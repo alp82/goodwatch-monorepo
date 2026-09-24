@@ -1,0 +1,13 @@
+{
+ "qdrant_points": 191635,
+ "adult_skipped": 1,
+ "no_crate_row": 0,
+ "written": 191634,
+ "movie": 110790,
+ "show": 80844,
+ "votes>=2000": 50305,
+ "no_essence_text": 19590,
+ "no_keywords": 84138,
+ "no_tropes": 159652,
+ "seconds": 502
+}

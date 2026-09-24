@@ -1,0 +1,13 @@
+{
+  "name": "search-arena-bench-replay",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end latency replay of the combo-safe-v3 store access trace against the local Qdrant + CrateDB, with the webapp's client libraries",
+  "scripts": {
+    "replay": "node replay.ts"
+  },
+  "dependencies": {
+    "@qdrant/js-client-rest": "1.19.0",
+    "undici": "6.21.3"
+  }
+}

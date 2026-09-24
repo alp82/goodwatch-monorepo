@@ -1,0 +1,14 @@
+simp_combo.FINAL['combo-safe-v2-wcred-par'] over 138 queries (dev, holdout, holdout2, holdout3, holdout4)
+LOC (non-comment, non-blank, no docstrings; data layer excluded): functions entered 1022, executed statements 999
+  catalog.py         functions   58  executed   41  module defs  27  (data layer, not counted)
+  context.py         functions    0  executed    4  module defs   0  (data layer, not counted)
+  cuts.py            functions   10  executed   10  module defs   1
+  qemb.py            functions   22  executed   13  module defs   2  (data layer, not counted)
+  simp_combo.py      functions  892  executed  869  module defs 122
+  sparse.py          functions  120  executed  120  module defs  11
+regexes: 6 sites, 5 distinct patterns
+config keys: 47 read of 47
+numeric module constants: 4 names, 13 numeric leaves
+word lists: 13 (475 entries)
+numeric literals in executed statements (candidates): 51; default-argument literals of entered functions: 2
+proxy score (config read + constant leaves + literals + regex sites + word lists): 130

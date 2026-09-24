@@ -1,0 +1,126 @@
+{
+ "stages": {
+  "prod": [
+   "crate_text",
+   "qdrant_fp2000"
+  ],
+  "prod-replay": [
+   "crate_text",
+   "qdrant_fp2000"
+  ],
+  "fp-count": [
+   "crate_text",
+   "fp_full"
+  ],
+  "emb-e5s": [
+   "qemb",
+   "qdrant_emb"
+  ],
+  "emb-e5s-notitle": [
+   "qemb",
+   "qdrant_emb"
+  ],
+  "emb-bgeb": [
+   "qemb",
+   "qdrant_emb"
+  ],
+  "hyb-lin": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full"
+  ],
+  "hyb-rrf": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full"
+  ],
+  "emb-then-fp": [
+   "qemb",
+   "qdrant_emb",
+   "fp_payload"
+  ],
+  "nojev-knn": [
+   "qemb",
+   "qdrant_emb",
+   "fp_payload"
+  ],
+  "hyb-lin+prior": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full"
+  ],
+  "neg": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full",
+   "qemb_extra"
+  ],
+  "facet": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full",
+   "qemb_extra"
+  ],
+  "prior-gated": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full"
+  ],
+  "title-strict": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full",
+   "fuzzy_title"
+  ],
+  "notext": [
+   "qemb",
+   "qdrant_emb",
+   "fp_full"
+  ],
+  "bgeb-notitle": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full"
+  ],
+  "r2-combo": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title"
+  ],
+  "r2-combo-bgeb": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title"
+  ],
+  "r2-combo-strict": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title"
+  ],
+  "r2-combo-bgeb-strict": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title"
+  ]
+ }
+}

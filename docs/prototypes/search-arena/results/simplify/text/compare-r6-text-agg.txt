@@ -1,0 +1,163 @@
+ndcg10 text-agg − r6 per group: dev -0.005, dsty -0.006, ho -0.009, ho2 +0.015, ho3 +0.000, h3sty +0.000, ho4 +0.000
+60 of 120 graded queries have a different top 10; title_lookup rank 1 identical on 6/7
+
+ho2-10 [holdout2] 'animated movie that is not for kids': 0.485 -> 0.293 (-0.193), unj 0 -> 2
+   - #7 Neon Genesis Evangelion: The End of Evangelion (1997) [3]; #9 The Garden of Sinners: Paradox Spiral (2008) [3]
+   + #6 The Last Unicorn (1982) [?]; #7 The Bob's Burgers Movie (2022) [?]
+new-04 [dev] 'quiet and lonely in deep space': 1.000 -> 0.817 (-0.183), unj 0 -> 2
+   - #3 Love (2011) [3]; #6 Moon (2009) [3]; #10 Orbiter 9 (2017) [3]
+   + #3 Beacon 23 (2023) [?]; #7 Europa Report (2013) [?]; #10 Spaceman (2024) [3]
+core-09 [holdout] 'unreliable narrator': 0.540 -> 0.383 (-0.157), unj 0 -> 2
+   - #5 The Usual Suspects (1995) [3]; #7 Memento (2000) [3]; #10 Mulholland Drive (2001) [3]
+   + #8 Spider (2002) [?]; #9 Blink (1993) [?]; #10 Fractured (2019) [3]
+lab-13 [dev] 'time travel complex': 0.917 -> 0.834 (-0.083), unj 0 -> 1
+   - #3 Bodies (2023) [3]; #7 Steins;Gate (2011) [3]; #9 Vortex (2023) [2]; #10 Tenet (2020) [3]
+   + #6 Plan B (2023) [3]; #7 24 (2016) [2]; #8 Curvature (2017) [?]; #10 JL50 (2020) [3]
+new-20 [holdout] 'An ordinary guy slowly realises his whole life is staged or fake and has to decide whether to break out of it.': 0.632 -> 0.559 (-0.073), unj 0 -> 0
+   - #9 Dispatches from Elsewhere (2020) [2]; #10 Breaking Bad (2008) [0]
+   + #9 Mister Lonely (2008) [0]; #10 Persona (1966) [0]
+new-05 [holdout] 'rainy neon cyberpunk city': 0.811 -> 0.740 (-0.071), unj 0 -> 1
+   - #8 Ghost in the Shell 2: Innocence (2004) [3]; #10 Texhnolyze (2003) [2]
+   + #6 Strange Days (1995) [2]; #9 Havoc (2025) [?]
+core-26 [dev] 'Ich suche etwas Spannendes, das mich rätseln lässt, aber am Ende nicht völlig deprimiert.': 0.676 -> 0.612 (-0.064), unj 0 -> 0
+   reordered: Stranger Things #3->#1, Sherlock #1->#2, The Sixth Sense #2->#3, Wie is de Mol? #5->#4, Anatomy of a Fall #8->#5, Inception #4->#6, Awe! #10->#7, Rear Window #6->#8, Searching #7->#9, The Prestige #9->#10
+lab-02 [dev] 'feel good cooking show': 0.951 -> 0.888 (-0.064), unj 0 -> 1
+   - #10 Jinny's Kitchen (2023) [3]
+   + #10 Selena + Chef (2020) [?]
+core-27 [dev] 'Quiero una serie policial realista y cruda, sin animación ni detectives con poderes mágicos.': 0.946 -> 0.894 (-0.051), unj 0 -> 1
+   - #8 Crime Patrol (2003) [3]
+   + #10 Behzat Ç.: An Ankara Policeman (2010) [?]
+core-17 [dev] 'Give me car chases, but make it more getaway driver than superheroes destroying a city.': 0.733 -> 0.684 (-0.049), unj 0 -> 0
+   - #9 The Driver (1978) [3]
+   + #10 The Transporter Refueled (2015) [2]
+new-14 [holdout] 'good first anime for someone who never watched anime': 0.589 -> 0.543 (-0.046), unj 0 -> 0
+   - #9 Little Witch Academia (2017) [2]
+   + #9 Blue Spring Ride (2014) [1]
+core-13 [dev] 'I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.': 0.647 -> 0.603 (-0.044), unj 0 -> 0
+   - #4 Just One Look (2025) [2]; #7 Before I Go to Sleep (2014) [2]; #9 Source Code (2011) [3]; #10 Fool Me Once (2024) [3]
+   + #3 The Usual Suspects (1995) [2]; #6 Memento (2000) [0]; #9 The Sixth Sense (1999) [3]; #10 The Game (1997) [3]
+core-29 [holdout] 'Kafam çok yorgun. Sıcak ve komik ama aşırı duygusal olmayan bir şey izlemek istiyorum.': 0.910 -> 0.871 (-0.039), unj 0 -> 0
+   - #9 Geniş Aile (2009) [3]; #10 Takıntılar (2024) [2]
+   + #9 That's So Raven (2003) [2]; #10 Nissene på låven (2001) [2]
+lab-10 [dev] 'sunglasses at night': 0.774 -> 0.738 (-0.036), unj 0 -> 2
+   - #9 Un Chien Andalou (1929) [0]; #10 Spring Breakers (2013) [1]
+   + #7 Unearthly Stranger (1963) [?]; #9 Angel Heart (1987) [?]
+ppl-11 [dev] 'like david lynch but less weird': 0.316 -> 0.281 (-0.035), unj 0 -> 0
+   - #8 Spellbound (1945) [2]
+   + #8 Santa Sangre (1989) [0]
+new-07 [dev] 'like The Matrix but anime': 0.649 -> 0.631 (-0.019), unj 0 -> 1
+   - #10 Noein: To Your Other Self (2005) [2]
+   + #10 Ghost in the Shell: S.A.C. 2nd GIG - Individual Eleven (2006) [?]
+new-21 [dev] 'un dessin animé drôle pour toute la famille': 0.751 -> 0.734 (-0.017), unj 0 -> 1
+   - #10 The Berenstain Bears (1985) [1]
+   + #10 Olaf Presents (2021) [?]
+new-02 [dev] 'two geniuses in a battle of wits': 0.780 -> 0.765 (-0.016), unj 0 -> 0
+   reordered: The Devil's Plan #6->#4, Sleuth #4->#5, Battle of the Warriors #9->#6, Fracture #5->#7, Sanctuary #7->#9
+lab-09 [holdout] 'scifi with cars': 0.849 -> 0.838 (-0.011), unj 0 -> 1
+   - #9 Terminator 2: Judgment Day (1991) [1]
+   + #10 Blade Runner (1982) [?]
+ho2-11 [holdout2] 'claustrophobic thriller in the Arctic': 0.333 -> 0.322 (-0.011), unj 0 -> 1
+   - #10 Freezer (2014) [1]
+   + #10 Cutterhead (2019) [?]
+new-09 [dev] '80s sci-fi action': 0.951 -> 0.946 (-0.006), unj 0 -> 0
+   reordered: Back to the Future #5->#4, The Centurions #4->#5, Aliens #8->#7, M.A.S.K. #7->#8
+new-08 [holdout] 'like Breaking Bad but a comedy': 0.673 -> 0.669 (-0.004), unj 0 -> 0
+   - #10 Crime Scene Cleaner (2011) [2]
+   + #10 BEEF (2023) [2]
+core-25 [dev] 'something short to watch after work': 0.876 -> 0.872 (-0.004), unj 0 -> 0
+   - #10 Day & Night (2010) [3]
+   + #8 Mickey Mouse (2013) [3]
+new-13 [dev] 'smart sci-fi for adults': 0.945 -> 0.943 (-0.002), unj 0 -> 0
+   reordered: Love, Death & Robots #7->#6, 3 Body Problem #6->#7, Mr. Robot #10->#9, Devs #9->#10
+lab-08 [holdout] 'melancholy lighthouse keeper mystery': 0.835 -> 0.835 (+0.000), unj 0 -> 0
+   reordered: FROM #10->#6, The Haunting of Hill House #6->#7, Echoes from the Dead #7->#8, The Pale Blue Eye #8->#9, The Others #9->#10
+core-11 [dev] 'no anime, gritty crime show': 1.000 -> 1.000 (+0.000), unj 0 -> 0
+   reordered: Mare of Easttown #6->#3, We Own This City #3->#4, Top Boy #4->#6
+core-15 [dev] 'A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.': 1.000 -> 1.000 (+0.000), unj 0 -> 0
+   - #9 Samber (2023) [3]; #10 Who Killed Little Gregory? (2019) [3]
+   + #9 Top Boy (2011) [3]; #10 Black Bird (2022) [3]
+core-18 [holdout] 'Brain’s fried. Something warm and funny, but not painfully cheesy.': 0.616 -> 0.616 (+0.000), unj 0 -> 0
+   - #6 SpongeBob SquarePants (1999) [2]
+   + #10 Get a Horse! (2013) [2]
+core-22 [dev] 'time loop': 1.000 -> 1.000 (+0.000), unj 0 -> 0
+   - #8 Maanaadu (2021) [3]
+   + #6 Repeaters (2011) [3]
+new-06 [holdout] 'kung fu comedy': 1.000 -> 1.000 (+0.000), unj 0 -> 0
+   reordered: The Young Master #10->#9, Kung Fu Panda #9->#10
+new-10 [holdout] '90s crime movies with great dialogue': 0.921 -> 0.921 (+0.000), unj 0 -> 0
+   reordered: True Romance #4->#3, GoodFellas #3->#4
+new-23 [holdout] 'psycological thriler with a big twist': 0.960 -> 0.960 (+0.000), unj 0 -> 0
+   - #9 Forgotten (2017) [3]
+   + #10 I See You (2019) [3]
+ho2-03 [holdout2] 'anime about pirates': 1.000 -> 1.000 (+0.000), unj 0 -> 0
+   reordered: One Piece "3D2Y": Overcome Ace's Death! Luffy's Vow to his Friends #7->#6, One Piece Film: Strong World #6->#7
+ho2-12 [holdout2] 'lazy sunny summer on the Italian coast': 0.884 -> 0.884 (+0.000), unj 0 -> 0
+   reordered: Summertime #3->#2, Walking on Sunshine #2->#3
+ho2-14 [holdout2] '2000s British gangster comedies': 0.883 -> 0.883 (+0.000), unj 0 -> 0
+   reordered: White Chicks #9->#8, Ali G Indahouse #8->#9
+ho2-19 [holdout2] 'Una comedia absurda sobre la vida en la oficina, con personajes ridículos.': 0.803 -> 0.803 (+0.000), unj 0 -> 0
+   reordered: Monty Python and the Holy Grail #4->#3, Airplane! #3->#4
+ho2-04 [holdout2] 'western with samurai': 0.853 -> 0.854 (+0.001), unj 0 -> 0
+   reordered: Lone Wolf and Cub: Baby Cart at the River Styx #9->#7, Samurai Champloo #7->#8, Seven Samurai #8->#9
+new-03 [holdout] 'satire about politics or big corporations': 0.859 -> 0.861 (+0.002), unj 0 -> 0
+   reordered: Wag the Dog #8->#6, Humble Politiciann Nograj #10->#7, The Politician #7->#8, War, Inc. #6->#9, Borat Subsequent Moviefilm #9->#10
+core-10 [holdout] 'dark comedy about rich people': 0.762 -> 0.764 (+0.003), unj 0 -> 0
+   reordered: The Magic Christian #9->#8, Suburbicon #8->#9
+core-08 [dev] 'sunglasses': 0.625 -> 0.630 (+0.006), unj 0 -> 0
+   reordered: Spring Breakers #5->#3, Sin City #3->#4, La Dolce Vita #4->#5
+ho2-21 [holdout2] 'dystopain deth game series': 0.433 -> 0.441 (+0.008), unj 0 -> 1
+   - #9 The Walking Dead (2010) [0]
+   + #10 Akudama Drive (2020) [?]
+new-01 [holdout] 'heist on a train': 0.777 -> 0.787 (+0.009), unj 0 -> 0
+   reordered: The First Great Train Robbery #4->#3, Red Sun #3->#4, Money Train #8->#5, Von Ryan's Express #5->#6, The Great Train Robbery #6->#7, Inception #7->#8
+new-19 [dev] 'A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun than grim.': 0.666 -> 0.678 (+0.011), unj 0 -> 0
+   - #9 Phineas and Ferb (2007) [0]
+   + #10 Meet Dave (2008) [1]
+ho2-09 [holdout2] 'space opera without aliens': 0.080 -> 0.092 (+0.012), unj 0 -> 1
+   - #8 Star Trek Into Darkness (2013) [0]; #9 The Empire Strikes Back (1980) [0]
+   + #5 Babylon 5 (1994) [0]; #9 Star Blazers: Space Battleship Yamato 2199 (2013) [?]
+ho2-07 [holdout2] 'like The Sopranos but in Italy': 0.939 -> 0.953 (+0.014), unj 0 -> 0
+   - #10 Mare of Easttown (2021) [0]
+   + #10 RIPLEY (2024) [1]
+lab-04 [dev] 'tense heist thriller, not bleak': 0.657 -> 0.675 (+0.018), unj 0 -> 0
+   - #10 Fast Five (2011) [2]
+   + #10 Thunivu (2023) [2]
+ho2-01 [holdout2] 'horror on a submarine': 0.870 -> 0.889 (+0.019), unj 0 -> 0
+   reordered: Kraken #6->#5, The Rift #8->#6, Death Ship #5->#7, Underwater #9->#8, Alien #7->#9
+new-16 [holdout] 'whole movie takes place in one room': 0.718 -> 0.740 (+0.022), unj 0 -> 1
+   - #7 Mystery Street (1950) [0]; #8 Silver Linings Playbook (2012) [0]; #10 Good Luck to You, Leo Grande (2022) [3]
+   + #7 Room in Rome (2010) [3]; #8 Same Time, Next Year (1978) [?]; #10 The Exterminating Angel (1962) [3]
+core-14 [holdout] 'Rich people being absolutely awful to each other, preferably funny.': 0.785 -> 0.818 (+0.033), unj 0 -> 2
+   - #5 Borat: Cultural Learnings of America for Make Benefit Glorious Nation of Kazakhstan (2006) [0]; #6 Another Period (2015) [3]; #8 Between Two Ferns with Zach Galifianakis (2008) [0]
+   + #6 Odd Mom Out (2015) [3]; #9 Succession (2018) [?]; #10 Saltburn (2023) [?]
+ho2-18 [holdout2] "A soldier comes home from war and can't fit back into ordinary life. I want it honest and quiet, not an action movie.": 0.809 -> 0.845 (+0.035), unj 0 -> 1
+   - #7 Hector (2015) [0]; #8 The Lucky Ones (2008) [3]
+   + #9 The Best Years of Our Lives (1946) [3]; #10 Taking Chance (2009) [?]
+core-23 [dev] 'slow atmospheric science fiction': 0.964 -> 1.000 (+0.036), unj 0 -> 0
+   - #10 Alien: Covenant - Prologue: Last Supper (2017) [2]
+   + #10 Another Earth (2011) [3]
+lab-00 [dev] 'complete nonsense': 0.675 -> 0.713 (+0.038), unj 0 -> 0
+   reordered: Aqua Teen Hunger Force Colon Movie Film for Theaters #2->#1, The Day Today #1->#2, Sharknado 4: The 4th Awakens #4->#3, Italian Spiderman #3->#4
+core-28 [holdout] 'Des gens riches qui se comportent horriblement entre eux, de préférence quelque chose de drôle.': 0.441 -> 0.481 (+0.040), unj 0 -> 0
+   - #9 The Day Today (1994) [0]
+   + #9 Fun with Dick and Jane (2005) [1]
+new-15 [dev] 'nonlinear storytelling': 0.836 -> 0.882 (+0.046), unj 0 -> 0
+   - #9 Your Name. (2016) [2]
+   + #9 Pedro Páramo (2024) [3]
+ho2-13 [holdout2] '70s paranoid conspiracy thrillers': 0.874 -> 0.921 (+0.046), unj 0 -> 0
+   reordered: Three Days of the Condor #2->#1, Marathon Man #1->#2
+new-12 [holdout] "war movie that isn't about World War II": 0.561 -> 0.611 (+0.050), unj 0 -> 3
+   - #3 Fires on the Plain (1959) [0]; #9 The Thin Red Line (1998) [0]; #10 Hacksaw Ridge (2016) [0]
+   + #5 Full Metal Jacket (1987) [?]; #8 The Lost Battalion (2001) [?]; #10 Black Hawk Down (2001) [?]
+ho2-02 [holdout2] 'comedy set in a prison': 0.616 -> 0.691 (+0.075), unj 0 -> 1
+   - #6 Drop the Dead Donkey (1990) [0]; #7 Trial & Error (2017) [0]; #8 The John Larroquette Show (1993) [0]
+   + #3 Prison Playbook (2017) [2]; #4 Orange Is the New Black (2013) [2]; #10 King of Devil's Island (2010) [?]
+ho2-17 [holdout2] 'A small-town cop who is way out of their depth investigates a murder, told with dry dark humour and lots of quirky locals.': 0.847 -> 0.930 (+0.083), unj 0 -> 0
+   - #10 Sherlock (2010) [0]
+   + #9 The Guard (2011) [3]
+ho2-05 [holdout2] 'war film about snipers': 0.654 -> 0.878 (+0.225), unj 0 -> 0
+   - #4 Civil War (2024) [1]; #9 Warfare (2025) [1]; #10 Savior (1998) [1]
+   + #7 Sniper (1993) [3]; #8 Sniper: Reloaded (2011) [3]; #9 A Sniper's War (2018) [3]
+lab-03 [dev] 'slow burn space horror': 0.435 -> 0.708 (+0.273), unj 0 -> 1
+   - #3 Together (2025) [0]; #5 The Endless (2017) [1]; #6 Come True (2020) [0]; #7 The Haunting (1963) [1]; #8 The Incident (2014) [1]; #9 In the Mouth of Madness (1995) [1]; #10 Stalker (1979) [1]
+   + #2 Dead Space: Aftermath (2011) [1]; #4 Galaxy of Terror (1981) [2]; #6 Ash (2025) [3]; #7 Color Out of Space (2020) [1]; #8 The Dark Side of the Moon (1990) [3]; #9 Alien: Covenant (2017) [3]; #10 Alien: Romulus (2024) [?]

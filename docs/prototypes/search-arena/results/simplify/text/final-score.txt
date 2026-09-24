@@ -1,0 +1,8 @@
+| candidate | dev | dsty | ho | ho2 | ho3 | h3sty | ho4 | bad5 dev/ho/ho2/ho3/ho4 = tot | unj tot | own10 dsty/h3sty/ho4 | title@1 | p50 ms | p95 ms |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| r6 | 0.836 | 0.812 | 0.761 | 0.728 | 0.893 | 0.884 | 0.837 | 10/10/17/1/2 = 40 | 0 | 6.00/6.00/6.00 | 6/7 | 48.5 | 116.3 |
+| text-safe | 0.831 (c0.838 u6) | 0.806 | 0.754 (c0.759 u6) | 0.749 (c0.750 u3) | 0.893 | 0.884 | 0.837 | 9/9/16/1/2 = 37 | 15 | 6.00/6.00/6.00 | 6/7 | 39.3 | 95.5 |
+| text-cons | 0.833 (c0.839 u7) | 0.806 | 0.755 (c0.768 u9) | 0.743 (c0.752 u7) | 0.893 | 0.884 | 0.837 | 9/7/17/1/2 = 36 | 23 | 6.00/6.00/6.00 | 6/7 | 42.4 | 92.5 |
+| text-agg | 0.831 (c0.839 u10) | 0.806 | 0.751 (c0.766 u10) | 0.743 (c0.752 u7) | 0.893 | 0.884 | 0.837 | 9/7/17/1/2 = 36 | 27 | 6.00/6.00/6.00 | 6/7 | 44.7 | 91.1 |
+ndcg10 per split (round-6 cut rule); '(c… u…)' = condensed ndcg10 with ungraded titles skipped, and the unjudged count in the top 10, shown only when a split has ungraded titles. Latency: in-process ms per query after the Jev reading, compare only against r6 from the same run.
+127 queries x 4 candidates in 110 s (incl. loading). Lists: /home/alp/dev/projects/goodwatch/goodwatch-monorepo/.claude/worktrees/search-simplify/docs/prototypes/search-arena/results/simplify/lists

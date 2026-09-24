@@ -1,0 +1,520 @@
+{
+ "measured_at": "2026-09-24T10:45-11:00Z",
+ "webapp": {
+  "host": "abio (Coolify server id 1), public 159.69.247.66, private 10.0.0.21",
+  "host_cpu": "8 vCPU Intel Xeon (Skylake, IBRS, no TSX)",
+  "host_ram_mb": 15618,
+  "host_ram_available_mb": 11745,
+  "host_disk": "151G, 44G used",
+  "container": "gk4owk8-100908690984 (Coolify app 'alp82/goodwatch-monorepo:main', https://goodwatch.app)",
+  "build": "nixpacks (no Dockerfile), base_directory /goodwatch-webapp, install 'npm ci --include=dev', build 'npm run build'",
+  "process": "npm run start -> remix-serve ./build/server/index.js, one Node v24.10.0 process, no cluster mode",
+  "replicas": 1,
+  "cpu_limit": null,
+  "memory_limit": null,
+  "cpu_shares": 1024,
+  "mem_usage_mib": 642.5,
+  "node_rss_mib": 662,
+  "shares_host_with": [
+   "windmill default worker (2 vCPU, 4 GiB limit, ~45% CPU)",
+   "other Coolify apps (aistack, seen-site, etc.)",
+   "abusive-api stack (mysql, bots)"
+  ],
+  "network": "Docker bridge network 'coolify' (NAT to private net 10.0.0.0/x)",
+  "qdrant_url_in_env": "http://10.0.0.20:6334 (gRPC); d4.server.ts rewrites to 6333 REST",
+  "crate_hosts_in_env": "10.0.0.11,10.0.0.12,10.0.0.13:4200 (search uses only the first host)"
+ },
+ "network_from_webapp_container_netns": {
+  "method": "nsenter into webapp container netns; python http.client keep-alive; 0.5 s spacing; first request dropped",
+  "qdrant_get_root_ms": {
+   "n": 59,
+   "min": 1.31,
+   "p50": 1.86,
+   "p95": 2.38,
+   "max": 3.26,
+   "mean": 1.89
+  },
+  "crate_select1_ms": {
+   "n": 59,
+   "min": 2.2,
+   "p50": 3.02,
+   "p95": 3.37,
+   "max": 3.59,
+   "mean": 2.99
+  },
+  "icmp_ping_ms": {
+   "host_to_qdrant_avg": 0.625,
+   "host_to_crate01_avg": 0.66,
+   "container_to_qdrant_avg": 0.842
+  },
+  "qdrant_query_top500": {
+   "request": "POST /collections/media_fingerprint_v1/points/query, 74-dim real fingerprint_v1 vector of a random title, using fingerprint_v1, limit 500, filter voting_count>=2000 and must_not adult, with_payload 6 fingerprint_scores_v1.<key> fields (as d4 retrieve does)",
+   "ms": {
+    "n": 50,
+    "min": 31.07,
+    "p50": 41.74,
+    "p95": 56.6,
+    "max": 69.95,
+    "mean": 43.4
+   },
+   "returned": {
+    "min": 500,
+    "max": 500
+   },
+   "response_bytes": 94195,
+   "note": "production uses limit 2000 when order is weighted_sum or a trope query exists, else 100"
+  },
+  "crate_trope_match_over_500_ids": {
+   "request": "production tropeMatches 'any term' SQL: match((name 5.0, content 1.0), term) AND media_tmdb_id IN (500 ids) ORDER BY _score LIMIT 400, 1 req/s",
+   "ms": {
+    "n": 20,
+    "min": 40.13,
+    "p50": 60.58,
+    "p95": 166.85,
+    "max": 239.98,
+    "mean": 82.49
+   }
+  }
+ },
+ "qdrant": {
+  "host": "gw-vector1, private 10.0.0.20, public 157.90.157.44",
+  "cpu": "16 vCPU Intel Xeon (Skylake, IBRS, no TSX) @2.0GHz, avx512f",
+  "ram_total_mb": 31337,
+  "ram_available_mb": 18821,
+  "disk": "301G, 155G used, 134G free",
+  "version": "1.19.1",
+  "container": "qdrant-main, no CPU/memory limit",
+  "container_mem_gib": 4.87,
+  "qdrant_resident_bytes": 1447088128,
+  "qdrant_retained_bytes": 4264411136,
+  "search_pool": {
+   "mode": "high_io",
+   "high_cpu_threads": 16,
+   "high_io_threads": 64
+  },
+  "collection_media_fingerprint_v1": {
+   "points": 191659,
+   "indexed_vectors": 191632,
+   "segments": 12,
+   "shards": 6,
+   "replication_factor": 1,
+   "status": "green",
+   "vectors": {
+    "fingerprint_v1": {
+     "size": 74,
+     "distance": "Cosine",
+     "on_disk": false
+    }
+   },
+   "on_disk_payload": true,
+   "hnsw": {
+    "m": 16,
+    "ef_construct": 200,
+    "full_scan_threshold": 1000,
+    "on_disk": false
+   },
+   "quantization": null,
+   "optimizer": {
+    "default_segment_number": 2,
+    "indexing_threshold": 1000
+   },
+   "payload_indexes": 120,
+   "storage_on_disk_gb": 2.1,
+   "current_vector_ram_mb": 56.7
+  },
+  "shares_host_with": [
+   "windmill-highperf worker (6 vCPU, 19.6 GiB limit)",
+   "windmill default worker (2 vCPU, 4 GiB, ~50% CPU)",
+   "aistack convex backend (6.7 GiB)",
+   "manaschmiede convex"
+  ],
+  "telemetry_since_restart_2026-09-22T19:53Z": {
+   "rest_points_query": {
+    "count": 405,
+    "avg_ms": 89.97,
+    "min_ms": 4.39,
+    "max_ms": 6593.9
+   },
+   "grpc_recommend_ok": {
+    "count": 46928,
+    "avg_ms": 970.3,
+    "max_ms": 60641
+   },
+   "grpc_recommend_timeouts_60s": 1353,
+   "grpc_get": {
+    "count": 53701,
+    "avg_ms": 15.8
+   },
+   "grpc_scroll_ok": {
+    "count": 8026,
+    "avg_ms": 2139
+   },
+   "payload_io_read_bytes": 3037753763689,
+   "note": "server-side durations; REST query = d4 search (and prototypes/bench), gRPC recommend = related/similar/recommendation features"
+  },
+  "new_vectors_estimate": {
+   "titles": 191634,
+   "dims": [
+    768,
+    384
+   ],
+   "float32": {
+    "768": {
+     "bytes": 588699648,
+     "MB": 588.7,
+     "MiB": 561.4
+    },
+    "384": {
+     "bytes": 294349824,
+     "MB": 294.3,
+     "MiB": 280.7
+    },
+    "1152": {
+     "bytes": 883049472,
+     "MB": 883.0,
+     "MiB": 842.1
+    }
+   },
+   "float16": {
+    "768": {
+     "bytes": 294349824,
+     "MB": 294.3,
+     "MiB": 280.7
+    },
+    "384": {
+     "bytes": 147174912,
+     "MB": 147.2,
+     "MiB": 140.4
+    },
+    "1152": {
+     "bytes": 441524736,
+     "MB": 441.5,
+     "MiB": 421.1
+    }
+   },
+   "int8": {
+    "768": {
+     "bytes": 147174912,
+     "MB": 147.2,
+     "MiB": 140.4
+    },
+    "384": {
+     "bytes": 73587456,
+     "MB": 73.6,
+     "MiB": 70.2
+    },
+    "1152": {
+     "bytes": 220762368,
+     "MB": 220.8,
+     "MiB": 210.5
+    }
+   },
+   "hnsw_links_per_named_vector_mb_approx": 24.5,
+   "note": "raw vector storage only; HNSW level-0 links ~m*2*4 B per point per named vector; int8 scalar quantization keeps float32 originals on disk (mmap) unless vectors are float16/int8 datatype"
+  }
+ },
+ "cratedb": {
+  "version": "5.10.9",
+  "nodes": 3,
+  "node_names": [
+   "crate-01",
+   "crate-02",
+   "crate-03"
+  ],
+  "hosts": "10.0.0.11-13:4200",
+  "per_node": {
+   "available_processors": 16,
+   "heap_max_mb": 16384,
+   "heap_used_mb": [
+    3416,
+    3703,
+    3919
+   ],
+   "os_mem_used_mb": [
+    26537,
+    25800,
+    26602
+   ],
+   "disk_gb": 300,
+   "disk_used_gb": [
+    98,
+    160,
+    120
+   ],
+   "load1": [
+    0.93,
+    0.38,
+    0.75
+   ]
+  },
+  "replicas": "0-1 on almost all tables",
+  "search_tables_primary": {
+   "movie": {
+    "docs_lucene": 1344813,
+    "mb": 37780,
+    "shards": 12
+   },
+   "show": {
+    "docs_lucene": 246657,
+    "mb": 1452,
+    "shards": 12
+   },
+   "trope": {
+    "docs": 4045945,
+    "mb": 2384,
+    "shards": 3
+   },
+   "alternative_title": {
+    "docs": 562251,
+    "mb": 55,
+    "shards": 6
+   },
+   "search_history": {
+    "docs": 157
+   },
+   "search_interpretations": {
+    "docs": 72
+   },
+   "search_spending": {
+    "docs": 144
+   }
+  },
+  "fulltext_indexes": {
+   "movie/show": [
+    "title",
+    "original_title",
+    "tagline",
+    "synopsis",
+    "essence_text"
+   ],
+   "trope": [
+    "name",
+    "content"
+   ],
+   "alternative_title": [
+    "title"
+   ]
+  },
+  "fulltext_used_today": "yes: d4 tropeMatches (trope name/content, phrase -> and -> any) and search.server.ts literal fallback match((essence_text 2.0, synopsis)) on movie/show"
+ },
+ "windmill": {
+  "version": "CE v1.803.0-3-g3e3d2a6363",
+  "ee_license": "none",
+  "worker_groups_configured": [
+   "native",
+   "reports",
+   "default"
+  ],
+  "workers_live": {
+   "default": {
+    "workers": 15,
+    "instances": 15,
+    "ips": [
+     [
+      "128.140.63.101",
+      1
+     ],
+     [
+      "128.140.87.34",
+      1
+     ],
+     [
+      "138.201.153.137",
+      1
+     ],
+     [
+      "157.90.157.44",
+      1
+     ],
+     [
+      "159.69.247.66",
+      1
+     ],
+     [
+      "167.235.251.11",
+      1
+     ],
+     [
+      "168.119.242.21",
+      1
+     ],
+     [
+      "46.224.14.221",
+      1
+     ],
+     [
+      "49.13.133.251",
+      1
+     ],
+     [
+      "49.13.63.58",
+      1
+     ],
+     [
+      "49.13.88.203",
+      1
+     ],
+     [
+      "49.13.94.216",
+      1
+     ],
+     [
+      "78.46.209.172",
+      1
+     ],
+     [
+      "91.107.208.205",
+      1
+     ],
+     [
+      "91.98.158.109",
+      1
+     ]
+    ],
+    "vcpus_raw": [
+     200000
+    ],
+    "memory_bytes": [
+     4294967296
+    ],
+    "job_isolation": [
+     "none"
+    ],
+    "native_mode": [
+     "False"
+    ],
+    "occ_30m_avg": 0.402
+   },
+   "native": {
+    "workers": 16,
+    "instances": 2,
+    "ips": [
+     [
+      "167.235.251.11",
+      16
+     ]
+    ],
+    "vcpus_raw": [
+     10000
+    ],
+    "memory_bytes": [
+     134217728
+    ],
+    "job_isolation": [
+     "none"
+    ],
+    "native_mode": [
+     "True"
+    ],
+    "occ_30m_avg": 0.0
+   },
+   "default-highperf": {
+    "workers": 2,
+    "instances": 2,
+    "ips": [
+     [
+      "157.90.157.44",
+      1
+     ],
+     [
+      "167.235.251.11",
+      1
+     ]
+    ],
+    "vcpus_raw": [
+     600000
+    ],
+    "memory_bytes": [
+     21021851648
+    ],
+    "job_isolation": [
+     "none"
+    ],
+    "native_mode": [
+     "False"
+    ],
+    "occ_30m_avg": 0.0
+   }
+  },
+  "per_worker_resources": {
+   "default": "2 vCPU, 4 GiB (1 worker per container, 15 hosts)",
+   "default-highperf": "6 vCPU, 19.6 GiB (on 10.0.0.10 and gw-vector1)",
+   "native": "8 workers per container sharing 0.1 vCPU, 128 MiB (2 containers on 10.0.0.10)"
+  },
+  "reports_group_workers": 0,
+  "dedicated_workers": "none observed (no dedicated tags, job_isolation none); dedicated workers are an Enterprise feature per Windmill docs, so not available on this CE instance (not verified via API)",
+  "queue_delay_recent_s": {
+   "flow": [
+    4.4,
+    3.3,
+    5.5
+   ],
+   "python3": [
+    5.2
+   ]
+  }
+ },
+ "production_search_latency": {
+  "source": "Crate doc.search_history.elapsed_ms (end to end in search.server.ts, includes the Jev reading when not cached), 2026-09-21..23",
+  "cached_reading": {
+   "n": 94,
+   "min": 154,
+   "p50": 688,
+   "p95": 1375,
+   "max": 5102
+  },
+  "fresh_reading_ready": {
+   "n": 60,
+   "min": 679,
+   "p50": 1750,
+   "p95": 3188,
+   "max": 4592
+  },
+  "basic_fallback": {
+   "n": 3,
+   "values": [
+    398,
+    399,
+    701
+   ]
+  },
+  "by_day": [
+   {
+    "day": "2026-09-21",
+    "n": 108,
+    "p50": 753,
+    "p95": 2487
+   },
+   {
+    "day": "2026-09-22",
+    "n": 32,
+    "p50": 1612,
+    "p95": 2639
+   },
+   {
+    "day": "2026-09-23",
+    "n": 17,
+    "p50": 773,
+    "p95": 3096
+   }
+  ],
+  "webapp_logs_since_container_start_10:21Z": {
+   "combined_search_requests_logged": 0,
+   "qdrant_grpc_recommend_client_ms": {
+    "n": 572,
+    "p50": 2694,
+    "p95": 10281
+   },
+   "crate_select_client_ms": {
+    "n": 3726,
+    "p50": 17.8,
+    "p95": 49.8
+   }
+  }
+ },
+ "not_determined": [
+  "per-stage split (Qdrant vs trope vs metadata vs title lookup) of production searches: not stored; d4 computes poolMs/tropeMs/displayMs but they are not persisted",
+  "whether Windmill dedicated workers can be enabled on this build (inferred EE-only from docs)",
+  "CPU model of Crate nodes (only processor count available via sys.nodes)"
+ ]
+}

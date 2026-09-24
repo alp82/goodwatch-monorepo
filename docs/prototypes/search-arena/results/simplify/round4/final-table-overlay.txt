@@ -1,0 +1,9 @@
+grades: results/grades.json + overlay results/simplify/rubric/overlay.json (472 pairs replaced)
+| candidate | dev | dsty | ho | ho2 | ho3 | h3sty | ho4 | bad5 dev/ho/ho2/ho3/ho4 = tot | unj tot | own10 dsty/h3sty/ho4 | title@1 | p50 ms | p95 ms |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| r6 | 0.799 | 0.812 | 0.722 | 0.711 | 0.888 | 0.884 | 0.828 | 19/12/17/1/2 = 51 | 0 | 6.00/6.00/6.00 | 6/7 | 46.3 | 107.4 |
+| combo | 0.802 | 0.814 | 0.746 | 0.773 | 0.915 | 0.889 | 0.869 | 18/11/14/1/0 = 44 | 0 | 6.25/6.00/5.33 | 6/7 | 42.0 | 87.3 |
+| combo-safe | 0.808 | 0.821 | 0.735 | 0.761 | 0.911 | 0.889 | 0.867 | 17/12/12/1/1 = 43 | 0 | 6.25/6.00/5.33 | 6/7 | 40.8 | 84.3 |
+| combo-v2 | 0.801 | 0.808 | 0.746 | 0.773 | 0.915 | 0.889 | 0.869 | 18/11/14/1/0 = 44 | 0 | 6.00/6.00/5.33 | 6/7 | 40.8 | 86.1 |
+| combo-safe-v2 | 0.807 | 0.814 | 0.735 | 0.761 | 0.911 | 0.889 | 0.867 | 17/12/12/1/1 = 43 | 0 | 6.00/6.00/5.33 | 6/7 | 39.6 | 84.8 |
+ndcg10 per split (round-6 cut rule); '(c… u…)' = condensed ndcg10 with ungraded titles skipped, and the unjudged count in the top 10, shown only when a split has ungraded titles. Latency: in-process ms per query after the Jev reading, compare only against r6 from the same run. Latency is from the run that wrote the lists.

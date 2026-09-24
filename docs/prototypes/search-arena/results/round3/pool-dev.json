@@ -1,0 +1,4320 @@
+[
+ {
+  "query_id": "lab-00",
+  "query": "complete nonsense",
+  "intent": "Deliberately absurd or surreal comedy where nonsense is the point (sketch shows, anti-humor). Generic family animation or merely bad films are wrong.",
+  "items": [
+   {
+    "pid": 1000000000762,
+    "title": "Monty Python and the Holy Grail",
+    "year": 1975,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Comedy",
+     "Fantasy"
+    ],
+    "essence_text": "A quintessential absurdist comedy that reimagines the legend of King Arthur with a uniquely British, irreverent twist. Filled with iconic sketches, memorable quotes, and brilliant wordplay, it's a relentless barrage of anachronistic humor and visual gags. The film's defining characteristic is its commitment to the utterly nonsensical, creating a perpetually rewatchable and endlessly quotable comedic masterpiece that continues to influence comedy.",
+    "tags": [
+     "Absurdist Comedy",
+     "British Humor",
+     "Satirical Fantasy",
+     "Cult Classic",
+     "Historical Parody",
+     "Sketch Comedy",
+     "Dialogue-Driven",
+     "Irreverent",
+     "Anachronistic",
+     "Meta-Humor"
+    ],
+    "keywords": [
+     "holy grail",
+     "swordplay",
+     "england",
+     "monk",
+     "wedding reception",
+     "scotland yard",
+     "animal attack",
+     "camelot",
+     "round table",
+     "chapter",
+     "satire",
+     "parody"
+    ]
+   },
+   {
+    "pid": 1000000011302,
+    "title": "Bananas",
+    "year": 1971,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A politically charged satire wrapped in layers of absurdist comedy and madcap antics. The film relentlessly mocks political systems and societal norms through over-the-top characters and nonsensical situations. Its humor is broad, relying heavily on slapstick and parody, creating an experience that is both chaotic and thought-provoking. Expect a barrage of irreverent gags and a skewering of authority at every turn.",
+    "tags": [
+     "Political Satire",
+     "Absurdist Comedy",
+     "Slapstick Humor",
+     "Eccentric Characters",
+     "Social Commentary",
+     "Anti-Establishment",
+     "Madcap",
+     "Nonsensical",
+     "Parody"
+    ],
+    "keywords": [
+     "revolution",
+     "political activism",
+     "loser",
+     "banana republic",
+     "anarchic comedy"
+    ]
+   },
+   {
+    "pid": 1000000228165,
+    "title": "The SpongeBob Movie: Sponge Out of Water",
+    "year": 2015,
+    "media_type": "movie",
+    "genres": [
+     "Family",
+     "Comedy",
+     "Adventure",
+     "Animation"
+    ],
+    "essence_text": "A wildly imaginative and energetically absurd animated adventure that seamlessly blends traditional animation with live-action. It's a non-stop barrage of gags, fourth-wall breaks, and visual silliness, perfect for audiences of all ages who appreciate irreverent humor. The film delivers pure, unadulterated escapism with its familiar, beloved characters embarking on a truly bizarre quest. It's a vibrant, laugh-out-loud experience that embraces its own cartoon logic and delights in its...",
+    "tags": [
+     "Animated Comedy",
+     "Family Adventure",
+     "Absurdist Humor",
+     "Zany Characters",
+     "Pop Culture References",
+     "Mixed Media",
+     "Fourth Wall Breaking",
+     "Lighthearted Fun",
+     "Silly & Energetic",
+     "Imagination-Driven"
+    ],
+    "keywords": [
+     "sea",
+     "ocean",
+     "villain",
+     "sequel",
+     "computer animation",
+     "based on cartoon",
+     "pirate",
+     "superhero team",
+     "aftercreditsstinger",
+     "live action and animation",
+     "based on tv series",
+     "amused"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-01",
+  "query": "tarkovsky",
+  "intent": "Ambiguous: films directed by Andrei Tarkovsky first, then contemplative, poetic, spiritual cinema in his style.",
+  "items": [
+   {
+    "pid": 1000000024657,
+    "title": "The Sacrifice",
+    "year": 1986,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A profoundly melancholic and philosophical film that explores the themes of spiritual crisis and existential dread in the face of nuclear war. The slow-burn narrative builds tension as the characters grapple with their mortality and the potential end of the world. With a focus on social commentary and psychological depth, the film offers a bleak and thought-provoking reflection on humanity's fate. This is an art-house experience that resonates with a sense of profound sadness and impending doom.",
+    "tags": [
+     "Existential Drama",
+     "Nuclear War Anxiety",
+     "Spiritual Crisis",
+     "Philosophical Contemplation",
+     "Slow-Burn Narrative",
+     "Bleak and Melancholic",
+     "Art House Cinema",
+     "Profound Sadness",
+     "Doomsday Scenario"
+    ],
+    "keywords": [
+     "nuclear war",
+     "philosopher",
+     "world war iii",
+     "philosophical",
+     "reflective",
+     "father son relationship",
+     "enchant"
+    ]
+   },
+   {
+    "pid": 1000000001396,
+    "title": "Mirror",
+    "year": 1975,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "History"
+    ],
+    "essence_text": "A deeply personal and visually stunning cinematic poem, weaving together fragmented memories and historical reflections. Its non-linear structure and dreamlike imagery create a unique and meditative experience. The film explores themes of memory, family, and the impact of history on individual lives. With its evocative use of music and sound, it invites the viewer into a world of profound beauty and melancholy.",
+    "tags": [
+     "Poetic Memoir",
+     "Russian Cinema",
+     "Dreamlike Imagery",
+     "Non-Linear Narrative",
+     "Autobiographical",
+     "Historical Reflection",
+     "Visually Stunning",
+     "Meditative Experience",
+     "Family History"
+    ],
+    "keywords": [
+     "dreams",
+     "wind",
+     "poetry",
+     "world war ii",
+     "cigarette",
+     "field",
+     "spanish civil war (1936-39)",
+     "nostalgia",
+     "forest",
+     "terminal illness",
+     "flashback",
+     "dying man"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-02",
+  "query": "feel good cooking show",
+  "intent": "Series centered on cooking or food with a warm, upbeat, low-conflict tone. Home renovation or dramas with incidental food are wrong.",
+  "items": [
+   {
+    "pid": 2000000077791,
+    "title": "Nailed It!",
+    "year": 2018,
+    "media_type": "show",
+    "genres": [
+     "Reality"
+    ],
+    "essence_text": "A delightful and low-stakes reality competition that celebrates the joy of trying rather than the pressure of perfection. The show thrives on comedic mishaps and endearing failures, creating a warm, inclusive atmosphere where viewers cheer for contestants regardless of their culinary skills. It serves as perfect background entertainment or a shared family activity, offering gentle humor and visual spectacle without demanding intense emotional investment. The charm lies in its sincerity and...",
+    "tags": [
+     "Baking Reality TV",
+     "Heartwarming Failure",
+     "Comedic Chaos",
+     "Low-Stakes Drama",
+     "Feel-Good Entertainment",
+     "Visual Comedy",
+     "Accessible Fun",
+     "Host-Driven Charm",
+     "Anti-Perfectionism"
+    ],
+    "keywords": [
+     "cooking",
+     "social media",
+     "baking",
+     "cooking competition",
+     "baking competition",
+     "pinterest"
+    ]
+   },
+   {
+    "pid": 2000000000562,
+    "title": "The Ellen DeGeneres Show",
+    "year": 2003,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Talk"
+    ],
+    "essence_text": "A long-running daytime talk show known for its high-energy host, celebrity interviews, and a consistent focus on positive, feel-good content. The show provides a lighthearted escape, filled with Ellen's signature humor, pranks, and heartwarming segments. It serves as a central hub for pop culture and celebrity news, making it highly accessible and background-friendly. This series offers a reliable dose of wholesome entertainment and casual conversation, perfect for easy, everyday viewing.",
+    "tags": [
+     "Talk Show",
+     "Celebrity Interviews",
+     "Wholesome",
+     "Positive Vibes",
+     "Daytime Entertainment",
+     "Humorous",
+     "Pop Culture Hub",
+     "Feel-Good"
+    ],
+    "keywords": [
+     "talk show",
+     "comforting",
+     "joyful"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-03",
+  "query": "slow burn space horror",
+  "intent": "Horror set in space or off-world with gradual, atmospheric dread rather than nonstop action.",
+  "items": [
+   {
+    "pid": 1000000293670,
+    "title": "The Wailing",
+    "year": 2016,
+    "media_type": "movie",
+    "genres": [
+     "Horror",
+     "Mystery"
+    ],
+    "essence_text": "This chilling Korean horror masterfully blends mystery, supernatural elements, and folk horror into an intensely unsettling experience. It unfolds as a slow-burn psychological thriller, ratcheting up tension with every perplexing revelation. The film's brilliance lies in its pervasive sense of dread and profound ambiguity, leaving viewers questioning reality and the true nature of evil. It's a deeply disturbing and thought-provoking journey into the abyss of human fear and faith.",
+    "tags": [
+     "Korean Horror",
+     "Supernatural Mystery",
+     "Folk Horror",
+     "Psychological Thriller",
+     "Intense & Disturbing",
+     "Ambiguous Narrative",
+     "Spiritual Themes",
+     "Slow Burn Suspense",
+     "Exceptional Direction",
+     "Unsettling Atmosphere"
+    ],
+    "keywords": [
+     "daughter",
+     "small town",
+     "police",
+     "investigation",
+     "exorcism",
+     "possession",
+     "murder",
+     "priest",
+     "rural area",
+     "curse",
+     "shaman",
+     "zombie"
+    ]
+   },
+   {
+    "pid": 1000000001398,
+    "title": "Stalker",
+    "year": 1979,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Drama"
+    ],
+    "essence_text": "A profoundly philosophical and visually haunting science fiction journey, inviting viewers into an enigmatic post-apocalyptic landscape. Its deliberate slow pace and dense atmosphere foster a deep sense of psychological immersion and existential contemplation. The film's strength lies in its ambiguity, compelling audiences to ponder its complex themes and the nature of human desire. It's a challenging yet deeply rewarding experience that lingers long after viewing, a true masterpiece of...",
+    "tags": [
+     "Philosophical Sci-Fi",
+     "Meditative & Ambiguous",
+     "Post-Apocalyptic Journey",
+     "Existential Drama",
+     "Visually Striking",
+     "Slow-Burn Mystery",
+     "Melancholy & Haunting",
+     "Aesthetic Masterpiece",
+     "World-Immersive"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "guard",
+     "wish",
+     "stalker",
+     "alien",
+     "strugatsky",
+     "writer",
+     "soldier",
+     "existentialism",
+     "zone",
+     "beautifully filmed"
+    ]
+   },
+   {
+    "pid": 1000000071933,
+    "title": "O-Bi, O-Ba: The End of Civilization",
+    "year": 1985,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Science Fiction"
+    ],
+    "essence_text": "This film plunges viewers into a stark, post-apocalyptic future where humanity clings to survival under a mysterious dome. It masterfully builds a sense of dread and melancholy, exploring profound philosophical questions about humanity's worth and the nature of hope. The deliberate slow burn allows for deep immersion into its decaying world, while a central mystery slowly unravels. It is a thought-provoking, often bleak, journey that challenges the audience with its desolate vision.",
+    "tags": [
+     "Bleak Post-Apocalypse",
+     "Existential Sci-Fi",
+     "Slow-Burn Mystery",
+     "Philosophical Dilemmas",
+     "Dystopian Survival",
+     "Gritty Atmosphere",
+     "Social Commentary",
+     "Last Remaining Humanity",
+     "Visually Stark"
+    ],
+    "keywords": [
+     "hope",
+     "paranoia",
+     "post-apocalyptic future"
+    ]
+   },
+   {
+    "pid": 1000000011772,
+    "title": "The Haunting",
+    "year": 1963,
+    "media_type": "movie",
+    "genres": [
+     "Horror"
+    ],
+    "essence_text": "A chilling exploration into the depths of psychological horror, set within the confines of a sinister haunted house. The film masterfully creates an atmosphere of unease and dread, blurring the lines between reality and the supernatural. Characters grapple with their sanity as they confront the house's dark history. Expect a slow-burn narrative that relies on atmosphere and suggestion. The story culminates in a haunting and ambiguous climax.",
+    "tags": [
+     "Haunted House",
+     "Psychological Horror",
+     "Eerie Atmosphere",
+     "Supernatural",
+     "Isolation",
+     "Unreliable Narrator",
+     "Slow Burn",
+     "Classic Horror"
+    ],
+    "keywords": [
+     "suicide",
+     "experiment",
+     "based on novel or book",
+     "alcohol",
+     "insanity",
+     "haunted house",
+     "disappearance",
+     "black and white",
+     "orphan",
+     "nervous breakdown",
+     "house of horrors",
+     "super power"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-04",
+  "query": "tense heist thriller, not bleak",
+  "intent": "Suspenseful planned-theft thrillers with a playful or hopeful tone; relentlessly hopeless crime stories violate the exclusion.",
+  "items": [
+   {
+    "pid": 1000000051497,
+    "title": "Fast Five",
+    "year": 2011,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "Crime"
+    ],
+    "essence_text": "A high-octane action spectacle that delivers pure escapist entertainment. With a focus on elaborate heists and adrenaline-fueled car chases, the film emphasizes team dynamics and camaraderie against a backdrop of global locations. Expect relentless action sequences, a pumping score, and a storyline centered around crime and justice. It's a fast-paced, visually impressive ride designed for maximum thrills.",
+    "tags": [
+     "Action Spectacle",
+     "Heist Thriller",
+     "Car Racing",
+     "Team Dynamics",
+     "Global Locations",
+     "Escapist Entertainment",
+     "Intense Action Sequences",
+     "Crime & Justice"
+    ],
+    "keywords": [
+     "car race",
+     "freedom",
+     "fbi",
+     "car crash",
+     "prison escape",
+     "heist",
+     "escaped convict",
+     "street race",
+     "money",
+     "organized crime",
+     "fugitive",
+     "on the run"
+    ]
+   },
+   {
+    "pid": 1000000619278,
+    "title": "Inside Man: Most Wanted",
+    "year": 2019,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime",
+     "Thriller"
+    ],
+    "essence_text": "A high-stakes crime thriller that plunges viewers into a tense hostage situation, pitting an NYPD negotiator and federal agent against cunning criminals. The film excels in crafting palpable tension and intricate plot twists as the authorities race against time to resolve a complex siege. It delivers fast-paced action and strategic maneuvers, creating an immersive, adrenaline-pumping experience. This is a solid entry for fans of sophisticated crime dramas with a focus on tactical execution...",
+    "tags": [
+     "High-Stakes Thriller",
+     "Hostage Drama",
+     "Police Procedural",
+     "Strategic Crime",
+     "Tense & Suspenseful",
+     "Urban Setting",
+     "Adrenaline-Pumping",
+     "Cat-and-Mouse Game"
+    ],
+    "keywords": [
+     "neo-nazism",
+     "hostage-taking",
+     "bank robbery",
+     "hostage negotiator"
+    ]
+   },
+   {
+    "pid": 1000001149167,
+    "title": "High Rollers",
+    "year": 2025,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime",
+     "Thriller"
+    ],
+    "essence_text": "This is a high-stakes heist thriller centered on a master thief forced into a dangerous casino robbery to save his kidnapped lover. The narrative is a relentless race against time, fueled by intense adrenaline and gripping tension. Audiences will be immersed in a world of rival criminals and federal pursuit, enjoying the intricate plotting and compelling character stakes. It promises a thrilling and suspenseful cinematic experience.",
+    "tags": [
+     "Heist Thriller",
+     "Master Thief",
+     "High Stakes",
+     "Casino Robbery",
+     "Abduction Plot",
+     "Race Against Time",
+     "Criminal Underworld",
+     "FBI Pursuit",
+     "Clever Plotting",
+     "Intense Suspense"
+    ],
+    "keywords": [
+     "casino heist"
+    ]
+   },
+   {
+    "pid": 1000000391632,
+    "title": "Late Shift",
+    "year": 2022,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Thriller",
+     "Adventure"
+    ],
+    "essence_text": "An innovative interactive thriller that places the audience directly into the high-stakes narrative of a student caught in a dangerous heist. Every choice dictates the protagonist's fate, creating a dynamic and highly engaging experience of suspense and consequence. It's a fast-paced journey through London's underbelly, demanding active participation and offering remarkable rewatchability as you navigate the twisted path to clear a name. This film redefines viewer engagement with its...",
+    "tags": [
+     "Interactive Thriller",
+     "High-Stakes Heist",
+     "Decision-Driven Narrative",
+     "London Underworld",
+     "Innocent on the Run",
+     "Crime & Conspiracy",
+     "Consequences of Choice",
+     "Adrenaline-Fueled",
+     "Unique Storytelling"
+    ],
+    "keywords": [
+     "heist",
+     "car theft",
+     "interactive",
+     "choose your own adventure"
+    ]
+   },
+   {
+    "pid": 1000000009654,
+    "title": "The Italian Job",
+    "year": 2003,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime"
+    ],
+    "essence_text": "A slick, high-octane heist film brimming with exhilarating car chases and a satisfying revenge plot. It showcases a charismatic ensemble cast executing an elaborate plan to reclaim their stolen gold. The movie delivers constant thrills and a fast-paced narrative, making it a highly entertaining and rewatchable experience that blends clever strategy with explosive action sequences.",
+    "tags": [
+     "High-Octane Heist",
+     "Vengeful Plot",
+     "Ensemble Cast",
+     "Car Chase Thrills",
+     "Clever Planning",
+     "Modern Action",
+     "Team Dynamics",
+     "Fun & Exciting",
+     "Blockbuster Remake"
+    ],
+    "keywords": [
+     "gold",
+     "california",
+     "helicopter",
+     "hacker",
+     "venice, italy",
+     "chase",
+     "subway",
+     "master thief",
+     "safe",
+     "heist",
+     "revenge",
+     "murder"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-06",
+  "query": "furious",
+  "intent": "Ambiguous mood vs title lookup: rage-driven, ferocious, high-intensity titles; the Fast & Furious franchise is a plausible title reading.",
+  "items": []
+ },
+ {
+  "query_id": "lab-07",
+  "query": "craty",
+  "intent": "Unresolved typo (probably \"crazy\"); if read as crazy, eccentric or chaotic entertainment. Excluded from decisive scoring.",
+  "items": [
+   {
+    "pid": 2000000206686,
+    "title": "Chicken Nugget",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Mystery",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "An exceptionally unique and absurd Korean comedy series that takes viewers on a zany quest after a woman inexplicably turns into a chicken nugget. Its humor is entirely derived from its bizarre premise and eccentric characters, creating a truly original and wonderfully strange experience. The show is a pure escapist delight, offering fast-paced, visually stylized fun that constantly defies expectations. It's a whimsical, highly novel adventure perfect for those seeking something truly out of...",
+    "tags": [
+     "Absurdist Comedy",
+     "Korean Drama",
+     "Surreal Premise",
+     "Quirky & Zany",
+     "Fast-Paced Adventure",
+     "Visual Spectacle",
+     "Unique Humor",
+     "Whimsical Journey",
+     "Mystery-Comedy",
+     "Lighthearted Fun"
+    ],
+    "keywords": [
+     "man vs machine",
+     "shapeshifting",
+     "miniseries",
+     "secret admirer",
+     "frantic",
+     "lost daughter",
+     "rescue operation",
+     "fried chicken",
+     "father daughter relationship",
+     "based on webcomic or webtoon",
+     "absurd",
+     "mystery"
+    ]
+   },
+   {
+    "pid": 1000000001878,
+    "title": "Fear and Loathing in Las Vegas",
+    "year": 1998,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Drama",
+     "Comedy"
+    ],
+    "essence_text": "A wildly surreal and psychedelic journey through the underbelly of the American Dream. Fueled by copious drug use and a cynical worldview, the film immerses viewers in a haze of paranoia, absurdity, and dark humor. Its frenetic pace and over-the-top visuals create a truly unique and unforgettable experience. Beneath the surface of drug-induced chaos lies a biting commentary on American society and the fading ideals of the '60s.",
+    "tags": [
+     "Psychedelic Absurdity",
+     "Drug-Fueled Road Trip",
+     "Cult Classic",
+     "Dark Humor",
+     "Visually Gonzo",
+     "Counter-Culture",
+     "Cynical Social Commentary",
+     "Surreal Experience",
+     "Existential Angst"
+    ],
+    "keywords": [
+     "journalist",
+     "casino",
+     "based on novel or book",
+     "1970s",
+     "paranoia",
+     "cocaine",
+     "dark comedy",
+     "lsd",
+     "hallucination",
+     "fake identity",
+     "surrealism",
+     "road trip"
+    ]
+   },
+   {
+    "pid": 2000000003108,
+    "title": "Superjail!",
+    "year": 2008,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "A hyper-violent, absurdist animated series that plunges viewers into a surreal maximum-security prison run by a deranged warden. Its distinctive visual style and breakneck pacing create a constant barrage of bizarre, grotesque, and often darkly humorous chaos. This show is a pure escapist dive into an unconventional, psychedelic world where logic takes a backseat to extreme spectacle. It's an acquired taste, offering a unique blend of physical comedy, satire, and nihilistic fun.",
+    "tags": [
+     "Absurdist Comedy",
+     "Extreme Violence",
+     "Psychedelic Visuals",
+     "Dark Satire",
+     "Surreal Prison",
+     "Fast-Paced Anarchy",
+     "Grotesque Humor",
+     "Unconventional Animation",
+     "Adult Swim Cult Classic",
+     "Mind-Bending Chaos"
+    ],
+    "keywords": [
+     "prison",
+     "alternate dimension",
+     "adult animation"
+    ]
+   },
+   {
+    "pid": 2000000056590,
+    "title": "The Eric Andre Show",
+    "year": 2012,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A late-night talk show deconstructed into its most bizarre and unpredictable form. Expect a barrage of absurdist humor, cringe comedy, and surreal encounters that defy conventional television norms. It's a chaotic blend of celebrity interviews, public pranks, and meta-commentary that revels in its own anarchy. This is not for the faint of heart, but for those who appreciate comedy that pushes boundaries and embraces the bizarre.",
+    "tags": [
+     "Absurdist Talk Show",
+     "Cringe Comedy",
+     "Meta-Humor",
+     "Cult TV",
+     "Improv Comedy",
+     "Satirical",
+     "Unconventional",
+     "Anarchic",
+     "Late Night"
+    ],
+    "keywords": [
+     "surreal",
+     "talk show",
+     "hidden camera",
+     "parody",
+     "absurdist humor"
+    ]
+   },
+   {
+    "pid": 2000000005030,
+    "title": "Get a Life",
+    "year": 1990,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Comedy"
+    ],
+    "essence_text": "An unapologetically weird and twisted sitcom that revels in its own absurdity. It's a darkly humorous and satirical take on everyday life, viewed through a lens of surrealism and pop culture. The show's eccentricity and unconventional humor make it a cult classic for those who appreciate the bizarre. Expect off-the-wall situations, cringe-worthy moments, and a unique brand of anti-comedy that defies easy categorization.",
+    "tags": [
+     "Surreal Sitcom",
+     "Anti-Comedy",
+     "Eccentric",
+     "Darkly Humorous",
+     "Pop Culture Satire",
+     "Absurdist",
+     "Twisted",
+     "Unconventional",
+     "Cult Classic"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 1000001310146,
+    "title": "Barbie",
+    "year": 2023,
+    "media_type": "movie",
+    "genres": [
+     "Horror"
+    ],
+    "essence_text": "A vibrant, visually stunning, and surprisingly philosophical satire that cleverly deconstructs gender roles and societal expectations through the lens of the iconic doll. It masterfully blends absurdist humor and sharp wit with an underlying emotional depth, inviting audiences to ponder identity and purpose. The film is a joyous spectacle that is both a nostalgic celebration and a potent piece of social commentary, making it a highly rewatchable and thought-provoking experience.",
+    "tags": [
+     "Satirical Comedy",
+     "Visually Inventive",
+     "Feminist Themes",
+     "Existential Exploration",
+     "Pop Culture Commentary",
+     "Nostalgic Fun",
+     "Meta-Humor",
+     "Whimsical Fantasy",
+     "Social Critique"
+    ],
+    "keywords": [
+     "short film"
+    ]
+   },
+   {
+    "pid": 1000000046498,
+    "title": "Candy",
+    "year": 1968,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Comedy",
+     "Fantasy"
+    ],
+    "essence_text": "A wildly eccentric and absurdist sex comedy from the 1960s, this film follows a naive high school girl's bizarre odyssey to find meaning amidst a series of sexually charged encounters. It revels in its campy humor, satirical edge, and a delightfully nonsensical plot. The movie is a product of its time, offering a psychedelic and often explicit journey that's more about the journey than any profound destination. It's a rewatchable curiosity for those who appreciate unconventional,...",
+    "tags": [
+     "Absurdist Sex Comedy",
+     "1960s Counter-Culture",
+     "Satirical Adventure",
+     "Eccentric Characters",
+     "Psychedelic Visuals",
+     "Explicit & Humorous",
+     "Coming-of-Age Quest",
+     "Cult Classic",
+     "Nonsensical Plot"
+    ],
+    "keywords": [
+     "california",
+     "obsession",
+     "seduction",
+     "satire"
+    ]
+   },
+   {
+    "pid": 1000000000813,
+    "title": "Airplane!",
+    "year": 1980,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A landmark in comedic filmmaking, this movie delivers a relentless barrage of absurd visual gags, rapid-fire puns, and irreverent one-liners. Its genius lies in its deadpan delivery of preposterous situations, constantly subverting expectations for uproarious laughter. It’s a quintessential pure escapism experience that remains endlessly rewatchable for its sheer density of jokes. Prepare for a non-stop, hilarious ride that redefined parody films.",
+    "tags": [
+     "Slapstick Comedy",
+     "Parody Film",
+     "Absurdist Humor",
+     "Rapid-Fire Gags",
+     "Iconic Dialogue",
+     "Cult Classic",
+     "Satirical",
+     "Irreverent",
+     "Zany Fun"
+    ],
+    "keywords": [
+     "chicago, illinois",
+     "post-traumatic stress disorder (ptsd)",
+     "airplane",
+     "cataclysm",
+     "nun",
+     "guitar",
+     "alcohol",
+     "stewardess",
+     "taxi driver",
+     "passenger",
+     "fear of flying",
+     "pilot"
+    ]
+   },
+   {
+    "pid": 1000000009012,
+    "title": "Jackass: The Movie",
+    "year": 2002,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Comedy",
+     "Documentary"
+    ],
+    "essence_text": "A barrage of outrageous stunts, pranks, and gross-out gags that revels in pushing the boundaries of good taste. Defined by its high-energy, fast-paced delivery and fearless commitment to physical comedy. The film is an assault on the senses, delivering a blend of adrenaline-fueled excitement and cringe-worthy humor. It's a pure spectacle of absurdity that's best enjoyed with a group of like-minded friends who appreciate over-the-top antics.",
+    "tags": [
+     "Stunt Comedy",
+     "Gross-Out Humor",
+     "Extreme Stunts",
+     "Prank Compilation",
+     "Pop Culture",
+     "Fast-Paced",
+     "Eccentric",
+     "Crude Humor"
+    ],
+    "keywords": [
+     "pain",
+     "idiot",
+     "disgust",
+     "stunt",
+     "music video",
+     "stuntman",
+     "stupidity",
+     "prank",
+     "shocking",
+     "based on tv series"
+    ]
+   },
+   {
+    "pid": 1000000040623,
+    "title": "A Town Called Panic",
+    "year": 2009,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Animation",
+     "Comedy",
+     "Family",
+     "Fantasy"
+    ],
+    "essence_text": "A wildly inventive and relentlessly silly stop-motion adventure, defined by its absurdist humor and eccentric characters. The film unleashes a barrage of visual gags and surreal scenarios, creating a uniquely imaginative and fast-paced experience. Its charm lies in its commitment to pure, unadulterated whimsy, making it a delightful escape for viewers of all ages. Expect non-stop laughter and a celebration of the bizarre.",
+    "tags": [
+     "Absurdist Comedy",
+     "Stop-Motion Animation",
+     "Surreal Adventure",
+     "Whimsical",
+     "Fast-Paced",
+     "Eccentric Characters",
+     "Visually Creative",
+     "Imaginative World",
+     "Silly Humor"
+    ],
+    "keywords": [
+     "farm",
+     "birthday",
+     "human animal relationship",
+     "stop motion",
+     "shootout"
+    ]
+   },
+   {
+    "pid": 2000000246326,
+    "title": "The Filthy Frank Show",
+    "year": 2011,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama",
+     "Action & Adventure",
+     "Documentary"
+    ],
+    "essence_text": "This notorious web series is a chaotic maelstrom of anti-humor, extreme cringe, and bizarre, grotesque surrealism that actively defies conventional storytelling. It’s a deliberately offensive and often shocking experience, reveling in its absurdity and pushing the boundaries of taste and sanity. With its cult following and a unique blend of meta-commentary and disturbing imagery, it exists as a bizarre piece of internet performance art rather than a traditional narrative. Viewers seeking...",
+    "tags": [
+     "Absurdist Web Series",
+     "Dark Satire",
+     "Cringe Humor",
+     "Internet Surrealism",
+     "Anti-Comedy",
+     "Cult Phenomenon",
+     "Unconventional Humor",
+     "Shock Value",
+     "Performance Art"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 2000000057606,
+    "title": "Zach Stone Is Gonna Be Famous",
+    "year": 2013,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This series is a sharp, uncomfortable satire on the desperate pursuit of fame in the digital age, anchored by a hilariously cringeworthy protagonist. It expertly blends situational comedy with a biting social commentary on reality television and influencer culture. Viewers will find themselves squirming with a mix of laughter and vicarious embarrassment as Zach executes his increasingly bizarre schemes for celebrity. It's a surprisingly insightful and uniquely awkward viewing experience that...",
+    "tags": [
+     "Cringe Comedy",
+     "Reality TV Satire",
+     "Social Commentary",
+     "Millennial Anxiety",
+     "Meta-Narrative",
+     "Ambitious Failure",
+     "Pop Culture Obsession",
+     "Character Study",
+     "Uncomfortable Humor"
+    ],
+    "keywords": [
+     "fame",
+     "mockumentary",
+     "sitcom"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-10",
+  "query": "sunglasses at night",
+  "intent": "Literal clue: sunglasses worn at night are a notable feature (They Live, The Matrix), or cool nocturnal style; generic night imagery is weak.",
+  "items": [
+   {
+    "pid": 1000000122081,
+    "title": "Spring Breakers",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "A visually audacious and audibly immersive crime drama that plunges into the dark side of youth hedonism, set against a neon-drenched spring break. The film is less about plot and more about atmosphere, using its bold aesthetic and relentless soundtrack to craft a hypnotic, dreamlike experience. It serves as a provocative social commentary on materialism and the allure of criminality, leaving viewers with a sense of unsettling melancholy and a vivid, unforgettable impression of its...",
+    "tags": [
+     "Sensory Crime Drama",
+     "Neon-Noir Aesthetic",
+     "Youth Rebellion",
+     "Existential Thriller",
+     "Hedonistic Exploitation",
+     "Social Satire",
+     "Hypnotic Pacing",
+     "Controversial Cinema",
+     "Pop Culture Critique"
+    ],
+    "keywords": [
+     "drug dealer",
+     "florida",
+     "robbery",
+     "gangster",
+     "rapper",
+     "materialism",
+     "female friendship",
+     "shootout",
+     "drugs",
+     "threesome",
+     "hedonism",
+     "spring break"
+    ]
+   },
+   {
+    "pid": 1000000000626,
+    "title": "Un Chien Andalou",
+    "year": 1929,
+    "media_type": "movie",
+    "genres": [
+     "Horror"
+    ],
+    "essence_text": "A landmark of surrealist cinema, this avant-garde film defies conventional narrative structure, embracing dream logic and shocking imagery. The film assaults the viewer with bizarre, unsettling sequences designed to provoke a subconscious emotional response rather than tell a coherent story. It is a challenging and unforgettable cinematic experience.",
+    "tags": [
+     "Surrealist Cinema",
+     "Avant-Garde",
+     "Dream Logic",
+     "Psychological Horror",
+     "Non-Linear Narrative",
+     "Visually Disturbing",
+     "Absurdist",
+     "Silent Film"
+    ],
+    "keywords": [
+     "dreams",
+     "midnight movie",
+     "donkey",
+     "cloud",
+     "razor",
+     "ant",
+     "surreal",
+     "surrealism",
+     "priest",
+     "death",
+     "psychotronic",
+     "severed hand"
+    ]
+   },
+   {
+    "pid": 1000000000680,
+    "title": "Pulp Fiction",
+    "year": 1994,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "Crime",
+     "Comedy"
+    ],
+    "essence_text": "A highly influential crime film celebrated for its non-linear narrative, stylized violence, and witty dialogue. The film pieces together seemingly disparate storylines that coalesce into a larger, darkly comedic whole. Its impact on pop culture is undeniable, and its rewatchability stems from its intricate plot and memorable characters. It blends elements of neo-noir, black comedy, and homage to classic genre films, making it a uniquely entertaining and thought-provoking experience.",
+    "tags": [
+     "Crime Caper",
+     "Non-linear Narrative",
+     "Stylized Violence",
+     "Witty Dialogue",
+     "Pop Culture References",
+     "Black Comedy",
+     "Ensemble Cast",
+     "Neo-Noir",
+     "Homage to Genre Films"
+    ],
+    "keywords": [
+     "drug dealer",
+     "drug crime",
+     "gangster",
+     "dark comedy",
+     "stolen money",
+     "crime boss",
+     "redemption",
+     "los angeles, california",
+     "theft",
+     "couple",
+     "nonlinear timeline",
+     "multiple storylines"
+    ]
+   },
+   {
+    "pid": 1000000000638,
+    "title": "Lost Highway",
+    "year": 1997,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Thriller",
+     "Mystery"
+    ],
+    "essence_text": "A disorienting and highly stylized psychological neo-noir that plunges viewers into a nightmarish labyrinth of shifting identities and fragmented realities. Its non-linear narrative and dreamlike logic create an unsettling atmosphere, leaving much to interpretation and inviting repeat viewings. This film is a deeply immersive and often disturbing journey into the darkest corners of the human psyche, anchored by a unique visual and auditory landscape.",
+    "tags": [
+     "Psychological Noir",
+     "Surrealist Mystery",
+     "Lynchian Nightmare",
+     "Non-Linear Narrative",
+     "Identity Crisis",
+     "Existential Dread",
+     "Unsettling Atmosphere",
+     "Art-House Thriller",
+     "Dream Logic"
+    ],
+    "keywords": [
+     "prison",
+     "pornography",
+     "jealousy",
+     "dreams",
+     "dual identity",
+     "nightmare",
+     "police",
+     "sexual frustration",
+     "gangster",
+     "insanity",
+     "paranoia",
+     "prison cell"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-11",
+  "query": "fantasy with dragons",
+  "intent": "Fantasy where real dragons appear and matter. \"Dragon\" in a name or martial-arts metaphor is wrong.",
+  "items": [
+   {
+    "pid": 1000001458319,
+    "title": "How to Train Your Dragon 2",
+    "year": 2027,
+    "media_type": "movie",
+    "genres": [
+     "Fantasy",
+     "Adventure",
+     "Family",
+     "Action"
+    ],
+    "essence_text": "This live-action adaptation promises a return to the wondrous world of dragons and Vikings, elevating the original's heartfelt narrative and breathtaking spectacle. It will deliver exhilarating aerial action and a deep emotional core, focusing on themes of loyalty, responsibility, and the unbreakable bond between a boy and his dragon. Expect stunning visual effects and a grand, immersive adventure that appeals to both new audiences and fans of the animated series. The film offers a powerful...",
+    "tags": [
+     "Live-Action Fantasy",
+     "Epic Adventure",
+     "Coming-of-Age Story",
+     "Dragon Bonding",
+     "Spectacular Visuals",
+     "Heartfelt Relationships",
+     "Action-Packed Sequences",
+     "Mythical World",
+     "Emotional Journey",
+     "Found Family Themes"
+    ],
+    "keywords": [
+     "vikings (norsemen)",
+     "sequel",
+     "dragon",
+     "live action remake",
+     "based on young adult novel",
+     "dragon trainer"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "lab-12",
+  "query": "like groundhog day",
+  "intent": "Other time-loop / repeating-day stories, ideally comedic or about personal growth. Groundhog Day itself is a reference hit, not a discovery.",
+  "items": []
+ },
+ {
+  "query_id": "lab-13",
+  "query": "time travel complex",
+  "intent": "Time travel with intricate causality, paradoxes or interlocking timelines; simple time-travel comedies are partial.",
+  "items": [
+   {
+    "pid": 2000000155441,
+    "title": "Reset",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A gripping and ingeniously structured thriller that traps two strangers in a deadly time loop, forcing them to repeatedly relive a bus explosion until they can prevent it. The series is a masterclass in tension and intrigue, combining relentless pacing with a compelling central mystery. It delves into the psychological toll of their predicament while also weaving in humanistic elements from their fellow passengers. This is an addictive and thought-provoking binge that keeps viewers on the...",
+    "tags": [
+     "Time Loop Thriller",
+     "High-Stakes Mystery",
+     "Psychological Suspense",
+     "Urban Drama",
+     "Ingenious Plotting",
+     "Intense & Paced",
+     "Character-Driven Puzzle",
+     "Sci-Fi Elements",
+     "Chinese Drama"
+    ],
+    "keywords": [
+     "time travel",
+     "investigation",
+     "time loop",
+     "explosion",
+     "slight romance",
+     "student",
+     "suspense"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-04",
+  "query": "Incepton",
+  "intent": "Misspelled title: Inception (2010) first.",
+  "items": [
+   {
+    "pid": 1000000020980,
+    "title": "Liquid Sky",
+    "year": 1982,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Comedy",
+     "Thriller"
+    ],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [
+     "rape",
+     "heroin",
+     "bisexuality",
+     "cocaine",
+     "punk rock",
+     "alien",
+     "androgyny",
+     "drugs",
+     "fashion",
+     "disco",
+     "gay theme"
+    ]
+   },
+   {
+    "pid": 1000001150089,
+    "title": "7:11 PM",
+    "year": 2023,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Thriller"
+    ],
+    "essence_text": "An IPS aspirant must travel through time to stop a criminal mastermind and save his town, in an imaginative tale with possible science fiction and fantasy elements. The incident that sets off the adventure has a major impact. Ravi has to save his loved ones. The overall experience will depend on how well the production balances all those elements.",
+    "tags": [
+     "Time Travel",
+     "Criminal Mastermind",
+     "Action",
+     "Sci-Fi",
+     "Fantasy",
+     "IPS Aspirant",
+     "Small Town",
+     "Other World",
+     "Imagination"
+    ],
+    "keywords": []
+   }
+  ]
+ },
+ {
+  "query_id": "core-06",
+  "query": "tense but not bleak",
+  "intent": "Suspenseful titles (thrillers, mysteries, competitions) that do not leave a hopeless aftertaste.",
+  "items": [
+   {
+    "pid": 1000001212073,
+    "title": "Sixty Minutes",
+    "year": 2024,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Adventure",
+     "Crime",
+     "Drama",
+     "Thriller"
+    ],
+    "essence_text": "This film delivers a relentless, adrenaline-fueled sprint across Berlin, driven by a father's desperate race against the clock to reach his daughter. It's a high-stakes action thriller where every minute counts, punctuated by intense fight sequences and a palpable sense of urgency. The narrative focuses on raw desperation and the lengths one will go for family. Viewers seeking a fast-paced, tension-filled experience with a strong emotional core will find themselves on the edge of their seats.",
+    "tags": [
+     "Action Thriller",
+     "Race Against Time",
+     "Martial Arts",
+     "Paternal Stakes",
+     "High Tension",
+     "Urban Pursuit",
+     "Adrenaline-Fueled",
+     "Gritty Realism",
+     "Time-Sensitive Plot"
+    ],
+    "keywords": [
+     "excited"
+    ]
+   },
+   {
+    "pid": 1000000899718,
+    "title": "Yodha",
+    "year": 2024,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Adventure",
+     "Thriller"
+    ],
+    "essence_text": "An intense, adrenaline-fueled action thriller centered on a high-stakes plane hijacking. The narrative maintains relentless tension as a skilled commando battles impossible odds to save the passengers. It's a gripping survival story filled with strategic maneuvers and explosive sequences, offering pure escapism through its fast-paced, heroic premise. Ideal for viewers who enjoy a suspenseful, action-packed race against time.",
+    "tags": [
+     "Action Thriller",
+     "High Stakes",
+     "Plane Hijacking",
+     "Commando Hero",
+     "Survival Story",
+     "Suspenseful",
+     "Fast-Paced Action",
+     "Intrigue-Driven"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 1000000009759,
+    "title": "Cellular",
+    "year": 2004,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "A high-octane thriller centered on a race against time. Fueled by adrenaline and a ticking clock, the film keeps viewers on the edge of their seats as an ordinary person is thrust into an extraordinary situation. With its fast pace and escalating stakes, it's a pure escapist experience, ideal for those seeking suspenseful entertainment.",
+    "tags": [
+     "Fast-Paced Thriller",
+     "Kidnapping",
+     "Phone Call",
+     "Ticking Clock Scenario",
+     "Resourceful Protagonist",
+     "Unlikely Alliance",
+     "High Stakes",
+     "Action-Oriented"
+    ],
+    "keywords": [
+     "police",
+     "psychopath",
+     "bank",
+     "telephone",
+     "los angeles, california",
+     "home invasion",
+     "cell phone",
+     "duringcreditsstinger"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-07",
+  "query": "car chases",
+  "intent": "Car chases are central to the experience: pursuit-driven action, getaway and road films.",
+  "items": [
+   {
+    "pid": 1000000385687,
+    "title": "Fast X",
+    "year": 2023,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime",
+     "Thriller",
+     "Adventure",
+     "Mystery"
+    ],
+    "essence_text": "A relentless, high-octane action spectacle defined by its impossible car stunts and unwavering focus on family. It delivers pure escapism with explosive set pieces and a fast-paced narrative. The film leans heavily into its established lore, offering fans another chapter of high stakes and visceral thrills. Expect massive spectacle, adrenaline-pumping sequences, and an emphasis on loyalty and the bonds that tie its characters together.",
+    "tags": [
+     "High-Octane Action",
+     "Family Loyalty Saga",
+     "Explosive Car Chases",
+     "Over-the-Top Stunts",
+     "Global Thriller",
+     "Revenge Plot",
+     "Adrenaline-Pumping",
+     "Franchise Extravaganza",
+     "Blockbuster Entertainment"
+    ],
+    "keywords": [
+     "sequel",
+     "revenge",
+     "betrayal",
+     "racing",
+     "family",
+     "cliffhanger",
+     "cars",
+     "bold",
+     "ominous",
+     "აწყვეტილები"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-08",
+  "query": "sunglasses",
+  "intent": "Sunglasses are a notable visual element or plot device (They Live, The Matrix, Men in Black).",
+  "items": [
+   {
+    "pid": 1000000000024,
+    "title": "Kill Bill: Vol. 1",
+    "year": 2003,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime"
+    ],
+    "essence_text": "A hyper-stylized and adrenaline-fueled revenge epic that meticulously blends martial arts cinema, spaghetti westerns, and grindhouse aesthetics into a unique cinematic experience. Defined by its relentless pace, vivid visual flair, and an iconic, genre-spanning soundtrack, the film is a masterclass in homage and spectacle. Though intensely violent, it delivers a thrilling and cathartic journey of retribution, solidifying its place as a cornerstone of modern action cinema. Its sheer audacity...",
+    "tags": [
+     "Hyper-Stylized Action",
+     "Revenge Epic",
+     "Martial Arts Spectacle",
+     "Cult Classic",
+     "Visually Dynamic",
+     "Iconic Soundtrack",
+     "Grindhouse Homage",
+     "Non-Linear Narrative",
+     "Pop Culture Landmark",
+     "Tarantino Esque"
+    ],
+    "keywords": [
+     "martial arts",
+     "japan",
+     "kung fu",
+     "showdown",
+     "coma",
+     "sword",
+     "asia",
+     "yakuza",
+     "bride",
+     "sword fight",
+     "revenge",
+     "vigilante"
+    ]
+   },
+   {
+    "pid": 1000000000280,
+    "title": "Terminator 2: Judgment Day",
+    "year": 1991,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "Science Fiction"
+    ],
+    "essence_text": "A landmark of action cinema and visual effects, delivering a relentless, high-octane thrill ride. Its dystopian vision of a future ruled by machines continues to resonate, amplified by groundbreaking special effects that redefined the genre. Beyond the spectacle, the film explores themes of redemption, sacrifice, and the dangers of unchecked technological advancement. It's a visceral and thought-provoking experience that lingers long after the credits roll.",
+    "tags": [
+     "Action Sci-Fi Spectacle",
+     "Groundbreaking Visual Effects",
+     "Dystopian Future",
+     "Technological Apocalypse",
+     "Redemption & Sacrifice",
+     "Iconic Performances",
+     "Time Travel Paradox",
+     "Cybernetic Warfare",
+     "Existential Threat"
+    ],
+    "keywords": [
+     "man vs machine",
+     "cyborg",
+     "shotgun",
+     "dystopia",
+     "moral ambiguity",
+     "post-apocalyptic future",
+     "villain",
+     "time travel",
+     "mental institution",
+     "juvenile delinquent",
+     "fictional war",
+     "urban setting"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-11",
+  "query": "no anime, gritty crime show",
+  "intent": "Gritty, grounded crime series. Anime and movies are explicit exclusions.",
+  "items": [
+   {
+    "pid": 2000000125949,
+    "title": "We Own This City",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "This is a meticulously crafted and unflinching look at systemic police corruption, set against the backdrop of Baltimore's drug war. It plunges viewers into a bleak reality, showcasing the moral collapse of a city and its institutions. The series excels in its gritty realism, complex narrative, and profound social commentary, presenting a devastating indictment of policy and power. This is a challenging yet essential watch for those seeking a raw, character-driven exploration of American...",
+    "tags": [
+     "Gritty Crime Drama",
+     "Police Corruption",
+     "Systemic Failure",
+     "Bleak Realism",
+     "Social Commentary",
+     "Intense & Unflinching",
+     "Character-Driven",
+     "Documentary Style",
+     "Moral Collapse",
+     "Based on True Events"
+    ],
+    "keywords": [
+     "robbery",
+     "detective",
+     "police brutality",
+     "based on novel or book",
+     "drug dealer",
+     "baltimore, usa",
+     "wiretap",
+     "strip club",
+     "murder",
+     "organized crime",
+     "miniseries",
+     "police corruption"
+    ]
+   },
+   {
+    "pid": 2000000041889,
+    "title": "Top Boy",
+    "year": 2011,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A raw and unflinching look into the lives of drug dealers in London, this series offers a gritty and realistic portrayal of inner-city gang culture. It's a tense and suspenseful drama driven by complex characters and their struggles for survival. The show delivers a powerful social commentary on class, poverty, and the choices people make in the face of limited opportunities. Expect a bleak but gripping narrative with strong performances and immersive world-building.",
+    "tags": [
+     "Gritty Crime Drama",
+     "Inner-City Gang Culture",
+     "Realistic Portrayal",
+     "Social Commentary",
+     "Coming-of-Age",
+     "Complex Characters",
+     "Intense & Suspenseful",
+     "Bleak & Unflinching"
+    ],
+    "keywords": [
+     "london, england",
+     "drug crime",
+     "gangster",
+     "outlaw",
+     "organized crime",
+     "urban",
+     "gang",
+     "drug dealing",
+     "urban decay",
+     "hackney, london"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-13",
+  "query": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+  "intent": "Suspense and twists (mysteries, whodunits, clever thrillers) with a satisfying, not miserable, ending.",
+  "items": [
+   {
+    "pid": 1000000204922,
+    "title": "Before I Go to Sleep",
+    "year": 2014,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "Mystery"
+    ],
+    "essence_text": "A gripping psychological thriller that plunges viewers into the disorienting world of a woman who loses her memory daily. The narrative skillfully builds tension and intrigue as she uncovers terrifying truths about her past, forcing her to question everyone around her. It's a deeply unsettling and emotional journey centered on identity and trust, with a strong emphasis on the protagonist's internal struggle. This film is designed to keep you guessing until the very end.",
+    "tags": [
+     "Psychological Thriller",
+     "Amnesia Mystery",
+     "Unreliable Narrator",
+     "Suspenseful & Tense",
+     "Memory & Identity",
+     "Domestic Drama",
+     "Dark Secrets",
+     "Intriguing Plot",
+     "Emotional & Dramatic"
+    ],
+    "keywords": [
+     "amnesia",
+     "married couple",
+     "head injury",
+     "flashback",
+     "confusion",
+     "memory loss",
+     "psychologist",
+     "hospital",
+     "best friend",
+     "doctor",
+     "fear",
+     "search for truth"
+    ]
+   },
+   {
+    "pid": 1000000048138,
+    "title": "Unknown",
+    "year": 2011,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Mystery",
+     "Thriller"
+    ],
+    "essence_text": "This film is a high-octane thriller driven by a compelling identity mystery, where a man awakens to find his life stolen. It delivers relentless tension and a fast-paced narrative filled with twists and turns, making it a pure escapist experience. The plot is intricately woven, demanding constant attention as the protagonist races against time to uncover the truth. It's an engaging and suspenseful ride that keeps you guessing until the very end.",
+    "tags": [
+     "High-Stakes Thriller",
+     "Identity Mystery",
+     "Fast-Paced Action",
+     "Conspiracy Plot",
+     "Suspenseful & Twisty",
+     "European Setting",
+     "Amnesia Theme",
+     "Intriguing Premise"
+    ],
+    "keywords": [
+     "hotel",
+     "taxi",
+     "coma",
+     "taxi driver",
+     "prince",
+     "briefcase",
+     "hospital",
+     "stolen identity"
+    ]
+   },
+   {
+    "pid": 2000000283484,
+    "title": "Just One Look",
+    "year": 2025,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "A taut psychological mystery that plunges a woman into a desperate quest to uncover buried truths and save her husband from a dark past. Driven by a single ominous photograph, the series skillfully builds tension through fragmented memories and unsettling revelations. It's a gripping domestic thriller, perfect for viewers who enjoy unraveling complex secrets and exploring the precariousness of trust. The narrative keeps you guessing, making it an ideal binge-watch.",
+    "tags": [
+     "Psychological Mystery",
+     "Domestic Thriller",
+     "Secrets & Lies",
+     "Hazy Memory",
+     "Unraveling Past",
+     "Marital Intrigue",
+     "Suspenseful Drama",
+     "Contemporary Realism",
+     "Dark Undercurrents"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "miniseries",
+     "thriller"
+    ]
+   },
+   {
+    "pid": 2000000221585,
+    "title": "The Edge of Sleep",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "A chilling and incredibly tense thriller that immediately plunges viewers into a terrifying mystery where sleep itself is a death sentence. The show expertly builds paranoia and dread through its high-stakes premise and the constant threat looming over its survivors. It explores the psychological toll of an unprecedented global catastrophe, urging characters to stay awake while uncovering a horrifying truth. This series is a gripping, relentless ride designed to keep audiences on the edge of...",
+    "tags": [
+     "Apocalyptic Thriller",
+     "Psychological Horror",
+     "Survival Mystery",
+     "High Stakes Suspense",
+     "Global Catastrophe",
+     "Tense & Paranoid",
+     "Unsettling Premise",
+     "Race Against Time",
+     "Existential Dread"
+    ],
+    "keywords": [
+     "mysterious",
+     "suspense",
+     "fantasy"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-15",
+  "query": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+  "intent": "Grounded, gritty crime series; animation, supernatural detectives and movies are wrong.",
+  "items": [
+   {
+    "pid": 2000000155537,
+    "title": "Black Bird",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "This gripping true-crime drama is a masterclass in psychological tension, centering on an intense cat-and-mouse game within the confines of a prison. It delves deep into the minds of its complex characters, forcing viewers to confront dark human nature. The slow-burn narrative steadily ratchets up the stakes, creating an unnerving atmosphere that is both compelling and disturbing. Featuring powerful performances, it's a bleak yet captivating exploration of truth, confession, and the weight...",
+    "tags": [
+     "True Crime Drama",
+     "Psychological Thriller",
+     "Intense Interrogation",
+     "Character-Driven",
+     "Dark & Gritty",
+     "Slow Burn Suspense",
+     "Moral Dilemma",
+     "Prison Setting",
+     "Biographical Fiction"
+    ],
+    "keywords": [
+     "prison",
+     "detective",
+     "based on novel or book",
+     "illinois",
+     "indiana, usa",
+     "prisoner",
+     "oddball",
+     "investigation",
+     "missouri",
+     "based on true story",
+     "serial killer",
+     "miniseries"
+    ]
+   },
+   {
+    "pid": 2000000125949,
+    "title": "We Own This City",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "This is a meticulously crafted and unflinching look at systemic police corruption, set against the backdrop of Baltimore's drug war. It plunges viewers into a bleak reality, showcasing the moral collapse of a city and its institutions. The series excels in its gritty realism, complex narrative, and profound social commentary, presenting a devastating indictment of policy and power. This is a challenging yet essential watch for those seeking a raw, character-driven exploration of American...",
+    "tags": [
+     "Gritty Crime Drama",
+     "Police Corruption",
+     "Systemic Failure",
+     "Bleak Realism",
+     "Social Commentary",
+     "Intense & Unflinching",
+     "Character-Driven",
+     "Documentary Style",
+     "Moral Collapse",
+     "Based on True Events"
+    ],
+    "keywords": [
+     "robbery",
+     "detective",
+     "police brutality",
+     "based on novel or book",
+     "drug dealer",
+     "baltimore, usa",
+     "wiretap",
+     "strip club",
+     "murder",
+     "organized crime",
+     "miniseries",
+     "police corruption"
+    ]
+   },
+   {
+    "pid": 2000000087508,
+    "title": "Delhi Crime",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Crime"
+    ],
+    "essence_text": "A harrowing and meticulously crafted crime drama, this series offers an unflinching look into high-profile investigations in Delhi, often drawing from real events. It's a deeply emotional and thought-provoking experience, highlighting the dedication of the police force amidst immense societal pressure and the devastating impact of crime. The show excels in its gritty realism and powerful character portrayals, making for a challenging but essential watch that explores themes of justice and...",
+    "tags": [
+     "Gritty Crime Drama",
+     "Police Procedural",
+     "Social Commentary",
+     "Realistic & Hard-hitting",
+     "True Crime Inspired",
+     "Indian Society Focus",
+     "Intense & Emotional",
+     "Justice System Exploration",
+     "Character-Driven Investigation"
+    ],
+    "keywords": [
+     "delhi, india",
+     "investigation",
+     "gang rape",
+     "true crime",
+     "euphoric",
+     "horrified",
+     "tragic"
+    ]
+   },
+   {
+    "pid": 2000000041889,
+    "title": "Top Boy",
+    "year": 2011,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A raw and unflinching look into the lives of drug dealers in London, this series offers a gritty and realistic portrayal of inner-city gang culture. It's a tense and suspenseful drama driven by complex characters and their struggles for survival. The show delivers a powerful social commentary on class, poverty, and the choices people make in the face of limited opportunities. Expect a bleak but gripping narrative with strong performances and immersive world-building.",
+    "tags": [
+     "Gritty Crime Drama",
+     "Inner-City Gang Culture",
+     "Realistic Portrayal",
+     "Social Commentary",
+     "Coming-of-Age",
+     "Complex Characters",
+     "Intense & Suspenseful",
+     "Bleak & Unflinching"
+    ],
+    "keywords": [
+     "london, england",
+     "drug crime",
+     "gangster",
+     "outlaw",
+     "organized crime",
+     "urban",
+     "gang",
+     "drug dealing",
+     "urban decay",
+     "hackney, london"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-17",
+  "query": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+  "intent": "Grounded getaway-driver and heist-driving films; superhero destruction spectacles are wrong.",
+  "items": [
+   {
+    "pid": 1000000013387,
+    "title": "Transporter 3",
+    "year": 2008,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "Crime"
+    ],
+    "essence_text": "This film is a relentless, high-octane action spectacle that delivers exactly what 'Transporter' fans expect: non-stop car chases, intense hand-to-hand combat, and Jason Statham's stoic, no-nonsense protagonist. The plot is a simple framework for a series of escalating, well-choreographed action sequences that prioritize pure thrills over narrative depth. It's a prime example of a pure escapism action movie, designed to keep adrenaline levels high from start to finish.",
+    "tags": [
+     "High-Octane Action",
+     "Car Chase Thriller",
+     "Martial Arts Sequences",
+     "Professional Courier",
+     "Relentless Pacing",
+     "Explosive Stunts",
+     "Jason Statham Vehicle",
+     "European Action Cinema",
+     "International Crime",
+     "Adrenaline-Pumping"
+    ],
+    "keywords": [
+     "martial arts",
+     "police",
+     "killing",
+     "detective",
+     "love",
+     "police chase",
+     "gunfight",
+     "getaway driver",
+     "taken",
+     "action hero"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-19",
+  "query": "cozy",
+  "intent": "Comforting, gentle, low-stakes titles (warm animation, feel-good comedy).",
+  "items": [
+   {
+    "pid": 2000000156993,
+    "title": "Harry Wild",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Mystery",
+     "Comedy"
+    ],
+    "essence_text": "This show offers a delightful and witty take on the cozy mystery genre, centered around a charmingly eccentric retired professor who finds a new passion for solving crimes. Its strength lies in its clever dialogue, engaging mysteries, and the compelling relationship between the protagonist and her detective son. It's a comforting and engaging series perfect for those who enjoy a blend of intriguing plots and character-driven humor, making it an excellent choice for a relaxed watch.",
+    "tags": [
+     "Cozy Mystery",
+     "Witty Crime Drama",
+     "Charming Protagonist",
+     "Engaging & Intriguing",
+     "Lighthearted Whodunit",
+     "Family Dynamics",
+     "Comfort Watch",
+     "Smart Dialogue",
+     "Procedural Elements"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "investigation",
+     "lighthearted"
+    ]
+   },
+   {
+    "pid": 2000000261317,
+    "title": "Mistletoe Murders",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A charming and lighthearted cozy mystery series wrapped in a festive Christmas setting. It delivers engaging, low-stakes puzzles alongside a blossoming romantic subplot between its endearing leads. The show provides comforting escapism with a focus on wholesome small-town dynamics and a sprinkling of seasonal cheer. Perfect for viewers seeking a gentle mystery with a guaranteed hopeful outcome.",
+    "tags": [
+     "Cozy Mystery",
+     "Christmas Themed",
+     "Romantic Comedy",
+     "Amateur Sleuth",
+     "Small Town Charm",
+     "Feel-Good Entertainment",
+     "Lighthearted Crime",
+     "Holiday Season",
+     "Unlikely Partners"
+    ],
+    "keywords": [
+     "christmas",
+     "mystery"
+    ]
+   },
+   {
+    "pid": 1000000571798,
+    "title": "Ruby Herring Mysteries: Silent Witness",
+    "year": 2019,
+    "media_type": "movie",
+    "genres": [
+     "Mystery",
+     "TV Movie"
+    ],
+    "essence_text": "A charming and wholesome cozy mystery where an intrepid reporter accidentally uncovers a knack for solving crimes. The narrative is driven by intrigue and a budding, lighthearted romance, making it an enjoyable escape. It offers a comforting, contemporary setting, perfect for viewers seeking a gentle mystery without intense violence or dark themes. The story provides a satisfying puzzle to unravel with a pleasant cast of characters.",
+    "tags": [
+     "Cozy Mystery",
+     "Amateur Sleuth",
+     "Light Romance",
+     "Wholesome Entertainment",
+     "Contemporary Crime",
+     "Intrigue-Driven",
+     "Character-Focused",
+     "Gentle Suspense",
+     "Television Movie"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 2000000076459,
+    "title": "Miss Marple: The Body in the Library",
+    "year": 1984,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "This classic British cozy mystery provides a comforting and engaging whodunit experience, centered around the keen observations of amateur detective Miss Jane Marple. Set in a charming yet deceptively dangerous English village, it features intricate plotting and a cast of well-developed characters that keep the viewer guessing. The series excels in its clever dialogue and the gradual unraveling of clues, making it an ideal watch for those who appreciate traditional, character-driven...",
+    "tags": [
+     "Cozy Mystery",
+     "British Period Drama",
+     "Amateur Detective",
+     "Intricate Plot",
+     "Whodunit",
+     "Character-Driven",
+     "Gentle Suspense",
+     "Classic Adaptation",
+     "Village Life"
+    ],
+    "keywords": [
+     "detective",
+     "based on novel or book",
+     "amateur detective",
+     "miniseries",
+     "murder investigation"
+    ]
+   },
+   {
+    "pid": 2000000002059,
+    "title": "Rosemary & Thyme",
+    "year": 2003,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A delightfully gentle cozy mystery series, `Rosemary & Thyme` combines the beauty of English gardens with intriguing whodunits. Follow two endearing protagonists as they restore lavish landscapes and unearth an array of secrets. The show offers a wholesome and scenic escape, perfect for those who enjoy character-driven plots and a leisurely pace, inviting viewers into a world of charming mysteries and picturesque settings.",
+    "tags": [
+     "Cozy Mystery",
+     "English Countryside",
+     "Gardening Theme",
+     "Female Detective Duo",
+     "Wholesome Entertainment",
+     "Gentle Intrigue",
+     "Beautiful Scenery",
+     "Character-Driven",
+     "Relaxing Atmosphere"
+    ],
+    "keywords": [
+     "girlfriends",
+     "plants",
+     "rosemary",
+     "thyme",
+     "greenthumb",
+     "cosy crime"
+    ]
+   },
+   {
+    "pid": 2000000076075,
+    "title": "Laid-Back Camp",
+    "year": 2018,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "A heartwarming slice-of-life anime that follows a group of high school girls as they discover the joys of camping. The series is characterized by its gentle humor, scenic landscapes, and emphasis on friendship and personal growth. It creates a relaxing and immersive viewing experience, emphasizing the beauty of nature. With its optimistic outlook and focus on simple pleasures, it's a perfect comfort watch that promotes feelings of warmth and contentment.",
+    "tags": [
+     "Cozy Camping",
+     "Slice of Life",
+     "Friendship",
+     "Relaxing Atmosphere",
+     "Scenic Landscapes",
+     "Japanese Culture",
+     "Gentle Humor",
+     "Optimistic",
+     "Wholesome"
+    ],
+    "keywords": [
+     "camping",
+     "cooking",
+     "friendship",
+     "slice of life",
+     "travel",
+     "food",
+     "based on manga",
+     "high school student",
+     "journey",
+     "school life",
+     "calm",
+     "anime"
+    ]
+   },
+   {
+    "pid": 2000000251597,
+    "title": "Bookish",
+    "year": 2025,
+    "media_type": "show",
+    "genres": [
+     "Crime"
+    ],
+    "essence_text": "A charming and intellectually stimulating mystery series centered around a bookshop owner who solves crimes using his extensive literary knowledge. The show fosters a cozy, wholesome atmosphere, enriched by its clever dialogue and an ensemble of endearing, nuanced characters. It delivers satisfying puzzles and gentle intrigue, making it a perfect comfort watch that rewards attentive viewing. Ideal for those who enjoy a blend of mystery, character development, and a love for books.",
+    "tags": [
+     "Cozy Mystery",
+     "Intellectual Puzzles",
+     "Quirky Characters",
+     "Found Family Themes",
+     "Bookish Atmosphere",
+     "Clever Dialogue",
+     "Warm & Charming",
+     "Investigative Drama",
+     "Gentle Intrigue"
+    ],
+    "keywords": []
+   }
+  ]
+ },
+ {
+  "query_id": "core-21",
+  "query": "funny",
+  "intent": "Strong comedies; broad, so quality and popularity should matter.",
+  "items": [
+   {
+    "pid": 1000000046740,
+    "title": "Monty Python's Fliegender Zirkus",
+    "year": 1971,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A unique foray into German television by the legendary Monty Python, these specials exemplify their signature blend of absurdism, sharp wit, and satirical genius. Characterized by rapid-fire sketches and a complete disregard for conventional narrative, they offer a hilarious and often thought-provoking commentary on society. It's a highly rewatchable experience for fans of unconventional humor, cementing Python's status as masters of meta-narrative and physical comedy.",
+    "tags": [
+     "Absurdist Sketch Comedy",
+     "British Satire",
+     "Iconic Humor",
+     "Non-Sequitur",
+     "Surrealist Gags",
+     "Fourth Wall Breaking",
+     "Intellectually Playful",
+     "Rewatchable Classic",
+     "Cult Following"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 1000000000762,
+    "title": "Monty Python and the Holy Grail",
+    "year": 1975,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Comedy",
+     "Fantasy"
+    ],
+    "essence_text": "A quintessential absurdist comedy that reimagines the legend of King Arthur with a uniquely British, irreverent twist. Filled with iconic sketches, memorable quotes, and brilliant wordplay, it's a relentless barrage of anachronistic humor and visual gags. The film's defining characteristic is its commitment to the utterly nonsensical, creating a perpetually rewatchable and endlessly quotable comedic masterpiece that continues to influence comedy.",
+    "tags": [
+     "Absurdist Comedy",
+     "British Humor",
+     "Satirical Fantasy",
+     "Cult Classic",
+     "Historical Parody",
+     "Sketch Comedy",
+     "Dialogue-Driven",
+     "Irreverent",
+     "Anachronistic",
+     "Meta-Humor"
+    ],
+    "keywords": [
+     "holy grail",
+     "swordplay",
+     "england",
+     "monk",
+     "wedding reception",
+     "scotland yard",
+     "animal attack",
+     "camelot",
+     "round table",
+     "chapter",
+     "satire",
+     "parody"
+    ]
+   },
+   {
+    "pid": 1000000740985,
+    "title": "Borat Subsequent Moviefilm",
+    "year": 2020,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A relentlessly outrageous and deeply uncomfortable mockumentary that masterfully employs cringe humor and social satire to expose raw prejudices in contemporary America. Sacha Baron Cohen's fearless performance drives this politically charged and often shocking film, which blends genuine social commentary with absurd physical comedy. It's a provocative and unsparing look at societal absurdities, designed to elicit both laughter and deep introspection.",
+    "tags": [
+     "Outrageous Satire",
+     "Cringe Comedy",
+     "Mockumentary",
+     "Political Commentary",
+     "Social Experiment",
+     "Fearless Performance",
+     "Improv Comedy",
+     "Shocking & Provocative",
+     "Contemporary Issues"
+    ],
+    "keywords": [
+     "presidential election",
+     "patriotism",
+     "mockery",
+     "kazakhstan",
+     "satire",
+     "hidden camera",
+     "sequel",
+     "mockumentary",
+     "prank",
+     "social satire",
+     "disguise",
+     "satirical"
+    ]
+   },
+   {
+    "pid": 2000000043082,
+    "title": "Key & Peele",
+    "year": 2012,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A sharp and satirical sketch comedy show that cleverly dissects pop culture and social issues. Defined by its witty wordplay, improvisational acting, and fearless approach to controversial topics, the show delivers both laughs and thought-provoking commentary. The humor ranges from cringe-inducing to absurd, offering a unique blend of comedy styles. The duo's strong performances and chemistry make it a standout in the sketch comedy landscape.",
+    "tags": [
+     "Sketch Comedy",
+     "Satire & Parody",
+     "Pop Culture Commentary",
+     "Wit & Wordplay",
+     "Social Satire",
+     "Cringe Humor",
+     "Improvisational Acting",
+     "Dark Humor"
+    ],
+    "keywords": [
+     "sketch comedy",
+     "hilarious"
+    ]
+   },
+   {
+    "pid": 1000000011485,
+    "title": "Take the Money and Run",
+    "year": 1969,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A pioneering mockumentary, this classic comedy follows the hilariously inept attempts of a would-be bank robber, Virgil Starkwell. The film is a masterclass in witty dialogue and physical comedy, driven by its eccentric central character and his seemingly endless string of misfortunes. It offers a lighthearted and fast-paced romp through a series of absurd situations, parodying traditional crime narratives with charming, self-aware humor.",
+    "tags": [
+     "Classic Mockumentary",
+     "Slapstick Comedy",
+     "Incompetent Criminal",
+     "Witty Dialogue",
+     "Absurdist Humor",
+     "Quirky Character Study",
+     "Crime Parody",
+     "Fast-Paced Gags",
+     "Vintage Charm"
+    ],
+    "keywords": [
+     "prison",
+     "pickpocket",
+     "bad luck",
+     "jinx",
+     "wedding"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-22",
+  "query": "time loop",
+  "intent": "Repeating time is the central mechanism.",
+  "items": [
+   {
+    "pid": 2000000070523,
+    "title": "Dark",
+    "year": 2017,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Sci-Fi & Fantasy",
+     "Mystery"
+    ],
+    "essence_text": "A masterful and incredibly intricate German sci-fi mystery that demands unwavering attention from its audience. The series weaves a complex, non-linear narrative spanning multiple generations, creating a dense web of interconnected characters and timelines. Its bleak, atmospheric tone and philosophical depth explore causality, free will, and the profound impact of past events on the future. This is an immersive and challenging viewing experience, rich with suspense and profound thematic...",
+    "tags": [
+     "Mind-Bending Time Travel",
+     "German Sci-Fi Mystery",
+     "Intricate Non-Linear Plot",
+     "Atmospheric & Bleak",
+     "Intergenerational Drama",
+     "Existential & Philosophical",
+     "Dark & Suspenseful",
+     "Complex Character Web",
+     "Demanding Viewer Experience",
+     "Rewarding Complexity"
+    ],
+    "keywords": [
+     "hotel",
+     "detective",
+     "small town",
+     "cave",
+     "nuclear power plant",
+     "time travel",
+     "investigation",
+     "time machine",
+     "cop",
+     "woods",
+     "surrealism",
+     "priest"
+    ]
+   },
+   {
+    "pid": 2000000129043,
+    "title": "Kudi Yedamaithe",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "This series is a gripping and mind-bending thriller built around a relentless time loop, forcing its protagonists to navigate a dark crime mystery. It masterfully intertwines elements of suspense and psychological drama, creating a highly intricate and intriguing narrative. Viewers are drawn into a complex puzzle that challenges their perception of reality, marked by high tension and unexpected turns. The unique premise and gritty execution make it a compelling and unsettling watch that...",
+    "tags": [
+     "Time Loop Thriller",
+     "Crime Mystery",
+     "Psychological Suspense",
+     "Mind-Bending Plot",
+     "Non-Linear Narrative",
+     "Dark & Gritty",
+     "Intriguing",
+     "High Stakes",
+     "Unconventional Storytelling",
+     "Relentless Tension"
+    ],
+    "keywords": [
+     "time loop"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-23",
+  "query": "slow atmospheric science fiction",
+  "intent": "Contemplative, slow-paced, mood-heavy science fiction; loud action sci-fi is wrong.",
+  "items": []
+ },
+ {
+  "query_id": "core-25",
+  "query": "something short to watch after work",
+  "intent": "Short, low-commitment viewing (short films, brisk movies, episodic comedy); no exact runtime assumed.",
+  "items": [
+   {
+    "pid": 1000000040619,
+    "title": "Day & Night",
+    "year": 2010,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family",
+     "Comedy"
+    ],
+    "essence_text": "A visually inventive animated short about embracing differences and finding common ground. It celebrates the unique qualities of contrasting characters, using them as visual metaphors for perspective. The film’s strength lies in its heartwarming message of friendship and acceptance, offering a comforting and uplifting experience for viewers of all ages. It is a fast-paced emotional and thought-provoking short.",
+    "tags": [
+     "Animated Short",
+     "Pixar Animation",
+     "Character-Driven",
+     "Visual Metaphor",
+     "Emotional Growth",
+     "Day and Night",
+     "Friendship",
+     "Wholesome Content"
+    ],
+    "keywords": [
+     "short film"
+    ]
+   },
+   {
+    "pid": 1000000673595,
+    "title": "Maggie Simpson in \"Playdate with Destiny\"",
+    "year": 2020,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Family",
+     "Romance"
+    ],
+    "essence_text": "A delightful and heartwarming animated short that captures the essence of young love with a touch of humor and pop culture references. The film's lighthearted tone and adorable characters make it a perfect family-friendly experience. It's a sweet and simple story that evokes feelings of nostalgia and comfort, offering a brief escape into a world of innocent romance. The fast-paced editing and vibrant animation style enhance the viewing pleasure.",
+    "tags": [
+     "Animated Short",
+     "Romantic Comedy",
+     "Family-Friendly",
+     "Pop Culture References",
+     "Heartwarming",
+     "Cuteness Overload",
+     "Escapist Fun",
+     "Lighthearted"
+    ],
+    "keywords": [
+     "cartoon",
+     "playground",
+     "romance",
+     "meet cute",
+     "babies",
+     "short film"
+    ]
+   },
+   {
+    "pid": 1000000234567,
+    "title": "Get a Horse!",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family",
+     "Comedy"
+    ],
+    "essence_text": "A delightful and innovative short that blends classic cartoon aesthetics with modern meta-narrative techniques. The film cleverly plays with the audience's expectations, delivering a fresh take on familiar characters. Its fast-paced energy, physical comedy, and vibrant animation create a visually engaging experience. With a strong emphasis on sound design and musicality, this nostalgic homage is sure to entertain audiences of all ages. It serves as both a loving tribute to early Disney and a...",
+    "tags": [
+     "Classic Cartoon Revival",
+     "Meta-Narrative Experiment",
+     "Nostalgic Animation",
+     "Slapstick Comedy",
+     "Homage to Early Disney",
+     "Family-Friendly Fun",
+     "Visually Dynamic",
+     "Sound-Driven Experience"
+    ],
+    "keywords": [
+     "mouse",
+     "computer animation",
+     "black and white",
+     "cartoon mouse",
+     "color",
+     "woman director",
+     "hand drawn animation",
+     "short film",
+     "anthropomorphic animal"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-26",
+  "query": "Ich suche etwas Spannendes, das mich rätseln lässt, aber am Ende nicht völlig deprimiert.",
+  "intent": "German: suspense and puzzles without a miserable finish.",
+  "items": [
+   {
+    "pid": 1000000500723,
+    "title": "Awe!",
+    "year": 2018,
+    "media_type": "movie",
+    "genres": [
+     "Romance",
+     "Action",
+     "Drama"
+    ],
+    "essence_text": "An ingenious psychological mystery that masterfully weaves together disparate character narratives into a singular, compelling whole. The film thrives on intrigue, slowly revealing the subtle connections between its seemingly unrelated protagonists, leading to a profound and unexpected resolution. It's a character-driven experience, rich with emotional depth and an innovative narrative structure that invites rewatchability. This is a thought-provoking and emotionally resonant cinematic...",
+    "tags": [
+     "Psychological Mystery",
+     "Interconnected Stories",
+     "Nonlinear Narrative",
+     "Character-Driven",
+     "Unpredictable Twist",
+     "Intriguing Premise",
+     "Existential Themes",
+     "Emotional Depth",
+     "Thought-Provoking"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 2000000077400,
+    "title": "The Innocents",
+    "year": 2018,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Drama"
+    ],
+    "essence_text": "A supernatural mystery that follows a teenage couple on the run, intertwined with dangerous secrets and the discovery of extraordinary abilities. The series builds a palpable sense of tension and suspense, exploring themes of forbidden love, family dynamics, and personal identity. The atmospheric Nordic setting and slow-burn narrative enhance the feeling of unease and the sense of the uncanny. It's a coming-of-age story wrapped in a psychological thriller, where love and fear walk hand in hand.",
+    "tags": [
+     "Supernatural Mystery",
+     "Teen Romance",
+     "Shape-shifting",
+     "Family Secrets",
+     "Nordic Noir",
+     "Atmospheric Tension",
+     "Psychological Thriller",
+     "Forbidden Love",
+     "Coming of Age",
+     "Slow Burn"
+    ],
+    "keywords": [
+     "runaway",
+     "shapeshifting",
+     "race against time",
+     "mad scientist",
+     "interracial romance",
+     "boyfriend girlfriend relationship",
+     "teen drama",
+     "psychological",
+     "cerebral",
+     "understated",
+     "romantic",
+     "teen"
+    ]
+   },
+   {
+    "pid": 1000000915935,
+    "title": "Anatomy of a Fall",
+    "year": 2023,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "Mystery",
+     "Crime"
+    ],
+    "essence_text": "A gripping and intellectually stimulating legal drama that delves into the profound ambiguity of truth and perception. The film masterfully crafts a complex mystery surrounding a suspicious death, inviting viewers to actively piece together fragmented narratives. Its exceptional character depth and sharp dialogue provide a rich psychological portrait of a family under immense scrutiny. This is a thought-provoking, slow-burn experience that lingers long after the credits roll.",
+    "tags": [
+     "Legal Drama",
+     "Psychological Mystery",
+     "Ambiguous Truth",
+     "Character Study",
+     "Intense Courtroom Thriller",
+     "Moral Dilemma",
+     "Intimate & Introspective",
+     "Superb Acting",
+     "Family Dysfunction"
+    ],
+    "keywords": [
+     "husband wife relationship",
+     "winter",
+     "bisexuality",
+     "moral conflict",
+     "autopsy",
+     "blind",
+     "courtroom",
+     "lgbt",
+     "death of husband",
+     "woman director",
+     "moral dilemma",
+     "courtroom drama"
+    ]
+   },
+   {
+    "pid": 1000000001124,
+    "title": "The Prestige",
+    "year": 2006,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Mystery",
+     "Science Fiction"
+    ],
+    "essence_text": "This is a meticulously crafted psychological thriller centered on the escalating, deadly rivalry between two stage magicians. Its narrative complexity and intricate plotting keep viewers utterly engrossed, delivering a deeply satisfying mystery that rewards close attention. The film delves into the dark side of obsession and ambition, featuring compelling character studies and a truly unforgettable twist. It's a rewatchable experience that unveils new layers with each viewing.",
+    "tags": [
+     "Psychological Thriller",
+     "Intricate Mystery",
+     "Intense Rivalry",
+     "Magic & Illusion",
+     "Obsessive Characters",
+     "Non-Linear Narrative",
+     "Victorian Era",
+     "Mind-Bending Plot",
+     "Unforgettable Twist"
+    ],
+    "keywords": [
+     "dying and death",
+     "suicide",
+     "class society",
+     "london, england",
+     "magic",
+     "competition",
+     "obsession",
+     "hostility",
+     "class",
+     "diary",
+     "twist",
+     "tricks"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-27",
+  "query": "Quiero una serie policial realista y cruda, sin animación ni detectives con poderes mágicos.",
+  "intent": "Spanish: grounded gritty crime series; no animation or magic detectives.",
+  "items": [
+   {
+    "pid": 2000000034415,
+    "title": "The Killing",
+    "year": 2011,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Crime",
+     "Mystery"
+    ],
+    "essence_text": "A dark and atmospheric crime drama set against the backdrop of Seattle. The series unfolds as a slow-burn mystery, filled with complex characters and psychological depth. Its intense and brooding tone creates a pervasive sense of tension. This is a character-driven story with a bleak outlook on humanity.",
+    "tags": [
+     "Noir Crime Drama",
+     "Seattle Setting",
+     "Intense Mystery",
+     "Atmospheric",
+     "Brooding",
+     "Bleak",
+     "Character-Driven",
+     "Slow-Burn",
+     "Psychological Depth"
+    ],
+    "keywords": [
+     "detective",
+     "child murder",
+     "mayor",
+     "seattle, washington",
+     "female protagonist",
+     "drugs",
+     "police detective",
+     "political campaign",
+     "female detective",
+     "murder investigation",
+     "questioning",
+     "murder mystery"
+    ]
+   },
+   {
+    "pid": 2000000080793,
+    "title": "Crime Patrol",
+    "year": 2003,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Mystery",
+     "Action & Adventure"
+    ],
+    "essence_text": "A long-running Indian true-crime series that dramatizes real criminal cases from across the country. Presented in a factual yet narrative-driven style, it explores the dark underbelly of society and the complexities of human nature. The show is often grim and unflinching in its portrayal of violence and its consequences, offering a stark social commentary. It's a compelling watch for those interested in investigative journalism and the realities of crime, serving as both educational and...",
+    "tags": [
+     "Indian True Crime",
+     "Crime Dramatization",
+     "Real-Life Cases",
+     "Social Commentary",
+     "Investigative",
+     "Gritty",
+     "Episodic Anthology",
+     "Law & Order",
+     "Contemporary Society"
+    ],
+    "keywords": [
+     "crime scene",
+     "crime investigation"
+    ]
+   },
+   {
+    "pid": 2000000004464,
+    "title": "Homicide: Life on the Street",
+    "year": 1993,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "This seminal police procedural plunges viewers into the grim realities of a Baltimore homicide unit, offering a refreshingly realistic and often bleak portrayal of crime investigation. It thrives on its exceptionally well-developed characters and razor-sharp dialogue, exploring the psychological toll of the job. The series foregoes easy answers, instead delving into the moral ambiguities and systemic failures that define its world. It's a challenging, character-driven drama that offers deep...",
+    "tags": [
+     "Gritty Police Procedural",
+     "Realistic Crime Drama",
+     "Character-Driven",
+     "Baltimore Setting",
+     "Psychological Depth",
+     "Complex Investigations",
+     "Bleak & Cynical",
+     "Dialogue-Heavy",
+     "Social Realism",
+     "Intense"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "baltimore, usa",
+     "police",
+     "murder",
+     "police detective",
+     "homicide detective",
+     "police department",
+     "police protagonist"
+    ]
+   },
+   {
+    "pid": 2000000061244,
+    "title": "Happy Valley",
+    "year": 2014,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "This series is a masterclass in gritty crime drama, centered on an indomitable police sergeant navigating profound personal tragedy while confronting dangerous criminals. It expertly weaves together intense suspense with moments of dark humor, creating a compelling and often brutal portrayal of contemporary life. The show's strength lies in its deeply complex characters and unflinching realism, delivering a consistently gripping and emotionally resonant experience.",
+    "tags": [
+     "Gritty Crime Thriller",
+     "Character-Driven Drama",
+     "Psychological Depth",
+     "Darkly Humorous",
+     "British Police Procedural",
+     "Social Realism",
+     "Family Trauma",
+     "Intense Narrative",
+     "Moral Ambiguity",
+     "Unflinching Portrayal"
+    ],
+    "keywords": [
+     "rape",
+     "police",
+     "yorkshire",
+     "revenge",
+     "rural area",
+     "death of daughter",
+     "police sergeant",
+     "crime investigation",
+     "suspenseful"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "core-30",
+  "query": "spannend aber nicht düster",
+  "intent": "German: tension without darkness.",
+  "items": [
+   {
+    "pid": 1000000049444,
+    "title": "Kung Fu Panda 2",
+    "year": 2011,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family",
+     "Comedy"
+    ],
+    "essence_text": "A visually stunning and action-packed animated adventure that combines thrilling martial arts sequences with heartwarming emotional depth. The film masterfully balances laugh-out-loud physical comedy and witty dialogue with a touching narrative about self-discovery and finding one's family. Its vibrant animation and dynamic characters make it a pure escapist delight for audiences of all ages, offering both spectacle and genuine emotional resonance.",
+    "tags": [
+     "Animated Adventure",
+     "Martial Arts Action",
+     "Family-Friendly Comedy",
+     "Hero's Journey",
+     "Self-Discovery Themes",
+     "Vibrant Visuals",
+     "Emotional Depth",
+     "Wholesome Entertainment",
+     "Humorous & Heartfelt"
+    ],
+    "keywords": [
+     "mission",
+     "martial arts",
+     "kung fu",
+     "hope",
+     "villain",
+     "fleet",
+     "sequel",
+     "panda",
+     "friends",
+     "woman director"
+    ]
+   },
+   {
+    "pid": 2000000256537,
+    "title": "Commander Karan Saxena",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Action & Adventure"
+    ],
+    "essence_text": "A high-octane espionage thriller that thrusts viewers into a relentless race against time to avert nationwide terror attacks. The series is defined by its intense tension, fast-paced action, and complex web of political conspiracies. It's a compelling watch for those seeking adrenaline-fueled drama and stories of heroic agents battling shadowy threats. Prepare for a gripping narrative where danger lurks around every corner.",
+    "tags": [
+     "Espionage Thriller",
+     "Counter-Terrorism Action",
+     "High Stakes",
+     "Fast-Paced Intrigue",
+     "Political Conspiracy",
+     "Heroic Agent",
+     "Race Against Time",
+     "Modern Warfare Themes",
+     "Suspenseful Plot"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 1000000068734,
+    "title": "Argo",
+    "year": 2012,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Thriller"
+    ],
+    "essence_text": "A meticulously crafted historical thriller that ratchets up the tension with every passing moment, based on an astonishing true story. It plunges viewers into a perilous real-world crisis, expertly blending political intrigue with a high-stakes escape narrative. The film is a masterclass in suspense, keeping audiences on the edge of their seats as a desperate plan unfolds. Its gripping direction and strong performances immerse you fully in a period of geopolitical turmoil, making for a...",
+    "tags": [
+     "Historical Thriller",
+     "Espionage Drama",
+     "Political Suspense",
+     "True Story Adaptation",
+     "High-Stakes Escape",
+     "Intelligent Screenplay",
+     "Intense Pacing",
+     "CIA Operation",
+     "Gripping Narrative"
+    ],
+    "keywords": [
+     "central intelligence agency (cia)",
+     "husband wife relationship",
+     "revolution",
+     "press conference",
+     "biography",
+     "american abroad",
+     "extraction",
+     "iran hostage crisis",
+     "intelligence agent",
+     "langley virginia",
+     "1980s",
+     "political thriller"
+    ]
+   },
+   {
+    "pid": 2000000093352,
+    "title": "The Family Man",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Action & Adventure"
+    ],
+    "essence_text": "This acclaimed Indian series masterfully weaves together a high-stakes espionage thriller with a relatable family drama. It follows a middle-class intelligence officer balancing the perilous world of counter-terrorism with the mundane challenges of domestic life, constantly protecting his family from his secret profession. The show is packed with gripping tension, complex characters, and sharp dialogue, making it a highly binge-worthy watch that explores themes of duty, sacrifice, and the...",
+    "tags": [
+     "Espionage Thriller",
+     "Family Drama",
+     "Indian Original",
+     "Counter-Terrorism",
+     "Double Life Narrative",
+     "High Stakes",
+     "Social Commentary",
+     "Intricate Plotting",
+     "Character-Driven"
+    ],
+    "keywords": [
+     "terrorism",
+     "raw"
+    ]
+   },
+   {
+    "pid": 1000000575264,
+    "title": "Mission: Impossible - Dead Reckoning Part One",
+    "year": 2023,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Adventure",
+     "Thriller"
+    ],
+    "essence_text": "A high-octane, globe-trotting espionage thriller defined by its relentless action and practical stuntwork. The film delivers a masterclass in suspense, blending intricate plot twists with breathtaking set pieces. It immerses the viewer in a world of technological threats and complex moral choices, where the stakes are nothing less than global security. The narrative maintains a breakneck pace, offering pure escapism for action fans.",
+    "tags": [
+     "Action Spectacle",
+     "Global Espionage",
+     "High-Stakes Thrills",
+     "Techno-Thriller",
+     "Intricate Plot",
+     "Stuntwork",
+     "Practical Effects",
+     "Team Dynamics",
+     "Fast-Paced"
+    ],
+    "keywords": [
+     "mask",
+     "race against time",
+     "mission",
+     "rome, italy",
+     "chase",
+     "secret mission",
+     "spy",
+     "fake identity",
+     "secret agent",
+     "sequel",
+     "intelligence agency",
+     "secret government organization"
+    ]
+   },
+   {
+    "pid": 1000000783675,
+    "title": "The First Slam Dunk",
+    "year": 2022,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A thrilling and emotionally resonant return to the court, delivering an electrifying basketball match with cinematic flair. The film masterfully interweaves intense, nail-biting game sequences with poignant character backstories, particularly focusing on Ryota Miyagi's journey. Its dynamic animation and exceptional sound design immerse viewers directly into the heart of the game, making for an exhilarating and cathartic experience that will deeply resonate with long-time fans and new...",
+    "tags": [
+     "Sports Anime",
+     "Basketball Thriller",
+     "Intense Competition",
+     "Team Dynamics",
+     "Character Backstory",
+     "Fast-Paced Action",
+     "Emotional Journey",
+     "Animated Spectacle",
+     "Nostalgic Revival",
+     "Inspirational"
+    ],
+    "keywords": [
+     "high school",
+     "competition",
+     "basketball",
+     "high school sports",
+     "romance",
+     "tournament",
+     "based on manga",
+     "sport competition",
+     "school life",
+     "shounen",
+     "anime",
+     "school club"
+    ]
+   },
+   {
+    "pid": 2000000049926,
+    "title": "Komedi Dükkânı",
+    "year": 2007,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "Komedi Dükkânı offers a delightful dose of spontaneous and interactive sketch comedy, driven by the quick wit and physical humor of its performers. It’s a consistently entertaining show that thrives on audience participation and unscripted scenarios, making each episode a fresh, engaging experience. The show provides pure escapism with its lighthearted tone and ensures abundant laughter for a wide audience. It's a highly rewatchable comfort watch, perfect for a cheerful viewing experience.",
+    "tags": [
+     "Improvisational Comedy",
+     "Sketch Comedy",
+     "Audience Interactive",
+     "Turkish Entertainment",
+     "Lighthearted Humor",
+     "Spontaneous Performance",
+     "Family Friendly",
+     "Variety Show Format",
+     "Pure Escapism"
+    ],
+    "keywords": [
+     "tiyatro",
+     "program",
+     "komedi"
+    ]
+   },
+   {
+    "pid": 2000000125437,
+    "title": "Racket Boys",
+    "year": 2021,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Comedy"
+    ],
+    "essence_text": "A heartwarming and comedic series about a group of middle school students finding their way through badminton in the Korean countryside. It blends sports action with coming-of-age themes, family dynamics, and the charm of rural life. The show offers a lighthearted and feel-good viewing experience, celebrating teamwork, friendship, and the pursuit of dreams. It's both accessible and enjoyable, making it ideal for a wide audience seeking wholesome entertainment.",
+    "tags": [
+     "Badminton",
+     "Middle School",
+     "Team Dynamics",
+     "Rural Life",
+     "Coming-of-Age",
+     "Underdog Story",
+     "Heartwarming",
+     "Friendship",
+     "Family"
+    ],
+    "keywords": [
+     "sports",
+     "boarding house",
+     "working mom",
+     "badminton",
+     "rural life",
+     "slight romance",
+     "sports drama"
+    ]
+   },
+   {
+    "pid": 2000000157569,
+    "title": "Renegade Nell",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "A vibrant and whimsical historical fantasy adventure that blends 18th-century highway robbery with a magical twist. This show is a delightful escapade, following a framed outlaw as she discovers a grander purpose, aided by an enchanting, pint-sized sprite. It offers a fast-paced narrative brimming with spirited action, lighthearted humor, and themes of family and destiny. Perfect for those seeking a fun, fantastical journey with a strong female lead and a touch of period charm.",
+    "tags": [
+     "Historical Fantasy",
+     "Swashbuckling Adventure",
+     "Magical Realism",
+     "Empowering Female Lead",
+     "Family Bonds",
+     "Whimsical & Fun",
+     "Villainous Conspiracy",
+     "Period Setting",
+     "Hero's Journey",
+     "Enchanted Sprite"
+    ],
+    "keywords": [
+     "england",
+     "18th century",
+     "framed for murder",
+     "audacious"
+    ]
+   },
+   {
+    "pid": 1000000796368,
+    "title": "Jathi Ratnalu",
+    "year": 2021,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A light-hearted Telugu comedy centered around friendship and humorous situations. The film thrives on its situational humor and references to pop culture, making it an enjoyable, escapist experience. The quirky characters and feel-good vibe contribute to its charm. While not deeply thought-provoking, it is a comfortably rewatchable film. Expect silly, feel-good fun.",
+    "tags": [
+     "Telugu Comedy",
+     "Situational Humor",
+     "Friendship",
+     "Pop Culture References",
+     "Escapist",
+     "Light-Hearted",
+     "Feel-Good",
+     "Quirky Characters"
+    ],
+    "keywords": []
+   }
+  ]
+ },
+ {
+  "query_id": "new-02",
+  "query": "two geniuses in a battle of wits",
+  "intent": "Cat-and-mouse between two brilliant opponents who outthink each other (detective vs criminal, rival magicians). A lone genius without a rival is weak.",
+  "items": [
+   {
+    "pid": 1000000009777,
+    "title": "Proof",
+    "year": 2005,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A character-driven drama that explores the complexities of genius and mental illness. The film delves into the life of a young woman grappling with her father's deteriorating mental state and her own fears of inheriting his condition. It's a story of family secrets, intellectual prowess, and the delicate balance between sanity and madness. The film's strength lies in its strong performances and thought-provoking exploration of psychological themes.",
+    "tags": [
+     "Psychological Drama",
+     "Mental Illness",
+     "Family Secrets",
+     "Genius vs. Madness",
+     "Character-Driven",
+     "Intriguing Plot",
+     "Strong Performances",
+     "Intellectual"
+    ],
+    "keywords": [
+     "paranoia",
+     "mathematics",
+     "mathematician",
+     "proof",
+     "dementia",
+     "notebook",
+     "campus",
+     "grief",
+     "university",
+     "illness",
+     "mental illness",
+     "paper"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-04",
+  "query": "quiet and lonely in deep space",
+  "intent": "Contemplative sci-fi about isolation far from Earth: solitary astronauts, long voyages, stations. Loud space opera is wrong.",
+  "items": [
+   {
+    "pid": 1000000087199,
+    "title": "I Travel Because I Have to, I Come Back Because I Love You",
+    "year": 2010,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "This is a deeply introspective drama charting a geologist's solitary journey through Brazil's hinterlands, mirroring his internal landscape of emptiness and abandonment. The film offers a melancholic and reflective character study, slowly unfolding a sense of profound isolation. Its quiet pace and immersive atmosphere draw the viewer into the protagonist's psychological state, providing a poignant and thought-provoking experience about human solitude and the search for connection.",
+    "tags": [
+     "Introspective Drama",
+     "Solitary Journey",
+     "Existential Melancholy",
+     "Brazilian Cinema",
+     "Character Study",
+     "Psychological Reflection",
+     "Sparse Narrative",
+     "Quietly Poignant",
+     "Sense of Isolation"
+    ],
+    "keywords": [
+     "melancholy",
+     "nostalgic",
+     "reflective",
+     "didactic",
+     "admiring",
+     "appreciative",
+     "conceited"
+    ]
+   },
+   {
+    "pid": 1000000017431,
+    "title": "Moon",
+    "year": 2009,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Drama"
+    ],
+    "essence_text": "A masterful piece of psychological science fiction, 'Moon' expertly crafts a tale of isolation, identity, and existential mystery. The film's brilliance lies in its meticulous narrative structure and a captivating central performance that carries the emotional weight of profound revelations. It is a thought-provoking exploration of consciousness and what it means to be human in a technologically advanced, yet desolate, future. This quiet, atmospheric film demands attention and rewards...",
+    "tags": [
+     "Isolation & Loneliness",
+     "Psychological Sci-Fi",
+     "Identity & Consciousness",
+     "Philosophical Mystery",
+     "Thought-Provoking",
+     "Humanity vs. AI",
+     "Minimalist Space Setting",
+     "Compelling Lead Performance",
+     "Atmospheric & Melancholy"
+    ],
+    "keywords": [
+     "future",
+     "moon",
+     "artificial intelligence (a.i.)",
+     "isolation",
+     "dystopia",
+     "space",
+     "moon base",
+     "psychological thriller",
+     "human clone",
+     "lunar mission",
+     "corporate conspiracy",
+     "existential crisis"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-07",
+  "query": "like The Matrix but anime",
+  "intent": "Anime about simulated reality, cyberspace, or AI and identity. The live-action Matrix films themselves are not the answer.",
+  "items": []
+ },
+ {
+  "query_id": "new-09",
+  "query": "80s sci-fi action",
+  "intent": "Science-fiction action released in the 1980s. Modern remakes are wrong on era.",
+  "items": [
+   {
+    "pid": 1000000047822,
+    "title": "Eliminators",
+    "year": 1986,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Science Fiction"
+    ],
+    "essence_text": "A pilot rebels against his creator in this retro sci-fi adventure. He teams up with a diverse group of allies, including a scientist, a robot, and a martial arts warrior, to fight for freedom. The film blends action with humor, delivering a nostalgic and entertaining experience. The story explores themes of technology, humanity, and the power of unlikely alliances.",
+    "tags": [
+     "80s Sci-Fi Adventure",
+     "Android Rebellion",
+     "Human-Robot Team-Up",
+     "Action & Humor",
+     "Futuristic World",
+     "Technological Dystopia",
+     "Unlikely Allies",
+     "Retro Charm"
+    ],
+    "keywords": [
+     "android",
+     "kung fu",
+     "saving the world",
+     "self sacrifice",
+     "cyborg",
+     "hologram",
+     "time travel",
+     "mad scientist",
+     "ancient rome",
+     "flashback",
+     "jungle",
+     "airplane crash"
+    ]
+   },
+   {
+    "pid": 1000000000679,
+    "title": "Aliens",
+    "year": 1986,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "Science Fiction"
+    ],
+    "essence_text": "A relentless barrage of adrenaline-fueled action, this sci-fi horror masterpiece ratchets up the tension with every pulse. The iconic xenomorphs are terrifying, the space marines are hardened, and the stakes are impossibly high. It's a visceral and immersive experience, defined by intense sound design and spectacular creature effects. At its core, it's a story of survival and the primal instinct to protect, cementing its place as a true classic.",
+    "tags": [
+     "Sci-Fi Horror Action",
+     "Xenomorphs",
+     "Space Marines",
+     "Survival",
+     "Motherhood",
+     "James Cameron",
+     "Iconic",
+     "Creature Feature",
+     "Tension-Filled"
+    ],
+    "keywords": [
+     "android",
+     "space marine",
+     "extraterrestrial technology",
+     "spaceman",
+     "space travel",
+     "settler",
+     "colony",
+     "cryogenics",
+     "vacuum",
+     "space colony",
+     "warrior woman",
+     "alien"
+    ]
+   },
+   {
+    "pid": 1000000027380,
+    "title": "MegaForce",
+    "year": 1982,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Action",
+     "Science Fiction"
+    ],
+    "essence_text": "An exercise in high-octane, over-the-top action and militaristic science fiction. Its defining feature is a commitment to exaggerated visuals and vehicular combat, delivering spectacle through sheer force. The tone is campy and the aesthetic screams 1980s, complete with futuristic technology and propaganda-esque ideals. A product of its time, it offers pure escapism through unapologetic and somewhat absurd action sequences.",
+    "tags": [
+     "Over-the-Top Action",
+     "Militaristic Sci-Fi",
+     "Vehicular Combat",
+     "Futuristic Technology",
+     "Propaganda-Esque",
+     "Exaggerated Visuals",
+     "Campy Tone",
+     "80s Aesthetic"
+    ],
+    "keywords": [
+     "dictator",
+     "soldier",
+     "military unit"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-11",
+  "query": "comedy without romance",
+  "intent": "Comedies where no romance plot drives the story; romantic comedies violate the exclusion.",
+  "items": [
+   {
+    "pid": 1000001307207,
+    "title": "Louis C.K.: Sorry",
+    "year": 2021,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A provocative and unapologetic stand-up special built on a foundation of dark, observational humor. Louis C.K. delivers a masterclass in conversational, cringe-inducing comedy, dissecting societal norms, personal failings, and taboo subjects with sharp wit. The performance is entirely dialogue-driven, demanding close listening as it veers from philosophical musings to uncomfortable truths. This is challenging, thought-provoking comedy for an adult audience prepared for controversial material.",
+    "tags": [
+     "Stand-Up Comedy",
+     "Dark Humor",
+     "Observational Comedy",
+     "Social Commentary",
+     "Provocative",
+     "Cringe Humor",
+     "Philosophical Musings",
+     "Controversial"
+    ],
+    "keywords": [
+     "stand-up comedy",
+     "stand-up"
+    ]
+   },
+   {
+    "pid": 1000000421854,
+    "title": "Joe Rogan: Triggered",
+    "year": 2016,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "Joe Rogan's stand-up special offers a blend of sharp wit, observational humor, and surprisingly deep philosophical musings. He tackles a range of contemporary topics with his signature intense and inquisitive style, often veering into uncomfortable yet relatable territory. The special is characterized by its candid dialogue and Rogan's engaging delivery, providing a raw and unfiltered comedic experience for adult audiences. It's a thought-provoking yet escapist watch that rewards listeners...",
+    "tags": [
+     "Stand-Up Comedy",
+     "Observational Humor",
+     "Contemporary Issues",
+     "Unfiltered Commentary",
+     "Philosophical Comedy",
+     "Adult Humor",
+     "Provocative",
+     "Wit",
+     "Relatable",
+     "Storytelling"
+    ],
+    "keywords": [
+     "stand-up comedy"
+    ]
+   },
+   {
+    "pid": 2000000000713,
+    "title": "Chappelle's Show",
+    "year": 2003,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This seminal sketch comedy show delivers sharp, often provocative social commentary through Dave Chappelle's unique comedic lens. It masterfully blends stand-up with a rapid-fire series of memorable sketches, unafraid to tackle sensitive topics with dark humor and biting satire. The show is known for its iconic characters and quotable lines, offering an instantly recognizable and highly rewatchable experience. It's a comedic powerhouse that pushes boundaries and leaves a lasting cultural impact.",
+    "tags": [
+     "Sketch Comedy",
+     "Dave Chappelle",
+     "Social Satire",
+     "Pop Culture Commentary",
+     "Dark Humor",
+     "Witty & Provocative",
+     "Iconic Characters",
+     "Cringe Humor",
+     "Cult Classic",
+     "Fast-Paced"
+    ],
+    "keywords": [
+     "sketch comedy"
+    ]
+   },
+   {
+    "pid": 1000000017856,
+    "title": "Ali G, Aiii",
+    "year": 2000,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This compilation showcases the infamous Ali G, a character defined by his outrageous and often cringeworthy interactions with unsuspecting public figures and everyday people. It's a masterclass in satirical and absurd comedy, deriving humor from social awkwardness and sharp, unscripted exchanges. The film serves as a snapshot of early 2000s pop culture commentary, offering a high-energy, laugh-out-loud experience for fans of bold, irreverent humor and social parody.",
+    "tags": [
+     "Satirical Comedy",
+     "Cringe Humor",
+     "British Sketch Comedy",
+     "Character-Driven Humor",
+     "Pop Culture Commentary",
+     "Unscripted Interviews",
+     "Shock Comedy",
+     "Social Parody",
+     "Fast-Paced"
+    ],
+    "keywords": [
+     "sketch comedy"
+    ]
+   },
+   {
+    "pid": 2000000005828,
+    "title": "I manegen med Glenn Killing",
+    "year": 1992,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This cult Swedish sketch comedy show is an audacious and often bizarre foray into absurdist humor, heavily inspired by British parody. It introduces a gallery of eccentric characters and delivers its comedy through a blend of witty dialogue, slapstick, and pointed satire. The series cemented the unique comedic style of its creators, becoming a significant piece of Swedish television history. It's a rewatchable and distinctive viewing experience for those who appreciate unconventional,...",
+    "tags": [
+     "Swedish Sketch Comedy",
+     "Absurdist Humor",
+     "Satirical Parody",
+     "Cult Classic",
+     "Character-Driven Comedy",
+     "Early 90s Television",
+     "Influential Comedy",
+     "Physical Comedy"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 2000000046836,
+    "title": "The Jeselnik Offensive",
+    "year": 2013,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A late-night comedy series that revels in the outrageous, filtering current events through the lens of its host's distinctively dark and sociopathic persona. The show thrives on sharp, controversial wit and delivers humor derived from morbid and taboo subjects. It's an acquired taste, perfect for those who appreciate uncomfortable laughter and incisive social commentary delivered with a smirk. Expect a fast-paced barrage of jokes and opinions that challenge sensibilities.",
+    "tags": [
+     "Dark Satirical Comedy",
+     "Topical Humor",
+     "Sociopathic Wit",
+     "News Commentary",
+     "Stand-up Inspired",
+     "Cynical Observations",
+     "Provocative Dialogue",
+     "Adult-Oriented"
+    ],
+    "keywords": [
+     "talk show",
+     "stand-up comedy",
+     "sketch comedy",
+     "insult comedy"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-13",
+  "query": "smart sci-fi for adults",
+  "intent": "Idea-driven science fiction for grown-ups; kid-oriented or pure spectacle sci-fi is wrong.",
+  "items": [
+   {
+    "pid": 1000000014092,
+    "title": "Ghost in the Shell 2.0",
+    "year": 2008,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Animation",
+     "Drama",
+     "Crime",
+     "Mystery",
+     "Science Fiction",
+     "Thriller"
+    ],
+    "essence_text": "A landmark in cyberpunk animation, this film explores the intersection of humanity and technology in a visually stunning, dystopian future. It grapples with philosophical questions about identity, consciousness, and the nature of reality in an age of cybernetics. The film presents a complex mystery, driven by action and intrigue, demanding active engagement from its audience. Its mature themes and stylized violence mark it as a sophisticated and thought-provoking anime experience.",
+    "tags": [
+     "Cyberpunk Action",
+     "Philosophical Sci-Fi",
+     "Dystopian Future",
+     "Technological Singularity",
+     "Visually Striking",
+     "Adult Animation",
+     "Existential Mystery",
+     "Cyber Warfare",
+     "Anime Classic"
+    ],
+    "keywords": [
+     "future",
+     "android",
+     "cyborg",
+     "dystopia",
+     "cyberpunk",
+     "anime",
+     "philosophical",
+     "ambiguous"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-15",
+  "query": "nonlinear storytelling",
+  "intent": "The story is told out of chronological order and the structure is part of the experience.",
+  "items": [
+   {
+    "pid": 1000000206487,
+    "title": "Predestination",
+    "year": 2014,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Thriller"
+    ],
+    "essence_text": "A profoundly intricate and mind-bending science fiction thriller that masterfully weaves a non-linear narrative around a compelling time-travel paradox. It's a bleak yet captivating exploration of identity, destiny, and the paradoxes of self, demanding close attention from its audience. The film delivers a constant sense of psychological intrigue, leaving viewers to unravel its complex layers long after the credits roll.",
+    "tags": [
+     "Mind-Bending Sci-Fi",
+     "Time Travel Paradox",
+     "Identity Exploration",
+     "Non-Linear Narrative",
+     "Psychological Thriller",
+     "Existential Themes",
+     "Bleak & Intricate",
+     "Deterministic Fate",
+     "Intriguing Mystery"
+    ],
+    "keywords": [
+     "mission",
+     "orphanage",
+     "pregnancy",
+     "bomber",
+     "secret organization",
+     "time travel",
+     "bartender",
+     "time machine",
+     "intersexuality",
+     "fate",
+     "terrorism",
+     "loner"
+    ]
+   },
+   {
+    "pid": 1000000023155,
+    "title": "The Garden of Sinners: Paradox Spiral",
+    "year": 2008,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Animation",
+     "Drama",
+     "Mystery",
+     "Thriller",
+     "Fantasy"
+    ],
+    "essence_text": "This is a deeply intricate and psychologically dense anime film, renowned for its challenging non-linear narrative and profound thematic exploration. It plunges viewers into a dark, supernatural mystery where reality is fluid and identity is questioned, demanding full attention to unravel its layers. The experience is both unsettling and intellectually stimulating, rich with philosophical discourse and visually stylized sequences. It is a work that rewards multiple viewings due to its sheer...",
+    "tags": [
+     "Psychological Thriller",
+     "Supernatural Mystery",
+     "Non-Linear Narrative",
+     "Philosophical Anime",
+     "Dark Fantasy",
+     "Complex Plot",
+     "Existential Horror",
+     "Character-Driven Mystery",
+     "Metaphysical Investigation"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "supernatural",
+     "adult animation",
+     "anime",
+     "based on light novel"
+    ]
+   },
+   {
+    "pid": 2000000046648,
+    "title": "True Detective",
+    "year": 2014,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A dark and atmospheric crime drama that delves into the complex psyches of its characters. The series weaves a web of mystery and intrigue, drawing the viewer into a bleak and morally ambiguous world. Character depth and strong performances are central to the show's appeal, creating a deeply immersive and unsettling viewing experience. Its slow-burn narrative and intricate plotting demand close attention, making it a rewarding experience for those who appreciate sophisticated storytelling.",
+    "tags": [
+     "Southern Gothic Mystery",
+     "Psychological Thriller",
+     "Character-Driven Drama",
+     "Atmospheric Cinematography",
+     "Bleak & Intense",
+     "Complex Narrative",
+     "Moral Ambiguity",
+     "Existential Themes",
+     "Crime Investigation"
+    ],
+    "keywords": [
+     "philosophy",
+     "detective",
+     "investigation",
+     "anthology",
+     "murder",
+     "serial killer",
+     "police corruption",
+     "police detective",
+     "nonlinear timeline",
+     "police investigation",
+     "murder investigation",
+     "murder mystery"
+    ]
+   },
+   {
+    "pid": 1000000372058,
+    "title": "Your Name.",
+    "year": 2016,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Romance",
+     "Drama"
+    ],
+    "essence_text": "A breathtakingly beautiful anime that weaves a poignant, complex love story across time and space. Its narrative is emotionally resonant, exploring themes of connection, fate, and memory with stunning visual flair. The film is elevated by its unforgettable soundtrack, which is deeply integrated into the storytelling and enhances every emotional beat. It offers a truly immersive and cathartic experience that has captivated audiences worldwide.",
+    "tags": [
+     "Supernatural Romance",
+     "Visually Breathtaking",
+     "Emotionally Profound",
+     "Time-Bending Narrative",
+     "Masterful Animated Storytelling",
+     "Iconic Soundtrack",
+     "Poignant Love Story",
+     "Cultural Phenomenon",
+     "Fantasy Drama"
+    ],
+    "keywords": [
+     "high school",
+     "race against time",
+     "dreams",
+     "afterlife",
+     "natural disaster",
+     "supernatural",
+     "time travel",
+     "comet",
+     "romance",
+     "tragedy",
+     "school",
+     "body-swap"
+    ]
+   },
+   {
+    "pid": 2000000001396,
+    "title": "Breaking Bad",
+    "year": 2008,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Crime"
+    ],
+    "essence_text": "A meticulously crafted descent into moral darkness that transforms a sympathetic underdog into a terrifying antagonist. The series relies on unbearable tension and complex character psychology rather than gratuitous action, though its violence is visceral when it occurs. It offers a profound exploration of ego, pride, and the corrosive nature of power within the framework of a realistic crime drama. Every plot thread is tightly woven, creating an addictive binge-watching experience that...",
+    "tags": [
+     "Moral Decay Character Study",
+     "High-Stakes Crime Drama",
+     "Psychological Thriller",
+     "New Mexico Noir",
+     "Tragic Anti-Hero Arc",
+     "Family Dysfunction",
+     "Methodical Tension",
+     "Cinematic Storytelling",
+     "Dark Humor",
+     "Consequence-Driven Narrative"
+    ],
+    "keywords": [
+     "new mexico",
+     "drug dealer",
+     "narcissism",
+     "psychopath",
+     "terminal illness",
+     "outlaw",
+     "dark comedy",
+     "cancer",
+     "tragedy",
+     "drugs",
+     "criminal",
+     "meth lab"
+    ]
+   },
+   {
+    "pid": 1000000000038,
+    "title": "Eternal Sunshine of the Spotless Mind",
+    "year": 2004,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Drama",
+     "Romance"
+    ],
+    "essence_text": "A poignant and surreal exploration of love, loss, and memory. The film delves into the complexities of relationships and the pain of heartbreak through a mind-bending narrative structure. Driven by strong performances and a unique visual style, it creates an emotionally resonant experience that lingers long after the credits roll. It balances moments of wonder with a pervading sense of melancholy, inviting the viewer to reflect on the nature of identity and the importance of our connections.",
+    "tags": [
+     "Bittersweet Romance",
+     "Memory & Identity",
+     "Psychological Drama",
+     "Mind-Bending Narrative",
+     "Emotional Complexity",
+     "Surreal Elements",
+     "Character-Driven",
+     "Innovative Storytelling",
+     "Melancholy Mood"
+    ],
+    "keywords": [
+     "new york city",
+     "regret",
+     "jealousy",
+     "deja vu",
+     "amnesia",
+     "dreams",
+     "operation",
+     "melancholy",
+     "relationship problems",
+     "love",
+     "memory",
+     "brainwashing"
+    ]
+   },
+   {
+    "pid": 1000000500723,
+    "title": "Awe!",
+    "year": 2018,
+    "media_type": "movie",
+    "genres": [
+     "Romance",
+     "Action",
+     "Drama"
+    ],
+    "essence_text": "An ingenious psychological mystery that masterfully weaves together disparate character narratives into a singular, compelling whole. The film thrives on intrigue, slowly revealing the subtle connections between its seemingly unrelated protagonists, leading to a profound and unexpected resolution. It's a character-driven experience, rich with emotional depth and an innovative narrative structure that invites rewatchability. This is a thought-provoking and emotionally resonant cinematic...",
+    "tags": [
+     "Psychological Mystery",
+     "Interconnected Stories",
+     "Nonlinear Narrative",
+     "Character-Driven",
+     "Unpredictable Twist",
+     "Intriguing Premise",
+     "Existential Themes",
+     "Emotional Depth",
+     "Thought-Provoking"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 1000000000548,
+    "title": "Rashomon",
+    "year": 1950,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "Akira Kurosawa's \"Rashomon\" is a groundbreaking cinematic masterpiece that profoundly explores the subjective nature of truth and the complexities of human perception. Through its revolutionary non-linear narrative, multiple characters recount conflicting versions of a single event, forcing viewers to grapple with the elusive concept of reality. It's a deeply psychological and philosophical work, rich with intrigue and enduring relevance, solidified by Kurosawa's masterful direction and...",
+    "tags": [
+     "Philosophical Crime Drama",
+     "Non-Linear Storytelling",
+     "Human Nature Exploration",
+     "Classic Japanese Cinema",
+     "Ambiguous Truth",
+     "Masterful Direction",
+     "Psychological Study",
+     "Historical Setting",
+     "Deeply Thought-Provoking",
+     "Intriguing Mystery"
+    ],
+    "keywords": [
+     "dying and death",
+     "japan",
+     "samurai",
+     "rape",
+     "court case",
+     "court",
+     "truth",
+     "rain",
+     "woodcutter",
+     "subjectivity",
+     "medium",
+     "sunlight"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-17",
+  "query": "mindbending",
+  "intent": "Reality-twisting, puzzle-box or surreal films that leave you rethinking what you saw.",
+  "items": [
+   {
+    "pid": 1000000034647,
+    "title": "Enter the Void",
+    "year": 2010,
+    "media_type": "movie",
+    "genres": [
+     "Fantasy",
+     "Drama"
+    ],
+    "essence_text": "A visually arresting and intensely psychedelic journey through the afterlife. Told through a non-linear, first-person perspective, the film explores themes of death, memory, and spiritual transcendence. The film's surreal visuals and unconventional storytelling create a disorienting and immersive experience. It's a profound and unsettling exploration of consciousness, challenging viewers with its explicit content and philosophical depth. Prepare for a cinematic experience that is both...",
+    "tags": [
+     "Psychedelic Experience",
+     "Non-Linear Narrative",
+     "Visually Stunning",
+     "Existential Exploration",
+     "Drug-Induced Visions",
+     "Life After Death",
+     "Japanese Setting",
+     "Tragedy and Loss",
+     "Surreal and Unsettling"
+    ],
+    "keywords": [
+     "japan",
+     "prostitute",
+     "afterlife",
+     "hallucination",
+     "surrealism",
+     "reincarnation",
+     "stripper",
+     "strip club",
+     "drug trip",
+     "drug dealing",
+     "tokyo, japan",
+     "drugs"
+    ]
+   },
+   {
+    "pid": 2000000228958,
+    "title": "Joko Anwar's Nightmares and Daydreams",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Mystery"
+    ],
+    "essence_text": "This series unfolds as a collection of interconnected, mind-bending tales, weaving together supernatural and sci-fi elements with a deep sense of mystery. Each story builds on a unique premise, creating an unsettling and intriguing atmosphere that demands attention. It's a journey into the unknown, exploring complex ideas with a deliberate pace and a pervasive sense of the uncanny. The show is best enjoyed by viewers seeking a thought-provoking and slightly unsettling narrative experience.",
+    "tags": [
+     "Supernatural Sci-Fi",
+     "Mind-Bending Anthology",
+     "Psychological Thriller",
+     "Interconnected Mysteries",
+     "Atmospheric & Eerie",
+     "Conceptual Storytelling",
+     "Indonesian Horror Elements",
+     "Thought-Provoking",
+     "Slow Burn Suspense"
+    ],
+    "keywords": [
+     "anthology",
+     "haunting",
+     "shocking",
+     "phenomena",
+     "horror anthology",
+     "dark",
+     "terror",
+     "psychological horror",
+     "horror",
+     "thriller",
+     "ambivalent",
+     "hopeful"
+    ]
+   },
+   {
+    "pid": 1000000289510,
+    "title": "The Blue Elephant",
+    "year": 2014,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "An intense, mind-bending blend of psychological thriller and oriental supernatural horror that blurring the boundaries between madness and ancient demonic folklore. Driven by stylish visual effects, hallucinated reality shifts, and an eerie soundscape, the film keeps viewers suspended in persistent dread. It offers an immersive journey into obsession and guilt, anchored by sharp performances and a haunting musical score.",
+    "tags": [
+     "Psychological Horror",
+     "Supernatural Mystery",
+     "Mind-Bending Thriller",
+     "Psychedelic Imagery",
+     "Ancient Folklore",
+     "Unreliable Narrator",
+     "High Tension",
+     "Atmospheric Cinema",
+     "Egyptian Blockbuster"
+    ],
+    "keywords": [
+     "egypt",
+     "based on novel or book",
+     "psychological thriller",
+     "psychiatrist",
+     "mental illness",
+     "hidden past",
+     "hallucinations"
+    ]
+   },
+   {
+    "pid": 1000000023155,
+    "title": "The Garden of Sinners: Paradox Spiral",
+    "year": 2008,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Animation",
+     "Drama",
+     "Mystery",
+     "Thriller",
+     "Fantasy"
+    ],
+    "essence_text": "This is a deeply intricate and psychologically dense anime film, renowned for its challenging non-linear narrative and profound thematic exploration. It plunges viewers into a dark, supernatural mystery where reality is fluid and identity is questioned, demanding full attention to unravel its layers. The experience is both unsettling and intellectually stimulating, rich with philosophical discourse and visually stylized sequences. It is a work that rewards multiple viewings due to its sheer...",
+    "tags": [
+     "Psychological Thriller",
+     "Supernatural Mystery",
+     "Non-Linear Narrative",
+     "Philosophical Anime",
+     "Dark Fantasy",
+     "Complex Plot",
+     "Existential Horror",
+     "Character-Driven Mystery",
+     "Metaphysical Investigation"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "supernatural",
+     "adult animation",
+     "anime",
+     "based on light novel"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-19",
+  "query": "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun than grim.",
+  "intent": "Space-western / ragtag-crew adventures with humor and found family. Grim space horror is wrong.",
+  "items": [
+   {
+    "pid": 2000000109939,
+    "title": "Our Flag Means Death",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Action & Adventure",
+     "Drama"
+    ],
+    "essence_text": "A delightfully eccentric romantic comedy that reimagines the Golden Age of Piracy with an unexpectedly wholesome and hilarious twist. The show shines through its brilliant comedic performances and sharp, witty dialogue, centering on the blossoming relationship between its two lead characters. It's a heartwarming tale of self-discovery, found family, and the pursuit of happiness, offering pure escapism with genuine emotional depth. This unique series subverts expectations with charm and an...",
+    "tags": [
+     "Queer Romantic Comedy",
+     "Quirky Historical Setting",
+     "Found Family Themes",
+     "Witty Dialogue",
+     "Absurdist Humor",
+     "Heartwarming Character Journeys",
+     "Subversive Pirate Adventure",
+     "Feel-Good Ensemble",
+     "Hopeful & Uplifting"
+    ],
+    "keywords": [
+     "romcom",
+     "pirate",
+     "period drama",
+     "swashbuckler",
+     "18th century"
+    ]
+   },
+   {
+    "pid": 1000000002661,
+    "title": "Batman",
+    "year": 1966,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A campy, over-the-top superhero adventure that embraces its own absurdity with glee. The film's vibrant pop art aesthetic and satirical take on crime fighting create a unique, family-friendly experience. With intentionally exaggerated performances and outlandish scenarios, it delivers a sense of nostalgic charm. It's pure, unadulterated escapism designed to entertain through its sheer ridiculousness and over-the-top antics.",
+    "tags": [
+     "Campy Superhero Adventure",
+     "Satirical Crime Fighting",
+     "Pop Art Aesthetic",
+     "Comedic Book Adaptation",
+     "Family-Friendly Action",
+     "Classic TV Homage",
+     "Over-the-Top Performances",
+     "Nostalgic Charm"
+    ],
+    "keywords": [
+     "rescue",
+     "submarine",
+     "missile",
+     "superhero",
+     "shark attack",
+     "parody",
+     "based on comic",
+     "shark",
+     "super power",
+     "shark repelent",
+     "black cat",
+     "super villain"
+    ]
+   },
+   {
+    "pid": 2000000000615,
+    "title": "Futurama",
+    "year": 1999,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "A retro-futuristic animated sitcom that satirizes modern society through the lens of the 31st century. Its blend of absurdist humor, clever wit, and pop culture references creates a unique comedic experience. The show's interplanetary adventures and workplace dynamics are both outlandish and relatable, making it a cult classic. It offers sharp social commentary wrapped in a package of pure escapism.",
+    "tags": [
+     "Retro-Futuristic",
+     "Satirical Comedy",
+     "Interplanetary Adventures",
+     "Workplace Comedy",
+     "Absurdist Humor",
+     "Pop Culture References",
+     "Social Commentary",
+     "Cult Classic"
+    ],
+    "keywords": [
+     "spacecraft",
+     "future",
+     "space travel",
+     "melancholy",
+     "parody",
+     "alien",
+     "mad scientist",
+     "adult humor",
+     "distant future",
+     "social satire",
+     "robot",
+     "adult animation"
+    ]
+   },
+   {
+    "pid": 2000000000253,
+    "title": "Star Trek",
+    "year": 1966,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Drama"
+    ],
+    "essence_text": "A seminal science fiction series that launched a cultural phenomenon, Star Trek offers an optimistic vision of humanity's future. It combines thrilling space exploration with thoughtful social commentary, addressing contemporary issues through allegorical tales set in fantastical alien worlds. The show is defined by its iconic characters and their enduring relationships, who navigate moral dilemmas and foster a hopeful outlook for intergalactic peace and discovery. It remains a deeply...",
+    "tags": [
+     "Classic Sci-Fi",
+     "Space Exploration",
+     "Optimistic Future",
+     "Social Allegory",
+     "Philosophical Themes",
+     "Character-Driven Crew",
+     "Found Family",
+     "Iconic Pop Culture",
+     "Episodic Adventure",
+     "Humanitarian Vision"
+    ],
+    "keywords": [
+     "space travel",
+     "exploration",
+     "friendship",
+     "space",
+     "alien",
+     "romulans",
+     "trek",
+     "space opera",
+     "space adventure",
+     "distant  planet",
+     "imaginative",
+     "23rd century"
+    ]
+   },
+   {
+    "pid": 2000000000326,
+    "title": "Red Dwarf",
+    "year": 1988,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "A cult British sci-fi sitcom renowned for its witty dialogue, eccentric characters, and absurdist humor. Set on a mining ship three million years in deep space, the show blends elements of science fiction with working-class humor and male bonding. It's a show that doesn't take itself too seriously, offering lighthearted entertainment and satirical social commentary. Perfect for casual viewing and repeat watches, it remains a beloved classic for its unique blend of comedy and science fiction.",
+    "tags": [
+     "British Sci-Fi Comedy",
+     "Cult Classic",
+     "Sitcom",
+     "Space Adventure",
+     "Male Friendship",
+     "Working Class",
+     "Satirical",
+     "Witty Dialogue",
+     "Eccentric Characters"
+    ],
+    "keywords": [
+     "cat",
+     "spacecraft",
+     "hologram",
+     "space travel",
+     "alien",
+     "distant future",
+     "sitcom",
+     "alone in space",
+     "smeg",
+     "hilarious",
+     "joyful"
+    ]
+   }
+  ]
+ },
+ {
+  "query_id": "new-21",
+  "query": "un dessin animé drôle pour toute la famille",
+  "intent": "French: funny animated films for the whole family. Adult animation or animated war dramas are wrong.",
+  "items": [
+   {
+    "pid": 2000000003022,
+    "title": "Rugrats",
+    "year": 1991,
+    "media_type": "show",
+    "genres": [
+     "Family",
+     "Animation",
+     "Kids",
+     "Comedy"
+    ],
+    "essence_text": "This beloved children's cartoon whisks viewers into the imaginative world of toddlers, transforming everyday experiences into grand adventures. It's a consistently wholesome and lighthearted comedy, brimming with physical gags and a unique visual style. The show masterfully captures the innocent wonder of childhood, making it a perfect comfort watch for families. Its enduring charm and simple, engaging narratives make it highly rewatchable and a source of nostalgic joy for many.",
+    "tags": [
+     "Classic Kids' Cartoon",
+     "Wholesome Comedy",
+     "Imaginative Adventures",
+     "Toddler's Perspective",
+     "Family-Friendly Fun",
+     "Nostalgic Viewing",
+     "Distinctive Animation",
+     "Simple & Engaging",
+     "Humorous Antics"
+    ],
+    "keywords": [
+     "baby",
+     "friendship",
+     "toddler",
+     "nostalgic",
+     "playful",
+     "lighthearted"
+    ]
+   },
+   {
+    "pid": 2000000002437,
+    "title": "Pocoyo",
+    "year": 2005,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Kids",
+     "Family"
+    ],
+    "essence_text": "A charming and educational animated series designed for very young children, focusing on a curious toddler and his diverse group of friends. Its highly distinctive, minimalist visual style and vibrant color palette create an inviting and playful world. Each episode offers gentle lessons on simple concepts, friendship, and basic social interactions through whimsical, character-driven adventures. It's a truly wholesome and comforting watch, perfect for fostering early learning and imaginative...",
+    "tags": [
+     "Pre-School Education",
+     "Gentle & Wholesome",
+     "Visually Distinctive",
+     "Character-Driven Learning",
+     "Simple Adventures",
+     "Friendship Themes",
+     "Bright & Colorful",
+     "Childlike Wonder",
+     "Playful Humor"
+    ],
+    "keywords": [
+     "animation"
+    ]
+   },
+   {
+    "pid": 2000000002005,
+    "title": "The New Adventures of Winnie the Pooh",
+    "year": 1988,
+    "media_type": "show",
+    "genres": [
+     "Family",
+     "Animation",
+     "Comedy",
+     "Kids"
+    ],
+    "essence_text": "This animated series offers a truly wholesome and heartwarming experience, bringing the classic Winnie the Pooh stories to life with gentle charm. It's a comforting escape into the Hundred Acre Wood, defined by its endearing characters and their timeless lessons on friendship and kindness. The series is perfect for family viewing, serving as both a delightful introduction for new generations and a nostalgic treat for adults. Its quiet, unassuming nature makes it an ideal background or...",
+    "tags": [
+     "Classic Children's",
+     "Gentle Animation",
+     "Wholesome Entertainment",
+     "Beloved Characters",
+     "Friendship Themes",
+     "Nostalgic Charm",
+     "Simple Pleasures",
+     "Comfort Watch",
+     "Family-Friendly",
+     "Heartwarming"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 1000000893366,
+    "title": "Little Nicholas: Happy As Can Be",
+    "year": 2022,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family"
+    ],
+    "essence_text": "A charming animated biopic that brings to life the creators of Little Nicolas, Jean-Jacques Sempé and René Goscinny, and the beloved character himself. The film explores the enriching childhood of Nicolas through schoolyard games, summer camp pranks, and the power of friendship. It is a meta-narrative that celebrates creativity, nostalgia, and the enduring magic of childhood imagination. The film provides a wholesome and heartwarming experience suitable for all ages.",
+    "tags": [
+     "Animated Biopic",
+     "French Animation",
+     "Childhood Memories",
+     "Friendship",
+     "Historical Setting",
+     "Charming",
+     "Meta-Narrative",
+     "Wholesome",
+     "Nostalgic"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 2000000065136,
+    "title": "Barbapapa",
+    "year": 1974,
+    "media_type": "show",
+    "genres": [
+     "Kids",
+     "Animation",
+     "Family"
+    ],
+    "essence_text": "A classic, incredibly wholesome children's animation featuring the beloved shapeshifting Barbapapa family. Each episode delivers gentle, imaginative adventures focused on problem-solving and helping others, often with subtle environmental or social lessons. Its distinctive, colorful visual style and comforting tone make it a perfect, nostalgic comfort watch for young audiences and families alike, creating a truly charming and peaceful viewing experience.",
+    "tags": [
+     "Wholesome Children's Animation",
+     "Gentle Comedy",
+     "Shapeshifting Adventures",
+     "Family-Centric Themes",
+     "Problem-Solving Narratives",
+     "Subtle Educational Elements",
+     "Classic Cartoon",
+     "Distinctive Visual Style",
+     "Nostalgic Charm",
+     "Peaceful & Cheerful"
+    ],
+    "keywords": [
+     "cartoon",
+     "children's story",
+     "baby story",
+     "baby boy",
+     "children cartoon",
+     "les barbapapa"
+    ]
+   },
+   {
+    "pid": 2000000002160,
+    "title": "Alvin and the Chipmunks",
+    "year": 1983,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "A heartwarming and iconic animated series, 'Alvin and the Chipmunks' delivers wholesome entertainment through its catchy music and lighthearted adventures. The show centers on the comedic antics and occasional life lessons of three chipmunk brothers navigating life with their human guardian. Its strong emphasis on family dynamics and the pursuit of pop stardom makes it a fun, rewatchable comfort watch for multiple generations. The infectious songs and physical comedy are central to its...",
+    "tags": [
+     "Classic Children's Animation",
+     "Musical Comedy",
+     "Wholesome Family Fun",
+     "Nostalgic Cartoon",
+     "Singing Animal Characters",
+     "Family Dynamics",
+     "Showbiz Antics",
+     "Lighthearted Adventures",
+     "Iconic Character Voices"
+    ],
+    "keywords": [
+     "chipmunk"
+    ]
+   },
+   {
+    "pid": 1000000940551,
+    "title": "Migration",
+    "year": 2023,
+    "media_type": "movie",
+    "genres": [
+     "Family",
+     "Comedy",
+     "Adventure",
+     "Animation"
+    ],
+    "essence_text": "This animated adventure delivers a charming and visually appealing family road trip, following a cautious duck family's hilarious and heartwarming journey. It's a predominantly wholesome and fast-paced experience, filled with endearing characters and vibrant animation. The film balances gentle humor with moments of wonder and mild peril, making it a perfect pure escapism for audiences of all ages. It emphasizes themes of family bonds and stepping outside one's comfort zone.",
+    "tags": [
+     "Animated Family Adventure",
+     "Wholesome Comedy",
+     "Road Trip Story",
+     "Animal Protagonists",
+     "Lighthearted Fun",
+     "Visually Engaging",
+     "Journey of Discovery",
+     "Coming-of-Age Themes",
+     "Heartwarming"
+    ],
+    "keywords": [
+     "duck",
+     "villain",
+     "migration",
+     "flight",
+     "anthropomorphism",
+     "family",
+     "animals",
+     "chef",
+     "overprotective father",
+     "illumination",
+     "bird"
+    ]
+   },
+   {
+    "pid": 2000000006138,
+    "title": "Well, Just You Wait!",
+    "year": 1969,
+    "media_type": "show",
+    "genres": [
+     "Family",
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "A timeless animated classic, 'Nu, Pogodi!' delivers pure, unadulterated physical comedy through the endless pursuit of a mischievous wolf by a clever hare. Its humor is almost entirely visual and sound-driven, making it universally accessible and endlessly rewatchable. This charming cartoon is a wholesome, fast-paced escapade, perfect for all ages and a beloved staple of comfort viewing.",
+    "tags": [
+     "Classic Animation",
+     "Slapstick Comedy",
+     "Silent Comedy",
+     "Chase Cartoon",
+     "Family-Friendly",
+     "Visual Storytelling",
+     "Iconic Characters",
+     "Highly Rewatchable",
+     "Soundscape Driven"
+    ],
+    "keywords": [
+     "wolf",
+     "tricks",
+     "cartoon",
+     "hase",
+     "jen pockej"
+    ]
+   },
+   {
+    "pid": 1000001029119,
+    "title": "Minions & More Volume 1",
+    "year": 2022,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Adventure",
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "This compilation offers a delightful collection of animated shorts, perfect for family viewing. Led by popular characters like the Minions, it's a dose of pure escapism filled with fast-paced, wholesome, and often absurd physical comedy. The vibrant visuals and humorous antics make it an excellent background-friendly or comfort watch, guaranteed to bring laughs to audiences of all ages.",
+    "tags": [
+     "Family-Friendly Animation",
+     "Collection of Shorts",
+     "Whimsical Comedy",
+     "Absurdist Humor",
+     "Physical Gags",
+     "Beloved Characters",
+     "High Rewatchability",
+     "Laughter-Inducing",
+     "Visual Spectacle"
+    ],
+    "keywords": []
+   },
+   {
+    "pid": 1000000011224,
+    "title": "Cinderella",
+    "year": 1950,
+    "media_type": "movie",
+    "genres": [
+     "Family",
+     "Fantasy",
+     "Animation",
+     "Romance"
+    ],
+    "essence_text": "A quintessential animated fairy tale that evokes pure wonder and wholesomeness with its timeless narrative. It's a journey of hope and perseverance, underscored by charming characters and memorable musical numbers. The film's classic animation style and heartwarming romance make it a truly comforting and uplifting viewing experience. It's an enduring piece of cinematic history that continues to charm audiences across generations.",
+    "tags": [
+     "Classic Animation",
+     "Magical Fairy Tale",
+     "Wholesome Romance",
+     "Hopeful & Uplifting",
+     "Musical Fantasy",
+     "Timeless Charm",
+     "Dream Fulfillment",
+     "Family-Friendly Adventure",
+     "Iconic Disney"
+    ],
+    "keywords": [
+     "princess",
+     "based on novel or book",
+     "loss of loved one",
+     "mouse",
+     "ball",
+     "fairy",
+     "cartoon",
+     "prince",
+     "villain",
+     "musical",
+     "midnight",
+     "love"
+    ]
+   },
+   {
+    "pid": 2000000082728,
+    "title": "Bluey",
+    "year": 2018,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Kids",
+     "Comedy"
+    ],
+    "essence_text": "This wonderfully wholesome animated series celebrates the joy and chaos of family life through the boundless imagination of a Blue Heeler puppy. Each episode is a masterclass in relatable parenting, imaginative play, and gentle humor, offering profound lessons on emotional resilience and social dynamics for all ages. It's a truly special show that balances heartwarming moments with genuine wit, making it a comfort watch that transcends typical children's programming. The series offers pure...",
+    "tags": [
+     "Wholesome Family Animation",
+     "Imaginative Play",
+     "Australian Life",
+     "Gentle Humor",
+     "Relatable Parenting",
+     "Children's Education",
+     "Emotional Intelligence",
+     "Joyful",
+     "Highly Rewatchable",
+     "Intergenerational Appeal"
+    ],
+    "keywords": [
+     "friendship",
+     "growing up",
+     "coming of age",
+     "dog",
+     "family",
+     "game",
+     "toddler",
+     "childhood",
+     "curious",
+     "pre-school",
+     "lighthearted",
+     "whimsical"
+    ]
+   }
+  ]
+ }
+]

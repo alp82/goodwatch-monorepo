@@ -1,0 +1,69 @@
+{
+ "stages": {
+  "r3-combo": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title",
+   "qdrant_sparse",
+   "spell"
+  ],
+  "r3-combo-fast": [
+   "qemb",
+   "qdrant_batch",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title",
+   "spell"
+  ],
+  "r4-combo": [
+   "crate_text",
+   "qemb",
+   "qdrant_emb",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title",
+   "qdrant_sparse",
+   "spell",
+   "r4_extra"
+  ],
+  "r4-combo-fast": [
+   "qemb",
+   "qdrant_batch",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title",
+   "spell",
+   "r4_extra"
+  ],
+  "r4-fast-noref": [
+   "qemb",
+   "qdrant_batch",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title",
+   "spell",
+   "r4_extra"
+  ],
+  "r4-fast-nocov": [
+   "qemb",
+   "qdrant_batch",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title",
+   "spell",
+   "r4_extra"
+  ],
+  "r4-fast-bigram1": [
+   "qemb",
+   "qdrant_batch",
+   "fp_full",
+   "qemb_extra",
+   "fuzzy_title",
+   "spell",
+   "r4_extra"
+  ]
+ }
+}

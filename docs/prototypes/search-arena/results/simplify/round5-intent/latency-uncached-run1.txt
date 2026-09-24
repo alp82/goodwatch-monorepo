@@ -1,0 +1,7 @@
+latency, uncached query encodes, reps 5, 133 queries
+| candidate | p50 ms | p95 ms | mean ms | max ms | encodes / query (mean, max) | top 10 differs from saved |
+|---|---|---|---|---|---|---|
+| r6 | 150.3 | 657.9 | 250.4 | 959.4 | 2.53, 11 | 0 |
+| combo-safe-v2-wcred | 194.3 | 575.5 | 232.7 | 966.8 | 2.41, 11 | 0 |
+| combo-safe-v2-wcred-par | 139.0 | 573.0 | 217.3 | 966.6 | 2.41, 11 | – |
+| combo-safe-v2-wcred-me5s | 121.2 | 579.4 | 218.7 | 962.1 | 2.27, 11 | – |

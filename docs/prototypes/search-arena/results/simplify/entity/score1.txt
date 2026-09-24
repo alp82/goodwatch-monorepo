@@ -1,0 +1,8 @@
+| candidate | dev | dsty | ho | ho2 | ho3 | h3sty | ho4 | bad5 dev/ho/ho2/ho3/ho4 = tot | unj tot | own10 dsty/h3sty/ho4 | title@1 | p50 ms | p95 ms |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| r6 | 0.836 | 0.812 | 0.761 | 0.728 | 0.893 | 0.884 | 0.837 | 10/10/17/1/2 = 40 | 0 | 6.00/6.00/6.00 | 6/7 | 112.2 | 554.2 |
+| entity-resolver | 0.834 (c0.840 u5) | 0.788 (c0.823 u4) | 0.761 | 0.721 (c0.728 u2) | 0.890 (c0.899 u2) | 0.895 | 0.798 (c0.871 u16) | 9/10/17/1/2 = 39 | 25 | 6.00/6.00/5.56 | 6/7 | 91.1 | 390.2 |
+| entity-lean | 0.829 (c0.837 u7) | 0.788 (c0.823 u4) | 0.761 | 0.721 (c0.728 u2) | 0.890 (c0.899 u2) | 0.895 | 0.798 (c0.871 u16) | 9/10/17/1/2 = 39 | 27 | 6.00/6.00/5.56 | 6/7 | 92.3 | 426.0 |
+| entity-lean-nofuzzy | 0.829 (c0.837 u7) | 0.788 (c0.823 u4) | 0.761 | 0.721 (c0.728 u2) | 0.871 (c0.876 u1) | 0.895 | 0.798 (c0.871 u16) | 9/10/17/1/2 = 39 | 26 | 6.00/6.00/5.56 | 6/7 | 90.7 | 414.8 |
+ndcg10 per split (round-6 cut rule); '(c… u…)' = condensed ndcg10 with ungraded titles skipped, and the unjudged count in the top 10, shown only when a split has ungraded titles. Latency: in-process ms per query after the Jev reading, compare only against r6 from the same run.
+127 queries x 4 candidates in 286 s (incl. loading). Lists: /home/alp/dev/projects/goodwatch/goodwatch-monorepo/.claude/worktrees/search-simplify/docs/prototypes/search-arena/results/simplify/lists

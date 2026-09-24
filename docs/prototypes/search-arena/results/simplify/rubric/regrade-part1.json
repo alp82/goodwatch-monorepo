@@ -1,0 +1,6751 @@
+[
+ {
+  "query_id": "lab-00",
+  "query": "complete nonsense",
+  "intent": "Deliberately absurd or surreal comedy where nonsense is the point (sketch shows, anti-humor). Generic family animation or merely bad films are wrong.",
+  "items": [
+   {
+    "pid": 1000000013158,
+    "title": "Aqua Teen Hunger Force Colon Movie Film for Theaters",
+    "year": 2007,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Action",
+     "Animation",
+     "Adventure",
+     "Fantasy",
+     "Science Fiction"
+    ],
+    "essence_text": "A feature-length expansion of the iconic Adult Swim series, this film delivers an overdose of anarchic, absurdist humor and surreal non-sequiturs. It's a chaotic, dialogue-driven romp that revels in its own lack of coherent plot and bizarre character interactions. Fans of the show will find more of the same irreverent comedy and off-the-wall antics, offering pure escapism into a world where logic is a distant concept. Expect highly quotable lines and a visual style that perfectly complements...",
+    "tags": [
+     "Absurdist Comedy",
+     "Adult Animation",
+     "Surreal Humor",
+     "Cult Classic",
+     "Nonsensical Plot",
+     "Character-Driven Comedy",
+     "Satirical",
+     "Improvised Feel",
+     "Off-the-Wall"
+    ],
+    "keywords": [
+     "africa",
+     "surrealism",
+     "robot",
+     "adult animation",
+     "aftercreditsstinger"
+    ],
+    "credits": {
+     "directors": [
+      "Dave Willis",
+      "Matt Maiellaro"
+     ],
+     "writers": [
+      "Dave Willis",
+      "Matt Maiellaro"
+     ],
+     "cast": [
+      "Dana Snyder",
+      "Carey Means",
+      "Dave Willis",
+      "Andy Merrill",
+      "Bruce Campbell"
+     ],
+     "companies": [
+      "Adult Swim",
+      "Williams Street",
+      "First Look Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 1000000011302,
+    "title": "Bananas",
+    "year": 1971,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A politically charged satire wrapped in layers of absurdist comedy and madcap antics. The film relentlessly mocks political systems and societal norms through over-the-top characters and nonsensical situations. Its humor is broad, relying heavily on slapstick and parody, creating an experience that is both chaotic and thought-provoking. Expect a barrage of irreverent gags and a skewering of authority at every turn.",
+    "tags": [
+     "Political Satire",
+     "Absurdist Comedy",
+     "Slapstick Humor",
+     "Eccentric Characters",
+     "Social Commentary",
+     "Anti-Establishment",
+     "Madcap",
+     "Nonsensical",
+     "Parody"
+    ],
+    "keywords": [
+     "revolution",
+     "political activism",
+     "loser",
+     "banana republic",
+     "anarchic comedy"
+    ],
+    "credits": {
+     "directors": [
+      "Woody Allen"
+     ],
+     "writers": [
+      "Woody Allen",
+      "Mickey Rose"
+     ],
+     "cast": [
+      "Woody Allen",
+      "Louise Lasser",
+      "Carlos Montalbán",
+      "Nati Abascal",
+      "Jacobo Morales"
+     ],
+     "companies": [
+      "Jack Rollins & Charles H. Joffe Productions",
+      "United Artists"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000762,
+    "title": "Monty Python and the Holy Grail",
+    "year": 1975,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Comedy",
+     "Fantasy"
+    ],
+    "essence_text": "A quintessential absurdist comedy that reimagines the legend of King Arthur with a uniquely British, irreverent twist. Filled with iconic sketches, memorable quotes, and brilliant wordplay, it's a relentless barrage of anachronistic humor and visual gags. The film's defining characteristic is its commitment to the utterly nonsensical, creating a perpetually rewatchable and endlessly quotable comedic masterpiece that continues to influence comedy.",
+    "tags": [
+     "Absurdist Comedy",
+     "British Humor",
+     "Satirical Fantasy",
+     "Cult Classic",
+     "Historical Parody",
+     "Sketch Comedy",
+     "Dialogue-Driven",
+     "Irreverent",
+     "Anachronistic",
+     "Meta-Humor"
+    ],
+    "keywords": [
+     "holy grail",
+     "swordplay",
+     "england",
+     "monk",
+     "wedding reception",
+     "scotland yard",
+     "animal attack",
+     "camelot",
+     "round table",
+     "chapter",
+     "satire",
+     "parody"
+    ],
+    "credits": {
+     "directors": [
+      "Terry Gilliam",
+      "Terry Jones"
+     ],
+     "writers": [
+      "Terry Gilliam",
+      "Michael Palin",
+      "John Cleese"
+     ],
+     "cast": [
+      "Graham Chapman",
+      "John Cleese",
+      "Eric Idle",
+      "Terry Gilliam",
+      "Terry Jones"
+     ],
+     "companies": [
+      "Python (Monty) Pictures",
+      "Michael White Productions",
+      "National Film Trustee Company"
+     ]
+    }
+   },
+   {
+    "pid": 1000000228165,
+    "title": "The SpongeBob Movie: Sponge Out of Water",
+    "year": 2015,
+    "media_type": "movie",
+    "genres": [
+     "Family",
+     "Comedy",
+     "Adventure",
+     "Animation"
+    ],
+    "essence_text": "A wildly imaginative and energetically absurd animated adventure that seamlessly blends traditional animation with live-action. It's a non-stop barrage of gags, fourth-wall breaks, and visual silliness, perfect for audiences of all ages who appreciate irreverent humor. The film delivers pure, unadulterated escapism with its familiar, beloved characters embarking on a truly bizarre quest. It's a vibrant, laugh-out-loud experience that embraces its own cartoon logic and delights in its...",
+    "tags": [
+     "Animated Comedy",
+     "Family Adventure",
+     "Absurdist Humor",
+     "Zany Characters",
+     "Pop Culture References",
+     "Mixed Media",
+     "Fourth Wall Breaking",
+     "Lighthearted Fun",
+     "Silly & Energetic",
+     "Imagination-Driven"
+    ],
+    "keywords": [
+     "sea",
+     "ocean",
+     "villain",
+     "sequel",
+     "computer animation",
+     "based on cartoon",
+     "pirate",
+     "superhero team",
+     "aftercreditsstinger",
+     "live action and animation",
+     "based on tv series",
+     "amused"
+    ],
+    "credits": {
+     "directors": [
+      "Mike Mitchell",
+      "Paul Tibbitt"
+     ],
+     "writers": [
+      "Glenn Berger",
+      "Jonathan Aibel",
+      "Stephen Hillenburg"
+     ],
+     "cast": [
+      "Tom Kenny",
+      "Bill Fagerbakke",
+      "Rodger Bumpass",
+      "Clancy Brown",
+      "Mr. Lawrence"
+     ],
+     "companies": [
+      "Paramount Animation",
+      "Paramount Pictures",
+      "Nickelodeon Movies"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002759,
+    "title": "The Day Today",
+    "year": 1994,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A groundbreaking and hilariously dark satire that mercilessly parodies contemporary news broadcasting. Its genius lies in its absurd humor, razor-sharp wit, and an unsettlingly accurate portrayal of media sensationalism and manipulation. The show’s distinctive visual and narrative style creates a world that is both bizarre and chillingly familiar. It's a highly influential, thought-provoking comedy that remains incisively relevant to this day.",
+    "tags": [
+     "News Satire",
+     "Absurdist Comedy",
+     "Media Parody",
+     "British Cult Classic",
+     "Darkly Humorous",
+     "Cutting Social Commentary",
+     "Unique Visual Style",
+     "Cringe Humor",
+     "Surreal"
+    ],
+    "keywords": [
+     "surreal",
+     "satire",
+     "parody",
+     "current affairs"
+    ],
+    "credits": {
+     "directors": [
+      "Andrew Gillman"
+     ],
+     "creators": [
+      "David Schneider",
+      "Steve Coogan"
+     ],
+     "writers": [
+      "David Schneider",
+      "Steve Coogan",
+      "Peter Baynham"
+     ],
+     "cast": [
+      "Chris Morris",
+      "Patrick Marber",
+      "Doon Mackichan",
+      "Steve Coogan",
+      "Rebecca Front"
+     ],
+     "companies": [
+      "TalkBack Productions",
+      "BBC"
+     ],
+     "networks": [
+      "BBC Two"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000813,
+    "title": "Airplane!",
+    "year": 1980,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A landmark in comedic filmmaking, this movie delivers a relentless barrage of absurd visual gags, rapid-fire puns, and irreverent one-liners. Its genius lies in its deadpan delivery of preposterous situations, constantly subverting expectations for uproarious laughter. It’s a quintessential pure escapism experience that remains endlessly rewatchable for its sheer density of jokes. Prepare for a non-stop, hilarious ride that redefined parody films.",
+    "tags": [
+     "Slapstick Comedy",
+     "Parody Film",
+     "Absurdist Humor",
+     "Rapid-Fire Gags",
+     "Iconic Dialogue",
+     "Cult Classic",
+     "Satirical",
+     "Irreverent",
+     "Zany Fun"
+    ],
+    "keywords": [
+     "chicago, illinois",
+     "post-traumatic stress disorder (ptsd)",
+     "airplane",
+     "cataclysm",
+     "nun",
+     "guitar",
+     "alcohol",
+     "stewardess",
+     "taxi driver",
+     "passenger",
+     "fear of flying",
+     "pilot"
+    ],
+    "credits": {
+     "directors": [
+      "Jerry Zucker",
+      "Jim Abrahams",
+      "David Zucker"
+     ],
+     "writers": [
+      "Jerry Zucker",
+      "Jim Abrahams",
+      "David Zucker"
+     ],
+     "cast": [
+      "Robert Hays",
+      "Julie Hagerty",
+      "Leslie Nielsen",
+      "Kareem Abdul-Jabbar",
+      "Lloyd Bridges"
+     ],
+     "companies": [
+      "Paramount Pictures",
+      "Howard W. Koch Productions"
+     ]
+    }
+   },
+   {
+    "pid": 2000000001229,
+    "title": "Tim and Eric Awesome Show, Great Job!",
+    "year": 2007,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A descent into the bizarre and uncomfortable, this sketch comedy show embraces the absurd and the grotesque. The humor is derived from surreal situations, cringe-inducing awkwardness, and a deliberately low-budget aesthetic. It's a satire of public-access television, complete with bizarre commercials and eccentric characters. Prepare for a viewing experience that is both unsettling and strangely compelling, a true 'nightmare version of television.'",
+    "tags": [
+     "Absurdist Sketch Comedy",
+     "Surreal Humor",
+     "Cringe Comedy",
+     "Nightmare Television",
+     "Deliberately Low-Budget",
+     "Public Access Aesthetic",
+     "Bizarre Commercials",
+     "Eccentric Characters",
+     "Satirical Parody"
+    ],
+    "keywords": [
+     "sketch comedy"
+    ],
+    "credits": {
+     "directors": [
+      "Tim Heidecker",
+      "Eric Wareheim",
+      "Jonathan Krisel"
+     ],
+     "creators": [
+      "Jonathan Krisel",
+      "Jon Mugar"
+     ],
+     "writers": [
+      "Jonathan Krisel",
+      "Jon Mugar",
+      "Doug Lussenhop"
+     ],
+     "cast": [
+      "Eric Wareheim",
+      "Tim Heidecker",
+      "Stephanie Courtney"
+     ],
+     "companies": [
+      "Abso Lutely Productions"
+     ],
+     "networks": [
+      "Adult Swim"
+     ]
+    }
+   },
+   {
+    "pid": 1000000390989,
+    "title": "Sharknado 4: The 4th Awakens",
+    "year": 2016,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Science Fiction"
+    ],
+    "essence_text": "Pure, unapologetic schlock, delivering exactly what you'd expect: absurd scenarios, over-the-top gore, and intentionally terrible effects. It embraces its own absurdity with gusto, offering a heavy dose of camp, parody, and self-aware humor. Best enjoyed with a group of friends ready to laugh at the ridiculousness. Not meant to be taken seriously, this is pure, disposable entertainment.",
+    "tags": [
+     "Campy Disaster",
+     "Absurdist Shark Action",
+     "Pop Culture Parody",
+     "So-Bad-It's-Good",
+     "Over-the-Top Spectacle",
+     "Gore & Creature Violence",
+     "Satirical Humor",
+     "B-Movie Aesthetic"
+    ],
+    "keywords": [
+     "shark attack",
+     "sequel",
+     "las vegas",
+     "shark",
+     "creature feature"
+    ],
+    "credits": {
+     "directors": [
+      "Anthony C. Ferrante"
+     ],
+     "writers": [
+      "Thunder Levin"
+     ],
+     "cast": [
+      "Ian Ziering",
+      "Ryan Whitney",
+      "Tara Reid",
+      "David Hasselhoff",
+      "Gary Busey"
+     ],
+     "companies": [
+      "The Asylum",
+      "Syfy"
+     ]
+    }
+   },
+   {
+    "pid": 2000000056590,
+    "title": "The Eric Andre Show",
+    "year": 2012,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A late-night talk show deconstructed into its most bizarre and unpredictable form. Expect a barrage of absurdist humor, cringe comedy, and surreal encounters that defy conventional television norms. It's a chaotic blend of celebrity interviews, public pranks, and meta-commentary that revels in its own anarchy. This is not for the faint of heart, but for those who appreciate comedy that pushes boundaries and embraces the bizarre.",
+    "tags": [
+     "Absurdist Talk Show",
+     "Cringe Comedy",
+     "Meta-Humor",
+     "Cult TV",
+     "Improv Comedy",
+     "Satirical",
+     "Unconventional",
+     "Anarchic",
+     "Late Night"
+    ],
+    "keywords": [
+     "surreal",
+     "talk show",
+     "hidden camera",
+     "parody",
+     "absurdist humor"
+    ],
+    "credits": {
+     "directors": [
+      "Kitao Sakurai",
+      "Jeff Tremaine"
+     ],
+     "creators": [
+      "Kitao Sakurai",
+      "Eric Andre"
+     ],
+     "writers": [
+      "Kitao Sakurai",
+      "Derrick Beckles",
+      "Eric Andre"
+     ],
+     "cast": [
+      "Eric Andre",
+      "Hannibal Buress",
+      "James Hazley",
+      "Pfelton Sutton",
+      "Adora Dei"
+     ],
+     "companies": [
+      "Working For Monsters",
+      "Abso Lutely Productions",
+      "Sick Duck Productions"
+     ],
+     "networks": [
+      "Adult Swim"
+     ]
+    }
+   },
+   {
+    "pid": 1000000112679,
+    "title": "Italian Spiderman",
+    "year": 2007,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Action"
+    ],
+    "essence_text": "This is a hilarious and over-the-top parody that brilliantly mimics the style of vintage Italian action–adventure films, embracing and exaggerating their charmingly terrible qualities. Its humor stems from its deliberate bad acting, nonsensical plots, and ridiculous special effects, making it a masterclass in camp and irony. The film's short-form nature and highly specific aesthetic ensure it's incredibly rewatchable for those who appreciate its unique brand of absurdist comedy. It's a...",
+    "tags": [
+     "Absurdist Comedy",
+     "Cult Classic",
+     "Parody Film",
+     "Campy & Irony",
+     "Intentional Bad Filmmaking",
+     "Nostalgic Homage",
+     "Over-the-Top Action",
+     "Bizarre Humor",
+     "Internet Phenomenon",
+     "Stylized Visuals"
+    ],
+    "keywords": [
+     "spoof"
+    ],
+    "credits": {
+     "directors": [
+      "Dario Russo"
+     ],
+     "writers": [
+      "David Ashby",
+      "Dario Russo",
+      "Tait Wilson"
+     ],
+     "cast": [
+      "David Ashby",
+      "Leombruno Tosca",
+      "Carmine Russo",
+      "Susanna Dekker"
+     ],
+     "companies": [
+      "Alrugo Entertainment"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "lab-06",
+  "query": "furious",
+  "intent": "Ambiguous mood vs title lookup: rage-driven, ferocious, high-intensity titles; the Fast & Furious franchise is a plausible title reading.",
+  "items": [
+   {
+    "pid": 1000000000024,
+    "title": "Kill Bill: Vol. 1",
+    "year": 2003,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime"
+    ],
+    "essence_text": "A hyper-stylized and adrenaline-fueled revenge epic that meticulously blends martial arts cinema, spaghetti westerns, and grindhouse aesthetics into a unique cinematic experience. Defined by its relentless pace, vivid visual flair, and an iconic, genre-spanning soundtrack, the film is a masterclass in homage and spectacle. Though intensely violent, it delivers a thrilling and cathartic journey of retribution, solidifying its place as a cornerstone of modern action cinema. Its sheer audacity...",
+    "tags": [
+     "Hyper-Stylized Action",
+     "Revenge Epic",
+     "Martial Arts Spectacle",
+     "Cult Classic",
+     "Visually Dynamic",
+     "Iconic Soundtrack",
+     "Grindhouse Homage",
+     "Non-Linear Narrative",
+     "Pop Culture Landmark",
+     "Tarantino Esque"
+    ],
+    "keywords": [
+     "martial arts",
+     "japan",
+     "kung fu",
+     "showdown",
+     "coma",
+     "sword",
+     "asia",
+     "yakuza",
+     "bride",
+     "sword fight",
+     "revenge",
+     "vigilante"
+    ],
+    "credits": {
+     "directors": [
+      "Quentin Tarantino"
+     ],
+     "writers": [
+      "Quentin Tarantino",
+      "Uma Thurman"
+     ],
+     "cast": [
+      "Uma Thurman",
+      "Lucy Liu",
+      "Vivica A. Fox",
+      "Daryl Hannah",
+      "David Carradine"
+     ],
+     "companies": [
+      "Miramax",
+      "A Band Apart",
+      "Super Cool ManChu"
+     ]
+    }
+   },
+   {
+    "pid": 1000000087035,
+    "title": "Furious",
+    "year": "2011",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000781732,
+    "title": "Animal",
+    "year": 2023,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "This film is a visceral and explosive saga of revenge, driven by intense family dynamics and a relentless pursuit of retribution. It offers an experience of immense spectacle and high adrenaline, with a powerful, often operatic musical score that underscores its emotional weight. The narrative is fast-paced and uncompromisingly violent, making it a compelling watch for those seeking a grand-scale action-drama. It explores themes of loyalty, betrayal, and the cyclical nature of violence...",
+    "tags": [
+     "Action-Packed Revenge",
+     "Intense Violence",
+     "Family Saga",
+     "High Spectacle",
+     "Crime Thriller",
+     "Emotional & Dramatic",
+     "Epic Scope",
+     "Dominant Score",
+     "Underworld Conflict"
+    ],
+    "keywords": [
+     "fistfight",
+     "shootout",
+     "held at gunpoint",
+     "machine gun",
+     "hand to hand combat",
+     "action hero",
+     "father son conflict",
+     "complex relationship"
+    ],
+    "credits": {
+     "directors": [
+      "Sandeep Reddy Vanga"
+     ],
+     "writers": [
+      "Sandeep Reddy Vanga",
+      "Pranay Reddy Vanga",
+      "Suresh Bandaru"
+     ],
+     "cast": [
+      "Ranbir Kapoor",
+      "Rashmika Mandanna",
+      "Anil Kapoor",
+      "Bobby Deol",
+      "Triptii Dimri"
+     ],
+     "companies": [
+      "T-Series",
+      "Bhadrakali Pictures",
+      "ST Film"
+     ]
+    }
+   },
+   {
+    "pid": 1000000094329,
+    "title": "The Raid",
+    "year": 2012,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "Crime"
+    ],
+    "essence_text": "An adrenaline-fueled, hyper-violent action thriller that is a relentless barrage of martial arts combat. The film throws a SWAT team into a high-rise controlled by a drug lord, leading to an incredibly fast-paced and brutal fight for survival. With minimal dialogue and a lean plot, its genius lies in its groundbreaking, bone-crunching fight choreography and relentless energy. It's a pure spectacle of action, designed to keep viewers on the edge of their seats with its sheer intensity and...",
+    "tags": [
+     "Relentless Action Thriller",
+     "Martial Arts Masterpiece",
+     "Hyper-Violent",
+     "Non-Stop Adrenaline",
+     "Confined Space Thriller",
+     "Indonesian Cinema",
+     "Visceral & Brutal",
+     "Choreographed Combat",
+     "Minimalist Plot"
+    ],
+    "keywords": [
+     "martial arts",
+     "crime boss",
+     "tenement",
+     "high rise",
+     "monitor",
+     "tower block",
+     "jakarta indonesia",
+     "swat",
+     "aggressive",
+     "powerful"
+    ],
+    "credits": {
+     "directors": [
+      "Gareth Evans"
+     ],
+     "writers": [
+      "Gareth Evans"
+     ],
+     "cast": [
+      "Iko Uwais",
+      "Joe Taslim",
+      "Donny Alamsyah",
+      "Yayan Ruhian",
+      "Pierre Gruno"
+     ],
+     "companies": [
+      "Celluloid Dreams",
+      "PT. Merantau Films",
+      "XYZ Films"
+     ]
+    }
+   },
+   {
+    "pid": 2000000287238,
+    "title": "Furious",
+    "year": "2026",
+    "media_type": "show",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000625568,
+    "title": "Unhinged",
+    "year": 2020,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "Horror"
+    ],
+    "essence_text": "A relentless and high-octane thriller that taps into the common anxieties of road rage, escalating into a terrifying game of cat-and-mouse. It delivers constant tension and unsettling psychological terror, fueled by a truly unhinged antagonist. The film is a pure adrenaline-fueled ride, designed to keep viewers on the edge of their seats from start to finish, offering little respite from its grim pursuit.",
+    "tags": [
+     "Relentless Thriller",
+     "Road Rage Nightmare",
+     "Psychological Terror",
+     "High Tension",
+     "Suspenseful Pursuit",
+     "Disturbing Antagonist",
+     "Survival Story",
+     "Modern Urban Dread"
+    ],
+    "keywords": [
+     "psychopath",
+     "aggression",
+     "stalker",
+     "murder",
+     "arson",
+     "single mother",
+     "confrontation",
+     "divorced",
+     "threat",
+     "pickup truck",
+     "road rage",
+     "retribution"
+    ],
+    "credits": {
+     "directors": [
+      "Derrick Borte"
+     ],
+     "writers": [
+      "Carl Ellsworth"
+     ],
+     "cast": [
+      "Russell Crowe",
+      "Caren Pistorius",
+      "Gabriel Bateman",
+      "Jimmi Simpson",
+      "Austin P. McKenzie"
+     ],
+     "companies": [
+      "Solstice Studios",
+      "Burek Films",
+      "Ingenious Media"
+     ]
+    }
+   },
+   {
+    "pid": 1000000167104,
+    "title": "Furious",
+    "year": "1984",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000415381,
+    "title": "Furious",
+    "year": 2017,
+    "media_type": "movie",
+    "genres": [
+     "Fantasy",
+     "Action",
+     "Adventure"
+    ],
+    "essence_text": "A visually stunning historical epic depicting a legendary battle of courage and sacrifice. Set in 13th century Russia, it follows a small band of warriors defending their land against overwhelming odds. The film emphasizes themes of patriotism, endurance, and the fight for freedom. With its action-packed battle sequences and immersive world-building, it honors Russian folklore and the spirit of its heroes, creating a spectacle that balances adrenaline with moments of pathos.",
+    "tags": [
+     "Historical Epic",
+     "Courage and Sacrifice",
+     "Russian Folklore",
+     "Action-Packed Battles",
+     "Patriotism",
+     "Visually Stunning",
+     "Warfare",
+     "13th Century",
+     "Underdog Story"
+    ],
+    "keywords": [
+     "amnesia",
+     "insanity",
+     "swordsman",
+     "combat",
+     "horseman",
+     "medieval",
+     "russian history",
+     "mongol",
+     "mongol empire",
+     "13th century",
+     "medieval times",
+     "courage"
+    ],
+    "credits": {
+     "directors": [
+      "Dzhanik Fayziev",
+      "Ivan Shurkhovetskiy"
+     ],
+     "writers": [
+      "Sergey Yudakov",
+      "Dmitriy Paltsev",
+      "Dmitriy Raevskiy"
+     ],
+     "cast": [
+      "Ilya Malakov",
+      "Aleksandr Tsoy",
+      "Andrey Burkovskiy",
+      "Aleksandr Ilyin Jr",
+      "Aleksey Serebryakov"
+     ],
+     "companies": [
+      "Central Partnership"
+     ]
+    }
+   },
+   {
+    "pid": 1000000697843,
+    "title": "Extraction 2",
+    "year": 2023,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Thriller",
+     "Crime"
+    ],
+    "essence_text": "A relentlessly paced and explosive action thriller that plunges viewers into a world of high-stakes mercenary operations. Featuring incredibly visceral combat and a truly impressive display of choreographed action, it delivers pure adrenaline. The film is a masterclass in cinematic spectacle, designed to keep audiences on the edge of their seats with its non-stop intensity. It's an ideal watch for those seeking a hardcore, no-holds-barred action experience.",
+    "tags": [
+     "High-Octane Action",
+     "Relentless Thriller",
+     "Elite Mercenary",
+     "Visceral Combat",
+     "Intense Rescue Mission",
+     "Adrenaline-Fueled Spectacle",
+     "Global Operations",
+     "Gritty Realism",
+     "Cinematic Long Takes"
+    ],
+    "keywords": [
+     "explosive",
+     "mercenary",
+     "rescue mission",
+     "sequel",
+     "revenge",
+     "georgia europe",
+     "criminal underworld",
+     "based on graphic novel",
+     "behind enemy lines",
+     "gritty",
+     "violence",
+     "survival instinct"
+    ],
+    "credits": {
+     "directors": [
+      "Sam Hargrave"
+     ],
+     "writers": [
+      "Joe Russo",
+      "Anthony Russo",
+      "Ande Parks"
+     ],
+     "cast": [
+      "Chris Hemsworth",
+      "Golshifteh Farahani",
+      "Adam Bessa",
+      "Tornike Gogrichiani",
+      "Tornike Bziava"
+     ],
+     "companies": [
+      "AGBO",
+      "TGIM Films",
+      "Wild State"
+     ]
+    }
+   },
+   {
+    "pid": 1000000009799,
+    "title": "The Fast and the Furious",
+    "year": 2001,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Crime",
+     "Thriller"
+    ],
+    "essence_text": "An adrenaline-fueled thrill ride into the world of street racing, where loyalty and family bonds are tested. The film delivers high-octane action sequences and a gripping undercover cop narrative. It immerses viewers in the culture of car modification and underground racing. It's a high-energy spectacle that celebrates speed, style, and the camaraderie of a tight-knit crew.",
+    "tags": [
+     "High-Octane Action",
+     "Street Racing Culture",
+     "Undercover Cop Thriller",
+     "Brotherhood and Loyalty",
+     "Car Modification",
+     "Heist Elements",
+     "Adrenaline Rush",
+     "Early 2000s Aesthetic"
+    ],
+    "keywords": [
+     "street gang",
+     "undercover",
+     "car race",
+     "auto-tuning",
+     "street race",
+     "los angeles, california",
+     "aftercreditsstinger",
+     "duringcreditsstinger",
+     "based on magazine, newspaper or article",
+     "cars",
+     "earnest",
+     "excited"
+    ],
+    "credits": {
+     "directors": [
+      "Rob Cohen"
+     ],
+     "writers": [
+      "Gary Scott Thompson",
+      "David Ayer",
+      "Erik Bergquist"
+     ],
+     "cast": [
+      "Paul Walker",
+      "Vin Diesel",
+      "Michelle Rodriguez",
+      "Jordana Brewster",
+      "Rick Yune"
+     ],
+     "companies": [
+      "Ardustry Entertainment",
+      "Universal Pictures",
+      "Original Film"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "core-12",
+  "query": "with my parents",
+  "intent": "Titles that work across generations; no implicit content filter beyond broad appeal.",
+  "items": [
+   {
+    "pid": 2000000072027,
+    "title": "Raven's Home",
+    "year": 2017,
+    "media_type": "show",
+    "genres": [
+     "Family",
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A lighthearted family sitcom focusing on the humorous challenges of co-parenting and psychic antics. The series offers wholesome entertainment driven by its endearing characters and their relatable, if often fantastical, everyday situations. It's a feel-good watch, perfect for casual viewing and family bonding, offering consistent laughs and positive messages. The emphasis is on the warmth of found family and the comedic chaos that ensues from unexpected abilities.",
+    "tags": [
+     "Family Sitcom",
+     "Psychic Abilities",
+     "Co-Parenting Comedy",
+     "Wholesome Entertainment",
+     "Youth-Oriented",
+     "Humorous Misadventures",
+     "Friendship Themes",
+     "Everyday Life",
+     "Nostalgic Appeal"
+    ],
+    "keywords": [
+     "psychic power",
+     "single mother",
+     "spin off",
+     "sitcom"
+    ],
+    "credits": {
+     "directors": [
+      "Raven-Symoné",
+      "Leonard R. Garner, Jr.",
+      "Lynda Tarryk"
+     ],
+     "creators": [
+      "Raven-Symoné",
+      "Warren Hutcherson"
+     ],
+     "writers": [
+      "Anthony C. Hill",
+      "Chase Heinrich",
+      "Micah Steinberg"
+     ],
+     "cast": [
+      "Raven-Symoné",
+      "Anneliese Van Der Pol",
+      "Issac Ryan Brown",
+      "Navia Robinson",
+      "Jason Maybaum"
+     ],
+     "companies": [
+      "Rough Draft Productions",
+      "It's a Laugh Productions",
+      "Funny Boone Productions"
+     ],
+     "networks": [
+      "Disney Channel"
+     ]
+    }
+   },
+   {
+    "pid": 1000000008392,
+    "title": "My Neighbor Totoro",
+    "year": 1988,
+    "media_type": "movie",
+    "genres": [
+     "Fantasy",
+     "Animation",
+     "Family"
+    ],
+    "essence_text": "A truly heartwarming and enchanting experience, this film is a timeless journey into the wonders of childhood imagination and the magic hidden in nature. It cultivates a profound sense of awe and comfort, making it an ideal comfort watch for all ages. The exceptional animation and evocative score create a deeply immersive world, solidifying its status as a gentle and wholesome classic of fantasy storytelling.",
+    "tags": [
+     "Heartwarming Family Story",
+     "Magical Realism",
+     "Childlike Wonder",
+     "Nature & Folklore",
+     "Soothing & Wholesome",
+     "Iconic Animation",
+     "Timeless Classic",
+     "Gentle Fantasy",
+     "Enchanting Soundtrack"
+    ],
+    "keywords": [
+     "mother",
+     "sibling relationship",
+     "village",
+     "leave",
+     "rural area",
+     "hospital",
+     "new neighbor",
+     "new home",
+     "super power",
+     "magical creature",
+     "anime"
+    ],
+    "credits": {
+     "directors": [
+      "Hayao Miyazaki"
+     ],
+     "writers": [
+      "Hayao Miyazaki"
+     ],
+     "cast": [
+      "Noriko Hidaka",
+      "Chika Sakamoto",
+      "Hitoshi Takagi",
+      "Shigesato Itoi",
+      "Sumi Shimamoto"
+     ],
+     "companies": [
+      "Studio Ghibli",
+      "Nibariki",
+      "Tokuma Shoten"
+     ]
+    }
+   },
+   {
+    "pid": 1000000831827,
+    "title": "Far from the Tree",
+    "year": 2021,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family"
+    ],
+    "essence_text": "This heartwarming animated short explores the dynamics of a parent-child relationship through the eyes of a curious young raccoon. Set against the backdrop of an idyllic Pacific Northwest beach, it delicately balances the themes of exploration and parental concern. The film evokes feelings of warmth and tenderness, emphasizing the importance of family and the bittersweet nature of growing up. It's a simple yet emotionally resonant story suitable for all ages.",
+    "tags": [
+     "Family-Friendly",
+     "Animal Protagonist",
+     "Parent-Child Relationship",
+     "Pacific Northwest Setting",
+     "Emotional",
+     "Coming-of-Age",
+     "Safety Concerns",
+     "Curiosity"
+    ],
+    "keywords": [
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "Natalie Nourigat"
+     ],
+     "writers": [
+      "Natalie Nourigat"
+     ],
+     "cast": [],
+     "companies": [
+      "Walt Disney Pictures",
+      "Walt Disney Animation Studios"
+     ]
+    }
+   },
+   {
+    "pid": 1000000015789,
+    "title": "A Goofy Movie",
+    "year": 1995,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Comedy",
+     "Romance",
+     "Animation",
+     "Family"
+    ],
+    "essence_text": "A heartwarming and hilarious animated road trip that focuses on the endearing relationship between a father and son. This Disney classic blends physical comedy with genuine emotional moments as Goofy tries to connect with his teenage son Max. The film's memorable musical numbers and vibrant animation enhance the sense of adventure and fun. It's a nostalgic and wholesome experience that celebrates family bonds and the importance of staying true to yourself.",
+    "tags": [
+     "Family Road Trip",
+     "Father-Son Bonding",
+     "Classic Disney Animation",
+     "Wholesome Comedy",
+     "Coming-of-Age",
+     "Memorable Musical Numbers",
+     "Heartwarming",
+     "Nostalgic"
+    ],
+    "keywords": [
+     "parent child relationship",
+     "pop singer",
+     "cartoon",
+     "musical",
+     "road trip",
+     "celebrity",
+     "coming of age",
+     "first love",
+     "cross country trip",
+     "father son relationship"
+    ],
+    "credits": {
+     "directors": [
+      "Kevin Lima"
+     ],
+     "writers": [
+      "Brian Pimental",
+      "Chris Matheson",
+      "Jymn Magon"
+     ],
+     "cast": [
+      "Bill Farmer",
+      "Jason Marsden",
+      "Rob Paulsen",
+      "Jim Cummings",
+      "Kellie Martin"
+     ],
+     "companies": [
+      "Walt Disney Pictures",
+      "Walt Disney Animation",
+      "Phoenix Animation Studios"
+     ]
+    }
+   },
+   {
+    "pid": 1000000001585,
+    "title": "It's a Wonderful Life",
+    "year": 1946,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Family",
+     "Fantasy"
+    ],
+    "essence_text": "A timeless holiday classic, this film beautifully blends poignant drama with a touch of fantasy to explore the profound impact one life has on many. It's a deeply emotional journey into a man's existential crisis, ultimately delivering a powerful message of community, self-worth, and enduring hope. The narrative is a masterclass in character development and emotional catharsis, making it a beloved comfort watch for generations. It stands as a testament to the quiet heroism found in everyday...",
+    "tags": [
+     "Classic Christmas Film",
+     "Heartwarming Drama",
+     "Existential Crisis",
+     "Small Town Life",
+     "Community Spirit",
+     "Angelic Intervention",
+     "Bittersweet Narrative",
+     "Redemptive Story",
+     "Enduring Message"
+    ],
+    "keywords": [
+     "small town",
+     "angel",
+     "suicide attempt",
+     "holiday",
+     "bank",
+     "great depression",
+     "family business ",
+     "black and white",
+     "nervous breakdown",
+     "old house",
+     "newlywed",
+     "magic realism"
+    ],
+    "credits": {
+     "directors": [
+      "Frank Capra"
+     ],
+     "writers": [
+      "Frank Capra",
+      "Frances Goodrich",
+      "Albert Hackett"
+     ],
+     "cast": [
+      "James Stewart",
+      "Donna Reed",
+      "Lionel Barrymore",
+      "Thomas Mitchell",
+      "Henry Travers"
+     ],
+     "companies": [
+      "Liberty Films"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000788,
+    "title": "Mrs. Doubtfire",
+    "year": 1993,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Drama",
+     "Family"
+    ],
+    "essence_text": "This is a timeless, heartwarming family comedy driven by an iconic, powerhouse performance. It blends hilarious physical comedy and clever wit with genuine emotional depth, exploring themes of family bonds, divorce, and parental love. The film offers a cathartic journey of self-improvement wrapped in an unforgettable premise. It's a highly rewatchable comfort watch suitable for all ages, delivering both big laughs and heartfelt moments.",
+    "tags": [
+     "Family Comedy",
+     "Heartwarming",
+     "Robin Williams Showcase",
+     "Physical Comedy",
+     "Divorce & Reconciliation",
+     "Disguise & Identity",
+     "Parenting Themes",
+     "Nostalgic Classic",
+     "Uplifting"
+    ],
+    "keywords": [
+     "mask",
+     "parent child relationship",
+     "san francisco, california",
+     "social worker",
+     "transvestite",
+     "nanny",
+     "restaurant",
+     "fake identity",
+     "custody battle",
+     "responsibility",
+     "voice acting",
+     "divorced couple"
+    ],
+    "credits": {
+     "directors": [
+      "Chris Columbus"
+     ],
+     "writers": [
+      "Randi Mayem Singer",
+      "Leslie Dixon",
+      "Anne Fine"
+     ],
+     "cast": [
+      "Robin Williams",
+      "Sally Field",
+      "Lisa Jakub",
+      "Matthew Lawrence",
+      "Mara Wilson"
+     ],
+     "companies": [
+      "20th Century Fox",
+      "Blue Wolf Productions"
+     ]
+    }
+   },
+   {
+    "pid": 2000000004241,
+    "title": "8 Simple Rules",
+    "year": 2002,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "A warm and witty family sitcom that gently navigates the trials and tribulations of raising teenagers, offering relatable humor derived from everyday domestic situations. The series is defined by its wholesome charm, focusing on generational clashes and the evolving dynamics within a loving family. It serves as an easy, comforting watch, perfect for viewers seeking lighthearted escapism and a dose of nostalgic charm. The engaging performances and familiar scenarios make it highly rewatchable...",
+    "tags": [
+     "Classic Sitcom",
+     "Wholesome Family Comedy",
+     "Parenting Challenges",
+     "Teenage Life",
+     "Domestic & Relatable",
+     "Heartwarming Humor",
+     "Everyday Scenarios",
+     "Comfort Watch",
+     "Multi-Generational Appeal"
+    ],
+    "keywords": [
+     "family relationships",
+     "family",
+     "overprotective parent",
+     "sitcom"
+    ],
+    "credits": {
+     "directors": [
+      "James Widdoes",
+      "Lynn M. McCracken",
+      "Robby Benson"
+     ],
+     "creators": [
+      "Tom Shadyac",
+      "Martin Weiss"
+     ],
+     "writers": [
+      "Martin Weiss",
+      "Bonnie Kallman",
+      "Seth Kurland"
+     ],
+     "cast": [
+      "John Ritter",
+      "Katey Sagal",
+      "Kaley Cuoco",
+      "Amy Davidson",
+      "James Garner"
+     ],
+     "companies": [
+      "Shady Acres Entertainment",
+      "Flody Co.",
+      "Touchstone Television"
+     ],
+     "networks": [
+      "ABC"
+     ]
+    }
+   },
+   {
+    "pid": 1000000022968,
+    "title": "Father's Little Dividend",
+    "year": 1951,
+    "media_type": "movie",
+    "genres": [
+     "Romance",
+     "Comedy"
+    ],
+    "essence_text": "This is a quintessential classic Hollywood family comedy, brimming with wholesome charm and gentle humor. It delves into the humorous anxieties and adjustments of becoming a grandparent, offering a warm portrayal of intergenerational family dynamics. The film's lighthearted tone and relatable domestic situations make it a comfort watch, perfectly capturing a bygone era of American suburban life. It’s an easygoing, feel-good experience focused on the joys and mild tribulations of expanding a...",
+    "tags": [
+     "Classic Hollywood",
+     "Family Comedy",
+     "Wholesome & Charming",
+     "Intergenerational Story",
+     "Domestic Life",
+     "Lighthearted Humor",
+     "Parental Adjustments",
+     "1950s Americana"
+    ],
+    "keywords": [
+     "grandfather",
+     "in-laws",
+     "pregnant daughter",
+     "parent-in-law child-in-law relationship",
+     "maternity ward",
+     "baby born",
+     "baby nursery",
+     "father daughter relationship"
+    ],
+    "credits": {
+     "directors": [
+      "Vincente Minnelli"
+     ],
+     "writers": [
+      "Frances Goodrich",
+      "Albert Hackett",
+      "Edward Streeter"
+     ],
+     "cast": [
+      "Spencer Tracy",
+      "Joan Bennett",
+      "Elizabeth Taylor",
+      "Don Taylor",
+      "Billie Burke"
+     ],
+     "companies": [
+      "Metro-Goldwyn-Mayer"
+     ]
+    }
+   },
+   {
+    "pid": 2000000001530,
+    "title": "My Three Sons",
+    "year": 1960,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "A quintessential classic sitcom, this series offers a consistently wholesome and comforting look at multi-generational family life. Its gentle humor stems from everyday situations, offering a warm and hopeful portrayal of domestic challenges and triumphs. The show is highly rewatchable, serving as a nostalgic window into mid-20th century American family values. It's an ideal choice for lighthearted viewing, perfect for all ages and truly a timeless comfort watch.",
+    "tags": [
+     "Classic Family Sitcom",
+     "Wholesome Comedy",
+     "Multi-Generational Dynamics",
+     "Gentle Humor",
+     "1960s Americana",
+     "Comfort Watch",
+     "Endearing Characters",
+     "Nostalgic Television",
+     "Relatable Parenting"
+    ],
+    "keywords": [
+     "single father",
+     "sitcom"
+    ],
+    "credits": {
+     "directors": [
+      "Frederick de Cordova",
+      "James V. Kern",
+      "Gene Reynolds"
+     ],
+     "creators": [
+      "George Tibbles",
+      "John McGreevey"
+     ],
+     "writers": [
+      "George Tibbles",
+      "John McGreevey",
+      "Tom Adair"
+     ],
+     "cast": [
+      "Fred MacMurray",
+      "Tim Considine",
+      "Don Grady",
+      "Barry Livingston",
+      "Stanley Livingston"
+     ],
+     "companies": [
+      "MCA Television",
+      "Don Fedderson Productions",
+      "Gregg-Don Inc."
+     ],
+     "networks": [
+      "CBS"
+     ]
+    }
+   },
+   {
+    "pid": 1000000019414,
+    "title": "Please Don't Eat the Daisies",
+    "year": 1960,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Family",
+     "Romance"
+    ],
+    "essence_text": "A charming and wholesome classic family comedy that captures the delightful chaos of suburban life in the mid-20th century. The film follows a family's transition from city to country, exploring domestic humor, parenting challenges, and marital dynamics with a light touch. It's an endearing and nostalgic piece, driven by clever situational comedy and witty dialogue, offering pure escapism and a comforting, feel-good experience perfect for multi-generational viewing.",
+    "tags": [
+     "Classic Family Comedy",
+     "Domestic Bliss & Chaos",
+     "Suburban Life",
+     "Wholesome & Charming",
+     "Mid-Century Americana",
+     "Romantic Comedy",
+     "Parenting Antics",
+     "Lighthearted Entertainment",
+     "Feel-Good Nostalgia"
+    ],
+    "keywords": [
+     "professor",
+     "romcom",
+     "critic"
+    ],
+    "credits": {
+     "directors": [
+      "Charles Walters"
+     ],
+     "writers": [
+      "Isobel Lennart",
+      "Jean Kerr"
+     ],
+     "cast": [
+      "Doris Day",
+      "David Niven",
+      "Janis Paige",
+      "Spring Byington",
+      "Richard Haydn"
+     ],
+     "companies": [
+      "Euterpe Productions",
+      "Metro-Goldwyn-Mayer"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "core-18",
+  "query": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+  "intent": "Easy, warm comedies with wit, avoiding saccharine sentimentality.",
+  "items": [
+   {
+    "pid": 2000000000387,
+    "title": "SpongeBob SquarePants",
+    "year": 1999,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "A delightfully whimsical and endlessly rewatchable animated series that thrives on its unique blend of absurdist humor and vibrant underwater world. The show is a masterclass in physical and situational comedy, driven by its iconic, eccentric characters and their good-natured mishaps. It radiates a consistent sense of pure fun and unadulterated escapism, making it a beloved comfort watch for all ages. The infectious optimism and visual creativity ensure it remains a cultural touchstone.",
+    "tags": [
+     "Absurdist Comedy",
+     "Whimsical World",
+     "Slapstick Humor",
+     "Character-Driven Ensemble",
+     "Family-Friendly",
+     "Animated Classic",
+     "Optimistic Tone",
+     "Surreal Adventures",
+     "Pop Culture Icon",
+     "Musical Moments"
+    ],
+    "keywords": [
+     "squirrel",
+     "fast food restaurant",
+     "squid",
+     "crab",
+     "underwater",
+     "jellyfish",
+     "starfish",
+     "sea creature",
+     "tiki culture",
+     "boating",
+     "playful",
+     "job"
+    ],
+    "credits": {
+     "directors": [
+      "Paul Tibbitt",
+      "Walt Dohrn",
+      "Aaron Springer"
+     ],
+     "creators": [
+      "Mr. Lawrence",
+      "Kaz"
+     ],
+     "writers": [
+      "Mr. Lawrence",
+      "Kaz",
+      "Casey Alexander"
+     ],
+     "cast": [
+      "Tom Kenny",
+      "Bill Fagerbakke",
+      "Rodger Bumpass",
+      "Clancy Brown",
+      "Carolyn Lawrence"
+     ],
+     "companies": [
+      "United Plankton Pictures",
+      "Nickelodeon Productions",
+      "Nickelodeon Animation Studio"
+     ],
+     "networks": [
+      "Nickelodeon"
+     ]
+    }
+   },
+   {
+    "pid": 1000000001824,
+    "title": "50 First Dates",
+    "year": 2004,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Romance"
+    ],
+    "essence_text": "A charming and heartwarming romantic comedy built on a unique and endlessly endearing premise, where every day presents a fresh start for love. It's a feel-good film that balances humor with genuine emotional depth, exploring themes of commitment and the power of connection despite significant challenges. The film is a comfort watch, brimming with wholesome charm and delivering a consistently optimistic and cathartic experience perfect for a date night or relaxed viewing.",
+    "tags": [
+     "Heartwarming Romantic Comedy",
+     "Unique Premise",
+     "Charming & Wholesome",
+     "Memory Loss Theme",
+     "Feel-Good Love Story",
+     "Date Night Essential",
+     "Lighthearted Humor",
+     "Endearing Characters",
+     "Optimistic Outlook"
+    ],
+    "keywords": [
+     "amnesia",
+     "hawaii",
+     "romcom",
+     "deception",
+     "womanizer",
+     "love",
+     "car accident",
+     "screwball comedy",
+     "short-term memory loss",
+     "true love",
+     "romantic",
+     "joyful"
+    ],
+    "credits": {
+     "directors": [
+      "Peter Segal"
+     ],
+     "writers": [
+      "George Wing"
+     ],
+     "cast": [
+      "Adam Sandler",
+      "Drew Barrymore",
+      "Rob Schneider",
+      "Sean Astin",
+      "Lusia Strus"
+     ],
+     "companies": [
+      "Columbia Pictures",
+      "Anonymous Content",
+      "Flower Films"
+     ]
+    }
+   },
+   {
+    "pid": 2000000001877,
+    "title": "Phineas and Ferb",
+    "year": 2007,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Family",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "A brilliantly inventive and relentlessly cheerful animated series that consistently delivers creative, over-the-top summer projects and catchy musical numbers. Its unique blend of witty dialogue, physical comedy, and absurdist humor appeals across generations, making it a truly intergenerational comfort watch. Each episode is a standalone adventure filled with boundless imagination, clever gags, and a wholesome spirit. It's the quintessential animated show for pure, unadulterated escapism...",
+    "tags": [
+     "Inventive Kids' Comedy",
+     "Wholesome Family Fun",
+     "Catchy Musical Numbers",
+     "Absurdist Humor",
+     "Creative Problem-Solving",
+     "Sibling Dynamics",
+     "Summer Adventure",
+     "Cartoon Slapstick",
+     "Endlessly Rewatchable"
+    ],
+    "keywords": [
+     "secret agent",
+     "blended family",
+     "absurd",
+     "admiring",
+     "amused",
+     "excited",
+     "sincere"
+    ],
+    "credits": {
+     "directors": [
+      "Robert Hughes",
+      "Zac Moncrief",
+      "Jay Lender"
+     ],
+     "creators": [
+      "Dan Povenmire",
+      "Jeff 'Swampy' Marsh"
+     ],
+     "writers": [
+      "Martin Olson",
+      "Scott D. Peterson",
+      "Kim Roberson"
+     ],
+     "cast": [
+      "Vincent Martella",
+      "Thomas Brodie-Sangster",
+      "David Errigo Jr.",
+      "Ashley French",
+      "Alyson Stoner"
+     ],
+     "companies": [
+      "Disney Television Animation"
+     ],
+     "networks": [
+      "Disney XD",
+      "Disney Channel"
+     ]
+    }
+   },
+   {
+    "pid": 1000000212778,
+    "title": "Chef",
+    "year": 2014,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A truly heartwarming and feel-good film that celebrates the joy of food, family, and following one's passion. It's a comforting journey of self-discovery and entrepreneurial spirit, filled with engaging characters and mouth-watering culinary scenes. The narrative is optimistic and uplifting, providing a cathartic experience as the protagonist rebuilds his life and reconnects with what truly matters. This is a delightful watch perfect for a casual evening, leaving viewers with a sense of...",
+    "tags": [
+     "Feel-Good Comedy-Drama",
+     "Foodie Film",
+     "Family Bonding",
+     "Redemptive Journey",
+     "Passion Rediscovery",
+     "Heartwarming Story",
+     "Road Trip Adventure",
+     "Entrepreneurial Spirit",
+     "Optimistic & Uplifting",
+     "Authentic Dialogue"
+    ],
+    "keywords": [
+     "parent child relationship",
+     "affectation",
+     "restaurant owner",
+     "road trip",
+     "food",
+     "chef",
+     "ex-husband ex-wife relationship",
+     "semi autobiographical",
+     "twitter",
+     "social media",
+     "duringcreditsstinger",
+     "food truck"
+    ],
+    "credits": {
+     "directors": [
+      "Jon Favreau"
+     ],
+     "writers": [
+      "Jon Favreau"
+     ],
+     "cast": [
+      "Jon Favreau",
+      "John Leguizamo",
+      "Bobby Cannavale",
+      "Emjay Anthony",
+      "Scarlett Johansson"
+     ],
+     "companies": [
+      "Altus Media",
+      "Fairview Entertainment",
+      "Prescience"
+     ]
+    }
+   },
+   {
+    "pid": 2000000005287,
+    "title": "Kingdom",
+    "year": 2007,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A warm and witty British dramedy centered on a compassionate solicitor navigating the eccentricities of rural Norfolk life. The series thrives on its delightful characters and clever dialogue, offering a comforting glimpse into a close-knit community. It's a gentle blend of everyday legal challenges and personal stories, making for an enjoyable and heartwarming watch. Perfect for those seeking a charming, character-rich escape with a touch of lighthearted humor.",
+    "tags": [
+     "British Charm",
+     "Legal Dramedy",
+     "Rural Life",
+     "Character-Driven",
+     "Quirky Locals",
+     "Warm & Witty",
+     "Gentle Humor",
+     "Community Focus",
+     "Stephen Fry Lead"
+    ],
+    "keywords": [
+     "england",
+     "small town",
+     "lawyer"
+    ],
+    "credits": {
+     "directors": [
+      "Edward Hall",
+      "Metin Hüseyin",
+      "Andrew Grieve"
+     ],
+     "creators": [
+      "Gina Carter",
+      "Stephen Fry"
+     ],
+     "writers": [
+      "Alan Whiting",
+      "Jeff Povey",
+      "Guy Burt"
+     ],
+     "cast": [
+      "Stephen Fry",
+      "Celia Imrie",
+      "Karl Davies",
+      "Tony Slattery",
+      "Hermione Norris"
+     ],
+     "companies": [
+      "Sprout Pictures",
+      "Parallel Films",
+      "Sprout Productions"
+     ],
+     "networks": [
+      "ITV1"
+     ]
+    }
+   },
+   {
+    "pid": 2000000003269,
+    "title": "Whose Line Is It Anyway?",
+    "year": 1988,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A high-energy explosion of wit and absurdity where four charismatic performers improvise their way through rapid-fire games with zero safety net. The show relies entirely on the sharp timing and creative synergy of its cast, delivering laughs that feel spontaneous yet perfectly constructed. It serves as an ideal comfort watch or party backdrop, offering pure escapism without demanding deep emotional investment. Its enduring appeal lies in the sheer joy of watching masters of comedy turn...",
+    "tags": [
+     "Improvised Comedy",
+     "Witty Wordplay",
+     "Nostalgic Classic",
+     "High-Energy Fun",
+     "Showbiz Satire",
+     "Comfort Viewing",
+     "Charismatic Performers",
+     "Absurdist Humor",
+     "Family Friendly",
+     "Replay Value"
+    ],
+    "keywords": [
+     "game show",
+     "improvisation",
+     "improvised"
+    ],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Dan Patterson"
+     ],
+     "writers": [
+      "Dan Patterson"
+     ],
+     "cast": [
+      "Clive Anderson"
+     ],
+     "companies": [],
+     "networks": [
+      "Channel 4"
+     ]
+    }
+   },
+   {
+    "pid": 1000000019762,
+    "title": "Son of Flubber",
+    "year": 1963,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Family",
+     "Science Fiction"
+    ],
+    "essence_text": "This delightful classic Disney comedy continues the zany misadventures of Professor Ned Brainard and his groundbreaking inventions, particularly the gravity-defying 'Flubbergas.' The film is a charming blend of lighthearted humor and whimsical science fiction, showcasing the hilarious chaos that ensues from his ingenious but often unpredictable experiments. It’s a feel-good, family-friendly romp that delivers a healthy dose of imagination and good-natured fun, perfect for nostalgic viewing.",
+    "tags": [
+     "Classic Disney",
+     "Family Comedy",
+     "Sci-Fi Whimsy",
+     "Mad Scientist Antics",
+     "Lighthearted Humor",
+     "Inventive Fun",
+     "Feel-Good Film",
+     "Physical Comedy",
+     "Charming Fantasy"
+    ],
+    "keywords": [
+     "flying car",
+     "inventor",
+     "american football",
+     "sequel",
+     "black and white",
+     "secret formula",
+     "anti-gravity",
+     "broken window",
+     "flubber"
+    ],
+    "credits": {
+     "directors": [
+      "Robert Stevenson"
+     ],
+     "writers": [
+      "Bill Walsh"
+     ],
+     "cast": [
+      "Fred MacMurray",
+      "Nancy Olson",
+      "Keenan Wynn",
+      "Tommy Kirk",
+      "Ed Wynn"
+     ],
+     "companies": [
+      "Walt Disney Productions"
+     ]
+    }
+   },
+   {
+    "pid": 2000000048891,
+    "title": "Brooklyn Nine-Nine",
+    "year": 2013,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A delightfully wholesome and fast-paced ensemble comedy that blends sharp wit with endearing characters. It delivers consistent laughs through its clever situational humor and rapid-fire dialogue, creating a feel-good atmosphere. The series is a brilliant comfort watch, perfect for pure escapism and easy rewatching. Despite its premise within a police precinct, the focus is firmly on the hilarious dynamics and evolving relationships of its lovable cast, making it widely accessible and...",
+    "tags": [
+     "Ensemble Comedy",
+     "Wholesome Humor",
+     "Police Procedural Parody",
+     "Character-Driven",
+     "Witty Dialogue",
+     "Fast-Paced",
+     "Heartwarming",
+     "Optimistic Tone",
+     "Rewatchable",
+     "Workplace Comedy"
+    ],
+    "keywords": [
+     "new york city",
+     "detective",
+     "police",
+     "workplace",
+     "big city",
+     "brooklyn, new york city",
+     "nypd",
+     "sitcom",
+     "workplace comedy",
+     "sharp"
+    ],
+    "credits": {
+     "directors": [
+      "Michael McDonald",
+      "Claire Scanlon",
+      "Linda Mendoza"
+     ],
+     "creators": [
+      "David Miner",
+      "Michael Schur"
+     ],
+     "writers": [
+      "Luke Del Tredici",
+      "David Phillips",
+      "Daniel J. Goor"
+     ],
+     "cast": [
+      "Andy Samberg",
+      "Melissa Fumero",
+      "Terry Crews",
+      "Joe Lo Truglio",
+      "Stephanie Beatriz"
+     ],
+     "companies": [
+      "Dr. Goor Productions",
+      "Universal Television",
+      "3 Arts Entertainment"
+     ],
+     "networks": [
+      "NBC",
+      "FOX"
+     ]
+    }
+   },
+   {
+    "pid": 2000000056817,
+    "title": "Moone Boy",
+    "year": 2012,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "This charming series offers a delightful blend of whimsical comedy and heartfelt coming-of-age, set against a vividly nostalgic 1980s Irish backdrop. The humor is derived from relatable family dynamics and the eccentric antics of its characters, especially through the unique lens of an imaginary friend. It's a genuinely warm and funny watch, perfect for those seeking pure escapism and a touch of feel-good nostalgia.",
+    "tags": [
+     "Irish Comedy",
+     "Quirky Family",
+     "Imaginary Friend",
+     "Nostalgic 1980s Setting",
+     "Wholesome Humor",
+     "Coming-of-Age",
+     "Charming & Witty",
+     "Absurdist Situations",
+     "Heartfelt Character Dynamics"
+    ],
+    "keywords": [
+     "small town",
+     "imaginary friend",
+     "ireland",
+     "sitcom",
+     "1980s",
+     "child protagonist",
+     "irish"
+    ],
+    "credits": {
+     "directors": [
+      "Declan Lowney",
+      "Ian Fitzgibbon"
+     ],
+     "creators": [
+      "Paul Donovan"
+     ],
+     "writers": [],
+     "cast": [
+      "Chris O'Dowd",
+      "David Rawle",
+      "Deirdre O'Kane",
+      "Clare Monnelly",
+      "Aoife Duffin"
+     ],
+     "companies": [
+      "Sprout Pictures",
+      "Baby Cow Productions",
+      "Grand Pictures"
+     ],
+     "networks": [
+      "Sky One"
+     ]
+    }
+   },
+   {
+    "pid": 1000000009671,
+    "title": "Crocodile Dundee",
+    "year": 1986,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Comedy"
+    ],
+    "essence_text": "A delightful and wholesome comedy that thrives on the classic 'fish-out-of-water' premise, bringing the rugged Australian wilderness to the bustling streets of New York. Its humor stems from the charming protagonist's naive yet street-smart navigation of urban life, creating genuinely funny and heartwarming cultural clashes. The film is a feel-good romantic comedy, perfect for a relaxed viewing, offering a blend of lighthearted adventure and genuine laughs.",
+    "tags": [
+     "Fish-Out-Of-Water Comedy",
+     "Culture Clash Humor",
+     "80s Classic",
+     "Feel-Good",
+     "Romantic Comedy",
+     "Australian Outback",
+     "New York City Adventure",
+     "Charming Protagonist",
+     "Warm & Humorous",
+     "Nostalgic"
+    ],
+    "keywords": [
+     "hotel",
+     "new york city",
+     "journalist",
+     "prostitute",
+     "culture clash",
+     "subway",
+     "crocodile",
+     "tourist",
+     "wilderness",
+     "knife",
+     "limousine",
+     "poacher"
+    ],
+    "credits": {
+     "directors": [
+      "Peter Faiman"
+     ],
+     "writers": [
+      "Paul Hogan",
+      "John Cornell",
+      "Ken Shadie"
+     ],
+     "cast": [
+      "Paul Hogan",
+      "Linda Kozlowski",
+      "Mark Blum",
+      "David Gulpilil",
+      "Michael Lombard"
+     ],
+     "companies": [
+      "Rimfire Films"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "core-19",
+  "query": "cozy",
+  "intent": "Comforting, gentle, low-stakes titles (warm animation, feel-good comedy).",
+  "items": [
+   {
+    "pid": 2000000079864,
+    "title": "Joe Pera Talks With You",
+    "year": 2018,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "This series offers a uniquely gentle and comforting comedic experience, delving into mundane topics with profound and often humorous insight. Led by its endearing protagonist, it creates an atmosphere of quiet contemplation and wholesome eccentricity. The show’s slow, deliberate pace and observational humor make it an ideal comfort watch, providing a soothing escape from the everyday. It encourages viewers to find wonder in the simple things, delivering a truly original and quietly brilliant...",
+    "tags": [
+     "Gentle Comedy",
+     "Wholesome Slice of Life",
+     "Quirky Observations",
+     "Meditative & Calm",
+     "Midwestern Charm",
+     "Unconventional Humor",
+     "Comfort Watch",
+     "Thought-Provoking Mundanity",
+     "Unique Character Study",
+     "Slow Paced"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Marty Schousboe"
+     ],
+     "creators": [
+      "Conner O'Malley",
+      "Mark Costa"
+     ],
+     "writers": [
+      "Joe Pera",
+      "Jo Firestone",
+      "Dan Licata"
+     ],
+     "cast": [
+      "Joe Pera",
+      "Jo Firestone",
+      "Conner O'Malley",
+      "Jo Scott",
+      "Gene Kelly"
+     ],
+     "companies": [
+      "Chestnut Walnut Unlimited",
+      "Factual Productions",
+      "Williams Street"
+     ],
+     "networks": [
+      "Adult Swim"
+     ]
+    }
+   },
+   {
+    "pid": 2000000261317,
+    "title": "Mistletoe Murders",
+    "year": 2024,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A charming and lighthearted cozy mystery series wrapped in a festive Christmas setting. It delivers engaging, low-stakes puzzles alongside a blossoming romantic subplot between its endearing leads. The show provides comforting escapism with a focus on wholesome small-town dynamics and a sprinkling of seasonal cheer. Perfect for viewers seeking a gentle mystery with a guaranteed hopeful outcome.",
+    "tags": [
+     "Cozy Mystery",
+     "Christmas Themed",
+     "Romantic Comedy",
+     "Amateur Sleuth",
+     "Small Town Charm",
+     "Feel-Good Entertainment",
+     "Lighthearted Crime",
+     "Holiday Season",
+     "Unlikely Partners"
+    ],
+    "keywords": [
+     "christmas",
+     "mystery"
+    ],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [
+      "Sarah Drew",
+      "Peter Mooney",
+      "Sierra Marilyn Riley",
+      "Lara Amersey",
+      "Jean Yoon"
+     ],
+     "companies": [
+      "Hallmark Media",
+      "Headspinner Productions",
+      "Entertainment One Television"
+     ],
+     "networks": [
+      "Hallmark+"
+     ]
+    }
+   },
+   {
+    "pid": 2000000007154,
+    "title": "The No. 1 Ladies' Detective Agency",
+    "year": 2009,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Crime",
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "This series offers a gentle, heartwarming escape into the vibrant landscapes and community spirit of Botswana. Centered on the intuitive and compassionate Mma Ramotswe, the narrative prioritizes human connection and moral clarity over high-stakes action or complex plotting. The pacing is deliberately slow and soothing, allowing the beauty of the setting and the warmth of the characters to take center stage. It serves as an ideal comfort watch, delivering a sense of hope and decency through...",
+    "tags": [
+     "Cozy Mystery",
+     "African Cultural Portrait",
+     "Heartwarming Drama",
+     "Female Empowerment",
+     "Gentle Humor",
+     "Community-Centric Storytelling",
+     "Slow-Paced Narrative",
+     "Visually Scenic",
+     "Wholesome Entertainment"
+    ],
+    "keywords": [
+     "sibling relationship",
+     "based on novel or book",
+     "south africa",
+     "botswana",
+     "dark comedy",
+     "female protagonist",
+     "female detective",
+     "detective agency",
+     "comedy mystery"
+    ],
+    "credits": {
+     "directors": [
+      "Charles Sturridge",
+      "Tim Bricknell",
+      "Tim Fywell"
+     ],
+     "creators": [
+      "Robert Jones",
+      "Nicholas Wright"
+     ],
+     "writers": [
+      "Alexander McCall Smith",
+      "Robert Jones",
+      "Nicholas Wright"
+     ],
+     "cast": [
+      "Jill Scott",
+      "Anika Noni Rose",
+      "Lucian Msamati",
+      "Desmond Dube",
+      "Harish Patel"
+     ],
+     "companies": [
+      "BBC",
+      "The Weinstein Company",
+      "HBO"
+     ],
+     "networks": [
+      "BBC One"
+     ]
+    }
+   },
+   {
+    "pid": 2000000076459,
+    "title": "Miss Marple: The Body in the Library",
+    "year": 1984,
+    "media_type": "show",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "This classic British cozy mystery provides a comforting and engaging whodunit experience, centered around the keen observations of amateur detective Miss Jane Marple. Set in a charming yet deceptively dangerous English village, it features intricate plotting and a cast of well-developed characters that keep the viewer guessing. The series excels in its clever dialogue and the gradual unraveling of clues, making it an ideal watch for those who appreciate traditional, character-driven...",
+    "tags": [
+     "Cozy Mystery",
+     "British Period Drama",
+     "Amateur Detective",
+     "Intricate Plot",
+     "Whodunit",
+     "Character-Driven",
+     "Gentle Suspense",
+     "Classic Adaptation",
+     "Village Life"
+    ],
+    "keywords": [
+     "detective",
+     "based on novel or book",
+     "amateur detective",
+     "miniseries",
+     "murder investigation"
+    ],
+    "credits": {
+     "directors": [
+      "Silvio Narizzano"
+     ],
+     "creators": [
+      "T.R. Bowen"
+     ],
+     "writers": [
+      "T.R. Bowen",
+      "Agatha Christie"
+     ],
+     "cast": [
+      "Joan Hickson",
+      "Gwen Watford",
+      "Andrew Cruickshank",
+      "Frederick Jaeger",
+      "David Horovitch"
+     ],
+     "companies": [
+      "BBC",
+      "A+E Studios",
+      "Seven Network"
+     ],
+     "networks": [
+      "BBC One"
+     ]
+    }
+   },
+   {
+    "pid": 2000000000484,
+    "title": "Murder, She Wrote",
+    "year": 1984,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "This quintessential cozy mystery series invites viewers into a world of charming small towns and intricate puzzles, led by an unassuming but sharp-witted mystery writer. Each episode delivers a self-contained whodunit, characterized by its wholesome tone and clever plot twists. It's the ultimate comfort watch for fans of lighthearted crime fiction, offering consistent intrigue and a sense of nostalgic familiarity that encourages rewatching and casual drop-ins.",
+    "tags": [
+     "Cozy Mystery",
+     "Amateur Sleuth",
+     "Classic Television",
+     "Wholesome",
+     "Intriguing Plots",
+     "Character-Driven",
+     "Episodic",
+     "Nostalgic",
+     "Murder Investigation"
+    ],
+    "keywords": [
+     "detective",
+     "writer",
+     "investigator",
+     "elderly",
+     "mystery writer",
+     "mysterious",
+     "criminal consultant",
+     "comforting",
+     "solve",
+     "sleuth"
+    ],
+    "credits": {
+     "directors": [
+      "Anthony Pullen Shaw",
+      "Walter Grauman",
+      "Vincent McEveety"
+     ],
+     "creators": [
+      "Richard Levinson"
+     ],
+     "writers": [
+      "Peter S. Fischer",
+      "Robert Swanson",
+      "Tom Sawyer"
+     ],
+     "cast": [
+      "Angela Lansbury",
+      "Tom Bosley"
+     ],
+     "companies": [
+      "Universal Television",
+      "Corymore Productions"
+     ],
+     "networks": [
+      "CBS"
+     ]
+    }
+   },
+   {
+    "pid": 1000000491411,
+    "title": "One Winter Weekend",
+    "year": 2018,
+    "media_type": "movie",
+    "genres": [
+     "Romance",
+     "TV Movie"
+    ],
+    "essence_text": "This film delivers a quintessential comfort experience, wrapped in the warm glow of holiday traditions and predictable but satisfying romantic arcs. The narrative prioritizes emotional safety and charm over complexity, relying on witty banter and gentle situational humor to drive the plot forward. Visually lush with festive decor and soft lighting, it creates an inviting atmosphere perfect for background viewing or shared family entertainment. While it rarely challenges the viewer...",
+    "tags": [
+     "Cozy Holiday Rom-Com",
+     "Feel-Good Romance",
+     "Light Situational Comedy",
+     "Festive Atmosphere",
+     "Low-Stakes Drama",
+     "Charming Lead Chemistry",
+     "Comfort Viewing",
+     "Traditional Tropes",
+     "Warm & Inviting",
+     "Safe for All Ages"
+    ],
+    "keywords": [
+     "winter",
+     "chalet",
+     "ski resort",
+     "ski",
+     "christmas"
+    ],
+    "credits": {
+     "directors": [
+      "Gary Yates"
+     ],
+     "writers": [
+      "Erinne Dobson"
+     ],
+     "cast": [
+      "Taylor Cole",
+      "Jack Turner",
+      "Bea Santos",
+      "Rukiya Bernard",
+      "Dewshane Williams"
+     ],
+     "companies": [
+      "Hallmark Media",
+      "The Cartel"
+     ]
+    }
+   },
+   {
+    "pid": 1000000300778,
+    "title": "Garage Sale Mystery: All That Glitters",
+    "year": 2014,
+    "media_type": "movie",
+    "genres": [
+     "Mystery",
+     "Family",
+     "TV Movie"
+    ],
+    "essence_text": "This is a classic cozy mystery, designed for comfortable, low-stakes viewing. The focus is on the light-hearted puzzle of the whodunit, led by a charming amateur sleuth who is an expert in antiques. Expect a formulaic plot, gentle suspense, and a guaranteed resolution where everything is tidied up by the end. It's the perfect film for a quiet afternoon, offering simple intrigue without any intense violence or emotional weight.",
+    "tags": [
+     "Cozy Mystery",
+     "Amateur Sleuth",
+     "Made-for-TV Movie",
+     "Lighthearted Investigation",
+     "Small Town Crime",
+     "Formulaic Whodunit",
+     "Comfort Watch",
+     "Antiques & Collectibles"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Peter DeLuise"
+     ],
+     "writers": [
+      "Walter Klenhard",
+      "Suzi Weinert"
+     ],
+     "cast": [
+      "Lori Loughlin",
+      "Michael Kopsa",
+      "Steve Bacic",
+      "Johannah Newmarch",
+      "Kevin O'Grady"
+     ],
+     "companies": [
+      "Front Street Pictures",
+      "Axelrod-Ett Productions"
+     ]
+    }
+   },
+   {
+    "pid": 2000000076075,
+    "title": "Laid-Back Camp",
+    "year": 2018,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "A heartwarming slice-of-life anime that follows a group of high school girls as they discover the joys of camping. The series is characterized by its gentle humor, scenic landscapes, and emphasis on friendship and personal growth. It creates a relaxing and immersive viewing experience, emphasizing the beauty of nature. With its optimistic outlook and focus on simple pleasures, it's a perfect comfort watch that promotes feelings of warmth and contentment.",
+    "tags": [
+     "Cozy Camping",
+     "Slice of Life",
+     "Friendship",
+     "Relaxing Atmosphere",
+     "Scenic Landscapes",
+     "Japanese Culture",
+     "Gentle Humor",
+     "Optimistic",
+     "Wholesome"
+    ],
+    "keywords": [
+     "camping",
+     "cooking",
+     "friendship",
+     "slice of life",
+     "travel",
+     "food",
+     "based on manga",
+     "high school student",
+     "journey",
+     "school life",
+     "calm",
+     "anime"
+    ],
+    "credits": {
+     "directors": [
+      "Norihiko Nagahama",
+      "Yoshiaki Kyougoku",
+      "Tarou Iwasaki"
+     ],
+     "creators": [
+      "Michiyoshi Minamisawa",
+      "Tsuneo Takechi"
+     ],
+     "writers": [
+      "Afro",
+      "Jin Tanaka",
+      "Mutsumi Ito"
+     ],
+     "cast": [
+      "Yumiri Hanamori",
+      "Nao Toyama",
+      "Sayuri Hara",
+      "Rie Takahashi",
+      "Tomoyo Kurosawa"
+     ],
+     "companies": [
+      "C-Station",
+      "MAGES.",
+      "8bit"
+     ],
+     "networks": [
+      "AT-X"
+     ]
+    }
+   },
+   {
+    "pid": 1000000571798,
+    "title": "Ruby Herring Mysteries: Silent Witness",
+    "year": 2019,
+    "media_type": "movie",
+    "genres": [
+     "Mystery",
+     "TV Movie"
+    ],
+    "essence_text": "A charming and wholesome cozy mystery where an intrepid reporter accidentally uncovers a knack for solving crimes. The narrative is driven by intrigue and a budding, lighthearted romance, making it an enjoyable escape. It offers a comforting, contemporary setting, perfect for viewers seeking a gentle mystery without intense violence or dark themes. The story provides a satisfying puzzle to unravel with a pleasant cast of characters.",
+    "tags": [
+     "Cozy Mystery",
+     "Amateur Sleuth",
+     "Light Romance",
+     "Wholesome Entertainment",
+     "Contemporary Crime",
+     "Intrigue-Driven",
+     "Character-Focused",
+     "Gentle Suspense",
+     "Television Movie"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Paul Ziller"
+     ],
+     "writers": [
+      "Andrea Canning",
+      "Lynn Keller"
+     ],
+     "cast": [
+      "Taylor Cole",
+      "Stephen Huszar",
+      "Alyson Walker",
+      "Stellina Rusich",
+      "Jovanna Huguet"
+     ],
+     "companies": []
+    }
+   },
+   {
+    "pid": 2000000002059,
+    "title": "Rosemary & Thyme",
+    "year": 2003,
+    "media_type": "show",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A delightfully gentle cozy mystery series, `Rosemary & Thyme` combines the beauty of English gardens with intriguing whodunits. Follow two endearing protagonists as they restore lavish landscapes and unearth an array of secrets. The show offers a wholesome and scenic escape, perfect for those who enjoy character-driven plots and a leisurely pace, inviting viewers into a world of charming mysteries and picturesque settings.",
+    "tags": [
+     "Cozy Mystery",
+     "English Countryside",
+     "Gardening Theme",
+     "Female Detective Duo",
+     "Wholesome Entertainment",
+     "Gentle Intrigue",
+     "Beautiful Scenery",
+     "Character-Driven",
+     "Relaxing Atmosphere"
+    ],
+    "keywords": [
+     "girlfriends",
+     "plants",
+     "rosemary",
+     "thyme",
+     "greenthumb",
+     "cosy crime"
+    ],
+    "credits": {
+     "directors": [
+      "Brian Farnham",
+      "Simon Langton",
+      "Tom Clegg"
+     ],
+     "creators": [
+      "David Joss Buckley",
+      "Guy Andrews"
+     ],
+     "writers": [
+      "David Joss Buckley",
+      "Guy Andrews"
+     ],
+     "cast": [
+      "Pam Ferris",
+      "Felicity Kendal"
+     ],
+     "companies": [],
+     "networks": [
+      "ITV1"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "core-20",
+  "query": "bleak",
+  "intent": "Deliberately bleak, despairing or harrowing titles.",
+  "items": [
+   {
+    "pid": 1000000199615,
+    "title": "The Notebook",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "War"
+    ],
+    "essence_text": "A profoundly bleak and unflinching war drama, this film follows two young brothers forced into a harsh education in survival and moral compromise. It's a stark coming-of-age story set against the backdrop of an absurd, cruel world, driven by psychological tension and disturbing imagery. The narrative explores the corruption of innocence with an impactful quiet intensity. It is a powerful, difficult watch that leaves a lasting impression on the viewer.",
+    "tags": [
+     "Grim War Drama",
+     "Bleak Coming-of-Age",
+     "Psychological Survival",
+     "Moral Ambiguity",
+     "Stark Cinematography",
+     "Unflinching Realism",
+     "Childhood Trauma",
+     "Humanity's Dark Side",
+     "Post-War Narrative"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "János Szász"
+     ],
+     "writers": [
+      "János Szász",
+      "András Szekér",
+      "Ágota Kristóf"
+     ],
+     "cast": [
+      "Piroska Molnár",
+      "Ulrich Thomsen",
+      "Ulrich Matthes",
+      "Orsolya Tóth",
+      "Péter Andorai"
+     ],
+     "companies": [
+      "Hunnia Filmstúdió",
+      "Amour Fou Filmproduktion",
+      "Filmfonds Wien"
+     ]
+    }
+   },
+   {
+    "pid": 1000000060981,
+    "title": "My Joy",
+    "year": 2010,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A bleak and disturbing odyssey through the underbelly of Russia, filled with violence and alienation. The experience is intense and unsettling, offering little in the way of escapism or comfort. Expect a film heavy on social commentary and psychological depth, with a tragic and hopeless tone; it's a challenging watch that explores the darker aspects of human existence.",
+    "tags": [
+     "Bleak",
+     "Russian Cinema",
+     "Social Commentary",
+     "Violence",
+     "Melancholy",
+     "Crime",
+     "Psychological",
+     "Tragic",
+     "Gritty Realism"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Sergei Loznitsa"
+     ],
+     "writers": [
+      "Sergei Loznitsa"
+     ],
+     "cast": [
+      "Olga Shuvalova",
+      "Vlad Ivanov",
+      "Vladimir Golovin",
+      "Aleksey Vertkov",
+      "Dmitry Gotsdiner"
+     ],
+     "companies": [
+      "ma.ja.de. Fiction",
+      "ARTE",
+      "Sota Cinema Group"
+     ]
+    }
+   },
+   {
+    "pid": 1000001503571,
+    "title": "Bleak - An action Short",
+    "year": "2023",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000016166,
+    "title": "Sauna",
+    "year": 2008,
+    "media_type": "movie",
+    "genres": [
+     "Horror"
+    ],
+    "essence_text": "A relentlessly bleak and atmospheric historical horror that delves into the spiritual torments of war-hardened men. Set against a desolate 16th-century landscape, it masterfully builds a sense of dread and moral decay, exploring themes of guilt and atonement. The film is a slow-burn psychological journey, rich with chilling visuals and an oppressive mood, delivering a uniquely unsettling experience rather than jump scares. It's a powerful, disturbing meditation on the darkness within humanity.",
+    "tags": [
+     "Historical Horror",
+     "Psychological Dread",
+     "Moral Ambiguity",
+     "War's Toll",
+     "Bleak Atmosphere",
+     "Spiritual Anguish",
+     "Brooding Drama",
+     "Unsettling Thriller",
+     "Sin & Redemption",
+     "Cold War"
+    ],
+    "keywords": [
+     "ritual",
+     "village",
+     "border",
+     "redemption",
+     "swamp",
+     "woods",
+     "soldier",
+     "murderer",
+     "gothic horror",
+     "post war",
+     "medieval",
+     "remorse"
+    ],
+    "credits": {
+     "directors": [
+      "Antti-Jussi Annila"
+     ],
+     "writers": [
+      "Iiro Küttner"
+     ],
+     "cast": [
+      "Ville Virtanen",
+      "Tommi Eronen",
+      "Viktor Klimenko",
+      "Rain Tolk",
+      "Kari Ketonen"
+     ],
+     "companies": [
+      "Bronson Club",
+      "Etic Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 1000000081401,
+    "title": "The Turin Horse",
+    "year": 2011,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A stark and minimalist portrayal of the end of days, experienced through the lives of a farmer and his daughter. The film unfolds at a glacial pace, emphasizing the drudgery and bleakness of their existence. With its black and white cinematography and sparse dialogue, it creates an atmosphere of profound melancholy and spiritual decay.  It's a deeply philosophical and challenging work that invites contemplation on mortality, faith, and the human condition.",
+    "tags": [
+     "Existential Drama",
+     "Slow Cinema",
+     "Bleak and Minimalist",
+     "Philosophical Reflection",
+     "End of the World",
+     "Deterioration",
+     "Hungarian Cinema",
+     "Black and White",
+     "Arthouse"
+    ],
+    "keywords": [
+     "horse",
+     "turin italy",
+     "remodernist",
+     "mortality",
+     "contemplative cinema",
+     "slow cinema",
+     "bleak",
+     "dreary"
+    ],
+    "credits": {
+     "directors": [
+      "Béla Tarr",
+      "Ágnes Hranitzky"
+     ],
+     "writers": [
+      "Béla Tarr",
+      "László Krasznahorkai"
+     ],
+     "cast": [
+      "János Derzsi",
+      "Erika Bók",
+      "Mihály Kormos",
+      "Lajos Kovács",
+      "Mihály Ráday"
+     ],
+     "companies": [
+      "Motion Picture Public Foundation of Hungary",
+      "Vega Film",
+      "Zero Fiction Film"
+     ]
+    }
+   },
+   {
+    "pid": 1000001195910,
+    "title": "Bleak: Who",
+    "year": "2022",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000499556,
+    "title": "An Elephant Sitting Still",
+    "year": 2018,
+    "media_type": "movie",
+    "genres": [
+     "Drama"
+    ],
+    "essence_text": "A devastatingly bleak and melancholic portrait of life in a northern Chinese city, saturated with existential despair and moral decay. The film's slow-burn narrative unfolds with an unflinching gaze, depicting characters trapped in cycles of violence and hopelessness. The oppressive atmosphere and deeply flawed characters create a powerful sense of unease. It is a challenging and thought-provoking work that offers a harsh critique of contemporary Chinese society.",
+    "tags": [
+     "Bleak Social Realism",
+     "Slow-Burn Tragedy",
+     "Chinese Indie Cinema",
+     "Existential Despair",
+     "Moral Decay",
+     "Character-Driven Narrative",
+     "Philosophical",
+     "Depressing",
+     "Social Critique"
+    ],
+    "keywords": [
+     "cynical",
+     "thoughtful",
+     "philosophical",
+     "complex",
+     "harsh",
+     "powerful"
+    ],
+    "credits": {
+     "directors": [
+      "Hu Bo"
+     ],
+     "writers": [
+      "Hu Bo"
+     ],
+     "cast": [
+      "Peng Yuchang",
+      "Wang Yuwen",
+      "Zhang Yu",
+      "Li Congxi",
+      "Zhenghui Ling"
+     ],
+     "companies": [
+      "Dongchun Films"
+     ]
+    }
+   },
+   {
+    "pid": 1000000017835,
+    "title": "Threads",
+    "year": 1985,
+    "media_type": "movie",
+    "genres": [
+     "War",
+     "Drama",
+     "Science Fiction"
+    ],
+    "essence_text": "A harrowing and unflinching depiction of a nuclear holocaust's impact on ordinary lives and the complete collapse of civilization. Presented with stark, documentary-style realism, this film delivers an overwhelming sense of dread and despair. It's a powerful and deeply disturbing social commentary, leaving an indelible mark on the viewer with its relentless bleakness and tragic portrayal of humanity's downfall. This is less a narrative and more a chilling, educational experience designed to...",
+    "tags": [
+     "Nuclear Holocaust",
+     "Post-Apocalyptic",
+     "Socio-Political Commentary",
+     "Gritty Realism",
+     "Devastating",
+     "Psychological Horror",
+     "Survival Drama",
+     "Bleak",
+     "Warning Film"
+    ],
+    "keywords": [
+     "great britain",
+     "northern england",
+     "despair",
+     "yorkshire",
+     "nuclear holocaust",
+     "disaster",
+     "nuclear fallout",
+     "radiation sickness",
+     "disturbed",
+     "aggressive",
+     "grim",
+     "nuclear winter"
+    ],
+    "credits": {
+     "directors": [
+      "Mick Jackson"
+     ],
+     "writers": [
+      "Barry Hines"
+     ],
+     "cast": [
+      "Karen Meagher",
+      "Reece Dinsdale",
+      "David Brierly",
+      "Rita May",
+      "Nicholas Lane"
+     ],
+     "companies": [
+      "Western-World Television Inc.",
+      "BBC",
+      "Nine Network Australia"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000451,
+    "title": "Leaving Las Vegas",
+    "year": 1995,
+    "media_type": "movie",
+    "genres": [
+     "Drama",
+     "Romance"
+    ],
+    "essence_text": "A raw and profoundly melancholic drama that delves into the depths of self-destruction and an unconventional, doomed romance. The film is a harrowing character study, anchored by two phenomenal performances that capture the raw vulnerability and desperation of its protagonists. Its bleak and unflinching portrayal of addiction and despair creates an intensely somber mood that is both emotionally draining and remarkably intimate. This is a powerful, yet very difficult, viewing experience.",
+    "tags": [
+     "Profoundly Melancholy",
+     "Character Study",
+     "Tragic Romance",
+     "Devastating Drama",
+     "Existential Struggle",
+     "Las Vegas Noir",
+     "Exceptional Acting",
+     "Sobering & Bleak",
+     "Intimate & Gritty"
+    ],
+    "keywords": [
+     "hotel room",
+     "dying and death",
+     "individual",
+     "prostitute",
+     "lovesickness",
+     "rage and hate",
+     "casino",
+     "unsociability",
+     "alcohol",
+     "love at first sight",
+     "movie business",
+     "screenwriter"
+    ],
+    "credits": {
+     "directors": [
+      "Mike Figgis"
+     ],
+     "writers": [
+      "Mike Figgis",
+      "John O'Brien"
+     ],
+     "cast": [
+      "Nicolas Cage",
+      "Elisabeth Shue",
+      "Julian Sands",
+      "Richard Lewis",
+      "Steven Weber"
+     ],
+     "companies": [
+      "Initial Productions",
+      "Lumière Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000641,
+    "title": "Requiem for a Dream",
+    "year": 2000,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Drama"
+    ],
+    "essence_text": "A harrowing and unflinching portrayal of addiction's destructive spiral, following four intertwined lives as their dreams collapse into a nightmarish reality. The film is characterized by its visceral, rapid-fire editing and disturbing hallucinatory sequences, designed to immerse the viewer in the psychological torment of its characters. It's an intensely bleak and emotionally devastating experience, underscored by a powerful score, leaving a lasting and profound impact.",
+    "tags": [
+     "Addiction Drama",
+     "Psychological Descent",
+     "Visually Intense",
+     "Urban Bleakness",
+     "Body Horror",
+     "Existential Anguish",
+     "Tragic Fates",
+     "Unflinching Realism",
+     "Experimental Editing",
+     "Harrowing Experience"
+    ],
+    "keywords": [
+     "drug dealer",
+     "corruption",
+     "drug abuse",
+     "unsociability",
+     "degradation",
+     "insanity",
+     "heroin",
+     "drug addiction",
+     "junkie",
+     "hallucination",
+     "speed",
+     "diet"
+    ],
+    "credits": {
+     "directors": [
+      "Darren Aronofsky"
+     ],
+     "writers": [
+      "Darren Aronofsky",
+      "Hubert Selby Jr."
+     ],
+     "cast": [
+      "Ellen Burstyn",
+      "Jared Leto",
+      "Jennifer Connelly",
+      "Marlon Wayans",
+      "Christopher McDonald"
+     ],
+     "companies": [
+      "Artisan Entertainment",
+      "Thousand Words",
+      "Protozoa Pictures"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "core-21",
+  "query": "funny",
+  "intent": "Strong comedies; broad, so quality and popularity should matter.",
+  "items": [
+   {
+    "pid": 1000001271637,
+    "title": "Funny",
+    "year": "1971",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 2000000316066,
+    "title": "Funny!",
+    "year": "2022",
+    "media_type": "show",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000001035259,
+    "title": "The Naked Gun",
+    "year": 2025,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Action",
+     "Crime"
+    ],
+    "essence_text": "This film promises a riotous return to the anarchic, slapstick humor that defined its predecessors, delivering a barrage of visual gags, sharp wit, and absurd situations. Fans of the original will find comfort in its familiar yet refreshed comedic style. It's a vehicle for pure, unadulterated escapism, where plot takes a backseat to relentless laughter and irreverent parody. Expect a fast-paced, eccentric ride filled with homage and meta-commentary, making it a perfect watch for those...",
+    "tags": [
+     "Slapstick Comedy",
+     "Absurdist Farce",
+     "Parody Film",
+     "Rapid-Fire Gags",
+     "Witty Dialogue",
+     "Detective Comedy",
+     "Iconic Franchise Revival",
+     "Meta-Humor",
+     "Pure Escapism"
+    ],
+    "keywords": [
+     "sequel",
+     "slapstick comedy",
+     "reboot",
+     "aftercreditsstinger",
+     "duringcreditsstinger",
+     "action comedy",
+     "absurd",
+     "hilarious"
+    ],
+    "credits": {
+     "directors": [
+      "Akiva Schaffer"
+     ],
+     "writers": [
+      "Akiva Schaffer",
+      "Dan Gregor",
+      "Doug Mand"
+     ],
+     "cast": [
+      "Liam Neeson",
+      "Pamela Anderson",
+      "Paul Walter Hauser",
+      "Danny Huston",
+      "CCH Pounder"
+     ],
+     "companies": [
+      "Fuzzy Door Productions",
+      "Paramount Pictures",
+      "Domain Entertainment"
+     ]
+    }
+   },
+   {
+    "pid": 1000000381196,
+    "title": "Funny",
+    "year": "1988",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000996924,
+    "title": "Funny",
+    "year": "2022",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000000762,
+    "title": "Monty Python and the Holy Grail",
+    "year": 1975,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Comedy",
+     "Fantasy"
+    ],
+    "essence_text": "A quintessential absurdist comedy that reimagines the legend of King Arthur with a uniquely British, irreverent twist. Filled with iconic sketches, memorable quotes, and brilliant wordplay, it's a relentless barrage of anachronistic humor and visual gags. The film's defining characteristic is its commitment to the utterly nonsensical, creating a perpetually rewatchable and endlessly quotable comedic masterpiece that continues to influence comedy.",
+    "tags": [
+     "Absurdist Comedy",
+     "British Humor",
+     "Satirical Fantasy",
+     "Cult Classic",
+     "Historical Parody",
+     "Sketch Comedy",
+     "Dialogue-Driven",
+     "Irreverent",
+     "Anachronistic",
+     "Meta-Humor"
+    ],
+    "keywords": [
+     "holy grail",
+     "swordplay",
+     "england",
+     "monk",
+     "wedding reception",
+     "scotland yard",
+     "animal attack",
+     "camelot",
+     "round table",
+     "chapter",
+     "satire",
+     "parody"
+    ],
+    "credits": {
+     "directors": [
+      "Terry Gilliam",
+      "Terry Jones"
+     ],
+     "writers": [
+      "Terry Gilliam",
+      "Michael Palin",
+      "John Cleese"
+     ],
+     "cast": [
+      "Graham Chapman",
+      "John Cleese",
+      "Eric Idle",
+      "Terry Gilliam",
+      "Terry Jones"
+     ],
+     "companies": [
+      "Python (Monty) Pictures",
+      "Michael White Productions",
+      "National Film Trustee Company"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000496,
+    "title": "Borat: Cultural Learnings of America for Make Benefit Glorious Nation of Kazakhstan",
+    "year": 2006,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A groundbreaking mockumentary that follows the hilariously offensive Kazakh journalist Borat as he travels across America, exposing societal prejudices and hypocrisies through outrageous encounters. The film masterfully combines absurdist cringe humor with sharp social satire, creating an experience that is both uproariously funny and deeply uncomfortable. It's a fearless, one-of-a-kind cinematic social experiment that pushes boundaries and provokes thought amidst relentless laughter.",
+    "tags": [
+     "Mockumentary Comedy",
+     "Sacha Baron Cohen",
+     "Social Satire",
+     "Cringe Humor",
+     "Absurdist Pranks",
+     "Unflinching Commentary",
+     "Cultural Critique",
+     "Shocking & Provocative",
+     "Hilariously Offensive"
+    ],
+    "keywords": [
+     "journalist",
+     "california",
+     "prostitute",
+     "rodeo",
+     "kazakhstan",
+     "demeanor course",
+     "chicken",
+     "driving school",
+     "satire",
+     "mockumentary",
+     "social satire",
+     "antisemitism"
+    ],
+    "credits": {
+     "directors": [
+      "Larry Charles"
+     ],
+     "writers": [
+      "Sacha Baron Cohen",
+      "Anthony Hines",
+      "Peter Baynham"
+     ],
+     "cast": [
+      "Sacha Baron Cohen",
+      "Ken Davitian",
+      "Luenell",
+      "Pamela Anderson",
+      "Bob Barr"
+     ],
+     "companies": [
+      "20th Century Fox",
+      "Everyman Pictures",
+      "Four by Two"
+     ]
+    }
+   },
+   {
+    "pid": 1000000740985,
+    "title": "Borat Subsequent Moviefilm",
+    "year": 2020,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A relentlessly outrageous and deeply uncomfortable mockumentary that masterfully employs cringe humor and social satire to expose raw prejudices in contemporary America. Sacha Baron Cohen's fearless performance drives this politically charged and often shocking film, which blends genuine social commentary with absurd physical comedy. It's a provocative and unsparing look at societal absurdities, designed to elicit both laughter and deep introspection.",
+    "tags": [
+     "Outrageous Satire",
+     "Cringe Comedy",
+     "Mockumentary",
+     "Political Commentary",
+     "Social Experiment",
+     "Fearless Performance",
+     "Improv Comedy",
+     "Shocking & Provocative",
+     "Contemporary Issues"
+    ],
+    "keywords": [
+     "presidential election",
+     "patriotism",
+     "mockery",
+     "kazakhstan",
+     "satire",
+     "hidden camera",
+     "sequel",
+     "mockumentary",
+     "prank",
+     "social satire",
+     "disguise",
+     "satirical"
+    ],
+    "credits": {
+     "directors": [
+      "Jason Woliner"
+     ],
+     "writers": [
+      "Sacha Baron Cohen",
+      "Anthony Hines",
+      "Peter Baynham"
+     ],
+     "cast": [
+      "Sacha Baron Cohen",
+      "Maria Bakalova",
+      "Tom Hanks",
+      "Dani Popescu",
+      "Manuel Vieru"
+     ],
+     "companies": [
+      "Oak Springs Productions",
+      "Four by Two Films"
+     ]
+    }
+   },
+   {
+    "pid": 1000000011485,
+    "title": "Take the Money and Run",
+    "year": 1969,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A pioneering mockumentary, this classic comedy follows the hilariously inept attempts of a would-be bank robber, Virgil Starkwell. The film is a masterclass in witty dialogue and physical comedy, driven by its eccentric central character and his seemingly endless string of misfortunes. It offers a lighthearted and fast-paced romp through a series of absurd situations, parodying traditional crime narratives with charming, self-aware humor.",
+    "tags": [
+     "Classic Mockumentary",
+     "Slapstick Comedy",
+     "Incompetent Criminal",
+     "Witty Dialogue",
+     "Absurdist Humor",
+     "Quirky Character Study",
+     "Crime Parody",
+     "Fast-Paced Gags",
+     "Vintage Charm"
+    ],
+    "keywords": [
+     "prison",
+     "pickpocket",
+     "bad luck",
+     "jinx",
+     "wedding"
+    ],
+    "credits": {
+     "directors": [
+      "Woody Allen"
+     ],
+     "writers": [
+      "Woody Allen",
+      "Mickey Rose"
+     ],
+     "cast": [
+      "Woody Allen",
+      "Janet Margolin",
+      "Marcel Hillaire",
+      "Jacquelyn Hyde",
+      "Lonny Chapman"
+     ],
+     "companies": [
+      "Palomar Pictures International"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000813,
+    "title": "Airplane!",
+    "year": 1980,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A landmark in comedic filmmaking, this movie delivers a relentless barrage of absurd visual gags, rapid-fire puns, and irreverent one-liners. Its genius lies in its deadpan delivery of preposterous situations, constantly subverting expectations for uproarious laughter. It’s a quintessential pure escapism experience that remains endlessly rewatchable for its sheer density of jokes. Prepare for a non-stop, hilarious ride that redefined parody films.",
+    "tags": [
+     "Slapstick Comedy",
+     "Parody Film",
+     "Absurdist Humor",
+     "Rapid-Fire Gags",
+     "Iconic Dialogue",
+     "Cult Classic",
+     "Satirical",
+     "Irreverent",
+     "Zany Fun"
+    ],
+    "keywords": [
+     "chicago, illinois",
+     "post-traumatic stress disorder (ptsd)",
+     "airplane",
+     "cataclysm",
+     "nun",
+     "guitar",
+     "alcohol",
+     "stewardess",
+     "taxi driver",
+     "passenger",
+     "fear of flying",
+     "pilot"
+    ],
+    "credits": {
+     "directors": [
+      "Jerry Zucker",
+      "Jim Abrahams",
+      "David Zucker"
+     ],
+     "writers": [
+      "Jerry Zucker",
+      "Jim Abrahams",
+      "David Zucker"
+     ],
+     "cast": [
+      "Robert Hays",
+      "Julie Hagerty",
+      "Leslie Nielsen",
+      "Kareem Abdul-Jabbar",
+      "Lloyd Bridges"
+     ],
+     "companies": [
+      "Paramount Pictures",
+      "Howard W. Koch Productions"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "core-25",
+  "query": "something short to watch after work",
+  "intent": "Short, low-commitment viewing (short films, brisk movies, episodic comedy); no exact runtime assumed.",
+  "items": [
+   {
+    "pid": 1000000036593,
+    "title": "Naked Gun 33⅓: The Final Insult",
+    "year": 1994,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Crime"
+    ],
+    "essence_text": "A relentless barrage of visual gags and absurd humor, this film epitomizes over-the-top slapstick comedy and sharp parody. It's a truly rewatchable experience due to its rapid-fire jokes and the sheer commitment to its nonsensical premise. The humor ranges from witty wordplay to uproarious physical comedy, making it a comfort watch for those seeking pure, unadulterated comedic escapism. It's an iconic piece of parody cinema that continues to land its jokes with a uniquely irreverent charm.",
+    "tags": [
+     "Slapstick Comedy",
+     "Absurdist Parody",
+     "Irreverent Humor",
+     "Iconic Physical Comedy",
+     "Highly Rewatchable",
+     "Campy & Over-the-Top",
+     "Pop Culture Satire",
+     "Rapid-Fire Gags",
+     "Nonsensical Plot"
+    ],
+    "keywords": [
+     "police",
+     "undercover",
+     "parody",
+     "sexual humor",
+     "sequel",
+     "slapstick comedy",
+     "spoof",
+     "los angeles, california",
+     "terrorism",
+     "state prison",
+     "good versus evil",
+     "based on tv series"
+    ],
+    "credits": {
+     "directors": [
+      "Peter Segal"
+     ],
+     "writers": [
+      "David Zucker",
+      "Pat Proft",
+      "Robert LoCash"
+     ],
+     "cast": [
+      "Leslie Nielsen",
+      "Priscilla Presley",
+      "George Kennedy",
+      "O. J. Simpson",
+      "Fred Ward"
+     ],
+     "companies": [
+      "Paramount Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 1000000040619,
+    "title": "Day & Night",
+    "year": 2010,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family",
+     "Comedy"
+    ],
+    "essence_text": "A visually inventive animated short about embracing differences and finding common ground. It celebrates the unique qualities of contrasting characters, using them as visual metaphors for perspective. The film’s strength lies in its heartwarming message of friendship and acceptance, offering a comforting and uplifting experience for viewers of all ages. It is a fast-paced emotional and thought-provoking short.",
+    "tags": [
+     "Animated Short",
+     "Pixar Animation",
+     "Character-Driven",
+     "Visual Metaphor",
+     "Emotional Growth",
+     "Day and Night",
+     "Friendship",
+     "Wholesome Content"
+    ],
+    "keywords": [
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "Teddy Newton"
+     ],
+     "writers": [
+      "Teddy Newton"
+     ],
+     "cast": [
+      "Wayne Dyer"
+     ],
+     "companies": [
+      "Walt Disney Pictures",
+      "Pixar"
+     ]
+    }
+   },
+   {
+    "pid": 1000000088018,
+    "title": "The Skeleton Dance",
+    "year": 1929,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family",
+     "Music",
+     "Comedy",
+     "Horror"
+    ],
+    "essence_text": "A delightful and spooky cartoon short featuring dancing skeletons in a graveyard. The animation is simple but expressive, perfectly capturing the whimsical and macabre tone. The catchy music and sound effects are central to the experience, driving the rhythm and enhancing the humor. This is a classic piece of animation that evokes nostalgia and provides lighthearted entertainment for all ages, especially around Halloween. Its iconic imagery and charmingly eerie atmosphere have made it a...",
+    "tags": [
+     "Classic Cartoon Short",
+     "Spooky Fun",
+     "Vintage Animation",
+     "Musical",
+     "Halloween Theme",
+     "Silly Skeletons",
+     "Simple Story",
+     "Iconic Imagery"
+    ],
+    "keywords": [
+     "skeleton",
+     "cartoon",
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "Walt Disney"
+     ],
+     "writers": [
+      "Carl W. Stalling"
+     ],
+     "cast": [
+      "Walt Disney",
+      "Carl W. Stalling"
+     ],
+     "companies": [
+      "Walt Disney Productions"
+     ]
+    }
+   },
+   {
+    "pid": 1000000438788,
+    "title": "Cars Toon Mater's Tall Tales",
+    "year": 2010,
+    "media_type": "movie",
+    "genres": [
+     "Family",
+     "Comedy",
+     "Adventure",
+     "Animation"
+    ],
+    "essence_text": "This collection of animated shorts offers whimsical, bite-sized adventures centered around Mater's exaggerated stories. Each tale delivers lighthearted, physical comedy and playful absurdity, perfect for younger audiences. The episodic format makes it an ideal background watch or comfort viewing, ensuring a high rewatchability factor. It's a wholesome and entertaining experience that embraces imaginative storytelling.",
+    "tags": [
+     "Kid-Friendly Comedy",
+     "Animated Shorts",
+     "Tall Tales",
+     "Whimsical Adventures",
+     "Character-Driven Humor",
+     "Family Entertainment",
+     "Nostalgic",
+     "Fast-Paced",
+     "Absurdist Jokes"
+    ],
+    "keywords": [
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "John Lasseter",
+      "Victor Navone",
+      "Rob Gibbs"
+     ],
+     "writers": [
+      "Kevin O'Brien",
+      "John Lasseter",
+      "Bobby Podesta"
+     ],
+     "cast": [
+      "Larry the Cable Guy",
+      "Keith Ferguson",
+      "John Cygan",
+      "Lori Alan",
+      "Elissa Knight"
+     ],
+     "companies": [
+      "Pixar"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000774,
+    "title": "Workers Leaving the Lumière Factory",
+    "year": 1895,
+    "media_type": "movie",
+    "genres": [
+     "History",
+     "Documentary"
+    ],
+    "essence_text": "A foundational piece of cinematic history, this short film captures a moment in time at the Lumière factory. Its simple depiction of everyday life offers a nostalgic glimpse into the past. Beyond entertainment, it serves as an educational document, showcasing early filmmaking techniques and the dawn of the industrial age. It evokes a sense of wonder and curiosity about the origins of motion pictures.",
+    "tags": [
+     "Silent Film",
+     "Early Cinema",
+     "Historical Document",
+     "Lumière Brothers",
+     "French History",
+     "Black and White",
+     "Working Class",
+     "Industrial Revolution"
+    ],
+    "keywords": [
+     "factory worker",
+     "factory",
+     "lyon",
+     "closing time",
+     "historical",
+     "early cinema",
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "Louis Lumière"
+     ],
+     "writers": [],
+     "cast": [],
+     "companies": [
+      "Lumière"
+     ]
+    }
+   },
+   {
+    "pid": 1000001371727,
+    "title": "Sing: Thriller",
+    "year": 2024,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family",
+     "Comedy",
+     "Music"
+    ],
+    "essence_text": "This animated short is a pure dose of high-energy, family-friendly fun, bringing beloved characters together for a vibrant musical spectacle. Driven by the infectious energy of a classic pop song, it delivers a visually cheerful and musically engaging experience. It's a wholesome and uplifting piece of entertainment, perfect for quick viewing, designed to delight audiences of all ages with its charm and lively performances.",
+    "tags": [
+     "Animated Musical",
+     "Family-Friendly Fun",
+     "Uplifting & Energetic",
+     "Pop Music Celebration",
+     "Vibrant Visuals",
+     "Cute Characters",
+     "Performance-Focused",
+     "Short & Sweet",
+     "Wholesome Entertainment"
+    ],
+    "keywords": [
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "Garth Jennings"
+     ],
+     "writers": [
+      "Garth Jennings"
+     ],
+     "cast": [
+      "Matthew McConaughey",
+      "Tori Kelly",
+      "Nick Kroll",
+      "Scarlett Johansson",
+      "Taron Egerton"
+     ],
+     "companies": [
+      "Illumination",
+      "Universal Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 1000000532953,
+    "title": "Purl",
+    "year": 2019,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "A charming and incisive animated short that cleverly satirizes corporate culture and gender dynamics in the workplace. It blends humor with a poignant message about staying true to oneself amidst pressures to conform. The film is surprisingly effective in its social commentary, delivering a relatable and ultimately uplifting experience. It's a quick, punchy watch that leaves a lasting impression.",
+    "tags": [
+     "Workplace Satire",
+     "Social Commentary",
+     "Animated Short",
+     "Empowerment Theme",
+     "Heartwarming & Insightful",
+     "Corporate Culture",
+     "Fitting In",
+     "Humorous & Direct"
+    ],
+    "keywords": [
+     "workplace",
+     "male camaraderie",
+     "startup",
+     "working conditions",
+     "ball of yarn",
+     "short film",
+     "pixar sparkshorts"
+    ],
+    "credits": {
+     "directors": [
+      "Kristen Lester"
+     ],
+     "writers": [
+      "Kristen Lester"
+     ],
+     "cast": [
+      "Bret Parker",
+      "Emily Davis",
+      "Michael Daley",
+      "Michael Frederickson",
+      "Erik Langley"
+     ],
+     "companies": [
+      "Pixar"
+     ]
+    }
+   },
+   {
+    "pid": 1000000447061,
+    "title": "Red Nose Day Actually",
+    "year": 2017,
+    "media_type": "movie",
+    "genres": [
+     "TV Movie",
+     "Comedy",
+     "Romance"
+    ],
+    "essence_text": "A heartwarming and nostalgic return to beloved characters, this short film serves as a feel-good romantic comedy. It delivers a collection of interconnected vignettes, emphasizing the enduring presence of love and connection in everyday life. The humor is gentle and the overall tone is one of comfort and hopeful optimism. Perfect for fans of the original seeking a dose of familiar charm and an uplifting message.",
+    "tags": [
+     "Feel-Good Comedy",
+     "Romantic Reunion",
+     "Charity Special",
+     "Nostalgic Sequel",
+     "Interconnected Stories",
+     "Heartwarming Moments",
+     "British Humor",
+     "Hopeful Outlook",
+     "Lighthearted"
+    ],
+    "keywords": [
+     "romcom",
+     "time",
+     "sequel",
+     "love",
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "Mat Whitecross",
+      "Richard Curtis"
+     ],
+     "writers": [
+      "Richard Curtis"
+     ],
+     "cast": [
+      "Hugh Grant",
+      "Liam Neeson",
+      "Colin Firth",
+      "Laura Linney",
+      "Andrew Lincoln"
+     ],
+     "companies": [
+      "Portobello Studios",
+      "BBC Film",
+      "NBC Productions"
+     ]
+    }
+   },
+   {
+    "pid": 2000000030773,
+    "title": "The Yogi Bear Show",
+    "year": 1961,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Family",
+     "Kids"
+    ],
+    "essence_text": "The Yogi Bear Show delivers timeless, wholesome fun with its iconic characters and classic Hanna-Barbera animation style. Centered around Yogi's endless quest for picnic baskets and Ranger Smith's futile attempts to stop him, it's a series built on delightful slapstick and simple, endearing humor. This show is a pure comfort watch, highly rewatchable for its nostalgic charm and family-friendly gags. It creates a warm, escapist world in Jellystone Park that continues to entertain generations.",
+    "tags": [
+     "Classic Cartoon",
+     "Hanna-Barbera",
+     "Slapstick Comedy",
+     "Animal Characters",
+     "Family Friendly",
+     "Nostalgic",
+     "Wholesome Fun",
+     "Iconic Characters",
+     "Light Entertainment"
+    ],
+    "keywords": [
+     "bear",
+     "picnic basket"
+    ],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [
+      "Daws Butler",
+      "Don Messick",
+      "Jimmy Weldon",
+      "Vance Colvig Jr.",
+      "Julie Bennett"
+     ],
+     "companies": [
+      "Hanna-Barbera Cartoons"
+     ],
+     "networks": [
+      "Syndication"
+     ]
+    }
+   },
+   {
+    "pid": 1000000016463,
+    "title": "Roundhay Garden Scene",
+    "year": 1888,
+    "media_type": "movie",
+    "genres": [
+     "Documentary"
+    ],
+    "essence_text": "A brief glimpse into the dawn of cinema, this silent short captures a moment in a family garden. Its historical significance as one of the earliest surviving films makes it a captivating artifact for film enthusiasts. The grainy visuals and simple scene evoke a sense of nostalgia, offering a window into the past. While not narratively complex, it serves as a testament to the ingenuity of early filmmaking.",
+    "tags": [
+     "Early Cinema",
+     "Historical Significance",
+     "Short Film",
+     "Silent Film",
+     "Family Garden",
+     "Technical Achievement",
+     "Nostalgic Curiosity",
+     "Film History"
+    ],
+    "keywords": [
+     "walking",
+     "hat",
+     "garden",
+     "historical",
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "Louis Aimé Augustin Le Prince"
+     ],
+     "writers": [],
+     "cast": [
+      "Adolphe Le Prince",
+      "Joseph Whitley",
+      "Sarah Whitley",
+      "Annie Hartley"
+     ],
+     "companies": [
+      "Whitley Partners"
+     ]
+    }
+   },
+   {
+    "pid": 1000001211262,
+    "title": "Return",
+    "year": 2018,
+    "media_type": "movie",
+    "genres": [
+     "Horror"
+    ],
+    "essence_text": "This horror short is a masterclass in atmospheric tension, relying almost entirely on powerful sound design and evocative visuals to create a deeply unsettling experience. With no dialogue, it invites viewers to immerse themselves completely in its meticulously crafted aural landscape, where every creak and whisper contributes to a creeping sense of dread. It's a psychological horror piece that builds its scares through subtle shifts in perception and an escalating, palpable tension,...",
+    "tags": [
+     "Short Horror",
+     "Atmospheric Horror",
+     "Psychological Horror",
+     "Sound Design Focused",
+     "Minimalist Storytelling",
+     "Visually Driven",
+     "Suspenseful",
+     "Unsettling",
+     "Tense",
+     "Eerie"
+    ],
+    "keywords": [
+     "ghost",
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "Tom Millhouse"
+     ],
+     "writers": [
+      "Tom Millhouse"
+     ],
+     "cast": [
+      "Marianne Chase",
+      "Althyr Pivatto",
+      "Clara V.D.Bey",
+      "Tom Millhouse"
+     ],
+     "companies": [
+      "Tom Millhouse"
+     ]
+    }
+   },
+   {
+    "pid": 1000000234567,
+    "title": "Get a Horse!",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family",
+     "Comedy"
+    ],
+    "essence_text": "A delightful and innovative short that blends classic cartoon aesthetics with modern meta-narrative techniques. The film cleverly plays with the audience's expectations, delivering a fresh take on familiar characters. Its fast-paced energy, physical comedy, and vibrant animation create a visually engaging experience. With a strong emphasis on sound design and musicality, this nostalgic homage is sure to entertain audiences of all ages. It serves as both a loving tribute to early Disney and a...",
+    "tags": [
+     "Classic Cartoon Revival",
+     "Meta-Narrative Experiment",
+     "Nostalgic Animation",
+     "Slapstick Comedy",
+     "Homage to Early Disney",
+     "Family-Friendly Fun",
+     "Visually Dynamic",
+     "Sound-Driven Experience"
+    ],
+    "keywords": [
+     "mouse",
+     "computer animation",
+     "black and white",
+     "cartoon mouse",
+     "color",
+     "woman director",
+     "hand drawn animation",
+     "short film",
+     "anthropomorphic animal"
+    ],
+    "credits": {
+     "directors": [
+      "Lauren MacMullan"
+     ],
+     "writers": [
+      "Lauren MacMullan",
+      "Nancy Kruse",
+      "Raymond S. Persi"
+     ],
+     "cast": [
+      "Walt Disney",
+      "Marcellite Garner",
+      "Russi Taylor",
+      "Billy Bletcher",
+      "Will Ryan"
+     ],
+     "companies": [
+      "Walt Disney Animation Studios",
+      "Walt Disney Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 1000000406785,
+    "title": "Inner Workings",
+    "year": 2016,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family",
+     "Comedy"
+    ],
+    "essence_text": "A whimsical and visually engaging short film that delves into the internal conflict between a man's pragmatic Brain and his adventurous Heart. Through vibrant animation and relatable character dynamics, the short explores themes of work-life balance and the importance of embracing spontaneity. It presents a humorous yet thought-provoking look at psychological struggles and the desire for freedom. A quick and charming watch that blends visual style with a heartwarming message.",
+    "tags": [
+     "Internal Conflict",
+     "Brain vs. Heart",
+     "Character Animation",
+     "Whimsical",
+     "Work-Life Balance",
+     "Visual Metaphor",
+     "Contemporary",
+     "CGI Short Film",
+     "Psychological"
+    ],
+    "keywords": [
+     "office",
+     "human body",
+     "loneliness",
+     "conformity",
+     "peer pressure",
+     "repetition",
+     "repression",
+     "short film",
+     "social conditioning"
+    ],
+    "credits": {
+     "directors": [
+      "Leo Matsuda"
+     ],
+     "writers": [
+      "Leo Matsuda"
+     ],
+     "cast": [
+      "Tucker Gilmore",
+      "Raymond S. Persi"
+     ],
+     "companies": [
+      "Walt Disney Animation Studios",
+      "Walt Disney Pictures"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "core-29",
+  "query": "Kafam çok yorgun. Sıcak ve komik ama aşırı duygusal olmayan bir şey izlemek istiyorum.",
+  "intent": "Turkish: easy warm comedy, not overly sentimental.",
+  "items": [
+   {
+    "pid": 2000000003269,
+    "title": "Whose Line Is It Anyway?",
+    "year": 1988,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A high-energy explosion of wit and absurdity where four charismatic performers improvise their way through rapid-fire games with zero safety net. The show relies entirely on the sharp timing and creative synergy of its cast, delivering laughs that feel spontaneous yet perfectly constructed. It serves as an ideal comfort watch or party backdrop, offering pure escapism without demanding deep emotional investment. Its enduring appeal lies in the sheer joy of watching masters of comedy turn...",
+    "tags": [
+     "Improvised Comedy",
+     "Witty Wordplay",
+     "Nostalgic Classic",
+     "High-Energy Fun",
+     "Showbiz Satire",
+     "Comfort Viewing",
+     "Charismatic Performers",
+     "Absurdist Humor",
+     "Family Friendly",
+     "Replay Value"
+    ],
+    "keywords": [
+     "game show",
+     "improvisation",
+     "improvised"
+    ],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Dan Patterson"
+     ],
+     "writers": [
+      "Dan Patterson"
+     ],
+     "cast": [
+      "Clive Anderson"
+     ],
+     "companies": [],
+     "networks": [
+      "Channel 4"
+     ]
+    }
+   },
+   {
+    "pid": 2000000048162,
+    "title": "İşler Güçler",
+    "year": 2012,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A charming Turkish comedy series that dives into the hilariously chaotic lives of three struggling actors, blending backstage antics with everyday absurdities. Its humor is rooted in clever dialogue, relatable situations, and the strong chemistry between its leads, making it a highly enjoyable and rewatchable experience. Perfect for those seeking lighthearted escapism and a glimpse into the often-comical world of show business.",
+    "tags": [
+     "Turkish Sitcom",
+     "Actor's Lives",
+     "Behind-the-Scenes Humor",
+     "Friendship Dynamics",
+     "Episodic Comedy",
+     "Lighthearted Entertainment",
+     "Character-Driven Humor",
+     "Everyday Absurdity",
+     "Fast-Paced Dialogue"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [
+      "Ahmet Kural",
+      "Murat Cemcir",
+      "Sadi Celil Cengiz",
+      "Melike Emiroğlu",
+      "Yeliz Şar"
+     ],
+     "companies": [
+      "Limon"
+     ],
+     "networks": [
+      "Star TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000049100,
+    "title": "Dikkat Şahan Çıkabilir",
+    "year": 2005,
+    "media_type": "show",
+    "genres": [],
+    "essence_text": "A lively Turkish sketch comedy program that humorously dissects daily events and contemporary life. The show's episodic nature and focus on diverse comedic scenarios make it easily digestible and highly rewatchable. It offers a lighthearted and often witty escape, perfect for those who appreciate observational humor and rapid-fire comedic takes on relatable situations. This series is an ideal choice for casual viewing, providing consistent laughs without requiring deep narrative engagement.",
+    "tags": [
+     "Turkish Sketch Comedy",
+     "Observational Humor",
+     "Daily Life Commentary",
+     "Episodic Comedy",
+     "Lighthearted",
+     "Wit-Driven",
+     "Contemporary Issues (humorous lens)",
+     "Easy Viewing",
+     "Pop Culture Satire",
+     "Fast-Paced"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [
+      "Şahan Gökbakar"
+     ],
+     "companies": [],
+     "networks": [
+      "atv",
+      "TV8"
+     ]
+    }
+   },
+   {
+    "pid": 2000000048846,
+    "title": "Çok Güzel Hareketler Bunlar",
+    "year": 2008,
+    "media_type": "show",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A beloved Turkish sketch comedy show known for its energetic ensemble cast and audience interaction. It delivers sharp, humorous takes on everyday situations and societal quirks. The series is a go-to for lighthearted entertainment and offers a comforting, laugh-out-loud experience, perfect for casual viewing. Its blend of wit and physical comedy makes it broadly appealing and highly rewatchable for a quick dose of cheer.",
+    "tags": [
+     "Turkish Sketch Comedy",
+     "Audience Interactive",
+     "Variety Show",
+     "Humorous Everyday Life",
+     "Fast-Paced Skits",
+     "Ensemble Cast",
+     "Comfort Watch",
+     "Lighthearted Entertainment",
+     "Improvisational Feel"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [
+      "Yılmaz Erdoğan",
+      "Büşra Pekin",
+      "Eser Yenenler",
+      "Oğuzhan Koç",
+      "İbrahim Büyükak"
+     ],
+     "companies": [
+      "BKM"
+     ],
+     "networks": [
+      "Kanal D"
+     ]
+    }
+   },
+   {
+    "pid": 2000000076276,
+    "title": "1 Man 1 Woman 2 Children",
+    "year": 2013,
+    "media_type": "show",
+    "genres": [
+     "Family",
+     "Comedy"
+    ],
+    "essence_text": "This sitcom offers a humorous and highly relatable look into the everyday lives and funny situations of a couple navigating relationships and parenthood. Through direct address to the audience, it playfully dissects common marital dynamics and domestic absurdities. The series excels in its witty dialogue and observational humor, making it a perfect comfort watch that resonates with anyone who's experienced the ups and downs of a long-term partnership. It's a lighthearted, binge-friendly show...",
+    "tags": [
+     "Relatable Couple Comedy",
+     "Situational Humor",
+     "Family Life Sitcom",
+     "Everyday Absurdity",
+     "Observational Comedy",
+     "Meta-Narrative",
+     "Conversational",
+     "Lighthearted",
+     "Turkish TV Series"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Leyla Yaman"
+     ],
+     "creators": [
+      "Utku Gürtunca",
+      "Meriç Acemi"
+     ],
+     "writers": [
+      "Utku Gürtunca",
+      "Meriç Acemi",
+      "Ali Alper Erze"
+     ],
+     "cast": [
+      "Demet Evgar",
+      "Emre Karayel"
+     ],
+     "companies": [
+      "Bando Yapım"
+     ],
+     "networks": [
+      "FOX"
+     ]
+    }
+   },
+   {
+    "pid": 2000000049926,
+    "title": "Komedi Dükkânı",
+    "year": 2007,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "Komedi Dükkânı offers a delightful dose of spontaneous and interactive sketch comedy, driven by the quick wit and physical humor of its performers. It’s a consistently entertaining show that thrives on audience participation and unscripted scenarios, making each episode a fresh, engaging experience. The show provides pure escapism with its lighthearted tone and ensures abundant laughter for a wide audience. It's a highly rewatchable comfort watch, perfect for a cheerful viewing experience.",
+    "tags": [
+     "Improvisational Comedy",
+     "Sketch Comedy",
+     "Audience Interactive",
+     "Turkish Entertainment",
+     "Lighthearted Humor",
+     "Spontaneous Performance",
+     "Family Friendly",
+     "Variety Show Format",
+     "Pure Escapism"
+    ],
+    "keywords": [
+     "tiyatro",
+     "program",
+     "komedi"
+    ],
+    "credits": {
+     "directors": [],
+     "writers": [],
+     "cast": [
+      "Tolga Çevik",
+      "Sarp Bozkurt",
+      "Fırat Doğu Parlak",
+      "Özer Atik",
+      "Salih Kalyon"
+     ],
+     "companies": [
+      "25 Film"
+     ],
+     "networks": [
+      "Star TV",
+      "TRT 1"
+     ]
+    }
+   },
+   {
+    "pid": 1000001285495,
+    "title": "Takıntılar",
+    "year": 2024,
+    "media_type": "movie",
+    "genres": [
+     "Comedy"
+    ],
+    "essence_text": "A charming ensemble comedy adapted from a popular play, this film finds humor in the quirky interactions of individuals with obsessive-compulsive disorder. Set in a doctor's waiting room, the narrative thrives on the clash of distinct personalities and their unique compulsions, leading to hilariously awkward and heartwarming situations. It offers a lighthearted yet insightful look at mental health, emphasizing human connection and understanding. This is a feel-good film perfect for audiences...",
+    "tags": [
+     "Ensemble Comedy",
+     "Mental Health Awareness",
+     "Character-Driven Humor",
+     "Play Adaptation",
+     "Lighthearted & Wholesome",
+     "Situational Farce",
+     "Quirky Characters",
+     "Feel-Good",
+     "Dialogue-Heavy"
+    ],
+    "keywords": [
+     "ironic",
+     "introspective",
+     "lighthearted",
+     "witty",
+     "hilarious",
+     "amused",
+     "approving",
+     "celebratory",
+     "earnest",
+     "empathetic",
+     "hopeful",
+     "optimistic"
+    ],
+    "credits": {
+     "directors": [
+      "Yunus Nihat Özcan"
+     ],
+     "writers": [
+      "Laurent Baffie",
+      "Ferhat Ergün"
+     ],
+     "cast": [
+      "Ecem Erkek",
+      "Özge Özberk",
+      "Seda Bakan",
+      "Çiçek Dilligil",
+      "Zafer Algöz"
+     ],
+     "companies": [
+      "ONK Content",
+      "Birleşik Heyecanlar",
+      "Sky Films"
+     ]
+    }
+   },
+   {
+    "pid": 2000000032090,
+    "title": "Geniş Aile",
+    "year": 2009,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "This Turkish comedy series offers a charming and relatable take on the ups and downs of family life. It thrives on classic situational comedy, often leveraging the amusing dynamics within a large household. The show provides pure escapism with its lighthearted tone and consistently funny scenarios, making it a comfort watch suitable for various audiences. It's a delightful exploration of familial bonds and the humor found in everyday domesticity.",
+    "tags": [
+     "Turkish Comedy",
+     "Family Sitcom",
+     "Slice of Life",
+     "Humorous Situations",
+     "Character-Driven Comedy",
+     "Lighthearted",
+     "Relatable",
+     "Everyday Life",
+     "Community Focus"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Cüneyt İnay",
+      "Kamuran Süner"
+     ],
+     "writers": [
+      "Cüneyt İnay",
+      "Kamuran Süner"
+     ],
+     "cast": [
+      "Ufuk Özkan",
+      "Rasim Öztekin",
+      "Mine Teber",
+      "Fırat Tanış",
+      "Bihter Dinçel"
+     ],
+     "companies": [],
+     "networks": [
+      "Kanal D",
+      "Star TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000061516,
+    "title": "Kardeş Payı",
+    "year": 2014,
+    "media_type": "show",
+    "genres": [
+     "Family",
+     "Drama",
+     "Comedy"
+    ],
+    "essence_text": "A heartwarming Turkish sitcom centered on the hilarious dynamics of a family, particularly two brothers with big dreams and a plumbing business. The show thrives on clever dialogue and engaging situational comedy, creating a feel-good and endlessly rewatchable experience. It's a wholesome series that celebrates the quirks of family life and the pursuit of ambitious, if unconventional, goals.",
+    "tags": [
+     "Turkish Comedy",
+     "Family Sitcom",
+     "Inventive Humor",
+     "Character-Driven",
+     "Wholesome",
+     "Feel-Good",
+     "Everyday Life",
+     "Brotherly Bonds",
+     "Hopeful",
+     "Situational Humor"
+    ],
+    "keywords": [
+     "invention"
+    ],
+    "credits": {
+     "directors": [
+      "Selçuk Aydemir"
+     ],
+     "creators": [
+      "Selçuk Aydemir"
+     ],
+     "writers": [
+      "Selçuk Aydemir"
+     ],
+     "cast": [
+      "Ahmet Kural",
+      "Murat Cemcir",
+      "Seda Bakan",
+      "Şinasi Yurtsever",
+      "Ayşe Kökçü"
+     ],
+     "companies": [
+      "NTC Medya"
+     ],
+     "networks": [
+      "Star TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000048273,
+    "title": "Yedi Numara",
+    "year": 2000,
+    "media_type": "show",
+    "genres": [
+     "Comedy",
+     "Drama"
+    ],
+    "essence_text": "This Turkish sitcom delivers a heartwarming and consistently humorous look at an unlikely household formed by diverse young adults. It thrives on the situational comedy derived from their clashing backgrounds and everyday squabbles, ultimately highlighting themes of understanding and found family. The series is a delightful comfort watch, offering pure escapism through its charming characters and lighthearted tone. It's a classic example of a feel-good domestic comedy that resonates with a...",
+    "tags": [
+     "Turkish Sitcom",
+     "Wholesome Comedy",
+     "Found Family Dynamics",
+     "Culture Clash Humor",
+     "Slice-of-Life",
+     "Character-Driven Comedy",
+     "Lighthearted & Charming",
+     "Multi-Generational Appeal",
+     "Domestic Bliss",
+     "Nostalgic"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Sadullah Çelen",
+      "Haluk Bener"
+     ],
+     "creators": [
+      "Oya Yüce"
+     ],
+     "writers": [
+      "Oya Yüce",
+      "Ayça Mutlugil"
+     ],
+     "cast": [
+      "Şebnem Sönmez",
+      "Engin Alkan",
+      "Tuba Erdem",
+      "Ayça Mutlugil",
+      "Nuray Uslu"
+     ],
+     "companies": [
+      "TRT",
+      "Fora Film"
+     ],
+     "networks": [
+      "TRT 1"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "new-14",
+  "query": "good first anime for someone who never watched anime",
+  "intent": "Accessible, widely acclaimed anime that work as an entry point. Niche, fan-service or long-lore-dependent titles are wrong.",
+  "items": [
+   {
+    "pid": 2000000203949,
+    "title": "Gudetama: An Eggcellent Adventure",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Family",
+     "Animation"
+    ],
+    "essence_text": "A wonderfully whimsical and charming anime that follows the adventures of the famously lazy egg, Gudetama, and a determined chick. This series offers a lighthearted escape, brimming with absurdist humor and a truly wholesome journey of self-discovery and family. Its unique visual style and endearing characters create a delightful, low-stakes experience, perfect for a comfort watch or background entertainment for all ages.",
+    "tags": [
+     "Cute Anime",
+     "Absurdist Comedy",
+     "Whimsical Adventure",
+     "Family-Friendly",
+     "Quirky Characters",
+     "Journey of Discovery",
+     "Charming & Gentle",
+     "Food-Themed"
+    ],
+    "keywords": [
+     "mother",
+     "journey",
+     "anime",
+     "egg",
+     "lazy"
+    ],
+    "credits": {
+     "directors": [
+      "Motonori Sakakibara"
+     ],
+     "creators": [
+      "Taro Goto"
+     ],
+     "writers": [],
+     "cast": [
+      "Shunsuke Takeuchi",
+      "Seiran Fukushima",
+      "Seiya",
+      "Soshina",
+      "Akiyoshi Nakao"
+     ],
+     "companies": [
+      "Sanrio",
+      "OLM"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000069293,
+    "title": "Little Witch Academia",
+    "year": 2017,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Sci-Fi & Fantasy",
+     "Comedy",
+     "Action & Adventure",
+     "Kids"
+    ],
+    "essence_text": "This is an enchanting and visually delightful anime that delivers a heartwarming tale of an aspiring witch's journey through a magical academy. It's a pure escapist fantasy, brimming with wonder and a relentlessly hopeful spirit. The series thrives on its charming characters and the whimsical, energetic adventures they embark on. It's a comfort watch perfect for all ages, emphasizing the power of belief and perseverance.",
+    "tags": [
+     "Magical School Adventure",
+     "Optimistic Fantasy",
+     "Underdog Story",
+     "Wholesome Comedy",
+     "Vibrant Animation",
+     "Friendship & Teamwork",
+     "Discovering Potential",
+     "Inspiring & Uplifting",
+     "All-Ages Charm"
+    ],
+    "keywords": [
+     "witch",
+     "magic",
+     "fairy",
+     "friendship",
+     "school",
+     "dragon",
+     "wizard",
+     "school life",
+     "anime",
+     "academia",
+     "academy",
+     "based on short"
+    ],
+    "credits": {
+     "directors": [
+      "Yoshihiro Miyajima",
+      "Yuichi Shimodaira",
+      "Hideyuki Satake"
+     ],
+     "creators": [
+      "Masahiko Otsuka",
+      "Takanori Aki"
+     ],
+     "writers": [
+      "Yoh Yoshinari",
+      "Michiru Shimada",
+      "Kimiko Ueno"
+     ],
+     "cast": [
+      "Megumi Han",
+      "Michiyo Murase",
+      "Fumiko Orikasa",
+      "Chinatsu Akasaki",
+      "Yoko Hikasa"
+     ],
+     "companies": [
+      "TRIGGER",
+      "TOHO"
+     ],
+     "networks": [
+      "Tokyo MX"
+     ]
+    }
+   },
+   {
+    "pid": 2000000010620,
+    "title": "Maya the Bee",
+    "year": 1975,
+    "media_type": "show",
+    "genres": [
+     "Action & Adventure",
+     "Animation"
+    ],
+    "essence_text": "A beloved classic anime that invites viewers into the enchanting world of a young bee's adventures. This series exudes pure wonder and wholesome charm, making it a timeless watch for children and families. It subtly imparts educational themes about nature and community while focusing on friendship and exploration. The gentle narrative and vibrant animation create a comforting and nostalgic viewing experience, perfect for pure escapism.",
+    "tags": [
+     "Classic Anime",
+     "Children's Adventure",
+     "Nature Exploration",
+     "Wholesome & Pure",
+     "Friendship Themes",
+     "Gentle Storytelling",
+     "Educational Content",
+     "Optimistic Outlook",
+     "Innocent Charm",
+     "Fantasy World"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "writers": [
+      "Waldemar Bonsels",
+      "Susumu Shiraume"
+     ],
+     "cast": [
+      "Michiko Nomura",
+      "Masako Nozawa",
+      "Ichiro Nagai",
+      "Mina Tominaga",
+      "Miyoko Asou"
+     ],
+     "companies": [
+      "Nippon Animation",
+      "Wako Productions",
+      "Apollo Film"
+     ],
+     "networks": [
+      "tv asahi"
+     ]
+    }
+   },
+   {
+    "pid": 2000000085937,
+    "title": "Demon Slayer: Kimetsu no Yaiba",
+    "year": 2019,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Action & Adventure",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "This anime is a visually breathtaking and action-packed journey into a world besieged by demons, driven by a brother's unwavering resolve to save his transformed sister. It's an adrenaline-fueled experience marked by spectacular fight choreography and stunning animation that elevates every encounter. Beneath the thrilling combat lies a poignant narrative centered on family bonds, personal growth, and the enduring strength of the human spirit.",
+    "tags": [
+     "Shonen Action",
+     "Demon Slaying Adventure",
+     "Epic Battles",
+     "Strong Sibling Bond",
+     "Visually Stunning",
+     "Historical Fantasy Setting",
+     "Emotional Journey",
+     "Fast-Paced Storytelling",
+     "Character-Driven Action"
+    ],
+    "keywords": [
+     "sibling relationship",
+     "swordplay",
+     "sword",
+     "magic",
+     "training",
+     "supernatural",
+     "undead",
+     "tragedy",
+     "coming of age",
+     "based on manga",
+     "demon",
+     "mutilation"
+    ],
+    "credits": {
+     "directors": [
+      "Haruo Sotozaki",
+      "Hideki Hosokawa",
+      "Shinya Shimomura"
+     ],
+     "writers": [
+      "Koyoharu Gotouge"
+     ],
+     "cast": [
+      "Natsuki Hanae",
+      "Akari Kito",
+      "Hiro Shimono",
+      "Yoshitsugu Matsuoka",
+      "Nobuhiko Okamoto"
+     ],
+     "companies": [
+      "ufotable",
+      "Aniplex",
+      "Shueisha"
+     ],
+     "networks": [
+      "Fuji TV",
+      "Gunma TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000067075,
+    "title": "Mob Psycho 100",
+    "year": 2016,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Action & Adventure",
+     "Comedy",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "This vibrant anime masterfully blends high-octane psychic battles with heartfelt character development and genuinely funny absurdist humor. It's a journey of self-discovery for a powerful yet socially awkward boy, framed by unique and explosive animation. The series is both exhilarating and surprisingly wholesome, exploring themes of empathy, identity, and what it means to be truly strong. It offers a unique blend of action, comedy, and a deeply resonant emotional core.",
+    "tags": [
+     "Anime Action Comedy",
+     "Psychic Powers",
+     "Coming-of-Age Story",
+     "Visually Dynamic",
+     "Emotional Growth",
+     "Found Family Themes",
+     "Absurdist Humor",
+     "Wholesome & Heartfelt",
+     "Supernatural Battles"
+    ],
+    "keywords": [
+     "supernatural",
+     "based on comic",
+     "psychic power",
+     "slice of life",
+     "coming of age",
+     "sibling rivalry",
+     "based on manga",
+     "super power",
+     "occult",
+     "extrasensory perception",
+     "high school rivalry",
+     "shounen"
+    ],
+    "credits": {
+     "directors": [
+      "Katsuya Shigehara",
+      "Yuzuru Tachikawa",
+      "Yuji Oya"
+     ],
+     "creators": [
+      "Hiroshi Seko",
+      "Yuzuru Tachikawa"
+     ],
+     "writers": [
+      "ONE",
+      "Hiroshi Seko",
+      "Yuzuru Tachikawa"
+     ],
+     "cast": [
+      "Setsuo Ito",
+      "Takahiro Sakurai",
+      "Miyu Irino",
+      "Akio Otsuka"
+     ],
+     "companies": [
+      "BONES",
+      "Warner Bros. Japan",
+      "THE KLOCKWORX"
+     ],
+     "networks": [
+      "Tokyo MX"
+     ]
+    }
+   },
+   {
+    "pid": 2000000066941,
+    "title": "ReLIFE",
+    "year": 2016,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Sci-Fi & Fantasy"
+    ],
+    "essence_text": "A touching and nostalgic anime about second chances and the challenges of growing up. A 27-year-old NEET is given the opportunity to relive his high school days, confronting his past regrets and navigating the complexities of adolescence once more. The series blends slice-of-life elements with a touch of fantasy, exploring themes of social connection, self-discovery, and the importance of human relationships. It's a heartwarming and thought-provoking experience with a strong emotional core.",
+    "tags": [
+     "Coming-of-Age",
+     "Second Chance",
+     "High School",
+     "Slice of Life",
+     "Romance",
+     "NEET",
+     "Social Rehabilitation",
+     "Emotional",
+     "Nostalgic"
+    ],
+    "keywords": [
+     "secret organization",
+     "friendship",
+     "high school",
+     "bullying",
+     "romance",
+     "slice of life",
+     "tragedy",
+     "coming of age",
+     "based on manga",
+     "school life",
+     "angst",
+     "anime"
+    ],
+    "credits": {
+     "directors": [
+      "Akiko Seki",
+      "Toru Takahashi",
+      "Makoto Nakata"
+     ],
+     "creators": [
+      "Michiko Yokote",
+      "Kazuho Hyoudou"
+     ],
+     "writers": [
+      "Yayoiso",
+      "Michiko Yokote",
+      "Kazuho Hyoudou"
+     ],
+     "cast": [
+      "Kensho Ono",
+      "Ai Kayano",
+      "Ryohei Kimura",
+      "Haruka Tomatsu",
+      "Reina Ueda"
+     ],
+     "companies": [
+      "TMS Entertainment"
+     ],
+     "networks": [
+      "Gunma TV",
+      "Tokyo MX"
+     ]
+    }
+   },
+   {
+    "pid": 2000000207250,
+    "title": "The Dangers in My Heart",
+    "year": 2023,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "A coming-of-age romantic comedy that explores the awkwardness and charm of first love through the eyes of two unlikely individuals. The series delves into the psychological complexities of its characters, blending cringe humor with moments of genuine connection. With sharp dialogue and relatable scenarios, it offers an introspective and heartwarming experience. Expect a story that balances humor with emotional depth, capturing the essence of adolescence.",
+    "tags": [
+     "Romantic Comedy",
+     "Coming-of-Age",
+     "Cringe Humor",
+     "Psychological",
+     "Character-Driven",
+     "Introspective",
+     "Contemporary",
+     "Relatable"
+    ],
+    "keywords": [
+     "adolescence",
+     "romance",
+     "slice of life",
+     "school",
+     "middle school",
+     "based on manga",
+     "shounen",
+     "anime"
+    ],
+    "credits": {
+     "directors": [
+      "Yoshiyuki Shirahata",
+      "Park Gyeong-sun",
+      "Taro Kubo"
+     ],
+     "creators": [
+      "Jukki Hanada"
+     ],
+     "writers": [
+      "Norio Sakurai",
+      "Jukki Hanada"
+     ],
+     "cast": [
+      "Shun Horie",
+      "Hina Youmiya"
+     ],
+     "companies": [
+      "Shin-Ei Animation",
+      "TV Asahi",
+      "avex pictures"
+     ],
+     "networks": [
+      "HTB",
+      "tv asahi"
+     ]
+    }
+   },
+   {
+    "pid": 2000000068854,
+    "title": "From Me to You: Kimi ni Todoke",
+    "year": 2009,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Drama"
+    ],
+    "essence_text": "A heartwarming shoujo anime about a shy high school girl who learns to open up and make friends. The series is known for its sweet and innocent portrayal of first love and the challenges of adolescence. It emphasizes character development and the importance of friendship. The show is a feel-good experience that provides a wholesome and comforting escape.",
+    "tags": [
+     "Anime",
+     "Shoujo",
+     "High School",
+     "Coming-of-Age",
+     "Romance",
+     "Slice of Life",
+     "Wholesome",
+     "Friendship",
+     "Character Development"
+    ],
+    "keywords": [
+     "friendship",
+     "high school",
+     "romance",
+     "slice of life",
+     "coming of age",
+     "school",
+     "based on manga",
+     "school life",
+     "heart warming",
+     "shoujo",
+     "anime",
+     "japanese high school"
+    ],
+    "credits": {
+     "directors": [
+      "Norihiro Naganuma",
+      "Shinpei Ezaki",
+      "Hiro Kaburagi"
+     ],
+     "creators": [
+      "Tomoko Konparu",
+      "Mamiko Ikeda"
+     ],
+     "writers": [
+      "Karuho Shiina",
+      "Tomoko Konparu",
+      "Mamiko Ikeda"
+     ],
+     "cast": [
+      "Mamiko Noto",
+      "Daisuke Namikawa",
+      "Miyuki Sawashiro",
+      "Yuko Sanpei",
+      "Yuichi Nakamura"
+     ],
+     "companies": [
+      "Production I.G",
+      "Shueisha",
+      "VAP"
+     ],
+     "networks": [
+      "Nippon TV",
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000062565,
+    "title": "My Love Story!!",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "A heartwarming and optimistic coming-of-age anime centered around a kindhearted protagonist and his pursuit of love. The series balances comedic moments with genuine emotional depth, creating a feel-good viewing experience. It's a lighthearted, pure romance with a focus on friendship and personal growth. Its fast-paced energy and wholesome charm make it easily bingeable and comforting to watch.",
+    "tags": [
+     "Romantic Comedy",
+     "Coming-of-Age",
+     "High School",
+     "Shōjo Anime",
+     "Kindhearted Protagonist",
+     "Pure Romance",
+     "Friendship",
+     "Optimistic",
+     "Heartwarming"
+    ],
+    "keywords": [
+     "love at first sight",
+     "friendship",
+     "high school",
+     "romcom",
+     "romance",
+     "slice of life",
+     "bromance",
+     "based on manga",
+     "school life",
+     "anime",
+     "playful",
+     "adoring"
+    ],
+    "credits": {
+     "directors": [
+      "Morio Asaka",
+      "Nanako Shimazaki",
+      "Kotono Watanabe"
+     ],
+     "creators": [
+      "Natsuko Takahashi",
+      "Seiko Takagi"
+     ],
+     "writers": [
+      "Kazune Kawahara",
+      "Natsuko Takahashi",
+      "Seiko Takagi"
+     ],
+     "cast": [
+      "Takuya Eguchi",
+      "Megumi Han",
+      "Nobunaga Shimazaki"
+     ],
+     "companies": [
+      "Madhouse"
+     ],
+     "networks": [
+      "Nippon TV"
+     ]
+    }
+   },
+   {
+    "pid": 2000000119100,
+    "title": "BOCCHI THE ROCK!",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy"
+    ],
+    "essence_text": "This charming anime series follows the incredibly relatable journey of a socially anxious high school girl as she stumbles into her dream of joining a band. It masterfully blends quirky humor and genuine emotional depth, showcasing her struggles and triumphs in a surprisingly heartfelt way. The strong musical elements are central to its appeal, perfectly complementing the character's growth and the band's development. It's a truly wholesome and uplifting watch, offering a unique blend of...",
+    "tags": [
+     "Anime Comedy",
+     "Musical Journey",
+     "Social Anxiety",
+     "Band Life",
+     "Self-Discovery",
+     "Wholesome & Heartwarming",
+     "Quirky Characters",
+     "Overcoming Challenges",
+     "Slice-of-Life"
+    ],
+    "keywords": [
+     "slice of life",
+     "school",
+     "female protagonist",
+     "based on manga",
+     "rock band",
+     "girl band",
+     "seinen",
+     "anime",
+     "social anxiety",
+     "musical comedy",
+     "music",
+     "music comedy"
+    ],
+    "credits": {
+     "directors": [
+      "Yusuke Kawakami",
+      "Yoshiyuki Fujiwara",
+      "Keiichiro Saito"
+     ],
+     "creators": [
+      "Erika Yoshida"
+     ],
+     "writers": [
+      "Erika Yoshida",
+      "Aki Hamazi"
+     ],
+     "cast": [
+      "Yoshino Aoyama",
+      "Sayumi Suzushiro",
+      "Saku Mizuno",
+      "Ikumi Hasegawa"
+     ],
+     "companies": [
+      "CloverWorks",
+      "Aniplex",
+      "Houbunsha"
+     ],
+     "networks": [
+      "Gunma TV",
+      "Tokyo MX"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "new-17",
+  "query": "mindbending",
+  "intent": "Reality-twisting, puzzle-box or surreal films that leave you rethinking what you saw.",
+  "items": [
+   {
+    "pid": 1000000185789,
+    "title": "Mulholland Dr.",
+    "year": 1999,
+    "media_type": "movie",
+    "genres": [
+     "Thriller",
+     "TV Movie",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A dark and twisting neo-noir mystery set against the backdrop of Hollywood. This psychological thriller unravels a dreamlike narrative with an unreliable narrator, pulling the viewer into a world of intrigue and paranoia. Expect to be captivated by its intense atmosphere, surreal imagery, and complex plot. The film's ambiguity and dream logic demand careful attention, rewarding multiple viewings.",
+    "tags": [
+     "Neo-Noir Mystery",
+     "Psychological Thriller",
+     "Dream Logic",
+     "Unreliable Narrator",
+     "Hollywood Intrigue",
+     "Atmospheric",
+     "Intense",
+     "Surreal",
+     "Complex Plot"
+    ],
+    "keywords": [
+     "investigation",
+     "pilot",
+     "audition"
+    ],
+    "credits": {
+     "directors": [
+      "David Lynch"
+     ],
+     "writers": [
+      "David Lynch"
+     ],
+     "cast": [
+      "Justin Theroux",
+      "Naomi Watts",
+      "Laura Harring",
+      "Ann Miller",
+      "Brent Briscoe"
+     ],
+     "companies": [
+      "Touchstone Television",
+      "Imagine Television Studios",
+      "Picture Factory"
+     ]
+    }
+   },
+   {
+    "pid": 2000000090669,
+    "title": "1899",
+    "year": 2022,
+    "media_type": "show",
+    "genres": [
+     "Mystery",
+     "Drama"
+    ],
+    "essence_text": "A profoundly enigmatic and atmospheric mystery that strands a diverse group of immigrants on a ship headed for a mind-bending revelation. Much like a puzzle box, the series constantly redefines its reality, layering mysteries with psychological depth and existential dread. It’s a visually striking and intellectually demanding journey that thrives on its complex, non-linear narrative and unsettling tone. This show demands full attention, rewarding viewers who enjoy deciphering intricate,...",
+    "tags": [
+     "Mind-Bending Mystery",
+     "Psychological Thriller",
+     "Period Sci-Fi",
+     "Complex Narrative",
+     "Atmospheric & Eerie",
+     "Enigmatic Puzzle Box",
+     "Existential Themes",
+     "Visually Rich",
+     "Non-Linear Storytelling",
+     "High Concept"
+    ],
+    "keywords": [
+     "sea",
+     "immigration",
+     "atlantic ocean",
+     "ship",
+     "dystopia",
+     "bermuda triangle",
+     "triangle",
+     "19th century",
+     "new encounter",
+     "old continent",
+     "admiring",
+     "assertive"
+    ],
+    "credits": {
+     "directors": [
+      "Baran bo Odar"
+     ],
+     "creators": [
+      "Philipp Klausing",
+      "Baran bo Odar"
+     ],
+     "writers": [
+      "Jantje Friese",
+      "Darío Madrona",
+      "Emil Nygaard Albertsen"
+     ],
+     "cast": [
+      "Emily Beecham",
+      "Andreas Pietschmann",
+      "Aneurin Barnard",
+      "Isabella Wei",
+      "Maciej Musiał"
+     ],
+     "companies": [
+      "Dark Ways"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 1000000034647,
+    "title": "Enter the Void",
+    "year": 2010,
+    "media_type": "movie",
+    "genres": [
+     "Fantasy",
+     "Drama"
+    ],
+    "essence_text": "A visually arresting and intensely psychedelic journey through the afterlife. Told through a non-linear, first-person perspective, the film explores themes of death, memory, and spiritual transcendence. The film's surreal visuals and unconventional storytelling create a disorienting and immersive experience. It's a profound and unsettling exploration of consciousness, challenging viewers with its explicit content and philosophical depth. Prepare for a cinematic experience that is both...",
+    "tags": [
+     "Psychedelic Experience",
+     "Non-Linear Narrative",
+     "Visually Stunning",
+     "Existential Exploration",
+     "Drug-Induced Visions",
+     "Life After Death",
+     "Japanese Setting",
+     "Tragedy and Loss",
+     "Surreal and Unsettling"
+    ],
+    "keywords": [
+     "japan",
+     "prostitute",
+     "afterlife",
+     "hallucination",
+     "surrealism",
+     "reincarnation",
+     "stripper",
+     "strip club",
+     "drug trip",
+     "drug dealing",
+     "tokyo, japan",
+     "drugs"
+    ],
+    "credits": {
+     "directors": [
+      "Gaspar Noé"
+     ],
+     "writers": [
+      "Gaspar Noé"
+     ],
+     "cast": [
+      "Paz de la Huerta",
+      "Nathaniel Brown",
+      "Cyril Roy",
+      "Olly Alexander",
+      "Masato Tanno"
+     ],
+     "companies": [
+      "Fidélité Films",
+      "Wild Bunch",
+      "BUF"
+     ]
+    }
+   },
+   {
+    "pid": 2000000001087,
+    "title": "Serial Experiments Lain",
+    "year": 1998,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Drama",
+     "Sci-Fi & Fantasy",
+     "Mystery"
+    ],
+    "essence_text": "A landmark cyberpunk anime that plunges viewers into a deeply unsettling exploration of reality, consciousness, and the digital realm. Its non-linear, fragmented narrative demands active engagement, weaving a complex web of existential questions and psychological mystery. The series maintains a pervasive sense of dread and ambiguity, making it a profoundly thought-provoking yet challenging watch. It's a cult classic that invites multiple viewings to unravel its many layers.",
+    "tags": [
+     "Cyberpunk Thriller",
+     "Psychological Horror",
+     "Existential Sci-Fi",
+     "Deeply Ambiguous",
+     "Non-Linear Narrative",
+     "Unsettling Atmosphere",
+     "Philosophical Exploration",
+     "Mind-Bending",
+     "Techno-Paranoia"
+    ],
+    "keywords": [
+     "dementia",
+     "computer",
+     "internet",
+     "cyberpunk",
+     "cyberspace",
+     "angst",
+     "seinen",
+     "anime",
+     "virtual world",
+     "internete",
+     "psychological",
+     "suspense"
+    ],
+    "credits": {
+     "directors": [
+      "Ryutaro Nakamura",
+      "Masahiko Murata",
+      "Akihiko Nishiyama"
+     ],
+     "creators": [
+      "Chiaki J. Konaka"
+     ],
+     "writers": [
+      "Chiaki J. Konaka",
+      "Yasuyuki Ueda"
+     ],
+     "cast": [
+      "Kaori Shimizu",
+      "Yoko Asada",
+      "Ayako Kawasumi",
+      "Ryusuke Ohbayashi",
+      "Rei Igarashi"
+     ],
+     "companies": [
+      "Pioneer LDC",
+      "Triangle Staff"
+     ],
+     "networks": [
+      "TV Tokyo"
+     ]
+    }
+   },
+   {
+    "pid": 1000000001903,
+    "title": "Vanilla Sky",
+    "year": 2001,
+    "media_type": "movie",
+    "genres": [
+     "Mystery",
+     "Romance",
+     "Science Fiction"
+    ],
+    "essence_text": "A mind-bending psychological thriller that masterfully blurs the lines between reality and illusion. It’s a melancholic and deeply introspective journey into a man's fractured psyche, driven by a central mystery that compels re-examination. The film's non-linear structure and surreal elements create a truly disorienting yet captivating experience, exploring themes of identity, love, and the consequences of technology.",
+    "tags": [
+     "Psychological Thriller",
+     "Mind-Bending Mystery",
+     "Dreamlike",
+     "Illusion vs. Reality",
+     "Sci-Fi Drama",
+     "Non-Linear Narrative",
+     "Existential",
+     "Melancholic Romance",
+     "Intriguing"
+    ],
+    "keywords": [
+     "regret",
+     "jealousy",
+     "amnesia",
+     "dreams",
+     "love of one's life",
+     "nightmare",
+     "love triangle",
+     "virtual reality",
+     "ex-girlfriend",
+     "surreal",
+     "melancholy",
+     "plastic surgery"
+    ],
+    "credits": {
+     "directors": [
+      "Cameron Crowe"
+     ],
+     "writers": [
+      "Cameron Crowe"
+     ],
+     "cast": [
+      "Tom Cruise",
+      "Penélope Cruz",
+      "Cameron Diaz",
+      "Kurt Russell",
+      "Jason Lee"
+     ],
+     "companies": [
+      "Paramount Pictures",
+      "Cruise/Wagner Productions",
+      "Vinyl Films"
+     ]
+    }
+   },
+   {
+    "pid": 2000000000894,
+    "title": "The Prisoner",
+    "year": 1967,
+    "media_type": "show",
+    "genres": [
+     "Drama",
+     "Sci-Fi & Fantasy",
+     "Mystery"
+    ],
+    "essence_text": "A groundbreaking and enigmatic series, 'The Prisoner' is a deeply philosophical and psychological thriller wrapped in an allegorical mystery. It continually challenges perceptions of identity, freedom, and control, set within a deceptively idyllic yet bizarre prison. The show's unique blend of surrealism, political commentary, and intellectual intrigue makes it a highly rewatchable and thought-provoking experience, often leaving viewers with more questions than answers.",
+    "tags": [
+     "Cult Classic",
+     "Psychological Thriller",
+     "Allegorical Sci-Fi",
+     "Existential Mystery",
+     "Anti-Establishment",
+     "Surrealist Drama",
+     "Philosophical Exploration",
+     "Iconic Television",
+     "Paranoid Narrative"
+    ],
+    "keywords": [
+     "small town",
+     "kidnapping",
+     "trapped",
+     "orwellian"
+    ],
+    "credits": {
+     "directors": [
+      "Patrick McGoohan",
+      "Don Chaffey",
+      "Pat Jackson"
+     ],
+     "creators": [
+      "Patrick McGoohan"
+     ],
+     "writers": [
+      "Patrick McGoohan",
+      "Anthony Skene",
+      "Terence Feely"
+     ],
+     "cast": [
+      "Patrick McGoohan",
+      "Peter Swanwick"
+     ],
+     "companies": [
+      "Everyman Films",
+      "ITC Entertainment"
+     ],
+     "networks": [
+      "ITV1"
+     ]
+    }
+   },
+   {
+    "pid": 1000000027205,
+    "title": "Inception",
+    "year": 2010,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Science Fiction",
+     "Adventure"
+    ],
+    "essence_text": "A groundbreaking sci-fi thriller that immerses viewers in a multi-layered world of dreams and psychological intrigue. Its tightly woven, complex narrative demands full attention, offering a thrilling and thought-provoking experience. The film is a masterful blend of high-octane action, visual spectacle, and deep emotional stakes, cemented by an iconic musical score. It's a rewatchable masterpiece that continually rewards careful observation with new insights into its ingenious structure and...",
+    "tags": [
+     "Mind-bending Sci-Fi",
+     "Psychological Thriller",
+     "Elaborate Heist",
+     "Visually Spectactular",
+     "Complex Narrative",
+     "Dream Logic",
+     "High Concept",
+     "Intense Suspense",
+     "Christopher Nolan Film"
+    ],
+    "keywords": [
+     "rescue",
+     "mission",
+     "dreams",
+     "airplane",
+     "paris, france",
+     "virtual reality",
+     "kidnapping",
+     "philosophy",
+     "spy",
+     "allegory",
+     "manipulation",
+     "car crash"
+    ],
+    "credits": {
+     "directors": [
+      "Christopher Nolan"
+     ],
+     "writers": [
+      "Christopher Nolan"
+     ],
+     "cast": [
+      "Leonardo DiCaprio",
+      "Joseph Gordon-Levitt",
+      "Ken Watanabe",
+      "Tom Hardy",
+      "Elliot Page"
+     ],
+     "companies": [
+      "Legendary Pictures",
+      "Syncopy",
+      "Warner Bros. Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000492,
+    "title": "Being John Malkovich",
+    "year": 1999,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Drama",
+     "Fantasy"
+    ],
+    "essence_text": "This film plunges viewers into a truly bizarre and inventive concept, blending philosophical inquiry with absurdist humor and a unique meta-narrative. It's a mind-bending exploration of identity, control, and desire, filled with sharp wit and memorable performances. The narrative unfolds with captivating intrigue, challenging perceptions and rewarding close attention. It's a darkly humorous and thought-provoking experience that begs for rewatches to uncover its many layers.",
+    "tags": [
+     "Mind-Bending",
+     "Surreal Comedy",
+     "Existential Sci-Fi",
+     "Psychological Intrigue",
+     "Meta-Commentary",
+     "Identity Crisis",
+     "Absurdist Humor",
+     "Darkly Humorous",
+     "Cult Classic",
+     "Witty Dialogue"
+    ],
+    "keywords": [
+     "witch",
+     "sexual identity",
+     "individual",
+     "secret love",
+     "transvestism",
+     "identity",
+     "subconsciousness",
+     "new identity",
+     "pet",
+     "chimp",
+     "puppeteer",
+     "appropriation of another human being"
+    ],
+    "credits": {
+     "directors": [
+      "Spike Jonze"
+     ],
+     "writers": [
+      "Charlie Kaufman"
+     ],
+     "cast": [
+      "John Cusack",
+      "Cameron Diaz",
+      "John Malkovich",
+      "Catherine Keener",
+      "Orson Bean"
+     ],
+     "companies": [
+      "Propaganda Films",
+      "Single Cell Pictures",
+      "Gramercy Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 1000000004977,
+    "title": "Paprika",
+    "year": 2006,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Science Fiction",
+     "Thriller"
+    ],
+    "essence_text": "A visually stunning and psychologically complex anime film that delves into the depths of the human mind. The film creates a dreamlike world with surreal and unsettling imagery. It explores themes of consciousness, technology, and reality through a captivating mystery. Its mind-bending visuals and intricate plot make for a unique and thought-provoking experience. The film's exploration of the blurred lines between dreams and reality is both fascinating and disturbing.",
+    "tags": [
+     "Psychological Sci-Fi Thriller",
+     "Dreamlike Animated World",
+     "Mind-Bending Visuals",
+     "Exploration of Consciousness",
+     "Surreal and Unsettling",
+     "Technological Dystopia",
+     "Mystery & Intrigue",
+     "Visually Stunning",
+     "Complex Narrative"
+    ],
+    "keywords": [
+     "research",
+     "japan",
+     "dreams",
+     "based on novel or book",
+     "procession",
+     "psychoanalysis",
+     "mad scientist",
+     "dream girl",
+     "parallel world",
+     "adult animation",
+     "dream world",
+     "anime"
+    ],
+    "credits": {
+     "directors": [
+      "Satoshi Kon"
+     ],
+     "writers": [
+      "Satoshi Kon",
+      "Seishi Minakami",
+      "Yasutaka Tsutsui"
+     ],
+     "cast": [
+      "Megumi Hayashibara",
+      "Tohru Emori",
+      "Katsunosuke Hori",
+      "Toru Furuya",
+      "Akio Otsuka"
+     ],
+     "companies": [
+      "Madhouse",
+      "Sony Pictures"
+     ]
+    }
+   },
+   {
+    "pid": 2000000096713,
+    "title": "The Midnight Gospel",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Comedy",
+     "Sci-Fi & Fantasy",
+     "Mystery"
+    ],
+    "essence_text": "A truly unique adult animated series that blends trippy, vibrant visuals with profound philosophical discussions. Each episode delves into existential questions, often featuring real-life interviews set against bizarre, fantastical backdrops. This show is a journey of introspection and visual spectacle, challenging perceptions and encouraging deep thought. It's an acquired taste, but incredibly rewarding for those seeking an unconventional and mind-expanding experience.",
+    "tags": [
+     "Existential Animation",
+     "Psychedelic Philosophy",
+     "Surreal & Bizarre",
+     "Deep Conversations",
+     "Mind-Bending Visuals",
+     "Adult Themes",
+     "Thought-Provoking",
+     "Unique Format",
+     "Spiritual Exploration"
+    ],
+    "keywords": [
+     "philosophy",
+     "simulation",
+     "universe",
+     "fantasy world",
+     "psychedelic",
+     "meditative",
+     "philosophical",
+     "reflective",
+     "introspective",
+     "reminiscent",
+     "sentimental"
+    ],
+    "credits": {
+     "directors": [
+      "Pendleton Ward"
+     ],
+     "creators": [
+      "Pendleton Ward",
+      "Duncan Trussell"
+     ],
+     "writers": [
+      "Pendleton Ward",
+      "Duncan Trussell",
+      "Mike L. Mayfield"
+     ],
+     "cast": [
+      "Duncan Trussell",
+      "Phil Hendrie"
+     ],
+     "companies": [
+      "Titmouse",
+      "Oatmeal Maiden"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000141,
+    "title": "Donnie Darko",
+    "year": 2001,
+    "media_type": "movie",
+    "genres": [
+     "Fantasy",
+     "Drama",
+     "Mystery"
+    ],
+    "essence_text": "A dark and atmospheric psychological thriller that blends elements of science fiction, mystery, and coming-of-age drama. The film's strength lies in its ability to create a sense of unease and uncertainty, leaving the audience questioning reality. Donnie Darko is a mind-bending journey that explores themes of fate, free will, and sacrifice, with an ambiguous ending that sparks debate. The strong performances and haunting soundtrack contribute to the film's lasting impact.",
+    "tags": [
+     "Psychological Thriller",
+     "Mystery",
+     "Coming-of-Age",
+     "Surreal",
+     "Mind-Bending",
+     "Dark",
+     "Atmospheric",
+     "Time Travel",
+     "Indie Film"
+    ],
+    "keywords": [
+     "high school",
+     "airplane",
+     "parent child relationship",
+     "presidential election",
+     "therapist",
+     "school performance",
+     "halloween",
+     "time travel",
+     "vandalism",
+     "surrealism",
+     "loss",
+     "imaginary friend"
+    ],
+    "credits": {
+     "directors": [
+      "Richard Kelly"
+     ],
+     "writers": [
+      "Richard Kelly"
+     ],
+     "cast": [
+      "Jake Gyllenhaal",
+      "Jena Malone",
+      "James Duval",
+      "Drew Barrymore",
+      "Beth Grant"
+     ],
+     "companies": [
+      "Flower Films",
+      "Pandora Cinema",
+      "Newmarket Films"
+     ]
+    }
+   },
+   {
+    "pid": 2000000061664,
+    "title": "Sense8",
+    "year": 2015,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Drama"
+    ],
+    "essence_text": "A mind-bending series exploring the profound connections between eight strangers scattered across the globe. The show weaves a complex web of personal dramas, interwoven with suspenseful plotlines and philosophical undertones. Its strength lies in its diverse and well-developed characters, and its exploration of empathy, identity, and the nature of consciousness. Visually striking and emotionally resonant, Sense8 offers a unique and immersive viewing experience that transcends geographical...",
+    "tags": [
+     "Interconnected Minds",
+     "Global Conspiracy",
+     "Psychological Thriller",
+     "Character-Driven",
+     "Sci-Fi Action",
+     "LGBTQ+ Themes",
+     "Intense Drama",
+     "Visual Storytelling",
+     "Philosophical Elements"
+    ],
+    "keywords": [
+     "sexuality",
+     "identity",
+     "telepathy",
+     "secret agent",
+     "supernatural",
+     "conspiracy",
+     "superhuman",
+     "super power",
+     "bigotry",
+     "lgbt",
+     "persecution",
+     "social issues"
+    ],
+    "credits": {
+     "directors": [
+      "Lana Wachowski",
+      "Lilly Wachowski",
+      "James McTeigue"
+     ],
+     "creators": [
+      "Lilly Wachowski",
+      "Lana Wachowski"
+     ],
+     "writers": [
+      "Lilly Wachowski",
+      "Lana Wachowski",
+      "J. Michael Straczynski"
+     ],
+     "cast": [
+      "Aml Ameen",
+      "Miguel Ángel Silvestre",
+      "Max Riemelt",
+      "Jamie Clayton",
+      "Bae Doona"
+     ],
+     "companies": [
+      "Anarchos Productions",
+      "Studio JMS",
+      "Georgeville Television"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "new-18",
+  "query": "wholesome",
+  "intent": "Kind, warm, uplifting titles without cynicism or cruelty.",
+  "items": [
+   {
+    "pid": 1000000064328,
+    "title": "The Muppets",
+    "year": 2011,
+    "media_type": "movie",
+    "genres": [
+     "Family",
+     "Comedy",
+     "Music"
+    ],
+    "essence_text": "A joyous and utterly wholesome musical comedy that brings the beloved Muppets back to the big screen with renewed energy. It's a heartwarming tale of friendship, perseverance, and the magic of putting on a show, brimming with catchy songs and classic Muppet humor. The film expertly balances nostalgic charm with fresh appeal, creating a truly feel-good experience that resonates across generations. An uplifting and comforting watch for the whole family.",
+    "tags": [
+     "Family Musical",
+     "Wholesome Comedy",
+     "Nostalgic Revival",
+     "Heartwarming Story",
+     "Puppet Characters",
+     "Showbiz Theme",
+     "Catchy Songs",
+     "Optimistic",
+     "Broad Appeal"
+    ],
+    "keywords": [
+     "musical",
+     "based on toy",
+     "puppetry",
+     "hollywood",
+     "los angeles, california",
+     "oil tycoon",
+     "studio tour",
+     "duringcreditsstinger",
+     "puppets",
+     "based on tv series",
+     "comedy"
+    ],
+    "credits": {
+     "directors": [
+      "James Bobin"
+     ],
+     "writers": [
+      "Jason Segel",
+      "Nicholas Stoller",
+      "Jim Henson"
+     ],
+     "cast": [
+      "Jason Segel",
+      "Amy Adams",
+      "Chris Cooper",
+      "Rashida Jones",
+      "Steve Whitmire"
+     ],
+     "companies": [
+      "Walt Disney Pictures",
+      "The Muppets Studio"
+     ]
+    }
+   },
+   {
+    "pid": 2000000003022,
+    "title": "Rugrats",
+    "year": 1991,
+    "media_type": "show",
+    "genres": [
+     "Family",
+     "Animation",
+     "Kids",
+     "Comedy"
+    ],
+    "essence_text": "This beloved children's cartoon whisks viewers into the imaginative world of toddlers, transforming everyday experiences into grand adventures. It's a consistently wholesome and lighthearted comedy, brimming with physical gags and a unique visual style. The show masterfully captures the innocent wonder of childhood, making it a perfect comfort watch for families. Its enduring charm and simple, engaging narratives make it highly rewatchable and a source of nostalgic joy for many.",
+    "tags": [
+     "Classic Kids' Cartoon",
+     "Wholesome Comedy",
+     "Imaginative Adventures",
+     "Toddler's Perspective",
+     "Family-Friendly Fun",
+     "Nostalgic Viewing",
+     "Distinctive Animation",
+     "Simple & Engaging",
+     "Humorous Antics"
+    ],
+    "keywords": [
+     "baby",
+     "friendship",
+     "toddler",
+     "nostalgic",
+     "playful",
+     "lighthearted"
+    ],
+    "credits": {
+     "directors": [
+      "Jim Duffy",
+      "Norton Virgien",
+      "Rick Bugental"
+     ],
+     "creators": [
+      "Gábor Csupó",
+      "Arlene Klasky"
+     ],
+     "writers": [
+      "Jill Gorey",
+      "Barbara Herndon",
+      "Peter Gaffney"
+     ],
+     "cast": [
+      "E. G. Daily",
+      "Christine Cavanaugh",
+      "Kath Soucie",
+      "Cheryl Chase",
+      "Dionne Quan"
+     ],
+     "companies": [
+      "Klasky-Csupo",
+      "Nickelodeon Animation Studio",
+      "Games Animation"
+     ],
+     "networks": [
+      "Nickelodeon"
+     ]
+    }
+   },
+   {
+    "pid": 2000000073041,
+    "title": "Cooking with Bill",
+    "year": 2017,
+    "media_type": "show",
+    "genres": [],
+    "essence_text": "A delightfully simple and wholesome show focusing on a couple exploring new kitchen gadgets. It offers a gentle, slice-of-life experience, perfect for background viewing or a relaxing unwind. The charm comes from its unassuming nature and the small, relatable comedic moments. It’s a comforting watch that provides light entertainment and perhaps a few cooking tips.",
+    "tags": [
+     "Wholesome Cooking",
+     "Appliance Reviews",
+     "Gentle Humor",
+     "Everyday Life",
+     "Relaxing Viewing",
+     "Comfort Watch",
+     "Informal Entertainment",
+     "Casual Viewing",
+     "Domestic Focus"
+    ],
+    "keywords": [
+     "parody"
+    ],
+    "credits": {
+     "directors": [
+      "Neill Blomkamp"
+     ],
+     "writers": [],
+     "cast": [
+      "Alec Gillis",
+      "Carly Pope"
+     ],
+     "companies": [
+      "Oats Studios"
+     ],
+     "networks": [
+      "YouTube"
+     ]
+    }
+   },
+   {
+    "pid": 2000000100412,
+    "title": "The Baby-Sitters Club",
+    "year": 2020,
+    "media_type": "show",
+    "genres": [
+     "Kids"
+    ],
+    "essence_text": "A truly wholesome and heartwarming adaptation that captures the spirit of friendship, entrepreneurship, and everyday childhood adventures. The series excels in its portrayal of realistic, diverse characters navigating relatable challenges, making it an ideal comfort watch for families. With its bright, optimistic tone and subtle contemporary updates, it offers both a nostalgic trip for fans of the original books and an accessible, positive experience for new young viewers. It's an optimistic...",
+    "tags": [
+     "Heartwarming Kids Show",
+     "Friendship & Entrepreneurship",
+     "Contemporary Adaptation",
+     "Slice-of-Life Drama",
+     "Positive Role Models",
+     "Family-Friendly Comedy",
+     "Relatable Childhood",
+     "Modern Nostalgia",
+     "Community Focused"
+    ],
+    "keywords": [
+     "small town",
+     "babysitter",
+     "friendship",
+     "family relationships",
+     "teenage girl",
+     "inspirational",
+     "hopeful"
+    ],
+    "credits": {
+     "directors": [
+      "Kimmy Gatewood",
+      "Andrew DeYoung"
+     ],
+     "creators": [
+      "Michael De Luca",
+      "Lucia Aniello"
+     ],
+     "writers": [
+      "Ann M. Martin",
+      "Sascha Rothchild"
+     ],
+     "cast": [
+      "Sophie Grace",
+      "Momona Tamada",
+      "Shay Rudolph",
+      "Malia Baker"
+     ],
+     "companies": [
+      "Walden Media",
+      "Terrible Baby Productions",
+      "Paulilu"
+     ],
+     "networks": [
+      "Netflix"
+     ]
+    }
+   },
+   {
+    "pid": 2000000002020,
+    "title": "Hey Dude",
+    "year": 1989,
+    "media_type": "show",
+    "genres": [
+     "Western",
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "A quintessential 80s teen sitcom set on a dude ranch, offering wholesome, lighthearted fun. It delivers a blend of coming-of-age stories and mild comedic adventures, centered around a quirky ensemble cast. The show's appeal lies in its comforting, family-friendly atmosphere and its nostalgic charm for those who grew up watching it. Perfect for easygoing viewing and reminiscent of simpler times.",
+    "tags": [
+     "Wholesome Teen Comedy",
+     "80s Sitcom",
+     "Ranch Life",
+     "Coming-of-Age",
+     "Found Family",
+     "Lighthearted",
+     "Nostalgic",
+     "Episodic Adventures",
+     "Family-Friendly"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [],
+     "creators": [
+      "Steve Roth"
+     ],
+     "writers": [
+      "Steve Roth"
+     ],
+     "cast": [
+      "David Brisbin",
+      "Kelly Brown",
+      "Debra Kalman",
+      "David Lascher",
+      "Christine Taylor"
+     ],
+     "companies": [
+      "Cinetel Productions"
+     ],
+     "networks": [
+      "Nickelodeon"
+     ]
+    }
+   },
+   {
+    "pid": 1000001702273,
+    "title": "Wholesome",
+    "year": "2026",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000072962,
+    "title": "George and A.J.",
+    "year": 2009,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Family",
+     "Comedy"
+    ],
+    "essence_text": "A charming and humorous animated short that expands the world of Pixar's \"Up.\" It offers a delightful, ground-level perspective on the film's fantastical inciting incident, focusing on the bewildered reactions of two minor characters. The experience is pure, wholesome fun, packed with clever gags and the signature heart and quality of a Pixar production. This is a perfect, bite-sized piece of comfort viewing for all ages.",
+    "tags": [
+     "Animated Short",
+     "Pixar Comedy",
+     "Wholesome Humor",
+     "'Up' Spin-off",
+     "Heartwarming",
+     "Lighthearted Fun",
+     "Character Vignette",
+     "Family Friendly"
+    ],
+    "keywords": [
+     "short film"
+    ],
+    "credits": {
+     "directors": [
+      "Josh Cooley"
+     ],
+     "writers": [
+      "Josh Cooley"
+     ],
+     "cast": [
+      "Steve Purcell",
+      "Jason Topolski",
+      "Bob Peterson",
+      "A.J. Riebli III",
+      "Peter Sohn"
+     ],
+     "companies": [
+      "Pixar"
+     ]
+    }
+   },
+   {
+    "pid": 2000000013712,
+    "title": "Oswald",
+    "year": 2001,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Family",
+     "Kids"
+    ],
+    "essence_text": "A delightfully gentle and wholesome animated series perfectly crafted for young audiences. It follows the charming adventures of Oswald and his friends as they navigate simple challenges in their whimsical town, emphasizing friendship and problem-solving. The show's calm pacing and inviting visual style create a comforting and safe viewing environment. It's an ideal choice for young children, offering positive messages and a sense of quiet wonder.",
+    "tags": [
+     "Preschool",
+     "Wholesome",
+     "Gentle",
+     "Problem-Solving",
+     "Friendship",
+     "Animated",
+     "Calming",
+     "Imaginative",
+     "Educational"
+    ],
+    "keywords": [],
+    "credits": {
+     "directors": [
+      "Debbie Baber",
+      "Henry Lenardin-Madden"
+     ],
+     "creators": [
+      "Annie Evans",
+      "Suzanne Collins"
+     ],
+     "writers": [
+      "Annie Evans",
+      "Suzanne Collins",
+      "Gary Apple"
+     ],
+     "cast": [
+      "Fred Savage",
+      "David L. Lander",
+      "Crystal Scales",
+      "Debi Derryberry",
+      "Laraine Newman"
+     ],
+     "companies": [
+      "Nickelodeon Animation Studio",
+      "Hit Entertainment"
+     ],
+     "networks": [
+      "Nick Jr."
+     ]
+    }
+   },
+   {
+    "pid": 1000000011945,
+    "title": "Emil i Lönneberga",
+    "year": 1971,
+    "media_type": "movie",
+    "genres": [
+     "Comedy",
+     "Family"
+    ],
+    "essence_text": "A delightfully wholesome and nostalgic film capturing the mischievous yet good-hearted adventures of a young boy in rural Sweden. Filled with gentle humor and charming physical comedy, it provides a warm, idyllic escape into a simpler time. The narrative centers on the endearing family dynamics and the innocent spirit of childhood, making it a perfect comfort watch for all ages. It embodies a timeless sense of wonder and lighthearted fun.",
+    "tags": [
+     "Classic Children's Story",
+     "Wholesome Family Film",
+     "Rural Idyllic Setting",
+     "Mischievous Protagonist",
+     "Gentle Humor",
+     "Nostalgic Charm",
+     "Everyday Adventures",
+     "Swedish Folklore",
+     "Pastoral Comedy"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "parent child relationship",
+     "clumsy fellow",
+     "shenanigan",
+     "bad luck",
+     "based on children's book",
+     "family",
+     "childhood"
+    ],
+    "credits": {
+     "directors": [
+      "Olle Hellbom"
+     ],
+     "writers": [
+      "Astrid Lindgren"
+     ],
+     "cast": [
+      "Jan Ohlsson",
+      "Lena Wisborg",
+      "Allan Edwall",
+      "Emy Storm",
+      "Björn Gustafson"
+     ],
+     "companies": [
+      "Stella Film",
+      "SF Studios"
+     ]
+    }
+   },
+   {
+    "pid": 2000000074280,
+    "title": "Hey Duggee",
+    "year": 2014,
+    "media_type": "show",
+    "genres": [
+     "Animation",
+     "Kids",
+     "Family",
+     "Comedy"
+    ],
+    "essence_text": "A wonderfully wholesome and engaging animated series designed for preschool children, focusing on learning through simple, character-driven adventures. Each episode promotes positive values like friendship and problem-solving, all while earning a badge from the lovable Duggee. Its distinctive visual style and catchy musical elements create a comforting and easily rewatchable experience. This show is a delight for young viewers and a calm, enjoyable background presence for parents.",
+    "tags": [
+     "Preschool Education",
+     "Wholesome & Positive",
+     "Brightly Animated",
+     "Character-Driven Learning",
+     "Family Friendly",
+     "Gentle Humor",
+     "Friendship Themes",
+     "Engaging & Repetitive",
+     "Badge Earning"
+    ],
+    "keywords": [
+     "badge",
+     "preschool",
+     "vorschule"
+    ],
+    "credits": {
+     "directors": [
+      "Grant Orchard",
+      "Sander Jones"
+     ],
+     "creators": [
+      "Grant Orchard",
+      "Sam Morrison"
+     ],
+     "writers": [
+      "Grant Orchard",
+      "Sam Morrison",
+      "Jo Clegg"
+     ],
+     "cast": [
+      "Alexander Armstrong",
+      "Jasmine Bartholomew",
+      "Alfie Sanderson",
+      "Leo Templer",
+      "Poppie Boyes"
+     ],
+     "companies": [
+      "Studio AKA"
+     ],
+     "networks": [
+      "CBeebies"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ },
+ {
+  "query_id": "ho2-20",
+  "query": "epic",
+  "intent": "Grand-scale films or series with sweeping stories, big battles or journeys (historical, fantasy or sci-fi epics). Small, intimate stories are wrong.",
+  "items": [
+   {
+    "pid": 1000000019995,
+    "title": "Avatar",
+    "year": 2009,
+    "media_type": "movie",
+    "genres": [
+     "Science Fiction",
+     "Action",
+     "Adventure"
+    ],
+    "essence_text": "A visually stunning science fiction epic, renowned for its groundbreaking CGI and immersive world-building. The film combines action-packed sequences with a romantic subplot and deeper themes of environmentalism and cultural clash. Its greatest strength lies in its ability to transport viewers to an alien world, creating a sense of wonder and spectacle. Though the narrative is familiar, the execution is innovative, making it a visually arresting and emotionally engaging experience.",
+    "tags": [
+     "Visually Stunning",
+     "Sci-Fi Epic",
+     "Groundbreaking CGI",
+     "Environmental Themes",
+     "Action-Packed",
+     "Romantic Subplot",
+     "World Immersion",
+     "Technological Advancement",
+     "Cultural Clash"
+    ],
+    "keywords": [
+     "paraplegic",
+     "attachment to nature",
+     "culture clash",
+     "indigenous",
+     "space travel",
+     "space colony",
+     "tribe",
+     "alien planet",
+     "distant future",
+     "marine",
+     "battle",
+     "love affair"
+    ],
+    "credits": {
+     "directors": [
+      "James Cameron"
+     ],
+     "writers": [
+      "James Cameron"
+     ],
+     "cast": [
+      "Sam Worthington",
+      "Zoe Saldaña",
+      "Sigourney Weaver",
+      "Stephen Lang",
+      "Michelle Rodriguez"
+     ],
+     "companies": [
+      "Dune Entertainment",
+      "Lightstorm Entertainment",
+      "20th Century Fox"
+     ]
+    }
+   },
+   {
+    "pid": 2000000001399,
+    "title": "Game of Thrones",
+    "year": 2011,
+    "media_type": "show",
+    "genres": [
+     "Sci-Fi & Fantasy",
+     "Drama",
+     "Action & Adventure"
+    ],
+    "essence_text": "A sprawling epic that masterfully blends high fantasy with gritty political realism, focusing on the intricate web of alliances and betrayals among noble houses. The narrative is driven by deep character development and moral ambiguity, where heroes can become villains and vice versa amidst brutal warfare. Its immersive world-building is amplified by a haunting musical score and cinematic spectacle, creating an intense, binge-worthy experience defined by constant tension and shocking twists.",
+    "tags": [
+     "Epic Fantasy Drama",
+     "Intricate Political Maneuvering",
+     "Brutal Medieval Warfare",
+     "Ensemble Character Study",
+     "High-Stakes Power Struggles",
+     "Dark & Gritty Tone",
+     "Cinematic Spectacle",
+     "Iconic Score",
+     "Complex Moral Ambiguity",
+     "Apocalyptic Threat"
+    ],
+    "keywords": [
+     "based on novel or book",
+     "kingdom",
+     "dragon",
+     "king",
+     "intrigue",
+     "fantasy world"
+    ],
+    "credits": {
+     "directors": [
+      "David Nutter",
+      "Alan Taylor",
+      "Mark Mylod"
+     ],
+     "creators": [
+      "David Benioff",
+      "D. B. Weiss"
+     ],
+     "writers": [
+      "George R.R. Martin",
+      "David Benioff",
+      "D. B. Weiss"
+     ],
+     "cast": [
+      "Peter Dinklage",
+      "Kit Harington",
+      "Sean Bean",
+      "Mark Addy",
+      "Richard Madden"
+     ],
+     "companies": [
+      "Revolution Sun Studios",
+      "Television 360",
+      "Generator Entertainment"
+     ],
+     "networks": [
+      "HBO"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000122,
+    "title": "The Lord of the Rings: The Return of the King",
+    "year": 2003,
+    "media_type": "movie",
+    "genres": [
+     "Adventure",
+     "Fantasy",
+     "Action"
+    ],
+    "essence_text": "The culmination of an epic fantasy saga, delivering a visually stunning and emotionally resonant conclusion. Its grand scale and heroic themes are underscored by a powerful orchestral score. The film focuses on the enduring power of hope and sacrifice, set against a backdrop of immense battles and the struggle between good and evil. It's a cathartic journey that celebrates courage and friendship, leaving a lasting impact long after the credits roll.",
+    "tags": [
+     "Epic Fantasy Conclusion",
+     "Heroic Journey",
+     "Visually Stunning",
+     "Triumph Over Evil",
+     "Orchestral Score",
+     "Character-Driven",
+     "Intense Battles",
+     "Hope and Sacrifice",
+     "Classic Storytelling"
+    ],
+    "keywords": [
+     "army",
+     "based on novel or book",
+     "elves",
+     "dwarf",
+     "magic",
+     "kingdom",
+     "obsession",
+     "bravery",
+     "castle",
+     "volcano",
+     "giant spider",
+     "sequel"
+    ],
+    "credits": {
+     "directors": [
+      "Peter Jackson"
+     ],
+     "writers": [
+      "Peter Jackson",
+      "Fran Walsh",
+      "Philippa Boyens"
+     ],
+     "cast": [
+      "Elijah Wood",
+      "Ian McKellen",
+      "Viggo Mortensen",
+      "Sean Astin",
+      "Andy Serkis"
+     ],
+     "companies": [
+      "New Line Cinema",
+      "WingNut Films",
+      "The Saul Zaentz Company"
+     ]
+    }
+   },
+   {
+    "pid": 1000001408158,
+    "title": "Epic - First Semester",
+    "year": "2026",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000001625726,
+    "title": "Epic",
+    "year": "2015",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000116711,
+    "title": "Epic",
+    "year": 2013,
+    "media_type": "movie",
+    "genres": [
+     "Animation",
+     "Adventure",
+     "Family",
+     "Fantasy"
+    ],
+    "essence_text": "A visually rich and exciting animated adventure set in a vibrant fantasy world, this film offers pure escapism for the whole family. The story centers on a teenager's journey of self-discovery as she becomes embroiled in an ancient battle between good and evil. With its lush animation, fast-paced action, and hopeful tone, the film creates a sense of wonder. It's a comfortable and engaging watch, emphasizing themes of courage, teamwork, and respect for nature.",
+    "tags": [
+     "Family-Friendly Adventure",
+     "Fantasy World",
+     "Visually Appealing",
+     "Coming-of-Age Themes",
+     "Action-Packed",
+     "Magical Realism",
+     "Nature vs. Technology",
+     "Good vs. Evil",
+     "Wholesome Entertainment"
+    ],
+    "keywords": [
+     "daughter",
+     "villain",
+     "father",
+     "forest",
+     "nature",
+     "miniature people"
+    ],
+    "credits": {
+     "directors": [
+      "Chris Wedge"
+     ],
+     "writers": [
+      "James V. Hart",
+      "Tom J. Astle",
+      "Matt Ember"
+     ],
+     "cast": [
+      "Colin Farrell",
+      "Amanda Seyfried",
+      "Christoph Waltz",
+      "Josh Hutcherson",
+      "Jason Sudeikis"
+     ],
+     "companies": [
+      "Blue Sky Studios",
+      "20th Century Fox Animation"
+     ]
+    }
+   },
+   {
+    "pid": 1000001679207,
+    "title": "EPIC: The Musical",
+    "year": "",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000204089,
+    "title": "Epic",
+    "year": "1985",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000001445363,
+    "title": "EPiC: Elvis Presley in Concert",
+    "year": "2026",
+    "media_type": "movie",
+    "genres": [],
+    "essence_text": "",
+    "tags": [],
+    "keywords": [],
+    "note": "not in the fingerprint catalog: no essence text",
+    "credits": {}
+   },
+   {
+    "pid": 1000000350312,
+    "title": "Bāhubali 2: The Conclusion",
+    "year": 2017,
+    "media_type": "movie",
+    "genres": [
+     "Action",
+     "Adventure",
+     "Fantasy"
+    ],
+    "essence_text": "This cinematic marvel delivers unparalleled spectacle and a deeply resonant emotional journey, serving as the epic conclusion to a sprawling fantasy saga. It’s filled with breathtaking action, stunning visual effects, and a narrative that masterfully intertwines themes of duty, revenge, and familial legacy. The film provides immense catharsis and a sense of wonder, immersing viewers in a richly imagined world. It’s a powerful and exhilarating experience, a true testament to epic storytelling...",
+    "tags": [
+     "Epic Fantasy",
+     "Grand Spectacle",
+     "Indian Mythology",
+     "Action Drama",
+     "War Saga",
+     "Emotional Depth",
+     "Heroic Journey",
+     "Visual Masterpiece",
+     "Family Saga",
+     "Mythological Epic"
+    ],
+    "keywords": [
+     "kingdom",
+     "bilingual"
+    ],
+    "credits": {
+     "directors": [
+      "S. S. Rajamouli"
+     ],
+     "writers": [
+      "S. S. Rajamouli",
+      "Vijayendra Prasad",
+      "Rahul Koda"
+     ],
+     "cast": [
+      "Prabhas",
+      "Rana Daggubati",
+      "Anushka Shetty",
+      "Sathyaraj",
+      "Nassar"
+     ],
+     "companies": [
+      "Arka Media Works"
+     ]
+    }
+   }
+  ],
+  "rubric": "vague"
+ }
+]

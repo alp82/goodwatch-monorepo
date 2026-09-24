@@ -1,0 +1,6 @@
+| candidate | ho5 | h5sty | bad5 ho5 = tot | unj tot | own10 ho5 | title@1 | p50 ms | p95 ms |
+|---|---|---|---|---|---|---|---|---|---|
+| r6 | 0.764 | 0.799 | 16 = 16 | 0 | nan | 0/0 | 45.2 | 106.4 |
+| combo-safe-v3-scan | 0.794 | 0.913 | 15 = 15 | 0 | nan | 0/0 | 38.9 | 92.3 |
+| combo-safe-v3 | 0.794 | 0.913 | 15 = 15 | 0 | nan | 0/0 | 41.0 | 98.5 |
+ndcg10 per split (round-6 cut rule); '(c… u…)' = condensed ndcg10 with ungraded titles skipped, and the unjudged count in the top 10, shown only when a split has ungraded titles. Latency: in-process ms per query after the Jev reading, compare only against r6 from the same run. Latency is from the run that wrote the lists.

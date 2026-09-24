@@ -1,0 +1,550 @@
+{
+ "r5": {
+  "lab-01": {
+   "names": [
+    "Andrei Tarkovsky"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "surname"
+   ],
+   "intent": "both",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 9,
+   "centroid": [
+    "Stalker",
+    "Solaris",
+    "The Steamroller and the Violin",
+    "Andrei Rublev",
+    "Mirror",
+    "Ivan's Childhood",
+    "The Sacrifice",
+    "Nostalgia",
+    "The Killers"
+   ],
+   "detect_ms": 0.141
+  },
+  "ho2-15": {
+   "names": [
+    "Terry Gilliam"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "both",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 29,
+   "centroid": [
+    "Monty Python and the Holy Grail",
+    "Twelve Monkeys",
+    "Fear and Loathing in Las Vegas",
+    "Brazil",
+    "The Imaginarium of Doctor Parnassus",
+    "The Brothers Grimm",
+    "The Fisher King",
+    "Time Bandits",
+    "The Adventures of Baron Munchausen",
+    "The Zero Theorem",
+    "Tideland",
+    "The Man Who Killed Don Quixote",
+    "Jabberwocky"
+   ],
+   "detect_ms": 0.068
+  },
+  "ho2-16": {
+   "names": [
+    "Jackie Chan"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 109,
+   "centroid": [
+    "Kung Fu Panda",
+    "Rush Hour",
+    "Kung Fu Panda 2",
+    "Rush Hour 2",
+    "Rush Hour 3",
+    "The Karate Kid",
+    "Kung Fu Panda 3",
+    "Shanghai Noon",
+    "The Foreigner",
+    "Shanghai Knights",
+    "The Forbidden Kingdom",
+    "Around the World in 80 Days",
+    "Iron Mask",
+    "The Tuxedo",
+    "The Young Master",
+    "Crime Story",
+    "The Shadow's Edge",
+    "Vanguard",
+    "Ride On",
+    "1911"
+   ],
+   "detect_ms": 0.103
+  },
+  "ppl-01": {
+   "names": [
+    "Brad Pitt"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "funny",
+   "negated": [],
+   "era": null,
+   "n_titles": 58,
+   "centroid": [
+    "Fight Club",
+    "Inglourious Basterds",
+    "Se7en",
+    "Snatch",
+    "Once Upon a Time... in Hollywood",
+    "World War Z",
+    "Ocean's Eleven",
+    "The Curious Case of Benjamin Button",
+    "Troy",
+    "Twelve Monkeys",
+    "Fury",
+    "Mr. & Mrs. Smith",
+    "Ocean's Thirteen",
+    "The Big Short",
+    "Moneyball",
+    "Bullet Train",
+    "Ocean's Twelve",
+    "Megamind",
+    "Interview with the Vampire",
+    "Burn After Reading"
+   ],
+   "detect_ms": 0.076
+  },
+  "ppl-03": {
+   "names": [
+    "Bill Murray"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "deadpan comedies",
+   "negated": [],
+   "era": null,
+   "n_titles": 68,
+   "centroid": [
+    "Groundhog Day",
+    "Zombieland",
+    "Lost in Translation",
+    "Ghostbusters",
+    "Moonrise Kingdom",
+    "The Jungle Book",
+    "Rushmore",
+    "Ghostbusters II",
+    "Charlie's Angels",
+    "The Life Aquatic with Steve Zissou",
+    "Isle of Dogs",
+    "The Monuments Men",
+    "Caddyshack",
+    "Wild Things",
+    "Scrooged",
+    "St. Vincent",
+    "Tootsie",
+    "Broken Flowers",
+    "Garfield",
+    "The Dead Don't Die"
+   ],
+   "detect_ms": 0.087
+  },
+  "ppl-05": {
+   "names": [
+    "Steven Spielberg"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "surname"
+   ],
+   "intent": "filmography",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": "early",
+   "n_titles": 79,
+   "centroid": [
+    "Saving Private Ryan",
+    "Schindler's List",
+    "Jurassic Park",
+    "Catch Me If You Can",
+    "Raiders of the Lost Ark",
+    "Indiana Jones and the Last Crusade",
+    "Jaws",
+    "Indiana Jones and the Kingdom of the Crystal Skull",
+    "Minority Report",
+    "Indiana Jones and the Temple of Doom",
+    "War of the Worlds",
+    "Ready Player One",
+    "The Terminal",
+    "The Lost World: Jurassic Park",
+    "E.T. the Extra-Terrestrial",
+    "Bridge of Spies",
+    "A.I. Artificial Intelligence",
+    "Lincoln",
+    "Hook",
+    "The Adventures of Tintin"
+   ],
+   "detect_ms": 0.072
+  },
+  "ppl-08": {
+   "names": [
+    "Bud Spencer",
+    "Terence Hill"
+   ],
+   "kinds": [
+    "person",
+    "person"
+   ],
+   "match": [
+    "full",
+    "full"
+   ],
+   "intent": "filmography",
+   "lean": "filmography",
+   "residual": "lustige",
+   "negated": [],
+   "era": null,
+   "n_titles": 53,
+   "centroid": [
+    "Miami Supercops",
+    "All the Way Boys",
+    "God Forgives... I Don't!",
+    "The Two Missionaries",
+    "Ace High",
+    "Troublemakers",
+    "They Call Me Trinity",
+    "Blackie the Pirate",
+    "Trinity Is Still My Name",
+    "Watch Out, We're Mad",
+    "Crime Busters",
+    "Who Finds a Friend Finds a Treasure",
+    "Double Trouble",
+    "Go for It",
+    "I'm for the Hippopotamus",
+    "Boot Hill"
+   ],
+   "detect_ms": 0.093
+  },
+  "ppl-09": {
+   "names": [
+    "Quentin Tarantino"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "surname"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 39,
+   "centroid": [
+    "Pulp Fiction",
+    "Django Unchained",
+    "Inglourious Basterds",
+    "Kill Bill: Vol. 1",
+    "Reservoir Dogs",
+    "Once Upon a Time... in Hollywood",
+    "Kill Bill: Vol. 2",
+    "The Hateful Eight",
+    "The Hateful Eight: Extended Version",
+    "Jackie Brown",
+    "Death Proof",
+    "Grindhouse",
+    "Reservoir Dogs",
+    "Four Rooms",
+    "The Hateful Eight: Extended Version",
+    "The Hateful Eight: Extended Version",
+    "My Best Friend's Birthday",
+    "Kill Bill: The Whole Bloody Affair"
+   ],
+   "detect_ms": 0.065
+  },
+  "ppl-11": {
+   "names": [
+    "David Lynch"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [
+    "weird"
+   ],
+   "era": null,
+   "n_titles": 39,
+   "centroid": [
+    "Mulholland Drive",
+    "The Elephant Man",
+    "Blue Velvet",
+    "Twin Peaks",
+    "Dune",
+    "Lost Highway",
+    "Eraserhead",
+    "Twin Peaks: Fire Walk with Me",
+    "Wild at Heart",
+    "The Straight Story",
+    "Rabbits",
+    "Inland Empire",
+    "Mulholland Dr.",
+    "Mulholland Dr.",
+    "Lumière & Company",
+    "DumbLand",
+    "Twin Peaks",
+    "Lady Blue Shanghai",
+    "Lady Blue Shanghai",
+    "Twin Peaks US Pilot"
+   ],
+   "detect_ms": 0.073
+  },
+  "ppl-13": {
+   "names": [
+    "Denis Villeneuve"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 12,
+   "centroid": [
+    "Dune",
+    "Prisoners",
+    "Arrival",
+    "Blade Runner 2049",
+    "Dune: Part Two",
+    "Sicario",
+    "Incendies",
+    "Enemy",
+    "Next Floor",
+    "August 32nd on Earth",
+    "Polytechnique",
+    "Maelström"
+   ],
+   "detect_ms": 0.093
+  },
+  "ppl-15": {
+   "names": [
+    "Hayao Miyazaki"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "surname"
+   ],
+   "intent": "style",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 29,
+   "centroid": [
+    "Spirited Away",
+    "Howl's Moving Castle",
+    "Princess Mononoke",
+    "My Neighbor Totoro",
+    "Castle in the Sky",
+    "Kiki's Delivery Service",
+    "Ponyo",
+    "Nausicaä of the Valley of the Wind",
+    "Porco Rosso",
+    "The Wind Rises",
+    "The Boy and the Heron",
+    "On Your Mark",
+    "Lupin the Third: The Castle of Cagliostro",
+    "Lupin the Third: Greatest Capers",
+    "Mei and the Kittenbus",
+    "Yuki's Sun"
+   ],
+   "detect_ms": 0.051
+  },
+  "ppl-17": {
+   "names": [
+    "Vince Gilligan"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "both",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 11,
+   "centroid": [
+    "Breaking Bad",
+    "Better Call Saul",
+    "Hancock",
+    "El Camino: A Breaking Bad Movie",
+    "Home Fries",
+    "The Lone Gunmen",
+    "Pluribus"
+   ],
+   "detect_ms": 0.054
+  },
+  "ppl-20": {
+   "names": [
+    "Edgar Wright"
+   ],
+   "kinds": [
+    "person"
+   ],
+   "match": [
+    "full"
+   ],
+   "intent": "both",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 17,
+   "centroid": [
+    "Shaun of the Dead",
+    "Baby Driver",
+    "Hot Fuzz",
+    "Scott Pilgrim vs. the World",
+    "The World's End",
+    "Last Night in Soho",
+    "The Sparks Brothers",
+    "Spaced",
+    "The Running Man",
+    "Don't"
+   ],
+   "detect_ms": 0.05
+  },
+  "ppl-21": {
+   "names": [
+    "Studio Ghibli"
+   ],
+   "kinds": [
+    "studio"
+   ],
+   "match": [
+    "alias"
+   ],
+   "intent": "filmography",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 27,
+   "centroid": [
+    "Spirited Away",
+    "Howl's Moving Castle",
+    "Princess Mononoke",
+    "My Neighbor Totoro",
+    "Castle in the Sky",
+    "Kiki's Delivery Service",
+    "Ponyo",
+    "The Secret World of Arrietty",
+    "Porco Rosso",
+    "The Wind Rises",
+    "The Boy and the Heron",
+    "Whisper of the Heart",
+    "The Cat Returns",
+    "Earwig and the Witch",
+    "The Tale of The Princess Kaguya",
+    "From Up on Poppy Hill",
+    "When Marnie Was There",
+    "Tales from Earthsea",
+    "On Your Mark",
+    "The Red Turtle"
+   ],
+   "detect_ms": 0.046
+  },
+  "ppl-23": {
+   "names": [
+    "Pixar"
+   ],
+   "kinds": [
+    "studio"
+   ],
+   "match": [
+    "alias"
+   ],
+   "intent": "filmography",
+   "lean": "style",
+   "residual": "",
+   "negated": [],
+   "era": null,
+   "n_titles": 87,
+   "centroid": [
+    "WALL·E",
+    "Up",
+    "Finding Nemo",
+    "Toy Story",
+    "Monsters, Inc.",
+    "Toy Story 3",
+    "Ratatouille",
+    "The Incredibles",
+    "Inside Out",
+    "Coco",
+    "Toy Story 2",
+    "Cars",
+    "Brave",
+    "Monsters University",
+    "Soul",
+    "Toy Story 4",
+    "Incredibles 2",
+    "Finding Dory",
+    "A Bug's Life",
+    "Cars 2"
+   ],
+   "detect_ms": 0.058
+  }
+ }
+}

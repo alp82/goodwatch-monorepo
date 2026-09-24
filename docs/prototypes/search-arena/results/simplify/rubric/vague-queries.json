@@ -1,0 +1,15 @@
+{
+ "lab-00": "complete nonsense: two-word mood; the literal word 'nonsense' invites title/keyword matches, the intent wants good absurd comedy",
+ "lab-06": "furious: one-word mood (with a title reading the intent allows); a keyword hit on 'furious' alone is not a good pick",
+ "core-12": "with my parents: occasion only (who is watching), no genre or subject; broad appeal is the whole point",
+ "core-18": "Brain's fried. Something warm and funny, but not painfully cheesy: mood and occasion; 'not cheesy' is a quality bar, not a subject",
+ "core-19": "cozy: one-word mood",
+ "core-20": "bleak: one-word mood",
+ "core-21": "funny: one-word mood; the intent says quality and popularity should matter",
+ "core-25": "something short to watch after work: occasion; the calibration failure (The Yogi Bear Show 3 by agents, 0 by the user)",
+ "core-29": "Turkish version of core-18 (tired, something warm and funny, not overly sentimental): mood and occasion",
+ "new-14": "good first anime for someone who never watched anime: occasion/audience; anime is explicit, but the grade hinges on accessibility and acclaim",
+ "new-17": "mindbending: one-word mood",
+ "new-18": "wholesome: one-word mood",
+ "ho2-20": "epic: one-word mood/scale"
+}

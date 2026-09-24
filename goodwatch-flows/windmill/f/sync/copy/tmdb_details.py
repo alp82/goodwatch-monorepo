@@ -39,7 +39,50 @@ SUB_BATCH_SIZE = 50000
 HOURS_TO_FETCH = 24*2
 
 
+CREATOR_JOB = "Creator"
+
+
 # ===== Helper Functions =====
+
+def creator_credits(tmdb_details: dict, media_id: str) -> list[tuple[Person, PersonWorkedOn]]:
+    """A show's `created_by` as person rows and Creator crew credits.
+
+    TMDB lists a show's creators apart from its crew, so the crew copy never sees them.
+    Each creator becomes a person_worked_on row with the job "Creator", keyed by the
+    created_by credit id. The department stays NULL like every other show crew row,
+    because aggregate credits carry no department per job.
+    """
+    crew = tmdb_details.get("credits", {}).get("crew", []) or tmdb_details.get("aggregate_credits", {}).get("crew", [])
+    # A credit id the crew copy already writes must not reach the same upsert twice.
+    seen_credit_ids = {member.get("credit_id") for member in crew} | {
+        job.get("credit_id") for member in crew for job in member.get("jobs", [])
+    }
+    credits = []
+    for creator in tmdb_details.get("created_by") or []:
+        person_id = creator.get("id")
+        name = creator.get("name")
+        credit_id = creator.get("credit_id")
+        if not (person_id and name and credit_id) or credit_id in seen_credit_ids:
+            continue
+        seen_credit_ids.add(credit_id)
+        credits.append((
+            Person(
+                tmdb_id=person_id,
+                name=name,
+                original_name=creator.get("original_name"),
+                profile_path=creator.get("profile_path"),
+                gender=creator.get("gender"),
+            ),
+            PersonWorkedOn(
+                media_tmdb_id=media_id,
+                media_type="show",
+                person_tmdb_id=person_id,
+                credit_id=credit_id,
+                job=CREATOR_JOB,
+            ),
+        ))
+    return credits
+
 
 def to_timestamp(dt_input: str) -> Optional[float]:
     """Convert datetime to Unix timestamp."""
@@ -521,6 +564,15 @@ def copy_media(
                             episode_count_job=job.get("episode_count"),
                             episode_count_total=crew_member.get("total_episode_count"),
                         ))
+
+            # Process creators (shows only). Crew people come first, so their fuller
+            # person records win over the creator's.
+            if not is_movie:
+                for person, worked_on in creator_credits(tmdb_details, media_id):
+                    if person.tmdb_id not in entity_ids["person"]:
+                        entity_ids["person"].add(person.tmdb_id)
+                        entity_batches['person'].append(person)
+                    entity_batches['person_worked_on'].append(worked_on)
 
             # Streaming children and aggregates belong exclusively to the shared
             # tmdb_streaming reconciler. Unset model fields remain NULL and normal

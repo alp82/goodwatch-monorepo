@@ -1,0 +1,1297 @@
+{
+ "sty-01": {
+  "names": [
+   "Terry Gilliam"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 20,
+  "centroid": [
+   "Monty Python and the Holy Grail",
+   "Twelve Monkeys",
+   "Fear and Loathing in Las Vegas",
+   "Brazil",
+   "The Imaginarium of Doctor Parnassus",
+   "The Brothers Grimm",
+   "The Fisher King",
+   "Time Bandits",
+   "The Adventures of Baron Munchausen",
+   "The Zero Theorem",
+   "Tideland",
+   "The Man Who Killed Don Quixote",
+   "Jabberwocky"
+  ],
+  "peers": [
+   [
+    "Guy Maddin",
+    2.69
+   ],
+   [
+    "Tim Burton",
+    2.65
+   ],
+   [
+    "Jean-Pierre Jeunet",
+    2.48
+   ],
+   [
+    "Henry Selick",
+    2.39
+   ],
+   [
+    "Marc Caro",
+    2.37
+   ],
+   [
+    "Ralph Bakshi",
+    2.35
+   ],
+   [
+    "David Lynch",
+    2.34
+   ],
+   [
+    "Alejandro Jodorowsky",
+    2.34
+   ],
+   [
+    "Robert Fuest",
+    2.3
+   ],
+   [
+    "Michel Gondry",
+    2.3
+   ],
+   [
+    "Jeffrey Lau Chun-Wai",
+    2.28
+   ],
+   [
+    "Daniel Scheinert",
+    2.27
+   ],
+   [
+    "Joe Dante",
+    2.23
+   ],
+   [
+    "Matt Shakman",
+    2.21
+   ],
+   [
+    "Sean Patrick O'Reilly",
+    2.19
+   ]
+  ],
+  "terms": [
+   "surreal",
+   "fantasy",
+   "mind_screw",
+   "scenery",
+   "crazy",
+   "dung_age",
+   "visual",
+   "cuckoo",
+   "dung",
+   "provok_visual",
+   "cameo",
+   "gilliam",
+   "terry_gilliam",
+   "funny",
+   "gainax_end"
+  ],
+  "detect_ms": 0.073,
+  "own_max": 6
+ },
+ "sty-02": {
+  "names": [
+   "Charlie Kaufman"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 10,
+  "centroid": [
+   "Eternal Sunshine of the Spotless Mind",
+   "Being John Malkovich",
+   "Adaptation.",
+   "Synecdoche, New York",
+   "I'm Thinking of Ending Things",
+   "Confessions of a Dangerous Mind",
+   "Anomalisa",
+   "Human Nature",
+   "Orion and the Dark",
+   "The Dana Carvey Show"
+  ],
+  "peers": [
+   [
+    "Michel Gondry",
+    2.37
+   ],
+   [
+    "Charlie McDowell",
+    2.27
+   ],
+   [
+    "Leos Carax",
+    2.21
+   ],
+   [
+    "Quentin Dupieux",
+    2.2
+   ],
+   [
+    "Tricia Brock",
+    2.17
+   ],
+   [
+    "Jake Schreier",
+    2.16
+   ],
+   [
+    "Sebastián Silva",
+    2.15
+   ],
+   [
+    "Yorgos Lanthimos",
+    2.12
+   ],
+   [
+    "Daniel Scheinert",
+    2.11
+   ],
+   [
+    "David Lynch",
+    2.09
+   ],
+   [
+    "Guy Maddin",
+    2.02
+   ],
+   [
+    "Lars von Trier",
+    2.02
+   ],
+   [
+    "Josephine Decker",
+    2.01
+   ],
+   [
+    "Satoshi Kon",
+    2.01
+   ],
+   [
+    "Albert Brooks",
+    2.0
+   ]
+  ],
+  "terms": [
+   "surreal",
+   "philosophical",
+   "inventive",
+   "existentialism",
+   "mind_screw",
+   "scale_idealism",
+   "existential",
+   "philosophical_theme",
+   "surreal_exploration",
+   "idealism",
+   "cynicism",
+   "vs_cynicism",
+   "idealism_vs",
+   "mean",
+   "mental_story"
+  ],
+  "detect_ms": 0.051,
+  "own_max": 6
+ },
+ "sty-03": {
+  "names": [
+   "Nicolas Cage"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "style",
+  "lean": "filmography",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 109,
+  "centroid": [
+   "Kick-Ass",
+   "Face/Off",
+   "National Treasure",
+   "Lord of War",
+   "National Treasure: Book of Secrets",
+   "The Rock",
+   "Con Air",
+   "Ghost Rider",
+   "Gone in Sixty Seconds",
+   "Knowing",
+   "The Croods",
+   "Longlegs",
+   "Adaptation.",
+   "Next",
+   "The Unbearable Weight of Massive Talent",
+   "The Sorcerer's Apprentice",
+   "Raising Arizona",
+   "Matchstick Men",
+   "City of Angels",
+   "Ghost Rider: Spirit of Vengeance"
+  ],
+  "peers": [
+   [
+    "Richard Donner",
+    2.0
+   ],
+   [
+    "Rob Cohen",
+    1.96
+   ],
+   [
+    "Venkat Prabhu",
+    1.9
+   ],
+   [
+    "Harald Zwart",
+    1.89
+   ],
+   [
+    "Rob Bowman",
+    1.86
+   ],
+   [
+    "Steve Boyum",
+    1.85
+   ],
+   [
+    "Chuck Russell",
+    1.85
+   ],
+   [
+    "John McTiernan",
+    1.84
+   ],
+   [
+    "Louis Leterrier",
+    1.83
+   ],
+   [
+    "Timur Bekmambetov",
+    1.79
+   ],
+   [
+    "Luc Besson",
+    1.79
+   ],
+   [
+    "Benny Chan",
+    1.74
+   ],
+   [
+    "Guy Ritchie",
+    1.74
+   ],
+   [
+    "Kevin Tancharoen",
+    1.72
+   ],
+   [
+    "Gore Verbinski",
+    1.72
+   ]
+  ],
+  "terms": [
+   "trailer",
+   "trust_trailer",
+   "never_trust",
+   "ham",
+   "chekhov",
+   "large_ham",
+   "trust",
+   "hero",
+   "never",
+   "child",
+   "joke",
+   "large",
+   "car",
+   "death",
+   "nicola_cage"
+  ],
+  "detect_ms": 0.057,
+  "own_max": 6
+ },
+ "sty-04": {
+  "names": [
+   "Mel Brooks"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "style",
+  "lean": "filmography",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 26,
+  "centroid": [
+   "Spaceballs",
+   "Young Frankenstein",
+   "Blazing Saddles",
+   "Robots",
+   "Robin Hood: Men in Tights",
+   "Paws of Fury: The Legend of Hank",
+   "History of the World: Part I",
+   "The Producers",
+   "Dracula: Dead and Loving It",
+   "Bombshell: The Hedy Lamarr Story",
+   "Remembering Gene Wilder",
+   "Ballerina",
+   "High Anxiety",
+   "The Electric Company",
+   "Silent Movie",
+   "Richard Pryor: Omit the Logic",
+   "The Automat",
+   "Jakers! The Adventures of Piggley Winks",
+   "To Be or Not to Be",
+   "Sarah Silverman: Someone You Love"
+  ],
+  "peers": [
+   [
+    "Michael Herbig",
+    2.24
+   ],
+   [
+    "John Landis",
+    2.2
+   ],
+   [
+    "Leonid Gaidai",
+    2.05
+   ],
+   [
+    "Michel Hazanavicius",
+    2.03
+   ],
+   [
+    "David Wain",
+    2.03
+   ],
+   [
+    "Lee Lik-Chi",
+    2.01
+   ],
+   [
+    "Ricky Gervais",
+    2.01
+   ],
+   [
+    "Édouard Molinaro",
+    2.01
+   ],
+   [
+    "Blake Edwards",
+    2.01
+   ],
+   [
+    "Terry Hughes",
+    1.99
+   ],
+   [
+    "Frank Tashlin",
+    1.99
+   ],
+   [
+    "Adam McKay",
+    1.99
+   ],
+   [
+    "Stephen Chow",
+    1.98
+   ],
+   [
+    "James Bobin",
+    1.97
+   ],
+   [
+    "Taika Waititi",
+    1.97
+   ]
+  ],
+  "terms": [
+   "mel_brook",
+   "brook",
+   "mel",
+   "parody",
+   "brook_comedy",
+   "affectionate_parody",
+   "affectionate",
+   "punny_name",
+   "punny",
+   "adolf",
+   "spoof",
+   "fourth_wall",
+   "ham",
+   "wall",
+   "fourth"
+  ],
+  "detect_ms": 0.072,
+  "own_max": 6
+ },
+ "sty-05": {
+  "names": [
+   "Aardman"
+  ],
+  "kinds": [
+   "studio"
+  ],
+  "match": [
+   "alias"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 22,
+  "centroid": [
+   "Chicken Run",
+   "Flushed Away",
+   "Wallace & Gromit: The Curse of the Were-Rabbit",
+   "Robin Robin",
+   "The Pirates! In an Adventure with Scientists!",
+   "The Wrong Trousers",
+   "A Close Shave",
+   "Shaun the Sheep Movie",
+   "A Grand Day Out",
+   "Wallace & Gromit's Cracking Contraptions",
+   "Wallace & Gromit's Cracking Contraptions",
+   "Wallace & Gromit: Vengeance Most Fowl",
+   "Shaun the Sheep: The Flight Before Christmas",
+   "Chicken Run: Dawn of the Nugget",
+   "Early Man",
+   "A Matter of Loaf and Death",
+   "Shaun the Sheep",
+   "Shaun the Sheep: The Farmer's Llamas",
+   "A Shaun the Sheep Movie: Farmageddon",
+   "Wallace & Gromit's World of Invention"
+  ],
+  "peers": [
+   [
+    "Sony Pictures Animation",
+    2.64
+   ],
+   [
+    "DreamWorks Animation",
+    2.62
+   ],
+   [
+    "Blue Sky Studios",
+    2.62
+   ],
+   [
+    "Blue Sky Studios",
+    2.62
+   ],
+   [
+    "Disney Television Animation",
+    2.61
+   ],
+   [
+    "Nickelodeon Animation Studio",
+    2.59
+   ],
+   [
+    "Pacific Data Images",
+    2.57
+   ],
+   [
+    "Pixar",
+    2.56
+   ],
+   [
+    "20th Century Fox Animation",
+    2.55
+   ],
+   [
+    "Hanna-Barbera Cartoons",
+    2.52
+   ],
+   [
+    "O Entertainment",
+    2.51
+   ],
+   [
+    "Walt Disney Productions",
+    2.51
+   ],
+   [
+    "Walt Disney Productions",
+    2.51
+   ],
+   [
+    "Illumination",
+    2.51
+   ],
+   [
+    "CBBC",
+    2.46
+   ]
+  ],
+  "terms": [
+   "claymation",
+   "motion_animation",
+   "stop_motion",
+   "motion",
+   "plasticine",
+   "stop",
+   "delightful_stop",
+   "british_humor",
+   "delightful",
+   "animation",
+   "motion_adventure",
+   "silent_snarker",
+   "inventive",
+   "whimsical",
+   "anthropomorphism"
+  ],
+  "detect_ms": 0.049,
+  "own_max": 6
+ },
+ "sty-06": {
+  "names": [
+   "David Fincher"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "surname"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "",
+  "negated": [],
+  "era": null,
+  "n_titles": 4,
+  "centroid": [
+   "Fight Club",
+   "Gone Girl",
+   "Se7en",
+   "The Social Network",
+   "The Curious Case of Benjamin Button",
+   "Zodiac",
+   "The Girl with the Dragon Tattoo",
+   "The Game",
+   "MINDHUNTER",
+   "Alien³",
+   "Panic Room",
+   "The Killer",
+   "Mank",
+   "Madonna: Vogue"
+  ],
+  "peers": [
+   [
+    "Paul McGuigan",
+    1.28
+   ],
+   [
+    "Tom Shankland",
+    1.27
+   ],
+   [
+    "Greg Yaitanes",
+    1.26
+   ],
+   [
+    "Stephen Hopkins",
+    1.26
+   ],
+   [
+    "William Friedkin",
+    1.25
+   ],
+   [
+    "Brian De Palma",
+    1.23
+   ],
+   [
+    "Scott Frank",
+    1.22
+   ],
+   [
+    "Andrew McCarthy",
+    1.22
+   ],
+   [
+    "Mikael Håfström",
+    1.22
+   ],
+   [
+    "Jack Bender",
+    1.21
+   ],
+   [
+    "Abel Ferrara",
+    1.21
+   ],
+   [
+    "Chris Long",
+    1.21
+   ],
+   [
+    "Jamie Payne",
+    1.21
+   ],
+   [
+    "Joel Schumacher",
+    1.21
+   ],
+   [
+    "Paul Schrader",
+    1.21
+   ]
+  ],
+  "terms": [
+   "useless",
+   "shot",
+   "sir",
+   "police_useless",
+   "second",
+   "trailer",
+   "line",
+   "oh_crap",
+   "crap",
+   "unreliable",
+   "oh",
+   "never",
+   "frame",
+   "fincher",
+   "book"
+  ],
+  "detect_ms": 0.073,
+  "own_max": 6
+ },
+ "sty-07": {
+  "names": [
+   "Matt Groening"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "cartoons",
+  "negated": [],
+  "era": null,
+  "n_titles": 3,
+  "centroid": [
+   "The Simpsons Movie",
+   "Maggie Simpson in \"The Longest Daycare\"",
+   "Maggie Simpson in \"Playdate with Destiny\""
+  ],
+  "peers": [
+   [
+    "David Silverman",
+    2.15
+   ],
+   [
+    "Malcolm D. Lee",
+    2.01
+   ],
+   [
+    "Rhys Thomas",
+    1.96
+   ],
+   [
+    "John Whitesell",
+    1.95
+   ],
+   [
+    "Rich Correll",
+    1.95
+   ],
+   [
+    "Rod Daniel",
+    1.94
+   ],
+   [
+    "Eric Dean Seaton",
+    1.93
+   ],
+   [
+    "Amy Heckerling",
+    1.93
+   ],
+   [
+    "Savage Steve Holland",
+    1.92
+   ],
+   [
+    "Steve Hoefer",
+    1.9
+   ],
+   [
+    "Gil Junger",
+    1.9
+   ],
+   [
+    "Michael Lembeck",
+    1.9
+   ],
+   [
+    "Melanie Mayron",
+    1.88
+   ],
+   [
+    "Ivan Reitman",
+    1.88
+   ],
+   [
+    "Bob Koherr",
+    1.87
+   ]
+  ],
+  "terms": [
+   "vanity_plate",
+   "plate",
+   "vanity",
+   "dialogue_episode",
+   "music_cartoon",
+   "mime_music",
+   "animal_harm",
+   "mime",
+   "bumbl_dad",
+   "animat_short",
+   "culture_reference",
+   "2d_visual",
+   "3d_effect",
+   "visual_3d",
+   "2d"
+  ],
+  "detect_ms": 0.07,
+  "own_max": 6
+ },
+ "sty-08": {
+  "names": [
+   "Jean-Pierre Jeunet"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "un",
+  "negated": [],
+  "era": null,
+  "n_titles": 8,
+  "centroid": [
+   "Amélie",
+   "Alien Resurrection",
+   "Delicatessen",
+   "A Very Long Engagement",
+   "The City of Lost Children",
+   "Micmacs",
+   "The Young and Prodigious T.S. Spivet",
+   "Bigbug"
+  ],
+  "peers": [
+   [
+    "Gore Verbinski",
+    1.95
+   ],
+   [
+    "Tim Burton",
+    1.95
+   ],
+   [
+    "Jeremiah S. Chechik",
+    1.94
+   ],
+   [
+    "Lijo Jose Pellissery",
+    1.92
+   ],
+   [
+    "Ömer Faruk Sorak",
+    1.91
+   ],
+   [
+    "Luc Besson",
+    1.8
+   ],
+   [
+    "Michel Gondry",
+    1.8
+   ],
+   [
+    "George Miller",
+    1.76
+   ],
+   [
+    "Matt Shakman",
+    1.75
+   ],
+   [
+    "Ben Wheatley",
+    1.74
+   ],
+   [
+    "Jake Schreier",
+    1.72
+   ],
+   [
+    "Nick Hurran",
+    1.71
+   ],
+   [
+    "Sarik Andreasyan",
+    1.7
+   ],
+   [
+    "Stewart Raffill",
+    1.69
+   ],
+   [
+    "Ralph Bakshi",
+    1.69
+   ]
+  ],
+  "terms": [
+   "dystopia",
+   "bio_punk",
+   "eye_len",
+   "quirky",
+   "fish_eye",
+   "circus_music",
+   "collector_strange",
+   "strongest",
+   "mystery_explore",
+   "find",
+   "born",
+   "turn_master",
+   "color_wash",
+   "bio",
+   "cruel_unusual"
+  ],
+  "detect_ms": 0.071,
+  "own_max": 6
+ },
+ "sty-09": {
+  "names": [
+   "Darren Aronofsky"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "filmography",
+  "lean": "style",
+  "residual": "would direct",
+  "negated": [],
+  "era": null,
+  "n_titles": 15,
+  "centroid": [
+   "Requiem for a Dream",
+   "Black Swan",
+   "The Wrestler",
+   "Noah",
+   "The Fountain",
+   "mother!",
+   "The Whale",
+   "Pi",
+   "Caught Stealing"
+  ],
+  "detect_ms": 0.027
+ },
+ "sty-10": {
+  "names": [
+   "Danny Boyle"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "stuff them",
+  "negated": [],
+  "era": null,
+  "n_titles": 16,
+  "centroid": [
+   "Slumdog Millionaire",
+   "Trainspotting",
+   "28 Days Later",
+   "127 Hours",
+   "Sunshine",
+   "The Beach",
+   "28 Years Later",
+   "Yesterday",
+   "Steve Jobs",
+   "T2 Trainspotting",
+   "Trance",
+   "Pistol",
+   "Trust",
+   "Shallow Grave",
+   "National Theatre Live: Frankenstein",
+   "A Life Less Ordinary",
+   "Millions",
+   "Vacuuming Completely Nude in Paradise"
+  ],
+  "peers": [
+   [
+    "Joel Schumacher",
+    1.43
+   ],
+   [
+    "Sarik Andreasyan",
+    1.37
+   ],
+   [
+    "Anurag Kashyap",
+    1.36
+   ],
+   [
+    "Bronwen Hughes",
+    1.36
+   ],
+   [
+    "John Herzfeld",
+    1.35
+   ],
+   [
+    "Vikramaditya Motwane",
+    1.35
+   ],
+   [
+    "Selvaraghavan",
+    1.31
+   ],
+   [
+    "Takeshi Kitano",
+    1.31
+   ],
+   [
+    "Nick Hamm",
+    1.3
+   ],
+   [
+    "Paul McGuigan",
+    1.29
+   ],
+   [
+    "David Fincher",
+    1.28
+   ],
+   [
+    "Jacques Audiard",
+    1.28
+   ],
+   [
+    "Aashiq Abu",
+    1.26
+   ],
+   [
+    "Steven Soderbergh",
+    1.26
+   ],
+   [
+    "Álex de la Iglesia",
+    1.26
+   ]
+  ],
+  "terms": [
+   "edinburgh_scotland",
+   "edinburgh",
+   "full_money",
+   "england",
+   "scottish_cinema",
+   "nature",
+   "chekhov",
+   "live",
+   "break_comedian",
+   "has",
+   "establish_character",
+   "word",
+   "scotland",
+   "briefcase_full",
+   "money"
+  ],
+  "detect_ms": 0.091,
+  "own_max": 6
+ },
+ "sty-11": {
+  "names": [
+   "Jackie Chan"
+  ],
+  "kinds": [
+   "person"
+  ],
+  "match": [
+   "full"
+  ],
+  "intent": "style",
+  "lean": "filmography",
+  "residual": "stunts slapstick",
+  "negated": [],
+  "era": null,
+  "n_titles": 89,
+  "centroid": [
+   "Kung Fu Panda",
+   "Rush Hour",
+   "Kung Fu Panda 2",
+   "Rush Hour 2",
+   "Rush Hour 3",
+   "The Karate Kid",
+   "Kung Fu Panda 3",
+   "Shanghai Noon",
+   "The Foreigner",
+   "Shanghai Knights",
+   "The Forbidden Kingdom",
+   "Around the World in 80 Days",
+   "Iron Mask",
+   "The Tuxedo",
+   "The Young Master",
+   "Crime Story",
+   "The Shadow's Edge",
+   "Vanguard",
+   "Ride On",
+   "1911"
+  ],
+  "peers": [
+   [
+    "Stanley Tong Gwai-Lai",
+    2.21
+   ],
+   [
+    "Sammo Kam-Bo Hung",
+    2.2
+   ],
+   [
+    "Steve Boyum",
+    2.17
+   ],
+   [
+    "Rohit Shetty",
+    2.1
+   ],
+   [
+    "Corey Yuen",
+    2.08
+   ],
+   [
+    "Harald Zwart",
+    2.04
+   ],
+   [
+    "Gérard Krawczyk",
+    2.03
+   ],
+   [
+    "Justin Lin",
+    2.0
+   ],
+   [
+    "Brett Ratner",
+    1.98
+   ],
+   [
+    "Shawn Levy",
+    1.97
+   ],
+   [
+    "Yuen Woo-ping",
+    1.97
+   ],
+   [
+    "Louis Leterrier",
+    1.96
+   ],
+   [
+    "Peter MacDonald",
+    1.96
+   ],
+   [
+    "McG",
+    1.95
+   ],
+   [
+    "Richard Donner",
+    1.93
+   ]
+  ],
+  "terms": [
+   "martial_art",
+   "martial",
+   "kung",
+   "jackie_chan",
+   "art",
+   "jackie",
+   "chan",
+   "action_hero",
+   "fu",
+   "action_comedy",
+   "kung_fu",
+   "physical",
+   "physical_comedy",
+   "art_action",
+   "action"
+  ],
+  "detect_ms": 0.076,
+  "own_max": 6
+ },
+ "sty-12": {
+  "names": [
+   "Blumhouse Productions"
+  ],
+  "kinds": [
+   "studio"
+  ],
+  "match": [
+   "alias"
+  ],
+  "intent": "style",
+  "lean": "style",
+  "residual": "horror",
+  "negated": [],
+  "era": null,
+  "n_titles": 184,
+  "centroid": [
+   "Whiplash",
+   "Get Out",
+   "Split",
+   "Sinister",
+   "Paranormal Activity",
+   "Glass",
+   "The Invisible Man",
+   "The Black Phone",
+   "Insidious: Chapter 2",
+   "The Gift",
+   "Halloween",
+   "Happy Death Day",
+   "M3GAN",
+   "The Visit",
+   "Hush",
+   "Five Nights at Freddy's",
+   "The Hunt",
+   "Paranormal Activity 2",
+   "Insidious: Chapter 3",
+   "Sharp Objects"
+  ],
+  "peers": [
+   [
+    "Blumhouse Productions",
+    1.86
+   ],
+   [
+    "Vertigo Entertainment",
+    1.73
+   ],
+   [
+    "Intrepid Pictures",
+    1.71
+   ],
+   [
+    "Castelao Productions",
+    1.71
+   ],
+   [
+    "Castelao Productions",
+    1.66
+   ],
+   [
+    "BoulderLight Pictures",
+    1.65
+   ],
+   [
+    "BoulderLight Pictures",
+    1.65
+   ],
+   [
+    "Divide / Conquer",
+    1.65
+   ],
+   [
+    "After Dark Films",
+    1.65
+   ],
+   [
+    "Blinding Edge Pictures",
+    1.62
+   ],
+   [
+    "Blinding Edge Pictures",
+    1.62
+   ],
+   [
+    "Caliber Media Company",
+    1.6
+   ],
+   [
+    "Caliber Media Company",
+    1.6
+   ],
+   [
+    "Dark Castle Entertainment",
+    1.59
+   ],
+   [
+    "XYZ Films",
+    1.58
+   ]
+  ],
+  "terms": [
+   "wham_shot",
+   "alway_spoil",
+   "wham",
+   "foreshadow",
+   "red_herr",
+   "creepy",
+   "herr",
+   "trailer_alway",
+   "proof_father",
+   "supernatural_proof",
+   "line",
+   "wham_line",
+   "trailer",
+   "spoil",
+   "chekhov"
+  ],
+  "detect_ms": 0.053,
+  "own_max": 6
+ }
+}

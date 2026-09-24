@@ -13,10 +13,33 @@ from typing import Any, Dict, List, Optional, Tuple
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 from f.sync.copy import deleted_titles
-from f.sync.copy.qdrant_retry import REQUEST_TIMEOUT_SECONDS, upsert_with_retry
+from qdrant_client import models as qm
+from f.sync.copy.qdrant_retry import (
+    REQUEST_TIMEOUT_SECONDS, insert_points, update_points, write_with_retry,
+)
 
 # The sync functions are executed from their AST; give them the real delete-on-sync helpers.
 DELETED_TITLE_HELPERS = {name: getattr(deleted_titles, name) for name in deleted_titles.__dict__ if not name.startswith("_")}
+
+# Real point-operation helpers with a no-op backoff, plus a collection that has no
+# fingerprint_v1_raw vector yet.
+POINT_WRITE_HELPERS = {
+    "insert_points": insert_points, "update_points": update_points,
+    "write_with_retry": lambda *args, **kwargs: write_with_retry(*args, **kwargs, sleep=lambda seconds: None),
+    "FINGERPRINT_RAW_VECTOR": "fingerprint_v1_raw",
+    "_collection_vector_names": lambda client: {"fingerprint_v1"},
+    "qm": qm,
+}
+
+
+def completed(*args: Any, **kwargs: Any) -> list:
+    """A batch_update_points result where every operation completed."""
+    return [SimpleNamespace(status=qm.UpdateStatus.COMPLETED)] * len(kwargs["update_operations"])
+
+
+def written_points(client: Mock) -> list:
+    """Points created by the last batch request's insert_points operation."""
+    return client.batch_update_points.call_args.kwargs["update_operations"][0].upsert.points
 
 ROOT = Path(__file__).parents[1] / "windmill" / "f"
 SYNC_NAMES = ("tmdb_details", "all_ratings", "tmdb_streaming", "tvtropes", "dna_data")
@@ -218,6 +241,7 @@ class VectorKeysetTests(unittest.TestCase):
                     "HOURS_TO_FETCH": 48, "BATCH_SIZE": 100, "UPSERT_BATCH_SIZE": 100,
                     "Optional": Optional, "List": List, "Tuple": Tuple, "Dict": Dict, "Any": Any,
                     "MEDIA_COLLECTION": "media", "QdrantMediaPoint": MagicMock(),
+                    **POINT_WRITE_HELPERS,
                 }
                 exec(compile(ast.Module(body=functions, type_ignores=[]), "vector_data.py", "exec"), namespace)
                 result = namespace["copy_to_qdrant"](
@@ -247,13 +271,15 @@ class VectorPublicationTests(unittest.TestCase):
                 qc = MagicMock()
                 crate = MagicMock()
                 crate.select.return_value = [{"tmdb_id": 42, "streaming_availabilities": ["DE_8", "US_9"]}]
-                qc.client.upsert.return_value.status = "completed" if status == "scheduled" else status
+                qc.client.batch_update_points.side_effect = lambda **kw: [
+                    SimpleNamespace(status="completed" if status == "scheduled" else status)
+                ] * len(kw["update_operations"])
                 fetch_ids = MagicMock(side_effect=[([42], 42), ([], 42)])
                 namespace = {
                     **DELETED_TITLE_HELPERS,
                     "QdrantConnector": object, "CrateConnector": lambda: crate, "get_db": lambda: db,
                     "ExitStack": ExitStack,
-                    "upsert_with_retry": lambda *args, **kwargs: upsert_with_retry(*args, **kwargs, sleep=lambda seconds: None), "publication_lease": lambda *args: nullcontext(lambda: None),
+                    **POINT_WRITE_HELPERS, "publication_lease": lambda *args: nullcontext(lambda: None),
                     "TmdbMovieDetails": MagicMock(), "TmdbTvDetails": MagicMock(),
                     "datetime": datetime, "timedelta": timedelta, "HOURS_TO_FETCH": 48,
                     "BATCH_SIZE": 100, "UPSERT_BATCH_SIZE": 100,
@@ -264,14 +290,13 @@ class VectorPublicationTests(unittest.TestCase):
                     "_build_payload": lambda **kw: ({"tmdb_id": 42, "streaming_availability": ["8_DE"]}, {"fingerprint_v1": [0.2]}),
                     "QdrantMediaPoint": SimpleNamespace(make_point_id=lambda *args: 84),
                     "MEDIA_COLLECTION": "media",
-                    "qm": SimpleNamespace(PointStruct=lambda **kw: kw, UpdateStatus=SimpleNamespace(COMPLETED="completed")),
                 }
                 functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_published_streaming"]
                 exec(compile(ast.Module(body=functions, type_ignores=[]), "vector_data.py", "exec"), namespace)
                 if status in ("completed", "scheduled"):
                     result = namespace["copy_to_qdrant"](qc, "movie", {"tmdb_id": {"$in": [42]}}, recent_only=False, strict_writes=True)
                     self.assertEqual(result["upserts"], 1)
-                    self.assertEqual(qc.client.upsert.call_args.kwargs["points"][0]["payload"]["streaming_availability"], ["8_DE", "9_US"])
+                    self.assertEqual(written_points(qc.client)[0].payload["streaming_availability"], ["8_DE", "9_US"])
                 else:
                     with self.assertRaisesRegex(RuntimeError, "incomplete status"):
                         namespace["copy_to_qdrant"](qc, "movie", {"tmdb_id": {"$in": [42]}}, recent_only=False, strict_writes=True)
@@ -280,8 +305,20 @@ class VectorPublicationTests(unittest.TestCase):
                         "SELECT tmdb_id, streaming_availabilities FROM movie WHERE tmdb_id = ANY(?)", ([42],))
                     crate.disconnect.assert_called_once()
                 self.assertEqual(fetch_ids.call_args_list[0].kwargs["base_selector"], {"tmdb_id": {"$in": [42]}})
-                qc.upsert_points.assert_not_called()
-                self.assertTrue(qc.client.upsert.call_args.kwargs["wait"])
+                qc.client.upsert.assert_not_called()
+                self.assertTrue(qc.client.batch_update_points.call_args.kwargs["wait"])
+
+
+class RawFingerprintTests(unittest.TestCase):
+    def test_raw_vector_uses_the_fingerprint_dimension_order(self) -> None:
+        from f.dna.generate.vectors import create_fingerprint
+        from f.dna.models import CoreScores
+        from f.sync.copy.vector_data import _raw_fingerprint
+        scores = {name: index % 11 for index, name in enumerate(reversed(list(CoreScores.model_fields)))}
+        raw = _raw_fingerprint(scores)
+        self.assertEqual(len(raw), 74)
+        self.assertEqual(raw, create_fingerprint(scores))
+        self.assertIsNone(_raw_fingerprint({"adrenaline": 3}))
 
 
 class VectorSerializationTests(unittest.TestCase):
@@ -292,7 +329,7 @@ class VectorSerializationTests(unittest.TestCase):
         self.crate = MagicMock()
         self.crate.select.return_value = [{"tmdb_id": 42, "streaming_availabilities": ["US_9"]}]
         self.qc = MagicMock()
-        self.qc.client.upsert.return_value.status = "completed"
+        self.qc.client.batch_update_points.side_effect = completed
         tree = ast.parse((ROOT / "sync" / "copy" / "vector_data.py").read_text())
         functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
                      and node.name in ("copy_to_qdrant", "_published_streaming")]
@@ -304,7 +341,7 @@ class VectorSerializationTests(unittest.TestCase):
             "BATCH_SIZE": 100, "UPSERT_BATCH_SIZE": 100,
             "Optional": Optional, "List": List, "Tuple": Tuple, "Dict": Dict, "Any": Any,
             "ExitStack": ExitStack,
-                    "upsert_with_retry": lambda *args, **kwargs: upsert_with_retry(*args, **kwargs, sleep=lambda seconds: None),
+            **POINT_WRITE_HELPERS,
             "publication_lease": load_copy(self.db).__globals__["publication_lease"],
             "_fetch_tmdb_ids_keyset": MagicMock(side_effect=[([42], 42), ([], 42)]),
             "_fetch_map_by_ids": lambda *args: {42: {"tmdb_id": 42}},
@@ -312,7 +349,6 @@ class VectorSerializationTests(unittest.TestCase):
             "_build_payload": lambda **kw: ({"tmdb_id": 42, "streaming_availability": ["8_DE"]}, {"fingerprint_v1": [0.2]}),
             "QdrantMediaPoint": SimpleNamespace(make_point_id=lambda *args: 84),
             "MEDIA_COLLECTION": "media",
-            "qm": SimpleNamespace(PointStruct=lambda **kw: kw, UpdateStatus=SimpleNamespace(COMPLETED="completed")),
         }
         exec(compile(ast.Module(body=functions, type_ignores=[]), "vector_data.py", "exec"), self.namespace)
 
@@ -328,22 +364,42 @@ class VectorSerializationTests(unittest.TestCase):
         self.namespace["_build_payload"] = Mock(return_value=(
             {"tmdb_id": 42}, {"fingerprint_v1": [0.2]},
         ))
-        self.qc.client.upsert.side_effect = [
-            RpcFailure(grpc.StatusCode.UNAVAILABLE), SimpleNamespace(status="completed"),
+        self.qc.client.batch_update_points.side_effect = [
+            RpcFailure(grpc.StatusCode.UNAVAILABLE), [SimpleNamespace(status="completed")] * 3,
         ]
         result = self.publish()
         self.assertEqual(result["upserts"], 1)
         self.assertEqual(result["publication"]["attempts"], 2)
         self.assertEqual(result["publication"]["retries"], 1)
         self.namespace["_build_payload"].assert_called_once()
-        calls = self.qc.client.upsert.call_args_list
-        self.assertIs(calls[0].kwargs["points"], calls[1].kwargs["points"])
+        calls = self.qc.client.batch_update_points.call_args_list
+        self.assertIs(calls[0].kwargs["update_operations"], calls[1].kwargs["update_operations"])
         self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)
+
+    def test_existing_points_keep_vectors_other_writers_own(self) -> None:
+        self.namespace["_build_payload"] = lambda **kw: ({"tmdb_id": 42}, {
+            "fingerprint_v1": [0.2], "fingerprint_v1_raw": [2.0],
+        })
+        for names, expected in (
+            ({"fingerprint_v1"}, {"fingerprint_v1": [0.2]}),
+            ({"fingerprint_v1", "fingerprint_v1_raw", "text_en_v1"},
+             {"fingerprint_v1": [0.2], "fingerprint_v1_raw": [2.0]}),
+        ):
+            with self.subTest(collection_vectors=names):
+                self.namespace["_collection_vector_names"] = lambda client: names
+                self.namespace["_fetch_tmdb_ids_keyset"] = MagicMock(side_effect=[([42], 42), ([], 42)])
+                self.publish()
+                insert, vectors, payload = self.qc.client.batch_update_points.call_args.kwargs["update_operations"]
+                self.assertEqual(insert.upsert.update_mode, qm.UpdateMode.INSERT_ONLY)
+                self.assertEqual(insert.upsert.points[0].vector, expected)
+                self.assertEqual(vectors.update_vectors.points[0].vector, expected)
+                self.assertEqual(payload.overwrite_payload.points, [84])
+                self.assertEqual(payload.overwrite_payload.payload["tmdb_id"], 42)
 
     def test_targeted_vector_uses_latest_published_snapshot_after_other_writer(self) -> None:
         self.publish()
-        point = self.qc.client.upsert.call_args.kwargs["points"][0]
-        self.assertEqual(point["payload"]["streaming_availability"], ["9_US"])
+        point = written_points(self.qc.client)[0]
+        self.assertEqual(point.payload["streaming_availability"], ["9_US"])
 
 
     def test_unknown_snapshot_preserves_vectors_but_confirmed_empty_can_clear(self) -> None:
@@ -353,10 +409,10 @@ class VectorSerializationTests(unittest.TestCase):
                 self.crate.select.return_value = [{"tmdb_id": 42, "streaming_availabilities": value}]
                 self.assertEqual(self.publish()["upserts"], expected)
                 if expected:
-                    point = self.qc.client.upsert.call_args.kwargs["points"][0]
-                    self.assertEqual(point["payload"]["streaming_availability"], [])
+                    point = written_points(self.qc.client)[0]
+                    self.assertEqual(point.payload["streaming_availability"], [])
                 else:
-                    self.qc.client.upsert.assert_not_called()
+                    self.qc.client.batch_update_points.assert_not_called()
 
     def test_scheduled_and_targeted_writes_hold_title_lease_through_completion(self) -> None:
         for targeted in (False, True):
@@ -366,8 +422,8 @@ class VectorSerializationTests(unittest.TestCase):
                     with self.assertRaisesRegex(RuntimeError, "publication busy"):
                         with self.namespace["publication_lease"](self.db, "movie", 42):
                             self.fail("Concurrent publisher entered the active title lease")
-                    return SimpleNamespace(status="completed")
-                self.qc.client.upsert.side_effect = check_competitor_blocked
+                    return completed(*args, **kwargs)
+                self.qc.client.batch_update_points.side_effect = check_competitor_blocked
                 self.assertEqual(self.publish(targeted=targeted)["upserts"], 1)
                 self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)
 
@@ -377,15 +433,15 @@ class VectorSerializationTests(unittest.TestCase):
         })
         with self.assertRaisesRegex(RuntimeError, "publication busy"):
             self.publish(targeted=False)
-        self.qc.client.upsert.assert_not_called()
+        self.qc.client.batch_update_points.assert_not_called()
 
     def test_lost_lease_during_write_prevents_success_and_preserves_new_owner(self) -> None:
         def replace_owner(**kwargs: Any) -> SimpleNamespace:
             self.db.streaming_publication_leases.update_one(
                 {"_id": "movie:42"}, {"$set": {"token": "replacement"}},
             )
-            return SimpleNamespace(status="completed")
-        self.qc.client.upsert.side_effect = replace_owner
+            return completed(**kwargs)
+        self.qc.client.batch_update_points.side_effect = replace_owner
         with self.assertRaisesRegex(RuntimeError, "lease lost"):
             self.publish()
         self.assertEqual(self.db.streaming_publication_leases.find_one({"_id": "movie:42"})["token"], "replacement")
