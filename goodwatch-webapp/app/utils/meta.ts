@@ -80,7 +80,11 @@ const buildJsonLdDetail = (data: PageMeta, media: MovieResult | ShowResult) => {
 		name: p.name,
 		url: `https://goodwatch.app${personPath(p.id, p.name)}`,
 	})
-	const crewWith = (job: string) => media.crew.filter((c) => c.job === job).slice(0, 5).map(person)
+	const crewWith = (job: string) =>
+		media.crew
+			.filter((c) => c.job === job)
+			.slice(0, 5)
+			.map(person)
 
 	const jsonLd: Record<string, unknown> = {
 		"@context": "https://schema.org",
@@ -100,43 +104,49 @@ const buildJsonLdDetail = (data: PageMeta, media: MovieResult | ShowResult) => {
 		genre: details.genres,
 		inLanguage: details.original_language_code || undefined,
 		countryOfOrigin: details.production_country_codes?.length
-			? details.production_country_codes.map((code) => ({ "@type": "Country", name: code }))
+			? details.production_country_codes.map((code) => ({
+					"@type": "Country",
+					name: code,
+				}))
 			: undefined,
-		sameAs: details.imdb_id ? [`https://www.imdb.com/title/${details.imdb_id}/`] : undefined,
-		actor: media.actors.length ? media.actors.slice(0, 5).map(person) : undefined,
+		sameAs: details.imdb_id
+			? [`https://www.imdb.com/title/${details.imdb_id}/`]
+			: undefined,
+		actor: media.actors.length
+			? media.actors.slice(0, 5).map(person)
+			: undefined,
 	}
 
-	const usCertificate = details.age_certifications?.find((c) => c.startsWith("US_"))?.split("_")[1]
+	const usCertificate = details.age_certifications
+		?.find((c) => c.startsWith("US_"))
+		?.split("_")[1]
 	if (usCertificate) jsonLd.contentRating = usCertificate
 
 	if (media.mediaType === "movie") {
 		const d = media.details
-		if (d.release_date) jsonLd.datePublished = new Date(d.release_date).toISOString().slice(0, 10)
-		if (d.runtime) jsonLd.duration = `PT${Math.floor(d.runtime / 60)}H${d.runtime % 60}M`
+		if (d.release_date)
+			jsonLd.datePublished = new Date(d.release_date).toISOString().slice(0, 10)
+		if (d.runtime)
+			jsonLd.duration = `PT${Math.floor(d.runtime / 60)}H${d.runtime % 60}M`
 		const directors = crewWith("Director")
 		if (directors.length) jsonLd.director = directors
 		const composers = crewWith("Original Music Composer")
 		if (composers.length) jsonLd.musicBy = composers
 	} else {
 		const d = media.details
-		if (d.first_air_date) jsonLd.startDate = new Date(d.first_air_date).toISOString().slice(0, 10)
-		if (d.last_air_date && !d.in_production) jsonLd.endDate = new Date(d.last_air_date).toISOString().slice(0, 10)
+		if (d.first_air_date)
+			jsonLd.startDate = new Date(d.first_air_date).toISOString().slice(0, 10)
+		if (d.last_air_date && !d.in_production)
+			jsonLd.endDate = new Date(d.last_air_date).toISOString().slice(0, 10)
 		jsonLd.numberOfSeasons = d.number_of_seasons
 		jsonLd.numberOfEpisodes = d.number_of_episodes
 		const creators = crewWith("Executive Producer").slice(0, 3)
 		if (creators.length) jsonLd.producer = creators
 	}
 
-	if (details.goodwatch_overall_score_normalized_percent && details.goodwatch_overall_score_voting_count) {
-		jsonLd.aggregateRating = {
-			"@type": "AggregateRating",
-			name: "GoodWatch score",
-			ratingValue: Math.floor(details.goodwatch_overall_score_normalized_percent).toString(),
-			ratingCount: details.goodwatch_overall_score_voting_count.toString(),
-			worstRating: "0",
-			bestRating: "100",
-		}
-	}
+	// No aggregateRating: Google only accepts ratings from this site's own
+	// users, and every GoodWatch score (user, official, overall) is built from
+	// TMDB, IMDb, Metacritic and Rotten Tomatoes votes.
 
 	return jsonLd
 }
