@@ -170,6 +170,16 @@ const WORLD_KEYS  = ['world_immersion','dialogue_centrality','rewatchability','a
 const CRAFT_KEYS  = ['direction','acting','narrative_structure','dialogue_quality','character_depth','intrigue','complexity','non_linear_narrative','meta_narrative'] as const;
 const STYLE_KEYS  = ['cinematography','editing','music_composition','visual_stylization','music_centrality','sound_centrality'] as const;
 
+// The attributes each pillar is computed from.
+export const PILLAR_ATTRIBUTES: Record<keyof PillarTiers, readonly (keyof CoreScores)[]> = {
+	Energy: ENERGY_KEYS,
+	Heart: HEART_KEYS,
+	Humor: HUMOR_KEYS,
+	World: WORLD_KEYS,
+	Craft: CRAFT_KEYS,
+	Style: STYLE_KEYS,
+};
+
 export interface PillarScores {
 	Energy: number
 	Heart: number

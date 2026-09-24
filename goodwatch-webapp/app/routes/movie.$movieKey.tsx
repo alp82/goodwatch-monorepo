@@ -16,21 +16,15 @@ import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { titleToDashed } from "~/utils/helpers"
 import useLocale from "~/utils/locale"
-import { type PageMeta, buildMeta } from "~/utils/meta"
+import { detailsPageMeta } from "~/utils/detailsMeta"
+import { buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
 export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
-	const pageMeta: PageMeta = {
-		title: `${data.media.details.title} (${data.media.details.release_year}) | Movie | GoodWatch`,
-		description: `Discover '${data.media.details.title}' (${data.media.details.release_year}) and find movies with similar plotlines, cast, genre, or tone. Dive deep into movie details and watch availability.`,
-		url: `https://goodwatch.app/movie/${data.media.details.tmdb_id}-${titleToDashed(data.media.details.title)}`,
-		image: `https://image.tmdb.org/t/p/w1280/${data.media.images.backdrops?.[0]?.file_path}`,
-		alt: `${data.media.details.title} (${data.media.details.release_year}) movie poster`,
-	}
-
-	return buildMeta({ pageMeta, item: data.media.details })
+	if (!data) return [{ title: "Not Found | GoodWatch" }]
+	return buildMeta({ pageMeta: detailsPageMeta(data.media), item: data.media })
 }
 
 export type LoaderData = {
