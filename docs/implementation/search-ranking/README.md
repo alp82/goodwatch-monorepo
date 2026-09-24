@@ -313,23 +313,23 @@ suite in the webapp.
 
 ## Ticket breakdown
 
-The owner approved this breakdown on September 24, 2026.
+The owner approved this breakdown on September 24, 2026. Each ticket is a GitHub issue.
 
-| # | ticket | depends on | area |
-|---|---|---|---|
-| 1 | Reduce the Qdrant recommendation load | | Qdrant, webapp |
-| 2 | Apply the prototype fixes and re-score | | prototype |
-| 3 | Replace upserts with `insert_points` and `update_points`, and write `fingerprint_v1_raw` | | Windmill |
-| 4 | Add the new vectors and `search_reference_profiles` to the schema | 3 | Windmill, Qdrant |
-| 5 | Copy `created_by` for shows, and backfill | | Windmill, Crate |
-| 6 | Embed titles: first load from the prototype vectors, then incremental and full modes | 4 | Windmill, Qdrant |
-| 7 | Build search indexes into the Crate blob table and the profile collection | 2, 5, 6 | Windmill, Crate |
-| 8 | Encoder worker and Qdrant HTTP client in the webapp | | webapp |
-| 9 | Port the ranker, the index loader and the reading exports; rename the prototype modules | 2, 7, 8 | webapp |
-| 10 | Parity check against the prototype | 9 | prototype, webapp |
-| 11 | Stage timings, shadow mode, switch-over, removal of the old ranking | 1, 10 | webapp |
-| 12 | Follow-ups: Spanish and Turkish routing, Jev 529 retry, undici stall in today's client | | webapp |
-| 13 | Enrichment labels for concrete elements (the aliens gap) | | Windmill, DNA |
+| # | issue | ticket | depends on | area |
+|---|---|---|---|---|
+| 1 | #136 | Reduce the Qdrant recommendation load | | Qdrant, webapp |
+| 2 | #137 | Apply the prototype fixes and re-score | | prototype |
+| 3 | #138 | Replace upserts with `insert_points` and `update_points`, and write `fingerprint_v1_raw` | | Windmill |
+| 4 | #139 | Add the new vectors and `search_reference_profiles` to the schema | #138 | Windmill, Qdrant |
+| 5 | #140 | Copy `created_by` for shows, and backfill | | Windmill, Crate |
+| 6 | #141 | Embed titles: first load from the prototype vectors, then incremental and full modes | #139 | Windmill, Qdrant |
+| 7 | #142 | Build search indexes into the Crate blob table and the profile collection | #137, #140, #141 | Windmill, Crate |
+| 8 | #143 | Encoder worker and Qdrant HTTP client in the webapp | | webapp |
+| 9 | #144 | Port the ranker, the index loader and the reading exports; rename the prototype modules | #137, #142, #143 | webapp |
+| 10 | #145 | Parity check against the prototype | #144 | prototype, webapp |
+| 11 | #146 | Stage timings, shadow mode, switch-over, removal of the old ranking | #136, #145 | webapp |
+| 12 | #147 | Follow-ups: Spanish and Turkish routing, Jev 529 retry, undici stall in today's client | | webapp |
+| 13 | #148 | Enrichment labels for concrete elements (the aliens gap) | | Windmill, DNA |
 
 Tickets 3, 4 and 6 change live data on the Qdrant host, so each needs a snapshot check first. Hourly snapshots land in
 `/mnt/backup-qdrant/snapshots`.
