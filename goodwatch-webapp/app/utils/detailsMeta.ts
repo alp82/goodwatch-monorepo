@@ -17,11 +17,14 @@ export function detailsPageMeta(media: MovieResult | ShowResult): PageMeta {
 			? clip(details.synopsis, 140)
 			: ""
 	const backdrop = media.images?.backdrops?.[0]?.file_path || details.backdrop_path
+	// The share card shows the poster and the score only when they exist.
+	const score = details.goodwatch_overall_score_normalized_percent
+	const cardParts = [details.poster_path && "poster", typeof score === "number" && score >= 0 && score <= 100 && "GoodWatch score"].filter(Boolean)
 	return {
 		title: `${name}: Where to Stream and Ratings | GoodWatch`,
 		description: `${name}: ${lead} See where to stream it legally and how critics and audiences rate it.`.replace(/\s+/g, " ").trim(),
 		url: `https://goodwatch.app/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`,
 		image: backdrop ? `https://image.tmdb.org/t/p/w1280${backdrop}` : `https://image.tmdb.org/t/p/w780${details.poster_path}`,
-		alt: `${name} on GoodWatch: poster and score`,
+		alt: cardParts.length ? `${name} on GoodWatch: ${cardParts.join(" and ")}` : `${name} on GoodWatch`,
 	}
 }

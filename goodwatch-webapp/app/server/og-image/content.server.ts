@@ -216,12 +216,10 @@ const rotateByPath = <T>(items: T[], path: string) => {
 	return [...items.slice(k), ...items.slice(0, k)]
 }
 
-async function titleContent(
-	type: "movie" | "show",
-	id: number,
-): Promise<OgContent> {
-	const media =
-		type === "movie"
+// The details loaders throw a 404 Response for unknown titles; any other error is an outage.
+async function loadDetails(type: "movie" | "show", id: number) {
+	try {
+		return type === "movie"
 			? await getDetailsForMovie({
 					movieId: String(id),
 					country: "US",
@@ -232,6 +230,18 @@ async function titleContent(
 					country: "US",
 					language: "en",
 				})
+	} catch (error) {
+		if (error instanceof Response && error.status === 404) return null
+		throw error
+	}
+}
+
+async function titleContent(
+	type: "movie" | "show",
+	id: number,
+): Promise<OgContent | null> {
+	const media = await loadDetails(type, id)
+	if (!media) return null
 	const d = media.details
 	const runtime =
 		d.media_type === "movie"
@@ -352,7 +362,10 @@ async function staticPageContent(path: string): Promise<OgContent> {
 	return { kind: "page", ...page, backdrop: backdrop ?? null }
 }
 
-/** What the card for a canonical path (see canonicalOgPath) shows, or null when the page has no data. */
+/**
+ * What the card for a canonical path (see canonicalOgPath) shows, or null when the page has
+ * no data. Throws when the data can't be loaded.
+ */
 export async function resolveOgContent(
 	path: string,
 ): Promise<OgContent | null> {

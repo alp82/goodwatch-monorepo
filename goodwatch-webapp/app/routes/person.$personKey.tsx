@@ -108,7 +108,8 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 			description: `${p.name}'s ${role}${counts ? `: ${counts}` : ""}${top ? `, including ${top}` : ""}. See what their work feels like, who they work with, and their best-rated titles.`,
 			url,
 			image,
-			alt: `Portrait of ${p.name}`,
+			// Describes the share card: name, role, title count, and the portrait when there is one.
+			alt: `${p.name} (${p.known_for_department === "Acting" ? "actor" : p.known_for_department.toLowerCase()}, ${p.stats.titles} titles) on GoodWatch${p.profile_path ? ", with portrait" : ""}`,
 		},
 	}).filter((tag) => !("script:ld+json" in tag))
 	return [
