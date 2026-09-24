@@ -10,6 +10,7 @@ import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { getDetailsForMovie } from "~/server/details.server"
+import { prefetchRelatedTitlesState } from "~/server/related.server"
 import type { MovieQueryResult } from "~/server/types/details-types"
 import { resolveCountry } from "~/server/country.server"
 import { getUserSettings } from "~/server/user-settings.server"
@@ -57,11 +58,17 @@ export const loader: LoaderFunction = async ({
 		countryDefault: userSettings?.country_default,
 	})
 	const language = url.searchParams.get("language") || "en"
-	const media = await getDetailsForMovie({
-		movieId,
-		country,
-		language,
-	})
+	const [media, dehydratedState] = await Promise.all([
+		getDetailsForMovie({
+			movieId,
+			country,
+			language,
+		}),
+		prefetchRelatedTitlesState({
+			tmdbId: Number(movieId),
+			sourceMediaType: "movie",
+		}),
+	])
 
 	return {
 		media,
@@ -69,6 +76,7 @@ export const loader: LoaderFunction = async ({
 			country,
 		},
 		countryIsFallback,
+		dehydratedState,
 	}
 }
 

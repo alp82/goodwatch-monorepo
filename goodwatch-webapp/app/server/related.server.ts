@@ -1,4 +1,13 @@
+import {
+	type DehydratedState,
+	QueryClient,
+	dehydrate,
+} from "@tanstack/react-query"
 import { cached } from "~/utils/cache"
+import {
+	getQueryKeyRelatedMovies,
+	getQueryKeyRelatedShows,
+} from "~/utils/related-query-keys"
 import { MEDIA_COLLECTION, recommend, makePointId } from "~/utils/qdrant"
 import type { AllRatings } from "~/utils/ratings"
 import {
@@ -12,18 +21,17 @@ import { getStreamingProviders } from "~/server/streaming-providers.server"
 import type { StreamingProvider } from "~/routes/api.streaming-providers"
 
 const STREAMING_PROVIDERS_WHITELIST: number[] = [
-	2,    // Apple TV
-	8,    // Netflix
-	9,    // Amazon Prime
-	15,   // Hulu
-	192,  // YouTube
-	283,  // Crunchyroll
-	337,  // Disney+
-	386,  // Peacock Premium
-	531,  // Paramount+
+	2, // Apple TV
+	8, // Netflix
+	9, // Amazon Prime
+	15, // Hulu
+	192, // YouTube
+	283, // Crunchyroll
+	337, // Disney+
+	386, // Peacock Premium
+	531, // Paramount+
 	1899, // HBO Max
 ] as const
-
 
 export interface RelatedMovie extends AllRatings {
 	tmdb_id: number
@@ -71,60 +79,132 @@ export interface RelatedShowParams {
 
 export const getRelatedMovies = async (params: RelatedMovieParams) => {
 	// Create cache key that includes streaming combinations to prevent stale data
-	const cacheKey = `related-movie-${params.tmdb_id}-${params.fingerprint_key || 'all'}-${params.source_media_type}-${params.streaming_combinations?.join(',') || 'none'}`
-	
-	return await cached({
+	const cacheKey = `related-movie-${params.tmdb_id}-${params.fingerprint_key || "all"}-${params.source_media_type}-${params.streaming_combinations?.join(",") || "none"}`
+
+	return (await cached({
 		name: `${MEDIA_COLLECTION}:${cacheKey}`,
 		target: _getRelatedMovies as any,
 		params,
 		ttlMinutes: 60 * 24,
 		//ttlMinutes: 0,
-	}) as unknown as RelatedMovie[]
+	})) as unknown as RelatedMovie[]
 }
 
 export const getRelatedShows = async (params: RelatedShowParams) => {
 	// Create cache key that includes streaming combinations to prevent stale data
-	const cacheKey = `related-show-${params.tmdb_id}-${params.fingerprint_key || 'all'}-${params.source_media_type}-${params.streaming_combinations?.join(',') || 'none'}`
-	
-	return await cached({
+	const cacheKey = `related-show-${params.tmdb_id}-${params.fingerprint_key || "all"}-${params.source_media_type}-${params.streaming_combinations?.join(",") || "none"}`
+
+	return (await cached({
 		name: `${MEDIA_COLLECTION}:${cacheKey}`,
 		target: _getRelatedShows as any,
 		params,
 		ttlMinutes: 60 * 24,
 		//ttlMinutes: 0,
-	}) as unknown as RelatedShow[]
+	})) as unknown as RelatedShow[]
+}
+
+/**
+ * Prefetches the default ("overall") related movies and shows for a title page
+ * and returns them as dehydrated query state for the loader. The title page
+ * then server-renders real links to related titles, and the client hooks start
+ * with this data instead of refetching. The query doesn't depend on the user,
+ * so every visitor, including crawlers, gets the same sets. A failed query is
+ * logged and left out, so the page still renders and the client retries.
+ */
+export const prefetchRelatedTitlesState = async ({
+	tmdbId,
+	sourceMediaType,
+}: {
+	tmdbId: number
+	sourceMediaType: "movie" | "show"
+}): Promise<DehydratedState> => {
+	const queryClient = new QueryClient()
+	if (!Number.isSafeInteger(tmdbId)) return dehydrate(queryClient)
+
+	const keyParams = { tmdbId, sourceMediaType }
+	const params = { tmdb_id: tmdbId, source_media_type: sourceMediaType }
+	const logFailure = (target: string) => (error: unknown) => {
+		console.error("Related titles prefetch failed", {
+			target,
+			tmdbId,
+			sourceMediaType,
+			error: error instanceof Error ? error.message : error,
+		})
+		throw error
+	}
+
+	// The cards don't read streaming_availability, and it's about half of the
+	// payload that gets embedded in the HTML.
+	const withoutStreaming = <T extends RelatedMovie | RelatedShow>(
+		titles: T[],
+	) => titles.map(({ streaming_availability, ...title }) => title)
+
+	await Promise.all([
+		queryClient.prefetchQuery({
+			queryKey: getQueryKeyRelatedMovies(keyParams),
+			queryFn: () =>
+				getRelatedMovies(params)
+					.then(withoutStreaming)
+					.catch(logFailure("movies")),
+		}),
+		queryClient.prefetchQuery({
+			queryKey: getQueryKeyRelatedShows(keyParams),
+			queryFn: () =>
+				getRelatedShows(params)
+					.then(withoutStreaming)
+					.catch(logFailure("shows")),
+		}),
+	])
+
+	return dehydrate(queryClient)
 }
 
 const extractRatingsFromPayload = (payload: QdrantMediaPayload): AllRatings => {
 	return {
 		tmdb_url: "",
 		tmdb_user_score_original: 0,
-		tmdb_user_score_normalized_percent: payload.tmdb_user_score_normalized_percent ?? 0,
+		tmdb_user_score_normalized_percent:
+			payload.tmdb_user_score_normalized_percent ?? 0,
 		tmdb_user_score_rating_count: payload.tmdb_user_score_rating_count ?? 0,
 		imdb_url: "",
 		imdb_user_score_original: 0,
-		imdb_user_score_normalized_percent: payload.imdb_user_score_normalized_percent ?? 0,
+		imdb_user_score_normalized_percent:
+			payload.imdb_user_score_normalized_percent ?? 0,
 		imdb_user_score_rating_count: payload.imdb_user_score_rating_count ?? 0,
 		metacritic_url: "",
 		metacritic_user_score_original: 0,
-		metacritic_user_score_normalized_percent: payload.metacritic_user_score_normalized_percent ?? 0,
-		metacritic_user_score_rating_count: payload.metacritic_user_score_rating_count ?? 0,
+		metacritic_user_score_normalized_percent:
+			payload.metacritic_user_score_normalized_percent ?? 0,
+		metacritic_user_score_rating_count:
+			payload.metacritic_user_score_rating_count ?? 0,
 		metacritic_meta_score_original: 0,
-		metacritic_meta_score_normalized_percent: payload.metacritic_meta_score_normalized_percent ?? 0,
-		metacritic_meta_score_review_count: payload.metacritic_meta_score_review_count ?? 0,
+		metacritic_meta_score_normalized_percent:
+			payload.metacritic_meta_score_normalized_percent ?? 0,
+		metacritic_meta_score_review_count:
+			payload.metacritic_meta_score_review_count ?? 0,
 		rotten_tomatoes_url: "",
 		rotten_tomatoes_audience_score_original: 0,
-		rotten_tomatoes_audience_score_normalized_percent: payload.rotten_tomatoes_audience_score_normalized_percent ?? 0,
-		rotten_tomatoes_audience_score_rating_count: payload.rotten_tomatoes_audience_score_rating_count ?? 0,
+		rotten_tomatoes_audience_score_normalized_percent:
+			payload.rotten_tomatoes_audience_score_normalized_percent ?? 0,
+		rotten_tomatoes_audience_score_rating_count:
+			payload.rotten_tomatoes_audience_score_rating_count ?? 0,
 		rotten_tomatoes_tomato_score_original: 0,
-		rotten_tomatoes_tomato_score_normalized_percent: payload.rotten_tomatoes_tomato_score_normalized_percent ?? 0,
-		rotten_tomatoes_tomato_score_review_count: payload.rotten_tomatoes_tomato_score_review_count ?? 0,
-		goodwatch_user_score_normalized_percent: payload.goodwatch_user_score_normalized_percent ?? 0,
-		goodwatch_user_score_rating_count: payload.goodwatch_user_score_rating_count ?? 0,
-		goodwatch_official_score_normalized_percent: payload.goodwatch_official_score_normalized_percent ?? 0,
-		goodwatch_official_score_review_count: payload.goodwatch_official_score_review_count ?? 0,
-		goodwatch_overall_score_normalized_percent: payload.goodwatch_overall_score_normalized_percent ?? 0,
-		goodwatch_overall_score_voting_count: payload.goodwatch_overall_score_voting_count ?? 0,
+		rotten_tomatoes_tomato_score_normalized_percent:
+			payload.rotten_tomatoes_tomato_score_normalized_percent ?? 0,
+		rotten_tomatoes_tomato_score_review_count:
+			payload.rotten_tomatoes_tomato_score_review_count ?? 0,
+		goodwatch_user_score_normalized_percent:
+			payload.goodwatch_user_score_normalized_percent ?? 0,
+		goodwatch_user_score_rating_count:
+			payload.goodwatch_user_score_rating_count ?? 0,
+		goodwatch_official_score_normalized_percent:
+			payload.goodwatch_official_score_normalized_percent ?? 0,
+		goodwatch_official_score_review_count:
+			payload.goodwatch_official_score_review_count ?? 0,
+		goodwatch_overall_score_normalized_percent:
+			payload.goodwatch_overall_score_normalized_percent ?? 0,
+		goodwatch_overall_score_voting_count:
+			payload.goodwatch_overall_score_voting_count ?? 0,
 	}
 }
 
@@ -151,7 +231,7 @@ async function getRelatedTitles({
 
 	// Build filter conditions using shared utility
 	const additionalMust: any[] = [
-		{ key: "media_type", match: { value: target_media_type } }
+		{ key: "media_type", match: { value: target_media_type } },
 	]
 
 	const additionalMustNot: any[] = [
@@ -180,11 +260,13 @@ async function getRelatedTitles({
 	// Add streaming combinations filter if provided
 	if (streaming_combinations && streaming_combinations.length > 0) {
 		// Create should clause with multiple match conditions for each combination
-		const streamingShouldConditions = streaming_combinations.map(combination => ({
-			key: "streaming_availability",
-			match: { value: combination }
-		}))
-		
+		const streamingShouldConditions = streaming_combinations.map(
+			(combination) => ({
+				key: "streaming_availability",
+				match: { value: combination },
+			}),
+		)
+
 		additionalMust.push({
 			should: streamingShouldConditions,
 		})
@@ -203,7 +285,8 @@ async function getRelatedTitles({
 	// Build payload fields using shared utility
 	const payloadFields = buildPayloadFields({
 		includeRatings: true,
-		includeFingerprintKey: withKey && fingerprint_key ? fingerprint_key : undefined,
+		includeFingerprintKey:
+			withKey && fingerprint_key ? fingerprint_key : undefined,
 		includeStreaming: true,
 	})
 
@@ -219,19 +302,22 @@ async function getRelatedTitles({
 	})
 
 	const mappedResults = results
-		.filter(result => result.payload.poster_path)
+		.filter((result) => result.payload.poster_path)
 		.map((result) => {
 			const payload = result.payload
 			const annScore = result.score
-			const targetFingerprintScore = payload?.fingerprint_scores_v1?.[fingerprint_key ?? ""] ?? 0
-			
+			const targetFingerprintScore =
+				payload?.fingerprint_scores_v1?.[fingerprint_key ?? ""] ?? 0
+
 			let finalScore = annScore
 			if (withKey && sourceFingerprintScore !== null) {
-				const distance = Math.abs(targetFingerprintScore - sourceFingerprintScore)
+				const distance = Math.abs(
+					targetFingerprintScore - sourceFingerprintScore,
+				)
 				const maxDistance = 10
 				const normalizedDistance = Math.min(distance / maxDistance, 1)
 				const fingerprintSimilarity = 1 - normalizedDistance
-				finalScore = (0.2 * annScore) + (0.8 * fingerprintSimilarity)
+				finalScore = 0.2 * annScore + 0.8 * fingerprintSimilarity
 			}
 
 			return {
@@ -248,9 +334,7 @@ async function getRelatedTitles({
 			}
 		})
 
-	return mappedResults
-		.sort((a, b) => b.score - a.score)
-		.slice(0, 32)
+	return mappedResults.sort((a, b) => b.score - a.score).slice(0, 32)
 }
 
 async function _getRelatedMovies({
@@ -323,15 +407,15 @@ export interface RelatedByCategoryParams {
 
 export const getRelatedByCategory = async (params: RelatedByCategoryParams) => {
 	// Create a cache key that includes countries and streaming_ids for proper invalidation
-	const cacheKey = `related-by-category-${params.countries.join(',')}-${params.streaming_ids?.join(',') || 'all'}`
-	
-	return await cached({
+	const cacheKey = `related-by-category-${params.countries.join(",")}-${params.streaming_ids?.join(",") || "all"}`
+
+	return (await cached({
 		name: `${MEDIA_COLLECTION}:${cacheKey}`,
 		target: _getRelatedByCategory as any,
 		params,
 		ttlMinutes: 60 * 24,
 		//ttlMinutes: 0,
-	}) as unknown as RelatedByCategory
+	})) as unknown as RelatedByCategory
 }
 
 async function _getRelatedByCategory({
@@ -348,7 +432,7 @@ async function _getRelatedByCategory({
 	// Fetch streaming providers once
 	const streamingProviders = await getStreamingProviders({ country: "US" })
 	const providerMap = new Map<number, StreamingProvider>(
-		streamingProviders.map(provider => [provider.id, provider])
+		streamingProviders.map((provider) => [provider.id, provider]),
 	)
 
 	// Determine streaming IDs to use
@@ -358,19 +442,21 @@ async function _getRelatedByCategory({
 	} else {
 		// Get top 10 providers for each country based on order_by_country
 		const countryProviderScores = new Map<number, number>()
-		
-		streamingProviders.forEach(provider => {
+
+		streamingProviders.forEach((provider) => {
 			let totalScore = 0
 			let hasValidCountry = false
-			
-			countries.forEach(country => {
-				const countryOrder = provider.order_by_country?.[country] ?? provider.order_default
-				if (countryOrder !== undefined && countryOrder < 50) { // Reasonable limit
+
+			countries.forEach((country) => {
+				const countryOrder =
+					provider.order_by_country?.[country] ?? provider.order_default
+				if (countryOrder !== undefined && countryOrder < 50) {
+					// Reasonable limit
 					totalScore += countryOrder
 					hasValidCountry = true
 				}
 			})
-			
+
 			if (hasValidCountry) {
 				countryProviderScores.set(provider.id, totalScore)
 			}
@@ -382,46 +468,50 @@ async function _getRelatedByCategory({
 			.slice(0, 10)
 			.map(([providerId]) => providerId)
 
-    // Edge case: if no providers found for requested countries, fallback to using all providers
-    if (targetStreamingIds.length === 0) {
-        // Use all provider IDs as fallback to ensure availability
-        targetStreamingIds = streamingProviders.map(p => p.id);
-    }
+		// Edge case: if no providers found for requested countries, fallback to using all providers
+		if (targetStreamingIds.length === 0) {
+			// Use all provider IDs as fallback to ensure availability
+			targetStreamingIds = streamingProviders.map((p) => p.id)
+		}
 	}
 
 	// Build exact streaming combinations for filtering
 	const targetCombinations = new Set<string>()
-	targetStreamingIds.forEach(providerId => {
-		countries.forEach(country => {
+	targetStreamingIds.forEach((providerId) => {
+		countries.forEach((country) => {
 			targetCombinations.add(`${providerId}_${country}`)
 		})
 	})
 
 	// Helper function to parse streaming availability by country
 	const parseStreamingAvailabilityByCountry = (
-		streamingAvailability: string[] | undefined
+		streamingAvailability: string[] | undefined,
 	): Record<string, StreamingAvailability[]> => {
 		if (!streamingAvailability?.length) return {}
 
 		const result: Record<string, StreamingAvailability[]> = {}
-		
+
 		// Initialize empty arrays for all requested countries
-		countries.forEach(country => {
+		countries.forEach((country) => {
 			result[country] = []
 		})
 
-		streamingAvailability.forEach(code => {
+		streamingAvailability.forEach((code) => {
 			// Handle malformed codes gracefully
-			if (typeof code !== 'string' || !code.includes('_')) return
-			
-			const [providerIdStr, country] = code.split('_', 2)
+			if (typeof code !== "string" || !code.includes("_")) return
+
+			const [providerIdStr, country] = code.split("_", 2)
 			if (!providerIdStr || !country) return
-			
+
 			const providerId = parseInt(providerIdStr)
 			if (isNaN(providerId) || providerId <= 0) return
-			
+
 			// Only process if this is one of our target countries and streaming IDs
-			if (!countries.includes(country) || !targetStreamingIds.includes(providerId)) return
+			if (
+				!countries.includes(country) ||
+				!targetStreamingIds.includes(providerId)
+			)
+				return
 
 			const provider = providerMap.get(providerId)
 			if (!provider) return
@@ -431,7 +521,7 @@ async function _getRelatedByCategory({
 			}
 
 			// Check if provider already added to this country
-			const alreadyAdded = result[country].some(p => p.id === providerId)
+			const alreadyAdded = result[country].some((p) => p.id === providerId)
 			if (!alreadyAdded) {
 				result[country].push({
 					id: providerId,
@@ -442,7 +532,7 @@ async function _getRelatedByCategory({
 		})
 
 		// Sort providers by name within each country
-		countries.forEach(country => {
+		countries.forEach((country) => {
 			result[country].sort((a, b) => a.name.localeCompare(b.name))
 		})
 
@@ -453,10 +543,10 @@ async function _getRelatedByCategory({
 	const createSlug = (title: string): string => {
 		return title
 			.toLowerCase()
-			.replace(/[^a-z0-9\s-]/g, '')
-			.replace(/\s+/g, '-')
-			.replace(/-+/g, '-')
-			.replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+			.replace(/[^a-z0-9\s-]/g, "")
+			.replace(/\s+/g, "-")
+			.replace(/-+/g, "-")
+			.replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
 			.trim()
 	}
 
@@ -493,9 +583,15 @@ async function _getRelatedByCategory({
 						release_year: m.release_year,
 						link: `https://goodwatch.app/movie/${m.tmdb_id}-${slug}`,
 						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${m.poster_path}`,
-						backdrop_path: m.backdrop_path ? `https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${m.backdrop_path}` : "",
-						goodwatch_score: Math.ceil(m.goodwatch_overall_score_normalized_percent),
-						streaming_availability: parseStreamingAvailabilityByCountry(m.streaming_availability),
+						backdrop_path: m.backdrop_path
+							? `https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${m.backdrop_path}`
+							: "",
+						goodwatch_score: Math.ceil(
+							m.goodwatch_overall_score_normalized_percent,
+						),
+						streaming_availability: parseStreamingAvailabilityByCountry(
+							m.streaming_availability,
+						),
 					}
 				}),
 				shows: shows.slice(0, 10).map((s) => {
@@ -506,9 +602,15 @@ async function _getRelatedByCategory({
 						release_year: s.release_year,
 						link: `https://goodwatch.app/show/${s.tmdb_id}-${slug}`,
 						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${s.poster_path}`,
-						backdrop_path: s.backdrop_path ? `https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${s.backdrop_path}` : "",
-						goodwatch_score: Math.ceil(s.goodwatch_overall_score_normalized_percent),
-						streaming_availability: parseStreamingAvailabilityByCountry(s.streaming_availability),
+						backdrop_path: s.backdrop_path
+							? `https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${s.backdrop_path}`
+							: "",
+						goodwatch_score: Math.ceil(
+							s.goodwatch_overall_score_normalized_percent,
+						),
+						streaming_availability: parseStreamingAvailabilityByCountry(
+							s.streaming_availability,
+						),
 					}
 				}),
 			}
