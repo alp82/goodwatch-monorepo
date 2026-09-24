@@ -17,22 +17,16 @@ import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { titleToDashed } from "~/utils/helpers"
 import useLocale from "~/utils/locale"
-import { type PageMeta, buildMeta } from "~/utils/meta"
+import { detailsPageMeta } from "~/utils/detailsMeta"
+import { buildMeta } from "~/utils/meta"
 import type { ShowQueryResult } from "~/server/types/details-types"
 
 export { pageHeaders as headers } from "~/utils/headers"
 export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
-	const pageMeta: PageMeta = {
-		title: `${data.media.details.title} (${data.media.details.release_year}) | Show | GoodWatch`,
-		description: `Discover '${data.media.details.title}' (${data.media.details.release_year}) and find shows with similar plotlines, cast, genre, or tone. Dive deep into show details and watch availability.`,
-		url: `https://goodwatch.app/show/${data.media.details.tmdb_id}-${titleToDashed(data.media.details.title)}`,
-		image: `https://image.tmdb.org/t/p/w1280/${data.media.images.backdrops?.[0]?.file_path}`,
-		alt: `${data.media.details.title} (${data.media.details.release_year}) show poster`,
-	}
-
-	return buildMeta({ pageMeta, item: data.media.details })
+	if (!data) return [{ title: "Not Found | GoodWatch" }]
+	return buildMeta({ pageMeta: detailsPageMeta(data.media), item: data.media })
 }
 
 type LoaderData = {

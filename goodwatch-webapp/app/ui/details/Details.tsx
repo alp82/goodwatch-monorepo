@@ -4,9 +4,7 @@ import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { sections } from "~/ui/details/sections"
 import DetailsHeader from "~/ui/details/DetailsHeader"
 import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
-import DetailsOverview from "~/ui/details/DetailsOverview"
-import DetailsRatings from "~/ui/details/DetailsRatings"
-import DetailsStreaming from "~/ui/details/DetailsStreaming"
+import DetailsHero from "~/ui/details/hero/DetailsHero"
 import { useScrollSections } from "~/utils/scroll"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
@@ -57,26 +55,15 @@ export default function Details({ media, country }: DetailsProps) {
 				navigateToSection={navigateToSection}
 			/>
 
-			<DetailsOverview media={media} sectionProps={sectionProps} />
+			<DetailsHero
+				media={media}
+				country={country}
+				sectionProps={sectionProps}
+				navigateToSection={navigateToSection}
+			/>
 
-			<div className="isolate flex flex-col items-center">
-				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
-					<div className="flex flex-col lg:flex-row gap-8">
-						<div>
-							<DetailsFingerprint media={media} />
-						</div>
-						<div className="w-full flex flex-col justify-between">
-							<DetailsRatings media={media} sectionProps={sectionProps} />
-
-							<DetailsStreaming
-								media={media}
-								country={country}
-								sectionProps={sectionProps}
-								navigateToSection={navigateToSection}
-							/>
-						</div>
-					</div>
-				</div>
+			<div className="isolate">
+				<DetailsFingerprint media={media} sectionProps={sectionProps.fingerprint} />
 			</div>
 
 			<div className="isolate flex flex-col items-center">
