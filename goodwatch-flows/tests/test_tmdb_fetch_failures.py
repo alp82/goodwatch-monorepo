@@ -1,10 +1,13 @@
 """Per-title failure isolation, secret redaction and the batch failure policy."""
 import asyncio
+import sys
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import requests
 
+sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
 API_KEY = "sekret-key-123"

@@ -1,10 +1,13 @@
 """TMDB 404 handling: only status_code 34 flags a title as deleted."""
 import asyncio
+import sys
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import requests
 
+sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 from f.data_source.common import not_deleted_filter
 from f.dna.models import DnaMovie
 from f.imdb_web.models import ImdbTvRating
