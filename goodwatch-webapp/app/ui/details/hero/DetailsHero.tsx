@@ -8,6 +8,8 @@ import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { BackdropTrailer, PosterTrailer, backdropUrl } from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
+// PROTOTYPE — score-area variants (?score=1..6), prototype/score-area branch only.
+import { ScoreAreaPrototype, ScorePrototypeSwitcher, useScoreVariant } from "~/ui/details/hero/prototype-score-area/ScoreAreaPrototype"
 import type { Section, SectionProps } from "~/utils/scroll"
 
 export interface DetailsHeroProps {
@@ -27,10 +29,12 @@ const GLASS = "md:rounded-xl md:border md:border-white/10 md:bg-black/55 md:back
 // Phones: a backdrop banner plays the trailer; score, ratings, streaming, and
 // actions follow on one dark surface.
 export default function DetailsHero({ media, country, hasEpisodeGrid = false, sectionProps, navigateToSection }: DetailsHeroProps) {
+	const scoreVariant = useScoreVariant()
+	const prototypeActive = scoreVariant.Component != null
 	return (
 		<div className="relative mx-auto mb-10 mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div {...sectionProps.overview}>
-				<div className="grid gap-4 md:h-[28.5rem] md:grid-cols-[auto_1fr] md:grid-rows-[minmax(0,1fr)] [&>*]:min-w-0">
+				<div className={`grid gap-4 ${prototypeActive ? "md:min-h-[28.5rem] md:grid-rows-[auto]" : "md:h-[28.5rem] md:grid-rows-[minmax(0,1fr)]"} md:grid-cols-[auto_1fr] [&>*]:min-w-0`}>
 					<PosterTrailer media={media} className="hidden aspect-[2/3] md:block md:h-full md:w-[19rem]" />
 					<div className="relative flex min-h-0 flex-col rounded-2xl border border-white/10 bg-stone-950 md:rounded-xl md:bg-transparent">
 						<div className="absolute inset-0 hidden overflow-hidden rounded-xl md:block" aria-hidden="true">
@@ -39,6 +43,10 @@ export default function DetailsHero({ media, country, hasEpisodeGrid = false, se
 						</div>
 						<BackdropTrailer media={media} className="h-44 rounded-t-2xl md:hidden" />
 
+						{prototypeActive ? (
+							<ScoreAreaPrototype variantKey={scoreVariant.key} media={media} hasEpisodeGrid={hasEpisodeGrid} />
+						) : (
+						<>
 						{/* The score bar puts the score, the site chips and the rate button on one line when
 						    its own width allows (a container query); otherwise the chips move to a second
 						    line under the score and the rate button. */}
@@ -55,6 +63,9 @@ export default function DetailsHero({ media, country, hasEpisodeGrid = false, se
 							</div>
 						</div>
 
+						</>
+						)}
+
 						<div className="mx-4 mt-4 h-px bg-white/10 md:hidden" />
 						<div className="hidden min-h-8 grow md:block" aria-hidden="true" />
 
@@ -65,6 +76,7 @@ export default function DetailsHero({ media, country, hasEpisodeGrid = false, se
 					</div>
 				</div>
 			</div>
+			<ScorePrototypeSwitcher />
 		</div>
 	)
 }

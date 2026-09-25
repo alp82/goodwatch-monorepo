@@ -53,7 +53,7 @@ export default function RateButton({ media, className = "" }: { media: MovieResu
 
 // Ten bars that grow with the score, in the score colors. Hover previews the
 // label; a click saves through ScoreAction.
-function ScorePicker({ media, onDone }: { media: MovieResult | ShowResult; onDone: () => void }) {
+export function ScorePicker({ media, onDone }: { media: MovieResult | ShowResult; onDone: () => void }) {
 	const current = useUserScore(media.mediaType, media.details.tmdb_id)?.score ?? null
 	const [hover, setHover] = useState<number | null>(null)
 	const shown = hover ?? current
