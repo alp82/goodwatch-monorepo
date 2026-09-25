@@ -83,6 +83,7 @@ def main(site: str = "rotten_tomatoes", show_ids: list = None, all_shows: bool =
         ids = [int(show_id) for show_id in show_ids or []]
         if all_shows:
             ids = sorted(db[TABLES[site]["collection"]].distinct("tmdb_id"))
+        site = site or "rotten_tomatoes"
         counts = publish_seasons(db, connector, site, ids)
         connector.run(f"REFRESH TABLE {TABLES[site]['table']}")
         print(counts, flush=True)

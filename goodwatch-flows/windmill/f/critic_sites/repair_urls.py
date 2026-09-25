@@ -97,7 +97,8 @@ def main(site: str = "rotten_tomatoes", dry_run: bool = True):
 
     init_mongodb()
     try:
-        report = repair(get_db(), site, datetime.utcnow(), dry_run=dry_run)
+        # Windmill passes null for an omitted argument: only an explicit false writes.
+        report = repair(get_db(), site or "rotten_tomatoes", datetime.utcnow(), dry_run=dry_run is not False)
         print(report, flush=True)
         return report
     finally:

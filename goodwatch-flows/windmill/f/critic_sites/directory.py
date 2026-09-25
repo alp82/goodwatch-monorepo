@@ -100,6 +100,7 @@ def match_directory(db, site: str, urls: set, now: datetime, top: int = TOP_SHOW
 
 
 def main(site: str = "rotten_tomatoes", top: int = TOP_SHOWS, dry_run: bool = False):
+    site = site or "rotten_tomatoes"
     from mongoengine import get_db
     from f.critic_sites import polite_http
     from f.db.mongodb import close_mongodb, init_mongodb
@@ -110,8 +111,8 @@ def main(site: str = "rotten_tomatoes", top: int = TOP_SHOWS, dry_run: bool = Fa
         now = datetime.utcnow()
         client = polite_http.PoliteClient(db, site)
         urls = directory_urls(client, site)
-        # Windmill may pass whole numbers as floats; pymongo's limit needs an int.
-        report = match_directory(db, site, urls, now, top=int(top), dry_run=dry_run)
+        # Windmill passes null for an omitted argument, so the defaults above do not apply.
+        report = match_directory(db, site, urls, now, top=int(top or TOP_SHOWS), dry_run=bool(dry_run))
         if not dry_run:
             crawl.ensure_indexes(db)
             report["scheduled"] = crawl.schedule_known_urls(db, site)

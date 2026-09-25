@@ -662,6 +662,7 @@ def main(site: str = "rotten_tomatoes", max_minutes: float = 25, batch_size: int
     from f.db.cratedb import CrateConnector
     from f.db.mongodb import close_mongodb, init_mongodb
 
+    site = site or "rotten_tomatoes"
     if site not in SITES:
         raise ValueError(f"unknown site {site}")
     init_mongodb()
@@ -677,8 +678,9 @@ def main(site: str = "rotten_tomatoes", max_minutes: float = 25, batch_size: int
         print(f"newly scheduled titles with a known URL: {scheduled}", flush=True)
         connector = CrateConnector()
         client = polite_http.PoliteClient(db, site)
-        # Windmill may pass whole numbers as floats; pymongo's limit needs an int.
-        report = run(db, client, site, float(max_minutes) * 60, connector=connector, batch_size=int(batch_size),
+        # Windmill passes null for an omitted argument, so the defaults above do not apply.
+        report = run(db, client, site, float(max_minutes or 25) * 60, connector=connector,
+                     batch_size=int(batch_size or 25),
                      kinds=tuple(kinds or ("tv", "movie")))
         report["scheduled"] = scheduled
         report["seconds_per_request"] = round(report["seconds"] / report["requests"], 2) if report["requests"] else None
