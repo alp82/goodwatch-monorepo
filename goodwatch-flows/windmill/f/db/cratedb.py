@@ -57,6 +57,7 @@ class CrateConnector:
         auto_timestamps: bool = True,  # fill missing created_at/updated_at with now
         override_timestamps: bool = False,  # if True, overwrite any provided ts with now
         replace_nulls: bool = False,  # verified snapshots can clear obsolete fields
+        replace_null_columns: Iterable[str] = (),  # columns the caller owns: NULL clears them
     ) -> dict[str, int]:
         """
         Batch upsert Pydantic models into CrateDB.
@@ -147,9 +148,12 @@ class CrateConnector:
         col_list = ", ".join(f'"{c}"' for c in all_cols)
         placeholders = ", ".join(["?"] * len(all_cols))
 
+        # By default a NULL means "this writer does not set the column", so the
+        # stored value stays. Callers that own a column name it so NULL clears it.
+        cleared_cols = set(replace_null_columns)
         if update_cols:
             updates = "UPDATE SET " + ", ".join(
-                (f'"{c}" = excluded."{c}"' if replace_nulls else
+                (f'"{c}" = excluded."{c}"' if replace_nulls or c in cleared_cols else
                  f'"{c}" = COALESCE(excluded."{c}", "{c}")') for c in update_cols
             )
         else:

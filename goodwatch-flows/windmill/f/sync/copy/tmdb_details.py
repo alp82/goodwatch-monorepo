@@ -1,3 +1,4 @@
+import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
@@ -41,8 +42,26 @@ HOURS_TO_FETCH = 24*2
 
 CREATOR_JOB = "Creator"
 
+IMDB_TITLE_ID = re.compile(r"tt\d+")
+# TMDB details are the only source of a title's IMDb id, so this copy clears
+# them when TMDB has none. Other writers leave them to COALESCE.
+IMDB_ID_COLUMNS = ("imdb_id", "imdb_url")
+
 
 # ===== Helper Functions =====
+
+def imdb_title(tmdb_details: dict, is_movie: bool) -> tuple[Optional[str], Optional[str]]:
+    """The IMDb title id and link of a TMDB details document, or (None, None).
+
+    Movies carry the id at the top level, shows in `external_ids`. Anything that
+    is not a title id (missing, empty, "None", a person id) yields no link.
+    """
+    raw = tmdb_details.get("imdb_id") if is_movie else (tmdb_details.get("external_ids") or {}).get("imdb_id")
+    if not isinstance(raw, str) or not IMDB_TITLE_ID.fullmatch(raw.strip()):
+        return None, None
+    imdb_id = raw.strip()
+    return imdb_id, f"https://www.imdb.com/title/{imdb_id}"
+
 
 def creator_credits(tmdb_details: dict, media_id: str) -> list[tuple[Person, PersonWorkedOn]]:
     """A show's `created_by` as person rows and Creator crew credits.
@@ -114,7 +133,8 @@ def to_timestamp(dt_input: str) -> Optional[float]:
         
 
 
-def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseModel]):
+def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseModel],
+                      replace_null_columns: tuple[str, ...] = ()):
     """Process and insert entities and return upsert results."""
     total_result = {"records_received": 0, "rows_upserted": 0}
     
@@ -128,6 +148,7 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
                     records=batch,
                     conflict_columns=SCHEMAS[table]["primary_key"],
                     silent=True,
+                    replace_null_columns=replace_null_columns,
                 )
                 total_result["records_received"] += result["records_received"]
                 total_result["rows_upserted"] += result["rows_upserted"]
@@ -165,7 +186,6 @@ def copy_media(
     
     projection = {
         "_id": 0,
-        "imdb_id": 0,
         "vote_average": 0,
         "vote_count": 0,
     }
@@ -212,8 +232,7 @@ def copy_media(
 
             # Streaming
             tmdb_url = f"https://www.themoviedb.org/{media_type}/{tmdb_id}"
-            imdb_id = tmdb_details.get("imdb_id") if is_movie else tmdb_details.get("external_ids", {}).get("imdb_id")
-            imdb_url = f"https://www.imdb.com/title/{imdb_id}" if imdb_id else None
+            imdb_id, imdb_url = imdb_title(tmdb_details, is_movie)
             
             # Scores
             tmdb_vote_count = tmdb_details.get("vote_count")
@@ -583,6 +602,7 @@ def copy_media(
             connector=connector,
             table=media_table_name,
             records=media_documents,
+            replace_null_columns=IMDB_ID_COLUMNS,
         )
         
         media_type_key = 'movies' if is_movie else 'shows'

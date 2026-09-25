@@ -12,6 +12,7 @@ from f.db.mongodb import (
     build_query_selector_for_object_ids,
 )
 from f.sync.copy.deleted_titles import flagged_among
+from f.sync.copy.tmdb_details import imdb_title
 from f.sync.models.crate_models import (
     Movie,
     Show,
@@ -206,8 +207,7 @@ def copy_media(
                 continue
             
             tmdb_url = f"https://www.themoviedb.org/{media_type}/{tmdb_id}"
-            imdb_id = tmdb_details.get("imdb_id") if is_movie else tmdb_details.get("external_ids", {}).get("imdb_id")
-            imdb_url = f"https://www.imdb.com/title/{imdb_id}" if imdb_id else None
+            _, imdb_url = imdb_title(tmdb_details, is_movie)
 
             # Calculate normalized scores
             tmdb_vote_count = tmdb_details.get("vote_count")
