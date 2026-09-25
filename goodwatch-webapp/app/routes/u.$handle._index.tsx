@@ -1,6 +1,6 @@
-// Public profile: /u/:handle. The person's display name, handle, and public share lists, newest first.
-// A handle its owner renamed away from redirects to their current one while it's on hold; unknown, expired, and
-// deleted handles answer 404. For the owner, this page is also My lists: it shows their unlisted lists too, marked,
+// Public profile: /u/:handle. The person's handle and public share lists, newest first. Handles are permanent, so
+// there are no renamed handles to redirect; a differently cased handle redirects to the lowercase one, and unknown
+// and deleted handles answer 404. For the owner, this page is also My lists: it shows their unlisted lists too, marked,
 // with Edit, Share, Delete, and a Public or Unlisted switch under each.
 import { PlusIcon } from "@heroicons/react/20/solid"
 import {
@@ -14,7 +14,7 @@ import { useEffect, useState } from "react"
 import { toast } from "react-toastify"
 import { useShareListOwnerAction } from "~/routes/api.share-lists"
 import {
-	findProfileByHandle,
+	getProfileByHandle,
 	listsByUser,
 	publicListsByUser,
 } from "~/server/share-lists/store.server"
@@ -37,11 +37,8 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const requested = params.handle ?? ""
-	const found = await findProfileByHandle(requested)
-	if (!found) throw notFound()
-	// Temporary: the old handle stops redirecting when its hold ends.
-	if ("redirectTo" in found) return redirect(profilePath(found.redirectTo), 302)
-	const { profile } = found
+	const profile = await getProfileByHandle(requested)
+	if (!profile) throw notFound()
 	if (requested !== profile.handle)
 		return redirect(profilePath(profile.handle), 301)
 
@@ -61,7 +58,6 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		title: list.title,
 		design: list.design,
 		theme: list.theme,
-		signature: list.signature,
 		items: list.items
 			.map((e) => byKey.get(entryKey(e)))
 			.filter((t): t is CardTitle => t !== undefined),
@@ -70,7 +66,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	}))
 	return json(
 		{
-			profile: { handle: profile.handle, displayName: profile.displayName },
+			profile: { handle: profile.handle },
 			lists: summaries,
 			isOwner,
 		},
@@ -86,11 +82,9 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 			{ title: "Profile not found · GoodWatch" },
 			{ name: "robots", content: "noindex, nofollow" },
 		]
-	const { handle, displayName } = data.profile
+	const { handle } = data.profile
 	return [
-		{
-			title: `${displayName ? `${displayName} (@${handle})` : `@${handle}`} · GoodWatch`,
-		},
+		{ title: `@${handle} · GoodWatch` },
 		{ name: "description", content: `Top 5 lists by @${handle} on GoodWatch.` },
 		{ name: "robots", content: "noindex, nofollow" },
 	]
@@ -103,7 +97,6 @@ export default function PublicProfile() {
 	const lead = lists[0]
 	const accent = THEMES[lead?.theme ?? "ember"]
 	const backdrop = lead?.items.find((t) => t.backdrop)?.backdrop ?? null
-	const name = profile.displayName || `@${profile.handle}`
 	return (
 		<main className="min-h-screen pb-24">
 			<CardFonts />
@@ -124,18 +117,13 @@ export default function PublicProfile() {
 							backgroundImage: `linear-gradient(135deg, ${accent.accent}, ${accent.accent2})`,
 						}}
 					>
-						{(profile.displayName || profile.handle).charAt(0).toUpperCase()}
+						{profile.handle.charAt(0).toUpperCase()}
 					</div>
 					<div className="min-w-0 flex-1">
 						<h1 className="text-3xl font-black break-words text-white sm:text-5xl">
-							{name}
+							@{profile.handle}
 						</h1>
 						<p className="mt-1 text-gray-300">
-							{profile.displayName && (
-								<span className="mr-2 font-semibold text-gray-200">
-									@{profile.handle}
-								</span>
-							)}
 							<span className="text-gray-400">
 								{lists.length
 									? pluralize(lists.length, "list")
@@ -145,12 +133,6 @@ export default function PublicProfile() {
 					</div>
 					{isOwner && (
 						<div className="flex gap-2">
-							<Link
-								to="/settings/profile"
-								className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-gray-100 hover:bg-white/15"
-							>
-								Edit profile
-							</Link>
 							<Link
 								to={newListPath()}
 								className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-black text-black hover:brightness-110"

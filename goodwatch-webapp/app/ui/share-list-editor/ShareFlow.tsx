@@ -1,17 +1,18 @@
 // Sharing a new list. Share needs an account and a handle, because list links live at /u/:handle/lists/:id:
 // 1. A guest is asked to sign up or sign in. The draft stays in this browser, and authentication returns to
 //    /lists/new?share=1, which picks the flow up again.
-// 2. A signed-in person without a handle claims one in a dialog, prefilled with a free suggestion.
+// 2. A signed-in person without a handle chooses one (HandlePicker, as in onboarding), prefilled with a free
+//    suggestion. The handle is permanent and signs the card.
 // 3. The draft is saved as a list on the account, the link is copied, and the browser moves to the list's editor.
 import { useQueryClient } from "@tanstack/react-query"
 import { useLocation, useNavigate } from "@remix-run/react"
 import { Link } from "@remix-run/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "react-toastify"
-import { useClaimHandle } from "~/routes/api.handle"
 import {
 	fetchShareViewer,
 	type ShareViewer,
+	shareViewerQueryKey,
 	useCreateShareList,
 } from "~/routes/api.share-lists"
 import {
@@ -25,10 +26,8 @@ import {
 	writeBrowserDraft,
 } from "~/ui/share-list-editor/autosave"
 import type { ListDraft } from "~/ui/share-list-editor/list-state"
-import { sectionLabel } from "~/ui/share-list-editor/parts"
 import type { ShareAction } from "~/ui/share-list-editor/ShareListEditor"
-import { useHandleAvailability } from "~/ui/share-lists/useHandleAvailability"
-import { HANDLE_MAX } from "~/utils/handles"
+import { HandlePicker } from "~/ui/share-lists/HandlePicker"
 
 /** Where authentication returns to, so the flow continues with the saved draft. */
 export const RESUME_SHARE_PATH = "/lists/new?share=1"
@@ -62,10 +61,8 @@ export function useShareFlow() {
 		async (draft: ListDraft, handle: string) => {
 			setStep({ kind: "working" })
 			try {
-				// New lists sign with the handle unless the person typed a signature.
-				const signature = draft.signature.trim() || `@${handle}`
 				const list = await create.mutateAsync({
-					...listInput({ ...draft, signature }),
+					...listInput(draft),
 					visibility: "public",
 				})
 				clearBrowserDraft()
@@ -97,8 +94,8 @@ export function useShareFlow() {
 			let viewer: ShareViewer
 			try {
 				viewer = await queryClient.fetchQuery({
-					queryKey: ["share-viewer", draft.signature],
-					queryFn: () => fetchShareViewer(draft.signature),
+					queryKey: shareViewerQueryKey,
+					queryFn: fetchShareViewer,
 				})
 			} catch (error) {
 				setStep({
@@ -224,90 +221,20 @@ function HandleDialog({
 	onClose: () => void
 	onClaimed: (handle: string) => void
 }) {
-	const [input, setInput] = useState(suggestion)
-	const status = useHandleAvailability(input)
-	const claim = useClaimHandle()
-	const canClaim =
-		!!status.handle && !status.problem && status.available && !claim.isPending
-
-	let message: string | null = null
-	let tone: "ok" | "error" | "muted" = "muted"
-	if (status.problem) [message, tone] = [status.problem, "error"]
-	else if (!status.handle) message = null
-	else if (status.checking) message = "Checking…"
-	else if (status.checkFailed)
-		[message, tone] = ["Couldn't check that handle. Try again.", "error"]
-	else if (status.unavailable)
-		[message, tone] = [status.unavailableReason, "error"]
-	else if (status.available)
-		[message, tone] = [`@${status.handle} is available.`, "ok"]
-	if (claim.isError) [message, tone] = [claim.error.message, "error"]
-
 	return (
-		<DialogShell label="Choose a handle" onClose={onClose}>
-			<form
-				className="flex flex-col gap-4"
-				onSubmit={(e) => {
-					e.preventDefault()
-					if (!canClaim) return
-					claim.mutate(
-						{ handle: status.handle, displayName: null },
-						{ onSuccess: (profile) => onClaimed(profile.handle) },
-					)
-				}}
-			>
-				<h2 className="text-2xl font-black">Choose your handle</h2>
-				<p className="text-neutral-300">
-					Your lists live on your public profile. You can change the handle
-					later in settings.
-				</p>
-				<div className="flex flex-col gap-1.5">
-					<label htmlFor="share-handle" className={sectionLabel}>
-						Handle
-					</label>
-					<div className="flex items-center rounded-full bg-white/10 px-4 focus-within:ring-2 focus-within:ring-white">
-						<span className="text-neutral-400" aria-hidden>
-							@
-						</span>
-						<input
-							id="share-handle"
-							autoFocus
-							value={input}
-							onChange={(e) =>
-								setInput(e.target.value.replace(/\s/g, "").toLowerCase())
-							}
-							maxLength={HANDLE_MAX + 1}
-							autoComplete="off"
-							autoCapitalize="none"
-							spellCheck={false}
-							placeholder="your_handle"
-							aria-describedby="share-handle-status"
-							aria-invalid={tone === "error"}
-							className="w-full min-w-0 border-0 bg-transparent py-2.5 pl-1 text-white outline-none placeholder:text-neutral-500 focus:ring-0 focus:outline-none"
-						/>
-					</div>
-					<p
-						id="share-handle-status"
-						aria-live="polite"
-						className={`min-h-5 text-sm ${tone === "ok" ? "text-emerald-400" : tone === "error" ? "text-red-400" : "text-neutral-400"}`}
-					>
-						{message}
-					</p>
-					<p className="text-sm text-neutral-500">
-						goodwatch.app/u/
-						<span className="text-neutral-300">
-							{status.handle || "your_handle"}
-						</span>
-					</p>
-				</div>
-				<button
-					type="submit"
-					disabled={!canClaim}
-					className="rounded-full bg-white py-2.5 font-black text-black disabled:opacity-40"
-				>
-					{claim.isPending ? "Saving…" : "Share"}
-				</button>
-			</form>
+		<DialogShell label="Choose your handle" onClose={onClose}>
+			<h2 className="text-2xl font-black">Choose your handle</h2>
+			<p className="text-neutral-300">
+				Your lists live on your public profile, and every card you share is
+				signed with your handle.
+			</p>
+			<HandlePicker
+				id="share-handle"
+				suggestion={suggestion}
+				submitLabel="Share"
+				autoFocus
+				onClaimed={onClaimed}
+			/>
 		</DialogShell>
 	)
 }

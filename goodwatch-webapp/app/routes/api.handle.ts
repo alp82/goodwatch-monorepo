@@ -1,4 +1,4 @@
-// Handles for public profiles. GET ?handle= checks one while someone types; POST claims or changes theirs.
+// Handles for public profiles. GET ?handle= checks one while someone types; POST claims the person's handle, once.
 import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from "@remix-run/node"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { claimHandle, isHandleTaken, type Profile, ShareListError } from "~/server/share-lists/store.server"
@@ -20,16 +20,15 @@ export async function action({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST") return json({ error: "Method not allowed" }, { status: 405 })
 	const userId = await getUserIdFromRequest({ request })
 	if (!userId) return json({ error: "Sign in to choose a handle." }, { status: 401 })
-	let body: { handle?: string; displayName?: string | null }
+	let body: { handle?: string }
 	try {
 		body = await request.json()
 	} catch {
 		return json({ error: "Invalid request." }, { status: 400 })
 	}
 	if (typeof body !== "object" || body === null) return json({ error: "Invalid request." }, { status: 400 })
-	const displayName = typeof body.displayName === "string" || body.displayName === null ? body.displayName : undefined
 	try {
-		return json({ profile: await claimHandle(userId, String(body.handle ?? ""), displayName) })
+		return json({ profile: await claimHandle(userId, String(body.handle ?? "")) })
 	} catch (error) {
 		if (error instanceof ShareListError) return json({ error: error.message }, { status: error.status })
 		console.error("[share-lists] handle claim failed", error)
@@ -53,7 +52,7 @@ export const useHandleCheck = (handle: string | null) =>
 
 export const useClaimHandle = () =>
 	useMutation({
-		mutationFn: async (body: { handle: string; displayName: string | null }): Promise<Profile> => {
+		mutationFn: async (body: { handle: string }): Promise<Profile> => {
 			const response = await fetch("/api/handle", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },

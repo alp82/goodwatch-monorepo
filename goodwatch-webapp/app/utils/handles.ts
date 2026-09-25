@@ -1,5 +1,5 @@
-// Handle rules for public profiles, shared by the server (which enforces them) and the settings form (which explains
-// them while someone types).
+// Handle rules for public profiles, shared by the server (which enforces them) and the handle form (which explains
+// them while someone types). A handle is chosen once and can't be changed.
 
 export const HANDLE_MIN = 3
 export const HANDLE_MAX = 30
@@ -58,10 +58,6 @@ const RESERVED_HANDLES = new Set([
 	"wishlist",
 ])
 
-// A handle renamed away from, or of a deleted account, stays on hold this long before anyone else can claim it.
-// During the hold, the person who renamed away can switch back, and their old profile URL redirects.
-export const HANDLE_HOLD_DAYS = 90
-
 export const normalizeHandle = (handle: unknown) =>
 	typeof handle === "string"
 		? handle.trim().replace(/^@/, "").toLowerCase()
@@ -78,7 +74,7 @@ export function handleProblem(handle: string): string | null {
 }
 
 /**
- * Turns free text, such as a signature or the name part of an email address, into a valid handle, or null when
+ * Turns free text, such as an account name or the name part of an email address, into a valid handle, or null when
  * nothing usable is left. Used to suggest a handle; people can always type their own.
  */
 export function handleFromText(text: string | null | undefined): string | null {

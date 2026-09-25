@@ -132,7 +132,7 @@ function RentalCard({ title, items, name, theme, date, editing }: CardProps) {
 
 					<div style={flex({ marginTop: 26, alignItems: "flex-end", gap: 18 })}>
 						<div style={{ display: "flex", fontSize: 16, letterSpacing: 4, color: alpha(TYPE, 0.55), paddingBottom: 10 }}>SIGNED</div>
-						<div data-edit="name" style={flex({ flex: 1, borderBottom: `2px solid ${alpha(TYPE, 0.5)}`, paddingBottom: 2, paddingLeft: 10 })}>
+						<div style={flex({ flex: 1, borderBottom: `2px solid ${alpha(TYPE, 0.5)}`, paddingBottom: 2, paddingLeft: 10 })}>
 							<div style={{ display: "flex", fontFamily: "Permanent Marker", fontSize: fit(name || "a movie person", [[14, 44], [22, 36], [999, 28]]), color: "#1f3f8f", transform: "rotate(-2deg)" }}>
 								{name || "a movie person"}
 							</div>

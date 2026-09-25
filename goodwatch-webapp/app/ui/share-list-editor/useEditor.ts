@@ -19,17 +19,19 @@ import { type ListDraft, useListState } from "~/ui/share-list-editor/list-state"
 export type Dialog =
 	| { kind: "rank"; index: number }
 	| { kind: "title" }
-	| { kind: "signature" }
 	| null
 
 export function useEditor({
 	initial,
 	quickPicks,
 	date,
+	byline,
 }: {
 	initial: ListDraft
 	quickPicks: Record<string, CardTitle[]>
 	date: string
+	/** Who the card is signed by: the owner's @handle, or a placeholder until a guest shares. */
+	byline: string
 }) {
 	const list = useListState(initial)
 	const [dialog, setDialog] = useState<Dialog>(null)
@@ -73,7 +75,7 @@ export function useEditor({
 		card: {
 			title: list.title,
 			items: list.items.slice(0, LIST_SIZE),
-			name: list.signature,
+			name: byline,
 			theme: shownTheme,
 			date,
 		},

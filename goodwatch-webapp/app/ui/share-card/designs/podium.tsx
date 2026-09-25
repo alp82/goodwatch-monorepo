@@ -107,7 +107,7 @@ export function PodiumCard({ title, items, name, theme, editing }: CardProps) {
 				<div style={flex({ justifyContent: "space-between", alignItems: "center", marginTop: 88, paddingTop: 36, borderTop: `2px solid ${alpha("#ffffff", 0.14)}` })}>
 					<div style={col({ gap: 4 })}>
 						<div style={{ display: "flex", fontSize: 22, fontWeight: 700, color: alpha("#ffffff", 0.5), letterSpacing: 3 }}>CURATED BY</div>
-						<div data-edit="name" style={{ display: "flex", fontSize: 38, fontWeight: 900, color: t.accent2 }}>{name || "someone with taste"}</div>
+						<div style={{ display: "flex", fontSize: 38, fontWeight: 900, color: t.accent2 }}>{name || "someone with taste"}</div>
 					</div>
 					<div style={col({ alignItems: "flex-end", gap: 4 })}>
 						<div style={{ display: "flex", fontSize: 22, fontWeight: 700, color: alpha("#ffffff", 0.5), letterSpacing: 3 }}>MAKE YOURS</div>

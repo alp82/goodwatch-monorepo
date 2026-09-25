@@ -155,7 +155,7 @@ export function ManifestoCard({ title, items, name, theme, date, editing }: Card
 
 			{/* Footer */}
 			<div style={flex({ position: "absolute", left: M, right: M, bottom: 38, justifyContent: "space-between", alignItems: "flex-end", fontSize: 20, fontWeight: 700, letterSpacing: 1 })}>
-				<div data-edit="name" style={flex({ gap: 10 })}>
+				<div style={flex({ gap: 10 })}>
 					<div style={{ display: "flex", fontWeight: 400 }}>Curated by</div>
 					<div style={{ display: "flex" }}>{name || "someone with taste"}</div>
 				</div>

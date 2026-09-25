@@ -1,5 +1,5 @@
-// The share list editor. The card is the centerpiece; Edit flips it to one panel with the title, signature, ranking,
-// and titles to add. A single toolbar holds Edit, the design and color pickers, the save status, and Share: one row at
+// The share list editor. The card is the centerpiece; Edit flips it to one panel with the title, ranking, and titles
+// to add. The card is signed with the owner's @handle (byline). A single toolbar holds Edit, the design and color pickers, the save status, and Share: one row at
 // 1024 px and wider, two rows below (Edit and Share, then the pickers).
 import { PencilSquareIcon } from "@heroicons/react/24/outline"
 import { useRef, useState } from "react"
@@ -23,7 +23,6 @@ import type { ListDraft } from "~/ui/share-list-editor/list-state"
 import {
 	DragGhost,
 	PromptLinks,
-	SignatureInput,
 	TitleInput,
 	sectionLabel,
 } from "~/ui/share-list-editor/parts"
@@ -107,16 +106,18 @@ export function ShareListEditor({
 	initial,
 	quickPicks,
 	date,
+	byline,
 	saveTarget,
 	share,
 }: {
 	initial: ListDraft
 	quickPicks: Record<string, CardTitle[]>
 	date: string
+	byline: string
 	saveTarget: SaveTarget
 	share?: ShareAction
 }) {
-	const ed = useEditor({ initial, quickPicks, date })
+	const ed = useEditor({ initial, quickPicks, date, byline })
 	const status = useAutosave(ed.list, saveTarget)
 	const [flipped, setFlipped] = useState(false)
 	const { ref, size } = useFit(
@@ -196,10 +197,6 @@ export function ShareListEditor({
 								className="rounded-2xl bg-white/10 px-4 py-2.5 text-lg"
 							/>
 							<PromptLinks ed={ed} />
-						</div>
-						<div className="flex shrink-0 flex-col gap-2">
-							<div className={sectionLabel}>Signed</div>
-							<SignatureInput ed={ed} />
 						</div>
 						<div className="flex shrink-0 flex-col gap-2">
 							<div className={sectionLabel}>Ranking</div>

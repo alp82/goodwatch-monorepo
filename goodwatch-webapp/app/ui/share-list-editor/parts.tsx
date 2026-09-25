@@ -70,22 +70,6 @@ export function TitleInput({
 	)
 }
 
-export function SignatureInput({
-	ed,
-	autoFocus,
-}: { ed: Editor; autoFocus?: boolean }) {
-	return (
-		<input
-			autoFocus={autoFocus}
-			value={ed.list.signature}
-			onChange={(e) => ed.list.setSignature(e.target.value)}
-			placeholder="your name or @handle"
-			aria-label="Signature"
-			className="w-full rounded-full border-0 bg-white/10 px-4 py-2.5 text-sm placeholder:text-neutral-500 focus:ring-2 focus:ring-white"
-		/>
-	)
-}
-
 /** List prompts as small inline links that wrap. Picking one sets the title and the quick picks. */
 export function PromptLinks({ ed }: { ed: Editor }) {
 	return (

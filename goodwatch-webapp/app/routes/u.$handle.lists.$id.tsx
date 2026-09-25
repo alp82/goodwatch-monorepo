@@ -1,5 +1,5 @@
 // Public share list page: /u/:handle/lists/:id. The card, large, and the five titles with where they stream in the
-// viewer's country. Lists are looked up by id; an outdated handle redirects to the canonical URL, and deleted lists
+// viewer's country. Lists are looked up by id; a wrong or differently cased handle redirects to the canonical URL, and deleted lists
 // (or lists of deleted accounts) answer 404. Unlisted lists open by link. The page is noindex. Its og:image is the
 // versioned 1200x630 link preview, not the card, because link previews crop or shrink portrait images.
 import { CheckIcon } from "@heroicons/react/20/solid"
@@ -85,7 +85,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 	const design = designByKey(list.design)
 	const origin = publicOrigin()
-	const signature = listByline(list.signature, owner.handle)
+	const byline = listByline(owner.handle)
 	return json(
 		{
 			list: {
@@ -93,7 +93,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 				title: list.title,
 				design: design.key,
 				theme: list.theme,
-				signature,
+				byline,
 				date: cardDate(new Date(list.createdAt)),
 				unlisted: list.visibility === "unlisted",
 			},
@@ -101,11 +101,11 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			availability,
 			owned: [...owned],
 			country,
-			owner: { handle: owner.handle, displayName: owner.displayName },
+			owner: { handle: owner.handle },
 			isOwner: viewerId === list.userId,
 			share: {
 				url: `${origin}${shareListPath(owner.handle, list.id)}`,
-				image: `${origin}${shareListPreviewPath(list.id, previewHash(list, signature))}`,
+				image: `${origin}${shareListPreviewPath(list.id, previewHash(list, byline))}`,
 				width: LIST_PREVIEW_SIZE.width,
 				height: LIST_PREVIEW_SIZE.height,
 			},
@@ -122,7 +122,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 			{ name: "robots", content: "noindex, nofollow" },
 		]
 	const { list, items, share } = data
-	const title = `${list.title} by ${list.signature} · GoodWatch`
+	const title = `${list.title} by ${list.byline} · GoodWatch`
 	const description = items
 		.map((item, i) => `${i + 1}. ${item.title}`)
 		.join("  ")
@@ -179,7 +179,7 @@ export default function ShareListPage() {
 							card={{
 								title: list.title,
 								items,
-								name: list.signature,
+								name: list.byline,
 								theme: list.theme,
 								date: list.date,
 							}}
@@ -208,11 +208,8 @@ export default function ShareListPage() {
 								to={profilePath(owner.handle)}
 								className="font-bold text-white underline decoration-white/30 underline-offset-4 hover:decoration-white"
 							>
-								{list.signature}
+								{list.byline}
 							</Link>
-							{list.signature !== `@${owner.handle}` && (
-								<span className="text-gray-400"> · @{owner.handle}</span>
-							)}
 						</p>
 						<div className="mt-2 flex flex-wrap gap-3">
 							<Link

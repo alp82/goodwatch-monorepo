@@ -38,7 +38,6 @@ export interface CardDesign {
 export const LIST_SIZE = 5
 
 export const TITLE_MAX_LENGTH = 80
-export const SIGNATURE_MAX_LENGTH = 28
 
 export interface ListPrompt {
 	id: string
@@ -82,8 +81,11 @@ export const hash = (s: string) => {
 	return h >>> 0
 }
 
-/** How a list is signed: its signature, or the owner's @handle when it has none. */
-export const listByline = (signature: string, handle: string) => signature || `@${handle}`
+/** How a card is signed: always the owner's @handle, so nobody can sign as someone else. */
+export const listByline = (handle: string) => `@${handle}`
+
+/** What a guest's draft card shows before sharing, when there is no handle yet. */
+export const GUEST_BYLINE = "@you"
 
 export const titleKey = (type: MediaType, tmdbId: number) => `${type}:${tmdbId}`
 

@@ -1,15 +1,17 @@
 // Share lists and public profiles in Crate (doc.user_list, doc.user_profile, doc.user_handle).
 // Every write validates its input and checks ownership; reads right after a write refresh the table first,
 // because Crate makes writes visible to reads about once a second.
-// Deletes are soft: rows get deleted_at (renamed handles get released_at), and every read filters them out.
+// Deletes are soft: rows get deleted_at, and every read filters them out.
+// A handle is chosen once and never changes. The list card and link preview print it, so nobody signs as someone else.
+// The signature and display_name columns are no longer read or written.
 import { createHash, randomBytes } from "node:crypto"
 import { entryKey, type ListEntry, parseTitleKey, resolveCardTitles } from "~/server/share-lists/titles.server"
 import { isDesignKey } from "~/ui/share-card/designs"
-import { isPromptId, isThemeKey, LIST_SIZE, SIGNATURE_MAX_LENGTH, type ThemeKey, TITLE_MAX_LENGTH } from "~/ui/share-card/model"
+import { isPromptId, isThemeKey, LIST_SIZE, type ThemeKey, TITLE_MAX_LENGTH } from "~/ui/share-card/model"
 import { execute, query } from "~/utils/crate"
-import { HANDLE_HOLD_DAYS, HANDLE_MAX, handleFromText, handleProblem, normalizeHandle } from "~/utils/handles"
+import { HANDLE_MAX, handleFromText, handleProblem, normalizeHandle } from "~/utils/handles"
 
-export { HANDLE_HOLD_DAYS, HANDLE_MAX, HANDLE_MIN, handleProblem, normalizeHandle } from "~/utils/handles"
+export { HANDLE_MAX, HANDLE_MIN, handleProblem, normalizeHandle } from "~/utils/handles"
 
 export type Visibility = "public" | "unlisted"
 
@@ -20,7 +22,6 @@ export interface ShareList {
 	promptId: string | null
 	design: string
 	theme: ThemeKey
-	signature: string
 	items: ListEntry[]
 	visibility: Visibility
 	remixedFrom: string | null
@@ -34,7 +35,6 @@ export interface ShareListInput {
 	promptId: string | null
 	design: string
 	theme: string
-	signature: string
 	items: string[] // title keys, like "movie:603", in rank order
 	visibility?: Visibility
 	remixedFrom?: string | null
@@ -43,7 +43,6 @@ export interface ShareListInput {
 export interface Profile {
 	userId: string
 	handle: string
-	displayName: string | null
 }
 
 /** A rejected request, with the HTTP status to answer. */
@@ -73,8 +72,8 @@ export function newListId(length = 10) {
 }
 
 /** Identifies what a list's card shows. The card image URL carries it. */
-export function contentHash(list: Pick<ShareList, "design" | "theme" | "title" | "signature" | "items">) {
-	const content = JSON.stringify([list.design, list.theme, list.title, list.signature, list.items.map(entryKey)])
+export function contentHash(list: Pick<ShareList, "design" | "theme" | "title" | "items">) {
+	const content = JSON.stringify([list.design, list.theme, list.title, list.items.map(entryKey)])
 	return createHash("sha256").update(content).digest("base64url").slice(0, 12)
 }
 
@@ -85,8 +84,6 @@ export async function validateList(input: ShareListInput) {
 	const title = clean(input.title)
 	if (!title) throw new ShareListError(400, "Give the list a title.")
 	if (title.length > TITLE_MAX_LENGTH) throw new ShareListError(400, `Titles can be up to ${TITLE_MAX_LENGTH} characters.`)
-	const signature = clean(input.signature)
-	if (signature.length > SIGNATURE_MAX_LENGTH) throw new ShareListError(400, `Signatures can be up to ${SIGNATURE_MAX_LENGTH} characters.`)
 	if (!isDesignKey(input.design)) throw new ShareListError(400, "Unknown card design.")
 	if (!isThemeKey(input.theme)) throw new ShareListError(400, "Unknown color theme.")
 	const promptId = input.promptId && isPromptId(input.promptId) ? input.promptId : null
@@ -101,7 +98,7 @@ export async function validateList(input: ShareListInput) {
 	const found = await resolveCardTitles(entries)
 	if (found.length !== entries.length) throw new ShareListError(400, "Some titles aren't in the catalog.")
 
-	return { title, signature, design: input.design, theme: input.theme, promptId, visibility, items: entries }
+	return { title, design: input.design, theme: input.theme, promptId, visibility, items: entries }
 }
 
 type ListRow = {
@@ -111,7 +108,6 @@ type ListRow = {
 	prompt_id: string | null
 	design: string
 	theme: string
-	signature: string | null
 	items: ListEntry[]
 	visibility: Visibility
 	remixed_from: string | null
@@ -119,7 +115,7 @@ type ListRow = {
 	created_at: number
 	updated_at: number
 }
-const LIST_COLUMNS = "id, user_id, title, prompt_id, design, theme, signature, items, visibility, remixed_from, content_hash, created_at, updated_at"
+const LIST_COLUMNS = "id, user_id, title, prompt_id, design, theme, items, visibility, remixed_from, content_hash, created_at, updated_at"
 
 const fromRow = (r: ListRow): ShareList => ({
 	id: r.id,
@@ -128,7 +124,6 @@ const fromRow = (r: ListRow): ShareList => ({
 	promptId: r.prompt_id,
 	design: r.design,
 	theme: (isThemeKey(r.theme) ? r.theme : "ember") as ThemeKey,
-	signature: r.signature ?? "",
 	items: (r.items ?? []).map((i) => ({ media_type: i.media_type, tmdb_id: Number(i.tmdb_id) })),
 	visibility: r.visibility,
 	remixedFrom: r.remixed_from,
@@ -172,8 +167,8 @@ export async function createList(userId: string, input: ShareListInput): Promise
 	const id = newListId()
 	const hash = contentHash(valid)
 	await run(
-		`INSERT INTO doc.user_list (${LIST_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		[id, userId, valid.title, valid.promptId, valid.design, valid.theme, valid.signature, valid.items, valid.visibility, remixedFrom, hash, now, now],
+		`INSERT INTO doc.user_list (${LIST_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		[id, userId, valid.title, valid.promptId, valid.design, valid.theme, valid.items, valid.visibility, remixedFrom, hash, now, now],
 	)
 	await refreshLists()
 	return (await getList(id)) as ShareList
@@ -183,9 +178,9 @@ export async function updateList(userId: string, id: string, input: ShareListInp
 	const current = await ownedList(userId, id)
 	const valid = await validateList({ ...input, visibility: input.visibility ?? current.visibility })
 	await run(
-		`UPDATE doc.user_list SET title = ?, prompt_id = ?, design = ?, theme = ?, signature = ?, items = ?, visibility = ?,
+		`UPDATE doc.user_list SET title = ?, prompt_id = ?, design = ?, theme = ?, items = ?, visibility = ?,
 		 content_hash = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL`,
-		[valid.title, valid.promptId, valid.design, valid.theme, valid.signature, valid.items, valid.visibility, contentHash(valid), new Date(), id, userId],
+		[valid.title, valid.promptId, valid.design, valid.theme, valid.items, valid.visibility, contentHash(valid), new Date(), id, userId],
 	)
 	await refreshLists()
 	return (await getList(id)) as ShareList
@@ -230,81 +225,41 @@ export async function restoreList(userId: string, id: string): Promise<ShareList
 
 // --- Handles and profiles ---
 
-const HOLD_MS = HANDLE_HOLD_DAYS * 24 * 60 * 60 * 1000
+// A handle is claimed once, when someone first needs one, and never changes. Uniqueness comes from doc.user_handle,
+// keyed by the handle: an insert with ON CONFLICT DO NOTHING lets exactly one person claim it. A deleted account's
+// handle stays claimed for good, so nobody can take over someone else's name and links.
 
-type ProfileRow = { user_id: string; handle: string; display_name: string | null }
-const toProfile = (r: ProfileRow): Profile => ({ userId: r.user_id, handle: r.handle, displayName: r.display_name })
+type ProfileRow = { user_id: string; handle: string }
+const toProfile = (r: ProfileRow): Profile => ({ userId: r.user_id, handle: r.handle })
 
 export async function getProfileByUserId(userId: string): Promise<Profile | null> {
-	const [row] = await select<ProfileRow>("SELECT user_id, handle, display_name FROM doc.user_profile WHERE user_id = ? AND deleted_at IS NULL", [userId])
+	const [row] = await select<ProfileRow>("SELECT user_id, handle FROM doc.user_profile WHERE user_id = ? AND deleted_at IS NULL", [userId])
 	return row ? toProfile(row) : null
 }
 
+/** The profile a handle belongs to, or null when the handle is invalid, unclaimed, or its account is deleted. */
 export async function getProfileByHandle(handle: string): Promise<Profile | null> {
 	const normalized = normalizeHandle(handle)
 	if (handleProblem(normalized)) return null
-	const [row] = await select<ProfileRow>("SELECT user_id, handle, display_name FROM doc.user_profile WHERE handle = ? AND deleted_at IS NULL", [
-		normalized,
-	])
+	const [row] = await select<ProfileRow>("SELECT user_id, handle FROM doc.user_profile WHERE handle = ? AND deleted_at IS NULL", [normalized])
 	return row ? toProfile(row) : null
 }
 
-/**
- * The profile a handle in a URL points to. A handle its owner renamed away from, still on hold, redirects to their
- * current handle. Unknown, expired, and deleted handles resolve to null.
- */
-export async function findProfileByHandle(handle: string): Promise<{ profile: Profile } | { redirectTo: string } | null> {
-	const normalized = normalizeHandle(handle)
-	if (handleProblem(normalized)) return null
-	const profile = await getProfileByHandle(normalized)
-	if (profile) return { profile }
-	const row = await getHandleRow(normalized)
-	if (!row || row.deleted_at != null || row.released_at == null || row.released_at + HOLD_MS < Date.now()) return null
-	const current = await getProfileByUserId(row.user_id)
-	return current && current.handle !== normalized ? { redirectTo: current.handle } : null
+// Reads by primary key are real-time in Crate, so this sees a claim made a moment ago.
+async function handleOwner(handle: string): Promise<string | null> {
+	const [row] = await select<{ user_id: string }>("SELECT user_id FROM doc.user_handle WHERE handle = ?", [handle])
+	return row?.user_id ?? null
 }
 
-type HandleRow = {
-	handle: string
-	user_id: string
-	released_at: number | null
-	deleted_at: number | null
-	_seq_no: number
-	_primary_term: number
-}
-
-// Reads by primary key are real-time in Crate, so this sees a claim made a moment ago. The timestamps are cast to
-// epoch milliseconds because the Crate client turns a NULL timestamp into a Date at 1970-01-01.
-async function getHandleRow(handle: string): Promise<HandleRow | null> {
-	const [row] = await select<HandleRow>(
-		`SELECT handle, user_id, CAST(released_at AS BIGINT) AS released_at, CAST(deleted_at AS BIGINT) AS deleted_at, _seq_no, _primary_term
-		 FROM doc.user_handle WHERE handle = ?`,
-		[handle],
-	)
-	return row ?? null
-}
-
-type Claim = "free" | "yours" | "reclaim" | "take-over" | "taken"
-
-// What claiming this handle means for the person: a new row, already theirs, switching back to a handle they renamed
-// away from, taking over a row whose hold has expired, or not possible.
-function claimFor(row: HandleRow | null, userId: string, now: number): Claim {
-	if (!row) return "free"
-	const active = row.released_at == null && row.deleted_at == null
-	if (active) return row.user_id === userId ? "yours" : "taken"
-	const heldUntil = (row.deleted_at ?? row.released_at ?? 0) + HOLD_MS
-	if (heldUntil <= now) return "take-over"
-	return row.user_id === userId && row.deleted_at == null ? "reclaim" : "taken"
-}
-
-/** Whether the person can't have the handle: someone holds it, or it's on hold for someone else. */
+/** Whether someone else has the handle. Deleted accounts keep theirs. */
 export async function isHandleTaken(handle: string, userId?: string): Promise<boolean> {
-	return claimFor(await getHandleRow(handle), userId ?? "", Date.now()) === "taken"
+	const owner = await handleOwner(handle)
+	return owner !== null && owner !== userId
 }
 
 /**
- * The first free handle for the person among the candidates, trying each as is and then with 2 to 9 appended.
- * Candidates are free text (a signature, a name); unusable ones are skipped. Null when none is free.
+ * The first free handle among the candidates, trying each as is and then with 2 to 9 appended. Candidates are free
+ * text (an account name, the name part of an email address); unusable ones are skipped. Null when none is free.
  */
 export async function suggestHandle(userId: string, candidates: (string | null | undefined)[]): Promise<string | null> {
 	const bases = [...new Set(candidates.map(handleFromText).filter((h): h is string => !!h))]
@@ -319,64 +274,38 @@ export async function suggestHandle(userId: string, candidates: (string | null |
 }
 
 /**
- * Claims a handle for the person, or changes theirs. Exactly one of two people claiming the same handle at once
- * succeeds: a new handle is an insert keyed by the handle, and taking over an expired one is an update guarded by the
- * row's sequence number. Changing a handle releases the old one, which then stays on hold.
+ * Claims the person's handle. It can be claimed once: someone who already has a handle gets 409, unless they claim
+ * the same one again. Exactly one of two people claiming the same handle at once succeeds.
  */
-export async function claimHandle(userId: string, rawHandle: string, displayName?: string | null): Promise<Profile> {
+export async function claimHandle(userId: string, rawHandle: string): Promise<Profile> {
 	const handle = normalizeHandle(rawHandle)
 	const problem = handleProblem(handle)
 	if (problem) throw new ShareListError(400, problem)
-	const name = displayName === undefined ? undefined : clean(displayName).slice(0, 50) || null
-	const now = new Date()
-
-	const row = await getHandleRow(handle)
-	const claim = claimFor(row, userId, now.getTime())
-	if (claim === "taken") throw new ShareListError(409, "That handle is taken.")
-	if (claim === "free") {
-		await run("INSERT INTO doc.user_handle (handle, user_id, claimed_at) VALUES (?, ?, ?) ON CONFLICT (handle) DO NOTHING", [handle, userId, now])
-	} else if (claim === "reclaim" || claim === "take-over") {
-		const current = row as HandleRow
-		const result = await run(
-			`UPDATE doc.user_handle SET user_id = ?, claimed_at = ?, released_at = NULL, deleted_at = NULL
-			 WHERE handle = ? AND _seq_no = ? AND _primary_term = ?`,
-			[userId, now, handle, current._seq_no, current._primary_term],
-		)
-		if (!result?.rowcount) throw new ShareListError(409, "That handle is taken.")
-	}
-	await run("REFRESH TABLE doc.user_handle", [])
-	const holder = await getHandleRow(handle)
-	if (holder?.user_id !== userId || holder.released_at != null || holder.deleted_at != null) {
-		throw new ShareListError(409, "That handle is taken.")
-	}
 
 	const current = await getProfileByUserId(userId)
-	await run(
-		`INSERT INTO doc.user_profile (user_id, handle, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)
-		 ON CONFLICT (user_id) DO UPDATE SET handle = excluded.handle, display_name = excluded.display_name, updated_at = excluded.updated_at`,
-		[userId, handle, name === undefined ? (current?.displayName ?? null) : name, now, now],
-	)
-	if (current && current.handle !== handle) {
-		await run("UPDATE doc.user_handle SET released_at = ? WHERE handle = ? AND user_id = ? AND released_at IS NULL AND deleted_at IS NULL", [
-			now,
-			current.handle,
-			userId,
-		])
-		await run("REFRESH TABLE doc.user_handle", [])
+	if (current) {
+		if (current.handle === handle) return current
+		throw new ShareListError(409, "Your handle is already set and can't be changed.")
 	}
+
+	const now = new Date()
+	await run("INSERT INTO doc.user_handle (handle, user_id, claimed_at) VALUES (?, ?, ?) ON CONFLICT (handle) DO NOTHING", [handle, userId, now])
+	await run("REFRESH TABLE doc.user_handle", [])
+	if ((await handleOwner(handle)) !== userId) throw new ShareListError(409, "That handle is taken.")
+
+	await run("INSERT INTO doc.user_profile (user_id, handle, created_at, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT (user_id) DO NOTHING", [
+		userId,
+		handle,
+		now,
+		now,
+	])
 	await run("REFRESH TABLE doc.user_profile", [])
 	return (await getProfileByUserId(userId)) as Profile
 }
 
-export async function setDisplayName(userId: string, displayName: string | null): Promise<Profile> {
-	const current = await getProfileByUserId(userId)
-	if (!current) throw new ShareListError(400, "Choose a handle first.")
-	return claimHandle(userId, current.handle, displayName)
-}
-
 /**
- * Soft-deletes everything share lists store for a person: their lists, profile, and handles. The handles stay on hold,
- * so nobody else takes over their links right away. Call it from the account-deletion flow.
+ * Soft-deletes everything share lists store for a person: their lists, profile, and handle. The handle stays claimed,
+ * so nobody else can take over their name or links. Call it from the account-deletion flow.
  */
 export async function deleteAccountData(userId: string): Promise<void> {
 	const now = new Date()

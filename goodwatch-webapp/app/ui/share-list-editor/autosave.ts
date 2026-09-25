@@ -36,7 +36,6 @@ export function readBrowserDraft(): ListDraft | null {
 			promptId: isPromptId(draft.promptId) ? draft.promptId : null,
 			design: isDesignKey(draft.design) ? draft.design : "",
 			theme: isThemeKey(draft.theme) ? draft.theme : "ember",
-			signature: typeof draft.signature === "string" ? draft.signature : "",
 			items,
 			remixedFrom:
 				typeof draft.remixedFrom === "string" ? draft.remixedFrom : null,
@@ -65,7 +64,6 @@ export const listInput = (draft: ListDraft) => ({
 	promptId: draft.promptId,
 	design: draft.design,
 	theme: draft.theme,
-	signature: draft.signature,
 	items: draft.items.map((i) => i.key),
 	remixedFrom: draft.remixedFrom ?? null,
 })

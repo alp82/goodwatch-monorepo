@@ -12,6 +12,7 @@ import {
 	LIST_SIZE,
 	THEMES,
 	cardDate,
+	GUEST_BYLINE,
 } from "~/ui/share-card/model"
 import { RESUME_SHARE_PATH } from "~/ui/share-list-editor/ShareFlow"
 import { readBrowserDraft } from "~/ui/share-list-editor/autosave"
@@ -71,7 +72,7 @@ export function GuestDraftCard() {
 						card={{
 							title,
 							items: draft.items,
-							name: draft.signature,
+							name: GUEST_BYLINE,
 							theme: draft.theme,
 							date: cardDate(new Date()),
 						}}

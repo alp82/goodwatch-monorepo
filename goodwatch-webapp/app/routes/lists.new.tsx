@@ -25,8 +25,10 @@ import { DEFAULT_DESIGN } from "~/ui/share-card/designs"
 import {
 	DEFAULT_PROMPT_ID,
 	DEFAULT_THEME,
+	GUEST_BYLINE,
 	LIST_PROMPTS,
 	cardDate,
+	listByline,
 } from "~/ui/share-card/model"
 import { PREFILL_CANDIDATES, prefillPrompt } from "~/ui/share-card/prefill"
 import { useShareFlow } from "~/ui/share-list-editor/ShareFlow"
@@ -42,7 +44,6 @@ const EMPTY_DRAFT: ListDraft = {
 	promptId: DEFAULT_PROMPT_ID,
 	design: DEFAULT_DESIGN,
 	theme: DEFAULT_THEME,
-	signature: "",
 	items: [],
 	remixedFrom: null,
 }
@@ -71,16 +72,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		userId ? getProfileByUserId(userId) : null,
 		fromRatings ? ratedEntries(params, userId).then(prefillTitles) : [],
 	])
-	// New lists sign with the person's handle once they have one.
-	const signature = profile ? `@${profile.handle}` : ""
-	// A remix is a new list with the source's prompt, titles, design, and colors. The signature stays the viewer's.
+	// A remix is a new list with the source's prompt, titles, design, and colors, signed by the viewer.
 	const initial: ListDraft = source
 		? {
 				title: source.title,
 				promptId: source.promptId,
 				design: source.design,
 				theme: source.theme,
-				signature,
 				items: await resolveCardTitles(source.items),
 				remixedFrom: source.id,
 			}
@@ -88,10 +86,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			? {
 					...EMPTY_DRAFT,
 					...prefillPrompt(rated.map((t) => t.type)),
-					signature,
 					items: rated,
 				}
-			: { ...EMPTY_DRAFT, signature }
+			: EMPTY_DRAFT
 	return json(
 		{
 			initial,
@@ -99,6 +96,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			startsFresh: !!source || rated.length > 0,
 			quickPicks,
 			date: cardDate(new Date()),
+			// Cards are signed with the person's handle; guests see a placeholder until they share.
+			byline: profile ? listByline(profile.handle) : GUEST_BYLINE,
 		},
 		{ headers: { "Cache-Control": "private, no-store" } },
 	)
@@ -115,7 +114,7 @@ export const meta: MetaFunction = () => [
 ]
 
 export default function NewShareList() {
-	const { initial, startsFresh, quickPicks, date } =
+	const { initial, startsFresh, quickPicks, date, byline } =
 		useLoaderData<typeof loader>()
 	// The browser draft is only readable after hydration; restoring it remounts the editor with the draft.
 	const [start, setStart] = useState<{ draft: ListDraft; restored: boolean }>({
@@ -157,6 +156,7 @@ export default function NewShareList() {
 				initial={start.draft}
 				quickPicks={quickPicks}
 				date={date}
+				byline={byline}
 				saveTarget={{ kind: "draft" }}
 				share={flow.share}
 			/>

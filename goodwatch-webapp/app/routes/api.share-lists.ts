@@ -1,7 +1,7 @@
 // Share lists API. GET tells the editor who is sharing: signed in or not, their handle, or a suggested one.
 // POST writes: create, update, set visibility, delete, and undo a recent delete. The signed-in person must own the list.
 import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from "@remix-run/node"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { warmShareCard } from "~/server/share-card/images.server"
 import {
 	createList,
@@ -27,7 +27,7 @@ type Body =
 
 export type ShareListResponse = { list: ShareList } | { deleted: true } | { error: string }
 
-/** Who is sharing. A handle suggestion comes from ?signature=, then the account's name, then its email address. */
+/** Who is sharing, and their handle. Without one, a free suggestion from the account's name or email address. */
 export type ShareViewer =
 	| { signedIn: false }
 	| { signedIn: true; handle: string | null; suggestedHandle: string | null }
@@ -40,7 +40,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if (profile) return json<ShareViewer>({ signedIn: true, handle: profile.handle, suggestedHandle: null }, noStore)
 	const meta = user.user_metadata ?? {}
 	const suggestedHandle = await suggestHandle(user.id, [
-		new URL(request.url).searchParams.get("signature"),
 		meta.user_name,
 		meta.preferred_username,
 		meta.full_name,
@@ -97,11 +96,17 @@ export async function action({ request }: ActionFunctionArgs) {
 
 // Query and mutation helpers
 
-export const fetchShareViewer = async (signature: string): Promise<ShareViewer> => {
-	const response = await fetch(`/api/share-lists?signature=${encodeURIComponent(signature)}`)
+export const shareViewerQueryKey = ["share-viewer"]
+
+export const fetchShareViewer = async (): Promise<ShareViewer> => {
+	const response = await fetch("/api/share-lists")
 	if (!response.ok) throw new Error("Couldn't check your account. Try again.")
 	return response.json()
 }
+
+/** The signed-in person's handle, or a suggestion when they have none yet. Pass enabled: false for guests. */
+export const useShareViewer = (enabled: boolean) =>
+	useQuery<ShareViewer>({ queryKey: shareViewerQueryKey, queryFn: fetchShareViewer, enabled })
 
 export const useCreateShareList = () =>
 	useMutation({

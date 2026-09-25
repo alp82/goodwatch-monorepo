@@ -5,8 +5,8 @@
 //   with more than one child needs display: flex, no z-index (later siblings paint on top), no CSS grid,
 //   no React fragments inside card markup (satori collapses their children).
 // - Mark the element that represents rank i (0-based) with data-slot={i}: the editor opens the
-//   title dialog on click and accepts drops there. Mark the list title data-edit="title" and the
-//   signature data-edit="name". When `editing` is true, render placeholders (with data-slot) for
+//   title dialog on click and accepts drops there. Mark the list title data-edit="title". The byline
+//   (`name`, always the owner's @handle) isn't editable. When `editing` is true, render placeholders (with data-slot) for
 //   empty ranks up to five. Never render placeholders when exporting.
 // - resvg panics (and takes the server down) on some inputs: negative sizes, a zero-height box
 //   with a dashed border, a blurred boxShadow on a rotated parent. Check renders with scripts/check-share-cards.ts, which renders

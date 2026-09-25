@@ -198,7 +198,7 @@ export function CeremonyCard({ title, items, name, theme, date, editing }: CardP
 			<div style={flex({ position: "absolute", left: 80, right: 80, bottom: 70, justifyContent: "space-between", alignItems: "flex-end", paddingTop: 26, borderTop: "1.5px solid rgba(255,255,255,0.12)" })}>
 				<div style={col({ gap: 6 })}>
 					<div style={{ display: "flex", fontSize: 16, fontWeight: 700, letterSpacing: 5, color: MUTED }}>PRESENTED BY</div>
-					<div data-edit="name" style={{ display: "flex", fontFamily: "Instrument Serif", fontSize: 38, color: CREAM }}>{name || "someone with taste"}</div>
+					<div style={{ display: "flex", fontFamily: "Instrument Serif", fontSize: 38, color: CREAM }}>{name || "someone with taste"}</div>
 				</div>
 				<div style={col({ alignItems: "flex-end", gap: 6 })}>
 					<div style={{ display: "flex", fontSize: 16, fontWeight: 700, letterSpacing: 5, color: MUTED }}>HOLD YOUR OWN</div>

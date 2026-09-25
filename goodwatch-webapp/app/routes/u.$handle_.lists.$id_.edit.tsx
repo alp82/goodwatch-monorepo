@@ -1,5 +1,5 @@
 // The editor for a saved share list: /u/:handle/lists/:id/edit. Only the owner can open it; everyone else goes to
-// the list page. An outdated handle redirects to the canonical URL, and deleted lists answer 404.
+// the list page. A wrong or differently cased handle redirects to the canonical URL, and deleted lists answer 404.
 // The trailing underscores keep this route out of the profile and list page layouts.
 import {
 	json,
@@ -18,7 +18,7 @@ import {
 	shareListEditPath,
 	shareListPath,
 } from "~/ui/share-card/links"
-import { cardDate } from "~/ui/share-card/model"
+import { cardDate, listByline } from "~/ui/share-card/model"
 import type { ListDraft } from "~/ui/share-list-editor/list-state"
 import { SharedNotice } from "~/ui/share-list-editor/ShareFlow"
 import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
@@ -50,7 +50,6 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		promptId: list.promptId,
 		design: list.design,
 		theme: list.theme,
-		signature: list.signature,
 		items,
 		remixedFrom: list.remixedFrom,
 	}
@@ -74,6 +73,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => [
 export default function EditShareList() {
 	const { id, handle, initial, quickPicks, date } =
 		useLoaderData<typeof loader>()
+	const byline = listByline(handle)
 	const path = shareListPath(handle, id)
 	return (
 		<>
@@ -81,6 +81,7 @@ export default function EditShareList() {
 				initial={initial}
 				quickPicks={quickPicks}
 				date={date}
+				byline={byline}
 				saveTarget={{ kind: "list", id }}
 				share={async () => {
 					// Make sure the card image is current before the link gets pasted somewhere.

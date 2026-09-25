@@ -115,7 +115,7 @@ function LetterboardCard({ title, items, name, theme, editing }: CardProps) {
 						</div>
 
 						<div style={flex({ justifyContent: "flex-end", fontWeight: 700, fontSize: 24, letterSpacing: 5, color: LETTER, ...plastic })}>
-							<div data-edit="name" style={{ display: "flex" }}>{`— ${clip((name || "SOMEONE WITH TASTE").toUpperCase(), 22)}`}</div>
+							<div style={{ display: "flex" }}>{`— ${clip((name || "SOMEONE WITH TASTE").toUpperCase(), 22)}`}</div>
 						</div>
 					</div>
 				</div>

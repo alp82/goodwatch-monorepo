@@ -233,7 +233,7 @@ export function BentoCard({ title, items, name, theme, editing }: CardProps) {
 					<img src={logo("#fbbf24")} width={62} height={66} style={{ width: 62, height: 66 }} />
 					<div style={col({ gap: 6 })}>
 						<div style={{ display: "flex", fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: 2 }}>CURATED BY</div>
-						<div data-edit="name" style={{ display: "flex", fontSize: fit(name || "someone with taste", [[12, 26], [20, 21], [999, 17]]), fontWeight: 900, color: t.accent2, lineHeight: 1.1, wordBreak: "break-all" }}>
+						<div style={{ display: "flex", fontSize: fit(name || "someone with taste", [[12, 26], [20, 21], [999, 17]]), fontWeight: 900, color: t.accent2, lineHeight: 1.1, wordBreak: "break-all" }}>
 							{name || "someone with taste"}
 						</div>
 					</div>

@@ -215,7 +215,7 @@ function MarqueeCard({ title, items, name, theme, date, editing }: CardProps) {
 				<div style={flex({ justifyContent: "space-between", alignItems: "flex-end", paddingTop: 26, borderTop: `2px solid ${alpha("#ffffff", 0.12)}` })}>
 					<div style={col({ gap: 4 })}>
 						<div style={{ display: "flex", fontSize: 20, fontWeight: 700, letterSpacing: 3, color: alpha("#ffffff", 0.45) }}>PROGRAMMED BY</div>
-						<div data-edit="name" style={{ display: "flex", fontSize: 36, fontWeight: 900, color: t.accent2 }}>{name || "someone with taste"}</div>
+						<div style={{ display: "flex", fontSize: 36, fontWeight: 900, color: t.accent2 }}>{name || "someone with taste"}</div>
 					</div>
 					<div style={col({ alignItems: "flex-end", gap: 4 })}>
 						<div style={{ display: "flex", fontSize: 20, fontWeight: 700, letterSpacing: 3, color: alpha("#ffffff", 0.45) }}>{date.toUpperCase()}</div>

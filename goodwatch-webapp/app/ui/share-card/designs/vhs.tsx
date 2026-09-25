@@ -283,7 +283,6 @@ export function VhsCard({ title, items, name, theme, date, editing }: CardProps)
 
 			<div style={{ display: "flex", position: "absolute", left: 712, top: 1020, width: 310, height: 166, backgroundColor: alpha("#000000", 0.35), transform: "rotate(3deg) translate(8px, 10px)" }} />
 			<div
-				data-edit="name"
 				style={col({
 					position: "absolute",
 					left: 712,

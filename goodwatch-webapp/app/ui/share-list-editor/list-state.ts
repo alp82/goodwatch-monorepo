@@ -1,9 +1,9 @@
-// The share list being edited: title, titles in rank order, signature, design, color theme, and list prompt.
+// The share list being edited: title, titles in rank order, design, color theme, and list prompt. The card is signed
+// with the owner's handle, which isn't part of the draft.
 import { useRef, useState } from "react"
 import {
 	type CardTitle,
 	LIST_SIZE,
-	SIGNATURE_MAX_LENGTH,
 	type ThemeKey,
 	TITLE_MAX_LENGTH,
 } from "~/ui/share-card/model"
@@ -13,7 +13,6 @@ export interface ListDraft {
 	promptId: string | null
 	design: string
 	theme: ThemeKey
-	signature: string
 	items: CardTitle[]
 	// The list this one remixes, if any.
 	remixedFrom?: string | null
@@ -62,8 +61,6 @@ export function useListState(initial: ListDraft) {
 		set,
 		setTitle: (title: string) =>
 			set({ title: title.slice(0, TITLE_MAX_LENGTH) }),
-		setSignature: (signature: string) =>
-			set({ signature: signature.slice(0, SIGNATURE_MAX_LENGTH) }),
 		has: (key: string) => draft.items.some((i) => i.key === key),
 		remove: (key: string) =>
 			set({ items: draft.items.filter((i) => i.key !== key) }),

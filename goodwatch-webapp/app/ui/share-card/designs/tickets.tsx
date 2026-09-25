@@ -124,7 +124,7 @@ function TicketsCard({ title, items, name, theme, date, editing }: CardProps) {
 				<div style={flex({ justifyContent: "space-between", alignItems: "flex-end", paddingTop: 30, borderTop: `2px dashed ${alpha("#ffffff", 0.25)}` })}>
 					<div style={col({ gap: 6 })}>
 						<div style={{ display: "flex", fontFamily: "Space Mono", fontSize: 20, letterSpacing: 4, color: alpha("#ffffff", 0.5) }}>TICKETS ISSUED TO</div>
-						<div data-edit="name" style={{ display: "flex", fontSize: 38, fontWeight: 900, color: t.accent }}>
+						<div style={{ display: "flex", fontSize: 38, fontWeight: 900, color: t.accent }}>
 							{name || "someone with taste"}
 						</div>
 					</div>

@@ -5,14 +5,13 @@ import type { ReactNode } from "react"
 import { ScaledCard } from "~/ui/share-card/ScaledCard"
 import { designByKey } from "~/ui/share-card/designs"
 import { shareListPath } from "~/ui/share-card/links"
-import type { CardTitle, ThemeKey } from "~/ui/share-card/model"
+import { type CardTitle, type ThemeKey, listByline } from "~/ui/share-card/model"
 
 export interface ShareListSummary {
 	id: string
 	title: string
 	design: string
 	theme: ThemeKey
-	signature: string
 	items: CardTitle[]
 	date: string
 	// Only sent to the owner; everyone else only ever sees public lists.
@@ -44,7 +43,7 @@ export function ShareListTile({
 						card={{
 							title: list.title,
 							items: list.items,
-							name: list.signature,
+							name: listByline(handle),
 							theme: list.theme,
 							date: list.date,
 						}}

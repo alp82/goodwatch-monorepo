@@ -1,10 +1,10 @@
-// The live card on the front of the editor. Clicking a poster opens its rank dialog, clicking the title or signature
-// opens a text dialog, dragging a poster onto another swaps them, and titles can be dropped onto posters.
+// The live card on the front of the editor. Clicking a poster opens its rank dialog, clicking the title opens the
+// title dialog, dragging a poster onto another swaps them, and titles can be dropped onto posters.
 import type { MouseEvent, PointerEvent } from "react"
 import { ScaledCard } from "~/ui/share-card/ScaledCard"
 import type { Editor } from "~/ui/share-list-editor/useEditor"
 
-/** Hover and drop-target highlights for the card's ranks, title, and signature. */
+/** Hover and drop-target highlights for the card's ranks and title. */
 export function CardPreviewStyles({ ed }: { ed: Editor }) {
 	const over =
 		ed.dnd.drag?.over?.kind === "slot" ? ed.dnd.drag.over.index : null
@@ -28,7 +28,6 @@ export function CardPreview({ ed }: { ed: Editor }) {
 			})
 		const edit = el.closest<HTMLElement>("[data-edit]")?.dataset.edit
 		if (edit === "title") ed.setDialog({ kind: "title" })
-		if (edit === "name") ed.setDialog({ kind: "signature" })
 	}
 	const onPointerDown = (e: PointerEvent) => {
 		const index = Number(

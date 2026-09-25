@@ -1,9 +1,8 @@
-// Dialogs the card opens: one rank (swap, move up, remove, or pick a title), and the title or signature.
+// Dialogs the card opens: one rank (swap, move up, remove, or pick a title), and the title.
 import { useEffect, useState } from "react"
 import {
 	Thumb,
 	PromptLinks,
-	SignatureInput,
 	TitleInput,
 	sectionLabel,
 } from "~/ui/share-list-editor/parts"
@@ -140,7 +139,7 @@ function TextDialog({
 	ed,
 	kind,
 	onClose,
-}: { ed: Editor; kind: "title" | "signature"; onClose: () => void }) {
+}: { ed: Editor; kind: "title"; onClose: () => void }) {
 	useEscape(onClose)
 	return (
 		<div
@@ -150,7 +149,7 @@ function TextDialog({
 			<form
 				role="dialog"
 				aria-modal="true"
-				aria-label={kind === "title" ? "List title" : "Signature"}
+				aria-label="List title"
 				onSubmit={(e) => {
 					e.preventDefault()
 					onClose()
@@ -158,21 +157,13 @@ function TextDialog({
 				className="flex w-full max-w-xl flex-col gap-4 rounded-t-[28px] bg-neutral-900 p-5 pb-10 text-white shadow-2xl ring-1 ring-white/10 sm:rounded-[28px] sm:pb-5"
 				onClick={(e) => e.stopPropagation()}
 			>
-				<div className={sectionLabel}>
-					{kind === "title" ? "List title" : "Signed by"}
-				</div>
-				{kind === "title" ? (
-					<>
-						<TitleInput
-							ed={ed}
-							autoFocus
-							className="rounded-2xl bg-white/10 px-4 py-3 text-2xl"
-						/>
-						<PromptLinks ed={ed} />
-					</>
-				) : (
-					<SignatureInput ed={ed} autoFocus />
-				)}
+				<div className={sectionLabel}>List title</div>
+				<TitleInput
+					ed={ed}
+					autoFocus
+					className="rounded-2xl bg-white/10 px-4 py-3 text-2xl"
+				/>
+				<PromptLinks ed={ed} />
 				<button
 					type="submit"
 					className="rounded-full bg-white py-2.5 font-black text-black"

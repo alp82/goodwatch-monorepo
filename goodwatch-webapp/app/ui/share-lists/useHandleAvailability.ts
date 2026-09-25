@@ -1,5 +1,5 @@
 // Whether a typed handle can be claimed: valid by the rules, and free on the server. The server check waits until
-// the person pauses typing, and skips the handle they already have.
+// the person pauses typing.
 import { useEffect, useState } from "react"
 import { useHandleCheck } from "~/routes/api.handle"
 import { handleProblem, normalizeHandle } from "~/utils/handles"
@@ -15,31 +15,24 @@ function useDebounced<T>(value: T, delay: number) {
 	return debounced
 }
 
-export function useHandleAvailability(
-	input: string,
-	current: string | null = null,
-) {
+export function useHandleAvailability(input: string) {
 	const handle = normalizeHandle(input)
 	const problem = handle ? handleProblem(handle) : null
-	const isCurrent = !!current && handle === current
 	const debounced = useDebounced(handle, CHECK_DELAY_MS)
 	const check = useHandleCheck(
-		!problem && handle && !isCurrent && debounced === handle ? handle : null,
+		!problem && handle && debounced === handle ? handle : null,
 	)
 	const checking =
 		!problem &&
 		!!handle &&
-		!isCurrent &&
 		(debounced !== handle || check.isFetching)
 	const available =
-		isCurrent ||
-		(check.data?.handle === handle && check.data.available && !checking)
+		check.data?.handle === handle && check.data.available && !checking
 	const unavailable =
 		!checking && check.data?.handle === handle && !check.data.available
 	return {
 		handle,
 		problem,
-		isCurrent,
 		checking,
 		available,
 		unavailable,

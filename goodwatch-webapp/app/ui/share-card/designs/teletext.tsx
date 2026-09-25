@@ -80,7 +80,7 @@ function TeletextCard({ title, items, name, theme, date, editing }: CardProps) {
 			{/* Sub header */}
 			<div style={flex({ marginTop: 22, height: 50, alignItems: "center", justifyContent: "space-between", fontSize: 40, letterSpacing: 1 })}>
 				<div style={{ display: "flex", color: t.accent2 }}>{`TOP ${count} · INDEX`}</div>
-				<div data-edit="name" style={{ display: "flex", color: "#ffffff" }}>{`COMPILED BY ${(name || "A VIEWER").toUpperCase()}`}</div>
+				<div style={{ display: "flex", color: "#ffffff" }}>{`COMPILED BY ${(name || "A VIEWER").toUpperCase()}`}</div>
 			</div>
 			<div style={{ display: "flex", height: 6, backgroundColor: t.accent2, marginBottom: 10 }} />
 

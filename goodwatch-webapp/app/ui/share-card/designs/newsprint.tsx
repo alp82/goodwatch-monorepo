@@ -100,7 +100,7 @@ function NewsprintCard({ title, items, name, theme, date, editing }: CardProps) 
 			</div>
 			<div style={flex({ marginTop: 12, gap: 8, alignItems: "baseline", fontSize: 25, fontStyle: "italic" })}>
 				<div style={{ display: "flex" }}>Ranked, argued over, and final. By</div>
-				<div data-edit="name" style={{ display: "flex", fontFamily: "Space Mono", fontStyle: "normal", fontWeight: 700, fontSize: 19, letterSpacing: 1, textTransform: "uppercase", color: ink }}>
+				<div style={{ display: "flex", fontFamily: "Space Mono", fontStyle: "normal", fontWeight: 700, fontSize: 19, letterSpacing: 1, textTransform: "uppercase", color: ink }}>
 					{name || "our critic"}
 				</div>
 			</div>

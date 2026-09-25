@@ -159,7 +159,7 @@ export function CoverCard({ title, items, name, theme, date, editing }: CardProp
 					))}
 				</div>
 				<div style={flex({ justifyContent: "space-between", alignItems: "center", fontSize: 21, color: alpha(ink, 0.65) })}>
-					<div data-edit="name" style={{ display: "flex" }}>{`Curated by ${name || "someone with taste"}`}</div>
+					<div style={{ display: "flex" }}>{`Curated by ${name || "someone with taste"}`}</div>
 					<div style={{ display: "flex", fontWeight: 800, color: ink, letterSpacing: 1 }}>goodwatch.app</div>
 				</div>
 			</div>

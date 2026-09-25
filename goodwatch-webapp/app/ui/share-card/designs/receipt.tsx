@@ -64,7 +64,7 @@ export function ReceiptCard({ title, items, name, theme, date, editing }: CardPr
 					<Rule />
 					<Line l="DATE" r={date.toUpperCase()} />
 					<Line l="ORDER" r={`#${String(seed % 1000000).padStart(6, "0")}`} />
-					<div data-edit="name" style={col({})}>
+					<div style={col({})}>
 						<Line l="CURATOR" r={(name || "ANONYMOUS").toUpperCase()} />
 					</div>
 					<Rule />

@@ -262,7 +262,7 @@ export function TradingCard({ title, items, name, theme, date, editing }: CardPr
 			)}
 
 			<div style={flex({ position: "absolute", left: 70, right: 70, bottom: 64, justifyContent: "space-between", alignItems: "center", paddingTop: 24, borderTop: `2px solid ${alpha("#ffffff", 0.15)}` })}>
-				<div data-edit="name" style={col({ gap: 2 })}>
+				<div style={col({ gap: 2 })}>
 					<div style={{ display: "flex", fontFamily: "Space Mono", fontWeight: 700, fontSize: 18, letterSpacing: 3, color: alpha("#ffffff", 0.5) }}>PULLED BY</div>
 					<div style={{ display: "flex", fontSize: 34, fontWeight: 900, color: t.accent2 }}>{name || "someone with taste"}</div>
 				</div>

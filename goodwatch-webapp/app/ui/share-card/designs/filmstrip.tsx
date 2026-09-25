@@ -61,7 +61,7 @@ function FilmstripCard({ title, items, name, theme, date, editing }: CardProps) 
 
 			<div style={col({ position: "absolute", left: 44, bottom: 56, width: 250, gap: 6 })}>
 				<div style={{ display: "flex", fontFamily: "Space Mono", fontSize: 18, letterSpacing: 3, color: alpha(t.ink, 0.55) }}>DEVELOPED BY</div>
-				<div data-edit="name" style={{ display: "flex", fontSize: fit(name || "someone with taste", [[14, 32], [20, 24], [999, 19]]), fontWeight: 900, lineHeight: 1.05, maxWidth: 270, overflow: "hidden" }}>
+				<div style={{ display: "flex", fontSize: fit(name || "someone with taste", [[14, 32], [20, 24], [999, 19]]), fontWeight: 900, lineHeight: 1.05, maxWidth: 270, overflow: "hidden" }}>
 					{name || "someone with taste"}
 				</div>
 				<div style={{ display: "flex", fontFamily: "Space Mono", fontSize: 18, marginTop: 10, color: alpha(t.ink, 0.55) }}>{date.toUpperCase()}</div>
