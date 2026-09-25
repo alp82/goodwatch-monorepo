@@ -163,7 +163,7 @@ class FakeBlobs:
     def exists(self, digest):
         return digest in self.data
 
-    def put(self, data, digest):
+    def put(self, digest, data):
         assert hashlib.sha1(data).hexdigest() == digest
         self.puts += 1
         created = digest not in self.data
@@ -180,7 +180,6 @@ class FakeCrate:
     def __init__(self):
         self.rows = {}
         self.blobs = FakeBlobs()
-        self.con = types.SimpleNamespace(get_blob_container=lambda name: self.blobs)
         self.cur = types.SimpleNamespace(rowcount=0)
 
     def run(self, sql, params=()):
@@ -227,12 +226,12 @@ def publish_build(crate, files: dict[str, bytes], now: datetime, running_before_
     manifest = {"build_id": build_id, "created_at": now.isoformat(),
                 "previous_build_id": seen[0]["build_id"] if seen[0] else None, "files": entries}
     flow.write_build_row(crate, build_id, "building", manifest)
-    flow.store_files(crate, files, entries, stats)
+    flow.store_files(crate.blobs, files, entries, stats)
     flow.write_build_row(crate, build_id, "complete", manifest)
     if running_before_publish:
         running_before_publish()
     flow.publish(crate, manifest, seen)
-    flow.cleanup(crate, None, now, stats)
+    flow.cleanup(crate, crate.blobs, None, now, stats)
     return stats
 
 
@@ -268,13 +267,59 @@ class StorageTests(unittest.TestCase):
         running = {"build_id": "running", "created_at": (t0 + timedelta(hours=1)).isoformat(),
                    "files": flow.file_entries({"a": b"9"})}
         flow.write_build_row(crate, "running", "building", running)
-        crate.blobs.put(b"9", hashlib.sha1(b"9").hexdigest())
+        crate.blobs.put(hashlib.sha1(b"9").hexdigest(), b"9")
         publish_build(crate, {"a": b"2"}, t0 + timedelta(hours=2))
         publish_build(crate, {"a": b"3"}, t0 + timedelta(hours=3))
         self.assertIn(hashlib.sha1(b"9").hexdigest(), crate.blobs.data)
         publish_build(crate, {"a": b"4"}, t0 + timedelta(hours=8))   # the running build is now stale
         self.assertNotIn(hashlib.sha1(b"9").hexdigest(), crate.blobs.data)
         self.assertNotIn("running", crate.rows)
+
+
+class BlobStoreTests(unittest.TestCase):
+    """The blob client against a fake cluster: node a holds no shard of the blob, node b does."""
+
+    def store(self, stored: set):
+        blobs = flow.BlobStore(["http://a:4200", "b:4200"], "user", "secret")
+        calls = []
+
+        def request(method, url, body=None):
+            calls.append((method, url, None if body is None else len(body)))
+            if url.startswith("http://a:4200"):
+                return 307, url.replace("http://a:4200", "http://b:4200")
+            digest = url.rsplit("/", 1)[1]
+            if method == "HEAD":
+                return (200 if digest in stored else 404), None
+            if method == "PUT":
+                created = digest not in stored
+                stored.add(digest)
+                return (201 if created else 409), None
+            if method == "DELETE":
+                found = digest in stored
+                stored.discard(digest)
+                return (204 if found else 404), None
+            raise AssertionError(method)
+        blobs._request = request
+        return blobs, calls
+
+    def test_a_write_goes_to_the_node_the_head_request_names(self) -> None:
+        blobs, calls = self.store(set())
+        self.assertTrue(blobs.put("d1", b"xyz"))
+        self.assertEqual(calls, [("HEAD", "http://a:4200/_blobs/search_index_files/d1", None),
+                                 ("HEAD", "http://b:4200/_blobs/search_index_files/d1", None),
+                                 ("PUT", "http://b:4200/_blobs/search_index_files/d1", 3)])
+
+    def test_a_stored_blob_isnt_sent_again(self) -> None:
+        blobs, calls = self.store({"d1"})
+        self.assertFalse(blobs.put("d1", b"xyz"))
+        self.assertNotIn("PUT", [c[0] for c in calls])
+        self.assertTrue(blobs.exists("d1"))
+        self.assertTrue(blobs.delete("d1"))
+        self.assertFalse(blobs.exists("d1"))
+
+    def test_the_host_list_takes_bare_hosts(self) -> None:
+        self.assertEqual(flow.BlobStore(["10.0.0.11:4200", " http://x:1 "], "u", "p").hosts,
+                         ["http://10.0.0.11:4200", "http://x:1"])
 
 
 if __name__ == "__main__":

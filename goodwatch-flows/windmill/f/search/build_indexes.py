@@ -26,14 +26,18 @@ downloads each file from `/_blobs/search_index_files/<sha1>`. Formats:
 docs/implementation/search-ranking/README.md ("Index files").
 """
 
+import base64
 import gzip
 import hashlib
+import http.client
 import json
 import time
 from contextlib import ExitStack
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlsplit
 
 import numpy as np
+import wmill
 from qdrant_client import QdrantClient, models as qm
 
 from f.db.cratedb import CrateConnector
@@ -248,21 +252,87 @@ def write_build_row(crate, build_id: str, status: str, manifest: dict) -> None:
     )
 
 
-def store_files(crate, files: dict[str, bytes], entries: dict[str, dict], stats: dict) -> None:
+class BlobStore:
+    """Crate's blob HTTP API (`/_blobs/<table>/<sha1>`).
+
+    A node that doesn't hold a blob's shard answers `307` with a node that does, and for a
+    write it answers before reading the body, which breaks a large upload sent to it. So a
+    write first asks with `HEAD` which node to send the body to."""
+
+    MAX_REDIRECTS = 5
+
+    def __init__(self, hosts: list[str], username: str, password: str, table: str = FILES_TABLE,
+                 timeout: float = 300) -> None:
+        self.hosts = [h if "//" in h else f"http://{h}" for h in (x.strip() for x in hosts) if h]
+        self.auth = "Basic " + base64.b64encode(f"{username}:{password}".encode()).decode()
+        self.table = table
+        self.timeout = timeout
+
+    @classmethod
+    def from_windmill(cls) -> "BlobStore":
+        return cls(wmill.get_variable("u/Alp/CRATE_HOSTS").split(","), wmill.get_variable("u/Alp/CRATE_USER"),
+                   wmill.get_variable("u/Alp/CRATE_PASS"))
+
+    def _request(self, method: str, url: str, body: bytes | None = None) -> tuple[int, str | None]:
+        parts = urlsplit(url)
+        conn = http.client.HTTPConnection(parts.hostname, parts.port or 4200, timeout=self.timeout)
+        try:
+            conn.request(method, parts.path, body=body, headers={"Authorization": self.auth})
+            response = conn.getresponse()
+            response.read()
+            return response.status, response.getheader("Location")
+        finally:
+            conn.close()
+
+    def _follow(self, method: str, digest: str) -> tuple[int, str]:
+        """(status, url) of a body-less request after following redirects."""
+        url = f"{self.hosts[0]}/_blobs/{self.table}/{digest}"
+        for _ in range(self.MAX_REDIRECTS):
+            status, location = self._request(method, url)
+            if status != 307:
+                return status, url
+            url = location
+        raise RuntimeError(f"Too many redirects for blob {digest}")
+
+    def exists(self, digest: str) -> bool:
+        status, _ = self._follow("HEAD", digest)
+        if status not in (200, 404):
+            raise RuntimeError(f"HEAD blob {digest}: HTTP {status}")
+        return status == 200
+
+    def put(self, digest: str, data: bytes) -> bool:
+        """True when written, False when the blob was already stored."""
+        status, url = self._follow("HEAD", digest)
+        if status == 200:
+            return False
+        if status != 404:
+            raise RuntimeError(f"HEAD blob {digest}: HTTP {status}")
+        status, _ = self._request("PUT", url, data)
+        if status not in (201, 409):
+            raise RuntimeError(f"PUT blob {digest}: HTTP {status}")
+        return status == 201
+
+    def delete(self, digest: str) -> bool:
+        status, _ = self._follow("DELETE", digest)
+        if status not in (204, 404):
+            raise RuntimeError(f"DELETE blob {digest}: HTTP {status}")
+        return status == 204
+
+
+def store_files(blobs, files: dict[str, bytes], entries: dict[str, dict], stats: dict) -> None:
     """Write each file to the blob table unless its digest is already stored."""
-    container = crate.con.get_blob_container(FILES_TABLE)
     stats["files_written"] = stats["files_unchanged"] = stats["bytes_written"] = 0
+    started = time.monotonic()
     for name, data in files.items():
         digest = entries[name]["sha1"]
-        if container.exists(digest):
+        if not blobs.put(digest, data):
             stats["files_unchanged"] += 1
             continue
-        # bytes, not a stream: a write redirected to the node that holds the shard sends them again
-        container.put(data, digest=digest)
-        if not container.exists(digest):
+        if not blobs.exists(digest):
             raise RuntimeError(f"Blob {digest} ({name}) is missing after the write")
         stats["files_written"] += 1
         stats["bytes_written"] += len(data)
+    stats["store_seconds"] = round(time.monotonic() - started, 1)
 
 
 def read_current(crate) -> tuple[dict | None, int | None, int | None]:
@@ -294,7 +364,7 @@ def publish(crate, manifest: dict, seen: tuple) -> None:
     crate.run(f"REFRESH TABLE {BUILDS_TABLE}")
 
 
-def cleanup(crate, client: QdrantClient | None, now: datetime, stats: dict) -> None:
+def cleanup(crate, blobs, client: QdrantClient | None, now: datetime, stats: dict) -> None:
     """Keep the current and the previous build, and builds that are still running; delete the
     rest: build rows, blobs and profile points."""
     crate.run(f"REFRESH TABLE {BUILDS_TABLE}")
@@ -317,11 +387,10 @@ def cleanup(crate, client: QdrantClient | None, now: datetime, stats: dict) -> N
         else:
             delete_rows.append(row["build_id"])
     keep_digests |= {f["sha1"] for f in current["files"].values()}
-    container = crate.con.get_blob_container(FILES_TABLE)
     deleted = 0
     for row in crate.select(f"SELECT digest FROM blob.{FILES_TABLE}"):
         if row["digest"] not in keep_digests:
-            container.delete(row["digest"])
+            blobs.delete(row["digest"])
             deleted += 1
     for build_id in delete_rows:
         crate.run(f"DELETE FROM {BUILDS_TABLE} WHERE build_id = ?", (build_id,))
@@ -359,7 +428,7 @@ def write_profiles(client: QdrantClient, profiles: list[dict], build_id: str, st
 # ---- Main ------------------------------------------------------------------------------------------
 
 
-def run(crate, client: QdrantClient, *, dry_run: bool, now: datetime | None = None) -> dict:
+def run(crate, blobs, client: QdrantClient, *, dry_run: bool, now: datetime | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
     build_id = new_build_id(now)
     stats: dict = {"build_id": build_id}
@@ -385,12 +454,17 @@ def run(crate, client: QdrantClient, *, dry_run: bool, now: datetime | None = No
         "stats": build.stats,
     }
     write_build_row(crate, build_id, "building", manifest)
-    store_files(crate, files, entries, stats)
-    write_profiles(client, build.profiles, build_id, stats)
-    write_build_row(crate, build_id, "complete", manifest)
-    publish(crate, manifest, seen)
+    try:
+        store_files(blobs, files, entries, stats)
+        write_profiles(client, build.profiles, build_id, stats)
+        write_build_row(crate, build_id, "complete", manifest)
+        publish(crate, manifest, seen)
+    except Exception:
+        # The next cleanup deletes a failed build's row, and the files and profiles only it has.
+        write_build_row(crate, build_id, "failed", manifest)
+        raise
     stats["published"] = True
-    cleanup(crate, client, now, stats)
+    cleanup(crate, blobs, client, now, stats)
     return stats
 
 
@@ -405,6 +479,6 @@ def main(dry_run: bool = False):
         stack.callback(crate.disconnect)
         qdrant = QdrantConnector(timeout=REQUEST_TIMEOUT_SECONDS)
         stack.callback(qdrant.close)
-        stats = run(crate, qdrant.client, dry_run=dry_run)
+        stats = run(crate, BlobStore.from_windmill(), qdrant.client, dry_run=dry_run)
     stats["seconds"] = round(time.monotonic() - started, 1)
     return stats
