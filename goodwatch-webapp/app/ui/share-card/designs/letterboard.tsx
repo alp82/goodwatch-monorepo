@@ -114,8 +114,9 @@ function LetterboardCard({ title, items, name, theme, editing }: CardProps) {
 							})}
 						</div>
 
-						<div style={flex({ justifyContent: "flex-end", fontWeight: 700, fontSize: 24, letterSpacing: 5, color: LETTER, ...plastic })}>
-							<div style={{ display: "flex" }}>{`— ${clip((name || "SOMEONE WITH TASTE").toUpperCase(), 22)}`}</div>
+						{/* The byline is the owner's @handle, shown in full: a cut-off handle could read as someone else's. */}
+						<div style={flex({ justifyContent: "flex-end", fontWeight: 700, fontSize: (name || "").length > 22 ? 20 : 24, letterSpacing: (name || "").length > 22 ? 4 : 5, color: LETTER, ...plastic })}>
+							<div style={{ display: "flex", whiteSpace: "nowrap" }}>{`— ${(name || "SOMEONE WITH TASTE").toUpperCase()}`}</div>
 						</div>
 					</div>
 				</div>

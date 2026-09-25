@@ -1,7 +1,7 @@
 // Renders every card design through satori and resvg and reports failures, including renderer aborts.
 //
 //   npm run check:share-cards              every design: 5 titles in all 7 themes, plus 1 and 2 titles, a long
-//                                          title and signature, a title without artwork, and editing placeholders
+//                                          title and a 30-character handle, a title without artwork, and editing placeholders
 //   npm run check:share-cards -- podium    only the named designs
 //   SHARE_CARD_OUT=/tmp/cards npm run check:share-cards    also writes each PNG there
 //
@@ -33,14 +33,14 @@ const TITLES: CardTitle[] = [
 ]
 const noArt = TITLES.map((t, i) => (i === 4 ? { ...t, poster: null, backdrop: null } : t))
 
-type Case = { name: string; theme: ThemeKey; title: string; signature: string; items: CardTitle[]; editing?: boolean }
+type Case = { name: string; theme: ThemeKey; title: string; byline: string; items: CardTitle[]; editing?: boolean }
 const CASES: Case[] = [
-	...(Object.keys(THEMES) as ThemeKey[]).map((theme) => ({ name: `five-${theme}`, theme, title: "The best sci-fi of all time", signature: "@goodwatch", items: TITLES })),
-	{ name: "one", theme: "ice", title: "x", signature: "", items: TITLES.slice(0, 1) },
-	{ name: "two", theme: "neon", title: "Comfort rewatches", signature: "@a", items: TITLES.slice(0, 2) },
-	{ name: "long", theme: "acid", title: "Movies I will defend with my life at every single dinner party, no matter what", signature: "someone.with.a.long.handl", items: TITLES },
-	{ name: "no-artwork", theme: "rose", title: "My top 5 movies of all time", signature: "@goodwatch", items: noArt },
-	{ name: "editing", theme: "royal", title: "My top 5 movies of all time", signature: "@goodwatch", items: TITLES.slice(0, 2), editing: true },
+	...(Object.keys(THEMES) as ThemeKey[]).map((theme) => ({ name: `five-${theme}`, theme, title: "The best sci-fi of all time", byline: "@cinephile", items: TITLES })),
+	{ name: "one", theme: "ice", title: "x", byline: "@you", items: TITLES.slice(0, 1) },
+	{ name: "two", theme: "neon", title: "Comfort rewatches", byline: "@abc", items: TITLES.slice(0, 2) },
+	{ name: "long", theme: "acid", title: "Movies I will defend with my life at every single dinner party, no matter what", byline: "@a_very_long_handle_for_testing", items: TITLES },
+	{ name: "no-artwork", theme: "rose", title: "My top 5 movies of all time", byline: "@cinephile", items: noArt },
+	{ name: "editing", theme: "royal", title: "My top 5 movies of all time", byline: "@cinephile", items: TITLES.slice(0, 2), editing: true },
 ]
 
 const only = process.argv.slice(2)
@@ -56,7 +56,7 @@ await Promise.all(
 			const label = `${design.key}/${c.name}`
 			const t0 = Date.now()
 			try {
-				const png = await renderShareCard(design, { title: c.title, name: c.signature, theme: c.theme, items: c.items, date: "Sep 25, 2026" }, c.editing)
+				const png = await renderShareCard(design, { title: c.title, name: c.byline, theme: c.theme, items: c.items, date: "Sep 25, 2026" }, c.editing)
 				if (out) writeFileSync(join(out, `${design.key}-${c.name}.png`), png)
 				console.log(`ok    ${label} ${Date.now() - t0} ms`)
 			} catch (error) {
