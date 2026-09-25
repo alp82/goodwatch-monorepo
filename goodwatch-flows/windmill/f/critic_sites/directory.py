@@ -71,10 +71,13 @@ def match_directory(db, site: str, urls: set, now: datetime, top: int = TOP_SHOW
     proposals = {}
     top_docs = collection.find({"tmdb_deleted": {"$ne": True}},
                                {"tmdb_id": 1, "title_variations": 1, "release_year": 1, conf.url_field: 1,
-                                "wikidata_url": 1}).sort("popularity", -1).limit(top)
+                                "wikidata_url": 1, "not_found_until": 1, "rejected_until": 1}
+                               ).sort("popularity", -1).limit(top)
     for doc in top_docs:
         if doc.get(conf.url_field) or doc.get("wikidata_url"):
             continue
+        if any(doc.get(name) and doc[name] > now for name in ("not_found_until", "rejected_until")):
+            continue  # the crawl found the page missing or another title's: wait for the date
         report["considered"] += 1
         match = next((directory[url_key(base + slug)] for slug in slug_candidates(site, doc.get("title_variations"),
                                                                                     doc.get("release_year"))

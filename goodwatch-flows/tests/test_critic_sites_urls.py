@@ -65,6 +65,16 @@ class DirectoryTests(unittest.TestCase):
         self.assertEqual(report["matched"], 2)
         self.assertEqual(report["claimed_by_other_title"], 3)
 
+    def test_titles_in_the_negative_cache_are_not_matched_again(self):
+        self.add(1, ["home"], 2020, rejected_url=f"{RT}/tv/home", rejected_until=NOW + timedelta(days=30))
+        self.add(2, ["dark"], 2017, not_found_url=f"{RT}/tv/dark", not_found_until=NOW + timedelta(days=30))
+        self.add(3, ["lost"], 2004, rejected_url=f"{RT}/tv/lost", rejected_until=NOW - timedelta(days=1))
+        report = directory.match_directory(self.db, "rotten_tomatoes",
+                                           {f"{RT}/tv/home", f"{RT}/tv/dark", f"{RT}/tv/lost"}, NOW, top=10)
+        self.assertEqual(report["matched"], 1)
+        self.assertEqual(self.tv.find_one({"tmdb_id": 3})["rotten_tomatoes_url"], f"{RT}/tv/lost")
+        self.assertIsNone(self.tv.find_one({"tmdb_id": 1}).get("rotten_tomatoes_url"))
+
     def test_only_the_most_popular_titles_are_matched(self):
         self.add(1, ["the_bear"], 2022, popularity=1.0)
         self.add(2, ["dark"], 2017, popularity=9.0)
