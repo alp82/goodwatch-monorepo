@@ -7,13 +7,15 @@ import DetailsFingerprint from "~/ui/details/DetailsFingerprint"
 import DetailsHero from "~/ui/details/hero/DetailsHero"
 import { useScrollSections } from "~/utils/scroll"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import type { EpisodeGrid } from "~/server/episode-grid.server"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
 	country: string
+	episodeGrid?: EpisodeGrid | null
 }
 
-export default function Details({ media, country }: DetailsProps) {
+export default function Details({ media, country, episodeGrid }: DetailsProps) {
 	const [headerHeight, setHeaderHeight] = useState(112)
 	const { details } = media
 	const { backdrop_path } = details
@@ -71,6 +73,7 @@ export default function Details({ media, country }: DetailsProps) {
 					<DetailsContent
 						media={media}
 						country={country}
+						episodeGrid={episodeGrid}
 						sectionProps={sectionProps}
 						navigateToSection={navigateToSection}
 					/>

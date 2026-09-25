@@ -12,10 +12,13 @@ import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
 import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import DetailsRelated from "~/ui/details/DetailsRelated"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import type { EpisodeGrid } from "~/server/episode-grid.server"
+import EpisodeGridSection from "~/ui/details/episode-grid/EpisodeGridSection"
 
 export interface DetailsContentProps {
 	media: MovieResult | ShowResult
 	country: string
+	episodeGrid?: EpisodeGrid | null
 	sectionProps: SectionProps<SectionIds>
 	navigateToSection: (section: Section) => void
 }
@@ -23,6 +26,7 @@ export interface DetailsContentProps {
 export default function DetailsContent({
 	media,
 	country,
+	episodeGrid,
 	sectionProps,
 	navigateToSection,
 }: DetailsContentProps) {
@@ -30,16 +34,11 @@ export default function DetailsContent({
 
 	return (
 		<div className="flex flex-col gap-12">
-			{/*<div>*/}
-				{/*{ratingsSeasons && ratingsSeasons.length > 1 && <div className="mt-2 ml-4">*/}
-				{/*  <a onClick={handleToggleShowSeasonRatings} className="text-lg underline bold cursor-pointer hover:text-indigo-100 hover:bg-indigo-900">*/}
-				{/*    {showSeasonRatings ? 'Hide' : 'Show'} Ratings per Season*/}
-				{/*  </a>*/}
-				{/*  {showSeasonRatings && ratingsSeasons.map((ratingsSeason, index) => (*/}
-				{/*    <Ratings key={index} {...ratingsSeason} title={`Season ${index+1}`} compact={true} />*/}
-				{/*  ))}*/}
-				{/*</div>}*/}
-			{/*</div>*/}
+			{episodeGrid && episodeGrid.seasons.length > 0 && (
+				<div>
+					<EpisodeGridSection grid={episodeGrid} title={details.title} />
+				</div>
+			)}
 			{/*<div>*/}
 			{/*	<Streaming*/}
 			{/*		details={details}*/}

@@ -9,6 +9,7 @@ import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { getDetailsForShow, getDetailsForMovie } from "~/server/details.server"
+import { type EpisodeGrid, getEpisodeGrid } from "~/server/episode-grid.server"
 import { resolveCountry } from "~/server/country.server"
 import { prefetchRelatedTitlesState } from "~/server/related.server"
 import { getUserSettings } from "~/server/user-settings.server"
@@ -29,6 +30,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 type LoaderData = {
 	media: ShowQueryResult
+	episodeGrid: EpisodeGrid | null
 	params: {
 		country: string
 	}
@@ -50,11 +52,16 @@ export const loader: LoaderFunction = async ({
 		countryDefault: userSettings?.country_default,
 	})
 	const language = url.searchParams.get("language") || "en"
-	const [media, dehydratedState] = await Promise.all([
+	const [media, episodeGrid, dehydratedState] = await Promise.all([
 		getDetailsForShow({
 			showId,
 			country,
 			language,
+		}),
+		// A failed grid read hides the grid; it never fails the page.
+		getEpisodeGrid({ showId }).catch((error) => {
+			console.error("episode grid failed", { showId, error })
+			return null
 		}),
 		prefetchRelatedTitlesState({
 			tmdbId: Number(showId),
@@ -64,6 +71,7 @@ export const loader: LoaderFunction = async ({
 
 	return {
 		media,
+		episodeGrid,
 		params: {
 			country,
 		},
@@ -73,7 +81,7 @@ export const loader: LoaderFunction = async ({
 }
 
 export default function DetailsTV() {
-	const { media, params, countryIsFallback } = useLoaderData<LoaderData>()
+	const { media, episodeGrid, params, countryIsFallback } = useLoaderData<LoaderData>()
 	const { country } = params
 
 	// console.log(media)
@@ -106,7 +114,7 @@ export default function DetailsTV() {
 		updateParams({ ...currentParams, country: stored }, true)
 	}, [media, country, countryIsFallback])
 
-	return <Details media={media} country={country} />
+	return <Details media={media} country={country} episodeGrid={episodeGrid} />
 }
 
 // Search refinements do not change the currently loaded title.
