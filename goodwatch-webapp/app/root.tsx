@@ -48,6 +48,7 @@ import cssTailwind from "~/tailwind.css?url"
 import cssToastify from "react-toastify/dist/ReactToastify.css?url"
 import App from "~/app"
 import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
+import { useOgImageWarmup } from "~/ui/og-image/useOgImageWarmup"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url"
 import { getAuthFromRequest, useUser } from "./utils/auth"
@@ -281,6 +282,7 @@ export function ErrorBoundary() {
 function Root() {
 	const { locale, env, user } = useLoaderData<LoaderData>()
 	const location = useLocation()
+	useOgImageWarmup()
 
 	// Add check for custom scroll handling
 	const [shouldUseScrollRestoration, setShouldUseScrollRestoration] =

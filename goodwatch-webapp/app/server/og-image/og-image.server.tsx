@@ -170,3 +170,18 @@ export async function getOgImage(pagePath: string): Promise<Buffer | null> {
 	}
 	return renderAndStore(key, path)
 }
+
+/**
+ * Renders a page's card in the background when it is missing or older than a day, so the
+ * next share of that page is fast and current. Best effort: skipped while renders are busy.
+ */
+export async function warmOgImage(pagePath: string): Promise<void> {
+	const path = canonicalOgPath(pagePath)
+	if (!path || pending.has(path) || activeRenders >= MAX_CONCURRENT_RENDERS)
+		return
+
+	const key = `${CACHE_PREFIX}${path}`
+	const cached = await readCache(key, path)
+	if (cached && Date.now() - cached.renderedAt <= FRESH_MS) return
+	await renderAndStore(key, path)
+}
