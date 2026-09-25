@@ -655,7 +655,8 @@ told apart:
 
 ### Rollout: stage timings and shadow mode
 
-Built in #146 (`5dee4328`). The switch-over waits for the owner.
+Built in #146 (`5dee4328`). Shadow mode runs on production since September 25, 2026. The owner switches to `on`
+after about a day of clean shadow data (see [switch-over check](#switch-over-check)).
 
 - **Stage timings:** every `search_history` row has `stage_ms` (`OBJECT(IGNORED)`, added with
   `goodwatch-webapp/migrations/20260925_search_stage_timings_and_shadow.sql`, applied on September 25, 2026):
@@ -674,7 +675,6 @@ Built in #146 (`5dee4328`). The switch-over waits for the owner.
     the build, the route, `lesser_known`, the pool size, `stage_ms` (the ranker's stages plus `display` and `waited`)
     and each Qdrant request (`rounds`). The trace (encoded texts, the reference, the top 50's signals, profile terms)
     is sealed with `SEARCH_STORAGE_KEY` in `ciphertext`, because it holds text from the query.
-  - The mode `on` isn't wired yet: it behaves like `shadow`.
 - **Trace cost:** the trace now reads only the profile's terms instead of mapping all 660k terms, and its time is
   reported as `trace`, outside `total`.
 
@@ -693,6 +693,118 @@ Measured on September 25, 2026 on the webapp host (10.0.0.21), in a separate con
 The spec's estimate was a median of 105 to 154 ms and a 95th percentile of 263 to 392 ms. Encoding takes the
 difference, as #143 found. Loading took 6 s for the index and 21 s for the models (14 s of it the download), and
 the process grew to 2.1 GB RSS.
+
+### Rollout: mode on
+
+Built in #146. `SEARCH_RANKING_MODE=on` serves the new ranking's list; the switch-over and the rollback are environment
+changes only (`on`, `shadow` or `off`, then redeploy).
+
+- **What serves:** `combinedSearch` (`app/server/combined-search/search.server.ts`) waits for the title lookup (it
+  runs alongside the reading and is usually done by then), keeps its eligible movie and show rows, and calls
+  `rankForServing()` (`app/server/search-ranking/serve.server.ts`), which is `rankSearch` with a deadline. The list is
+  the ranker's blended list (at most 50 titles), so exact titles still win through the strict and fuzzy title blend.
+- **Response:** unchanged fields. Each row gets its display fields and reason chips from one Qdrant read of the
+  titles' payloads (`describeTitles()` in `reading-retrieval.server.ts`, the same reasons as today's list), the title
+  lookup's poster and original name where it has the title, and the catalog metadata as before. The reading chips,
+  the filters, the adult exclusion, the eligibility check and the IMDb deduplication stay as they are. The session
+  snapshot keeps the whole list, so pagination shows 3 pages instead of up to 5. TMDB person rows (non-clickable
+  cards) aren't part of the new list.
+- **Fallbacks:** today's ranking serves, and `search_history.ranker_fallback` records why (added with
+  `goodwatch-webapp/migrations/20260925_search_history_ranker_fallback.sql`, applied on September 25, 2026):
+  - `lesser known`: the index holds only titles above the eligibility line;
+  - `basic search`: no reading;
+  - `index not loaded`, `encoder not ready`, `encoder queue full`: checked before the ranking starts;
+  - `timeout`: the ranking missed its deadline, 1,500 ms by default (`SEARCH_RANKING_DEADLINE_MS` overrides it). The
+    ranking can't be cancelled, so it finishes in the background and its result is dropped;
+  - `error`: the ranking or its display read failed (logged as "Search ranking failed; the current ranking serves").
+    `stage_ms.failedRanking` holds the time the failed attempt took.
+
+  `ranker_fallback` is NULL when the new ranking served, and for every search in modes `off` and `shadow`.
+- **History:** `ranker_version` is `hybrid-v1` when the new ranking served. `stage_ms` then has `language`, `reading`,
+  `titleLookup`, `ranking` (the ranker's total), `rankingQdrant` and `rankingQdrantServer` (all Qdrant requests, wall
+  and Qdrant's own time), the ranker's stages as `rankingEncode`, `rankingRound1`, `rankingRound2`, `rankingScore`,
+  `rankingBlend` and so on, `display` (the title rows' metadata, the payload read and the rows' metadata) and `total`.
+- **No shadow in mode on:** today's ranking isn't run next to the new one. It would add its Qdrant pool query (up to
+  2,000 points) and the Crate text searches to every search. `search_shadow` gets no rows in mode `on`.
+- **Checked locally on September 25, 2026** (a production build under `remix-serve`, production Qdrant and Crate,
+  build `20260925T144040Z`, readings from the arena captures, no Jev calls): a person ("christopher nolan"), "like
+  interstellar", a German query, "zombie movie without gore", "80s sci-fi action" and "Inception" served `hybrid-v1`;
+  a lesser-known search, basic searches, a search before the index loaded, a forced encoder startup failure and a
+  5 ms deadline fell back with the right reason. Pagination (20, 20 and 10 rows) and the detail pages' previous and
+  next links worked in a browser. These checks wrote 35 `search_history` rows between 15:07 and 15:18 UTC with
+  `ranker_version = 'hybrid-v1'` or a `ranker_fallback`; production was in shadow mode then, so they are the only such
+  rows before the switch.
+
+### Switch-over check
+
+Run these in Crate before switching to `on` (the owner's criteria: about a day of shadow data, no new errors, memory
+and CPU stable, ranker latency in line with the measurements above).
+
+Shadow outcomes, with the errors and skips:
+
+```sql
+SELECT outcome, reason, count(*) AS searches, min(created_at) AS first_row, max(created_at) AS last_row
+FROM doc.search_shadow
+WHERE created_at > now() - INTERVAL '24 hours'
+GROUP BY outcome, reason
+ORDER BY searches DESC;
+```
+
+The new list against the served list, and the stage latencies of both (milliseconds):
+
+```sql
+SELECT
+  count(*) AS ranked,
+  avg(overlap10) AS top10_overlap_mean,
+  percentile(overlap10, 0.5) AS top10_overlap_median,
+  sum(CASE WHEN overlap10 = 0 THEN 1 ELSE 0 END) AS top10_disjoint,
+  sum(CASE WHEN same_first THEN 1 ELSE 0 END) AS same_first_title,
+  percentile(new_total, [0.5, 0.95]) AS new_ranking_ms_p50_p95,
+  percentile(new_encode, [0.5, 0.95]) AS new_encode_ms_p50_p95,
+  percentile(new_round1, [0.5, 0.95]) AS new_round1_ms_p50_p95,
+  percentile(new_round2, [0.5, 0.95]) AS new_round2_ms_p50_p95,
+  percentile(new_display, [0.5, 0.95]) AS new_display_ms_p50_p95,
+  percentile(served_ranking, [0.5, 0.95]) AS served_ranking_ms_p50_p95,
+  percentile(served_total, [0.5, 0.95]) AS served_total_ms_p50_p95
+FROM (
+  SELECT
+    array_length(array_slice(s.served_keys, 1, 10), 1)
+      + array_length(array_slice(s.ranked_keys, 1, 10), 1)
+      - array_length(array_unique(array_slice(s.served_keys, 1, 10), array_slice(s.ranked_keys, 1, 10)), 1)
+      AS overlap10,
+    s.served_keys[1] = s.ranked_keys[1] AS same_first,
+    s.stage_ms['total']::DOUBLE AS new_total,
+    s.stage_ms['encode']::DOUBLE AS new_encode,
+    s.stage_ms['round1']::DOUBLE AS new_round1,
+    s.stage_ms['round2']::DOUBLE AS new_round2,
+    s.stage_ms['display']::DOUBLE AS new_display,
+    h.stage_ms['ranking']::DOUBLE AS served_ranking,
+    h.stage_ms['total']::DOUBLE AS served_total
+  FROM doc.search_shadow s
+  LEFT JOIN doc.search_history h ON h.id = s.history_id
+  WHERE s.outcome = 'ranked' AND s.created_at > now() - INTERVAL '24 hours'
+) t;
+```
+
+- `served_keys` are the first 50 keys of the served list, TMDB person rows included, so an exact-name person search
+  counts its person rows as misses.
+- `new_ranking_ms` is the ranker's `total` (index, parse, encoding, Qdrant rounds, scoring and blend), without the
+  trace and the display read. `served_ranking_ms` is today's ranking stage. Both run on the same host, but shadow
+  ranking runs after the response, next to other traffic.
+- Memory and CPU aren't in Crate: check the container (`docker stats` on 10.0.0.21) and the logs for
+  `Search shadow ranking failed` and `Query encoder failed`.
+
+After the switch, the served searches by ranker and fallback reason:
+
+```sql
+SELECT ranker_version, ranker_fallback, count(*) AS searches,
+  percentile(stage_ms['ranking']::DOUBLE, [0.5, 0.95]) AS ranking_ms_p50_p95,
+  percentile(elapsed_ms, [0.5, 0.95]) AS total_ms_p50_p95
+FROM doc.search_history
+WHERE created_at > now() - INTERVAL '24 hours'
+GROUP BY ranker_version, ranker_fallback
+ORDER BY searches DESC;
+```
 
 ## Follow-ups: language routing, Jev retries and Qdrant clients
 
