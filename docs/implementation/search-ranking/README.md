@@ -445,7 +445,7 @@ downloading, checking and parsing all ten files of the first build took 3.5 seco
 | `collocations` | `bigrams`: sorted terms `a_b` | two adjacent unit words form one facet unit when `stem(a) + "_" + stem(b)` is in the list (df of the bigram >= 0.3 x the rarer word's df over the titles, body fields, and creator and cast names the prototype indexed) |
 | `name_index` | `keys` (sorted folded keys that resolve), `entity` (index into `entities` per key), `entities`: `{id` (profile point id), `kind` (`person`, `team`, `studio`), `name`, `members` (`p:<person id>`, `c:<company id>`, `n:<network id>`), `mass` (votes of the main-credit titles), `titles` (`[point id, weight]`: 1 for a main credit, 0.5 for a minor one, the max over members), `codirected` (point ids a person member co-directed), `mention` (folded names searched in other titles' texts)`}` | a key is listed only when it resolves (its entity's mass >= 3 x the next entity's and >= 150,000 x (1 + the key's word df)), so detection is a lookup. Keys with a space are the typo targets (one Levenshtein edit). A team counts as a person with several ids. Title weights of several entities: the mean over entities. Own titles: weight 1, plus `codirected` for the bounds. Mentions: `mention` joined with spaces, scored as BM25F |
 | `peers` | `members`, `fingerprints` (float32 `[n, 74]` centroids), `titles` (top 8 point ids by votes) | peers of a reference: members of the same kind (`p:` people, `c:`/`n:` studios), z-scored cosine to the reference's fingerprint centroid, the nearest 15 that aren't the reference's own members, each giving `max(z, 0)` to its titles |
-| `negation_labels` | `labels` (lowercased keywords and essence tags), `stems` (the label's distinct content stems in `singular()` form, sorted: "zombies" and "zombie" both become `zomby`), `titles` (point ids) | a negated phrase hits the labels whose stems contain every stem of the phrase, both sides in `singular()` form; a title's penalty share is `min(1, hits / 2)` |
+| `negation_labels` | `labels` (lowercased keywords and essence tags), `stems` (the label's distinct content stems in `singular()` form, sorted: "zombies" and "zombie" both become `zomby`), `titles` (point ids) | a negated phrase hits the labels whose stems contain every stem of the phrase, both sides in `singular()` form; a title's penalty share is `min(1, hits / 2)`. Known German, French, Spanish and Turkish element words are put in English first (#169, see [non-English negations](#follow-up-non-english-negations)) |
 | `alternate_cuts` | `pairs` of point ids | cut folding: keep the first title of every linked set in rank order |
 | `intent_examples` | `labels`, `texts`, `model`, `prefix` (`query: `), `vectors` (float32 `[39, 384]`, multilingual-e5-small of prefix + text) | the intent is the label of the example with the highest dot product with the query (names replaced by `X`) |
 | `mix_vectors` | `point_ids`, `text_multi_v1` and `text_en_v1`, each `{scale: float32 [d], values: int8 [n, d]}` (vector = values x scale; a title without the vector has zeros) | z statistics of the non-English mix, see below |
@@ -911,6 +911,58 @@ and spaces, where ICU's root order and code point order agree today. The effect 
 reading per text), not wrong results. Replacing `localeCompare` with a code point comparison would remove the
 dependency without changing any current key, but it changes the key computation, so it waits for the owner.
 
+## Follow-up: non-English negations
+
+Done in #169. The negation labels are English keywords and tags, so "Krimi ohne Mord" found nothing to demote.
+
+- **Approach: a word list.** `goodwatch-webapp/app/server/search-ranking/negation-words.json` maps German, French,
+  Spanish and Turkish words to 41 English words, mostly common elements (aliens, robots, dragons, zombies, gore,
+  murder, violence, romance, sex, drugs, magic, animals, dogs, vampires, ghosts, blood, nudity, suicide, superheroes,
+  horror, anime, animation, jump scares, war, World War II, kids, action, monsters, spiders, torture), plus a few
+  phrases ("dessin animé", "süper kahraman") and per-language plural and case endings. `englishNegation` (in
+  `query-parsing.server.ts`) rewrites a negated phrase that holds a known element: known words become English, and
+  articles and other function words are dropped ("pas de zombies" hits "zombie", "nicht über den Zweiten Weltkrieg"
+  hits "world war ii"). Phrases without a known element stay as they are, so English negations are unchanged. Only
+  the label match uses the rewrite; the embedding penalty still encodes the phrase as typed. The arena prototype reads
+  the same file (`english_negation` in `simp_combo.py`).
+- **Words that are also English** ("terror", French "sang", German "Kind" and "Tier") apply only when the search is
+  routed non-English (the `nonEnglish` lists), so "war on terror" or "Hong Sang-soo" keep their meaning.
+- **Negation parsing:** Spanish and French "ni" starts a second negated clause, "aucun", "aucune" and "nada" are
+  markers, and an ordinal ("2.") doesn't end a clause. Turkish negates after the element: a postposition (`olmadan`,
+  `olmayan`, `yok`, `değil`, `içermeyen`) negates the word before it, and a `-sız/-siz/-suz/-süz` word negates its
+  stem, both only when they name a known element. "aşırı duygusal olmayan" (not too emotional) stays positive: as a
+  negated clause, its multilingual embedding pushed away most Turkish titles in `core-29`. "korkusuz" (fearless) is
+  an exception. Spell correction skips the list's words, so "kein" and "seks" aren't corrected to "keen" and "seeks".
+- **Why not the other options:** the Jev reading has no English phrase for a negated element. Its chips are
+  fingerprint dimensions ("Low violence" for "detective show with no murders") and its searched phrases stay in the
+  query's language ("ohne mord"). Matching the multilingual embedding of the phrase against 94,000 labels would need
+  a label embedding in the index build and a threshold, and gives fuzzy matches; the list is deterministic, free and
+  adds no query time.
+- **Measured** with 300 queries that agents wrote without seeing the list: 200 for tuning (two variants of 25
+  English negation queries in each language) and 100 held out (25 other queries, one per language). A query counts as
+  matching when its label penalty hits exactly the titles that the English element hits ("sin extraterrestres" and
+  "aliens"). "Before" is the arena prototype without this change. "After" is the same in the arena and on the
+  production build `20260925T144040Z` through the webapp's routing, spell correction and `labelNegation`. The sets
+  and the script are in `docs/prototypes/search-arena/bench/negation-languages/`.
+
+  | set | before | after |
+  |---|---|---|
+  | tuning, 200 | 43 | 182 |
+  | held out, 100 | 17 | 97 (87 in the arena before adding the grammar words its misses showed: "aucun", "nada", "ist", "un") |
+
+  The remaining tuning misses mostly say something else than the English source ("nicht blutig" is "gory", not
+  "gore"; "kansız" is "blood"; "Sexszenen" is "sex scene", which matches the English "sex scenes"). Real misses:
+  "korkusuz" (read as fearless), "sans sang" and "sin terror" in searches routed English, "ani korku sahneleri" (jump
+  scare scenes) and Turkish verb negation ("geçmeyen").
+- **Arena** (`combo-safe-v3`, `evalsimp.py`): 2 of 131 graded queries change their top 10, both non-English
+  negations. `dev6-05` "Krimi ohne Mord" goes from 0.362 to 0.398: The Godfather Part II and The Batman drop out,
+  L.A. Confidential and Chinatown come in (L.A. Confidential was already graded 0; two assessors graded Chinatown 0).
+  `core-27` goes from 0.958 to 0.964. No English query, no non-English query without a negation and no holdout5
+  query changes. dev nDCG@10 goes from 0.822 to 0.823.
+- **English safety:** rewriting every one of the 103,776 arena labels as if it were a negated phrase changes the
+  stems of 28, all foreign-language labels ("segunda guerra mundial") or English spellings of listed words
+  ("jumpscares", "super heroes").
+
 ## Prerequisites
 
 1. **Fix the Qdrant recommendation load.** Since Qdrant restarted on September 22, 2026, it has handled about 47,000
@@ -925,6 +977,8 @@ dependency without changing any current key, but it changes the key computation,
 
 - **Negation needs catalog labels.** "space opera without aliens" fails for every ranker. The fix is enrichment labels
   for concrete elements (aliens, robots, dragons, gore), not a ranking rule. See the walkthrough's section on this gap.
+- **Non-English negations** couldn't match the English labels. Fixed in #169 for common elements with a word list: see
+  [non-English negations](#follow-up-non-english-negations).
 - **Spanish and Turkish queries route as English.** Fixed in #147: see [follow-ups](#follow-ups-language-routing-jev-retries-and-qdrant-clients).
 - **Jev 529 errors** fall back to basic search with no retry. Fixed in #147: two bounded retries.
 - **The undici stall** may affect today's search, which uses `@qdrant/js-client-rest`. Measured in #147: the stall
