@@ -365,6 +365,37 @@ SCHEMAS = {
         "clustered_by": "show_id",
         "shards": 6,
     },
+    # Rotten Tomatoes and Metacritic season scores (f/critic_sites/crawl, #152), one row per
+    # TMDB show and season in the site's numbering. A season the site lists without a critic
+    # score has a row with NULL scores. Column names follow the show table's.
+    "rotten_tomatoes_season": {
+        "columns": {
+            "show_id": "INTEGER",
+            "season_number": "INTEGER",
+            "rotten_tomatoes_url": "TEXT",
+            "rotten_tomatoes_tomato_score_original": "DOUBLE",
+            "rotten_tomatoes_tomato_score_review_count": "INTEGER",
+            "rotten_tomatoes_audience_score_original": "DOUBLE",
+            "rotten_tomatoes_audience_score_rating_count": "INTEGER",
+        },
+        "primary_key": ["show_id", "season_number"],
+        "clustered_by": "show_id",
+        "shards": 6,
+    },
+    "metacritic_season": {
+        "columns": {
+            "show_id": "INTEGER",
+            "season_number": "INTEGER",
+            "metacritic_url": "TEXT",
+            "metacritic_meta_score_original": "DOUBLE",
+            "metacritic_meta_score_review_count": "INTEGER",
+            "metacritic_user_score_original": "DOUBLE",
+            "metacritic_user_score_rating_count": "INTEGER",
+        },
+        "primary_key": ["show_id", "season_number"],
+        "clustered_by": "show_id",
+        "shards": 6,
+    },
     # ============================
     # ===== Related Metadata =====
     # ============================

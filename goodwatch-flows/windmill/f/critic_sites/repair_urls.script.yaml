@@ -1,0 +1,23 @@
+summary: Repair shared Rotten Tomatoes or Metacritic URLs
+description: One-off (#152). A URL several titles hold stays on the Wikidata holder or the holder whose year is in the slug; the others lose it, backed up to _backup_<YYYYMMDD>_critic_urls. Other groups are left for the crawl.
+lock: '!inline f/critic_sites/repair_urls.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order:
+    - site
+    - dry_run
+  properties:
+    site:
+      type: string
+      description: rotten_tomatoes or metacritic
+      default: rotten_tomatoes
+      enum:
+        - rotten_tomatoes
+        - metacritic
+    dry_run:
+      type: boolean
+      description: Report what would change without writing.
+      default: true
+  required: []

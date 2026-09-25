@@ -1,0 +1,37 @@
+summary: Crawl Rotten Tomatoes or Metacritic scores
+description: >-
+  Crawls one site's due titles from known URLs (Wikidata, stored or sitemap), shows first,
+  for up to max_minutes: canonical URLs, show and season critic scores, a 90-day negative
+  cache, and a stop on 403, 429 or a bot challenge (#152). Publishes season rows to Crate.
+lock: '!inline f/critic_sites/crawl.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order:
+    - site
+    - max_minutes
+    - batch_size
+    - kinds
+  properties:
+    site:
+      type: string
+      description: rotten_tomatoes or metacritic
+      default: rotten_tomatoes
+      enum:
+        - rotten_tomatoes
+        - metacritic
+    max_minutes:
+      type: number
+      description: Stop starting new batches after this many minutes.
+      default: 25
+    batch_size:
+      type: integer
+      description: Titles leased per batch.
+      default: 25
+    kinds:
+      type: array
+      description: Queues to crawl in order; default tv, then movie.
+      items:
+        type: string
+  required: []

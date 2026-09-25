@@ -1,0 +1,9 @@
+summary: Parsed critic site pages
+description: Library module for the Rotten Tomatoes and Metacritic crawlers (#152); main does nothing.
+lock: '!inline f/critic_sites/pages.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

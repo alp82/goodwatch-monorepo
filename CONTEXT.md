@@ -97,3 +97,6 @@ _Avoid_: Season 0
 
 **Season score**:
 The vote-weighted mean of the IMDb ratings of a season's rated episodes. A season without a rated episode has no season score.
+
+**Season critic score**:
+A season's Tomatometer or Metascore as Rotten Tomatoes or Metacritic publish it, in that site's season numbering. It is distinct from the season score, which GoodWatch computes from IMDb episode ratings.

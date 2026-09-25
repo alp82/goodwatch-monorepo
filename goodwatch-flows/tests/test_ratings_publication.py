@@ -55,6 +55,23 @@ class RatingsPublicationTest(unittest.TestCase):
                         self.assertEqual(result['movies' if media_type == 'movie' else 'shows']['rows_upserted'], 1)
                         collection.delete_many({})
 
+    def test_rotten_tomatoes_and_metacritic_values_the_crawler_removed_are_cleared(self):
+        # The crawler removes a URL and its scores when the page is gone or belongs to
+        # another title (#152). NULL must then clear the Crate columns, not keep them.
+        self.mongo.rotten_tomatoes_tv_rating.insert_one({'tmdb_id': 1, 'updated_at': datetime.utcnow(),
+                                                         'not_found_url': 'https://www.rottentomatoes.com/tv/x'})
+        all_ratings.copy_media(self.connector, {'tmdb_id': {'$in': [1]}}, 'show', recent_only=False)
+        call = self.connector.upsert_many.call_args.kwargs
+        published = call['records'][0]
+        self.assertIsNone(published.rotten_tomatoes_url)
+        self.assertIsNone(published.rotten_tomatoes_tomato_score_original)
+        cleared = set(call['replace_null_columns'])
+        self.assertLessEqual({'rotten_tomatoes_url', 'rotten_tomatoes_tomato_score_original',
+                              'rotten_tomatoes_audience_score_rating_count', 'metacritic_url',
+                              'metacritic_meta_score_original', 'metacritic_user_score_original',
+                              'goodwatch_official_score_normalized_percent'}, cleared)
+        self.assertNotIn('imdb_user_score_original', cleared)
+
     def test_every_recently_changed_title_is_published_once_across_batches(self):
         now = datetime.utcnow()
         self.mongo.tmdb_movie_details.insert_many([

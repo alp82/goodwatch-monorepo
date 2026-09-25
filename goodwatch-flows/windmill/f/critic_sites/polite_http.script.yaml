@@ -1,0 +1,9 @@
+summary: Polite HTTP for Rotten Tomatoes and Metacritic
+description: Library (#152). Honest User-Agent, one request every 2 s per site across workers, and a 403, 429 or bot challenge stops the site until a deadline recorded in critic_site_state.
+lock: '!inline f/critic_sites/polite_http.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

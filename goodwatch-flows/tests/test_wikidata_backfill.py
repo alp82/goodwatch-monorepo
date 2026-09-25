@@ -434,41 +434,6 @@ class ImdbInitTests(unittest.TestCase):
                          {1: "tt0000001", 2: "tt0000002"})
 
 
-class CrawlerProvenanceTests(unittest.TestCase):
-    """A URL the crawler found is marked as crawled, so Wikidata never replaces it."""
-
-    def setUp(self):
-        disconnect()
-        connect("crawler_provenance", mongo_client_class=mongomock.MongoClient, uuidRepresentation="standard")
-        self.addCleanup(disconnect)
-
-    def test_rotten_tomatoes_store_marks_a_found_url_as_crawled(self):
-        from f.rotten_web.models import RottenTomatoesCrawlResult, RottenTomatoesTvRating
-        from f.rotten_web.rotten_tomatoes_crawl_ratings import fetch
-        entry = RottenTomatoesTvRating(tmdb_id=1, rotten_tomatoes_url=RT + "tv/x", url_source="wikidata").save()
-        empty = dict(tomato_score_original=None, tomato_score_normalized_percent=None, tomato_score_vote_count=None,
-                     audience_score_original=None, audience_score_normalized_percent=None,
-                     audience_score_vote_count=None, rate_limit_reached=False)
-        fetch.store_result(entry, RottenTomatoesCrawlResult(url=None, **empty))
-        self.assertEqual(RottenTomatoesTvRating.objects.get(tmdb_id=1).url_source, "wikidata")
-        fetch.store_result(entry, RottenTomatoesCrawlResult(url=RT + "tv/y", **empty))
-        stored = RottenTomatoesTvRating.objects.get(tmdb_id=1)
-        self.assertEqual((stored.rotten_tomatoes_url, stored.url_source), (RT + "tv/y", "crawl"))
-        self.assertIsNotNone(stored.url_verified_at)
-
-    def test_metacritic_store_marks_a_found_url_as_crawled(self):
-        from f.metacritic_web.models import MetacriticCrawlResult, MetacriticMovieRating
-        from f.metacritic_web.metacritic_crawl_ratings import fetch
-        entry = MetacriticMovieRating(tmdb_id=1).save()
-        fetch.store_result(entry, MetacriticCrawlResult(
-            url=MC + "movie/x", meta_score_original=80, meta_score_normalized_percent=80, meta_score_vote_count=10,
-            user_score_original=None, user_score_normalized_percent=None, user_score_vote_count=None,
-            rate_limit_reached=False))
-        stored = MetacriticMovieRating.objects.get(tmdb_id=1)
-        self.assertEqual((stored.metacritic_url, stored.url_source), (MC + "movie/x", "crawl"))
-        self.assertIsNotNone(stored.url_verified_at)
-
-
 class ModelTests(unittest.TestCase):
     """Crawlers load these documents through mongoengine, which rejects unknown fields."""
 

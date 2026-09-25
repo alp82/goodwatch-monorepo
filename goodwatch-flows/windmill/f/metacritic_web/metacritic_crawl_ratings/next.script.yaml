@@ -1,9 +1,0 @@
-summary: ''
-description: Retrieve next batch of entries for crawling Metacritic pages
-lock: '!inline f/metacritic_web/metacritic_crawl_ratings/next.script.lock'
-kind: script
-schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
-  type: object
-  properties: {}
-  required: []

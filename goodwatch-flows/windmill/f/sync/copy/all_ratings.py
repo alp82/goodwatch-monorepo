@@ -22,6 +22,26 @@ from f.sync.models.crate_schemas import SCHEMAS
 BATCH_SIZE = 5000
 SUB_BATCH_SIZE = 50000
 HOURS_TO_FETCH = 24 * 2
+# The rating documents are the whole truth for these columns: the Rotten Tomatoes and
+# Metacritic crawlers remove a URL and its scores when the page is gone or belongs to
+# another title (#152), and the Crate row must lose them too instead of keeping them.
+CLEARED_COLUMNS = (
+    "metacritic_url",
+    "metacritic_user_score_original",
+    "metacritic_user_score_normalized_percent",
+    "metacritic_user_score_rating_count",
+    "metacritic_meta_score_original",
+    "metacritic_meta_score_normalized_percent",
+    "metacritic_meta_score_review_count",
+    "rotten_tomatoes_url",
+    "rotten_tomatoes_audience_score_original",
+    "rotten_tomatoes_audience_score_normalized_percent",
+    "rotten_tomatoes_audience_score_rating_count",
+    "rotten_tomatoes_tomato_score_original",
+    "rotten_tomatoes_tomato_score_normalized_percent",
+    "rotten_tomatoes_tomato_score_review_count",
+    "goodwatch_official_score_normalized_percent",
+)
 
 tmdb_details_projection = {
     "tmdb_id": 1,
@@ -79,7 +99,8 @@ def fetch_map_by_ids(collection, tmdb_ids) -> dict:
     return {doc["tmdb_id"]: doc for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}})}
 
 
-def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseModel]):
+def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseModel],
+                      replace_null_columns=()):
     """Process and insert entities and return upsert results."""
     total_result = {"records_received": 0, "rows_upserted": 0}
 
@@ -93,6 +114,7 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
                     records=batch,
                     conflict_columns=SCHEMAS[table]["primary_key"],
                     silent=True,
+                    replace_null_columns=replace_null_columns,
                 )
                 total_result["records_received"] += result["records_received"]
                 total_result["rows_upserted"] += result["rows_upserted"]
@@ -321,6 +343,7 @@ def copy_media(
             connector=connector,
             table=media_table_name,
             records=media_documents,
+            replace_null_columns=CLEARED_COLUMNS,
         )
 
         media_type_key = "movies" if is_movie else "shows"

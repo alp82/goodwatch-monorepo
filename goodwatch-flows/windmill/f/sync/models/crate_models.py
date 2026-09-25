@@ -292,6 +292,26 @@ class ImdbSeason(BaseModel):
     max_episode_number: Optional[int] = None
 
 
+class RottenTomatoesSeason(BaseModel):
+    show_id: int
+    season_number: int  # Rotten Tomatoes' numbering
+    rotten_tomatoes_url: Optional[str] = None
+    rotten_tomatoes_tomato_score_original: Optional[float] = None
+    rotten_tomatoes_tomato_score_review_count: Optional[int] = None
+    rotten_tomatoes_audience_score_original: Optional[float] = None
+    rotten_tomatoes_audience_score_rating_count: Optional[int] = None
+
+
+class MetacriticSeason(BaseModel):
+    show_id: int
+    season_number: int  # Metacritic's numbering
+    metacritic_url: Optional[str] = None
+    metacritic_meta_score_original: Optional[float] = None
+    metacritic_meta_score_review_count: Optional[int] = None
+    metacritic_user_score_original: Optional[float] = None  # 0-10
+    metacritic_user_score_rating_count: Optional[int] = None
+
+
 # metadata
 
 
