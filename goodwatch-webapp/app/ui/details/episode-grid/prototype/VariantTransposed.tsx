@@ -45,7 +45,7 @@ export default function VariantTransposed({ grid }: GridVariantProps) {
 
 	return (
 		<div className="grid gap-4 lg:grid-cols-[minmax(0,auto)_16rem] lg:justify-start lg:items-start">
-			<div className="max-w-full overflow-x-auto overscroll-x-contain rounded-2xl border border-white/8 bg-[#141923]">
+			<div className="relative max-w-full overflow-x-auto overscroll-x-contain rounded-2xl border border-white/8 bg-[#141923]">
 				<table className="border-separate border-spacing-x-[3px] border-spacing-y-[3px] p-2">
 					<caption className="sr-only">Season scores from every site, then the IMDb rating of every episode, one column per season</caption>
 					<thead>

@@ -46,7 +46,7 @@ export default function VariantHeatmap({ grid }: GridVariantProps) {
 	return (
 		<div>
 			<div className="rounded-2xl border border-white/8 bg-[#141923] p-3 sm:p-4">
-				<div className="overflow-x-auto overscroll-x-contain pb-2" tabIndex={-1}>
+				<div className="relative overflow-x-auto overscroll-x-contain pb-2">
 					<table className="border-collapse [&_td]:p-[1.5px] [&_th]:p-[1.5px]">
 						<caption className="sr-only">IMDb rating of every episode, one row per season</caption>
 						<thead>
