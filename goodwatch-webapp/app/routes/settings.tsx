@@ -1,4 +1,4 @@
-import { FlagIcon, TvIcon, UserIcon } from "@heroicons/react/24/solid";
+import { AtSymbolIcon, FlagIcon, TvIcon, UserIcon } from "@heroicons/react/24/solid";
 import type { MetaFunction } from "@remix-run/node";
 import { Link, Outlet, useMatches } from "@remix-run/react";
 import React from "react";
@@ -32,6 +32,11 @@ const navigation = [
 		name: "Streaming",
 		to: "/settings/streaming",
 		icon: TvIcon,
+	},
+	{
+		name: "Profile",
+		to: "/settings/profile",
+		icon: AtSymbolIcon,
 	},
 	{
 		name: "Account",
