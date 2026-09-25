@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "react-toastify"
 import {
 	fetchShareViewer,
+	ShareListRequestError,
 	type ShareViewer,
 	shareViewerQueryKey,
 	useCreateShareList,
@@ -74,6 +75,18 @@ export function useShareFlow() {
 					state: { shared: { url, copied } } satisfies SharedState,
 				})
 			} catch (error) {
+				// The server has no handle for this account, whatever the cached viewer said: choose one, then continue.
+				if (error instanceof ShareListRequestError && error.code === "handle_required") {
+					const viewer = await queryClient
+						.fetchQuery({ queryKey: shareViewerQueryKey, queryFn: fetchShareViewer, staleTime: 0 })
+						.catch(() => null)
+					setStep({
+						kind: "handle",
+						draft,
+						suggestion: viewer?.signedIn ? (viewer.suggestedHandle ?? "") : "",
+					})
+					return
+				}
 				setStep({
 					kind: "error",
 					message:
@@ -83,7 +96,7 @@ export function useShareFlow() {
 				})
 			}
 		},
-		[create, navigate],
+		[create, navigate, queryClient],
 	)
 
 	const share: ShareAction = useCallback(

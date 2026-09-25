@@ -50,9 +50,16 @@ export class ShareListError extends Error {
 	constructor(
 		readonly status: 400 | 403 | 404 | 409,
 		message: string,
+		/** A machine-readable reason the client can act on, such as sending the person to the handle step. */
+		readonly code?: "handle_required",
 	) {
 		super(message)
 	}
+}
+
+/** Lists are published under the owner's handle, so every write that shares one needs a claimed handle first. */
+async function requireHandle(userId: string) {
+	if (!(await getProfileByUserId(userId))) throw new ShareListError(403, "Choose your handle before you share lists.", "handle_required")
 }
 
 // Crate's client types its parameters narrowly; list items are objects.
@@ -161,6 +168,7 @@ export async function publicListsByUser(userId: string): Promise<ShareList[]> {
 }
 
 export async function createList(userId: string, input: ShareListInput): Promise<ShareList> {
+	await requireHandle(userId)
 	const valid = await validateList(input)
 	const remixedFrom = input.remixedFrom ? ((await getList(input.remixedFrom))?.id ?? null) : null
 	const now = new Date()
@@ -175,6 +183,7 @@ export async function createList(userId: string, input: ShareListInput): Promise
 }
 
 export async function updateList(userId: string, id: string, input: ShareListInput): Promise<ShareList> {
+	await requireHandle(userId)
 	const current = await ownedList(userId, id)
 	const valid = await validateList({ ...input, visibility: input.visibility ?? current.visibility })
 	await run(
@@ -188,6 +197,7 @@ export async function updateList(userId: string, id: string, input: ShareListInp
 
 export async function setListVisibility(userId: string, id: string, visibility: Visibility): Promise<ShareList> {
 	if (visibility !== "public" && visibility !== "unlisted") throw new ShareListError(400, "Unknown visibility.")
+	await requireHandle(userId)
 	await ownedList(userId, id)
 	await run("UPDATE doc.user_list SET visibility = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL", [
 		visibility,
@@ -213,6 +223,7 @@ export const UNDO_DELETE_MS = 10 * 60 * 1000
 /** Undoes a recent delete. Only the owner can, and only within UNDO_DELETE_MS. */
 export async function restoreList(userId: string, id: string): Promise<ShareList> {
 	if (!/^[0-9A-Za-z]{10}$/.test(id)) throw new ShareListError(404, "This list doesn't exist.")
+	await requireHandle(userId)
 	await run(
 		"UPDATE doc.user_list SET deleted_at = NULL, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at >= ?",
 		[new Date(), id, userId, new Date(Date.now() - UNDO_DELETE_MS)],

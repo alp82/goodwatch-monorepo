@@ -25,7 +25,7 @@ type Body =
 	| { intent: "delete"; id: string }
 	| { intent: "restore"; id: string }
 
-export type ShareListResponse = { list: ShareList } | { deleted: true } | { error: string }
+export type ShareListResponse = { list: ShareList } | { deleted: true } | { error: string; code?: "handle_required" }
 
 /** Who is sharing, and their handle. Without one, a free suggestion from the account's name or email address. */
 export type ShareViewer =
@@ -88,13 +88,23 @@ export async function action({ request }: ActionFunctionArgs) {
 				return json({ error: "Unknown request." }, { status: 400 })
 		}
 	} catch (error) {
-		if (error instanceof ShareListError) return json({ error: error.message }, { status: error.status })
+		if (error instanceof ShareListError) return json({ error: error.message, code: error.code }, { status: error.status })
 		console.error("[share-lists] write failed", error)
 		return json({ error: "Saving failed. Try again." }, { status: 500 })
 	}
 }
 
 // Query and mutation helpers
+
+/** A failed share-list request. `code` is "handle_required" when the account has no handle yet. */
+export class ShareListRequestError extends Error {
+	constructor(
+		message: string,
+		readonly code?: "handle_required",
+	) {
+		super(message)
+	}
+}
 
 export const shareViewerQueryKey = ["share-viewer"]
 
@@ -117,7 +127,7 @@ export const useCreateShareList = () =>
 				body: JSON.stringify({ intent: "create", list }),
 			})
 			const result = await response.json().catch(() => ({}))
-			if (!response.ok) throw new Error(result.error ?? "Saving the list failed. Try again.")
+			if (!response.ok) throw new ShareListRequestError(result.error ?? "Saving the list failed. Try again.", result.code)
 			return result.list
 		},
 	})
@@ -137,7 +147,7 @@ export const useShareListOwnerAction = () =>
 				body: JSON.stringify(action),
 			})
 			const result = await response.json().catch(() => ({}))
-			if (!response.ok) throw new Error(result.error ?? "That didn't work. Try again.")
+			if (!response.ok) throw new ShareListRequestError(result.error ?? "That didn't work. Try again.", result.code)
 			return result
 		},
 	})
