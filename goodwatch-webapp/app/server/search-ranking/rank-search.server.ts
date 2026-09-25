@@ -91,6 +91,30 @@ export interface SearchRequest {
 	nonEnglish: boolean
 	/** The allowed title lookup matches (movies and shows), in lookup order. */
 	titleLookup: TitleLookupRow[]
+	/** Also return the intermediate values (texts, candidate scores, profile terms), for parity checks. */
+	trace?: boolean
+}
+
+/** The intermediate values of one search, returned when the request asks for a trace. */
+export interface SearchTrace {
+	/** The texts encoded per model. */
+	texts: Record<"english" | "multilingual", string[]>
+	/** Every candidate of the pool with its score before the blend. */
+	candidates: [number, number][]
+	/** Each signal's weighted contribution per candidate, aligned with candidates. */
+	signals: Record<string, number[]>
+	/** The top RESULT_LENGTH candidates before the blend, highest first. */
+	discovery: [number, number][]
+	/** The reference profile's terms with their query weights. */
+	profileTerms: [string, number][] | null
+	/** Seed titles, own titles and the era of the reference. */
+	seeds: number[] | null
+	own: number[] | null
+	/** Round 2: the candidates each pool query returned. The rescore: the points it returned of the union it asked for. */
+	scored: { using: string; asked: number; returned: number }[]
+	/** Titles the filter keeps (title table rows), and the era applied. */
+	filtered: number
+	era: { from: number; to: number } | null
 }
 
 export interface RankedSearch {
@@ -110,6 +134,7 @@ export interface RankedSearch {
 	/** Qdrant requests: queries and Qdrant's own time per round. */
 	rounds: { name: string; queries: number; serverMs: number; wallMs: number }[]
 	poolSize: number
+	trace?: SearchTrace
 }
 
 // --- Signals -------------------------------------------------------------------------------------------------------
@@ -503,6 +528,7 @@ export async function rankSearch(
 
 	// Non-English with English chips: the dense signal mixes z(multilingual cosine) and z(English chips cosine), each
 	// z-scored over every filtered title (from the int8 mix vectors); the union of both top lists is rescored.
+	const scored: SearchTrace["scored"] = []
 	let mixStats: [number, number, number, number] | null = null
 	if (dense && chipQuery && "vector" in dense && "vector" in chipQuery) {
 		const union = [...unionIds]
@@ -515,6 +541,13 @@ export async function rankSearch(
 				with_payload: false,
 			})),
 		)
+		if (request.trace)
+			for (const [k, q] of [dense, chipQuery].entries())
+				scored.push({
+					using: `rescore ${q.using}`,
+					asked: union.length,
+					returned: r.results[k].length,
+				})
 		rounds.push({
 			name: "rescore",
 			queries: 2,
@@ -598,6 +631,15 @@ export async function rankSearch(
 	// 5. Score. The candidates are the pool titles that pass the filter.
 	const fpScores = toMap(r2.results[fpAt])
 	const cand = poolIds.filter((id) => fpScores.has(id) && t.rowOf.has(id))
+	if (request.trace)
+		round2.forEach((q, k) => {
+			const got = new Set(r2.results[k].map((p) => Number(p.id)))
+			scored.push({
+				using: String(q.using),
+				asked: cand.length,
+				returned: cand.filter((id) => got.has(id)).length,
+			})
+		})
 	const rows = cand.map((id) => t.rowOf.get(id) as number)
 	const column = (at: number) => {
 		const m = toMap(r2.results[at])
@@ -606,10 +648,24 @@ export async function rankSearch(
 	const fromMap = (m: Map<number, number>) => cand.map((id) => m.get(id) ?? 0)
 	const n = cand.length
 	const total = new Float64Array(n)
-	const addTo = (weight: number, values: ArrayLike<number>) => {
+	const signals: Record<string, number[]> = {}
+	const addTo = (
+		weight: number,
+		values: ArrayLike<number>,
+		name = "signal",
+	) => {
 		for (let i = 0; i < n; i++) total[i] += weight * values[i]
+		if (request.trace) {
+			let key = name
+			for (let k = 2; key in signals; k++) key = `${name}${k}`
+			signals[key] = Array.from(values, (v) => weight * v)
+		}
 	}
-	addTo(WEIGHTS.fingerprint, z(cand.map((id) => fpScores.get(id) ?? 0)))
+	addTo(
+		WEIGHTS.fingerprint,
+		z(cand.map((id) => fpScores.get(id) ?? 0)),
+		"fingerprint",
+	)
 	if (denseAt >= 0) {
 		let values = column(denseAt)
 		if (chipAt >= 0 && mixStats) {
@@ -621,17 +677,18 @@ export async function rankSearch(
 					NON_ENGLISH_MIX * ((english[i] - m2) / s2),
 			)
 		}
-		addTo(WEIGHTS.dense, z(values))
+		addTo(WEIGHTS.dense, z(values), "dense")
 	}
 	if (bm25.size) {
 		const values = fromMap(bm25)
-		if (values.some((v) => v !== 0)) addTo(WEIGHTS.bm25, z(values))
+		if (values.some((v) => v !== 0)) addTo(WEIGHTS.bm25, z(values), "bm25")
 	}
 	if (facetAt.length) {
 		const zs = facetAt.map((at) => z(column(at)))
 		addTo(
 			WEIGHTS.facet,
 			cand.map((_, i) => zs.reduce((s, x) => s + x[i], 0) / zs.length),
+			"facets",
 		)
 	}
 	if (units.length) {
@@ -643,6 +700,7 @@ export async function rankSearch(
 		addTo(
 			WEIGHTS.coverage,
 			z(cand.map((_, i) => Math.min(...perUnit.map((u) => u[i])))),
+			"coverage",
 		)
 	}
 	const penalties = [...negatedAt, ...avoidedAt].map((at) => column(at))
@@ -650,20 +708,23 @@ export async function rankSearch(
 		addTo(
 			-WEIGHTS.negation,
 			z(cand.map((_, i) => Math.max(...penalties.map((p) => p[i])))),
+			"negation",
 		)
 	if (negated.length) {
 		const shares = negated.map((phrase) => labelNegation(index, phrase))
 		addTo(
 			-WEIGHTS.negationLabels,
 			cand.map((id) => Math.max(...shares.map((s) => s.get(id) ?? 0))),
+			"negationLabels",
 		)
 	}
 	const logVotes = rows.map((row) => Math.log1p(t.votes[row]))
 	addTo(
 		WEIGHTS.goodwatchScore,
 		z(filled(rows.map((row) => t.goodwatchScores[row]))),
+		"goodwatchScore",
 	)
-	if (!ref) addTo(WEIGHTS.votes, z(logVotes))
+	if (!ref) addTo(WEIGHTS.votes, z(logVotes), "votes")
 	else {
 		const credit = rows.map((row) => ref.weights.get(row) ?? 0)
 		const strength =
@@ -671,48 +732,80 @@ export async function rankSearch(
 		const agreeing: Float64Array[] = []
 		if (profileFpAt >= 0) {
 			const zc = z(column(profileFpAt))
-			addTo(strength * WEIGHTS.profileFingerprint, zc)
+			addTo(strength * WEIGHTS.profileFingerprint, zc, "profileFingerprint")
 			agreeing.push(zc)
 		}
 		if (profileTextAt >= 0) {
 			const zc = z(column(profileTextAt))
-			addTo(strength * WEIGHTS.profileText, zc)
+			addTo(strength * WEIGHTS.profileText, zc, "profileText")
 			agreeing.push(zc)
 		}
 		// The prototype's term profile is scored even when empty (all zeros)
 		const termsZ = termsAt >= 0 ? z(column(termsAt)) : new Float64Array(n)
-		addTo(strength * WEIGHTS.profileTerms, termsZ)
+		addTo(strength * WEIGHTS.profileTerms, termsZ, "profileTerms")
 		agreeing.push(termsZ)
 		if (det) {
 			const mentions = mentionAt >= 0 ? column(mentionAt) : new Array(n).fill(0)
-			addTo(strength * WEIGHTS.mentions, z(mentions.map((x) => Math.log1p(x))))
-			if (peers) addTo(strength * WEIGHTS.peers, fromMap(peers))
+			addTo(
+				strength * WEIGHTS.mentions,
+				z(mentions.map((x) => Math.log1p(x))),
+				"mentions",
+			)
+			if (peers) addTo(strength * WEIGHTS.peers, fromMap(peers), "peers")
 		}
 		if (agreeing.length)
 			addTo(
 				strength * WEIGHTS.agreement,
 				cand.map((_, i) => Math.min(...agreeing.map((a) => a[i]))),
+				"agreement",
 			)
 		addTo(
 			ref.intent === "filmography"
 				? WEIGHTS.ownTitlesFilmography
 				: WEIGHTS.ownTitles,
 			credit,
+			"ownTitles",
 		)
 		if (ref.intent === "style" || ref.intent === "both") {
 			const zv = z(logVotes)
 			addTo(
 				-WEIGHTS.popularityDamping,
 				zv.map((x, i) => (credit[i] >= 1 ? 0 : x)),
+				"popularityDamping",
 			)
-		} else addTo(WEIGHTS.votes, z(logVotes))
+		} else addTo(WEIGHTS.votes, z(logVotes), "votes")
 		if (ref.era) {
 			const zy = z(filled(rows.map((row) => t.years[row])))
-			addTo(WEIGHTS.career * (ref.era === "late" ? 1 : -1), zy)
+			addTo(WEIGHTS.career * (ref.era === "late" ? 1 : -1), zy, "career")
 		}
 	}
 	const ranked = topIds(cand, total, RESULT_LENGTH)
 	lap("score")
+	let trace: SearchTrace | undefined
+	if (request.trace) {
+		const scoreOf = new Map(cand.map((id, i) => [id, total[i]]))
+		const termOf = new Map<number, string>()
+		index.termStatistics.ids.forEach((id, i) =>
+			termOf.set(id, index.termStatistics.terms[i]),
+		)
+		trace = {
+			texts,
+			signals,
+			candidates: cand.map((id, i) => [id, total[i]]),
+			discovery: ranked.map((id) => [id, scoreOf.get(id) as number]),
+			profileTerms: ref
+				? [...profileWeights].map(([id, w]) => [
+						termOf.get(id) ?? String(id),
+						w,
+					])
+				: null,
+			seeds: ref ? ref.seeds.map((row) => t.pointIds[row]) : null,
+			own: ref ? [...ref.own].sort((a, b) => a - b) : null,
+			scored,
+			filtered: filter.rows.reduce((a, b) => a + b, 0),
+			era: filter.era,
+		}
+	}
 
 	// Blend with the title lookup, fold alternate cuts, bound the own titles
 	let results = foldCuts(
@@ -742,5 +835,6 @@ export async function rankSearch(
 		timings,
 		rounds,
 		poolSize: cand.length,
+		trace,
 	}
 }

@@ -74,6 +74,7 @@ for (const id of files) {
 			text: cap.language.text,
 			nonEnglish: cap.language.detectedNonEnglish,
 			titleLookup: (cap.titleLookup ?? []).filter((t) => t.eligible),
+			trace: Boolean(arg("json")),
 		},
 		{
 			includeAdult: cap.policy.includeAdult,
