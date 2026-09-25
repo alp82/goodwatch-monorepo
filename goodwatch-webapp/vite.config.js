@@ -1,5 +1,5 @@
 import { copyFileSync } from "node:fs"
-import { join, resolve } from "node:path"
+import { basename, join, resolve } from "node:path"
 import { vitePlugin as remix } from "@remix-run/dev"
 import { installGlobals } from "@remix-run/node"
 import { sentryVitePlugin } from "@sentry/vite-plugin"
@@ -10,15 +10,18 @@ import tsconfigPaths from "vite-tsconfig-paths"
 
 installGlobals()
 
-// The query encoder runs in a worker thread, which needs its own file next to the server bundle.
-// app/server/search-ranking/query-encoder.server.ts loads it from there.
-const QUERY_ENCODER_WORKER = "app/server/search-ranking/query-encoder.worker.js"
-function queryEncoderWorker() {
+// The query encoder worker thread and the share card renderer process each need their own file next to the
+// server bundle. query-encoder.server.ts and share-card/render.server.tsx load them from there.
+const SEPARATE_ENTRIES = [
+	"app/server/search-ranking/query-encoder.worker.js",
+	"app/server/share-card/render.child.js",
+]
+function separateEntryFiles() {
 	let root
 	let outDir
 	let ssr = false
 	return {
-		name: "query-encoder-worker",
+		name: "separate-entry-files",
 		apply: "build",
 		configResolved(config) {
 			root = config.root
@@ -27,10 +30,8 @@ function queryEncoderWorker() {
 		},
 		closeBundle() {
 			if (!ssr) return
-			copyFileSync(
-				join(root, QUERY_ENCODER_WORKER),
-				resolve(root, outDir, "query-encoder.worker.js"),
-			)
+			for (const file of SEPARATE_ENTRIES)
+				copyFileSync(join(root, file), resolve(root, outDir, basename(file)))
 		},
 	}
 }
@@ -66,7 +67,7 @@ export default defineConfig(({ mode }) => ({
 			project: "webapp",
 		}),
 		tailwindcss(),
-		queryEncoderWorker(),
+		separateEntryFiles(),
 	],
 
 	build: {
