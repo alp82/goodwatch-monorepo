@@ -343,8 +343,9 @@ Done in #142. What was built and decided:
   Producer jobs) and `person_appeared_in` (billing order below 15 for movies and 40 for shows), companies from
   `movie`/`show.production_company_ids` and `show.network_ids`. Term ids come from `search_terms`; a term without an
   id yet (its title's new text isn't embedded yet) is left out until the next build.
-- **Worker:** tag `highperf`. The run holds the vectors of about 50,000 titles and loads multilingual-e5-small for
-  the intent examples, which is more than the 4 GiB of a default worker.
+- **Worker:** tag `highperf`. A run takes about 12 to 13 minutes: 3.5 to 4 minutes reading, 5 minutes building
+  (including loading multilingual-e5-small for the intent examples), and under 30 seconds storing files. It peaked
+  at 2.9 GiB, too close to a default worker's 4 GiB limit.
 - **Storage.**
   - `search_index_files` is a blob table with 3 shards, created on September 25, 2026, and listed in
     `BLOB_TABLES` in `f/sync/models/crate_schemas.py`; `f/sync/init/cratedb` creates missing blob tables.
@@ -353,7 +354,11 @@ Done in #142. What was built and decided:
     webapp loads. Build ids are UTC timestamps such as `20260925T061500Z`.
   - A run computes every file first, records the build as `building` with its file list, writes the files whose
     digest isn't stored yet, writes the profiles, marks the build `complete` and moves `current` with a
-    compare-and-set on `_seq_no`. A run that loses the compare-and-set fails and publishes nothing.
+    compare-and-set on `_seq_no`. A run that loses the compare-and-set fails and publishes nothing. A run that fails
+    after recording its build marks it `failed`.
+  - **Writing blobs:** a node that doesn't hold a blob's shard answers a `PUT` with `307` before it reads the body,
+    which broke crate-python's blob client on the 58 MB `mix_vectors` file. `BlobStore` in the flow asks with `HEAD`
+    which node to send the body to (`404` there means "not stored yet, write here"), then writes to that node.
   - **Cleanup** keeps `current`, the build it replaced (`previous_build_id`), and builds still `building` that started
     less than 6 hours ago. It deletes every other build row, every blob none of the kept builds lists, and every
     profile point whose `build_id` isn't a kept build.
@@ -390,12 +395,18 @@ in-memory indexes (`FINAL["combo-safe-v3"]`).
     people drop out and 9 come in, which changes 4 of 32,444 resolving keys ("kevin fox" no longer resolves;
     "clery", "stoudt" and "charlotte stoudt" now do). No graded query is affected.
   - **Collocations:** 1 of 102,440 differs, because a person was renamed between the two arena data pulls.
-- **Production build** (`prod`, `results/bench/indexes-prod.json`): the names detected in all 168 graded queries
-  are identical. Of the 50 entities of the graded reference queries, 40 have identical credits; the other 10
+- **Production build** (`prod`, build `20260925T080750Z`, `results/bench/indexes-prod.json`): the names detected
+  in all 168 graded queries are identical. Of the 50 entities of the graded reference queries, 40 have identical credits; the other 10
   differ by fresher data (new titles, and `created_by` creators: Vince Gilligan is now a writer on The X-Files
   instead of its fallback creator, Seth Rogen is now a creator of Preacher). Profile centroids have cosine 0.9993
   (fingerprint) and 0.9975 (text) or higher against the prototype's, and 98% of the top 40 terms are the same.
-  Term df of the graded queries' terms changed by 0.3% at the 95th percentile.
+  Term df of the graded queries' terms changed by 0.4% at the 95th percentile. The intent example vectors, encoded
+  by the flow's ONNX model, have cosine 0.9999992 or higher with the prototype's, and the nearest intent is the
+  same on all 39 graded queries that use one.
+- **Drift to expect:** the main-writer rule reads TMDB's `known_for_department` (a writer's credit is main only for
+  people known for Writing). A person-row refresh on September 25, 2026 changed it for about 0.16% of the credited
+  people (for example Writing to Acting or to Creator), and 83 of 32,405 name keys stopped resolving between two
+  builds 13 minutes apart. That follows TMDB, as the prototype's rule does.
 
 ### Index files
 
@@ -420,7 +431,8 @@ The manifest in `search_index_builds` is `{format: 1, build_id, created_at, prev
 read, always current), downloads each file with `GET http://<crate host>:4200/_blobs/search_index_files/<sha1>`
 (basic auth, follow a `307`), checks the SHA-1, gunzips and parses it. It swaps in a new build only when every file
 has loaded, and checks the row again every few minutes. If a download returns 404, the cleanup of a later build
-removed it: read the current row again.
+removed it: read the current row again. From the webapp container on 10.0.0.21, reading the manifest and
+downloading, checking and parsing all ten files of the first build took 3.5 seconds.
 
 | file | fields | how the ranker uses it |
 |---|---|---|
