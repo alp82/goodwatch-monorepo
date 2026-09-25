@@ -3,7 +3,7 @@ import io
 import json
 import sys
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -14,7 +14,7 @@ from mongoengine import connect, disconnect
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'windmill'))
 from f.dna.generate import fetch
-from f.dna.models import DnaMovie, DnaTv
+from f.dna.models import DnaMovie, DnaTv, create_fingerprint
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
 PRIMARY = 'qwen/qwen3.8-flash'
@@ -103,6 +103,52 @@ class OpenRouterGenerationTest(unittest.TestCase):
         self.assertEqual(fetch.generate_dna([movie]), [])
         self.post.assert_not_called()
         self.assertFalse(DnaMovie.objects.get(id=movie.id).is_selected)
+
+    def test_saved_dna_also_stores_the_fingerprint_and_releases_the_title(self):
+        # Released in the same save: a later failure in the flow cannot leave it selected.
+        movie = self.title(is_selected=True, selected_at=datetime.utcnow())
+        self.post.return_value = self.success()
+        fetch.generate_dna([movie])
+        stored = DnaMovie.objects.get(id=movie.id)
+        self.assertEqual(stored.dna, self.dna)
+        self.assertEqual(stored.vector_fingerprint, create_fingerprint(self.dna['fingerprint']['scores']))
+        self.assertFalse(stored.is_selected)
+        self.assertIsNotNone(stored.dna_generated_at)
+        self.assertEqual(stored.updated_at, stored.dna_generated_at)
+
+    def test_fresh_dna_skips_the_llm_stores_the_missing_fingerprint_and_releases(self):
+        generated = datetime.utcnow() - timedelta(days=179)
+        for field in ['dna_generated_at', 'updated_at']:
+            with self.subTest(age_from=field):
+                self.post.reset_mock()
+                movie = self.title(dna=self.dna, is_selected=True, selected_at=datetime.utcnow(),
+                                   **{field: generated})
+                self.assertEqual(fetch.generate_dna([movie]), [])
+                self.post.assert_not_called()
+                stored = DnaMovie.objects.get(id=movie.id)
+                self.assertFalse(stored.is_selected)
+                self.assertEqual(stored.vector_fingerprint,
+                                 create_fingerprint(self.dna['fingerprint']['scores']))
+                # The queue measures DNA age by selected_at.
+                self.assertEqual(stored.selected_at.replace(microsecond=0), generated.replace(microsecond=0))
+                self.assertEqual(stored.dna_generated_at.replace(microsecond=0), generated.replace(microsecond=0))
+
+    def test_dna_older_than_180_days_is_regenerated(self):
+        for field in ['dna_generated_at', 'updated_at']:
+            with self.subTest(age_from=field):
+                self.post.reset_mock()
+                self.post.return_value = self.success()
+                movie = self.title(dna=self.dna, is_selected=True,
+                                   **{field: datetime.utcnow() - timedelta(days=181)})
+                self.assertEqual(fetch.generate_dna([movie]), [{'id': str(movie.id), 'dna': self.dna}])
+                self.assertEqual(self.post.call_count, 1)
+
+    def test_fresh_but_invalid_dna_is_regenerated(self):
+        broken = json.loads(json.dumps(self.dna))
+        del broken['fingerprint']['scores']['adrenaline']
+        movie = self.title(dna=broken, dna_generated_at=datetime.utcnow())
+        self.post.return_value = self.success()
+        self.assertEqual(fetch.generate_dna([movie]), [{'id': str(movie.id), 'dna': self.dna}])
 
     def test_invalid_dna_gets_one_full_response_repair(self):
         movie = self.title()

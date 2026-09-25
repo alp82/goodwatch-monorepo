@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Union
 from email.utils import parsedate_to_datetime
 import time
@@ -9,7 +9,14 @@ import wmill
 
 from f.data_source.common import get_document_for_id
 from f.db.mongodb import init_mongodb, close_mongodb
-from f.dna.models import DnaMovie, DnaTv, DNAAnalysis
+from f.dna.models import (
+    DNA_STALE_AFTER_DAYS,
+    DnaMovie,
+    DnaTv,
+    DNAAnalysis,
+    create_fingerprint,
+    dna_generated_at,
+)
 from f.dna.generate.spend_pause import SpendPause, release_unprocessed
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
@@ -479,6 +486,37 @@ def is_tmdb_deleted(entry):
     return model.objects(tmdb_id=entry.tmdb_id, tmdb_deleted=True).first() is not None
 
 
+def release_fresh_dna(entry):
+    """Release a title whose DNA is younger than DNA_STALE_AFTER_DAYS without an LLM call.
+
+    Stores a missing fingerprint and resets selected_at to the DNA's generation
+    time, so the queue selects the title again once its DNA turns stale.
+    Returns False when the DNA is stale or unusable and must be regenerated.
+    """
+    generated_at = dna_generated_at(entry)
+    if generated_at is None:
+        return False
+    if generated_at.tzinfo is not None:
+        generated_at = generated_at.astimezone(timezone.utc).replace(tzinfo=None)
+    now = datetime.utcnow()
+    if generated_at <= now - timedelta(days=DNA_STALE_AFTER_DAYS):
+        return False
+    try:
+        fingerprint = create_fingerprint(entry.dna["fingerprint"]["scores"])
+    except (KeyError, TypeError, ValidationError):
+        return False
+    changes = {
+        "set__is_selected": False,
+        "set__selected_at": generated_at,
+        "set__dna_generated_at": generated_at,
+    }
+    if list(entry.vector_fingerprint or []) != fingerprint:
+        # updated_at tells the Crate DNA sync (f/sync/copy/dna_data) to publish it.
+        changes |= {"set__vector_fingerprint": fingerprint, "set__updated_at": now}
+    entry.update(**changes)
+    return True
+
+
 class UnidentifiedTitle(ValueError):
     """The model filled the strict schema with zeros instead of rating the title."""
 
@@ -497,6 +535,10 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
             # No LLM spend for titles deleted on TMDB; release the entry untouched.
             print(f"skipping {entry.original_title} (id: {entry.tmdb_id}): deleted on TMDB")
             entry.update(set__is_selected=False)
+            continue
+        if release_fresh_dna(entry):
+            print(f"skipping {entry.original_title} (id: {entry.tmdb_id}): DNA is younger than "
+                  f"{DNA_STALE_AFTER_DAYS} days")
             continue
         model = PRIMARY_MODEL if is_premium(entry) else FALLBACK_MODEL
         media_type = "Movie" if isinstance(entry, DnaMovie) else "Show"
@@ -565,10 +607,17 @@ def generate_dna(next_entries: list[Union[DnaMovie, DnaTv]]):
             entry.is_selected = False
             entry.save()
             continue
+        # One save stores the DNA, its fingerprint and the release, so no later
+        # step can leave a title with saved DNA selected.
+        generated_at = datetime.utcnow()
         entry.failed_at = None
         entry.error_message = None
         entry.llm_model_name = f"openrouter:{model}@alibaba"
         entry.dna = dna
+        entry.dna_generated_at = generated_at
+        entry.vector_fingerprint = create_fingerprint(dna["fingerprint"]["scores"])
+        entry.updated_at = generated_at
+        entry.is_selected = False
         entry.save()
         results.append({"id": str(entry.id), "dna": dna})
     return results

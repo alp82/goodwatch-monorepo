@@ -5,12 +5,7 @@
 from datetime import datetime
 
 from f.db.mongodb import init_mongodb, close_mongodb
-from f.dna.models import CoreScores, DnaMovie, DnaTv
-
-
-def create_fingerprint(scores: dict) -> list[float]:
-    validated = CoreScores(**scores)
-    return [float(getattr(validated, name)) for name in CoreScores.model_fields]
+from f.dna.models import DnaMovie, DnaTv, create_fingerprint
 
 
 def main(ids: dict[str, list], results: list[dict]):
