@@ -147,5 +147,5 @@ Spot checks against the live pages, 2026-09-25:
 | Breaking Bad | Metacritic | 87 / 98 reviews, user 9.4; seasons 73, 84, 89, 96, 99; IMDb id verified |
 | The Bear | RT | seasons 100, 99, 89, 84, 96; S4 88 reviews, Popcornmeter 69 from 1,290 |
 | The Bear | Metacritic | seasons 88, 92, 80, 72, 83; S3 45 reviews, user 6.3 from 148 |
-| The Simpsons | RT | 38 seasons listed, 22 with a Tomatometer; S24 33% from 6 reviews, Popcornmeter 67 from 145 |
+| The Simpsons | RT | 38 seasons listed, 21 with a Tomatometer; S24 33% from 6 reviews, Popcornmeter 67 from 145 |
 | The Simpsons | Metacritic | 41 seasons listed, Metascores for S1 (80) and S2 (92) only |
