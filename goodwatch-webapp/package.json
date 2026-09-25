@@ -14,6 +14,7 @@
 	"dependencies": {
 		"@headlessui/react": "^2.2.0",
 		"@heroicons/react": "^2.1.5",
+		"@huggingface/tokenizers": "0.2.0",
 		"@qdrant/js-client-grpc": "^1.15.1",
 		"@qdrant/js-client-rest": "^1.19.0",
 		"@remix-run/node": "^2.17.2",
@@ -40,6 +41,7 @@
 		"is-ip": "^5.0.1",
 		"isbot": "^5.1.17",
 		"node-crate": "^3.0.0",
+		"onnxruntime-node": "1.30.0",
 		"patch-package": "^8.0.1",
 		"posthog-js": "^1.295.0",
 		"react": "^18.3.1",
