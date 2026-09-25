@@ -122,7 +122,6 @@ export const SmartOnboardingBanner = () => {
 				</div>
 				<div className="md:flex-1">
 					<HandlePicker
-						id="onboarding-handle"
 						suggestion={currentStep.suggestion}
 						submitLabel="Save handle"
 						onClaimed={actions.completeHandle}

@@ -1,7 +1,7 @@
 // The one place a person chooses their handle: the onboarding step, the share flow, and profile settings all use it.
 // A handle is permanent, so the form says so before anyone claims one.
 import { useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { useId, useState } from "react"
 import { useClaimHandle } from "~/routes/api.handle"
 import { shareViewerQueryKey } from "~/routes/api.share-lists"
 import { useHandleAvailability } from "~/ui/share-lists/useHandleAvailability"
@@ -11,7 +11,7 @@ export function HandlePicker({
 	suggestion = "",
 	submitLabel = "Claim handle",
 	autoFocus = false,
-	id = "handle",
+	id: givenId,
 	onClaimed,
 }: {
 	suggestion?: string
@@ -20,6 +20,9 @@ export function HandlePicker({
 	id?: string
 	onClaimed: (handle: string) => void
 }) {
+	// Unique per mount unless given: the onboarding banner renders its content twice (desktop and phone drawer).
+	const autoId = useId()
+	const id = givenId ?? `handle${autoId.replace(/:/g, "")}`
 	const [input, setInput] = useState(suggestion)
 	const status = useHandleAvailability(input)
 	const claim = useClaimHandle()
