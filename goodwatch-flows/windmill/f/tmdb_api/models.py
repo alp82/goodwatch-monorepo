@@ -481,6 +481,9 @@ class BaseTmdbDetails(Document):
             "updated_at",
             "is_selected",
             ("updated_at", "tmdb_id"),
+            # The completeness queue reads never-selected and stale titles in popularity order.
+            ("selected_at", "-popularity"),
+            ("-popularity", "selected_at"),
             # Partial: the sync looks up every flagged title on each run.
             {"fields": ["tmdb_deleted"], "partialFilterExpression": {"tmdb_deleted": True}},
         ],

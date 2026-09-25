@@ -45,6 +45,9 @@ class BaseDNA(Document):
             "selected_at",
             "updated_at",
             "is_selected",
+            # The completeness queue reads never-selected and stale titles in popularity order.
+            ("selected_at", "-popularity"),
+            ("-popularity", "selected_at"),
         ],
     }
 

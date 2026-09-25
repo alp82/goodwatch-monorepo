@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Union, Literal
 
-from mongoengine import Document, Q
+from mongoengine import Document, Q, QuerySet
 from pydantic import BaseModel
 
 
@@ -156,61 +156,99 @@ def not_deleted_filter(model: Document) -> Q:
     return Q()
 
 
-def completeness_queue(
-    movie_model: Document, tv_model: Document, count: int, buffer_minutes: int
+# A fetched title is due for a refresh once this long has passed since its last selection.
+STALE_AFTER_DAYS = 30
+
+
+def never_selected_titles(model: Document) -> QuerySet:
+    # Walks the (selected_at, -popularity) index, so it reads only the titles it returns.
+    # One $or with the stuck titles below cannot walk an index in popularity order:
+    # MongoDB fetched and sorted every never-selected title on each run.
+    return model.objects(Q(selected_at=None) & not_deleted_filter(model)).order_by(
+        "-popularity"
+    )
+
+
+def stuck_titles(model: Document, selected_before: datetime) -> QuerySet:
+    # Selected by a run that never released them, e.g. one that timed out.
+    # Few titles match, found through the is_selected index.
+    return model.objects(
+        Q(is_selected=True)
+        & Q(selected_at__lt=selected_before)
+        & not_deleted_filter(model)
+    ).order_by("-popularity")
+
+
+def stale_titles(model: Document, stale_before: datetime) -> QuerySet:
+    # Walks the (-popularity, selected_at) index and checks selected_at on the index
+    # key, so only the returned titles are fetched. The popularity condition is what
+    # makes MongoDB bound selected_at on the index; without it the scan fetches every
+    # recently selected title that is more popular than the stale ones.
+    return model.objects(
+        Q(popularity__gte=0)
+        & Q(selected_at__lt=stale_before)
+        & not_deleted_filter(model)
+    ).order_by("-popularity")
+
+
+def no_fetch_entries_for(
+    model: Document, count: int, buffer_time_for_selected_entries: datetime
 ) -> list[Document]:
-    # Get the top n entries without "selected_at" sorted by popularity
-    buffer_time_for_selected_entries = datetime.utcnow() - timedelta(
-        minutes=buffer_minutes
-    )
-    movies_no_fetch = list(
-        movie_model.objects(
-            (
-                Q(selected_at=None)
-                | (
-                    Q(is_selected=True)
-                    & Q(selected_at__lt=buffer_time_for_selected_entries)
-                )
-            )
-            & not_deleted_filter(movie_model)
-        )
-        .order_by("-popularity")
-        .limit(count)
-    )
-    tvs_no_fetch = list(
-        tv_model.objects(
-            (
-                Q(selected_at=None)
-                | (
-                    Q(is_selected=True)
-                    & Q(selected_at__lt=buffer_time_for_selected_entries)
-                )
-            )
-            & not_deleted_filter(tv_model)
-        )
-        .order_by("-popularity")
-        .limit(count)
-    )
+    never_selected = list(never_selected_titles(model).limit(count))
+    stuck = list(stuck_titles(model, buffer_time_for_selected_entries).limit(count))
+    return by_popularity(never_selected + stuck)[:count]
 
-    # Get the top n entries with the oldest "selected_at"
-    movies_old_fetch = list(
-        movie_model.objects(Q(selected_at__ne=None) & not_deleted_filter(movie_model))
-        .order_by("selected_at").limit(count)
-    )
-    tvs_old_fetch = list(
-        tv_model.objects(Q(selected_at__ne=None) & not_deleted_filter(tv_model))
-        .order_by("selected_at").limit(count)
-    )
 
-    # Compare and return
-    no_fetch_entries = sorted(
-        movies_no_fetch + tvs_no_fetch, key=lambda x: x.popularity, reverse=True
+def stale_entries_for(
+    model: Document, count: int, stale_before: datetime
+) -> list[Document]:
+    return list(stale_titles(model, stale_before).limit(count))
+
+
+def by_popularity(entries: list[Document]) -> list[Document]:
+    return sorted(entries, key=lambda x: x.popularity or 0, reverse=True)
+
+
+def mix_batch(
+    no_fetch_entries: list[Document], stale_entries: list[Document], count: int
+) -> list[Document]:
+    """Half the batch for never-fetched titles, half for stale ones.
+
+    A group that cannot fill its half leaves the free slots to the other group.
+    """
+    queued = {(type(entry), entry.id) for entry in no_fetch_entries}
+    stale_entries = [
+        entry for entry in stale_entries if (type(entry), entry.id) not in queued
+    ]
+    no_fetch_share = min(
+        len(no_fetch_entries), max((count + 1) // 2, count - len(stale_entries))
+    )
+    return no_fetch_entries[:no_fetch_share] + stale_entries[: count - no_fetch_share]
+
+
+def completeness_queue(
+    movie_model: Document,
+    tv_model: Document,
+    count: int,
+    buffer_minutes: int,
+    stale_after_days: int = STALE_AFTER_DAYS,
+) -> list[Document]:
+    now = datetime.utcnow()
+    buffer_time_for_selected_entries = now - timedelta(minutes=buffer_minutes)
+    stale_before = now - timedelta(days=stale_after_days)
+
+    # The most popular titles never fetched, or reserved by a run that never finished
+    no_fetch_entries = by_popularity(
+        no_fetch_entries_for(movie_model, count, buffer_time_for_selected_entries)
+        + no_fetch_entries_for(tv_model, count, buffer_time_for_selected_entries)
     )[:count]
-    old_fetch_entries = sorted(
-        movies_old_fetch + tvs_old_fetch, key=lambda x: x.selected_at
+    # The most popular titles not fetched for stale_after_days
+    stale_entries = by_popularity(
+        stale_entries_for(movie_model, count, stale_before)
+        + stale_entries_for(tv_model, count, stale_before)
     )[:count]
 
-    next_entries = (no_fetch_entries + old_fetch_entries)[:count]
+    next_entries = mix_batch(no_fetch_entries, stale_entries, count)
     update_selected_for_next_entries(movie_model, tv_model, next_entries)
     return next_entries
 
