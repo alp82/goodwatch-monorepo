@@ -11,7 +11,7 @@ import http from "node:http"
 import { promisify } from "node:util"
 import { gunzip as gunzipCallback } from "node:zlib"
 import { assertSearchRankingEnabled } from "./mode.server.ts"
-import { normalized } from "./text-rules.server.ts"
+import { normalized, singular } from "./text-rules.server.ts"
 
 const gunzip = promisify(gunzipCallback)
 
@@ -119,7 +119,7 @@ export interface Peers {
 export interface NegationLabels {
 	/** Point ids per label. */
 	titles: number[][]
-	/** Content stem -> the labels that hold it. */
+	/** Content stem in singular() form -> the labels that hold it. */
 	labelsWithStem: Map<string, number[]>
 }
 
@@ -376,7 +376,8 @@ function nameIndex(d: Json): NameIndex {
 function negationLabels(d: Json): NegationLabels {
 	const labelsWithStem = new Map<string, number[]>()
 	;(d.stems as string[][]).forEach((stems, label) => {
-		for (const s of stems) {
+		// Builds since #168 store singular() forms already; older ones don't, and singular() is idempotent.
+		for (const s of new Set(stems.map(singular))) {
 			const list = labelsWithStem.get(s) ?? []
 			list.push(label)
 			labelsWithStem.set(s, list)

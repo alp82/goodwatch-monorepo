@@ -87,6 +87,21 @@ export function stem(word: string): string {
 	return word
 }
 
+/**
+ * One form for a stem's singular and plural, for the negation label match only ("zombies" stems to zomby but "zombie"
+ * to zombie; "superheroes" to superheroe; "wolves" to wolve). The same rules as `singular` in
+ * f/search/index_builders, which stores label stems in this form. Idempotent. stem() stays as it is: it defines the
+ * stored BM25F term weights.
+ */
+export function singular(stemmed: string): string {
+	if (length(stemmed) < 4) return stemmed
+	if (stemmed.endsWith("ie")) return `${stemmed.slice(0, -2)}y`
+	if (stemmed.endsWith("lve")) return `${stemmed.slice(0, -2)}f`
+	if (["oe", "use", "che", "ze"].some((x) => stemmed.endsWith(x)))
+		return stemmed.slice(0, -1)
+	return stemmed
+}
+
 /** The stemmed content words of a text, in order, without stopwords. */
 export function tokens(text: string | null | undefined): string[] {
 	const out: string[] = []

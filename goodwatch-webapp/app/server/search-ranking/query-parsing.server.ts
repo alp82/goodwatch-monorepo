@@ -1,7 +1,14 @@
 // Reads the search text: language, negated clauses, a decade or year, spelling, and the facets of Jev's searched
 // phrases. Pure functions over the query and the loaded search index.
 import type { SearchIndex } from "./search-index.server.ts"
-import { STOPWORDS, length, stem, tokens, words } from "./text-rules.server.ts"
+import {
+	STOPWORDS,
+	length,
+	singular,
+	stem,
+	tokens,
+	words,
+} from "./text-rules.server.ts"
 
 // --- Language -----------------------------------------------------------------------------------------------------
 
@@ -96,14 +103,15 @@ export function splitNegation(text: string): {
 
 /**
  * Per point id, the share (capped at 1) of 2 keyword or essence-tag labels that hold every content stem of a negated
- * phrase ("aliens" hits "alien" and "alien invasion"). Titles without a hit are absent.
+ * phrase ("aliens" hits "alien" and "alien invasion"). Stems compare in their singular() form, so "zombies" hits
+ * "zombie". Titles without a hit are absent.
  */
 export function labelNegation(
 	index: SearchIndex,
 	phrase: string,
 ): Map<number, number> {
 	const out = new Map<number, number>()
-	const want = [...new Set(tokens(phrase))]
+	const want = [...new Set(tokens(phrase).map(singular))]
 	if (!want.length) return out
 	const { labelsWithStem, titles } = index.negationLabels
 	let hit: Set<number> | null = null
