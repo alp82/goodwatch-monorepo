@@ -1,6 +1,7 @@
 import React from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { SectionIds } from "~/ui/details/sections"
+import EpisodeGridLink from "~/ui/details/hero/EpisodeGridLink"
 import ListActions from "~/ui/details/hero/ListActions"
 import RateButton from "~/ui/details/hero/RateButton"
 import RatingChips from "~/ui/details/hero/RatingChips"
@@ -12,6 +13,8 @@ import type { Section, SectionProps } from "~/utils/scroll"
 export interface DetailsHeroProps {
 	media: MovieResult | ShowResult
 	country: string
+	/** Whether the page has an episode grid to link to from the score bar. */
+	hasEpisodeGrid?: boolean
 	sectionProps: SectionProps<SectionIds>
 	navigateToSection: (section: Section) => void
 }
@@ -23,7 +26,7 @@ const GLASS = "md:rounded-xl md:border md:border-white/10 md:bg-black/55 md:back
 // list actions on a glass bar at the bottom.
 // Phones: a backdrop banner plays the trailer; score, ratings, streaming, and
 // actions follow on one dark surface.
-export default function DetailsHero({ media, country, sectionProps, navigateToSection }: DetailsHeroProps) {
+export default function DetailsHero({ media, country, hasEpisodeGrid = false, sectionProps, navigateToSection }: DetailsHeroProps) {
 	return (
 		<div className="relative mx-auto mb-10 mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div {...sectionProps.overview}>
@@ -36,11 +39,19 @@ export default function DetailsHero({ media, country, sectionProps, navigateToSe
 						</div>
 						<BackdropTrailer media={media} className="h-44 rounded-t-2xl md:hidden" />
 
-						<div className={`relative z-30 grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-4 px-4 pt-1 md:m-3 md:flex md:flex-wrap md:gap-x-5 md:gap-y-3 md:py-3 ${GLASS}`}>
-							<ScoreRing media={media} size={52} />
-							<RateButton media={media} className="md:order-last md:ml-auto" />
-							<div className="col-span-2 md:col-span-1">
-								<RatingChips media={media} fill />
+						{/* The score bar puts the score, the site chips and the rate button on one line when
+						    its own width allows (a container query); otherwise the chips move to a second
+						    line under the score and the rate button. */}
+						<div className={`@container relative z-30 px-4 pt-1 md:m-3 md:py-3 ${GLASS}`}>
+							<div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-4 md:gap-x-5 md:gap-y-3 @[50rem]:grid-cols-[auto_1fr_auto]">
+								<ScoreRing media={media} size={52} />
+								<RateButton media={media} className="@[50rem]:col-start-3 @[50rem]:row-start-1" />
+								<div className="col-span-2 flex flex-wrap items-center gap-1.5 @[50rem]:col-span-1 @[50rem]:col-start-2 @[50rem]:row-start-1">
+									<div className="w-full md:w-auto">
+										<RatingChips media={media} fill />
+									</div>
+									{hasEpisodeGrid && <EpisodeGridLink />}
+								</div>
 							</div>
 						</div>
 

@@ -8,6 +8,7 @@ import DetailsHero from "~/ui/details/hero/DetailsHero"
 import { useScrollSections } from "~/utils/scroll"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
+import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -60,6 +61,7 @@ export default function Details({ media, country, episodeGrid }: DetailsProps) {
 			<DetailsHero
 				media={media}
 				country={country}
+				hasEpisodeGrid={hasEpisodeGrid(episodeGrid)}
 				sectionProps={sectionProps}
 				navigateToSection={navigateToSection}
 			/>
@@ -74,6 +76,7 @@ export default function Details({ media, country, episodeGrid }: DetailsProps) {
 						media={media}
 						country={country}
 						episodeGrid={episodeGrid}
+						headerHeight={headerHeight}
 						sectionProps={sectionProps}
 						navigateToSection={navigateToSection}
 					/>
