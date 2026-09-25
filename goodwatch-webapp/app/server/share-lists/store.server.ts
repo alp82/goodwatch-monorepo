@@ -1,6 +1,7 @@
 // Share lists and public profiles in Crate (doc.user_list, doc.user_profile, doc.user_handle).
 // Every write validates its input and checks ownership; reads right after a write refresh the table first,
 // because Crate makes writes visible to reads about once a second.
+// Deletes are soft: rows get deleted_at (renamed handles get released_at), and every read filters them out.
 import { createHash, randomBytes } from "node:crypto"
 import { entryKey, type ListEntry, parseTitleKey, resolveCardTitles } from "~/server/share-lists/titles.server"
 import { isDesignKey } from "~/ui/share-card/designs"
@@ -137,7 +138,7 @@ const refreshLists = () => run("REFRESH TABLE doc.user_list", [])
 
 export async function getList(id: string): Promise<ShareList | null> {
 	if (!/^[0-9A-Za-z]{10}$/.test(id)) return null
-	const [row] = await select<ListRow>(`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE id = ?`, [id])
+	const [row] = await select<ListRow>(`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE id = ? AND deleted_at IS NULL`, [id])
 	return row ? fromRow(row) : null
 }
 
@@ -149,13 +150,13 @@ async function ownedList(userId: string, id: string) {
 }
 
 export async function listsByUser(userId: string): Promise<ShareList[]> {
-	const rows = await select<ListRow>(`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE user_id = ? ORDER BY updated_at DESC LIMIT 200`, [userId])
+	const rows = await select<ListRow>(`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE user_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT 200`, [userId])
 	return rows.map(fromRow)
 }
 
 export async function publicListsByUser(userId: string): Promise<ShareList[]> {
 	const rows = await select<ListRow>(
-		`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE user_id = ? AND visibility = 'public' ORDER BY created_at DESC LIMIT 200`,
+		`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE user_id = ? AND visibility = 'public' AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 200`,
 		[userId],
 	)
 	return rows.map(fromRow)
@@ -180,7 +181,7 @@ export async function updateList(userId: string, id: string, input: ShareListInp
 	const valid = await validateList({ ...input, visibility: input.visibility ?? current.visibility })
 	await run(
 		`UPDATE doc.user_list SET title = ?, prompt_id = ?, design = ?, theme = ?, signature = ?, items = ?, visibility = ?,
-		 content_hash = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
+		 content_hash = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL`,
 		[valid.title, valid.promptId, valid.design, valid.theme, valid.signature, valid.items, valid.visibility, contentHash(valid), new Date(), id, userId],
 	)
 	await refreshLists()
@@ -190,14 +191,21 @@ export async function updateList(userId: string, id: string, input: ShareListInp
 export async function setListVisibility(userId: string, id: string, visibility: Visibility): Promise<ShareList> {
 	if (visibility !== "public" && visibility !== "unlisted") throw new ShareListError(400, "Unknown visibility.")
 	await ownedList(userId, id)
-	await run("UPDATE doc.user_list SET visibility = ?, updated_at = ? WHERE id = ? AND user_id = ?", [visibility, new Date(), id, userId])
+	await run("UPDATE doc.user_list SET visibility = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL", [
+		visibility,
+		new Date(),
+		id,
+		userId,
+	])
 	await refreshLists()
 	return (await getList(id)) as ShareList
 }
 
+/** Soft-deletes a list: it keeps its row with deleted_at set, and every read treats it as gone. */
 export async function deleteList(userId: string, id: string): Promise<void> {
 	await ownedList(userId, id)
-	await run("DELETE FROM doc.user_list WHERE id = ? AND user_id = ?", [id, userId])
+	const now = new Date()
+	await run("UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL", [now, now, id, userId])
 	await refreshLists()
 }
 
@@ -225,30 +233,85 @@ export function handleProblem(handle: string): string | null {
 	return null
 }
 
+// A handle renamed away from, or of a deleted account, stays on hold this long before anyone else can claim it.
+// During the hold, the person who renamed away can switch back, and their old profile URL redirects.
+export const HANDLE_HOLD_DAYS = 90
+const HOLD_MS = HANDLE_HOLD_DAYS * 24 * 60 * 60 * 1000
+
 type ProfileRow = { user_id: string; handle: string; display_name: string | null }
 const toProfile = (r: ProfileRow): Profile => ({ userId: r.user_id, handle: r.handle, displayName: r.display_name })
 
 export async function getProfileByUserId(userId: string): Promise<Profile | null> {
-	const [row] = await select<ProfileRow>("SELECT user_id, handle, display_name FROM doc.user_profile WHERE user_id = ?", [userId])
+	const [row] = await select<ProfileRow>("SELECT user_id, handle, display_name FROM doc.user_profile WHERE user_id = ? AND deleted_at IS NULL", [userId])
 	return row ? toProfile(row) : null
 }
 
 export async function getProfileByHandle(handle: string): Promise<Profile | null> {
 	const normalized = normalizeHandle(handle)
 	if (handleProblem(normalized)) return null
-	const [row] = await select<ProfileRow>("SELECT user_id, handle, display_name FROM doc.user_profile WHERE handle = ?", [normalized])
+	const [row] = await select<ProfileRow>("SELECT user_id, handle, display_name FROM doc.user_profile WHERE handle = ? AND deleted_at IS NULL", [
+		normalized,
+	])
 	return row ? toProfile(row) : null
 }
 
-/** Whether someone else holds the handle. */
+/**
+ * The profile a handle in a URL points to. A handle its owner renamed away from, still on hold, redirects to their
+ * current handle. Unknown, expired, and deleted handles resolve to null.
+ */
+export async function findProfileByHandle(handle: string): Promise<{ profile: Profile } | { redirectTo: string } | null> {
+	const normalized = normalizeHandle(handle)
+	if (handleProblem(normalized)) return null
+	const profile = await getProfileByHandle(normalized)
+	if (profile) return { profile }
+	const row = await getHandleRow(normalized)
+	if (!row || row.deleted_at != null || row.released_at == null || row.released_at + HOLD_MS < Date.now()) return null
+	const current = await getProfileByUserId(row.user_id)
+	return current && current.handle !== normalized ? { redirectTo: current.handle } : null
+}
+
+type HandleRow = {
+	handle: string
+	user_id: string
+	released_at: number | null
+	deleted_at: number | null
+	_seq_no: number
+	_primary_term: number
+}
+
+// Reads by primary key are real-time in Crate, so this sees a claim made a moment ago. The timestamps are cast to
+// epoch milliseconds because the Crate client turns a NULL timestamp into a Date at 1970-01-01.
+async function getHandleRow(handle: string): Promise<HandleRow | null> {
+	const [row] = await select<HandleRow>(
+		`SELECT handle, user_id, CAST(released_at AS BIGINT) AS released_at, CAST(deleted_at AS BIGINT) AS deleted_at, _seq_no, _primary_term
+		 FROM doc.user_handle WHERE handle = ?`,
+		[handle],
+	)
+	return row ?? null
+}
+
+type Claim = "free" | "yours" | "reclaim" | "take-over" | "taken"
+
+// What claiming this handle means for the person: a new row, already theirs, switching back to a handle they renamed
+// away from, taking over a row whose hold has expired, or not possible.
+function claimFor(row: HandleRow | null, userId: string, now: number): Claim {
+	if (!row) return "free"
+	const active = row.released_at == null && row.deleted_at == null
+	if (active) return row.user_id === userId ? "yours" : "taken"
+	const heldUntil = (row.deleted_at ?? row.released_at ?? 0) + HOLD_MS
+	if (heldUntil <= now) return "take-over"
+	return row.user_id === userId && row.deleted_at == null ? "reclaim" : "taken"
+}
+
+/** Whether the person can't have the handle: someone holds it, or it's on hold for someone else. */
 export async function isHandleTaken(handle: string, userId?: string): Promise<boolean> {
-	const [row] = await select<{ user_id: string }>("SELECT user_id FROM doc.user_handle WHERE handle = ?", [handle])
-	return !!row && row.user_id !== userId
+	return claimFor(await getHandleRow(handle), userId ?? "", Date.now()) === "taken"
 }
 
 /**
  * Claims a handle for the person, or changes theirs. Exactly one of two people claiming the same handle at once
- * succeeds: the handle is the primary key of user_handle. Changing a handle frees the old one.
+ * succeeds: a new handle is an insert keyed by the handle, and taking over an expired one is an update guarded by the
+ * row's sequence number. Changing a handle releases the old one, which then stays on hold.
  */
 export async function claimHandle(userId: string, rawHandle: string, displayName?: string | null): Promise<Profile> {
 	const handle = normalizeHandle(rawHandle)
@@ -257,10 +320,25 @@ export async function claimHandle(userId: string, rawHandle: string, displayName
 	const name = displayName === undefined ? undefined : clean(displayName).slice(0, 50) || null
 	const now = new Date()
 
-	await run("INSERT INTO doc.user_handle (handle, user_id, created_at) VALUES (?, ?, ?) ON CONFLICT (handle) DO NOTHING", [handle, userId, now])
+	const row = await getHandleRow(handle)
+	const claim = claimFor(row, userId, now.getTime())
+	if (claim === "taken") throw new ShareListError(409, "That handle is taken.")
+	if (claim === "free") {
+		await run("INSERT INTO doc.user_handle (handle, user_id, claimed_at) VALUES (?, ?, ?) ON CONFLICT (handle) DO NOTHING", [handle, userId, now])
+	} else if (claim === "reclaim" || claim === "take-over") {
+		const current = row as HandleRow
+		const result = await run(
+			`UPDATE doc.user_handle SET user_id = ?, claimed_at = ?, released_at = NULL, deleted_at = NULL
+			 WHERE handle = ? AND _seq_no = ? AND _primary_term = ?`,
+			[userId, now, handle, current._seq_no, current._primary_term],
+		)
+		if (!result?.rowcount) throw new ShareListError(409, "That handle is taken.")
+	}
 	await run("REFRESH TABLE doc.user_handle", [])
-	const [holder] = await select<{ user_id: string }>("SELECT user_id FROM doc.user_handle WHERE handle = ?", [handle])
-	if (holder?.user_id !== userId) throw new ShareListError(409, "That handle is taken.")
+	const holder = await getHandleRow(handle)
+	if (holder?.user_id !== userId || holder.released_at != null || holder.deleted_at != null) {
+		throw new ShareListError(409, "That handle is taken.")
+	}
 
 	const current = await getProfileByUserId(userId)
 	await run(
@@ -269,7 +347,12 @@ export async function claimHandle(userId: string, rawHandle: string, displayName
 		[userId, handle, name === undefined ? (current?.displayName ?? null) : name, now, now],
 	)
 	if (current && current.handle !== handle) {
-		await run("DELETE FROM doc.user_handle WHERE handle = ? AND user_id = ?", [current.handle, userId])
+		await run("UPDATE doc.user_handle SET released_at = ? WHERE handle = ? AND user_id = ? AND released_at IS NULL AND deleted_at IS NULL", [
+			now,
+			current.handle,
+			userId,
+		])
+		await run("REFRESH TABLE doc.user_handle", [])
 	}
 	await run("REFRESH TABLE doc.user_profile", [])
 	return (await getProfileByUserId(userId)) as Profile
@@ -279,4 +362,16 @@ export async function setDisplayName(userId: string, displayName: string | null)
 	const current = await getProfileByUserId(userId)
 	if (!current) throw new ShareListError(400, "Choose a handle first.")
 	return claimHandle(userId, current.handle, displayName)
+}
+
+/**
+ * Soft-deletes everything share lists store for a person: their lists, profile, and handles. The handles stay on hold,
+ * so nobody else takes over their links right away. Call it from the account-deletion flow.
+ */
+export async function deleteAccountData(userId: string): Promise<void> {
+	const now = new Date()
+	await run("UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, now, userId])
+	await run("UPDATE doc.user_profile SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, now, userId])
+	await run("UPDATE doc.user_handle SET deleted_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, userId])
+	await run("REFRESH TABLE doc.user_list, doc.user_profile, doc.user_handle", [])
 }
