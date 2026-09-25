@@ -963,3 +963,97 @@ work), p50 / p95 ms:
 
 The fixes don't make the prototype slower. In-process, the union costs two extra partial sorts over the filtered rows;
 the port's gain is the Qdrant plan, which the replay measured.
+
+## Parity check of the TypeScript ranker (2026-09-25, issue #145)
+
+The port (`goodwatch-webapp/app/server/search-ranking/`) ran all 168 graded queries on the recorded readings, and
+`FINAL["combo-safe-v3"]` was exported fresh (its lists equal the saved ones). Scripts: `bench/parity/`. Results:
+`results/bench/parity.json`.
+
+To separate the causes, the port also ran on two local copies of production's stores that hold the arena snapshot
+(`mirror.py`: the Qdrant vectors, payload and profiles, and an index build from the production builders on the arena
+inputs):
+
+- **exact:** float32 text vectors, no HNSW. What differs from the prototype here is logic, float noise or ties.
+- **prod layout:** production's settings (float16, HNSW, 6 shards). What differs from exact is the approximation.
+
+On production, the prototype also ran with production's vote counts (`patch_production_votes.py`: the build's title
+table, plus live eligibility). Top 10s compared with the prototype:
+
+| run | shared (mean) | same set | same order | min |
+|---|---|---|---|---|
+| exact mirror, before the fix | 9.905 | 158 | 137 | 3 |
+| exact mirror | 9.94 | 158 | 136 | 9 |
+| exact mirror, prototype with normalized embeddings | 9.97 | 163 | 158 | 9 |
+| exact mirror, that prototype scoring the port's pool | 9.988 | 166 | 165 | 9 |
+| prod-layout mirror | 9.946 | 159 | 136 | 9 |
+| production | 9.274 | 77 | 42 | 6 |
+| production, prototype with production votes | 9.821 | 140 | 112 | 8 |
+
+**One port bug, fixed** (`1b4ac94c`): round 2 and the non-English rescore ask Qdrant to score a known set of ids.
+Without `params.exact`, Qdrant returned only 789 of 1,110 ids for the dense queries of "zombie movie without gore",
+on production and on both mirrors, and the missing titles scored 0. With exact search, every title gets its score, and
+an A/B on production measured the same Qdrant time (p50 8.7 ms).
+
+**Same data (exact mirror): every difference is explained.** 32 queries differ in order after the fix:
+
+- 22 **normalization:** the arena's stored embeddings have norms of 0.9995 to 1.0005 (float16 precision), and the
+  prototype takes the dot product. Qdrant normalizes stored vectors, so cosines differ by up to 3e-4. They're
+  identical when the prototype normalizes too.
+- 7 **pool:** identical when the prototype scores the port's pool. The pools differ at list cuts: of 4,582 titles
+  in one pool only, 4,306 tie at the cut (numpy's argpartition and Qdrant pick different tied titles; one-dimension
+  fingerprint readings tie thousands: "zombie movie without gore" has 5,990 titles at 0.0 for 500 places), 204 are
+  within float noise of it, 71 come from the int8 mix statistics, and 1 sits 7e-5 below the non-English union cut.
+- 3 **near ties:** two titles within 1e-4 ("danny boyle movies and stuff like them"), or a sparse list's kept hits
+  differ by a tie at its 300th score ("survivors after a plane crash", "detective show with no murders").
+
+Scores on identical pools match to a median of 1.2e-5 per query. The larger outliers (up to 0.5) are single titles
+whose BM25 hit is kept on one side only, because of a tie at the 300 cut.
+
+**Approximation (prod-layout mirror against exact):** 141 of 168 in the same order. The differences are pools:
+HNSW recall, float16 and the tie order of another shard layout.
+
+**Production: data drift.** Production's data changed a lot since the snapshot, and it's still changing:
+
+- The IMDb vote-count repair (the parser had dropped the dot: "2.5M" became 25,000,000) is rewriting
+  `goodwatch_overall_score_voting_count`. The build's title table (08:20 UTC) has 50,371 eligible titles, and
+  Qdrant's live filter has 41,507 (10:20 UTC), down from 45,590 at about 09:45.
+- About 3,000 points were published today (194,765 points). 1,435 live-eligible titles aren't in the build: they
+  take places in the round-1 lists and are then dropped.
+
+Of the 126 queries whose top 10 differs from the prototype on production:
+
+| cause | queries | evidence |
+|---|---|---|
+| votes and eligibility | 72 | the prototype with production votes gives the same top 10 |
+| titles published after the build | 6 | the same, once those titles are excluded (experiment) |
+| credits (#140 creators, peers) | 8 | the reference's seeds, own titles or profile terms differ |
+| changed titles | 11 | a title that moved has a re-embedded text (Inception: cosine 0.90), a regenerated fingerprint or a new vote count |
+| pool drift | 23 | the pool holds new or changed titles, or other peers |
+| approximation | 6 | 3 the same as on the prod-layout mirror, 3 whose pools differ only by ties |
+
+**Quality.** 61 ungraded (query, title) pairs reached the port's top 10s: 5 on the mirrors, the rest on production. Two sonnet
+assessors graded them (quadratic weighted kappa 0.878, 72% exact, no pair 2 or more apart, so no assessor C). The
+grades are merged into `results/grades.json` (5,009 → 5,070) as `r6-p145`, on `main` only. The new grades raise the
+ideal DCG of some queries, so every row is re-scored with them:
+
+| run | dev | dsty | ho | ho2 | ho3 | ho4 | holdout5 | bad5 |
+|---|---|---|---|---|---|---|---|---|
+| prototype | .822 | .810 | .777 | .740 | .911 | .872 | .790 | 40 (+15 ho5) |
+| port, exact mirror | .820 | .810 | .776 | .740 | .911 | .872 | .787 | 40 (+15) |
+| port, prod-layout mirror | .821 | .810 | .778 | .740 | .911 | .872 | .789 | 40 (+15) |
+| port, production | .817 | .799 | .764 | .726 | .909 | .872 | .788 | 40 (+15) |
+| prototype, production votes | .816 (4 ungraded) | .813 | .761 | .723 | .910 | .868 | .787 | 41 (+15) |
+
+On the same data, the port is within 0.003 of the prototype on every split. On production, it's within 0.005 of
+the prototype with production's votes on every split except dsty. The dsty gap (.799 against .813) is two credit
+changes: "vince gilligan" (0.716 → 0.675, the #140 creators) and "miyazaki-like" (1.000 → 0.964, other peers). The
+drop against the snapshot (ho −.013, ho2 −.014) comes from graded titles that fell below 2,000 votes.
+
+**For #146:**
+
+- The 2,000-vote line was tuned on the inflated counts, and the eligible set is still shrinking. Decide whether the
+  line should move before switching.
+- Rebuild the indexes once the repair is done.
+- The deviation 1 of #144 is right: the prototype encodes facet phrases, units and negated clauses with the query's
+  main model (`rank_query`). Design rule 2 in the spec is corrected.

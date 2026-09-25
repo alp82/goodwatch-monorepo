@@ -1,6 +1,8 @@
 // Runs the local search ranking end to end on recorded searches: the Jev readings of the search arena's captures,
 // against the current search index build and Qdrant (read-only queries). Prints each query's top 10 and timings, and,
-// with --expect, how many of an expected top 10 it shares.
+// with --expect, how many of an expected top 10 it shares. --json writes every result with its trace (the texts,
+// candidate scores and signals, see SearchTrace), which docs/prototypes/search-arena/bench/parity/ compares with the
+// prototype.
 //
 //   SEARCH_RANKING_MODE=shadow npx vite-node --config scripts/arena-vite.config.mjs scripts/search-ranking-run.ts \
 //     --captures=<dir of <id>.json captures> [--only=id,id] [--expect=<trace.jsonl with top10 per id>] [--json=<out>]

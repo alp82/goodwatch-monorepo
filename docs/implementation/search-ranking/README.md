@@ -153,9 +153,12 @@ benchmark machine:
 
 1. **Use full precision for the query models,** 4 threads, in one worker thread with a queue. Int8 failed parity.
    Running encodes at the same time adds no throughput.
-2. **Encode in two batches per search, one per model.** `bge-base` encodes only the query and the residual. The
-   multilingual model encodes the intent string and the facet phrases. Never send the facet phrases through `bge-base`:
-   41 phrases take 161 ms there.
+2. **Encode in two batches per search, one per model.** The query's main model encodes the query or the residual, the
+   facet phrases, the coverage units and the negated clauses: `bge-base` for English queries, the multilingual model
+   for non-English ones. The multilingual model also encodes the intent text, and `bge-base` also encodes Jev's
+   English chips of a non-English query. This is what the prototype does (checked in #145); an earlier version of
+   this rule sent the facet phrases to the multilingual model, which changes the ranking. Batched, the encodes took
+   p50 12 ms and p95 30 ms on the benchmark machine (#144).
 3. **Call Qdrant over plain HTTP with `node:http`,** one `/points/query/batch` request per round. Two problems with
    the alternatives:
    - `@qdrant/js-client-rest` converts every JSON value and costs about 10 ms per batch, against 1.4 ms of Qdrant time.
@@ -593,7 +596,9 @@ Done in #144, in `goodwatch-webapp/app/server/search-ranking/`. Nothing calls it
      profile (its centroids with `lookup_from` for one entity, as vectors otherwise).
   3. Non-English queries with English chips only: the union of both top 2,000 lists, scored with both vectors.
   4. Round 2, the pool: every signal for the pool ids, with the search's filter. The candidates are the pool titles
-     that pass it.
+     that pass it. Every dense query here and in step 3 searches exactly (`params.exact`): without it, Qdrant can
+     return only part of a known set of ids (789 of 1,110 in "zombie movie without gore"), and the missing titles
+     scored 0 (fixed in #145; exact costs no measurable Qdrant time).
 
   So 156 of the 168 graded queries take 2 rounds and the 12 non-English queries with chips take 3, plus the request in
   step 1, which overlaps the encoding.
@@ -604,14 +609,17 @@ Done in #144, in `goodwatch-webapp/app/server/search-ranking/`. Nothing calls it
   `goodwatch-webapp/migrations/20260925_search_history_ranker_version.sql`, applied on September 25, 2026) records
   the ranking that produced the served list: `fingerprint-text-v1` (today's), `essence-text-v1` (the basic search)
   and, once it serves, `hybrid-v1` (`RANKER_VERSION`). The Jev contract and question version strings are unchanged.
-- **Encoding differs from design rule 2.** The prototype encodes the facet phrases, coverage units and negated clauses
-  with the query's main model: `bge-base` for English queries. The benchmark trace does too (71 facet and 75 unit
-  encodes with `bge-base`). Encoding them with the multilingual model would change the ranking, so the port follows
-  the prototype. For English queries, only the intent text goes through the multilingual model.
+- **Encoding follows the prototype** (design rule 2, corrected in #145): the facet phrases, coverage units and negated
+  clauses go through the query's main model, `bge-base` for English queries, as in `simp_combo.rank_query` and the
+  benchmark trace (71 facet and 75 unit encodes with `bge-base`). For English queries, only the intent text goes
+  through the multilingual model.
 - **Local run:** `goodwatch-webapp/scripts/search-ranking-run.ts` ranks the arena captures (recorded readings) against
   production Qdrant and the current build. On September 25, 2026 (build `20260925T082040Z`), all 168 graded queries
   ran; their top 10s share 9.86 titles on average with the prototype's trace, 145 are the same set and 119 the same
-  order. The differences are fresher data and fresh query encodes; #145 checks parity properly.
+  order. #145 checked parity properly: see [parity check](#parity-check).
+- **Trace:** `rankSearch` with `request.trace` also returns the encoded texts, every candidate with its score and
+  each signal's contribution, the top 50 before the blend, the reference's seeds, own titles and profile terms, and
+  how many candidates each pool query returned. `search-ranking-run.ts --json` asks for it.
 
 ### Parity check
 
@@ -623,6 +631,27 @@ Before shadow mode, compare the TypeScript ranker with the prototype on all 168 
 
 Target identical top 10s, and scores within float tolerance. This is a one-off script next to the prototype, not a test
 suite in the webapp.
+
+Done in #145 (`docs/prototypes/search-arena/bench/parity/`, results in `results/bench/parity.json` and the arena log's
+"Parity check" section). The port also ran on local copies of production's stores that hold the arena snapshot
+(`mirror.py`), one exact and one with production's Qdrant settings, so logic, approximation and data drift could be
+told apart:
+
+- **One port bug, fixed:** round 2 and the rescore now search exactly (see the Qdrant requests above).
+- **Same data:** 136 of 168 top 10s in the same order, and 9.94 shared titles on average. All 32 differences are
+  explained: 22 by the arena's stored embeddings, whose norms differ from 1 by up to 5e-4 (Qdrant normalizes them,
+  the prototype doesn't), 7 by pools that differ at list cuts (mostly ties: a one-dimension fingerprint reading can tie
+  thousands of titles, and numpy and Qdrant keep different ones), and 3 by near ties. With normalized embeddings and
+  the port's pool, the prototype gives the port's top 10 on 165 of 168 queries.
+- **Production:** 42 of 168 in the same order, because the data changed: the IMDb vote-count repair of September 25
+  (eligible titles: 50,371 in the build, 41,507 in Qdrant's live payload hours later), about 3,000 new points,
+  re-embedded titles and new credits. The prototype with production's votes gives the same top 10 as the port on 112
+  queries. The rest is attributed title by title.
+- **Quality**, with 61 new grades: on the same data the port is within 0.003 NDCG@10 of the prototype on every split
+  (dev .820 against .822, holdout5 .787 against .790). On production it's within 0.005 of the prototype with
+  production's votes, except the dev style group, where two queries have new credits.
+- **Before the switch (#146):** the 2,000-vote eligibility line was tuned on the inflated vote counts, so decide
+  whether it moves. Rebuild the indexes after the vote repair.
 
 ## Prerequisites
 
