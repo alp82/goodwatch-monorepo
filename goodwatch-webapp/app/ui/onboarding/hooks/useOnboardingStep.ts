@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react"
 import { useFetcher } from "@remix-run/react"
+import { useShareViewer } from "~/routes/api.share-lists"
 import { useUserSettings } from "~/routes/api.user-settings.get"
 
+// Onboarding runs for signed-in people: country, streaming services, then their handle. The handle step also shows
+// on its own for people who finished the first two before handles existed.
 export type OnboardingStep = 
 	| { type: 'country', countryCode: string }
 	| { type: 'streaming' }
+	| { type: 'handle', suggestion: string }
 	| { type: 'complete' }
 
 export const useOnboardingStep = () => {
@@ -14,6 +18,14 @@ export const useOnboardingStep = () => {
 		isFetched: settingsFetched,
 	} = useUserSettings()
 	const guessCountryFetcher = useFetcher<{ country: string }>()
+	const viewer = useShareViewer(settingsFetched)
+	// Null while unknown. A failed check skips the step rather than blocking onboarding.
+	const needsHandle = viewer.isError
+		? false
+		: viewer.data
+			? viewer.data.signedIn && !viewer.data.handle
+			: null
+	const suggestion = viewer.data?.signedIn ? (viewer.data.suggestedHandle ?? "") : ""
 	
 	const [currentStep, setCurrentStep] = useState<OnboardingStep | null>(null)
 	const onboardingCompleted =
@@ -38,11 +50,16 @@ export const useOnboardingStep = () => {
 		}
 
 		if (onboardingCompleted) {
+			if (needsHandle === null) return
 			setCurrentStep((prev) => {
-				if (prev?.type === "complete") {
+				if (needsHandle) {
+					return prev?.type === "handle" ? prev : { type: "handle", suggestion }
+				}
+				// Finishing a step in this visit ends on the confirmation; a visit that starts complete shows nothing.
+				if (prev === null || prev.type === "complete") {
 					return prev
 				}
-				return null
+				return { type: "complete" }
 			})
 			return
 		}
@@ -67,15 +84,8 @@ export const useOnboardingStep = () => {
 				}
 				return { type: "streaming" }
 			})
-		} else {
-			setCurrentStep((prev) => {
-				if (prev?.type === "complete") {
-					return prev
-				}
-				return { type: "complete" }
-			})
 		}
-	}, [settingsFetched, settingsLoading, onboardingCompleted, userSettings, guessCountryFetcher.data])
+	}, [settingsFetched, settingsLoading, onboardingCompleted, userSettings, guessCountryFetcher.data, needsHandle, suggestion])
 
 	return {
 		isResolved: settingsFetched,

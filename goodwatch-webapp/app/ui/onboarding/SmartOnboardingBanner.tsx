@@ -6,6 +6,7 @@ import { CountryFlag } from "~/ui/country/CountryFlag"
 import { getCountryName } from "~/server/resources/country-names"
 import CountrySelector from "~/ui/onboarding/CountrySelector"
 import StreamingSelector from "~/ui/onboarding/StreamingSelector"
+import { HandlePicker } from "~/ui/share-lists/HandlePicker"
 import { useOnboardingStep } from "~/ui/onboarding/hooks/useOnboardingStep"
 import { useOnboardingActions } from "~/ui/onboarding/hooks/useOnboardingActions"
 
@@ -99,6 +100,34 @@ export const SmartOnboardingBanner = () => {
 					Which streaming services do you use?
 				</p>
 				<StreamingSelector onSelect={handleStreamingComplete} />
+			</div>
+		)
+	} else if (currentStep.type === 'handle') {
+		content = (
+			<div className="flex w-full flex-col gap-3 md:flex-row md:items-start md:gap-8">
+				<div className="flex flex-col gap-1 md:w-2/5">
+					<p className="text-white font-bold text-sm md:text-lg">
+						Choose your handle
+					</p>
+					<p className="text-white/80 text-xs md:text-sm">
+						It's your public profile address and signs every list you share. You can't change it later.
+					</p>
+					<button
+						type="button"
+						onClick={actions.dismiss}
+						className="mt-1 self-start text-sm text-white/60 underline underline-offset-4 hover:text-white"
+					>
+						Later
+					</button>
+				</div>
+				<div className="md:flex-1">
+					<HandlePicker
+						id="onboarding-handle"
+						suggestion={currentStep.suggestion}
+						submitLabel="Save handle"
+						onClaimed={actions.completeHandle}
+					/>
+				</div>
 			</div>
 		)
 	} else if (currentStep.type === 'complete') {

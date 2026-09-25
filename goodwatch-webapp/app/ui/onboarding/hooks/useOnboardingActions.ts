@@ -41,10 +41,15 @@ export const useOnboardingActions = (
 			},
 			{
 				onSuccess: () => {
-					setCurrentStep({ type: 'complete' })
+					// The settings refetch; useOnboardingStep moves on to the handle step or the confirmation.
+					setCurrentStep({ type: 'streaming' })
 				}
 			}
 		)
+	}
+
+	const completeHandle = () => {
+		setCurrentStep({ type: 'complete' })
 	}
 
 	const continueToQuiz = () => {
@@ -62,6 +67,7 @@ export const useOnboardingActions = (
 		isDismissed,
 		confirmCountry,
 		completeStreaming,
+		completeHandle,
 		continueToQuiz,
 		dismiss,
 	}
