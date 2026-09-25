@@ -264,14 +264,23 @@ def episode_deletes(db) -> list[str]:
 def diff_seasons(db) -> dict:
     """all_seasons: every season score from the effective episodes. season_changes: the diff
     against the stored seasons. Seasons without a rated episode (announced ones) have no row."""
+    # IMDb ratings have one decimal, so the mean is computed exactly in integers (tenths times
+    # votes) and rounded half up to two decimals. A float sum depends on the summation order and
+    # rounds an exact half either way, which would rewrite the season on every run.
     db.execute("""
         CREATE OR REPLACE TABLE all_seasons AS
+        WITH w AS (
+            SELECT show_tconst, season,
+                   sum(CAST(round(rating * 10) AS BIGINT) * votes)::HUGEINT tenths_votes,
+                   sum(votes)::HUGEINT votes, count(*)::INTEGER rated_episodes, max(episode) max_episode
+            FROM effective_episodes
+            WHERE season IS NOT NULL AND season > 0 AND votes > 0
+            GROUP BY show_tconst, season
+        )
         SELECT show_tconst, season,
-               round(sum(rating * votes) / sum(votes), 2) rating,
-               sum(votes)::BIGINT votes, count(*)::INTEGER rated_episodes, max(episode) max_episode
-        FROM effective_episodes
-        WHERE season IS NOT NULL AND season > 0 AND votes > 0
-        GROUP BY show_tconst, season
+               CAST((20 * tenths_votes + votes) // (2 * votes) AS DOUBLE) / 100 rating,
+               votes::BIGINT votes, rated_episodes, max_episode
+        FROM w
     """)
     db.execute("""
         CREATE OR REPLACE TABLE season_changes AS

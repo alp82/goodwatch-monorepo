@@ -296,6 +296,15 @@ class SeasonAggregationTests(unittest.TestCase):
             ("tt1", 2): (7.0, 50, 1, 1),
         })
 
+    def test_season_scores_round_exact_halves_up_every_time(self):
+        # (6.0 x 1 + 8.1 x 3) / 4 = 7.575 exactly, but 7.57499... as a float. Float sums also
+        # land on either side of a half depending on the summation order, which flipped
+        # stored seasons from run to run.
+        episodes = [episode("tt10", "tt1", 1, 1), episode("tt11", "tt1", 1, 2)]
+        ratings = [("tt10", 6.0, 1), ("tt11", 8.1, 3)]
+        db = database(ratings=ratings, episodes=episodes, stored_titles=[stored(1, "tt1", 8.0, 1000, kind="tv")])
+        self.assertEqual(self.seasons(db)[("tt1", 1)], (7.58, 4, 2, 2))
+
     def test_breaking_bad_style_numbers(self):
         # Two episodes with IMDb's real Ozymandias and Felina figures round to the expected mean.
         db = database(
