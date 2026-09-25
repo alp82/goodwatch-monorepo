@@ -1,0 +1,331 @@
+{
+ "queries": 12,
+ "summary": {
+  "eligible": {
+   "top10_same": 7,
+   "top50_same_order": 4
+  },
+  "media": {
+   "top10_same": 8,
+   "top50_same_order": 8
+  },
+  "int8": {
+   "top10_same": 12,
+   "top50_same_order": 11
+  }
+ },
+ "per_query": [
+  {
+   "query": "core-26",
+   "text": "Ich suche etwas Spannendes, das mich r\u00e4tseln l\u00e4sst, aber am Ende nicht v\u00f6llig deprimiert.",
+   "filtered_titles": 31179,
+   "sd_ratio": {
+    "exact": 4.36324405670166,
+    "eligible": 4.653581142425537,
+    "media": 4.653581142425537,
+    "int8": 4.361742677307373
+   },
+   "eligible": {
+    "top10_same": false,
+    "top50_overlap": 48,
+    "top50_same_order": false
+   },
+   "media": {
+    "top10_same": false,
+    "top50_overlap": 48,
+    "top50_same_order": false
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 49,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "core-27",
+   "text": "Quiero una serie policial realista y cruda, sin animaci\u00f3n ni detectives con poderes m\u00e1gicos.",
+   "filtered_titles": 9263,
+   "sd_ratio": {
+    "exact": 3.8875091075897217,
+    "eligible": 3.771263599395752,
+    "media": 4.07017707824707,
+    "int8": 3.88675847330149
+   },
+   "eligible": {
+    "top10_same": false,
+    "top50_overlap": 50,
+    "top50_same_order": false
+   },
+   "media": {
+    "top10_same": false,
+    "top50_overlap": 49,
+    "top50_same_order": false
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "core-28",
+   "text": "Des gens riches qui se comportent horriblement entre eux, de pr\u00e9f\u00e9rence quelque chose de dr\u00f4le.",
+   "filtered_titles": 50305,
+   "sd_ratio": {
+    "exact": 3.818530797958374,
+    "eligible": 3.818530797958374,
+    "media": 3.818530797958374,
+    "int8": 3.817489504231508
+   },
+   "eligible": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   },
+   "media": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "core-29",
+   "text": "Kafam \u00e7ok yorgun. S\u0131cak ve komik ama a\u015f\u0131r\u0131 duygusal olmayan bir \u015fey izlemek istiyorum.",
+   "filtered_titles": 50305,
+   "sd_ratio": {
+    "exact": 4.321601390838623,
+    "eligible": 4.321601390838623,
+    "media": 4.321601390838623,
+    "int8": 4.320608660773272
+   },
+   "eligible": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   },
+   "media": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "core-30",
+   "text": "spannend aber nicht d\u00fcster",
+   "filtered_titles": 50305,
+   "sd_ratio": {
+    "exact": 3.773930549621582,
+    "eligible": 3.773930549621582,
+    "media": 3.773930549621582,
+    "int8": 3.773065431072349
+   },
+   "eligible": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   },
+   "media": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "new-21",
+   "text": "un dessin anim\u00e9 dr\u00f4le pour toute la famille",
+   "filtered_titles": 2691,
+   "sd_ratio": {
+    "exact": 4.210482120513916,
+    "eligible": 3.262282133102417,
+    "media": 3.262282133102417,
+    "int8": 4.210942406000561
+   },
+   "eligible": {
+    "top10_same": false,
+    "top50_overlap": 45,
+    "top50_same_order": false
+   },
+   "media": {
+    "top10_same": false,
+    "top50_overlap": 45,
+    "top50_same_order": false
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "new-22",
+   "text": "Antikriegsfilm, der zeigt, wie sinnlos Krieg ist",
+   "filtered_titles": 38906,
+   "sd_ratio": {
+    "exact": 3.3648648262023926,
+    "eligible": 3.2336997985839844,
+    "media": 3.3648648262023926,
+    "int8": 3.364324619605798
+   },
+   "eligible": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": false
+   },
+   "media": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "ho2-19",
+   "text": "Una comedia absurda sobre la vida en la oficina, con personajes rid\u00edculos.",
+   "filtered_titles": 50305,
+   "sd_ratio": {
+    "exact": 3.6753883361816406,
+    "eligible": 3.6753883361816406,
+    "media": 3.6753883361816406,
+    "int8": 3.6748629135281923
+   },
+   "eligible": {
+    "top10_same": true,
+    "top50_overlap": 49,
+    "top50_same_order": true
+   },
+   "media": {
+    "top10_same": true,
+    "top50_overlap": 49,
+    "top50_same_order": true
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 49,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "ppl-08",
+   "text": "lustige Filme mit Bud Spencer und Terence Hill",
+   "filtered_titles": 38906,
+   "sd_ratio": {
+    "exact": 4.014767169952393,
+    "eligible": 3.9023663997650146,
+    "media": 4.014767169952393,
+    "int8": 4.014231486521802
+   },
+   "eligible": {
+    "top10_same": true,
+    "top50_overlap": 49,
+    "top50_same_order": false
+   },
+   "media": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "sty-08",
+   "text": "un film \u00e0 la jean-pierre jeunet",
+   "filtered_titles": 38906,
+   "sd_ratio": {
+    "exact": 3.8772130012512207,
+    "eligible": 3.3573789596557617,
+    "media": 3.8772130012512207,
+    "int8": 3.876143015591216
+   },
+   "eligible": {
+    "top10_same": true,
+    "top50_overlap": 49,
+    "top50_same_order": false
+   },
+   "media": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "h5-26",
+   "text": "d\u00fcstere serie \u00fcber ein geheimnis in einer kleinstadt",
+   "filtered_titles": 11399,
+   "sd_ratio": {
+    "exact": 3.517246723175049,
+    "eligible": 3.291670083999634,
+    "media": 3.517246723175049,
+    "int8": 3.517161555009176
+   },
+   "eligible": {
+    "top10_same": false,
+    "top50_overlap": 50,
+    "top50_same_order": false
+   },
+   "media": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": true
+   }
+  },
+  {
+   "query": "h5-27",
+   "text": "una peli rom\u00e1ntica que no sea cursi",
+   "filtered_titles": 19521,
+   "sd_ratio": {
+    "exact": 4.057465553283691,
+    "eligible": 3.9598076343536377,
+    "media": 3.9305977821350098,
+    "int8": 4.058884903351904
+   },
+   "eligible": {
+    "top10_same": false,
+    "top50_overlap": 50,
+    "top50_same_order": false
+   },
+   "media": {
+    "top10_same": false,
+    "top50_overlap": 50,
+    "top50_same_order": false
+   },
+   "int8": {
+    "top10_same": true,
+    "top50_overlap": 50,
+    "top50_same_order": false
+   }
+  }
+ ]
+}

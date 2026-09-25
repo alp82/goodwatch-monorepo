@@ -1,0 +1,704 @@
+{
+ "inputs_seconds": 9.5,
+ "builders_seconds": 13.7,
+ "checks": [
+  {
+   "index": "credits (person -> {title: (weight, role)})",
+   "prototype": 266850,
+   "build": 266850,
+   "only_prototype": 0,
+   "only_build": 0,
+   "different": 0,
+   "examples": {
+    "only_prototype": [],
+    "only_build": [],
+    "different": []
+   }
+  },
+  {
+   "index": "persons (kept for the name index)",
+   "prototype": 104929,
+   "build": 104112,
+   "only_prototype": 826,
+   "only_build": 9,
+   "different": 0,
+   "examples": {
+    "only_prototype": [
+     "5610",
+     "23216",
+     "159714",
+     "17098",
+     "21054"
+    ],
+    "only_build": [
+     "1491201",
+     "1212664",
+     "1232886",
+     "1523378",
+     "1367540"
+    ],
+    "different": []
+   }
+  },
+  {
+   "index": "studios ((c|n, id) -> (name, {title: weight}))",
+   "prototype": 35572,
+   "build": 35572,
+   "only_prototype": 0,
+   "only_build": 0,
+   "different": 0,
+   "examples": {
+    "only_prototype": [],
+    "only_build": [],
+    "different": []
+   }
+  },
+  {
+   "index": "word frequencies",
+   "prototype": 59477,
+   "build": 59477,
+   "only_prototype": 0,
+   "only_build": 0,
+   "different": 0,
+   "examples": {
+    "only_prototype": [],
+    "only_build": [],
+    "different": []
+   }
+  },
+  {
+   "index": "spell vocabulary",
+   "same": true
+  },
+  {
+   "index": "resolved name keys (key -> entity)",
+   "prototype": 32444,
+   "build": 32446,
+   "only_prototype": 1,
+   "only_build": 3,
+   "different": 0,
+   "examples": {
+    "only_prototype": [
+     "'kevin fox'"
+    ],
+    "only_build": [
+     "'clery'",
+     "'charlotte stoudt'",
+     "'stoudt'"
+    ],
+    "different": []
+   }
+  },
+  {
+   "index": "fuzzy keys (multi-word keys that resolve)",
+   "prototype": 21163,
+   "build": 21163,
+   "same": false
+  },
+  {
+   "index": "resolved entity mass",
+   "prototype": 32444,
+   "build": 32446,
+   "only_prototype": 1,
+   "only_build": 3,
+   "different": 0,
+   "examples": {
+    "only_prototype": [
+     "'kevin fox'"
+    ],
+    "only_build": [
+     "'clery'",
+     "'charlotte stoudt'",
+     "'stoudt'"
+    ],
+    "different": []
+   }
+  },
+  {
+   "index": "names detected in the graded queries",
+   "queries": 168,
+   "with_names": 49,
+   "different": 0,
+   "examples": {}
+  },
+  {
+   "index": "term df (body fields)",
+   "prototype": 659282,
+   "build": 659282,
+   "only_prototype": 0,
+   "only_build": 0,
+   "different": 0,
+   "examples": {
+    "only_prototype": [],
+    "only_build": [],
+    "different": []
+   }
+  },
+  {
+   "index": "term idf (bitwise)",
+   "prototype": 659282,
+   "build": 659282,
+   "only_prototype": 0,
+   "only_build": 0,
+   "different": 0,
+   "examples": {
+    "only_prototype": [],
+    "only_build": [],
+    "different": []
+   }
+  },
+  {
+   "index": "eligible titles (N)",
+   "prototype": 50305,
+   "build": 50305
+  },
+  {
+   "index": "collocations",
+   "prototype": 102440,
+   "build": 102440,
+   "only_prototype": 1,
+   "only_build": 1,
+   "examples_only_prototype": [
+    "abbey_rhyne"
+   ],
+   "examples_only_build": [
+    "abigail_rhyne"
+   ]
+  },
+  {
+   "index": "negation labels (label -> titles)",
+   "prototype": 103744,
+   "build": 103744,
+   "only_prototype": 0,
+   "only_build": 0,
+   "different": 0,
+   "examples": {
+    "only_prototype": [],
+    "only_build": [],
+    "different": []
+   }
+  },
+  {
+   "index": "negation label stems",
+   "prototype": 103744,
+   "build": 103744,
+   "only_prototype": 0,
+   "only_build": 0,
+   "different": 0,
+   "examples": {
+    "only_prototype": [],
+    "only_build": [],
+    "different": []
+   }
+  },
+  {
+   "index": "alternate cuts (pairs)",
+   "prototype": 616,
+   "build": 616,
+   "same": true,
+   "only_prototype": [],
+   "only_build": []
+  },
+  {
+   "index": "peers",
+   "prototype": 4505,
+   "build": 4505,
+   "only_prototype": 0,
+   "only_build": 0,
+   "centroid_max_abs_diff": 0.0,
+   "top_titles_different": 0
+  },
+  {
+   "index": "reference profiles (graded single-entity queries)",
+   "queries": 48,
+   "missing": 0,
+   "seeds_same": 48,
+   "seed_sets_same": 48,
+   "terms_same": 48,
+   "min_fp_cos": 0.9999999403953552,
+   "min_text_cos": 0.9999999403953552,
+   "per_query": [
+    {
+     "query": "lab-01",
+     "entity": "Andrei Tarkovsky",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ho2-15",
+     "entity": "Terry Gilliam",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ho2-16",
+     "entity": "Jackie Chan",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 0.9999999403953552,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-01",
+     "entity": "Brad Pitt",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 0.9999999403953552,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-02",
+     "entity": "Keanu Reeves",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 0.9999999403953552,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-03",
+     "entity": "Bill Murray",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0000001192092896,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-04",
+     "entity": "Tom Hanks",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 0.9999999403953552,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-05",
+     "entity": "Steven Spielberg",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-06",
+     "entity": "Leonardo DiCaprio",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 0.9999999403953552,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-07",
+     "entity": "Stephen Chow",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 0.9999999403953552,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-09",
+     "entity": "Quentin Tarantino",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-10",
+     "entity": "Wes Anderson",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-11",
+     "entity": "David Lynch",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 0.9999999403953552,
+     "text_cos": 0.9999999403953552,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-12",
+     "entity": "Guy Ritchie",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-13",
+     "entity": "Denis Villeneuve",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-14",
+     "entity": "Ethan Coen & Joel Coen",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-15",
+     "entity": "Hayao Miyazaki",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-16",
+     "entity": "Stanley Kubrick",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-17",
+     "entity": "Vince Gilligan",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 0.9999999403953552,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-18",
+     "entity": "Christopher Nolan",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 0.9999999403953552,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-19",
+     "entity": "Jim Carrey",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-20",
+     "entity": "Edgar Wright",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-21",
+     "entity": "Studio Ghibli",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-22",
+     "entity": "A24",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-23",
+     "entity": "Pixar",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 0.9999999403953552,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "ppl-24",
+     "entity": "HBO",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-01",
+     "entity": "Terry Gilliam",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-02",
+     "entity": "Charlie Kaufman",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 0.9999999403953552,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-03",
+     "entity": "Nicolas Cage",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 0.9999999403953552,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-04",
+     "entity": "Mel Brooks",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-05",
+     "entity": "Aardman",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-06",
+     "entity": "David Fincher",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-07",
+     "entity": "Matt Groening",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-08",
+     "entity": "Jean-Pierre Jeunet",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-09",
+     "entity": "Darren Aronofsky",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-10",
+     "entity": "Danny Boyle",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-11",
+     "entity": "Jackie Chan",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 0.9999999403953552,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "sty-12",
+     "entity": "Blumhouse Productions",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 0.9999999403953552,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "h5-22",
+     "entity": "Meryl Streep",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "h5-23",
+     "entity": "Sofia Coppola",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 0.9999999403953552,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "h5-24",
+     "entity": "Ridley Scott",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "h5-25",
+     "entity": "DreamWorks Animation",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "dev5-01",
+     "entity": "Brad Pitt",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 0.9999999403953552,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "dev5-02",
+     "entity": "Will Ferrell",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "dev5-03",
+     "entity": "Ridley Scott",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "dev5-04",
+     "entity": "Reese Witherspoon",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "dev5-05",
+     "entity": "Seth Rogen",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    },
+    {
+     "query": "dev5-06",
+     "entity": "Ricky Gervais",
+     "seeds_same": true,
+     "seed_sets_same": true,
+     "fp_cos": 1.0,
+     "text_cos": 1.0,
+     "terms_same": true,
+     "term_names_same": true
+    }
+   ]
+  }
+ ]
+}
