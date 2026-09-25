@@ -288,10 +288,10 @@ def word_freq():
 
 
 def correct_word(w):
-    """An unknown word (ASCII letters, 4+, df < 3) becomes the most frequent vocabulary word one edit away (a
-    transposition counts one)."""
+    """An unknown word (ASCII letters, 4+, df < 3, not a word of the negation word list) becomes the most frequent
+    vocabulary word one edit away (a transposition counts one)."""
     freq, vocab = word_freq()
-    if not w.isascii() or not w.isalpha() or len(w) < 4 or freq.get(w, 0) >= 3:
+    if not w.isascii() or not w.isalpha() or len(w) < 4 or freq.get(w, 0) >= 3 or negation_form(w):
         return w
     hits = process.extract(w, vocab, scorer=OSA.distance, score_cutoff=1, limit=None)
     if not hits:
@@ -339,20 +339,191 @@ def english_from_chips(ctx):
 # --- negation -----------------------------------------------------------------------------------------------------
 
 # A marker word opens a negated clause; the clause runs to a clause-end word or a token ending in , . ; ! ?
-# ("than": "more getaway driver than superheroes"; "less": "like david lynch but less weird").
+# ("than": "more getaway driver than superheroes"; "less": "like david lynch but less weird"). Spanish and French
+# "ni" starts a second clause inside one ("sin animación ni detectives"). An ordinal ("2.") doesn't end a clause.
+#
+# Turkish negates after the element (#169). A postposition ("zombi olmadan", "zombi yok", "robot olmayan") negates
+# the content word before it when that names a known element, skipping function words ("ile ilgili"). A compound
+# head ("seks sahnesi", "dünya savaşı") or the start of a known phrase ("süper kahraman", "2. dünya savaşı") takes the
+# word before it too, and an ordinal before that ("ikinci"). A "-sız / -siz / -suz / -süz" word negates its stem when
+# the stem is a known element ("zombisiz").
 NEG_WORDS = set("no not without except minus nothing than less fewer isn't aren't don't doesn't "
-                "ohne nicht kein keine keinen keiner sans pas ni sin".split())
-CLAUSE_END = set("but and aber und mais et pero y".split())
+                "ohne nicht kein keine keinen keiner sans pas aucun aucune ni sin nada".split())
+CLAUSE_END = set("but and aber und mais et pero y ama fakat ancak ve".split())
+NEG_AFTER = set("olmadan olmayan yok degil icermeyen".split())       # folded
+NEG_SUFFIXES = ("siz", "suz")                                         # folded -sız -siz -suz -süz
+NEG_SUFFIX_EXCEPT = {"korkusuz"}                                      # "fearless" (and Daredevil's Turkish title)
+_ORDINAL = re.compile(r"\d+\.")
+_TRIM = ",.;:!?-()\""
+
+NEGATION_WORDS_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), *[".."] * 4, "goodwatch-webapp", "app",
+                                   "server", "search-ranking", "negation-words.json")
+
+
+def fold_word(w):
+    """Lowercase, no diacritics, Turkish dotless i as i, ß as ss: the form of the negation word list."""
+    w = w.lower().replace("ı", "i").replace("ß", "ss")
+    return "".join(c for c in unicodedata.normalize("NFKD", w) if unicodedata.category(c) != "Mn")
+
+
+def negation_words():
+    """The negation word list, indexed: for all searches and (key "ne") for non-English ones, form -> English and
+    {language: {form -> English}}; function words; phrases and their starts of 2 or more words; suffixes; every listed
+    word (spell correction skips them)."""
+    def build():
+        d = json.load(open(NEGATION_WORDS_FILE))
+
+        def index(elements):
+            forms, by_lang = {}, defaultdict(dict)
+            for english, langs in elements.items():
+                for lang, fs in langs.items():
+                    for f in fs:
+                        forms[f] = english
+                        by_lang[lang][f] = english
+            return forms, by_lang
+        w = {"all": index(d["elements"]), "ne": index(d["nonEnglishElements"]),
+             "function": {x for xs in d["functionWords"].values() for x in xs},
+             "ne_function": {x for xs in d["nonEnglishFunctionWords"].values() for x in xs},
+             "phrases": d["phrases"], "suffixes": d["suffixes"],
+             "phrase_starts": {" ".join(k.split()[:i]) for k in d["phrases"] for i in range(2, len(k.split()) + 1)}}
+        w["listed"] = (set(w["all"][0]) | set(w["ne"][0]) | w["function"] | w["ne_function"]
+                       | {x for k in d["phrases"] for x in k.split()})
+        return w
+    return cached("negation_words", build)
+
+
+def element_english(word, non_en=False):
+    """The English words for one word when it's a known element form, else None. A word that isn't listed as it is
+    may be a listed form plus one of its language's suffixes ("Außerirdischen", "sahnesi")."""
+    nw = negation_words()
+    w = fold_word(word)
+    for key in ("all", "ne") if non_en else ("all",):
+        forms, by_lang = nw[key]
+        if w in forms:
+            return forms[w]
+        for lang, sfx in nw["suffixes"].items():
+            for s in sfx:
+                if w.endswith(s) and len(w) - len(s) >= 3 and w[:-len(s)] in by_lang[lang]:
+                    return by_lang[lang][w[:-len(s)]]
+    return None
+
+
+def suffix_negated(word):
+    """The stem of a Turkish "-sız" word when the stem is a known element ("zombisiz" -> "zombi"), else None."""
+    f = fold_word(word)
+    if f.endswith(NEG_SUFFIXES) and len(f) > 5 and f not in NEG_SUFFIX_EXCEPT:
+        return word.lower()[:-3]
+    return None
+
+
+def negation_form(word):
+    """A word spell correction leaves alone: a negation or clause-end marker, a word of the negation word list, or a
+    known element with a Turkish "-sız" suffix ("seks" stays, not "seeks"; "kein" stays, not "keen")."""
+    f = fold_word(word)
+    stem = suffix_negated(word)
+    return (word in NEG_WORDS or word in CLAUSE_END or f in NEG_AFTER or f in negation_words()["listed"]
+            or element_english(word, True) is not None
+            or (stem is not None and element_english(stem) is not None))
+
+
+def english_negation(phrase, non_en=False):
+    """A negated phrase with its known non-English element words and phrases in English and, when it has one, its
+    non-English function words dropped ("de zombis" -> "zombie", "zweiten weltkrieg" -> "ii world war"). A phrase
+    without a known element comes back as it is. non_en: the search is routed non-English, which adds the words that
+    are also English words ("terror" -> "horror")."""
+    english, hit = _english_elements(phrase, non_en)
+    return english if hit else phrase
+
+
+def _english_elements(phrase, non_en):
+    """(the phrase with known elements in English and function words dropped, whether it holds a known element)."""
+    nw = negation_words()
+    function = nw["function"] | nw["ne_function"] if non_en else nw["function"]
+    ws = words(phrase.replace("\u0307", ""))   # "İkinci" lowercases to i + a combining dot
+    out, hit, i = [], False, 0
+    while i < len(ws):
+        for n in (3, 2):
+            key = " ".join(fold_word(w) for w in ws[i:i + n])
+            if i + n <= len(ws) and key in nw["phrases"]:
+                out.append(nw["phrases"][key])
+                hit, i = True, i + n
+                break
+        else:
+            w = ws[i]
+            i += 1
+            e = element_english(w, non_en)
+            if e is not None:
+                out.append(e)
+                hit = True
+            elif fold_word(w) not in function:
+                out.append(w)
+    return " ".join(out), hit
+
+
+def _clean(tok):
+    return tok.strip(_TRIM).lower()
+
+
+def _ends_clause(tok):
+    return tok[-1] in ",.;!?" and not _ORDINAL.fullmatch(tok)
+
+
+def _turkish_element(pos):
+    """The words before a Turkish postposition that it negates, taken off the end of pos. [] when they don't name a
+    known element: "aşırı duygusal olmayan" (not too emotional) stays positive, since a negated Turkish tone word
+    would mostly push away Turkish titles in the multilingual embedding."""
+    nw = negation_words()
+    core, skipped = [], []
+    while pos and len(core) < 3:
+        prev = pos[-1]
+        pw = _clean(prev)
+        if pw in CLAUSE_END or (_ends_clause(prev) and (core or skipped)):
+            break
+        if not core and fold_word(pw) in nw["function"]:
+            skipped.insert(0, pw)
+        elif not core:
+            core.append(pw)
+        else:
+            f0, fp = fold_word(core[0]), fold_word(pw)
+            head = f0 not in nw["all"][0] and f0.endswith(("si", "su", "i", "u")) and len(f0) >= 5
+            if not (f"{fp} {f0}" in nw["phrase_starts"] or head or element_english(pw) == "ii"):
+                break
+            core.insert(0, pw)
+        pos.pop()
+    if not core or not _english_elements(" ".join(core), False)[1]:
+        pos.extend(core + skipped)
+        return []
+    return core + skipped
 
 
 def split_negation(text):
     """(positive text, [negated clauses]) over whitespace tokens. No markers: (text, [])."""
     pos, negs, cur = [], [], None
     for tok in text.replace("’", "'").split():
-        w = tok.strip(",.;:!?-()\"").lower()
+        w = _clean(tok)
         if cur is not None and w in CLAUSE_END:
             cur = None
-        if cur is None and w in NEG_WORDS:
+        if cur is None and fold_word(w) in NEG_AFTER and pos:
+            element = _turkish_element(pos)
+            if element:
+                negs.append(element)
+                if pos and pos[-1].strip(",").lower() in CLAUSE_END:
+                    pos.pop()
+            else:
+                pos.append(tok)
+            continue
+        stem = suffix_negated(w) if cur is None else None
+        if stem is not None:
+            if pos and f"{fold_word(_clean(pos[-1]))} {fold_word(stem)}" in negation_words()["phrases"]:
+                negs.append([_clean(pos.pop()), stem])   # "süper kahramansız"
+                continue
+            if element_english(stem) is not None:
+                negs.append([stem])
+                continue
+        if cur is not None and cur and w == "ni":
+            cur = []
+            negs.append(cur)
+        elif cur is None and w in NEG_WORDS:
             cur = []
             negs.append(cur)
             if pos and pos[-1].strip(",").lower() in CLAUSE_END:
@@ -361,7 +532,7 @@ def split_negation(text):
             pos.append(tok)
         elif w:
             cur.append(w)
-        if cur is not None and tok[-1] in ",.;!?":
+        if cur is not None and _ends_clause(tok):
             cur = None
     return " ".join(pos) or text, [" ".join(c) for c in negs if c]
 
@@ -381,10 +552,11 @@ def singular(stem):
     return stem
 
 
-def label_negation(phrase):
+def label_negation(phrase, non_en=False):
     """Per catalog row, the share (capped at 1) of 2 keyword / essence-tag labels that hold every content stem of a
     negated phrase ("aliens" -> "alien", "alien invasion"; "about world war ii" -> "world war ii drama"). Stems are
-    compared in their singular() form ("zombies" hits "zombie")."""
+    compared in their singular() form ("zombies" hits "zombie"). Known non-English element words match as their
+    English words ("ohne Mord" hits "murder", #169); non_en: the search is routed non-English."""
     def build():
         cat = C.load()
         labels, by_stem = defaultdict(set), defaultdict(set)   # label -> eligible rows; stem -> labels holding it
@@ -396,7 +568,7 @@ def label_negation(phrase):
                 by_stem[singular(t)].add(k)
         return labels, by_stem
     labels, by_stem = cached("labels", build)
-    want = {singular(t) for t in S.tokens(phrase)}
+    want = {singular(t) for t in S.tokens(english_negation(phrase, non_en))}
     hit = set.intersection(*[by_stem.get(t, set()) for t in want]) if want else set()
     n = np.zeros(len(C.load().ids))
     for k in hit:
@@ -1046,7 +1218,7 @@ def rank_query(ctx, cfg, non_en, ref):
         score -= wt("neg") * z(np.max(pens, axis=0))
     if negated and cfg["neg_lex"]:
         # lexical evidence: titles labelled with the negated thing drop like a soft filter
-        score -= cfg["neg_lex"] * np.max([label_negation(n)[cand] for n in negated], axis=0)
+        score -= cfg["neg_lex"] * np.max([label_negation(n, non_en)[cand] for n in negated], axis=0)
     lv = np.log1p(cat.votes[cand]).astype(np.float64)
     score += wt("gw") * z(filled(cat.goodwatch_score[cand]))
     if ref is None:

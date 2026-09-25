@@ -1,0 +1,128 @@
+[
+ {
+  "query_id": "dev6-05",
+  "query": "Krimi ohne Mord",
+  "intent": "German: a crime story without murder (heists, cons, fraud, thefts). Murder mysteries and serial-killer thrillers are wrong.",
+  "items": [
+   {
+    "pid": 1000000002118,
+    "title": "L.A. Confidential",
+    "year": 1997,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Mystery",
+     "Thriller",
+     "Drama"
+    ],
+    "essence_text": "A masterclass in neo-noir, 'L.A. Confidential' immerses viewers in the dark underbelly of 1950s Los Angeles. It weaves a complex web of crime, corruption, and intrigue through the eyes of three distinct detectives. The film is renowned for its razor-sharp dialogue, brilliant performances, and stunning period detail that creates an atmosphere of pervasive moral ambiguity. It's a gripping, intricately plotted mystery that stands as a benchmark for the genre.",
+    "tags": [
+     "Neo-Noir Crime Thriller",
+     "Period Detective Drama",
+     "Complex Conspiracy",
+     "Gritty Los Angeles",
+     "Intricate Plotting",
+     "Character-Driven Mystery",
+     "Police Corruption",
+     "Stellar Ensemble Cast",
+     "Classic American Cinema"
+    ],
+    "keywords": [
+     "corruption",
+     "based on novel or book",
+     "call girl",
+     "shotgun",
+     "detective",
+     "femme fatale",
+     "domestic violence",
+     "whodunit",
+     "corpse",
+     "district attorney",
+     "movie star",
+     "good cop bad cop"
+    ],
+    "credits": {
+     "directors": [
+      "Curtis Hanson"
+     ],
+     "writers": [
+      "Curtis Hanson",
+      "Brian Helgeland",
+      "James Ellroy"
+     ],
+     "cast": [
+      "Kevin Spacey",
+      "Russell Crowe",
+      "Guy Pearce",
+      "James Cromwell",
+      "Kim Basinger"
+     ],
+     "companies": [
+      "Regency Enterprises",
+      "Warner Bros. Pictures",
+      "Wolper Organization"
+     ]
+    }
+   },
+   {
+    "pid": 1000000000829,
+    "title": "Chinatown",
+    "year": 1974,
+    "media_type": "movie",
+    "genres": [
+     "Crime",
+     "Drama",
+     "Mystery",
+     "Thriller"
+    ],
+    "essence_text": "A definitive neo-noir masterpiece, this film plunges viewers into a complex and morally murky mystery within sun-drenched, corrupt Los Angeles. Its intricate plot, sharp dialogue, and unforgettable characters weave a tale of deep-seated corruption and shocking family secrets. The atmosphere is thick with cynicism and dread, leading to one of cinema's most famously bleak and unforgettable endings. It's a gripping, slow-burn thriller that leaves a lasting impression.",
+    "tags": [
+     "Neo-Noir Masterpiece",
+     "Complex Mystery",
+     "Bleak Crime Drama",
+     "Political Corruption",
+     "Iconic Performance",
+     "Atmospheric Thriller",
+     "Character-Driven",
+     "Cynical & Nihilistic",
+     "Historical Drama",
+     "Systemic Injustice"
+    ],
+    "keywords": [
+     "dying and death",
+     "sea",
+     "pedophilia",
+     "rape",
+     "mistake in person",
+     "river",
+     "chinatown",
+     "barrage",
+     "femme fatale",
+     "conspiracy",
+     "whodunit",
+     "los angeles, california"
+    ],
+    "credits": {
+     "directors": [
+      "Roman Polanski"
+     ],
+     "writers": [
+      "Robert Towne"
+     ],
+     "cast": [
+      "Jack Nicholson",
+      "Faye Dunaway",
+      "John Huston",
+      "Perry Lopez",
+      "John Hillerman"
+     ],
+     "companies": [
+      "Paramount Pictures",
+      "Long Road Productions",
+      "Robert Evans Productions"
+     ]
+    }
+   }
+  ]
+ }
+]

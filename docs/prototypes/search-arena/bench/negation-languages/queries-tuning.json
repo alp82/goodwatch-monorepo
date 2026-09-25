@@ -1,0 +1,1602 @@
+[
+  {
+    "id": "1-de-a",
+    "lang": "de",
+    "query": "weltraumoper ohne aliens",
+    "english_query": "space opera without aliens",
+    "english_element": "aliens",
+    "negated_words": "ohne aliens"
+  },
+  {
+    "id": "1-de-b",
+    "lang": "de",
+    "query": "Weltraumoper ohne Außerirdische",
+    "english_query": "space opera without aliens",
+    "english_element": "aliens",
+    "negated_words": "ohne Außerirdische"
+  },
+  {
+    "id": "1-fr-a",
+    "lang": "fr",
+    "query": "opéra spatial sans extraterrestres",
+    "english_query": "space opera without aliens",
+    "english_element": "aliens",
+    "negated_words": "sans extraterrestres"
+  },
+  {
+    "id": "1-fr-b",
+    "lang": "fr",
+    "query": "opera spatial sans aliens",
+    "english_query": "space opera without aliens",
+    "english_element": "aliens",
+    "negated_words": "sans aliens"
+  },
+  {
+    "id": "1-es-a",
+    "lang": "es",
+    "query": "space opera sin extraterrestres",
+    "english_query": "space opera without aliens",
+    "english_element": "aliens",
+    "negated_words": "sin extraterrestres"
+  },
+  {
+    "id": "1-es-b",
+    "lang": "es",
+    "query": "opera espacial sin alienigenas",
+    "english_query": "space opera without aliens",
+    "english_element": "aliens",
+    "negated_words": "sin alienigenas"
+  },
+  {
+    "id": "1-tr-a",
+    "lang": "tr",
+    "query": "uzaylısız uzay operası",
+    "english_query": "space opera without aliens",
+    "english_element": "aliens",
+    "negated_words": "uzaylısız"
+  },
+  {
+    "id": "1-tr-b",
+    "lang": "tr",
+    "query": "uzay operasi uzayli olmadan",
+    "english_query": "space opera without aliens",
+    "english_element": "aliens",
+    "negated_words": "uzayli olmadan"
+  },
+  {
+    "id": "2-de-a",
+    "lang": "de",
+    "query": "Fantasy-Serie ohne Drachen",
+    "english_query": "fantasy series without dragons",
+    "english_element": "dragons",
+    "negated_words": "ohne Drachen"
+  },
+  {
+    "id": "2-de-b",
+    "lang": "de",
+    "query": "fantasy serie die keine drachen hat",
+    "english_query": "fantasy series without dragons",
+    "english_element": "dragons",
+    "negated_words": "keine drachen"
+  },
+  {
+    "id": "2-fr-a",
+    "lang": "fr",
+    "query": "série fantasy sans dragons",
+    "english_query": "fantasy series without dragons",
+    "english_element": "dragons",
+    "negated_words": "sans dragons"
+  },
+  {
+    "id": "2-fr-b",
+    "lang": "fr",
+    "query": "serie fantastique pas de dragons",
+    "english_query": "fantasy series without dragons",
+    "english_element": "dragons",
+    "negated_words": "pas de dragons"
+  },
+  {
+    "id": "2-es-a",
+    "lang": "es",
+    "query": "serie de fantasía sin dragones",
+    "english_query": "fantasy series without dragons",
+    "english_element": "dragons",
+    "negated_words": "sin dragones"
+  },
+  {
+    "id": "2-es-b",
+    "lang": "es",
+    "query": "serie fantasia que no tenga dragones",
+    "english_query": "fantasy series without dragons",
+    "english_element": "dragons",
+    "negated_words": "que no tenga dragones"
+  },
+  {
+    "id": "2-tr-a",
+    "lang": "tr",
+    "query": "ejderhasız fantastik dizi",
+    "english_query": "fantasy series without dragons",
+    "english_element": "dragons",
+    "negated_words": "ejderhasız"
+  },
+  {
+    "id": "2-tr-b",
+    "lang": "tr",
+    "query": "fantastik dizi ejderha olmayan",
+    "english_query": "fantasy series without dragons",
+    "english_element": "dragons",
+    "negated_words": "ejderha olmayan"
+  },
+  {
+    "id": "3-de-a",
+    "lang": "de",
+    "query": "Zombiefilm ohne Gore",
+    "english_query": "zombie movie without gore",
+    "english_element": "gore",
+    "negated_words": "ohne Gore"
+  },
+  {
+    "id": "3-de-b",
+    "lang": "de",
+    "query": "zombiefilm nicht blutig",
+    "english_query": "zombie movie without gore",
+    "english_element": "gore",
+    "negated_words": "nicht blutig"
+  },
+  {
+    "id": "3-fr-a",
+    "lang": "fr",
+    "query": "film de zombies sans gore",
+    "english_query": "zombie movie without gore",
+    "english_element": "gore",
+    "negated_words": "sans gore"
+  },
+  {
+    "id": "3-fr-b",
+    "lang": "fr",
+    "query": "film de zombies pas trop gore",
+    "english_query": "zombie movie without gore",
+    "english_element": "gore",
+    "negated_words": "pas trop gore"
+  },
+  {
+    "id": "3-es-a",
+    "lang": "es",
+    "query": "película de zombis sin gore",
+    "english_query": "zombie movie without gore",
+    "english_element": "gore",
+    "negated_words": "sin gore"
+  },
+  {
+    "id": "3-es-b",
+    "lang": "es",
+    "query": "peli de zombies sin sangre explicita",
+    "english_query": "zombie movie without gore",
+    "english_element": "gore",
+    "negated_words": "sin sangre explicita"
+  },
+  {
+    "id": "3-tr-a",
+    "lang": "tr",
+    "query": "gore olmayan zombi filmi",
+    "english_query": "zombie movie without gore",
+    "english_element": "gore",
+    "negated_words": "gore olmayan"
+  },
+  {
+    "id": "3-tr-b",
+    "lang": "tr",
+    "query": "kansiz zombi filmi",
+    "english_query": "zombie movie without gore",
+    "english_element": "gore",
+    "negated_words": "kansiz"
+  },
+  {
+    "id": "4-de-a",
+    "lang": "de",
+    "query": "Krimiserie ohne Morde",
+    "english_query": "detective show with no murders",
+    "english_element": "murders",
+    "negated_words": "ohne Morde"
+  },
+  {
+    "id": "4-de-b",
+    "lang": "de",
+    "query": "detektiv serie keine morde",
+    "english_query": "detective show with no murders",
+    "english_element": "murders",
+    "negated_words": "keine morde"
+  },
+  {
+    "id": "4-fr-a",
+    "lang": "fr",
+    "query": "série policière sans meurtres",
+    "english_query": "detective show with no murders",
+    "english_element": "murders",
+    "negated_words": "sans meurtres"
+  },
+  {
+    "id": "4-fr-b",
+    "lang": "fr",
+    "query": "serie de detective pas de meurtre",
+    "english_query": "detective show with no murders",
+    "english_element": "murders",
+    "negated_words": "pas de meurtre"
+  },
+  {
+    "id": "4-es-a",
+    "lang": "es",
+    "query": "serie de detectives sin asesinatos",
+    "english_query": "detective show with no murders",
+    "english_element": "murders",
+    "negated_words": "sin asesinatos"
+  },
+  {
+    "id": "4-es-b",
+    "lang": "es",
+    "query": "serie policiaca que no tenga asesinatos",
+    "english_query": "detective show with no murders",
+    "english_element": "murders",
+    "negated_words": "que no tenga asesinatos"
+  },
+  {
+    "id": "4-tr-a",
+    "lang": "tr",
+    "query": "cinayetsiz dedektif dizisi",
+    "english_query": "detective show with no murders",
+    "english_element": "murders",
+    "negated_words": "cinayetsiz"
+  },
+  {
+    "id": "4-tr-b",
+    "lang": "tr",
+    "query": "dedektif dizisi cinayet yok",
+    "english_query": "detective show with no murders",
+    "english_element": "murders",
+    "negated_words": "cinayet yok"
+  },
+  {
+    "id": "5-de-a",
+    "lang": "de",
+    "query": "Sci-Fi Film ohne Roboter",
+    "english_query": "sci-fi movie without robots",
+    "english_element": "robots",
+    "negated_words": "ohne Roboter"
+  },
+  {
+    "id": "5-de-b",
+    "lang": "de",
+    "query": "science fiction film keine roboter",
+    "english_query": "sci-fi movie without robots",
+    "english_element": "robots",
+    "negated_words": "keine roboter"
+  },
+  {
+    "id": "5-fr-a",
+    "lang": "fr",
+    "query": "film de science-fiction sans robots",
+    "english_query": "sci-fi movie without robots",
+    "english_element": "robots",
+    "negated_words": "sans robots"
+  },
+  {
+    "id": "5-fr-b",
+    "lang": "fr",
+    "query": "film scifi sans robot",
+    "english_query": "sci-fi movie without robots",
+    "english_element": "robots",
+    "negated_words": "sans robot"
+  },
+  {
+    "id": "5-es-a",
+    "lang": "es",
+    "query": "película de ciencia ficción sin robots",
+    "english_query": "sci-fi movie without robots",
+    "english_element": "robots",
+    "negated_words": "sin robots"
+  },
+  {
+    "id": "5-es-b",
+    "lang": "es",
+    "query": "peli de ciencia ficcion sin robots",
+    "english_query": "sci-fi movie without robots",
+    "english_element": "robots",
+    "negated_words": "sin robots"
+  },
+  {
+    "id": "5-tr-a",
+    "lang": "tr",
+    "query": "robotsuz bilim kurgu filmi",
+    "english_query": "sci-fi movie without robots",
+    "english_element": "robots",
+    "negated_words": "robotsuz"
+  },
+  {
+    "id": "5-tr-b",
+    "lang": "tr",
+    "query": "bilim kurgu filmi robot olmayan",
+    "english_query": "sci-fi movie without robots",
+    "english_element": "robots",
+    "negated_words": "robot olmayan"
+  },
+  {
+    "id": "6-de-a",
+    "lang": "de",
+    "query": "Anime ohne Roboter",
+    "english_query": "anime without robots",
+    "english_element": "robots",
+    "negated_words": "ohne Roboter"
+  },
+  {
+    "id": "6-de-b",
+    "lang": "de",
+    "query": "anime kein roboter",
+    "english_query": "anime without robots",
+    "english_element": "robots",
+    "negated_words": "kein roboter"
+  },
+  {
+    "id": "6-fr-a",
+    "lang": "fr",
+    "query": "anime sans robots",
+    "english_query": "anime without robots",
+    "english_element": "robots",
+    "negated_words": "sans robots"
+  },
+  {
+    "id": "6-fr-b",
+    "lang": "fr",
+    "query": "animé sans robot",
+    "english_query": "anime without robots",
+    "english_element": "robots",
+    "negated_words": "sans robot"
+  },
+  {
+    "id": "6-es-a",
+    "lang": "es",
+    "query": "anime sin robots",
+    "english_query": "anime without robots",
+    "english_element": "robots",
+    "negated_words": "sin robots"
+  },
+  {
+    "id": "6-es-b",
+    "lang": "es",
+    "query": "anime que no tenga robots",
+    "english_query": "anime without robots",
+    "english_element": "robots",
+    "negated_words": "que no tenga robots"
+  },
+  {
+    "id": "6-tr-a",
+    "lang": "tr",
+    "query": "robotsuz anime",
+    "english_query": "anime without robots",
+    "english_element": "robots",
+    "negated_words": "robotsuz"
+  },
+  {
+    "id": "6-tr-b",
+    "lang": "tr",
+    "query": "anime robot olmayan",
+    "english_query": "anime without robots",
+    "english_element": "robots",
+    "negated_words": "robot olmayan"
+  },
+  {
+    "id": "7-de-a",
+    "lang": "de",
+    "query": "Horrorfilm ohne Jumpscares",
+    "english_query": "horror without jump scares",
+    "english_element": "jump scares",
+    "negated_words": "ohne Jumpscares"
+  },
+  {
+    "id": "7-de-b",
+    "lang": "de",
+    "query": "horror film keine schockmomente",
+    "english_query": "horror without jump scares",
+    "english_element": "jump scares",
+    "negated_words": "keine schockmomente"
+  },
+  {
+    "id": "7-fr-a",
+    "lang": "fr",
+    "query": "film d'horreur sans jump scares",
+    "english_query": "horror without jump scares",
+    "english_element": "jump scares",
+    "negated_words": "sans jump scares"
+  },
+  {
+    "id": "7-fr-b",
+    "lang": "fr",
+    "query": "horreur sans sursauts",
+    "english_query": "horror without jump scares",
+    "english_element": "jump scares",
+    "negated_words": "sans sursauts"
+  },
+  {
+    "id": "7-es-a",
+    "lang": "es",
+    "query": "película de terror sin sustos",
+    "english_query": "horror without jump scares",
+    "english_element": "jump scares",
+    "negated_words": "sin sustos"
+  },
+  {
+    "id": "7-es-b",
+    "lang": "es",
+    "query": "terror sin jump scares",
+    "english_query": "horror without jump scares",
+    "english_element": "jump scares",
+    "negated_words": "sin jump scares"
+  },
+  {
+    "id": "7-tr-a",
+    "lang": "tr",
+    "query": "ani korku sahnesi olmayan korku filmi",
+    "english_query": "horror without jump scares",
+    "english_element": "jump scares",
+    "negated_words": "ani korku sahnesi olmayan"
+  },
+  {
+    "id": "7-tr-b",
+    "lang": "tr",
+    "query": "jump scare icermeyen korku filmi",
+    "english_query": "horror without jump scares",
+    "english_element": "jump scares",
+    "negated_words": "jump scare icermeyen"
+  },
+  {
+    "id": "8-de-a",
+    "lang": "de",
+    "query": "Komödie ohne Romantik",
+    "english_query": "comedy without romance",
+    "english_element": "romance",
+    "negated_words": "ohne Romantik"
+  },
+  {
+    "id": "8-de-b",
+    "lang": "de",
+    "query": "komodie keine liebesgeschichte",
+    "english_query": "comedy without romance",
+    "english_element": "romance",
+    "negated_words": "keine liebesgeschichte"
+  },
+  {
+    "id": "8-fr-a",
+    "lang": "fr",
+    "query": "comédie sans romance",
+    "english_query": "comedy without romance",
+    "english_element": "romance",
+    "negated_words": "sans romance"
+  },
+  {
+    "id": "8-fr-b",
+    "lang": "fr",
+    "query": "comedie pas d'histoire d'amour",
+    "english_query": "comedy without romance",
+    "english_element": "romance",
+    "negated_words": "pas d'histoire d'amour"
+  },
+  {
+    "id": "8-es-a",
+    "lang": "es",
+    "query": "comedia sin romance",
+    "english_query": "comedy without romance",
+    "english_element": "romance",
+    "negated_words": "sin romance"
+  },
+  {
+    "id": "8-es-b",
+    "lang": "es",
+    "query": "comedia que no tenga historia de amor",
+    "english_query": "comedy without romance",
+    "english_element": "romance",
+    "negated_words": "que no tenga historia de amor"
+  },
+  {
+    "id": "8-tr-a",
+    "lang": "tr",
+    "query": "romantizmsiz komedi",
+    "english_query": "comedy without romance",
+    "english_element": "romance",
+    "negated_words": "romantizmsiz"
+  },
+  {
+    "id": "8-tr-b",
+    "lang": "tr",
+    "query": "komedi ask hikayesi olmayan",
+    "english_query": "comedy without romance",
+    "english_element": "romance",
+    "negated_words": "ask hikayesi olmayan"
+  },
+  {
+    "id": "9-de-a",
+    "lang": "de",
+    "query": "hoffnungsvolles Weltraumabenteuer ohne Horror",
+    "english_query": "a hopeful space adventure without horror",
+    "english_element": "horror",
+    "negated_words": "ohne Horror"
+  },
+  {
+    "id": "9-de-b",
+    "lang": "de",
+    "query": "weltraum abenteuer positiv, kein horror",
+    "english_query": "a hopeful space adventure without horror",
+    "english_element": "horror",
+    "negated_words": "kein horror"
+  },
+  {
+    "id": "9-fr-a",
+    "lang": "fr",
+    "query": "aventure spatiale optimiste sans horreur",
+    "english_query": "a hopeful space adventure without horror",
+    "english_element": "horror",
+    "negated_words": "sans horreur"
+  },
+  {
+    "id": "9-fr-b",
+    "lang": "fr",
+    "query": "aventure spatiale pleine d'espoir pas d'horreur",
+    "english_query": "a hopeful space adventure without horror",
+    "english_element": "horror",
+    "negated_words": "pas d'horreur"
+  },
+  {
+    "id": "9-es-a",
+    "lang": "es",
+    "query": "aventura espacial esperanzadora sin terror",
+    "english_query": "a hopeful space adventure without horror",
+    "english_element": "horror",
+    "negated_words": "sin terror"
+  },
+  {
+    "id": "9-es-b",
+    "lang": "es",
+    "query": "aventura espacial optimista sin horror",
+    "english_query": "a hopeful space adventure without horror",
+    "english_element": "horror",
+    "negated_words": "sin horror"
+  },
+  {
+    "id": "9-tr-a",
+    "lang": "tr",
+    "query": "korkusuz umut dolu uzay macerası",
+    "english_query": "a hopeful space adventure without horror",
+    "english_element": "horror",
+    "negated_words": "korkusuz"
+  },
+  {
+    "id": "9-tr-b",
+    "lang": "tr",
+    "query": "umut dolu uzay macerasi korku olmayan",
+    "english_query": "a hopeful space adventure without horror",
+    "english_element": "horror",
+    "negated_words": "korku olmayan"
+  },
+  {
+    "id": "10-de-a",
+    "lang": "de",
+    "query": "kein Anime, düstere Krimiserie",
+    "english_query": "no anime, gritty crime show",
+    "english_element": "anime",
+    "negated_words": "kein Anime"
+  },
+  {
+    "id": "10-de-b",
+    "lang": "de",
+    "query": "dustere krimiserie ohne anime",
+    "english_query": "no anime, gritty crime show",
+    "english_element": "anime",
+    "negated_words": "ohne anime"
+  },
+  {
+    "id": "10-fr-a",
+    "lang": "fr",
+    "query": "pas d'anime, série policière sombre",
+    "english_query": "no anime, gritty crime show",
+    "english_element": "anime",
+    "negated_words": "pas d'anime"
+  },
+  {
+    "id": "10-fr-b",
+    "lang": "fr",
+    "query": "serie crime realiste sans anime",
+    "english_query": "no anime, gritty crime show",
+    "english_element": "anime",
+    "negated_words": "sans anime"
+  },
+  {
+    "id": "10-es-a",
+    "lang": "es",
+    "query": "sin anime, serie policiaca dura",
+    "english_query": "no anime, gritty crime show",
+    "english_element": "anime",
+    "negated_words": "sin anime"
+  },
+  {
+    "id": "10-es-b",
+    "lang": "es",
+    "query": "serie criminal realista que no sea anime",
+    "english_query": "no anime, gritty crime show",
+    "english_element": "anime",
+    "negated_words": "que no sea anime"
+  },
+  {
+    "id": "10-tr-a",
+    "lang": "tr",
+    "query": "anime olmayan sert bir suç dizisi",
+    "english_query": "no anime, gritty crime show",
+    "english_element": "anime",
+    "negated_words": "anime olmayan"
+  },
+  {
+    "id": "10-tr-b",
+    "lang": "tr",
+    "query": "animesiz gercekci polisiye dizi",
+    "english_query": "no anime, gritty crime show",
+    "english_element": "anime",
+    "negated_words": "animesiz"
+  },
+  {
+    "id": "11-de-a",
+    "lang": "de",
+    "query": "Krimiserie, keine Animation",
+    "english_query": "crime show, no animation",
+    "english_element": "animation",
+    "negated_words": "keine Animation"
+  },
+  {
+    "id": "11-de-b",
+    "lang": "de",
+    "query": "krimiserie ohne zeichentrick",
+    "english_query": "crime show, no animation",
+    "english_element": "animation",
+    "negated_words": "ohne zeichentrick"
+  },
+  {
+    "id": "11-fr-a",
+    "lang": "fr",
+    "query": "série policière, pas de dessin animé",
+    "english_query": "crime show, no animation",
+    "english_element": "animation",
+    "negated_words": "pas de dessin animé"
+  },
+  {
+    "id": "11-fr-b",
+    "lang": "fr",
+    "query": "serie crime sans animation",
+    "english_query": "crime show, no animation",
+    "english_element": "animation",
+    "negated_words": "sans animation"
+  },
+  {
+    "id": "11-es-a",
+    "lang": "es",
+    "query": "serie policiaca, sin animacion",
+    "english_query": "crime show, no animation",
+    "english_element": "animation",
+    "negated_words": "sin animacion"
+  },
+  {
+    "id": "11-es-b",
+    "lang": "es",
+    "query": "serie de crimen que no sea animada",
+    "english_query": "crime show, no animation",
+    "english_element": "animation",
+    "negated_words": "que no sea animada"
+  },
+  {
+    "id": "11-tr-a",
+    "lang": "tr",
+    "query": "cizgi film olmayan polisiye dizi",
+    "english_query": "crime show, no animation",
+    "english_element": "animation",
+    "negated_words": "cizgi film olmayan"
+  },
+  {
+    "id": "11-tr-b",
+    "lang": "tr",
+    "query": "animasyonsuz suç dizisi",
+    "english_query": "crime show, no animation",
+    "english_element": "animation",
+    "negated_words": "animasyonsuz"
+  },
+  {
+    "id": "12-de-a",
+    "lang": "de",
+    "query": "Film mit Verfolgungsjagden ohne Superhelden",
+    "english_query": "car chase movie without superheroes",
+    "english_element": "superheroes",
+    "negated_words": "ohne Superhelden"
+  },
+  {
+    "id": "12-de-b",
+    "lang": "de",
+    "query": "autoverfolgungsjagd film keine superhelden",
+    "english_query": "car chase movie without superheroes",
+    "english_element": "superheroes",
+    "negated_words": "keine superhelden"
+  },
+  {
+    "id": "12-fr-a",
+    "lang": "fr",
+    "query": "film de course-poursuite sans super-héros",
+    "english_query": "car chase movie without superheroes",
+    "english_element": "superheroes",
+    "negated_words": "sans super-héros"
+  },
+  {
+    "id": "12-fr-b",
+    "lang": "fr",
+    "query": "film de poursuite en voiture pas de super heros",
+    "english_query": "car chase movie without superheroes",
+    "english_element": "superheroes",
+    "negated_words": "pas de super heros"
+  },
+  {
+    "id": "12-es-a",
+    "lang": "es",
+    "query": "película de persecuciones de coches sin superhéroes",
+    "english_query": "car chase movie without superheroes",
+    "english_element": "superheroes",
+    "negated_words": "sin superhéroes"
+  },
+  {
+    "id": "12-es-b",
+    "lang": "es",
+    "query": "peli de persecuciones sin superheroes",
+    "english_query": "car chase movie without superheroes",
+    "english_element": "superheroes",
+    "negated_words": "sin superheroes"
+  },
+  {
+    "id": "12-tr-a",
+    "lang": "tr",
+    "query": "süper kahramansız araba kovalamaca filmi",
+    "english_query": "car chase movie without superheroes",
+    "english_element": "superheroes",
+    "negated_words": "süper kahramansız"
+  },
+  {
+    "id": "12-tr-b",
+    "lang": "tr",
+    "query": "araba kovalamacali film super kahraman olmayan",
+    "english_query": "car chase movie without superheroes",
+    "english_element": "superheroes",
+    "negated_words": "super kahraman olmayan"
+  },
+  {
+    "id": "13-de-a",
+    "lang": "de",
+    "query": "Horrorfilm ohne Zombies",
+    "english_query": "horror movie without zombies",
+    "english_element": "zombies",
+    "negated_words": "ohne Zombies"
+  },
+  {
+    "id": "13-de-b",
+    "lang": "de",
+    "query": "horrorfilm keine zombies",
+    "english_query": "horror movie without zombies",
+    "english_element": "zombies",
+    "negated_words": "keine zombies"
+  },
+  {
+    "id": "13-fr-a",
+    "lang": "fr",
+    "query": "film d'horreur sans zombies",
+    "english_query": "horror movie without zombies",
+    "english_element": "zombies",
+    "negated_words": "sans zombies"
+  },
+  {
+    "id": "13-fr-b",
+    "lang": "fr",
+    "query": "film horreur pas de zombies",
+    "english_query": "horror movie without zombies",
+    "english_element": "zombies",
+    "negated_words": "pas de zombies"
+  },
+  {
+    "id": "13-es-a",
+    "lang": "es",
+    "query": "película de terror sin zombis",
+    "english_query": "horror movie without zombies",
+    "english_element": "zombies",
+    "negated_words": "sin zombis"
+  },
+  {
+    "id": "13-es-b",
+    "lang": "es",
+    "query": "peli de miedo sin zombies",
+    "english_query": "horror movie without zombies",
+    "english_element": "zombies",
+    "negated_words": "sin zombies"
+  },
+  {
+    "id": "13-tr-a",
+    "lang": "tr",
+    "query": "zombisiz korku filmi",
+    "english_query": "horror movie without zombies",
+    "english_element": "zombies",
+    "negated_words": "zombisiz"
+  },
+  {
+    "id": "13-tr-b",
+    "lang": "tr",
+    "query": "korku filmi zombi olmayan",
+    "english_query": "horror movie without zombies",
+    "english_element": "zombies",
+    "negated_words": "zombi olmayan"
+  },
+  {
+    "id": "14-de-a",
+    "lang": "de",
+    "query": "Actionfilm ohne Gewalt",
+    "english_query": "action movie without violence",
+    "english_element": "violence",
+    "negated_words": "ohne Gewalt"
+  },
+  {
+    "id": "14-de-b",
+    "lang": "de",
+    "query": "actionfilm keine gewalt",
+    "english_query": "action movie without violence",
+    "english_element": "violence",
+    "negated_words": "keine gewalt"
+  },
+  {
+    "id": "14-fr-a",
+    "lang": "fr",
+    "query": "film d'action sans violence",
+    "english_query": "action movie without violence",
+    "english_element": "violence",
+    "negated_words": "sans violence"
+  },
+  {
+    "id": "14-fr-b",
+    "lang": "fr",
+    "query": "film action pas trop violent",
+    "english_query": "action movie without violence",
+    "english_element": "violence",
+    "negated_words": "pas trop violent"
+  },
+  {
+    "id": "14-es-a",
+    "lang": "es",
+    "query": "película de acción sin violencia",
+    "english_query": "action movie without violence",
+    "english_element": "violence",
+    "negated_words": "sin violencia"
+  },
+  {
+    "id": "14-es-b",
+    "lang": "es",
+    "query": "peli de accion que no sea violenta",
+    "english_query": "action movie without violence",
+    "english_element": "violence",
+    "negated_words": "que no sea violenta"
+  },
+  {
+    "id": "14-tr-a",
+    "lang": "tr",
+    "query": "şiddet içermeyen aksiyon filmi",
+    "english_query": "action movie without violence",
+    "english_element": "violence",
+    "negated_words": "şiddet içermeyen"
+  },
+  {
+    "id": "14-tr-b",
+    "lang": "tr",
+    "query": "aksiyon filmi siddetsiz",
+    "english_query": "action movie without violence",
+    "english_element": "violence",
+    "negated_words": "siddetsiz"
+  },
+  {
+    "id": "15-de-a",
+    "lang": "de",
+    "query": "Liebesdrama ohne Sexszenen",
+    "english_query": "romantic drama without sex scenes",
+    "english_element": "sex",
+    "negated_words": "ohne Sexszenen"
+  },
+  {
+    "id": "15-de-b",
+    "lang": "de",
+    "query": "romantikdrama keine sexszenen",
+    "english_query": "romantic drama without sex scenes",
+    "english_element": "sex",
+    "negated_words": "keine sexszenen"
+  },
+  {
+    "id": "15-fr-a",
+    "lang": "fr",
+    "query": "drame romantique sans scènes de sexe",
+    "english_query": "romantic drama without sex scenes",
+    "english_element": "sex",
+    "negated_words": "sans scènes de sexe"
+  },
+  {
+    "id": "15-fr-b",
+    "lang": "fr",
+    "query": "drame romantique sans scenes explicites",
+    "english_query": "romantic drama without sex scenes",
+    "english_element": "sex",
+    "negated_words": "sans scenes explicites"
+  },
+  {
+    "id": "15-es-a",
+    "lang": "es",
+    "query": "drama romántico sin escenas de sexo",
+    "english_query": "romantic drama without sex scenes",
+    "english_element": "sex",
+    "negated_words": "sin escenas de sexo"
+  },
+  {
+    "id": "15-es-b",
+    "lang": "es",
+    "query": "drama romantico sin escenas subidas de tono",
+    "english_query": "romantic drama without sex scenes",
+    "english_element": "sex",
+    "negated_words": "sin escenas subidas de tono"
+  },
+  {
+    "id": "15-tr-a",
+    "lang": "tr",
+    "query": "cinsellik içermeyen romantik dram",
+    "english_query": "romantic drama without sex scenes",
+    "english_element": "sex",
+    "negated_words": "cinsellik içermeyen"
+  },
+  {
+    "id": "15-tr-b",
+    "lang": "tr",
+    "query": "seks sahnesi olmayan ask dramasi",
+    "english_query": "romantic drama without sex scenes",
+    "english_element": "sex",
+    "negated_words": "seks sahnesi olmayan"
+  },
+  {
+    "id": "16-de-a",
+    "lang": "de",
+    "query": "Krimidrama ohne Drogen",
+    "english_query": "crime drama without drugs",
+    "english_element": "drugs",
+    "negated_words": "ohne Drogen"
+  },
+  {
+    "id": "16-de-b",
+    "lang": "de",
+    "query": "krimidrama keine drogen",
+    "english_query": "crime drama without drugs",
+    "english_element": "drugs",
+    "negated_words": "keine drogen"
+  },
+  {
+    "id": "16-fr-a",
+    "lang": "fr",
+    "query": "drame criminel sans drogue",
+    "english_query": "crime drama without drugs",
+    "english_element": "drugs",
+    "negated_words": "sans drogue"
+  },
+  {
+    "id": "16-fr-b",
+    "lang": "fr",
+    "query": "drame policier pas de drogues",
+    "english_query": "crime drama without drugs",
+    "english_element": "drugs",
+    "negated_words": "pas de drogues"
+  },
+  {
+    "id": "16-es-a",
+    "lang": "es",
+    "query": "drama criminal sin drogas",
+    "english_query": "crime drama without drugs",
+    "english_element": "drugs",
+    "negated_words": "sin drogas"
+  },
+  {
+    "id": "16-es-b",
+    "lang": "es",
+    "query": "drama policiaco que no tenga drogas",
+    "english_query": "crime drama without drugs",
+    "english_element": "drugs",
+    "negated_words": "que no tenga drogas"
+  },
+  {
+    "id": "16-tr-a",
+    "lang": "tr",
+    "query": "uyuşturucusuz suç draması",
+    "english_query": "crime drama without drugs",
+    "english_element": "drugs",
+    "negated_words": "uyuşturucusuz"
+  },
+  {
+    "id": "16-tr-b",
+    "lang": "tr",
+    "query": "suç dramasi uyusturucu olmayan",
+    "english_query": "crime drama without drugs",
+    "english_element": "drugs",
+    "negated_words": "uyusturucu olmayan"
+  },
+  {
+    "id": "17-de-a",
+    "lang": "de",
+    "query": "Fantasyfilm ohne Magie",
+    "english_query": "fantasy movie without magic",
+    "english_element": "magic",
+    "negated_words": "ohne Magie"
+  },
+  {
+    "id": "17-de-b",
+    "lang": "de",
+    "query": "fantasy film keine magie",
+    "english_query": "fantasy movie without magic",
+    "english_element": "magic",
+    "negated_words": "keine magie"
+  },
+  {
+    "id": "17-fr-a",
+    "lang": "fr",
+    "query": "film fantastique sans magie",
+    "english_query": "fantasy movie without magic",
+    "english_element": "magic",
+    "negated_words": "sans magie"
+  },
+  {
+    "id": "17-fr-b",
+    "lang": "fr",
+    "query": "film fantasy pas de magie",
+    "english_query": "fantasy movie without magic",
+    "english_element": "magic",
+    "negated_words": "pas de magie"
+  },
+  {
+    "id": "17-es-a",
+    "lang": "es",
+    "query": "película de fantasía sin magia",
+    "english_query": "fantasy movie without magic",
+    "english_element": "magic",
+    "negated_words": "sin magia"
+  },
+  {
+    "id": "17-es-b",
+    "lang": "es",
+    "query": "peli fantasia sin magia",
+    "english_query": "fantasy movie without magic",
+    "english_element": "magic",
+    "negated_words": "sin magia"
+  },
+  {
+    "id": "17-tr-a",
+    "lang": "tr",
+    "query": "büyüsüz fantastik film",
+    "english_query": "fantasy movie without magic",
+    "english_element": "magic",
+    "negated_words": "büyüsüz"
+  },
+  {
+    "id": "17-tr-b",
+    "lang": "tr",
+    "query": "fantastik film buyu olmayan",
+    "english_query": "fantasy movie without magic",
+    "english_element": "magic",
+    "negated_words": "buyu olmayan"
+  },
+  {
+    "id": "18-de-a",
+    "lang": "de",
+    "query": "Familienfilm ohne sterbende Tiere",
+    "english_query": "family movie without animals dying / without animals",
+    "english_element": "animals",
+    "negated_words": "ohne sterbende Tiere"
+  },
+  {
+    "id": "18-de-b",
+    "lang": "de",
+    "query": "familienfilm keine tiere",
+    "english_query": "family movie without animals dying / without animals",
+    "english_element": "animals",
+    "negated_words": "keine tiere"
+  },
+  {
+    "id": "18-fr-a",
+    "lang": "fr",
+    "query": "film pour toute la famille sans animaux qui meurent",
+    "english_query": "family movie without animals dying / without animals",
+    "english_element": "animals",
+    "negated_words": "sans animaux qui meurent"
+  },
+  {
+    "id": "18-fr-b",
+    "lang": "fr",
+    "query": "film famille pas d'animaux",
+    "english_query": "family movie without animals dying / without animals",
+    "english_element": "animals",
+    "negated_words": "pas d'animaux"
+  },
+  {
+    "id": "18-es-a",
+    "lang": "es",
+    "query": "película familiar sin animales que mueran",
+    "english_query": "family movie without animals dying / without animals",
+    "english_element": "animals",
+    "negated_words": "sin animales que mueran"
+  },
+  {
+    "id": "18-es-b",
+    "lang": "es",
+    "query": "peli familiar sin animales",
+    "english_query": "family movie without animals dying / without animals",
+    "english_element": "animals",
+    "negated_words": "sin animales"
+  },
+  {
+    "id": "18-tr-a",
+    "lang": "tr",
+    "query": "hayvanların ölmediği aile filmi",
+    "english_query": "family movie without animals dying / without animals",
+    "english_element": "animals",
+    "negated_words": "hayvanların ölmediği"
+  },
+  {
+    "id": "18-tr-b",
+    "lang": "tr",
+    "query": "hayvansiz aile filmi",
+    "english_query": "family movie without animals dying / without animals",
+    "english_element": "animals",
+    "negated_words": "hayvansiz"
+  },
+  {
+    "id": "19-de-a",
+    "lang": "de",
+    "query": "Horrorfilm ohne Vampire",
+    "english_query": "horror without vampires",
+    "english_element": "vampires",
+    "negated_words": "ohne Vampire"
+  },
+  {
+    "id": "19-de-b",
+    "lang": "de",
+    "query": "horror keine vampire",
+    "english_query": "horror without vampires",
+    "english_element": "vampires",
+    "negated_words": "keine vampire"
+  },
+  {
+    "id": "19-fr-a",
+    "lang": "fr",
+    "query": "film d'horreur sans vampires",
+    "english_query": "horror without vampires",
+    "english_element": "vampires",
+    "negated_words": "sans vampires"
+  },
+  {
+    "id": "19-fr-b",
+    "lang": "fr",
+    "query": "horreur pas de vampires",
+    "english_query": "horror without vampires",
+    "english_element": "vampires",
+    "negated_words": "pas de vampires"
+  },
+  {
+    "id": "19-es-a",
+    "lang": "es",
+    "query": "película de terror sin vampiros",
+    "english_query": "horror without vampires",
+    "english_element": "vampires",
+    "negated_words": "sin vampiros"
+  },
+  {
+    "id": "19-es-b",
+    "lang": "es",
+    "query": "terror sin vampiros",
+    "english_query": "horror without vampires",
+    "english_element": "vampires",
+    "negated_words": "sin vampiros"
+  },
+  {
+    "id": "19-tr-a",
+    "lang": "tr",
+    "query": "vampirsiz korku filmi",
+    "english_query": "horror without vampires",
+    "english_element": "vampires",
+    "negated_words": "vampirsiz"
+  },
+  {
+    "id": "19-tr-b",
+    "lang": "tr",
+    "query": "korku filmi vampir olmayan",
+    "english_query": "horror without vampires",
+    "english_element": "vampires",
+    "negated_words": "vampir olmayan"
+  },
+  {
+    "id": "20-de-a",
+    "lang": "de",
+    "query": "Thriller ohne Blut",
+    "english_query": "thriller without blood",
+    "english_element": "blood",
+    "negated_words": "ohne Blut"
+  },
+  {
+    "id": "20-de-b",
+    "lang": "de",
+    "query": "thriller keine blutigen szenen",
+    "english_query": "thriller without blood",
+    "english_element": "blood",
+    "negated_words": "keine blutigen szenen"
+  },
+  {
+    "id": "20-fr-a",
+    "lang": "fr",
+    "query": "thriller sans sang",
+    "english_query": "thriller without blood",
+    "english_element": "blood",
+    "negated_words": "sans sang"
+  },
+  {
+    "id": "20-fr-b",
+    "lang": "fr",
+    "query": "thriller pas de sang",
+    "english_query": "thriller without blood",
+    "english_element": "blood",
+    "negated_words": "pas de sang"
+  },
+  {
+    "id": "20-es-a",
+    "lang": "es",
+    "query": "thriller sin sangre",
+    "english_query": "thriller without blood",
+    "english_element": "blood",
+    "negated_words": "sin sangre"
+  },
+  {
+    "id": "20-es-b",
+    "lang": "es",
+    "query": "thriller que no tenga sangre",
+    "english_query": "thriller without blood",
+    "english_element": "blood",
+    "negated_words": "que no tenga sangre"
+  },
+  {
+    "id": "20-tr-a",
+    "lang": "tr",
+    "query": "kansız gerilim filmi",
+    "english_query": "thriller without blood",
+    "english_element": "blood",
+    "negated_words": "kansız"
+  },
+  {
+    "id": "20-tr-b",
+    "lang": "tr",
+    "query": "gerilim filmi kan olmayan",
+    "english_query": "thriller without blood",
+    "english_element": "blood",
+    "negated_words": "kan olmayan"
+  },
+  {
+    "id": "21-de-a",
+    "lang": "de",
+    "query": "Kriegsfilm nicht über den Zweiten Weltkrieg",
+    "english_query": "war movie that isn't about World War II",
+    "english_element": "world war ii",
+    "negated_words": "nicht über den Zweiten Weltkrieg"
+  },
+  {
+    "id": "21-de-b",
+    "lang": "de",
+    "query": "kriegsfilm ohne 2. weltkrieg",
+    "english_query": "war movie that isn't about World War II",
+    "english_element": "world war ii",
+    "negated_words": "ohne 2. weltkrieg"
+  },
+  {
+    "id": "21-fr-a",
+    "lang": "fr",
+    "query": "film de guerre qui ne parle pas de la Seconde Guerre mondiale",
+    "english_query": "war movie that isn't about World War II",
+    "english_element": "world war ii",
+    "negated_words": "ne parle pas de la Seconde Guerre mondiale"
+  },
+  {
+    "id": "21-fr-b",
+    "lang": "fr",
+    "query": "film de guerre sans la seconde guerre mondiale",
+    "english_query": "war movie that isn't about World War II",
+    "english_element": "world war ii",
+    "negated_words": "sans la seconde guerre mondiale"
+  },
+  {
+    "id": "21-es-a",
+    "lang": "es",
+    "query": "película de guerra que no sea sobre la Segunda Guerra Mundial",
+    "english_query": "war movie that isn't about World War II",
+    "english_element": "world war ii",
+    "negated_words": "que no sea sobre la Segunda Guerra Mundial"
+  },
+  {
+    "id": "21-es-b",
+    "lang": "es",
+    "query": "peli de guerra sin segunda guerra mundial",
+    "english_query": "war movie that isn't about World War II",
+    "english_element": "world war ii",
+    "negated_words": "sin segunda guerra mundial"
+  },
+  {
+    "id": "21-tr-a",
+    "lang": "tr",
+    "query": "İkinci Dünya Savaşı ile ilgili olmayan savaş filmi",
+    "english_query": "war movie that isn't about World War II",
+    "english_element": "world war ii",
+    "negated_words": "İkinci Dünya Savaşı ile ilgili olmayan"
+  },
+  {
+    "id": "21-tr-b",
+    "lang": "tr",
+    "query": "2. dunya savasi olmayan savas filmi",
+    "english_query": "war movie that isn't about World War II",
+    "english_element": "world war ii",
+    "negated_words": "2. dunya savasi olmayan"
+  },
+  {
+    "id": "22-de-a",
+    "lang": "de",
+    "query": "Horrorfilm ohne Geister",
+    "english_query": "horror without ghosts",
+    "english_element": "ghosts",
+    "negated_words": "ohne Geister"
+  },
+  {
+    "id": "22-de-b",
+    "lang": "de",
+    "query": "horrorfilm keine geister",
+    "english_query": "horror without ghosts",
+    "english_element": "ghosts",
+    "negated_words": "keine geister"
+  },
+  {
+    "id": "22-fr-a",
+    "lang": "fr",
+    "query": "film d'horreur sans fantômes",
+    "english_query": "horror without ghosts",
+    "english_element": "ghosts",
+    "negated_words": "sans fantômes"
+  },
+  {
+    "id": "22-fr-b",
+    "lang": "fr",
+    "query": "horreur sans fantomes",
+    "english_query": "horror without ghosts",
+    "english_element": "ghosts",
+    "negated_words": "sans fantomes"
+  },
+  {
+    "id": "22-es-a",
+    "lang": "es",
+    "query": "película de terror sin fantasmas",
+    "english_query": "horror without ghosts",
+    "english_element": "ghosts",
+    "negated_words": "sin fantasmas"
+  },
+  {
+    "id": "22-es-b",
+    "lang": "es",
+    "query": "terror sin fantasmas",
+    "english_query": "horror without ghosts",
+    "english_element": "ghosts",
+    "negated_words": "sin fantasmas"
+  },
+  {
+    "id": "22-tr-a",
+    "lang": "tr",
+    "query": "hayaletsiz korku filmi",
+    "english_query": "horror without ghosts",
+    "english_element": "ghosts",
+    "negated_words": "hayaletsiz"
+  },
+  {
+    "id": "22-tr-b",
+    "lang": "tr",
+    "query": "korku filmi hayalet olmayan",
+    "english_query": "horror without ghosts",
+    "english_element": "ghosts",
+    "negated_words": "hayalet olmayan"
+  },
+  {
+    "id": "23-de-a",
+    "lang": "de",
+    "query": "Drama ohne Nacktheit",
+    "english_query": "drama without nudity",
+    "english_element": "nudity",
+    "negated_words": "ohne Nacktheit"
+  },
+  {
+    "id": "23-de-b",
+    "lang": "de",
+    "query": "drama keine nacktszenen",
+    "english_query": "drama without nudity",
+    "english_element": "nudity",
+    "negated_words": "keine nacktszenen"
+  },
+  {
+    "id": "23-fr-a",
+    "lang": "fr",
+    "query": "drame sans nudité",
+    "english_query": "drama without nudity",
+    "english_element": "nudity",
+    "negated_words": "sans nudité"
+  },
+  {
+    "id": "23-fr-b",
+    "lang": "fr",
+    "query": "drame pas de nudite",
+    "english_query": "drama without nudity",
+    "english_element": "nudity",
+    "negated_words": "pas de nudite"
+  },
+  {
+    "id": "23-es-a",
+    "lang": "es",
+    "query": "drama sin desnudos",
+    "english_query": "drama without nudity",
+    "english_element": "nudity",
+    "negated_words": "sin desnudos"
+  },
+  {
+    "id": "23-es-b",
+    "lang": "es",
+    "query": "drama que no tenga desnudez",
+    "english_query": "drama without nudity",
+    "english_element": "nudity",
+    "negated_words": "que no tenga desnudez"
+  },
+  {
+    "id": "23-tr-a",
+    "lang": "tr",
+    "query": "çıplaklık içermeyen dram",
+    "english_query": "drama without nudity",
+    "english_element": "nudity",
+    "negated_words": "çıplaklık içermeyen"
+  },
+  {
+    "id": "23-tr-b",
+    "lang": "tr",
+    "query": "dram filmi ciplaklik olmayan",
+    "english_query": "drama without nudity",
+    "english_element": "nudity",
+    "negated_words": "ciplaklik olmayan"
+  },
+  {
+    "id": "24-de-a",
+    "lang": "de",
+    "query": "Thriller ohne Suizid",
+    "english_query": "thriller without suicide",
+    "english_element": "suicide",
+    "negated_words": "ohne Suizid"
+  },
+  {
+    "id": "24-de-b",
+    "lang": "de",
+    "query": "thriller keine selbstmord szenen",
+    "english_query": "thriller without suicide",
+    "english_element": "suicide",
+    "negated_words": "keine selbstmord szenen"
+  },
+  {
+    "id": "24-fr-a",
+    "lang": "fr",
+    "query": "thriller sans suicide",
+    "english_query": "thriller without suicide",
+    "english_element": "suicide",
+    "negated_words": "sans suicide"
+  },
+  {
+    "id": "24-fr-b",
+    "lang": "fr",
+    "query": "thriller pas de suicide",
+    "english_query": "thriller without suicide",
+    "english_element": "suicide",
+    "negated_words": "pas de suicide"
+  },
+  {
+    "id": "24-es-a",
+    "lang": "es",
+    "query": "thriller sin suicidio",
+    "english_query": "thriller without suicide",
+    "english_element": "suicide",
+    "negated_words": "sin suicidio"
+  },
+  {
+    "id": "24-es-b",
+    "lang": "es",
+    "query": "thriller que no tenga suicidio",
+    "english_query": "thriller without suicide",
+    "english_element": "suicide",
+    "negated_words": "que no tenga suicidio"
+  },
+  {
+    "id": "24-tr-a",
+    "lang": "tr",
+    "query": "intihar içermeyen gerilim filmi",
+    "english_query": "thriller without suicide",
+    "english_element": "suicide",
+    "negated_words": "intihar içermeyen"
+  },
+  {
+    "id": "24-tr-b",
+    "lang": "tr",
+    "query": "gerilim filmi intihar olmayan",
+    "english_query": "thriller without suicide",
+    "english_element": "suicide",
+    "negated_words": "intihar olmayan"
+  },
+  {
+    "id": "25-de-a",
+    "lang": "de",
+    "query": "Teenie-Film ohne Hunde",
+    "english_query": "teen movie without dogs",
+    "english_element": "dogs",
+    "negated_words": "ohne Hunde"
+  },
+  {
+    "id": "25-de-b",
+    "lang": "de",
+    "query": "jugendfilm keine hunde",
+    "english_query": "teen movie without dogs",
+    "english_element": "dogs",
+    "negated_words": "keine hunde"
+  },
+  {
+    "id": "25-fr-a",
+    "lang": "fr",
+    "query": "film ado sans chiens",
+    "english_query": "teen movie without dogs",
+    "english_element": "dogs",
+    "negated_words": "sans chiens"
+  },
+  {
+    "id": "25-fr-b",
+    "lang": "fr",
+    "query": "film pour ados pas de chien",
+    "english_query": "teen movie without dogs",
+    "english_element": "dogs",
+    "negated_words": "pas de chien"
+  },
+  {
+    "id": "25-es-a",
+    "lang": "es",
+    "query": "película para adolescentes sin perros",
+    "english_query": "teen movie without dogs",
+    "english_element": "dogs",
+    "negated_words": "sin perros"
+  },
+  {
+    "id": "25-es-b",
+    "lang": "es",
+    "query": "peli de adolescentes sin perros",
+    "english_query": "teen movie without dogs",
+    "english_element": "dogs",
+    "negated_words": "sin perros"
+  },
+  {
+    "id": "25-tr-a",
+    "lang": "tr",
+    "query": "köpeksiz gençlik filmi",
+    "english_query": "teen movie without dogs",
+    "english_element": "dogs",
+    "negated_words": "köpeksiz"
+  },
+  {
+    "id": "25-tr-b",
+    "lang": "tr",
+    "query": "genclik filmi kopek olmayan",
+    "english_query": "teen movie without dogs",
+    "english_element": "dogs",
+    "negated_words": "kopek olmayan"
+  }
+]

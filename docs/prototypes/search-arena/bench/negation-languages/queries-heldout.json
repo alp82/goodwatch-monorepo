@@ -1,0 +1,126 @@
+[
+  {"id": "h1-de", "lang": "de", "query": "Weltraumabenteuer ohne Aliens", "english_query": "space adventure without aliens", "english_element": "aliens"},
+  {"id": "h1-fr", "lang": "fr", "query": "une aventure spatiale sans extraterrestres", "english_query": "a space adventure without aliens", "english_element": "aliens"},
+  {"id": "h1-es", "lang": "es", "query": "aventura espacial sin extraterrestres", "english_query": "space adventure without aliens", "english_element": "aliens"},
+  {"id": "h1-tr", "lang": "tr", "query": "Uzaylısız bir uzay macerası arıyorum", "english_query": "I'm looking for a space adventure without aliens", "english_element": "aliens"},
+
+  {"id": "h2-de", "lang": "de", "query": "mittelalterliche Fantasy-Serie, aber bitte keine Drachen", "english_query": "medieval fantasy series, but please no dragons", "english_element": "dragons"},
+  {"id": "h2-fr", "lang": "fr", "query": "fantasy médiéval sans dragons", "english_query": "medieval fantasy without dragons", "english_element": "dragons"},
+  {"id": "h2-es", "lang": "es", "query": "Busco una fantasia medieval que no tenga dragones", "english_query": "I'm looking for a medieval fantasy that doesn't have dragons", "english_element": "dragons"},
+  {"id": "h2-tr", "lang": "tr", "query": "ejderhasiz ortacag fantezisi", "english_query": "dragon-free medieval fantasy", "english_element": "dragons"},
+
+  {"id": "h3-de", "lang": "de", "query": "Zombieserie ohne Gore", "english_query": "zombie series without gore", "english_element": "gore"},
+  {"id": "h3-fr", "lang": "fr", "query": "Je cherche une série de zombies, mais sans gore", "english_query": "I'm looking for a zombie series, but without gore", "english_element": "gore"},
+  {"id": "h3-es", "lang": "es", "query": "serie de zombis sin gore", "english_query": "zombie series without gore", "english_element": "gore"},
+  {"id": "h3-tr", "lang": "tr", "query": "Gore icermeyen zombi dizisi ariyorum", "english_query": "I'm looking for a zombie series that doesn't contain gore", "english_element": "gore"},
+
+  {"id": "h4-de", "lang": "de", "query": "krimi ohne mord", "english_query": "mystery without murder", "english_element": "murder"},
+  {"id": "h4-fr", "lang": "fr", "query": "polar cosy sans meurtre", "english_query": "cozy mystery without murder", "english_element": "murder"},
+  {"id": "h4-es", "lang": "es", "query": "Quiero un misterio acogedor que no tenga asesinato", "english_query": "I want a cozy mystery that doesn't have murder", "english_element": "murder"},
+  {"id": "h4-tr", "lang": "tr", "query": "cinayetsiz keyifli bir gizem dizisi arıyorum", "english_query": "I'm looking for a cozy mystery series without murder", "english_element": "murder"},
+
+  {"id": "h5-de", "lang": "de", "query": "Science-Fiction ohne Roboter", "english_query": "science fiction without robots", "english_element": "robots"},
+  {"id": "h5-fr", "lang": "fr", "query": "science-fiction sans robots", "english_query": "science fiction without robots", "english_element": "robots"},
+  {"id": "h5-es", "lang": "es", "query": "ciencia ficcion sin robots", "english_query": "science fiction without robots", "english_element": "robots"},
+  {"id": "h5-tr", "lang": "tr", "query": "robotsuz bilim kurgu filmi", "english_query": "robot-free science fiction movie", "english_element": "robots"},
+
+  {"id": "h6-de", "lang": "de", "query": "Ich suche einen Horrorfilm, aber bitte ohne Jump Scares", "english_query": "I'm looking for a horror film, but please without jump scares", "english_element": "jump scares"},
+  {"id": "h6-fr", "lang": "fr", "query": "un film d'horreur sans jump scares", "english_query": "a horror film without jump scares", "english_element": "jump scares"},
+  {"id": "h6-es", "lang": "es", "query": "pelicula de terror sin sustos repentinos", "english_query": "horror movie without sudden scares", "english_element": "jump scares"},
+  {"id": "h6-tr", "lang": "tr", "query": "Ani korku sahneleri olmadan bir korku filmi istiyorum", "english_query": "I want a horror movie without jump scares", "english_element": "jump scares"},
+
+  {"id": "h7-de", "lang": "de", "query": "Actionkomödie, aber bitte keine Romantik", "english_query": "action comedy, but please no romance", "english_element": "romance"},
+  {"id": "h7-fr", "lang": "fr", "query": "comedie d'action sans romance", "english_query": "action comedy without romance", "english_element": "romance"},
+  {"id": "h7-es", "lang": "es", "query": "Busco una comedia de accion que no tenga romance", "english_query": "I'm looking for an action comedy that doesn't have romance", "english_element": "romance"},
+  {"id": "h7-tr", "lang": "tr", "query": "romantizmsiz aksiyon komedisi", "english_query": "romance-free action comedy", "english_element": "romance"},
+
+  {"id": "h8-de", "lang": "de", "query": "Weltuntergangsfilm ohne Zombies", "english_query": "apocalypse movie without zombies", "english_element": "zombies"},
+  {"id": "h8-fr", "lang": "fr", "query": "film apocalyptique, mais pas de zombies s'il vous plait", "english_query": "apocalypse movie, but no zombies please", "english_element": "zombies"},
+  {"id": "h8-es", "lang": "es", "query": "pelicula sobre el apocalipsis sin zombis", "english_query": "movie about the apocalypse without zombies", "english_element": "zombies"},
+  {"id": "h8-tr", "lang": "tr", "query": "Zombisiz bir kiyamet filmi ariyorum", "english_query": "I'm looking for a zombie-free apocalypse movie", "english_element": "zombies"},
+
+  {"id": "h9-de", "lang": "de", "query": "Drama ohne Gewalt", "english_query": "drama without violence", "english_element": "violence"},
+  {"id": "h9-fr", "lang": "fr", "query": "Je cherche un drame, mais aucun acte de violence", "english_query": "I'm looking for a drama, but no act of violence", "english_element": "violence"},
+  {"id": "h9-es", "lang": "es", "query": "drama sin violencia", "english_query": "drama without violence", "english_element": "violence"},
+  {"id": "h9-tr", "lang": "tr", "query": "siddet icermeyen bir dram", "english_query": "a drama that doesn't contain violence", "english_element": "violence"},
+
+  {"id": "h10-de", "lang": "de", "query": "Liebesgeschichte ohne Sexszenen", "english_query": "love story without sex scenes", "english_element": "sex scenes"},
+  {"id": "h10-fr", "lang": "fr", "query": "histoire d'amour sans scenes de sexe", "english_query": "love story without sex scenes", "english_element": "sex scenes"},
+  {"id": "h10-es", "lang": "es", "query": "Quiero una historia de amor que no tenga escenas de sexo", "english_query": "I want a love story that doesn't have sex scenes", "english_element": "sex scenes"},
+  {"id": "h10-tr", "lang": "tr", "query": "seks sahnesi olmayan bir ask hikayesi istiyorum", "english_query": "I want a love story that doesn't have sex scenes", "english_element": "sex scenes"},
+
+  {"id": "h11-de", "lang": "de", "query": "Teenieserie, aber bitte keine Drogen", "english_query": "teen series, but please no drugs", "english_element": "drugs"},
+  {"id": "h11-fr", "lang": "fr", "query": "serie ado sans drogue", "english_query": "teen series without drugs", "english_element": "drugs"},
+  {"id": "h11-es", "lang": "es", "query": "serie para adolescentes sin drogas", "english_query": "series for teenagers without drugs", "english_element": "drugs"},
+  {"id": "h11-tr", "lang": "tr", "query": "uyusturucu icermeyen bir genc dizisi ariyorum", "english_query": "I'm looking for a teen series that doesn't contain drugs", "english_element": "drugs"},
+
+  {"id": "h12-de", "lang": "de", "query": "Ich suche eine Fantasyserie ohne Magie", "english_query": "I'm looking for a fantasy series without magic", "english_element": "magic"},
+  {"id": "h12-fr", "lang": "fr", "query": "serie fantasy sans magie", "english_query": "fantasy series without magic", "english_element": "magic"},
+  {"id": "h12-es", "lang": "es", "query": "serie de fantasia sin magia", "english_query": "fantasy series without magic", "english_element": "magic"},
+  {"id": "h12-tr", "lang": "tr", "query": "buyusuz bir fantezi dizisi", "english_query": "a magic-free fantasy series", "english_element": "magic"},
+
+  {"id": "h13-de", "lang": "de", "query": "Kinderfilm ohne Tiere", "english_query": "kids film without animals", "english_element": "animals"},
+  {"id": "h13-fr", "lang": "fr", "query": "film pour enfants sans animaux", "english_query": "film for children without animals", "english_element": "animals"},
+  {"id": "h13-es", "lang": "es", "query": "Busco una pelicula infantil que no tenga animales", "english_query": "I'm looking for a kids movie that doesn't have animals", "english_element": "animals"},
+  {"id": "h13-tr", "lang": "tr", "query": "hayvansiz cocuk filmi ariyorum", "english_query": "I'm looking for an animal-free kids movie", "english_element": "animals"},
+
+  {"id": "h14-de", "lang": "de", "query": "Gothic-Film ohne Vampire", "english_query": "gothic film without vampires", "english_element": "vampires"},
+  {"id": "h14-fr", "lang": "fr", "query": "un film gothique sans vampires", "english_query": "a gothic film without vampires", "english_element": "vampires"},
+  {"id": "h14-es", "lang": "es", "query": "pelicula gotica sin vampiros", "english_query": "gothic movie without vampires", "english_element": "vampires"},
+  {"id": "h14-tr", "lang": "tr", "query": "vampirsiz gotik film", "english_query": "vampire-free gothic movie", "english_element": "vampires"},
+
+  {"id": "h15-de", "lang": "de", "query": "Film über ein Spukhaus, aber ohne Geister", "english_query": "movie about a haunted house, but without ghosts", "english_element": "ghosts"},
+  {"id": "h15-fr", "lang": "fr", "query": "film de maison hantee sans fantomes", "english_query": "haunted house movie without ghosts", "english_element": "ghosts"},
+  {"id": "h15-es", "lang": "es", "query": "Quiero una pelicula de casa embrujada que no tenga fantasmas", "english_query": "I want a haunted house movie that doesn't have ghosts", "english_element": "ghosts"},
+  {"id": "h15-tr", "lang": "tr", "query": "hayaletsiz perili ev filmi istiyorum", "english_query": "I want a ghost-free haunted house movie", "english_element": "ghosts"},
+
+  {"id": "h16-de", "lang": "de", "query": "Slasherfilm ohne Blut", "english_query": "slasher film without blood", "english_element": "blood"},
+  {"id": "h16-fr", "lang": "fr", "query": "un slasher, mais pas de sang", "english_query": "a slasher, but no blood", "english_element": "blood"},
+  {"id": "h16-es", "lang": "es", "query": "pelicula slasher, nada de sangre", "english_query": "slasher movie, no blood at all", "english_element": "blood"},
+  {"id": "h16-tr", "lang": "tr", "query": "kansiz bir slasher filmi ariyorum", "english_query": "I'm looking for a blood-free slasher movie", "english_element": "blood"},
+
+  {"id": "h17-de", "lang": "de", "query": "Actionfilm ohne Superhelden", "english_query": "action movie without superheroes", "english_element": "superheroes"},
+  {"id": "h17-fr", "lang": "fr", "query": "Je cherche un film d'action, mais sans super-heros", "english_query": "I'm looking for an action movie, but without superheroes", "english_element": "superheroes"},
+  {"id": "h17-es", "lang": "es", "query": "pelicula de accion sin superheroes", "english_query": "action movie without superheroes", "english_element": "superheroes"},
+  {"id": "h17-tr", "lang": "tr", "query": "Super kahraman yok, sade bir aksiyon filmi arıyorum", "english_query": "No superheroes, I'm looking for a plain action movie", "english_element": "superheroes"},
+
+  {"id": "h18-de", "lang": "de", "query": "Kriegsdrama, das nicht im Zweiten Weltkrieg spielt", "english_query": "war drama that is not set in World War II", "english_element": "World War II"},
+  {"id": "h18-fr", "lang": "fr", "query": "drame de guerre qui ne se deroule pas pendant la Seconde Guerre mondiale", "english_query": "war drama that doesn't take place during World War II", "english_element": "World War II"},
+  {"id": "h18-es", "lang": "es", "query": "Busco un drama belico que no transcurra en la Segunda Guerra Mundial", "english_query": "I'm looking for a war drama that doesn't take place in World War II", "english_element": "World War II"},
+  {"id": "h18-tr", "lang": "tr", "query": "İkinci Dünya Savaşı'nda geçmeyen bir savaş dramı arıyorum", "english_query": "I'm looking for a war drama not set in World War II", "english_element": "World War II"},
+
+  {"id": "h19-de", "lang": "de", "query": "Krimiserie, die nicht animiert ist", "english_query": "crime series that is not animated", "english_element": "animation"},
+  {"id": "h19-fr", "lang": "fr", "query": "serie policiere qui n'est pas un dessin anime", "english_query": "crime series that is not a cartoon", "english_element": "animation"},
+  {"id": "h19-es", "lang": "es", "query": "serie policiaca que no sea animada", "english_query": "crime series that isn't animated", "english_element": "animation"},
+  {"id": "h19-tr", "lang": "tr", "query": "animasyon olmayan bir polisiye dizi istiyorum", "english_query": "I want a crime series that isn't animation", "english_element": "animation"},
+
+  {"id": "h20-de", "lang": "de", "query": "Serie ohne Hunde", "english_query": "show without dogs", "english_element": "dogs"},
+  {"id": "h20-fr", "lang": "fr", "query": "une serie sans chiens", "english_query": "a show without dogs", "english_element": "dogs"},
+  {"id": "h20-es", "lang": "es", "query": "serie sin perros", "english_query": "show without dogs", "english_element": "dogs"},
+  {"id": "h20-tr", "lang": "tr", "query": "İçinde köpek olmayan bir dizi arıyorum", "english_query": "I'm looking for a show that doesn't have dogs in it", "english_element": "dogs"},
+
+  {"id": "h21-de", "lang": "de", "query": "Film ohne Nacktheit", "english_query": "movie without nudity", "english_element": "nudity"},
+  {"id": "h21-fr", "lang": "fr", "query": "film sans nudite", "english_query": "movie without nudity", "english_element": "nudity"},
+  {"id": "h21-es", "lang": "es", "query": "una pelicula, nada de desnudos", "english_query": "a movie, no nudity at all", "english_element": "nudity"},
+  {"id": "h21-tr", "lang": "tr", "query": "ciplaklik icermeyen bir film", "english_query": "a movie that doesn't contain nudity", "english_element": "nudity"},
+
+  {"id": "h22-de", "lang": "de", "query": "Ich suche ein Drama, aber bitte ohne Selbstmord", "english_query": "I'm looking for a drama, but please without suicide", "english_element": "suicide"},
+  {"id": "h22-fr", "lang": "fr", "query": "drame sans suicide", "english_query": "drama without suicide", "english_element": "suicide"},
+  {"id": "h22-es", "lang": "es", "query": "drama que no tenga suicidio", "english_query": "drama that doesn't have suicide", "english_element": "suicide"},
+  {"id": "h22-tr", "lang": "tr", "query": "intihar icermeyen bir dram ariyorum", "english_query": "I'm looking for a drama that doesn't contain suicide", "english_element": "suicide"},
+
+  {"id": "h23-de", "lang": "de", "query": "Thriller ohne Folter", "english_query": "thriller without torture", "english_element": "torture"},
+  {"id": "h23-fr", "lang": "fr", "query": "thriller sans torture", "english_query": "thriller without torture", "english_element": "torture"},
+  {"id": "h23-es", "lang": "es", "query": "Busco un thriller que no tenga tortura", "english_query": "I'm looking for a thriller that doesn't have torture", "english_element": "torture"},
+  {"id": "h23-tr", "lang": "tr", "query": "iskencesiz gerilim filmi", "english_query": "torture-free thriller movie", "english_element": "torture"},
+
+  {"id": "h24-de", "lang": "de", "query": "Monsterfilm ohne Spinnen", "english_query": "monster movie without spiders", "english_element": "spiders"},
+  {"id": "h24-fr", "lang": "fr", "query": "un film de monstres, pas d'araignees", "english_query": "a monster movie, no spiders", "english_element": "spiders"},
+  {"id": "h24-es", "lang": "es", "query": "pelicula de monstruos sin aranas", "english_query": "monster movie without spiders", "english_element": "spiders"},
+  {"id": "h24-tr", "lang": "tr", "query": "orumceksiz canavar filmi ariyorum", "english_query": "I'm looking for a spider-free monster movie", "english_element": "spiders"},
+
+  {"id": "h25-de", "lang": "de", "query": "Komödie, die kein Horror ist", "english_query": "comedy that is not horror", "english_element": "horror"},
+  {"id": "h25-fr", "lang": "fr", "query": "comedie qui n'est pas de l'horreur", "english_query": "comedy that is not horror", "english_element": "horror"},
+  {"id": "h25-es", "lang": "es", "query": "Quiero una comedia que no sea de terror", "english_query": "I want a comedy that isn't horror", "english_element": "horror"},
+  {"id": "h25-tr", "lang": "tr", "query": "korku olmayan bir komedi ariyorum", "english_query": "I'm looking for a comedy that isn't horror", "english_element": "horror"}
+]
