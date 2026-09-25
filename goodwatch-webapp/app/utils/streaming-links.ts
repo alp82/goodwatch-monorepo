@@ -28,6 +28,15 @@ export const ignoredProviders = [
 	350, // Apple TV Plus
 ]
 
+// JustWatch lists add-on channels and plan tiers separately; one entry per brand reads better.
+export const brandName = (name: string) =>
+	name
+		.replace(/\s+(Amazon|Apple TV|Roku Premium)\s+Channel$/i, "")
+		.replace(/\s+(Roku Premium Channel|Channel)$/i, "")
+		.replace(/\s+(Standard|Basic)\s+with\s+Ads$/i, "")
+		.replace(/\s+(Essential|Premium|Basic|Standard)$/i, "")
+		.replace(/\s+Plus$/i, "+")
+
 export const getShorterProviderLabel = (label: string) => {
 	switch (label) {
 		case "Amazon Video":

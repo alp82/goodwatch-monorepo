@@ -7,20 +7,11 @@ import type { MovieResult, ShowResult, StreamingType } from "~/server/types/deta
 import { useClickOutside } from "~/ui/details/hero/useClickOutside"
 import CountrySelector from "~/ui/streaming/CountrySelector"
 import type { Section } from "~/utils/scroll"
-import { duplicateProviderMapping, getShorterProviderLabel, getStreamingUrl, ignoredProviders } from "~/utils/streaming-links"
+import { brandName, duplicateProviderMapping, getShorterProviderLabel, getStreamingUrl, ignoredProviders } from "~/utils/streaming-links"
 
 type Media = MovieResult | ShowResult
 
 export const OFFER_LABEL: Record<string, string> = { flatrate: "Stream", rent: "Rent", buy: "Buy", free: "Free", ads: "Free with ads" }
-
-// JustWatch lists add-on channels and plan tiers separately; one entry per brand reads better.
-const brandName = (name: string) =>
-	name
-		.replace(/\s+(Amazon|Apple TV|Roku Premium)\s+Channel$/i, "")
-		.replace(/\s+(Roku Premium Channel|Channel)$/i, "")
-		.replace(/\s+(Standard|Basic)\s+with\s+Ads$/i, "")
-		.replace(/\s+(Essential|Premium|Basic|Standard)$/i, "")
-		.replace(/\s+Plus$/i, "+")
 
 // Legal offers for the given offer types, one per brand, your services first.
 export function useStreamingLinks(media: Media, country: string, types: StreamingType[]) {
