@@ -56,3 +56,28 @@ _Avoid_: Quality rating
 
 **Fingerprint verdict**:
 A reviewer's assessment of how faithfully a fingerprint describes a title, supported by explanations of implausible attribute scores. An existing model's output is not a reference answer.
+
+**Share list**:
+A person's ranking of exactly five films or shows under a title, published at its own link and shown as a share card. A share list is separate from ratings, Want to See, and the taste profile.
+_Avoid_: Top list, Collection
+
+**Share card**:
+The image of a share list in one card design and color theme. It is the share list's link preview and changes when the share list changes.
+
+**Card design**:
+One of the fixed visual layouts a share card can take, identified by a permanent key.
+
+**Color theme**:
+The named set of accent, ink, and paper colors applied to a card design.
+
+**List prompt**:
+A suggested share list title, such as "The best sci-fi shows", that also selects which titles are suggested for it.
+
+**Remix**:
+A new share list, owned by the viewer, started from another person's share list with the same list prompt and titles.
+
+**Handle**:
+The unique public name that identifies a person's public profile and its route.
+
+**Public profile**:
+The page listing a person's public share lists under their handle.
