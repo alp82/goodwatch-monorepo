@@ -276,6 +276,15 @@ export default function Footer({}: FooterProps) {
 						</a>
 					</div>
 
+					{/* Required by the IMDb non-commercial dataset license. */}
+					<p className="mt-3 text-center text-xs leading-5 text-gray-500">
+						Information courtesy of IMDb (
+						<a href="https://www.imdb.com" target="_blank" rel="noreferrer" className="hover:text-gray-300">
+							https://www.imdb.com
+						</a>
+						). Used with permission.
+					</p>
+
 					<div className="mt-4 mb-16 flex justify-center">
 						<a
 							href="https://shieldaze.com"
