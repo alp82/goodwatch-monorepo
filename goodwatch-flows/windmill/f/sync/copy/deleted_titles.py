@@ -26,6 +26,19 @@ TITLE_KEYED_TABLES = (
     "streaming_evidence",
     "streaming_availability",
 )
+# The columns that tell a title's rows apart within a table, after the title's
+# (media_tmdb_id, media_type). Together they form the table's primary key.
+ROW_KEY_COLUMNS = {
+    "media_image": ("image_type", "url_path", "language_code"),
+    "media_video": ("tmdb_id",),
+    "trope": ("name",),
+    "alternative_title": ("country_code",),
+    "translation": ("language_code", "country_code"),
+    "release_event": ("country_code", "release_date", "release_type", "certification"),
+    "person_appeared_in": ("person_tmdb_id", "credit_id"),
+    "person_worked_on": ("person_tmdb_id", "credit_id"),
+    "streaming_evidence": ("country_code",),
+}
 MEDIA_TABLES = {"movie": "movie", "show": "show"}
 # How the TMDB daily dump names each media type.
 DAILY_DUMP_TYPES = {"movie": "movie", "show": "tv"}
@@ -46,6 +59,13 @@ class TitleTable:
     id_column: str
     media_types: tuple[str, ...] = ("movie", "show")
     media_type_column: bool = True
+    # Columns that tell one title's rows apart; empty where rows are not addressed singly.
+    key_columns: tuple[str, ...] = ()
+
+    @property
+    def primary_key(self) -> tuple[str, ...]:
+        """The columns that address a single row: the title scope, then the row key."""
+        return (self.id_column, *(("media_type",) if self.media_type_column else ()), *self.key_columns)
 
     def scope(self, media_type: str, with_ids: bool = True) -> str:
         if media_type not in self.media_types:
@@ -62,7 +82,7 @@ class TitleTable:
 # In delete order: children first, the title row last, so an interrupted run leaves
 # the title visible to the next run instead of orphaning its rows.
 CHILD_TABLES = (
-    *(TitleTable(table, "media_tmdb_id") for table in TITLE_KEYED_TABLES),
+    *(TitleTable(table, "media_tmdb_id", key_columns=ROW_KEY_COLUMNS.get(table, ())) for table in TITLE_KEYED_TABLES),
     TitleTable("season", "show_id", media_types=("show",), media_type_column=False),
 )
 MEDIA_TITLE_TABLES = {
@@ -99,6 +119,14 @@ def title_tables(media_type: str) -> list[TitleTable]:
     if media_type not in MEDIA_TABLES:
         raise ValueError(f"unknown media_type: {media_type}")
     return [table for table in CHILD_TABLES if media_type in table.media_types] + [MEDIA_TITLE_TABLES[media_type]]
+
+
+def title_table(media_type: str, name: str) -> TitleTable:
+    """The table `name` as a table of this media type's titles."""
+    for table in title_tables(media_type):
+        if table.name == name:
+            return table
+    raise ValueError(f"not a {media_type} title table: {name}")
 
 
 def titles_with_rows(connector: Any, table: TitleTable, media_type: str, ids: list[int] | None = None) -> list[int]:

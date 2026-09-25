@@ -17,6 +17,7 @@ from f.sync.copy.deleted_titles import (
     delete_titles_from_crate,
     find_flagged_tmdb_ids,
 )
+from f.sync.copy.stale_child_rows import add_stats, delete_stale_child_rows, listed_scopes
 from f.sync.models.crate_models import (
     Movie,
     Show,
@@ -211,7 +212,8 @@ def copy_media(
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     entity_ids = defaultdict(set)
     stale_seasons_deleted = 0
-    
+    stale_child_rows = {}
+
     projection = {
         "_id": 0,
         "vote_average": 0,
@@ -222,6 +224,8 @@ def copy_media(
         media_documents = []
         entity_batches = defaultdict(list)
         season_ids_by_show = {}
+        # Per copied title, the child tables whose rows its payload lists in full.
+        listed_scopes_by_title = {}
 
         tmdb_details_batch = list(
             #mongo_collection.find({"tmdb_id": 217} | updated_at_filter, projection)
@@ -251,6 +255,7 @@ def copy_media(
                 continue
             
             media_ids.append(media_id)
+            listed_scopes_by_title[int(tmdb_id)] = listed_scopes(tmdb_details, is_movie)
 
             release_date = tmdb_details.get("release_date" if is_movie else "first_air_date")
             release_year = release_date.year if release_date else None
@@ -651,10 +656,13 @@ def copy_media(
 
         if season_ids_by_show:
             stale_seasons_deleted += delete_stale_seasons(connector, season_ids_by_show)
+        add_stats(stale_child_rows, delete_stale_child_rows(
+            connector, media_type, listed_scopes_by_title, entity_batches))
 
         start += BATCH_SIZE
 
     entity_counts["deleted_titles"] = deleted_titles
+    entity_counts["stale_child_rows"] = stale_child_rows
     if not is_movie:
         entity_counts["stale_seasons"] = {"rows_deleted": stale_seasons_deleted}
     return entity_counts
