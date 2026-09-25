@@ -1,9 +1,16 @@
 import { createHash } from "node:crypto";
 import { fetch } from "undici";
-import { blend, type Title, type Row } from "~/ui/search/search-model";
+import {
+	blend,
+	titleMatch,
+	type Title,
+	type Row,
+} from "~/ui/search/search-model";
 import {
 	attributeRequest,
+	describeTitles,
 	fingerprintRequest,
+	readingFields,
 	retrieveByReading,
 	summarizeReading,
 	type Eligibility,
@@ -32,8 +39,15 @@ import {
 	shadowRank,
 	startShadowRanking,
 } from "../search-ranking/shadow.server";
+import {
+	RankingDeadlineError,
+	rankForServing,
+	servingFallback,
+	type ServingFallback,
+} from "../search-ranking/serve.server";
 
-// Shadow mode loads the new ranking's index and query models at server start. Off by default: then nothing loads.
+// Modes shadow and on load the new ranking's index and query models at server start. Off by default: then nothing
+// loads.
 startShadowRanking();
 
 export interface SearchBatch {
@@ -193,6 +207,135 @@ async function literal(q: string, policy: Eligibility): Promise<Result[]> {
 			scores: [],
 		}));
 }
+const TMDB_ID_RANGE = 1_000_000_000_000;
+const DISPLAY_TIMEOUT_MS = 2000;
+const round1 = (ms: number) => Math.round(ms * 10) / 10;
+const titleKey = (t: Title) => `${t.type === "tv" ? "show" : t.type}:${t.id}`;
+
+interface ServedList {
+	rows: Row[];
+	metadata: Metadata[];
+	rankerVersion: string;
+	titleError: boolean;
+	stageMs: Record<string, number>;
+}
+
+/**
+ * The new ranking's list (SEARCH_RANKING_MODE=on), in the response's row format: the ranker's blended list, with
+ * the title lookup's rows, the display fields and reason chips of each title, and the catalog metadata. Throws when
+ * the ranking fails or misses its deadline; the caller then serves today's ranking.
+ */
+async function rankedList(
+	q: string,
+	language: { text: string; policy: { mode: string } },
+	readings: Parameters<typeof readingFields>[1],
+	policy: Eligibility,
+	titlePromise: Promise<{ results: Title[]; error?: boolean }>,
+	signal: AbortSignal,
+): Promise<ServedList> {
+	const started = performance.now();
+	const title = await titlePromise;
+	const titleDone = performance.now();
+	if (signal.aborted) throw new Error("Search interrupted");
+	const titleRows = title.results.filter((t) => t.type !== "person");
+	const titleMeta = await metadataFor([...new Set(titleRows.map(titleKey))]);
+	const meta = new Map(titleMeta.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]));
+	const allowedTitles = titleRows.filter((t) =>
+		eligible(meta.get(titleKey(t)), policy, false),
+	);
+	const lookup = new Map(allowedTitles.map((t) => [titleKey(t), t]));
+	const fields = readingFields(
+		language.text,
+		readings,
+		language.policy.mode === "native-vector-only",
+	);
+	const rankStarted = performance.now();
+	const ranked = await rankForServing(
+		fields,
+		{
+			query: q,
+			text: language.text,
+			nonEnglish: language.policy.mode !== "english",
+			titleLookup: allowedTitles,
+		},
+		policy,
+	);
+	const rankDone = performance.now();
+	if (signal.aborted) throw new Error("Search interrupted");
+	const listed = ranked.results.map((r) => ({
+		key: `${r.mediaType}:${r.id % TMDB_ID_RANGE}`,
+		tmdbId: r.id % TMDB_ID_RANGE,
+		mediaType: r.mediaType,
+		blended: r,
+	}));
+	const [described, rankedMeta] = await Promise.all([
+		describeTitles(fields, listed, { timeoutMs: DISPLAY_TIMEOUT_MS }),
+		metadataFor(listed.map((r) => r.key).filter((key) => !meta.has(key))),
+	]);
+	for (const m of rankedMeta) meta.set(`${m.media_type}:${m.tmdb_id}`, m);
+	const display = new Map(
+		described.map((d) => [`${d.media_type}:${d.tmdb_id}`, d]),
+	);
+	const identities = new Set<string>();
+	const rows: Row[] = [];
+	for (const { key, blended } of listed) {
+		const found = lookup.get(key);
+		const m = meta.get(key);
+		const shown = display.get(key);
+		// Same checks as today's list: eligibility from the catalog, and one row per IMDb title.
+		if (!eligible(m, policy, !found)) continue;
+		if (!found && !shown) continue;
+		const identity = m?.imdb_id?.trim() ? `imdb:${m.imdb_id.trim()}` : key;
+		if (identities.has(identity)) continue;
+		identities.add(identity);
+		let match = titleMatch(found?.title ?? blended.title, q);
+		const original = titleMatch(found?.original ?? "", q);
+		if (original.lexical > match.lexical)
+			match = {
+				lexical: original.lexical,
+				match: `${original.match} (original name)`,
+			};
+		rows.push({
+			key,
+			title: found?.title ?? shown?.title ?? blended.title,
+			original: found?.original,
+			type: blended.mediaType,
+			year:
+				blended.year ||
+				found?.year ||
+				(shown?.release_year ? String(shown.release_year) : ""),
+			poster: found?.poster ?? shown?.poster_path ?? null,
+			knownFor: found?.knownFor,
+			adult: found?.adult,
+			popularity: found?.popularity ?? 0,
+			...(shown ? { discovery: { ...shown, rank: rows.length + 1 } } : {}),
+			...match,
+			score: blended.score,
+		});
+	}
+	const done = performance.now();
+	const stageMs: Record<string, number> = {
+		titleLookup: round1(titleDone - started),
+		ranking: round1(rankDone - rankStarted),
+		rankingQdrant: round1(ranked.rounds.reduce((sum, r) => sum + r.wallMs, 0)),
+		rankingQdrantServer: round1(
+			ranked.rounds.reduce((sum, r) => sum + r.serverMs, 0),
+		),
+		display: round1(rankStarted - titleDone + (done - rankDone)),
+	};
+	// The ranker's own stages (encode, round1, round2, score, blend, ...); its total is `ranking`.
+	for (const [name, ms] of Object.entries(ranked.timings))
+		if (name !== "total")
+			stageMs[`ranking${name[0].toUpperCase()}${name.slice(1)}`] = round1(ms);
+	return {
+		rows,
+		metadata: [...meta.values()],
+		rankerVersion: ranked.rankerVersion,
+		titleError: "error" in title,
+		stageMs,
+	};
+}
+
 export async function combinedSearch(
 	q: string,
 	policy: Eligibility,
@@ -243,6 +386,9 @@ export async function combinedSearch(
 						}
 					: prepareLanguage(q, visitor, signal);
 			});
+	const mode = getSearchRankingMode();
+	// The eligible title lookup rows, for shadow mode.
+	let shadowTitles: Title[] = [];
 	const language = await languagePromise;
 	lap("language");
 	chargedNano += language.chargedNano;
@@ -260,8 +406,6 @@ export async function combinedSearch(
 	});
 	lap("reading");
 	chargedNano += outcome.chargedNano;
-	let results: Result[] = [];
-	const retrieval: { qdrantMs?: number } = {};
 	let reading: ReadingChip[] = [];
 	if (outcome.kind !== "basic") {
 		reading = summarizeReading(
@@ -271,81 +415,125 @@ export async function combinedSearch(
 		);
 		onReading?.(reading);
 	}
-	if (outcome.kind === "basic") {
-		errors.push(BASIC_SEARCH_MESSAGE);
-		try {
-			results = await literal(q, policy);
-		} catch {
-			errors.push("Description search unavailable");
+	// SEARCH_RANKING_MODE=on: the new ranking serves unless it can't (see serve.server.ts); then today's ranking
+	// serves, and the reason goes on the history row.
+	let fallback: ServingFallback | null = null;
+	let served: ServedList | null = null;
+	if (mode === "on") {
+		fallback = servingFallback({
+			hasReading: outcome.kind !== "basic",
+			eligibility: policy,
+		});
+		if (!fallback && outcome.kind !== "basic") {
+			const attempt = performance.now();
+			try {
+				served = await rankedList(
+					q,
+					language,
+					outcome.readings,
+					policy,
+					titlePromise,
+					signal,
+				);
+				Object.assign(stageMs, served.stageMs);
+			} catch (error) {
+				if (signal.aborted) throw new Error("Search interrupted");
+				fallback = error instanceof RankingDeadlineError ? "timeout" : "error";
+				console.error(
+					"Search ranking failed; the current ranking serves",
+					error,
+				);
+				stageMs.failedRanking =
+					Math.round((performance.now() - attempt) * 10) / 10;
+			}
+			mark = performance.now();
 		}
-	} else {
-		try {
-			results = await retrieveByReading(
-				language.text,
-				outcome.readings,
-				policy,
-				language.policy.mode === "native-vector-only",
-				retrieval,
-			);
-		} catch {
+	}
+	const { rows, metadata } = served ?? (await currentList());
+	async function currentList() {
+		let results: Result[] = [];
+		const retrieval: { qdrantMs?: number } = {};
+		if (outcome.kind === "basic") {
 			errors.push(BASIC_SEARCH_MESSAGE);
 			try {
 				results = await literal(q, policy);
 			} catch {
 				errors.push("Description search unavailable");
 			}
+		} else {
+			try {
+				results = await retrieveByReading(
+					language.text,
+					outcome.readings,
+					policy,
+					language.policy.mode === "native-vector-only",
+					retrieval,
+				);
+			} catch {
+				errors.push(BASIC_SEARCH_MESSAGE);
+				try {
+					results = await literal(q, policy);
+				} catch {
+					errors.push("Description search unavailable");
+				}
+			}
 		}
+		lap("ranking");
+		if (retrieval.qdrantMs !== undefined)
+			stageMs.rankingQdrant = retrieval.qdrantMs;
+		const title = await titlePromise;
+		lap("titleLookup");
+		if ("error" in title) errors.push("Title lookup unavailable");
+		if (signal.aborted) throw new Error("Search interrupted");
+		// Catalog metadata is authoritative for eligibility and reliable identity. Fetch before
+		// blend so an ineligible discovery hit cannot boost a title's rank or use a snapshot slot.
+		const keys = [
+			...title.results
+				.filter((t) => t.type !== "person")
+				.map((t) => `${t.type === "tv" ? "show" : t.type}:${t.id}`),
+			...results.map((r) => `${r.media_type}:${r.tmdb_id}`),
+		];
+		const metadata = await metadataFor([...new Set(keys)]);
+		const meta = new Map(
+			metadata.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]),
+		);
+		const allowedTitles = title.results.filter((t) =>
+			eligible(
+				meta.get(`${t.type === "tv" ? "show" : t.type}:${t.id}`),
+				policy,
+				false,
+			),
+		);
+		shadowTitles = allowedTitles;
+		const description = results.filter((r) =>
+			eligible(meta.get(`${r.media_type}:${r.tmdb_id}`), policy, true),
+		);
+		const identities = new Set<string>();
+		const rows = blend(
+			allowedTitles,
+			{ results: description },
+			q,
+			"balanced",
+		).filter((r) => {
+			const m = meta.get(r.key),
+				identity = m?.imdb_id?.trim() ? `imdb:${m.imdb_id.trim()}` : r.key;
+			if (identities.has(identity)) return false;
+			identities.add(identity);
+			return true;
+		});
+		if ("error" in title && errors.includes("Description search unavailable"))
+			throw new Error("Search unavailable");
+		lap("display");
+		return { rows, metadata };
 	}
-	lap("ranking");
-	if (retrieval.qdrantMs !== undefined)
-		stageMs.rankingQdrant = retrieval.qdrantMs;
-	const title = await titlePromise;
-	lap("titleLookup");
-	if ("error" in title) errors.push("Title lookup unavailable");
-	if (signal.aborted) throw new Error("Search interrupted");
-	// Catalog metadata is authoritative for eligibility and reliable identity. Fetch before
-	// blend so an ineligible discovery hit cannot boost a title's rank or use a snapshot slot.
-	const keys = [
-		...title.results
-			.filter((t) => t.type !== "person")
-			.map((t) => `${t.type === "tv" ? "show" : t.type}:${t.id}`),
-		...results.map((r) => `${r.media_type}:${r.tmdb_id}`),
-	];
-	const metadata = await metadataFor([...new Set(keys)]);
-	const meta = new Map(
-		metadata.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]),
-	);
-	const allowedTitles = title.results.filter((t) =>
-		eligible(
-			meta.get(`${t.type === "tv" ? "show" : t.type}:${t.id}`),
-			policy,
-			false,
-		),
-	);
-	const description = results.filter((r) =>
-		eligible(meta.get(`${r.media_type}:${r.tmdb_id}`), policy, true),
-	);
-	const identities = new Set<string>();
-	const rows = blend(
-		allowedTitles,
-		{ results: description },
-		q,
-		"balanced",
-	).filter((r) => {
-		const m = meta.get(r.key),
-			identity = m?.imdb_id?.trim() ? `imdb:${m.imdb_id.trim()}` : r.key;
-		if (identities.has(identity)) return false;
-		identities.add(identity);
-		return true;
-	});
-	if ("error" in title && errors.includes("Description search unavailable"))
-		throw new Error("Search unavailable");
-	lap("display");
+	if (served?.titleError) errors.push("Title lookup unavailable");
 	const elapsedMs = Date.now() - started;
 	stageMs.total = elapsedMs;
-	const servedRankerVersion = errors.includes(BASIC_SEARCH_MESSAGE)
-		? BASIC_RANKER_VERSION
-		: READING_RANKER_VERSION;
+	const servedRankerVersion = served
+		? served.rankerVersion
+		: errors.includes(BASIC_SEARCH_MESSAGE)
+			? BASIC_RANKER_VERSION
+			: READING_RANKER_VERSION;
 	const history = await recordSearchHistory({
 		text: q,
 		accountId: visitor.accountId,
@@ -354,9 +542,12 @@ export async function combinedSearch(
 		outcome: errors.includes(BASIC_SEARCH_MESSAGE) ? "basic" : outcome.kind,
 		...(outcome.kind === "basic" ? { reason: outcome.reason } : {}),
 		rankerVersion: servedRankerVersion,
+		...(fallback ? { rankerFallback: fallback } : {}),
 		stageMs,
 	});
-	if (getSearchRankingMode() !== "off") {
+	// Shadow mode only. In mode on, today's ranking isn't run next to the new one: it would double the Qdrant and
+	// Crate work of every search.
+	if (mode === "shadow") {
 		const shadow = {
 			historyId: history.id,
 			query: q,
@@ -365,7 +556,7 @@ export async function combinedSearch(
 			nativeOnly: language.policy.mode === "native-vector-only",
 			readings: outcome.kind === "basic" ? null : outcome.readings,
 			eligibility: policy,
-			titleLookup: allowedTitles,
+			titleLookup: shadowTitles,
 			servedRankerVersion,
 			servedKeys: rows.map((r) => r.key),
 		};

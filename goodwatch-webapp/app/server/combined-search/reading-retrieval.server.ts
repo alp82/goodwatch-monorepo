@@ -694,6 +694,103 @@ const DISPLAY_FIELDS = [
 	...FLAGS.filter((f) => f.qdrant?.key === f.id).map((f) => f.id),
 ];
 
+// A result's reason chips: the required flags it has, the required genres it matched, and each used fingerprint
+// dimension that is strong where wanted or weak where avoided ("mismatch" for the opposite, which the UI hides).
+function payloadReasons(
+	payload: Payload,
+	mediaType: "movie" | "show",
+	flags: FlagJudgment[],
+	matchedGenres: string[],
+	used: [Key, number][],
+): Result["reasons"] {
+	const scores = payload.fingerprint_scores_v1 ?? {};
+	const has = (f: Flag) =>
+		f.media
+			? f.media === mediaType
+			: f.id === "animated"
+				? payload.production_method === "Animation"
+				: f.id === "live_action"
+					? payload.production_method === "Live-Action"
+					: payload[f.id] === true;
+	const reasons: Result["reasons"] = [];
+	for (const judgment of flags) {
+		const f = FLAGS.find((x) => x.id === judgment.id) as Flag;
+		if (judgment.decision === "required" && has(f))
+			reasons.push({ text: f.label, kind: "attribute" });
+	}
+	for (const genre of matchedGenres)
+		reasons.push({ text: `genre: ${genre}`, kind: "attribute" });
+	for (const [key, weight] of used) {
+		const value = scores[key];
+		if (typeof value !== "number") continue;
+		if (weight > 0 && value >= STRONG_SCORE_MIN)
+			reasons.push({ text: `${label(key)} ${value}`, kind: "dimension" });
+		else if (weight < 0 && value <= WEAK_SCORE_MAX)
+			reasons.push({ text: `low ${label(key)} ${value}`, kind: "dimension" });
+		else if (weight > 0 && value <= WEAK_SCORE_MAX)
+			reasons.push({
+				text: `but ${label(key)} only ${value}`,
+				kind: "mismatch",
+			});
+		else if (weight < 0 && value >= STRONG_SCORE_MIN)
+			reasons.push({ text: `but ${label(key)} ${value}`, kind: "mismatch" });
+	}
+	return reasons;
+}
+
+/**
+ * The display fields and reason chips of a list another ranker ranked, in its order: one Qdrant read of the titles'
+ * payloads. The ranks follow the list; the score fields other rankers don't have stay 0.
+ */
+export async function describeTitles(
+	fields: ReadingFields,
+	titles: { tmdbId: number; mediaType: "movie" | "show" }[],
+	options: { timeoutMs?: number } = {},
+): Promise<Result[]> {
+	if (!titles.length) return [];
+	const pointIdOf = (t: (typeof titles)[number]) =>
+		(t.mediaType === "show" ? 2 : 1) * 1_000_000_000_000 + t.tmdbId;
+	const points = await retrievePoints(
+		MEDIA_COLLECTION,
+		{ ids: titles.map(pointIdOf), with_payload: DISPLAY_FIELDS },
+		options,
+	);
+	const payloads = new Map(
+		points.map((point) => [
+			Number(point.id),
+			point.payload as unknown as Payload,
+		]),
+	);
+	const used = Object.entries(fields.weights) as [Key, number][];
+	return titles.flatMap((t, i) => {
+		const payload = payloads.get(pointIdOf(t));
+		if (!payload) return [];
+		const scores = payload.fingerprint_scores_v1 ?? {};
+		return [
+			{
+				tmdb_id: t.tmdbId,
+				media_type: t.mediaType,
+				title: payload.title ?? `${t.mediaType} ${t.tmdbId}`,
+				release_year: payload.release_year,
+				poster_path: payload.poster_path ?? null,
+				genres: payload.genres ?? [],
+				rank: i + 1,
+				weightedSum: 0,
+				cosine: 0,
+				combined: 0,
+				tropes: [],
+				reasons: payloadReasons(payload, t.mediaType, fields.flags, [], used),
+				scores: used.map(([key, weight]) => ({
+					key,
+					label: label(key),
+					weight,
+					value: scores[key] ?? null,
+				})),
+			} satisfies Result,
+		];
+	});
+}
+
 interface Query {
 	weights: Partial<Record<Key, number>>;
 	vector: number[];
@@ -812,37 +909,13 @@ const retrieve = async (
 	const results = ranked.map((r, i) => {
 		const payload = payloads.get(String(r.id)) ?? ({} as Payload);
 		const scores = payload.fingerprint_scores_v1 ?? {};
-		const has = (f: Flag) =>
-			f.media
-				? f.media === r.media_type
-				: f.id === "animated"
-					? payload.production_method === "Animation"
-					: f.id === "live_action"
-						? payload.production_method === "Live-Action"
-						: payload[f.id] === true;
-		const reasons: Result["reasons"] = [];
-		for (const judgment of flags) {
-			const f = FLAGS.find((x) => x.id === judgment.id) as Flag;
-			if (judgment.decision === "required" && has(f))
-				reasons.push({ text: f.label, kind: "attribute" });
-		}
-		for (const genre of r.genre.matched)
-			reasons.push({ text: `genre: ${genre}`, kind: "attribute" });
-		for (const [key, weight] of used) {
-			const value = scores[key];
-			if (typeof value !== "number") continue;
-			if (weight > 0 && value >= STRONG_SCORE_MIN)
-				reasons.push({ text: `${label(key)} ${value}`, kind: "dimension" });
-			else if (weight < 0 && value <= WEAK_SCORE_MAX)
-				reasons.push({ text: `low ${label(key)} ${value}`, kind: "dimension" });
-			else if (weight > 0 && value <= WEAK_SCORE_MAX)
-				reasons.push({
-					text: `but ${label(key)} only ${value}`,
-					kind: "mismatch",
-				});
-			else if (weight < 0 && value >= STRONG_SCORE_MIN)
-				reasons.push({ text: `but ${label(key)} ${value}`, kind: "mismatch" });
-		}
+		const reasons = payloadReasons(
+			payload,
+			r.media_type,
+			flags,
+			r.genre.matched,
+			used,
+		);
 		return {
 			tmdb_id: r.tmdb_id,
 			media_type: r.media_type,

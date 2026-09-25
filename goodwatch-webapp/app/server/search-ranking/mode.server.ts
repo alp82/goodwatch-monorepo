@@ -1,7 +1,7 @@
 // SEARCH_RANKING_MODE switches the local search ranking on:
 // - off (default): nothing in this folder loads models, reads indexes or calls Qdrant.
 // - shadow: the new ranking runs next to the current search and is only logged.
-// - on: the new ranking serves results.
+// - on: the new ranking serves results, with the current one as the fallback (serve.server.ts).
 export type SearchRankingMode = "off" | "shadow" | "on"
 
 let warnedValue: string | undefined

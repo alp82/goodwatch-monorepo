@@ -31,7 +31,7 @@ const TMDB_ID_RANGE = 1_000_000_000_000
 let running = 0
 let started = false
 
-/** At server start: loads the index and the query models in the background when shadow mode is on. */
+/** At server start: loads the index and the query models in the background in modes shadow and on. */
 export function startShadowRanking(): void {
 	if (started || getSearchRankingMode() === "off") return
 	started = true

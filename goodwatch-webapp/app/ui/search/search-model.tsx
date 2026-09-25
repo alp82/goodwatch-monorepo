@@ -31,7 +31,7 @@ export type Row = {
 	match: string;
 	score: number;
 };
-function titleMatch(title: string, query: string) {
+export function titleMatch(title: string, query: string) {
 	const name = normalized(title),
 		request = normalized(query);
 	if (!name || !request) return { lexical: 0, match: "" };

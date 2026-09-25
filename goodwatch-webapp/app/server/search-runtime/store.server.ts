@@ -298,12 +298,14 @@ export class SearchStore {
 		reason?: BasicReason
 		// The ranking that produced the served list, so results can be compared by version.
 		rankerVersion: string
+		// SEARCH_RANKING_MODE=on only: why today's ranking served instead of the new one.
+		rankerFallback?: string
 		// Milliseconds per stage (reading, ranking, display, ...), rounded to 0.1 ms.
 		stageMs?: Record<string, number>
 	}): Promise<string> {
 		const id = randomUUID()
 		await this.execute(
-			"INSERT INTO doc.search_history (id, created_at, account_id, ciphertext, elapsed_ms, charged_nano, outcome, reason, ranker_version, stage_ms) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?)",
+			"INSERT INTO doc.search_history (id, created_at, account_id, ciphertext, elapsed_ms, charged_nano, outcome, reason, ranker_version, ranker_fallback, stage_ms) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 			[
 				id,
 				input.accountId,
@@ -313,6 +315,7 @@ export class SearchStore {
 				input.outcome,
 				input.reason ?? null,
 				input.rankerVersion,
+				input.rankerFallback ?? null,
 				input.stageMs ?? null,
 			],
 		)
