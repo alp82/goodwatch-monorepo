@@ -1,5 +1,5 @@
 import { fetch } from "undici"
-import type { Eligibility } from "./d4.server"
+import type { Eligibility } from "./reading-retrieval.server"
 
 // Search text never passes through the general-purpose SQL logger.
 export async function searchStatement(stmt: string, args: unknown[] = []) {

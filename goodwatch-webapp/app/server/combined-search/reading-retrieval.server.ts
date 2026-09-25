@@ -1,5 +1,6 @@
-// Locked D4+ (corrected), extracted from the accepted combined-search baseline.
-// Question payloads, thresholds and ranking are preserved. No prototype transport or experiments.
+// Search by Jev reading: the two Jev questionnaires (attributes and fingerprint), how their answers are decoded,
+// and the current retrieval and ranking that uses them. Question payloads, thresholds and ranking are the accepted
+// combined-search baseline. The Jev contract and question version strings are cache keys: don't rename them.
 import type {
 	SystemOneRequest,
 	Questions,
@@ -295,7 +296,7 @@ const phraseCandidates = (request: string) => {
 	return [...new Set(candidates)].slice(0, 20);
 };
 
-// D4+ uses the attribute flags, the concrete-word questions, and the phrase choice. The genre,
+// The search uses the attribute flags, the concrete-word questions, and the phrase choice. The genre,
 // request-shape, and "mention" questions only serve hidden columns, so they are left out.
 // Questions can't see one another, so leaving some out doesn't change the remaining answers.
 const contentWords = (request: string) =>
@@ -384,7 +385,7 @@ export const attributeRequest = (request: string): SystemOneRequest => {
 			},
 		};
 	});
-	// D5: would a written description of the ideal title mention this word? Unlike the concrete
+	// Would a written description of the ideal title mention this word? Unlike the concrete
 	// question, this one follows the direction of the request: "little action" scores low.
 	if (!LEAN_ATTRIBUTE_QUESTIONS)
 		words.forEach((_, i) => {
@@ -398,7 +399,7 @@ export const attributeRequest = (request: string): SystemOneRequest => {
 				},
 			};
 		});
-	// D4: Jev picks the one best search phrase among code-generated candidates, so there is always one
+	// Jev picks the one best search phrase among code-generated candidates, so there is always one
 	const candidates = phraseCandidates(request);
 	if (candidates.length > 1) {
 		questions.phrase = {
@@ -1166,7 +1167,7 @@ const runPhraseVariant = async (
 		}
 	}
 
-	// Rank: normalized B2 weighted sum, plus text evidence
+	// Rank: normalized fingerprint weighted sum, plus text evidence
 	const rows = [...pool.values()].map((row) => ({
 		...row,
 		weightedSum: used.reduce(
@@ -1271,7 +1272,7 @@ const runPhraseVariant = async (
 		ms += fill.ms;
 		if (!gated)
 			notes.push(
-				`Only ${found} titles had evidence. The rest come from the B2 vector search.`,
+				`Only ${found} titles had evidence. The rest come from the fingerprint vector search.`,
 			);
 	}
 	return {
@@ -1295,8 +1296,28 @@ export interface ReadingChip {
 	// dimension the retrieval weights; phrase: text that the essence search looks for.
 	kind: "attribute" | "excluded" | "want" | "avoid" | "phrase";
 }
+// The phrases the text search looks for: Jev's best phrase and, when it reaches
+// SECOND_PHRASE_PROBABILITY, the second one. None when the best phrase is a single word that Jev
+// marked as not concrete (a mood word, which the fingerprint dimensions cover).
+const searchedPhrases = (attributes: ReturnType<typeof decodeAttributes>) => {
+	const best = attributes.phrases[0];
+	const bestWord =
+		best && !best.phrase.includes(" ")
+			? attributes.split.find((w) => w.word === best.phrase)
+			: undefined;
+	const gated = Boolean(bestWord && !bestWord.isConcrete);
+	if (!best || gated) return [];
+	return [
+		best,
+		...(attributes.phrases[1] &&
+		attributes.phrases[1].probability >= SECOND_PHRASE_PROBABILITY
+			? [attributes.phrases[1]]
+			: []),
+	];
+};
+
 // The interpretation shown to the person before results arrive. It uses the same
-// decisions, thresholds, and phrase rule as retrieveD4, so the chips describe what
+// decisions, thresholds, and phrase rule as retrieveByReading, so the chips describe what
 // the search actually looks for.
 export function summarizeReading(
 	request: string,
@@ -1329,29 +1350,82 @@ export function summarizeReading(
 			text: weight > 0 ? label(key) : `Low ${label(key).toLowerCase()}`,
 			kind: weight > 0 ? "want" : "avoid",
 		});
-	if (!nativeOnly) {
-		const best = attributes.phrases[0];
-		const bestWord =
-			best && !best.phrase.includes(" ")
-				? attributes.split.find((w) => w.word === best.phrase)
-				: undefined;
-		const gated = Boolean(bestWord && !bestWord.isConcrete);
-		if (best && !gated) {
-			const searched = [
-				best,
-				...(attributes.phrases[1] &&
-				attributes.phrases[1].probability >= SECOND_PHRASE_PROBABILITY
-					? [attributes.phrases[1]]
-					: []),
-			];
-			for (const p of searched)
-				chips.push({ text: `“${p.phrase}”`, kind: "phrase" });
-		}
-	}
+	if (!nativeOnly)
+		for (const p of searchedPhrases(attributes))
+			chips.push({ text: `“${p.phrase}”`, kind: "phrase" });
 	return chips;
 }
 
-export async function retrieveD4(
+// What a flag decision filters on, and how: "media" (movie or show), "identity" (anime,
+// animation, live action: required and excluded both filter) or "soft" (audience and context:
+// only a required decision filters).
+export type FlagKind = "media" | "identity" | "soft";
+export interface ReadingFlag extends FlagJudgment {
+	kind: FlagKind;
+	// The Qdrant payload condition the flag stands for.
+	condition: { key: string; value: string | boolean };
+}
+export interface ReadingFields {
+	flags: ReadingFlag[];
+	// The request words Jev judged; isConcrete marks words that name something on screen.
+	concreteWords: { word: string; concrete: number; isConcrete: boolean }[];
+	// The phrases the text search looks for (see searchedPhrases), whatever the language mode.
+	searchedPhrases: { phrase: string; probability: number }[];
+	// The fingerprint query weights: 2 * (want - avoid) per used dimension.
+	weights: Partial<Record<Key, number>>;
+	// The same weights as a vector in fingerprint dimension order (fingerprint_v1 and fingerprint_v1_raw).
+	vector: number[];
+	chips: ReadingChip[];
+}
+
+const flagKind = (f: Flag): FlagKind =>
+	f.media
+		? "media"
+		: f.id.startsWith("suitability_") || f.id.startsWith("context_")
+			? "soft"
+			: "identity";
+
+// The decoded reading, for rankers other than retrieveByReading.
+export function readingFields(
+	request: string,
+	readings: [SystemOneResult<Questions>, SystemOneResult<Questions>],
+	nativeOnly: boolean,
+): ReadingFields {
+	const attributes = decodeAttributes(
+		request,
+		readings[0].answers as Record<string, Answer>,
+	);
+	const reading = decodeFingerprint(
+		readings[1].answers as Record<string, Answer>,
+	);
+	const weights = pick(reading.details, isQueryDimension, MAX_QUERY_DIMENSIONS);
+	return {
+		flags: attributes.flags.map((judgment) => {
+			const f = FLAGS.find((x) => x.id === judgment.id) as Flag;
+			return {
+				...judgment,
+				kind: flagKind(f),
+				condition: f.media
+					? { key: "media_type", value: f.media }
+					: {
+							key: f.qdrant?.key as string,
+							value: f.qdrant?.value as string | boolean,
+						},
+			};
+		}),
+		concreteWords: attributes.split.map(({ word, concrete, isConcrete }) => ({
+			word,
+			concrete,
+			isConcrete,
+		})),
+		searchedPhrases: searchedPhrases(attributes),
+		weights,
+		vector: sparseVector(weights),
+		chips: summarizeReading(request, readings, nativeOnly),
+	};
+}
+
+export async function retrieveByReading(
 	request: string,
 	readings: [SystemOneResult<Questions>, SystemOneResult<Questions>],
 	eligibility: Eligibility,

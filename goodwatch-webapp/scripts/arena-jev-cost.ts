@@ -7,7 +7,7 @@ import { TypeSafeClient, type SystemOneRequest } from "@typesafe-ai/sdk";
 import {
 	attributeRequest,
 	fingerprintRequest,
-} from "~/server/combined-search/d4.server";
+} from "~/server/combined-search/reading-retrieval.server";
 import { JEV_MODEL } from "~/server/search-runtime/runtime.server";
 
 const NANO = 42;

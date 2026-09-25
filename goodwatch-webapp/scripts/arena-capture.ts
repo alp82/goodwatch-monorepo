@@ -27,11 +27,11 @@ import { TypeSafeClient, type SystemOneRequest } from "@typesafe-ai/sdk";
 import {
 	attributeRequest,
 	fingerprintRequest,
-	retrieveD4,
+	retrieveByReading,
 	summarizeReading,
 	type Eligibility,
 	type Result,
-} from "~/server/combined-search/d4.server";
+} from "~/server/combined-search/reading-retrieval.server";
 import {
 	eligible,
 	metadataFor,
@@ -57,7 +57,7 @@ const SPEND_CAP_USD = 0.1;
 const QUESTION_VERSION = "accepted-d4-corrected-v1"; // as combinedSearch passes it
 const MOVIE_BASE = 1_000_000_000_000,
 	SHOW_BASE = 2_000_000_000_000; // ~/utils/qdrant point ids
-// Mirrors of d4.server.ts tunables used to decode the reading (checked against results below).
+// Mirrors of reading-retrieval.server.ts tunables used to decode the reading (checked against results below).
 const FLAG_DECISION_PROBABILITY = 0.5,
 	CONCRETE_WORD_PROBABILITY = 0.6,
 	WANT_WEIGHT_MIN = 0.5,
@@ -220,7 +220,7 @@ async function reading(
 	}
 }
 
-// --- Decode the reading into the named parts retrieveD4 uses --------------------------------
+// --- Decode the reading into the named parts retrieveByReading uses --------------------------------
 const label = (key: string) => FINGERPRINT_META[key]?.label ?? key;
 function decode(requests: SystemOneRequest[], readings: any[]) {
 	const [attrReq] = requests;
@@ -295,7 +295,7 @@ function decode(requests: SystemOneRequest[], readings: any[]) {
 			want,
 			avoid,
 			net,
-			// The query weights retrieveD4 uses: 2 * (want - avoid), kept when >= 0.5 or <= -1.2.
+			// The query weights retrieveByReading uses: 2 * (want - avoid), kept when >= 0.5 or <= -1.2.
 			weights: Object.fromEntries(chosen),
 			fallbackSingleDimension,
 		},
@@ -528,7 +528,7 @@ for (const q of queries) {
 			decoded = decode(r.requests, r.readings);
 			chips = summarizeReading(language.text, r.readings as any, vectorOnly);
 			try {
-				results = await retrieveD4(language.text, r.readings as any, policy, vectorOnly);
+				results = await retrieveByReading(language.text, r.readings as any, policy, vectorOnly);
 				path_ = vectorOnly ? "vector-only" : "phrase";
 			} catch (e) {
 				errors.push(`retrieve failed, basic: ${e}`);
@@ -597,11 +597,11 @@ for (const q of queries) {
 					: null,
 			};
 		});
-		// Sanity check: the decoded query weights must equal what retrieveD4 used.
+		// Sanity check: the decoded query weights must equal what retrieveByReading used.
 		if (decoded && results[0]?.scores?.length) {
 			const used = Object.fromEntries(results[0].scores.map((s) => [s.key, round(s.weight, 6)]));
 			const mine = Object.fromEntries(Object.entries(decoded.dimensions.weights).map(([k, w]) => [k, round(w, 6)]));
-			if (canonical(used) !== canonical(mine)) errors.push("decoded weights differ from retrieveD4");
+			if (canonical(used) !== canonical(mine)) errors.push("decoded weights differ from retrieveByReading");
 		}
 		const capture = {
 			id: q.id,
@@ -639,7 +639,7 @@ for (const q of queries) {
 				const key = `${x.type === "tv" ? "show" : x.type}:${x.id}`;
 				return { ...x, key, eligible: x.type !== "person" && titleKeys.has(key) };
 			}),
-			retrieveD4: {
+			retrieveByReading: {
 				returned: results.length,
 				eligible: description.length,
 			},

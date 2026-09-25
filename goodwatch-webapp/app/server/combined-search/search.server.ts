@@ -4,12 +4,12 @@ import { blend, type Title, type Row } from "~/ui/search/search-model";
 import {
 	attributeRequest,
 	fingerprintRequest,
-	retrieveD4,
+	retrieveByReading,
 	summarizeReading,
 	type Eligibility,
 	type ReadingChip,
 	type Result,
-} from "./d4.server";
+} from "./reading-retrieval.server";
 import { toCrateSql } from "./search-filters";
 import {
 	eligible,
@@ -255,7 +255,7 @@ export async function combinedSearch(
 		}
 	} else {
 		try {
-			results = await retrieveD4(
+			results = await retrieveByReading(
 				language.text,
 				outcome.readings,
 				policy,

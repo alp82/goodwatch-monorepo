@@ -1,5 +1,5 @@
 // Accepted balanced blend and literal fragment highlighting.
-import type { Result } from "~/server/combined-search/d4.server";
+import type { Result } from "~/server/combined-search/reading-retrieval.server";
 export type Title = {
 	id: number;
 	title: string;

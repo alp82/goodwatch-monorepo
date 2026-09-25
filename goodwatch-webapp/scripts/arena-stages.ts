@@ -10,9 +10,9 @@ import { TypeSafeClient, type SystemOneRequest } from "@typesafe-ai/sdk";
 import {
 	attributeRequest,
 	fingerprintRequest,
-	retrieveD4,
+	retrieveByReading,
 	type Eligibility,
-} from "~/server/combined-search/d4.server";
+} from "~/server/combined-search/reading-retrieval.server";
 import { metadataFor, searchQuery } from "~/server/combined-search/catalog.server";
 import { LANGUAGE_VERSION, nonEnglish } from "~/server/combined-search/language.server";
 import { JEV_MODEL, getSearchStore } from "~/server/search-runtime/runtime.server";
@@ -157,7 +157,7 @@ for (const pass of VECTOR_ONLY ? [1, 2, 3] : [1, 2]) {
 			return { t, ms: performance.now() - s };
 		})();
 		const s = performance.now();
-		const results = await retrieveD4(q, r.readings, policy, VECTOR_ONLY);
+		const results = await retrieveByReading(q, r.readings, policy, VECTOR_ONLY);
 		const retrieveMs = performance.now() - s;
 		const title = await titlePromise;
 		const m = performance.now();

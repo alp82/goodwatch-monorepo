@@ -21,7 +21,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { Highlight, type Row } from "./search-model";
 import type { SearchBatch } from "~/server/combined-search/search.server";
-import type { ReadingChip } from "~/server/combined-search/d4.server";
+import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server";
 import { useGenres } from "~/routes/api.genres.all";
 import {
 	type SearchFilters,
