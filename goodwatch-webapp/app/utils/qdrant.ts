@@ -15,6 +15,8 @@ function decodeValue(value: Value): unknown {
 
 export const MEDIA_COLLECTION = "media_fingerprint_v1"
 
+const QDRANT_TIMEOUT_MS = 10_000
+
 type MediaType = "movie" | "show"
 
 const MOVIE_BASE = 1_000_000_000_000
@@ -27,6 +29,9 @@ class QdrantClientWrapper {
 		this.client = new QdrantClient({
 			url,
 			apiKey,
+			// The client's default is 300 s, which let a stalled call hold a page
+			// render for minutes. Recommendation calls take about 40 ms in Qdrant.
+			timeout: QDRANT_TIMEOUT_MS,
 		})
 	}
 
