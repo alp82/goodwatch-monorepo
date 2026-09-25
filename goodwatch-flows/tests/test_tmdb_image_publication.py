@@ -75,6 +75,7 @@ class MetadataPublicationTests(unittest.TestCase):
         db.tmdb_tv_providers.find.return_value = []
         connector = MagicMock()
         connector.select.return_value = []
+        connector.cur.rowcount = 0
         seasons = []
 
         def record_batch(*, table, records, conflict_columns, **kwargs):

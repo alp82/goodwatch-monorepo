@@ -38,6 +38,8 @@ from f.sync.models.crate_schemas import SCHEMAS
 BATCH_SIZE = 15000
 SUB_BATCH_SIZE = 50000
 HOURS_TO_FETCH = 24*2
+# Shows per stale season delete; their current season ids travel in the same statement.
+STALE_SEASON_SHOWS_PER_DELETE = 500
 
 
 CREATOR_JOB = "Creator"
@@ -155,6 +157,34 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
     
     return total_result
 
+def listed_season_ids(tmdb_details: dict) -> list[int]:
+    """The season ids a TMDB show payload lists, or [] when it lists none."""
+    return [season["id"] for season in tmdb_details.get("seasons") or [] if season.get("id")]
+
+
+def delete_stale_seasons(connector: CrateConnector, season_ids_by_show: dict[int, list[int]]) -> int:
+    """Delete the season rows of these shows whose ids TMDB no longer lists.
+
+    The season key is the TMDB season id, so a season TMDB re-creates under a new id
+    leaves its old row behind unless it is deleted here. Callers pass only shows whose
+    payload lists at least one season, so a partial fetch never wipes a show's seasons.
+    """
+    show_ids = sorted(season_ids_by_show)
+    deleted = 0
+    for i in range(0, len(show_ids), STALE_SEASON_SHOWS_PER_DELETE):
+        batch = show_ids[i:i + STALE_SEASON_SHOWS_PER_DELETE]
+        kept_ids = sorted({season_id for show_id in batch for season_id in season_ids_by_show[show_id]})
+        connector.run(
+            "DELETE FROM season WHERE show_id = ANY(?) AND NOT (tmdb_id = ANY(?))",
+            (batch, kept_ids),
+        )
+        deleted += max(connector.cur.rowcount or 0, 0)
+    if deleted:
+        connector.run("REFRESH TABLE season")
+        print(f"    Deleted {deleted} stale seasons of {len(show_ids)} shows", flush=True)
+    return deleted
+
+
 def copy_media(
     connector: CrateConnector, 
     query_selector: dict = {},
@@ -183,6 +213,7 @@ def copy_media(
     start = 0
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     entity_ids = defaultdict(set)
+    stale_seasons_deleted = 0
     
     projection = {
         "_id": 0,
@@ -193,6 +224,7 @@ def copy_media(
     while True:
         media_documents = []
         entity_batches = defaultdict(list)
+        season_ids_by_show = {}
 
         tmdb_details_batch = list(
             #mongo_collection.find({"tmdb_id": 217} | updated_at_filter, projection)
@@ -342,7 +374,8 @@ def copy_media(
                         ))
             
             # Process seasons (shows only)
-            if not is_movie and tmdb_details.get("seasons"):
+            if not is_movie and (season_ids := listed_season_ids(tmdb_details)):
+                season_ids_by_show[int(tmdb_id)] = season_ids
                 for season in tmdb_details["seasons"]:
                     season_id = season.get("id")
                     if season_id:
@@ -619,9 +652,14 @@ def copy_media(
             entity_counts[table_name]["records_received"] += entity_upsert_result["records_received"]
             entity_counts[table_name]["rows_upserted"] += entity_upsert_result["rows_upserted"]
 
+        if season_ids_by_show:
+            stale_seasons_deleted += delete_stale_seasons(connector, season_ids_by_show)
+
         start += BATCH_SIZE
 
     entity_counts["deleted_titles"] = deleted_titles
+    if not is_movie:
+        entity_counts["stale_seasons"] = {"rows_deleted": stale_seasons_deleted}
     return entity_counts
 
 
