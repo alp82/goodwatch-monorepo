@@ -70,34 +70,34 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 	"/": HOME_COPY,
 	"/discover": {
 		tag: "Discover",
-		title: "Find your next favorite",
+		title: "Discover your next favorite",
 		subtitle: "Filter by streaming service, score, mood, cast, and more.",
 	},
 	"/search": {
 		tag: "Search",
-		title: "Describe it. We'll find it.",
-		subtitle: "Search movies and shows by title, person, or feeling.",
+		title: "Describe what you want to watch",
+		subtitle: "We'll find movies and shows by topic, feeling or content.",
 	},
 	"/how-it-works": {
 		tag: "How it works",
-		title: "Ratings, vibes, and fingerprints",
+		title: "Ratings and Fingerprints",
 		subtitle: "How GoodWatch scores and understands every title.",
 	},
 	"/about": {
 		tag: "About",
-		title: "Made by people who watch too much",
-		subtitle: "Why GoodWatch exists and who builds it.",
+		title: "Why GoodWatch exists",
+		subtitle: "Made by people who watch too much.",
 	},
 	"/taste": {
 		tag: "Taste profile",
 		title: "Your taste",
 		subtitle:
-			"See what you really love in movies and shows, and get picks that fit.",
+			"We understand what you really love in movies and shows.",
 	},
 	"/taste/quiz": {
 		tag: "Taste quiz",
 		title: "Rate 5 movies. Get great picks.",
-		subtitle: "Recommendations that fit your taste, in 30 seconds. No signup.",
+		subtitle: "Recommendations that fit your taste, in 30 seconds.",
 	},
 	"/wishlist": {
 		tag: "Wishlist",
@@ -111,18 +111,18 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 	},
 	"/sign-up": {
 		tag: "Sign up",
-		title: "Save what you love",
+		title: "Watch what you love",
 		subtitle: "Track, rate, and get picks tailored to your taste.",
 	},
 	"/privacy": {
 		tag: "Privacy",
 		title: "Privacy policy",
-		subtitle: "What we collect and why.",
+		subtitle: "Why your taste is safe with us.",
 	},
 	"/disclaimer": {
 		tag: "Disclaimer",
 		title: "Disclaimer",
-		subtitle: "Data sources and attributions.",
+		subtitle: "GoodWatch sources and attributions.",
 	},
 	"/settings": {
 		tag: "Settings",
