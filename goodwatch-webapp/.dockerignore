@@ -1,0 +1,13 @@
+# Build context for Dockerfile. Coolify's nixpacks build uses the same context, so don't exclude .nixpacks.
+node_modules
+build
+.cache
+public/build
+.env
+.env.*
+!.env.example
+.sentryclirc
+.vercel
+*.log
+Dockerfile
+.dockerignore
