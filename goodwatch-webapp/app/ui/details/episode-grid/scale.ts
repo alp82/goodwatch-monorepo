@@ -6,10 +6,19 @@
 // 0-100 percent (see imdb_crawl_ratings/fetch.py, `user_score_normalized_percent`), and the
 // vibe step is that percent floored to the ten. So 8.7 is vibe-80, "Great".
 //
-// The colour is never the only signal: the number is printed in the cell, or, where a
-// layout hides it, it is in the cell's accessible name and in the hover or tap tip.
-import type { ProviderScore, SeasonScores } from "~/server/episode-grid.server"
+// The colour is never the only signal: the number is printed in the cell, and it is in the
+// cell's accessible name and in the hover or tap tip.
+import type { EpisodeGrid, ProviderScore, SeasonScores } from "~/server/episode-grid.server"
 import { goodwatchVibeIndex, scoreLabels } from "~/utils/ratings"
+
+/**
+ * Whether a show gets the episode grid, and with it the link to the grid in the score bar.
+ * Movies have no grid; a show needs at least one season with a rated episode.
+ */
+export const hasEpisodeGrid = (grid: EpisodeGrid | null | undefined): grid is EpisodeGrid => !!grid && grid.seasons.length > 0
+
+/** The anchor of the episode grid section on a show page. */
+export const EPISODE_GRID_ANCHOR = "episode-ratings"
 
 /** Episodes with fewer IMDb votes than this get the few-votes mark. The dataset's floor is 5 votes. */
 export const LOW_VOTE_THRESHOLD = 50
@@ -29,19 +38,29 @@ export const imdbVibe = (score: number) => goodwatchVibeIndex(Math.round(score *
 export const vibeLabel = (vibe: number) => scoreLabels[Math.max(1, vibe / 10)]
 
 /**
- * Ink for a number on a filled `bg-vibe-N` tile. The middle steps (amber to mid green) are
- * light enough that near-black reads better than white; the dark ends take white.
+ * How far each vibe step is darkened for an episode tile, as its share in an oklab mix with
+ * black. Numbers on tiles are always white, and the middle steps (amber to mid green) are
+ * too light for white text as they are: white on vibe-60 is 2.7:1. Each of those steps is
+ * darkened just enough to reach WCAG AA (4.5:1). vibe-90 is darkened a little too, so it
+ * stays a visible step apart from the darkened vibe-80. The red end and vibe-100 already
+ * pass and keep their colour.
  */
-export const vibeInkClass = (vibe: number) => (vibe >= 40 && vibe <= 80 ? "text-gray-950" : "text-white")
+const TILE_SHADE: Record<number, number> = { 40: 86, 50: 83, 60: 80, 70: 85, 80: 93, 90: 94 }
+
+/** The background of a tile coloured by vibe step, dark enough for a white number. */
+export const vibeTileColor = (vibe: number) => {
+	const share = TILE_SHADE[vibe]
+	return share ? `color-mix(in oklab, var(--color-vibe-${vibe}) ${share}%, black)` : `var(--color-vibe-${vibe})`
+}
+
+/** A vibe colour washed into the grid surface, for few-vote tiles. White on it stays above 10:1. */
+export const vibeWash = (vibe: number) => `color-mix(in oklab, var(--color-vibe-${vibe}) 22%, #141923)`
 
 /**
- * A vibe colour lifted towards white, for a number on the dark page. The darkest vibe
- * steps are too dark to read on gray-900 as they are; this keeps the hue order.
+ * A vibe colour lifted towards white, for words on the dark page. The darkest vibe steps
+ * are too dark to read on gray-900 as they are; this keeps the hue order.
  */
 export const vibeTextColor = (vibe: number) => `color-mix(in oklab, var(--color-vibe-${vibe}) 72%, white)`
-
-/** A vibe colour washed into the grid surface, for tinted cells. */
-export const vibeTint = (vibe: number, amount = 40) => `color-mix(in oklab, var(--color-vibe-${vibe}) ${amount}%, #141923)`
 
 export const formatCount = (count: number) => count.toLocaleString("en-US")
 

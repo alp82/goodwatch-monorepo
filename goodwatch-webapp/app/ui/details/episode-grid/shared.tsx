@@ -1,5 +1,5 @@
-// Pieces every episode grid layout uses: the floating tip and popover, the season scores
-// and legend that live inside them, provider marks and the IMDb attribution line.
+// Pieces of the episode grid: the floating tip and popover, and the episode tip, season
+// scores, provider marks and legend that live inside them.
 import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import type { GridEpisode, GridSeason, GridSpecial } from "~/server/episode-grid.server"
 import imdbLogo from "~/img/imdb-logo-250.png"
@@ -15,9 +15,9 @@ import {
 	formatScore,
 	imdbVibe,
 	isLowVotes,
-	vibeInkClass,
 	vibeLabel,
 	vibeTextColor,
+	vibeTileColor,
 } from "~/ui/details/episode-grid/scale"
 
 /** One slot per number from `first` to `last`; `episode` is null for an unrated number. */
@@ -171,7 +171,10 @@ export function EpisodeTip({ season, episode }: { season: number | null; episode
 	const low = isLowVotes(episode.votes)
 	return (
 		<div className="flex items-start gap-2.5">
-			<span className={`mt-0.5 inline-flex h-7 min-w-9 items-center justify-center rounded-md px-1.5 text-sm font-bold tabular-nums bg-vibe-${vibe} ${vibeInkClass(vibe)}`}>
+			<span
+				className="mt-0.5 inline-flex h-7 min-w-9 items-center justify-center rounded-md px-1.5 text-sm font-bold tabular-nums text-white"
+				style={{ background: vibeTileColor(vibe) }}
+			>
 				{formatScore(episode.score)}
 			</span>
 			<span className="min-w-0">
@@ -203,28 +206,12 @@ export function ProviderLogo({ provider }: { provider: ProviderKey }) {
 }
 
 /** Every site's score for one season, one line each. Missing providers are left out. */
-export function SeasonScoreList({ season, providers, inline = false }: { season: GridSeason; providers: ProviderKey[]; inline?: boolean }) {
+export function SeasonScoreList({ season, providers }: { season: GridSeason; providers: ProviderKey[] }) {
 	const rows = providers.flatMap((p) => {
 		const value = season.scores[p]
 		return value ? [{ p, value }] : []
 	})
 	if (!rows.length) return <p className="text-xs text-gray-400">No site has a score for this season.</p>
-	if (inline)
-		return (
-			<ul className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-				{rows.map(({ p, value }) => {
-					const meta = PROVIDERS[p]
-					const suffix = meta.site === "rotten" || meta.site === "metacritic" ? meta.short : null
-					return (
-						<li key={p} className="flex items-center gap-1.5">
-							<ProviderLogo provider={p} />
-							{suffix && <span className="text-xs text-gray-400">{suffix}</span>}
-							<span className="text-sm font-semibold tabular-nums text-gray-50">{meta.format(value.score)}</span>
-						</li>
-					)
-				})}
-			</ul>
-		)
 	return (
 		<ul className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-1">
 			{rows.map(({ p, value }) => {
@@ -237,7 +224,7 @@ export function SeasonScoreList({ season, providers, inline = false }: { season:
 							{suffix ?? (p === "imdb" ? "Episode avg" : "Season avg")}
 							{value.count && meta.countNoun ? <span className="text-gray-500"> · {formatCount(value.count)}</span> : null}
 						</span>
-						<span className="text-right text-sm font-semibold tabular-nums text-gray-50">{meta.format(value.score)}</span>
+						<span className="text-right text-sm font-semibold tabular-nums text-white">{meta.format(value.score)}</span>
 					</li>
 				)
 			})}
@@ -270,7 +257,9 @@ export function LegendContent({ lowVoteSample, children }: { lowVoteSample: Reac
 			<ul className="flex gap-0.5">
 				{steps.map(({ vibe, range }) => (
 					<li key={vibe} className="flex-1 text-center">
-						<span className={`block rounded-sm py-0.5 text-[11px] font-semibold bg-vibe-${vibe} ${vibeInkClass(vibe)}`}>{range}</span>
+						<span className="block rounded-sm py-0.5 text-[11px] font-semibold text-white" style={{ background: vibeTileColor(vibe) }}>
+							{range}
+						</span>
 						<span className="mt-0.5 block text-[10px] leading-tight" style={{ color: vibeTextColor(vibe) }}>
 							{vibeLabel(vibe)}
 						</span>
@@ -287,18 +276,5 @@ export function LegendContent({ lowVoteSample, children }: { lowVoteSample: Reac
 			</p>
 			{children}
 		</div>
-	)
-}
-
-/** Required by the IMDb dataset license (https://help.imdb.com/article/imdb/general-information/can-i-use-imdb-data-in-my-software/G5JTRESSHJBBHTGX). */
-export function ImdbAttribution({ className = "" }: { className?: string }) {
-	return (
-		<p className={`text-[11px] text-gray-500 ${className}`}>
-			Information courtesy of IMDb (
-			<a href="https://www.imdb.com" target="_blank" rel="noreferrer" className="underline decoration-gray-700 underline-offset-2 hover:text-gray-300">
-				https://www.imdb.com
-			</a>
-			). Used with permission.
-		</p>
 	)
 }

@@ -12,13 +12,16 @@ import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
 import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import DetailsRelated from "~/ui/details/DetailsRelated"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import type { EpisodeGrid } from "~/server/episode-grid.server"
-import EpisodeGridSection from "~/ui/details/episode-grid/EpisodeGridSection"
+import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
+import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
+import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 
 export interface DetailsContentProps {
 	media: MovieResult | ShowResult
 	country: string
-	episodeGrid?: EpisodeGrid | null
+	episodeGrid?: EpisodeGridData | null
+	/** Height of the sticky title header, so anchored sections scroll clear of it. */
+	headerHeight?: number
 	sectionProps: SectionProps<SectionIds>
 	navigateToSection: (section: Section) => void
 }
@@ -27,6 +30,7 @@ export default function DetailsContent({
 	media,
 	country,
 	episodeGrid,
+	headerHeight,
 	sectionProps,
 	navigateToSection,
 }: DetailsContentProps) {
@@ -34,9 +38,9 @@ export default function DetailsContent({
 
 	return (
 		<div className="flex flex-col gap-12">
-			{episodeGrid && episodeGrid.seasons.length > 0 && (
+			{hasEpisodeGrid(episodeGrid) && (
 				<div>
-					<EpisodeGridSection grid={episodeGrid} title={details.title} />
+					<EpisodeGrid grid={episodeGrid} headerHeight={headerHeight} />
 				</div>
 			)}
 			{/*<div>*/}
