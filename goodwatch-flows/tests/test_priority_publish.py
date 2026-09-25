@@ -219,7 +219,7 @@ class VectorKeysetTests(unittest.TestCase):
     def test_targeted_publication_avoids_unbounded_date_index_scan(self):
         tree = ast.parse((ROOT / "sync" / "copy" / "vector_data.py").read_text())
         functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
-                     and node.name in ("copy_to_qdrant", "_driver_batches", "_with_fingerprint", "_fetch_tmdb_ids_keyset")]
+                     and node.name in ("copy_to_qdrant", "_drivers", "_driver_batches", "_with_fingerprint", "_fetch_tmdb_ids_keyset")]
         for recent_only in (False, True):
             with self.subTest(recent_only=recent_only):
                 collection = MagicMock()
@@ -292,7 +292,7 @@ class VectorPublicationTests(unittest.TestCase):
                     "QdrantMediaPoint": SimpleNamespace(make_point_id=lambda *args: 84),
                     "MEDIA_COLLECTION": "media",
                 }
-                functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in ("_driver_batches", "_with_fingerprint", "_published_streaming")]
+                functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in ("_drivers", "_driver_batches", "_with_fingerprint", "_published_streaming")]
                 exec(compile(ast.Module(body=functions, type_ignores=[]), "vector_data.py", "exec"), namespace)
                 if status in ("completed", "scheduled"):
                     result = namespace["copy_to_qdrant"](qc, "movie", {"tmdb_id": {"$in": [42]}}, recent_only=False, strict_writes=True)
@@ -333,7 +333,7 @@ class VectorSerializationTests(unittest.TestCase):
         self.qc.client.batch_update_points.side_effect = completed
         tree = ast.parse((ROOT / "sync" / "copy" / "vector_data.py").read_text())
         functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
-                     and node.name in ("copy_to_qdrant", "_driver_batches", "_with_fingerprint", "_published_streaming")]
+                     and node.name in ("copy_to_qdrant", "_drivers", "_driver_batches", "_with_fingerprint", "_published_streaming")]
         self.namespace = {
             **DELETED_TITLE_HELPERS,
             "QdrantConnector": object, "CrateConnector": lambda: self.crate,

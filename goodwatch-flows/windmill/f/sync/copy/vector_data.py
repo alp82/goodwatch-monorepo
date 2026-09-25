@@ -159,6 +159,20 @@ def _with_fingerprint(dna_collection):
     return keep
 
 
+def _drivers(c_details, c_imdb, c_dna, *, recent_only: bool) -> list:
+    """The (collection, keep) drivers whose changed documents pick the titles to copy.
+
+    The details drive every run. In the recent window, the IMDb ratings (the daily dataset
+    ingest changes them without touching the details) and the DNA also drive it. Every write
+    of new DNA or a fingerprint moves the DNA's updated_at, including when it sets
+    dna_generated_at, so updated_at alone finds them. Both are kept to titles with a
+    fingerprint, the only ones the copy writes.
+    """
+    if not recent_only:
+        return [(c_details, None)]
+    return [(c_details, None), (c_imdb, _with_fingerprint(c_dna)), (c_dna, _with_fingerprint(c_dna))]
+
+
 def _driver_batches(drivers: list, base_selector: dict, *, use_compound_hint: bool):
     """Batches of tmdb ids from each (collection, keep) driver in turn. keep, when set, filters
     each batch. An id comes only once."""
@@ -471,10 +485,7 @@ def copy_to_qdrant(
     updated = {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
     sel = dict(query_selector or {})
 
-    # Drivers: details (typically largest / frequently updated), and in the recent window also
-    # the IMDb ratings of titles with a fingerprint, which the daily dataset ingest changes
-    # without touching the details.
-    drivers = [(c_details, None), (c_imdb, _with_fingerprint(c_dna))] if recent_only else [(c_details, None)]
+    drivers = _drivers(c_details, c_imdb, c_dna, recent_only=recent_only)
     # fingerprint_v1_raw may not exist in the collection yet; check once per media type.
     write_raw_fingerprint = FINGERPRINT_RAW_VECTOR in _collection_vector_names(qc.client)
 

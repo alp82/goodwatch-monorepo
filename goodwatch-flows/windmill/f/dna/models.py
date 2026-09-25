@@ -58,6 +58,8 @@ class BaseDNA(Document):
             # The completeness queue reads never-selected and stale titles in popularity order.
             ("selected_at", "-popularity"),
             ("-popularity", "selected_at"),
+            # f/sync/copy/vector_data reads recently updated DNA in tmdb_id order.
+            ("updated_at", "tmdb_id"),
         ],
     }
 
