@@ -230,7 +230,7 @@ payload indexes, and prints the plan unless `apply` is set. What the change show
 - **First load: start from the prototype's vectors.** The stored vectors equal CPU fp32 output (cosine 1.0000), and
   loading them took about a minute locally, against an estimated 4 to 8 hours of embedding on the worker.
   1. Load `text_en_v1`, `text_multi_v1` and `terms_bm25f_v1` for the 191,634 titles in the catalog snapshot of
-     September 23, 2026, 08:48 UTC. The files are `data/emb-bge-base-en-v1.5-notitle.npy`,
+     September 23, 2026, 06:48 UTC (08:48 CEST). The files are `data/emb-bge-base-en-v1.5-notitle.npy`,
      `data/emb-multilingual-e5-small.npy` and `data/emb-ids.json` in the arena, which are gitignored local data.
   2. Run incremental mode once, starting at the snapshot time. It embeds every title changed or added since then.
   3. Continue on the incremental schedule.
@@ -242,6 +242,71 @@ payload indexes, and prints the plan unless `apply` is set. What the change show
   - Both: at most 512 tokens, L2-normalized.
 - **BM25F document weights** use fixed average field lengths as constants. Freezing them keeps stored weights stable.
   Averages drift under 1% in 30 days.
+
+Done in #141. What was built and decided:
+
+- **Code:** `f/search/embed_titles` (the flow), `f/search/title_text` (text preparation and input hash),
+  `f/search/terms` (tokenizer and BM25F document weights), `f/search/text_encoder` (ONNX models).
+- **Text sources.** A title's text comes from two stores, as the catalog snapshot did: `title`, `original_title`,
+  `release_year`, `genres` and `tropes` from the Qdrant payload, and `essence_text`, `essence_tags`,
+  `substr(synopsis, 1, 600)` and `keywords` from Crate (`original_title` and `tropes` fall back to Crate). The two
+  stores disagree for about 5,000 titles, so reading everything from Crate would change their vectors. Built this way,
+  every title unchanged since the snapshot reproduces the snapshot's inputs exactly.
+- **Models:** the official `onnx/model.onnx` of each Hugging Face repository at a pinned revision, with pinned SHA-256
+  hashes. The files are downloaded once per host into `/tmp/windmill/cache/search-models`, which is the workers'
+  persistent `windmill_worker_dependency_cache` volume. Both highperf workers have the tag `highperf` (one on
+  10.0.0.10, one on gw-vector1 next to Qdrant), and a job can land on either.
+- **Term ids: a vocabulary that only grows.** Crate table `search_terms (term, id)`. A term keeps its id forever; new
+  terms get the next free ids, reserved in blocks with a compare-and-set on the counter row
+  `terms_bm25f_v1.next_term_id` in `search_embedding_state`, so concurrent runs can't give one id to two terms. The
+  table was seeded with the benchmark's ids (first-seen order over the snapshot's body terms, 1,548,830 terms). A
+  32-bit hash was the alternative: it needs no state, but about 550 of today's terms would collide (CRC32 over the
+  vocabulary), which breaks exact BM25F. The index build (#142) maps terms to ids with this table; the webapp gets
+  the ids in the term statistics and never hashes terms itself.
+- **`terms_bm25f_v1` is stored for every title, not only eligible ones.** Eligible-only would save about 260 MiB of
+  the 440 MiB sparse index, but eligibility changes with vote counts, and every crossing would need a re-embed. The
+  Qdrant host has about 20 GB free. The ranker filters to eligible titles, and term statistics count only eligible
+  titles. A title without body terms (10,597 of them) gets an empty sparse vector, so every point has all three
+  vectors.
+- **Incremental mode** finds candidates in two ways: Crate rows whose `tmdb_details_updated_at`, `dna_updated_at` or
+  `tvtropes_tags_updated_at` is newer than the last run's start minus 72 hours (the copy flows write rows up to
+  12 hours after the source changed), and points that lack one of the three vectors (`has_vector`). It embeds a
+  candidate only when its input hash differs from the one in `search_embedding_inputs`: most timestamp changes are
+  rating updates, about 4,500 titles a day against about 100 real text changes. A title without a point is skipped;
+  once the publish creates its point, the missing-vector check picks it up.
+- **Full mode** scrolls every point and re-embeds it whatever its hash, checkpointing the next point id in
+  `search_embedding_state` after every 1,000 titles. `restart` starts over and `max_minutes` stops early.
+- **Where the embedding text is built:** `f/search/title_text`. `title_inputs(payload, crate_row)` collects the
+  inputs, `english_text` and `multilingual_text` build what each model embeds (the `passage: ` prefix is added
+  there), `term_fields` builds the BM25F body fields, and `input_hash` hashes all of it. `f/search/terms` turns the
+  fields into document weights. The index build (#142) should reuse `term_fields` and `f/search/terms` for the term
+  statistics, so query and document terms are tokenized the same way.
+- **State in Crate** (tables defined in `f/sync/models/crate_schemas.py`):
+  - `search_terms (term, id, created_at)`: the term vocabulary.
+  - `search_embedding_inputs (point_id, input_hash, embedded_at, updated_at)`: one row per embedded point. Rows of
+    deleted points stay behind; they are harmless.
+  - `search_embedding_state (name, value, updated_at)`, `value` is JSON: `terms_bm25f_v1.next_term_id`
+    (`{"next_id": n}`), `embed_titles.incremental` (`{"started_at", "stats"}` of the last successful incremental run)
+    and `embed_titles.full` (`{"started_at", "next_point_id", "completed_at"}`).
+- **Snapshot time.** The catalog file was written at 08:48 CEST, which is 06:48 UTC. The catch-up run used
+  `since: 2026-09-22T06:48:00Z`, 24 hours before the snapshot, to cover the copy flows' lag. Only titles whose input
+  hash differs from the snapshot's were embedded, so the earlier start cost only hash comparisons.
+- **First load and catch-up (September 24 and 25, 2026):** the first load wrote the snapshot's vectors to 191,633
+  points (one snapshot title had been deleted) and seeded 1,548,830 terms. The catch-up (job
+  `01a0d71b-65f2-7cbc-b0cb-920f7a7932d2`) embedded 183 titles in 103 seconds: 78 points created after the snapshot
+  and 105 whose text changed. It added 943 terms. Afterwards all 191,711 points had all three vectors.
+- **Parity:** a preview job on a highperf worker embedded 250 random unchanged titles and compared them with the
+  loaded vectors: cosine at least 0.9999993 for `text_en_v1` and 0.9999996 for `text_multi_v1`, and `terms_bm25f_v1`
+  equal for all 250. The script is `goodwatch-flows/scripts/check_embedding_parity.py`; run it as a Windmill preview
+  on the `highperf` tag before and after a model or text change.
+- **Full-mode duration is not measured yet.** The parity run took 60 seconds for `bge-base` and 32 seconds for the
+  multilingual model on 250 titles, including the first model download. If that rate holds without the download,
+  a full run takes longer than the 4 to 8 hours estimated above. Measure it with `max_minutes` before relying on it.
+- **Schedule:** `f/search/embed_titles` runs incremental mode (`{"mode": "incremental"}`) every 6 hours, at 05:45,
+  11:45, 17:45 and 23:45 Europe/Berlin (`0 45 5/6 * * *`), 45 minutes after each DNA copy. Windmill schedules are not
+  synced from the repository; this one was created through the API. The catch-up measured about 90 changed or new
+  titles a day, so a run embeds about 25 titles and takes about a minute. A new title gets its text vectors at most
+  6 hours after the publish creates its point, and the nightly index build sees them the same day.
 
 ### New flow: build search indexes
 
