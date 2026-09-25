@@ -37,6 +37,9 @@ function separateEntryFiles() {
 }
 
 export default defineConfig(({ mode }) => ({
+	// resvg is a native module used only on the server to render share cards. Keep the client dependency scan away
+	// from it, or the optimizer fails on its .node binary and the dev server can't serve client scripts.
+	optimizeDeps: { exclude: ["@resvg/resvg-js"] },
 	define: {
 		"process.env.NODE_ENV": JSON.stringify(mode),
 	},
