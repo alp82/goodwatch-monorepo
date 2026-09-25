@@ -20,6 +20,7 @@ import {
 } from "~/ui/share-card/links"
 import { cardDate } from "~/ui/share-card/model"
 import type { ListDraft } from "~/ui/share-list-editor/list-state"
+import { SharedNotice } from "~/ui/share-list-editor/ShareFlow"
 import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
 import { getUserIdFromRequest } from "~/utils/auth"
 
@@ -70,13 +71,24 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => [
 export default function EditShareList() {
 	const { id, handle, initial, quickPicks, date } =
 		useLoaderData<typeof loader>()
+	const path = shareListPath(handle, id)
 	return (
-		<ShareListEditor
-			initial={initial}
-			quickPicks={quickPicks}
-			date={date}
-			saveTarget={{ kind: "list", id }}
-			share={async () => `${publicOrigin()}${shareListPath(handle, id)}`}
-		/>
+		<>
+			<ShareListEditor
+				initial={initial}
+				quickPicks={quickPicks}
+				date={date}
+				saveTarget={{ kind: "list", id }}
+				share={async () => {
+					// Make sure the card image is current before the link gets pasted somewhere.
+					navigator.sendBeacon?.(
+						"/api/og-image-warm",
+						new Blob([path], { type: "text/plain" }),
+					)
+					return `${publicOrigin()}${path}`
+				}}
+			/>
+			<SharedNotice />
+		</>
 	)
 }

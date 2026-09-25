@@ -23,7 +23,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		return new Response(null, { status: 400 })
 
 	// Share list pages carry their own card image, rendered by the share card renderer.
-	const list = /^\/lists\/([0-9A-Za-z]{10})$/.exec(path)
+	const list = /^\/u\/[a-z][a-z0-9_]{2,29}\/lists\/([0-9A-Za-z]{10})$/.exec(path)
 	if (list) {
 		warmShareCard({ id: list[1] })
 		return new Response(null, { status: 204 })

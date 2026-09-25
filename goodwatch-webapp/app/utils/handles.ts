@@ -76,3 +76,21 @@ export function handleProblem(handle: string): string | null {
 	if (RESERVED_HANDLES.has(handle)) return "That handle is reserved."
 	return null
 }
+
+/**
+ * Turns free text, such as a signature or the name part of an email address, into a valid handle, or null when
+ * nothing usable is left. Used to suggest a handle; people can always type their own.
+ */
+export function handleFromText(text: string | null | undefined): string | null {
+	if (!text) return null
+	const handle = text
+		.normalize("NFKD")
+		.replace(/\p{M}/gu, "")
+		.toLowerCase()
+		.replace(/[^a-z0-9_]+/g, "_")
+		.replace(/^[^a-z]+/, "")
+		.replace(/_+/g, "_")
+		.slice(0, HANDLE_MAX)
+		.replace(/_+$/, "")
+	return handleProblem(handle) ? null : handle
+}

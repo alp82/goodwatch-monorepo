@@ -46,6 +46,13 @@ export function readBrowserDraft(): ListDraft | null {
 	}
 }
 
+/** Saves the draft in this browser right away, for example before leaving the page to sign up. */
+export function writeBrowserDraft(draft: ListDraft) {
+	try {
+		localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
+	} catch {}
+}
+
 export function clearBrowserDraft() {
 	try {
 		localStorage.removeItem(DRAFT_KEY)

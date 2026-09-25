@@ -11,21 +11,16 @@ import {
 } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import React from "react"
-import { useClaimHandle, useHandleCheck } from "~/routes/api.handle"
+import { useClaimHandle } from "~/routes/api.handle"
 import { getProfileByUserId } from "~/server/share-lists/store.server"
 import { profilePath } from "~/ui/share-card/links"
 import { getUserIdFromRequest } from "~/utils/auth"
-import {
-	HANDLE_HOLD_DAYS,
-	HANDLE_MAX,
-	handleProblem,
-	normalizeHandle,
-} from "~/utils/handles"
+import { useHandleAvailability } from "~/ui/share-lists/useHandleAvailability"
+import { HANDLE_HOLD_DAYS, HANDLE_MAX } from "~/utils/handles"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
 const DISPLAY_NAME_MAX = 50
-const CHECK_DELAY_MS = 300
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await getUserIdFromRequest({ request })
@@ -46,15 +41,6 @@ export const meta: MetaFunction = () => [
 	{ name: "robots", content: "noindex, nofollow" },
 ]
 
-function useDebounced<T>(value: T, delay: number) {
-	const [debounced, setDebounced] = React.useState(value)
-	React.useEffect(() => {
-		const id = window.setTimeout(() => setDebounced(value), delay)
-		return () => window.clearTimeout(id)
-	}, [value, delay])
-	return debounced
-}
-
 export default function SettingsProfile() {
 	const loaded = useLoaderData<typeof loader>()
 	const [saved, setSaved] = React.useState(loaded.profile)
@@ -62,24 +48,16 @@ export default function SettingsProfile() {
 	const [displayName, setDisplayName] = React.useState(saved?.displayName ?? "")
 	const claim = useClaimHandle()
 
-	const handle = normalizeHandle(handleInput)
-	const problem = handle ? handleProblem(handle) : null
-	const isCurrent = handle === saved?.handle
-	const debounced = useDebounced(handle, CHECK_DELAY_MS)
-	// Check availability only for a valid handle that isn't the person's own, and only once they pause typing.
-	const check = useHandleCheck(
-		!problem && handle && !isCurrent && debounced === handle ? handle : null,
-	)
-	const checking =
-		!problem &&
-		!!handle &&
-		!isCurrent &&
-		(debounced !== handle || check.isFetching)
-	const available =
-		isCurrent ||
-		(check.data?.handle === handle && check.data.available && !checking)
-	const unavailable =
-		!checking && check.data?.handle === handle && !check.data.available
+	const {
+		handle,
+		problem,
+		isCurrent,
+		checking,
+		available,
+		unavailable,
+		checkFailed,
+		unavailableReason,
+	} = useHandleAvailability(handleInput, saved?.handle ?? null)
 
 	const nameChanged =
 		(displayName.trim() || null) !== (saved?.displayName ?? null)
@@ -108,14 +86,14 @@ export default function SettingsProfile() {
 	else if (isCurrent)
 		status = <Status tone="muted">This is your handle.</Status>
 	else if (checking) status = <Status tone="muted">Checking…</Status>
-	else if (check.isError)
+	else if (checkFailed)
 		status = (
 			<Status tone="error">Couldn't check that handle. Try again.</Status>
 		)
 	else if (unavailable)
 		status = (
 			<Status tone="error">
-				{check.data?.problem ?? "That handle is taken."}
+				{unavailableReason}
 			</Status>
 		)
 	else if (available)

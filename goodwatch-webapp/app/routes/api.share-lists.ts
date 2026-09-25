@@ -1,17 +1,21 @@
-// Writes for share lists: create, update, set visibility, delete. The signed-in person must own the list.
-import { type ActionFunctionArgs, json } from "@remix-run/node"
+// Share lists API. GET tells the editor who is sharing: signed in or not, their handle, or a suggested one.
+// POST writes: create, update, set visibility, delete. The signed-in person must own the list.
+import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from "@remix-run/node"
+import { useMutation } from "@tanstack/react-query"
 import { warmShareCard } from "~/server/share-card/images.server"
 import {
 	createList,
 	deleteList,
+	getProfileByUserId,
 	type ShareList,
 	ShareListError,
 	type ShareListInput,
 	setListVisibility,
+	suggestHandle,
 	updateList,
 	type Visibility,
 } from "~/server/share-lists/store.server"
-import { getUserIdFromRequest } from "~/utils/auth"
+import { getUserFromRequest, getUserIdFromRequest } from "~/utils/auth"
 
 type Body =
 	| { intent: "create"; list: ShareListInput }
@@ -20,6 +24,29 @@ type Body =
 	| { intent: "delete"; id: string }
 
 export type ShareListResponse = { list: ShareList } | { deleted: true } | { error: string }
+
+/** Who is sharing. A handle suggestion comes from ?signature=, then the account's name, then its email address. */
+export type ShareViewer =
+	| { signedIn: false }
+	| { signedIn: true; handle: string | null; suggestedHandle: string | null }
+
+export async function loader({ request }: LoaderFunctionArgs) {
+	const noStore = { headers: { "Cache-Control": "private, no-store" } }
+	const user = await getUserFromRequest({ request })
+	if (!user) return json<ShareViewer>({ signedIn: false }, noStore)
+	const profile = await getProfileByUserId(user.id)
+	if (profile) return json<ShareViewer>({ signedIn: true, handle: profile.handle, suggestedHandle: null }, noStore)
+	const meta = user.user_metadata ?? {}
+	const suggestedHandle = await suggestHandle(user.id, [
+		new URL(request.url).searchParams.get("signature"),
+		meta.user_name,
+		meta.preferred_username,
+		meta.full_name,
+		meta.name,
+		user.email?.split("@")[0],
+	])
+	return json<ShareViewer>({ signedIn: true, handle: null, suggestedHandle }, noStore)
+}
 
 export async function action({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST") return json({ error: "Method not allowed" }, { status: 405 })
@@ -59,3 +86,25 @@ export async function action({ request }: ActionFunctionArgs) {
 		return json({ error: "Saving failed. Try again." }, { status: 500 })
 	}
 }
+
+// Query and mutation helpers
+
+export const fetchShareViewer = async (signature: string): Promise<ShareViewer> => {
+	const response = await fetch(`/api/share-lists?signature=${encodeURIComponent(signature)}`)
+	if (!response.ok) throw new Error("Couldn't check your account. Try again.")
+	return response.json()
+}
+
+export const useCreateShareList = () =>
+	useMutation({
+		mutationFn: async (list: ShareListInput): Promise<ShareList> => {
+			const response = await fetch("/api/share-lists", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ intent: "create", list }),
+			})
+			const result = await response.json().catch(() => ({}))
+			if (!response.ok) throw new Error(result.error ?? "Saving the list failed. Try again.")
+			return result.list
+		},
+	})

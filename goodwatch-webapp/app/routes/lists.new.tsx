@@ -1,13 +1,14 @@
 // The editor for a new share list. ?remix=<list id> starts from another list's prompt and titles.
 // A new list saves as a draft in this browser until it's shared; a visit without ?remix restores that draft.
+// ?share=1 is where sign-up and sign-in return to: it shares the restored draft (see ShareFlow).
 import {
 	json,
 	type LoaderFunctionArgs,
 	type MetaFunction,
 } from "@remix-run/node"
-import { useLoaderData } from "@remix-run/react"
+import { useLoaderData, useSearchParams } from "@remix-run/react"
 import { useEffect, useState } from "react"
-import { getList } from "~/server/share-lists/store.server"
+import { getList, getProfileByUserId } from "~/server/share-lists/store.server"
 import {
 	getQuickPicks,
 	resolveCardTitles,
@@ -19,9 +20,11 @@ import {
 	DEFAULT_THEME,
 	LIST_PROMPTS,
 } from "~/ui/share-card/model"
-import { readBrowserDraft } from "~/ui/share-list-editor/autosave"
+import { isComplete, readBrowserDraft } from "~/ui/share-list-editor/autosave"
 import type { ListDraft } from "~/ui/share-list-editor/list-state"
+import { useShareFlow } from "~/ui/share-list-editor/ShareFlow"
 import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
+import { getUserIdFromRequest, useUser } from "~/utils/auth"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -37,10 +40,14 @@ const EMPTY_DRAFT: ListDraft = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const remixId = new URL(request.url).searchParams.get("remix")
-	const [quickPicks, source] = await Promise.all([
+	const userId = await getUserIdFromRequest({ request })
+	const [quickPicks, source, profile] = await Promise.all([
 		getQuickPicks(),
 		remixId ? getList(remixId) : null,
+		userId ? getProfileByUserId(userId) : null,
 	])
+	// New lists sign with the person's handle once they have one.
+	const signature = profile ? `@${profile.handle}` : ""
 	// A remix is a new list with the source's prompt, titles, design, and colors. The signature stays the viewer's.
 	const initial: ListDraft = source
 		? {
@@ -48,17 +55,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				promptId: source.promptId,
 				design: source.design,
 				theme: source.theme,
-				signature: "",
+				signature,
 				items: await resolveCardTitles(source.items),
 				remixedFrom: source.id,
 			}
-		: EMPTY_DRAFT
-	return json({
-		initial,
-		isRemix: !!source,
-		quickPicks,
-		date: cardDate(new Date()),
-	})
+		: { ...EMPTY_DRAFT, signature }
+	return json(
+		{
+			initial,
+			isRemix: !!source,
+			quickPicks,
+			date: cardDate(new Date()),
+		},
+		{ headers: { "Cache-Control": "private, no-store" } },
+	)
 }
 
 export const meta: MetaFunction = () => [
@@ -88,13 +98,35 @@ export default function NewShareList() {
 			})
 	}, [isRemix])
 
+	const flow = useShareFlow()
+	// Back from sign-up or sign-in: share the saved draft once the session is known.
+	const [params, setParams] = useSearchParams()
+	const { user, loading } = useUser()
+	const resuming = params.get("share") === "1"
+	useEffect(() => {
+		if (!resuming || loading) return
+		setParams(
+			(p) => {
+				p.delete("share")
+				return p
+			},
+			{ replace: true, preventScrollReset: true },
+		)
+		const draft = readBrowserDraft()
+		if (user && draft && isComplete(draft)) flow.share(draft)
+	}, [resuming, loading, user, setParams, flow.share])
+
 	return (
-		<ShareListEditor
-			key={start.restored ? "restored" : "initial"}
-			initial={start.draft}
-			quickPicks={quickPicks}
-			date={date}
-			saveTarget={{ kind: "draft" }}
-		/>
+		<>
+			<ShareListEditor
+				key={start.restored ? "restored" : "initial"}
+				initial={start.draft}
+				quickPicks={quickPicks}
+				date={date}
+				saveTarget={{ kind: "draft" }}
+				share={flow.share}
+			/>
+			{flow.dialogs}
+		</>
 	)
 }

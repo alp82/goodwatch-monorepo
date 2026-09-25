@@ -7,7 +7,7 @@ import { entryKey, type ListEntry, parseTitleKey, resolveCardTitles } from "~/se
 import { isDesignKey } from "~/ui/share-card/designs"
 import { isPromptId, isThemeKey, LIST_SIZE, SIGNATURE_MAX_LENGTH, type ThemeKey, TITLE_MAX_LENGTH } from "~/ui/share-card/model"
 import { execute, query } from "~/utils/crate"
-import { HANDLE_HOLD_DAYS, handleProblem, normalizeHandle } from "~/utils/handles"
+import { HANDLE_HOLD_DAYS, HANDLE_MAX, handleFromText, handleProblem, normalizeHandle } from "~/utils/handles"
 
 export { HANDLE_HOLD_DAYS, HANDLE_MAX, HANDLE_MIN, handleProblem, normalizeHandle } from "~/utils/handles"
 
@@ -284,6 +284,22 @@ function claimFor(row: HandleRow | null, userId: string, now: number): Claim {
 /** Whether the person can't have the handle: someone holds it, or it's on hold for someone else. */
 export async function isHandleTaken(handle: string, userId?: string): Promise<boolean> {
 	return claimFor(await getHandleRow(handle), userId ?? "", Date.now()) === "taken"
+}
+
+/**
+ * The first free handle for the person among the candidates, trying each as is and then with 2 to 9 appended.
+ * Candidates are free text (a signature, a name); unusable ones are skipped. Null when none is free.
+ */
+export async function suggestHandle(userId: string, candidates: (string | null | undefined)[]): Promise<string | null> {
+	const bases = [...new Set(candidates.map(handleFromText).filter((h): h is string => !!h))]
+	for (const base of bases) {
+		for (const suffix of ["", "2", "3", "4", "5", "6", "7", "8", "9"]) {
+			const handle = `${base.slice(0, HANDLE_MAX - suffix.length)}${suffix}`
+			if (handleProblem(handle)) continue
+			if (!(await isHandleTaken(handle, userId))) return handle
+		}
+	}
+	return null
 }
 
 /**

@@ -9,6 +9,7 @@ import {
 	useIsomorphicLayoutEffect,
 } from "~/ui/share-card/ScaledCard"
 import {
+	isComplete,
 	type SaveStatus,
 	type SaveTarget,
 	useAutosave,
@@ -83,12 +84,14 @@ function ShareButton({ ed, share }: { ed: Editor; share?: ShareAction }) {
 	return (
 		<button
 			type="button"
-			disabled={!share || ed.list.items.length === 0}
+			disabled={!share || !isComplete(ed.list.draft)}
 			onClick={onClick}
 			title={
-				share
-					? "Copies a link. The card is its preview image."
-					: "Save the list to share it."
+				!share
+					? "Save the list to share it."
+					: isComplete(ed.list.draft)
+						? "Copies a link. The card is its preview image."
+						: "Add 5 titles to share the list."
 			}
 			className="w-40 rounded-full py-2.5 text-center text-base font-black whitespace-nowrap text-black transition hover:brightness-110 disabled:opacity-40"
 			style={{
