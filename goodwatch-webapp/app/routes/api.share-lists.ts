@@ -1,5 +1,6 @@
 // Writes for share lists: create, update, set visibility, delete. The signed-in person must own the list.
 import { type ActionFunctionArgs, json } from "@remix-run/node"
+import { warmShareCard } from "~/server/share-card/images.server"
 import {
 	createList,
 	deleteList,
@@ -36,10 +37,12 @@ export async function action({ request }: ActionFunctionArgs) {
 		switch (body.intent) {
 			case "create": {
 				const list = await createList(userId, body.list)
+				warmShareCard(list)
 				return json({ list })
 			}
 			case "update": {
 				const list = await updateList(userId, String(body.id), body.list)
+				warmShareCard(list)
 				return json({ list })
 			}
 			case "visibility":

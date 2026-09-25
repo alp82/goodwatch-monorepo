@@ -2,6 +2,7 @@
 // by the time someone shares the link. See useOgImageWarmup.
 import type { ActionFunctionArgs } from "@remix-run/node"
 import { warmOgImage } from "~/server/og-image/og-image.server"
+import { warmShareCard } from "~/server/share-card/images.server"
 
 const MAX_PATH_LENGTH = 512
 
@@ -20,6 +21,13 @@ export async function action({ request }: ActionFunctionArgs) {
 	const path = (await request.text()).trim()
 	if (!path.startsWith("/") || path.length > MAX_PATH_LENGTH)
 		return new Response(null, { status: 400 })
+
+	// Share list pages carry their own card image, rendered by the share card renderer.
+	const list = /^\/lists\/([0-9A-Za-z]{10})$/.exec(path)
+	if (list) {
+		warmShareCard({ id: list[1] })
+		return new Response(null, { status: 204 })
+	}
 
 	// Answer right away; the render runs on its own.
 	warmOgImage(path).catch((error) =>

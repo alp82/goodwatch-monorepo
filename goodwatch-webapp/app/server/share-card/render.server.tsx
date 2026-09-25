@@ -3,6 +3,7 @@
 import { type ChildProcess, fork } from "node:child_process"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { Fragment, isValidElement, type ReactElement, type ReactNode } from "react"
 import { toDataUri } from "~/server/og-image/render.server"
 import { CARD_FONT_DIR, CARD_FONTS } from "~/ui/share-card/fonts"
@@ -11,9 +12,15 @@ import type { CardDesign, CardProps, CardTitle } from "~/ui/share-card/model"
 const POOL_SIZE = Number(process.env.SHARE_CARD_RENDERERS) || 2
 const RENDER_TIMEOUT_MS = 30_000
 
-// public/ in development, build/client/ once built.
+// public/ in development, build/client/ once built. Relative to this module (app/server/share-card, or
+// build/server once bundled), with the working directory as a fallback.
 function fontDir() {
-	const candidates = ["public", "build/client"].map((dir) => join(process.cwd(), dir, CARD_FONT_DIR))
+	const here = fileURLToPath(new URL(".", import.meta.url))
+	const candidates = [
+		join(here, "../../../public", CARD_FONT_DIR),
+		join(here, "../client", CARD_FONT_DIR),
+		...["public", "build/client"].map((dir) => join(process.cwd(), dir, CARD_FONT_DIR)),
+	]
 	const found = candidates.find((dir) => existsSync(join(dir, CARD_FONTS[0].file)))
 	if (!found) throw new Error(`Share card fonts not found in ${candidates.join(" or ")}`)
 	return found
