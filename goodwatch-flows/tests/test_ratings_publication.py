@@ -3,7 +3,7 @@ import sys
 import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import mongomock
 from mongoengine import connect, disconnect
@@ -54,6 +54,21 @@ class RatingsPublicationTest(unittest.TestCase):
                                          expected.timestamp() if expected else None)
                         self.assertEqual(result['movies' if media_type == 'movie' else 'shows']['rows_upserted'], 1)
                         collection.delete_many({})
+
+    def test_every_recently_changed_title_is_published_once_across_batches(self):
+        now = datetime.utcnow()
+        self.mongo.tmdb_movie_details.insert_many([
+            {'tmdb_id': tmdb_id, 'updated_at': now if tmdb_id in (1, 2) else now - timedelta(days=30)}
+            for tmdb_id in range(1, 8)])
+        self.mongo.imdb_movie_rating.insert_many([
+            {'tmdb_id': tmdb_id, 'updated_at': now, 'user_score_vote_count': 10} for tmdb_id in (2, 3, 4, 5, 6)])
+        self.mongo.metacritic_movie_rating.insert_one({'tmdb_id': 7, 'updated_at': now})
+        with patch.object(all_ratings, 'BATCH_SIZE', 2):
+            result = all_ratings.copy_media(self.connector, {}, 'movie')
+        published = [record.tmdb_id for call in self.connector.upsert_many.call_args_list
+                     for record in call.kwargs['records']]
+        self.assertEqual(published, [1, 2, 3, 4, 5, 6, 7])
+        self.assertEqual(result['movies']['rows_upserted'], 7)
 
     def test_a_recent_imdb_change_keeps_the_older_sources_in_the_aggregates(self):
         # The daily IMDb ingest moves only the IMDb document. The scheduled copy must still
