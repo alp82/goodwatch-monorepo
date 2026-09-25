@@ -191,18 +191,27 @@ def stale_titles(model: Document, stale_before: datetime) -> QuerySet:
     ).order_by("-popularity")
 
 
+# The queue only needs these. Loading whole fetched TMDB documents (about 34 KB,
+# deeply embedded) took mongoengine several seconds per batch.
+QUEUE_FIELDS = ("id", "tmdb_id", "popularity")
+
+
 def no_fetch_entries_for(
     model: Document, count: int, buffer_time_for_selected_entries: datetime
 ) -> list[Document]:
-    never_selected = list(never_selected_titles(model).limit(count))
-    stuck = list(stuck_titles(model, buffer_time_for_selected_entries).limit(count))
+    never_selected = list(never_selected_titles(model).only(*QUEUE_FIELDS).limit(count))
+    stuck = list(
+        stuck_titles(model, buffer_time_for_selected_entries)
+        .only(*QUEUE_FIELDS)
+        .limit(count)
+    )
     return by_popularity(never_selected + stuck)[:count]
 
 
 def stale_entries_for(
     model: Document, count: int, stale_before: datetime
 ) -> list[Document]:
-    return list(stale_titles(model, stale_before).limit(count))
+    return list(stale_titles(model, stale_before).only(*QUEUE_FIELDS).limit(count))
 
 
 def by_popularity(entries: list[Document]) -> list[Document]:
