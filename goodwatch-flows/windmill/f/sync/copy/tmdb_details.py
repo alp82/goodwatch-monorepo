@@ -1,4 +1,3 @@
-import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
@@ -7,6 +6,7 @@ from mongoengine import get_db
 from pydantic import BaseModel
 
 from f.db.cratedb import CrateConnector
+from f.external_ids.imdb_ids import effective_imdb_id, imdb_url
 from f.db.mongodb import (
     init_mongodb,
     close_mongodb,
@@ -44,9 +44,8 @@ STALE_SEASON_SHOWS_PER_DELETE = 500
 
 CREATOR_JOB = "Creator"
 
-IMDB_TITLE_ID = re.compile(r"tt\d+")
-# TMDB details are the only source of a title's IMDb id, so this copy clears
-# them when TMDB has none. Other writers leave them to COALESCE.
+# TMDB details own a title's IMDb id (TMDB's, else the Wikidata `imdb_id_override`),
+# so this copy clears them when neither exists. Other writers leave them to COALESCE.
 IMDB_ID_COLUMNS = ("imdb_id", "imdb_url")
 
 
@@ -55,14 +54,12 @@ IMDB_ID_COLUMNS = ("imdb_id", "imdb_url")
 def imdb_title(tmdb_details: dict, is_movie: bool) -> tuple[Optional[str], Optional[str]]:
     """The IMDb title id and link of a TMDB details document, or (None, None).
 
-    Movies carry the id at the top level, shows in `external_ids`. Anything that
-    is not a title id (missing, empty, "None", a person id) yields no link.
+    Movies carry TMDB's id at the top level, shows in `external_ids`. Without a
+    valid TMDB id, the Wikidata `imdb_id_override` is used. Anything that is not
+    a title id (missing, empty, "None", a person id) yields no link.
     """
-    raw = tmdb_details.get("imdb_id") if is_movie else (tmdb_details.get("external_ids") or {}).get("imdb_id")
-    if not isinstance(raw, str) or not IMDB_TITLE_ID.fullmatch(raw.strip()):
-        return None, None
-    imdb_id = raw.strip()
-    return imdb_id, f"https://www.imdb.com/title/{imdb_id}"
+    imdb_id, _ = effective_imdb_id(tmdb_details, is_movie)
+    return imdb_id, imdb_url(imdb_id)
 
 
 def creator_credits(tmdb_details: dict, media_id: str) -> list[tuple[Person, PersonWorkedOn]]:

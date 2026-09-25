@@ -26,7 +26,11 @@ class ImdbCrawlResult(BaseModel):
 
 class BaseImdbRating(Document):
     tmdb_id = IntField()
+    # The effective IMDb id: TMDB's, else the Wikidata override. The IMDb dataset
+    # ingest maps tconsts to TMDB ids through this field.
     imdb_id = StringField()
+    # "tmdb" or "wikidata"; missing on documents written before #150 (then TMDB).
+    imdb_id_source = StringField()
     original_title = StringField()
     popularity = FloatField()
 

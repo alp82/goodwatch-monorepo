@@ -165,6 +165,8 @@ def store_result(
 
     if type(result.url) in [str]:
         next_entry.metacritic_url = result.url
+        next_entry.url_source = "crawl"
+        next_entry.url_verified_at = datetime.utcnow()
 
     if type(result.meta_score_original) in [int, float]:
         next_entry.meta_score_original = result.meta_score_original

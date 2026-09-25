@@ -71,6 +71,27 @@ class ImdbIdPublicationTest(unittest.TestCase):
             self.assertIsNone(shows[tmdb_id].imdb_url)
             self.assertIsNone(shows[tmdb_id].imdb_id)
 
+    def test_wikidata_override_fills_a_missing_tmdb_id(self):
+        """#150 fills `imdb_id_override`; the details copy must publish it, not clear it."""
+        self.mongo.tmdb_tv_details.insert_many([
+            {"tmdb_id": 1, "title": "Override only", "external_ids": {}, "imdb_id_override": "tt0000001"},
+            {"tmdb_id": 2, "title": "TMDB wins", "external_ids": {"imdb_id": "tt0000002"},
+             "imdb_id_override": "tt0000009"},
+        ])
+        self.mongo.tmdb_movie_details.insert_one(
+            {"tmdb_id": 3, "title": "Movie override", "imdb_id": None, "imdb_id_override": "tt0000003"})
+        tmdb_details.copy_media(self.connector, {}, "show", recent_only=False)
+        tmdb_details.copy_media(self.connector, {}, "movie", recent_only=False)
+        shows, movies = self.published("show"), self.published("movie")
+        self.assertEqual((shows[1].imdb_id, shows[1].imdb_url), ("tt0000001", "https://www.imdb.com/title/tt0000001"))
+        self.assertEqual(shows[2].imdb_id, "tt0000002")
+        self.assertEqual(movies[3].imdb_id, "tt0000003")
+
+    def test_ratings_copy_links_the_override(self):
+        self.mongo.tmdb_tv_details.insert_one({"tmdb_id": 1, "external_ids": {}, "imdb_id_override": "tt0000001"})
+        all_ratings.copy_media(self.connector, {}, "show", recent_only=False)
+        self.assertEqual(self.published("show")[1].imdb_url, "https://www.imdb.com/title/tt0000001")
+
     def test_details_copy_clears_stale_imdb_columns(self):
         """TMDB details own the IMDb id, so a title without one must clear the old link."""
         self.mongo.tmdb_movie_details.insert_one({"tmdb_id": 1, "title": "No id"})

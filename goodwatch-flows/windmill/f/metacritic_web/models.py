@@ -45,6 +45,15 @@ class BaseMetacriticRating(Document):
     title_variations = ListField(StringField())
     release_year = IntField()
     metacritic_url = StringField()
+    # "crawl" (found by the crawler; missing on older documents means the same) or
+    # "wikidata" (filled by f/external_ids/wikidata_backfill). A crawled URL is never
+    # replaced by Wikidata's.
+    url_source = StringField()
+    # When the URL's source last confirmed it: the crawler's successful fetch, or the
+    # Wikidata export the URL was taken from.
+    url_verified_at = DateTimeField()
+    # Wikidata's current value for this title, kept even when the stored URL differs.
+    wikidata_url = StringField()
 
     meta_score_original = FloatField()
     meta_score_normalized_percent = FloatField()

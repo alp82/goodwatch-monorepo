@@ -27,6 +27,7 @@ tmdb_details_projection = {
     "tmdb_id": 1,
     "imdb_id": 1,
     "external_ids": 1,
+    "imdb_id_override": 1,
     "vote_count": 1,
     "vote_average": 1,
 }
