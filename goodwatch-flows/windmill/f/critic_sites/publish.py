@@ -1,3 +1,11 @@
+# extra_requirements:
+# requests
+# pymongo
+# mongoengine
+# crate
+# pydantic
+# wmill
+
 """Publish Rotten Tomatoes and Metacritic season scores to Crate (#152).
 
 Tables `rotten_tomatoes_season` and `metacritic_season`, one row per TMDB show and

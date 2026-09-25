@@ -1,3 +1,11 @@
+# extra_requirements:
+# requests
+# pymongo
+# mongoengine
+# crate
+# pydantic
+# wmill
+
 """Weekly sitemap directory for the Rotten Tomatoes and Metacritic show crawls (#152).
 
 Downloads the site's series sitemaps (RT `tv-series_*.xml`, about 25k series;

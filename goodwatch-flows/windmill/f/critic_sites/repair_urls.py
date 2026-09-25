@@ -1,3 +1,11 @@
+# extra_requirements:
+# requests
+# pymongo
+# mongoengine
+# crate
+# pydantic
+# wmill
+
 """Repair Rotten Tomatoes and Metacritic URLs that several titles share (#152).
 
 The old crawlers stored guessed URLs, and a guess such as `m/good_night` landed on

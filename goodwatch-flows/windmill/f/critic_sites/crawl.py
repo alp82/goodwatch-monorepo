@@ -1,3 +1,11 @@
+# extra_requirements:
+# requests
+# pymongo
+# mongoengine
+# crate
+# pydantic
+# wmill
+
 """Rotten Tomatoes and Metacritic crawls from known URLs, with season critic scores (#152).
 
 One long-running job per site (`main(site=...)`) crawls titles whose URL is known:

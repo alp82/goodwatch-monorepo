@@ -1,3 +1,11 @@
+# extra_requirements:
+# requests
+# pymongo
+# mongoengine
+# crate
+# pydantic
+# wmill
+
 """Crawl one title's Metacritic page now, for `f/priority/crawl_all` (#152).
 
 Plain HTTP from the title's known URL (Wikidata's, then the stored one), with the

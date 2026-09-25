@@ -1,3 +1,11 @@
+# extra_requirements:
+# requests
+# pymongo
+# mongoengine
+# crate
+# pydantic
+# wmill
+
 """Polite HTTP for the Rotten Tomatoes and Metacritic crawlers (#152).
 
 Owner rules (issue #152, 2026-09-25): plain HTTP with an honest, identifying
