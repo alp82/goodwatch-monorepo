@@ -565,6 +565,54 @@ eligibility filter). Client overhead is wall time minus Qdrant's time:
 Most of the wall time is Qdrant's own time: 25 ms p50 at limit 20, and up to 760 ms at limit 500 while Qdrant was
 loaded (see [prerequisites](#prerequisites)).
 
+### Ranker
+
+Done in #144, in `goodwatch-webapp/app/server/search-ranking/`. Nothing calls it yet: #146 adds shadow mode.
+
+- **Entry point:** `rankSearch(reading, request, eligibility)` in `rank-search.server.ts`. `reading` is
+  `readingFields(text, readings, nativeOnly)` from `combined-search/reading-retrieval.server.ts` (the decoded searched
+  phrases, concrete words, flags with their kind and Qdrant condition, the fingerprint weights and vector, and the
+  chips). `request` is the typed query, the text the reading used, the language flag and the allowed title lookup rows.
+  It returns the ranked list (at most 50), the route, the reference, the time per stage and each Qdrant round.
+- **Modules:** `search-index.server.ts` (the index loader), `text-rules.server.ts` (`words`, `normalized`, `fold`,
+  `tokens`, `stem`, `terms`), `query-parsing.server.ts` (language, negation, labels, era, spelling, facets and units),
+  `references.server.ts` (names, teams, typos, intent, "like X" titles, the residual), `search-filter.server.ts` (the
+  Qdrant filter and the same test on the title table), `ranking.server.ts` (weights, z-scores, profile terms, peers,
+  own-title bounds, cut folding), `title-blend.server.ts` (production's blend with strict and fuzzy titles).
+- **Index loader:** reads the `current` row, downloads the ten files in parallel from any Crate node (following
+  `307`), checks each SHA-1, and swaps the build in only when all of them have parsed. It checks the row every
+  5 minutes and loads a new build in the background. A missing blob means a newer build's cleanup removed it: it reads
+  the row again. `startSearchIndex()` preloads it. From a laptop over the VPN a load took 30 to 37 seconds (the
+  download); on the LAN it took 3.5 seconds (#142).
+- **Qdrant requests per search:**
+  1. While the texts are encoded: the stored profile of one person, team or studio (`search_reference_profiles`,
+     its `fingerprint_v1` for the peers and its `terms`), or the seed titles' three vectors for a "like X" title or
+     several people. Qdrant's query by point id leaves the point itself out, so a "like X" title can't be read that
+     way.
+  2. Round 1, the top lists: fingerprint (`fingerprint_v1_raw`, exact), dense, BM25F, facets, coverage units, and the
+     profile (its centroids with `lookup_from` for one entity, as vectors otherwise).
+  3. Non-English queries with English chips only: the union of both top 2,000 lists, scored with both vectors.
+  4. Round 2, the pool: every signal for the pool ids, with the search's filter. The candidates are the pool titles
+     that pass it.
+
+  So 156 of the 168 graded queries take 2 rounds and the 12 non-English queries with chips take 3, plus the request in
+  step 1, which overlaps the encoding.
+- **Filter:** the ranker ranks the indexed titles only (`goodwatch_overall_score_voting_count >= 2000`, not adult),
+  whatever `lesserKnown` and `includeAdult` say. The title table can't test the genre and streaming chip filters: the
+  Qdrant queries apply them, the in-memory parts (the mix statistics, reference titles and peers before round 2) don't.
+- **Versions:** `search_history.ranker_version` (added with
+  `goodwatch-webapp/migrations/20260925_search_history_ranker_version.sql`, applied on September 25, 2026) records
+  the ranking that produced the served list: `fingerprint-text-v1` (today's), `essence-text-v1` (the basic search)
+  and, once it serves, `hybrid-v1` (`RANKER_VERSION`). The Jev contract and question version strings are unchanged.
+- **Encoding differs from design rule 2.** The prototype encodes the facet phrases, coverage units and negated clauses
+  with the query's main model: `bge-base` for English queries. The benchmark trace does too (71 facet and 75 unit
+  encodes with `bge-base`). Encoding them with the multilingual model would change the ranking, so the port follows
+  the prototype. For English queries, only the intent text goes through the multilingual model.
+- **Local run:** `goodwatch-webapp/scripts/search-ranking-run.ts` ranks the arena captures (recorded readings) against
+  production Qdrant and the current build. On September 25, 2026 (build `20260925T082040Z`), all 168 graded queries
+  ran; their top 10s share 9.86 titles on average with the prototype's trace, 145 are the same set and 119 the same
+  order. The differences are fresher data and fresh query encodes; #145 checks parity properly.
+
 ### Parity check
 
 Before shadow mode, compare the TypeScript ranker with the prototype on all 168 graded queries:
