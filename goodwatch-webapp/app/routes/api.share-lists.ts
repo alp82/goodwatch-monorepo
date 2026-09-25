@@ -1,5 +1,5 @@
 // Share lists API. GET tells the editor who is sharing: signed in or not, their handle, or a suggested one.
-// POST writes: create, update, set visibility, delete. The signed-in person must own the list.
+// POST writes: create, update, set visibility, delete, and undo a recent delete. The signed-in person must own the list.
 import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from "@remix-run/node"
 import { useMutation } from "@tanstack/react-query"
 import { warmShareCard } from "~/server/share-card/images.server"
@@ -10,6 +10,7 @@ import {
 	type ShareList,
 	ShareListError,
 	type ShareListInput,
+	restoreList,
 	setListVisibility,
 	suggestHandle,
 	updateList,
@@ -22,6 +23,7 @@ type Body =
 	| { intent: "update"; id: string; list: ShareListInput }
 	| { intent: "visibility"; id: string; visibility: Visibility }
 	| { intent: "delete"; id: string }
+	| { intent: "restore"; id: string }
 
 export type ShareListResponse = { list: ShareList } | { deleted: true } | { error: string }
 
@@ -77,6 +79,8 @@ export async function action({ request }: ActionFunctionArgs) {
 			case "delete":
 				await deleteList(userId, String(body.id))
 				return json({ deleted: true })
+			case "restore":
+				return json({ list: await restoreList(userId, String(body.id)) })
 			default:
 				return json({ error: "Unknown request." }, { status: 400 })
 		}
@@ -106,5 +110,25 @@ export const useCreateShareList = () =>
 			const result = await response.json().catch(() => ({}))
 			if (!response.ok) throw new Error(result.error ?? "Saving the list failed. Try again.")
 			return result.list
+		},
+	})
+
+/** Owner actions on a saved list: change its visibility, delete it, or undo a recent delete. */
+export type ShareListOwnerAction =
+	| { intent: "visibility"; id: string; visibility: Visibility }
+	| { intent: "delete"; id: string }
+	| { intent: "restore"; id: string }
+
+export const useShareListOwnerAction = () =>
+	useMutation({
+		mutationFn: async (action: ShareListOwnerAction): Promise<ShareListResponse> => {
+			const response = await fetch("/api/share-lists", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(action),
+			})
+			const result = await response.json().catch(() => ({}))
+			if (!response.ok) throw new Error(result.error ?? "That didn't work. Try again.")
+			return result
 		},
 	})

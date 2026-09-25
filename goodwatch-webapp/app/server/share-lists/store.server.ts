@@ -212,6 +212,22 @@ export async function deleteList(userId: string, id: string): Promise<void> {
 	await refreshLists()
 }
 
+/** How long after a delete its owner can still undo it. Older deletes are restored by hand only. */
+export const UNDO_DELETE_MS = 10 * 60 * 1000
+
+/** Undoes a recent delete. Only the owner can, and only within UNDO_DELETE_MS. */
+export async function restoreList(userId: string, id: string): Promise<ShareList> {
+	if (!/^[0-9A-Za-z]{10}$/.test(id)) throw new ShareListError(404, "This list doesn't exist.")
+	await run(
+		"UPDATE doc.user_list SET deleted_at = NULL, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at >= ?",
+		[new Date(), id, userId, new Date(Date.now() - UNDO_DELETE_MS)],
+	)
+	await refreshLists()
+	const list = await getList(id)
+	if (!list || list.userId !== userId) throw new ShareListError(404, "This list can't be restored anymore.")
+	return list
+}
+
 // --- Handles and profiles ---
 
 const HOLD_MS = HANDLE_HOLD_DAYS * 24 * 60 * 60 * 1000

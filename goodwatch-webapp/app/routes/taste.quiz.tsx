@@ -25,6 +25,7 @@ import type { ScoringMedia } from "~/ui/scoring/types"
 import { getUserFromRequest } from "~/utils/auth"
 import { getLocaleFromRequest } from "~/utils/locale"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { GuestDraftCard } from "~/ui/share-lists/MyListsCard"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -95,6 +96,11 @@ export default function TasteQuizRoute() {
 
 	return (
 		<div className="relative">
+			{!isLoggedIn && (
+				<div className="px-4">
+					<GuestDraftCard />
+				</div>
+			)}
 			<TasteQuiz
 				availableTitles={smartTitles}
 				onSignUp={handleSignUp}

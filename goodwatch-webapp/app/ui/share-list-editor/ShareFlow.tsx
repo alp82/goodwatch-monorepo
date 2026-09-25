@@ -135,13 +135,13 @@ export function useShareFlow() {
 				onClaimed={(handle) => publish(step.draft, handle)}
 			/>
 		) : step.kind === "working" ? (
-			<Shell label="Sharing" onClose={() => {}}>
+			<DialogShell label="Sharing" onClose={() => {}}>
 				<p className="text-center text-neutral-300" aria-live="polite">
 					Saving your list…
 				</p>
-			</Shell>
+			</DialogShell>
 		) : step.kind === "error" ? (
-			<Shell label="Sharing failed" onClose={close}>
+			<DialogShell label="Sharing failed" onClose={close}>
 				<p className="text-red-300" role="alert">
 					{step.message}
 				</p>
@@ -152,13 +152,14 @@ export function useShareFlow() {
 				>
 					OK
 				</button>
-			</Shell>
+			</DialogShell>
 		) : null
 
 	return { share, dialogs }
 }
 
-function Shell({
+/** A bottom sheet on phones, a centered dialog on larger screens. Sits above the mobile bottom nav. */
+export function DialogShell({
 	label,
 	onClose,
 	children,
@@ -189,7 +190,7 @@ function Shell({
 function AccountDialog({ onClose }: { onClose: () => void }) {
 	const returnTo = encodeURIComponent(RESUME_SHARE_PATH)
 	return (
-		<Shell label="Create an account to share" onClose={onClose}>
+		<DialogShell label="Create an account to share" onClose={onClose}>
 			<h2 className="text-2xl font-black">Share your list</h2>
 			<p className="text-neutral-300">
 				Sharing needs a free account. Your list is saved in this browser, and
@@ -210,7 +211,7 @@ function AccountDialog({ onClose }: { onClose: () => void }) {
 					Sign in
 				</Link>
 			</p>
-		</Shell>
+		</DialogShell>
 	)
 }
 
@@ -243,7 +244,7 @@ function HandleDialog({
 	if (claim.isError) [message, tone] = [claim.error.message, "error"]
 
 	return (
-		<Shell label="Choose a handle" onClose={onClose}>
+		<DialogShell label="Choose a handle" onClose={onClose}>
 			<form
 				className="flex flex-col gap-4"
 				onSubmit={(e) => {
@@ -307,7 +308,7 @@ function HandleDialog({
 					{claim.isPending ? "Saving…" : "Share"}
 				</button>
 			</form>
-		</Shell>
+		</DialogShell>
 	)
 }
 
@@ -338,7 +339,7 @@ export function SharedNotice() {
 	if (!manual) return null
 	const close = () => setManual(null)
 	return (
-		<Shell label="Your list is live" onClose={close}>
+		<DialogShell label="Your list is live" onClose={close}>
 			<h2 className="text-2xl font-black">Your list is live</h2>
 			<p className="text-neutral-300">
 				Copy the link and share it anywhere. The card is its preview image.
@@ -362,6 +363,6 @@ export function SharedNotice() {
 			>
 				{copied ? "Link copied ✓" : "Copy link"}
 			</button>
-		</Shell>
+		</DialogShell>
 	)
 }

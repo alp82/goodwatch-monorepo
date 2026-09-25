@@ -16,6 +16,7 @@ import {
 import {
 	Cog6ToothIcon,
 	EyeIcon,
+	QueueListIcon,
 	UserCircleIcon,
 } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
@@ -24,6 +25,7 @@ import logo from "~/img/goodwatch-logo-white.svg"
 import Search from "~/ui/Search"
 import { SignInButton } from "~/ui/auth/SignInButton"
 import { SignOutLink } from "~/ui/auth/SignOutLink"
+import { myListsPath } from "~/ui/share-card/links"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useUser } from "~/utils/auth"
 
@@ -294,6 +296,24 @@ export default function Header() {
 																<span className="font-extrabold">
 																	Already Watched
 																</span>
+															</span>
+														</Link>
+													)}
+												</MenuItem>
+												<MenuItem>
+													{({ focus }) => (
+														<Link
+															to={myListsPath}
+															className={`flex gap-2 items-center px-4 py-2 text-base font-medium ${
+																focus
+																	? "bg-gray-700 text-white"
+																	: "text-sky-400"
+															}`}
+														>
+															<QueueListIcon className="w-5 h-5" />
+															<span>
+																My{" "}
+																<span className="font-extrabold">Lists</span>
 															</span>
 														</Link>
 													)}
