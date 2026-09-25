@@ -169,12 +169,15 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 		const seasons = (media as unknown as { seasons?: { season_number: number; episode_count: number }[] }).seasons ?? []
 		const real = seasons.filter((x) => x.season_number > 0)
 		const most = Math.max(1, ...real.map((x) => x.episode_count))
+		// Long-running shows get thin bars and a label on every fifth season, so the chart
+		// stays inside a phone's width.
+		const many = real.length > 12
 		return real.length ? (
-			<div className="mt-4 flex h-16 items-end gap-1.5" role="img" aria-label={real.map((x) => `Season ${x.season_number}: ${x.episode_count} episodes`).join(", ")}>
-				{real.map((x) => (
-					<span key={x.season_number} className="flex flex-1 flex-col items-center gap-1">
+			<div className={`mt-4 flex h-16 items-end ${many ? "gap-px" : "gap-1.5"}`} role="img" aria-label={real.map((x) => `Season ${x.season_number}: ${x.episode_count} episodes`).join(", ")}>
+				{real.map((x, i) => (
+					<span key={x.season_number} className="flex min-w-0 flex-1 flex-col items-center gap-1">
 						<span className="w-full rounded-sm bg-sky-400/70" style={{ height: `${(x.episode_count / most) * 44}px` }} />
-						<span className="text-[10px] text-gray-400">S{x.season_number}</span>
+						<span className="whitespace-nowrap text-[10px] text-gray-400">{!many || i === 0 || x.season_number % 5 === 0 ? `S${x.season_number}` : "\u00a0"}</span>
 					</span>
 				))}
 			</div>
