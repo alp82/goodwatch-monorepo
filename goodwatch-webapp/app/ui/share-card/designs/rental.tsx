@@ -1,6 +1,6 @@
 // "Rental card": a video-store checkout card half out of its pocket, which takes the theme color.
 // Typed titles on ruled lines, rank as the line number, due-date stamps in the theme's ink,
-// the #1 poster paper-clipped to the corner, and a handwritten member signature.
+// the #1 poster paper-clipped to the corner, and the owner's @handle handwritten at the bottom.
 import { alpha, Brand, col, fit, flex, Img, kind, pad, svgUri } from "../kit"
 import { type CardProps, type CardDesign, hash, type CardTitle, THEMES } from "../model"
 

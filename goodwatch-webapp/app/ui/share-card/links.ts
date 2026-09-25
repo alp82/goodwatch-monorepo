@@ -1,6 +1,6 @@
 // Paths of share list pages and their card images. A list lives under its owner's handle, but pages look it up by id
-// alone and redirect when the handle in the URL is outdated. The image path carries the content hash instead of the
-// handle, so a changed list gets a new image URL (link previews refresh) and a handle rename doesn't.
+// alone and redirect when the handle in the URL is wrong or differently cased. The image path carries the content hash
+// instead of the handle, so a changed list gets a new image URL and link previews refresh.
 /** Redirects to the signed-in person's profile, or to the new-list editor without one. */
 export const myListsPath = "/lists/mine"
 export const newListPath = (remixOf?: string) =>
