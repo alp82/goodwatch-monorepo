@@ -26,7 +26,9 @@ from f.sync.models.qdrant_models import QdrantMediaPoint
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
 # Tunables
-BATCH_SIZE = 2000  # ids per loop
+# ids per loop. A batch holds the full TMDB details documents; 2000 popular titles peaked near
+# the 4 GB worker limit.
+BATCH_SIZE = 500
 UPSERT_BATCH_SIZE = 1000  # points per Qdrant write request
 HOURS_TO_FETCH = 24 * 2  # time window for "recent" updates
 
@@ -149,10 +151,19 @@ def _fetch_tmdb_ids_keyset(
     return ids, next_last
 
 
+def _with_fingerprint(dna_collection):
+    """Keep the ids whose DNA has a fingerprint vector, the only titles the copy writes."""
+    def keep(ids: List[int]) -> List[int]:
+        return sorted(doc["tmdb_id"] for doc in dna_collection.find(
+            {"tmdb_id": {"$in": ids}, "vector_fingerprint": {"$exists": True}}, {"_id": 0, "tmdb_id": 1}))
+    return keep
+
+
 def _driver_batches(drivers: list, base_selector: dict, *, use_compound_hint: bool):
-    """Batches of tmdb ids from each driver collection in turn. An id comes only once."""
+    """Batches of tmdb ids from each (collection, keep) driver in turn. keep, when set, filters
+    each batch. An id comes only once."""
     seen: set = set()
-    for collection in drivers:
+    for collection, keep in drivers:
         last_tmdb_id: Optional[int] = None
         while True:
             ids, last_tmdb_id = _fetch_tmdb_ids_keyset(
@@ -166,6 +177,8 @@ def _driver_batches(drivers: list, base_selector: dict, *, use_compound_hint: bo
             if not ids:
                 break
             ids = [tmdb_id for tmdb_id in ids if tmdb_id not in seen]
+            if keep and ids:
+                ids = keep(ids)
             seen.update(ids)
             if ids:
                 yield ids
@@ -459,8 +472,9 @@ def copy_to_qdrant(
     sel = dict(query_selector or {})
 
     # Drivers: details (typically largest / frequently updated), and in the recent window also
-    # the IMDb ratings, which the daily dataset ingest changes without touching the details.
-    drivers = [c_details, c_imdb] if recent_only else [c_details]
+    # the IMDb ratings of titles with a fingerprint, which the daily dataset ingest changes
+    # without touching the details.
+    drivers = [(c_details, None), (c_imdb, _with_fingerprint(c_dna))] if recent_only else [(c_details, None)]
     # fingerprint_v1_raw may not exist in the collection yet; check once per media type.
     write_raw_fingerprint = FINGERPRINT_RAW_VECTOR in _collection_vector_names(qc.client)
 

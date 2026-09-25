@@ -23,9 +23,21 @@ class DriverBatchesTest(unittest.TestCase):
         selector = {"updated_at": {"$gte": now - timedelta(hours=vector_data.HOURS_TO_FETCH)}}
 
         batches = list(vector_data._driver_batches(
-            [db.tmdb_movie_details, db.imdb_movie_rating], selector, use_compound_hint=True))
+            [(db.tmdb_movie_details, None), (db.imdb_movie_rating, None)], selector, use_compound_hint=True))
 
         self.assertEqual(batches, [[1, 3], [2]])
+
+    def test_the_imdb_driver_keeps_only_titles_with_a_fingerprint(self):
+        db = mongomock.MongoClient().goodwatch
+        now = datetime.utcnow()
+        db.imdb_movie_rating.insert_many([{"tmdb_id": tmdb_id, "updated_at": now} for tmdb_id in (5, 6, 7)])
+        db.dna_movie.insert_many([{"tmdb_id": 5, "vector_fingerprint": [0.1]}, {"tmdb_id": 6}])
+        selector = {"updated_at": {"$gte": now - timedelta(hours=vector_data.HOURS_TO_FETCH)}}
+
+        batches = list(vector_data._driver_batches(
+            [(db.imdb_movie_rating, vector_data._with_fingerprint(db.dna_movie))], selector, use_compound_hint=True))
+
+        self.assertEqual(batches, [[5]])
 
 
 if __name__ == "__main__":
