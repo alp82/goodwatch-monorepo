@@ -82,6 +82,9 @@ export const hash = (s: string) => {
 	return h >>> 0
 }
 
+/** How a list is signed: its signature, or the owner's @handle when it has none. */
+export const listByline = (signature: string, handle: string) => signature || `@${handle}`
+
 export const titleKey = (type: MediaType, tmdbId: number) => `${type}:${tmdbId}`
 
 // The date a card prints, like "Sep 25, 2026".

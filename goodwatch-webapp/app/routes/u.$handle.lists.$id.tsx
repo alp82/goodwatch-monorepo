@@ -1,7 +1,7 @@
 // Public share list page: /u/:handle/lists/:id. The card, large, and the five titles with where they stream in the
 // viewer's country. Lists are looked up by id; an outdated handle redirects to the canonical URL, and deleted lists
-// (or lists of deleted accounts) answer 404. Unlisted lists open by link. The page is noindex, and its og:image is
-// the versioned card image, so a pasted link previews the current card.
+// (or lists of deleted accounts) answer 404. Unlisted lists open by link. The page is noindex. Its og:image is the
+// versioned 1200x630 link preview, not the card, because link previews crop or shrink portrait images.
 import { CheckIcon } from "@heroicons/react/20/solid"
 import {
 	PencilSquareIcon,
@@ -16,6 +16,7 @@ import {
 } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import { resolveCountry } from "~/server/country.server"
+import { previewHash } from "~/server/share-card/images.server"
 import {
 	type ListOffer,
 	type TitleAvailability,
@@ -24,17 +25,18 @@ import {
 import { getList, getProfileByUserId } from "~/server/share-lists/store.server"
 import { resolveCardTitles } from "~/server/share-lists/titles.server"
 import { getUserSettings } from "~/server/user-settings.server"
+import { LIST_PREVIEW_SIZE } from "~/ui/og-image/ListPreviewCard"
 import { CardFonts, ScaledCard } from "~/ui/share-card/ScaledCard"
 import { designByKey } from "~/ui/share-card/designs"
 import {
 	newListPath,
 	profilePath,
 	publicOrigin,
-	shareCardImagePath,
 	shareListEditPath,
 	shareListPath,
+	shareListPreviewPath,
 } from "~/ui/share-card/links"
-import { type CardTitle, THEMES, cardDate } from "~/ui/share-card/model"
+import { type CardTitle, THEMES, cardDate, listByline } from "~/ui/share-card/model"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { titleToDashed } from "~/utils/helpers"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
@@ -83,7 +85,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 	const design = designByKey(list.design)
 	const origin = publicOrigin()
-	const signature = list.signature || `@${owner.handle}`
+	const signature = listByline(list.signature, owner.handle)
 	return json(
 		{
 			list: {
@@ -103,9 +105,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			isOwner: viewerId === list.userId,
 			share: {
 				url: `${origin}${shareListPath(owner.handle, list.id)}`,
-				image: `${origin}${shareCardImagePath(list)}`,
-				width: design.w,
-				height: design.h,
+				image: `${origin}${shareListPreviewPath(list.id, previewHash(list, signature))}`,
+				width: LIST_PREVIEW_SIZE.width,
+				height: LIST_PREVIEW_SIZE.height,
 			},
 		},
 		// Lists are live: after an edit, the page (and its og:image URL) must change right away, so no shared caching.
