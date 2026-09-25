@@ -1,0 +1,11 @@
+summary: IMDb dataset diff
+description: 'The DuckDB diff behind f/imdb_datasets/ingest: which title,
+  episode and season values a run writes, marks missing or clears. Imported, not
+  run.'
+lock: '!inline f/imdb_datasets/diff.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []
