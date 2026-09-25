@@ -271,6 +271,27 @@ class Season(BaseModel):
     vote_average: Optional[float] = None
 
 
+class ImdbEpisode(BaseModel):
+    show_id: int
+    imdb_episode_id: str
+    imdb_show_id: str
+    season_number: Optional[int] = None  # NULL for specials
+    episode_number: Optional[int] = None
+    name: Optional[str] = None
+    imdb_user_score_original: Optional[float] = None
+    imdb_user_score_rating_count: Optional[int] = None
+
+
+class ImdbSeason(BaseModel):
+    show_id: int
+    season_number: int
+    imdb_show_id: str
+    imdb_user_score_original: Optional[float] = None  # vote-weighted over rated episodes
+    imdb_user_score_rating_count: Optional[int] = None
+    imdb_rated_episode_count: Optional[int] = None
+    max_episode_number: Optional[int] = None
+
+
 # metadata
 
 

@@ -332,6 +332,39 @@ SCHEMAS = {
         "primary_key": ["tmdb_id"],
         "shards": 12,
     },
+    # IMDb episode ratings in IMDb's numbering (f/imdb_datasets/ingest), one row per TMDB show
+    # and IMDb episode. A special has a NULL season_number. One show's grid is one routed read.
+    "imdb_episode": {
+        "columns": {
+            "show_id": "INTEGER",
+            "imdb_episode_id": "TEXT",
+            "imdb_show_id": "TEXT",
+            "season_number": "INTEGER",
+            "episode_number": "INTEGER",
+            "name": "TEXT",
+            "imdb_user_score_original": "DOUBLE",
+            "imdb_user_score_rating_count": "INTEGER",
+        },
+        "primary_key": ["show_id", "imdb_episode_id"],
+        "clustered_by": "show_id",
+        "shards": 6,
+    },
+    # IMDb season scores in IMDb's numbering: the vote-weighted mean of the season's rated
+    # episodes, without specials. Seasons without a rated episode have no row.
+    "imdb_season": {
+        "columns": {
+            "show_id": "INTEGER",
+            "season_number": "INTEGER",
+            "imdb_show_id": "TEXT",
+            "imdb_user_score_original": "DOUBLE",
+            "imdb_user_score_rating_count": "BIGINT",
+            "imdb_rated_episode_count": "INTEGER",
+            "max_episode_number": "INTEGER",
+        },
+        "primary_key": ["show_id", "season_number"],
+        "clustered_by": "show_id",
+        "shards": 6,
+    },
     # ============================
     # ===== Related Metadata =====
     # ============================

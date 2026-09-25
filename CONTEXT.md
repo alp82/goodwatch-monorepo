@@ -87,3 +87,13 @@ The unique public name that identifies a person's public profile and its route.
 
 **Public profile**:
 The page listing a person's public share lists under their handle.
+
+**Episode grid**:
+A show's episode ratings laid out with one row per season and one cell per episode, in IMDb's season and episode numbering.
+
+**Special**:
+An episode IMDb lists without a season number. It gets its own row in the episode grid and counts toward no season score.
+_Avoid_: Season 0
+
+**Season score**:
+The vote-weighted mean of the IMDb ratings of a season's rated episodes. A season without a rated episode has no season score.

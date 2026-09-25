@@ -33,6 +33,8 @@ locks:
   f/dna/test/generate: 72c413313a9907ad7554ba3b9632d4fc2cace02fc5c10719091ee4959f88affd
   f/genome/dna_v2/generate: 4f02e59dcef8c74bbdb45157206bd5522eb85139dd4fdceb275fbb5c0503d310
   f/genome/iterate: 43415039746e51ac0784840fd73060d341f001b43ae1704e30932e663818d6db
+  f/imdb_datasets/diff: e0719f163c72faf2738c5348146184925a39984ca00dfea1a3a1386cc67fc400
+  f/imdb_datasets/ingest: 772c79cdf02d3fa86166fcc3bb42992f91e371f54061a9c66ebfe2d787a5d9c1
   f/imdb_web/crawl_all_by_id.flow:
     __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
   f/imdb_web/imdb_crawl_ratings.flow:

@@ -174,7 +174,7 @@ class MonitorCheckTests(unittest.TestCase):
             notify=False,
             max_resolutions=0,
         )
-        self.assertEqual(len(result["pipelines"]), 8)
+        self.assertEqual(len(result["pipelines"]), len(DAILY_PATHS))
         self.assertEqual(result["daily_paths_missing"], [])
         self.assertTrue(
             all(

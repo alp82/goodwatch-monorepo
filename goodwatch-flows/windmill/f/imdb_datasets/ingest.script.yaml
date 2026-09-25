@@ -1,0 +1,39 @@
+summary: Ingest the daily IMDb datasets
+description: "Checks the ETags of the IMDb datasets title.ratings and
+  title.episode, and when they changed downloads them (plus title.basics
+  weekly), diffs them against the stored values in DuckDB and writes only the
+  changes: show and movie ratings to imdb_tv_rating and imdb_movie_rating,
+  episode ratings to imdb_tv_episode_rating, vote-weighted season scores to
+  imdb_tv_season_rating, and the changed shows' rows to the Crate tables
+  imdb_episode and imdb_season. Runs daily after IMDb's export."
+lock: '!inline f/imdb_datasets/ingest.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order:
+    - force
+    - dry_run
+    - refresh_names
+    - full_crate_sync
+  properties:
+    dry_run:
+      type: boolean
+      description: Diff and report the counts, but write nothing.
+      default: false
+    force:
+      type: boolean
+      description: Run even when nothing changed, and past the shrink and change-share
+        checks.
+      default: false
+    full_crate_sync:
+      type: boolean
+      description: Rewrite the Crate rows of every show with IMDb episodes.
+      default: false
+    refresh_names:
+      type: boolean
+      description: Download title.basics for episode titles even if the weekly refresh
+        is not due.
+      default: false
+  required: []
+timeout: 3600
