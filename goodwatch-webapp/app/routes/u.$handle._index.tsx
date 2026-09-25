@@ -30,12 +30,15 @@ import {
 import { getUserIdFromRequest } from "~/utils/auth"
 import { pluralize } from "~/utils/helpers"
 
+// A list or profile can come back (Undo, a restored account), so "not found" must never be cached.
+const notFound = () => new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } })
+
 export { pageHeaders as headers } from "~/utils/headers"
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const requested = params.handle ?? ""
 	const found = await findProfileByHandle(requested)
-	if (!found) throw new Response("Not found", { status: 404 })
+	if (!found) throw notFound()
 	// Temporary: the old handle stops redirecting when its hold ends.
 	if ("redirectTo" in found) return redirect(profilePath(found.redirectTo), 302)
 	const { profile } = found

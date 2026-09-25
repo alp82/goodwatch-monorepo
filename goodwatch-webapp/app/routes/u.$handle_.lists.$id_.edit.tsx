@@ -24,13 +24,16 @@ import { SharedNotice } from "~/ui/share-list-editor/ShareFlow"
 import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
 import { getUserIdFromRequest } from "~/utils/auth"
 
+// A list or profile can come back (Undo, a restored account), so "not found" must never be cached.
+const notFound = () => new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } })
+
 export { pageHeaders as headers } from "~/utils/headers"
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const list = await getList(params.id ?? "")
-	if (!list) throw new Response("Not found", { status: 404 })
+	if (!list) throw notFound()
 	const owner = await getProfileByUserId(list.userId)
-	if (!owner) throw new Response("Not found", { status: 404 })
+	if (!owner) throw notFound()
 
 	const userId = await getUserIdFromRequest({ request })
 	if (userId !== list.userId)

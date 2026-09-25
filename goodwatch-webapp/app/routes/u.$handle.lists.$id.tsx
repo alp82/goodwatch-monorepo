@@ -39,6 +39,9 @@ import { getUserIdFromRequest } from "~/utils/auth"
 import { titleToDashed } from "~/utils/helpers"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 
+// A list or profile can come back (Undo, a restored account), so "not found" must never be cached.
+const notFound = () => new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } })
+
 export { pageHeaders as headers } from "~/utils/headers"
 
 // Offers shown per title before the rest collapse into "+N".
@@ -46,9 +49,9 @@ const OFFERS_SHOWN = 4
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const list = await getList(params.id ?? "")
-	if (!list) throw new Response("Not found", { status: 404 })
+	if (!list) throw notFound()
 	const owner = await getProfileByUserId(list.userId)
-	if (!owner) throw new Response("Not found", { status: 404 })
+	if (!owner) throw notFound()
 	if (params.handle !== owner.handle)
 		return redirect(shareListPath(owner.handle, list.id), 301)
 
