@@ -141,7 +141,7 @@ def copy_media(
 
         for dna_data in dna_data_batch:
             tmdb_id = dna_data["tmdb_id"]
-            tmdb_details = tmdb_details_by_id[tmdb_id]
+            tmdb_details = tmdb_details_by_id.get(tmdb_id)
 
             if not tmdb_details or tmdb_id in flagged_ids:
                 continue
@@ -222,6 +222,64 @@ def copy_media(
     return entity_counts
 
 
+# An analysis reaches Crate only through the recent copy above, which reads the last
+# HOURS_TO_FETCH hours. An analysis that changed while the copy didn't run (analyses from
+# before the copy existed, outages) never got there. The catch-up finds and copies them.
+PUBLISHABLE_DNA = {"dna": {"$ne": None}, "vector_fingerprint": {"$ne": None}, "updated_at": {"$ne": None}}
+
+
+def dna_missing_from_crate(connector: CrateConnector, mongo_dna, table: str) -> list[int]:
+    """tmdb ids whose Crate row lacks the analysis Mongo has, or holds an older one.
+
+    Only titles with a Crate row count: a title without one gets its analysis from the
+    first catch-up after the details copy creates the row.
+    """
+    missing = []
+
+    def check(batch: list[dict]) -> None:
+        rows = connector.select(
+            f"SELECT tmdb_id, dna_updated_at FROM {table} WHERE tmdb_id = ANY(?)",
+            ([doc["tmdb_id"] for doc in batch],),
+        )
+        stored = {row["tmdb_id"]: row["dna_updated_at"] for row in rows}
+        for doc in batch:
+            if doc["tmdb_id"] not in stored:
+                continue
+            copied = stored[doc["tmdb_id"]]
+            # Crate keeps milliseconds; allow a second of rounding.
+            if copied is None or copied < to_timestamp(doc["updated_at"]) * 1000 - 1000:
+                missing.append(doc["tmdb_id"])
+
+    batch = []
+    for doc in mongo_dna.find(PUBLISHABLE_DNA, {"_id": 0, "tmdb_id": 1, "updated_at": 1}).sort("tmdb_id", 1):
+        batch.append(doc)
+        if len(batch) == BATCH_SIZE:
+            check(batch)
+            batch = []
+    if batch:
+        check(batch)
+    return missing
+
+
+def catch_up(connector: CrateConnector, media_type: str) -> dict:
+    """Copy every analysis that is missing from Crate or older there, whatever its age."""
+    mongo_db = get_db()
+    is_movie = media_type == "movie"
+    tmdb_ids = dna_missing_from_crate(
+        connector, mongo_db.dna_movie if is_movie else mongo_db.dna_tv, "movie" if is_movie else "show",
+    )
+    print(f"{media_type} analyses missing from Crate: {len(tmdb_ids)}")
+    result = {"missing": len(tmdb_ids)}
+    if tmdb_ids:
+        result |= copy_media(
+            connector=connector,
+            query_selector=PUBLISHABLE_DNA | {"tmdb_id": {"$in": tmdb_ids}},
+            media_type=media_type,
+            recent_only=False,
+        )
+    return result
+
+
 def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies = False):
     init_mongodb()
     connector = CrateConnector()
@@ -256,6 +314,13 @@ def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies = Fals
         query_selector=show_query_selector,
         media_type="show"
     )
+
+    # A run for explicit ids leaves the rest alone.
+    if not movie_ids and not show_ids:
+        results["catch_up"] = {
+            "movies": None if skip_movies else catch_up(connector, "movie"),
+            "shows": catch_up(connector, "show"),
+        }
 
     connector.disconnect()
     close_mongodb()
