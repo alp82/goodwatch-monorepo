@@ -536,6 +536,7 @@ export async function rankSearch(
 			COLLECTION,
 			[dense, chipQuery].map((q) => ({
 				...denseQuery(q),
+				params: { exact: true },
 				filter: { must: [{ has_id: union }] },
 				limit: union.length,
 				with_payload: false,
@@ -588,9 +589,14 @@ export async function rankSearch(
 		must_not: F.must_not,
 	}
 	const round2: QdrantQuery[] = []
+	// Every pool title needs its score, so the dense queries search exactly: without `exact`, a query for a known set
+	// of ids can return only part of them (in "zombie movie without gore", 789 of 1,110).
 	const score = (q: Record<string, unknown>) => {
 		round2.push({
 			...q,
+			...("lookup_from" in q || Array.isArray(q.query)
+				? { params: { exact: true } }
+				: {}),
 			filter: poolFilter,
 			limit: poolIds.length,
 			with_payload: false,
