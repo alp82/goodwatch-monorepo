@@ -228,11 +228,11 @@ function Overview({ t, onSelect }: { t: F.TitleInput; onSelect: (p: Pillar) => v
 					<div
 						key={p}
 						onClick={() => onSelect(p)}
-						className="group grid cursor-pointer gap-4 rounded-xl px-2 py-6 md:-mx-2 md:grid-cols-[12rem_1fr_17rem_2rem] md:items-center md:gap-10 hover:bg-white/3"
+						className="group grid cursor-pointer gap-4 rounded-xl px-2 py-6 lg:-mx-2 lg:grid-cols-[12rem_1fr_17rem_2rem] lg:items-center lg:gap-10 hover:bg-white/3"
 					>
-						<div className="flex items-center justify-between md:block">
+						<div className="flex items-center justify-between lg:block">
 							<PillarName p={p} />
-							<div className="md:mt-2">
+							<div className="lg:mt-2">
 								<Meter tier={tiers[p]} p={p} />
 							</div>
 						</div>
@@ -246,9 +246,9 @@ function Overview({ t, onSelect }: { t: F.TitleInput; onSelect: (p: Pillar) => v
 								e.stopPropagation()
 								onSelect(p)
 							}}
-							className="flex h-8 items-center justify-center gap-1 justify-self-start rounded-full text-sm text-gray-300 hover:bg-white/10 group-hover:text-white cursor-pointer focus-visible:outline-2 focus-visible:outline-amber-300 md:w-8"
+							className="flex h-8 items-center justify-center gap-1 justify-self-start rounded-full text-sm text-gray-300 hover:bg-white/10 group-hover:text-white cursor-pointer focus-visible:outline-2 focus-visible:outline-amber-300 lg:w-8"
 						>
-							<span className="md:hidden">See all traits</span>
+							<span className="lg:hidden">See all traits</span>
 							<ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
 						</button>
 					</div>
