@@ -1,5 +1,5 @@
 from f.db.cratedb import CrateConnector
-from f.sync.models.crate_schemas import SCHEMAS
+from f.sync.models.crate_schemas import BLOB_TABLES, SCHEMAS
 
 
 def init_database():
@@ -33,6 +33,18 @@ def init_database():
                         print(f"Adding missing column '{col_name}' to table '{table_name}'.")
                         alter_sql = f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}"
                         db.run(alter_sql)
+
+        for table_name, spec in BLOB_TABLES.items():
+            print(f"\n--- Processing blob table: {table_name} ---")
+            db.cur.execute(
+                "SELECT 1 FROM information_schema.tables WHERE table_schema = 'blob' AND table_name = ?",
+                (table_name,),
+            )
+            if db.cur.rowcount > 0:
+                print(f"Blob table '{table_name}' already exists.")
+            else:
+                print(f"Blob table '{table_name}' does not exist. Creating...")
+                db.run(f"CREATE BLOB TABLE {table_name} CLUSTERED INTO {spec['shards']} SHARDS")
 
     except Exception as e:
         print(f"\nAn error occurred during database initialization: {e}")

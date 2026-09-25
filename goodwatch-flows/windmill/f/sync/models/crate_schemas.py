@@ -625,6 +625,30 @@ SCHEMAS = {
         "primary_key": ["name"],
         "shards": 1,
     },
+    # ============================
+    # ===== Search indexes (f/search/build_indexes) =====
+    # ============================
+    # One row per build with its file list (manifest, JSON), plus the row build_id = 'current'
+    # that holds the manifest of the build the webapp loads. The files are in the blob table
+    # search_index_files.
+    "search_index_builds": {
+        "columns": {
+            "build_id": "TEXT",
+            "status": "TEXT",
+            "manifest": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "started_at": "TIMESTAMP",
+            "finished_at": "TIMESTAMP",
+        },
+        "primary_key": ["build_id"],
+        "shards": 1,
+    },
+}
+
+# Blob tables: files stored under the SHA-1 of their content, read over HTTP at
+# /_blobs/<table>/<sha1>.
+BLOB_TABLES = {
+    # The search index files, one gzipped JSON file per index (f/search/build_indexes).
+    "search_index_files": {"shards": 3},
 }
 
 

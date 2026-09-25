@@ -1,0 +1,22 @@
+summary: Build the search indexes
+description: Builds the index files the webapp's search ranking loads (term
+  statistics, names and credits, peers, negation labels, alternate cuts, words,
+  collocations, intent examples, title table, mix vectors) into the Crate blob
+  table search_index_files, rewrites the Qdrant collection
+  search_reference_profiles, moves the current row of search_index_builds and
+  keeps the current and the previous build. Runs nightly and by hand after a
+  full f/search/embed_titles run.
+lock: '!inline f/search/build_indexes.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order:
+    - dry_run
+  properties:
+    dry_run:
+      type: boolean
+      description: Build everything and report sizes and counts, but write nothing.
+      default: false
+  required: []
+tag: highperf
