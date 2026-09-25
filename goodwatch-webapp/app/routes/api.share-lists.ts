@@ -61,6 +61,10 @@ export async function action({ request }: ActionFunctionArgs) {
 	} catch {
 		return json({ error: "Invalid request." }, { status: 400 })
 	}
+	const hasList = (b: Body) => (b.intent === "create" || b.intent === "update" ? typeof b.list === "object" && b.list !== null : true)
+	if (typeof body !== "object" || body === null || typeof body.intent !== "string" || !hasList(body)) {
+		return json({ error: "Invalid request." }, { status: 400 })
+	}
 
 	try {
 		switch (body.intent) {

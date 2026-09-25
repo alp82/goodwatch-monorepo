@@ -26,8 +26,10 @@ export async function action({ request }: ActionFunctionArgs) {
 	} catch {
 		return json({ error: "Invalid request." }, { status: 400 })
 	}
+	if (typeof body !== "object" || body === null) return json({ error: "Invalid request." }, { status: 400 })
+	const displayName = typeof body.displayName === "string" || body.displayName === null ? body.displayName : undefined
 	try {
-		return json({ profile: await claimHandle(userId, String(body.handle ?? ""), body.displayName) })
+		return json({ profile: await claimHandle(userId, String(body.handle ?? ""), displayName) })
 	} catch (error) {
 		if (error instanceof ShareListError) return json({ error: error.message }, { status: error.status })
 		console.error("[share-lists] handle claim failed", error)
