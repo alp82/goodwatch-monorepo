@@ -1,0 +1,1201 @@
+{
+ "date": "2026-09-25",
+ "issue": 145,
+ "prototype": "simp_combo.FINAL[\"combo-safe-v3\"] on the arena snapshot of 2026-09-23 06:48 UTC",
+ "port": "goodwatch-webapp search-ranking after 1b4ac94c (round 2 exact)",
+ "production_build": "20260925T082040Z",
+ "runs": {
+  "proto": "the prototype (export_prototype.py)",
+  "proto-norm": "the prototype with L2-normalized stored title embeddings (patch_normalize.py)",
+  "proto-norm-pp-exact": "proto-norm scoring the port pool of port-exact (patch_port_pool.py)",
+  "port-exact": "the port on the exact mirror: arena data, float32, no HNSW, eligible titles only (mirror.py --layout=exact)",
+  "port-mprod": "the port on the production-layout mirror: arena data, float16, HNSW m16, 6 shards, all titles (mirror.py --layout=prod)",
+  "port-prod": "the port on production Qdrant and build 20260925T082040Z, 10:24 UTC",
+  "port-prod-before": "the same before the round-2 exact fix, 10:05 UTC",
+  "proto-prodvotes": "proto-norm with the build title table votes and the live eligibility snapshot of 10:24 UTC (patch_production_votes.py)",
+  "port-prod-excl": "experiment: port-prod with the 1,435 live-eligible titles missing from the build excluded in Qdrant"
+ },
+ "before_fix": {
+  "proto vs port-exact": {
+   "mean_shared_top10": 9.905,
+   "same_set": 158,
+   "same_order": 137,
+   "min_shared": 3
+  },
+  "dev6-02 dense pool queries returned": "789 of 1110"
+ },
+ "stages": {
+  "proto vs port-prod-before": {
+   "mean_shared_top10": 9.244,
+   "same_set": 77,
+   "same_order": 42,
+   "same_top50": 1,
+   "min_shared": 6,
+   "first_differing_stage": {
+    "pool": 115,
+    "terms": 2,
+    "seeds": 7,
+    "own": 2
+   },
+   "by_route": {
+    "general": "22/101",
+    "non_english": "1/10",
+    "reference": "19/57"
+   }
+  },
+  "proto vs port-prod": {
+   "mean_shared_top10": 9.274,
+   "same_set": 77,
+   "same_order": 42,
+   "same_top50": 1,
+   "min_shared": 6,
+   "first_differing_stage": {
+    "pool": 115,
+    "terms": 2,
+    "seeds": 7,
+    "own": 2
+   },
+   "by_route": {
+    "general": "22/101",
+    "non_english": "1/10",
+    "reference": "19/57"
+   }
+  },
+  "proto vs port-exact": {
+   "mean_shared_top10": 9.94,
+   "same_set": 158,
+   "same_order": 136,
+   "same_top50": 18,
+   "min_shared": 9,
+   "first_differing_stage": {
+    "pool": 31,
+    "discovery10": 1
+   },
+   "by_route": {
+    "general": "81/101",
+    "non_english": "2/10",
+    "reference": "53/57"
+   }
+  },
+  "proto vs port-mprod": {
+   "mean_shared_top10": 9.946,
+   "same_set": 159,
+   "same_order": 136,
+   "same_top50": 23,
+   "min_shared": 9,
+   "first_differing_stage": {
+    "pool": 32
+   },
+   "by_route": {
+    "general": "77/101",
+    "non_english": "5/10",
+    "reference": "54/57"
+   }
+  },
+  "proto-norm vs port-exact": {
+   "mean_shared_top10": 9.97,
+   "same_set": 163,
+   "same_order": 158,
+   "same_top50": 116,
+   "min_shared": 9,
+   "first_differing_stage": {
+    "pool": 10
+   },
+   "by_route": {
+    "general": "94/101",
+    "non_english": "9/10",
+    "reference": "55/57"
+   }
+  },
+  "proto-norm-pp-exact vs port-exact": {
+   "mean_shared_top10": 9.988,
+   "same_set": 166,
+   "same_order": 165,
+   "same_top50": 159,
+   "min_shared": 9,
+   "first_differing_stage": {
+    "discovery10": 3
+   },
+   "by_route": {
+    "general": "99/101",
+    "non_english": "10/10",
+    "reference": "56/57"
+   }
+  },
+  "port-exact vs port-mprod": {
+   "mean_shared_top10": 9.97,
+   "same_set": 163,
+   "same_order": 141,
+   "same_top50": 34,
+   "min_shared": 9,
+   "first_differing_stage": {
+    "pool": 27
+   },
+   "by_route": {
+    "general": "81/101",
+    "non_english": "6/10",
+    "reference": "54/57"
+   }
+  },
+  "port-mprod vs port-prod": {
+   "mean_shared_top10": 9.292,
+   "same_set": 80,
+   "same_order": 43,
+   "same_top50": 1,
+   "min_shared": 6,
+   "first_differing_stage": {
+    "pool": 113,
+    "seeds": 8,
+    "own": 2,
+    "terms": 2
+   },
+   "by_route": {
+    "general": "24/101",
+    "non_english": "1/10",
+    "reference": "18/57"
+   }
+  },
+  "proto-prodvotes vs port-prod": {
+   "mean_shared_top10": 9.821,
+   "same_set": 140,
+   "same_order": 112,
+   "same_top50": 15,
+   "min_shared": 8,
+   "first_differing_stage": {
+    "pool": 48,
+    "seeds": 6,
+    "terms": 1,
+    "own": 1
+   },
+   "by_route": {
+    "general": "69/101",
+    "non_english": "3/10",
+    "reference": "40/57"
+   }
+  },
+  "proto-prodvotes vs port-prod-excl": {
+   "mean_shared_top10": 9.827,
+   "same_set": 141,
+   "same_order": 115,
+   "same_top50": 21,
+   "min_shared": 8,
+   "first_differing_stage": {
+    "pool": 45,
+    "seeds": 6,
+    "terms": 1,
+    "own": 1
+   },
+   "by_route": {
+    "general": "73/101",
+    "non_english": "3/10",
+    "reference": "39/57"
+   }
+  }
+ },
+ "attribution": {
+  "same data": {
+   "normalization": 22,
+   "pool": 7,
+   "near tie": 3
+  },
+  "production": {
+   "votes": 72,
+   "other drift": 23,
+   "approximation and drift": 14,
+   "new titles": 6,
+   "approximation": 3,
+   "credits": 8
+  },
+  "queries": 168
+ },
+ "attribution_same_data": {
+  "lab-00": "normalization",
+  "core-18": "normalization",
+  "core-19": "normalization",
+  "core-26": "normalization",
+  "core-27": "normalization",
+  "core-28": "normalization",
+  "core-29": "normalization",
+  "core-30": "pool",
+  "new-02": "pool",
+  "new-03": "normalization",
+  "new-10": "normalization",
+  "new-11": "pool",
+  "new-18": "normalization",
+  "new-21": "normalization",
+  "ho2-05": "normalization",
+  "ho2-08": "pool",
+  "ho2-10": "normalization",
+  "ho2-22": "normalization",
+  "ppl-09": "normalization",
+  "sty-10": "near tie",
+  "h5-01": "normalization",
+  "h5-06": "normalization",
+  "h5-09": "normalization",
+  "h5-10": "normalization",
+  "h5-11": "near tie",
+  "h5-13": "pool",
+  "h5-20": "normalization",
+  "h5-26": "normalization",
+  "h5-27": "normalization",
+  "dev6-02": "pool",
+  "dev6-03": "near tie",
+  "dev6-04": "pool"
+ },
+ "attribution_production": {
+  "lab-00": "votes",
+  "lab-02": "votes",
+  "lab-04": "other drift",
+  "lab-05": "votes",
+  "lab-06": "votes",
+  "lab-07": "approximation and drift",
+  "lab-08": "votes",
+  "lab-09": "votes",
+  "lab-11": "votes",
+  "lab-12": "votes",
+  "lab-13": "votes",
+  "core-02": "votes",
+  "core-04": "approximation and drift",
+  "core-05": "votes",
+  "core-09": "other drift",
+  "core-10": "votes",
+  "core-11": "votes",
+  "core-12": "approximation and drift",
+  "core-13": "votes",
+  "core-14": "other drift",
+  "core-15": "votes",
+  "core-16": "votes",
+  "core-17": "votes",
+  "core-18": "votes",
+  "core-19": "other drift",
+  "core-20": "votes",
+  "core-22": "other drift",
+  "core-23": "new titles",
+  "core-24": "votes",
+  "core-25": "votes",
+  "core-26": "approximation and drift",
+  "core-27": "votes",
+  "core-28": "approximation and drift",
+  "core-29": "approximation and drift",
+  "core-30": "other drift",
+  "new-01": "other drift",
+  "new-02": "approximation and drift",
+  "new-03": "approximation and drift",
+  "new-06": "votes",
+  "new-07": "votes",
+  "new-08": "votes",
+  "new-10": "approximation and drift",
+  "new-11": "approximation and drift",
+  "new-12": "votes",
+  "new-14": "votes",
+  "new-16": "votes",
+  "new-17": "other drift",
+  "new-18": "votes",
+  "new-20": "new titles",
+  "new-21": "votes",
+  "new-22": "other drift",
+  "new-23": "other drift",
+  "new-25": "votes",
+  "ho2-01": "votes",
+  "ho2-02": "votes",
+  "ho2-03": "votes",
+  "ho2-04": "votes",
+  "ho2-05": "votes",
+  "ho2-06": "votes",
+  "ho2-07": "votes",
+  "ho2-08": "votes",
+  "ho2-09": "other drift",
+  "ho2-10": "votes",
+  "ho2-11": "new titles",
+  "ho2-12": "votes",
+  "ho2-13": "votes",
+  "ho2-15": "other drift",
+  "ho2-16": "votes",
+  "ho2-17": "votes",
+  "ho2-18": "new titles",
+  "ho2-19": "other drift",
+  "ho2-22": "approximation",
+  "ppl-02": "votes",
+  "ppl-06": "other drift",
+  "ppl-07": "votes",
+  "ppl-09": "credits",
+  "ppl-11": "votes",
+  "ppl-15": "other drift",
+  "ppl-16": "votes",
+  "ppl-17": "credits",
+  "ppl-18": "credits",
+  "ppl-19": "credits",
+  "ppl-23": "votes",
+  "ppl-24": "votes",
+  "sty-01": "other drift",
+  "sty-04": "credits",
+  "sty-05": "votes",
+  "sty-06": "other drift",
+  "sty-07": "votes",
+  "sty-08": "other drift",
+  "sty-09": "votes",
+  "sty-10": "credits",
+  "h5-01": "approximation and drift",
+  "h5-03": "votes",
+  "h5-04": "votes",
+  "h5-05": "votes",
+  "h5-06": "votes",
+  "h5-07": "votes",
+  "h5-09": "votes",
+  "h5-10": "approximation",
+  "h5-11": "votes",
+  "h5-12": "votes",
+  "h5-13": "other drift",
+  "h5-14": "votes",
+  "h5-15": "votes",
+  "h5-17": "votes",
+  "h5-18": "approximation",
+  "h5-19": "votes",
+  "h5-20": "other drift",
+  "h5-22": "votes",
+  "h5-24": "votes",
+  "h5-25": "votes",
+  "h5-27": "approximation and drift",
+  "h5-28": "other drift",
+  "h5-29": "new titles",
+  "h5-30": "new titles",
+  "dev5-01": "votes",
+  "dev5-02": "votes",
+  "dev5-03": "other drift",
+  "dev5-04": "other drift",
+  "dev5-05": "credits",
+  "dev5-06": "credits",
+  "dev6-02": "approximation and drift",
+  "dev6-03": "votes",
+  "dev6-04": "votes",
+  "dev6-05": "approximation and drift"
+ },
+ "production_drift_titles": {
+  "tally": {
+   "changed titles": 11,
+   "pool drift": 23,
+   "ties only": 3
+  },
+  "queries": {
+   "lab-04": {
+    "attribution": "other drift",
+    "class": "changed titles",
+    "titles": {
+     "1000000027205": [
+      "text_en_v1 re-embedded (cosine 0.901)",
+      "text_multi_v1 re-embedded (cosine 0.965)",
+      "votes 27225987 -> 28229034"
+     ],
+     "1000000051497": []
+    },
+    "pool": {
+     "other unit bm25 'heist'": 1,
+     "other unit bm25 'thriller'": 5,
+     "other unit 'thriller'": 1,
+     "other unit 'heist'": 1,
+     "not in snapshot None": 4
+    }
+   },
+   "lab-07": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "other fingerprint": 8,
+     "other bm25": 1,
+     "not in snapshot None": 1,
+     "other dense": 1
+    }
+   },
+   "core-04": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "not in snapshot None": 1
+    }
+   },
+   "core-09": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "other fingerprint": 9,
+     "other bm25": 3,
+     "other dense": 2,
+     "not in snapshot None": 1
+    }
+   },
+   "core-12": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {
+     "1000000000012": [],
+     "1000000015653": []
+    },
+    "pool": {
+     "other bm25": 2,
+     "not in snapshot None": 3,
+     "other dense": 1
+    }
+   },
+   "core-14": {
+    "attribution": "other drift",
+    "class": "changed titles",
+    "titles": {
+     "1000000045004": [
+      "new point"
+     ],
+     "1000000740985": []
+    },
+    "pool": {
+     "other fingerprint": 18,
+     "not in snapshot None": 1
+    }
+   },
+   "core-19": {
+    "attribution": "other drift",
+    "class": "changed titles",
+    "titles": {
+     "1000000577091": [],
+     "2000000001668": [
+      "text_en_v1 re-embedded (cosine 0.876)",
+      "text_multi_v1 re-embedded (cosine 0.951)",
+      "votes 12010888 -> 12011761"
+     ]
+    },
+    "pool": {
+     "not in snapshot None": 1
+    }
+   },
+   "core-22": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "other fingerprint": 11,
+     "other bm25": 2,
+     "other dense": 2,
+     "not in snapshot None": 1
+    }
+   },
+   "core-26": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "other union multilingual": 2,
+     "other union english": 1,
+     "not in snapshot None": 1,
+     "other facet 'etwas spannendes'": 2
+    }
+   },
+   "core-28": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "other union multilingual": 12,
+     "other facet 'gens riches'": 1,
+     "other union english": 2,
+     "other fingerprint": 1,
+     "not in snapshot None": 4
+    }
+   },
+   "core-29": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "other fingerprint": 1,
+     "other union multilingual": 7,
+     "other union english": 2,
+     "not in snapshot None": 1
+    }
+   },
+   "core-30": {
+    "attribution": "other drift",
+    "class": "changed titles",
+    "titles": {
+     "1000000027205": [
+      "text_en_v1 re-embedded (cosine 0.901)",
+      "text_multi_v1 re-embedded (cosine 0.965)",
+      "votes 27225987 -> 28229034"
+     ],
+     "1000000575265": []
+    },
+    "pool": {}
+   },
+   "new-01": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "other unit 'train'": 3,
+     "other unit 'heist'": 2,
+     "not in snapshot None": 2
+    }
+   },
+   "new-02": {
+    "attribution": "approximation and drift",
+    "class": "ties only",
+    "titles": {},
+    "pool": {}
+   },
+   "new-03": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "not in snapshot None": 4
+    }
+   },
+   "new-10": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "other fingerprint": 10,
+     "other bm25": 3,
+     "other facet 'crime movies'": 1,
+     "not in snapshot None": 1
+    }
+   },
+   "new-11": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "other bm25": 4,
+     "not in snapshot None": 2,
+     "other dense": 1
+    }
+   },
+   "new-17": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "not in snapshot None": 1
+    }
+   },
+   "new-22": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {
+     "1000000016374": [],
+     "1000000031217": []
+    },
+    "pool": {
+     "other union multilingual": 13,
+     "other union english": 5,
+     "not in snapshot None": 1
+    }
+   },
+   "new-23": {
+    "attribution": "other drift",
+    "class": "changed titles",
+    "titles": {
+     "1000000000274": [],
+     "1000000027205": [
+      "text_en_v1 re-embedded (cosine 0.901)",
+      "text_multi_v1 re-embedded (cosine 0.965)",
+      "votes 27225987 -> 28229034"
+     ]
+    },
+    "pool": {
+     "other unit bm25 'thriller'": 5,
+     "other fingerprint": 5,
+     "other unit bm25 'psychological'": 2,
+     "other bm25": 1,
+     "other unit 'thriller'": 1,
+     "other facet 'big twist'": 1,
+     "other facet 'psycological thriler'": 1,
+     "not in snapshot None": 1
+    }
+   },
+   "ho2-09": {
+    "attribution": "other drift",
+    "class": "changed titles",
+    "titles": {
+     "1000000001895": [],
+     "1000000013475": [
+      "text_en_v1 re-embedded (cosine 0.994)",
+      "text_multi_v1 re-embedded (cosine 0.997)",
+      "votes 777544 -> 781494"
+     ]
+    },
+    "pool": {
+     "other bm25": 4
+    }
+   },
+   "ho2-15": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {
+     "1000000021712": [],
+     "1000000103328": []
+    },
+    "pool": {
+     "fixed peers": 3,
+     "not in snapshot None": 1
+    }
+   },
+   "ho2-19": {
+    "attribution": "other drift",
+    "class": "changed titles",
+    "titles": {
+     "2000000016382": [],
+     "2000000037606": [
+      "text_en_v1 re-embedded (cosine 0.994)",
+      "votes 52789 -> 55044"
+     ]
+    },
+    "pool": {
+     "other union english": 5,
+     "other union multilingual": 9,
+     "other facet 'vida oficina'": 2,
+     "not in snapshot None": 4
+    }
+   },
+   "ppl-06": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "fixed peers": 8,
+     "not in snapshot None": 3
+    }
+   },
+   "ppl-15": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {
+     "1000000037585": [],
+     "1000000315465": []
+    },
+    "pool": {
+     "fixed peers": 3
+    }
+   },
+   "sty-01": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "not in snapshot None": 2
+    }
+   },
+   "sty-06": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "fixed peers": 8
+    }
+   },
+   "sty-08": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "fixed peers": 5,
+     "not in snapshot None": 3
+    }
+   },
+   "h5-01": {
+    "attribution": "approximation and drift",
+    "class": "ties only",
+    "titles": {},
+    "pool": {}
+   },
+   "h5-13": {
+    "attribution": "other drift",
+    "class": "pool drift",
+    "titles": {
+     "1000000015961": [],
+     "2000000147050": []
+    },
+    "pool": {
+     "other fingerprint": 6,
+     "other unit bm25 'cover'": 3,
+     "other unit 'cover'": 2,
+     "other unit 'uncovering'": 2
+    }
+   },
+   "h5-20": {
+    "attribution": "other drift",
+    "class": "changed titles",
+    "titles": {
+     "1000000019995": [],
+     "1000000027205": [
+      "text_en_v1 re-embedded (cosine 0.901)",
+      "text_multi_v1 re-embedded (cosine 0.965)",
+      "votes 27225987 -> 28229034"
+     ]
+    },
+    "pool": {}
+   },
+   "h5-27": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {
+     "1000000019913": [],
+     "1000000041630": [],
+     "1000000437667": [],
+     "1000000449563": []
+    },
+    "pool": {
+     "other union multilingual": 1
+    }
+   },
+   "h5-28": {
+    "attribution": "other drift",
+    "class": "changed titles",
+    "titles": {
+     "1000000255635": [],
+     "1000000474722": [
+      "fingerprint regenerated"
+     ]
+    },
+    "pool": {
+     "none None": 1,
+     "not in snapshot None": 4
+    }
+   },
+   "dev5-03": {
+    "attribution": "other drift",
+    "class": "changed titles",
+    "titles": {
+     "2000000045013": [],
+     "2000000079864": [
+      "text_en_v1 re-embedded (cosine 0.981)",
+      "text_multi_v1 re-embedded (cosine 0.992)",
+      "votes 4269 -> 41277"
+     ]
+    },
+    "pool": {
+     "fixed peers": 4
+    }
+   },
+   "dev5-04": {
+    "attribution": "other drift",
+    "class": "ties only",
+    "titles": {},
+    "pool": {}
+   },
+   "dev6-02": {
+    "attribution": "approximation and drift",
+    "class": "pool drift",
+    "titles": {},
+    "pool": {
+     "not in snapshot None": 2
+    }
+   },
+   "dev6-05": {
+    "attribution": "approximation and drift",
+    "class": "changed titles",
+    "titles": {
+     "1000000000550": [
+      "fingerprint regenerated"
+     ],
+     "2000000070523": []
+    },
+    "pool": {
+     "not in snapshot None": 4
+    }
+   }
+  }
+ },
+ "pool_difference_titles": {
+  "exact mirror": {
+   "tie": 4306,
+   "near": 204,
+   "mix": 71,
+   "other": 1
+  },
+  "production": {
+   "other": 932,
+   "tie": 6873,
+   "near": 680,
+   "not in snapshot": 199,
+   "mix": 353,
+   "fixed": 181,
+   "none": 2
+  },
+  "production, new titles excluded": {
+   "near": 229,
+   "tie": 5417,
+   "not in snapshot": 202,
+   "other": 388,
+   "mix": 343,
+   "fixed": 180,
+   "none": 2
+  }
+ },
+ "scores_with_new_grades": {
+  "proto": {
+   "dev": {
+    "ndcg10": 0.8224,
+    "cond": 0.8224,
+    "unjudged": 0,
+    "bad5": 17
+   },
+   "dev-sty": {
+    "ndcg10": 0.8095,
+    "cond": 0.8095,
+    "unjudged": 0,
+    "bad5": 3
+   },
+   "holdout": {
+    "ndcg10": 0.7768,
+    "cond": 0.7768,
+    "unjudged": 0,
+    "bad5": 9
+   },
+   "holdout2": {
+    "ndcg10": 0.7397,
+    "cond": 0.7397,
+    "unjudged": 0,
+    "bad5": 12
+   },
+   "holdout3": {
+    "ndcg10": 0.9107,
+    "cond": 0.9107,
+    "unjudged": 0,
+    "bad5": 1
+   },
+   "ho3-sty": {
+    "ndcg10": 0.8934,
+    "cond": 0.8934,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "holdout4": {
+    "ndcg10": 0.8715,
+    "cond": 0.8715,
+    "unjudged": 0,
+    "bad5": 1
+   },
+   "bad5_total_regular": 40,
+   "holdout5": {
+    "ndcg10": 0.7896,
+    "cond": 0.7896,
+    "unjudged": 0,
+    "bad5": 15
+   },
+   "ho5-sty": {
+    "ndcg10": 0.9126,
+    "cond": 0.9126,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "bad5_total_holdout5": 15
+  },
+  "proto-norm": {
+   "dev": {
+    "ndcg10": 0.8217,
+    "cond": 0.8217,
+    "unjudged": 0,
+    "bad5": 17
+   },
+   "dev-sty": {
+    "ndcg10": 0.8095,
+    "cond": 0.8095,
+    "unjudged": 0,
+    "bad5": 3
+   },
+   "holdout": {
+    "ndcg10": 0.7764,
+    "cond": 0.7764,
+    "unjudged": 0,
+    "bad5": 9
+   },
+   "holdout2": {
+    "ndcg10": 0.7395,
+    "cond": 0.7395,
+    "unjudged": 0,
+    "bad5": 12
+   },
+   "holdout3": {
+    "ndcg10": 0.9107,
+    "cond": 0.9107,
+    "unjudged": 0,
+    "bad5": 1
+   },
+   "ho3-sty": {
+    "ndcg10": 0.8934,
+    "cond": 0.8934,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "holdout4": {
+    "ndcg10": 0.8715,
+    "cond": 0.8715,
+    "unjudged": 0,
+    "bad5": 1
+   },
+   "bad5_total_regular": 40,
+   "holdout5": {
+    "ndcg10": 0.7885,
+    "cond": 0.7885,
+    "unjudged": 0,
+    "bad5": 15
+   },
+   "ho5-sty": {
+    "ndcg10": 0.9126,
+    "cond": 0.9126,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "bad5_total_holdout5": 15
+  },
+  "port-exact": {
+   "dev": {
+    "ndcg10": 0.82,
+    "cond": 0.82,
+    "unjudged": 0,
+    "bad5": 17
+   },
+   "dev-sty": {
+    "ndcg10": 0.8095,
+    "cond": 0.8095,
+    "unjudged": 0,
+    "bad5": 3
+   },
+   "holdout": {
+    "ndcg10": 0.7764,
+    "cond": 0.7764,
+    "unjudged": 0,
+    "bad5": 9
+   },
+   "holdout2": {
+    "ndcg10": 0.7396,
+    "cond": 0.7396,
+    "unjudged": 0,
+    "bad5": 12
+   },
+   "holdout3": {
+    "ndcg10": 0.9107,
+    "cond": 0.9107,
+    "unjudged": 0,
+    "bad5": 1
+   },
+   "ho3-sty": {
+    "ndcg10": 0.8934,
+    "cond": 0.8934,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "holdout4": {
+    "ndcg10": 0.8715,
+    "cond": 0.8715,
+    "unjudged": 0,
+    "bad5": 1
+   },
+   "bad5_total_regular": 40,
+   "holdout5": {
+    "ndcg10": 0.7866,
+    "cond": 0.7866,
+    "unjudged": 0,
+    "bad5": 15
+   },
+   "ho5-sty": {
+    "ndcg10": 0.9126,
+    "cond": 0.9126,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "bad5_total_holdout5": 15
+  },
+  "port-mprod": {
+   "dev": {
+    "ndcg10": 0.8208,
+    "cond": 0.8208,
+    "unjudged": 0,
+    "bad5": 17
+   },
+   "dev-sty": {
+    "ndcg10": 0.8095,
+    "cond": 0.8095,
+    "unjudged": 0,
+    "bad5": 3
+   },
+   "holdout": {
+    "ndcg10": 0.7779,
+    "cond": 0.7779,
+    "unjudged": 0,
+    "bad5": 9
+   },
+   "holdout2": {
+    "ndcg10": 0.7395,
+    "cond": 0.7395,
+    "unjudged": 0,
+    "bad5": 12
+   },
+   "holdout3": {
+    "ndcg10": 0.9107,
+    "cond": 0.9107,
+    "unjudged": 0,
+    "bad5": 1
+   },
+   "ho3-sty": {
+    "ndcg10": 0.8934,
+    "cond": 0.8934,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "holdout4": {
+    "ndcg10": 0.8715,
+    "cond": 0.8715,
+    "unjudged": 0,
+    "bad5": 1
+   },
+   "bad5_total_regular": 40,
+   "holdout5": {
+    "ndcg10": 0.7886,
+    "cond": 0.7886,
+    "unjudged": 0,
+    "bad5": 15
+   },
+   "ho5-sty": {
+    "ndcg10": 0.9126,
+    "cond": 0.9126,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "bad5_total_holdout5": 15
+  },
+  "proto-prodvotes": {
+   "dev": {
+    "ndcg10": 0.8162,
+    "cond": 0.8198,
+    "unjudged": 4,
+    "bad5": 18
+   },
+   "dev-sty": {
+    "ndcg10": 0.8127,
+    "cond": 0.8127,
+    "unjudged": 0,
+    "bad5": 3
+   },
+   "holdout": {
+    "ndcg10": 0.761,
+    "cond": 0.7629,
+    "unjudged": 1,
+    "bad5": 9
+   },
+   "holdout2": {
+    "ndcg10": 0.7225,
+    "cond": 0.7256,
+    "unjudged": 2,
+    "bad5": 13
+   },
+   "holdout3": {
+    "ndcg10": 0.9098,
+    "cond": 0.9098,
+    "unjudged": 0,
+    "bad5": 1
+   },
+   "ho3-sty": {
+    "ndcg10": 0.8906,
+    "cond": 0.8906,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "holdout4": {
+    "ndcg10": 0.8682,
+    "cond": 0.8682,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "bad5_total_regular": 41,
+   "holdout5": {
+    "ndcg10": 0.7867,
+    "cond": 0.7871,
+    "unjudged": 1,
+    "bad5": 15
+   },
+   "ho5-sty": {
+    "ndcg10": 0.9126,
+    "cond": 0.9126,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "bad5_total_holdout5": 15
+  },
+  "port-prod": {
+   "dev": {
+    "ndcg10": 0.8172,
+    "cond": 0.8172,
+    "unjudged": 0,
+    "bad5": 18
+   },
+   "dev-sty": {
+    "ndcg10": 0.7995,
+    "cond": 0.7995,
+    "unjudged": 0,
+    "bad5": 3
+   },
+   "holdout": {
+    "ndcg10": 0.7636,
+    "cond": 0.7636,
+    "unjudged": 0,
+    "bad5": 9
+   },
+   "holdout2": {
+    "ndcg10": 0.7257,
+    "cond": 0.7257,
+    "unjudged": 0,
+    "bad5": 12
+   },
+   "holdout3": {
+    "ndcg10": 0.9092,
+    "cond": 0.9092,
+    "unjudged": 0,
+    "bad5": 1
+   },
+   "ho3-sty": {
+    "ndcg10": 0.8906,
+    "cond": 0.8906,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "holdout4": {
+    "ndcg10": 0.8716,
+    "cond": 0.8716,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "bad5_total_regular": 40,
+   "holdout5": {
+    "ndcg10": 0.7881,
+    "cond": 0.7881,
+    "unjudged": 0,
+    "bad5": 15
+   },
+   "ho5-sty": {
+    "ndcg10": 0.9126,
+    "cond": 0.9126,
+    "unjudged": 0,
+    "bad5": 0
+   },
+   "bad5_total_holdout5": 15
+  }
+ },
+ "grading": {
+  "tag": "p145",
+  "pairs": 61,
+  "queries": 44,
+  "qwk": 0.878,
+  "exact_agreement": 0.721,
+  "pairs_2_apart": 0,
+  "grades_json": "5009 -> 5070"
+ },
+ "production_state": {
+  "eligible_in_build": 50371,
+  "live_eligible_10_20_utc": 41507,
+  "live_eligible_not_in_build": 1435,
+  "points": 194765
+ }
+}
