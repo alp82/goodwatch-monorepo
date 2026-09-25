@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useId, useState } from "react"
 import { useClaimHandle } from "~/routes/api.handle"
-import { shareViewerQueryKey } from "~/routes/api.share-lists"
+import { type ShareViewer, shareViewerQueryKey } from "~/routes/api.share-lists"
 import { useHandleAvailability } from "~/ui/share-lists/useHandleAvailability"
 import { HANDLE_MAX, HANDLE_MIN } from "~/utils/handles"
 
@@ -49,7 +49,13 @@ export function HandlePicker({
 					{ handle: status.handle },
 					{
 						onSuccess: (profile) => {
-							queryClient.invalidateQueries({ queryKey: shareViewerQueryKey })
+							// Use the claim's answer instead of refetching, so nothing reads a stale "no handle" and
+							// sends the person back to this step.
+							queryClient.setQueryData<ShareViewer>(shareViewerQueryKey, {
+								signedIn: true,
+								handle: profile.handle,
+								suggestedHandle: null,
+							})
 							onClaimed(profile.handle)
 						},
 					},

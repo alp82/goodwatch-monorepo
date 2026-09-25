@@ -7,7 +7,7 @@ import {
 import type { SetUserSettingsOptions } from "~/routes/api.user-settings.set";
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch";
 import { cached, resetCache } from "~/utils/cache";
-import { query, upsert } from "~/utils/crate";
+import { execute, query, upsert } from "~/utils/crate";
 
 interface UserSettingRow {
 	key: keyof UserSettingsMap;
@@ -113,6 +113,9 @@ export async function setUserSettings({
 		conflictColumns: ["user_id", "key"],
 		ignoreUpdate: options.ignoreUpdate,
 	});
+	// Make the write visible right away. Without it, the refetch after saving (for example the next onboarding step)
+	// can read the old values for up to a second.
+	await execute("REFRESH TABLE user_setting");
 
 	await resetUserSettingsCache({ user_id });
 	return result;
