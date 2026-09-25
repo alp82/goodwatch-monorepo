@@ -21,20 +21,20 @@ are local CPU models.
    to the multilingual embedding (`multilingual-e5-small`). English uses `bge-base-en-v1.5` over each title's text
    without its title. When Jev's reading has English chips, a non-English query's dense signal is the mean of
    z(`multilingual-e5-small` cosine) and z(`bge-base` cosine of the chips), z-scored over every filtered title
-   (`mix_z`, line 214). Its candidates are the union of each cosine's top 2,000, scored with both (line 970), the
+   (`mix_z`, line 214). Its candidates are the union of each cosine's top 2,000, scored with both (line 986), the
    same union and rescore the port runs in Qdrant.
-2. **Reference** (`resolve_reference`, line 481). This step finds a person, a studio, or a "like X" title, or none.
-   All three become one `Reference` (line 468) with these fields:
+2. **Reference** (`resolve_reference`, line 497). This step finds a person, a studio, or a "like X" title, or none.
+   All three become one `Reference` (line 484) with these fields:
    - weighted titles;
    - seed titles, from which the profile is built;
    - an intent: `like`, `filmography`, `style` or `both`;
    - a residual query: the words that remain, such as "funny" in "funny brad pitt shows".
-3. **Scoring** (`rank_query`, line 933). One function handles every query. The intent changes only numbers, never
+3. **Scoring** (`rank_query`, line 949). One function handles every query. The intent changes only numbers, never
    code.
-4. **Title blend** (`blend`, line 1299). This step ports production's title-lookup blend, so exact title searches
+4. **Title blend** (`blend`, line 1315). This step ports production's title-lookup blend, so exact title searches
    still win.
-5. **Clean-up.** This step keeps one alternate cut per film (`fold_cuts`, line 1235). For person, studio and "like X"
-   queries, it then bounds the entity's own titles in the top 10 (`bound_own`, line 1176).
+5. **Clean-up.** This step keeps one alternate cut per film (`fold_cuts`, line 1251). For person, studio and "like X"
+   queries, it then bounds the entity's own titles in the top 10 (`bound_own`, line 1192).
 
 ## The score
 
@@ -44,48 +44,48 @@ the whole-query lists, 300 for the partial ones.
 | signal | weight | code |
 |---|---|---|
 | Jev fingerprint: production's weighted sum of Jev weights × 74 scores | `b` 0.48 | `weighted_sum`, line 221 |
-| Dense cosine of the query (or residual) to each title | `a` 0.4 | line 960 |
-| BM25 over tags, keywords, tropes and essence text | 0.12 | `sparse_top`, line 977 |
-| Facets: dense match to each of Jev's searched phrases, averaged | 0.1 | `facets`, line 418 |
-| Facet coverage: the weakest facet unit counts, so "western with samurai" needs both | 0.3 | `facet_units`, line 441 |
-| Negation, embedding: similarity to the negated phrase | −0.1 | line 1030 |
-| Negation, labels: the title's keywords or tags name the negated thing | −2.0 × share | `label_negation`, line 369 |
-| Votes and GoodWatch score prior | 0.1 each | line 1036 |
+| Dense cosine of the query (or residual) to each title | `a` 0.4 | line 976 |
+| BM25 over tags, keywords, tropes and essence text | 0.12 | `sparse_top`, line 993 |
+| Facets: dense match to each of Jev's searched phrases, averaged | 0.1 | `facets`, line 434 |
+| Facet coverage: the weakest facet unit counts, so "western with samurai" needs both | 0.3 | `facet_units`, line 457 |
+| Negation, embedding: similarity to the negated phrase | −0.1 | line 1046 |
+| Negation, labels: the title's keywords or tags name the negated thing | −2.0 × share | `label_negation`, line 384 |
+| Votes and GoodWatch score prior | 0.1 each | line 1052 |
 
 With a reference, the ranker adds:
 
 | signal | weight | code |
 |---|---|---|
-| Fingerprint centroid of the seed titles | 0.8 | `reference_profile`, line 1063 |
+| Fingerprint centroid of the seed titles | 0.8 | `reference_profile`, line 1079 |
 | Embedding centroid of the seed titles | 0.6 | same |
-| Term profile: BM25 of the top 40 terms the seeds share, weighted by IDF; ties sorted by term | 0.3 | `term_scores`, line 1084 |
-| Peers: top titles of the 15 people or studios with the nearest fingerprint centroid | 0.3 | `peer_scores`, line 1153 |
-| Name mentions in other titles' texts | 0.1 | `mention_scores`, line 1117 |
-| Own-title boost × credit weight: 4.0 for filmography, 1.0 otherwise | | line 1049 |
-| Popularity damping for others' titles (style and both) | −0.2 | line 1051 |
+| Term profile: BM25 of the top 40 terms the seeds share, weighted by IDF; ties sorted by term | 0.3 | `term_scores`, line 1100 |
+| Peers: top titles of the 15 people or studios with the nearest fingerprint centroid | 0.3 | `peer_scores`, line 1169 |
+| Name mentions in other titles' texts | 0.1 | `mention_scores`, line 1133 |
+| Own-title boost × credit weight: 4.0 for filmography, 1.0 otherwise | | line 1065 |
+| Popularity damping for others' titles (style and both) | −0.2 | line 1067 |
 
 For `like` and `filmography` queries, the profile counts at 0.15 strength. For `style` and `both`, it counts at full
 strength.
 
 ## Mechanisms that replaced r6's special cases
 
-- **People and studios** (`name_index` line 713, `detect` line 794). One name index covers full names, last names
+- **People and studios** (`name_index` line 729, `detect` line 810). One name index covers full names, last names
   and studio brands. A key resolves when two tests pass:
   - its entity's main-credit votes reach 3 times the next candidate's (`name_dominance`);
   - they also reach 150k × (1 + how often the key occurs as a plain word) (`name_votes`).
 
   This replaces r6's common-word guards, surname rules and word lists. People who share most of their credits
   merge into a team (the Coen brothers). A one-edit typo matches full names only ("sofia copola").
-- **Intent** (`nearest_intent`, line 867). The ranker replaces the names with "X", encodes the query with
-  `multilingual-e5-small` and picks the nearest of 39 example phrases (`INTENT_EXAMPLES`, line 606). This matches the
+- **Intent** (`nearest_intent`, line 883). The ranker replaces the names with "X", encodes the query with
+  `multilingual-e5-small` and picks the nearest of 39 example phrases (`INTENT_EXAMPLES`, line 622). This matches the
   gold label on 37 of 42 queries; r6's rules match 35. The encode runs in a worker thread that overlaps the other
   encodes (`intent_pool` and `settle`, lines 844 and 852).
-- **Credits** (`credits`, line 644). There are two classes: main (weight 1) and minor (0.5).
+- **Credits** (`credits`, line 660). There are two classes: main (weight 1) and minor (0.5).
   - Main credits: the director, a Writing-department writer, the creator, and the top 4 billed actors.
   - Show creators come from `data/credits-v2.jsonl.gz`. When TMDB has no Creator credit, the fallback is the
     show's writers, never pure executive producers. This fixes "funny brad pitt shows".
     - Built by: `scripts/pull_credits.py --writer-creators`.
-- **Own titles in the top 10** (`bound_own`, line 1176). The bounds by intent:
+- **Own titles in the top 10** (`bound_own`, line 1192). The bounds by intent:
 
   | intent | own titles in the top 10 |
   |---|---|
@@ -97,7 +97,7 @@ strength.
 - **Negation** (`split_negation`, line 348). One marker-word list (English, German, French and Spanish) cuts the
   negated clauses out of the query. "less X" is handled the same way. The label penalty (`label_negation`) acts like
   a soft filter when the catalog labels the negated thing.
-- **Era** (`era_filter`, line 397). One regex finds a decade or a year and filters to it. "early" and "late" with a
+- **Era** (`era_filter`, line 413). One regex finds a decade or a year and filters to it. "early" and "late" with a
   person add a small year term (`career_w`).
 - **Spell correction** (`correct_word`, line 290). An unknown word becomes the most frequent catalog word one edit
   away.

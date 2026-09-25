@@ -366,9 +366,25 @@ def split_negation(text):
     return " ".join(pos) or text, [" ".join(c) for c in negs if c]
 
 
+def singular(stem):
+    """One form for a stem's singular and plural (#168). The shared stemmer leaves some pairs apart ("zombies" ->
+    zomby, "zombie" -> zombie; "superheroes" -> superheroe; "wolves" -> wolve); the negation label match compares
+    these forms on both sides. The stemmer itself stays: it defines the stored BM25F term weights."""
+    if len(stem) < 4:
+        return stem
+    if stem.endswith("ie"):
+        return stem[:-2] + "y"
+    if stem.endswith("lve"):
+        return stem[:-2] + "f"
+    if stem.endswith(("oe", "use", "che", "ze")):
+        return stem[:-1]
+    return stem
+
+
 def label_negation(phrase):
     """Per catalog row, the share (capped at 1) of 2 keyword / essence-tag labels that hold every content stem of a
-    negated phrase ("aliens" -> "alien", "alien invasion"; "about world war ii" -> "world war ii drama")."""
+    negated phrase ("aliens" -> "alien", "alien invasion"; "about world war ii" -> "world war ii drama"). Stems are
+    compared in their singular() form ("zombies" hits "zombie")."""
     def build():
         cat = C.load()
         labels, by_stem = defaultdict(set), defaultdict(set)   # label -> eligible rows; stem -> labels holding it
@@ -377,10 +393,10 @@ def label_negation(phrase):
                 labels[x.lower()].add(r)
         for k in labels:
             for t in S.tokens(k):
-                by_stem[t].add(k)
+                by_stem[singular(t)].add(k)
         return labels, by_stem
     labels, by_stem = cached("labels", build)
-    want = set(S.tokens(phrase))
+    want = {singular(t) for t in S.tokens(phrase)}
     hit = set.intersection(*[by_stem.get(t, set()) for t in want]) if want else set()
     n = np.zeros(len(C.load().ids))
     for k in hit:
