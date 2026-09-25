@@ -15,6 +15,7 @@ import {
 	Tag,
 	col,
 	fitFontSize,
+	headlineText,
 } from "~/ui/og-image/parts"
 
 export interface OgTitleContent {
@@ -209,7 +210,7 @@ function BandCard({ content }: { content: OgPageContent }) {
 						color: INK,
 					}}
 				>
-					{content.title.toUpperCase()}
+					{headlineText(content.title)}
 				</div>
 				<Subtext text={content.subtitle} />
 			</div>

@@ -16,7 +16,18 @@ import {
 	navLabel,
 } from "~/ui/explore/config"
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
-import type { OgContent, OgPageContent } from "~/ui/og-image/OgCard"
+import type { OgContent } from "~/ui/og-image/OgCard"
+import {
+	DEPARTMENT_LABELS,
+	HOME_COPY,
+	MEDIA_LABELS,
+	STATIC_PAGE_COPY,
+	categoryIndexCopy,
+	collectionCopy,
+	personTag,
+	seasonsLabel,
+	typeIndexCopy,
+} from "~/ui/og-image/copy"
 import { canonicalTitleId } from "~/utils/title-identity"
 
 type Category = keyof typeof mainHierarchy
@@ -38,87 +49,6 @@ const clip = (text: string) =>
 	text.length <= TITLE_MAX_LENGTH
 		? text
 		: `${text.slice(0, TITLE_MAX_LENGTH - 1).trim()}…`
-
-type StaticPage = Pick<OgPageContent, "tag" | "title" | "subtitle">
-
-const HOME: StaticPage = {
-	tag: "GoodWatch",
-	title: "What should you watch tonight?",
-	subtitle:
-		"Every streaming service, every rating, one place. Find movies and shows by mood, vibe, and where they stream.",
-}
-
-const STATIC_PAGES: Record<string, StaticPage> = {
-	"/": HOME,
-	"/discover": {
-		tag: "Discover",
-		title: "Find your next favorite",
-		subtitle: "Filter by streaming service, score, mood, cast, and more.",
-	},
-	"/search": {
-		tag: "Search",
-		title: "Describe it. We'll find it.",
-		subtitle: "Search movies and shows by title, person, or feeling.",
-	},
-	"/how-it-works": {
-		tag: "How it works",
-		title: "Ratings, vibes, and fingerprints",
-		subtitle: "How GoodWatch scores and understands every title.",
-	},
-	"/about": {
-		tag: "About",
-		title: "Made by people who watch too much",
-		subtitle: "Why GoodWatch exists and who builds it.",
-	},
-	"/taste": {
-		tag: "Taste profile",
-		title: "Your taste",
-		subtitle:
-			"See what you really love in movies and shows, and get picks that fit.",
-	},
-	"/taste/quiz": {
-		tag: "Taste quiz",
-		title: "Rate 5 movies. Get great picks.",
-		subtitle: "Recommendations that fit your taste, in 30 seconds. No signup.",
-	},
-	"/wishlist": {
-		tag: "Wishlist",
-		title: "Your watch-next list",
-		subtitle: "Everything you want to watch, and where it streams.",
-	},
-	"/sign-in": {
-		tag: "Sign in",
-		title: "Welcome back",
-		subtitle: "Pick up where you left off.",
-	},
-	"/sign-up": {
-		tag: "Sign up",
-		title: "Save what you love",
-		subtitle: "Track, rate, and get picks tailored to your taste.",
-	},
-	"/privacy": {
-		tag: "Privacy",
-		title: "Privacy policy",
-		subtitle: "What we collect and why.",
-	},
-	"/disclaimer": {
-		tag: "Disclaimer",
-		title: "Disclaimer",
-		subtitle: "Data sources and attributions.",
-	},
-	"/settings": {
-		tag: "Settings",
-		title: "Your settings",
-		subtitle: "Country, streaming services, and account.",
-	},
-}
-
-const DEPARTMENT_LABELS: Record<string, string> = {
-	Acting: "Actor",
-	Directing: "Director",
-	Writing: "Writer",
-	Production: "Producer",
-}
 
 const positiveId = (segment: string | undefined) => {
 	const id = Number(segment?.split("-")[0])
@@ -155,7 +85,7 @@ export function canonicalOgPath(path: string): string | null {
 	if (first === "discover") return "/discover"
 
 	const clean = `/${segments.join("/")}`
-	return hasKey(STATIC_PAGES, clean) ? clean : "/"
+	return hasKey(STATIC_PAGE_COPY, clean) ? clean : "/"
 }
 
 // The same defaults the discover pages use for a visitor without settings. Unset filters are
@@ -249,12 +179,12 @@ async function titleContent(
 				? `${Math.floor(d.runtime / 60)}h ${d.runtime % 60}m`
 				: ""
 			: d.number_of_seasons
-				? `${d.number_of_seasons} season${d.number_of_seasons > 1 ? "s" : ""}`
+				? seasonsLabel(d.number_of_seasons)
 				: ""
 	const score = d.goodwatch_overall_score_normalized_percent
 	return {
 		kind: "title",
-		tag: [type === "movie" ? "Movie" : "TV Show", d.release_year, runtime]
+		tag: [MEDIA_LABELS[type], d.release_year, runtime]
 			.filter(Boolean)
 			.join(" · "),
 		title: clip(d.title),
@@ -272,7 +202,7 @@ async function personContent(id: number): Promise<OgContent | null> {
 		person.known_for_department
 	return {
 		kind: "person",
-		tag: `${department} · ${person.stats.titles} titles`,
+		tag: personTag(department, person.stats.titles),
 		name: clip(person.name),
 		photo: tmdbImage("h632", person.profile_path),
 	}
@@ -294,10 +224,7 @@ async function browseContent(path: string): Promise<OgContent | null> {
 		})
 		return {
 			kind: "page",
-			tag: typeLabel,
-			title: `The best ${typeLabel.toLowerCase()} to watch right now`,
-			subtitle:
-				"By genre, mood, or streaming service. Scored from IMDb, Rotten Tomatoes, and Metacritic.",
+			...typeIndexCopy(typeLabel),
 			backdrop: rotateByPath(backdrops, path)[0] ?? null,
 		}
 	}
@@ -319,8 +246,7 @@ async function browseContent(path: string): Promise<OgContent | null> {
 			null
 		return {
 			kind: "collection",
-			tag: `${main.label} · ${typeLabel}`,
-			title: `${stripEmoji(page.label)} ${typeLabel}`,
+			...collectionCopy(typeLabel, main.label, stripEmoji(page.label)),
 			subtitle: page.subtitle,
 			backdrop,
 			providerId:
@@ -344,8 +270,7 @@ async function browseContent(path: string): Promise<OgContent | null> {
 		null
 	return {
 		kind: "collection",
-		tag: `Browse ${typeLabel}`,
-		title: `${typeLabel} by ${main.label.toLowerCase()}`,
+		...categoryIndexCopy(typeLabel, main.label),
 		subtitle: main.subtitle,
 		backdrop,
 		providerId: null,
@@ -353,7 +278,7 @@ async function browseContent(path: string): Promise<OgContent | null> {
 }
 
 async function staticPageContent(path: string): Promise<OgContent> {
-	const page = STATIC_PAGES[path] ?? HOME
+	const page = STATIC_PAGE_COPY[path] ?? HOME_COPY
 	const backdrops = await discoverBackdrops({ type: "movie", minScore: "80" })
 	// Taste pages skip the rotation, so they lead with a different title than the other main pages.
 	const backdrop = path.startsWith("/taste")

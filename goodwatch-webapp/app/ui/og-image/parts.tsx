@@ -7,6 +7,7 @@ import disneyLogo from "~/img/disneyplus-logo.png?inline"
 import logoAmber from "~/img/goodwatch-logo-amber.svg?raw"
 import netflixLogo from "~/img/netflix-logo.svg?raw"
 import primeLogo from "~/img/primevideo-logo.svg?raw"
+import { BRAND_NAME, SUBTEXT_MAX_LENGTH } from "~/ui/og-image/copy"
 import {
 	goodwatchScoreDisplay,
 	goodwatchVibeIndex,
@@ -61,10 +62,38 @@ export const col = (s: CSSProperties = {}): CSSProperties => ({
 	...s,
 })
 
-// Font sizes by text length: the first entry whose max length fits wins.
-export type FontSizes = [maxLength: number, fontSize: number][]
-export const fitFontSize = (text: string, sizes: FontSizes) =>
-	sizes.find(([max]) => text.length <= max)?.[1] ?? sizes[sizes.length - 1][1]
+// How wide a character sets compared with an Anton letter. The fallback fonts for other
+// scripts run wider: CJK and Hangul are square, Arabic has no joined forms in satori.
+const characterWidth = (char: string) => {
+	if (
+		/[\u1100-\u11ff\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/.test(
+			char,
+		)
+	)
+		return 2.3
+	if (/[\u0600-\u06ff\u0590-\u05ff]/.test(char)) return 1.7
+	if (/[\u0400-\u04ff\u0370-\u03ff]/.test(char)) return 1.35
+	if (/[\u0e00-\u0e7f\u0900-\u0dff]/.test(char)) return 1.3
+	return 1
+}
+const textWidth = (text: string) =>
+	[...text].reduce((sum, char) => sum + characterWidth(char), 0)
+
+// Satori lays text out left to right. For Arabic and Hebrew titles, that puts the words in
+// reverse order, so they are flipped back here; the letters inside each word come out right.
+const RTL = /[\u0590-\u06ff]/
+export const headlineText = (text: string) => {
+	const upper = text.toUpperCase()
+	if (!RTL.test(upper)) return upper
+	return upper.split(/\s+/).reverse().join("\u00a0")
+}
+
+// Font sizes by text width in Anton letters: the first entry whose max width fits wins.
+export type FontSizes = [maxWidth: number, fontSize: number][]
+export const fitFontSize = (text: string, sizes: FontSizes) => {
+	const width = textWidth(text)
+	return sizes.find(([max]) => width <= max)?.[1] ?? sizes[sizes.length - 1][1]
+}
 
 export const Frame = ({
 	children,
@@ -88,7 +117,7 @@ export const Frame = ({
 
 export const Brand = ({
 	dark = false,
-	size = 40,
+	size = 56,
 }: { dark?: boolean; size?: number }) => (
 	<div style={row({ alignItems: "center", gap: size * 0.3 })}>
 		<img
@@ -106,7 +135,7 @@ export const Brand = ({
 				letterSpacing: -0.5,
 			}}
 		>
-			GoodWatch
+			{BRAND_NAME}
 		</div>
 	</div>
 )
@@ -164,13 +193,13 @@ export const Headline = ({
 			color: INK,
 		}}
 	>
-		{text.toUpperCase()}
+		{headlineText(text)}
 	</div>
 )
 
 // A subtext only shows when it is short enough to read at a glance.
 export const Subtext = ({ text }: { text: string | null }) =>
-	text && text.length <= 40 ? (
+	text && text.length <= SUBTEXT_MAX_LENGTH ? (
 		<div
 			style={{
 				display: "flex",
