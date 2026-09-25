@@ -60,5 +60,38 @@ class MetadataPublicationTests(unittest.TestCase):
                 self.assertEqual([release.certification for release in releases], ["", "", "", "PG"])
 
 
+    def test_show_seasons_publish_their_vote_average(self):
+        document = {
+            "tmdb_id": 22, "title": "Example Show",
+            "seasons": [
+                {"id": 101, "season_number": 1, "name": "Season 1", "vote_average": 7.9},
+                {"id": 102, "season_number": 2, "name": "Season 2", "vote_average": 0},
+                {"id": 103, "season_number": 3, "name": "Season 3"},
+            ],
+        }
+        db = MagicMock()
+        db.tmdb_tv_details.count_documents.return_value = 1
+        db.tmdb_tv_details.find.return_value.sort.return_value.skip.return_value.limit.side_effect = [[document], []]
+        db.tmdb_tv_providers.find.return_value = []
+        connector = MagicMock()
+        connector.select.return_value = []
+        seasons = []
+
+        def record_batch(*, table, records, conflict_columns, **kwargs):
+            if table == "season":
+                seasons.extend(record.model_dump() for record in records)
+            return {"records_received": len(records), "rows_upserted": len(records)}
+
+        connector.upsert_many.side_effect = record_batch
+        with patch.object(tmdb_details, "get_db", return_value=db):
+            tmdb_details.copy_media(connector, {"tmdb_id": 22}, "show", recent_only=False)
+        self.assertEqual(
+            {season["tmdb_id"]: season["vote_average"] for season in seasons},
+            {101: 7.9, 102: 0, 103: None},
+        )
+        for season in seasons:
+            self.assertEqual(set(season), set(SCHEMAS["season"]["columns"]))
+
+
 if __name__ == "__main__":
     unittest.main()

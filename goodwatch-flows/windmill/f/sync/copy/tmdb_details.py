@@ -226,7 +226,6 @@ def copy_media(
 
             # Create Media document
             media = MediaClass(
-                _key=media_id, 
                 tmdb_id=tmdb_id,
                 title=title,
                 original_title=original_title,
@@ -338,7 +337,7 @@ def copy_media(
                             episode_count=season.get("episode_count"),
                             overview=season.get("overview"),
                             poster_path=season.get("poster_path"),
-                            tmdb_vote_average=season.get("vote_average"),
+                            vote_average=season.get("vote_average"),
                         ))
             
             # Process images
