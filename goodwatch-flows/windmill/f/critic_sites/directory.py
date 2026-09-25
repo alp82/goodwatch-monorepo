@@ -110,7 +110,8 @@ def main(site: str = "rotten_tomatoes", top: int = TOP_SHOWS, dry_run: bool = Fa
         now = datetime.utcnow()
         client = polite_http.PoliteClient(db, site)
         urls = directory_urls(client, site)
-        report = match_directory(db, site, urls, now, top=top, dry_run=dry_run)
+        # Windmill may pass whole numbers as floats; pymongo's limit needs an int.
+        report = match_directory(db, site, urls, now, top=int(top), dry_run=dry_run)
         if not dry_run:
             crawl.ensure_indexes(db)
             report["scheduled"] = crawl.schedule_known_urls(db, site)

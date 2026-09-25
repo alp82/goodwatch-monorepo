@@ -677,7 +677,8 @@ def main(site: str = "rotten_tomatoes", max_minutes: float = 25, batch_size: int
         print(f"newly scheduled titles with a known URL: {scheduled}", flush=True)
         connector = CrateConnector()
         client = polite_http.PoliteClient(db, site)
-        report = run(db, client, site, max_minutes * 60, connector=connector, batch_size=batch_size,
+        # Windmill may pass whole numbers as floats; pymongo's limit needs an int.
+        report = run(db, client, site, float(max_minutes) * 60, connector=connector, batch_size=int(batch_size),
                      kinds=tuple(kinds or ("tv", "movie")))
         report["scheduled"] = scheduled
         report["seconds_per_request"] = round(report["seconds"] / report["requests"], 2) if report["requests"] else None
