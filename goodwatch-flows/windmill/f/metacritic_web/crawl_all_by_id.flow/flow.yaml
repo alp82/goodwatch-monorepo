@@ -28,18 +28,11 @@ value:
                   expr: flow_input.iter.value
               path: f/metacritic_web/metacritic_crawl_ratings/fetch
               tag_override: null
-            retry:
-              constant:
-                attempts: 0
-                seconds: 0
-              exponential:
-                attempts: 4
-                multiplier: 6
-                random_factor: 50
-                seconds: 2
+            # No retries: a block is recorded and reported, never retried through (#152).
+            # A show with many scored seasons takes one request every 2 s per season page.
             timeout:
               type: static
-              value: 30
+              value: 180
         iterator:
           type: javascript
           expr: results.a

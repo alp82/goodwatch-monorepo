@@ -471,6 +471,11 @@ class BaseTmdbDetails(Document):
     # Set when TMDB permanently removed the title; a missing field means not deleted.
     tmdb_deleted = BooleanField(default=False)
     tmdb_deleted_at = DateTimeField()
+    # IMDb id from Wikidata when TMDB has none; written only by f/external_ids/wikidata_backfill.
+    # TMDB's own id always wins (f/external_ids/imdb_ids.effective_imdb_id).
+    imdb_id_override = StringField()
+    imdb_id_override_source = StringField()
+    imdb_id_override_at = DateTimeField()
 
     meta = {
         "abstract": True,

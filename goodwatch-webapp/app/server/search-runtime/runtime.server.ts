@@ -1,5 +1,6 @@
 import { fetch } from "undici";
 import {
+	APIError,
 	TypeSafeClient,
 	type SystemOneRequest,
 	type SystemOneResult,
@@ -20,6 +21,11 @@ export const JEV_NANO_PER_TOKEN = 42; // $0.042 per million input tokens; output
 export const JEV_PRICE_VERSION = "typesafe-public-2026-09-21-42nano-v1";
 export const JEV_RESERVE_NANO = 2 * JEV_INPUT_BOUND * JEV_NANO_PER_TOKEN;
 export const BASIC_SEARCH_MESSAGE = "Showing basic search results.";
+// HTTP 529: TypeSafe is overloaded and asks callers to retry after a short delay. A request that gets a 529 is sent
+// again after each of these delays, inside the same deadline, claim and spending estimate.
+export const JEV_OVERLOAD_RETRY_DELAYS_MS = [100, 250];
+// A retry starts only while this much of the deadline is left, enough for a normal reading. Later, it falls back.
+export const JEV_RETRY_MIN_REMAINING_MS = 700;
 
 type Reading = SystemOneResult<Questions>;
 export type LanguagePolicy =
@@ -196,6 +202,7 @@ export async function executeJevStage(
 		return basic("storage", JEV_RESERVE_NANO);
 	}
 	const controller = new AbortController();
+	const deadlineAt = Date.now() + JEV_DEADLINE_MS;
 	let deadlineExpired = false;
 	const cancelled = () => controller.abort();
 	input.signal?.addEventListener("abort", cancelled, { once: true });
@@ -215,6 +222,31 @@ export async function executeJevStage(
 		logLevel: "off",
 	});
 	let readings: [Reading, Reading] | undefined;
+	// Rejected attempts per request. Retries run under the claim and estimate above: no new claim, no second estimate.
+	const overloaded = [0, 0];
+	const read = async (request: SystemOneRequest, index: number) => {
+		for (let attempt = 0; ; attempt++) {
+			try {
+				return await client.systemOne(request, {
+					signal: controller.signal,
+					timeout: JEV_DEADLINE_MS,
+					retry: { maxRetries: 0 },
+				});
+			} catch (error) {
+				const delay = JEV_OVERLOAD_RETRY_DELAYS_MS[attempt];
+				if (
+					!(error instanceof APIError && error.status === 529) ||
+					delay === undefined ||
+					deadlineAt - Date.now() - delay < JEV_RETRY_MIN_REMAINING_MS ||
+					controller.signal.aborted
+				)
+					throw error;
+				overloaded[index]++;
+				await new Promise((resolve) => setTimeout(resolve, delay));
+				if (controller.signal.aborted) throw error;
+			}
+		}
+	};
 	try {
 		// Race covers body parsing as well as headers (SDK attempt timer ends at headers).
 		const aborted = new Promise<never>((_, reject) => {
@@ -227,15 +259,7 @@ export async function executeJevStage(
 				);
 		});
 		readings = (await Promise.race([
-			Promise.all(
-				requests.map((request) =>
-					client.systemOne(request, {
-						signal: controller.signal,
-						timeout: JEV_DEADLINE_MS,
-						retry: { maxRetries: 0 },
-					}),
-				),
-			),
+			Promise.all(requests.map(read)),
 			aborted,
 		])) as [Reading, Reading];
 	} catch {
@@ -266,9 +290,17 @@ export async function executeJevStage(
 	if (readings.some((result) => result.usage.input_tokens > JEV_INPUT_BOUND)) {
 		await store.haltPaidAdmissions().catch(() => {});
 	}
-	const actualNano = readings.reduce(
-		(sum, result) => sum + result.usage.input_tokens * JEV_NANO_PER_TOKEN,
-		0,
+	// Never infer zero usage from an error: each rejected 529 attempt counts as if it was billed like the identical
+	// request that succeeded. Capped at the estimate, which covers both requests at the input bound: above it, the
+	// estimate stays the recorded spend, as when a response is lost.
+	const actualNano = Math.min(
+		readings.reduce(
+			(sum, result, index) =>
+				sum +
+				result.usage.input_tokens * JEV_NANO_PER_TOKEN * (1 + overloaded[index]),
+			0,
+		),
+		overloaded.some(Boolean) ? JEV_RESERVE_NANO : Number.POSITIVE_INFINITY,
 	);
 	const valid = readings.every(
 		(result, index) =>
@@ -293,11 +325,11 @@ export async function executeJevStage(
 // accountId must be the verified identity AT search time; never adopt guest rows at signup.
 export async function recordSearchHistory(
 	input: Parameters<SearchStore["history"]>[0],
-): Promise<{ recorded: boolean }> {
+): Promise<{ recorded: boolean; id: string | null }> {
 	try {
-		await getSearchStore().history(input);
-		return { recorded: true };
+		const id = await getSearchStore().history(input);
+		return { recorded: true, id };
 	} catch {
-		return { recorded: false };
+		return { recorded: false, id: null };
 	}
 }

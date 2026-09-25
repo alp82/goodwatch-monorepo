@@ -1,0 +1,28 @@
+summary: Match shows to Rotten Tomatoes or Metacritic sitemaps
+description: Weekly (#152). Downloads the site's series sitemaps, gives popular shows without any URL their unique sitemap match (url_source sitemap), and schedules every title with a URL for the crawl.
+lock: '!inline f/critic_sites/directory.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order:
+    - site
+    - top
+    - dry_run
+  properties:
+    site:
+      type: string
+      description: rotten_tomatoes or metacritic
+      default: rotten_tomatoes
+      enum:
+        - rotten_tomatoes
+        - metacritic
+    top:
+      type: integer
+      description: How many of the most popular shows to consider.
+      default: 20000
+    dry_run:
+      type: boolean
+      description: Report matches without writing.
+      default: false
+  required: []

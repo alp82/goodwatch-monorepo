@@ -5,10 +5,16 @@ from pymongo.collection import Collection
 import wmill
 
 from f.db.mongodb import init_mongodb, close_mongodb
+from f.external_ids.imdb_ids import effective_imdb_id
 from f.tmdb_daily.models import DumpType
 
 
 BATCH_SIZE = 10000
+# Titles with an IMDb id from TMDB or, failing that, from Wikidata (#150).
+MOVIES_WITH_IMDB_ID = {"$or": [{"imdb_id": {"$ne": None}}, {"imdb_id_override": {"$type": "string"}}],
+                       "tmdb_deleted": {"$ne": True}}
+TV_WITH_IMDB_ID = {"$or": [{"external_ids.imdb_id": {"$ne": None}}, {"imdb_id_override": {"$type": "string"}}],
+                   "tmdb_deleted": {"$ne": True}}
 
 
 def initialize_documents():
@@ -19,9 +25,9 @@ def initialize_documents():
     imdb_movie_collection = db["imdb_movie_rating"]
     imdb_tv_collection = db["imdb_tv_rating"]
 
-    total_movies = tmdb_movie_collection.count_documents({"imdb_id": {"$ne": None}, "tmdb_deleted": {"$ne": True}})
+    total_movies = tmdb_movie_collection.count_documents(MOVIES_WITH_IMDB_ID)
     total_tv = tmdb_tv_collection.count_documents(
-        {"external_ids.imdb_id": {"$ne": None}, "tmdb_deleted": {"$ne": True}}
+        TV_WITH_IMDB_ID
     )
 
     print(f"Total movie objects with IMDB ID: {total_movies}")
@@ -36,7 +42,7 @@ def initialize_documents():
         print(f"Processing movies {start} to {end}")
 
         tmdb_movie_cursor = (
-            tmdb_movie_collection.find({"imdb_id": {"$ne": None}, "tmdb_deleted": {"$ne": True}})
+            tmdb_movie_collection.find(MOVIES_WITH_IMDB_ID)
             .skip(start)
             .limit(BATCH_SIZE)
         )
@@ -51,7 +57,7 @@ def initialize_documents():
         print(f"Processing tv shows {start} to {end}")
 
         tmdb_tv_cursor = (
-            tmdb_tv_collection.find({"external_ids.imdb_id": {"$ne": None}, "tmdb_deleted": {"$ne": True}})
+            tmdb_tv_collection.find(TV_WITH_IMDB_ID)
             .skip(start)
             .limit(BATCH_SIZE)
         )
@@ -89,14 +95,11 @@ def initialize_documents():
 
 def build_operation(tmdb_entry: dict, type: DumpType):
     date_now = datetime.utcnow()
-    imdb_id = (
-        tmdb_entry.get("imdb_id")
-        if type == DumpType.MOVIES
-        else tmdb_entry.get("external_ids", {}).get("imdb_id")
-    )
+    imdb_id, imdb_id_source = effective_imdb_id(tmdb_entry, is_movie=type == DumpType.MOVIES)
 
     update_fields = {
         "imdb_id": imdb_id,
+        "imdb_id_source": imdb_id_source,
         "original_title": tmdb_entry.get("original_title"),
         "popularity": tmdb_entry.get("popularity"),
     }

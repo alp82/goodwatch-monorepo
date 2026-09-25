@@ -132,6 +132,11 @@ def desired_payload_indexes() -> List[PayloadIndexSpec]:
         # clause scanned every point and cost about 500 ms per query.
         PayloadIndexSpec("adult", "bool"),
         PayloadIndexSpec("production_method", "keyword"),
+        # Related titles and the other recommendation features exclude titles without artwork
+        # with is_empty clauses. Without an index, each clause read the whole on-disk payload
+        # of every candidate: about 400 ms per call and 200 MB/s of payload reads.
+        PayloadIndexSpec("poster_path", "keyword"),
+        PayloadIndexSpec("backdrop_path", "keyword"),
     ]
 
     # Suitability flags (booleans)

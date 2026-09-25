@@ -790,10 +790,12 @@ export async function rankSearch(
 	let trace: SearchTrace | undefined
 	if (request.trace) {
 		const scoreOf = new Map(cand.map((id, i) => [id, total[i]]))
+		// Only the profile's terms: a map of every term would cost tens of milliseconds per search
 		const termOf = new Map<number, string>()
-		index.termStatistics.ids.forEach((id, i) =>
-			termOf.set(id, index.termStatistics.terms[i]),
-		)
+		if (ref && profileWeights.size)
+			index.termStatistics.ids.forEach((id, i) => {
+				if (profileWeights.has(id)) termOf.set(id, index.termStatistics.terms[i])
+			})
 		trace = {
 			texts,
 			signals,
@@ -811,6 +813,7 @@ export async function rankSearch(
 			filtered: filter.rows.reduce((a, b) => a + b, 0),
 			era: filter.era,
 		}
+		lap("trace")
 	}
 
 	// Blend with the title lookup, fold alternate cuts, bound the own titles
@@ -821,7 +824,8 @@ export async function rankSearch(
 	if (ref) results = boundOwn(results, ref)
 	results = results.slice(0, RESULT_LENGTH)
 	lap("blend")
-	timings.total = performance.now() - started
+	// The trace is for checks and shadow logs, not part of the ranking: keep it out of the total
+	timings.total = performance.now() - started - (timings.trace ?? 0)
 
 	return {
 		rankerVersion: RANKER_VERSION,

@@ -6,11 +6,14 @@ import type {
 	Questions,
 	SystemOneResult,
 } from "@typesafe-ai/sdk";
-import { QdrantClient } from "@qdrant/js-client-rest";
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta";
 import { MEDIA_COLLECTION, parsePointId } from "~/utils/qdrant";
 import { VALID_FINGERPRINT_KEYS } from "../utils/fingerprint";
 import { searchQuery as query } from "./catalog.server";
+import {
+	queryPoints,
+	retrievePoints,
+} from "../search-ranking/qdrant-http.server";
 import {
 	type SearchFilters,
 	toCrateSql,
@@ -558,21 +561,8 @@ const qdrantFilter = (flags: FlagJudgment[], eligibility: Eligibility) => {
 
 // --- Retrieval ---------------------------------------------------------------------------
 
-let qdrant: QdrantClient | undefined;
-const getQdrant = () => {
-	if (!qdrant) {
-		const url = new URL(process.env.QDRANT_URL || "http://localhost:6333");
-		if (url.port === "6334") url.port = "6333";
-		qdrant = new QdrantClient({
-			url: url.toString().replace(/\/$/, ""),
-			apiKey: process.env.QDRANT_API_KEY,
-			checkCompatibility: false,
-			timeout: 8000,
-		});
-	}
-	return qdrant;
-};
-
+// Qdrant calls go through node:http (search-ranking/qdrant-http.server.ts): @qdrant/js-client-rest's JSON
+// conversion cost about 100 ms per search on these large responses (#147).
 interface Payload {
 	title: string;
 	release_year: number;
@@ -732,7 +722,7 @@ const retrieve = async (
 	const used = Object.entries(reading.weights) as [Key, number][];
 	const wide = reading.order === "weighted_sum" || Boolean(tropeQuery);
 	// The pool carries only the used dimensions. Display fields are fetched for the final 20.
-	const response = await getQdrant().query(MEDIA_COLLECTION, {
+	const response = await queryPoints(MEDIA_COLLECTION, {
 		query: reading.vector,
 		using: "fingerprint_v1",
 		filter: qdrantFilter(flags, eligibility) as never,
@@ -806,7 +796,7 @@ const retrieve = async (
 
 	const displayStarted = Date.now();
 	const points = ranked.length
-		? await getQdrant().retrieve(MEDIA_COLLECTION, {
+		? await retrievePoints(MEDIA_COLLECTION, {
 				ids: ranked.map((r) => r.id),
 				with_payload: DISPLAY_FIELDS,
 			})
@@ -1257,6 +1247,7 @@ const runPhraseVariant = async (
 	});
 
 	let ms = Date.now() - started - extra.ms;
+	let qdrantMs = 0;
 	if (results.length < resultLimit && vectorQuery.vector.some((x) => x !== 0)) {
 		const fill = await retrieve(
 			vectorQuery,
@@ -1273,6 +1264,7 @@ const runPhraseVariant = async (
 				results.push({ ...r, rank: results.length + 1 });
 		}
 		ms += fill.ms;
+		qdrantMs += fill.ms;
 		if (!gated)
 			notes.push(
 				`Only ${found} titles had evidence. The rest come from the fingerprint vector search.`,
@@ -1290,6 +1282,7 @@ const runPhraseVariant = async (
 		pool: pool.size,
 		notes,
 		extra,
+		qdrantMs,
 	};
 };
 
@@ -1433,6 +1426,8 @@ export async function retrieveByReading(
 	readings: [SystemOneResult<Questions>, SystemOneResult<Questions>],
 	eligibility: Eligibility,
 	nativeOnly: boolean,
+	// Filled with the milliseconds spent in Qdrant (the fingerprint pool and display fields), when given.
+	stages?: { qdrantMs?: number },
 ) {
 	const attributes = decodeAttributes(
 		request,
@@ -1448,16 +1443,18 @@ export async function retrieveByReading(
 		order: "weighted_sum",
 		genres: [],
 	};
-	if (nativeOnly)
-		return (await retrieve(vectorQuery, attributes.flags, "", eligibility))
-			.results;
-	return (
-		await runPhraseVariant(
-			request,
-			{ twoPhrases: true, moodGate: true, wider: true },
-			attributes,
-			vectorQuery,
-			eligibility,
-		)
-	).results;
+	if (nativeOnly) {
+		const found = await retrieve(vectorQuery, attributes.flags, "", eligibility);
+		if (stages) stages.qdrantMs = found.ms;
+		return found.results;
+	}
+	const found = await runPhraseVariant(
+		request,
+		{ twoPhrases: true, moodGate: true, wider: true },
+		attributes,
+		vectorQuery,
+		eligibility,
+	);
+	if (stages) stages.qdrantMs = found.qdrantMs;
+	return found.results;
 }

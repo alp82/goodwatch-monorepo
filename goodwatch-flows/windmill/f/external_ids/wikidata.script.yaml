@@ -1,0 +1,10 @@
+summary: Wikidata id exports
+description: Runs the Wikidata Query Service exports of IMDb, Rotten Tomatoes and
+  Metacritic ids per TMDB id, stopping on a 429.
+lock: '!inline f/external_ids/wikidata.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

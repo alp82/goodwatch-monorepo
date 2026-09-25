@@ -189,7 +189,8 @@ class SelectionTests(unittest.TestCase):
                         "tmdb_details_projection": {}, "Any": Any,
                         "publication_lease": lambda *args: nullcontext(lambda: None),
                     }
-                    functions = [function]
+                    functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef)
+                                              and node.name in ("changed_tmdb_ids", "fetch_map_by_ids")]
                     if name == "tmdb_streaming":
                         from test_streaming_publication import load_copy
                         streaming = load_copy(db).__globals__
@@ -218,7 +219,7 @@ class VectorKeysetTests(unittest.TestCase):
     def test_targeted_publication_avoids_unbounded_date_index_scan(self):
         tree = ast.parse((ROOT / "sync" / "copy" / "vector_data.py").read_text())
         functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
-                     and node.name in ("copy_to_qdrant", "_fetch_tmdb_ids_keyset")]
+                     and node.name in ("copy_to_qdrant", "_drivers", "_driver_batches", "_with_fingerprint", "_fetch_tmdb_ids_keyset")]
         for recent_only in (False, True):
             with self.subTest(recent_only=recent_only):
                 collection = MagicMock()
@@ -291,7 +292,7 @@ class VectorPublicationTests(unittest.TestCase):
                     "QdrantMediaPoint": SimpleNamespace(make_point_id=lambda *args: 84),
                     "MEDIA_COLLECTION": "media",
                 }
-                functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_published_streaming"]
+                functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in ("_drivers", "_driver_batches", "_with_fingerprint", "_published_streaming")]
                 exec(compile(ast.Module(body=functions, type_ignores=[]), "vector_data.py", "exec"), namespace)
                 if status in ("completed", "scheduled"):
                     result = namespace["copy_to_qdrant"](qc, "movie", {"tmdb_id": {"$in": [42]}}, recent_only=False, strict_writes=True)
@@ -332,7 +333,7 @@ class VectorSerializationTests(unittest.TestCase):
         self.qc.client.batch_update_points.side_effect = completed
         tree = ast.parse((ROOT / "sync" / "copy" / "vector_data.py").read_text())
         functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
-                     and node.name in ("copy_to_qdrant", "_published_streaming")]
+                     and node.name in ("copy_to_qdrant", "_drivers", "_driver_batches", "_with_fingerprint", "_published_streaming")]
         self.namespace = {
             **DELETED_TITLE_HELPERS,
             "QdrantConnector": object, "CrateConnector": lambda: self.crate,
@@ -343,6 +344,7 @@ class VectorSerializationTests(unittest.TestCase):
             "ExitStack": ExitStack,
             **POINT_WRITE_HELPERS,
             "publication_lease": load_copy(self.db).__globals__["publication_lease"],
+            "SCHEDULED_LEASE_WAIT_SECONDS": 0,
             "_fetch_tmdb_ids_keyset": MagicMock(side_effect=[([42], 42), ([], 42)]),
             "_fetch_map_by_ids": lambda *args: {42: {"tmdb_id": 42}},
             "_fetch_multimap_by_ids": lambda *args: {},
@@ -426,6 +428,23 @@ class VectorSerializationTests(unittest.TestCase):
                 self.qc.client.batch_update_points.side_effect = check_competitor_blocked
                 self.assertEqual(self.publish(targeted=targeted)["upserts"], 1)
                 self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)
+
+    def test_scheduled_publication_waits_out_a_short_competitor_lease(self) -> None:
+        # A scheduled copy walks thousands of titles while the streaming sync and the
+        # priority publish hold one title each for seconds.
+        self.db.streaming_publication_leases.insert_one({
+            "_id": "movie:42", "token": "other", "expires_at": datetime.utcnow() + timedelta(seconds=1),
+        })
+        self.namespace["SCHEDULED_LEASE_WAIT_SECONDS"] = 10
+        self.assertEqual(self.publish(targeted=False)["upserts"], 1)
+
+    def test_targeted_publication_does_not_wait_for_a_busy_title(self) -> None:
+        self.db.streaming_publication_leases.insert_one({
+            "_id": "movie:42", "token": "other", "expires_at": datetime.utcnow() + timedelta(seconds=1),
+        })
+        self.namespace["SCHEDULED_LEASE_WAIT_SECONDS"] = 10
+        with self.assertRaisesRegex(RuntimeError, "publication busy"):
+            self.publish(targeted=True)
 
     def test_busy_streaming_writer_prevents_vector_mutation(self) -> None:
         self.db.streaming_publication_leases.insert_one({

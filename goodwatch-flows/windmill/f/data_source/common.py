@@ -21,12 +21,14 @@ def retrieve_next_entry_ids(
     buffer_minutes: int,
     movie_model: Document,
     tv_model: Document,
+    stale_after_days: int = None,
 ) -> IdsParameter:
     next_entries = prepare_next_entries(
         movie_model=movie_model,
         tv_model=tv_model,
         count=count,
         buffer_minutes=buffer_minutes,
+        stale_after_days=stale_after_days,
     )
     ids = get_ids_for_documents(
         next_entries=next_entries,
@@ -41,12 +43,14 @@ def retrieve_next_entry_ids_full(
     buffer_minutes: int,
     movie_model: Document,
     tv_model: Document,
+    stale_after_days: int = None,
 ) -> dict[str, dict]:
     next_entries = prepare_next_entries(
         movie_model=movie_model,
         tv_model=tv_model,
         count=count,
         buffer_minutes=buffer_minutes,
+        stale_after_days=stale_after_days,
     )
     ids = get_ids_for_documents(
         next_entries=next_entries,
@@ -156,7 +160,9 @@ def not_deleted_filter(model: Document) -> Q:
     return Q()
 
 
-# A fetched title is due for a refresh once this long has passed since its last selection.
+# By default a fetched title is due for a refresh once this long has passed since
+# its last selection. A source with a different refresh interval passes its own
+# stale_after_days (DNA: f/dna/models.DNA_STALE_AFTER_DAYS).
 STALE_AFTER_DAYS = 30
 
 
@@ -240,8 +246,10 @@ def completeness_queue(
     tv_model: Document,
     count: int,
     buffer_minutes: int,
-    stale_after_days: int = STALE_AFTER_DAYS,
+    stale_after_days: int = None,
 ) -> list[Document]:
+    if stale_after_days is None:
+        stale_after_days = STALE_AFTER_DAYS
     now = datetime.utcnow()
     buffer_time_for_selected_entries = now - timedelta(minutes=buffer_minutes)
     stale_before = now - timedelta(days=stale_after_days)
@@ -309,9 +317,15 @@ def update_selected_for_next_entries(
 
 
 def prepare_next_entries(
-    movie_model: Document, tv_model: Document, count: int, buffer_minutes: int
+    movie_model: Document,
+    tv_model: Document,
+    count: int,
+    buffer_minutes: int,
+    stale_after_days: int = None,
 ) -> list[Document]:
-    return completeness_queue(movie_model, tv_model, count, buffer_minutes)
+    return completeness_queue(
+        movie_model, tv_model, count, buffer_minutes, stale_after_days
+    )
 
 
 def main():

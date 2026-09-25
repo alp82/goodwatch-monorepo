@@ -136,6 +136,21 @@ async function sha256OfFile(path: string) {
 	return hash.digest("hex")
 }
 
+// remix-serve replaces the global fetch with a polyfill unless single fetch is on, and Readable.fromWeb() rejects the
+// polyfill's ReadableStream. Reading the body through its reader works with both.
+async function* chunksOf(body: ReadableStream<Uint8Array>) {
+	const reader = body.getReader()
+	try {
+		for (;;) {
+			const { done, value } = await reader.read()
+			if (done) return
+			yield value
+		}
+	} finally {
+		reader.releaseLock()
+	}
+}
+
 async function download(
 	spec: QueryModelSpec,
 	file: QueryModelFile,
@@ -159,9 +174,7 @@ async function download(
 	})
 	try {
 		await pipeline(
-			Readable.fromWeb(
-				response.body as import("node:stream/web").ReadableStream,
-			),
+			Readable.from(chunksOf(response.body)),
 			hashing,
 			createWriteStream(partial),
 		)

@@ -24,6 +24,7 @@ DAILY_PATHS = {
     "f/rotten_web/rotten_tomatoes_init_ratings",
     "f/metacritic_web/metacritic_init_ratings",
     "f/imdb_web/imdb_init_ratings",
+    "f/imdb_datasets/ingest",
     "f/tmdb_api/tmdb_init_details",
 }
 RUNTIME_HOURS = {
@@ -47,6 +48,7 @@ RUNTIME_HOURS = {
     "f/rotten_web/rotten_tomatoes_init_ratings": 6,
     "f/metacritic_web/metacritic_init_ratings": 6,
     "f/imdb_web/imdb_init_ratings": 6,
+    "f/imdb_datasets/ingest": 1,
     "f/tmdb_daily/tmdb_extract_daily_dump_data": 6,
     "f/tmdb_api/tmdb_init_details": 6,
     "f/tmdb_daily/tmdb_check_daily_dump_availability": 2,

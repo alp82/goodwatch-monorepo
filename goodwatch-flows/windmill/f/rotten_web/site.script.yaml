@@ -1,0 +1,9 @@
+summary: Rotten Tomatoes page parsers
+description: Library (#152). Parses RT series, season and movie pages and the series sitemaps; main does nothing.
+lock: '!inline f/rotten_web/site.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

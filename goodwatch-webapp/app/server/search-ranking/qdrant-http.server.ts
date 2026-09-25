@@ -1,10 +1,13 @@
-// A small Qdrant REST client for search: one POST /collections/{c}/points/query/batch per round.
+// A small Qdrant REST client for search: one POST /collections/{c}/points/query/batch per round for the new ranking,
+// and `queryPoints` and `retrievePoints` for today's reading retrieval (combined-search/reading-retrieval.server.ts).
 //
 // Why not the existing clients:
 // - @qdrant/js-client-rest converts every JSON value and costs about 10 ms per batch, against about 1.4 ms of
 //   Qdrant time.
 // - undici and Node's fetch stall about 40 ms on Qdrant responses of 1.1 to 5.5 KB. node:http with keep-alive
 //   doesn't.
+// - On the reading retrieval's large responses (200 KB to 1 MB), @qdrant/js-client-rest's JSON reviver cost about
+//   70 ms per query and 36 ms per retrieve at the median on the webapp host (#147).
 import http from "node:http"
 import https from "node:https"
 import { assertSearchRankingEnabled } from "./mode.server.ts"
@@ -131,4 +134,62 @@ export async function queryBatch(
 		wallMs: performance.now() - started,
 		responseBytes: body.length,
 	}
+}
+
+async function postJson<T>(
+	path: string,
+	body: unknown,
+	timeoutMs: number,
+): Promise<T> {
+	const { status, body: raw } = await post(
+		path,
+		JSON.stringify(body),
+		timeoutMs,
+	)
+	if (status !== 200) {
+		throw new Error(
+			`Qdrant request ${path} failed with HTTP ${status}: ${raw.toString("utf8", 0, 500)}`,
+		)
+	}
+	return (JSON.parse(raw.toString("utf8")) as { result: T }).result
+}
+
+// Today's search calls these on every search that reads Qdrant, whatever SEARCH_RANKING_MODE says. They return what
+// @qdrant/js-client-rest's `query` and `retrieve` return, for the same request bodies.
+
+/** One Query API request: POST /collections/{c}/points/query. */
+export function queryPoints(
+	collection: string,
+	query: QdrantQuery,
+	options: { timeoutMs?: number } = {},
+): Promise<{ points: ScoredPoint[] }> {
+	return postJson(
+		`/collections/${encodeURIComponent(collection)}/points/query`,
+		query,
+		options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+	)
+}
+
+/** Points by id: POST /collections/{c}/points. */
+export function retrievePoints(
+	collection: string,
+	request: {
+		ids: (number | string)[]
+		with_payload?: boolean | string[]
+		with_vector?: boolean | string[]
+	},
+	options: { timeoutMs?: number } = {},
+): Promise<
+	{
+		id: number | string
+		payload?: Record<string, unknown> | null
+		vector?: unknown
+	}[]
+> {
+	return postJson(
+		`/collections/${encodeURIComponent(collection)}/points`,
+		// The default of @qdrant/js-client-rest's `retrieve`.
+		{ with_payload: true, ...request },
+		options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+	)
 }

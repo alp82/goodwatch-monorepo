@@ -1,0 +1,18 @@
+summary: Backfill IMDb, Rotten Tomatoes and Metacritic ids from Wikidata
+description: Weekly. Fills missing IMDb ids (imdb_id_override on the TMDB details,
+  imdb_*_rating.imdb_id, Crate show/movie imdb_id) and missing Rotten Tomatoes and
+  Metacritic URLs (url_source wikidata) from two Wikidata exports. Never replaces a
+  TMDB id or a crawled URL. Backs up changed fields to _backup_<YYYYMMDD>_wikidata_ids.
+lock: '!inline f/external_ids/wikidata_backfill.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order:
+    - dry_run
+  properties:
+    dry_run:
+      type: boolean
+      description: Run the exports and report what would change, but write nothing.
+      default: false
+  required: []

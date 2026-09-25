@@ -1,5 +1,6 @@
-"""Delete-on-sync for titles that TMDB permanently removed (tmdb_deleted in Mongo)."""
+"""Delete-on-sync for titles that are gone: flagged tmdb_deleted in Mongo, or missing from Mongo."""
 
+from dataclasses import dataclass
 from typing import Any, Iterable
 
 # Raw pymongo filters on tmdb_movie_details / tmdb_tv_details.
@@ -25,7 +26,69 @@ TITLE_KEYED_TABLES = (
     "streaming_evidence",
     "streaming_availability",
 )
+# The columns that tell a title's rows apart within a table, after the title's
+# (media_tmdb_id, media_type). Together they form the table's primary key.
+ROW_KEY_COLUMNS = {
+    "media_image": ("image_type", "url_path", "language_code"),
+    "media_video": ("tmdb_id",),
+    "trope": ("name",),
+    "alternative_title": ("country_code",),
+    "translation": ("language_code", "country_code"),
+    "release_event": ("country_code", "release_date", "release_type", "certification"),
+    "person_appeared_in": ("person_tmdb_id", "credit_id"),
+    "person_worked_on": ("person_tmdb_id", "credit_id"),
+    "streaming_evidence": ("country_code",),
+}
 MEDIA_TABLES = {"movie": "movie", "show": "show"}
+# How the TMDB daily dump names each media type.
+DAILY_DUMP_TYPES = {"movie": "movie", "show": "tv"}
+# Full-table DISTINCT scans are bounded explicitly; a truncated scan only sweeps less.
+MAX_SCANNED_TITLES = 10_000_000
+MONGO_LOOKUP_BATCH_SIZE = 10_000
+
+
+@dataclass(frozen=True)
+class TitleTable:
+    """A Crate table whose rows belong to a title, and how a statement scopes them to titles.
+
+    Movie and show tmdb_ids collide, so every scope includes the media type: through a
+    media_type column, or through a table that only holds rows of one media type.
+    """
+
+    name: str
+    id_column: str
+    media_types: tuple[str, ...] = ("movie", "show")
+    media_type_column: bool = True
+    # Columns that tell one title's rows apart; empty where rows are not addressed singly.
+    key_columns: tuple[str, ...] = ()
+
+    @property
+    def primary_key(self) -> tuple[str, ...]:
+        """The columns that address a single row: the title scope, then the row key."""
+        return (self.id_column, *(("media_type",) if self.media_type_column else ()), *self.key_columns)
+
+    def scope(self, media_type: str, with_ids: bool = True) -> str:
+        if media_type not in self.media_types:
+            raise ValueError(f"{self.name} holds no {media_type} rows")
+        conditions = ["media_type = ?"] if self.media_type_column else []
+        if with_ids:
+            conditions.append(f"{self.id_column} = ANY(?)")
+        return " AND ".join(conditions)
+
+    def params(self, media_type: str, *rest) -> tuple:
+        return (media_type, *rest) if self.media_type_column else tuple(rest)
+
+
+# In delete order: children first, the title row last, so an interrupted run leaves
+# the title visible to the next run instead of orphaning its rows.
+CHILD_TABLES = (
+    *(TitleTable(table, "media_tmdb_id", key_columns=ROW_KEY_COLUMNS.get(table, ())) for table in TITLE_KEYED_TABLES),
+    TitleTable("season", "show_id", media_types=("show",), media_type_column=False),
+)
+MEDIA_TITLE_TABLES = {
+    media_type: TitleTable(table, "tmdb_id", media_types=(media_type,), media_type_column=False)
+    for media_type, table in MEDIA_TABLES.items()
+}
 
 
 def normalize_tmdb_ids(tmdb_ids: Iterable) -> list[int]:
@@ -51,73 +114,159 @@ def batches(ids: list[int]):
         yield ids[i:i + DELETE_BATCH_SIZE]
 
 
-def titles_present_in_crate(connector: Any, media_type: str, ids: list[int]) -> list[int]:
-    """Flagged titles that still have a title row; all flagged titles are checked on every run."""
-    media_table = MEDIA_TABLES[media_type]
+def title_tables(media_type: str) -> list[TitleTable]:
+    """Every table holding rows of this media type's titles, in delete order."""
+    if media_type not in MEDIA_TABLES:
+        raise ValueError(f"unknown media_type: {media_type}")
+    return [table for table in CHILD_TABLES if media_type in table.media_types] + [MEDIA_TITLE_TABLES[media_type]]
+
+
+def title_table(media_type: str, name: str) -> TitleTable:
+    """The table `name` as a table of this media type's titles."""
+    for table in title_tables(media_type):
+        if table.name == name:
+            return table
+    raise ValueError(f"not a {media_type} title table: {name}")
+
+
+def titles_with_rows(connector: Any, table: TitleTable, media_type: str, ids: list[int] | None = None) -> list[int]:
+    """The titles among `ids` (all titles, for None) that have at least one row in `table`."""
+    select = f"SELECT DISTINCT {table.id_column} AS tmdb_id FROM {table.name}"
+    if ids is None:
+        where = table.scope(media_type, with_ids=False)
+        sql = f"{select}{' WHERE ' + where if where else ''} LIMIT {MAX_SCANNED_TITLES}"
+        return normalize_tmdb_ids(row["tmdb_id"] for row in connector.select(sql, table.params(media_type)))
     present = []
     for batch in batches(ids):
-        rows = connector.select(f"SELECT tmdb_id FROM {media_table} WHERE tmdb_id = ANY(?)", (batch,))
-        present.extend(int(row["tmdb_id"]) for row in rows)
-    return sorted(present)
+        rows = connector.select(f"{select} WHERE {table.scope(media_type)}", table.params(media_type, batch))
+        present.extend(row["tmdb_id"] for row in rows)
+    return normalize_tmdb_ids(present)
 
 
-def exceeds_delete_cap(media_type: str, ids: list[int], store: str) -> bool:
+def plan_flagged_title_rows(connector: Any, media_type: str, tmdb_ids: Iterable) -> dict[str, list[int]]:
+    """Per table, the given titles that still have rows there, whether or not their title row is left."""
+    ids = normalize_tmdb_ids(tmdb_ids)
+    if not ids:
+        return {}
+    plan = {table.name: titles_with_rows(connector, table, media_type, ids) for table in title_tables(media_type)}
+    return {table: table_ids for table, table_ids in plan.items() if table_ids}
+
+
+def planned_titles(plan: dict[str, list[int]]) -> list[int]:
+    return normalize_tmdb_ids(tmdb_id for ids in plan.values() for tmdb_id in ids)
+
+
+def delete_title_rows(connector: Any, media_type: str, plan: dict[str, list[int]]) -> dict[str, int]:
+    """Delete the planned titles' rows table by table, children before title rows.
+
+    `plan` maps a table name to the titles whose rows go; returns the rows deleted per table.
+    """
+    tables = {table.name: table for table in title_tables(media_type)}
+    unknown = set(plan) - set(tables)
+    if unknown:
+        raise ValueError(f"not a {media_type} title table: {sorted(unknown)}")
+    rows_deleted = {}
+    for name, table in tables.items():
+        ids = normalize_tmdb_ids(plan.get(name, ()))
+        if not ids:
+            continue
+        deleted = 0
+        for batch in batches(ids):
+            connector.run(f"DELETE FROM {name} WHERE {table.scope(media_type)}", table.params(media_type, batch))
+            deleted += max(connector.cur.rowcount or 0, 0)
+        connector.run(f"REFRESH TABLE {name}")
+        rows_deleted[name] = deleted
+    return rows_deleted
+
+
+def exceeds_delete_cap(media_type: str, ids: list[int], store: str, reason: str = "tmdb_deleted flags") -> bool:
     if len(ids) <= MAX_DELETED_TITLES_PER_RUN:
         return False
     print(
         f"!!! REFUSING to delete {len(ids)} {media_type} titles from {store}: more than "
-        f"MAX_DELETED_TITLES_PER_RUN={MAX_DELETED_TITLES_PER_RUN}. Check the tmdb_deleted "
-        f"flags in Mongo before deleting manually.",
+        f"MAX_DELETED_TITLES_PER_RUN={MAX_DELETED_TITLES_PER_RUN}. Check the {reason} "
+        f"in Mongo before deleting manually.",
         flush=True,
     )
     return True
 
 
-def delete_titles_from_crate(connector: Any, media_type: str, tmdb_ids: Iterable) -> dict:
-    """Remove titles and all their derived rows from CrateDB, scoped by media type.
+def apply_plan(connector: Any, media_type: str, plan: dict[str, list[int]], result: dict, reason: str) -> dict:
+    """Delete a plan unless it covers more titles than the cap allows."""
+    titles = planned_titles(plan)
+    result["titles_with_rows"] = len(titles)
+    if not titles:
+        return result
+    if exceeds_delete_cap(media_type, titles, "CrateDB", reason):
+        result["skipped_over_cap"] = True
+        return result
+    result["rows_deleted"] = delete_title_rows(connector, media_type, plan)
+    result["titles_deleted"] = result["rows_deleted"].get(MEDIA_TABLES[media_type], 0)
+    print(
+        f"Deleted the rows of {len(titles)} {media_type} titles ({reason}), "
+        f"{result['titles_deleted']} of them with a title row, from CrateDB: {result['rows_deleted']}",
+        flush=True,
+    )
+    return result
 
-    Only ever driven by an explicit id list; movie and show tmdb_ids collide.
+
+def delete_titles_from_crate(connector: Any, media_type: str, tmdb_ids: Iterable) -> dict:
+    """Remove flagged titles and all their derived rows from CrateDB, scoped by media type.
+
+    Only ever driven by an explicit id list. A title whose title row is already gone
+    still loses its child rows. The flagged set only grows, so the cap applies to the
+    titles that still have rows.
     """
     if media_type not in MEDIA_TABLES:
         raise ValueError(f"unknown media_type: {media_type}")
     ids = normalize_tmdb_ids(tmdb_ids)
-    result = {"titles_flagged": len(ids), "titles_deleted": 0, "rows_deleted": {}, "skipped_over_cap": False}
-    if not ids:
-        return result
-    # The flagged set only grows, so the deletes and the cap apply to what is still published.
-    ids = titles_present_in_crate(connector, media_type, ids)
-    if not ids:
-        return result
-    if exceeds_delete_cap(media_type, ids, "CrateDB"):
-        result["skipped_over_cap"] = True
-        return result
+    result = {"titles_flagged": len(ids), "titles_with_rows": 0, "titles_deleted": 0,
+              "rows_deleted": {}, "skipped_over_cap": False}
+    plan = plan_flagged_title_rows(connector, media_type, ids)
+    return apply_plan(connector, media_type, plan, result, "tmdb_deleted flags")
 
-    # Children first, the title row last: an interrupted run leaves the title
-    # flagged and visible to the next run instead of orphaning derived rows.
-    statements = [
-        (table, f"DELETE FROM {table} WHERE media_type = ? AND media_tmdb_id = ANY(?)", True)
-        for table in TITLE_KEYED_TABLES
-    ]
-    if media_type == "show":
-        statements.append(("season", "DELETE FROM season WHERE show_id = ANY(?)", False))
-    media_table = MEDIA_TABLES[media_type]
-    statements.append((media_table, f"DELETE FROM {media_table} WHERE tmdb_id = ANY(?)", False))
 
-    for table, sql, with_media_type in statements:
-        deleted = 0
-        for batch in batches(ids):
-            connector.run(sql, (media_type, batch) if with_media_type else (batch,))
-            deleted += max(connector.cur.rowcount or 0, 0)
-        connector.run(f"REFRESH TABLE {table}")
-        result["rows_deleted"][table] = deleted
+def ids_found(collection: Any, selector: dict, ids: list[int], *, as_strings: bool = False) -> set[int]:
+    """The ids among `ids` that have a document matching `selector`."""
+    found = set()
+    for i in range(0, len(ids), MONGO_LOOKUP_BATCH_SIZE):
+        batch = ids[i:i + MONGO_LOOKUP_BATCH_SIZE]
+        values = batch + [str(tmdb_id) for tmdb_id in batch] if as_strings else batch
+        for doc in collection.find(selector | {"tmdb_id": {"$in": values}}, {"tmdb_id": 1, "_id": 0}):
+            found.add(int(doc["tmdb_id"]))
+    return found
 
-    result["titles_deleted"] = result["rows_deleted"][media_table]
-    print(
-        f"Deleted {result['titles_deleted']} of {len(ids)} flagged {media_type} titles "
-        f"from CrateDB: {result['rows_deleted']}",
-        flush=True,
-    )
-    return result
+
+def plan_orphaned_title_rows(connector: Any, media_type: str, details_collection: Any,
+                             daily_dump_collection: Any) -> dict[str, list[int]]:
+    """Per table, the titles with rows there that are missing from Mongo.
+
+    A title is missing from Mongo when it has no details document and the TMDB daily
+    dump never listed it. Titles the dump lists but that are not fetched yet are kept
+    (tmdb_daily publishes stub title rows for them), and so are rows of titles that have
+    a details document but no title row, because the details copy owns them. Flagged
+    titles have a details document, so they are left to delete_titles_from_crate.
+    """
+    rows_by_table = {table.name: titles_with_rows(connector, table, media_type) for table in title_tables(media_type)}
+    candidates = normalize_tmdb_ids(tmdb_id for ids in rows_by_table.values() for tmdb_id in ids)
+    missing = sorted(set(candidates) - ids_found(details_collection, {}, candidates))
+    dump_selector = {"type": DAILY_DUMP_TYPES[media_type]}
+    gone = set(missing) - ids_found(daily_dump_collection, dump_selector, missing, as_strings=True)
+    plan = {table: sorted(gone.intersection(ids)) for table, ids in rows_by_table.items()}
+    return {table: ids for table, ids in plan.items() if ids}
+
+
+def sweep_orphaned_titles(connector: Any, media_type: str, details_collection: Any, daily_dump_collection: Any,
+                          *, dry_run: bool = False) -> dict:
+    """Delete every Crate row of titles that are missing from Mongo, capped like the flagged path."""
+    if media_type not in MEDIA_TABLES:
+        raise ValueError(f"unknown media_type: {media_type}")
+    plan = plan_orphaned_title_rows(connector, media_type, details_collection, daily_dump_collection)
+    result = {"titles_with_rows": len(planned_titles(plan)), "titles_deleted": 0, "rows_deleted": {},
+              "skipped_over_cap": False, "titles_by_table": {table: len(ids) for table, ids in plan.items()}}
+    if dry_run:
+        return result | {"plan": plan}
+    return apply_plan(connector, media_type, plan, result, "titles missing from Mongo")
 
 
 def delete_titles_from_qdrant(client: Any, collection: str, media_type: str, tmdb_ids: Iterable, make_point_id) -> dict:

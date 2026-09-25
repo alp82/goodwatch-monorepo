@@ -1,0 +1,9 @@
+summary: Metacritic page parsers
+description: Library (#152). Parses Metacritic show, season and movie pages (__NUXT_DATA__) and the TV sitemaps; main does nothing.
+lock: '!inline f/metacritic_web/site.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

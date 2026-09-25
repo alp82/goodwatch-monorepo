@@ -22,11 +22,32 @@ from f.sync.models.crate_schemas import SCHEMAS
 BATCH_SIZE = 5000
 SUB_BATCH_SIZE = 50000
 HOURS_TO_FETCH = 24 * 2
+# The rating documents are the whole truth for these columns: the Rotten Tomatoes and
+# Metacritic crawlers remove a URL and its scores when the page is gone or belongs to
+# another title (#152), and the Crate row must lose them too instead of keeping them.
+CLEARED_COLUMNS = (
+    "metacritic_url",
+    "metacritic_user_score_original",
+    "metacritic_user_score_normalized_percent",
+    "metacritic_user_score_rating_count",
+    "metacritic_meta_score_original",
+    "metacritic_meta_score_normalized_percent",
+    "metacritic_meta_score_review_count",
+    "rotten_tomatoes_url",
+    "rotten_tomatoes_audience_score_original",
+    "rotten_tomatoes_audience_score_normalized_percent",
+    "rotten_tomatoes_audience_score_rating_count",
+    "rotten_tomatoes_tomato_score_original",
+    "rotten_tomatoes_tomato_score_normalized_percent",
+    "rotten_tomatoes_tomato_score_review_count",
+    "goodwatch_official_score_normalized_percent",
+)
 
 tmdb_details_projection = {
     "tmdb_id": 1,
     "imdb_id": 1,
     "external_ids": 1,
+    "imdb_id_override": 1,
     "vote_count": 1,
     "vote_average": 1,
 }
@@ -64,15 +85,22 @@ def to_timestamp(dt_input: str) -> Optional[float]:
         raise Exception(f"cannot convert datetime to timestamp: {dt_input}")
 
 
-def fetch_all_documents_in_batch(tmdb_ids, collection):
-    results = defaultdict(list)
-    for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}}):
-        if doc.get("created_at") and doc.get("updated_at"):
-            results[doc["tmdb_id"]].append(doc)
-    return dict(results)
+def changed_tmdb_ids(collections, selector: dict) -> list[int]:
+    """The sorted tmdb ids of the documents matching the selector in any collection."""
+    tmdb_ids = set()
+    for collection in collections:
+        for doc in collection.find(selector, {"_id": 0, "tmdb_id": 1}).batch_size(20000):
+            if doc.get("tmdb_id") is not None:
+                tmdb_ids.add(doc["tmdb_id"])
+    return sorted(tmdb_ids)
 
 
-def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseModel]):
+def fetch_map_by_ids(collection, tmdb_ids) -> dict:
+    return {doc["tmdb_id"]: doc for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}})}
+
+
+def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseModel],
+                      replace_null_columns=()):
     """Process and insert entities and return upsert results."""
     total_result = {"records_received": 0, "rows_upserted": 0}
 
@@ -86,6 +114,7 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
                     records=batch,
                     conflict_columns=SCHEMAS[table]["primary_key"],
                     silent=True,
+                    replace_null_columns=replace_null_columns,
                 )
                 total_result["records_received"] += result["records_received"]
                 total_result["rows_upserted"] += result["rows_upserted"]
@@ -120,61 +149,24 @@ def copy_media(
     }
     if not recent_only:
         updated_at_filter = {}
-    imdb_entry_count = mongo_imdb.count_documents(query_selector | updated_at_filter)
-    meta_entry_count = mongo_meta.count_documents(query_selector | updated_at_filter)
-    rotten_entry_count = mongo_rotten.count_documents(
-        query_selector | updated_at_filter
+    # Collect the changed titles of every source once, then read them in batches by id.
+    # Paging each collection with skip rescanned it for every page and timed out on
+    # large windows, such as the IMDb dataset ingest's first run.
+    all_tmdb_ids = changed_tmdb_ids(
+        [mongo_details, mongo_imdb, mongo_meta, mongo_rotten], query_selector | updated_at_filter
     )
-    total_entry_count = imdb_entry_count + meta_entry_count + rotten_entry_count
-    print(f"Total {media_type} Score entries: {total_entry_count}")
+    print(f"Total {media_type} titles to copy: {len(all_tmdb_ids)}", flush=True)
 
-    start = 0
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
 
-    while True:
+    for start in range(0, len(all_tmdb_ids), BATCH_SIZE):
         media_documents = []
         entity_batches = defaultdict(list)
-
-        tmdb_details_batch = list(
-            mongo_details.find(
-                query_selector | updated_at_filter, tmdb_details_projection
-            )
-            .sort("tmdb_id", 1)
-            .skip(start)
-            .limit(BATCH_SIZE)
-        )
-        imdb_batch = list(
-            mongo_imdb.find(query_selector | updated_at_filter)
-            .sort("tmdb_id", 1)
-            .skip(start)
-            .limit(BATCH_SIZE)
-        )
-        meta_batch = list(
-            mongo_meta.find(query_selector | updated_at_filter)
-            .sort("tmdb_id", 1)
-            .skip(start)
-            .limit(BATCH_SIZE)
-        )
-        rotten_batch = list(
-            mongo_rotten.find(query_selector | updated_at_filter)
-            .sort("tmdb_id", 1)
-            .skip(start)
-            .limit(BATCH_SIZE)
-        )
-        tmdb_ids = list(
-            set(
-                [doc["tmdb_id"] for doc in tmdb_details_batch]
-                + [doc["tmdb_id"] for doc in imdb_batch]
-                + [doc["tmdb_id"] for doc in meta_batch]
-                + [doc["tmdb_id"] for doc in rotten_batch]
-            )
-        )
-        if not tmdb_ids:
-            break
+        tmdb_ids = all_tmdb_ids[start:start + BATCH_SIZE]
 
         # Insert batch of media
         print(
-            f"\nBatch from {start} to {start + len(tmdb_ids)} {media_type} score entries"
+            f"\nBatch from {start} to {start + len(tmdb_ids)} {media_type} score entries", flush=True
         )
 
         tmdb_details_for_tmdb_ids = list(
@@ -186,9 +178,11 @@ def copy_media(
         tmdb_details_map = {doc["tmdb_id"]: doc for doc in tmdb_details_for_tmdb_ids}
         # Do not re-insert rating rows for titles deleted on TMDB.
         flagged_ids = flagged_among(mongo_details, tmdb_ids)
-        imdb_map = {doc["tmdb_id"]: doc for doc in imdb_batch}
-        meta_map = {doc["tmdb_id"]: doc for doc in meta_batch}
-        rotten_map = {doc["tmdb_id"]: doc for doc in rotten_batch}
+        # The batches only say which titles changed. The aggregates need every source of
+        # each title, including the ones that did not change in this window.
+        imdb_map = fetch_map_by_ids(mongo_imdb, tmdb_ids)
+        meta_map = fetch_map_by_ids(mongo_meta, tmdb_ids)
+        rotten_map = fetch_map_by_ids(mongo_rotten, tmdb_ids)
 
         for tmdb_id in tmdb_ids:
             if tmdb_id in flagged_ids:
@@ -349,6 +343,7 @@ def copy_media(
             connector=connector,
             table=media_table_name,
             records=media_documents,
+            replace_null_columns=CLEARED_COLUMNS,
         )
 
         media_type_key = "movies" if is_movie else "shows"
@@ -371,12 +366,12 @@ def copy_media(
                 "rows_upserted"
             ]
 
-        start += BATCH_SIZE
 
     return entity_counts
 
 
-def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies=False):
+def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies=False, full: bool = False):
+    """full: copy every title instead of the ones changed in the last 48 h."""
     init_mongodb()
     connector = CrateConnector()
 
@@ -393,7 +388,8 @@ def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies=False)
             movie_query_selector = build_query_selector_for_object_ids(ids=movie_ids)
 
         results["movies"] = copy_media(
-            connector=connector, query_selector=movie_query_selector, media_type="movie"
+            connector=connector, query_selector=movie_query_selector, media_type="movie",
+            recent_only=not full,
         )
 
     # Process shows
@@ -404,7 +400,8 @@ def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies=False)
         show_query_selector = build_query_selector_for_object_ids(ids=show_ids)
 
     results["shows"] = copy_media(
-        connector=connector, query_selector=show_query_selector, media_type="show"
+        connector=connector, query_selector=show_query_selector, media_type="show",
+        recent_only=not full,
     )
 
     connector.disconnect()

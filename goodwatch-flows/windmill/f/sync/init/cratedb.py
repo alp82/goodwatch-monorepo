@@ -20,9 +20,10 @@ def init_database():
                 print(f"Table '{table_name}' does not exist. Creating...")
                 pk_def = f"PRIMARY KEY ({', '.join(spec['primary_key'])})"
                 all_parts = col_defs + [pk_def]
+                routing = f"BY ({spec['clustered_by']}) " if spec.get("clustered_by") else ""
                 create_sql = (
                     f"CREATE TABLE {table_name} ({', '.join(all_parts)}) "
-                    f"CLUSTERED INTO {spec['shards']} SHARDS"
+                    f"CLUSTERED {routing}INTO {spec['shards']} SHARDS"
                 )
                 db.run(create_sql)
             else:

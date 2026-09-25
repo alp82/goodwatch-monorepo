@@ -332,6 +332,70 @@ SCHEMAS = {
         "primary_key": ["tmdb_id"],
         "shards": 12,
     },
+    # IMDb episode ratings in IMDb's numbering (f/imdb_datasets/ingest), one row per TMDB show
+    # and IMDb episode. A special has a NULL season_number. One show's grid is one routed read.
+    "imdb_episode": {
+        "columns": {
+            "show_id": "INTEGER",
+            "imdb_episode_id": "TEXT",
+            "imdb_show_id": "TEXT",
+            "season_number": "INTEGER",
+            "episode_number": "INTEGER",
+            "name": "TEXT",
+            "imdb_user_score_original": "DOUBLE",
+            "imdb_user_score_rating_count": "INTEGER",
+        },
+        "primary_key": ["show_id", "imdb_episode_id"],
+        "clustered_by": "show_id",
+        "shards": 6,
+    },
+    # IMDb season scores in IMDb's numbering: the vote-weighted mean of the season's rated
+    # episodes, without specials. Seasons without a rated episode have no row.
+    "imdb_season": {
+        "columns": {
+            "show_id": "INTEGER",
+            "season_number": "INTEGER",
+            "imdb_show_id": "TEXT",
+            "imdb_user_score_original": "DOUBLE",
+            "imdb_user_score_rating_count": "BIGINT",
+            "imdb_rated_episode_count": "INTEGER",
+            "max_episode_number": "INTEGER",
+        },
+        "primary_key": ["show_id", "season_number"],
+        "clustered_by": "show_id",
+        "shards": 6,
+    },
+    # Rotten Tomatoes and Metacritic season scores (f/critic_sites/crawl, #152), one row per
+    # TMDB show and season in the site's numbering. A season the site lists without a critic
+    # score has a row with NULL scores. Column names follow the show table's.
+    "rotten_tomatoes_season": {
+        "columns": {
+            "show_id": "INTEGER",
+            "season_number": "INTEGER",
+            "rotten_tomatoes_url": "TEXT",
+            "rotten_tomatoes_tomato_score_original": "DOUBLE",
+            "rotten_tomatoes_tomato_score_review_count": "INTEGER",
+            "rotten_tomatoes_audience_score_original": "DOUBLE",
+            "rotten_tomatoes_audience_score_rating_count": "INTEGER",
+        },
+        "primary_key": ["show_id", "season_number"],
+        "clustered_by": "show_id",
+        "shards": 6,
+    },
+    "metacritic_season": {
+        "columns": {
+            "show_id": "INTEGER",
+            "season_number": "INTEGER",
+            "metacritic_url": "TEXT",
+            "metacritic_meta_score_original": "DOUBLE",
+            "metacritic_meta_score_review_count": "INTEGER",
+            "metacritic_user_score_original": "DOUBLE",
+            "metacritic_user_score_rating_count": "INTEGER",
+        },
+        "primary_key": ["show_id", "season_number"],
+        "clustered_by": "show_id",
+        "shards": 6,
+    },
     # ============================
     # ===== Related Metadata =====
     # ============================

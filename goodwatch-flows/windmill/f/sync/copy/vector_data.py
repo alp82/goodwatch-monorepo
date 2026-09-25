@@ -16,7 +16,7 @@ from f.db.mongodb import (
 from f.db.qdrant import QdrantConnector
 from f.db.cratedb import CrateConnector
 from f.sync.copy.deleted_titles import delete_titles_from_qdrant, find_flagged_tmdb_ids, flagged_among
-from f.sync.copy.tmdb_streaming import publication_lease
+from f.sync.copy.tmdb_streaming import SCHEDULED_LEASE_WAIT_SECONDS, publication_lease
 from f.sync.copy.qdrant_retry import (
     REQUEST_TIMEOUT_SECONDS, insert_points, update_points, write_with_retry,
 )
@@ -26,7 +26,9 @@ from f.sync.models.qdrant_models import QdrantMediaPoint
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 
 # Tunables
-BATCH_SIZE = 2000  # ids per loop
+# ids per loop. A batch holds the full TMDB details documents; 2000 popular titles peaked near
+# the 4 GB worker limit.
+BATCH_SIZE = 500
 UPSERT_BATCH_SIZE = 1000  # points per Qdrant write request
 HOURS_TO_FETCH = 24 * 2  # time window for "recent" updates
 
@@ -147,6 +149,53 @@ def _fetch_tmdb_ids_keyset(
 
     next_last = ids[-1] if ids else last_tmdb_id
     return ids, next_last
+
+
+def _with_fingerprint(dna_collection):
+    """Keep the ids whose DNA has a fingerprint vector, the only titles the copy writes."""
+    def keep(ids: List[int]) -> List[int]:
+        return sorted(doc["tmdb_id"] for doc in dna_collection.find(
+            {"tmdb_id": {"$in": ids}, "vector_fingerprint": {"$exists": True}}, {"_id": 0, "tmdb_id": 1}))
+    return keep
+
+
+def _drivers(c_details, c_imdb, c_dna, *, recent_only: bool) -> list:
+    """The (collection, keep) drivers whose changed documents pick the titles to copy.
+
+    The details drive every run. In the recent window, the IMDb ratings (the daily dataset
+    ingest changes them without touching the details) and the DNA also drive it. Every write
+    of new DNA or a fingerprint moves the DNA's updated_at, including when it sets
+    dna_generated_at, so updated_at alone finds them. Both are kept to titles with a
+    fingerprint, the only ones the copy writes.
+    """
+    if not recent_only:
+        return [(c_details, None)]
+    return [(c_details, None), (c_imdb, _with_fingerprint(c_dna)), (c_dna, _with_fingerprint(c_dna))]
+
+
+def _driver_batches(drivers: list, base_selector: dict, *, use_compound_hint: bool):
+    """Batches of tmdb ids from each (collection, keep) driver in turn. keep, when set, filters
+    each batch. An id comes only once."""
+    seen: set = set()
+    for collection, keep in drivers:
+        last_tmdb_id: Optional[int] = None
+        while True:
+            ids, last_tmdb_id = _fetch_tmdb_ids_keyset(
+                collection,
+                base_selector=base_selector,
+                last_tmdb_id=last_tmdb_id,
+                limit=BATCH_SIZE,
+                overfetch_factor=3,
+                use_compound_hint=use_compound_hint,
+            )
+            if not ids:
+                break
+            ids = [tmdb_id for tmdb_id in ids if tmdb_id not in seen]
+            if keep and ids:
+                ids = keep(ids)
+            seen.update(ids)
+            if ids:
+                yield ids
 
 
 def _fetch_map_by_ids(
@@ -436,8 +485,7 @@ def copy_to_qdrant(
     updated = {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
     sel = dict(query_selector or {})
 
-    # Driver: details (typically largest / frequently updated)
-    driver_collection = c_details
+    drivers = _drivers(c_details, c_imdb, c_dna, recent_only=recent_only)
     # fingerprint_v1_raw may not exist in the collection yet; check once per media type.
     write_raw_fingerprint = FINGERPRINT_RAW_VECTOR in _collection_vector_names(qc.client)
 
@@ -447,7 +495,6 @@ def copy_to_qdrant(
         "batches": 0, "attempts": 0, "retries": 0, "errors": {},
     }
 
-    last_tmdb_id: Optional[int] = None
     processed = 0
     # Titles deleted on TMDB: collected over the whole run, removed once at the end.
     flagged_ids: set = set()
@@ -456,20 +503,9 @@ def copy_to_qdrant(
     base_selector = {"updated_at": updated, **sel} if recent_only else sel
     use_compound_hint = "updated_at" in base_selector
 
-    while True:
-        ids, last_tmdb_id = _fetch_tmdb_ids_keyset(
-            driver_collection,
-            base_selector=base_selector,
-            last_tmdb_id=last_tmdb_id,
-            limit=BATCH_SIZE,
-            overfetch_factor=3,
-            use_compound_hint=use_compound_hint,
-        )
-        if not ids:
-            break
-
+    for ids in _driver_batches(drivers, base_selector, use_compound_hint=use_compound_hint):
         processed += len(ids)
-        print(f"\n{media_type} ids fetched: {processed} (last_tmdb_id={last_tmdb_id})")
+        print(f"\n{media_type} ids fetched: {processed} (last_tmdb_id={ids[-1]})")
 
         batch_flagged_ids = flagged_among(c_details, ids)
         flagged_ids |= batch_flagged_ids
@@ -518,7 +554,10 @@ def copy_to_qdrant(
         for start in range(0, len(upsert_buffer), UPSERT_BATCH_SIZE):
             batch = upsert_buffer[start:start + UPSERT_BATCH_SIZE]
             with ExitStack() as leases:
-                checks = [leases.enter_context(publication_lease(db, media_type, tmdb_id))
+                # A scheduled copy waits out the seconds-long leases of the streaming sync and
+                # the priority publish; a targeted publish fails fast and is retried.
+                lease_wait = 0 if strict_writes else SCHEDULED_LEASE_WAIT_SECONDS
+                checks = [leases.enter_context(publication_lease(db, media_type, tmdb_id, lease_wait))
                           for tmdb_id, _, _ in sorted(batch, key=lambda item: item[0])]
                 for check_owned in checks:
                     check_owned()

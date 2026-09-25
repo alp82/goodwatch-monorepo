@@ -1,0 +1,9 @@
+summary: Effective IMDb id of a TMDB title
+description: TMDB's IMDb id, else the Wikidata imdb_id_override.
+lock: '!inline f/external_ids/imdb_ids.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

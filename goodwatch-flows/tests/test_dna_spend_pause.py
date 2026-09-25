@@ -124,9 +124,11 @@ class SpendPauseTest(unittest.TestCase):
             self.assertIsNone(entry.selected_at)
             self.assertIsNone(entry.failed_at)
         done.reload()
-        self.assertTrue(done.is_selected)  # Fingerprint persistence still needs to finish.
+        # Saved with its fingerprint and released in the same write.
+        self.assertFalse(done.is_selected)
         self.assertEqual(done.selected_at, datetime(2026, 9, 14, 10))
         self.assertEqual(done.dna, self.dna)
+        self.assertEqual(len(done.vector_fingerprint), 74)
 
     def test_paused_selection_returns_empty_batch_without_touching_mongodb(self):
         self.redis.set(PAUSE_KEY, 'daily', ex=60)

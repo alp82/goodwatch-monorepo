@@ -1,4 +1,3 @@
-import re
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
@@ -7,6 +6,7 @@ from mongoengine import get_db
 from pydantic import BaseModel
 
 from f.db.cratedb import CrateConnector
+from f.external_ids.imdb_ids import effective_imdb_id, imdb_url
 from f.db.mongodb import (
     init_mongodb,
     close_mongodb,
@@ -17,6 +17,7 @@ from f.sync.copy.deleted_titles import (
     delete_titles_from_crate,
     find_flagged_tmdb_ids,
 )
+from f.sync.copy.stale_child_rows import add_stats, delete_stale_child_rows, listed_scopes
 from f.sync.models.crate_models import (
     Movie,
     Show,
@@ -44,9 +45,8 @@ STALE_SEASON_SHOWS_PER_DELETE = 500
 
 CREATOR_JOB = "Creator"
 
-IMDB_TITLE_ID = re.compile(r"tt\d+")
-# TMDB details are the only source of a title's IMDb id, so this copy clears
-# them when TMDB has none. Other writers leave them to COALESCE.
+# TMDB details own a title's IMDb id (TMDB's, else the Wikidata `imdb_id_override`),
+# so this copy clears them when neither exists. Other writers leave them to COALESCE.
 IMDB_ID_COLUMNS = ("imdb_id", "imdb_url")
 
 
@@ -55,14 +55,12 @@ IMDB_ID_COLUMNS = ("imdb_id", "imdb_url")
 def imdb_title(tmdb_details: dict, is_movie: bool) -> tuple[Optional[str], Optional[str]]:
     """The IMDb title id and link of a TMDB details document, or (None, None).
 
-    Movies carry the id at the top level, shows in `external_ids`. Anything that
-    is not a title id (missing, empty, "None", a person id) yields no link.
+    Movies carry TMDB's id at the top level, shows in `external_ids`. Without a
+    valid TMDB id, the Wikidata `imdb_id_override` is used. Anything that is not
+    a title id (missing, empty, "None", a person id) yields no link.
     """
-    raw = tmdb_details.get("imdb_id") if is_movie else (tmdb_details.get("external_ids") or {}).get("imdb_id")
-    if not isinstance(raw, str) or not IMDB_TITLE_ID.fullmatch(raw.strip()):
-        return None, None
-    imdb_id = raw.strip()
-    return imdb_id, f"https://www.imdb.com/title/{imdb_id}"
+    imdb_id, _ = effective_imdb_id(tmdb_details, is_movie)
+    return imdb_id, imdb_url(imdb_id)
 
 
 def creator_credits(tmdb_details: dict, media_id: str) -> list[tuple[Person, PersonWorkedOn]]:
@@ -214,7 +212,8 @@ def copy_media(
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     entity_ids = defaultdict(set)
     stale_seasons_deleted = 0
-    
+    stale_child_rows = {}
+
     projection = {
         "_id": 0,
         "vote_average": 0,
@@ -225,6 +224,8 @@ def copy_media(
         media_documents = []
         entity_batches = defaultdict(list)
         season_ids_by_show = {}
+        # Per copied title, the child tables whose rows its payload lists in full.
+        listed_scopes_by_title = {}
 
         tmdb_details_batch = list(
             #mongo_collection.find({"tmdb_id": 217} | updated_at_filter, projection)
@@ -254,6 +255,7 @@ def copy_media(
                 continue
             
             media_ids.append(media_id)
+            listed_scopes_by_title[int(tmdb_id)] = listed_scopes(tmdb_details, is_movie)
 
             release_date = tmdb_details.get("release_date" if is_movie else "first_air_date")
             release_year = release_date.year if release_date else None
@@ -654,10 +656,13 @@ def copy_media(
 
         if season_ids_by_show:
             stale_seasons_deleted += delete_stale_seasons(connector, season_ids_by_show)
+        add_stats(stale_child_rows, delete_stale_child_rows(
+            connector, media_type, listed_scopes_by_title, entity_batches))
 
         start += BATCH_SIZE
 
     entity_counts["deleted_titles"] = deleted_titles
+    entity_counts["stale_child_rows"] = stale_child_rows
     if not is_movie:
         entity_counts["stale_seasons"] = {"rows_deleted": stale_seasons_deleted}
     return entity_counts

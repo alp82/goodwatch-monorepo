@@ -1,0 +1,29 @@
+summary: Publish critic season scores to Crate
+description: Rewrites the Crate rotten_tomatoes_season or metacritic_season rows of the given shows, or of every show with all_shows (#152).
+lock: '!inline f/critic_sites/publish.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order:
+    - site
+    - show_ids
+    - all_shows
+  properties:
+    site:
+      type: string
+      description: rotten_tomatoes or metacritic
+      default: rotten_tomatoes
+      enum:
+        - rotten_tomatoes
+        - metacritic
+    show_ids:
+      type: array
+      description: TMDB show ids.
+      items:
+        type: integer
+    all_shows:
+      type: boolean
+      description: Republish every show with a season document.
+      default: false
+  required: []
