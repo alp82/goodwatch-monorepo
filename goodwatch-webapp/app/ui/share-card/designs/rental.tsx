@@ -1,4 +1,4 @@
-// "Rental card": a video-store checkout card half out of its kraft pocket.
+// "Rental card": a video-store checkout card half out of its pocket, which takes the theme color.
 // Typed titles on ruled lines, rank as the line number, due-date stamps in the theme's ink,
 // the #1 poster paper-clipped to the corner, and a handwritten member signature.
 import { alpha, Brand, col, fit, flex, Img, kind, pad, svgUri } from "../kit"
@@ -149,21 +149,21 @@ function RentalCard({ title, items, name, theme, date, editing }: CardProps) {
 				</div>
 			</div>
 
-			{/* Kraft pocket, painted over the bottom of the card. */}
-			<div style={col({ position: "absolute", left: 80, top: CARD_Y + CARD_H - 60, width: 920, height: H - (CARD_Y + CARD_H - 60) + 40, backgroundColor: "#c79f62", borderRadius: "14px 14px 0 0", boxShadow: `0 -10px 30px ${alpha("#000000", 0.35)}`, padding: "22px 44px", backgroundImage: `linear-gradient(180deg, ${alpha("#ffffff", 0.18)} 0%, ${alpha("#ffffff", 0)} 30%)` })}>
-				<div style={flex({ justifyContent: "space-between", alignItems: "center", color: "#3d2a10" })}>
+			{/* Pocket in the theme color, painted over the bottom of the card. */}
+			<div style={col({ position: "absolute", left: 80, top: CARD_Y + CARD_H - 60, width: 920, height: H - (CARD_Y + CARD_H - 60) + 40, backgroundColor: t.accent, borderRadius: "14px 14px 0 0", boxShadow: `0 -10px 30px ${alpha("#000000", 0.35)}`, padding: "22px 44px", backgroundImage: `linear-gradient(180deg, ${alpha("#ffffff", 0.18)} 0%, ${alpha("#ffffff", 0)} 30%)` })}>
+				<div style={flex({ justifyContent: "space-between", alignItems: "center", color: t.ink })}>
 					<div style={flex({ alignItems: "center", gap: 14, fontSize: 20, fontWeight: 700, letterSpacing: 4 })}>
-						<div style={{ display: "flex", width: 14, height: 14, borderRadius: 7, backgroundColor: t.accent }} />
+						<div style={{ display: "flex", width: 14, height: 14, borderRadius: 7, backgroundColor: t.ink }} />
 						PLEASE BE KIND · REWIND
 					</div>
 					<div style={{ display: "flex", fontSize: 22, fontWeight: 700, letterSpacing: 2 }}>goodwatch.app</div>
 				</div>
 				<div style={flex({ marginTop: 18, justifyContent: "space-between" })}>
 					{Array.from({ length: 46 }, (_, i) => (
-						<div key={i} style={{ display: "flex", width: 10, height: 3, backgroundColor: alpha("#3d2a10", 0.35) }} />
+						<div key={i} style={{ display: "flex", width: 10, height: 3, backgroundColor: alpha(t.ink, 0.35) }} />
 					))}
 				</div>
-				<div style={{ display: "flex", marginTop: 14, fontFamily: "Anton", fontSize: 76, lineHeight: 1, letterSpacing: 6, color: alpha("#3d2a10", 0.16) }}>VIDEO CLUB</div>
+				<div style={{ display: "flex", marginTop: 14, fontFamily: "Anton", fontSize: 76, lineHeight: 1, letterSpacing: 6, color: alpha(t.ink, 0.18) }}>VIDEO CLUB</div>
 			</div>
 		</div>
 	)
