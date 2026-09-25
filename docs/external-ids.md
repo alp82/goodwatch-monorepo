@@ -102,4 +102,5 @@ trailing-slash form.
   per site for the top 10k shows ([rt-metacritic-speedup.md](research/season-episode-scores/rt-metacritic-speedup.md)
   §1.2). #150 didn't ask for them. They fit #152, which needs the sitemaps as a directory and negative cache anyway.
 - #152 must fetch a Wikidata URL before trusting it: one of five checked returned 404. It should store the canonical
-  URL after redirects, and compare canonical URLs rather than slugs.
+  URL after redirects, and compare canonical URLs rather than slugs. Done, with the sitemaps: see
+  [critic-scores.md](critic-scores.md).
