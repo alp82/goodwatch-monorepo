@@ -1,24 +1,32 @@
-// PROTOTYPE — score-area redesign variants for show and movie pages, switchable with ?score=1..6
-// on the real details route. ?score=0 or no param shows the current bar. Throwaway: this folder
-// lives only on the prototype/score-area branch and must not reach main.
+// PROTOTYPE — score-area layout variants for show and movie pages, switchable with ?score=1..8
+// on the real details route. ?score=0 or no param shows the current production hero. Round 2:
+// the existing score ring, rating chips, rate button, and episode-ratings chip keep their look;
+// the variants only rearrange, group, and resize them. Throwaway: this folder lives only on the
+// prototype/score-area branch and must not reach main.
 import { useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
-import { PrototypeFonts, type VariantProps } from "./shared"
-import Variant1Byline from "./Variant1Byline"
-import Variant2Consensus from "./Variant2Consensus"
-import Variant3Synthesis from "./Variant3Synthesis"
-import Variant4Dials from "./Variant4Dials"
-import Variant5Glass from "./Variant5Glass"
-import Variant6YourTurn from "./Variant6YourTurn"
+import type { VariantProps } from "./shared"
+import {
+	Variant1ActionCluster,
+	Variant2PosterStack,
+	Variant3BigRing,
+	Variant4QuietPill,
+	Variant5TitleStrip,
+	Variant6CompactLine,
+	Variant7ScoreAndRate,
+	Variant8OnePanel,
+} from "./variants"
 
 export const SCORE_VARIANTS: { key: string; name: string; Component: ((p: VariantProps) => JSX.Element) | null }[] = [
 	{ key: "0", name: "Current bar", Component: null },
-	{ key: "1", name: "Byline", Component: Variant1Byline },
-	{ key: "2", name: "Consensus strip", Component: Variant2Consensus },
-	{ key: "3", name: "Synthesis", Component: Variant3Synthesis },
-	{ key: "4", name: "Dials", Component: Variant4Dials },
-	{ key: "5", name: "Glass card", Component: Variant5Glass },
-	{ key: "6", name: "Your turn", Component: Variant6YourTurn },
+	{ key: "1", name: "Action cluster", Component: Variant1ActionCluster },
+	{ key: "2", name: "Poster stack", Component: Variant2PosterStack },
+	{ key: "3", name: "Big ring", Component: Variant3BigRing },
+	{ key: "4", name: "Quiet pill", Component: Variant4QuietPill },
+	{ key: "5", name: "Title strip", Component: Variant5TitleStrip },
+	{ key: "6", name: "Compact line", Component: Variant6CompactLine },
+	{ key: "7", name: "Score and Rate", Component: Variant7ScoreAndRate },
+	{ key: "8", name: "One panel", Component: Variant8OnePanel },
 ]
 
 export function useScoreVariant() {
@@ -30,12 +38,12 @@ export function useScoreVariant() {
 export function ScoreAreaPrototype(props: VariantProps & { variantKey: string }) {
 	const variant = SCORE_VARIANTS.find((v) => v.key === props.variantKey)
 	if (!variant?.Component) return null
-	const { Component } = variant
+	const { Component, key } = variant
+	const { variantKey, ...rest } = props
 	return (
-		<>
-			<PrototypeFonts />
-			<Component media={props.media} hasEpisodeGrid={props.hasEpisodeGrid} />
-		</>
+		<div data-score-variant={key}>
+			<Component {...rest} />
+		</div>
 	)
 }
 
