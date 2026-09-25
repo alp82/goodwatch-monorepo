@@ -64,12 +64,8 @@ def to_timestamp(dt_input: str) -> Optional[float]:
         raise Exception(f"cannot convert datetime to timestamp: {dt_input}")
 
 
-def fetch_all_documents_in_batch(tmdb_ids, collection):
-    results = defaultdict(list)
-    for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}}):
-        if doc.get("created_at") and doc.get("updated_at"):
-            results[doc["tmdb_id"]].append(doc)
-    return dict(results)
+def fetch_map_by_ids(collection, tmdb_ids) -> dict:
+    return {doc["tmdb_id"]: doc for doc in collection.find({"tmdb_id": {"$in": tmdb_ids}})}
 
 
 def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseModel]):
@@ -186,9 +182,11 @@ def copy_media(
         tmdb_details_map = {doc["tmdb_id"]: doc for doc in tmdb_details_for_tmdb_ids}
         # Do not re-insert rating rows for titles deleted on TMDB.
         flagged_ids = flagged_among(mongo_details, tmdb_ids)
-        imdb_map = {doc["tmdb_id"]: doc for doc in imdb_batch}
-        meta_map = {doc["tmdb_id"]: doc for doc in meta_batch}
-        rotten_map = {doc["tmdb_id"]: doc for doc in rotten_batch}
+        # The batches only say which titles changed. The aggregates need every source of
+        # each title, including the ones that did not change in this window.
+        imdb_map = fetch_map_by_ids(mongo_imdb, tmdb_ids)
+        meta_map = fetch_map_by_ids(mongo_meta, tmdb_ids)
+        rotten_map = fetch_map_by_ids(mongo_rotten, tmdb_ids)
 
         for tmdb_id in tmdb_ids:
             if tmdb_id in flagged_ids:

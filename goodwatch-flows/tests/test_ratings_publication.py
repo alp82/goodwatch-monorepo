@@ -1,7 +1,7 @@
 """Exercise ratings publication with incomplete source metadata, without live services."""
 import sys
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -54,3 +54,32 @@ class RatingsPublicationTest(unittest.TestCase):
                                          expected.timestamp() if expected else None)
                         self.assertEqual(result['movies' if media_type == 'movie' else 'shows']['rows_upserted'], 1)
                         collection.delete_many({})
+
+    def test_a_recent_imdb_change_keeps_the_older_sources_in_the_aggregates(self):
+        # The daily IMDb ingest moves only the IMDb document. The scheduled copy must still
+        # read the title's TMDB, Metacritic and Rotten Tomatoes values for the aggregates.
+        now = datetime.utcnow()
+        old = now - timedelta(days=30)
+        self.mongo.tmdb_movie_details.insert_one({
+            'tmdb_id': 603, 'vote_average': 8.0, 'vote_count': 100, 'updated_at': old})
+        self.mongo.imdb_movie_rating.insert_one({
+            'tmdb_id': 603, 'created_at': old, 'updated_at': now, 'user_score_original': 9.0,
+            'user_score_normalized_percent': 90.0, 'user_score_vote_count': 1000})
+        self.mongo.metacritic_movie_rating.insert_one({
+            'tmdb_id': 603, 'created_at': old, 'updated_at': old,
+            'user_score_normalized_percent': 70.0, 'user_score_vote_count': 10,
+            'meta_score_original': 60, 'meta_score_normalized_percent': 60.0, 'meta_score_vote_count': 5})
+        self.mongo.rotten_tomatoes_movie_rating.insert_one({
+            'tmdb_id': 603, 'created_at': old, 'updated_at': old,
+            'audience_score_normalized_percent': 80.0, 'audience_score_vote_count': 20,
+            'tomato_score_normalized_percent': 70.0, 'tomato_score_vote_count': 7})
+
+        all_ratings.copy_media(self.connector, {}, 'movie')
+
+        published = self.connector.upsert_many.call_args.kwargs['records'][0]
+        self.assertEqual(published.imdb_user_score_rating_count, 1000)
+        self.assertEqual(published.metacritic_meta_score_original, 60)
+        self.assertEqual(published.goodwatch_user_score_normalized_percent, 80.0)
+        self.assertEqual(published.goodwatch_user_score_rating_count, 1130)
+        self.assertEqual(published.goodwatch_official_score_normalized_percent, 65.0)
+        self.assertEqual(published.goodwatch_overall_score_voting_count, 1142)
