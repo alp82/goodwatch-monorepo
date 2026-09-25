@@ -4,9 +4,11 @@
 // needed and starts the worker, which loads both models (about 1.35 GB) and warms them up. Both calls throw while
 // SEARCH_RANKING_MODE is off.
 //
-// Per search, send one request: the English texts (the query and the residual) go through bge-base, the
-// multilingual texts (the intent and the facet phrases) through multilingual-e5-small. Never send facet phrases to
-// the English model: dozens of phrases cost over 100 ms there.
+// Per search, send one request with each model's texts. rank-search.server.ts sends the query's texts (the query or
+// residual, facet phrases, coverage units, negated clauses) to the query's main model, bge-base for English and
+// multilingual-e5-small otherwise, as the ranker was tuned. The intent text always goes to multilingual-e5-small, a
+// non-English query's English chips to bge-base. Dozens of phrases through bge-base would cost over 100 ms, so keep
+// the lists short.
 import { Worker } from "node:worker_threads"
 import { assertSearchRankingEnabled } from "./mode.server.ts"
 import {
