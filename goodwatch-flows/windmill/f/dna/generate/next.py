@@ -1,6 +1,6 @@
 from f.data_source.common import retrieve_next_entry_ids_full
 from f.db.mongodb import init_mongodb, close_mongodb
-from f.dna.models import DnaMovie, DnaTv
+from f.dna.models import DNA_STALE_AFTER_DAYS, DnaMovie, DnaTv
 from f.dna.generate.spend_pause import SpendPause
 
 
@@ -20,6 +20,7 @@ def main():
         buffer_minutes=BUFFER_SELECTED_AT_MINUTES,
         movie_model=DnaMovie,
         tv_model=DnaTv,
+        stale_after_days=DNA_STALE_AFTER_DAYS,
     )
     close_mongodb()
     return result

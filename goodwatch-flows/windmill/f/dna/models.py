@@ -13,6 +13,13 @@ from mongoengine import (
 from pydantic import BaseModel
 
 
+# DNA and its fingerprint are regenerated once they are this old. The DNA queue
+# treats a title as stale when its selected_at is older than this; a run that
+# skips fresh DNA resets selected_at to the DNA's generation time, so the queue
+# and the fetch guard agree on the DNA's age.
+DNA_STALE_AFTER_DAYS = 180
+
+
 # Database models
 
 
@@ -34,6 +41,9 @@ class BaseDNA(Document):
 
     llm_model_name = StringField()
     dna = DictField()
+    # When the LLM generated the stored DNA. Older documents lack it; their
+    # updated_at, set when the fingerprint was stored, stands in (see dna_generated_at()).
+    dna_generated_at = DateTimeField()
     vector_fingerprint = ListField(FloatField())
 
     meta = {
@@ -230,6 +240,19 @@ class DNAAnalysis(BaseModel):
     viewing_context: ViewingContext
     essence_tags: list[str]
     essence_text: str
+
+
+def create_fingerprint(scores: dict) -> list[float]:
+    """The stored fingerprint: the 74 attribute scores in CoreScores order."""
+    validated = CoreScores(**scores)
+    return [float(getattr(validated, name)) for name in CoreScores.model_fields]
+
+
+def dna_generated_at(entry: BaseDNA):
+    """When the title's stored DNA was generated, or None without DNA."""
+    if not entry.dna:
+        return None
+    return entry.dna_generated_at or entry.updated_at
 
 
 def main():
