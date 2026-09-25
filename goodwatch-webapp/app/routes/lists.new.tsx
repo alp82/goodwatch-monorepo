@@ -36,6 +36,7 @@ import { ShareListEditor } from "~/ui/share-list-editor/ShareListEditor"
 import { isComplete, readBrowserDraft } from "~/ui/share-list-editor/autosave"
 import type { ListDraft } from "~/ui/share-list-editor/list-state"
 import { getUserIdFromRequest, useUser } from "~/utils/auth"
+import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -103,15 +104,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	)
 }
 
-export const meta: MetaFunction = () => [
-	{ title: "Make your top 5 · GoodWatch" },
-	{
-		name: "description",
-		content:
-			"Rank your five favorite movies or shows and share them as a card.",
-	},
-	{ name: "robots", content: "noindex, nofollow" },
-]
+// The editor stays out of search results, but links to it (Make your own, Remix) get a proper preview.
+export const meta: MetaFunction = () => {
+	const pageMeta: PageMeta = {
+		title: "Make your top 5 · GoodWatch",
+		description: "Rank your five favorite movies or shows and share them as a card.",
+		url: "https://goodwatch.app/lists/new",
+		image: "https://goodwatch.app/og/lists/new.png",
+		alt: "Rank your top 5 movies or shows on GoodWatch and share them",
+	}
+	return [
+		...buildMeta({ pageMeta }).filter((tag) => !("name" in tag && tag.name === "robots")),
+		{ name: "robots", content: "noindex, nofollow" },
+	]
+}
 
 export default function NewShareList() {
 	const { initial, startsFresh, quickPicks, date, byline } =

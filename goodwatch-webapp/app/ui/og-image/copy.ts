@@ -99,6 +99,11 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		title: "Rate 5 movies. Get great picks.",
 		subtitle: "Recommendations that fit your taste, in 30 seconds.",
 	},
+	"/lists/new": {
+		tag: "Top 5",
+		title: "Rank your top 5. Share it.",
+		subtitle: "Pick five movies or shows, choose a card design, and share the link.",
+	},
 	"/wishlist": {
 		tag: "Wishlist",
 		title: "Your watch-next list",
