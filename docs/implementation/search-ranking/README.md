@@ -92,23 +92,27 @@ Crate leaves the ranking path. It keeps serving the title lookup and display fie
   - **At most two builds.** After moving the current-build row, the build job deletes every file that neither the new
     build nor the previous one uses. The previous build stays for rollback and for a webapp still loading it. That
     keeps the table at about 60 to 100 MB, estimated from about 30 to 50 MB per compressed build.
-  - **Check access first.** Nobody has used blob tables on this cluster yet. Confirm the webapp can read the blob
-    endpoint (`/_blobs/search_index_files/<sha1>`) with its SQL credentials. If it can't, fall back to a normal table
-    with one compressed file per row, with the same build record and cleanup.
+  - **Access, checked in #142.** The webapp container on 10.0.0.21 read a test blob from all three Crate nodes with
+    its SQL credentials (`CRATE_USER`, basic auth). A node that doesn't hold the blob answers `307` with a `Location`
+    on the node that does, so the loader must follow redirects. Like `/_sql`, the blob endpoint also answers LAN
+    requests without credentials. The fallback (a normal table with one compressed file per row) wasn't needed.
 
 ### Webapp
 
-The webapp loads about 130 MB of tables at startup:
+The webapp loads the index files of one build at startup. Sizes of the first production build (#142), gzipped and
+as JSON; the [index files](#index-files) section has the formats:
 
-| table | size in memory | used for |
-|---|---|---|
-| Term statistics (659k terms, document frequency) | 49 MiB | BM25F query weights, spell correction |
-| Name index | 9 MB | people, studios, teams, typo matching |
-| Credits (main and minor, writer fallback for shows) | 11 MB | own-title boost and bounds |
-| People and studios | 15 MB | peers, dominance tests |
-| Negation labels | 9 MB | label negation |
-| Title table (50,305 eligible titles) | 3 MB | priors, filters, cuts |
-| Intent examples, vocabulary, alternate cuts | under 3 MB | intent, spell correction, cut folding |
+| file | gzipped | JSON | used for |
+|---|---|---|---|
+| `term_statistics` (660k terms, id and document frequency) | 5.1 MB | 17 MB | BM25F query weights and term ids |
+| `name_index` (32k resolving keys, 22k entities with their credits) | 3.0 MB | 12 MB | people, studios, teams, typo matching, own titles |
+| `negation_labels` (104k labels) | 3.6 MB | 15 MB | label negation |
+| `title_table` (50,371 eligible titles) | 1.6 MB | 6 MB | priors, "like X" titles, fuzzy titles, era, filters |
+| `peers` (4.5k people and studios) | 1.4 MB | 2 MB | peers |
+| `word_frequencies`, `collocations`, `alternate_cuts`, `intent_examples` | 1 MB | 3 MB | spell correction, name tests, units, cut folding, intent |
+| `mix_vectors` (int8 text vectors of the eligible titles) | 58 MB | 78 MB | z statistics of the non-English mix |
+
+Held as typed arrays, `mix_vectors` takes 58 MB of memory and the other tables about 100 MB.
 
 It also loads the two query models, about 1.35 GB together.
 
@@ -326,6 +330,129 @@ when it changes.
 
 Port the builders from `docs/prototypes/search-arena/scripts/pull_credits.py --writer-creators` and the index code in
 the harness.
+
+Done in #142. What was built and decided:
+
+- **Code:** `f/search/build_indexes` reads the sources, stores the files and the build records, writes the profiles and
+  cleans up. `f/search/index_builders` holds the builders as pure functions, ported rule for rule from
+  `pull_credits.py --writer-creators` and `simp_combo.py`. Tests: `goodwatch-flows/tests/test_build_indexes.py`.
+- **Sources.** The eligible titles (`goodwatch_overall_score_voting_count >= 2000`, not adult in the payload or in
+  Crate) come from Qdrant (payload, `fingerprint_v1`, `text_en_v1`, `text_multi_v1`) and Crate, combined with
+  `f/search/title_text.title_inputs` exactly as the embedding does, so the body terms are the terms of each title's
+  `terms_bm25f_v1` vector. Credits come from Crate `person_worked_on` (director, writing, `Creator` and Executive
+  Producer jobs) and `person_appeared_in` (billing order below 15 for movies and 40 for shows), companies from
+  `movie`/`show.production_company_ids` and `show.network_ids`. Term ids come from `search_terms`; a term without an
+  id yet (its title's new text isn't embedded yet) is left out until the next build.
+- **Worker:** tag `highperf`. The run holds the vectors of about 50,000 titles and loads multilingual-e5-small for
+  the intent examples, which is more than the 4 GiB of a default worker.
+- **Storage.**
+  - `search_index_files` is a blob table with 3 shards, created on September 25, 2026, and listed in
+    `BLOB_TABLES` in `f/sync/models/crate_schemas.py`; `f/sync/init/cratedb` creates missing blob tables.
+  - `search_index_builds (build_id, status, manifest, started_at, finished_at)`: one row per build (`building`,
+    then `complete`) with its manifest, plus the row `build_id = 'current'` holding the manifest of the build the
+    webapp loads. Build ids are UTC timestamps such as `20260925T061500Z`.
+  - A run computes every file first, records the build as `building` with its file list, writes the files whose
+    digest isn't stored yet, writes the profiles, marks the build `complete` and moves `current` with a
+    compare-and-set on `_seq_no`. A run that loses the compare-and-set fails and publishes nothing.
+  - **Cleanup** keeps `current`, the build it replaced (`previous_build_id`), and builds still `building` that started
+    less than 6 hours ago. It deletes every other build row, every blob none of the kept builds lists, and every
+    profile point whose `build_id` isn't a kept build.
+- **Reference profiles.** One point per entity of the name index (person, team or studio brand): the log-vote
+  weighted, normalized centroids of its top 20 main-credit titles by votes (ties: lower point id), and the top 40
+  profile terms sorted by weight, then by term. Point id: UUIDv5 of the entity key (`person:<id>`,
+  `team:<id>,<id>`, `studio:c:<id>,n:<id>,...`) in the namespace `6f1c2d8e-5b0a-4f7e-9a51-3c2e8d4b7a10`, so an
+  entity keeps its point from build to build. Payload: `kind`, `name`, `terms` (`[{term, weight}]`) and
+  `build_id`. The name index lists each entity's point id, so the webapp never computes it. A query that names
+  several entities ("Bud Spencer and Terence Hill") has no stored profile; the webapp builds it from the seeds'
+  vectors, as the prototype does.
+- **Schedule and manual runs:** see [the flow's schedule](#build-schedule).
+
+#### Build schedule
+
+`f/search/build_indexes` runs daily at 06:15 Europe/Berlin (`0 15 6 * * *`), after the night's credit copy (04:00),
+DNA copy (05:00) and embedding run (05:45). Windmill schedules aren't synced from the repository; this one was
+created through the API. After a full `f/search/embed_titles` run, start `f/search/build_indexes` by hand (no
+arguments), so the term statistics and profiles use the new vectors the same day. `dry_run: true` builds everything
+and reports sizes without writing.
+
+#### Fidelity against the prototype
+
+`docs/prototypes/search-arena/bench/indexes/fidelity.py` compares the builders with `simp_combo.py`'s own
+in-memory indexes (`FINAL["combo-safe-v3"]`).
+
+- **Same inputs** (`logic`, `results/bench/indexes-logic.json`): the arena's catalog, raw credits and embeddings go
+  through the production builders. Credits (266,850 people), studios, word frequencies and the spell vocabulary,
+  term df and IDF (bitwise, 659,282 terms), negation labels, alternate cuts, peers (4,505, identical centroids), and
+  all 48 single-entity reference profiles of the graded queries (seeds, top 40 terms and order; centroid cosine
+  1.0) are identical. The names detected in all 168 graded queries are identical. Two known differences:
+  - **Kept people.** The prototype's `persons.json` counted each person's titles with the older creator fallback
+    (top Executive Producers); the build counts them from the credits the ranker uses (the writer fallback). 826
+    people drop out and 9 come in, which changes 4 of 32,444 resolving keys ("kevin fox" no longer resolves;
+    "clery", "stoudt" and "charlotte stoudt" now do). No graded query is affected.
+  - **Collocations:** 1 of 102,440 differs, because a person was renamed between the two arena data pulls.
+- **Production build** (`prod`, `results/bench/indexes-prod.json`): the names detected in all 168 graded queries
+  are identical. Of the 50 entities of the graded reference queries, 40 have identical credits; the other 10
+  differ by fresher data (new titles, and `created_by` creators: Vince Gilligan is now a writer on The X-Files
+  instead of its fallback creator, Seth Rogen is now a creator of Preacher). Profile centroids have cosine 0.9993
+  (fingerprint) and 0.9975 (text) or higher against the prototype's, and 98% of the top 40 terms are the same.
+  Term df of the graded queries' terms changed by 0.3% at the 95th percentile.
+
+### Index files
+
+Every file is one gzipped UTF-8 JSON object, stored in `search_index_files` under the SHA-1 of the gzipped bytes.
+Gzip's timestamp is fixed, so an unchanged index has the same digest and isn't written again. Conventions:
+
+- Arrays are columnar: parallel arrays of equal length, not arrays of objects.
+- Point ids are JSON numbers (below 2^53, exact in JavaScript).
+- A numeric matrix is `{"shape": [rows, columns], "float32": "<base64>"}` (or `"int8"`), little-endian, row-major.
+- Title rows are the eligible titles in point id order, the same order in `title_table` and `mix_vectors`.
+- Text rules the webapp must reproduce:
+  - `words(s)`: the lowercased runs of letters and digits (Python `[^\W_]+`: Unicode letters and numbers, no
+    underscore, no combining marks). `normalized(s)` joins them with spaces.
+  - `fold(s)`: lowercase, NFKD, drop combining marks, remove a possessive `'s` / `’s` / `` `s ``, `&` becomes
+    ` and `, `+` becomes a space, then `words` joined with spaces.
+  - Terms: `f/search/terms` (`tokens`, `stem`, `terms`), which the webapp ports for the query side.
+
+The manifest in `search_index_builds` is `{format: 1, build_id, created_at, previous_build_id, files: {<name>:
+{sha1, bytes}}, profiles: {collection, points}, stats}`.
+
+**Loading.** The webapp reads `SELECT manifest FROM search_index_builds WHERE build_id = 'current'` (a primary-key
+read, always current), downloads each file with `GET http://<crate host>:4200/_blobs/search_index_files/<sha1>`
+(basic auth, follow a `307`), checks the SHA-1, gunzips and parses it. It swaps in a new build only when every file
+has loaded, and checks the row again every few minutes. If a download returns 404, the cleanup of a later build
+removed it: read the current row again.
+
+| file | fields | how the ranker uses it |
+|---|---|---|
+| `title_table` | `point_ids`, `titles` (the title, else the original title), `original_titles` (`""` when unknown), `years` (0 when unknown), `votes`, `goodwatch_scores` (null when unknown), `popularity`, `imdb_ids` (null when unknown), `flag_names`, `flags` (bit `i` set when `flag_names[i]` is true), `production_methods` | votes and GoodWatch score priors, "like X" titles (votes >= 10,000), franchise titles, fuzzy titles, the era filter, the imdb dedup of the blend, and the query's filter evaluated in memory for the mix statistics |
+| `term_statistics` | `n` (eligible titles), `terms` (sorted by code point), `ids` (`search_terms` id: the index in `terms_bm25f_v1`), `df` | `idf(t) = ln(1 + (n - df + 0.5) / (df + 0.5))`. The BM25F query is a sparse vector of `idf(t)` at `ids[t]` for each distinct query term; a term not in the file adds nothing |
+| `word_frequencies` | `words` (sorted), `df` (eligible titles whose title, original title, essence text, essence tags or keywords contain the word), `spell_vocabulary` (words with df >= 20 made only of letters, sorted) | spell correction: an unknown word (ASCII letters, 4 or more, df < 3) becomes the vocabulary word one edit away (transpositions count one) with the highest df, ties to the first in file order. Name keys: a single-word key's df. Typos and fuzzy titles: words with df 0 |
+| `collocations` | `bigrams`: sorted terms `a_b` | two adjacent unit words form one facet unit when `stem(a) + "_" + stem(b)` is in the list (df of the bigram >= 0.3 x the rarer word's df over the titles, body fields, and creator and cast names the prototype indexed) |
+| `name_index` | `keys` (sorted folded keys that resolve), `entity` (index into `entities` per key), `entities`: `{id` (profile point id), `kind` (`person`, `team`, `studio`), `name`, `members` (`p:<person id>`, `c:<company id>`, `n:<network id>`), `mass` (votes of the main-credit titles), `titles` (`[point id, weight]`: 1 for a main credit, 0.5 for a minor one, the max over members), `codirected` (point ids a person member co-directed), `mention` (folded names searched in other titles' texts)`}` | a key is listed only when it resolves (its entity's mass >= 3 x the next entity's and >= 150,000 x (1 + the key's word df)), so detection is a lookup. Keys with a space are the typo targets (one Levenshtein edit). A team counts as a person with several ids. Title weights of several entities: the mean over entities. Own titles: weight 1, plus `codirected` for the bounds. Mentions: `mention` joined with spaces, scored as BM25F |
+| `peers` | `members`, `fingerprints` (float32 `[n, 74]` centroids), `titles` (top 8 point ids by votes) | peers of a reference: members of the same kind (`p:` people, `c:`/`n:` studios), z-scored cosine to the reference's fingerprint centroid, the nearest 15 that aren't the reference's own members, each giving `max(z, 0)` to its titles |
+| `negation_labels` | `labels` (lowercased keywords and essence tags), `stems` (the label's distinct content stems, sorted), `titles` (point ids) | a negated phrase hits the labels whose stems contain every stem of the phrase; a title's penalty share is `min(1, hits / 2)` |
+| `alternate_cuts` | `pairs` of point ids | cut folding: keep the first title of every linked set in rank order |
+| `intent_examples` | `labels`, `texts`, `model`, `prefix` (`query: `), `vectors` (float32 `[39, 384]`, multilingual-e5-small of prefix + text) | the intent is the label of the example with the highest dot product with the query (names replaced by `X`) |
+| `mix_vectors` | `point_ids`, `text_multi_v1` and `text_en_v1`, each `{scale: float32 [d], values: int8 [n, d]}` (vector = values x scale; a title without the vector has zeros) | z statistics of the non-English mix, see below |
+
+**The non-English mix statistics.** The mix z-scores the multilingual cosine and the chips' bge-base cosine over
+every filtered title (#137). Those statistics depend on the query vectors, so no number can be stored per filter.
+Storing a covariance matrix per filter works only for a few fixed filters, and the filters vary: media type,
+animation, anime, audience and mood flags, and the era. `bench/indexes/mix_stats.py` ranked the 12 graded non-English
+queries with chips four ways (`results/bench/indexes-mix.json`):
+
+| z statistics over | top 10 as the prototype | top 50 in the same order |
+|---|---|---|
+| every eligible title | 7 of 12 | 4 of 12 |
+| the eligible titles of the query's media type | 8 of 12 | 8 of 12 |
+| the filtered titles, from `mix_vectors` (int8) | 12 of 12 | 11 of 12 |
+
+So the build ships the int8 vectors, and the webapp computes the mean and spread of both cosines over the query's
+filtered titles (the Qdrant filter evaluated on `title_table`, plus the era filter): for each model,
+`values[row] · (q ⊙ scale)` over the filtered rows. Only the ratio of the two spreads changes the ranking. The
+spread ratio is within 0.04% of the exact one. In Node, the scan over all 50,371 titles took 33 ms on the benchmark
+machine; it runs only for non-English queries, and it can overlap the Qdrant round that fetches the two top-2,000
+lists.
 
 ### Copy `created_by`
 
