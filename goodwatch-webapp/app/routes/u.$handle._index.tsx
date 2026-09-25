@@ -71,7 +71,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			lists: summaries,
 			isOwner,
 		},
-		isOwner ? { headers: { "Cache-Control": "private, no-store" } } : undefined,
+		// Never cached by shared caches: the owner's view differs from a visitor's, and an unlisted or deleted list
+		// must leave the profile right away.
+		{ headers: { "Cache-Control": "private, no-store" } },
 	)
 }
 
