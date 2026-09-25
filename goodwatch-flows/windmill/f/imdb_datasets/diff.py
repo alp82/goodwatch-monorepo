@@ -61,13 +61,17 @@ def create_input_tables(db) -> None:
         db.execute(f"CREATE OR REPLACE TABLE {table} ({columns})")
 
 
-def should_skip(stored_etags: dict, current_etags: dict, mapping_changes: int, pending_shows: int) -> bool:
-    """Skip the run when both files are unchanged, no TMDB title got a new IMDb id, and no
-    Crate sync is left over from an earlier run."""
+def should_skip(stored_etags: dict, current_etags: dict, relinked: int, pending_shows: int) -> bool:
+    """Skip the run when both files are unchanged, TMDB moved no title to another IMDb id, and
+    no Crate sync is left over from an earlier run.
+
+    A title's first IMDb id does not force a run: TMDB adds thousands a day while its details
+    are fetched, and they wait for the next files like any new rating. A skipped run keeps
+    the details window open, so they are read again then."""
     same_files = all(
         current_etags.get(name) and stored_etags.get(name) == current_etags.get(name) for name in DAILY_FILES
     )
-    return same_files and mapping_changes == 0 and pending_shows == 0
+    return same_files and relinked == 0 and pending_shows == 0
 
 
 def build_title_map(db) -> None:
@@ -95,15 +99,20 @@ def build_title_map(db) -> None:
     """)
 
 
-def mapping_changes(db) -> int:
-    """Titles that TMDB linked to an IMDb id since the last run, or relinked to another id."""
-    return db.execute("""
-        SELECT count(*) FROM title_map m
-        WHERE NOT EXISTS (
-            SELECT 1 FROM stored_titles s
-            WHERE s.kind = m.kind AND s.tmdb_id = m.tmdb_id AND s.imdb_id = m.imdb_id
+def link_changes(db) -> dict:
+    """Titles TMDB linked to their first IMDb id since the last run (new) or moved to another
+    IMDb id (relinked)."""
+    new, relinked = db.execute(r"""
+        WITH s AS (
+            SELECT kind, tmdb_id, coalesce(bool_or(regexp_full_match(imdb_id, 'tt[0-9]+')), false) linked,
+                   list(imdb_id) imdb_ids
+            FROM stored_titles GROUP BY kind, tmdb_id
         )
-    """).fetchone()[0]
+        SELECT count(*) FILTER (s.tmdb_id IS NULL OR NOT s.linked),
+               count(*) FILTER (s.linked AND NOT list_contains(s.imdb_ids, m.imdb_id))
+        FROM title_map m LEFT JOIN s ON s.kind = m.kind AND s.tmdb_id = m.tmdb_id
+    """).fetchone()
+    return {"new": new, "relinked": relinked}
 
 
 def diff_titles(db, run_date: str) -> dict:

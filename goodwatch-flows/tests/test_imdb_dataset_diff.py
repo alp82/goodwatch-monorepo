@@ -146,14 +146,16 @@ class TitleDiffTests(unittest.TestCase):
             details=[("movie", 1, "", False), ("movie", 2, "None", False)],
         )
         self.assertEqual(db.execute("SELECT tmdb_id, imdb_id FROM title_map").fetchall(), [(1, "tt1")])
-        self.assertEqual(diff.mapping_changes(db), 0)
+        self.assertEqual(diff.link_changes(db), {"new": 0, "relinked": 0})
 
-    def test_mapping_changes_count_new_and_relinked_titles(self):
+    def test_link_changes_tell_first_links_from_relinks(self):
         db = database(
-            stored_titles=[stored(1, "tt1", 7.0, 100), stored(2, "tt2", 7.0, 100)],
-            details=[("movie", 1, "tt1", False), ("movie", 2, "tt3", False), ("tv", 7, "tt7", False)],
+            stored_titles=[stored(1, "tt1", 7.0, 100), stored(2, "tt2", 7.0, 100), stored(3, None, None, None)],
+            details=[("movie", 1, "tt1", False), ("movie", 2, "tt3", False), ("tv", 7, "tt7", False),
+                     ("movie", 3, "tt4", False)],
         )
-        self.assertEqual(diff.mapping_changes(db), 2)
+        # Title 2 moved to another IMDb id; titles 3 and 7 got their first one.
+        self.assertEqual(diff.link_changes(db), {"new": 2, "relinked": 1})
 
     def test_links_without_a_rating_write_are_stored_on_their_own(self):
         db = database(
@@ -365,12 +367,12 @@ class CrateRowTests(unittest.TestCase):
 class SkipTests(unittest.TestCase):
     def test_a_run_skips_only_when_nothing_changed(self):
         etags = {"title.ratings.tsv.gz": '"a"', "title.episode.tsv.gz": '"b"'}
-        self.assertTrue(diff.should_skip(etags, dict(etags), mapping_changes=0, pending_shows=0))
-        self.assertFalse(diff.should_skip(etags, etags | {"title.ratings.tsv.gz": '"c"'}, mapping_changes=0, pending_shows=0))
-        self.assertFalse(diff.should_skip(etags, etags | {"title.episode.tsv.gz": '"c"'}, mapping_changes=0, pending_shows=0))
-        self.assertFalse(diff.should_skip(etags, dict(etags), mapping_changes=1, pending_shows=0))
-        self.assertFalse(diff.should_skip(etags, dict(etags), mapping_changes=0, pending_shows=3))
-        self.assertFalse(diff.should_skip({}, dict(etags), mapping_changes=0, pending_shows=0))
+        self.assertTrue(diff.should_skip(etags, dict(etags), relinked=0, pending_shows=0))
+        self.assertFalse(diff.should_skip(etags, etags | {"title.ratings.tsv.gz": '"c"'}, relinked=0, pending_shows=0))
+        self.assertFalse(diff.should_skip(etags, etags | {"title.episode.tsv.gz": '"c"'}, relinked=0, pending_shows=0))
+        self.assertFalse(diff.should_skip(etags, dict(etags), relinked=1, pending_shows=0))
+        self.assertFalse(diff.should_skip(etags, dict(etags), relinked=0, pending_shows=3))
+        self.assertFalse(diff.should_skip({}, dict(etags), relinked=0, pending_shows=0))
         self.assertFalse(diff.should_skip(etags, {"title.ratings.tsv.gz": None, "title.episode.tsv.gz": None}, 0, 0))
 
 

@@ -7,7 +7,7 @@ One run:
 
 1. Reads the stored title ratings and the TMDB details changed since the last run, and sends
    a HEAD request for `title.ratings` and `title.episode`. It skips when both ETags are the
-   ones it stored, no TMDB title got a new IMDb id, and no Crate sync is left over.
+   ones it stored, TMDB moved no title to another IMDb id, and no Crate sync is left over.
 2. Downloads both files (about 65 MB) and, once a week, `title.basics` for episode titles.
 3. Diffs them against the stored Mongo values in DuckDB (`f/imdb_datasets/diff`) and writes
    only the changes:
@@ -422,18 +422,19 @@ def main(
         map_checked_at = state.get("map_checked_at")
         details = load_rows(duck, "details_delta", details_rows(db, map_checked_at), directory)
         diff.build_title_map(duck)
-        mapping_changes = diff.mapping_changes(duck)
+        links = diff.link_changes(duck)
         timings["read_titles_s"] = round(time.time() - t, 1)
         pending = sorted(set(state.get("crate_pending_show_ids") or []))
-        print(f"Stored titles {stored_titles}, details read {details}, mapping changes {mapping_changes}, "
+        print(f"Stored titles {stored_titles}, details read {details}, TMDB links {links}, "
               f"pending Crate shows {len(pending)}", flush=True)
 
         if not force and not full_crate_sync and diff.should_skip(
                 {name: (stored_files.get(name) or {}).get("etag") for name in diff.DAILY_FILES},
-                etags, mapping_changes, len(pending)):
-            print("Both files and the TMDB links are unchanged: skipping", flush=True)
+                etags, links["relinked"], len(pending)):
+            print("Both files are unchanged and TMDB relinked no title: skipping", flush=True)
             if not dry_run:
-                _save_state(db, {"map_checked_at": now, "last_checked_at": now})
+                # map_checked_at stays, so the next run reads the new first links again.
+                _save_state(db, {"last_checked_at": now})
                 db[RUNS].insert_one({"started_at": now, "outcome": "skipped", "run_date": run_date, "etags": etags})
             close_mongodb()
             if alerts:
@@ -474,7 +475,8 @@ def main(
             "episode_names": duck.execute("SELECT count(*) FROM ds_names").fetchone()[0],
             "stored_titles": stored_titles,
             "details_read": details,
-            "mapping_changes": mapping_changes,
+            "new_links": links["new"],
+            "relinked": links["relinked"],
         }
         counts["stored_episodes"] = load_rows(duck, "stored_episodes", stored_episode_rows(db), directory)
         counts["stored_seasons"] = load_rows(duck, "stored_seasons", stored_season_rows(db), directory)

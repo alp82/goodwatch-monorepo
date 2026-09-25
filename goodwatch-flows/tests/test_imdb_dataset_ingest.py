@@ -157,16 +157,32 @@ class IngestTest(unittest.TestCase):
         self.assertEqual(result["outcome"], "skipped")
         self.assertEqual([run["outcome"] for run in self.db.imdb_dataset_runs.find()], ["ingested", "skipped"])
 
-    def test_a_new_tmdb_link_runs_even_with_the_same_files(self):
+    def test_a_first_link_waits_for_the_next_files_and_is_not_lost(self):
         self.publish_day_one()
         ingest.main()
         self.db.tmdb_tv_details.update_one({"tmdb_id": 2000}, {"$set": {
             "external_ids": {"imdb_id": "tt0903747"}, "updated_at": datetime(2099, 1, 1)}})
+        self.assertEqual(ingest.main()["outcome"], "skipped")
+        self.publish("title.ratings.tsv.gz", [
+            ("tt0903747", "9.5", "2680743"), ("tt0133093", "8.7", "2250000"), ("tt0234215", "7.2", "700000"),
+            ("tt0959621", "9.0", "30000"), ("tt1054724", "8.6", "25000"), ("tt1232244", "8.8", "20000"),
+            ("tt9999999", "7.0", "500"),
+        ], '"r2"')
+        result = ingest.main()
+        self.assertEqual(result["counts"]["new_links"], 1)
+        # The newly linked show gets its own rating and its own copy of the grid.
+        self.assertEqual(self.db.imdb_tv_rating.find_one({"tmdb_id": 2000})["user_score_vote_count"], 2680743)
+        self.assertIn((2000, "tt0959621"), self.crate.rows["imdb_episode"])
+
+    def test_a_relinked_title_runs_even_with_the_same_files(self):
+        self.publish_day_one()
+        ingest.main()
+        self.db.tmdb_movie_details.update_one({"tmdb_id": 604}, {"$set": {
+            "imdb_id": "tt0133093", "updated_at": datetime(2099, 1, 1)}})
         result = ingest.main()
         self.assertEqual(result["outcome"], "ingested")
-        self.assertEqual(result["counts"]["mapping_changes"], 1)
-        # The relinked show gets its own copy of the grid.
-        self.assertIn((2000, "tt0959621"), self.crate.rows["imdb_episode"])
+        self.assertEqual(result["counts"]["relinked"], 1)
+        self.assertEqual(self.db.imdb_movie_rating.find_one({"tmdb_id": 604})["user_score_vote_count"], 2250000)
 
     def test_the_next_day_writes_only_what_moved(self):
         self.publish_day_one()
