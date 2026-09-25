@@ -694,6 +694,111 @@ The spec's estimate was a median of 105 to 154 ms and a 95th percentile of 263 t
 difference, as #143 found. Loading took 6 s for the index and 21 s for the models (14 s of it the download), and
 the process grew to 2.1 GB RSS.
 
+## Follow-ups: language routing, Jev retries and Qdrant clients
+
+Done in #147.
+
+### Spanish and Turkish routing
+
+`nonEnglish()` in `combined-search/language.server.ts` decides whether a search takes the non-English path (today:
+the Jev reading of the original text and the fingerprint vector only, because translation is off in production).
+
+- **German and French** keep the v1 rule: two marker words.
+- **Spanish and Turkish** need two points and more points than the search has English function words ("the",
+  "with", "about", "movies", "english", ...). A strong word ("películas", "temporada", "dizi", "izle", "bölüm") is
+  worth two, a weak word ("una", "comedia", "komik", "korku") one, and so is a word with "ñ" or a Turkish verb ending
+  ("izlenecek", "oynuyor").
+- **"ñ" and "ç" no longer route on their own.** v1 sent "Iñárritu movies" and "quinceañera coming of age film" to the
+  non-English path. "ä", "ö", "ü", "ß", "ğ", "ı", "ş" and "İ" still do.
+- **Version:** `LANGUAGE_VERSION` is now `five-language-markers-v2`. It's part of the Jev reading's cache key for
+  every search, English ones included, so readings cached under v1 aren't reused. Each text pays for one new reading
+  the next time someone searches it (about $0.0003).
+
+`goodwatch-webapp/scripts/language-routing/check.ts` checks the routing on these sets (September 25, 2026):
+
+| set | v1 | v2 |
+|---|---|---|
+| Spanish searches, tuning set | 19 of 100 | 84 of 100 |
+| Turkish searches, tuning set | 62 of 100 | 97 of 100 |
+| Spanish searches, held out | 10 of 60 | 54 of 60 |
+| Turkish searches, held out | 37 of 60 | 57 of 60 |
+| Arena non-English queries (German, Spanish, French, Turkish) | 8 of 14 | 10 of 14 |
+| English graded arena queries: routed non-English | 0 of 154 | 0 of 154 |
+| English searches with Spanish and Turkish names, titles and loanwords: routed non-English | 2 of 241 | 0 of 241 |
+| Production search history, distinct texts: routed non-English | 0 of 43 | 0 of 43 |
+
+The held-out sets were written after the tuning and never used for it. Most remaining Spanish and Turkish misses are
+bare titles ("la casa de papel", "dirilis ertugrul"), which are language-neutral and stay English. The 4 arena misses
+are French and German, which this change doesn't touch.
+
+### Jev 529 retry
+
+`executeJevStage` in `search-runtime/runtime.server.ts` sends a request that gets HTTP 529 (TypeSafe overloaded)
+again after 100 ms, and after another 529 again after 250 ms.
+
+- **Deadline:** the retries run inside the same 1,500 ms deadline. A retry starts only while at least 700 ms of it
+  are left; otherwise the search falls back to the basic search as before.
+- **Accounting:** retries run under the one claim, Redis lock and spending estimate of the search. There's no second
+  claim or estimate. The settlement counts each rejected 529 attempt as if it was billed like the identical request
+  that succeeded, capped at the estimate. TypeSafe's docs don't say whether a 529 is billed, and the store's rule is
+  never to infer zero usage from an error.
+- **Other errors** (429, 5xx, timeouts, connection errors) aren't retried.
+
+A simulation with a fake TypeSafe endpoint (no paid calls) checked nine cases: one or two 529s recover with one claim
+and one estimate; three 529s, a late 529, a 500 and a 429 fall back with the settlement left `unknown`, as before; and
+a retry that runs past the deadline falls back with `deadline`.
+
+### Qdrant clients
+
+Measured on the webapp host (10.0.0.21) on September 25, 2026, in a separate container of the production image
+(`--cpuset-cpus=4-7`, `nice -n 19`) next to live traffic, with `goodwatch-webapp/scripts/qdrant-client-bench.ts`.
+Client overhead is wall time minus Qdrant's reported time, p50 / p95 in milliseconds:
+
+| requests | response | client | wall | Qdrant | overhead |
+|---|---|---|---|---|---|
+| search `query`, 148 recorded from the arena captures | 540 KB | `@qdrant/js-client-rest` | 186 / 315 | 84 / 121 | 105 / 219 |
+| | | `node:http` | 113 / 181 | 78 / 108 | 35 / 82 |
+| search `retrieve` (100 titles' display fields) | 196 KB | `@qdrant/js-client-rest` | 59 / 82 | 7 / 12 | 52 / 74 |
+| | | `node:http` | 23 / 36 | 7 / 12 | 16 / 28 |
+| related seed read, 150 titles | 0.8 KB | `@qdrant/js-client-grpc` | 5 / 19 | 0.5 / 2.6 | 4.7 / 14 |
+| | | `node:http` | 3 / 9 | 0.4 / 2.5 | 2.6 / 5.4 |
+| related `recommend` (100 results) | 226 KB | `@qdrant/js-client-grpc` | 109 / 158 | 47 / 81 | 60 / 85 |
+| | | `node:http` | 63 / 94 | 46 / 76 | 16 / 23 |
+
+- **Search:** today's reading retrieval calls Qdrant on 74 of the 168 arena searches: every non-English search and
+  every English search whose text evidence fills fewer than 100 results. Each of those makes one `query` (limit 2,000)
+  and one `retrieve`. No response is small, so undici's 40 ms stall doesn't apply. The cost is
+  `@qdrant/js-client-rest`'s JSON reviver, which visits every value: about 100 ms per search at the median. The
+  retrieval now calls `queryPoints` and `retrievePoints` in `search-ranking/qdrant-http.server.ts` (`node:http`,
+  keep-alive). On the 148 recorded requests both clients returned deep-equal results (the one difference at first
+  was gone on repeat and came from a change between the two calls), and the 8 vector-only arena searches returned
+  deep-equal result lists end to end.
+- **Related titles** don't use undici either: they use gRPC. The seed read shows no stall. `recommend` spends about
+  44 ms more in the client than `node:http` would, from protobuf decoding. Production logs show 151 ms p50 and 494 ms
+  p95 for the two calls together. Moving `app/utils/qdrant.ts` to `node:http` would change the transport of six
+  modules (related titles, discover, guest and user recommendations, interest discovery, fingerprint preview), so
+  it's a separate change. To keep scores identical it would have to round REST scores to float32 (`Math.fround`),
+  as gRPC returns them.
+
+### Reading cache keys and ICU
+
+#146 suspected that `canonical()` in `runtime.server.ts`, which sorts object keys with `localeCompare`, made the
+reading cache keys differ between a laptop (ICU 78.3) and the container (ICU 76.1). It doesn't:
+
+- The key order is the same in both. On the 278 distinct key sets of the reading requests for 290 queries (the arena
+  queries and the routing check sets), `localeCompare` gave the same order under Node 26 with ICU 78.3 (`en-US`, `tr-TR` and `C`
+  locales) and in the production container (Node 24.10, ICU 76.1, no `LANG`), and that order equals plain code point
+  order.
+- The keys differ because the environments use different `SEARCH_STORAGE_KEY` values. The cache key is an HMAC with
+  that key. Both write to the same Crate tables, so `search_interpretations` and `search_history` hold rows of both
+  keys, and a laptop can't see production's cached readings.
+
+Deploys of the same image compute the same keys. A Node or ICU upgrade could only change a key if the collation of
+two keys in one object changes. The keys are question ids made of lowercase ASCII letters, digits, `'`, `-`, `_`, `:`
+and spaces, where ICU's root order and code point order agree today. The effect would be cache misses (a new paid
+reading per text), not wrong results. Replacing `localeCompare` with a code point comparison would remove the
+dependency without changing any current key, but it changes the key computation, so it waits for the owner.
+
 ## Prerequisites
 
 1. **Fix the Qdrant recommendation load.** Since Qdrant restarted on September 22, 2026, it has handled about 47,000
@@ -708,9 +813,16 @@ the process grew to 2.1 GB RSS.
 
 - **Negation needs catalog labels.** "space opera without aliens" fails for every ranker. The fix is enrichment labels
   for concrete elements (aliens, robots, dragons, gore), not a ranking rule. See the walkthrough's section on this gap.
-- **Spanish and Turkish queries route as English.** The marker lists exist, but routing needs two marker hits.
-- **Jev 529 errors** fall back to basic search with no retry.
-- **The undici stall** may affect today's search, which uses `@qdrant/js-client-rest`.
+- **Spanish and Turkish queries route as English.** Fixed in #147: see [follow-ups](#follow-ups-language-routing-jev-retries-and-qdrant-clients).
+- **Jev 529 errors** fall back to basic search with no retry. Fixed in #147: two bounded retries.
+- **The undici stall** may affect today's search, which uses `@qdrant/js-client-rest`. Measured in #147: the stall
+  doesn't apply (every response is 150 KB or more), but the client's JSON conversion cost about 100 ms per search.
+  The search now uses `node:http`.
+- **Related titles** (`app/utils/qdrant.ts`, gRPC) spend about 60 ms of client time per `recommend` call, against
+  16 ms over `node:http` (#147). Not changed yet.
+- **A Jev reading that fails stays blocked.** After any provider error the attempt is `unknown`, and later searches
+  of the same text get the basic search until the attempt is reconciled (`reconcileUnknown`). #147's retries make
+  this rarer, but don't change it.
 - **holdout5 is agent-written.** Confirm quality on real queries from shadow mode.
 
 ## Ticket breakdown
