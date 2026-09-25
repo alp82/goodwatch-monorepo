@@ -1,15 +1,15 @@
-// The episode ratings grid (#153). One component, two orientations picked by the width of
-// its own box (a container query, so it follows the column it sits in, not the window):
+// The episode ratings grid (#153). One component, two orientations:
 //
-// - wide (42rem and up): seasons as rows, episodes as columns. Reads left to right like
-//   every other episode grid, and a long season fits across a desktop column.
-// - narrow: seasons as columns, episodes as rows. On a phone most shows have far fewer
+// - rows: seasons as rows, episodes as columns. Reads left to right like every other
+//   episode grid. Used only when the longest season fits the grid's box at full cell size.
+// - columns: seasons as columns, episodes as rows. On a phone most shows have far fewer
 //   seasons than episodes per season, so the grid fits the width and grows downwards,
 //   which is the direction a phone scrolls anyway.
 //
-// Both are rendered and CSS hides one, so the server render matches the client and
-// nothing jumps on hydration. A grid wider than its box scrolls sideways inside the box,
-// never the page.
+// Both are rendered and a container query on the grid's own box picks one. The query's
+// width is the rows table's width, worked out from the show's episode count, so the server
+// render matches the client and nothing jumps on hydration. A grid wider than its box
+// scrolls sideways inside the box, never the page.
 //
 // Episodes are solid vibe tiles with the score in white. Each season label carries the
 // IMDb season score; hovering, focusing or tapping it opens every site's season score.
@@ -39,6 +39,25 @@ type Episode = GridEpisode | GridSpecial
 type Orientation = "wide" | "narrow"
 
 const SURFACE = "bg-[#141923]"
+// Keep these in step with the rows table's classes: the season label column (min-w-[4.25rem]),
+// the tile width (w-10) and the cell spacing (border-spacing-[3px]).
+const ROWS_LABEL_REM = 4.25
+const ROWS_CELL_REM = 2.5
+const CELL_SPACING_REM = 3 / 16
+
+/** The width the rows table needs to show `columns` episode columns without scrolling. */
+const rowsWidthRem = (columns: number) => ROWS_LABEL_REM + columns * ROWS_CELL_REM + (columns + 2) * CELL_SPACING_REM
+
+/**
+ * Shows the rows table only when its box is wide enough for every episode column, and the
+ * columns table otherwise. Container query conditions cannot read custom properties, so
+ * the width goes into the rule itself.
+ */
+const layoutRule = (columns: number) =>
+	`#${EPISODE_GRID_ANCHOR} [data-grid-layout="rows"]{display:none}` +
+	`@container episode-grid (min-width: ${rowsWidthRem(columns)}rem){` +
+	`#${EPISODE_GRID_ANCHOR} [data-grid-layout="rows"]{display:block}` +
+	`#${EPISODE_GRID_ANCHOR} [data-grid-layout="columns"]{display:none}}`
 const CELL_SIZE: Record<Orientation, string> = {
 	wide: "h-8 w-10 text-[12.5px]",
 	narrow: "h-7 w-full min-w-[2.125rem] text-xs",
@@ -263,9 +282,15 @@ export default function EpisodeGrid({ grid, headerHeight }: { grid: EpisodeGridD
 					<InformationCircleIcon className="h-5 w-5" />
 				</button>
 			</div>
-			<div className={`@container mt-4 rounded-2xl border border-white/[0.06] ${SURFACE} p-2 sm:p-3`}>
-				<div className="hidden overflow-x-auto overscroll-x-contain @2xl:block">{wide}</div>
-				<div className="overflow-x-auto overscroll-x-contain @2xl:hidden">{narrow}</div>
+			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed rule built from a number */}
+			<style dangerouslySetInnerHTML={{ __html: layoutRule(columns) }} />
+			<div className={`@container/episode-grid mt-4 rounded-2xl border border-white/[0.06] ${SURFACE} p-2 sm:p-3`}>
+				<div data-grid-layout="rows" className="overflow-x-auto overscroll-x-contain">
+					{wide}
+				</div>
+				<div data-grid-layout="columns" className="overflow-x-auto overscroll-x-contain">
+					{narrow}
+				</div>
 			</div>
 			<FloatLayer state={float.state} />
 		</section>
