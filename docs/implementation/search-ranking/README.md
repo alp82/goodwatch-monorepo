@@ -373,6 +373,59 @@ Done in #140. How it's stored:
   3. Switch over.
   4. Remove the old ranking code.
 
+### Query encoder and Qdrant client
+
+Done in #143, in `goodwatch-webapp/app/server/search-ranking/`:
+
+- **Switch:** `SEARCH_RANKING_MODE` is `off` (default), `shadow` or `on` (`mode.server.ts`). While it's off, the encoder
+  and the Qdrant client throw, and importing them loads nothing.
+- **Encoder:** `encodeQueryTexts({ english, multilingual })` in `query-encoder.server.ts` sends one request per search
+  to one worker thread (`query-encoder.worker.js`, 4 intra-op threads, a queue, one batch per model). It adds the
+  query prefixes itself. `startQueryEncoder()` loads the models ahead of the first search. More than 32 waiting
+  requests are rejected, and a failed start is retried after 5 minutes.
+- **Tokenizer:** `@huggingface/tokenizers`, the library transformers.js uses internally, without transformers.js's
+  onnxruntime-web and sharp dependencies. Vectors match the Python reference vectors of all 158 benchmark queries
+  with texts (cosine at least 0.99999999996).
+- **Model files** (`query-models.server.ts`): the fp32 Xenova exports at pinned revisions and SHA-256 hashes, about
+  925 MB. They are downloaded on first start into `SEARCH_MODEL_DIR` (default: a temp directory, so each deploy
+  downloads them again). Mount a volume and set `SEARCH_MODEL_DIR` to keep them across deploys.
+- **Build:** `.npmrc` skips onnxruntime-node's CUDA download. `vite.config.js` copies the worker next to
+  `build/server/index.js`. The nixpacks build installs the Linux x64 binary, which loads with the image's Node 24.10.
+- **Qdrant client:** `queryBatch(collection, queries)` in `qdrant-http.server.ts` sends one
+  `POST /collections/{c}/points/query/batch` over a keep-alive `node:http` agent, from `QDRANT_URL` (6334 becomes
+  6333) and `QDRANT_API_KEY`. It returns each query's points, Qdrant's time and the wall time.
+- **Benchmark:** `goodwatch-webapp/scripts/search-ranking-bench.ts` (run with Node 24 on the TypeScript sources).
+
+Measured on the webapp host (10.0.0.21, Intel Skylake, AVX-512 without VNNI) on September 25, 2026, in a separate
+container of the production image, pinned to 4 cores with `nice -n 19`, while the webapp served about 14 requests a
+second:
+
+| | result |
+|---|---|
+| Download of the model files | 10 s |
+| Model load, cold page cache, plus warm-up | 6.2 s + 0.4 s |
+| Memory of both models | 1,374 MB RSS |
+| Encoding per search, one at a time (p50 / p95 / max) | 53 / 184 / 345 ms |
+| `bge-base` batch / multilingual batch (p50 / p95) | 54 / 169 ms, 21 / 77 ms |
+| Four searches at a time, including queueing (p50 / p95) | 196 / 476 ms |
+| Throughput | 15 to 18 searches a second |
+
+Encoding is about 4.5 times slower than on the benchmark machine, more than the estimated 2 to 3 times. Site latency
+didn't change during the run.
+
+Qdrant query batches from the same container (158 benchmark queries, `text_en_v1` and `text_multi_v1` with the
+eligibility filter). Client overhead is wall time minus Qdrant's time:
+
+| limit, response size (p50) | client | client overhead p50 / p95 | requests over 30 ms overhead |
+|---|---|---|---|
+| 20, 2.2 KB | `node:http` | 4.4 / 7.7 ms | 0 of 158 |
+| 20, 2.2 KB | fetch | 9.3 / 52 ms | 50 of 158 |
+| 100, 10.7 KB | `node:http` | 5.0 / 9.2 ms | 0 of 158 |
+| 500, 53 KB | `node:http` | 6.7 / 15.6 ms | 1 of 158 |
+
+Most of the wall time is Qdrant's own time: 25 ms p50 at limit 20, and up to 760 ms at limit 500 while Qdrant was
+loaded (see [prerequisites](#prerequisites)).
+
 ### Parity check
 
 Before shadow mode, compare the TypeScript ranker with the prototype on all 168 graded queries:
