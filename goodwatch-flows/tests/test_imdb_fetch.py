@@ -47,6 +47,19 @@ class ImdbFetchTests(unittest.TestCase):
         self.assertEqual(request.call_args.kwargs["timeout"], 15)
         save.assert_called_once()
 
+    def test_abbreviated_vote_counts_keep_their_decimal(self) -> None:
+        """Before 2026-09-11 the parser dropped the dot, so "2.5M" became 25,000,000."""
+        for text, expected in (("2.5M", 2_500_000), ("2.2K", 2_200), ("15K", 15_000),
+                               ("1,234", 1_234), ("1.2B", 1_200_000_000)):
+            html = '\n'.join([
+                '<link rel="canonical" href="https://www.imdb.com/title/tt0903747/">',
+                '<div><div data-testid="hero-rating-bar__aggregate-rating__score"><span>9.5</span></div>',
+                f'<div>out of 10</div><div>{text}</div></div>',
+            ])
+            with self.subTest(text=text), patch.object(
+                    fetch.requests, "get", return_value=SimpleNamespace(status_code=200, text=html)):
+                self.assertEqual(fetch.crawl_imdb_page("tt0903747").user_score_vote_count, expected)
+
     def test_empty_http_202_does_not_refresh_previous_rating(self) -> None:
         previous = datetime(2026, 9, 1)
         entry = ImdbMovieRating(tmdb_id=278, imdb_id="tt0111161", original_title="Example",
