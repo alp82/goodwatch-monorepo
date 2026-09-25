@@ -6,7 +6,22 @@
 @source inline("{bg,border-t}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-{600,900}"); /* Fingerprint */
 @source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-900/50"); /* DNA tags */
 @source inline("bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-950/70"); /* Sign in */
-@source inline("{hover:,active:,}{after:,}{from,via,to,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,pink,rose,slate,gray,zinc,neutral,stone}-{50,100,200,300,400,500,600,700,800,900,950}{/{80,50,20,15},}"); /* Buttons, Discover filters */
+/* Buttons (ui/button/Button.tsx): only the highlight colors in use. Add a color here when a Button uses a new highlight. */
+@source inline("from-{gray,stone,emerald,sky,cyan}-{50,800,200/15,800/15}");
+@source inline("to-{gray,stone,emerald,sky,cyan}-{300,900,200/20,800/20}");
+@source inline("border-{gray,stone,emerald,sky,cyan}-{800,200/20}");
+@source inline("hover:from-{gray,stone,emerald,sky,cyan}-{100,700}");
+@source inline("hover:to-{gray,stone,emerald,sky,cyan}-{400,900}");
+@source inline("{,active:}after:from-{gray,stone,emerald,sky,cyan}-{200,600,700}");
+@source inline("{,active:}after:to-{gray,stone,emerald,sky,cyan}-{100,700,800}");
+@source inline("hover:after:from-{gray,stone,emerald,sky,cyan}-{300,600}");
+@source inline("hover:after:to-{gray,stone,emerald,sky,cyan}-{200,700}");
+@source inline("text-{gray,stone,emerald,sky,cyan}-{100,900}");
+@source inline("group-active:text-{gray,stone,emerald,sky,cyan}-{300,700}");
+/* Discover filter sections (ui/filter/FilterBarSection.tsx): the colors in server/types/discover-types.tsx. */
+@source inline("from-{amber,blue,cyan,emerald,green,indigo,orange,pink,purple,rose,slate,teal}-700/{50,80}");
+@source inline("via-{amber,blue,cyan,emerald,green,indigo,orange,pink,purple,rose,slate,teal}-900/{50,80}");
+@source inline("to-{amber,blue,cyan,emerald,green,indigo,orange,pink,purple,rose,slate,teal}-800/{50,80}");
 
 @theme {
 	--breakpoint-xs: 475px;
