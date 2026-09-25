@@ -1257,6 +1257,7 @@ const runPhraseVariant = async (
 	});
 
 	let ms = Date.now() - started - extra.ms;
+	let qdrantMs = 0;
 	if (results.length < resultLimit && vectorQuery.vector.some((x) => x !== 0)) {
 		const fill = await retrieve(
 			vectorQuery,
@@ -1273,6 +1274,7 @@ const runPhraseVariant = async (
 				results.push({ ...r, rank: results.length + 1 });
 		}
 		ms += fill.ms;
+		qdrantMs += fill.ms;
 		if (!gated)
 			notes.push(
 				`Only ${found} titles had evidence. The rest come from the fingerprint vector search.`,
@@ -1290,6 +1292,7 @@ const runPhraseVariant = async (
 		pool: pool.size,
 		notes,
 		extra,
+		qdrantMs,
 	};
 };
 
@@ -1433,6 +1436,8 @@ export async function retrieveByReading(
 	readings: [SystemOneResult<Questions>, SystemOneResult<Questions>],
 	eligibility: Eligibility,
 	nativeOnly: boolean,
+	// Filled with the milliseconds spent in Qdrant (the fingerprint pool and display fields), when given.
+	stages?: { qdrantMs?: number },
 ) {
 	const attributes = decodeAttributes(
 		request,
@@ -1448,16 +1453,18 @@ export async function retrieveByReading(
 		order: "weighted_sum",
 		genres: [],
 	};
-	if (nativeOnly)
-		return (await retrieve(vectorQuery, attributes.flags, "", eligibility))
-			.results;
-	return (
-		await runPhraseVariant(
-			request,
-			{ twoPhrases: true, moodGate: true, wider: true },
-			attributes,
-			vectorQuery,
-			eligibility,
-		)
-	).results;
+	if (nativeOnly) {
+		const found = await retrieve(vectorQuery, attributes.flags, "", eligibility);
+		if (stages) stages.qdrantMs = found.ms;
+		return found.results;
+	}
+	const found = await runPhraseVariant(
+		request,
+		{ twoPhrases: true, moodGate: true, wider: true },
+		attributes,
+		vectorQuery,
+		eligibility,
+	);
+	if (stages) stages.qdrantMs = found.qdrantMs;
+	return found.results;
 }

@@ -293,11 +293,11 @@ export async function executeJevStage(
 // accountId must be the verified identity AT search time; never adopt guest rows at signup.
 export async function recordSearchHistory(
 	input: Parameters<SearchStore["history"]>[0],
-): Promise<{ recorded: boolean }> {
+): Promise<{ recorded: boolean; id: string | null }> {
 	try {
-		await getSearchStore().history(input);
-		return { recorded: true };
+		const id = await getSearchStore().history(input);
+		return { recorded: true, id };
 	} catch {
-		return { recorded: false };
+		return { recorded: false, id: null };
 	}
 }

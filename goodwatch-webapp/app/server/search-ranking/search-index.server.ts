@@ -560,6 +560,11 @@ export async function getSearchIndex(): Promise<SearchIndex> {
 	return refresh()
 }
 
+/** The id of the loaded build, or null before the first build has loaded. */
+export function loadedSearchIndexBuild(): string | null {
+	return current?.buildId ?? null
+}
+
 /** Starts loading the index in the background, so the first search doesn't wait for it. */
 export function startSearchIndex(): void {
 	getSearchIndex().catch(() => {

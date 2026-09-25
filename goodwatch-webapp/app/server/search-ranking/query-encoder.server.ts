@@ -158,6 +158,7 @@ async function start(): Promise<RunningEncoder> {
 	})
 	const onGone = (error: Error) => {
 		running = undefined
+		loaded = false
 		failAll(error)
 	}
 	worker.on("error", (error) => onGone(error))
@@ -186,6 +187,7 @@ function ensureRunning(): Promise<RunningEncoder> {
 	running.then(
 		() => {
 			lastFailure = undefined
+			loaded = true
 		},
 		(error: Error) => {
 			running = undefined
@@ -195,6 +197,17 @@ function ensureRunning(): Promise<RunningEncoder> {
 		},
 	)
 	return running
+}
+
+let loaded = false
+
+/** Whether the models are loaded, and how many requests wait. Shadow mode skips a search while it isn't ready or busy. */
+export function queryEncoderState(): {
+	ready: boolean
+	pending: number
+	maxPending: number
+} {
+	return { ready: loaded, pending: pending.size, maxPending: MAX_PENDING }
 }
 
 /** Starts loading the models in the background, so the first search doesn't wait for it. */
@@ -237,6 +250,7 @@ export async function encodeQueryTexts(
 export async function stopQueryEncoder(): Promise<void> {
 	const current = running
 	running = undefined
+	loaded = false
 	if (!current) return
 	const encoder = await current.catch(() => undefined)
 	if (encoder) await encoder.worker.terminate()

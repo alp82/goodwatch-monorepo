@@ -27,6 +27,14 @@ import {
 	type JevOutcome,
 	translationEnabled,
 } from "../search-runtime/runtime.server";
+import { getSearchRankingMode } from "../search-ranking/mode.server";
+import {
+	shadowRank,
+	startShadowRanking,
+} from "../search-ranking/shadow.server";
+
+// Shadow mode loads the new ranking's index and query models at server start. Off by default: then nothing loads.
+startShadowRanking();
 
 export interface SearchBatch {
 	q: string;
@@ -193,10 +201,21 @@ export async function combinedSearch(
 	// Called once the interpretation is known and before retrieval, so the caller can
 	// show it while the results are still on their way.
 	onReading?: (reading: ReadingChip[]) => void,
+	// Runs work that must not delay the response (shadow ranking) once the response is sent.
+	afterResponse?: (task: () => void) => void,
 ): Promise<SearchBatch> {
 	const started = Date.now(),
 		errors: string[] = [];
 	let chargedNano = 0;
+	// Milliseconds per stage, in order: the language step, the Jev reading, the ranking (with its Qdrant time), the
+	// wait for the title lookup that runs alongside, and the display (catalog metadata and the blend).
+	const stageMs: Record<string, number> = {};
+	let mark = performance.now();
+	const lap = (name: string) => {
+		const now = performance.now();
+		stageMs[name] = Math.round((now - mark) * 10) / 10;
+		mark = now;
+	};
 	const titlePromise = titles(q, policy, signal).then(
 		(results) => ({ results }),
 		() => ({ results: [] as Title[], error: true }),
@@ -225,6 +244,7 @@ export async function combinedSearch(
 					: prepareLanguage(q, visitor, signal);
 			});
 	const language = await languagePromise;
+	lap("language");
 	chargedNano += language.chargedNano;
 	const outcome: JevOutcome = await runJevStage({
 		requestText: q,
@@ -238,8 +258,10 @@ export async function combinedSearch(
 		signal,
 		admissionAttemptId: language.admissionAttemptId,
 	});
+	lap("reading");
 	chargedNano += outcome.chargedNano;
 	let results: Result[] = [];
+	const retrieval: { qdrantMs?: number } = {};
 	let reading: ReadingChip[] = [];
 	if (outcome.kind !== "basic") {
 		reading = summarizeReading(
@@ -263,6 +285,7 @@ export async function combinedSearch(
 				outcome.readings,
 				policy,
 				language.policy.mode === "native-vector-only",
+				retrieval,
 			);
 		} catch {
 			errors.push(BASIC_SEARCH_MESSAGE);
@@ -273,7 +296,11 @@ export async function combinedSearch(
 			}
 		}
 	}
+	lap("ranking");
+	if (retrieval.qdrantMs !== undefined)
+		stageMs.rankingQdrant = retrieval.qdrantMs;
 	const title = await titlePromise;
+	lap("titleLookup");
 	if ("error" in title) errors.push("Title lookup unavailable");
 	if (signal.aborted) throw new Error("Search interrupted");
 	// Catalog metadata is authoritative for eligibility and reliable identity. Fetch before
@@ -313,7 +340,12 @@ export async function combinedSearch(
 	});
 	if ("error" in title && errors.includes("Description search unavailable"))
 		throw new Error("Search unavailable");
+	lap("display");
 	const elapsedMs = Date.now() - started;
+	stageMs.total = elapsedMs;
+	const servedRankerVersion = errors.includes(BASIC_SEARCH_MESSAGE)
+		? BASIC_RANKER_VERSION
+		: READING_RANKER_VERSION;
 	const history = await recordSearchHistory({
 		text: q,
 		accountId: visitor.accountId,
@@ -321,10 +353,26 @@ export async function combinedSearch(
 		chargedNano,
 		outcome: errors.includes(BASIC_SEARCH_MESSAGE) ? "basic" : outcome.kind,
 		...(outcome.kind === "basic" ? { reason: outcome.reason } : {}),
-		rankerVersion: errors.includes(BASIC_SEARCH_MESSAGE)
-			? BASIC_RANKER_VERSION
-			: READING_RANKER_VERSION,
+		rankerVersion: servedRankerVersion,
+		stageMs,
 	});
+	if (getSearchRankingMode() !== "off") {
+		const shadow = {
+			historyId: history.id,
+			query: q,
+			text: language.text,
+			nonEnglish: language.policy.mode !== "english",
+			nativeOnly: language.policy.mode === "native-vector-only",
+			readings: outcome.kind === "basic" ? null : outcome.readings,
+			eligibility: policy,
+			titleLookup: allowedTitles,
+			servedRankerVersion,
+			servedKeys: rows.map((r) => r.key),
+		};
+		const task = () => shadowRank(shadow);
+		if (afterResponse) afterResponse(task);
+		else setImmediate(task);
+	}
 	return {
 		q,
 		rows,

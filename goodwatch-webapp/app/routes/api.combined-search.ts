@@ -65,6 +65,8 @@ export async function action({ request }: ActionFunctionArgs) {
 		// then the "batch" line with the results. "no-transform" keeps the compression
 		// middleware from holding the first line back until the response ends.
 		const encoder = new TextEncoder();
+		// Work that must not delay the response (shadow ranking) runs after the stream closes.
+		const deferred: (() => void)[] = [];
 		const stream = new ReadableStream({
 			async start(controller) {
 				const send = (message: object) =>
@@ -80,6 +82,7 @@ export async function action({ request }: ActionFunctionArgs) {
 						{ accountId: user?.id || null, networkIdentity },
 						request.signal,
 						(reading) => send({ kind: "reading", reading }),
+						(task) => deferred.push(task),
 					);
 					send({ kind: "batch", batch });
 				} catch {
@@ -89,6 +92,7 @@ export async function action({ request }: ActionFunctionArgs) {
 					});
 				} finally {
 					controller.close();
+					for (const task of deferred) setImmediate(task);
 				}
 			},
 		});
