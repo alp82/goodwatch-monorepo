@@ -614,16 +614,33 @@ def peers(credits: dict, st: dict, fp: np.ndarray, votes: np.ndarray, point_ids:
 
 # === negation labels, cuts =========================================================================
 
+def singular(stem: str) -> str:
+    """One form for a stem's singular and plural. The shared stemmer leaves some pairs apart
+    ("zombies" -> zomby but "zombie" -> zombie, "superheroes" -> superheroe, "wolves" -> wolve).
+    Only the negation label match uses this; the stemmer itself defines the stored BM25F weights
+    and stays as it is. The webapp applies the same function to the negated phrase, and it is
+    idempotent, so it can also apply it to the stems it loads."""
+    if len(stem) < 4:
+        return stem
+    if stem.endswith("ie"):
+        return stem[:-2] + "y"
+    if stem.endswith("lve"):
+        return stem[:-2] + "f"
+    if stem.endswith(("oe", "use", "che", "ze")):
+        return stem[:-1]
+    return stem
+
+
 def negation_labels(titles: list[Title]) -> list[tuple[str, list[str], list[int]]]:
-    """Keyword and essence-tag labels (lowercased): (label, its content stems, rows). A negated
-    phrase hits a label when the label holds every stem of the phrase."""
+    """Keyword and essence-tag labels (lowercased): (label, its content stems in singular() form,
+    rows). A negated phrase hits a label when the label holds every stem of the phrase."""
     labels = defaultdict(set)
     for r, t in enumerate(titles):
         for x in list(t.keywords) + list(t.essence_tags):
             labels[x.lower()].add(r)
     out = []
     for label in sorted(labels):
-        stems = sorted(set(bm25f.tokens(label)))
+        stems = sorted({singular(s) for s in bm25f.tokens(label)})
         if stems:
             out.append((label, stems, sorted(labels[label])))
     return out

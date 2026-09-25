@@ -20,6 +20,7 @@ for name in ("onnxruntime", "tokenizers"):
 
 from f.search import build_indexes as flow  # noqa: E402
 from f.search import index_builders as ib  # noqa: E402
+from f.search import terms as bm25f  # noqa: E402
 
 
 def title(point_id, media_type="movie", votes=10_000, **kw) -> ib.Title:
@@ -126,6 +127,25 @@ class ProfileTests(unittest.TestCase):
         m = np.array([[1, 0], [0, 1]], np.float32)
         c = ib.centroid(m, [0, 1], np.array([np.e - 1, np.e ** 3 - 1]))
         np.testing.assert_allclose(c, np.array([1, 3]) / np.sqrt(10), rtol=1e-6)
+
+
+class NegationLabelTests(unittest.TestCase):
+    def test_plural_and_singular_stems_share_one_form(self) -> None:
+        pairs = [("zombies", "zombie"), ("superheroes", "superhero"), ("werewolves", "werewolf"),
+                 ("tornadoes", "tornado"), ("hippies", "hippie"), ("parties", "party"), ("aliens", "alien")]
+        for plural, one in pairs:
+            (p,), (o,) = bm25f.tokens(plural), bm25f.tokens(one)
+            self.assertEqual(ib.singular(p), ib.singular(o), (plural, one))
+
+    def test_singular_is_idempotent_and_leaves_short_stems(self) -> None:
+        for s in ["zomby", "zombie", "superheroe", "werewolve", "house", "use", "tie", "horse", "alien"]:
+            self.assertEqual(ib.singular(ib.singular(s)), ib.singular(s))
+        self.assertEqual((ib.singular("use"), ib.singular("tie")), ("use", "tie"))
+
+    def test_labels_store_singular_stems(self) -> None:
+        titles = [title(MOVIE + 1, keywords=["zombie"], essence_tags=["Zombies"])]
+        labels = ib.negation_labels(titles)
+        self.assertEqual([x[1] for x in labels], [["zomby"], ["zomby"]])
 
 
 class CutTests(unittest.TestCase):
