@@ -58,7 +58,7 @@ _Avoid_: Quality rating
 A reviewer's assessment of how faithfully a fingerprint describes a title, supported by explanations of implausible attribute scores. An existing model's output is not a reference answer.
 
 **Share list**:
-A person's ranking of exactly five films or shows under a title, published at its own link and shown as a share card. A share list is separate from ratings, Want to See, and the taste profile.
+A person's ranking of exactly five films or shows under a title, published at its own link under its owner's handle and shown as a share card. A share list is separate from ratings, Want to See, and the taste profile.
 _Avoid_: Top list, Collection
 
 **Share card**:
@@ -80,4 +80,7 @@ A new share list, owned by the viewer, started from another person's share list 
 The unique public name that identifies a person's public profile and its route.
 
 **Public profile**:
-The page listing a person's public share lists under their handle.
+The page listing a person's public share lists under their handle. For its owner, it is also where they manage all their share lists.
+
+**Handle hold**:
+The 90 days after a handle is renamed away or its account is deleted, during which no one else can claim it.

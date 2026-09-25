@@ -8,7 +8,8 @@ The primary source is the prototype on branch
 It holds every editor layout and card design the owner reviewed, including the rejected ones. Run it with the dev
 server and open `/prototype/share-list`.
 
-Status: approved for implementation, September 25, 2026. The ticket breakdown is in [Ticket breakdown](#ticket-breakdown).
+Status: approved for implementation, September 25, 2026. Updated the same day: routes under the owner's handle and
+soft deletes. The ticket breakdown is in [Ticket breakdown](#ticket-breakdown).
 
 ## Goal
 
@@ -36,11 +37,40 @@ The owner made these decisions while reviewing the prototype, September 24 and 2
    mark and wordmark on light cards, in Gabarito Black.
 10. **Dropdowns never change size** when the selection changes.
 
+The owner added these on September 25, 2026, after reviewing the spec:
+
+11. **Lists live under their owner's path.** A shared list's link is `/u/:handle/lists/:id`, and the owner's profile at
+    `/u/:handle` is also where they manage their lists. See [Routes](#routes).
+12. **Deletes are soft.** Deleting a list, and deleting an account, sets a `deleted_at` timestamp instead of removing
+    rows. Deleted data is hidden from every page, image, and API. See [Deletion](#deletion).
+13. The spec's earlier choices stand: design keys `manifesto`, `ceremony`, and `rental`; **Public** and **Unlisted**
+    visibility; handle claims through `user_handle`.
+
+## Routes
+
+| Route | Page |
+|---|---|
+| `/lists/new` | The editor for a new list. Remix and **Make your own** open it too, as `/lists/new?remix=:id`. |
+| `/u/:handle` | The public profile: the person's public lists. For the owner it's also **My lists**. |
+| `/u/:handle/lists` | Redirects to `/u/:handle`. There is no separate list index in the first release. |
+| `/u/:handle/lists/:id` | The public list page. |
+| `/u/:handle/lists/:id/edit` | The editor for an existing list. Only the owner can open it; others go to the list page. |
+| `/og/lists/:id/:hash.png` | The share card image. |
+
+- **Why the new-list editor stays at `/lists/new`:** a list gets its owner's handle only when it's shared, and guests
+  and first-time sharers don't have a handle yet. After the first share, the editor moves to the list's edit route.
+- **List ids are global.** Pages look a list up by its id alone. If the handle in the URL isn't the owner's current
+  handle, for example after a rename, the page answers with a permanent redirect to the canonical URL. Old list links
+  keep working forever, and a list can never show up under someone else's handle.
+- **Renamed handles:** `/u/<old handle>` redirects to the owner's current handle while the old handle is on hold (see
+  [Deletion](#deletion)). After the hold, the old handle answers 404 until someone claims it.
+- **Image URLs** stay handle-free, so a rename doesn't change them and social apps keep their cached previews.
+
 ## What people see
 
 ### Editor
 
-Routes: `/lists/new` for a new list, `/lists/:id/edit` for an existing one. Both render the same editor.
+Routes: `/lists/new` for a new list, `/u/:handle/lists/:id/edit` for an existing one. Both render the same editor.
 
 **Toolbar.** One row at 1024 px and wider: **Edit** (or **Done**) on the left, the design picker and color picker in the
 center, and a "Saved" note plus **Share** on the right. Below 1024 px it has two rows: **Edit** and **Share** first,
@@ -80,11 +110,11 @@ restores it. Owners: edits save to the list on the server with the same debounce
 
 ### Share and sign-up
 
-1. A signed-in owner clicks **Share**. The list is already saved, so the app copies `https://goodwatch.app/lists/:id`
+1. A signed-in owner clicks **Share**. The list is already saved, so the app copies `https://goodwatch.app/u/:handle/lists/:id`
    and shows "Link copied ✓". If the clipboard is blocked, it shows the link to copy by hand.
 2. A guest clicks **Share**. The app explains that sharing needs an account and opens sign-up, with sign-in as an
    option. After authentication, the browser draft is saved as a new list on the account, the person claims a handle
-   if they don't have one yet, and the link is copied.
+   if they don't have one yet, and the link is copied. The browser then moves to the list's edit route.
 3. Every change to a saved list re-renders its card image in the background, so a link pasted right after an edit
    previews the current card.
 
@@ -95,11 +125,12 @@ restores it. Owners: edits save to the list on the server with the same debounce
 - **Public list page:** **Make your own** opens an empty editor; **Remix** opens the editor with the same prompt and
   titles, as a new list that belongs to the viewer.
 - **My lists and profile:** **New list** opens `/lists/new`.
-- The main navigation doesn't change in the first release. "My lists" is linked from Taste and from the user menu.
+- The main navigation doesn't change in the first release. "My lists" is linked from Taste and from the user menu, and
+  goes to the person's `/u/:handle`. A signed-in person without a handle has no lists yet; the link opens `/lists/new`.
 
 ### Public list page
 
-Route: `/lists/:id`. It shows:
+Route: `/u/:handle/lists/:id`. It shows:
 
 - The card, large, rendered in the page.
 - The five titles as links to their detail pages, each with where it streams in the viewer's country, using the same
@@ -110,18 +141,21 @@ Route: `/lists/:id`. It shows:
   `og:image` with the versioned card URL, its width and height, and `twitter:card` `summary_large_image`.
 - `noindex, nofollow`.
 
-A deleted list returns 404. A list whose owner made it unlisted still opens by link.
+A deleted list returns 404, including its image. A list whose owner made it unlisted still opens by link. A URL with an
+outdated handle redirects to the canonical one.
 
 ### My lists
 
-Route: `/taste/lists`. A grid of the person's list cards with **Edit**, **Share** (copy link), **Delete** (with
-confirmation), and a visibility toggle (**Public** or **Unlisted**). **New list** starts one. Guests see their browser
-draft and an invitation to sign up to keep and share it.
+Route: `/u/:handle`, seen by its owner. The owner sees all their lists, unlisted ones marked, each with **Edit**,
+**Share** (copy link), **Delete** (with confirmation), and a visibility toggle (**Public** or **Unlisted**). **New list**
+starts one. Everyone else sees only the public lists, without the controls.
+
+Guests have no profile. Taste shows their browser draft with an invitation to sign up to keep and share it.
 
 ### Public profile
 
 Route: `/u/:handle`. It shows the person's display name and handle, and their public lists as a grid of cards, newest
-first. It's `noindex`.
+first. It's `noindex`. The owner's view doubles as [My lists](#my-lists). A deleted profile answers 404.
 
 - **Handles** are claimed on first share, or in account settings. They are 3 to 30 characters of lowercase letters,
   digits, and underscores, must start with a letter, and are unique. A reserved list blocks route and brand words
@@ -148,27 +182,55 @@ CREATE TABLE IF NOT EXISTS doc.user_list (
   remixed_from TEXT,               -- source list id for a remix
   content_hash TEXT NOT NULL,      -- hash of what the card shows; versions the image URL
   created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  deleted_at TIMESTAMP WITH TIME ZONE              -- set when deleted; NULL while live
 ) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas = '0-1');
 
 CREATE TABLE IF NOT EXISTS doc.user_profile (
   user_id TEXT PRIMARY KEY,
-  handle TEXT NOT NULL,            -- lowercase, unique (enforced in the webapp; Crate has no unique index)
+  handle TEXT NOT NULL,            -- lowercase, unique (enforced through user_handle)
   display_name TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  deleted_at TIMESTAMP WITH TIME ZONE              -- set when the account is deleted
+) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas = '0-1');
+
+CREATE TABLE IF NOT EXISTS doc.user_handle (
+  handle TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  claimed_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  released_at TIMESTAMP WITH TIME ZONE,            -- set when the owner renamed away from it
+  deleted_at TIMESTAMP WITH TIME ZONE              -- set when the owner's account was deleted
 ) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas = '0-1');
 ```
 
-- **Uniqueness:** Crate has no unique constraints on non-key columns. Claim a handle with a second table keyed by the
-  handle, `doc.user_handle (handle TEXT PRIMARY KEY, user_id TEXT NOT NULL)`, inserted with `ON CONFLICT DO NOTHING`
-  and checked for the claiming user. Then write `user_profile`. Crate refreshes reads about once a second, so read the
-  claim back with `REFRESH TABLE` before confirming.
+- **Uniqueness:** Crate has no unique constraints on non-key columns. Claim a handle through `doc.user_handle`, keyed
+  by the handle: insert with `ON CONFLICT DO NOTHING` and check the claiming user. Taking over a row whose hold has
+  expired is an update guarded by the row's `_seq_no` and `_primary_term`, so of two people claiming it at once exactly
+  one wins. Then write `user_profile`. Crate refreshes reads about once a second, so read the claim back with
+  `REFRESH TABLE` before confirming.
 - **Validation** happens on the server for every write: five distinct titles that exist in the catalog, known design
   and theme keys, length limits, and ownership.
 - **Content hash:** a short hash of the design key, theme, title, signature, and the five item keys, recomputed on
   every write. The card image URL includes it.
-- **Deletion** is a hard delete. Deleting an account deletes its lists, profile, and handle.
+- **Deletion** is soft; see [Deletion](#deletion).
+
+### Deletion
+
+Nothing is removed from the database in the first release. Rows carry `deleted_at` (and `released_at` for handles), and
+every read filters them out.
+
+- **Deleting a list** sets its `deleted_at`. Its page, edit route, and image answer 404, and it disappears from the
+  profile and from remix lookups. Remixes of it keep their own content. There is no undo in the product; an operator
+  can restore a list by clearing `deleted_at`.
+- **Deleting an account** sets `deleted_at` on the person's lists, profile, and handles, in that order. The profile
+  answers 404 and every list link answers 404. The webapp has no account-deletion flow today; the store exposes one
+  function for it, and the flow calls it when it exists.
+- **Renaming a handle** sets `released_at` on the old handle row. The profile keeps its lists; list links redirect by
+  id, and `/u/<old handle>` redirects to the new handle during the hold.
+- **Handle hold: 90 days.** After a rename or an account deletion, nobody else can claim the handle for 90 days, which
+  stops look-alike takeovers of fresh links. During the hold, the person who renamed away can switch back, and a deleted
+  account's profile answers 404. After 90 days the handle is free, and the next claim takes over the row.
 
 ## Card images
 
@@ -250,6 +312,9 @@ These are tracked together in one needs-triage issue:
   every few seconds), and render only the latest hash.
 - **Crate read-after-write.** Crate refreshes about once a second. Reads right after a save (the share link, My lists)
   must use the written data or `REFRESH TABLE`, or they can show stale content.
+- **Soft-deleted personal data stays stored.** Titles, signatures, handles, and display names of deleted lists and
+  accounts remain in Crate. A purge after the handle hold, or on request, is out of scope for the first release and
+  may be needed for privacy requests.
 - **Font licenses.** All card fonts are from Google Fonts under the Open Font License, which allows bundling. Keep the
   license files next to the fonts, like `OFL-Gabarito.txt`.
 - **Social preview size.** Most apps crop tall images in link previews. Story-format cards may preview cropped in X and
@@ -259,13 +324,14 @@ These are tracked together in one needs-triage issue:
 
 One tracking issue links these slices. Each slice is sized for one agent.
 
-1. **Data:** the `user_list`, `user_profile`, and `user_handle` tables, the server module, and the write API.
+1. **Data:** the `user_list`, `user_profile`, and `user_handle` tables with soft deletes, the server module, and the
+   write API.
 2. **Card designs:** a production share-card module with the 15 designs, themes, prompts, and bundled fonts.
 3. **Card images:** rendering in workers under `/og/lists/<id>/<hash>.png`, with caching and warmup.
-4. **Editor:** `/lists/new` and `/lists/:id/edit` with the Flip editor, drag and drop, pickers, and autosave.
+4. **Editor:** `/lists/new` and `/u/:handle/lists/:id/edit` with the Flip editor, drag and drop, pickers, and autosave.
 5. **Share and sign-up:** **Share** copies the link and gates guests behind sign-up, then saves the draft and claims a
    handle.
-6. **Public list page:** `/lists/:id` with the card, linked titles and availability, Make your own, Remix, and meta tags.
-7. **Profiles:** handle claiming in settings and `/u/:handle`.
-8. **My lists:** `/taste/lists` with edit, share, delete, and visibility.
+6. **Public list page:** `/u/:handle/lists/:id` with the card, linked titles and availability, Make your own, Remix, and meta tags.
+7. **Profiles:** handle claiming in settings, `/u/:handle`, and renamed-handle redirects.
+8. **My lists:** the owner's view of `/u/:handle` with edit, share, delete, and visibility, linked from Taste.
 9. **Taste entry point:** "Share your top 5", prefilled from the person's highest-rated titles.
