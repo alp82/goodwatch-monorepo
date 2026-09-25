@@ -323,7 +323,8 @@ These are tracked together in one needs-triage issue:
 - **Font licenses.** All card fonts are from Google Fonts under the Open Font License, which allows bundling. Keep the
   license files next to the fonts, like `OFL-Gabarito.txt`.
 - **Social preview size.** Most apps crop tall images in link previews. Story-format cards may preview cropped in X and
-  Slack. If that looks bad, add a 1200×630 companion image later.
+  Slack. On 2026-09-26 the owner tried and rejected two 1200×630 companions (the card scaled onto a themed
+  background, and a simplified layout per design) and chose to keep the card itself as the preview image.
 
 ## Ticket breakdown
 

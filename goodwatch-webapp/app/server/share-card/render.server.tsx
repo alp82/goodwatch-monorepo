@@ -6,7 +6,6 @@ import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Fragment, type ReactElement, type ReactNode, isValidElement } from "react"
 import { toDataUri } from "~/server/og-image/render.server"
-import { LIST_PREVIEW_SIZE, ListPreviewCard, type ListPreviewContent } from "~/ui/og-image/ListPreviewCard"
 import { CARD_FONTS, CARD_FONT_DIR } from "~/ui/share-card/fonts"
 import type { CardDesign, CardProps, CardTitle } from "~/ui/share-card/model"
 
@@ -155,13 +154,6 @@ export async function renderShareCard(design: CardDesign, props: Omit<CardProps,
 	const items = await Promise.all(props.items.map(inlineTitle))
 	const tree = resolveTree(<design.Card {...props} items={items} editing={editing} />)
 	return renderTree(tree, design.w, design.h)
-}
-
-/** Renders the 1200x630 link preview of a list page. Posters are inlined here; a missing one keeps its type stand-in. */
-export async function renderListPreview(content: ListPreviewContent): Promise<Buffer> {
-	const items = await Promise.all(content.items.map(async (item) => ({ ...item, poster: await cachedImage(item.poster) })))
-	const tree = resolveTree(<ListPreviewCard content={{ ...content, items }} />)
-	return renderTree(tree, LIST_PREVIEW_SIZE.width, LIST_PREVIEW_SIZE.height)
 }
 
 /** Ends the renderer processes, so a script can exit. */

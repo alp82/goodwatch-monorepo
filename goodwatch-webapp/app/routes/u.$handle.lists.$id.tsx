@@ -1,7 +1,7 @@
 // Public share list page: /u/:handle/lists/:id. The card, large, and the five titles with where they stream in the
 // viewer's country. Lists are looked up by id; a wrong or differently cased handle redirects to the canonical URL, and deleted lists
 // (or lists of deleted accounts) answer 404. Unlisted lists open by link. The page is noindex. Its og:image is the
-// versioned 1200x630 link preview, not the card, because link previews crop or shrink portrait images.
+// list's share card itself, at the design's own size, versioned by the list's content hash.
 import { CheckIcon } from "@heroicons/react/20/solid"
 import {
 	PencilSquareIcon,
@@ -16,7 +16,6 @@ import {
 } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import { resolveCountry } from "~/server/country.server"
-import { previewHash } from "~/server/share-card/images.server"
 import {
 	type ListOffer,
 	type TitleAvailability,
@@ -25,7 +24,6 @@ import {
 import { getList, getProfileByUserId } from "~/server/share-lists/store.server"
 import { resolveCardTitles } from "~/server/share-lists/titles.server"
 import { getUserSettings } from "~/server/user-settings.server"
-import { LIST_PREVIEW_SIZE } from "~/ui/og-image/ListPreviewCard"
 import { CardFonts, ScaledCard } from "~/ui/share-card/ScaledCard"
 import { designByKey } from "~/ui/share-card/designs"
 import {
@@ -33,8 +31,8 @@ import {
 	profilePath,
 	publicOrigin,
 	shareListEditPath,
+	shareCardImagePath,
 	shareListPath,
-	shareListPreviewPath,
 } from "~/ui/share-card/links"
 import { type CardTitle, THEMES, cardDate, listByline } from "~/ui/share-card/model"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -105,9 +103,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			isOwner: viewerId === list.userId,
 			share: {
 				url: `${origin}${shareListPath(owner.handle, list.id)}`,
-				image: `${origin}${shareListPreviewPath(list.id, previewHash(list, byline))}`,
-				width: LIST_PREVIEW_SIZE.width,
-				height: LIST_PREVIEW_SIZE.height,
+				image: `${origin}${shareCardImagePath(list)}`,
+				width: design.w,
+				height: design.h,
 			},
 		},
 		// Lists are live: after an edit, the page (and its og:image URL) must change right away, so no shared caching.

@@ -1,19 +1,17 @@
-// The images of a share list: its card at /og/lists/<id>/<content hash>.png, and its 1200x630 link preview at
-// /og/lists/<id>/preview/<preview hash>.png. Render, cache, and warm them.
+// The image of a share list: its card at /og/lists/<id>/<content hash>.png, which is also the list page's og:image.
+// Render, cache, and warm it.
 // Renders run in child processes (render.server.tsx). PNGs are cached in process and in Redis, keyed by list id and
 // hash, so a changed list is rendered once and its old images age out.
-import { createHash } from "node:crypto"
-import { renderListPreview, renderShareCard } from "~/server/share-card/render.server"
+import { renderShareCard } from "~/server/share-card/render.server"
 import { type ShareList, getList, getProfileByUserId } from "~/server/share-lists/store.server"
 import { resolveCardTitles } from "~/server/share-lists/titles.server"
 import { designByKey } from "~/ui/share-card/designs"
-import { THEMES, cardDate, listByline } from "~/ui/share-card/model"
+import { cardDate, listByline } from "~/ui/share-card/model"
 import { getRedisCluster } from "~/utils/cache"
 
-// Bump when a design (or the preview layout) changes in a way that should redraw cached images.
+// Bump when a design changes in a way that should redraw cached images.
 // v2: cards are signed with the owner's @handle instead of a free-text signature.
 const CACHE_PREFIX = "share-card:v2:"
-const PREVIEW_CACHE_PREFIX = "share-list-preview:v2:"
 const STORE_SECONDS = 30 * 24 * 60 * 60
 const MEMORY_CACHE_MAX_BYTES = 128 * 1024 * 1024
 const WARM_DEBOUNCE_MS = 3000
@@ -102,28 +100,6 @@ async function cached(key: string, draw: () => Promise<Buffer>): Promise<Buffer>
 // A list's handle never changes, so the content hash alone identifies its card.
 const cardFor = (list: ShareList, byline: string) => cached(`${CACHE_PREFIX}${list.id}:${list.contentHash}`, () => render(list, byline))
 
-/** Identifies what a list's link preview shows: its content and the byline. */
-export const previewHash = (list: Pick<ShareList, "contentHash">, byline: string) =>
-	createHash("sha256").update(`${list.contentHash}\n${byline}`).digest("base64url").slice(0, 12)
-
-async function renderPreview(list: ShareList, byline: string): Promise<Buffer> {
-	const started = Date.now()
-	const items = await resolveCardTitles(list.items)
-	const png = await renderListPreview({
-		title: list.title,
-		byline,
-		accent: THEMES[list.theme].accent,
-		items: items.map((item) => ({ title: item.title, poster: item.poster })),
-	})
-	console.info(`[share-card] rendered preview ${list.id} in ${Date.now() - started} ms`)
-	return png
-}
-
-const previewFor = (list: ShareList, byline: string) => {
-	const hash = previewHash(list, byline)
-	return cached(`${PREVIEW_CACHE_PREFIX}${list.id}:${hash}`, () => renderPreview(list, byline))
-}
-
 /** The byline a list's images show, or null when its owner has no profile (a deleted account). */
 async function bylineOf(list: ShareList) {
 	const owner = await getProfileByUserId(list.userId)
@@ -142,22 +118,10 @@ export async function getShareCardImage(id: string, hash: string): Promise<{ png
 	return { png: await cardFor(list, byline), current: list.contentHash === hash }
 }
 
-/**
- * The link preview of a list, or null when the list or its owner's profile doesn't exist, like the list page.
- * An old hash answers with the current preview. Throws when the render fails.
- */
-export async function getListPreviewImage(id: string, hash: string): Promise<{ png: Buffer; current: boolean } | null> {
-	const list = await getList(id)
-	if (!list) return null
-	const byline = await bylineOf(list)
-	if (byline === null) return null
-	return { png: await previewFor(list, byline), current: previewHash(list, byline) === hash }
-}
-
 const warmTimers = new Map<string, NodeJS.Timeout>()
 
 /**
- * Renders a list's current card and link preview in the background after a save or a page view, once edits settle.
+ * Renders a list's current card in the background after a save or a page view, once edits settle.
  * Only the latest hash renders.
  */
 export function warmShareCard(list: Pick<ShareList, "id">) {
@@ -171,7 +135,7 @@ export function warmShareCard(list: Pick<ShareList, "id">) {
 					if (!current) return
 					const byline = await bylineOf(current)
 					if (byline === null) return
-					await Promise.all([cardFor(current, byline), previewFor(current, byline)])
+					await cardFor(current, byline)
 				})
 				.catch((error) => console.warn("[share-card] warmup failed", list.id, error))
 		}, WARM_DEBOUNCE_MS),
