@@ -1,0 +1,318 @@
+{
+	"about": "German, French, Spanish and Turkish words for common content elements, so a non-English negated phrase can match the English keyword and tag labels (#169). Forms are folded: lowercase, no diacritics, ı as i, ß as ss. `elements` maps English words to their forms per language. `phrases` maps word sequences to English words. `suffixes` are the endings stripped, per language, when a word isn't listed as it is. `functionWords` are dropped from a negated phrase that holds at least one known element. The `nonEnglish` lists apply only when the search is routed non-English, because their words are also English words (Spanish \"terror\", French \"sang\"). Read by query-parsing.server.ts and by the arena prototype (docs/prototypes/search-arena/harness/simp_combo.py).",
+	"suffixes": {
+		"de": ["en", "er", "n", "e", "s"],
+		"fr": ["s", "x"],
+		"es": ["es", "s"],
+		"tr": ["lari", "leri", "lar", "ler", "si", "su", "i", "u"]
+	},
+	"functionWords": {
+		"de": ["der", "das", "dem", "ein", "eine", "einen", "einem", "einer", "eines", "mit", "von", "vom", "zum", "zur", "im", "auf", "und", "oder", "zu", "viel", "viele", "vielen", "irgendwelche", "jegliche", "jeglicher", "allzu", "sehr", "film", "filme", "filmen", "serie", "serien", "fur", "uber", "hat", "haben", "gibt", "vorkommt", "vorkommen", "den", "des", "ist", "sind", "spielt", "spielen", "handelt"],
+		"fr": ["le", "la", "les", "l", "une", "des", "du", "de", "d", "avec", "et", "ou", "en", "au", "aux", "trop", "beaucoup", "film", "films", "serie", "series", "pour", "sur", "dans", "un", "pendant", "se", "deroule", "passe", "s", "il", "vous", "plait", "svp"],
+		"es": ["el", "la", "las", "una", "unos", "unas", "de", "del", "y", "o", "en", "mucho", "mucha", "muchos", "muchas", "demasiado", "demasiada", "pelicula", "peliculas", "peli", "pelis", "serie", "series", "para", "sobre", "tenga", "tengan", "haya", "con", "un", "transcurra", "ocurra", "pase", "durante"],
+		"tr": ["bir", "ile", "hic", "cok", "fazla", "icinde", "iceren", "film", "filmi", "filmler", "filmleri", "dizi", "dizisi", "diziler", "icin", "olan", "ilgili", "hakkinda"]
+	},
+	"nonEnglishFunctionWords": {
+		"de": ["die"],
+		"es": ["sea", "los", "al"]
+	},
+	"elements": {
+		"alien": {
+			"de": ["ausserirdische", "ausserirdischer", "ausserirdischen", "ausserirdischem", "alien", "aliens"],
+			"fr": ["extraterrestre", "extraterrestres", "alien", "aliens"],
+			"es": ["extraterrestre", "extraterrestres", "alienigena", "alienigenas", "alien", "aliens", "marcianos"],
+			"tr": ["uzayli", "uzaylilar", "alien"]
+		},
+		"robot": {
+			"de": ["roboter", "robotern", "robot", "robots", "androide", "androiden"],
+			"fr": ["robot", "robots", "androide", "androides"],
+			"es": ["robot", "robots", "androide", "androides"],
+			"tr": ["robot", "robotlar"]
+		},
+		"dragon": {
+			"de": ["drache", "drachen"],
+			"fr": ["dragon", "dragons"],
+			"es": ["dragon", "dragones"],
+			"tr": ["ejderha", "ejderhalar", "ejder"]
+		},
+		"zombie": {
+			"de": ["zombie", "zombies"],
+			"fr": ["zombie", "zombies"],
+			"es": ["zombi", "zombis", "zombie", "zombies"],
+			"tr": ["zombi", "zombiler", "zombie"]
+		},
+		"gore": {
+			"de": ["gore"],
+			"fr": ["gore"],
+			"es": ["gore"],
+			"tr": ["gore", "vahset"]
+		},
+		"gory": {
+			"de": ["blutig", "blutige", "blutigen", "blutiger"],
+			"fr": ["sanglant", "sanglante", "sanglants", "sanglantes"],
+			"es": ["sangriento", "sangrienta", "sangrientos", "sangrientas"],
+			"tr": ["kanli"]
+		},
+		"blood": {
+			"de": ["blut"],
+			"fr": [],
+			"es": ["sangre"],
+			"tr": ["kan"]
+		},
+		"murder": {
+			"de": ["mord", "morde", "morden", "mordes"],
+			"fr": ["meurtre", "meurtres", "assassinat", "assassinats"],
+			"es": ["asesinato", "asesinatos", "homicidio", "homicidios"],
+			"tr": ["cinayet", "cinayetler"]
+		},
+		"violence": {
+			"de": ["gewalt"],
+			"fr": ["violence", "violences"],
+			"es": ["violencia"],
+			"tr": ["siddet"]
+		},
+		"romance": {
+			"de": ["romantik", "romanze", "romanzen", "liebesgeschichte", "liebesgeschichten"],
+			"fr": ["romance", "romantisme"],
+			"es": ["romance", "romances", "romanticismo"],
+			"tr": ["romantizm", "romantik"]
+		},
+		"love": {
+			"de": ["liebe"],
+			"fr": ["amour"],
+			"es": ["amor"],
+			"tr": []
+		},
+		"sex": {
+			"de": ["sex"],
+			"fr": ["sexe"],
+			"es": ["sexo"],
+			"tr": ["seks", "cinsellik"]
+		},
+		"sex scene": {
+			"de": ["sexszene", "sexszenen"],
+			"fr": [],
+			"es": [],
+			"tr": []
+		},
+		"scene": {
+			"de": ["szene", "szenen"],
+			"fr": ["scene", "scenes"],
+			"es": ["escena", "escenas"],
+			"tr": ["sahne", "sahneler"]
+		},
+		"drug": {
+			"de": ["drogen", "droge", "rauschgift"],
+			"fr": ["drogue", "drogues"],
+			"es": ["droga", "drogas"],
+			"tr": ["uyusturucu"]
+		},
+		"magic": {
+			"de": ["magie", "zauberei", "zauber", "magisch", "magische", "magischen", "magischer"],
+			"fr": ["magie", "magique", "magiques"],
+			"es": ["magia", "magico", "magica", "magicos", "magicas"],
+			"tr": ["buyu", "sihir", "buyulu", "sihirli"]
+		},
+		"power": {
+			"de": ["krafte", "kraft"],
+			"fr": ["pouvoir", "pouvoirs"],
+			"es": ["poder", "poderes"],
+			"tr": ["guc", "gucler"]
+		},
+		"animal": {
+			"de": ["tiere", "tieren"],
+			"fr": ["animal", "animaux"],
+			"es": ["animal", "animales"],
+			"tr": ["hayvan", "hayvanlar"]
+		},
+		"dog": {
+			"de": ["hund", "hunde", "hunden"],
+			"fr": ["chien", "chiens"],
+			"es": ["perro", "perros"],
+			"tr": ["kopek", "kopekler"]
+		},
+		"vampire": {
+			"de": ["vampir", "vampire", "vampiren"],
+			"fr": ["vampire", "vampires"],
+			"es": ["vampiro", "vampiros"],
+			"tr": ["vampir", "vampirler"]
+		},
+		"ghost": {
+			"de": ["geist", "geister", "geistern", "gespenst", "gespenster"],
+			"fr": ["fantome", "fantomes"],
+			"es": ["fantasma", "fantasmas"],
+			"tr": ["hayalet", "hayaletler"]
+		},
+		"nudity": {
+			"de": ["nacktheit", "nackt", "nacktszenen", "nacktszene"],
+			"fr": ["nudite", "nu", "nus", "nue", "nues"],
+			"es": ["desnudez", "desnudo", "desnudos", "desnuda", "desnudas", "desnudos"],
+			"tr": ["ciplaklik", "ciplak"]
+		},
+		"suicide": {
+			"de": ["selbstmord", "suizid"],
+			"fr": ["suicide", "suicides"],
+			"es": ["suicidio", "suicidios"],
+			"tr": ["intihar"]
+		},
+		"superhero": {
+			"de": ["superheld", "superhelden", "superheldin"],
+			"fr": ["superheros"],
+			"es": ["superheroe", "superheroes"],
+			"tr": ["superkahraman", "superkahramanlar"]
+		},
+		"horror": {
+			"de": ["horror", "grusel", "horrorfilm", "horrorfilme"],
+			"fr": ["horreur", "epouvante"],
+			"es": ["horror"],
+			"tr": ["korku"]
+		},
+		"anime": {
+			"de": ["anime", "animes"],
+			"fr": [],
+			"es": ["anime", "animes"],
+			"tr": ["anime"]
+		},
+		"animation": {
+			"de": ["animation", "animiert", "animierte", "zeichentrick", "zeichentrickfilm", "animationsfilm"],
+			"fr": ["animation"],
+			"es": ["animacion", "animado", "animados", "animada", "animadas", "dibujos"],
+			"tr": ["animasyon", "cizgi"]
+		},
+		"jump scare": {
+			"de": ["jumpscare", "jumpscares", "schockmomente"],
+			"fr": ["jumpscare", "jumpscares", "sursaut", "sursauts"],
+			"es": ["jumpscare", "jumpscares", "susto", "sustos"],
+			"tr": ["jumpscare"]
+		},
+		"war": {
+			"de": ["krieg", "kriege", "kriegsfilm"],
+			"fr": ["guerre", "guerres"],
+			"es": ["guerra", "guerras"],
+			"tr": ["savas"]
+		},
+		"world war": {
+			"de": ["weltkrieg", "weltkriegs"],
+			"fr": [],
+			"es": [],
+			"tr": []
+		},
+		"world": {
+			"de": ["welt"],
+			"fr": ["mondiale", "monde"],
+			"es": ["mundial", "mundo"],
+			"tr": ["dunya"]
+		},
+		"ii": {
+			"de": ["zweite", "zweiter", "zweiten", "ii"],
+			"fr": ["seconde", "deuxieme", "ii"],
+			"es": ["segunda", "ii"],
+			"tr": ["ikinci"]
+		},
+		"kid": {
+			"de": ["kinder", "kindern"],
+			"fr": ["enfant", "enfants"],
+			"es": ["nino", "ninos", "nina", "ninas"],
+			"tr": ["cocuk", "cocuklar"]
+		},
+		"action": {
+			"de": ["action", "actionfilm", "actionfilme"],
+			"fr": ["action"],
+			"es": ["accion"],
+			"tr": ["aksiyon"]
+		},
+		"monster": {
+			"de": ["monster"],
+			"fr": ["monstre", "monstres"],
+			"es": ["monstruo", "monstruos"],
+			"tr": ["canavar", "canavarlar"]
+		},
+		"spider": {
+			"de": ["spinne", "spinnen"],
+			"fr": ["araignee", "araignees"],
+			"es": ["arana", "aranas"],
+			"tr": ["orumcek"]
+		},
+		"torture": {
+			"de": ["folter"],
+			"fr": ["torture", "tortures"],
+			"es": ["tortura", "torturas"],
+			"tr": ["iskence"]
+		},
+		"rape": {
+			"de": ["vergewaltigung", "vergewaltigungen"],
+			"fr": ["viol", "viols"],
+			"es": ["violacion", "violaciones"],
+			"tr": ["tecavuz"]
+		},
+		"death": {
+			"de": ["tod"],
+			"fr": ["mort"],
+			"es": ["muerte", "muertes"],
+			"tr": ["olum"]
+		},
+		"story": {
+			"de": ["geschichte", "geschichten"],
+			"fr": ["histoire", "histoires"],
+			"es": ["historia", "historias"],
+			"tr": ["hikaye", "hikayeler"]
+		},
+		"violent": {
+			"de": ["gewalttatig", "gewalttatige", "gewalttatigen", "brutale", "brutalen"],
+			"fr": ["violent", "violente", "violents", "violentes"],
+			"es": ["violento", "violenta", "violentos", "violentas"],
+			"tr": ["siddetli"]
+		}
+	},
+	"nonEnglishElements": {
+		"horror": {
+			"es": ["terror"]
+		},
+		"blood": {
+			"fr": ["sang"]
+		},
+		"love": {
+			"tr": ["ask"]
+		},
+		"kid": {
+			"de": ["kind"]
+		},
+		"animal": {
+			"de": ["tier"]
+		},
+		"gore": {
+			"de": ["splatter"]
+		}
+	},
+	"phrases": {
+		"dessin anime": "animation",
+		"dessins animes": "animation",
+		"dibujos animados": "animation",
+		"dibujo animado": "animation",
+		"cizgi film": "animation",
+		"cizgi filmi": "animation",
+		"cizgi filmler": "animation",
+		"histoire d amour": "romance",
+		"histoires d amour": "romance",
+		"historia de amor": "romance",
+		"historias de amor": "romance",
+		"ask hikaye": "romance",
+		"ask hikayesi": "romance",
+		"ask hikayeleri": "romance",
+		"super heros": "superhero",
+		"super kahraman": "superhero",
+		"super kahramanlar": "superhero",
+		"subidas de tono": "sex",
+		"sustos repentinos": "jump scare",
+		"susto repentino": "jump scare",
+		"ani korku": "jump scare",
+		"2 weltkrieg": "world war ii",
+		"2 weltkriegs": "world war ii",
+		"2 dunya savasi": "world war ii",
+		"2 dunya savas": "world war ii",
+		"2 guerra mundial": "world war ii",
+		"2 guerre mondiale": "world war ii",
+		"jump scare": "jump scare",
+		"jump scares": "jump scare"
+	}
+}

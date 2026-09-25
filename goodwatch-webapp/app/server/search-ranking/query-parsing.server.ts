@@ -1,5 +1,6 @@
 // Reads the search text: language, negated clauses, a decade or year, spelling, and the facets of Jev's searched
 // phrases. Pure functions over the query and the loaded search index.
+import negationWords from "./negation-words.json"
 import type { SearchIndex } from "./search-index.server.ts"
 import {
 	STOPWORDS,
@@ -59,14 +60,244 @@ export function englishFromChips(chips: ReadingChipLike[]): {
 // --- Negation -----------------------------------------------------------------------------------------------------
 
 // A marker word opens a negated clause; the clause runs to a clause-end word or a token ending in , . ; ! ?
-// ("than": "more getaway driver than superheroes"; "less": "like david lynch but less weird").
+// ("than": "more getaway driver than superheroes"; "less": "like david lynch but less weird"). Spanish and French
+// "ni" starts a second clause inside one ("sin animación ni detectives"). An ordinal ("2.") doesn't end a clause.
+//
+// Turkish negates after the element. A postposition ("zombi olmadan", "zombi yok", "robot olmayan") negates the
+// content word before it when that names a known element, skipping function words ("ile ilgili"). A compound head
+// ("seks sahnesi", "dünya savaşı") or the start of a known phrase ("süper kahraman", "2. dünya savaşı") takes the word
+// before it too, and an ordinal before that ("ikinci"). A "-sız / -siz / -suz / -süz" word negates its stem when the
+// stem is a known element ("zombisiz").
 const NEGATION_WORDS = new Set(
-	"no not without except minus nothing than less fewer isn't aren't don't doesn't ohne nicht kein keine keinen keiner sans pas ni sin".split(
+	"no not without except minus nothing than less fewer isn't aren't don't doesn't ohne nicht kein keine keinen keiner sans pas aucun aucune ni sin nada".split(
 		" ",
 	),
 )
-const CLAUSE_END = new Set("but and aber und mais et pero y".split(" "))
+const CLAUSE_END = new Set(
+	"but and aber und mais et pero y ama fakat ancak ve".split(" "),
+)
+// Folded, like the negation word list
+const NEGATION_AFTER = new Set("olmadan olmayan yok degil icermeyen".split(" "))
+const NEGATION_SUFFIXES = ["siz", "suz"]
+// "Fearless", and Daredevil's Turkish title
+const NEGATION_SUFFIX_EXCEPT = new Set(["korkusuz"])
 const TRIM = /^[,.;:!?\-()"]+|[,.;:!?\-()"]+$/g
+const ORDINAL = /^\d+\.$/
+const clean = (token: string) => token.replace(TRIM, "").toLowerCase()
+const endsClause = (token: string) =>
+	",.;!?".includes(token[token.length - 1]) && !ORDINAL.test(token)
+
+/** Lowercase, no diacritics, Turkish dotless i as i, ß as ss: the form of the negation word list. */
+export function foldWord(word: string): string {
+	return word
+		.toLowerCase()
+		.replace(/ı/g, "i")
+		.replace(/ß/g, "ss")
+		.normalize("NFKD")
+		.replace(/\p{Mn}/gu, "")
+}
+
+type ElementForms = Record<string, Record<string, string[]>>
+
+interface ElementIndex {
+	forms: Map<string, string>
+	byLanguage: Map<string, Map<string, string>>
+}
+
+function elementIndex(elements: ElementForms): ElementIndex {
+	const forms = new Map<string, string>()
+	const byLanguage = new Map<string, Map<string, string>>()
+	for (const [english, languages] of Object.entries(elements)) {
+		for (const [language, list] of Object.entries(languages)) {
+			if (!byLanguage.has(language)) byLanguage.set(language, new Map())
+			for (const form of list) {
+				forms.set(form, english)
+				byLanguage.get(language)?.set(form, english)
+			}
+		}
+	}
+	return { forms, byLanguage }
+}
+
+const allWords = (lists: Record<string, string[]>) =>
+	new Set(Object.values(lists).flat())
+
+// German, French, Spanish and Turkish words for common content elements (#169). The arena prototype reads the same
+// file. The nonEnglish lists apply only to searches routed non-English, because their words are English words too.
+const NEGATION_LIST = {
+	all: elementIndex(negationWords.elements),
+	nonEnglish: elementIndex(negationWords.nonEnglishElements as ElementForms),
+	functionWords: allWords(negationWords.functionWords),
+	nonEnglishFunctionWords: allWords(negationWords.nonEnglishFunctionWords),
+	phrases: new Map(Object.entries(negationWords.phrases)),
+	// Every start of 2 or more words of a phrase
+	phraseStarts: new Set(
+		Object.keys(negationWords.phrases).flatMap((k) => {
+			const ws = k.split(" ")
+			return ws.slice(1).map((_, i) => ws.slice(0, i + 2).join(" "))
+		}),
+	),
+	suffixes: Object.entries(negationWords.suffixes),
+}
+const LISTED = new Set([
+	...NEGATION_LIST.all.forms.keys(),
+	...NEGATION_LIST.nonEnglish.forms.keys(),
+	...NEGATION_LIST.functionWords,
+	...NEGATION_LIST.nonEnglishFunctionWords,
+	...[...NEGATION_LIST.phrases.keys()].flatMap((k) => k.split(" ")),
+])
+
+/**
+ * The English words for one word when it's a known element form, else null. A word that isn't listed as it is may be
+ * a listed form plus one of its language's suffixes ("Außerirdischen", "sahnesi").
+ */
+export function elementEnglish(
+	word: string,
+	nonEnglish = false,
+): string | null {
+	const w = foldWord(word)
+	const indexes = nonEnglish
+		? [NEGATION_LIST.all, NEGATION_LIST.nonEnglish]
+		: [NEGATION_LIST.all]
+	for (const { forms, byLanguage } of indexes) {
+		const direct = forms.get(w)
+		if (direct !== undefined) return direct
+		for (const [language, suffixes] of NEGATION_LIST.suffixes) {
+			for (const suffix of suffixes) {
+				if (!w.endsWith(suffix) || length(w) - suffix.length < 3) continue
+				const base = byLanguage.get(language)?.get(w.slice(0, -suffix.length))
+				if (base !== undefined) return base
+			}
+		}
+	}
+	return null
+}
+
+/** The stem of a Turkish "-sız" word ("zombisiz" -> "zombi"), else null. The stem isn't checked. */
+function suffixStem(word: string): string | null {
+	const f = foldWord(word)
+	if (
+		NEGATION_SUFFIXES.some((s) => f.endsWith(s)) &&
+		length(f) > 5 &&
+		!NEGATION_SUFFIX_EXCEPT.has(f)
+	)
+		return [...word.toLowerCase()].slice(0, -3).join("")
+	return null
+}
+
+/**
+ * A word spell correction leaves alone: a negation or clause-end marker, a word of the negation word list, or a known
+ * element with a Turkish "-sız" suffix ("seks" stays, not "seeks"; "kein" stays, not "keen").
+ */
+function negationForm(word: string): boolean {
+	const f = foldWord(word)
+	const stem = suffixStem(word)
+	return (
+		NEGATION_WORDS.has(word) ||
+		CLAUSE_END.has(word) ||
+		NEGATION_AFTER.has(f) ||
+		LISTED.has(f) ||
+		elementEnglish(word, true) !== null ||
+		(stem !== null && elementEnglish(stem) !== null)
+	)
+}
+
+/**
+ * A negated phrase with its known non-English element words and phrases in English and, when it has one, its
+ * non-English function words dropped ("de zombis" -> "zombie", "zweiten weltkrieg" -> "ii world war"). A phrase
+ * without a known element comes back as it is. nonEnglish: the search is routed non-English, which adds the words that
+ * are also English words ("terror" -> "horror").
+ */
+export function englishNegation(phrase: string, nonEnglish = false): string {
+	const { english, hit } = englishElements(phrase, nonEnglish)
+	return hit ? english : phrase
+}
+
+/** (the phrase with known elements in English and function words dropped, whether it holds a known element). */
+function englishElements(
+	phrase: string,
+	nonEnglish: boolean,
+): { english: string; hit: boolean } {
+	const ws = words(phrase.replace(/\u0307/g, "")) // "İkinci" lowercases to i + a combining dot
+	const isFunction = (w: string) =>
+		NEGATION_LIST.functionWords.has(w) ||
+		(nonEnglish && NEGATION_LIST.nonEnglishFunctionWords.has(w))
+	const out: string[] = []
+	let hit = false
+	let i = 0
+	while (i < ws.length) {
+		let matched = false
+		for (const n of [3, 2]) {
+			if (i + n > ws.length) continue
+			const english = NEGATION_LIST.phrases.get(
+				ws
+					.slice(i, i + n)
+					.map(foldWord)
+					.join(" "),
+			)
+			if (english !== undefined) {
+				out.push(english)
+				hit = true
+				i += n
+				matched = true
+				break
+			}
+		}
+		if (matched) continue
+		const w = ws[i++]
+		const english = elementEnglish(w, nonEnglish)
+		if (english !== null) {
+			out.push(english)
+			hit = true
+		} else if (!isFunction(foldWord(w))) out.push(w)
+	}
+	return { english: out.join(" "), hit }
+}
+
+/**
+ * The words before a Turkish postposition that it negates, taken off the end of positive. [] when they don't name a
+ * known element: "aşırı duygusal olmayan" (not too emotional) stays positive, since a negated Turkish tone word would
+ * mostly push away Turkish titles in the multilingual embedding.
+ */
+function turkishElement(positive: string[]): string[] {
+	const core: string[] = []
+	const skipped: string[] = []
+	while (positive.length && core.length < 3) {
+		const prev = positive[positive.length - 1]
+		const pw = clean(prev)
+		if (
+			CLAUSE_END.has(pw) ||
+			(endsClause(prev) && (core.length || skipped.length))
+		)
+			break
+		if (!core.length && NEGATION_LIST.functionWords.has(foldWord(pw)))
+			skipped.unshift(pw)
+		else if (!core.length) core.push(pw)
+		else {
+			const f0 = foldWord(core[0])
+			const fp = foldWord(pw)
+			const head =
+				!NEGATION_LIST.all.forms.has(f0) &&
+				["si", "su", "i", "u"].some((s) => f0.endsWith(s)) &&
+				length(f0) >= 5
+			if (
+				!(
+					NEGATION_LIST.phraseStarts.has(`${fp} ${f0}`) ||
+					head ||
+					elementEnglish(pw) === "ii"
+				)
+			)
+				break
+			core.unshift(pw)
+		}
+		positive.pop()
+	}
+	if (!core.length || !englishElements(core.join(" "), false).hit) {
+		positive.push(...core, ...skipped)
+		return []
+	}
+	return [...core, ...skipped]
+}
 
 /** (positive text, negated clauses), over whitespace tokens. Without a marker: (text, []). */
 export function splitNegation(text: string): {
@@ -76,24 +307,56 @@ export function splitNegation(text: string): {
 	const positive: string[] = []
 	const negated: string[][] = []
 	let clause: string[] | null = null
+	const popClauseEnd = () => {
+		if (
+			positive.length &&
+			CLAUSE_END.has(
+				positive[positive.length - 1].replace(/^,+|,+$/g, "").toLowerCase(),
+			)
+		)
+			positive.pop()
+	}
 	for (const token of text.replace(/’/g, "'").split(/\s+/).filter(Boolean)) {
-		const w = token.replace(TRIM, "").toLowerCase()
+		const w = clean(token)
 		if (clause !== null && CLAUSE_END.has(w)) clause = null
-		if (clause === null && NEGATION_WORDS.has(w)) {
+		if (clause === null && NEGATION_AFTER.has(foldWord(w)) && positive.length) {
+			const element = turkishElement(positive)
+			if (element.length) {
+				negated.push(element)
+				popClauseEnd()
+			} else positive.push(token)
+			continue
+		}
+		const stem = clause === null ? suffixStem(w) : null
+		if (stem !== null) {
+			const before = positive.length
+				? clean(positive[positive.length - 1])
+				: null
+			if (
+				before !== null &&
+				NEGATION_LIST.phrases.has(`${foldWord(before)} ${foldWord(stem)}`)
+			) {
+				// "süper kahramansız"
+				positive.pop()
+				negated.push([before, stem])
+				continue
+			}
+			if (elementEnglish(stem) !== null) {
+				negated.push([stem])
+				continue
+			}
+		}
+		if (clause?.length && w === "ni") {
+			clause = []
+			negated.push(clause)
+		} else if (clause === null && NEGATION_WORDS.has(w)) {
 			clause = []
 			negated.push(clause)
 			// "tense but not bleak" -> "tense"
-			if (
-				positive.length &&
-				CLAUSE_END.has(
-					positive[positive.length - 1].replace(/^,+|,+$/g, "").toLowerCase(),
-				)
-			)
-				positive.pop()
+			popClauseEnd()
 		} else if (clause === null) positive.push(token)
 		else if (w) clause.push(w)
-		if (clause !== null && ",.;!?".includes(token[token.length - 1]))
-			clause = null
+		if (clause !== null && endsClause(token)) clause = null
 	}
 	return {
 		positive: positive.join(" ") || text,
@@ -104,14 +367,18 @@ export function splitNegation(text: string): {
 /**
  * Per point id, the share (capped at 1) of 2 keyword or essence-tag labels that hold every content stem of a negated
  * phrase ("aliens" hits "alien" and "alien invasion"). Stems compare in their singular() form, so "zombies" hits
- * "zombie". Titles without a hit are absent.
+ * "zombie". Known non-English element words match as their English words ("ohne Mord" hits "murder"); nonEnglish: the
+ * search is routed non-English. Titles without a hit are absent.
  */
 export function labelNegation(
 	index: SearchIndex,
 	phrase: string,
+	nonEnglish = false,
 ): Map<number, number> {
 	const out = new Map<number, number>()
-	const want = [...new Set(tokens(phrase).map(singular))]
+	const want = [
+		...new Set(tokens(englishNegation(phrase, nonEnglish)).map(singular)),
+	]
 	if (!want.length) return out
 	const { labelsWithStem, titles } = index.negationLabels
 	let hit: Set<number> | null = null
@@ -171,12 +438,18 @@ function oneEdit(a: string, b: string): boolean {
 }
 
 /**
- * An unknown word (ASCII letters, 4 or more, in fewer than 3 titles) becomes the vocabulary word one edit away with
+ * An unknown word (ASCII letters, 4 or more, in fewer than 3 titles, not a word of the negation word list) becomes the vocabulary word one edit away with
  * the most titles; ties go to the first in vocabulary order.
  */
 export function correctWord(index: SearchIndex, w: string): string {
 	const { df, spellVocabulary, spellByLength } = index.words
-	if (!ASCII_LETTERS.test(w) || w.length < 4 || (df.get(w) ?? 0) >= 3) return w
+	if (
+		!ASCII_LETTERS.test(w) ||
+		w.length < 4 ||
+		(df.get(w) ?? 0) >= 3 ||
+		negationForm(w)
+	)
+		return w
 	let best = -1
 	let bestDf = -1
 	for (const len of [w.length - 1, w.length, w.length + 1]) {

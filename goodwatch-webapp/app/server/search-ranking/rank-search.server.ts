@@ -717,7 +717,9 @@ export async function rankSearch(
 			"negation",
 		)
 	if (negated.length) {
-		const shares = negated.map((phrase) => labelNegation(index, phrase))
+		const shares = negated.map((phrase) =>
+			labelNegation(index, phrase, nonEnglish),
+		)
 		addTo(
 			-WEIGHTS.negationLabels,
 			cand.map((id) => Math.max(...shares.map((s) => s.get(id) ?? 0))),
