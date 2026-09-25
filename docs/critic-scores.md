@@ -13,10 +13,27 @@ approved; stop on 403 or 429; never solve or work around a bot challenge; no pro
 | Pace | One request every 2 s per site, shared by every worker through `critic_site_state.next_request_at` (one document per site). |
 | Blocks | A 403, a 429, `cf-mitigated: challenge`, a 202 with an empty body or a challenge page title stops the site: `critic_site_state.blocked_until` is set (429: `Retry-After`, at least 1 h, at most 7 days; otherwise 24 h) and the event is logged in `critic_site_blocks`. Three pages in a row without the expected data count as a possible challenge and stop the site for 6 h. Nothing is retried through a block; unfinished titles wait until the deadline. |
 | URLs | Only known URLs, never guessed: Wikidata's (`wikidata_url`, from `f/external_ids/wikidata_backfill`) first, then the stored one, then a sitemap match. The canonical URL after redirects is stored, without a trailing slash. Metacritic is requested with the trailing slash to skip its redirect. |
-| Verification | Metacritic: the page's IMDb id must equal the title's effective IMDb id (`f/external_ids/imdb_ids.effective_imdb_id`); `imdb_id_verified` records it. Otherwise a URL that did not come from Wikidata needs a matching title (normalized, 0.8 similarity) and a year at most one off. |
-| Shared URLs | A URL several titles hold stays with the title the page matches best (IMDb id, then Wikidata agreement, then title and year, then popularity). One request settles the whole group; the others are rejected with reason `duplicate`. |
-| Negative cache | A 404 (or a redirect away from title pages) sets `not_found_url` and `not_found_until` (+90 days); a rejected match sets `rejected_url`, `rejected_until` (+90 days) and `rejected_reason`. Both clear the URL, `url_source` and the scores, and those URLs are not requested again until the date. Titles with no URL from any source are never requested. |
+| Verification | See [Verification](#verification) below. |
+| Shared URLs | A URL several titles hold stays with the title the page matches best (score: IMDb id 4, Wikidata agreement 2, title 1, year 1 near the premiere or 0.5 elsewhere in the run; then popularity). One request settles the whole group; the others are rejected with reason `duplicate`. When no title in the group matches, each gets its own reason (`title_mismatch`, `year_mismatch`, `imdb_mismatch`). |
+| Negative cache | A 404 (or a redirect away from title pages) sets `not_found_url` and `not_found_until` (+90 days); a rejected match sets `rejected_url`, `rejected_until` (+90 days), `rejected_reason` and `rejected_page` (the page's `title`, `year` and `imdb_id`, so a rule change can re-evaluate the rejection without a request). Both clear the URL, `url_source` and the scores, and those URLs are not requested again until the date. Titles with no URL from any source are never requested. |
 | Backups | Before a URL changes or is cleared, or scores disappear, the previous values go to `_backup_<YYYYMMDD>_critic_urls` (`collection`, `doc_id`, `tmdb_id`, `previous`, `reason`, `run_at`). |
+
+### Verification
+
+A page belongs to the title when:
+
+| Evidence | Rule |
+|---|---|
+| IMDb id (Metacritic) | The page's IMDb id equals the title's effective IMDb id (`f/external_ids/imdb_ids.effective_imdb_id`): accepted, `imdb_id_verified: true`. A different id rejects (`imdb_mismatch`) only when the title's Wikidata URL is another page, or the id is the TMDB IMDb id of another title of the same kind in the catalog. Otherwise the title and year below decide and `imdb_id_verified` is false: Metacritic sometimes gives a show the id of its pilot film (The Six Million Dollar Man) or English dub. |
+| Wikidata URL | The page is the title's Wikidata URL: accepted without a title or year check, unless the IMDb id differs. |
+| Title | Otherwise the normalized page title (letters and digits of any script, so Japanese or Korean titles count) must equal, or reach 0.8 similarity with, one of the title's names: TMDB title and original title, the rating document's title variations, TMDB alternative titles and translated titles. A subtitle on either side also matches: "Sword Art Online: Alicization" matches "Sword Art Online", and "Monster" matches the alternative title "Monster: The Jeffrey Dahmer Story" (the part before `: ` or ` - `, at least 3 characters). |
+| Year | Movies: at most one year from the release year. Shows: anywhere in the run, from a year before the first air date to a year after the last air date (this year while the show airs). Rotten Tomatoes dates a show page by the first season it tracks or its US or dubbed premiere (Doraemon 2014, Coronation Street 2000). |
+
+These rules replaced a stricter set on 2026-09-26 after the [URL verification audit](research/critic-url-verification-audit.md)
+found about 30% of Rotten Tomatoes and 8% of Metacritic rejections wrong. Known cases the rules still reject: a
+page dated before the show's premiere (Tony Awards: RT 1947, TMDB 1956; Monster: The Lizzie Borden Story: Metacritic
+dates the anthology 2022, TMDB the season 2026), and a page whose IMDb id is a separate TMDB entry of the same show
+(Sailor Moon: Metacritic uses the 1995 English dub's id, which TMDB lists as its own show, 295779).
 
 ### Queue
 

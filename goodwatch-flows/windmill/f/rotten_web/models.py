@@ -1,6 +1,7 @@
 from typing import Optional
 from mongoengine import (
     DateTimeField,
+    DictField,
     StringField,
     Document,
     FloatField,
@@ -68,6 +69,7 @@ class BaseRottenTomatoesRating(Document):
     rejected_url = StringField()
     rejected_until = DateTimeField()
     rejected_reason = StringField()  # duplicate, title_mismatch, year_mismatch, imdb_mismatch
+    rejected_page = DictField()  # what the rejected page said: title, year, imdb_id
 
     tomato_score_original = FloatField()
     tomato_score_normalized_percent = FloatField()
