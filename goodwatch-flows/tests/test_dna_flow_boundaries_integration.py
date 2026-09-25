@@ -49,12 +49,12 @@ def inert_modules(modules):
 
 @unittest.skipUnless(API and TOKEN, "Set TEST_WINDMILL_API and TEST_WINDMILL_TOKEN")
 class DNAFlowBoundaries(unittest.TestCase):
-    def run_boundary(self, path):
+    def run_boundary(self, path, args=None):
         import yaml
         flow = copy.deepcopy(yaml.safe_load((ROOT / (path + ".flow") / "flow.yaml").read_text()))
         inert_modules(flow["value"]["modules"])
         job_id = api("/jobs/run/preview_flow", {
-            "value": flow["value"], "schema": flow["schema"], "args": {},
+            "value": flow["value"], "schema": flow["schema"], "args": args or {},
             "path": "f/dna/flow_boundary_check",
         })
         print("Boundary preview:", job_id, flush=True)
@@ -89,7 +89,7 @@ class DNAFlowBoundaries(unittest.TestCase):
         called = self.run_boundary("f/priority/crawl_all")
         for path in (
             "f/tmdb_api/tmdb_fetch_details_from_api/fetch",
-            "f/imdb_web/crawl_all_by_id", "f/metacritic_web/crawl_all_by_id",
+            "f/metacritic_web/crawl_all_by_id",
             "f/rotten_web/crawl_all_by_id", "f/tvtropes_web/crawl_all_by_id",
             "f/tmdb_web/crawl_all_by_id", "f/priority/publish",
         ):
@@ -99,6 +99,15 @@ class DNAFlowBoundaries(unittest.TestCase):
             self.assertIn(path, called)
             # Top-level modules are collected in flow order; the branchall precedes publish.
             self.assertLess(called.index(path), called.index("f/priority/publish"), called)
+        # imdb.com blocks the crawler, so the IMDb branch is off unless crawl_imdb is set.
+        self.assertNotIn("f/imdb_web/imdb_init_ratings/update", called)
+        self.assertNotIn("f/imdb_web/crawl_all_by_id", called)
+
+    def test_priority_crawl_runs_imdb_when_enabled(self):
+        called = self.run_boundary("f/priority/crawl_all", {"crawl_imdb": True})
+        for path in ("f/imdb_web/imdb_init_ratings/update", "f/imdb_web/crawl_all_by_id"):
+            self.assertIn(path, called)
+        self.assertIn("f/priority/reset", called)
 
     def test_dedicated_dna_flow_reaches_fingerprint_persistence(self):
         called = self.run_boundary("f/dna/generate_dna")

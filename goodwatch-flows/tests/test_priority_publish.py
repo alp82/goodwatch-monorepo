@@ -477,6 +477,17 @@ class AcknowledgmentTests(unittest.TestCase):
         self.assertFalse(modules[publish]["continue_on_error"])
         self.assertEqual(modules[reset]["value"]["input_transforms"]["publication_result"]["expr"], "results.o")
 
+    def test_flow_skips_imdb_unless_enabled(self) -> None:
+        # imdb.com blocks the crawler; IMDb ratings come from the daily dataset files.
+        import yaml
+        flow = yaml.safe_load((ROOT / "priority" / "crawl_all.flow" / "flow.yaml").read_text())
+        self.assertIs(flow["schema"]["properties"]["crawl_imdb"]["default"], False)
+        branches = next(module for module in flow["value"]["modules"] if module["value"]["type"] == "branchall")["value"]["branches"]
+        for branch in branches:
+            for module in branch["modules"]:
+                is_imdb = module["value"]["path"].startswith("f/imdb_web/")
+                self.assertEqual(module.get("skip_if"), {"expr": "!flow_input.crawl_imdb"} if is_imdb else None, module["id"])
+
 
 if __name__ == "__main__":
     unittest.main()
