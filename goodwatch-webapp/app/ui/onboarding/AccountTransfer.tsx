@@ -1,5 +1,5 @@
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
-import { Link } from "@remix-run/react";
+import { Link, useLocation } from "@remix-run/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useUser } from "~/utils/auth";
@@ -24,6 +24,7 @@ type Review = {
 	settings: Record<string, string>;
 };
 export function AccountTransfer() {
+	const { pathname } = useLocation();
 	const { user } = useUser();
 	const queryClient = useQueryClient();
 	const [pending, setPending] = useState<PendingTransfer | undefined>();
@@ -254,6 +255,9 @@ export function AccountTransfer() {
 		}
 	}, [pending, busy]);
 	if (!ready) return null;
+	// The share flow brings new accounts back to the list editor with a handle dialog open. Onboarding's drawer would
+	// cover it, so onboarding waits for the next page.
+	const onListEditor = /^\/lists\/new$|^\/u\/[^/]+\/lists\/[^/]+\/edit$/.test(pathname);
 	if (!pending)
 		return error ? (
 			<div role="alert" className="mt-16 p-4 text-amber-200">
@@ -263,7 +267,7 @@ export function AccountTransfer() {
 			<div role="status" className="mt-16 -mb-16 bg-slate-800 p-4 text-white">
 				{finished}
 			</div>
-		) : (
+		) : onListEditor ? null : (
 			<SmartOnboardingBanner />
 		);
 	// Do not open an empty dialog while differences load, or after a no-op comparison.
