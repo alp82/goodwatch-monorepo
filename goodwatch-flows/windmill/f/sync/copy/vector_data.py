@@ -16,7 +16,7 @@ from f.db.mongodb import (
 from f.db.qdrant import QdrantConnector
 from f.db.cratedb import CrateConnector
 from f.sync.copy.deleted_titles import delete_titles_from_qdrant, find_flagged_tmdb_ids, flagged_among
-from f.sync.copy.tmdb_streaming import publication_lease
+from f.sync.copy.tmdb_streaming import SCHEDULED_LEASE_WAIT_SECONDS, publication_lease
 from f.sync.copy.qdrant_retry import (
     REQUEST_TIMEOUT_SECONDS, insert_points, update_points, write_with_retry,
 )
@@ -543,7 +543,10 @@ def copy_to_qdrant(
         for start in range(0, len(upsert_buffer), UPSERT_BATCH_SIZE):
             batch = upsert_buffer[start:start + UPSERT_BATCH_SIZE]
             with ExitStack() as leases:
-                checks = [leases.enter_context(publication_lease(db, media_type, tmdb_id))
+                # A scheduled copy waits out the seconds-long leases of the streaming sync and
+                # the priority publish; a targeted publish fails fast and is retried.
+                lease_wait = 0 if strict_writes else SCHEDULED_LEASE_WAIT_SECONDS
+                checks = [leases.enter_context(publication_lease(db, media_type, tmdb_id, lease_wait))
                           for tmdb_id, _, _ in sorted(batch, key=lambda item: item[0])]
                 for check_owned in checks:
                     check_owned()

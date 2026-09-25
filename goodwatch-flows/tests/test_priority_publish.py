@@ -344,6 +344,7 @@ class VectorSerializationTests(unittest.TestCase):
             "ExitStack": ExitStack,
             **POINT_WRITE_HELPERS,
             "publication_lease": load_copy(self.db).__globals__["publication_lease"],
+            "SCHEDULED_LEASE_WAIT_SECONDS": 0,
             "_fetch_tmdb_ids_keyset": MagicMock(side_effect=[([42], 42), ([], 42)]),
             "_fetch_map_by_ids": lambda *args: {42: {"tmdb_id": 42}},
             "_fetch_multimap_by_ids": lambda *args: {},
@@ -427,6 +428,23 @@ class VectorSerializationTests(unittest.TestCase):
                 self.qc.client.batch_update_points.side_effect = check_competitor_blocked
                 self.assertEqual(self.publish(targeted=targeted)["upserts"], 1)
                 self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)
+
+    def test_scheduled_publication_waits_out_a_short_competitor_lease(self) -> None:
+        # A scheduled copy walks thousands of titles while the streaming sync and the
+        # priority publish hold one title each for seconds.
+        self.db.streaming_publication_leases.insert_one({
+            "_id": "movie:42", "token": "other", "expires_at": datetime.utcnow() + timedelta(seconds=1),
+        })
+        self.namespace["SCHEDULED_LEASE_WAIT_SECONDS"] = 10
+        self.assertEqual(self.publish(targeted=False)["upserts"], 1)
+
+    def test_targeted_publication_does_not_wait_for_a_busy_title(self) -> None:
+        self.db.streaming_publication_leases.insert_one({
+            "_id": "movie:42", "token": "other", "expires_at": datetime.utcnow() + timedelta(seconds=1),
+        })
+        self.namespace["SCHEDULED_LEASE_WAIT_SECONDS"] = 10
+        with self.assertRaisesRegex(RuntimeError, "publication busy"):
+            self.publish(targeted=True)
 
     def test_busy_streaming_writer_prevents_vector_mutation(self) -> None:
         self.db.streaming_publication_leases.insert_one({
