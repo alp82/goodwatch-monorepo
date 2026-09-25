@@ -653,6 +653,47 @@ told apart:
 - **Before the switch (#146):** the 2,000-vote eligibility line was tuned on the inflated vote counts, so decide
   whether it moves. Rebuild the indexes after the vote repair.
 
+### Rollout: stage timings and shadow mode
+
+Built in #146 (`5dee4328`). The switch-over waits for the owner.
+
+- **Stage timings:** every `search_history` row has `stage_ms` (`OBJECT(IGNORED)`, added with
+  `goodwatch-webapp/migrations/20260925_search_stage_timings_and_shadow.sql`, applied on September 25, 2026):
+  `language`, `reading` (Jev), `ranking` (the current ranking, with `rankingQdrant` for its Qdrant time),
+  `titleLookup` (the extra wait for the TMDB title lookup that runs alongside), `display` (catalog metadata and the
+  blend) and `total`. Read the whole object: its keys aren't indexed.
+- **Shadow mode** (`SEARCH_RANKING_MODE=shadow`, `app/server/search-ranking/shadow.server.ts`):
+  - At server start, `startShadowRanking()` loads the index and the query models in the background.
+  - The current ranking still serves. After the response stream closes, `shadowRank()` runs `rankSearch` on the same
+    reading, title lookup and filters, then reads the display fields of its list (the `display` stage).
+  - At most two run at a time. A search is skipped while the index or the models load, while the encoder queue is
+    full, or when the search had no reading (basic search). Errors are caught and logged; the user's response never
+    waits.
+  - Each search gets a `search_shadow` row, joined to `search_history` by `history_id`: `outcome` (`ranked`,
+    `skipped`, `failed`) and `reason`, the served list's first 50 keys (`served_keys`), the new list with its scores,
+    the build, the route, `lesser_known`, the pool size, `stage_ms` (the ranker's stages plus `display` and `waited`)
+    and each Qdrant request (`rounds`). The trace (encoded texts, the reference, the top 50's signals, profile terms)
+    is sealed with `SEARCH_STORAGE_KEY` in `ciphertext`, because it holds text from the query.
+  - The mode `on` isn't wired yet: it behaves like `shadow`.
+- **Trace cost:** the trace now reads only the profile's terms instead of mapping all 660k terms, and its time is
+  reported as `trace`, outside `total`.
+
+Measured on September 25, 2026 on the webapp host (10.0.0.21), in a separate container of the production image
+(`--cpuset-cpus=4-7`, `nice -n 19`) next to live traffic, on 32 real past searches with cached readings (28 general,
+4 reference, all English), build `20260925T082040Z`, in milliseconds:
+
+| stage | one at a time, p50 / p95 | two at a time, p50 / p95 |
+|---|---|---|
+| ranker total | 162 / 469 | 299 / 585 |
+| encoding | 88 / 235 | 170 / 371 |
+| Qdrant round 1 (wall; Qdrant's own time) | 43 / 113 (35 / 102) | 43 / 123 |
+| Qdrant round 2 (wall; Qdrant's own time) | 28 / 78 (15 / 42) | 28 / 103 |
+| scoring and blend | 12 / 38 | 14 / 59 |
+
+The spec's estimate was a median of 105 to 154 ms and a 95th percentile of 263 to 392 ms. Encoding takes the
+difference, as #143 found. Loading took 6 s for the index and 21 s for the models (14 s of it the download), and
+the process grew to 2.1 GB RSS.
+
 ## Prerequisites
 
 1. **Fix the Qdrant recommendation load.** Since Qdrant restarted on September 22, 2026, it has handled about 47,000
