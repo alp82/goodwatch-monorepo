@@ -149,6 +149,28 @@ def _fetch_tmdb_ids_keyset(
     return ids, next_last
 
 
+def _driver_batches(drivers: list, base_selector: dict, *, use_compound_hint: bool):
+    """Batches of tmdb ids from each driver collection in turn. An id comes only once."""
+    seen: set = set()
+    for collection in drivers:
+        last_tmdb_id: Optional[int] = None
+        while True:
+            ids, last_tmdb_id = _fetch_tmdb_ids_keyset(
+                collection,
+                base_selector=base_selector,
+                last_tmdb_id=last_tmdb_id,
+                limit=BATCH_SIZE,
+                overfetch_factor=3,
+                use_compound_hint=use_compound_hint,
+            )
+            if not ids:
+                break
+            ids = [tmdb_id for tmdb_id in ids if tmdb_id not in seen]
+            seen.update(ids)
+            if ids:
+                yield ids
+
+
 def _fetch_map_by_ids(
     collection, ids: List[int], projection: dict | None = None
 ) -> Dict[int, dict]:
@@ -436,8 +458,9 @@ def copy_to_qdrant(
     updated = {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
     sel = dict(query_selector or {})
 
-    # Driver: details (typically largest / frequently updated)
-    driver_collection = c_details
+    # Drivers: details (typically largest / frequently updated), and in the recent window also
+    # the IMDb ratings, which the daily dataset ingest changes without touching the details.
+    drivers = [c_details, c_imdb] if recent_only else [c_details]
     # fingerprint_v1_raw may not exist in the collection yet; check once per media type.
     write_raw_fingerprint = FINGERPRINT_RAW_VECTOR in _collection_vector_names(qc.client)
 
@@ -447,7 +470,6 @@ def copy_to_qdrant(
         "batches": 0, "attempts": 0, "retries": 0, "errors": {},
     }
 
-    last_tmdb_id: Optional[int] = None
     processed = 0
     # Titles deleted on TMDB: collected over the whole run, removed once at the end.
     flagged_ids: set = set()
@@ -456,20 +478,9 @@ def copy_to_qdrant(
     base_selector = {"updated_at": updated, **sel} if recent_only else sel
     use_compound_hint = "updated_at" in base_selector
 
-    while True:
-        ids, last_tmdb_id = _fetch_tmdb_ids_keyset(
-            driver_collection,
-            base_selector=base_selector,
-            last_tmdb_id=last_tmdb_id,
-            limit=BATCH_SIZE,
-            overfetch_factor=3,
-            use_compound_hint=use_compound_hint,
-        )
-        if not ids:
-            break
-
+    for ids in _driver_batches(drivers, base_selector, use_compound_hint=use_compound_hint):
         processed += len(ids)
-        print(f"\n{media_type} ids fetched: {processed} (last_tmdb_id={last_tmdb_id})")
+        print(f"\n{media_type} ids fetched: {processed} (last_tmdb_id={ids[-1]})")
 
         batch_flagged_ids = flagged_among(c_details, ids)
         flagged_ids |= batch_flagged_ids
