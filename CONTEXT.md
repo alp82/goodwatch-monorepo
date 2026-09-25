@@ -68,7 +68,7 @@ A person's ranking of exactly five films or shows under a title, published at it
 _Avoid_: Top list, Collection
 
 **Share card**:
-The image of a share list in one card design and color theme. It is the share list's link preview and changes when the share list changes.
+The image of a share list in one card design and color theme, signed with its owner's handle. It changes when the share list changes.
 
 **Card design**:
 One of the fixed visual layouts a share card can take, identified by a permanent key.
@@ -83,13 +83,11 @@ A suggested share list title, such as "The best sci-fi shows", that also selects
 A new share list, owned by the viewer, started from another person's share list with the same list prompt and titles.
 
 **Handle**:
-The unique public name that identifies a person's public profile and its route.
+The unique public name a person chooses once, which identifies their public profile and its route and signs every share card they share. It can't be changed, and a deleted account's handle is never reassigned.
+_Avoid_: Signature, Display name, Username
 
 **Public profile**:
 The page listing a person's public share lists under their handle. For its owner, it is also where they manage all their share lists.
-
-**Handle hold**:
-The 90 days after a handle is renamed away or its account is deleted, during which no one else can claim it.
 
 **Episode grid**:
 A show's episode ratings laid out with one row per season and one cell per episode, in IMDb's season and episode numbering.

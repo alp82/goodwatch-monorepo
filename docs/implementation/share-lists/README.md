@@ -8,8 +8,8 @@ The primary source is the prototype on branch
 It holds every editor layout and card design the owner reviewed, including the rejected ones. Run it with the dev
 server and open `/prototype/share-list`.
 
-Status: approved for implementation, September 25, 2026. Updated the same day: routes under the owner's handle and
-soft deletes. The ticket breakdown is in [Ticket breakdown](#ticket-breakdown).
+Status: approved for implementation, September 25, 2026. Updated the same day: routes under the owner's handle, soft
+deletes, and permanent handles that sign every card (issue #170). The ticket breakdown is in [Ticket breakdown](#ticket-breakdown).
 
 ## Goal
 
@@ -46,6 +46,16 @@ The owner added these on September 25, 2026, after reviewing the spec:
 13. The spec's earlier choices stand: design keys `manifesto`, `ceremony`, and `rental`; **Public** and **Unlisted**
     visibility; handle claims through `user_handle`.
 
+After the first release, on September 25, 2026, the owner found that people could sign cards as someone else (free-text
+signatures, free-text display names, renamable handles) and decided (issue #170):
+
+14. **People choose a real handle once, and it can't be changed.** Onboarding asks signed-in people for it after their
+    country and streaming services, and people who finished onboarding before see only that step. The share flow and
+    profile settings use the same handle picker. Handles stay unique and case-insensitive.
+15. **Every card is signed with the owner's @handle.** There is no free-text signature and no display name. Guest drafts
+    show `@you` until shared.
+16. **A deleted account's handle stays claimed for good,** so nobody can take over someone else's name or links.
+
 ## Routes
 
 | Route | Page |
@@ -59,12 +69,11 @@ The owner added these on September 25, 2026, after reviewing the spec:
 
 - **Why the new-list editor stays at `/lists/new`:** a list gets its owner's handle only when it's shared, and guests
   and first-time sharers don't have a handle yet. After the first share, the editor moves to the list's edit route.
-- **List ids are global.** Pages look a list up by its id alone. If the handle in the URL isn't the owner's current
-  handle, for example after a rename, the page answers with a permanent redirect to the canonical URL. Old list links
-  keep working forever, and a list can never show up under someone else's handle.
-- **Renamed handles:** `/u/<old handle>` redirects to the owner's current handle while the old handle is on hold (see
-  [Deletion](#deletion)). After the hold, the old handle answers 404 until someone claims it.
-- **Image URLs** stay handle-free, so a rename doesn't change them and social apps keep their cached previews.
+- **List ids are global.** Pages look a list up by its id alone. If the handle in the URL isn't the owner's handle,
+  for example a mistyped or differently cased one, the page answers with a permanent redirect to the canonical URL. A
+  list can never show up under someone else's handle.
+- **Handles never change** (decision 14), so there are no renamed-handle redirects.
+- **Image URLs** are handle-free and versioned by the list's content.
 
 ## What people see
 
@@ -80,7 +89,7 @@ design name never shift the layout.
 **Front of the card.** The live card, scaled to fit the space below the toolbar. It is interactive:
 
 - Clicking a poster opens a dialog for that rank, with search, quick picks, **Move up**, and **Remove**.
-- Clicking the list title or the signature opens a small dialog to edit it.
+- Clicking the list title opens a small dialog to edit it. The card's byline is the owner's @handle and isn't editable.
 - Dragging a poster onto another poster swaps their ranks.
 - Dropping a title onto a poster puts it at that rank. A new title replaces the one there; a title already in the list
   swaps places.
@@ -88,9 +97,8 @@ design name never shift the layout.
 **Back of the card** (after **Edit**). One scrolling panel, no tabs:
 
 1. **Title:** a text input, with list prompts below it as small inline links that wrap.
-2. **Signed:** the signature input.
-3. **Ranking:** the five titles as rows. Rows reorder by drag and drop; a gap opens where the title will land.
-4. **Add titles:** a search box and a poster grid that fills the remaining height and scrolls. Without a query it shows
+2. **Ranking:** the five titles as rows. Rows reorder by drag and drop; a gap opens where the title will land.
+3. **Add titles:** a search box and a poster grid that fills the remaining height and scrolls. Without a query it shows
    quick picks for the current list prompt (up to 48). With a query it shows up to 48 search results. Posters can be
    clicked to add or dragged into the ranking or onto the card. Dropping into a full list inserts the title and pushes
    the last title out; the row that will drop off is marked while dragging.
@@ -135,14 +143,14 @@ Route: `/u/:handle/lists/:id`. It shows:
 - The card, large, rendered in the page.
 - The five titles as links to their detail pages, each with where it streams in the viewer's country, using the same
   availability data as title pages.
-- The author: signature, handle, and a link to their profile.
+- The author: the owner's @handle, linking to their profile.
 - **Make your own** (primary) and **Remix** (secondary). The owner sees **Edit** instead of **Remix**.
-- Meta tags: `og:title` ("<title> by <signature> · GoodWatch"), `og:description` (the numbered titles),
+- Meta tags: `og:title` ("<title> by @<handle> · GoodWatch"), `og:description` (the numbered titles),
   `og:image` with the versioned card URL, its width and height, and `twitter:card` `summary_large_image`.
 - `noindex, nofollow`.
 
-A deleted list returns 404, including its image. A list whose owner made it unlisted still opens by link. A URL with an
-outdated handle redirects to the canonical one.
+A deleted list returns 404, including its image. A list whose owner made it unlisted still opens by link. A URL with a
+wrong or differently cased handle redirects to the canonical one.
 
 ### My lists
 
@@ -154,13 +162,13 @@ Guests have no profile. Taste shows their browser draft with an invitation to si
 
 ### Public profile
 
-Route: `/u/:handle`. It shows the person's display name and handle, and their public lists as a grid of cards, newest
-first. It's `noindex`. The owner's view doubles as [My lists](#my-lists). A deleted profile answers 404.
+Route: `/u/:handle`. It shows the person's @handle and their public lists as a grid of cards, newest first. It's `noindex`. The owner's view doubles as [My lists](#my-lists). A deleted profile answers 404.
 
-- **Handles** are claimed on first share, or in account settings. They are 3 to 30 characters of lowercase letters,
-  digits, and underscores, must start with a letter, and are unique. A reserved list blocks route and brand words
-  (`admin`, `api`, `goodwatch`, `lists`, `settings`, and so on).
-- The signature on new lists defaults to `@handle`, and people can still type any signature.
+- **Handles** are chosen once, in onboarding, on first share, or in profile settings, all with the same picker, and
+  can't be changed afterward. They are 3 to 30 characters of lowercase letters, digits, and underscores, must start
+  with a letter, and are unique. A reserved list blocks route and brand words (`admin`, `api`, `goodwatch`, `lists`,
+  `settings`, and so on). Settings shows a set handle read-only.
+- Every card, link preview, and list page is signed with the owner's @handle. There is no display name.
 
 ## Data model
 
@@ -176,7 +184,7 @@ CREATE TABLE IF NOT EXISTS doc.user_list (
   prompt_id TEXT,                  -- list prompt the title came from, if any
   design TEXT NOT NULL,            -- card design key
   theme TEXT NOT NULL,             -- color theme key
-  signature TEXT,                  -- up to 28 characters
+  signature TEXT,                  -- unused since issue #170; cards print the owner's @handle
   items ARRAY(OBJECT(STRICT) AS (media_type TEXT, tmdb_id BIGINT)),  -- exactly 5, in rank order
   visibility TEXT NOT NULL,        -- 'public' or 'unlisted'
   remixed_from TEXT,               -- source list id for a remix
@@ -189,7 +197,7 @@ CREATE TABLE IF NOT EXISTS doc.user_list (
 CREATE TABLE IF NOT EXISTS doc.user_profile (
   user_id TEXT PRIMARY KEY,
   handle TEXT NOT NULL,            -- lowercase, unique (enforced through user_handle)
-  display_name TEXT,
+  display_name TEXT,               -- unused since issue #170
   created_at TIMESTAMP WITH TIME ZONE NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
   deleted_at TIMESTAMP WITH TIME ZONE              -- set when the account is deleted
@@ -199,26 +207,24 @@ CREATE TABLE IF NOT EXISTS doc.user_handle (
   handle TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   claimed_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  released_at TIMESTAMP WITH TIME ZONE,            -- set when the owner renamed away from it
+  released_at TIMESTAMP WITH TIME ZONE,            -- unused since issue #170: handles can't be renamed
   deleted_at TIMESTAMP WITH TIME ZONE              -- set when the owner's account was deleted
 ) CLUSTERED INTO 1 SHARDS WITH (number_of_replicas = '0-1');
 ```
 
 - **Uniqueness:** Crate has no unique constraints on non-key columns. Claim a handle through `doc.user_handle`, keyed
-  by the handle: insert with `ON CONFLICT DO NOTHING` and check the claiming user. Taking over a row whose hold has
-  expired is an update guarded by the row's `_seq_no` and `_primary_term`, so of two people claiming it at once exactly
-  one wins. Then write `user_profile`. Crate refreshes reads about once a second, so read the claim back with
+  by the handle: insert with `ON CONFLICT DO NOTHING` and check the claiming user, so of two people claiming it at once
+  exactly one wins. A handle row is never reused. Then write `user_profile`. Crate refreshes reads about once a second, so read the claim back with
   `REFRESH TABLE` before confirming.
 - **Validation** happens on the server for every write: five distinct titles that exist in the catalog, known design
   and theme keys, length limits, and ownership.
-- **Content hash:** a short hash of the design key, theme, title, signature, and the five item keys, recomputed on
+- **Content hash:** a short hash of the design key, theme, title, and the five item keys, recomputed on
   every write. The card image URL includes it.
 - **Deletion** is soft; see [Deletion](#deletion).
 
 ### Deletion
 
-Nothing is removed from the database in the first release. Rows carry `deleted_at` (and `released_at` for handles), and
-every read filters them out.
+Nothing is removed from the database in the first release. Rows carry `deleted_at`, and every read filters them out.
 
 - **Deleting a list** sets its `deleted_at`. Its page, edit route, and image answer 404, and it disappears from the
   profile and from remix lookups. Remixes of it keep their own content. There is no undo in the product; an operator
@@ -226,11 +232,9 @@ every read filters them out.
 - **Deleting an account** sets `deleted_at` on the person's lists, profile, and handles, in that order. The profile
   answers 404 and every list link answers 404. The webapp has no account-deletion flow today; the store exposes one
   function for it, and the flow calls it when it exists.
-- **Renaming a handle** sets `released_at` on the old handle row. The profile keeps its lists; list links redirect by
-  id, and `/u/<old handle>` redirects to the new handle during the hold.
-- **Handle hold: 90 days.** After a rename or an account deletion, nobody else can claim the handle for 90 days, which
-  stops look-alike takeovers of fresh links. During the hold, the person who renamed away can switch back, and a deleted
-  account's profile answers 404. After 90 days the handle is free, and the next claim takes over the row.
+- **A deleted account's handle stays claimed for good** (decision 16). Its profile answers 404, and nobody else can
+  claim the handle, so nobody can take over someone else's name or links. Handles can't be renamed, so there is no
+  hold period.
 
 ## Card images
 
@@ -257,7 +261,7 @@ Card images move from the prototype endpoint into the production Open Graph imag
 Each design is a React component that renders twice: as DOM for the live preview and through satori for the PNG. The
 prototype's card contract carries over unchanged; see `app/ui/prototype-share-list/kit.tsx` on the prototype branch.
 In short: inline styles, flexbox only, `display: flex` on every element with more than one child, no React fragments
-inside card markup, `data-slot` on each rank's element, `data-edit` on the title and signature, placeholders only
+inside card markup, `data-slot` on each rank's element, `data-edit` on the title (the @handle byline isn't editable), placeholders only
 while editing, and none of the known resvg crash inputs (negative sizes, a zero-height box with a dashed border, a
 blurred shadow on a rotated parent).
 
@@ -305,15 +309,16 @@ These are tracked together in one needs-triage issue:
 
 ## Open risks
 
-- **Public free text.** Titles, signatures, handles, and display names are public by default. The first release needs
+- **Public free text.** List titles and handles are public by default. Handles are permanent and unique, so nobody can
+  sign as someone else, but a handle can still be a look-alike of a real name. The first release needs
   at least length limits, a reserved-handle list, and a way for the owner to delete a list or profile by hand. Abuse
   reporting is out of scope and may be needed soon after launch.
 - **Render cost.** Every saved change renders a card. Debounce server-side too (for example, at most one render per list
   every few seconds), and render only the latest hash.
 - **Crate read-after-write.** Crate refreshes about once a second. Reads right after a save (the share link, My lists)
   must use the written data or `REFRESH TABLE`, or they can show stale content.
-- **Soft-deleted personal data stays stored.** Titles, signatures, handles, and display names of deleted lists and
-  accounts remain in Crate. A purge after the handle hold, or on request, is out of scope for the first release and
+- **Soft-deleted personal data stays stored.** Titles and handles of deleted lists and accounts remain in Crate, and so
+  do signatures and display names written before issue #170. A purge on request is out of scope for the first release and
   may be needed for privacy requests.
 - **Font licenses.** All card fonts are from Google Fonts under the Open Font License, which allows bundling. Keep the
   license files next to the fonts, like `OFL-Gabarito.txt`.
@@ -332,6 +337,7 @@ One tracking issue links these slices. Each slice is sized for one agent.
 5. **Share and sign-up:** **Share** copies the link and gates guests behind sign-up, then saves the draft and claims a
    handle.
 6. **Public list page:** `/u/:handle/lists/:id` with the card, linked titles and availability, Make your own, Remix, and meta tags.
-7. **Profiles:** handle claiming in settings, `/u/:handle`, and renamed-handle redirects.
+7. **Profiles:** handle claiming in settings, and `/u/:handle`. Issue #170 made handles permanent and moved the choice
+   into onboarding.
 8. **My lists:** the owner's view of `/u/:handle` with edit, share, delete, and visibility, linked from Taste.
 9. **Taste entry point:** "Share your top 5", prefilled from the person's highest-rated titles.
