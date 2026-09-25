@@ -20,9 +20,6 @@ export const shareListEditPath = (handle: string, id: string) =>
 	`/u/${handle}/lists/${id}/edit`
 export const shareCardImagePath = (list: { id: string; contentHash: string }) =>
 	`/og/lists/${list.id}/${list.contentHash}.png`
-/** The 1200x630 link preview of a list page. Its hash covers the byline too (see previewHash). */
-export const shareListPreviewPath = (id: string, previewHash: string) =>
-	`/og/lists/${id}/preview/${previewHash}.png`
 
 export const publicOrigin = () =>
 	typeof window !== "undefined"

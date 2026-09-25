@@ -101,7 +101,7 @@ export default function WhereToWatch({ media, country, navigateToSection }: { me
 
 	return (
 		<div id="streaming" ref={ref} className="relative min-w-0">
-			<div className="flex items-center gap-2">
+			<div className="flex flex-wrap items-center gap-2">
 				<h2 className="whitespace-nowrap text-sm font-semibold text-gray-200 max-[430px]:sr-only">Where to watch</h2>
 				<div role="tablist" aria-label="Offer type" className="flex rounded-full bg-white/8 p-0.5 text-xs">
 					{(["flatrate", "rent", "buy"] as const).map((t) => (

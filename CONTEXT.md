@@ -47,8 +47,12 @@ Guest progress retained in its original browser while its transfer to an account
 **Duplicate listings**:
 Catalog entries reliably identified as the same underlying film or show. A shared title alone does not establish identity; remakes, sequels, and distinct series remain separate works.
 
+**Title analysis**:
+The per-title model call that reads a title's details and produces its fingerprint, essence text, essence tags, content advisories and suitability flags. A title without a title analysis has no fingerprint and can't be found by search. The code still names it DNA (`f/dna/...`, `dna_movie`, `dna_tv`, `dna_created_at`).
+_Avoid_: DNA
+
 **Fingerprint**:
-The 74 named attribute scores describing a movie or show's characteristics. Each score is an integer from 0 to 10, interpreted using its attribute definition.
+The 74 named attribute scores describing a movie or show's characteristics. Each score is an integer from 0 to 10, interpreted using its attribute definition. It is one output of the title analysis.
 
 **Attribute score**:
 The strength or presence of a named characteristic in a title. It is not a viewer's rating of how good the title is.
