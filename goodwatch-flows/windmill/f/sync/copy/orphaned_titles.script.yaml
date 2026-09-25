@@ -1,0 +1,13 @@
+summary: Sweep CrateDB rows of titles missing from Mongo
+description: ''
+lock: '!inline f/sync/copy/orphaned_titles.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      description: 'Report the rows that would be deleted without deleting them.'
+      default: false
+  required: []
