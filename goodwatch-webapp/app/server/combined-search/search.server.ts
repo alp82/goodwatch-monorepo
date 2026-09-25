@@ -9,6 +9,7 @@ import {
 	type Eligibility,
 	type ReadingChip,
 	type Result,
+	READING_RANKER_VERSION,
 } from "./reading-retrieval.server";
 import { toCrateSql } from "./search-filters";
 import {
@@ -149,6 +150,8 @@ async function lookupTitles(q: string, policy: Eligibility): Promise<Title[]> {
 				.join(", "),
 		}));
 }
+// The ranking of the basic search: essence text relevance only (see literal).
+const BASIC_RANKER_VERSION = "essence-text-v1";
 async function literal(q: string, policy: Eligibility): Promise<Result[]> {
 	const groups = await Promise.all(
 		(["movie", "show"] as const).map((type) => {
@@ -318,6 +321,9 @@ export async function combinedSearch(
 		chargedNano,
 		outcome: errors.includes(BASIC_SEARCH_MESSAGE) ? "basic" : outcome.kind,
 		...(outcome.kind === "basic" ? { reason: outcome.reason } : {}),
+		rankerVersion: errors.includes(BASIC_SEARCH_MESSAGE)
+			? BASIC_RANKER_VERSION
+			: READING_RANKER_VERSION,
 	});
 	return {
 		q,

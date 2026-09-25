@@ -296,9 +296,11 @@ export class SearchStore {
 		chargedNano: number
 		outcome: "ready" | "cached" | "basic"
 		reason?: BasicReason
+		// The ranking that produced the served list, so results can be compared by version.
+		rankerVersion: string
 	}) {
 		await this.execute(
-			"INSERT INTO doc.search_history (id, created_at, account_id, ciphertext, elapsed_ms, charged_nano, outcome, reason) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?)",
+			"INSERT INTO doc.search_history (id, created_at, account_id, ciphertext, elapsed_ms, charged_nano, outcome, reason, ranker_version) VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?)",
 			[
 				randomUUID(),
 				input.accountId,
@@ -307,6 +309,7 @@ export class SearchStore {
 				input.chargedNano,
 				input.outcome,
 				input.reason ?? null,
+				input.rankerVersion,
 			],
 		)
 	}

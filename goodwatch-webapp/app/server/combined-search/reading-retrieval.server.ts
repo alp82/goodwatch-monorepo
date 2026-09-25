@@ -16,6 +16,9 @@ import {
 	toCrateSql,
 	toQdrantMust,
 } from "./search-filters";
+// Recorded with each search as its ranker version. Change it when the ranking changes.
+export const READING_RANKER_VERSION = "fingerprint-text-v1";
+
 // --- Tunables ----------------------------------------------------------------------------
 // Every threshold and weight of the search lives here. Probabilities are Jev outputs in 0..1.
 
