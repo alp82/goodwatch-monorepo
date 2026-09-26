@@ -145,13 +145,11 @@ export async function prepareLanguage(
 		const claim = await store.claim({
 			cacheKey,
 			contract,
-			scopes: [
+			scopes: Promise.resolve(visitor.accountId).then((accountId) => [
 				"global",
 				store.digest(`network:${visitor.networkIdentity}`),
-				...(visitor.accountId
-					? [store.digest(`account:${visitor.accountId}`)]
-					: []),
-			],
+				...(accountId ? [store.digest(`account:${accountId}`)] : []),
+			]),
 			reserveNano: RESERVE,
 			priceVersion: "openrouter-nano-2026-09-21-100-400-v1",
 		});

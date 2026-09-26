@@ -106,20 +106,20 @@ export class SearchStore {
 	}
 	// Callers look the cache key up first (lookup), so claim doesn't. A reading that lands in between is caught by the
 	// Redis lock and the primary-key insert below.
+	// The scopes may still be resolving: they are awaited only before admission, after the spending checks.
 	async claim(input: {
 		cacheKey: string
 		contract: string
-		scopes: string[]
+		scopes: string[] | Promise<string[]>
 		reserveNano: number
 		priceVersion: string
 		admissionAttemptId?: string
 	}): Promise<Claim> {
-		if (
-			!input.scopes.length ||
-			!Number.isSafeInteger(input.reserveNano) ||
-			input.reserveNano <= 0
-		)
+		if (!Number.isSafeInteger(input.reserveNano) || input.reserveNano <= 0)
 			return { kind: "basic", reason: "configuration" }
+		// Handled at the await below; this only keeps an early rejection from counting as unhandled.
+		const scopesReady = Promise.resolve(input.scopes)
+		scopesReady.catch(() => {})
 		// The control row and the spending, in parallel. The spending query reads Crate's clock once, and sums today's
 		// and this month's (UTC) spending by it.
 		const [[control], [spend]] = await Promise.all([
@@ -137,11 +137,13 @@ export class SearchStore {
 			Number(spend.month) + input.reserveNano > MONTHLY_NANO
 		)
 			return { kind: "basic", reason: "budget" }
+		const scopes = await scopesReady
+		if (!scopes.length) return { kind: "basic", reason: "configuration" }
 		const id = randomUUID()
 		const admitted = await this.coordination.claim(
 			id,
 			input.cacheKey,
-			input.scopes,
+			scopes,
 			input.admissionAttemptId,
 		)
 		if (admitted !== "ok") return { kind: "basic", reason: admitted }

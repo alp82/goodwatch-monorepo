@@ -90,7 +90,12 @@ export interface JevStageInput {
 	requests: [SystemOneRequest, SystemOneRequest];
 	// Obtained from authenticated server context and a TRUSTED ingress address resolver.
 	// Never accept arbitrary forwarded headers, browser-provided user IDs, or new cookies.
-	visitor: { accountId: string | null; networkIdentity: string };
+	// accountId may still be resolving (the route verifies the session while the search starts). It is awaited only
+	// where it is needed, before admission; a rejection means the search must not make a paid call.
+	visitor: {
+		accountId: string | null | Promise<string | null>;
+		networkIdentity: string;
+	};
 	signal?: AbortSignal;
 	admissionAttemptId?: string;
 	// Filled with milliseconds per step, for the history row: lookup (the cache), claim (spending checks and the
@@ -175,13 +180,12 @@ export async function executeJevStage(
 		claim = await store.claim({
 			cacheKey,
 			contract,
-			scopes: [
+			// The account scope waits for the session check; the spending checks don't.
+			scopes: Promise.resolve(input.visitor.accountId).then((accountId) => [
 				"global",
 				store.digest(`network:${input.visitor.networkIdentity}`),
-				...(input.visitor.accountId
-					? [store.digest(`account:${input.visitor.accountId}`)]
-					: []),
-			],
+				...(accountId ? [store.digest(`account:${accountId}`)] : []),
+			]),
 			reserveNano: JEV_RESERVE_NANO,
 			priceVersion: JEV_PRICE_VERSION,
 			admissionAttemptId: input.admissionAttemptId,

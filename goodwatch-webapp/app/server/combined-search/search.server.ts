@@ -412,6 +412,8 @@ export async function combinedSearch(
 	const started = Date.now(),
 		errors: string[] = [];
 	let chargedNano = 0;
+	// Awaited before the paid call and the history row; this keeps an early rejection from counting as unhandled.
+	Promise.resolve(visitor.accountId).catch(() => {});
 	// Milliseconds per stage, in order: the people step, the language step, the Jev reading, the wait for the title
 	// lookup that runs alongside, the ranking (with its Qdrant time and its own stages), and the display (catalog
 	// metadata, display fields and the blend).
@@ -589,7 +591,8 @@ export async function combinedSearch(
 	stageMs.total = elapsedMs;
 	const history = await recordSearchHistory({
 		text: query,
-		accountId: visitor.accountId,
+		// The verified account, or a rejection when the session check failed: then the search records nothing.
+		accountId: await visitor.accountId,
 		elapsedMs,
 		chargedNano,
 		outcome: errors.includes(BASIC_SEARCH_MESSAGE) ? "basic" : outcome.kind,
