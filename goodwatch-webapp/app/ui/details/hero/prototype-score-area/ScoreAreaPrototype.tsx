@@ -1,32 +1,29 @@
-// PROTOTYPE — score-area layout variants for show and movie pages, switchable with ?score=1..8
-// on the real details route. ?score=0 or no param shows the current production hero. Round 2:
-// the existing score ring, rating chips, rate button, and episode-ratings chip keep their look;
-// the variants only rearrange, group, and resize them. Throwaway: this folder lives only on the
-// prototype/score-area branch and must not reach main.
+// PROTOTYPE — score-area layout variants for show and movie pages, switchable with ?score= on
+// the real details route. ?score=0 or no param shows the current production hero; 8 is round 2's
+// "One panel"; 8a to 8f are round 3, grown from it (see round3.tsx). Throwaway: this folder lives
+// only on the prototype/score-area branch and must not reach main.
 import { useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
-import type { VariantProps } from "./shared"
 import {
-	Variant1ActionCluster,
-	Variant2PosterStack,
-	Variant3BigRing,
-	Variant4QuietPill,
-	Variant5TitleStrip,
-	Variant6CompactLine,
-	Variant7ScoreAndRate,
-	Variant8OnePanel,
-} from "./variants"
+	Variant8aBlurPanel,
+	Variant8bStackedChips,
+	Variant8cRateInActions,
+	Variant8dScoreColumn,
+	Variant8eDividers,
+	Variant8fScoreAndRate,
+} from "./round3"
+import type { VariantProps } from "./shared"
+import { Variant8OnePanel } from "./variants"
 
 export const SCORE_VARIANTS: { key: string; name: string; Component: ((p: VariantProps) => JSX.Element) | null }[] = [
 	{ key: "0", name: "Current bar", Component: null },
-	{ key: "1", name: "Action cluster", Component: Variant1ActionCluster },
-	{ key: "2", name: "Poster stack", Component: Variant2PosterStack },
-	{ key: "3", name: "Big ring", Component: Variant3BigRing },
-	{ key: "4", name: "Quiet pill", Component: Variant4QuietPill },
-	{ key: "5", name: "Title strip", Component: Variant5TitleStrip },
-	{ key: "6", name: "Compact line", Component: Variant6CompactLine },
-	{ key: "7", name: "Score and Rate", Component: Variant7ScoreAndRate },
-	{ key: "8", name: "One panel", Component: Variant8OnePanel },
+	{ key: "8", name: "One panel (round 2)", Component: Variant8OnePanel },
+	{ key: "8a", name: "Blur panel", Component: Variant8aBlurPanel },
+	{ key: "8b", name: "Stacked chips", Component: Variant8bStackedChips },
+	{ key: "8c", name: "Rate in actions", Component: Variant8cRateInActions },
+	{ key: "8d", name: "Score column", Component: Variant8dScoreColumn },
+	{ key: "8e", name: "Lines, side light", Component: Variant8eDividers },
+	{ key: "8f", name: "Score and Rate", Component: Variant8fScoreAndRate },
 ]
 
 export function useScoreVariant() {

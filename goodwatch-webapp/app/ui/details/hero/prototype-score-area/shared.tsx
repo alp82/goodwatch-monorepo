@@ -35,8 +35,9 @@ export const GLASS = "md:rounded-xl md:border md:border-white/10 md:bg-black/55 
 // Rating chips: the production RatingChips, with size steps, layouts, and optional hiding of
 // sites that have no score at all.
 
-type ChipSize = "sm" | "md" | "lg"
+type ChipSize = "xs" | "sm" | "md" | "lg"
 const CHIP_SIZE: Record<ChipSize, { chip: string; imdb: string; logo: string; bar: string }> = {
+	xs: { chip: "h-6 gap-1 px-1.5 text-xs", imdb: "h-2.5", logo: "h-3", bar: "h-2.5" },
 	sm: { chip: "h-7 gap-1 px-1.5 text-[13px]", imdb: "h-3", logo: "h-3.5", bar: "h-3" },
 	md: { chip: "h-8 gap-1.5 px-2 text-sm md:h-9", imdb: "h-3.5", logo: "h-4", bar: "h-3.5" },
 	lg: { chip: "h-10 gap-2 px-2.5 text-base", imdb: "h-4", logo: "h-5", bar: "h-4" },
@@ -52,8 +53,8 @@ export function Chips({
 	media: Media
 	size?: ChipSize
 	/** fillPhone: equal columns on phones, a row from md (production). fill: equal columns always.
-	 * row: one line, no wrapping. wrap: a wrapping row. */
-	layout?: "fillPhone" | "fill" | "row" | "wrap"
+	 * row: one line, no wrapping. wrap: a wrapping row. col: stacked, left-aligned. */
+	layout?: "fillPhone" | "fill" | "row" | "wrap" | "col"
 	hideEmpty?: boolean
 	className?: string
 }) {
@@ -103,6 +104,7 @@ export function Chips({
 				<div className={`hidden items-center gap-1.5 md:flex md:flex-wrap ${className}`}>{shown.map((c) => c.node)}</div>
 			</>
 		)
+	if (layout === "col") return <div className={`flex flex-col items-start gap-1.5 ${className}`}>{shown.map((c) => c.node)}</div>
 	return <div className={`flex items-center gap-1.5 ${layout === "wrap" ? "flex-wrap" : ""} ${className}`}>{shown.map((c) => c.node)}</div>
 }
 
