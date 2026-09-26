@@ -1,3 +1,4 @@
+import time
 from collections import defaultdict
 from datetime import datetime
 from typing import Iterable, List
@@ -6,6 +7,26 @@ from crate import client
 from pydantic import BaseModel
 from urllib3 import Timeout
 import wmill
+
+
+# Seconds to wait before each retry of rows that failed with a transient error.
+RETRY_DELAYS = (1, 4, 10)
+TRANSIENT_ERRORS = ("IOException", "VersionConflictEngineException")
+
+
+def _failures(results: list[dict]) -> list[tuple[int, dict]]:
+    return [
+        (index, result)
+        for index, result in enumerate(results)
+        if result.get("error_message")
+        or result.get("error")
+        or result.get("rowcount", -1) != 1
+    ]
+
+
+def _transient(result: dict) -> bool:
+    message = str(result.get("error_message") or result.get("error") or "")
+    return any(name in message for name in TRANSIENT_ERRORS)
 
 
 class CrateConnector:
@@ -170,22 +191,27 @@ class CrateConnector:
             row = [d.get(c) for c in all_cols]
             data.append(row)
 
-        results = self.cur.executemany(sql, data)
-        # CrateDB can return a successful HTTP response with individual failed
-        # bulk operations. Callers must not acknowledge a crawl in that case.
-        if not isinstance(results, list) or len(results) != len(data):
-            raise RuntimeError(f"Incomplete bulk result while writing {table}")
-        failures = [
-            (index, result)
-            for index, result in enumerate(results)
-            if result.get("error_message")
-            or result.get("error")
-            or result.get("rowcount", -1) != 1
-        ]
+        results = self._bulk(table, sql, data)
+        failures = _failures(results)
+        # A shard read can fail one row with an IOException, or a concurrent
+        # write with a version conflict. Those rows alone are written again.
+        for attempt, delay in enumerate(RETRY_DELAYS, start=1):
+            if not failures or not all(_transient(result) for _, result in failures):
+                break
+            print(f"    Retrying {len(failures)} of {len(data)} rows into '{table}' "
+                  f"in {delay} s: {failures[0][1]}", flush=True)
+            self.sleep(delay)
+            retried = self._bulk(table, sql, [data[index] for index, _ in failures])
+            for (index, _), result in zip(failures, retried):
+                results[index] = result
+            failures = _failures(results)
+        else:
+            attempt = len(RETRY_DELAYS) + 1
         if failures:
             index, result = failures[0]
+            retries = f" after {attempt - 1} retries" if attempt > 1 else ""
             raise RuntimeError(
-                f"Failed to upsert {len(failures)} of {len(data)} rows into {table}; "
+                f"Failed to upsert {len(failures)} of {len(data)} rows into {table}{retries}; "
                 f"first failure at row {index}: {result}"
             )
 
@@ -193,6 +219,16 @@ class CrateConnector:
             "records_received": len(records),
             "rows_upserted": sum(result["rowcount"] for result in results),
         }
+
+    sleep = staticmethod(time.sleep)
+
+    def _bulk(self, table: str, sql: str, data: list) -> list[dict]:
+        results = self.cur.executemany(sql, data)
+        # CrateDB can return a successful HTTP response with individual failed
+        # bulk operations. Callers must not acknowledge a crawl in that case.
+        if not isinstance(results, list) or len(results) != len(data):
+            raise RuntimeError(f"Incomplete bulk result while writing {table}")
+        return results
 
     def table_exists(self, table_name: str) -> bool:
         if not self.cur:
