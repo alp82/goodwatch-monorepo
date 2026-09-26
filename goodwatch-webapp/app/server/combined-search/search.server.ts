@@ -253,6 +253,19 @@ async function literal(q: string, policy: Eligibility): Promise<Result[]> {
 			scores: [],
 		}));
 }
+/**
+ * The text a Jev reading reads, which is also the text in its cache key: lowercase, with each run of whitespace
+ * collapsed to one space, so "Slow burn" and "slow  burn" share one reading. The language step runs on the text as
+ * typed (capitalized German nouns are a language marker), and the ranking, the title lookup and the history keep it.
+ */
+export function readingText(text: string): string {
+	return text
+		.normalize("NFC")
+		.trim()
+		.replace(/\s+/g, " ")
+		.toLowerCase()
+		.normalize("NFC");
+}
 const TMDB_ID_RANGE = 1_000_000_000_000;
 const DISPLAY_TIMEOUT_MS = 2000;
 const round1 = (ms: number) => Math.round(ms * 10) / 10;
@@ -274,6 +287,8 @@ interface ServedList {
 async function rankedList(
 	q: string,
 	language: { text: string; policy: { mode: string } },
+	// The text the Jev reading read (see readingText): its word and phrase answers refer to it.
+	readText: string,
 	readings: Parameters<typeof readingFields>[1],
 	policy: Eligibility,
 	titlePromise: Promise<{ results: Title[]; error?: boolean }>,
@@ -293,7 +308,7 @@ async function rankedList(
 	);
 	const lookup = new Map(allowedTitles.map((t) => [titleKey(t), t]));
 	const fields = readingFields(
-		language.text,
+		readText,
 		readings,
 		language.policy.mode === "native-vector-only",
 	);
@@ -462,14 +477,13 @@ export async function combinedSearch(
 	const language = await languagePromise;
 	lap("language");
 	chargedNano += language.chargedNano;
+	// Jev reads the normalized text, so the reading and its cache entry don't depend on case or spacing.
+	const readText = readingText(language.text);
 	const outcome: JevOutcome = await runJevStage({
-		requestText: q,
+		requestText: readingText(q),
 		questionVersion: "accepted-d4-corrected-v1",
 		language: language.policy,
-		requests: [
-			attributeRequest(language.text),
-			fingerprintRequest(language.text),
-		],
+		requests: [attributeRequest(readText), fingerprintRequest(readText)],
 		visitor,
 		signal,
 		admissionAttemptId: language.admissionAttemptId,
@@ -479,7 +493,7 @@ export async function combinedSearch(
 	let reading: ReadingChip[] = [];
 	if (outcome.kind !== "basic") {
 		reading = summarizeReading(
-			language.text,
+			readText,
 			outcome.readings,
 			language.policy.mode === "native-vector-only",
 		);
@@ -497,6 +511,7 @@ export async function combinedSearch(
 			served = await rankedList(
 				q,
 				language,
+				readText,
 				outcome.readings,
 				policy,
 				titlePromise,
