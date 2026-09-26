@@ -32,6 +32,7 @@ import {
 } from "~/server/person.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
+import { Portrait } from "~/ui/person/Portrait"
 import { personPath, pluralize, titleToDashed } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
@@ -228,26 +229,6 @@ function TitleCard({ c }: { c: Credit }) {
 					{role}
 				</p>
 			)}
-		</div>
-	)
-}
-
-function Portrait({
-	path,
-	name,
-	className,
-}: { path: string | null; name: string; className: string }) {
-	return path ? (
-		<img
-			src={img(path)}
-			alt={`Portrait of ${name}`}
-			className={`object-cover ${className}`}
-		/>
-	) : (
-		<div
-			className={`flex items-center justify-center bg-gray-800 text-2xl font-bold text-gray-500 ${className}`}
-		>
-			{name.slice(0, 1)}
 		</div>
 	)
 }
