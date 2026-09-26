@@ -1,9 +1,10 @@
-// Renders every card design through satori and resvg and reports failures, including renderer aborts.
+// Renders every card design through satori and resvg and reports failures, including renderer aborts and link
+// previews over PREVIEW_MAX_BYTES.
 //
 //   npm run check:share-cards              every design: 5 titles in all 7 themes, plus 1 and 2 titles, a long
 //                                          title and a 30-character handle, a title without artwork, and editing placeholders
 //   npm run check:share-cards -- podium    only the named designs
-//   SHARE_CARD_OUT=/tmp/cards npm run check:share-cards    also writes each PNG there
+//   SHARE_CARD_OUT=/tmp/cards npm run check:share-cards    also writes each card PNG and preview JPEG there
 //
 // Each render runs in a renderer child process, so an abort fails that render instead of this script.
 // The titles are fixed samples; the script reads nothing from the database.
@@ -50,15 +51,23 @@ if (out) mkdirSync(out, { recursive: true })
 
 const started = Date.now()
 const failures: string[] = []
+// WhatsApp skips og:image files over 600 KB; stay well under.
+const PREVIEW_MAX_BYTES = 300 * 1024
+let largestPreview = { bytes: 0, label: "" }
 await Promise.all(
 	designs.flatMap((design) =>
 		CASES.map(async (c) => {
 			const label = `${design.key}/${c.name}`
 			const t0 = Date.now()
 			try {
-				const png = await renderShareCard(design, { title: c.title, name: c.byline, theme: c.theme, items: c.items, date: "Sep 25, 2026" }, c.editing)
-				if (out) writeFileSync(join(out, `${design.key}-${c.name}.png`), png)
-				console.log(`ok    ${label} ${Date.now() - t0} ms`)
+				const { card, preview } = await renderShareCard(design, { title: c.title, name: c.byline, theme: c.theme, items: c.items, date: "Sep 25, 2026" }, c.editing)
+				if (out) {
+					writeFileSync(join(out, `${design.key}-${c.name}.png`), card)
+					writeFileSync(join(out, `${design.key}-${c.name}.jpg`), preview)
+				}
+				if (preview.length > largestPreview.bytes) largestPreview = { bytes: preview.length, label }
+				if (preview.length > PREVIEW_MAX_BYTES) throw new Error(`preview is ${Math.round(preview.length / 1024)} KB`)
+				console.log(`ok    ${label} ${Date.now() - t0} ms, card ${Math.round(card.length / 1024)} KB, preview ${Math.round(preview.length / 1024)} KB`)
 			} catch (error) {
 				failures.push(`${label}: ${error instanceof Error ? error.message : error}`)
 				console.log(`FAIL  ${label}: ${error instanceof Error ? error.message : error}`)
@@ -67,7 +76,8 @@ await Promise.all(
 	),
 )
 stopShareCardRenderers()
-console.log(`\n${designs.length * CASES.length - failures.length} passed, ${failures.length} failed in ${Math.round((Date.now() - started) / 1000)} s`)
+console.log(`\nLargest preview: ${largestPreview.label}, ${Math.round(largestPreview.bytes / 1024)} KB`)
+console.log(`${designs.length * CASES.length - failures.length} passed, ${failures.length} failed in ${Math.round((Date.now() - started) / 1000)} s`)
 if (failures.length) {
 	console.log(failures.join("\n"))
 	process.exit(1)

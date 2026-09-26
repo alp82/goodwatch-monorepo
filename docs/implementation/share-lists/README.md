@@ -146,7 +146,8 @@ Route: `/u/:handle/lists/:id`. It shows:
 - The author: the owner's @handle, linking to their profile.
 - **Make your own** (primary) and **Remix** (secondary). The owner sees **Edit** instead of **Remix**.
 - Meta tags: `og:title` ("<title> by @<handle> · GoodWatch"), `og:description` (the numbered titles),
-  `og:image` with the versioned card URL, its width and height, and `twitter:card` `summary_large_image`.
+  `og:image` and `twitter:image` with the versioned link preview URL, its type, width and height, and `twitter:card`
+  `summary_large_image`.
 - `noindex, nofollow`.
 
 A deleted list returns 404, including its image. A list whose owner made it unlisted still opens by link. A URL with a
@@ -241,9 +242,13 @@ Nothing is removed from the database in the first release. Rows carry `deleted_a
 Card images move from the prototype endpoint into the production Open Graph image system
 (`app/server/og-image`, `app/ui/og-image`, the `/og/` routes, the Redis cache, and the warmup endpoint).
 
-- **URL:** `/og/lists/<id>/<content_hash>.png`. A changed list gets a new URL, so social apps that cache previews by URL
-  fetch the new card. The old URL answers with the current card.
-- **Size:** each design's native size (1080×1920, 1080×1350, or 1080×1080), not the 1200×630 page-card size.
+- **URL:** `/og/lists/<id>/<content_hash>.png` for the card and `/og/lists/<id>/<content_hash>.jpg` for its link
+  preview. A changed list gets new URLs, so social apps that cache previews by URL fetch the new card. An old URL
+  answers with the current image.
+- **Size:** the card is a PNG at each design's native size (1080×1920, 1080×1350, or 1080×1080), not the 1200×630
+  page-card size, and up to about 2.4 MB. The link preview is the same card as a JPEG, 720 pixels wide (720×1280,
+  720×900, or 720×720) at quality 82, about 55 to 190 KB. WhatsApp skips `og:image` files over 600 KB. One render
+  draws both images from the same satori layout, and `npm run check:share-cards` fails a preview over 300 KB.
 - **Rendering off the main thread:** satori plus resvg blocks the Node event loop for about 1 to 6 seconds per card
   (Marquee is about 6 seconds). Render share cards in a worker pool (`worker_threads`) so page requests keep flowing.
   resvg aborts the whole process on some inputs, so the renderer must also survive a crashed worker: run resvg in a
