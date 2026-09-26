@@ -1,8 +1,8 @@
-// PROTOTYPE - throwaway. People in search results, round 3, switchable with ?people=<variant> on
+// PROTOTYPE - throwaway. People in search results, round 4, switchable with ?people=<variant> on
 // /search (the search controller strips ?variant=, so this uses its own param).
-// Round 1 (commit 4dcfa02e) picked the banner, round 2 (eb9a7ad5, 649097d3) picked the peek
-// slivers. Round 3: peek layouts (side slivers, or a horizontal accordion that opens in place)
-// crossed with banner looks (backdrop, portrait, posters, compact).
+// Round 1 (commit 4dcfa02e) picked the banner, round 2 (eb9a7ad5, 649097d3) the peek slivers,
+// round 3 (7e57360e) the accordion with the backdrop banner. Round 4: the portrait keeps its
+// size and place while the panel opens; three ways to anchor it.
 // Gate: how well the query matches a person's name. A full name inside a longer phrase ("funny
 // brad pitt movies") counts as a full match, and the server narrows the titles to that person.
 // Legacy person rows from the old ranking are removed from the grid, as the production ranker does.
@@ -14,12 +14,9 @@ import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { personPath } from "~/utils/helpers"
 
 export const PEOPLE_VARIANTS = {
-	peek: "Peek · backdrop banner",
-	"peek-portrait": "Peek · portrait banner",
-	accordion: "Accordion · backdrop banner",
-	"accordion-portrait": "Accordion · portrait banner",
-	"accordion-posters": "Accordion · poster banner",
-	"accordion-compact": "Accordion · compact banner",
+	strip: "Accordion · photo strip stays",
+	card: "Accordion · portrait card stays",
+	avatar: "Accordion · round avatar stays",
 }
 export type PeopleVariant = keyof typeof PEOPLE_VARIANTS
 
@@ -76,8 +73,8 @@ function score(p: PrototypePerson, q: string) {
 
 export function usePrototypePeople(q: string, enabled: boolean) {
 	const [params] = useSearchParams()
-	const raw = params.get("people") ?? "peek"
-	const variant = (raw in PEOPLE_VARIANTS ? raw : "peek") as PeopleVariant
+	const raw = params.get("people") ?? "strip"
+	const variant = (raw in PEOPLE_VARIANTS ? raw : "strip") as PeopleVariant
 	const query = useQuery<{ people: PrototypePerson[] }>({
 		queryKey: ["prototype-search-people", q],
 		enabled: enabled && q.trim().length >= 2,
@@ -178,44 +175,6 @@ function ScopeNote({ p, links }: { p: ScoredPerson; links: ScopeLinks }) {
 	return null
 }
 
-// --- Round 3: peek layouts and banner looks ---------------------------------------------------
-
-type Look = "backdrop" | "portrait" | "posters" | "compact"
-type Layout = "peek" | "accordion"
-const VARIANT_SHAPE: Record<PeopleVariant, { layout: Layout; look: Look }> = {
-	peek: { layout: "peek", look: "backdrop" },
-	"peek-portrait": { layout: "peek", look: "portrait" },
-	accordion: { layout: "accordion", look: "backdrop" },
-	"accordion-portrait": { layout: "accordion", look: "portrait" },
-	"accordion-posters": { layout: "accordion", look: "posters" },
-	"accordion-compact": { layout: "accordion", look: "compact" },
-}
-// Banner height per look, shared by both layouts so the slivers match it.
-const LOOK_HEIGHT: Record<Look, string> = {
-	backdrop: "h-60",
-	portrait: "h-60",
-	posters: "h-64",
-	compact: "h-32",
-}
-// On phones the banner stacks, so it needs more height.
-const PHONE_HEIGHT: Record<Look, string> = {
-	backdrop: "max-sm:h-[29rem]",
-	portrait: "max-sm:h-[30rem]",
-	posters: "max-sm:h-[27rem]",
-	compact: "max-sm:h-32",
-}
-
-// Keyframes: content arrives from the side of the picked sliver, the backdrop fades in, and an
-// accordion panel reveals its content once it has started to open.
-function Motion() {
-	return (
-		<style>{`
-@keyframes gwPersonIn { from { opacity: 0; transform: translateX(var(--gw-from, 0px)); } to { opacity: 1; transform: none; } }
-@keyframes gwBackdropIn { from { opacity: 0; } to { opacity: 0.3; } }
-@keyframes gwReveal { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
-`}</style>
-	)
-}
 const motionSafe = "motion-reduce:animate-none motion-reduce:transition-none"
 
 function backdropOf(p: PrototypePerson) {
@@ -234,7 +193,7 @@ function NameBlock({ p, size = "large" }: { p: ScoredPerson; size?: "large" | "s
 				{p.department}
 			</span>
 			<span
-				className={`block truncate font-black text-gray-100 transition-colors duration-200 group-hover/name:text-white ${size === "large" ? "text-3xl sm:text-4xl" : "text-xl sm:text-2xl"}`}
+				className={`line-clamp-2 block font-black break-words text-gray-100 transition-colors duration-200 group-hover/name:text-white ${size === "large" ? "text-3xl sm:text-4xl" : "text-xl sm:text-2xl"}`}
 			>
 				{p.name}
 			</span>
@@ -247,24 +206,6 @@ function NameBlock({ p, size = "large" }: { p: ScoredPerson; size?: "large" | "s
 					→
 				</span>
 			</span>
-		</Link>
-	)
-}
-
-function PortraitLink({
-	p,
-	className,
-	fill = false,
-}: { p: ScoredPerson; className: string; fill?: boolean }) {
-	return (
-		<Link
-			to={personPath(p.id, p.name)}
-			prefetch="intent"
-			tabIndex={-1}
-			aria-hidden="true"
-			className={`block shrink-0 cursor-pointer transition-transform duration-200 ease-out ${fill ? "h-full w-full" : "hover:-translate-y-0.5"} ${motionSafe}`}
-		>
-			<Portrait p={p} className={className} />
 		</Link>
 	)
 }
@@ -292,236 +233,181 @@ function Posters({ p, size }: { p: ScoredPerson; size: string }) {
 	)
 }
 
-/** The banner's content in one of the looks. Fills its parent, which sets height and frame. */
-function BannerBody({
-	p,
-	links,
-	look,
-}: { p: ScoredPerson; links: ScopeLinks; look: Look }) {
-	const backdrop = backdropOf(p)
-	const note = (
-		<div className="text-sm">
-			<ScopeNote p={p} links={links} />
-		</div>
-	)
-	const shade = (
-		<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-950 via-gray-950/70 to-transparent" />
-	)
-	if (look === "portrait")
-		// The sliver's portrait widens into the banner; the name sits on the dark side.
-		return (
-			<div className="relative isolate flex h-full max-sm:flex-col">
-				<div className="relative h-full w-56 shrink-0 max-sm:h-48 max-sm:w-full">
-					<PortraitLink p={p} fill className="h-full w-full object-[50%_20%]" />
-					<div className="pointer-events-none absolute inset-0 bg-linear-to-r from-transparent via-transparent to-gray-950 max-sm:bg-linear-to-b" />
-				</div>
-				<div className="flex min-w-0 flex-1 flex-wrap items-end justify-between gap-4 bg-gray-950 p-4 sm:p-6">
-					<div className="min-w-0 space-y-2">
-						<NameBlock p={p} />
-						{note}
-					</div>
-					<Posters p={p} size="w-20 sm:w-24" />
-				</div>
-			</div>
-		)
-	if (look === "posters")
-		// Posters are the picture; the person is a caption on the left.
-		return (
-			<div className="flex h-full items-stretch gap-4 bg-gray-900 p-4 max-sm:flex-col-reverse sm:p-5">
-				<div className="flex w-56 shrink-0 flex-col justify-end gap-3 max-sm:w-auto">
-					<PortraitLink p={p} className="h-20 w-14 rounded-md shadow-xl" />
-					<NameBlock p={p} size="small" />
-					{note}
-				</div>
-				<ul className="flex min-w-0 flex-1 justify-end gap-3 max-sm:h-40 max-sm:flex-none max-sm:justify-start">
-					{p.knownFor.slice(0, 3).map((t) => (
-						<li key={t.id} className="h-full">
-							<Link
-								to={`/${t.type}/${t.id}`}
-								prefetch="intent"
-								title={t.title}
-								className={`group/poster block h-full cursor-pointer transition duration-200 ease-out hover:-translate-y-1 ${motionSafe}`}
-							>
-								<img
-									src={img(t.poster) ?? ""}
-									alt={t.title}
-									className="aspect-[2/3] h-full rounded-md border-2 border-gray-800 object-cover shadow-xl transition-colors group-hover/poster:border-gray-500"
-								/>
-							</Link>
-						</li>
-					))}
-				</ul>
-			</div>
-		)
-	if (look === "compact")
-		// One short row: the cast list's round portrait, the name, small posters.
-		return (
-			<div className="relative isolate flex h-full items-center gap-4 px-4 sm:px-5">
-				{backdrop && (
-					<img
-						key={backdrop}
-						src={img(backdrop, "w1280") ?? ""}
-						alt=""
-						className={`absolute inset-0 -z-10 h-full w-full object-cover opacity-30 animate-[gwBackdropIn_400ms_ease-out_both] ${motionSafe}`}
-					/>
-				)}
-				<div className="absolute inset-0 -z-10 bg-linear-to-r from-gray-950 via-gray-950/80 to-gray-950/40" />
-				<PortraitLink
-					p={p}
-					className="h-20 w-20 rounded-full border-2 border-stone-400 shadow-lg"
-				/>
-				<div className="min-w-0 flex-1 space-y-1">
-					<NameBlock p={p} size="small" />
-					{note}
-				</div>
-				<Posters p={p} size="hidden w-14 sm:block" />
-			</div>
-		)
-	// backdrop: the person page header.
+// --- Round 4: the accordion with a backdrop banner, three ways to anchor the portrait -----------
+// The portrait never moves or resizes: a closed person shows it at its final size and place, and
+// opening only slides a drawer out to its right. Only the drawer's width animates, quickly.
+
+type Anchor = "strip" | "card" | "avatar"
+const ANCHOR: Record<PeopleVariant, Anchor> = {
+	strip: "strip",
+	card: "card",
+	avatar: "avatar",
+}
+// Closed width of a person, per anchor.
+const TILE: Record<Anchor, string> = {
+	strip: "3.5rem",
+	card: "6rem",
+	avatar: "4.5rem",
+}
+const OPEN_MS = 220
+
+function Motion() {
 	return (
-		<div className="relative isolate flex h-full flex-wrap items-end gap-6 p-4 sm:p-6">
-			{backdrop && (
-				<img
-					key={backdrop}
-					src={img(backdrop, "w1280") ?? ""}
-					alt=""
-					className={`absolute inset-0 -z-10 h-full w-full object-cover opacity-30 animate-[gwBackdropIn_400ms_ease-out_both] ${motionSafe}`}
-				/>
-			)}
-			{shade}
-			<PortraitLink p={p} className="h-36 w-24 rounded-lg shadow-2xl" />
-			<div className="min-w-0 flex-1 basis-56 space-y-2">
+		<style>{`
+@keyframes gwBackdropIn { from { opacity: 0; } to { opacity: 0.3; } }
+@keyframes gwDrawerIn { from { opacity: 0; } to { opacity: 1; } }
+`}</style>
+	)
+}
+
+// The banner without its portrait: backdrop, name, scope note, and posters.
+function Drawer({ p, links }: { p: ScoredPerson; links: ScopeLinks }) {
+	return (
+		<div
+			className={`flex h-full items-end gap-6 p-4 animate-[gwDrawerIn_160ms_ease-out_both] sm:p-6 ${motionSafe}`}
+		>
+			<div className="min-w-0 flex-1 space-y-2">
 				<NameBlock p={p} />
-				{note}
+				<div className="text-sm">
+					<ScopeNote p={p} links={links} />
+				</div>
 			</div>
-			<Posters p={p} size="w-20 sm:w-24" />
+			<Posters p={p} size="w-16 lg:w-20 xl:w-24" />
 		</div>
 	)
 }
 
-// A collapsed person: portrait strip with the name running up. Open means full color.
-// On phones a sliver is a short row (accordion) or a small tile (peek) with a flat name.
-function SliverFace({
-	p,
-	open,
-	phone,
-}: { p: ScoredPerson; open: boolean; phone: "row" | "tile" }) {
-	const flat =
-		phone === "row"
-			? "max-sm:inset-x-auto max-sm:bottom-auto max-sm:top-1/2 max-sm:left-16 max-sm:-translate-y-1/2 max-sm:group-hover:-translate-y-1/2 max-sm:text-sm"
-			: "max-sm:bottom-1 max-sm:w-full max-sm:truncate max-sm:px-1 max-sm:text-center max-sm:text-[10px] max-sm:group-hover:translate-y-0"
+// The open panel's backdrop spans the whole panel, portrait included.
+function PanelBackdrop({ p }: { p: ScoredPerson }) {
+	const backdrop = backdropOf(p)
 	return (
 		<>
-			<Portrait
-				p={p}
-				className={`absolute inset-0 h-full w-full transition duration-300 ease-out ${phone === "row" ? "max-sm:w-12 max-sm:object-[50%_25%]" : ""} ${motionSafe} ${open ? "opacity-100" : "opacity-40 grayscale group-hover:scale-105 group-hover:opacity-90 group-hover:grayscale-0"}`}
-			/>
-			<span
-				className={`absolute inset-0 bg-linear-to-t from-black/90 via-black/30 to-transparent transition-opacity duration-300 ${open ? "opacity-100" : "opacity-70 group-hover:opacity-100"}`}
-			/>
-			<span
-				className={`absolute inset-x-0 bottom-2 mx-auto rotate-180 text-xs font-semibold transition duration-200 ease-out [writing-mode:vertical-rl] max-sm:rotate-0 max-sm:[writing-mode:horizontal-tb] ${flat} ${motionSafe} ${open ? "text-white" : "text-gray-300 group-hover:-translate-y-1 group-hover:text-white"}`}
-			>
-				{p.name}
+			{backdrop && (
+				<img
+					src={img(backdrop, "w1280") ?? ""}
+					alt=""
+					className={`absolute inset-y-0 left-0 -z-10 h-full w-(--gw-open) max-w-none object-cover opacity-30 animate-[gwBackdropIn_300ms_ease-out_both] ${motionSafe}`}
+				/>
+			)}
+			<div className="absolute inset-y-0 left-0 -z-10 w-(--gw-open) bg-linear-to-t from-gray-950 via-gray-950/70 to-transparent" />
+		</>
+	)
+}
+
+/** What a person shows at their own place, closed or open. Never changes size or position. */
+function AnchorFace({
+	p,
+	anchor,
+	open,
+}: { p: ScoredPerson; anchor: Anchor; open: boolean }) {
+	const photo = `transition-[filter,opacity] duration-150 ${motionSafe} ${open ? "" : "opacity-50 grayscale group-hover:opacity-100 group-hover:grayscale-0"}`
+	const name = (extra: string) => (
+		<span
+			className={`pointer-events-none absolute font-semibold text-gray-200 transition-colors group-hover:text-white ${extra} ${open ? "invisible" : ""}`}
+		>
+			{p.name}
+		</span>
+	)
+	if (anchor === "strip")
+		// The photo strip itself: full height, fixed width.
+		return (
+			<>
+				<Portrait p={p} className={`absolute inset-0 h-full w-full ${photo}`} />
+				<span
+					className={`pointer-events-none absolute inset-0 bg-linear-to-t from-black/90 via-black/30 to-transparent ${open ? "invisible" : ""}`}
+				/>
+				{name(
+					"inset-x-0 bottom-2 mx-auto rotate-180 text-xs [writing-mode:vertical-rl]",
+				)}
+			</>
+		)
+	if (anchor === "card")
+		// The banner's portrait card, at the spot it has in the open banner.
+		return (
+			<>
+				{name("inset-x-2 top-3 line-clamp-3 text-left text-xs leading-snug")}
+				<Portrait
+					p={p}
+					className={`absolute bottom-4 left-2 h-30 w-20 rounded-lg shadow-2xl sm:bottom-6 ${photo}`}
+				/>
+			</>
+		)
+	// The cast list's round portrait, at the bottom, with the name running up above it.
+	return (
+		<>
+			{name(
+				"inset-x-0 bottom-24 mx-auto rotate-180 text-xs [writing-mode:vertical-rl]",
+			)}
+			<span className="absolute bottom-4 left-1/2 block h-14 w-14 -translate-x-1/2 overflow-hidden rounded-full border-2 border-stone-400 shadow-lg sm:bottom-6">
+				<Portrait p={p} className={`h-full w-full ${photo}`} />
 			</span>
 		</>
 	)
 }
-const sliverButton = (open: boolean) =>
-	`group relative block h-full w-full cursor-pointer overflow-hidden rounded-xl border transition duration-200 ease-out focus-visible:outline focus-visible:outline-cyan-300 active:scale-[0.97] ${motionSafe} ${open ? "border-gray-500" : "border-gray-800 hover:-translate-y-0.5 hover:border-gray-300/70 hover:shadow-xl"}`
 
-type Pick = {
+function Accordion4({
+	s,
+	current,
+	select,
+	anchor,
+	links,
+}: {
 	s: PeopleState
 	current: ScoredPerson
 	select: (id: number) => void
-	from: number
-	look: Look
+	anchor: Anchor
 	links: ScopeLinks
-}
-
-// peek: the banner on the left, every person as a fixed sliver on the right. The open person's
-// sliver stays in place in full color.
-function Peek({ s, current, select, from, look, links }: Pick) {
-	const many = s.shown.length > 1
-	return (
-		<div className={`flex max-sm:h-auto max-sm:flex-col ${LOOK_HEIGHT[look]}`}>
-			<div
-				className={`relative min-w-0 flex-1 overflow-hidden rounded-xl border border-gray-800 ${PHONE_HEIGHT[look]}`}
-			>
-				<div
-					key={current.id}
-					style={{ "--gw-from": `${from * 16}px` } as React.CSSProperties}
-					className={`h-full animate-[gwPersonIn_260ms_cubic-bezier(0.2,0.8,0.2,1)_both] ${motionSafe}`}
-				>
-					<BannerBody p={current} links={links} look={look} />
-				</div>
-			</div>
-			{many && (
-				<ul
-					aria-label="People"
-					className="ml-2 flex shrink-0 gap-1.5 max-sm:mt-2 max-sm:ml-0 max-sm:h-20"
-				>
-					{s.shown.slice(0, 6).map((p) => (
-						<li key={p.id} className="h-full w-14 max-sm:w-auto max-sm:flex-1">
-							<button
-								type="button"
-								aria-pressed={p.id === current.id}
-								aria-label={`Show ${p.name}`}
-								onClick={() => select(p.id)}
-								className={sliverButton(p.id === current.id)}
-							>
-								<SliverFace p={p} open={p.id === current.id} phone="tile" />
-							</button>
-						</li>
-					))}
-				</ul>
-			)}
-		</div>
-	)
-}
-
-// accordion: every person keeps a fixed place in one row; the open one widens where it stands
-// and its sliver turns into the banner.
-function Accordion({ s, current, select, look, links }: Pick) {
+}) {
 	const people = s.shown.slice(0, 6)
 	return (
 		<ul
 			aria-label="People"
-			// The open panel's final width: the row minus the closed slivers and the gaps.
 			style={
 				{
-					"--gw-open": `calc(100cqw - ${people.length - 1} * (var(--gw-sliver) + 0.375rem) - 2px)`,
+					"--gw-tile": TILE[anchor],
+					// The open panel's final width: the row minus the closed people and the gaps.
+					"--gw-open": `calc(100cqw - ${people.length - 1} * (var(--gw-tile) + 0.375rem))`,
 				} as React.CSSProperties
 			}
-			className={`@container flex gap-1.5 [--gw-sliver:3.5rem] max-sm:h-auto max-sm:flex-col ${LOOK_HEIGHT[look]}`}
+			className="@container flex h-60 gap-1.5"
 		>
 			{people.map((p) => {
 				const open = p.id === current.id
 				return (
 					<li
 						key={p.id}
-						style={{ flexGrow: open ? 1 : 0 }}
-						className={`relative min-w-0 shrink-0 basis-(--gw-sliver) overflow-hidden rounded-xl border transition-[flex-grow,border-color,height] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] max-sm:basis-auto ${open ? PHONE_HEIGHT[look] : "max-sm:h-12"} ${motionSafe} ${open ? "border-gray-800" : "border-transparent"}`}
+						style={{
+							flexGrow: open ? 1 : 0,
+							transitionDuration: `${OPEN_MS}ms`,
+						}}
+						className={`group relative isolate min-w-0 shrink-0 basis-(--gw-tile) overflow-hidden rounded-xl border bg-gray-900 transition-[flex-grow,border-color] ease-out ${motionSafe} ${open ? "border-gray-800" : "border-gray-800/60 hover:border-gray-500"}`}
 					>
-						{/* The banner is laid out at its full width from the start, so it is uncovered
-						    while the panel opens instead of reflowing. */}
-						{open && (
-							<div
-								className={`absolute inset-y-0 left-0 w-(--gw-open) max-sm:w-full animate-[gwReveal_300ms_ease-out_120ms_both] ${motionSafe}`}
+						{open && <PanelBackdrop p={p} />}
+						{open ? (
+							// Open: the portrait links to the person page, the drawer sits to its right.
+							<>
+								<Link
+									to={personPath(p.id, p.name)}
+									prefetch="intent"
+									aria-label={`${p.name}: all titles`}
+									className="absolute inset-y-0 left-0 w-(--gw-tile) cursor-pointer focus-visible:outline focus-visible:outline-cyan-300"
+								>
+									<AnchorFace p={p} anchor={anchor} open />
+								</Link>
+								<div className="absolute inset-y-0 left-(--gw-tile) w-[calc(var(--gw-open)-var(--gw-tile))]">
+									<Drawer p={p} links={links} />
+								</div>
+							</>
+						) : (
+							<button
+								type="button"
+								aria-label={`Show ${p.name}`}
+								onClick={() => select(p.id)}
+								className="absolute inset-y-0 left-0 w-(--gw-tile) cursor-pointer focus-visible:outline focus-visible:outline-cyan-300"
 							>
-								<BannerBody p={p} links={links} look={look} />
-							</div>
+								<AnchorFace p={p} anchor={anchor} open={false} />
+							</button>
 						)}
-						<button
-							type="button"
-							aria-pressed={open}
-							aria-label={`Show ${p.name}`}
-							onClick={() => select(p.id)}
-							tabIndex={open ? -1 : 0}
-							className={`${sliverButton(false)} absolute inset-0 transition-opacity duration-200 ${open ? "pointer-events-none opacity-0" : "opacity-100"}`}
-						>
-							<SliverFace p={p} open={false} phone="row" />
-						</button>
 					</li>
 				)
 			})}
@@ -531,14 +417,10 @@ function Accordion({ s, current, select, look, links }: Pick) {
 
 function PeopleBanner({ s, links }: { s: PeopleState; links: ScopeLinks }) {
 	const [selected, setSelected] = useState<number | null>(null)
-	const [from, setFrom] = useState(0)
 	const key = s.shown.map((p) => p.id).join(",")
 	// A new search starts on its best match again.
-	useEffect(() => {
-		setSelected(null)
-		setFrom(0)
-	}, [key])
-	// Load every person's images up front, so switching never shows empty poster frames.
+	useEffect(() => setSelected(null), [key])
+	// Load every person's images up front, so opening never shows empty poster frames.
 	useEffect(() => {
 		for (const p of s.shown) {
 			for (const src of [
@@ -551,18 +433,16 @@ function PeopleBanner({ s, links }: { s: PeopleState; links: ScopeLinks }) {
 	}, [key])
 	if (!s.shown.length) return null
 	const current = s.shown.find((p) => p.id === selected) ?? s.shown[0]
-	const index = (id: number) => s.shown.findIndex((p) => p.id === id)
-	const select = (id: number) => {
-		if (id === current.id) return
-		setFrom(Math.sign(index(id) - index(current.id)))
-		setSelected(id)
-	}
-	const { layout, look } = VARIANT_SHAPE[s.variant]
-	const pick: Pick = { s, current, select, from, look, links }
 	return (
 		<section aria-label="People" className="mb-4">
 			<Motion />
-			{layout === "accordion" ? <Accordion {...pick} /> : <Peek {...pick} />}
+			<Accordion4
+				s={s}
+				current={current}
+				select={setSelected}
+				anchor={ANCHOR[s.variant]}
+				links={links}
+			/>
 		</section>
 	)
 }
