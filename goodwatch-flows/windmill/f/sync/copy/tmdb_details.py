@@ -14,8 +14,7 @@ from f.db.mongodb import (
 )
 from f.sync.copy.deleted_titles import (
     NOT_DELETED_FILTER,
-    delete_titles_from_crate,
-    find_flagged_tmdb_ids,
+    delete_flagged_titles_from_crate,
 )
 from f.sync.copy.stale_child_rows import add_stats, delete_stale_child_rows, listed_scopes
 from f.sync.models.crate_models import (
@@ -201,8 +200,10 @@ def copy_media(
         updated_at_filter = {}
     # Titles deleted on TMDB are removed from CrateDB instead of upserted. Every flagged
     # title is checked, not only the recent window, so a missed run or a racing publisher heals.
-    flagged_ids = find_flagged_tmdb_ids(mongo_collection, query_selector)
-    deleted_titles = delete_titles_from_crate(connector, media_type, flagged_ids)
+    # Oldest flag first within the per-run budget, and nothing while the flags spike.
+    deleted_titles = delete_flagged_titles_from_crate(
+        connector, media_type, mongo_collection, mongo_db.tmdb_daily_dump_data, query_selector,
+    )
 
     copy_filter = query_selector | updated_at_filter | NOT_DELETED_FILTER
     total_entry_count = mongo_collection.count_documents(copy_filter)

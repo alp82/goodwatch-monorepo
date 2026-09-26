@@ -1,6 +1,7 @@
 """Delete-on-sync for titles that are gone: flagged tmdb_deleted in Mongo, or missing from Mongo."""
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any, Iterable
 
 # Raw pymongo filters on tmdb_movie_details / tmdb_tv_details.
@@ -8,9 +9,24 @@ from typing import Any, Iterable
 NOT_DELETED_FILTER = {"tmdb_deleted": {"$ne": True}}
 FLAGGED_FILTER = {"tmdb_deleted": True}
 
-# Safety net: an upstream bug must not be able to wipe the catalog.
-MAX_DELETED_TITLES_PER_RUN = 1000
+# Per-run budget: a run deletes the rows of at most this many titles per media type,
+# oldest flag first, so a backlog drains over several runs instead of blocking deletion.
+# Above the real inflow of any 12 h before the sweep of long-stale titles that started
+# on 2026-09-25 (#184), and under 1 % of the movie catalog.
+MAX_DELETED_TITLES_PER_RUN = 10_000
 DELETE_BATCH_SIZE = 500
+
+# Spike guard, the signature of an upstream bug: titles flagged in the last
+# FLAG_SPIKE_WINDOW that TMDB's daily export still listed at most EXPORT_LISTING_WINDOW
+# before the flag. A title TMDB really removed drops out of the export; a live title
+# that a bug flags doesn't. Real history up to 2026-09-26: at most 105 movies and 5
+# shows per 24 h (#184), while the fetcher refreshes about 10,000 movies an hour.
+FLAG_SPIKE_WINDOW = timedelta(hours=24)
+EXPORT_LISTING_WINDOW = timedelta(hours=36)
+MAX_LISTED_NEW_FLAGS = 500
+# Titles missing from Mongo have no flag time. After the #165 repair there were none,
+# so more than this many means the Mongo reads are broken, not that titles are gone.
+MAX_ORPHANED_TITLES = 1000
 
 # Derived tables keyed by (media_tmdb_id, media_type). User-owned tables
 # (user_score, user_wishlist, ...) are intentionally not listed.
@@ -95,10 +111,69 @@ def normalize_tmdb_ids(tmdb_ids: Iterable) -> list[int]:
     return sorted({int(tmdb_id) for tmdb_id in tmdb_ids})
 
 
+def ordered_tmdb_ids(tmdb_ids: Iterable) -> list[int]:
+    """The ids as ints without duplicates, in the given order."""
+    return list(dict.fromkeys(int(tmdb_id) for tmdb_id in tmdb_ids))
+
+
 def find_flagged_tmdb_ids(details_collection: Any, selector: dict | None = None) -> list[int]:
     """Flagged titles matching the caller's selector (id selector and/or updated_at window)."""
     cursor = details_collection.find((selector or {}) | FLAGGED_FILTER, {"tmdb_id": 1, "_id": 0})
     return normalize_tmdb_ids(doc["tmdb_id"] for doc in cursor)
+
+
+def flagged_oldest_first(details_collection: Any, selector: dict | None = None) -> list[int]:
+    """Flagged titles matching the selector, oldest flag first; a missing flag time counts as oldest."""
+    cursor = details_collection.find((selector or {}) | FLAGGED_FILTER, {"tmdb_id": 1, "tmdb_deleted_at": 1, "_id": 0})
+    flags = sorted((doc.get("tmdb_deleted_at") or datetime.min, int(doc["tmdb_id"])) for doc in cursor)
+    return ordered_tmdb_ids(tmdb_id for _, tmdb_id in flags)
+
+
+def flag_spike(details_collection: Any, daily_dump_collection: Any, media_type: str,
+               now: datetime | None = None) -> dict:
+    """Whether the recent flags look like an upstream bug rather than titles TMDB removed.
+
+    Counts the titles flagged in the last FLAG_SPIKE_WINDOW whose TMDB daily export entry
+    was written at most EXPORT_LISTING_WINDOW before the flag, and trips above
+    MAX_LISTED_NEW_FLAGS. While it trips, callers delete nothing of this media type.
+    """
+    since = (now or datetime.utcnow()) - FLAG_SPIKE_WINDOW
+    flagged_at = {
+        int(doc["tmdb_id"]): doc["tmdb_deleted_at"]
+        for doc in details_collection.find(FLAGGED_FILTER | {"tmdb_deleted_at": {"$gte": since}},
+                                           {"tmdb_id": 1, "tmdb_deleted_at": 1, "_id": 0})
+    }
+    ids = sorted(flagged_at)
+    listed = set()
+    for i in range(0, len(ids), MONGO_LOOKUP_BATCH_SIZE):
+        batch = ids[i:i + MONGO_LOOKUP_BATCH_SIZE]
+        selector = {"type": DAILY_DUMP_TYPES[media_type], "tmdb_id": {"$in": batch + [str(tmdb_id) for tmdb_id in batch]}}
+        for entry in daily_dump_collection.find(selector, {"tmdb_id": 1, "updated_at": 1, "_id": 0}):
+            tmdb_id = int(entry["tmdb_id"])
+            written_at = entry.get("updated_at")
+            if written_at and written_at >= flagged_at[tmdb_id] - EXPORT_LISTING_WINDOW:
+                listed.add(tmdb_id)
+    window_hours = FLAG_SPIKE_WINDOW.total_seconds() / 3600
+    spike = {"new_flags": len(ids), "listed_new_flags": len(listed), "threshold": MAX_LISTED_NEW_FLAGS,
+             "window_hours": window_hours, "tripped": len(listed) > MAX_LISTED_NEW_FLAGS}
+    if spike["tripped"]:
+        print(
+            f"!!! FLAG SPIKE: {len(listed)} of the {len(ids)} {media_type} titles flagged tmdb_deleted in the "
+            f"last {window_hours:g} h were still in a TMDB daily export shortly before the flag (threshold "
+            f"MAX_LISTED_NEW_FLAGS={MAX_LISTED_NEW_FLAGS}). Deleting no {media_type} titles until the flags "
+            f"are checked. Examples: {sorted(listed)[:20]}",
+            flush=True,
+        )
+    return spike
+
+
+def refuse_on_spike(media_type: str, store: str, spike: dict, result: dict) -> bool:
+    result["spike"] = spike
+    if not spike["tripped"]:
+        return False
+    print(f"!!! REFUSING to delete {media_type} titles from {store}: flag spike, see above.", flush=True)
+    result["refused_spike"] = True
+    return True
 
 
 def flagged_among(details_collection: Any, tmdb_ids: Iterable) -> set[int]:
@@ -179,26 +254,48 @@ def delete_title_rows(connector: Any, media_type: str, plan: dict[str, list[int]
     return rows_deleted
 
 
-def exceeds_delete_cap(media_type: str, ids: list[int], store: str, reason: str = "tmdb_deleted flags") -> bool:
-    if len(ids) <= MAX_DELETED_TITLES_PER_RUN:
-        return False
-    print(
-        f"!!! REFUSING to delete {len(ids)} {media_type} titles from {store}: more than "
-        f"MAX_DELETED_TITLES_PER_RUN={MAX_DELETED_TITLES_PER_RUN}. Check the {reason} "
-        f"in Mongo before deleting manually.",
-        flush=True,
-    )
-    return True
+
+
+def restrict_plan(plan: dict[str, list[int]], tmdb_ids: Iterable) -> dict[str, list[int]]:
+    keep = set(tmdb_ids)
+    restricted = {table: [tmdb_id for tmdb_id in ids if tmdb_id in keep] for table, ids in plan.items()}
+    return {table: ids for table, ids in restricted.items() if ids}
+
+
+def plan_within_budget(connector: Any, media_type: str, ordered_ids: list[int]) -> tuple[dict[str, list[int]], bool]:
+    """The rows of the first MAX_DELETED_TITLES_PER_RUN titles in `ordered_ids` that still have rows.
+
+    Plans chunk by chunk and stops once the budget is full, so a large flagged set costs
+    no more than the chunks needed. Also returns whether titles may be left for later runs.
+    """
+    plan: dict[str, list[int]] = {}
+    taken = 0
+    for start in range(0, len(ordered_ids), DELETE_BATCH_SIZE):
+        chunk = ordered_ids[start:start + DELETE_BATCH_SIZE]
+        chunk_plan = plan_flagged_title_rows(connector, media_type, chunk)
+        with_rows = set(planned_titles(chunk_plan))
+        candidates = [tmdb_id for tmdb_id in chunk if tmdb_id in with_rows]
+        chosen = candidates[:MAX_DELETED_TITLES_PER_RUN - taken]
+        for table, ids in restrict_plan(chunk_plan, chosen).items():
+            plan.setdefault(table, []).extend(ids)
+        taken += len(chosen)
+        if taken >= MAX_DELETED_TITLES_PER_RUN:
+            more_left = len(candidates) > len(chosen) or start + DELETE_BATCH_SIZE < len(ordered_ids)
+            return plan, more_left
+    return plan, False
 
 
 def apply_plan(connector: Any, media_type: str, plan: dict[str, list[int]], result: dict, reason: str) -> dict:
-    """Delete a plan unless it covers more titles than the cap allows."""
+    """Delete a plan that already fits the budget and passed the guard."""
     titles = planned_titles(plan)
-    result["titles_with_rows"] = len(titles)
+    result["titles_planned"] = len(titles)
+    if result.get("budget_reached"):
+        print(
+            f"Budget: deleting the rows of {len(titles)} {media_type} titles ({reason}) in this run, "
+            f"MAX_DELETED_TITLES_PER_RUN={MAX_DELETED_TITLES_PER_RUN}. The rest follow in later runs.",
+            flush=True,
+        )
     if not titles:
-        return result
-    if exceeds_delete_cap(media_type, titles, "CrateDB", reason):
-        result["skipped_over_cap"] = True
         return result
     result["rows_deleted"] = delete_title_rows(connector, media_type, plan)
     result["titles_deleted"] = result["rows_deleted"].get(MEDIA_TABLES[media_type], 0)
@@ -210,20 +307,31 @@ def apply_plan(connector: Any, media_type: str, plan: dict[str, list[int]], resu
     return result
 
 
-def delete_titles_from_crate(connector: Any, media_type: str, tmdb_ids: Iterable) -> dict:
+def delete_titles_from_crate(connector: Any, media_type: str, tmdb_ids: Iterable, *, spike: dict) -> dict:
     """Remove flagged titles and all their derived rows from CrateDB, scoped by media type.
 
-    Only ever driven by an explicit id list. A title whose title row is already gone
-    still loses its child rows. The flagged set only grows, so the cap applies to the
-    titles that still have rows.
+    Only ever driven by an explicit id list, in deletion order (oldest flag first, see
+    flagged_oldest_first). A title whose title row is already gone still loses its child
+    rows. A run deletes at most MAX_DELETED_TITLES_PER_RUN titles that still have rows,
+    and nothing while `spike` (see flag_spike) trips.
     """
     if media_type not in MEDIA_TABLES:
         raise ValueError(f"unknown media_type: {media_type}")
-    ids = normalize_tmdb_ids(tmdb_ids)
-    result = {"titles_flagged": len(ids), "titles_with_rows": 0, "titles_deleted": 0,
-              "rows_deleted": {}, "skipped_over_cap": False}
-    plan = plan_flagged_title_rows(connector, media_type, ids)
+    ids = ordered_tmdb_ids(tmdb_ids)
+    result = {"titles_flagged": len(ids), "titles_planned": 0, "titles_deleted": 0, "rows_deleted": {},
+              "budget_reached": False, "refused_spike": False}
+    if not ids or refuse_on_spike(media_type, "CrateDB", spike, result):
+        return result
+    plan, result["budget_reached"] = plan_within_budget(connector, media_type, ids)
     return apply_plan(connector, media_type, plan, result, "tmdb_deleted flags")
+
+
+def delete_flagged_titles_from_crate(connector: Any, media_type: str, details_collection: Any,
+                                     daily_dump_collection: Any, selector: dict | None = None) -> dict:
+    """The details copy's deletion step: guard, then the flagged titles oldest first."""
+    spike = flag_spike(details_collection, daily_dump_collection, media_type)
+    flagged_ids = flagged_oldest_first(details_collection, selector)
+    return delete_titles_from_crate(connector, media_type, flagged_ids, spike=spike)
 
 
 def ids_found(collection: Any, selector: dict, ids: list[int], *, as_strings: bool = False) -> set[int]:
@@ -256,39 +364,63 @@ def plan_orphaned_title_rows(connector: Any, media_type: str, details_collection
     return {table: ids for table, ids in plan.items() if ids}
 
 
+
 def sweep_orphaned_titles(connector: Any, media_type: str, details_collection: Any, daily_dump_collection: Any,
                           *, dry_run: bool = False) -> dict:
-    """Delete every Crate row of titles that are missing from Mongo, capped like the flagged path."""
+    """Delete the Crate rows of titles that are missing from Mongo, lowest tmdb_id first.
+
+    Refuses everything when more than MAX_ORPHANED_TITLES titles look orphaned, and
+    deletes at most MAX_DELETED_TITLES_PER_RUN titles per run.
+    """
     if media_type not in MEDIA_TABLES:
         raise ValueError(f"unknown media_type: {media_type}")
     plan = plan_orphaned_title_rows(connector, media_type, details_collection, daily_dump_collection)
-    result = {"titles_with_rows": len(planned_titles(plan)), "titles_deleted": 0, "rows_deleted": {},
-              "skipped_over_cap": False, "titles_by_table": {table: len(ids) for table, ids in plan.items()}}
+    orphans = planned_titles(plan)
+    result = {"titles_with_rows": len(orphans), "titles_planned": 0, "titles_deleted": 0, "rows_deleted": {},
+              "budget_reached": len(orphans) > MAX_DELETED_TITLES_PER_RUN, "refused_spike": False,
+              "titles_by_table": {table: len(ids) for table, ids in plan.items()}}
     if dry_run:
         return result | {"plan": plan}
+    if len(orphans) > MAX_ORPHANED_TITLES:
+        print(
+            f"!!! REFUSING to delete {len(orphans)} {media_type} titles missing from Mongo from CrateDB: more than "
+            f"MAX_ORPHANED_TITLES={MAX_ORPHANED_TITLES}. Check the Mongo details and daily dump reads first.",
+            flush=True,
+        )
+        result["refused_spike"] = True
+        return result
+    plan = restrict_plan(plan, orphans[:MAX_DELETED_TITLES_PER_RUN])
     return apply_plan(connector, media_type, plan, result, "titles missing from Mongo")
 
 
-def delete_titles_from_qdrant(client: Any, collection: str, media_type: str, tmdb_ids: Iterable, make_point_id) -> dict:
-    """Remove the points of flagged titles, addressed by the same point ids the upsert uses."""
-    ids = normalize_tmdb_ids(tmdb_ids)
-    result = {"titles_flagged": len(ids), "points_requested": 0, "skipped_over_cap": False}
-    if not ids:
+def delete_titles_from_qdrant(client: Any, collection: str, media_type: str, tmdb_ids: Iterable, make_point_id,
+                              *, spike: dict) -> dict:
+    """Remove the points of flagged titles, addressed by the same point ids the upsert uses.
+
+    `tmdb_ids` is in deletion order (oldest flag first). A run deletes at most
+    MAX_DELETED_TITLES_PER_RUN points that still exist, and nothing while `spike` trips.
+    """
+    ids = ordered_tmdb_ids(tmdb_ids)
+    result = {"titles_flagged": len(ids), "points_requested": 0, "budget_reached": False, "refused_spike": False}
+    if not ids or refuse_on_spike(media_type, "Qdrant", spike, result):
         return result
-    # All flagged titles are checked on every run; only points that still exist are deleted.
+    # Flagged titles are checked in order until the budget is full; only points that still exist are deleted.
+    ordered_points = [int(make_point_id(media_type, tmdb_id)) for tmdb_id in ids]
     point_ids = []
-    for batch in batches([int(make_point_id(media_type, tmdb_id)) for tmdb_id in ids]):
+    for start in range(0, len(ordered_points), DELETE_BATCH_SIZE):
+        batch = ordered_points[start:start + DELETE_BATCH_SIZE]
         records = client.retrieve(collection_name=collection, ids=batch, with_payload=False, with_vectors=False)
-        point_ids.extend(int(record.id) for record in records)
-    if not point_ids:
-        return result
-    if exceeds_delete_cap(media_type, point_ids, "Qdrant"):
-        result["skipped_over_cap"] = True
-        return result
+        existing = {int(record.id) for record in records}
+        point_ids.extend(point_id for point_id in batch if point_id in existing)
+        if len(point_ids) >= MAX_DELETED_TITLES_PER_RUN:
+            result["budget_reached"] = len(point_ids) > MAX_DELETED_TITLES_PER_RUN or start + DELETE_BATCH_SIZE < len(ordered_points)
+            point_ids = point_ids[:MAX_DELETED_TITLES_PER_RUN]
+            break
     for batch in batches(point_ids):
         client.delete(collection_name=collection, points_selector=batch, wait=True)
         result["points_requested"] += len(batch)
-    print(f"Requested deletion of {result['points_requested']} {media_type} points from {collection}", flush=True)
+    if point_ids:
+        print(f"Requested deletion of {result['points_requested']} {media_type} points from {collection}", flush=True)
     return result
 
 

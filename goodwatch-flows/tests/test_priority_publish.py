@@ -201,7 +201,9 @@ class SelectionTests(unittest.TestCase):
                     selectors = []
                     for method, args, _ in db.mock_calls:
                         if method.endswith("count_documents") or method.endswith("find"):
-                            selectors.append(args[0])
+                            # The flag spike guard reads the recent flags of the whole catalog on purpose.
+                            if "tmdb_deleted_at" not in args[0]:
+                                selectors.append(args[0])
                         elif method.endswith("aggregate"):
                             selectors.append(args[0][0]["$match"])
                     self.assertTrue(selectors)

@@ -15,7 +15,7 @@ from f.db.mongodb import (
 )
 from f.db.qdrant import QdrantConnector
 from f.db.cratedb import CrateConnector
-from f.sync.copy.deleted_titles import delete_titles_from_qdrant, find_flagged_tmdb_ids, flagged_among
+from f.sync.copy.deleted_titles import delete_titles_from_qdrant, flag_spike, flagged_among, flagged_oldest_first
 from f.sync.copy.tmdb_streaming import SCHEDULED_LEASE_WAIT_SECONDS, publication_lease
 from f.sync.copy.qdrant_retry import (
     REQUEST_TIMEOUT_SECONDS, insert_points, update_points, write_with_retry,
@@ -600,10 +600,13 @@ def copy_to_qdrant(
                     )
                 total_upserts += len(points)
 
-    # Every flagged title is checked, not only the ones this run iterated over.
-    flagged_ids |= set(find_flagged_tmdb_ids(c_details, sel))
+    # Every flagged title is checked, not only the ones this run iterated over, oldest flag
+    # first within the per-run budget, and nothing while the flags spike.
+    spike = flag_spike(c_details, db.tmdb_daily_dump_data, media_type)
+    oldest_first = flagged_oldest_first(c_details, sel)
     deleted_titles = delete_titles_from_qdrant(
-        qc.client, MEDIA_COLLECTION, media_type, flagged_ids, QdrantMediaPoint.make_point_id,
+        qc.client, MEDIA_COLLECTION, media_type, oldest_first + sorted(flagged_ids - set(oldest_first)),
+        QdrantMediaPoint.make_point_id, spike=spike,
     )
 
     return {"upserts": total_upserts, "payload_updates": total_payload_updates,

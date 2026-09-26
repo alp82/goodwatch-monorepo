@@ -100,30 +100,31 @@ class FakeCollection:
 
 
 ALL_CHILDREN = [*TITLE_KEYED_TABLES]
+CALM = {"tripped": False}
 
 
 class FlaggedTitlesWithoutTitleRowTests(unittest.TestCase):
     def test_flagged_title_without_title_row_loses_its_child_rows(self):
         crate = FakeCrate()
         crate.add_title("show", 5, title_row=False)
-        result = delete_titles_from_crate(crate, "show", [5])
+        result = delete_titles_from_crate(crate, "show", [5], spike=CALM)
         self.assertEqual(crate.has_rows("show", 5), ["user_score"])
         self.assertEqual(result["rows_deleted"]["season"], 1)
         self.assertEqual(result["rows_deleted"]["trope"], 1)
         self.assertEqual(result["titles_deleted"], 0)
-        self.assertEqual(result["titles_with_rows"], 1)
+        self.assertEqual(result["titles_planned"], 1)
 
     def test_other_media_type_with_the_same_tmdb_id_keeps_its_rows(self):
         crate = FakeCrate()
         crate.add_title("show", 5, title_row=False)
         crate.add_title("movie", 5)
-        delete_titles_from_crate(crate, "show", [5])
+        delete_titles_from_crate(crate, "show", [5], spike=CALM)
         self.assertEqual(crate.has_rows("movie", 5), sorted([*TITLE_KEYED_TABLES, "movie", "user_score"]))
 
     def test_deletes_only_touch_tables_that_hold_rows_of_the_title(self):
         crate = FakeCrate()
         crate.add_title("movie", 7, children=["trope"], title_row=False)
-        result = delete_titles_from_crate(crate, "movie", [7])
+        result = delete_titles_from_crate(crate, "movie", [7], spike=CALM)
         deletes = [sql for sql, _ in crate.statements if sql.startswith("DELETE")]
         self.assertEqual(deletes, ["DELETE FROM trope WHERE media_type = ? AND media_tmdb_id = ANY(?)"])
         self.assertEqual(result["rows_deleted"], {"trope": 1})
@@ -131,25 +132,9 @@ class FlaggedTitlesWithoutTitleRowTests(unittest.TestCase):
     def test_flagged_titles_without_any_rows_issue_no_delete(self):
         crate = FakeCrate()
         crate.add_title("movie", 1)
-        delete_titles_from_crate(crate, "movie", [2, 3])
+        delete_titles_from_crate(crate, "movie", [2, 3], spike=CALM)
         self.assertFalse([sql for sql, _ in crate.statements if sql.startswith("DELETE")])
         self.assertIn("movie", crate.has_rows("movie", 1))
-
-    def test_cap_counts_titles_that_still_have_rows(self):
-        crate = FakeCrate()
-        cap = deleted_titles.MAX_DELETED_TITLES_PER_RUN
-        for tmdb_id in range(cap + 1):
-            crate.add_title("movie", tmdb_id, children=["trope"], title_row=False)
-        result = delete_titles_from_crate(crate, "movie", range(cap + 1))
-        self.assertTrue(result["skipped_over_cap"])
-        self.assertEqual(len(crate.tables["trope"]), cap + 1)
-        # Flagged titles that are already fully gone do not count toward the cap.
-        result = delete_titles_from_crate(crate, "movie", range(cap + 50))
-        self.assertTrue(result["skipped_over_cap"])
-        crate.tables["trope"] = crate.tables["trope"][:cap]
-        result = delete_titles_from_crate(crate, "movie", range(cap + 50))
-        self.assertFalse(result["skipped_over_cap"])
-        self.assertEqual(crate.tables["trope"], [])
 
 
 def mongo(details_ids=(), flagged_ids=(), dump=()):
@@ -220,16 +205,6 @@ class OrphanSweepTests(unittest.TestCase):
         crate.add_title("movie", 4)
         details, daily = mongo(flagged_ids=[4])
         self.assertEqual(plan_orphaned_title_rows(crate, "movie", details, daily), {})
-
-    def test_sweep_is_capped(self):
-        crate = FakeCrate()
-        cap = deleted_titles.MAX_DELETED_TITLES_PER_RUN
-        for tmdb_id in range(cap + 1):
-            crate.add_title("movie", tmdb_id, children=["trope"])
-        details, daily = mongo()
-        result = sweep_orphaned_titles(crate, "movie", details, daily)
-        self.assertTrue(result["skipped_over_cap"])
-        self.assertEqual(len(crate.tables["movie"]), cap + 1)
 
     def test_dry_run_plans_without_deleting(self):
         crate = FakeCrate()
