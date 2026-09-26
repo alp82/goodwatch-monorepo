@@ -40,8 +40,6 @@ import placeholder from "~/img/placeholder-poster.png";
 // PROTOTYPE - throwaway: people in search results (?people=<variant>).
 import {
 	PeopleAround,
-	PersonResultCard,
-	slotIndex,
 	usePrototypePeople,
 } from "./prototype-search-people/PrototypeSearchPeople";
 
@@ -762,9 +760,12 @@ function JourneyList() {
 		j.batch?.q ?? "",
 		!!j.batch && j.batch.q === j.q,
 	);
-	const slot =
-		j.page === 1 ? slotIndex(people, (j.rows[0]?.lexical ?? 0) >= 2) : -1;
-	const shownRows = slot >= 0 ? j.pageRows.slice(0, 19) : j.pageRows;
+	const links = {
+		scope: j.batch?.q === j.q ? j.batch?.personScope : undefined,
+		anyPerson: j.setting("anyPerson") === "1",
+		allHref: j.resultsHref({ q: j.q, page: null, anyPerson: "1" }),
+		scopedHref: j.resultsHref({ q: j.q, page: null, anyPerson: null }),
+	};
 	return (
 		<section aria-label="Search results" className="min-w-0">
 			<div
@@ -790,12 +791,13 @@ function JourneyList() {
 			    always ends on a complete row. */}
 			<PeopleAround
 				s={people}
+				links={links}
 				grid={
 			<ul
 				aria-busy={j.loading}
-				className={`grid grid-cols-2 sm:grid-cols-4 gap-2 py-2 ${people.variant === "aside" && people.shown.length ? "" : "lg:grid-cols-5"}`}
+				className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 py-2"
 			>
-				{shownRows.flatMap((r, i) => {
+				{j.pageRows.map((r) => {
 					const reasons = (r.discovery?.reasons ?? [])
 						.filter((x) => x.kind !== "mismatch")
 						.slice(0, RESULT_REASONS);
@@ -837,14 +839,7 @@ function JourneyList() {
 					);
 					const card =
 						"group relative block aspect-[2/3] overflow-hidden rounded-lg border-4 bg-gray-900";
-					const personSlot =
-						i === slot ? (
-							<li key="prototype-person" className="min-w-0">
-								<PersonResultCard p={people.shown[0]} />
-							</li>
-						) : null;
-					return [
-						personSlot,
+					return (
 						<li key={r.key} className="min-w-0">
 							{r.type === "person" ? (
 								<div className={`${card} border-gray-800`}>{body}</div>
@@ -859,8 +854,8 @@ function JourneyList() {
 									{body}
 								</Link>
 							)}
-						</li>,
-					];
+						</li>
+					);
 				})}
 			</ul>
 				}

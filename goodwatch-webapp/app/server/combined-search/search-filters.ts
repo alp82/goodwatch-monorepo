@@ -143,7 +143,8 @@ export const toCrateSql = (
 			.map((key) => Number(key.split(":")[1]))
 			.filter(Number.isSafeInteger);
 		if (!ids.length) return null;
-		clauses.push(`tmdb_id IN (${ids.join(",")})`);
+		// "+ 0" keeps Crate from planning a primary key lookup, which cannot evaluate MATCH.
+		clauses.push(`(tmdb_id + 0) IN (${ids.join(",")})`);
 	}
 	if (filters.streaming?.providerIds.length) {
 		const { country, providerIds } = filters.streaming;

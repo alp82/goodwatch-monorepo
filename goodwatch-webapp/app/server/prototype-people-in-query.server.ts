@@ -6,6 +6,8 @@ import { query } from "~/utils/crate"
 // People below this TMDB popularity are not indexed. About 57k people pass.
 const MIN_POPULARITY = 1
 const MAX_NAME_WORDS = 4
+// Joining words that belong to a name, not to what the person wants to watch.
+const CONNECTORS = new Set(["and", "with", "starring", "featuring", "feat", "by", "or", "plus"])
 
 export interface NamedPerson {
 	id: number
@@ -73,9 +75,16 @@ export async function peopleInQuery(q: string) {
 			used.fill(true, i, i + n)
 		}
 	}
+	const next = (i: number) => used[i - 1] || used[i + 1]
 	const rest = tokens
-		// "brad pitt's" leaves a lone "s" behind.
-		.filter((t, i) => !used[i] && !(t === "s" && used[i - 1]))
+		.filter(
+			(t, i) =>
+				!used[i] &&
+				// "brad pitt's" leaves a lone "s" behind.
+				!(t === "s" && used[i - 1]) &&
+				// "brad pitt and george clooney", "movies with tom hanks"
+				!(CONNECTORS.has(t) && next(i)),
+		)
 		.join(" ")
 	return { people, rest }
 }
@@ -85,8 +94,9 @@ export async function sharedCredits(ids: number[]) {
 	const sets = await Promise.all(
 		ids.map(async (id) => {
 			const [acting, crew] = await Promise.all([
+				// Appearances as themselves (talk shows, award shows) are not their titles.
 				query<{ media_tmdb_id: number; media_type: string }>(
-					"SELECT media_tmdb_id, media_type FROM person_appeared_in WHERE person_tmdb_id = ? LIMIT 3000",
+					"SELECT media_tmdb_id, media_type FROM person_appeared_in WHERE person_tmdb_id = ? AND NOT coalesce(character, '') ~* '^(self|himself|herself|themselves)\\b.*' LIMIT 3000",
 					[id],
 				),
 				query<{ media_tmdb_id: number; media_type: string }>(

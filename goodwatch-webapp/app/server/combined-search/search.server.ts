@@ -469,11 +469,13 @@ export async function combinedSearch(
 					language.policy.mode === "native-vector-only",
 					retrieval,
 				);
-			} catch {
+			} catch (e) {
+				console.error("PROTOTYPE retrieval", e);
 				errors.push(BASIC_SEARCH_MESSAGE);
 				try {
 					results = await literal(q, policy);
-				} catch {
+				} catch (e) {
+					console.error("PROTOTYPE literal", e);
 					errors.push("Description search unavailable");
 				}
 			}

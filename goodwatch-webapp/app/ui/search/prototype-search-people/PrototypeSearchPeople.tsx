@@ -1,22 +1,23 @@
-// PROTOTYPE - throwaway. Five ways to mix people into the search results, switchable with
-// ?people=<variant> on /search (the search controller strips ?variant=, so this uses its own param).
-// Question: how do people show up without invading the title results?
-// Every variant uses the same gate: how well the query matches the person's name. Descriptive
-// queries rarely match a name, so they get no people. Legacy person rows from the old ranking
-// are removed from the grid, as the production ranker does.
+// PROTOTYPE - throwaway. People in search results, round 2, switchable with ?people=<variant> on
+// /search (the search controller strips ?variant=, so this uses its own param).
+// Round 1 (commit 4dcfa02e) picked the banner. Round 2 question: when several people match, how
+// does the banner let you switch between them?
+// Gate: how well the query matches a person's name. A full name inside a longer phrase ("funny
+// brad pitt movies") counts as a full match, and the server narrows the titles to that person.
+// Legacy person rows from the old ranking are removed from the grid, as the production ranker does.
 import { Link, useSearchParams } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import type { PrototypePerson } from "~/routes/api.prototype-search-people"
 import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { personPath } from "~/utils/helpers"
 
 export const PEOPLE_VARIANTS = {
-	strip: "People row above results",
-	slot: "Person in a grid slot",
-	hero: "Banner on name match",
-	aside: "Side column",
-	tabs: "Titles / People tabs",
+	names: "Banner + name tabs",
+	avatars: "Banner + avatar row",
+	arrows: "Banner + arrows",
+	rail: "Banner + people list",
+	peek: "Banner + side slivers",
 	off: "No people (production today)",
 }
 export type PeopleVariant = keyof typeof PEOPLE_VARIANTS
@@ -26,6 +27,10 @@ export type ScoredPerson = PrototypePerson & {
 	confidence: number
 	level: Level
 	why: string
+}
+export interface PersonScope {
+	people: { id: number; name: string }[]
+	rest: string
 }
 
 const words = (s: string): string[] =>
@@ -37,6 +42,7 @@ const words = (s: string): string[] =>
 
 // How sure we are that the query asks for this person.
 function score(p: PrototypePerson, q: string) {
+	if (p.embedded) return { confidence: 1, why: "full name inside the phrase" }
 	const wanted = words(q)
 	const name = words(p.name)
 	if (!wanted.length || !name.length) return { confidence: 0, why: "no words" }
@@ -67,7 +73,8 @@ function score(p: PrototypePerson, q: string) {
 
 export function usePrototypePeople(q: string, enabled: boolean) {
 	const [params] = useSearchParams()
-	const variant = (params.get("people") ?? "strip") as PeopleVariant
+	const raw = params.get("people") ?? "names"
+	const variant = (raw in PEOPLE_VARIANTS ? raw : "names") as PeopleVariant
 	const query = useQuery<{ people: PrototypePerson[] }>({
 		queryKey: ["prototype-search-people", q],
 		enabled: enabled && q.trim().length >= 2 && variant !== "off",
@@ -88,12 +95,10 @@ export function usePrototypePeople(q: string, enabled: boolean) {
 			return { ...p, ...s, level }
 		})
 		.sort((a, b) => b.confidence - a.confidence || b.popularity - a.popularity)
-	const shown = people.filter((p) => p.level !== "low")
 	return {
-		variant: variant in PEOPLE_VARIANTS ? variant : "strip",
+		variant,
 		people,
-		shown,
-		top: shown[0]?.level === "high" ? shown[0] : undefined,
+		shown: variant === "off" ? [] : people.filter((p) => p.level !== "low").slice(0, 8),
 	}
 }
 export type PeopleState = ReturnType<typeof usePrototypePeople>
@@ -104,11 +109,6 @@ const img = (path: string | null, size = "w300_and_h450_bestv2") =>
 	path ? `https://www.themoviedb.org/t/p/${size}${path}` : null
 const role = (p: PrototypePerson) =>
 	p.department === "Acting" ? "Actor" : p.department || "Person"
-const knownFor = (p: PrototypePerson, n = 3) =>
-	p.knownFor
-		.slice(0, n)
-		.map((t) => t.title)
-		.join(", ")
 
 // Portrait from the person page.
 function Portrait({
@@ -127,278 +127,300 @@ function Portrait({
 	)
 }
 
-// The round actor avatar from the title page cast list, smaller.
-function Avatar({ p }: { p: ScoredPerson }) {
-	return (
-		<Link
-			to={personPath(p.id, p.name)}
-			prefetch="intent"
-			className="group flex w-20 shrink-0 flex-col items-center"
-		>
-			<div className="mb-1 h-16 w-16 overflow-hidden rounded-full border-2 border-stone-400 shadow-lg transition-all group-hover:border-slate-200">
-				<Portrait p={p} className="h-full w-full" />
-			</div>
-			<p className="w-20 truncate text-center text-xs font-semibold" title={p.name}>
-				{p.name}
+interface ScopeLinks {
+	scope?: PersonScope
+	anyPerson: boolean
+	allHref: string
+	scopedHref: string
+}
+
+// What the banner says about the title grid when the person was named inside the phrase.
+function ScopeNote({ p, links }: { p: ScoredPerson; links: ScopeLinks }) {
+	if (!p.embedded) return null
+	const inScope = links.scope?.people.some((x) => x.id === p.id)
+	const link =
+		"text-cyan-300 underline underline-offset-2 hover:text-cyan-200"
+	if (inScope && links.scope)
+		return (
+			<p className="mt-2 text-sm text-gray-300">
+				Showing titles with{" "}
+				{links.scope.people.map((x) => x.name).join(" and ")} that match “
+				{links.scope.rest}”.{" "}
+				<Link to={links.allHref} preventScrollReset className={link}>
+					Search all titles instead
+				</Link>
 			</p>
-			<p className="w-20 truncate text-center text-[11px] text-gray-400">
-				{role(p)}
+		)
+	if (links.anyPerson)
+		return (
+			<p className="mt-2 text-sm text-gray-300">
+				Showing all titles.{" "}
+				<Link to={links.scopedHref} preventScrollReset className={link}>
+					Only titles with {p.name}
+				</Link>
 			</p>
-		</Link>
-	)
+		)
+	return null
 }
 
-// The collaborator card from the person page.
-function PersonRowCard({ p }: { p: ScoredPerson }) {
+// The round 1 banner: person page header look, three known-for posters.
+function Banner({
+	p,
+	links,
+	aside,
+	below,
+}: {
+	p: ScoredPerson
+	links: ScopeLinks
+	aside?: ReactNode
+	below?: ReactNode
+}) {
+	const backdrop = p.knownFor.find((t) => t.backdrop)?.backdrop ?? null
 	return (
-		<Link
-			to={personPath(p.id, p.name)}
-			prefetch="intent"
-			className="flex h-full gap-3 rounded-xl border border-gray-800 bg-gray-900 p-3 hover:border-amber-400/60"
-		>
-			<Portrait p={p} className="h-16 w-12 shrink-0 rounded-md" />
-			<div className="min-w-0">
-				<div className="truncate font-semibold">{p.name}</div>
-				<div className="text-xs text-amber-400">{role(p)}</div>
-				<div className="mt-1 line-clamp-2 text-xs text-gray-400">
-					{knownFor(p)}
-				</div>
-			</div>
-		</Link>
-	)
-}
-
-// The search result poster card, with a portrait instead of a poster.
-export function PersonResultCard({ p }: { p: ScoredPerson }) {
-	return (
-		<Link
-			to={personPath(p.id, p.name)}
-			prefetch="intent"
-			className="group relative block aspect-[2/3] overflow-hidden rounded-lg border-4 border-gray-800 bg-gray-900 hover:border-amber-700/50 focus-visible:outline focus-visible:outline-cyan-300"
-		>
-			<Portrait
-				p={p}
-				className="h-full w-full transition-transform duration-300 group-hover:scale-105"
-			/>
-			<div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/30 to-transparent" />
-			<div className="absolute inset-x-0 bottom-0 px-2.5 pb-2.5">
-				<p className="text-[11px] uppercase tracking-[0.2em] text-amber-400">
-					{role(p)}
-				</p>
-				<h3 className="text-sm font-bold leading-tight text-white line-clamp-2">
-					{p.name}
-				</h3>
-				<p className="truncate text-[11px] text-gray-300">
-					Known for {knownFor(p, 2)}
-				</p>
-			</div>
-		</Link>
-	)
-}
-
-// --- Variants ------------------------------------------------------------------------------
-
-// strip: one row of round avatars between the status line and the grid. Nothing when no
-// person clears the gate; the grid never moves sideways.
-function Strip({ s }: { s: PeopleState }) {
-	if (!s.shown.length) return null
-	return (
-		<section aria-label="People" className="mb-2">
-			<h2 className="mb-2 text-sm text-gray-400">People</h2>
-			<div className="flex gap-2 overflow-x-auto pb-2">
-				{s.shown.slice(0, 8).map((p) => (
-					<Avatar key={p.id} p={p} />
-				))}
-			</div>
-		</section>
-	)
-}
-
-// hero: a person header only when the query is clearly a name. Weaker matches get one line.
-function Hero({ s }: { s: PeopleState }) {
-	const p = s.top
-	const others = s.shown.filter((x) => x !== p).slice(0, 5)
-	const backdrop = p?.knownFor.find((t) => t.backdrop)?.backdrop ?? null
-	return (
-		<>
-			{p && (
-				<header className="relative isolate mb-4 overflow-hidden rounded-xl border border-gray-800">
-					{backdrop && (
-						<img
-							src={img(backdrop, "w1280") ?? ""}
-							alt=""
-							className="absolute inset-0 -z-10 h-full w-full object-cover opacity-30"
-						/>
-					)}
-					<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-950 via-gray-950/70 to-transparent" />
-					<div className="flex flex-wrap items-end gap-6 p-4 sm:p-6">
-						<Portrait
-							p={p}
-							className="h-36 w-24 shrink-0 rounded-lg shadow-2xl"
-						/>
-						<div className="min-w-0 flex-1">
-							<p className="text-sm uppercase tracking-[0.2em] text-amber-400">
-								{p.department}
-							</p>
-							<h2 className="text-3xl font-black sm:text-4xl">{p.name}</h2>
-							<Link
-								to={personPath(p.id, p.name)}
-								prefetch="intent"
-								className="mt-2 inline-block text-sm text-cyan-300 underline underline-offset-2"
-							>
-								See all titles with {p.name}
-							</Link>
-						</div>
-						<ul className="flex gap-2">
-							{p.knownFor.slice(0, 3).map((t) => (
-								<li key={t.id} className="w-20 sm:w-24">
-									<Link to={`/${t.type}/${t.id}`} prefetch="intent">
-										<img
-											src={img(t.poster) ?? ""}
-											alt={t.title}
-											className="aspect-[2/3] w-full rounded-md border-2 border-gray-800 object-cover hover:border-amber-700/50"
-										/>
-									</Link>
-								</li>
-							))}
-						</ul>
+		<header className="relative isolate overflow-hidden rounded-xl border border-gray-800">
+			{backdrop && (
+				<img
+					key={backdrop}
+					src={img(backdrop, "w1280") ?? ""}
+					alt=""
+					className="absolute inset-0 -z-10 h-full w-full object-cover opacity-30"
+				/>
+			)}
+			<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-950 via-gray-950/70 to-transparent" />
+			<div className="flex">
+				<div className="flex min-w-0 flex-1 flex-wrap items-end gap-6 p-4 sm:p-6">
+					<Portrait p={p} className="h-36 w-24 shrink-0 rounded-lg shadow-2xl" />
+					<div className="min-w-0 flex-1 basis-60">
+						<p className="text-sm uppercase tracking-[0.2em] text-amber-400">
+							{p.department}
+						</p>
+						<h2 className="text-3xl font-black sm:text-4xl">{p.name}</h2>
+						<Link
+							to={personPath(p.id, p.name)}
+							prefetch="intent"
+							className="mt-2 inline-block text-sm text-cyan-300 underline underline-offset-2"
+						>
+							See all titles with {p.name}
+						</Link>
+						<ScopeNote p={p} links={links} />
 					</div>
-				</header>
-			)}
-			{others.length > 0 && (
-				<p className="mb-3 text-sm text-gray-400">
-					{p ? "Other people: " : "People: "}
-					{others.map((o, i) => (
-						<span key={o.id}>
-							{i > 0 && ", "}
-							<Link
-								to={personPath(o.id, o.name)}
-								prefetch="intent"
-								className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200"
-							>
-								{o.name}
-							</Link>
-						</span>
-					))}
-				</p>
-			)}
-		</>
+					<ul className="flex gap-2">
+						{p.knownFor.slice(0, 3).map((t) => (
+							<li key={t.id} className="w-20 sm:w-24">
+								<Link to={`/${t.type}/${t.id}`} prefetch="intent">
+									<img
+										src={img(t.poster) ?? ""}
+										alt={t.title}
+										className="aspect-[2/3] w-full rounded-md border-2 border-gray-800 object-cover hover:border-amber-700/50"
+									/>
+								</Link>
+							</li>
+						))}
+					</ul>
+				</div>
+				{aside}
+			</div>
+			{below}
+		</header>
 	)
 }
 
-// aside: people in their own column on wide screens, a closed disclosure on phones.
-function Aside({ s, grid }: { s: PeopleState; grid: ReactNode }) {
-	if (!s.shown.length) return <>{grid}</>
-	const list = (
-		<ul className="grid gap-2">
-			{s.shown.slice(0, 5).map((p) => (
+// --- Round 2 variants: the banner with a way to switch between people ------------------------
+
+type Pick = { s: PeopleState; current: ScoredPerson; select: (id: number) => void }
+
+// names: text tabs above the banner, in the style of the result pages' toggles.
+function NameTabs({ s, current, select }: Pick) {
+	return (
+		<div role="tablist" aria-label="People" className="mb-2 flex flex-wrap gap-1">
+			{s.shown.map((p) => (
+				<button
+					key={p.id}
+					type="button"
+					role="tab"
+					aria-selected={p.id === current.id}
+					onClick={() => select(p.id)}
+					className={`rounded-md border px-3 py-1.5 text-sm ${p.id === current.id ? "border-cyan-300/70 bg-gray-800 text-white" : "border-gray-600 bg-gray-900 text-gray-300 hover:text-white"}`}
+				>
+					{p.name}
+				</button>
+			))}
+		</div>
+	)
+}
+
+// avatars: the cast list's round portraits along the bottom of the banner.
+function AvatarRow({ s, current, select }: Pick) {
+	return (
+		<div className="flex gap-3 overflow-x-auto border-t border-gray-800/80 bg-gray-950/60 px-4 py-3 sm:px-6">
+			{s.shown.map((p) => (
+				<button
+					key={p.id}
+					type="button"
+					aria-pressed={p.id === current.id}
+					onClick={() => select(p.id)}
+					className="group flex w-16 shrink-0 flex-col items-center"
+				>
+					<div
+						className={`mb-1 h-12 w-12 overflow-hidden rounded-full border-2 shadow-lg transition-all ${p.id === current.id ? "border-amber-400" : "border-stone-500 opacity-70 group-hover:border-slate-200 group-hover:opacity-100"}`}
+					>
+						<Portrait p={p} className="h-full w-full" />
+					</div>
+					<span
+						className={`w-16 truncate text-center text-[11px] ${p.id === current.id ? "text-white" : "text-gray-400"}`}
+					>
+						{p.name}
+					</span>
+				</button>
+			))}
+		</div>
+	)
+}
+
+// arrows: step through people like a carousel; the count says there are more.
+function ArrowBar({ s, current, select }: Pick) {
+	const i = s.shown.findIndex((p) => p.id === current.id)
+	const step = (d: number) =>
+		select(s.shown[(i + d + s.shown.length) % s.shown.length].id)
+	const button =
+		"rounded-md border border-gray-600 bg-gray-900/80 px-3 py-1.5 text-sm text-gray-200 hover:text-white"
+	return (
+		<div className="flex items-center justify-between gap-3 border-t border-gray-800/80 bg-gray-950/60 px-4 py-2 text-sm sm:px-6">
+			<button type="button" className={button} onClick={() => step(-1)}>
+				← {s.shown[(i - 1 + s.shown.length) % s.shown.length].name}
+			</button>
+			<span className="text-gray-400">
+				{i + 1} of {s.shown.length} people
+			</span>
+			<button type="button" className={button} onClick={() => step(1)}>
+				{s.shown[(i + 1) % s.shown.length].name} →
+			</button>
+		</div>
+	)
+}
+
+// rail: the other people as compact collaborator rows inside the banner's right edge.
+function PeopleRail({ s, current, select }: Pick) {
+	return (
+		<ul className="hidden w-64 shrink-0 space-y-1 overflow-y-auto border-l border-gray-800/80 bg-gray-950/60 p-2 md:block md:max-h-64">
+			{s.shown.map((p) => (
 				<li key={p.id}>
-					<PersonRowCard p={p} />
+					<button
+						type="button"
+						aria-pressed={p.id === current.id}
+						onClick={() => select(p.id)}
+						className={`flex w-full items-center gap-2 rounded-lg border p-1.5 text-left ${p.id === current.id ? "border-amber-400/60 bg-gray-900" : "border-transparent hover:border-gray-700"}`}
+					>
+						<Portrait p={p} className="h-10 w-7 shrink-0 rounded" />
+						<span className="min-w-0">
+							<span className="block truncate text-sm font-semibold">{p.name}</span>
+							<span className="block text-[11px] text-amber-400">{role(p)}</span>
+						</span>
+					</button>
 				</li>
 			))}
 		</ul>
 	)
+}
+
+// peek: the other people sit next to the banner as narrow portrait slivers; one click opens one.
+function Slivers({ s, current, select }: Pick) {
 	return (
-		<>
-			<details className="mb-2 lg:hidden">
-				<summary className="cursor-pointer py-2 text-sm text-gray-300">
-					People ({s.shown.length})
-				</summary>
-				{list}
-			</details>
-			<div className="lg:flex lg:gap-4">
-				<div className="min-w-0 flex-1">{grid}</div>
-				<aside aria-label="People" className="hidden w-72 shrink-0 py-2 lg:block">
-					<h2 className="mb-2 text-sm text-gray-400">People</h2>
-					{list}
-				</aside>
-			</div>
-		</>
+		<ul className="ml-2 flex shrink-0 gap-1">
+			{s.shown
+				.filter((p) => p.id !== current.id)
+				.slice(0, 5)
+				.map((p) => (
+					<li key={p.id}>
+						<button
+							type="button"
+							onClick={() => select(p.id)}
+							title={p.name}
+							className="group relative block h-full w-10 overflow-hidden rounded-xl border border-gray-800 hover:border-amber-400/60 sm:w-14"
+						>
+							<Portrait
+								p={p}
+								className="absolute inset-0 h-full w-full opacity-50 transition-opacity group-hover:opacity-90"
+							/>
+							<span className="absolute inset-x-0 bottom-2 rotate-180 text-xs font-semibold text-white [writing-mode:vertical-rl] mx-auto">
+								{p.name}
+							</span>
+						</button>
+					</li>
+				))}
+		</ul>
 	)
 }
 
-// tabs: people never share the title list; a tab with a count says they exist.
-function Tabs({ s, grid }: { s: PeopleState; grid: ReactNode }) {
-	const [tab, setTab] = useState<"titles" | "people">("titles")
-	if (!s.shown.length) return <>{grid}</>
-	const button = (key: "titles" | "people", label: string) => (
-		<button
-			type="button"
-			aria-pressed={tab === key}
-			onClick={() => setTab(key)}
-			className={`rounded-md border px-3 py-1.5 text-sm ${tab === key ? "border-cyan-300/70 bg-gray-800 text-white" : "border-gray-600 bg-gray-900 text-gray-300 hover:text-white"}`}
-		>
-			{label}
-		</button>
+function PeopleBanner({ s, links }: { s: PeopleState; links: ScopeLinks }) {
+	const [selected, setSelected] = useState<number | null>(null)
+	const key = s.shown.map((p) => p.id).join(",")
+	// A new search starts on its best match again.
+	useEffect(() => setSelected(null), [key])
+	if (!s.shown.length) return null
+	const current = s.shown.find((p) => p.id === selected) ?? s.shown[0]
+	const pick: Pick = { s, current, select: setSelected }
+	const many = s.shown.length > 1
+	const v = s.variant
+	const banner = (
+		<Banner
+			p={current}
+			links={links}
+			aside={many && v === "rail" ? <PeopleRail {...pick} /> : undefined}
+			below={
+				many && v === "avatars" ? (
+					<AvatarRow {...pick} />
+				) : many && v === "arrows" ? (
+					<ArrowBar {...pick} />
+				) : undefined
+			}
+		/>
 	)
 	return (
-		<>
-			<div className="flex gap-1 py-2">
-				{button("titles", "Titles")}
-				{button("people", `People (${s.shown.length})`)}
-			</div>
-			{tab === "titles" ? (
-				grid
+		<section aria-label="People" className="mb-4">
+			{many && v === "names" && <NameTabs {...pick} />}
+			{many && v === "peek" ? (
+				<div className="flex">
+					<div className="min-w-0 flex-1">{banner}</div>
+					<Slivers {...pick} />
+				</div>
 			) : (
-				<ul className="grid grid-cols-2 gap-2 py-2 sm:grid-cols-4 lg:grid-cols-5">
-					{s.shown.map((p) => (
-						<li key={p.id} className="min-w-0">
-							<PersonResultCard p={p} />
-						</li>
-					))}
-				</ul>
+				banner
 			)}
-		</>
+		</section>
 	)
 }
 
-/**
- * slot: where the top person goes in the title grid on page 1, or -1. An exact name takes the
- * first slot unless a title matches exactly too; a likely name takes the last slot of the
- * first row; everything else stays out of the grid.
- */
-export function slotIndex(s: PeopleState, exactTitle: boolean) {
-	if (s.variant !== "slot" || !s.shown.length) return -1
-	const p = s.shown[0]
-	if (p.level === "high") return exactTitle ? 1 : 0
-	if (p.level === "medium") return 4
-	return -1
-}
-
-/** Renders around the title grid: above it, beside it, or instead of it. */
+/** Renders the people banner above the title grid. */
 export function PeopleAround({
 	s,
 	grid,
+	links,
 }: {
 	s: PeopleState
 	grid: ReactNode
+	links: ScopeLinks
 }) {
 	return (
 		<>
-			<PrototypeState s={s} />
-			{s.variant === "strip" && <Strip s={s} />}
-			{s.variant === "hero" && <Hero s={s} />}
-			{s.variant === "aside" ? (
-				<Aside s={s} grid={grid} />
-			) : s.variant === "tabs" ? (
-				<Tabs s={s} grid={grid} />
-			) : (
-				grid
-			)}
+			<PrototypeState s={s} links={links} />
+			<PeopleBanner s={s} links={links} />
+			{grid}
 			<PrototypeSwitcher variants={PEOPLE_VARIANTS} param="people" />
 		</>
 	)
 }
 
 // Surfaces the gate so the owner can see why people show up or not.
-function PrototypeState({ s }: { s: PeopleState }) {
+function PrototypeState({ s, links }: { s: PeopleState; links: ScopeLinks }) {
 	const [open, setOpen] = useState(false)
 	return (
 		<div className="mb-2 rounded border border-dashed border-fuchsia-500/60 px-2 py-1 text-xs text-fuchsia-300">
 			<button type="button" onClick={() => setOpen((o) => !o)}>
 				Prototype: {s.people.length} people found, {s.shown.length} pass the gate
-				{s.top ? `, top: ${s.top.name}` : ""}
-				{" "}
+				{links.scope
+					? ` · titles narrowed to ${links.scope.people.map((p) => p.name).join(" + ")}, ranked by “${links.scope.rest}”`
+					: ""}{" "}
 				{open ? "▾" : "▸"}
 			</button>
 			{open && (
