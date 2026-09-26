@@ -602,6 +602,18 @@ class StreamingPublicationTests(unittest.TestCase):
         self.assertEqual(sorted(crate.rows, key=key), retained)
         self.assertEqual(result["publication"]["status"], "partial_success")
 
+    def test_scheduled_batches_leave_only_titles_the_budget_can_refresh(self) -> None:
+        # Titles left to the per-title path publish at a tenth of the batched
+        # rate. Once the budget is spent, unmapped titles stay in their batch.
+        self.copy.__globals__["SCHEDULED_MAPPING_REFRESHES"] = 1
+        self.copy.__globals__["SCHEDULED_BATCH_SIZE"] = 1
+        crate = Crate([self.unmapped_title(tmdb_id) for tmdb_id in (41, 43, 45)])
+        publish_title = Mock(wraps=self.copy.__globals__["publish_title"])
+        with patch.dict(self.copy.__globals__, publish_title=publish_title,
+                        refresh_unmapped_country=Mock(return_value={"outcome": "fetched"})):
+            self.copy(crate, {}, "show")
+        self.assertEqual(publish_title.call_count, 1)
+
     def test_targeted_publication_refreshes_every_unmapped_country(self) -> None:
         self.copy.__globals__["SCHEDULED_MAPPING_REFRESHES"] = 0
         crate = Crate([self.unmapped_title(42)])

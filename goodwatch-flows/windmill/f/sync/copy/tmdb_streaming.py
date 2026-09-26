@@ -722,15 +722,17 @@ def copy_media(
                                     lease_wait_seconds, publication, targeted)
             else:
                 publishable.append(tmdb_id)
-        one_by_one = publishable if targeted else []
-        if not targeted:
-            for batch_start in range(0, len(publishable), SCHEDULED_BATCH_SIZE):
-                one_by_one += publish_batch(
-                    mongo_db, connector, publishable[batch_start:batch_start + SCHEDULED_BATCH_SIZE], media_type,
-                    MediaClass, mongo_details, mongo_providers, service_ids, refresh_budget, entity_counts, publication)
-        for tmdb_id in one_by_one:
-            publish_title(mongo_db, connector, tmdb_id, media_type, MediaClass, mongo_details, mongo_providers,
-                          service_ids, lease_wait_seconds, refresh_budget, entity_counts, publication, targeted)
+        batches = [publishable] if targeted else [
+            publishable[batch_start:batch_start + SCHEDULED_BATCH_SIZE]
+            for batch_start in range(0, len(publishable), SCHEDULED_BATCH_SIZE)]
+        for batch in batches:
+            one_by_one = batch if targeted else publish_batch(
+                mongo_db, connector, batch, media_type, MediaClass, mongo_details, mongo_providers,
+                service_ids, refresh_budget, entity_counts, publication)
+            # Spend the refreshes before the next batch decides which titles to leave.
+            for tmdb_id in one_by_one:
+                publish_title(mongo_db, connector, tmdb_id, media_type, MediaClass, mongo_details, mongo_providers,
+                              service_ids, lease_wait_seconds, refresh_budget, entity_counts, publication, targeted)
         if not targeted:
             print(f"  {min(start + BATCH_SIZE, len(candidate_ids))}/{len(candidate_ids)} {media_type} titles "
                   f"in {time.monotonic() - run_clock:.0f} s", flush=True)
