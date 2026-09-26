@@ -83,7 +83,7 @@
 
 	--animate-gradient-x: gradient-move-x 5s ease infinite;
 	/* People in search results: the open person's drawer and its faded backdrop. */
-	--animate-fade-in: fade-in 160ms ease-out both;
+	--animate-fade-in: fade-in 120ms ease-out both;
 	--animate-backdrop-in: backdrop-in 300ms ease-out both;
 
 	@keyframes fade-in {

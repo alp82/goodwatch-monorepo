@@ -143,7 +143,7 @@ interface PeopleProps {
 	allTitlesHref: string
 }
 
-// Opening a person grows their panel in 220 ms. The photo and the drawer have their final size from the start, so
+// Opening a person grows their panel in 150 ms. The photo and the drawer have their final size from the start, so
 // the panel only reveals them: nothing stretches. A closing panel drops its drawer at once.
 function Accordion({
 	people,
@@ -171,7 +171,7 @@ function Accordion({
 				return (
 					<li
 						key={p.id}
-						className={`group relative isolate min-w-0 shrink-0 basis-(--closed-width) overflow-hidden rounded-xl border bg-gray-900 transition-[flex-grow,border-color] duration-220 ease-out ${noMotion} ${open ? "grow border-gray-800" : "grow-0 border-gray-800/60 hover:border-gray-500"}`}
+						className={`group relative isolate min-w-0 shrink-0 basis-(--closed-width) overflow-hidden rounded-xl border bg-gray-900 transition-[flex-grow,border-color] duration-150 ease-out ${noMotion} ${open ? "grow border-gray-800" : "grow-0 border-gray-800/60 hover:border-gray-500"}`}
 					>
 						{open ? (
 							<>
