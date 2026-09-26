@@ -1,6 +1,7 @@
 // Pieces of the episode grid: the floating tip and popover, and the episode tip, season
 // scores, provider marks and legend that live inside them.
 import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import type { GridEpisode, GridSeason, GridSpecial } from "~/server/episode-grid.server"
 import imdbLogo from "~/img/imdb-logo-250.png"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-250.png"
@@ -131,8 +132,14 @@ export function useFloat() {
 	return { state, trigger, close, isOpen: (id: string) => state?.id === id }
 }
 
-/** Draws the float above its anchor, or below when there is no room, inside the viewport. */
-export function FloatLayer({ state }: { state: FloatState | null }) {
+/**
+ * Draws the float above its anchor, or below when the sticky headers would cover it, inside
+ * the viewport. `topInset` is how far down the viewport those headers reach.
+ *
+ * The float goes into a portal on the body: the grid sits in an `isolate` stacking context,
+ * where no z-index can lift the float over the sticky title header.
+ */
+export function FloatLayer({ state, topInset }: { state: FloatState | null; topInset: number }) {
 	const ref = useRef<HTMLDivElement>(null)
 	const [position, setPosition] = useState<{ left: number; top: number } | null>(null)
 
@@ -142,15 +149,23 @@ export function FloatLayer({ state }: { state: FloatState | null }) {
 		const { width, height } = el.getBoundingClientRect()
 		const { anchor } = state
 		const gap = 6
-		const left = Math.min(Math.max(8, anchor.left + anchor.width / 2 - width / 2), window.innerWidth - width - 8)
-		// The site header covers the top ~120px of the viewport; go below when it would hide the box.
+		const margin = 8
+		const left = Math.min(Math.max(margin, anchor.left + anchor.width / 2 - width / 2), window.innerWidth - width - margin)
 		const above = anchor.top - height - gap
-		const top = above >= 128 ? above : anchor.bottom + gap
+		const below = anchor.bottom + gap
+		const fitsAbove = above >= topInset + margin
+		const fitsBelow = below + height <= window.innerHeight - margin
+		// Neither side fits: take the roomier one and keep the top edge clear of the headers.
+		const top = fitsAbove
+			? above
+			: fitsBelow || window.innerHeight - anchor.bottom >= anchor.top - topInset
+				? below
+				: Math.max(topInset + margin, above)
 		setPosition({ left, top })
-	}, [state])
+	}, [state, topInset])
 
 	if (!state) return null
-	return (
+	return createPortal(
 		<div
 			ref={ref}
 			aria-hidden="true"
@@ -159,7 +174,8 @@ export function FloatLayer({ state }: { state: FloatState | null }) {
 			style={position ? { left: position.left, top: position.top } : { left: 0, top: 0, visibility: "hidden" }}
 		>
 			{state.content}
-		</div>
+		</div>,
+		document.body,
 	)
 }
 

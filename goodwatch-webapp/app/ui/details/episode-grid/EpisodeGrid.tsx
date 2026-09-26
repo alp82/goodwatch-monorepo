@@ -292,7 +292,7 @@ export default function EpisodeGrid({ grid, headerHeight }: { grid: EpisodeGridD
 					{narrow}
 				</div>
 			</div>
-			<FloatLayer state={float.state} />
+			<FloatLayer state={float.state} topInset={SITE_BAR_HEIGHT + (headerHeight ?? 0)} />
 		</section>
 	)
 }
