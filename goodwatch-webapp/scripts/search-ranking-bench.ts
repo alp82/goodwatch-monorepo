@@ -1,6 +1,6 @@
 // Measures the search ranking's query encoder and Qdrant client on the machine it runs on.
 //
-//   SEARCH_RANKING_MODE=shadow node scripts/search-ranking-bench.ts --trace=<dir> [--parts=encoder,qdrant]
+//   node scripts/search-ranking-bench.ts --trace=<dir> [--parts=encoder,qdrant]
 //     [--passes=2] [--collection=media_fingerprint_v1]
 //
 // <dir> holds trace.jsonl and vectors.json from the ranking benchmark's store access trace (168 graded queries, the

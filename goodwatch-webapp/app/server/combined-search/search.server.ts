@@ -11,12 +11,10 @@ import {
 	describeTitles,
 	fingerprintRequest,
 	readingFields,
-	retrieveByReading,
 	summarizeReading,
 	type Eligibility,
 	type ReadingChip,
 	type Result,
-	READING_RANKER_VERSION,
 } from "./reading-retrieval.server";
 import { allowsTitle, toCrateSql } from "./search-filters";
 import {
@@ -34,15 +32,11 @@ import {
 	type JevOutcome,
 	translationEnabled,
 } from "../search-runtime/runtime.server";
-import { getSearchRankingMode } from "../search-ranking/mode.server";
-import {
-	shadowRank,
-	startShadowRanking,
-} from "../search-ranking/shadow.server";
 import {
 	RankingDeadlineError,
 	rankForServing,
 	servingFallback,
+	startSearchRanking,
 	type ServingFallback,
 } from "../search-ranking/serve.server";
 import {
@@ -55,9 +49,8 @@ import {
 	startPeopleIndex,
 } from "../search-people/people.server";
 
-// Modes shadow and on load the new ranking's index and query models at server start. Off by default: then nothing
-// loads.
-startShadowRanking();
+// The ranking's index and query models load at server start.
+startSearchRanking();
 // The names a search can find inside a phrase load at server start too.
 startPeopleIndex();
 
@@ -274,9 +267,9 @@ interface ServedList {
 }
 
 /**
- * The new ranking's list (SEARCH_RANKING_MODE=on), in the response's row format: the ranker's blended list, with
- * the title lookup's rows, the display fields and reason chips of each title, and the catalog metadata. Throws when
- * the ranking fails or misses its deadline; the caller then serves today's ranking.
+ * The ranked list, in the response's row format: the ranker's blended list, with the title lookup's rows, the display
+ * fields and reason chips of each title, and the catalog metadata. Throws when the ranking fails or misses its
+ * deadline; the caller then serves the basic search.
  */
 async function rankedList(
 	q: string,
@@ -398,16 +391,15 @@ export async function combinedSearch(
 	// Called once the interpretation is known and before retrieval, so the caller can
 	// show it while the results are still on their way.
 	onReading?: (reading: ReadingChip[]) => void,
-	// Runs work that must not delay the response (shadow ranking) once the response is sent.
-	afterResponse?: (task: () => void) => void,
 	// allTitles: search all titles even when the query names people inside a longer phrase.
 	options: { allTitles?: boolean } = {},
 ): Promise<SearchBatch> {
 	const started = Date.now(),
 		errors: string[] = [];
 	let chargedNano = 0;
-	// Milliseconds per stage, in order: the language step, the Jev reading, the ranking (with its Qdrant time), the
-	// wait for the title lookup that runs alongside, and the display (catalog metadata and the blend).
+	// Milliseconds per stage, in order: the people step, the language step, the Jev reading, the wait for the title
+	// lookup that runs alongside, the ranking (with its Qdrant time and its own stages), and the display (catalog
+	// metadata, display fields and the blend).
 	const stageMs: Record<string, number> = {};
 	let mark = performance.now();
 	const lap = (name: string) => {
@@ -467,9 +459,6 @@ export async function combinedSearch(
 						}
 					: prepareLanguage(q, visitor, signal);
 			});
-	const mode = getSearchRankingMode();
-	// The eligible title lookup rows, for shadow mode.
-	let shadowTitles: Title[] = [];
 	const language = await languagePromise;
 	lap("language");
 	chargedNano += language.chargedNano;
@@ -496,72 +485,43 @@ export async function combinedSearch(
 		);
 		onReading?.(reading);
 	}
-	// SEARCH_RANKING_MODE=on: the new ranking serves unless it can't (see serve.server.ts); then today's ranking
-	// serves, and the reason goes on the history row.
-	let fallback: ServingFallback | null = null;
+	// The ranking serves every search with a reading. The basic search serves the others, and the searches the ranking
+	// can't serve (see serve.server.ts); the reason goes on the history row.
+	let fallback: ServingFallback | null = servingFallback({
+		hasReading: outcome.kind !== "basic",
+	});
 	let served: ServedList | null = null;
-	if (mode === "on") {
-		fallback = servingFallback({
-			hasReading: outcome.kind !== "basic",
-			eligibility: policy,
-		});
-		if (!fallback && outcome.kind !== "basic") {
-			const attempt = performance.now();
-			try {
-				served = await rankedList(
-					q,
-					language,
-					outcome.readings,
-					policy,
-					titlePromise,
-					signal,
-				);
-				Object.assign(stageMs, served.stageMs);
-			} catch (error) {
-				if (signal.aborted) throw new Error("Search interrupted");
-				fallback = error instanceof RankingDeadlineError ? "timeout" : "error";
-				console.error(
-					"Search ranking failed; the current ranking serves",
-					error,
-				);
-				stageMs.failedRanking =
-					Math.round((performance.now() - attempt) * 10) / 10;
-			}
-			mark = performance.now();
+	if (!fallback && outcome.kind !== "basic") {
+		const attempt = performance.now();
+		try {
+			served = await rankedList(
+				q,
+				language,
+				outcome.readings,
+				policy,
+				titlePromise,
+				signal,
+			);
+			Object.assign(stageMs, served.stageMs);
+		} catch (error) {
+			if (signal.aborted) throw new Error("Search interrupted");
+			fallback = error instanceof RankingDeadlineError ? "timeout" : "error";
+			console.error("Search ranking failed; the basic search serves", error);
+			stageMs.failedRanking =
+				Math.round((performance.now() - attempt) * 10) / 10;
 		}
+		mark = performance.now();
 	}
-	const { rows, metadata } = served ?? (await currentList());
-	async function currentList() {
+	const { rows, metadata } = served ?? (await basicList());
+	async function basicList() {
 		let results: Result[] = [];
-		const retrieval: { qdrantMs?: number } = {};
-		if (outcome.kind === "basic") {
-			errors.push(BASIC_SEARCH_MESSAGE);
-			try {
-				results = await literal(q, policy);
-			} catch {
-				errors.push("Description search unavailable");
-			}
-		} else {
-			try {
-				results = await retrieveByReading(
-					language.text,
-					outcome.readings,
-					policy,
-					language.policy.mode === "native-vector-only",
-					retrieval,
-				);
-			} catch {
-				errors.push(BASIC_SEARCH_MESSAGE);
-				try {
-					results = await literal(q, policy);
-				} catch {
-					errors.push("Description search unavailable");
-				}
-			}
+		errors.push(BASIC_SEARCH_MESSAGE);
+		try {
+			results = await literal(q, policy);
+		} catch {
+			errors.push("Description search unavailable");
 		}
 		lap("ranking");
-		if (retrieval.qdrantMs !== undefined)
-			stageMs.rankingQdrant = retrieval.qdrantMs;
 		const title = await titlePromise;
 		lap("titleLookup");
 		if ("error" in title) errors.push("Title lookup unavailable");
@@ -582,7 +542,6 @@ export async function combinedSearch(
 		const allowedTitles = titleRows.filter((t) =>
 			eligible(meta.get(titleKey(t)), policy, false),
 		);
-		shadowTitles = allowedTitles;
 		const description = results.filter((r) =>
 			eligible(meta.get(`${r.media_type}:${r.tmdb_id}`), policy, true),
 		);
@@ -608,11 +567,6 @@ export async function combinedSearch(
 	const shown = await shownPeople;
 	const elapsedMs = Date.now() - started;
 	stageMs.total = elapsedMs;
-	const servedRankerVersion = served
-		? served.rankerVersion
-		: errors.includes(BASIC_SEARCH_MESSAGE)
-			? BASIC_RANKER_VERSION
-			: READING_RANKER_VERSION;
 	const history = await recordSearchHistory({
 		text: query,
 		accountId: visitor.accountId,
@@ -620,29 +574,10 @@ export async function combinedSearch(
 		chargedNano,
 		outcome: errors.includes(BASIC_SEARCH_MESSAGE) ? "basic" : outcome.kind,
 		...(outcome.kind === "basic" ? { reason: outcome.reason } : {}),
-		rankerVersion: servedRankerVersion,
+		rankerVersion: served ? served.rankerVersion : BASIC_RANKER_VERSION,
 		...(fallback ? { rankerFallback: fallback } : {}),
 		stageMs,
 	});
-	// Shadow mode only. In mode on, today's ranking isn't run next to the new one: it would double the Qdrant and
-	// Crate work of every search.
-	if (mode === "shadow") {
-		const shadow = {
-			historyId: history.id,
-			query: q,
-			text: language.text,
-			nonEnglish: language.policy.mode !== "english",
-			nativeOnly: language.policy.mode === "native-vector-only",
-			readings: outcome.kind === "basic" ? null : outcome.readings,
-			eligibility: policy,
-			titleLookup: shadowTitles,
-			servedRankerVersion,
-			servedKeys: rows.map((r) => r.key),
-		};
-		const task = () => shadowRank(shadow);
-		if (afterResponse) afterResponse(task);
-		else setImmediate(task);
-	}
 	return {
 		q: query,
 		rows,

@@ -1,8 +1,7 @@
 // Encodes search query texts with the two local query models (see query-models.server.ts) in one worker thread.
 //
 // Nothing starts on import. The first call to startQueryEncoder() or encodeQueryTexts() downloads the model files if
-// needed and starts the worker, which loads both models (about 1.35 GB) and warms them up. Both calls throw while
-// SEARCH_RANKING_MODE is off.
+// needed and starts the worker, which loads both models (about 1.35 GB) and warms them up.
 //
 // Per search, send one request with each model's texts. rank-search.server.ts sends the query's texts (the query or
 // residual, facet phrases, coverage units, negated clauses) to the query's main model, bge-base for English and
@@ -10,7 +9,6 @@
 // non-English query's English chips to bge-base. Dozens of phrases through bge-base would cost over 100 ms, so keep
 // the lists short.
 import { Worker } from "node:worker_threads"
-import { assertSearchRankingEnabled } from "./mode.server.ts"
 import {
 	type LocalQueryModels,
 	type QueryModelName,
@@ -178,7 +176,6 @@ async function start(): Promise<RunningEncoder> {
 }
 
 function ensureRunning(): Promise<RunningEncoder> {
-	assertSearchRankingEnabled("The query encoder")
 	if (running) return running
 	if (lastFailure && Date.now() - failedAt < RETRY_AFTER_MS) {
 		return Promise.reject(lastFailure)
@@ -201,7 +198,7 @@ function ensureRunning(): Promise<RunningEncoder> {
 
 let loaded = false
 
-/** Whether the models are loaded, and how many requests wait. Shadow mode skips a search while it isn't ready or busy. */
+/** Whether the models are loaded, and how many requests wait. The basic search serves while it isn't ready or busy. */
 export function queryEncoderState(): {
 	ready: boolean
 	pending: number

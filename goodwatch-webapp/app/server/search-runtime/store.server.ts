@@ -298,7 +298,7 @@ export class SearchStore {
 		reason?: BasicReason
 		// The ranking that produced the served list, so results can be compared by version.
 		rankerVersion: string
-		// SEARCH_RANKING_MODE=on only: why today's ranking served instead of the new one.
+		// Why the basic search served a search that has a reading, instead of the ranking.
 		rankerFallback?: string
 		// Milliseconds per stage (reading, ranking, display, ...), rounded to 0.1 ms.
 		stageMs?: Record<string, number>
@@ -320,45 +320,5 @@ export class SearchStore {
 			],
 		)
 		return id
-	}
-	// One shadow ranking next to the served list. Anything derived from the query text goes into `sealed`.
-	async shadow(input: {
-		historyId: string | null
-		outcome: "ranked" | "skipped" | "failed"
-		reason?: string
-		servedRankerVersion: string
-		rankerVersion?: string
-		buildId?: string
-		route?: string
-		lesserKnown: boolean
-		servedKeys: string[]
-		rankedKeys?: string[]
-		rankedScores?: number[]
-		poolSize?: number
-		stageMs?: Record<string, number>
-		rounds?: { name: string; queries: number; serverMs: number; wallMs: number }[]
-		sealed?: unknown
-	}) {
-		await this.execute(
-			"INSERT INTO doc.search_shadow (id, history_id, created_at, outcome, reason, served_ranker_version, ranker_version, build_id, route, lesser_known, served_keys, ranked_keys, ranked_scores, pool_size, stage_ms, rounds, ciphertext) VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-			[
-				randomUUID(),
-				input.historyId,
-				input.outcome,
-				input.reason ?? null,
-				input.servedRankerVersion,
-				input.rankerVersion ?? null,
-				input.buildId ?? null,
-				input.route ?? null,
-				input.lesserKnown,
-				input.servedKeys,
-				input.rankedKeys ?? null,
-				input.rankedScores ?? null,
-				input.poolSize ?? null,
-				input.stageMs ?? null,
-				input.rounds ?? null,
-				input.sealed === undefined ? null : this.seal(input.sealed),
-			],
-		)
 	}
 }

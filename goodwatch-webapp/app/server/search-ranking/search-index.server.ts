@@ -5,12 +5,11 @@
 // typed tables, and swaps the new build in only when all files have loaded, so a search never sees two builds at once.
 // It checks the current row every few minutes and loads a new build in the background.
 //
-// Nothing loads while SEARCH_RANKING_MODE is off. Formats: "Index files" in docs/implementation/search-ranking/README.md.
+// Nothing loads on import. Formats: "Index files" in docs/implementation/search-ranking/README.md.
 import { createHash } from "node:crypto"
 import http from "node:http"
 import { promisify } from "node:util"
 import { gunzip as gunzipCallback } from "node:zlib"
-import { assertSearchRankingEnabled } from "./mode.server.ts"
 import { normalized, singular } from "./text-rules.server.ts"
 
 const gunzip = promisify(gunzipCallback)
@@ -553,7 +552,6 @@ function watch() {
 
 /** The loaded search index. The first call loads it; later calls return the current build at once. */
 export async function getSearchIndex(): Promise<SearchIndex> {
-	assertSearchRankingEnabled("The search index")
 	watch()
 	if (current) return current
 	if (lastFailure && !loading && Date.now() - failedAt < RETRY_AFTER_MS)

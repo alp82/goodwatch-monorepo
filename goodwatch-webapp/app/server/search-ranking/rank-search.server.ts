@@ -8,8 +8,6 @@
 //    Non-English queries with English chips then rescore the union of both dense top lists with both vectors.
 // 4. Qdrant round 2: score the candidate pool with every signal.
 // 5. Score in memory, blend with the title lookup, fold alternate cuts, bound the reference's own titles.
-//
-// Nothing here runs while SEARCH_RANKING_MODE is off: the index, the encoder and the Qdrant client all refuse.
 import type {
 	Eligibility,
 	ReadingFields,
@@ -894,7 +892,7 @@ export async function rankSearch(
 	if (ref) results = boundOwn(results, ref)
 	results = results.slice(0, RESULT_LENGTH)
 	lap("blend")
-	// The trace is for checks and shadow logs, not part of the ranking: keep it out of the total
+	// The trace is for checks, not part of the ranking: keep it out of the total
 	timings.total = performance.now() - started - (timings.trace ?? 0)
 
 	return {

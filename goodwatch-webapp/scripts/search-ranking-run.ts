@@ -4,7 +4,7 @@
 // candidate scores and signals, see SearchTrace), which docs/prototypes/search-arena/bench/parity/ compares with the
 // prototype.
 //
-//   SEARCH_RANKING_MODE=shadow npx vite-node --config scripts/arena-vite.config.mjs scripts/search-ranking-run.ts \
+//   npx vite-node --config scripts/arena-vite.config.mjs scripts/search-ranking-run.ts \
 //     --captures=<dir of <id>.json captures> [--only=id,id] [--expect=<trace.jsonl with top10 per id>] [--json=<out>] \
 //     [--lesser-known]
 //

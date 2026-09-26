@@ -519,8 +519,9 @@ Done in #140. How it's stored:
 
 Done in #143, in `goodwatch-webapp/app/server/search-ranking/`:
 
-- **Switch:** `SEARCH_RANKING_MODE` is `off` (default), `shadow` or `on` (`mode.server.ts`). While it's off, the encoder
-  and the Qdrant client throw, and importing them loads nothing.
+- **Switch:** `SEARCH_RANKING_MODE` was `off` (default), `shadow` or `on` (`mode.server.ts`) until the previous ranking
+  was removed (see [removal of the previous ranking](#removal-of-the-previous-ranking)). Importing the encoder or the
+  Qdrant client still loads nothing.
 - **Encoder:** `encodeQueryTexts({ english, multilingual })` in `query-encoder.server.ts` sends one request per search
   to one worker thread (`query-encoder.worker.js`, 4 intra-op threads, a queue, one batch per model). It adds the
   query prefixes itself. `startQueryEncoder()` loads the models ahead of the first search. More than 32 waiting
@@ -609,8 +610,9 @@ Done in #144, in `goodwatch-webapp/app/server/search-ranking/`. Nothing calls it
   before round 2) don't.
 - **Versions:** `search_history.ranker_version` (added with
   `goodwatch-webapp/migrations/20260925_search_history_ranker_version.sql`, applied on September 25, 2026) records
-  the ranking that produced the served list: `fingerprint-text-v1` (today's), `essence-text-v1` (the basic search)
-  and, once it serves, `hybrid-v1` (`RANKER_VERSION`). The Jev contract and question version strings are unchanged.
+  the ranking that produced the served list: `hybrid-v1` (`RANKER_VERSION`), `essence-text-v1` (the basic search),
+  and `fingerprint-text-v1` for the previous ranking, which served until September 26, 2026. The Jev contract and
+  question version strings are unchanged.
 - **Encoding follows the prototype** (design rule 2, corrected in #145): the facet phrases, coverage units and negated
   clauses go through the query's main model, `bge-base` for English queries, as in `simp_combo.rank_query` and the
   benchmark trace (71 facet and 75 unit encodes with `bge-base`). For English queries, only the intent text goes
@@ -657,8 +659,9 @@ told apart:
 
 ### Rollout: stage timings and shadow mode
 
-Built in #146 (`5dee4328`). Shadow mode runs on production since September 25, 2026. The owner switches to `on`
-after about a day of clean shadow data (see [switch-over check](#switch-over-check)).
+Built in #146 (`5dee4328`). Shadow mode ran on production on September 25, 2026, until the switch to `on`. The stage
+timings stay; shadow mode was removed with the previous ranking (see
+[removal of the previous ranking](#removal-of-the-previous-ranking)).
 
 - **Stage timings:** every `search_history` row has `stage_ms` (`OBJECT(IGNORED)`, added with
   `goodwatch-webapp/migrations/20260925_search_stage_timings_and_shadow.sql`, applied on September 25, 2026):
@@ -698,8 +701,9 @@ the process grew to 2.1 GB RSS.
 
 ### Rollout: mode on
 
-Built in #146. `SEARCH_RANKING_MODE=on` serves the new ranking's list; the switch-over and the rollback are environment
-changes only (`on`, `shadow` or `off`, then redeploy).
+Built in #146. `SEARCH_RANKING_MODE=on` served the new ranking's list from September 25, 2026. Since the previous
+ranking was removed, the ranking always serves and the fallbacks below get the basic search (see
+[removal of the previous ranking](#removal-of-the-previous-ranking)).
 
 - **What serves:** `combinedSearch` (`app/server/combined-search/search.server.ts`) waits for the title lookup (it
   runs alongside the reading and is usually done by then), keeps its eligible movie and show rows, and calls
@@ -765,6 +769,10 @@ production searches after the switch did.
   Beneath" and "Thresher" for "horror on a submarine", and "Thunder Rock" and "Murder at the Lighthouse" for
   "melancholy lighthouse keeper mystery". Person and "like X" searches keep their own titles on top. Qdrant's own time
   for round 2 grew from 7 to 53 ms to 20 to 91 ms.
+- **On production** (September 26, 2026, 4 searches with cached readings, each run as a lesser-known and as a normal
+  search): the ranking stage took 134 to 441 ms against 110 to 370 ms, 25 to 120 ms more, almost all of it round 2
+  (54 to 169 ms against 35 to 83 ms). The whole search took 195 to 485 ms against 189 to 420 ms. Every search was
+  served by `hybrid-v1` with no fallback.
 
 ### Switch-over check
 
@@ -836,6 +844,56 @@ WHERE created_at > now() - INTERVAL '24 hours'
 GROUP BY ranker_version, ranker_fallback
 ORDER BY searches DESC;
 ```
+
+### Removal of the previous ranking
+
+Done in #146 on September 26, 2026, after the new ranking had served production for about 20 hours.
+
+**Health since the switch** (production `search_history` rows from 2026-09-25 20:59 to 2026-09-26 16:25 UTC; rows
+that local development servers wrote to the same table are left out: they are sealed with a different
+`SEARCH_STORAGE_KEY`):
+
+| served by | searches |
+|---|---|
+| `hybrid-v1` | 127 |
+| previous ranking, `lesser known` fallback | 28 (fixed by [lesser-known searches](#lesser-known-searches)) |
+| basic search, no reading | 2 |
+| previous ranking, `timeout` | 1 (the first search, 3 minutes after a restart) |
+| `error`, `index not loaded`, `encoder not ready`, `encoder queue full` | 0 |
+
+Latency of the 127 `hybrid-v1` searches, in milliseconds (p50 / p95):
+
+| stage | production | estimate |
+|---|---|---|
+| ranking | 190 / 403 | 105 to 154 / 263 to 392 |
+| encoding | 58 / 148 | |
+| Qdrant, all rounds (wall; Qdrant's own time) | 87 / 216 (57 / 150) | |
+| display | 50 / 106 | |
+| Jev reading | 513 / 983 | |
+| whole search, cached reading (23 searches) | 270 / 694 | median 690 to 840 |
+| whole search, fresh reading (104 searches) | 840 / 1,268 | median 1,750 to 1,900 |
+
+The ranking is slightly slower than the estimate (encoding, as #143 found), and no search spent over 1 s in it. The
+whole search is much faster than estimated, because the estimate included the previous ranking's retrieval and
+display times. The container's logs since the last restart had no search errors besides that one timeout.
+
+**What was removed:**
+
+- The previous ranking (`retrieveByReading` and its Crate text searches, trope matches and Qdrant pool query in
+  `combined-search/reading-retrieval.server.ts`), `READING_RANKER_VERSION` and `queryPoints`.
+- `SEARCH_RANKING_MODE` (`mode.server.ts`) and shadow mode (`shadow.server.ts`, `SearchStore.shadow`, the route's
+  after-response hook). The Crate table `search_shadow` keeps its rows but gets no new ones; it can be dropped.
+- `scripts/arena-capture.ts` and `scripts/arena-stages.ts` with their fetch wrappers. They recorded the previous
+  ranking for the search arena, so the arena playground can no longer capture ad-hoc queries.
+
+**How it serves now:** `startSearchRanking()` (`search-ranking/serve.server.ts`) loads the index and the query models
+when `search.server.ts` loads, in production and in local development. Every search with a reading is ranked. The
+basic search serves searches without a reading and the ranking's fallbacks (`index not loaded`, `encoder not ready`,
+`encoder queue full`, `timeout`, `error`), which `ranker_fallback` still records.
+
+**Rollback:** the spec asks for no switch after the removal, so there is none. To bring back the previous ranking,
+revert the removal commit and redeploy. The Coolify variable `SEARCH_RANKING_MODE` does nothing now and can be
+deleted.
 
 ## Follow-ups: language routing, Jev retries and Qdrant clients
 
