@@ -67,6 +67,11 @@ class Crate:
             assert params is not None
             self.rows = [row for row in self.rows if key(row) != tuple(params)]
 
+    def run_many(self, sql: str, params: list) -> None:
+        self.writes.append(f"{len(params)}x {sql}")
+        for row in params:
+            self.rows = [old for old in self.rows if key(old) != tuple(row)]
+
 
 def key(row: dict) -> tuple:
     return tuple(row[k] for k in ("media_tmdb_id", "media_type", "country_code", "streaming_service_id", "streaming_type"))
@@ -575,6 +580,127 @@ class StreamingPublicationTests(unittest.TestCase):
         self.assertEqual(candidate_reads.count("tmdb_tv_providers"), 4)
         self.assertIn("evidence_identity_repair_pending", hints)
         self.assertIn("evidence_country_identity_error", hints)
+
+    def unmapped_title(self, tmdb_id: int) -> dict:
+        """A title whose CA scrape names a provider the catalog lacks, with a published CA offer."""
+        self.db.tmdb_tv_providers.insert_one({
+            "tmdb_id": tmdb_id, "country_code": "CA", "updated_at": self.now,
+            "streaming_links": [{"provider_name": "Cineplex", "stream_type": "buy", "stream_url": clickout_url("Cineplex", 140)}],
+        })
+        return availability("CA", media_tmdb_id=tmdb_id)
+
+    def test_scheduled_run_bounds_synchronous_mapping_refreshes(self) -> None:
+        # Each refresh runs a fetch job for about 2.4 s. A scheduled run with
+        # thousands of unmapped legacy scrapes spent 90% of its time in them.
+        self.copy.__globals__["SCHEDULED_MAPPING_REFRESHES"] = 1
+        retained = [self.unmapped_title(tmdb_id) for tmdb_id in (41, 43)]
+        crate = Crate(retained)
+        refresh = Mock(return_value={"outcome": "fetched"})
+        with patch.dict(self.copy.__globals__, refresh_unmapped_country=refresh):
+            result = self.copy(crate, {}, "show")
+        refresh.assert_called_once()
+        self.assertEqual(sorted(crate.rows, key=key), retained)
+        self.assertEqual(result["publication"]["status"], "partial_success")
+
+    def test_targeted_publication_refreshes_every_unmapped_country(self) -> None:
+        self.copy.__globals__["SCHEDULED_MAPPING_REFRESHES"] = 0
+        crate = Crate([self.unmapped_title(42)])
+        refresh = Mock(return_value={"outcome": "fetched"})
+        with patch.dict(self.copy.__globals__, refresh_unmapped_country=refresh):
+            self.publish(crate)
+        refresh.assert_called_once()
+
+    def test_scheduled_titles_are_read_and_written_per_batch_not_per_title(self) -> None:
+        # One Crate round trip per read and write per title held a run to about
+        # 4 titles per second; a batch shares them.
+        self.copy.__globals__["SCHEDULED_BATCH_SIZE"] = 10
+        for tmdb_id in range(1, 6):
+            self.db.tmdb_tv_providers.insert_one({
+                "tmdb_id": tmdb_id, "country_code": "US", "updated_at": self.now,
+                "streaming_links": [{"provider_name": "Amazon", "stream_type": "flatrate", "stream_url": f"https://new/{tmdb_id}"}],
+            })
+        crate = Crate([availability(media_tmdb_id=tmdb_id) for tmdb_id in range(1, 6)])
+        selects = []
+        select = crate.select
+        crate.select = lambda sql, params=None: selects.append(sql) or select(sql, params)
+        result = self.copy(crate, {}, "show")
+        self.assertEqual(sorted(crate.media), [1, 2, 3, 4, 5])
+        self.assertEqual({(row["media_tmdb_id"], row["streaming_service_id"]) for row in crate.rows},
+                         {(tmdb_id, 9) for tmdb_id in range(1, 6)})
+        self.assertEqual(sum("FROM streaming_availability" in sql for sql in selects), 1)
+        self.assertEqual(sum("FROM streaming_evidence" in sql for sql in selects), 1)
+        self.assertEqual(crate.writes.count("streaming_availability"), 1)
+        self.assertEqual(crate.writes.count("streaming_evidence"), 1)
+        self.assertEqual(crate.writes.count("show"), 1)
+        self.assertIn("5x DELETE FROM streaming_availability", " ".join(crate.writes))
+        self.assertEqual(result["shows"]["records_received"], 5)
+        self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)
+
+    def test_scheduled_batch_publishes_a_busy_title_after_its_lease_is_released(self) -> None:
+        for tmdb_id in (41, 43):
+            self.db.tmdb_tv_providers.insert_one({"tmdb_id": tmdb_id, "country_code": "US", "updated_at": self.now, "streaming_links": []})
+        leases = self.db.streaming_publication_leases
+        leases.insert_one({"_id": "show:43", "token": "other", "expires_at": datetime.utcnow() + timedelta(minutes=15)})
+        crate = Crate([availability(media_tmdb_id=41), availability(media_tmdb_id=43)])
+        with patch("time.sleep", side_effect=lambda seconds: leases.delete_one({"_id": "show:43"})) as sleep:
+            self.copy(crate, {}, "show")
+        sleep.assert_called_once()
+        self.assertEqual(crate.rows, [])
+        self.assertEqual(sorted(crate.media), [41, 43])
+        self.assertEqual(leases.count_documents({}), 0)
+
+    def test_scheduled_batch_stops_before_aggregates_when_a_lease_is_replaced(self) -> None:
+        for tmdb_id in (41, 43):
+            self.db.tmdb_tv_providers.insert_one({"tmdb_id": tmdb_id, "country_code": "US", "updated_at": self.now, "streaming_links": []})
+        crate = Crate([availability(media_tmdb_id=41), availability(media_tmdb_id=43)])
+        select = crate.select
+        def replace_owner(sql, params=None):
+            result = select(sql, params)
+            if "FROM streaming_availability" in sql:
+                self.db.streaming_publication_leases.update_one({"_id": "show:43"}, {"$set": {"token": "replacement"}})
+            return result
+        crate.select = replace_owner
+        with self.assertRaisesRegex(RuntimeError, "lease lost"):
+            self.copy(crate, {}, "show")
+        self.assertEqual(len(crate.rows), 2)
+        self.assertEqual(crate.media, {})
+        self.assertEqual(self.db.streaming_publication_leases.find_one({"_id": "show:43"})["token"], "replacement")
+        self.assertIsNone(self.db.streaming_publication_leases.find_one({"_id": "show:41"}))
+
+    def test_scheduled_run_selects_changes_since_the_last_completed_run(self) -> None:
+        # A fixed 48 h window on a 6 h schedule published every change eight times.
+        self.db.tmdb_tv_providers.insert_many([
+            {"tmdb_id": 1, "country_code": "US", "updated_at": self.now - timedelta(hours=10), "streaming_links": []},
+            {"tmdb_id": 2, "country_code": "US", "updated_at": self.now - timedelta(minutes=10), "streaming_links": []},
+        ])
+        selected = []
+        select = self.copy.__globals__["scheduled_candidates"]
+        self.copy.__globals__["scheduled_candidates"] = lambda *args: selected.append(select(*args)) or selected[-1]
+        self.copy(Crate(), {}, "show")
+        self.assertEqual(selected[-1], [1, 2])
+        self.db.tmdb_tv_providers.insert_one({"tmdb_id": 3, "country_code": "US", "updated_at": datetime.utcnow(), "streaming_links": []})
+        self.copy(Crate(), {}, "show")
+        # The overlap re-reads changes written while the last run was selecting.
+        self.assertEqual(selected[-1], [2, 3])
+        # Movies keep their own watermark.
+        self.db.tmdb_movie_providers.insert_one({"tmdb_id": 1, "country_code": "US", "updated_at": self.now - timedelta(hours=10), "streaming_links": []})
+        self.copy(Crate(), {}, "movie")
+        self.assertEqual(selected[-1], [1])
+
+    def test_failed_scheduled_run_keeps_the_previous_watermark(self) -> None:
+        self.db.tmdb_tv_providers.insert_one({"tmdb_id": 1, "country_code": "US", "updated_at": self.now - timedelta(hours=10),
+            "streaming_links": [{"provider_name": "Amazon", "stream_type": "flatrate", "stream_url": "https://new"}]})
+        crate = Crate()
+        def fail(**kwargs):
+            raise RuntimeError("child write failed")
+        crate.upsert_many = fail
+        with self.assertRaisesRegex(RuntimeError, "child write failed"):
+            self.copy(crate, {}, "show")
+        selected = []
+        select = self.copy.__globals__["scheduled_candidates"]
+        self.copy.__globals__["scheduled_candidates"] = lambda *args: selected.append(select(*args)) or selected[-1]
+        self.copy(Crate(), {}, "show")
+        self.assertEqual(selected[-1], [1])
 
     def test_provider_object_id_selector_does_not_expand_to_unrelated_details(self) -> None:
         provider_id = self.db.tmdb_tv_providers.insert_one({

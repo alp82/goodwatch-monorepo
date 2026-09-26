@@ -194,8 +194,9 @@ class SelectionTests(unittest.TestCase):
                     if name == "tmdb_streaming":
                         from test_streaming_publication import load_copy
                         streaming = load_copy(db).__globals__
-                        namespace.update({key: streaming[key] for key in ("publication_snapshot", "build_evidence", "StreamingEvidence", "SCHEMAS", "scoped_provider_id")})
-                        namespace["publication_snapshot"].__wrapped__.__globals__["publication_lease"] = lambda *args: nullcontext(lambda: None)
+                        streaming["publication_lease"] = lambda *args: nullcontext(lambda: None)
+                        namespace.update({key: value for key, value in streaming.items()
+                                          if key not in namespace and key not in ("copy_media", "scheduled_candidates")})
                     exec(compile(ast.Module(body=functions, type_ignores=[]), str(ROOT / name), "exec"), namespace)
                     namespace["copy_media"](connector, {"tmdb_id": {"$in": [42]}}, recent_only=recent_only)
                     selectors = []

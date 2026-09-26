@@ -57,6 +57,15 @@ class CrateConnector:
         print(f"Executing SQL: {sql}", flush=True)
         self.cur.execute(sql, params or ())
 
+    def run_many(self, sql: str, params: list) -> None:
+        """Run one statement for each parameter row in a single bulk request."""
+        print(f"Executing SQL {len(params)} times: {sql}", flush=True)
+        results = self.cur.executemany(sql, params)
+        errors = [result for result in results or [] if result.get("error_message") or result.get("error")
+                  or result.get("rowcount", 0) < 0]
+        if errors:
+            raise RuntimeError(f"{len(errors)} of {len(params)} statements failed; first: {errors[0]}")
+
     def select(self, sql: str, params: tuple | None = None) -> list[dict]:
         self.run(sql, params)
         results = self.cur.fetchall()
