@@ -59,7 +59,10 @@ export async function action({ request }: ActionFunctionArgs) {
 		let scope: { people: { id: number; name: string }[]; rest: string } | null =
 			null;
 		if (body.anyPerson !== true) {
-			const found = await peopleInQuery(q).catch(() => null);
+			const personId = Number.isSafeInteger(body.personId)
+				? (body.personId as number)
+				: undefined;
+			const found = await peopleInQuery(q, personId).catch(() => null);
 			if (found?.people.length && found.rest.length >= 2) {
 				const titles = await sharedCredits(found.people.map((p) => p.id));
 				if (titles.length) {

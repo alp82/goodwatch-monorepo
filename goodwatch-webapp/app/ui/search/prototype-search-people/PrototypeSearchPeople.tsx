@@ -43,6 +43,8 @@ const words = (s: string): string[] =>
 // How sure we are that the query asks for this person.
 function score(p: PrototypePerson, q: string) {
 	if (p.embedded) return { confidence: 1, why: "full name inside the phrase" }
+	if (p.offered)
+		return { confidence: 0.8, why: "one word of the phrase names this famous person" }
 	const wanted = words(q)
 	const name = words(p.name)
 	if (!wanted.length || !name.length) return { confidence: 0, why: "no words" }
@@ -95,6 +97,9 @@ export function usePrototypePeople(q: string, enabled: boolean) {
 			return { ...p, ...s, level }
 		})
 		.sort((a, b) => b.confidence - a.confidence || b.popularity - a.popularity)
+	// The person the search is narrowed to leads the banner.
+	const picked = Number(params.get("person"))
+	people.sort((a, b) => Number(b.id === picked) - Number(a.id === picked))
 	return {
 		variant,
 		people,
@@ -132,11 +137,12 @@ interface ScopeLinks {
 	anyPerson: boolean
 	allHref: string
 	scopedHref: string
+	pickHref: (id: number) => string
 }
 
 // What the banner says about the title grid when the person was named inside the phrase.
 function ScopeNote({ p, links }: { p: ScoredPerson; links: ScopeLinks }) {
-	if (!p.embedded) return null
+	if (!p.embedded && !p.offered) return null
 	const inScope = links.scope?.people.some((x) => x.id === p.id)
 	const link =
 		"text-cyan-300 underline underline-offset-2 hover:text-cyan-200"
@@ -148,6 +154,14 @@ function ScopeNote({ p, links }: { p: ScoredPerson; links: ScopeLinks }) {
 				{links.scope.rest}”.{" "}
 				<Link to={links.allHref} preventScrollReset className={link}>
 					Search all titles instead
+				</Link>
+			</p>
+		)
+	if (p.offered)
+		return (
+			<p className="mt-2 text-sm text-gray-300">
+				<Link to={links.pickHref(p.id)} preventScrollReset className={link}>
+					Only titles with {p.name}
 				</Link>
 			</p>
 		)

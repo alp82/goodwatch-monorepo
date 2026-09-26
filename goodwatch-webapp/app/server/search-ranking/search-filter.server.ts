@@ -51,6 +51,16 @@ export function searchFilter(
 		const max = filters.maxYear
 		tests.push((row) => table.years[row] > 0 && table.years[row] <= max)
 	}
+	// PROTOTYPE - throwaway: the titles of the people named in the query.
+	if (filters?.titles) {
+		const ids = new Set(
+			filters.titles.map((key) => {
+				const [type, id] = key.split(":")
+				return (type === "show" ? 2 : 1) * 1_000_000_000_000 + Number(id)
+			}),
+		)
+		tests.push((row) => ids.has(table.pointIds[row]))
+	}
 	for (const flag of flags) {
 		if (!flag.decision) continue
 		const wanted = flag.decision === "required"

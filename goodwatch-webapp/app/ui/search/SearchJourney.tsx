@@ -141,7 +141,7 @@ function useController() {
 		editing.current = value;
 		setDraft(value);
 		setFocused(-1);
-		navigate(resultsHref({ q: value, page: null, anyPerson: null }), {
+		navigate(resultsHref({ q: value, page: null, anyPerson: null, person: null }), {
 			replace: true,
 			preventScrollReset: location.pathname === path,
 		});
@@ -221,7 +221,7 @@ function useController() {
 		...(streaming ? { streaming } : {}),
 	};
 	const filtersKey = searchFiltersKey(filters);
-	const policyKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}${filtersKey ? `:${filtersKey}` : ""}${setting("anyPerson") === "1" ? ":anyPerson" : ""}`;
+	const policyKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}${filtersKey ? `:${filtersKey}` : ""}${setting("anyPerson") === "1" ? ":anyPerson" : ""}${setting("person") ? `:person=${setting("person")}` : ""}`;
 	const batchKey = `${policyKey}:${q}`;
 	// Filter changes narrow the shown batch at once; the refetch waits until the
 	// filters stop changing, so dragging the year slider sends one request.
@@ -257,6 +257,7 @@ function useController() {
 					filters,
 					// PROTOTYPE - throwaway: skip narrowing to people named in the phrase.
 					anyPerson: setting("anyPerson") === "1",
+					personId: Number(setting("person")) || undefined,
 				}),
 			});
 			const unavailable =
@@ -763,8 +764,10 @@ function JourneyList() {
 	const links = {
 		scope: j.batch?.q === j.q ? j.batch?.personScope : undefined,
 		anyPerson: j.setting("anyPerson") === "1",
-		allHref: j.resultsHref({ q: j.q, page: null, anyPerson: "1" }),
+		allHref: j.resultsHref({ q: j.q, page: null, anyPerson: "1", person: null }),
 		scopedHref: j.resultsHref({ q: j.q, page: null, anyPerson: null }),
+		pickHref: (id: number) =>
+			j.resultsHref({ q: j.q, page: null, anyPerson: null, person: String(id) }),
 	};
 	return (
 		<section aria-label="Search results" className="min-w-0">

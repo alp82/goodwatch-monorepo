@@ -11,6 +11,8 @@ export interface PrototypePerson {
 	popularity: number
 	// Found as a full name inside a longer phrase, not by the whole-query person search.
 	embedded?: boolean
+	// One word of the phrase could name this famous person ("tom" in "funny tom"). Offered only.
+	offered?: boolean
 	knownFor: {
 		id: number
 		type: "movie" | "show"
@@ -68,7 +70,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if (!cache.has(key)) {
 		const [whole, inside] = await Promise.all([
 			tmdbPeople(q),
-			peopleInQuery(q).catch(() => ({ people: [], rest: q })),
+			peopleInQuery(q).catch(() => ({ people: [], rest: q, offered: [] })),
 		])
 		// Names inside a longer phrase; TMDB supplies the known-for titles.
 		const embedded = await Promise.all(
@@ -79,9 +81,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					return { ...toPerson(hit ?? { ...n, known_for: [] }), embedded: true }
 				}),
 		)
-		const ids = new Set(embedded.map((p) => p.id))
+		// A single name inside a phrase; skipped when the whole query is that name ("tom").
+		const offered =
+			inside.rest.split(" ").length > 1
+				? await Promise.all(
+						inside.offered.map(async (n) => {
+							const hit = (await tmdbPeople(n.name)).find(
+								(p) => p.id === n.id,
+							)
+							return {
+								...toPerson(hit ?? { ...n, known_for: [] }),
+								offered: true,
+							}
+						}),
+					)
+				: []
+		const ids = new Set([...embedded, ...offered].map((p) => p.id))
 		const people = [
 			...embedded,
+			...offered,
 			...whole
 				.filter((p) => p.known_for?.length && !ids.has(p.id))
 				.slice(0, 12)
