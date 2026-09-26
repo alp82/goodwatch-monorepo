@@ -1,37 +1,36 @@
 // PROTOTYPE — round 4 score-area layout, grown from round 3's 8f (the owner's pick). Lives only on
 // the prototype/score-area branch. 8g is 8f with 8e's divider lines, a smaller ring, the rating
-// chips on the rate button's row at the button's height, and the country selector next to the
-// offer pills with the "Your services" legend moved down to the disclaimer line.
-// Everything switches on the panel's own width (a container query, @[41rem] = 656 px), so the
-// wide panel beside the poster, the narrow column at tablet width, and the phone card each get
-// their own arrangement.
+// chips on their own row under the ring and the rate button (Episode ratings right-aligned on the
+// same row), and the country selector next to the offer pills with the "Your services" legend
+// moved down to the disclaimer line. The same arrangement holds at every width.
+// Round 5: the poster is exactly as tall as the panel beside it and keeps 2:3, so the panel's
+// height drives the poster's width (see PosterMatchedFrame).
 import { CheckIcon } from "@heroicons/react/20/solid"
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
+import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { useClickOutside } from "~/ui/details/hero/useClickOutside"
 import ListActions from "~/ui/details/hero/ListActions"
+import { BackdropTrailer, PosterTrailer, backdropUrl } from "~/ui/details/hero/Trailer"
 import { OFFER_LABEL, useStreamingLinks } from "~/ui/details/hero/WhereToWatch"
 import CountrySelector from "~/ui/streaming/CountrySelector"
 import type { Section } from "~/utils/scroll"
-import { BigRing, BlurFrame, Divider } from "./round3"
+import { BigRing, Divider } from "./round3"
 import { Chips, EpisodesText, type Media, RateBtn, type VariantProps } from "./shared"
 
-// 8g — Score row: 8f plus 8e's lines. Wide panels put ring, rate button, and chips on one row
-// (chips at the button's height, Episode ratings under them); narrower panels keep ring and rate
-// button on top and put the chips with Episode ratings (right-aligned) on the row below.
+// 8g — Score row: 8f plus 8e's lines. Ring and rate button on top, the chips with Episode ratings
+// (right-aligned; it wraps to its own line, still right-aligned, when the row is too narrow) below.
 export function Variant8gScoreRow(p: VariantProps) {
 	const { media, hasEpisodeGrid } = p
 	return (
-		<BlurFrame media={media} blur="sm">
-			<div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-5 gap-y-4 @[41rem]:grid-cols-[auto_auto_minmax(0,1fr)] @[41rem]:grid-rows-[1fr_2.75rem_1fr] @[41rem]:gap-x-6 @[41rem]:gap-y-0">
-				<div className="@[41rem]:col-start-1 @[41rem]:row-span-3 @[41rem]:row-start-1">
-					<BigRing media={media} phone={72} desktop={96} />
-				</div>
-				<RateBtn media={media} align="left" className="min-w-0 @[41rem]:col-start-2 @[41rem]:row-start-2" />
-				<div className="col-span-2 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 @[41rem]:col-span-1 @[41rem]:col-start-3 @[41rem]:row-span-2 @[41rem]:row-start-2 @[41rem]:flex-col @[41rem]:flex-nowrap @[41rem]:items-end @[41rem]:gap-y-1.5 @[41rem]:self-start">
-					<Chips media={media} size="rise" layout="wrap" hideEmpty className="@[41rem]:flex-nowrap" />
-					{hasEpisodeGrid && <EpisodesText className="ml-auto @[41rem]:ml-0" />}
+		<PosterMatchedFrame media={media}>
+			<div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-5 gap-y-4">
+				<BigRing media={media} phone={72} desktop={96} />
+				<RateBtn media={media} align="left" className="min-w-0" />
+				<div className="col-span-2 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
+					<Chips media={media} size="sm" layout="wrap" hideEmpty />
+					{hasEpisodeGrid && <EpisodesText className="ml-auto" />}
 				</div>
 			</div>
 			<div className="my-6 md:my-7">
@@ -43,7 +42,88 @@ export function Variant8gScoreRow(p: VariantProps) {
 				<Divider />
 			</div>
 			<ListActions media={media} />
-		</BlurFrame>
+		</PosterMatchedFrame>
+	)
+}
+
+// ---------------------------------------------------------------------------------------------
+// Round 3's BlurFrame (sm blur, production gradient) with the poster matched to the panel.
+//
+// The panel sits in the grid's second column; its content alone sets the row's height (the grid
+// has a floor of MIN_W * 1.5). The poster is absolutely positioned in the first column, so it
+// never feeds back into the row height: CSS gives it height min(100%, column width * 1.5) and
+// width from aspect-ratio 2/3, so it is exactly the panel's height unless the column is too
+// narrow, and it never crops or stretches. A ResizeObserver sets the column width to 2/3 of the
+// panel's height, clamped to [MIN_W, min(MAX_W, 40% of the row)]. Narrower column means a wider
+// panel, a possibly shorter panel, and so on, so it re-measures until it settles (a few passes
+// at most; within a second it stops if it revisits a width). The server renders a per-breakpoint default
+// (the settled value for Breaking Bad) so there is no visible shift on hydration.
+
+const MIN_W = 192 // 12rem
+const MAX_W = 352 // 22rem
+const MAX_SHARE = 0.4
+
+function PosterMatchedFrame({ media, children }: { media: Media; children: React.ReactNode }) {
+	const rowRef = useRef<HTMLDivElement>(null)
+	const boxRef = useRef<HTMLDivElement>(null)
+	const [posterW, setPosterW] = useState<number | null>(null)
+	useEffect(() => {
+		const row = rowRef.current
+		const box = boxRef.current
+		if (!row || !box) return
+		const seen = new Set<number>()
+		let lastRowW = -1
+		let forget: ReturnType<typeof setTimeout> | undefined
+		const measure = () => {
+			if (!window.matchMedia("(min-width: 768px)").matches) return
+			const rowW = row.clientWidth
+			if (rowW !== lastRowW) {
+				seen.clear()
+				lastRowW = rowW
+			}
+			const max = Math.min(MAX_W, Math.floor(rowW * MAX_SHARE))
+			const next = Math.round(Math.min(max, Math.max(MIN_W, (box.offsetHeight * 2) / 3)))
+			if (seen.has(next)) return
+			seen.add(next)
+			setPosterW((w) => (w === next ? w : next))
+			// Once it has settled, later content changes (a rating, another offer tab) start fresh.
+			clearTimeout(forget)
+			forget = setTimeout(() => seen.clear(), 1000)
+		}
+		measure()
+		const ro = new ResizeObserver(measure)
+		ro.observe(row)
+		ro.observe(box)
+		return () => {
+			ro.disconnect()
+			clearTimeout(forget)
+		}
+	}, [])
+	const style = posterW == null ? undefined : ({ "--poster-w": `${posterW}px` } as React.CSSProperties)
+	return (
+		<div
+			ref={rowRef}
+			style={style}
+			className="grid gap-4 md:min-h-[18rem] md:grid-cols-[var(--poster-w)_minmax(0,1fr)] md:[--poster-w:21rem] lg:[--poster-w:20.5rem] [&>*]:min-w-0"
+		>
+			<div className="relative hidden md:block">
+				<div className="absolute left-0 top-0 aspect-[2/3] h-[min(100%,var(--poster-w)*1.5)]">
+					<PosterTrailer media={media} className="block h-full w-full" />
+				</div>
+			</div>
+			<div ref={boxRef} className="relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-stone-950 md:rounded-xl">
+				<div className="absolute inset-0 -z-10" aria-hidden="true">
+					<img src={backdropUrl(media)} alt="" className="h-full w-full scale-110 object-cover object-[center_25%]" />
+					<div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+					<div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70" />
+				</div>
+				<BackdropTrailer
+					media={media}
+					className="h-44 [mask-image:linear-gradient(to_bottom,black_65%,transparent)] md:hidden [&_span.bg-gradient-to-b]:hidden"
+				/>
+				<div className="@container flex grow flex-col px-4 pb-5 pt-2 md:p-5 lg:p-7">{children}</div>
+			</div>
+		</div>
 	)
 }
 
@@ -60,7 +140,7 @@ function WhereToWatchSplit({ media, country, navigateToSection }: { media: Media
 	const [popover, setPopover] = useState<"none" | "country" | "all">("none")
 	const ref = useRef<HTMLDivElement>(null)
 	const gridRef = useRef<HTMLDivElement>(null)
-	useClickOutside(ref, () => setPopover("none"))
+	useClickOutside([ref], () => setPopover("none"))
 	const links = useStreamingLinks(media, country, type === "flatrate" ? ["flatrate", "flatrate_and_buy", "free", "ads"] : [type])
 	const anyOwned = links.some((l) => l.owned)
 
