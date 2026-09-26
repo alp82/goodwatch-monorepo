@@ -326,14 +326,60 @@ class MetacriticTests(CrawlTestCase):
         self.add_show(1, "The Office", 2005, url=f"{MC}/tv/the-office", source="wikidata",
                       wikidata_url=f"{MC}/tv/the-office", imdb_id="tt0386676")
         self.add_show(2, "The Office", 2001, imdb_id="tt0290978", next_crawl_at=None)  # the UK show, no URL
-        self.crawl(FakeClient(self.site, {
+        client = FakeClient(self.site, {
             f"{MC}/tv/the-office/": (200, f"{MC}/tv/the-office/", mc_show("the-office", "The Office", 2001, "tt0290978")),
-        }))
+        })
+        self.crawl(client)
         doc = self.rating(1)
         self.assertEqual((doc["crawl_status"], doc["rejected_reason"]), ("rejected", "imdb_mismatch"))
         self.assertNotIn("metacritic_url", doc)
         # What the page said is kept, so the rejection can be re-evaluated without a request.
         self.assertEqual(doc["rejected_page"], {"title": "The Office", "year": 2001, "imdb_id": "tt0290978"})
+        # The page goes to the title its IMDb id names, without another request.
+        owner = self.rating(2)
+        self.assertEqual((owner["crawl_status"], owner["metacritic_url"]), ("ok", f"{MC}/tv/the-office"))
+        self.assertTrue(owner["imdb_id_verified"])
+        self.assertEqual(owner["meta_score_original"], 83)
+        self.assertEqual(client.requested, [f"{MC}/tv/the-office/"])
+
+    def test_the_page_stays_off_an_imdb_owner_verified_on_another_page(self):
+        self.add_show(1, "The Office", 2005, url=f"{MC}/tv/the-office", imdb_id="tt0386676")
+        self.add_show(2, "The Office", 2001, imdb_id="tt0290978", next_crawl_at=None,
+                      metacritic_url=f"{MC}/tv/the-office-uk", crawl_status="ok", imdb_id_verified=True)
+        self.crawl(FakeClient(self.site, {
+            f"{MC}/tv/the-office/": (200, f"{MC}/tv/the-office/", mc_show("the-office", "The Office", 2001, "tt0290978")),
+        }))
+        self.assertEqual(self.rating(1)["rejected_reason"], "imdb_mismatch")
+        self.assertEqual(self.rating(2)["metacritic_url"], f"{MC}/tv/the-office-uk")
+
+    def test_a_page_without_a_title_holding_its_imdb_id_goes_to_its_imdb_owner(self):
+        # A group winner without an IMDb id loses to the catalog title the page's IMDb id names.
+        url = f"{MC}/movie/x"
+        self.add_movie(1, "X", 2022, popularity=50, url=url)
+        self.add_movie(2, "X", 1996, popularity=5)
+        self.db.tmdb_movie_details.update_one({"tmdb_id": 2}, {"$set": {"imdb_id": "tt0118200"}})
+        product = {"type": "movie", "title": "X", "slug": "x", "premiereYear": 1996,
+                   "criticScoreSummary": pages.summary("/movie/x/critic-reviews/", 60, 8), "imdbId": "tt0118200"}
+        self.crawl(FakeClient(self.site, {f"{url}/": (200, f"{url}/", pages.mc_page(f"{url}/", product, [], []))}),
+                   kind="movie")
+        self.assertEqual(self.rating(2, "movie")["metacritic_url"], url)
+        self.assertEqual(self.rating(1, "movie")["crawl_status"], "rejected")
+
+    def test_swapped_heartland_pages_each_go_to_their_imdb_title(self):
+        # Wikidata gives CBC's Heartland (14929) TNT's page; each page carries the right IMDb id.
+        self.add_show(14929, "Heartland", 2007, popularity=67, url=f"{MC}/tv/heartland-2007",
+                      wikidata_url=f"{MC}/tv/heartland", imdb_id="tt1094229", airing=True)
+        self.add_show(2756, "Heartland", 2007, popularity=7, url=f"{MC}/tv/heartland", imdb_id="tt0839847",
+                      last=2007)
+        self.crawl(FakeClient(self.site, {
+            f"{MC}/tv/heartland/": (200, f"{MC}/tv/heartland/", mc_show("heartland", "Heartland", 2007, "tt0839847")),
+            f"{MC}/tv/heartland-2007/": (200, f"{MC}/tv/heartland-2007/",
+                                         mc_show("heartland-2007", "Heartland (2007)", 2007, "tt1094229")),
+        }))
+        for tmdb_id, slug in ((14929, "heartland-2007"), (2756, "heartland")):
+            doc = self.rating(tmdb_id)
+            self.assertEqual((doc["crawl_status"], doc["metacritic_url"]), ("ok", f"{MC}/tv/{slug}"))
+            self.assertTrue(doc["imdb_id_verified"])
 
     def test_an_imdb_mismatch_rejects_when_wikidata_points_elsewhere(self):
         self.add_show(1, "Heartland", 2007, url=f"{MC}/tv/heartland", wikidata_url=f"{MC}/tv/heartland-ca",
@@ -353,6 +399,7 @@ class MetacriticTests(CrawlTestCase):
             f"{MC}/tv/heartland/": (200, f"{MC}/tv/heartland/", mc_show("heartland", "Heartland", 2007, "tt0839847")),
         }))
         self.assertEqual(self.rating(14929)["rejected_reason"], "imdb_mismatch")
+        self.assertEqual(self.rating(2756)["metacritic_url"], f"{MC}/tv/heartland")
 
     def test_an_imdb_mismatch_falls_back_to_title_and_year(self):
         # Audit: Metacritic gives The Six Million Dollar Man the IMDb id of its 1973 pilot film,

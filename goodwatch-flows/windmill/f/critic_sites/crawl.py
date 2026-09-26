@@ -23,7 +23,9 @@ Per title:
    matching title (TMDB alternative titles and translations count) and a year near the
    premiere or, for shows, within the run.
 3. A URL several titles hold goes to the one title the page matches; the others lose
-   it (reason `duplicate`). One request settles the whole group.
+   it (reason `duplicate`). One request settles the whole group. A Metacritic page whose
+   IMDb id no title in the group has goes to the one catalog title with that id, unless
+   that title is verified on another page. A title that loses a page tries its next URL.
 4. Shows: the show page lists every season with its critic score. Season pages add
    RT's review count and Popcornmeter and Metacritic's user score, fetched only for
    seasons with critic reviews, and again only after 80 days or for the latest season.
@@ -253,6 +255,20 @@ def imdb_id_holders(db, kind: str, imdb_id: Optional[str]) -> frozenset:
     return frozenset(row["tmdb_id"] for row in rows)
 
 
+def imdb_owner(ctx, page: ParsedTitle, imdb_holders: frozenset) -> Optional[dict]:
+    """The rating document of the one catalog title whose IMDb id is the page's, unless
+    that title is already verified by IMDb id on another page of the site."""
+    if len(imdb_holders) != 1:
+        return None
+    owner = ctx.collection.find_one({"tmdb_id": next(iter(imdb_holders)), "tmdb_deleted": {"$ne": True}})
+    if owner is None:
+        return None
+    elsewhere = url_key(owner.get(ctx.conf.url_field) or "") != url_key(page.canonical_url)
+    if owner.get("crawl_status") == "ok" and owner.get("imdb_id_verified") and elsewhere:
+        return None
+    return owner
+
+
 # ===== Crawling =====
 
 
@@ -389,26 +405,30 @@ def crawl_one(ctx: Context, doc: dict, infos: dict) -> list[Outcome]:
     if not tried:
         return [Outcome("skipped", doc)]
     rejected = None
+    others = {}  # outcomes of other titles that shared or own a fetched page, by document id
     for url, source in tried:
         try:
             response = ctx.fetch(ctx.conf.site.fetch_url(url))
         except polite_http.FetchError as error:
-            return [Outcome("error", doc, url=url, reason=str(error))]
+            return [Outcome("error", doc, url=url, reason=str(error)), *others.values()]
         if response.status in (404, 410) or (response.status == 200 and not ctx.conf.site.is_title_url(response.url, ctx.kind)):
             continue
         if response.status != 200:
-            return [Outcome("error", doc, url=url, reason=f"HTTP {response.status}")]
+            return [Outcome("error", doc, url=url, reason=f"HTTP {response.status}"), *others.values()]
         page = ctx.conf.site.parse_title_page(response.text)
         if page is None:
-            return [Outcome("error", doc, url=url, reason="unexpected page", unexpected=True)]
+            return [Outcome("error", doc, url=url, reason="unexpected page", unexpected=True), *others.values()]
         if page.kind != ctx.kind:
             continue
-        outcomes = decide(ctx, doc, info, url, source, response.url, page)
-        if outcomes[0].status == "ok" or outcomes[0].reason == "duplicate" or len(outcomes) > 1:
-            return outcomes
-        rejected = outcomes[0]
+        own, *rest = decide(ctx, doc, info, url, source, response.url, page)
+        for outcome in rest:
+            others.setdefault(outcome.doc["_id"], outcome)
+        if own.status == "ok":
+            return [own, *others.values()]
+        # A page that belongs to another title does not end the search: the next URL may be this title's.
+        rejected = own
     if rejected:
-        return [rejected]
+        return [rejected, *others.values()]
     return [Outcome("not_found", doc, url=tried[0][0])]
 
 
@@ -419,8 +439,16 @@ def decide(ctx: Context, doc: dict, info: TitleInfo, url: str, source: str, fina
     infos[doc["tmdb_id"]] = info
     group = [doc] + others
     imdb_holders = frozenset()
-    if page.imdb_id and any(infos[member["tmdb_id"]].imdb_id not in (None, page.imdb_id) for member in group):
+    owner = None
+    if page.imdb_id and any(infos[member["tmdb_id"]].imdb_id != page.imdb_id for member in group):
         imdb_holders = imdb_id_holders(ctx.db, ctx.kind, page.imdb_id)
+        if all(infos[member["tmdb_id"]].imdb_id != page.imdb_id for member in group):
+            owner = imdb_owner(ctx, page, imdb_holders)
+    if owner is not None:
+        # The page names its title by IMDb id: that title competes for it, without another request.
+        infos.update(load_titles(ctx.db, ctx.kind, [owner], ctx.now))
+        others.append(owner)
+        group.append(owner)
     assessed = {member["tmdb_id"]: assess(ctx.conf, page, member, infos[member["tmdb_id"]], url, imdb_holders)
                 for member in group}
     if not others:
@@ -436,12 +464,20 @@ def decide(ctx: Context, doc: dict, info: TitleInfo, url: str, source: str, fina
     outcomes = []
     for member in group:
         if member is winner:
-            member_source = source if member is doc else (member.get("url_source") or "legacy")
+            if member is doc:
+                member_source = source
+            elif member is owner:
+                member_source = "imdb"
+            else:
+                member_source = member.get("url_source") or "legacy"
             outcomes.append(with_seasons(ctx, Outcome("ok", member, url=url, source=member_source, page=page),
                                          infos[member["tmdb_id"]]))
+        elif member is owner:
+            continue  # it never held the URL, so losing it changes nothing
         else:
-            # Without a winner, each title keeps its own reason instead of "duplicate".
-            reason = "duplicate" if winner is not None else assessed[member["tmdb_id"]][1]
+            # Without a winner, or against the page's IMDb owner, each title keeps its own reason.
+            own_reason = assessed[member["tmdb_id"]][1]
+            reason = "duplicate" if winner is not None and not (winner is owner and own_reason) else own_reason
             outcomes.append(Outcome("rejected", member, url=url, page=page, reason=reason))
     # The crawled title first, so the caller reads its status from outcomes[0].
     return sorted(outcomes, key=lambda outcome: outcome.doc is not doc)
