@@ -1052,6 +1052,74 @@ Done in #169. The negation labels are English keywords and tags, so "Krimi ohne 
   stems of 28, all foreign-language labels ("segunda guerra mundial") or English spellings of listed words
   ("jumpscares", "super heroes").
 
+## Follow-up: search latency
+
+Done in #183, September 26, 2026. 30% of production searches took 1 s or more. None of these changes the ranked
+list, except the first, which only changes the text Jev reads.
+
+- **Normalized reading text** (`readingText` in `combined-search/search.server.ts`): Jev reads the query lowercased
+  with each run of whitespace collapsed to one space, and the reading cache key uses the same text. "Slow burn" and
+  "slow  burn" share one reading. The language step runs on the text as typed (capitalized German nouns are a
+  language marker), and the ranking, the title lookup and the history keep it too. Already-lowercase searches kept
+  their cache keys.
+- **Jev bookkeeping** (`search-runtime/store.server.ts`): `claim` doesn't repeat the caller's cache lookup. The control
+  row and the spending sums run in parallel, and the spending query reads Crate's clock itself
+  (`date_trunc('day' | 'month', CURRENT_TIMESTAMP)`, the same UTC boundaries as before). The attempt and estimate
+  inserts run in parallel; if the attempt insert conflicts or fails, the estimate is settled at zero, as for a search
+  cancelled before dispatch, and if that fails the estimate stays counted. `finish` stays on the response path.
+- **Session check:** the route starts the search while Supabase `getUser()` runs. The search waits for the account only
+  before Redis admission of a paid call and for the history row. If the check fails, the search is aborted and the
+  route returns 503, as before.
+- **Work during the Jev call:** the title matches' catalog rows, and `prepareSearch()` in
+  `search-ranking/rank-search.server.ts`: references, negation and spelling, the encoding of the texts known without
+  the reading (the dense text, the intent text, negated clauses), and the reference's profile or seed vectors. After
+  the reading, `rankSearch` encodes only what the reading adds (facets, coverage units, English chips). A text's vector
+  is bit-identical whatever else is in its batch, checked on a laptop and on the webapp host, so two batches give the
+  same vectors as one.
+- **Fuzzy title bound** (`title-blend.server.ts`): `fuzzyTitle` skips title names that share too few characters with the
+  query to reach the 0.9 cutoff, before the full LCS ratio. The character counts are computed when a build loads.
+- **Query vector cache** (`query-encoder.server.ts`): the vectors of the last 500 encoder requests, keyed by a digest of
+  the whole request, so a repeated search (a filter change, a reload) skips the encoder.
+- **History after the response:** the `search_history` row is written after the batch is sent.
+- **TypeSafe connections:** the Jev requests use their own undici pool with a 5-minute idle timeout (undici's default is
+  4 s), and a free `GET /health` a minute (two at once, one per connection a search uses) keeps both connections
+  open. `api.typesafe.ai` (Cloudflare) kept an idle connection for 300 s and dropped it by 450 s.
+
+New `stage_ms` keys: `readingLookup`, `readingClaim`, `readingDispatch`, `readingCall`, `readingFinish`;
+`rankingPrepare` (the prepared part's own time, alongside the reading), `rankingPrepareParse`, `rankingEncodeEarly`
+and `rankingPrepared` (the wait for it after the reading). `rankingEncode` is now the encoding after the reading, and
+`titleLookup` includes the title rows' catalog query.
+
+**Results unchanged:** `combinedSearch` ran end to end on 37 fixed queries (titles, descriptions, people, negations,
+non-English, lesser-known, and two with capitals and extra spaces) with cached readings and a recording proxy in front
+of Qdrant. Without the proxy, two runs of the same code differed on 7 of 37 lists (ties and HNSW). With it, 35 of 37
+lists were identical before and after, keys, order and scores; the two capitalized queries now return exactly the list
+of their lowercase text. The fuzzy title match returned the same title as before on 560 queries.
+
+**Production, before and after** (p50 / p90 / p95 in milliseconds). Before: the 127 `hybrid-v1` searches from
+September 25, 20:59 to September 26, 16:25 UTC. After: 46 searches of real queries run one at a time on production on
+September 26, 22:30 to 22:34 UTC.
+
+| | before, fresh reading (104) | after, fresh reading (35) | before, cached (23) | after, cached (11) |
+|---|---|---|---|---|
+| whole search | 838 / 1,223 / 1,266 | 588 / 669 / 835 | 270 / 629 / 689 | 296 / 371 / 389 |
+| Jev reading | 549 / 957 / 985 | 419 / 468 / 478 | 8 / 30 / 32 | 7 / 14 / 16 |
+| ranking | 190 / 311 / 334 | 102 / 204 / 274 | 206 / 454 / 601 | 155 / 303 / 327 |
+| display | 49 / 100 / 104 | 34 / 55 / 69 | 60 / 95 / 126 | 36 / 58 / 59 |
+
+**Qdrant (not changed):** `media_fingerprint_v1` had 23 to 25 segments with the optimizer running, not stuck: 4 running
+and 7 queued optimizations, waiting for CPU permits. `f/sync/copy/vector_data` (about 2.6 hours every 4 hours) and
+`f/search/embed_titles` write to the collection about 16 hours a day, so the optimizer can't finish between runs.
+Production searches during a `vector_data` run and outside it showed the same Qdrant time (p50 57 against 54 ms, p90
+108 against 120 ms). A probe across the 22:15 snapshot showed the same medians, with one spike to 939 ms against 491 ms
+outside it. Moving schedules would gain nothing measurable, so they stay.
+
+**One merged Jev request (measured, not changed):** on 47 real queries, twice each, one request with both question sets
+and one state was 20 ms slower on average than the two parallel requests (p50 354 against 335 ms) and used 3.4% fewer
+input tokens ($0.000319 against $0.000330 a reading). It changed the answers more than two runs of the same requests
+do: the reading chips matched on 14% of runs against 40% between two separate runs, and the top 10 shared 8.5 titles
+against 9.1. Keep two requests.
+
 ## Prerequisites
 
 1. **Fix the Qdrant recommendation load.** Since Qdrant restarted on September 22, 2026, it has handled about 47,000
