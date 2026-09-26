@@ -1,0 +1,28 @@
+{
+  "started_at": "2026-09-26T08:21:54.321789+00:00",
+  "queue_sha256": "e31ad216a7a4f3508795674fca89633d747686e3e76d86f2c1d18fc93fbeb190",
+  "code_sha256": {
+    "scripts/recover_tvtropes.py": "e8bd35409b738cab186c84064ae43afdecfb3db9cb952312abb920fe97ec2cda",
+    "windmill/f/tvtropes_web/crawl.py": "d576f78a577135d339829df65a9ab2eb20acedc7f67bd215c63e32ec89d57f24",
+    "windmill/f/tvtropes_web/pages.py": "92183cc00cc11d54cc4e3fa03beddf5d62f46c517d8d291ad5518e5565508ef8",
+    "windmill/f/tvtropes_web/title_variations.py": "fba9232f8d215bf34b6231a9bc59cb890b7f728d5411b608dd5388103c22b22c"
+  },
+  "user_agent": "GoodWatchBot/0.1 (+https://goodwatch.app; hello@goodwatch.app) tvtropes-recovery",
+  "queue": 849,
+  "attempted_this_run": 32,
+  "statuses": {
+    "no_release_year": 1,
+    "recovered": 4,
+    "rejected": 27
+  },
+  "unattempted": 817,
+  "requests_this_run": 30,
+  "request_budget": 30,
+  "request_spacing_seconds": 6.0,
+  "elapsed_seconds_this_run": 174.139,
+  "http_statuses_this_run": {
+    "200": 30
+  },
+  "stop_reason": "request budget of 30 used",
+  "production_writes": 0
+}

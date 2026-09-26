@@ -1,0 +1,216 @@
+{
+ "negative": {
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/Pokemon": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Anime/PokemonTheSeries?from=Anime.Pokemon",
+   "title": "show:60572",
+   "at": "2026-09-26T08:22:42.920462+00:00",
+   "until": "2026-12-25T08:22:42.920462+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/PokemonHorizonsTheSeries": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:220150",
+   "at": "2026-09-26T08:23:12.430821+00:00",
+   "until": "2026-12-25T08:23:12.430821+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheAvengers2012": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:24428",
+   "at": "2026-09-26T08:24:48.460798+00:00",
+   "until": "2026-12-25T08:24:48.460798+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Avenger": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:24428",
+   "at": "2026-09-26T08:24:48.460798+00:00",
+   "until": "2026-12-25T08:24:48.460798+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Shameless": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:34307",
+   "at": "2026-09-26T08:22:30.440596+00:00",
+   "until": "2026-12-25T08:22:30.440596+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Siren": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:52720",
+   "at": "2026-09-26T08:23:00.545315+00:00",
+   "until": "2026-12-25T08:23:00.545315+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/AgentsOfSHIELD": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:1403",
+   "at": "2026-09-26T08:23:48.410415+00:00",
+   "until": "2026-12-25T08:23:48.410415+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/AlarmFuerCobra11": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:1338",
+   "at": "2026-09-26T08:24:36.611124+00:00",
+   "until": "2026-12-25T08:24:36.611124+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/CameraCafe": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:1533",
+   "at": "2026-09-26T08:24:12.469899+00:00",
+   "until": "2026-12-25T08:24:12.469899+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/EverybodyLovesRaymond": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2140",
+   "at": "2026-09-26T08:24:24.412927+00:00",
+   "until": "2026-12-25T08:24:24.412927+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/HomicideLifeOnTheStreet": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:4464",
+   "at": "2026-09-26T08:24:42.450626+00:00",
+   "until": "2026-12-25T08:24:42.450626+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/LawAndOrder": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:549",
+   "at": "2026-09-26T08:21:54.919435+00:00",
+   "until": "2026-12-25T08:21:54.919435+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/LawAndOrderSpecialVictimsUnit": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2734",
+   "at": "2026-09-26T08:22:00.396688+00:00",
+   "until": "2026-12-25T08:22:00.396688+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/NineOneOne": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:75219",
+   "at": "2026-09-26T08:22:48.463538+00:00",
+   "until": "2026-12-25T08:22:48.463538+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/RizzoliAndIsles": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:32895",
+   "at": "2026-09-26T08:23:54.838149+00:00",
+   "until": "2026-12-25T08:23:54.838149+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/SalatutElamat": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:14610",
+   "at": "2026-09-26T08:22:54.409490+00:00",
+   "until": "2026-12-25T08:22:54.409490+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/ShamelessUS": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:34307",
+   "at": "2026-09-26T08:22:30.440596+00:00",
+   "until": "2026-12-25T08:22:30.440596+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/StarTrekStrangeNewWorlds": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:103516",
+   "at": "2026-09-26T08:24:30.446868+00:00",
+   "until": "2026-12-25T08:24:30.446868+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheChosenTVSeries": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Series/TheChosen2017?from=Series.TheChosenTVSeries",
+   "title": "show:85077",
+   "at": "2026-09-26T08:24:00.807942+00:00",
+   "until": "2026-12-25T08:24:00.807942+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheOffice": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2316",
+   "at": "2026-09-26T08:22:12.410376+00:00",
+   "until": "2026-12-25T08:22:12.410376+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheOfficeUS": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2316",
+   "at": "2026-09-26T08:22:12.410376+00:00",
+   "until": "2026-12-25T08:22:12.410376+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/ThirdRockFromTheSun": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:155",
+   "at": "2026-09-26T08:24:18.487079+00:00",
+   "until": "2026-12-25T08:24:18.487079+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/ThirtyRock": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:4608",
+   "at": "2026-09-26T08:23:00.544894+00:00",
+   "until": "2026-12-25T08:23:00.544894+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TwentyFour": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:1973",
+   "at": "2026-09-26T08:22:36.653937+00:00",
+   "until": "2026-12-25T08:22:36.653937+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TwoBrokeGirls": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:39340",
+   "at": "2026-09-26T08:24:06.475824+00:00",
+   "until": "2026-12-25T08:24:06.475824+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebVideo/CriticalRole": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:254002",
+   "at": "2026-09-26T08:24:12.470522+00:00",
+   "until": "2026-12-25T08:24:12.470522+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebVideo/HotOnes": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:72649",
+   "at": "2026-09-26T08:24:30.447457+00:00",
+   "until": "2026-12-25T08:24:30.447457+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebVideo/OddityArchive": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:215920",
+   "at": "2026-09-26T08:24:18.487644+00:00",
+   "until": "2026-12-25T08:24:18.487644+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/MiraculousLadybug": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:65334",
+   "at": "2026-09-26T08:22:24.431756+00:00",
+   "until": "2026-12-25T08:22:24.431756+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Wrestling/WWESmackDown": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:1549",
+   "at": "2026-09-26T08:23:48.410922+00:00",
+   "until": "2026-12-25T08:23:48.410922+00:00"
+  }
+ },
+ "blocked_until": null,
+ "blocks": []
+}
