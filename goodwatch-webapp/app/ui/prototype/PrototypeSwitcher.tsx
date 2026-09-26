@@ -25,13 +25,13 @@ export function PrototypeSwitcher({ variants, param = "variant", position = "bot
 	if (process.env.NODE_ENV === "production") return null
 	return (
 		<div className={`fixed ${position} z-50 flex items-center gap-2 rounded-full bg-white px-2 py-1.5 text-sm font-semibold text-black shadow-2xl ring-2 ring-fuchsia-500`}>
-			<button type="button" onClick={() => go(-1)} className="rounded-full px-3 py-1 hover:bg-neutral-200" aria-label="Previous variant">
+			<button type="button" onClick={() => go(-1)} className="cursor-pointer rounded-full px-3 py-1 hover:bg-neutral-200" aria-label="Previous variant">
 				←
 			</button>
 			<span className="min-w-44 text-center">
 				{current} — {variants[current]}
 			</span>
-			<button type="button" onClick={() => go(1)} className="rounded-full px-3 py-1 hover:bg-neutral-200" aria-label="Next variant">
+			<button type="button" onClick={() => go(1)} className="cursor-pointer rounded-full px-3 py-1 hover:bg-neutral-200" aria-label="Next variant">
 				→
 			</button>
 		</div>
