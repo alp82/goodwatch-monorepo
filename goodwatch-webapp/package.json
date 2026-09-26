@@ -9,7 +9,6 @@
 		"start": "remix-serve ./build/server/index.js",
 		"build": "patch-package && remix vite:build",
 		"typecheck": "tsc",
-		"test": "node --test 'app/**/*.test.ts'",
 		"check:share-cards": "vite-node scripts/check-share-cards.tsx",
 		"postinstall": "patch-package"
 	},

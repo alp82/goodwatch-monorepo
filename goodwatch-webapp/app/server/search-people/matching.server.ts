@@ -52,7 +52,7 @@ true real classic modern short fast slow hard easy happy`.split(/\s+/),
 )
 
 /** Folded words: lowercase, no diacritics, no possessive 's. The same keys the search ranking uses for names. */
-export const nameWords = (text: string): string[] =>
+const nameWords = (text: string): string[] =>
 	fold(text).split(" ").filter(Boolean)
 
 /** The index over people rows (already limited to popular, non-adult people). */
@@ -128,15 +128,14 @@ export function peopleInQuery(q: string, index: PeopleIndex): PeopleInQuery {
 	return { named, rest: restWords.join(" "), offered }
 }
 
-// Gate levels: people at or above MEDIUM are shown.
-export const HIGH_CONFIDENCE = 0.8
-export const MEDIUM_CONFIDENCE = 0.55
+// Gate level: people at or above it are shown.
+const MEDIUM_CONFIDENCE = 0.55
 // A name found inside a phrase, and a famous person one word of the phrase names.
 export const NAMED_CONFIDENCE = 1
 export const OFFERED_CONFIDENCE = 0.8
 
 /** How sure the query as a whole asks for this person, from 0 to 1. Descriptive queries score 0. */
-export function nameMatchConfidence(
+function nameMatchConfidence(
 	q: string,
 	name: string,
 	popularity: number,
