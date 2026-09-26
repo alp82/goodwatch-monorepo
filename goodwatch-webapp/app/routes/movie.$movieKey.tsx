@@ -10,6 +10,7 @@ import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { getDetailsForMovie } from "~/server/details.server"
+import { detailsPagePayload } from "~/server/details-page.server"
 import { prefetchRelatedTitlesState } from "~/server/related.server"
 import type { MovieQueryResult } from "~/server/types/details-types"
 import { resolveCountry } from "~/server/country.server"
@@ -63,7 +64,7 @@ export const loader: LoaderFunction = async ({
 			movieId,
 			country,
 			language,
-		}),
+		}).then(detailsPagePayload),
 		prefetchRelatedTitlesState({
 			tmdbId: Number(movieId),
 			sourceMediaType: "movie",

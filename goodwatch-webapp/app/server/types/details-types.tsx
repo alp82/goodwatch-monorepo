@@ -58,16 +58,17 @@ export enum Department {
 	Writing = "Writing",
 }
 
+// Fields marked optional are read from the database but left out of the details page payload.
 export interface Actor {
 	id: number
-	credit_id: string
+	credit_id?: string
 	name: string
 	character: string
-	popularity: number
+	popularity?: number
 	profile_path: null | string
 	order_default: number
-	episode_count_character: number | null
-	episode_count_total: number | null
+	episode_count_character?: number | null
+	episode_count_total?: number | null
 }
 
 export interface Crew {
@@ -77,7 +78,7 @@ export interface Crew {
 	job: string
 	department: string
 	popularity: number
-	episode_count_job: number | null
+	episode_count_job?: number | null
 	episode_count_total: number | null
 }
 
@@ -190,6 +191,8 @@ export interface BaseDetails extends AllRatings {
 	genres: string[]
 	keywords: string[]
 	tropes: string[]
+	/** The full trope count when a page payload cut `tropes` to the featured ones. */
+	tropes_count?: number
 	homepage: string | null
 	imdb_id: string | null
 	freebase_mid: string | null

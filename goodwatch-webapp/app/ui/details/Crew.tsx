@@ -13,8 +13,16 @@ export interface CrewProps {
 	crew: CrewType[]
 }
 
+/** The job and department of each crew line. A crew member shows when either matches. */
+export const CREW_ROLES = {
+	directors: { job: "Director", department: "Directing" },
+	writers: { job: "Writer", department: "Writing" },
+	producers: { job: "Producer", department: "Production" },
+	composers: { job: "Original Music Composer", department: "Sound" },
+} as const
+
 export default function Crew({ crew }: CrewProps) {
-	const filterCrew = (crew: CrewType[], job: string, department: string) => {
+	const filterCrew = (crew: CrewType[], { job, department }: { job: string; department: string }) => {
 		return (crew || [])
 			.filter(
 				(crewMember) =>
@@ -29,10 +37,10 @@ export default function Crew({ crew }: CrewProps) {
 			.slice(0, 3)
 	}
 
-	const directors = filterCrew(crew, "Director", "Directing")
-	const writers = filterCrew(crew, "Writer", "Writing")
-	const producers = filterCrew(crew, "Producer", "Production")
-	const composers = filterCrew(crew, "Original Music Composer", "Sound")
+	const directors = filterCrew(crew, CREW_ROLES.directors)
+	const writers = filterCrew(crew, CREW_ROLES.writers)
+	const producers = filterCrew(crew, CREW_ROLES.producers)
+	const composers = filterCrew(crew, CREW_ROLES.composers)
 
 	const RenderInfo = ({
 		title,

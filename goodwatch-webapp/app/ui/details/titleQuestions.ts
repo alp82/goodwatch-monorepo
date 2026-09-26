@@ -161,8 +161,10 @@ function boxOfficeAnswer(media: MovieResult | ShowResult) {
 // Some titles list their signature tropes first, then the rest A to Z. Keep
 // that leading run and fill up with a stable sample from the alphabetical
 // rest, so the chips don't all start with "A". Seeded, so SSR and client match.
-export function featuredTropes(media: MovieResult | ShowResult, n = 12) {
+// A page payload carries only the featured tropes, already in this order.
+export function featuredTropes(media: MovieResult | ShowResult, n = FEATURED_TROPES) {
 	const tropes = media.details.tropes ?? []
+	if (media.details.tropes_count !== undefined) return tropes.slice(0, n)
 	let start = tropes.length - 1
 	while (start > 0 && tropes[start - 1].localeCompare(tropes[start]) <= 0) start--
 	// A real signature run is short; a long "lead" means the A-to-Z check broke early.
@@ -176,10 +178,16 @@ export function featuredTropes(media: MovieResult | ShowResult, n = 12) {
 	return [...lead, ...rest].slice(0, n)
 }
 
+/** How many trope chips the questions section shows. */
+export const FEATURED_TROPES = 12
+
+/** How many tropes TV Tropes lists for the title, also when the payload carries only the featured ones. */
+export const tropeCount = (media: MovieResult | ShowResult) => media.details.tropes_count ?? media.details.tropes?.length ?? 0
+
 function tropesAnswer(media: MovieResult | ShowResult) {
-	const tropes = media.details.tropes ?? []
-	if (tropes.length < 3) return null
-	return `TV Tropes lists ${tropes.length} storytelling tropes for ${media.details.title}, including ${featuredTropes(media, 3).join(", ")}.`
+	const count = tropeCount(media)
+	if (count < 3) return null
+	return `TV Tropes lists ${count} storytelling tropes for ${media.details.title}, including ${featuredTropes(media, 3).join(", ")}.`
 }
 
 function languageAnswer(media: MovieResult | ShowResult) {

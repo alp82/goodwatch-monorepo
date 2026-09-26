@@ -6,10 +6,12 @@ import {
 	json,
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
-import React, { useEffect } from "react"
+import React, { useEffect, useMemo } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { getDetailsForShow, getDetailsForMovie } from "~/server/details.server"
-import { type EpisodeGrid, getEpisodeGrid } from "~/server/episode-grid.server"
+import { detailsPagePayload } from "~/server/details-page.server"
+import { getEpisodeGrid } from "~/server/episode-grid.server"
+import { type EpisodeGridWire, packEpisodeGrid, unpackEpisodeGrid } from "~/utils/episode-grid-wire"
 import { resolveCountry } from "~/server/country.server"
 import { prefetchRelatedTitlesState } from "~/server/related.server"
 import { getUserSettings } from "~/server/user-settings.server"
@@ -30,7 +32,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 type LoaderData = {
 	media: ShowQueryResult
-	episodeGrid: EpisodeGrid | null
+	episodeGrid: EpisodeGridWire | null
 	params: {
 		country: string
 	}
@@ -57,12 +59,14 @@ export const loader: LoaderFunction = async ({
 			showId,
 			country,
 			language,
-		}),
+		}).then(detailsPagePayload),
 		// A failed grid read hides the grid; it never fails the page.
-		getEpisodeGrid({ showId }).catch((error) => {
-			console.error("episode grid failed", { showId, error })
-			return null
-		}),
+		getEpisodeGrid({ showId })
+			.then((grid) => grid && packEpisodeGrid(grid))
+			.catch((error) => {
+				console.error("episode grid failed", { showId, error })
+				return null
+			}),
 		prefetchRelatedTitlesState({
 			tmdbId: Number(showId),
 			sourceMediaType: "show",
@@ -81,8 +85,9 @@ export const loader: LoaderFunction = async ({
 }
 
 export default function DetailsTV() {
-	const { media, episodeGrid, params, countryIsFallback } = useLoaderData<LoaderData>()
+	const { media, episodeGrid: episodeGridWire, params, countryIsFallback } = useLoaderData<LoaderData>()
 	const { country } = params
+	const episodeGrid = useMemo(() => episodeGridWire && unpackEpisodeGrid(episodeGridWire), [episodeGridWire])
 
 	// console.log(media)
 

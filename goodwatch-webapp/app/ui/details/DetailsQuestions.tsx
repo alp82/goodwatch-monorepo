@@ -18,7 +18,7 @@ import type React from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { useStreamingLinks } from "~/ui/details/hero/WhereToWatch"
-import { type QuestionId, ageInfo, agreement, featuredTropes, money, titleQuestions } from "~/ui/details/titleQuestions"
+import { type QuestionId, ageInfo, agreement, FEATURED_TROPES, featuredTropes, money, titleQuestions, tropeCount } from "~/ui/details/titleQuestions"
 
 type Media = MovieResult | ShowResult
 
@@ -211,7 +211,7 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 		)
 	}
 	if (id === "tropes") {
-		const tropes = media.details.tropes ?? []
+		const count = tropeCount(media)
 		return (
 			<div className="mt-4 flex flex-wrap gap-1.5">
 				{featuredTropes(media).map((tr) => (
@@ -219,7 +219,7 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 						{tr}
 					</span>
 				))}
-				{tropes.length > 12 && <span className="px-1 py-1 text-sm text-gray-400">and {tropes.length - 12} more</span>}
+				{count > FEATURED_TROPES && <span className="px-1 py-1 text-sm text-gray-400">and {count - FEATURED_TROPES} more</span>}
 			</div>
 		)
 	}
