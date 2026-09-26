@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "5"
+
 services:
   db:
     deploy:
@@ -5,6 +11,7 @@ services:
       replicas: 0
     image: postgres:14
     restart: unless-stopped
+    logging: *default-logging
     expose:
       - 5432
     environment:
@@ -28,11 +35,7 @@ services:
           cpus: "2"
           memory: 4096M
     restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "5"
+    logging: *default-logging
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - RUST_LOG=info

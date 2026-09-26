@@ -1,5 +1,11 @@
 version: "3.8"
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "10"
+
 services:
   mongo:
     container_name: mongo
@@ -16,11 +22,7 @@ services:
     volumes:
       - mongodb:/data/db
       - ./mongodb-keyfile:/data/mongodb-keyfile
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "10"
+    logging: *default-logging
     command: --replSet rs0 --bind_ip_all --port 28017 --keyFile /data/mongodb-keyfile
 
 volumes:

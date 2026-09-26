@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "5"
+
 services:
   highperf_worker:
     build:
@@ -12,11 +18,7 @@ services:
           cpus: "6"
           memory: 20048M
     restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "5"
+    logging: *default-logging
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - RUST_LOG=info

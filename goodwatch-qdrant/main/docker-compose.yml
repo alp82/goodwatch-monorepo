@@ -1,8 +1,15 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "5"
+
 services:
   qdrant:
     image: ${QDRANT_IMAGE:-qdrant/qdrant:v1.19.1}
     container_name: qdrant-main
     restart: unless-stopped
+    logging: *default-logging
 
     ports:
       - "${SELF_IP}:${HTTP_PORT}:6333"  # HTTP API

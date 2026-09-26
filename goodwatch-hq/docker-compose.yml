@@ -1,5 +1,11 @@
 version: "3.7"
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "5"
+
 services:
   db:
     deploy:
@@ -9,11 +15,7 @@ services:
     command: -c 'max_connections=3000'
     restart: unless-stopped
     shm_size: "1gb"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "100m"
-        max-file: "5"
+    logging: *default-logging
     volumes:
       - db_data:/var/lib/postgresql/data
     expose:
@@ -35,6 +37,7 @@ services:
     deploy:
       replicas: 2
     restart: unless-stopped
+    logging: *default-logging
     expose:
       - 8000
     environment:
@@ -68,6 +71,7 @@ services:
           cpus: "0.5"
           memory: 1024M
     restart: unless-stopped
+    logging: *default-logging
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - RUST_LOG=info
@@ -98,6 +102,7 @@ services:
           cpus: "0.1"
           memory: 128M
     restart: unless-stopped
+    logging: *default-logging
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - RUST_LOG=info
@@ -111,6 +116,7 @@ services:
   lsp:
     image: ghcr.io/windmill-labs/windmill-lsp:latest
     restart: unless-stopped
+    logging: *default-logging
     expose:
       - 3001
     volumes:
@@ -121,12 +127,14 @@ services:
     deploy:
       replicas: 0 # Set to 1 to enable multiplayer, only available on Enterprise Edition
     restart: unless-stopped
+    logging: *default-logging
     expose:
       - 3002
 
   caddy:
     image: caddy:2.5.2-alpine
     restart: unless-stopped
+    logging: *default-logging
 
     # Configure the mounted Caddyfile and the exposed ports or use another reverse proxy if needed
     volumes:

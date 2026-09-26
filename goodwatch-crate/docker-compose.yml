@@ -1,8 +1,16 @@
+# Crate logs are chatty and needed for debugging, so keep up to 1 GB per container.
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "10"
+
 services:
   cratedb:
     image: crate:${CRATE_VERSION}
     container_name: ${NODE_NAME}
     restart: always
+    logging: *default-logging
 
     mem_limit: 26g
     memswap_limit: 26g
