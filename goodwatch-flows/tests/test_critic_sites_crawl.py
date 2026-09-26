@@ -384,6 +384,15 @@ class MetacriticTests(CrawlTestCase):
         self.assertEqual(self.rating(1)["rejected_reason"], "year_mismatch")
         self.assertEqual(self.rating(2)["rejected_reason"], "year_mismatch")
 
+    def test_an_imdb_mismatch_without_a_page_year_is_still_rejected(self):
+        # Manhunt (1970) landed on manhunt-2013 when the page gave no year to compare.
+        self.add_show(13487, "Manhunt", 1970, url=f"{MC}/tv/manhunt-2013", imdb_id="tt0065318", last=1970)
+        self.crawl(FakeClient(self.site, {
+            f"{MC}/tv/manhunt-2013/": (200, f"{MC}/tv/manhunt-2013/",
+                                       mc_show("manhunt-2013", "Manhunt", None, "tt2699110")),
+        }))
+        self.assertEqual(self.rating(13487)["rejected_reason"], "imdb_mismatch")
+
     def test_the_title_holding_the_page_imdb_id_wins_a_shared_url(self):
         url = f"{MC}/tv/charlies-angels"
         self.add_show(3382, "Charlie's Angels", 1976, popularity=90, url=url, imdb_id="tt0073972", last=1981)

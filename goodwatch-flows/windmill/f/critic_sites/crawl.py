@@ -336,6 +336,9 @@ def assess(conf: SiteConfig, page: ParsedTitle, doc: dict, info: TitleInfo, requ
             return None, "title_mismatch"
         if fit == 0:
             return None, "year_mismatch"
+        if imdb_differs and fit is None:
+            # Against a different IMDb id the year must be known and agree.
+            return None, "imdb_mismatch"
     return score + int(title_ok) + (fit or 0), None
 
 
