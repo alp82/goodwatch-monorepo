@@ -180,3 +180,49 @@ Root causes, largest first:
 Because of the 90-day negative cache, the falsely rejected shows need their `rejected_*` fields cleared, or
 `rejected_until` expired, once the fix ships. They include the 1996 Rurouni Kenshin and TNT Heartland (tmdb 2756),
 whose right URL was never tried.
+
+## After the fix, 2026-09-26 01:45 UTC
+
+The rules above shipped in `da6c3445` and `7ff4e2ce` (a Metacritic page with another IMDb id also needs a page
+year). 750 rejected or unverified titles were re-queued, their old state saved in
+`_backup_20260925_critic_rejections`. Measured read-only through Windmill preview jobs.
+
+Rejections, top 10k shows (audit → now):
+
+| Reason | RT | Metacritic |
+|---|---:|---:|
+| `duplicate` | 290 → 259 | 170 → 168 |
+| `year_mismatch` | 71 → 53 | 1 → 2 |
+| `title_mismatch` | 31 → 14 | n/a |
+| `imdb_mismatch` | n/a | 17 → 11 |
+| **Total** | **392 → 326** | **188 → 181** |
+| Page found (`ok`) | 4,184 → 4,251 | 2,813 → 2,820 |
+| Show-level critic score | 1,711 → 1,713 | 1,768 → 1,770 |
+
+Whole catalog now: RT shows `duplicate` 3,671, `year_mismatch` 334, `title_mismatch` 54, not found 34, error 3,
+`ok` 10,479. Metacritic shows `duplicate` 2,521, `imdb_mismatch` 50, `year_mismatch` 27, not found 410, error 44,
+`ok` 7,032. Movies are almost all `duplicate` from the one-off repair (RT 28,630, Metacritic 37,434) and have barely
+been crawled.
+
+Re-queued titles:
+
+| | RT shows | RT movies | MC re-evaluated | MC re-verified IMDb id |
+|---|---:|---:|---:|---:|
+| Re-queued | 570 | 3 | 146 | 31 |
+| `ok` with a show score | 12 | | 10 | 6 |
+| `ok`, season scores only | 4 | | 0 | 0 |
+| `ok`, no critic score | 126 | | 18 | 14 |
+| Rejected again (`duplicate` / `year` / `title` / `imdb`) | 404 (165 / 190 / 49 / –) | | 115 (62 / 20 / – / 33) | 10 (– / – / – / 10) |
+| Not found | 1 | | | |
+| Still pending | 23 | 3 | 3 | 1 |
+
+The 30 pending titles are due but unpopular, so the regular crawl reaches them later. The effect on scores is small,
+as the audit predicted: 32 re-queued titles gained a critic score. No 403, 429 or challenge in any run;
+`critic_site_blocks` is empty and neither site has `blocked_until`.
+
+Audit cases now: accepted are Doraemon (2005), Coronation Street, DNA Journey, Wogan, Father Brown (2013), Degrassi,
+Sword Art Online and Tokyo Ghoul (one season score each) on RT, and After Midnight (242965, `imdb_id_verified:
+false`) on Metacritic. Still rejected, as documented in `docs/critic-scores.md`: Tony Awards and Rurouni Kenshin
+(1996) on RT, and Sailor Moon, The Six Million Dollar Man and Monster: The Lizzie Borden Story on Metacritic.
+Heartland (2756) now reaches `heartland-2007` on Metacritic but is rejected as `imdb_mismatch`. The Simpsons (456):
+RT page `ok` with no series score and 21 scored seasons; Metacritic 87 with Metascores for S1 and S2.

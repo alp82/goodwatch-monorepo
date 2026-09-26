@@ -24,7 +24,7 @@ A page belongs to the title when:
 
 | Evidence | Rule |
 |---|---|
-| IMDb id (Metacritic) | The page's IMDb id equals the title's effective IMDb id (`f/external_ids/imdb_ids.effective_imdb_id`): accepted, `imdb_id_verified: true`. A different id rejects (`imdb_mismatch`) only when the title's Wikidata URL is another page, or the id is the TMDB IMDb id of another title of the same kind in the catalog. Otherwise the title and year below decide, and the page must give a year, and `imdb_id_verified` is false: Metacritic sometimes gives a show the id of its pilot film (The Six Million Dollar Man) or English dub. |
+| IMDb id (Metacritic) | The page's IMDb id equals the title's effective IMDb id (`f/external_ids/imdb_ids.effective_imdb_id`): accepted, `imdb_id_verified: true`. A different id rejects (`imdb_mismatch`) only when the title's Wikidata URL is another page, or the id is the TMDB IMDb id of another title of the same kind in the catalog. Otherwise the title and year below decide, the page must give a year, and `imdb_id_verified` is false: Metacritic sometimes gives a show the id of its pilot film, its English dub or another IMDb entry of the same show (After Midnight). Without a page year the mismatch still rejects: Manhunt (1970) would otherwise land on `manhunt-2013`. |
 | Wikidata URL | The page is the title's Wikidata URL: accepted without a title or year check, unless the IMDb id differs. |
 | Title | Otherwise the normalized page title (letters and digits of any script, so Japanese or Korean titles count) must equal, or reach 0.8 similarity with, one of the title's names: TMDB title and original title, the rating document's title variations, TMDB alternative titles and translated titles. A subtitle on either side also matches: "Sword Art Online: Alicization" matches "Sword Art Online", and "Monster" matches the alternative title "Monster: The Jeffrey Dahmer Story" (the part before `: ` or ` - `, at least 3 characters). |
 | Year | Movies: at most one year from the release year. Shows: anywhere in the run, from a year before the first air date to a year after the last air date (this year while the show airs). Rotten Tomatoes dates a show page by the first season it tracks or its US or dubbed premiere (Doraemon 2014, Coronation Street 2000). |
@@ -33,7 +33,9 @@ These rules replaced a stricter set on 2026-09-26 after the [URL verification au
 found about 30% of Rotten Tomatoes and 8% of Metacritic rejections wrong. Known cases the rules still reject: a
 page dated before the show's premiere (Tony Awards: RT 1947, TMDB 1956; Monster: The Lizzie Borden Story: Metacritic
 dates the anthology 2022, TMDB the season 2026), and a page whose IMDb id is a separate TMDB entry of the same show
-(Sailor Moon: Metacritic uses the 1995 English dub's id, which TMDB lists as its own show, 295779).
+(Sailor Moon: Metacritic uses the 1995 English dub's id, which TMDB lists as its own show, 295779), a Metacritic
+page with another IMDb id and no year (The Six Million Dollar Man, whose page carries the 1973 pilot film's id), and
+an RT page dated by a US premiere after the run (Samurai X 2003 for the 1996–1998 Rurouni Kenshin).
 
 ### Queue
 
