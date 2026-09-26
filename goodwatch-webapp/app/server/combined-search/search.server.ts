@@ -40,6 +40,10 @@ import {
 	type ServingFallback,
 } from "../search-ranking/serve.server";
 import {
+	type PreparedSearch,
+	prepareSearch,
+} from "../search-ranking/rank-search.server";
+import {
 	type CreditScope,
 	type LookupPerson,
 	type PeopleReading,
@@ -270,6 +274,31 @@ const DISPLAY_TIMEOUT_MS = 2000;
 const round1 = (ms: number) => Math.round(ms * 10) / 10;
 const titleKey = (t: Title) => `${t.type === "tv" ? "show" : t.type}:${t.id}`;
 
+interface TitleMatches {
+	title: { results: Title[]; error?: boolean };
+	/** Catalog rows by key; rankedList adds the ranked titles' rows. */
+	meta: Map<string, Metadata>;
+	/** The title lookup's movies and shows that the filters and the catalog allow. */
+	allowedTitles: Title[];
+}
+
+/** The title lookup's matches that the ranking may show, with their catalog rows. Needs no reading. */
+async function titleMatches(
+	titlePromise: Promise<{ results: Title[]; error?: boolean }>,
+	policy: Eligibility,
+): Promise<TitleMatches> {
+	const title = await titlePromise;
+	const titleRows = title.results.filter((t) =>
+		allowsTitle(policy.filters, titleKey(t)),
+	);
+	const titleMeta = await metadataFor([...new Set(titleRows.map(titleKey))]);
+	const meta = new Map(titleMeta.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]));
+	const allowedTitles = titleRows.filter((t) =>
+		eligible(meta.get(titleKey(t)), policy, false),
+	);
+	return { title, meta, allowedTitles };
+}
+
 interface ServedList {
 	rows: Row[];
 	metadata: Metadata[];
@@ -290,21 +319,17 @@ async function rankedList(
 	readText: string,
 	readings: Parameters<typeof readingFields>[1],
 	policy: Eligibility,
-	titlePromise: Promise<{ results: Title[]; error?: boolean }>,
+	// Started before the reading: the title matches with their catalog rows, and the ranking's prepared part.
+	early: {
+		titles: Promise<TitleMatches>;
+		prepared?: Promise<PreparedSearch>;
+	},
 	signal: AbortSignal,
 ): Promise<ServedList> {
 	const started = performance.now();
-	const title = await titlePromise;
+	const { title, meta, allowedTitles } = await early.titles;
 	const titleDone = performance.now();
 	if (signal.aborted) throw new Error("Search interrupted");
-	const titleRows = title.results.filter((t) =>
-		allowsTitle(policy.filters, titleKey(t)),
-	);
-	const titleMeta = await metadataFor([...new Set(titleRows.map(titleKey))]);
-	const meta = new Map(titleMeta.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]));
-	const allowedTitles = titleRows.filter((t) =>
-		eligible(meta.get(titleKey(t)), policy, false),
-	);
 	const lookup = new Map(allowedTitles.map((t) => [titleKey(t), t]));
 	const fields = readingFields(
 		readText,
@@ -319,6 +344,7 @@ async function rankedList(
 			text: language.text,
 			nonEnglish: language.policy.mode !== "english",
 			titleLookup: allowedTitles,
+			prepared: early.prepared,
 		},
 		policy,
 	);
@@ -480,6 +506,21 @@ export async function combinedSearch(
 	chargedNano += language.chargedNano;
 	// Jev reads the normalized text, so the reading and its cache entry don't depend on case or spacing.
 	const readText = readingText(language.text);
+	// Work that needs no reading starts now and runs while Jev reads: the title matches' catalog rows, and the
+	// ranking's prepared part (references, the texts known without the reading, the reference's vectors). Skipped
+	// when the ranking can't serve anyway. Failures surface in rankedList, which then falls back as before.
+	const early = {
+		titles: titleMatches(titlePromise, policy),
+		prepared: servingFallback({ hasReading: true })
+			? undefined
+			: prepareSearch({
+					query: q,
+					text: language.text,
+					nonEnglish: language.policy.mode !== "english",
+				}),
+	};
+	early.titles.catch(() => {});
+	early.prepared?.catch(() => {});
 	const readingSteps: Record<string, number> = {};
 	const outcome: JevOutcome = await runJevStage({
 		timings: readingSteps,
@@ -520,7 +561,7 @@ export async function combinedSearch(
 				readText,
 				outcome.readings,
 				policy,
-				titlePromise,
+				early,
 				signal,
 			);
 			Object.assign(stageMs, served.stageMs);

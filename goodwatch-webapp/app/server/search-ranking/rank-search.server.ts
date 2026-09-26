@@ -1,9 +1,12 @@
-// The search ranking after the Jev reading: one entry point, rankSearch().
+// The search ranking after the Jev reading: one entry point, rankSearch(). prepareSearch() starts the part that needs
+// no reading while Jev reads.
 //
 // Per search:
 // 1. Read the query: language, a person, studio or "like X" reference, negated clauses, a decade or year.
-// 2. Encode the texts with the two local query models, one request. At the same time, fetch the reference's stored
-//    profile (one person, team or studio) or its seed titles' vectors (a "like X" title, several people).
+// 2. Encode the texts with the two local query models: before the reading, the texts known without it (the dense
+//    text, the intent text, negated clauses); after it, the facets, coverage units and English chips. Before the
+//    reading, also fetch the reference's stored profile (one person, team or studio) or its seed titles' vectors (a
+//    "like X" title, several people).
 // 3. Qdrant round 1: every top list at once (fingerprint, dense, BM25F, facets, coverage units, profile).
 //    Non-English queries with English chips then rescore the union of both dense top lists with both vectors.
 // 4. Qdrant round 2: score the candidate pool with every signal.
@@ -17,7 +20,7 @@ import {
 	type QdrantQuery,
 	type ScoredPoint,
 } from "./qdrant-http.server.ts"
-import { encodeQueryTexts } from "./query-encoder.server.ts"
+import { type QueryVectors, encodeQueryTexts } from "./query-encoder.server.ts"
 import {
 	englishFromChips,
 	eraRange,
@@ -52,6 +55,7 @@ import {
 } from "./ranking.server.ts"
 import {
 	type Intent,
+	type NamedEntity,
 	type Reference,
 	nearestIntent,
 	resolveReference,
@@ -81,17 +85,13 @@ const VECTOR = {
 } as const
 type Model = "english" | "multilingual"
 
-export interface SearchRequest {
-	/** What the person typed. */
-	query: string
-	/** The text the Jev reading used (the query, unless it was translated). */
-	text: string
-	/** The language step routed the query away from English. */
-	nonEnglish: boolean
+export interface SearchRequest extends QueryRequest {
 	/** The allowed title lookup matches (movies and shows), in lookup order. */
 	titleLookup: TitleLookupRow[]
 	/** Also return the intermediate values (texts, candidate scores, profile terms), for parity checks. */
 	trace?: boolean
+	/** prepareSearch of the same query, started before the reading was known. */
+	prepared?: Promise<PreparedSearch>
 }
 
 /** The intermediate values of one search, returned when the request asks for a trace. */
@@ -223,12 +223,50 @@ function payloadFacts(payload: Record<string, unknown>): TitleFacts {
 
 // --- The entry point -------------------------------------------------------------------------------------------------
 
-/** Ranks a search from its Jev reading: the ranked list plus per-stage timings. */
-export async function rankSearch(
-	reading: ReadingFields,
-	request: SearchRequest,
-	eligibility: Eligibility,
-): Promise<RankedSearch> {
+/** The query, as the ranking reads it before the Jev reading is known. */
+export interface QueryRequest {
+	/** What the person typed. */
+	query: string
+	/** The text the Jev reading uses (the query, unless it was translated). */
+	text: string
+	/** The language step routed the query away from English. */
+	nonEnglish: boolean
+}
+
+/**
+ * The part of a search that doesn't depend on the Jev reading: the query's references, negation and spelling, the
+ * encoding of the texts known without the reading (the dense text, the intent text, negated clauses), and the
+ * reference's stored profile or seed vectors. prepareSearch starts it while the reading is on its way.
+ */
+export interface PreparedSearch {
+	index: SearchIndex
+	nonEnglish: boolean
+	embMain: Model
+	found: ReturnType<typeof resolveReference>
+	positive: string
+	negated: string[]
+	denseText: string
+	denseFromIntent: boolean
+	hasDense: boolean
+	single: NamedEntity["entity"] | null
+	seedIds: number[]
+	/** The early texts per model, and their vectors in the same order. */
+	early: Record<Model, string[]>
+	encoded: Promise<Pick<QueryVectors, "english" | "multilingual">>
+	fetched: Promise<ScoredPoint[]>
+	/** Resolves when the encoding and the fetch have finished, failed or not. */
+	done: Promise<void>
+	timings: Record<string, number>
+	rounds: RankedSearch["rounds"]
+}
+
+/**
+ * Starts the reading-independent part of a search (see PreparedSearch). Rejects when the index can't load; the
+ * encoding and the fetch report their errors when rankSearch awaits them.
+ */
+export async function prepareSearch(
+	request: QueryRequest,
+): Promise<PreparedSearch> {
 	const started = performance.now()
 	const timings: Record<string, number> = {}
 	const rounds: RankedSearch["rounds"] = []
@@ -238,23 +276,14 @@ export async function rankSearch(
 		timings[name] = (timings[name] ?? 0) + (now - mark)
 		mark = now
 	}
-
 	const index = await getSearchIndex()
 	lap("index")
 	const t = index.titleTable
 	const { query, text } = request
 	const nonEnglish = request.nonEnglish || looksForeign(text)
 	const embMain: Model = nonEnglish ? "multilingual" : "english"
-
-	// 1. Read the query
 	const found = resolveReference(index, query, text, nonEnglish)
 	const det = found?.detection ?? null
-	const { base: baseFilter, withEra: filter } = searchFilter(
-		t,
-		reading.flags,
-		eligibility,
-		eraRange(text),
-	)
 	let { positive, negated } = splitNegation(
 		nonEnglish ? text : spell(index, text),
 	)
@@ -266,63 +295,35 @@ export async function rankSearch(
 	}
 	// A non-English entity query uses the intent vector as its dense query, with no second encode
 	const denseFromIntent = found?.kind === "entity" && embMain === "multilingual"
-	const phrases = reading.searchedPhrases.map((p) => p.phrase)
-	const concrete = new Set(
-		reading.concreteWords
-			.filter((w) => w.isConcrete)
-			.map((w) => w.word.toLowerCase()),
-	)
-	const facetTexts = positive
-		? facets(phrases, negated, found?.words ?? new Set())
-		: []
-	let units: string[] = []
-	if (!found && tokens(positive).length <= COVERAGE_MAX_TOKENS) {
-		units = facetUnits(index, phrases, negated)
-		if (!units.some((u) => u.split(" ").some((w) => concrete.has(w))))
-			units = []
-	}
 	const hasDense =
 		Boolean(denseText) && (!denseFromIntent || det?.intentText != null)
-	const chips = nonEnglish && hasDense ? englishFromChips(reading.chips) : null
-	const mixed = Boolean(chips?.positive)
-
-	// The texts per model, each encoded once
-	const texts: Record<Model, string[]> = { english: [], multilingual: [] }
-	const slot = (model: Model, s: string) => {
-		const i = texts[model].indexOf(s)
-		if (i >= 0) return i
-		texts[model].push(s)
-		return texts[model].length - 1
+	// The texts known before the reading, per model, each once
+	const early: Record<Model, string[]> = { english: [], multilingual: [] }
+	const add = (model: Model, s: string) => {
+		if (!early[model].includes(s)) early[model].push(s)
 	}
-	const intentSlot =
-		det?.intentText != null ? slot("multilingual", det.intentText) : -1
-	const denseSlot = hasDense && !denseFromIntent ? slot(embMain, denseText) : -1
-	const chipSlot = mixed && chips ? slot("english", chips.positive) : -1
-	const avoidedSlots =
-		mixed && chips ? chips.avoided.map((s) => slot("english", s)) : []
-	const facetSlots = facetTexts.map((s) => slot(embMain, s))
-	const unitSlots = units.map((s) => slot(embMain, s))
-	const negatedSlots = negated.map((s) => slot(embMain, s))
+	if (det?.intentText != null) add("multilingual", det.intentText)
+	if (hasDense && !denseFromIntent) add(embMain, denseText)
+	for (const s of negated) add(embMain, s)
 	lap("parse")
 
-	// 2. Encode, and fetch the reference's profile or seed vectors meanwhile
 	const single =
 		found?.kind === "entity" && det?.entities.length === 1
 			? det.entities[0].entity
 			: null
 	const seedIds =
 		found && !single ? found.seeds.map((row) => t.pointIds[row]) : []
-	const encoding =
-		texts.english.length || texts.multilingual.length
-			? encodeQueryTexts(texts).then((v) => {
-					timings.encode = v.timings.totalMs
+	const encoded =
+		early.english.length || early.multilingual.length
+			? encodeQueryTexts(early).then((v) => {
+					timings.encodeEarly = v.timings.totalMs
 					return v
 				})
 			: Promise.resolve({
 					english: [] as Float32Array[],
 					multilingual: [] as Float32Array[],
 				})
-	const prefetch = (async () => {
+	const fetched = (async () => {
 		const t0 = performance.now()
 		let points: ScoredPoint[] = []
 		if (single) {
@@ -361,8 +362,158 @@ export async function rankSearch(
 		timings.prefetch = performance.now() - t0
 		return points
 	})()
-	const [vectors, fetched] = await Promise.all([encoding, prefetch])
+	// Awaited by rankSearch; this only keeps an early rejection from counting as unhandled.
+	encoded.catch(() => {})
+	fetched.catch(() => {})
+	const done = Promise.allSettled([encoded, fetched]).then(() => {
+		timings.prepare = performance.now() - started
+	})
+	return {
+		done,
+		index,
+		nonEnglish,
+		embMain,
+		found,
+		positive,
+		negated,
+		denseText,
+		denseFromIntent,
+		hasDense,
+		single,
+		seedIds,
+		early,
+		encoded,
+		fetched,
+		timings,
+		rounds,
+	}
+}
+
+/**
+ * Ranks a search from its Jev reading: the ranked list plus per-stage timings. `request.prepared` is the search's
+ * prepareSearch, started before the reading was known; without it, rankSearch prepares the search itself. The
+ * timings count from this call, except the prepared part's own: prepare (its whole time), index, prepareParse,
+ * encodeEarly and prefetch, which ran alongside the reading when it was started early.
+ */
+export async function rankSearch(
+	reading: ReadingFields,
+	request: SearchRequest,
+	eligibility: Eligibility,
+): Promise<RankedSearch> {
+	const started = performance.now()
+	const timings: Record<string, number> = {}
+	let mark = started
+	const lap = (name: string) => {
+		const now = performance.now()
+		timings[name] = (timings[name] ?? 0) + (now - mark)
+		mark = now
+	}
+
+	const prepared = await (request.prepared ?? prepareSearch(request))
+	lap("prepared")
+	const rounds: RankedSearch["rounds"] = prepared.rounds
+	const {
+		index,
+		nonEnglish,
+		embMain,
+		found,
+		positive,
+		negated,
+		denseText,
+		denseFromIntent,
+		hasDense,
+		single,
+		seedIds,
+	} = prepared
+	const t = index.titleTable
+	const { query, text } = request
+	const det = found?.detection ?? null
+
+	// 1. Read the query: what the reading adds to the prepared part
+	const { base: baseFilter, withEra: filter } = searchFilter(
+		t,
+		reading.flags,
+		eligibility,
+		eraRange(text),
+	)
+	const phrases = reading.searchedPhrases.map((p) => p.phrase)
+	const concrete = new Set(
+		reading.concreteWords
+			.filter((w) => w.isConcrete)
+			.map((w) => w.word.toLowerCase()),
+	)
+	const facetTexts = positive
+		? facets(phrases, negated, found?.words ?? new Set())
+		: []
+	let units: string[] = []
+	if (!found && tokens(positive).length <= COVERAGE_MAX_TOKENS) {
+		units = facetUnits(index, phrases, negated)
+		if (!units.some((u) => u.split(" ").some((w) => concrete.has(w))))
+			units = []
+	}
+	const chips = nonEnglish && hasDense ? englishFromChips(reading.chips) : null
+	const mixed = Boolean(chips?.positive)
+
+	// The texts per model, each encoded once
+	const texts: Record<Model, string[]> = { english: [], multilingual: [] }
+	const slot = (model: Model, s: string) => {
+		const i = texts[model].indexOf(s)
+		if (i >= 0) return i
+		texts[model].push(s)
+		return texts[model].length - 1
+	}
+	const intentSlot =
+		det?.intentText != null ? slot("multilingual", det.intentText) : -1
+	const denseSlot = hasDense && !denseFromIntent ? slot(embMain, denseText) : -1
+	const chipSlot = mixed && chips ? slot("english", chips.positive) : -1
+	const avoidedSlots =
+		mixed && chips ? chips.avoided.map((s) => slot("english", s)) : []
+	const facetSlots = facetTexts.map((s) => slot(embMain, s))
+	const unitSlots = units.map((s) => slot(embMain, s))
+	const negatedSlots = negated.map((s) => slot(embMain, s))
+	lap("parse")
+
+	// 2. Encode the texts the reading added. The early texts and the reference's profile or seed vectors were started
+	// by prepareSearch.
+	const late: Record<Model, string[]> = {
+		english: texts.english.filter((s) => !prepared.early.english.includes(s)),
+		multilingual: texts.multilingual.filter(
+			(s) => !prepared.early.multilingual.includes(s),
+		),
+	}
+	const encoding =
+		late.english.length || late.multilingual.length
+			? encodeQueryTexts(late).then((v) => {
+					timings.encode = v.timings.totalMs
+					return v
+				})
+			: Promise.resolve({
+					english: [] as Float32Array[],
+					multilingual: [] as Float32Array[],
+				})
+	const [earlyVectors, lateVectors, fetched] = await Promise.all([
+		prepared.encoded,
+		encoding,
+		prepared.fetched,
+	])
+	await prepared.done
 	lap("encodeAndPrefetch")
+	// The prepared part's own stages
+	for (const [name, ms] of Object.entries(prepared.timings))
+		timings[name === "parse" ? "prepareParse" : name] = ms
+	// A text's vector doesn't depend on the other texts of its batch (the encoder masks the padding), so the two
+	// batches give the same vectors as one.
+	const vectors: Record<Model, Float32Array[]> = {
+		english: [],
+		multilingual: [],
+	}
+	for (const model of ["english", "multilingual"] as const)
+		vectors[model] = texts[model].map((s) => {
+			const i = prepared.early[model].indexOf(s)
+			return i >= 0
+				? earlyVectors[model][i]
+				: lateVectors[model][late[model].indexOf(s)]
+		})
 	const vec = (model: Model, i: number) => Array.from(vectors[model][i])
 
 	let ref: Reference | null = null
