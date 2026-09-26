@@ -10,7 +10,11 @@ def build_evidence(tmdb_id, media_type, details, providers, rows, verified, reso
     proof = details.get("watch_providers_check") or {}
     proof_valid = proof.get("payload_hash") == snapshot_id(api_payload)
     by_country = {p["country_code"]: p for p in providers if p.get("country_code")}
-    countries = set(prior_countries) | set(by_country) | set(api) | {row["country_code"] for row in rows.values()}
+    rows_by_country = {}
+    for row in rows.values():
+        rows_by_country.setdefault(row["country_code"], []).append(row)
+    countries = set(prior_countries) | set(by_country) | set(api) | set(rows_by_country)
+    catalog_ids = {row["tmdb_id"] for values in catalog.values() for row in values}
     result = []
     for country in sorted(countries):
         if len(country) != 2 or country != country.upper():
@@ -54,10 +58,9 @@ def build_evidence(tmdb_id, media_type, details, providers, rows, verified, reso
                     reason = reason or "missing"
                 if details.get("watch_providers_error"):
                     reason = reason or "failed"
-                ids = {row["tmdb_id"] for values in catalog.values() for row in values}
                 for kind in OFFER_TYPES:
                     for offer in api.get(country, {}).get(kind, []):
-                        if offer["provider_id"] not in ids:
+                        if offer["provider_id"] not in catalog_ids:
                             reason = reason or "mapping_incomplete"
                         offers.append({"service_id": offer["provider_id"], "offer_type": kind, "tmdb_link": api[country].get("link")})
             if checked is None:
@@ -71,13 +74,14 @@ def build_evidence(tmdb_id, media_type, details, providers, rows, verified, reso
                            "offer_types": list(OFFER_TYPES), "mapping_complete": reason not in ("mapping_incomplete", "identity_pending", "invalid", "missing"),
                            "offers": [offer | {"snapshot_id": snapshot} for offer in offers]})
         # Unattributed published legacy rows cannot establish a negative.
-        legacy = any(row["country_code"] == country and not any(row.get(field) is not None for field in
-                     ("tmdb_link", "display_priority", "stream_url", "price_dollar", "quality")) for row in rows.values())
+        country_rows = rows_by_country.get(country, [])
+        legacy = any(not any(row.get(field) is not None for field in
+                     ("tmdb_link", "display_priority", "stream_url", "price_dollar", "quality")) for row in country_rows)
         # Retained rows whose source payload is absent must also block a negative.
-        retained = any(row["country_code"] == country and (
+        retained = any(
             ((row.get("tmdb_link") is not None or row.get("display_priority") is not None) and country not in api) or
             (any(row.get(f) is not None for f in ("stream_url", "price_dollar", "quality")) and not provider)
-        ) for row in rows.values())
+            for row in country_rows)
         envelope = {"version": 1, "media_tmdb_id": tmdb_id, "media_type": media_type, "country_code": country,
                     "checks": checks, "unknown_contributions": legacy or retained or any(not p.get("country_code") for p in providers)}
         result.append(dict(media_tmdb_id=tmdb_id, media_type=media_type, country_code=country,
