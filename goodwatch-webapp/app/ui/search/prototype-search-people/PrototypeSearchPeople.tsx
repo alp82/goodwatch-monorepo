@@ -14,9 +14,7 @@ import { PrototypeSwitcher } from "~/ui/prototype/PrototypeSwitcher"
 import { personPath } from "~/utils/helpers"
 
 export const PEOPLE_VARIANTS = {
-	strip: "Accordion · photo strip stays",
-	card: "Accordion · portrait card stays",
-	avatar: "Accordion · round avatar stays",
+	strip: "Accordion · photo strip, full photo when open",
 }
 export type PeopleVariant = keyof typeof PEOPLE_VARIANTS
 
@@ -240,8 +238,6 @@ function Posters({ p, size }: { p: ScoredPerson; size: string }) {
 type Anchor = "strip" | "card" | "avatar"
 const ANCHOR: Record<PeopleVariant, Anchor> = {
 	strip: "strip",
-	card: "card",
-	avatar: "avatar",
 }
 // Closed width of a person, per anchor.
 const TILE: Record<Anchor, string> = {
@@ -365,6 +361,9 @@ function Accordion4({
 			style={
 				{
 					"--gw-tile": TILE[anchor],
+					// The open person's portrait: the strip at full 2:3 width for the row's 15rem
+					// height; the other anchors keep their closed width.
+					"--gw-photo": anchor === "strip" ? "10rem" : TILE[anchor],
 					// The open panel's final width: the row minus the closed people and the gaps.
 					"--gw-open": `calc(100cqw - ${people.length - 1} * (var(--gw-tile) + 0.375rem))`,
 				} as React.CSSProperties
@@ -390,11 +389,11 @@ function Accordion4({
 									to={personPath(p.id, p.name)}
 									prefetch="intent"
 									aria-label={`${p.name}: all titles`}
-									className="absolute inset-y-0 left-0 w-(--gw-tile) cursor-pointer focus-visible:outline focus-visible:outline-cyan-300"
+									className="absolute inset-y-0 left-0 w-(--gw-photo) cursor-pointer focus-visible:outline focus-visible:outline-cyan-300"
 								>
 									<AnchorFace p={p} anchor={anchor} open />
 								</Link>
-								<div className="absolute inset-y-0 left-(--gw-tile) w-[calc(var(--gw-open)-var(--gw-tile))]">
+								<div className="absolute inset-y-0 left-(--gw-photo) w-[calc(var(--gw-open)-var(--gw-photo))]">
 									<Drawer p={p} links={links} />
 								</div>
 							</>
