@@ -1,6 +1,35 @@
 import crate from "node-crate"
 import pc from "picocolors"
 
+// node-crate has no request timeout: a request whose response never arrives awaits forever. Every call is capped at
+// CRATE_TIMEOUT_MS (default 10 s; webapp queries finish in well under 2 s). The timeout only stops waiting: the HTTP
+// request is not cancelled, so a write may still land after it fires. `upsert` reads its row back to find out.
+const DEFAULT_TIMEOUT_MS = 10_000
+
+const getTimeoutMs = () => {
+	const configured = Number.parseInt(process.env.CRATE_TIMEOUT_MS || "", 10)
+	return configured > 0 ? configured : DEFAULT_TIMEOUT_MS
+}
+
+export class CrateTimeoutError extends Error {
+	constructor(timeoutMs: number) {
+		super(`CrateDB did not respond within ${timeoutMs} ms`)
+		this.name = "CrateTimeoutError"
+	}
+}
+
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+	let timer: ReturnType<typeof setTimeout> | undefined
+	const timeout = new Promise<never>((_, reject) => {
+		timer = setTimeout(() => reject(new CrateTimeoutError(timeoutMs)), timeoutMs)
+	})
+	try {
+		return await Promise.race([promise, timeout])
+	} finally {
+		clearTimeout(timer)
+	}
+}
+
 class CrateClient {
 	constructor(hosts: string[]) {
 		crate.connect(hosts.join(" "))
@@ -12,7 +41,7 @@ class CrateClient {
 	) {
 		const startTime = performance.now()
 		try {
-			const result = await crate.execute(query, params)
+			const result = await withTimeout(crate.execute(query, params), getTimeoutMs())
 			const duration = performance.now() - startTime
 			const querySummary = this.getQuerySummary(query)
 			const formattedLog = this.formatLog(querySummary, duration)
@@ -227,16 +256,40 @@ export const upsert = async ({
 		allColumns.map(col => (row as any)[col] ?? null)
 	)
 
+	const readBackSql = `
+		SELECT count(*) AS n FROM ${table}
+		WHERE ${conflictColumns.map(col => `"${col}" = ?`).join(" AND ")}
+		${updateClause === "NOTHING" ? "" : `AND "updated_at" = ?`}
+	`
+	const writeRow = async (row: (typeof rows)[number]) => {
+		const record = Object.fromEntries(allColumns.map((col, i) => [col, row[i]]))
+		const readBackParams = [
+			...conflictColumns.map(col => record[col]),
+			...(updateClause === "NOTHING" ? [] : [now]),
+		]
+		for (let attempt = 1; attempt <= 2; attempt++) {
+			try {
+				return await client.execute(sql, row)
+			} catch (error) {
+				if (!(error instanceof CrateTimeoutError)) throw error
+			}
+			// The write timed out but may still have landed. Primary key lookups are real-time in CrateDB.
+			const [{ n }] = await query<{ n: number }>(readBackSql, readBackParams)
+			if (n > 0) return { rowcount: 1 }
+		}
+		throw new Error(`Saving to ${table} timed out twice and the row is not stored. Please try again.`)
+	}
+
 	// Execute the query
 	const client = getCrateClient()
 	if (rows.length === 1) {
-		return await client.execute(sql, rows[0])
+		return await writeRow(rows[0])
 	} else {
 		// For multiple rows, we need to execute them individually
 		// CrateDB doesn't support executemany like PostgreSQL
 		let totalRowcount = 0
 		for (const row of rows) {
-			const result = await client.execute(sql, row)
+			const result = await writeRow(row)
 			totalRowcount += result.rowcount || 0
 		}
 		return { rowcount: totalRowcount }
