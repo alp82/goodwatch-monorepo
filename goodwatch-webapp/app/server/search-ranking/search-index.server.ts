@@ -11,6 +11,7 @@ import http from "node:http"
 import { promisify } from "node:util"
 import { gunzip as gunzipCallback } from "node:zlib"
 import { normalized, singular } from "./text-rules.server.ts"
+import { prepareTitleBlend } from "./title-blend.server.ts"
 
 const gunzip = promisify(gunzipCallback)
 
@@ -519,6 +520,8 @@ function refresh(): Promise<SearchIndex> {
 		loading = loadCurrent()
 			.then((index) => {
 				if (index !== current) {
+					// Before the swap, so no search pays for it.
+					prepareTitleBlend(index)
 					current = index
 					console.info(
 						`Search index build ${index.buildId} loaded in ${Math.round(index.timings.total)} ms`,
