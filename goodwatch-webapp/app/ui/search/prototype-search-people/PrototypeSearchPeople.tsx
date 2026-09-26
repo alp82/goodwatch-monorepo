@@ -398,6 +398,119 @@ function Accordion4({
 	)
 }
 
+// --- Phones: the banner alone, other people as text links below it -------------------------
+
+export const MOBILE_VARIANTS = {
+	links: "Phone · banner, names below",
+	"links-posters": "Phone · banner with posters, names below",
+	scroll: "Phone · banner, names in one scrolling line",
+}
+type MobileVariant = keyof typeof MOBILE_VARIANTS
+
+function MobilePeople({
+	s,
+	current,
+	select,
+	links,
+}: {
+	s: PeopleState
+	current: ScoredPerson
+	select: (id: number) => void
+	links: ScopeLinks
+}) {
+	const [params] = useSearchParams()
+	const raw = params.get("mobile") ?? "links"
+	const variant = (raw in MOBILE_VARIANTS ? raw : "links") as MobileVariant
+	const backdrop = backdropOf(current)
+	const people = s.shown.slice(0, 8)
+	const href = personPath(current.id, current.name)
+	return (
+		<>
+			<div className="relative isolate overflow-hidden rounded-xl border border-gray-800 bg-gray-900">
+				{backdrop && (
+					<img
+						key={backdrop}
+						src={img(backdrop, "w780") ?? ""}
+						alt=""
+						className={`absolute inset-0 -z-10 h-full w-full object-cover opacity-30 animate-[gwBackdropIn_300ms_ease-out_both] ${motionSafe}`}
+					/>
+				)}
+				<div className="absolute inset-0 -z-10 bg-linear-to-t from-gray-950 via-gray-950/70 to-transparent" />
+				<div className="flex items-end gap-4 p-3">
+					{/* The full 2:3 photo, swapped at once; it links to the person page. */}
+					<Link
+						to={href}
+						prefetch="intent"
+						tabIndex={-1}
+						aria-hidden="true"
+						className="block shrink-0 cursor-pointer"
+					>
+						<Portrait p={current} className="h-36 w-24 rounded-lg shadow-2xl" />
+					</Link>
+					<div
+						key={current.id}
+						className={`min-w-0 flex-1 space-y-2 animate-[gwDrawerIn_160ms_ease-out_both] ${motionSafe}`}
+					>
+						<NameBlock p={current} size="small" />
+						<div className="text-xs">
+							<ScopeNote p={current} links={links} />
+						</div>
+					</div>
+				</div>
+				{variant === "links-posters" && (
+					<ul
+						key={current.id}
+						className={`flex gap-2 px-3 pb-3 animate-[gwDrawerIn_160ms_ease-out_both] ${motionSafe}`}
+					>
+						{current.knownFor.slice(0, 3).map((t) => (
+							<li key={t.id} className="min-w-0 flex-1">
+								<Link
+									to={`/${t.type}/${t.id}`}
+									prefetch="intent"
+									className="flex cursor-pointer items-center gap-2 rounded-md bg-gray-950/60 p-1 pr-2"
+								>
+									<img
+										src={img(t.poster) ?? ""}
+										alt=""
+										className="aspect-[2/3] w-8 shrink-0 rounded object-cover"
+									/>
+									<span className="line-clamp-2 text-[11px] leading-tight text-gray-300">
+										{t.title}
+									</span>
+								</Link>
+							</li>
+						))}
+					</ul>
+				)}
+			</div>
+			{people.length > 1 && (
+				<nav
+					aria-label="People"
+					className={`mt-2 text-sm ${variant === "scroll" ? "-mx-4 overflow-x-auto px-4 whitespace-nowrap [scrollbar-width:none]" : "leading-7"}`}
+				>
+					<span className="mr-1 text-gray-500">People:</span>
+					{people.map((p, i) => {
+						const open = p.id === current.id
+						return (
+							<span key={p.id}>
+								{i > 0 && <span className="px-1.5 text-gray-600">·</span>}
+								<button
+									type="button"
+									aria-pressed={open}
+									onClick={() => select(p.id)}
+									className={`cursor-pointer transition-colors ${open ? "font-semibold text-white" : "text-cyan-300 hover:text-cyan-100"}`}
+								>
+									{p.name}
+								</button>
+							</span>
+						)
+					})}
+				</nav>
+			)}
+		</>
+	)
+}
+
 function PeopleBanner({ s, links }: { s: PeopleState; links: ScopeLinks }) {
 	const [selected, setSelected] = useState<number | null>(null)
 	const key = s.shown.map((p) => p.id).join(",")
@@ -419,13 +532,18 @@ function PeopleBanner({ s, links }: { s: PeopleState; links: ScopeLinks }) {
 	return (
 		<section aria-label="People" className="mb-4">
 			<Motion />
-			<Accordion4
-				s={s}
-				current={current}
-				select={setSelected}
-				anchor={ANCHOR[s.variant]}
-				links={links}
-			/>
+			<div className="max-sm:hidden">
+				<Accordion4
+					s={s}
+					current={current}
+					select={setSelected}
+					anchor={ANCHOR[s.variant]}
+					links={links}
+				/>
+			</div>
+			<div className="sm:hidden">
+				<MobilePeople s={s} current={current} select={setSelected} links={links} />
+			</div>
 		</section>
 	)
 }
@@ -445,7 +563,17 @@ export function PeopleAround({
 			<PrototypeState s={s} links={links} />
 			<PeopleBanner s={s} links={links} />
 			{grid}
-			<PrototypeSwitcher variants={PEOPLE_VARIANTS} param="people" />
+			<div className="max-sm:hidden">
+				<PrototypeSwitcher variants={PEOPLE_VARIANTS} param="people" />
+			</div>
+			<div className="sm:hidden">
+				<PrototypeSwitcher
+					variants={MOBILE_VARIANTS}
+					param="mobile"
+					arrowKeys={false}
+					position="bottom-24 left-1/2 -translate-x-1/2"
+				/>
+			</div>
 		</>
 	)
 }

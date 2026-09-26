@@ -2,7 +2,7 @@
 import { useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
 
-export function PrototypeSwitcher({ variants, param = "variant", position = "bottom-6 left-1/2 -translate-x-1/2" }: { variants: Record<string, string>; param?: string; position?: string }) {
+export function PrototypeSwitcher({ variants, param = "variant", position = "bottom-6 left-1/2 -translate-x-1/2", arrowKeys = true }: { variants: Record<string, string>; param?: string; position?: string; arrowKeys?: boolean }) {
 	const [params, setParams] = useSearchParams()
 	const keys = Object.keys(variants)
 	const current = params.get(param) ?? keys[0]
@@ -14,6 +14,7 @@ export function PrototypeSwitcher({ variants, param = "variant", position = "bot
 	}
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
+			if (!arrowKeys) return
 			const t = e.target as HTMLElement
 			if (t.closest("input, textarea, [contenteditable]")) return
 			if (e.key === "ArrowLeft") go(-1)
