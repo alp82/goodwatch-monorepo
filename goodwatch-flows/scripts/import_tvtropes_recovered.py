@@ -7,7 +7,7 @@ Default is a DRY RUN that only reads. Three modes:
   import          (default) dry run, or --apply to write; writes a rollback file
   --rollback F    restore the fields an earlier --apply changed
 
-The import writes exactly what `store_result` in
+The import writes exactly what `fetch_entry` in
 f/tvtropes_web/tv_tropes_crawl_tags/fetch.py persists for a successful crawl:
 tvtropes_url, tropes[{name,url,html}], updated_at=utcnow, is_selected=False and
 error_message/failed_at removed (mongoengine unsets fields saved as None).
