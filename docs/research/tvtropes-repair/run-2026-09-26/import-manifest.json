@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-09-26T08:33:39.626582+00:00",
+  "report": "review.md",
+  "runs": [
+    "run-2026-09-26"
+  ],
+  "denied": [
+    "movie:1491",
+    "show:1425"
+  ],
+  "count": 4,
+  "entries": [
+    {
+      "media_type": "show",
+      "tmdb_id": 790,
+      "title": "Agatha Christie's Poirot",
+      "year": 1989,
+      "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/Poirot",
+      "trope_count": 252,
+      "tropes_sha256": "b83281bd823a1973b246d6a90a44fd2745bde73cf69c3117191030691ece7263",
+      "country_suffixed_page": false,
+      "run": "run-2026-09-26"
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 3034,
+      "title": "Scene of the Crime",
+      "year": 1970,
+      "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/Tatort",
+      "trope_count": 104,
+      "tropes_sha256": "d0e602c22d917096142f9e6788887a70de543941c51f6b5753ee203047eb549d",
+      "country_suffixed_page": false,
+      "run": "run-2026-09-26"
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 4454,
+      "title": "Will & Grace",
+      "year": 1998,
+      "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/WillAndGrace",
+      "trope_count": 201,
+      "tropes_sha256": "46c32b27ef93dd9cb1a79172461d884253e7a64faeef89599201a0c7cd4e9cfe",
+      "country_suffixed_page": false,
+      "run": "run-2026-09-26"
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 62643,
+      "title": "DC's Legends of Tomorrow",
+      "year": 2016,
+      "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/LegendsOfTomorrow",
+      "trope_count": 285,
+      "tropes_sha256": "082066fe7d895dd931cb3d037d04786802e786a2864a356ca4af0bcf00c00d6e",
+      "country_suffixed_page": false,
+      "run": "run-2026-09-26"
+    }
+  ]
+}

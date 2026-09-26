@@ -1,18 +1,1244 @@
 {
  "negative": {
+  "https://tvtropes.org/pmwiki/pmwiki.php/Animation/TheLittleMole": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:44256",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:55:06.397596+00:00",
+   "until": "2026-12-25T08:55:06.397596+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/Berserk": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:35935",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:46:24.383880+00:00",
+   "until": "2026-12-25T08:46:24.383880+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/BombermanJetters": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:9112",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:00:18.843293+00:00",
+   "until": "2026-12-25T09:00:18.843293+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/CodeGeass": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:31724",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:40:54.497882+00:00",
+   "until": "2026-12-25T08:40:54.497882+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/Fractale": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:38270",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:10:06.426166+00:00",
+   "until": "2026-12-25T09:10:06.426166+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/FullmetalAlchemist": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:37863",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:45:36.400544+00:00",
+   "until": "2026-12-25T08:45:36.400544+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/FutariWaPrettyCureSplashStar": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:36324",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:52:48.513072+00:00",
+   "until": "2026-12-25T08:52:48.513072+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/HeavenlyDelusion": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Manga/HeavenlyDelusion",
+   "title": "show:208891",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:48:25.337267+00:00",
+   "until": "2026-12-25T08:48:25.337267+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/KiraKiraPrecureALaMode": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:69289",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:54:30.423451+00:00",
+   "until": "2026-12-25T08:54:30.423451+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Anime/Pokemon": {
    "outcome": "rejected",
-   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Anime/PokemonTheSeries?from=Anime.Pokemon",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Anime/PokemonTheSeries",
    "title": "show:60572",
-   "at": "2026-09-26T08:22:42.920462+00:00",
-   "until": "2026-12-25T08:22:42.920462+00:00"
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:35:48.913958+00:00",
+   "until": "2026-12-25T08:35:48.913958+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Anime/PokemonHorizonsTheSeries": {
    "outcome": "rejected",
    "reason": "identity",
    "title": "show:220150",
-   "at": "2026-09-26T08:23:12.430821+00:00",
-   "until": "2026-12-25T08:23:12.430821+00:00"
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:36:12.418566+00:00",
+   "until": "2026-12-25T08:36:12.418566+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/RedBaron1994": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:34090",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:03:42.421257+00:00",
+   "until": "2026-12-25T09:03:42.421257+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/StarDetectivePrettyCure": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:306721",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:51:12.398615+00:00",
+   "until": "2026-12-25T08:51:12.398615+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/TheIdolmaster": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:63463",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:53:12.437199+00:00",
+   "until": "2026-12-25T08:53:12.437199+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/TrainToTheEndOfTheWorld": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:212273",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:01:06.420523+00:00",
+   "until": "2026-12-25T09:01:06.420523+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Anime/Tsuritama": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:45283",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:56:36.458324+00:00",
+   "until": "2026-12-25T08:56:36.458324+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Disney/TheLionKingOneAndAHalf": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:11430",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:55:54.393673+00:00",
+   "until": "2026-12-25T08:55:54.393673+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/AMidsummerNightsDream1935": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10210",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:44:54.493055+00:00",
+   "until": "2026-12-25T09:44:54.493055+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/AVeryHaroldAndKumar3DChristmas": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:55465",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:36:00.443422+00:00",
+   "until": "2026-12-25T09:36:00.443422+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/AboveTheLaw": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/AboveTheLaw",
+   "title": "movie:9395",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:27:42.738188+00:00",
+   "until": "2026-12-25T09:27:42.738188+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/ActsOfVengeance": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:445954",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:33:48.421455+00:00",
+   "until": "2026-12-25T09:33:48.421455+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Adrift": {
+   "outcome": "not_found",
+   "reason": "HTTP 404",
+   "title": "movie:429300",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:13:00.371008+00:00",
+   "until": "2026-12-25T09:13:00.371008+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/AeonFlux": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Film/AeonFlux2005",
+   "title": "movie:8202",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:25:36.763208+00:00",
+   "until": "2026-12-25T09:25:36.763208+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Aftermath": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/Aftermath",
+   "title": "movie:390051",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:31:00.772294+00:00",
+   "until": "2026-12-25T09:31:00.772294+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/AllHailTheKing": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:253980",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:33:42.433379+00:00",
+   "until": "2026-12-25T09:33:42.433379+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/AllQuietOnTheWesternFront": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:143",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:26:00.429801+00:00",
+   "until": "2026-12-25T09:26:00.429801+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/AroundTheWorldInEightyDays": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:2897",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:20:30.741181+00:00",
+   "until": "2026-12-25T09:20:30.741181+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/AssaultOnPrecinct13": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:8978",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:17:54.527112+00:00",
+   "until": "2026-12-25T09:17:54.527112+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Baahubali": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:256040",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:40:12.469651+00:00",
+   "until": "2026-12-25T09:40:12.469651+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/BadCompany": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/BadCompany",
+   "title": "movie:3132",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:30:00.806430+00:00",
+   "until": "2026-12-25T09:30:00.806430+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Batman": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:2661",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:34:48.432672+00:00",
+   "until": "2026-12-25T09:34:48.432672+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/BatmanAndRobin": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/BatmanAndRobin",
+   "title": "movie:415",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:55:42.728130+00:00",
+   "until": "2026-12-25T08:55:42.728130+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Bedazzled": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1636",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:24:24.495991+00:00",
+   "until": "2026-12-25T09:24:24.495991+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/BenHur": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:271969",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:23:12.423165+00:00",
+   "until": "2026-12-25T09:23:12.423165+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/BeverlyHillsCop": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:90",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:52:00.389236+00:00",
+   "until": "2026-12-25T08:52:00.389236+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/BillAndTedFaceTheMusic": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:501979",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:18:12.453201+00:00",
+   "until": "2026-12-25T09:18:12.453201+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/BillAndTedsBogusJourney": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1649",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:36:36.471828+00:00",
+   "until": "2026-12-25T09:36:36.471828+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/BlackChristmas": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:551808",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:37:06.465583+00:00",
+   "until": "2026-12-25T09:37:06.465583+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Bound": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9303",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:21:18.407553+00:00",
+   "until": "2026-12-25T09:21:18.407553+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/BridgetJonesDiary": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Film/BridgetJonesFilmSeries",
+   "title": "movie:634",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:06:06.719727+00:00",
+   "until": "2026-12-25T09:06:06.719727+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Burning": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:491584",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:17:06.400002+00:00",
+   "until": "2026-12-25T09:17:06.400002+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/CheaperByTheDozen": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/CheaperByTheDozen",
+   "title": "movie:11007",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:17:18.725687+00:00",
+   "until": "2026-12-25T09:17:18.725687+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/ClashOfTheTitans": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10323",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:17:00.461645+00:00",
+   "until": "2026-12-25T09:17:00.461645+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Cleaner": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1125899",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:22:24.418501+00:00",
+   "until": "2026-12-25T09:22:24.418501+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/ConanTheBarbarian": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9387",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:02:12.511469+00:00",
+   "until": "2026-12-25T09:02:12.511469+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Creep": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:250574",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:38:12.423551+00:00",
+   "until": "2026-12-25T09:38:12.423551+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/CrimesOfTheFuture": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:819876",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:28:18.413431+00:00",
+   "until": "2026-12-25T09:28:18.413431+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/DarkWater": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9009",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:32:06.435242+00:00",
+   "until": "2026-12-25T09:32:06.435242+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/DawnOfTheDead": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:924",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:54:24.462954+00:00",
+   "until": "2026-12-25T08:54:24.462954+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/DayOfTheDead": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:8408",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:23:30.489993+00:00",
+   "until": "2026-12-25T09:23:30.489993+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/DeathOnTheNile": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:4192",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:16:24.450632+00:00",
+   "until": "2026-12-25T09:16:24.450632+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/DonJon": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11849",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:46:18.462394+00:00",
+   "until": "2026-12-25T09:46:18.462394+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/DontLookDown": {
+   "outcome": "not_found",
+   "reason": "HTTP 404",
+   "title": "movie:45722",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:40:42.823524+00:00",
+   "until": "2026-12-25T08:40:42.823524+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Dune": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:841",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:53:54.397640+00:00",
+   "until": "2026-12-25T08:53:54.397640+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Eden": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1042834",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:04:18.450403+00:00",
+   "until": "2026-12-25T09:04:18.450403+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/EmployeeOfTheMonth": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9794",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:37:42.425589+00:00",
+   "until": "2026-12-25T09:37:42.425589+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/EscapeRoom": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:522681",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:06:30.393343+00:00",
+   "until": "2026-12-25T09:06:30.393343+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Extinction": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:429415",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:33:36.415255+00:00",
+   "until": "2026-12-25T09:33:36.415255+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Fantomas": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/DerivativeWorks/Fantomas",
+   "title": "movie:9826",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:39:12.730417+00:00",
+   "until": "2026-12-25T09:39:12.730417+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/FatherOfTheBride": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11846",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:19:18.496319+00:00",
+   "until": "2026-12-25T09:19:18.496319+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Flight7500": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:82657",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:37:54.431698+00:00",
+   "until": "2026-12-25T09:37:54.431698+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Fortress2012": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11119",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:52:12.476627+00:00",
+   "until": "2026-12-25T09:52:12.476627+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/FourKidsAndIt": {
+   "outcome": "not_found",
+   "reason": "HTTP 404",
+   "title": "movie:555457",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:48:24.916966+00:00",
+   "until": "2026-12-25T09:48:24.916966+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Fracture": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:6145",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:13:42.395706+00:00",
+   "until": "2026-12-25T09:13:42.395706+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/FrightNight": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:58151",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:19:54.413523+00:00",
+   "until": "2026-12-25T09:19:54.413523+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Furie": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:228150",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:43:42.391384+00:00",
+   "until": "2026-12-25T08:43:42.391384+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/GetCarter": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10461",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:50:42.442704+00:00",
+   "until": "2026-12-25T09:50:42.442704+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/GhostTown": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:12797",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:43:48.470402+00:00",
+   "until": "2026-12-25T09:43:48.470402+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/GoingInStyle": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:353070",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:13:18.418453+00:00",
+   "until": "2026-12-25T09:13:18.418453+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Gold": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:334524",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:21:42.401739+00:00",
+   "until": "2026-12-25T09:21:42.401739+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/GoneIn60Seconds": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9679",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:03:18.398716+00:00",
+   "until": "2026-12-25T09:03:18.398716+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/GoodBoy": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1422096",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:08:30.405435+00:00",
+   "until": "2026-12-25T09:08:30.405435+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/GrandmasBoy": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9900",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:29:00.421942+00:00",
+   "until": "2026-12-25T09:29:00.421942+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/GreenStreet": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:8923",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:19:36.434716+00:00",
+   "until": "2026-12-25T09:19:36.434716+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Hairspray": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:2976",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:28:00.417823+00:00",
+   "until": "2026-12-25T09:28:00.417823+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/HalloweenII": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11281",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:13:36.407700+00:00",
+   "until": "2026-12-25T09:13:36.407700+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/HalloweenII2009": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11281",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:13:36.407700+00:00",
+   "until": "2026-12-25T09:13:36.407700+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Hellboy": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:456740",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:12:12.477968+00:00",
+   "until": "2026-12-25T09:12:12.477968+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/HouseOfWax": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10066",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:11:06.436038+00:00",
+   "until": "2026-12-25T09:11:06.436038+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/HouseOnHauntedHill": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11377",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:43:12.468714+00:00",
+   "until": "2026-12-25T09:43:12.468714+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/ImStillHere": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1000837",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:14:30.413305+00:00",
+   "until": "2026-12-25T09:14:30.413305+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Inferno": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/Inferno",
+   "title": "movie:207932",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:06:36.906926+00:00",
+   "until": "2026-12-25T09:06:36.906926+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/JackFrost": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9745",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:43:42.430350+00:00",
+   "until": "2026-12-25T09:43:42.430350+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Jennifer": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10424",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:51:36.443030+00:00",
+   "until": "2026-12-25T09:51:36.443030+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Jennifer8": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10424",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:51:36.443030+00:00",
+   "until": "2026-12-25T09:51:36.443030+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/JourneysEnd": {
+   "outcome": "not_found",
+   "reason": "HTTP 404",
+   "title": "movie:438259",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:48:48.908100+00:00",
+   "until": "2026-12-25T09:48:48.908100+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Judy": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1248832",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:42:06.385791+00:00",
+   "until": "2026-12-25T08:42:06.385791+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/July22": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Film/TwentyTwoJuly",
+   "title": "movie:500006",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:45:19.161228+00:00",
+   "until": "2026-12-25T09:45:19.161228+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/KingCobra": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:390584",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:51:54.439173+00:00",
+   "until": "2026-12-25T09:51:54.439173+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Kukushka": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:554",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:42:42.947352+00:00",
+   "until": "2026-12-25T09:42:42.947352+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/LastSummer": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:812037",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:21:24.794458+00:00",
+   "until": "2026-12-25T09:21:24.794458+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/LeapYear": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:25195",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:19:42.445122+00:00",
+   "until": "2026-12-25T09:19:42.445122+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/LicenseToWed": {
+   "outcome": "not_found",
+   "reason": "HTTP 404",
+   "title": "movie:2959",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:38:18.416774+00:00",
+   "until": "2026-12-25T09:38:18.416774+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Lifeforce": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/LifeForce",
+   "title": "movie:11954",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:27:54.771655+00:00",
+   "until": "2026-12-25T09:27:54.771655+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Litalien": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:523773",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:28:06.821243+00:00",
+   "until": "2026-12-25T09:28:06.821243+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/LittleBoy": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:256962",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:51:24.442742+00:00",
+   "until": "2026-12-25T09:51:24.442742+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/LittleWomen": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:43436",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:50:54.442983+00:00",
+   "until": "2026-12-25T09:50:54.442983+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/LookBothWays": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:805327",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:21:36.410494+00:00",
+   "until": "2026-12-25T09:21:36.410494+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/LoveDontCostAThing": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:21542",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:30:42.816132+00:00",
+   "until": "2026-12-25T09:30:42.816132+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Madre": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:30018",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:48:12.441622+00:00",
+   "until": "2026-12-25T09:48:12.441622+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Mandy": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/Mandy",
+   "title": "movie:460885",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:22:36.874771+00:00",
+   "until": "2026-12-25T09:22:36.874771+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/MidnightSun": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:419478",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:18:36.426411+00:00",
+   "until": "2026-12-25T09:18:36.426411+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Midway": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:522162",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:01:18.400057+00:00",
+   "until": "2026-12-25T09:01:18.400057+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/MortalKombat": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9312",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:15:30.409752+00:00",
+   "until": "2026-12-25T09:15:30.409752+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/MuchAdoAboutNothing": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11971",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:36:18.446892+00:00",
+   "until": "2026-12-25T09:36:18.446892+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/MurderByNumbers": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11892",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:33:18.442705+00:00",
+   "until": "2026-12-25T09:33:18.442705+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/MySpyTheEternalCity": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1048241",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:14:24.420562+00:00",
+   "until": "2026-12-25T09:14:24.420562+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Neighbors2014": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:325133",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:12:54.429832+00:00",
+   "until": "2026-12-25T09:12:54.429832+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/NightHunter": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:441282",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:13:54.420723+00:00",
+   "until": "2026-12-25T09:13:54.420723+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/NightOfTheDemons": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:24924",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:45:36.470694+00:00",
+   "until": "2026-12-25T09:45:36.470694+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/NightSchool": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:454293",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:26:48.428984+00:00",
+   "until": "2026-12-25T09:26:48.428984+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/NightmareAlley": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:597208",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:01:48.397153+00:00",
+   "until": "2026-12-25T09:01:48.397153+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/NineLives": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:322240",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:18:48.469051+00:00",
+   "until": "2026-12-25T09:18:48.469051+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/NineteenSeventeen": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:530915",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:51:42.419860+00:00",
+   "until": "2026-12-25T08:51:42.419860+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/NoEscape": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:192141",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:22:30.422592+00:00",
+   "until": "2026-12-25T09:22:30.422592+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/NoStringsAttached": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/NoStringsAttached",
+   "title": "movie:41630",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:45:30.680000+00:00",
+   "until": "2026-12-25T08:45:30.680000+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/NoWayOut": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/NoWayOut",
+   "title": "movie:10083",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:32:18.746728+00:00",
+   "until": "2026-12-25T09:32:18.746728+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/OYouth": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:310593",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:12:42.403491+00:00",
+   "until": "2026-12-25T09:12:42.403491+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/OnceUponATimeInMexico": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1428",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:20:36.448207+00:00",
+   "until": "2026-12-25T09:20:36.448207+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Overboard": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10780",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:27:30.462663+00:00",
+   "until": "2026-12-25T09:27:30.462663+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Pathfinder": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/Pathfinder",
+   "title": "movie:1534",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:39:00.786259+00:00",
+   "until": "2026-12-25T09:39:00.786259+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/PerfectAddiction": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:845659",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:46:36.449631+00:00",
+   "until": "2026-12-25T09:46:36.449631+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/PetesDragon": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:294272",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:03:54.418710+00:00",
+   "until": "2026-12-25T09:03:54.418710+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/PodPeople": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:262338",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:43:30.453349+00:00",
+   "until": "2026-12-25T09:43:30.453349+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/PointBreak": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:257088",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:11:18.396381+00:00",
+   "until": "2026-12-25T09:11:18.396381+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Poltergeist": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:609",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:08:54.437098+00:00",
+   "until": "2026-12-25T09:08:54.437098+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Ravenous": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10212",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:38:24.429324+00:00",
+   "until": "2026-12-25T09:38:24.429324+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/RawDeal": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:2099",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:29:24.428092+00:00",
+   "until": "2026-12-25T09:29:24.428092+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Reality": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:985617",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:48:00.516608+00:00",
+   "until": "2026-12-25T09:48:00.516608+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Revanche": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:14249",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:40:48.480032+00:00",
+   "until": "2026-12-25T09:40:48.480032+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Revenge": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:467938",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:20:18.455403+00:00",
+   "until": "2026-12-25T09:20:18.455403+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/RoadHouse": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:359410",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:47:30.373316+00:00",
+   "until": "2026-12-25T08:47:30.373316+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/RobinHood": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/RobinHood",
+   "title": "movie:11886",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:12:00.893506+00:00",
+   "until": "2026-12-25T09:12:00.893506+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/RurouniKenshin": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Film/RurouniKenshin2012",
+   "title": "movie:127533",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:33:12.768240+00:00",
+   "until": "2026-12-25T09:33:12.768240+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/SamsonAndDelilah": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:29993",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:35:48.812001+00:00",
+   "until": "2026-12-25T09:35:48.812001+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/SharkNight": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:65055",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:29:42.434299+00:00",
+   "until": "2026-12-25T09:29:42.434299+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/SharknadoThe4thAwakens": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:390989",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:50:06.909093+00:00",
+   "until": "2026-12-25T09:50:06.909093+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Shattered": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:844398",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:29:18.457351+00:00",
+   "until": "2026-12-25T09:29:18.457351+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/SilentNight": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:891699",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:17:24.427816+00:00",
+   "until": "2026-12-25T09:17:24.427816+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/SixMoralTales": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:46581",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:34:18.809922+00:00",
+   "until": "2026-12-25T09:34:18.809922+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/StandUpGuys": {
+   "outcome": "not_found",
+   "reason": "HTTP 404",
+   "title": "movie:121824",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:22:18.437358+00:00",
+   "until": "2026-12-25T09:22:18.437358+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/StatesOfGrace": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1662",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:15:54.906821+00:00",
+   "until": "2026-12-25T09:15:54.906821+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Stitches": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1390382",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:17:12.407841+00:00",
+   "until": "2026-12-25T09:17:12.407841+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Stowaway": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:559581",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:45:24.443219+00:00",
+   "until": "2026-12-25T09:45:24.443219+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/StrawDogs": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:64639",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:27:36.424128+00:00",
+   "until": "2026-12-25T09:27:36.424128+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Streetdance": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:41592",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:52:06.821910+00:00",
+   "until": "2026-12-25T09:52:06.821910+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Sunrise": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:631",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:48:54.828475+00:00",
+   "until": "2026-12-25T09:48:54.828475+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/SuperCop": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11134",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:25:24.430769+00:00",
+   "until": "2026-12-25T09:25:24.430769+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/SuperManTheChristopherReeveStory": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1128559",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:41:24.444493+00:00",
+   "until": "2026-12-25T09:41:24.444493+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/SuperMarioBros": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9607",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:25:54.431004+00:00",
+   "until": "2026-12-25T09:25:54.431004+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Suspiria": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:361292",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:20:00.416719+00:00",
+   "until": "2026-12-25T09:20:00.416719+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Tar": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:817758",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:15:00.443964+00:00",
+   "until": "2026-12-25T09:15:00.443964+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/The39Steps": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:260",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:42:06.437713+00:00",
+   "until": "2026-12-25T09:42:06.437713+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheAlamo": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10733",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:40:42.837012+00:00",
+   "until": "2026-12-25T09:40:42.837012+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheAssignment": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:399173",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:36:54.444600+00:00",
+   "until": "2026-12-25T09:36:54.444600+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheAvengers2012": {
    "outcome": "rejected",
@@ -21,12 +1247,1028 @@
    "at": "2026-09-26T08:24:48.460798+00:00",
    "until": "2026-12-25T08:24:48.460798+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheBabysitter": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:419479",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:22:12.410955+00:00",
+   "until": "2026-12-25T09:22:12.410955+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheBirthOfANation": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:339408",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:40:06.456697+00:00",
+   "until": "2026-12-25T09:40:06.456697+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheBlot": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9599",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:25:06.832563+00:00",
+   "until": "2026-12-25T09:25:06.832563+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheBlueLagoon": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:5689",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:01:36.868145+00:00",
+   "until": "2026-12-25T09:01:36.868145+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheBoogeyman": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:532408",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:59:54.390517+00:00",
+   "until": "2026-12-25T08:59:54.390517+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheBride": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1159831",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:00.373030+00:00",
+   "until": "2026-12-25T08:49:00.373030+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheCondemned": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:14636",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:22:00.458386+00:00",
+   "until": "2026-12-25T09:22:00.458386+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheCourier2021": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:522241",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:14:12.418770+00:00",
+   "until": "2026-12-25T09:14:12.418770+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheCrazies": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:29427",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:29:36.813278+00:00",
+   "until": "2026-12-25T09:29:36.813278+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheCreator": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:670292",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:51:54.390028+00:00",
+   "until": "2026-12-25T08:51:54.390028+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheDayTheEarthStoodStill": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10200",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:00:42.415141+00:00",
+   "until": "2026-12-25T09:00:42.415141+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheDisappearanceOfEleanorRigby": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:157829",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:50:00.444979+00:00",
+   "until": "2026-12-25T09:50:00.444979+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheDoor": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Film/TheDoor2008",
+   "title": "movie:10537",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:24:37.245831+00:00",
+   "until": "2026-12-25T09:24:37.245831+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheEndOfTheAffair": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/TheEndOfTheAffair",
+   "title": "movie:20024",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:48:07.103026+00:00",
+   "until": "2026-12-25T09:48:07.103026+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheForeigner": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:379149",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:00:00.394303+00:00",
+   "until": "2026-12-25T09:00:00.394303+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheForest": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/TheForest",
+   "title": "movie:329440",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:37:30.785366+00:00",
+   "until": "2026-12-25T09:37:30.785366+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheFront": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:204082",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:59:42.394692+00:00",
+   "until": "2026-12-25T08:59:42.394692+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGirlWithTheDragonTattoo": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:15472",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:13:06.443729+00:00",
+   "until": "2026-12-25T09:13:06.443729+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGreatGatsby": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11034",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:42:18.438109+00:00",
+   "until": "2026-12-25T09:42:18.438109+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGreatTrainRobbery": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11583",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:50:12.458585+00:00",
+   "until": "2026-12-25T09:50:12.458585+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGuardian": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/TheGuardian",
+   "title": "movie:4643",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:16:36.701816+00:00",
+   "until": "2026-12-25T09:16:36.701816+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHarderTheyFall": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:28528",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:53:30.401112+00:00",
+   "until": "2026-12-25T08:53:30.401112+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHauntedMansion": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10756",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:16:12.405872+00:00",
+   "until": "2026-12-25T09:16:12.405872+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHeartbreakKid": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9038",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:12:30.425133+00:00",
+   "until": "2026-12-25T09:12:30.425133+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHillsHaveEyes": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9792",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:57:24.409811+00:00",
+   "until": "2026-12-25T08:57:24.409811+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHousemaid": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1368166",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:42:30.374252+00:00",
+   "until": "2026-12-25T08:42:30.374252+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHunt": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:103663",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:02:36.400280+00:00",
+   "until": "2026-12-25T09:02:36.400280+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHunted": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/Hunted",
+   "title": "movie:10632",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:33:00.758598+00:00",
+   "until": "2026-12-25T09:33:00.758598+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheInvitation": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:830788",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:15:12.415710+00:00",
+   "until": "2026-12-25T09:15:12.415710+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheIslandOfDoctorMoreau": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9306",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:49:18.469262+00:00",
+   "until": "2026-12-25T09:49:18.469262+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheKiller": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:800158",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:55:54.392662+00:00",
+   "until": "2026-12-25T08:55:54.392662+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheLadykillers": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:5516",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:24:48.455004+00:00",
+   "until": "2026-12-25T09:24:48.455004+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheLittleDeath": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:276844",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:45:12.456518+00:00",
+   "until": "2026-12-25T09:45:12.456518+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheMagnificentSeven": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:966",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:58:48.440583+00:00",
+   "until": "2026-12-25T08:58:48.440583+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheMalteseFalcon": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/TheMalteseFalcon",
+   "title": "movie:963",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:20:48.503406+00:00",
+   "until": "2026-12-25T09:20:48.503406+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheNightClerk": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:526007",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:23:54.421733+00:00",
+   "until": "2026-12-25T09:23:54.421733+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheNuttyProfessor": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9327",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:19:00.446350+00:00",
+   "until": "2026-12-25T09:19:00.446350+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheParentTrap": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9820",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:47:48.453395+00:00",
+   "until": "2026-12-25T08:47:48.453395+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/ThePassenger": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:957314",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:51:48.434883+00:00",
+   "until": "2026-12-25T09:51:48.434883+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheRaid": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:180299",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:14:18.432035+00:00",
+   "until": "2026-12-25T09:14:18.432035+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheRiotClub": {
+   "outcome": "not_found",
+   "reason": "HTTP 404",
+   "title": "movie:270302",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:44:00.409236+00:00",
+   "until": "2026-12-25T09:44:00.409236+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheRoom": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/TheRoom",
+   "title": "movie:17473",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:41:06.796489+00:00",
+   "until": "2026-12-25T09:41:06.796489+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheSentinel": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/TheSentinel",
+   "title": "movie:5820",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:19:24.778931+00:00",
+   "until": "2026-12-25T09:19:24.778931+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheSnowman": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:372343",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:09:30.430718+00:00",
+   "until": "2026-12-25T09:09:30.430718+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheStoryOfO": {
+   "outcome": "not_found",
+   "reason": "HTTP 404",
+   "title": "movie:4561",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:15:24.761885+00:00",
+   "until": "2026-12-25T09:15:24.761885+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheThiefOfBagdad": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:12232",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:47:42.477756+00:00",
+   "until": "2026-12-25T09:47:42.477756+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheThomasCrownAffair": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:913",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:17:36.460943+00:00",
+   "until": "2026-12-25T09:17:36.460943+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheWave": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:7735",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:20:12.479162+00:00",
+   "until": "2026-12-25T09:20:12.479162+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheWayBack": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:529485",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:26:24.445287+00:00",
+   "until": "2026-12-25T09:26:24.445287+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheWeddingYear": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:521844",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:46:00.927844+00:00",
+   "until": "2026-12-25T09:46:00.927844+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheWeek": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:465109",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:47:06.851336+00:00",
+   "until": "2026-12-25T09:47:06.851336+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheWickerMan": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:16307",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:14:06.459835+00:00",
+   "until": "2026-12-25T09:14:06.459835+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheWitches": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:10166",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:31:18.469247+00:00",
+   "until": "2026-12-25T09:31:18.469247+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheWitches2020": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:531219",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:00:24.429266+00:00",
+   "until": "2026-12-25T09:00:24.429266+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheXFiles": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:846",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:12:48.402044+00:00",
+   "until": "2026-12-25T09:12:48.402044+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Thirteen": {
+   "outcome": "not_found",
+   "reason": "HTTP 404",
+   "title": "movie:11023",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:22:06.382523+00:00",
+   "until": "2026-12-25T09:22:06.382523+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/ThreeMenAndABaby": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:12154",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:33:06.438682+00:00",
+   "until": "2026-12-25T09:33:06.438682+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Trespass": {
+   "outcome": "not_found",
+   "reason": "HTTP 404",
+   "title": "movie:70578",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:52:18.407281+00:00",
+   "until": "2026-12-25T09:52:18.407281+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Troll": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:736526",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:29:12.417066+00:00",
+   "until": "2026-12-25T09:29:12.417066+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TrueStories": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:245706",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:44:48.473294+00:00",
+   "until": "2026-12-25T09:44:48.473294+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TruthOrDare": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/TruthOrDare",
+   "title": "movie:460019",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:14:42.733565+00:00",
+   "until": "2026-12-25T09:14:42.733565+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/UnderWraps": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:763873",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:42:36.797977+00:00",
+   "until": "2026-12-25T09:42:36.797977+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/VanWilder": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:11452",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:18:00.436622+00:00",
+   "until": "2026-12-25T09:18:00.436622+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Vice": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:429197",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:12:18.424565+00:00",
+   "until": "2026-12-25T09:12:18.424565+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/VillageOfTheDamned": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:12122",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:38:36.460193+00:00",
+   "until": "2026-12-25T09:38:36.460193+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/WayOfTheDragon": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:9462",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:27:18.475576+00:00",
+   "until": "2026-12-25T09:27:18.475576+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/WestSideStory": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:511809",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:08:42.428931+00:00",
+   "until": "2026-12-25T09:08:42.428931+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/WhatsLoveGotToDoWithIt": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:800301",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:35:54.861609+00:00",
+   "until": "2026-12-25T09:35:54.861609+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/WhoAmI": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:8697",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:28:24.413189+00:00",
+   "until": "2026-12-25T09:28:24.413189+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/WildOrchids": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:5203",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:10:36.774113+00:00",
+   "until": "2026-12-25T09:10:36.774113+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Wolfman": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Film/Wolfman1979",
+   "title": "movie:7978",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:02:24.757292+00:00",
+   "until": "2026-12-25T09:02:24.757292+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/WomanInBlackAngelOfDeath": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:288158",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:34:12.465443+00:00",
+   "until": "2026-12-25T09:34:12.465443+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Yesterday": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:515195",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:22:48.453399+00:00",
+   "until": "2026-12-25T09:22:48.453399+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/YouCanSeeEverything": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1765072",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:11:00.405956+00:00",
+   "until": "2026-12-25T09:11:00.405956+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Youth": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:310593",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:12:42.403491+00:00",
+   "until": "2026-12-25T09:12:42.403491+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/RWBY": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:50137",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:48:48.423438+00:00",
+   "until": "2026-12-25T08:48:48.423438+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/TheTick": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:14540",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:58:30.397549+00:00",
+   "until": "2026-12-25T08:58:30.397549+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Literature/AscendanceOfABookworm": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:91768",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:40:24.419198+00:00",
+   "until": "2026-12-25T08:40:24.419198+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Literature/FromOldCountryBumpkinToMasterSwordsman": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:260823",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:43:00.752360+00:00",
+   "until": "2026-12-25T08:43:00.752360+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Literature/HortonHearsAWho": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:12222",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:54:12.911117+00:00",
+   "until": "2026-12-25T08:54:12.911117+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Literature/MakeineTooManyLosingHeroines": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:241535",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:12.389629+00:00",
+   "until": "2026-12-25T08:49:12.389629+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Literature/ShangriLaFrontier": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:205050",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:45:30.680668+00:00",
+   "until": "2026-12-25T08:45:30.680668+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/AWrinkleInTime": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:407451",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:13:24.422102+00:00",
+   "until": "2026-12-25T09:13:24.422102+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/AboveTheLaw": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:9395",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:27:42.738188+00:00",
+   "until": "2026-12-25T09:27:42.738188+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Aftermath": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:390051",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:31:00.772294+00:00",
+   "until": "2026-12-25T09:31:00.772294+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/AloneInTheDark": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:12142",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:48:42.459108+00:00",
+   "until": "2026-12-25T09:48:42.459108+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Main/Avenger": {
    "outcome": "rejected",
    "reason": "namespace",
    "title": "movie:24428",
    "at": "2026-09-26T08:24:48.460798+00:00",
    "until": "2026-12-25T08:24:48.460798+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/BadEducation": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:140",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:37:48.886453+00:00",
+   "until": "2026-12-25T09:37:48.886453+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/BeingHuman": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:32022",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:54.913815+00:00",
+   "until": "2026-12-25T08:49:54.913815+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Beowulf": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:2310",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:11:18.397739+00:00",
+   "until": "2026-12-25T09:11:18.397739+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Bordertown": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:554",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:59:18.396718+00:00",
+   "until": "2026-12-25T08:59:18.396718+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/BrokenArrow": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:9208",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:02:54.466368+00:00",
+   "until": "2026-12-25T09:02:54.466368+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/CasinoRoyale": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:12208",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:19:30.468771+00:00",
+   "until": "2026-12-25T09:19:30.468771+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/CheaperByTheDozen": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:11007",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:17:18.725687+00:00",
+   "until": "2026-12-25T09:17:18.725687+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Contraband": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:77866",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:25:36.764973+00:00",
+   "until": "2026-12-25T09:25:36.764973+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Crash": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:83584",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:54:42.798674+00:00",
+   "until": "2026-12-25T08:54:42.798674+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Crisis": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:50558",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:03:42.422486+00:00",
+   "until": "2026-12-25T09:03:42.422486+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Damned": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:850439",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:34:42.504255+00:00",
+   "until": "2026-12-25T09:34:42.504255+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Destroyer": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:471507",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:47:30.465690+00:00",
+   "until": "2026-12-25T09:47:30.465690+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Fortress": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:12088",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:27:00.517249+00:00",
+   "until": "2026-12-25T09:27:00.517249+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Frozen": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:109445",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:46:19.109735+00:00",
+   "until": "2026-12-25T08:46:19.109735+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Fury": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:228150",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:43:42.391384+00:00",
+   "until": "2026-12-25T08:43:42.391384+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Ghost": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:126027",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:39:06.469238+00:00",
+   "until": "2026-12-25T08:39:06.469238+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/GimmeShelter": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:352232",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:42:06.441021+00:00",
+   "until": "2026-12-25T09:42:06.441021+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/GodzillaKingOfTheMonsters": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:18983",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:51:48.438205+00:00",
+   "until": "2026-12-25T09:51:48.438205+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Hero": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:10699",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:48:54.831112+00:00",
+   "until": "2026-12-25T09:48:54.831112+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/HouseOfCards": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:1425",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:39:24.522301+00:00",
+   "until": "2026-12-25T08:39:24.522301+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Inferno": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:207932",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:06:36.906926+00:00",
+   "until": "2026-12-25T09:06:36.906926+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/It": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:19614",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:50:36.391704+00:00",
+   "until": "2026-12-25T08:50:36.391704+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Joy": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:274479",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:23:42.441603+00:00",
+   "until": "2026-12-25T09:23:42.441603+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Kingdom": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:46437",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:38:36.390284+00:00",
+   "until": "2026-12-25T08:38:36.390284+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Leviathan": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:14372",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:48:36.447459+00:00",
+   "until": "2026-12-25T09:48:36.447459+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Lifeforce": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:11954",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:27:54.771655+00:00",
+   "until": "2026-12-25T09:27:54.771655+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/MarieAntoinette": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:1887",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:17:12.409392+00:00",
+   "until": "2026-12-25T09:17:12.409392+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/MaryQueenOfScots": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:457136",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:15:18.886189+00:00",
+   "until": "2026-12-25T09:15:18.886189+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Missing": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:45388",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:12.389161+00:00",
+   "until": "2026-12-25T08:49:12.389161+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Mother": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:30018",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:48:12.441622+00:00",
+   "until": "2026-12-25T09:48:12.441622+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/NightOfTheLivingDead": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:10331",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:48.436409+00:00",
+   "until": "2026-12-25T08:49:48.436409+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/NoGoodDeed": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:136835",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:25:36.766347+00:00",
+   "until": "2026-12-25T09:25:36.766347+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/NoStringsAttached": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:41630",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:45:30.680000+00:00",
+   "until": "2026-12-25T08:45:30.680000+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/NoWayOut": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:10083",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:32:18.746728+00:00",
+   "until": "2026-12-25T09:32:18.746728+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Oldboy": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:87516",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:05:36.405643+00:00",
+   "until": "2026-12-25T09:05:36.405643+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Pathfinder": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:1534",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:39:00.786259+00:00",
+   "until": "2026-12-25T09:39:00.786259+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/RedDawn": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:60747",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:09:48.413697+00:00",
+   "until": "2026-12-25T09:09:48.413697+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Resurrection": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:878608",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:27:00.518364+00:00",
+   "until": "2026-12-25T09:27:00.518364+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Rise": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:2484",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:50:18.462731+00:00",
+   "until": "2026-12-25T08:50:18.462731+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Sahara": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:7364",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:24:00.451064+00:00",
+   "until": "2026-12-25T09:24:00.451064+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Scarface": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:877",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:50:54.445236+00:00",
+   "until": "2026-12-25T09:50:54.445236+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Main/Shameless": {
    "outcome": "rejected",
@@ -42,6 +2284,414 @@
    "at": "2026-09-26T08:23:00.545315+00:00",
    "until": "2026-12-25T08:23:00.545315+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Sirens": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:60766",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:10:36.775320+00:00",
+   "until": "2026-12-25T09:10:36.775320+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Skin": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:569485",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:46:00.930199+00:00",
+   "until": "2026-12-25T09:46:00.930199+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/SkyHigh": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:11459",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:09:48.412078+00:00",
+   "until": "2026-12-25T09:09:48.412078+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Solaris": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:593",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:36:06.449723+00:00",
+   "until": "2026-12-25T09:36:06.449723+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheAmityvilleHorror": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:10065",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:19:48.422409+00:00",
+   "until": "2026-12-25T09:19:48.422409+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheBlob": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:9599",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:25:06.832563+00:00",
+   "until": "2026-12-25T09:25:06.832563+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheColony": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:760873",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:39:36.830137+00:00",
+   "until": "2026-12-25T09:39:36.830137+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheCountOfMonteCristo": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:240456",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:50:00.633832+00:00",
+   "until": "2026-12-25T08:50:00.633832+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheEagle": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:49494",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:15:30.411341+00:00",
+   "until": "2026-12-25T09:15:30.411341+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheFlightOfThePhoenix": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:10243",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:46:12.485892+00:00",
+   "until": "2026-12-25T09:46:12.485892+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheFly": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:11815",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:47:18.456809+00:00",
+   "until": "2026-12-25T09:47:18.456809+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheGirlNextDoor": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:15356",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:33:30.438417+00:00",
+   "until": "2026-12-25T09:33:30.438417+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheGuardian": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:4643",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:16:36.701816+00:00",
+   "until": "2026-12-25T09:16:36.701816+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheItalianJob": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:10536",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:28:42.458094+00:00",
+   "until": "2026-12-25T09:28:42.458094+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheKid": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:4244",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:23:48.446872+00:00",
+   "until": "2026-12-25T09:23:48.446872+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheLittlePrince": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:309809",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:00:24.430294+00:00",
+   "until": "2026-12-25T09:00:24.430294+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheLostWorld": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:896",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:46:00.461822+00:00",
+   "until": "2026-12-25T08:46:00.461822+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheMalteseFalcon": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:963",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:20:48.503406+00:00",
+   "until": "2026-12-25T09:20:48.503406+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheManWhoWasntThere": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:10778",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:30:12.433876+00:00",
+   "until": "2026-12-25T09:30:12.433876+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheMechanic": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:27582",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:04:00.455993+00:00",
+   "until": "2026-12-25T09:04:00.455993+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheOtherWoman": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:193610",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:11:12.417810+00:00",
+   "until": "2026-12-25T09:11:12.417810+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/ThePhantom": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:9826",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:39:12.730417+00:00",
+   "until": "2026-12-25T09:39:12.730417+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/ThePrincess": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:759175",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:20:54.434719+00:00",
+   "until": "2026-12-25T09:20:54.434719+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheRaven": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:70436",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:39:36.828746+00:00",
+   "until": "2026-12-25T09:39:36.828746+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheRedShoes": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:19542",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:47:42.480422+00:00",
+   "until": "2026-12-25T09:47:42.480422+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheRoom": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:582913",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:37:36.458349+00:00",
+   "until": "2026-12-25T09:37:36.458349+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheSentinel": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:5820",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:19:24.778931+00:00",
+   "until": "2026-12-25T09:19:24.778931+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheTimeMachine": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:2135",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:14:54.511696+00:00",
+   "until": "2026-12-25T09:14:54.511696+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheWolfMan": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:7978",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:02:24.757292+00:00",
+   "until": "2026-12-25T09:02:24.757292+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Thirteen": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:11023",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:22:06.382523+00:00",
+   "until": "2026-12-25T09:22:06.382523+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Twisted": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:13572",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:43:12.470802+00:00",
+   "until": "2026-12-25T09:43:12.470802+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Uninvited": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:14254",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:25:42.473825+00:00",
+   "until": "2026-12-25T09:25:42.473825+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/V": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:75893",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:55:42.729168+00:00",
+   "until": "2026-12-25T08:55:42.729168+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/War": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:10431",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:14:54.513504+00:00",
+   "until": "2026-12-25T09:14:54.513504+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/WhiteNoise": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:744594",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:19:48.424077+00:00",
+   "until": "2026-12-25T09:19:48.424077+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Main/Zapped": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:278774",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:49:54.446615+00:00",
+   "until": "2026-12-25T09:49:54.446615+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Manga/BadGirl2021": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:258000",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:54.914303+00:00",
+   "until": "2026-12-25T08:49:54.914303+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Manga/DailyLifeWithMonsterGirl": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:63187",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:02:00.395691+00:00",
+   "until": "2026-12-25T09:02:00.395691+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Manga/FutureDiary": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:46671",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:51:18.533194+00:00",
+   "until": "2026-12-25T08:51:18.533194+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Manga/HayateTheCombatButler": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:56355",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:12.390017+00:00",
+   "until": "2026-12-25T08:49:12.390017+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Manga/Major": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:29602",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:44:36.392913+00:00",
+   "until": "2026-12-25T08:44:36.392913+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Manga/NonNonBiyori": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:66875",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:44:36.393402+00:00",
+   "until": "2026-12-25T08:44:36.393402+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Manga/RosarioToVampire": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:36983",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:00.373845+00:00",
+   "until": "2026-12-25T08:49:00.373845+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Manga/SasakiAndMiyano": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:127549",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:58:06.437664+00:00",
+   "until": "2026-12-25T08:58:06.437664+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Music/MichaelJacksonsThriller": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:92060",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:38:06.473769+00:00",
+   "until": "2026-12-25T09:38:06.473769+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Recap/MiraculousLadybugSP01MiraculousWorldNewYorkUnitedHeroez": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:755812",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:25:36.767274+00:00",
+   "until": "2026-12-25T09:25:36.767274+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Recap/SherlockSpecialTheAbominableBride": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:379170",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:25:30.477156+00:00",
+   "until": "2026-12-25T09:25:30.477156+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Recap/TheLionGuardReturnOfTheRoar": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:359983",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:40:48.482015+00:00",
+   "until": "2026-12-25T09:40:48.482015+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Recap/TheMuppetShowSpecial": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:1548113",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:15:24.763415+00:00",
+   "until": "2026-12-25T09:15:24.763415+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/ALeagueOfTheirOwn": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:32348",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:48:06.382542+00:00",
+   "until": "2026-12-25T08:48:06.382542+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/AgentCarter": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:61550",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:47:12.446865+00:00",
+   "until": "2026-12-25T08:47:12.446865+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/AgentsOfSHIELD": {
    "outcome": "rejected",
    "reason": "identity",
@@ -53,8 +2703,33 @@
    "outcome": "rejected",
    "reason": "identity",
    "title": "show:1338",
-   "at": "2026-09-26T08:24:36.611124+00:00",
-   "until": "2026-12-25T08:24:36.611124+00:00"
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:37:54.411372+00:00",
+   "until": "2026-12-25T08:37:54.411372+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/AllCreaturesGreatAndSmall": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:7406",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:46:12.381803+00:00",
+   "until": "2026-12-25T08:46:12.381803+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/BadBoy": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:105017",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:47:06.787744+00:00",
+   "until": "2026-12-25T08:47:06.787744+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/BattleStarGalactica2003": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:1972",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:39:12.943450+00:00",
+   "until": "2026-12-25T08:39:12.943450+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/CameraCafe": {
    "outcome": "rejected",
@@ -63,6 +2738,86 @@
    "at": "2026-09-26T08:24:12.469899+00:00",
    "until": "2026-12-25T08:24:12.469899+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/CelebrityJeopardy": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:209752",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:59:18.395677+00:00",
+   "until": "2026-12-25T08:59:18.395677+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/ChinesePaladin": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:8757",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:10:43.017732+00:00",
+   "until": "2026-12-25T09:10:43.017732+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/Counterstrike": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:10814",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:00:54.423580+00:00",
+   "until": "2026-12-25T09:00:54.423580+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/Crashing": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:68898",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:07:54.790508+00:00",
+   "until": "2026-12-25T09:07:54.790508+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/DayBreak": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:4618",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:05:30.890579+00:00",
+   "until": "2026-12-25T09:05:30.890579+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/DifficultPeople": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:63353",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:51:48.387415+00:00",
+   "until": "2026-12-25T08:51:48.387415+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/DowntonAbbey": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:33907",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:40:36.376673+00:00",
+   "until": "2026-12-25T08:40:36.376673+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/Dragula": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:70940",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:53:36.421751+00:00",
+   "until": "2026-12-25T08:53:36.421751+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/EarthAbides": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:250308",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:50:36.390883+00:00",
+   "until": "2026-12-25T08:50:36.390883+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/Empire2015": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:64500",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:48:54.408624+00:00",
+   "until": "2026-12-25T08:48:54.408624+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/EverybodyLovesRaymond": {
    "outcome": "rejected",
    "reason": "identity",
@@ -70,12 +2825,101 @@
    "at": "2026-09-26T08:24:24.412927+00:00",
    "until": "2026-12-25T08:24:24.412927+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/EverybodysLiveWithJohnMulaney": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:283387",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:54:42.797562+00:00",
+   "until": "2026-12-25T08:54:42.797562+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/FlashForward": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:19092",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:48:18.419001+00:00",
+   "until": "2026-12-25T08:48:18.419001+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/Freddie": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:204",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:05:48.409794+00:00",
+   "until": "2026-12-25T09:05:48.409794+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/GaryUnmarried": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:5911",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:52:54.402279+00:00",
+   "until": "2026-12-25T08:52:54.402279+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/GeorgieAndMandysFirstMarriage": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:243875",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:42:24.387925+00:00",
+   "until": "2026-12-25T08:42:24.387925+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/GoldenPalace": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:3068",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:04:12.407834+00:00",
+   "until": "2026-12-25T09:04:12.407834+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/GrowingUpFisher": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:58838",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:10:00.802489+00:00",
+   "until": "2026-12-25T09:10:00.802489+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/HandOfGod": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:61263",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:10:54.442041+00:00",
+   "until": "2026-12-25T09:10:54.442041+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/Hercules2005": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2567",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:42:48.408107+00:00",
+   "until": "2026-12-25T08:42:48.408107+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/HomeMovieThePrincessBride": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:105479",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:53:48.409682+00:00",
+   "until": "2026-12-25T08:53:48.409682+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/HomicideLifeOnTheStreet": {
    "outcome": "rejected",
    "reason": "identity",
    "title": "show:4464",
-   "at": "2026-09-26T08:24:42.450626+00:00",
-   "until": "2026-12-25T08:24:42.450626+00:00"
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:38:00.427221+00:00",
+   "until": "2026-12-25T08:38:00.427221+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/HopeAndGloria": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:1115",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:01:54.436108+00:00",
+   "until": "2026-12-25T09:01:54.436108+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/LawAndOrder": {
    "outcome": "rejected",
@@ -88,8 +2932,65 @@
    "outcome": "rejected",
    "reason": "identity",
    "title": "show:2734",
-   "at": "2026-09-26T08:22:00.396688+00:00",
-   "until": "2026-12-25T08:22:00.396688+00:00"
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:34:36.385279+00:00",
+   "until": "2026-12-25T08:34:36.385279+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/Longmire": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:43901",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:39:18.396793+00:00",
+   "until": "2026-12-25T08:39:18.396793+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/LoveIsBlind": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:99353",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:55:24.413117+00:00",
+   "until": "2026-12-25T08:55:24.413117+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/MagnificentCentury": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:34899",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:42:42.417537+00:00",
+   "until": "2026-12-25T08:42:42.417537+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/Manhunt": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:72597",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:36.386831+00:00",
+   "until": "2026-12-25T08:49:36.386831+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/MidnightTexas": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:67861",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:52:18.464870+00:00",
+   "until": "2026-12-25T08:52:18.464870+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/MrSunshine": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:75820",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:50:30.377816+00:00",
+   "until": "2026-12-25T08:50:30.377816+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/NewYearsRockinEve": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:1944",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:56:48.383962+00:00",
+   "until": "2026-12-25T08:56:48.383962+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/NineOneOne": {
    "outcome": "rejected",
@@ -98,12 +2999,60 @@
    "at": "2026-09-26T08:22:48.463538+00:00",
    "until": "2026-12-25T08:22:48.463538+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/PacificBlue": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:50",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:42:36.389743+00:00",
+   "until": "2026-12-25T08:42:36.389743+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/QueerAsFolk": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2902",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:43:36.402640+00:00",
+   "until": "2026-12-25T08:43:36.402640+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/QueerAsFolkUS": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2902",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:43:36.402640+00:00",
+   "until": "2026-12-25T08:43:36.402640+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/RedOaks": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:63130",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:05:18.796114+00:00",
+   "until": "2026-12-25T09:05:18.796114+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/RescueSpecialOps": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:21592",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:04:54.782173+00:00",
+   "until": "2026-12-25T09:04:54.782173+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/RizzoliAndIsles": {
    "outcome": "rejected",
    "reason": "identity",
    "title": "show:32895",
    "at": "2026-09-26T08:23:54.838149+00:00",
    "until": "2026-12-25T08:23:54.838149+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/RunningWilde": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:32757",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:10:12.417640+00:00",
+   "until": "2026-12-25T09:10:12.417640+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/SalatutElamat": {
    "outcome": "rejected",
@@ -112,33 +3061,157 @@
    "at": "2026-09-26T08:22:54.409490+00:00",
    "until": "2026-12-25T08:22:54.409490+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/Satisfaction": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:15280",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:05:36.404521+00:00",
+   "until": "2026-12-25T09:05:36.404521+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/Scoop": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Series/Scoop2009",
+   "title": "show:203599",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:45:55.410729+00:00",
+   "until": "2026-12-25T08:45:55.410729+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/ShamelessUS": {
    "outcome": "rejected",
    "reason": "identity",
    "title": "show:34307",
-   "at": "2026-09-26T08:22:30.440596+00:00",
-   "until": "2026-12-25T08:22:30.440596+00:00"
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:35:36.417885+00:00",
+   "until": "2026-12-25T08:35:36.417885+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/ShitMyDadSays": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:32843",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:59:12.416732+00:00",
+   "until": "2026-12-25T08:59:12.416732+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/SixteenHundredPenn": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:43243",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:07:42.828396+00:00",
+   "until": "2026-12-25T09:07:42.828396+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/SonsOfTucson": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:21763",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:08:36.439905+00:00",
+   "until": "2026-12-25T09:08:36.439905+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/SpiderMan": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:888",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:42:12.408761+00:00",
+   "until": "2026-12-25T08:42:12.408761+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/StarTrekStrangeNewWorlds": {
    "outcome": "rejected",
    "reason": "identity",
    "title": "show:103516",
-   "at": "2026-09-26T08:24:30.446868+00:00",
-   "until": "2026-12-25T08:24:30.446868+00:00"
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:37:48.414263+00:00",
+   "until": "2026-12-25T08:37:48.414263+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TV101": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:14787",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:04:06.758194+00:00",
+   "until": "2026-12-25T09:04:06.758194+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TalesOfTomorrow": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:15487",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:58:30.396592+00:00",
+   "until": "2026-12-25T08:58:30.396592+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TenEightOfficersOnDuty": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:11229",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:57:06.384656+00:00",
+   "until": "2026-12-25T08:57:06.384656+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheBridge": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:45016",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:45:48.375943+00:00",
+   "until": "2026-12-25T08:45:48.375943+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheChief": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:34447",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:58:00.385964+00:00",
+   "until": "2026-12-25T08:58:00.385964+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheChosenTVSeries": {
    "outcome": "rejected",
-   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Series/TheChosen2017?from=Series.TheChosenTVSeries",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Series/TheChosen2017",
    "title": "show:85077",
-   "at": "2026-09-26T08:24:00.807942+00:00",
-   "until": "2026-12-25T08:24:00.807942+00:00"
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:37:00.728406+00:00",
+   "until": "2026-12-25T08:37:00.728406+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheFlipWilsonShow": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:10663",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:51:06.777330+00:00",
+   "until": "2026-12-25T08:51:06.777330+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheLawAccordingToLidiaPoet": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:218896",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:03:00.423116+00:00",
+   "until": "2026-12-25T09:03:00.423116+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheLyonsDen": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:4885",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:58:18.750940+00:00",
+   "until": "2026-12-25T08:58:18.750940+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheOffice": {
    "outcome": "rejected",
    "reason": "identity",
    "title": "show:2316",
-   "at": "2026-09-26T08:22:12.410376+00:00",
-   "until": "2026-12-25T08:22:12.410376+00:00"
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:35:06.883779+00:00",
+   "until": "2026-12-25T08:35:06.883779+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheOfficeUK": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2996",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:59:48.443344+00:00",
+   "until": "2026-12-25T08:59:48.443344+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheOfficeUS": {
    "outcome": "rejected",
@@ -147,12 +3220,29 @@
    "at": "2026-09-26T08:22:12.410376+00:00",
    "until": "2026-12-25T08:22:12.410376+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheSoulMan": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:42992",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:52:42.793237+00:00",
+   "until": "2026-12-25T08:52:42.793237+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TheTransporter": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:39497",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:58:36.390021+00:00",
+   "until": "2026-12-25T08:58:36.390021+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/ThirdRockFromTheSun": {
    "outcome": "rejected",
    "reason": "identity",
    "title": "show:155",
-   "at": "2026-09-26T08:24:18.487079+00:00",
-   "until": "2026-12-25T08:24:18.487079+00:00"
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:37:18.459569+00:00",
+   "until": "2026-12-25T08:37:18.459569+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/ThirtyRock": {
    "outcome": "rejected",
@@ -160,6 +3250,14 @@
    "title": "show:4608",
    "at": "2026-09-26T08:23:00.544894+00:00",
    "until": "2026-12-25T08:23:00.544894+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/TroyFallOfACity": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:71181",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:08:00.915023+00:00",
+   "until": "2026-12-25T09:08:00.915023+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Series/TwentyFour": {
    "outcome": "rejected",
@@ -175,12 +3273,92 @@
    "at": "2026-09-26T08:24:06.475824+00:00",
    "until": "2026-12-25T08:24:06.475824+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/VeronicasCloset": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:603",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:12.388378+00:00",
+   "until": "2026-12-25T08:49:12.388378+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/WillAndGrace": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:74321",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:45:24.405147+00:00",
+   "until": "2026-12-25T08:45:24.405147+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/YoungRock": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:97754",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:57:30.393927+00:00",
+   "until": "2026-12-25T08:57:30.393927+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Series/YourFamily": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:81887",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:06.763215+00:00",
+   "until": "2026-12-25T08:49:06.763215+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebAnimation/DeathBattle": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:39224",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:48:54.409901+00:00",
+   "until": "2026-12-25T08:48:54.409901+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebAnimation/GothamGirls": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:15185",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:06:30.394582+00:00",
+   "until": "2026-12-25T09:06:30.394582+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebAnimation/HelluvaBoss": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:289892",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:48:06.383349+00:00",
+   "until": "2026-12-25T08:48:06.383349+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebAnimation/InanimateInsanity": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:324498",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:02:00.396409+00:00",
+   "until": "2026-12-25T09:02:00.396409+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebAnimation/TheAmazingDigitalCircus": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:261145",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:51:12.399971+00:00",
+   "until": "2026-12-25T08:51:12.399971+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/WebVideo/CriticalRole": {
    "outcome": "rejected",
    "reason": "namespace",
    "title": "show:254002",
    "at": "2026-09-26T08:24:12.470522+00:00",
    "until": "2026-12-25T08:24:12.470522+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebVideo/Dimension20": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:89180",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:42:42.418191+00:00",
+   "until": "2026-12-25T08:42:42.418191+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/WebVideo/HotOnes": {
    "outcome": "rejected",
@@ -196,6 +3374,150 @@
    "at": "2026-09-26T08:24:18.487644+00:00",
    "until": "2026-12-25T08:24:18.487644+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebVideo/TeamThor": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:441829",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:43:48.472607+00:00",
+   "until": "2026-12-25T09:43:48.472607+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebVideo/TheAngryVideoGameNerd": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:14188",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:55:54.394271+00:00",
+   "until": "2026-12-25T08:55:54.394271+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WebVideo/UNHhhh": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "show:75127",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:09:48.412912+00:00",
+   "until": "2026-12-25T09:09:48.412912+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/BatmanAndMisterFreezeSubZero": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:15805",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:38:48.449030+00:00",
+   "until": "2026-12-25T09:38:48.449030+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/BigMouth": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:74204",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:40:06.431617+00:00",
+   "until": "2026-12-25T08:40:06.431617+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/CareBears1980s": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2264",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:55:18.451094+00:00",
+   "until": "2026-12-25T08:55:18.451094+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/DuckTales": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:72350",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:39:00.604868+00:00",
+   "until": "2026-12-25T08:39:00.604868+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/EarthwormJim": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:6592",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:08:24.462611+00:00",
+   "until": "2026-12-25T09:08:24.462611+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/FantasticFour": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2901",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:53:06.423367+00:00",
+   "until": "2026-12-25T08:53:06.423367+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/FrankeldasBookOfSpooks": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1119090",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:31:06.433484+00:00",
+   "until": "2026-12-25T09:31:06.433484+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/Frozen": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/Frozen",
+   "title": "movie:109445",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:46:19.109735+00:00",
+   "until": "2026-12-25T08:46:19.109735+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/Grimsburg": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:202224",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:52:06.392063+00:00",
+   "until": "2026-12-25T08:52:06.392063+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/GrizzyAndTheLemmings": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:74415",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:48:00.405260+00:00",
+   "until": "2026-12-25T08:48:00.405260+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/HarrietTheSpy": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:136300",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:08:06.449036+00:00",
+   "until": "2026-12-25T09:08:06.449036+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/HortonHearsAWho": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:12222",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:54:12.911117+00:00",
+   "until": "2026-12-25T08:54:12.911117+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/HouseOfMouse": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:2467",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:49:24.447793+00:00",
+   "until": "2026-12-25T08:49:24.447793+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/HowToTrainYourDragon": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1087192",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:44:12.756479+00:00",
+   "until": "2026-12-25T08:44:12.756479+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/LoveDeathAndRobots": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:86831",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:41:06.390827+00:00",
+   "until": "2026-12-25T08:41:06.390827+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/MiraculousLadybug": {
    "outcome": "rejected",
    "reason": "identity",
@@ -203,12 +3525,164 @@
    "at": "2026-09-26T08:22:24.431756+00:00",
    "until": "2026-12-25T08:22:24.431756+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/MuppetBabies": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:77410",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:47:24.789997+00:00",
+   "until": "2026-12-25T08:47:24.789997+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/MyLittlePonyTheMovie": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:335360",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:11:48.790634+00:00",
+   "until": "2026-12-25T09:11:48.790634+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/PAWPatrolMightyPups": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:552095",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:51:06.937632+00:00",
+   "until": "2026-12-25T09:51:06.937632+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/PigletsBigMovie": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:13691",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:39:30.510358+00:00",
+   "until": "2026-12-25T09:39:30.510358+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/PinkaliciousAndPeterrific": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:77379",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:10:24.867429+00:00",
+   "until": "2026-12-25T09:10:24.867429+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/PoundPuppies": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:33955",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:43:00.751824+00:00",
+   "until": "2026-12-25T08:43:00.751824+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/ScoobyDooAndBatmanTheBraveAndTheBold": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:484862",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:45:06.473934+00:00",
+   "until": "2026-12-25T09:45:06.473934+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/Spermageddon": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1064307",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:29:48.420012+00:00",
+   "until": "2026-12-25T09:29:48.420012+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/StraightOuttaNowhereScoobyDooMeetsCourageTheCowardlyDog": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:843906",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:49:06.899722+00:00",
+   "until": "2026-12-25T09:49:06.899722+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/StraightOuttaNowhereScoobyDooMeetsCouragetheCowardlyDog": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:843906",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:49:06.899722+00:00",
+   "until": "2026-12-25T09:49:06.899722+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TheLEGOStarWarsHolidaySpecial": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:732670",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:43:18.447588+00:00",
+   "until": "2026-12-25T09:43:18.447588+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TheLegendOfPrinceValiant": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:529",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:02:18.407712+00:00",
+   "until": "2026-12-25T09:02:18.407712+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TheLegendOfTheBoneknapperDragon": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:47626",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:43:24.474470+00:00",
+   "until": "2026-12-25T09:43:24.474470+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TheLorax": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:73723",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:43:06.369271+00:00",
+   "until": "2026-12-25T08:43:06.369271+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TheRenAndStimpyShow": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:504",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:47:54.491369+00:00",
+   "until": "2026-12-25T08:47:54.491369+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TheSmurfs": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:5687",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:40:30.378002+00:00",
+   "until": "2026-12-25T08:40:30.378002+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/TomAndJerryANutcrackerTale": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:24696",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:43:54.443877+00:00",
+   "until": "2026-12-25T09:43:54.443877+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/XMen": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "show:4574",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T08:44:00.772197+00:00",
+   "until": "2026-12-25T08:44:00.772197+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Wrestling/WWESmackDown": {
    "outcome": "rejected",
    "reason": "namespace",
    "title": "show:1549",
    "at": "2026-09-26T08:23:48.410922+00:00",
    "until": "2026-12-25T08:23:48.410922+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/YMMV/GhostTown2008": {
+   "outcome": "rejected",
+   "reason": "namespace",
+   "title": "movie:12797",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-26T09:43:48.470402+00:00",
+   "until": "2026-12-25T09:43:48.470402+00:00"
   }
  },
  "blocked_until": null,

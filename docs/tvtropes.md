@@ -129,8 +129,38 @@ The strict rule rejected 22 titles after fetching their pages. Re-checked offlin
 Law & Order, The Office (US), Miraculous, 24, 9-1-1, Salatut elämät, 30 Rock, Agents of S.H.I.E.L.D., Rizzoli & Isles,
 2 Broke Girls, Caméra Café, Everybody Loves Raymond and The Avengers (2012). It still rejects SVU and Strange New
 Worlds, whose intros have no year, and The Chosen, which the wiki dates 2017 and TMDB dates 2019. Those 13 URLs are
-open again for the next run, because their rejections were made under the old rules. Nothing was published; the 4
-recovered rows wait in `review.md`.
+open again for the next run, because their rejections were made under the old rules. The 4 recovered rows were
+reviewed (title, year, Wikidata IMDb and TMDB ids) and imported on 2026-09-26 (`run-2026-09-26/import-rollback.json`).
+
+### Full batch, 2026-09-26
+
+`research/tvtropes-repair/run-2026-09-26b` over `queue-2026-09-26b.json` (the queue re-exported after the 4 imports:
+845 titles), 1,300-request budget at 6 s, both identity rules:
+
+| | |
+|---|---:|
+| Requests | 779 in 78 min: 769 HTTP 200, 10 HTTP 404. No 403, 429 or challenge; the run finished the queue. |
+| Recovered | 418 (271 movies, 147 shows); 13 of them are the titles re-opened from the first batch |
+| Rejected | 350: 276 by identity after fetching, 74 by namespace or 404 without a new request |
+| Other | 53 without a usable URL, 12 without a release year, 9 not found, 3 identified without tropes |
+
+Review: every recovered row was checked offline against its saved page (page title, catalog title and year, intro)
+and against Wikidata (`P6839` to IMDb `P345` and TMDB ids). 146 rows match Wikidata's IMDb and TMDB ids and none
+contradicts them; 101 come from the IMDb-keyed tvtropes2imdb mapping. All 186 `known_url` rows were read by hand;
+no false match was found. Stub pages with 3–9 tropes (47) were kept: the pages are short, not mis-parsed.
+
+Imported 415 (`run-2026-09-26b/import-rollback.json`; 79 stale stored URLs replaced). Kept out for the owner:
+
+- The Illusionist (movie 1491) and House of Cards (show 1425): the pages are now the right ones
+  (`Film/TheIllusionist2006`, `Series/HouseOfCardsUS`, both matching Wikidata), but the importer's built-in deny
+  list from #120 blocks them.
+- Che: Part One (movie 8881): `Film/Che` covers both parts of the film.
+
+After a manual run of `f/sync/copy/tvtropes`, all 419 titles imported on 2026-09-26 have their tropes in Mongo and
+in Crate `movie/show.tropes`. 17 titles have a few fewer `trope` rows than tropes, exactly the number of repeated
+trope names, which collapse on the table's primary key (this also explains the ten short titles in #120).
+
+Page bodies under `sources/` stay local.
 
 ## Tests
 

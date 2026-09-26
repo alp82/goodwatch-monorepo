@@ -1,0 +1,121 @@
+{
+  "created_at": "2026-09-26T08:33:45.074202+00:00",
+  "entries": [
+    {
+      "media_type": "show",
+      "tmdb_id": 790,
+      "_id": {
+        "$oid": "65247cc50b2d4511fe3f6e29"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-09T15:10:29.345Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/Poirot",
+      "written_tropes_sha256": "b83281bd823a1973b246d6a90a44fd2745bde73cf69c3117191030691ece7263",
+      "written_updated_at": {
+        "$date": "2026-09-26T08:33:45.295Z"
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 3034,
+      "_id": {
+        "$oid": "65247cc70b2d4511fe3f7504"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-07T13:59:08.676Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-09-24T10:19:41.763Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/Tatort",
+      "written_tropes_sha256": "d0e602c22d917096142f9e6788887a70de543941c51f6b5753ee203047eb549d",
+      "written_updated_at": {
+        "$date": "2026-09-26T08:33:45.567Z"
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 4454,
+      "_id": {
+        "$oid": "65247cc90b2d4511fe3f78fc"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-11-11T23:59:21.022Z"
+        },
+        "is_selected": false,
+        "error_message": {
+          "$missing": true
+        },
+        "failed_at": {
+          "$missing": true
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/WillAndGrace",
+      "written_tropes_sha256": "46c32b27ef93dd9cb1a79172461d884253e7a64faeef89599201a0c7cd4e9cfe",
+      "written_updated_at": {
+        "$date": "2026-09-26T08:33:45.672Z"
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 62643,
+      "_id": {
+        "$oid": "65247ce00b2d4511fe3fd845"
+      },
+      "previous": {
+        "tvtropes_url": {
+          "$missing": true
+        },
+        "tropes": {
+          "$missing": true
+        },
+        "updated_at": {
+          "$date": "2025-10-09T16:04:48.834Z"
+        },
+        "is_selected": false,
+        "error_message": "Rate Limit reached",
+        "failed_at": {
+          "$date": "2026-09-20T06:35:28.219Z"
+        }
+      },
+      "written_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/LegendsOfTomorrow",
+      "written_tropes_sha256": "082066fe7d895dd931cb3d037d04786802e786a2864a356ca4af0bcf00c00d6e",
+      "written_updated_at": {
+        "$date": "2026-09-26T08:33:45.814Z"
+      }
+    }
+  ]
+}
