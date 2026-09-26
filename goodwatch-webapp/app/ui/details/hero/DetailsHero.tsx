@@ -8,7 +8,7 @@ import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { BackdropTrailer, PosterTrailer, backdropUrl } from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
-// PROTOTYPE — score-area layout variants (?score=0, 8, 8a..8f), prototype/score-area branch only.
+// PROTOTYPE — score-area layout variants (?score=0, 8, 8a..8g), prototype/score-area branch only.
 import { ScoreAreaPrototype, ScorePrototypeSwitcher, useScoreVariant } from "~/ui/details/hero/prototype-score-area/ScoreAreaPrototype"
 import type { Section, SectionProps } from "~/utils/scroll"
 

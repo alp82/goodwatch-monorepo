@@ -34,7 +34,7 @@ const TINT: Record<Tint, string> = {
 	side: "bg-gradient-to-r from-black/60 via-black/30 to-black/10",
 }
 
-function BlurFrame({ media, blur = "md", tint = "down", children }: { media: Media; blur?: Blur; tint?: Tint; children: React.ReactNode }) {
+export function BlurFrame({ media, blur = "md", tint = "down", children }: { media: Media; blur?: Blur; tint?: Tint; children: React.ReactNode }) {
 	return (
 		<div className="grid gap-4 md:min-h-[28.5rem] md:grid-cols-[auto_1fr] [&>*]:min-w-0">
 			<PosterTrailer media={media} className="hidden aspect-[2/3] self-start md:block md:w-[19rem]" />
@@ -65,7 +65,7 @@ function ringName(media: Media) {
 	return score == null ? "GoodWatch score: not rated yet" : `GoodWatch score ${score} of 100, ${scoreLabels[Math.max(1, Math.round(score / 10))]}`
 }
 
-function BigRing({ media, phone = 76, desktop = 96 }: { media: Media; phone?: number; desktop?: number }) {
+export function BigRing({ media, phone = 76, desktop = 96 }: { media: Media; phone?: number; desktop?: number }) {
 	const name = ringName(media)
 	return (
 		<div role="img" aria-label={name} title={name} className="shrink-0 [&_*]:pointer-events-none">
@@ -79,7 +79,7 @@ function BigRing({ media, phone = 76, desktop = 96 }: { media: Media; phone?: nu
 	)
 }
 
-const Divider = () => <div aria-hidden="true" className="h-px bg-white/10" />
+export const Divider = () => <div aria-hidden="true" className="h-px bg-white/10" />
 
 // ---------------------------------------------------------------------------------------------
 // 8a — Blur panel: round 2's "One panel" without the inner card. Ring big on the left, the compact

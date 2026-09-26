@@ -1,6 +1,6 @@
 // PROTOTYPE — score-area layout variants for show and movie pages, switchable with ?score= on
 // the real details route. ?score=0 or no param shows the current production hero; 8 is round 2's
-// "One panel"; 8a to 8f are round 3, grown from it (see round3.tsx). Throwaway: this folder lives
+// "One panel"; 8a to 8f are round 3, grown from it (see round3.tsx); 8g is round 4, grown from 8f (round4.tsx). Throwaway: this folder lives
 // only on the prototype/score-area branch and must not reach main.
 import { useSearchParams } from "@remix-run/react"
 import { useEffect } from "react"
@@ -12,6 +12,7 @@ import {
 	Variant8eDividers,
 	Variant8fScoreAndRate,
 } from "./round3"
+import { Variant8gScoreRow } from "./round4"
 import type { VariantProps } from "./shared"
 import { Variant8OnePanel } from "./variants"
 
@@ -24,6 +25,7 @@ export const SCORE_VARIANTS: { key: string; name: string; Component: ((p: Varian
 	{ key: "8d", name: "Score column", Component: Variant8dScoreColumn },
 	{ key: "8e", name: "Lines, side light", Component: Variant8eDividers },
 	{ key: "8f", name: "Score and Rate", Component: Variant8fScoreAndRate },
+	{ key: "8g", name: "Score row, lines", Component: Variant8gScoreRow },
 ]
 
 export function useScoreVariant() {

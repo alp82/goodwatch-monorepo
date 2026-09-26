@@ -35,12 +35,20 @@ export const GLASS = "md:rounded-xl md:border md:border-white/10 md:bg-black/55 
 // Rating chips: the production RatingChips, with size steps, layouts, and optional hiding of
 // sites that have no score at all.
 
-type ChipSize = "xs" | "sm" | "md" | "lg"
+type ChipSize = "xs" | "sm" | "md" | "lg" | "rise"
 const CHIP_SIZE: Record<ChipSize, { chip: string; imdb: string; logo: string; bar: string }> = {
 	xs: { chip: "h-6 gap-1 px-1.5 text-xs", imdb: "h-2.5", logo: "h-3", bar: "h-2.5" },
 	sm: { chip: "h-7 gap-1 px-1.5 text-[13px]", imdb: "h-3", logo: "h-3.5", bar: "h-3" },
 	md: { chip: "h-8 gap-1.5 px-2 text-sm md:h-9", imdb: "h-3.5", logo: "h-4", bar: "h-3.5" },
 	lg: { chip: "h-10 gap-2 px-2.5 text-base", imdb: "h-4", logo: "h-5", bar: "h-4" },
+	// sm in a narrow panel; once the panel is wide enough for the chips to sit beside the rate
+	// button (round 4, 8g), the rate button's height (h-11) with lg's logo and text steps.
+	rise: {
+		chip: "h-7 gap-1 px-1.5 text-[13px] @[41rem]:h-11 @[41rem]:gap-2 @[41rem]:px-2.5 @[41rem]:text-base",
+		imdb: "h-3 @[41rem]:h-4",
+		logo: "h-3.5 @[41rem]:h-5",
+		bar: "h-3 @[41rem]:h-4",
+	},
 }
 
 export function Chips({
