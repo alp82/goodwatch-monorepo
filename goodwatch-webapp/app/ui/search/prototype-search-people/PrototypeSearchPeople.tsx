@@ -153,23 +153,7 @@ function ScopeNote({ p, links }: { p: ScoredPerson; links: ScopeLinks }) {
 				</Link>
 			</p>
 		)
-	if (p.offered)
-		return (
-			<p className="text-sm text-gray-300">
-				<Link to={links.pickHref(p.id)} preventScrollReset className={link}>
-					Only titles with {p.name}
-				</Link>
-			</p>
-		)
-	if (links.anyPerson)
-		return (
-			<p className="text-sm text-gray-300">
-				Showing all titles.{" "}
-				<Link to={links.scopedHref} preventScrollReset className={link}>
-					Only titles with {p.name}
-				</Link>
-			</p>
-		)
+	// The owner dropped the "Only titles with" offer: a single name in a phrase only shows people.
 	return null
 }
 
