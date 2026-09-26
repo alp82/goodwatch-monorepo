@@ -1,0 +1,1 @@
+{"ratings_and_wishlist_990_ratings": {"rows": 1355, "p50_ms": 12.5, "p95_ms": 18.9}, "ratings_and_wishlist_200_ratings": {"rows": 214, "p50_ms": 8.6, "p95_ms": 10.0}, "ratings_and_wishlist_75_ratings": {"rows": 91, "p50_ms": 9.2, "p95_ms": 9.8}, "catalog_page_20000_rows": {"ms": 12353, "rows": 20000, "mb": 23.4}}

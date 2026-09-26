@@ -1,0 +1,947 @@
+{
+ "discover_titles": 120,
+ "reference_pool": 58628,
+ "users": {
+  "3a8e67d6": {
+   "user": "3a8e67d6",
+   "ratings": 990,
+   "ref_cos_p5_p50_p95": [
+    0.809,
+    0.903,
+    0.945
+   ],
+   "discover_raw_display": [
+    75,
+    82,
+    90,
+    92,
+    94
+   ],
+   "discover_percentile": [
+    1,
+    7,
+    42,
+    67,
+    93
+   ],
+   "discover_z": [
+    1,
+    19,
+    51,
+    61,
+    72
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    39,
+    16,
+    30,
+    22,
+    5,
+    8
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    19,
+    14,
+    33,
+    52,
+    2
+   ]
+  },
+  "fdf4a92a": {
+   "user": "fdf4a92a",
+   "ratings": 336,
+   "ref_cos_p5_p50_p95": [
+    0.807,
+    0.888,
+    0.942
+   ],
+   "discover_raw_display": [
+    79,
+    86,
+    89,
+    91,
+    94
+   ],
+   "discover_percentile": [
+    3,
+    24,
+    53,
+    73,
+    94
+   ],
+   "discover_z": [
+    9,
+    38,
+    53,
+    63,
+    77
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    26,
+    21,
+    22,
+    31,
+    10,
+    10
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    7,
+    19,
+    44,
+    49,
+    1
+   ]
+  },
+  "0765b834": {
+   "user": "0765b834",
+   "ratings": 329,
+   "ref_cos_p5_p50_p95": [
+    0.787,
+    0.896,
+    0.944
+   ],
+   "discover_raw_display": [
+    67,
+    77,
+    88,
+    91,
+    94
+   ],
+   "discover_percentile": [
+    0,
+    3,
+    33,
+    60,
+    94
+   ],
+   "discover_z": [
+    1,
+    6,
+    46,
+    58,
+    73
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    48,
+    23,
+    17,
+    11,
+    8,
+    13
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    35,
+    12,
+    37,
+    33,
+    3
+   ]
+  },
+  "a632ceed": {
+   "user": "a632ceed",
+   "ratings": 250,
+   "ref_cos_p5_p50_p95": [
+    0.786,
+    0.902,
+    0.952
+   ],
+   "discover_raw_display": [
+    71,
+    81,
+    89,
+    92,
+    94
+   ],
+   "discover_percentile": [
+    0,
+    9,
+    41,
+    68,
+    90
+   ],
+   "discover_z": [
+    1,
+    21,
+    50,
+    61,
+    70
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    44,
+    13,
+    22,
+    25,
+    9,
+    7
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    29,
+    13,
+    25,
+    48,
+    5
+   ]
+  },
+  "bd2113e9": {
+   "user": "bd2113e9",
+   "ratings": 238,
+   "ref_cos_p5_p50_p95": [
+    0.801,
+    0.894,
+    0.945
+   ],
+   "discover_raw_display": [
+    71,
+    80,
+    89,
+    92,
+    95
+   ],
+   "discover_percentile": [
+    0,
+    5,
+    47,
+    74,
+    95
+   ],
+   "discover_z": [
+    1,
+    14,
+    52,
+    63,
+    76
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    41,
+    13,
+    15,
+    24,
+    14,
+    13
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    29,
+    12,
+    26,
+    49,
+    4
+   ]
+  },
+  "04c96753": {
+   "user": "04c96753",
+   "ratings": 231,
+   "ref_cos_p5_p50_p95": [
+    0.734,
+    0.875,
+    0.934
+   ],
+   "discover_raw_display": [
+    64,
+    75,
+    83,
+    88,
+    93
+   ],
+   "discover_percentile": [
+    0,
+    6,
+    26,
+    55,
+    94
+   ],
+   "discover_z": [
+    1,
+    14,
+    41,
+    57,
+    73
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    47,
+    26,
+    18,
+    16,
+    4,
+    9
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    41,
+    27,
+    31,
+    21,
+    0
+   ]
+  },
+  "bef6a8e5": {
+   "user": "bef6a8e5",
+   "ratings": 223,
+   "ref_cos_p5_p50_p95": [
+    0.779,
+    0.889,
+    0.94
+   ],
+   "discover_raw_display": [
+    66,
+    76,
+    88,
+    91,
+    94
+   ],
+   "discover_percentile": [
+    0,
+    3,
+    40,
+    66,
+    93
+   ],
+   "discover_z": [
+    1,
+    5,
+    49,
+    61,
+    73
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    48,
+    12,
+    20,
+    16,
+    11,
+    13
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    40,
+    10,
+    30,
+    40,
+    0
+   ]
+  },
+  "0220a501": {
+   "user": "0220a501",
+   "ratings": 214,
+   "ref_cos_p5_p50_p95": [
+    0.743,
+    0.872,
+    0.943
+   ],
+   "discover_raw_display": [
+    63,
+    73,
+    86,
+    90,
+    94
+   ],
+   "discover_percentile": [
+    0,
+    3,
+    42,
+    70,
+    93
+   ],
+   "discover_z": [
+    1,
+    8,
+    49,
+    63,
+    74
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    47,
+    10,
+    18,
+    24,
+    13,
+    8
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    43,
+    14,
+    25,
+    36,
+    2
+   ]
+  },
+  "f9d6f839": {
+   "user": "f9d6f839",
+   "ratings": 199,
+   "ref_cos_p5_p50_p95": [
+    0.779,
+    0.875,
+    0.95
+   ],
+   "discover_raw_display": [
+    81,
+    86,
+    88,
+    91,
+    94
+   ],
+   "discover_percentile": [
+    13,
+    36,
+    54,
+    72,
+    91
+   ],
+   "discover_z": [
+    27,
+    43,
+    53,
+    63,
+    75
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    13,
+    23,
+    34,
+    25,
+    18,
+    7
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    3,
+    23,
+    56,
+    36,
+    2
+   ]
+  },
+  "ee55b0fc": {
+   "user": "ee55b0fc",
+   "ratings": 200,
+   "ref_cos_p5_p50_p95": [
+    0.791,
+    0.875,
+    0.936
+   ],
+   "discover_raw_display": [
+    74,
+    83,
+    87,
+    90,
+    94
+   ],
+   "discover_percentile": [
+    0,
+    16,
+    48,
+    72,
+    96
+   ],
+   "discover_z": [
+    1,
+    31,
+    51,
+    63,
+    80
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    33,
+    18,
+    28,
+    18,
+    5,
+    18
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    19,
+    24,
+    45,
+    28,
+    4
+   ]
+  },
+  "2774c415": {
+   "user": "2774c415",
+   "ratings": 199,
+   "ref_cos_p5_p50_p95": [
+    0.756,
+    0.872,
+    0.939
+   ],
+   "discover_raw_display": [
+    64,
+    75,
+    85,
+    90,
+    95
+   ],
+   "discover_percentile": [
+    0,
+    4,
+    35,
+    71,
+    97
+   ],
+   "discover_z": [
+    1,
+    11,
+    46,
+    62,
+    80
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    44,
+    20,
+    18,
+    13,
+    7,
+    18
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    39,
+    18,
+    33,
+    24,
+    6
+   ]
+  },
+  "4d220087": {
+   "user": "4d220087",
+   "ratings": 199,
+   "ref_cos_p5_p50_p95": [
+    0.788,
+    0.901,
+    0.948
+   ],
+   "discover_raw_display": [
+    71,
+    80,
+    88,
+    91,
+    94
+   ],
+   "discover_percentile": [
+    0,
+    6,
+    34,
+    63,
+    86
+   ],
+   "discover_z": [
+    1,
+    15,
+    47,
+    60,
+    68
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    47,
+    19,
+    18,
+    26,
+    5,
+    5
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    30,
+    15,
+    29,
+    44,
+    2
+   ]
+  },
+  "79f97995": {
+   "user": "79f97995",
+   "ratings": 127,
+   "ref_cos_p5_p50_p95": [
+    0.714,
+    0.859,
+    0.93
+   ],
+   "discover_raw_display": [
+    57,
+    69,
+    83,
+    88,
+    92
+   ],
+   "discover_percentile": [
+    0,
+    2,
+    35,
+    61,
+    91
+   ],
+   "discover_z": [
+    1,
+    3,
+    45,
+    59,
+    72
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    50,
+    16,
+    23,
+    16,
+    7,
+    8
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    52,
+    18,
+    32,
+    18,
+    0
+   ]
+  },
+  "f753f88e": {
+   "user": "f753f88e",
+   "ratings": 105,
+   "ref_cos_p5_p50_p95": [
+    0.741,
+    0.881,
+    0.943
+   ],
+   "discover_raw_display": [
+    65,
+    77,
+    86,
+    90,
+    94
+   ],
+   "discover_percentile": [
+    0,
+    8,
+    36,
+    65,
+    91
+   ],
+   "discover_z": [
+    1,
+    19,
+    47,
+    61,
+    72
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    45,
+    19,
+    21,
+    18,
+    9,
+    8
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    37,
+    21,
+    31,
+    29,
+    2
+   ]
+  },
+  "c427eb6f": {
+   "user": "c427eb6f",
+   "ratings": 100,
+   "ref_cos_p5_p50_p95": [
+    0.805,
+    0.898,
+    0.946
+   ],
+   "discover_raw_display": [
+    74,
+    82,
+    90,
+    92,
+    95
+   ],
+   "discover_percentile": [
+    0,
+    9,
+    53,
+    77,
+    96
+   ],
+   "discover_z": [
+    1,
+    22,
+    55,
+    64,
+    76
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    38,
+    13,
+    14,
+    30,
+    11,
+    14
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    24,
+    12,
+    24,
+    55,
+    5
+   ]
+  },
+  "258a211d": {
+   "user": "258a211d",
+   "ratings": 100,
+   "ref_cos_p5_p50_p95": [
+    0.765,
+    0.89,
+    0.947
+   ],
+   "discover_raw_display": [
+    63,
+    74,
+    87,
+    92,
+    95
+   ],
+   "discover_percentile": [
+    0,
+    2,
+    36,
+    71,
+    95
+   ],
+   "discover_z": [
+    1,
+    2,
+    47,
+    63,
+    74
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    48,
+    15,
+    14,
+    25,
+    8,
+    10
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    42,
+    8,
+    23,
+    43,
+    4
+   ]
+  },
+  "ed871d10": {
+   "user": "ed871d10",
+   "ratings": 100,
+   "ref_cos_p5_p50_p95": [
+    0.779,
+    0.877,
+    0.928
+   ],
+   "discover_raw_display": [
+    68,
+    78,
+    87,
+    90,
+    93
+   ],
+   "discover_percentile": [
+    0,
+    6,
+    41,
+    73,
+    95
+   ],
+   "discover_z": [
+    1,
+    15,
+    49,
+    63,
+    75
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    41,
+    18,
+    14,
+    23,
+    12,
+    12
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    32,
+    17,
+    40,
+    30,
+    1
+   ]
+  },
+  "68c64873": {
+   "user": "68c64873",
+   "ratings": 81,
+   "ref_cos_p5_p50_p95": [
+    0.677,
+    0.844,
+    0.919
+   ],
+   "discover_raw_display": [
+    62,
+    76,
+    82,
+    87,
+    92
+   ],
+   "discover_percentile": [
+    1,
+    17,
+    37,
+    68,
+    94
+   ],
+   "discover_z": [
+    1,
+    33,
+    48,
+    61,
+    74
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    39,
+    25,
+    17,
+    21,
+    10,
+    8
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    48,
+    28,
+    33,
+    10,
+    1
+   ]
+  },
+  "a0a7e235": {
+   "user": "a0a7e235",
+   "ratings": 75,
+   "ref_cos_p5_p50_p95": [
+    0.778,
+    0.869,
+    0.933
+   ],
+   "discover_raw_display": [
+    79,
+    85,
+    87,
+    90,
+    94
+   ],
+   "discover_percentile": [
+    10,
+    32,
+    55,
+    75,
+    98
+   ],
+   "discover_z": [
+    24,
+    43,
+    54,
+    65,
+    82
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    14,
+    24,
+    28,
+    30,
+    9,
+    15
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    6,
+    26,
+    58,
+    28,
+    2
+   ]
+  },
+  "8473d80e": {
+   "user": "8473d80e",
+   "ratings": 75,
+   "ref_cos_p5_p50_p95": [
+    0.79,
+    0.899,
+    0.941
+   ],
+   "discover_raw_display": [
+    70,
+    78,
+    87,
+    90,
+    93
+   ],
+   "discover_percentile": [
+    0,
+    5,
+    29,
+    53,
+    89
+   ],
+   "discover_z": [
+    1,
+    10,
+    44,
+    56,
+    69
+   ],
+   "discover_percentile_buckets_0_20_40_60_80_90_100": [
+    48,
+    26,
+    21,
+    12,
+    7,
+    6
+   ],
+   "discover_raw_buckets_0_80_85_90_95_100": [
+    31,
+    15,
+    40,
+    34,
+    0
+   ]
+  }
+ },
+ "heldout_percentile": {
+  "liked": {
+   "n": 700,
+   "p25": 40,
+   "median": 68,
+   "p75": 88,
+   "share_at_or_above_80": 0.35,
+   "share_below_40": 0.25
+  },
+  "disliked": {
+   "n": 167,
+   "p25": 21,
+   "median": 41,
+   "p75": 76,
+   "share_at_or_above_80": 0.17,
+   "share_below_40": 0.47
+  },
+  "loved": {
+   "n": 222,
+   "p25": 50,
+   "median": 75,
+   "p75": 92,
+   "share_at_or_above_80": 0.41,
+   "share_below_40": 0.14
+  }
+ },
+ "pooled_discover_raw_cos": [
+  0.583,
+  0.669,
+  0.799,
+  0.872,
+  0.908,
+  0.941,
+  0.956
+ ],
+ "display_tiers_pooled": {
+  "90_99": 0.15791666666666668,
+  "75_89": 0.27,
+  "60_74": 0.245,
+  "50_59": 0.32708333333333334
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "node": "v26.9.0",
+ "titles": 241258,
+ "build_ms": {
+  "uint8_and_index": 100.9,
+  "float32_extra": 27.6
+ },
+ "memory_mb": {
+  "uint8_raw_plus_norms_plus_map": 11.8,
+  "float32_extra": 68.1
+ },
+ "score_100": {
+  "uint8_raw": {
+   "p50_us": 13.47,
+   "p95_us": 55.52,
+   "p99_us": 81.98,
+   "sink": 3316.26
+  },
+  "float32_normalized": {
+   "p50_us": 16.48,
+   "p95_us": 52.85,
+   "p99_us": 83.211,
+   "sink": 3316.26
+  }
+ },
+ "score_all_titles_ms": {
+  "p50": 49.6227,
+  "p95": 53.2739
+ }
+}
