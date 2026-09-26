@@ -93,6 +93,9 @@ export interface JevStageInput {
 	visitor: { accountId: string | null; networkIdentity: string };
 	signal?: AbortSignal;
 	admissionAttemptId?: string;
+	// Filled with milliseconds per step, for the history row: lookup (the cache), claim (spending checks and the
+	// attempt), dispatch, call (both Jev requests), finish (settlement and cache write).
+	timings?: Record<string, number>;
 }
 
 export async function runJevStage(input: JevStageInput): Promise<JevOutcome> {
@@ -122,6 +125,12 @@ export async function executeJevStage(
 		return basic("input");
 	if (input.language.mode === "translated" && !translationEnabled())
 		return basic("configuration");
+	let mark = performance.now();
+	const step = (name: string) => {
+		const now = performance.now();
+		if (input.timings) input.timings[name] = Math.round((now - mark) * 10) / 10;
+		mark = now;
+	};
 	// Copy only known fields: callers cannot sneak an alternate model or transport options in.
 	let requests: [SystemOneRequest, SystemOneRequest];
 	let cacheKey: string;
@@ -148,6 +157,7 @@ export async function executeJevStage(
 			}),
 		);
 		const hit = await store.lookup(cacheKey);
+		step("lookup");
 		if (hit?.kind === "cached")
 			return {
 				kind: "cached",
@@ -179,6 +189,7 @@ export async function executeJevStage(
 	} catch {
 		return basic("storage");
 	}
+	step("claim");
 	if (claim.kind === "basic") return basic(claim.reason);
 	if (claim.kind === "cached") {
 		try {
@@ -201,6 +212,7 @@ export async function executeJevStage(
 	} catch {
 		return basic("storage", JEV_RESERVE_NANO);
 	}
+	step("dispatch");
 	const controller = new AbortController();
 	const deadlineAt = Date.now() + JEV_DEADLINE_MS;
 	let deadlineExpired = false;
@@ -278,6 +290,7 @@ export async function executeJevStage(
 		clearTimeout(timer);
 		input.signal?.removeEventListener("abort", cancelled);
 	}
+	step("call");
 	const validUsage = readings.every(
 		(result) =>
 			Number.isSafeInteger(result?.usage?.input_tokens) &&
@@ -316,6 +329,7 @@ export async function executeJevStage(
 	} catch {
 		return basic("storage", JEV_RESERVE_NANO);
 	}
+	step("finish");
 	return valid
 		? { kind: "ready", readings, chargedNano: actualNano }
 		: basic("contract", actualNano);

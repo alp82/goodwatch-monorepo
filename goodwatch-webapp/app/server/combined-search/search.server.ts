@@ -479,7 +479,9 @@ export async function combinedSearch(
 	chargedNano += language.chargedNano;
 	// Jev reads the normalized text, so the reading and its cache entry don't depend on case or spacing.
 	const readText = readingText(language.text);
+	const readingSteps: Record<string, number> = {};
 	const outcome: JevOutcome = await runJevStage({
+		timings: readingSteps,
 		requestText: readingText(q),
 		questionVersion: "accepted-d4-corrected-v1",
 		language: language.policy,
@@ -489,6 +491,9 @@ export async function combinedSearch(
 		admissionAttemptId: language.admissionAttemptId,
 	});
 	lap("reading");
+	// The reading's own steps: readingLookup, readingClaim, readingDispatch, readingCall, readingFinish.
+	for (const [name, ms] of Object.entries(readingSteps))
+		stageMs[`reading${name[0].toUpperCase()}${name.slice(1)}`] = ms;
 	chargedNano += outcome.chargedNano;
 	let reading: ReadingChip[] = [];
 	if (outcome.kind !== "basic") {
