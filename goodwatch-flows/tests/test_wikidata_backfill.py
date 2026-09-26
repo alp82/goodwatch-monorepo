@@ -160,6 +160,19 @@ class CollectTests(unittest.TestCase):
         self.assertEqual(ids[278].rotten_tomatoes, {RT + "m/shawshank_redemption"})
         self.assertEqual(ids[278].metacritic, {MC + "movie/the-shawshank-redemption"})
 
+    def test_ignored_values_are_dropped_for_their_title_only(self):
+        # CBC's Heartland (TMDB tv 14929) carries TNT's Metacritic page on Wikidata.
+        rows = [row("Q521858", 14929, "tt1094229", "", "tv/heartland"),
+                row("Q16842575", 2756, "tt0839847", "", "tv/heartland")]
+        stats = {}
+        tv = wikidata.collect_ids(rows, "tv", stats)
+        self.assertEqual(tv[14929].metacritic, set())
+        self.assertEqual(tv[14929].imdb, {"tt1094229"})
+        self.assertEqual(tv[2756].metacritic, {MC + "tv/heartland"})
+        self.assertEqual(stats["ignored"], 1)
+        movie = wikidata.collect_ids([row("Q1", 14929, "", "", "movie/heartland")], "movie", {})
+        self.assertEqual(movie[14929].metacritic, {MC + "movie/heartland"})
+
 
 def ids(imdb=(), rt=(), mc=(), items=("Q1",)):
     return wikidata.WikidataIds(imdb=set(imdb), rotten_tomatoes=set(rt), metacritic=set(mc), items=set(items))

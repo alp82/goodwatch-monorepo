@@ -53,6 +53,14 @@ METACRITIC_ID = {"tv": re.compile(r"tv/[^/\s]+"), "movie": re.compile(r"movie/[^
 IMDB_ID = re.compile(r"tt\d+")
 TMDB_ID = re.compile(r"\d+")
 
+# Wikidata values known to be wrong for one title: (kind, TMDB id) -> values, in the form
+# collect_ids returns them. They are dropped before planning, as if Wikidata didn't have
+# them. Wikidata itself is not edited. See docs/external-ids.md.
+IGNORED = {
+    # CBC's Heartland (Q521858) lists TNT's Heartland page; TNT's is TMDB tv 2756, tt0839847.
+    ("tv", 14929): {METACRITIC_BASE + "tv/heartland"},
+}
+
 
 class WikidataExportError(RuntimeError):
     pass
@@ -140,6 +148,11 @@ def collect_ids(rows: list[dict], kind: str, stats: dict) -> dict[int, WikidataI
         metacritic = record["mc"].strip()
         if METACRITIC_ID[kind].fullmatch(metacritic):
             ids.metacritic.add(METACRITIC_BASE + metacritic)
+    for (ignored_kind, tmdb_id), values in IGNORED.items():
+        ids = by_tmdb.get(tmdb_id) if ignored_kind == kind else None
+        for found in (ids.imdb, ids.rotten_tomatoes, ids.metacritic) if ids else ():
+            stats["ignored"] = stats.get("ignored", 0) + len(found & values)
+            found -= values
     return by_tmdb
 
 

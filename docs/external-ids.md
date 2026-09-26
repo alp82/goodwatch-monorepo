@@ -54,6 +54,18 @@ Disagreements with TMDB ids (`disagree_with_tmdb`) and with crawled URLs (`disag
 Before each write, the previous values go to the Mongo collection `_backup_<YYYYMMDD>_wikidata_ids`, one document
 per changed document: `collection`, `doc_id`, `tmdb_id`, `previous`, `set`, `inserted`, `run_at`.
 
+### Ignored Wikidata values
+
+`IGNORED` in `f/external_ids/wikidata.py` maps a title (`kind`, TMDB id) to Wikidata values that are wrong for it.
+`collect_ids` drops them before planning, so the job acts as if Wikidata didn't have them, and counts them as
+`ignored` in the export stats. Wikidata itself is not edited. Add an entry, with a comment saying why, when a repair
+would otherwise be undone by the next weekly run. Dropping a value doesn't remove what an earlier run stored, so clear
+that once, with a backup: a wrong `wikidata_url` also steers the critic crawl and the shared-URL repair.
+
+| Title | Ignored value | Why |
+|---|---|---|
+| CBC's Heartland (tv 14929, tt1094229) | Metacritic `tv/heartland` | TNT's Heartland page (tv 2756, tt0839847). CBC's is `tv/heartland-2007`. The `wikidata_url` it left on 14929 was cleared on 2026-09-26 (backup in `_backup_20260926_wikidata_ids`). |
+
 ## Schedule
 
 Windmill schedule `f/external_ids/wikidata_backfill`, Sundays at 03:30 Europe/Berlin (`0 30 3 * * SUN`), no
