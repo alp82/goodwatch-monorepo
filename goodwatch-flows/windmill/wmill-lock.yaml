@@ -1,6 +1,7 @@
 locks:
   f/apps/stats.app:
     __app_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+  f/critic_sites/polite_http: 28950e75e2f9f69be195db67de94d2a17a52aa318100527e7a7f4c624236d0bd
   f/data_source/common: 442d137713e1bfd91db22e185a42c6f05ed356420d7cb5cb7d5e1f4a4464237e
   f/data_source/models: 83dac008dff5170169bccd88c43ee803fbfa6e202444865c2ffde413c9661238
   f/data_source/request_with_proxy.flow:
@@ -170,10 +171,12 @@ locks:
     __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
   f/tmdb_web/tmdb_init_providers/main: 9c61d2c91069f1ae6713d8c4e5b37d6fd2e6d08c4744cd2749c3a121dbb78aaa
   f/tmdb_web/tmdb_init_providers/update: 6244124118cce1aa7568dcc9550288d9e8fe108f9fd102bfc992884819b0b368
+  f/tvtropes_web/crawl: 20ccc0a1739d238db5d8a1f25a7a7d5fc7942071c0bf462f2b526d5c037c9741
   f/tvtropes_web/crawl_all_by_id.flow:
     __flow_hash: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
   f/tvtropes_web/models: bcc1391368238d32a32f484ee22d4db54636e7fb3d64c95ecba9dcac2183cde6
-  f/tvtropes_web/tv_tropes_crawl_tags/fetch: 9cfb2f720507502bf638d72e3dce0a7b4d13b3f94878470b6e75c8c005ec9acd
+  f/tvtropes_web/pages: 1246b1c412935d52cbb53dca3ad183b7a1c6c6653f265c20010cb1163e0c6443
+  f/tvtropes_web/tv_tropes_crawl_tags/fetch: 84c27a397bff42a301950dd3553eea5281ea58be3ba9405ffa0ef75775b2fb0c
   f/tvtropes_web/tv_tropes_crawl_tags/iterate: 0854c8247b7edb9506da00264ed947803b0c6c6f1514063ceffe82688f8021d4
   f/tvtropes_web/tv_tropes_crawl_tags/next: e274a241f0465805045d392ec270a193fcfa52821b87f12027592d3ac9baa1b5
   f/tvtropes_web/tvtropes_crawl_tags.flow:

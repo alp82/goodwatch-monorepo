@@ -73,6 +73,17 @@ class PoliteClientTests(unittest.TestCase):
         self.assertEqual(page.url, "https://www.rottentomatoes.com/tv/the-mentalist")
         self.assertTrue(page.redirected)
 
+    def test_a_site_can_name_its_own_user_agent_and_pace(self):
+        # TV Tropes shares the block handling but identifies its own crawl and paces slower.
+        self.http = FakeHttp([FakeResponse(), FakeResponse()])
+        client = polite_http.PoliteClient(self.db, "tvtropes", http=self.http, sleep=self.clock.sleep,
+                                          clock=self.clock, interval=6, user_agent="GoodWatchBot/0.1 tvtropes")
+        client.get("https://tvtropes.org/pmwiki/pmwiki.php/Film/A")
+        client.get("https://tvtropes.org/pmwiki/pmwiki.php/Film/B")
+        self.assertEqual(self.http.calls[0]["headers"]["User-Agent"], "GoodWatchBot/0.1 tvtropes")
+        self.assertEqual(self.clock.slept, [6.0])
+        self.assertIn("critic-scores", polite_http.HEADERS["User-Agent"])
+
     def test_requests_are_spaced_two_seconds_apart_per_site(self):
         client = self.client([FakeResponse(), FakeResponse(), FakeResponse()])
         client.get("https://www.rottentomatoes.com/a")

@@ -153,8 +153,9 @@ def claim_slot(db, site: str, clock, interval: float) -> datetime:
 
 class PoliteClient:
     def __init__(self, db, site: str, http=None, sleep=time.sleep, clock=datetime.utcnow,
-                 interval: float = REQUEST_INTERVAL_SECONDS):
+                 interval: float = REQUEST_INTERVAL_SECONDS, user_agent: str = USER_AGENT):
         self.db = db
+        self.headers = {**HEADERS, "User-Agent": user_agent}
         self.site = site
         self.http = http or requests.Session()
         self.sleep = sleep
@@ -173,7 +174,7 @@ class PoliteClient:
             self.sleep(wait)
         started = time.monotonic()
         try:
-            response = self.http.get(url, headers=HEADERS, timeout=TIMEOUT_SECONDS, allow_redirects=True)
+            response = self.http.get(url, headers=self.headers, timeout=TIMEOUT_SECONDS, allow_redirects=True)
         except requests.exceptions.RequestException as error:
             raise FetchError(f"{type(error).__name__} for {url}") from error
         finally:

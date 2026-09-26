@@ -1,0 +1,10 @@
+summary: Parsed TV Tropes pages
+description: 'Library module: identity check, trope list and subpage links from
+  plain HTML (html5lib); main does nothing.'
+lock: '!inline f/tvtropes_web/pages.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

@@ -1,0 +1,98 @@
+{
+  "titles": [
+    {
+      "media_type": "movie",
+      "tmdb_id": 15,
+      "title": "Citizen Kane",
+      "release_year": 1941,
+      "title_variations": [
+        "CitizenKane"
+      ],
+      "recorded_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/CitizenKane",
+      "trope_count": 231,
+      "tropes_sha256": "9695cbd87ee042f109587526f02539f64e0a4984534a09a02ae96897563d59a0",
+      "pages": {
+        "https://tvtropes.org/pmwiki/pmwiki.php/Film/CitizenKane": {
+          "file": "Film__CitizenKane.html.gz",
+          "requested_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/CitizenKane"
+        },
+        "https://tvtropes.org/pmwiki/pmwiki.php/CitizenKane/TropesAToD": {
+          "file": "CitizenKane__TropesAToD.html.gz",
+          "requested_url": "https://tvtropes.org/pmwiki/pmwiki.php/CitizenKane/TropesAToD"
+        },
+        "https://tvtropes.org/pmwiki/pmwiki.php/CitizenKane/TropesEToM": {
+          "file": "CitizenKane__TropesEToM.html.gz",
+          "requested_url": "https://tvtropes.org/pmwiki/pmwiki.php/CitizenKane/TropesEToM"
+        },
+        "https://tvtropes.org/pmwiki/pmwiki.php/CitizenKane/TropesNToZ": {
+          "file": "CitizenKane__TropesNToZ.html.gz",
+          "requested_url": "https://tvtropes.org/pmwiki/pmwiki.php/CitizenKane/TropesNToZ"
+        }
+      }
+    },
+    {
+      "media_type": "movie",
+      "tmdb_id": 76203,
+      "title": "12 Years a Slave",
+      "release_year": 2013,
+      "title_variations": [
+        "12YearsASlave",
+        "TwelveYearsASlave"
+      ],
+      "recorded_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwelveYearsASlave",
+      "trope_count": 104,
+      "tropes_sha256": "95d06183e948bb68ee1da515f4f7378e2f7c97aacc8542de55eceee5578e991f",
+      "pages": {
+        "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwelveYearsASlave": {
+          "file": "Film__TwelveYearsASlave.html.gz",
+          "requested_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TwelveYearsASlave"
+        }
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 4613,
+      "title": "Band of Brothers",
+      "release_year": 2001,
+      "title_variations": [
+        "BandOfBrothers"
+      ],
+      "recorded_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/BandOfBrothers2001",
+      "trope_count": 212,
+      "tropes_sha256": "2825431d93356670894095882c991c03d072b65ff68a04a65a1d688672fe4e7f",
+      "pages": {
+        "https://tvtropes.org/pmwiki/pmwiki.php/Series/BandOfBrothers2001": {
+          "file": "Series__BandOfBrothers2001.html.gz",
+          "requested_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/BandOfBrothers2001"
+        }
+      }
+    },
+    {
+      "media_type": "show",
+      "tmdb_id": 1425,
+      "title": "House of Cards",
+      "release_year": 2013,
+      "title_variations": [
+        "HouseOfCards"
+      ],
+      "recorded_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/HouseOfCardsUK",
+      "trope_count": 107,
+      "tropes_sha256": "87c6942b3bf123fb76c42056aa788b8f2e04167b05d54c8f59a2abeebb0bf000",
+      "pages": {
+        "https://tvtropes.org/pmwiki/pmwiki.php/Main/HouseOfCards": {
+          "file": "Main__HouseOfCards.html.gz",
+          "requested_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/HouseOfCards"
+        },
+        "https://tvtropes.org/pmwiki/pmwiki.php/Series/HouseOfCardsUS": {
+          "file": "Series__HouseOfCardsUS.html.gz",
+          "requested_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/HouseOfCardsUS"
+        },
+        "https://tvtropes.org/pmwiki/pmwiki.php/Series/HouseOfCardsUK": {
+          "file": "Series__HouseOfCardsUK.html.gz",
+          "requested_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/HouseOfCardsUK"
+        }
+      }
+    }
+  ],
+  "source": "docs/research/tvtropes-repair (Playwright crawl, 2026-09-20/21)"
+}

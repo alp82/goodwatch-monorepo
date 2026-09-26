@@ -1,0 +1,11 @@
+summary: TV Tropes crawl from known URLs
+description: 'Library module shared by the local recovery runner and the
+  per-title fetch: known URLs only, SiteBlocked stops everything; main does
+  nothing.'
+lock: '!inline f/tvtropes_web/crawl.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

@@ -3,7 +3,7 @@ description: Crawl TV Tropes pages and find semantic tags information
 lock: '!inline f/tvtropes_web/tv_tropes_crawl_tags/fetch.script.lock'
 kind: script
 schema:
-  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  $schema: https://json-schema.org/draft/2020-12/schema
   type: object
   properties:
     next_id:
