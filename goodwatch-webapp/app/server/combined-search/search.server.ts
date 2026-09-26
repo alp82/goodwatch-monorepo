@@ -64,7 +64,6 @@ export interface SearchBatch {
 	mode: string;
 	elapsedMs: number;
 	chargedNano: number;
-	historyRecorded: boolean;
 	// People the query names, shown above the titles.
 	people: SearchPerson[];
 	creditScope: CreditScope | null;
@@ -589,17 +588,25 @@ export async function combinedSearch(
 	const shown = await shownPeople;
 	const elapsedMs = Date.now() - started;
 	stageMs.total = elapsedMs;
-	const history = await recordSearchHistory({
+	// The history row is written after the response: nothing in the results depends on it. When the session check
+	// failed, the search records nothing.
+	const entry = {
 		text: query,
-		// The verified account, or a rejection when the session check failed: then the search records nothing.
-		accountId: await visitor.accountId,
 		elapsedMs,
 		chargedNano,
-		outcome: errors.includes(BASIC_SEARCH_MESSAGE) ? "basic" : outcome.kind,
+		outcome: errors.includes(BASIC_SEARCH_MESSAGE)
+			? ("basic" as const)
+			: outcome.kind,
 		...(outcome.kind === "basic" ? { reason: outcome.reason } : {}),
 		rankerVersion: served ? served.rankerVersion : BASIC_RANKER_VERSION,
 		...(fallback ? { rankerFallback: fallback } : {}),
 		stageMs,
+	};
+	setImmediate(() => {
+		Promise.resolve(visitor.accountId).then(
+			(accountId) => recordSearchHistory({ ...entry, accountId }),
+			() => {},
+		);
 	});
 	return {
 		q: query,
@@ -610,7 +617,6 @@ export async function combinedSearch(
 		mode: language.policy.mode,
 		elapsedMs,
 		chargedNano,
-		historyRecorded: history.recorded,
 		people: shown,
 		creditScope: people.scope
 			? { people: people.scope.people, text: people.scope.text }
