@@ -289,22 +289,39 @@ def embed_points(
     `payloads` holds only points that exist; `force` lists points that must be embedded
     even when their stored hash matches, such as points that lost their vectors.
     """
+    todo = changed_inputs(crate, payloads, force=force, stats=stats)
+    if not dry_run:
+        embed_inputs(crate, client, vocabulary, todo, stats)
+
+
+def changed_inputs(
+    crate, payloads: dict[int, dict], *, force: set[int] | None, stats: dict,
+) -> dict[int, tuple[TitleInputs, str]]:
+    """The inputs and input hash of each point to embed; see `embed_points`."""
     ids = sorted(payloads)
     rows = fetch_crate_rows(crate, ids)
     stats["no_crate_row"] += sum(1 for pid in ids if pid not in rows)
     inputs = {pid: title_inputs(payloads[pid], rows[pid]) for pid in ids if pid in rows}
     hashes = {pid: input_hash(i) for pid, i in inputs.items()}
     stored = stored_hashes(crate, list(hashes)) if force is not None else {}
-    todo = [pid for pid in hashes if force is None or pid in force or stored.get(pid) != hashes[pid]]
+    todo = {pid: (inputs[pid], hashes[pid]) for pid in hashes
+            if force is None or pid in force or stored.get(pid) != hashes[pid]}
     stats["unchanged"] += len(hashes) - len(todo)
     stats["to_embed"] += len(todo)
-    if dry_run or not todo:
+    return todo
+
+
+def embed_inputs(crate, client: QdrantClient, vocabulary: TermVocabulary,
+                 todo: dict[int, tuple[TitleInputs, str]], stats: dict) -> None:
+    """Embed and write the given points and record their input hashes."""
+    if not todo:
         return
+    ids = list(todo)
     started = time.monotonic()
-    vectors = dict(zip(todo, text_vectors([inputs[pid] for pid in todo], vocabulary)))
+    vectors = dict(zip(ids, text_vectors([todo[pid][0] for pid in ids], vocabulary)))
     stats["embed_seconds"] += time.monotonic() - started
     written = write_vectors(client, vectors, stats)
-    record_hashes(crate, {pid: hashes[pid] for pid in written}, datetime.now(timezone.utc))
+    record_hashes(crate, {pid: todo[pid][1] for pid in written}, datetime.now(timezone.utc))
     stats["embedded"] += len(written)
 
 
@@ -353,9 +370,13 @@ def sweep_due(crate, now: datetime) -> bool:
 
 
 def sweep_changed(crate, client: QdrantClient, vocabulary: TermVocabulary, dry_run: bool) -> dict:
-    """Embed every point whose input hash differs from the stored one, whatever its timestamps."""
+    """Embed every point whose input hash differs from the stored one, whatever its timestamps.
+
+    Few points change, so they're collected across pages and embedded CHUNK_SIZE at a time:
+    each embedding call loads both models."""
     started_at = datetime.now(timezone.utc)
     stats = _new_stats()
+    pending: dict[int, tuple[TitleInputs, str]] = {}
     offset = None
     while True:
         points, offset = client.scroll(
@@ -363,9 +384,13 @@ def sweep_changed(crate, client: QdrantClient, vocabulary: TermVocabulary, dry_r
             with_payload=PAYLOAD_FIELDS + ["media_type", "tmdb_id"], with_vectors=False,
         )
         stats["candidates"] += len(points)
-        embed_points(crate, client, vocabulary, {int(p.id): p.payload or {} for p in points}, force=set(),
-                     stats=stats, dry_run=dry_run)
-        if offset is None:
+        pending |= changed_inputs(crate, {int(p.id): p.payload or {} for p in points}, force=set(), stats=stats)
+        done = offset is None
+        if not dry_run and (len(pending) >= CHUNK_SIZE or done):
+            embed_inputs(crate, client, vocabulary, pending, stats)
+            pending = {}
+            print(f"sweep: {stats['candidates']} points {json.dumps(stats)}", flush=True)
+        if done:
             break
     print(f"sweep: {json.dumps(stats)}", flush=True)
     if not dry_run:
