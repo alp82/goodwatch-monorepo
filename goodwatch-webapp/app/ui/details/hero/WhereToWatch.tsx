@@ -52,7 +52,7 @@ export default function WhereToWatch({ media, country, navigateToSection }: { me
 	const [popover, setPopover] = useState<"none" | "country" | "all">("none")
 	const ref = useRef<HTMLDivElement>(null)
 	const gridRef = useRef<HTMLDivElement>(null)
-	useClickOutside(ref, () => setPopover("none"))
+	useClickOutside([ref], () => setPopover("none"))
 	const links = useStreamingLinks(media, country, type === "flatrate" ? ["flatrate", "flatrate_and_buy", "free", "ads"] : [type])
 	const anyOwned = links.some((l) => l.owned)
 

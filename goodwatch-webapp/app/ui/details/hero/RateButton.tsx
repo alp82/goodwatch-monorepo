@@ -13,8 +13,10 @@ import { scoreLabels } from "~/utils/ratings"
 export default function RateButton({ media, className = "" }: { media: MovieResult | ShowResult; className?: string }) {
 	const [open, setOpen] = useState(false)
 	const ref = useRef<HTMLDivElement>(null)
+	// The phone sheet renders in a portal, outside `ref`.
+	const sheetRef = useRef<HTMLDivElement>(null)
 	const score = useUserScore(media.mediaType, media.details.tmdb_id)?.score ?? null
-	useClickOutside(ref, () => setOpen(false))
+	useClickOutside([ref, sheetRef], () => setOpen(false))
 	const look = score
 		? `bg-vibe-${score * 10} text-white`
 		: "bg-yellow-400 text-black hover:bg-yellow-300 md:border-2 md:border-yellow-400 md:bg-transparent md:text-yellow-300 md:hover:bg-yellow-400/10"
@@ -42,7 +44,7 @@ export default function RateButton({ media, className = "" }: { media: MovieResu
 			)}
 			<div className="md:hidden">
 				<Drawer open={open} onClose={() => setOpen(false)}>
-					<div className="p-2">
+					<div ref={sheetRef} className="p-2">
 						<ScorePicker media={media} onDone={() => setOpen(false)} />
 					</div>
 				</Drawer>
