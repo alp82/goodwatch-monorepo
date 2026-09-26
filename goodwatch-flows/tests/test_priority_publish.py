@@ -190,7 +190,7 @@ class SelectionTests(unittest.TestCase):
                         "publication_lease": lambda *args: nullcontext(lambda: None),
                     }
                     functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef)
-                                              and node.name in ("changed_tmdb_ids", "fetch_map_by_ids")]
+                                              and node.name in ("changed_tmdb_ids", "fetch_map_by_ids", "scheduled_candidates")]
                     if name == "tmdb_streaming":
                         from test_streaming_publication import load_copy
                         streaming = load_copy(db).__globals__

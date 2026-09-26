@@ -308,6 +308,44 @@ def publication_snapshot(
         print(f"Provider mapping refresh for {media_type}:{tmdb_id}/{country}: {refresh_outcomes[country]}")
 
 
+def scheduled_candidates(
+    mongo_db: Any, mongo_details: Any, mongo_providers: Any,
+    query_selector: dict, cutoff: Optional[datetime], is_movie: bool,
+) -> list[int]:
+    """All tmdb_ids a scheduled run publishes, sorted, each source read once.
+
+    Every read walks one index range. Paging these reads by tmdb_id instead
+    re-ran them for each page, and the details $or/$group aggregate could not
+    bound tmdb_id on its date-first indexes.
+    """
+    only_ids = {"_id": 0, "tmdb_id": 1}
+    candidates: set = set()
+    provider_filters = [{field: {"$gte": cutoff}} for field in ("updated_at", "failed_at")] if cutoff else [{}]
+    for date_filter in provider_filters:
+        candidates.update(row.get("tmdb_id") for row in mongo_providers.find(query_selector | date_filter, only_ids))
+    for marker in ("identity_repair_pending", "country_identity_error"):
+        # The planner never picks these partial tmdb_id indexes for a marker
+        # predicate on its own, so without the hint it scans every provider.
+        marked = {marker: {"$exists": True, "$nin": [None, False, ""]}}
+        candidates.update(row.get("tmdb_id") for row in mongo_providers.find(
+            query_selector | marked, only_ids).hint(f"evidence_{marker}"))
+    if not query_selector:
+        quarantine_query = {"media": "movie" if is_movie else "tv", "status": {"$in": ["unresolved", "resolved_alias"]}}
+        candidates.update(row.get("tmdb_id") for row in mongo_db.provider_identity_unresolved.find(quarantine_query, only_ids))
+    # ObjectId selectors refer to provider documents in this entrypoint.
+    # Preserve that legacy interface instead of applying them to details.
+    if "_id" not in query_selector:
+        if cutoff:
+            for field in ("updated_at", "watch_providers_attempted_at"):
+                # Covered by the (field, tmdb_id) index: no details document is read.
+                candidates.update(row.get("tmdb_id") for row in mongo_details.find(
+                    query_selector | {field: {"$gte": cutoff}}, only_ids).hint([(field, 1), ("tmdb_id", 1)]))
+        else:
+            candidates.update(row.get("tmdb_id") for row in mongo_details.find(query_selector, only_ids))
+    candidates.discard(None)
+    return sorted(candidates)
+
+
 def copy_media(
     connector: CrateConnector,
     query_selector: dict = {},
@@ -322,9 +360,7 @@ def copy_media(
     mongo_providers = mongo_db.tmdb_movie_providers if is_movie else mongo_db.tmdb_tv_providers
     media_table_name = "movie" if is_movie else "show"
     MediaClass = Movie if is_movie else Show
-    cutoff = datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)
-    updated_at_filter = {"$or": [{field: {"$gte": cutoff}} for field in ("updated_at", "failed_at")]} if recent_only else {}
-    details_filter = {"$or": [{field: {"$gte": cutoff}} for field in ("updated_at", "watch_providers_attempted_at")]} if recent_only else {}
+    cutoff = datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH) if recent_only else None
     # Failure/pending invalidation must not require a new whole-catalog scan.
     # Index creation is idempotent; deploy these before enabling the new writer.
     mongo_providers.create_index([("failed_at", 1), ("tmdb_id", 1)])
@@ -344,41 +380,12 @@ def copy_media(
     publication = {"status": "success", "titles": {}}
     targeted_ids = query_selector.get("tmdb_id", {}).get("$in") if not recent_only else None
     lease_wait_seconds = 0 if targeted_ids is not None else SCHEDULED_LEASE_WAIT_SECONDS
-    start = 0
-    last_tmdb_id: int | None = None
-    while True:
-        if targeted_ids is not None:
-            tmdb_ids = targeted_ids[start:start + BATCH_SIZE]
-        else:
-            # Either source can change independently. Merge bounded keyset pages
-            # so API-only updates reach the same reconciler without a second writer.
-            pipeline = [{"$match": query_selector | updated_at_filter}]
-            if last_tmdb_id is not None:
-                pipeline.append({"$match": {"tmdb_id": {"$gt": last_tmdb_id}}})
-            pipeline += [{"$group": {"_id": "$tmdb_id"}}, {"$sort": {"_id": 1}},
-                         {"$limit": BATCH_SIZE}]
-            candidates = {row["_id"] for row in mongo_providers.aggregate(pipeline)}
-            invalidation_match = {"$or": [{"identity_repair_pending": {"$exists": True, "$nin": [None, False, ""]}}, {"country_identity_error": {"$exists": True, "$nin": [None, False, ""]}}]}
-            invalidation_pipeline = [{"$match": {"$and": [query_selector, invalidation_match]}}]
-            if last_tmdb_id is not None:
-                invalidation_pipeline.append({"$match": {"tmdb_id": {"$gt": last_tmdb_id}}})
-            invalidation_pipeline += [{"$group": {"_id": "$tmdb_id"}}, {"$sort": {"_id": 1}}, {"$limit": BATCH_SIZE}]
-            candidates.update(row["_id"] for row in mongo_providers.aggregate(invalidation_pipeline))
-            if not query_selector:
-                quarantine_query = {"media": "movie" if is_movie else "tv", "status": {"$in": ["unresolved", "resolved_alias"]}}
-                if last_tmdb_id is not None:
-                    quarantine_query["tmdb_id"] = {"$gt": last_tmdb_id}
-                candidates.update(row["tmdb_id"] for row in mongo_db.provider_identity_unresolved.find(quarantine_query).sort("tmdb_id", 1).limit(BATCH_SIZE))
-            # ObjectId selectors refer to provider documents in this entrypoint.
-            # Preserve that legacy interface instead of applying them to details.
-            if "_id" not in query_selector:
-                candidates.update(row["_id"] for row in mongo_details.aggregate(
-                    [{"$match": query_selector | details_filter}] + pipeline[1:]))
-            tmdb_ids = sorted(candidates)[:BATCH_SIZE]
-            if tmdb_ids:
-                last_tmdb_id = tmdb_ids[-1]
-        if not tmdb_ids:
-            break
+    # Either source can change independently. Merge them so API-only updates
+    # reach the same reconciler without a second writer.
+    candidate_ids = targeted_ids if targeted_ids is not None else scheduled_candidates(
+        mongo_db, mongo_details, mongo_providers, query_selector, cutoff, is_movie)
+    for start in range(0, len(candidate_ids), BATCH_SIZE):
+        tmdb_ids = candidate_ids[start:start + BATCH_SIZE]
         # Titles deleted on TMDB are removed by the details sync; never republish them.
         flagged_ids = flagged_among(mongo_details, tmdb_ids)
         for tmdb_id in tmdb_ids:
@@ -481,7 +488,6 @@ def copy_media(
                 check_owned()
                 for field in ("records_received", "rows_upserted"):
                     entity_counts["movies" if is_movie else "shows"][field] += result[field]
-        start += BATCH_SIZE
     return dict(entity_counts) | {"publication": publication}
 
 

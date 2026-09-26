@@ -532,6 +532,50 @@ class StreamingPublicationTests(unittest.TestCase):
         self.assertEqual(result["shows"]["records_received"], 5)
         self.assertEqual(crate.media[5]["streaming_availabilities"], ["US_9"])
 
+    def test_scheduled_candidates_are_read_once_through_indexes_not_per_page_aggregates(self) -> None:
+        # A details aggregate per page timed out on the 20 GB movie details, and
+        # the marker queries scanned every provider document on every page.
+        self.copy.__globals__["BATCH_SIZE"] = 2
+        now = datetime.utcnow()
+        for tmdb_id in (1, 3):
+            self.db.tmdb_tv_details.insert_one({"tmdb_id": tmdb_id, "watch_providers_attempted_at": now})
+        self.db.tmdb_tv_details.insert_one({"tmdb_id": 5, "updated_at": now})
+        self.db.tmdb_tv_providers.insert_many([
+            {"tmdb_id": 2, "country_code": "US", "updated_at": now, "streaming_links": []},
+            {"tmdb_id": 4, "country_code": "US", "failed_at": now},
+            {"tmdb_id": 6, "country_code": "US", "identity_repair_pending": "repair"},
+            {"tmdb_id": 7, "country_code": "US", "country_identity_error": "Invalid country"},
+            {"tmdb_id": 8, "country_code": "US", "identity_repair_pending": None},
+        ])
+        candidate_reads = []
+        hints = []
+        find = mongomock.collection.Collection.find
+        hint = mongomock.collection.Cursor.hint
+
+        def spy_find(collection: Any, filter: Any = None, *args: Any, **kwargs: Any) -> Any:
+            if filter and "tmdb_id" not in filter and collection.name in ("tmdb_tv_details", "tmdb_tv_providers"):
+                candidate_reads.append(collection.name)
+            return find(collection, filter, *args, **kwargs)
+
+        def spy_hint(cursor: Any, index: Any) -> Any:
+            hints.append(index)
+            return hint(cursor, index)
+
+        selected = []
+        select = self.copy.__globals__["scheduled_candidates"]
+        self.copy.__globals__["scheduled_candidates"] = lambda *args: selected.extend(select(*args)) or selected
+        crate = Crate()
+        with patch.object(mongomock.collection.Collection, "aggregate", side_effect=AssertionError("aggregate")), \
+                patch.object(mongomock.collection.Collection, "find", spy_find), \
+                patch.object(mongomock.collection.Cursor, "hint", spy_hint):
+            self.copy(crate, {}, "show")
+        self.assertEqual(selected, [1, 2, 3, 4, 5, 6, 7])
+        # Four title pages, but each source is read once.
+        self.assertEqual(candidate_reads.count("tmdb_tv_details"), 2)
+        self.assertEqual(candidate_reads.count("tmdb_tv_providers"), 4)
+        self.assertIn("evidence_identity_repair_pending", hints)
+        self.assertIn("evidence_country_identity_error", hints)
+
     def test_provider_object_id_selector_does_not_expand_to_unrelated_details(self) -> None:
         provider_id = self.db.tmdb_tv_providers.insert_one({
             "tmdb_id": 42, "country_code": "US", "updated_at": datetime.utcnow(), "streaming_links": [],
