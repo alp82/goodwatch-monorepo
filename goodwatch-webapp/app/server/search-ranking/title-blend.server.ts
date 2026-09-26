@@ -23,6 +23,19 @@ export interface TitleLookupRow {
 	popularity: number
 }
 
+/** What the ranker knows of a title outside the title table (a lesser-known title), in the table's conventions. */
+export interface TitleFacts {
+	/** The title, else the original title. */
+	title: string
+	/** "" when unknown. */
+	originalTitle: string
+	/** 0 when unknown. */
+	year: number
+	votes: number
+	/** NaN when unknown. */
+	goodwatchScore: number
+}
+
 export interface BlendedTitle {
 	id: number
 	title: string
@@ -114,7 +127,7 @@ interface Row {
 
 /**
  * The blended list: title lookup matches, a fuzzy title, and the ranked list (point ids in rank order), scored by
- * production's rank fusion.
+ * production's rank fusion. Ranked ids outside the title table take their title and year from `outside`.
  */
 export function blend(
 	index: SearchIndex,
@@ -123,6 +136,7 @@ export function blend(
 	ranked: number[],
 	concreteWords: Set<string>,
 	filterRows: Uint8Array,
+	outside: Map<number, TitleFacts> = new Map(),
 ): BlendedTitle[] {
 	const t = index.titleTable
 	const q = normalized(query)
@@ -185,8 +199,22 @@ export function blend(
 	ranked.forEach((id, i) => {
 		let row = rows.get(id)
 		if (!row) {
-			const r = t.rowOf.get(id) as number
-			row = fromTable(r, 0, lexical(t.titles[r], t.originalTitles[r]))
+			const r = t.rowOf.get(id)
+			if (r !== undefined)
+				row = fromTable(r, 0, lexical(t.titles[r], t.originalTitles[r]))
+			else {
+				const facts = outside.get(id) as TitleFacts
+				row = {
+					id,
+					title: facts.title,
+					mediaType: id >= SHOW_POINT_IDS ? "show" : "movie",
+					year: facts.year ? String(facts.year) : "",
+					popularity: 0,
+					lexical: lexical(facts.title, facts.originalTitle),
+					rank: null,
+					score: 0,
+				}
+			}
 			rows.set(id, row)
 		}
 		row.rank = i + 1

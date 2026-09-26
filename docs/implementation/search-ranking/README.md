@@ -602,9 +602,11 @@ Done in #144, in `goodwatch-webapp/app/server/search-ranking/`. Nothing calls it
 
   So 156 of the 168 graded queries take 2 rounds and the 12 non-English queries with chips take 3, plus the request in
   step 1, which overlaps the encoding.
-- **Filter:** the ranker ranks the indexed titles only (`goodwatch_overall_score_voting_count >= 2000`, not adult),
-  whatever `lesserKnown` and `includeAdult` say. The title table can't test the genre and streaming chip filters: the
-  Qdrant queries apply them, the in-memory parts (the mix statistics, reference titles and peers before round 2) don't.
+- **Filter:** a normal search ranks the indexed titles only (`goodwatch_overall_score_voting_count >= 2000`, not
+  adult). A lesser-known search ranks every title that isn't adult (see [lesser-known searches](#lesser-known-searches)).
+  Adult titles are always excluded, whatever `includeAdult` says. The title table can't test the genre and streaming
+  chip filters: the Qdrant queries apply them, the in-memory parts (the mix statistics, reference titles and peers
+  before round 2) don't.
 - **Versions:** `search_history.ranker_version` (added with
   `goodwatch-webapp/migrations/20260925_search_history_ranker_version.sql`, applied on September 25, 2026) records
   the ranking that produced the served list: `fingerprint-text-v1` (today's), `essence-text-v1` (the basic search)
@@ -711,7 +713,6 @@ changes only (`on`, `shadow` or `off`, then redeploy).
   cards) aren't part of the new list.
 - **Fallbacks:** today's ranking serves, and `search_history.ranker_fallback` records why (added with
   `goodwatch-webapp/migrations/20260925_search_history_ranker_fallback.sql`, applied on September 25, 2026):
-  - `lesser known`: the index holds only titles above the eligibility line;
   - `basic search`: no reading;
   - `index not loaded`, `encoder not ready`, `encoder queue full`: checked before the ranking starts;
   - `timeout`: the ranking missed its deadline, 1,500 ms by default (`SEARCH_RANKING_DEADLINE_MS` overrides it). The
@@ -734,6 +735,36 @@ changes only (`on`, `shadow` or `off`, then redeploy).
   next links worked in a browser. These checks wrote 35 `search_history` rows between 15:07 and 15:18 UTC with
   `ranker_version = 'hybrid-v1'` or a `ranker_fallback`; production was in shadow mode then, so they are the only such
   rows before the switch.
+
+### Lesser-known searches
+
+Built in #146. The search setting "Include lesser-known titles" (`lesserKnown`) asks for titles below the 2,000-vote
+eligibility line too. Until this change, those searches fell back to the previous ranking: 28 of the first 158
+production searches after the switch did.
+
+- **Universe:** the Qdrant filter drops the vote condition and keeps the adult exclusion, so the ranker searches all
+  225,492 titles instead of the 42,090 indexed ones (counts from September 26, 2026). The round 1 lists keep their
+  depths, so the pool stays about the same size.
+- **Facts of titles outside the title table:** round 2 gets one more query in the same batch request. It reads
+  `title`, `original_title`, `release_year`, `goodwatch_overall_score_voting_count` and
+  `goodwatch_overall_score_normalized_percent` from the payloads of the pool titles that the title table doesn't
+  hold. They stand in for the table row in the priors (votes, GoodWatch score), the career signal and the blend.
+  There is no extra request, no new index file and no extra webapp memory.
+- **What stays limited to the indexed titles:** the index files are built over the indexed titles, so term statistics
+  (IDF), credits and own titles, peers, negation labels, "like X" titles, fuzzy titles, alternate cuts and the
+  non-English mix statistics don't know lesser-known titles. A lesser-known title can still come in through every
+  store signal (fingerprint, dense text, BM25F, facets, coverage units, the reference profile), but it gets no own-title
+  credit in a person search and no label penalty for a negated element (the embedding penalty still applies).
+- **Normal searches don't change:** without `lesserKnown`, the filter and the candidates are the same as before.
+- **A full second index** over all titles would close those gaps. Scaled from the indexed build (about 160 MB in
+  memory for 50,371 titles, 58 MB of it `mix_vectors`), it would take roughly 4.5 times as much memory (about
+  720 MB instead of 160 MB, so about 560 MB more in the webapp) and make the nightly build much longer. That's an
+  owner decision, not part of this change.
+- **Checked locally** (`scripts/search-ranking-run.ts --lesser-known`, 9 arena captures, production Qdrant and build
+  `20260926T041504Z`): on-topic lesser-known titles join the lists, for example "Gods of the Deep", "What Lurks
+  Beneath" and "Thresher" for "horror on a submarine", and "Thunder Rock" and "Murder at the Lighthouse" for
+  "melancholy lighthouse keeper mystery". Person and "like X" searches keep their own titles on top. Qdrant's own time
+  for round 2 grew from 7 to 53 ms to 20 to 91 ms.
 
 ### Switch-over check
 

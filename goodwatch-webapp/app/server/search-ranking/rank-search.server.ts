@@ -66,6 +66,7 @@ import {
 } from "./search-index.server.ts"
 import {
 	type BlendedTitle,
+	type TitleFacts,
 	type TitleLookupRow,
 	blend,
 } from "./title-blend.server.ts"
@@ -197,6 +198,30 @@ function quantizedCosines(
 
 const toMap = (points: ScoredPoint[]) =>
 	new Map(points.map((p) => [Number(p.id), p.score]))
+
+// The payload fields that stand in for a title table row, for titles below the eligibility line.
+const FACT_FIELDS = [
+	"title",
+	"original_title",
+	"release_year",
+	"goodwatch_overall_score_voting_count",
+	"goodwatch_overall_score_normalized_percent",
+]
+
+/** A lesser-known title's facts from its payload, in the title table's conventions. */
+function payloadFacts(payload: Record<string, unknown>): TitleFacts {
+	const title = typeof payload.title === "string" ? payload.title : ""
+	const original =
+		typeof payload.original_title === "string" ? payload.original_title : ""
+	const score = payload.goodwatch_overall_score_normalized_percent
+	return {
+		title: title || original,
+		originalTitle: original,
+		year: Number(payload.release_year) || 0,
+		votes: Number(payload.goodwatch_overall_score_voting_count) || 0,
+		goodwatchScore: typeof score === "number" ? score : Number.NaN,
+	}
+}
 
 // --- The entry point -------------------------------------------------------------------------------------------------
 
@@ -624,6 +649,19 @@ export async function rankSearch(
 	const mentionAt = mentionWeights.size
 		? score(sparseQuery(mentionWeights))
 		: -1
+	// A lesser-known search's pool holds titles the title table doesn't: read their facts in the same request.
+	const outside = eligibility.lesserKnown
+		? poolIds.filter((id) => !t.rowOf.has(id))
+		: []
+	let factsAt = -1
+	if (outside.length) {
+		round2.push({
+			filter: { must: [{ has_id: outside }] },
+			limit: outside.length,
+			with_payload: FACT_FIELDS,
+		})
+		factsAt = round2.length - 1
+	}
 	lap("plan")
 	const r2 = await queryBatch(COLLECTION, round2)
 	rounds.push({
@@ -636,9 +674,20 @@ export async function rankSearch(
 
 	// 5. Score. The candidates are the pool titles that pass the filter.
 	const fpScores = toMap(r2.results[fpAt])
-	const cand = poolIds.filter((id) => fpScores.has(id) && t.rowOf.has(id))
+	const outsideFacts = new Map<number, TitleFacts>(
+		factsAt >= 0
+			? r2.results[factsAt].map((p) => [
+					Number(p.id),
+					payloadFacts(p.payload ?? {}),
+				])
+			: [],
+	)
+	const cand = poolIds.filter(
+		(id) => fpScores.has(id) && (t.rowOf.has(id) || outsideFacts.has(id)),
+	)
 	if (request.trace)
 		round2.forEach((q, k) => {
+			if (k === factsAt) return
 			const got = new Set(r2.results[k].map((p) => Number(p.id)))
 			scored.push({
 				using: String(q.using),
@@ -646,7 +695,18 @@ export async function rankSearch(
 				returned: cand.filter((id) => got.has(id)).length,
 			})
 		})
-	const rows = cand.map((id) => t.rowOf.get(id) as number)
+	// Title table rows, -1 for a lesser-known title outside it
+	const rows = cand.map((id) => t.rowOf.get(id) ?? -1)
+	const fact = <K extends keyof TitleFacts>(
+		key: K,
+		fromTable: (row: number) => TitleFacts[K],
+	) =>
+		cand.map((id, i) =>
+			rows[i] >= 0
+				? fromTable(rows[i])
+				: (outsideFacts.get(id) as TitleFacts)[key],
+		)
+	const votes = fact("votes", (row) => t.votes[row])
 	const column = (at: number) => {
 		const m = toMap(r2.results[at])
 		return cand.map((id) => m.get(id) ?? 0)
@@ -726,10 +786,10 @@ export async function rankSearch(
 			"negationLabels",
 		)
 	}
-	const logVotes = rows.map((row) => Math.log1p(t.votes[row]))
+	const logVotes = votes.map((v) => Math.log1p(v))
 	addTo(
 		WEIGHTS.goodwatchScore,
-		z(filled(rows.map((row) => t.goodwatchScores[row]))),
+		z(filled(fact("goodwatchScore", (row) => t.goodwatchScores[row]))),
 		"goodwatchScore",
 	)
 	if (!ref) addTo(WEIGHTS.votes, z(logVotes), "votes")
@@ -783,7 +843,7 @@ export async function rankSearch(
 			)
 		} else addTo(WEIGHTS.votes, z(logVotes), "votes")
 		if (ref.era) {
-			const zy = z(filled(rows.map((row) => t.years[row])))
+			const zy = z(filled(fact("year", (row) => t.years[row])))
 			addTo(WEIGHTS.career * (ref.era === "late" ? 1 : -1), zy, "career")
 		}
 	}
@@ -821,7 +881,15 @@ export async function rankSearch(
 	// Blend with the title lookup, fold alternate cuts, bound the own titles
 	let results = foldCuts(
 		index,
-		blend(index, query, request.titleLookup, ranked, concrete, baseFilter.rows),
+		blend(
+			index,
+			query,
+			request.titleLookup,
+			ranked,
+			concrete,
+			baseFilter.rows,
+			outsideFacts,
+		),
 	)
 	if (ref) results = boundOwn(results, ref)
 	results = results.slice(0, RESULT_LENGTH)

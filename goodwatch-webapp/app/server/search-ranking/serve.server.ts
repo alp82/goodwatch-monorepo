@@ -1,6 +1,6 @@
 // SEARCH_RANKING_MODE=on: the new ranking serves the search. The current ranking still serves when the new one can't:
-// a lesser-known search (the index holds only titles above the eligibility line), a basic search (no reading), the
-// index or the query models not loaded yet, a full encoder queue, or a ranking that fails or misses its deadline.
+// a basic search (no reading), the index or the query models not loaded yet, a full encoder queue, or a ranking that
+// fails or misses its deadline.
 // combinedSearch records the reason on the search_history row (ranker_fallback).
 import type {
 	Eligibility,
@@ -25,7 +25,6 @@ export function servingDeadlineMs(): number {
 }
 
 export type ServingFallback =
-	| "lesser known"
 	| "basic search"
 	| "index not loaded"
 	| "encoder not ready"
@@ -38,7 +37,6 @@ export function servingFallback(search: {
 	hasReading: boolean
 	eligibility: Eligibility
 }): ServingFallback | null {
-	if (search.eligibility.lesserKnown) return "lesser known"
 	if (!search.hasReading) return "basic search"
 	if (!loadedSearchIndexBuild()) return "index not loaded"
 	const encoder = queryEncoderState()
