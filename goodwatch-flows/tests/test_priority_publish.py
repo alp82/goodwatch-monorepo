@@ -496,17 +496,29 @@ class AcknowledgmentTests(unittest.TestCase):
         self.assertFalse(modules[publish]["continue_on_error"])
         self.assertEqual(modules[reset]["value"]["input_transforms"]["publication_result"]["expr"], "results.o")
 
-    def test_flow_skips_imdb_unless_enabled(self) -> None:
+    def test_flow_skips_blocked_sites_unless_enabled(self) -> None:
         # imdb.com blocks the crawler; IMDb ratings come from the daily dataset files.
+        # TV Tropes challenges the production IP; tropes come from the reviewed local recovery.
         import yaml
         flow = yaml.safe_load((ROOT / "priority" / "crawl_all.flow" / "flow.yaml").read_text())
-        self.assertIs(flow["schema"]["properties"]["crawl_imdb"]["default"], False)
+        flags = {"f/imdb_web/": "crawl_imdb", "f/tvtropes_web/": "crawl_tvtropes"}
+        for flag in flags.values():
+            self.assertIs(flow["schema"]["properties"][flag]["default"], False)
+            self.assertIn(flag, flow["schema"]["order"])
         branches = next(module for module in flow["value"]["modules"] if module["value"]["type"] == "branchall")["value"]["branches"]
         for branch in branches:
             for module in branch["modules"]:
-                is_imdb = module["value"]["path"].startswith("f/imdb_web/")
-                self.assertEqual(module.get("skip_if"), {"expr": "!flow_input.crawl_imdb"} if is_imdb else None, module["id"])
+                flag = next((flag for prefix, flag in flags.items() if module["value"]["path"].startswith(prefix)), None)
+                self.assertEqual(module.get("skip_if"), {"expr": f"!flow_input.{flag}"} if flag else None, module["id"])
 
+    def test_flow_publishes_and_releases_without_tvtropes_results(self) -> None:
+        # With crawl_tvtropes off, publish and reset must not depend on the skipped TV Tropes modules.
+        import yaml
+        flow = yaml.safe_load((ROOT / "priority" / "crawl_all.flow" / "flow.yaml").read_text())
+        top = {module["id"]: module for module in flow["value"]["modules"]}
+        for module_id in ("o", "y"):
+            exprs = [t.get("expr", "") for t in top[module_id]["value"]["input_transforms"].values()]
+            self.assertFalse(any("results.k" in e or "results.v" in e for e in exprs), exprs)
 
 if __name__ == "__main__":
     unittest.main()

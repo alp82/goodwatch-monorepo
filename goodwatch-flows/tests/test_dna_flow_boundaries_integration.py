@@ -90,7 +90,7 @@ class DNAFlowBoundaries(unittest.TestCase):
         for path in (
             "f/tmdb_api/tmdb_fetch_details_from_api/fetch",
             "f/metacritic_web/crawl_all_by_id",
-            "f/rotten_web/crawl_all_by_id", "f/tvtropes_web/crawl_all_by_id",
+            "f/rotten_web/crawl_all_by_id",
             "f/tmdb_web/crawl_all_by_id", "f/priority/publish",
         ):
             self.assertIn(path, called)
@@ -102,6 +102,15 @@ class DNAFlowBoundaries(unittest.TestCase):
         # imdb.com blocks the crawler, so the IMDb branch is off unless crawl_imdb is set.
         self.assertNotIn("f/imdb_web/imdb_init_ratings/update", called)
         self.assertNotIn("f/imdb_web/crawl_all_by_id", called)
+        # TV Tropes challenges the production IP, so its branch is off unless crawl_tvtropes is set.
+        self.assertNotIn("f/tvtropes_web/tvtropes_init_tags/update", called)
+        self.assertNotIn("f/tvtropes_web/crawl_all_by_id", called)
+
+    def test_priority_crawl_runs_tvtropes_when_enabled(self):
+        called = self.run_boundary("f/priority/crawl_all", {"crawl_tvtropes": True})
+        for path in ("f/tvtropes_web/tvtropes_init_tags/update", "f/tvtropes_web/crawl_all_by_id"):
+            self.assertIn(path, called)
+        self.assertIn("f/priority/reset", called)
 
     def test_priority_crawl_runs_imdb_when_enabled(self):
         called = self.run_boundary("f/priority/crawl_all", {"crawl_imdb": True})

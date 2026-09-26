@@ -159,6 +159,8 @@ value:
           - summary: TV Tropes
             modules:
               - id: k
+                skip_if:
+                  expr: '!flow_input.crawl_tvtropes'
                 value:
                   type: script
                   input_transforms:
@@ -178,6 +180,8 @@ value:
                     random_factor: 0
                     seconds: 2
               - id: v
+                skip_if:
+                  expr: '!flow_input.crawl_tvtropes'
                 value:
                   type: flow
                   input_transforms:
@@ -294,12 +298,20 @@ schema:
     - movie_tmdb_id
     - tv_tmdb_id
     - crawl_imdb
+    - crawl_tvtropes
   properties:
     crawl_imdb:
       type: boolean
       description: >-
         Crawl imdb.com pages. Off because imdb.com blocks the crawler; IMDb
         ratings come from the daily dataset files instead.
+      default: false
+    crawl_tvtropes:
+      type: boolean
+      description: >-
+        Crawl tvtropes.org pages. Off because TV Tropes challenges the
+        production IP; tropes come from the reviewed local recovery
+        (docs/tvtropes.md) instead.
       default: false
     movie_tmdb_id:
       type: string
