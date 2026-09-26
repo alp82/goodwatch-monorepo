@@ -159,18 +159,21 @@ def _with_fingerprint(dna_collection):
     return keep
 
 
-def _drivers(c_details, c_imdb, c_dna, *, recent_only: bool) -> list:
+def _drivers(c_details, c_imdb, c_dna, c_tropes, *, recent_only: bool) -> list:
     """The (collection, keep) drivers whose changed documents pick the titles to copy.
 
     The details drive every run. In the recent window, the IMDb ratings (the daily dataset
-    ingest changes them without touching the details) and the DNA also drive it. Every write
-    of new DNA or a fingerprint moves the DNA's updated_at, including when it sets
-    dna_generated_at, so updated_at alone finds them. Both are kept to titles with a
-    fingerprint, the only ones the copy writes.
+    ingest changes them without touching the details), the DNA and the tropes also drive it.
+    Every write of new DNA or a fingerprint moves the DNA's updated_at, including when it sets
+    dna_generated_at, so updated_at alone finds them. Every trope crawl or reviewed import
+    moves the trope document's updated_at, and the payload's `tropes` feed the search text.
+    All three are kept to titles with a fingerprint, the only ones the copy writes.
     """
     if not recent_only:
         return [(c_details, None)]
-    return [(c_details, None), (c_imdb, _with_fingerprint(c_dna)), (c_dna, _with_fingerprint(c_dna))]
+    with_fingerprint = _with_fingerprint(c_dna)
+    return [(c_details, None), (c_imdb, with_fingerprint), (c_dna, with_fingerprint),
+            (c_tropes, with_fingerprint)]
 
 
 def _driver_batches(drivers: list, base_selector: dict, *, use_compound_hint: bool):
@@ -485,7 +488,7 @@ def copy_to_qdrant(
     updated = {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
     sel = dict(query_selector or {})
 
-    drivers = _drivers(c_details, c_imdb, c_dna, recent_only=recent_only)
+    drivers = _drivers(c_details, c_imdb, c_dna, c_tropes, recent_only=recent_only)
     # fingerprint_v1_raw may not exist in the collection yet; check once per media type.
     write_raw_fingerprint = FINGERPRINT_RAW_VECTOR in _collection_vector_names(qc.client)
 

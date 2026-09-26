@@ -1,4 +1,4 @@
-"""The scheduled Qdrant copy picks up titles whose IMDb rating or DNA changed without a details update."""
+"""The scheduled Qdrant copy picks up titles whose IMDb rating, DNA or tropes changed without a details update."""
 import sys
 import unittest
 from datetime import datetime, timedelta
@@ -54,7 +54,30 @@ class DriverBatchesTest(unittest.TestCase):
             {"tmdb_id": 4, "updated_at": old, "vector_fingerprint": [0.4]}])
         selector = {"updated_at": {"$gte": now - timedelta(hours=vector_data.HOURS_TO_FETCH)}}
 
-        drivers = vector_data._drivers(db.tmdb_movie_details, db.imdb_movie_rating, db.dna_movie, recent_only=True)
+        drivers = vector_data._drivers(db.tmdb_movie_details, db.imdb_movie_rating, db.dna_movie, db.tv_tropes_movie_tags, recent_only=True)
+        batches = list(vector_data._driver_batches(drivers, selector, use_compound_hint=True))
+
+        self.assertEqual(batches, [[1], [2]])
+
+    def test_recent_trope_changes_add_fingerprinted_titles_once(self):
+        db = mongomock.MongoClient().goodwatch
+        now = datetime.utcnow()
+        old = now - timedelta(days=30)
+        db.tmdb_movie_details.insert_many([
+            {"tmdb_id": tmdb_id, "updated_at": now if tmdb_id == 1 else old} for tmdb_id in (1, 2, 3, 4)])
+        db.dna_movie.insert_many([
+            {"tmdb_id": tmdb_id, "updated_at": old, "vector_fingerprint": [0.1]} for tmdb_id in (1, 2, 4)])
+        db.tv_tropes_movie_tags.insert_many([
+            {"tmdb_id": 1, "updated_at": now, "tropes": [{"name": "Chekhov's Gun"}]},
+            # Tropes imported since the title's last TMDB refresh.
+            {"tmdb_id": 2, "updated_at": now, "tropes": [{"name": "Red Herring"}]},
+            # A title without a fingerprint has no point to publish.
+            {"tmdb_id": 3, "updated_at": now, "tropes": [{"name": "Twist Ending"}]},
+            {"tmdb_id": 4, "updated_at": old, "tropes": [{"name": "Cold Open"}]}])
+        selector = {"updated_at": {"$gte": now - timedelta(hours=vector_data.HOURS_TO_FETCH)}}
+
+        drivers = vector_data._drivers(
+            db.tmdb_movie_details, db.imdb_movie_rating, db.dna_movie, db.tv_tropes_movie_tags, recent_only=True)
         batches = list(vector_data._driver_batches(drivers, selector, use_compound_hint=True))
 
         self.assertEqual(batches, [[1], [2]])
@@ -62,7 +85,7 @@ class DriverBatchesTest(unittest.TestCase):
     def test_a_full_copy_walks_only_the_details(self):
         db = mongomock.MongoClient().goodwatch
 
-        drivers = vector_data._drivers(db.tmdb_movie_details, db.imdb_movie_rating, db.dna_movie, recent_only=False)
+        drivers = vector_data._drivers(db.tmdb_movie_details, db.imdb_movie_rating, db.dna_movie, db.tv_tropes_movie_tags, recent_only=False)
 
         self.assertEqual([collection for collection, _ in drivers], [db.tmdb_movie_details])
 
