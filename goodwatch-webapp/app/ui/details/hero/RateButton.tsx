@@ -9,7 +9,8 @@ import ScoreAction from "~/ui/user/actions/ScoreAction"
 import { scoreLabels } from "~/utils/ratings"
 
 // Solid yellow on phones, outlined on desktop. Once rated, it shows your
-// score in the score color.
+// score in the score color. The desktop picker opens under the button: from its right edge
+// while the box is narrow, from its left edge from lg up.
 export default function RateButton({ media, className = "" }: { media: MovieResult | ShowResult; className?: string }) {
 	const [open, setOpen] = useState(false)
 	const ref = useRef<HTMLDivElement>(null)
@@ -27,7 +28,7 @@ export default function RateButton({ media, className = "" }: { media: MovieResu
 				onClick={() => setOpen(!open)}
 				aria-expanded={open}
 				aria-haspopup="dialog"
-				className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-bold shadow-lg shadow-black/30 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${look}`}
+				className={`inline-flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-base font-bold shadow-lg shadow-black/30 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${look}`}
 			>
 				<StarIcon className="h-5 w-5" />
 				{score ? `Your score: ${score}` : "Rate this"}
@@ -36,9 +37,9 @@ export default function RateButton({ media, className = "" }: { media: MovieResu
 				<dialog
 					open
 					aria-label={`Rate ${media.details.title}`}
-					className="absolute left-auto right-0 top-full z-50 mt-3 hidden w-[26rem] rounded-2xl border border-white/10 bg-stone-900 p-5 text-white shadow-2xl shadow-black/70 md:block"
+					className="absolute left-auto right-0 top-full z-50 mt-3 hidden w-[26rem] rounded-2xl border border-white/10 bg-stone-900 p-5 text-white shadow-2xl shadow-black/70 md:block lg:left-0 lg:right-auto"
 				>
-					<span aria-hidden="true" className="absolute -top-1.5 right-8 h-3 w-3 rotate-45 border-l border-t border-white/10 bg-stone-900" />
+					<span aria-hidden="true" className="absolute -top-1.5 right-8 h-3 w-3 rotate-45 border-l border-t border-white/10 bg-stone-900 lg:left-8 lg:right-auto" />
 					<ScorePicker media={media} onDone={() => setOpen(false)} />
 				</dialog>
 			)}

@@ -91,17 +91,13 @@ export function PosterTrailer({ media, className = "" }: { media: Media; classNa
 	)
 }
 
+// The sharp backdrop, fading out at the bottom into whatever is behind it.
 export function BackdropTrailer({ media, className = "" }: { media: Media; className?: string }) {
 	return (
 		<TrailerImage
 			media={media}
-			className={`w-full overflow-hidden ${className}`}
-			image={
-				<>
-					<img src={backdropUrl(media)} alt="" className="absolute inset-0 h-full w-full object-cover object-[center_25%]" />
-					<span aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-stone-950" />
-				</>
-			}
+			className={`w-full overflow-hidden [mask-image:linear-gradient(to_bottom,black_65%,transparent)] ${className}`}
+			image={<img src={backdropUrl(media)} alt="" className="absolute inset-0 h-full w-full object-cover object-[center_25%]" />}
 		/>
 	)
 }

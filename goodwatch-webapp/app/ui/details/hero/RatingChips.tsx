@@ -4,10 +4,9 @@ import metacriticLogoIcon from "~/img/metacritic-logo-icon-250.png"
 import rottenLogoIcon from "~/img/rotten-logo-icon-250.png"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
-// IMDb, Metacritic (critics | audience), and Rotten Tomatoes (critics |
-// audience) as brand-colored chips. `fill` spreads them over three equal
-// columns on phones.
-export default function RatingChips({ media, fill = false }: { media: MovieResult | ShowResult; fill?: boolean }) {
+// IMDb, Metacritic (critics | audience), and Rotten Tomatoes (critics | audience) as compact
+// brand-colored chips in a wrapping row. A site with no score at all is left out.
+export default function RatingChips({ media }: { media: MovieResult | ShowResult }) {
 	const d = media.details
 	const imdb = d.imdb_user_score_original ? d.imdb_user_score_original.toFixed(1) : null
 	const mc = d.metacritic_meta_score_original ? String(Math.floor(d.metacritic_meta_score_original)) : null
@@ -18,29 +17,32 @@ export default function RatingChips({ media, fill = false }: { media: MovieResul
 	const pair = (critics: string | null, audience: string | null) => (
 		<>
 			<span>{critics ?? "–"}</span>
-			<span aria-hidden="true" className="h-3.5 w-px bg-current opacity-40" />
+			<span aria-hidden="true" className="h-3 w-px bg-current opacity-40" />
 			<span className="font-medium opacity-90">{audience ?? "–"}</span>
 		</>
 	)
-	const chip = (href: string | undefined, logo: string, alt: string, value: React.ReactNode, brand: string, title: string) => (
+	const chip = (key: string, href: string | undefined, logo: string, alt: string, value: React.ReactNode, brand: string, title: string) => (
 		<a
+			key={key}
 			href={href || undefined}
 			target="_blank"
 			rel="noreferrer"
 			title={title}
-			className={`inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-sm font-semibold tabular-nums md:h-9 ${fill ? "justify-center" : ""} ${brand} ${
-				href ? "hover:brightness-110" : "pointer-events-none opacity-50"
+			className={`inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 text-[13px] font-semibold tabular-nums ${brand} ${
+				href ? "hover:brightness-110" : "pointer-events-none"
 			}`}
 		>
-			<img src={logo} alt={alt} className={alt === "IMDb" ? "h-3.5" : "h-4"} />
+			<img src={logo} alt={alt} className={alt === "IMDb" ? "h-3" : "h-3.5"} />
 			{value}
 		</a>
 	)
-	return (
-		<div className={fill ? "grid grid-cols-3 gap-1.5 md:flex md:flex-wrap md:items-center" : "flex flex-wrap items-center gap-1.5"}>
-			{chip(d.imdb_url, imdbLogo, "IMDb", imdb ?? "–", "bg-imdb text-black", `IMDb: ${imdb ?? "no score"}`)}
-			{chip(d.metacritic_url, metacriticLogoIcon, "Metacritic", pair(mc, mcUser), "bg-metacritic text-white", `Metacritic: critics ${mc ?? "–"}, audience ${mcUser ?? "–"}`)}
-			{chip(d.rotten_tomatoes_url, rottenLogoIcon, "Rotten Tomatoes", pair(rt, rtUser), "bg-rotten text-white", `Rotten Tomatoes: critics ${rt ?? "–"}, audience ${rtUser ?? "–"}`)}
-		</div>
-	)
+	const chips = [
+		imdb && chip("imdb", d.imdb_url, imdbLogo, "IMDb", imdb, "bg-imdb text-black", `IMDb: ${imdb}`),
+		(mc || mcUser) &&
+			chip("mc", d.metacritic_url, metacriticLogoIcon, "Metacritic", pair(mc, mcUser), "bg-metacritic text-white", `Metacritic: critics ${mc ?? "–"}, audience ${mcUser ?? "–"}`),
+		(rt || rtUser) &&
+			chip("rt", d.rotten_tomatoes_url, rottenLogoIcon, "Rotten Tomatoes", pair(rt, rtUser), "bg-rotten text-white", `Rotten Tomatoes: critics ${rt ?? "–"}, audience ${rtUser ?? "–"}`),
+	].filter(Boolean)
+	if (chips.length === 0) return null
+	return <div className="flex flex-wrap items-center gap-1.5">{chips}</div>
 }

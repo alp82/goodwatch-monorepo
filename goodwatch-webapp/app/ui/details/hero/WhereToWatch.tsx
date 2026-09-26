@@ -47,6 +47,8 @@ const GAP = 8
 // Offer tiles in a fixed number of rows so switching offer type or country
 // never changes the height: one row of logos on phones, two rows of named
 // tiles from md up. When the rows are full, the last tile opens the full list.
+// The country selector sits beside the offer types; the "Your services" legend
+// sits beside the disclaimer under the tiles.
 export default function WhereToWatch({ media, country, navigateToSection }: { media: Media; country: string; navigateToSection: (s: Section) => void }) {
 	const [type, setType] = useState<"flatrate" | "rent" | "buy">("flatrate")
 	const [popover, setPopover] = useState<"none" | "country" | "all">("none")
@@ -101,7 +103,7 @@ export default function WhereToWatch({ media, country, navigateToSection }: { me
 
 	return (
 		<div id="streaming" ref={ref} className="relative min-w-0">
-			<div className="flex flex-wrap items-center gap-2">
+			<div className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
 				<h2 className="whitespace-nowrap text-sm font-semibold text-gray-200 max-[430px]:sr-only">Where to watch</h2>
 				<div role="tablist" aria-label="Offer type" className="flex rounded-full bg-white/8 p-0.5 text-xs">
 					{(["flatrate", "rent", "buy"] as const).map((t) => (
@@ -117,43 +119,29 @@ export default function WhereToWatch({ media, country, navigateToSection }: { me
 						</button>
 					))}
 				</div>
-				<div className="ml-auto flex shrink-0 items-center gap-3 text-xs">
-					{anyOwned ? (
-						<span className="inline-flex items-center gap-1 text-green-300">
-							<span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-500 text-black">
-								<CheckIcon className="h-2.5 w-2.5" />
-							</span>
-							Your services
-						</span>
-					) : (
-						<Link to="/settings/streaming" className="hidden text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white md:inline">
-							Set your services
-						</Link>
+				<div className="relative -mr-2 ml-auto shrink-0 text-xs">
+					<button
+						type="button"
+						onClick={() => setPopover(popover === "country" ? "none" : "country")}
+						aria-expanded={popover === "country"}
+						aria-label="Change country"
+						className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-gray-300 hover:bg-white/10 cursor-pointer"
+					>
+						{flag && <img src={flag} alt="" className="h-2.5 rounded-[1px]" />}
+						{country || "Country"}
+						<AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
+					</button>
+					{popover === "country" && (
+						<div className="absolute right-0 top-full z-40 mt-2 w-72 rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
+							<h3 className="mb-2 text-xs font-semibold text-gray-400">Show services in</h3>
+							<CountrySelector
+								mediaType={media.mediaType}
+								countryCodes={media.details.streaming_country_codes}
+								currentCountryCode={country}
+								navigateToSection={navigateToSection}
+							/>
+						</div>
 					)}
-					<div className="relative">
-						<button
-							type="button"
-							onClick={() => setPopover(popover === "country" ? "none" : "country")}
-							aria-expanded={popover === "country"}
-							aria-label="Change country"
-							className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-gray-300 hover:bg-white/10 cursor-pointer"
-						>
-							{flag && <img src={flag} alt="" className="h-2.5 rounded-[1px]" />}
-							{country || "Country"}
-							<AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
-						</button>
-						{popover === "country" && (
-							<div className="absolute right-0 top-full z-40 mt-2 w-72 rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
-								<h3 className="mb-2 text-xs font-semibold text-gray-400">Show services in</h3>
-								<CountrySelector
-									mediaType={media.mediaType}
-									countryCodes={media.details.streaming_country_codes}
-									currentCountryCode={country}
-									navigateToSection={navigateToSection}
-								/>
-							</div>
-						)}
-					</div>
 				</div>
 			</div>
 			<div
@@ -184,17 +172,31 @@ export default function WhereToWatch({ media, country, navigateToSection }: { me
 					<div className="flex flex-wrap gap-2 pt-1">{links.map(tile)}</div>
 				</div>
 			)}
-			<p className="mt-2 text-[11px] text-gray-500">
-				Links go to licensed services. Data from{" "}
-				<a href="https://www.justwatch.com" target="_blank" rel="noreferrer" className="underline decoration-white/20 hover:text-gray-300">
-					JustWatch
-				</a>{" "}
-				and{" "}
-				<a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="underline decoration-white/20 hover:text-gray-300">
-					TMDB
-				</a>
-				.
-			</p>
+			<div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+				<p className="text-[11px] text-gray-400">
+					Links go to licensed services. Data from{" "}
+					<a href="https://www.justwatch.com" target="_blank" rel="noreferrer" className="underline decoration-white/20 hover:text-gray-200">
+						JustWatch
+					</a>{" "}
+					and{" "}
+					<a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="underline decoration-white/20 hover:text-gray-200">
+						TMDB
+					</a>
+					.
+				</p>
+				{anyOwned ? (
+					<span className="ml-auto inline-flex shrink-0 items-center gap-1 text-xs text-green-300">
+						<span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-500 text-black">
+							<CheckIcon className="h-2.5 w-2.5" />
+						</span>
+						Your services
+					</span>
+				) : (
+					<Link to="/settings/streaming" className="ml-auto hidden text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white md:inline">
+						Set your services
+					</Link>
+				)}
+			</div>
 		</div>
 	)
 }
