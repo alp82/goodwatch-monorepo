@@ -16,9 +16,12 @@ queue: `next_crawl_at` on the `*_tv_rating` / `*_movie_rating` documents.
 Per title:
 1. Try Wikidata's URL, then the stored URL, over plain HTTP (`polite_http`), and
    store the canonical URL after redirects.
-2. Verify the page belongs to the title. On Metacritic the page's IMDb id must equal
-   the title's effective IMDb id. Otherwise a URL not from Wikidata needs a matching
-   title and a year at most one off.
+2. Verify the page belongs to the title. A Metacritic page whose IMDb id equals the
+   title's effective IMDb id belongs to it. A different IMDb id rejects the page when
+   Wikidata gives the title another URL or the id belongs to another catalog title;
+   otherwise the page needs a matching title and year. A URL not from Wikidata needs a
+   matching title (TMDB alternative titles and translations count) and a year near the
+   premiere or, for shows, within the run.
 3. A URL several titles hold goes to the one title the page matches; the others lose
    it (reason `duplicate`). One request settles the whole group.
 4. Shows: the show page lists every season with its critic score. Season pages add
@@ -44,7 +47,7 @@ from typing import Optional
 from pymongo import ASCENDING, DESCENDING
 
 from f.critic_sites import polite_http
-from f.critic_sites.matching import title_matches, url_key, year_matches
+from f.critic_sites.matching import title_matches, url_key, year_fit
 from f.critic_sites.pages import ParsedTitle, SeasonScores
 from f.external_ids.imdb_ids import effective_imdb_id
 from f.metacritic_web import site as metacritic_site
@@ -69,9 +72,11 @@ RECENTLY_CRAWLED = timedelta(days=1)
 DETAILS = {"tv": "tmdb_tv_details", "movie": "tmdb_movie_details"}
 DETAILS_FIELDS = {"_id": 0, "tmdb_id": 1, "title": 1, "original_title": 1, "first_air_date": 1, "release_date": 1,
                   "in_production": 1, "next_episode_to_air": 1, "last_air_date": 1, "imdb_id": 1,
-                  "external_ids.imdb_id": 1, "imdb_id_override": 1}
+                  "external_ids.imdb_id": 1, "imdb_id_override": 1, "alternative_titles.title": 1,
+                  "translations.data.title": 1, "translations.data.name": 1}
+TMDB_IMDB_FIELD = {"tv": "external_ids.imdb_id", "movie": "imdb_id"}
 STATE_FIELDS = ("not_found_url", "not_found_until", "rejected_url", "rejected_until", "rejected_reason",
-                "crawl_error", "error_message", "failed_at")
+                "rejected_page", "crawl_error", "error_message", "failed_at")
 
 
 @dataclass(frozen=True)
@@ -168,9 +173,10 @@ def next_titles(db, site: str, kind: str, now: datetime, limit: int, lease: time
 @dataclass
 class TitleInfo:
     titles: list
-    year: Optional[int]
+    year: Optional[int]  # premiere or release
     imdb_id: Optional[str]
     interval: timedelta
+    last_year: Optional[int] = None  # shows: the last aired year, this year while airing
 
 
 def _date(value) -> Optional[datetime]:
@@ -198,6 +204,25 @@ def refresh_interval(kind: str, details: dict, now: datetime) -> timedelta:
     return MOVIE_INTERVAL
 
 
+def tmdb_titles(row: dict) -> list:
+    """TMDB's alternative titles and translated titles of a details document."""
+    names = [alternative.get("title") for alternative in row.get("alternative_titles") or []]
+    for translation in row.get("translations") or []:
+        data = translation.get("data") or {}
+        names += [data.get("title"), data.get("name")]
+    return [name for name in names if isinstance(name, str)]
+
+
+def last_year(kind: str, row: dict, interval: timedelta, now: datetime) -> Optional[int]:
+    """The last year of a show's run: this year while it airs or when TMDB has no last date."""
+    if kind != "tv":
+        return None
+    last_air = _date(row.get("last_air_date"))
+    if interval == AIRING_INTERVAL or last_air is None:
+        return now.year
+    return last_air.year
+
+
 def load_titles(db, kind: str, docs: list[dict], now: datetime) -> dict[int, TitleInfo]:
     tmdb_ids = [doc["tmdb_id"] for doc in docs]
     details = {row["tmdb_id"]: row for row in db[DETAILS[kind]].find({"tmdb_id": {"$in": tmdb_ids}}, DETAILS_FIELDS)}
@@ -206,15 +231,26 @@ def load_titles(db, kind: str, docs: list[dict], now: datetime) -> dict[int, Tit
         row = details.get(doc["tmdb_id"], {})
         released = _date(row.get("first_air_date" if kind == "tv" else "release_date"))
         titles = [row.get("title"), row.get("original_title"), doc.get("original_title"),
-                  *(doc.get("title_variations") or [])]
+                  *(doc.get("title_variations") or []), *tmdb_titles(row)]
         imdb_id, _ = effective_imdb_id(row, kind == "movie")
+        interval = refresh_interval(kind, row, now)
         infos[doc["tmdb_id"]] = TitleInfo(
-            titles=[title for title in titles if title],
+            titles=list(dict.fromkeys(title for title in titles if title)),
             year=released.year if released else doc.get("release_year"),
             imdb_id=imdb_id,
-            interval=refresh_interval(kind, row, now),
+            interval=interval,
+            last_year=last_year(kind, row, interval, now),
         )
     return infos
+
+
+def imdb_id_holders(db, kind: str, imdb_id: Optional[str]) -> frozenset:
+    """TMDB ids of the catalog titles whose TMDB IMDb id is `imdb_id` (indexed field only)."""
+    if not imdb_id:
+        return frozenset()
+    rows = db[DETAILS[kind]].find({TMDB_IMDB_FIELD[kind]: imdb_id, "tmdb_deleted": {"$ne": True}},
+                                  {"_id": 0, "tmdb_id": 1})
+    return frozenset(row["tmdb_id"] for row in rows)
 
 
 # ===== Crawling =====
@@ -275,24 +311,35 @@ def candidates(doc: dict, conf: SiteConfig, now: datetime) -> list[tuple[str, st
     return found
 
 
-def assess(conf: SiteConfig, page: ParsedTitle, doc: dict, info: TitleInfo, requested: str):
-    """(score, None) when the page may belong to the title, (None, reason) when not."""
+def assess(conf: SiteConfig, page: ParsedTitle, doc: dict, info: TitleInfo, requested: str,
+           imdb_holders: frozenset = frozenset()):
+    """(score, None) when the page may belong to the title, (None, reason) when not.
+
+    `imdb_holders` are the catalog titles whose IMDb id is the page's. A different IMDb id
+    rejects the page when Wikidata gives the title another URL or the id belongs to
+    another title. Otherwise the title and year decide, since Metacritic sometimes gives
+    a show the IMDb id of its pilot film or English dub."""
     score = 0
-    if page.imdb_id and info.imdb_id:
-        if page.imdb_id != info.imdb_id:
-            return None, "imdb_mismatch"
-        score += 4
     wikidata = doc.get("wikidata_url")
-    if wikidata and url_key(wikidata) in (url_key(page.canonical_url), url_key(requested)):
+    wikidata_agrees = bool(wikidata) and url_key(wikidata) in (url_key(page.canonical_url), url_key(requested))
+    imdb_differs = bool(page.imdb_id and info.imdb_id and page.imdb_id != info.imdb_id)
+    if imdb_differs and ((wikidata and not wikidata_agrees) or imdb_holders - {doc["tmdb_id"]}):
+        return None, "imdb_mismatch"
+    if page.imdb_id and page.imdb_id == info.imdb_id:
+        score += 4
+    if wikidata_agrees:
         score += 2
     title_ok = title_matches(page.title, info.titles)
-    year_ok = year_matches(page.year, info.year)
-    if score == 0:
+    fit = year_fit(page.year, info.year, info.last_year)
+    if score == 0 or imdb_differs:
         if not title_ok:
             return None, "title_mismatch"
-        if year_ok is False:
+        if fit == 0:
             return None, "year_mismatch"
-    return score + int(title_ok) + int(bool(year_ok)), None
+        if imdb_differs and fit is None:
+            # Against a different IMDb id the year must be known and agree.
+            return None, "imdb_mismatch"
+    return score + int(title_ok) + (fit or 0), None
 
 
 def holders(ctx: Context, doc: dict, requested: str, page: ParsedTitle) -> list[dict]:
@@ -368,21 +415,23 @@ def crawl_one(ctx: Context, doc: dict, infos: dict) -> list[Outcome]:
 def decide(ctx: Context, doc: dict, info: TitleInfo, url: str, source: str, final_url: str,
            page: ParsedTitle) -> list[Outcome]:
     others = holders(ctx, doc, url, page)
+    infos = load_titles(ctx.db, ctx.kind, others, ctx.now) if others else {}
+    infos[doc["tmdb_id"]] = info
+    group = [doc] + others
+    imdb_holders = frozenset()
+    if page.imdb_id and any(infos[member["tmdb_id"]].imdb_id not in (None, page.imdb_id) for member in group):
+        imdb_holders = imdb_id_holders(ctx.db, ctx.kind, page.imdb_id)
+    assessed = {member["tmdb_id"]: assess(ctx.conf, page, member, infos[member["tmdb_id"]], url, imdb_holders)
+                for member in group}
     if not others:
-        score, reason = assess(ctx.conf, page, doc, info, url)
+        score, reason = assessed[doc["tmdb_id"]]
         if score is None:
             return [Outcome("rejected", doc, url=url, source=source, page=page, reason=reason)]
         return [with_seasons(ctx, Outcome("ok", doc, url=url, source=source, page=page), info)]
 
     # One page, several titles: it stays with the best match and leaves the others.
-    infos = load_titles(ctx.db, ctx.kind, others, ctx.now)
-    infos[doc["tmdb_id"]] = info
-    group = [doc] + others
-    ranked = []
-    for member in group:
-        score, _ = assess(ctx.conf, page, member, infos[member["tmdb_id"]], url)
-        if score is not None:
-            ranked.append((score, member.get("popularity") or 0, member))
+    ranked = [(assessed[member["tmdb_id"]][0], member.get("popularity") or 0, member) for member in group
+              if assessed[member["tmdb_id"]][0] is not None]
     winner = max(ranked, key=lambda entry: entry[:2])[2] if ranked else None
     outcomes = []
     for member in group:
@@ -391,7 +440,9 @@ def decide(ctx: Context, doc: dict, info: TitleInfo, url: str, source: str, fina
             outcomes.append(with_seasons(ctx, Outcome("ok", member, url=url, source=member_source, page=page),
                                          infos[member["tmdb_id"]]))
         else:
-            outcomes.append(Outcome("rejected", member, url=url, page=page, reason="duplicate"))
+            # Without a winner, each title keeps its own reason instead of "duplicate".
+            reason = "duplicate" if winner is not None else assessed[member["tmdb_id"]][1]
+            outcomes.append(Outcome("rejected", member, url=url, page=page, reason=reason))
     # The crawled title first, so the caller reads its status from outcomes[0].
     return sorted(outcomes, key=lambda outcome: outcome.doc is not doc)
 
@@ -477,6 +528,10 @@ def store_lost(ctx: Context, outcome: Outcome) -> None:
         set_fields.update({"not_found_url": outcome.url, "not_found_until": until})
     else:
         set_fields.update({"rejected_url": outcome.url, "rejected_until": until, "rejected_reason": outcome.reason})
+        if outcome.page is not None:
+            # What the page said, so a later rule change can re-evaluate the rejection without a request.
+            set_fields["rejected_page"] = {"title": outcome.page.title, "year": outcome.page.year,
+                                           "imdb_id": outcome.page.imdb_id}
     unset = {name: "" for name in [conf.url_field, "url_source", "url_verified_at", *conf.score_fields()]}
     ctx.collection.update_one({"_id": doc["_id"]}, {"$set": set_fields, "$unset": unset})
     if ctx.kind == "tv":

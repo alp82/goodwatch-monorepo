@@ -262,10 +262,42 @@ class MatchingTests(unittest.TestCase):
         self.assertFalse(matching.title_matches("Good Night", ["Goodnight Mommy"]))
         self.assertFalse(matching.title_matches(None, ["x"]))
 
+    def test_a_subtitle_on_either_side_still_matches(self):
+        # Audit samples (docs/research/critic-url-verification-audit.md): RT adds a season or series subtitle.
+        self.assertTrue(matching.title_matches("Sword Art Online: Alicization", ["Sword Art Online"]))
+        self.assertTrue(matching.title_matches("Degrassi: The Next Generation", ["Degrassi"]))
+        self.assertTrue(matching.title_matches("Monster", ["Monster: The Jeffrey Dahmer Story"]))
+        self.assertTrue(matching.title_matches("Doctor Who - The Specials", ["Doctor Who"]))
+        # A shared first word is not a subtitle.
+        self.assertFalse(matching.title_matches("Monster Hunter", ["Monster"]))
+        self.assertFalse(matching.title_matches("Home Alone", ["Home"]))
+        self.assertFalse(matching.title_matches("X: The Series", ["X"]))  # too short to tell apart
+
+    def test_non_latin_titles_are_compared_instead_of_dropped(self):
+        self.assertTrue(matching.title_matches("東京喰種トーキョーグール √A", ["Tokyo Ghoul", "東京喰種トーキョーグール"]))
+        self.assertTrue(matching.title_matches("Padre Brown, detective", ["Father Brown", "Padre Brown, detective"]))
+        self.assertFalse(matching.title_matches("東京喰種トーキョーグール", ["進撃の巨人"]))
+        self.assertFalse(matching.title_matches("√", ["√"]))
+
     def test_years(self):
         self.assertTrue(matching.year_matches(2023, 2022))
         self.assertFalse(matching.year_matches(2023, 2020))
         self.assertIsNone(matching.year_matches(None, 2020))
+
+    def test_a_show_year_may_fall_anywhere_in_its_run(self):
+        # 1 near the premiere, 0.5 elsewhere in the run, 0 outside it, None when unknown.
+        self.assertEqual(matching.year_fit(2014, 2005, 2026), 0.5)   # Doraemon: the US dub premiere
+        self.assertEqual(matching.year_fit(2000, 1960, 2026), 0.5)   # Coronation Street
+        self.assertEqual(matching.year_fit(1984, 1982, 1992), 0.5)   # Wogan
+        self.assertEqual(matching.year_fit(2006, 2005, 2026), 1)
+        self.assertEqual(matching.year_fit(1993, 1982, 1992), 0.5)   # one year of slack after the end
+        self.assertEqual(matching.year_fit(2009, 2022, 2026), 0)     # Sherri 2022 is not the 2009 sitcom
+        self.assertEqual(matching.year_fit(1947, 1956, 2026), 0)     # Tony Awards: still rejected
+        self.assertEqual(matching.year_fit(2014, 1979, 2005), 0)
+        self.assertEqual(matching.year_fit(2023, 2020, None), 0)     # movies: premiere only
+        self.assertEqual(matching.year_fit(2021, 2020, None), 1)
+        self.assertIsNone(matching.year_fit(None, 2020, 2026))
+        self.assertIsNone(matching.year_fit(2020, None, None))
 
 
 if __name__ == "__main__":

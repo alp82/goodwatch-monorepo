@@ -1,6 +1,7 @@
 from typing import Optional
 from mongoengine import (
     DateTimeField,
+    DictField,
     StringField,
     Document,
     FloatField,
@@ -68,6 +69,7 @@ class BaseMetacriticRating(Document):
     rejected_url = StringField()
     rejected_until = DateTimeField()
     rejected_reason = StringField()  # duplicate, title_mismatch, year_mismatch, imdb_mismatch
+    rejected_page = DictField()  # what the rejected page said: title, year, imdb_id
     # The page's IMDb id equals the title's effective IMDb id.
     imdb_id_verified = BooleanField()
 
