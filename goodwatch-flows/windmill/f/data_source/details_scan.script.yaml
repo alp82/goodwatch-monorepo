@@ -1,0 +1,9 @@
+summary: Bounded reads of the TMDB details collections
+description: ''
+lock: '!inline f/data_source/details_scan.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

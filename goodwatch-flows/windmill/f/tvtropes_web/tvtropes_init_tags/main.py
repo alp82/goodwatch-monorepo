@@ -4,6 +4,7 @@ from pymongo import UpdateOne
 from pymongo.collection import Collection
 import wmill
 
+from f.data_source.details_scan import is_listed, scan_by_id, upsert_batch
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_daily.models import DumpType
 from f.tvtropes_web.title_variations import title_variations
@@ -14,80 +15,35 @@ BATCH_SIZE = 10000
 def initialize_documents():
     print("Initializing documents for TV Tropes semantic tags")
     db = get_db()
-    tmdb_movie_collection = db["tmdb_movie_details"]
-    tmdb_tv_collection = db["tmdb_tv_details"]
-    tvtropes_movie_collection = db["tv_tropes_movie_tags"]
-    tvtropes_tv_collection = db["tv_tropes_tv_tags"]
-
-    total_movies = tmdb_movie_collection.count_documents({"title": {"$ne": None}, "tmdb_deleted": {"$ne": True}})
-    total_tv = tmdb_tv_collection.count_documents({"title": {"$ne": None}, "tmdb_deleted": {"$ne": True}})
-
-    print(f"Total movie objects with titles: {total_movies}")
-    print(f"Total tv objects with titles: {total_tv}")
-
-    movie_upserts = {
-        "count_new_movies": 0,
-        "upserted_movie_ids": [],
-    }
-    tv_upserts = {
-        "count_new_tv": 0,
-        "upserted_tv_ids": [],
-    }
-
-    # Process movies in batches
-    for start in range(0, total_movies, BATCH_SIZE):
-        end = min(start + BATCH_SIZE, total_movies)
-        print(f"Processing movies {start} to {end}")
-
-        tmdb_movie_cursor = (
-            tmdb_movie_collection.find({"title": {"$ne": None}, "tmdb_deleted": {"$ne": True}})
-            .skip(start)
-            .limit(BATCH_SIZE)
-        )
-
-        movie_operations = []
-        for tmdb_movie in tmdb_movie_cursor:
-            operation = build_operation(tmdb_entry=tmdb_movie, type=DumpType.MOVIES)
-            movie_operations.append(operation)
-
-        upserts = store_copies(
-            movie_operations,
-            collection=tvtropes_movie_collection,
-            label_plural="movies",
-        )
-        movie_upserts["count_new_movies"] += upserts.get("count_new_documents")
-        movie_upserts["upserted_movie_ids"] += upserts.get("upserted_ids")
-
-    # Process TV shows in batches
-    for start in range(0, total_tv, BATCH_SIZE):
-        end = min(start + BATCH_SIZE, total_tv)
-        print(f"Processing tv shows {start} to {end}")
-
-        tmdb_tv_cursor = (
-            tmdb_tv_collection.find({"title": {"$ne": None}, "tmdb_deleted": {"$ne": True}})
-            .skip(start)
-            .limit(BATCH_SIZE)
-        )
-
-        tv_operations = []
-        for tmdb_tv in tmdb_tv_cursor:
-            operation = build_operation(tmdb_entry=tmdb_tv, type=DumpType.TV_SERIES)
-            tv_operations.append(operation)
-
-        upserts = store_copies(
-            tv_operations,
-            collection=tvtropes_tv_collection,
-            label_plural="tv series",
-        )
-        tv_upserts["count_new_tv"] += upserts.get("count_new_documents")
-        tv_upserts["upserted_tv_ids"] += upserts.get("upserted_ids")
-
+    new_movies, copied_movies = copy_details(
+        db["tmdb_movie_details"], db["tv_tropes_movie_tags"], DumpType.MOVIES, "movies")
+    new_tv, copied_tv = copy_details(
+        db["tmdb_tv_details"], db["tv_tropes_tv_tags"], DumpType.TV_SERIES, "tv series")
     return {
-        "count_new_movies": movie_upserts.get("count_new_documents"),
-        "count_new_tv": tv_upserts.get("count_new_documents"),
-        "upserted_movie_ids": movie_upserts.get("upserted_movie_ids"),
-        "upserted_tv_ids": tv_upserts.get("upserted_tv_ids"),
+        "count_new_movies": new_movies,
+        "count_new_tv": new_tv,
+        "count_copied_movies": copied_movies,
+        "count_copied_tv": copied_tv,
     }
+
+
+def copy_details(details: Collection, target: Collection, type: DumpType, label_plural: str) -> tuple[int, int]:
+    date_field = "release_date" if type == DumpType.MOVIES else "first_air_date"
+    projection = {field: 1 for field in (
+        "tmdb_id", "title", "original_title", "popularity", "alternative_titles", "tmdb_deleted", date_field, "overview",
+    )}
+    count_new = 0
+    count_copied = 0
+    for batch in scan_by_id(details, projection):
+        operations = [
+            build_operation(tmdb_entry=entry, type=type)
+            for entry in batch
+            if is_listed(entry) and entry.get("title") is not None
+        ]
+        count_new += upsert_batch(target, operations)
+        count_copied += len(operations)
+        print(f"Copied {count_copied} {label_plural} ({count_new} new)")
+    return count_new, count_copied
 
 
 def build_operation(tmdb_entry: dict, type: DumpType):

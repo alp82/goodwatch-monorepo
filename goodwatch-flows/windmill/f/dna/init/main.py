@@ -3,105 +3,48 @@ from mongoengine import get_db
 from pymongo import UpdateOne
 from pymongo.collection import Collection
 
+from f.data_source.details_scan import is_listed, scan_by_id, upsert_batch
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_daily.models import DumpType
 
 
-BATCH_SIZE = 10000
+# Titles need all of these to be analysed.
+REQUIRED_FIELDS = {
+    DumpType.MOVIES: ("original_title", "release_date", "overview"),
+    DumpType.TV_SERIES: ("original_title", "first_air_date", "overview"),
+}
 
 
 def initialize_documents():
     print("Initializing documents for DNA generation")
     db = get_db()
-    details_movie_collection = db["tmdb_movie_details"]
-    details_tv_collection = db["tmdb_tv_details"]
-    dna_movie_collection = db["dna_movie"]
-    dna_tv_collection = db["dna_tv"]
-
-    filter_query_movies = {
-        "original_title": {"$ne": None},
-        "release_date": {"$ne": None},
-        "overview": {"$ne": None},
-        "tmdb_deleted": {"$ne": True},
-    }
-    filter_query_tv = {
-        "original_title": {"$ne": None},
-        "first_air_date": {"$ne": None},
-        "overview": {"$ne": None},
-        "tmdb_deleted": {"$ne": True},
-    }
-
-    total_movies = details_movie_collection.count_documents(filter_query_movies)
-    total_tv = details_tv_collection.count_documents(filter_query_tv)
-
-    print(f"Total movie objects with titles, year and overview: {total_movies}")
-    print(f"Total tv objects with titles, year and overview: {total_tv}")
-
-    movie_upserts = {
-        "count_new_movies": 0,
-        "upserted_movie_ids": [],
-    }
-    tv_upserts = {
-        "count_new_tv": 0,
-        "upserted_tv_ids": [],
-    }
-
-    # Process movies in batches
-    for start in range(0, total_movies, BATCH_SIZE):
-        end = min(start + BATCH_SIZE, total_movies)
-        print(f"Processing movies {start} to {end}")
-
-        details_movie_cursor = (
-            details_movie_collection.find(filter_query_movies).skip(start).limit(BATCH_SIZE)
-        )
-
-        movie_operations = []
-        for details_movie in details_movie_cursor:
-            operation = build_operation(
-                details_entry=details_movie, type=DumpType.MOVIES
-            )
-            movie_operations.append(operation)
-
-        if movie_operations:
-            upserts = store_copies(
-                movie_operations,
-                collection=dna_movie_collection,
-                label_plural="movies",
-            )
-            movie_upserts["count_new_movies"] += upserts.get("count_new_documents")
-            movie_upserts["upserted_movie_ids"] += upserts.get("upserted_ids")
-
-    # Process TV shows in batches
-    for start in range(0, total_tv, BATCH_SIZE):
-        end = min(start + BATCH_SIZE, total_tv)
-        print(f"Processing tv shows {start} to {end}")
-
-        details_tv_cursor = (
-            details_tv_collection.find(filter_query_tv).skip(start).limit(BATCH_SIZE)
-        )
-
-        tv_operations = []
-        for details_tv in details_tv_cursor:
-            operation = build_operation(
-                details_entry=details_tv, type=DumpType.TV_SERIES
-            )
-            tv_operations.append(operation)
-
-        if tv_operations:
-            upserts = store_copies(
-                tv_operations,
-                collection=dna_tv_collection,
-                label_plural="tv",
-            )
-            tv_upserts["count_new_tv"] += upserts.get("count_new_documents")
-            tv_upserts["upserted_tv_ids"] += upserts.get("upserted_ids")
-
+    new_movies, copied_movies = copy_details(
+        db["tmdb_movie_details"], db["dna_movie"], DumpType.MOVIES, "movies")
+    new_tv, copied_tv = copy_details(
+        db["tmdb_tv_details"], db["dna_tv"], DumpType.TV_SERIES, "tv")
     return {
-        "count_new_movies": movie_upserts.get("count_new_documents"),
-        "count_new_tv": tv_upserts.get("count_new_documents"),
-        "upserted_movie_ids": movie_upserts.get("upserted_movie_ids"),
-        "upserted_tv_ids": tv_upserts.get("upserted_tv_ids"),
+        "count_new_movies": new_movies,
+        "count_new_tv": new_tv,
+        "count_copied_movies": copied_movies,
+        "count_copied_tv": copied_tv,
     }
+
+
+def copy_details(details: Collection, target: Collection, type: DumpType, label_plural: str) -> tuple[int, int]:
+    required = REQUIRED_FIELDS[type]
+    projection = {field: 1 for field in ("tmdb_id", "popularity", "tmdb_deleted", *required)}
+    count_new = 0
+    count_copied = 0
+    for batch in scan_by_id(details, projection):
+        operations = [
+            build_operation(details_entry=entry, type=type)
+            for entry in batch
+            if is_listed(entry) and all(entry.get(field) is not None for field in required)
+        ]
+        count_new += upsert_batch(target, operations)
+        count_copied += len(operations)
+        print(f"Copied {count_copied} {label_plural} ({count_new} new)")
+    return count_new, count_copied
 
 
 def build_operation(details_entry: dict, type: DumpType):
