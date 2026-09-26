@@ -18,7 +18,7 @@ import {
 	type Result,
 	READING_RANKER_VERSION,
 } from "./reading-retrieval.server";
-import { toCrateSql } from "./search-filters";
+import { allowsTitle, toCrateSql } from "./search-filters";
 import {
 	eligible,
 	metadataFor,
@@ -45,10 +45,21 @@ import {
 	servingFallback,
 	type ServingFallback,
 } from "../search-ranking/serve.server";
+import {
+	type CreditScope,
+	type LookupPerson,
+	type PeopleReading,
+	type SearchPerson,
+	peopleToShow,
+	readPeople,
+	startPeopleIndex,
+} from "../search-people/people.server";
 
 // Modes shadow and on load the new ranking's index and query models at server start. Off by default: then nothing
 // loads.
 startShadowRanking();
+// The names a search can find inside a phrase load at server start too.
+startPeopleIndex();
 
 export interface SearchBatch {
 	q: string;
@@ -61,19 +72,26 @@ export interface SearchBatch {
 	elapsedMs: number;
 	chargedNano: number;
 	historyRecorded: boolean;
+	// People the query names, shown above the titles.
+	people: SearchPerson[];
+	creditScope: CreditScope | null;
 }
 // Title lookups depend only on the text and the adult policy, never on filter chips,
 // so filter-only refetches reuse them. Search text is private: entries stay in this
 // process, keyed by a digest, and are never written to a shared store or logged.
 const TITLE_TTL_MS = 10 * 60 * 1000;
 const TITLE_ENTRIES = 200;
-const titleCache = new Map<string, { at: number; value: Title[] }>();
-const titleFlights = new Map<string, Promise<Title[]>>();
+interface TitleLookup {
+	titles: Title[];
+	people: LookupPerson[];
+}
+const titleCache = new Map<string, { at: number; value: TitleLookup }>();
+const titleFlights = new Map<string, Promise<TitleLookup>>();
 function titles(
 	q: string,
 	policy: Eligibility,
 	signal: AbortSignal,
-): Promise<Title[]> {
+): Promise<TitleLookup> {
 	const key = createHash("sha256")
 		.update(`${policy.includeAdult ? 1 : 0}:${q.trim().toLowerCase()}`)
 		.digest("hex");
@@ -102,7 +120,7 @@ function titles(
 		titleFlights.set(key, flight);
 	}
 	const shared = flight;
-	return new Promise<Title[]>((resolve, reject) => {
+	return new Promise<TitleLookup>((resolve, reject) => {
 		const leave = () => reject(new Error("Search interrupted"));
 		if (signal.aborted) return leave();
 		signal.addEventListener("abort", leave, { once: true });
@@ -111,7 +129,10 @@ function titles(
 			.finally(() => signal.removeEventListener("abort", leave));
 	});
 }
-async function lookupTitles(q: string, policy: Eligibility): Promise<Title[]> {
+async function lookupTitles(
+	q: string,
+	policy: Eligibility,
+): Promise<TitleLookup> {
 	const page = async (n: number) => {
 		const params = new URLSearchParams({
 			api_key: process.env.TMDB_API_KEY || "",
@@ -138,9 +159,20 @@ async function lookupTitles(q: string, policy: Eligibility): Promise<Title[]> {
 				first_air_date?: string;
 				poster_path?: string;
 				profile_path?: string;
+				known_for_department?: string;
 				popularity?: number;
 				adult?: boolean;
-				known_for?: { title?: string; name?: string }[];
+				known_for?: {
+					id: number;
+					media_type: string;
+					title?: string;
+					name?: string;
+					release_date?: string;
+					first_air_date?: string;
+					poster_path?: string | null;
+					backdrop_path?: string | null;
+					adult?: boolean;
+				}[];
 			}[];
 		}>;
 	};
@@ -151,26 +183,47 @@ async function lookupTitles(q: string, policy: Eligibility): Promise<Title[]> {
 			(_, i) => page(i + 2),
 		),
 	);
-	return [first, ...rest]
+	const results = [first, ...rest]
 		.flatMap((p) => p.results || [])
-		.filter(
-			(r) =>
-				["movie", "tv", "person"].includes(r.media_type) &&
-				(policy.includeAdult || r.adult !== true),
-		)
-		.map((r) => ({
-			id: r.id,
-			title: r.title || r.name || "Untitled",
-			original: r.original_title || r.original_name,
-			type: r.media_type,
-			year: (r.release_date || r.first_air_date || "").slice(0, 4),
-			poster: r.poster_path || r.profile_path || null,
-			popularity: r.popularity || 0,
-			adult: r.adult,
-			knownFor: (r.known_for || [])
-				.map((t: { title?: string; name?: string }) => t.title || t.name)
-				.join(", "),
-		}));
+		.filter((r) => policy.includeAdult || r.adult !== true);
+	return {
+		titles: results
+			.filter((r) => r.media_type === "movie" || r.media_type === "tv")
+			.map((r) => ({
+				id: r.id,
+				title: r.title || r.name || "Untitled",
+				original: r.original_title || r.original_name,
+				type: r.media_type,
+				year: (r.release_date || r.first_air_date || "").slice(0, 4),
+				poster: r.poster_path || null,
+				popularity: r.popularity || 0,
+				adult: r.adult,
+			})),
+		people: results
+			.filter((r) => r.media_type === "person")
+			.map((r) => ({
+				id: r.id,
+				name: r.name || "",
+				department: r.known_for_department || "",
+				profile: r.profile_path || null,
+				popularity: r.popularity || 0,
+				knownFor: (r.known_for || [])
+					.filter(
+						(t) =>
+							(t.media_type === "movie" || t.media_type === "tv") &&
+							(policy.includeAdult || t.adult !== true),
+					)
+					.map((t) => ({
+						type:
+							t.media_type === "tv" ? ("show" as const) : ("movie" as const),
+						id: t.id,
+						title: t.title || t.name || "Untitled",
+						year: (t.release_date || t.first_air_date || "").slice(0, 4),
+						poster: t.poster_path || null,
+						backdrop: t.backdrop_path || null,
+					})),
+			})),
+	};
 }
 // The ranking of the basic search: essence text relevance only (see literal).
 const BASIC_RANKER_VERSION = "essence-text-v1";
@@ -237,7 +290,9 @@ async function rankedList(
 	const title = await titlePromise;
 	const titleDone = performance.now();
 	if (signal.aborted) throw new Error("Search interrupted");
-	const titleRows = title.results.filter((t) => t.type !== "person");
+	const titleRows = title.results.filter((t) =>
+		allowsTitle(policy.filters, titleKey(t)),
+	);
 	const titleMeta = await metadataFor([...new Set(titleRows.map(titleKey))]);
 	const meta = new Map(titleMeta.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]));
 	const allowedTitles = titleRows.filter((t) =>
@@ -305,7 +360,6 @@ async function rankedList(
 				found?.year ||
 				(shown?.release_year ? String(shown.release_year) : ""),
 			poster: found?.poster ?? shown?.poster_path ?? null,
-			knownFor: found?.knownFor,
 			adult: found?.adult,
 			popularity: found?.popularity ?? 0,
 			...(shown ? { discovery: { ...shown, rank: rows.length + 1 } } : {}),
@@ -337,8 +391,8 @@ async function rankedList(
 }
 
 export async function combinedSearch(
-	q: string,
-	policy: Eligibility,
+	query: string,
+	eligibility: Eligibility,
 	visitor: JevStageInput["visitor"],
 	signal: AbortSignal,
 	// Called once the interpretation is known and before retrieval, so the caller can
@@ -346,6 +400,8 @@ export async function combinedSearch(
 	onReading?: (reading: ReadingChip[]) => void,
 	// Runs work that must not delay the response (shadow ranking) once the response is sent.
 	afterResponse?: (task: () => void) => void,
+	// allTitles: search all titles even when the query names people inside a longer phrase.
+	options: { allTitles?: boolean } = {},
 ): Promise<SearchBatch> {
 	const started = Date.now(),
 		errors: string[] = [];
@@ -359,20 +415,45 @@ export async function combinedSearch(
 		stageMs[name] = Math.round((now - mark) * 10) / 10;
 		mark = now;
 	};
+	// Names inside a longer phrase ("funny brad pitt movies") narrow the search to the titles of those people, ranked
+	// by the words left over ("funny movies"). From here on, q is the text that is searched.
+	const people = await readPeople(query, !options.allTitles).catch(
+		(): PeopleReading => ({ named: [], offered: [], scope: null }),
+	);
+	lap("people");
+	const q = people.scope?.text ?? query;
+	const policy: Eligibility = people.scope
+		? {
+				...eligibility,
+				filters: { ...eligibility.filters, onlyTitles: people.scope.titles },
+			}
+		: eligibility;
 	const titlePromise = titles(q, policy, signal).then(
-		(results) => ({ results }),
-		() => ({ results: [] as Title[], error: true }),
+		(lookup) => ({ results: lookup.titles, people: lookup.people }),
+		() => ({
+			results: [] as Title[],
+			people: [] as LookupPerson[],
+			error: true,
+		}),
+	);
+	// Runs alongside the search; only the known-for titles of people outside the title lookup need the catalog.
+	const shownPeople = titlePromise.then((title) =>
+		peopleToShow(query, people, title.people).catch((error) => {
+			console.error("People for the search failed", error);
+			return [];
+		}),
 	);
 	// English/default-off interpretation and native title lookup run in parallel.
 	const languagePromise = !translationEnabled()
 		? prepareLanguage(q, visitor, signal)
 		: titlePromise.then((title) => {
-				const exact = title.results.some((r) =>
-					[r.title, r.original].some(
-						(t) =>
-							t?.normalize("NFC").toLocaleLowerCase() ===
-							q.normalize("NFC").toLocaleLowerCase(),
-					),
+				const exact = [
+					...title.results.flatMap((r) => [r.title, r.original]),
+					...title.people.map((p) => p.name),
+				].some(
+					(t) =>
+						t?.normalize("NFC").toLocaleLowerCase() ===
+						q.normalize("NFC").toLocaleLowerCase(),
 				);
 				return exact
 					? {
@@ -487,22 +568,19 @@ export async function combinedSearch(
 		if (signal.aborted) throw new Error("Search interrupted");
 		// Catalog metadata is authoritative for eligibility and reliable identity. Fetch before
 		// blend so an ineligible discovery hit cannot boost a title's rank or use a snapshot slot.
+		const titleRows = title.results.filter((t) =>
+			allowsTitle(policy.filters, titleKey(t)),
+		);
 		const keys = [
-			...title.results
-				.filter((t) => t.type !== "person")
-				.map((t) => `${t.type === "tv" ? "show" : t.type}:${t.id}`),
+			...titleRows.map(titleKey),
 			...results.map((r) => `${r.media_type}:${r.tmdb_id}`),
 		];
 		const metadata = await metadataFor([...new Set(keys)]);
 		const meta = new Map(
 			metadata.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]),
 		);
-		const allowedTitles = title.results.filter((t) =>
-			eligible(
-				meta.get(`${t.type === "tv" ? "show" : t.type}:${t.id}`),
-				policy,
-				false,
-			),
+		const allowedTitles = titleRows.filter((t) =>
+			eligible(meta.get(titleKey(t)), policy, false),
 		);
 		shadowTitles = allowedTitles;
 		const description = results.filter((r) =>
@@ -527,6 +605,7 @@ export async function combinedSearch(
 		return { rows, metadata };
 	}
 	if (served?.titleError) errors.push("Title lookup unavailable");
+	const shown = await shownPeople;
 	const elapsedMs = Date.now() - started;
 	stageMs.total = elapsedMs;
 	const servedRankerVersion = served
@@ -535,7 +614,7 @@ export async function combinedSearch(
 			? BASIC_RANKER_VERSION
 			: READING_RANKER_VERSION;
 	const history = await recordSearchHistory({
-		text: q,
+		text: query,
 		accountId: visitor.accountId,
 		elapsedMs,
 		chargedNano,
@@ -565,7 +644,7 @@ export async function combinedSearch(
 		else setImmediate(task);
 	}
 	return {
-		q,
+		q: query,
 		rows,
 		reading,
 		metadata,
@@ -574,5 +653,9 @@ export async function combinedSearch(
 		elapsedMs,
 		chargedNano,
 		historyRecorded: history.recorded,
+		people: shown,
+		creditScope: people.scope
+			? { people: people.scope.people, text: people.scope.text }
+			: null,
 	};
 }

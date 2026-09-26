@@ -37,6 +37,7 @@ import SectionType, { type TitleType } from "~/ui/filter/sections/SectionType";
 import AddFilterMenu from "~/ui/filter/AddFilterMenu";
 import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
+import { SearchPeople } from "./SearchPeople";
 
 // --- Tunables ----------------------------------------------------------------------------
 
@@ -132,7 +133,7 @@ function useController() {
 		editing.current = value;
 		setDraft(value);
 		setFocused(-1);
-		navigate(resultsHref({ q: value, page: null }), {
+		navigate(resultsHref({ q: value, page: null, allTitles: null }), {
 			replace: true,
 			preventScrollReset: location.pathname === path,
 		});
@@ -212,7 +213,10 @@ function useController() {
 		...(streaming ? { streaming } : {}),
 	};
 	const filtersKey = searchFiltersKey(filters);
-	const policyKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}${filtersKey ? `:${filtersKey}` : ""}`;
+	// Search all titles even when the query names people inside a longer phrase.
+	const allTitles = setting("allTitles") === "1";
+	const basePolicyKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}${allTitles ? ":allTitles" : ""}`;
+	const policyKey = `${basePolicyKey}${filtersKey ? `:${filtersKey}` : ""}`;
 	const batchKey = `${policyKey}:${q}`;
 	// Filter changes narrow the shown batch at once; the refetch waits until the
 	// filters stop changing, so dragging the year slider sends one request.
@@ -246,6 +250,7 @@ function useController() {
 					includeAdult: false,
 					lesserKnown: setting("lesserKnown") === "1",
 					filters,
+					allTitles,
 				}),
 			});
 			const unavailable =
@@ -295,7 +300,7 @@ function useController() {
 	}, [search.data]);
 	// While a filtered fetch is pending, narrow the unfiltered batch of this query
 	// when it is cached: it holds more matches than another filtered batch.
-	const unfilteredKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}:${q}`;
+	const unfilteredKey = `${basePolicyKey}:${q}`;
 	const batch = q
 		? (batches[batchKey] ??
 			batches[unfilteredKey] ??
@@ -674,11 +679,9 @@ export function JourneyHeader() {
 							}
 							if (e.key === "ArrowDown" || e.key === "ArrowUp") {
 								e.preventDefault();
-								const indices = j.pageRows
-									.filter((r) => r.type !== "person")
-									.map((r) =>
-										j.sequence.findIndex((item) => item.key === r.key),
-									);
+								const indices = j.pageRows.map((r) =>
+									j.sequence.findIndex((item) => item.key === r.key),
+								);
 								j.setFocused((n) => {
 									if (!indices.length) return -1;
 									const current = indices.indexOf(n);
@@ -737,8 +740,7 @@ function JourneyList() {
 		r.poster
 			? `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${r.poster}`
 			: placeholder;
-	const meta = (r: Row) =>
-		r.type === "person" ? `Known for ${r.knownFor}` : `${r.year} · ${r.type}`;
+	const meta = (r: Row) => `${r.year} · ${r.type}`;
 	const active = (r: Row) =>
 		j.currentKey === r.key ||
 		j.focused === j.sequence.findIndex((item) => item.key === r.key);
@@ -763,6 +765,13 @@ function JourneyList() {
 					</button>
 				) : null}
 			</div>
+			{j.batch?.q === j.q && (
+				<SearchPeople
+					people={j.batch.people}
+					scope={j.batch.creditScope}
+					allTitlesHref={j.resultsHref({ q: j.q, page: null, allTitles: "1" })}
+				/>
+			)}
 			{/* Columns of 2, 4, and 5 all divide the page size of 20, so a full page
 			    always ends on a complete row. */}
 			<ul
@@ -813,19 +822,15 @@ function JourneyList() {
 						"group relative block aspect-[2/3] overflow-hidden rounded-lg border-4 bg-gray-900";
 					return (
 						<li key={r.key} className="min-w-0">
-							{r.type === "person" ? (
-								<div className={`${card} border-gray-800`}>{body}</div>
-							) : (
-								<Link
-									prefetch="intent"
-									data-result={r.key}
-									to={j.detailHref(r)}
-									onClick={j.remember}
-									className={`${card} hover:border-amber-700/50 focus-visible:outline focus-visible:outline-cyan-300 ${active(r) ? "border-cyan-300/70" : "border-gray-800"}`}
-								>
-									{body}
-								</Link>
-							)}
+							<Link
+								prefetch="intent"
+								data-result={r.key}
+								to={j.detailHref(r)}
+								onClick={j.remember}
+								className={`${card} hover:border-amber-700/50 focus-visible:outline focus-visible:outline-cyan-300 ${active(r) ? "border-cyan-300/70" : "border-gray-800"}`}
+							>
+								{body}
+							</Link>
 						</li>
 					);
 				})}

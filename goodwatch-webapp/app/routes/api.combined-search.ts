@@ -83,6 +83,7 @@ export async function action({ request }: ActionFunctionArgs) {
 						request.signal,
 						(reading) => send({ kind: "reading", reading }),
 						(task) => deferred.push(task),
+						{ allTitles: body.allTitles === true },
 					);
 					send({ kind: "batch", batch });
 				} catch {

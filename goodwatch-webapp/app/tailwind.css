@@ -82,6 +82,26 @@
 	--color-rotten: #f83309;
 
 	--animate-gradient-x: gradient-move-x 5s ease infinite;
+	/* People in search results: the open person's drawer and its faded backdrop. */
+	--animate-fade-in: fade-in 160ms ease-out both;
+	--animate-backdrop-in: backdrop-in 300ms ease-out both;
+
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+	@keyframes backdrop-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 0.3;
+		}
+	}
 
 	@keyframes gradient-move-x {
 		0%,

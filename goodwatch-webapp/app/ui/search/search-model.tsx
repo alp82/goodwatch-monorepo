@@ -8,7 +8,6 @@ export type Title = {
 	year: string;
 	poster: string | null;
 	popularity: number;
-	knownFor: string;
 	adult?: boolean;
 };
 export type Description = { results: Result[] };
@@ -24,7 +23,6 @@ export type Row = {
 	type: string;
 	year: string;
 	poster: string | null;
-	knownFor?: string;
 	popularity: number;
 	discovery?: Description["results"][number];
 	lexical: number;
@@ -70,7 +68,6 @@ export function blend(
 			type,
 			year: t.year,
 			poster: t.poster,
-			knownFor: t.knownFor,
 			adult: t.adult,
 			popularity: t.popularity,
 			...titleMatch(t.title, q),
