@@ -149,15 +149,24 @@ and against Wikidata (`P6839` to IMDb `P345` and TMDB ids). 146 rows match Wikid
 contradicts them; 101 come from the IMDb-keyed tvtropes2imdb mapping. All 186 `known_url` rows were read by hand;
 no false match was found. Stub pages with 3–9 tropes (47) were kept: the pages are short, not mis-parsed.
 
-Imported 415 (`run-2026-09-26b/import-rollback.json`; 79 stale stored URLs replaced). Kept out for the owner:
+Imported 415 (`run-2026-09-26b/import-rollback.json`; 79 stale stored URLs replaced). After a manual run of
+`f/sync/copy/tvtropes`, all 419 titles imported on 2026-09-26 have their tropes in Mongo and in Crate
+`movie/show.tropes`.
 
-- The Illusionist (movie 1491) and House of Cards (show 1425): the pages are now the right ones
-  (`Film/TheIllusionist2006`, `Series/HouseOfCardsUS`, both matching Wikidata), but the importer's built-in deny
-  list from #120 blocks them.
-- Che: Part One (movie 8881): `Film/Che` covers both parts of the film.
+Three rows waited for the owner, who approved them the same day:
 
-After a manual run of `f/sync/copy/tvtropes`, all 419 titles imported on 2026-09-26 have their tropes in Mongo and
-in Crate `movie/show.tropes`. 17 titles have a few fewer `trope` rows than tropes, exactly the number of repeated
+- The Illusionist (movie 1491, `Film/TheIllusionist2006`, 61 tropes) and House of Cards (show 1425,
+  `Series/HouseOfCardsUS`, 228 tropes). Both pages match Wikidata. The importer's built-in deny list from #120 named
+  these two titles because #120 had matched them to the wrong pages; it is removed, and `--deny` remains for one-off
+  exclusions.
+- Che: Part One (movie 8881) and Che: Part Two (movie 8880): `Film/Che` covers both parts, so both get its 14 tropes.
+  Part Two has no known URL of its own (no Wikidata `P6839`, not in tvtropes2imdb), so `run-2026-09-26c` ran the
+  runner for it against the page saved in `run-2026-09-26b` (candidate source `shared_page`), without a new request.
+  The strict rule passed.
+
+Imported with `run-2026-09-26b/import-manifest-owner.json` (418 entries; 415 skipped as already imported) and
+`run-2026-09-26c/import-manifest.json`. Rollback files: `run-2026-09-26b/import-rollback-owner.json` and
+`run-2026-09-26c/import-rollback.json`. A manual `f/sync/copy/tvtropes` run copied them to Crate. 17 titles have a few fewer `trope` rows than tropes, exactly the number of repeated
 trope names, which collapse on the table's primary key (this also explains the ten short titles in #120).
 
 Page bodies under `sources/` stay local.

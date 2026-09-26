@@ -35,8 +35,6 @@ from pathlib import Path
 from urllib.parse import quote
 
 COLLECTIONS = {"movie": "tv_tropes_movie_tags", "show": "tv_tropes_tv_tags"}
-# Reviewed wrong pages (recovery-report-2026-09-21.md, "Do not publish").
-BUILTIN_DENY = {("movie", 1491), ("show", 1425)}
 URL_PREFIX = "https://tvtropes.org/pmwiki/pmwiki.php/"
 COUNTRY_SUFFIX = re.compile(r"(US|UK|AU|CA|NZ|IN|JP|KR|FR|DE|ES|IT|BR|MX)$")
 SET_FIELDS = ["tvtropes_url", "tropes", "updated_at", "is_selected"]
@@ -302,7 +300,7 @@ def url_state(doc, new_url):
 
 
 def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=print, expect_count=None):
-    deny = set(deny) | BUILTIN_DENY
+    deny = set(deny)
     candidates = recovered(load_latest(run_dirs))
     if not apply:
         store = ReadOnlyStore(store)
@@ -437,7 +435,7 @@ def main(argv=None):
         args = parser.parse_args(argv[1:])
         if not args.run_dirs:
             parser.error("run directories required")
-        manifest = build_manifest(args.run_dirs, args.report, set(args.deny) | BUILTIN_DENY, args.expect)
+        manifest = build_manifest(args.run_dirs, args.report, set(args.deny), args.expect)
         args.output.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         print(f"wrote {manifest['count']} entries to {args.output}")
         return 0

@@ -1,0 +1,27 @@
+{
+ "summary": {
+  "note": "Che: Part Two shares Film/Che with Che: Part One (owner decision 2026-09-26); replayed from the page saved in run-2026-09-26b, no request sent"
+ },
+ "entries": [
+  {
+   "media_type": "movie",
+   "tmdb_id": 8880,
+   "title": "Che: Part Two",
+   "original_title": "Che: Part Two",
+   "release_year": 2008,
+   "popularity": 6.4803,
+   "title_variations": [
+    "ChePartTwo",
+    "Che"
+   ],
+   "imdb_id": "tt0374569",
+   "before_url": null,
+   "candidates": [
+    {
+     "source": "shared_page",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Che"
+    }
+   ]
+  }
+ ]
+}

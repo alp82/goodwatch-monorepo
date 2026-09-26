@@ -90,7 +90,7 @@ class ImportTests(unittest.TestCase):
         self.records = [
             record("movie", 1, "Film/Good"),
             record("movie", 2, "Film/NotAllowed"),
-            record("movie", 1491, "WesternAnimation/TheIllusionist2010"),
+            record("movie", 1491, "Film/TheIllusionist2006"),
             record("show", 3, "Series/HasTropes"),
             record("show", 4, "Series/Changed"),
             record("show", 5, "Series/NoDoc"),
@@ -132,7 +132,7 @@ class ImportTests(unittest.TestCase):
         self.lines = []
         self.rollback_path = Path(self.tmp.name) / "rollback.json"
 
-    def run_import(self, apply, deny=(), expect_count=4):
+    def run_import(self, apply, deny=(), expect_count=5):
         return imp.run_import(
             [self.run_dir], self.manifest, deny, self.store, apply, self.rollback_path, self.lines.append,
             expect_count=expect_count,
@@ -146,9 +146,8 @@ class ImportTests(unittest.TestCase):
         reasons = self.reasons(skips)
         self.assertEqual(
             totals,
-            {"import": 4, "skip": 6, "url-replaced": 1, "url-same": 1, "no-previous-url": 2},
+            {"import": 5, "skip": 5, "url-replaced": 1, "url-same": 1, "no-previous-url": 3},
         )
-        self.assertEqual(reasons[("movie", 1491)], "denied")  # built in, although allow-listed
         self.assertEqual(reasons[("movie", 2)], "not in allow-file")
         self.assertIn("already has tropes", reasons[("show", 3)])
         self.assertIn("sha256", reasons[("show", 4)])
@@ -157,11 +156,17 @@ class ImportTests(unittest.TestCase):
         self.assertIn("already has tropes", reasons[("show", 9)])
         self.assertEqual(self.store.docs["show"][4]["tropes"], tropes("kept"))
         self.assertEqual(self.store.docs["show"][4]["tvtropes_url"], PREFIX + "Series/OldWithTropes")
-        self.assertEqual(self.store.writes, 4)
+        self.assertEqual(self.store.writes, 5)
         self.assertEqual(self.store.docs["show"][0]["tropes"], tropes("old"))
 
+    def test_nothing_is_denied_without_an_explicit_deny(self):
+        # The owner lifted the #120 deny list for The Illusionist and House of Cards (2026-09-26).
+        totals, skips = self.run_import(apply=False, expect_count=None)
+        self.assertNotIn(("movie", 1491), self.reasons(skips))
+        self.assertEqual(totals["import"], 5)
+
     def test_explicit_deny(self):
-        _, skips = self.run_import(apply=True, deny=[("movie", 1)], expect_count=3)
+        _, skips = self.run_import(apply=True, deny=[("movie", 1)], expect_count=4)
         self.assertEqual(self.reasons(skips)[("movie", 1)], "denied")
         self.assertEqual(self.store.docs["movie"][0]["tropes"], [])
 
@@ -179,7 +184,7 @@ class ImportTests(unittest.TestCase):
     def test_dry_run_performs_no_writes(self):
         before = copy.deepcopy(self.store.docs)
         totals, _ = self.run_import(apply=False)
-        self.assertEqual(totals["import"], 4)
+        self.assertEqual(totals["import"], 5)
         self.assertEqual(self.store.writes, 0)
         self.assertEqual(self.store.docs, before)
         self.assertFalse(self.rollback_path.exists())
@@ -192,12 +197,12 @@ class ImportTests(unittest.TestCase):
         self.run_import(apply=True)
         self.assertNotEqual(self.store.docs, before)
         restored, skipped = imp.run_rollback(self.rollback_path, self.store, self.lines.append)
-        self.assertEqual((restored, skipped), (4, 0))
+        self.assertEqual((restored, skipped), (5, 0))
         self.assertEqual(self.store.docs, before)
 
     def test_stale_url_is_importable_and_reported(self):
         totals, _ = self.run_import(apply=False, expect_count=None)
-        self.assertEqual((totals["url-replaced"], totals["url-same"], totals["no-previous-url"]), (1, 1, 2))
+        self.assertEqual((totals["url-replaced"], totals["url-same"], totals["no-previous-url"]), (1, 1, 3))
         replaced = next(l for l in self.lines if l.startswith("would-import") and "show:6 " in l)
         self.assertIn("url-replaced", replaced)
         self.assertIn(PREFIX + "Series/Old", replaced)
@@ -221,7 +226,7 @@ class ImportTests(unittest.TestCase):
         self.assertNotIn("tvtropes_url", self.store.docs["movie"][0])
 
     def test_apply_aborts_before_first_write_on_unexpected_count(self):
-        for wrong in (None, 3, 5):
+        for wrong in (None, 4, 6):
             with self.assertRaises(SystemExit):
                 self.run_import(apply=True, expect_count=wrong)
         self.assertEqual(self.store.writes, 0)
@@ -232,7 +237,7 @@ class ImportTests(unittest.TestCase):
         self.store.docs["movie"][0]["tvtropes_url"] = PREFIX + "Film/CrawledLater"
         self.store.docs["show"][3]["updated_at"] = datetime(2030, 1, 1)  # url-same doc touched later
         restored, skipped = imp.run_rollback(self.rollback_path, self.store, self.lines.append)
-        self.assertEqual((restored, skipped), (2, 2))
+        self.assertEqual((restored, skipped), (3, 2))
         self.assertEqual(self.store.docs["movie"][0]["tvtropes_url"], PREFIX + "Film/CrawledLater")
         self.assertEqual(self.store.docs["show"][3]["tropes"], tropes("Series/SameUrl"))
 
