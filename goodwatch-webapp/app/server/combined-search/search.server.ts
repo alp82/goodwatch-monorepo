@@ -26,6 +26,7 @@ import {
 import { prepareLanguage } from "./language.server";
 import {
 	BASIC_SEARCH_MESSAGE,
+	keepJevConnectionsWarm,
 	runJevStage,
 	recordSearchHistory,
 	type JevStageInput,
@@ -57,6 +58,8 @@ import {
 startSearchRanking();
 // The names a search can find inside a phrase load at server start too.
 startPeopleIndex();
+// The connections to TypeSafe stay open between searches.
+keepJevConnectionsWarm();
 
 export interface SearchBatch {
 	q: string;

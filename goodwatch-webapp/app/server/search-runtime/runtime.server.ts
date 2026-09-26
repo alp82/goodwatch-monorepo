@@ -1,4 +1,4 @@
-import { fetch } from "undici";
+import { Agent, fetch } from "undici";
 import {
 	APIError,
 	TypeSafeClient,
@@ -26,6 +26,35 @@ export const BASIC_SEARCH_MESSAGE = "Showing basic search results.";
 export const JEV_OVERLOAD_RETRY_DELAYS_MS = [100, 250];
 // A retry starts only while this much of the deadline is left, enough for a normal reading. Later, it falls back.
 export const JEV_RETRY_MIN_REMAINING_MS = 700;
+
+// The connections to TypeSafe stay open between searches. undici's default pool closes a connection after 4 s idle,
+// so most searches paid a new TCP and TLS handshake. api.typesafe.ai (behind Cloudflare) keeps idle connections for
+// minutes, and a free GET /health a minute keeps both connections of a search's two parallel requests open.
+const TYPESAFE_ORIGIN = "https://api.typesafe.ai";
+const KEEP_WARM_EVERY_MS = 60_000;
+const typesafeAgent = new Agent({
+	keepAliveTimeout: 5 * 60_000,
+	keepAliveMaxTimeout: 10 * 60_000,
+});
+const typesafeFetch = ((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) =>
+	fetch(input, { ...init, dispatcher: typesafeAgent })) as typeof fetch;
+let keepWarm: NodeJS.Timeout | undefined;
+
+/** Starts the pings that keep the TypeSafe connections open. No model calls, nothing billed. Once per process. */
+export function keepJevConnectionsWarm(): void {
+	if (keepWarm || !process.env.TYPESAFE_API_KEY) return;
+	const ping = () =>
+		typesafeFetch(`${TYPESAFE_ORIGIN}/health`, {
+			signal: AbortSignal.timeout(5000),
+		}).then(
+			(response) => response.body?.cancel(),
+			() => {},
+		);
+	const both = () => Promise.all([ping(), ping()]).catch(() => {});
+	both();
+	keepWarm = setInterval(both, KEEP_WARM_EVERY_MS);
+	keepWarm.unref();
+}
 
 type Reading = SystemOneResult<Questions>;
 export type LanguagePolicy =
@@ -229,9 +258,9 @@ export async function executeJevStage(
 	}, JEV_DEADLINE_MS);
 	const client = new TypeSafeClient({
 		// Undici implements Fetch; Remix augments the global DOM types with its shim.
-		fetch: fetch as unknown as typeof globalThis.fetch,
+		fetch: typesafeFetch as unknown as typeof globalThis.fetch,
 		apiKey,
-		baseURL: "https://api.typesafe.ai",
+		baseURL: TYPESAFE_ORIGIN,
 		defaultModel: JEV_MODEL,
 		timeout: JEV_DEADLINE_MS,
 		retry: { maxRetries: 0 },
