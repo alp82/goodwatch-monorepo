@@ -3,6 +3,10 @@ import { isIP } from "node:net";
 import { getAuthFromRequest } from "~/utils/auth";
 import { combinedSearch } from "~/server/combined-search/search.server";
 import { parseSearchFilters } from "~/server/combined-search/search-filters";
+import {
+	peopleInQuery,
+	sharedCredits,
+} from "~/server/prototype-people-in-query.server";
 
 export async function action({ request }: ActionFunctionArgs) {
 	let headers = new Headers({
@@ -48,6 +52,26 @@ export async function action({ request }: ActionFunctionArgs) {
 				{ status: 400, headers },
 			);
 		const filters = parseSearchFilters(body.filters);
+		// PROTOTYPE - throwaway: a full name inside a longer phrase ("funny brad pitt movies")
+		// narrows the search to that person's titles and ranks them by the words left over.
+		// body.anyPerson turns this off ("Search all titles instead").
+		let searchText = q;
+		let scope: { people: { id: number; name: string }[]; rest: string } | null =
+			null;
+		if (body.anyPerson !== true) {
+			const found = await peopleInQuery(q).catch(() => null);
+			if (found?.people.length && found.rest.length >= 2) {
+				const titles = await sharedCredits(found.people.map((p) => p.id));
+				if (titles.length) {
+					filters.titles = titles;
+					searchText = found.rest;
+					scope = {
+						people: found.people.map((p) => ({ id: p.id, name: p.name })),
+						rest: found.rest,
+					};
+				}
+			}
+		}
 		const { user, headers: authHeaders } = await getAuthFromRequest({
 			request,
 		});
@@ -72,8 +96,8 @@ export async function action({ request }: ActionFunctionArgs) {
 				const send = (message: object) =>
 					controller.enqueue(encoder.encode(`${JSON.stringify(message)}\n`));
 				try {
-					const batch = await combinedSearch(
-						q,
+					const searched = await combinedSearch(
+						searchText,
 						{
 							includeAdult: false,
 							lesserKnown: body.lesserKnown === true,
@@ -84,6 +108,16 @@ export async function action({ request }: ActionFunctionArgs) {
 						(reading) => send({ kind: "reading", reading }),
 						(task) => deferred.push(task),
 					);
+					// PROTOTYPE: title lookup rows skip retrieval filters, so drop the ones outside scope.
+					const allowed = new Set(filters.titles ?? []);
+					const batch = scope
+						? {
+								...searched,
+								q,
+								rows: searched.rows.filter((r) => allowed.has(r.key)),
+								personScope: scope,
+							}
+						: searched;
 					send({ kind: "batch", batch });
 				} catch {
 					send({

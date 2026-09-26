@@ -7,6 +7,9 @@ export interface SearchFilters {
 	minYear?: number;
 	maxYear?: number;
 	streaming?: { country: string; providerIds: number[] };
+	// PROTOTYPE - throwaway: title keys ("movie:550") of the people named in the query. Set only
+	// by the server; parseSearchFilters never reads it from a request.
+	titles?: string[];
 }
 
 const GENRE = /^[\p{L}\p{N} &-]{1,40}$/u;
@@ -93,6 +96,13 @@ export const toQdrantMust = (filters: SearchFilters | undefined): unknown[] => {
 		must.push({ key: "genres", match: { value: genre } });
 	const range = yearRange(filters);
 	if (range) must.push({ key: "release_year", range });
+	if (filters.titles)
+		must.push({
+			has_id: filters.titles.map((key) => {
+				const [type, id] = key.split(":");
+				return (type === "show" ? 2 : 1) * 1_000_000_000_000 + Number(id);
+			}),
+		});
 	if (filters.streaming?.providerIds.length)
 		must.push({
 			key: "streaming_availability",
@@ -126,6 +136,14 @@ export const toCrateSql = (
 	if (filters.maxYear !== undefined) {
 		clauses.push("release_year <= ?");
 		params.push(filters.maxYear);
+	}
+	if (filters.titles) {
+		const ids = filters.titles
+			.filter((key) => key.startsWith(`${table}:`))
+			.map((key) => Number(key.split(":")[1]))
+			.filter(Number.isSafeInteger);
+		if (!ids.length) return null;
+		clauses.push(`tmdb_id IN (${ids.join(",")})`);
 	}
 	if (filters.streaming?.providerIds.length) {
 		const { country, providerIds } = filters.streaming;

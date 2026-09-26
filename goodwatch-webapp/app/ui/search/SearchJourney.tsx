@@ -37,6 +37,13 @@ import SectionType, { type TitleType } from "~/ui/filter/sections/SectionType";
 import AddFilterMenu from "~/ui/filter/AddFilterMenu";
 import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
+// PROTOTYPE - throwaway: people in search results (?people=<variant>).
+import {
+	PeopleAround,
+	PersonResultCard,
+	slotIndex,
+	usePrototypePeople,
+} from "./prototype-search-people/PrototypeSearchPeople";
 
 // --- Tunables ----------------------------------------------------------------------------
 
@@ -56,7 +63,11 @@ const SCROLL_RESTORE_MS = 3000;
 // How many reasons a result card reveals on hover or focus.
 const RESULT_REASONS = 3;
 
-type Batch = SearchBatch & { cacheKey: string };
+// PROTOTYPE - throwaway: personScope is set when a name in the phrase narrowed the search.
+type Batch = SearchBatch & {
+	cacheKey: string;
+	personScope?: { people: { id: number; name: string }[]; rest: string };
+};
 const path = "/search";
 const storage = "goodwatch_search_journey_v1";
 const control =
@@ -132,7 +143,7 @@ function useController() {
 		editing.current = value;
 		setDraft(value);
 		setFocused(-1);
-		navigate(resultsHref({ q: value, page: null }), {
+		navigate(resultsHref({ q: value, page: null, anyPerson: null }), {
 			replace: true,
 			preventScrollReset: location.pathname === path,
 		});
@@ -212,7 +223,7 @@ function useController() {
 		...(streaming ? { streaming } : {}),
 	};
 	const filtersKey = searchFiltersKey(filters);
-	const policyKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}${filtersKey ? `:${filtersKey}` : ""}`;
+	const policyKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}${filtersKey ? `:${filtersKey}` : ""}${setting("anyPerson") === "1" ? ":anyPerson" : ""}`;
 	const batchKey = `${policyKey}:${q}`;
 	// Filter changes narrow the shown batch at once; the refetch waits until the
 	// filters stop changing, so dragging the year slider sends one request.
@@ -246,6 +257,8 @@ function useController() {
 					includeAdult: false,
 					lesserKnown: setting("lesserKnown") === "1",
 					filters,
+					// PROTOTYPE - throwaway: skip narrowing to people named in the phrase.
+					anyPerson: setting("anyPerson") === "1",
 				}),
 			});
 			const unavailable =
@@ -373,6 +386,8 @@ function useController() {
 	const dedupe = (source: Batch | null | undefined, meta = metadata) => {
 		const identities = new Set<string>();
 		return (source?.rows ?? []).filter((r) => {
+			// PROTOTYPE - throwaway: the old ranking still returns people; production drops them.
+			if (r.type === "person") return false;
 			if (r.type !== "movie" && r.type !== "show") return true;
 			const m = meta.get(r.key);
 			if (m?.adult === true || r.adult === true) return false;
@@ -742,6 +757,14 @@ function JourneyList() {
 	const active = (r: Row) =>
 		j.currentKey === r.key ||
 		j.focused === j.sequence.findIndex((item) => item.key === r.key);
+	// PROTOTYPE - throwaway: people in search results.
+	const people = usePrototypePeople(
+		j.batch?.q ?? "",
+		!!j.batch && j.batch.q === j.q,
+	);
+	const slot =
+		j.page === 1 ? slotIndex(people, (j.rows[0]?.lexical ?? 0) >= 2) : -1;
+	const shownRows = slot >= 0 ? j.pageRows.slice(0, 19) : j.pageRows;
 	return (
 		<section aria-label="Search results" className="min-w-0">
 			<div
@@ -765,11 +788,14 @@ function JourneyList() {
 			</div>
 			{/* Columns of 2, 4, and 5 all divide the page size of 20, so a full page
 			    always ends on a complete row. */}
+			<PeopleAround
+				s={people}
+				grid={
 			<ul
 				aria-busy={j.loading}
-				className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2 py-2"
+				className={`grid grid-cols-2 sm:grid-cols-4 gap-2 py-2 ${people.variant === "aside" && people.shown.length ? "" : "lg:grid-cols-5"}`}
 			>
-				{j.pageRows.map((r) => {
+				{shownRows.flatMap((r, i) => {
 					const reasons = (r.discovery?.reasons ?? [])
 						.filter((x) => x.kind !== "mismatch")
 						.slice(0, RESULT_REASONS);
@@ -811,7 +837,14 @@ function JourneyList() {
 					);
 					const card =
 						"group relative block aspect-[2/3] overflow-hidden rounded-lg border-4 bg-gray-900";
-					return (
+					const personSlot =
+						i === slot ? (
+							<li key="prototype-person" className="min-w-0">
+								<PersonResultCard p={people.shown[0]} />
+							</li>
+						) : null;
+					return [
+						personSlot,
 						<li key={r.key} className="min-w-0">
 							{r.type === "person" ? (
 								<div className={`${card} border-gray-800`}>{body}</div>
@@ -826,10 +859,12 @@ function JourneyList() {
 									{body}
 								</Link>
 							)}
-						</li>
-					);
+						</li>,
+					];
 				})}
 			</ul>
+				}
+			/>
 			{j.rows.length > 0 && (
 				<nav
 					aria-label="Search pages"
