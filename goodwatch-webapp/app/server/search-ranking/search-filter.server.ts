@@ -5,7 +5,10 @@ import type {
 	Eligibility,
 	ReadingFlag,
 } from "../combined-search/reading-retrieval.server.ts"
-import { toQdrantMust } from "../combined-search/search-filters.ts"
+import {
+	titlePointId,
+	toQdrantMust,
+} from "../combined-search/search-filters.ts"
 import type { TitleTable } from "./search-index.server.ts"
 
 // The ranker ranks the indexed titles only: at least this many votes and not adult.
@@ -50,6 +53,10 @@ export function searchFilter(
 	if (filters?.maxYear !== undefined) {
 		const max = filters.maxYear
 		tests.push((row) => table.years[row] > 0 && table.years[row] <= max)
+	}
+	if (filters?.onlyTitles) {
+		const only = new Set(filters.onlyTitles.map(titlePointId))
+		tests.push((row) => only.has(table.pointIds[row]))
 	}
 	for (const flag of flags) {
 		if (!flag.decision) continue

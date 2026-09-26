@@ -7,6 +7,9 @@ export interface SearchFilters {
 	minYear?: number;
 	maxYear?: number;
 	streaming?: { country: string; providerIds: number[] };
+	// Only these titles ("movie:550"): the credits of the people a search names. Set by the server only;
+	// parseSearchFilters never reads it from a request.
+	onlyTitles?: string[];
 }
 
 const GENRE = /^[\p{L}\p{N} &-]{1,40}$/u;
@@ -83,6 +86,16 @@ const yearRange = (filters: SearchFilters) =>
 			}
 		: null;
 
+// Qdrant point ids: movies at 10^12 + TMDB id, shows at 2 * 10^12 + TMDB id.
+export const titlePointId = (key: string) => {
+	const [type, id] = key.split(":");
+	return (type === "show" ? 2 : 1) * 1_000_000_000_000 + Number(id);
+};
+
+// Title lookup rows skip retrieval, so their titles are checked here.
+export const allowsTitle = (filters: SearchFilters | undefined, key: string) =>
+	!filters?.onlyTitles || filters.onlyTitles.includes(key);
+
 // Qdrant payload: media_type, genres (names), release_year (integer), streaming_availability ("8_DE").
 export const toQdrantMust = (filters: SearchFilters | undefined): unknown[] => {
 	if (!filters) return [];
@@ -93,6 +106,8 @@ export const toQdrantMust = (filters: SearchFilters | undefined): unknown[] => {
 		must.push({ key: "genres", match: { value: genre } });
 	const range = yearRange(filters);
 	if (range) must.push({ key: "release_year", range });
+	if (filters.onlyTitles)
+		must.push({ has_id: filters.onlyTitles.map(titlePointId) });
 	if (filters.streaming?.providerIds.length)
 		must.push({
 			key: "streaming_availability",
@@ -106,7 +121,7 @@ export const toQdrantMust = (filters: SearchFilters | undefined): unknown[] => {
 };
 
 // Crate columns: genres (text array), release_year, streaming_availabilities ("DE_8").
-// `sql` is empty or starts with " AND "; null means the table is excluded by type.
+// `sql` is empty or starts with " AND "; null means the table is excluded by type or by the titles.
 export const toCrateSql = (
 	filters: SearchFilters | undefined,
 	table: "movie" | "show",
@@ -126,6 +141,16 @@ export const toCrateSql = (
 	if (filters.maxYear !== undefined) {
 		clauses.push("release_year <= ?");
 		params.push(filters.maxYear);
+	}
+	if (filters.onlyTitles) {
+		const ids = filters.onlyTitles
+			.filter((key) => key.startsWith(`${table}:`))
+			.map((key) => Number(key.slice(table.length + 1)))
+			.filter(Number.isSafeInteger);
+		if (!ids.length) return null;
+		// "+ 0": a bare tmdb_id IN (...) makes Crate plan a primary key lookup, which can't evaluate MATCH.
+		clauses.push(`(tmdb_id + 0) IN (${ids.map(() => "?").join(",")})`);
+		params.push(...ids);
 	}
 	if (filters.streaming?.providerIds.length) {
 		const { country, providerIds } = filters.streaming;
