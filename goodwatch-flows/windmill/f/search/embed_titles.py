@@ -13,7 +13,10 @@ Modes:
   or `tvtropes_tags_updated_at` moved since the last run, minus an overlap for the copy
   flows' lag, plus every point that lacks one of the three vectors. A title is embedded
   only when its input hash (`f/search/title_text.input_hash`) differs from the stored one,
-  because most timestamp changes are rating or popularity updates.
+  because most timestamp changes are rating or popularity updates. Once a day it also
+  checks every point's hash, whatever its timestamps: the title analysis copy's catch-up
+  writes an analysis with its original, older `dna_updated_at`, so no timestamp shows
+  that the title's text changed.
 - `full`: every point, whatever its hash. Needed only for a new vector version. It
   checkpoints after every 1,000 points and resumes from there.
 
@@ -24,8 +27,8 @@ State lives in Crate:
   new terms get the next free ids, so the webapp can map query terms to ids with the term
   statistics the index build writes. Ids are handed out in blocks through a
   compare-and-set on `search_embedding_state`, so two runs never give one id to two terms.
-- `search_embedding_state`: the next term id, the incremental checkpoint and the full-mode
-  checkpoint.
+- `search_embedding_state`: the next term id, the incremental checkpoint, the last daily
+  sweep and the full-mode checkpoint.
 """
 
 import json
@@ -66,6 +69,8 @@ STATE_TABLE = "search_embedding_state"
 NEXT_TERM_ID = "terms_bm25f_v1.next_term_id"
 INCREMENTAL_CHECKPOINT = "embed_titles.incremental"
 FULL_CHECKPOINT = "embed_titles.full"
+SWEEP_CHECKPOINT = "embed_titles.sweep"
+SWEEP_EVERY = timedelta(hours=24)
 
 
 # ---- Crate state ------------------------------------------------------------------------
@@ -334,9 +339,37 @@ def run_incremental(crate, client: QdrantClient, since: datetime | None, dry_run
         embed_points(crate, client, vocabulary, payloads, force=set(missing) & set(chunk), stats=stats,
                      dry_run=dry_run)
         print(f"incremental: {start + len(chunk)}/{len(candidates)} {json.dumps(stats)}", flush=True)
+    if sweep_due(crate, started_at):
+        stats["sweep"] = sweep_changed(crate, client, vocabulary, dry_run)
     stats["new_terms"] = vocabulary.new_terms
     if not dry_run:
         write_state(crate, INCREMENTAL_CHECKPOINT, {"started_at": started_at.isoformat(), "stats": stats})
+    return stats
+
+
+def sweep_due(crate, now: datetime) -> bool:
+    last = read_state(crate, SWEEP_CHECKPOINT)
+    return last is None or now - datetime.fromisoformat(last["started_at"]) >= SWEEP_EVERY
+
+
+def sweep_changed(crate, client: QdrantClient, vocabulary: TermVocabulary, dry_run: bool) -> dict:
+    """Embed every point whose input hash differs from the stored one, whatever its timestamps."""
+    started_at = datetime.now(timezone.utc)
+    stats = _new_stats()
+    offset = None
+    while True:
+        points, offset = client.scroll(
+            MEDIA_COLLECTION, limit=CHUNK_SIZE, offset=offset,
+            with_payload=PAYLOAD_FIELDS + ["media_type", "tmdb_id"], with_vectors=False,
+        )
+        stats["candidates"] += len(points)
+        embed_points(crate, client, vocabulary, {int(p.id): p.payload or {} for p in points}, force=set(),
+                     stats=stats, dry_run=dry_run)
+        if offset is None:
+            break
+    print(f"sweep: {json.dumps(stats)}", flush=True)
+    if not dry_run:
+        write_state(crate, SWEEP_CHECKPOINT, {"started_at": started_at.isoformat(), "stats": stats})
     return stats
 
 

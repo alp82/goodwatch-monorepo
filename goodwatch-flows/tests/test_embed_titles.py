@@ -245,5 +245,30 @@ class FullModeTests(unittest.TestCase):
         self.assertIn("completed_at", json.loads(crate.state[flow.FULL_CHECKPOINT]))
 
 
+class SweepTests(unittest.TestCase):
+    """The daily sweep embeds titles whose text changed without a recent timestamp (#171)."""
+
+    def test_due_without_a_sweep_or_after_a_day(self) -> None:
+        crate = FakeCrate()
+        now = flow.datetime(2026, 9, 26, 12, tzinfo=flow.timezone.utc)
+        self.assertTrue(flow.sweep_due(crate, now))
+        crate.state[flow.SWEEP_CHECKPOINT] = json.dumps({"started_at": (now - flow.timedelta(hours=23)).isoformat()})
+        self.assertFalse(flow.sweep_due(crate, now))
+        self.assertTrue(flow.sweep_due(crate, now + flow.timedelta(hours=1)))
+
+    def test_checks_every_point_by_hash_and_records_the_sweep(self) -> None:
+        crate = FakeCrate()
+        pages = {None: ([types.SimpleNamespace(id=point(1), payload={"title": "A"})], point(2)),
+                 point(2): ([types.SimpleNamespace(id=point(2), payload={"title": "B"})], None)}
+        client = types.SimpleNamespace(scroll=lambda collection, limit, offset, **kw: pages[offset])
+        calls = []
+        with patch.object(flow, "embed_points",
+                          lambda crate, client, vocab, payloads, force, **kw: calls.append((list(payloads), force))):
+            stats = flow.sweep_changed(crate, client, None, dry_run=False)
+        self.assertEqual(calls, [([point(1)], set()), ([point(2)], set())])
+        self.assertEqual(stats["candidates"], 2)
+        self.assertIn(flow.SWEEP_CHECKPOINT, crate.state)
+
+
 if __name__ == "__main__":
     unittest.main()
