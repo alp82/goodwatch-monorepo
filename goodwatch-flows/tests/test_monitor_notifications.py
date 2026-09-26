@@ -169,6 +169,72 @@ class NotificationTests(unittest.TestCase):
         )
         self.assertNotIn("must-not-appear", content)
 
+    def test_crate_shard_notification_contains_lag_translog_and_shard_detail(
+        self,
+    ) -> None:
+        from datetime import datetime, timezone
+        from f.monitoring.health import incident_transition
+
+        report = {
+            "path": "f/monitoring/crate_shards",
+            "status": "unhealthy",
+            "causes": ["crate_checkpoint_lag", "crate_translog_oversized"],
+            "latest_job_id": None,
+            "checkpoint_lag_ops": 5407389,
+            "translog_mb": 7210,
+            "detail": "doc.movie#8 lag 5407389 translog 7210MB replica crate-03",
+            "affected_shards": [{"shard": "must-not-appear"}],
+        }
+        pending = incident_transition(
+            None, report, datetime(2026, 9, 26, 12, tzinfo=timezone.utc)
+        )["notification"]
+        opener = Mock()
+        opener.open.return_value = io.BytesIO(b'{"id":"998877"}')
+        with patch(
+            "f.monitoring.notifications.build_opener", return_value=opener
+        ):
+            result = deliver_notification(WEBHOOK, pending)
+        self.assertTrue(result["delivered"])
+        content = json.loads(opener.open.call_args.args[0].data)["content"]
+        self.assertIn("incident: f/monitoring/crate_shards", content)
+        self.assertIn("crate_checkpoint_lag, crate_translog_oversized", content)
+        self.assertIn("Largest checkpoint lag (ops): 5407389", content)
+        self.assertIn("Largest translog (MB): 7210", content)
+        self.assertIn(
+            "doc.movie#8 lag 5407389 translog 7210MB replica crate-03", content
+        )
+        self.assertNotIn("No resolved execution", content)
+        self.assertNotIn("must-not-appear", content)
+
+    def test_crate_disk_notification_and_unsafe_detail_is_rejected(self) -> None:
+        notice = {
+            "kind": "incident",
+            "pipeline": "f/monitoring/crate_disk",
+            "causes": ["crate_disk_watermark"],
+            "job_id": None,
+            "disk_used_percent": 88,
+            "detail": "crate-03 88%, crate-01 37% (low watermark 85%)",
+        }
+        opener = Mock()
+        opener.open.return_value = io.BytesIO(b'{"id":"998877"}')
+        with patch(
+            "f.monitoring.notifications.build_opener", return_value=opener
+        ):
+            self.assertTrue(deliver_notification(WEBHOOK, notice)["delivered"])
+            content = json.loads(opener.open.call_args.args[0].data)["content"]
+            self.assertIn("Highest disk use (%): 88", content)
+            self.assertIn("crate-03 88%", content)
+            opener.open.reset_mock()
+            for detail in ["@everyone <script>", "x" * 400, 7]:
+                with self.subTest(detail=detail):
+                    result = deliver_notification(
+                        WEBHOOK, {**notice, "detail": detail}
+                    )
+                    self.assertEqual(
+                        result["error_code"], "invalid_notification"
+                    )
+            opener.open.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

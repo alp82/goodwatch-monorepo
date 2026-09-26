@@ -329,6 +329,10 @@ def incident_transition(
             "unacknowledged_title_count",
             "oldest_overdue_at",
             "age_basis",
+            "checkpoint_lag_ops",
+            "translog_mb",
+            "disk_used_percent",
+            "detail",
         ]:
             if report.get(field) is not None:
                 state["pending_notification"][field] = report[field]

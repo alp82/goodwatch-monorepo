@@ -12,6 +12,7 @@ from urllib.parse import urlencode
 
 from f.monitoring.collection import observe_execution
 from f.monitoring.backlog_health import assess_backlogs
+from f.monitoring.cluster_health import assess_cluster
 from f.monitoring.health import assess_pipeline, schedule_cadence, timestamp
 from f.monitoring.incidents import record_incident
 
@@ -97,10 +98,15 @@ def poll(
         [Any, list[dict[str, Any]], datetime, float], dict[str, Any]
     ]
     | None = None,
+    cluster_collector: Callable[[Any, float], dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     started_clock = clock()
     deadline = started_clock + budget_seconds
-    collection_deadline = deadline - 70 if backlog_collector else deadline
+    collection_deadline = (
+        deadline
+        - (70 if backlog_collector else 0)
+        - (20 if cluster_collector else 0)
+    )
     store.initialize()
     if not store.acquire():
         return {"status": "overlap", "reason": "checker_lease_busy"}
@@ -267,6 +273,27 @@ def poll(
             store.put(
                 "backlog-progress", "progress", "", backlog_result["progress"]
             )
+        cluster_result = None
+        if cluster_collector:
+            try:
+                remaining = max(0, deadline - clock() - 5)
+                if remaining <= 0:
+                    raise TimeoutError("No cluster collection budget remains")
+                cluster_snapshot = cluster_collector(store, remaining)
+            except Exception:
+                cluster_snapshot = {"complete": False}
+            infrastructure["crate_cluster"] = (
+                "ok" if cluster_snapshot.get("complete") is True else "degraded"
+            )
+            cluster_result = assess_cluster(
+                cluster_snapshot, store.get("crate-cluster-progress"), now
+            )
+            store.put(
+                "crate-cluster-progress",
+                "progress",
+                "",
+                cluster_result["progress"],
+            )
         reports = []
         for path, plan in plans.items():
             ledger = plan["jobs"]
@@ -318,6 +345,16 @@ def poll(
                     webhook_url if notify and clock() < deadline else None,
                 )
                 reports.append(report)
+        if cluster_result:
+            for report in cluster_result["reports"]:
+                report["observed_at"] = now.isoformat()
+                report["notification"] = record_incident(
+                    store,
+                    report,
+                    now,
+                    webhook_url if notify and clock() < deadline else None,
+                )
+                reports.append(report)
         result = {
             "status": "completed",
             "observed_at": now.isoformat(),
@@ -330,6 +367,11 @@ def poll(
                 Counter(r["status"] for r in backlog_result["reports"])
             )
             if backlog_result
+            else {},
+            "cluster_status_counts": dict(
+                Counter(r["status"] for r in cluster_result["reports"])
+            )
+            if cluster_result
             else {},
             "pipelines": reports,
             "provider_identity_repair": snapshots["country"].get("identity_repair")
@@ -354,6 +396,7 @@ def main(notify: bool = True) -> dict[str, Any]:
     import httpx
     from f.monitoring.store import MonitoringStore
     from f.monitoring.backlog_collection import collect_backlogs
+    from f.monitoring.cluster_collection import collect_cluster
 
     client = wmill.Windmill(workspace="goodwatch").client
 
@@ -385,4 +428,5 @@ def main(notify: bool = True) -> dict[str, Any]:
         notify,
         webhook,
         backlog_collector=collect_backlogs,
+        cluster_collector=lambda store, remaining: collect_cluster(store.db),
     )

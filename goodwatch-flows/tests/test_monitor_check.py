@@ -400,6 +400,75 @@ class MonitorCheckTests(unittest.TestCase):
             completed,
         )
 
+    def test_crate_cluster_reports_persist_progress_and_open_incidents(
+        self,
+    ) -> None:
+        from f.monitoring.cluster_health import shard_summaries
+
+        store = MemoryStore()
+        rows = [
+            {
+                "schema_name": "doc",
+                "table_name": "movie",
+                "id": 8,
+                "primary": True,
+                "node": "crate-02",
+                "routing_state": "STARTED",
+                "local_checkpoint": 74_002_505,
+                "global_checkpoint": 68_595_116,
+                "translog_bytes": 7_200_000_000,
+            },
+        ]
+
+        def cluster(ledger, remaining_seconds):
+            self.assertIs(ledger, store)
+            self.assertGreater(remaining_seconds, 0)
+            return {
+                "complete": True,
+                "shards": shard_summaries(rows),
+                "nodes": [
+                    {"name": "crate-03", "total_bytes": 100, "available_bytes": 60}
+                ],
+                "watermarks": {"low": "85%"},
+            }
+
+        result = poll(
+            Api(),
+            store,
+            NOW,
+            notify=False,
+            cluster_collector=cluster,
+            clock=lambda: 0,
+        )
+        self.assertEqual(result["infrastructure"]["crate_cluster"], "ok")
+        self.assertEqual(
+            result["cluster_status_counts"], {"unhealthy": 1, "healthy": 1}
+        )
+        self.assertIn("doc.movie#8", store.values["crate-cluster-progress"])
+        self.assertTrue(
+            store.values["pipeline:f/monitoring/crate_shards"]["incident"][
+                "active"
+            ]
+        )
+        self.assertFalse(
+            store.values["pipeline:f/monitoring/crate_disk"]["incident"][
+                "active"
+            ]
+        )
+
+    def test_crate_cluster_collection_failure_is_unknown(self) -> None:
+        store = MemoryStore()
+
+        def unavailable(*args):
+            raise RuntimeError("sensitive upstream details must not escape")
+
+        result = poll(
+            Api(), store, NOW, notify=False, cluster_collector=unavailable
+        )
+        self.assertEqual(result["infrastructure"]["crate_cluster"], "degraded")
+        self.assertEqual(result["cluster_status_counts"], {"unknown": 2})
+        self.assertNotIn("sensitive", str(result))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -20,6 +20,15 @@ Excessive runtime, missing descendants, material child/outcome failures, consecu
 
 The idempotently initialized Crate table `workflow_monitoring` stores normalized jobs, latest reports, pipeline incidents, and delivery state. State and attempt timestamps are written before Discord I/O. Confirmed incidents are deduplicated, reminders are six-hourly, and recovery is sent once. Discord delivery requires `wait=true` and a returned message ID. Failures retain pending notification state, respect a global retry gate (at least 30 minutes for ordinary transient failures and Discord's longer requested delay for 429), and block retries after permanent webhook errors until the secret changes. Discord and Crate cannot commit atomically: a process death after Discord accepts a message but before persistence can cause a delayed duplicate; the durable attempt gate prevents immediate flooding.
 
+## Crate shard and disk health
+
+The same five-minute check reads `sys.shards`, `sys.nodes` and `sys.cluster` (read only, about 20 seconds of the budget are reserved) and reports two grouped incidents through the same ledger and Discord path:
+
+- `f/monitoring/crate_shards` is unhealthy when a started primary's global checkpoint trails its local checkpoint by **500,000 operations or more** (`crate_checkpoint_lag`), when a lag of at least 1,000 operations keeps the **same global checkpoint for an hour** (`crate_checkpoint_stalled`), or when a started copy's **translog reaches 1 GB** (`crate_translog_oversized`). The message names the three worst shards with lag, translog size and replica node.
+- `f/monitoring/crate_disk` is unhealthy when any node's disk use comes within **10 points of the configured low watermark** (`crate_disk_near_watermark`, 75% with the default 85%) or passes it (`crate_disk_watermark`). Absolute byte watermarks fall back to the 85% default.
+
+A stuck replica checkpoint pins the retention leases, so the translog and every soft-deleted document above it are kept and the shard grows with each update. In September 2026 this left `movie` shards 8 and 9 at 24–29 GB instead of 0.2 GB. The fix is to cancel the lagging replica with `ALTER TABLE <table> REROUTE CANCEL SHARD <id> ON '<replica node>'`, one shard at a time, so it recovers from the primary. Thresholds live in `f/monitoring/cluster_health.py`. A failed system table read is `unknown` and never counts as recovery.
+
 ## Configuration and rollout
 
 1. Create the Windmill **secret** variable `f/monitoring/discord_webhook_url` with the chosen channel's Discord webhook URL. Never put it in Git, job arguments, or chat. The adapter accepts the fixed HTTPS Discord webhook host/path, sends Discord's required identifying User-Agent, and disables redirects and mentions. A corrected delivery-client identity also invalidates an old permanent-error gate while preserving the pending incident.

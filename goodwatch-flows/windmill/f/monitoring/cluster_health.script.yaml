@@ -1,0 +1,9 @@
+summary: Assess Crate shard checkpoints, translogs and disk watermarks
+description: Pure assessment of read-only CrateDB system table snapshots.
+lock: '!inline f/monitoring/cluster_health.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

@@ -40,7 +40,15 @@ CAUSES = {
     "publication_unacknowledged",
     "publication_retry_exhausted",
     "publication_failed",
+    "crate_checkpoint_lag",
+    "crate_checkpoint_stalled",
+    "crate_translog_oversized",
+    "crate_disk_near_watermark",
+    "crate_disk_watermark",
 }
+# Infrastructure incidents have no Windmill execution to link.
+INFRASTRUCTURE_PIPELINES = {"f/monitoring/crate_shards", "f/monitoring/crate_disk"}
+DETAIL_PATTERN = r"[A-Za-z0-9_.#%(),;:+ -]{1,300}"
 
 
 def failure(
@@ -100,6 +108,9 @@ def deliver_notification(
         "overdue_title_count": "Overdue titles",
         "outstanding_demand": "Outstanding demand",
         "unacknowledged_title_count": "Unacknowledged titles",
+        "checkpoint_lag_ops": "Largest checkpoint lag (ops)",
+        "translog_mb": "Largest translog (MB)",
+        "disk_used_percent": "Highest disk use (%)",
     }
     for field in count_fields:
         value = notification.get(field)
@@ -109,6 +120,11 @@ def deliver_notification(
             or not 0 <= value <= 10**18
         ):
             return failure("invalid_notification", True)
+    detail = notification.get("detail")
+    if detail is not None and (
+        not isinstance(detail, str) or not re.fullmatch(DETAIL_PATTERN, detail)
+    ):
+        return failure("invalid_notification", True)
     oldest = notification.get("oldest_overdue_at")
     if oldest is not None:
         try:
@@ -138,13 +154,15 @@ def deliver_notification(
     for field, label in count_fields.items():
         if notification.get(field) is not None:
             content += f"\n{label}: {notification[field]}"
+    if detail:
+        content += f"\n{detail}"
     if oldest:
         content += f"\nOldest observed timestamp: {oldest} ({age_basis or 'unspecified'})"
     if source_pipeline:
         content += f"\nhttps://windmill.goodwatch.app/flows/get/{source_pipeline}?workspace=goodwatch"
     if job_id:
         content += f"\nhttps://windmill.goodwatch.app/run/{job_id}?workspace=goodwatch"
-    else:
+    elif pipeline not in INFRASTRUCTURE_PIPELINES:
         content += "\nNo resolved execution. https://windmill.goodwatch.app/schedules?workspace=goodwatch"
     request = Request(
         webhook_url + "?wait=true",
