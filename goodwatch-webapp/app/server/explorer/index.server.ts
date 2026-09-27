@@ -13,6 +13,7 @@ import {
 	type ExplorerPairs,
 	type ExplorerService,
 	type ExplorerTitle,
+	DEFAULT_BRANCHING,
 	GROUPINGS,
 	type Grouping,
 	isGrouping,
@@ -47,7 +48,6 @@ import {
 	keepExplorerPoolWarm,
 } from "./pool.server"
 import {
-	DEFAULT_BRANCHING,
 	type TreeShape,
 	bridgeMembers,
 	buildTree,
@@ -481,7 +481,8 @@ export async function getNearCard(
 	ctx: ViewerContext,
 	key: TitleKey,
 ): Promise<ExplorerCard | null> {
-	const seat = await seatFor(ctx, { unseen: "0", services: "all" }, false)
+	// The card lists the services that carry the title, so a country's first card waits briefly for its availability.
+	const seat = await seatFor(ctx, { unseen: "0", services: "all" }, true)
 	const { pool, taste } = seat
 	const i = pool.indexOf(key)
 	if (i < 0) return null

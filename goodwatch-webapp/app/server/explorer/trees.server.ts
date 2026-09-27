@@ -1,7 +1,7 @@
 // Trees lay titles out for zooming in: the first posters, then around each title its closest titles, generation by
 // generation, never repeating a title (nor a name: a film and its series remake read as the same). Bridges pick the
 // titles two islands share, then lay them out the same way.
-import type { BridgeKind } from "~/domain/explorer"
+import { type BridgeKind, firstPosters } from "~/domain/explorer"
 import type { Layout } from "./groupings.server"
 import { type ExplorerPool, cosineOf, cosineTo } from "./pool.server"
 
@@ -12,8 +12,6 @@ export interface TreeShape {
 	generation: number[]
 }
 
-/** Children per title in each generation after the first posters: 6 around each first poster, then 2 and 2. */
-export const DEFAULT_BRANCHING = [6, 2, 2]
 // Closest titles are looked for among this many of the candidates, best first, which keeps a tree of a large island
 // (Drama holds thousands) well inside the endpoint's budget.
 const MAX_CANDIDATES = 2000
@@ -21,10 +19,6 @@ const MAX_CANDIDATES = 2000
 const GOOD_SCORE = 55
 const QUALITY_WEIGHT = 0.2
 const MIN_BOTH = 6
-
-/** How many first posters a tree starts with, by how many titles it holds. */
-export const firstPosters = (count: number) =>
-	count < 40 ? 2 : count < 220 ? 3 : count < 800 ? 4 : 5
 
 /** A tree over `members` (pool titles, in the order the first posters are picked). */
 export function buildTree(
