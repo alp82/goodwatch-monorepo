@@ -17,7 +17,18 @@ import {
 import { type TitleSnapshot, buildSnapshot } from "./snapshot.server"
 
 export type { CatalogStats } from "./catalog-stats.server"
-export type { TitleFacts, TitleKey, TitleSnapshot } from "./snapshot.server"
+export type {
+	TitleColumns,
+	TitleFacts,
+	TitleKey,
+	TitleSnapshot,
+} from "./snapshot.server"
+export {
+	FLAG_ADULT,
+	FLAG_POSTER,
+	UNKNOWN_DAY,
+	UNKNOWN_SCORE,
+} from "./format.server"
 
 const CHECK_EVERY_MS = 60_000
 // Until the first load, while Redis is still connecting after the server starts.
