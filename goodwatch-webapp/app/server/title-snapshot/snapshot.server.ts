@@ -1,7 +1,11 @@
 // The loaded title snapshot: every title with a title analysis, its fingerprint and the facts filters and sorts need,
 // in webapp memory. Built once per snapshot version from the decoded columns; never changed afterwards.
 import { type MoodKey, moodMaskOf, moodsInMask } from "~/domain/moods"
-import { type CatalogStats, catalogStats } from "./catalog-stats.server"
+import {
+	type CatalogStats,
+	catalogStats,
+	referencePool,
+} from "./catalog-stats.server"
 import {
 	type Columns,
 	FINGERPRINT_LENGTH,
@@ -51,6 +55,8 @@ export interface TitleSnapshot {
 	/** Every title, in point id order, with its row (0 to count - 1). */
 	forEach(fn: (key: TitleKey, row: number) => void): void
 	readonly stats: CatalogStats
+	/** The rows of the reference pool the statistics describe: the most voted movies, then shows (see catalog-stats). */
+	readonly referenceRows: readonly number[]
 	/** The 74 raw scores in VALID_FINGERPRINT_KEYS order, 255 for a missing score. A view, not a copy: don't write. */
 	fingerprint(key: TitleKey): Uint8Array | null
 	// The same by row (0 to count - 1, as forEach passes it), for callers that go over many titles once per version.
@@ -66,6 +72,7 @@ class LoadedSnapshot implements TitleSnapshot {
 	readonly builtAt: Date
 	readonly count: number
 	readonly stats: CatalogStats
+	readonly referenceRows: readonly number[]
 	private readonly genreNames: string[]
 	private readonly originNames: string[]
 	// 1 / |fingerprint| per row; 0 for a fingerprint of all zeros.
@@ -101,7 +108,8 @@ class LoadedSnapshot implements TitleSnapshot {
 			}
 			this.moodMasks[row] = moodMaskOf(fp, genres)
 		}
-		this.stats = catalogStats(c)
+		this.referenceRows = referencePool(c)
+		this.stats = catalogStats(c, this.referenceRows)
 	}
 
 	/** The row of a point id, by binary search over the sorted ids; -1 when absent. */

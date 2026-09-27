@@ -11,7 +11,7 @@ import { NO_TASTE, type Taste } from "./taste.server"
 
 export { markTasteChanged, stopTasteStore } from "./member.server"
 export { type RecommendedList, logRecommendedOverlap } from "./shadow.server"
-export type { FingerprintKey, Taste } from "./taste.server"
+export { CRAFT_KEYS, type FingerprintKey, type Taste } from "./taste.server"
 
 export async function loadTaste(viewer: Viewer): Promise<Taste> {
 	if (viewer.kind === "member") return loadMemberTaste(viewer.userId)

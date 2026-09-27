@@ -39,8 +39,13 @@ export interface ViewerContext {
 export async function getViewerContext(
 	request: Request,
 	guest?: GuestProgress,
+	// The signed-in member's id when the caller has already read it (null for a guest), to skip a second auth check.
+	knownUserId?: string | null,
 ): Promise<ViewerContext> {
-	const userId = await getUserIdFromRequest({ request })
+	const userId =
+		knownUserId === undefined
+			? await getUserIdFromRequest({ request })
+			: knownUserId
 	const guessedCountry = getLocaleFromRequest(request).locale.country
 	if (!userId) return guestContext(guest, guessedCountry)
 
