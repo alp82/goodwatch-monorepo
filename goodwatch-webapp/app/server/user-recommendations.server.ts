@@ -109,7 +109,6 @@ async function _getUserRecommendations({
 	// Fetch all items to exclude (scored, skipped, watched, wishlist)
 	// Only those with vectors in Qdrant
 	const allExcluded = await getUserExcludeItems(userId)
-	const excludeIds = allExcluded.map(s => s.tmdb_id)
 
 	console.log('[User Recommendations] highScores:', highScores.length, 'lowScores:', lowScores.length, 'allExcluded:', allExcluded.length)
 
@@ -132,7 +131,7 @@ async function _getUserRecommendations({
 		mediaType,
 		minVotingCount: 50000,
 		minScore: 60,
-		additionalMustNot: buildExcludeFilter(excludeIds),
+		additionalMustNot: buildExcludeFilter(allExcluded),
 	})
 
 	const filterConditions = { must, must_not }

@@ -310,7 +310,7 @@ export const useFavoriteMutation = () => {
 		MutationContext
 	>({
 		mutationFn: async ({ mediaType, tmdbId, action }) => {
-			const response = await fetch("/api/update-favorite", {
+			const response = await fetch("/api/update-favorites", {
 				method: "POST",
 				body: JSON.stringify({
 					tmdb_id: tmdbId,
