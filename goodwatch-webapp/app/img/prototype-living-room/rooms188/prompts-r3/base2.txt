@@ -1,0 +1,13 @@
+Use your image generation tool. Create a NEW photorealistic editorial interior photograph, a real camera capture for a lifestyle magazine, not a 3D render.
+
+Use the attached reference for palette, mood, and layout only: a deep teal-blue wall behind a wall-mounted TV, built-in walnut shelving left and right of the TV that runs down to the floor on a solid plinth, a tall white paper floor lantern on a single central stem glowing warm amber on the left, a window at the far left with a crisp dusk sky, a walnut TV sideboard with slatted doors under the TV, a rust-colored linen sofa on the left side of the room. Keep the TV the same size and position as in the reference: horizontally centered, top edge about 10% below the top of the frame, about 37% of the frame width. The TV is unbranded: a plain black bezel with no logo. Redraw every object cleanly; do not copy the reference's textures.
+
+The feeling: a cozy evening at home; the viewer has just sat down and is about to watch something. Inviting, warm, calm, real.
+
+Camera: from the viewer's seat, eye height about 1.1 m, level, 24mm lens, straight verticals, f/11 deep focus. Every object in the frame is in sharp focus, including the nearest one; there is no depth-of-field blur anywhere, not even at the frame edges. Subtle film grain, natural color. Landscape 16:9.
+
+TV screen: uniformly flat, matte, pure #00FF00 green, evenly lit edge to edge.
+
+Light: dusk. Cool teal-blue light from the window, warm amber pools from the lantern and one small lamp with its cord visible, soft shadows that keep detail. The lantern's paper ribs stay visible (not blown out).
+
+Craft rules: every object complete and physically correct with clean edges; each cabinet door has one slim brass bar pull, centered on that door; shelves sit clearly above or below the sideboard top, never flush with it; oak floorboards with visible plank seams; materials with smooth, readable surfaces (plaster, oiled wood, linen, glazed ceramic, glass, leather); Blu-ray cases on the shelves are thin plastic cases whose spines are plain solid color strips (black, blue, white, deep red) with no lettering at all; books have plain cloth spines with no lettering; exactly one trailing pothos in the whole room, other plants are different species; every object appears once; no text, no logos, no watermark.
