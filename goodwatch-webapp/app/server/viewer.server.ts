@@ -42,7 +42,14 @@ export async function getViewerContext(
 	const userId = await getUserIdFromRequest({ request })
 	const guessedCountry = getLocaleFromRequest(request).locale.country
 	if (!userId) return guestContext(guest, guessedCountry)
+	return getMemberViewerContext(userId, guessedCountry)
+}
 
+/** A member's viewer context by user id, for callers that already know the member (and scripts). */
+export async function getMemberViewerContext(
+	userId: string,
+	guessedCountry: string,
+): Promise<ViewerContext> {
 	const [userData, settings] = await Promise.all([
 		getUserData({ user_id: userId }),
 		getUserSettings({ userId }),
