@@ -1,7 +1,9 @@
 // PROTOTYPE - throwaway. The living room background (#188), round 4: the fixed room itself, made clean without
 // losing its feel. Round 3 drifted from it (wall color, light, couch, coziness); this round treats `fixed` as
 // the reference and measures every candidate against it.
-//   /prototype/start-living-room-room-4?variant=fixed|faithful|reshoot|reshoot-oat&hand=graded|raw
+//   /prototype/start-living-room-room-4?variant=round5|faithful|reshoot|reshoot-oat|fixed&hand=graded|raw
+//   round5       `faithful` after the owner's round 4 notes: fewer, real-looking Blu-rays, no bowls, a new print,
+//                two plants fewer (a film camera instead), a clean basket, brass pulls, the re-shoot's small cup.
 //   fixed        round 2's dusk room, the reference.
 //   faithful     `fixed` itself: nine-tile detail pass, then local fixes (case, speaker, baskets, rugs, table).
 //   reshoot      a one-pass "re-photograph this exact room" edit of `fixed`, then the same loop; camel blanket.
@@ -27,20 +29,23 @@ import { Remote7 } from "~/ui/prototype-start-living-room/r7"
 import { LR_CSS } from "~/ui/prototype-start-living-room/tv"
 
 const FILES = import.meta.glob("/app/img/prototype-living-room/rooms188/r4-*.webp", { eager: true, query: "?url", import: "default" }) as Record<string, string>
+import r5Room from "~/img/prototype-living-room/rooms188/r5-A.webp"
+const R5 = r5Room
 const TVS = tvs as Record<string, Room3["tv"]>
 
 const ROOMS: Record<string, { name: string; alt: string }> = {
+	round5: { name: "Round 5: faithful, owner notes applied", alt: "A living room at dusk with a rust sofa, a paper lantern, a teal wall, Blu-rays and a film camera on the shelves" },
 	fixed: { name: "Fixed (round 2, the reference)", alt: "A living room at dusk with a rust sofa, a paper lantern, and a teal wall" },
 	faithful: { name: "Faithful: fixed, cleaned", alt: "A living room at dusk with a rust sofa, a paper lantern, a teal wall, and a warm knit blanket" },
 	reshoot: { name: "Re-shoot, camel blanket", alt: "A living room at dusk with a rust sofa, a paper lantern, a teal wall, and a camel knit blanket" },
 	"reshoot-oat": { name: "Re-shoot, oatmeal blanket", alt: "A living room at dusk with a rust sofa, a paper lantern, a teal wall, and an oatmeal knit blanket" },
 }
-const FILE_OF: Record<string, string> = { faithful: "A", reshoot: "B4", "reshoot-oat": "B3" }
+const FILE_OF: Record<string, string> = { round5: "A5", faithful: "A", reshoot: "B4", "reshoot-oat": "B3" }
 
 const roomOf = (k: string): Room3 | null => {
-	const src = k === "fixed" ? fixedR2 : FILES[`/app/img/prototype-living-room/rooms188/r4-${FILE_OF[k]}.webp`]
+	const src = k === "fixed" ? fixedR2 : (k === "round5" ? R5 : FILES[`/app/img/prototype-living-room/rooms188/r4-${FILE_OF[k]}.webp`])
 	if (!src) return null
-	const tv = k === "fixed" ? (tvs2 as Record<string, Room3["tv"]>).fixed : TVS[FILE_OF[k]]
+	const tv = k === "fixed" ? (tvs2 as Record<string, Room3["tv"]>).fixed : (k === "round5" ? TVS.A : TVS[FILE_OF[k]])
 	return { name: ROOMS[k].name, alt: ROOMS[k].alt, src, w: 1672, h: 941, tv }
 }
 
@@ -62,7 +67,7 @@ export default function LivingRoomRoom4() {
 	const { lr, home } = useLoaderData<typeof loader>() as unknown as { lr: LRData; home: HomeData }
 	const [params, setParams] = useSearchParams()
 	const ready = Object.keys(ROOMS).filter((k) => roomOf(k))
-	const key = ready.includes(params.get("variant") ?? "") ? (params.get("variant") as string) : ready.includes("faithful") ? "faithful" : ready[0]
+	const key = ready.includes(params.get("variant") ?? "") ? (params.get("variant") as string) : "round5"
 	const room = roomOf(key) as Room3
 	const graded = params.get("hand") !== "raw"
 	const h = useHome(home)
