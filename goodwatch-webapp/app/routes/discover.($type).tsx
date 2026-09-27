@@ -17,6 +17,7 @@ import {
 	dehydrate,
 } from "@tanstack/react-query"
 import React, { useState } from "react"
+import { searchText } from "~/domain/discover-search"
 import {
 	filterQuery,
 	filterStateFromParams,
@@ -56,7 +57,7 @@ import type { DiscoverFilterType } from "~/server/types/discover-types"
 import { prefetchUserSettings } from "~/server/user-settings.server"
 import type { FilterMediaType } from "~/server/utils/query-db"
 import { getViewerContext } from "~/server/viewer.server"
-import { DiscoverBrowse } from "~/ui/discover/DiscoverBrowse"
+import { DiscoverPage } from "~/ui/discover/DiscoverPage"
 import { type InitialBrowse, browseKey } from "~/ui/discover/useDiscoverBrowse"
 import MovieTvGrid from "~/ui/explore/MovieTvGrid"
 import FilterBar from "~/ui/filter/FilterBar"
@@ -70,7 +71,17 @@ import { useNav } from "~/utils/navigation"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({ data, location }) => {
+	// Discover's search mode: like the search page, not indexed.
+	if (
+		data &&
+		"browse" in data &&
+		searchText(new URLSearchParams(location.search).get("q"))
+	)
+		return [
+			{ title: "Search movies and shows · GoodWatch" },
+			{ name: "robots", content: "noindex, follow" },
+		]
 	const mediaType = data?.mediaType || "all"
 	const typePath = mediaType === "all" ? "" : `/${mediaType}`
 	const pageMeta: PageMeta = {
@@ -265,6 +276,7 @@ export interface BrowseLoaderData {
 		member: boolean
 		hasServices: boolean
 		savedForYou: boolean
+		searchScope: { country: string; services: number[] }
 	}
 	mediaType: "all"
 }
@@ -282,13 +294,16 @@ async function browseLoader(
 	const forYou = forYouFromParams(params, ctx)
 	const requested = Number.parseInt(params.get("page") ?? "1", 10) || 1
 	const count = Math.min(Math.max(1, requested), MAX_INITIAL_PAGES)
+	// Search mode: the browser runs the search (its reading streams in), so the first view has no results yet.
+	const searching = searchText(params.get("q")) !== null
 	let pages: BrowseResults[] | null = null
 	try {
-		pages = await Promise.all(
-			Array.from({ length: count }, (_, i) =>
-				getBrowseResults(ctx, { state, sort, forYou, page: i + 1 }),
-			),
-		)
+		if (!searching)
+			pages = await Promise.all(
+				Array.from({ length: count }, (_, i) =>
+					getBrowseResults(ctx, { state, sort, forYou, page: i + 1 }),
+				),
+			)
 	} catch (error) {
 		// Right after a restart: the browser asks /api/discover/results once the snapshot has loaded.
 		if (!(error instanceof SnapshotNotLoaded)) throw error
@@ -301,13 +316,15 @@ async function browseLoader(
 			member: ctx.viewer.kind === "member",
 			hasServices: ctx.services.length > 0,
 			savedForYou: ctx.forYou,
+			searchScope: { country: ctx.country, services: ctx.services },
 		},
 		mediaType: "all",
 	}
 }
 
-// Set while browse mode renders: its filters, sort, and For you change only the URL's parameters, and the results
-// come from /api/discover/results, so the loader doesn't run again for them. Today's Discover keeps revalidating.
+// Set while the new Discover renders: its filters, sort, For you, and search query change only the URL's parameters,
+// and the results come from /api/discover/results and the search, so the loader doesn't run again for them. Today's
+// Discover keeps revalidating.
 let browsing = false
 
 export const shouldRevalidate: ShouldRevalidateFunction = ({
@@ -351,7 +368,7 @@ export function ErrorBoundary() {
 export default function DiscoverRoute() {
 	const data = useLoaderData<LoaderData | BrowseLoaderData>()
 	browsing = "browse" in data
-	if ("browse" in data) return <DiscoverBrowse {...data.browse} />
+	if ("browse" in data) return <DiscoverPage {...data.browse} />
 	return <Discover />
 }
 

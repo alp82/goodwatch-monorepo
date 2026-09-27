@@ -5,6 +5,7 @@ import {
 } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
 import { z } from "zod"
+import { SEARCH_RESULTS } from "~/domain/discover-search"
 import { filterStateFromParams, sortFromParams } from "~/domain/filter-state"
 import {
 	DISCOVER_MAX_PAGE,
@@ -17,14 +18,17 @@ import {
 import { getFeatureMode, isEnabled } from "~/server/features.server"
 import { type GuestProgress, getViewerContext } from "~/server/viewer.server"
 import type { TasteInteraction } from "~/ui/taste/types"
+import type { TitleKey } from "~/utils/title-key"
 
 // One page of Discover's browse results with the filter bar's counts, recoveries, For you movement, and cards.
 // - Members: GET /api/discover/results?<filter bar parameters>&page=1
 // - Guests: POST /api/discover/results?<filter bar parameters>&page=1 with { guest: { interactions, country,
 //   services } }, the guest progress their browser holds. A signed-in member's POST ignores `guest`.
 // Parameters are the filter bar's URL state (services, unseen, type, moods, genres, score, released, similar, people,
-// sort, foryou, and the legacy Discover filters). Served while REC_FILTER_BAR lets the viewer see it; not found
-// otherwise.
+// sort, foryou, and the legacy Discover filters). In search mode, `ranked` carries the search's ranked list in its plain
+// order (title keys, comma-separated, at most SEARCH_RESULTS; empty when the search found nothing), and the results are
+// that list filtered in memory, with Relevance as the default sort. Served while REC_FILTER_BAR lets the viewer see
+// it; not found otherwise.
 
 export type DiscoverResultsResponse = DiscoverResults
 
@@ -41,6 +45,22 @@ const bodySchema = z.object({
 })
 
 const headers = { "Cache-Control": "private, no-store" }
+
+const MOVIE_BASE = 1e12
+const KEY_END = 3e12
+
+/** The search's ranked list from `ranked`, or undefined in browse mode. Invalid keys are dropped. */
+function rankedFromParams(params: URLSearchParams): TitleKey[] | undefined {
+	const value = params.get("ranked")
+	if (value === null) return undefined
+	const keys = value
+		.split(",")
+		.map(Number)
+		.filter(
+			(key) => Number.isSafeInteger(key) && key > MOVIE_BASE && key < KEY_END,
+		)
+	return [...new Set(keys)].slice(0, SEARCH_RESULTS)
+}
 const notFound = () => json({ error: "Not found" }, { status: 404, headers })
 const invalid = (error: string) => json({ error }, { status: 400, headers })
 
@@ -52,11 +72,13 @@ async function respond(request: Request, guest?: GuestProgress) {
 	const contextMs = performance.now() - startedAt
 
 	const params = new URL(request.url).searchParams
+	const ranked = rankedFromParams(params)
 	let response: DiscoverResults
 	try {
 		response = await getDiscoverResults(ctx, {
 			state: filterStateFromParams(params, discoverFilterDefaults(ctx)),
-			sort: sortFromParams(params, false),
+			sort: sortFromParams(params, ranked !== undefined),
+			ranked,
 			forYou: forYouFromParams(params, ctx),
 			page: Math.min(
 				DISCOVER_MAX_PAGE,

@@ -1,5 +1,6 @@
-// Discover's browse data: pages of /api/discover/results for the filter bar's query and the For you switch, loaded
-// by infinite scroll. Members GET; a guest's progress lives in their browser, so guests POST it with every request.
+// Discover's results: pages of /api/discover/results for the filter bar's query and the For you switch, loaded by
+// infinite scroll; in search mode, over the search's ranked list. Members GET; a guest's progress lives in their
+// browser, so guests POST it with every request.
 import { useSearchParams } from "@remix-run/react"
 import {
 	type InfiniteData,
@@ -11,6 +12,7 @@ import { useSetUserSettings } from "~/routes/api.user-settings.set"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import type { TasteInteraction } from "~/ui/taste/types"
 import { useGuestInteractions } from "~/utils/guest-progress"
+import type { TitleKey } from "~/utils/title-key"
 
 /** What a guest's browser sends: its guest progress and the country and services the guest chose. */
 export interface GuestBody {
@@ -26,9 +28,13 @@ export interface InitialBrowse {
 	pages: DiscoverResults[]
 }
 
-/** The results endpoint's query for a filter bar query and the For you switch. */
-export const browseKey = (query: string, forYou: boolean) =>
-	`${query}${query ? "&" : ""}foryou=${forYou ? 1 : 0}`
+/** The results endpoint's query for a filter bar query and the For you switch, and a search's ranked list. */
+export const browseKey = (
+	query: string,
+	forYou: boolean,
+	ranked?: readonly TitleKey[],
+) =>
+	`${query}${query ? "&" : ""}foryou=${forYou ? 1 : 0}${ranked ? `&ranked=${ranked.join(",")}` : ""}`
 
 /**
  * A guest's progress and chosen country and services, read after hydration (the server can't see them); null for a
@@ -93,6 +99,7 @@ export function useDiscoverBrowse({
 	member,
 	guest,
 	initial,
+	ranked,
 }: {
 	query: string
 	forYou: boolean
@@ -100,8 +107,13 @@ export function useDiscoverBrowse({
 	/** From useGuestBody. */
 	guest: GuestBody | null | undefined
 	initial: InitialBrowse | null
+	/**
+	 * Search mode: the search's ranked list, or null while it loads (the last results stay meanwhile). Undefined while
+	 * browsing.
+	 */
+	ranked?: readonly TitleKey[] | null
 }) {
-	const key = browseKey(query, forYou)
+	const key = browseKey(query, forYou, ranked ?? undefined)
 	const signature = guestSignature(guest)
 	// The loader's pages answer a member, or a guest who hasn't rated or chosen anything (the server's view of any guest).
 	const initialFits =
@@ -127,8 +139,8 @@ export function useDiscoverBrowse({
 					}
 				: undefined,
 		placeholderData: keepPreviousData,
-		// Guests wait until their progress is read, so the first request already carries it.
-		enabled: guest !== undefined,
+		// Guests wait until their progress is read, so the first request already carries it. A search waits for its list.
+		enabled: guest !== undefined && ranked !== null,
 	})
 	return { ...result, key }
 }

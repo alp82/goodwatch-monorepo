@@ -3,6 +3,12 @@ import { isIP } from "node:net";
 import { getAuthFromRequest } from "~/utils/auth";
 import { combinedSearch } from "~/server/combined-search/search.server";
 import { parseSearchFilters } from "~/server/combined-search/search-filters";
+import { getFeatureMode } from "~/server/features.server";
+import { RESULT_LENGTH } from "~/server/search-ranking/ranking.server";
+import {
+	searchTaste,
+	withTaste,
+} from "~/server/combined-search/taste-rows.server";
 
 export async function action({ request }: ActionFunctionArgs) {
 	let headers = new Headers({
@@ -70,6 +76,12 @@ export async function action({ request }: ActionFunctionArgs) {
 			},
 		);
 		accountId.catch(() => {});
+		// With the new filter bar, a member's rows carry their taste match and For you movement (see taste-rows).
+		// The taste loads while the search runs. `forYou` is the switch; the rows keep the ranking's order.
+		const taste = searchTaste(accountId);
+		const forYou = body.forYou === true;
+		const fullList =
+			body.discover === true && getFeatureMode("filterBar") !== "off";
 		// Newline-delimited JSON: a "reading" line as soon as the interpretation is known,
 		// then the "batch" line with the results. "no-transform" keeps the compression
 		// middleware from holding the first line back until the response ends.
@@ -89,9 +101,19 @@ export async function action({ request }: ActionFunctionArgs) {
 						{ accountId, networkIdentity },
 						searchAbort.signal,
 						(reading) => send({ kind: "reading", reading }),
-						{ allTitles: body.allTitles === true },
+						{
+							allTitles: body.allTitles === true,
+							// Discover's search mode filters and counts over the whole ranked list.
+							rows: fullList ? RESULT_LENGTH : undefined,
+						},
 					);
-					send({ kind: "batch", batch });
+					const memberTaste = await taste;
+					send({
+						kind: "batch",
+						batch: memberTaste
+							? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
+							: batch,
+					});
 				} catch {
 					send({
 						kind: "error",

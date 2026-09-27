@@ -1,7 +1,7 @@
 // Under the row: removable chips for every active filter, and the hidden-titles insight ("31 showing, 53 hidden by
 // your filters") with the two largest one-tap recoveries.
 import { PlusIcon, XMarkIcon } from "@heroicons/react/20/solid"
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import type { ReactNode } from "react"
 import type { FilterName, FilterState } from "~/domain/filter-state"
 import {
@@ -21,6 +21,8 @@ export function HiddenMeter({
 	counts: FilterBarCounts | null
 	className?: string
 }) {
+	// Layout animation keeps running under MotionConfig reducedMotion; with reduced motion the meter just takes its width.
+	const layout = !useReducedMotion()
 	const universe = counts ? counts.total + counts.hidden : 0
 	const share = (n: number) => `${universe ? (n / universe) * 100 : 0}%`
 	return (
@@ -29,14 +31,14 @@ export function HiddenMeter({
 			className={`flex h-1.5 overflow-hidden rounded-full bg-white/5 ${className}`}
 		>
 			<motion.div
-				layout
+				layout={layout}
 				transition={METER_TRANSITION}
 				className="h-full bg-amber-500"
 				style={{ width: share(counts?.total ?? 0) }}
 			/>
 			{counts?.recoveries.map((r) => (
 				<motion.div
-					layout
+					layout={layout}
 					key={r.filter}
 					transition={METER_TRANSITION}
 					className={`ml-px h-full opacity-70 ${METER_COLORS[r.filter] ?? "bg-gray-500"}`}

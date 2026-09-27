@@ -9,6 +9,7 @@ export function HiddenTitles({
 	onDrop,
 	onClear,
 	canClear,
+	searching = false,
 }: {
 	counts: FilterBarCounts
 	state: FilterState
@@ -16,17 +17,23 @@ export function HiddenTitles({
 	onClear: () => void
 	/** Whether any of the Filters sheet's filters are on. */
 	canClear: boolean
+	/** The results are a search's. */
+	searching?: boolean
 }) {
 	const empty = counts.total === 0
+	// A search that found nothing at all: no filter could bring anything back.
+	const nothingFound = searching && empty && counts.hidden === 0
 	if (!empty && !counts.recoveries.length) return null
 	return (
 		<div
 			className={`flex flex-col justify-center gap-2 rounded-2xl bg-white/[0.03] p-5 ring-1 ring-white/10 ${empty ? "col-span-full mx-auto w-full max-w-lg py-10" : "aspect-[2/3] scale-95"}`}
 		>
 			<p className="text-base font-bold text-white">
-				{empty
-					? "Nothing matches all your filters"
-					: `${counts.hidden.toLocaleString("en")} more hidden by your filters`}
+				{nothingFound
+					? "No results for this search. Try other words."
+					: empty
+						? "Nothing matches all your filters"
+						: `${counts.hidden.toLocaleString("en")} more hidden by your filters`}
 			</p>
 			{counts.recoveries.length > 0 && (
 				<div className="-mx-3">

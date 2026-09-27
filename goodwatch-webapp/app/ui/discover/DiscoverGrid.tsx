@@ -1,8 +1,14 @@
 // Discover's grid of title cards. The grid is never replaced: titles in both the old and the new list glide to their
 // new places, new ones scale in, leaving ones fade out. After For you flips, each moved card shows how far it moved
-// ("↑4", "↓2") for a moment. With reduced motion (MotionConfig reducedMotion="user"), only opacity fades run.
+// ("↑4", "↓2") for a moment. With reduced motion, only short opacity fades run: MotionConfig alone still let the
+// layout glide run, so the grid turns layout animation off itself.
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/20/solid"
-import { AnimatePresence, type Transition, motion } from "framer-motion"
+import {
+	AnimatePresence,
+	type Transition,
+	motion,
+	useReducedMotion,
+} from "framer-motion"
 import type { ReactNode } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
 import { SPRING } from "~/ui/filter-bar/motion"
@@ -32,6 +38,7 @@ export function DiscoverGrid({
 	/** After the last card, for example the hidden-titles cell. */
 	children?: ReactNode
 }) {
+	const reduce = useReducedMotion() ?? false
 	return (
 		<div className={DISCOVER_GRID}>
 			<AnimatePresence initial={false} mode="popLayout">
@@ -40,19 +47,23 @@ export function DiscoverGrid({
 					return (
 						<motion.div
 							key={card.key}
-							layout="position"
-							initial={{ opacity: 0, scale: 0.9 }}
+							layout={reduce ? false : "position"}
+							initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
 							animate={{
 								opacity: 1,
 								scale: 1,
 								transition: { duration: 0.18, ease: EASE_OUT },
 							}}
-							exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.1 } }}
+							exit={
+								reduce
+									? { opacity: 0, transition: { duration: 0.1 } }
+									: { opacity: 0, scale: 0.96, transition: { duration: 0.1 } }
+							}
 							transition={flipping ? FLIP_GLIDE : GLIDE}
 							className="relative"
 						>
 							<TitlePosterCard card={card} prefetch={index < 12} />
-							<MoveMark delta={delta} />
+							<MoveMark delta={delta} reduce={reduce} />
 						</motion.div>
 					)
 				})}
@@ -63,14 +74,14 @@ export function DiscoverGrid({
 }
 
 // Sits over the card's top left corner, inside the card's resting scale (the card is scale-95 until hovered).
-function MoveMark({ delta }: { delta: number }) {
+function MoveMark({ delta, reduce }: { delta: number; reduce: boolean }) {
 	return (
 		<div className="pointer-events-none absolute inset-0 scale-95">
 			<AnimatePresence>
 				{delta !== 0 && (
 					<motion.span
 						data-move-mark={delta}
-						initial={{ opacity: 0, scale: 0.6 }}
+						initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.6 }}
 						animate={{ opacity: 1, scale: 1 }}
 						exit={{ opacity: 0 }}
 						transition={SPRING}

@@ -1,5 +1,6 @@
-// Discover's browse mode: the catalog filtered and sorted in memory by the filter bar's state, For you applied, and
-// one page of title cards. Serves the Discover route's first view and /api/discover/results for every page after.
+// Discover's results: in browse mode the catalog, in search mode the search's ranked list, filtered and sorted in
+// memory by the filter bar's state, For you applied, and one page of title cards. Serves the Discover route's first
+// view and /api/discover/results for every page after.
 import type { FilterState, SortKey } from "~/domain/filter-state"
 import { type FingerprintKey, loadTaste } from "~/server/taste/index.server"
 import { type TitleCard, getTitleCards } from "~/server/title-cards.server"
@@ -48,19 +49,30 @@ export interface DiscoverResults extends Omit<FilterResult, "keys" | "moved"> {
 		/** The viewer's ratings, member or guest. */
 		ratings: number
 	}
-	/** The taste explanation chips while For you applies. */
+	/** The taste explanation chips while For you applies in browse mode; null while searching (Read as replaces it). */
 	explanation: { leanings: FingerprintKey[]; ratings: number } | null
+	/** Whether these are a search's results (the ranked list), not the catalog's. */
+	searching: boolean
 }
 
 /**
- * One page of Discover's browse results for the viewer. `forYou` is the switch: the caller resolves the URL's
- * `foryou` against the member's saved setting. Throws SnapshotNotLoaded until the title snapshot has loaded.
+ * One page of Discover's results for the viewer. `forYou` is the switch: the caller resolves the URL's `foryou`
+ * against the member's saved setting. With `ranked`, the search's ranked list in its plain order (at most
+ * SEARCH_RESULTS titles), the results are the search's: filtered in memory over that list, and For you moves a title
+ * at most 5 places. Throws SnapshotNotLoaded until the title snapshot has loaded.
  */
 export async function getDiscoverResults(
 	ctx: ViewerContext,
-	input: { state: FilterState; sort: SortKey; forYou: boolean; page: number },
+	input: {
+		state: FilterState
+		sort: SortKey
+		forYou: boolean
+		page: number
+		ranked?: TitleKey[]
+	},
 ): Promise<DiscoverResults> {
-	const { state, sort } = input
+	const { state, sort, ranked } = input
+	const searching = ranked !== undefined
 	const page = Math.min(DISCOVER_MAX_PAGE, Math.max(1, Math.floor(input.page)))
 	const taste = await loadTaste(ctx.viewer)
 	const status: ForYouStatus =
@@ -72,10 +84,12 @@ export async function getDiscoverResults(
 	const applied = input.forYou && status === "ready"
 
 	const result = await filterTitles({
-		universe: "catalog",
+		universe: searching ? ranked : "catalog",
 		state,
 		sort,
-		forYou: applied ? { taste, surface: "browse" } : null,
+		forYou: applied
+			? { taste, surface: searching ? "search" : "browse" }
+			: null,
 		viewer: ctx,
 	})
 
@@ -94,9 +108,11 @@ export async function getDiscoverResults(
 		matches: taste.match(keys),
 		moved: (moved ?? []).filter((m) => onPage.has(m.key)),
 		forYou: { on: input.forYou, applied, status, ratings: taste.ratings },
-		explanation: applied
-			? { leanings: taste.leanings(LEANINGS), ratings: taste.ratings }
-			: null,
+		explanation:
+			applied && !searching
+				? { leanings: taste.leanings(LEANINGS), ratings: taste.ratings }
+				: null,
+		searching,
 	}
 }
 

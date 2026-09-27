@@ -6,6 +6,7 @@ import { useLocation } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import { CommandPalette } from "./CommandPalette"
 import { useNavigation } from "./NavigationContext"
+import { currentSearchQuery } from "./destinations"
 
 const SEARCH_LABEL = "Search titles, people, moods"
 
@@ -23,12 +24,10 @@ function useShortcutLabel() {
 	return label
 }
 
-/** The search query on the search page, shown in the omnibox and prefilled in the dialog. */
+/** The search query on screen (Discover's search mode or the search page), shown in the omnibox. */
 function useCurrentQuery() {
 	const { pathname, search } = useLocation()
-	return pathname === "/search"
-		? (new URLSearchParams(search).get("q") ?? "")
-		: ""
+	return currentSearchQuery(pathname, search)
 }
 
 /** The desktop header's omnibox: looks like an input with its shortcut, opens the search dialog. */
@@ -61,7 +60,9 @@ export function Omnibox() {
 /** The dock's Search key. */
 export function DockSearchKey() {
 	const navigation = useNavigation()
-	const on = useLocation().pathname === "/search"
+	const { pathname, search } = useLocation()
+	const on =
+		pathname === "/search" || Boolean(currentSearchQuery(pathname, search))
 	return (
 		<button
 			type="button"

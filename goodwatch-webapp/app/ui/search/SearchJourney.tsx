@@ -37,6 +37,7 @@ import SectionType, { type TitleType } from "~/ui/filter/sections/SectionType";
 import AddFilterMenu from "~/ui/filter/AddFilterMenu";
 import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
+import { useFeature } from "~/hooks/useFeature";
 import { SearchPeople } from "./SearchPeople";
 
 // --- Tunables ----------------------------------------------------------------------------
@@ -129,16 +130,27 @@ function useController() {
 	};
 	const resultsHref = (changes: Record<string, string | null> = {}) =>
 		`${path}?${makeParams(changes)}`;
+	// With the new filter bar, Search is Discover's search mode: the header's box only holds the text until Enter,
+	// which opens Discover with the query.
+	const discoverSearch = useFeature("filterBar");
 	const changeQuery = (value: string) => {
 		editing.current = value;
 		setDraft(value);
 		setFocused(-1);
+		if (discoverSearch) return;
 		navigate(resultsHref({ q: value, page: null, allTitles: null }), {
 			replace: true,
 			preventScrollReset: location.pathname === path,
 		});
 	};
 	const commit = (value: string) => {
+		if (discoverSearch) {
+			const text = value.trim();
+			setOpen(false);
+			input.current?.blur();
+			navigate(text ? `/discover?q=${encodeURIComponent(text)}` : "/discover");
+			return;
+		}
 		changeQuery(value);
 		setRequested(value);
 	};
@@ -517,6 +529,7 @@ function useController() {
 				: "Search for a title, a person, or describe what you want to watch.";
 	return {
 		active,
+		discoverSearch,
 		q,
 		draft,
 		setDraft,
@@ -591,8 +604,9 @@ function ReadingChips() {
 	const row = "flex flex-wrap items-center gap-1 pt-2 min-h-8 text-xs";
 	if (!j.chips.length) {
 		const query = j.draft.trim();
-		const empty =
-			query.length < MIN_QUERY_LENGTH
+		const empty = j.discoverSearch
+			? "Describe a mood, a story, or a title, then press Enter."
+			: query.length < MIN_QUERY_LENGTH
 				? "Describe a mood, a story, or a title. The search shows what it understood here."
 				: j.loading
 					? "Reading your request…"
@@ -645,7 +659,7 @@ export function JourneyHeader() {
 						return;
 					}
 					j.commit(j.draft);
-					j.setOpen(true);
+					if (!j.discoverSearch) j.setOpen(true);
 				}}
 			>
 				{/* Open, the box grows downward and shows the reading chips under the input. */}
@@ -892,6 +906,11 @@ const filterKeys: FilterKey[] = ["type", "streaming", "genre", "release"]
 // Every search filter renders the matching Discover section, so both pages
 // share one look. Only the URL parameters differ.
 export function JourneyFilters() {
+	// With the new filter bar, Discover's search mode has the filters; these chips don't render.
+	if (useFeature("filterBar")) return null
+	return <JourneyFilterChips />
+}
+function JourneyFilterChips() {
 	const j = useSearchJourney()!
 	const [added, setAdded] = useState<FilterKey[]>([])
 	const [editing, setEditing] = useState<FilterKey | null>(null)
