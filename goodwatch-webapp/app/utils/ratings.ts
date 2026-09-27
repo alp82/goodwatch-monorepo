@@ -1,5 +1,3 @@
-import type { DiscoverResult } from "~/server/discover.server"
-import type { MovieDetails, TVDetails } from "~/server/types/details-types"
 import type { Score } from "~/server/scores.server"
 
 export interface AllRatings {
@@ -67,9 +65,8 @@ export const getRatingKeys = () => {
 	return keys
 }
 
-export const extractRatings = (
-	details: MovieDetails | TVDetails | DiscoverResult,
-) => {
+// Any object with some of the rating fields: details, discover results, title cards (whose missing scores are null).
+export const extractRatings = (details: Partial<Record<keyof AllRatings, unknown>>) => {
 	const keys = getRatingKeys()
 	return keys.reduce((acc, key) => {
 		return {

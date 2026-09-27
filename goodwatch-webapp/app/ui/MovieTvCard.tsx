@@ -1,12 +1,15 @@
 import { Link } from "@remix-run/react"
 import type React from "react"
+import { useFeature } from "~/hooks/useFeature"
 import { useUserScore, useIsOnWishlist } from "~/hooks/useUserDataAccessors"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { OnboardingResult } from "~/server/onboarding-media.server"
+import type { TitleCard } from "~/server/title-cards.server"
 import { Poster } from "~/ui/Poster"
 import RatingOverlay from "~/ui/ratings/RatingOverlay"
 import StreamingOverlay from "~/ui/streaming/StreamingOverlay"
+import { type CardTaste, TasteMatchPill } from "~/ui/title-card/TasteMatchPill"
 import UserDataOverlay from "~/ui/user/UserDataOverlay"
 import { titleToDashed } from "~/utils/helpers"
 import { extractRatings } from "~/utils/ratings"
@@ -17,19 +20,24 @@ interface MovieTvCardProps {
 		| TVDetails
 		| DiscoverResult
 		| OnboardingResult
+		| TitleCard
 	mediaType: "movie" | "show"
 	prefetch?: boolean
+	/** The viewer's taste match for the title; the pill shows while taste match is on for the viewer. */
+	taste?: CardTaste
 }
 
 export function MovieTvCard({
 	details,
 	mediaType,
 	prefetch = false,
+	taste,
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
 	const userScoreData = useUserScore(mediaType, details.tmdb_id)
 	const userScore = userScoreData?.score ?? null
 	const onWishList = useIsOnWishlist(mediaType, details.tmdb_id)
+	const tasteMatch = useFeature("tasteMatch")
 
 	return (
 		<Link
@@ -47,7 +55,11 @@ export function MovieTvCard({
 		>
 			<div className="relative">
 				<UserDataOverlay score={userScore} onWishList={onWishList} />
-				<RatingOverlay ratings={ratings} />
+				<RatingOverlay ratings={ratings}>
+					{tasteMatch && typeof taste?.match === "number" && (
+						<TasteMatchPill {...taste} />
+					)}
+				</RatingOverlay>
 				{details.streaming_links && (
 					<StreamingOverlay links={details.streaming_links} />
 				)}
