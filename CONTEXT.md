@@ -22,6 +22,18 @@ The experience of developing preferences, discovering suggestions, exploring tit
 **Discovery context**:
 The search, filters, sorting, results position, and current Taste card that describe where a person is in their exploration.
 
+**Living room**:
+The start page, presented as a cozy room seen from the sofa: a TV on the wall and a remote in the person's hand.
+
+**TV**:
+The screen inside the living room where GoodWatch runs. It shows one TV screen at a time.
+
+**TV screen**:
+One view on the TV, such as the boot screen, home, a feature explanation, moods, search, or a title. It replaces the earlier notion of channels.
+
+**Remote**:
+The living room's main control. Everything on the remote is also reachable on the TV itself.
+
 **Shared guest progress**:
 A guest's title interactions available across Taste, title details, and Wishlist. A guest title interaction is a rating, Want to See, or Skip; a later interaction replaces the previous one for that title.
 
