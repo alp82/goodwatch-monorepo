@@ -131,6 +131,27 @@ export function updateGuestInteraction(
 	write(next)
 	return true
 }
+/** A title's guest interactions as they are now, for putting them back later with restoreGuestInteractions. */
+export function guestInteractionsOf(mediaType: MediaType, tmdbId: number) {
+	tmdbId = canonicalTitleId(mediaType, tmdbId)
+	return readGuestInteractions().filter(
+		(i) => i.media_type === mediaType && i.tmdb_id === tmdbId,
+	)
+}
+/** Undo: replaces a title's guest interactions with ones read earlier, timestamps included. */
+export function restoreGuestInteractions(
+	mediaType: MediaType,
+	tmdbId: number,
+	previous: TasteInteraction[],
+) {
+	tmdbId = canonicalTitleId(mediaType, tmdbId)
+	write([
+		...readGuestInteractions().filter(
+			(i) => !(i.media_type === mediaType && i.tmdb_id === tmdbId),
+		),
+		...previous,
+	])
+}
 export function guestUserData(interactions: TasteInteraction[]): UserData {
 	const data: UserData = {
 		scores: {},

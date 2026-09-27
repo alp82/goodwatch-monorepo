@@ -13,9 +13,11 @@ import {
 import { isOnServices } from "~/server/availability-index.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import {
+	type CardService,
 	MAX_KEYS,
 	type TitleCard,
 	getDisplayFields,
+	getServiceCards,
 	getTitleCards,
 } from "~/server/title-cards.server"
 import {
@@ -63,6 +65,8 @@ export interface WatchNext {
 	moods: MoodKey[]
 	onMyServices: boolean
 	hasServices: boolean
+	/** The viewer's own services, one per name, for the On my services control. */
+	myServices: CardService[]
 	/** The country's availability is still loading: On my services doesn't narrow yet, and mood counts ignore it. */
 	servicesPending: boolean
 	bestMatch: { available: boolean; prompt: BestMatchPrompt | null }
@@ -563,9 +567,10 @@ export async function getWatchNext(
 		...shown.flat(),
 		...suggestions,
 	].slice(0, MAX_KEYS)
-	const [cards, backdrops] = await Promise.all([
+	const [cards, backdrops, myServices] = await Promise.all([
 		getTitleCards(cardKeys, ctx, taste),
 		getDisplayFields(Object.values(pictures)),
+		getServiceCards(ctx.services),
 	])
 	const cardOf = new Map(cards.map((card) => [card.key, card]))
 	const titles = (keys: TitleKey[]) =>
@@ -586,6 +591,7 @@ export async function getWatchNext(
 		moods: plan.moods,
 		onMyServices: plan.onMyServices,
 		hasServices: plan.hasServices,
+		myServices,
 		servicesPending: plan.servicesPending,
 		bestMatch: plan.bestMatch,
 		total: plan.total,
