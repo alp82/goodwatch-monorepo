@@ -1,4 +1,5 @@
 import { query } from "~/utils/crate"
+import { makePointId } from "~/utils/qdrant"
 
 // Unified QdrantMediaPayload interface that combines fields from all recommendation systems
 export interface QdrantMediaPayload {
@@ -78,12 +79,18 @@ export function getStringValue(value: string | string[] | undefined, fallback = 
 	return value
 }
 
-// Helper function to build exclude filter for qdrant
-export function buildExcludeFilter(excludeIds: number[]): any[] {
-	return excludeIds.map(id => ({
-		key: "tmdb_id",
-		match: { value: id },
-	}))
+/**
+ * Qdrant must_not conditions that exclude these titles. A TMDB id alone is not a title: a movie and a show can share
+ * one (movie 155 is The Dark Knight, show 155 is 3rd Rock from the Sun), so exclusion goes by the composite point id.
+ */
+export function buildExcludeFilter(
+	items: { media_type: string; tmdb_id: number }[],
+): any[] {
+	if (items.length === 0) return []
+	const pointIds = items.map((item) =>
+		makePointId(item.media_type as "movie" | "show", item.tmdb_id),
+	)
+	return [{ has_id: [...new Set(pointIds)] }]
 }
 
 // Helper function to fetch user's exclude items from CrateDB (only those with vectors in Qdrant)

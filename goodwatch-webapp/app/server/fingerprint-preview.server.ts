@@ -116,21 +116,14 @@ export async function getFingerprintRecommendations({
 		makePointId(item.media_type, item.tmdb_id)
 	)
 
-	// Combine all items to exclude: all scored items + additional excludeIds
-	const allExcludeIds = [
-		...scoredItems.map(i => i.tmdb_id),
-		...excludeIds.map(i => i.tmdb_id),
-	]
-	const uniqueExcludeIds = [...new Set(allExcludeIds)]
-	
-	// Build filter conditions using shared utility
+	// Build filter conditions using shared utility; exclude all scored items + additional excludeIds
 	const { must, must_not } = buildBaseFilterConditions({
 		mediaType: "all",
 		minVotingCount: 50000,
 		minScore: 65,
 		fingerprintKey,
 		additionalMustNot: [
-			...buildExcludeFilter(uniqueExcludeIds),
+			...buildExcludeFilter([...scoredItems, ...excludeIds]),
 		],
 	})
 	

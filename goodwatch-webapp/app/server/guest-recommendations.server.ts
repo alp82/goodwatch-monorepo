@@ -1,6 +1,7 @@
 import { cached } from "~/utils/cache"
 import { MEDIA_COLLECTION, makePointId, recommend } from "~/utils/qdrant"
 import { type AllRatings } from "~/utils/ratings"
+import { buildExcludeFilter } from "~/server/utils/recommend"
 
 interface QdrantMediaPayload {
 	tmdb_id: number
@@ -161,12 +162,11 @@ async function getGuestRecommendations({
 		makePointId(item.media_type as "movie" | "show", item.tmdb_id)
 	)
 
-	// Get IDs to exclude (already rated + explicitly excluded skips/plan-to-watch)
-	const scoredIds = scored_items.map(item => item.tmdb_id)
-	const additionalExcludeIds = exclude_ids
-		.filter(item => item.media_type === target_media_type)
-		.map(item => item.tmdb_id)
-	const excludeIds = [...new Set([...scoredIds, ...additionalExcludeIds])]
+	// Exclude already rated + explicitly excluded skips/plan-to-watch
+	const excludeItems = [
+		...scored_items,
+		...exclude_ids.filter(item => item.media_type === target_media_type),
+	]
 
 	// Extract preferred genres from highly rated items
 	const preferredGenres = new Set<string>()
@@ -187,10 +187,7 @@ async function getGuestRecommendations({
 		must_not: [
 			{ is_empty: { key: "poster_path" } },
 			{ is_empty: { key: "backdrop_path" } },
-			...excludeIds.map(id => ({
-				key: "tmdb_id",
-				match: { value: id },
-			})),
+			...buildExcludeFilter(excludeItems),
 		],
 	}
 
