@@ -186,11 +186,14 @@ class SelectionTests(unittest.TestCase):
                         "CrateConnector": object, "Movie": object, "Show": object,
                         "get_db": lambda: db, "datetime": datetime, "timedelta": timedelta,
                         "HOURS_TO_FETCH": 48, "SCHEDULED_LEASE_WAIT_SECONDS": 0, "BATCH_SIZE": 100, "defaultdict": defaultdict,
-                        "tmdb_details_projection": {}, "Any": Any,
+                        "tmdb_details_projection": {}, "Any": Any, "Optional": Optional,
+                        "WINDOW_INDEX": [("updated_at", 1), ("tmdb_id", 1)], "TMDB_ID_INDEX": [("tmdb_id", 1)],
                         "publication_lease": lambda *args: nullcontext(lambda: None),
                     }
                     functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef)
-                                              and node.name in ("changed_tmdb_ids", "fetch_map_by_ids", "scheduled_candidates")]
+                                              and node.name in ("changed_tmdb_ids", "fetch_map_by_ids", "scheduled_candidates",
+                                                                "details_collection", "delete_flagged_titles",
+                                                                "window_tmdb_ids", "details_batches")]
                     if name == "tmdb_streaming":
                         from test_streaming_publication import load_copy
                         streaming = load_copy(db).__globals__

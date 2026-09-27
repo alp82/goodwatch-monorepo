@@ -38,11 +38,27 @@ from f.sync.models.crate_schemas import SCHEMAS
 BATCH_SIZE = 15000
 SUB_BATCH_SIZE = 50000
 HOURS_TO_FETCH = 24*2
+# The copy window is read as ids through the {updated_at, tmdb_id} index, which covers
+# the query, so no document is read. The documents are then fetched by id in batches
+# through the {tmdb_id} index. Offset paging sorted by tmdb_id read every earlier
+# document again for each batch and timed out once the window held about 300,000
+# movies (#185).
+WINDOW_INDEX = [("updated_at", 1), ("tmdb_id", 1)]
+TMDB_ID_INDEX = [("tmdb_id", 1)]
 # Shows per stale season delete; their current season ids travel in the same statement.
 STALE_SEASON_SHOWS_PER_DELETE = 500
 
 
 CREATOR_JOB = "Creator"
+
+
+class CopyFailed(RuntimeError):
+    """One or more steps of the copy failed. The other steps ran; `results` has what they did."""
+
+    def __init__(self, failures: dict[str, str], results: dict):
+        super().__init__("; ".join(f"{step}: {error}" for step, error in failures.items()))
+        self.failures = failures
+        self.results = results
 
 # TMDB details own a title's IMDb id (TMDB's, else the Wikidata `imdb_id_override`),
 # so this copy clears them when neither exists. Other writers leave them to COALESCE.
@@ -182,34 +198,76 @@ def delete_stale_seasons(connector: CrateConnector, season_ids_by_show: dict[int
     return deleted
 
 
+def details_collection(mongo_db, media_type: str):
+    return mongo_db.tmdb_movie_details if media_type == "movie" else mongo_db.tmdb_tv_details
+
+
+def delete_flagged_titles(connector: CrateConnector, media_type: str, query_selector: dict = {}) -> dict:
+    """Remove the titles flagged tmdb_deleted from CrateDB instead of upserting them.
+
+    Every flagged title is checked, not only the recent window, so a missed run or a
+    racing publisher heals. Oldest flag first within the per-run budget, and nothing
+    while the flags spike.
+    """
+    mongo_db = get_db()
+    return delete_flagged_titles_from_crate(
+        connector, media_type, details_collection(mongo_db, media_type), mongo_db.tmdb_daily_dump_data,
+        query_selector,
+    )
+
+
+def window_tmdb_ids(collection, query_selector: dict, since: Optional[datetime]) -> list:
+    """The tmdb_ids of the documents that match the selector and changed since `since`.
+
+    Without a selector, the {updated_at, tmdb_id} index answers the query on its own.
+    A selector (ids of a targeted run) is left to the planner, because the date-first
+    index would scan its whole date range for a handful of titles.
+    """
+    query = dict(query_selector)
+    if since is not None:
+        query["updated_at"] = {"$gte": since}
+    cursor = collection.find(query, {"tmdb_id": 1, "_id": 0})
+    if since is not None and not query_selector:
+        cursor = cursor.hint(WINDOW_INDEX)
+    return sorted({doc["tmdb_id"] for doc in cursor if doc.get("tmdb_id") is not None})
+
+
+def details_batches(collection, tmdb_ids: list, projection: dict):
+    """The live details documents of these titles, BATCH_SIZE titles per batch.
+
+    Each batch is one bounded query on the {tmdb_id} index. A title flagged after the
+    ids were read is left out, and it doesn't move any other title out of its batch.
+    """
+    for start in range(0, len(tmdb_ids), BATCH_SIZE):
+        batch = tmdb_ids[start:start + BATCH_SIZE]
+        yield start, list(
+            collection.find({"tmdb_id": {"$in": batch}} | NOT_DELETED_FILTER, projection)
+                .hint(TMDB_ID_INDEX)
+                .sort("tmdb_id", 1)
+        )
+
+
 def copy_media(
     connector: CrateConnector, 
     query_selector: dict = {},
     media_type: str = "movie",
     *, recent_only: bool = True,
+    delete_flagged: bool = True,
 ):
     is_movie = media_type == "movie"
 
     mongo_db = get_db()
-    mongo_collection = mongo_db.tmdb_movie_details if is_movie else mongo_db.tmdb_tv_details
+    mongo_collection = details_collection(mongo_db, media_type)
     media_table_name = 'movie' if is_movie else 'show'
     MediaClass = Movie if is_movie else Show
 
-    updated_at_filter = {"updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}}
-    if not recent_only:
-        updated_at_filter = {}
-    # Titles deleted on TMDB are removed from CrateDB instead of upserted. Every flagged
-    # title is checked, not only the recent window, so a missed run or a racing publisher heals.
-    # Oldest flag first within the per-run budget, and nothing while the flags spike.
-    deleted_titles = delete_flagged_titles_from_crate(
-        connector, media_type, mongo_collection, mongo_db.tmdb_daily_dump_data, query_selector,
-    )
+    since = datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH) if recent_only else None
+    # main() deletes before it copies, so a failed copy doesn't stop the deletion.
+    deleted_titles = delete_flagged_titles(connector, media_type, query_selector) if delete_flagged else None
 
-    copy_filter = query_selector | updated_at_filter | NOT_DELETED_FILTER
-    total_entry_count = mongo_collection.count_documents(copy_filter)
-    print(f"Total {media_type} entries: {total_entry_count}")
+    tmdb_ids = window_tmdb_ids(mongo_collection, query_selector, since)
+    print(f"Total {media_type} entries: {len(tmdb_ids)}", flush=True)
 
-    start = 0
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     entity_ids = defaultdict(set)
     stale_seasons_deleted = 0
@@ -221,28 +279,17 @@ def copy_media(
         "vote_count": 0,
     }
     
-    while True:
+    for start, tmdb_details_batch in details_batches(mongo_collection, tmdb_ids, projection):
         media_documents = []
         entity_batches = defaultdict(list)
         season_ids_by_show = {}
         # Per copied title, the child tables whose rows its payload lists in full.
         listed_scopes_by_title = {}
 
-        tmdb_details_batch = list(
-            #mongo_collection.find({"tmdb_id": 217} | updated_at_filter, projection)
-            #mongo_collection.find({"tmdb_id": {"$lt": 1000}} | updated_at_filter, projection)
-            mongo_collection.find(copy_filter, projection)
-                .sort("tmdb_id", 1)
-                .skip(start)
-                .limit(BATCH_SIZE)
-        )
-        if not tmdb_details_batch:
-            break
-
         # Insert batch of media
-        print(f"\nBatch from {start} to {start + len(tmdb_details_batch)} {media_type}s")
+        print(f"\nBatch from {start} to {start + len(tmdb_details_batch)} of {len(tmdb_ids)} {media_type}s", flush=True)
 
-        media_ids = []
+        media_ids = set()
         for index, tmdb_details in enumerate(tmdb_details_batch):
             tmdb_id = tmdb_details["tmdb_id"]
             media_id = str(tmdb_id)
@@ -255,7 +302,7 @@ def copy_media(
             if media_id in media_ids:
                 continue
             
-            media_ids.append(media_id)
+            media_ids.add(media_id)
             listed_scopes_by_title[int(tmdb_id)] = listed_scopes(tmdb_details, is_movie)
 
             release_date = tmdb_details.get("release_date" if is_movie else "first_air_date")
@@ -660,9 +707,8 @@ def copy_media(
         add_stats(stale_child_rows, delete_stale_child_rows(
             connector, media_type, listed_scopes_by_title, entity_batches))
 
-        start += BATCH_SIZE
-
-    entity_counts["deleted_titles"] = deleted_titles
+    if deleted_titles is not None:
+        entity_counts["deleted_titles"] = deleted_titles
     entity_counts["stale_child_rows"] = stale_child_rows
     if not is_movie:
         entity_counts["stale_seasons"] = {"rows_deleted": stale_seasons_deleted}
@@ -673,40 +719,49 @@ def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies = Fals
     init_mongodb()
     connector = CrateConnector()
 
-    results = {}
+    selectors = {}
+    if not skip_movies:
+        selectors["movie"] = build_query_selector_for_object_ids(ids=movie_ids) if movie_ids else {}
+    selectors["show"] = build_query_selector_for_object_ids(ids=show_ids) if show_ids else {}
 
-    if skip_movies:
-        results["movies"] = None
-    else:
-        # Process movies
-        if movie_ids is None or len(movie_ids) == 0:
-            print("Processing all movies...")
-            movie_query_selector = {}
-        else:
-            movie_query_selector = build_query_selector_for_object_ids(ids=movie_ids)
-        
-        results["movies"] = copy_media(
-            connector=connector, 
-            query_selector=movie_query_selector,
-            media_type="movie"
-        )
-    
-    # Process shows
-    if show_ids is None or len(show_ids) == 0:
-        print("\nProcessing all shows...")
-        show_query_selector = {}
-    else:
-        show_query_selector = build_query_selector_for_object_ids(ids=show_ids)
-    
-    results["shows"] = copy_media(
-        connector=connector, 
-        query_selector=show_query_selector,
-        media_type="show"
-    )
+    results = {"movies": None, "shows": None}
+    deleted = {}
+    failures = {}
+    try:
+        # Deletion runs first and on its own for each media type, so a failing or slow
+        # copy never keeps flagged titles in CrateDB (#185).
+        for media_type, selector in selectors.items():
+            print(f"\nDeleting flagged {media_type}s...", flush=True)
+            try:
+                deleted[media_type] = delete_flagged_titles(connector, media_type, selector)
+            except Exception as error:
+                print(f"!!! {media_type} deletion failed: {error!r}", flush=True)
+                failures[f"{media_type} deletion"] = repr(error)
 
-    connector.disconnect()
-    close_mongodb()
-    
+        for media_type, selector in selectors.items():
+            print(f"\nProcessing {media_type}s...", flush=True)
+            key = "movies" if media_type == "movie" else "shows"
+            try:
+                results[key] = copy_media(
+                    connector=connector,
+                    query_selector=selector,
+                    media_type=media_type,
+                    delete_flagged=False,
+                )
+            except Exception as error:
+                print(f"!!! {media_type} copy failed: {error!r}", flush=True)
+                failures[f"{media_type} copy"] = repr(error)
+                results[key] = {}
+            if media_type in deleted:
+                results[key]["deleted_titles"] = deleted[media_type]
+    finally:
+        connector.disconnect()
+        close_mongodb()
+
+    if failures:
+        # The job still fails, so monitoring reports it, but only after every step ran.
+        print(f"Results of the steps that ran: {results}", flush=True)
+        raise CopyFailed(failures, results)
     return results
 
 

@@ -3,10 +3,21 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import mongomock
+
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
 from f.sync.copy import tmdb_details
 from f.sync.models.crate_schemas import SCHEMAS
+
+
+def details_db(media_type, documents):
+    """A Mongo database whose details collection holds these documents."""
+    db = mongomock.MongoClient().db
+    collection = db.tmdb_movie_details if media_type == "movie" else db.tmdb_tv_details
+    if documents:
+        collection.insert_many([dict(document) for document in documents])
+    return db
 
 
 class MetadataPublicationTests(unittest.TestCase):
@@ -32,12 +43,7 @@ class MetadataPublicationTests(unittest.TestCase):
         }
         for media_type in ("movie", "show"):
             with self.subTest(media_type=media_type):
-                db = MagicMock()
-                collection = db.tmdb_movie_details if media_type == "movie" else db.tmdb_tv_details
-                collection.count_documents.return_value = 1
-                collection.find.return_value.sort.return_value.skip.return_value.limit.side_effect = [[document], []]
-                db.tmdb_movie_providers.find.return_value = []
-                db.tmdb_tv_providers.find.return_value = []
+                db = details_db(media_type, [document])
                 connector = MagicMock()
                 connector.select.return_value = []
                 images = []
@@ -69,10 +75,7 @@ class MetadataPublicationTests(unittest.TestCase):
                 {"id": 103, "season_number": 3, "name": "Season 3"},
             ],
         }
-        db = MagicMock()
-        db.tmdb_tv_details.count_documents.return_value = 1
-        db.tmdb_tv_details.find.return_value.sort.return_value.skip.return_value.limit.side_effect = [[document], []]
-        db.tmdb_tv_providers.find.return_value = []
+        db = details_db("show", [document])
         connector = MagicMock()
         connector.select.return_value = []
         connector.cur.rowcount = 0
