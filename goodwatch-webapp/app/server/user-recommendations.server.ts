@@ -1,3 +1,5 @@
+import { getFeatureMode } from "~/server/features.server"
+import { logRecommendedOverlap } from "~/server/taste/index.server"
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 import { MEDIA_COLLECTION, makePointId, recommend } from "~/utils/qdrant"
@@ -10,6 +12,7 @@ import {
 	buildBaseFilterConditions,
 	buildPayloadFields,
 } from "~/server/utils/recommend"
+import { titleKey } from "~/utils/title-key"
 
 
 export interface UserRecommendation extends Partial<AllRatings> {
@@ -42,6 +45,8 @@ export interface GetUserRecommendationsParams {
 // These thresholds are kept for the SQL query but the logic uses relative comparison
 const MAX_POSITIVE_EXAMPLES = 50
 const MAX_NEGATIVE_EXAMPLES = 50
+const MIN_VOTING_COUNT = 50000
+const MIN_SCORE = 60
 export const getUserRecommendations = async (params: GetUserRecommendationsParams) => {
 	return await cached({
 		name: `${MEDIA_COLLECTION}:user-recommendations`,
@@ -129,8 +134,8 @@ async function _getUserRecommendations({
 	// Build filter conditions
 	const { must, must_not } = buildBaseFilterConditions({
 		mediaType,
-		minVotingCount: 50000,
-		minScore: 60,
+		minVotingCount: MIN_VOTING_COUNT,
+		minScore: MIN_SCORE,
 		additionalMustNot: buildExcludeFilter(allExcluded),
 	})
 
@@ -161,6 +166,19 @@ async function _getUserRecommendations({
 	}
 
 	const results = await recommend<QdrantMediaPayload>(recommendParams)
+
+	// Compares the stored taste vector with this list and logs it, off the request path; the page doesn't change.
+	if (getFeatureMode("tasteMatch") === "shadow")
+		void logRecommendedOverlap({
+			userId,
+			mediaType,
+			minVotes: MIN_VOTING_COUNT,
+			minScore: MIN_SCORE,
+			excluded: allExcluded,
+			recommended: results.map((result) =>
+				titleKey(result.payload.media_type, result.payload.tmdb_id),
+			),
+		})
 
 	// Map results to UserRecommendation format
 	const mappedResults = results
