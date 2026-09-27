@@ -73,7 +73,8 @@ async function _getSearchResults({
 	query,
 }: SearchParams): Promise<SearchResults> {
 	const response = await fetch(
-		`https://api.themoviedb.org/3/search/multi?api_key=${process.env.TMDB_API_KEY}&language=${language}&query=${query}`,
+		`https://api.themoviedb.org/3/search/multi?api_key=${process.env.TMDB_API_KEY}&language=${language}&query=${encodeURIComponent(query)}`,
+		{ signal: AbortSignal.timeout(3000) },
 	).then((res) => res.json())
 
 	return (response.results || [])
