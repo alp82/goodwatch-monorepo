@@ -1094,15 +1094,7 @@ export function LivingRoom3({ data, room, pose = "hand", look = "current", round
 				</div>
 			)}
 
-			<svg ref={beamSvg} className="pointer-events-none absolute inset-0 h-full w-full transition-opacity duration-150" style={{ opacity: 0 }} aria-hidden>
-				<defs>
-					<linearGradient ref={beamGrad} id="lr3-beam" gradientUnits="userSpaceOnUse">
-						<stop offset="0" stopColor="#fb923c" stopOpacity="0.6" />
-						<stop offset="1" stopColor="#fb923c" stopOpacity="0.05" />
-					</linearGradient>
-				</defs>
-				<line ref={beamLine} stroke="url(#lr3-beam)" strokeWidth="3" strokeLinecap="round" />
-			</svg>
+			{/* Owner, #189: no laser-pointer beam on hover or tap, anywhere. The remote still turns to aim. */}
 		</div>
 	)
 }

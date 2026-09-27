@@ -2,7 +2,7 @@
 // Remote ("Grid, tiles") on a phone. Four answers to "who holds the remote when the phone is in your hand":
 //   couch     existing components: a portrait room (the locked room, extended down over your lap under the
 //             blanket), the TV on top, the Remote in the graded hand below it. Tap the TV or press keys; the
-//             remote turns toward what you touched and a short beam flashes.
+//             remote turns a little toward what you touched (no beam, owner round 2).
 //   remote    bolder: the phone IS the remote. The room shows the TV; the rest of the screen is the remote's
 //             body, edge to edge: a touchpad (swipe to move, tap to choose), Back / Home / Search, the four
 //             features in one row, the streaming keys. No hand: yours is already holding it.
@@ -85,39 +85,6 @@ function usePhoneTv(tvSlot: TvSlot) {
 	return { z, t, services: services ?? [] }
 }
 
-// A short flash from the remote's tip to what it aims at. Opacity only, gone in half a second.
-type Shot = { id: number; x1: number; y1: number; x2: number; y2: number }
-
-function Beam({ shot }: { shot: Shot | null }) {
-	return (
-		<svg className="pointer-events-none absolute inset-0 z-[5] h-full w-full" aria-hidden>
-			<defs>
-				<linearGradient id="lrp-beam" gradientUnits="userSpaceOnUse" x1={shot?.x1} y1={shot?.y1} x2={shot?.x2} y2={shot?.y2}>
-					<stop offset="0" stopColor="#fb923c" stopOpacity="0.75" />
-					<stop offset="1" stopColor="#fb923c" stopOpacity="0.08" />
-				</linearGradient>
-			</defs>
-			<AnimatePresence>
-				{shot && (
-					<motion.line
-						key={shot.id}
-						x1={shot.x1}
-						y1={shot.y1}
-						x2={shot.x2}
-						y2={shot.y2}
-						stroke="url(#lrp-beam)"
-						strokeWidth="3"
-						strokeLinecap="round"
-						initial={{ opacity: 0.9 }}
-						animate={{ opacity: 0 }}
-						transition={{ duration: 0.5, ease: "easeOut" }}
-					/>
-				)}
-			</AnimatePresence>
-		</svg>
-	)
-}
-
 // The room photo with the TV on the wall, placed by `p`. `onTap` hears every touch on the TV (for aiming).
 function Room({ room, p, z, t, tvSlot, onTap, dim = 0, children }: { room: PhoneRoom; p: Placed; z: Zapper; t: Tv4; tvSlot: TvSlot; onTap?: (x: number, y: number) => void; dim?: number; children?: ReactNode }) {
 	const glow = "#fbbf24"
@@ -179,17 +146,15 @@ function HandRemote({ s, z, t, services, handSrc, yaw, tip = 10 }: { s: number; 
 }
 
 // Aiming on a touch screen: nothing follows a finger that hovers, so the remote turns toward what was touched
-// (or toward the TV's middle after a key press) and fires a beam, then settles.
+// (or toward the TV's middle after a key press), then settles. Owner: no beam, in any variant.
 // Owner, round 1: the turn was far too strong. It now turns a quarter of the way, at most 6 degrees.
 function useAim(t: Tv4, tip: () => { x: number; y: number } | null, tvCenter: () => { x: number; y: number } | null, maxYaw = 6) {
 	const yaw = useSpring(0, { stiffness: 220, damping: 28 })
-	const [shot, setShot] = useState<Shot | null>(null)
 	const last = useRef(0)
 	const fire = (x: number, y: number) => {
 		const a = tip()
 		if (!a) return
 		yaw.set(Math.max(-maxYaw, Math.min(maxYaw, ((Math.atan2(x - a.x, a.y - y) * 180) / Math.PI) * 0.25)))
-		setShot({ id: Date.now(), x1: a.x, y1: a.y, x2: x, y2: y })
 		last.current = Date.now()
 		setTimeout(() => yaw.set(0), 320)
 	}
@@ -204,7 +169,7 @@ function useAim(t: Tv4, tip: () => { x: number; y: number } | null, tvCenter: ()
 		const c = tvCenter()
 		if (c) fire(c.x, c.y)
 	}, [t.pulse])
-	return { yaw, shot, fire }
+	return { yaw, fire }
 }
 
 const CSS = `${LR_CSS} ${LR2_CSS} ${LR3_CSS} ${LR4_CSS} ${LR5_CSS} ${LR6_CSS}
@@ -272,7 +237,6 @@ function Couch({ tall, handSrc, tvSlot, rotateHint }: { tall: PhoneRoom; handSrc
 					<div className="absolute" style={{ left, top }}>
 						<HandRemote s={s} z={z} t={t} services={services} handSrc={handSrc} yaw={aim.yaw} />
 					</div>
-					<Beam shot={aim.shot} />
 					<FirstHint t={t} className="left-1/2 -translate-x-1/2 whitespace-nowrap !py-1.5 !text-[12px]" style={{ top: p.tv.y + p.tv.h + 8 }} text={<>Tap the TV or use the remote. <span className="text-amber-300">Both work.</span></>} />
 					{rotateHint && <RotateHint />}
 				</>
@@ -369,7 +333,6 @@ function Landscape({ room, handSrc, tvSlot }: { room: PhoneRoom; handSrc: string
 					>
 						<HandRemote s={s} z={z} t={t} services={services} handSrc={handSrc} yaw={aim.yaw} tip={12} />
 					</motion.div>
-					<Beam shot={aim.shot} />
 					<button
 						type="button"
 						onClick={() => settle(!lifted)}
@@ -587,8 +550,7 @@ function TouchTv({ tall, handSrc, tvSlot, data }: { tall: PhoneRoom; handSrc: st
 						>
 							<HandRemote s={s} z={z} t={t} services={services} handSrc={handSrc} yaw={aim.yaw} />
 						</motion.div>
-						<Beam shot={aim.shot} />
-						<FirstHint t={t} className="left-1/2 -translate-x-1/2 whitespace-nowrap" text={<>Touch the TV. <span className="text-amber-300">It's a touchscreen.</span></>} />
+							<FirstHint t={t} className="left-1/2 -translate-x-1/2 whitespace-nowrap" text={<>Touch the TV. <span className="text-amber-300">It's a touchscreen.</span></>} />
 					</div>
 					<div className="lrp-dock absolute inset-x-0 bottom-0 flex items-center justify-between px-5" style={{ height: DOCK }}>
 						<button type="button" className="flex items-center gap-2.5 text-left">
