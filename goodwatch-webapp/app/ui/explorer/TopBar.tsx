@@ -1,3 +1,4 @@
+import { ListBulletIcon } from "@heroicons/react/24/solid"
 import type { ReactNode } from "react"
 import {
 	type ExplorerService,
@@ -17,8 +18,11 @@ interface TopBarProps {
 	services: ExplorerService[]
 	onToggleServices: () => void
 	onToggleUnseen: () => void
-	/** Where the person has been (the last two steps and a dropdown), on the second row. */
+	/** Where the person has been (the last two steps and a dropdown): second row, first row on phones. */
 	history?: ReactNode
+	/** The list view: the same islands and titles as headings and links. */
+	listView: boolean
+	onToggleList: () => void
 }
 
 /**
@@ -35,6 +39,8 @@ export function TopBar({
 	onToggleServices,
 	onToggleUnseen,
 	history,
+	listView,
+	onToggleList,
 }: TopBarProps) {
 	const mine = services.filter((s) => s.mine && s.logo)
 	return (
@@ -103,6 +109,7 @@ export function TopBar({
 						/>
 					</svg>
 				</label>
+				{history && <div className="ex-hist-top">{history}</div>}
 				<div className="ex-filters">
 					<button
 						type="button"
@@ -137,9 +144,25 @@ export function TopBar({
 						<span className="ex-tick" aria-hidden="true" />
 						Not seen yet
 					</button>
+					<button
+						type="button"
+						aria-pressed={listView}
+						onClick={onToggleList}
+						className="ex-tog ex-list-tog"
+						aria-label="List"
+					>
+						<ListBulletIcon className="ex-i" aria-hidden="true" />
+						<span className="ex-wide-list" aria-hidden="true">
+							List
+						</span>
+					</button>
 				</div>
 			</div>
-			{history && <div className="ex-row ex-row2">{history}</div>}
+			{history && (
+				<div className="ex-row ex-row2">
+					<div className="ex-hist-side">{history}</div>
+				</div>
+			)}
 		</header>
 	)
 }

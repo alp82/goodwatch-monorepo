@@ -5,16 +5,20 @@
 //
 // Frame budget: at most 240 posters are drawn, titles below about 16 px become dots or are skipped, images load at the
 // size they're shown, and the loop stops when nothing moves (the sea stops its fog after 10 idle seconds).
-import type { ExplorerTitle, ExplorerTree } from "~/domain/explorer"
-import { mixRgb, luminous } from "./color"
+//
+// Combining islands: lit islands and a bridge set the focus layout (focus.ts), and every island springs to its place,
+// size, and look there; a bridge is an island of its own that rises between the two it joins and sinks when let go.
+import type { BridgeKind, ExplorerTitle, ExplorerTree } from "~/domain/explorer"
+import { luminous, mixRgb } from "./color"
+import { layOutFocus } from "./focus"
 import { beginImageFrame, onImageReady } from "./images"
 import {
 	BRANCHING,
 	type IslandInput,
-	type IslandLook,
 	type MapIsland,
 	NEUTRAL_LOOK,
 	TREE_EXTENT,
+	makeBridge,
 	makeIsland,
 	showTopTitles,
 	showTree,
@@ -25,15 +29,19 @@ import {
 	FONT,
 	type Lens,
 	clamp,
+	paintBand,
 	paintNames,
 	paintPool,
 	paintPoster,
+	paintRing,
+	paintSeed,
 	paintThread,
+	risen,
 	smooth,
 } from "./paint"
 import { loadBackdropImages, paintBackdropTile } from "./sea/backdrop"
 import { createSeaRenderer } from "./sea/renderer"
-import type { IslandShape, SeaRenderer } from "./sea/types"
+import type { BackdropTile, IslandShape, SeaRenderer } from "./sea/types"
 import { type World, shoreDistance, shoreRadius } from "./world"
 
 export type { Drawn } from "./paint"
@@ -63,6 +71,7 @@ export interface EngineHooks {
 	card: () => DOMRect | null
 	onTapPoster: (d: Drawn) => void
 	onTapIsland: (island: MapIsland) => void
+	onDoubleTapIsland: (island: MapIsland) => void
 	onTapWater: () => void
 	onLongPress: (d: Drawn) => void
 	/** An island is close enough that its tree should load. */
@@ -90,6 +99,8 @@ interface Flight {
 
 const ease = (t: number) =>
 	t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
+/** Rises past 1 a little and settles: how a bridge grows. */
+const backOut = (t: number) => 1 + 2.2 * (t - 1) ** 3 + 1.2 * (t - 1) ** 2
 const isActive = (d: Drawn, a: { key: number; island?: string }) =>
 	d.title.key === a.key && (!a.island || a.island === d.island.id)
 
@@ -132,10 +143,17 @@ export function createMapEngine(
 	let notes: ReadonlyMap<string, string> = new Map()
 	let layoutBox: { x0: number; y0: number; x1: number; y1: number } | null =
 		null
+	/** Lit islands: picked, or being combined while their bridge loads. */
+	let lit: string[] = []
+	/** A bridge that isn't there yet (hovering an island while another is lit): 0 to 1 as it fades in and out. */
+	let preview: { from: string; to: string; a: number; want: number } | null =
+		null
+	let previewAt: { x: number; y: number } | null = null
+	const t0 = performance.now()
 	const listeners = new Set<() => void>()
 	/** Frame intervals and the poster layer's work per frame, for measuring the budget in development. */
 	const stats = { intervals: [] as number[], work: [] as number[] }
-	const tiles = new Map<string, Promise<void>>()
+	const tiles = new Map<string, Promise<BackdropTile | null>>()
 	let worldKey = ""
 
 	document.fonts?.load(`800 24px ${FONT}`).then(() => {
@@ -193,8 +211,14 @@ export function createMapEngine(
 
 	// ------------------------------------------------------------ islands as drawn
 
-	/** How big an island is drawn: its focus scale. */
-	const V = (island: MapIsland) => island.look.scale
+	/** How big an island is drawn: its focus scale, and a bridge's growth as it rises. */
+	const V = (island: MapIsland) =>
+		island.look.scale * (island.bridge ? backOut(island.bridge.grow) : 1)
+	/** The islands on the map: all but a bridge that is sinking. */
+	const live = () => islands.filter((i) => !i.bridge || i.bridge.to === 1)
+	const bridgeOf = () => islands.find((i) => i.bridge?.to === 1) ?? null
+	/** An island's radius as drawn, in world units. */
+	const rOf = (island: MapIsland) => island.shape.r * V(island)
 	const cX = (island: MapIsland) => island.shape.cx + island.look.dx
 	const cY = (island: MapIsland) => island.shape.cy + island.look.dy
 	/** A poster's center and width in world units, as drawn. */
@@ -216,35 +240,118 @@ export function createMapEngine(
 		)
 	}
 
-	/** Paints each island's surface from its first titles' backdrops, three at a time, and tints it to match. */
+	/** Paints an island's surface from its first titles' backdrops (once per grouping and filters) and tints it to match. */
+	function paintSurface(island: MapIsland): Promise<void> {
+		const id = `${worldKey}|${island.id}`
+		let job = tiles.get(id)
+		if (!job) {
+			const paths = island.top
+				.map((t) => t.backdrop)
+				.filter((b): b is string => !!b)
+			job = loadBackdropImages(paths)
+				.then((images) => paintBackdropTile(images, island.base))
+				.catch(() => null)
+			tiles.set(id, job)
+		}
+		return job.then((tile) => {
+			if (!tile || !islands.includes(island)) return
+			island.backdrop = tile
+			island.tint = luminous(mixRgb(tile.average, island.base, 0.45))
+			wake()
+		})
+	}
+	/** Paints every island's surface, three at a time. */
 	function paintSurfaces() {
 		const key = worldKey
 		const todo = [...islands]
 		const next = (): Promise<void> => {
 			const island = todo.shift()
 			if (!island || key !== worldKey) return Promise.resolve()
-			const id = `${key}|${island.id}`
-			let job = tiles.get(id)
-			if (!job) {
-				const paths = island.top
-					.map((t) => t.backdrop)
-					.filter((b): b is string => !!b)
-				job = loadBackdropImages(paths)
-					.then((images) => {
-						const tile = paintBackdropTile(images, island.base)
-						if (!tile || !islands.includes(island)) return
-						island.backdrop = tile
-						island.tint = luminous(mixRgb(tile.average, island.base, 0.45))
-						wake()
-					})
-					.catch(() => {})
-				tiles.set(id, job)
-			}
-			return job.then(next)
+			return paintSurface(island).then(next)
 		}
 		void next()
 		void next()
 		void next()
+	}
+
+	// ------------------------------------------------------------ the focus layout
+
+	let layoutKey = ""
+	/**
+	 * Where every island goes, how big, and how it looks, for what's in focus now (the bridge, the islands it joins, lit
+	 * islands). A sinking bridge keeps its look while it goes.
+	 */
+	function relayout(force = false) {
+		if (!world) return
+		const br = bridgeOf()
+		const shown = live()
+		const key = `${br?.id ?? ""}|${lit.join(",")}|${shown.length}`
+		if (key === layoutKey && !force) return
+		layoutKey = key
+		const S = Math.min(world.w, world.h)
+		const ph = phone()
+		// The bridge's name goes above it: how tall it'll be (world units), from the size it'll be drawn at.
+		const fontPx = clamp(
+			S * 0.33 * fitS * (ph ? 0.2 : 0.22),
+			ph ? 12 : 15,
+			ph ? 22 : 40,
+		)
+		const bridgeHead = br
+			? (fontPx * ((br.name.length > 18 ? 2 : 1) * 1.02 + 0.8) + 14) / fitS
+			: 0
+		const out = layOutFocus({
+			w: world.w,
+			h: world.h,
+			islands: shown.map((i) => ({
+				id: i.id,
+				cx: i.shape.cx,
+				cy: i.shape.cy,
+				r: i.shape.r,
+				joins: i.bridge?.of,
+			})),
+			lit,
+			bridgeHead,
+		})
+		for (const island of shown) {
+			island.target = out.looks.get(island.id) ?? { ...NEUTRAL_LOOK }
+			island.role = out.roles.get(island.id) ?? "none"
+		}
+		layoutBox = out.box
+		wake()
+	}
+	/** Two islands whose shores meet on the way to their places push apart (the bigger, more focused one moves less). */
+	function nudge() {
+		const list = live()
+		const S = world ? Math.min(world.w, world.h) : 1000
+		const gap = S * 0.01
+		const weight = (i: MapIsland) =>
+			i.role === "bridge"
+				? 1e6
+				: i.role === "joined" || i.role === "lit"
+					? 4
+					: 1
+		for (let a = 0; a < list.length; a++)
+			for (let b = a + 1; b < list.length; b++) {
+				const A = list[a]
+				const B = list[b]
+				// Never further apart than where they're headed (neighbors on the normal map may sit closer than this).
+				const at = Math.hypot(
+					B.shape.cx + B.target.dx - A.shape.cx - A.target.dx,
+					B.shape.cy + B.target.dy - A.shape.cy - A.target.dy,
+				)
+				const want = Math.min((rOf(A) + rOf(B)) * 1.06 + gap, at * 0.99)
+				const vx = cX(B) - cX(A)
+				const vy = cY(B) - cY(A)
+				const d = Math.hypot(vx, vy)
+				if (d >= want || d < 1e-3) continue
+				const o = (want - d) * 0.5
+				const wa = weight(B) / (weight(A) + weight(B))
+				const wb = weight(A) / (weight(A) + weight(B))
+				A.look.dx -= (vx / d) * o * wa
+				A.look.dy -= (vy / d) * o * wa
+				B.look.dx += (vx / d) * o * wb
+				B.look.dy += (vy / d) * o * wb
+			}
 	}
 
 	// ------------------------------------------------------------ scales and stops
@@ -333,7 +440,7 @@ export function createMapEngine(
 		const p = toWorld(sx, sy)
 		let best: MapIsland | null = null
 		let bd = Number.POSITIVE_INFINITY
-		for (const island of islands) {
+		for (const island of live()) {
 			// Small islands (out of focus) get a little more reach, so they're still easy to hit.
 			const d = distN(island, p.x, p.y) * Math.min(1, V(island) * 1.4)
 			if (d < reach && d < bd) {
@@ -711,7 +818,7 @@ export function createMapEngine(
 				lastTap = { t: 0, x: 0, y: 0 }
 				// A double tap goes into an island, or one step closer.
 				if (island && !d && islandLevel(island))
-					hooks.current.onTapIsland(island)
+					hooks.current.onDoubleTapIsland(island)
 				else stepZoom(1, p.x, p.y)
 				return
 			}
@@ -762,6 +869,8 @@ export function createMapEngine(
 		canvas.height = Math.round(H * dpr)
 		const was = fitS
 		computeScales()
+		// The room kept for a bridge's name depends on the scale.
+		if (lit.length || bridgeOf()) relayout(true)
 		// At the overview, stay at the overview.
 		if (world && Math.abs(cur.s - was) < was * 0.01) {
 			const h = homeCam()
@@ -829,7 +938,34 @@ export function createMapEngine(
 				}
 				moving = true
 			}
+			if (island.bridge) {
+				const b = island.bridge
+				const next = reduce
+					? b.to
+					: clamp(b.grow + (b.to ? 1 : -1) * dt * (b.to ? 1.15 : 3), 0, 1)
+				if (next !== b.grow) moving = true
+				b.grow = next
+			}
 		}
+		// While they move, shores keep apart (the targets never overlap; this holds for the way there too).
+		if (moving && !reduce) nudge()
+		if (preview) {
+			const p = preview
+			const was = p.a
+			const next = reduce
+				? p.want
+				: p.a + (p.want - p.a) * (1 - Math.exp(-dt * 9))
+			p.a = Math.abs(p.want - next) < 0.004 ? p.want : next
+			if (p.a <= 0 && p.want === 0) preview = null
+			// It shimmers while it's shown (it holds still with reduced motion).
+			if (!reduce || p.a !== was) moving = true
+		}
+		// A bridge that has sunk is gone.
+		const before = islands.length
+		islands = islands.filter(
+			(i) => !(i.bridge && i.bridge.to === 0 && i.bridge.grow <= 0),
+		)
+		if (islands.length !== before) moving = true
 		return moving
 	}
 	/** 1 out at the map, 0 once in among the titles: focus styling is for the map (inside, every island shows). */
@@ -861,6 +997,13 @@ export function createMapEngine(
 					0.2 * vivid -
 					0.8 * m,
 				saturation: 1 + 0.16 * vivid - 0.88 * m,
+				// Out at the map, the night closes in around a bridge, so it's what the person sees first.
+				spotlight: island.bridge
+					? 0.5 *
+						smooth(0, 1, island.bridge.grow) *
+						(island.bridge.to ? 1 : island.bridge.grow) *
+						ml
+					: 0,
 			}
 		})
 	}
@@ -962,6 +1105,9 @@ export function createMapEngine(
 			const b1 = w1s / Math.max(nat1, 1e-6)
 			const kids = floor1 > 0 ? smooth(0.72, 1, nat1 / floor1) : 1
 			if (w1s < show * 0.9) continue
+			// A bridge's posters come up once it has nearly risen, and go first as it sinks.
+			const rise = risen(island, 0.7)
+			if (rise <= 0.01) continue
 			for (let i = 0; i < island.titles.length && out.length < MAX_DRAWN; i++) {
 				const first = island.generation[i] === 1
 				if (!first && kids < 0.01) break
@@ -999,7 +1145,12 @@ export function createMapEngine(
 					h,
 					cx,
 					cy,
-					a: smooth(show * 0.9, show * 2, rw) * fade * pm * (first ? 1 : kids),
+					a:
+						smooth(show * 0.9, show * 2, rw) *
+						fade *
+						pm *
+						rise *
+						(first ? 1 : kids),
 					t,
 				})
 			}
@@ -1013,6 +1164,8 @@ export function createMapEngine(
 		g.clearRect(0, 0, W, H)
 		drawn = layOutPosters()
 		const act = hooks.current.active()
+		paintPreview()
+		paintCauseways()
 		paintPool(g, lens, smooth(fitS * 1.3, fitS * 2.4, cur.s), W, H)
 		// Far ones first, the ones at the focus on top; the hovered and active posters last.
 		const lift = (d: Drawn) =>
@@ -1040,6 +1193,7 @@ export function createMapEngine(
 				})
 			}
 		}
+		paintRings()
 		if (fontsReady)
 			paintNames(g, islands, {
 				W,
@@ -1055,6 +1209,106 @@ export function createMapEngine(
 			})
 		// Keep reading the next dots' colors.
 		if (budget.left <= 0) dirty = true
+	}
+
+	// ------------------------------------------------------------ combining, drawn
+
+	/** The point on an island's shore (as drawn now) toward (x, y), in world units. */
+	function shore(island: MapIsland, x: number, y: number, k = 0.985) {
+		const a = Math.atan2(y - cY(island), x - cX(island))
+		const r = shoreRadius(island.shape, a) * V(island) * k
+		return { x: cX(island) + Math.cos(a) * r, y: cY(island) + Math.sin(a) * r }
+	}
+	const onScreen = (p: { x: number; y: number }) => toScreen(p.x, p.y)
+	/** Where a bridge of these islands would rise: between them, as they sit now. */
+	const seedOf = (a: MapIsland, b: MapIsland) => ({
+		x: (cX(a) + cX(b)) / 2,
+		y: (cY(a) + cY(b)) / 2,
+	})
+
+	/** The preview of a bridge: two bands of light from the islands meeting in a seed of light where it would rise. */
+	function paintPreview() {
+		previewAt = null
+		if (!preview || preview.a < 0.01) return
+		const A = islands.find((x) => x.id === preview?.from && !x.bridge)
+		const B = islands.find((x) => x.id === preview?.to && !x.bridge)
+		if (!A || !B) return
+		const al = preview.a
+		const wide = clamp(Math.min(rOf(A), rOf(B)) * cur.s * 0.12, 3, 18)
+		const sp = seedOf(A, B)
+		const c = toScreen(sp.x, sp.y)
+		const mid = mixRgb(A.tint, B.tint, 0.5)
+		const now = performance.now() - t0
+		const drift = reduce ? 0 : -(now / 40)
+		paintBand(
+			g,
+			onScreen(shore(A, sp.x, sp.y)),
+			c,
+			A.tint,
+			mid,
+			wide,
+			al * 0.8,
+			drift,
+		)
+		paintBand(
+			g,
+			onScreen(shore(B, sp.x, sp.y)),
+			c,
+			B.tint,
+			mid,
+			wide,
+			al * 0.8,
+			drift,
+		)
+		const pulse = reduce ? 1 : 0.85 + 0.15 * Math.sin(now / 260)
+		const R = clamp(Math.min(rOf(A), rOf(B)) * cur.s * 0.42, 18, 60) * pulse
+		paintSeed(g, c, mid, R, al)
+		previewAt = c
+	}
+	/** A bridge's causeways: a band of light from each island it joins to its shore, reaching out as it rises. */
+	function paintCauseways() {
+		for (const island of islands) {
+			const b = island.bridge
+			if (!b || b.grow <= 0.01) continue
+			for (const id of b.of) {
+				const o = islands.find((x) => x.id === id)
+				if (!o) continue
+				const A = onScreen(shore(o, cX(island), cY(island)))
+				const B = onScreen(shore(island, cX(o), cY(o)))
+				const k = smooth(0, 0.8, b.grow)
+				const wide = clamp(Math.min(rOf(o), rOf(island)) * cur.s * 0.16, 3, 26)
+				paintBand(
+					g,
+					A,
+					{ x: A.x + (B.x - A.x) * k, y: A.y + (B.y - A.y) * k },
+					o.tint,
+					island.tint,
+					wide,
+					b.to ? 1 : b.grow,
+					0,
+				)
+			}
+		}
+	}
+	/** Lit islands wear a bright shoreline; the ones a bridge joins a fainter one. */
+	function paintRings() {
+		const joined = new Set(bridgeOf()?.bridge?.of ?? [])
+		for (const island of islands) {
+			if (island.bridge || island.look.lit < 0.02 || !island.on) continue
+			const k = island.look.lit * (joined.has(island.id) ? 0.4 : 1)
+			if (k < 0.02) continue
+			const pts: { x: number; y: number }[] = []
+			const N = 72
+			for (let n = 0; n <= N; n++) {
+				const a = (n / N) * Math.PI * 2
+				const rr = shoreRadius(island.shape, a) * cur.s * V(island) + 5
+				pts.push({
+					x: island.sx + Math.cos(a) * rr,
+					y: island.sy + Math.sin(a) * rr,
+				})
+			}
+			paintRing(g, pts, island.tint, k)
+		}
 	}
 
 	// ------------------------------------------------------------ queries
@@ -1074,6 +1328,41 @@ export function createMapEngine(
 				best = d
 			}
 		}
+		return best
+	}
+	/** The title next to one in a direction (arrow keys): near it, about as big, and roughly that way. */
+	function neighbor(
+		d: { island: MapIsland; i: number },
+		dx: number,
+		dy: number,
+	) {
+		const x0 = PX(d.island, d.i)
+		const y0 = PY(d.island, d.i)
+		const w0 = PW(d.island, d.i)
+		let best: { island: MapIsland; i: number; title: ExplorerTitle } | null =
+			null
+		let bv = Number.POSITIVE_INFINITY
+		for (const island of live())
+			for (let i = 0; i < island.titles.length; i++) {
+				if (island === d.island && i === d.i) continue
+				const w = PW(island, i)
+				if (
+					w < w0 * 0.35 ||
+					w > w0 * 2.9 ||
+					!hooks.current.visible(island.titles[i])
+				)
+					continue
+				const vx = PX(island, i) - x0
+				const vy = PY(island, i) - y0
+				const dist = Math.hypot(vx, vy)
+				const cos = (vx * dx + vy * dy) / Math.max(dist, 1e-6)
+				if (cos < 0.45) continue
+				const v = dist * (2 - cos) * (1 + Math.abs(Math.log(w / w0)) * 0.4)
+				if (v < bv) {
+					bv = v
+					best = { island, i, title: island.titles[i] }
+				}
+			}
 		return best
 	}
 	function posterCam(
@@ -1107,6 +1396,9 @@ export function createMapEngine(
 			world = next
 			worldKey = key
 			layoutBox = null
+			layoutKey = ""
+			lit = []
+			preview = null
 			notes = new Map()
 			const byId = new Map(inputs.map((input) => [input.id, input]))
 			islands = next.islands.flatMap((shape) => {
@@ -1138,8 +1430,9 @@ export function createMapEngine(
 		},
 		invalidate: wake,
 		repad: resize,
-		islands: () => islands,
-		island: (id: string) => islands.find((x) => x.id === id) ?? null,
+		/** The islands on the map, a rising bridge among them (a sinking one is left out). */
+		islands: live,
+		island: (id: string) => live().find((x) => x.id === id) ?? null,
 		drawn: () => drawn,
 		/** A drawn title, on the given island if it's on more than one. */
 		find: (key: number, island?: string) =>
@@ -1149,6 +1442,7 @@ export function createMapEngine(
 			drawn.find((d) => d.title.key === key) ??
 			null,
 		nearest,
+		neighbor,
 		/** A poster this wide is close enough to open its card. */
 		activationWidth: ACT,
 		pointer: () => pointer,
@@ -1208,20 +1502,69 @@ export function createMapEngine(
 			wake()
 		},
 		flyTo,
+		/** Lights islands (picked, or being combined while their bridge loads); the focus layout follows. */
+		setLit(ids: readonly string[]) {
+			const next = ids.filter((id) => islands.some((i) => i.id === id))
+			if (next.join(",") === lit.join(",")) return
+			lit = next
+			relayout()
+		},
 		/**
-		 * Where islands go and how they look when something is in focus (combining islands); islands left out spring
-		 * back to their place. `box` bounds the layout in world units when it spills over the map, so the overview
-		 * frames all of it.
+		 * Raises a bridge between two islands with its titles: it rises between them and grows into the main thing on
+		 * screen, the two stay medium beside it, and the rest shrink and grey. A bridge already up sinks.
 		 */
-		setLooks(
-			looks: ReadonlyMap<string, Partial<IslandLook>>,
-			box: typeof layoutBox = null,
-		) {
-			for (const island of islands)
-				island.target = { ...NEUTRAL_LOOK, ...looks.get(island.id) }
-			layoutBox = box
+		raiseBridge(
+			a: string,
+			b: string,
+			tree: ExplorerTree & { kind: BridgeKind },
+		): MapIsland | null {
+			const A = live().find((x) => x.id === a && !x.bridge)
+			const B = live().find((x) => x.id === b && !x.bridge)
+			if (!world || !A || !B) return null
+			// At most one bridge sinks while the next rises (the sea's atlas holds 16 surfaces).
+			islands = islands.filter((i) => !(i.bridge && i.bridge.to === 0))
+			for (const i of islands) if (i.bridge) i.bridge.to = 0
+			const island = makeBridge([A, B], tree, seedOf(A, B))
+			islands.push(island)
+			void paintSurface(island)
+			computeScales()
+			relayout()
+			// Out at the map, framing the new layout: the bridge is the main thing on screen.
+			flyTo(homeCam(), reduce ? 1 : 950)
+			return island
+		},
+		/** Lets the bridge go: it sinks and every island springs back. False when there's none. */
+		lowerBridge() {
+			const br = bridgeOf()
+			if (!br?.bridge) return false
+			br.bridge.to = 0
+			relayout()
+			return true
+		},
+		bridge: bridgeOf,
+		/** Previews the bridge two islands would make (null hides it). */
+		setPreview(pair: { from: string; to: string } | null) {
+			if (!pair) {
+				if (preview) preview.want = 0
+			} else if (preview?.from === pair.from && preview.to === pair.to)
+				preview.want = 1
+			else preview = { ...pair, a: reduce ? 1 : 0.5, want: 1 }
 			wake()
 		},
+		/** Where the preview's seed of light is on screen, for its label. */
+		previewAnchor: () => (preview && preview.want > 0 ? previewAt : null),
+		/** The focus layout's bounds in world units (null on the normal map). */
+		layoutBox: () => layoutBox,
+		/** Each island's center and radius as drawn now, in world units (for the minimap). */
+		circles: () =>
+			live().map((island) => ({
+				island,
+				x: cX(island),
+				y: cY(island),
+				r: rOf(island),
+			})),
+		/** The scale that frames an island's titles. */
+		islandLevel: (island: MapIsland) => islandLevel(island),
 		/** A line under an island's name in place of its size and taste (for example what it shares with another). */
 		setNotes(next: ReadonlyMap<string, string>) {
 			notes = next

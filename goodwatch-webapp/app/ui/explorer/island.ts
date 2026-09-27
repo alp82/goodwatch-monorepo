@@ -1,13 +1,14 @@
 // An island as the map engine holds it: the grouping's island from the server, its place in the world, its tree of
 // titles laid out for zooming in, its painted surface, and how it's drawn this frame.
 import {
+	type BridgeKind,
 	DEFAULT_BRANCHING,
 	type ExplorerTitle,
 	type ExplorerTree,
 	firstPosters,
 } from "~/domain/explorer"
+import { type Rgb, hexRgb, luminous, mixRgb, rgbHex } from "./color"
 import type { BackdropTile } from "./sea/types"
-import { type Rgb, hexRgb, luminous } from "./color"
 import { type Placed, placeTree, treeExtent, treeRoots } from "./tree"
 import type { WorldIsland } from "./world"
 
@@ -30,9 +31,9 @@ export interface IslandInput {
 }
 
 /**
- * How the focus of the map styles an island (the seam combining islands builds on): an offset from its place and a
- * scale, both in world units, and how muted (grey, dim, names only), vivid (first posters readable from far out), and
- * lit (picked) it is, each 0 to 1. The engine springs every island toward its target.
+ * How the focus of the map styles an island: an offset from its place and a scale, both in world units, and how muted
+ * (grey, dim, names only), vivid (first posters readable from far out), and lit (picked) it is, each 0 to 1. The focus
+ * layout sets the targets; the engine springs every island toward them.
  */
 export interface IslandLook {
 	dx: number
@@ -50,6 +51,17 @@ export const NEUTRAL_LOOK: IslandLook = {
 	mute: 0,
 	vivid: 0,
 	lit: 0,
+}
+
+/** An island's part in the focus layout: the bridge, joined by it, lit, out of focus, or none (no focus). */
+export type FocusRole = "bridge" | "joined" | "lit" | "other" | "none"
+
+/** A bridge: the islands it joins, what it holds, and how far it has risen (0 to 1; it sinks back to 0 when let go). */
+export interface BridgeState {
+	of: [string, string]
+	kind: BridgeKind
+	grow: number
+	to: 0 | 1
 }
 
 export interface MapIsland {
@@ -90,6 +102,9 @@ export interface MapIsland {
 	vx: number
 	vy: number
 	vs: number
+	role: FocusRole
+	/** Set on the island a bridge adds between two others. */
+	bridge: BridgeState | null
 }
 
 /** How far an island's first posters may grow into the room their smaller posters take once you zoom in. */
@@ -158,8 +173,51 @@ export function makeIsland(input: IslandInput, shape: WorldIsland): MapIsland {
 		vx: 0,
 		vy: 0,
 		vs: 0,
+		role: "none",
+		bridge: null,
 	}
 	island.boost = boostOf(island)
+	return island
+}
+
+/**
+ * The island a bridge raises between two islands, seeded where they meet: its titles are the bridge's tree, its color
+ * and shoreline a mix of theirs. It starts small and grows; the focus layout makes it the main thing on screen.
+ */
+export function makeBridge(
+	joined: [MapIsland, MapIsland],
+	tree: ExplorerTree & { kind: BridgeKind },
+	at: { x: number; y: number },
+): MapIsland {
+	const [a, b] = joined
+	const shape: WorldIsland = {
+		id: `${a.id}+${b.id}`,
+		cx: at.x,
+		cy: at.y,
+		r: Math.max(52, Math.min(a.shape.r, b.shape.r) * 0.62),
+		seed: 1.3 + a.shape.seed + b.shape.seed * 0.7,
+	}
+	const matches = tree.titles
+		.map((t) => t.match)
+		.filter((m): m is number => m != null)
+		.sort((x, y) => x - y)
+	const island = makeIsland(
+		{
+			id: shape.id,
+			name: `${a.name} + ${b.name}`,
+			color: rgbHex(mixRgb(a.base, b.base, 0.5)),
+			count: tree.count,
+			medianMatch: matches.length
+				? matches[Math.floor(matches.length / 2)]
+				: null,
+			logo: null,
+			titles: tree.titles.slice(0, 12),
+		},
+		shape,
+	)
+	island.tint = luminous(mixRgb(a.tint, b.tint, 0.5))
+	island.bridge = { of: [a.id, b.id], kind: tree.kind, grow: 0, to: 1 }
+	showTree(island, tree)
 	return island
 }
 
