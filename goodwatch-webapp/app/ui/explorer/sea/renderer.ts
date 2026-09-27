@@ -32,6 +32,36 @@ function forcedKind(): SeaKind | null {
 	return (value && FORCED[value]) || null
 }
 
+/**
+ * Whether WebGL runs in software (SwiftShader, llvmpipe, or another software rasterizer). The shader sea draws there
+ * at only 7 to 13 frames a second at 1440 by 900, while Canvas 2D holds 60, so such browsers get Canvas 2D first.
+ * Checked once on a throwaway canvas, whose context is released right away.
+ */
+let software: boolean | undefined
+export function webglRunsInSoftware(): boolean {
+	if (software !== undefined) return software
+	software = false
+	try {
+		const probe = document.createElement("canvas")
+		const gl = (probe.getContext("webgl2") ??
+			probe.getContext("webgl")) as WebGLRenderingContext | null
+		if (!gl) return software
+		const info = gl.getExtension("WEBGL_debug_renderer_info")
+		// Firefox reports the unmasked renderer through RENDERER and deprecates the extension.
+		const renderer = String(
+			gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER) ?? "",
+		)
+		software =
+			/swiftshader|llvmpipe|softpipe|software|basic render driver/i.test(
+				renderer,
+			)
+		gl.getExtension("WEBGL_lose_context")?.loseContext()
+	} catch {
+		software = false
+	}
+	return software
+}
+
 const sameCamera = (a: Camera | null, b: Camera) =>
 	!!a &&
 	a.x === b.x &&
@@ -56,8 +86,8 @@ const sameIsland = (a: IslandShape, b: IslandShape) =>
 	(a.spotlight ?? 0) === (b.spotlight ?? 0)
 
 /**
- * The best sea the browser can draw: WebGL2, then WebGL1, then Canvas 2D. Creating a context, compiling, or linking
- * failing falls through to the next adapter. The renderer owns the backdrop atlas, recovers from lost WebGL contexts
+ * The best sea the browser can draw: WebGL2, then WebGL1, then Canvas 2D (Canvas 2D alone when WebGL runs in
+ * software). Creating a context, compiling, or linking failing falls through to the next adapter. The renderer owns the backdrop atlas, recovers from lost WebGL contexts
  * (two losses within a minute switch to Canvas 2D), and stops asking for frames when nothing moves.
  *
  * A canvas that ever gave out one kind of context can't give out another, so each later adapter draws on a sibling
@@ -143,7 +173,11 @@ export function createSeaRenderer(
 
 	const forced = forcedKind()
 	let adapter = createAdapter(
-		forced ? [...new Set<SeaKind>([forced, "canvas2d"])] : ORDER,
+		forced
+			? [...new Set<SeaKind>([forced, "canvas2d"])]
+			: webglRunsInSoftware()
+				? ["canvas2d"]
+				: ORDER,
 	)
 
 	function uploadAllTiles() {
