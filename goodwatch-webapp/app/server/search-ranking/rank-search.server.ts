@@ -34,6 +34,7 @@ import {
 import {
 	COVERAGE_BM25,
 	COVERAGE_MAX_TOKENS,
+	HEAD_LENGTH,
 	MAIN_DEPTH,
 	NON_ENGLISH_MIX,
 	NON_ENGLISH_UNION_DEPTH,
@@ -1028,20 +1029,30 @@ export async function rankSearch(
 	}
 
 	// Blend with the title lookup, fold alternate cuts, bound the own titles
-	let results = foldCuts(
-		index,
-		blend(
+	const blended = (list: number[]) =>
+		foldCuts(
 			index,
-			query,
-			request.titleLookup,
-			ranked,
-			concrete,
-			baseFilter.rows,
-			outsideFacts,
-		),
-	)
-	if (ref) results = boundOwn(results, ref)
-	results = results.slice(0, RESULT_LENGTH)
+			blend(
+				index,
+				query,
+				request.titleLookup,
+				list,
+				concrete,
+				baseFilter.rows,
+				outsideFacts,
+			),
+		)
+	// The top HEAD_LENGTH is blended and bounded from the top HEAD_LENGTH candidates alone, as when the list was that
+	// long, and the longer list only continues after it: candidates further down neither outscore a weak title-lookup
+	// match in the top nor get pulled up into it as own titles.
+	let head = blended(ranked.slice(0, HEAD_LENGTH))
+	if (ref) head = boundOwn(head, ref)
+	head = head.slice(0, HEAD_LENGTH)
+	const inHead = new Set(head.map((r) => r.id))
+	const results = [
+		...head,
+		...blended(ranked).filter((r) => !inHead.has(r.id)),
+	].slice(0, RESULT_LENGTH)
 	lap("blend")
 	// The trace is for checks, not part of the ranking: keep it out of the total
 	timings.total = performance.now() - started - (timings.trace ?? 0)

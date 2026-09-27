@@ -44,6 +44,7 @@ import {
 	type PreparedSearch,
 	prepareSearch,
 } from "../search-ranking/rank-search.server";
+import { HEAD_LENGTH } from "../search-ranking/ranking.server";
 import {
 	type CreditScope,
 	type LookupPerson,
@@ -328,6 +329,8 @@ async function rankedList(
 		prepared?: Promise<PreparedSearch>;
 	},
 	signal: AbortSignal,
+	// How many ranked titles to serve: HEAD_LENGTH for the search page, up to RESULT_LENGTH for Discover.
+	length: number,
 ): Promise<ServedList> {
 	const started = performance.now();
 	const { title, meta, allowedTitles } = await early.titles;
@@ -353,14 +356,18 @@ async function rankedList(
 	);
 	const rankDone = performance.now();
 	if (signal.aborted) throw new Error("Search interrupted");
-	const listed = ranked.results.map((r) => ({
+	const listed = ranked.results.slice(0, length).map((r) => ({
 		key: `${r.mediaType}:${r.id % TMDB_ID_RANGE}`,
 		tmdbId: r.id % TMDB_ID_RANGE,
 		mediaType: r.mediaType,
 		blended: r,
 	}));
 	const [described, rankedMeta] = await Promise.all([
-		describeTitles(fields, listed, { timeoutMs: DISPLAY_TIMEOUT_MS }),
+		// Display fields and reasons for the head only: Discover shows its own cards, and reading 100 titles' payloads
+		// doubled the display stage. Titles past the head come with the ranker's title and year.
+		describeTitles(fields, listed.slice(0, HEAD_LENGTH), {
+			timeoutMs: DISPLAY_TIMEOUT_MS,
+		}),
 		metadataFor(listed.map((r) => r.key).filter((key) => !meta.has(key))),
 	]);
 	for (const m of rankedMeta) meta.set(`${m.media_type}:${m.tmdb_id}`, m);
@@ -369,13 +376,13 @@ async function rankedList(
 	);
 	const identities = new Set<string>();
 	const rows: Row[] = [];
-	for (const { key, blended } of listed) {
+	for (const [at, { key, blended }] of listed.entries()) {
 		const found = lookup.get(key);
 		const m = meta.get(key);
 		const shown = display.get(key);
 		// Same checks as today's list: eligibility from the catalog, and one row per IMDb title.
 		if (!eligible(m, policy, !found)) continue;
-		if (!found && !shown) continue;
+		if (!found && !shown && at < HEAD_LENGTH) continue;
 		const identity = m?.imdb_id?.trim() ? `imdb:${m.imdb_id.trim()}` : key;
 		if (identities.has(identity)) continue;
 		identities.add(identity);
@@ -434,8 +441,9 @@ export async function combinedSearch(
 	// Called once the interpretation is known and before retrieval, so the caller can
 	// show it while the results are still on their way.
 	onReading?: (reading: ReadingChip[]) => void,
-	// allTitles: search all titles even when the query names people inside a longer phrase.
-	options: { allTitles?: boolean } = {},
+	// allTitles: search all titles even when the query names people inside a longer phrase. rows: how many ranked
+	// titles to serve (Discover's search mode asks for up to RESULT_LENGTH); the search page's HEAD_LENGTH by default.
+	options: { allTitles?: boolean; rows?: number } = {},
 ): Promise<SearchBatch> {
 	const started = Date.now(),
 		errors: string[] = [];
@@ -566,6 +574,7 @@ export async function combinedSearch(
 				policy,
 				early,
 				signal,
+				options.rows ?? HEAD_LENGTH,
 			);
 			Object.assign(stageMs, served.stageMs);
 		} catch (error) {
