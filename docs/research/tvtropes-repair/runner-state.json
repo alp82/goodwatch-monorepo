@@ -416,6 +416,14 @@
    "at": "2026-09-27T08:10:58.662894+00:00",
    "until": "2026-12-26T08:10:58.662894+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Cube1997": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:431",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:25:01.207748+00:00",
+   "until": "2026-12-26T08:25:01.207748+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/DarkWater": {
    "outcome": "rejected",
    "reason": "identity",

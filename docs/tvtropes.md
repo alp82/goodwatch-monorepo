@@ -153,8 +153,13 @@ Mongo documents were backed up to `_backup_20260927_tvtropes_123` (39 documents)
 (`import-rollback.json`, `remove-rollback.json`). A manual `f/sync/copy/tvtropes` run and a scoped delete of 6,363
 stale `trope` rows left Crate matching Mongo for all 36 titles that have Crate rows. `queue-followup.json` lists
 8 right pages that were seen as links but not fetched within the budget: Hangover Part II and III, Taken 2, the three
-Austin Powers films, Planet of the Apes (1968) and Cube. Their titles now have no tropes, so a normal run and import
-fills them.
+Austin Powers films, Planet of the Apes (1968) and Cube.
+
+Follow-up the same day (`run-followup`, `run-followup-accept`): 8 requests, all HTTP 200, no block. All 8 pages were
+the right films (Cube through a reviewed accept: Film/Cube1997, TMDB dates the 1998 release) and were imported into
+the emptied documents, then synced to Crate. The Qdrant publish had not yet picked up the audit's changes, so a
+targeted `f/sync/copy/vector_data` run (`movie_ids`, `show_ids`) published all 36 audit titles that have a point;
+their payload tropes now match Mongo.
 
 ### Live batch, 2026-09-26
 

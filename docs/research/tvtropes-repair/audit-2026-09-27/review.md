@@ -68,3 +68,27 @@ Right pages seen as links but not fetched within the budget are in `queue-follow
 | show | 243520 | Spartacus: Gods of the Arena | 2011 | Series/SpartacusBloodAndSand | 630 | TMDB-deleted duplicate of the 2011 prequel Gods of the Arena; the page is the 2010 series (show 46296) |  |
 | show | 278353 | Spartacus: Gods of the Arena | 2011 | Series/SpartacusBloodAndSand | 637 | TMDB-deleted duplicate of the 2011 prequel Gods of the Arena; the page is the 2010 series (show 46296) |  |
 | show | 281095 | Spartacus: Gods of the Arena | 2011 | Series/SpartacusBloodAndSand | 637 | TMDB-deleted duplicate of the 2011 prequel Gods of the Arena; the page is the 2010 series (show 46296) |  |
+
+## Follow-up: the 8 right pages, 2026-09-27
+
+`run-followup` over `queue-followup.json`: 8 requests from the dev machine, plain HTTP, 6 s apart, all HTTP 200;
+no 403, 429 or challenge. Cube was replayed from the saved page with a reviewed accept (`queue-followup-accept.json`,
+`run-followup-accept`, no request). Each page's intro names the title and year, and Wikidata maps each IMDb id to
+this TMDB id. Trope lists were spot-read and fit each film.
+
+| media | tmdb_id | title | year | page | tropes | rule | evidence | verdict |
+|---|---|---|---|---|---|---|---|---|
+| movie | 45243 | The Hangover Part II | 2011 | Film/TheHangoverPartII | 38 | strict | "released in 2011 ... this time, in Bangkok"; Wikidata tt1411697 = TMDB 45243 | ok |
+| movie | 109439 | The Hangover Part III | 2013 | Film/TheHangoverPartIII | 59 | known_url | "released in 2013 ... the Wolfpack make their way back to Vegas"; Wikidata tt1951261 = TMDB 109439 | ok |
+| movie | 82675 | Taken 2 | 2012 | Film/Taken2 | 87 | strict | "a 2012 French action thriller ... a sequel to Taken (2008)"; Wikidata tt1397280 = TMDB 82675 | ok |
+| movie | 816 | Austin Powers: International Man of Mystery | 1997 | Film/AustinPowersInternationalManOfMystery | 111 | strict | "a 1997 American spy comedy film ... the first installment"; Wikidata tt0118655 = TMDB 816 | ok |
+| movie | 817 | Austin Powers: The Spy Who Shagged Me | 1999 | Film/AustinPowersTheSpyWhoShaggedMe | 151 | strict | "a 1999 American spy comedy film ... the second installment"; Wikidata tt0145660 = TMDB 817 | ok |
+| movie | 818 | Austin Powers in Goldmember | 2002 | Film/AustinPowersInGoldmember | 96 | strict | "a 2002 American spy comedy film ... the third installment"; Wikidata tt0295178 = TMDB 818 | ok |
+| movie | 871 | Planet of the Apes | 1968 | Film/PlanetOfTheApes1968 | 128 | strict | "this classic 1968 Science Fiction film" (Schaffner, Serling); Wikidata tt0063442 = TMDB 871 | ok |
+| movie | 431 | Cube | 1998 | Film/Cube1997 | 99 | reviewed | "a 1997 Sci-Fi Horror/mystery film directed by Vincenzo Natali"; Wikidata tt0123755 = TMDB 431, dated 1997 (TIFF); TMDB uses the 1998 release, so the year rule rejects it | ok |
+
+Imported all 8 into documents without tropes (`run-followup/import-rollback.json`,
+`run-followup-accept/import-rollback.json`). A manual `f/sync/copy/tvtropes` run left Crate matching Mongo for all 8
+(`crate-followup.json`). Qdrant still held the old tropes for all 36 audit titles with a point while the 07:30 UTC
+`f/sync/copy/vector_data` run was in progress, so a targeted run of the same script (`movie_ids`, `show_ids`) published
+them; afterwards all 36 payloads match Mongo (`qdrant-followup.json`).
