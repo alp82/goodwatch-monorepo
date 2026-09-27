@@ -1,0 +1,30 @@
+import type { ReactNode } from "react"
+import type { FilterName } from "~/domain/filter-state"
+
+/** What the title filter counted for the current state; the results endpoints return it (see FilterResult). */
+export interface FilterBarCounts {
+	total: number
+	hidden: number
+	/** Titles only that filter hides, largest first. */
+	recoveries: { filter: FilterName; titles: number }[]
+	/** What each option would leave, the others unchanged. */
+	optionCounts: Record<FilterName, Record<string, number>>
+	/** Per-service counts are missing while the viewer's country loads. */
+	approximate?: boolean
+}
+
+/** The For you switch next to the sort (Discover). The surface owns its state and what it explains. */
+export interface ForYouControl {
+	on: boolean
+	onChange: (on: boolean) => void
+	/** The "↑N moved" count: how many titles For you moved up. */
+	movedUp: number
+	/** What the fingerprint icon explains, on hover, focus, or tap. */
+	explanation: ReactNode
+	/** Shown in the switch's place, for example the sign-up prompt for a guest without enough ratings. */
+	replacement?: ReactNode
+	/** The switch shows but can't be flipped yet, for example without enough liked titles. */
+	disabled?: boolean
+	/** A short line under For you in the phone sheet, for example "Titles you'd rate highly rise". */
+	hint?: string
+}
