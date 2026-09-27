@@ -16,6 +16,7 @@
 // Redis cluster. Without a Redis connection, a member's taste is built on every read and not stored.
 import Redis from "ioredis"
 import { getFeatureMode } from "~/server/features.server"
+import { clearTastePortrait } from "~/server/taste-portrait/cache.server"
 import {
 	type TitleSnapshot,
 	getTitleSnapshot,
@@ -233,8 +234,9 @@ export async function loadMemberTaste(userId: string): Promise<Taste> {
 }
 
 /**
- * Call after every committed write to the person's ratings or Want to See. Records the write time for readers and,
- * unless REC_TASTE_MATCH is off, schedules a rebuild off the request path. Never throws.
+ * Call after every committed write to the person's ratings or Want to See. Records the write time for readers, clears
+ * the person's cached Taste page views, and, unless REC_TASTE_MATCH is off, schedules a rebuild off the request path.
+ * Never throws.
  */
 export async function markTasteChanged(
 	userId: string | null | undefined,
@@ -247,6 +249,8 @@ export async function markTasteChanged(
 	} catch (error) {
 		console.error("Taste: recording the write failed:", error)
 	}
+	// The Taste page's cached views describe the old ratings.
+	await clearTastePortrait(userId)
 	if (getFeatureMode("tasteMatch") === "off" || scheduled.has(userId)) return
 	const timer = setTimeout(async () => {
 		scheduled.delete(userId)
