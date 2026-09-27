@@ -768,11 +768,11 @@ export interface Room3 {
 
 const QUERIES = SUGGESTIONS
 const pct = (v: number, of: number) => `${(v / of) * 100}%`
-const REMOTE_W = 312
+export const REMOTE_W = 312
 // The hand photo (1024 x 1536): where the placeholder the remote replaces was.
-const HAND = { w: 1024, h: 1536, x: 321, y: 68, pw: 382, ph: 1060 }
+export const HAND = { w: 1024, h: 1536, x: 321, y: 68, pw: 382, ph: 1060 }
 // In the hand, the remote is as long as the placeholder: the extra length is a plain grip with the logo.
-const GRIP_H = Math.round((REMOTE_W * HAND.ph) / HAND.pw)
+export const GRIP_H = Math.round((REMOTE_W * HAND.ph) / HAND.pw)
 export type Pose = "side" | "front" | "hand"
 
 // Wide-screen layout, computed from the window and the remote's natural size only (no measuring after
@@ -1175,7 +1175,7 @@ function Caption({ ch, className }: { ch: number; className: string }) {
 	)
 }
 
-const LR3_CSS = `
+export const LR3_CSS = `
 .lr3-body { width: ${REMOTE_W}px; }
 .lr3-svc { box-shadow: 0 2px 0 rgba(0,0,0,0.55), 0 4px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.18); transition: transform 70ms, box-shadow 70ms, filter 120ms; filter: saturate(0.9) brightness(0.92); }
 .lr3-svc:hover { filter: none; }

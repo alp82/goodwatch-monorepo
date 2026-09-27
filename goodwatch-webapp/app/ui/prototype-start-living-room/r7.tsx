@@ -37,9 +37,9 @@ export const LAYOUTS7: Record<Layout7, { name: string; idea: string }> = {
 	labeled: { name: "Labeled (round 6)", idea: "Round 6's Labeled keys, unchanged, for comparison." },
 }
 
-type Feat = "mood" | PageId | "picks"
+export type Feat = "mood" | PageId | "picks"
 
-const FEAT: Record<Feat, { label: string; d: string; tint: string }> = {
+export const FEAT: Record<Feat, { label: string; d: string; tint: string }> = {
 	mood: { label: "Mood", d: ICON.mood, tint: "#fbbf24" },
 	// Owner, round 8: the key reads "Watch now".
 	watchnext: { label: "Watch now", d: "M6 4h12v16l-6-4-6 4z", tint: "#38bdf8" },
@@ -49,7 +49,7 @@ const FEAT: Record<Feat, { label: string; d: string; tint: string }> = {
 	picks: { label: "Pick for me", d: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z", tint: "#fb923c" },
 }
 
-function useFeat(t: Tv4) {
+export function useFeat(t: Tv4) {
 	const on = (f: Feat) =>
 		f === "mood" ? t.top.k === "moods" || t.mode === "mood" : f === "picks" ? t.top.k === "picks" : t.top.k === "page" && t.top.id === f
 	const run = (f: Feat) => {
@@ -169,7 +169,7 @@ function Well({ tight, children }: { tight?: boolean; children: ReactNode }) {
 	return <div className={`lr6-well w-full rounded-[26px] ${tight ? "p-2" : "p-2.5"}`}>{children}</div>
 }
 
-type F = ReturnType<typeof useFeat>
+export type F = ReturnType<typeof useFeat>
 
 function WideFeat({ k, f, small, tint, left }: { k: Feat; f: F; small?: boolean; tint?: boolean; left?: boolean }) {
 	const on = f.on(k)
@@ -189,7 +189,7 @@ function WideFeat({ k, f, small, tint, left }: { k: Feat; f: F; small?: boolean;
 }
 
 // Icon over name, both centered: every icon sits on the same line, whatever the name's length.
-function TileFeat({ k, f }: { k: Feat; f: F }) {
+export function TileFeat({ k, f }: { k: Feat; f: F }) {
 	const on = f.on(k)
 	return (
 		<button
