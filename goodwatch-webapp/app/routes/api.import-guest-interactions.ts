@@ -9,6 +9,7 @@ import { execute, query, upsert } from "~/utils/crate";
 import { canonicalTitleId } from "~/utils/title-identity";
 import { getUserData, resetUserDataCache } from "~/server/userData.server";
 import { resetUserSettingsCache } from "~/server/user-settings.server";
+import { markTasteChanged } from "~/server/taste/index.server";
 
 const changeSchema = z
 	.object({
@@ -286,6 +287,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		await Promise.all([
 			resetUserDataCache({ user_id: user.id }),
 			resetUserSettingsCache({ user_id: user.id }),
+			markTasteChanged(user.id),
 		]);
 	}
 }

@@ -1,5 +1,6 @@
 import { canonicalTitleId } from "~/utils/title-identity"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server";
+import { markTasteChanged } from "~/server/taste/index.server";
 import { resetUserDataCache } from "~/server/userData.server";
 import { execute, upsert } from "~/utils/crate";
 
@@ -59,6 +60,7 @@ export const updateWishList = async ({
 	}
 
 	await resetUserDataCache({ user_id });
+	await markTasteChanged(user_id);
 	await resetOnboardingMediaCache({ userId: user_id, searchTerm: "" });
 
 	return {

@@ -53,6 +53,10 @@ export interface TitleSnapshot {
 	readonly stats: CatalogStats
 	/** The 74 raw scores in VALID_FINGERPRINT_KEYS order, 255 for a missing score. A view, not a copy: don't write. */
 	fingerprint(key: TitleKey): Uint8Array | null
+	// The same by row (0 to count - 1, as forEach passes it), for callers that go over many titles once per version.
+	factsAt(row: number): TitleFacts
+	cosineAt(row: number, unitTaste: Float32Array): number | null
+	fingerprintAt(row: number): Uint8Array
 }
 
 const K = FINGERPRINT_LENGTH
@@ -128,8 +132,12 @@ class LoadedSnapshot implements TitleSnapshot {
 
 	facts(key: TitleKey): TitleFacts | null {
 		const row = this.rowOf(key)
-		if (row < 0) return null
+		return row < 0 ? null : this.factsAt(row)
+	}
+
+	factsAt(row: number): TitleFacts {
 		const c = this.c
+		const key = c.pointIds[row]
 		const isShow = key >= SHOW_BASE
 		const day = c.releaseDays[row]
 		const score = c.scores[row]
@@ -154,7 +162,10 @@ class LoadedSnapshot implements TitleSnapshot {
 
 	cosine(key: TitleKey, unitTaste: Float32Array): number | null {
 		const row = this.rowOf(key)
-		if (row < 0) return null
+		return row < 0 ? null : this.cosineAt(row, unitTaste)
+	}
+
+	cosineAt(row: number, unitTaste: Float32Array): number | null {
 		const inverseNorm = this.inverseNorms[row]
 		if (inverseNorm === 0) return null
 		const fp = this.c.fingerprints
@@ -174,7 +185,10 @@ class LoadedSnapshot implements TitleSnapshot {
 
 	fingerprint(key: TitleKey): Uint8Array | null {
 		const row = this.rowOf(key)
-		if (row < 0) return null
+		return row < 0 ? null : this.fingerprintAt(row)
+	}
+
+	fingerprintAt(row: number): Uint8Array {
 		return this.c.fingerprints.subarray(row * K, row * K + K)
 	}
 }
