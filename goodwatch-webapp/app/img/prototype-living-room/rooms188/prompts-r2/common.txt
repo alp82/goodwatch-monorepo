@@ -1,0 +1,11 @@
+Use your image generation tool. Photorealistic editorial interior photograph, a real camera capture for a lifestyle magazine, not a render.
+
+Use the attached reference ONLY for the camera position, framing, and the TV's size and position: the TV is wall-mounted, horizontally centered, its top edge about 10% below the top of the frame, about 37% of the frame width and 35% of its height. Everything else in the room is new, as described below.
+
+Camera: a person seated on a sofa, camera at seated eye height (about 1.1 m), level, 28mm lens, straight verticals, f/8 deep focus so everything from the foreground to the back wall is sharp, subtle film grain, natural color balance. Landscape 16:9.
+
+TV screen: uniformly flat, matte, pure #00FF00 green, evenly lit edge to edge, no reflection, framed by a thin black bezel.
+
+Lighting: dusk. Cool teal-blue light from a window, warm amber pools from lamps, soft shadows that keep detail, mixed color temperature, uneven light.
+
+Constraints: asymmetric composition, honest and unstaged, lived-in but tidy; real material textures (fabric pilling, wood grain, a little dust); every object appears once; spine titles tiny and unreadable; no text overlays, no watermark.
