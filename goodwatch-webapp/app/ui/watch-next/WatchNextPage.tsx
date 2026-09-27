@@ -1,7 +1,8 @@
-// The Watch next page: the docked strip on the hero, the hero with its Then column, the stepped grid, suggestions
-// while the Wishlist is short, and the sign-up prompt for guests.
+// The Watch next page: the docked strip on the hero (phones: the slab's buttons and drawers at the bottom), the hero
+// with its Then column, the stepped grid, suggestions while the Wishlist is short, and the sign-up prompt for guests.
 import { useCallback, useState } from "react"
 import { type MoodKey, toggleMood } from "~/domain/moods"
+import type { WatchNextSort } from "~/domain/watch-next"
 import { useFeature } from "~/hooks/useFeature"
 import { useWishlistMutation } from "~/hooks/useUserDataMutations"
 import { useUserData } from "~/routes/api.user-data"
@@ -11,6 +12,7 @@ import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { DockedStrip } from "./DockedStrip"
 import { FinishPrompt, FinishToast } from "./FinishPrompt"
 import { type MoodControl, refusalText } from "./MoodPicker"
+import { PhoneControls } from "./PhoneControls"
 import { SteppedGrid, WorthAdding } from "./SteppedGrid"
 import { WatchNextHero } from "./WatchNextHero"
 import { WRAP } from "./style"
@@ -83,16 +85,18 @@ export function WatchNextPage({
 		refused,
 	}
 
+	const setOnMyServices = (on: boolean) => setChoice({ onMyServices: on })
+	// The default sort stays out of the URL.
+	const setSort = (sort: WatchNextSort) =>
+		setChoice({ sort: sort === data?.defaultSort ? null : sort })
+
 	const strip =
 		data && moods ? (
 			<DockedStrip
 				data={data}
 				moods={moods}
-				setOnMyServices={(on) => setChoice({ onMyServices: on })}
-				// The default sort stays out of the URL.
-				setSort={(sort) =>
-					setChoice({ sort: sort === data.defaultSort ? null : sort })
-				}
+				setOnMyServices={setOnMyServices}
+				setSort={setSort}
 			/>
 		) : (
 			<div
@@ -148,6 +152,12 @@ export function WatchNextPage({
 					)}
 				</div>
 			)}
+			<PhoneControls
+				data={data}
+				moods={moods}
+				setOnMyServices={setOnMyServices}
+				setSort={setSort}
+			/>
 			<FinishPrompt
 				finished={finishing.prompt}
 				onClose={finishing.closePrompt}

@@ -95,7 +95,8 @@ export function FinishToast({
 		data?.hero && data.hero.key !== toast?.title.key ? data.hero : null
 	return (
 		<div
-			className="pointer-events-none fixed inset-x-0 bottom-24 z-[1050] flex justify-center px-4 md:bottom-6"
+			// Phones: above the slab (its buttons and the navigation).
+			className="pointer-events-none fixed inset-x-0 bottom-40 z-[1050] flex justify-center px-4 lg:bottom-6"
 			aria-live="polite"
 		>
 			<AnimatePresence>

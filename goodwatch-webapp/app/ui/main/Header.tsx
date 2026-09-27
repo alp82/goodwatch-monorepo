@@ -17,6 +17,7 @@ import Search from "~/ui/Search"
 import { SignInButton } from "~/ui/auth/SignInButton"
 import { UserMenu } from "~/ui/main/UserMenu"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
+import { useFeature } from "~/hooks/useFeature"
 import { useUser } from "~/utils/auth"
 
 const mainNav = [
@@ -38,12 +39,17 @@ const mainNav = [
 	},
 ]
 
+// Watch next leads the links while REC_WATCH_NEXT shows it to the viewer.
+const watchNextNav = { label: "Watch next", path: "/watch-next" }
+
 export default function Header() {
 	const location = useLocation()
 	const isPage = (pathname: string) => location.pathname.startsWith(pathname)
 	const isPageExact = (pathname: string) => location.pathname === pathname
 
 	const { user, loading } = useUser()
+	const watchNext = useFeature("watchNext")
+	const desktopNav = watchNext ? [watchNextNav, ...mainNav] : mainNav
 
 	return (
 		<div className="fixed top-0 z-[1000] w-full bg-gray-900">
@@ -95,6 +101,23 @@ export default function Header() {
 														</Link>
 													)}
 												</MenuItem>
+												{watchNext && (
+													<MenuItem>
+														{({ focus }) => (
+															<Link
+																to={watchNextNav.path}
+																prefetch="render"
+																className={`block px-4 py-2 text-base font-medium ${
+																	isPage(watchNextNav.path)
+																		? "bg-amber-900 text-white"
+																		: "text-gray-300"
+																} ${focus ? "bg-gray-700 text-white" : ""}`}
+															>
+																{watchNextNav.label}
+															</Link>
+														)}
+													</MenuItem>
+												)}
 												{mainNav.map((nav) => (
 													<MenuItem key={nav.path}>
 														{({ focus }) => (
@@ -198,7 +221,7 @@ export default function Header() {
 						{/* Main nav */}
 						<div className="hidden lg:ml-6 lg:block">
 							<div className="flex space-x-4">
-								{mainNav.map((nav) => (
+								{desktopNav.map((nav) => (
 									<Link
 										key={nav.path}
 										className={`rounded-md px-3 py-2 text-md font-semibold ${
