@@ -1,4 +1,4 @@
-import { QdrantClient, RecommendStrategy, type Value } from "@qdrant/js-client-grpc"
+import { QdrantClient, RecommendStrategy, type ScoredPoint, type Value } from "@qdrant/js-client-grpc"
 import pc from "picocolors"
 
 function decodeValue(value: Value): unknown {
@@ -18,6 +18,11 @@ export const MEDIA_COLLECTION = "media_fingerprint_v1"
 const QDRANT_TIMEOUT_MS = 10_000
 
 type MediaType = "movie" | "show"
+
+/** A filter in Qdrant's REST shape; conditions are converted to gRPC per call. */
+export type QdrantFilter = { must?: unknown[]; should?: unknown[]; must_not?: unknown[] }
+
+type PayloadSelection = boolean | string[] | { include?: string[]; exclude?: string[] }
 
 const MOVIE_BASE = 1_000_000_000_000
 const SHOW_BASE = 2_000_000_000_000
@@ -177,29 +182,7 @@ class QdrantClientWrapper {
 	}) {
 		const startTime = performance.now()
 		try {
-			// Convert withPayload to gRPC format
-			let withPayloadSelector: any
-			if (params.withPayload === true) {
-				withPayloadSelector = { selectorOptions: { case: 'enable', value: true } }
-			} else if (params.withPayload === false) {
-				withPayloadSelector = { selectorOptions: { case: 'enable', value: false } }
-			} else if (Array.isArray(params.withPayload)) {
-				withPayloadSelector = {
-					selectorOptions: {
-						case: 'include',
-						value: { fields: params.withPayload },
-					},
-				}
-			} else if (params.withPayload && typeof params.withPayload === 'object') {
-				if ('include' in params.withPayload && params.withPayload.include) {
-					withPayloadSelector = {
-						selectorOptions: {
-							case: 'include',
-							value: { fields: params.withPayload.include },
-						},
-					}
-				}
-			}
+			const withPayloadSelector = this.convertPayloadSelector(params.withPayload)
 
 			// Read examples from Qdrant itself, rather than inferring their presence
 			// from Crate metadata. Send vectors to avoid a lookup/deletion race.
@@ -265,22 +248,7 @@ class QdrantClientWrapper {
 				this.logSlowQueryDetails('recommend', params, duration, result.length)
 			}
 
-			return result.map((point) => {
-				const id = point.id?.pointIdOptions?.case === 'num' 
-					? Number(point.id.pointIdOptions.value)
-					: point.id?.pointIdOptions?.value
-				
-				const payload = Object.fromEntries(
-					Object.entries(point.payload ?? {}).map(([key, value]) => [key, decodeValue(value)]),
-				)
-
-				return {
-					id,
-					score: point.score,
-					payload: payload as T,
-					vector: point.vectors,
-				}
-			})
+			return this.toScoredResults<T>(result)
 		} catch (error) {
 			const duration = performance.now() - startTime
 			const vectorName = params.using ?? 'default'
@@ -297,6 +265,73 @@ class QdrantClientWrapper {
 		}
 	}
 
+	private convertPayloadSelector(withPayload: PayloadSelection | undefined): any {
+		if (withPayload === true || withPayload === false) {
+			return { selectorOptions: { case: 'enable', value: withPayload } }
+		}
+		const fields = Array.isArray(withPayload) ? withPayload : withPayload?.include
+		if (fields) return { selectorOptions: { case: 'include', value: { fields } } }
+		return undefined
+	}
+
+	private toScoredResults<T>(points: ScoredPoint[]) {
+		return points.map((point) => ({
+			id: point.id?.pointIdOptions?.case === 'num'
+				? Number(point.id.pointIdOptions.value)
+				: point.id?.pointIdOptions?.value,
+			score: point.score,
+			payload: Object.fromEntries(
+				Object.entries(point.payload ?? {}).map(([key, value]) => [key, decodeValue(value)]),
+			) as T,
+			vector: point.vectors,
+		}))
+	}
+
+	/**
+	 * The points nearest to one query vector, in one Qdrant call. Unlike recommend, it reads no example points first:
+	 * the caller brings the vector (for example a stored taste vector).
+	 */
+	async search<T = Record<string, any>>(params: {
+		collectionName: string
+		vector: ArrayLike<number>
+		using: string
+		filter?: QdrantFilter
+		limit: number
+		withPayload?: PayloadSelection
+		hnswEf?: number
+		exact?: boolean
+	}) {
+		const startTime = performance.now()
+		const summary = `SEARCH ${params.collectionName} (${params.using})`
+		try {
+			const response = await this.client.api('points').search({
+				collectionName: params.collectionName,
+				vector: Array.from(params.vector),
+				vectorName: params.using,
+				filter: this.convertFilterToGrpc(params.filter),
+				limit: BigInt(params.limit),
+				withPayload: this.convertPayloadSelector(params.withPayload),
+				params: {
+					hnswEf: BigInt(params.hnswEf ?? 64),
+					exact: params.exact ?? false,
+				},
+			})
+			const duration = performance.now() - startTime
+			console.log(this.formatLog(summary, duration, response.result.length))
+			if (duration >= 300) {
+				console.warn(pc.yellow('  ⚠ Slow query details:'))
+				console.warn(pc.dim('  Filter:'), JSON.stringify(params.filter).substring(0, 150))
+				console.warn(pc.dim('  Limit:'), params.limit)
+			}
+			return this.toScoredResults<T>(response.result)
+		} catch (error) {
+			console.error(this.formatLog(summary, performance.now() - startTime, 0, true))
+			console.error("Filter:", JSON.stringify(params.filter))
+			console.error("Error:", error)
+			throw error
+		}
+	}
+
 	async scroll<T = Record<string, any>>(params: {
 		collectionName: string
 		filter?: any
@@ -306,29 +341,7 @@ class QdrantClientWrapper {
 	}) {
 		const startTime = performance.now()
 		try {
-			// Convert withPayload to gRPC format
-			let withPayloadSelector: any
-			if (params.withPayload === true) {
-				withPayloadSelector = { selectorOptions: { case: 'enable', value: true } }
-			} else if (params.withPayload === false) {
-				withPayloadSelector = { selectorOptions: { case: 'enable', value: false } }
-			} else if (Array.isArray(params.withPayload)) {
-				withPayloadSelector = {
-					selectorOptions: {
-						case: 'include',
-						value: { fields: params.withPayload },
-					},
-				}
-			} else if (params.withPayload && typeof params.withPayload === 'object') {
-				if ('include' in params.withPayload && params.withPayload.include) {
-					withPayloadSelector = {
-						selectorOptions: {
-							case: 'include',
-							value: { fields: params.withPayload.include },
-						},
-					}
-				}
-			}
+			const withPayloadSelector = this.convertPayloadSelector(params.withPayload)
 
 			// Convert filter from REST format to gRPC format
 			let grpcFilter: any = undefined
@@ -472,6 +485,13 @@ export const recommend = async <T = Record<string, any>>(params: {
 }) => {
 	const client = getQdrantClient()
 	return await client.recommend<T>(params)
+}
+
+export const search = async <T = Record<string, any>>(
+	params: Parameters<QdrantClientWrapper["search"]>[0],
+) => {
+	const client = getQdrantClient()
+	return await client.search<T>(params)
 }
 
 export const scroll = async <T = Record<string, any>>(params: {
