@@ -3,6 +3,7 @@ export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
+import { getEnabledFeatures } from "~/server/features.server"
 import { getUserData } from "~/server/userData.server"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import { AuthProvider } from "~/ui/auth/AuthProvider"
@@ -40,6 +41,7 @@ import Footer from "~/ui/Footer"
 import InfoBox from "~/ui/InfoBox"
 import Header from "~/ui/main/Header"
 import BottomNav from "~/ui/nav/BottomNav"
+import type { EnabledFeatures } from "~/utils/features"
 import { LocaleContext, getLocaleFromRequest } from "~/utils/locale"
 
 import "swiper/css"
@@ -98,6 +100,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 type LoaderData = {
 	user: User | null
+	features: EnabledFeatures
 	dehydratedState: DehydratedState
 	locale: {
 		language: string
@@ -109,7 +112,7 @@ type LoaderData = {
 	}
 }
 
-// Root data (user, locale, env) never depends on the query string, so filter and
+// Root data (user, features, locale, env) never depends on the query string, so filter and
 // search text changes must not rerun the auth check and the user data prefetch.
 export const shouldRevalidate: ShouldRevalidateFunction = ({
 	currentUrl,
@@ -141,6 +144,7 @@ export const loader: LoaderFunction = async ({
 	return json<LoaderData>(
 		{
 			user,
+			features: getEnabledFeatures({ userId: user?.id }),
 			dehydratedState: dehydrate(queryClient),
 			locale,
 			env: {
