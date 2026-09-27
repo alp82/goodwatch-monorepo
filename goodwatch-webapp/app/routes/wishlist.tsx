@@ -5,6 +5,7 @@ import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
 	json,
+	redirect,
 } from "@remix-run/node"
 import { useLoaderData, useNavigation } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
@@ -12,6 +13,8 @@ import React from "react"
 import { seededRandomSin } from "~/utils/random"
 import { useUserData } from "~/routes/api.user-data"
 import type { DiscoverResult } from "~/server/discover.server"
+import { isEnabled } from "~/server/features.server"
+import { getUserIdFromRequest } from "~/utils/auth"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import WishlistFilter, {
 	type FilterByStreaming,
@@ -40,10 +43,37 @@ export type LoaderData = {
 	}
 }
 
+// The old Wishlist sorts, as Watch next names them.
+const WATCH_NEXT_SORT: Partial<Record<string, string>> = {
+	most_recently_added: "added",
+	least_recently_added: "waiting",
+	highest_score: "score",
+	most_popular: "popular",
+}
+
+/** Where /wishlist sends a viewer who sees Watch next, keeping the sort and streaming choice. */
+function watchNextUrl(url: URL) {
+	const params = new URLSearchParams()
+	const sort = WATCH_NEXT_SORT[url.searchParams.get("sortBy") ?? ""]
+	if (sort) params.set("sort", sort)
+	const streaming = url.searchParams.get("filterByStreaming")
+	if (streaming && streaming !== "mine") params.set("services", "all")
+	const query = params.toString()
+	return query ? `/watch-next?${query}` : "/watch-next"
+}
+
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const url = new URL(request.url)
+	// Watch next replaces the Wishlist page for viewers who see it (members in preview, everyone once on).
+	const userId = await getUserIdFromRequest({ request })
+	if (isEnabled("watchNext", { userId }))
+		return redirect(watchNextUrl(url), {
+			status: 301,
+			// Personal while in preview, and a flag can switch back: browsers must not keep the redirect.
+			headers: { "Cache-Control": "private, no-store", Vary: "Cookie" },
+		})
 	const sortBy = (url.searchParams.get("sortBy") ||
 		"most_recently_added") as SortBy
 	const filterByStreaming = (url.searchParams.get("filterByStreaming") ||

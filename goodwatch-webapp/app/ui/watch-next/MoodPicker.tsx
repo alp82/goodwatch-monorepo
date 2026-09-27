@@ -1,6 +1,7 @@
 // The moods control in the docked strip: the picked moods as small poster chips with a remove button, a button that
 // opens the grid dropdown, and the dropdown itself: the 11 moods as poster tiles with how many Wishlist titles fit
 // each, "k of 3", Clear, and Done. A fourth pick is refused with a hint (the page announces it in a live region).
+// The phone's Moods drawer reuses the grid and the hint.
 import {
 	CheckIcon,
 	ChevronDownIcon,
@@ -31,6 +32,14 @@ export interface MoodControl {
 
 export const refusalText = (mood: MoodKey) =>
 	`Three is the most. Remove one to add ${MOOD_BY_KEY[mood].name}.`
+
+/** The mood colors that stand for "Any mood". */
+export const SPECTRUM: readonly MoodKey[] = [
+	"funny",
+	"romance",
+	"crime",
+	"worlds",
+]
 
 const isFull = (control: MoodControl, mood: MoodKey) =>
 	control.moods.length >= MAX_MOODS && !control.moods.includes(mood)
@@ -75,7 +84,7 @@ function MoodArt({
 function Spectrum() {
 	return (
 		<span className="flex -space-x-2" aria-hidden>
-			{(["funny", "romance", "crime", "worlds"] as const).map((mood) => (
+			{SPECTRUM.map((mood) => (
 				<span
 					key={mood}
 					className="h-6 w-6 rounded-full ring-2 ring-gray-900"
@@ -190,6 +199,18 @@ function Tick({ on }: { on: boolean }) {
 	)
 }
 
+/** The refusal of a fourth pick, shown for a few seconds in place of the title. */
+export function useRefusalHint(control: MoodControl): string | null {
+	const [hint, setHint] = useState<string | null>(null)
+	useEffect(() => {
+		if (!control.refused) return
+		setHint(refusalText(control.refused.mood))
+		const id = setTimeout(() => setHint(null), 3200)
+		return () => clearTimeout(id)
+	}, [control.refused])
+	return hint
+}
+
 // The dropdown's top line: the title or the refusal hint, "k of 3", Clear, and Done.
 function PanelHead({
 	control,
@@ -199,13 +220,7 @@ function PanelHead({
 	onDone: () => void
 }) {
 	const k = control.moods.length
-	const [hint, setHint] = useState<string | null>(null)
-	useEffect(() => {
-		if (!control.refused) return
-		setHint(refusalText(control.refused.mood))
-		const id = setTimeout(() => setHint(null), 3200)
-		return () => clearTimeout(id)
-	}, [control.refused])
+	const hint = useRefusalHint(control)
 	return (
 		<div className="flex min-h-9 shrink-0 items-center gap-3 border-b border-white/8 px-3 py-2">
 			<AnimatePresence mode="wait" initial={false}>
@@ -263,10 +278,23 @@ function PanelHead({
 	)
 }
 
-// The grid of the 11 moods as poster tiles. Tiles are checkboxes; a refused one stays focusable and says why.
-function MoodGrid({ control }: { control: MoodControl }) {
+/**
+ * The grid of the 11 moods as poster tiles. Tiles are checkboxes; a refused one stays focusable and says why. `dense`
+ * is the phone drawer's: two columns of shorter tiles with the name and count (the description stays in the label),
+ * scrolling with the drawer.
+ */
+export function MoodGrid({
+	control,
+	dense = false,
+}: { control: MoodControl; dense?: boolean }) {
 	return (
-		<div className="grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-y-auto overscroll-contain p-3 sm:grid-cols-3 lg:grid-cols-4">
+		<div
+			className={
+				dense
+					? "grid grid-cols-2 gap-2"
+					: "grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-y-auto overscroll-contain p-3 sm:grid-cols-3 lg:grid-cols-4"
+			}
+		>
 			{MOODS.map(({ key: mood, name, description, hue }) => {
 				const on = control.moods.includes(mood)
 				const full = isFull(control, mood)
@@ -283,7 +311,7 @@ function MoodGrid({ control }: { control: MoodControl }) {
 						data-mood={mood}
 						onClick={() => control.toggle(mood)}
 						whileTap={{ scale: full ? 1 : 0.97 }}
-						className={`group relative isolate flex h-[6.5rem] cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-left text-white transition-[opacity,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:h-28 ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${full ? "opacity-40" : ""}`}
+						className={`group relative isolate flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl p-2.5 text-left text-white transition-[opacity,box-shadow] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${dense ? "h-[4.75rem]" : "h-[6.5rem] md:h-28"} ${on ? "ring-2 ring-white" : "ring-1 ring-white/10"} ${full ? "opacity-40" : ""}`}
 						style={{ boxShadow: on ? `0 8px 28px -8px ${hue}` : undefined }}
 					>
 						<MoodArt
@@ -298,9 +326,11 @@ function MoodGrid({ control }: { control: MoodControl }) {
 							<Tick on={on} />
 						</span>
 						<span className="block">
-							<span className="line-clamp-2 text-xs leading-snug text-white/90 [text-shadow:0_1px_4px_rgba(0,0,0,.8)]">
-								{description}
-							</span>
+							{!dense && (
+								<span className="line-clamp-2 text-xs leading-snug text-white/90 [text-shadow:0_1px_4px_rgba(0,0,0,.8)]">
+									{description}
+								</span>
+							)}
 							<span className="mt-1 block text-[11px] font-semibold tabular-nums text-white/75">
 								{count}
 							</span>

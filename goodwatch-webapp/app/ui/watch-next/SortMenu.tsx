@@ -16,7 +16,7 @@ import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { SORT_LABEL, SORT_OPTIONS } from "./labels"
 import { EASE } from "./style"
 
-const RATE_MORE =
+export const RATE_MORE =
 	"Rate a few more titles you love and Best match learns your taste."
 
 export function SortMenu({

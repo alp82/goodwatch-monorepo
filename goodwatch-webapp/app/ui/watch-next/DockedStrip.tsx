@@ -1,5 +1,5 @@
 // The glass strip docked on the hero's top edge: moods, how many titles fit, On my services, and the sort. Once it
-// scrolls away, the same line pins under the site header.
+// scrolls away, the same line pins under the site header. From the large breakpoint up; phones use PhoneControls.
 import { GlobeAltIcon, PlusIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
@@ -205,7 +205,7 @@ export function DockedStrip(props: StripProps) {
 						initial={{ opacity: 0, y: -12 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.22, ease: EASE }}
-						className="fixed inset-x-0 top-16 z-40 border-b border-white/10 bg-gray-900/90 backdrop-blur-md"
+						className="fixed inset-x-0 top-16 z-40 hidden border-b lg:block border-white/10 bg-gray-900/90 backdrop-blur-md"
 					>
 						<div className={WRAP}>
 							<StripBody {...props} pinned />

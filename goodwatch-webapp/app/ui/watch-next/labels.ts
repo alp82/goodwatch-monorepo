@@ -49,6 +49,20 @@ export const SORT_LABEL = Object.fromEntries(
 	SORT_OPTIONS.map((option) => [option.key, option.label]),
 ) as Record<WatchNextSort, string>
 
+/** The sort's name on the phone slab's narrow button. */
+export const SORT_SHORT: Record<WatchNextSort, string> = {
+	...SORT_LABEL,
+	newest: "Newest",
+	popular: "Popular",
+}
+
+/** The phone slab's moods button: "Any mood", "Funny", "Funny +2". */
+export function moodsShort(moods: readonly MoodKey[]): string {
+	if (!moods.length) return "Any mood"
+	const first = MOOD_BY_KEY[moods[0]].name
+	return moods.length === 1 ? first : `${first} +${moods.length - 1}`
+}
+
 /** "Funny", "Funny or Scary", "Funny, Scary or Heavy". */
 export function moodWords(moods: readonly MoodKey[]): string {
 	const names = moods.map((mood) => MOOD_BY_KEY[mood].name)
