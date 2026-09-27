@@ -33,9 +33,22 @@ export interface Destination {
 	available: boolean
 }
 
-/** The search page for a query. Discover's search mode takes over this path with a redirect once it ships. */
-export const searchHref = (q: string) =>
-	q.trim() ? `/search?q=${encodeURIComponent(q.trim())}` : "/search"
+/**
+ * Where a search for a query goes: Discover's search mode while the new filter bar is on for the viewer (`/search`
+ * redirects there too), else the search page.
+ */
+export function searchHref(q: string, features: EnabledFeatures): string {
+	const text = q.trim()
+	const path = features.filterBar ? "/discover" : "/search"
+	return text ? `${path}?q=${encodeURIComponent(text)}` : path
+}
+
+/** The query of the search on screen (Discover's search mode or the search page), for prefilling a search field. */
+export function currentSearchQuery(pathname: string, search: string): string {
+	return pathname === "/search" || pathname.startsWith("/discover")
+		? (new URLSearchParams(search).get("q") ?? "")
+		: ""
+}
 
 export function getDestinations(
 	features: EnabledFeatures,

@@ -30,6 +30,7 @@ import { tmdbImage, useSignUpHref } from "./bits"
 import {
 	type DestinationKey,
 	currentDestination,
+	currentSearchQuery,
 	getDestinations,
 	searchHref,
 } from "./destinations"
@@ -133,9 +134,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const signUp = useSignUpHref()
 	const features = useFeatures()
 	const { pick } = useTonightsPick()
-	const [q, setQ] = useState(() =>
-		pathname === "/search" ? (new URLSearchParams(search).get("q") ?? "") : "",
-	)
+	const [q, setQ] = useState(() => currentSearchQuery(pathname, search))
 	const [active, setActive] = useState(0)
 	const [recent, setRecent] = useState<string[]>([])
 	useEffect(() => setRecent(readRecent()), [])
@@ -159,7 +158,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 			result.push({
 				key: "search",
 				label: `Search for “${trimmed}”`,
-				href: searchHref(trimmed),
+				href: searchHref(trimmed, features),
 				search: trimmed,
 				icon: MagnifyingGlassIcon,
 			})
@@ -197,7 +196,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 					key: `recent-${text}`,
 					label: text,
 					sub: "Recent search",
-					href: searchHref(text),
+					href: searchHref(text, features),
 					search: text,
 					icon: ClockIcon,
 				})

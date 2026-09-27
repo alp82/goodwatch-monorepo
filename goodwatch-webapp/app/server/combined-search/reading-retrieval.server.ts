@@ -684,6 +684,8 @@ export interface ReadingChip {
 	// attribute: a required flag; excluded: a ruled-out flag; want/avoid: a fingerprint
 	// dimension the retrieval weights; phrase: text that the essence search looks for.
 	kind: "attribute" | "excluded" | "want" | "avoid" | "phrase";
+	// want/avoid: the fingerprint dimension, so the chip can wear its color.
+	key?: string;
 }
 // The phrases the text search looks for: Jev's best phrase and, when it reaches
 // SECOND_PHRASE_PROBABILITY, the second one. None when the best phrase is a single word that Jev
@@ -738,6 +740,7 @@ export function summarizeReading(
 		chips.push({
 			text: weight > 0 ? label(key) : `Low ${label(key).toLowerCase()}`,
 			kind: weight > 0 ? "want" : "avoid",
+			key,
 		});
 	if (!nativeOnly)
 		for (const p of searchedPhrases(attributes))

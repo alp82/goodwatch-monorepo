@@ -21,6 +21,12 @@ function textColorOn(rgba: string): string {
 		: "#030712"
 }
 
+/** A chip's colors for a fingerprint attribute: its fingerprint color, with readable text on it. */
+export function fingerprintChipStyle(key: string) {
+	const { color } = getFingerprintMeta(key)
+	return { backgroundColor: color, color: textColorOn(color) }
+}
+
 // Fingerprint attributes as small chips in their fingerprint colors ("Slow Burn", "Dry Humor"): the reasons on a
 // title card and the taste leanings next to For you.
 export function ReasonChips({
@@ -34,12 +40,11 @@ export function ReasonChips({
 	return (
 		<span className={`flex flex-wrap gap-1 ${className}`}>
 			{reasons.map((key) => {
-				const { color } = getFingerprintMeta(key)
 				return (
 					<span
 						key={key}
 						className="rounded-full px-2 py-0.5 text-xs font-semibold leading-tight"
-						style={{ backgroundColor: color, color: textColorOn(color) }}
+						style={fingerprintChipStyle(key)}
 					>
 						{reasonLabel(key)}
 					</span>

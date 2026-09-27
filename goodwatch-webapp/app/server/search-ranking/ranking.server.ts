@@ -5,7 +5,7 @@ import type { Intent, Reference } from "./references.server.ts"
 import type { NameEntity, SearchIndex } from "./search-index.server.ts"
 
 /** Recorded with each search as its ranker version. Change it when the ranking changes. */
-export const RANKER_VERSION = "hybrid-v1"
+export const RANKER_VERSION = "hybrid-v2"
 
 // --- Weights ---------------------------------------------------------------------------------------------------------
 
@@ -56,8 +56,16 @@ export const MAIN_DEPTH = 500
 export const PART_DEPTH = 300
 /** Non-English: each cosine's top list, whose union is rescored with both. */
 export const NON_ENGLISH_UNION_DEPTH = 2000
-/** The returned list length. */
-export const RESULT_LENGTH = 50
+/**
+ * The returned list length. Discover's search mode counts and filters over it. hybrid-v1 returned 50; the first 50 of
+ * the longer list are the same titles in the same order (see HEAD_LENGTH).
+ */
+export const RESULT_LENGTH = 100
+/**
+ * The head of the list, blended and bounded exactly as when the list was this long (hybrid-v1); the longer list
+ * continues after it. Blending or bounding the whole list could let candidates past it into the top.
+ */
+export const HEAD_LENGTH = 50
 
 // Reference profiles.
 export const PROFILE_TERMS = 40
