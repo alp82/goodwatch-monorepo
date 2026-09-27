@@ -587,6 +587,8 @@ function Key4({ label, d, onClick, on }: { label: string; d: string; onClick: ()
 
 // What the remote's screen says: a headline and one line of help. Round 5 reuses it.
 export function lcdLines(t: Tv4, services: LRServiceButton[]): [string, string] {
+	// The TV flow prototype (#187) says what its own screens are.
+	if ("lcd" in t) return t.lcd as [string, string]
 	const s = t.top
 	const svc = services.find((x) => x.key === t.mix.service)
 	return t.mode === "mood"
@@ -768,7 +770,7 @@ export function Brand({ k }: { k: string }) {
 
 const ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
 
-function Keyboard({ t }: { t: Tv4 }) {
+export function Keyboard({ t }: { t: Tv4 }) {
 	// A real keyboard works too, wherever the focus is (except in a text field, which types by itself).
 	useEffect(() => {
 		const on = (e: KeyboardEvent) => {

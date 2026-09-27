@@ -811,15 +811,19 @@ function layout(cw: number, ch: number, pose: Pose, rh: number) {
 // Round 5 swaps in its own remote designs; they drive the same round 4 TV.
 export type RemoteSlot = (p: { z: Zapper; t: Tv4; services: LRServiceButton[]; pointing: boolean; grip?: number }) => ReactNode
 
-export function LivingRoom3({ data, room, pose = "hand", look = "current", round4 = false, remote }: { data: LRData; room: Room3; pose?: Pose; look?: Look; round4?: boolean; remote?: RemoteSlot }) {
+// The TV flow prototype (#187) brings its own screen state and screens; the remote drives them the same way.
+export type TvSlot = { use: (z: Zapper, services: LRServiceButton[]) => Tv4; screen: (t: Tv4) => ReactNode }
+
+export function LivingRoom3({ data, room, pose = "hand", look = "current", round4 = false, remote, tvSlot }: { data: LRData; room: Room3; pose?: Pose; look?: Look; round4?: boolean; remote?: RemoteSlot; tvSlot?: TvSlot }) {
 	const root = useRef<HTMLDivElement>(null)
 	const area = useRef<HTMLDivElement>(null)
 	const remoteBox = useRef<HTMLDivElement>(null)
 	const z = useZapper(CHANNELS2.length)
 	const r = useRemote3(z, data.country)
 	// Round 4 drives the TV with its own screen stack; both hooks run, one is used.
-	const t4 = useTv4(z, data.country)
 	const { data: services } = useApi<LRServiceButton[]>({ op: "services" })
+	// Always the same hook for a given page, so the hook order stays stable.
+	const t4 = tvSlot ? tvSlot.use(z, services ?? []) : useTv4(z, data.country)
 	const [pointing, setPointing] = useState(false)
 	// Aiming: while you point at the TV, the remote swivels from its bottom toward the pointer. Springs and
 	// refs only, so moving the mouse never re-renders the page.
@@ -1019,7 +1023,7 @@ export function LivingRoom3({ data, room, pose = "hand", look = "current", round
 							<Screen
 								z={z}
 								channels={CHANNELS2}
-								render={(ch) => (round4 ? <Tv4Screen t={t4} data={data} services={services ?? []} /> : render3(ch, data, QUERIES, r, services ?? []))}
+								render={(ch) => (round4 ? (tvSlot ? tvSlot.screen(t4) : <Tv4Screen t={t4} data={data} services={services ?? []} />) : render3(ch, data, QUERIES, r, services ?? []))}
 								className="h-full w-full"
 								pointer={box.wide}
 								onPick={round4 ? (el) => (z.on ? t4.pick(el) : z.setOn(true)) : onPick}
