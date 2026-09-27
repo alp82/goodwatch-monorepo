@@ -39,7 +39,7 @@ export interface BuiltTaste {
 
 // Craft attributes say how well a title is made, not what it is like, so they never explain a match (as in the
 // prototypes).
-const CRAFT_KEYS: ReadonlySet<FingerprintKey> = new Set([
+export const CRAFT_KEYS: ReadonlySet<FingerprintKey> = new Set([
 	"direction",
 	"acting",
 	"cinematography",

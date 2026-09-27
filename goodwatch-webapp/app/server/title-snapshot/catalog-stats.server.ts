@@ -46,8 +46,11 @@ export function referencePool(c: Columns): number[] {
 	return [...top(movies, POOL_MOVIES.size), ...top(shows, POOL_SHOWS.size)]
 }
 
-export function catalogStats(c: Columns): CatalogStats {
-	const rows = referencePool(c)
+/** The statistics of the given reference pool rows (see referencePool). */
+export function catalogStats(
+	c: Columns,
+	rows: readonly number[],
+): CatalogStats {
 	const n = rows.length
 	const K = FINGERPRINT_LENGTH
 	const fp = c.fingerprints

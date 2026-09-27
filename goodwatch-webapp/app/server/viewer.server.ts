@@ -25,6 +25,7 @@ export interface ViewerContext {
 	country: string
 	services: number[] // saved, expanded through duplicateProviderMapping; [] for none
 	seen: ReadonlySet<TitleKey> // scored or watched
+	scores: ReadonlyMap<TitleKey, number> // the person's ratings, 1 to 10
 	wishlist: ReadonlyMap<TitleKey, Date> // added-at
 	skipped: ReadonlySet<TitleKey> // Not interested; hidden by Not seen yet
 	forYou: boolean // the member's saved For you setting; true for guests
@@ -38,8 +39,13 @@ export interface ViewerContext {
 export async function getViewerContext(
 	request: Request,
 	guest?: GuestProgress,
+	// The signed-in member's id when the caller has already read it (null for a guest), to skip a second auth check.
+	knownUserId?: string | null,
 ): Promise<ViewerContext> {
-	const userId = await getUserIdFromRequest({ request })
+	const userId =
+		knownUserId === undefined
+			? await getUserIdFromRequest({ request })
+			: knownUserId
 	const guessedCountry = getLocaleFromRequest(request).locale.country
 	if (!userId) return guestContext(guest, guessedCountry)
 
@@ -61,6 +67,12 @@ export async function getViewerContext(
 				toTitleKey(key as MediaKey),
 			),
 		]),
+		scores: new Map(
+			Object.entries(userData.scores).map(([key, entry]) => [
+				toTitleKey(key as MediaKey),
+				Number(entry.score),
+			]),
+		),
 		wishlist,
 		skipped: new Set(
 			Object.keys(userData.skipped).map((key) => toTitleKey(key as MediaKey)),
@@ -75,12 +87,15 @@ function guestContext(
 ): ViewerContext {
 	const interactions = normalizeGuestInteractions(guest?.interactions ?? [])
 	const seen = new Set<TitleKey>()
+	const scores = new Map<TitleKey, number>()
 	const wishlist = new Map<TitleKey, Date>()
 	const skipped = new Set<TitleKey>()
 	for (const item of interactions) {
 		const key = titleKey(item.media_type, item.tmdb_id)
-		if (item.type === "score") seen.add(key)
-		else if (item.type === "plan") wishlist.set(key, new Date(item.timestamp))
+		if (item.type === "score") {
+			seen.add(key)
+			if (item.score) scores.set(key, Number(item.score))
+		} else if (item.type === "plan") wishlist.set(key, new Date(item.timestamp))
 		else skipped.add(key)
 	}
 	return {
@@ -95,6 +110,7 @@ function guestContext(
 		country: countryCode(guest?.country) ?? guessedCountry,
 		services: expandServices(guest?.services),
 		seen,
+		scores,
 		wishlist,
 		skipped,
 		forYou: true,
