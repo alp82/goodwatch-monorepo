@@ -94,6 +94,38 @@ export async function getTitleCards(
 	return keys.flatMap((key) => cards.get(key) ?? [])
 }
 
+/**
+ * The subscription services that carry each title in the country, with names and logos, the given services first;
+ * null for every title while the country's availability loads. For surfaces that draw cards from their own display
+ * fields (the Taste page).
+ */
+export async function getCardServices(
+	country: string,
+	keys: TitleKey[],
+	own: readonly number[],
+): Promise<(CardService[] | null)[]> {
+	if (!keys.length) return []
+	const providers = await serviceNames()
+	const ownSet = new Set(own)
+	return servicesFor(country, keys).map((ids) =>
+		cardServices(ids, ownSet, providers),
+	)
+}
+
+/** Names and logos of the given services, in their order; unknown ids and repeated names are left out. */
+export async function getServiceList(
+	ids: readonly number[],
+): Promise<CardService[]> {
+	if (!ids.length) return []
+	const providers = await serviceNames()
+	const byName = new Map<string, CardService>()
+	for (const id of ids) {
+		const service = providers.get(id)
+		if (service && !byName.has(service.name)) byName.set(service.name, service)
+	}
+	return [...byName.values()]
+}
+
 function cardServices(
 	ids: number[] | null,
 	own: ReadonlySet<number>,

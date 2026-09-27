@@ -18,7 +18,8 @@ import {
 import type { Side, SideEdge, SidesView } from "./view"
 import { adjective, capitalize, label, noun } from "./words.server"
 
-type SidesResult = Omit<SidesView, "titles" | "subject">
+// The person's services with their logos are added with the titles (index.server.ts).
+type SidesResult = Omit<SidesView, "titles" | "subject" | "services">
 
 const MORE_OF_THIS = 12
 const MORE_OF_THIS_MATCH = 65

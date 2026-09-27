@@ -1,4 +1,4 @@
-// Members' portraits, cached in Redis per person and tab for 10 minutes at `taste-portrait:v1:<user_id>:<tab>`, and
+// Members' portraits, cached in Redis per person and tab for 10 minutes at `taste-portrait:v2:<user_id>:<tab>`, and
 // cleared when their taste changes (markTasteChanged calls clearTastePortrait).
 //
 // A cached view is used only when it was built after the person's latest write had settled: Crate shows a write to
@@ -11,7 +11,7 @@ import Redis from "ioredis"
 import { PORTRAIT_TABS, type PortraitTab, type PortraitView } from "./view"
 
 // Bump when a view's shape or computation changes, so cached views of the old kind are never read.
-const CACHE_VERSION = "v1"
+const CACHE_VERSION = "v2"
 const TTL_SECONDS = 10 * 60
 const SETTLE_MS = 1_500
 
