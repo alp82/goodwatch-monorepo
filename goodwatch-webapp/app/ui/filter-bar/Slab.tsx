@@ -20,7 +20,7 @@ import {
 	SLAB_NAV_ATTRIBUTE,
 	isBottomNavActive,
 } from "~/ui/nav/BottomNav"
-import { ServiceStack, SortItems, radioKeys, useMenu } from "./controls"
+import { DockStrip, useHasDock } from "~/ui/navigation/MobileDock"
 import {
 	FilterGroups,
 	type FilterGroupsData,
@@ -28,10 +28,11 @@ import {
 } from "./FilterGroups"
 import { ShowTitlesButton } from "./FiltersSheet"
 import { ForYouRow } from "./ForYou"
-import { type SortOption, recoveryLabel } from "./labels"
-import { Knob, MENU, RollingNumber, SPRING, TAP } from "./motion"
 import { SnapSheet } from "./SnapSheet"
 import { HiddenMeter, RecoveryList } from "./SubBar"
+import { ServiceStack, SortItems, radioKeys, useMenu } from "./controls"
+import { type SortOption, recoveryLabel } from "./labels"
+import { Knob, MENU, RollingNumber, SPRING, TAP } from "./motion"
 import type { FilterBarCounts, ForYouControl } from "./types"
 import type { StreamingProvider } from "./useFilterData"
 
@@ -224,9 +225,9 @@ function Block({
 }
 
 /**
- * The slab's frame, for any surface: a fixed panel at the bottom with an optional line on top, the strip of segments
- * with a trailing key, anything anchored above the strip (menus), and the dock row. Scrolling down folds the line and
- * the dock away; the strip stays. While it's mounted, the site's own bottom navigation steps aside.
+ * The slab's frame: an optional line, a filter strip and its menus. With the new navigation it lives in DockStrip,
+ * above the shared hub row. Otherwise it owns a fixed panel and the legacy navigation row, hiding BottomNav.
+ * Scrolling down folds the line and the legacy row away; the filter strip stays.
  */
 export function SlabShell({
 	line,
@@ -246,52 +247,62 @@ export function SlabShell({
 	children?: ReactNode
 }) {
 	const folded = useScrollFold()
+	const hasDock = useHasDock()
 	useEffect(() => {
+		if (hasDock) return
 		document.documentElement.setAttribute(SLAB_NAV_ATTRIBUTE, "")
 		return () => document.documentElement.removeAttribute(SLAB_NAV_ATTRIBUTE)
-	}, [])
-	return (
-		<div className="fixed inset-x-0 bottom-0 z-[60] lg:hidden">
-			<motion.div
-				layout
-				transition={SPRING}
-				className="relative rounded-t-[26px] bg-gray-950/90 ring-1 ring-white/10 backdrop-blur-2xl shadow-[0_-20px_50px_-20px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.07)]"
+	}, [hasDock])
+	const panel = (
+		<motion.div
+			layout
+			transition={SPRING}
+			className={
+				hasDock
+					? "relative min-w-0 flex-1"
+					: "relative rounded-t-[26px] bg-gray-950/90 ring-1 ring-white/10 backdrop-blur-2xl shadow-[0_-20px_50px_-20px_rgba(0,0,0,.9),inset_0_1px_0_rgba(255,255,255,.07)]"
+			}
+		>
+			<AnimatePresence initial={false}>
+				{!folded && line && (
+					<motion.div
+						initial={{ height: 0, opacity: 0 }}
+						animate={{ height: "auto", opacity: 1 }}
+						exit={{ height: 0, opacity: 0 }}
+						transition={SPRING}
+						className="overflow-hidden"
+					>
+						{line}
+					</motion.div>
+				)}
+			</AnimatePresence>
+			<div
+				className={`flex items-center gap-2 ${hasDock ? "" : "px-3 pt-2.5 pb-2.5"}`}
 			>
-				<AnimatePresence initial={false}>
-					{!folded && line && (
-						<motion.div
-							initial={{ height: 0, opacity: 0 }}
-							animate={{ height: "auto", opacity: 1 }}
-							exit={{ height: 0, opacity: 0 }}
-							transition={SPRING}
-							className="overflow-hidden"
-						>
-							{line}
-						</motion.div>
-					)}
-				</AnimatePresence>
-				<div className="flex items-center gap-2 px-3 pt-2.5 pb-2.5">
-					<div className="flex h-[52px] min-w-0 flex-1 items-stretch gap-1 rounded-[18px] bg-white/[0.05] p-1 ring-1 ring-white/10">
-						{strip}
-					</div>
-					{trailing}
+				<div className="flex h-[52px] min-w-0 flex-1 items-stretch gap-1 rounded-[18px] bg-white/[0.05] p-1 ring-1 ring-white/10">
+					{strip}
 				</div>
-				{children}
-				<AnimatePresence initial={false}>
-					{!folded && (
-						<motion.div
-							initial={{ height: 0 }}
-							animate={{ height: "auto" }}
-							exit={{ height: 0 }}
-							transition={SPRING}
-							className="overflow-hidden border-t border-white/5"
-						>
-							{nav ?? <SlabNav />}
-						</motion.div>
-					)}
-				</AnimatePresence>
-			</motion.div>
-		</div>
+				{trailing}
+			</div>
+			{children}
+			<AnimatePresence initial={false}>
+				{!hasDock && !folded && (
+					<motion.div
+						initial={{ height: 0 }}
+						animate={{ height: "auto" }}
+						exit={{ height: 0 }}
+						transition={SPRING}
+						className="overflow-hidden border-t border-white/5"
+					>
+						{nav ?? <SlabNav />}
+					</motion.div>
+				)}
+			</AnimatePresence>
+		</motion.div>
+	)
+	if (hasDock) return <DockStrip>{panel}</DockStrip>
+	return (
+		<div className="fixed inset-x-0 bottom-0 z-[60] lg:hidden">{panel}</div>
 	)
 }
 
