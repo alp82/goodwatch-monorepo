@@ -1,14 +1,15 @@
 ---
-- name: Configure cleanup Cron Job for Windmill
+# The daily `killall -9 windmill` worked around old memory leaks. It killed every
+# running job at 21:31 and made schedules re-run, so it is removed. The entry is
+# matched by its name, which must stay unchanged for the removal to work.
+- name: Remove the daily Windmill kill cron job
   hosts: all
   become: yes
   tasks:
-    - name: "Cron: Kill chromium zombie processes (Daily at 21:31)"
+    - name: "Cron: remove the daily Windmill kill"
       cron:
         name: "Kill windmill process every 24 hours"
-        minute: "31"
-        hour: "21"
-        job: "/usr/bin/killall -9 windmill"
+        state: absent
 
 - name: Configure Backup Cron Job for CrateDB
   hosts: db1
