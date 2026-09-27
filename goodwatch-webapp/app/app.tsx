@@ -8,18 +8,27 @@ import React from "react"
 import Footer from "~/ui/Footer"
 import Header from "~/ui/main/Header"
 import BottomNav from "~/ui/nav/BottomNav"
+import {
+	HubDialog,
+	MobileDock,
+	NavigationProvider,
+	SearchDialog,
+	SiteHeader,
+} from "~/ui/navigation"
 import { useUser } from "~/utils/auth"
+import { useFeature } from "~/hooks/useFeature"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
 
 function App() {
 	const location = useLocation()
 	const { user } = useUser()
+	const navigation = useFeature("navigation")
 
 	useInvalidateOnVisibility()
 
-	return (
+	const page = (
 		<>
-			<Header />
+			{navigation ? <SiteHeader /> : <Header />}
 			{/* Show smart onboarding banner for logged-in users */}
 			{user && <AccountTransfer key={user.id} />}
 			<main className="relative grow mx-auto mt-16 pb-2 w-full text-neutral-300">
@@ -37,9 +46,18 @@ function App() {
 				</AnimatePresence>
 			</main>
 			<Footer />
-			<BottomNav />
+			{navigation ? (
+				<>
+					<MobileDock />
+					<HubDialog />
+					<SearchDialog />
+				</>
+			) : (
+				<BottomNav />
+			)}
 		</>
 	)
+	return navigation ? <NavigationProvider>{page}</NavigationProvider> : page
 }
 
 export default function AppWithSearch() {
