@@ -25,6 +25,8 @@ import { getCast } from "~/server/cast.server"
 import { getCountries } from "~/server/countries.server"
 import { getCrew } from "~/server/crew.server"
 import { getGenresUnique } from "~/server/genres.server"
+import { legacyDiscoverRedirect } from "~/server/discover-legacy-params.server"
+import { getFeatureMode, isEnabled } from "~/server/features.server"
 import { getPersonName } from "~/server/person.server"
 import {
 	getStreamingProviders,
@@ -45,6 +47,7 @@ import type { TitleType } from "~/ui/filter/sections/SectionType"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 import { useNav } from "~/utils/navigation"
+import { getUserIdFromRequest } from "~/utils/auth"
 import { buildDiscoverParams } from "~/utils/discover"
 import { personPath } from "~/utils/helpers"
 
@@ -117,6 +120,17 @@ export const loader = async ({
 	if (personId) {
 		const name = await getPersonName(personId)
 		if (name) return redirect(personPath(personId, name), 301)
+	}
+
+	// With the new filter bar, old links move to the new parameter names.
+	if (
+		getFeatureMode("filterBar") !== "off" &&
+		isEnabled("filterBar", {
+			userId: await getUserIdFromRequest({ request }),
+		})
+	) {
+		const moved = await legacyDiscoverRedirect(request)
+		if (moved) return moved
 	}
 
 	const requestedPage = Number.parseInt(urlParams.get("page") || "1", 10)
