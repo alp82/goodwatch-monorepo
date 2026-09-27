@@ -1,9 +1,11 @@
 // The Explorer's reads from `/api/explorer/*`: members send GET and are read from their session; guests send POST
 // with the guest progress their browser holds, so taste, Seen, and their services apply to them too.
 import type {
+	ExplorerBridge,
 	ExplorerCard,
 	ExplorerIslandTree,
 	ExplorerMap,
+	ExplorerPairs,
 	Grouping,
 } from "~/domain/explorer"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
@@ -63,6 +65,20 @@ export const fetchIsland = (q: MapQuery, id: string, member: boolean) =>
 export const fetchCard = (key: TitleKey, member: boolean) =>
 	request<ExplorerCard>("card", { key: String(key) }, member)
 
+export const fetchPairs = (q: MapQuery, member: boolean) =>
+	request<ExplorerPairs>("pairs", mapParams(q), member)
+
+export const fetchBridge = (
+	q: MapQuery,
+	a: string,
+	b: string,
+	member: boolean,
+) => request<ExplorerBridge>("bridge", { ...mapParams(q), a, b }, member)
+
+/** A pair of islands in one order, whichever way round they were picked. */
+export const pairKey = (a: string, b: string) =>
+	a < b ? `${a},${b}` : `${b},${a}`
+
 /** Query keys: per viewer (a member's id, or "guest"), so signing in or out never shows another person's map. */
 export const explorerKeys = {
 	map: (viewer: string, q: MapQuery) =>
@@ -79,4 +95,16 @@ export const explorerKeys = {
 		] as const,
 	card: (viewer: string, key: TitleKey) =>
 		["explorer", "card", viewer, key] as const,
+	pairs: (viewer: string, q: MapQuery) =>
+		["explorer", "pairs", viewer, q.grouping, q.services, q.unseen] as const,
+	bridge: (viewer: string, q: MapQuery, a: string, b: string) =>
+		[
+			"explorer",
+			"bridge",
+			viewer,
+			q.grouping,
+			q.services,
+			q.unseen,
+			pairKey(a, b),
+		] as const,
 }

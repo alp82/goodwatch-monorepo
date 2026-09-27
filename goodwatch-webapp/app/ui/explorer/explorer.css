@@ -902,13 +902,547 @@ body:has(.ex-stage) > main {
 	color: var(--mute);
 }
 
+/* ---- the history: a back button, the last two steps, and every step in a dropdown */
+.ex-hist-top {
+	display: none;
+}
+.ex-hist {
+	position: relative;
+	flex: none;
+	min-width: 0;
+}
+.ex-crumbs {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	height: 44px;
+	padding: 0 4px;
+	border-radius: 13px;
+	background: var(--glass);
+	border: 1px solid var(--line);
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+	min-width: 0;
+}
+.ex-back {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 36px;
+	border-radius: 10px;
+	color: #fff;
+	flex: none;
+}
+.ex-back:hover {
+	background: rgba(255, 255, 255, 0.1);
+}
+.ex-back:disabled {
+	color: rgba(255, 255, 255, 0.25);
+	background: none;
+}
+.ex-crumb {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	height: 36px;
+	padding: 0 11px 0 9px;
+	border-radius: 10px;
+	font-size: 14.5px;
+	font-weight: 600;
+	color: var(--mute);
+	min-width: 0;
+	max-width: 14rem;
+}
+button.ex-crumb:hover {
+	background: rgba(255, 255, 255, 0.08);
+	color: #fff;
+}
+.ex-crumb-on {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.1);
+}
+.ex-crumb-t {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.ex-sep {
+	color: rgba(255, 255, 255, 0.25);
+	font-size: 12px;
+}
+.ex-hist-btn {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+	height: 36px;
+	padding: 0 9px;
+	border-radius: 10px;
+	color: var(--mute);
+	flex: none;
+}
+.ex-hist-btn:hover {
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+}
+.ex-hist-n {
+	font-size: 12px;
+	font-weight: 700;
+	min-width: 20px;
+	height: 20px;
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.1);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 4px;
+}
+.ex-hist-menu {
+	position: absolute;
+	left: 0;
+	top: calc(100% + 6px);
+	z-index: 60;
+	width: 300px;
+	max-width: calc(100vw - 24px);
+	max-height: 340px;
+	overflow-y: auto;
+	padding: 6px;
+	border-radius: 14px;
+	background: var(--glass-2);
+	border: 1px solid var(--line);
+	backdrop-filter: blur(22px);
+	-webkit-backdrop-filter: blur(22px);
+	box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+	touch-action: pan-y;
+}
+.ex-hist-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	min-height: 44px;
+	padding: 6px 10px;
+	border-radius: 9px;
+	text-align: left;
+	font-size: 14.5px;
+	font-weight: 500;
+	color: var(--text);
+}
+.ex-hist-item:hover {
+	background: rgba(255, 255, 255, 0.07);
+}
+.ex-hist-cur {
+	background: rgba(255, 255, 255, 0.06);
+}
+.ex-hist-kind {
+	width: 44px;
+	flex: none;
+	font-size: 11px;
+	color: var(--mute);
+	text-align: center;
+}
+.ex-hist-t {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.ex-hist-here {
+	font-size: 11px;
+	color: var(--gold);
+	flex: none;
+}
+.ex-list-tog {
+	padding: 0 14px 0 12px;
+}
+@media (max-width: 1279px) {
+	.ex-wide-list {
+		display: none;
+	}
+	.ex-list-tog {
+		width: 44px;
+		padding: 0;
+		justify-content: center;
+	}
+}
+@media (max-width: 767px) {
+	.ex-hist-top {
+		display: block;
+		flex: 1;
+		min-width: 0;
+	}
+	.ex-hist-side {
+		display: none;
+	}
+	.ex-hist-top .ex-hist {
+		flex: 1;
+	}
+	.ex-row .ex-pick {
+		flex: none;
+	}
+	.ex-row .ex-pick select {
+		width: auto;
+	}
+	/* Only the step you're on; the rest are in the dropdown. */
+	.ex-crumbs > .ex-crumb:not(.ex-crumb-on),
+	.ex-crumbs > .ex-sep {
+		display: none;
+	}
+	.ex-crumb-on {
+		flex: 0 1 auto;
+	}
+	.ex-crumb {
+		max-width: 9.5rem;
+	}
+	.ex-hist-n {
+		display: none;
+	}
+	.ex-hist-btn {
+		padding: 0 6px;
+	}
+	.ex-hist-menu {
+		left: auto;
+		right: 0;
+	}
+	.ex-filters .ex-list-tog {
+		flex: none;
+		padding: 0;
+	}
+}
+
+/* ---- the combine bar */
+.ex-bar-wrap {
+	position: absolute;
+	left: 0;
+	right: 0;
+	z-index: 31;
+	pointer-events: none;
+}
+.ex-bar {
+	pointer-events: auto;
+	position: relative;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: max-content;
+	max-width: calc(100% - 24px);
+	min-height: 50px;
+	padding: 5px 5px 5px 16px;
+	border-radius: 16px;
+	background: var(--glass-2);
+	border: 1px solid var(--line-2);
+	backdrop-filter: blur(22px) saturate(1.5);
+	-webkit-backdrop-filter: blur(22px) saturate(1.5);
+	box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+	font-size: 15px;
+	animation: ex-drop 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.ex-bar-body {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	padding-right: 6px;
+}
+.ex-bar b {
+	font-weight: 700;
+	color: #fff;
+}
+.ex-bar-nm {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 0 1 auto;
+}
+.ex-bar-count {
+	color: #fff4d6;
+	font-weight: 700;
+	flex: none;
+}
+.ex-bar-sm {
+	display: none;
+}
+.ex-bar-mute {
+	color: var(--mute);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+.ex-bar-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 99px;
+	flex: none;
+	display: inline-block;
+}
+.ex-bar-pair {
+	display: inline-flex;
+	flex: none;
+}
+.ex-bar-pair .ex-bar-dot + .ex-bar-dot {
+	margin-left: -3px;
+	outline: 2px solid rgba(14, 19, 34, 0.9);
+}
+.ex-bar-go {
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+	min-height: 40px;
+	flex: 0 1 auto;
+}
+.ex-bar-go:hover b {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.ex-bar-x {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	height: 40px;
+	padding: 0 14px 0 12px;
+	border-radius: 12px;
+	font-size: 15px;
+	font-weight: 700;
+	color: #fff;
+	background: rgba(255, 255, 255, 0.1);
+}
+.ex-bar-x svg {
+	width: 12px;
+	height: 12px;
+}
+.ex-bar-x:hover {
+	background: rgba(255, 255, 255, 0.18);
+}
+@keyframes ex-drop {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -6px);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, 0);
+	}
+}
+@media (max-width: 767px) {
+	.ex-bar-lg {
+		display: none;
+	}
+	.ex-bar-sm {
+		display: inline;
+	}
+	.ex-bar {
+		font-size: 14px;
+		padding-left: 12px;
+		min-height: 48px;
+		width: calc(100% - 24px);
+	}
+	.ex-bar-body {
+		flex: 1;
+		flex-wrap: wrap;
+		row-gap: 0;
+	}
+	.ex-bar-x {
+		padding: 0 12px;
+		font-size: 14px;
+	}
+}
+
+/* ---- on the map: "Go in" on a lit island, and the label of a previewed bridge */
+.ex-on {
+	position: absolute;
+	left: 0;
+	top: 0;
+	will-change: transform;
+	pointer-events: auto;
+}
+.ex-goin {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	height: 44px;
+	padding: 0 18px 0 16px;
+	border-radius: 99px;
+	font-size: 15px;
+	font-weight: 700;
+	color: #0b0f1c;
+	background: #f4f6ff;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 24px
+		var(--c, rgba(255, 255, 255, 0.3));
+	white-space: nowrap;
+	animation: ex-pop-in 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.ex-goin:hover {
+	background: #fff;
+}
+.ex-goin svg {
+	width: 14px;
+	height: 14px;
+}
+.ex-ghost {
+	pointer-events: none;
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1px;
+	padding: 8px 14px;
+	border-radius: 14px;
+	color: #fff;
+	text-align: center;
+	white-space: nowrap;
+	background: rgba(9, 12, 23, 0.6);
+	border: 1px solid color-mix(in srgb, var(--c) 55%, rgba(255, 255, 255, 0.18));
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+	animation: ex-fade 0.3s ease both;
+}
+.ex-ghost b {
+	font-size: 15px;
+	font-weight: 800;
+}
+.ex-ghost span {
+	font-size: 13px;
+	color: #fff4d6;
+	font-weight: 700;
+}
+@keyframes ex-pop-in {
+	from {
+		opacity: 0;
+		transform: scale(0.9);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ---- the minimap: shows once you're zoomed in */
+.ex-mini {
+	position: absolute;
+	z-index: 25;
+	left: 18px;
+	bottom: 18px;
+	padding: 6px;
+	border-radius: 14px;
+	background: var(--glass);
+	border: 1px solid var(--line);
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+	transition: opacity 0.35s, transform 0.35s;
+}
+.ex-mini-off {
+	opacity: 0;
+	transform: translateY(8px);
+	pointer-events: none;
+}
+@media (max-width: 1023px) {
+	.ex-mini {
+		bottom: 74px;
+	}
+}
+@media (max-width: 767px) {
+	.ex-mini {
+		left: 12px;
+		bottom: 84px;
+		padding: 4px;
+		border-radius: 10px;
+	}
+}
+
+/* ---- the list view: the same islands and titles as headings and links */
+/* Under the controls, and scrolling on its own: the page itself never scrolls. */
+.ex-list.ex-list-view {
+	z-index: 26;
+	top: calc(var(--ex-pad-t, 150px) - 16px);
+	padding-top: 16px;
+	background: #050810;
+	overscroll-behavior: contain;
+}
+.ex-tog[aria-pressed="true"] {
+	color: #0b0f1c;
+	background: #f4f6ff;
+	border-color: #f4f6ff;
+}
+.ex-list-view .ex-list-islands {
+	max-width: 1280px;
+}
+.ex-list-combine {
+	position: relative;
+	display: inline-block;
+	margin: 0 0 10px;
+}
+.ex-list-combine select {
+	appearance: none;
+	-webkit-appearance: none;
+	min-height: 44px;
+	max-width: 100%;
+	padding: 0 36px 0 14px;
+	border-radius: 12px;
+	font: 600 14.5px Gabarito, system-ui, sans-serif;
+	color: #fff;
+	background: var(--glass)
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E")
+		no-repeat right 14px center / 12px 8px;
+	border: 1px solid var(--line-2);
+}
+.ex-list-combine select option {
+	color: #0b0f1c;
+}
+.ex-list-bridge {
+	max-width: 1280px;
+	margin-bottom: 28px;
+	padding: 16px 18px;
+	border-radius: 16px;
+	border: 1px solid color-mix(in srgb, var(--c) 55%, rgba(255, 255, 255, 0.18));
+	background: color-mix(in srgb, var(--c) 10%, rgba(10, 14, 26, 0.7));
+}
+.ex-list-bridge ul {
+	columns: 3 240px;
+}
+.ex-list-bridge-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+}
+.ex-list-sep {
+	flex: none;
+	min-height: 44px;
+	padding: 0 16px;
+	border-radius: 12px;
+	font-weight: 700;
+	color: #fff;
+	background: rgba(255, 255, 255, 0.1);
+}
+.ex-list-sep:hover {
+	background: rgba(255, 255, 255, 0.18);
+}
+@media (max-width: 767px) {
+	.ex-list.ex-list-view {
+		padding: 16px 16px 32px;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.ex-card,
 	.ex-card-sheet,
 	.ex-cap-b,
 	.ex-where,
-	.ex-toast {
+	.ex-toast,
+	.ex-bar,
+	.ex-goin,
+	.ex-ghost {
 		animation: none;
+	}
+	.ex-mini {
+		transition: none;
 	}
 	.ex-card {
 		filter: none;

@@ -1,10 +1,10 @@
+import type { ExplorerTitle } from "~/domain/explorer"
 // The poster layer's drawing, on a Canvas 2D over the sea: the `lit` posters (a warm pool of light follows the
 // focus; cards near it are bright, tilt toward it, and cast shadows away from it; far ones sink into the night and
 // shrink to dots in their own color), the thread from the active poster to its card, and the islands' names.
 import { type Rgb, mixRgb, rgbCss } from "./color"
 import { dotColor, imageAt, posterImage } from "./images"
 import type { MapIsland } from "./island"
-import type { ExplorerTitle } from "~/domain/explorer"
 
 export const FONT = "Gabarito, system-ui, sans-serif"
 
@@ -332,6 +332,90 @@ export function paintThread(
 	g.restore()
 }
 
+// ---------------------------------------------------------------- combining
+
+type Point = { x: number; y: number }
+
+/** A band of light between two screen points: a wide soft glow, a core, and a dotted line of light drifting along. */
+export function paintBand(
+	g: CanvasRenderingContext2D,
+	a: Point,
+	b: Point,
+	c0: Rgb,
+	c1: Rgb,
+	wide: number,
+	alpha: number,
+	drift: number,
+) {
+	const gr = g.createLinearGradient(a.x, a.y, b.x, b.y)
+	gr.addColorStop(0, rgbCss(c0, 0.5))
+	gr.addColorStop(1, rgbCss(c1, 0.5))
+	g.save()
+	g.lineCap = "round"
+	g.strokeStyle = gr
+	g.globalAlpha = alpha * 0.28
+	g.lineWidth = wide * 2.2
+	g.beginPath()
+	g.moveTo(a.x, a.y)
+	g.lineTo(b.x, b.y)
+	g.stroke()
+	g.globalAlpha = alpha * 0.75
+	g.lineWidth = wide * 0.5
+	g.stroke()
+	g.globalAlpha = alpha
+	g.setLineDash([1, Math.max(6, wide * 0.9)])
+	g.lineDashOffset = drift
+	g.lineWidth = Math.max(1.6, wide * 0.18)
+	g.strokeStyle = "rgba(255,255,255,.85)"
+	g.stroke()
+	g.restore()
+}
+
+/** Where a bridge would rise: a seed of light, pulsing gently (still with reduced motion). */
+export function paintSeed(
+	g: CanvasRenderingContext2D,
+	at: Point,
+	color: Rgb,
+	radius: number,
+	alpha: number,
+) {
+	g.save()
+	g.globalCompositeOperation = "lighter"
+	g.globalAlpha = alpha
+	const gr = g.createRadialGradient(at.x, at.y, 0, at.x, at.y, radius)
+	gr.addColorStop(0, rgbCss(mixRgb(color, [1, 1, 1], 0.6), 0.9))
+	gr.addColorStop(0.35, rgbCss(color, 0.45))
+	gr.addColorStop(1, rgbCss(color, 0))
+	g.fillStyle = gr
+	g.fillRect(at.x - radius, at.y - radius, 2 * radius, 2 * radius)
+	g.restore()
+}
+
+/** A lit island: a bright shoreline just off its shore, and a halo in its own light. `shore` is in screen pixels. */
+export function paintRing(
+	g: CanvasRenderingContext2D,
+	shore: Point[],
+	color: Rgb,
+	alpha: number,
+) {
+	if (shore.length < 3) return
+	g.save()
+	g.beginPath()
+	shore.forEach((p, n) => (n ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)))
+	g.closePath()
+	g.globalAlpha = alpha
+	g.shadowColor = rgbCss(mixRgb(color, [1, 1, 1], 0.2), 1)
+	g.shadowBlur = 22
+	g.lineWidth = 3
+	g.strokeStyle = rgbCss(mixRgb(color, [1, 1, 1], 0.55), 1)
+	g.stroke()
+	g.shadowBlur = 0
+	g.lineWidth = 1.4
+	g.strokeStyle = "rgba(255,255,255,.95)"
+	g.stroke()
+	g.restore()
+}
+
 // ---------------------------------------------------------------- names
 
 export interface NamesFrame {
@@ -353,10 +437,23 @@ export interface NamesFrame {
 
 const subLineOf = (island: MapIsland, phone: boolean) => {
 	const n = `${island.count.toLocaleString("en")} ${island.count === 1 ? "title" : "titles"}`
-	return island.medianMatch != null && !phone
-		? `${n}, ${island.medianMatch}% your taste`
-		: n
+	const taste =
+		island.medianMatch != null && !phone
+			? `, ${island.medianMatch}% your taste`
+			: ""
+	if (island.bridge)
+		return island.bridge.kind === "both"
+			? `${n} in both${taste}`
+			: `${n} between the two${taste}`
+	return `${n}${taste}`
 }
+
+/** How far a bridge has risen, for its name and posters: 0 until it's well up, and fading as it sinks. */
+export const risen = (island: MapIsland, from: number) =>
+	island.bridge
+		? smooth(from, 1, island.bridge.grow) *
+			(island.bridge.to ? 1 : island.bridge.grow)
+		: 1
 
 /**
  * The islands' names: big on the islands out at the map, then small and pinned inside the view as you zoom into one,
@@ -371,9 +468,10 @@ export function paintNames(
 	const placed: { x0: number; x1: number; y0: number; y1: number }[] = []
 	const order = islands
 		.filter((island) => island.on)
-		// Lit islands, then vivid ones, then the ones nearest the middle claim their room first.
+		// The bridge, then lit islands, then vivid ones, then the ones nearest the middle claim their room first.
 		.sort(
 			(a, b) =>
+				(b.bridge ? 1 : 0) - (a.bridge ? 1 : 0) ||
 				(b.look.lit > 0.5 ? 1 : 0) - (a.look.lit > 0.5 ? 1 : 0) ||
 				(b.look.vivid > 0.5 ? 1 : 0) - (a.look.vivid > 0.5 ? 1 : 0) ||
 				Math.hypot(a.sx - W / 2, a.sy - H / 2) -
@@ -383,15 +481,19 @@ export function paintNames(
 		const st1 = f.islandScale(island)
 		let a = 1 - smooth(Math.max(f.fit * 1.3, st1 * 0.42), st1 * 0.8, f.scale)
 		const mm = island.look.mute * f.mapLevel
-		a *= 1 - 0.28 * mm
+		a *= (1 - 0.28 * mm) * risen(island, 0.55)
 		if (a <= 0.01) continue
 		const z = smooth(f.fit * 1.25, f.fit * 2.2, f.scale)
 		const sr = island.sr
+		const bridge = !!island.bridge
 		let size =
 			clamp(sr * (ph ? 0.2 : 0.22), ph ? 12 : 15, ph ? 22 : 40) * (1 - z) +
 			(ph ? 13 : 15) * z
+		if (bridge) size = Math.max(size, ph ? 14 : 17)
 		g.font = `800 ${size}px ${FONT}`
-		const room = Math.max(sr * (ph ? 1.8 : 2.1), ph ? 72 : 120)
+		const room = Math.max(sr * (ph ? 1.8 : 2.1), bridge ? 180 : ph ? 72 : 120)
+		/** The widest the line under the name may be. */
+		const subRoom = Math.max(sr * 1.8, bridge ? 240 : 0)
 		let lines = [island.name]
 		const words = island.name.split(" ")
 		if (
@@ -431,12 +533,24 @@ export function paintNames(
 		g.font = `800 ${size}px ${FONT}`
 		const half = Math.max(...lines.map((l) => g.measureText(l).width)) / 2 + 12
 		const lead = size * 1.02
-		const note = f.notes.get(island.id)
+		const note = bridge ? undefined : f.notes.get(island.id)
 		const subLine = note ?? subLineOf(island, ph)
+		const subFont = `${note ? 700 : 500} ${note ? sub * 1.08 : sub}px ${FONT}`
+		// A bridge's line is wide; keep all of it on screen.
+		g.font = subFont
+		const subHalf =
+			bridge && z < 0.5
+				? Math.min(g.measureText(subLine).width, subRoom) / 2
+				: 0
+		g.font = `800 ${size}px ${FONT}`
 		const lx =
 			z > 0
 				? clamp(island.sx, pad.l + half, W - Math.max(pad.r, 60) - half)
-				: clamp(island.sx, half + 6, W - half - 6)
+				: clamp(
+						island.sx,
+						Math.max(half, subHalf) + 6,
+						W - Math.max(half, subHalf) - 6,
+					)
 		let y =
 			z > 0
 				? clamp(island.sy, pad.t + 24, H - 50)
@@ -444,19 +558,22 @@ export function paintNames(
 					(island.logo ? size * 0.5 : 0) -
 					((lines.length - 1) * lead) / 2
 		// A name pulled far from its island (the island is mostly off screen) says nothing: leave it out.
-		if (Math.hypot(lx - island.sx, y - island.sy) > Math.max(sr * 0.75, 40))
+		if (
+			!bridge &&
+			Math.hypot(lx - island.sx, y - island.sy) > Math.max(sr * 0.75, 40)
+		)
 			continue
-		const withSub = ((sr > (ph ? 34 : 46) && mm < 0.5) || !!note) && z < 0.5
+		const withSub =
+			(((sr > (ph ? 34 : 46) || bridge) && mm < 0.5) || !!note) && z < 0.5
 		if (above) {
 			const below = (lines.length - 1) * lead + (withSub ? sub * 1.55 : 0)
 			const top = island.sy - sr * 1.1 - 8 - sub * 0.4 - below
 			y = Math.max(top, pad.t + size)
 			if (y > top + 4) y = island.sy + sr * 1.1 + size + 4
 		}
-		const subFont = `${note ? 700 : 500} ${note ? sub * 1.08 : sub}px ${FONT}`
 		g.font = subFont
 		const bh = withSub
-			? Math.max(half - 6, Math.min(g.measureText(subLine).width, sr * 1.8) / 2)
+			? Math.max(half - 6, Math.min(g.measureText(subLine).width, subRoom) / 2)
 			: half - 6
 		const box = {
 			x0: lx - bh,
@@ -508,7 +625,7 @@ export function paintNames(
 			g.font = subFont
 			;(g as unknown as { letterSpacing: string }).letterSpacing = "0px"
 			g.fillStyle = note ? "#fff4d6" : "rgba(235,240,255,.78)"
-			g.fillText(subLine, lx, y, sr * 1.8)
+			g.fillText(subLine, lx, y, subRoom)
 		}
 		g.restore()
 	}

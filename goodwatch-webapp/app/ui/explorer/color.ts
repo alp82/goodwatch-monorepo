@@ -11,6 +11,15 @@ export const hexRgb = (hex: string): Rgb => [
 export const rgbCss = (c: Rgb, alpha = 1) =>
 	`rgba(${Math.round(c[0] * 255)},${Math.round(c[1] * 255)},${Math.round(c[2] * 255)},${alpha})`
 
+export const rgbHex = (c: Rgb) =>
+	`#${c
+		.map((v) =>
+			Math.round(Math.min(1, Math.max(0, v)) * 255)
+				.toString(16)
+				.padStart(2, "0"),
+		)
+		.join("")}`
+
 export const mixRgb = (a: Rgb, b: Rgb, t: number): Rgb => [
 	a[0] + (b[0] - a[0]) * t,
 	a[1] + (b[1] - a[1]) * t,
