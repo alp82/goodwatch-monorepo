@@ -5,6 +5,7 @@ import {
 	redirect,
 } from "@remix-run/node"
 import {
+	type ShouldRevalidateFunction,
 	useLoaderData,
 	useLocation,
 	useNavigate,
@@ -16,6 +17,12 @@ import {
 	dehydrate,
 } from "@tanstack/react-query"
 import React, { useState } from "react"
+import {
+	filterQuery,
+	filterStateFromParams,
+	rewriteLegacyDiscoverParams,
+	sortFromParams,
+} from "~/domain/filter-state"
 import { queryKeyCast } from "~/routes/api.cast"
 import { queryKeyCountries } from "~/routes/api.countries"
 import { queryKeyCrew } from "~/routes/api.crew"
@@ -24,32 +31,42 @@ import { getQueryKeyStreamingProviders } from "~/routes/api.streaming-providers"
 import { getCast } from "~/server/cast.server"
 import { getCountries } from "~/server/countries.server"
 import { getCrew } from "~/server/crew.server"
-import { getGenresUnique } from "~/server/genres.server"
 import { legacyDiscoverRedirect } from "~/server/discover-legacy-params.server"
-import { getFeatureMode, isEnabled } from "~/server/features.server"
-import { getPersonName } from "~/server/person.server"
 import {
-	getStreamingProviders,
-	slimStreamingProviders,
-} from "~/server/streaming-providers.server"
-import { prefetchUserSettings } from "~/server/user-settings.server"
+	type DiscoverResults as BrowseResults,
+	SnapshotNotLoaded,
+	discoverFilterDefaults,
+	forYouFromParams,
+	getDiscoverResults as getBrowseResults,
+} from "~/server/discover-results.server"
 import {
 	type DiscoverParams,
 	type DiscoverResults,
 	type DiscoverSortBy,
 	getDiscoverResults,
 } from "~/server/discover.server"
+import { getFeatureMode, isEnabled } from "~/server/features.server"
+import { getGenresUnique } from "~/server/genres.server"
+import { getPersonName } from "~/server/person.server"
+import {
+	getStreamingProviders,
+	slimStreamingProviders,
+} from "~/server/streaming-providers.server"
 import type { DiscoverFilterType } from "~/server/types/discover-types"
+import { prefetchUserSettings } from "~/server/user-settings.server"
 import type { FilterMediaType } from "~/server/utils/query-db"
+import { getViewerContext } from "~/server/viewer.server"
+import { DiscoverBrowse } from "~/ui/discover/DiscoverBrowse"
+import { type InitialBrowse, browseKey } from "~/ui/discover/useDiscoverBrowse"
 import MovieTvGrid from "~/ui/explore/MovieTvGrid"
 import FilterBar from "~/ui/filter/FilterBar"
 import type { TitleType } from "~/ui/filter/sections/SectionType"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
-import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
-import { useNav } from "~/utils/navigation"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { buildDiscoverParams } from "~/utils/discover"
 import { personPath } from "~/utils/helpers"
+import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
+import { useNav } from "~/utils/navigation"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -122,15 +139,23 @@ export const loader = async ({
 		if (name) return redirect(personPath(personId, name), 301)
 	}
 
-	// With the new filter bar, old links move to the new parameter names.
-	if (
-		getFeatureMode("filterBar") !== "off" &&
-		isEnabled("filterBar", {
-			userId: await getUserIdFromRequest({ request }),
-		})
-	) {
-		const moved = await legacyDiscoverRedirect(request)
-		if (moved) return moved
+	// With the new filter bar, Discover's browse mode: old links move to the new parameter names first.
+	if (getFeatureMode("filterBar") !== "off") {
+		const userId = (await getUserIdFromRequest({ request })) ?? null
+		if (isEnabled("filterBar", { userId })) {
+			const moved = await legacyDiscoverRedirect(request)
+			if (moved) return moved
+			// The type is a filter now: /discover/movies is /discover?type=movie. Temporary, while the flag can roll back.
+			if (routeParams.type) {
+				const type = (
+					{ movies: "movie", show: "show" } as Record<string, string>
+				)[routeParams.type]
+				if (type && !urlParams.has("type")) urlParams.set("type", type)
+				const search = urlParams.toString()
+				return redirect(`/discover${search ? `?${search}` : ""}`, 302)
+			}
+			return browseLoader(request, userId)
+		}
 	}
 
 	const requestedPage = Number.parseInt(urlParams.get("page") || "1", 10)
@@ -231,6 +256,77 @@ export const loader = async ({
 	}
 }
 
+// Pages the first view loads for ?page=N, like today's Discover.
+const MAX_INITIAL_PAGES = 5
+
+export interface BrowseLoaderData {
+	browse: {
+		initial: InitialBrowse | null
+		member: boolean
+		hasServices: boolean
+		savedForYou: boolean
+	}
+	mediaType: "all"
+}
+
+async function browseLoader(
+	request: Request,
+	userId: string | null,
+): Promise<BrowseLoaderData> {
+	const params = new URL(request.url).searchParams
+	// A guest's progress lives in their browser: the first view is the plain guest's, and the browser asks again with it.
+	const ctx = await getViewerContext(request, undefined, userId)
+	const defaults = discoverFilterDefaults(ctx)
+	const state = filterStateFromParams(params, defaults)
+	const sort = sortFromParams(params, false)
+	const forYou = forYouFromParams(params, ctx)
+	const requested = Number.parseInt(params.get("page") ?? "1", 10) || 1
+	const count = Math.min(Math.max(1, requested), MAX_INITIAL_PAGES)
+	let pages: BrowseResults[] | null = null
+	try {
+		pages = await Promise.all(
+			Array.from({ length: count }, (_, i) =>
+				getBrowseResults(ctx, { state, sort, forYou, page: i + 1 }),
+			),
+		)
+	} catch (error) {
+		// Right after a restart: the browser asks /api/discover/results once the snapshot has loaded.
+		if (!(error instanceof SnapshotNotLoaded)) throw error
+	}
+	return {
+		browse: {
+			initial: pages
+				? { key: browseKey(filterQuery(state, sort, defaults), forYou), pages }
+				: null,
+			member: ctx.viewer.kind === "member",
+			hasServices: ctx.services.length > 0,
+			savedForYou: ctx.forYou,
+		},
+		mediaType: "all",
+	}
+}
+
+// Set while browse mode renders: its filters, sort, and For you change only the URL's parameters, and the results
+// come from /api/discover/results, so the loader doesn't run again for them. Today's Discover keeps revalidating.
+let browsing = false
+
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+	currentUrl,
+	nextUrl,
+	formMethod,
+	defaultShouldRevalidate,
+}) => {
+	if (
+		!browsing ||
+		formMethod ||
+		currentUrl.pathname !== nextUrl.pathname ||
+		// An old link followed from this page still goes through the loader's redirect.
+		rewriteLegacyDiscoverParams(nextUrl.searchParams, () => undefined)
+	)
+		return defaultShouldRevalidate
+	return false
+}
+
 export function ErrorBoundary() {
 	const error = useRouteError()
 	const navigate = useNavigate()
@@ -252,7 +348,14 @@ export function ErrorBoundary() {
 	)
 }
 
-export default function Discover() {
+export default function DiscoverRoute() {
+	const data = useLoaderData<LoaderData | BrowseLoaderData>()
+	browsing = "browse" in data
+	if ("browse" in data) return <DiscoverBrowse {...data.browse} />
+	return <Discover />
+}
+
+function Discover() {
 	const { initialResults, initialParams, mediaType } =
 		useLoaderData<LoaderData>()
 	const { currentParams, updateQueryParams } = useNav<DiscoverParams>()

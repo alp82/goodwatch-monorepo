@@ -182,6 +182,24 @@ export function filterStateToParams(
 	return params
 }
 
+/**
+ * The filter and sort parameters alone, for fetching counts and results: Discover's loader and the filter bar build
+ * the same string for the same state. On my services and Not seen yet are spelled out, so the server's defaults for
+ * the viewer can't read them differently.
+ */
+export function filterQuery(
+	state: FilterState,
+	sort: SortKey,
+	defaults: FilterDefaults,
+): string {
+	const out = filterStateToParams(state, defaults)
+	if (!out.has("services"))
+		out.set("services", state.onMyServices ? "mine" : "all")
+	out.set("unseen", state.notSeenYet ? "1" : "0")
+	out.set("sort", sort)
+	return out.toString()
+}
+
 /** The sort from `sort`; Relevance only while searching, where it's also the default. */
 export function sortFromParams(
 	params: URLSearchParams,
