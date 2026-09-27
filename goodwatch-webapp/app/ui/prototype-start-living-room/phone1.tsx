@@ -13,7 +13,7 @@
 //             TV bigger than portrait allows, the hand and remote at the right edge. (?force=landscape shows the
 //             landscape layout in a desktop browser at any size.)
 // Rendering budget (#190): only transform and opacity animate, nothing loops at idle, no blend or live blur.
-import { AnimatePresence, motion, useSpring } from "framer-motion"
+import { AnimatePresence, animate, motion, useMotionValue, useSpring } from "framer-motion"
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import type { LRData, LRServiceButton } from "~/server/prototype-start-living-room.server"
@@ -180,17 +180,18 @@ function HandRemote({ s, z, t, services, handSrc, yaw, tip = 10 }: { s: number; 
 
 // Aiming on a touch screen: nothing follows a finger that hovers, so the remote turns toward what was touched
 // (or toward the TV's middle after a key press) and fires a beam, then settles.
-function useAim(t: Tv4, tip: () => { x: number; y: number } | null, tvCenter: () => { x: number; y: number } | null, maxYaw = 35) {
-	const yaw = useSpring(0, { stiffness: 500, damping: 30 })
+// Owner, round 1: the turn was far too strong. It now turns a quarter of the way, at most 6 degrees.
+function useAim(t: Tv4, tip: () => { x: number; y: number } | null, tvCenter: () => { x: number; y: number } | null, maxYaw = 6) {
+	const yaw = useSpring(0, { stiffness: 220, damping: 28 })
 	const [shot, setShot] = useState<Shot | null>(null)
 	const last = useRef(0)
 	const fire = (x: number, y: number) => {
 		const a = tip()
 		if (!a) return
-		yaw.set(Math.max(-maxYaw, Math.min(maxYaw, (Math.atan2(x - a.x, a.y - y) * 180) / Math.PI)))
+		yaw.set(Math.max(-maxYaw, Math.min(maxYaw, ((Math.atan2(x - a.x, a.y - y) * 180) / Math.PI) * 0.25)))
 		setShot({ id: Date.now(), x1: a.x, y1: a.y, x2: x, y2: y })
 		last.current = Date.now()
-		setTimeout(() => yaw.set(0), 420)
+		setTimeout(() => yaw.set(0), 320)
 	}
 	// A key press: aim at the TV's middle, unless a touch on the TV just aimed.
 	const first = useRef(true)
@@ -329,28 +330,57 @@ function Sideways({ wide, tall, handSrc, tvSlot, force }: { wide: PhoneRoom; tal
 function Landscape({ room, handSrc, tvSlot }: { room: PhoneRoom; handSrc: string; tvSlot: TvSlot }) {
 	const { ref, cw, ch } = useBox()
 	const { z, t, services } = usePhoneTv(tvSlot)
-	// Full screen: the header would take a sixth of the height. The TV takes two thirds of it.
-	const tvW = Math.min(cw * 0.6, ((ch * 0.66) * room.tv.w) / room.tv.h)
-	const p = cw ? place(room, cw, ch, { cx: cw * 0.42, top: ch * 0.07, w: tvW }) : null
-	const s = Math.min(ch / 560, 0.62)
-	const left = cw - REMOTE_W * s - Math.max(14, cw * 0.035)
-	const top = ch * 0.3
+	// Owner, round 1: the remote in the middle, like the desktop. Full screen (the header would take a sixth
+	// of the height); the TV centered on top, the hand and remote centered under it, tipped toward the screen.
+	const tvH = ch * 0.44
+	const p = cw ? place(room, cw, ch, { cx: cw / 2, top: ch * 0.04, w: Math.min(cw * 0.7, (tvH * room.tv.w) / room.tv.h) }) : null
+	const s = Math.min(ch / 760, 0.6)
+	const left = cw / 2 - (REMOTE_W * s) / 2
+	// Tipped back, the remote's top looks lower than it is: start it a little higher.
+	const top = p ? p.tv.y + p.tv.h - 22 : 0
+	// Only the screen, the pad, and Back / Home / Search fit under the TV. Drag the remote up to reach the
+	// feature keys and the streaming keys; it may cover the bottom of the TV while it's lifted.
+	const lift = Math.max(0, top + 700 * s - ch + 8)
+	const y = useMotionValue(0)
 	const aim = useAim(
 		t,
-		() => ({ x: left + (REMOTE_W * s) / 2, y: top + 14 * s }),
+		() => ({ x: cw / 2, y: top + y.get() + 14 * s }),
 		() => (p ? { x: p.tv.x + p.tv.w / 2, y: p.tv.y + p.tv.h / 2 } : null),
-		70,
 	)
+	const [lifted, setLifted] = useState(false)
+	const settle = (up: boolean) => {
+		setLifted(up)
+		animate(y, up ? -lift : 0, { type: "spring", stiffness: 320, damping: 34 })
+	}
 	return (
 		<Page boxRef={ref} full>
 			{p && (
 				<>
-					<Room room={room} p={p} z={z} t={t} tvSlot={tvSlot} onTap={(x, y) => aim.fire(x, y)} />
-					<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(130%_100%_at_40%_40%,transparent_60%,rgba(0,0,0,0.55)_100%)]" />
-					<div className="absolute" style={{ left, top }}>
-						<HandRemote s={s} z={z} t={t} services={services} handSrc={handSrc} yaw={aim.yaw} tip={14} />
-					</div>
+					<Room room={room} p={p} z={z} t={t} tvSlot={tvSlot} onTap={(x, yy) => aim.fire(x, yy)} />
+					<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(130%_100%_at_50%_35%,transparent_60%,rgba(0,0,0,0.55)_100%)]" />
+					<motion.div
+						className="absolute touch-none"
+						style={{ left, top, y }}
+						drag="y"
+						dragConstraints={{ top: -lift, bottom: 0 }}
+						dragElastic={0.08}
+						dragMomentum={false}
+						onDragEnd={(_, info) => settle(info.velocity.y < -150 || (info.velocity.y <= 150 && y.get() < -lift / 2))}
+					>
+						<HandRemote s={s} z={z} t={t} services={services} handSrc={handSrc} yaw={aim.yaw} tip={12} />
+					</motion.div>
 					<Beam shot={aim.shot} />
+					<button
+						type="button"
+						onClick={() => settle(!lifted)}
+						className="absolute bottom-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-[11.5px] font-semibold text-white/80 ring-1 ring-white/10"
+						style={{ left: left + REMOTE_W * s + 14 }}
+					>
+						<svg viewBox="0 0 24 24" className={`h-3.5 w-3.5 transition-transform ${lifted ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+							<path d="M6 15l6-6 6 6" />
+						</svg>
+						{lifted ? "Lower the remote" : "Lift for more keys"}
+					</button>
 					<a href="/" onClick={(e) => e.preventDefault()} className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-black/55 py-1.5 pl-2 pr-3 text-[12px] font-semibold text-white/85 ring-1 ring-white/10">
 						<img src={gwLogo} alt="" className="h-4" />
 						GoodWatch
