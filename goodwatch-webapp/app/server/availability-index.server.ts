@@ -91,6 +91,33 @@ export function isOnServices(
 	return false
 }
 
+/**
+ * Waits up to `timeoutMs` for the country's first load, starting it if needed. True once the country is loaded. Only
+ * for the rare request that can't do without availability (a country's first request after the server starts).
+ */
+export async function availabilityLoaded(
+	countryCode: string,
+	timeoutMs: number,
+): Promise<boolean> {
+	const country = countryCode.toUpperCase()
+	if (loadedIndex(country)) return true
+	if (!queued.has(country)) return false
+	let timer: NodeJS.Timeout | undefined
+	await Promise.race([
+		queue,
+		new Promise<void>((resolve) => {
+			timer = setTimeout(resolve, timeoutMs)
+		}),
+	])
+	clearTimeout(timer)
+	return indexes.has(country)
+}
+
+/** When the country's index was loaded, or null before its first load. Changes with each refresh. */
+export function availabilityLoadedAt(countryCode: string): number | null {
+	return indexes.get(countryCode.toUpperCase())?.loadedAt ?? null
+}
+
 /** Size and load time of each loaded country, for logs and measurements. */
 export function availabilityIndexStats(): AvailabilityIndexStats[] {
 	return [...stats.values()]

@@ -25,6 +25,7 @@ export interface ViewerContext {
 	country: string
 	services: number[] // saved, expanded through duplicateProviderMapping; [] for none
 	seen: ReadonlySet<TitleKey> // scored or watched
+	ratings: ReadonlyMap<TitleKey, number> // the person's scores, 1 to 10
 	wishlist: ReadonlyMap<TitleKey, Date> // added-at
 	skipped: ReadonlySet<TitleKey> // Not interested; hidden by Not seen yet
 	forYou: boolean // the member's saved For you setting; true for guests
@@ -47,6 +48,10 @@ export async function getViewerContext(
 		getUserData({ user_id: userId }),
 		getUserSettings({ userId }),
 	])
+	const ratings = new Map<TitleKey, number>()
+	for (const [key, entry] of Object.entries(userData.scores)) {
+		if (entry.score) ratings.set(toTitleKey(key as MediaKey), entry.score)
+	}
 	const wishlist = new Map<TitleKey, Date>()
 	for (const [key, entry] of Object.entries(userData.wishlist)) {
 		wishlist.set(toTitleKey(key as MediaKey), new Date(entry.createdAt))
@@ -61,6 +66,7 @@ export async function getViewerContext(
 				toTitleKey(key as MediaKey),
 			),
 		]),
+		ratings,
 		wishlist,
 		skipped: new Set(
 			Object.keys(userData.skipped).map((key) => toTitleKey(key as MediaKey)),
@@ -75,12 +81,15 @@ function guestContext(
 ): ViewerContext {
 	const interactions = normalizeGuestInteractions(guest?.interactions ?? [])
 	const seen = new Set<TitleKey>()
+	const ratings = new Map<TitleKey, number>()
 	const wishlist = new Map<TitleKey, Date>()
 	const skipped = new Set<TitleKey>()
 	for (const item of interactions) {
 		const key = titleKey(item.media_type, item.tmdb_id)
-		if (item.type === "score") seen.add(key)
-		else if (item.type === "plan") wishlist.set(key, new Date(item.timestamp))
+		if (item.type === "score") {
+			seen.add(key)
+			if (item.score) ratings.set(key, item.score)
+		} else if (item.type === "plan") wishlist.set(key, new Date(item.timestamp))
 		else skipped.add(key)
 	}
 	return {
@@ -95,6 +104,7 @@ function guestContext(
 		country: countryCode(guest?.country) ?? guessedCountry,
 		services: expandServices(guest?.services),
 		seen,
+		ratings,
 		wishlist,
 		skipped,
 		forYou: true,
