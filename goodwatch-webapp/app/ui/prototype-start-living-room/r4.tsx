@@ -38,6 +38,16 @@ type Scr =
 	| { k: "search" }
 	| { k: "title"; key: string }
 	| { k: "picks" }
+	| { k: "page"; id: PageId }
+
+// Round 7: remote keys for pages that don't exist on the TV yet. The TV shows a card; no link leaves the room.
+export type PageId = "watchnext" | "explorer" | "taste" | "discover"
+export const PAGES: Record<PageId, { name: string; line: string }> = {
+	watchnext: { name: "Watch now", line: "Your Want to See list, best match first, on your services." },
+	explorer: { name: "Explorer", line: "Steer through taste: drift from a title you love to what sits next to it." },
+	taste: { name: "Taste", line: "The sides of you, you versus everyone, and your fingerprint." },
+	discover: { name: "Discover", line: "Browse and search in one place, For you on by default." },
+}
 
 // The order the wheel zaps through on a feature screen.
 const FEATURES: Feature[] = ["tonight", "scores", "fingerprint", "where"]
@@ -241,6 +251,8 @@ export function useTv4(z: Zapper, country: string) {
 	return {
 		stack, top, focus, setFocus, mode, moodIdx, mix, menu, draft, setDraft, query, loved, deckPage, pulse, muted, setMuted, on: z.on, wake: () => z.setOn(true),
 		click, step, ok, back, home, pickMode, pickService, pick, submit, startPicks: () => go({ k: "picks" }), country,
+		openPage: (id: PageId) => (click(), go({ k: "page", id })),
+		openTitle: (key: string) => (click(), go({ k: "title", key })),
 		okLabel: mode === "search" ? "GO" : top.k === "picks" ? "DONE" : "OK",
 	}
 }
@@ -271,7 +283,7 @@ const asR3 = (t: Tv4) => ({ country: t.country, loved: t.loved, deckPage: t.deck
 
 export function Tv4Screen({ t, data, services }: { t: Tv4; data: LRData; services: LRServiceButton[] }) {
 	const s = t.top
-	const key = s.k === "feature" ? `f-${s.id}` : s.k === "title" ? `t-${s.key}` : s.k
+	const key = s.k === "feature" ? `f-${s.id}` : s.k === "title" ? `t-${s.key}` : s.k === "page" ? `p-${s.id}` : s.k
 	return (
 		<div className="absolute inset-0 overflow-hidden bg-[#07080b] text-white">
 			<AnimatePresence initial={false}>
@@ -294,11 +306,33 @@ export function Tv4Screen({ t, data, services }: { t: Tv4; data: LRData; service
 						{s.k === "picks" && <PicksTv r={asR3(t)} />}
 						{s.k === "keyboard" && <Keyboard t={t} />}
 						{s.k === "moods" && <Moods t={t} />}
+						{s.k === "page" && <PageCard id={s.id} data={data} />}
 					</Lean.Provider>
 				</motion.div>
 			</AnimatePresence>
 			{s.k !== "boot" && <TvBar t={t} services={services} />}
 		</div>
+	)
+}
+
+function PageCard({ id, data }: { id: PageId; data: LRData }) {
+	const l = data.lineup
+	const at = { watchnext: 0, explorer: 3, taste: 6, discover: 9 }[id]
+	return (
+		<>
+			<img src={img(l[at]?.backdrop, "w780")} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20 blur-md" />
+			<div className="absolute inset-0 flex items-center gap-10 px-[8%]">
+				<div className="relative h-[60%] w-[34%] shrink-0">
+					<PosterFan posters={l.slice(at, at + 3).map((x) => x.poster)} />
+				</div>
+				<div>
+					<div className="text-[11px] font-bold uppercase tracking-[0.25em] text-orange-300/80">GoodWatch</div>
+					<div className="mt-2 text-[34px] font-extrabold leading-none">{PAGES[id].name}</div>
+					<p className="mt-3 max-w-[32ch] text-[15px] leading-snug text-white/70">{PAGES[id].line}</p>
+					<p className="mt-5 text-[12px] text-white/40">Prototype: this page opens here once it's built.</p>
+				</div>
+			</div>
+		</>
 	)
 }
 
@@ -551,16 +585,11 @@ function Key4({ label, d, onClick, on }: { label: string; d: string; onClick: ()
 	)
 }
 
-// The screen on the remote says what the wheel does right now, in one line.
-function Lcd4({ t, services }: { t: Tv4; services: LRServiceButton[] }) {
-	const input = useRef<HTMLInputElement>(null)
-	useEffect(() => {
-		if (t.mode === "search") input.current?.focus({ preventScroll: true })
-	}, [t.mode])
+// What the remote's screen says: a headline and one line of help. Round 5 reuses it.
+export function lcdLines(t: Tv4, services: LRServiceButton[]): [string, string] {
 	const s = t.top
 	const svc = services.find((x) => x.key === t.mix.service)
-	const [head, line]: [string, string] =
-		t.mode === "mood"
+	return t.mode === "mood"
 			? [`${MOODS[t.moodIdx].emoji} ${MOODS[t.moodIdx].name}`, "Turn to change the mood"]
 			: s.k === "boot"
 				? ["Starting…", "GoodWatch"]
@@ -576,11 +605,22 @@ function Lcd4({ t, services }: { t: Tv4; services: LRServiceButton[] }) {
 									? [`${Math.min(t.loved.length, 3)} of 3 loved`, t.loved.length >= 3 ? "OK shows your picks" : "Point at titles you loved"]
 									: s.k === "title"
 										? ["Title", "Back to return"]
+										: s.k === "page"
+											? [PAGES[s.id].name, "Back to return"]
 										: s.k === "moods"
 											? [`${MOODS[t.focus]?.emoji ?? ""} ${MOODS[t.focus]?.name ?? ""}`, "Turn to choose, OK to pick"]
 										: s.k === "keyboard"
 											? ["Search", "Type, or point at the keys"]
 											: ["Search", "Point at a title to open it"]
+}
+
+// The screen on the remote says what the wheel does right now, in one line.
+function Lcd4({ t, services }: { t: Tv4; services: LRServiceButton[] }) {
+	const input = useRef<HTMLInputElement>(null)
+	useEffect(() => {
+		if (t.mode === "search") input.current?.focus({ preventScroll: true })
+	}, [t.mode])
+	const [head, line] = lcdLines(t, services)
 	return (
 		<div className="lr2-lcd relative h-[96px] w-full overflow-hidden rounded-[20px] px-4 py-3">
 			<div className="lr2-lcd-grid pointer-events-none absolute inset-0" />

@@ -20,7 +20,7 @@ import { PILLAR_CONFIG, type PillarName } from "~/ui/fingerprint/Pillars"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { GwBadge, Lean, Search, ease, img, renderChannel } from "./channels"
 import { CHANNELS2, LR2_CSS, MOODS, SUGGESTIONS, TUNE_KEYS, Wheel } from "./remote2"
-import { Remote4, Tv4Screen, useTv4 } from "./r4"
+import { Remote4, type Tv4, Tv4Screen, useTv4 } from "./r4"
 import { Screen, type Zapper, useAutoPowerOn, useRemoteKeys, useZapper } from "./tv"
 
 const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -808,7 +808,10 @@ function layout(cw: number, ch: number, pose: Pose, rh: number) {
 	}
 }
 
-export function LivingRoom3({ data, room, pose = "hand", look = "current", round4 = false }: { data: LRData; room: Room3; pose?: Pose; look?: Look; round4?: boolean }) {
+// Round 5 swaps in its own remote designs; they drive the same round 4 TV.
+export type RemoteSlot = (p: { z: Zapper; t: Tv4; services: LRServiceButton[]; pointing: boolean; grip?: number }) => ReactNode
+
+export function LivingRoom3({ data, room, pose = "hand", look = "current", round4 = false, remote }: { data: LRData; room: Room3; pose?: Pose; look?: Look; round4?: boolean; remote?: RemoteSlot }) {
 	const root = useRef<HTMLDivElement>(null)
 	const area = useRef<HTMLDivElement>(null)
 	const remoteBox = useRef<HTMLDivElement>(null)
@@ -1070,7 +1073,9 @@ export function LivingRoom3({ data, room, pose = "hand", look = "current", round
 						return <img src={handBack} alt="" aria-hidden className="pointer-events-none absolute max-w-none select-none" style={{ left: x, top: -HAND.y * k, width: HAND.w * k, height: HAND.h * k }} draggable={false} />
 					})()}
 					<div ref={remoteBox} className="absolute left-0 top-0 origin-top-left" style={{ transform: `scale(${L.remote.s})` }}>
-						{round4 ? (
+						{remote ? (
+							remote({ z, t: t4, services: services ?? [], pointing, grip: pose === "hand" ? GRIP_H : undefined })
+						) : round4 ? (
 							<Remote4 z={z} t={t4} services={services ?? []} pointing={pointing} grip={pose === "hand" ? GRIP_H : undefined} />
 						) : (
 							<Remote3 z={z} r={r} services={services ?? []} pointing={pointing} grip={pose === "hand" ? GRIP_H : undefined} look={look} />
