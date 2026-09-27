@@ -14,7 +14,7 @@ const ACTIONS = {
 } as const
 
 // The action wrappers clone their child and pass onClick, disabled, and style.
-function ActionButton({ kind, active, ...rest }: { kind: keyof typeof ACTIONS; active: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+export function ActionButton({ kind, active, ...rest }: { kind: keyof typeof ACTIONS; active: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
 	const a = ACTIONS[kind]
 	return (
 		<button

@@ -29,6 +29,13 @@ export const isGrouping = (value: unknown): value is Grouping =>
 /** No grouping has more islands than this; with a bridge the renderer holds 15. */
 export const MAX_ISLANDS = 14
 
+/** Children per title in each generation of a tree after the first posters: 6 around each first poster, then 2 and 2. */
+export const DEFAULT_BRANCHING = [6, 2, 2]
+
+/** How many first posters a tree starts with, by how many titles it holds. */
+export const firstPosters = (count: number) =>
+	count < 40 ? 2 : count < 220 ? 3 : count < 800 ? 4 : 5
+
 /** The three match bands an island's titles fall into (matches run from 50 to 99). */
 export const MATCH_BANDS = [
 	{ key: "near", name: "Near you", min: 85 },
