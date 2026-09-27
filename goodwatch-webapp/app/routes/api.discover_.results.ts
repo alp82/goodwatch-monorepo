@@ -3,6 +3,7 @@ import {
 	type LoaderFunctionArgs,
 	json,
 } from "@remix-run/node"
+import { useQuery } from "@tanstack/react-query"
 import { z } from "zod"
 import {
 	type FilterDefaults,
@@ -161,6 +162,57 @@ function filterDefaults(ctx: ViewerContext): FilterDefaults {
 export async function loader({ request }: LoaderFunctionArgs) {
 	if (getFeatureMode("filterBar") === "off") return notFound()
 	return respond(request)
+}
+
+// Query hook
+
+/**
+ * One page of results and the filter bar's counts for a filter query (useFilterState's `query`). Members GET; guests
+ * POST their guest progress. The previous answer stays while the next loads, so counts don't blank between toggles.
+ */
+export function useDiscoverResults({
+	query,
+	page = 1,
+	forYou,
+	guest,
+	enabled = true,
+}: {
+	query: string
+	page?: number
+	/** The `foryou` parameter when the view sets it. */
+	forYou?: boolean
+	/** A guest's progress (snapshotGuestProgress), or null for a member. */
+	guest: {
+		interactions: unknown[]
+		country?: string | null
+		services?: string | null
+	} | null
+	enabled?: boolean
+}) {
+	const params = new URLSearchParams(query)
+	params.set("page", String(page))
+	if (forYou !== undefined) params.set("foryou", forYou ? "1" : "0")
+	const url = `/api/discover/results?${params}`
+	return useQuery<DiscoverResultsResponse>({
+		queryKey: ["discover-results", url, guest ? "guest" : "member"],
+		queryFn: async () => {
+			const response = await fetch(
+				url,
+				guest
+					? {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ guest }),
+						}
+					: undefined,
+			)
+			if (!response.ok)
+				throw new Error(`Discover results failed: ${response.status}`)
+			return response.json()
+		},
+		placeholderData: (previous) => previous,
+		enabled,
+	})
 }
 
 export async function action({ request }: ActionFunctionArgs) {

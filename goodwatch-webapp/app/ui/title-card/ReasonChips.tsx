@@ -1,7 +1,7 @@
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 
-export const reasonLabel = (key: string) =>
-	getFingerprintMeta(key).label.toLowerCase()
+/** A fingerprint attribute's label as the fingerprint shows it ("Philosophical", "Dry Humor"). */
+export const reasonLabel = (key: string) => getFingerprintMeta(key).label
 
 // The chips sit on a near-black surface. The fingerprint colors are translucent, so the text color is picked for the
 // color the chip actually shows: dark text on light chips (yellow, pale blue), white on the rest.
@@ -21,7 +21,8 @@ function textColorOn(rgba: string): string {
 		: "#030712"
 }
 
-// Fingerprint attributes as small chips in their fingerprint colors ("slow burn", "dry humor").
+// Fingerprint attributes as small chips in their fingerprint colors ("Slow Burn", "Dry Humor"): the reasons on a
+// title card and the taste leanings next to For you.
 export function ReasonChips({
 	reasons,
 	className = "",

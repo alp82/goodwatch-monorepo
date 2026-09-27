@@ -5,7 +5,7 @@
 // released, similar, people, sort, foryou=0|1. The parameters of old Discover filters the sheet doesn't offer keep
 // their old names and apply as legacy filters.
 import { MAX_MOODS, MOOD_KEYS, type MoodKey } from "~/domain/moods"
-import type { TitleKey } from "~/utils/title-key"
+import { type TitleKey, titleKey } from "~/utils/title-key"
 
 /** The filter groups, in the order of the bits of a title's fail mask. */
 export const FILTER_NAMES = [
@@ -190,4 +190,156 @@ export function sortFromParams(
 	const sort = oneOf(SORT_KEYS, params.get("sort"))
 	if (sort === "relevance") return searching ? sort : "popular"
 	return sort ?? (searching ? "relevance" : "popular")
+}
+
+/** The state with one filter group back at its widest: what a one-tap recovery does. */
+export function dropFilter(state: FilterState, name: FilterName): FilterState {
+	switch (name) {
+		case "services":
+			return { ...state, onMyServices: false, services: undefined }
+		case "notSeenYet":
+			return { ...state, notSeenYet: false }
+		case "type":
+			return { ...state, type: "all" }
+		case "moods":
+			return { ...state, moods: [] }
+		case "genres":
+			return { ...state, genres: [] }
+		case "minScore":
+			return { ...state, minScore: 0 }
+		case "released":
+			return { ...state, released: "any" }
+		case "similarTo":
+			return { ...state, similarTo: undefined }
+		case "people":
+			return { ...state, people: undefined }
+		case "legacy":
+			return { ...state, legacy: undefined }
+	}
+}
+
+/** The Filters sheet's filters cleared; On my services and Not seen yet stay as they are. */
+export const clearSecondaryFilters = (state: FilterState): FilterState => ({
+	...state,
+	type: "all",
+	services: undefined,
+	moods: [],
+	genres: [],
+	minScore: 0,
+	released: "any",
+	similarTo: undefined,
+	people: undefined,
+	legacy: undefined,
+})
+
+/** How many of the Filters sheet's filters are active: the badge on the Filters button. */
+export function secondaryFilterCount(state: FilterState): number {
+	return (
+		(state.type !== "all" ? 1 : 0) +
+		(!state.onMyServices && state.services?.length ? 1 : 0) +
+		state.moods.length +
+		state.genres.length +
+		(state.minScore ? 1 : 0) +
+		(state.released !== "any" ? 1 : 0) +
+		(state.similarTo?.length ?? 0) +
+		(state.people?.length ?? 0) +
+		Object.keys(state.legacy ?? {}).length
+	)
+}
+
+// Today's Discover parameters that have a new name. The legacy filters keep theirs.
+const RENAMED_DISCOVER_PARAMS = [
+	"withGenres",
+	"withStreamingProviders",
+	"streamingPreset",
+	"minScore",
+	"sortBy",
+	"sortDirection",
+	"watchedType",
+	"similarTitles",
+	"withCast",
+	"withCrew",
+	"withCastCombinationType",
+	"withCrewCombinationType",
+	"withStreamingTypes",
+] as const
+const OLD_SORTS: Record<string, SortKey> = {
+	popularity: "popular",
+	aggregated_score: "top",
+	release_date: "newest",
+}
+
+/**
+ * Today's Discover parameters rewritten to the new names, or null when the URL carries none of them, so a caller
+ * redirects only old links. Genres were ids and are names now, so the caller passes the genre table.
+ * - withGenres (ids) becomes genres (names); withStreamingProviders becomes services; streamingPreset mine or
+ *   everywhere becomes services=mine or all; minScore becomes score, the highest option at or below it; sortBy becomes
+ *   sort; watchedType didnt-watch becomes unseen=1; similarTitles (tmdbId:mediaType) becomes similar (title keys);
+ *   withCast and withCrew become people; type=movies becomes type=movie.
+ * - Old parameters that only shaped the old controls (sortDirection, the cast and crew combination types,
+ *   withStreamingTypes, and watchedType watched or want-to-watch) are dropped. Everything else passes through.
+ */
+export function rewriteLegacyDiscoverParams(
+	params: URLSearchParams,
+	genreNameById: (id: number) => string | undefined,
+): URLSearchParams | null {
+	const oldType = params.get("type")
+	const typeIsOld = oldType === "movies" || oldType === "all"
+	if (!typeIsOld && !RENAMED_DISCOVER_PARAMS.some((name) => params.has(name)))
+		return null
+
+	const next = new URLSearchParams(params)
+	for (const name of RENAMED_DISCOVER_PARAMS) next.delete(name)
+	const numbers = (value: string | null) =>
+		list(value)
+			.map(Number)
+			.filter((n) => Number.isSafeInteger(n) && n > 0)
+	// A new parameter already in the URL wins over the old one.
+	const setIfMissing = (name: string, values: (string | number)[]) => {
+		const value = [...new Set(values)].join(",")
+		if (value && !next.get(name)) next.set(name, value)
+	}
+
+	if (oldType === "movies") next.set("type", "movie")
+	else if (oldType === "all") next.delete("type")
+
+	setIfMissing(
+		"genres",
+		numbers(params.get("withGenres"))
+			.map(genreNameById)
+			.filter((name): name is string => Boolean(name)),
+	)
+
+	const providers = numbers(params.get("withStreamingProviders"))
+	const preset = params.get("streamingPreset")
+	if (providers.length) setIfMissing("services", providers)
+	else if (preset === "mine") setIfMissing("services", ["mine"])
+	else if (preset === "everywhere") setIfMissing("services", ["all"])
+
+	const minScore = Number(params.get("minScore"))
+	const score = [...MIN_SCORES].reverse().find((option) => option <= minScore)
+	if (score) setIfMissing("score", [score])
+
+	const sort = OLD_SORTS[params.get("sortBy") ?? ""]
+	if (sort && sort !== "popular") setIfMissing("sort", [sort])
+
+	if (params.get("watchedType") === "didnt-watch") setIfMissing("unseen", ["1"])
+
+	setIfMissing(
+		"similar",
+		list(params.get("similarTitles")).flatMap((item) => {
+			const [id, mediaType] = item.split(":")
+			const tmdbId = Number(id)
+			if (!Number.isSafeInteger(tmdbId) || tmdbId <= 0) return []
+			if (mediaType !== "movie" && mediaType !== "show") return []
+			return [titleKey(mediaType, tmdbId)]
+		}),
+	)
+
+	setIfMissing("people", [
+		...numbers(params.get("withCast")),
+		...numbers(params.get("withCrew")),
+	])
+
+	return next
 }
