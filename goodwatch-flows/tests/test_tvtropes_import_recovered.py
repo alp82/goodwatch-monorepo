@@ -242,6 +242,139 @@ class ImportTests(unittest.TestCase):
         self.assertEqual(self.store.docs["show"][3]["tropes"], tropes("Series/SameUrl"))
 
 
+class BackupStore(FakeStore):
+    def __init__(self, docs):
+        super().__init__(docs)
+        self.backups = {}
+
+    def backup(self, collection, media_type, docs):
+        rows = self.backups.setdefault(collection, {})
+        for doc in docs:
+            rows.setdefault(doc["_id"], dict(copy.deepcopy(doc), _source_collection=imp.COLLECTIONS[media_type]))
+
+
+class ReplaceTests(unittest.TestCase):
+    """#123: a reviewed re-check may replace the tropes of a wrong page, and only that page."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.run_dir = Path(self.tmp.name) / "run"
+        self.run_dir.mkdir()
+        records = [record("movie", 1, "Film/IronMan2008"), record("movie", 2, "Film/Godzilla2014"),
+                   record("movie", 3, "Film/Plain")]
+        (self.run_dir / "results.jsonl").write_text("".join(json.dumps(r) + "\n" for r in records))
+        self.manifest = {(r["media_type"], r["tmdb_id"]): {
+            "media_type": r["media_type"], "tmdb_id": r["tmdb_id"], "title": r["title"], "url": r["result"]["url"],
+            "tropes_sha256": imp.tropes_sha256(r["result"]["tropes"])} for r in records}
+        self.manifest[("movie", 1)].update(replaces_url=PREFIX + "Main/IronMan", replaces_trope_count=1)
+        self.manifest[("movie", 2)].update(replaces_url=PREFIX + "Film/Godzilla", replaces_trope_count=1)
+        self.store = BackupStore({"movie": [
+            empty_doc("m1", 1, tvtropes_url=PREFIX + "Main/IronMan", tropes=tropes("franchise")),
+            # Changed since the review: another URL now.
+            empty_doc("m2", 2, tvtropes_url=PREFIX + "Film/GodzillaOther", tropes=tropes("other")),
+            # Not a re-check: existing tropes stay protected.
+            empty_doc("m3", 3, tvtropes_url=PREFIX + "Film/Plain", tropes=tropes("kept")),
+        ]})
+        self.rollback_path = Path(self.tmp.name) / "rollback.json"
+        self.lines = []
+
+    def run_import(self, apply=True, expect_count=1, backup="_backup_20260927_tvtropes_123"):
+        return imp.run_import([self.run_dir], self.manifest, (), self.store, apply, self.rollback_path,
+                              self.lines.append, expect_count=expect_count, backup_collection=backup)
+
+    def test_only_the_reviewed_page_is_replaced_after_a_backup(self):
+        totals, skips = self.run_import()
+        reasons = dict(skips)
+        self.assertEqual(totals["import"], 1)
+        self.assertIn("replaces", reasons[("movie", 2)])
+        self.assertIn("already has tropes", reasons[("movie", 3)])
+        iron_man = self.store.docs["movie"][0]
+        self.assertEqual((iron_man["tvtropes_url"], iron_man["tropes"]),
+                         (PREFIX + "Film/IronMan2008", tropes("Film/IronMan2008")))
+        backup = self.store.backups["_backup_20260927_tvtropes_123"]["m1"]
+        self.assertEqual((backup["tvtropes_url"], backup["tropes"]), (PREFIX + "Main/IronMan", tropes("franchise")))
+        self.assertEqual(backup["_source_collection"], "tv_tropes_movie_tags")
+        self.assertTrue(any("replaced" in line and "Main/IronMan" in line for line in self.lines))
+        imp.run_rollback(self.rollback_path, self.store, self.lines.append)
+        self.assertEqual(self.store.docs["movie"][0]["tropes"], tropes("franchise"))
+
+    def test_replacing_needs_a_backup_collection(self):
+        with self.assertRaisesRegex(SystemExit, "backup"):
+            self.run_import(backup=None)
+        self.assertEqual(self.store.writes, 0)
+
+    def test_dry_run_backs_nothing_up(self):
+        totals, _ = self.run_import(apply=False)
+        self.assertEqual(totals["import"], 1)
+        self.assertEqual((self.store.writes, self.store.backups), (0, {}))
+
+
+class RemoveTests(unittest.TestCase):
+    """#123: a reviewed removal clears a wrong page's tropes and URL, guarded by what was reviewed."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.store = BackupStore({"movie": [
+            empty_doc("m238", 238, tvtropes_url=PREFIX + "Film/TheGodfather", tropes=tropes("trilogy")),
+            empty_doc("m240", 240, tvtropes_url=PREFIX + "Film/TheGodfather", tropes=tropes("trilogy") * 2),
+            empty_doc("m9", 9, tvtropes_url=PREFIX + "Film/Changed", tropes=tropes("x")),
+        ], "show": []})
+        self.removals = {("movie", 238): {"media_type": "movie", "tmdb_id": 238, "url": PREFIX + "Film/TheGodfather",
+                                          "trope_count": 1, "reason": "trilogy page"},
+                         ("movie", 240): {"media_type": "movie", "tmdb_id": 240, "url": PREFIX + "Film/TheGodfather",
+                                          "trope_count": 1, "reason": "trilogy page"},
+                         ("movie", 9): {"media_type": "movie", "tmdb_id": 9, "url": PREFIX + "Film/Reviewed",
+                                        "trope_count": 1, "reason": "x"},
+                         ("show", 5): {"media_type": "show", "tmdb_id": 5, "url": PREFIX + "Series/X",
+                                       "trope_count": 1, "reason": "x"}}
+        self.rollback_path = Path(self.tmp.name) / "rollback.json"
+        self.lines = []
+
+    def remove(self, apply=True, expect_count=1, backup="_backup_20260927_tvtropes_123"):
+        return imp.run_remove(self.removals, self.store, apply, self.rollback_path, self.lines.append,
+                              expect_count=expect_count, backup_collection=backup)
+
+    def test_removes_only_documents_that_still_hold_the_reviewed_page(self):
+        before = copy.deepcopy(self.store.docs)
+        removed, skips = self.remove()
+        reasons = dict(skips)
+        self.assertEqual(removed, 1)
+        self.assertIn("trope count", reasons[("movie", 240)])
+        self.assertIn("url", reasons[("movie", 9)])
+        self.assertIn("no Mongo document", reasons[("show", 5)])
+        godfather = self.store.docs["movie"][0]
+        self.assertEqual(godfather["tropes"], [])
+        self.assertNotIn("tvtropes_url", godfather)
+        self.assertIs(godfather["is_selected"], False)
+        self.assertGreater(godfather["updated_at"], datetime(2026, 1, 1))
+        self.assertEqual(self.store.docs["movie"][1:], before["movie"][1:])
+        self.assertEqual(set(self.store.backups["_backup_20260927_tvtropes_123"]), {"m238"})
+        restored, _ = imp.run_rollback(self.rollback_path, self.store, self.lines.append)
+        self.assertEqual(restored, 1)
+        self.assertEqual(self.store.docs, before)
+
+    def test_dry_run_and_count_guard_write_nothing(self):
+        removed, _ = self.remove(apply=False)
+        self.assertEqual(removed, 1)
+        for wrong in (None, 2):
+            with self.assertRaises(SystemExit):
+                self.remove(expect_count=wrong)
+        with self.assertRaisesRegex(SystemExit, "backup"):
+            self.remove(backup=None)
+        self.assertEqual((self.store.writes, self.store.backups), (0, {}))
+        self.assertFalse(self.rollback_path.exists())
+
+    def test_removal_list_file(self):
+        path = Path(self.tmp.name) / "removals.json"
+        path.write_text(json.dumps({"entries": list(self.removals.values())}))
+        self.assertEqual(imp.load_removals(path), self.removals)
+        path.write_text(json.dumps({"entries": [self.removals[("movie", 238)]] * 2}))
+        with self.assertRaises(SystemExit):
+            imp.load_removals(path)
+
+
 class ManifestTests(unittest.TestCase):
     def build(self, report_rows, records, deny=frozenset(), expected=1):
         with tempfile.TemporaryDirectory() as tmp:

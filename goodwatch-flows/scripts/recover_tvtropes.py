@@ -4,9 +4,12 @@
 Three steps; none of them writes to a database:
 
   queue   read-only: the most popular titles without tropes and their known URLs
-          (stored URL, Wikidata P6839, the CC0 tvtropes2imdb mapping), in popularity order
+          (stored URL, Wikidata P6839, the CC0 tvtropes2imdb mapping), in popularity order.
+          `--recheck FILE` queues only the listed titles, even those that have tropes,
+          with the Wikidata and tvtropes2imdb pages before the stored one (#123).
   run     crawl a queue over plain HTTP at one pace, stop on any 403, 429 or challenge,
-          and resume where the last run stopped
+          and resume where the last run stopped. `--saved RUN_DIR` answers from pages
+          an earlier run saved, without a request.
   review  write the review table that `import_tvtropes_recovered.py build-manifest` reads
 
 Nothing is guessed: a title without a known URL is never requested. Not-found pages and
@@ -117,27 +120,59 @@ class BudgetExhausted(Exception):
     pass
 
 
+def saved_pages(run_dirs: list[Path]) -> dict:
+    """Requested URL -> the response an earlier run saved: 200s and not-found pages only,
+    never a block. Later runs win."""
+    saved = {}
+    for run_dir in run_dirs:
+        for line in (run_dir / "results.jsonl").read_text().splitlines():
+            for request in json.loads(line).get("requests") or []:
+                source = run_dir / (request.get("source_file") or "missing")
+                if request.get("status") in (200, 404, 410) and not request.get("blocked") and source.is_file():
+                    saved[request["requested_url"]] = {"run": run_dir.name, "status": request["status"],
+                                                       "url": request.get("url") or request["requested_url"],
+                                                       "path": source}
+    return saved
+
+
 class LocalClient:
     """Plain HTTP at one pace for the whole site, with a request budget. Saves every
-    response under `sources/` and raises SiteBlocked on a 403, 429 or challenge."""
+    response under `sources/` and raises SiteBlocked on a 403, 429 or challenge.
+    A URL in `saved` is answered from an earlier run's page: no request, pause or budget."""
 
     def __init__(self, sources: Path, delay: float, max_requests: int, http=None,
                  sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.monotonic,
-                 now: Callable[[], datetime] = utcnow):
+                 now: Callable[[], datetime] = utcnow, saved: Optional[dict] = None):
         self.sources, self.delay, self.max_requests = sources, delay, max_requests
         self.http = http or requests.Session()
         self.sleep, self.clock, self.now = sleep, clock, now
+        self.saved = saved or {}
+        # Every page used, live or saved, in order; `requests` counts the live ones.
         self.log: list[dict] = []
+        self.requests = 0
         self.last: Optional[float] = None
 
+    def replay(self, url: str) -> Page:
+        page = self.saved[url]
+        body = gzip.decompress(page["path"].read_bytes())
+        digest = hashlib.sha256(body).hexdigest()
+        self.sources.mkdir(parents=True, exist_ok=True)
+        (self.sources / f"{digest}.html.gz").write_bytes(gzip.compress(body))
+        self.log.append({"requested_url": url, "saved_from": page["run"], "url": page["url"], "status": page["status"],
+                         "sha256": digest, "source_file": f"sources/{digest}.html.gz"})
+        return Page(status=page["status"], url=page["url"], text=body.decode("utf-8", "replace"), requested_url=url)
+
     def get(self, url: str) -> Page:
-        if len(self.log) >= self.max_requests:
+        if url in self.saved:
+            return self.replay(url)
+        if self.requests >= self.max_requests:
             raise BudgetExhausted(f"request budget of {self.max_requests} used")
         if self.last is not None:
             self.sleep(max(0.0, self.delay - (self.clock() - self.last)))
         self.last = self.clock()
         record = {"requested_url": url, "started_at": self.now().isoformat()}
         self.log.append(record)
+        self.requests += 1
         try:
             response = self.http.get(url, headers=HEADERS, timeout=TIMEOUT_SECONDS, allow_redirects=True)
         except requests.exceptions.RequestException as error:
@@ -196,7 +231,7 @@ def record_outcome(entry: dict, outcome: crawl.Outcome, state: State, now: datet
 
 
 def run(queue_path: Path, output: Path, state_path: Path, delay: float, max_requests: int,
-        http=None, sleep=time.sleep, clock=time.monotonic, now=utcnow, out=print) -> dict:
+        http=None, sleep=time.sleep, clock=time.monotonic, now=utcnow, out=print, saved: Optional[dict] = None) -> dict:
     queue_bytes = queue_path.read_bytes()
     queue = load_queue(queue_path)
     state = State(state_path)
@@ -214,7 +249,8 @@ def run(queue_path: Path, output: Path, state_path: Path, delay: float, max_requ
     result_path = output / "results.jsonl"
     records = [json.loads(line) for line in result_path.read_text().splitlines()] if result_path.exists() else []
     done = {(r["media_type"], r["tmdb_id"]) for r in records if r["status"] in TERMINAL}
-    client = LocalClient(output / "sources", delay, max_requests, http=http, sleep=sleep, clock=clock, now=now)
+    client = LocalClient(output / "sources", delay, max_requests, http=http, sleep=sleep, clock=clock, now=now,
+                         saved=saved)
     hashes = code_hashes()
     stop_reason, failures, attempted = None, 0, 0
     monotonic_start = clock()
@@ -257,6 +293,7 @@ def run(queue_path: Path, output: Path, state_path: Path, delay: float, max_requ
         if stop_reason:
             break
     state.save()
+    live = [q for q in client.log if "saved_from" not in q]
     latest = {(r["media_type"], r["tmdb_id"]): r for r in records}
     statuses = {}
     for r in latest.values():
@@ -270,12 +307,13 @@ def run(queue_path: Path, output: Path, state_path: Path, delay: float, max_requ
         "attempted_this_run": attempted,
         "statuses": dict(sorted(statuses.items())),
         "unattempted": len(queue) - len(latest),
-        "requests_this_run": len(client.log),
+        "requests_this_run": client.requests,
+        **({"saved_pages_this_run": len(client.log) - client.requests} if saved is not None else {}),
         "request_budget": max_requests,
         "request_spacing_seconds": delay,
         "elapsed_seconds_this_run": round(clock() - monotonic_start, 3),
-        "http_statuses_this_run": {str(k): sum(1 for q in client.log if q.get("status") == k)
-                                   for k in sorted({q.get("status") for q in client.log}, key=str)},
+        "http_statuses_this_run": {str(k): sum(1 for q in live if q.get("status") == k)
+                                   for k in sorted({q.get("status") for q in live}, key=str)},
         "stop_reason": stop_reason,
         "production_writes": 0,
     }
@@ -311,8 +349,11 @@ def review(output: Path) -> Path:
              "|---|---|---|---|---|---|---|---|---|"]
     for r in sorted(found, key=lambda r: (-(r.get("popularity") or 0), r["media_type"], r["tmdb_id"])):
         page = r["result"]["url"].removeprefix(BASE_URL)
+        source = f"{r.get('source')} ({r.get('rule') or 'strict'})"
+        if r.get("recheck"):
+            source += f"; replaces {(r.get('before_url') or 'nothing').removeprefix(BASE_URL)} ({r.get('before_trope_count')} tropes)"
         lines.append(f"| {r['media_type']} | {r['tmdb_id']} | {cell(r.get('title'))} | {r.get('release_year')} | "
-                     f"{page} | {len(r['result']['tropes'])} | {r.get('source')} ({r.get('rule') or 'strict'}) | {cell(r.get('intro'))[:300]} | review |")
+                     f"{page} | {len(r['result']['tropes'])} | {source} | {cell(r.get('intro'))[:300]} | review |")
     lines += ["", f"## Other outcomes ({len(other)})", "", "| media | tmdb_id | title | status | detail |",
               "|---|---|---|---|---|"]
     for r in sorted(other, key=lambda r: (r["status"], r["media_type"], r["tmdb_id"])):
@@ -350,8 +391,25 @@ def fetch_wikidata(http=None) -> dict:
     return ids
 
 
-def build_queue(titles: list[dict], wikidata: dict, mapping: dict) -> tuple[list[dict], dict]:
+def read_recheck_list(path: Path) -> set:
+    """`media_type:tmdb_id` per line; blank lines and `#` comments are ignored."""
+    keys = set()
+    for line in path.read_text().splitlines():
+        line = line.split("#")[0].strip()
+        if not line:
+            continue
+        media_type, _, tmdb_id = line.partition(":")
+        if media_type not in ("movie", "show") or not tmdb_id.isdigit():
+            raise ValueError(f"expected media_type:tmdb_id, got {line!r}")
+        keys.add((media_type, int(tmdb_id)))
+    return keys
+
+
+def build_queue(titles: list[dict], wikidata: dict, mapping: dict, recheck: Optional[set] = None) -> tuple[list[dict], dict]:
     """Queue entries for titles without tropes that have at least one known URL, most popular first.
+
+    With `recheck`, a set of (media_type, tmdb_id), only those titles are queued, with or
+    without tropes, and their Wikidata and tvtropes2imdb pages are tried before the stored one.
 
     `titles`: media_type, tmdb_id, title, original_title, release_year, popularity, title_variations,
     tvtropes_url, trope_count, imdb_id."""
@@ -359,21 +417,28 @@ def build_queue(titles: list[dict], wikidata: dict, mapping: dict) -> tuple[list
               "sources": {source: 0 for source in crawl.SOURCES}}
     entries = []
     for title in sorted(titles, key=lambda t: (-(t.get("popularity") or 0), t["media_type"], t["tmdb_id"])):
+        key = (title["media_type"], title["tmdb_id"])
+        if recheck is not None and key not in recheck:
+            continue
         counts["titles"] += 1
         if title.get("trope_count"):
             counts["with_tropes"] += 1
-            continue
+            if recheck is None:
+                continue
         candidates = crawl.candidate_urls(
             title["media_type"], stored=title.get("tvtropes_url"),
-            wikidata=wikidata.get((title["media_type"], title["tmdb_id"])),
+            wikidata=wikidata.get(key),
             tvtropes2imdb=mapping.get(title.get("imdb_id") or ""))
+        if recheck is not None:
+            candidates = [c for c in candidates if c[0] != "stored"] + [c for c in candidates if c[0] == "stored"]
         if not candidates:
             counts["no_known_url"] += 1
             continue
         for source, _ in candidates:
             counts["sources"][source] += 1
         counts["queued"] += 1
-        entries.append({
+        extra = {"recheck": True, "before_trope_count": title.get("trope_count") or 0} if recheck is not None else {}
+        entries.append(extra | {
             "media_type": title["media_type"], "tmdb_id": title["tmdb_id"],
             "title": title.get("title") or title.get("original_title"),
             "original_title": title.get("original_title"), "release_year": title.get("release_year"),
@@ -386,14 +451,15 @@ def build_queue(titles: list[dict], wikidata: dict, mapping: dict) -> tuple[list
     return entries, counts
 
 
-def read_titles(db, media_type: str, top: int) -> list[dict]:
-    """The `top` most popular non-deleted TMDB titles with their TV Tropes document. Read only."""
+def read_titles(db, media_type: str, top: int, ids: Optional[list[int]] = None) -> list[dict]:
+    """The `top` most popular non-deleted TMDB titles, or the titles with these TMDB `ids`,
+    with their TV Tropes document. Read only."""
     from f.external_ids.imdb_ids import effective_imdb_id
 
     details = db["tmdb_movie_details" if media_type == "movie" else "tmdb_tv_details"]
     tags = db["tv_tropes_movie_tags" if media_type == "movie" else "tv_tropes_tv_tags"]
     rows = list(details.find(
-        {"tmdb_deleted": {"$ne": True}},
+        {"tmdb_deleted": {"$ne": True}} | ({"tmdb_id": {"$in": ids}} if ids is not None else {}),
         {"tmdb_id": 1, "title": 1, "original_title": 1, "popularity": 1, "imdb_id": 1, "external_ids.imdb_id": 1,
          "imdb_id_override": 1}).sort("popularity", -1).limit(top))
     by_id = {doc["tmdb_id"]: doc for doc in tags.aggregate([
@@ -411,18 +477,25 @@ def read_titles(db, media_type: str, top: int) -> list[dict]:
     return titles
 
 
-def export_queue(path: Path, top: int, kinds: list[str], use_wikidata: bool) -> dict:
+def export_queue(path: Path, top: int, kinds: list[str], use_wikidata: bool, recheck: Optional[set] = None) -> dict:
     sys.path.insert(0, str(FLOWS / "scripts"))
     from import_tvtropes_recovered import connect
 
     client, db = connect()
     try:
-        titles = [t for kind in kinds for t in read_titles(db, kind, top)]
+        if recheck is None:
+            titles = [t for kind in kinds for t in read_titles(db, kind, top)]
+        else:
+            titles = [t for kind in ("movie", "show")
+                      for t in read_titles(db, kind, len(recheck), sorted(i for m, i in recheck if m == kind))]
     finally:
         client.close()
     wikidata = fetch_wikidata() if use_wikidata else {}
-    entries, counts = build_queue(titles, wikidata, load_mapping())
+    entries, counts = build_queue(titles, wikidata, load_mapping(), recheck=recheck)
     counts.update(generated_at=utcnow().isoformat(), top=top, kinds=kinds, wikidata_ids=len(wikidata))
+    if recheck is not None:
+        missing = sorted(recheck - {(e["media_type"], e["tmdb_id"]) for e in entries})
+        counts.update(recheck=len(recheck), recheck_not_queued=[f"{m}:{i}" for m, i in missing])
     path.write_text(json.dumps({"summary": counts, "entries": entries}, indent=1, ensure_ascii=False) + "\n")
     print(json.dumps(counts, indent=2))
     return counts
@@ -436,21 +509,27 @@ def main(argv=None):
     queue.add_argument("--top", type=int, default=10000, help="most popular titles per kind")
     queue.add_argument("--kinds", default="movie,show")
     queue.add_argument("--no-wikidata", action="store_true")
+    queue.add_argument("--recheck", type=Path, metavar="FILE",
+                       help="queue only these titles (media_type:tmdb_id per line), even with tropes")
     runner = commands.add_parser("run", help="crawl a queue; resumes in the same output directory")
     runner.add_argument("queue", type=Path)
     runner.add_argument("output", type=Path)
     runner.add_argument("--max-requests", type=int, required=True)
     runner.add_argument("--delay", type=float, default=DEFAULT_DELAY, help="seconds between requests")
     runner.add_argument("--state", type=Path, default=DEFAULT_STATE)
+    runner.add_argument("--saved", type=Path, action="append", metavar="RUN_DIR",
+                        help="answer from pages this earlier run saved, without a request (repeatable)")
     reviewer = commands.add_parser("review", help="write review.md for a run directory")
     reviewer.add_argument("output", type=Path)
     args = parser.parse_args(argv)
     if args.command == "queue":
-        export_queue(args.output, args.top, args.kinds.split(","), not args.no_wikidata)
+        export_queue(args.output, args.top, args.kinds.split(","), not args.no_wikidata,
+                     read_recheck_list(args.recheck) if args.recheck else None)
     elif args.command == "run":
         if args.delay < MIN_DELAY or not 1 <= args.max_requests <= MAX_REQUESTS:
             parser.error(f"Use at least {MIN_DELAY} s between requests and a budget of 1..{MAX_REQUESTS}")
-        run(args.queue, args.output, args.state, args.delay, args.max_requests)
+        run(args.queue, args.output, args.state, args.delay, args.max_requests,
+            saved=saved_pages(args.saved) if args.saved else None)
     else:
         print(review(args.output))
 
