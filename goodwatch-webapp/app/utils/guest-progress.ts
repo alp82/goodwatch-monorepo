@@ -144,8 +144,9 @@ export function guestUserData(interactions: TasteInteraction[]): UserData {
 		const updatedAt = new Date(item.timestamp)
 		if (item.type === "score")
 			data.scores[key] = { score: item.score!, review: null, updatedAt }
-		else
-			data[item.type === "plan" ? "wishlist" : "skipped"][key] = { updatedAt }
+		else if (item.type === "plan")
+			data.wishlist[key] = { createdAt: updatedAt, updatedAt }
+		else data.skipped[key] = { updatedAt }
 	}
 	return data
 }
