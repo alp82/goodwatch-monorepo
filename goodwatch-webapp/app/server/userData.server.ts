@@ -40,8 +40,8 @@ async function _getUserData({
 			 FROM user_score WHERE user_id = ?`,
 			[user_id],
 		),
-		query<{ tmdb_id: number; media_type: string; updated_at: Date }>(
-			`SELECT tmdb_id, media_type, updated_at 
+		query<{ tmdb_id: number; media_type: string; created_at: Date | null; updated_at: Date }>(
+			`SELECT tmdb_id, media_type, created_at, updated_at 
 			 FROM user_wishlist WHERE user_id = ?`,
 			[user_id],
 		),
@@ -84,6 +84,8 @@ async function _getUserData({
 	wishlist.forEach((item) => {
 		const key = createMediaKey(item.media_type as MediaType, item.tmdb_id)
 		result.wishlist[key] = {
+			// Every row had created_at when checked on September 27, 2026; updated_at covers any that lack it.
+			createdAt: new Date(item.created_at ?? item.updated_at),
 			updatedAt: new Date(item.updated_at),
 		}
 	})

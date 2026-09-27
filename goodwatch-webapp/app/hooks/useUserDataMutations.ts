@@ -83,7 +83,8 @@ const updateWishlistOptimistic = (
 	const updated = { ...data, wishlist: { ...data.wishlist } }
 
 	if (action === "add") {
-		updated.wishlist[key] = { updatedAt: new Date() }
+		const now = new Date()
+		updated.wishlist[key] = { createdAt: now, updatedAt: now }
 	} else {
 		delete updated.wishlist[key]
 	}
