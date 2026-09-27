@@ -118,6 +118,7 @@ locks:
   f/sync/copy/all_ratings: d208051382678c5d96f48d3238d454e808da3bee83afdb930971355d322f4943
   f/sync/copy/dna_data: 4ee1f6629a18cd2ec9b38dec222224578b921aa77562c556230ad02548bf01e2
   f/sync/copy/qdrant_retry: 89e9a2cb5beca57c66409eac90dec597594bc6c8210ea16c6ddc944b6446c1c6
+  f/sync/copy/title_snapshot: e7e7ff8aaac326bcc6c0530bb950d03897d289e45457bef3181afed280ed41ed
   f/sync/copy/tmdb_daily: 7814f6ee77bc2e1d9aca4ad0ad7c5eb7ad13793359186a3069884c5335107aa7
   f/sync/copy/tmdb_details: 70e0a525de5a1e5bfaae8fc728bc8fdb2cbde37ad571dd3e6e93d329ec7f89e5
   f/sync/copy/tmdb_streaming: e0cb0b6578c4f6196165d24956dfa023265786ae8a5bfc943a9459ba3d4852bc

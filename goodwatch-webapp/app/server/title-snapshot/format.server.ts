@@ -16,7 +16,8 @@
 //   origin        uint8        index into manifest.origins (first production country, else original language); 255 unknown
 //   flags         uint8        FLAG_* bits
 //
-// That is 101 bytes per title. manifest.sha256 is the SHA-256 (hex) of the joined chunks.
+// That is 101 bytes per title. manifest.sha256 is the SHA-256 (hex) of the joined chunks. The publisher writes chunks
+// of 1 MB and adds `sourceMark` to the manifest (what it compares to skip unchanged runs); the webapp ignores it.
 import { createHash } from "node:crypto"
 
 export const FORMAT = 1

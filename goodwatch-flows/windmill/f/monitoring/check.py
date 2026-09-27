@@ -36,6 +36,7 @@ RUNTIME_HOURS = {
     "f/sync/copy/tmdb_streaming": 2,
     "f/sync/copy/tmdb_details": 2,
     "f/sync/copy/tmdb_daily": 2,
+    "f/sync/copy/title_snapshot": 1,
     "f/sync/populate_crate": 12,
     "f/dna/initialize_dna": 6,
     "f/tmdb_web/tmdb_init_providers": 6,
