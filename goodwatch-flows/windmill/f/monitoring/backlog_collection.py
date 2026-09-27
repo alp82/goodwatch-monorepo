@@ -120,11 +120,14 @@ def collect_identity_repairs(db: Any, now: datetime, *, budget_seconds: float = 
                         {"$gt": ["$next_fetch_at", now]}, 1, 0]}},
                     "pending_leased_count": {"$sum": {"$cond": [
                         {"$gt": ["$lease_expires_at", now]}, 1, 0]}},
+                    # The crawler never claims these, so they stay pending.
+                    "pending_deleted_count": {"$sum": {"$cond": [
+                        {"$eq": ["$tmdb_deleted", True]}, 1, 0]}},
                     "oldest_next_fetch_at": {"$min": "$next_fetch_at"},
                 }},
             ], hint="pending_identity_refresh", maxTimeMS=max(1, int(remaining * 1000))))
             partition = stats[0] if stats else {"pending_count": 0, "pending_failed_count": 0,
-                "pending_backoff_count": 0, "pending_leased_count": 0}
+                "pending_backoff_count": 0, "pending_leased_count": 0, "pending_deleted_count": 0}
             partition.pop("_id", None)
             partition["oldest_next_fetch_at"] = iso(partition.get("oldest_next_fetch_at"))
             index = indexes.get("country_identity", {})

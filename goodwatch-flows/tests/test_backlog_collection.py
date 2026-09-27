@@ -33,6 +33,34 @@ class CountryBacklogCollectionTests(unittest.TestCase):
         self.assertEqual(result['overdue_country_count'],0)
         self.assertEqual(result['upstream_blocked_until'],(now+timedelta(hours=1)).isoformat())
 
+
+class IdentityRepairCollectionTests(unittest.TestCase):
+    def test_pending_repairs_of_titles_deleted_on_tmdb_are_counted_apart(self):
+        # The crawler never claims a deleted title's countries, so their pending
+        # markers stay. The report must show why they can't make progress.
+        from f.monitoring.backlog_collection import collect_identity_repairs
+        now = datetime(2026, 9, 27)
+        db = mongomock.MongoClient().test
+        for media in ('movie', 'tv'):
+            collection = db[f'tmdb_{media}_providers']
+            collection.create_index([('next_fetch_at', 1), ('lease_expires_at', 1)],
+                                    name='pending_identity_refresh')
+        db.tmdb_movie_providers.insert_many([
+            {'tmdb_id': 1, 'country_code': 'DE', 'identity_repair_pending': 'r',
+             'consecutive_failures': 3, 'next_fetch_at': now + timedelta(hours=1), 'tmdb_deleted': True},
+            {'tmdb_id': 2, 'country_code': 'DE', 'identity_repair_pending': 'r',
+             'consecutive_failures': 3, 'next_fetch_at': now + timedelta(hours=1)},
+            {'tmdb_id': 3, 'country_code': 'DE', 'tmdb_deleted': True},
+        ])
+        result = collect_identity_repairs(db, now)
+        self.assertTrue(result['complete'], result)
+        movie = next(p for p in result['partitions'] if p['media_type'] == 'movie')
+        tv = next(p for p in result['partitions'] if p['media_type'] == 'tv')
+        self.assertEqual(movie['pending_count'], 2)
+        self.assertEqual(movie['pending_failed_count'], 2)
+        self.assertEqual(movie['pending_deleted_count'], 1)
+        self.assertEqual(tv['pending_deleted_count'], 0)
+
 if __name__=='__main__':unittest.main()
 
 from unittest.mock import patch
