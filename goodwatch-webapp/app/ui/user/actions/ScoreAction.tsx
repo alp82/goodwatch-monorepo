@@ -7,12 +7,22 @@ import {
 	useWatchedMutation,
 } from "~/hooks/useUserDataMutations"
 import type { Score } from "~/server/scores.server"
+import type { MediaType } from "~/types/user-data"
 import UserAction from "~/ui/auth/UserAction"
 import type { UserActionProps } from "~/ui/user/actions/types"
 
-export interface ScoreActionProps extends UserActionProps {
+/** What scoring needs to know about a title; MovieResult and ShowResult have it. */
+export interface ScoredMedia {
+	mediaType: MediaType
+	details: { tmdb_id: number; title: string }
+}
+
+export interface ScoreActionProps extends Omit<UserActionProps, "media"> {
+	media: ScoredMedia
 	score: Score | null
 	isGuest?: boolean
+	/** Also records (or, when clearing, removes) the watch. Off where the caller has recorded the watch itself. */
+	recordWatch?: boolean
 }
 
 export default function ScoreAction({
@@ -21,6 +31,7 @@ export default function ScoreAction({
 	score,
 	onChange,
 	isGuest = false,
+	recordWatch = true,
 }: ScoreActionProps) {
 	const { user } = useUser()
 	const { details, mediaType } = media
@@ -42,7 +53,7 @@ export default function ScoreAction({
 		})
 
 		const watchHistoryAction = score === null ? "remove" : "add"
-		if (user)
+		if (user && recordWatch)
 			updateWatched({
 				mediaType,
 				tmdbId: tmdb_id,

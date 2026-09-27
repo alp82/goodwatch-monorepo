@@ -105,6 +105,21 @@ function cardServices(
 		.sort((a, b) => Number(own.has(b.id)) - Number(own.has(a.id)))
 }
 
+/**
+ * Names and logos of some services, in the order given, one per name: for a surface that shows the viewer's own
+ * services (the ids in ViewerContext.services include each brand's duplicates, such as "with ads" plans).
+ */
+export async function getServiceCards(ids: number[]): Promise<CardService[]> {
+	const providers = await serviceNames()
+	const seen = new Set<string>()
+	return ids.flatMap((id) => {
+		const service = providers.get(id)
+		if (!service || seen.has(service.name)) return []
+		seen.add(service.name)
+		return [service]
+	})
+}
+
 // Names and logos of the services, the same in every country: about a thousand rows, kept in memory for a day. A
 // failed read keeps the previous names (or none) and retries on the next call.
 let names: { byId: Map<number, CardService>; until: number } | null = null

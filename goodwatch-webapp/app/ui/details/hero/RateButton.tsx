@@ -5,7 +5,7 @@ import type { Score } from "~/server/scores.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { useClickOutside } from "~/ui/details/hero/useClickOutside"
 import Drawer from "~/ui/modal/Drawer"
-import ScoreAction from "~/ui/user/actions/ScoreAction"
+import ScoreAction, { type ScoredMedia } from "~/ui/user/actions/ScoreAction"
 import { scoreLabels } from "~/utils/ratings"
 
 // Solid yellow on phones, outlined on desktop. Once rated, it shows your
@@ -55,8 +55,8 @@ export default function RateButton({ media, className = "" }: { media: MovieResu
 }
 
 // Ten bars that grow with the score, in the score colors. Hover previews the
-// label; a click saves through ScoreAction.
-function ScorePicker({ media, onDone }: { media: MovieResult | ShowResult; onDone: () => void }) {
+// label; a click saves through ScoreAction. `recordWatch` as in ScoreAction.
+export function ScorePicker({ media, onDone, recordWatch }: { media: ScoredMedia; onDone: () => void; recordWatch?: boolean }) {
 	const current = useUserScore(media.mediaType, media.details.tmdb_id)?.score ?? null
 	const [hover, setHover] = useState<number | null>(null)
 	const shown = hover ?? current
@@ -65,7 +65,7 @@ function ScorePicker({ media, onDone }: { media: MovieResult | ShowResult; onDon
 			<div className="flex items-baseline justify-between gap-4">
 				<h3 className="text-sm font-semibold text-gray-300">Your score for {media.details.title}</h3>
 				{current && (
-					<ScoreAction media={media} score={null} onChange={onDone}>
+					<ScoreAction media={media} score={null} onChange={onDone} recordWatch={recordWatch}>
 						<button type="button" className="text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white cursor-pointer">
 							Clear
 						</button>
@@ -88,7 +88,7 @@ function ScorePicker({ media, onDone }: { media: MovieResult | ShowResult; onDon
 				{Array.from({ length: 10 }, (_, i) => (i + 1) as Score).map((n) => {
 					const lit = shown != null && n <= shown
 					return (
-						<ScoreAction key={n} media={media} score={n} onChange={onDone}>
+						<ScoreAction key={n} media={media} score={n} onChange={onDone} recordWatch={recordWatch}>
 							<button
 								type="button"
 								aria-label={`${n}, ${scoreLabels[n]}`}
