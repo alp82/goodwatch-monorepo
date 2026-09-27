@@ -5,6 +5,9 @@ import type { TitleKey } from "~/utils/title-key"
 export const PORTRAIT_TABS = ["sides", "everyone", "fingerprint"] as const
 export type PortraitTab = (typeof PORTRAIT_TABS)[number]
 
+/** Guests with fewer guest ratings than this see the sample taste. */
+export const GUEST_MIN_RATINGS = 5
+
 export const isPortraitTab = (value: unknown): value is PortraitTab =>
 	PORTRAIT_TABS.includes(value as PortraitTab)
 
@@ -27,6 +30,18 @@ export interface PortraitTitle {
 	/** Whether one of the person's services carries it; null for a title they've seen, without services, or while
 	 * availability loads. */
 	onMyServices: boolean | null
+	/** For a title they haven't seen: the attributes that most drive its match, strongest first (the card's reasons). */
+	reasons: string[]
+	/** For a title they haven't seen: the subscription services that carry it where they watch, theirs first; null for
+	 * a title they've seen or while availability loads. */
+	services: PortraitService[] | null
+}
+
+export interface PortraitService {
+	id: number
+	name: string
+	/** TMDB logo path. */
+	logo_path: string
 }
 
 /** Who the portrait describes, and what the page should say about it. */
@@ -95,12 +110,15 @@ export interface Side {
 export interface SidesView extends ViewBase {
 	tab: "sides"
 	sides: Side[]
-	/** The two sides least alike: "You love {first}, and just as much {second}." Null with fewer than 2 sides. */
+	/** The ids of the two sides least alike: "You love {first's name}, and just as much {second's name}." Null with
+	 * fewer than 2 sides. */
 	headline: { first: string; second: string } | null
 	/** The side the picker opens first: the one with the highest average rating. */
 	openFirst: string | null
 	/** Whether the person has saved services, so On my services applies. */
 	hasServices: boolean
+	/** The person's services with their logos, for the On my services switch. */
+	services: PortraitService[]
 }
 
 // ---------- You vs everyone ----------

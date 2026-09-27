@@ -10,6 +10,7 @@
 import { createHash } from "node:crypto"
 import { isOnServices } from "~/server/availability-index.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
+import { getCardServices, getServiceList } from "~/server/title-cards.server"
 import {
 	type TitleSnapshot,
 	getTitleSnapshot,
@@ -31,19 +32,20 @@ import { buildFingerprint } from "./fingerprint.server"
 import { type PortraitInput, readPerson, round1 } from "./person.server"
 import { SAMPLE_RATINGS, SAMPLE_WANT_TO_SEE } from "./sample-ratings"
 import { buildSides } from "./sides.server"
-import type {
-	PortraitSubject,
-	PortraitTab,
-	PortraitTitle,
-	PortraitView,
-	PortraitViewOf,
+import {
+	GUEST_MIN_RATINGS,
+	type PortraitSubject,
+	type PortraitTab,
+	type PortraitTitle,
+	type PortraitView,
+	type PortraitViewOf,
 } from "./view"
 
 export { clearTastePortrait } from "./cache.server"
 export * from "./view"
 
-/** Guests with fewer guest ratings than this see the sample taste. */
-export const GUEST_MIN_RATINGS = 5
+/** Reasons per suggestion, as title cards show them. */
+const CARD_REASONS = 2
 const GUEST_KEEP_MS = 10 * 60_000
 const SAMPLE_KEEP_MS = 6 * 60 * 60_000
 const MAX_KEPT = 500
@@ -58,8 +60,13 @@ export interface PortraitViewer {
 export async function portraitViewer(
 	request: Request,
 	guest?: GuestProgress,
+	// The signed-in member's id when the caller has already read it (null for a guest), to skip a second auth check.
+	knownUserId?: string | null,
 ): Promise<PortraitViewer> {
-	const userId = (await getUserIdFromRequest({ request })) ?? null
+	const userId =
+		knownUserId === undefined
+			? ((await getUserIdFromRequest({ request })) ?? null)
+			: knownUserId
 	return {
 		viewer: userId
 			? { kind: "member", userId }
@@ -260,6 +267,11 @@ async function buildView(
 	const displays = await titleDisplays(keys)
 	const unseen = [...keys].filter((key) => !input.scores.has(key))
 	const matches = person.match(unseen)
+	const unseenServices = new Map(
+		(await getCardServices(input.country, unseen, input.services)).map(
+			(services, i) => [unseen[i], services],
+		),
+	)
 	const titles: Record<string, PortraitTitle> = {}
 	for (const key of keys) {
 		const display = displays.get(key)
@@ -276,10 +288,19 @@ async function buildView(
 			mine,
 			match: seen ? null : (matches.get(key) ?? null),
 			onMyServices: seen ? null : person.onMyServices(key),
+			reasons:
+				seen || matches.get(key) == null
+					? []
+					: input.taste.reasons(key, CARD_REASONS),
+			services: seen ? null : (unseenServices.get(key) ?? null),
 		}
 	}
+	const services =
+		built.tab === "sides" ? await getServiceList(input.services) : []
 	const view = prune(
-		{ ...built, subject, titles } as PortraitView,
+		(built.tab === "sides"
+			? { ...built, subject, titles, services }
+			: { ...built, subject, titles }) as PortraitView,
 		(key) => titles[key] !== undefined,
 	)
 	console.info(
@@ -371,6 +392,7 @@ function unavailable(tab: PortraitTab, kind: Viewer["kind"]): PortraitView {
 			headline: null,
 			openFirst: null,
 			hasServices: false,
+			services: [],
 		}
 	if (tab === "everyone")
 		return {
