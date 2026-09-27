@@ -247,6 +247,22 @@ class RecheckAndSavedPageTests(RunnerCase):
                        {"Film/Alpha": FakeResponse(200, work("Alpha is a 2000 film."))})
         self.assertEqual(self.http.calls, ["Film/Alpha"])
 
+    def test_a_reviewer_may_accept_a_page_the_identity_rules_reject(self):
+        # "the third film in the Alien film series" trips the shared-page rule.
+        text = work("Alien 3 is the third film in the Alien film series, released in 1992.")
+        accepted = dict(entry(1, "Alien 3", 1992, ["Film/Alien3"]),
+                        accept=[{"url": BASE + "Film/Alien3", "reason": "IMDb tt0103644 via tvtropes2imdb"}])
+        other = entry(2, "Alien 3", 1992, ["Film/Alien3"])
+        # Without the reviewer's entry the page is rejected and goes to the negative cache.
+        self.run_queue([other], {"Film/Alien3": FakeResponse(200, text)})
+        self.assertEqual(self.results()[0]["status"], "rejected")
+        # The reviewer read it and accepts it: the negative cache doesn't hide it.
+        self.out = self.dir / "run2"
+        self.run_queue([accepted], {"Film/Alien3": FakeResponse(200, text)})
+        record = self.results()[0]
+        self.assertEqual((record["status"], record["rule"]), ("recovered", "reviewed"))
+        self.assertIn("stored (reviewed)", runner.review(self.out).read_text())
+
     def test_recheck_rows_show_the_page_they_would_replace_and_carry_it_into_the_manifest(self):
         recheck = dict(entry(1, "Alpha", 2000, ["Film/Alpha2000"]), recheck=True,
                        before_url=BASE + "Film/AlphaFranchise", before_trope_count=40)

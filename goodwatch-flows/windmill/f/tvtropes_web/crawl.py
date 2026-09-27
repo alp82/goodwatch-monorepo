@@ -102,13 +102,16 @@ def crawl_tree(get: Callable[[str], Page], page: WorkPage, visited: set, owner: 
 
 def crawl_title(get: Callable[[str], Page], media_type: str, original_title: Optional[str],
                 release_year: Optional[int], variations: list[str], candidates: list[tuple[str, str]],
-                is_negative: Callable[[str], bool] = lambda url: False, known_url_rule: bool = False) -> Outcome:
+                is_negative: Callable[[str], bool] = lambda url: False, known_url_rule: bool = False,
+                accepted: frozenset = frozenset()) -> Outcome:
     """Try the known URLs in order until one is this title's page.
 
     Raises `SiteBlocked` on a block (stop everything) and `CrawlError` on an
     unexpected page. `is_negative(url)` skips URLs in the caller's negative cache.
     A page passes the strict `identifies_work` rule or, with `known_url_rule`, the
     looser `matches_known_url`; each candidate records which rule passed.
+    `accepted` holds page URLs a reviewer read and accepted for this title although
+    the rules reject them (local runner only, rule `reviewed`).
     """
     # The identity check needs a release year; don't spend a request that can't pass.
     if not release_year:
@@ -135,6 +138,8 @@ def crawl_title(get: Callable[[str], Page], media_type: str, original_title: Opt
             rule = "strict"
         elif known_url_rule and matches_known_url(page, original_title, release_year, media_type, variations):
             rule = "known_url"
+        elif page.url in accepted:
+            rule = "reviewed"
         else:
             reason = "identity" if page.url == url else f"identity after redirect to {page.url}"
             tried.append({"url": url, "source": source, "outcome": "rejected", "reason": reason})

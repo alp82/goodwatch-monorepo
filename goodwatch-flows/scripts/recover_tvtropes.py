@@ -259,12 +259,15 @@ def run(queue_path: Path, output: Path, state_path: Path, delay: float, max_requ
             continue
         first_request = len(client.log)
         record = dict(entry, started_at=now().isoformat(), code_sha256=hashes)
+        # Pages a reviewer accepted for this title are tried even if an earlier run rejected them.
+        accepted = frozenset(a["url"] for a in entry.get("accept") or [])
         try:
             outcome = crawl.crawl_title(
                 client.get, entry["media_type"], entry.get("title") or entry.get("original_title"),
                 entry.get("release_year"), entry.get("title_variations", []),
                 [(c["source"], c["url"]) for c in entry.get("candidates", [])],
-                lambda url: state.is_negative(url, now()), known_url_rule=True)
+                lambda url: url not in accepted and state.is_negative(url, now()), known_url_rule=True,
+                accepted=accepted)
             record.update(record_outcome(entry, outcome, state, now()))
             failures = 0
         except BudgetExhausted as error:
