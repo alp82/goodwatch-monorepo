@@ -1,0 +1,27 @@
+summary: Publish the title snapshot to Redis
+description: "Reads every movie and show with a title analysis from Crate and
+  publishes them as the webapp's binary title snapshot (format 1): 1 MB chunks
+  under title-snapshot:<version>:<n>, then the manifest at
+  title-snapshot:current, then deletes every version but the new and the
+  previous one. Publishes only when an analysis was added, changed or removed
+  since the current version. Started after each scheduled vector copy, nightly,
+  and on demand."
+lock: '!inline f/sync/copy/title_snapshot.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order:
+    - force
+    - dry_run
+  properties:
+    dry_run:
+      type: boolean
+      description: Read and encode the snapshot and report it, but write nothing.
+      default: false
+    force:
+      type: boolean
+      description: Publish even when no title analysis changed.
+      default: false
+  required: []
+timeout: 1800

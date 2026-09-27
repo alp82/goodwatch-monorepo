@@ -36,6 +36,9 @@ HOURS_TO_FETCH = 24 * 2  # time window for "recent" updates
 # distance. Written only when the collection has this named vector.
 FINGERPRINT_RAW_VECTOR = "fingerprint_v1_raw"
 
+# Started after every scheduled copy (not after targeted ones).
+TITLE_SNAPSHOT_SCRIPT = "f/sync/copy/title_snapshot"
+
 # ---- Helpers ---------------------------------------------------------------
 
 
@@ -633,7 +636,22 @@ def main(
         stack.callback(close_mongodb)
         qc = QdrantConnector(timeout=REQUEST_TIMEOUT_SECONDS)
         stack.callback(qc.close)
-        return {
+        result = {
             "movies": copy_to_qdrant(qc, "movie", _id_selector(movie_ids)),
             "shows": copy_to_qdrant(qc, "show", _id_selector(show_ids)),
         }
+    if not movie_ids and not show_ids:
+        result["title_snapshot"] = _start_title_snapshot()
+    return result
+
+
+def _start_title_snapshot() -> str:
+    """Starts the title snapshot publisher after a scheduled copy; it publishes only when a title
+    analysis changed. Failing to start it doesn't fail the copy: the nightly run catches up."""
+    import wmill
+
+    try:
+        return wmill.run_script_by_path_async(path=TITLE_SNAPSHOT_SCRIPT, args={})
+    except Exception as error:
+        print(f"Could not start {TITLE_SNAPSHOT_SCRIPT}: {error}", flush=True)
+        return f"not started: {error}"

@@ -188,20 +188,29 @@ minutes for the whole catalog ([#174](https://github.com/alp82/goodwatch-monorep
 
   About 100 bytes per title, so about 24 MB in total. Per-title inverse norms, mood bits, and catalog statistics are
   derived in the webapp at load time, not stored.
-- **Keys:** `title-snapshot:<version>:<n>` for chunks of at most 4 MB, and `title-snapshot:current` holding a JSON
-  manifest: `{ version, format: 1, count, chunks, sha256, keyOrder, genres[], origins[], builtAt }`. `keyOrder` is the
-  74 fingerprint keys; the webapp refuses a snapshot whose key order differs from its own `VALID_FINGERPRINT_KEYS`.
-- **Publishing:** a new Windmill script writes all chunks of a new version, then swaps `title-snapshot:current`, then
-  deletes the chunks of versions older than the previous one. It runs nightly on a schedule, after each fingerprint
-  batch, and on demand (owner, [#193](https://github.com/alp82/goodwatch-monorepo/issues/193)). A fingerprint batch
-  reaches Crate and Qdrant through the copies (`f/sync/copy/dna_data.py` and `f/sync/copy/vector_data.py`), so the
-  publisher runs after each vector copy and publishes only when title-analysis fingerprints were added or changed since
-  the manifest's `builtAt`; otherwise it exits without a new version (default, not yet confirmed by the owner: the
-  vector copy rewrites every title updated in 48 hours, so "after each copy" alone would publish every 4 hours). It
-  uses its own Redis client with `decode_responses=False`,
-  because the flows' `RedisConnector` decodes responses. The ticket measures two sources and picks the faster:
-  a Qdrant scroll of `fingerprint_v1_raw` with payload fields, or paged Crate reads of the scalar columns plus the
-  Qdrant scroll for fingerprints. Either runs offline, so it doesn't count against the per-request Qdrant rule.
+- **Keys:** `title-snapshot:<version>:<n>` for chunks of at most 1 MB (ioredis keeps a reply buffer of about three
+  times the largest value, so 4 MB chunks would push the webapp past its memory budget), and `title-snapshot:current`
+  holding a JSON manifest: `{ version, format: 1, count, chunks, sha256, keyOrder, genres[], origins[], builtAt }`, plus
+  the publisher's `sourceMark`, which the webapp ignores. `keyOrder` is the 74 fingerprint keys; the webapp refuses a
+  snapshot whose key order differs from its own `VALID_FINGERPRINT_KEYS`. `title-snapshot:lock` keeps two publishes
+  from running at once.
+- **Publishing:** `f/sync/copy/title_snapshot.py` writes all chunks of a new version, then swaps
+  `title-snapshot:current`, then deletes the chunks of versions older than the previous one. It runs nightly on a
+  schedule, after each fingerprint batch, and on demand (owner, [#193](https://github.com/alp82/goodwatch-monorepo/issues/193)).
+  A fingerprint batch reaches Crate and Qdrant through the copies (`f/sync/copy/dna_data.py` and
+  `f/sync/copy/vector_data.py`), so each scheduled vector copy starts the publisher, which publishes only when a title
+  analysis was added, changed, or removed since the current version; otherwise it exits without a new version
+  (default, not yet confirmed by the owner). It compares a mark, per table the count and sum of Crate's
+  `dna_updated_at` (two aggregates, well under a second), with the `sourceMark` in the manifest, not the manifest's
+  `builtAt`: `dna_updated_at` is the analysis's time in MongoDB, so an analysis the DNA copy brings to Crate after a
+  publish would be older than that publish's `builtAt`. It uses its own binary Redis client (`decode_responses=False`).
+- **Source** ([#195](https://github.com/alp82/goodwatch-monorepo/issues/195), measured September 27, 2026): Crate alone,
+  in pages of 2,000 by `tmdb_id` filtered on `dna_updated_at`, reading the scores from the typed
+  `fingerprint_scores['<key>']` subcolumns (237,736 titles; 85 s of page reads over HTTP from a workstation, worst page 3.5 s; a whole local run with the Python client took 152 to 167 s). Reading the whole
+  `fingerprint_scores` object took 119 s for the shows alone with pages up to 6.6 s. A Qdrant scroll of
+  `fingerprint_v1_raw` took 46 s over gRPC (126 s over REST) but holds 227,150 points, 4.5% fewer than Crate's titles
+  with a fingerprint, and its payload lacks popularity, the release day, and the origin, so it would still need the
+  Crate read. It runs offline, so it doesn't count against the per-request Qdrant rule.
 - **Freshness:** a title analyzed minutes ago shows no taste match and belongs to no mood until the next snapshot.
   That is accepted ([#174](https://github.com/alp82/goodwatch-monorepo/issues/174)).
 - **Capacity:** the Redis cluster had no `maxmemory` and 4.57 GB used on the node checked on September 27, 2026. Two
