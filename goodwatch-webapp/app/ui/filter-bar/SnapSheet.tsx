@@ -73,6 +73,8 @@ export function SnapSheet({
 
 	// The content stays mounted while the sheet closes.
 	const [mounted, setMounted] = useState(open)
+	// Shown from the render that opens it, so the dialog can take focus right away.
+	const shown = open || mounted
 	useEffect(() => {
 		if (open) setMounted(true)
 		const target = open ? px(snaps[Math.min(index, snaps.length - 1)]) : 0
@@ -147,7 +149,7 @@ export function SnapSheet({
 				aria-label={label}
 				aria-hidden={!open}
 				style={{ height: h }}
-				className={`pointer-events-auto absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[28px] bg-gray-950/95 backdrop-blur-2xl ${mounted ? "ring-1 ring-white/10 shadow-[0_-20px_60px_-10px_rgba(0,0,0,.8),inset_0_1px_0_rgba(255,255,255,.08)]" : "invisible"}`}
+				className={`pointer-events-auto absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[28px] bg-gray-950/95 backdrop-blur-2xl ${shown ? "ring-1 ring-white/10 shadow-[0_-20px_60px_-10px_rgba(0,0,0,.8),inset_0_1px_0_rgba(255,255,255,.08)]" : "invisible"}`}
 			>
 				<div
 					className="shrink-0 cursor-grab touch-none select-none active:cursor-grabbing"
@@ -162,9 +164,9 @@ export function SnapSheet({
 					{header}
 				</div>
 				<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-					{mounted && children}
+					{shown && children}
 				</div>
-				{mounted && footer}
+				{shown && footer}
 			</motion.div>
 		</div>
 	)
