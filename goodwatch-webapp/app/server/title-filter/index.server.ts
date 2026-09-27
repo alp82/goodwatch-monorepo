@@ -1,0 +1,325 @@
+// The title filter: the in-memory engine behind the filter bar on Discover, Watch next, and Explorer. It filters and
+// sorts a universe of titles by the filter state, counts what each filter hides and what each option would leave, and
+// applies For you. Everything runs over the title snapshot and the availability index in webapp memory; only the
+// filters that aren't snapshot facts (Similar to, cast and crew, legacy Discover filters) read Qdrant or Crate, once
+// per parameter set per 30 minutes.
+import {
+	type FilterName,
+	type FilterState,
+	RELEASED,
+	type Released,
+	type SortKey,
+} from "~/domain/filter-state"
+import {
+	FOR_YOU_WINDOW,
+	type ForYouSurface,
+	rankForYou,
+} from "~/domain/for-you"
+import { MOOD_KEYS } from "~/domain/moods"
+import {
+	type CountryServices,
+	countryServices,
+} from "~/server/availability-index.server"
+import type { Taste } from "~/server/taste/index.server"
+import {
+	type TitleSnapshot,
+	getTitleSnapshot,
+} from "~/server/title-snapshot/index.server"
+import type { ViewerContext } from "~/server/viewer.server"
+import { duplicateProviderMapping } from "~/utils/streaming-links"
+import type { TitleKey } from "~/utils/title-key"
+import {
+	legacyTitles,
+	personTitles,
+	similarTitles,
+	titlesOnServicesByColumn,
+} from "./id-sets.server"
+import { catalogRows, compareRows } from "./order.server"
+import {
+	type DayRange,
+	type ServicesFilter,
+	runPasses,
+	titleSet,
+} from "./passes.server"
+
+export interface FilterResult {
+	/** Passing titles in the requested order (For you applied). */
+	keys: TitleKey[]
+	total: number
+	/** Universe size minus total. */
+	hidden: number
+	/**
+	 * Titles that only that filter hides, largest first. A title hidden by two filters counts in neither, so these
+	 * don't add up to `hidden`.
+	 */
+	recoveries: { filter: FilterName; titles: number }[]
+	/**
+	 * What each option would leave, the other filters unchanged. Keys: services `all`, `mine`, and service ids;
+	 * notSeenYet `on`, `off`; type `all`, `movie`, `show`; moods by key; genres by name; minScore `0`, `60`, `70`, `80`;
+	 * released by option; similarTo and people only for the chosen options (what removing each would leave); legacy
+	 * `on`, `off`.
+	 */
+	optionCounts: Record<FilterName, Record<string, number>>
+	/** For you movement against the plain order: titles whose place changed, `by` > 0 moved up. */
+	moved?: { key: TitleKey; by: number }[]
+	/** The "↑N moved" count. */
+	movedUp?: number
+	/**
+	 * True while the viewer's country loads into the availability index: On my services then goes by the titles'
+	 * streaming column, and per-service counts are missing.
+	 */
+	approximate: boolean
+}
+
+export interface FilterInput {
+	/** "catalog" is every title Discover shows; a list is a ranked search, a Wishlist, or an Explorer pool. */
+	universe: Iterable<TitleKey> | "catalog"
+	state: FilterState
+	sort: SortKey
+	forYou: { taste: Taste; surface: ForYouSurface } | null
+	viewer: ViewerContext
+}
+
+export class SnapshotNotLoaded extends Error {
+	constructor() {
+		super("The title snapshot hasn't loaded yet")
+		this.name = "SnapshotNotLoaded"
+	}
+}
+
+export async function filterTitles(input: FilterInput): Promise<FilterResult> {
+	const snapshot = getTitleSnapshot()
+	if (!snapshot) throw new SnapshotNotLoaded()
+	const { state, viewer } = input
+
+	const [similarTo, people, legacy, services] = await Promise.all([
+		Promise.all(
+			(state.similarTo ?? []).map(async (seed) => ({
+				option: String(seed),
+				keys: await similarTitles(seed),
+			})),
+		),
+		Promise.all(
+			(state.people ?? []).map(async (person) => ({
+				option: String(person),
+				keys: await personTitles(person),
+			})),
+		),
+		state.legacy ? legacyTitles(state.legacy) : null,
+		servicesFilterBase(state, viewer),
+	])
+
+	const { rows, keys } = universeInOrder(snapshot, input.universe, input.sort)
+	const releasedOptions = releasedRanges(new Date())
+	const genreBits = state.genres.reduce((bits, name) => {
+		const b = snapshot.columns.genreNames.indexOf(name)
+		return b < 0 ? bits : bits | (1 << b)
+	}, 0)
+	const seenOrSkipped = titleSet(
+		new Set([...viewer.seen, ...viewer.skipped]),
+		snapshot,
+	)
+	const sets = (list: { option: string; keys: Set<TitleKey> }[]) =>
+		list.map(({ option, keys }) => ({ option, keys: titleSet(keys, snapshot) }))
+
+	const { passing, recoveries, optionCounts } = runPasses({
+		columns: snapshot.columns,
+		rows,
+		keys,
+		services:
+			services.kind === "index"
+				? {
+						...services,
+						availabilityRows: availabilityRows(
+							viewer.country,
+							services.index,
+							snapshot,
+							rows,
+							keys,
+						),
+					}
+				: {
+						...services,
+						kept: services.kept && titleSet(services.kept, snapshot),
+					},
+		notSeen: state.notSeenYet ? seenOrSkipped : null,
+		seenOrSkipped,
+		type: state.type,
+		moods: state.moods.reduce(
+			(mask, mood) => mask | (1 << MOOD_KEYS.indexOf(mood)),
+			0,
+		),
+		genres: genreBits,
+		genresChosen: state.genres.length > 0,
+		minScore: state.minScore,
+		released: releasedOptions[state.released],
+		releasedOptions,
+		similarTo: sets(similarTo),
+		people: sets(people),
+		legacy: legacy && titleSet(legacy, snapshot),
+	})
+
+	const ordered = Array.from(passing, (i) => keys[i])
+	let moved: FilterResult["moved"]
+	let movedUp: number | undefined
+	if (input.forYou?.taste.signal === "some") {
+		const { taste, surface } = input.forYou
+		const considered =
+			surface === "browse" ? ordered.slice(0, FOR_YOU_WINDOW) : ordered.slice()
+		const ranking = rankForYou(considered, taste.match(considered), surface)
+		for (let j = 0; j < ranking.order.length; j++) ordered[j] = ranking.order[j]
+		moved = []
+		ranking.order.forEach((key, j) => {
+			if (ranking.moved[j] !== 0) moved?.push({ key, by: ranking.moved[j] })
+		})
+		movedUp = ranking.movedUp
+	}
+
+	return {
+		keys: ordered,
+		total: passing.length,
+		hidden: rows.length - passing.length,
+		recoveries,
+		optionCounts,
+		moved,
+		movedUp,
+		approximate: services.kind === "column",
+	}
+}
+
+/** The universe's snapshot rows and keys in the plain order of the sort. */
+function universeInOrder(
+	snapshot: TitleSnapshot,
+	universe: Iterable<TitleKey> | "catalog",
+	sort: SortKey,
+): { rows: Int32Array; keys: Float64Array } {
+	if (universe === "catalog") return catalogRows(snapshot, sort)
+	let found = [...new Set(universe)].map((key) => ({
+		key,
+		row: snapshot.rowOf(key),
+	}))
+	if (sort !== "relevance") {
+		const compare = compareRows(snapshot.columns, sort)
+		// Titles the snapshot doesn't hold have no facts to sort by: they follow, in the universe's order.
+		const known = found.filter((t) => t.row >= 0)
+		known.sort((a, b) => compare(a.row, b.row))
+		found = known.concat(found.filter((t) => t.row < 0))
+	}
+	return {
+		rows: Int32Array.from(found, (t) => t.row),
+		keys: Float64Array.from(found, (t) => t.key),
+	}
+}
+
+type ServicesBase =
+	| (Omit<Extract<ServicesFilter, { kind: "index" }>, "availabilityRows"> & {
+			index: CountryServices
+	  })
+	| { kind: "column"; kept: Set<TitleKey> | null; onMyServices: boolean }
+
+// The viewer's saved services are already expanded through duplicateProviderMapping; explicit choices are expanded
+// here, so both match the availability index's base services and the streaming column's provider ids alike.
+const expand = (ids: number[]) => [
+	...new Set(
+		ids.flatMap((id) => [id, ...(duplicateProviderMapping[id] ?? [])]),
+	),
+]
+
+async function servicesFilterBase(
+	state: FilterState,
+	viewer: ViewerContext,
+): Promise<ServicesBase> {
+	const explicit = state.onMyServices ? [] : expand(state.services ?? [])
+	// On my services without saved services has nothing to keep by: it doesn't narrow.
+	const kept = state.onMyServices ? viewer.services : explicit
+	const index = countryServices(viewer.country)
+	if (index) {
+		const indexes = (ids: number[]) => [
+			...new Set(
+				ids.map((id) => index.indexOfService(id)).filter((at) => at >= 0),
+			),
+		]
+		const keptIndexes = indexes(kept)
+		return {
+			kind: "index",
+			index,
+			// A choice of services none of which carries anything keeps nothing: mark it with an impossible index.
+			kept: kept.length && !keptIndexes.length ? [-1] : keptIndexes,
+			mine: indexes(viewer.services),
+			chosen: indexes(explicit),
+		}
+	}
+	return {
+		kind: "column",
+		kept: kept.length
+			? await titlesOnServicesByColumn(viewer.country, kept)
+			: null,
+		onMyServices: state.onMyServices && viewer.services.length > 0,
+	}
+}
+
+// Availability rows per snapshot row, per loaded country index and snapshot version, filled as titles are looked up.
+const NOT_LOOKED_UP = -2
+const availabilityRowCache = new Map<
+	string,
+	{ loadedAt: number; version: string; rows: Int32Array }
+>()
+
+function availabilityRows(
+	country: string,
+	index: CountryServices,
+	snapshot: TitleSnapshot,
+	rows: Int32Array,
+	keys: Float64Array,
+): Int32Array {
+	let cache = availabilityRowCache.get(country)
+	if (
+		!cache ||
+		cache.loadedAt !== index.loadedAt ||
+		cache.version !== snapshot.version
+	) {
+		cache = {
+			loadedAt: index.loadedAt,
+			version: snapshot.version,
+			rows: new Int32Array(snapshot.count).fill(NOT_LOOKED_UP),
+		}
+		availabilityRowCache.set(country, cache)
+	}
+	const out = new Int32Array(rows.length)
+	for (let i = 0; i < rows.length; i++) {
+		const row = rows[i]
+		if (row < 0) {
+			out[i] = index.rowOf(keys[i])
+			continue
+		}
+		let at = cache.rows[row]
+		if (at === NOT_LOOKED_UP) {
+			at = index.rowOf(keys[i])
+			cache.rows[row] = at
+		}
+		out[i] = at
+	}
+	return out
+}
+
+const DAY_MS = 86_400_000
+const dayOf = (year: number) => Math.floor(Date.UTC(year, 0, 1) / DAY_MS)
+
+/** The Released options as day ranges; "recent" is the current year and the two before it. */
+function releasedRanges(now: Date): Record<Released, DayRange | null> {
+	const always = {
+		from: Number.NEGATIVE_INFINITY,
+		to: Number.POSITIVE_INFINITY,
+	}
+	const ranges: Record<Released, DayRange | null> = {
+		any: null,
+		recent: { from: dayOf(now.getUTCFullYear() - 2), to: always.to },
+		"2010s": { from: dayOf(2010), to: dayOf(2020) },
+		"2000s": { from: dayOf(2000), to: dayOf(2010) },
+		before2000: { from: always.from, to: dayOf(2000) },
+	}
+	return Object.fromEntries(RELEASED.map((r) => [r, ranges[r]])) as Record<
+		Released,
+		DayRange | null
+	>
+}
