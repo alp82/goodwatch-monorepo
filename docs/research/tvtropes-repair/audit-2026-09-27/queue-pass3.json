@@ -1,0 +1,169 @@
+{
+ "summary": {
+  "note": "#123 audit pass 3: pages read in passes 1-2 that the identity rules reject for wording or a festival year, accepted by the reviewer (rule `reviewed`); replayed from saved pages, no request"
+ },
+ "entries": [
+  {
+   "recheck": true,
+   "before_trope_count": 501,
+   "media_type": "movie",
+   "tmdb_id": 238,
+   "title": "The Godfather",
+   "original_title": "The Godfather",
+   "release_year": 1972,
+   "popularity": 61.2775,
+   "title_variations": [
+    "TheGodfather"
+   ],
+   "imdb_id": "tt0068646",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather",
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather1972"
+    }
+   ],
+   "accept": [
+    {
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather1972",
+     "reason": "TV Tropes' page for the 1972 film (renamed from Film/TheGodfather, which Wikidata P6839 and tvtropes2imdb tt0068646 give for this title). Its intro introduces the trilogy, but Part II and Part III now have their own pages"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 501,
+   "media_type": "movie",
+   "tmdb_id": 242,
+   "title": "The Godfather Part III",
+   "original_title": "The Godfather Part III",
+   "release_year": 1990,
+   "popularity": 38.9618,
+   "title_variations": [
+    "TheGodfatherPartIII"
+   ],
+   "imdb_id": "tt0099674",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather",
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfatherPartIII"
+    }
+   ],
+   "accept": [
+    {
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfatherPartIII",
+     "reason": "\"The Godfather Part III is the final film of The Godfather gangster film trilogy ... Released in 1990\": one film; the word trilogy trips the shared-page rule"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 191,
+   "media_type": "movie",
+   "tmdb_id": 18785,
+   "title": "The Hangover",
+   "original_title": "The Hangover",
+   "release_year": 2009,
+   "popularity": 28.9496,
+   "title_variations": [
+    "TheHangover"
+   ],
+   "imdb_id": "tt1119646",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover",
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover2009"
+    }
+   ],
+   "accept": [
+    {
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover2009",
+     "reason": "\"an American comedy film released in 2009 ... the first installment in The Hangover (Film Series)\": one film; the phrase film series trips the shared-page rule"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 185,
+   "media_type": "movie",
+   "tmdb_id": 417859,
+   "title": "Puss in Boots",
+   "original_title": "Puss in Boots",
+   "release_year": 2011,
+   "popularity": 23.8031,
+   "title_variations": [
+    "PussInBoots"
+   ],
+   "imdb_id": "tt0448694",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PussInBoots",
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/PussInBoots2011"
+    }
+   ],
+   "accept": [
+    {
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/PussInBoots2011",
+     "reason": "Main/PussInBoots lists it as \"The film about the Shrek character, Puss in Boots (2011)\"; its intro has no medium word; Wikidata P6839 WesternAnimation/PussInBoots redirects to that list"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 143,
+   "media_type": "movie",
+   "tmdb_id": 764,
+   "title": "The Evil Dead",
+   "original_title": "The Evil Dead",
+   "release_year": 1983,
+   "popularity": 16.2681,
+   "title_variations": [
+    "TheEvilDead"
+   ],
+   "imdb_id": "tt0083907",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/EvilDead",
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheEvilDead1981"
+    }
+   ],
+   "accept": [
+    {
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheEvilDead1981",
+     "reason": "Released October 15, 1981 (IMDb tt0083907, 1981); TMDB dates movie 764 by its 1983 release, so the year rule rejects it"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 220,
+   "media_type": "movie",
+   "tmdb_id": 8077,
+   "title": "Alien³",
+   "original_title": "Alien³",
+   "release_year": 1992,
+   "popularity": 13.2224,
+   "title_variations": [
+    "Alien3"
+   ],
+   "imdb_id": "tt0103644",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Alien",
+   "candidates": [
+    {
+     "source": "tvtropes2imdb",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Alien3"
+    }
+   ],
+   "accept": [
+    {
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Alien3",
+     "reason": "\"Alien 3 ... is the third film in the Alien film series, released in 1992\" and tvtropes2imdb tt0103644; the phrase film series trips the shared-page rule"
+    }
+   ]
+  }
+ ]
+}

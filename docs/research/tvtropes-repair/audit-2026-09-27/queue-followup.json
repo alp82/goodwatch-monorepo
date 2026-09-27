@@ -1,0 +1,161 @@
+{
+ "summary": {
+  "note": "#123 follow-up: right pages linked from pages fetched on 2026-09-27, not fetched within the ~30-request budget. Their wrong tropes are removed, so a normal run and import fills them. Cube1997 and PlanetOfTheApes1968 may need a reviewed accept (festival or other-year names)"
+ },
+ "entries": [
+  {
+   "media_type": "movie",
+   "tmdb_id": 45243,
+   "title": "The Hangover Part II",
+   "original_title": "The Hangover Part II",
+   "release_year": 2011,
+   "popularity": 19.2455,
+   "title_variations": [
+    "TheHangoverPartII"
+   ],
+   "imdb_id": "tt1411697",
+   "before_url": null,
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangoverPartII"
+    }
+   ]
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 109439,
+   "title": "The Hangover Part III",
+   "original_title": "The Hangover Part III",
+   "release_year": 2013,
+   "popularity": 16.8233,
+   "title_variations": [
+    "TheHangoverPartIII"
+   ],
+   "imdb_id": "tt1951261",
+   "before_url": null,
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangoverPartIII"
+    }
+   ]
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 82675,
+   "title": "Taken 2",
+   "original_title": "Taken 2",
+   "release_year": 2012,
+   "popularity": 14.4844,
+   "title_variations": [
+    "Taken2"
+   ],
+   "imdb_id": "tt1397280",
+   "before_url": null,
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken2"
+    }
+   ]
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 816,
+   "title": "Austin Powers: International Man of Mystery",
+   "original_title": "Austin Powers: International Man of Mystery",
+   "release_year": 1997,
+   "popularity": 11.4128,
+   "title_variations": [
+    "AustinPowersInternationalManOfMystery",
+    "AustinPowers"
+   ],
+   "imdb_id": "tt0118655",
+   "before_url": null,
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowersInternationalManOfMystery"
+    }
+   ]
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 817,
+   "title": "Austin Powers: The Spy Who Shagged Me",
+   "original_title": "Austin Powers: The Spy Who Shagged Me",
+   "release_year": 1999,
+   "popularity": 15.1251,
+   "title_variations": [
+    "AustinPowersTheSpyWhoShaggedMe",
+    "AustinPowers"
+   ],
+   "imdb_id": "tt0145660",
+   "before_url": null,
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowersTheSpyWhoShaggedMe"
+    }
+   ]
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 818,
+   "title": "Austin Powers in Goldmember",
+   "original_title": "Austin Powers in Goldmember",
+   "release_year": 2002,
+   "popularity": 11.3629,
+   "title_variations": [
+    "AustinPowersInGoldmember"
+   ],
+   "imdb_id": "tt0295178",
+   "before_url": null,
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowersInGoldmember"
+    }
+   ]
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 871,
+   "title": "Planet of the Apes",
+   "original_title": "Planet of the Apes",
+   "release_year": 1968,
+   "popularity": 14.5845,
+   "title_variations": [
+    "PlanetOfTheApes"
+   ],
+   "imdb_id": "tt0063442",
+   "before_url": null,
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes1968"
+    }
+   ]
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 431,
+   "title": "Cube",
+   "original_title": "Cube",
+   "release_year": 1998,
+   "popularity": 8.0308,
+   "title_variations": [
+    "Cube"
+   ],
+   "imdb_id": "tt0123755",
+   "before_url": null,
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Cube1997"
+    }
+   ]
+  }
+ ]
+}

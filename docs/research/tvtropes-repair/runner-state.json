@@ -192,6 +192,14 @@
    "at": "2026-09-26T09:31:00.772294+00:00",
    "until": "2026-12-25T09:31:00.772294+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Alien3": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:8077",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:10:34.393305+00:00",
+   "until": "2026-12-26T08:10:34.393305+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/AllHailTheKing": {
    "outcome": "rejected",
    "reason": "identity",
@@ -223,6 +231,14 @@
    "rules": "2026-09-26 strict+known_url",
    "at": "2026-09-26T09:17:54.527112+00:00",
    "until": "2026-12-25T09:17:54.527112+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:816",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:10:40.379773+00:00",
+   "until": "2026-12-26T08:10:40.379773+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/Baahubali": {
    "outcome": "rejected",
@@ -360,6 +376,22 @@
    "at": "2026-09-26T09:02:12.511469+00:00",
    "until": "2026-12-25T09:02:12.511469+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Crash": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Film/Crash2004",
+   "title": "movie:1640",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:10:52.711768+00:00",
+   "until": "2026-12-26T08:10:52.711768+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Crash2004": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:1640",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:10:52.711768+00:00",
+   "until": "2026-12-26T08:10:52.711768+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/Creep": {
    "outcome": "rejected",
    "reason": "identity",
@@ -375,6 +407,14 @@
    "rules": "2026-09-26 strict+known_url",
    "at": "2026-09-26T09:28:18.413431+00:00",
    "until": "2026-12-25T09:28:18.413431+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Cube": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/TheCube",
+   "title": "movie:431",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:10:58.662894+00:00",
+   "until": "2026-12-26T08:10:58.662894+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/DarkWater": {
    "outcome": "rejected",
@@ -455,6 +495,14 @@
    "rules": "2026-09-26 strict+known_url",
    "at": "2026-09-26T09:06:30.393343+00:00",
    "until": "2026-12-25T09:06:30.393343+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/EvilDead": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:764",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:10:10.339033+00:00",
+   "until": "2026-12-26T08:10:10.339033+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/Extinction": {
    "outcome": "rejected",
@@ -984,6 +1032,14 @@
    "at": "2026-09-26T09:03:54.418710+00:00",
    "until": "2026-12-25T09:03:54.418710+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:871",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:10:22.337507+00:00",
+   "until": "2026-12-26T08:10:22.337507+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/PodPeople": {
    "outcome": "rejected",
    "reason": "identity",
@@ -1208,6 +1264,14 @@
    "at": "2026-09-26T09:20:00.416719+00:00",
    "until": "2026-12-25T09:20:00.416719+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/Taken",
+   "title": "movie:8681",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:10:04.744908+00:00",
+   "until": "2026-12-26T08:10:04.744908+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/Tar": {
    "outcome": "rejected",
    "reason": "identity",
@@ -1359,6 +1423,14 @@
    "at": "2026-09-26T09:48:07.103026+00:00",
    "until": "2026-12-25T09:48:07.103026+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheEvilDead1981": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:764",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:14:04.660928+00:00",
+   "until": "2026-12-26T08:14:04.660928+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheForeigner": {
    "outcome": "rejected",
    "reason": "identity",
@@ -1391,6 +1463,22 @@
    "at": "2026-09-26T09:13:06.443729+00:00",
    "until": "2026-12-25T09:13:06.443729+00:00"
   },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather1972": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:238",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:13:34.823906+00:00",
+   "until": "2026-12-26T08:13:34.823906+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfatherPartIII": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:242",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:08:46.433084+00:00",
+   "until": "2026-12-26T08:08:46.433084+00:00"
+  },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGreatGatsby": {
    "outcome": "rejected",
    "reason": "identity",
@@ -1414,6 +1502,22 @@
    "rules": "2026-09-26 strict+known_url",
    "at": "2026-09-26T09:16:36.701816+00:00",
    "until": "2026-12-25T09:16:36.701816+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:18785",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:09:34.326906+00:00",
+   "until": "2026-12-26T08:09:34.326906+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover2009": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:18785",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:13:40.653417+00:00",
+   "until": "2026-12-26T08:13:40.653417+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHarderTheyFall": {
    "outcome": "rejected",
@@ -3572,6 +3676,22 @@
    "rules": "2026-09-26 strict+known_url",
    "at": "2026-09-26T08:43:00.751824+00:00",
    "until": "2026-12-25T08:43:00.751824+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/PussInBoots": {
+   "outcome": "rejected",
+   "reason": "identity after redirect to https://tvtropes.org/pmwiki/pmwiki.php/Main/PussInBoots",
+   "title": "movie:417859",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:09:40.683598+00:00",
+   "until": "2026-12-26T08:09:40.683598+00:00"
+  },
+  "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/PussInBoots2011": {
+   "outcome": "rejected",
+   "reason": "identity",
+   "title": "movie:417859",
+   "rules": "2026-09-26 strict+known_url",
+   "at": "2026-09-27T08:13:46.693331+00:00",
+   "until": "2026-12-26T08:13:46.693331+00:00"
   },
   "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/ScoobyDooAndBatmanTheBraveAndTheBold": {
    "outcome": "rejected",

@@ -1,0 +1,970 @@
+{
+ "summary": {
+  "titles": 42,
+  "with_tropes": 42,
+  "no_known_url": 0,
+  "queued": 42,
+  "sources": {
+   "stored": 42,
+   "wikidata": 8,
+   "tvtropes2imdb": 6
+  },
+  "generated_at": "2026-09-27T08:04:49.914370+00:00",
+  "top": 10000,
+  "kinds": [
+   "movie",
+   "show"
+  ],
+  "wikidata_ids": 4183,
+  "recheck": 45,
+  "recheck_not_queued": [
+   "show:243520",
+   "show:278353",
+   "show:281095"
+  ]
+ },
+ "entries": [
+  {
+   "recheck": true,
+   "before_trope_count": 639,
+   "media_type": "show",
+   "tmdb_id": 46296,
+   "title": "Spartacus",
+   "original_title": "Spartacus",
+   "release_year": 2010,
+   "popularity": 88.807,
+   "title_variations": [
+    "Spartacus"
+   ],
+   "imdb_id": "tt1442449",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/SpartacusBloodAndSand",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/SpartacusBloodAndSand"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 114,
+   "media_type": "show",
+   "tmdb_id": 37854,
+   "title": "One Piece",
+   "original_title": "ワンピース",
+   "release_year": 1999,
+   "popularity": 81.2128,
+   "title_variations": [
+    "OnePiece"
+   ],
+   "imdb_id": "tt0388629",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/OnePiece2023",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/OnePiece2023"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 501,
+   "media_type": "movie",
+   "tmdb_id": 238,
+   "title": "The Godfather",
+   "original_title": "The Godfather",
+   "release_year": 1972,
+   "popularity": 61.2775,
+   "title_variations": [
+    "TheGodfather"
+   ],
+   "imdb_id": "tt0068646",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 166,
+   "media_type": "show",
+   "tmdb_id": 94605,
+   "title": "Arcane",
+   "original_title": "Arcane",
+   "release_year": 2021,
+   "popularity": 54.7182,
+   "title_variations": [
+    "Arcane"
+   ],
+   "imdb_id": "tt11126994",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/Arcane",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/Arcane"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 501,
+   "media_type": "movie",
+   "tmdb_id": 242,
+   "title": "The Godfather Part III",
+   "original_title": "The Godfather Part III",
+   "release_year": 1990,
+   "popularity": 38.9618,
+   "title_variations": [
+    "TheGodfatherPartIII"
+   ],
+   "imdb_id": "tt0099674",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 76,
+   "media_type": "show",
+   "tmdb_id": 246,
+   "title": "Avatar: The Last Airbender",
+   "original_title": "Avatar: The Last Airbender",
+   "release_year": 2005,
+   "popularity": 38.7304,
+   "title_variations": [
+    "AvatarTheLastAirbender",
+    "Avatar"
+   ],
+   "imdb_id": "tt0417299",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/AvatarTheLastAirbender2024",
+   "candidates": [
+    {
+     "source": "wikidata",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/AvatarTheLastAirbender"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/AvatarTheLastAirbender2024"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 501,
+   "media_type": "movie",
+   "tmdb_id": 240,
+   "title": "The Godfather Part II",
+   "original_title": "The Godfather Part II",
+   "release_year": 1974,
+   "popularity": 37.0615,
+   "title_variations": [
+    "TheGodfatherPartII"
+   ],
+   "imdb_id": "tt0071562",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather",
+   "candidates": [
+    {
+     "source": "tvtropes2imdb",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfatherPartII"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheGodfather"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 149,
+   "media_type": "movie",
+   "tmdb_id": 1726,
+   "title": "Iron Man",
+   "original_title": "Iron Man",
+   "release_year": 2008,
+   "popularity": 35.7318,
+   "title_variations": [
+    "IronMan"
+   ],
+   "imdb_id": "tt0371746",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/IronMan",
+   "candidates": [
+    {
+     "source": "wikidata",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/IronMan1"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/IronMan"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 108,
+   "media_type": "movie",
+   "tmdb_id": 948,
+   "title": "Halloween",
+   "original_title": "Halloween",
+   "release_year": 1978,
+   "popularity": 35.0349,
+   "title_variations": [
+    "Halloween"
+   ],
+   "imdb_id": "tt0077651",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Halloween",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Halloween"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 26,
+   "media_type": "movie",
+   "tmdb_id": 447273,
+   "title": "Snow White",
+   "original_title": "Snow White",
+   "release_year": 2025,
+   "popularity": 33.0054,
+   "title_variations": [
+    "SnowWhite"
+   ],
+   "imdb_id": "tt6208148",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/SnowWhite",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/SnowWhite"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 61,
+   "media_type": "movie",
+   "tmdb_id": 920,
+   "title": "Cars",
+   "original_title": "Cars",
+   "release_year": 2006,
+   "popularity": 32.5644,
+   "title_variations": [
+    "Cars"
+   ],
+   "imdb_id": "tt0317219",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Cars",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Cars"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 21,
+   "media_type": "movie",
+   "tmdb_id": 564,
+   "title": "The Mummy",
+   "original_title": "The Mummy",
+   "release_year": 1999,
+   "popularity": 29.2123,
+   "title_variations": [
+    "TheMummy"
+   ],
+   "imdb_id": "tt0120616",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/TheMummy",
+   "candidates": [
+    {
+     "source": "wikidata",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheMummy1999"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/TheMummy"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 191,
+   "media_type": "movie",
+   "tmdb_id": 18785,
+   "title": "The Hangover",
+   "original_title": "The Hangover",
+   "release_year": 2009,
+   "popularity": 28.9496,
+   "title_variations": [
+    "TheHangover"
+   ],
+   "imdb_id": "tt1119646",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 128,
+   "media_type": "movie",
+   "tmdb_id": 1062722,
+   "title": "Frankenstein",
+   "original_title": "Frankenstein",
+   "release_year": 2025,
+   "popularity": 24.499,
+   "title_variations": [
+    "Frankenstein"
+   ],
+   "imdb_id": "tt1312221",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Frankenstein",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Frankenstein"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 185,
+   "media_type": "movie",
+   "tmdb_id": 417859,
+   "title": "Puss in Boots",
+   "original_title": "Puss in Boots",
+   "release_year": 2011,
+   "popularity": 23.8031,
+   "title_variations": [
+    "PussInBoots"
+   ],
+   "imdb_id": "tt0448694",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PussInBoots",
+   "candidates": [
+    {
+     "source": "wikidata",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/PussInBoots"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/PussInBoots"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 278,
+   "media_type": "movie",
+   "tmdb_id": 260346,
+   "title": "Taken 3",
+   "original_title": "Taken 3",
+   "release_year": 2014,
+   "popularity": 21.2428,
+   "title_variations": [
+    "Taken3"
+   ],
+   "imdb_id": "tt2446042",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 119,
+   "media_type": "movie",
+   "tmdb_id": 2059,
+   "title": "National Treasure",
+   "original_title": "National Treasure",
+   "release_year": 2004,
+   "popularity": 21.1064,
+   "title_variations": [
+    "NationalTreasure"
+   ],
+   "imdb_id": "tt0368891",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/NationalTreasure",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/NationalTreasure"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 10,
+   "media_type": "movie",
+   "tmdb_id": 1091,
+   "title": "The Thing",
+   "original_title": "The Thing",
+   "release_year": 1982,
+   "popularity": 20.6785,
+   "title_variations": [
+    "TheThing"
+   ],
+   "imdb_id": "tt0084787",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheThing",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheThing"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 191,
+   "media_type": "movie",
+   "tmdb_id": 45243,
+   "title": "The Hangover Part II",
+   "original_title": "The Hangover Part II",
+   "release_year": 2011,
+   "popularity": 19.2455,
+   "title_variations": [
+    "TheHangoverPartII"
+   ],
+   "imdb_id": "tt1411697",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 185,
+   "media_type": "movie",
+   "tmdb_id": 4108,
+   "title": "The Transporter",
+   "original_title": "The Transporter",
+   "release_year": 2002,
+   "popularity": 18.86,
+   "title_variations": [
+    "TheTransporter"
+   ],
+   "imdb_id": "tt0293662",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheTransporter",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheTransporter"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 21,
+   "media_type": "movie",
+   "tmdb_id": 282035,
+   "title": "The Mummy",
+   "original_title": "The Mummy",
+   "release_year": 2017,
+   "popularity": 18.7434,
+   "title_variations": [
+    "TheMummy"
+   ],
+   "imdb_id": "tt2345759",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/TheMummy",
+   "candidates": [
+    {
+     "source": "wikidata",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheMummy2017"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/TheMummy"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 278,
+   "media_type": "movie",
+   "tmdb_id": 8681,
+   "title": "Taken",
+   "original_title": "Taken",
+   "release_year": 2008,
+   "popularity": 18.3172,
+   "title_variations": [
+    "Taken"
+   ],
+   "imdb_id": "tt0936501",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 119,
+   "media_type": "movie",
+   "tmdb_id": 6637,
+   "title": "National Treasure: Book of Secrets",
+   "original_title": "National Treasure: Book of Secrets",
+   "release_year": 2007,
+   "popularity": 17.8754,
+   "title_variations": [
+    "NationalTreasureBookOfSecrets",
+    "NationalTreasure"
+   ],
+   "imdb_id": "tt0465234",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/NationalTreasure",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/NationalTreasure"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 424,
+   "media_type": "movie",
+   "tmdb_id": 124905,
+   "title": "Godzilla",
+   "original_title": "Godzilla",
+   "release_year": 2014,
+   "popularity": 17.7882,
+   "title_variations": [
+    "Godzilla"
+   ],
+   "imdb_id": "tt0831387",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Godzilla",
+   "candidates": [
+    {
+     "source": "tvtropes2imdb",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Gojira"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Godzilla"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 191,
+   "media_type": "movie",
+   "tmdb_id": 109439,
+   "title": "The Hangover Part III",
+   "original_title": "The Hangover Part III",
+   "release_year": 2013,
+   "popularity": 16.8233,
+   "title_variations": [
+    "TheHangoverPartIII"
+   ],
+   "imdb_id": "tt1951261",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 143,
+   "media_type": "movie",
+   "tmdb_id": 764,
+   "title": "The Evil Dead",
+   "original_title": "The Evil Dead",
+   "release_year": 1983,
+   "popularity": 16.2681,
+   "title_variations": [
+    "TheEvilDead"
+   ],
+   "imdb_id": "tt0083907",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/EvilDead",
+   "candidates": [
+    {
+     "source": "tvtropes2imdb",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheEvil"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/EvilDead"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 143,
+   "media_type": "movie",
+   "tmdb_id": 109428,
+   "title": "Evil Dead",
+   "original_title": "Evil Dead",
+   "release_year": 2013,
+   "popularity": 15.759,
+   "title_variations": [
+    "EvilDead"
+   ],
+   "imdb_id": "tt1288558",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/EvilDead",
+   "candidates": [
+    {
+     "source": "tvtropes2imdb",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/EvilDead2"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/EvilDead"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 185,
+   "media_type": "movie",
+   "tmdb_id": 9335,
+   "title": "Transporter 2",
+   "original_title": "Transporter 2",
+   "release_year": 2005,
+   "popularity": 15.6894,
+   "title_variations": [
+    "Transporter2"
+   ],
+   "imdb_id": "tt0388482",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheTransporter",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheTransporter"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 454,
+   "media_type": "movie",
+   "tmdb_id": 817,
+   "title": "Austin Powers: The Spy Who Shagged Me",
+   "original_title": "Austin Powers: The Spy Who Shagged Me",
+   "release_year": 1999,
+   "popularity": 15.1251,
+   "title_variations": [
+    "AustinPowersTheSpyWhoShaggedMe",
+    "AustinPowers"
+   ],
+   "imdb_id": "tt0145660",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 62,
+   "media_type": "movie",
+   "tmdb_id": 869,
+   "title": "Planet of the Apes",
+   "original_title": "Planet of the Apes",
+   "release_year": 2001,
+   "popularity": 15.0648,
+   "title_variations": [
+    "PlanetOfTheApes"
+   ],
+   "imdb_id": "tt0133152",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 424,
+   "media_type": "movie",
+   "tmdb_id": 929,
+   "title": "Godzilla",
+   "original_title": "Godzilla",
+   "release_year": 1998,
+   "popularity": 14.8161,
+   "title_variations": [
+    "Godzilla"
+   ],
+   "imdb_id": "tt0120685",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Godzilla",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Godzilla"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 61,
+   "media_type": "movie",
+   "tmdb_id": 871,
+   "title": "Planet of the Apes",
+   "original_title": "Planet of the Apes",
+   "release_year": 1968,
+   "popularity": 14.5845,
+   "title_variations": [
+    "PlanetOfTheApes"
+   ],
+   "imdb_id": "tt0063442",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes",
+   "candidates": [
+    {
+     "source": "tvtropes2imdb",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes2001"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 278,
+   "media_type": "movie",
+   "tmdb_id": 82675,
+   "title": "Taken 2",
+   "original_title": "Taken 2",
+   "release_year": 2012,
+   "popularity": 14.4844,
+   "title_variations": [
+    "Taken2"
+   ],
+   "imdb_id": "tt1397280",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 121,
+   "media_type": "movie",
+   "tmdb_id": 12230,
+   "title": "One Hundred and One Dalmatians",
+   "original_title": "One Hundred and One Dalmatians",
+   "release_year": 1961,
+   "popularity": 14.3598,
+   "title_variations": [
+    "OneHundredAndOneDalmatians"
+   ],
+   "imdb_id": "tt0055254",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/OneHundredAndOneDalmatians1996",
+   "candidates": [
+    {
+     "source": "wikidata",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/OneHundredAndOneDalmatians"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/OneHundredAndOneDalmatians1996"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 170,
+   "media_type": "movie",
+   "tmdb_id": 17578,
+   "title": "The Adventures of Tintin",
+   "original_title": "The Adventures of Tintin",
+   "release_year": 2011,
+   "popularity": 13.3784,
+   "title_variations": [
+    "TheAdventuresOfTintin"
+   ],
+   "imdb_id": "tt0983193",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/Tintin",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/Tintin"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 220,
+   "media_type": "movie",
+   "tmdb_id": 8077,
+   "title": "Alien³",
+   "original_title": "Alien³",
+   "release_year": 1992,
+   "popularity": 13.2224,
+   "title_variations": [
+    "Alien3"
+   ],
+   "imdb_id": "tt0103644",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Alien",
+   "candidates": [
+    {
+     "source": "tvtropes2imdb",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Alien3"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Alien"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 454,
+   "media_type": "movie",
+   "tmdb_id": 816,
+   "title": "Austin Powers: International Man of Mystery",
+   "original_title": "Austin Powers: International Man of Mystery",
+   "release_year": 1997,
+   "popularity": 11.4128,
+   "title_variations": [
+    "AustinPowersInternationalManOfMystery",
+    "AustinPowers"
+   ],
+   "imdb_id": "tt0118655",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 454,
+   "media_type": "movie",
+   "tmdb_id": 818,
+   "title": "Austin Powers in Goldmember",
+   "original_title": "Austin Powers in Goldmember",
+   "release_year": 2002,
+   "popularity": 11.3629,
+   "title_variations": [
+    "AustinPowersInGoldmember"
+   ],
+   "imdb_id": "tt0295178",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 52,
+   "media_type": "movie",
+   "tmdb_id": 1640,
+   "title": "Crash",
+   "original_title": "Crash",
+   "release_year": 2005,
+   "popularity": 10.5357,
+   "title_variations": [
+    "Crash"
+   ],
+   "imdb_id": "tt0375679",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Crash2004",
+   "candidates": [
+    {
+     "source": "wikidata",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Crash"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Crash2004"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 189,
+   "media_type": "movie",
+   "tmdb_id": 3176,
+   "title": "Battle Royale",
+   "original_title": "バトル・ロワイアル",
+   "release_year": 2000,
+   "popularity": 9.9458,
+   "title_variations": [
+    "BattleRoyale"
+   ],
+   "imdb_id": "tt0266308",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/BattleRoyale",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/BattleRoyale"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 125,
+   "media_type": "movie",
+   "tmdb_id": 431,
+   "title": "Cube",
+   "original_title": "Cube",
+   "release_year": 1998,
+   "popularity": 8.0308,
+   "title_variations": [
+    "Cube"
+   ],
+   "imdb_id": "tt0123755",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheCube",
+   "candidates": [
+    {
+     "source": "wikidata",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Cube"
+    },
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheCube"
+    }
+   ]
+  },
+  {
+   "recheck": true,
+   "before_trope_count": 166,
+   "media_type": "movie",
+   "tmdb_id": 1488912,
+   "title": "Arcane",
+   "original_title": "Arcane",
+   "release_year": null,
+   "popularity": 0.2868,
+   "title_variations": [
+    "Arcane"
+   ],
+   "imdb_id": "tt11126994",
+   "before_url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/Arcane",
+   "candidates": [
+    {
+     "source": "stored",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/WesternAnimation/Arcane"
+    }
+   ]
+  }
+ ]
+}
