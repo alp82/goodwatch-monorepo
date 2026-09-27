@@ -814,7 +814,7 @@ export type RemoteSlot = (p: { z: Zapper; t: Tv4; services: LRServiceButton[]; p
 // The TV flow prototype (#187) brings its own screen state and screens; the remote drives them the same way.
 export type TvSlot = { use: (z: Zapper, services: LRServiceButton[]) => Tv4; screen: (t: Tv4) => ReactNode }
 
-export function LivingRoom3({ data, room, pose = "hand", look = "current", round4 = false, remote, tvSlot }: { data: LRData; room: Room3; pose?: Pose; look?: Look; round4?: boolean; remote?: RemoteSlot; tvSlot?: TvSlot }) {
+export function LivingRoom3({ data, room, pose = "hand", look = "current", round4 = false, remote, tvSlot, handSrc = handBack, roomOverlay }: { data: LRData; room: Room3; pose?: Pose; look?: Look; round4?: boolean; remote?: RemoteSlot; tvSlot?: TvSlot; handSrc?: string; roomOverlay?: React.ReactNode }) {
 	const root = useRef<HTMLDivElement>(null)
 	const area = useRef<HTMLDivElement>(null)
 	const remoteBox = useRef<HTMLDivElement>(null)
@@ -1005,6 +1005,7 @@ export function LivingRoom3({ data, room, pose = "hand", look = "current", round
 						<AnimatePresence initial={false}>
 							<motion.img key={room.src} src={room.src} alt={room.alt} className="absolute inset-0 h-full w-full select-none" draggable={false} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} />
 						</AnimatePresence>
+						{roomOverlay}
 						<motion.div className="absolute inset-0 bg-[#05060a]" initial={{ opacity: 0.6 }} animate={{ opacity: z.on ? 0.12 : 0.6 }} transition={{ duration: 1.4, ease: "easeOut" }} />
 						{/* The TV's light on the room: a plain translucent gradient. A blend mode here (and dust drifting
 						    through it) made the browser re-blend the whole room every frame: 86% of a core while idle. */}
@@ -1074,7 +1075,7 @@ export function LivingRoom3({ data, room, pose = "hand", look = "current", round
 					{pose === "hand" && (() => {
 						const k = (REMOTE_W * L.remote.s) / HAND.pw
 						const x = REMOTE_W * L.remote.s / 2 - (HAND.x + HAND.pw / 2) * k
-						return <img src={handBack} alt="" aria-hidden className="pointer-events-none absolute max-w-none select-none" style={{ left: x, top: -HAND.y * k, width: HAND.w * k, height: HAND.h * k }} draggable={false} />
+						return <img src={handSrc} alt="" aria-hidden className="pointer-events-none absolute max-w-none select-none" style={{ left: x, top: -HAND.y * k, width: HAND.w * k, height: HAND.h * k }} draggable={false} />
 					})()}
 					<div ref={remoteBox} className="absolute left-0 top-0 origin-top-left" style={{ transform: `scale(${L.remote.s})` }}>
 						{remote ? (
