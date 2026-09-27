@@ -9,6 +9,9 @@ interface UpdateWishListParams {
 	tmdb_id: number | null;
 	media_type: "movie" | "show";
 	action: "add" | "remove";
+	// Adding back a title with its original added-at time (Undo after "I watched it" in Watch next), so it keeps its
+	// place in Waiting longest. Server callers only; the update-wishlist route never passes it.
+	addedAt?: Date;
 }
 
 export interface UpdateWishListPayload {
@@ -26,6 +29,7 @@ export const updateWishList = async ({
 	tmdb_id,
 	media_type,
 	action,
+	addedAt,
 }: UpdateWishListParams): Promise<UpdateWishListResult> => {
 	if (!user_id || !tmdb_id) {
 		return {
@@ -45,6 +49,7 @@ export const updateWishList = async ({
 				user_id,
 				tmdb_id,
 				media_type: media_type,
+				...(addedAt ? { created_at: addedAt } : {}),
 			}],
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
 			ignoreUpdate: true, // Just ignore if already exists

@@ -133,6 +133,18 @@ async function serviceNames(): Promise<Map<number, CardService>> {
 
 // ---------------------------------------------------------------- display fields
 
+/**
+ * Display fields alone, for up to MAX_KEYS titles, from the same cache and Crate read as the cards: for callers that
+ * need a picture or a name but nothing personal (Watch next's mood pictures). Titles Crate lacks are left out.
+ */
+export async function getDisplayFields(
+	keys: TitleKey[],
+): Promise<Map<TitleKey, TitleDisplay>> {
+	if (keys.length > MAX_KEYS)
+		throw new Error(`getDisplayFields takes at most ${MAX_KEYS} titles`)
+	return readDisplays([...new Set(keys)])
+}
+
 async function readDisplays(
 	keys: TitleKey[],
 ): Promise<Map<TitleKey, TitleDisplay>> {
