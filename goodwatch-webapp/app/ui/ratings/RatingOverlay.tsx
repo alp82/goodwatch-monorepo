@@ -1,4 +1,4 @@
-import React from "react"
+import type { ReactNode } from "react"
 import gwLogo from "~/img/goodwatch-logo.png"
 import {
 	type AllRatings,
@@ -10,9 +10,14 @@ export interface RatingsOverlayProps {
 	ratings?: AllRatings
 	title?: string
 	compact?: boolean
+	/** Shown under the score tab (the taste-match pill). */
+	children?: ReactNode
 }
 
-export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
+export default function RatingOverlay({
+	ratings,
+	children,
+}: RatingsOverlayProps) {
 	const hasScore =
 		typeof ratings?.goodwatch_overall_score_normalized_percent === "number"
 	const score = hasScore
@@ -23,7 +28,10 @@ export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
 		: null
 
 	return (
-		<div className="absolute top-0 right-0 rounded-t-full p-2">
+		// Above the title's gradient while it holds the pill, so the pill's reasons aren't covered.
+		<div
+			className={`absolute top-0 right-0 flex flex-col items-center rounded-t-full p-2 ${children ? "z-10" : ""}`}
+		>
 			{hasScore && (
 				<div
 					className={`${vibeColorIndex == null ? "bg-gray-700" : `bg-vibe-${vibeColorIndex}`} rounded-t-full flex flex-col items-center text-white px-3 pt-2`}
@@ -32,6 +40,7 @@ export default function RatingOverlay({ ratings }: RatingsOverlayProps) {
 					<span className="text-lg font-bold">{score}</span>
 				</div>
 			)}
+			{children}
 		</div>
 	)
 }
