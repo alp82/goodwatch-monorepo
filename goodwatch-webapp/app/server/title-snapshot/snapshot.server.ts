@@ -40,6 +40,28 @@ export interface TitleFacts {
 	moods: MoodKey[]
 }
 
+/**
+ * The snapshot's columns, one value per row, for engines that go over many titles on every request (the title filter).
+ * Views over the loaded snapshot, not copies: don't write.
+ */
+export interface TitleColumns {
+	/** Point ids, ascending. */
+	readonly pointIds: Float64Array
+	/** Bit i set for genreNames[i]. */
+	readonly genres: Uint32Array
+	readonly genreNames: readonly string[]
+	/** Days since 1970-01-01; UNKNOWN_DAY when unknown. */
+	readonly releaseDays: Int32Array
+	readonly votes: Uint32Array
+	readonly popularity: Float32Array
+	/** GoodWatch score 0 to 100; UNKNOWN_SCORE when unknown. */
+	readonly scores: Uint8Array
+	/** FLAG_* bits. */
+	readonly flags: Uint8Array
+	/** Bit i set for MOOD_KEYS[i]. */
+	readonly moods: Uint16Array
+}
+
 export interface TitleSnapshot {
 	readonly version: string
 	readonly builtAt: Date
@@ -57,6 +79,9 @@ export interface TitleSnapshot {
 	factsAt(row: number): TitleFacts
 	cosineAt(row: number, unitTaste: Float32Array): number | null
 	fingerprintAt(row: number): Uint8Array
+	/** The row of a title (0 to count - 1), or -1 when the snapshot doesn't hold it. */
+	rowOf(key: TitleKey): number
+	readonly columns: TitleColumns
 }
 
 const K = FINGERPRINT_LENGTH
@@ -66,6 +91,7 @@ class LoadedSnapshot implements TitleSnapshot {
 	readonly builtAt: Date
 	readonly count: number
 	readonly stats: CatalogStats
+	readonly columns: TitleColumns
 	private readonly genreNames: string[]
 	private readonly originNames: string[]
 	// 1 / |fingerprint| per row; 0 for a fingerprint of all zeros.
@@ -102,10 +128,21 @@ class LoadedSnapshot implements TitleSnapshot {
 			this.moodMasks[row] = moodMaskOf(fp, genres)
 		}
 		this.stats = catalogStats(c)
+		this.columns = {
+			pointIds: c.pointIds,
+			genres: c.genres,
+			genreNames: this.genreNames,
+			releaseDays: c.releaseDays,
+			votes: c.votes,
+			popularity: c.popularity,
+			scores: c.scores,
+			flags: c.flags,
+			moods: this.moodMasks,
+		}
 	}
 
 	/** The row of a point id, by binary search over the sorted ids; -1 when absent. */
-	private rowOf(key: TitleKey): number {
+	rowOf(key: TitleKey): number {
 		const ids = this.c.pointIds
 		let lo = 0
 		let hi = ids.length - 1

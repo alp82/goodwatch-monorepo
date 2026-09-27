@@ -91,6 +91,37 @@ export function isOnServices(
 	return false
 }
 
+/**
+ * A country's loaded index for engines that test many titles per request (the title filter), or `null` while the
+ * country loads. The services of the title at `row` are `services[entries[i]]` for i from offsets[row] to
+ * offsets[row + 1]. Views, not copies: don't write.
+ */
+export interface CountryServices {
+	readonly loadedAt: number
+	/** Service ids, duplicates mapped to their base service. */
+	readonly services: readonly number[]
+	readonly offsets: Uint32Array
+	readonly entries: Uint16Array
+	/** The row of a title, or -1 when no subscription service carries it. */
+	rowOf(key: TitleKey): number
+	/** The index of a service in `services` (duplicates count as their base service), or -1 when none carries it. */
+	indexOfService(serviceId: number): number
+}
+
+export function countryServices(country: string): CountryServices | null {
+	const index = loadedIndex(country)
+	if (!index) return null
+	const at = new Map(index.services.map((service, i) => [service, i]))
+	return {
+		loadedAt: index.loadedAt,
+		services: index.services,
+		offsets: index.offsets,
+		entries: index.entries,
+		rowOf: (key) => findRow(index, key),
+		indexOfService: (serviceId) => at.get(baseService(serviceId)) ?? -1,
+	}
+}
+
 /** Size and load time of each loaded country, for logs and measurements. */
 export function availabilityIndexStats(): AvailabilityIndexStats[] {
 	return [...stats.values()]
