@@ -180,6 +180,19 @@ class CountryStateTests(unittest.TestCase):
             country_state.claim(self.db, self.collection, other, now=retry_at)
         )
 
+    def test_rate_limit_on_a_long_failing_country_blocks_upstream_for_hours_not_days(
+        self,
+    ) -> None:
+        identity = self.country(consecutive_failures=9, next_fetch_at=self.now)
+        document = country_state.claim(self.db, self.collection, identity, now=self.now)
+        country_state.save_failure(self.db, self.collection, document, "429",
+                                   rate_limited=True, now=self.now)
+        # A rate limit says nothing about the country, so it is retried with the rest.
+        saved = self.collection.find_one({"_id": identity})
+        self.assertLessEqual(saved["next_fetch_at"], self.now + timedelta(minutes=396))
+        blocked = self.db.tmdb_streaming_upstream.find_one({"_id": "tmdb_watch"})["blocked_until"]
+        self.assertLessEqual(blocked, self.now + timedelta(minutes=396))
+
     def test_expired_worker_cannot_overwrite_or_clear_replacement_lease(
         self,
     ) -> None:
@@ -210,12 +223,15 @@ class CountryStateTests(unittest.TestCase):
             )
         )
 
-    def test_backoff_steps_have_positive_jitter_and_six_hour_floor_after_third_failure(
+    def test_backoff_steps_have_positive_jitter_and_grow_to_the_freshness_window(
         self,
     ) -> None:
+        # A deleted title's 404 or a country TMDB never serves fails every time.
+        # Retrying such a country every six hours forever filled the repair lane.
         identity = self.country()
         now = self.now
-        for minimum, maximum in [(30, 33), (120, 132), (360, 396), (360, 396)]:
+        for minimum, maximum in [(30, 33), (120, 132), (360, 396), (1440, 1584),
+                                 (4320, 4752), (10080, 11088), (10080, 11088)]:
             claimed = country_state.claim(
                 self.db, self.collection, identity, now=now
             )

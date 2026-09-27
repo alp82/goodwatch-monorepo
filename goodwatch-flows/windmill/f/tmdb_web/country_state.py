@@ -16,6 +16,8 @@ from pymongo.database import Database
 FRESHNESS = timedelta(days=7)
 LEASE_DURATION = timedelta(minutes=5)
 MAPPING_REFRESH_BACKOFF = timedelta(minutes=30)
+FAILURE_BACKOFF_MINUTES = (30, 120, 360, 1440, 4320, int(FRESHNESS.total_seconds() // 60))
+RATE_LIMIT_STEPS = 3  # at most six hours
 
 
 def eligibility(now: datetime | None = None) -> dict:
@@ -138,7 +140,12 @@ def save_failure(
 ) -> bool:
     now = now or datetime.utcnow()
     failures = (document.get("consecutive_failures") or 0) + 1
-    minutes = (30, 120, 360)[min(failures - 1, 2)]
+    # Transient errors clear within the first steps. A country that keeps failing,
+    # such as a title deleted on TMDB, is retried no more often than it is refreshed.
+    # A rate limit says nothing about the country and blocks every country, so it
+    # stays within the short steps.
+    steps = FAILURE_BACKOFF_MINUTES[:RATE_LIMIT_STEPS] if rate_limited else FAILURE_BACKOFF_MINUTES
+    minutes = steps[min(failures, len(steps)) - 1]
     deadline = now + timedelta(minutes=minutes * uniform(1, 1.1))
     if retry_at is not None:
         deadline = max(deadline, retry_at)
