@@ -4,6 +4,7 @@ import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
 import { getEnabledFeatures } from "~/server/features.server"
+import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getUserData } from "~/server/userData.server"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import { AuthProvider } from "~/ui/auth/AuthProvider"
@@ -132,6 +133,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
+	// The title snapshot loads in the background from the server's first page request on.
+	startTitleSnapshot()
 	const { locale } = getLocaleFromRequest(request)
 	const { user, headers } = await getAuthFromRequest({ request })
 	const queryClient = new QueryClient()
