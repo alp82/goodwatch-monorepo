@@ -1,5 +1,6 @@
+import type { Taste } from "~/server/taste/index.server"
 import { query } from "~/utils/crate"
-import { makePointId } from "~/utils/qdrant"
+import { MEDIA_COLLECTION, type QdrantFilter, makePointId, search } from "~/utils/qdrant"
 
 // Unified QdrantMediaPayload interface that combines fields from all recommendation systems
 export interface QdrantMediaPayload {
@@ -91,6 +92,40 @@ export function buildExcludeFilter(
 		makePointId(item.media_type as "movie" | "show", item.tmdb_id),
 	)
 	return [{ has_id: [...new Set(pointIds)] }]
+}
+
+/**
+ * The titles nearest to a taste vector under the filter, in one Qdrant call, each with its calibrated taste match
+ * (null when the title isn't in the title snapshot yet), best match first. Returns nothing for a taste without a
+ * vector.
+ */
+export async function searchByTaste<T>({
+	taste,
+	filter,
+	limit,
+	payloadFields,
+}: {
+	taste: Taste
+	filter: QdrantFilter
+	limit: number
+	payloadFields: string[]
+}) {
+	if (!taste.vector) return []
+	const results = await search<T>({
+		collectionName: MEDIA_COLLECTION,
+		vector: taste.vector,
+		using: "fingerprint_v1",
+		filter,
+		limit,
+		withPayload: { include: payloadFields },
+		hnswEf: 128,
+	})
+	const matches = taste.match(results.map((result) => Number(result.id)))
+	// The same cosine orders both, except for the few titles whose fingerprint_v1 in Qdrant is older than the
+	// snapshot's fingerprint, so sort by the match shown (stable; titles without a match last).
+	return results
+		.map((result, i) => ({ ...result, match: matches[i] }))
+		.sort((a, b) => (b.match ?? -1) - (a.match ?? -1))
 }
 
 // Helper function to fetch user's exclude items from CrateDB (only those with vectors in Qdrant)

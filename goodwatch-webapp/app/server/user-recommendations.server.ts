@@ -1,5 +1,5 @@
-import { getFeatureMode } from "~/server/features.server"
-import { logRecommendedOverlap } from "~/server/taste/index.server"
+import { getFeatureMode, isEnabled } from "~/server/features.server"
+import { loadTaste, logRecommendedOverlap } from "~/server/taste/index.server"
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 import { MEDIA_COLLECTION, makePointId, recommend } from "~/utils/qdrant"
@@ -11,6 +11,7 @@ import {
 	getUserExcludeItems,
 	buildBaseFilterConditions,
 	buildPayloadFields,
+	searchByTaste,
 } from "~/server/utils/recommend"
 import { titleKey } from "~/utils/title-key"
 
@@ -64,6 +65,54 @@ async function _getUserRecommendations({
 }: GetUserRecommendationsParams): Promise<UserRecommendation[]> {
 	console.log('[User Recommendations] userId:', userId, 'mediaType:', mediaType, 'limit:', limit)
 
+	// With taste match on, one vector query with the stored taste vector. A member below the minimum signal (or any
+	// member before the title snapshot has loaded) has no vector and keeps the recommend call.
+	if (isEnabled("tasteMatch", { userId })) {
+		const [taste, excluded] = await Promise.all([
+			loadTaste({ kind: "member", userId }),
+			getUserExcludeItems(userId),
+		])
+		if (taste.vector) {
+			const results = await searchByTaste<QdrantMediaPayload>({
+				taste,
+				filter: recommendationFilter(mediaType, excluded),
+				limit,
+				payloadFields: PAYLOAD_FIELDS,
+			})
+			// Best match first; a title not in the title snapshot yet shows no match (0 hides the pill).
+			return results.map((result) =>
+				toUserRecommendation(result.payload, result.score, result.match ?? 0),
+			)
+		}
+	}
+	return recommendFromExamples({ userId, mediaType, limit })
+}
+
+const PAYLOAD_FIELDS = buildPayloadFields({
+	includeRatings: true,
+	additionalFields: ["essence_tags", "genres"],
+})
+
+/** At least MIN_VOTING_COUNT votes and MIN_SCORE, a poster and a backdrop, none of the person's excluded titles. */
+function recommendationFilter(
+	mediaType: "movie" | "show" | "all",
+	excluded: { media_type: string; tmdb_id: number }[],
+) {
+	return buildBaseFilterConditions({
+		mediaType,
+		minVotingCount: MIN_VOTING_COUNT,
+		minScore: MIN_SCORE,
+		additionalMustNot: buildExcludeFilter(excluded),
+	})
+}
+
+// Qdrant's recommend API over the newest 50 liked and 50 disliked titles: a points read plus a recommend call.
+// Serves while REC_TASTE_MATCH is off or shadow, and for members without a taste vector.
+async function recommendFromExamples({
+	userId,
+	mediaType,
+	limit,
+}: Required<GetUserRecommendationsParams>): Promise<UserRecommendation[]> {
 	// Fetch all scores - we'll use relative scoring (top half positive, bottom half negative)
 	const highScores = await query<UserScore>(`
 		SELECT * FROM (
@@ -131,21 +180,7 @@ async function _getUserRecommendations({
 		makePointId(s.media_type as "movie" | "show", s.tmdb_id)
 	)
 
-	// Build filter conditions
-	const { must, must_not } = buildBaseFilterConditions({
-		mediaType,
-		minVotingCount: MIN_VOTING_COUNT,
-		minScore: MIN_SCORE,
-		additionalMustNot: buildExcludeFilter(allExcluded),
-	})
-
-	const filterConditions = { must, must_not }
-
-	// Build payload fields using shared utility
-	const payloadFields = buildPayloadFields({
-		includeRatings: true,
-		additionalFields: ["essence_tags", "genres"],
-	})
+	const filterConditions = recommendationFilter(mediaType, allExcluded)
 
 	// Call Qdrant recommend
 	const recommendParams: any = {
@@ -156,7 +191,7 @@ async function _getUserRecommendations({
 		negative: negativePoints,
 		filter: filterConditions,
 		limit,
-		withPayload: { include: payloadFields },
+		withPayload: { include: PAYLOAD_FIELDS },
 		hnswEf: 128,
 		exact: false,
 	}
@@ -180,53 +215,58 @@ async function _getUserRecommendations({
 			),
 		})
 
-	// Map results to UserRecommendation format
-	const mappedResults = results
-		.map<UserRecommendation>((result) => {
-			const payload = result.payload
-			const annScore = result.score
-
-			// Convert to match percentage (0-100)
-			const matchPercentage = Math.round(Math.min(annScore * 100, 99))
-
-			const title = getStringValue(payload.title, "")
-			const posterPath = getStringValue(payload.poster_path, "")
-			const backdropPath = getStringValue(payload.backdrop_path, "")
-			const essenceTags = Array.isArray(payload.essence_tags) ? payload.essence_tags : []
-
-			return {
-				tmdb_id: payload.tmdb_id,
-				media_type: payload.media_type,
-				title,
-				release_year: String(payload.release_year ?? ""),
-				poster_path: posterPath,
-				backdrop_path: backdropPath,
-				essence_tags: essenceTags,
-				goodwatch_overall_score_voting_count: payload.goodwatch_overall_score_voting_count ?? 0,
-				goodwatch_overall_score_normalized_percent: payload.goodwatch_overall_score_normalized_percent ?? 0,
-				ann_score: annScore,
-				match_percentage: matchPercentage,
-				tmdb_user_score_normalized_percent: payload.tmdb_user_score_normalized_percent ?? 0,
-				tmdb_user_score_rating_count: payload.tmdb_user_score_rating_count ?? 0,
-				imdb_user_score_normalized_percent: payload.imdb_user_score_normalized_percent ?? 0,
-				imdb_user_score_rating_count: payload.imdb_user_score_rating_count ?? 0,
-				metacritic_user_score_normalized_percent: payload.metacritic_user_score_normalized_percent ?? 0,
-				metacritic_user_score_rating_count: payload.metacritic_user_score_rating_count ?? 0,
-				metacritic_meta_score_normalized_percent: payload.metacritic_meta_score_normalized_percent ?? 0,
-				metacritic_meta_score_review_count: payload.metacritic_meta_score_review_count ?? 0,
-				rotten_tomatoes_audience_score_normalized_percent: payload.rotten_tomatoes_audience_score_normalized_percent ?? 0,
-				rotten_tomatoes_audience_score_rating_count: payload.rotten_tomatoes_audience_score_rating_count ?? 0,
-				rotten_tomatoes_tomato_score_normalized_percent: payload.rotten_tomatoes_tomato_score_normalized_percent ?? 0,
-				rotten_tomatoes_tomato_score_review_count: payload.rotten_tomatoes_tomato_score_review_count ?? 0,
-				goodwatch_user_score_normalized_percent: payload.goodwatch_user_score_normalized_percent ?? 0,
-				goodwatch_user_score_rating_count: payload.goodwatch_user_score_rating_count ?? 0,
-				goodwatch_official_score_normalized_percent: payload.goodwatch_official_score_normalized_percent ?? 0,
-				goodwatch_official_score_review_count: payload.goodwatch_official_score_review_count ?? 0,
-			}
-		})
+	// The recommend path shows the raw cosine as the match, capped at 99
+	const mappedResults = results.map((result) =>
+		toUserRecommendation(
+			result.payload,
+			result.score,
+			Math.round(Math.min(result.score * 100, 99)),
+		),
+	)
 
 	// Sort by match percentage and return top results
 	return mappedResults
 		.sort((a, b) => b.match_percentage - a.match_percentage)
 		.slice(0, limit)
+}
+
+function toUserRecommendation(
+	payload: QdrantMediaPayload,
+	annScore: number,
+	matchPercentage: number,
+): UserRecommendation {
+	const title = getStringValue(payload.title, "")
+	const posterPath = getStringValue(payload.poster_path, "")
+	const backdropPath = getStringValue(payload.backdrop_path, "")
+	const essenceTags = Array.isArray(payload.essence_tags) ? payload.essence_tags : []
+
+	return {
+		tmdb_id: payload.tmdb_id,
+		media_type: payload.media_type,
+		title,
+		release_year: String(payload.release_year ?? ""),
+		poster_path: posterPath,
+		backdrop_path: backdropPath,
+		essence_tags: essenceTags,
+		goodwatch_overall_score_voting_count: payload.goodwatch_overall_score_voting_count ?? 0,
+		goodwatch_overall_score_normalized_percent: payload.goodwatch_overall_score_normalized_percent ?? 0,
+		ann_score: annScore,
+		match_percentage: matchPercentage,
+		tmdb_user_score_normalized_percent: payload.tmdb_user_score_normalized_percent ?? 0,
+		tmdb_user_score_rating_count: payload.tmdb_user_score_rating_count ?? 0,
+		imdb_user_score_normalized_percent: payload.imdb_user_score_normalized_percent ?? 0,
+		imdb_user_score_rating_count: payload.imdb_user_score_rating_count ?? 0,
+		metacritic_user_score_normalized_percent: payload.metacritic_user_score_normalized_percent ?? 0,
+		metacritic_user_score_rating_count: payload.metacritic_user_score_rating_count ?? 0,
+		metacritic_meta_score_normalized_percent: payload.metacritic_meta_score_normalized_percent ?? 0,
+		metacritic_meta_score_review_count: payload.metacritic_meta_score_review_count ?? 0,
+		rotten_tomatoes_audience_score_normalized_percent: payload.rotten_tomatoes_audience_score_normalized_percent ?? 0,
+		rotten_tomatoes_audience_score_rating_count: payload.rotten_tomatoes_audience_score_rating_count ?? 0,
+		rotten_tomatoes_tomato_score_normalized_percent: payload.rotten_tomatoes_tomato_score_normalized_percent ?? 0,
+		rotten_tomatoes_tomato_score_review_count: payload.rotten_tomatoes_tomato_score_review_count ?? 0,
+		goodwatch_user_score_normalized_percent: payload.goodwatch_user_score_normalized_percent ?? 0,
+		goodwatch_user_score_rating_count: payload.goodwatch_user_score_rating_count ?? 0,
+		goodwatch_official_score_normalized_percent: payload.goodwatch_official_score_normalized_percent ?? 0,
+		goodwatch_official_score_review_count: payload.goodwatch_official_score_review_count ?? 0,
+	}
 }
