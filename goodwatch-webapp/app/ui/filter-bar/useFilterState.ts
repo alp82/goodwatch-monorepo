@@ -7,6 +7,7 @@ import {
 	type SortKey,
 	clearSecondaryFilters,
 	dropFilter,
+	filterQuery,
 	filterStateFromParams,
 	filterStateToParams,
 	secondaryFilterCount,
@@ -104,15 +105,10 @@ export function useFilterState({
 		defaults,
 		searching,
 		secondaryCount: secondaryFilterCount(current.state),
-		query: useMemo(() => {
-			const out = filterStateToParams(current.state, defaults)
-			// Spelled out, so the server's defaults for the viewer can't read them differently.
-			if (!out.has("services"))
-				out.set("services", current.state.onMyServices ? "mine" : "all")
-			out.set("unseen", current.state.notSeenYet ? "1" : "0")
-			out.set("sort", current.sort)
-			return out.toString()
-		}, [current, defaults]),
+		query: useMemo(
+			() => filterQuery(current.state, current.sort, defaults),
+			[current, defaults],
+		),
 		update,
 		set: useCallback(
 			(patch: Partial<FilterState>) => update((s) => ({ ...s, ...patch })),
