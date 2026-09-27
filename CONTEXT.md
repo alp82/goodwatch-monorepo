@@ -8,7 +8,7 @@ GoodWatch helps people discover films and TV shows and choose something they wan
 An appealing film or TV show unfamiliar to the person and available on their streaming services in their country. Finding a worthwhile suggestion and actually watching it are distinct outcomes.
 
 **Interest discovery**:
-Finding films and TV shows the person wants to watch, without requiring availability on their services. Interest discovery precedes the decision about what they can watch next.
+Finding films and TV shows the person wants to watch, without requiring availability on their services. Interest discovery precedes the decision about what they can watch next. For members with saved services, On my services still narrows it by default, and one tap widens it to everywhere.
 
 **Watchability check**:
 The follow-up assessment of where a title of interest can be watched in the person's country and on their services.
@@ -42,7 +42,59 @@ The action expressing an intention to watch a title and placing it in Wishlist.
 _Avoid_: Save
 
 **Wishlist**:
-The person's collection of titles marked Want to See.
+The person's collection of titles marked Want to See. It has no manual order; the person chooses a sort.
+
+**Watch next**:
+The top of the Wishlist under the person's chosen sort and moods. It is a view of the Wishlist, not a separate list, and nothing but Want to See adds to it.
+_Avoid_: Queue, Up next, Priority queue
+
+**Tonight's pick**:
+The single title GoodWatch puts forward for tonight: for a member, the first title of Watch next.
+
+**Seen**:
+A title the person has watched or rated.
+
+**Not seen yet**:
+The filter that hides every title the person has seen or marked Not interested (skipped).
+_Avoid_: Hide seen, Unwatched
+
+**On my services**:
+The filter that keeps only titles streaming on the person's saved services in their country. It is on by default for members with saved services.
+_Avoid_: My streaming, Available
+
+**Mood**:
+A named kind of evening, such as Funny or Crime & mystery, that a title belongs to by a fixed rule over its fingerprint and genres. A title can belong to several moods or to none. A person picks up to three.
+_Avoid_: Vibe, Mood blend
+
+**Taste**:
+What a person's ratings and Want to See say about the fingerprints they enjoy. A guest has a taste too, built from their guest progress.
+_Avoid_: Taste profile
+
+**Taste match**:
+How well a title's fingerprint fits the person's taste, shown from 50 to 99 percent once the person has rated 5 titles they liked. It places the title within the person's own range, so 90 means the title fits better than about 80 percent of well-known titles would.
+_Avoid_: Match score, Similarity
+
+**For you**:
+The switch that blends taste match into whichever sort is chosen. It is on by default and never replaces the sort.
+_Avoid_: Personalized sort, Recommended sort
+
+**Side of you**:
+One distinct strand of the titles a person rates highly, such as dark crime or gentle comedy, named by the attributes that set it apart. Its edge is a place just past it that the person has barely tried.
+
+**Fingerprint family**:
+One of five groups of fingerprint attributes (Feel, Humor, World, Story, and Craft), used to show a person's taste against everyone's. Feel is a fingerprint family, not a Mood.
+
+**You vs everyone**:
+The comparison of a person's ratings with the GoodWatch score of the same titles. "Everyone" means the GoodWatch score, not other members.
+
+**Explorer**:
+The page where a person browses by moving across a map of islands.
+
+**Island**:
+The titles of one group on the Explorer map under the chosen grouping, such as one genre, streaming service, or decade.
+
+**Bridge**:
+The island that forms between two islands a person combines, holding the titles they share or, for groupings where a title belongs to one island only, the titles closest to both.
 
 **Guest rating limit**:
 The maximum number of distinct titles a guest can hold ratings for before an account is required for additional ratings.
