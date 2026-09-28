@@ -742,7 +742,7 @@ function Services({ view }: { view: TvView }) {
 				line="Pick every service you have. The streaming keys on the remote work too."
 			/>
 			<div className="absolute inset-x-12 top-[150px] grid grid-cols-4 gap-3">
-				{view.data.catalog.map((c) => {
+				{view.data.catalog.slice(0, 12).map((c) => {
 					const on = mine.includes(c.name)
 					return (
 						<Item

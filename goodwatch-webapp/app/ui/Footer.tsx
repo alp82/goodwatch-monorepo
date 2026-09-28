@@ -1,9 +1,12 @@
-import { ArrowRightIcon, ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
+import {
+	ArrowRightIcon,
+	ArrowTopRightOnSquareIcon,
+} from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import discordColor from "~/img/discord-mark-blue.svg"
 import redditColor from "~/img/reddit-color.svg"
-import tmdbLogo from "~/img/tmdb-logo.svg"
 import shieldazeBanner from "~/img/secured-by-shieldaze-transparent.webp"
+import tmdbLogo from "~/img/tmdb-logo.svg"
 
 const DISCORD_GOODWATCH_URL = "https://discord.gg/TVAcrfQzcA"
 
@@ -88,7 +91,12 @@ const navigation = {
 			name: "GitHub",
 			href: "https://github.com/alp82/goodwatch-monorepo",
 			icon: (props: Record<string, string>) => (
-				<svg fill="currentColor" viewBox="0 0 24 24" {...props}>
+				<svg
+					fill="currentColor"
+					viewBox="0 0 24 24"
+					aria-hidden="true"
+					{...props}
+				>
 					<path
 						fillRule="evenodd"
 						d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
@@ -100,40 +108,65 @@ const navigation = {
 	],
 }
 
-export type FooterProps = {}
-
-export default function Footer({}: FooterProps) {
+export default function Footer() {
 	return (
 		<footer className="mt-48">
 			<section className="pb-16 px-4 sm:px-6 lg:px-8">
 				<div className="max-w-7xl mx-auto">
 					<div className="relative rounded-3xl overflow-hidden bg-[#5865F2] p-1">
-						<div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
-						
+						<div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10" />
+
 						<div className="relative bg-indigo-950/90 backdrop-blur-xl rounded-[22px] p-8 md:p-12 overflow-hidden">
-							<div className="absolute -top-24 -right-24 w-64 h-64 bg-[#5865F2] rounded-full blur-[100px] opacity-40"></div>
-							<div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary-500 rounded-full blur-[100px] opacity-20"></div>
-							
+							<div className="absolute -top-24 -right-24 w-64 h-64 bg-[#5865F2] rounded-full blur-[100px] opacity-40" />
+							<div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary-500 rounded-full blur-[100px] opacity-20" />
+
 							<div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
 								<div className="flex-1 text-center md:text-left">
 									<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-400/20 text-indigo-300 border border-indigo-400/30 text-xs font-bold uppercase tracking-wider mb-4">
-										<span className="w-2 h-2 rounded-full bg-[#5865F2] animate-pulse" />
+										<span className="w-2 h-2 rounded-full bg-[#5865F2]" />
 										Community First
 									</div>
-									<h3 className="text-3xl md:text-4xl font-bold text-white mb-4">Join the Chat</h3>
+									<h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+										Join the Chat
+									</h3>
 									<p className="text-gray-300 text-lg max-w-xl leading-relaxed">
-										Discuss the latest episodes, request new features, or just argue about whether <span className="text-white font-medium">Die Hard</span> is a Christmas movie.
+										Discuss the latest episodes, request new features, or just
+										argue about whether{" "}
+										<span className="text-white font-medium">Die Hard</span> is
+										a Christmas movie.
 									</p>
-									
+
 									<div className="flex items-center justify-center md:justify-start mt-6 -space-x-3">
-										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" /></div>
-										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" alt="User" /></div>
-										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mark" alt="User" /></div>
-										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah" alt="User" /></div>
-										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-[#5865F2] text-white flex items-center justify-center text-xs font-bold">+100</div>
+										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
+											<img
+												src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+												alt="User"
+											/>
+										</div>
+										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
+											<img
+												src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka"
+												alt="User"
+											/>
+										</div>
+										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
+											<img
+												src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mark"
+												alt="User"
+											/>
+										</div>
+										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
+											<img
+												src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
+												alt="User"
+											/>
+										</div>
+										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-[#5865F2] text-white flex items-center justify-center text-xs font-bold">
+											+100
+										</div>
 									</div>
 								</div>
-								
+
 								<div>
 									<a
 										href={DISCORD_GOODWATCH_URL}
@@ -145,7 +178,14 @@ export default function Footer({}: FooterProps) {
 											transition-all duration-300 hover:scale-105 shadow-[0_0_40px_rgba(88,101,242,0.4)]
 										"
 									>
-										<svg className="w-8 h-8 fill-current group-hover:-translate-x-1 transition-transform" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.11,77.11,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.89,105.89,0,0,0,126.6,80.22c1.24-23.28-3.28-47.54-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.25-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"></path></svg>
+										<svg
+											aria-hidden="true"
+											className="w-8 h-8 fill-current group-hover:-translate-x-1 transition-transform"
+											viewBox="0 0 127.14 96.36"
+											xmlns="http://www.w3.org/2000/svg"
+										>
+											<path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.11,77.11,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.89,105.89,0,0,0,126.6,80.22c1.24-23.28-3.28-47.54-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.25-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z" />
+										</svg>
 										<span>Join Discord</span>
 										<ArrowRightIcon className="h-6 group-hover:translate-x-1 transition-transform" />
 									</a>
@@ -279,7 +319,12 @@ export default function Footer({}: FooterProps) {
 					{/* Required by the IMDb non-commercial dataset license. */}
 					<p className="mt-3 text-center text-xs leading-5 text-gray-500">
 						Information courtesy of IMDb (
-						<a href="https://www.imdb.com" target="_blank" rel="noreferrer" className="hover:text-gray-300">
+						<a
+							href="https://www.imdb.com"
+							target="_blank"
+							rel="noreferrer"
+							className="hover:text-gray-300"
+						>
 							https://www.imdb.com
 						</a>
 						). Used with permission.

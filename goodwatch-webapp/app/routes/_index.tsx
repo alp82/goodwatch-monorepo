@@ -121,17 +121,25 @@ export default function Index() {
 	const initial = useLoaderData<typeof livingRoomLoader>()
 	const leave = useLeaveThroughTv()
 	const { pathname, search } = useLocation()
-	const screen = new URLSearchParams(search).get("tv") ?? "home"
+	const tvParams = new URLSearchParams(search)
+	const screen = tvParams.get("tv") ?? "home"
+	// The Discover and Explorer apps draw their poster grids from the pool too, and so do the guest
+	// Welcome's tile thumbnails (fetched after first paint, so the cached HTML stays the same for everyone).
+	const poolApp =
+		(screen === "app" &&
+			["discover", "explorer"].includes(tvParams.get("app") ?? "")) ||
+		(screen === "home" && !initial.member)
 	const pool = useQuery<LivingRoomData>({
 		queryKey: ["living-room-pool", initial],
-		enabled: [
-			"services",
-			"this-or-that",
-			"moods",
-			"source",
-			"picks",
-			"title",
-		].includes(screen),
+		enabled:
+			[
+				"services",
+				"this-or-that",
+				"moods",
+				"source",
+				"picks",
+				"title",
+			].includes(screen) || poolApp,
 		queryFn: async () => {
 			const response = await fetch("/api/living-room/picks?view=pool", {
 				method: "POST",

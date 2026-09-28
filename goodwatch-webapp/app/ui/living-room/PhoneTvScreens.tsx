@@ -4,7 +4,7 @@
 // its item ids, and its actions are the same as the desktop's; only the drawing changes. Title screens also take
 // a rating: the taste quiz's four levels over a 1 to 10 strip (#220).
 import { AnimatePresence, motion } from "framer-motion"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, createContext, useContext, useState } from "react"
 import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import type { Score as RatingScore } from "~/server/scores.server"
@@ -45,7 +45,26 @@ import {
 	resolvedSource,
 } from "./tv-flow"
 
-export function PhoneTvScreens({ view }: { view: TvView }) {
+// True for the copy drawn inside the desktop scene before the window is measured: the desktop edition's
+// headline is then the page's one H1, and both editions share the cached guest HTML (#233).
+const DuplicateEdition = createContext(false)
+
+export function PhoneTvScreens({
+	view,
+	duplicate = false,
+}: {
+	view: TvView
+	/** The pre-measure copy next to the desktop edition; its guest headline is not an H1. */
+	duplicate?: boolean
+}) {
+	return (
+		<DuplicateEdition.Provider value={duplicate}>
+			<PhoneTvScreen view={view} />
+		</DuplicateEdition.Provider>
+	)
+}
+
+function PhoneTvScreen({ view }: { view: TvView }) {
 	const { state } = view
 	const s = state.screen
 	const key =
@@ -174,15 +193,16 @@ function Head({
 	title,
 	line,
 	eyebrow,
-	as: Title = "h2",
+	as = "h2",
 }: {
 	view: TvView
 	title: string
 	line?: ReactNode
 	eyebrow?: string
-	/** The guest home's headline is the page's H1 (#233). */
+	/** The guest home's headline is the page's H1 (#233), except in the duplicate edition. */
 	as?: "h1" | "h2"
 }) {
+	const Title = useContext(DuplicateEdition) ? "h2" : as
 	const atHome = view.state.screen.name === "home"
 	return (
 		<div

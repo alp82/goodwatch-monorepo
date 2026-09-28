@@ -121,6 +121,7 @@ export function Remote({
 			f === "mood" ? { type: "open-moods" } : { type: "open-app", app: f },
 		)
 	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: only drops focus after pointer presses; keys need nothing
 		<section
 			className="relative select-none"
 			aria-label="Remote control"
@@ -137,6 +138,13 @@ export function Remote({
 				waking.current = false
 				e.stopPropagation()
 				e.preventDefault()
+			}}
+			// A pointer press must not leave the button focused, or the next Enter repeats it instead of
+			// reaching the TV's focused item. Keyboard presses (detail 0) keep their focus.
+			onClick={(e) => {
+				if (e.detail === 0) return
+				const button = (e.target as HTMLElement).closest("button")
+				if (button === document.activeElement) button?.blur()
 			}}
 		>
 			<div

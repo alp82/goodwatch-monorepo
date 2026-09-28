@@ -18,11 +18,15 @@ function GlobalLoading() {
 	}, [active])
 
 	return (
+		// biome-ignore lint/a11y/useFocusableInteractive: a page-wide loading indicator is not a control
 		<div
 			role="progressbar"
 			aria-hidden={!active}
+			aria-valuemin={0}
+			aria-valuemax={100}
+			aria-valuenow={active ? undefined : 0}
 			aria-valuetext={active ? "Loading" : undefined}
-			className="fixed inset-x-0 top-0 left-0 z-50 h-1 animate-pulse"
+			className={`fixed inset-x-0 top-0 left-0 z-50 h-1 ${active ? "animate-pulse" : ""}`}
 		>
 			<div
 				ref={ref}

@@ -1,16 +1,15 @@
+import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline"
 import { Link } from "@remix-run/react"
 import { useEffect, useState } from "react"
-import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline"
-import { useSmartTitles } from "~/routes/api.smart-titles"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import {
+	type ExploreFilters,
+	type TasteExploration,
 	defaultExploreFilters,
 	detailsHref,
 	readExploration,
 	rememberExploration,
 	uniqueTitles,
-	type ExploreFilters,
-	type TasteExploration,
 } from "~/ui/taste/exploration"
 
 type CurrentTitle = Pick<ScoringMedia, "tmdb_id" | "media_type" | "title">
@@ -23,26 +22,9 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 		setOrigin(saved)
 		setFilters(saved.filters || defaultExploreFilters)
 	}, [])
-	const suggestions = useSmartTitles({
-		count: 100,
-		enabled: origin !== null && !origin.titles?.length,
-	})
-	const pool = uniqueTitles(
-		origin?.titles?.length
-			? origin.titles
-			: suggestions.data?.smartTitles || [],
-	)
-	useEffect(() => {
-		if (
-			!origin ||
-			origin.titles?.length ||
-			!suggestions.data?.smartTitles.length
-		)
-			return
-		const titles = suggestions.data.smartTitles
-		rememberExploration({ titles })
-		setOrigin((previous) => ({ ...previous, titles }))
-	}, [origin, suggestions.data])
+	// Only the taste quiz stores titles to explore, and only a title from that list shows the bar, so a
+	// title page reached any other way (the living room's TV, search) never offers "Start exploring".
+	const pool = uniqueTitles(origin?.titles ?? [])
 	const genres = [
 		...new Set(pool.flatMap((title) => title.genres || [])),
 	].sort()
@@ -74,18 +56,19 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 		rememberExploration({ filters: nextFilters })
 	}
 	const status =
-		origin === null || (suggestions.isFetching && !pool.length)
-			? "Finding titles…"
-			: suggestions.isError && !pool.length
-				? "Couldn’t load titles"
-				: candidates.length === 0
-					? "No titles match these filters"
-					: index >= 0
-						? `${index + 1} of ${candidates.length}`
-						: `${candidates.length} titles to explore`
+		candidates.length === 0
+			? "No titles match these filters"
+			: index >= 0
+				? `${index + 1} of ${candidates.length}`
+				: `${candidates.length} titles to explore`
 	const select =
 		"min-w-0 rounded-md border border-gray-600 bg-gray-800 px-2 py-1.5 text-sm text-gray-100 focus-visible:outline focus-visible:outline-cyan-300"
-	if (!pool.length) return null
+	const fromQuiz = pool.some(
+		(title) =>
+			title.tmdb_id === current.tmdb_id &&
+			title.media_type === current.media_type,
+	)
+	if (!fromQuiz) return null
 	return (
 		<nav
 			aria-label="Explore titles"
@@ -116,9 +99,7 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 								← Previous
 							</span>
 						)}
-						<span role="status" className="text-xs text-gray-300">
-							{status}
-						</span>
+						<output className="text-xs text-gray-300">{status}</output>
 						{next ? (
 							<Link
 								prefetch="render"
@@ -229,15 +210,6 @@ export default function ExploreBar({ current }: { current: CurrentTitle }) {
 							another.
 						</p>
 					</div>
-				)}
-				{suggestions.isError && !pool.length && (
-					<button
-						type="button"
-						onClick={() => suggestions.refetch()}
-						className="mt-2 text-cyan-300 underline"
-					>
-						Retry loading titles
-					</button>
 				)}
 				{!next && index >= 0 && (
 					<p className="mt-2 text-xs text-gray-400">

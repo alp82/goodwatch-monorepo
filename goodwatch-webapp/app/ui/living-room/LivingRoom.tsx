@@ -381,7 +381,7 @@ export function LivingRoom({
 						className="lr-canvas-phone absolute left-0 top-0 origin-top-left"
 						style={{ width: PHONE_TV_CANVAS.w, height: PHONE_TV_CANVAS.h }}
 					>
-						<PhoneTvScreens view={view} />
+						<PhoneTvScreens view={view} duplicate />
 					</div>
 				)}
 				<div className="tv-glass pointer-events-none absolute inset-0 rounded-[3px]" />
