@@ -45,7 +45,7 @@ export default function Dealbreakers({ data }: { data: Payload4 }) {
 						<p className="text-sm text-gray-400">What loses you</p>
 						<h1 className="mt-3 text-3xl font-bold leading-tight md:text-5xl">
 							<span className="text-rose-300">{cap(noun(hero.key))}</span>{" "}
-							{noun(hero.key) === "horror" ? "loses" : "lose"} you
+							lose you
 						</h1>
 						{ex && (
 							<>
@@ -138,7 +138,7 @@ export default function Dealbreakers({ data }: { data: Payload4 }) {
 								<div className="grid grid-cols-[7rem_1fr] items-end gap-4 md:grid-cols-[9rem_1fr]">
 									<RatedPoster t={dex} size="w342" />
 									<p className="pb-1 text-gray-300">
-										{dex.title} leans hard into {noun(d.key)}, and you gave it{" "}
+										{dex.title} is an example you liked: you gave it{" "}
 										{article(dex.mine ?? 0)} {dex.mine}.
 									</p>
 								</div>

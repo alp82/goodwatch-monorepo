@@ -537,10 +537,10 @@ function analyze(
 		.reverse()
 		.map((r) => ({ ...vector[r.k], evidence: evidence(r.k, disliked, 3) }))
 
-	// Archetype: an adjective from the second trait, a persona from the first.
+	// Name the viewing preference; applying a title adjective to a person changes its meaning.
 	const [t1, t2, t3] = ranked.map((r) => r.key)
 	const archetype = {
-		name: `The ${adj(t2)} ${persona(t1)}`,
+		name: `The ${persona(t1)}`,
 		line: `${cap(noun(t1))}, ${noun(t2)} and ${noun(t3)}, rarely ${noun(ranked[ranked.length - 1].key)}.`,
 	}
 
@@ -1086,7 +1086,7 @@ function analyze(
 			id: f.id,
 			name: f.name,
 			blurb: f.blurb,
-			archetype: `The ${adj(fr[1].key)} ${persona(fr[0].key)}`,
+			archetype: `The ${persona(fr[0].key)}`,
 			overlap: Math.round(50 + 50 * cosv),
 			shared,
 			split,

@@ -106,7 +106,7 @@ export const FINGERPRINT_META: Record<string, FingerprintMeta> = {
   grotesque: m("grotesque", "Grotesque", "Macabre, distorted imagery.", "rgba(121, 85, 72, 0.6)", "🧟"),
   camp_and_irony: m("camp_and_irony", "Camp & Irony", "Stylized exaggeration and wink.", "rgba(255, 171, 145, 0.6)", "💅"),
   dialogue_centrality: m("dialogue_centrality", "Dialogue Centrality", "Stories driven by conversation.", "rgba(66, 165, 245, 0.6)", "🗣️"),
-  music_centrality: m("music_centrality", "Music Centrality", "Songs central to storytelling.", "rgba(0, 188, 212, 0.6)", "🎵"),
+  music_centrality: m("music_centrality", "Music Centrality", "The score or soundtrack shapes the emotional experience.", "rgba(0, 188, 212, 0.6)", "🎵"),
   sound_centrality: m("sound_centrality", "Sound Centrality", "Sound design as core element.", "rgba(129, 212, 250, 0.6)", "🔊"),
 }
 
