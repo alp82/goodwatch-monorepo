@@ -5,10 +5,12 @@ import type { CSSProperties, ReactNode } from "react"
 import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import type { Score as RatingScore } from "~/server/scores.server"
+import type { TasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { runtimeLabel } from "~/ui/watch-next/labels"
 import { offersOf, watchLine } from "~/ui/watch-next/services"
 import { backdropUrl, logoUrl, posterUrl } from "~/ui/watch-next/style"
 import { APP, ICON, Icon } from "./Remote"
+import { TvQuiz, quizItemLabel } from "./TvQuiz"
 import {
 	type LivingRoomChoices,
 	type LivingRoomData,
@@ -43,6 +45,8 @@ export type TvView = {
 	signInHref: string
 	/** Rates a title from 1 to 10. The phone title screen offers it (#224); without it, no rating shows. */
 	onRate?: (titleKey: string, score: RatingScore) => void
+	/** The taste quiz's titles, scores, and picks (#226). The TV flow owns its step and focus. */
+	quiz?: TasteQuiz
 }
 
 /** What the Remote's one-line screen says: the focused item, and what the wheel does. */
@@ -69,6 +73,10 @@ function itemLabel(
 	screen: TvScreen,
 	data: LivingRoomData,
 ): string {
+	if (screen.name === "quiz" || item === "taste-quiz") {
+		const label = quizItemLabel(item)
+		if (label) return label
+	}
 	const [kind, ...rest] = item.split(":")
 	const arg = rest.join(":")
 	switch (kind) {
@@ -123,7 +131,9 @@ export function TvScreens({ view }: { view: TvView }) {
 				? `app-${s.app}`
 				: s.name === "search"
 					? `search-${s.query ?? ""}`
-					: s.name
+					: s.name === "quiz"
+						? `quiz-${s.quiz.screen}`
+						: s.name
 	if (state.power === "off")
 		return <div className="absolute inset-0 bg-black" aria-hidden />
 	return (
@@ -182,6 +192,8 @@ function Screen({ view }: { view: TvView }) {
 			) : (
 				<Keyboard view={view} />
 			)
+		case "quiz":
+			return <TvQuiz view={view} quiz={s.quiz} />
 	}
 }
 
@@ -353,9 +365,9 @@ function Welcome({ view }: { view: TvView }) {
 			art: <Fan titles={best.slice(3, 6)} heart />,
 		},
 		{
-			id: "just-show-me",
-			label: "Just show me",
-			line: "The best rated, right now.",
+			id: "taste-quiz",
+			label: "Rate what you've seen",
+			line: "Score five titles, get picks made for you.",
 			art: <Fan titles={best.slice(0, 3)} />,
 		},
 		{
@@ -530,6 +542,15 @@ function OrOpen({ view }: { view: TvView }) {
 					{APP[a].name}
 				</Item>
 			))}
+			<Item
+				view={view}
+				id="taste-quiz"
+				className="flex h-10 items-center gap-2 rounded-full px-4 text-[14px] font-semibold"
+				grow="scale-[1.06]"
+			>
+				<span className="text-amber-300">♥</span>
+				Rate titles
+			</Item>
 		</div>
 	)
 }

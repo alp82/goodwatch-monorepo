@@ -13,6 +13,7 @@ import { runtimeLabel } from "~/ui/watch-next/labels"
 import { logoUrl } from "~/ui/watch-next/style"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
 import { APP, ICON, Icon } from "./Remote"
+import { TvQuiz } from "./TvQuiz"
 import {
 	Backdrop,
 	Boot,
@@ -54,7 +55,9 @@ export function PhoneTvScreens({ view }: { view: TvView }) {
 				? `app-${s.app}`
 				: s.name === "search"
 					? `search-${s.query ?? ""}`
-					: s.name
+					: s.name === "quiz"
+						? `quiz-${s.quiz.screen}`
+						: s.name
 	if (state.power === "off")
 		return <div className="absolute inset-0 bg-black" aria-hidden />
 	return (
@@ -113,6 +116,8 @@ function Screen({ view }: { view: TvView }) {
 			) : (
 				<Keyboard view={view} />
 			)
+		case "quiz":
+			return <TvQuiz view={view} quiz={s.quiz} phone />
 	}
 }
 
@@ -213,9 +218,9 @@ function Welcome({ view }: { view: TvView }) {
 			art: <Fan titles={best.slice(3, 6)} heart size={38} />,
 		},
 		{
-			id: "just-show-me",
-			label: "Just show me",
-			line: "The best rated, right now.",
+			id: "taste-quiz",
+			label: "Rate what you've seen",
+			line: "Score five, get picks made for you.",
 			art: <Fan titles={best.slice(0, 3)} size={38} />,
 		},
 		{
@@ -354,6 +359,15 @@ function MemberHome({ view }: { view: TvView }) {
 						<span className="whitespace-nowrap">{APP[a].name}</span>
 					</PItem>
 				))}
+				<PItem
+					view={view}
+					id="taste-quiz"
+					className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[18px] font-semibold"
+					grow="scale-[1.05]"
+				>
+					<span className="text-amber-300">♥</span>
+					<span className="whitespace-nowrap">Rate titles</span>
+				</PItem>
 			</div>
 		</>
 	)

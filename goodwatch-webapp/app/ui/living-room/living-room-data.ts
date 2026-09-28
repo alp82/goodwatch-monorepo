@@ -163,5 +163,8 @@ export function tvContextOf(
 		hasServices: myServices(data, choices).length > 0,
 		answered: choices.answers.filter((a) => a !== "skip").length,
 		pairsLeft: Math.max(0, data.pairs.length - choices.answers.length),
+		// The taste quiz fills these in the browser (`LivingRoom`), from the person's scores and picks.
+		quizProgress: 0,
+		quizPicks: [],
 	}
 }

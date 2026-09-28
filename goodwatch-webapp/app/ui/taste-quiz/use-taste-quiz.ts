@@ -25,12 +25,18 @@ export function useTasteQuiz({
 	titles,
 	member,
 	showPicks = false,
+	enabled = true,
+	wantPicks = false,
 }: {
 	/** The first titles to rate, from smart-titles. */
 	titles: ScoringMedia[]
 	member: boolean
 	/** Open on the picks (the return from Continue with Google). */
 	showPicks?: boolean
+	/** False holds back the title fetch until the quiz shows (the Living room TV mounts this hook on every screen). */
+	enabled?: boolean
+	/** Fetch the picks now, whatever this hook's own state says (the TV keeps its quiz step in the URL). */
+	wantPicks?: boolean
 }) {
 	const { interactions, addScore, addSkip, addPlanToWatch } = useTasteScoring({
 		isAuthenticated: member,
@@ -63,7 +69,14 @@ export function useTasteQuiz({
 		[],
 	)
 
-	const fetchMoreTitles = useCallback(() => fetchSmartTitles({ count: 20 }), [])
+	// A new callback when `enabled` turns true makes the queue fetch again.
+	const fetchMoreTitles = useCallback(
+		() =>
+			enabled
+				? fetchSmartTitles({ count: 20 })
+				: Promise.resolve([] as ScoringMedia[]),
+		[enabled],
+	)
 	const queue = useTitleQueue({
 		initialTitles: titles,
 		isAuthenticated: member,
@@ -102,7 +115,7 @@ export function useTasteQuiz({
 	const { picks, isLoading: picksLoading } = useQuizPicks({
 		scored,
 		exclude,
-		enabled: state.pickedBefore || state.screen !== "quiz",
+		enabled: wantPicks || state.pickedBefore || state.screen !== "quiz",
 	})
 	const pages = pickPages(picks.length)
 
