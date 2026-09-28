@@ -164,6 +164,7 @@ export function Screen({
 	onPick,
 	overlay,
 	onPointerOver,
+	canvas,
 }: {
 	z: Zapper
 	channels: ChannelInfo[]
@@ -178,7 +179,11 @@ export function Screen({
 	onPick?: (el: HTMLElement) => void
 	overlay?: ReactNode
 	onPointerOver?: (over: boolean) => void
+	// #224: phones may use their own, smaller canvas. Defaults to 960 x 528.
+	canvas?: { w: number; h: number }
 }) {
+	const CW = canvas?.w ?? CANVAS_W
+	const CH = canvas?.h ?? CANVAS_H
 	const box = useRef<HTMLDivElement>(null)
 	const [fit, setFit] = useState({ scale: 0, dx: 0, dy: 0 })
 	const scale = fit.scale
@@ -188,14 +193,14 @@ export function Screen({
 		if (!el) return
 		// Cover the screen: TVs differ a little from 960 x 528, so crop the overflow evenly.
 		const measure = () => {
-			const s = Math.max(el.clientWidth / CANVAS_W, el.clientHeight / CANVAS_H)
-			setFit({ scale: s, dx: (el.clientWidth - CANVAS_W * s) / 2, dy: (el.clientHeight - CANVAS_H * s) / 2 })
+			const s = Math.max(el.clientWidth / CW, el.clientHeight / CH)
+			setFit({ scale: s, dx: (el.clientWidth - CW * s) / 2, dy: (el.clientHeight - CH * s) / 2 })
 		}
 		const ro = new ResizeObserver(measure)
 		ro.observe(el)
 		measure()
 		return () => ro.disconnect()
-	}, [])
+	}, [CW, CH])
 	const swipeProps = useSwipe((d) => z.tune(z.ch + d))
 	const info = channels[z.ch]
 	// The pointer moves by writing its transform directly: no React render per mouse move.
@@ -238,7 +243,7 @@ export function Screen({
 		>
 			<div
 				className="absolute left-0 top-0 origin-top-left"
-				style={{ width: CANVAS_W, height: CANVAS_H, transform: `translate(${fit.dx}px, ${fit.dy}px) scale(${scale})`, opacity: scale ? 1 : 0 }}
+				style={{ width: CW, height: CH, transform: `translate(${fit.dx}px, ${fit.dy}px) scale(${scale})`, opacity: scale ? 1 : 0 }}
 			>
 				{/* Power, like an old set. On: a dot, then a line, then the picture. Off: the reverse, then dark. */}
 				<motion.div

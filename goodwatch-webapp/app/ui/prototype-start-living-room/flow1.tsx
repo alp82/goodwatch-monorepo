@@ -48,13 +48,13 @@ const PROTOTYPE_AT: Record<PageId, string> = {
 }
 const PROTO_ORIGIN = "http://localhost:3003"
 
-const APP: Record<PageId, { name: string; line: string; d: string; tint: string }> = {
+export const APP: Record<PageId, { name: string; line: string; d: string; tint: string }> = {
 	watchnext: { name: "Watch now", line: "Your Wishlist, best match first, on your services.", d: "M6 4h12v16l-6-4-6 4z", tint: "#38bdf8" },
 	taste: { name: "Taste", line: "The sides of you, you versus everyone, and your fingerprint.", d: "M12 11v3M8.5 8.5a5 5 0 0 1 7 0M6 12a6 6 0 0 1 12 0v2M9 13v1a3 3 0 0 0 6 0", tint: "#f472b6" },
 	discover: { name: "Discover", line: "Browse and search everything, sorted for you.", d: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z", tint: "#34d399" },
 	explorer: { name: "Explorer", line: "Wander a map of titles grouped by how they feel.", d: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z", tint: "#a78bfa" },
 }
-const APPS: PageId[] = ["watchnext", "taste", "discover", "explorer"]
+export const APPS: PageId[] = ["watchnext", "taste", "discover", "explorer"]
 
 type Scr =
 	| { k: "boot" }
@@ -75,7 +75,7 @@ export type Exit = { kind: "page"; id: PageId } | { kind: "title"; key: string }
 
 // Someone with no saved services has no "yours": just say where it streams.
 let noServices = false
-const watchLine = (t: WTitle) => {
+export const watchLine = (t: WTitle) => {
 	const w = watchLineOf(t)
 	return noServices && w.offer ? { ...w, text: `On ${w.offer.name}` } : w
 }
@@ -411,6 +411,8 @@ export function useFlow(z: Zapper, h: Home, flow: Flow, services: LRServiceButto
 		wish,
 		moodCount,
 		isFocus,
+		focused,
+		items: list,
 		hover,
 		pairAt,
 		answered,
@@ -461,7 +463,7 @@ export function FlowScreen({ t }: { t: FlowT }) {
 	)
 }
 
-function Boot() {
+export function Boot() {
 	return (
 		<div className="absolute inset-0 flex flex-col items-center justify-center bg-black">
 			<motion.img src={gwLogo} alt="" className="h-16" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.2 }} />
@@ -473,10 +475,10 @@ function Boot() {
 }
 
 // A focusable thing on the TV: pointing at it focuses it, the wheel moves the focus, OK or a click opens it.
-function F({ t, v, className = "", on = "ring-amber-300 bg-white/[0.10]", off = "ring-white/5 bg-white/[0.04]", children, scale = 1.04 }: { t: FlowT; v: string; className?: string; on?: string; off?: string; children: ReactNode; scale?: number }) {
+export function F({ t, v, className = "", on = "ring-amber-300 bg-white/[0.10]", off = "ring-white/5 bg-white/[0.04]", children, scale = 1.04, ring = "ring-2" }: { t: FlowT; v: string; className?: string; on?: string; off?: string; children: ReactNode; scale?: number; ring?: string }) {
 	const f = t.isFocus(v)
 	return (
-		<motion.button type="button" data-pick={v} onMouseEnter={() => t.hover(v)} className={`relative text-left ring-2 transition-colors ${f ? on : off} ${className}`} animate={{ scale: f ? scale : 1 }} transition={{ type: "spring", stiffness: 420, damping: 32 }}>
+		<motion.button type="button" data-pick={v} onMouseEnter={() => t.hover(v)} className={`relative text-left ${ring} transition-colors ${f ? on : off} ${className}`} animate={{ scale: f ? scale : 1 }} transition={{ type: "spring", stiffness: 420, damping: 32 }}>
 			{children}
 		</motion.button>
 	)
@@ -492,7 +494,7 @@ function Head({ title, line, eyebrow }: { title: string; line?: ReactNode; eyebr
 	)
 }
 
-function Backdrop({ t, dim = 0.22 }: { t?: WTitle | null; dim?: number }) {
+export function Backdrop({ t, dim = 0.22 }: { t?: WTitle | null; dim?: number }) {
 	return (
 		<AnimatePresence initial={false}>
 			{t?.backdrop && <motion.img key={t.key} src={backdropUrl(t, "w780")} alt="" className="absolute inset-0 h-full w-full object-cover" initial={{ opacity: 0 }} animate={{ opacity: dim }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }} />}
@@ -500,7 +502,7 @@ function Backdrop({ t, dim = 0.22 }: { t?: WTitle | null; dim?: number }) {
 	)
 }
 
-function Coin({ t, className = "" }: { t: WTitle; className?: string }) {
+export function Coin({ t, className = "" }: { t: WTitle; className?: string }) {
 	if (t.match == null) return null
 	return <span className={`rounded-full bg-gradient-to-b from-amber-400 to-amber-600 px-2 py-0.5 text-[13px] font-black tabular-nums text-black ring-2 ring-black/60 ${className}`}>{t.match}</span>
 }
@@ -550,7 +552,7 @@ function Welcome({ t }: { t: FlowT }) {
 	)
 }
 
-function Fan({ posters, heart }: { posters: WTitle[]; heart?: boolean }) {
+export function Fan({ posters, heart }: { posters: WTitle[]; heart?: boolean }) {
 	return (
 		<div className="absolute inset-0 flex items-center justify-center">
 			{posters.slice(0, 3).map((p, i) => (
@@ -643,7 +645,7 @@ function Launcher({ t }: { t: FlowT }) {
 	)
 }
 
-function appLine(t: FlowT, id: PageId) {
+export function appLine(t: FlowT, id: PageId) {
 	const h = t.h
 	if (id === "watchnext") return t.member ? `${h.watchNext.length} on your Wishlist you can play tonight, best match first.` : "Save what you want to see; it waits here, best match first."
 	if (id === "taste") return h.leans.length ? `You go for ${and(h.leans)}.` : APP.taste.line
@@ -1136,7 +1138,7 @@ function Bar({ t }: { t: FlowT }) {
 // Leaving the living room: the TV grows until it is the window, and the page is what was on it. Back grows
 // the room around it again. One-shot clip-path and transform animations; nothing loops.
 
-function ExitLayer({ t }: { t: FlowT }) {
+export function ExitLayer({ t }: { t: FlowT }) {
 	const x = t.exit!
 	const [rect] = useState(() => {
 		const el = document.querySelector("[data-flow-screen]")?.getBoundingClientRect()

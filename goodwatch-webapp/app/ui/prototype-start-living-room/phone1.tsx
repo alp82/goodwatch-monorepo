@@ -35,6 +35,25 @@ export const PHONE_VARIANTS: Record<PhoneVariant, { name: string; kind: "existin
 	sideways: { name: "Turn sideways for the whole room", kind: "existing components" },
 }
 
+/** #224, the phone edition of the TV screens: an optional smaller canvas, something docked under the TV (in
+ * page pixels), extra room between the TV and the remote, and a camera that leans in while `lean(t)` is true. */
+export type PhoneTvOpts = {
+	canvas?: { w: number; h: number }
+	below?: (t: Tv4, tv: { x: number; y: number; w: number; h: number }, box: { cw: number; ch: number; landscape: boolean; remoteLeft: number }) => ReactNode
+	gap?: number
+	lean?: (t: Tv4) => boolean
+}
+
+// The camera leaning in: scale the room (transform only) so the TV fills most of the width (or height, sideways).
+function leanOf(p: Placed, cw: number, ch: number, landscape: boolean) {
+	const k = landscape ? Math.min((0.92 * cw) / p.tv.w, (0.86 * ch) / p.tv.h) : Math.min(cw / p.tv.w, 1.2)
+	const tcx = cw / 2
+	const tcy = landscape ? ch * 0.47 : Math.max(6, p.tv.y) + (k * p.tv.h) / 2
+	const x = tcx - k * (p.tv.x + p.tv.w / 2)
+	const y = tcy - k * (p.tv.y + p.tv.h / 2)
+	return { k, x, y, dy: tcy + (k * p.tv.h) / 2 - (p.tv.y + p.tv.h) }
+}
+
 /** A room photo in its own pixel coordinates, with the TV's rectangle. */
 export type PhoneRoom = { src: string; w: number; h: number; tv: { x: number; y: number; w: number; h: number }; alt: string }
 
@@ -86,7 +105,7 @@ function usePhoneTv(tvSlot: TvSlot) {
 }
 
 // The room photo with the TV on the wall, placed by `p`. `onTap` hears every touch on the TV (for aiming).
-function Room({ room, p, z, t, tvSlot, onTap, dim = 0, children }: { room: PhoneRoom; p: Placed; z: Zapper; t: Tv4; tvSlot: TvSlot; onTap?: (x: number, y: number) => void; dim?: number; children?: ReactNode }) {
+function Room({ room, p, z, t, tvSlot, onTap, dim = 0, children, canvas }: { room: PhoneRoom; p: Placed; z: Zapper; t: Tv4; tvSlot: TvSlot; onTap?: (x: number, y: number) => void; dim?: number; children?: ReactNode; canvas?: { w: number; h: number } }) {
 	const glow = "#fbbf24"
 	const cx = `${((room.tv.x + room.tv.w / 2) / room.w) * 100}%`
 	const cy = `${((room.tv.y + room.tv.h / 2) / room.h) * 100}%`
@@ -116,6 +135,7 @@ function Room({ room, p, z, t, tvSlot, onTap, dim = 0, children }: { room: Phone
 					pointer={false}
 					swipe={false}
 					osd={false}
+						canvas={canvas}
 					onPick={(el) => (z.on ? t.pick(el) : z.setOn(true))}
 				/>
 			</motion.div>
@@ -214,15 +234,16 @@ function FirstHint({ t, text, className, style }: { t: Tv4; text: ReactNode; cla
 // ---------------------------------------------------------------------------------------------------------
 // couch: portrait room, TV on top, remote in hand below.
 
-function Couch({ tall, handSrc, tvSlot, rotateHint }: { tall: PhoneRoom; handSrc: string; tvSlot: TvSlot; rotateHint?: boolean }) {
+function Couch({ tall, handSrc, tvSlot, rotateHint, opts }: { tall: PhoneRoom; handSrc: string; tvSlot: TvSlot; rotateHint?: boolean; opts?: PhoneTvOpts }) {
 	const { ref, cw, ch } = useBox()
 	const { z, t, services } = usePhoneTv(tvSlot)
 	const p = cw ? place(tall, cw, ch, { cx: cw / 2, top: Math.max(14, ch * 0.035), w: cw * 0.92 }) : null
 	// The remote: under the TV, over the coffee table and the blanket; the streaming keys (about 700 remote
 	// pixels down) stay on screen, the grip runs off the bottom under the hand.
-	const top = p ? p.tv.y + p.tv.h + Math.max(26, ch * 0.05) : 0
+	const top = p ? p.tv.y + p.tv.h + Math.max(26, ch * 0.05) + (opts?.gap ?? 0) : 0
 	const s = p ? Math.min((cw * 0.66) / REMOTE_W, (ch - top - 10) / 700, 1) : 0
 	const left = cw / 2 - (REMOTE_W * s) / 2
+	const leaning = opts?.lean?.(t) ?? false
 	const aim = useAim(
 		t,
 		() => (p ? { x: cw / 2, y: top + 14 * s } : null),
@@ -232,16 +253,27 @@ function Couch({ tall, handSrc, tvSlot, rotateHint }: { tall: PhoneRoom; handSrc
 		<Page boxRef={ref}>
 			{p && (
 				<>
-					<Room room={tall} p={p} z={z} t={t} tvSlot={tvSlot} onTap={(x, y) => aim.fire(x, y - (ref.current?.getBoundingClientRect().top ?? 0))} />
-					<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_30%,transparent_55%,rgba(0,0,0,0.5)_100%)]" />
-					<div className="absolute" style={{ left, top }}>
-						<HandRemote s={s} z={z} t={t} services={services} handSrc={handSrc} yaw={aim.yaw} />
-					</div>
+					<Leaning on={leaning} l={leanOf(p, cw, ch, false)}>
+							<Room room={tall} p={p} z={z} t={t} tvSlot={tvSlot} canvas={opts?.canvas} onTap={(x, y) => aim.fire(x, y - (ref.current?.getBoundingClientRect().top ?? 0))} />
+						</Leaning>
+						<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_30%,transparent_55%,rgba(0,0,0,0.5)_100%)]" />
+						{opts?.below?.(t, p.tv, { cw, ch, landscape: false, remoteLeft: left })}
+						<motion.div className="absolute" style={{ left, top }} initial={false} animate={{ y: leaning ? leanOf(p, cw, ch, false).dy : 0 }} transition={{ duration: 0.5, ease: [0.2, 0.7, 0.1, 1] }}>
+							<HandRemote s={s} z={z} t={t} services={services} handSrc={handSrc} yaw={aim.yaw} />
+						</motion.div>
 					<FirstHint t={t} className="left-1/2 -translate-x-1/2 whitespace-nowrap !py-1.5 !text-[12px]" style={{ top: p.tv.y + p.tv.h + 8 }} text={<>Tap the TV or use the remote. <span className="text-amber-300">Both work.</span></>} />
 					{rotateHint && <RotateHint />}
 				</>
 			)}
 		</Page>
+	)
+}
+
+function Leaning({ on, l, children }: { on: boolean; l: ReturnType<typeof leanOf>; children: ReactNode }) {
+	return (
+		<motion.div className="absolute inset-0 origin-top-left" initial={false} animate={on ? { x: l.x, y: l.y, scale: l.k } : { x: 0, y: 0, scale: 1 }} transition={{ duration: on ? 0.55 : 0.8, ease: [0.2, 0.7, 0.1, 1] }}>
+			{children}
+		</motion.div>
 	)
 }
 
@@ -277,7 +309,7 @@ function RotateHint() {
 // ---------------------------------------------------------------------------------------------------------
 // sideways: landscape. The whole room, the remote at the right edge.
 
-function Sideways({ wide, tall, handSrc, tvSlot, force }: { wide: PhoneRoom; tall: PhoneRoom; handSrc: string; tvSlot: TvSlot; force: boolean }) {
+function Sideways({ wide, tall, handSrc, tvSlot, force, opts }: { wide: PhoneRoom; tall: PhoneRoom; handSrc: string; tvSlot: TvSlot; force: boolean; opts?: PhoneTvOpts }) {
 	const [landscape, setLandscape] = useState(force)
 	useIso(() => {
 		if (force) return
@@ -287,11 +319,11 @@ function Sideways({ wide, tall, handSrc, tvSlot, force }: { wide: PhoneRoom; tal
 		m.addEventListener("change", on)
 		return () => m.removeEventListener("change", on)
 	}, [force])
-	if (!landscape) return <Couch tall={tall} handSrc={handSrc} tvSlot={tvSlot} rotateHint />
-	return <Landscape room={wide} handSrc={handSrc} tvSlot={tvSlot} />
+	if (!landscape) return <Couch tall={tall} handSrc={handSrc} tvSlot={tvSlot} rotateHint opts={opts} />
+	return <Landscape room={wide} handSrc={handSrc} tvSlot={tvSlot} opts={opts} />
 }
 
-function Landscape({ room, handSrc, tvSlot }: { room: PhoneRoom; handSrc: string; tvSlot: TvSlot }) {
+function Landscape({ room, handSrc, tvSlot, opts }: { room: PhoneRoom; handSrc: string; tvSlot: TvSlot; opts?: PhoneTvOpts }) {
 	const { ref, cw, ch } = useBox()
 	const { z, t, services } = usePhoneTv(tvSlot)
 	// Owner, round 1: the remote in the middle, like the desktop. Full screen (the header would take a sixth
@@ -312,6 +344,7 @@ function Landscape({ room, handSrc, tvSlot }: { room: PhoneRoom; handSrc: string
 		() => (p ? { x: p.tv.x + p.tv.w / 2, y: p.tv.y + p.tv.h / 2 } : null),
 	)
 	const [lifted, setLifted] = useState(false)
+	const leaning = opts?.lean?.(t) ?? false
 	const settle = (up: boolean) => {
 		setLifted(up)
 		animate(y, up ? -lift : 0, { type: "spring", stiffness: 320, damping: 34 })
@@ -320,11 +353,16 @@ function Landscape({ room, handSrc, tvSlot }: { room: PhoneRoom; handSrc: string
 		<Page boxRef={ref} full>
 			{p && (
 				<>
-					<Room room={room} p={p} z={z} t={t} tvSlot={tvSlot} onTap={(x, yy) => aim.fire(x, yy)} />
-					<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(130%_100%_at_50%_35%,transparent_60%,rgba(0,0,0,0.55)_100%)]" />
-					<motion.div
-						className="absolute touch-none"
-						style={{ left, top, y }}
+					<Leaning on={leaning} l={leanOf(p, cw, ch, true)}>
+							<Room room={room} p={p} z={z} t={t} tvSlot={tvSlot} canvas={opts?.canvas} onTap={(x, yy) => aim.fire(x, yy)} />
+						</Leaning>
+						<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(130%_100%_at_50%_35%,transparent_60%,rgba(0,0,0,0.55)_100%)]" />
+						{opts?.below?.(t, p.tv, { cw, ch, landscape: true, remoteLeft: left })}
+						{/* Leaning in, the remote drops to the bottom edge: its screen and pad still peek over it. */}
+						<motion.div className="pointer-events-none absolute inset-0" initial={false} animate={{ y: leaning ? ch - top - 64 : 0 }} transition={{ duration: 0.5, ease: [0.2, 0.7, 0.1, 1] }}>
+						<motion.div
+						className="pointer-events-auto absolute touch-none"
+							style={{ left, top, y }}
 						drag="y"
 						dragConstraints={{ top: -lift, bottom: 0 }}
 						dragElastic={0.08}
@@ -332,7 +370,8 @@ function Landscape({ room, handSrc, tvSlot }: { room: PhoneRoom; handSrc: string
 						onDragEnd={(_, info) => settle(info.velocity.y < -150 || (info.velocity.y <= 150 && y.get() < -lift / 2))}
 					>
 						<HandRemote s={s} z={z} t={t} services={services} handSrc={handSrc} yaw={aim.yaw} tip={12} />
-					</motion.div>
+						</motion.div>
+						</motion.div>
 					<button
 						type="button"
 						onClick={() => settle(!lifted)}
@@ -579,9 +618,9 @@ function TouchTv({ tall, handSrc, tvSlot, data }: { tall: PhoneRoom; handSrc: st
 	)
 }
 
-export function LivingRoomPhone({ variant, tall, wide, handSrc, tvSlot, data, force }: { variant: PhoneVariant; tall: PhoneRoom; wide: PhoneRoom; handSrc: string; tvSlot: TvSlot; data: LRData; force: boolean }) {
+export function LivingRoomPhone({ variant, tall, wide, handSrc, tvSlot, data, force, opts }: { variant: PhoneVariant; tall: PhoneRoom; wide: PhoneRoom; handSrc: string; tvSlot: TvSlot; data: LRData; force: boolean; opts?: PhoneTvOpts }) {
 	if (variant === "remote") return <PhoneIsRemote wide={wide} tvSlot={tvSlot} />
 	if (variant === "touch") return <TouchTv tall={tall} handSrc={handSrc} tvSlot={tvSlot} data={data} />
-	if (variant === "sideways") return <Sideways wide={wide} tall={tall} handSrc={handSrc} tvSlot={tvSlot} force={force} />
+	if (variant === "sideways") return <Sideways wide={wide} tall={tall} handSrc={handSrc} tvSlot={tvSlot} force={force} opts={opts} />
 	return <Couch tall={tall} handSrc={handSrc} tvSlot={tvSlot} />
 }
