@@ -1,4 +1,4 @@
-// The living room on its own route, until #234 moves it to `/` and removes the old start page. Not linked and not
+// The living room on its own route (the desktop scene, or the phone scene on phones), until #234 moves it to `/` and removes the old start page. Not linked and not
 // indexed yet. The TV's screen and keys live in the search params (`?tv=picks&mood=cozy`); changing only those
 // never reruns the loader.
 import {
@@ -15,11 +15,13 @@ import {
 } from "@remix-run/react"
 import { useCallback } from "react"
 import {
+	useScoreMutation,
 	useSkippedMutation,
 	useWatchedMutation,
 	useWishlistMutation,
 } from "~/hooks/useUserDataMutations"
 import { getLivingRoomData } from "~/server/living-room.server"
+import type { Score } from "~/server/scores.server"
 import { LivingRoom } from "~/ui/living-room/LivingRoom"
 import { APP } from "~/ui/living-room/Remote"
 import { type LivingRoomData, titleOf } from "~/ui/living-room/living-room-data"
@@ -66,6 +68,19 @@ export default function LivingRoomRoute() {
 	const wishlist = useWishlistMutation()
 	const watched = useWatchedMutation()
 	const skipped = useSkippedMutation()
+	const score = useScoreMutation()
+	const onRate = useCallback(
+		(titleKey: string, value: Score) => {
+			const t = titleOf(data, titleKey)
+			if (t)
+				score.mutate({
+					mediaType: t.media_type,
+					tmdbId: t.tmdb_id,
+					score: value,
+				})
+		},
+		[data, score],
+	)
 
 	// Leaving is plain navigation for now; #232 grows the TV into the window instead.
 	const onEffect = useCallback(
@@ -109,5 +124,12 @@ export default function LivingRoomRoute() {
 		[data, navigate, signUpHref, wishlist, watched, skipped],
 	)
 
-	return <LivingRoom data={data} onEffect={onEffect} signInHref={signInHref} />
+	return (
+		<LivingRoom
+			data={data}
+			onEffect={onEffect}
+			signInHref={signInHref}
+			onRate={onRate}
+		/>
+	)
 }
