@@ -1,138 +1,71 @@
-// The living room's data, read once per page load: a pool of worthwhile titles per mood, the member's Wishlist, the
-// services catalog, and the this-or-that pairs. The TV derives tonight's picks from it in the browser
-// (`titlesFor` in ~/ui/living-room/living-room-data), so D-pad moves never rerun the loader.
-//
-// Interim version for the desktop build (#229). Serving the living room with caching, guest progress, and writes
-// belongs to #231, which replaces this module's internals and keeps `LivingRoomData` as its contract.
-import { MOOD_BY_KEY, MOOD_KEYS, type MoodKey } from "~/domain/moods"
-import { loadTaste } from "~/server/taste/index.server"
-import {
-	type CardService,
-	MAX_KEYS,
-	type TitleCard,
-	getServiceCards,
-	getTitleCards,
-} from "~/server/title-cards.server"
+import { json } from "@remix-run/node"
+import { loadMemberTaste } from "~/server/taste/member.server"
+import { getServiceCards } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
-import { getViewerContext } from "~/server/viewer.server"
-import { getWatchNext, worthwhileSuggestions } from "~/server/watch-next.server"
-import type {
-	LivingRoomData,
-	LivingRoomTitle,
-	TvPair,
-} from "~/ui/living-room/living-room-data"
+import { getUserSettings } from "~/server/user-settings.server"
+import type { ViewerContext } from "~/server/viewer.server"
+import type { LivingRoomData } from "~/ui/living-room/living-room-data"
+import { getLocaleFromRequest } from "~/utils/locale"
+import { livingRoomAuth } from "./living-room/data.server"
+import { livingRoomWishlistCards } from "./living-room/pool.server"
+import { loadLivingRoomWishlist } from "./living-room/wishlist.server"
 
-const PER_MOOD = 3
-const BEST = 6
-const CATALOG = 12
-
-// Contrasting moods for "Which one, tonight?".
-const PAIRS: [MoodKey, MoodKey][] = [
-	["funny", "heavy"],
-	["action", "romance"],
-	["feelgood", "scary"],
-	["mind", "worlds"],
-	["crime", "growing"],
-	["history", "funny"],
-]
-
-export async function getLivingRoomData(
-	request: Request,
-): Promise<LivingRoomData> {
-	const ctx = await getViewerContext(request)
-	const taste = await loadTaste(ctx.viewer)
-	const member = ctx.viewer.kind === "member"
-
-	// The best few for any mood, then a few per mood, without repeats.
-	const keys: number[] = []
-	const byMood = new Map<MoodKey, number[]>()
-	const add = (list: number[]) => {
-		for (const k of list) if (!keys.includes(k)) keys.push(k)
+/** First paint never selects picks. Guests need only the shared empty UI contract. */
+export async function loadLivingRoom(request: Request) {
+	const { user, headers } = await livingRoomAuth(request)
+	const localeCountry = getLocaleFromRequest(request).locale.country
+	const country = /^[A-Z]{2}$/.test(localeCountry) ? localeCountry : "DE"
+	const data: LivingRoomData = {
+		member: !!user,
+		suggestions: [],
+		wishlist: [],
+		catalog: [],
+		savedServices: [],
+		pairs: [],
 	}
-	add(
-		worthwhileSuggestions(ctx, taste, {
-			moods: [],
-			onMyServices: false,
-			count: BEST,
-		}),
-	)
-	for (const mood of MOOD_KEYS) {
-		const list = worthwhileSuggestions(ctx, taste, {
-			moods: [mood],
-			onMyServices: false,
-			count: PER_MOOD + 2,
-		})
-		byMood.set(mood, list)
-		add(list.slice(0, PER_MOOD))
-	}
-
-	const [cards, watchNext, saved] = await Promise.all([
-		getTitleCards(keys.slice(0, MAX_KEYS), ctx, taste),
-		member ? getWatchNext(ctx, { onMyServices: false }, taste) : null,
-		getServiceCards(ctx.services),
-	])
-	const snapshot = getTitleSnapshot()
-	const withMoods = (card: TitleCard): LivingRoomTitle => ({
-		...card,
-		moods: snapshot?.facts(card.key)?.moods ?? [],
-	})
-	const suggestions = cards.map(withMoods)
-
-	const wishlist: LivingRoomTitle[] = watchNext
-		? [
-				...(watchNext.hero ? [watchNext.hero] : []),
-				...watchNext.thenColumn,
-				...watchNext.tiers.flatMap((t) => t.titles ?? []),
-			]
-		: []
-
-	const pairs: TvPair[] = []
-	const used = new Set<number>()
-	const firstOf = (mood: MoodKey) => {
-		const key = (byMood.get(mood) ?? []).find(
-			(k) => !used.has(k) && suggestions.some((t) => t.key === k),
+	if (!user) return { data, headers }
+	try {
+		const [taste, wishlist, settings] = await Promise.all([
+			loadMemberTaste(user.id),
+			loadLivingRoomWishlist(user.id, getTitleSnapshot()),
+			getUserSettings({ userId: user.id }),
+		])
+		const savedCountry = settings.country_default?.toUpperCase()
+		const services = (settings.streaming_providers_default ?? "")
+			.split(",")
+			.map(Number)
+			.filter((id) => Number.isSafeInteger(id) && id > 0)
+		const viewer: ViewerContext = {
+			viewer: { kind: "member", userId: user.id },
+			country:
+				savedCountry && /^[A-Z]{2}$/.test(savedCountry)
+					? savedCountry
+					: country,
+			services,
+			seen: new Set(),
+			skipped: new Set(),
+			ratings: new Map(),
+			wishlist: new Map(wishlist.keys.map((key) => [key, new Date(0)])),
+			forYou: settings.for_you !== "no",
+		}
+		const [cards, saved] = await Promise.all([
+			livingRoomWishlistCards(viewer, taste),
+			getServiceCards(services),
+		])
+		data.wishlist = cards
+		data.catalog = saved
+		data.savedServices = saved.map((service) => service.name)
+	} catch (error) {
+		console.error("Living room: loading member data failed", error)
+		throw json(
+			{ error: "Unable to load living room data" },
+			{ status: 503, headers },
 		)
-		if (key !== undefined) used.add(key)
-		return key
 	}
-	for (const [ma, mb] of PAIRS) {
-		const a = firstOf(ma)
-		const b = firstOf(mb)
-		if (a === undefined || b === undefined) continue
-		pairs.push({
-			a,
-			b,
-			aLabel: MOOD_BY_KEY[ma].name,
-			bLabel: MOOD_BY_KEY[mb].name,
-			aMoods: [ma],
-			bMoods: [mb],
-		})
-	}
-
-	return {
-		member,
-		suggestions,
-		wishlist,
-		catalog: catalogOf([...wishlist, ...suggestions], saved),
-		savedServices: saved.map((s) => s.name),
-		pairs,
-	}
+	return { data, headers }
 }
 
-// The services the titles stream on, the viewer's own first, then the most common.
-function catalogOf(titles: TitleCard[], saved: CardService[]): CardService[] {
-	const counts = new Map<string, { service: CardService; n: number }>()
-	for (const t of titles)
-		for (const s of t.services ?? []) {
-			const c = counts.get(s.name)
-			if (c) c.n++
-			else counts.set(s.name, { service: s, n: 1 })
-		}
-	const common = [...counts.values()]
-		.sort((a, b) => b.n - a.n)
-		.map((c) => c.service)
-	const out: CardService[] = []
-	for (const s of [...saved, ...common])
-		if (!out.some((o) => o.name === s.name)) out.push(s)
-	return out.slice(0, CATALOG)
+export async function livingRoomLoader({ request }: { request: Request }) {
+	const { data, headers } = await loadLivingRoom(request)
+	return json(data, { headers })
 }

@@ -1,17 +1,17 @@
 // The living room on its own route (the desktop scene, or the phone scene on phones), until #234 moves it to `/` and removes the old start page. Not linked and not
 // indexed yet. The TV's screen and keys live in the search params (`?tv=picks&mood=cozy`); changing only those
 // never reruns the loader.
-import {
-	type LinksFunction,
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
+import type {
+	HeadersFunction,
+	LinksFunction,
+	MetaFunction,
 } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
 	useLoaderData,
 	useLocation,
 } from "@remix-run/react"
+import { useQuery } from "@tanstack/react-query"
 import { useCallback } from "react"
 import {
 	useScoreMutation,
@@ -19,7 +19,6 @@ import {
 	useWatchedMutation,
 	useWishlistMutation,
 } from "~/hooks/useUserDataMutations"
-import { getLivingRoomData } from "~/server/living-room.server"
 import type { Score } from "~/server/scores.server"
 import { LivingRoom } from "~/ui/living-room/LivingRoom"
 import { APP } from "~/ui/living-room/Remote"
@@ -28,10 +27,20 @@ import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import { type TvEffect, isTvOnlyChange } from "~/ui/living-room/tv-flow"
 import { useLeaveThroughTv } from "~/ui/living-room/tv-transition"
 import { titleHref } from "~/ui/watch-next/WatchNextHero"
+import { snapshotGuestProgress } from "~/utils/guest-progress"
 
-export async function loader({ request }: LoaderFunctionArgs) {
-	const data = await getLivingRoomData(request)
-	return json(data, { headers: { "Cache-Control": "private, no-store" } })
+export { livingRoomLoader as loader } from "~/server/living-room.server"
+import type { livingRoomLoader } from "~/server/living-room.server"
+import { pageHeaders } from "~/utils/headers"
+
+// Keep auth refreshes private, but use this route's exact guest policy instead of the root's public default.
+export const headers: HeadersFunction = (args) => {
+	const result = new Headers(pageHeaders(args))
+	if (!/private|no-store/i.test(result.get("Cache-Control") ?? "")) {
+		const policy = args.loaderHeaders.get("Cache-Control")
+		if (policy) result.set("Cache-Control", policy)
+	}
+	return result
 }
 
 export const shouldRevalidate: ShouldRevalidateFunction = ({
@@ -59,9 +68,34 @@ export const meta: MetaFunction = () => [
 ]
 
 export default function LivingRoomRoute() {
-	const data = useLoaderData<typeof loader>() as LivingRoomData
+	const initial = useLoaderData<typeof livingRoomLoader>()
 	const leave = useLeaveThroughTv()
 	const { pathname, search } = useLocation()
+	const screen = new URLSearchParams(search).get("tv") ?? "home"
+	const pool = useQuery<LivingRoomData>({
+		queryKey: ["living-room-pool", initial],
+		enabled: [
+			"services",
+			"this-or-that",
+			"moods",
+			"source",
+			"picks",
+			"title",
+		].includes(screen),
+		queryFn: async () => {
+			const response = await fetch("/api/living-room/picks?view=pool", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(
+					initial.member ? {} : { guest: snapshotGuestProgress() },
+				),
+			})
+			if (!response.ok) throw new Error("Unable to load living room picks")
+			return response.json()
+		},
+	})
+	const data: LivingRoomData = pool.data ?? initial
+
 	const here = encodeURIComponent(pathname + search)
 	const signUpHref = `/sign-up?redirectTo=${here}`
 	const signInHref = `/sign-in?redirectTo=${here}`

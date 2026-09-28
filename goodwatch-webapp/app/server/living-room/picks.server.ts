@@ -9,7 +9,7 @@ import { getTitleCards } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
 import type { Night } from "~/ui/living-room/tv-flow"
-import { livingRoomServices, tvTitleKey } from "./data.server"
+import { livingRoomServices } from "./data.server"
 
 export class LivingRoomUnavailable extends Error {}
 
@@ -84,6 +84,6 @@ export async function getLivingRoomPicks(
 	if (!keys.length) return { titles: [], pickKeys: [], source }
 	const titles = (await getTitleCards(keys, viewer, taste))
 		.slice(0, 3)
-		.map((card) => ({ ...card, tvKey: tvTitleKey(card.key) }))
-	return { titles, pickKeys: titles.map(({ tvKey }) => tvKey), source }
+		.map((card) => ({ ...card, moods: snapshot.facts(card.key)?.moods ?? [] }))
+	return { titles, pickKeys: titles.map(({ key }) => String(key)), source }
 }
