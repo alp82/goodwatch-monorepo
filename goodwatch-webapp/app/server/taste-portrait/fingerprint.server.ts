@@ -13,7 +13,6 @@ import {
 } from "./person.server"
 import type { FingerprintAttribute, FingerprintView, Tier } from "./view"
 import {
-	adjective,
 	capitalize,
 	isWorded,
 	joinWords,
@@ -195,15 +194,15 @@ export function buildFingerprint(person: Person): FingerprintResult {
 			: first
 		: ""
 
-	// The persona from the largest positive edge across all families, the adjective from the largest positive edge in a
-	// different family; both at "You lean toward it" or above, or no identity.
+	// Describe the strongest viewing preference, supported by a positive edge in another family.
+	// Keep both evidence keys, but do not apply a title adjective to the person.
 	const leaning = byEdge.filter((a) => a.tier >= 1)
 	const top = leaning[0]
 	const second = leaning.find((a) => top && a.family !== top.family)
 	const identity =
 		top && second
 			? {
-					name: `The ${adjective(second.key)} ${persona(top.key)}`,
+					name: `The ${persona(top.key)}`,
 					persona: top.key,
 					adjective: second.key,
 				}

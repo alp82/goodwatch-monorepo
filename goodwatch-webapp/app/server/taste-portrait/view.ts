@@ -218,9 +218,7 @@ export interface FingerprintAttribute {
 
 export interface FingerprintView extends ViewBase {
 	tab: "fingerprint"
-	/** "The dreamlike novelty hunter": a persona from the attribute with the largest positive edge, an adjective from
-	 * the largest positive edge in another family. Null with fewer than two attributes at "You lean toward it" or
-	 * above. */
+	/** A viewing preference, with the two attribute keys supporting the identity. */
 	identity: { name: string; persona: string; adjective: string } | null
 	/** "Show you the unexpected, the surreal or absurd humor, and you're in. Grounded dramas rarely get a look." */
 	line: string
