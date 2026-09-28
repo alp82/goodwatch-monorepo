@@ -1,4 +1,4 @@
-// The desktop living room (#229): the room photo, the TV on the wall, and the Remote in a hand below it. The TV
+// The living room (#229): on phones the phone scene takes over (#230, `PhoneLivingRoom`). On the desktop: the room photo, the TV on the wall, and the Remote in a hand below it. The TV
 // flow (`useTvFlow`) drives both; the keyboard works like the Remote. The Remote leans back toward the screen and
 // turns at most 6 degrees toward what it points at: the pointer over the TV, else the focused item. No beam.
 //
@@ -15,7 +15,9 @@ import {
 	useState,
 } from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
-import { Remote } from "./Remote"
+import type { Score as RatingScore } from "~/server/scores.server"
+import { PhoneLivingRoom, usePhoneOrientation } from "./PhoneLivingRoom"
+import { Remote, type RemoteProps } from "./Remote"
 import { TvScreens, type TvView, lcdLines } from "./TvScreens"
 import {
 	type LivingRoomChoices,
@@ -56,6 +58,8 @@ export type LivingRoomProps = {
 	 */
 	onEffect: (effect: TvEffect, choices: LivingRoomChoices) => void
 	signInHref: string
+	/** Rates a title from 1 to 10 (the phone title screen's rating). */
+	onRate?: (titleKey: string, score: RatingScore) => void
 }
 
 function nightOf(screen: TvScreen): Night | null {
@@ -69,9 +73,10 @@ function nightOf(screen: TvScreen): Night | null {
 export function LivingRoom({
 	data,
 	onEffect,
-
 	signInHref,
+	onRate,
 }: LivingRoomProps) {
+	const phone = usePhoneOrientation()
 	const [params] = useSearchParams()
 	const [choices, setChoices] = useState<LivingRoomChoices>(NO_CHOICES)
 	const [draft, setDraftState] = useState("")
@@ -186,7 +191,21 @@ export function LivingRoom({
 		draft,
 		setDraft,
 		signInHref,
+		onRate,
 	}
+	const activeService = night?.service ?? null
+	const remote: RemoteProps = {
+		screen: state.screen,
+		power: state.power,
+		lcd: lcdLines(state, flow.focused, data, draft),
+		serviceName: (key) => remoteServiceName(key, data.catalog),
+		activeService,
+		dispatch,
+		onOk: ok,
+	}
+	if (phone)
+		return <PhoneLivingRoom orientation={phone} view={view} remote={remote} />
+
 	const on = state.power !== "off"
 	const tvCenter = {
 		x: `${((ROOM.tv.x + ROOM.tv.w / 2) / ROOM.w) * 100}%`,
@@ -196,8 +215,6 @@ export function LivingRoom({
 		x: (L.tv.width - TV_CANVAS.w * L.canvasScale) / 2,
 		y: (L.tv.height - TV_CANVAS.h * L.canvasScale) / 2,
 	}
-	const activeService = night?.service ?? null
-
 	return (
 		<div
 			ref={root}
@@ -326,15 +343,7 @@ export function LivingRoom({
 					className="absolute left-0 top-0 origin-top-left"
 					style={{ transform: `scale(${L.remote.scale})` }}
 				>
-					<Remote
-						screen={state.screen}
-						power={state.power}
-						lcd={lcdLines(state, flow.focused, data, draft)}
-						serviceName={(key) => remoteServiceName(key, data.catalog)}
-						activeService={activeService}
-						dispatch={dispatch}
-						onOk={ok}
-					/>
+					<Remote {...remote} />
 				</div>
 			</motion.div>
 		</div>

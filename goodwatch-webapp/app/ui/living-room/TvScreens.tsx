@@ -1,9 +1,10 @@
 // The desktop TV screens of the "Ask, then answer" flow (#187), drawn on the fixed 960 x 528 canvas. They render
 // the TV flow's state and send its actions: hovering an item focuses it, clicking chooses it. No data fetching.
 import { AnimatePresence, motion } from "framer-motion"
-import type { ReactNode } from "react"
+import type { CSSProperties, ReactNode } from "react"
 import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
+import type { Score as RatingScore } from "~/server/scores.server"
 import { runtimeLabel } from "~/ui/watch-next/labels"
 import { offersOf, watchLine } from "~/ui/watch-next/services"
 import { backdropUrl, logoUrl, posterUrl } from "~/ui/watch-next/style"
@@ -28,7 +29,7 @@ import {
 	resolvedSource,
 } from "./tv-flow"
 
-const EASE = [0.2, 0.7, 0.1, 1] as const
+export const EASE = [0.2, 0.7, 0.1, 1] as const
 
 export type TvView = {
 	state: TvState
@@ -40,6 +41,8 @@ export type TvView = {
 	draft: string
 	setDraft: (update: (draft: string) => string) => void
 	signInHref: string
+	/** Rates a title from 1 to 10. The phone title screen offers it (#224); without it, no rating shows. */
+	onRate?: (titleKey: string, score: RatingScore) => void
 }
 
 /** What the Remote's one-line screen says: the focused item, and what the wheel does. */
@@ -182,7 +185,7 @@ function Screen({ view }: { view: TvView }) {
 	}
 }
 
-function Boot() {
+export function Boot() {
 	return (
 		<div className="absolute inset-0 flex flex-col items-center justify-center bg-black">
 			<motion.img
@@ -206,7 +209,7 @@ function Boot() {
 }
 
 // A focusable thing on the TV: pointing at it focuses it, the wheel moves the focus, OK or a click chooses it.
-function Item({
+export function Item({
 	view,
 	id,
 	className = "",
@@ -258,7 +261,7 @@ function Head({
 	)
 }
 
-function Backdrop({
+export function Backdrop({
 	title,
 	dim,
 }: { title: LivingRoomTitle | null | undefined; dim: number }) {
@@ -273,7 +276,7 @@ function Backdrop({
 	)
 }
 
-function Score({
+export function Score({
 	title,
 	size = "md",
 }: { title: LivingRoomTitle; size?: "md" | "lg" }) {
@@ -290,7 +293,7 @@ function Score({
 	)
 }
 
-function Match({
+export function Match({
 	title,
 	className = "",
 }: { title: LivingRoomTitle; className?: string }) {
@@ -305,7 +308,7 @@ function Match({
 	)
 }
 
-function whereLine(view: TvView, title: LivingRoomTitle) {
+export function whereLine(view: TvView, title: LivingRoomTitle) {
 	const mine = new Set(myServices(view.data, view.choices))
 	const offers = offersOf(
 		title,
@@ -314,19 +317,26 @@ function whereLine(view: TvView, title: LivingRoomTitle) {
 	return { offers, text: watchLine(offers) }
 }
 
-function Poster({
+export function Poster({
 	title,
 	size,
 	className,
-}: { title: LivingRoomTitle; size: string; className: string }) {
+	style,
+}: {
+	title: LivingRoomTitle
+	size: string
+	className: string
+	style?: CSSProperties
+}) {
 	return title.poster_path ? (
 		<img
 			src={posterUrl(title.poster_path, size)}
 			alt=""
 			className={className}
+			style={style}
 		/>
 	) : (
-		<div className={`${className} bg-white/10`} />
+		<div className={`${className} bg-white/10`} style={style} />
 	)
 }
 
@@ -387,17 +397,23 @@ function Welcome({ view }: { view: TvView }) {
 	)
 }
 
-function Fan({
+/** Three posters fanned out; `size` is a poster's width in canvas pixels. */
+export function Fan({
 	titles,
 	heart,
-}: { titles: LivingRoomTitle[]; heart?: boolean }) {
+	size,
+}: { titles: LivingRoomTitle[]; heart?: boolean; size?: number }) {
 	return (
 		<div className="absolute inset-0 flex items-center justify-center">
 			{titles.slice(0, 3).map((t, i) => (
 				<div
 					key={t.key}
-					className="relative -mx-3 first:mt-6 last:mt-6"
+					className={`relative ${size ? "" : "-mx-3 first:mt-6 last:mt-6"}`}
 					style={{
+						...(size && {
+							margin: `0 ${-size * 0.14}px`,
+							marginTop: i === 1 ? 0 : size * 0.28,
+						}),
 						transform: `rotate(${(i - 1) * 7}deg)`,
 						zIndex: i === 1 ? 2 : 1,
 					}}
@@ -406,6 +422,7 @@ function Fan({
 						title={t}
 						size="w185"
 						className="h-[129px] w-[86px] rounded-lg object-cover shadow-xl ring-1 ring-white/10"
+						style={size ? { width: size, height: size * 1.5 } : undefined}
 					/>
 					{heart && i === 1 && (
 						<span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-[13px] text-black">
@@ -418,7 +435,7 @@ function Fan({
 	)
 }
 
-function greeting() {
+export function greeting() {
 	const hour = new Date().getHours()
 	return hour < 12
 		? "Good morning."
@@ -1260,8 +1277,8 @@ function AppGlimpse({ view, app }: { view: TvView; app: TvApp }) {
 // ---------------------------------------------------------------------------------------------------------
 // Search: the on-screen keyboard without a query, the results with one.
 
-const KEY_ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
-const SEARCH_PRESETS = [
+export const KEY_ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
+export const SEARCH_PRESETS = [
 	"cozy mystery",
 	"space adventure",
 	"feel-good comedy",
@@ -1341,16 +1358,22 @@ function Keyboard({ view }: { view: TvView }) {
 	)
 }
 
-// Interim: matches among the titles already on the TV. The search itself arrives with #231.
-function SearchResults({ view, query }: { view: TvView; query: string }) {
+/** Interim: matches among the titles already on the TV. The search itself arrives with #231. */
+export function searchHits(
+	data: LivingRoomData,
+	query: string,
+): LivingRoomTitle[] {
 	const q = query.toLowerCase()
-	const pool = [...view.data.wishlist, ...view.data.suggestions]
 	const seen = new Set<number>()
-	const hits = pool.filter((t) => {
+	return [...data.wishlist, ...data.suggestions].filter((t) => {
 		if (seen.has(t.key) || !t.title.toLowerCase().includes(q)) return false
 		seen.add(t.key)
 		return true
 	})
+}
+
+function SearchResults({ view, query }: { view: TvView; query: string }) {
+	const hits = searchHits(view.data, query)
 	return (
 		<>
 			<Head
