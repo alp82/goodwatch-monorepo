@@ -9,6 +9,7 @@ import {
 	getDiscoverResults,
 } from "~/server/discover.server"
 import { getPersonProfile } from "~/server/person.server"
+import { moods } from "~/ui/explore/category/moods"
 import {
 	type NavType,
 	type PageData,
@@ -19,6 +20,7 @@ import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import type { OgContent } from "~/ui/og-image/OgCard"
 import {
 	DEPARTMENT_LABELS,
+	DISCOVERY_COPY,
 	HOME_COPY,
 	MEDIA_LABELS,
 	STATIC_PAGE_COPY,
@@ -83,6 +85,7 @@ export function canonicalOgPath(path: string): string | null {
 		return `/${segments.join("/")}`
 	}
 	if (first === "discover") return "/discover"
+	if (first === "explorer" && segments.length === 1) return "/explorer"
 
 	const clean = `/${segments.join("/")}`
 	return hasKey(STATIC_PAGE_COPY, clean) ? clean : "/"
@@ -277,7 +280,95 @@ async function browseContent(path: string): Promise<OgContent | null> {
 	}
 }
 
+// Well-known, top-scored movies: popular, scored 80 or more, and a few years old.
+async function scoredPosters(params: Partial<DiscoverParams> = {}) {
+	const results = await getDiscoverResults({
+		...DISCOVER_DEFAULTS,
+		...defaultDiscoverParams,
+		type: "movie",
+		minScore: "80",
+		maxYear: String(new Date().getFullYear() - 3),
+		...params,
+	})
+	// One title per franchise, so a wall of Avengers posters doesn't crowd out the rest.
+	const franchises = new Set<string>()
+	return results
+		.filter((r) => {
+			const franchise = r.title
+				.toLowerCase()
+				.replace(/^the /, "")
+				.split(/[\s:]/)[0]
+			if (!r.poster_path || franchises.has(franchise)) return false
+			franchises.add(franchise)
+			return true
+		})
+		.map((r) => ({
+			id: r.tmdb_id,
+			src: tmdbImage("w342", r.poster_path),
+			score: r.goodwatch_overall_score_normalized_percent ?? null,
+		}))
+}
+
+const toPoster = ({
+	src,
+	score,
+}: { src: string | null; score: number | null }) => ({
+	src,
+	score,
+})
+
+async function discoverCardContent(): Promise<OgContent> {
+	const posters = await scoredPosters()
+	return {
+		kind: "discovery",
+		feature: "discover",
+		groups: [{ label: "", posters: posters.slice(0, 12).map(toPoster) }],
+	}
+}
+
+// Params for titles in every given mood: their fingerprint conditions and context filters all apply.
+const allMoods = (keys: readonly string[]): Partial<DiscoverParams> => {
+	const params = keys.map((key) => moods[key].discoverParams ?? {})
+	const conditions = params.flatMap((p) =>
+		p.fingerprintConditions ? JSON.parse(p.fingerprintConditions) : [],
+	)
+	const contexts = params.flatMap((p) => p.contextFilters || [])
+	return {
+		fingerprintConditions: JSON.stringify([{ logic: "AND", conditions }]),
+		contextFilters: contexts.join(","),
+	}
+}
+
+async function explorerCardContent(): Promise<OgContent> {
+	const { islands, bridge } = DISCOVERY_COPY.explorer
+	const [first, second, shared] = await Promise.all([
+		...islands.map((island) => scoredPosters(allMoods([island.mood]))),
+		scoredPosters(allMoods(islands.map((island) => island.mood))),
+	])
+	const sharedIds = new Set(shared.map((p) => p.id))
+	// An island's picks lead when the mood still includes them, then its top titles follow.
+	const only = (posters: typeof first, picks: readonly number[] = []) =>
+		[
+			...picks.flatMap((id) => posters.filter((p) => p.id === id)),
+			...posters.filter((p) => !picks.includes(p.id)),
+		]
+			.filter((p) => !sharedIds.has(p.id))
+			.slice(0, 2)
+			.map(toPoster)
+	return {
+		kind: "discovery",
+		feature: "explorer",
+		groups: [
+			{ label: islands[0].label, posters: only(first, islands[0].picks) },
+			{ label: islands[1].label, posters: only(second, islands[1].picks) },
+			{ label: bridge.label, posters: shared.slice(0, 3).map(toPoster) },
+		],
+	}
+}
+
 async function staticPageContent(path: string): Promise<OgContent> {
+	if (path === "/discover") return discoverCardContent()
+	if (path === "/explorer") return explorerCardContent()
 	const page = STATIC_PAGE_COPY[path] ?? HOME_COPY
 	const backdrops = await discoverBackdrops({ type: "movie", minScore: "80" })
 	// Taste pages skip the rotation, so they lead with a different title than the other main pages.

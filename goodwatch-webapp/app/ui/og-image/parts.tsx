@@ -47,7 +47,8 @@ const VIBE_COLORS: Record<number, string> = {
 	100: "#166534",
 }
 
-const vibeColor = (score: number) => VIBE_COLORS[goodwatchVibeIndex(score)]
+export const vibeColor = (score: number) =>
+	VIBE_COLORS[goodwatchVibeIndex(score)]
 const scoreWord = (score: number) =>
 	scoreLabels[Math.min(10, Math.floor(score / 10) + 1)]
 

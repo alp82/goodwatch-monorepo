@@ -1,8 +1,13 @@
 // The Open Graph card for a page, one layout per kind of page:
 // - Movies and shows: amber panel with the title and score, poster on the right.
 // - People and collections: picture on the left, amber panel on the right.
+// - Discover and Explorer: amber panel with the pitch, top-scored posters on a dark panel.
 // - Every other page: backdrop across the top, amber band with the headline below.
 // Image fields hold data URIs, so satori never fetches anything itself.
+import {
+	DiscoveryCard,
+	type DiscoveryFeature,
+} from "~/ui/og-image/DiscoveryCard"
 import {
 	Brand,
 	Frame,
@@ -51,7 +56,20 @@ export interface OgPageContent {
 	backdrop: string | null
 }
 
+export interface OgPoster {
+	src: string | null
+	score: number | null
+}
+
+// Discover has one group of posters. Explorer has two islands, then the bridge between them.
+export interface OgDiscoveryContent {
+	kind: "discovery"
+	feature: DiscoveryFeature
+	groups: { label: string; posters: OgPoster[] }[]
+}
+
 export type OgContent =
+	| OgDiscoveryContent
 	| OgTitleContent
 	| OgPersonContent
 	| OgCollectionContent
@@ -219,6 +237,7 @@ function BandCard({ content }: { content: OgPageContent }) {
 }
 
 export function OgCard({ content }: { content: OgContent }) {
+	if (content.kind === "discovery") return <DiscoveryCard content={content} />
 	if (content.kind === "title") return <TitleCard content={content} />
 	if (content.kind === "page") return <BandCard content={content} />
 	return <SplitCard content={content} />

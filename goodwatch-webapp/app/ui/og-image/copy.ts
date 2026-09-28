@@ -91,8 +91,7 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 	"/taste": {
 		tag: "Taste profile",
 		title: "Your taste",
-		subtitle:
-			"We understand what you really love in movies and shows.",
+		subtitle: "We understand what you really love in movies and shows.",
 	},
 	"/taste/quiz": {
 		tag: "Taste quiz",
@@ -102,7 +101,8 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 	"/lists/new": {
 		tag: "Top 5",
 		title: "Rank your top 5. Share it.",
-		subtitle: "Pick five movies or shows, choose a card design, and share the link.",
+		subtitle:
+			"Pick five movies or shows, choose a card design, and share the link.",
 	},
 	"/wishlist": {
 		tag: "Wishlist",
@@ -135,3 +135,25 @@ export const STATIC_PAGE_COPY: Record<string, PageCopy> = {
 		subtitle: "Country, streaming services, and account.",
 	},
 }
+
+// /discover and /explorer: headline lines are set as written, one per line.
+export const DISCOVERY_COPY = {
+	discover: {
+		tag: "Discover",
+		lines: ["What’s good", "tonight?"],
+		subtitle: "Only the good stuff, on the services you have.",
+	},
+	explorer: {
+		tag: "Explorer",
+		lines: ["Get lost in", "good movies"],
+		subtitle: "Every mood is an island. The best finds are in between.",
+		// Keys into moods in app/ui/explore/category/moods.ts. The bridge shows titles in both.
+		islands: [
+			// Preferred picks, as TMDB ids: Inception and The Matrix.
+			{ label: "Mind-Bending", mood: "mind-bending", picks: [27205, 603] },
+			// The Grand Budapest Hotel and Back to the Future, so the island isn't family animation.
+			{ label: "Funny", mood: "funny", picks: [120467, 105] },
+		],
+		bridge: { label: "Mind-Bending + Funny" },
+	},
+} as const

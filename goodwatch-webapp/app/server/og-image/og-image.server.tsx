@@ -8,7 +8,7 @@ import { OgCard, type OgContent } from "~/ui/og-image/OgCard"
 import { getRedisCluster } from "~/utils/cache"
 
 // Bump the version when the card design or text changes, so cached PNGs are rendered again.
-const CACHE_PREFIX = "og-image:v2:"
+const CACHE_PREFIX = "og-image:v9:"
 // A card older than this is still served, and redrawn in the background for the next request.
 const FRESH_MS = 24 * 60 * 60 * 1000
 // How long Redis keeps a card at all. Its LFU policy may evict cards sooner.
@@ -112,6 +112,21 @@ async function withRenderSlot<T>(task: () => Promise<T>): Promise<T> {
 
 async function inlineImages(content: OgContent): Promise<OgContent> {
 	switch (content.kind) {
+		case "discovery":
+			return {
+				...content,
+				groups: await Promise.all(
+					content.groups.map(async (group) => ({
+						...group,
+						posters: await Promise.all(
+							group.posters.map(async (poster) => ({
+								...poster,
+								src: await toDataUri(poster.src),
+							})),
+						),
+					})),
+				),
+			}
 		case "title":
 			return { ...content, poster: await toDataUri(content.poster) }
 		case "person":
