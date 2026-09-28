@@ -1,25 +1,25 @@
-import React, { useEffect } from "react";
-import type { DiscoverParams, WatchedType } from "~/server/discover.server";
+import React, { useEffect } from "react"
+import type { DiscoverParams, WatchedType } from "~/server/discover.server"
 import {
 	type WatchOption,
 	discoverFilters,
 	watchOptions,
-} from "~/server/types/discover-types";
-import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton";
-import { SignInButton } from "~/ui/auth/SignInButton";
-import EditableSection from "~/ui/filter/sections/EditableSection";
-import RadioBlock from "~/ui/form/RadioBlock";
-import { Tag } from "~/ui/tags/Tag";
-import { Ping } from "~/ui/wait/Ping";
-import { Spinner } from "~/ui/wait/Spinner";
-import { useUser } from "~/utils/auth";
-import { useNav } from "~/utils/navigation";
+} from "~/server/types/discover-types"
+import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton"
+import { SignInButton } from "~/ui/auth/SignInButton"
+import EditableSection from "~/ui/filter/sections/EditableSection"
+import RadioBlock from "~/ui/form/RadioBlock"
+import { Tag } from "~/ui/tags/Tag"
+import { Ping } from "~/ui/wait/Ping"
+import { Spinner } from "~/ui/wait/Spinner"
+import { useUser } from "~/utils/auth"
+import { useNav } from "~/utils/navigation"
 
 interface SectionWatchParams {
-	params: DiscoverParams;
-	editing: boolean;
-	onEdit: () => void;
-	onClose: () => void;
+	params: DiscoverParams
+	editing: boolean
+	onEdit: () => void
+	onClose: () => void
 }
 
 export default function SectionWatch({
@@ -28,58 +28,66 @@ export default function SectionWatch({
 	onEdit,
 	onClose,
 }: SectionWatchParams) {
-	const { user, loading } = useUser();
-	const isUserLoggedIn = Boolean(user);
+	const { user, loading } = useUser()
+	const isUserLoggedIn = Boolean(user)
 
 	// initialization
 
 	const [watchedType, setWatchedType] = React.useState<WatchedType>(
 		params.watchedType || watchOptions[0].name,
-	);
+	)
 	const selectedWatchOption = watchOptions.find(
 		(option) => option.name === watchedType,
-	);
+	)
 
 	useEffect(() => {
 		if (params.watchedType !== watchedType) {
-			setWatchedType(params.watchedType);
+			setWatchedType(params.watchedType)
 		}
-	}, [params.watchedType]);
+	}, [params.watchedType])
 
 	// update handlers
 
-	const { updateQueryParams } = useNav<Pick<DiscoverParams, "watchedType">>();
+	const { updateQueryParams } = useNav<Pick<DiscoverParams, "watchedType">>()
 
 	useEffect(() => {
 		if (editing && !params.watchedType) {
-			updateQueryParams({
-				watchedType: watchOptions[0].name,
-			});
+			// A default, not a user choice: replace so Back leaves Discover in one step.
+			updateQueryParams(
+				{
+					watchedType: watchOptions[0].name,
+				},
+				{ replace: true },
+			)
 		}
-	}, [editing]);
+	}, [editing])
 
 	useEffect(() => {
-		if (params.watchedType) return;
+		if (params.watchedType) return
 
-		updateQueryParams({
-			watchedType,
-		});
-	}, [watchedType]);
+		// Writes the initial default on mount: replace, so it adds no history entry.
+		updateQueryParams(
+			{
+				watchedType,
+			},
+			{ replace: true },
+		)
+	}, [watchedType])
 
 	const handleChangeWatchedType = (watchOption: WatchOption) => {
-		const watchedType = watchOption.name;
-		setWatchedType(watchedType);
+		const watchedType = watchOption.name
+		setWatchedType(watchedType)
 		updateQueryParams({
 			watchedType,
-		});
-	};
+		})
+	}
 
 	const handleRemoveAll = () => {
 		updateQueryParams({
 			watchedType: undefined,
-		});
-		onClose();
-	};
+		})
+		onClose()
+	}
 
 	// rendering
 
@@ -130,5 +138,5 @@ export default function SectionWatch({
 				)}
 			</EditableSection>
 		</>
-	);
+	)
 }
