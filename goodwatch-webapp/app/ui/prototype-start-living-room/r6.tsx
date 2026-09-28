@@ -186,6 +186,13 @@ function Ring({ t, feel, size }: { t: Tv4; feel: Exclude<Feel6, "detent" | "touc
 		if (glide) animate(rot, rot.get() + d * STEP, { type: "spring", stiffness: 300, damping: 40 })
 		t.step(d)
 	}
+	// #220 round 2: a TV that knows the four directions apart (a 2D focus, a rating control) takes the edges
+	// itself; everything else keeps treating them as a turn of the wheel.
+	const edge = (d: 1 | -1, pos: keyof typeof GLOW) => {
+		const dpad = (t as unknown as { dpad?: (p: keyof typeof GLOW) => boolean }).dpad
+		if (dpad?.(pos)) return setFlash((f) => ({ pos, n: (f?.n ?? 0) + 1 }))
+		turn(d, pos)
+	}
 	const angle = (e: { clientX: number; clientY: number }) => {
 		const b = ref.current!.getBoundingClientRect()
 		return (Math.atan2(e.clientY - (b.top + b.height / 2), e.clientX - (b.left + b.width / 2)) * 180) / Math.PI
@@ -270,10 +277,10 @@ function Ring({ t, feel, size }: { t: Tv4; feel: Exclude<Feel6, "detent" | "touc
 					/>
 				))}
 			<div className="lr6-face pointer-events-none absolute inset-[12px] rounded-full" />
-			<Edge pos="top" label="Up" onClick={() => turn(-1, "top")} />
-			<Edge pos="bottom" label="Down" onClick={() => turn(1, "bottom")} />
-			<Edge pos="left" label="Previous" onClick={() => turn(-1, "left")} />
-			<Edge pos="right" label="Next" onClick={() => turn(1, "right")} />
+			<Edge pos="top" label="Up" onClick={() => edge(-1, "top")} />
+			<Edge pos="bottom" label="Down" onClick={() => edge(1, "bottom")} />
+			<Edge pos="left" label="Previous" onClick={() => edge(-1, "left")} />
+			<Edge pos="right" label="Next" onClick={() => edge(1, "right")} />
 			<button
 				type="button"
 				onClick={t.ok}

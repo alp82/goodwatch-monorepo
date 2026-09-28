@@ -23,7 +23,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				return json({ error: "Unknown op" }, { status: 400 })
 		}
 	} catch (e) {
+		// #220 round 2 runs without databases: the remote's streaming keys still need their labels.
+		if (p.get("op") === "services") return json(FALLBACK_SERVICES)
+		if (p.get("op") === "deck" || p.get("op") === "tune") return json([])
 		console.error("[prototype living room] api3 failed", e)
 		return json({ error: "Failed" }, { status: 503 })
 	}
 }
+
+const FALLBACK_SERVICES = [
+	{ key: "netflix", label: "Netflix", color: "#e50914", logo: null, ids: [8] },
+	{ key: "prime", label: "Prime Video", color: "#1f8ef1", logo: null, ids: [9] },
+	{ key: "disney", label: "Disney+", color: "#113ccf", logo: null, ids: [337] },
+	{ key: "max", label: "Max", color: "#002be7", logo: null, ids: [1899] },
+]
