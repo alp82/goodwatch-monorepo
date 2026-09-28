@@ -5,6 +5,7 @@
 // database, nothing persists. Keyboard: 1-9 and 0 score, S skips, P back to picks, arrows turn the picks' pages.
 import { json } from "@remix-run/node"
 import { useSearchParams } from "@remix-run/react"
+import { ProtoBar } from "~/ui/prototype-taste-quiz-page/bar"
 import {
 	type As,
 	PAGE_VARIANTS,
@@ -12,7 +13,6 @@ import {
 	QuizPage,
 	usePageQuiz,
 } from "~/ui/prototype-taste-quiz-page/page"
-import { ProtoBar } from "~/ui/prototype-taste-quiz-page/bar"
 
 export async function loader() {
 	if (process.env.NODE_ENV === "production")
@@ -29,7 +29,7 @@ export default function TasteQuizPage() {
 	const variant = (
 		p.get("variant") && p.get("variant")! in PAGE_VARIANTS
 			? p.get("variant")
-			: "page"
+			: "backdrop"
 	) as PageVariant
 	const as = (
 		["guest", "new", "me"].includes(p.get("as") ?? "") ? p.get("as") : "guest"

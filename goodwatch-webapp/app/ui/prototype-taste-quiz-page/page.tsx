@@ -1,4 +1,4 @@
-// PROTOTYPE - throwaway (#220 round 4). The locked living room quiz (rate + stack + moment) as a regular web page:
+// PROTOTYPE - throwaway (#220, locked after round 4: backdrop layout, full site, secondary dock on phones). The locked living room quiz (rate + stack + moment) as a regular web page:
 // what /taste/quiz becomes, reached from a banner on the Taste page.
 // It shares the TV version's titles, bands, and taste model (~/ui/prototype-taste-quiz-fit-3/data) and follows the
 // same flow: one widely seen title at a time with Haven't seen it, the 5-answer "Keep these 5?" moment, picks with
@@ -6,7 +6,7 @@
 // Mock titles only. No database, nothing persists, and sign-up is a stand-in toast.
 import { Link } from "@remix-run/react"
 import { type ReactNode, useEffect, useState } from "react"
-import { GoogleG } from "./google"
+import { DockStrip, useHasDock } from "~/ui/navigation"
 import {
 	type Answer,
 	BANDS,
@@ -20,6 +20,7 @@ import {
 	picksFor,
 	poster,
 } from "~/ui/prototype-taste-quiz-fit-3/data"
+import { GoogleG } from "./google"
 
 export const GOAL = 5
 export type As = "guest" | "new" | "me"
@@ -35,7 +36,7 @@ export const PAGE_VARIANTS: Record<
 	},
 	backdrop: {
 		name: "Backdrop",
-		idea: "The TV's look on the web: the title's backdrop fills the header behind the poster and the stack, like the details page hero.",
+		idea: "Locked. The TV's look on the web: the title's backdrop fills a tall hero behind the poster and the stack. On phones the actions sit in a secondary dock above the navigation dock.",
 	},
 	dock: {
 		name: "Dock",
@@ -225,7 +226,7 @@ export function QuizPage({
 		return () => window.removeEventListener("keydown", on)
 	})
 	return (
-		<div className="pb-40 text-white lg:pb-20">
+		<div className="pb-16 text-white lg:pb-24">
 			{q.screen === "quiz" && <QuizStep q={q} variant={variant} />}
 			{q.screen === "enough" && <Enough q={q} />}
 			{q.screen === "picks" && <Picks q={q} variant={variant} />}
@@ -313,8 +314,11 @@ function QuizStep({ q, variant }: { q: PageQuiz; variant: PageVariant }) {
 						Keys: 1–9, 0 = 10 · S skips{rateMore ? " · P back to picks" : ""}
 					</span>
 				</div>
-				{rateMore && variant !== "dock" && (
+				{rateMore && variant === "page" && (
 					<RateMoreActions q={q} className="mt-8" />
+				)}
+				{rateMore && variant === "backdrop" && (
+					<RateMoreActions q={q} className="mt-10 hidden lg:flex" />
 				)}
 			</div>
 		</div>
@@ -331,8 +335,8 @@ function QuizStep({ q, variant }: { q: PageQuiz; variant: PageVariant }) {
 						/>
 					)}
 					<div className="absolute inset-0 bg-linear-to-r from-gray-950 via-gray-950/80 to-gray-950/40" />
-					<div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-gray-950 to-transparent" />
-					<Section className="relative">
+					<div className="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-gray-950 to-transparent" />
+					<Section className="relative min-h-[70vh] pt-10 pb-20 md:pt-16 md:pb-32 lg:min-h-[600px]">
 						<Heading
 							eyebrow={eyebrow}
 							title="How was it?"
@@ -359,6 +363,11 @@ function QuizStep({ q, variant }: { q: PageQuiz; variant: PageVariant }) {
 				</Section>
 			)}
 			{rateMore && variant === "dock" && <Dock q={q} />}
+			{rateMore && variant === "backdrop" && (
+				<SecondaryDock>
+					<RateMoreActions q={q} />
+				</SecondaryDock>
+			)}
 		</>
 	)
 }
@@ -392,6 +401,29 @@ function RateMoreActions({
 			<button type="button" className={back} onClick={q.showPicks}>
 				♥ Back to my picks
 			</button>
+		</div>
+	)
+}
+
+/**
+ * Phone actions stacked above the site's navigation dock, the way Discover's filters and Watch next's controls do it
+ * (DockStrip from ~/ui/navigation). Without the new navigation it falls back to a bar above the legacy BottomNav.
+ */
+function SecondaryDock({ children }: { children: ReactNode }) {
+	const hasDock = useHasDock()
+	if (hasDock)
+		return (
+			<DockStrip>
+				<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 [&>*]:flex-wrap">
+					{children}
+				</div>
+			</DockStrip>
+		)
+	return (
+		<div className="fixed inset-x-0 bottom-16 z-40 border-t border-gray-800 bg-gray-950/95 backdrop-blur lg:hidden">
+			<div className="flex flex-wrap items-center gap-2 px-4 py-2.5">
+				{children}
+			</div>
 		</div>
 	)
 }
@@ -561,7 +593,8 @@ function Picks({ q, variant }: { q: PageQuiz; variant: PageVariant }) {
 	) : (
 		<>
 			<GoogleButton onClick={() => q.join()}>
-				Save these {q.kept.length} answers · free
+				Save these {q.kept.length}
+				<span className="hidden sm:inline"> answers · free</span>
 			</GoogleButton>
 			<button type="button" className={ghost} onClick={q.more}>
 				Rate more
@@ -601,6 +634,13 @@ function Picks({ q, variant }: { q: PageQuiz; variant: PageVariant }) {
 						{actions}
 					</div>
 				</div>
+			) : variant === "backdrop" ? (
+				<>
+					<div className="mt-10 hidden flex-wrap items-center gap-2 lg:flex">
+						{actions}
+					</div>
+					<SecondaryDock>{actions}</SecondaryDock>
+				</>
 			) : (
 				<div className="mt-8 flex flex-wrap items-center gap-2">{actions}</div>
 			)}

@@ -17,7 +17,7 @@ export function ProtoBar({ page }: { page: "quiz" | "taste" }) {
 	return (
 		<div className="border-b border-white/10 bg-black/80 text-xs">
 			<div className="mx-auto flex max-w-7xl items-center gap-1.5 overflow-x-auto px-4 py-2 [scrollbar-width:none] md:px-8">
-				<span className="shrink-0 font-bold text-amber-400">#220 r4</span>
+				<span className="shrink-0 font-bold text-amber-400">#220 locked</span>
 				<Link to={`${TASTE_PATH}?as=${as}`} className={chip(page === "taste")}>
 					Taste page
 				</Link>
@@ -66,7 +66,7 @@ export function ProtoBar({ page }: { page: "quiz" | "taste" }) {
 								key={v}
 								to={href(here, { variant: v })}
 								title={PAGE_VARIANTS[v].idea}
-								className={chip((p.get("variant") ?? "page") === v)}
+								className={chip((p.get("variant") ?? "backdrop") === v)}
 							>
 								{PAGE_VARIANTS[v].name}
 							</Link>

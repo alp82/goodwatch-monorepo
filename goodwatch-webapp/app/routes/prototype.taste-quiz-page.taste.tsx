@@ -5,8 +5,8 @@ import { json } from "@remix-run/node"
 import { useSearchParams } from "@remix-run/react"
 import { ProtoBar } from "~/ui/prototype-taste-quiz-page/bar"
 import {
-	type TasteState,
 	TastePage,
+	type TasteState,
 	type Who,
 } from "~/ui/prototype-taste-quiz-page/taste"
 
