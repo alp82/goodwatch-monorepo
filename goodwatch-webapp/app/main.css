@@ -161,3 +161,46 @@
 .tropes .ymmv1 {
 	color: deeppink;
 }
+
+/* Leaving the living room through its TV (#232, app/ui/living-room/tv-transition.ts). Out: the new page grows
+   from the TV's box to the window. In (browser Back): the page shrinks into the TV while the room waits under it. */
+html[data-tv-transition]::view-transition-old(root),
+html[data-tv-transition]::view-transition-new(root) {
+	animation: none;
+	mix-blend-mode: normal;
+}
+
+html[data-tv-transition="out"]::view-transition-new(root) {
+	animation: living-room-tv-grow 0.6s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+html[data-tv-transition="in"]::view-transition-old(root) {
+	z-index: 1;
+	animation: living-room-tv-shrink 0.45s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+@keyframes living-room-tv-grow {
+	from {
+		clip-path: var(--tv-inset);
+	}
+	to {
+		clip-path: inset(0 0 0 0 round 0);
+	}
+}
+
+@keyframes living-room-tv-shrink {
+	from {
+		clip-path: inset(0 0 0 0 round 0);
+	}
+	to {
+		clip-path: var(--tv-inset);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
+	}
+}
