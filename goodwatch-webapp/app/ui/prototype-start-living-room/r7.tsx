@@ -49,17 +49,26 @@ export const FEAT: Record<Feat, { label: string; d: string; tint: string }> = {
 	picks: { label: "Pick for me", d: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z", tint: "#fb923c" },
 }
 
+// A TV may relabel a feature key for its own prototype (#220 round 3: a Save key); other TVs leave it alone.
+export type FeatSwap = Partial<Record<Feat, { label: string; d: string; run: () => void; on: boolean }>>
+
 export function useFeat(t: Tv4) {
+	const swap = (t as Tv4 & { featSwap?: FeatSwap }).featSwap ?? {}
+	const key = (f: Feat) => swap[f] ?? FEAT[f]
 	const on = (f: Feat) =>
-		f === "mood" ? t.top.k === "moods" || t.mode === "mood" : f === "picks" ? t.top.k === "picks" : t.top.k === "page" && t.top.id === f
+		swap[f] ? swap[f].on : f === "mood" ? t.top.k === "moods" || t.mode === "mood" : f === "picks" ? t.top.k === "picks" : t.top.k === "page" && t.top.id === f
 	const run = (f: Feat) => {
-		if (f === "mood") t.pickMode("mood")
+		const w = swap[f]
+		if (w) {
+			t.click()
+			w.run()
+		} else if (f === "mood") t.pickMode("mood")
 		else if (f === "picks") {
 			t.click()
 			t.startPicks()
 		} else t.openPage(f)
 	}
-	return { on, run }
+	return { on, run, key }
 }
 
 export function Remote7({ layout, feel, ...p }: Props & { layout: Layout7; feel?: Feel6 }) {
@@ -198,8 +207,8 @@ export function TileFeat({ k, f }: { k: Feat; f: F }) {
 			onClick={() => f.run(k)}
 			className={`lr2-key flex h-[60px] w-full flex-col items-center justify-center gap-1.5 rounded-[18px] text-[10.5px] font-semibold uppercase tracking-wider ${on ? "lr2-key-on" : ""}`}
 		>
-			<Icon d={FEAT[k].d} className="h-5 w-5" />
-			{FEAT[k].label}
+			<Icon d={f.key(k).d} className="h-5 w-5" />
+			{f.key(k).label}
 		</button>
 	)
 }
