@@ -40,6 +40,7 @@ import {
 	layoutPhone,
 	phoneRemoteTurnToward,
 } from "./room"
+import { TV_SCREEN_ATTR } from "./tv-transition"
 
 const useIsoLayoutEffect =
 	typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -197,6 +198,7 @@ export function PhoneLivingRoom({
 
 					{/* The TV, with the phone edition of the screens scaled to cover it. */}
 					<div
+						{...{ [TV_SCREEN_ATTR]: "" }}
 						className="absolute overflow-hidden rounded-[3px] bg-black"
 						style={{
 							left: L.tv.left,
