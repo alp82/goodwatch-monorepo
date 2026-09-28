@@ -5,6 +5,19 @@
 // effects the page must carry out (rate a title, toggle a service, leave the living room). The screen and its
 // keys live in the URL search params (`/?tv=picks&mood=cozy`); `readTvState` and `writeTvParams` convert.
 // Power, the More menu, and the in-app history depth are not in the URL.
+//
+// The taste quiz (#226) is one TV screen whose step (rate, keep, picks), goal, and picks page follow the shared
+// quiz flow (`quiz-flow.ts`) and live in the URL too, so Back and "Back to my picks" land on the same picks page.
+import type { Score } from "~/server/scores.server"
+import {
+	QUIZ_GOAL,
+	type QuizState,
+	RATING_LEVELS,
+	initialQuizState,
+	pickPages,
+	picksOnPage,
+	quizTransition,
+} from "../taste-quiz/quiz-flow.ts"
 
 export type TvApp = "watch-now" | "taste" | "discover" | "explorer"
 export const TV_APPS: readonly TvApp[] = [
@@ -43,6 +56,8 @@ export type TvScreen =
 	| { name: "app"; app: TvApp }
 	/** The on-screen keyboard without a query, the results with one. */
 	| { name: "search"; query: string | null }
+	/** The taste quiz: rate one title at a time, "Keep these 5?", then picks three at a time. */
+	| { name: "quiz"; quiz: QuizState }
 
 export type TvScreenName = TvScreen["name"]
 
@@ -73,6 +88,10 @@ export type TvContext = {
 	answered: number
 	/** This-or-that pairs still unanswered (skips count as answered). */
 	pairsLeft: number
+	/** Taste quiz scores toward the goal: all guest scores, or a member's scores in this visit. */
+	quizProgress: number
+	/** Taste quiz picks as `<media_type>-<tmdb_id>`, best first. */
+	quizPicks: readonly string[]
 }
 
 export type TvEffect =
@@ -84,8 +103,22 @@ export type TvEffect =
 	| { type: "not-for-me"; title: string }
 	| {
 			type: "leave"
-			to: { kind: "title"; title: string } | { kind: "app"; app: TvApp }
+			to:
+				| { kind: "title"; title: string }
+				| { kind: "app"; app: TvApp }
+				/** A page the machine doesn't know, such as a quiz pick's title page. The living room sends it. */
+				| { kind: "page"; href: string }
 	  }
+	/** Taste quiz: score the title on screen. */
+	| { type: "quiz-rate"; score: Score }
+	/** Taste quiz: "Haven't seen it". */
+	| { type: "quiz-skip" }
+	/** Taste quiz: "+ Want to see". */
+	| { type: "quiz-want" }
+	/** Taste quiz: Continue with Google, back to the quiz's picks. */
+	| { type: "quiz-save" }
+	/** Taste quiz: open a pick's title page (`<media_type>-<tmdb_id>`). */
+	| { type: "quiz-pick"; pick: string }
 
 export type TvHistory = "push" | "replace" | "back" | "none"
 
@@ -131,7 +164,13 @@ const SCREEN_NAMES: readonly TvScreenName[] = [
 	"title",
 	"app",
 	"search",
+	"quiz",
 ]
+
+function readInt(params: URLSearchParams, key: string, fallback: number) {
+	const n = Number.parseInt(params.get(key) ?? "", 10)
+	return Number.isFinite(n) && n >= 0 ? n : fallback
+}
 
 function readNight(params: URLSearchParams): Night {
 	const from = params.get("from")
@@ -165,6 +204,18 @@ function readScreen(params: URLSearchParams): TvScreen {
 		}
 		case "search":
 			return { name, query: params.get("q")?.trim() || null }
+		case "quiz": {
+			const step = params.get("step")
+			return {
+				name,
+				quiz: {
+					screen: step === "keep" || step === "picks" ? step : "quiz",
+					goal: Math.max(QUIZ_GOAL, readInt(params, "goal", QUIZ_GOAL)),
+					page: readInt(params, "page", 0),
+					pickedBefore: step === "picks" || params.get("more") === "1",
+				},
+			}
+		}
 		default:
 			return { name } as TvScreen
 	}
@@ -190,6 +241,10 @@ const TV_KEYS = [
 	"title",
 	"app",
 	"q",
+	"step",
+	"goal",
+	"page",
+	"more",
 	"focus",
 ]
 
@@ -211,6 +266,12 @@ export function writeTvParams(
 	if (s.name === "title") out.set("title", s.title)
 	if (s.name === "app") out.set("app", s.app)
 	if (s.name === "search" && s.query) out.set("q", s.query)
+	if (s.name === "quiz") {
+		if (s.quiz.screen !== "quiz") out.set("step", s.quiz.screen)
+		if (s.quiz.goal !== QUIZ_GOAL) out.set("goal", String(s.quiz.goal))
+		if (s.quiz.page) out.set("page", String(s.quiz.page))
+		if (s.quiz.pickedBefore && s.quiz.screen !== "picks") out.set("more", "1")
+	}
 	if (state.focus) out.set("focus", state.focus)
 	return out
 }
@@ -237,8 +298,8 @@ export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 	switch (screen.name) {
 		case "home":
 			return ctx.member
-				? [...moodItems(ctx), ...TV_APPS.map((a) => `app:${a}`)]
-				: ["find-my-tonight", "just-show-me", "about"]
+				? [...moodItems(ctx), ...TV_APPS.map((a) => `app:${a}`), "taste-quiz"]
+				: ["find-my-tonight", "taste-quiz", "about"]
 		case "about":
 			return ["find-my-tonight", "just-show-me"]
 		case "services":
@@ -275,7 +336,56 @@ export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 				: ["full-page"]
 		case "search":
 			return []
+		case "quiz":
+			return quizItems(screen.quiz, ctx)
 	}
+}
+
+/** The rating: the four levels (`level:dislike`, ...), then the exact 1-10 strip (`score:1` ... `score:10`). */
+export const QUIZ_RATING_ITEMS = [
+	...RATING_LEVELS.map((l) => `level:${l.name.toLowerCase()}`),
+	...Array.from({ length: 10 }, (_, i) => `score:${i + 1}`),
+]
+
+function quizItems(q: QuizState, ctx: TvContext): string[] {
+	const save = ctx.member ? [] : ["quiz-save"]
+	switch (q.screen) {
+		case "quiz":
+			return [
+				...QUIZ_RATING_ITEMS,
+				"quiz-skip",
+				"quiz-want",
+				// Rate more: after the picks, and always for members (their picks come from the account).
+				...(q.pickedBefore || ctx.member ? [...save, "back-to-picks"] : []),
+			]
+		case "keep":
+			return [...save, "quiz-picks", "rate-more"]
+		case "picks": {
+			const pages = pickPages(ctx.quizPicks.length)
+			const page = Math.min(q.page, pages - 1)
+			return [
+				...(page > 0 ? ["picks-prev"] : []),
+				...picksOnPage(ctx.quizPicks, page).map((k) => `pick:${k}`),
+				...(page < pages - 1 ? ["picks-next"] : []),
+				...save,
+				"rate-more",
+			]
+		}
+	}
+}
+
+/** The score a rating item stores: a level's score (3, 5, 7, 9) or the exact number. */
+export function quizScoreOf(item: string): Score | null {
+	const [kind, arg] = item.split(":")
+	if (kind === "score") {
+		const n = Number(arg)
+		return Number.isInteger(n) && n >= 1 && n <= 10 ? (n as Score) : null
+	}
+	if (kind === "level")
+		return (
+			RATING_LEVELS.find((l) => l.name.toLowerCase() === arg)?.score ?? null
+		)
+	return null
 }
 
 function moodItems(ctx: TvContext) {
@@ -341,6 +451,14 @@ function replace(
 /** Back: close the menu, pop a screen this visit pushed, or (on a deep link) replace with home. Home stays. */
 function back(state: TvState, effects: TvEffect[] = []): TvTransition {
 	if (state.menuOpen) return none({ ...state, menuOpen: false }, effects)
+	// Back from Rate more returns to the same picks page.
+	const s = state.screen
+	if (s.name === "quiz" && s.quiz.screen === "quiz" && s.quiz.pickedBefore)
+		return replace(
+			state,
+			{ name: "quiz", quiz: quizTransition(s.quiz, { type: "show-picks" }) },
+			effects,
+		)
 	if (state.screen.name === "home") return none(state, effects)
 	if (state.depth > 0) return { state, history: "back", effects }
 	return replace(state, { name: "home" }, effects)
@@ -362,8 +480,68 @@ function pickForMe(state: TvState, ctx: TvContext): TvTransition {
 	return push(state, { name: "this-or-that" })
 }
 
+function chooseInQuiz(
+	state: TvState,
+	q: QuizState,
+	item: string,
+	ctx: TvContext,
+): TvTransition {
+	const score = quizScoreOf(item)
+	const toQuiz = (next: QuizState, effects: TvEffect[] = []) =>
+		replace(state, { name: "quiz", quiz: next }, effects)
+	if (score != null) {
+		const effects: TvEffect[] = [{ type: "quiz-rate", score }]
+		const next = quizTransition(q, {
+			type: "scored",
+			progress: ctx.quizProgress + 1,
+		})
+		// The focus stays on the rating, so the next title takes the same press.
+		return next === q ? none(state, effects) : toQuiz(next, effects)
+	}
+	const [kind, ...rest] = item.split(":")
+	switch (kind) {
+		case "quiz-skip":
+			return none(state, [{ type: "quiz-skip" }])
+		case "quiz-want":
+			return none(state, [{ type: "quiz-want" }])
+		case "quiz-save":
+			return none(state, [{ type: "quiz-save" }])
+		case "quiz-picks":
+		case "back-to-picks":
+			return toQuiz(quizTransition(q, { type: "show-picks" }))
+		case "rate-more":
+			return toQuiz(
+				quizTransition(q, { type: "rate-more", progress: ctx.quizProgress }),
+			)
+		case "picks-prev":
+		case "picks-next": {
+			const next = quizTransition(q, {
+				type: "turn",
+				by: kind === "picks-next" ? 1 : -1,
+				pages: pickPages(ctx.quizPicks.length),
+			})
+			// Each further press on an arrow turns another page; past the last page the focus falls to the first item.
+			const screen: TvScreen = { name: "quiz", quiz: next }
+			return {
+				state: {
+					...state,
+					screen,
+					focus: tvItems(screen, ctx).includes(item) ? item : null,
+				},
+				history: "replace",
+				effects: [],
+			}
+		}
+		case "pick":
+			return none(state, [{ type: "quiz-pick", pick: rest.join(":") }])
+		default:
+			return none(state)
+	}
+}
+
 function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 	const s = state.screen
+	if (s.name === "quiz") return chooseInQuiz(state, s.quiz, item, ctx)
 	const [kind, ...rest] = item.split(":")
 	const arg = rest.join(":")
 	switch (kind) {
@@ -376,6 +554,14 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 			})
 		case "about":
 			return push(state, { name: "about" })
+		case "taste-quiz":
+			return push(state, {
+				name: "quiz",
+				quiz: initialQuizState({
+					progress: ctx.quizProgress,
+					member: ctx.member,
+				}),
+			})
 		case "app":
 			return push(state, { name: "app", app: arg as TvApp })
 		case "moods":

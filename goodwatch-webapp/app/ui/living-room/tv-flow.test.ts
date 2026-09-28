@@ -20,6 +20,8 @@ const guest: TvContext = {
 	hasServices: false,
 	answered: 0,
 	pairsLeft: 6,
+	quizProgress: 0,
+	quizPicks: [],
 }
 const member: TvContext = {
 	...guest,
@@ -84,10 +86,10 @@ describe("TV state in the URL", () => {
 })
 
 describe("guest home: Find my tonight", () => {
-	it("offers Find my tonight, Just show me, and What is GoodWatch?", () => {
+	it("offers Find my tonight, the taste quiz, and What is GoodWatch?", () => {
 		assert.deepEqual(tvItems({ name: "home" }, guest), [
 			"find-my-tonight",
-			"just-show-me",
+			"taste-quiz",
 			"about",
 		])
 	})
@@ -153,9 +155,9 @@ describe("guest home: Find my tonight", () => {
 })
 
 describe("guest home: Just show me and What is GoodWatch?", () => {
-	it("shows new picks right away", () => {
+	it("shows new picks right away from What is GoodWatch?", () => {
 		assert.equal(
-			run(at(""), guest, { type: "choose", item: "just-show-me" }).url,
+			run(at("tv=about"), guest, { type: "choose", item: "just-show-me" }).url,
 			"tv=picks&from=new",
 		)
 	})
@@ -188,7 +190,7 @@ describe("guest home: Just show me and What is GoodWatch?", () => {
 })
 
 describe("member home: mood, source, picks", () => {
-	it("lists Any mood, the moods, and the four apps", () => {
+	it("lists Any mood, the moods, the four apps, and the taste quiz", () => {
 		assert.deepEqual(tvItems({ name: "home" }, member), [
 			"mood:any",
 			"mood:cozy",
@@ -197,6 +199,7 @@ describe("member home: mood, source, picks", () => {
 			"app:taste",
 			"app:discover",
 			"app:explorer",
+			"taste-quiz",
 		])
 	})
 
@@ -442,6 +445,183 @@ describe("loader revalidation", () => {
 		assert.equal(
 			isTvOnlyChange(new URL("https://x/"), new URL("https://x/movie/1")),
 			false,
+		)
+	})
+})
+
+describe("taste quiz", () => {
+	const picks = Array.from({ length: 8 }, (_, i) => `movie-${i + 1}`)
+	const quizGuest: TvContext = { ...guest, quizPicks: picks }
+	const rate = { type: "choose", item: "level:good" } as const
+
+	it("opens from home tile 2 with the Remote alone", () => {
+		const t = run(at(""), guest, { type: "step", by: 1 }, { type: "ok" })
+		assert.equal(t.history, "push")
+		assert.equal(t.url, "tv=quiz")
+		assert.equal(t.state.depth, 1)
+	})
+
+	it("resumes a returning guest in Rate more with the picks behind it", () => {
+		const t = run(
+			at(""),
+			{ ...guest, quizProgress: 6 },
+			{
+				type: "choose",
+				item: "taste-quiz",
+			},
+		)
+		assert.equal(t.url, "tv=quiz&goal=10&more=1")
+	})
+
+	it("walks the four levels, then the 1-10 strip, then the actions", () => {
+		const items = tvItems(at("tv=quiz").screen, guest)
+		assert.deepEqual(items.slice(0, 4), [
+			"level:dislike",
+			"level:okay",
+			"level:good",
+			"level:excellent",
+		])
+		assert.equal(items[4], "score:1")
+		assert.equal(items[13], "score:10")
+		assert.deepEqual(items.slice(14), ["quiz-skip", "quiz-want"])
+	})
+
+	it("stores 3, 5, 7, or 9 for a level and the exact score for the strip", () => {
+		const scores = [
+			"level:dislike",
+			"level:okay",
+			"level:good",
+			"level:excellent",
+			"score:6",
+		].map((item) => run(at("tv=quiz"), guest, { type: "choose", item }).effects)
+		assert.deepEqual(
+			scores.map((e) => e[0]),
+			[3, 5, 7, 9, 6].map((score) => ({ type: "quiz-rate", score })),
+		)
+	})
+
+	it("keeps the focus on the rating below the goal and doesn't navigate", () => {
+		const t = run(
+			at("tv=quiz&focus=level%3Agood"),
+			{ ...guest, quizProgress: 2 },
+			{ type: "ok" },
+		)
+		assert.equal(t.history, "none")
+		assert.equal(t.url, "tv=quiz&focus=level%3Agood")
+	})
+
+	it("counts only scores: skips and Want to see leave the quiz as it is", () => {
+		for (const item of ["quiz-skip", "quiz-want"]) {
+			const t = run(
+				at("tv=quiz"),
+				{ ...guest, quizProgress: 4 },
+				{
+					type: "choose",
+					item,
+				},
+			)
+			assert.equal(t.history, "none")
+			assert.equal(t.url, "tv=quiz")
+		}
+	})
+
+	it("asks Keep these 5? on the fifth score, Save first for guests", () => {
+		const t = run(at("tv=quiz", 1), { ...guest, quizProgress: 4 }, rate)
+		assert.equal(t.history, "replace")
+		assert.equal(t.url, "tv=quiz&step=keep")
+		assert.deepEqual(tvItems(t.state.screen, guest), [
+			"quiz-save",
+			"quiz-picks",
+			"rate-more",
+		])
+		assert.deepEqual(tvItems(t.state.screen, member), [
+			"quiz-picks",
+			"rate-more",
+		])
+	})
+
+	it("saves with Google from the keep ask without navigating", () => {
+		const t = run(at("tv=quiz&step=keep"), guest, { type: "ok" })
+		assert.deepEqual(t.effects, [{ type: "quiz-save" }])
+		assert.equal(t.history, "none")
+	})
+
+	it("shows picks three at a time with arrows at the edges", () => {
+		const t = run(at("tv=quiz&step=keep"), quizGuest, {
+			type: "choose",
+			item: "quiz-picks",
+		})
+		assert.equal(t.url, "tv=quiz&step=picks")
+		assert.deepEqual(tvItems(t.state.screen, quizGuest), [
+			"pick:movie-1",
+			"pick:movie-2",
+			"pick:movie-3",
+			"picks-next",
+			"quiz-save",
+			"rate-more",
+		])
+	})
+
+	it("turns a page per press on the arrow and keeps the focus there", () => {
+		const t = run(at("tv=quiz&step=picks&focus=picks-next"), quizGuest, {
+			type: "ok",
+		})
+		assert.equal(t.history, "replace")
+		assert.equal(t.url, "tv=quiz&step=picks&page=1&focus=picks-next")
+		const last = run(t.state, quizGuest, { type: "ok" })
+		assert.equal(last.url, "tv=quiz&step=picks&page=2")
+		assert.deepEqual(tvItems(last.state.screen, quizGuest).slice(0, 3), [
+			"picks-prev",
+			"pick:movie-7",
+			"pick:movie-8",
+		])
+	})
+
+	it("opens a pick's title page through an effect", () => {
+		const t = run(at("tv=quiz&step=picks"), quizGuest, { type: "ok" })
+		assert.deepEqual(t.effects, [{ type: "quiz-pick", pick: "movie-1" }])
+	})
+
+	it("returns from Rate more to the same picks page with Back", () => {
+		const rateMore = run(
+			at("tv=quiz&step=picks&page=1", 1),
+			{ ...quizGuest, quizProgress: 5 },
+			{ type: "choose", item: "rate-more" },
+		)
+		assert.equal(rateMore.url, "tv=quiz&goal=10&page=1&more=1")
+		const back = run(rateMore.state, quizGuest, { type: "back" })
+		assert.equal(back.history, "replace")
+		assert.equal(back.url, "tv=quiz&step=picks&goal=10&page=1")
+	})
+
+	it("offers Save and Back to my picks in Rate more, and both work", () => {
+		const s = at("tv=quiz&goal=10&page=1&more=1")
+		assert.deepEqual(tvItems(s.screen, guest).slice(-2), [
+			"quiz-save",
+			"back-to-picks",
+		])
+		assert.deepEqual(tvItems(s.screen, member).slice(-1), ["back-to-picks"])
+		assert.equal(
+			run(s, quizGuest, { type: "choose", item: "back-to-picks" }).url,
+			"tv=quiz&step=picks&goal=10&page=1",
+		)
+	})
+
+	it("leaves the quiz with Back from the first rating or the picks", () => {
+		assert.equal(run(at("tv=quiz", 1), guest, { type: "back" }).history, "back")
+		assert.equal(
+			run(at("tv=quiz&step=picks", 1), guest, { type: "back" }).history,
+			"back",
+		)
+	})
+
+	it("treats quiz steps as TV-only URL changes", () => {
+		assert.equal(
+			isTvOnlyChange(
+				new URL("https://x/?tv=quiz"),
+				new URL("https://x/?tv=quiz&step=picks&page=2&goal=10&more=1"),
+			),
+			true,
 		)
 	})
 })

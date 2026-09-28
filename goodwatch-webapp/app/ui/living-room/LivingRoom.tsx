@@ -4,7 +4,7 @@
 //
 // Rendering budget (#190): only transform and opacity follow the pointer or animate, nothing loops at idle, and
 // nothing blends or blurs over the room photo.
-import { useSearchParams } from "@remix-run/react"
+import { useLocation, useSearchParams } from "@remix-run/react"
 import { motion, useReducedMotion, useSpring } from "framer-motion"
 import {
 	useCallback,
@@ -16,8 +16,17 @@ import {
 } from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import type { Score as RatingScore } from "~/server/scores.server"
+import { useContinueWithGoogle } from "~/ui/taste-quiz/continue-with-google"
+import {
+	QUIZ_GOAL,
+	type QuizState,
+	readQuizKey,
+} from "~/ui/taste-quiz/quiz-flow"
+import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
+import { titleToDashed } from "~/utils/helpers"
 import { PhoneLivingRoom, usePhoneOrientation } from "./PhoneLivingRoom"
 import { Remote, type RemoteProps } from "./Remote"
+import { pickKey } from "./TvQuiz"
 import { TvScreens, type TvView, lcdLines } from "./TvScreens"
 import {
 	type LivingRoomChoices,
@@ -41,6 +50,7 @@ import {
 	type TvEffect,
 	type TvScreen,
 	readTvState,
+	writeTvParams,
 } from "./tv-flow"
 import { TV_SCREEN_ATTR, useReturnIntoTv } from "./tv-transition"
 import { useTvFlow } from "./use-tv-flow"
@@ -82,11 +92,31 @@ export function LivingRoom({
 	const [params] = useSearchParams()
 	const [choices, setChoices] = useState<LivingRoomChoices>(NO_CHOICES)
 	const [draft, setDraftState] = useState("")
-	const night = useMemo(() => nightOf(readTvState(params).screen), [params])
+	const screen = useMemo(() => readTvState(params).screen, [params])
+	const night = useMemo(() => nightOf(screen), [screen])
+
+	// The taste quiz (#226): titles and picks load only once the TV shows it.
+	const quizStep = screen.name === "quiz" ? screen.quiz : null
+	const quiz = useTasteQuiz({
+		titles: [],
+		member: data.member,
+		enabled: quizStep != null,
+		wantPicks: quizStep != null && quizStep.screen !== "quiz",
+	})
+	const quizPicks = useMemo(() => quiz.picks.map(pickKey), [quiz.picks])
 	const ctx = useMemo(
-		() => tvContextOf(data, choices, night),
-		[data, choices, night],
+		() => ({
+			...tvContextOf(data, choices, night),
+			quizProgress: quiz.progress,
+			quizPicks,
+		}),
+		[data, choices, night, quiz.progress, quizPicks],
 	)
+	// Continue with Google returns to the quiz's picks.
+	const google = useContinueWithGoogle()
+	const { pathname } = useLocation()
+	const quizRef = useRef({ quiz, google, pathname, params })
+	quizRef.current = { quiz, google, pathname, params }
 
 	const choicesRef = useRef(choices)
 	choicesRef.current = choices
@@ -103,6 +133,11 @@ export function LivingRoom({
 				}
 			} else if (effect.type === "answer-pair") {
 				next = { ...next, answers: [...next.answers, effect.side] }
+			} else if (effect.type.startsWith("quiz-")) {
+				handleQuizEffect(effect, quizRef.current, (e) =>
+					onEffect(e, choicesRef.current),
+				)
+				return
 			}
 			choicesRef.current = next
 			setChoices(next)
@@ -128,7 +163,14 @@ export function LivingRoom({
 		if (searching) setDraftState("")
 	}, [searching])
 
-	useRemoteKeys({ power: state.power, searching, dispatch, ok, setDraft })
+	useRemoteKeys({
+		power: state.power,
+		searching,
+		quiz: state.screen.name === "quiz" ? state.screen.quiz : null,
+		dispatch,
+		ok,
+		setDraft,
+	})
 
 	// ---- Layout: measured once per resize, never per pointer move.
 	const root = useRef<HTMLDivElement>(null)
@@ -194,6 +236,7 @@ export function LivingRoom({
 		setDraft,
 		signInHref,
 		onRate,
+		quiz,
 	}
 	const activeService = night?.service ?? null
 	const remote: RemoteProps = {
@@ -358,18 +401,21 @@ export function LivingRoom({
 function useRemoteKeys({
 	power,
 	searching,
+	quiz,
 	dispatch,
 	ok,
 	setDraft,
 }: {
 	power: "off" | "booting" | "on"
 	searching: boolean
+	/** The taste quiz step on screen: 1-9 and 0 score, S skips, P goes back to the picks. */
+	quiz: QuizState | null
 	dispatch: ReturnType<typeof useTvFlow>["dispatch"]
 	ok: () => void
 	setDraft: (update: (d: string) => string) => void
 }) {
-	const latest = useRef({ power, searching, dispatch, ok, setDraft })
-	latest.current = { power, searching, dispatch, ok, setDraft }
+	const latest = useRef({ power, searching, quiz, dispatch, ok, setDraft })
+	latest.current = { power, searching, quiz, dispatch, ok, setDraft }
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
 			const target = e.target as HTMLElement
@@ -395,6 +441,20 @@ function useRemoteKeys({
 					e.preventDefault()
 					return
 				}
+			}
+			const intent = k.quiz ? readQuizKey(e.key, k.quiz) : null
+			if (intent && intent.type !== "turn") {
+				k.dispatch({
+					type: "choose",
+					item:
+						intent.type === "score"
+							? `score:${intent.score}`
+							: intent.type === "skip"
+								? "quiz-skip"
+								: "back-to-picks",
+				})
+				e.preventDefault()
+				return
 			}
 			switch (e.key) {
 				case "ArrowUp":
@@ -424,4 +484,62 @@ function useRemoteKeys({
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
 	}, [])
+}
+
+/** Carries out a taste quiz effect with the quiz hook, or turns a pick into a page to leave for. */
+function handleQuizEffect(
+	effect: TvEffect,
+	{
+		quiz,
+		google,
+		pathname,
+		params,
+	}: {
+		quiz: ReturnType<typeof useTasteQuiz>
+		google: ReturnType<typeof useContinueWithGoogle>
+		pathname: string
+		params: URLSearchParams
+	},
+	leave: (effect: TvEffect) => void,
+) {
+	switch (effect.type) {
+		case "quiz-rate":
+			return quiz.rate(effect.score)
+		case "quiz-skip":
+			return quiz.skip()
+		case "quiz-want":
+			return quiz.wantToSee()
+		case "quiz-save": {
+			const current = readTvState(params).screen
+			const picks = writeTvParams(
+				{
+					screen: {
+						name: "quiz",
+						quiz: {
+							...(current.name === "quiz"
+								? current.quiz
+								: { goal: QUIZ_GOAL, page: 0 }),
+							screen: "picks",
+							pickedBefore: true,
+						},
+					},
+					focus: null,
+				},
+				params,
+			).toString()
+			return google(`${pathname}?${picks}`)
+		}
+		case "quiz-pick": {
+			const pick = quiz.picks.find((p) => pickKey(p) === effect.pick)
+			if (pick)
+				leave({
+					type: "leave",
+					to: {
+						kind: "page",
+						href: `/${pick.media_type}/${pick.tmdb_id}-${titleToDashed(pick.title)}`,
+					},
+				})
+			return
+		}
+	}
 }

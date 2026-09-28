@@ -93,7 +93,8 @@ export default function LivingRoomRoute() {
 			switch (effect.type) {
 				case "leave": {
 					const to = effect.to
-					if (to.kind === "app")
+					if (to.kind === "page") leave(to.href)
+					else if (to.kind === "app")
 						leave(
 							to.app === "watch-now" && !data.member
 								? signUpHref
