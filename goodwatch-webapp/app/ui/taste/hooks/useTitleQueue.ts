@@ -1,9 +1,9 @@
-import { readExploration, rememberExploration } from "../exploration"
-import { useState, useCallback, useEffect, useRef, useMemo } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import type { ScoringMedia } from "~/ui/scoring/types"
-import type { TasteInteraction } from "../types"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { queryKeySmartTitles } from "~/routes/api.smart-titles"
+import type { ScoringMedia } from "~/ui/scoring/types"
+import { readExploration, rememberExploration } from "../exploration"
+import type { TasteInteraction } from "../types"
 
 interface UseTitleQueueParams {
 	resume?: boolean
@@ -42,6 +42,11 @@ export function useTitleQueue({
 	const [queue, setQueue] = useState<ScoringMedia[]>([])
 	const [currentIndex, setCurrentIndex] = useState(0)
 	const [isPrefetching, setIsPrefetching] = useState(false)
+	// True once a fetch came back with nothing new. Until then an empty queue is still loading: the server
+	// render and the first client render have no queue yet, and must not read as "every title seen".
+	const [exhausted, setExhausted] = useState(false)
+	// A new fetcher (e.g. the Living room TV enabling its quiz) may find titles again.
+	useEffect(() => setExhausted(false), [fetchMoreTitles])
 
 	// Track which items have been seen to avoid duplicates
 	const seenIds = useRef(new Set<string>())
@@ -97,6 +102,7 @@ export function useTitleQueue({
 
 		fetchInProgress.current = true
 		setIsPrefetching(true)
+		setExhausted(false)
 
 		try {
 			const newTitles = await fetchMoreTitles()
@@ -107,9 +113,11 @@ export function useTitleQueue({
 				filtered.forEach((t) => seenIds.current.add(makeKey(t)))
 				// Append to queue without affecting current position
 				setQueue((prev) => [...prev, ...filtered])
-			}
+				setExhausted(false)
+			} else setExhausted(true)
 		} catch (error) {
 			console.error("[TitleQueue] Failed to prefetch:", error)
+			setExhausted(true)
 		} finally {
 			setIsPrefetching(false)
 			fetchInProgress.current = false
@@ -147,8 +155,8 @@ export function useTitleQueue({
 	const current = queue[currentIndex] ?? null
 	const next = queue[currentIndex + 1] ?? null
 
-	// Show loading if queue is empty and we haven't initialized
-	const showLoading = !hasInitialized.current && initialTitles.length === 0
+	// Loading until there is a title, or a fetch has found nothing more.
+	const showLoading = current === null && !exhausted
 
 	return {
 		remainingTitles: queue.slice(currentIndex),
