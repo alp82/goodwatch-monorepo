@@ -1,6 +1,6 @@
 // PROTOTYPE - throwaway. Where the taste quiz fits (#220), round 3: `rate` + `stack` locked, paged picks, a way back
 // from Rate more, and five sign-up placements.
-//   /prototype/taste-quiz-fit-3?signup=always|inline|moment|key|detour&as=guest|new|me
+//   /prototype/taste-quiz-fit-3?signup=moment(default, round 4)|always|inline|key|detour&as=guest|new|me
 // The room is the locked r5-A with the graded hand, the remote is the final Remote ("Grid, tiles"), and the TV
 // runs the `ask` flow's look: home (quiz is the second tile), the quiz, tonight's picks, then the sign-up.
 // See ~/ui/prototype-taste-quiz-fit-3/quiz.tsx for what each variant and rating control tries.
@@ -70,7 +70,7 @@ export const meta = () => [
 ]
 
 const S_ORDER = Object.keys(SIGNUPS) as Signup[]
-// Round 3 locks the owner's picks from round 2.
+// Round 3 locks the owner's picks from round 2; round 4 makes `moment` the default sign-up.
 const VARIANT: Variant = "rate"
 const RATING: Rating = "stack"
 
@@ -79,7 +79,7 @@ export default function TasteQuizFit3() {
 	const signup = (
 		S_ORDER.includes(params.get("signup") as Signup)
 			? params.get("signup")
-			: "always"
+			: "moment"
 	) as Signup
 	const as = (
 		["guest", "new", "me"].includes(params.get("as") ?? "")
@@ -155,7 +155,7 @@ function Panel({ signup, as }: { signup: Signup; as: As }) {
 	return (
 		<div className="fixed left-4 top-[4.75rem] z-[60] flex w-[250px] flex-col gap-2 rounded-xl bg-black/80 p-3 text-xs text-white ring-1 ring-white/15">
 			<div className="text-[10px] font-bold uppercase tracking-wider text-white/50">
-				Round 3 · rate + stack
+				Round 4 · rate + stack + moment
 			</div>
 			<div className="text-[10px] font-bold uppercase tracking-wider text-white/50">
 				Sign-up

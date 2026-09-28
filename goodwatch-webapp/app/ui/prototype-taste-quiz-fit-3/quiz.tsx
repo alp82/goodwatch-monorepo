@@ -17,6 +17,7 @@ import { GwBadge, ease } from "~/ui/prototype-start-living-room/channels"
 import { Icon } from "~/ui/prototype-start-living-room/r3"
 import type { PageId, Tv4 } from "~/ui/prototype-start-living-room/r4"
 import { type Zapper, zapSound } from "~/ui/prototype-start-living-room/tv"
+import { GoogleG } from "~/ui/prototype-taste-quiz-page/google"
 import {
 	type Answer,
 	BANDS,
@@ -49,8 +50,8 @@ export type Rating = "stack" | "fused" | "reveal" | "dpad" | "after"
 export type As = "guest" | "new" | "me"
 export type Signup = "always" | "inline" | "moment" | "key" | "detour"
 
-// Round 3: where and how a guest signs up. Every path but `detour` is one press: the TV's own account
-// (Google TV, Apple ID...) creates the GoodWatch account, and the answers move over in place.
+// Round 3: where and how a guest signs up. Round 4 locks `moment`. The Living room is a web page, not a TV app, so
+// "one press" is the site's own sign-in (Continue with Google), not a TV platform account.
 export const SIGNUPS: Record<Signup, { name: string; idea: string }> = {
 	always: {
 		name: "Always there",
@@ -58,7 +59,7 @@ export const SIGNUPS: Record<Signup, { name: string; idea: string }> = {
 	},
 	inline: {
 		name: "One step, on the TV",
-		idea: "No QR detour: the picks screen carries the sign-up itself. Continue as the TV's account is one press; another email is the small fallback.",
+		idea: "No QR detour: the picks screen carries the sign-up itself. Continue with Google is one press; another email is the small fallback.",
 	},
 	moment: {
 		name: "At the 5th answer",
@@ -361,10 +362,12 @@ export function useQuiz(
 					return [slots.map((k) => `open:${k}`), ["done"]]
 				if (variant === "live" && progress >= goal)
 					return [...ratingRows(), ["done"]]
-				if (toPicksHere) {
-					const r = ratingRows()
-					return [...r.slice(0, -1), [...r[r.length - 1], "topicks"]]
-				}
+				// Round 4: Rate more keeps the sign-up bottom left, with Back to my picks right next to it.
+				if (toPicksHere)
+					return [
+						...ratingRows(),
+						[...(!member && !joined ? ["join"] : []), "topicks"],
+					]
 				return ratingRows()
 			case "enough":
 				return !member && !joined && signup === "moment"
@@ -626,7 +629,7 @@ export function useQuiz(
 		if (v === "save" || v === "join" || v === "key:save") return join()
 		if (v === "join:picks") return join(), replace({ k: "picks" })
 		if (v === "join:mail")
-			return say("Prototype: a sign-in link goes to the phone you scan with.")
+			return say("Prototype: the site's email sign-up opens here.")
 		if (v === "more") {
 			setGoal((g) => Math.max(g, progress) + 5)
 			const f =
@@ -749,7 +752,7 @@ export function useQuiz(
 			"su:signin": "Sign in",
 			"su:later": "Not now",
 			save: "Save my answers",
-			join: "Continue as alex@gmail.com",
+			join: "Continue with Google",
 			"join:picks": "Save and show my picks",
 			"join:mail": "Use another email",
 			topicks: "Back to my picks",
@@ -1343,6 +1346,7 @@ function Card({ t }: { t: QuizT }) {
 					</div>
 				</motion.div>
 			</AnimatePresence>
+			{t.toPicksHere && <RateMoreBar t={t} />}
 		</>
 	)
 }
@@ -1745,18 +1749,36 @@ function Acts({ t }: { t: QuizT }) {
 					{ACT[a]}
 				</F>
 			))}
-			{t.toPicksHere && (
+		</div>
+	)
+}
+
+// Round 4, Rate more: the sign-up stays bottom left (guests), and Back to my picks sits right next to it.
+function RateMoreBar({ t }: { t: QuizT }) {
+	const n = t.mine.filter((a) => a.kind !== "skip").length
+	return (
+		<div className="absolute bottom-9 left-12 flex items-center gap-3">
+			{!t.saved && (
 				<F
 					t={t}
-					v="topicks"
-					className="ml-auto rounded-full px-4 py-1.5 text-[14px] font-bold text-amber-200"
-					on="ring-amber-300 bg-amber-400/20"
-					off="ring-amber-300/30 bg-amber-400/10"
-					scale={1.05}
+					v="join"
+					className="flex items-center gap-2.5 rounded-full py-2 pl-2 pr-5 text-[15px] font-bold"
+					on="ring-amber-300 bg-white text-black"
+					off="ring-transparent bg-white/90 text-black"
 				>
-					♥ Back to my picks
+					<Avatar />
+					Save these {n} answers · one press, free
 				</F>
 			)}
+			<F
+				t={t}
+				v="topicks"
+				className="rounded-full px-5 py-2.5 text-[15px] font-bold text-amber-200"
+				on="ring-amber-300 bg-amber-400/20"
+				off="ring-amber-300/30 bg-amber-400/10"
+			>
+				♥ Back to my picks
+			</F>
 		</div>
 	)
 }
@@ -2143,7 +2165,7 @@ function Enough({ t }: { t: QuizT }) {
 				</F>
 				{ask && (
 					<span className="ml-3 text-[13px] text-white/45">
-						as alex@gmail.com, this TV's account
+						Continues with Google · free
 					</span>
 				)}
 			</div>
@@ -2151,11 +2173,11 @@ function Enough({ t }: { t: QuizT }) {
 	)
 }
 
-// The TV's own account, standing in for Google TV or Apple ID sign-in.
-function Avatar() {
+// The site's own one-press sign-in: Continue with Google (the Living room is a web page, not a TV app).
+export function Avatar() {
 	return (
-		<span className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500 text-[15px] font-black text-white ring-2 ring-white">
-			A
+		<span className="flex h-8 w-8 items-center justify-center rounded-full bg-white ring-1 ring-black/10">
+			<GoogleG />
 		</span>
 	)
 }
@@ -2285,7 +2307,7 @@ function Picks({ t, quick }: { t: QuizT; quick: boolean }) {
 							Rate more
 						</F>
 						<span className="ml-auto text-[12px] text-white/40">
-							As alex@gmail.com, this TV's account.
+							Continue with Google: no password, your answers come along.
 						</span>
 					</>
 				) : (
@@ -2364,7 +2386,7 @@ function InlineJoin({ t, n }: { t: QuizT; n: number }) {
 				off="ring-transparent bg-white/90 text-black"
 			>
 				<Avatar />
-				Continue as alex@gmail.com
+				Continue with Google
 			</F>
 			<F
 				t={t}
