@@ -1,4 +1,4 @@
-import { fetch } from "undici";
+import { Agent, fetch } from "undici";
 import {
 	APIError,
 	TypeSafeClient,
@@ -26,6 +26,35 @@ export const BASIC_SEARCH_MESSAGE = "Showing basic search results.";
 export const JEV_OVERLOAD_RETRY_DELAYS_MS = [100, 250];
 // A retry starts only while this much of the deadline is left, enough for a normal reading. Later, it falls back.
 export const JEV_RETRY_MIN_REMAINING_MS = 700;
+
+// The connections to TypeSafe stay open between searches. undici's default pool closes a connection after 4 s idle,
+// so most searches paid a new TCP and TLS handshake. api.typesafe.ai (behind Cloudflare) keeps idle connections for
+// minutes, and a free GET /health a minute keeps both connections of a search's two parallel requests open.
+const TYPESAFE_ORIGIN = "https://api.typesafe.ai";
+const KEEP_WARM_EVERY_MS = 60_000;
+const typesafeAgent = new Agent({
+	keepAliveTimeout: 5 * 60_000,
+	keepAliveMaxTimeout: 10 * 60_000,
+});
+const typesafeFetch = ((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) =>
+	fetch(input, { ...init, dispatcher: typesafeAgent })) as typeof fetch;
+let keepWarm: NodeJS.Timeout | undefined;
+
+/** Starts the pings that keep the TypeSafe connections open. No model calls, nothing billed. Once per process. */
+export function keepJevConnectionsWarm(): void {
+	if (keepWarm || !process.env.TYPESAFE_API_KEY) return;
+	const ping = () =>
+		typesafeFetch(`${TYPESAFE_ORIGIN}/health`, {
+			signal: AbortSignal.timeout(5000),
+		}).then(
+			(response) => response.body?.cancel(),
+			() => {},
+		);
+	const both = () => Promise.all([ping(), ping()]).catch(() => {});
+	both();
+	keepWarm = setInterval(both, KEEP_WARM_EVERY_MS);
+	keepWarm.unref();
+}
 
 type Reading = SystemOneResult<Questions>;
 export type LanguagePolicy =
@@ -90,9 +119,17 @@ export interface JevStageInput {
 	requests: [SystemOneRequest, SystemOneRequest];
 	// Obtained from authenticated server context and a TRUSTED ingress address resolver.
 	// Never accept arbitrary forwarded headers, browser-provided user IDs, or new cookies.
-	visitor: { accountId: string | null; networkIdentity: string };
+	// accountId may still be resolving (the route verifies the session while the search starts). It is awaited only
+	// where it is needed, before admission; a rejection means the search must not make a paid call.
+	visitor: {
+		accountId: string | null | Promise<string | null>;
+		networkIdentity: string;
+	};
 	signal?: AbortSignal;
 	admissionAttemptId?: string;
+	// Filled with milliseconds per step, for the history row: lookup (the cache), claim (spending checks and the
+	// attempt), dispatch, call (both Jev requests), finish (settlement and cache write).
+	timings?: Record<string, number>;
 }
 
 export async function runJevStage(input: JevStageInput): Promise<JevOutcome> {
@@ -122,6 +159,12 @@ export async function executeJevStage(
 		return basic("input");
 	if (input.language.mode === "translated" && !translationEnabled())
 		return basic("configuration");
+	let mark = performance.now();
+	const step = (name: string) => {
+		const now = performance.now();
+		if (input.timings) input.timings[name] = Math.round((now - mark) * 10) / 10;
+		mark = now;
+	};
 	// Copy only known fields: callers cannot sneak an alternate model or transport options in.
 	let requests: [SystemOneRequest, SystemOneRequest];
 	let cacheKey: string;
@@ -148,6 +191,7 @@ export async function executeJevStage(
 			}),
 		);
 		const hit = await store.lookup(cacheKey);
+		step("lookup");
 		if (hit?.kind === "cached")
 			return {
 				kind: "cached",
@@ -165,13 +209,12 @@ export async function executeJevStage(
 		claim = await store.claim({
 			cacheKey,
 			contract,
-			scopes: [
+			// The account scope waits for the session check; the spending checks don't.
+			scopes: Promise.resolve(input.visitor.accountId).then((accountId) => [
 				"global",
 				store.digest(`network:${input.visitor.networkIdentity}`),
-				...(input.visitor.accountId
-					? [store.digest(`account:${input.visitor.accountId}`)]
-					: []),
-			],
+				...(accountId ? [store.digest(`account:${accountId}`)] : []),
+			]),
 			reserveNano: JEV_RESERVE_NANO,
 			priceVersion: JEV_PRICE_VERSION,
 			admissionAttemptId: input.admissionAttemptId,
@@ -179,6 +222,7 @@ export async function executeJevStage(
 	} catch {
 		return basic("storage");
 	}
+	step("claim");
 	if (claim.kind === "basic") return basic(claim.reason);
 	if (claim.kind === "cached") {
 		try {
@@ -201,6 +245,7 @@ export async function executeJevStage(
 	} catch {
 		return basic("storage", JEV_RESERVE_NANO);
 	}
+	step("dispatch");
 	const controller = new AbortController();
 	const deadlineAt = Date.now() + JEV_DEADLINE_MS;
 	let deadlineExpired = false;
@@ -213,9 +258,9 @@ export async function executeJevStage(
 	}, JEV_DEADLINE_MS);
 	const client = new TypeSafeClient({
 		// Undici implements Fetch; Remix augments the global DOM types with its shim.
-		fetch: fetch as unknown as typeof globalThis.fetch,
+		fetch: typesafeFetch as unknown as typeof globalThis.fetch,
 		apiKey,
-		baseURL: "https://api.typesafe.ai",
+		baseURL: TYPESAFE_ORIGIN,
 		defaultModel: JEV_MODEL,
 		timeout: JEV_DEADLINE_MS,
 		retry: { maxRetries: 0 },
@@ -278,6 +323,7 @@ export async function executeJevStage(
 		clearTimeout(timer);
 		input.signal?.removeEventListener("abort", cancelled);
 	}
+	step("call");
 	const validUsage = readings.every(
 		(result) =>
 			Number.isSafeInteger(result?.usage?.input_tokens) &&
@@ -316,6 +362,7 @@ export async function executeJevStage(
 	} catch {
 		return basic("storage", JEV_RESERVE_NANO);
 	}
+	step("finish");
 	return valid
 		? { kind: "ready", readings, chargedNano: actualNano }
 		: basic("contract", actualNano);

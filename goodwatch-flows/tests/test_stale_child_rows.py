@@ -6,6 +6,8 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import mongomock
+
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
 from f.sync.copy import stale_child_rows, tmdb_details
@@ -95,11 +97,17 @@ class ChildRowCrate:
         return results
 
 
-def copy(crate, media_type, documents):
-    db = MagicMock()
+def details_db(media_type, documents):
+    """A Mongo database whose details collection holds these documents."""
+    db = mongomock.MongoClient().db
     collection = db.tmdb_movie_details if media_type == "movie" else db.tmdb_tv_details
-    collection.count_documents.return_value = len(documents)
-    collection.find.return_value.sort.return_value.skip.return_value.limit.side_effect = [documents, []]
+    if documents:
+        collection.insert_many([dict(document) for document in documents])
+    return db
+
+
+def copy(crate, media_type, documents):
+    db = details_db(media_type, documents)
     with patch.object(tmdb_details, "get_db", return_value=db):
         return tmdb_details.copy_media(crate, {}, media_type, recent_only=False)
 
@@ -437,7 +445,9 @@ class StaleChildRowTests(unittest.TestCase):
     def test_flagged_deleted_title_keeps_its_rows_for_the_tmdb_deleted_path(self):
         crate = ChildRowCrate()
         crate.add("media_video", "movie", 1, "v-old")
-        copy(crate, "movie", [movie(1, tmdb_deleted=True)])
+        # The deletion step removes it; the copy itself neither publishes it nor prunes its rows.
+        with patch.object(tmdb_details, "delete_flagged_titles", return_value={}):
+            copy(crate, "movie", [movie(1, tmdb_deleted=True)])
         self.assertEqual(crate.keys("media_video", "movie", 1), [("v-old",)])
 
     def test_rows_the_upsert_did_not_leave_in_crate_block_the_delete(self):

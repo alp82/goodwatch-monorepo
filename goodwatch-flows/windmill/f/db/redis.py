@@ -5,7 +5,8 @@ import wmill
 
 
 class RedisConnector:
-    def __init__(self) -> None:
+    def __init__(self, decode_responses: bool = True) -> None:
+        """decode_responses=False returns bytes, for binary values."""
         hosts = wmill.get_variable("u/Alp/REDIS_HOSTS")
         port = int(wmill.get_variable("u/Alp/REDIS_PORT"))
         redis_pass = wmill.get_variable("u/Alp/REDIS_PASS")
@@ -13,7 +14,7 @@ class RedisConnector:
         self.r = RedisCluster(
             startup_nodes=startup_nodes,
             password=redis_pass,
-            decode_responses=True,
+            decode_responses=decode_responses,
         )
 
     def debug(self) -> None:

@@ -104,62 +104,83 @@ export class SearchStore {
 		await this.coordination.cache(cacheKey, row.ciphertext)
 		return { kind: "cached", ciphertext: row.ciphertext }
 	}
+	// Callers look the cache key up first (lookup), so claim doesn't. A reading that lands in between is caught by the
+	// Redis lock and the primary-key insert below.
+	// The scopes may still be resolving: they are awaited only before admission, after the spending checks.
 	async claim(input: {
 		cacheKey: string
 		contract: string
-		scopes: string[]
+		scopes: string[] | Promise<string[]>
 		reserveNano: number
 		priceVersion: string
 		admissionAttemptId?: string
 	}): Promise<Claim> {
-		if (
-			!input.scopes.length ||
-			!Number.isSafeInteger(input.reserveNano) ||
-			input.reserveNano <= 0
-		)
+		if (!Number.isSafeInteger(input.reserveNano) || input.reserveNano <= 0)
 			return { kind: "basic", reason: "configuration" }
-		const hit = await this.lookup(input.cacheKey)
-		if (hit) return hit
-		const [control] = await this.query<{ halted: boolean }>(
-			"SELECT halted FROM doc.search_control WHERE id = 'paid'",
-		)
+		// Handled at the await below; this only keeps an early rejection from counting as unhandled.
+		const scopesReady = Promise.resolve(input.scopes)
+		scopesReady.catch(() => {})
+		// The control row and the spending, in parallel. The spending query reads Crate's clock once, and sums today's
+		// and this month's (UTC) spending by it.
+		const [[control], [spend]] = await Promise.all([
+			this.query<{ halted: boolean }>(
+				"SELECT halted FROM doc.search_control WHERE id = 'paid'",
+			),
+			this.query<{ now: number; day: number; month: number }>(
+				"SELECT CURRENT_TIMESTAMP AS now, coalesce(sum(CASE WHEN budget_at >= date_trunc('day', CURRENT_TIMESTAMP) THEN amount_nano ELSE 0 END), 0) AS day, coalesce(sum(amount_nano), 0) AS month FROM doc.search_spending WHERE budget_at >= date_trunc('month', CURRENT_TIMESTAMP)",
+			),
+		])
 		if (!control || control.halted) return { kind: "basic", reason: "budget" }
-		const [{ now }] = await this.query<{ now: number }>(
-			"SELECT CURRENT_TIMESTAMP AS now",
-		)
-		const date = new Date(now)
-		const day = Date.UTC(
-			date.getUTCFullYear(),
-			date.getUTCMonth(),
-			date.getUTCDate(),
-		)
-		const month = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1)
-		const [spend] = await this.query<{ day: number; month: number }>(
-			"SELECT coalesce(sum(CASE WHEN budget_at >= ? THEN amount_nano ELSE 0 END), 0) AS day, coalesce(sum(amount_nano), 0) AS month FROM doc.search_spending WHERE budget_at >= ?",
-			[day, month],
-		)
+		const now = Number(spend.now)
 		if (
 			Number(spend.day) + input.reserveNano > DAILY_NANO ||
 			Number(spend.month) + input.reserveNano > MONTHLY_NANO
 		)
 			return { kind: "basic", reason: "budget" }
+		const scopes = await scopesReady
+		if (!scopes.length) return { kind: "basic", reason: "configuration" }
 		const id = randomUUID()
 		const admitted = await this.coordination.claim(
 			id,
 			input.cacheKey,
-			input.scopes,
+			scopes,
 			input.admissionAttemptId,
 		)
 		if (admitted !== "ok") return { kind: "basic", reason: admitted }
 		let claimed = false
 		try {
-			// A primary-key insert also protects duplicates if a Redis lease is lost.
-			// Abandoned/unknown attempts stay blocked until explicitly reconciled.
-			const inserted = await this.execute(
-				"INSERT INTO doc.search_interpretations (cache_key, attempt_id, status, contract, created_at) VALUES (?, ?, 'pending', ?, ?) ON CONFLICT DO NOTHING",
-				[input.cacheKey, id, input.contract, now],
-			)
-			if (inserted.rowcount !== 1) {
+			// Both inserts run in parallel.
+			// - A primary-key insert of the attempt also protects duplicates if a Redis lease is lost. Abandoned/unknown
+			//   attempts stay blocked until explicitly reconciled.
+			// - Immutable estimate, followed by a separate immutable adjustment on success. If the response is lost,
+			//   retain the estimate; never infer a refund.
+			const [inserted, estimate] = await Promise.allSettled([
+				this.execute(
+					"INSERT INTO doc.search_interpretations (cache_key, attempt_id, status, contract, created_at) VALUES (?, ?, 'pending', ?, ?) ON CONFLICT DO NOTHING",
+					[input.cacheKey, id, input.contract, now],
+				),
+				this.execute(
+					"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, price_version) VALUES (?, ?, ?, 'estimate', ?, ?, ?, ?)",
+					[
+						`${id}:estimate`,
+						id,
+						input.cacheKey,
+						now,
+						now,
+						input.reserveNano,
+						input.priceVersion,
+					],
+				),
+			])
+			if (inserted.status === "rejected" || inserted.value.rowcount !== 1) {
+				// No paid call happens for this attempt: settle its estimate at zero, as finish(id, 0) does for a search
+				// cancelled before dispatch. If that fails, the estimate stays counted, which only errs on the safe side.
+				if (estimate.status === "fulfilled")
+					await this.execute(
+						"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano) VALUES (?, ?, ?, 'settlement', ?, CURRENT_TIMESTAMP, ?) ON CONFLICT DO NOTHING",
+						[`${id}:settled`, id, input.cacheKey, now, -input.reserveNano],
+					).catch(() => {})
+				if (inserted.status === "rejected") throw inserted.reason
 				const cached = await this.lookup(input.cacheKey)
 				if (cached) return cached
 				const [prior] = await this.query<Interpretation>(
@@ -174,20 +195,7 @@ export class SearchStore {
 							: "busy",
 				}
 			}
-			// Immutable estimate, followed by a separate immutable adjustment on success.
-			// If the response is lost, retain the estimate; never infer a refund.
-			await this.execute(
-				"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, price_version) VALUES (?, ?, ?, 'estimate', ?, ?, ?, ?)",
-				[
-					`${id}:estimate`,
-					id,
-					input.cacheKey,
-					now,
-					now,
-					input.reserveNano,
-					input.priceVersion,
-				],
-			)
+			if (estimate.status === "rejected") throw estimate.reason
 			claimed = true
 			return { kind: "claimed", id }
 		} finally {
@@ -214,13 +222,16 @@ export class SearchStore {
 	async finish(id: string, costNano: number | null, value?: unknown) {
 		if (costNano !== null && (!Number.isSafeInteger(costNano) || costNano < 0))
 			throw new Error("Invalid search cost")
+		// Primary-key reads see writes immediately, independently of search refresh. Both reads run in parallel.
+		const settled = this.query<{ id: string }>(
+			"SELECT id FROM doc.search_spending WHERE id = ?",
+			[`${id}:settled`],
+		)
+		// Handled below; this only keeps an early rejection from counting as unhandled.
+		settled.catch(() => {})
 		const row = await this.reservation(id)
 		try {
-			// Primary-key reads see writes immediately, independently of search refresh.
-			const [previous] = await this.query<{ id: string }>(
-				"SELECT id FROM doc.search_spending WHERE id = ?",
-				[`${id}:settled`],
-			)
+			const [previous] = await settled
 			if (previous) return
 			if (costNano === null) {
 				await this.execute(
@@ -298,7 +309,7 @@ export class SearchStore {
 		reason?: BasicReason
 		// The ranking that produced the served list, so results can be compared by version.
 		rankerVersion: string
-		// SEARCH_RANKING_MODE=on only: why today's ranking served instead of the new one.
+		// Why the basic search served a search that has a reading, instead of the ranking.
 		rankerFallback?: string
 		// Milliseconds per stage (reading, ranking, display, ...), rounded to 0.1 ms.
 		stageMs?: Record<string, number>
@@ -320,45 +331,5 @@ export class SearchStore {
 			],
 		)
 		return id
-	}
-	// One shadow ranking next to the served list. Anything derived from the query text goes into `sealed`.
-	async shadow(input: {
-		historyId: string | null
-		outcome: "ranked" | "skipped" | "failed"
-		reason?: string
-		servedRankerVersion: string
-		rankerVersion?: string
-		buildId?: string
-		route?: string
-		lesserKnown: boolean
-		servedKeys: string[]
-		rankedKeys?: string[]
-		rankedScores?: number[]
-		poolSize?: number
-		stageMs?: Record<string, number>
-		rounds?: { name: string; queries: number; serverMs: number; wallMs: number }[]
-		sealed?: unknown
-	}) {
-		await this.execute(
-			"INSERT INTO doc.search_shadow (id, history_id, created_at, outcome, reason, served_ranker_version, ranker_version, build_id, route, lesser_known, served_keys, ranked_keys, ranked_scores, pool_size, stage_ms, rounds, ciphertext) VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-			[
-				randomUUID(),
-				input.historyId,
-				input.outcome,
-				input.reason ?? null,
-				input.servedRankerVersion,
-				input.rankerVersion ?? null,
-				input.buildId ?? null,
-				input.route ?? null,
-				input.lesserKnown,
-				input.servedKeys,
-				input.rankedKeys ?? null,
-				input.rankedScores ?? null,
-				input.poolSize ?? null,
-				input.stageMs ?? null,
-				input.rounds ?? null,
-				input.sealed === undefined ? null : this.seal(input.sealed),
-			],
-		)
 	}
 }

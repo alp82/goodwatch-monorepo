@@ -1,7 +1,8 @@
 // Public share list page: /u/:handle/lists/:id. The card, large, and the five titles with where they stream in the
 // viewer's country. Lists are looked up by id; a wrong or differently cased handle redirects to the canonical URL, and deleted lists
 // (or lists of deleted accounts) answer 404. Unlisted lists open by link. The page is noindex. Its og:image is the
-// list's share card itself, at the design's own size, versioned by the list's content hash.
+// list's share card itself, as a small JPEG preview versioned by the list's content hash; the full-resolution card PNG
+// stays at the same path with .png.
 import { CheckIcon } from "@heroicons/react/20/solid"
 import {
 	PencilSquareIcon,
@@ -31,7 +32,9 @@ import {
 	profilePath,
 	publicOrigin,
 	shareListEditPath,
-	shareCardImagePath,
+	SHARE_CARD_PREVIEW,
+	shareCardPreviewPath,
+	shareCardPreviewSize,
 	shareListPath,
 } from "~/ui/share-card/links"
 import { type CardTitle, THEMES, cardDate, listByline } from "~/ui/share-card/model"
@@ -103,9 +106,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			isOwner: viewerId === list.userId,
 			share: {
 				url: `${origin}${shareListPath(owner.handle, list.id)}`,
-				image: `${origin}${shareCardImagePath(list)}`,
-				width: design.w,
-				height: design.h,
+				image: `${origin}${shareCardPreviewPath(list)}`,
+				...shareCardPreviewSize(design),
 			},
 		},
 		// Lists are live: after an edit, the page (and its og:image URL) must change right away, so no shared caching.
@@ -136,7 +138,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		{ property: "og:description", content: description },
 		{ property: "og:url", content: share.url },
 		{ property: "og:image", content: share.image },
-		{ property: "og:image:type", content: "image/png" },
+		{ property: "og:image:type", content: SHARE_CARD_PREVIEW.type },
 		{ property: "og:image:width", content: String(share.width) },
 		{ property: "og:image:height", content: String(share.height) },
 		{ property: "og:image:alt", content: alt },

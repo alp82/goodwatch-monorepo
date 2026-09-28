@@ -4,6 +4,7 @@ import base64
 import binascii
 import json
 import re
+from functools import lru_cache
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
@@ -20,6 +21,8 @@ def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
+# Publication decodes each offer's URL for reconciliation and again for evidence.
+@lru_cache(maxsize=16384)
 def provider_name_from_url(url: str | None) -> str | None:
     """Absent metadata permits exact-name fallback; malformed metadata fails."""
     if not url:

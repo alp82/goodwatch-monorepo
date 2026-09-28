@@ -29,6 +29,13 @@ from f.tmdb_web.provider_identity import provider_name_from_url
 
 BATCH_SIZE = 5000
 SUB_BATCH_SIZE = 50000
+# Titles a scheduled run publishes under one set of leases, reads and bulk writes.
+SCHEDULED_BATCH_SIZE = 200
+# Synchronous mapping refreshes a scheduled run may make per media type. Each
+# runs a fetch job for about 2.4 s, and stale legacy scrapes can need thousands.
+SCHEDULED_MAPPING_REFRESHES = 100
+# How far before the last completed run's start the next scheduled run reads.
+WATERMARK_OVERLAP = timedelta(hours=1)
 LEASE_POLL_SECONDS = 2
 # Longer than a targeted publish of one title, far below the 15-minute lease.
 SCHEDULED_LEASE_WAIT_SECONDS = 120
@@ -266,13 +273,76 @@ def refresh_unmapped_country(provider: dict, media_type: str) -> dict:
     )
 
 
+class RefreshBudget:
+    """How many synchronous mapping refreshes a run may still make. None is unbounded."""
+
+    def __init__(self, remaining: Optional[int]) -> None:
+        self.remaining = remaining
+
+    def available(self) -> bool:
+        return self.remaining is None or self.remaining > 0
+
+    def take(self) -> bool:
+        if not self.available():
+            return False
+        if self.remaining is not None:
+            self.remaining -= 1
+        return True
+
+
+@contextmanager
+def publication_leases(db: Any, media_type: str, tmdb_ids: list[int]) -> Iterator[tuple[list[int], Callable[[], None]]]:
+    """Take the free publication leases of many titles under one token.
+
+    Titles another publisher holds are left out of the owned list; the caller
+    publishes them on their own, waiting for the lease.
+    """
+    if db.provider_identity_maintenance.find_one({"_id": "repair", "active": True}):
+        raise RuntimeError("Provider identity maintenance in progress")
+    collection = db.streaming_publication_leases
+    token = str(uuid4())
+    owned: list[int] = []
+    identities: list[str] = []
+    try:
+        for tmdb_id in tmdb_ids:
+            identity = f"{media_type}:{tmdb_id}"
+            now = datetime.utcnow()
+            try:
+                collection.update_one(
+                    {"_id": identity, "expires_at": {"$lte": now}},
+                    {"$set": {"token": token, "expires_at": now + timedelta(minutes=15)}},
+                    upsert=True,
+                )
+            except DuplicateKeyError:
+                continue
+            owned.append(tmdb_id)
+            identities.append(identity)
+
+        def check_owned() -> None:
+            if db.provider_identity_maintenance.find_one({"_id": "repair", "active": True}):
+                raise RuntimeError("Provider identity maintenance in progress")
+            held = collection.count_documents({"_id": {"$in": identities}, "token": token,
+                                               "expires_at": {"$gt": datetime.utcnow() + timedelta(minutes=4)}})
+            if held != len(identities):
+                raise RuntimeError(f"Streaming publication lease lost in a batch of {len(identities)} {media_type} titles")
+
+        yield owned, check_owned
+        check_owned()
+    finally:
+        if identities:
+            collection.delete_many({"_id": {"$in": identities}, "token": token})
+
+
 @contextmanager
 def publication_snapshot(
     db: Any, connector: CrateConnector, tmdb_id: int, media_type: str,
     details_collection: Any, providers_collection: Any, service_ids: dict,
-    lease_wait_seconds: float = 0,
+    lease_wait_seconds: float = 0, refresh_budget: Optional[RefreshBudget] = None,
 ) -> Iterator[tuple]:
-    """Retry unresolved countries once, without holding a write lease during HTTP."""
+    """Retry unresolved countries once, without holding a write lease during HTTP.
+
+    A spent refresh budget defers the country as a failed refresh would.
+    """
     refresh_outcomes = {}
     deferred = set()
     while True:
@@ -290,7 +360,7 @@ def publication_snapshot(
                     tmdb_id, media_type, existing, details, providers, service_ids, deferred)
             except UnmappedStreamingProvider as error:
                 country = error.country
-                if country in refresh_outcomes:
+                if country in refresh_outcomes or (refresh_budget is not None and not refresh_budget.take()):
                     deferred.add(country)
                     continue
                 provider = next(row for row in providers if row.get("country_code") == country)
@@ -346,6 +416,244 @@ def scheduled_candidates(
     return sorted(candidates)
 
 
+def scheduled_cutoff(db: Any, media_type: str, now: datetime) -> datetime:
+    """Where a scheduled run starts reading source changes.
+
+    From shortly before the last completed run started, so each change is
+    published about once; HOURS_TO_FETCH back when no run has completed yet.
+    A failed run leaves the watermark, and the next run catches up.
+    """
+    watermark = db.sync_watermarks.find_one({"_id": f"tmdb_streaming:{media_type}"})
+    if watermark and watermark.get("completed_run_started_at"):
+        return watermark["completed_run_started_at"] - WATERMARK_OVERLAP
+    return now - timedelta(hours=HOURS_TO_FETCH)
+
+
+def record_completed_run(db: Any, media_type: str, started_at: datetime) -> None:
+    db.sync_watermarks.update_one({"_id": f"tmdb_streaming:{media_type}"},
+                                  {"$max": {"completed_run_started_at": started_at}}, upsert=True)
+
+
+def reconcile_deferring_unmapped(
+    tmdb_id: int, media_type: str, existing: list[dict], details: dict,
+    providers: list[dict], service_ids: dict,
+) -> tuple[tuple, set[str]]:
+    """Reconcile, deferring every country whose scraped provider has no mapping."""
+    deferred: set[str] = set()
+    while True:
+        try:
+            return reconcile_availability(tmdb_id, media_type, existing, details, providers, service_ids, deferred), deferred
+        except UnmappedStreamingProvider as error:
+            deferred.add(error.country)
+
+
+def publication_writes(
+    tmdb_id: int, media_type: str, MediaClass: Any, existing: list[dict], details: dict,
+    providers: list[dict], rows: dict, verified: dict, api_results: dict,
+    service_ids: dict, prior_countries: list[str],
+) -> tuple[list[BaseModel], list[BaseModel], list[tuple], Optional[BaseModel]]:
+    """Evidence, changed and removed availability, and the aggregate one title publishes.
+
+    Without a confirmed source only the evidence is written.
+    """
+    evidence: list[BaseModel] = [StreamingEvidence(**record) for record in build_evidence(
+        tmdb_id, media_type, details, providers, rows, verified, scoped_provider_id, service_ids, prior_countries)]
+    if not verified and not api_results:
+        return evidence, [], [], None
+    old_rows = {availability_key(row): StreamingAvailability(**row).model_dump() for row in existing}
+    changed: list[BaseModel] = [StreamingAvailability(**row) for key, row in rows.items() if row != old_rows.get(key)]
+    removed = sorted(old_rows.keys() - rows.keys())
+    metadata = {}
+    for field in ("created_at", "updated_at"):
+        timestamps = [row[field] for row in providers if row.get("updated_at") and row.get(field)]
+        if timestamps:
+            metadata[f"tmdb_providers_{field}"] = to_timestamp(max(timestamps))
+    media = MediaClass(
+        tmdb_id=tmdb_id,
+        streaming_country_codes=sorted({row["country_code"] for row in rows.values()}),
+        streaming_service_ids=sorted({row["streaming_service_id"] for row in rows.values()}),
+        streaming_availabilities=sorted({f"{row['country_code']}_{row['streaming_service_id']}" for row in rows.values()}),
+        **metadata,
+    )
+    return evidence, changed, removed, media
+
+
+def add_counts(entity_counts: dict, entity: str, result: dict) -> None:
+    for field in ("records_received", "rows_upserted"):
+        entity_counts[entity][field] += result[field]
+
+
+def publish_quarantined(
+    mongo_db: Any, connector: CrateConnector, tmdb_id: int, media_type: str, unresolved: dict,
+    lease_wait_seconds: float, publication: dict, targeted: bool,
+) -> None:
+    # Quarantined source identities are not an empty availability
+    # snapshot. Freeze the entire published title, including API
+    # contributions, until its identity is authoritatively resolved.
+    # Invalidate evidence even while legacy offers remain frozen.
+    with publication_lease(mongo_db, media_type, tmdb_id, lease_wait_seconds) as check_owned:
+        check_owned()
+        connector.run("REFRESH TABLE streaming_evidence")
+        previous = connector.select("SELECT * FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?", ([tmdb_id], media_type))
+        evidence = [StreamingEvidence(**row) for row in quarantine_evidence(previous)]
+        if evidence:
+            connector.upsert_many(table="streaming_evidence", records=evidence,
+                conflict_columns=SCHEMAS["streaming_evidence"]["primary_key"], silent=True, replace_nulls=True)
+    publication["status"] = "partial_success"
+    if targeted:
+        publication["titles"][str(tmdb_id)] = {
+            "provider_state": "quarantined", "identity_resolution": unresolved["status"],
+            "deferred_country_count": unresolved["source_country_count"],
+            "unidentified_country_count": unresolved["source_document_count"],
+            "streaming_availability": None,
+        }
+
+
+def publish_title(
+    mongo_db: Any, connector: CrateConnector, tmdb_id: int, media_type: str, MediaClass: Any,
+    mongo_details: Any, mongo_providers: Any, service_ids: dict, lease_wait_seconds: float,
+    refresh_budget: RefreshBudget, entity_counts: dict, publication: dict, targeted: bool,
+) -> None:
+    """Publish one title under its own lease, refreshing unmapped countries within the budget."""
+    with publication_snapshot(
+        mongo_db, connector, tmdb_id, media_type, mongo_details, mongo_providers, service_ids,
+        lease_wait_seconds, refresh_budget,
+    ) as snapshot:
+        check_owned, existing, providers, rows, verified, api_results, refresh_outcomes, details = snapshot
+        unverified = [
+            row for row in providers
+            if verified.get(row.get("country_code")) is not row
+        ]
+        deferred = sorted({row["country_code"] for row in unverified
+                           if row.get("country_code")})
+        summary = {"provider_refresh_outcomes": refresh_outcomes, "verified_countries": sorted(verified), "deferred_countries": deferred,
+                   "api_countries": sorted(api_results), "provider_state": "present" if providers else "absent",
+                   "deferred_country_count": len(unverified),
+                   "unidentified_country_count": sum(not row.get("country_code") for row in unverified),
+                   "streaming_availability": (sorted({f"{row['streaming_service_id']}_{row['country_code']}" for row in rows.values()})
+                                              if existing or verified or api_results else None)}
+        if unverified or not providers:
+            publication["status"] = "partial_success"
+        if targeted:
+            publication["titles"][str(tmdb_id)] = summary
+        check_owned()
+        connector.run("REFRESH TABLE streaming_evidence")
+        prior_evidence = connector.select(
+            "SELECT country_code FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?",
+            ([tmdb_id], media_type))
+        evidence, changed, removed, media = publication_writes(
+            tmdb_id, media_type, MediaClass, existing, details, providers, rows, verified, api_results,
+            service_ids, [record["country_code"] for record in prior_evidence])
+        if evidence:
+            check_owned()
+            connector.upsert_many(table="streaming_evidence", records=evidence,
+                conflict_columns=SCHEMAS["streaming_evidence"]["primary_key"], silent=True, replace_nulls=True)
+            check_owned()
+        if media is None:
+            return
+        # Exact source snapshots must clear NULL fields too. Write additions
+        # before removals so failed inserts cannot erase retained source data.
+        if changed:
+            check_owned()
+            result = connector.upsert_many(
+                table="streaming_availability", records=changed,
+                conflict_columns=SCHEMAS["streaming_availability"]["primary_key"],
+                silent=True, replace_nulls=True,
+            )
+            add_counts(entity_counts, "streaming_availability", result)
+        for key in removed:
+            check_owned()
+            connector.run(
+                "DELETE FROM streaming_availability WHERE media_tmdb_id = ? AND media_type = ? "
+                "AND country_code = ? AND streaming_service_id = ? AND streaming_type = ?", key)
+        check_owned()
+        result = upsert_in_batches(connector, "movie" if media_type == "movie" else "show", [media])
+        check_owned()
+        add_counts(entity_counts, "movies" if media_type == "movie" else "shows", result)
+
+
+def publish_batch(
+    mongo_db: Any, connector: CrateConnector, tmdb_ids: list[int], media_type: str, MediaClass: Any,
+    mongo_details: Any, mongo_providers: Any, service_ids: dict,
+    refresh_budget: RefreshBudget, entity_counts: dict, publication: dict,
+) -> list[int]:
+    """Publish many titles with one read per source and one bulk write per table.
+
+    The same reconciliation and write order as publish_title, under one set of
+    leases. Returns the titles left to publish_title: those another publisher
+    holds, and those with an unmapped provider while refreshes remain.
+    """
+    left: list[int] = []
+    with publication_leases(mongo_db, media_type, tmdb_ids) as (owned, check_owned):
+        owned_ids = set(owned)
+        left += [tmdb_id for tmdb_id in tmdb_ids if tmdb_id not in owned_ids]
+        if not owned:
+            return left
+        details_by_id = fetch_documents_in_batch(owned, mongo_details)
+        providers_by_id = fetch_all_documents_in_batch(owned, mongo_providers)
+        check_owned()
+        connector.run("REFRESH TABLE streaming_availability")
+        existing_by_id = defaultdict(list)
+        for row in connector.select(
+            "SELECT * FROM streaming_availability WHERE media_tmdb_id = ANY(?) AND media_type = ?", (owned, media_type)
+        ):
+            existing_by_id[row["media_tmdb_id"]].append(row)
+        connector.run("REFRESH TABLE streaming_evidence")
+        prior_by_id = defaultdict(list)
+        for row in connector.select(
+            "SELECT media_tmdb_id, country_code FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?",
+            (owned, media_type),
+        ):
+            prior_by_id[row["media_tmdb_id"]].append(row["country_code"])
+        refreshes_left = refresh_budget.remaining
+        evidence: list[BaseModel] = []
+        changed: list[BaseModel] = []
+        removed: list[tuple] = []
+        media: list[BaseModel] = []
+        for tmdb_id in owned:
+            details = details_by_id.get(tmdb_id, {})
+            providers = providers_by_id.get(tmdb_id, [])
+            existing = existing_by_id.get(tmdb_id, [])
+            (rows, verified, api_results), unmapped = reconcile_deferring_unmapped(
+                tmdb_id, media_type, existing, details, providers, service_ids)
+            if unmapped and (refreshes_left is None or refreshes_left > 0):
+                refreshes_left = None if refreshes_left is None else refreshes_left - 1
+                left.append(tmdb_id)
+                continue
+            if any(verified.get(row.get("country_code")) is not row for row in providers) or not providers:
+                publication["status"] = "partial_success"
+            title_evidence, title_changed, title_removed, title_media = publication_writes(
+                tmdb_id, media_type, MediaClass, existing, details, providers, rows, verified, api_results,
+                service_ids, prior_by_id.get(tmdb_id, []))
+            evidence += title_evidence
+            changed += title_changed
+            removed += title_removed
+            if title_media is not None:
+                media.append(title_media)
+        if evidence:
+            check_owned()
+            connector.upsert_many(table="streaming_evidence", records=evidence,
+                conflict_columns=SCHEMAS["streaming_evidence"]["primary_key"], silent=True, replace_nulls=True)
+        if changed:
+            check_owned()
+            result = connector.upsert_many(
+                table="streaming_availability", records=changed,
+                conflict_columns=SCHEMAS["streaming_availability"]["primary_key"],
+                silent=True, replace_nulls=True,
+            )
+            add_counts(entity_counts, "streaming_availability", result)
+        if removed:
+            check_owned()
+            connector.run_many(
+                "DELETE FROM streaming_availability WHERE media_tmdb_id = ? AND media_type = ? "
+                "AND country_code = ? AND streaming_service_id = ? AND streaming_type = ?", [list(key) for key in removed])
+        if media:
+            check_owned()
+            result = upsert_in_batches(connector, "movie" if media_type == "movie" else "show", media)
+            add_counts(entity_counts, "movies" if media_type == "movie" else "shows", result)
+    return left
+
+
 def copy_media(
     connector: CrateConnector,
     query_selector: dict = {},
@@ -358,9 +666,17 @@ def copy_media(
     mongo_db = get_db()
     mongo_details = mongo_db.tmdb_movie_details if is_movie else mongo_db.tmdb_tv_details
     mongo_providers = mongo_db.tmdb_movie_providers if is_movie else mongo_db.tmdb_tv_providers
-    media_table_name = "movie" if is_movie else "show"
     MediaClass = Movie if is_movie else Show
-    cutoff = datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH) if recent_only else None
+    started_at = datetime.utcnow()
+    run_clock = time.monotonic()
+    # Only the full scheduled run advances the watermark; selector runs keep the fixed window.
+    whole_catalog = recent_only and not query_selector
+    if not recent_only:
+        cutoff = None
+    elif whole_catalog:
+        cutoff = scheduled_cutoff(mongo_db, media_type, started_at)
+    else:
+        cutoff = started_at - timedelta(hours=HOURS_TO_FETCH)
     # Failure/pending invalidation must not require a new whole-catalog scan.
     # Index creation is idempotent; deploy these before enabling the new writer.
     mongo_providers.create_index([("failed_at", 1), ("tmdb_id", 1)])
@@ -379,115 +695,49 @@ def copy_media(
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     publication = {"status": "success", "titles": {}}
     targeted_ids = query_selector.get("tmdb_id", {}).get("$in") if not recent_only else None
-    lease_wait_seconds = 0 if targeted_ids is not None else SCHEDULED_LEASE_WAIT_SECONDS
+    targeted = targeted_ids is not None
+    lease_wait_seconds = 0 if targeted else SCHEDULED_LEASE_WAIT_SECONDS
+    # A targeted title refreshes every unmapped country; a scheduled run defers
+    # them once its refreshes are spent, keeping their published contribution.
+    refresh_budget = RefreshBudget(None if targeted else SCHEDULED_MAPPING_REFRESHES)
     # Either source can change independently. Merge them so API-only updates
     # reach the same reconciler without a second writer.
-    candidate_ids = targeted_ids if targeted_ids is not None else scheduled_candidates(
+    candidate_ids = targeted_ids if targeted else scheduled_candidates(
         mongo_db, mongo_details, mongo_providers, query_selector, cutoff, is_movie)
+    print(f"Publishing {len(candidate_ids)} {media_type} titles changed since {cutoff}", flush=True)
     for start in range(0, len(candidate_ids), BATCH_SIZE):
         tmdb_ids = candidate_ids[start:start + BATCH_SIZE]
         # Titles deleted on TMDB are removed by the details sync; never republish them.
         flagged_ids = flagged_among(mongo_details, tmdb_ids)
+        unresolved_by_id = {row["tmdb_id"]: row for row in mongo_db.provider_identity_unresolved.find({
+            "media": "movie" if is_movie else "tv", "tmdb_id": {"$in": list(tmdb_ids)},
+            "status": {"$in": ["unresolved", "resolved_alias"]},
+        })}
+        publishable = []
         for tmdb_id in tmdb_ids:
             if tmdb_id in flagged_ids:
                 continue
-            unresolved = mongo_db.provider_identity_unresolved.find_one({
-                "media": "movie" if is_movie else "tv", "tmdb_id": tmdb_id,
-                "status": {"$in": ["unresolved", "resolved_alias"]},
-            })
-            if unresolved:
-                # Quarantined source identities are not an empty availability
-                # snapshot. Freeze the entire published title, including API
-                # contributions, until its identity is authoritatively resolved.
-                # Invalidate evidence even while legacy offers remain frozen.
-                with publication_lease(mongo_db, media_type, tmdb_id, lease_wait_seconds) as check_owned:
-                    check_owned()
-                    connector.run("REFRESH TABLE streaming_evidence")
-                    previous = connector.select("SELECT * FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?", ([tmdb_id], media_type))
-                    evidence = [StreamingEvidence(**row) for row in quarantine_evidence(previous)]
-                    if evidence:
-                        connector.upsert_many(table="streaming_evidence", records=evidence,
-                            conflict_columns=SCHEMAS["streaming_evidence"]["primary_key"], silent=True, replace_nulls=True)
-                publication["status"] = "partial_success"
-                if targeted_ids is not None:
-                    publication["titles"][str(tmdb_id)] = {
-                        "provider_state": "quarantined", "identity_resolution": unresolved["status"],
-                        "deferred_country_count": unresolved["source_country_count"],
-                        "unidentified_country_count": unresolved["source_document_count"],
-                        "streaming_availability": None,
-                    }
-                continue
-            with publication_snapshot(
-                mongo_db, connector, tmdb_id, media_type, mongo_details, mongo_providers, service_ids,
-                lease_wait_seconds,
-            ) as snapshot:
-                check_owned, existing, providers, rows, verified, api_results, refresh_outcomes, details = snapshot
-                unverified = [
-                    row for row in providers
-                    if verified.get(row.get("country_code")) is not row
-                ]
-                deferred = sorted({row["country_code"] for row in unverified
-                                   if row.get("country_code")})
-                summary = {"provider_refresh_outcomes": refresh_outcomes, "verified_countries": sorted(verified), "deferred_countries": deferred,
-                           "api_countries": sorted(api_results), "provider_state": "present" if providers else "absent",
-                           "deferred_country_count": len(unverified),
-                           "unidentified_country_count": sum(not row.get("country_code") for row in unverified),
-                           "streaming_availability": (sorted({f"{row['streaming_service_id']}_{row['country_code']}" for row in rows.values()})
-                                                      if existing or verified or api_results else None)}
-                if unverified or not providers:
-                    publication["status"] = "partial_success"
-                if targeted_ids is not None:
-                    publication["titles"][str(tmdb_id)] = summary
-                check_owned()
-                connector.run("REFRESH TABLE streaming_evidence")
-                prior_evidence = connector.select(
-                    "SELECT country_code FROM streaming_evidence WHERE media_tmdb_id = ANY(?) AND media_type = ?",
-                    ([tmdb_id], media_type))
-                evidence = [StreamingEvidence(**record) for record in build_evidence(
-                    tmdb_id, media_type, details, providers, rows, verified, scoped_provider_id, service_ids,
-                    [record["country_code"] for record in prior_evidence])]
-                if evidence:
-                    check_owned()
-                    connector.upsert_many(table="streaming_evidence", records=evidence,
-                        conflict_columns=SCHEMAS["streaming_evidence"]["primary_key"], silent=True, replace_nulls=True)
-                    check_owned()
-                if not verified and not api_results:
-                    continue
-                old_rows = {availability_key(row): StreamingAvailability(**row).model_dump() for row in existing}
-                changed: list[BaseModel] = [StreamingAvailability(**row) for key, row in rows.items() if row != old_rows.get(key)]
-                # Exact source snapshots must clear NULL fields too. Write additions
-                # before removals so failed inserts cannot erase retained source data.
-                if changed:
-                    check_owned()
-                    result = connector.upsert_many(
-                        table="streaming_availability", records=changed,
-                        conflict_columns=SCHEMAS["streaming_availability"]["primary_key"],
-                        silent=True, replace_nulls=True,
-                    )
-                    for field in ("records_received", "rows_upserted"):
-                        entity_counts["streaming_availability"][field] += result[field]
-                for key in old_rows.keys() - rows.keys():
-                    check_owned()
-                    connector.run(
-                        "DELETE FROM streaming_availability WHERE media_tmdb_id = ? AND media_type = ? "
-                        "AND country_code = ? AND streaming_service_id = ? AND streaming_type = ?", key)
-                metadata = {}
-                for field in ("created_at", "updated_at"):
-                    timestamps = [row[field] for row in providers if row.get("updated_at") and row.get(field)]
-                    if timestamps:
-                        metadata[f"tmdb_providers_{field}"] = to_timestamp(max(timestamps))
-                media = MediaClass(
-                    tmdb_id=tmdb_id,
-                    streaming_country_codes=sorted({row["country_code"] for row in rows.values()}),
-                    streaming_service_ids=sorted({row["streaming_service_id"] for row in rows.values()}),
-                    streaming_availabilities=sorted({f"{row['country_code']}_{row['streaming_service_id']}" for row in rows.values()}),
-                    **metadata,
-                )
-                check_owned()
-                result = upsert_in_batches(connector, media_table_name, [media])
-                check_owned()
-                for field in ("records_received", "rows_upserted"):
-                    entity_counts["movies" if is_movie else "shows"][field] += result[field]
+            if tmdb_id in unresolved_by_id:
+                publish_quarantined(mongo_db, connector, tmdb_id, media_type, unresolved_by_id[tmdb_id],
+                                    lease_wait_seconds, publication, targeted)
+            else:
+                publishable.append(tmdb_id)
+        batches = [publishable] if targeted else [
+            publishable[batch_start:batch_start + SCHEDULED_BATCH_SIZE]
+            for batch_start in range(0, len(publishable), SCHEDULED_BATCH_SIZE)]
+        for batch in batches:
+            one_by_one = batch if targeted else publish_batch(
+                mongo_db, connector, batch, media_type, MediaClass, mongo_details, mongo_providers,
+                service_ids, refresh_budget, entity_counts, publication)
+            # Spend the refreshes before the next batch decides which titles to leave.
+            for tmdb_id in one_by_one:
+                publish_title(mongo_db, connector, tmdb_id, media_type, MediaClass, mongo_details, mongo_providers,
+                              service_ids, lease_wait_seconds, refresh_budget, entity_counts, publication, targeted)
+        if not targeted:
+            print(f"  {min(start + BATCH_SIZE, len(candidate_ids))}/{len(candidate_ids)} {media_type} titles "
+                  f"in {time.monotonic() - run_clock:.0f} s", flush=True)
+    if whole_catalog:
+        record_completed_run(mongo_db, media_type, started_at)
     return dict(entity_counts) | {"publication": publication}
 
 

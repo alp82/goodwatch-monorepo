@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Import reviewed, recovered TV Tropes results into the production Mongo documents.
 
-Default is a DRY RUN that only reads. Three modes:
+Default is a DRY RUN that only reads. Four modes:
 
   build-manifest  write the reviewed allow-list from run dirs + the review report
   import          (default) dry run, or --apply to write; writes a rollback file
+  remove LIST     dry run, or --apply: clear the tropes and URL of pages reviewed as
+                  the wrong work (#123); backs the documents up first
   --rollback F    restore the fields an earlier --apply changed
 
 The import writes exactly what `fetch_entry` in
@@ -17,7 +19,10 @@ makes it pick the rows up.
 
 Documents are never created: tvtropes_init_tags upserts one document per TMDB
 title, so a missing document means the identity is wrong and it is skipped.
-Documents that already hold tropes are never replaced. A document with no
+Documents that already hold tropes are never replaced, except by a reviewed
+re-check (`recover_tvtropes.py queue --recheck`): its manifest entry names the
+page and trope count it replaces, the document must still hold exactly those,
+and --backup-collection copies the whole document first. A document with no
 tropes but a stale tvtropes_url is importable; the dry run reports the previous
 url (url-replaced / url-same) and the rollback record restores it exactly.
 --apply requires --expect-count N and aborts before the first write unless
@@ -144,6 +149,9 @@ def build_manifest(run_dirs, report_path, deny, expected):
                 "country_suffixed_page": has_country_suffix(url),
                 "run": record["_run"],
             }
+            # A reviewed re-check (#123) may replace exactly the page it was checked against.
+            | ({"replaces_url": record.get("before_url"), "replaces_trope_count": record.get("before_trope_count")}
+               if record.get("recheck") and record.get("before_trope_count") else {})
         )
     for key in sorted(set(reviewed) - set(candidates)):
         problems.append(f"{key}: reviewed ok in the report but not recovered in the runs")
@@ -193,6 +201,13 @@ class MongoStore:
             update["$unset"] = {name: "" for name in unset_fields}
         return self.db[COLLECTIONS[media_type]].update_one(query, update).modified_count
 
+    def backup(self, collection, media_type, docs):
+        """Copy whole documents into `collection` before a write. The first copy of a
+        document is kept, so a second run can't overwrite it with a changed one."""
+        for doc in docs:
+            copy = dict(doc, _source_collection=COLLECTIONS[media_type], _backed_up_at=datetime.utcnow())
+            self.db[collection].update_one({"_id": doc["_id"]}, {"$setOnInsert": copy}, upsert=True)
+
 
 class ReadOnlyStore:
     def __init__(self, store):
@@ -200,6 +215,9 @@ class ReadOnlyStore:
         self.find_by_id = store.find_by_id
 
     def update(self, *args, **kwargs):
+        raise RuntimeError("write attempted during a dry run")
+
+    def backup(self, *args, **kwargs):
         raise RuntimeError("write attempted during a dry run")
 
 
@@ -288,7 +306,13 @@ def plan(key, record, manifest, deny, store):
     if len(docs) > 1:
         return "skip", f"{len(docs)} Mongo documents for this identity", docs
     if docs[0].get("tropes"):
-        return "skip", "Mongo document already has tropes", docs
+        if not entry.get("replaces_url"):
+            return "skip", "Mongo document already has tropes", docs
+        current = (docs[0].get("tvtropes_url"), len(docs[0]["tropes"]))
+        if current != (entry["replaces_url"], entry.get("replaces_trope_count")):
+            return "skip", (f"document holds {current[0]} ({current[1]} tropes), the review replaces "
+                            f"{entry['replaces_url']} ({entry.get('replaces_trope_count')} tropes)"), docs
+        return "import", "replace", docs
     return "import", "", docs
 
 
@@ -299,7 +323,8 @@ def url_state(doc, new_url):
     return "url-same" if previous == new_url else "url-replaced"
 
 
-def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=print, expect_count=None):
+def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=print, expect_count=None,
+               backup_collection=None):
     deny = set(deny)
     candidates = recovered(load_latest(run_dirs))
     if not apply:
@@ -319,6 +344,12 @@ def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=p
         raise SystemExit(
             f"aborted before any write: {planned} identities would be imported, --expect-count is {expect_count}"
         )
+    replacing = [p for p in plans if p[2] == "import" and p[3] == "replace"]
+    if apply and replacing:
+        if not backup_collection:
+            raise SystemExit("aborted before any write: replacing tropes needs --backup-collection")
+        for key, _, _, _, docs in replacing:
+            store.backup(backup_collection, key[0], docs)
     for key, record, action, reason, docs in plans:
         title = (record or manifest[key]).get("title")
         label = f"{key[0]}:{key[1]} {title!r}"
@@ -349,8 +380,9 @@ def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=p
                 # null matches absent too; the exact previous url and updated_at must still be there
                 "tvtropes_url": doc.get("tvtropes_url"),
                 "updated_at": doc.get("updated_at"),
-                "$or": [{"tropes": {"$exists": False}}, {"tropes": None}, {"tropes": []}],
             }
+            if reason != "replace":
+                guard["$or"] = [{"tropes": {"$exists": False}}, {"tropes": None}, {"tropes": []}]
             if store.update(key[0], guard, written, UNSET_FIELDS) != 1:
                 rollback["entries"].pop()
                 dump_json(rollback_path, rollback)
@@ -360,6 +392,8 @@ def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=p
             urls = url_state(docs[0], record["result"]["url"])
             totals[urls] += 1
             verb = "imported" if apply else "would-import"
+            if reason == "replace":
+                urls += f" replaced {len(docs[0]['tropes'])} tropes"
             out(
                 f"{verb:12} {label} <- {record['result']['url']} ({len(record['result']['tropes'])} tropes) "
                 f"| {urls} previous_url={docs[0].get('tvtropes_url')!r} | {state}"
@@ -381,6 +415,86 @@ def run_import(run_dirs, manifest, deny, store, apply, rollback_path=None, out=p
     if apply:
         out(f"rollback file: {rollback_path}")
     return totals, skips
+
+
+# ===== Remove =====
+
+
+def load_removals(path):
+    """The reviewed removal list: {"entries": [{media_type, tmdb_id, url, trope_count, reason}]}."""
+    removals = {}
+    for entry in json.loads(Path(path).read_text(encoding="utf-8"))["entries"]:
+        key = (entry["media_type"], int(entry["tmdb_id"]))
+        if key in removals:
+            raise SystemExit(f"removal list names {key} twice")
+        if key[0] not in COLLECTIONS or not entry.get("url") or not entry.get("reason"):
+            raise SystemExit(f"removal of {key} needs a media type, the reviewed url and a reason")
+        removals[key] = entry
+    return removals
+
+
+def run_remove(removals, store, apply, rollback_path=None, out=print, expect_count=None, backup_collection=None):
+    """Clear the tropes and URL of documents that hold a page reviewed as the wrong work (#123).
+
+    A document is cleared only while it still holds the reviewed URL and trope count. The
+    whole documents are copied to `backup_collection` and a rollback record is written
+    before the first write; `--rollback` restores them. Returns (removed, skips)."""
+    if not apply:
+        store = ReadOnlyStore(store)
+    plans = []
+    for key, entry in sorted(removals.items()):
+        docs = store.find(*key)
+        if not docs:
+            reason = "no Mongo document"
+        elif len(docs) > 1:
+            reason = f"{len(docs)} Mongo documents for this identity"
+        elif docs[0].get("tvtropes_url") != entry["url"]:
+            reason = f"url is {docs[0].get('tvtropes_url')}, the review removes {entry['url']}"
+        elif len(docs[0].get("tropes") or []) != entry.get("trope_count"):
+            reason = f"trope count is {len(docs[0].get('tropes') or [])}, the review removes {entry.get('trope_count')}"
+        else:
+            reason = None
+        plans.append((key, entry, reason, docs))
+    planned = [p for p in plans if p[2] is None]
+    if apply:
+        if len(planned) != expect_count:
+            raise SystemExit(f"aborted before any write: {len(planned)} documents would be cleared, "
+                             f"--expect-count is {expect_count}")
+        if not backup_collection:
+            raise SystemExit("aborted before any write: removing tropes needs --backup-collection")
+        for key, _, _, docs in planned:
+            store.backup(backup_collection, key[0], docs)
+    rollback = {"created_at": datetime.now(timezone.utc).isoformat(), "kind": "remove", "entries": []}
+    removed, skips = 0, []
+    for key, entry, reason, docs in plans:
+        label = f"{key[0]}:{key[1]}"
+        if reason is None and apply:
+            doc = docs[0]
+            written_at = utcnow_ms()
+            rollback["entries"].append({
+                "media_type": key[0], "tmdb_id": key[1], "_id": doc["_id"], "previous": previous_values(doc),
+                "written_url": None, "written_tropes_sha256": tropes_sha256([]), "written_updated_at": written_at,
+                "reason": entry["reason"]})
+            dump_json(rollback_path, rollback)  # before the write
+            guard = {"_id": doc["_id"], "tmdb_id": key[1], "tvtropes_url": doc.get("tvtropes_url"),
+                     "updated_at": doc.get("updated_at")}
+            if store.update(key[0], guard, {"tropes": [], "updated_at": written_at, "is_selected": False},
+                            ["tvtropes_url"]) != 1:
+                rollback["entries"].pop()
+                dump_json(rollback_path, rollback)
+                reason = "document changed between read and write"
+        if reason is None:
+            removed += 1
+            out(f"{'removed' if apply else 'would-remove':12} {label} {entry['url']} "
+                f"({len(docs[0]['tropes'])} tropes): {entry['reason']}")
+        else:
+            skips.append((key, reason))
+            out(f"{'skip':12} {label}: {reason}")
+    out(f"\nmode: {'APPLY' if apply else 'DRY RUN (no writes)'}")
+    out(f"{'removed' if apply else 'would-remove'}: {removed}  skipped: {len(skips)}")
+    if apply:
+        out(f"backup collection: {backup_collection}\nrollback file: {rollback_path}")
+    return removed, skips
 
 
 def run_rollback(path, store, out=print):
@@ -426,6 +540,22 @@ def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     building = argv[:1] == ["build-manifest"]
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    if argv[:1] == ["remove"]:
+        parser.add_argument("removals", type=Path, help="reviewed removal list (JSON)")
+        parser.add_argument("--apply", action="store_true")
+        parser.add_argument("--expect-count", type=int)
+        parser.add_argument("--backup-collection", help="required with --apply, e.g. _backup_20260927_tvtropes_123")
+        parser.add_argument("--rollback-out", type=Path, required=True)
+        args = parser.parse_args(argv[1:])
+        if args.apply and args.rollback_out.exists():
+            parser.error(f"{args.rollback_out} exists; rollback records are never overwritten")
+        client, db = connect()
+        try:
+            run_remove(load_removals(args.removals), MongoStore(db), args.apply, args.rollback_out,
+                       expect_count=args.expect_count, backup_collection=args.backup_collection)
+        finally:
+            client.close()
+        return 0
     parser.add_argument("run_dirs", nargs="*", type=Path)
     parser.add_argument("--deny", action="append", type=identity, default=[], metavar="media_type:tmdb_id")
     if building:
@@ -444,6 +574,7 @@ def main(argv=None):
     parser.add_argument("--expect-count", type=int, help="required with --apply: exact number of identities to import")
     parser.add_argument("--rollback", type=Path)
     parser.add_argument("--rollback-out", type=Path, help="where --apply writes its rollback record")
+    parser.add_argument("--backup-collection", help="required when --apply replaces tropes (reviewed re-checks)")
     args = parser.parse_args(argv)
     if args.rollback:
         client, db = connect()
@@ -465,7 +596,7 @@ def main(argv=None):
     client, db = connect()
     try:
         run_import(args.run_dirs, load_manifest(args.allow_file), args.deny, MongoStore(db), args.apply, rollback_path,
-                   expect_count=args.expect_count)
+                   expect_count=args.expect_count, backup_collection=args.backup_collection)
     finally:
         client.close()
     return 0

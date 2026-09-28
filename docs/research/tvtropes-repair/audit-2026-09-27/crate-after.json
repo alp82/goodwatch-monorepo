@@ -1,0 +1,290 @@
+{
+ "show:246": {
+  "stale": 0,
+  "mongo_names": 1210,
+  "media_tropes": 1211,
+  "missing_rows": 0,
+  "trope_rows_before": 1210,
+  "media_matches_mongo": true
+ },
+ "movie:238": {
+  "stale": 0,
+  "mongo_names": 382,
+  "media_tropes": 393,
+  "missing_rows": 0,
+  "trope_rows_before": 382,
+  "media_matches_mongo": true
+ },
+ "movie:240": {
+  "stale": 0,
+  "mongo_names": 102,
+  "media_tropes": 102,
+  "missing_rows": 0,
+  "trope_rows_before": 102,
+  "media_matches_mongo": true
+ },
+ "movie:242": {
+  "stale": 0,
+  "mongo_names": 50,
+  "media_tropes": 50,
+  "missing_rows": 0,
+  "trope_rows_before": 50,
+  "media_matches_mongo": true
+ },
+ "movie:431": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:564": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:764": {
+  "stale": 0,
+  "mongo_names": 59,
+  "media_tropes": 59,
+  "missing_rows": 0,
+  "trope_rows_before": 59,
+  "media_matches_mongo": true
+ },
+ "movie:816": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:817": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:818": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:869": {
+  "stale": 0,
+  "mongo_names": 61,
+  "media_tropes": 61,
+  "missing_rows": 0,
+  "trope_rows_before": 61,
+  "media_matches_mongo": true
+ },
+ "movie:871": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:920": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:929": {
+  "stale": 0,
+  "mongo_names": 193,
+  "media_tropes": 193,
+  "missing_rows": 0,
+  "trope_rows_before": 193,
+  "media_matches_mongo": true
+ },
+ "movie:948": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:1091": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:1726": {
+  "stale": 0,
+  "mongo_names": 277,
+  "media_tropes": 277,
+  "missing_rows": 0,
+  "trope_rows_before": 277,
+  "media_matches_mongo": true
+ },
+ "movie:3176": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:6637": {
+  "stale": 0,
+  "mongo_names": 31,
+  "media_tropes": 31,
+  "missing_rows": 0,
+  "trope_rows_before": 31,
+  "media_matches_mongo": true
+ },
+ "movie:8077": {
+  "stale": 0,
+  "mongo_names": 149,
+  "media_tropes": 149,
+  "missing_rows": 0,
+  "trope_rows_before": 149,
+  "media_matches_mongo": true
+ },
+ "movie:8681": {
+  "stale": 0,
+  "mongo_names": 90,
+  "media_tropes": 90,
+  "missing_rows": 0,
+  "trope_rows_before": 90,
+  "media_matches_mongo": true
+ },
+ "movie:9335": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "show:37854": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:12230": {
+  "stale": 0,
+  "mongo_names": 205,
+  "media_tropes": 205,
+  "missing_rows": 0,
+  "trope_rows_before": 205,
+  "media_matches_mongo": true
+ },
+ "movie:17578": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:18785": {
+  "stale": 0,
+  "mongo_names": 69,
+  "media_tropes": 69,
+  "missing_rows": 0,
+  "trope_rows_before": 69,
+  "media_matches_mongo": true
+ },
+ "movie:45243": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:82675": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:109428": {
+  "stale": 0,
+  "mongo_names": 60,
+  "media_tropes": 60,
+  "missing_rows": 0,
+  "trope_rows_before": 60,
+  "media_matches_mongo": true
+ },
+ "movie:109439": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:124905": {
+  "stale": 0,
+  "mongo_names": 299,
+  "media_tropes": 299,
+  "missing_rows": 0,
+  "trope_rows_before": 299,
+  "media_matches_mongo": true
+ },
+ "movie:260346": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:282035": {
+  "stale": 0,
+  "mongo_names": 101,
+  "media_tropes": 101,
+  "missing_rows": 0,
+  "trope_rows_before": 101,
+  "media_matches_mongo": true
+ },
+ "movie:417859": {
+  "stale": 0,
+  "mongo_names": 185,
+  "media_tropes": 188,
+  "missing_rows": 0,
+  "trope_rows_before": 185,
+  "media_matches_mongo": true
+ },
+ "movie:447273": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ },
+ "movie:1062722": {
+  "stale": 0,
+  "mongo_names": 0,
+  "media_tropes": 0,
+  "missing_rows": 0,
+  "trope_rows_before": 0,
+  "media_matches_mongo": true
+ }
+}

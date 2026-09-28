@@ -1,4 +1,4 @@
-// Renders share cards and list link previews to PNG in child processes (render.child.js), so a render never blocks the web server and a
+// Renders share cards (PNG) and their link previews (JPEG) in child processes (render.child.js), so a render never blocks the web server and a
 // resvg abort only ends that child. A crashed or stuck child fails its render and is replaced on the next one.
 import { type ChildProcess, fork } from "node:child_process"
 import { existsSync } from "node:fs"
@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url"
 import { Fragment, type ReactElement, type ReactNode, isValidElement } from "react"
 import { toDataUri } from "~/server/og-image/render.server"
 import { CARD_FONTS, CARD_FONT_DIR } from "~/ui/share-card/fonts"
+import { SHARE_CARD_PREVIEW } from "~/ui/share-card/links"
 import type { CardDesign, CardProps, CardTitle } from "~/ui/share-card/model"
 
 const POOL_SIZE = Number(process.env.SHARE_CARD_RENDERERS) || 2
@@ -31,7 +32,7 @@ type Job = {
 	tree: unknown
 	width: number
 	height: number
-	resolve: (png: Buffer) => void
+	resolve: (images: ShareCardImages) => void
 	reject: (error: Error) => void
 }
 
@@ -58,12 +59,13 @@ function spawn(slot: Slot) {
 		child.once("message", (message: { ready?: boolean }) => (message.ready ? resolve() : reject(new Error("Renderer failed to start"))))
 		child.once("error", reject)
 	})
-	child.on("message", (message: { id?: number; png?: string; error?: string }) => {
+	child.on("message", (message: { id?: number; png?: string; jpeg?: string; error?: string }) => {
 		const job = slot.job
 		if (!job || message.id !== job.id) return
 		clearTimeout(slot.timer)
 		slot.job = null
-		if (message.png) job.resolve(Buffer.from(message.png, "base64"))
+		if (message.png && message.jpeg)
+			job.resolve({ card: Buffer.from(message.png, "base64"), preview: Buffer.from(message.jpeg, "base64") })
 		else job.reject(new Error(message.error ?? "Render failed"))
 		next()
 	})
@@ -89,7 +91,13 @@ function next() {
 					fail(slot, new Error(`Render timed out after ${RENDER_TIMEOUT_MS} ms`))
 					child.kill("SIGKILL")
 				}, RENDER_TIMEOUT_MS)
-				child.send({ id: job.id, tree: job.tree, width: job.width, height: job.height })
+				child.send({
+					id: job.id,
+					tree: job.tree,
+					width: job.width,
+					height: job.height,
+					preview: { width: SHARE_CARD_PREVIEW.width, quality: SHARE_CARD_PREVIEW.quality },
+				})
 			})
 			.catch((error) => {
 				fail(slot, error)
@@ -118,7 +126,7 @@ function resolveTree(node: ReactNode): Plain {
 }
 
 function renderTree(tree: Plain, width: number, height: number) {
-	return new Promise<Buffer>((resolve, reject) => {
+	return new Promise<ShareCardImages>((resolve, reject) => {
 		queue.push({ id: nextId++, tree, width, height, resolve, reject })
 		next()
 	})
@@ -149,8 +157,15 @@ const inlineTitle = async (item: CardTitle): Promise<CardTitle> => ({
 	backdrop: await cachedImage(item.backdrop),
 })
 
-/** Renders a card at its design's native size. Rejects when the render fails, times out, or crashes the renderer. */
-export async function renderShareCard(design: CardDesign, props: Omit<CardProps, "editing">, editing = false): Promise<Buffer> {
+/** A card as a PNG at its design's native size, and the same card as a small JPEG for link previews. */
+export type ShareCardImages = { card: Buffer; preview: Buffer }
+
+/** Renders a card and its link preview. Rejects when the render fails, times out, or crashes the renderer. */
+export async function renderShareCard(
+	design: CardDesign,
+	props: Omit<CardProps, "editing">,
+	editing = false,
+): Promise<ShareCardImages> {
 	const items = await Promise.all(props.items.map(inlineTitle))
 	const tree = resolveTree(<design.Card {...props} items={items} editing={editing} />)
 	return renderTree(tree, design.w, design.h)

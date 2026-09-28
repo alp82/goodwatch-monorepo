@@ -11,6 +11,7 @@ import { getUserIdFromRequest, useUser } from "~/utils/auth"
 export type UserSettingsMap = {
 	cookie_consent: "yes" | "no"
 	country_default: string
+	for_you: "yes" | "no"
 	onboarding_country_completed: "yes" | "no"
 	onboarding_streaming_completed: "yes" | "no"
 	onboarding_ratings_completed: "yes" | "no"
@@ -24,6 +25,7 @@ type SettingType = StringSetting | EnumSetting<string>
 export const UserSettingsSchema: Record<keyof UserSettingsMap, SettingType> = {
 	cookie_consent: { type: "enum", options: ["yes", "no"] },
 	country_default: { type: "string" },
+	for_you: { type: "enum", options: ["yes", "no"] },
 	onboarding_country_completed: { type: "enum", options: ["yes", "no"] },
 	onboarding_streaming_completed: { type: "enum", options: ["yes", "no"] },
 	onboarding_ratings_completed: { type: "enum", options: ["yes", "no"] },

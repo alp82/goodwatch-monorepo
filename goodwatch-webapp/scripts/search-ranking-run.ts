@@ -4,8 +4,11 @@
 // candidate scores and signals, see SearchTrace), which docs/prototypes/search-arena/bench/parity/ compares with the
 // prototype.
 //
-//   SEARCH_RANKING_MODE=shadow npx vite-node --config scripts/arena-vite.config.mjs scripts/search-ranking-run.ts \
-//     --captures=<dir of <id>.json captures> [--only=id,id] [--expect=<trace.jsonl with top10 per id>] [--json=<out>]
+//   npx vite-node --config scripts/arena-vite.config.mjs scripts/search-ranking-run.ts \
+//     --captures=<dir of <id>.json captures> [--only=id,id] [--expect=<trace.jsonl with top10 per id>] [--json=<out>] \
+//     [--lesser-known]
+//
+// --lesser-known ranks every capture as a lesser-known search (titles below the eligibility line included).
 //
 // Needs CRATE_*, QDRANT_URL and QDRANT_API_KEY as the webapp has them. No Jev calls: the readings are recorded.
 import { readdirSync, readFileSync, writeFileSync } from "node:fs"
@@ -80,7 +83,7 @@ for (const id of files) {
 		},
 		{
 			includeAdult: cap.policy.includeAdult,
-			lesserKnown: cap.policy.lesserKnown,
+			lesserKnown: process.argv.includes("--lesser-known") || cap.policy.lesserKnown,
 		},
 	)
 	const top10 = ranked.results.slice(0, 10)

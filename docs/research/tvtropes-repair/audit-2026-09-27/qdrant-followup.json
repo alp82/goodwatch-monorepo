@@ -1,0 +1,22 @@
+{
+ "checked_at": "2026-09-27T08:33Z",
+ "before_publish": {
+  "match": 0,
+  "differ": 36,
+  "no_point": ["show:243520", "show:278353", "show:281095"],
+  "note": "The scheduled f/sync/copy/vector_data run of 07:30 UTC was still running; every changed title still carried its old tropes payload"
+ },
+ "targeted_publish": {
+  "script": "f/sync/copy/vector_data",
+  "job": "01a0e1fb-d3b6-d44f-416e-cb15d2ef60b0",
+  "args": "movie_ids: the 34 changed movies; show_ids: 246, 37854",
+  "upserts": {"movies": 34, "shows": 2},
+  "errors": {}
+ },
+ "after_publish": {
+  "match": 36,
+  "differ": 0,
+  "no_point": ["show:243520", "show:278353", "show:281095"],
+  "note": "Payload tropes equal the Mongo trope names for all 36 titles with a Qdrant point; the 3 TMDB-deleted Gods of the Arena duplicates have no point"
+ }
+}

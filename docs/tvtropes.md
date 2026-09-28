@@ -96,9 +96,9 @@ At most 826 first-page requests plus subpages: about 1.15 requests per movie and
 requests. At 6 s per request that is about 1 h 50 min, in batches. The live batch below averaged 5.8 s per request,
 including parsing.
 
-The importer only fills documents that have no tropes, so refreshing the 10,660 titles that already have (mostly
-2025) tropes isn't possible yet. The research estimates about 16,600 requests for all known URLs in the top 10k: about
-28 h at 6 s, or 9 h at 2 s.
+The importer fills documents that have no tropes. A title that already has tropes is replaced only through a reviewed
+re-check (below), one listed title at a time; there is no bulk refresh of the 10,660 titles with (mostly 2025) tropes.
+The research estimates about 16,600 requests for all known URLs in the top 10k: about 28 h at 6 s, or 9 h at 2 s.
 
 ### Review and import
 
@@ -113,6 +113,53 @@ Publishing goes through the reviewed path from #120 (`goodwatch-flows/scripts/im
    replaces existing tropes, and each write is guarded by the document's previous URL and `updated_at`.
 5. The next `f/sync/copy/tvtropes` run copies the documents to Crate (it picks up `updated_at` from the past 48 h).
    Undo with `--rollback <file>`.
+
+### Re-check and correct titles that have tropes (#123)
+
+For a reviewed list of suspicious matches only. Default `queue`, `run` and import behavior is unchanged.
+
+- `recover_tvtropes.py queue QUEUE --recheck FILE` queues only the titles in `FILE` (`media_type:tmdb_id` per line),
+  with or without tropes. It tries the Wikidata and tvtropes2imdb pages before the stored one, and each row records the
+  page and trope count it would replace. A reviewer may edit the queue's candidates, for example to add a link from a
+  disambiguation page (source `page_link`), which is a known URL, not a guessed slug.
+- `run … --saved RUN_DIR` (repeatable) answers from pages an earlier run saved: no request, no pause, no budget. Blocks
+  are never replayed.
+- A queue entry may carry `accept: [{url, reason}]` for a page the reviewer has read and accepted, although the
+  identity rules reject its wording ("the third film in the Alien film series") or a festival year. The runner marks it
+  rule `reviewed`, and the negative cache doesn't hide it. Production never passes accepted URLs.
+- Replacements use the normal review, `build-manifest` and import path. A re-checked row's manifest entry names the
+  page and trope count it replaces; `--apply` replaces only a document that still holds exactly those, and
+  `--backup-collection NAME` (required) copies the whole document first.
+- Removals: `import_tvtropes_recovered.py remove removals.json --rollback-out FILE`, then `--apply --expect-count N
+  --backup-collection NAME`. The list names each document's reviewed URL, trope count and a reason. A document is
+  cleared (`tropes: []`, URL unset, `updated_at` now) only while it still holds them. `--rollback FILE` restores it.
+- Crate: `f/sync/copy/tvtropes` only upserts, so afterwards delete the title's `trope` rows whose names are no longer in
+  its Mongo tropes, scoped by media type and TMDB id. The Qdrant publish (`f/sync/copy/vector_data`) follows the
+  changed `updated_at` within 48 h.
+
+### Audit of the 45 suspicious matches, 2026-09-27
+
+`research/tvtropes-repair/audit-2026-09-27` ([review](research/tvtropes-repair/audit-2026-09-27/review.md)): 30
+requests from the dev machine at 6 s, all HTTP 200, no 403, 429 or challenge. Many stored pages have become
+disambiguation pages (Film/TheHangover, Film/Taken, Film/EvilDead, Film/PlanetOfTheApes, Main/IronMan, Film/Godzilla).
+
+| Outcome | Titles |
+|---|---:|
+| Correct, kept | 6 |
+| Wrong, replaced with the right page | 17 |
+| Wrong, tropes and URL removed | 22 |
+
+Mongo documents were backed up to `_backup_20260927_tvtropes_123` (39 documents) before the writes
+(`import-rollback.json`, `remove-rollback.json`). A manual `f/sync/copy/tvtropes` run and a scoped delete of 6,363
+stale `trope` rows left Crate matching Mongo for all 36 titles that have Crate rows. `queue-followup.json` lists
+8 right pages that were seen as links but not fetched within the budget: Hangover Part II and III, Taken 2, the three
+Austin Powers films, Planet of the Apes (1968) and Cube.
+
+Follow-up the same day (`run-followup`, `run-followup-accept`): 8 requests, all HTTP 200, no block. All 8 pages were
+the right films (Cube through a reviewed accept: Film/Cube1997, TMDB dates the 1998 release) and were imported into
+the emptied documents, then synced to Crate. The Qdrant publish had not yet picked up the audit's changes, so a
+targeted `f/sync/copy/vector_data` run (`movie_ids`, `show_ids`) published all 36 audit titles that have a point;
+their payload tropes now match Mongo.
 
 ### Live batch, 2026-09-26
 

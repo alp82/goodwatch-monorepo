@@ -15,6 +15,7 @@ import {
 	getStringValue,
 	buildBaseFilterConditions,
 	buildPayloadFields,
+	buildExcludeFilter,
 } from "~/server/utils/recommend"
 import type { CoreScores } from "~/server/utils/fingerprint"
 import { getStreamingProviders } from "~/server/streaming-providers.server"
@@ -237,14 +238,8 @@ async function getRelatedTitles({
 	const additionalMustNot: any[] = [
 		{ is_empty: { key: "poster_path" } },
 		{ is_empty: { key: "backdrop_path" } },
+		...buildExcludeFilter([{ media_type: source_media_type, tmdb_id }]),
 	]
-
-	if (source_media_type === target_media_type) {
-		additionalMustNot.push({
-			key: "tmdb_id",
-			match: { value: tmdb_id },
-		})
-	}
 
 	// Add fingerprint filter if needed
 	if (withKey && sourceFingerprintScore !== null) {

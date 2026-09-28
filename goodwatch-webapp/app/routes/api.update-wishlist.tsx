@@ -14,7 +14,9 @@ export const action: ActionFunction = async ({
 	const user_id = await getUserIdFromRequest({ request })
 
 	const result = await updateWishList({
-		...params,
+		tmdb_id: params.tmdb_id,
+		media_type: params.media_type,
+		action: params.action,
 		user_id,
 	})
 

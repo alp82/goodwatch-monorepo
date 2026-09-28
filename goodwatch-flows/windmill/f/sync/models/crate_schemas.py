@@ -590,11 +590,15 @@ SCHEMAS = {
     # ============================
     # ===== User Data ============
     # ============================
+    # init/cratedb adds created_at and updated_at to every table; the user tables declare them
+    # because the webapp reads them (the Wishlist sorts by created_at, the time a title was added).
     "user_setting": {
         "columns": {
             "user_id": "TEXT",
             "key": "TEXT",
             "value": "TEXT",
+            "created_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
         },
         "primary_key": ["user_id", "key"],
         "shards": 3,
@@ -604,6 +608,8 @@ SCHEMAS = {
             "user_id": "TEXT",
             "tmdb_id": "INTEGER",
             "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
+            "created_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
         },
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 3,
@@ -613,6 +619,8 @@ SCHEMAS = {
             "user_id": "TEXT",
             "tmdb_id": "INTEGER",
             "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
+            "created_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
         },
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 6,
@@ -624,6 +632,8 @@ SCHEMAS = {
             "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
             "score": "INTEGER",
             "review": "TEXT",
+            "created_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
         },
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 6,
@@ -633,6 +643,8 @@ SCHEMAS = {
             "user_id": "TEXT",
             "tmdb_id": "INTEGER",
             "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
+            "created_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
         },
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 3,
@@ -654,6 +666,8 @@ SCHEMAS = {
             "first_watched_at": "TIMESTAMP",
             "last_watched_at": "TIMESTAMP",
             "watch_count": "INTEGER",
+            "created_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
         },
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 6,

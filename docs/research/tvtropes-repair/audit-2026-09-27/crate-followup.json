@@ -1,0 +1,82 @@
+{
+ "movie:431": {
+  "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Cube1997",
+  "stale": 0,
+  "trope_rows": 99,
+  "updated_at": "2026-09-27 08:26:31.286000",
+  "mongo_names": 99,
+  "media_tropes": 99,
+  "missing_rows": 0,
+  "media_matches_mongo": true
+ },
+ "movie:816": {
+  "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowersInternationalManOfMystery",
+  "stale": 0,
+  "trope_rows": 111,
+  "updated_at": "2026-09-27 08:26:29.917000",
+  "mongo_names": 111,
+  "media_tropes": 111,
+  "missing_rows": 0,
+  "media_matches_mongo": true
+ },
+ "movie:817": {
+  "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowersTheSpyWhoShaggedMe",
+  "stale": 0,
+  "trope_rows": 151,
+  "updated_at": "2026-09-27 08:26:30.025000",
+  "mongo_names": 151,
+  "media_tropes": 151,
+  "missing_rows": 0,
+  "media_matches_mongo": true
+ },
+ "movie:818": {
+  "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowersInGoldmember",
+  "stale": 0,
+  "trope_rows": 96,
+  "updated_at": "2026-09-27 08:26:30.091000",
+  "mongo_names": 96,
+  "media_tropes": 96,
+  "missing_rows": 0,
+  "media_matches_mongo": true
+ },
+ "movie:871": {
+  "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes1968",
+  "stale": 0,
+  "trope_rows": 128,
+  "updated_at": "2026-09-27 08:26:30.150000",
+  "mongo_names": 128,
+  "media_tropes": 128,
+  "missing_rows": 0,
+  "media_matches_mongo": true
+ },
+ "movie:45243": {
+  "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangoverPartII",
+  "stale": 0,
+  "trope_rows": 38,
+  "updated_at": "2026-09-27 08:26:30.211000",
+  "mongo_names": 38,
+  "media_tropes": 38,
+  "missing_rows": 0,
+  "media_matches_mongo": true
+ },
+ "movie:82675": {
+  "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken2",
+  "stale": 0,
+  "trope_rows": 87,
+  "updated_at": "2026-09-27 08:26:30.255000",
+  "mongo_names": 87,
+  "media_tropes": 87,
+  "missing_rows": 0,
+  "media_matches_mongo": true
+ },
+ "movie:109439": {
+  "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangoverPartIII",
+  "stale": 0,
+  "trope_rows": 59,
+  "updated_at": "2026-09-27 08:26:30.306000",
+  "mongo_names": 59,
+  "media_tropes": 59,
+  "missing_rows": 0,
+  "media_matches_mongo": true
+ }
+}

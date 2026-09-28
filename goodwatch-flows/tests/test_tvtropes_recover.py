@@ -68,7 +68,7 @@ def entry(tmdb_id, title, year, urls, popularity=1.0, media="movie"):
             "title_variations": [], "candidates": [{"source": "stored", "url": BASE + u} for u in urls]}
 
 
-class RunnerTests(unittest.TestCase):
+class RunnerCase(unittest.TestCase):
     def setUp(self):
         self.dir = Path(tempfile.mkdtemp())
         self.queue = self.dir / "queue.json"
@@ -86,6 +86,8 @@ class RunnerTests(unittest.TestCase):
     def results(self):
         return [json.loads(line) for line in (self.out / "results.jsonl").read_text().splitlines()]
 
+
+class RunnerTests(RunnerCase):
     def test_titles_run_in_popularity_order_at_one_pace_with_an_honest_user_agent(self):
         summary = self.run_queue(
             [entry(1, "Alpha", 2000, ["Film/Alpha"], popularity=5), entry(2, "Beta", 2001, ["Film/Beta"], popularity=50)],
@@ -198,7 +200,112 @@ class RunnerTests(unittest.TestCase):
                          [("movie", 1, BASE + "Film/Alpha")])
 
 
+class RecheckAndSavedPageTests(RunnerCase):
+    """`queue --recheck` re-checks titles that already have tropes; `run --saved` answers
+    from pages an earlier run saved, without a request."""
+
+    def save_run(self, name, pages):
+        """A finished earlier run directory whose results list the saved responses."""
+        run_dir = self.dir / name
+        (run_dir / "sources").mkdir(parents=True)
+        requests_ = []
+        for path, (status, text, final) in pages.items():
+            digest = runner.hashlib.sha256(text.encode()).hexdigest()
+            (run_dir / "sources" / f"{digest}.html.gz").write_bytes(gzip.compress(text.encode()))
+            requests_.append({"requested_url": BASE + path, "url": BASE + (final or path), "status": status,
+                              "sha256": digest, "source_file": f"sources/{digest}.html.gz"})
+        (run_dir / "results.jsonl").write_text(json.dumps({"media_type": "movie", "tmdb_id": 0,
+                                                           "requests": requests_}) + "\n")
+        return run_dir
+
+    def test_saved_pages_answer_without_a_request_a_pause_or_the_budget(self):
+        saved = self.save_run("old", {"Film/Alpha": (200, work("Alpha is a 2000 film."), None),
+                                      "Film/Gone": (404, "missing", None),
+                                      "Film/Blocked": (403, "<title>Just a moment...</title>", None)})
+        self.queue.write_text(json.dumps({"entries": [
+            entry(1, "Alpha", 2000, ["Film/Alpha"], popularity=9), entry(2, "Beta", 2001, ["Film/Gone", "Film/Beta"]),
+            entry(3, "Gamma", 2002, ["Film/Blocked"], popularity=0)]}))
+        self.http = FakeHttp({"Film/Beta": FakeResponse(200, work("Beta is a 2001 film.")),
+                              "Film/Blocked": FakeResponse(200, work("Gamma is a 2002 film."))})
+        summary = runner.run(self.queue, self.out, self.state, 6, 2, http=self.http, sleep=self.clock.sleep,
+                             clock=self.clock, now=lambda: NOW, out=self.lines.append, saved=runner.saved_pages([saved]))
+        # Only unsaved URLs, and a saved block is never replayed.
+        self.assertEqual(self.http.calls, ["Film/Beta", "Film/Blocked"])
+        self.assertEqual(self.clock.slept, [6.0])
+        self.assertEqual(summary["requests_this_run"], 2)
+        self.assertEqual(summary["saved_pages_this_run"], 2)
+        alpha, beta, gamma = self.results()
+        self.assertEqual((alpha["status"], alpha["requests"][0]["saved_from"]), ("recovered", "old"))
+        self.assertTrue((self.out / alpha["requests"][0]["source_file"]).exists())
+        self.assertEqual([c["outcome"] for c in beta["candidates"]], ["not_found", "identified"])
+        self.assertNotIn("saved_from", beta["requests"][1])
+        self.assertEqual(gamma["status"], "recovered")
+
+    def test_without_saved_pages_every_url_is_requested(self):
+        self.save_run("old", {"Film/Alpha": (200, work("Alpha is a 2000 film."), None)})
+        self.run_queue([entry(1, "Alpha", 2000, ["Film/Alpha"])],
+                       {"Film/Alpha": FakeResponse(200, work("Alpha is a 2000 film."))})
+        self.assertEqual(self.http.calls, ["Film/Alpha"])
+
+    def test_a_reviewer_may_accept_a_page_the_identity_rules_reject(self):
+        # "the third film in the Alien film series" trips the shared-page rule.
+        text = work("Alien 3 is the third film in the Alien film series, released in 1992.")
+        accepted = dict(entry(1, "Alien 3", 1992, ["Film/Alien3"]),
+                        accept=[{"url": BASE + "Film/Alien3", "reason": "IMDb tt0103644 via tvtropes2imdb"}])
+        other = entry(2, "Alien 3", 1992, ["Film/Alien3"])
+        # Without the reviewer's entry the page is rejected and goes to the negative cache.
+        self.run_queue([other], {"Film/Alien3": FakeResponse(200, text)})
+        self.assertEqual(self.results()[0]["status"], "rejected")
+        # The reviewer read it and accepts it: the negative cache doesn't hide it.
+        self.out = self.dir / "run2"
+        self.run_queue([accepted], {"Film/Alien3": FakeResponse(200, text)})
+        record = self.results()[0]
+        self.assertEqual((record["status"], record["rule"]), ("recovered", "reviewed"))
+        self.assertIn("stored (reviewed)", runner.review(self.out).read_text())
+
+    def test_recheck_rows_show_the_page_they_would_replace_and_carry_it_into_the_manifest(self):
+        recheck = dict(entry(1, "Alpha", 2000, ["Film/Alpha2000"]), recheck=True,
+                       before_url=BASE + "Film/AlphaFranchise", before_trope_count=40)
+        self.run_queue([recheck], {"Film/Alpha2000": FakeResponse(200, work("Alpha is a 2000 film."))})
+        path = runner.review(self.out)
+        text = path.read_text()
+        self.assertIn("stored (strict); replaces Film/AlphaFranchise (40 tropes)", text)
+        path.write_text(text.replace("| review |", "| ok |"))
+        manifest = importer.build_manifest([self.out], path, set(), expected=1)
+        self.assertEqual((manifest["entries"][0]["replaces_url"], manifest["entries"][0]["replaces_trope_count"]),
+                         (BASE + "Film/AlphaFranchise", 40))
+
+
 class QueueTests(unittest.TestCase):
+    def test_recheck_queues_only_the_listed_titles_even_with_tropes_better_candidates_first(self):
+        titles = [
+            {"media_type": "movie", "tmdb_id": 1, "title": "Iron Man", "release_year": 2008, "popularity": 90,
+             "trope_count": 149, "tvtropes_url": BASE + "Main/IronMan", "imdb_id": "tt0371746"},
+            {"media_type": "movie", "tmdb_id": 2, "title": "Other", "release_year": 2001, "popularity": 95,
+             "trope_count": 10, "tvtropes_url": BASE + "Film/Other"},
+            {"media_type": "show", "tmdb_id": 3, "title": "Dark", "release_year": 2017, "popularity": 70,
+             "trope_count": 0, "tvtropes_url": BASE + "Series/Dark"},
+        ]
+        entries, counts = runner.build_queue(titles, {("movie", 1): "Film/IronMan2008"}, {"tt0371746": "IronMan"},
+                                             recheck={("movie", 1), ("show", 3)})
+        self.assertEqual([(e["media_type"], e["tmdb_id"]) for e in entries], [("movie", 1), ("show", 3)])
+        iron_man = entries[0]
+        self.assertEqual([c["url"] for c in iron_man["candidates"]],
+                         [BASE + "Film/IronMan2008", BASE + "Film/IronMan", BASE + "Main/IronMan"])
+        self.assertEqual((iron_man["recheck"], iron_man["before_url"], iron_man["before_trope_count"]),
+                         (True, BASE + "Main/IronMan", 149))
+        self.assertEqual(counts["queued"], 2)
+
+    def test_recheck_lists_read_media_type_and_tmdb_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ids.txt"
+            path.write_text("# the 45 of #123\nmovie:1726\n\nshow:246\n")
+            self.assertEqual(runner.read_recheck_list(path), {("movie", 1726), ("show", 246)})
+            path.write_text("film:1\n")
+            with self.assertRaises(ValueError):
+                runner.read_recheck_list(path)
+
+
     def test_queue_holds_titles_without_tropes_that_have_a_known_url(self):
         titles = [
             {"media_type": "movie", "tmdb_id": 1, "title": "Has Tropes", "popularity": 90, "trope_count": 5,

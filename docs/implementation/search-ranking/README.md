@@ -519,8 +519,9 @@ Done in #140. How it's stored:
 
 Done in #143, in `goodwatch-webapp/app/server/search-ranking/`:
 
-- **Switch:** `SEARCH_RANKING_MODE` is `off` (default), `shadow` or `on` (`mode.server.ts`). While it's off, the encoder
-  and the Qdrant client throw, and importing them loads nothing.
+- **Switch:** `SEARCH_RANKING_MODE` was `off` (default), `shadow` or `on` (`mode.server.ts`) until the previous ranking
+  was removed (see [removal of the previous ranking](#removal-of-the-previous-ranking)). Importing the encoder or the
+  Qdrant client still loads nothing.
 - **Encoder:** `encodeQueryTexts({ english, multilingual })` in `query-encoder.server.ts` sends one request per search
   to one worker thread (`query-encoder.worker.js`, 4 intra-op threads, a queue, one batch per model). It adds the
   query prefixes itself. `startQueryEncoder()` loads the models ahead of the first search. More than 32 waiting
@@ -602,13 +603,16 @@ Done in #144, in `goodwatch-webapp/app/server/search-ranking/`. Nothing calls it
 
   So 156 of the 168 graded queries take 2 rounds and the 12 non-English queries with chips take 3, plus the request in
   step 1, which overlaps the encoding.
-- **Filter:** the ranker ranks the indexed titles only (`goodwatch_overall_score_voting_count >= 2000`, not adult),
-  whatever `lesserKnown` and `includeAdult` say. The title table can't test the genre and streaming chip filters: the
-  Qdrant queries apply them, the in-memory parts (the mix statistics, reference titles and peers before round 2) don't.
+- **Filter:** a normal search ranks the indexed titles only (`goodwatch_overall_score_voting_count >= 2000`, not
+  adult). A lesser-known search ranks every title that isn't adult (see [lesser-known searches](#lesser-known-searches)).
+  Adult titles are always excluded, whatever `includeAdult` says. The title table can't test the genre and streaming
+  chip filters: the Qdrant queries apply them, the in-memory parts (the mix statistics, reference titles and peers
+  before round 2) don't.
 - **Versions:** `search_history.ranker_version` (added with
   `goodwatch-webapp/migrations/20260925_search_history_ranker_version.sql`, applied on September 25, 2026) records
-  the ranking that produced the served list: `fingerprint-text-v1` (today's), `essence-text-v1` (the basic search)
-  and, once it serves, `hybrid-v1` (`RANKER_VERSION`). The Jev contract and question version strings are unchanged.
+  the ranking that produced the served list: `hybrid-v1` (`RANKER_VERSION`), `essence-text-v1` (the basic search),
+  and `fingerprint-text-v1` for the previous ranking, which served until September 26, 2026. The Jev contract and
+  question version strings are unchanged.
 - **Encoding follows the prototype** (design rule 2, corrected in #145): the facet phrases, coverage units and negated
   clauses go through the query's main model, `bge-base` for English queries, as in `simp_combo.rank_query` and the
   benchmark trace (71 facet and 75 unit encodes with `bge-base`). For English queries, only the intent text goes
@@ -655,8 +659,9 @@ told apart:
 
 ### Rollout: stage timings and shadow mode
 
-Built in #146 (`5dee4328`). Shadow mode runs on production since September 25, 2026. The owner switches to `on`
-after about a day of clean shadow data (see [switch-over check](#switch-over-check)).
+Built in #146 (`5dee4328`). Shadow mode ran on production on September 25, 2026, until the switch to `on`. The stage
+timings stay; shadow mode was removed with the previous ranking (see
+[removal of the previous ranking](#removal-of-the-previous-ranking)).
 
 - **Stage timings:** every `search_history` row has `stage_ms` (`OBJECT(IGNORED)`, added with
   `goodwatch-webapp/migrations/20260925_search_stage_timings_and_shadow.sql`, applied on September 25, 2026):
@@ -696,8 +701,9 @@ the process grew to 2.1 GB RSS.
 
 ### Rollout: mode on
 
-Built in #146. `SEARCH_RANKING_MODE=on` serves the new ranking's list; the switch-over and the rollback are environment
-changes only (`on`, `shadow` or `off`, then redeploy).
+Built in #146. `SEARCH_RANKING_MODE=on` served the new ranking's list from September 25, 2026. Since the previous
+ranking was removed, the ranking always serves and the fallbacks below get the basic search (see
+[removal of the previous ranking](#removal-of-the-previous-ranking)).
 
 - **What serves:** `combinedSearch` (`app/server/combined-search/search.server.ts`) waits for the title lookup (it
   runs alongside the reading and is usually done by then), keeps its eligible movie and show rows, and calls
@@ -711,7 +717,6 @@ changes only (`on`, `shadow` or `off`, then redeploy).
   cards) aren't part of the new list.
 - **Fallbacks:** today's ranking serves, and `search_history.ranker_fallback` records why (added with
   `goodwatch-webapp/migrations/20260925_search_history_ranker_fallback.sql`, applied on September 25, 2026):
-  - `lesser known`: the index holds only titles above the eligibility line;
   - `basic search`: no reading;
   - `index not loaded`, `encoder not ready`, `encoder queue full`: checked before the ranking starts;
   - `timeout`: the ranking missed its deadline, 1,500 ms by default (`SEARCH_RANKING_DEADLINE_MS` overrides it). The
@@ -734,6 +739,40 @@ changes only (`on`, `shadow` or `off`, then redeploy).
   next links worked in a browser. These checks wrote 35 `search_history` rows between 15:07 and 15:18 UTC with
   `ranker_version = 'hybrid-v1'` or a `ranker_fallback`; production was in shadow mode then, so they are the only such
   rows before the switch.
+
+### Lesser-known searches
+
+Built in #146. The search setting "Include lesser-known titles" (`lesserKnown`) asks for titles below the 2,000-vote
+eligibility line too. Until this change, those searches fell back to the previous ranking: 28 of the first 158
+production searches after the switch did.
+
+- **Universe:** the Qdrant filter drops the vote condition and keeps the adult exclusion, so the ranker searches all
+  225,492 titles instead of the 42,090 indexed ones (counts from September 26, 2026). The round 1 lists keep their
+  depths, so the pool stays about the same size.
+- **Facts of titles outside the title table:** round 2 gets one more query in the same batch request. It reads
+  `title`, `original_title`, `release_year`, `goodwatch_overall_score_voting_count` and
+  `goodwatch_overall_score_normalized_percent` from the payloads of the pool titles that the title table doesn't
+  hold. They stand in for the table row in the priors (votes, GoodWatch score), the career signal and the blend.
+  There is no extra request, no new index file and no extra webapp memory.
+- **What stays limited to the indexed titles:** the index files are built over the indexed titles, so term statistics
+  (IDF), credits and own titles, peers, negation labels, "like X" titles, fuzzy titles, alternate cuts and the
+  non-English mix statistics don't know lesser-known titles. A lesser-known title can still come in through every
+  store signal (fingerprint, dense text, BM25F, facets, coverage units, the reference profile), but it gets no own-title
+  credit in a person search and no label penalty for a negated element (the embedding penalty still applies).
+- **Normal searches don't change:** without `lesserKnown`, the filter and the candidates are the same as before.
+- **A full second index** over all titles would close those gaps. Scaled from the indexed build (about 160 MB in
+  memory for 50,371 titles, 58 MB of it `mix_vectors`), it would take roughly 4.5 times as much memory (about
+  720 MB instead of 160 MB, so about 560 MB more in the webapp) and make the nightly build much longer. That's an
+  owner decision, not part of this change.
+- **Checked locally** (`scripts/search-ranking-run.ts --lesser-known`, 9 arena captures, production Qdrant and build
+  `20260926T041504Z`): on-topic lesser-known titles join the lists, for example "Gods of the Deep", "What Lurks
+  Beneath" and "Thresher" for "horror on a submarine", and "Thunder Rock" and "Murder at the Lighthouse" for
+  "melancholy lighthouse keeper mystery". Person and "like X" searches keep their own titles on top. Qdrant's own time
+  for round 2 grew from 7 to 53 ms to 20 to 91 ms.
+- **On production** (September 26, 2026, 4 searches with cached readings, each run as a lesser-known and as a normal
+  search): the ranking stage took 134 to 441 ms against 110 to 370 ms, 25 to 120 ms more, almost all of it round 2
+  (54 to 169 ms against 35 to 83 ms). The whole search took 195 to 485 ms against 189 to 420 ms. Every search was
+  served by `hybrid-v1` with no fallback.
 
 ### Switch-over check
 
@@ -805,6 +844,56 @@ WHERE created_at > now() - INTERVAL '24 hours'
 GROUP BY ranker_version, ranker_fallback
 ORDER BY searches DESC;
 ```
+
+### Removal of the previous ranking
+
+Done in #146 on September 26, 2026, after the new ranking had served production for about 20 hours.
+
+**Health since the switch** (production `search_history` rows from 2026-09-25 20:59 to 2026-09-26 16:25 UTC; rows
+that local development servers wrote to the same table are left out: they are sealed with a different
+`SEARCH_STORAGE_KEY`):
+
+| served by | searches |
+|---|---|
+| `hybrid-v1` | 127 |
+| previous ranking, `lesser known` fallback | 28 (fixed by [lesser-known searches](#lesser-known-searches)) |
+| basic search, no reading | 2 |
+| previous ranking, `timeout` | 1 (the first search, 3 minutes after a restart) |
+| `error`, `index not loaded`, `encoder not ready`, `encoder queue full` | 0 |
+
+Latency of the 127 `hybrid-v1` searches, in milliseconds (p50 / p95):
+
+| stage | production | estimate |
+|---|---|---|
+| ranking | 190 / 403 | 105 to 154 / 263 to 392 |
+| encoding | 58 / 148 | |
+| Qdrant, all rounds (wall; Qdrant's own time) | 87 / 216 (57 / 150) | |
+| display | 50 / 106 | |
+| Jev reading | 513 / 983 | |
+| whole search, cached reading (23 searches) | 270 / 694 | median 690 to 840 |
+| whole search, fresh reading (104 searches) | 840 / 1,268 | median 1,750 to 1,900 |
+
+The ranking is slightly slower than the estimate (encoding, as #143 found), and no search spent over 1 s in it. The
+whole search is much faster than estimated, because the estimate included the previous ranking's retrieval and
+display times. The container's logs since the last restart had no search errors besides that one timeout.
+
+**What was removed:**
+
+- The previous ranking (`retrieveByReading` and its Crate text searches, trope matches and Qdrant pool query in
+  `combined-search/reading-retrieval.server.ts`), `READING_RANKER_VERSION` and `queryPoints`.
+- `SEARCH_RANKING_MODE` (`mode.server.ts`) and shadow mode (`shadow.server.ts`, `SearchStore.shadow`, the route's
+  after-response hook). The Crate table `search_shadow` keeps its rows but gets no new ones; it can be dropped.
+- `scripts/arena-capture.ts` and `scripts/arena-stages.ts` with their fetch wrappers. They recorded the previous
+  ranking for the search arena, so the arena playground can no longer capture ad-hoc queries.
+
+**How it serves now:** `startSearchRanking()` (`search-ranking/serve.server.ts`) loads the index and the query models
+when `search.server.ts` loads, in production and in local development. Every search with a reading is ranked. The
+basic search serves searches without a reading and the ranking's fallbacks (`index not loaded`, `encoder not ready`,
+`encoder queue full`, `timeout`, `error`), which `ranker_fallback` still records.
+
+**Rollback:** the spec asks for no switch after the removal, so there is none. To bring back the previous ranking,
+revert the removal commit and redeploy. The Coolify variable `SEARCH_RANKING_MODE` does nothing now and can be
+deleted.
 
 ## Follow-ups: language routing, Jev retries and Qdrant clients
 
@@ -962,6 +1051,74 @@ Done in #169. The negation labels are English keywords and tags, so "Krimi ohne 
 - **English safety:** rewriting every one of the 103,776 arena labels as if it were a negated phrase changes the
   stems of 28, all foreign-language labels ("segunda guerra mundial") or English spellings of listed words
   ("jumpscares", "super heroes").
+
+## Follow-up: search latency
+
+Done in #183, September 26, 2026. 30% of production searches took 1 s or more. None of these changes the ranked
+list, except the first, which only changes the text Jev reads.
+
+- **Normalized reading text** (`readingText` in `combined-search/search.server.ts`): Jev reads the query lowercased
+  with each run of whitespace collapsed to one space, and the reading cache key uses the same text. "Slow burn" and
+  "slow  burn" share one reading. The language step runs on the text as typed (capitalized German nouns are a
+  language marker), and the ranking, the title lookup and the history keep it too. Already-lowercase searches kept
+  their cache keys.
+- **Jev bookkeeping** (`search-runtime/store.server.ts`): `claim` doesn't repeat the caller's cache lookup. The control
+  row and the spending sums run in parallel, and the spending query reads Crate's clock itself
+  (`date_trunc('day' | 'month', CURRENT_TIMESTAMP)`, the same UTC boundaries as before). The attempt and estimate
+  inserts run in parallel; if the attempt insert conflicts or fails, the estimate is settled at zero, as for a search
+  cancelled before dispatch, and if that fails the estimate stays counted. `finish` stays on the response path.
+- **Session check:** the route starts the search while Supabase `getUser()` runs. The search waits for the account only
+  before Redis admission of a paid call and for the history row. If the check fails, the search is aborted and the
+  route returns 503, as before.
+- **Work during the Jev call:** the title matches' catalog rows, and `prepareSearch()` in
+  `search-ranking/rank-search.server.ts`: references, negation and spelling, the encoding of the texts known without
+  the reading (the dense text, the intent text, negated clauses), and the reference's profile or seed vectors. After
+  the reading, `rankSearch` encodes only what the reading adds (facets, coverage units, English chips). A text's vector
+  is bit-identical whatever else is in its batch, checked on a laptop and on the webapp host, so two batches give the
+  same vectors as one.
+- **Fuzzy title bound** (`title-blend.server.ts`): `fuzzyTitle` skips title names that share too few characters with the
+  query to reach the 0.9 cutoff, before the full LCS ratio. The character counts are computed when a build loads.
+- **Query vector cache** (`query-encoder.server.ts`): the vectors of the last 500 encoder requests, keyed by a digest of
+  the whole request, so a repeated search (a filter change, a reload) skips the encoder.
+- **History after the response:** the `search_history` row is written after the batch is sent.
+- **TypeSafe connections:** the Jev requests use their own undici pool with a 5-minute idle timeout (undici's default is
+  4 s), and a free `GET /health` a minute (two at once, one per connection a search uses) keeps both connections
+  open. `api.typesafe.ai` (Cloudflare) kept an idle connection for 300 s and dropped it by 450 s.
+
+New `stage_ms` keys: `readingLookup`, `readingClaim`, `readingDispatch`, `readingCall`, `readingFinish`;
+`rankingPrepare` (the prepared part's own time, alongside the reading), `rankingPrepareParse`, `rankingEncodeEarly`
+and `rankingPrepared` (the wait for it after the reading). `rankingEncode` is now the encoding after the reading, and
+`titleLookup` includes the title rows' catalog query.
+
+**Results unchanged:** `combinedSearch` ran end to end on 37 fixed queries (titles, descriptions, people, negations,
+non-English, lesser-known, and two with capitals and extra spaces) with cached readings and a recording proxy in front
+of Qdrant. Without the proxy, two runs of the same code differed on 7 of 37 lists (ties and HNSW). With it, 35 of 37
+lists were identical before and after, keys, order and scores; the two capitalized queries now return exactly the list
+of their lowercase text. The fuzzy title match returned the same title as before on 560 queries.
+
+**Production, before and after** (p50 / p90 / p95 in milliseconds). Before: the 127 `hybrid-v1` searches from
+September 25, 20:59 to September 26, 16:25 UTC. After: 46 searches of real queries run one at a time on production on
+September 26, 22:30 to 22:34 UTC.
+
+| | before, fresh reading (104) | after, fresh reading (35) | before, cached (23) | after, cached (11) |
+|---|---|---|---|---|
+| whole search | 838 / 1,223 / 1,266 | 588 / 669 / 835 | 270 / 629 / 689 | 296 / 371 / 389 |
+| Jev reading | 549 / 957 / 985 | 419 / 468 / 478 | 8 / 30 / 32 | 7 / 14 / 16 |
+| ranking | 190 / 311 / 334 | 102 / 204 / 274 | 206 / 454 / 601 | 155 / 303 / 327 |
+| display | 49 / 100 / 104 | 34 / 55 / 69 | 60 / 95 / 126 | 36 / 58 / 59 |
+
+**Qdrant (not changed):** `media_fingerprint_v1` had 23 to 25 segments with the optimizer running, not stuck: 4 running
+and 7 queued optimizations, waiting for CPU permits. `f/sync/copy/vector_data` (about 2.6 hours every 4 hours) and
+`f/search/embed_titles` write to the collection about 16 hours a day, so the optimizer can't finish between runs.
+Production searches during a `vector_data` run and outside it showed the same Qdrant time (p50 57 against 54 ms, p90
+108 against 120 ms). A probe across the 22:15 snapshot showed the same medians, with one spike to 939 ms against 491 ms
+outside it. Moving schedules would gain nothing measurable, so they stay.
+
+**One merged Jev request (measured, not changed):** on 47 real queries, twice each, one request with both question sets
+and one state was 20 ms slower on average than the two parallel requests (p50 354 against 335 ms) and used 3.4% fewer
+input tokens ($0.000319 against $0.000330 a reading). It changed the answers more than two runs of the same requests
+do: the reading chips matched on 14% of runs against 40% between two separate runs, and the top 10 shared 8.5 titles
+against 9.1. Keep two requests.
 
 ## Prerequisites
 

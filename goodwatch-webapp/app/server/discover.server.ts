@@ -3,6 +3,7 @@ import { DISCOVER_PAGE_SIZE } from "~/utils/constants"
 import type { AllRatings } from "~/utils/ratings"
 import type { FingerprintCondition } from "~/server/utils/query-db"
 import { generateFingerprintSQL } from "~/server/utils/query-db"
+import { isValidFingerprintKey } from "~/server/utils/fingerprint"
 import { getGenresAll } from "~/server/genres.server"
 import { cached } from "~/utils/cache"
 import { MEDIA_COLLECTION, recommend, makePointId, parsePointId } from "~/utils/qdrant"
@@ -386,6 +387,114 @@ async function getQdrantCandidates({
 	return candidateIds
 }
 
+// Map pillar names to their underlying fingerprint scores
+const PILLAR_TO_SCORES: Record<string, string[]> = {
+	Energy: ['adrenaline', 'tension', 'scare', 'fast_pace', 'spectacle', 'violence'],
+	Heart: ['romance', 'wholesome', 'pathos', 'melancholy', 'hopefulness', 'catharsis', 'nostalgia', 'coming_of_age', 'family_dynamics', 'wonder'],
+	Humor: ['situational_comedy', 'wit_wordplay', 'physical_comedy', 'cringe_humor', 'absurdist_humor', 'satire_parody', 'dark_humor'],
+	World: ['world_immersion', 'dialogue_centrality', 'rewatchability', 'ambiguity', 'novelty'],
+	Craft: ['direction', 'acting', 'narrative_structure', 'dialogue_quality', 'character_depth', 'intrigue', 'complexity', 'non_linear_narrative', 'meta_narrative'],
+	Style: ['cinematography', 'editing', 'music_composition', 'visual_stylization', 'music_centrality', 'sound_centrality'],
+}
+
+const FINGERPRINT_OPERATORS = new Set([">", ">=", "<", "<=", "=", "!="])
+
+// generateFingerprintSQL writes fields, operators, and values into the SQL text, and they come from the URL: keep only
+// conditions on known fingerprint keys with a known operator and a finite number.
+function safeFingerprintConditions(value: unknown): FingerprintCondition[] {
+	if (!Array.isArray(value)) return []
+	const safe: FingerprintCondition[] = []
+	for (const item of value) {
+		if (!item || typeof item !== "object") continue
+		const condition = item as FingerprintCondition
+		if (condition.conditions !== undefined) {
+			const nested = safeFingerprintConditions(condition.conditions)
+			const logic = condition.logic === "OR" ? "OR" : "AND"
+			if (nested.length) safe.push({ logic, conditions: nested })
+		} else if (
+			typeof condition.field === "string" &&
+			isValidFingerprintKey(condition.field) &&
+			typeof condition.operator === "string" &&
+			FINGERPRINT_OPERATORS.has(condition.operator) &&
+			typeof condition.value === "number" &&
+			Number.isFinite(condition.value)
+		) {
+			safe.push({
+				field: condition.field,
+				operator: condition.operator,
+				value: condition.value,
+			})
+		}
+	}
+	return safe
+}
+
+/**
+ * The SQL conditions (on the alias `m`) and their parameters for Discover's fingerprint conditions and pillars. Shared
+ * by Discover's query and the title filter's legacy filters.
+ */
+export function fingerprintFilterConditions({
+	fingerprintConditions,
+	fingerprintPillars,
+	fingerprintPillarMinTier,
+}: {
+	fingerprintConditions?: string
+	fingerprintPillars?: string
+	fingerprintPillarMinTier?: string
+}): { conditions: string[]; params: number[] } {
+	const conditions: string[] = []
+	const params: number[] = []
+
+	if (fingerprintConditions) {
+		try {
+			const parsedConditions = safeFingerprintConditions(JSON.parse(fingerprintConditions))
+			if (parsedConditions.length > 0) {
+				const fingerprintSQL = generateFingerprintSQL(parsedConditions)
+				if (fingerprintSQL) {
+					const cleanedSQL = fingerprintSQL
+						.replace(/^AND\s+/i, "")
+						.replace(/fingerprint_scores/g, "m.fingerprint_scores")
+					if (cleanedSQL) {
+						conditions.push(cleanedSQL)
+					}
+				}
+			}
+		} catch (error) {
+			console.error("Failed to parse fingerprintConditions:", error)
+		}
+	}
+
+	if (fingerprintPillars) {
+		const tierToMinScore = (tier: number): number => {
+			if (tier >= 3) return 8
+			if (tier >= 2) return 6
+			return 4
+		}
+
+		const pillarNames = fingerprintPillars.split(",").filter(Boolean).map((name) => name.trim())
+		const minTier = fingerprintPillarMinTier ? Number(fingerprintPillarMinTier) : 1
+		const minScore = tierToMinScore(minTier)
+
+		// For each pillar, require at least 2 scores to meet the threshold
+		// This approximates the pillar computation (especially top2 aggregation)
+		for (const pillarName of pillarNames) {
+			const scores = PILLAR_TO_SCORES[pillarName]
+			if (scores) {
+				// Count how many scores meet the threshold
+				const countExpr = scores.map((score) => {
+					params.push(minScore)
+					return `CASE WHEN COALESCE(m.fingerprint_scores['${score}'], 0) >= ? THEN 1 ELSE 0 END`
+				}).join(" + ")
+
+				// Require at least 2 scores to meet threshold
+				conditions.push(`(${countExpr}) >= 2`)
+			}
+		}
+	}
+
+	return { conditions, params }
+}
+
 interface MediaQueryParams {
 	mediaType: "movie" | "show"
 	tableName: "movie" | "show"
@@ -481,24 +590,15 @@ async function getMediaResults({
 		params.push(...ids)
 	}
 
-	if (fingerprintConditions) {
-		try {
-			const parsedConditions = JSON.parse(fingerprintConditions) as FingerprintCondition[]
-			if (Array.isArray(parsedConditions) && parsedConditions.length > 0) {
-				const fingerprintSQL = generateFingerprintSQL(parsedConditions)
-				if (fingerprintSQL) {
-					const cleanedSQL = fingerprintSQL
-						.replace(/^AND\s+/i, "")
-						.replace(/fingerprint_scores/g, "m.fingerprint_scores")
-					if (cleanedSQL) {
-						conditions.push(cleanedSQL)
-					}
-				}
-			}
-		} catch (error) {
-			console.error("Failed to parse fingerprintConditions:", error)
-		}
-	}
+	// Fingerprint conditions and pillars
+	// Works in both standalone mode and with Qdrant candidates (filters after similarity)
+	const fingerprint = fingerprintFilterConditions({
+		fingerprintConditions,
+		fingerprintPillars,
+		fingerprintPillarMinTier,
+	})
+	conditions.push(...fingerprint.conditions)
+	params.push(...fingerprint.params)
 	
 	// Add score filters
 	if (minScore) {
@@ -518,45 +618,6 @@ async function getMediaResults({
 	if (maxYear) {
 		conditions.push("m.release_year <= ?")
 		params.push(Number(maxYear))
-	}
-	
-	// Add fingerprint pillar filter
-	// Works in both standalone mode and with Qdrant candidates (filters after similarity)
-	if (fingerprintPillars) {
-		const PILLAR_TO_SCORES: Record<string, string[]> = {
-			Energy: ['adrenaline', 'tension', 'scare', 'fast_pace', 'spectacle', 'violence'],
-			Heart: ['romance', 'wholesome', 'pathos', 'melancholy', 'hopefulness', 'catharsis', 'nostalgia', 'coming_of_age', 'family_dynamics', 'wonder'],
-			Humor: ['situational_comedy', 'wit_wordplay', 'physical_comedy', 'cringe_humor', 'absurdist_humor', 'satire_parody', 'dark_humor'],
-			World: ['world_immersion', 'dialogue_centrality', 'rewatchability', 'ambiguity', 'novelty'],
-			Craft: ['direction', 'acting', 'narrative_structure', 'dialogue_quality', 'character_depth', 'intrigue', 'complexity', 'non_linear_narrative', 'meta_narrative'],
-			Style: ['cinematography', 'editing', 'music_composition', 'visual_stylization', 'music_centrality', 'sound_centrality'],
-		}
-		
-		const tierToMinScore = (tier: number): number => {
-			if (tier >= 3) return 8
-			if (tier >= 2) return 6
-			return 4
-		}
-		
-		const pillarNames = fingerprintPillars.split(",").filter(Boolean).map((name) => name.trim())
-		const minTier = fingerprintPillarMinTier ? Number(fingerprintPillarMinTier) : 1
-		const minScore = tierToMinScore(minTier)
-		
-		// For each pillar, require at least 2 scores to meet the threshold
-		// This approximates the pillar computation (especially top2 aggregation)
-		for (const pillarName of pillarNames) {
-			const scores = PILLAR_TO_SCORES[pillarName]
-			if (scores) {
-				// Count how many scores meet the threshold
-				const countExpr = scores.map((score) => {
-					params.push(minScore)
-					return `CASE WHEN COALESCE(m.fingerprint_scores['${score}'], 0) >= ? THEN 1 ELSE 0 END`
-				}).join(" + ")
-				
-				// Require at least 2 scores to meet threshold
-				conditions.push(`(${countExpr}) >= 2`)
-			}
-		}
 	}
 	
 	// Add genre filter

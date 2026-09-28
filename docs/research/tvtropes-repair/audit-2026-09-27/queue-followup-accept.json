@@ -1,0 +1,32 @@
+{
+ "summary": {
+  "note": "#123 follow-up: Cube (1997) with a reviewed accept, answered from run-followup without a request"
+ },
+ "entries": [
+  {
+   "media_type": "movie",
+   "tmdb_id": 431,
+   "title": "Cube",
+   "original_title": "Cube",
+   "release_year": 1998,
+   "popularity": 8.0308,
+   "title_variations": [
+    "Cube"
+   ],
+   "imdb_id": "tt0123755",
+   "before_url": null,
+   "candidates": [
+    {
+     "source": "page_link",
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Cube1997"
+    }
+   ],
+   "accept": [
+    {
+     "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Cube1997",
+     "reason": "\"Cube is a 1997 Sci-Fi Horror/mystery film directed by Vincenzo Natali\": Wikidata dates tt0123755 (TMDB 431) 1997 (TIFF premiere); TMDB uses the 1998 release. The year gap trips the identity rules; Wikidata P6839 Film/Cube redirects to a disambiguation page"
+    }
+   ]
+  }
+ ]
+}

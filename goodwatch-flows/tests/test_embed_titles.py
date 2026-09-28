@@ -245,5 +245,45 @@ class FullModeTests(unittest.TestCase):
         self.assertIn("completed_at", json.loads(crate.state[flow.FULL_CHECKPOINT]))
 
 
+class SweepTests(unittest.TestCase):
+    """The daily sweep embeds titles whose text changed without a recent timestamp (#171)."""
+
+    def test_due_without_a_sweep_or_after_a_day(self) -> None:
+        crate = FakeCrate()
+        now = flow.datetime(2026, 9, 26, 12, tzinfo=flow.timezone.utc)
+        self.assertTrue(flow.sweep_due(crate, now))
+        crate.state[flow.SWEEP_CHECKPOINT] = json.dumps({"started_at": (now - flow.timedelta(hours=23)).isoformat()})
+        self.assertFalse(flow.sweep_due(crate, now))
+        self.assertTrue(flow.sweep_due(crate, now + flow.timedelta(hours=1)))
+
+    def test_embeds_changed_points_of_every_page_in_chunks_and_records_the_sweep(self) -> None:
+        crate = FakeCrate()
+        crate.rows = {point(i): {"essence_text": f"story {i}"} for i in range(1, 6)}
+        for i in (1, 3):  # unchanged
+            crate.hashes[point(i)] = input_hash(title_inputs({"title": f"T{i}"}, crate.rows[point(i)]))
+        pages = {None: ([types.SimpleNamespace(id=point(i), payload={"title": f"T{i}"}) for i in (1, 2)], point(3)),
+                 point(3): ([types.SimpleNamespace(id=point(i), payload={"title": f"T{i}"}) for i in (3, 4)], point(5)),
+                 point(5): ([types.SimpleNamespace(id=point(5), payload={"title": "T5"})], None)}
+        client = types.SimpleNamespace(scroll=lambda collection, limit, offset, **kw: pages[offset])
+        batches = []
+        with patch.object(flow, "CHUNK_SIZE", 2), \
+                patch.object(flow, "embed_inputs",
+                             lambda crate, client, vocab, todo, stats: batches.append(sorted(todo)) if todo else None):
+            stats = flow.sweep_changed(crate, client, None, dry_run=False)
+        self.assertEqual(batches, [[point(2), point(4)], [point(5)]])
+        self.assertEqual((stats["candidates"], stats["unchanged"], stats["to_embed"]), (5, 2, 3))
+        self.assertIn(flow.SWEEP_CHECKPOINT, crate.state)
+
+    def test_a_dry_run_counts_and_writes_nothing(self) -> None:
+        crate = FakeCrate()
+        crate.rows = {point(1): {"essence_text": "story"}}
+        client = types.SimpleNamespace(
+            scroll=lambda collection, limit, offset, **kw: ([types.SimpleNamespace(id=point(1), payload={})], None))
+        with patch.object(flow, "embed_inputs", lambda *a: self.fail("embedded in a dry run")):
+            stats = flow.sweep_changed(crate, client, None, dry_run=True)
+        self.assertEqual(stats["to_embed"], 1)
+        self.assertNotIn(flow.SWEEP_CHECKPOINT, crate.state)
+
+
 if __name__ == "__main__":
     unittest.main()

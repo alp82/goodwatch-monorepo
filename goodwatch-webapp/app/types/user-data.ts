@@ -17,10 +17,15 @@ export interface ActionTimestamp {
 	updatedAt: Date
 }
 
+// When the title was added to the Wishlist. Adding it again keeps the first time; removing and adding starts anew.
+export interface WishlistEntry extends ActionTimestamp {
+	createdAt: Date
+}
+
 // User data structure - grouped by action type
 export interface UserData {
 	scores: Record<MediaKey, ScoreData>
-	wishlist: Record<MediaKey, ActionTimestamp>
+	wishlist: Record<MediaKey, WishlistEntry>
 	watched: Record<MediaKey, ActionTimestamp>
 	favorites: Record<MediaKey, ActionTimestamp>
 	skipped: Record<MediaKey, ActionTimestamp>

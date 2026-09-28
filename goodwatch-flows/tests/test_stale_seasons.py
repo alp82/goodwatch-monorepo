@@ -3,6 +3,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import mongomock
+
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
 from f.sync.copy import tmdb_details
@@ -44,11 +46,17 @@ class SeasonTable:
         return sorted(season_id for season_id, owner in self.rows.items() if owner == show_id)
 
 
+def details_db(media_type, documents):
+    """A Mongo database whose details collection holds these documents."""
+    db = mongomock.MongoClient().db
+    collection = db.tmdb_movie_details if media_type == "movie" else db.tmdb_tv_details
+    if documents:
+        collection.insert_many([dict(document) for document in documents])
+    return db
+
+
 def copy_shows(connector, documents):
-    db = MagicMock()
-    collection = db.tmdb_tv_details
-    collection.count_documents.return_value = len(documents)
-    collection.find.return_value.sort.return_value.skip.return_value.limit.side_effect = [documents, []]
+    db = details_db("show", documents)
     with patch.object(tmdb_details, "get_db", return_value=db):
         return tmdb_details.copy_media(connector, {}, "show", recent_only=False)
 
@@ -103,10 +111,7 @@ class StaleSeasonTests(unittest.TestCase):
         self.assertEqual(crate.seasons_of(1), [11])
 
     def test_movies_never_touch_seasons(self):
-        db = MagicMock()
-        db.tmdb_movie_details.count_documents.return_value = 1
-        db.tmdb_movie_details.find.return_value.sort.return_value.skip.return_value.limit.side_effect = [
-            [{"tmdb_id": 1, "title": "Movie", "seasons": [{"id": 5}]}], []]
+        db = details_db("movie", [{"tmdb_id": 1, "title": "Movie", "seasons": [{"id": 5}]}])
         crate = SeasonTable([(11, 1)])
         with patch.object(tmdb_details, "get_db", return_value=db):
             tmdb_details.copy_media(crate, {}, "movie", recent_only=False)

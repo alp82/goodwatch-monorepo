@@ -186,22 +186,28 @@ class SelectionTests(unittest.TestCase):
                         "CrateConnector": object, "Movie": object, "Show": object,
                         "get_db": lambda: db, "datetime": datetime, "timedelta": timedelta,
                         "HOURS_TO_FETCH": 48, "SCHEDULED_LEASE_WAIT_SECONDS": 0, "BATCH_SIZE": 100, "defaultdict": defaultdict,
-                        "tmdb_details_projection": {}, "Any": Any,
+                        "tmdb_details_projection": {}, "Any": Any, "Optional": Optional,
+                        "WINDOW_INDEX": [("updated_at", 1), ("tmdb_id", 1)], "TMDB_ID_INDEX": [("tmdb_id", 1)],
                         "publication_lease": lambda *args: nullcontext(lambda: None),
                     }
                     functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef)
-                                              and node.name in ("changed_tmdb_ids", "fetch_map_by_ids", "scheduled_candidates")]
+                                              and node.name in ("changed_tmdb_ids", "fetch_map_by_ids", "scheduled_candidates",
+                                                                "details_collection", "delete_flagged_titles",
+                                                                "window_tmdb_ids", "details_batches")]
                     if name == "tmdb_streaming":
                         from test_streaming_publication import load_copy
                         streaming = load_copy(db).__globals__
-                        namespace.update({key: streaming[key] for key in ("publication_snapshot", "build_evidence", "StreamingEvidence", "SCHEMAS", "scoped_provider_id")})
-                        namespace["publication_snapshot"].__wrapped__.__globals__["publication_lease"] = lambda *args: nullcontext(lambda: None)
+                        streaming["publication_lease"] = lambda *args: nullcontext(lambda: None)
+                        namespace.update({key: value for key, value in streaming.items()
+                                          if key not in namespace and key not in ("copy_media", "scheduled_candidates")})
                     exec(compile(ast.Module(body=functions, type_ignores=[]), str(ROOT / name), "exec"), namespace)
                     namespace["copy_media"](connector, {"tmdb_id": {"$in": [42]}}, recent_only=recent_only)
                     selectors = []
                     for method, args, _ in db.mock_calls:
                         if method.endswith("count_documents") or method.endswith("find"):
-                            selectors.append(args[0])
+                            # The flag spike guard reads the recent flags of the whole catalog on purpose.
+                            if "tmdb_deleted_at" not in args[0]:
+                                selectors.append(args[0])
                         elif method.endswith("aggregate"):
                             selectors.append(args[0][0]["$match"])
                     self.assertTrue(selectors)

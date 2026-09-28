@@ -3,17 +3,25 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import mongomock
+
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
 from f.sync.copy import tmdb_details
 
 
+def details_db(media_type, documents):
+    """A Mongo database whose details collection holds these documents."""
+    db = mongomock.MongoClient().db
+    collection = db.tmdb_movie_details if media_type == "movie" else db.tmdb_tv_details
+    if documents:
+        collection.insert_many([dict(document) for document in documents])
+    return db
+
+
 def copy_one(document: dict, media_type: str) -> dict[str, list]:
     """Run copy_media on one Mongo document and return the upserted records per table."""
-    db = MagicMock()
-    collection = db.tmdb_movie_details if media_type == "movie" else db.tmdb_tv_details
-    collection.count_documents.return_value = 1
-    collection.find.return_value.sort.return_value.skip.return_value.limit.side_effect = [[document], []]
+    db = details_db(media_type, [document])
     connector = MagicMock()
     connector.select.return_value = []
     tables: dict[str, list] = {}

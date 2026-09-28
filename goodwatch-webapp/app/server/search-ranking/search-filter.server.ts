@@ -11,7 +11,9 @@ import {
 } from "../combined-search/search-filters.ts"
 import type { TitleTable } from "./search-index.server.ts"
 
-// The ranker ranks the indexed titles only: at least this many votes and not adult.
+// The indexed titles: at least this many votes and not adult. A normal search ranks only these. A lesser-known search
+// ranks every title that isn't adult; the title table still holds only the indexed ones, so the row test below covers
+// those, and the ranker reads the other titles' facts from Qdrant (rank-search.server.ts).
 export const ELIGIBLE_VOTES = 2000
 const SHOW_POINT_IDS = 2_000_000_000_000
 
@@ -26,7 +28,7 @@ export interface SearchFilter {
 
 type RowTest = (row: number) => boolean
 
-/** The search's filter over the indexed titles; the era applies only when some title passes it. */
+/** The search's filter; the era applies only when some indexed title passes it. */
 export function searchFilter(
 	table: TitleTable,
 	flags: ReadingFlag[],
@@ -34,10 +36,14 @@ export function searchFilter(
 	era: { from: number; to: number } | null,
 ): { base: SearchFilter; withEra: SearchFilter } {
 	const must: unknown[] = [
-		{
-			key: "goodwatch_overall_score_voting_count",
-			range: { gte: ELIGIBLE_VOTES },
-		},
+		...(eligibility.lesserKnown
+			? []
+			: [
+					{
+						key: "goodwatch_overall_score_voting_count",
+						range: { gte: ELIGIBLE_VOTES },
+					},
+				]),
 		...toQdrantMust(eligibility.filters),
 	]
 	const mustNot: unknown[] = [{ key: "adult", match: { value: true } }]

@@ -23,6 +23,19 @@ export interface TitleLookupRow {
 	popularity: number
 }
 
+/** What the ranker knows of a title outside the title table (a lesser-known title), in the table's conventions. */
+export interface TitleFacts {
+	/** The title, else the original title. */
+	title: string
+	/** "" when unknown. */
+	originalTitle: string
+	/** 0 when unknown. */
+	year: number
+	votes: number
+	/** NaN when unknown. */
+	goodwatchScore: number
+}
+
 export interface BlendedTitle {
 	id: number
 	title: string
@@ -77,6 +90,45 @@ export function similarity(a: string, b: string): number {
 	return (2 * prev[y.length]) / total
 }
 
+// Character counts of each title name, for a cheap upper bound of similarity() before the full comparison: a, ..., z,
+// 0, ..., 9, space, and one bucket for every other character. Computed once per index build (76 bytes a name).
+const BUCKETS = 38
+function bucket(code: number): number {
+	if (code >= 97 && code <= 122) return code - 97
+	if (code >= 48 && code <= 57) return code - 22
+	return code === 32 ? 36 : 37
+}
+function charCounts(text: string, into = new Uint16Array(BUCKETS), at = 0) {
+	for (const c of text) {
+		const b = at + bucket(c.codePointAt(0) as number)
+		if (into[b] < 65535) into[b]++
+	}
+	return into
+}
+const countsByNames = new WeakMap<
+	SearchIndex["titleNames"],
+	{ counts: Uint16Array; lengths: Uint32Array }
+>()
+function nameCounts(names: SearchIndex["titleNames"]) {
+	let found = countsByNames.get(names)
+	if (!found) {
+		const counts = new Uint16Array(names.length * BUCKETS)
+		const lengths = new Uint32Array(names.length)
+		names.forEach(({ name }, i) => {
+			charCounts(name, counts, i * BUCKETS)
+			lengths[i] = [...name].length
+		})
+		found = { counts, lengths }
+		countsByNames.set(names, found)
+	}
+	return found
+}
+
+/** Computes the per-build data of the fuzzy title match ahead of the first search. */
+export function prepareTitleBlend(index: SearchIndex): void {
+	nameCounts(index.titleNames)
+}
+
 /**
  * A query with a word unknown to the catalog: the row of the most similar eligible title (similarity >= STRICT), unless
  * it is the exact title (the title lookup finds those) or the filter excludes it.
@@ -89,11 +141,21 @@ function fuzzyTitle(
 	const q = normalized(query)
 	if (!q || q.split(" ").every((w) => index.words.df.has(w))) return null
 	const qLength = [...q].length
+	const counts = nameCounts(index.titleNames)
+	const wanted = charCounts(q)
+	const used: number[] = []
+	for (let b = 0; b < BUCKETS; b++) if (wanted[b]) used.push(b)
 	let best: { row: number; score: number } | null = null
-	for (const { name, row } of index.titleNames) {
+	for (let i = 0; i < index.titleNames.length; i++) {
+		const { name, row } = index.titleNames[i]
 		// The ratio can't reach STRICT when the lengths differ this much.
 		const n = name.length
 		if ((2 * Math.min(n, qLength)) / (n + qLength) < STRICT - 1e-9) continue
+		// Nor when the two strings share too few characters: a common subsequence matches at most min(count) of each.
+		let shared = 0
+		const base = i * BUCKETS
+		for (const b of used) shared += Math.min(wanted[b], counts.counts[base + b])
+		if ((2 * shared) / (counts.lengths[i] + qLength) < STRICT - 1e-9) continue
 		const score = similarity(q, name)
 		if (score >= STRICT && (!best || score > best.score)) best = { row, score }
 	}
@@ -114,7 +176,7 @@ interface Row {
 
 /**
  * The blended list: title lookup matches, a fuzzy title, and the ranked list (point ids in rank order), scored by
- * production's rank fusion.
+ * production's rank fusion. Ranked ids outside the title table take their title and year from `outside`.
  */
 export function blend(
 	index: SearchIndex,
@@ -123,6 +185,7 @@ export function blend(
 	ranked: number[],
 	concreteWords: Set<string>,
 	filterRows: Uint8Array,
+	outside: Map<number, TitleFacts> = new Map(),
 ): BlendedTitle[] {
 	const t = index.titleTable
 	const q = normalized(query)
@@ -185,8 +248,22 @@ export function blend(
 	ranked.forEach((id, i) => {
 		let row = rows.get(id)
 		if (!row) {
-			const r = t.rowOf.get(id) as number
-			row = fromTable(r, 0, lexical(t.titles[r], t.originalTitles[r]))
+			const r = t.rowOf.get(id)
+			if (r !== undefined)
+				row = fromTable(r, 0, lexical(t.titles[r], t.originalTitles[r]))
+			else {
+				const facts = outside.get(id) as TitleFacts
+				row = {
+					id,
+					title: facts.title,
+					mediaType: id >= SHOW_POINT_IDS ? "show" : "movie",
+					year: facts.year ? String(facts.year) : "",
+					popularity: 0,
+					lexical: lexical(facts.title, facts.originalTitle),
+					rank: null,
+					score: 0,
+				}
+			}
 			rows.set(id, row)
 		}
 		row.rank = i + 1

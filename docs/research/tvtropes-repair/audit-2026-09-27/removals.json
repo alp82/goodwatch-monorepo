@@ -1,0 +1,181 @@
+{
+ "issue": 123,
+ "entries": [
+  {
+   "media_type": "movie",
+   "tmdb_id": 431,
+   "title": "Cube",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheCube",
+   "trope_count": 125,
+   "reason": "Main/TheCube is a disambiguation page (Wikidata's Film/Cube redirects there)"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 564,
+   "title": "The Mummy",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/TheMummy",
+   "trope_count": 21,
+   "reason": "Franchise page stored; Wikidata's Film/TheMummy1999 is identified but lists no tropes (they are on Film/TheMummyTrilogy, a shared page)"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 816,
+   "title": "Austin Powers: International Man of Mystery",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers",
+   "trope_count": 454,
+   "reason": "Film/AustinPowers is \"a spy comedy movie trilogy\" page; each film has its own page"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 817,
+   "title": "Austin Powers: The Spy Who Shagged Me",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers",
+   "trope_count": 454,
+   "reason": "As International Man of Mystery"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 818,
+   "title": "Austin Powers in Goldmember",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/AustinPowers",
+   "trope_count": 454,
+   "reason": "As International Man of Mystery"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 871,
+   "title": "Planet of the Apes",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/PlanetOfTheApes",
+   "trope_count": 61,
+   "reason": "Film/PlanetOfTheApes is a disambiguation page"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 920,
+   "title": "Cars",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Cars",
+   "trope_count": 61,
+   "reason": "Main/ namespace, never one title's page; no Wikidata or tvtropes2imdb page"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 948,
+   "title": "Halloween",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Halloween",
+   "trope_count": 108,
+   "reason": "Main/ namespace, never one title's page; no Wikidata or tvtropes2imdb page"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 1091,
+   "title": "The Thing",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/TheThing",
+   "trope_count": 10,
+   "reason": "Main/ namespace, never one title's page; no Wikidata or tvtropes2imdb page"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 3176,
+   "title": "Battle Royale",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/BattleRoyale",
+   "trope_count": 189,
+   "reason": "Franchise/ namespace, never one title's page; no Wikidata or tvtropes2imdb page"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 9335,
+   "title": "Transporter 2",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheTransporter",
+   "trope_count": 185,
+   "reason": "Film/TheTransporter is the 2002 film; it links no Transporter 2 page"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 17578,
+   "title": "The Adventures of Tintin",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Franchise/Tintin",
+   "trope_count": 170,
+   "reason": "Franchise/ namespace, never one title's page; no Wikidata or tvtropes2imdb page"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 45243,
+   "title": "The Hangover Part II",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover",
+   "trope_count": 191,
+   "reason": "Film/TheHangover is a disambiguation page and its tropes were the 2009 film's (Wikidata gives it to movie 18785)"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 82675,
+   "title": "Taken 2",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken",
+   "trope_count": 278,
+   "reason": "Film/Taken redirects to a disambiguation page; the stored tropes were the 2008 film's"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 109439,
+   "title": "The Hangover Part III",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/TheHangover",
+   "trope_count": 191,
+   "reason": "Same as Part II"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 260346,
+   "title": "Taken 3",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Film/Taken",
+   "trope_count": 278,
+   "reason": "As Taken 2; Taken (2008) links no page for Taken 3"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 447273,
+   "title": "Snow White",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/SnowWhite",
+   "trope_count": 26,
+   "reason": "Main/ namespace, never one title's page; no Wikidata or tvtropes2imdb page"
+  },
+  {
+   "media_type": "movie",
+   "tmdb_id": 1062722,
+   "title": "Frankenstein",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Main/Frankenstein",
+   "trope_count": 128,
+   "reason": "Main/ namespace, never one title's page; no Wikidata or tvtropes2imdb page"
+  },
+  {
+   "media_type": "show",
+   "tmdb_id": 37854,
+   "title": "One Piece",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/OnePiece2023",
+   "trope_count": 114,
+   "reason": "Series/OnePiece2023 is the 2023 live-action series (Wikidata gives it to show 111110); this is the 1999 anime"
+  },
+  {
+   "media_type": "show",
+   "tmdb_id": 243520,
+   "title": "Spartacus: Gods of the Arena",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/SpartacusBloodAndSand",
+   "trope_count": 630,
+   "reason": "TMDB-deleted duplicate of the 2011 prequel Gods of the Arena; the page is the 2010 series (show 46296)"
+  },
+  {
+   "media_type": "show",
+   "tmdb_id": 278353,
+   "title": "Spartacus: Gods of the Arena",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/SpartacusBloodAndSand",
+   "trope_count": 637,
+   "reason": "TMDB-deleted duplicate of the 2011 prequel Gods of the Arena; the page is the 2010 series (show 46296)"
+  },
+  {
+   "media_type": "show",
+   "tmdb_id": 281095,
+   "title": "Spartacus: Gods of the Arena",
+   "url": "https://tvtropes.org/pmwiki/pmwiki.php/Series/SpartacusBloodAndSand",
+   "trope_count": 637,
+   "reason": "TMDB-deleted duplicate of the 2011 prequel Gods of the Arena; the page is the 2010 series (show 46296)"
+  }
+ ]
+}

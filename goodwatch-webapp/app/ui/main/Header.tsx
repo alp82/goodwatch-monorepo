@@ -9,24 +9,15 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline"
 import React, { Fragment } from "react"
 import { useLocation } from "@remix-run/react"
 
-import {
-	ArrowTopRightOnSquareIcon,
-	BookmarkIcon,
-} from "@heroicons/react/20/solid"
-import {
-	Cog6ToothIcon,
-	EyeIcon,
-	QueueListIcon,
-	UserCircleIcon,
-} from "@heroicons/react/24/solid"
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import logoCircle from "~/img/goodwatch-logo-circle.svg"
 import logo from "~/img/goodwatch-logo-white.svg"
 import Search from "~/ui/Search"
 import { SignInButton } from "~/ui/auth/SignInButton"
-import { SignOutLink } from "~/ui/auth/SignOutLink"
-import { myListsPath } from "~/ui/share-card/links"
+import { UserMenu } from "~/ui/main/UserMenu"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
+import { useFeature } from "~/hooks/useFeature"
 import { useUser } from "~/utils/auth"
 
 const mainNav = [
@@ -48,12 +39,17 @@ const mainNav = [
 	},
 ]
 
+// Watch next leads the links while REC_WATCH_NEXT shows it to the viewer.
+const watchNextNav = { label: "Watch next", path: "/watch-next" }
+
 export default function Header() {
 	const location = useLocation()
 	const isPage = (pathname: string) => location.pathname.startsWith(pathname)
 	const isPageExact = (pathname: string) => location.pathname === pathname
 
 	const { user, loading } = useUser()
+	const watchNext = useFeature("watchNext")
+	const desktopNav = watchNext ? [watchNextNav, ...mainNav] : mainNav
 
 	return (
 		<div className="fixed top-0 z-[1000] w-full bg-gray-900">
@@ -105,6 +101,23 @@ export default function Header() {
 														</Link>
 													)}
 												</MenuItem>
+												{watchNext && (
+													<MenuItem>
+														{({ focus }) => (
+															<Link
+																to={watchNextNav.path}
+																prefetch="render"
+																className={`block px-4 py-2 text-base font-medium ${
+																	isPage(watchNextNav.path)
+																		? "bg-amber-900 text-white"
+																		: "text-gray-300"
+																} ${focus ? "bg-gray-700 text-white" : ""}`}
+															>
+																{watchNextNav.label}
+															</Link>
+														)}
+													</MenuItem>
+												)}
 												{mainNav.map((nav) => (
 													<MenuItem key={nav.path}>
 														{({ focus }) => (
@@ -208,7 +221,7 @@ export default function Header() {
 						{/* Main nav */}
 						<div className="hidden lg:ml-6 lg:block">
 							<div className="flex space-x-4">
-								{mainNav.map((nav) => (
+								{desktopNav.map((nav) => (
 									<Link
 										key={nav.path}
 										className={`rounded-md px-3 py-2 text-md font-semibold ${
@@ -234,111 +247,7 @@ export default function Header() {
 						<div className="lg:ml-2">
 							<div className="flex items-center">
 								{loading ? null : user ? (
-									<Menu as="div" className="relative ml-2 shrink-0">
-										<MenuButton className="flex rounded-full bg-gray-800 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 cursor-pointer">
-											<span className="sr-only">Open user menu</span>
-											{user?.user_metadata?.avatar_url ? (
-												<img
-													className="h-8 w-8 rounded-[16px] hover:rounded-lg brightness-75 hover:brightness-100 transition duration-200"
-													src={user?.user_metadata?.avatar_url}
-													alt={user?.user_metadata?.name}
-													title={user?.user_metadata?.name}
-												/>
-											) : (
-												<UserCircleIcon className="h-8 w-8 rounded-[16px] brightness-75 hover:brightness-100 transition duration-200" />
-											)}
-										</MenuButton>
-										<Transition
-											as={Fragment}
-											enter="transition ease-out duration-100"
-											enterFrom="transform opacity-0 scale-95"
-											enterTo="transform opacity-100 scale-100"
-											leave="transition ease-in duration-75"
-											leaveFrom="transform opacity-100 scale-100"
-											leaveTo="transform opacity-0 scale-95"
-										>
-											<MenuItems className="absolute right-0 z-50 mt-2 w-72 origin-top-right border-2 border-gray-800 rounded-md bg-gray-950 py-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden">
-												<MenuItem>
-													{({ focus }) => (
-														<Link
-															to="/discover?type=all&watchedType=want-to-watch&streamingPreset=mine"
-															prefetch="viewport"
-															className={`flex gap-2 items-center px-4 py-2 text-base font-medium ${
-																focus
-																	? "bg-gray-700 text-white"
-																	: "text-amber-500"
-															}`}
-														>
-															<BookmarkIcon className="w-5 h-5" />
-															<span>
-																What I{" "}
-																<span className="font-extrabold">
-																	Want to See
-																</span>
-															</span>
-														</Link>
-													)}
-												</MenuItem>
-												<MenuItem>
-													{({ focus }) => (
-														<Link
-															to="/discover?type=all&watchedType=watched"
-															prefetch="viewport"
-															className={`flex gap-2 items-center px-4 py-2 text-base font-medium ${
-																focus
-																	? "bg-gray-700 text-white"
-																	: "text-green-500"
-															}`}
-														>
-															<EyeIcon className="w-5 h-5" />
-															<span>
-																What I{" "}
-																<span className="font-extrabold">
-																	Already Watched
-																</span>
-															</span>
-														</Link>
-													)}
-												</MenuItem>
-												<MenuItem>
-													{({ focus }) => (
-														<Link
-															to={myListsPath}
-															className={`flex gap-2 items-center px-4 py-2 text-base font-medium ${
-																focus
-																	? "bg-gray-700 text-white"
-																	: "text-sky-400"
-															}`}
-														>
-															<QueueListIcon className="w-5 h-5" />
-															<span>
-																My{" "}
-																<span className="font-extrabold">Lists</span>
-															</span>
-														</Link>
-													)}
-												</MenuItem>
-												<MenuItem>
-													{({ focus }) => (
-														<Link
-															to="/settings/country"
-															className={`w-full flex gap-2 items-center px-4 py-2 text-base font-medium ${
-																focus
-																	? "bg-gray-700 text-white"
-																	: "text-gray-200"
-															}`}
-														>
-															<Cog6ToothIcon className="w-5 h-5" />
-															<span>User Settings</span>
-														</Link>
-													)}
-												</MenuItem>
-												<MenuItem>
-													<SignOutLink active={false} />
-												</MenuItem>
-											</MenuItems>
-										</Transition>
-									</Menu>
+									<UserMenu user={user} />
 								) : (
 									<SignInButton />
 								)}

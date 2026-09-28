@@ -1,16 +1,15 @@
 // Encodes search query texts with the two local query models (see query-models.server.ts) in one worker thread.
 //
 // Nothing starts on import. The first call to startQueryEncoder() or encodeQueryTexts() downloads the model files if
-// needed and starts the worker, which loads both models (about 1.35 GB) and warms them up. Both calls throw while
-// SEARCH_RANKING_MODE is off.
+// needed and starts the worker, which loads both models (about 1.35 GB) and warms them up.
 //
 // Per search, send one request with each model's texts. rank-search.server.ts sends the query's texts (the query or
 // residual, facet phrases, coverage units, negated clauses) to the query's main model, bge-base for English and
 // multilingual-e5-small otherwise, as the ranker was tuned. The intent text always goes to multilingual-e5-small, a
 // non-English query's English chips to bge-base. Dozens of phrases through bge-base would cost over 100 ms, so keep
 // the lists short.
+import { createHash } from "node:crypto"
 import { Worker } from "node:worker_threads"
-import { assertSearchRankingEnabled } from "./mode.server.ts"
 import {
 	type LocalQueryModels,
 	type QueryModelName,
@@ -34,6 +33,8 @@ export interface QueryVectors {
 		/** Time the request waited in the worker's queue behind earlier searches. */
 		queuedMs: number
 		encodeMs: Partial<Record<QueryModelName, number>>
+		/** The vectors came from the cache of recent requests. */
+		cached?: boolean
 	}
 }
 
@@ -178,7 +179,6 @@ async function start(): Promise<RunningEncoder> {
 }
 
 function ensureRunning(): Promise<RunningEncoder> {
-	assertSearchRankingEnabled("The query encoder")
 	if (running) return running
 	if (lastFailure && Date.now() - failedAt < RETRY_AFTER_MS) {
 		return Promise.reject(lastFailure)
@@ -201,7 +201,7 @@ function ensureRunning(): Promise<RunningEncoder> {
 
 let loaded = false
 
-/** Whether the models are loaded, and how many requests wait. Shadow mode skips a search while it isn't ready or busy. */
+/** Whether the models are loaded, and how many requests wait. The basic search serves while it isn't ready or busy. */
 export function queryEncoderState(): {
 	ready: boolean
 	pending: number
@@ -215,10 +215,60 @@ export async function startQueryEncoder(): Promise<QueryEncoderStartup> {
 	return (await ensureRunning()).startup
 }
 
-/** Encodes one search's texts: one batch per model. Returns the vectors in the order of the texts. */
+// Recent requests' vectors, so a repeated search (a filter change, a page reload) skips the encoder. The key is a
+// digest of the whole request: a batch's vectors can differ from each text encoded alone in the last float bits, so
+// only an identical request reuses them. Search text is private: entries stay in this process, keyed by a digest.
+// Up to about 20 KB per entry (a few texts, 768 floats each for bge-base).
+const CACHE_ENTRIES = 500
+const vectorCache = new Map<
+	string,
+	Pick<QueryVectors, "english" | "multilingual">
+>()
+
+function requestKey(texts: QueryTexts): string {
+	return createHash("sha256")
+		.update(
+			JSON.stringify([texts.english ?? [], texts.multilingual ?? []]),
+		)
+		.digest("hex")
+}
+
+/**
+ * Encodes one search's texts: one batch per model. Returns the vectors in the order of the texts. A request identical
+ * to a recent one returns that request's vectors without encoding (timings.cached). Treat the vectors as read-only:
+ * they may be shared with other searches.
+ */
 export async function encodeQueryTexts(
 	texts: QueryTexts,
 ): Promise<QueryVectors> {
+	const started = performance.now()
+	const key = requestKey(texts)
+	const hit = vectorCache.get(key)
+	if (hit) {
+		// Refresh recency so eviction drops the least recently used entry.
+		vectorCache.delete(key)
+		vectorCache.set(key, hit)
+		return {
+			...hit,
+			timings: {
+				totalMs: performance.now() - started,
+				queuedMs: 0,
+				encodeMs: {},
+				cached: true,
+			},
+		}
+	}
+	const vectors = await encodeUncached(texts)
+	vectorCache.set(key, {
+		english: vectors.english,
+		multilingual: vectors.multilingual,
+	})
+	while (vectorCache.size > CACHE_ENTRIES)
+		vectorCache.delete(vectorCache.keys().next().value as string)
+	return vectors
+}
+
+async function encodeUncached(texts: QueryTexts): Promise<QueryVectors> {
 	const encoder = await ensureRunning()
 	if (pending.size >= MAX_PENDING) {
 		throw new Error(

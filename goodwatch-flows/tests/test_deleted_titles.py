@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 from f.sync.copy import deleted_titles
 from f.sync.copy.deleted_titles import (
-    MAX_DELETED_TITLES_PER_RUN,
     TITLE_KEYED_TABLES,
     delete_titles_from_crate,
     delete_titles_from_qdrant,
@@ -13,6 +12,8 @@ from f.sync.copy.deleted_titles import (
     flagged_among,
 )
 from f.sync.models.crate_schemas import SCHEMAS
+
+CALM = {"tripped": False}
 
 
 class FakeConnector:
@@ -36,7 +37,7 @@ class FakeConnector:
 class DeleteFromCrateTests(unittest.TestCase):
     def test_movie_deletes_every_title_keyed_table_scoped_by_media_type(self):
         connector = FakeConnector()
-        result = delete_titles_from_crate(connector, "movie", [7, "3", 7])
+        result = delete_titles_from_crate(connector, "movie", [7, "3", 7], spike=CALM)
         deletes = connector.deletes()
         self.assertEqual(
             [sql.split()[2] for sql, _ in deletes], [*TITLE_KEYED_TABLES, "movie"]
@@ -51,7 +52,7 @@ class DeleteFromCrateTests(unittest.TestCase):
 
     def test_show_also_deletes_seasons_and_never_touches_movie(self):
         connector = FakeConnector()
-        delete_titles_from_crate(connector, "show", [5])
+        delete_titles_from_crate(connector, "show", [5], spike=CALM)
         tables = [sql.split()[2] for sql, _ in connector.deletes()]
         self.assertEqual(tables[-2:], ["season", "show"])
         self.assertNotIn("movie", tables)
@@ -60,72 +61,63 @@ class DeleteFromCrateTests(unittest.TestCase):
 
     def test_user_tables_are_untouched_and_all_derived_tables_are_covered(self):
         connector = FakeConnector()
-        delete_titles_from_crate(connector, "show", [5])
+        delete_titles_from_crate(connector, "show", [5], spike=CALM)
         self.assertFalse([sql for sql, _ in connector.calls if "user_" in sql])
         derived = {name for name, spec in SCHEMAS.items() if "media_tmdb_id" in spec["columns"]}
         self.assertEqual(derived, set(TITLE_KEYED_TABLES))
 
     def test_empty_list_issues_no_sql(self):
         connector = FakeConnector()
-        result = delete_titles_from_crate(connector, "movie", [])
+        result = delete_titles_from_crate(connector, "movie", [], spike=CALM)
         self.assertEqual(connector.calls, [])
         self.assertEqual(result["titles_deleted"], 0)
 
-    def test_cap_skips_deletion(self):
+    def test_only_titles_still_published_are_deleted(self):
         connector = FakeConnector()
-        result = delete_titles_from_crate(connector, "movie", range(MAX_DELETED_TITLES_PER_RUN + 1))
-        self.assertEqual(connector.deletes(), [])
-        self.assertTrue(result["skipped_over_cap"])
-        self.assertEqual(result["titles_deleted"], 0)
-
-    def test_only_titles_still_published_are_deleted_and_capped(self):
-        connector = FakeConnector()
-        connector.missing = set(range(2, MAX_DELETED_TITLES_PER_RUN + 1))
-        result = delete_titles_from_crate(connector, "movie", range(MAX_DELETED_TITLES_PER_RUN + 1))
-        self.assertFalse(result["skipped_over_cap"])
+        connector.missing = set(range(2, 50))
+        result = delete_titles_from_crate(connector, "movie", range(50), spike=CALM)
+        self.assertEqual(result["titles_planned"], 2)
         self.assertTrue(all(params[-1] == [0, 1] for _, params in connector.deletes()))
 
     def test_nothing_published_issues_no_delete(self):
         connector = FakeConnector()
         connector.missing = {1, 2}
-        delete_titles_from_crate(connector, "movie", [1, 2])
+        delete_titles_from_crate(connector, "movie", [1, 2], spike=CALM)
         self.assertEqual(connector.deletes(), [])
 
     def test_ids_are_batched(self):
         connector = FakeConnector()
-        delete_titles_from_crate(connector, "movie", range(deleted_titles.DELETE_BATCH_SIZE + 1))
+        delete_titles_from_crate(connector, "movie", range(deleted_titles.DELETE_BATCH_SIZE + 1), spike=CALM)
         movie_deletes = [params for sql, params in connector.deletes() if sql.startswith("DELETE FROM movie")]
         self.assertEqual([len(params[0]) for params in movie_deletes], [deleted_titles.DELETE_BATCH_SIZE, 1])
 
     def test_unknown_media_type_and_bad_ids_raise(self):
         with self.assertRaises(ValueError):
-            delete_titles_from_crate(FakeConnector(), "tv", [1])
+            delete_titles_from_crate(FakeConnector(), "tv", [1], spike=CALM)
         with self.assertRaises(ValueError):
-            delete_titles_from_crate(FakeConnector(), "movie", ["1 OR 1=1"])
+            delete_titles_from_crate(FakeConnector(), "movie", ["1 OR 1=1"], spike=CALM)
 
 
 class DeleteFromQdrantTests(unittest.TestCase):
     def test_deletes_by_media_scoped_point_id(self):
         client = MagicMock()
         client.retrieve.side_effect = lambda ids, **kwargs: [SimpleNamespace(id=point_id) for point_id in ids]
-        result = delete_titles_from_qdrant(client, "media", "show", [2, 1], lambda media, tmdb_id: f"9{tmdb_id}")
-        client.delete.assert_called_once_with(collection_name="media", points_selector=[91, 92], wait=True)
+        result = delete_titles_from_qdrant(client, "media", "show", [2, 1], lambda media, tmdb_id: f"9{tmdb_id}", spike=CALM)
+        # Points go in the given order, which is oldest flag first.
+        client.delete.assert_called_once_with(collection_name="media", points_selector=[92, 91], wait=True)
         self.assertEqual(result["points_requested"], 2)
 
     def test_points_already_gone_are_not_deleted_again(self):
         client = MagicMock()
         client.retrieve.return_value = []
-        delete_titles_from_qdrant(client, "media", "show", [1, 2], lambda media, tmdb_id: tmdb_id)
+        delete_titles_from_qdrant(client, "media", "show", [1, 2], lambda media, tmdb_id: tmdb_id, spike=CALM)
         client.delete.assert_not_called()
 
-    def test_empty_and_over_cap_issue_no_delete(self):
+    def test_empty_list_issues_no_request(self):
         client = MagicMock()
-        client.retrieve.side_effect = lambda ids, **kwargs: [SimpleNamespace(id=point_id) for point_id in ids]
-        delete_titles_from_qdrant(client, "media", "movie", [], int)
-        result = delete_titles_from_qdrant(
-            client, "media", "movie", range(MAX_DELETED_TITLES_PER_RUN + 1), lambda media, tmdb_id: tmdb_id)
+        delete_titles_from_qdrant(client, "media", "movie", [], int, spike=CALM)
+        client.retrieve.assert_not_called()
         client.delete.assert_not_called()
-        self.assertTrue(result["skipped_over_cap"])
 
 
 class FlaggedLookupTests(unittest.TestCase):

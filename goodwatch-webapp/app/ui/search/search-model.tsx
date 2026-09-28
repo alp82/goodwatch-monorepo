@@ -28,6 +28,10 @@ export type Row = {
 	lexical: number;
 	match: string;
 	score: number;
+	// With the new filter bar, for members: the taste match (50 to 99, null without one) and how many places For you
+	// moves the row (positive: up; 0 when For you is off). Rows stay in the ranking's order.
+	tasteMatch?: number | null;
+	moved?: number;
 };
 export function titleMatch(title: string, query: string) {
 	const name = normalized(title),
