@@ -1,31 +1,33 @@
-import {
-	getInterestDiscovery,
-	type DiscoveryResult,
-} from "~/server/interest-discovery.server"
-import { getUserData } from "~/server/userData.server"
 import type {
 	LoaderFunction,
 	LoaderFunctionArgs,
 	MetaFunction,
 } from "@remix-run/node"
 import { json } from "@remix-run/node"
-import { useLoaderData, useNavigate } from "@remix-run/react"
+import { useLoaderData, useNavigate, useSearchParams } from "@remix-run/react"
 import {
 	type DehydratedState,
 	QueryClient,
 	dehydrate,
 } from "@tanstack/react-query"
+import { isEnabled } from "~/server/features.server"
+import {
+	type DiscoveryResult,
+	getInterestDiscovery,
+} from "~/server/interest-discovery.server"
 import {
 	getSmartTitlesForGuest,
 	getSmartTitlesForUser,
 } from "~/server/smart-titles.server"
 import { prefetchUserSettings } from "~/server/user-settings.server"
-import TasteQuiz from "~/ui/taste/TasteQuiz"
+import { getUserData } from "~/server/userData.server"
 import type { ScoringMedia } from "~/ui/scoring/types"
+import { GuestShareListEntry } from "~/ui/share-lists/ShareTopFiveCard"
+import { TasteQuizPage } from "~/ui/taste-quiz/TasteQuizPage"
+import TasteQuiz from "~/ui/taste/TasteQuiz"
 import { getUserFromRequest } from "~/utils/auth"
 import { getLocaleFromRequest } from "~/utils/locale"
 import { type PageMeta, buildMeta } from "~/utils/meta"
-import { GuestShareListEntry } from "~/ui/share-lists/ShareTopFiveCard"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -46,7 +48,9 @@ type LoaderData = {
 	isLoggedIn: boolean
 	userId?: string
 	smartTitles: ScoringMedia[]
-	discovery: DiscoveryResult
+	/** The new quiz (REC_TASTE_PAGE); the old quiz and its interest discovery otherwise. */
+	newQuiz: boolean
+	discovery: DiscoveryResult | null
 	dehydratedState: DehydratedState
 }
 
@@ -55,12 +59,13 @@ export const loader: LoaderFunction = async ({
 }: LoaderFunctionArgs) => {
 	const user = await getUserFromRequest({ request })
 	const isLoggedIn = !!user
+	const newQuiz = isEnabled("tastePage", { userId: user?.id })
 
 	const { locale } = getLocaleFromRequest(request)
 
-	const smartTitles = isLoggedIn
+	const smartTitles = user
 		? await getSmartTitlesForUser({
-				userId: user!.id,
+				userId: user.id,
 				count: 300,
 				locale,
 			})
@@ -79,16 +84,30 @@ export const loader: LoaderFunction = async ({
 		isLoggedIn,
 		userId: user?.id,
 		smartTitles,
-		discovery: await getInterestDiscovery(
-			user ? await getUserData({ user_id: user.id }) : undefined,
-		),
+		newQuiz,
+		discovery: newQuiz
+			? null
+			: await getInterestDiscovery(
+					user ? await getUserData({ user_id: user.id }) : undefined,
+				),
 		dehydratedState: dehydrate(queryClient),
 	})
 }
 
 export default function TasteQuizRoute() {
-	const { isLoggedIn, userId, smartTitles } = useLoaderData<LoaderData>()
+	const { isLoggedIn, userId, smartTitles, newQuiz } =
+		useLoaderData<LoaderData>()
 	const navigate = useNavigate()
+	const [params] = useSearchParams()
+
+	if (newQuiz)
+		return (
+			<TasteQuizPage
+				titles={smartTitles}
+				member={isLoggedIn}
+				showPicks={params.get("show") === "picks"}
+			/>
+		)
 
 	const handleSignUp = () => {
 		navigate("/sign-up/?redirectTo=/taste/quiz")
