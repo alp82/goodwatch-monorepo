@@ -34,9 +34,10 @@ MAIN_CATEGORIES = [
     "genres"
 ]
 
-# Only pages with search value. Auth and quiz pages are left out on purpose.
+# Only canonical public pages. Search is noindex; Taste may redirect guests to
+# the quiz. Auth, quiz, /living-room (301), and TV-state URLs are left out.
 STATIC_ROUTES = [
-    "/", "/movies", "/shows", "/discover", "/how-it-works", "/about", "/disclaimer", "/privacy"
+    "/", "/movies", "/shows", "/discover", "/explorer", "/how-it-works", "/about", "/disclaimer", "/privacy"
 ]
 
 
@@ -184,11 +185,13 @@ def create_landing_sitemaps():
 
 def create_master_sitemap_index(detail_lastmods: dict):
     """Create a master sitemap index that links to all other sitemap files."""
+    # Link to URL sets directly: Google does not support nested sitemap indexes.
+    # Keep the legacy detail indexes for their existing Search Console submissions.
     sitemap_files = [
         ("sitemap_static.xml", None),
         ("sitemap_categories.xml", None),
-        ("sitemap_index_movie_detail.xml", detail_lastmods["movie"]),
-        ("sitemap_index_show_detail.xml", detail_lastmods["show"]),
+        ("sitemap_movie_detail_0.xml", detail_lastmods["movie"]),
+        ("sitemap_show_detail_0.xml", detail_lastmods["show"]),
     ]
     write_sitemap_index("sitemap.xml", sitemap_files)
     return {

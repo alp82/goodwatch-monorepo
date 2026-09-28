@@ -7,11 +7,11 @@
     <loc>https://goodwatch.app/sitemaps/sitemap_categories.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://goodwatch.app/sitemaps/sitemap_index_movie_detail.xml</loc>
+    <loc>https://goodwatch.app/sitemaps/sitemap_movie_detail_0.xml</loc>
     <lastmod>2026-09-24</lastmod>
   </sitemap>
   <sitemap>
-    <loc>https://goodwatch.app/sitemaps/sitemap_index_show_detail.xml</loc>
+    <loc>https://goodwatch.app/sitemaps/sitemap_show_detail_0.xml</loc>
     <lastmod>2026-09-24</lastmod>
   </sitemap>
 </sitemapindex>

@@ -31,7 +31,7 @@ import { snapshotGuestProgress } from "~/utils/guest-progress"
 export { livingRoomLoader as loader } from "~/server/living-room.server"
 import type { livingRoomLoader } from "~/server/living-room.server"
 import { pageHeaders } from "~/utils/headers"
-import { buildMeta } from "~/utils/meta"
+import { buildMeta, ogImageUrl } from "~/utils/meta"
 
 // Keep auth refreshes private, but use this route's exact guest policy instead of the root's public default.
 export const headers: HeadersFunction = (args) => {
@@ -62,18 +62,60 @@ export const links: LinksFunction = () => [
 	},
 ]
 
-export const meta: MetaFunction = () =>
-	buildMeta({
+const HOME_URL = "https://goodwatch.app/"
+const HOME_TITLE = "GoodWatch - Find movies and TV shows to watch"
+const HOME_DESCRIPTION =
+	"Find your next movie or TV show by mood and taste. Compare IMDb, Rotten Tomatoes and Metacritic scores, explore titles, and check where they stream."
+
+// TV state and campaign parameters are views of the same page, not separate search results.
+// This metadata is shared by guests and members, on every device.
+export const meta: MetaFunction = () => [
+	...buildMeta({
 		pageMeta: {
-			title: "GoodWatch - Find the best movies and shows to watch",
-			description:
-				"Discover the best movies and shows to watch right now. Pick a mood and get worthwhile picks on Netflix, Prime Video, Disney+, HBO and more.",
-			url: "https://goodwatch.app",
-			image: "https://goodwatch.app/images/heroes/hero-movies.png",
-			alt: "The GoodWatch living room",
+			title: HOME_TITLE,
+			description: HOME_DESCRIPTION,
+			url: HOME_URL,
+			image: ogImageUrl(HOME_URL),
+			alt: "GoodWatch - find your next movie or TV show",
 		},
-		items: [],
-	})
+	}).filter((tag) => !("script:ld+json" in tag)),
+	// The living room is in English worldwide; there are no translated URL variants.
+	{ tagName: "link", rel: "alternate", hrefLang: "en", href: HOME_URL },
+	{ tagName: "link", rel: "alternate", hrefLang: "x-default", href: HOME_URL },
+	{
+		"script:ld+json": {
+			"@context": "https://schema.org",
+			"@graph": [
+				{
+					"@type": "Organization",
+					"@id": `${HOME_URL}#organization`,
+					name: "GoodWatch",
+					url: HOME_URL,
+					logo: `${HOME_URL}android-chrome-512x512.png`,
+				},
+				{
+					"@type": "WebSite",
+					"@id": `${HOME_URL}#website`,
+					name: "GoodWatch",
+					url: HOME_URL,
+					description: HOME_DESCRIPTION,
+					inLanguage: "en",
+					publisher: { "@id": `${HOME_URL}#organization` },
+				},
+				{
+					"@type": "WebPage",
+					"@id": `${HOME_URL}#webpage`,
+					name: HOME_TITLE,
+					url: HOME_URL,
+					description: HOME_DESCRIPTION,
+					inLanguage: "en",
+					isPartOf: { "@id": `${HOME_URL}#website` },
+					about: { "@id": `${HOME_URL}#organization` },
+				},
+			],
+		},
+	},
+]
 
 export default function Index() {
 	const initial = useLoaderData<typeof livingRoomLoader>()
