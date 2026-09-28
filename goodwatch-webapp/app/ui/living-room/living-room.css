@@ -161,3 +161,117 @@ html:has(.living-room),
 body:has(.living-room) {
 	overflow: hidden;
 }
+
+/* The first paint (#233), before the window is measured: the scene is placed by CSS, so the server HTML is the
+   same for every visitor and still lays out right on any screen. These rules mirror `layoutRoom` (desktop) and
+   `layoutPhone` (phone portrait and landscape) in room.ts; keep them in step. Lengths are in window pixels:
+   --lr-s is the photo's scale (pixels per photo unit), --lr-r the Remote's scale, and tan(atan2(x, 1px)) turns a
+   length into the plain number that scale() needs. */
+.living-room-first {
+	container-type: size;
+	--lr-room-w: 1672;
+	--lr-room-h: 941;
+	--lr-tv-x: 531;
+	--lr-s: max(min(80cqw, 75.912cqh) / 611, 100cqw / 1672, 100cqh / 941);
+	--lr-left: min(
+		0px,
+		max(100cqw - 1672 * var(--lr-s), 50cqw - 836.5 * var(--lr-s))
+	);
+	--lr-top: min(
+		0px,
+		max(100cqh - 941 * var(--lr-s), 23.5cqh - 255 * var(--lr-s))
+	);
+	/* REMOTE_H * 0.83 * 0.97 = 697.2 */
+	--lr-r: min(1.1px, 53cqh / 697.2, 30cqw / 312);
+	--lr-remote-top: 47cqh;
+}
+.living-room-first .lr-photo {
+	left: var(--lr-left);
+	top: var(--lr-top);
+	width: calc(var(--lr-room-w) * var(--lr-s));
+	height: calc(var(--lr-room-h) * var(--lr-s));
+}
+.living-room-first .lr-tv {
+	left: calc(var(--lr-left) + var(--lr-tv-x) * var(--lr-s));
+	top: calc(var(--lr-top) + 90 * var(--lr-s));
+	width: calc(611 * var(--lr-s));
+	height: calc(330 * var(--lr-s));
+}
+/* Both canvases have the TV's aspect within 1%: centered across, 3.025 photo units up. */
+.living-room-first .lr-canvas {
+	transform: translateY(calc(-3.025 * var(--lr-s)))
+		scale(tan(atan2(calc(0.636458 * var(--lr-s)), 1px)));
+}
+.living-room-first .lr-canvas-phone {
+	display: none;
+	transform: translateY(calc(-3.025 * var(--lr-s)))
+		scale(tan(atan2(calc(1.091071 * var(--lr-s)), 1px)));
+}
+.living-room-first .lr-remote {
+	left: calc(50cqw - 156 * var(--lr-r));
+	top: var(--lr-remote-top);
+	width: calc(312 * var(--lr-r));
+	height: calc(866 * var(--lr-r));
+}
+.living-room-first .lr-hand {
+	left: calc(-262.178 * var(--lr-r));
+	top: calc(-55.539 * var(--lr-r));
+	width: calc(836.356 * var(--lr-r));
+	height: calc(1254.534 * var(--lr-r));
+}
+.living-room-first .lr-remote-scale {
+	transform: scale(tan(atan2(var(--lr-r), 1px)));
+}
+
+/* Phone landscape: the whole room above the site header, the TV on top, the Remote under it. */
+@media (orientation: landscape) and (max-height: 540px) {
+	.living-room-first {
+		top: 0;
+		bottom: 0;
+		z-index: 1001;
+		--lr-s: max(min(70cqw, 81.4667cqh) / 611, 100cqw / 1672);
+		--lr-left: min(
+			0px,
+			max(100cqw - 1672 * var(--lr-s), 50cqw - 836.5 * var(--lr-s))
+		);
+		--lr-top: min(0px, max(100cqh - 941 * var(--lr-s), 4cqh - 90 * var(--lr-s)));
+		--lr-r: min(100cqh / 760, 0.6px);
+		--lr-remote-top: calc(var(--lr-top) + 420 * var(--lr-s) - 22px);
+	}
+}
+
+/* Phone portrait: the portrait room covers the width, the TV on top, the Remote below it. */
+@media (max-width: 767px) {
+	.living-room-first {
+		top: 4rem;
+		bottom: 4rem;
+		z-index: 40;
+		--lr-room-w: 1068;
+		--lr-room-h: 1602;
+		--lr-tv-x: 229;
+		--lr-s: max(92cqw / 611, 100cqw / 1068);
+		--lr-left: min(
+			0px,
+			max(100cqw - 1068 * var(--lr-s), 50cqw - 534.5 * var(--lr-s))
+		);
+		--lr-top: min(
+			0px,
+			max(100cqh - 1602 * var(--lr-s), max(14px, 3.5cqh) - 90 * var(--lr-s))
+		);
+		--lr-remote-top: calc(var(--lr-top) + 420 * var(--lr-s) + max(26px, 5cqh));
+		--lr-r: max(
+			0.3px,
+			min(66cqw / 312, (100cqh - var(--lr-remote-top) - 10px) / 700, 1px)
+		);
+	}
+}
+
+@media (max-width: 767px), (orientation: landscape) and (max-height: 540px) {
+	.living-room-first .lr-canvas,
+	.living-room-first .lr-caption {
+		display: none;
+	}
+	.living-room-first .lr-canvas-phone {
+		display: block;
+	}
+}

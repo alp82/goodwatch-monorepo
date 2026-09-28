@@ -121,6 +121,37 @@ function itemLabel(
 
 // ---------------------------------------------------------------------------------------------------------
 
+/** What GoodWatch is, in one line: the guest home's copy on the server-rendered first screen (#233). */
+export const ABOUT_LINE =
+	"One score from IMDb, Rotten Tomatoes, and Metacritic, how a title feels, and where it streams."
+
+/**
+ * Real links to the rest of GoodWatch in the server HTML (#233): crawlable, and reachable by keyboard, where they
+ * show up at the top left once focused. The TV and the Remote reach the same pages.
+ */
+export function LivingRoomLinks() {
+	return (
+		<nav
+			aria-label="GoodWatch"
+			className="sr-only focus-within:not-sr-only focus-within:absolute focus-within:left-4 focus-within:top-4 focus-within:z-50 focus-within:flex focus-within:gap-4 focus-within:rounded-xl focus-within:bg-black/85 focus-within:px-4 focus-within:py-3 focus-within:text-[15px] focus-within:font-semibold"
+		>
+			<p className="sr-only">GoodWatch: {ABOUT_LINE}</p>
+			{SITE_LINKS.map((l) => (
+				<a key={l.href} href={l.href} className="focus:underline">
+					{l.label}
+				</a>
+			))}
+		</nav>
+	)
+}
+
+const SITE_LINKS = [
+	{ label: "Discover", href: "/discover" },
+	{ label: "Taste", href: "/taste" },
+	{ label: "Explorer", href: "/explorer" },
+	{ label: "Search", href: "/search" },
+]
+
 export function TvScreens({ view }: { view: TvView }) {
 	const { state } = view
 	const s = state.screen
@@ -257,7 +288,14 @@ function Head({
 	title,
 	line,
 	eyebrow,
-}: { title: string; line?: ReactNode; eyebrow?: string }) {
+	as: Title = "div",
+}: {
+	title: string
+	line?: ReactNode
+	eyebrow?: string
+	/** The guest home's headline is the page's H1 (#233). */
+	as?: "div" | "h1"
+}) {
 	return (
 		<div className="absolute left-12 right-44 top-9">
 			{eyebrow && (
@@ -265,9 +303,9 @@ function Head({
 					{eyebrow}
 				</div>
 			)}
-			<div className="text-[34px] font-extrabold leading-none tracking-tight">
+			<Title className="text-[34px] font-extrabold leading-none tracking-tight">
 				{title}
-			</div>
+			</Title>
 			{line && <div className="mt-2 text-[15px] text-white/60">{line}</div>}
 		</div>
 	)
@@ -384,7 +422,11 @@ function Welcome({ view }: { view: TvView }) {
 	return (
 		<>
 			<Backdrop title={best[0]} dim={0.18} />
-			<Head title="Let's find something good for tonight." />
+			<Head
+				as="h1"
+				title="Let's find something good for tonight."
+				line={ABOUT_LINE}
+			/>
 			<div className="absolute inset-x-12 bottom-12 top-[120px] grid grid-cols-3 gap-6">
 				{cols.map((c) => (
 					<Item

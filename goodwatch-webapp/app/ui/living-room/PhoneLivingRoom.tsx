@@ -27,7 +27,7 @@ import {
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import { PhoneTvScreens } from "./PhoneTvScreens"
 import { Icon, Remote, type RemoteProps } from "./Remote"
-import type { TvView } from "./TvScreens"
+import { LivingRoomLinks, type TvView } from "./TvScreens"
 import {
 	HAND_IMAGE,
 	PHONE_ROOM,
@@ -45,7 +45,9 @@ import { TV_SCREEN_ATTR } from "./tv-transition"
 const useIsoLayoutEffect =
 	typeof window === "undefined" ? useEffect : useLayoutEffect
 
-const PORTRAIT = "(max-width: 767px)"
+/** Phone portrait; living-room.css repeats these queries for the first paint. */
+export const PHONE_PORTRAIT_QUERY = "(max-width: 767px)"
+const PORTRAIT = PHONE_PORTRAIT_QUERY
 const LANDSCAPE = "(orientation: landscape) and (max-height: 540px)"
 
 /** Which phone layout the window wants: portrait when narrow, landscape when short and wide, else none. */
@@ -158,6 +160,7 @@ export function PhoneLivingRoom({
 			ref={root}
 			className={`living-room fixed inset-x-0 overflow-clip bg-[#07080b] text-white ${landscape ? "inset-y-0 z-[1001]" : "bottom-16 top-16 z-40"}`}
 		>
+			<LivingRoomLinks />
 			{L && (
 				<>
 					<div

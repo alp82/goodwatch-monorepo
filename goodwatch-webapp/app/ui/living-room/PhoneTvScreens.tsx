@@ -174,11 +174,14 @@ function Head({
 	title,
 	line,
 	eyebrow,
+	as: Title = "h2",
 }: {
 	view: TvView
 	title: string
 	line?: ReactNode
 	eyebrow?: string
+	/** The guest home's headline is the page's H1 (#233). */
+	as?: "h1" | "h2"
 }) {
 	const atHome = view.state.screen.name === "home"
 	return (
@@ -192,9 +195,9 @@ function Head({
 						{eyebrow}
 					</span>
 				)}
-				<h2 className="truncate text-[26px] font-extrabold leading-tight tracking-tight">
+				<Title className="truncate text-[26px] font-extrabold leading-tight tracking-tight">
 					{title}
-				</h2>
+				</Title>
 			</div>
 			{line && (
 				<div className="truncate text-[18px] leading-snug text-white/60">
@@ -237,7 +240,7 @@ function Welcome({ view }: { view: TvView }) {
 	return (
 		<>
 			<Backdrop title={best[0]} dim={0.18} />
-			<Head view={view} title="Something good tonight?" />
+			<Head view={view} as="h1" title="Something good tonight?" />
 			<div className="absolute inset-x-5 bottom-3 top-[56px] flex flex-col gap-2">
 				{rows.map((r) => (
 					<PItem
