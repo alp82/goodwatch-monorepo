@@ -42,6 +42,7 @@ import {
 	type TvScreen,
 	readTvState,
 } from "./tv-flow"
+import { TV_SCREEN_ATTR, useReturnIntoTv } from "./tv-transition"
 import { useTvFlow } from "./use-tv-flow"
 
 const useIsoLayoutEffect =
@@ -77,6 +78,7 @@ export function LivingRoom({
 	onRate,
 }: LivingRoomProps) {
 	const phone = usePhoneOrientation()
+	useReturnIntoTv()
 	const [params] = useSearchParams()
 	const [choices, setChoices] = useState<LivingRoomChoices>(NO_CHOICES)
 	const [draft, setDraftState] = useState("")
@@ -265,6 +267,7 @@ export function LivingRoom({
 
 			{/* The TV. Its screens are drawn on a fixed canvas, scaled to cover the screen. */}
 			<div
+				{...{ [TV_SCREEN_ATTR]: "" }}
 				className="absolute overflow-hidden rounded-[3px] bg-black"
 				style={{
 					left: L.tv.left,

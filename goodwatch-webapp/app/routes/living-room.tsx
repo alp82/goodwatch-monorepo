@@ -11,7 +11,6 @@ import {
 	type ShouldRevalidateFunction,
 	useLoaderData,
 	useLocation,
-	useNavigate,
 } from "@remix-run/react"
 import { useCallback } from "react"
 import {
@@ -27,6 +26,7 @@ import { APP } from "~/ui/living-room/Remote"
 import { type LivingRoomData, titleOf } from "~/ui/living-room/living-room-data"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import { type TvEffect, isTvOnlyChange } from "~/ui/living-room/tv-flow"
+import { useLeaveThroughTv } from "~/ui/living-room/tv-transition"
 import { titleHref } from "~/ui/watch-next/WatchNextHero"
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -60,7 +60,7 @@ export const meta: MetaFunction = () => [
 
 export default function LivingRoomRoute() {
 	const data = useLoaderData<typeof loader>() as LivingRoomData
-	const navigate = useNavigate()
+	const leave = useLeaveThroughTv()
 	const { pathname, search } = useLocation()
 	const here = encodeURIComponent(pathname + search)
 	const signUpHref = `/sign-up?redirectTo=${here}`
@@ -82,7 +82,7 @@ export default function LivingRoomRoute() {
 		[data, score],
 	)
 
-	// Leaving is plain navigation for now; #232 grows the TV into the window instead.
+	// Leaving grows the TV into the window (#232); browser Back shrinks the page into the same TV screen.
 	const onEffect = useCallback(
 		(effect: TvEffect) => {
 			const titleKey = "title" in effect ? effect.title : null
@@ -94,19 +94,19 @@ export default function LivingRoomRoute() {
 				case "leave": {
 					const to = effect.to
 					if (to.kind === "app")
-						navigate(
+						leave(
 							to.app === "watch-now" && !data.member
 								? signUpHref
 								: APP[to.app].href,
 						)
 					else {
 						const t = titleOf(data, to.title)
-						if (t) navigate(titleHref(t))
+						if (t) leave(titleHref(t))
 					}
 					return
 				}
 				case "watch":
-					if (title) navigate(titleHref(title))
+					if (title) leave(titleHref(title))
 					return
 				case "want-to-see":
 					if (target && !title?.wantToSee)
@@ -121,7 +121,7 @@ export default function LivingRoomRoute() {
 					return
 			}
 		},
-		[data, navigate, signUpHref, wishlist, watched, skipped],
+		[data, leave, signUpHref, wishlist, watched, skipped],
 	)
 
 	return (
