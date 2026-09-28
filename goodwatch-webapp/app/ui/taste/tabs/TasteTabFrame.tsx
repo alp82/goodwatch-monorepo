@@ -1,16 +1,12 @@
 import { Link } from "@remix-run/react"
 import type { ReactNode } from "react"
-import {
-	GUEST_MIN_RATINGS,
-	type PortraitSubject,
-	type PortraitTab,
-	type PortraitViewOf,
-} from "~/server/taste-portrait/view"
-import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
+import type { PortraitTab, PortraitViewOf } from "~/server/taste-portrait/view"
+import { QUIZ_PATH } from "~/ui/taste-quiz/TasteQuizPage"
+import { TasteBanner } from "./TasteBanner"
 import { useTasteView } from "./useTasteView"
 
 /** Where a person rates titles they've seen. */
-const RATE_PATH = "/taste/quiz"
+const RATE_PATH = QUIZ_PATH
 
 const EMPTY_LINES: Record<PortraitTab, string> = {
 	sides: "Rate a few more titles you love to see the sides of your taste.",
@@ -20,8 +16,7 @@ const EMPTY_LINES: Record<PortraitTab, string> = {
 }
 
 /**
- * One Taste tab around its view: loading, the empty state with a rating shortcut, the sample-taste label, and the
- * sign-up prompt a guest sees.
+ * One Taste tab around its view: loading, the empty state with a rating shortcut, and the Taste banner.
  */
 export function TasteTabFrame<T extends PortraitTab>({
 	tab,
@@ -53,7 +48,7 @@ export function TasteTabFrame<T extends PortraitTab>({
 
 	return (
 		<div className="pb-32 text-white">
-			<SubjectBand subject={view.subject} />
+			<TasteBanner member={view.subject.kind === "member"} />
 			{view.status === "empty" ? (
 				<Notice
 					line={EMPTY_LINES[tab]}
@@ -63,37 +58,6 @@ export function TasteTabFrame<T extends PortraitTab>({
 				children(view)
 			)}
 		</div>
-	)
-}
-
-/** "Sample taste" on every tab below 5 guest ratings; for a guest's own taste, the prompt to keep it. */
-function SubjectBand({ subject }: { subject: PortraitSubject }) {
-	if (subject.kind === "member") return null
-	if (subject.kind === "guest")
-		return (
-			<div className="mx-auto flex max-w-7xl justify-end px-4 pt-4 md:px-8">
-				<SignUpPrompt feature="taste" stage="keep" size="inline" />
-			</div>
-		)
-	return (
-		<section
-			aria-label="Sample taste"
-			className="border-b border-amber-500/20 bg-amber-950/30"
-		>
-			<div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 md:px-8">
-				<span className="rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-black uppercase tracking-wide text-gray-950">
-					Sample taste
-				</span>
-				<p className="text-sm text-amber-50/90">
-					This is someone else's taste. Rate {GUEST_MIN_RATINGS} titles you've
-					seen to see your own.
-				</p>
-				<span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-					<RateLink small>Rate titles</RateLink>
-					<SignUpPrompt feature="taste" stage="learn" size="inline" />
-				</span>
-			</div>
-		</section>
 	)
 }
 

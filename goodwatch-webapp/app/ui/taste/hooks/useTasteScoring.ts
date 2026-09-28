@@ -1,21 +1,20 @@
-import {
-	useGuestInteractions,
-	updateGuestInteraction,
-	clearGuestProgress,
-	readGuestInteractions,
-} from "~/utils/guest-progress"
-import { useState, useEffect, useCallback } from "react"
-import type { Score } from "~/server/scores.server"
-import type { ScoringMedia } from "~/ui/scoring/types"
-import type { TasteInteraction } from "../types"
-import { ONBOARDING_RATINGS_KEY, FIRST_UNLOCK_COUNT_KEY } from "../constants"
-import { GUEST_LIMITS } from "../features"
-import { useRatingsCount } from "./useRatingsCount"
+import { useCallback, useState } from "react"
 import {
 	useScoreMutation,
 	useSkippedMutation,
 	useWishlistMutation,
 } from "~/hooks/useUserDataMutations"
+import type { Score } from "~/server/scores.server"
+import type { ScoringMedia } from "~/ui/scoring/types"
+import {
+	clearGuestProgress,
+	readGuestInteractions,
+	updateGuestInteraction,
+	useGuestInteractions,
+} from "~/utils/guest-progress"
+import { FIRST_UNLOCK_COUNT_KEY } from "../constants"
+import type { TasteInteraction } from "../types"
+import { useRatingsCount } from "./useRatingsCount"
 
 interface UseTasteScoringProps {
 	isAuthenticated: boolean
@@ -25,21 +24,10 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	const guestInteractions = useGuestInteractions()
 	const [memberInteractions, setInteractions] = useState<TasteInteraction[]>([])
 	const interactions = isAuthenticated ? memberInteractions : guestInteractions
-	const [firstUnlockCount, setFirstUnlockCount] = useState<number | null>(null)
 
 	const scoreMutation = useScoreMutation()
 	const skippedMutation = useSkippedMutation()
 	const wishlistMutation = useWishlistMutation()
-
-	useEffect(() => {
-		if (!isAuthenticated) {
-			try {
-				setFirstUnlockCount(
-					Number(localStorage.getItem(FIRST_UNLOCK_COUNT_KEY)) || null,
-				)
-			} catch {}
-		}
-	}, [isAuthenticated])
 
 	const updateInteractions = useCallback(
 		(media: ScoringMedia, interaction: Omit<TasteInteraction, "timestamp">) => {
@@ -158,29 +146,12 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 	const clearInteractions = useCallback(() => {
 		if (!isAuthenticated) {
 			setInteractions([])
-			setFirstUnlockCount(null)
 			clearGuestProgress()
 			localStorage.removeItem(FIRST_UNLOCK_COUNT_KEY)
 		}
 	}, [isAuthenticated])
 
 	const ratingsCount = useRatingsCount({ isAuthenticated, interactions })
-
-	const positiveRatingsCount = interactions.filter(
-		(i) => i.type === "score" && i.score && i.score >= 6,
-	).length
-
-	useEffect(() => {
-		if (
-			!isAuthenticated &&
-			positiveRatingsCount >= GUEST_LIMITS.FIRST_UNLOCK &&
-			firstUnlockCount === null
-		) {
-			const count = interactions.filter((i) => i.type === "score").length
-			setFirstUnlockCount(count)
-			localStorage.setItem(FIRST_UNLOCK_COUNT_KEY, String(count))
-		}
-	}, [isAuthenticated, positiveRatingsCount, firstUnlockCount, interactions])
 
 	return {
 		interactions,
@@ -189,8 +160,6 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 		addPlanToWatch,
 		clearInteractions,
 		ratingsCount,
-		positiveRatingsCount,
-		firstUnlockCount,
 		isSubmitting:
 			scoreMutation.isPending ||
 			skippedMutation.isPending ||
