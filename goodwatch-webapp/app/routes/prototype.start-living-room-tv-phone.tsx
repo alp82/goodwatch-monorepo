@@ -1,6 +1,6 @@
-// PROTOTYPE - throwaway. The phone edition of the TV screens (#224), round 1. See the top of
+// PROTOTYPE - throwaway. The phone edition of the TV screens (#224), round 2. See the top of
 // ~/ui/prototype-start-living-room/phonetv1.tsx for what each variant tries.
-//   /prototype/start-living-room-tv-phone?variant=small-canvas|type-scale|focus-card|lean-in&as=guest|new|me&force=landscape
+//   /prototype/start-living-room-tv-phone?variant=type-scale|type-scale-rows|type-scale-narrow|small-canvas|type-scale-r1|focus-card|lean-in&as=guest|new|me&force=landscape
 // Open it on a phone, or in a desktop browser's device mode (390 x 844, or 844 x 390 with force=landscape).
 // The room is the mobile living room's `sideways` variant (#189): portrait couch, or the whole room sideways.
 import { json, type LinksFunction, type LoaderFunctionArgs } from "@remix-run/node"
@@ -56,7 +56,7 @@ const ORDER = Object.keys(PHONETV_VARIANTS) as PhoneTvVariant[]
 export default function LivingRoomTvPhoneRoute() {
 	const { lr, home } = useLoaderData<typeof loader>() as unknown as { lr: LRData; home: HomeData }
 	const [params] = useSearchParams()
-	const variant = (ORDER.includes(params.get("variant") as PhoneTvVariant) ? params.get("variant") : "small-canvas") as PhoneTvVariant
+	const variant = (ORDER.includes(params.get("variant") as PhoneTvVariant) ? params.get("variant") : "type-scale") as PhoneTvVariant
 	const force = params.get("force") === "landscape"
 	return <Phone key={`${variant}:${home.audience}:${force}`} lr={lr} home={home} variant={variant} force={force} />
 }

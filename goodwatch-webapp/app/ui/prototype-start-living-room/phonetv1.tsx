@@ -36,17 +36,28 @@ import { Icon } from "./r3"
 import { SEARCH_PRESETS, type Tv4 } from "./r4"
 import { SUGGESTIONS } from "./remote2"
 
-export type PhoneTvVariant = "small-canvas" | "type-scale" | "focus-card" | "lean-in"
+export type PhoneTvVariant = "type-scale" | "type-scale-rows" | "type-scale-narrow" | "small-canvas" | "type-scale-r1" | "focus-card" | "lean-in"
 
 export const PHONETV_VARIANTS: Record<PhoneTvVariant, { name: string; kind: "existing components" | "bolder" }> = {
-	"small-canvas": { name: "Small canvas, one job per screen", kind: "existing components" },
-	"type-scale": { name: "Mid canvas, bigger type, fewer items", kind: "existing components" },
+	"type-scale": { name: "Type scale for portrait: 560 canvas, everything stays", kind: "existing components" },
+	"type-scale-rows": { name: "Type scale, Welcome as rows, moods in six rows", kind: "existing components" },
+	"type-scale-narrow": { name: "Type scale on a narrower 500 canvas, biggest type", kind: "existing components" },
+	"small-canvas": { name: "Round 1: small canvas, one job per screen", kind: "existing components" },
+	"type-scale-r1": { name: "Round 1: mid canvas, bigger type, fewer items", kind: "existing components" },
 	"focus-card": { name: "Pictures on the TV, words under it", kind: "bolder" },
 	"lean-in": { name: "The camera leans in", kind: "bolder" },
 }
 
 export const SMALL = { w: 440, h: 242 }
 export const MID = { w: 640, h: 352 }
+// Round 2 (#224): the portrait type-scale canvases. Text is 18 px minimum on the canvas.
+export const TS: Record<"type-scale" | "type-scale-rows" | "type-scale-narrow", Cv> = {
+	"type-scale": { w: 560, h: 308, rows: false },
+	"type-scale-rows": { w: 560, h: 308, rows: true },
+	"type-scale-narrow": { w: 500, h: 275, rows: false },
+}
+type Cv = { w: number; h: number; rows: boolean }
+const tsOf = (v: PhoneTvVariant): Cv | null => (v in TS ? TS[v as keyof typeof TS] : null)
 
 const ICONS = {
 	back: "M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3",
@@ -68,7 +79,9 @@ const ICONS = {
 // The slot: which screens the TV renders, plus what the room around it does (caption, lean).
 
 export function phoneTvOpts(v: PhoneTvVariant): PhoneTvOpts {
-	if (v === "type-scale") return { canvas: MID }
+	const ts = tsOf(v)
+	if (ts) return { canvas: { w: ts.w, h: ts.h } }
+	if (v === "type-scale-r1") return { canvas: MID }
 	if (v === "focus-card") return { canvas: SMALL, gap: 92, below: (t, tv, box) => <Caption t={t as unknown as FlowT} tv={tv} box={box} /> }
 	if (v === "lean-in") return { canvas: SMALL, lean: (t) => (t as unknown as { leaning?: boolean }).leaning ?? false }
 	return { canvas: SMALL }
@@ -77,12 +90,15 @@ export function phoneTvOpts(v: PhoneTvVariant): PhoneTvOpts {
 export function PhoneTvScreen({ t, v }: { t: FlowT; v: PhoneTvVariant }) {
 	const s = t.scr
 	const key = s.k === "title" ? `t-${s.key}` : s.k === "page" ? `p-${s.id}` : s.k
-	const mid = v === "type-scale"
+	const ts = tsOf(v)
+	const mid = v === "type-scale-r1" || !!ts
+	const cw = ts ? ts.w : mid ? MID.w : SMALL.w
 	const pic = v === "focus-card"
 	const body = () => {
 		if (s.k === "boot") return <Boot />
-		if (s.k === "keyboard") return mid ? <Up k={MID.w / SMALL.w}><SKeyboard t={t} /></Up> : <SKeyboard t={t} />
-		if (s.k === "search") return t.query ? <Up k={(mid ? MID.w : SMALL.w) / 960}><Search queries={SUGGESTIONS} fixed={t.query} /></Up> : null
+		if (s.k === "keyboard") return mid ? <Up k={cw / SMALL.w}><SKeyboard t={t} /></Up> : <SKeyboard t={t} />
+		if (s.k === "search") return t.query ? <Up k={cw / 960}><Search queries={SUGGESTIONS} fixed={t.query} /></Up> : null
+		if (ts) return <TsScreen t={t} c={ts} />
 		if (mid) return <MidScreen t={t} />
 		if (pic) return <PicScreen t={t} />
 		return <SmallScreen t={t} />
@@ -94,12 +110,12 @@ export function PhoneTvScreen({ t, v }: { t: FlowT; v: PhoneTvVariant }) {
 					{body()}
 				</motion.div>
 			</AnimatePresence>
-			{s.k !== "boot" && (mid ? <MidBar t={t} /> : <SBar t={t} />)}
+			{s.k !== "boot" && (ts ? <TsBar t={t} /> : mid ? <MidBar t={t} /> : <SBar t={t} />)}
 			<AnimatePresence>
 				{t.note && (
 					<motion.div
 						key={t.note.id}
-						className={`absolute left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 font-semibold text-black shadow-2xl ${mid ? "bottom-4 px-5 py-2 text-[20px]" : "bottom-3 px-4 py-1.5 text-[15px]"}`}
+						className={`absolute left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 font-semibold text-black shadow-2xl ${ts ? "bottom-3 px-4 py-1.5 text-[18px]" : mid ? "bottom-4 px-5 py-2 text-[20px]" : "bottom-3 px-4 py-1.5 text-[15px]"}`}
 						initial={{ opacity: 0, y: 8 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0 }}
@@ -1406,6 +1422,508 @@ function Caption({ t, tv, box }: { t: FlowT; tv: { x: number; y: number; w: numb
 						{c.line && <div className={`${box.landscape ? "line-clamp-3" : "line-clamp-2"} text-[13px] leading-snug text-white/65`}>{c.line}</div>}
 					</div>
 				</motion.div>
+			</AnimatePresence>
+		</div>
+	)
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Round 2, type-scale for portrait (#224): the 960 screens' structure on 560 x 308 (or 500 x 275), 18 px
+// minimum on the canvas, so about 11.5 px (13 px narrow) on a 390 px phone. Nothing leaves the home screens:
+// guests keep all three Welcome cards with art and lines, members all twelve moods and the four Doors.
+// Layouts are flex and grid, not fixed widths, so one set of screens fits both canvases.
+
+function TsScreen({ t, c }: { t: FlowT; c: Cv }) {
+	const s = t.scr
+	if (s.k === "home") return t.member ? <TsMoods t={t} c={c} home /> : <TsWelcome t={t} c={c} />
+	if (s.k === "about") return <TsAbout t={t} />
+	if (s.k === "services") return <TsServices t={t} />
+	if (s.k === "duel") return <TsDuel t={t} c={c} />
+	if (s.k === "moods") return <TsMoods t={t} c={c} />
+	if (s.k === "from") return <TsFrom t={t} />
+	if (s.k === "tonight") return <TsTonight t={t} c={c} />
+	if (s.k === "title") return <TsTitle t={t} k={s.key} c={c} />
+	if (s.k === "page") return <TsApp t={t} id={s.id} />
+	return null
+}
+
+// Header on the left; the Bar owns the top right (two icons at home, four elsewhere).
+function TsHead({ t, title, line, eyebrow }: { t: FlowT; title: string; line?: ReactNode; eyebrow?: string }) {
+	return (
+		<div className="absolute left-5 top-3" style={{ right: t.scr.k === "home" ? 96 : 176 }}>
+			<div className="flex items-baseline gap-2.5">
+				{eyebrow && <span className="shrink-0 text-[18px] font-bold text-amber-300/90">{eyebrow}</span>}
+				<span className="truncate text-[26px] font-extrabold leading-tight tracking-tight">{title}</span>
+			</div>
+			{line && <div className="truncate text-[18px] leading-snug text-white/60">{line}</div>}
+		</div>
+	)
+}
+
+function Tp(props: Parameters<typeof F>[0]) {
+	return <F ring="ring-4" {...props} />
+}
+
+function TsPill({ t, v, children, primary, className = "" }: { t: FlowT; v: string; children: ReactNode; primary?: boolean; className?: string }) {
+	return primary ? (
+		<Tp t={t} v={v} className={`shrink-0 rounded-full px-4 py-1.5 text-[18px] font-bold ${className}`} on="ring-amber-300 bg-amber-400 text-black" off="ring-transparent bg-amber-400/90 text-black">
+			{children}
+		</Tp>
+	) : (
+		<Tp t={t} v={v} className={`shrink-0 rounded-full px-4 py-1.5 text-[18px] font-semibold ${className}`}>
+			{children}
+		</Tp>
+	)
+}
+
+// The Welcome fan, sized to its box: three posters `w` wide.
+function TsFan({ posters, w, heart }: { posters: WTitle[]; w: number; heart?: boolean }) {
+	return (
+		<div className="absolute inset-0 flex items-center justify-center">
+			{posters.slice(0, 3).map((p, i) => (
+				<div key={p.key} className="relative" style={{ margin: `0 ${-w * 0.14}px`, marginTop: i === 1 ? 0 : w * 0.28, transform: `rotate(${(i - 1) * 7}deg)`, zIndex: i === 1 ? 2 : 1 }}>
+					<img src={posterUrl(p, "w185")} alt="" className="rounded-md shadow-xl ring-1 ring-white/10" style={{ width: w, height: w * 1.5 }} />
+					{heart && i === 1 && <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-[18px] text-black">♥</span>}
+				</div>
+			))}
+		</div>
+	)
+}
+
+function welcomeCards(t: FlowT, fan: number) {
+	const p = t.h.picks
+	return [
+		{ v: "go:services", label: "Find my tonight", line: "Three quick questions, then your picks.", art: <TsFan posters={p.slice(3, 6)} w={fan} heart /> },
+		{ v: "go:quick", label: "Just show me", line: "The best rated, right now.", art: <TsFan posters={p.slice(0, 3)} w={fan} /> },
+		{
+			v: "go:about",
+			label: "What is GoodWatch?",
+			line: "One score, how it feels, where it streams.",
+			art: (
+				<div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle,rgba(34,197,94,0.22),transparent_65%)]">
+					<GwBadge gw={85} size={fan * 0.8} text="text-[30px]" />
+				</div>
+			),
+		},
+	]
+}
+
+function TsWelcome({ t, c }: { t: FlowT; c: Cv }) {
+	const narrow = c.w < 540
+	if (c.rows) {
+		return (
+			<>
+				<Backdrop t={t.h.picks[0]} dim={0.18} />
+				<TsHead t={t} title="Something good tonight?" />
+				<div className="absolute inset-x-5 bottom-3 top-[52px] flex flex-col gap-2">
+					{welcomeCards(t, 38).map((x) => (
+						<Tp key={x.v} t={t} v={x.v} className="flex min-h-0 flex-1 items-center gap-3 overflow-hidden rounded-2xl pr-4" scale={1.02}>
+							<div className="relative h-full w-[120px] shrink-0">{x.art}</div>
+							<div className="min-w-0">
+								<div className="text-[21px] font-extrabold leading-tight">{x.label}</div>
+								<div className="truncate text-[18px] leading-snug text-white/60">{x.line}</div>
+							</div>
+						</Tp>
+					))}
+				</div>
+			</>
+		)
+	}
+	return (
+		<>
+			<Backdrop t={t.h.picks[0]} dim={0.18} />
+			<TsHead t={t} title="Something good tonight?" />
+			<div className="absolute inset-x-5 bottom-3 top-[52px] grid grid-cols-3 gap-3">
+				{welcomeCards(t, narrow ? 36 : 54).map((x) => (
+					<Tp key={x.v} t={t} v={x.v} className="flex flex-col overflow-hidden rounded-2xl">
+						<div className="relative w-full shrink-0" style={{ height: narrow ? 66 : 104 }}>
+							{x.art}
+						</div>
+						<div className="px-3 pb-2">
+							<div className="text-[20px] font-extrabold leading-[1.1]">{x.label}</div>
+							<div className="mt-1 text-[18px] leading-[1.15] text-white/60">{x.line}</div>
+						</div>
+					</Tp>
+				))}
+			</div>
+		</>
+	)
+}
+
+function TsMood({ t, v, h }: { t: FlowT; v: string; h: number }) {
+	const m = v === "mood:any" ? null : MOOD[v.slice(5) as MoodKey]
+	// The Wishlist count shows on the focused mood only: at 18 px a count on every chip truncates the names.
+	const n = t.member && m && t.isFocus(v) ? t.moodCount(m.key) : null
+	return (
+		<Tp t={t} v={v} className="flex items-center gap-2 rounded-xl px-2.5" scale={1.04}>
+			<span className="w-1.5 shrink-0 self-stretch rounded-full" style={{ background: m?.hue ?? "rgba(255,255,255,0.6)", margin: `${h * 0.2}px 0`, height: h * 0.6 }} />
+			<span className="min-w-0 flex-1 truncate text-[18px] font-bold" style={{ lineHeight: `${h}px` }}>
+				{m?.name ?? "Any mood"}
+			</span>
+			{n != null && <span className={`text-[18px] tabular-nums ${n ? "text-white/60" : "text-white/30"}`}>{n}</span>}
+		</Tp>
+	)
+}
+
+function TsDoor({ t, a, stacked }: { t: FlowT; a: (typeof APPS)[number]; stacked?: boolean }) {
+	return (
+		<Tp t={t} v={`page:${a}`} className={stacked ? "flex flex-col items-center justify-center gap-0.5 rounded-xl py-1 text-[18px] font-semibold" : "flex items-center gap-1.5 rounded-full px-3 py-1 text-[18px] font-semibold"} scale={1.05}>
+			<span style={{ color: APP[a].tint }}>
+				<Icon d={APP[a].d} className="h-[18px] w-[18px]" />
+			</span>
+			<span className="whitespace-nowrap">{APP[a].name}</span>
+		</Tp>
+	)
+}
+
+// All twelve moods at once (the round 1 type-scale paged them). With `home`, the four Doors stay too.
+function TsMoods({ t, c, home }: { t: FlowT; c: Cv; home?: boolean }) {
+	const vals = ["mood:any", ...MOODS.map((m) => `mood:${m.key}`)]
+	const narrow = c.w < 540
+	const bg = <div className="absolute inset-0 bg-[radial-gradient(110%_90%_at_30%_0%,#2b1706_0%,#08070a_62%)]" />
+	if (c.rows && home) {
+		// Moods in six rows of two; the Doors a column on the right.
+		return (
+			<>
+				{bg}
+				<TsHead t={t} title="What kind of night?" />
+				<div className="absolute bottom-3 left-5 right-[150px] top-[50px] grid grid-cols-2 grid-rows-6 gap-x-2 gap-y-1">
+					{vals.map((v) => (
+						<TsMood key={v} t={t} v={v} h={34} />
+					))}
+				</div>
+				<div className="absolute bottom-3 right-5 top-[50px] flex w-[122px] flex-col gap-1.5">
+					<span className="text-[18px] font-bold text-white/40">Or open</span>
+					{APPS.map((a) => (
+						<TsDoor key={a} t={t} a={a} />
+					))}
+				</div>
+			</>
+		)
+	}
+	const rowH = home ? (narrow ? 32 : 36) : narrow ? 42 : 48
+	return (
+		<>
+			{bg}
+			<TsHead t={t} title="What kind of night?" line={!home && t.member ? "Numbers fit your Wishlist." : undefined} />
+			<div className={`absolute inset-x-5 grid grid-cols-3 gap-x-2 gap-y-1.5 ${!home && t.member ? "top-[78px]" : "top-[52px]"}`}>
+				{vals.map((v) => (
+					<TsMood key={v} t={t} v={v} h={rowH} />
+				))}
+			</div>
+			{home && (narrow ? (
+				<div className="absolute inset-x-5 bottom-3 grid grid-cols-4 gap-2">
+					{APPS.map((a) => (
+						<TsDoor key={a} t={t} a={a} stacked />
+					))}
+				</div>
+			) : (
+				<div className="absolute inset-x-5 bottom-3 flex items-center justify-between gap-2">
+					{APPS.map((a) => (
+						<TsDoor key={a} t={t} a={a} />
+					))}
+				</div>
+			))}
+		</>
+	)
+}
+
+function TsAbout({ t }: { t: FlowT }) {
+	const d = t.h.picks[0]
+	const fact = (title: string, art: ReactNode) => (
+		<div className="flex flex-col items-center rounded-2xl bg-white/[0.04] pb-2 ring-1 ring-white/5">
+			<div className="flex h-[96px] items-center justify-center">{art}</div>
+			<div className="text-center text-[18px] font-extrabold leading-tight">{title}</div>
+		</div>
+	)
+	return (
+		<>
+			<TsHead t={t} title="What is GoodWatch?" />
+			<div className="absolute inset-x-5 top-[54px] grid grid-cols-3 gap-3">
+				{fact(
+					"One score",
+					<div className="flex items-center gap-1.5">
+						<div className="flex flex-col gap-1 opacity-80">
+							{[imdbLogo, rottenLogo, metacriticLogo].map((s) => (
+								<img key={s} src={s} alt="" className="h-5 w-5 object-contain" />
+							))}
+						</div>
+						<span className="text-[18px] text-white/40">→</span>
+						<GwBadge gw={d?.score ?? 85} size={36} text="text-[24px]" />
+					</div>,
+				)}
+				{fact("How it feels", <span className="text-[28px]">⚡❤️😂</span>)}
+				{fact(
+					"Where it streams",
+					<div className="grid grid-cols-3 gap-1">
+						{t.h.data.catalog.slice(0, 6).map((c) => (
+							<img key={c.name} src={c.logo} alt="" className="h-8 w-8 rounded-md" />
+						))}
+					</div>,
+				)}
+			</div>
+			<div className="absolute bottom-3 left-5 flex gap-2.5">
+				<TsPill t={t} v="go:services" primary>
+					Find my tonight
+				</TsPill>
+				<TsPill t={t} v="go:quick">
+					Just show me
+				</TsPill>
+			</div>
+		</>
+	)
+}
+
+// All twelve services at once, four by three.
+function TsServices({ t }: { t: FlowT }) {
+	const h = t.h
+	return (
+		<>
+			<TsHead t={t} eyebrow="1 of 3" title="Where do you watch?" />
+			<div className="absolute inset-x-5 top-[52px] grid grid-cols-4 gap-2">
+				{h.data.catalog.slice(0, 12).map((c) => {
+					const on = h.mine.includes(c.name)
+					return (
+						<Tp key={c.name} t={t} v={`svc:${c.name}`} className="flex h-[48px] items-center gap-2 rounded-xl pr-2" off={on ? "ring-green-500 bg-green-500/10" : "ring-white/5 bg-white/[0.04]"} on={on ? "ring-green-400 bg-green-500/20" : "ring-amber-300 bg-white/[0.10]"}>
+							<img src={c.logo} alt="" className="h-[44px] w-[44px] shrink-0 rounded-[10px]" />
+							<span className="truncate text-[18px] font-semibold">{c.name}</span>
+							{on && <span className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-[14px] font-black text-black">✓</span>}
+						</Tp>
+					)
+				})}
+			</div>
+			<div className="absolute bottom-3 left-5">
+				<TsPill t={t} v="go:duel" primary>
+					{h.mine.length ? `Continue with ${h.mine.length}` : "Continue without"}
+				</TsPill>
+			</div>
+		</>
+	)
+}
+
+function TsDuel({ t, c }: { t: FlowT; c: Cv }) {
+	const h = t.h
+	const i = t.pairAt()
+	const p = h.data.pairs[i]
+	if (!p) return null
+	const ph = c.w < 540 ? 120 : 138
+	const side = (k: string, s: "a" | "b", label: string) => {
+		const x = h.T(k)
+		if (!x) return null
+		return (
+			<Tp t={t} v={`duel:${s}`} className="flex min-w-0 flex-1 items-center gap-2.5 rounded-2xl p-2" scale={1.04}>
+				<img src={posterUrl(x, "w185")} alt="" className="shrink-0 rounded-lg object-cover" style={{ height: ph, width: ph / 1.5 }} />
+				<div className="min-w-0 text-[20px] font-extrabold leading-tight">{label}</div>
+			</Tp>
+		)
+	}
+	return (
+		<>
+			<Backdrop t={h.T(p.a)} dim={0.12} />
+			<TsHead t={t} eyebrow="2 of 3" title="Which one, tonight?" />
+			<AnimatePresence mode="wait" initial={false}>
+				<motion.div key={i} className="absolute inset-x-5 top-[54px] flex items-center gap-3" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.22 }}>
+					{side(p.a, "a", p.left)}
+					<span className="text-[18px] font-bold text-white/40">or</span>
+					{side(p.b, "b", p.right)}
+				</motion.div>
+			</AnimatePresence>
+			<div className="absolute bottom-3 left-5 right-5 flex items-center gap-2.5">
+				<TsPill t={t} v="duel:skip">
+					Skip
+				</TsPill>
+				{t.answered >= 3 ? (
+					<TsPill t={t} v="duel:done" primary>
+						♥ Show my picks
+					</TsPill>
+				) : (
+					<span className="truncate text-[18px] text-white/50">{3 - t.answered} more for your picks</span>
+				)}
+				<Dots at={h.answers.length} of={h.data.pairs.length} className="ml-auto" />
+			</div>
+		</>
+	)
+}
+
+function TsFrom({ t }: { t: FlowT }) {
+	const h = t.h
+	const mood = t.night.mood ? MOOD[t.night.mood].name : null
+	const newArt = h.picks.filter((x) => !t.night.mood || (h.data.extra[x.key]?.m ?? []).includes(t.night.mood as never))
+	const card = (v: string, title: string, line: string, art: WTitle[]) => (
+		<Tp t={t} v={v} className="flex flex-col justify-end overflow-hidden rounded-2xl p-4">
+			<span className="absolute -right-3 top-3 flex -space-x-7">
+				{art.slice(0, 3).map((x, i) => (
+					<img key={x.key} src={posterUrl(x, "w185")} alt="" className="h-[108px] w-[72px] rounded-lg object-cover shadow-2xl ring-1 ring-white/10" style={{ transform: `rotate(${(i - 1) * 6}deg)` }} />
+				))}
+			</span>
+			<span className="absolute inset-0 bg-gradient-to-r from-[#0b0c10] via-[#0b0c10]/80 to-transparent" />
+			<span className="relative">
+				<span className="block text-[24px] font-extrabold leading-none">{title}</span>
+				<span className="mt-1 block text-[18px] text-white/60">{line}</span>
+			</span>
+		</Tp>
+	)
+	return (
+		<>
+			<TsHead t={t} title={mood ? `${mood}. From where?` : "From where?"} />
+			<div className="absolute inset-x-5 bottom-4 top-[56px] grid grid-cols-2 gap-4">
+				{card("from:wish", "My Wishlist", t.wish.length ? `${t.wish.length} fit` : "Nothing fits", t.wish)}
+				{card("from:new", "Something new", "Close to your taste", newArt)}
+			</div>
+		</>
+	)
+}
+
+function TsTonight({ t, c }: { t: FlowT; c: Cv }) {
+	const h = t.h
+	const [a, ...rest] = t.options
+	const mood = t.night.mood ? MOOD[t.night.mood].name : null
+	const from = t.source === "wish" ? "From your Wishlist" : t.member ? "New to you" : h.hasTaste ? "For your answers" : "Best rated"
+	const narrow = c.w < 540
+	const ph = narrow ? 126 : 144
+	return (
+		<>
+			<Backdrop t={a} dim={0.3} />
+			<div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/20" />
+			<TsHead t={t} title="Here's tonight." line={[from, mood].filter(Boolean).join(" · ")} />
+			<div className="absolute inset-x-5 top-[80px] flex items-start gap-2.5">
+				{a && (
+					<Tp t={t} v={`t:${a.key}`} className="flex min-w-0 flex-1 gap-2.5 rounded-2xl p-2" scale={1.03}>
+						<img src={posterUrl(a, "w342")} alt="" className="shrink-0 rounded-lg object-cover" style={{ height: ph, width: ph / 1.5 }} />
+						<div className="min-w-0">
+							<div className="line-clamp-2 text-[20px] font-extrabold leading-tight">{a.title}</div>
+							<div className="mt-1.5 flex items-center gap-2">
+								<GwBadge gw={a.score} size={26} text="text-[18px]" />
+								<Coin t={a} className="!text-[18px]" />
+							</div>
+							<div className="mt-1.5 line-clamp-2 text-[18px] leading-tight text-white/60">{watchLine(a).text}</div>
+						</div>
+					</Tp>
+				)}
+				{rest.map((x) => (
+					<Tp key={x.key} t={t} v={`t:${x.key}`} className="shrink-0 rounded-xl p-1" scale={1.05}>
+						<img src={posterUrl(x, "w185")} alt="" className="rounded-lg object-cover" style={{ height: ph - 26, width: (ph - 26) / 1.5 }} />
+						<div className="truncate text-[18px] font-bold" style={{ width: (ph - 26) / 1.5 }}>
+							{x.title}
+						</div>
+					</Tp>
+				))}
+			</div>
+			<div className="absolute bottom-3 left-5 right-5 flex items-center gap-2">
+				<TsPill t={t} v="go:moods">
+					{mood ? `Mood: ${mood}` : "Pick a mood"}
+				</TsPill>
+				{t.member ? (
+					<TsPill t={t} v="night:switch">
+						{t.source === "wish" ? "Something new" : "My Wishlist"}
+					</TsPill>
+				) : (
+					<Tp t={t} v={t.answered ? "go:duel" : "go:services"} className="shrink-0 rounded-full px-4 py-1.5 text-[18px] font-bold text-amber-200" on="ring-amber-300 bg-amber-400/20" off="ring-amber-300/30 bg-amber-400/10">
+						{t.answered ? "♥ Refine" : "♥ Make it mine"}
+					</Tp>
+				)}
+			</div>
+		</>
+	)
+}
+
+function TsTitle({ t, k, c }: { t: FlowT; k: string; c: Cv }) {
+	const h = t.h
+	const x = h.T(k)
+	if (!x) return null
+	const w = watchLine(x)
+	const want = h.q.inQueue(x.key)
+	const why = h.whyOf(x.key)
+	const narrow = c.w < 540
+	const ph = narrow ? 186 : 212
+	return (
+		<>
+			<Backdrop t={x} dim={0.5} />
+			<div className="absolute inset-0 bg-gradient-to-r from-black via-black/75 to-transparent" />
+			<img src={posterUrl(x, "w342")} alt="" className="absolute left-5 top-4 rounded-xl object-cover shadow-2xl ring-1 ring-white/10" style={{ height: ph, width: ph / 1.5 }} />
+			<div className="absolute right-5 top-3.5" style={{ left: 20 + ph / 1.5 + 16 }}>
+				<div className="mr-[150px] line-clamp-2 text-[24px] font-extrabold leading-[1.05]">{x.title}</div>
+				<div className="mt-1 flex items-center gap-2.5 text-[18px] text-white/55">
+					<GwBadge gw={x.score} size={26} text="text-[18px]" />
+					{x.match != null && <Coin t={x} className="!text-[18px]" />}
+					<span className="truncate">{[x.year, runtimeLabel(x)].filter(Boolean).join(" · ")}</span>
+				</div>
+				{why.length > 0 && <div className="mt-1 line-clamp-2 text-[18px] leading-tight text-amber-100/85">For you: {and(why)}.</div>}
+			</div>
+			<div className="absolute bottom-3 right-5 flex flex-wrap content-end items-center gap-2" style={{ left: 20 + ph / 1.5 + 16 }}>
+				<Tp t={t} v={`watch:${x.key}`} className="flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-[18px] font-bold" on="ring-amber-300 bg-white text-black" off="ring-transparent bg-white/90 text-black">
+					{w.offer?.logo && <img src={w.offer.logo} alt="" className="h-5 w-5 rounded" />}
+					{w.owned ? "Watch" : w.offer ? `On ${w.offer.name}` : "Not streaming"}
+				</Tp>
+				<TsPill t={t} v={`want:${x.key}`}>{want ? "✓ Wishlist" : "Want to See"}</TsPill>
+				<TsPill t={t} v={`seen:${x.key}`}>Seen</TsPill>
+				<TsPill t={t} v={`no:${x.key}`}>Not for me</TsPill>
+				<TsPill t={t} v={`exit:title:${x.key}`}>↗</TsPill>
+			</div>
+		</>
+	)
+}
+
+function TsApp({ t, id }: { t: FlowT; id: string }) {
+	const h = t.h
+	const a = APP[id as keyof typeof APP]
+	const locked = !t.member && id === "watchnext"
+	return (
+		<>
+			<div className="absolute inset-0" style={{ background: `radial-gradient(90% 80% at 20% 0%, ${a.tint}33 0%, #07080b 60%)` }} />
+			<div className="absolute left-5 right-[176px] top-3.5 flex items-center gap-2.5">
+				<span style={{ color: a.tint }}>
+					<Icon d={a.d} className="h-7 w-7" />
+				</span>
+				<div className="truncate text-[26px] font-extrabold leading-none">{a.name}</div>
+			</div>
+			<div className="absolute left-5 right-5 top-[56px] line-clamp-2 text-[18px] leading-snug text-white/65">{locked ? "With a free account, this is your Wishlist, best match first." : appLine(t, id as (typeof APPS)[number])}</div>
+			{id === "watchnext" && t.member && (
+				<div className="absolute inset-x-5 top-[112px] flex gap-2">
+					{h.watchNext.slice(0, 6).map((x) => (
+						<Tp key={x.key} t={t} v={`t:${x.key}`} className="min-w-0 flex-1 rounded-xl p-1" scale={1.06}>
+							<img src={posterUrl(x, "w185")} alt="" className="aspect-[2/3] w-full rounded-lg object-cover" />
+						</Tp>
+					))}
+				</div>
+			)}
+			{!locked && (
+				<div className="absolute bottom-3 left-5">
+					<TsPill t={t} v={`exit:page:${id}`} primary>
+						Open {a.name} ↗
+					</TsPill>
+				</div>
+			)}
+		</>
+	)
+}
+
+function TsBar({ t }: { t: FlowT }) {
+	const atHome = t.scr.k === "home"
+	const btn = (k: string, d: string, label: string, on?: boolean) => (
+		<button key={k} type="button" data-pick={`bar:${k}`} aria-label={label} className={`flex h-9 w-9 items-center justify-center rounded-full ${on ? "bg-white/90 text-black" : "bg-black/50 text-white/85 ring-1 ring-white/10"}`}>
+			<Icon d={d} className="h-5 w-5" />
+		</button>
+	)
+	return (
+		<div className="absolute right-3 top-3 z-20 flex flex-col items-end gap-1.5">
+			<div className="flex items-center gap-1.5">
+				{!atHome && btn("back", ICONS.back, "Back")}
+				{!atHome && btn("home", ICONS.home, "Home")}
+				{btn("search", ICONS.search, "Search", t.scr.k === "keyboard")}
+				{btn("more", ICONS.more, "More", t.menu)}
+			</div>
+			<AnimatePresence>
+				{t.menu && (
+					<motion.div className="flex w-[200px] flex-col rounded-2xl bg-[#0c0e12]/95 p-1 ring-1 ring-white/10" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+						{[["bar:mood", ICONS.mood, "Mood"], ...APPS.map((a) => [`bar:page:${a}`, APP[a].d, APP[a].name]), ["bar:picks", ICONS.picks, "Pick for me"], ["bar:power", ICONS.power, "Turn off"]].map(([p, d, l]) => (
+							<button key={p} type="button" data-pick={p} className="flex items-center gap-2.5 rounded-lg px-2.5 py-1 text-left text-[18px] font-medium text-white/90">
+								<Icon d={d} className="h-5 w-5 opacity-80" />
+								{l}
+							</button>
+						))}
+					</motion.div>
+				)}
 			</AnimatePresence>
 		</div>
 	)

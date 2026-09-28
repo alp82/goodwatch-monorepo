@@ -60,15 +60,18 @@ export type PhoneRoom = { src: string; w: number; h: number; tv: { x: number; y:
 const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect
 
 // Scale and move the photo so the TV lands at (cx, top) with width w, while the photo still covers the box.
-function place(room: PhoneRoom, cw: number, ch: number, want: { cx: number; top: number; w: number }) {
+// #224 round 2: with `widthOnly` the photo covers the width but never the height. Covering the height made
+// the TV wider than the screen in windows taller than about 2.4 x their width (a desktop browser's tall,
+// narrow window; 594 x 1860 put the TV at 684 px, cropped on both sides). Below a short photo, a fade.
+function place(room: PhoneRoom, cw: number, ch: number, want: { cx: number; top: number; w: number; widthOnly?: boolean }) {
 	let s = want.w / room.tv.w
-	s = Math.max(s, cw / room.w, ch / room.h)
+	s = want.widthOnly ? Math.max(s, cw / room.w) : Math.max(s, cw / room.w, ch / room.h)
 	const W = room.w * s
 	const H = room.h * s
 	let left = want.cx - (room.tv.x + room.tv.w / 2) * s
 	let top = want.top - room.tv.y * s
 	left = Math.min(0, Math.max(cw - W, left))
-	top = Math.min(0, Math.max(ch - H, top))
+	top = Math.min(0, H >= ch ? Math.max(ch - H, top) : top)
 	return { s, left, top, W, H, tv: { x: left + room.tv.x * s, y: top + room.tv.y * s, w: room.tv.w * s, h: room.tv.h * s } }
 }
 type Placed = ReturnType<typeof place>
@@ -237,7 +240,7 @@ function FirstHint({ t, text, className, style }: { t: Tv4; text: ReactNode; cla
 function Couch({ tall, handSrc, tvSlot, rotateHint, opts }: { tall: PhoneRoom; handSrc: string; tvSlot: TvSlot; rotateHint?: boolean; opts?: PhoneTvOpts }) {
 	const { ref, cw, ch } = useBox()
 	const { z, t, services } = usePhoneTv(tvSlot)
-	const p = cw ? place(tall, cw, ch, { cx: cw / 2, top: Math.max(14, ch * 0.035), w: cw * 0.92 }) : null
+	const p = cw ? place(tall, cw, ch, { cx: cw / 2, top: Math.max(14, ch * 0.035), w: cw * 0.92, widthOnly: !!opts }) : null
 	// The remote: under the TV, over the coffee table and the blanket; the streaming keys (about 700 remote
 	// pixels down) stay on screen, the grip runs off the bottom under the hand.
 	const top = p ? p.tv.y + p.tv.h + Math.max(26, ch * 0.05) + (opts?.gap ?? 0) : 0
@@ -256,6 +259,7 @@ function Couch({ tall, handSrc, tvSlot, rotateHint, opts }: { tall: PhoneRoom; h
 					<Leaning on={leaning} l={leanOf(p, cw, ch, false)}>
 							<Room room={tall} p={p} z={z} t={t} tvSlot={tvSlot} canvas={opts?.canvas} onTap={(x, y) => aim.fire(x, y - (ref.current?.getBoundingClientRect().top ?? 0))} />
 						</Leaning>
+						{p.top + p.H < ch && <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-b from-transparent to-[#07080b] to-40%" style={{ top: p.top + p.H - 160 }} />}
 						<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_30%,transparent_55%,rgba(0,0,0,0.5)_100%)]" />
 						{opts?.below?.(t, p.tv, { cw, ch, landscape: false, remoteLeft: left })}
 						<motion.div className="absolute" style={{ left, top }} initial={false} animate={{ y: leaning ? leanOf(p, cw, ch, false).dy : 0 }} transition={{ duration: 0.5, ease: [0.2, 0.7, 0.1, 1] }}>
@@ -277,15 +281,20 @@ function Leaning({ on, l, children }: { on: boolean; l: ReturnType<typeof leanOf
 	)
 }
 
+// #224 round 2: at the bottom (over the hand, not the TV's heading), and gone by itself after 7 s.
 function RotateHint() {
 	const [gone, setGone] = useState(false)
+	useEffect(() => {
+		const id = setTimeout(() => setGone(true), 7000)
+		return () => clearTimeout(id)
+	}, [])
 	return (
 		<AnimatePresence>
 			{!gone && (
 				<motion.button
 					type="button"
 					onClick={() => setGone(true)}
-					className="absolute left-3 top-3 z-20 flex items-center gap-2.5 rounded-2xl bg-black/70 py-2 pl-2.5 pr-3.5 text-left text-[12.5px] font-semibold leading-tight text-white shadow-2xl ring-1 ring-white/15"
+					className="absolute bottom-3 left-3 z-20 flex items-center gap-2.5 rounded-2xl bg-black/70 py-2 pl-2.5 pr-3.5 text-left text-[12.5px] font-semibold leading-tight text-white shadow-2xl ring-1 ring-white/15"
 					initial={{ opacity: 0, y: -6 }}
 					animate={{ opacity: 1, y: 0 }}
 					exit={{ opacity: 0 }}
@@ -329,7 +338,7 @@ function Landscape({ room, handSrc, tvSlot, opts }: { room: PhoneRoom; handSrc: 
 	// Owner, round 1: the remote in the middle, like the desktop. Full screen (the header would take a sixth
 	// of the height); the TV centered on top, the hand and remote centered under it, tipped toward the screen.
 	const tvH = ch * 0.44
-	const p = cw ? place(room, cw, ch, { cx: cw / 2, top: ch * 0.04, w: Math.min(cw * 0.7, (tvH * room.tv.w) / room.tv.h) }) : null
+	const p = cw ? place(room, cw, ch, { cx: cw / 2, top: ch * 0.04, w: Math.min(cw * 0.7, (tvH * room.tv.w) / room.tv.h), widthOnly: !!opts }) : null
 	const s = Math.min(ch / 760, 0.6)
 	const left = cw / 2 - (REMOTE_W * s) / 2
 	// Tipped back, the remote's top looks lower than it is: start it a little higher.
