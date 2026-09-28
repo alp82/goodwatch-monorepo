@@ -1,0 +1,163 @@
+/* The living room. Rendering budget (#190): only transform and opacity animate or follow the pointer, nothing
+   loops at idle, and no blend modes or live blur sit over the room photo. */
+
+.living-room {
+	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+}
+.living-room .lcd-font {
+	font-family: "VT323", ui-monospace, monospace;
+}
+
+/* The TV turning on: a one-shot sweep from a line to the picture. */
+@keyframes tv-power-on {
+	from {
+		clip-path: inset(49.5% 0 49.5% 0);
+		opacity: 0.6;
+	}
+	to {
+		clip-path: inset(0 0 0 0);
+		opacity: 1;
+	}
+}
+.tv-power-on {
+	animation: tv-power-on 420ms cubic-bezier(0.6, 0, 0.2, 1) both;
+}
+.tv-glass {
+	background: repeating-linear-gradient(
+			180deg,
+			rgba(0, 0, 0, 0.06) 0 1px,
+			transparent 1px 3px
+		),
+		linear-gradient(
+			115deg,
+			rgba(255, 255, 255, 0.07) 0%,
+			rgba(255, 255, 255, 0.02) 28%,
+			transparent 29%
+		);
+	box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.55), inset 0 0 2px
+		rgba(255, 255, 255, 0.12);
+}
+
+/* The Remote: a dark body with the hand photo's corner radius, raised keys, and a green one-line screen. */
+.remote-body {
+	width: 312px;
+	border-radius: 38px;
+	background: radial-gradient(
+			140% 50% at 50% -10%,
+			rgba(255, 255, 255, 0.1),
+			transparent 60%
+		), linear-gradient(180deg, #2c2e33 0%, #212226 45%, #18191c 100%);
+	/* A warm edge on the lantern side and a cool one on the window side, so the body sits in the room's light. */
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.18),
+		inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+		inset 2px 0 0 rgba(255, 176, 110, 0.1),
+		inset -2px 0 0 rgba(140, 200, 210, 0.06),
+		inset 0 -3px 0 rgba(0, 0, 0, 0.45),
+		0 40px 80px -20px rgba(0, 0, 0, 0.9),
+		0 16px 32px -12px rgba(0, 0, 0, 0.7);
+}
+.remote-key {
+	color: rgba(255, 255, 255, 0.8);
+	background: linear-gradient(180deg, #34363b, #26272b);
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 2px 0 #0e0f11, 0 5px
+		10px rgba(0, 0, 0, 0.4);
+	transition: transform 80ms, box-shadow 80ms, color 120ms, background 120ms;
+}
+.remote-key:hover {
+	color: #fff;
+	background: linear-gradient(180deg, #3d4046, #2c2e33);
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 3px 0 #0e0f11, 0 7px
+		14px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08);
+	transform: translateY(-1px);
+}
+.remote-key:active {
+	transform: translateY(2px);
+	transition-duration: 0ms;
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 0 0 #0e0f11, 0 2px 4px
+		rgba(0, 0, 0, 0.4);
+}
+.remote-key:focus-visible,
+.remote-ok:focus-visible,
+.remote-arrow:focus-visible {
+	outline: 2px solid #fdba74;
+	outline-offset: 2px;
+}
+.remote-key[aria-pressed="true"] {
+	color: #fdba74;
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 2px 0 #0e0f11, 0 0 16px
+		rgba(251, 146, 60, 0.25), inset 0 0 0 1px rgba(251, 146, 60, 0.55);
+}
+.remote-key[aria-pressed="true"]:hover {
+	color: #fed7aa;
+}
+.remote-lcd {
+	--lcd: #8ef0c6;
+	background: repeating-linear-gradient(
+			0deg,
+			rgba(0, 0, 0, 0.18) 0 1px,
+			transparent 1px 3px
+		), radial-gradient(120% 120% at 50% 0%, #11201b 0%, #070b0a 70%);
+	box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.85), inset 0 0 0 1px
+		rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.08);
+	text-shadow: 0 0 8px color-mix(in srgb, var(--lcd) 45%, transparent);
+}
+.remote-wheel {
+	background: #121315;
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 2px 5px
+		rgba(0, 0, 0, 0.8);
+	cursor: grab;
+	transition: box-shadow 150ms;
+}
+.remote-wheel:hover {
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 2px 5px
+		rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.remote-wheel:active {
+	cursor: grabbing;
+}
+.remote-face {
+	background: radial-gradient(circle at 50% 30%, #303237, #1d1e21 70%);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -2px 6px
+		rgba(0, 0, 0, 0.6);
+}
+.remote-glow {
+	background: radial-gradient(circle, rgba(251, 146, 60, 0.45), transparent 70%);
+}
+.remote-arrow:hover {
+	background: rgba(255, 255, 255, 0.06);
+}
+.remote-ok {
+	background: radial-gradient(circle at 50% 30%, #3e4046, #25262a 70%);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 3px 8px
+		rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+.remote-ok:hover {
+	background: radial-gradient(circle at 50% 30%, #4a4d54, #2b2c31 70%);
+	color: #fff;
+}
+.remote-well {
+	background: rgba(0, 0, 0, 0.2);
+	box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45), 0 1px 0
+		rgba(255, 255, 255, 0.05);
+}
+.remote-service[aria-pressed="true"] {
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 2px 0 #0e0f11, 0 0 0
+		2px #fdba74, 0 0 16px rgba(251, 146, 60, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tv-power-on {
+		animation: none;
+	}
+	.remote-key,
+	.remote-key:hover {
+		transform: none;
+	}
+}
+
+/* The room fills the window: no page scroll behind it. */
+html:has(.living-room),
+body:has(.living-room) {
+	overflow: hidden;
+}
