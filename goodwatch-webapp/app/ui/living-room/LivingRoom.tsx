@@ -24,10 +24,15 @@ import {
 } from "~/ui/taste-quiz/quiz-flow"
 import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { titleToDashed } from "~/utils/helpers"
-import { PhoneLivingRoom, usePhoneOrientation } from "./PhoneLivingRoom"
+import {
+	PHONE_PORTRAIT_QUERY,
+	PhoneLivingRoom,
+	usePhoneOrientation,
+} from "./PhoneLivingRoom"
+import { PhoneTvScreens } from "./PhoneTvScreens"
 import { Remote, type RemoteProps } from "./Remote"
 import { pickKey } from "./TvQuiz"
-import { TvScreens, type TvView, lcdLines } from "./TvScreens"
+import { LivingRoomLinks, TvScreens, type TvView, lcdLines } from "./TvScreens"
 import {
 	type LivingRoomChoices,
 	type LivingRoomData,
@@ -37,6 +42,8 @@ import {
 } from "./living-room-data"
 import {
 	HAND_IMAGE,
+	PHONE_ROOM,
+	PHONE_TV_CANVAS,
 	REMOTE_H,
 	REMOTE_TILT_DEG,
 	REMOTE_W,
@@ -58,8 +65,12 @@ import { useTvFlow } from "./use-tv-flow"
 const useIsoLayoutEffect =
 	typeof window === "undefined" ? useEffect : useLayoutEffect
 
-// Until the window is measured (and on the server), lay out for a common laptop window.
-const DEFAULT_SIZE = { w: 1440, h: 836 }
+// Until the window is measured (on the server and while hydrating), the scene is laid out by CSS: the
+// `living-room-first` rules in living-room.css mirror `layoutRoom` and `layoutPhone`, and media queries pick the
+// desktop, phone portrait, or phone landscape layout and the phone room photo, so the first paint needs no script
+// and the HTML stays the same for every visitor (#233).
+const ROOM_SIZES =
+	"max(100vw, calc((100vh - 64px) * 1.777), calc(min(80vw, (100vh - 64px) * 0.759) * 2.7365))"
 
 export type LivingRoomProps = {
 	data: LivingRoomData
@@ -174,13 +185,13 @@ export function LivingRoom({
 
 	// ---- Layout: measured once per resize, never per pointer move.
 	const root = useRef<HTMLDivElement>(null)
-	const [size, setSize] = useState(DEFAULT_SIZE)
+	const [size, setSize] = useState<{ w: number; h: number } | null>(null)
 	useIsoLayoutEffect(() => {
 		const el = root.current
 		if (!el) return
 		const measure = () =>
 			setSize((s) =>
-				s.w === el.clientWidth && s.h === el.clientHeight
+				s && s.w === el.clientWidth && s.h === el.clientHeight
 					? s
 					: { w: el.clientWidth, h: el.clientHeight },
 			)
@@ -189,7 +200,7 @@ export function LivingRoom({
 		ro.observe(el)
 		return () => ro.disconnect()
 	}, [])
-	const L = useMemo(() => layoutRoom(size.w, size.h), [size])
+	const L = useMemo(() => (size ? layoutRoom(size.w, size.h) : null), [size])
 
 	// ---- The Remote turns toward its target: springs only, so pointer moves never re-render the page.
 	const reduceMotion = useReducedMotion()
@@ -197,7 +208,7 @@ export function LivingRoom({
 	const pointing = useRef(false)
 	const aimAt = useCallback(
 		(point: { x: number; y: number } | null) => {
-			if (reduceMotion) return
+			if (reduceMotion || !L) return
 			turn.set(point ? remoteTurnToward(L, point) : 0)
 		},
 		[L, reduceMotion, turn],
@@ -256,36 +267,53 @@ export function LivingRoom({
 		x: `${((ROOM.tv.x + ROOM.tv.w / 2) / ROOM.w) * 100}%`,
 		y: `${((ROOM.tv.y + ROOM.tv.h / 2) / ROOM.h) * 100}%`,
 	}
-	const canvasOffset = {
+	const canvasOffset = L && {
 		x: (L.tv.width - TV_CANVAS.w * L.canvasScale) / 2,
 		y: (L.tv.height - TV_CANVAS.h * L.canvasScale) / 2,
 	}
+	// Before the window is measured, CSS places the photo, the TV, and the Remote (see ROOM_SIZES above).
+	const first = !L
 	return (
 		<div
 			ref={root}
-			className="living-room fixed inset-x-0 bottom-16 top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0"
+			className={`living-room fixed inset-x-0 bottom-16 top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0 ${first ? "living-room-first" : ""}`}
 		>
+			<LivingRoomLinks />
 			{/* The photo covers the window; the TV and its light sit on it in the photo's own coordinates. */}
 			<div
-				className="absolute"
-				style={{
-					left: L.photo.left,
-					top: L.photo.top,
-					width: L.photo.width,
-					height: L.photo.height,
-				}}
+				className="lr-photo absolute"
+				style={
+					L
+						? {
+								left: L.photo.left,
+								top: L.photo.top,
+								width: L.photo.width,
+								height: L.photo.height,
+							}
+						: undefined
+				}
 			>
 				<picture>
-					<source
-						type="image/avif"
-						srcSet={ROOM.avif}
-						sizes={`${Math.round(L.photo.width)}px`}
-					/>
+					{first && (
+						<>
+							<source
+								media={PHONE_PORTRAIT_QUERY}
+								type="image/avif"
+								srcSet={PHONE_ROOM.avif}
+							/>
+							<source
+								media={PHONE_PORTRAIT_QUERY}
+								type="image/webp"
+								srcSet={PHONE_ROOM.webp}
+							/>
+						</>
+					)}
+					<source type="image/avif" srcSet={ROOM.avif} sizes={ROOM_SIZES} />
 					<img
 						{...{ fetchpriority: "high" }}
 						src={ROOM.fallback}
 						srcSet={ROOM.webp}
-						sizes={`${Math.round(L.photo.width)}px`}
+						sizes={ROOM_SIZES}
 						alt={ROOM.alt}
 						width={ROOM.w}
 						height={ROOM.h}
@@ -311,12 +339,14 @@ export function LivingRoom({
 			{/* The TV. Its screens are drawn on a fixed canvas, scaled to cover the screen. */}
 			<div
 				{...{ [TV_SCREEN_ATTR]: "" }}
-				className="absolute overflow-hidden rounded-[3px] bg-black"
+				className="lr-tv absolute overflow-hidden rounded-[3px] bg-black"
 				style={{
-					left: L.tv.left,
-					top: L.tv.top,
-					width: L.tv.width,
-					height: L.tv.height,
+					...(L && {
+						left: L.tv.left,
+						top: L.tv.top,
+						width: L.tv.width,
+						height: L.tv.height,
+					}),
 					boxShadow: on
 						? "0 0 90px 8px rgba(251,191,36,0.16), 0 0 18px 1px rgba(251,191,36,0.2)"
 						: "none",
@@ -333,19 +363,31 @@ export function LivingRoom({
 				}}
 			>
 				<div
-					className="absolute left-0 top-0 origin-top-left"
+					className="lr-canvas absolute left-0 top-0 origin-top-left"
 					style={{
 						width: TV_CANVAS.w,
 						height: TV_CANVAS.h,
-						transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${L.canvasScale})`,
+						transform:
+							L && canvasOffset
+								? `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${L.canvasScale})`
+								: undefined,
 					}}
 				>
 					<TvScreens view={view} />
 				</div>
+				{/* Phones get the phone edition of the first screen before the phone scene takes over. */}
+				{first && (
+					<div
+						className="lr-canvas-phone absolute left-0 top-0 origin-top-left"
+						style={{ width: PHONE_TV_CANVAS.w, height: PHONE_TV_CANVAS.h }}
+					>
+						<PhoneTvScreens view={view} />
+					</div>
+				)}
 				<div className="tv-glass pointer-events-none absolute inset-0 rounded-[3px]" />
 			</div>
 
-			<div className="pointer-events-none absolute bottom-6 left-8 flex max-w-[30%] items-center gap-3 [text-shadow:0_2px_14px_rgba(0,0,0,0.9)]">
+			<div className="lr-caption pointer-events-none absolute bottom-6 left-8 flex max-w-[30%] items-center gap-3 [text-shadow:0_2px_14px_rgba(0,0,0,0.9)]">
 				<img src={gwLogo} alt="" className="h-6" />
 				<span className="text-[15px] font-bold uppercase tracking-[0.28em] text-white/90">
 					GoodWatch
@@ -356,12 +398,14 @@ export function LivingRoom({
 			{/* The hand holds the Remote from behind: in the photo the fingers tuck behind it, so nothing goes in
 			    front. The pair leans back toward the screen and turns from the bottom toward the target. */}
 			<motion.div
-				className="absolute will-change-transform"
+				className="lr-remote absolute will-change-transform"
 				style={{
-					left: L.remote.left,
-					top: L.remote.top,
-					width: REMOTE_W * L.remote.scale,
-					height: REMOTE_H * L.remote.scale,
+					...(L && {
+						left: L.remote.left,
+						top: L.remote.top,
+						width: REMOTE_W * L.remote.scale,
+						height: REMOTE_H * L.remote.scale,
+					}),
 					originX: 0.5,
 					originY: 1,
 					transformPerspective: 1400,
@@ -375,19 +419,23 @@ export function LivingRoom({
 						src={HAND_IMAGE.webp}
 						alt=""
 						aria-hidden
-						className="pointer-events-none absolute max-w-none select-none"
-						style={{
-							left: L.hand.left,
-							top: L.hand.top,
-							width: L.hand.width,
-							height: L.hand.height,
-						}}
+						className="lr-hand pointer-events-none absolute max-w-none select-none"
+						style={
+							L
+								? {
+										left: L.hand.left,
+										top: L.hand.top,
+										width: L.hand.width,
+										height: L.hand.height,
+									}
+								: undefined
+						}
 						draggable={false}
 					/>
 				</picture>
 				<div
-					className="absolute left-0 top-0 origin-top-left"
-					style={{ transform: `scale(${L.remote.scale})` }}
+					className="lr-remote-scale absolute left-0 top-0 origin-top-left"
+					style={L ? { transform: `scale(${L.remote.scale})` } : undefined}
 				>
 					<Remote {...remote} />
 				</div>
