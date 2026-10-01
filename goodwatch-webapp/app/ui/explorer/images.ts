@@ -29,6 +29,7 @@ interface Entry {
 const cache = new Map<string, Entry>()
 let bytes = 0
 let frame = 0
+let hold = false
 
 const listeners = new Set<() => void>()
 let notifyQueued = false
@@ -49,9 +50,13 @@ export function onImageReady(listener: () => void) {
 	}
 }
 
-/** Starts a new frame for the cache's bookkeeping: what's drawn from here on counts as in use. */
-export function beginImageFrame() {
+/**
+ * Starts a new frame for the cache's bookkeeping: what's drawn from here on counts as in use. While `zooming` (the
+ * camera zooms fast), a poster with a size loaded keeps it, so the sizes it only passes through aren't loaded.
+ */
+export function beginImageFrame(zooming = false) {
 	frame++
+	hold = zooming
 }
 
 function evict() {
@@ -108,8 +113,12 @@ const sizeFor = (px: number): Size =>
  * until then, or null.
  */
 export function posterImage(path: string, px: number): HTMLImageElement | null {
-	const want = load(path, sizeFor(px))
-	if (want.ready) return want.image
+	const size = sizeFor(px)
+	const want = hold ? cache.get(size + path) : load(path, size)
+	if (want?.ready) {
+		want.used = frame
+		return want.image
+	}
 	for (let k = SIZES.length - 1; k >= 0; k--) {
 		const other = cache.get(SIZES[k] + path)
 		if (other?.ready) {
@@ -117,6 +126,7 @@ export function posterImage(path: string, px: number): HTMLImageElement | null {
 			return other.image
 		}
 	}
+	if (!want) load(path, size)
 	return null
 }
 
