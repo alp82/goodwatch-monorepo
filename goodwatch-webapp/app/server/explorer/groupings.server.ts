@@ -10,6 +10,7 @@ import {
 	DIMENSIONS as D,
 	type ExplorerPool,
 } from "./pool.server"
+import { normalize, pca2 } from "./positions.server"
 import { phraseOf, sentence } from "./words.server"
 
 export interface IslandDef {
@@ -225,14 +226,6 @@ export function buildLayout(
 
 const round3 = (v: number) => Math.round(v * 1000) / 1000
 
-function normalize(v: Float64Array): Float64Array {
-	let squares = 0
-	for (let d = 0; d < v.length; d++) squares += v[d] * v[d]
-	const length = Math.sqrt(squares) || 1
-	for (let d = 0; d < v.length; d++) v[d] /= length
-	return v
-}
-
 /** What sets each island apart: the two attributes its mean exceeds the average island's mean by most. */
 function apartLines(means: Float64Array[]): string[] {
 	const average = new Float64Array(D)
@@ -246,50 +239,6 @@ function apartLines(means: Float64Array[]): string[] {
 				.map((r) => phraseOf(r.key)),
 		),
 	)
-}
-
-/** The top two principal components of the island means, scaled to -1..1, so similar islands sit close together. */
-export function pca2(rows: Float64Array[]): [number, number][] {
-	const m = rows.length
-	if (m === 0) return []
-	if (m < 3) return rows.map((_, j) => [m === 1 ? 0 : j ? 0.6 : -0.6, 0])
-	const mu = new Float64Array(D)
-	for (const r of rows) for (let d = 0; d < D; d++) mu[d] += r[d] / m
-	const X = rows.map((r) => r.map((v, d) => v - mu[d]))
-	const components: Float64Array[] = []
-	for (let c = 0; c < 2; c++) {
-		// Power iteration from a fixed start, so the same islands always land in the same places.
-		let v: Float64Array = new Float64Array(D).map(
-			(_, d) => Math.sin(d * 1.7 + c * 3.1) + 0.01,
-		)
-		for (let step = 0; step < 60; step++) {
-			const next = new Float64Array(D)
-			for (const x of X) {
-				let s = 0
-				for (let d = 0; d < D; d++) s += x[d] * v[d]
-				for (let d = 0; d < D; d++) next[d] += s * x[d]
-			}
-			for (const p of components) {
-				let s = 0
-				for (let d = 0; d < D; d++) s += next[d] * p[d]
-				for (let d = 0; d < D; d++) next[d] -= s * p[d]
-			}
-			v = normalize(next)
-		}
-		components.push(v)
-	}
-	const points = X.map((x) =>
-		components.map((p) => {
-			let s = 0
-			for (let d = 0; d < D; d++) s += x[d] * p[d]
-			return s
-		}),
-	) as [number, number][]
-	const scale = Math.max(
-		1e-6,
-		...points.map(([a, b]) => Math.max(Math.abs(a), Math.abs(b))),
-	)
-	return points.map(([a, b]) => [a / scale, b / scale])
 }
 
 // ---------------------------------------------------------------- the groupings

@@ -1,7 +1,7 @@
 // Where the islands sit on the map, in world units (the short side about 1000). The server places each island between
 // -1 and 1 on both axes (similar islands close together) and says how many titles it holds; this sizes the islands by
-// their titles, spreads them from those places until their shores (with room for their wobble) no longer touch, and
-// fits the result into a world with the viewport's aspect ratio.
+// their titles, spreads them from those places until their shores (with room for their wobble) no longer touch, brings
+// in any island left on its own, and fits the result into a world with the viewport's aspect ratio.
 
 export interface WorldIsland {
 	id: string
@@ -70,6 +70,28 @@ export function layWorld(
 			Y[a] += (ty[a] - Y[a]) * 0.02
 		}
 	}
+	// An island whose place is far from the others' is left out on its own: it comes in toward its nearest neighbor
+	// until it's as close as the others are. That's no further than the room it has, so it pushes no one.
+	for (let pass = 0; pass < 3; pass++)
+		for (let a = 0; a < X.length; a++) {
+			let near = -1
+			let slack = Number.POSITIVE_INFINITY
+			for (let b = 0; b < X.length; b++) {
+				if (b === a) continue
+				const free =
+					Math.hypot(X[b] - X[a], Y[b] - Y[a]) - ((R[a] + R[b]) * 1.12 + gap)
+				if (free < slack) {
+					slack = free
+					near = b
+				}
+			}
+			if (near < 0 || slack <= 1) continue
+			const dx = X[near] - X[a]
+			const dy = Y[near] - Y[a]
+			const d = Math.hypot(dx, dy)
+			X[a] += (dx / d) * slack
+			Y[a] += (dy / d) * slack
+		}
 	if (!islands.length) return { w, h, islands: [] }
 	const x0 = Math.min(...X.map((x, a) => x - R[a]))
 	const x1 = Math.max(...X.map((x, a) => x + R[a]))
