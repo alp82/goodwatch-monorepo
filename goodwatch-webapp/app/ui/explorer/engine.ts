@@ -9,6 +9,7 @@
 // Combining islands: lit islands and a bridge set the focus layout (focus.ts), and every island springs to its place,
 // size, and look there; a bridge is an island of its own that rises between the two it joins and sinks when let go.
 import type { BridgeKind, ExplorerTitle, ExplorerTree } from "~/domain/explorer"
+import { type Cam, nextStop, settleStop, zoomAbout } from "./camera"
 import { luminous, mixRgb } from "./color"
 import { layOutFocus } from "./focus"
 import { beginImageFrame, onImageReady } from "./images"
@@ -84,11 +85,6 @@ export interface EngineHooks {
 	onHoverIsland: (island: MapIsland | null) => void
 }
 
-interface Cam {
-	x: number
-	y: number
-	s: number
-}
 interface Flight {
 	from: Cam
 	to: Cam
@@ -139,6 +135,8 @@ export function createMapEngine(
 	let raf = 0
 	let last = performance.now()
 	let prevCam = { x: 0, y: 0, s: 0 }
+	/** The camera is zooming fast: posters keep the size they have loaded until it slows down. */
+	let zooming = false
 	let fontsReady = false
 	let notes: ReadonlyMap<string, string> = new Map()
 	let layoutBox: { x0: number; y0: number; x1: number; y1: number } | null =
@@ -492,10 +490,7 @@ export function createMapEngine(
 	}
 	function zoomAt(s: number, sx: number, sy: number) {
 		flight = null
-		const a = toWorld(sx, sy, cur)
-		tgt.s = clamp(s, fitS * 0.8, maxS)
-		tgt.x = a.x - (sx - W / 2) / tgt.s
-		tgt.y = a.y - (sy - H / 2) / tgt.s
+		Object.assign(tgt, zoomAbout(cur, clamp(s, fitS * 0.8, maxS), sx, sy, W, H))
 		clampTgt()
 		wake()
 	}
@@ -583,51 +578,39 @@ export function createMapEngine(
 			flight = null
 		}
 	}
-	/** After a free zoom (trackpad, pinch), settles on the nearest stop in the direction the person was going. */
+	/**
+	 * After a free zoom (trackpad, pinch), the camera stays where it was let go: it settles on a stop only from close
+	 * by, about the point of the gesture, and goes back to the whole map from further out than that.
+	 */
 	function settle() {
 		if (!snapPt || drag || pts.size) return
 		const pt = snapPt
 		snapPt = null
-		const island = islandAt(pt.x, pt.y, 0.3) ?? focusIsland()
-		const st = stopsOf(island)
-		const l = Math.log(tgt.s)
-		let best = st[0]
-		for (const s of st)
-			if (Math.abs(Math.log(s) - l) < Math.abs(Math.log(best) - l)) best = s
-		if (gestureDir > 0) {
-			const up = st.find((s) => s >= tgt.s)
-			const down = [...st].reverse().find((s) => s < tgt.s)
-			if (up && (!down || l - Math.log(down) > 0.18)) best = up
-		} else if (gestureDir < 0) {
-			const down = [...st].reverse().find((s) => s <= tgt.s)
-			const up = st.find((s) => s > tgt.s)
-			if (down && (!up || Math.log(up) - l > 0.18)) best = down
-		}
-		const reach = gestureDir ? 1.15 : 0.5
+		const dir = gestureDir
 		gestureDir = 0
-		const gap = Math.abs(Math.log(best) - l)
-		if (gap < reach && gap > 0.004) {
-			if (st.length > 2 && best >= st[2] * 0.98 && best >= tgt.s)
-				zoomInAt(best, pt.x, pt.y)
-			else zoomAt(best, pt.x, pt.y)
-		}
+		const home = homeCam()
+		if (tgt.s < Math.min(fitS, home.s) * 0.999) return glideTo(home)
+		const island = islandAt(pt.x, pt.y, 0.3) ?? focusIsland()
+		const best = settleStop(stopsOf(island), tgt.s, dir)
+		if (best != null && Math.abs(Math.log(best / tgt.s)) > 0.004)
+			zoomAt(best, pt.x, pt.y)
 	}
-	/** One step in or out: a wheel notch, a button, or a key. */
-	function stepZoom(dir: 1 | -1, sx: number, sy: number) {
+	/**
+	 * One step in or out. A wheel notch is `anchored`: what's under the cursor stays there, so a notch back returns to
+	 * where it was. A button, a key, or a double tap frames the island, then centers the nearest poster.
+	 */
+	function stepZoom(dir: 1 | -1, sx: number, sy: number, anchored = false) {
 		const island =
 			islandAt(sx, sy, 0.3) ?? (dir > 0 ? islandAt(sx, sy, 1.2) : focusIsland())
 		const st = stopsOf(island)
 		const base = flight ? flight.to.s : tgt.s
-		let next: number | null =
-			dir > 0
-				? (st.find((s) => s > base * 1.12) ?? null)
-				: ([...st].reverse().find((s) => s < base / 1.12) ?? null)
-		if (next == null) next = dir > 0 ? base * 1.7 : base / 1.7
-		if (dir > 0 && island && base < st[1] * 0.9 && next === st[1])
-			return glideTo(islandCam(island))
+		const next = nextStop(st, base, dir) ?? (dir > 0 ? base * 1.7 : base / 1.7)
 		if (dir < 0 && next <= fitS * 1.01) return glideTo(homeCam())
-		if (dir > 0 && st.length > 2 && next >= st[2] * 0.98)
-			return zoomInAt(next, sx, sy)
+		if (!anchored && dir > 0) {
+			if (island && base < st[1] * 0.9 && next === st[1])
+				return glideTo(islandCam(island))
+			if (st.length > 2 && next >= st[2] * 0.98) return zoomInAt(next, sx, sy)
+		}
 		zoomAt(next, sx, sy)
 	}
 	function panBy(dx: number, dy: number) {
@@ -649,6 +632,8 @@ export function createMapEngine(
 		id: number
 	} | null = null
 	let pinch: { d: number; cx: number; cy: number } | null = null
+	/** The scale a pinch started at, for the way it went as a whole (fingers jitter as they lift). */
+	let pinchFrom = 1
 	let lastMove = { x: 0, y: 0, t: 0 }
 	let press: ReturnType<typeof setTimeout> | null = null
 	let pressed = false
@@ -666,7 +651,9 @@ export function createMapEngine(
 		e.preventDefault()
 		const p = local(e)
 		pointer = { x: p.x, y: p.y, mouse: true }
-		const dy = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1)
+		// The mode is read first: Firefox gives a mouse wheel's lines as pixels when the delta is read before it.
+		const mode = e.deltaMode
+		const dy = e.deltaY * (mode === 1 ? 33 : mode === 2 ? 400 : 1)
 		if (!dy) return
 		const now = performance.now()
 		// A mouse wheel's notch steps from stop to stop; a trackpad (small deltas, or pinch with ctrl) zooms freely.
@@ -680,7 +667,7 @@ export function createMapEngine(
 			snapPt = p
 			return
 		}
-		stepZoom(dy < 0 ? 1 : -1, p.x, p.y)
+		stepZoom(dy < 0 ? 1 : -1, p.x, p.y, true)
 	}
 	function hitPoster(x: number, y: number) {
 		for (let k = drawn.length - 1; k >= 0; k--) {
@@ -721,6 +708,7 @@ export function createMapEngine(
 				cx: (a.x + b.x) / 2,
 				cy: (a.y + b.y) / 2,
 			}
+			pinchFrom = cur.s
 		}
 	}
 	function onMove(e: PointerEvent) {
@@ -754,13 +742,13 @@ export function createMapEngine(
 			const cx = (a.x + b.x) / 2
 			const cy = (a.y + b.y) / 2
 			const f = d / Math.max(pinch.d, 1)
-			if (Math.abs(f - 1) > 0.002) gestureDir = f > 1 ? 1 : -1
 			const at = toWorld(pinch.cx, pinch.cy, cur)
 			const ns = clamp(cur.s * f, fitS * 0.7, maxS * 1.1)
 			cur.s = ns
 			cur.x = at.x - (cx - W / 2) / ns
 			cur.y = at.y - (cy - H / 2) / ns
 			Object.assign(tgt, cur)
+			gestureDir = ns > pinchFrom * 1.02 ? 1 : ns < pinchFrom / 1.02 ? -1 : 0
 			pinch = { d, cx, cy }
 			snapPt = { x: cx, y: cy }
 			snapAt = performance.now() + 120
@@ -829,8 +817,6 @@ export function createMapEngine(
 			return hooks.current.onTapWater()
 		}
 		if (now - lastMove.t > 70) vel = { x: 0, y: 0 }
-		snapPt = { x: p.x, y: p.y }
-		snapAt = now + 260
 		wake()
 	}
 	function onLeave() {
@@ -1033,6 +1019,11 @@ export function createMapEngine(
 		}
 		const moved =
 			cur.x !== prevCam.x || cur.y !== prevCam.y || cur.s !== prevCam.s
+		// More than e times a second is fast; the first frame after it slows down draws the posters at their size.
+		const fast =
+			prevCam.s > 0 && dt > 0 && Math.abs(Math.log(cur.s / prevCam.s)) > dt
+		if (zooming && !fast) dirty = true
+		zooming = fast
 		prevCam = { ...cur }
 		const islandsMoving = stepIslands(dt)
 		const lensMoving = stepLens(dt)
@@ -1159,7 +1150,7 @@ export function createMapEngine(
 	}
 
 	function drawPosters() {
-		beginImageFrame()
+		beginImageFrame(zooming)
 		g.setTransform(dpr, 0, 0, dpr, 0, 0)
 		g.clearRect(0, 0, W, H)
 		drawn = layOutPosters()

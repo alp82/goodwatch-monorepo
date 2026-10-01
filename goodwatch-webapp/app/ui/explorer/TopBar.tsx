@@ -4,6 +4,9 @@ import {
 	type ExplorerService,
 	GROUPING_NAMES,
 	type Grouping,
+	TITLE_TYPES,
+	TITLE_TYPE_NAMES,
+	type TitleType,
 } from "~/domain/explorer"
 import { TMDB } from "./images"
 
@@ -18,6 +21,9 @@ interface TopBarProps {
 	services: ExplorerService[]
 	onToggleServices: () => void
 	onToggleUnseen: () => void
+	/** Every type, or only movies, shows, or anime. */
+	titleType: TitleType
+	onTitleType: (type: TitleType) => void
 	/** Where the person has been (the last two steps and a dropdown): second row, first row on phones. */
 	history?: ReactNode
 	/** The list view: the same islands and titles as headings and links. */
@@ -26,8 +32,8 @@ interface TopBarProps {
 }
 
 /**
- * The controls over the map: the grouping (a segmented control, a select on narrow screens) and the two filters,
- * which hide titles (never dim them).
+ * The controls over the map: the grouping (a segmented control, a select on narrow screens) and the filters (the
+ * type, On my services, and Not seen yet), which hide titles (never dim them).
  */
 export function TopBar({
 	groupings,
@@ -38,6 +44,8 @@ export function TopBar({
 	services,
 	onToggleServices,
 	onToggleUnseen,
+	titleType,
+	onTitleType,
 	history,
 	listView,
 	onToggleList,
@@ -110,6 +118,29 @@ export function TopBar({
 					</svg>
 				</label>
 				{history && <div className="ex-hist-top">{history}</div>}
+				<label className="ex-tog ex-type" data-on={titleType !== "all"}>
+					<span className="sr-only">Show</span>
+					<select
+						value={titleType}
+						onChange={(e) => onTitleType(e.target.value as TitleType)}
+					>
+						{TITLE_TYPES.map((t) => (
+							<option key={t} value={t}>
+								{TITLE_TYPE_NAMES[t]}
+							</option>
+						))}
+					</select>
+					<svg viewBox="0 0 12 8" aria-hidden="true" className="ex-caret">
+						<path
+							d="M1 1.5l5 5 5-5"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="1.8"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						/>
+					</svg>
+				</label>
 				<div className="ex-filters">
 					<button
 						type="button"

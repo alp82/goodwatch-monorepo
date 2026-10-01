@@ -7,6 +7,7 @@ import type {
 	ExplorerMap,
 	ExplorerPairs,
 	Grouping,
+	TitleType,
 } from "~/domain/explorer"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 import type { TitleKey } from "~/utils/title-key"
@@ -18,6 +19,8 @@ export interface MapQuery {
 	services: "mine" | "all" | null
 	/** "0" turns Not seen yet off; it's on by default. */
 	unseen: "0" | "1" | null
+	/** Only movies, shows, or anime; every type by default. */
+	type: Exclude<TitleType, "all"> | null
 }
 
 export class ExplorerRequestFailed extends Error {
@@ -54,6 +57,7 @@ const mapParams = (q: MapQuery) => ({
 	grouping: q.grouping,
 	services: q.services,
 	unseen: q.unseen,
+	type: q.type,
 })
 
 export const fetchMap = (q: MapQuery, member: boolean) =>
@@ -82,7 +86,15 @@ export const pairKey = (a: string, b: string) =>
 /** Query keys: per viewer (a member's id, or "guest"), so signing in or out never shows another person's map. */
 export const explorerKeys = {
 	map: (viewer: string, q: MapQuery) =>
-		["explorer", "map", viewer, q.grouping, q.services, q.unseen] as const,
+		[
+			"explorer",
+			"map",
+			viewer,
+			q.grouping,
+			q.services,
+			q.unseen,
+			q.type,
+		] as const,
 	island: (viewer: string, q: MapQuery, id: string) =>
 		[
 			"explorer",
@@ -91,12 +103,21 @@ export const explorerKeys = {
 			q.grouping,
 			q.services,
 			q.unseen,
+			q.type,
 			id,
 		] as const,
 	card: (viewer: string, key: TitleKey) =>
 		["explorer", "card", viewer, key] as const,
 	pairs: (viewer: string, q: MapQuery) =>
-		["explorer", "pairs", viewer, q.grouping, q.services, q.unseen] as const,
+		[
+			"explorer",
+			"pairs",
+			viewer,
+			q.grouping,
+			q.services,
+			q.unseen,
+			q.type,
+		] as const,
 	bridge: (viewer: string, q: MapQuery, a: string, b: string) =>
 		[
 			"explorer",
@@ -105,6 +126,7 @@ export const explorerKeys = {
 			q.grouping,
 			q.services,
 			q.unseen,
+			q.type,
 			pairKey(a, b),
 		] as const,
 }

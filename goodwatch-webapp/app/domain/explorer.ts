@@ -46,10 +46,33 @@ export const MATCH_BANDS = [
 export const matchBandOf = (match: number): 0 | 1 | 2 =>
 	match >= MATCH_BANDS[0].min ? 0 : match >= MATCH_BANDS[1].min ? 1 : 2
 
-/** The filters of the Explorer. Both hide titles; they never dim them. */
+/** Which titles the map shows by type: every title, movies, shows, or anime (movies and shows alike). */
+export const TITLE_TYPES = ["all", "movie", "show", "anime"] as const
+
+export type TitleType = (typeof TITLE_TYPES)[number]
+
+export const TITLE_TYPE_NAMES: Record<TitleType, string> = {
+	all: "All types",
+	movie: "Movies",
+	show: "Shows",
+	anime: "Anime",
+}
+
+export const isTitleType = (value: unknown): value is TitleType =>
+	TITLE_TYPES.includes(value as TitleType)
+
+/** Whether a title is of the type: Movies and Shows go by media type and include anime; Anime is anime only. */
+export const ofTitleType = (
+	type: TitleType,
+	title: { mediaType: "movie" | "show"; anime: boolean },
+) =>
+	type === "all" || (type === "anime" ? title.anime : title.mediaType === type)
+
+/** The filters of the Explorer. All of them hide titles; they never dim them. */
 export interface ExplorerFilters {
 	onMyServices: boolean
 	notSeenYet: boolean
+	type: TitleType
 }
 
 export interface ExplorerService {
@@ -65,6 +88,7 @@ export interface ExplorerService {
 export interface ExplorerTitle {
 	key: TitleKey
 	mediaType: "movie" | "show"
+	anime: boolean
 	tmdbId: number
 	title: string
 	year: number | null
