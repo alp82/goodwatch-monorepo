@@ -484,6 +484,8 @@ export function ExplorerMap({
 			separate([b.a === island.id ? b.b : b.a])
 			return
 		}
+		// A bridge joins two islands only: tapping a third lets it go and lights the tapped one on its own.
+		if (b) return separate([island.id])
 		const cur = litRef.current
 		if (cur.includes(island.id)) return setLit([])
 		if (cur.length === 1) {
