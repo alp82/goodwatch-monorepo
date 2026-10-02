@@ -27,10 +27,10 @@ export const TITLE_FORMAT_NAMES: Record<TitleFormat, string> = {
 	show: "Shows",
 }
 
-/** The anime choices spelled out, for a menu. */
+/** The anime choices spelled out, for options that stand without an "Anime" label. */
 export const ANIME_NAMES: Record<AnimeChoice, string> = {
 	any: "Include anime",
-	only: "Only anime",
+	only: "Anime only",
 	none: "Hide anime",
 }
 
@@ -41,10 +41,10 @@ export const ANIME_SHORT_NAMES: Record<AnimeChoice, string> = {
 	none: "Hide",
 }
 
-/** The anime choice as a state: what a chip says once it's set. */
+/** The anime choice as a state: what a button or a chip says once it's set. Never the bare "Anime", which reads as only. */
 export const ANIME_STATE_NAMES: Record<AnimeChoice, string> = {
-	any: "Anime",
-	only: "Only anime",
+	any: "With anime",
+	only: "Anime only",
 	none: "No anime",
 }
 
@@ -104,7 +104,7 @@ export const passesTitleType = (filter: TitleTypeFilter, title: TypedTitle) =>
 	(filter.format === "all" || title.mediaType === filter.format) &&
 	(filter.anime === "any" || title.anime === (filter.anime === "only"))
 
-/** The choice in a few words: "All types", "Shows", "Only anime", "Movies · no anime". */
+/** The choice in a few words: "All types", "Shows", "Anime only", "Movies · no anime". */
 export function titleTypeSummary(filter: TitleTypeFilter): string {
 	if (isAllTitleTypes(filter)) return "All types"
 	const anime = ANIME_STATE_NAMES[filter.anime]

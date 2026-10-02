@@ -271,8 +271,8 @@ body:has(.ex-stage) > main {
 .ex-narrow {
 	display: none;
 }
-/* Below this the labels are short, so the type's segments and its Anime chip (from 1520px) have room. */
-@media (max-width: 1649px) {
+/* Below this the labels are short, so the type's button has room for what it says. */
+@media (max-width: 1459px) {
 	.ex-seg-b {
 		padding: 0 12px;
 		font-size: 14.5px;
@@ -284,7 +284,7 @@ body:has(.ex-stage) > main {
 		display: inline;
 	}
 }
-@media (max-width: 1259px) {
+@media (max-width: 1279px) {
 	.ex-seg {
 		display: none;
 	}
@@ -292,7 +292,7 @@ body:has(.ex-stage) > main {
 		display: block;
 	}
 }
-@media (max-width: 899px) {
+@media (max-width: 979px) {
 	/* Room for the type and the filters on one row. */
 	.ex-brand {
 		display: none;
@@ -332,7 +332,17 @@ body:has(.ex-stage) > main {
 	.ex-type {
 		margin-left: 0;
 		/* What it says is cut short before the step you're on is. */
-		max-width: min(8.5rem, 30.5vw);
+		max-width: min(12.5rem, 30.5vw);
+	}
+	/* Tighter, so more of what it says fits by the grouping and the step. */
+	.ex-type > button {
+		padding-inline: 10px;
+	}
+}
+@media (min-width: 390px) and (max-width: 767px) {
+	/* Room for "Anime only" in full. */
+	.ex-type {
+		max-width: min(12.5rem, 33.5vw);
 	}
 }
 
@@ -1077,7 +1087,7 @@ button.ex-crumb:hover {
 .ex-list-tog {
 	padding: 0 14px 0 12px;
 }
-@media (max-width: 1649px) {
+@media (max-width: 1459px) {
 	.ex-wide-list {
 		display: none;
 	}
