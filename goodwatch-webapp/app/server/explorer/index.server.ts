@@ -17,10 +17,9 @@ import {
 	GROUPINGS,
 	type Grouping,
 	isGrouping,
-	isTitleType,
 	matchBandOf,
-	ofTitleType,
 } from "~/domain/explorer"
+import { passesTitleType, titleTypeOf } from "~/domain/title-type"
 import {
 	availabilityLoaded,
 	availabilityLoadedAt,
@@ -72,8 +71,10 @@ export interface ExplorerQuery {
 	services?: string | null
 	/** "0" turns Not seen yet off; it's on by default. */
 	unseen?: string | null
-	/** "movie", "show", or "anime"; every type by default. */
+	/** "movie" or "show"; every format by default. */
 	type?: string | null
+	/** "only" or "none"; with anime by default. */
+	anime?: string | null
 }
 
 const TOP_TITLES = 12
@@ -122,7 +123,7 @@ async function seatFor(
 	const filters: ExplorerFilters = {
 		onMyServices: services.length > 0 && query.services !== "all",
 		notSeenYet: query.unseen !== "0",
-		type: isTitleType(query.type) ? query.type : "all",
+		type: titleTypeOf(query.type, query.anime),
 	}
 	if (
 		services.length > 0 &&
@@ -144,7 +145,7 @@ async function seatFor(
 	const visible = new Uint8Array(pool.n)
 	for (let i = 0; i < pool.n; i++) {
 		const key = pool.keys[i]
-		if (!ofTitleType(filters.type, pool.facts[i])) continue
+		if (!passesTitleType(filters.type, pool.facts[i])) continue
 		if (filters.notSeenYet && (ctx.seen.has(key) || ctx.skipped.has(key)))
 			continue
 		if (filters.onMyServices && lists && !lists[i].some((id) => mine.has(id)))
