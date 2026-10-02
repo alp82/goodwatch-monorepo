@@ -21,6 +21,7 @@ import {
 } from "~/server/smart-titles.server"
 import { prefetchUserSettings } from "~/server/user-settings.server"
 import { getUserData } from "~/server/userData.server"
+import { ImdbImportEntry } from "~/ui/imports/ImdbImportEntry"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { GuestShareListEntry } from "~/ui/share-lists/ShareTopFiveCard"
 import { TasteQuizPage } from "~/ui/taste-quiz/TasteQuizPage"
@@ -102,11 +103,14 @@ export default function TasteQuizRoute() {
 
 	if (newQuiz)
 		return (
-			<TasteQuizPage
-				titles={smartTitles}
-				member={isLoggedIn}
-				showPicks={params.get("show") === "picks"}
-			/>
+			<>
+				<ImdbImportEntry member={isLoggedIn} />
+				<TasteQuizPage
+					titles={smartTitles}
+					member={isLoggedIn}
+					showPicks={params.get("show") === "picks"}
+				/>
+			</>
 		)
 
 	const handleSignUp = () => {
@@ -115,6 +119,7 @@ export default function TasteQuizRoute() {
 
 	return (
 		<div className="relative">
+			<ImdbImportEntry member={isLoggedIn} />
 			{!isLoggedIn && (
 				<div className="px-4">
 					<GuestShareListEntry />

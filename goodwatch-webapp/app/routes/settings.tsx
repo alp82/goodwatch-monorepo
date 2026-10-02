@@ -1,6 +1,18 @@
-import { AtSymbolIcon, FlagIcon, TvIcon, UserIcon } from "@heroicons/react/24/solid";
+import {
+	ArrowDownTrayIcon,
+	AtSymbolIcon,
+	FlagIcon,
+	TvIcon,
+	UserIcon,
+} from "@heroicons/react/24/solid";
 import type { MetaFunction } from "@remix-run/node";
-import { Link, Outlet, useMatches } from "@remix-run/react";
+import {
+	Link,
+	Outlet,
+	useLocation,
+	useMatches,
+	useNavigate,
+} from "@remix-run/react";
 import React from "react";
 import { useSetUserSettings } from "~/routes/api.user-settings.set";
 import { Spinner } from "~/ui/wait/Spinner";
@@ -39,6 +51,11 @@ const navigation = [
 		icon: AtSymbolIcon,
 	},
 	{
+		name: "Imports",
+		to: "/settings/imports",
+		icon: ArrowDownTrayIcon,
+	},
+	{
 		name: "Account",
 		to: "/settings/account",
 		icon: UserIcon,
@@ -54,22 +71,23 @@ export default function Settings() {
 	};
 
 	const { user, loading } = useUser();
-	if (loading) {
+	const navigate = useNavigate();
+	const { pathname, search } = useLocation();
+	const signedOut = !loading && !user;
+	React.useEffect(() => {
+		if (signedOut)
+			navigate(`/sign-in?redirectTo=${encodeURIComponent(pathname + search)}`, {
+				replace: true,
+			});
+	}, [signedOut, navigate, pathname, search]);
+
+	// A signed-out visitor goes straight to sign-in, and comes back here afterwards.
+	if (loading || !user) {
 		return (
 			<div className="max-w-7xl mx-auto px-8 lmt-0 py-2 md:py-4 lg:py-8">
 				<div className="px-2 md:px-4 lg:px-8">
 					<Spinner size="large" />
 				</div>
-			</div>
-		);
-	}
-
-	if (!user) {
-		return (
-			<div className="max-w-7xl mx-auto px-8 lmt-0 py-2 md:py-4 lg:py-8">
-				<p className="py-3 px-5 text-lg border-l-8 border-blue-700 text-blue-200 bg-blue-900">
-					Please sign in to your account.
-				</p>
 			</div>
 		);
 	}
