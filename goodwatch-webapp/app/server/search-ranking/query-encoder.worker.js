@@ -12,6 +12,9 @@ import * as ort from "onnxruntime-node"
 
 const { models, threads } = workerData
 const now = () => performance.now()
+// Search text longer than this is cut. The models take 512 tokens, but a request of several 512-token texts held four
+// cores for 5 to 15 s; searches are a few words to a sentence.
+const QUERY_MAX_TOKENS = 128
 
 function loadTokenizer(model) {
 	const config = JSON.parse(readFileSync(model.tokenizerConfigPath, "utf8"))
@@ -32,8 +35,13 @@ async function loadModel(model) {
 		interOpNumThreads: 1,
 		executionMode: "sequential",
 		graphOptimizationLevel: "all",
+		// The arena and the memory pattern keep the buffers of the largest request ever run: a few long searches grew
+		// the process by about 1 GB for good. Without them the memory of a run is freed when it ends.
+		enableCpuMemArena: false,
+		enableMemPattern: false,
 	})
-	const { dim, pooling, queryPrefix, maxTokens } = model.spec
+	const { dim, pooling, queryPrefix } = model.spec
+	const maxTokens = Math.min(model.spec.maxTokens, QUERY_MAX_TOKENS)
 
 	// Returns the L2-normalized vectors of `texts`, packed into one Float32Array of texts.length * dim.
 	async function encode(texts) {
