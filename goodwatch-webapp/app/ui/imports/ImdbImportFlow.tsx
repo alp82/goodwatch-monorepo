@@ -1,11 +1,13 @@
 // The IMDb ratings import on /settings/imports: one page whose steps replace each other in place.
-//   no import yet        how to get the file, and the upload
+//   no import yet        the upload, then how to get the file
 //   earlier imports      the latest one's date and outcome, Upload a newer export, and the earlier ones
 //   an import open       its preview, progress or receipt (ImdbImportCurrent)
 // A running import is opened on arrival, so its progress shows directly.
 import { useEffect, useState } from "react"
-import type { ImdbImportSummary } from "~/domain/imdb-import"
-import { Spinner } from "~/ui/wait/Spinner"
+import type {
+	ImdbImportListResponse,
+	ImdbImportSummary,
+} from "~/domain/imdb-import"
 import { ImdbExportSteps } from "./ImdbExportSteps"
 import { ImdbImportCurrent } from "./ImdbImportCurrent"
 import { ImdbUpload } from "./ImdbUpload"
@@ -13,7 +15,6 @@ import { useImdbImports } from "./api"
 import {
 	card,
 	describeOutcome,
-	errorBox,
 	formatDate,
 	primaryButton,
 	secondaryButton,
@@ -32,8 +33,8 @@ const importHeading = (summary: ImdbImportSummary) => {
 	return `Imported on ${date}`
 }
 
-export function ImdbImportFlow() {
-	const list = useImdbImports()
+export function ImdbImportFlow({ initial }: { initial?: ImdbImportListResponse }) {
+	const list = useImdbImports(initial)
 	const [openId, setOpenId] = useState<string | null>(null)
 	const [uploadOpen, setUploadOpen] = useState(false)
 	// Once the person has done something here, a step that appears takes focus. Not on arrival.
@@ -77,25 +78,8 @@ export function ImdbImportFlow() {
 					focus={acted}
 					onUploadAnother={openUpload}
 				/>
-			) : list.isPending ? (
-				<Spinner size="medium" />
 			) : (
 				<>
-					{list.isError && (
-						<div className="flex flex-col items-start gap-3" aria-live="polite">
-							<p className={errorBox}>
-								We couldn't load your earlier imports. You can still upload a
-								file.
-							</p>
-							<button
-								type="button"
-								className={secondaryButton}
-								onClick={() => list.refetch()}
-							>
-								Try again
-							</button>
-						</div>
-					)}
 					{latest && (
 						<section
 							aria-labelledby="imdb-latest-heading"
@@ -137,8 +121,8 @@ export function ImdbImportFlow() {
 					)}
 					{(!latest || uploadOpen) && (
 						<>
-							<ImdbExportSteps focus={acted && uploadOpen} />
 							<ImdbUpload onPreview={(summary) => open(summary.id)} />
+							<ImdbExportSteps focus={acted && uploadOpen} />
 						</>
 					)}
 				</>

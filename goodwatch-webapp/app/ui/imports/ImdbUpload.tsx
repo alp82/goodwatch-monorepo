@@ -1,4 +1,4 @@
-// Step 2 of the IMDb import: choose or drop the CSV file. It is read in the browser and sent for a preview.
+// The first thing on the IMDb import page: choose or drop the CSV file. It is read in the browser and sent for a preview.
 import { ArrowUpTrayIcon } from "@heroicons/react/24/solid"
 import { type DragEvent, useRef, useState } from "react"
 import type { ImdbImportSummary } from "~/domain/imdb-import"

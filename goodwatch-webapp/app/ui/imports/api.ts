@@ -64,10 +64,11 @@ const post = (body: unknown): RequestInit => ({
 })
 
 /** The member's imports, newest first. */
-export function useImdbImports() {
+export function useImdbImports(initialData?: ImdbImportListResponse) {
 	return useQuery({
 		queryKey: imdbImportKeys.list,
 		queryFn: () => request<ImdbImportListResponse>(API),
+		initialData,
 	})
 }
 
