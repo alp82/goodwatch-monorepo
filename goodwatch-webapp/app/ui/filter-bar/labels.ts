@@ -9,6 +9,11 @@ import type {
 	SortKey,
 } from "~/domain/filter-state"
 import { MOOD_BY_KEY } from "~/domain/moods"
+import {
+	ANIME_NAMES,
+	ANIME_STATE_NAMES,
+	type AnimeChoice,
+} from "~/domain/title-type"
 
 export interface SortOption<K extends string = string> {
 	key: K
@@ -39,6 +44,9 @@ export const TYPE_LABELS: Record<FilterState["type"], string> = {
 	show: "Shows",
 }
 
+/** The Anime group's options, in the words every page uses. */
+export const ANIME_LABELS: Record<AnimeChoice, string> = ANIME_NAMES
+
 export const SCORE_LABELS: Record<MinScore, string> = {
 	0: "Any score",
 	60: "60 and up",
@@ -60,6 +68,7 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		services: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
 		notSeenYet: { dot: "bg-blue-400", bar: "bg-blue-500" },
 		type: { dot: "bg-teal-400", bar: "bg-teal-500" },
+		anime: { dot: "bg-pink-400", bar: "bg-pink-500" },
 		moods: { dot: "bg-indigo-400", bar: "bg-indigo-500" },
 		genres: { dot: "bg-amber-400", bar: "bg-amber-500" },
 		minScore: { dot: "bg-lime-400", bar: "bg-lime-500" },
@@ -91,7 +100,9 @@ export function recoveryLabel(
 ): string {
 	const n = titles.toLocaleString("en")
 	if (short && filter === "services") return `${n} other services`
-	if (short && filter !== "notSeenYet" && filter !== "type") return `${n} more`
+	const hidesAnime = filter === "anime" && state.anime === "none"
+	if (short && filter !== "notSeenYet" && filter !== "type" && !hidesAnime)
+		return `${n} more`
 	switch (filter) {
 		case "services":
 			return `${n} on other services`
@@ -101,6 +112,8 @@ export function recoveryLabel(
 			return state.type === "movie"
 				? plural(titles, "show", "shows")
 				: plural(titles, "movie", "movies")
+		case "anime":
+			return hidesAnime ? `${n} anime` : `${n} that aren't anime`
 		case "moods":
 			return `${n} in other moods`
 		case "genres":
@@ -158,6 +171,13 @@ export function activeChips(
 			group: "type",
 			label: TYPE_LABELS[state.type],
 			remove: (s) => ({ ...s, type: "all" }),
+		})
+	if (state.anime !== "any")
+		chips.push({
+			key: "anime",
+			group: "anime",
+			label: ANIME_STATE_NAMES[state.anime],
+			remove: (s) => ({ ...s, anime: "any" }),
 		})
 	for (const mood of state.moods)
 		chips.push({

@@ -1,10 +1,16 @@
 // The filter bar's state: what Discover, Watch next, and Explorer filter and sort by, and how it reads from and writes
 // to URL parameters. Pure and shared by the server (the title filter) and the browser (the filter bar).
 //
-// URL parameters (defaults are omitted): services=mine|all|<ids>, unseen=0|1, type, moods=funny,scary, genres, score,
-// released, similar, people, sort, foryou=0|1. The parameters of old Discover filters the sheet doesn't offer keep
+// URL parameters (defaults are omitted): services=mine|all|<ids>, unseen=0|1, type, anime=only|none, moods=funny,scary,
+// genres, score, released, similar, people, sort, foryou=0|1. Type and anime are the type filter every page shares. The parameters of old Discover filters the sheet doesn't offer keep
 // their old names and apply as legacy filters.
 import { MAX_MOODS, MOOD_KEYS, type MoodKey } from "~/domain/moods"
+import {
+	type AnimeChoice,
+	type TitleFormat,
+	titleTypeOf,
+	titleTypeParams,
+} from "~/domain/title-type"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
 /** The filter groups, in the order of the bits of a title's fail mask. */
@@ -12,6 +18,7 @@ export const FILTER_NAMES = [
 	"services",
 	"notSeenYet",
 	"type",
+	"anime",
 	"moods",
 	"genres",
 	"minScore",
@@ -55,7 +62,9 @@ export type LegacyParam = (typeof LEGACY_PARAMS)[number]
 export type LegacyFilters = Partial<Record<LegacyParam, string>>
 
 export interface FilterState {
-	type: "all" | "movie" | "show"
+	type: TitleFormat
+	/** With anime, only anime, or without it. */
+	anime: AnimeChoice
 	/** False means everywhere, or the explicit `services`. */
 	onMyServices: boolean
 	/** Explicit services when onMyServices is false; empty means everywhere. */
@@ -82,6 +91,7 @@ export interface FilterDefaults {
 
 export const defaultFilterState = (defaults: FilterDefaults): FilterState => ({
 	type: "all",
+	anime: "any",
 	onMyServices: defaults.onMyServices,
 	notSeenYet: defaults.notSeenYet,
 	moods: [],
@@ -121,7 +131,9 @@ export function filterStateFromParams(
 	}
 	const unseen = params.get("unseen")
 	if (unseen === "0" || unseen === "1") state.notSeenYet = unseen === "1"
-	state.type = oneOf(["movie", "show"] as const, params.get("type")) ?? "all"
+	const titleType = titleTypeOf(params.get("type"), params.get("anime"))
+	state.type = titleType.format
+	state.anime = titleType.anime
 	state.moods = [
 		...new Set(
 			list(params.get("moods")).filter((key): key is MoodKey =>
@@ -171,7 +183,9 @@ export function filterStateToParams(
 				? "1"
 				: "0",
 	)
-	set("type", state.type === "all" ? null : state.type)
+	const titleType = titleTypeParams({ format: state.type, anime: state.anime })
+	set("type", titleType.type)
+	set("anime", titleType.anime)
 	set("moods", state.moods.length ? state.moods.join(",") : null)
 	set("genres", state.genres.length ? state.genres.join(",") : null)
 	set("score", state.minScore ? String(state.minScore) : null)
@@ -219,6 +233,8 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 			return { ...state, notSeenYet: false }
 		case "type":
 			return { ...state, type: "all" }
+		case "anime":
+			return { ...state, anime: "any" }
 		case "moods":
 			return { ...state, moods: [] }
 		case "genres":
@@ -240,6 +256,7 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	...state,
 	type: "all",
+	anime: "any",
 	services: undefined,
 	moods: [],
 	genres: [],
@@ -254,6 +271,7 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 export function secondaryFilterCount(state: FilterState): number {
 	return (
 		(state.type !== "all" ? 1 : 0) +
+		(state.anime !== "any" ? 1 : 0) +
 		(!state.onMyServices && state.services?.length ? 1 : 0) +
 		state.moods.length +
 		state.genres.length +

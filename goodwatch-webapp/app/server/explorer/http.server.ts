@@ -98,4 +98,5 @@ export const explorerQueryOf = (params: URLSearchParams) => ({
 	services: params.get("services"),
 	unseen: params.get("unseen"),
 	type: params.get("type"),
+	anime: params.get("anime"),
 })

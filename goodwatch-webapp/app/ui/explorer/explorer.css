@@ -225,40 +225,13 @@ body:has(.ex-stage) > main {
 		rgba(251, 191, 36, 0.06)
 	);
 }
+/* The type filter (ui/type-filter) styles itself; the bar only places it. */
 .ex-type {
-	position: relative;
-	padding: 0;
+	flex: 0 1 auto;
 	margin-left: auto;
 }
 .ex-type + .ex-filters {
 	margin-left: 0;
-}
-.ex-type select {
-	appearance: none;
-	-webkit-appearance: none;
-	height: 100%;
-	padding: 0 36px 0 15px;
-	border: 0;
-	border-radius: inherit;
-	background: transparent;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
-}
-.ex-type select option {
-	color: #0b0f1c;
-}
-.ex-type .ex-caret {
-	color: currentColor;
-}
-.ex-type[data-on="true"] {
-	color: #fff;
-	border-color: rgba(251, 191, 36, 0.55);
-	background: linear-gradient(
-		180deg,
-		rgba(251, 191, 36, 0.16),
-		rgba(251, 191, 36, 0.06)
-	);
 }
 .ex-logos {
 	display: flex;
@@ -298,7 +271,8 @@ body:has(.ex-stage) > main {
 .ex-narrow {
 	display: none;
 }
-@media (max-width: 1299px) {
+/* Below this the labels are short, so the type's segments and its Anime chip (from 1520px) have room. */
+@media (max-width: 1649px) {
 	.ex-seg-b {
 		padding: 0 12px;
 		font-size: 14.5px;
@@ -310,7 +284,7 @@ body:has(.ex-stage) > main {
 		display: inline;
 	}
 }
-@media (max-width: 1199px) {
+@media (max-width: 1259px) {
 	.ex-seg {
 		display: none;
 	}
@@ -357,9 +331,8 @@ body:has(.ex-stage) > main {
 	/* The type sits on the first row, by the grouping; the filters keep the second. */
 	.ex-type {
 		margin-left: 0;
-	}
-	.ex-type select {
-		padding: 0 32px 0 13px;
+		/* What it says is cut short before the step you're on is. */
+		max-width: min(8.5rem, 30.5vw);
 	}
 }
 
@@ -1104,7 +1077,7 @@ button.ex-crumb:hover {
 .ex-list-tog {
 	padding: 0 14px 0 12px;
 }
-@media (max-width: 1279px) {
+@media (max-width: 1649px) {
 	.ex-wide-list {
 		display: none;
 	}

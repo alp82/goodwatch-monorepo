@@ -8,8 +8,10 @@ import {
 	MIN_SCORES,
 } from "~/domain/filter-state"
 import { MOOD_KEYS } from "~/domain/moods"
+import type { AnimeChoice } from "~/domain/title-type"
 import type { CountryServices } from "~/server/availability-index.server"
 import {
+	FLAG_ANIME,
 	type TitleColumns,
 	UNKNOWN_DAY,
 	UNKNOWN_SCORE,
@@ -83,6 +85,8 @@ export interface PassInput {
 	/** Always the full hidden set, for the Not seen yet option counts. */
 	seenOrSkipped: TitleSet
 	type: "all" | "movie" | "show"
+	/** A title the snapshot doesn't hold counts as not anime. */
+	anime: AnimeChoice
 	/** Mood bits a title needs one of; 0 when off. */
 	moods: number
 	/** Genre bits a title needs one of; 0 when off. `genresChosen` says whether the filter is on (a genre not in the table has no bit). */
@@ -146,10 +150,17 @@ class ToggleCounts {
 export function runPasses(input: PassInput): PassOutput {
 	const { columns, rows, keys, services } = input
 	const n = rows.length
-	const { genres, moods, scores, releaseDays } = columns
+	const { genres, moods, scores, releaseDays, flags } = columns
 	const masks = new Uint16Array(n)
 
+	// The type filter's rule (passesTitleType) over the columns: the format by the key, anime by the flag.
 	const typeWanted = input.type === "all" ? -1 : input.type === "show" ? 1 : 0
+	const animeWanted =
+		input.anime === "any" ? -1 : input.anime === "only" ? 1 : 0
+	const isAnime = (i: number) => {
+		const row = rows[i]
+		return row >= 0 && (flags[row] & FLAG_ANIME) !== 0
+	}
 	const moodMask = input.moods
 	const genreMask = input.genres >>> 0
 	const genresOn = input.genresChosen
@@ -197,6 +208,8 @@ export function runPasses(input: PassInput): PassOutput {
 		if (notSeen && inSet(notSeen, i)) mask |= BIT.notSeenYet
 		if (typeWanted >= 0 && (key >= SHOW_BASE ? 1 : 0) !== typeWanted)
 			mask |= BIT.type
+		if (animeWanted >= 0 && (isAnime(i) ? 1 : 0) !== animeWanted)
+			mask |= BIT.anime
 		if (moodMask && (row < 0 || (moods[row] & moodMask) === 0))
 			mask |= BIT.moods
 		if (genresOn && (row < 0 || (genres[row] & genreMask) === 0))
@@ -250,6 +263,18 @@ export function runPasses(input: PassInput): PassOutput {
 			if (keys[i] >= SHOW_BASE) shows++
 		}
 		optionCounts.type = { all, movie: all - shows, show: shows }
+	}
+
+	// Anime.
+	{
+		let any = 0
+		let only = 0
+		for (let i = 0; i < n; i++) {
+			if (!passesOthers(i, BIT.anime)) continue
+			any++
+			if (isAnime(i)) only++
+		}
+		optionCounts.anime = { any, only, none: any - only }
 	}
 
 	// Not seen yet.

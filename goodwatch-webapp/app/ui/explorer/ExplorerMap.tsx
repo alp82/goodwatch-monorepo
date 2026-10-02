@@ -19,9 +19,15 @@ import {
 	GROUPING_NAMES,
 	type ExplorerMap as MapData,
 	isGrouping,
-	isTitleType,
-	ofTitleType,
 } from "~/domain/explorer"
+import {
+	isAllTitleTypes,
+	parseTitleType,
+	passesTitleType,
+	titleTypeOf,
+	titleTypeParams,
+} from "~/domain/title-type"
+import { NoTitlesOfType } from "~/ui/type-filter"
 import { useUser } from "~/utils/auth"
 import {
 	type BarState,
@@ -77,19 +83,18 @@ interface Bridge {
 }
 
 /**
- * The map's query from the URL: `grouping`, `services=mine|all`, `unseen=0|1`, `type=movie|show|anime`; defaults are
- * left out.
+ * The map's query from the URL: `grouping`, `services=mine|all`, `unseen=0|1`, `type=movie|show`, `anime=only|none`;
+ * defaults are left out.
  */
 export function mapQueryOf(params: URLSearchParams): MapQuery {
 	const grouping = params.get("grouping")
 	const services = params.get("services")
 	const unseen = params.get("unseen")
-	const type = params.get("type")
 	return {
 		grouping: isGrouping(grouping) ? grouping : "genre",
 		services: services === "mine" || services === "all" ? services : null,
 		unseen: unseen === "0" || unseen === "1" ? unseen : null,
-		type: isTitleType(type) && type !== "all" ? type : null,
+		...titleTypeParams(parseTitleType(params)),
 	}
 }
 
@@ -97,7 +102,8 @@ const sameQuery = (a: MapQuery, b: MapQuery) =>
 	a.grouping === b.grouping &&
 	a.services === b.services &&
 	a.unseen === b.unseen &&
-	a.type === b.type
+	a.type === b.type &&
+	a.anime === b.anime
 
 const currentParams = () => new URLSearchParams(window.location.search)
 
@@ -175,14 +181,17 @@ export function ExplorerMap({
 	const hasServices = (map?.services.length ?? 0) > 0
 	const onMyServices = hasServices && query.services !== "all"
 	const notSeenYet = query.unseen !== "0"
-	const titleType = query.type ?? "all"
+	const titleType = useMemo(
+		() => titleTypeOf(query.type, query.anime),
+		[query.type, query.anime],
+	)
 	const [seenNow, setSeenNow] = useState<ReadonlySet<number>>(new Set())
 	/** The filters hide titles, never dim them, as soon as they're switched. */
 	const visible = useCallback(
 		(t: ExplorerTitle) =>
 			(!onMyServices || !!map?.approximate || t.services.length > 0) &&
 			(!notSeenYet || !(t.seen || seenNow.has(t.key))) &&
-			ofTitleType(titleType, t),
+			passesTitleType(titleType, t),
 		[onMyServices, notSeenYet, titleType, seenNow, map?.approximate],
 	)
 
@@ -210,6 +219,7 @@ export function ExplorerMap({
 		put("services", q.services)
 		put("unseen", q.unseen)
 		put("type", q.type)
+		put("anime", q.anime)
 		if (regroup) {
 			out.delete("island")
 			out.delete("bridge")
@@ -1317,7 +1327,7 @@ export function ExplorerMap({
 				}
 				onToggleUnseen={() => setQuery({ unseen: notSeenYet ? "0" : null })}
 				titleType={titleType}
-				onTitleType={(type) => setQuery({ type: type === "all" ? null : type })}
+				onTitleType={(next) => setQuery(titleTypeParams(next))}
 				history={
 					<HistoryBar steps={stepViews} at={history.at} onGo={history.go} />
 				}
@@ -1352,7 +1362,15 @@ export function ExplorerMap({
 			)}
 			{map && !map.islands.length && !loadingGrouping && (
 				<p className="ex-loading" role="status">
-					No titles pass these filters. Try another type or turn a filter off.
+					{isAllTitleTypes(titleType) ? (
+						"No titles pass these filters. Turn a filter off."
+					) : (
+						<NoTitlesOfType
+							value={titleType}
+							where="with these filters"
+							onReset={(all) => setQuery(titleTypeParams(all))}
+						/>
+					)}
 				</p>
 			)}
 			{mapQuery.isError && !map && (

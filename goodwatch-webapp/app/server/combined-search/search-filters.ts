@@ -2,6 +2,8 @@
 // No server-only imports: the client builds and applies the same object.
 export interface SearchFilters {
 	type?: "movie" | "show";
+	// The type filter's anime choice: only anime, or none of it. A title whose is_anime is unknown is not anime.
+	anime?: "only" | "none";
 	// Genre names as stored in Crate and Qdrant ("Comedy"). A title must have all of them.
 	genres?: string[];
 	minYear?: number;
@@ -27,6 +29,7 @@ export const parseSearchFilters = (input: unknown): SearchFilters => {
 	const raw = input as Record<string, unknown>;
 	const filters: SearchFilters = {};
 	if (raw.type === "movie" || raw.type === "show") filters.type = raw.type;
+	if (raw.anime === "only" || raw.anime === "none") filters.anime = raw.anime;
 	if (Array.isArray(raw.genres)) {
 		const genres = [
 			...new Set(
@@ -68,6 +71,7 @@ export const searchFiltersKey = (filters: SearchFilters | undefined) => {
 	if (!filters) return "";
 	const parts: string[] = [];
 	if (filters.type) parts.push(`t=${filters.type}`);
+	if (filters.anime) parts.push(`a=${filters.anime}`);
 	if (filters.genres?.length) parts.push(`g=${[...filters.genres].sort().join(",")}`);
 	if (filters.minYear !== undefined) parts.push(`min=${filters.minYear}`);
 	if (filters.maxYear !== undefined) parts.push(`max=${filters.maxYear}`);
@@ -96,12 +100,17 @@ export const titlePointId = (key: string) => {
 export const allowsTitle = (filters: SearchFilters | undefined, key: string) =>
 	!filters?.onlyTitles || filters.onlyTitles.includes(key);
 
-// Qdrant payload: media_type, genres (names), release_year (integer), streaming_availability ("8_DE").
+// Qdrant payload: media_type, is_anime, genres (names), release_year (integer), streaming_availability ("8_DE").
 export const toQdrantMust = (filters: SearchFilters | undefined): unknown[] => {
 	if (!filters) return [];
 	const must: unknown[] = [];
 	if (filters.type)
 		must.push({ key: "media_type", match: { value: filters.type } });
+	// "None" is everything that isn't marked anime, so a point without the field stays.
+	if (filters.anime === "only")
+		must.push({ key: "is_anime", match: { value: true } });
+	else if (filters.anime === "none")
+		must.push({ must_not: [{ key: "is_anime", match: { value: true } }] });
 	for (const genre of filters.genres ?? [])
 		must.push({ key: "genres", match: { value: genre } });
 	const range = yearRange(filters);
@@ -120,7 +129,7 @@ export const toQdrantMust = (filters: SearchFilters | undefined): unknown[] => {
 	return must;
 };
 
-// Crate columns: genres (text array), release_year, streaming_availabilities ("DE_8").
+// Crate columns: is_anime, genres (text array), release_year, streaming_availabilities ("DE_8").
 // `sql` is empty or starts with " AND "; null means the table is excluded by type or by the titles.
 export const toCrateSql = (
 	filters: SearchFilters | undefined,
@@ -130,6 +139,8 @@ export const toCrateSql = (
 	if (filters.type && filters.type !== table) return null;
 	const clauses: string[] = [],
 		params: (string | number)[] = [];
+	if (filters.anime === "only") clauses.push("coalesce(is_anime,false)");
+	else if (filters.anime === "none") clauses.push("NOT coalesce(is_anime,false)");
 	for (const genre of filters.genres ?? []) {
 		clauses.push("? = ANY(genres)");
 		params.push(genre);
@@ -165,10 +176,17 @@ export const toCrateSql = (
 // For rows retrieval cannot filter (title matches). Streaming is left to the watchability check.
 export const matchesRow = (
 	filters: SearchFilters | undefined,
-	row: { type: string; year?: string | number | null; genres?: string[] | null },
+	row: {
+		type: string;
+		year?: string | number | null;
+		genres?: string[] | null;
+		anime?: boolean | null;
+	},
 ) => {
 	if (!filters) return true;
 	if (filters.type && row.type !== filters.type) return false;
+	if (filters.anime && Boolean(row.anime) !== (filters.anime === "only"))
+		return false;
 	if (filters.genres?.some((genre) => !(row.genres ?? []).includes(genre)))
 		return false;
 	if (filters.minYear !== undefined && !(Number(row.year) >= filters.minYear))

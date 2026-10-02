@@ -1,13 +1,20 @@
 // You vs everyone: where the person's ratings part ways with the GoodWatch score ("everyone"). Each title shows both
 // scores on one line, so the gap is the story.
 import { Link } from "@remix-run/react"
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
+import {
+	ALL_TITLE_TYPES,
+	type TitleTypeFilter,
+	isAllTitleTypes,
+	passesTitleType,
+} from "~/domain/title-type"
 import type {
 	EveryoneRow,
 	EveryoneView,
 	PortraitTitle,
 } from "~/server/taste-portrait/view"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
+import { NoTitlesOfType, TypeFilter } from "~/ui/type-filter"
 import {
 	type Titles,
 	YourScore,
@@ -18,13 +25,6 @@ import {
 	titleHref,
 	vibe,
 } from "./parts"
-
-const FILTERS = [
-	{ id: "all", name: "Everything" },
-	{ id: "movie", name: "Films" },
-	{ id: "show", name: "Shows" },
-] as const
-type Filter = (typeof FILTERS)[number]["id"]
 
 const PAGE = 8
 const MOST = 30
@@ -50,10 +50,13 @@ function Ring({
 }
 
 export function YouVsEveryone({ view }: { view: EveryoneView }) {
-	const [filter, setFilter] = useState<Filter>("all")
+	// The type filter stays on the page: the lists are already here, so it isn't in the URL.
+	const [type, setType] = useState<TitleTypeFilter>(ALL_TITLE_TYPES)
 	const [n, setN] = useState(PAGE)
-	const keep = (row: EveryoneRow) =>
-		filter === "all" || view.titles[row.key]?.mediaType === filter
+	const keep = (row: EveryoneRow) => {
+		const t = view.titles[row.key]
+		return !!t && passesTitleType(type, t)
+	}
 	const allHigher = view.higher.filter(keep)
 	const allLower = view.lower.filter(keep)
 	const higher = allHigher.slice(0, n)
@@ -66,6 +69,12 @@ export function YouVsEveryone({ view }: { view: EveryoneView }) {
 		(a, b) => b.delta - a.delta,
 	)
 	const more = n < MOST && (allHigher.length > n || allLower.length > n)
+	const filtered = !isAllTitleTypes(type)
+	const none = filtered ? (
+		<NoTitlesOfType value={type} onReset={setType} where="on this side" />
+	) : (
+		"None of these in what you've rated."
+	)
 
 	return (
 		<>
@@ -118,17 +127,7 @@ export function YouVsEveryone({ view }: { view: EveryoneView }) {
 					</p>
 				)}
 				<div className="mt-8 flex flex-wrap items-center gap-2">
-					{FILTERS.map((f) => (
-						<button
-							key={f.id}
-							type="button"
-							onClick={() => setFilter(f.id)}
-							aria-pressed={filter === f.id}
-							className={`min-h-11 cursor-pointer rounded-full border-2 px-4 py-1.5 text-sm font-semibold md:min-h-0 ${filter === f.id ? "border-amber-500 bg-amber-900/30 text-amber-100" : "border-gray-700 text-gray-300 hover:border-gray-500"}`}
-						>
-							{f.name}
-						</button>
-					))}
+					<TypeFilter value={type} onChange={setType} />
 					<span className="ml-auto flex items-center gap-4 text-xs text-gray-400">
 						<span className="flex items-center gap-1.5">
 							<span className="h-3 w-3 rounded-full border-2 border-gray-300" />{" "}
@@ -141,20 +140,32 @@ export function YouVsEveryone({ view }: { view: EveryoneView }) {
 				</div>
 			</section>
 
-			<section className="mx-auto mt-8 grid max-w-7xl gap-10 px-4 md:grid-cols-2 md:px-8">
-				<Column
-					titles={view.titles}
-					title="You rate higher than everyone"
-					rows={higher}
-					tone="up"
-				/>
-				<Column
-					titles={view.titles}
-					title="You rate lower than everyone"
-					rows={lower}
-					tone="down"
-				/>
-			</section>
+			{filtered && !higher.length && !lower.length ? (
+				<p className="mx-auto mt-8 max-w-7xl px-4 text-gray-400 md:px-8">
+					<NoTitlesOfType
+						value={type}
+						onReset={setType}
+						where="where you and everyone part ways"
+					/>
+				</p>
+			) : (
+				<section className="mx-auto mt-8 grid max-w-7xl gap-10 px-4 md:grid-cols-2 md:px-8">
+					<Column
+						titles={view.titles}
+						title="You rate higher than everyone"
+						rows={higher}
+						tone="up"
+						none={none}
+					/>
+					<Column
+						titles={view.titles}
+						title="You rate lower than everyone"
+						rows={lower}
+						tone="down"
+						none={none}
+					/>
+				</section>
+			)}
 			{more && (
 				<div className="mx-auto mt-6 max-w-7xl px-4 md:px-8">
 					<button
@@ -220,11 +231,14 @@ function Column({
 	title,
 	rows,
 	tone,
+	none,
 }: {
 	titles: Titles
 	title: string
 	rows: EveryoneRow[]
 	tone: "up" | "down"
+	/** What the column says when it has no rows. */
+	none: ReactNode
 }) {
 	const [lead, ...rest] = rows
 	const lt = lead && titles[lead.key]
@@ -235,11 +249,7 @@ function Column({
 			>
 				{title}
 			</h2>
-			{!lt && (
-				<p className="text-sm text-gray-400">
-					None of these in what you've rated.
-				</p>
-			)}
+			{!lt && <p className="text-sm text-gray-400">{none}</p>}
 			{lt && (
 				<Link
 					to={titleHref(lt)}

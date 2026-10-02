@@ -279,12 +279,14 @@ async function buildView(
 		const { mediaType, tmdbId } = parseTitleKey(key)
 		const mine = input.scores.get(key) ?? null
 		const seen = mine !== null || input.chosen.has(key)
+		const facts = snapshot.facts(key)
 		titles[key] = {
 			key,
 			mediaType,
+			anime: facts?.anime ?? false,
 			tmdbId,
 			...display,
-			score: snapshot.facts(key)?.score ?? null,
+			score: facts?.score ?? null,
 			mine,
 			match: seen ? null : (matches.get(key) ?? null),
 			onMyServices: seen ? null : person.onMyServices(key),
