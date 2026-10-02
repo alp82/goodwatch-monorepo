@@ -7,6 +7,11 @@ import {
 // work compared with the catalog, recurring genres and tags, frequent collaborators, and
 // the filtered and grouped title grid. Every query is keyed by id so a cold page stays
 // around one second; profiles and the catalog baseline are cached in Redis.
+import {
+	type AnimeChoice,
+	passesTitleType,
+	titleTypeOf,
+} from "~/domain/title-type"
 import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 
@@ -16,6 +21,7 @@ export interface PersonCredit {
 	key: string
 	tmdb_id: number
 	media_type: MediaType
+	anime: boolean
 	title: string
 	release_year: number | null
 	poster_path: string | null
@@ -172,7 +178,7 @@ function fingerprintBaseline(): Promise<Record<string, number>> {
 
 const TITLE_COLS = `tmdb_id, title, release_year, poster_path, backdrop_path, popularity,
 	goodwatch_overall_score_normalized_percent AS score, goodwatch_overall_score_voting_count AS votes,
-	genres, essence_tags, fingerprint_scores AS fingerprint`
+	genres, essence_tags, fingerprint_scores AS fingerprint, is_anime AS anime`
 
 type TitleRow = Pick<
 	PersonCredit,
@@ -187,7 +193,7 @@ type TitleRow = Pick<
 	| "genres"
 	| "essence_tags"
 	| "fingerprint"
->
+> & { anime: boolean | null }
 type CreditRow = {
 	media_tmdb_id: number
 	media_type: MediaType
@@ -242,6 +248,7 @@ async function credits(id: number): Promise<PersonCredit[]> {
 			...t,
 			key,
 			media_type: r.media_type,
+			anime: t.anime === true,
 			popularity: t.popularity ?? 0,
 			votes: t.votes ?? 0,
 			genres: t.genres ?? [],
@@ -468,7 +475,8 @@ export async function getPersonProfile(
 		{ personId: number },
 		{ profile: PersonProfile | null }
 	>({
-		name: "person-profile",
+		// v2: credits carry `anime`.
+		name: "person-profile-v2",
 		target: async ({ personId }) => ({
 			profile: await loadPersonProfile(personId),
 		}),
@@ -540,6 +548,7 @@ async function loadPersonProfile(id: number): Promise<PersonProfile | null> {
 
 export interface GridFilters {
 	type: "all" | MediaType
+	anime: AnimeChoice
 	role: string
 	genre: string
 	decade: string
@@ -551,9 +560,10 @@ export interface GridFilters {
 }
 
 export function parseGridFilters(p: URLSearchParams): GridFilters {
-	const type = p.get("type")
+	const type = titleTypeOf(p.get("type"), p.get("anime"))
 	return {
-		type: type === "movie" || type === "show" ? type : "all",
+		type: type.format,
+		anime: type.anime,
 		role: p.get("role") ?? "",
 		genre: p.get("genre") ?? "",
 		decade: p.get("decade") ?? "",
@@ -587,7 +597,11 @@ const prominence = (c: PersonCredit) =>
 
 export function applyGridFilters(credits: PersonCredit[], f: GridFilters) {
 	const matches = (c: PersonCredit, skip?: keyof GridFilters) =>
-		(skip === "type" || f.type === "all" || c.media_type === f.type) &&
+		(skip === "type" ||
+			passesTitleType(
+				{ format: f.type, anime: f.anime },
+				{ mediaType: c.media_type, anime: c.anime },
+			)) &&
 		(skip === "role" ||
 			(f.role
 				? c.roles.includes(f.role)
@@ -614,8 +628,9 @@ export function applyGridFilters(credits: PersonCredit[], f: GridFilters) {
 		items: credits
 			.filter((c) => matches(c))
 			.sort((a, b) => prominence(b) - prominence(a)),
+		// What the other filters leave of every type, so an empty grid can say whether the type emptied it.
+		ofAnyType: credits.filter((c) => matches(c, "type")).length,
 		facets: {
-			type: facet("type", (c) => [c.media_type]),
 			role: facet("role", (c) => c.roles),
 			genre: facet("genre", (c) => c.genres).slice(0, 14),
 			decade: facet("decade", (c) => [decadeOf(c)]).sort((a, b) =>

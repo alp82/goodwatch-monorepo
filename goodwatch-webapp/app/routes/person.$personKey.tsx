@@ -5,7 +5,8 @@ import {
 } from "@heroicons/react/20/solid"
 // Cast and crew page: who the person is, what their work feels like compared with the
 // catalog, who they work with, and all their titles, filtered and grouped on the server.
-// Every link is a server-rendered <a href>, so search engines can follow them.
+// Every link is a server-rendered <a href>, so search engines can follow them; the type filter is the site's shared
+// control and goes to the filtered URL.
 import {
 	FilmIcon,
 	StarIcon,
@@ -18,8 +19,18 @@ import {
 	json,
 	redirect,
 } from "@remix-run/node"
-import { Link, useLoaderData, useSearchParams } from "@remix-run/react"
+import {
+	Link,
+	useLoaderData,
+	useNavigate,
+	useSearchParams,
+} from "@remix-run/react"
 import type React from "react"
+import {
+	type TitleTypeFilter,
+	isAllTitleTypes,
+	titleTypeParams,
+} from "~/domain/title-type"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import type { DiscoverResult } from "~/server/discover.server"
 import {
@@ -33,6 +44,7 @@ import {
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
 import { Portrait } from "~/ui/person/Portrait"
+import { NoTitlesOfType, TypeFilter } from "~/ui/type-filter"
 import { personPath, pluralize, titleToDashed } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
@@ -55,7 +67,10 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	if (url.pathname !== canonical) return redirect(canonical + url.search, 301)
 
 	const filters = parseGridFilters(url.searchParams)
-	const { items, facets } = applyGridFilters(profile.credits, filters)
+	const { items, facets, ofAnyType } = applyGridFilters(
+		profile.credits,
+		filters,
+	)
 	const slim = ({ fingerprint, essence_tags, genres, ...c }: PersonCredit) => c
 	const groups = groupTitles(items, filters, PER_GROUP).map((g) => ({
 		...g,
@@ -64,6 +79,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const knownFor = applyGridFilters(profile.credits, {
 		...filters,
 		type: "all",
+		anime: "any",
 		role: "",
 		genre: "",
 		decade: "",
@@ -78,6 +94,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		filters,
 		facets,
 		total: items.length,
+		ofAnyType,
 		groups,
 		knownFor: knownFor.map(slim),
 	})
@@ -201,6 +218,19 @@ function useFilterHref() {
 		const s = next.toString()
 		return `${s ? `?${s}` : "?"}${hash}`
 	}
+}
+
+const typeOf = (f: Data["filters"]): TitleTypeFilter => ({
+	format: f.type,
+	anime: f.anime,
+})
+
+/** Goes to this page with another type filter, the other filters kept. */
+function useSetType() {
+	const href = useFilterHref()
+	const navigate = useNavigate()
+	return (next: TitleTypeFilter) =>
+		navigate(href(titleTypeParams(next)), { preventScrollReset: true })
 }
 
 function subtitle(c: Credit) {
@@ -424,7 +454,7 @@ function Facts({ data }: { data: Data }) {
 	const career = careerSummary(s)
 	return (
 		<div className="mt-6 grid grid-cols-2 divide-white/10 rounded-xl border border-white/10 bg-gray-900/70 backdrop-blur sm:grid-cols-3 lg:grid-cols-5 lg:divide-x">
-			<Fact label="Titles" href={href({ type: null }, "#titles")}>
+			<Fact label="Titles" href={href({ type: null, anime: null }, "#titles")}>
 				<div className="flex items-center gap-4 text-lg font-semibold">
 					{kinds.map(({ n, one, many, Icon }) => (
 						<span key={one} className="flex items-center gap-1.5">
@@ -779,24 +809,13 @@ function CollaboratorCards({ data }: { data: Data }) {
 
 function FilterBox({ data }: { data: Data }) {
 	const href = useFilterHref()
+	const setType = useSetType()
 	const f = data.filters
 	const groups: {
 		key: keyof GridFilters
 		label: string
 		options: { value: string; label: string; count?: number }[]
 	}[] = [
-		{
-			key: "type",
-			label: "Type",
-			options: [
-				{ value: "all", label: "All" },
-				...data.facets.type.map((t) => ({
-					value: t.name,
-					label: t.name === "movie" ? "Movies" : "TV shows",
-					count: t.count,
-				})),
-			],
-		},
 		{
 			key: "role",
 			label: "Role",
@@ -844,11 +863,16 @@ function FilterBox({ data }: { data: Data }) {
 			],
 		},
 	]
-	const current = (k: keyof GridFilters) =>
-		String(f[k] || (k === "type" ? "all" : ""))
+	const current = (k: keyof GridFilters) => String(f[k] || "")
 	return (
 		<div className="rounded-lg border border-gray-700 text-sm">
 			<div className="space-y-2 p-3">
+				<div className="flex items-center gap-x-3">
+					<span className="w-16 shrink-0 text-xs uppercase tracking-wide text-gray-500">
+						Type
+					</span>
+					<TypeFilter value={typeOf(f)} onChange={setType} size="sm" />
+				</div>
 				{groups.map((g) => (
 					<div
 						key={g.key}
@@ -996,6 +1020,10 @@ function ScoreGroupHeading({
 
 function Titles({ data }: { data: Data }) {
 	const href = useFilterHref()
+	const setType = useSetType()
+	const f = data.filters
+	const type = typeOf(f)
+	const others = !!(f.role || f.genre || f.decade || f.trait || f.minScore)
 	return (
 		<section id="titles" className="scroll-mt-20 space-y-5">
 			<div className="flex items-baseline gap-3">
@@ -1003,9 +1031,18 @@ function Titles({ data }: { data: Data }) {
 				<span className="text-gray-400">{data.total}</span>
 			</div>
 			<FilterBox data={data} />
-			{!data.total && (
-				<p className="text-gray-400">No titles match these filters.</p>
-			)}
+			{!data.total &&
+				(data.ofAnyType > 0 && !isAllTitleTypes(type) ? (
+					<p className="text-gray-400">
+						<NoTitlesOfType
+							value={type}
+							onReset={setType}
+							where={others ? "with these filters" : "here"}
+						/>
+					</p>
+				) : (
+					<p className="text-gray-400">No titles match these filters.</p>
+				))}
 			<div className="space-y-10">
 				{data.groups.map((g) => (
 					// Native <details>: collapses without JavaScript and keeps collapsed titles in the HTML.

@@ -15,6 +15,7 @@ export const isPortraitTab = (value: unknown): value is PortraitTab =>
 export interface PortraitTitle {
 	key: TitleKey
 	mediaType: "movie" | "show"
+	anime: boolean
 	tmdbId: number
 	title: string
 	year: number | null
