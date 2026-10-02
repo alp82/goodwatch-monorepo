@@ -52,6 +52,13 @@ export function searchFilter(
 	const filters = eligibility.filters
 	if (filters?.type)
 		tests.push((row) => isShow(row) === (filters.type === "show"))
+	if (filters?.anime) {
+		const bit = table.flagNames.indexOf("is_anime")
+		const only = filters.anime === "only"
+		tests.push(
+			(row) => (bit >= 0 && ((table.flags[row] >> bit) & 1) === 1) === only,
+		)
+	}
 	if (filters?.minYear !== undefined) {
 		const min = filters.minYear
 		tests.push((row) => table.years[row] > 0 && table.years[row] >= min)
@@ -69,6 +76,8 @@ export function searchFilter(
 		const wanted = flag.decision === "required"
 		if (!wanted && flag.kind === "soft") continue
 		if (flag.kind === "media" && filters?.type) continue
+		// The anime filter decides anime, as the type filter decides movie or show: the reading's anime flag is left out.
+		if (flag.condition.key === "is_anime" && filters?.anime) continue
 		const { key, value } = flag.condition
 		;(wanted ? must : mustNot).push({ key, match: { value } })
 		let has: RowTest

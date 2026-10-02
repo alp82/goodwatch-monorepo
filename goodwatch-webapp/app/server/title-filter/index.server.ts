@@ -55,9 +55,9 @@ export interface FilterResult {
 	recoveries: { filter: FilterName; titles: number }[]
 	/**
 	 * What each option would leave, the other filters unchanged. Keys: services `all`, `mine`, and service ids;
-	 * notSeenYet `on`, `off`; type `all`, `movie`, `show`; moods by key; genres by name; minScore `0`, `60`, `70`, `80`;
-	 * released by option; similarTo and people only for the chosen options (what removing each would leave); legacy
-	 * `on`, `off`.
+	 * notSeenYet `on`, `off`; type `all`, `movie`, `show`; anime `any`, `only`, `none`; moods by key; genres by name;
+	 * minScore `0`, `60`, `70`, `80`; released by option; similarTo and people only for the chosen options (what
+	 * removing each would leave); legacy `on`, `off`.
 	 */
 	optionCounts: Record<FilterName, Record<string, number>>
 	/** For you movement against the plain order: titles whose place changed, `by` > 0 moved up. */
@@ -145,6 +145,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		notSeen: state.notSeenYet ? seenOrSkipped : null,
 		seenOrSkipped,
 		type: state.type,
+		anime: state.anime,
 		moods: state.moods.reduce(
 			(mask, mood) => mask | (1 << MOOD_KEYS.indexOf(mood)),
 			0,

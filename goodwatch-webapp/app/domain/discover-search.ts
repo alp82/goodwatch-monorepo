@@ -1,9 +1,9 @@
 // Discover's search mode: which filter bar choices go into the search ranking as eligibility, and the query limits.
 // Pure and shared by the server and the browser.
 //
-// Type, one genre, Released, and the services narrow the ranking itself (SearchFilters), as the search chips did, so
-// the ranked list is full of titles that fit. Everything else (Not seen yet, moods, the GoodWatch score, several
-// genres, Similar to, cast and crew, legacy filters) runs in memory over the ranked list, with its counts and
+// Type, anime, one genre, Released, and the services narrow the ranking itself (SearchFilters), as the search chips
+// did, so the ranked list is full of titles that fit. Everything else (Not seen yet, moods, the GoodWatch score,
+// several genres, Similar to, cast and crew, legacy filters) runs in memory over the ranked list, with its counts and
 // recoveries. The in-memory pass also checks the ranking's choices again, which changes nothing but keeps one code path.
 import type { SearchFilters } from "~/server/combined-search/search-filters"
 import type { FilterState, Released } from "./filter-state"
@@ -51,6 +51,7 @@ export function searchEligibility(
 ): SearchFilters {
 	const filters: SearchFilters = {}
 	if (state.type !== "all") filters.type = state.type
+	if (state.anime !== "any") filters.anime = state.anime
 	if (state.genres.length === 1) filters.genres = [...state.genres]
 	Object.assign(filters, releasedYears(state.released, now))
 	const services = state.onMyServices ? scope.services : (state.services ?? [])

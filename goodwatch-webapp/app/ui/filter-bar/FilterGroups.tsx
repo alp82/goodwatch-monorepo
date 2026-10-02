@@ -1,7 +1,7 @@
-// The Filters sheet's content: a search field over every option, then the groups in order (Movies or shows, Mood,
-// Genre, GoodWatch score, Released, Streaming services, Similar to, Cast and crew). Each option shows what the result
-// would be if tapped; an option that would leave nothing is dimmed. Typing two letters or more also finds titles for
-// Similar to and people for Cast and crew.
+// The Filters sheet's content: a search field over every option, then the groups in order (Movies or shows, Anime,
+// Mood, Genre, GoodWatch score, Released, Streaming services, Similar to, Cast and crew). Each option shows what the
+// result would be if tapped; an option that would leave nothing is dimmed. Typing two letters or more also finds
+// titles for Similar to and people for Cast and crew.
 import {
 	CheckIcon,
 	MagnifyingGlassIcon,
@@ -16,9 +16,11 @@ import {
 	RELEASED,
 } from "~/domain/filter-state"
 import { MOODS, toggleMood } from "~/domain/moods"
+import { ANIME_CHOICES } from "~/domain/title-type"
 import { goodwatchVibeIndex } from "~/utils/ratings"
 import type { TitleKey } from "~/utils/title-key"
 import {
+	ANIME_LABELS,
 	FILTER_ACCENTS,
 	RELEASED_LABELS,
 	SCORE_LABELS,
@@ -121,6 +123,18 @@ function buildGroups(
 				active: state.type === type,
 				count: count("type", type),
 				toggle: () => set({ type }),
+			})),
+		},
+		{
+			key: "anime",
+			title: "Anime",
+			badge: state.anime === "any" ? 0 : 1,
+			options: ANIME_CHOICES.map((anime) => ({
+				id: anime,
+				label: ANIME_LABELS[anime],
+				active: state.anime === anime,
+				count: count("anime", anime),
+				toggle: () => set({ anime }),
 			})),
 		},
 		{

@@ -25,6 +25,7 @@ export type {
 } from "./snapshot.server"
 export {
 	FLAG_ADULT,
+	FLAG_ANIME,
 	FLAG_POSTER,
 	UNKNOWN_DAY,
 	UNKNOWN_SCORE,
