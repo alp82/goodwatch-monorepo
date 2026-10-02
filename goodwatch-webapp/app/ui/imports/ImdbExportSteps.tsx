@@ -1,4 +1,4 @@
-// Step 1 of the IMDb import: how to get the ratings file out of IMDb.
+// How to get the ratings file out of IMDb. Shown below the upload.
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid"
 import type { ReactNode } from "react"
 import { IMDB_EXPORTS_URL, IMDB_RATINGS_URL } from "~/domain/imdb-import"
@@ -42,7 +42,7 @@ export function ImdbExportSteps({ focus = false }: { focus?: boolean }) {
 			className="flex flex-col gap-4"
 		>
 			<FocusHeading id="imdb-export-heading" focus={focus}>
-				Get your file from IMDb
+				How to get your file from IMDb
 			</FocusHeading>
 			<ol className="flex flex-col gap-4">
 				<Step number={1}>

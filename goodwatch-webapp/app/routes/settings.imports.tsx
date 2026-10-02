@@ -1,7 +1,11 @@
 // Imports settings: bring ratings from IMDb into GoodWatch by uploading the CSV file IMDb exports.
 // The settings layout only shows this to a signed-in member. The flow lives in ~/ui/imports.
-import type { MetaFunction } from "@remix-run/node"
+import { json, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node"
+import { useLoaderData } from "@remix-run/react"
+import type { ImdbImportListResponse } from "~/domain/imdb-import"
+import { listImportRows, summarize } from "~/server/imdb-import/store.server"
 import { ImdbImportFlow } from "~/ui/imports/ImdbImportFlow"
+import { getAuthFromRequest } from "~/utils/auth"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -15,7 +19,22 @@ export const meta: MetaFunction = () => [
 	{ name: "robots", content: "noindex, nofollow" },
 ]
 
+// The earlier imports come with the page, so it shows at once. They are an extra: if they can't be read,
+// the page still offers the upload.
+export async function loader({ request }: LoaderFunctionArgs) {
+	const { user, headers } = await getAuthFromRequest({ request })
+	headers.set("Cache-Control", "private, no-store")
+	const rows = user
+		? await listImportRows(user.id).catch((error) => {
+				console.error("IMDb import: reading the earlier imports failed:", error)
+				return []
+			})
+		: []
+	return json<ImdbImportListResponse>({ imports: rows.map(summarize) }, { headers })
+}
+
 export default function SettingsImports() {
+	const earlier = useLoaderData<typeof loader>()
 	return (
 		<div className="px-2 md:px-4 lg:px-8">
 			<div className="flex max-w-2xl flex-col gap-6 text-base text-gray-300">
@@ -29,7 +48,7 @@ export default function SettingsImports() {
 						it holds before anything is saved.
 					</p>
 				</div>
-				<ImdbImportFlow />
+				<ImdbImportFlow initial={earlier} />
 			</div>
 		</div>
 	)
