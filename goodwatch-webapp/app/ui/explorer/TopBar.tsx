@@ -120,7 +120,6 @@ export function TopBar({
 				<TypeFilter
 					value={titleType}
 					onChange={onTitleType}
-					expandFrom="wide"
 					align="right"
 					className="ex-type"
 				/>

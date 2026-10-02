@@ -2,6 +2,5 @@
 export {
 	NoTitlesOfType,
 	TypeFilter,
-	type TypeFilterExpand,
 	type TypeFilterProps,
 } from "./TypeFilter"
