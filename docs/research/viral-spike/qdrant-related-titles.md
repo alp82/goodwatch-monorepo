@@ -118,7 +118,7 @@ a `Recommend` that sends them as raw vectors and excludes the seeds with `has_id
 | Recommended for you, members | `server/user-recommendations.server.ts` | With taste match: one `Search` with the stored taste vector, `hnsw_ef` 128. Otherwise up to 50 positives and 50 negatives, `average_vector`. | Redis, 1 minute |
 | Guest recommendations | `server/guest-recommendations.server.ts` | Same two shapes as members | None (`ttlMinutes: 0`) |
 | Interest discovery (taste quiz) | `server/interest-discovery.server.ts` | Up to 50 positives and 50 negatives, limit 40, or two `Scroll` calls of 20 | None |
-| Fingerprint preview | `server/fingerprint-preview.server.ts` | Liked titles as positives, limit 16, votes of 50,000 or more, trait score filter | **Not verified** |
+| Fingerprint preview | `server/fingerprint-preview.server.ts` | Liked titles as positives, limit 16, votes of 50,000 or more, trait score filter | None |
 | Search ranking | `server/search-ranking/rank-search.server.ts` | REST `points/query/batch`, two or three rounds per search | Out of scope here. See the search footprint ticket of the map. |
 | Search display fields | `server/combined-search/reading-retrieval.server.ts` | REST retrieve by ids | Out of scope here |
 
@@ -403,7 +403,7 @@ The map's baseline ticket (#241) is the right place for steps 2, 3, 5, and 6.
   production.
 - Whether the payload memory tier can change in place on 1.19.1.
 - The gain of every option. Only the client overhead (option 2) and the index fix have measurements.
-- Whether `routes/api.fingerprint-preview.ts` has a cache in front, and who calls `routes/api.related-by-category.tsx`.
+- Who calls `routes/api.related-by-category.tsx`.
 - Label values of the `/metrics` series on 1.19.1, and the `jq` paths against the live responses.
 
 ## Sources
