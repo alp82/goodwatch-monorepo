@@ -162,7 +162,6 @@ export function FilterBar(props: FilterBarProps) {
 						<FiltersButton
 							count={secondaryCount}
 							expanded={sheetOpen}
-							summary={chips.map((chip) => chip.label)}
 							onClick={() => setSheetOpen(true)}
 						/>
 					</div>
