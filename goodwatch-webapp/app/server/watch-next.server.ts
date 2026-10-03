@@ -113,7 +113,8 @@ interface Entry {
 	popularity: number
 	/** null while the country's availability loads. */
 	onServices: boolean | null
-	match: number | null
+	/** Where the title falls in the person's range (Taste.percentile): what Best match sorts by. */
+	percentile: number | null
 	value: number | null
 	fit: number
 }
@@ -215,7 +216,7 @@ function sortValue(
 ): number | null {
 	switch (sort) {
 		case "match":
-			return entry.match
+			return entry.percentile
 		case "waiting":
 			return -entry.addedAt
 		case "added":
@@ -265,7 +266,7 @@ export function planWatchNext(
 	const keys = [...ctx.wishlist.keys()].filter(
 		(key) => outside.get(key) !== null,
 	)
-	const matches = taste.match(keys)
+	const percentiles = taste.percentile(keys)
 	let servicesPending = false
 	const entries: Entry[] = keys.map((key, i) => {
 		const facts = snapshot?.facts(key) ?? null
@@ -283,7 +284,7 @@ export function planWatchNext(
 			score: sortFacts?.score ?? null,
 			popularity: sortFacts?.popularity ?? 0,
 			onServices,
-			match: matches[i],
+			percentile: percentiles[i],
 		}
 		return {
 			...base,

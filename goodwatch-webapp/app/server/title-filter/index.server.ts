@@ -35,7 +35,7 @@ import {
 	similarTitles,
 	titlesOnServicesByColumn,
 } from "./id-sets.server"
-import { universeMatches } from "./matches.server"
+import { universeTaste } from "./matches.server"
 import {
 	type PlainSort,
 	byMatch,
@@ -148,7 +148,8 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		input.universe,
 		sortUsed === "match" ? "top" : sortUsed,
 	)
-	const matches = taste && universeMatches(snapshot, taste, rows, keys)
+	const universe = taste && universeTaste(snapshot, taste, rows, keys)
+	const matches = universe ? universe.matches : null
 	const releasedOptions = releasedRanges(new Date())
 	const genreBits = state.genres.reduce((bits, name) => {
 		const b = snapshot.columns.genreNames.indexOf(name)
@@ -202,20 +203,22 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 	})
 
 	const inOrder =
-		sortUsed === "match" && matches ? byMatch(passing, matches) : passing
+		sortUsed === "match" && universe
+			? byMatch(passing, universe.percentiles)
+			: passing
 	const ordered = Array.from(inOrder, (i) => keys[i])
 	let moved: FilterResult["moved"]
 	let movedUp: number | undefined
-	if (input.forYou && matches && sortUsed !== "match") {
+	if (input.forYou && universe && sortUsed !== "match") {
 		const { scores } = snapshot.columns
-		// NO_MATCH (0) reads as no match in rankForYou.
-		const matchInOrder = new Uint8Array(inOrder.length)
+		// NO_RANK (-1) reads as no match in rankForYou.
+		const percentileInOrder = new Float32Array(inOrder.length)
 		// The quality floor of the browse rule.
 		const liftable = new Uint8Array(inOrder.length)
 		for (let j = 0; j < inOrder.length; j++) {
 			const i = inOrder[j]
 			const row = rows[i]
-			matchInOrder[j] = matches[i]
+			percentileInOrder[j] = universe.percentiles[i]
 			if (
 				row >= 0 &&
 				scores[row] !== UNKNOWN_SCORE &&
@@ -223,7 +226,12 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 			)
 				liftable[j] = 1
 		}
-		const ranking = rankForYou(ordered, matchInOrder, input.forYou, liftable)
+		const ranking = rankForYou(
+			ordered,
+			percentileInOrder,
+			input.forYou,
+			liftable,
+		)
 		moved = []
 		for (let j = 0; j < ranking.order.length; j++) {
 			ordered[j] = ranking.order[j]

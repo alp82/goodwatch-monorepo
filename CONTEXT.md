@@ -71,7 +71,7 @@ What a person's ratings and Want to See say about the fingerprints they enjoy. A
 _Avoid_: Taste profile
 
 **Taste match**:
-How well a title's fingerprint fits the person's taste, shown from 50 to 99 percent once the person has rated 5 titles they liked. It places the title within the person's own range, so 90 means the title fits better than about 80 percent of well-known titles would.
+How well a title's fingerprint fits the person's taste, shown from 50 to 99 percent once the person has rated 5 titles they liked. It places the title within the person's own range, and high numbers are rare: 90 means the title fits better than about 99 percent of well-known titles would. The highest numbers need more liked titles: with 5 the scale ends at 85, from 100 at 99.
 _Avoid_: Match score, Similarity
 
 **For you**:

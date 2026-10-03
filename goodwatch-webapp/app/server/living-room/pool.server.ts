@@ -14,7 +14,7 @@ import type {
 	TvPair,
 } from "~/ui/living-room/living-room-data"
 import { livingRoomServices } from "./data.server"
-import { LivingRoomUnavailable } from "./picks.server"
+import { LivingRoomUnavailable, rankOf } from "./picks.server"
 
 const PER_MOOD = 3
 const BEST = 6
@@ -69,7 +69,7 @@ export async function getLivingRoomPool(
 			key,
 			rank:
 				ctx.forYou && taste.signal === "some"
-					? (taste.match([key])[0] ?? 0)
+					? rankOf(taste, key)
 					: facts.popularity,
 			popularity: facts.popularity,
 			moods: facts.moods,
@@ -139,10 +139,9 @@ export async function livingRoomWishlistCards(
 	taste: Awaited<ReturnType<typeof loadTaste>>,
 ): Promise<LivingRoomTitle[]> {
 	const keys = [...ctx.wishlist.keys()]
-	const matches = taste.match(keys)
 	const ordered = keys
-		.map((key, i) => ({ key, match: matches[i] ?? 0 }))
-		.sort((a, b) => b.match - a.match)
+		.map((key) => ({ key, rank: rankOf(taste, key) }))
+		.sort((a, b) => b.rank - a.rank)
 		.map(({ key }) => key)
 	const snapshot = getTitleSnapshot()
 	const cards: LivingRoomTitle[] = []

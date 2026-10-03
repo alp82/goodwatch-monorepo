@@ -427,11 +427,11 @@ export const DECADES: (IslandDef & { from: number; to: number })[] = [
 	{ id: "2020s", name: "2020s", color: "#8ccf4d", from: 2020, to: 9999 },
 ]
 
-// Your taste: bands of the viewer's match.
+// Your taste: bands of the viewer's match, about the best-fitting 19%, 40%, and 70% of well-known titles.
 export const TASTE_BANDS: (IslandDef & { min: number })[] = [
-	{ id: "near", name: "Near you", color: "#f5a524", min: 90 },
-	{ id: "close", name: "Close by", color: "#c9a04e", min: 80 },
-	{ id: "edges", name: "The edges", color: "#7d8fa3", min: 65 },
+	{ id: "near", name: "Near you", color: "#f5a524", min: 74 },
+	{ id: "close", name: "Close by", color: "#c9a04e", min: 67 },
+	{ id: "edges", name: "The edges", color: "#7d8fa3", min: 58 },
 	{ id: "far", name: "Unexplored", color: "#6a5aa8", min: 0 },
 ]
 

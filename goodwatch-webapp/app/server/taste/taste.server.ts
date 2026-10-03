@@ -21,8 +21,17 @@ export interface Taste {
 	readonly liked: number
 	/** The unit-length taste vector in VALID_FINGERPRINT_KEYS order (the fingerprint_v1 space); null without taste. */
 	readonly vector: Float32Array | null
-	/** 50 to 99 per title; null for a title without a fingerprint in the snapshot, or without taste. */
+	/**
+	 * The taste match shown, 50 to 99 per title; null for a title without a fingerprint in the snapshot, or without
+	 * taste. For showing and for the taste match filter. Many titles share a number and it ends lower for a taste built
+	 * from few liked titles (see ~/domain/taste-match.ts), so order and decide by `percentile`.
+	 */
 	match(keys: TitleKey[]): (number | null)[]
+	/**
+	 * Where each title falls in the person's own range: the share of the reference pool that fits their taste less
+	 * well, 0 to 100, resolved down to the top 0.01 percent. Null where `match` is null. What orders and rules go by.
+	 */
+	percentile(keys: TitleKey[]): (number | null)[]
 	/** The attributes that most drive the title's match, strongest first. */
 	reasons(key: TitleKey, n?: number): FingerprintKey[]
 	/** The person's strongest attributes against the reference pool, strongest first. */
@@ -66,6 +75,7 @@ export const NO_TASTE: Taste = {
 	liked: 0,
 	vector: null,
 	match: nulls,
+	percentile: nulls,
 	reasons: () => [],
 	leanings: () => [],
 }
@@ -88,18 +98,21 @@ export function makeTaste(snapshot: TitleSnapshot, built: BuiltTaste): Taste {
 		}
 		return against
 	}
+	const percentile = (keys: TitleKey[]) =>
+		keys.map((key) => {
+			const cosine = snapshot.cosine(key, vector)
+			return cosine === null ? null : percentileOf(cosine, quantiles)
+		})
 	return {
 		signal: "some",
 		ratings: built.ratings,
 		liked: built.liked,
 		vector,
 		match: (keys) =>
-			keys.map((key) => {
-				const cosine = snapshot.cosine(key, vector)
-				return cosine === null
-					? null
-					: displayMatch(percentileOf(cosine, quantiles))
-			}),
+			percentile(keys).map((p) =>
+				p === null ? null : displayMatch(p, built.liked),
+			),
+		percentile,
 		reasons: (key, n = 2) => {
 			const fp = snapshot.fingerprint(key)
 			if (!fp) return []

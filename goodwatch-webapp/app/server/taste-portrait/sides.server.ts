@@ -22,8 +22,10 @@ import { adjective, capitalize, label, noun } from "./words.server"
 type SidesResult = Omit<SidesView, "titles" | "subject" | "services">
 
 const MORE_OF_THIS = 12
-const MORE_OF_THIS_MATCH = 65
-const EDGE_MATCH = 56
+// The least rank step (Person.rankSteps, 50 to 99) of a suggestion: 65 is the top 70 percent of the person's range, 56
+// the top 89 percent.
+const MORE_OF_THIS_STEP = 65
+const EDGE_STEP = 56
 const EDGE_SUGGESTIONS = 8
 const EDGE_MIN_SUGGESTIONS = 4
 const MAX_EDGES = 6
@@ -106,8 +108,8 @@ function clusters(points: RatedTitle[], k: number, seed: Float64Array) {
 }
 
 // Without taste there is no match to hold suggestions to, so every suggestion passes.
-const passes = (match: number | null | undefined, least: number) =>
-	match === null || match === undefined || match >= least
+const passes = (step: number | null | undefined, least: number) =>
+	step === null || step === undefined || step >= least
 
 // ---------- edges: just past it ----------
 
@@ -149,13 +151,13 @@ function edgeCandidates(person: Person): EdgeCandidate[] {
 	) => {
 		// Each edge needs a few titles to go to: unseen ones from there, close to the person, with a good match.
 		const ranked = rankUnseen(person, person.signature, 0.4, keep).slice(0, 10)
-		const matches = person.match(ranked.map((t) => t.key))
+		const steps = person.rankSteps(ranked.map((t) => t.key))
 		const suggestions = ranked
-			.filter((t) => passes(matches.get(t.key), EDGE_MATCH))
+			.filter((t) => passes(steps.get(t.key), EDGE_STEP))
 			.slice(0, EDGE_SUGGESTIONS)
 		if (suggestions.length < EDGE_MIN_SUGGESTIONS) return
 		const itemsAverage = average(items.map((r) => r.score))
-		const top = suggestions.slice(0, 4).map((t) => matches.get(t.key) ?? 0)
+		const top = suggestions.slice(0, 4).map((t) => steps.get(t.key) ?? 0)
 		const ratedKeys = items.map((r) => r.key)
 		const suggestionKeys = suggestions.map((t) => t.key)
 		candidates.push({
@@ -339,7 +341,7 @@ export function buildSides(person: Person): SidesResult {
 				(_, k) => 0.45 * cluster.center[k] + 0.55 * person.signature[k],
 			)
 			const ranked = rankUnseen(person, direction, 0.8)
-			const matches = person.match(ranked.map((t) => t.key))
+			const steps = person.rankSteps(ranked.map((t) => t.key))
 			const everywhere: TitleKey[] = []
 			const onServices: TitleKey[] = []
 			for (const t of ranked) {
@@ -348,7 +350,7 @@ export function buildSides(person: Person): SidesResult {
 					onServices.length >= MORE_OF_THIS
 				)
 					break
-				if (!passes(matches.get(t.key), MORE_OF_THIS_MATCH)) continue
+				if (!passes(steps.get(t.key), MORE_OF_THIS_STEP)) continue
 				if (everywhere.length < MORE_OF_THIS) everywhere.push(t.key)
 				if (onServices.length < MORE_OF_THIS && person.onMyServices(t.key))
 					onServices.push(t.key)

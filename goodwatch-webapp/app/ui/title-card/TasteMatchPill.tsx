@@ -18,8 +18,10 @@ export interface CardTaste {
 const LONG_PRESS_MS = 450
 const MOVE_TOLERANCE_PX = 10
 
-// Following the calibration of the match (#174): 90 and above stands out, below 60 steps back. The number always
-// says the same, so the color is never the only signal.
+// Following the scale of the match (~/domain/taste-match.ts): 90 and above stands out, which is the top 1 percent of
+// well-known titles and needs a taste built from about 15 liked titles or more; below 60 steps back, which is the
+// third that fits least (more of them for a taste built from few). The number always says the same, so the color is
+// never the only signal.
 function tier(match: number) {
 	if (match >= 90)
 		return "bg-linear-to-b from-amber-300 to-amber-500 text-gray-950 shadow-[0_0_14px_rgba(251,191,36,0.55)]"

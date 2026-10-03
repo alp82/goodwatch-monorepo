@@ -1,9 +1,10 @@
-import { isOnServices } from "~/server/availability-index.server"
 // The person a portrait describes, read against the catalog: their rated titles as z-scores against the reference pool
 // of the catalog statistics, their usual rating and its spread, the two halves of their signature (what they choose
 // and what they rate above their usual), and the unseen titles of the reference pool to suggest from.
 //
 // Everything here runs in memory over the title snapshot; nothing reads Crate.
+import { rankStep } from "~/domain/taste-match"
+import { isOnServices } from "~/server/availability-index.server"
 import type { Taste } from "~/server/taste/index.server"
 import { CRAFT_KEYS, type FingerprintKey } from "~/server/taste/index.server"
 import type {
@@ -70,7 +71,13 @@ export interface Person {
 	unseen: PoolTitle[]
 	/** z of any title in the snapshot; null without a title analysis. */
 	zOf(key: TitleKey): Float64Array | null
+	/** The taste match shown per title; null without one. */
 	match(keys: TitleKey[]): Map<TitleKey, number | null>
+	/**
+	 * Per title, its percentile in the person's range in 50 even steps (rankStep, 50 to 99); null without a taste
+	 * match. What the Sides rules decide by: the match shown moves with the person's ceiling.
+	 */
+	rankSteps(keys: TitleKey[]): Map<TitleKey, number | null>
 	onMyServices(key: TitleKey): boolean | null
 }
 
@@ -214,6 +221,7 @@ export function readPerson(
 	)
 
 	const matches = new Map<TitleKey, number | null>()
+	const steps = new Map<TitleKey, number | null>()
 	const services = input.services
 	return {
 		input,
@@ -234,6 +242,17 @@ export function readPerson(
 				missing.forEach((key, i) => matches.set(key, found[i]))
 			}
 			return matches
+		},
+		rankSteps(keys) {
+			const missing = keys.filter((key) => !steps.has(key))
+			if (missing.length) {
+				const found = input.taste.percentile(missing)
+				missing.forEach((key, i) => {
+					const percentile = found[i]
+					steps.set(key, percentile === null ? null : rankStep(percentile))
+				})
+			}
+			return steps
 		},
 		onMyServices: (key) =>
 			services.length ? isOnServices(input.country, services, key) : null,

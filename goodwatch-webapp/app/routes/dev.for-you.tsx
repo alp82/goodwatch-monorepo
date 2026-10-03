@@ -1,8 +1,11 @@
-// Development only: For you's browse rule on the signed-in viewer's own taste, for tuning its curve. Two columns for
-// the filter bar's state in the URL: the plain order of the chosen sort, and the For you order. The loader sends the
-// match and score of every passing title, so changing a number ranks the whole list again in the browser with the
-// same rankForYou the server uses. The numbers here change nothing for anyone: to keep a curve, copy them into the
-// constants in app/domain/for-you.ts. Returns 404 in production.
+// Development only: For you's browse rule and the scale of the taste match on the signed-in viewer's own taste, for
+// tuning both. Two columns for the filter bar's state in the URL: the plain order of the chosen sort, and the For you
+// order. The loader sends the percentile and score of every passing title, so changing a number ranks the whole list
+// again in the browser with the same rankForYou the server uses, and shows every match again with the same shownMatch.
+// Each row shows the match as it was (round(50 + 0.49 * percentile)) next to the match under the scale on the page,
+// and a table counts the passing titles per band of both. The numbers here change nothing for anyone: to keep a
+// curve, copy them into the constants in app/domain/for-you.ts; to keep a scale, into app/domain/taste-match.ts.
+// Returns 404 in production.
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
@@ -16,10 +19,19 @@ import {
 	BROWSE_LIFT_FULL,
 	BROWSE_LIFT_START,
 	BROWSE_QUALITY_FLOOR,
-	browseLiftOfMatch,
+	browseLift,
 	browseLiftRange,
 	rankForYou,
 } from "~/domain/for-you"
+import {
+	MATCH_ANCHORS,
+	MATCH_CEILINGS,
+	type MatchScaleOptions,
+	matchCeiling,
+	percentileOfStep,
+	rankStep,
+	shownMatch,
+} from "~/domain/taste-match"
 import { useDiscoverResults } from "~/routes/api.discover_.results"
 import {
 	SnapshotNotLoaded,
@@ -55,6 +67,42 @@ const DEFAULTS = {
 	floor: BROWSE_QUALITY_FLOOR,
 }
 type Tuning = typeof DEFAULTS
+
+/** The scale of the match as the page tunes it: the match of each anchor and the ceiling of each step. */
+const SCALE_DEFAULTS = {
+	anchors: MATCH_ANCHORS.map((anchor) => anchor.match),
+	ceilings: MATCH_CEILINGS.map((step) => step.ceiling),
+}
+type ScaleTuning = typeof SCALE_DEFAULTS
+
+const scaleOptions = (scale: ScaleTuning): MatchScaleOptions => ({
+	anchors: MATCH_ANCHORS.map((anchor, i) => ({
+		...anchor,
+		match: scale.anchors[i],
+	})),
+	ceilings: MATCH_CEILINGS.map((step, i) => ({
+		...step,
+		ceiling: scale.ceilings[i],
+	})),
+})
+
+/** The match as it was shown before the scale: 50 to 99, even in the percentile. */
+const oldMatch = rankStep
+
+/** The bands the table counts titles in. */
+const BANDS: { label: string; from: number; to: number }[] = [
+	{ label: "50s", from: 50, to: 59 },
+	{ label: "60s", from: 60, to: 69 },
+	{ label: "70s", from: 70, to: 79 },
+	{ label: "80s", from: 80, to: 89 },
+	{ label: "90–94", from: 90, to: 94 },
+	{ label: "95–98", from: 95, to: 98 },
+	{ label: "99", from: 99, to: 99 },
+]
+
+/** The share of the pool at or above a percentile, as "top 1%" reads: 2 significant digits. */
+const topShare = (percentile: number) =>
+	`${Number((100 - percentile).toPrecision(2))}%`
 
 function notInProduction() {
 	if (process.env.NODE_ENV === "production")
@@ -102,7 +150,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		// The titles of both columns under the constants; the page asks for the ones other numbers bring in.
 		const forYou = rankForYou(
 			preview.keys,
-			preview.matches,
+			preview.percentiles,
 			"browse",
 			liftableOf(preview.scores, BROWSE_QUALITY_FLOOR),
 		)
@@ -139,7 +187,28 @@ export default function DevForYou() {
 		enabled: data.member,
 	})
 	const [tuning, setTuning] = useState<Tuning>(DEFAULTS)
+	const [scale, setScale] = useState<ScaleTuning>(SCALE_DEFAULTS)
 	const preview = data.member ? data.preview : null
+	// The liked count the ceiling is worked out from: the viewer's own until another one is typed in.
+	const [likedTyped, setLikedTyped] = useState<number | null>(null)
+	const liked = likedTyped ?? preview?.liked ?? 0
+	const options = useMemo(() => scaleOptions(scale), [scale])
+
+	// Every passing title with a match, per band, as it was shown and as the scale on the page shows it.
+	const bands = useMemo(() => {
+		const was = new Array<number>(BANDS.length).fill(0)
+		const now = new Array<number>(BANDS.length).fill(0)
+		let matched = 0
+		const bandOf = (match: number) =>
+			BANDS.findIndex((band) => match >= band.from && match <= band.to)
+		for (const percentile of preview?.percentiles ?? []) {
+			if (percentile < 0) continue
+			matched++
+			was[bandOf(oldMatch(percentile))]++
+			now[bandOf(shownMatch(percentile, liked, options))]++
+		}
+		return { was, now, matched }
+	}, [preview, liked, options])
 
 	// The whole list again for every change of a number: rankForYou is linear in it.
 	const ranking = useMemo(() => {
@@ -147,7 +216,7 @@ export default function DevForYou() {
 		const indexes = preview.keys.map((_, i) => i)
 		return rankForYou(
 			indexes,
-			preview.matches,
+			preview.percentiles,
 			"browse",
 			liftableOf(preview.scores, tuning.floor),
 			tuning,
@@ -201,7 +270,12 @@ export default function DevForYou() {
 			title={titles.get(preview.keys[index])}
 			titleKey={preview.keys[index]}
 			score={preview.scores[index]}
-			match={preview.matches[index]}
+			percentile={preview.percentiles[index]}
+			match={
+				preview.percentiles[index] < 0
+					? null
+					: shownMatch(preview.percentiles[index], liked, options)
+			}
 			floor={tuning.floor}
 			from={from}
 		/>
@@ -227,7 +301,7 @@ export default function DevForYou() {
 			<section className="mt-7 flex flex-wrap items-end gap-x-6 gap-y-4">
 				<NumberField
 					label="Start"
-					hint={`percentile; match ${range.start}%`}
+					hint={`percentile; climbs from the top ${topShare(range.start)}`}
 					value={tuning.start}
 					min={0}
 					max={100}
@@ -236,7 +310,7 @@ export default function DevForYou() {
 				/>
 				<NumberField
 					label="Full"
-					hint={`percentile; match ${range.full}%`}
+					hint={`percentile; the top ${topShare(range.full)} go to the top`}
 					value={tuning.full}
 					min={0}
 					max={100}
@@ -270,7 +344,119 @@ export default function DevForYou() {
 				</button>
 			</section>
 
-			<LiftPlot tuning={tuning} />
+			<LiftPlot tuning={tuning} liked={liked} options={options} />
+
+			<section className="mt-9">
+				<h2 className="text-[15px] font-bold text-white">
+					The scale of the match
+				</h2>
+				<p className="text-xs text-gray-500">
+					The match is linear in log10 of the share of well-known titles that
+					fit at least as well, through these anchors. For you does not read it:
+					it ranks by the percentile, so these numbers move no title.
+				</p>
+				<div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-4">
+					{MATCH_ANCHORS.map((anchor, i) => (
+						<NumberField
+							key={anchor.share}
+							label={`Top ${Number((anchor.share * 100).toPrecision(2))}%`}
+							hint="match"
+							value={scale.anchors[i]}
+							min={50}
+							max={99}
+							step={1}
+							onChange={(value) =>
+								setScale((now) => ({
+									...now,
+									anchors: now.anchors.map((was, j) => (j === i ? value : was)),
+								}))
+							}
+						/>
+					))}
+				</div>
+				<p className="mt-5 text-xs text-gray-500">
+					The highest match a taste shows, by the liked titles it is built from.
+					The part above 50 is scaled down to it, so titles stay apart.
+				</p>
+				<div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-4">
+					{MATCH_CEILINGS.map((step, i) => (
+						<NumberField
+							key={step.liked}
+							label={`${step.liked} liked`}
+							hint="ceiling"
+							value={scale.ceilings[i]}
+							min={50}
+							max={99}
+							step={1}
+							onChange={(value) =>
+								setScale((now) => ({
+									...now,
+									ceilings: now.ceilings.map((was, j) =>
+										j === i ? value : was,
+									),
+								}))
+							}
+						/>
+					))}
+					<NumberField
+						label="Liked titles"
+						hint={`yours: ${preview.liked}; ceiling ${Number(matchCeiling(liked, options.ceilings).toFixed(1))}`}
+						value={liked}
+						min={0}
+						max={5000}
+						step={1}
+						onChange={setLikedTyped}
+					/>
+					<button
+						type="button"
+						onClick={() => {
+							setScale(SCALE_DEFAULTS)
+							setLikedTyped(null)
+						}}
+						className="h-10 rounded-xl bg-white/[0.06] px-4 text-sm font-bold text-gray-200 ring-1 ring-white/10 cursor-pointer hover:bg-white/10"
+					>
+						Back to the constants
+					</button>
+				</div>
+				<table className="mt-5 text-sm tabular-nums text-gray-200">
+					<caption className="mb-2 text-left text-xs text-gray-500">
+						{bands.matched.toLocaleString("en")} passing titles with a match,
+						per band: as it was shown, and under the scale above with{" "}
+						{liked.toLocaleString("en")} liked titles
+					</caption>
+					<thead>
+						<tr className="text-xs text-gray-500">
+							<th className="pr-6 text-left font-normal">Match</th>
+							{BANDS.map((band) => (
+								<th key={band.label} className="px-3 text-right font-normal">
+									{band.label}
+								</th>
+							))}
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th className="pr-6 text-left font-normal text-gray-400">Old</th>
+							{bands.was.map((count, i) => (
+								<td key={BANDS[i].label} className="px-3 text-right">
+									{count.toLocaleString("en")}
+								</td>
+							))}
+						</tr>
+						<tr>
+							<th className="pr-6 text-left font-bold text-amber-200">New</th>
+							{bands.now.map((count, i) => (
+								<td
+									key={BANDS[i].label}
+									className="px-3 text-right text-amber-200"
+								>
+									{count.toLocaleString("en")}
+								</td>
+							))}
+						</tr>
+					</tbody>
+				</table>
+			</section>
 
 			<div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
 				<section>
@@ -332,27 +518,38 @@ function NumberField({
 	)
 }
 
-/** The lift per taste match, 50 to 99: how much of its position a title gives up. */
-function LiftPlot({ tuning }: { tuning: Tuning }) {
-	const matches = Array.from({ length: 50 }, (_, i) => 50 + i)
+/** The lift per rank step: the percentile in the 50 even steps the rule reads, with the match each step shows. */
+function LiftPlot({
+	tuning,
+	liked,
+	options,
+}: {
+	tuning: Tuning
+	liked: number
+	options: MatchScaleOptions
+}) {
+	const steps = Array.from({ length: 50 }, (_, i) => 50 + i)
 	return (
 		<section className="mt-7">
-			<h2 className="text-[15px] font-bold text-white">Lift per taste match</h2>
+			<h2 className="text-[15px] font-bold text-white">Lift per percentile</h2>
 			<p className="text-xs text-gray-500">
-				A title at place i of the sort lands at i × (1 − lift). Hover a bar for
-				its number.
+				A title at place i of the sort lands at i × (1 − lift). The rule reads
+				the percentile in 50 even steps; the numbers under the bars are
+				percentiles. Hover a bar for its numbers.
 			</p>
 			<div
 				className="mt-3 flex h-28 items-end gap-px"
 				role="img"
-				aria-label="Lift per taste match from 50 to 99"
+				aria-label="Lift per percentile from 0 to 100"
 			>
-				{matches.map((match) => {
-					const lift = browseLiftOfMatch(match, tuning)
+				{steps.map((step) => {
+					const from = percentileOfStep(step)
+					// The middle of the step, so rounding can't put it in the step below.
+					const lift = browseLift(Math.min(100, (step - 50) / 0.49), tuning)
 					return (
 						<div
-							key={match}
-							title={`${match}%: lift ${lift.toFixed(2)}, lands at ${(1 - lift).toFixed(2)} of its place`}
+							key={step}
+							title={`from percentile ${from.toFixed(1)} (match ${shownMatch(from, liked, options)}%, was ${step}%): lift ${lift.toFixed(2)}, lands at ${(1 - lift).toFixed(2)} of its place`}
 							className="flex h-full flex-1 items-end rounded-t-sm bg-white/[0.04]"
 						>
 							<div
@@ -364,9 +561,11 @@ function LiftPlot({ tuning }: { tuning: Tuning }) {
 				})}
 			</div>
 			<div className="mt-1 flex gap-px text-[10px] tabular-nums text-gray-500">
-				{matches.map((match) => (
-					<span key={match} className="flex-1 text-center">
-						{match % 5 === 0 || match === 99 ? match : ""}
+				{steps.map((step) => (
+					<span key={step} className="flex-1 text-center">
+						{step % 5 === 0 || step === 99
+							? Math.round(percentileOfStep(step))
+							: ""}
 					</span>
 				))}
 			</div>
@@ -379,6 +578,7 @@ function Row({
 	title,
 	titleKey,
 	score,
+	percentile,
 	match,
 	floor,
 	from,
@@ -388,8 +588,10 @@ function Row({
 	titleKey: TitleKey
 	/** -1 when unknown. */
 	score: number
-	/** 0 without a match. */
-	match: number
+	/** Below 0 without a match. */
+	percentile: number
+	/** The match under the scale on the page; null without one. */
+	match: number | null
 	floor: number
 	/** For the For you column: the title's place in the plain order. */
 	from?: number
@@ -423,10 +625,20 @@ function Row({
 				{score < 0 ? "–" : score}
 			</span>
 			<span
-				title="Taste match"
+				title="Taste match as it was shown"
+				className="w-11 shrink-0 text-right tabular-nums text-gray-500 line-through"
+			>
+				{match === null ? "" : `${oldMatch(percentile)}%`}
+			</span>
+			<span
+				title={
+					match === null
+						? "No taste match"
+						: `Taste match: top ${topShare(percentile)} of well-known titles`
+				}
 				className="w-11 shrink-0 text-right tabular-nums text-amber-300"
 			>
-				{match ? `${match}%` : "–"}
+				{match === null ? "–" : `${match}%`}
 			</span>
 			{from !== undefined && (
 				<span

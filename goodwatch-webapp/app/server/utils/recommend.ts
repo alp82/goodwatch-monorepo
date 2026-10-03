@@ -1,3 +1,4 @@
+import { rankStep } from "~/domain/taste-match"
 import type { Taste } from "~/server/taste/index.server"
 import { query } from "~/utils/crate"
 import { MEDIA_COLLECTION, type QdrantFilter, makePointId, search } from "~/utils/qdrant"
@@ -120,12 +121,20 @@ export async function searchByTaste<T>({
 		withPayload: { include: payloadFields },
 		hnswEf: 128,
 	})
-	const matches = taste.match(results.map((result) => Number(result.id)))
+	const keys = results.map((result) => Number(result.id))
+	const matches = taste.match(keys)
+	const percentiles = taste.percentile(keys)
 	// The same cosine orders both, except for the few titles whose fingerprint_v1 in Qdrant is older than the
-	// snapshot's fingerprint, so sort by the match shown (stable; titles without a match last).
+	// snapshot's fingerprint, so sort by the snapshot's percentile, in its 50 steps (stable; titles without a match
+	// last).
+	const step = (i: number) => {
+		const percentile = percentiles[i]
+		return percentile === null ? -1 : rankStep(percentile)
+	}
 	return results
-		.map((result, i) => ({ ...result, match: matches[i] }))
-		.sort((a, b) => (b.match ?? -1) - (a.match ?? -1))
+		.map((result, i) => ({ ...result, match: matches[i], step: step(i) }))
+		.sort((a, b) => b.step - a.step)
+		.map(({ step: _step, ...result }) => result)
 }
 
 // Helper function to fetch user's exclude items from CrateDB (only those with vectors in Qdrant)

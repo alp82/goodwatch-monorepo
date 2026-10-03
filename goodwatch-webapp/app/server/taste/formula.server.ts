@@ -6,10 +6,17 @@
 //   the Want to See titles (weight 0.5). N is the weighted mean of the disliked titles (rated 5 or less, weight
 //   6 - score). The taste is 2P - N, or P without dislikes, normalized to unit length. It's the arithmetic of Qdrant's
 //   average_vector recommend strategy, over all ratings instead of the newest 50 of each.
-// - The person's quantile table holds 101 quantiles of the taste's cosine over the reference pool (see pool.server.ts).
-//   A title's percentile interpolates its cosine in that table, and the match shown is round(50 + 0.49 * percentile),
-//   so it runs from 50 to 99.
-// A change to any of this changes stored values: bump TASTE_KEY_VERSION in member.server.ts.
+// - The person's quantile table holds the taste's cosine over the reference pool (see pool.server.ts) at
+//   QUANTILE_LEVELS: every whole percent, and the top 1 percent in finer steps down to the top 0.01 percent. A
+//   title's percentile interpolates its cosine in that table.
+// - The match shown runs from 50 to 99 and is logarithmic in the share of the pool that fits at least as well: 80 is
+//   the top 10 percent, 90 the top 1 percent, 99 the top 0.01 percent. A taste built from few liked titles ends
+//   lower: at 85 with 5, at 99 from 100. The scale is in ~/domain/taste-match.ts. It replaced
+//   round(50 + 0.49 * percentile), under which 90 was the top 18 percent: too sure for a signal whose holdout AUC
+//   the research measured at about 0.635.
+// A change to the vector or the quantile table changes stored values: bump TASTE_KEY_VERSION in member.server.ts. The
+// scale is applied on every read, so tuning it needs no bump.
+import { shownMatch } from "~/domain/taste-match"
 import type {
 	TitleKey,
 	TitleSnapshot,
@@ -22,7 +29,18 @@ export const MIN_LIKED = 5
 /** Ratings of this and more are liked; below are disliked. */
 export const LIKED_FROM = 6
 export const WANT_TO_SEE_WEIGHT = 0.5
-export const QUANTILES = 101
+/**
+ * The percentiles the quantile table holds: 0 to 99 in whole percents, then 99.1 to 99.9 in tenths, 99.91 to 99.99 in
+ * hundredths, and 100. The fine steps resolve the top 1 percent down to the top 0.01 percent, where the match shown
+ * goes from 90 to 99.
+ */
+export const QUANTILE_LEVELS: readonly number[] = [
+	...Array.from({ length: 100 }, (_, i) => i),
+	...Array.from({ length: 9 }, (_, i) => (991 + i) / 10),
+	...Array.from({ length: 9 }, (_, i) => (9991 + i) / 100),
+	100,
+]
+export const QUANTILES = QUANTILE_LEVELS.length
 
 const MISSING_SCORE = 255
 
@@ -116,8 +134,8 @@ export function tasteVector(
 }
 
 /**
- * 101 quantiles (0, 1, ..., 100) of the taste's cosines over the reference pool, interpolated linearly between ranks.
- * Sorts the cosines in place.
+ * The taste's cosines over the reference pool at QUANTILE_LEVELS, interpolated linearly between ranks. Sorts the
+ * cosines in place.
  */
 export function quantileTable(cosines: Float32Array): Float32Array {
 	const sorted = cosines.sort()
@@ -125,7 +143,7 @@ export function quantileTable(cosines: Float32Array): Float32Array {
 	const table = new Float32Array(QUANTILES)
 	if (n === 0) return table
 	for (let q = 0; q < QUANTILES; q++) {
-		const position = (q / (QUANTILES - 1)) * (n - 1)
+		const position = (QUANTILE_LEVELS[q] / 100) * (n - 1)
 		const lo = Math.floor(position)
 		const hi = Math.min(lo + 1, n - 1)
 		table[q] = sorted[lo] + (sorted[hi] - sorted[lo]) * (position - lo)
@@ -133,12 +151,15 @@ export function quantileTable(cosines: Float32Array): Float32Array {
 	return table
 }
 
-/** Where a cosine falls in the quantile table, 0 to 100, interpolated linearly between the quantiles. */
+/**
+ * Where a cosine falls in the quantile table, 0 to 100, interpolated linearly between the levels: the share of the
+ * reference pool below it, in percent. Single precision, so a percentile kept in a Float32Array is the same number.
+ */
 export function percentileOf(cosine: number, table: Float32Array): number {
 	const last = QUANTILES - 1
 	if (cosine <= table[0]) return 0
-	if (cosine >= table[last]) return last
-	// The last quantile at or below the cosine.
+	if (cosine >= table[last]) return 100
+	// The last level at or below the cosine.
 	let lo = 0
 	let hi = last
 	while (hi - lo > 1) {
@@ -146,10 +167,14 @@ export function percentileOf(cosine: number, table: Float32Array): number {
 		if (table[mid] <= cosine) lo = mid
 		else hi = mid
 	}
+	const from = QUANTILE_LEVELS[lo]
 	const span = table[hi] - table[lo]
-	return span > 0 ? lo + (cosine - table[lo]) / span : lo
+	if (span <= 0) return Math.fround(from)
+	return Math.fround(
+		from + ((QUANTILE_LEVELS[hi] - from) * (cosine - table[lo])) / span,
+	)
 }
 
-/** The match shown: 50 to 99. */
-export const displayMatch = (percentile: number) =>
-	Math.round(50 + 0.49 * percentile)
+/** The match shown, 50 to 99, for a percentile and the number of liked titles the taste is built from. */
+export const displayMatch = (percentile: number, liked: number) =>
+	shownMatch(percentile, liked)

@@ -31,16 +31,20 @@ const rowKey = (row: Row): TitleKey | null => {
 export function withTaste(rows: Row[], taste: Taste, forYou: boolean): Row[] {
 	const keys = rows.map(rowKey)
 	const known = keys.filter((key): key is TitleKey => key !== null)
-	const matchOf = new Map(
-		taste.match(known).map((match, i) => [known[i], match]),
-	)
-	const matches = keys.map((key) =>
-		key === null ? null : (matchOf.get(key) ?? null),
-	)
+	const perKey = (values: (number | null)[]) => {
+		const byKey = new Map(values.map((value, i) => [known[i], value]))
+		return keys.map((key) => (key === null ? null : (byKey.get(key) ?? null)))
+	}
+	// The match is what a row shows; For you ranks by the percentile behind it.
+	const matches = perKey(taste.match(known))
 	const moved = new Array<number>(rows.length).fill(0)
 	if (forYou && taste.signal === "some") {
 		const indexes = rows.map((_, i) => i)
-		const ranking = rankForYou(indexes, matches, "search")
+		const ranking = rankForYou(
+			indexes,
+			perKey(taste.percentile(known)),
+			"search",
+		)
 		ranking.order.forEach((plain, j) => {
 			moved[plain] = ranking.moved[j]
 		})

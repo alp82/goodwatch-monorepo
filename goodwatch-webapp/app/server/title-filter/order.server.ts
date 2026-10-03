@@ -117,21 +117,19 @@ export function sortToUse(
 }
 
 /**
- * Best match: universe positions that are in the Top rated order, reordered by taste match, highest first, titles
- * without one last. `matches` is per universe position. Titles with the same match keep their order, so ties go by
+ * Best match: universe positions that are in the Top rated order, reordered by taste, best fit first, titles without
+ * a taste match last. `percentiles` is per universe position (0 to 100; below 0 without one): the order goes by it and
+ * not by the match shown, which many titles share. Titles at the same percentile keep their order, so ties go by
  * GoodWatch score, then votes, then the title key.
  */
 export function byMatch(
 	positions: Int32Array,
-	matches: Uint8Array,
+	percentiles: Float32Array,
 ): Int32Array {
-	// A stable counting sort: a match is one byte.
-	const starts = new Uint32Array(257)
-	for (let p = 0; p < positions.length; p++)
-		starts[256 - matches[positions[p]]]++
-	for (let b = 1; b < starts.length; b++) starts[b] += starts[b - 1]
-	const out = new Int32Array(positions.length)
-	for (let p = 0; p < positions.length; p++)
-		out[starts[255 - matches[positions[p]]]++] = positions[p]
-	return out
+	// By index into `positions`, so equal percentiles keep the order they came in.
+	const at = new Int32Array(positions.length).map((_, p) => p)
+	at.sort(
+		(a, b) => percentiles[positions[b]] - percentiles[positions[a]] || a - b,
+	)
+	return at.map((p) => positions[p])
 }

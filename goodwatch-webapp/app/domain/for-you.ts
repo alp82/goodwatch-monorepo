@@ -2,26 +2,29 @@
 // the person would like rise within it. Pure and shared by the server and the browser, so the order and the "↑N moved"
 // count the browser shows agree with what the server returned.
 //
-// Both rules work on where the title falls in the person's own range: the percentile behind the taste match
-// (match = round(50 + 0.49 * percentile)), 0 to 100.
+// Both rules work on where the title falls in the person's own range: its percentile, 0 to 100 (Taste.percentile), not
+// the taste match the person sees, which is the same percentile on another scale (taste-match.ts). They read it in 50
+// even steps (rankStep, 50 to 99: the match as it was shown when the rules were tuned), so a step is 2 percentiles wide.
 // - Browse: every title of the plain order takes part. A title at plain index i lands at the effective position
-//   i * (1 - lift), and the titles are sorted by it. The lift (browseLift) is 0 up to the match of
-//   BROWSE_LIFT_START (79), rises with the match from there, and is 1 from the match of BROWSE_LIFT_FULL (98): a 90
-//   lands at about 0.42 of its position, a 95 at about 0.16, and a 98 or 99 goes to the very top. Only liftable
-//   titles get a lift: the server passes the titles with a GoodWatch score of at least BROWSE_QUALITY_FLOOR, because
-//   taste match says nothing about how good a title is. A title without a match gets none. Nothing is pushed down
-//   by its match; titles only fall behind the ones that rose.
+//   i * (1 - lift), and the titles are sorted by it. The lift (browseLift) is 0 up to the step of BROWSE_LIFT_START
+//   (79, so up to the 60th percentile), rises with the step from there, and is 1 from the step of BROWSE_LIFT_FULL
+//   (98, from the 97th percentile): the 82nd percentile lands at about 0.42 of its position, the 92nd at about 0.16,
+//   and the top 3 percent go to the very top. Only liftable titles get a lift: the server passes the titles with a
+//   GoodWatch score of at least BROWSE_QUALITY_FLOOR, because taste match says nothing about how good a title is. A
+//   title without a percentile gets none. Nothing is pushed down by its percentile; titles only fall behind the ones
+//   that rose.
 // - Search: relevance stays in charge. A title at plain index i scores -(i - 3 * lean), lean = (percentile - 50) / 50
-//   (0 for a title without a match), over the whole ranked list, so a title moves at most SEARCH_MAX_MOVE places.
+//   (0 for a title without one), over the whole ranked list, so a title moves at most SEARCH_MAX_MOVE places.
 // Ties keep the plain order, so the titles with the full lift keep the sort's order among themselves; in browse, a
 // lifted title that lands exactly on the place of a title that stayed goes before it. A change to either rule changes
 // what people see: keep the browser and server on one copy.
+import { percentileOfStep, rankStep } from "./taste-match"
 
-/** Browse: the percentile up to which a title gets no lift. Its match is 79. */
+/** Browse: the percentile up to which a title gets no lift. Its step is 79. */
 export const BROWSE_LIFT_START = 60
-/** Browse: the percentile from which a title goes to the top. Its match is 98. */
+/** Browse: the percentile from which a title goes to the top. Its step is 98. */
 export const BROWSE_LIFT_FULL = 98
-/** Browse: the curve between the two; 1 is a straight line, more than 1 keeps the middle matches lower. */
+/** Browse: the curve between the two; 1 is a straight line, more than 1 keeps the middle steps lower. */
 export const BROWSE_LIFT_EXPONENT = 1
 /** Browse: a title needs a known GoodWatch score of at least this to get a lift. */
 export const BROWSE_QUALITY_FLOOR = 60
@@ -56,54 +59,59 @@ export interface BrowseLiftOptions {
 	exponent?: number
 }
 
-/** The percentile (0 to 100) behind a taste match (50 to 99). */
-const percentileOf = (match: number | null | undefined) =>
-	!match ? MISSING_PERCENTILE : Math.max(0, Math.min(100, (match - 50) / 0.49))
+/** A title without a percentile: null, undefined, not a number, or below 0 (the filter's NO_RANK). */
+const missing = (percentile: number | null | undefined): boolean =>
+	percentile == null || !(percentile >= 0)
 
-/** The taste match (50 to 99) shown for a percentile. */
-const matchOf = (percentile: number) =>
-	Math.round(50 + 0.49 * Math.max(0, Math.min(100, percentile)))
-
-/**
- * The two ends of the browse lift as the taste matches a person sees: up to `start` a title stays, from `full` it goes
- * to the top. What the explanation quotes, so its numbers follow the constants.
- */
-export const browseLiftRange = (options: BrowseLiftOptions = {}) => ({
-	start: matchOf(options.start ?? BROWSE_LIFT_START),
-	full: matchOf(options.full ?? BROWSE_LIFT_FULL),
+/** The two ends of the browse lift as rank steps: up to `start` a title stays, from `full` it goes to the top. */
+const liftSteps = (options: BrowseLiftOptions) => ({
+	start: rankStep(options.start ?? BROWSE_LIFT_START),
+	full: rankStep(options.full ?? BROWSE_LIFT_FULL),
 })
 
 /**
- * Browse: how much of its plain position a title with this taste match (50 to 99) gives up, 0 (stays) to 1 (goes to
- * the top). The lift goes by the match the person sees, so the two ends are the matches of BROWSE_LIFT_START and
- * BROWSE_LIFT_FULL.
+ * The two ends of the browse lift as percentiles: a title above `start` begins to climb, and one from `full` on goes
+ * to the top. They are the edges of the steps, so they sit within a percentile of the constants. What the
+ * explanation quotes, so its numbers follow the constants.
  */
-export function browseLiftOfMatch(
-	match: number | null | undefined,
-	options: BrowseLiftOptions = {},
-): number {
-	if (!match) return 0
-	const { start, full } = browseLiftRange(options)
+export function browseLiftRange(options: BrowseLiftOptions = {}) {
+	const { start, full } = liftSteps(options)
+	return {
+		start: percentileOfStep(Math.min(start + 1, full)),
+		full: percentileOfStep(full),
+	}
+}
+
+/** Browse: the lift of a rank step (50 to 99), 0 (stays) to 1 (goes to the top). */
+function liftOfStep(step: number, options: BrowseLiftOptions): number {
+	const { start, full } = liftSteps(options)
 	// Ends that meet or cross leave a step: nothing up to the start, everything past it.
-	if (full <= start) return match > start ? 1 : 0
-	const t = Math.max(0, Math.min(1, (match - start) / (full - start)))
+	if (full <= start) return step > start ? 1 : 0
+	const t = Math.max(0, Math.min(1, (step - start) / (full - start)))
 	return t ** (options.exponent ?? BROWSE_LIFT_EXPONENT)
 }
 
-/** Browse: the lift of a title at this percentile (0 to 100) of the person's range. See browseLiftOfMatch. */
-export const browseLift = (
-	percentile: number,
-	options?: BrowseLiftOptions,
-): number => browseLiftOfMatch(matchOf(percentile), options)
+/**
+ * Browse: how much of its plain position a title at this percentile (0 to 100) of the person's range gives up, 0
+ * (stays) to 1 (goes to the top). 0 for a title without a percentile.
+ */
+export function browseLift(
+	percentile: number | null | undefined,
+	options: BrowseLiftOptions = {},
+): number {
+	if (missing(percentile)) return 0
+	return liftOfStep(rankStep(percentile as number), options)
+}
 
 /**
- * Reorders items that are already in their plain order (the chosen sort) by For you. `matches[i]` is the taste match
- * (50 to 99) of `items[i]`, or null (or 0) without one. `liftable[i]` says whether browse may lift `items[i]` (the quality
- * floor); without it every item with a match may. Search ignores it. `options` tunes the browse curve.
+ * Reorders items that are already in their plain order (the chosen sort) by For you. `percentiles[i]` is where
+ * `items[i]` falls in the person's range (0 to 100, Taste.percentile), or null (or below 0) without one. `liftable[i]`
+ * says whether browse may lift `items[i]` (the quality floor); without it every item with a percentile may. Search
+ * ignores it. `options` tunes the browse curve.
  */
 export function rankForYou<T>(
 	items: readonly T[],
-	matches: ArrayLike<number | null | undefined>,
+	percentiles: ArrayLike<number | null | undefined>,
 	surface: ForYouSurface,
 	liftable?: ArrayLike<boolean | number>,
 	options?: BrowseLiftOptions,
@@ -111,8 +119,8 @@ export function rankForYou<T>(
 	const n = items.length
 	const reordered =
 		surface === "browse"
-			? browseOrder(n, matches, liftable, options)
-			: searchOrder(n, matches)
+			? browseOrder(n, percentiles, liftable, options)
+			: searchOrder(n, percentiles)
 	const order: T[] = new Array(n)
 	const moved: number[] = new Array(n)
 	let movedUp = 0
@@ -125,15 +133,22 @@ export function rankForYou<T>(
 	return { order, moved, movedUp }
 }
 
+// The percentile as the search rule reads it: the middle of nothing for a title without one, else the percentile its
+// step stands for.
+const searchPercentile = (percentile: number | null | undefined) =>
+	missing(percentile)
+		? MISSING_PERCENTILE
+		: Math.max(0, Math.min(100, (rankStep(percentile as number) - 50) / 0.49))
+
 function searchOrder(
 	n: number,
-	matches: ArrayLike<number | null | undefined>,
+	percentiles: ArrayLike<number | null | undefined>,
 ): number[] {
 	const scores = new Float64Array(n)
 	for (let i = 0; i < n; i++)
 		scores[i] = -(
 			i -
-			SEARCH_LEAN_PLACES * ((percentileOf(matches[i]) - 50) / 50)
+			SEARCH_LEAN_PLACES * ((searchPercentile(percentiles[i]) - 50) / 50)
 		)
 	return Array.from({ length: n }, (_, i) => i).sort(
 		(a, b) => scores[b] - scores[a] || a - b,
@@ -145,31 +160,32 @@ function searchOrder(
 // then with the titles that stay: browse ranks the whole catalog on every request, and this is linear in it.
 function browseOrder(
 	n: number,
-	matches: ArrayLike<number | null | undefined>,
+	percentiles: ArrayLike<number | null | undefined>,
 	liftable: ArrayLike<boolean | number> | undefined,
-	options: BrowseLiftOptions | undefined,
+	options: BrowseLiftOptions = {},
 ): Int32Array {
-	// Lift and run per match, once: a match is a whole number from 50 to 99. Matches with the same lift share a run.
+	// Lift and run per rank step, once: a step is a whole number from 50 to 99. Steps with the same lift share a run.
 	const lifts = new Float64Array(100)
 	const runOf = new Int8Array(100).fill(-1)
 	const runs: number[][] = []
-	for (let match = 50; match < 100; match++) {
-		const lift = browseLiftOfMatch(match, options)
-		lifts[match] = lift
+	for (let step = 50; step < 100; step++) {
+		const lift = liftOfStep(step, options)
+		lifts[step] = lift
 		if (lift === 0) continue
-		if (lift !== lifts[match - 1]) runs.push([])
-		runOf[match] = runs.length - 1
+		if (lift !== lifts[step - 1]) runs.push([])
+		runOf[step] = runs.length - 1
 	}
 	const position = new Float64Array(n)
 	const isLifted = new Uint8Array(n)
 	let liftedCount = 0
 	for (let i = 0; i < n; i++) {
 		position[i] = i
-		const match = matches[i]
-		if (!match || (liftable && !liftable[i])) continue
-		const run = runOf[Math.round(match)] ?? -1
+		const percentile = percentiles[i]
+		if (missing(percentile) || (liftable && !liftable[i])) continue
+		const step = rankStep(percentile as number)
+		const run = runOf[step]
 		if (run < 0) continue
-		position[i] = i * (1 - lifts[Math.round(match)])
+		position[i] = i * (1 - lifts[step])
 		isLifted[i] = 1
 		runs[run].push(i)
 		liftedCount++

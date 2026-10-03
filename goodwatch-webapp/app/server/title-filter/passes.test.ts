@@ -120,21 +120,36 @@ test("without taste the taste match filter doesn't narrow", () => {
 	})
 })
 
-test("Best match orders by taste match, then GoodWatch score, then the tie-break; no match goes last", () => {
+test("Best match orders by percentile, then GoodWatch score, then the tie-break; no match goes last", () => {
 	const top = plain.slice().sort(compareRows(columns, "top"))
 	assert.deepEqual(top, [0, 4, 2, 5, 1, 3])
 	const { passing } = passes(top, {})
-	const matches = Uint8Array.from(top, (row) => MATCHES[row])
-	// 99, 95, then the two 80s (same score: the one with more votes first), 72, and the title without a match.
+	// Per row: rows 2 and 4 are at the same percentile, row 5 has no match.
+	const PERCENTILES = [45, 99.2, 61, 99.97, 61, -1]
+	const percentiles = Float32Array.from(top, (row) => PERCENTILES[row])
+	// The two at 61 have the same score: the one with more votes first.
 	assert.deepEqual(
-		Array.from(byMatch(passing, matches), (i) => top[i]),
+		Array.from(byMatch(passing, percentiles), (i) => top[i]),
 		[3, 1, 4, 2, 0, 5],
 	)
 	// It ranks what passes: with a filter, only those.
 	const filtered = passes(top, { minScore: 70 })
 	assert.deepEqual(
-		Array.from(byMatch(filtered.passing, matches), (i) => top[i]),
+		Array.from(byMatch(filtered.passing, percentiles), (i) => top[i]),
 		[4, 2, 0],
+	)
+})
+
+test("Best match orders titles that show the same match by their percentile", async () => {
+	const { shownMatch } = await import("~/domain/taste-match")
+	// Positions 0 to 5 in the Top rated order. All but the last show 90; the last has no match.
+	const percentiles = Float32Array.from([99.0, 99.05, 98.95, 99.05, 99.1, -1])
+	for (const percentile of percentiles.slice(0, 5))
+		assert.equal(shownMatch(percentile, 100), 90)
+	// Best fit first; the two at 99.05 keep the order they came in.
+	assert.deepEqual(
+		Array.from(byMatch(Int32Array.from([0, 1, 2, 3, 4, 5]), percentiles)),
+		[4, 1, 3, 0, 2, 5],
 	)
 })
 

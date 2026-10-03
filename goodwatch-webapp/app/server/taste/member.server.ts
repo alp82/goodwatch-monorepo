@@ -1,4 +1,4 @@
-// Members' taste, stored in Redis at `taste:v1:<user_id>` and rebuilt after every write to their ratings or Want to See.
+// Members' taste, stored in Redis at `taste:v2:<user_id>` and rebuilt after every write to their ratings or Want to See.
 //
 // - A write path calls markTasteChanged after its write commits. That sets `taste:touched:<user_id>` to the write time
 //   and schedules one rebuild for the person, coalesced: writes in quick succession (onboarding, an import) share it.
@@ -9,8 +9,7 @@
 //   before reading Crate. Crate shows a write to non-key reads only after its refresh (1 s by default), so a rebuild
 //   that reads within SETTLE_MS of the write records the previous touched time, and the next reader rebuilds again.
 //
-// The value is binary, under 1 KB: a 2-byte header length, a JSON header, padding to 4 bytes, then (with a vector) 74
-// float32 for the unit-length vector and 101 float32 for the quantile table, little-endian.
+// The value's layout is in stored.server.ts.
 //
 // TASTE_REDIS_URL points the store at a single Redis (for development and scripts); without it, it uses the webapp's
 // Redis cluster. Without a Redis connection, a member's taste is built on every read and not stored.
@@ -23,23 +22,15 @@ import {
 } from "~/server/title-snapshot/index.server"
 import { query } from "~/utils/crate"
 import { titleKey } from "~/utils/title-key"
-import {
-	QUANTILES,
-	TASTE_LENGTH,
-	type TasteSignals,
-	quantileTable,
-	tasteVector,
-} from "./formula.server"
+import { type TasteSignals, quantileTable, tasteVector } from "./formula.server"
 import { poolCosines, tastePool } from "./pool.server"
-import {
-	type BuiltTaste,
-	NO_TASTE,
-	type Taste,
-	makeTaste,
-} from "./taste.server"
+import { type StoredTaste, decodeTaste, encodeTaste } from "./stored.server"
+import { NO_TASTE, type Taste, makeTaste } from "./taste.server"
 
 // Bump when the formula, the calibration, or the value layout changes: every member's taste then rebuilds on first read.
-const TASTE_KEY_VERSION = "v1"
+// - v2: the quantile table also holds the top 1 percent in fine steps (QUANTILE_LEVELS). The v1 keys are never read
+//   again and expire on their own.
+const TASTE_KEY_VERSION = "v2"
 const tasteKey = (userId: string) => `taste:${TASTE_KEY_VERSION}:${userId}`
 const touchedKey = (userId: string) => `taste:touched:${userId}`
 // Both keys expire after half a year without a write; a reader then rebuilds.
@@ -48,14 +39,6 @@ const SETTLE_MS = 1_500
 const REBUILD_DELAY_MS = 1_500
 // The per-person read, far below Crate's timeout: heavy raters have about 1,400 rows.
 const MAX_ROWS = 20_000
-
-interface StoredTaste extends BuiltTaste {
-	wantToSee: number
-	builtAt: number
-	sourceAt: number
-	touchedAt: number
-	snapshotVersion: string
-}
 
 interface TasteRedis {
 	getBuffer(key: string): Promise<Buffer | null>
@@ -78,44 +61,6 @@ async function tasteRedis(): Promise<TasteRedis | null> {
 	}
 	const { getRedisCluster } = await import("~/utils/cache")
 	return getRedisCluster()
-}
-
-function encode(taste: StoredTaste): Buffer {
-	const { vector, quantiles, ...header } = taste
-	const json = Buffer.from(JSON.stringify(header))
-	const floatsAt = Math.ceil((2 + json.length) / 4) * 4
-	const floats = vector && quantiles ? TASTE_LENGTH + QUANTILES : 0
-	const buffer = Buffer.alloc(floatsAt + floats * 4)
-	buffer.writeUInt16LE(json.length, 0)
-	json.copy(buffer, 2)
-	if (vector && quantiles) {
-		vector.forEach((v, i) => buffer.writeFloatLE(v, floatsAt + i * 4))
-		quantiles.forEach((v, i) =>
-			buffer.writeFloatLE(v, floatsAt + (TASTE_LENGTH + i) * 4),
-		)
-	}
-	return buffer
-}
-
-function decode(buffer: Buffer): StoredTaste | null {
-	try {
-		const length = buffer.readUInt16LE(0)
-		const header = JSON.parse(buffer.subarray(2, 2 + length).toString())
-		const floatsAt = Math.ceil((2 + length) / 4) * 4
-		const read = (from: number, count: number) =>
-			Float32Array.from({ length: count }, (_, i) =>
-				buffer.readFloatLE(floatsAt + (from + i) * 4),
-			)
-		const hasVector = buffer.length >= floatsAt + (TASTE_LENGTH + QUANTILES) * 4
-		return {
-			...header,
-			vector: hasVector ? read(0, TASTE_LENGTH) : null,
-			quantiles: hasVector ? read(TASTE_LENGTH, QUANTILES) : null,
-		}
-	} catch (error) {
-		console.error("Taste: unreadable stored taste, rebuilding:", error)
-		return null
-	}
 }
 
 /** The person's ratings and Want to See, in one statement. */
@@ -178,7 +123,7 @@ async function rebuild(
 	}
 	if (redis)
 		try {
-			await redis.set(tasteKey(userId), encode(stored), "EX", TTL_SECONDS)
+			await redis.set(tasteKey(userId), encodeTaste(stored), "EX", TTL_SECONDS)
 		} catch (error) {
 			console.error("Taste: storing the rebuilt taste failed:", error)
 		}
@@ -219,7 +164,7 @@ export async function loadMemberTaste(userId: string): Promise<Taste> {
 				redis.getBuffer(tasteKey(userId)),
 				redis.get(touchedKey(userId)),
 			])
-			stored = value ? decode(value) : null
+			stored = value ? decodeTaste(value) : null
 			touched = Number(touchedValue) || 0
 		} catch (error) {
 			console.error("Taste: reading the stored taste failed:", error)

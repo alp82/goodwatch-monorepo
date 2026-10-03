@@ -1,10 +1,11 @@
 import type { LivingRoomPicks } from "~/domain/living-room"
 import { isMoodKey } from "~/domain/moods"
+import { rankStep } from "~/domain/taste-match"
 import {
 	countryServices,
 	isOnServices,
 } from "~/server/availability-index.server"
-import { loadTaste } from "~/server/taste/index.server"
+import { type Taste, loadTaste } from "~/server/taste/index.server"
 import { getTitleCards } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
@@ -12,6 +13,15 @@ import type { Night } from "~/ui/living-room/tv-flow"
 import { livingRoomServices } from "./data.server"
 
 export class LivingRoomUnavailable extends Error {}
+
+/**
+ * What the living room orders a title by under For you: its percentile in the person's range, in the 50 even steps
+ * these orders have always gone by, so titles within a step go by popularity. 0 without a taste match.
+ */
+export function rankOf(taste: Taste, key: number): number {
+	const percentile = taste.percentile([key])[0]
+	return percentile === null ? 0 : rankStep(percentile)
+}
 
 /** Select afresh from the shared Redis title snapshot; no cached rankings or picks. */
 export async function getLivingRoomPicks(
@@ -53,9 +63,7 @@ export async function getLivingRoomPicks(
 				? (viewer.wishlist.get(key)?.getTime() ?? 0)
 				: facts.popularity
 			const rank =
-				viewer.forYou && taste.signal === "some"
-					? (taste.match([key])[0] ?? 0)
-					: fallback
+				viewer.forYou && taste.signal === "some" ? rankOf(taste, key) : fallback
 			const entry = { key, rank, popularity: facts.popularity }
 			// Retain extras because card hydration can omit deleted catalog entries.
 			const at = ranked.findIndex(

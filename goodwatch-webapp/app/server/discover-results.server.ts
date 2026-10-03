@@ -124,7 +124,8 @@ export async function getDiscoverResults(
 
 /**
  * What For you's browse rule reads, for tuning it (the dev page /dev/for-you): every passing title in the plain order
- * of the sort, as parallel arrays, so the browser can rank the whole list again with other numbers.
+ * of the sort, as parallel arrays, so the browser can rank the whole list again with other numbers and show the match
+ * under another scale.
  */
 export interface ForYouPreview {
 	/** The plain sort the titles are in. Best match has no plain order to blend into, so it reads as Popular. */
@@ -132,13 +133,18 @@ export interface ForYouPreview {
 	hasTaste: boolean
 	/** Every passing title, in the plain order. */
 	keys: TitleKey[]
-	/** Taste match (50 to 99) per title of `keys`; 0 without one. */
-	matches: number[]
+	/**
+	 * Where each title of `keys` falls in the viewer's range (Taste.percentile, 0 to 100, to 4 decimals); -1 without a
+	 * taste match. For you ranks by it, and the page works out the match shown from it.
+	 */
+	percentiles: number[]
+	/** The liked titles the viewer's taste is built from: what sets the ceiling of the match shown. */
+	liked: number
 	/** GoodWatch score (0 to 100) per title of `keys`; -1 when unknown. */
 	scores: number[]
 }
 
-/** The plain order of the catalog for the viewer's filters and sort, with each title's taste match and score. */
+/** The plain order of the catalog for the viewer's filters and sort, with each title's percentile and score. */
 export async function getForYouPreview(
 	ctx: ViewerContext,
 	input: { state: FilterState; sort: SortKey },
@@ -163,7 +169,12 @@ export async function getForYouPreview(
 		sortUsed: result.sortUsed,
 		hasTaste: result.hasTaste,
 		keys: result.keys,
-		matches: taste.match(result.keys).map((match) => match ?? 0),
+		percentiles: taste
+			.percentile(result.keys)
+			.map((percentile) =>
+				percentile === null ? -1 : Math.round(percentile * 1e4) / 1e4,
+			),
+		liked: taste.liked,
 		scores,
 	}
 }

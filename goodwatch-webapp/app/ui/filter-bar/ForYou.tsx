@@ -24,12 +24,14 @@ export const FOR_YOU_SWITCH = "[data-for-you-switch]"
 export const FOR_YOU_HINT = "The better the match, the higher it rises"
 
 /**
- * What For you does while browsing, in one paragraph. The two matches come from the rule's constants, so the words
- * stay true when the curve is tuned.
+ * What For you does while browsing, in one paragraph. The rule goes by where a title falls among well-known titles,
+ * not by the match a card shows (that number ends lower for a taste built from few ratings), so the two ends are
+ * quoted as shares. They come from the rule's constants, so the words stay true when the curve is tuned.
  */
 export function forYouRule(): string {
 	const { start, full } = browseLiftRange()
-	return `The higher a title's taste match, the further it rises in the sort you chose: from ${Math.min(start + 1, full)}% it starts to climb, and from ${full}% it goes to the top. It reorders; nothing is hidden.`
+	const top = (percentile: number) => Math.max(1, Math.round(100 - percentile))
+	return `The higher a title's taste match, the further it rises in the sort you chose: the ${top(start)}% of well-known titles that fit you best start to climb, and the top ${top(full)}% go to the top. It reorders; nothing is hidden.`
 }
 
 /**
