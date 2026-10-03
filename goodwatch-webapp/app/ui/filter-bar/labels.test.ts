@@ -4,7 +4,7 @@ import "../../server/title-filter/test-alias.ts"
 
 const { FILTER_NAMES, MIN_MATCHES, defaultFilterState, stateAsApplied } =
 	await import("~/domain/filter-state")
-const { CONTENT_KINDS, PLAIN_LADDER } = await import("~/domain/age-content")
+const { CONTENT_KINDS } = await import("~/domain/age-content")
 const {
 	CONTENT_LABELS,
 	DISCOVER_SORTS,
@@ -12,7 +12,6 @@ const {
 	MATCH_LABELS,
 	RATE_MORE,
 	activeChips,
-	ageContentSummary,
 	compactCount,
 	discoverSorts,
 	recoveryLabel,
@@ -167,55 +166,6 @@ test("every kind of content has its words", () => {
 	assert.ok(CONTENT_LABELS.disturbing.words.split(" ").includes("scary"))
 })
 
-test("the closed Age & content control says the limit and what the person changed", () => {
-	const summary = (
-		ageLimit: number | undefined,
-		content?: Record<string, "hide" | "show">,
-	) => ageContentSummary({ ageLimit, content }, FSK)
-
-	assert.deepEqual(summary(undefined), {
-		badge: null,
-		text: null,
-		more: 0,
-		hiding: null,
-	})
-	// What the limit sets by itself isn't a change, but the tooltip lists it.
-	assert.deepEqual(summary(12), {
-		badge: "FSK 12",
-		text: null,
-		more: 0,
-		hiding: "Hiding violence, sex & nudity",
-	})
-	assert.equal(summary(12, { disturbing: "hide" }).text, "no disturbing scenes")
-	assert.equal(summary(12, { violence: "show" }).text, "violence OK")
-	assert.equal(summary(12, { violence: "show" }).hiding, "Hiding sex & nudity")
-	assert.equal(
-		summary(12, { violence: "show", disturbing: "hide" }).text,
-		"2 changes",
-	)
-	// An override equal to what the limit sets is no change.
-	assert.equal(summary(12, { violence: "hide" }).text, null)
-	assert.equal(summary(18).hiding, null)
-
-	// Age 0 is a limit, and an age that isn't a step stands for the step below it.
-	assert.equal(summary(0).badge, "FSK 0")
-	assert.equal(summary(0).hiding?.split(", ").length, 5)
-	assert.equal(summary(14).badge, "FSK 12")
-	assert.equal(ageContentSummary({ ageLimit: 16 }, PLAIN_LADDER).badge, "16+")
-
-	// Limit off: the first hidden kind, and how many more.
-	assert.deepEqual(summary(undefined, { violence: "hide" }), {
-		badge: null,
-		text: "no violence",
-		more: 0,
-		hiding: "Hiding violence",
-	})
-	const two = summary(undefined, { drugs: "hide", violence: "hide" })
-	assert.equal(two.text, "no violence")
-	assert.equal(two.more, 1)
-	assert.equal(two.hiding, "Hiding violence, drugs")
-})
-
 test("the age limit and every changed kind have a chip", () => {
 	const limited = {
 		...state,
@@ -256,15 +206,10 @@ test("the age limit and every changed kind have a chip", () => {
 		activeChips(same).map((chip) => chip.label),
 		["Age limit 6"],
 	)
-	assert.equal(ageContentSummary(same, FSK).text, null)
 	// At a limit that shows drugs by itself, the same choice is a change again.
 	assert.deepEqual(
 		activeChips({ ...same, ageLimit: 16 }).map((chip) => chip.label),
 		["Age limit 16", "No drugs"],
-	)
-	assert.equal(
-		ageContentSummary({ ...same, ageLimit: 16 }, FSK).text,
-		"no drugs",
 	)
 	// Without the viewer's ladder neither applies: no chips at all.
 	assert.deepEqual(activeChips(stateAsApplied(limited, null)), [])

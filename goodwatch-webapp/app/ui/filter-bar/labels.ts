@@ -3,11 +3,8 @@
 import {
 	CONTENT_KINDS,
 	type ContentKind,
-	type LadderStep,
 	changedContent,
-	hiddenKinds,
 	withoutContentChoice,
-	ladderStepFor,
 } from "~/domain/age-content"
 import {
 	type FilterName,
@@ -197,53 +194,6 @@ export const AGE_CONTENT_WORDS =
 const capitalized = (text: string) => text[0].toUpperCase() + text.slice(1)
 
 /** What the closed Age & content control says. */
-export interface AgeContentSummary {
-	/** The age limit's step ("FSK 12"); null while the limit is off. */
-	badge: string | null
-	/**
-	 * With a limit, what the person changed from what it sets: "no disturbing scenes", "violence OK", "2 changes". With
-	 * the limit off, the first hidden kind: "no violence". Null when there is nothing to say.
-	 */
-	text: string | null
-	/** With the limit off, how many kinds are hidden besides the one `text` names: the "+1" pill. */
-	more: number
-	/** Every hidden kind, for the tooltip: "Hiding violence, sex & nudity". Null when nothing is hidden. */
-	hiding: string | null
-}
-
-export function ageContentSummary(
-	state: Pick<FilterState, "ageLimit" | "content">,
-	steps: readonly LadderStep[],
-): AgeContentSummary {
-	const hidden = hiddenKinds(state.ageLimit, state.content)
-	const hiding = hidden.length
-		? `Hiding ${hidden.map((kind) => CONTENT_LABELS[kind].short).join(", ")}`
-		: null
-	const no = (kind: ContentKind) => `no ${CONTENT_LABELS[kind].short}`
-	if (state.ageLimit === undefined)
-		return {
-			badge: null,
-			text: hidden.length ? no(hidden[0]) : null,
-			more: Math.max(0, hidden.length - 1),
-			hiding,
-		}
-	const changed = changedContent(state.ageLimit, state.content) ?? {}
-	const kinds = CONTENT_KINDS.filter((kind) => changed[kind])
-	return {
-		badge: ladderStepFor(steps, state.ageLimit).label,
-		text:
-			kinds.length === 0
-				? null
-				: kinds.length > 1
-					? `${kinds.length} changes`
-					: changed[kinds[0]] === "hide"
-						? no(kinds[0])
-						: `${CONTENT_LABELS[kinds[0]].short} OK`,
-		more: 0,
-		hiding,
-	}
-}
-
 /**
  * Each filter group's color: the dot on its chip and the bar on its sheet section. Amber is what taste decides, so it
  * is the Taste match group's; genres are fuchsia.

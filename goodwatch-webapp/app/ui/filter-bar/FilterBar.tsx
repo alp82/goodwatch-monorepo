@@ -1,5 +1,5 @@
 // The shared filter bar. Desktop: one row (On my services, Not seen yet, For you where the surface has it, the sort,
-// Age & content where the surface has a rating ladder, and Filters), a sub-bar with removable chips and the hidden-titles insight, and the Filters side sheet. Phones: the
+// and Filters), a sub-bar with removable chips and the hidden-titles insight, and the Filters side sheet. Phones: the
 // active chips where the bar sits, and the slab fixed at the bottom. The surface owns the data: it binds the state
 // with useFilterState, fetches counts for `filters.query`, and passes them in. It also says whether the viewer has
 // taste (`taste`), which Best match and the Taste match filter need.
@@ -9,7 +9,6 @@ import { type ReactNode, useMemo, useRef, useState } from "react"
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { ladderStepFor } from "~/domain/age-content"
 import { secondaryFilterCount, stateAsApplied } from "~/domain/filter-state"
-import { AgeContentControl } from "./AgeContent"
 import {
 	FiltersButton,
 	NotSeenSwitch,
@@ -71,7 +70,7 @@ export function FilterBar(props: FilterBarProps) {
 	const titles = useTitleNames(state.similarTo ?? [], "")
 	const people = usePeopleNames(state.people ?? [], "")
 	const hasServices = filters.defaults.onMyServices || services.ids.length > 0
-	// The ladder stays while new counts are on their way, so the Age & content control doesn't come and go.
+	// The ladder stays while new counts are on their way, so the sheet's Age & content group doesn't come and go.
 	const lastLadder = useRef(counts?.ladder ?? null)
 	if (counts) lastLadder.current = counts.ladder ?? null
 	const ladder = lastLadder.current
@@ -92,14 +91,6 @@ export function FilterBar(props: FilterBarProps) {
 					ladder ? ladderStepFor(ladder.steps, age).label : undefined,
 			}),
 		[applied, services.countryProviders, titles.byKey, people.byId, ladder],
-	)
-	// On desktop the Age & content control says what its chips would say again, so they show only on phones.
-	const rowChips = useMemo(
-		() =>
-			chips.filter(
-				(chip) => chip.group !== "ageLimit" && chip.group !== "content",
-			),
-		[chips],
 	)
 	const sorts = props.sorts ?? discoverSorts(filters.searching, taste)
 	const sort = props.sort ?? sortShown(filters.sort, filters.searching, taste)
@@ -168,14 +159,6 @@ export function FilterBar(props: FilterBarProps) {
 					/>
 					<div className="ml-auto flex items-center gap-2.5">
 						{props.rowTrail}
-						{ladder && (
-							<AgeContentControl
-								state={state}
-								ladder={ladder}
-								counts={counts}
-								onChange={onChange}
-							/>
-						)}
 						<FiltersButton
 							count={secondaryCount}
 							expanded={sheetOpen}
@@ -184,11 +167,10 @@ export function FilterBar(props: FilterBarProps) {
 					</div>
 				</div>
 				<FilterChips
-					chips={rowChips}
+					chips={chips}
 					state={state}
 					onChange={onChange}
 					onClear={filters.clearSecondary}
-					canClear={rowChips.length < chips.length}
 					lead={props.chipLead}
 					className="mt-3"
 				/>

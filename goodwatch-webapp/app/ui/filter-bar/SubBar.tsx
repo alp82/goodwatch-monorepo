@@ -55,7 +55,6 @@ export function FilterChips({
 	state,
 	onChange,
 	onClear,
-	canClear = false,
 	lead,
 	className = "",
 }: {
@@ -63,15 +62,13 @@ export function FilterChips({
 	state: FilterState
 	onChange: (state: FilterState) => void
 	onClear: () => void
-	/** A filter is active that has no chip here (Age & content, which its own control shows): Clear filters still shows. */
-	canClear?: boolean
 	/** A first chip the surface adds, for example Watch next's mood. */
 	lead?: ReactNode
 	className?: string
 }) {
 	return (
 		<AnimatePresence initial={false}>
-			{(chips.length > 0 || lead || canClear) && (
+			{(chips.length > 0 || lead) && (
 				<motion.div
 					initial={{ opacity: 0, height: 0 }}
 					animate={{ opacity: 1, height: "auto" }}
@@ -109,7 +106,7 @@ export function FilterChips({
 								</motion.li>
 							))}
 						</AnimatePresence>
-						{(chips.length > 0 || canClear) && (
+						{chips.length > 0 && (
 							<li>
 								<button
 									type="button"
