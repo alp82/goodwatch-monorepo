@@ -539,35 +539,68 @@ export function SortControl<K extends string>({
 }
 
 /** Opens the Filters sheet; the badge counts the active filters inside it. */
+// The most active filters the Filters button's tooltip names; the rest are "+N more".
+const MAX_SUMMARY = 8
+
 export function FiltersButton({
 	count,
 	onClick,
 	expanded,
+	summary = [],
 	children,
 }: {
 	count: number
 	onClick: () => void
 	expanded: boolean
+	/** The active filters' labels: on hover or focus a tooltip lists them. */
+	summary?: string[]
 	children?: ReactNode
 }) {
+	const tooltipId = useId()
+	const tooltip = summary.length > 0 && !expanded
 	return (
-		<motion.button
-			type="button"
-			whileTap={TAP}
-			onClick={onClick}
-			aria-haspopup="dialog"
-			aria-expanded={expanded}
-			aria-label={count ? `Filters, ${count} active` : "Filters"}
-			className={`flex h-12 shrink-0 items-center gap-2 px-4 text-sm font-bold text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL} hover:ring-white/25`}
-		>
-			<AdjustmentsHorizontalIcon className="h-4 w-4" />
-			{children ?? "Filters"}
-			<span
-				aria-hidden
-				className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-xs tabular-nums ${count ? "bg-amber-500 text-gray-950" : "bg-white/10 text-gray-400"}`}
+		<span className="group/filters relative flex shrink-0">
+			<motion.button
+				type="button"
+				whileTap={TAP}
+				onClick={onClick}
+				aria-haspopup="dialog"
+				aria-expanded={expanded}
+				aria-label={count ? `Filters, ${count} active` : "Filters"}
+				aria-describedby={tooltip ? tooltipId : undefined}
+				className={`flex h-12 shrink-0 items-center gap-2 px-4 text-sm font-bold text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL} hover:ring-white/25`}
 			>
-				{count}
-			</span>
-		</motion.button>
+				<AdjustmentsHorizontalIcon className="h-4 w-4" />
+				{children ?? "Filters"}
+				<span
+					aria-hidden
+					className={`grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-xs tabular-nums ${count ? "bg-amber-500 text-gray-950" : "bg-white/10 text-gray-400"}`}
+				>
+					{count}
+				</span>
+			</motion.button>
+			{tooltip && (
+				<span
+					id={tooltipId}
+					role="tooltip"
+					className={`pointer-events-none absolute top-full right-0 z-50 mt-2 hidden w-max max-w-64 flex-col gap-1 px-3.5 py-3 text-sm group-hover/filters:flex group-focus-within/filters:flex ${MENU}`}
+				>
+					<span className="text-xs font-bold tracking-wide text-gray-400 uppercase">
+						Active filters
+					</span>
+					{summary.slice(0, MAX_SUMMARY).map((label, i) => (
+						// biome-ignore lint/suspicious/noArrayIndexKey: labels can repeat; the list is static
+						<span key={i} className="truncate">
+							{label}
+						</span>
+					))}
+					{summary.length > MAX_SUMMARY && (
+						<span className="text-gray-500">
+							+{summary.length - MAX_SUMMARY} more
+						</span>
+					)}
+				</span>
+			)}
+		</span>
 	)
 }

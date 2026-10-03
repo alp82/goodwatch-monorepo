@@ -1,13 +1,15 @@
-// The desktop Filters sheet: 480 px from the right, a search field focused on open, the groups with live counts, and
-// a footer with Clear all, the hidden count, and a live "Show N titles".
+// The desktop Filters sheet: 480 px from the right, a search field focused on open, the active filters (each one
+// scrolls to its group, or comes off), the groups with live counts, and a footer with Clear all, the hidden count, and
+// a live "Show N titles".
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { AnimatePresence, motion } from "framer-motion"
-import { useId, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import {
 	FilterGroups,
 	type FilterGroupsData,
 	FilterSearchField,
 } from "./FilterGroups"
+import { type ActiveChip, FILTER_ACCENTS } from "./labels"
 import { RollingNumber, TAP } from "./motion"
 import type { FilterBarCounts } from "./types"
 import { useModalDialog } from "./useModalDialog"
@@ -51,11 +53,14 @@ export function FiltersSheet({
 	open,
 	onClose,
 	data,
+	chips = [],
 	onClear,
 }: {
 	open: boolean
 	onClose: () => void
 	data: FilterGroupsData
+	/** The active filters, shown above the groups. */
+	chips?: ActiveChip[]
 	onClear: () => void
 }) {
 	const panel = useRef<HTMLElement>(null)
@@ -90,6 +95,7 @@ export function FiltersSheet({
 							titleId={titleId}
 							onClose={onClose}
 							data={data}
+							chips={chips}
 							onClear={onClear}
 							searchRef={search}
 						/>
@@ -100,20 +106,52 @@ export function FiltersSheet({
 	)
 }
 
+// The group a chip's filter is set in. Content is part of the Age & content group, which the age limit names.
+const groupOf = (chip: ActiveChip) =>
+	chip.group === "content" ? "ageLimit" : chip.group
+
 function SheetContent({
 	titleId,
 	onClose,
 	data,
+	chips,
 	onClear,
 	searchRef,
 }: {
 	titleId: string
 	onClose: () => void
 	data: FilterGroupsData
+	chips: ActiveChip[]
 	onClear: () => void
 	searchRef: React.RefObject<HTMLInputElement>
 }) {
 	const [query, setQuery] = useState("")
+	const scroller = useRef<HTMLDivElement>(null)
+	// The group a chip was tapped for; it is scrolled to once the groups show it (a search may have hidden it).
+	const [target, setTarget] = useState<{ group: string } | null>(null)
+	useEffect(() => {
+		if (!target) return
+		const section = scroller.current
+			?.querySelector(`#filter-group-${target.group}`)
+			?.closest("section")
+		if (!section) return
+		const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+		section.scrollIntoView({
+			block: "start",
+			behavior: still ? "auto" : "smooth",
+		})
+		section.animate(
+			[
+				{ backgroundColor: "rgba(255,255,255,.1)" },
+				{ backgroundColor: "rgba(255,255,255,0)" },
+			],
+			{ duration: 1200, easing: "ease-out" },
+		)
+	}, [target])
+	const goTo = (chip: ActiveChip) => {
+		setQuery("")
+		setTarget({ group: groupOf(chip) })
+	}
 	return (
 		<>
 			<header className="px-6 pt-6 pb-4">
@@ -136,8 +174,45 @@ function SheetContent({
 					inputRef={searchRef}
 					className="mt-4"
 				/>
+				{chips.length > 0 && (
+					<ul
+						aria-label="Active filters"
+						// Three rows exactly (3 × 32 px + 2 × 6 px), so a fourth row never peeks in half.
+						className="mt-3 flex max-h-[6.75rem] flex-wrap gap-1.5 overflow-y-auto"
+					>
+						{chips.map((chip) => (
+							<li
+								key={chip.key}
+								className="flex h-8 items-center rounded-full bg-white/[0.06] text-sm text-gray-100 ring-1 ring-white/10"
+							>
+								<button
+									type="button"
+									onClick={() => goTo(chip)}
+									aria-label={`Go to ${chip.label}`}
+									className="flex h-8 items-center gap-2 rounded-l-full pr-1 pl-3 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
+								>
+									<span
+										className={`h-1.5 w-1.5 rounded-full ${FILTER_ACCENTS[chip.group].dot}`}
+									/>
+									{chip.label}
+								</button>
+								<button
+									type="button"
+									onClick={() => data.onChange(chip.remove(data.state))}
+									aria-label={`Remove ${chip.label}`}
+									className="grid h-8 w-7 place-items-center rounded-r-full text-gray-500 cursor-pointer outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-amber-400"
+								>
+									<XMarkIcon className="h-3.5 w-3.5" />
+								</button>
+							</li>
+						))}
+					</ul>
+				)}
 			</header>
-			<div className="flex-1 overflow-y-auto px-6 pt-2 pb-8">
+			<div
+				ref={scroller}
+				className="flex-1 scroll-pt-2 overflow-y-auto px-6 pt-2 pb-8"
+			>
 				<FilterGroups data={data} query={query} />
 			</div>
 			<footer className="flex items-center gap-4 border-t border-white/5 bg-gray-950/90 px-6 py-4 backdrop-blur">

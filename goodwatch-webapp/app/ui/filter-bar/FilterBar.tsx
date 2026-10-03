@@ -162,6 +162,7 @@ export function FilterBar(props: FilterBarProps) {
 						<FiltersButton
 							count={secondaryCount}
 							expanded={sheetOpen}
+							summary={chips.map((chip) => chip.label)}
 							onClick={() => setSheetOpen(true)}
 						/>
 					</div>
@@ -186,6 +187,7 @@ export function FilterBar(props: FilterBarProps) {
 					open={sheetOpen}
 					onClose={() => setSheetOpen(false)}
 					data={groups}
+					chips={chips}
 					onClear={filters.clearSecondary}
 				/>
 			</div>
