@@ -14,6 +14,7 @@ import {
 } from "react"
 import {
 	type BridgeKind,
+	DEFAULT_GROUPING,
 	type ExplorerPair,
 	type ExplorerTitle,
 	GROUPING_NAMES,
@@ -37,7 +38,6 @@ import {
 	sharedNote,
 } from "./CombineBar"
 import { HistoryBar, type StepView } from "./HistoryBar"
-import { IslandList } from "./IslandList"
 import { Minimap } from "./Minimap"
 import { Caption, ProximityCard } from "./ProximityCard"
 import { TopBar } from "./TopBar"
@@ -91,7 +91,7 @@ export function mapQueryOf(params: URLSearchParams): MapQuery {
 	const services = params.get("services")
 	const unseen = params.get("unseen")
 	return {
-		grouping: isGrouping(grouping) ? grouping : "genre",
+		grouping: isGrouping(grouping) ? grouping : DEFAULT_GROUPING,
 		services: services === "mine" || services === "all" ? services : null,
 		unseen: unseen === "0" || unseen === "1" ? unseen : null,
 		...titleTypeParams(parseTitleType(params)),
@@ -119,8 +119,7 @@ const side = (island: MapIsland): Side => ({
  * The Explorer's islands map: the grouping's islands on the sea, their titles as lit posters that grow as you zoom in,
  * and the card of the title nearest the focus over the live map. Tapping an island lights it and shows what every other
  * island shares with it; tapping another raises the bridge between them. Every grouping, island entered, and bridge is
- * a step in the browser's history. Filters hide titles; the page never scrolls; the list view shows the same islands
- * and titles as headings and links.
+ * a step in the browser's history. Filters hide titles; the page never scrolls.
  */
 export function ExplorerMap({
 	initialMap,
@@ -133,7 +132,6 @@ export function ExplorerMap({
 }) {
 	const [params, setParams] = useSearchParams()
 	const query = useMemo(() => mapQueryOf(params), [params])
-	const listView = params.get("list") === "1"
 	const { user, loading: userLoading } = useUser()
 	const member = !!user
 	const viewer = user?.id ?? "guest"
@@ -162,7 +160,7 @@ export function ExplorerMap({
 	const shownRef = useRef(shownQuery)
 	shownRef.current = shownQuery
 
-	/** What every pair of islands shares, for the counts on the islands and the list's "Combine with…". */
+	/** What every pair of islands shares, for the counts on the islands. */
 	const pairsQuery = useQuery({
 		queryKey: explorerKeys.pairs(viewer, shownQuery ?? query),
 		queryFn: () => fetchPairs(shownQuery ?? query, member),
@@ -215,7 +213,7 @@ export function ExplorerMap({
 			else out.set(key, value)
 		}
 		const regroup = q.grouping !== query.grouping
-		put("grouping", q.grouping === "genre" ? null : q.grouping)
+		put("grouping", q.grouping === DEFAULT_GROUPING ? null : q.grouping)
 		put("services", q.services)
 		put("unseen", q.unseen)
 		put("type", q.type)
@@ -231,12 +229,6 @@ export function ExplorerMap({
 		const now = currentParams()
 		if (sameFocus(focusOf(now), focus)) return
 		setParams(withFocus(now, focus), { preventScrollReset: true })
-	}
-	const toggleList = () => {
-		const out = currentParams()
-		if (listView) out.delete("list")
-		else out.set("list", "1")
-		setParams(out, { replace: true, preventScrollReset: true })
 	}
 
 	// ------------------------------------------------------------ the stage
@@ -311,11 +303,7 @@ export function ExplorerMap({
 				color: island.color,
 				count: island.count,
 				medianMatch: island.medianMatch,
-				logo:
-					map.grouping === "streaming"
-						? (map.services.find((s) => String(s.id) === island.id)?.logo ??
-							null)
-						: null,
+				logo: null,
 				titles: island.titles,
 			})) ?? [],
 		[map],
@@ -1016,8 +1004,7 @@ export function ExplorerMap({
 			const el = stage.current
 			const target = ev.target as HTMLElement | null
 			if (!e || !el || !target || !el.contains(target)) return
-			if (target.closest("input, textarea, select, .ex-list, .ex-hist-menu"))
-				return
+			if (target.closest("input, textarea, select, .ex-hist-menu")) return
 			const onMap = target === posterCanvas.current
 			const a = activeRef.current
 			const k = keys.current
@@ -1083,7 +1070,7 @@ export function ExplorerMap({
 	const where = activeIsland
 		? { name: activeIsland.name, color: rgbCss(activeIsland.tint) }
 		: { name: "", color: "#888" }
-	const cardNode = active && activeIsland && !listView && (
+	const cardNode = active && activeIsland && (
 		<ProximityCard
 			key={active.key}
 			ref={cardEl}
@@ -1194,11 +1181,7 @@ export function ExplorerMap({
 		? "Tap an island to see how much it shares with every other island."
 		: "Click an island to see how much it shares with every other island."
 	return (
-		<div
-			ref={stage}
-			className={`ex-stage ${listView ? "ex-listing" : ""}`}
-			data-bar={bar ? "" : undefined}
-		>
+		<div ref={stage} className="ex-stage" data-bar={bar ? "" : undefined}>
 			{/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: a canvas isn't focusable; the sea is decoration. */}
 			<canvas ref={seaCanvas} className="ex-sea" aria-hidden="true" />
 			{/* biome-ignore lint/a11y/noInteractiveElementToNoninteractiveRole: the map is one application-like control (spec). */}
@@ -1206,8 +1189,7 @@ export function ExplorerMap({
 				ref={posterCanvas}
 				className="ex-posters"
 				role="application"
-				tabIndex={listView ? -1 : 0}
-				aria-hidden={listView || undefined}
+				tabIndex={0}
 				// The keys work after a click too; the focus ring is for keyboard focus only.
 				onPointerDown={(e) =>
 					e.currentTarget.focus({
@@ -1217,104 +1199,80 @@ export function ExplorerMap({
 				}
 				aria-label={
 					map
-						? `Islands map of ${map.total.toLocaleString("en")} films and shows by ${groupingName}, ${map.islands.length} islands. Arrow keys move between titles, plus and minus zoom, Enter opens a title, Escape steps back. The List button shows the same islands as a list.`
+						? `Islands map of ${map.total.toLocaleString("en")} films and shows by ${groupingName}, ${map.islands.length} islands. Arrow keys move between titles, plus and minus zoom, Enter opens a title, Escape steps back.`
 						: "Islands map"
 				}
 			/>
 			{fallback}
-			{!listView && (
-				<div className="ex-layer">
-					{captions.map((d) => {
-						const id = `${d.island.id}\n${d.title.key}`
-						return (
-							<Caption
-								key={id}
-								ref={(el) => {
-									if (el) captionEls.current.set(id, el)
-									else captionEls.current.delete(id)
-								}}
-								title={d.title}
-								onClick={() => pin(d)}
-							/>
-						)
-					})}
-					{preview && (
+			<div className="ex-layer">
+				{captions.map((d) => {
+					const id = `${d.island.id}\n${d.title.key}`
+					return (
+						<Caption
+							key={id}
+							ref={(el) => {
+								if (el) captionEls.current.set(id, el)
+								else captionEls.current.delete(id)
+							}}
+							title={d.title}
+							onClick={() => pin(d)}
+						/>
+					)
+				})}
+				{preview && (
+					<div
+						ref={previewEl}
+						className="ex-on"
+						style={{ visibility: "hidden" }}
+					>
 						<div
-							ref={previewEl}
-							className="ex-on"
-							style={{ visibility: "hidden" }}
+							className="ex-ghost"
+							style={{ "--c": preview.color } as React.CSSProperties}
 						>
-							<div
-								className="ex-ghost"
-								style={{ "--c": preview.color } as React.CSSProperties}
-							>
-								<b>{preview.label}</b>
-								{preview.sub && <span>{preview.sub}</span>}
-							</div>
+							<b>{preview.label}</b>
+							{preview.sub && <span>{preview.sub}</span>}
 						</div>
-					)}
-					{litIsland && !forming && (
-						<div ref={goEl} className="ex-on" style={{ visibility: "hidden" }}>
-							<button
-								type="button"
-								className="ex-goin"
-								style={
-									{ "--c": rgbCss(litIsland.tint, 0.6) } as React.CSSProperties
-								}
-								onClick={() => {
-									flyIn(litIsland)
-									// The button goes with the light; the keys carry on on the map.
-									posterCanvas.current?.focus({ preventScroll: true })
-								}}
-							>
-								Go in
-								<svg viewBox="0 0 14 14" aria-hidden="true">
-									<path
-										d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="1.9"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-									/>
-								</svg>
-							</button>
-						</div>
-					)}
-					{form === "float" && active && (
-						<div
-							ref={anchorEl}
-							className="ex-anchor"
-							style={{ visibility: "hidden" }}
+					</div>
+				)}
+				{litIsland && !forming && (
+					<div ref={goEl} className="ex-on" style={{ visibility: "hidden" }}>
+						<button
+							type="button"
+							className="ex-goin"
+							style={
+								{ "--c": rgbCss(litIsland.tint, 0.6) } as React.CSSProperties
+							}
+							onClick={() => {
+								flyIn(litIsland)
+								// The button goes with the light; the keys carry on on the map.
+								posterCanvas.current?.focus({ preventScroll: true })
+							}}
 						>
-							{cardNode}
-						</div>
-					)}
-					{form === "sheet" && cardNode}
-				</div>
-			)}
-			{listView && map && (
-				<IslandList
-					map={map}
-					className="ex-list-shown ex-list-view"
-					combining={{
-						visible,
-						pairs,
-						forming: !!forming,
-						bridge:
-							bridge && bar?.k === "bridge"
-								? {
-										name: bar.list.map((s) => s.name).join(" + "),
-										line: sharedLine(bridge.count, bridge.kind),
-										color: bar.list[0].color,
-										titles: bridge.titles,
-									}
-								: null,
-						onCombine: (a, b) => void combine(a, b),
-						onSeparate: () => separate(),
-					}}
-				/>
-			)}
+							Go in
+							<svg viewBox="0 0 14 14" aria-hidden="true">
+								<path
+									d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="1.9"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								/>
+							</svg>
+						</button>
+					</div>
+				)}
+				{form === "float" && active && (
+					<div
+						ref={anchorEl}
+						className="ex-anchor"
+						style={{ visibility: "hidden" }}
+					>
+						{cardNode}
+					</div>
+				)}
+				{form === "sheet" && cardNode}
+			</div>
 			<TopBar
 				groupings={map?.groupings ?? [query.grouping]}
 				grouping={map?.grouping ?? query.grouping}
@@ -1331,8 +1289,6 @@ export function ExplorerMap({
 				history={
 					<HistoryBar steps={stepViews} at={history.at} onGo={history.go} />
 				}
-				listView={listView}
-				onToggleList={toggleList}
 			/>
 			{bar && !(phone && active?.pinned) && (
 				<div className="ex-bar-wrap" style={{ top: barTop }}>
@@ -1378,7 +1334,7 @@ export function ExplorerMap({
 					The islands aren't ready yet. They'll appear in a moment.
 				</p>
 			)}
-			{!listView && world && !(phone && active) && (
+			{world && !(phone && active) && (
 				<Minimap
 					engine={engine}
 					world={world}
@@ -1395,7 +1351,7 @@ export function ExplorerMap({
 					}}
 				/>
 			)}
-			{!listView && !(phone && active?.pinned) && (
+			{!(phone && active?.pinned) && (
 				<ZoomRail
 					engine={engine}
 					onStop={(s) => {
@@ -1414,7 +1370,7 @@ export function ExplorerMap({
 					}}
 				/>
 			)}
-			{!listView && !active && !bar && !preview && focusIsland && (
+			{!active && !bar && !preview && focusIsland && (
 				<div className="ex-where" aria-live="polite">
 					<span
 						className="ex-dot"
@@ -1429,7 +1385,7 @@ export function ExplorerMap({
 					</span>
 				</div>
 			)}
-			{!listView && map && !active && !bar && !combined && atOverview && (
+			{map && !active && !bar && !combined && atOverview && (
 				<p className="ex-hint">{hint}</p>
 			)}
 			{toast && <output className="ex-toast">{toast}</output>}

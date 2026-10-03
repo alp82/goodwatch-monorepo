@@ -191,14 +191,16 @@ body:has(.ex-stage) > main {
 	margin-left: auto;
 	flex: none;
 }
+/* On my services and Not seen yet look like the filter bar's controls (ui/filter-bar/controls.tsx), on the map's glass
+   and at the bar's height: emerald lights On my services, the blue knob is Not seen yet, and the focus ring is amber. */
 .ex-tog {
 	flex: none;
 	display: inline-flex;
 	align-items: center;
 	gap: 9px;
 	height: 44px;
-	padding: 0 15px 0 11px;
-	border-radius: 13px;
+	padding: 0 13px;
+	border-radius: 16px;
 	font-size: 15px;
 	font-weight: 600;
 	color: var(--mute);
@@ -206,24 +208,31 @@ body:has(.ex-stage) > main {
 	border: 1px solid var(--line);
 	backdrop-filter: blur(18px);
 	-webkit-backdrop-filter: blur(18px);
-	transition: color 0.2s, border-color 0.2s, background 0.2s;
+	transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.15s;
 	white-space: nowrap;
 }
 .ex-tog:hover {
 	color: #fff;
 	border-color: var(--line-2);
 }
+.ex-tog:active:not(:disabled) {
+	transform: scale(0.94);
+}
 .ex-tog:disabled {
 	opacity: 0.45;
 }
+.ex-stage .ex-tog:focus-visible {
+	outline-color: #fbbf24;
+}
 .ex-tog[aria-checked="true"] {
 	color: #fff;
-	border-color: rgba(251, 191, 36, 0.55);
-	background: linear-gradient(
-		180deg,
-		rgba(251, 191, 36, 0.16),
-		rgba(251, 191, 36, 0.06)
-	);
+}
+.ex-tog-services[aria-checked="true"],
+.ex-tog-services[aria-checked="true"]:hover {
+	border-color: rgba(52, 211, 153, 0.35);
+	background: linear-gradient(to bottom, #059669, #065f46);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 24px -8px
+		rgba(16, 185, 129, 0.6);
 }
 /* The type filter (ui/type-filter) styles itself; the bar only places it. */
 .ex-type {
@@ -239,34 +248,17 @@ body:has(.ex-stage) > main {
 .ex-logos img {
 	width: 22px;
 	height: 22px;
-	border-radius: 6px;
+	border-radius: 28%;
 	box-shadow: 0 0 0 2px rgba(10, 14, 26, 0.9);
+	transition: opacity 0.3s, filter 0.3s;
 }
 .ex-logos img + img {
-	margin-left: -6px;
+	margin-left: -7px;
 }
-.ex-tick {
-	position: relative;
-	width: 18px;
-	height: 18px;
-	border-radius: 6px;
-	border: 1.5px solid rgba(255, 255, 255, 0.4);
-	flex: none;
-}
-.ex-tog[aria-checked="true"] .ex-tick {
-	background: var(--gold);
-	border-color: var(--gold);
-}
-.ex-tog[aria-checked="true"] .ex-tick::after {
-	content: "";
-	position: absolute;
-	left: 5px;
-	top: 1.5px;
-	width: 5px;
-	height: 9px;
-	border: solid #0b0f1c;
-	border-width: 0 2px 2px 0;
-	transform: rotate(45deg);
+/* Grayed while On my services is off. */
+.ex-tog[aria-checked="false"] .ex-logos img {
+	opacity: 0.5;
+	filter: grayscale(1);
 }
 .ex-narrow {
 	display: none;
@@ -327,6 +319,11 @@ body:has(.ex-stage) > main {
 		flex: 1;
 		justify-content: center;
 		padding: 0 10px;
+		gap: 7px;
+	}
+	/* Two logos, so the knob of Not seen yet fits on the same row. */
+	.ex-logos img:nth-child(n + 3) {
+		display: none;
 	}
 	/* The type sits on the first row, by the grouping; the filters keep the second. */
 	.ex-type {
@@ -873,14 +870,6 @@ body:has(.ex-stage) > main {
 	user-select: text;
 	touch-action: pan-y;
 }
-.ex-list-shown {
-	inset: 0;
-	width: auto;
-	height: auto;
-	overflow-y: auto;
-	clip-path: none;
-	padding: 24px 24px 48px;
-}
 .ex-list-nav {
 	display: flex;
 	flex-wrap: wrap;
@@ -1084,19 +1073,6 @@ button.ex-crumb:hover {
 	color: var(--gold);
 	flex: none;
 }
-.ex-list-tog {
-	padding: 0 14px 0 12px;
-}
-@media (max-width: 1459px) {
-	.ex-wide-list {
-		display: none;
-	}
-	.ex-list-tog {
-		width: 44px;
-		padding: 0;
-		justify-content: center;
-	}
-}
 @media (max-width: 767px) {
 	.ex-hist-top {
 		display: block;
@@ -1135,10 +1111,6 @@ button.ex-crumb:hover {
 	.ex-hist-menu {
 		left: auto;
 		right: 0;
-	}
-	.ex-filters .ex-list-tog {
-		flex: none;
-		padding: 0;
 	}
 }
 
@@ -1384,80 +1356,6 @@ button.ex-crumb:hover {
 		bottom: 84px;
 		padding: 4px;
 		border-radius: 10px;
-	}
-}
-
-/* ---- the list view: the same islands and titles as headings and links */
-/* Under the controls, and scrolling on its own: the page itself never scrolls. */
-.ex-list.ex-list-view {
-	z-index: 26;
-	top: calc(var(--ex-pad-t, 150px) - 16px);
-	padding-top: 16px;
-	background: #050810;
-	overscroll-behavior: contain;
-}
-.ex-tog[aria-pressed="true"] {
-	color: #0b0f1c;
-	background: #f4f6ff;
-	border-color: #f4f6ff;
-}
-.ex-list-view .ex-list-islands {
-	max-width: 1280px;
-}
-.ex-list-combine {
-	position: relative;
-	display: inline-block;
-	margin: 0 0 10px;
-}
-.ex-list-combine select {
-	appearance: none;
-	-webkit-appearance: none;
-	min-height: 44px;
-	max-width: 100%;
-	padding: 0 36px 0 14px;
-	border-radius: 12px;
-	font: 600 14.5px Gabarito, system-ui, sans-serif;
-	color: #fff;
-	background: var(--glass)
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E")
-		no-repeat right 14px center / 12px 8px;
-	border: 1px solid var(--line-2);
-}
-.ex-list-combine select option {
-	color: #0b0f1c;
-}
-.ex-list-bridge {
-	max-width: 1280px;
-	margin-bottom: 28px;
-	padding: 16px 18px;
-	border-radius: 16px;
-	border: 1px solid color-mix(in srgb, var(--c) 55%, rgba(255, 255, 255, 0.18));
-	background: color-mix(in srgb, var(--c) 10%, rgba(10, 14, 26, 0.7));
-}
-.ex-list-bridge ul {
-	columns: 3 240px;
-}
-.ex-list-bridge-head {
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: 12px;
-}
-.ex-list-sep {
-	flex: none;
-	min-height: 44px;
-	padding: 0 16px;
-	border-radius: 12px;
-	font-weight: 700;
-	color: #fff;
-	background: rgba(255, 255, 255, 0.1);
-}
-.ex-list-sep:hover {
-	background: rgba(255, 255, 255, 0.18);
-}
-@media (max-width: 767px) {
-	.ex-list.ex-list-view {
-		padding: 16px 16px 32px;
 	}
 }
 

@@ -1,4 +1,3 @@
-import { ListBulletIcon } from "@heroicons/react/24/solid"
 import type { ReactNode } from "react"
 import {
 	type ExplorerService,
@@ -6,6 +5,7 @@ import {
 	type Grouping,
 } from "~/domain/explorer"
 import type { TitleTypeFilter } from "~/domain/title-type"
+import { Knob } from "~/ui/filter-bar/motion"
 import { TypeFilter } from "~/ui/type-filter"
 import { TMDB } from "./images"
 
@@ -25,14 +25,12 @@ interface TopBarProps {
 	onTitleType: (type: TitleTypeFilter) => void
 	/** Where the person has been (the last two steps and a dropdown): second row, first row on phones. */
 	history?: ReactNode
-	/** The list view: the same islands and titles as headings and links. */
-	listView: boolean
-	onToggleList: () => void
 }
 
 /**
  * The controls over the map: the grouping (a segmented control, a select on narrow screens) and the filters (the
- * type, On my services, and Not seen yet), which hide titles (never dim them).
+ * type, On my services, and Not seen yet), which hide titles (never dim them). On my services and Not seen yet are the
+ * filter bar's controls in the bar's compact form: one switch each, lit and colored as the filter bar lights them.
  */
 export function TopBar({
 	groupings,
@@ -46,8 +44,6 @@ export function TopBar({
 	titleType,
 	onTitleType,
 	history,
-	listView,
-	onToggleList,
 }: TopBarProps) {
 	const mine = services.filter((s) => s.mine && s.logo)
 	return (
@@ -129,7 +125,7 @@ export function TopBar({
 						role="switch"
 						aria-checked={onMyServices}
 						onClick={onToggleServices}
-						className="ex-tog"
+						className="ex-tog ex-tog-services"
 						disabled={!services.length}
 						title={
 							services.length
@@ -154,20 +150,11 @@ export function TopBar({
 						onClick={onToggleUnseen}
 						className="ex-tog"
 					>
-						<span className="ex-tick" aria-hidden="true" />
 						Not seen yet
-					</button>
-					<button
-						type="button"
-						aria-pressed={listView}
-						onClick={onToggleList}
-						className="ex-tog ex-list-tog"
-						aria-label="List"
-					>
-						<ListBulletIcon className="ex-i" aria-hidden="true" />
-						<span className="ex-wide-list" aria-hidden="true">
-							List
-						</span>
+						<Knob
+							on={notSeenYet}
+							onClass="bg-blue-600 shadow-[0_0_14px_rgba(37,99,235,.6)]"
+						/>
 					</button>
 				</div>
 			</div>

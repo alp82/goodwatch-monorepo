@@ -1,14 +1,16 @@
 // Groupings split the Explorer's pool into islands. A layout is one grouping's islands over the whole pool, before
 // the viewer's filters: which islands each title sits on, each island's titles best first, where the islands sit
 // (similar islands close together), and what sets each one apart. Layouts that aren't personal are built once per
-// snapshot version and kept for 6 hours; Streaming is built per country and set of services; Taste distance per
-// request.
+// snapshot version and kept for 6 hours; Your taste per taste.
 import { type Grouping, MAX_ISLANDS } from "~/domain/explorer"
-import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
+import type { CoreScores } from "~/server/utils/fingerprint"
+import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
 import {
-	DESCRIPTIVE_KEYS,
 	DIMENSIONS as D,
+	DESCRIPTIVE_KEYS,
 	type ExplorerPool,
+	OCCASION_FLAGS,
+	type OccasionFlag,
 } from "./pool.server"
 import { normalize, pca2 } from "./positions.server"
 import { phraseOf, sentence } from "./words.server"
@@ -22,7 +24,7 @@ export interface IslandDef {
 export interface Layout {
 	grouping: Grouping
 	islands: IslandDef[]
-	/** Titles can sit on several islands (Genre, Mood, Streaming). */
+	/** Titles can sit on several islands (Mood, Theme, Style, Occasion, Genre). */
 	multi: boolean
 	/** Per pool title, bit j set when it sits on island j. */
 	mask: Uint16Array
@@ -91,20 +93,425 @@ const GENRES: (IslandDef & { from: string[] })[] = [
 	},
 ]
 
-// The 11 moods of the moods module, the same rules as Watch next. Names and colors live with the pages that show them.
-const MOODS: Record<MoodKey, { name: string; color: string }> = {
-	funny: { name: "Funny", color: "#e2cf55" },
-	feelgood: { name: "Feel-good", color: "#8ccf4d" },
-	romance: { name: "Romance", color: "#e0607e" },
-	action: { name: "Action", color: "#e8793d" },
-	scary: { name: "Scary", color: "#7fae3a" },
-	crime: { name: "Crime & mystery", color: "#c2413a" },
-	mind: { name: "Mind-bending", color: "#9b7bea" },
-	heavy: { name: "Heavy", color: "#5b7fa8" },
-	worlds: { name: "Other worlds", color: "#3fc1b0" },
-	history: { name: "History", color: "#9a9460" },
-	growing: { name: "Coming of age", color: "#7cc4e8" },
+// Mood, Theme, and Style islands come from the fingerprint. Each island has a level, 0 to 10 or so, worked out from a
+// title's scores, and takes the titles at or above `from`. These are Explorer's own islands: Watch next's moods (the
+// moods module) are a different, smaller set with their own rules.
+type Score = (key: keyof CoreScores) => number
+
+interface RuleIsland extends IslandDef {
+	level: (score: Score) => number
+	from: number
 }
+
+const humor = (s: Score) =>
+	Math.max(
+		s("situational_comedy"),
+		s("wit_wordplay"),
+		s("physical_comedy"),
+		s("absurdist_humor"),
+		s("satire_parody"),
+	)
+
+// Mood: how a title feels to watch.
+const MOODS: RuleIsland[] = [
+	{
+		id: "laugh",
+		name: "Laugh out loud",
+		color: "#e2cf55",
+		level: (s) => (s("bleakness") <= 5 ? humor(s) : 0),
+		from: 8,
+	},
+	{
+		id: "feelgood",
+		name: "Feel-good",
+		color: "#8ccf4d",
+		level: (s) =>
+			s("bleakness") <= 3 ? Math.min(s("wholesome"), s("hopefulness")) : 0,
+		from: 7,
+	},
+	{
+		id: "tense",
+		name: "Edge of your seat",
+		color: "#5b7fa8",
+		level: (s) => s("tension"),
+		from: 8,
+	},
+	{
+		id: "rush",
+		name: "Adrenaline rush",
+		color: "#e8793d",
+		level: (s) => Math.min(s("adrenaline"), s("fast_pace") + 1),
+		from: 8,
+	},
+	{
+		id: "creepy",
+		name: "Creepy",
+		color: "#7fae3a",
+		level: (s) => Math.max(s("scare"), s("uncanny")),
+		from: 7,
+	},
+	{
+		id: "cry",
+		name: "A good cry",
+		color: "#7cc4e8",
+		level: (s) => s("pathos"),
+		from: 8,
+	},
+	{
+		id: "bittersweet",
+		name: "Bittersweet",
+		color: "#b98a5a",
+		level: (s) => (s("bleakness") <= 6 ? s("melancholy") : 0),
+		from: 7,
+	},
+	{
+		id: "dark",
+		name: "Dark and heavy",
+		color: "#6a5aa8",
+		level: (s) => s("bleakness"),
+		from: 8,
+	},
+	{
+		id: "head",
+		name: "Messes with your head",
+		color: "#9b7bea",
+		level: (s) =>
+			Math.max(
+				s("surrealism") + 2,
+				Math.min(
+					s("complexity"),
+					Math.max(s("ambiguity"), s("non_linear_narrative")) + 1,
+				),
+			),
+		from: 8,
+	},
+	{
+		id: "think",
+		name: "Makes you think",
+		color: "#3fc1b0",
+		level: (s) => Math.max(s("philosophical"), s("social_commentary") - 1),
+		from: 7,
+	},
+	{
+		id: "wonder",
+		name: "Pure wonder",
+		color: "#e9a23b",
+		level: (s) => s("wonder"),
+		from: 8,
+	},
+	{
+		id: "twisted",
+		name: "Twisted fun",
+		color: "#c2413a",
+		level: (s) => s("dark_humor"),
+		from: 7,
+	},
+	{
+		id: "weird",
+		name: "Wonderfully weird",
+		color: "#d4508a",
+		level: (s) => Math.max(s("eccentricity"), s("absurdist_humor")),
+		from: 8,
+	},
+	{
+		id: "steamy",
+		name: "Steamy",
+		color: "#e0607e",
+		level: (s) => s("eroticism"),
+		from: 6,
+	},
+]
+
+// Theme: what a title is about.
+const THEMES: RuleIsland[] = [
+	{
+		id: "crime",
+		name: "Crime",
+		color: "#c2413a",
+		level: (s) => s("crime"),
+		from: 8,
+	},
+	{
+		id: "mystery",
+		name: "Mysteries",
+		color: "#5b7fa8",
+		level: (s) => s("mystery"),
+		from: 8,
+	},
+	{
+		id: "war",
+		name: "War",
+		color: "#9a9460",
+		level: (s) => s("warfare"),
+		from: 7,
+	},
+	{
+		id: "politics",
+		name: "Power and politics",
+		color: "#8e62d6",
+		level: (s) => s("political"),
+		from: 7,
+	},
+	{
+		id: "true",
+		name: "True stories",
+		color: "#b98a5a",
+		level: (s) => s("biographical"),
+		from: 6,
+	},
+	{
+		id: "growing",
+		name: "Growing up",
+		color: "#7cc4e8",
+		level: (s) => s("coming_of_age"),
+		from: 8,
+	},
+	{
+		id: "family",
+		name: "Family ties",
+		color: "#8ccf4d",
+		level: (s) => s("family_dynamics"),
+		from: 8,
+	},
+	{
+		id: "mind",
+		name: "Inside the mind",
+		color: "#9b7bea",
+		level: (s) => s("psychological"),
+		from: 8,
+	},
+	{
+		id: "showbiz",
+		name: "Fame and showbiz",
+		color: "#e2cf55",
+		level: (s) => s("showbiz"),
+		from: 6,
+	},
+	{
+		id: "sports",
+		name: "Sports",
+		color: "#e8793d",
+		level: (s) => s("sports"),
+		from: 6,
+	},
+	{
+		id: "money",
+		name: "Rich and poor",
+		color: "#7fae3a",
+		level: (s) => s("class_and_capitalism"),
+		from: 7,
+	},
+	{
+		id: "tech",
+		name: "Tech and the future",
+		color: "#3fc1b0",
+		level: (s) => Math.max(s("technology_and_humanity"), s("futuristic")),
+		from: 7,
+	},
+	{
+		id: "magic",
+		name: "Magic and myth",
+		color: "#d4508a",
+		level: (s) => s("fantasy"),
+		from: 7,
+	},
+	{
+		id: "past",
+		name: "Long ago",
+		color: "#9c7a52",
+		level: (s) => s("historical"),
+		from: 8,
+	},
+]
+
+// Style: how a title looks, sounds, and is told.
+const STYLES: RuleIsland[] = [
+	{
+		id: "spectacle",
+		name: "Big spectacle",
+		color: "#e8793d",
+		level: (s) => s("spectacle"),
+		from: 8,
+	},
+	{
+		id: "visual",
+		name: "Eye candy",
+		color: "#d4508a",
+		level: (s) => s("visual_stylization"),
+		from: 8,
+	},
+	{
+		id: "music",
+		name: "Music up front",
+		color: "#e2cf55",
+		level: (s) => s("music_centrality"),
+		from: 7,
+	},
+	{
+		id: "sound",
+		name: "Sound you feel",
+		color: "#3fc1b0",
+		level: (s) => s("sound_centrality"),
+		from: 8,
+	},
+	{
+		id: "immersive",
+		name: "Worlds to get lost in",
+		color: "#9b7bea",
+		level: (s) => s("world_immersion"),
+		from: 9,
+	},
+	{
+		id: "slow",
+		name: "Slow burn",
+		color: "#5b7fa8",
+		level: (s) => s("slow_burn"),
+		from: 8,
+	},
+	{
+		id: "fast",
+		name: "Non-stop",
+		color: "#c2413a",
+		level: (s) => s("fast_pace"),
+		from: 8,
+	},
+	{
+		id: "talk",
+		name: "All about the talk",
+		color: "#b98a5a",
+		level: (s) => s("dialogue_centrality"),
+		from: 8,
+	},
+	{
+		id: "puzzle",
+		name: "Told out of order",
+		color: "#8e62d6",
+		level: (s) => s("non_linear_narrative"),
+		from: 7,
+	},
+	{
+		id: "dream",
+		name: "Like a dream",
+		color: "#7cc4e8",
+		level: (s) => Math.max(s("surrealism"), s("psychedelic")),
+		from: 6,
+	},
+	{
+		id: "meta",
+		name: "Knows it's a movie",
+		color: "#e9a23b",
+		level: (s) => s("meta_narrative"),
+		from: 7,
+	},
+	{
+		id: "camp",
+		name: "Over the top",
+		color: "#e0607e",
+		level: (s) => s("camp_and_irony"),
+		from: 7,
+	},
+	{
+		id: "real",
+		name: "Raw and real",
+		color: "#9aa3ad",
+		level: (s) => s("contemporary_realism"),
+		from: 9,
+	},
+	{
+		id: "gross",
+		name: "Not for the squeamish",
+		color: "#7fae3a",
+		level: (s) => Math.max(s("grotesque"), s("violence") - 1),
+		from: 8,
+	},
+]
+
+// Occasion: who and what a title suits, from the title analysis's suitability and viewing-context flags. A title sits
+// on an island when any of the island's flags is set.
+const OCCASIONS: (IslandDef & { flags: OccasionFlag[] })[] = [
+	{
+		id: "date",
+		name: "Date night",
+		color: "#e0607e",
+		flags: ["suitability_date_night", "suitability_partner"],
+	},
+	{
+		id: "family",
+		name: "Family night",
+		color: "#7cc4e8",
+		flags: ["suitability_family", "suitability_intergenerational"],
+	},
+	{
+		id: "friends",
+		name: "With friends",
+		color: "#e8793d",
+		flags: ["suitability_friends"],
+	},
+	{
+		id: "party",
+		name: "Party",
+		color: "#e2cf55",
+		flags: ["suitability_group_party"],
+	},
+	{
+		id: "solo",
+		name: "Just you",
+		color: "#5b7fa8",
+		flags: ["suitability_solo_watch"],
+	},
+	{
+		id: "kids",
+		name: "For the kids",
+		color: "#8ccf4d",
+		flags: ["suitability_kids"],
+	},
+	{
+		id: "teens",
+		name: "For teens",
+		color: "#3fc1b0",
+		flags: ["suitability_teens"],
+	},
+	{
+		id: "comfort",
+		name: "Comfort watch",
+		color: "#b98a5a",
+		flags: ["context_is_comfort_watch"],
+	},
+	{
+		id: "binge",
+		name: "Binge it",
+		color: "#c2413a",
+		flags: ["context_is_binge_friendly"],
+	},
+	{
+		id: "background",
+		name: "On in the background",
+		color: "#9aa3ad",
+		flags: ["context_is_background_friendly"],
+	},
+	{
+		id: "escape",
+		name: "Total escape",
+		color: "#9b7bea",
+		flags: ["context_is_pure_escapism"],
+	},
+	{
+		id: "dropin",
+		name: "Easy to drop into",
+		color: "#e9a23b",
+		flags: ["context_is_drop_in_friendly"],
+	},
+]
+
+// An island that takes in more than MOST of the pool says little, and one with less than FEWEST is too thin to browse.
+// A rule island's `from` moves up while it's over MOST, or one step down when it's under FEWEST; an occasion over
+// TOO_COMMON is left out.
+const MOST = 0.25
+const FEWEST = 0.01
+const TOO_COMMON = 0.5
+const MISSING = 255
+// A title without a title analysis has fewer scores than this and sits on no rule island.
+const MIN_SCORES = 10
 
 const DECADES: (IslandDef & { from: number; to: number })[] = [
 	{
@@ -122,7 +529,7 @@ const DECADES: (IslandDef & { from: number; to: number })[] = [
 	{ id: "2020s", name: "2020s", color: "#8ccf4d", from: 2020, to: 9999 },
 ]
 
-// Taste distance: bands of the viewer's match.
+// Your taste: bands of the viewer's match.
 export const TASTE_BANDS: (IslandDef & { min: number })[] = [
 	{ id: "near", name: "Near you", color: "#f5a524", min: 90 },
 	{ id: "close", name: "Close by", color: "#c9a04e", min: 80 },
@@ -130,7 +537,7 @@ export const TASTE_BANDS: (IslandDef & { min: number })[] = [
 	{ id: "far", name: "Unexplored", color: "#6a5aa8", min: 0 },
 ]
 
-/** Colors for islands without a color of their own (countries, services), in order. */
+/** Colors for islands without a color of their own (countries), in order. */
 const PALETTE = [
 	"#5b7fa8",
 	"#c2413a",
@@ -149,7 +556,6 @@ const PALETTE = [
 const REST_COLOR = "#9aa3ad"
 const MIN_COUNTRY = 50
 export const REST_OF_WORLD = "rest"
-export const RENT_OR_BUY = "rent"
 
 // ---------------------------------------------------------------- building a layout
 
@@ -262,18 +668,106 @@ function genreLayout(pool: ExplorerPool): Layout {
 	)
 }
 
-function moodLayout(pool: ExplorerPool): Layout {
-	const bit = new Map(MOOD_KEYS.map((key, j) => [key, 1 << j]))
-	return buildLayout(
+const KEY_INDEX = Object.fromEntries(
+	VALID_FINGERPRINT_KEYS.map((key, k) => [key, k]),
+) as Record<keyof CoreScores, number>
+
+function ruleLayout(
+	pool: ExplorerPool,
+	grouping: Grouping,
+	rules: RuleIsland[],
+): Layout {
+	const n = pool.n
+	const R = rules.length
+	const levels = new Uint8Array(n * R)
+	for (let i = 0; i < n; i++) {
+		const fp = pool.snapshot.fingerprintAt(pool.rows[i])
+		let present = 0
+		for (let k = 0; k < fp.length; k++) if (fp[k] !== MISSING) present++
+		if (present < MIN_SCORES) continue
+		const score: Score = (key) => {
+			const v = fp[KEY_INDEX[key]]
+			return v === MISSING ? 0 : v
+		}
+		for (let j = 0; j < R; j++)
+			levels[i * R + j] = Math.max(0, rules[j].level(score))
+	}
+	const from = rules.map((rule, j) => {
+		const sizeAt = (t: number) => {
+			let size = 0
+			for (let i = 0; i < n; i++) if (levels[i * R + j] >= t) size++
+			return size
+		}
+		let t = rule.from
+		while (t < 10 && sizeAt(t) > n * MOST) t++
+		if (t === rule.from && sizeAt(t) < n * FEWEST) t--
+		return t
+	})
+	const layout = buildLayout(
 		pool,
-		"mood",
-		MOOD_KEYS.map((key) => ({ id: key, ...MOODS[key] })),
+		grouping,
+		rules,
 		(i) => {
 			let m = 0
-			for (const mood of pool.facts[i].moods) m |= bit.get(mood) ?? 0
+			for (let j = 0; j < R; j++) if (levels[i * R + j] >= from[j]) m |= 1 << j
 			return m
 		},
 		true,
+	)
+	report(pool, layout, (id) => {
+		const j = rules.findIndex((rule) => rule.id === id)
+		return from[j] === rules[j].from ? "" : ` from ${from[j]}`
+	})
+	return layout
+}
+
+function occasionLayout(pool: ExplorerPool): Layout {
+	const bitOf = new Map(OCCASION_FLAGS.map((flag, bit) => [flag, 1 << bit]))
+	const wanted = OCCASIONS.map((o) =>
+		o.flags.reduce((m, flag) => m | (bitOf.get(flag) ?? 0), 0),
+	)
+	const sizes = wanted.map((w) => {
+		let size = 0
+		for (let i = 0; i < pool.n; i++) if (pool.display[i].occasions & w) size++
+		return size
+	})
+	const layout = buildLayout(
+		pool,
+		"occasion",
+		OCCASIONS,
+		(i) => {
+			let m = 0
+			for (let j = 0; j < wanted.length; j++)
+				if (
+					sizes[j] <= pool.n * TOO_COMMON &&
+					pool.display[i].occasions & wanted[j]
+				)
+					m |= 1 << j
+			return m
+		},
+		true,
+	)
+	report(pool, layout, () => "")
+	return layout
+}
+
+/** Logs a layout's island sizes and how much of the pool sits on an island, once per build, for tuning the rules. */
+function report(
+	pool: ExplorerPool,
+	layout: Layout,
+	note: (id: string) => string,
+): void {
+	let placed = 0
+	for (let i = 0; i < pool.n; i++) if (layout.mask[i]) placed++
+	console.info(
+		`Explorer ${layout.grouping} islands: ${layout.islands
+			.map(
+				(island, j) =>
+					`${island.id} ${layout.members[j].length}${note(island.id)}`,
+			)
+			.join(
+				", ",
+			)}; ${Math.round((100 * placed) / Math.max(1, pool.n))}% of ${pool.n} titles on an island`,
 	)
 }
 
@@ -325,50 +819,7 @@ function countryLayout(pool: ExplorerPool): Layout {
 	)
 }
 
-/**
- * Streaming: an island per service of the viewer's that carries at least 3 pool titles in the country (the 13
- * largest), plus "Rent or buy" for titles on none of them. `servicesOf(i)` lists the services that carry pool title i.
- */
-export function streamingLayout(
-	pool: ExplorerPool,
-	services: { id: number; name: string }[],
-	servicesOf: (i: number) => readonly number[],
-): Layout {
-	const sizes = new Map<number, number>()
-	for (let i = 0; i < pool.n; i++)
-		for (const id of servicesOf(i)) sizes.set(id, (sizes.get(id) ?? 0) + 1)
-	const chosen = services
-		.filter((s) => (sizes.get(s.id) ?? 0) >= MIN_ISLAND)
-		.sort(
-			(a, b) => (sizes.get(b.id) ?? 0) - (sizes.get(a.id) ?? 0) || a.id - b.id,
-		)
-		.slice(0, MAX_ISLANDS - 1)
-	const at = new Map(chosen.map((s, j) => [s.id, j]))
-	const defs: IslandDef[] = [
-		...chosen.map((s, j) => ({
-			id: String(s.id),
-			name: s.name,
-			color: PALETTE[j % PALETTE.length],
-		})),
-		{ id: RENT_OR_BUY, name: "Rent or buy", color: "#57534e" },
-	]
-	return buildLayout(
-		pool,
-		"streaming",
-		defs,
-		(i) => {
-			let m = 0
-			for (const id of servicesOf(i)) {
-				const j = at.get(id)
-				if (j !== undefined) m |= 1 << j
-			}
-			return m || 1 << chosen.length
-		},
-		true,
-	)
-}
-
-/** Taste distance: the viewer's match bands; `match[i]` is 0 for a title without a match. */
+/** Your taste: the viewer's match bands; `match[i]` is 0 for a title without a match. */
 export function tasteLayout(pool: ExplorerPool, match: Uint8Array): Layout {
 	return buildLayout(
 		pool,
@@ -386,14 +837,17 @@ export function tasteLayout(pool: ExplorerPool, match: Uint8Array): Layout {
 
 const kept = new Map<string, { at: number; layout: Layout }>()
 
-/** A layout that's the same for everyone (Genre, Mood, Decade, Country), kept for 6 hours per snapshot version. */
+/** A layout that's the same for everyone (every grouping but Your taste), kept for 6 hours per snapshot version. */
 export function sharedLayout(
 	pool: ExplorerPool,
-	grouping: "genre" | "mood" | "decade" | "country",
+	grouping: Exclude<Grouping, "taste">,
 ): Layout {
 	return keep(`${pool.version}|${grouping}`, () => {
+		if (grouping === "mood") return ruleLayout(pool, "mood", MOODS)
+		if (grouping === "theme") return ruleLayout(pool, "theme", THEMES)
+		if (grouping === "style") return ruleLayout(pool, "style", STYLES)
+		if (grouping === "occasion") return occasionLayout(pool)
 		if (grouping === "genre") return genreLayout(pool)
-		if (grouping === "mood") return moodLayout(pool)
 		if (grouping === "decade") return decadeLayout(pool)
 		return countryLayout(pool)
 	})

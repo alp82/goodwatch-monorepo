@@ -4,6 +4,8 @@
 // reads Crate or Qdrant besides the viewer's own rows (the viewer context) and, once per snapshot version in the
 // background, the pool's display fields.
 import {
+	DEFAULT_BRANCHING,
+	DEFAULT_GROUPING,
 	type ExplorerBridge,
 	type ExplorerCard,
 	type ExplorerFilters,
@@ -13,7 +15,6 @@ import {
 	type ExplorerPairs,
 	type ExplorerService,
 	type ExplorerTitle,
-	DEFAULT_BRANCHING,
 	GROUPINGS,
 	type Grouping,
 	isGrouping,
@@ -39,7 +40,6 @@ import {
 	type Layout,
 	keep,
 	sharedLayout,
-	streamingLayout,
 	tasteLayout,
 } from "./groupings.server"
 import {
@@ -94,7 +94,7 @@ interface Seat {
 	ctx: ViewerContext
 	taste: Taste
 	filters: ExplorerFilters
-	/** The country's availability is still loading: On my services and Streaming can't apply. */
+	/** The country's availability is still loading: On my services can't apply. */
 	approximate: boolean
 	/** Per pool title, the taste match, 0 without one. */
 	match: Uint8Array
@@ -271,22 +271,17 @@ function titleOf(seat: Seat, i: number): ExplorerTitle {
 // ---------------------------------------------------------------- groupings for the viewer
 
 function offered(seat: Seat): Grouping[] {
-	return GROUPINGS.filter(
-		(g) =>
-			(g !== "streaming" || seat.services.length > 0) &&
-			(g !== "taste" || seat.taste.signal === "some"),
-	)
+	return GROUPINGS.filter((g) => g !== "taste" || seat.taste.signal === "some")
 }
 
-/** The grouping shown for a requested one: Genre in place of Streaming without services, and of Taste without taste. */
+/** The grouping shown for a requested one: the default in place of Your taste without taste. */
 function groupingFor(seat: Seat, requested: Grouping): Grouping {
-	if (requested === "streaming" && (!seat.services.length || !seat.lists))
-		return "genre"
-	if (requested === "taste" && seat.taste.signal !== "some") return "genre"
+	if (requested === "taste" && seat.taste.signal !== "some")
+		return DEFAULT_GROUPING
 	return requested
 }
 
-async function layoutFor(seat: Seat, grouping: Grouping): Promise<Layout> {
+function layoutFor(seat: Seat, grouping: Grouping): Layout {
 	const { pool } = seat
 	if (grouping === "taste") {
 		// Personal, but the same taste vector always gives the same bands.
@@ -299,37 +294,20 @@ async function layoutFor(seat: Seat, grouping: Grouping): Promise<Layout> {
 				)
 			: build()
 	}
-	if (grouping === "streaming") {
-		const lists = seat.lists as readonly (readonly number[])[]
-		const byId = await providersOf(seat.ctx.country)
-		const services = [...seat.services].sort((a, b) => a - b)
-		return keep(
-			`${pool.version}|streaming|${seat.ctx.country}|${availabilityLoadedAt(seat.ctx.country)}|${services.join(",")}`,
-			() =>
-				streamingLayout(
-					pool,
-					services.map((id) => ({
-						id,
-						name: byId.get(id)?.name ?? `Service ${id}`,
-					})),
-					(i) => lists[i],
-				),
-		)
-	}
 	return sharedLayout(pool, grouping)
 }
 
 const requestedGrouping = (value: string | null | undefined): Grouping =>
-	isGrouping(value) ? value : "genre"
+	isGrouping(value) ? value : DEFAULT_GROUPING
 
 async function prepare(
 	ctx: ViewerContext,
 	query: ExplorerQuery,
 ): Promise<{ seat: Seat; grouping: Grouping; layout: Layout }> {
 	const requested = requestedGrouping(query.grouping)
-	const seat = await seatFor(ctx, query, requested === "streaming")
+	const seat = await seatFor(ctx, query, false)
 	const grouping = groupingFor(seat, requested)
-	return { seat, grouping, layout: await layoutFor(seat, grouping) }
+	return { seat, grouping, layout: layoutFor(seat, grouping) }
 }
 
 const islandIndex = (layout: Layout, id: string | null | undefined) =>

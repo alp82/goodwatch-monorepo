@@ -1,13 +1,15 @@
-// Explorer: the islands map. A grouping (Genre, Mood, Streaming, Decade, Country, Taste distance) splits the Explorer's
-// pool of titles into islands; islands can be combined into bridges. These are the shapes the server's
+// Explorer: the islands map. A grouping (Mood, Theme, Style, Occasion, Genre, Decade, Country, Your taste) splits the
+// Explorer's pool of titles into islands; islands can be combined into bridges. These are the shapes the server's
 // `/api/explorer/*` endpoints return and the browser draws. Pure and shared by the server and the browser.
 import type { TitleKey } from "~/utils/title-key"
 import type { TitleTypeFilter } from "./title-type"
 
 export const GROUPINGS = [
-	"genre",
 	"mood",
-	"streaming",
+	"theme",
+	"style",
+	"occasion",
+	"genre",
 	"decade",
 	"country",
 	"taste",
@@ -16,13 +18,18 @@ export const GROUPINGS = [
 export type Grouping = (typeof GROUPINGS)[number]
 
 export const GROUPING_NAMES: Record<Grouping, string> = {
-	genre: "Genre",
 	mood: "Mood",
-	streaming: "Streaming",
+	theme: "Theme",
+	style: "Style",
+	occasion: "Occasion",
+	genre: "Genre",
 	decade: "Decade",
 	country: "Country",
-	taste: "Taste distance",
+	taste: "Your taste",
 }
+
+/** The grouping a visit starts with, and the one shown when the requested one needs taste the viewer doesn't have. */
+export const DEFAULT_GROUPING: Grouping = "mood"
 
 export const isGrouping = (value: unknown): value is Grouping =>
 	GROUPINGS.includes(value as Grouping)
@@ -108,16 +115,16 @@ export interface ExplorerIsland {
 }
 
 export interface ExplorerMap {
-	/** The grouping shown; Genre when the requested one needs services or taste the viewer doesn't have. */
+	/** The grouping shown; the default one when the requested one needs taste the viewer doesn't have. */
 	grouping: Grouping
 	requested: Grouping
 	/** The groupings this viewer can choose. */
 	groupings: Grouping[]
 	filters: ExplorerFilters
-	/** True while the viewer's country's availability loads: On my services and Streaming can't apply yet. */
+	/** True while the viewer's country's availability loads: On my services can't apply yet. */
 	approximate: boolean
 	taste: { signal: "none" | "some"; ratings: number; liked: number }
-	/** The viewer's services (for On my services and the Streaming grouping). */
+	/** The viewer's services (for On my services). */
 	services: ExplorerService[]
 	/** Distinct titles on the islands. */
 	total: number
@@ -141,8 +148,8 @@ export interface ExplorerIslandTree extends ExplorerTree {
 }
 
 /**
- * both: titles on both islands (Genre, Mood, and Streaming, where titles sit on several islands, when at least 6
- * exist); between: titles of either island that sit closest to both.
+ * both: titles on both islands (Mood, Theme, Style, Occasion, and Genre, where titles sit on several islands, when at
+ * least 6 exist); between: titles of either island that sit closest to both.
  */
 export type BridgeKind = "both" | "between"
 

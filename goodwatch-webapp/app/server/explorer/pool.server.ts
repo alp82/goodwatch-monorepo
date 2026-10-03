@@ -2,8 +2,8 @@
 // votes and the 3,000 most voted shows with at least 200 (about 12,000 titles), with what every request needs about
 // them precomputed: descriptive vectors for closeness, a quality score, and display fields.
 //
-// Built once per snapshot version. The display fields (title, year, poster, backdrop, genres) are the only thing read from
-// Crate, in the background by primary key, once per version; no request reads Crate for the pool.
+// Built once per snapshot version. The display fields (title, year, poster, backdrop, genres) and the title analysis's
+// occasion flags, which the snapshot doesn't hold, are the only thing read from Crate, in the background by primary key, once per version; no request reads Crate for the pool.
 import type {
 	TitleFacts,
 	TitleKey,
@@ -41,6 +41,29 @@ export const DESCRIPTIVE_KEYS = DESCRIPTIVE.map(
 )
 const D = DESCRIPTIVE.length
 
+/**
+ * The title analysis's suitability and viewing-context flags the Occasion grouping uses, as the Crate columns that hold
+ * them. Bit i of a title's `occasions` is OCCASION_FLAGS[i].
+ */
+export const OCCASION_FLAGS = [
+	"suitability_date_night",
+	"suitability_partner",
+	"suitability_family",
+	"suitability_intergenerational",
+	"suitability_friends",
+	"suitability_group_party",
+	"suitability_solo_watch",
+	"suitability_kids",
+	"suitability_teens",
+	"context_is_comfort_watch",
+	"context_is_binge_friendly",
+	"context_is_background_friendly",
+	"context_is_pure_escapism",
+	"context_is_drop_in_friendly",
+] as const
+
+export type OccasionFlag = (typeof OCCASION_FLAGS)[number]
+
 export interface Display {
 	title: string
 	year: number | null
@@ -48,6 +71,8 @@ export interface Display {
 	backdrop: string | null
 	/** The first two genres, in TMDB's order (the snapshot's genre bits have no order). */
 	genres: string[]
+	/** Bit i set when the title analysis sets OCCASION_FLAGS[i]. */
+	occasions: number
 }
 
 export interface ExplorerPool {
@@ -177,26 +202,33 @@ async function readDisplay(
 		// One batch at a time: this runs in the background and shouldn't crowd Crate.
 		for (let at = 0; at < ids.length; at += DISPLAY_BATCH) {
 			const batch = ids.slice(at, at + DISPLAY_BATCH)
-			const rows = await query<{
-				tmdb_id: number
-				title: string | null
-				release_year: number | null
-				poster_path: string | null
-				backdrop_path: string | null
-				genres: string[] | null
-			}>(
-				`SELECT tmdb_id, title, release_year, poster_path, backdrop_path, genres
+			const rows = await query<
+				{
+					tmdb_id: number
+					title: string | null
+					release_year: number | null
+					poster_path: string | null
+					backdrop_path: string | null
+					genres: string[] | null
+				} & Partial<Record<OccasionFlag, boolean | null>>
+			>(
+				`SELECT tmdb_id, title, release_year, poster_path, backdrop_path, genres, ${OCCASION_FLAGS.join(", ")}
 				 FROM ${mediaType} WHERE tmdb_id IN (${batch.map(() => "?").join(",")}) LIMIT ?`,
 				[...batch, batch.length],
 			)
 			for (const r of rows) {
 				if (!r.title || !r.poster_path) continue
+				let occasions = 0
+				OCCASION_FLAGS.forEach((flag, bit) => {
+					if (r[flag]) occasions |= 1 << bit
+				})
 				out.set(base + Number(r.tmdb_id), {
 					title: r.title,
 					year: r.release_year || null,
 					poster: r.poster_path,
 					backdrop: r.backdrop_path || null,
 					genres: (r.genres ?? []).slice(0, 2),
+					occasions,
 				})
 			}
 		}
