@@ -3,7 +3,17 @@
 //
 // URL parameters (defaults are omitted): services=mine|all|<ids>, unseen=0|1, type, anime=only|none, moods=funny,scary,
 // genres, score, match, released, similar, people, sort, foryou=0|1. Type and anime are the type filter every page shares. The parameters of old Discover filters the sheet doesn't offer keep
-// their old names and apply as legacy filters.
+// their old names and apply as legacy filters. The age and content filter: age=12 (the age of a ladder step),
+// hide=disturbing,drugs and ok=violence (the person's choices per kind of content, kept as given).
+import {
+	CONTENT_KINDS,
+	type ContentKind,
+	type ContentOverrides,
+	MAX_AGE,
+	type ViewerLadder,
+	changedContent,
+	showAllContent,
+} from "~/domain/age-content"
 import { MAX_MOODS, MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import {
 	type AnimeChoice,
@@ -27,6 +37,8 @@ export const FILTER_NAMES = [
 	"similarTo",
 	"people",
 	"legacy",
+	"ageLimit",
+	"content",
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
@@ -97,6 +109,17 @@ export interface FilterState {
 	/** Titles with any of these people (TMDB person ids) in the cast or crew. */
 	people?: number[]
 	legacy?: LegacyFilters
+	/**
+	 * The age limit: the age of a step of the viewer's rating ladder; undefined is off (0 is a limit). An age that
+	 * isn't a step in the viewer's country stands for the highest step at or below it (ladderStepFor).
+	 */
+	ageLimit?: number
+	/**
+	 * The person's choices per kind of content, as given; a kind without an entry follows what the age limit sets
+	 * (defaultHiddenKinds). An entry may equal what the limit sets: it stays, so it still holds after the limit changes.
+	 * The kinds hidden are hiddenKinds(ageLimit, content); the ones shown as changed, changedContent(ageLimit, content).
+	 */
+	content?: ContentOverrides
 }
 
 /** The defaults depend on the viewer: On my services for members with saved services, Not seen yet for members. */
@@ -127,6 +150,10 @@ const list = (value: string | null) =>
 const ids = (value: string | null, max = 3e12) =>
 	[...new Set(list(value).map(Number))].filter(
 		(id) => Number.isSafeInteger(id) && id > 0 && id < max,
+	)
+const kinds = (value: string | null) =>
+	list(value).filter((kind): kind is ContentKind =>
+		(CONTENT_KINDS as readonly string[]).includes(kind),
 	)
 const oneOf = <T extends string | number>(
 	options: readonly T[],
@@ -172,6 +199,14 @@ export function filterStateFromParams(
 		if (value) legacy[name] = value
 	}
 	if (Object.keys(legacy).length) state.legacy = legacy
+	const age = params.get("age")
+	if (age !== null && /^\d{1,2}$/.test(age) && Number(age) <= MAX_AGE)
+		state.ageLimit = Number(age)
+	// A kind named in both is hidden.
+	const overrides: ContentOverrides = {}
+	for (const kind of kinds(params.get("ok"))) overrides[kind] = "show"
+	for (const kind of kinds(params.get("hide"))) overrides[kind] = "hide"
+	if (Object.keys(overrides).length) state.content = overrides
 	return state
 }
 
@@ -212,6 +247,14 @@ export function filterStateToParams(
 	set("similar", state.similarTo?.length ? state.similarTo.join(",") : null)
 	set("people", state.people?.length ? state.people.join(",") : null)
 	for (const name of LEGACY_PARAMS) set(name, state.legacy?.[name] ?? null)
+	set("age", state.ageLimit === undefined ? null : String(state.ageLimit))
+	// Every override is written, also one the age limit sets anyway: it has to be there after the limit changes.
+	const chosen = (choice: "hide" | "show") =>
+		CONTENT_KINDS.filter((kind) => state.content?.[kind] === choice).join(
+			",",
+		) || null
+	set("hide", chosen("hide"))
+	set("ok", chosen("show"))
 	return params
 }
 
@@ -270,6 +313,12 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 			return { ...state, people: undefined }
 		case "legacy":
 			return { ...state, legacy: undefined }
+		// The content overrides stay, so the limit switched on again finds them.
+		case "ageLimit":
+			return { ...state, ageLimit: undefined }
+		// Every kind shown, whatever the age limit sets.
+		case "content":
+			return { ...state, content: showAllContent(state.ageLimit) }
 	}
 }
 
@@ -287,6 +336,8 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	similarTo: undefined,
 	people: undefined,
 	legacy: undefined,
+	ageLimit: undefined,
+	content: undefined,
 })
 
 /** How many of the Filters sheet's filters are active: the badge on the Filters button. */
@@ -302,9 +353,25 @@ export function secondaryFilterCount(state: FilterState): number {
 		(state.released !== "any" ? 1 : 0) +
 		(state.similarTo?.length ?? 0) +
 		(state.people?.length ?? 0) +
-		Object.keys(state.legacy ?? {}).length
+		Object.keys(state.legacy ?? {}).length +
+		(state.ageLimit === undefined ? 0 : 1) +
+		Object.keys(changedContent(state.ageLimit, state.content) ?? {}).length
 	)
 }
+
+/**
+ * The state as it applies, for everything that shows a filter as active (chips, the count on Filters, Clear
+ * filters). The age limit and content apply only with the viewer's ladder: without one (the age filter is off for the
+ * viewer, or the snapshot has no ratings; also while the first counts are on their way) the title filter ignores
+ * them, so they must not look applied. The URL keeps them.
+ */
+export const stateAsApplied = (
+	state: FilterState,
+	ladder: ViewerLadder | null | undefined,
+): FilterState =>
+	ladder || (state.ageLimit === undefined && !state.content)
+		? state
+		: { ...state, ageLimit: undefined, content: undefined }
 
 // Today's Discover parameters that have a new name. The legacy filters keep theirs.
 const RENAMED_DISCOVER_PARAMS = [

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { ViewerLadder } from "~/domain/age-content"
 import type { FilterName } from "~/domain/filter-state"
 
 /** What the title filter counted for the current state; the results endpoints return it (see FilterResult). */
@@ -11,6 +12,11 @@ export interface FilterBarCounts {
 	optionCounts: Record<FilterName, Record<string, number>>
 	/** Per-service counts are missing while the viewer's country loads. */
 	approximate?: boolean
+	/**
+	 * The viewer's rating country and its ladder, for the age limit's control. Null (or missing) when the age and
+	 * content filter isn't available to the viewer: the control doesn't show.
+	 */
+	ladder?: ViewerLadder | null
 }
 
 /** The For you switch next to the sort (Discover). The surface owns its state and what it explains. */

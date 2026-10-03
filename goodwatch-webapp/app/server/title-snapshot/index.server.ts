@@ -3,9 +3,15 @@
 // and the fingerprint key order, derives what the webapp needs, and only then replaces the loaded snapshot, in one
 // assignment. A failed load keeps the previous snapshot and logs why.
 //
+// The ratings sidecar (what the age and content filter reads) is optional: a manifest without `ratings`, a missing
+// ratings chunk, ratings that are refused (a bad shape, size, or checksum), or a Redis error on the ratings keys leave
+// the snapshot loaded without ratings, and the filter unavailable until the next version. It isn't read at all while
+// REC_AGE_FILTER is off (see loadRatings).
+//
 // TITLE_SNAPSHOT_REDIS_URL points the loader at a single Redis (for example a local one that
 // scripts/write-title-snapshot.ts filled with a sample); without it, it reads the webapp's Redis cluster.
 import Redis from "ioredis"
+import { getFeatureMode } from "~/server/features.server"
 import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
 import {
 	CURRENT_KEY,
@@ -14,6 +20,7 @@ import {
 	chunkKey,
 	joinChunks,
 } from "./format.server"
+import { loadRatings } from "./ratings.server"
 import { type TitleSnapshot, buildSnapshot } from "./snapshot.server"
 
 export type { CatalogStats } from "./catalog-stats.server"
@@ -21,12 +28,14 @@ export type {
 	TitleColumns,
 	TitleFacts,
 	TitleKey,
+	TitleRatings,
 	TitleSnapshot,
 } from "./snapshot.server"
 export {
 	FLAG_ADULT,
 	FLAG_ANIME,
 	FLAG_POSTER,
+	NO_RATING,
 	UNKNOWN_DAY,
 	UNKNOWN_SCORE,
 } from "./format.server"
@@ -92,14 +101,20 @@ async function check(): Promise<boolean> {
 			throw new Error(
 				`Title snapshot ${manifest.version} lacks chunk ${missing}; retrying at the next check`,
 			)
+		const ratings = await loadRatings(
+			redis,
+			manifest,
+			getFeatureMode("ageFilter") !== "off",
+		)
 		const readMs = performance.now() - startedAt
 		const snapshot = buildSnapshot(
 			manifest,
 			joinChunks(manifest, chunks as Buffer[]),
+			ratings,
 		)
 		current = snapshot
 		console.info(
-			`Title snapshot ${snapshot.version} loaded: ${snapshot.count} titles, ${snapshot.stats.pool} in the reference pool, in ${Math.round(performance.now() - startedAt)} ms (${Math.round(readMs)} ms reading Redis)`,
+			`Title snapshot ${snapshot.version} loaded: ${snapshot.count} titles, ${snapshot.stats.pool} in the reference pool, ${ratings ? `ratings for ${ratings.countries.length} countries` : "no ratings"}, in ${Math.round(performance.now() - startedAt)} ms (${Math.round(readMs)} ms reading Redis)`,
 		)
 	} catch (error) {
 		if (error instanceof SnapshotRefused) refusedManifest = raw

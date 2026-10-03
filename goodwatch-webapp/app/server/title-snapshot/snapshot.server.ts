@@ -1,5 +1,6 @@
 // The loaded title snapshot: every title with a title analysis, its fingerprint and the facts filters and sorts need,
 // in webapp memory. Built once per snapshot version from the decoded columns; never changed afterwards.
+import type { LadderStep } from "~/domain/age-content"
 import { type MoodKey, moodMaskOf, moodsInMask } from "~/domain/moods"
 import {
 	type CatalogStats,
@@ -16,6 +17,7 @@ import {
 	MISSING_SCORE,
 	MOVIE_BASE,
 	type Manifest,
+	type RatingColumns,
 	SHOW_BASE,
 	UNKNOWN_DAY,
 	UNKNOWN_ORIGIN,
@@ -64,6 +66,41 @@ export interface TitleColumns {
 	readonly flags: Uint8Array
 	/** Bit i set for MOOD_KEYS[i]. */
 	readonly moods: Uint16Array
+	/** What the age and content filter reads; null for a snapshot published without ratings, or whose ratings were refused. */
+	readonly ratings: TitleRatings | null
+}
+
+/** The snapshot's ratings, one value per row. Views, not copies: don't write. */
+export interface TitleRatings {
+	/** Bit i set for CONTENT_KINDS[i]. */
+	readonly content: Uint8Array
+	/** The median age across the countries that rated the title; NO_RATING when rated nowhere. */
+	readonly estimates: Uint8Array
+	/** The countries with ratings of their own, ascending. */
+	readonly countries: readonly string[]
+	/** The country's ladder, lowest step first; undefined for a country without ratings of its own. */
+	ladderOf(country: string): readonly LadderStep[] | undefined
+	/** The titles' ages in the country, NO_RATING without a rating there; null for a country without ratings of its own. */
+	agesOf(country: string): Uint8Array | null
+}
+
+function titleRatings(r: RatingColumns): TitleRatings {
+	const ages = new Map(
+		r.countries.map((country, at) => [
+			country,
+			r.ages.subarray(at * r.count, (at + 1) * r.count),
+		]),
+	)
+	const ladders = new Map(
+		r.countries.map((country) => [country, r.ladders[country]]),
+	)
+	return {
+		content: r.content,
+		estimates: r.estimates,
+		countries: r.countries,
+		ladderOf: (country) => ladders.get(country.toUpperCase()),
+		agesOf: (country) => ages.get(country.toUpperCase()) ?? null,
+	}
 }
 
 export interface TitleSnapshot {
@@ -109,6 +146,7 @@ class LoadedSnapshot implements TitleSnapshot {
 	constructor(
 		manifest: Manifest,
 		private readonly c: Columns,
+		ratings: RatingColumns | null,
 	) {
 		this.version = manifest.version
 		this.builtAt = new Date(manifest.builtAt)
@@ -146,6 +184,7 @@ class LoadedSnapshot implements TitleSnapshot {
 			scores: c.scores,
 			flags: c.flags,
 			moods: this.moodMasks,
+			ratings: ratings && titleRatings(ratings),
 		}
 	}
 
@@ -238,10 +277,14 @@ class LoadedSnapshot implements TitleSnapshot {
 	}
 }
 
-/** Derives the inverse norms, mood masks, and catalog statistics from decoded, checked columns. */
+/**
+ * Derives the inverse norms, mood masks, and catalog statistics from decoded, checked columns. `ratings` are the
+ * decoded sidecar's columns, or null without one.
+ */
 export function buildSnapshot(
 	manifest: Manifest,
 	columns: Columns,
+	ratings: RatingColumns | null = null,
 ): TitleSnapshot {
-	return new LoadedSnapshot(manifest, columns)
+	return new LoadedSnapshot(manifest, columns, ratings)
 }

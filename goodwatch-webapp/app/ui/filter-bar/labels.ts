@@ -1,13 +1,23 @@
 // What the filter bar says: sort options, option labels, chip labels, and the recovery wording. Every label is a
 // proper, capitalized label ("Top rated", "Crime & mystery", "Philosophical").
-import type {
-	FilterName,
-	FilterState,
-	LegacyParam,
-	MinMatch,
-	MinScore,
-	Released,
-	SortKey,
+import {
+	CONTENT_KINDS,
+	type ContentKind,
+	type LadderStep,
+	changedContent,
+	hiddenKinds,
+	withoutContentChoice,
+	ladderStepFor,
+} from "~/domain/age-content"
+import {
+	type FilterName,
+	type FilterState,
+	type LegacyParam,
+	type MinMatch,
+	type MinScore,
+	type Released,
+	type SortKey,
+	dropFilter,
 } from "~/domain/filter-state"
 import { MOOD_BY_KEY } from "~/domain/moods"
 import {
@@ -150,6 +160,91 @@ export const RELEASED_LABELS: Record<Released, string> = {
 }
 
 /**
+ * The kinds of content in words: `full` in the checklist, `short` inside a sentence ("no violence", "drugs OK"), and
+ * `words` the filter search also finds the kind by.
+ */
+export const CONTENT_LABELS: Record<
+	ContentKind,
+	{ full: string; short: string; words: string }
+> = {
+	violence: {
+		full: "Graphic violence",
+		short: "violence",
+		words: "violent blood gore",
+	},
+	sex: { full: "Sex & nudity", short: "sex & nudity", words: "sexual nude" },
+	disturbing: {
+		full: "Disturbing scenes",
+		short: "disturbing scenes",
+		words: "scary frightening suicide",
+	},
+	language: {
+		full: "Strong language",
+		short: "strong language",
+		words: "swearing profanity cursing",
+	},
+	drugs: {
+		full: "Drugs & alcohol",
+		short: "drugs",
+		words: "smoking drinking",
+	},
+}
+
+/** Further words the filter search finds the Age & content group by. */
+export const AGE_CONTENT_WORDS =
+	"age limit rating rated ratings content kids children family parental"
+
+const capitalized = (text: string) => text[0].toUpperCase() + text.slice(1)
+
+/** What the closed Age & content control says. */
+export interface AgeContentSummary {
+	/** The age limit's step ("FSK 12"); null while the limit is off. */
+	badge: string | null
+	/**
+	 * With a limit, what the person changed from what it sets: "no disturbing scenes", "violence OK", "2 changes". With
+	 * the limit off, the first hidden kind: "no violence". Null when there is nothing to say.
+	 */
+	text: string | null
+	/** With the limit off, how many kinds are hidden besides the one `text` names: the "+1" pill. */
+	more: number
+	/** Every hidden kind, for the tooltip: "Hiding violence, sex & nudity". Null when nothing is hidden. */
+	hiding: string | null
+}
+
+export function ageContentSummary(
+	state: Pick<FilterState, "ageLimit" | "content">,
+	steps: readonly LadderStep[],
+): AgeContentSummary {
+	const hidden = hiddenKinds(state.ageLimit, state.content)
+	const hiding = hidden.length
+		? `Hiding ${hidden.map((kind) => CONTENT_LABELS[kind].short).join(", ")}`
+		: null
+	const no = (kind: ContentKind) => `no ${CONTENT_LABELS[kind].short}`
+	if (state.ageLimit === undefined)
+		return {
+			badge: null,
+			text: hidden.length ? no(hidden[0]) : null,
+			more: Math.max(0, hidden.length - 1),
+			hiding,
+		}
+	const changed = changedContent(state.ageLimit, state.content) ?? {}
+	const kinds = CONTENT_KINDS.filter((kind) => changed[kind])
+	return {
+		badge: ladderStepFor(steps, state.ageLimit).label,
+		text:
+			kinds.length === 0
+				? null
+				: kinds.length > 1
+					? `${kinds.length} changes`
+					: changed[kinds[0]] === "hide"
+						? no(kinds[0])
+						: `${CONTENT_LABELS[kinds[0]].short} OK`,
+		more: 0,
+		hiding,
+	}
+}
+
+/**
  * Each filter group's color: the dot on its chip and the bar on its sheet section. Amber is what taste decides, so it
  * is the Taste match group's; genres are fuchsia.
  */
@@ -167,6 +262,8 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		similarTo: { dot: "bg-rose-400", bar: "bg-rose-500" },
 		people: { dot: "bg-purple-400", bar: "bg-purple-500" },
 		legacy: { dot: "bg-gray-400", bar: "bg-gray-500" },
+		ageLimit: { dot: "bg-violet-400", bar: "bg-violet-500" },
+		content: { dot: "bg-sky-400", bar: "bg-sky-500" },
 	}
 
 /**
@@ -224,14 +321,22 @@ export function recoveryLabel(
 			return `${n} without those people`
 		case "legacy":
 			return `${n} hidden by older filters`
+		case "ageLimit":
+			return `${n} above the age limit`
+		case "content":
+			return `${n} with hidden content`
 	}
 }
 
-/** Names the bar can't know from the filter state alone: services, titles, and people by id. */
+/**
+ * Names the bar can't know from the filter state alone: services, titles, and people by id, and the age limit's step
+ * on the viewer's ladder ("FSK 12").
+ */
 export interface FilterNames {
 	service?: (id: number) => string | undefined
 	title?: (key: number) => string | undefined
 	person?: (id: number) => string | undefined
+	ageStep?: (age: number) => string | undefined
 }
 
 export interface ActiveChip {
@@ -255,7 +360,11 @@ const without = <T>(list: T[] | undefined, value: T) => {
 	return next.length ? next : undefined
 }
 
-/** One removable chip per active secondary filter, legacy filters from old URLs included. */
+/**
+ * One removable chip per active secondary filter, legacy filters from old URLs included. The age limit is one chip
+ * ("Age limit FSK 12"), and so is every kind the person changed from what the limit sets ("No disturbing scenes",
+ * "Violence OK").
+ */
 export function activeChips(
 	state: FilterState,
 	names: FilterNames = {},
@@ -356,5 +465,24 @@ export function activeChips(
 				}
 			},
 		})
+	if (state.ageLimit !== undefined)
+		chips.push({
+			key: "age",
+			group: "ageLimit",
+			label: `Age limit ${names.ageStep?.(state.ageLimit) ?? state.ageLimit}`,
+			remove: (s) => dropFilter(s, "ageLimit"),
+		})
+	const changed = changedContent(state.ageLimit, state.content) ?? {}
+	for (const kind of CONTENT_KINDS) {
+		const choice = changed[kind]
+		if (!choice) continue
+		const { short } = CONTENT_LABELS[kind]
+		chips.push({
+			key: `content-${kind}`,
+			group: "content",
+			label: choice === "hide" ? `No ${short}` : `${capitalized(short)} OK`,
+			remove: (s) => ({ ...s, content: withoutContentChoice(s.content, kind) }),
+		})
+	}
 	return chips
 }

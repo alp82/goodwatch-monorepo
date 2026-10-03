@@ -8,6 +8,7 @@ export const FEATURES = [
 	"tastePage",
 	"explorer",
 	"navigation",
+	"ageFilter",
 ] as const
 
 export type Feature = (typeof FEATURES)[number]
@@ -22,4 +23,5 @@ export const NO_FEATURES: EnabledFeatures = {
 	tastePage: false,
 	explorer: false,
 	navigation: false,
+	ageFilter: false,
 }

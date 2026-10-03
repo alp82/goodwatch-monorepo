@@ -3,6 +3,14 @@
 // one bit set is what that group alone hides (its recovery). Then one pass per group over the titles every other group
 // lets through counts what each of that group's options would leave.
 import {
+	CONTENT_KINDS,
+	type ContentOverrides,
+	PLAIN_LADDER,
+	type ViewerLadder,
+	hiddenContentBits,
+	ladderStepFor,
+} from "~/domain/age-content"
+import {
 	FILTER_NAMES,
 	type FilterName,
 	MIN_MATCHES,
@@ -13,7 +21,9 @@ import type { AnimeChoice } from "~/domain/title-type"
 import type { CountryServices } from "~/server/availability-index.server"
 import {
 	FLAG_ANIME,
+	NO_RATING,
 	type TitleColumns,
+	type TitleRatings,
 	UNKNOWN_DAY,
 	UNKNOWN_SCORE,
 } from "~/server/title-snapshot/index.server"
@@ -74,6 +84,74 @@ export type ServicesFilter =
 			onMyServices: boolean
 	  }
 
+/**
+ * The age limit and the content filter, resolved for the viewer's country. A title's age is its rating in the country,
+ * else its estimate; a title rated nowhere, or one the snapshot doesn't hold, has none and fails any limit. Content
+ * hides a title that has one of the hidden kinds; a title the snapshot doesn't hold has none.
+ */
+export interface RatingsFilter {
+	/** Content bits (CONTENT_KINDS) per snapshot row. */
+	content: Uint8Array
+	/** The age in the viewer's country per snapshot row, NO_RATING without; null for a country without ratings of its own. */
+	ages: Uint8Array | null
+	/** The estimated age per snapshot row; NO_RATING when rated nowhere. */
+	estimates: Uint8Array
+	/** The age a title may have at most; -1 when the limit is off. */
+	limit: number
+	/** The content bits the state hides; 0 when none. */
+	hidden: number
+	/**
+	 * The age limit's options, for the counts: each step's age with the content bits that step would hide (what the
+	 * step sets by itself plus the person's overrides).
+	 */
+	steps: { age: number; hidden: number }[]
+	/** The content bits hidden with the limit off. */
+	hiddenWhenOff: number
+}
+
+/**
+ * The ladder a viewer's age limit goes by: their country's own, or plain ages for a country without ratings of its
+ * own. Null without ratings, and when the age filter isn't enabled for the viewer.
+ */
+export function ladderFor(
+	ratings: Pick<TitleRatings, "ladderOf"> | null | undefined,
+	country: string,
+	enabled: boolean,
+): ViewerLadder | null {
+	if (!ratings || !enabled) return null
+	const code = country.toUpperCase()
+	const steps = ratings.ladderOf(code)
+	return {
+		country: code,
+		steps: [...(steps ?? PLAIN_LADDER)],
+		local: steps !== undefined,
+	}
+}
+
+/** The age limit and content of a filter state, resolved over the snapshot's ratings for the viewer's ladder. */
+export function ratingsFilter(
+	ratings: TitleRatings,
+	ladder: ViewerLadder,
+	state: { ageLimit?: number; content?: ContentOverrides },
+): RatingsFilter {
+	const { ageLimit, content } = state
+	return {
+		content: ratings.content,
+		ages: ratings.agesOf(ladder.country),
+		estimates: ratings.estimates,
+		// An age that isn't a step of this ladder limits to the step it stands for. What content hides by default goes
+		// by the age as given, the same as in the browser.
+		limit:
+			ageLimit === undefined ? -1 : ladderStepFor(ladder.steps, ageLimit).age,
+		hidden: hiddenContentBits(ageLimit, content),
+		steps: ladder.steps.map((step) => ({
+			age: step.age,
+			hidden: hiddenContentBits(step.age, content),
+		})),
+		hiddenWhenOff: hiddenContentBits(undefined, content),
+	}
+}
+
 /** Everything the passes need, with every group resolved. A group is off when its field says so. */
 export interface PassInput {
 	columns: TitleColumns
@@ -104,6 +182,8 @@ export interface PassInput {
 	similarTo: { option: string; keys: TitleSet }[]
 	people: { option: string; keys: TitleSet }[]
 	legacy: TitleSet | null
+	/** Null when the snapshot has no ratings (or the age filter is off for the viewer): then neither group narrows. */
+	ratings: RatingsFilter | null
 }
 
 export interface PassOutput {
@@ -178,6 +258,15 @@ export function runPasses(input: PassInput): PassOutput {
 	const people = input.people
 	const legacy = input.legacy
 	const notSeen = input.notSeen
+	const ratings = input.ratings
+	const ageLimit = ratings ? ratings.limit : -1
+	const hiddenContent = ratings ? ratings.hidden : 0
+	// A title's age: its rating in the viewer's country, else its estimate; NO_RATING (above every limit) without.
+	const ageOf = (r: RatingsFilter, row: number) => {
+		if (row < 0) return NO_RATING
+		const age = r.ages ? r.ages[row] : NO_RATING
+		return age === NO_RATING ? r.estimates[row] : age
+	}
 
 	const inSet = (set: TitleSet, i: number) => {
 		const row = rows[i]
@@ -236,6 +325,11 @@ export function runPasses(input: PassInput): PassOutput {
 		if (similar.length && !inAny(similar, i)) mask |= BIT.similarTo
 		if (people.length && !inAny(people, i)) mask |= BIT.people
 		if (legacy && !inSet(legacy, i)) mask |= BIT.legacy
+		if (ratings) {
+			if (ageLimit >= 0 && ageOf(ratings, row) > ageLimit) mask |= BIT.ageLimit
+			if (hiddenContent && row >= 0 && ratings.content[row] & hiddenContent)
+				mask |= BIT.content
+		}
 		masks[i] = mask
 	}
 
@@ -509,6 +603,55 @@ export function runPasses(input: PassInput): PassOutput {
 		let off = 0
 		for (let i = 0; i < n; i++) if (passesOthers(i, BIT.legacy)) off++
 		optionCounts.legacy = { on: total, off }
+	}
+
+	// Age limit and content. A step changes what content hides, so the age limit's options are counted over the titles
+	// every group but these two lets through: per step, the titles at or below it without the content that step hides.
+	// Content counts, per kind, the titles that have it among those every other group lets through, the age limit
+	// included.
+	if (ratings) {
+		const both = BIT.ageLimit | BIT.content
+		const ageLimitBit = BIT.ageLimit
+		const { content } = ratings
+		const COMBINATIONS = 1 << CONTENT_KINDS.length
+		// Titles per age (UNRATED for none) and combination of kinds first, then each option sums what it keeps.
+		const UNRATED = 19
+		const perAge = new Uint32Array((UNRATED + 1) * COMBINATIONS)
+		const withinLimit = new Uint32Array(COMBINATIONS)
+		for (let i = 0; i < n; i++) {
+			const mask = masks[i]
+			if ((mask & ~both) !== 0) continue
+			const row = rows[i]
+			const age = ageOf(ratings, row)
+			const kinds = row < 0 ? 0 : content[row] & (COMBINATIONS - 1)
+			perAge[(age < UNRATED ? age : UNRATED) * COMBINATIONS + kinds]++
+			if ((mask & ageLimitBit) === 0) withinLimit[kinds]++
+		}
+		const left = (maxAge: number, hidden: number) => {
+			let titles = 0
+			for (let age = 0; age <= maxAge; age++)
+				for (let kinds = 0; kinds < COMBINATIONS; kinds++)
+					if ((kinds & hidden) === 0)
+						titles += perAge[age * COMBINATIONS + kinds]
+			return titles
+		}
+		const ageCounts: Record<string, number> = {
+			off: left(UNRATED, ratings.hiddenWhenOff),
+		}
+		for (const step of ratings.steps)
+			ageCounts[String(step.age)] = left(
+				Math.min(step.age, UNRATED - 1),
+				step.hidden,
+			)
+		optionCounts.ageLimit = ageCounts
+		optionCounts.content = Object.fromEntries(
+			CONTENT_KINDS.map((kind, b) => {
+				let titles = 0
+				for (let kinds = 0; kinds < COMBINATIONS; kinds++)
+					if (kinds & (1 << b)) titles += withinLimit[kinds]
+				return [kind, titles]
+			}),
+		)
 	}
 
 	return { passing, recoveries, optionCounts }

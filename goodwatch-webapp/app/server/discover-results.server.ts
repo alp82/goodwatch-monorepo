@@ -110,7 +110,13 @@ export async function getDiscoverResults(
 		sort,
 		state,
 		keys,
-		cards: await getTitleCards(keys, ctx, taste),
+		// The rating badge shows only while an age limit is on.
+		cards: await getTitleCards(
+			keys,
+			ctx,
+			taste,
+			state.ageLimit === undefined ? null : result.ladder,
+		),
 		matches: taste.match(keys),
 		moved: (moved ?? []).filter((m) => onPage.has(m.key)),
 		forYou: { on: input.forYou, applied, status, ratings: taste.ratings },

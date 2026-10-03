@@ -3,13 +3,23 @@
 //
 // Display fields are read for at most MAX_KEYS titles in one Crate statement by primary key and cached per title in
 // Redis for 6 hours, so a page usually needs no Crate read at all. Everything personal is computed in memory on every
-// call and never cached.
+// call and never cached. The rating badge is read from the title snapshot's ratings in memory as well, since it
+// depends on the viewer's country; it is no display field and stays out of the cache.
 //
 // TITLE_CARDS_REDIS_URL points the cache at a single Redis (for development); without it, it uses the webapp's Redis
 // cluster. Without a Redis connection, every call reads Crate.
 import Redis from "ioredis"
+import {
+	type RatingBadge,
+	type ViewerLadder,
+	ratingBadge,
+} from "~/domain/age-content"
 import { servicesFor } from "~/server/availability-index.server"
 import type { FingerprintKey, Taste } from "~/server/taste/index.server"
+import {
+	NO_RATING,
+	getTitleSnapshot,
+} from "~/server/title-snapshot/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
 import type { MediaType } from "~/types/user-data"
 import { query } from "~/utils/crate"
@@ -56,15 +66,24 @@ export interface TitleCard extends TitleDisplay {
 	/** Scored or watched. */
 	seen: boolean
 	wantToSee: boolean
+	/**
+	 * The title's rating for the viewer while an age limit is on: the step of their country's ladder it falls under,
+	 * or `~<age>` (estimated) for a title that goes by its ratings elsewhere. Null without an age limit, and for a
+	 * title rated nowhere.
+	 */
+	rating: RatingBadge | null
 }
 
 /**
  * The cards for up to MAX_KEYS titles, in the order of `keys`. Titles that don't exist in the catalog are left out.
+ * `ladder` is the viewer's ladder while an age limit is on (FilterResult.ladder): with it the cards carry their rating
+ * badge.
  */
 export async function getTitleCards(
 	keys: TitleKey[],
 	viewer: ViewerContext,
 	taste: Taste,
+	ladder: ViewerLadder | null = null,
 ): Promise<TitleCard[]> {
 	if (keys.length > MAX_KEYS)
 		throw new Error(`getTitleCards takes at most ${MAX_KEYS} titles`)
@@ -77,6 +96,7 @@ export async function getTitleCards(
 	const matches = taste.match(found)
 	const services = servicesFor(viewer.country, found)
 	const own = new Set(viewer.services)
+	const badges = ladder ? ratingBadges(found, ladder) : null
 
 	const cards = new Map<TitleKey, TitleCard>()
 	found.forEach((key, i) => {
@@ -89,9 +109,32 @@ export async function getTitleCards(
 			services: cardServices(services[i], own, providers),
 			seen: viewer.seen.has(key),
 			wantToSee: viewer.wishlist.has(key),
+			rating: badges ? badges[i] : null,
 		})
 	})
 	return keys.flatMap((key) => cards.get(key) ?? [])
+}
+
+/** Each title's rating badge on the viewer's ladder, from the title snapshot; null without a rating anywhere. */
+function ratingBadges(
+	keys: TitleKey[],
+	ladder: ViewerLadder,
+): (RatingBadge | null)[] {
+	const snapshot = getTitleSnapshot()
+	const ratings = snapshot?.columns.ratings
+	if (!snapshot || !ratings) return keys.map(() => null)
+	const ages = ladder.local ? ratings.agesOf(ladder.country) : null
+	const known = (age: number) => (age === NO_RATING ? null : age)
+	return keys.map((key) => {
+		const row = snapshot.rowOf(key)
+		if (row < 0) return null
+		return ratingBadge(
+			ladder.steps,
+			ages ? known(ages[row]) : null,
+			known(ratings.estimates[row]),
+			parseTitleKey(key).mediaType === "show",
+		)
+	})
 }
 
 /**

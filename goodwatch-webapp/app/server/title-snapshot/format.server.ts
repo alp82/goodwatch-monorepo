@@ -18,13 +18,43 @@
 //
 // That is 101 bytes per title. manifest.sha256 is the SHA-256 (hex) of the joined chunks. The publisher writes chunks
 // of 1 MB and adds `sourceMark` to the manifest (what it compares to skip unchanged runs); the webapp ignores it.
+//
+// Ratings, an optional sidecar for the age and content filter: `manifest.ratings` and chunks of their own at
+// `title-snapshot:<version>:ratings:<n>`. It is no part of the layout above, which stays as it is, so a webapp from
+// before the sidecar loads what a newer publisher writes, and a snapshot without the sidecar (or with one that is
+// refused) loads without ratings. Joined, the ratings chunks are these columns, one value per title in the snapshot's
+// row order:
+//
+//   content       uint8        bit i set for CONTENT_KINDS[i] (violence, sex, disturbing, language, drugs)
+//   estimate      uint8        median age across every country that rated the title, the lower one of an even
+//                              count; 255 when rated nowhere
+//   ages          uint8 x C    C = ratings.countries.length: all titles for countries[0], then for countries[1], and
+//                              so on. The title's age in that country, the strictest of its ratings there; 255 without
+//                              a rating there
+//
+// That is 2 + C bytes per title. Ages are 0 to 18. ratings.sha256 is the SHA-256 (hex) of the joined ratings chunks;
+// ratings.ladders holds each country's ladder (see domain/age-content).
 import { createHash } from "node:crypto"
+// Types only: this file also runs under plain Node (the publisher's test of its bytes against this decoder), which
+// doesn't know the `~/` alias, so it imports no values through it.
+import type { LadderStep } from "~/domain/age-content"
 
 export const FORMAT = 1
 export const CURRENT_KEY = "title-snapshot:current"
 export const chunkKey = (version: string, n: number) =>
 	`title-snapshot:${version}:${n}`
 export const MAX_CHUNK_BYTES = 4 * 1024 * 1024
+
+export const RATINGS_FORMAT = 1
+export const ratingsChunkKey = (version: string, n: number) =>
+	`title-snapshot:${version}:ratings:${n}`
+export const MAX_RATING_COUNTRIES = 64
+export const MAX_RATINGS_CHUNKS = 4096
+/** An age column's value for a title without a rating; an estimate's for a title rated nowhere. */
+export const NO_RATING = 255
+// The five CONTENT_KINDS of domain/age-content, and its MAX_AGE.
+const CONTENT_BITS = 0b11111
+const MAX_AGE = 18
 
 export const FINGERPRINT_LENGTH = 74
 export const MISSING_SCORE = 255
@@ -55,6 +85,27 @@ export interface Manifest {
 	genres: string[]
 	origins: string[]
 	builtAt: string
+	/** The ratings sidecar as published; checkManifest doesn't look at it, checkRatingsManifest does. */
+	ratings?: unknown
+}
+
+export interface RatingsManifest {
+	format: number
+	chunks: number
+	sha256: string
+	/** The countries with an age column: ISO 3166-1 alpha-2, ascending. */
+	countries: string[]
+	/** A ladder per country of `countries`: at least two steps, ascending by age. */
+	ladders: Record<string, LadderStep[]>
+}
+
+export interface RatingColumns {
+	count: number
+	countries: string[]
+	ladders: Record<string, LadderStep[]>
+	content: Uint8Array
+	estimates: Uint8Array
+	ages: Uint8Array // count x countries.length, country after country
 }
 
 export interface Columns {
@@ -207,6 +258,131 @@ function checkRows(manifest: Manifest, c: Columns) {
 			return fail(`fingerprint score ${fp[i]} at row ${Math.floor(i / 74)}`)
 }
 
+// --- Ratings (the optional sidecar) ---------------------------------------------------------------------------------
+
+/** Checks the shape of `manifest.ratings`. Throws SnapshotRefused. */
+export function checkRatingsManifest(value: unknown): RatingsManifest {
+	const m = value as Partial<RatingsManifest> | null
+	const fail = (why: string): never => {
+		throw new SnapshotRefused(`Title snapshot ratings refused: ${why}`)
+	}
+	if (!m || typeof m !== "object") return fail("not an object")
+	if (m.format !== RATINGS_FORMAT)
+		return fail(`format ${m.format}, this webapp reads ${RATINGS_FORMAT}`)
+	if (
+		!Number.isSafeInteger(m.chunks) ||
+		(m.chunks as number) < 0 ||
+		(m.chunks as number) > MAX_RATINGS_CHUNKS
+	)
+		return fail("bad chunk count")
+	if (typeof m.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(m.sha256))
+		return fail("bad sha256")
+	const countries = m.countries
+	if (
+		!Array.isArray(countries) ||
+		countries.length > MAX_RATING_COUNTRIES ||
+		countries.some(
+			(country, i) =>
+				typeof country !== "string" ||
+				!/^[A-Z]{2}$/.test(country) ||
+				(i > 0 && !(country > countries[i - 1])),
+		)
+	)
+		return fail("bad country table")
+	const ladders = m.ladders
+	if (!ladders || typeof ladders !== "object") return fail("bad ladders")
+	for (const country of countries) {
+		const steps: unknown = ladders[country]
+		if (!Array.isArray(steps) || steps.length < 2)
+			return fail(`no ladder of two steps for ${country}`)
+		let previous = -1
+		for (const step of steps as Partial<LadderStep>[]) {
+			if (!step || typeof step !== "object")
+				return fail(`bad ladder for ${country}`)
+			const age = step.age
+			if (
+				!Number.isSafeInteger(age) ||
+				(age as number) <= previous ||
+				(age as number) > MAX_AGE
+			)
+				return fail(`ladder ages for ${country} not ascending from 0 to 18`)
+			previous = age as number
+			if (typeof step.label !== "string" || !step.label)
+				return fail(`a ladder step without a label for ${country}`)
+			if (
+				step.show !== undefined &&
+				(typeof step.show !== "string" || !step.show)
+			)
+				return fail(`bad show label for ${country}`)
+		}
+	}
+	return m as RatingsManifest
+}
+
+/**
+ * Views of the ratings columns over one buffer of count * (2 + countries) bytes; no copy. Throws SnapshotRefused for
+ * another size.
+ */
+function ratingColumnsOf(
+	bytes: Uint8Array,
+	count: number,
+	manifest: Pick<RatingsManifest, "countries" | "ladders">,
+): RatingColumns {
+	const expected = count * (2 + manifest.countries.length)
+	if (bytes.byteLength !== expected)
+		throw new SnapshotRefused(
+			`Title snapshot ratings refused: ${bytes.byteLength} bytes; ${count} titles in ${manifest.countries.length} countries need ${expected}`,
+		)
+	return {
+		count,
+		countries: manifest.countries,
+		ladders: manifest.ladders,
+		content: bytes.subarray(0, count),
+		estimates: bytes.subarray(count, 2 * count),
+		ages: bytes.subarray(2 * count),
+	}
+}
+
+/**
+ * Joins the ratings chunks into one fresh buffer and checks it against the ratings manifest and the snapshot's title
+ * count. Throws SnapshotRefused.
+ */
+export function joinRatingsChunks(
+	manifest: RatingsManifest,
+	count: number,
+	chunks: Uint8Array[],
+): RatingColumns {
+	const fail = (why: string): never => {
+		throw new SnapshotRefused(`Title snapshot ratings refused: ${why}`)
+	}
+	const hash = createHash("sha256")
+	let total = 0
+	for (const chunk of chunks) {
+		hash.update(chunk)
+		total += chunk.byteLength
+	}
+	const digest = hash.digest("hex")
+	if (digest !== manifest.sha256)
+		return fail(
+			`checksum ${digest} differs from the manifest's ${manifest.sha256}`,
+		)
+	const bytes = new Uint8Array(total)
+	let at = 0
+	for (const chunk of chunks) {
+		bytes.set(chunk, at)
+		at += chunk.byteLength
+	}
+	const columns = ratingColumnsOf(bytes, count, manifest)
+	// Values the filter relies on: the five content bits, and ages 0 to 18 or none.
+	for (let row = 0; row < count; row++)
+		if (columns.content[row] & ~CONTENT_BITS)
+			return fail(`content bits outside the five kinds at row ${row}`)
+	for (let i = count; i < bytes.length; i++)
+		if (bytes[i] > MAX_AGE && bytes[i] !== NO_RATING)
+			return fail(`age ${bytes[i]} at row ${i % count}`)
+	return columns
+}
+
 // --- Writing (the development script; the Windmill publisher follows the same layout) -------------------------------
 
 export interface SnapshotRow {
@@ -291,6 +467,59 @@ export function encodeSnapshot(input: {
 			genres,
 			origins,
 			builtAt: (input.builtAt ?? new Date()).toISOString(),
+		},
+		chunks,
+	}
+}
+
+export interface RatingRow {
+	pointId: number
+	/** Content bits: bit i for CONTENT_KINDS[i]. */
+	content: number
+	/** Median age across every country that rated the title; null when rated nowhere. */
+	estimate: number | null
+	/** The title's age per country that rated it. Countries without a ladder are left out of the columns. */
+	ages: Readonly<Record<string, number>>
+}
+
+/**
+ * Encodes the ratings sidecar for the same titles as encodeSnapshot (it sorts the rows by point id alike). A country
+ * gets an age column when `ladders` holds a ladder for it.
+ */
+export function encodeRatings(input: {
+	rows: RatingRow[]
+	ladders: Record<string, LadderStep[]>
+}): { manifest: RatingsManifest; chunks: Uint8Array[] } {
+	const rows = [...input.rows].sort((a, b) => a.pointId - b.pointId)
+	const countries = Object.keys(input.ladders).sort()
+	if (countries.length > MAX_RATING_COUNTRIES)
+		throw new Error(
+			`${countries.length} countries; ratings format ${RATINGS_FORMAT} holds ${MAX_RATING_COUNTRIES}`,
+		)
+	const count = rows.length
+	const bytes = new Uint8Array(count * (2 + countries.length))
+	const c = ratingColumnsOf(bytes, count, { countries, ladders: input.ladders })
+	const age = (value: number | null | undefined) =>
+		value == null ? NO_RATING : Math.max(0, Math.min(MAX_AGE, value))
+	rows.forEach((r, row) => {
+		c.content[row] = r.content & CONTENT_BITS
+		c.estimates[row] = age(r.estimate)
+		countries.forEach((country, at) => {
+			c.ages[at * count + row] = age(r.ages[country])
+		})
+	})
+	const chunks: Uint8Array[] = []
+	for (let at = 0; at < bytes.length || chunks.length === 0; ) {
+		chunks.push(bytes.subarray(at, at + MAX_CHUNK_BYTES))
+		at += MAX_CHUNK_BYTES
+	}
+	return {
+		manifest: {
+			format: RATINGS_FORMAT,
+			chunks: chunks.length,
+			sha256: createHash("sha256").update(bytes).digest("hex"),
+			countries,
+			ladders: input.ladders,
 		},
 		chunks,
 	}

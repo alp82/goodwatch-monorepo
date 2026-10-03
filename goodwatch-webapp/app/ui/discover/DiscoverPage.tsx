@@ -20,7 +20,11 @@ import {
 	searchEligibility,
 	searchText,
 } from "~/domain/discover-search"
-import type { SortKey } from "~/domain/filter-state"
+import {
+	type SortKey,
+	secondaryFilterCount,
+	stateAsApplied,
+} from "~/domain/filter-state"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import { NextPageLink } from "~/ui/explore/GridUtils"
 import {
@@ -412,7 +416,11 @@ export function DiscoverPage({
 									state={filters.state}
 									onDrop={filters.drop}
 									onClear={filters.clearSecondary}
-									canClear={filters.secondaryCount > 0}
+									canClear={
+										secondaryFilterCount(
+											stateAsApplied(filters.state, first.ladder),
+										) > 0
+									}
 									searching={searching}
 								/>
 							)}

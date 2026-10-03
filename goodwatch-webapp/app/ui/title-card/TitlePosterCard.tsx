@@ -1,8 +1,8 @@
 import type { TitleCard } from "~/server/title-cards.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 
-// The existing poster card for a title card from getTitleCards: its services as streaming badges and its taste match
-// as the pill under the GoodWatch score.
+// The existing poster card for a title card from getTitleCards: its services as streaming badges, its taste match as
+// the pill under the GoodWatch score, and its rating badge above the title while an age limit is on.
 export function TitlePosterCard({
 	card,
 	prefetch,
@@ -24,6 +24,7 @@ export function TitlePosterCard({
 			mediaType={card.media_type}
 			prefetch={prefetch}
 			taste={{ match: card.match, reasons: card.reasons }}
+			rating={card.rating}
 		/>
 	)
 }

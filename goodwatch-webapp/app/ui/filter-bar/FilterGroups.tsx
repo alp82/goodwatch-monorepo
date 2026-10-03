@@ -1,8 +1,9 @@
 // The Filters sheet's content: a search field over every option, then the groups in order (Movies or shows, Anime,
-// Mood, Genre, GoodWatch score, Taste match, Released, Streaming services, Similar to, Cast and crew). Each option
-// shows what the result would be if tapped; an option that would leave nothing is dimmed. Typing two letters or more
-// also finds titles for Similar to and people for Cast and crew. Taste match needs taste: without it the group shows
-// dimmed with the way to get it.
+// Mood, Genre, GoodWatch score, Taste match, Released, Age & content, Streaming services, Similar to, Cast and crew).
+// Each option shows what the result would be if tapped; an option that would leave nothing is dimmed. Typing two
+// letters or more also finds titles for Similar to and people for Cast and crew. Taste match needs taste: without it
+// the group shows dimmed with the way to get it. Age & content needs the viewer's rating ladder: without it the group
+// doesn't show.
 import {
 	CheckIcon,
 	MagnifyingGlassIcon,
@@ -11,6 +12,11 @@ import {
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
 import { type ReactNode, type RefObject, useEffect, useState } from "react"
+import {
+	CONTENT_KINDS,
+	type ViewerLadder,
+	changedContent,
+} from "~/domain/age-content"
 import {
 	type FilterName,
 	type FilterState,
@@ -23,8 +29,11 @@ import { ANIME_CHOICES } from "~/domain/title-type"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { goodwatchVibeIndex } from "~/utils/ratings"
 import type { TitleKey } from "~/utils/title-key"
+import { AgeLimit, ContentChecklist } from "./AgeContent"
 import {
+	AGE_CONTENT_WORDS,
 	ANIME_LABELS,
+	CONTENT_LABELS,
 	FILTER_ACCENTS,
 	MATCH_LABELS,
 	RATE_TITLES_PATH,
@@ -72,6 +81,10 @@ interface Group {
 	badge: number
 	/** Why the group can't be used yet: taste is missing. Shown under its options. */
 	needs?: Exclude<TasteState, "ready">
+	/** Drawn in place of options, for a group that isn't a set of chips (Age & content). */
+	body?: ReactNode
+	/** What the search finds a group with a body by, besides its title. Lower case. */
+	words?: string
 }
 
 export interface FilterGroupsData {
@@ -82,6 +95,8 @@ export interface FilterGroupsData {
 	countryProviders: StreamingProvider[]
 	/** Whether the viewer has taste, for the Taste match group; ready by default. */
 	taste?: TasteState
+	/** The viewer's rating ladder, for the Age & content group; without it the group doesn't show. */
+	ladder?: ViewerLadder | null
 }
 
 interface Found {
@@ -125,6 +140,7 @@ function buildGroups(
 	const similar = state.similarTo ?? []
 	const people = state.people ?? []
 	const taste = data.taste ?? "ready"
+	const { ladder } = data
 
 	return [
 		{
@@ -239,6 +255,46 @@ function buildGroups(
 				toggle: () => set({ released }),
 			})),
 		},
+		...(ladder
+			? [
+					{
+						key: "ageLimit" as const,
+						title: "Age & content",
+						badge:
+							(state.ageLimit === undefined ? 0 : 1) +
+							Object.keys(changedContent(state.ageLimit, state.content) ?? {})
+								.length,
+						options: [],
+						words: [
+							AGE_CONTENT_WORDS,
+							ladder.local ? ladder.country : "",
+							...ladder.steps.flatMap((step) => [step.label, step.show ?? ""]),
+							...CONTENT_KINDS.flatMap((kind) =>
+								Object.values(CONTENT_LABELS[kind]),
+							),
+						]
+							.join(" ")
+							.toLowerCase(),
+						body: (
+							<div className="flex flex-col gap-4">
+								<AgeLimit
+									state={state}
+									ladder={ladder}
+									counts={counts}
+									onChange={onChange}
+									roomy
+								/>
+								<ContentChecklist
+									state={state}
+									counts={counts}
+									onChange={onChange}
+									roomy
+								/>
+							</div>
+						),
+					},
+				]
+			: []),
 		{
 			key: "services",
 			title: "Streaming services",
@@ -503,7 +559,15 @@ export function FilterGroups({
 					? g.options
 					: g.options.filter((o) => o.label.toLowerCase().includes(q)),
 		}))
-		.filter((g) => !q || g.options.length > 0)
+		// A group with a body is found by its words, from the start of any of them ("viol", "fsk").
+		.filter(
+			(g) =>
+				!q ||
+				(g.body
+					? g.title.toLowerCase().includes(q) ||
+						g.words?.split(" ").some((word) => word.startsWith(q))
+					: g.options.length > 0),
+		)
 	return (
 		<div className={className}>
 			<p aria-live="polite" className="sr-only">
@@ -543,7 +607,9 @@ export function FilterGroups({
 									</span>
 								)}
 							</header>
-							{g.options.length === 0 ? (
+							{g.body ? (
+								g.body
+							) : g.options.length === 0 ? (
 								g.empty && <p className="text-sm text-gray-500">{g.empty}</p>
 							) : (
 								<div

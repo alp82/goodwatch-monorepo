@@ -20,6 +20,7 @@ const FEATURE_VARIABLES: Record<
 	tastePage: { name: "REC_TASTE_PAGE", modes: ["off", "preview", "on"] },
 	explorer: { name: "REC_EXPLORER", modes: ["off", "preview", "on"] },
 	navigation: { name: "REC_NAVIGATION", modes: ["off", "preview", "on"] },
+	ageFilter: { name: "REC_AGE_FILTER", modes: ["off", "preview", "on"] },
 }
 
 // Compatible with both a member ({ userId }) and a guest (no userId).

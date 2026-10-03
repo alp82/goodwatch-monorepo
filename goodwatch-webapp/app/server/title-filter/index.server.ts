@@ -3,6 +3,7 @@
 // applies taste: the taste match filter, the Best match sort, and For you. Everything runs over the title snapshot and the availability index in webapp memory; only the
 // filters that aren't snapshot facts (Similar to, cast and crew, legacy Discover filters) read Qdrant or Crate, once
 // per parameter set per 30 minutes.
+import type { ViewerLadder } from "~/domain/age-content"
 import {
 	type FilterName,
 	type FilterState,
@@ -21,6 +22,7 @@ import {
 	countryServices,
 } from "~/server/availability-index.server"
 import type { Taste } from "~/server/taste/index.server"
+import { isEnabled } from "~/server/features.server"
 import {
 	type TitleSnapshot,
 	UNKNOWN_SCORE,
@@ -46,6 +48,8 @@ import {
 import {
 	type DayRange,
 	type ServicesFilter,
+	ladderFor,
+	ratingsFilter,
 	runPasses,
 	titleSet,
 } from "./passes.server"
@@ -76,6 +80,12 @@ export interface FilterResult {
 	 * notSeenYet `on`, `off`; type `all`, `movie`, `show`; anime `any`, `only`, `none`; moods by key; genres by name;
 	 * minScore `0`, `60`, `70`, `80`; minMatch `0`, `70`, `80`, `90`; released by option; similarTo and people only for the chosen options (what
 	 * removing each would leave); legacy `on`, `off`.
+	 *
+	 * ageLimit: `off` and each step of `ladder` by its age (`0`, `6`, `12`, ...). Choosing a step also changes what
+	 * content hides, so each counts what that step would leave with the content it sets by itself plus the person's
+	 * overrides. content: by kind (`violence`, `sex`, `disturbing`, `language`, `drugs`), the titles of that kind among those
+	 * every other filter lets through, the age limit included: what hiding the kind hides (or already hides), not what
+	 * it would leave. Both are empty without `ladder`.
 	 */
 	optionCounts: Record<FilterName, Record<string, number>>
 	/**
@@ -90,6 +100,11 @@ export interface FilterResult {
 	 * streaming column, and per-service counts are missing.
 	 */
 	approximate: boolean
+	/**
+	 * What the age limit's control draws: the viewer's rating country and its ladder. Null when the snapshot has no
+	 * ratings or REC_AGE_FILTER is off for the viewer; then the age limit and content don't narrow either.
+	 */
+	ladder: ViewerLadder | null
 }
 
 export interface FilterInput {
@@ -159,6 +174,7 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		new Set([...viewer.seen, ...viewer.skipped]),
 		snapshot,
 	)
+	const ladder = viewerLadder(viewer)
 	const sets = (list: { option: string; keys: Set<TitleKey> }[]) =>
 		list.map(({ option, keys }) => ({ option, keys: titleSet(keys, snapshot) }))
 
@@ -200,6 +216,10 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		similarTo: sets(similarTo),
 		people: sets(people),
 		legacy: legacy && titleSet(legacy, snapshot),
+		ratings:
+			ladder && snapshot.columns.ratings
+				? ratingsFilter(snapshot.columns.ratings, ladder, state)
+				: null,
 	})
 
 	const inOrder =
@@ -252,7 +272,21 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		moved,
 		movedUp,
 		approximate: services.kind === "column",
+		ladder,
 	}
+}
+
+/**
+ * The ladder the viewer's age limit goes by (ladderFor), or null when the snapshot has no ratings (or hasn't loaded)
+ * or REC_AGE_FILTER is off for the viewer: the flag turns the whole filter off, the URL parameters included.
+ */
+export function viewerLadder(viewer: ViewerContext): ViewerLadder | null {
+	const userId = viewer.viewer.kind === "member" ? viewer.viewer.userId : null
+	return ladderFor(
+		getTitleSnapshot()?.columns.ratings,
+		viewer.country,
+		isEnabled("ageFilter", { userId }),
+	)
 }
 
 /** The universe's snapshot rows and keys in the plain order of the sort. */

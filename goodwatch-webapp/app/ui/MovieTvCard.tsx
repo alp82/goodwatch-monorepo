@@ -1,5 +1,6 @@
 import { Link } from "@remix-run/react"
 import type React from "react"
+import type { RatingBadge } from "~/domain/age-content"
 import { useFeature } from "~/hooks/useFeature"
 import { useUserScore, useIsOnWishlist } from "~/hooks/useUserDataAccessors"
 import type { MovieDetails, TVDetails } from "~/server/details.server"
@@ -9,6 +10,7 @@ import type { TitleCard } from "~/server/title-cards.server"
 import { Poster } from "~/ui/Poster"
 import RatingOverlay from "~/ui/ratings/RatingOverlay"
 import StreamingOverlay from "~/ui/streaming/StreamingOverlay"
+import { RatingMark } from "~/ui/title-card/RatingMark"
 import { type CardTaste, TasteMatchPill } from "~/ui/title-card/TasteMatchPill"
 import UserDataOverlay from "~/ui/user/UserDataOverlay"
 import { titleToDashed } from "~/utils/helpers"
@@ -25,6 +27,8 @@ interface MovieTvCardProps {
 	prefetch?: boolean
 	/** The viewer's taste match for the title; the pill shows while taste match is on for the viewer. */
 	taste?: CardTaste
+	/** The title's age rating for the viewer, shown while an age limit is on. */
+	rating?: RatingBadge | null
 }
 
 export function MovieTvCard({
@@ -32,6 +36,7 @@ export function MovieTvCard({
 	mediaType,
 	prefetch = false,
 	taste,
+	rating,
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
 	const userScoreData = useUserScore(mediaType, details.tmdb_id)
@@ -65,14 +70,23 @@ export function MovieTvCard({
 				)}
 				<Poster path={details.poster_path} title={details.title} mediaType={mediaType} tmdbId={details.tmdb_id} />
 
+				{/* The bottom left is the one free corner; a card too narrow for its title keeps the badge there. */}
+				{rating && (
+					<RatingMark
+						rating={rating}
+						className="absolute bottom-2 left-2 @6xs:hidden"
+					/>
+				)}
 				<div
-					className="
-						hidden @6xs:flex items-end
+					// Without a rating the layout is what it was before the badge existed.
+					className={`
+						hidden @6xs:flex ${rating ? "flex-col items-start justify-end gap-1.5" : "items-end"}
 						absolute bottom-0 w-full min-h-40 px-2 py-2
 						bg-linear-to-t from-black/70 to-transparent group-hover:from-black/90 group-hover:via-90%
 						overflow-hidden
-					"
+					`}
 				>
+					{rating && <RatingMark rating={rating} />}
 					<span
 						className="
 							text-sm font-bold text-white
