@@ -137,7 +137,7 @@ async function discardPreviews(userId: string) {
 
 export async function createPreview(userId: string, fileName: string, csv: string): Promise<ImdbImportSummary> {
 	const rows = readRatingsFile(csv)
-	// First, so a missing migration is reported before any other work.
+	// First, so missing import tables are reported before any other work.
 	const lastApplied = await readLastApplied(userId)
 	const [catalog, scores] = await Promise.all([lookupCatalog(rows), readScores(userId)])
 	const classified = classifyRows(rows, { catalog, scores, lastApplied })

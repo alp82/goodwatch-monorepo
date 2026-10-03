@@ -173,9 +173,9 @@ Route: `/u/:handle`. It shows the person's @handle and their public lists as a g
 
 ## Data model
 
-Both tables live in CrateDB next to the existing `user_*` tables and are keyed by the Supabase user ID. Add them in a
-new file under `goodwatch-webapp/migrations/`, following `20260921_search_crate.sql`: CrateDB only, additive, safe to
-re-run, run explicitly during release.
+Both tables live in CrateDB next to the existing `user_*` tables and are keyed by the Supabase user ID. They are defined in
+`goodwatch-flows/windmill/f/sync/models/crate_schemas.py`, and the Windmill script `f/sync/init/cratedb` creates
+them. The SQL below shows the same tables.
 
 ```sql
 CREATE TABLE IF NOT EXISTS doc.user_list (

@@ -1,3 +1,15 @@
+# Every CrateDB table, for the pipelines and for the webapp. f/sync/init/cratedb creates the tables that are missing
+# and adds the columns that are missing; it never changes or drops a column.
+#
+# Per table:
+#   columns      name -> type and constraints, as in CREATE TABLE
+#   primary_key  column names
+#   shards       number of shards
+#   clustered_by optional routing column
+#   timestamps   False for a table that lists its own created_at/updated_at, or has none. Otherwise both are added
+#                as TIMESTAMP.
+#   replicas     optional number_of_replicas for a new table, such as "0-1". Without it, the cluster default.
+#   rows         optional rows the table must hold, inserted on every run unless their key already exists.
 SCHEMAS = {
     "crawl_priority": {
         "columns": {
@@ -719,6 +731,240 @@ SCHEMAS = {
         },
         "primary_key": ["build_id"],
         "shards": 1,
+    },
+    # ============================
+    # ===== Webapp: combined search (goodwatch-webapp/app/server/combined-search) =====
+    # ============================
+    # The paid query model's kill switch. One row, id 'paid'.
+    "search_control": {
+        "columns": {
+            "id": "TEXT",
+            "halted": "BOOLEAN NOT NULL",
+        },
+        "primary_key": ["id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+        "rows": [{"id": "paid", "halted": False}],
+    },
+    "search_interpretations": {
+        "columns": {
+            "cache_key": "TEXT",
+            "attempt_id": "TEXT NOT NULL",
+            "status": "TEXT NOT NULL",
+            "contract": "TEXT NOT NULL",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "ciphertext": "TEXT INDEX OFF",
+        },
+        "primary_key": ["cache_key"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
+    # Append-only estimates and adjustments. SUM(amount_nano) is accounted spend.
+    # Settlements stay in the original estimate's UTC budget window.
+    "search_spending": {
+        "columns": {
+            "id": "TEXT",
+            "attempt_id": "TEXT NOT NULL",
+            "cache_key": "TEXT NOT NULL",
+            "event": "TEXT NOT NULL",
+            "budget_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "amount_nano": "BIGINT NOT NULL",
+            "price_version": "TEXT",
+            "evidence": "TEXT INDEX OFF",
+        },
+        "primary_key": ["id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
+    "search_history": {
+        "columns": {
+            "id": "TEXT",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "account_id": "TEXT",
+            "ciphertext": "TEXT INDEX OFF",
+            "elapsed_ms": "INTEGER NOT NULL",
+            "charged_nano": "BIGINT NOT NULL",
+            "outcome": "TEXT NOT NULL",
+            "reason": "TEXT",
+            # Why today's ranking served a search while SEARCH_RANKING_MODE=on (the new ranking serves otherwise).
+            # Values: lesser known, basic search, index not loaded, encoder not ready, encoder queue full, timeout,
+            # error. NULL when the new ranking served, and for every search in modes off and shadow.
+            "ranker_fallback": "TEXT",
+            # The ranking that produced the served list.
+            "ranker_version": "TEXT",
+            # Milliseconds per stage of the served search, for example {"reading": 612.4, "ranking": 180.2,
+            # "display": 21.5}. IGNORED: the keys can change without a schema change, and they aren't indexed.
+            "stage_ms": "OBJECT(IGNORED)",
+        },
+        "primary_key": ["id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
+    # One row per search that shadow mode saw (SEARCH_RANKING_MODE=shadow). history_id joins search_history.id.
+    # The query text isn't stored here. Everything derived from it (the encoded texts, reference names, profile
+    # terms) is in ciphertext, sealed with SEARCH_STORAGE_KEY like search_history.ciphertext.
+    "search_shadow": {
+        "columns": {
+            "id": "TEXT",
+            "history_id": "TEXT",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            # ranked, skipped or failed; reason says why a search was skipped or failed.
+            "outcome": "TEXT NOT NULL",
+            "reason": "TEXT",
+            "served_ranker_version": "TEXT",
+            "ranker_version": "TEXT",
+            "build_id": "TEXT",
+            # general, non_english or reference
+            "route": "TEXT",
+            "lesser_known": "BOOLEAN",
+            # Keys (movie:<tmdb id>, show:<tmdb id>, person:<tmdb id>) of the served list's first 50 rows, in order.
+            "served_keys": "ARRAY(TEXT)",
+            # The new ranking's list (at most 50), in order, with its blended scores.
+            "ranked_keys": "ARRAY(TEXT)",
+            "ranked_scores": "ARRAY(DOUBLE)",
+            "pool_size": "INTEGER",
+            # Milliseconds per stage of the new ranking, plus display (its display fields) and waited (queue
+            # before it ran).
+            "stage_ms": "OBJECT(IGNORED)",
+            # Each Qdrant request: {name, queries, serverMs, wallMs}.
+            "rounds": "ARRAY(OBJECT(IGNORED))",
+            "ciphertext": "TEXT INDEX OFF",
+        },
+        "primary_key": ["id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
+    # ============================
+    # ===== Webapp: share lists and public profiles (docs/implementation/share-lists/README.md) =====
+    # ============================
+    # Deletes are soft: rows get deleted_at (and released_at for renamed handles), and every read filters them out.
+    # A person's ranking of exactly five titles. items is in rank order.
+    "user_list": {
+        "columns": {
+            "id": "TEXT",
+            "user_id": "TEXT NOT NULL",
+            "title": "TEXT NOT NULL",
+            "prompt_id": "TEXT",
+            "design": "TEXT NOT NULL",
+            "theme": "TEXT NOT NULL",
+            "signature": "TEXT",
+            "items": "ARRAY(OBJECT(STRICT) AS (media_type TEXT, tmdb_id BIGINT))",
+            "visibility": "TEXT NOT NULL",
+            "remixed_from": "TEXT",
+            "content_hash": "TEXT NOT NULL",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "updated_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "deleted_at": "TIMESTAMP WITH TIME ZONE",
+        },
+        "primary_key": ["id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
+    "user_profile": {
+        "columns": {
+            "user_id": "TEXT",
+            "handle": "TEXT NOT NULL",
+            "display_name": "TEXT",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "updated_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "deleted_at": "TIMESTAMP WITH TIME ZONE",
+        },
+        "primary_key": ["user_id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
+    # Crate has no unique index on non-key columns, so handles are claimed here: the handle is the key, and an
+    # insert with ON CONFLICT DO NOTHING lets exactly one person claim it. A handle renamed away from (released_at)
+    # or of a deleted account (deleted_at) is on hold for 90 days before anyone else can claim it.
+    "user_handle": {
+        "columns": {
+            "handle": "TEXT",
+            "user_id": "TEXT NOT NULL",
+            "claimed_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "released_at": "TIMESTAMP WITH TIME ZONE",
+            "deleted_at": "TIMESTAMP WITH TIME ZONE",
+        },
+        "primary_key": ["handle"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
+    # ============================
+    # ===== Webapp: IMDb ratings import (goodwatch-webapp/app/server/imdb-import) =====
+    # ============================
+    # One row per uploaded file. status: preview (nothing written to user_score yet), running, done, failed, undone.
+    # counts is the preview's outcome counts as JSON text. added, updated, kept and failed count what the apply
+    # wrote. updated_at is the apply's heartbeat: a running import whose heartbeat is old has stalled and can be
+    # resumed. confirmed_at is written to user_score.created_at/updated_at by this import, which is how the apply
+    # recognises its own writes after an interruption.
+    "user_import": {
+        "columns": {
+            "id": "TEXT",
+            "user_id": "TEXT NOT NULL",
+            "source": "TEXT NOT NULL",
+            "status": "TEXT NOT NULL",
+            "file_name": "TEXT",
+            "conflict_choice": "TEXT",
+            "counts": "TEXT NOT NULL",
+            "processed": "INTEGER NOT NULL",
+            "total": "INTEGER NOT NULL",
+            "added": "INTEGER NOT NULL",
+            "updated": "INTEGER NOT NULL",
+            "kept": "INTEGER NOT NULL",
+            "failed": "INTEGER NOT NULL",
+            "without_fingerprint": "INTEGER",
+            "error": "TEXT",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "updated_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "confirmed_at": "TIMESTAMP WITH TIME ZONE",
+            "finished_at": "TIMESTAMP WITH TIME ZONE",
+        },
+        "primary_key": ["id"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
+    },
+    # One row per data row of the file, in file order. The source observation (IMDb ID, rating, date rated) is kept
+    # apart from the effective GoodWatch rating in user_score.
+    # outcome: new, update, unchanged, conflict, unmatched, unsupported, invalid.
+    # current_score is the member's GoodWatch rating when the preview was made.
+    # apply_state: NULL (nothing written), added, updated, kept (the GoodWatch rating stayed), failed (retry), undone.
+    # prior_score and applied_score are set when the import writes the rating: what undo restores, and what it must
+    # still find in user_score to do so. A later import reads applied_score to tell its own ratings from the member's.
+    "user_import_item": {
+        "columns": {
+            "import_id": "TEXT NOT NULL",
+            "row_index": "INTEGER NOT NULL",
+            "user_id": "TEXT NOT NULL",
+            "imdb_id": "TEXT",
+            "title": "TEXT",
+            "year": "INTEGER",
+            "title_type": "TEXT",
+            "raw_rating": "TEXT",
+            "imdb_score": "INTEGER",
+            "date_rated": "TEXT",
+            "outcome": "TEXT NOT NULL",
+            "reason": "TEXT",
+            "tmdb_id": "BIGINT",
+            "media_type": "TEXT",
+            "current_score": "INTEGER",
+            "apply_state": "TEXT",
+            "prior_score": "INTEGER",
+            "applied_score": "INTEGER",
+            "applied_at": "TIMESTAMP WITH TIME ZONE",
+        },
+        "primary_key": ["import_id", "row_index"],
+        "shards": 1,
+        "timestamps": False,
+        "replicas": "0-1",
     },
 }
 

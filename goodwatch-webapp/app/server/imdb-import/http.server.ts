@@ -8,7 +8,7 @@ import { ImdbImportError } from "./file.server"
 
 const fail = (error: string, status: number, headers: Headers) => json<ImdbImportErrorBody>({ error }, { status, headers })
 
-/** Crate answers a statement on a table that doesn't exist with RelationUnknown: the migration hasn't run. */
+/** Crate answers a statement on a table that doesn't exist with RelationUnknown: the tables haven't been created yet. */
 function isMissingTable(error: unknown) {
 	const message = String((error as { message?: unknown } | null)?.message ?? error)
 	return /RelationUnknown|SchemaUnknown/.test(message) && message.includes("user_import")
@@ -30,7 +30,7 @@ export async function withMember(
 	} catch (error) {
 		if (error instanceof ImdbImportError) return fail(error.message, error.status, headers)
 		if (isMissingTable(error)) {
-			console.error("IMDb import: the import tables are missing. Run migrations/20261002_imdb_import_crate.sql.")
+			console.error("IMDb import: the import tables are missing. Run f/sync/init/cratedb in Windmill (goodwatch-flows).")
 			return fail("Importing from IMDb isn't available yet. Please try again later.", 503, headers)
 		}
 		console.error("IMDb import request failed:", error)
