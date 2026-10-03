@@ -99,6 +99,7 @@ export function GuestDraftCard() {
 						Continue editing
 					</Link>
 					<Link
+						rel="nofollow"
 						to={`/sign-up?redirectTo=${encodeURIComponent(missing > 0 ? newListPath() : RESUME_SHARE_PATH)}`}
 						className="rounded-full px-3.5 py-1.5 text-sm font-black text-black hover:brightness-110"
 						style={{

@@ -207,6 +207,7 @@ function AccountDialog({ onClose }: { onClose: () => void }) {
 				after you sign up it's saved to your account and the link is copied.
 			</p>
 			<Link
+				rel="nofollow"
 				to={`/sign-up?redirectTo=${returnTo}`}
 				className="rounded-full bg-white py-2.5 text-center font-black text-black"
 			>
@@ -215,6 +216,7 @@ function AccountDialog({ onClose }: { onClose: () => void }) {
 			<p className="text-center text-sm text-neutral-400">
 				Already have an account?{" "}
 				<Link
+					rel="nofollow"
 					to={`/sign-in?redirectTo=${returnTo}`}
 					className="font-semibold text-white underline underline-offset-4"
 				>

@@ -30,6 +30,21 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number): Promise<T
 	}
 }
 
+// Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
+const MAX_LOG_CHARS = 2000
+
+const capLog = (value: unknown, indent?: number): string => {
+	let text: string
+	try {
+		text = typeof value === 'string' ? value : (JSON.stringify(value, null, indent) ?? String(value))
+	} catch {
+		text = String(value)
+	}
+	return text.length > MAX_LOG_CHARS
+		? `${text.slice(0, MAX_LOG_CHARS)}... (${text.length - MAX_LOG_CHARS} more characters cut)`
+		: text
+}
+
 class CrateClient {
 	constructor(hosts: string[]) {
 		crate.connect(hosts.join(" "))
@@ -58,8 +73,8 @@ class CrateClient {
 			const formattedLog = this.formatLog(querySummary, duration, true)
 			console.error('====================')
 			console.error(formattedLog)
-			console.error('Query:', query)
-			console.error('Params:', params)
+			console.error('Query:', capLog(query))
+			console.error('Params:', capLog(params))
 			console.error('Error:', error)
 			console.error('Stack trace:')
 			console.trace()
@@ -80,7 +95,7 @@ class CrateClient {
 		console.warn(pc.dim('  Query:'), query.trim().replace(/\s+/g, ' ').substring(0, 200) + (query.length > 200 ? '...' : ''))
 		
 		if (params && params.length > 0) {
-			console.warn(pc.dim('  Params:'), params.length > 5 ? `${params.slice(0, 5).join(', ')}... (${params.length} total)` : params.join(', '))
+			console.warn(pc.dim('  Params:'), capLog(params.length > 5 ? `${params.slice(0, 5).join(', ')}... (${params.length} total)` : params.join(', ')))
 		}
 		
 		if (result.rowcount !== undefined) {

@@ -88,6 +88,7 @@ function GuestBanner() {
 						{mid ? "Keep rating" : "Rate titles"} →
 					</Link>
 					<Link
+						rel="nofollow"
 						to="/sign-in?redirectTo=/taste"
 						className="inline-flex min-h-11 items-center text-sm font-semibold text-amber-200/80 hover:text-amber-100 md:min-h-9"
 					>

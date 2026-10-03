@@ -1,6 +1,7 @@
 import { UserPlusIcon } from "@heroicons/react/20/solid"
 import { Link, useLocation } from "@remix-run/react"
 import { useUser } from "~/utils/auth"
+import { authReturnQuery } from "~/utils/auth-return"
 import {
 	SIGN_UP_MESSAGES,
 	type SignUpFeature,
@@ -20,8 +21,7 @@ interface SignUpPromptProps {
 
 // The page the person is on, so sign-up (and sign-in) bring them back to it. Guest progress transfers as usual.
 function useReturnQuery() {
-	const { pathname, search, hash } = useLocation()
-	return `?redirectTo=${encodeURIComponent(pathname + search + hash)}`
+	return authReturnQuery(useLocation())
 }
 
 /**
@@ -42,6 +42,7 @@ export function SignUpPrompt({
 	if (size === "chip")
 		return (
 			<Link
+				rel="nofollow"
 				to={signUp}
 				className={`inline-flex min-h-11 items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1.5 text-xs font-bold text-amber-200 ring-1 ring-amber-500/40 transition-colors hover:bg-amber-500/25 md:min-h-8 ${className}`}
 			>
@@ -71,12 +72,14 @@ export function SignUpPrompt({
 				</div>
 				<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
 					<Link
+						rel="nofollow"
 						to={signUp}
 						className="inline-flex min-h-11 items-center rounded-full bg-linear-to-b from-amber-400 to-amber-600 px-4 text-sm font-black text-gray-950 hover:brightness-110 md:min-h-9"
 					>
 						Sign up
 					</Link>
 					<Link
+						rel="nofollow"
 						to={`/sign-in${returnQuery}`}
 						className="text-sm text-gray-400 underline-offset-2 hover:text-gray-200 hover:underline"
 					>
@@ -88,6 +91,7 @@ export function SignUpPrompt({
 
 	return (
 		<Link
+			rel="nofollow"
 			to={signUp}
 			className={`inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-amber-300 underline-offset-2 hover:text-amber-200 hover:underline md:min-h-0 ${className}`}
 		>

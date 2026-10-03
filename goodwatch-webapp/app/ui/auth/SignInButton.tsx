@@ -1,6 +1,7 @@
 import { ArrowRightCircleIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import React, { useEffect, useState } from "react"
+import { authReturnQuery } from "~/utils/auth-return"
 
 type SignInButtonProps = {}
 
@@ -8,13 +9,12 @@ export const SignInButton = ({}: SignInButtonProps) => {
 	const location = useLocation()
 	const [redirectTo, setRedirectTo] = useState("")
 	useEffect(() => {
-		setRedirectTo(
-			`?redirectTo=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`,
-		)
+		setRedirectTo(authReturnQuery(window.location))
 	}, [location.pathname, location.search, location.hash])
 
 	return (
 		<Link
+			rel="nofollow"
 			to={`/sign-in/${redirectTo}`}
 			className="
 				w-full px-3 py-2

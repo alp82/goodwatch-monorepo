@@ -108,6 +108,7 @@ function AccountRow() {
 	if (!user)
 		return (
 			<Link
+				rel="nofollow"
 				to={signUp}
 				className="flex items-center gap-2 rounded-2xl bg-amber-500/15 px-4 py-3.5 text-left text-sm text-amber-200 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.4)] hover:bg-amber-500/20"
 			>

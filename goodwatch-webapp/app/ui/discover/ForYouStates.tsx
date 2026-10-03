@@ -25,6 +25,7 @@ export function ForYouSignUp() {
 				/>
 			</span>
 			<Link
+				rel="nofollow"
 				to={`/sign-up?redirectTo=${encodeURIComponent(pathname + search)}`}
 				aria-label={message.title}
 				className={`${SLAB_SEGMENT} text-amber-200 lg:hidden`}
