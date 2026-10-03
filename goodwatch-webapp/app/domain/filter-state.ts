@@ -2,7 +2,7 @@
 // to URL parameters. Pure and shared by the server (the title filter) and the browser (the filter bar).
 //
 // URL parameters (defaults are omitted): services=mine|all|<ids>, unseen=0|1, type, anime=only|none, moods=funny,scary,
-// genres, score, released, similar, people, sort, foryou=0|1. Type and anime are the type filter every page shares. The parameters of old Discover filters the sheet doesn't offer keep
+// genres, score, match, released, similar, people, sort, foryou=0|1. Type and anime are the type filter every page shares. The parameters of old Discover filters the sheet doesn't offer keep
 // their old names and apply as legacy filters.
 import { MAX_MOODS, MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import {
@@ -22,6 +22,7 @@ export const FILTER_NAMES = [
 	"moods",
 	"genres",
 	"minScore",
+	"minMatch",
 	"released",
 	"similarTo",
 	"people",
@@ -29,12 +30,25 @@ export const FILTER_NAMES = [
 ] as const
 export type FilterName = (typeof FILTER_NAMES)[number]
 
-export const SORT_KEYS = ["popular", "top", "newest", "relevance"] as const
-/** Relevance is the order of a ranked list (a search); it's offered only while searching. */
+export const SORT_KEYS = [
+	"popular",
+	"top",
+	"newest",
+	"relevance",
+	"match",
+] as const
+/**
+ * Relevance is the order of a ranked list (a search); it's offered only while searching. Match is Best match: taste
+ * match, highest first. It needs taste; without it the results fall back to Popular, or Relevance while searching.
+ */
 export type SortKey = (typeof SORT_KEYS)[number]
 
 export const MIN_SCORES = [0, 60, 70, 80] as const
 export type MinScore = (typeof MIN_SCORES)[number]
+
+/** The taste match filter's options: a title needs a taste match of at least this. */
+export const MIN_MATCHES = [0, 70, 80, 90] as const
+export type MinMatch = (typeof MIN_MATCHES)[number]
 
 export const RELEASED = [
 	"any",
@@ -75,6 +89,8 @@ export interface FilterState {
 	/** A title fits if it has at least one. */
 	genres: string[]
 	minScore: MinScore
+	/** The least taste match; a title without a match fits only 0. It doesn't narrow for a person without taste. */
+	minMatch: MinMatch
 	released: Released
 	/** Titles similar to any of these. */
 	similarTo?: TitleKey[]
@@ -97,6 +113,7 @@ export const defaultFilterState = (defaults: FilterDefaults): FilterState => ({
 	moods: [],
 	genres: [],
 	minScore: 0,
+	minMatch: 0,
 	released: "any",
 })
 
@@ -143,6 +160,7 @@ export function filterStateFromParams(
 	].slice(0, MAX_MOODS)
 	state.genres = [...new Set(list(params.get("genres")))]
 	state.minScore = oneOf(MIN_SCORES, params.get("score")) ?? 0
+	state.minMatch = oneOf(MIN_MATCHES, params.get("match")) ?? 0
 	state.released = oneOf(RELEASED, params.get("released")) ?? "any"
 	const similar = ids(params.get("similar"))
 	if (similar.length) state.similarTo = similar
@@ -189,6 +207,7 @@ export function filterStateToParams(
 	set("moods", state.moods.length ? state.moods.join(",") : null)
 	set("genres", state.genres.length ? state.genres.join(",") : null)
 	set("score", state.minScore ? String(state.minScore) : null)
+	set("match", state.minMatch ? String(state.minMatch) : null)
 	set("released", state.released === "any" ? null : state.released)
 	set("similar", state.similarTo?.length ? state.similarTo.join(",") : null)
 	set("people", state.people?.length ? state.people.join(",") : null)
@@ -214,7 +233,7 @@ export function filterQuery(
 	return out.toString()
 }
 
-/** The sort from `sort`; Relevance only while searching, where it's also the default. */
+/** The sort from `sort`; Relevance only while searching, where it's also the default. Best match is kept as asked. */
 export function sortFromParams(
 	params: URLSearchParams,
 	searching: boolean,
@@ -241,6 +260,8 @@ export function dropFilter(state: FilterState, name: FilterName): FilterState {
 			return { ...state, genres: [] }
 		case "minScore":
 			return { ...state, minScore: 0 }
+		case "minMatch":
+			return { ...state, minMatch: 0 }
 		case "released":
 			return { ...state, released: "any" }
 		case "similarTo":
@@ -261,6 +282,7 @@ export const clearSecondaryFilters = (state: FilterState): FilterState => ({
 	moods: [],
 	genres: [],
 	minScore: 0,
+	minMatch: 0,
 	released: "any",
 	similarTo: undefined,
 	people: undefined,
@@ -276,6 +298,7 @@ export function secondaryFilterCount(state: FilterState): number {
 		state.moods.length +
 		state.genres.length +
 		(state.minScore ? 1 : 0) +
+		(state.minMatch ? 1 : 0) +
 		(state.released !== "any" ? 1 : 0) +
 		(state.similarTo?.length ?? 0) +
 		(state.people?.length ?? 0) +

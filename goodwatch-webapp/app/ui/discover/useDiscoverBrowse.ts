@@ -145,10 +145,17 @@ export function useDiscoverBrowse({
 	return { ...result, key }
 }
 
+/** The switch in the URL: `foryou=0` while it's off; on is the default and left out. */
+export function writeForYou(params: URLSearchParams, on: boolean) {
+	if (on) params.delete("foryou")
+	else params.set("foryou", "0")
+}
+
 /**
  * The For you switch: the URL's `foryou` wins for the view, else the member's saved setting (on for guests). Flipping
  * it writes `foryou=0` while it's off (on is the default, left out) and saves the member's setting. A URL value alone
- * never changes the saved setting.
+ * never changes the saved setting. `remember` saves the setting without writing the URL, for a caller that writes
+ * `foryou` together with another parameter (leaving Best match through the switch).
  */
 export function useForYou({
 	member,
@@ -175,24 +182,28 @@ export function useForYou({
 				{ replace: true, preventScrollReset: true },
 			)
 	}, [value, on, setParams])
+	const remember = useCallback(
+		(next: boolean) => {
+			if (!member) return
+			setSavedNow(next)
+			save.mutate({ settings: { for_you: next ? "yes" : "no" } })
+		},
+		[member, save.mutate],
+	)
 	const set = useCallback(
 		(next: boolean) => {
 			setParams(
 				(previous) => {
 					const out = new URLSearchParams(previous)
-					if (next) out.delete("foryou")
-					else out.set("foryou", "0")
+					writeForYou(out, next)
 					out.delete("page")
 					return out
 				},
 				{ replace: true, preventScrollReset: true },
 			)
-			if (member) {
-				setSavedNow(next)
-				save.mutate({ settings: { for_you: next ? "yes" : "no" } })
-			}
+			remember(next)
 		},
-		[setParams, member, save.mutate],
+		[setParams, remember],
 	)
-	return { on, set }
+	return { on, set, remember }
 }

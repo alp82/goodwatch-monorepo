@@ -27,11 +27,11 @@ import {
 	FilterSearchField,
 } from "./FilterGroups"
 import { ShowTitlesButton } from "./FiltersSheet"
-import { ForYouRow } from "./ForYou"
+import { FOR_YOU_SWITCH, ForYouRow, useForYouUnderBestMatch } from "./ForYou"
 import { SnapSheet } from "./SnapSheet"
 import { HiddenMeter, RecoveryList } from "./SubBar"
 import { ServiceStack, SortItems, radioKeys, useMenu } from "./controls"
-import { type SortOption, recoveryLabel } from "./labels"
+import { type SortOption, compactCount, recoveryLabel } from "./labels"
 import { Knob, MENU, RollingNumber, SPRING, TAP } from "./motion"
 import type { FilterBarCounts, ForYouControl } from "./types"
 import type { StreamingProvider } from "./useFilterData"
@@ -175,6 +175,7 @@ function SlabForYou({
 				aria-checked={lit}
 				aria-disabled={forYou.disabled || undefined}
 				aria-label="For you"
+				data-for-you-switch
 				whileTap={forYou.disabled ? undefined : TAP}
 				onClick={() => !forYou.disabled && forYou.onChange(!forYou.on)}
 				className="absolute inset-0 flex flex-col items-center justify-end gap-0.5 rounded-[14px] pb-[7px] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
@@ -196,7 +197,10 @@ function SlabForYou({
 				{lit && forYou.movedUp > 0 && (
 					<span className="flex items-center text-[10px] font-black tabular-nums">
 						<ArrowUpIcon className="h-2.5 w-2.5" />
-						{forYou.movedUp}
+						<span aria-hidden>{compactCount(forYou.movedUp)}</span>
+						<span className="sr-only">
+							{forYou.movedUp.toLocaleString("en")} moved up
+						</span>
 					</span>
 				)}
 			</button>
@@ -320,6 +324,8 @@ export interface SlabProps {
 	sort: string
 	onSort: (sort: string) => void
 	sortFootnote?: string
+	/** Under the sorts, in the menu and in the sheet. */
+	sortFooter?: ReactNode
 	forYou?: ForYouControl
 	searching: boolean
 	groups: FilterGroupsData
@@ -330,18 +336,19 @@ export interface SlabProps {
 }
 
 export function Slab(props: SlabProps) {
-	const {
-		state,
-		counts,
-		onChange,
-		onDrop,
-		forYou,
-		searching,
-		hasServices,
-		providers,
-	} = props
+	const { state, counts, onChange, onDrop, searching, hasServices, providers } =
+		props
 	const [sheet, setSheet] = useState(-1)
 	const [menu, setMenu] = useState<"sort" | "explain" | null>(null)
+	// For you under Best match: flipping it opens the sort menu, or, inside the sheet, leaves the sorts below it to pick.
+	const { forYou, pick } = useForYouUnderBestMatch({
+		forYou: props.forYou,
+		sort: props.sort,
+		onSort: props.onSort,
+		open: menu === "sort" || sheet >= 0,
+		onOpen: () => sheet < 0 && setMenu("sort"),
+		onClose: () => setMenu((m) => (m === "sort" ? null : m)),
+	})
 	const sortMenu = useRef<HTMLDivElement>(null)
 	const explainMenu = useRef<HTMLDivElement>(null)
 	const sortTrigger = useRef<HTMLButtonElement>(null)
@@ -352,7 +359,7 @@ export function Slab(props: SlabProps) {
 		() => setMenu(null),
 		sortMenu,
 		sortTrigger,
-		"[data-slab-trigger]",
+		`[data-slab-trigger], ${FOR_YOU_SWITCH}`,
 	)
 	useEffect(() => {
 		if (menu !== "explain") return
@@ -372,7 +379,8 @@ export function Slab(props: SlabProps) {
 	}, [menu])
 
 	const top = counts?.recoveries[0]
-	const sortLabel = props.sorts.find((s) => s.key === props.sort)?.label ?? ""
+	const chosenSort = props.sorts.find((s) => s.key === props.sort)
+	const sortLabel = chosenSort?.label ?? ""
 	const mineOn = state.onMyServices
 	const hiddenLine =
 		counts && (counts.hidden > 0 || searching) ? (
@@ -504,7 +512,9 @@ export function Slab(props: SlabProps) {
 							onClick={() => setMenu((m) => (m === "sort" ? null : "sort"))}
 							className={`${SLAB_SEGMENT} ${menu === "sort" ? "bg-white/10 text-white" : "text-gray-200"}`}
 						>
-							<ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
+							<ArrowsUpDownIcon
+								className={`h-4 w-4 ${chosenSort?.taste ? "text-amber-400" : "text-gray-400"}`}
+							/>
 							<span className="relative w-full overflow-hidden px-1 text-center">
 								<AnimatePresence mode="popLayout" initial={false}>
 									<motion.span
@@ -560,8 +570,9 @@ export function Slab(props: SlabProps) {
 								value={props.sort}
 								dense
 								footnote={props.sortFootnote}
+								footer={props.sortFooter}
 								onPick={(key) => {
-									props.onSort(key)
+									pick(key)
 									setMenu(null)
 									sortTrigger.current?.focus()
 								}}
@@ -602,7 +613,7 @@ export function Slab(props: SlabProps) {
 					</div>
 				}
 			>
-				<SheetBody {...props} />
+				<SheetBody {...props} forYou={forYou} onSort={pick} />
 			</SnapSheet>
 		</>
 	)
@@ -619,6 +630,8 @@ function SheetBody(props: SlabProps) {
 		mineMore && state.onMyServices
 			? Math.max(0, (mineMore.all ?? 0) - (mineMore.mine ?? 0))
 			: 0
+	const pickSort = (sort: SortOption) =>
+		!sort.disabled && props.onSort(sort.key)
 	const pick = (mine: boolean) =>
 		mine && !props.hasServices
 			? props.onAddServices()
@@ -637,12 +650,17 @@ function SheetBody(props: SlabProps) {
 				</Block>
 			)}
 			<Block title="Sort">
+				{forYou && !forYou.replacement && (
+					<div className="mb-2">
+						<ForYouRow forYou={forYou} />
+					</div>
+				)}
 				<div
 					className="grid grid-cols-2 gap-2"
 					role="radiogroup"
 					aria-label="Sort"
 					onKeyDown={(event) =>
-						radioKeys(event, (index) => props.onSort(props.sorts[index].key))
+						radioKeys(event, (index) => pickSort(props.sorts[index]))
 					}
 				>
 					{props.sorts.map((s) => {
@@ -654,16 +672,19 @@ function SheetBody(props: SlabProps) {
 								type="button"
 								role="radio"
 								aria-checked={on}
+								aria-disabled={s.disabled || undefined}
 								tabIndex={on ? 0 : -1}
-								whileTap={TAP}
-								onClick={() => props.onSort(s.key)}
-								className="relative h-16 rounded-2xl bg-white/[0.03] px-3.5 text-left ring-1 ring-white/10 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+								data-sort={s.key}
+								whileTap={s.disabled ? undefined : TAP}
+								onClick={() => pickSort(s)}
+								className={`relative min-h-16 rounded-2xl bg-white/[0.03] px-3.5 py-2.5 text-left ring-1 ring-white/10 outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${s.disabled ? "cursor-default opacity-60" : "cursor-pointer"}`}
 							>
 								{on && (
 									<motion.span
 										layoutId="filter-sheet-sort"
 										transition={SPRING}
-										className="absolute inset-0 rounded-2xl bg-white/[0.08] ring-1 ring-white/30"
+										// Amber marks what taste decides: Best match.
+										className={`absolute inset-0 rounded-2xl ring-1 ${s.taste ? "bg-amber-500/[0.14] ring-amber-500/45" : "bg-white/[0.08] ring-white/30"}`}
 									/>
 								)}
 								<span
@@ -671,18 +692,16 @@ function SheetBody(props: SlabProps) {
 								>
 									{s.label}
 								</span>
-								<span className="relative block truncate text-[11px] text-gray-500">
+								<span
+									className={`relative block text-[11px] text-gray-500 ${s.disabled ? "leading-snug" : "truncate"}`}
+								>
 									{s.hint}
 								</span>
 							</motion.button>
 						)
 					})}
 				</div>
-				{forYou && !forYou.replacement && (
-					<div className="mt-2">
-						<ForYouRow forYou={forYou} />
-					</div>
-				)}
+				{props.sortFooter}
 			</Block>
 			<Block
 				title="More filters"

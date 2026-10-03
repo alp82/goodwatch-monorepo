@@ -1,11 +1,15 @@
 // Discover on the shared filter bar, browsing and searching on one page: the heading (tap it to search; the query
-// becomes the heading) with the explanation at the top right, the bar with For you next to the sort, and the grid of
+// becomes the heading) with the explanation at the top right, the bar with For you before the sort, and the grid of
 // title cards, loaded 40 at a time as the person scrolls. The grid is never replaced between browsing and searching:
 // titles in both lists glide to their new places.
 //
 // Browsing, the explanation shows the taste For you leans on. Searching, "Read as" shows how the search read the query,
 // Relevance joins the sorts and is chosen, and the counts and recoveries cover the search's top 100. Clearing the
 // search returns to the sort used before it.
+//
+// Best match (the sort by taste match) and the Taste match filter need taste; the bar hears from the results whether
+// the viewer has it. Under Best match For you shows on and flipping it leads to another sort (see the filter bar's
+// useForYouUnderBestMatch).
 import { ArrowPathIcon } from "@heroicons/react/20/solid"
 import { useLocation, useNavigation, useSearchParams } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
@@ -16,6 +20,7 @@ import {
 	searchEligibility,
 	searchText,
 } from "~/domain/discover-search"
+import type { SortKey } from "~/domain/filter-state"
 import type { DiscoverResults } from "~/server/discover-results.server"
 import { NextPageLink } from "~/ui/explore/GridUtils"
 import {
@@ -23,9 +28,12 @@ import {
 	type ForYouControl,
 	ForYouExplanation,
 	SLAB_CLEARANCE,
+	tasteStateOf,
 	useFilterState,
 } from "~/ui/filter-bar"
+import { sortShown } from "~/ui/filter-bar/labels"
 import { SearchPeople } from "~/ui/search/SearchPeople"
+import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { Spinner } from "~/ui/wait/Spinner"
 import type { TitleKey } from "~/utils/title-key"
 import { DiscoverGrid } from "./DiscoverGrid"
@@ -39,6 +47,7 @@ import {
 	useDiscoverBrowse,
 	useForYou,
 	useGuestBody,
+	writeForYou,
 } from "./useDiscoverBrowse"
 import { useDiscoverSearch } from "./useDiscoverSearch"
 
@@ -61,6 +70,8 @@ interface Flip {
 	/** The query before the flip, and the one that answers it. */
 	from: string
 	key: string
+	/** For you was turned on. */
+	on: boolean
 	before: Map<TitleKey, number>
 	pages: number
 	at: number | null
@@ -172,6 +183,7 @@ export function DiscoverPage({
 	const [flip, setFlip] = useState<Flip | null>(null)
 	const flipTo = (on: boolean) => {
 		setFlip({
+			on,
 			from: browse.key,
 			key: browseKey(
 				filters.query,
@@ -222,12 +234,22 @@ export function DiscoverPage({
 	const marks = useMemo(() => {
 		if (flip?.at == null) return null
 		const moved = new Map<TitleKey, number>()
+		if (flip.on) {
+			// Turned on, For you brings titles from far down the sort, so most of the page is new: every title it lifted
+			// says how far it came in the whole list. A title that only fell behind them is marked when the person had it
+			// in view before.
+			for (const page of pages)
+				for (const { key, by } of page.moved)
+					if (by > 0 || flip.before.has(key)) moved.set(key, by)
+			return moved
+		}
+		// Turned off, the lifted titles leave; the ones that stay say how far they moved among the loaded cards.
 		cards.forEach((card, i) => {
 			const was = flip.before.get(card.key)
 			if (was !== undefined && was !== i) moved.set(card.key, was - i)
 		})
 		return moved
-	}, [flip, cards])
+	}, [flip, cards, pages])
 
 	// Infinite scroll.
 	const { ref: moreRef, inView } = useInView({ rootMargin: "600px 0px" })
@@ -243,6 +265,9 @@ export function DiscoverPage({
 	])
 
 	const status = first?.forYou.status ?? (member ? "ready" : "signUp")
+	const taste = tasteStateOf(first)
+	// Best match is the sort in use: For you shows on, with nothing to move.
+	const bestMatch = sortShown(filters.sort, searching, taste) === "match"
 	const applied = Boolean(first?.forYou.applied) && forYou.on
 	const movedUp = applied && !stale ? (first?.movedUp ?? 0) : 0
 	const leanings = first?.explanation?.leanings ?? []
@@ -259,12 +284,18 @@ export function DiscoverPage({
 					? "Close matches you'd rate highly rise"
 					: undefined,
 		replacement: status === "signUp" ? <ForYouSignUp /> : undefined,
+		// One URL write for both: a second write in the same tick would drop the first.
+		onOffWithSort: (sort) => {
+			forYou.remember(false)
+			filters.setSort(sort as SortKey, (out) => writeForYou(out, false))
+		},
 		explanation:
 			status === "needsTaste" ? (
 				<ForYouNeedsTaste />
 			) : (
 				<ForYouExplanation
-					on={forYou.on}
+					on={forYou.on || bestMatch}
+					bestMatch={bestMatch}
 					searching={searching}
 					leanings={leanings}
 					ratings={ratings}
@@ -321,6 +352,14 @@ export function DiscoverPage({
 						filters={filters}
 						counts={counts}
 						forYou={forYouControl}
+						taste={taste}
+						sortFooter={
+							taste === "signUp" ? (
+								<div className="px-2 pt-2 pb-1">
+									<SignUpPrompt feature="bestMatch" stage="learn" size="chip" />
+								</div>
+							) : undefined
+						}
 						insightLead={
 							busy && searching ? (
 								<ArrowPathIcon

@@ -25,6 +25,13 @@ export interface ForYouControl {
 	replacement?: ReactNode
 	/** The switch shows but can't be flipped yet, for example without enough liked titles. */
 	disabled?: boolean
-	/** A short line under For you in the phone sheet, for example "Titles you'd rate highly rise". */
+	/** A short line under For you in the phone sheet, for example "Close matches you'd rate highly rise". */
 	hint?: string
+	/** The line while it's off; "Same order for everyone" by default. */
+	offHint?: string
+	/**
+	 * Turns For you off and applies a sort in one step: how a person leaves Best match through the switch. Without it
+	 * the bar calls `onChange(false)`, then the sort's own change.
+	 */
+	onOffWithSort?: (sort: string) => void
 }

@@ -75,8 +75,15 @@ How well a title's fingerprint fits the person's taste, shown from 50 to 99 perc
 _Avoid_: Match score, Similarity
 
 **For you**:
-The switch that blends taste match into whichever sort is chosen. It is on by default and never replaces the sort.
+The switch that blends taste match into whichever sort is chosen: the higher a title's taste match, the further it rises, and the best matches go to the top. It is on by default and never replaces the sort. Under Best match it shows on.
 _Avoid_: Personalized sort, Recommended sort
+
+**Best match**:
+The sort that orders titles by taste match, highest first, on Discover and Watch next. It needs taste.
+_Avoid_: Recommended sort, Sort by match
+
+**Taste match filter**:
+The filter that keeps only titles with a taste match of at least 70, 80, or 90 percent.
 
 **Side of you**:
 One distinct strand of the titles a person rates highly, such as dark crime or gentle comedy, named by the attributes that set it apart. Its edge is a place just past it that the person has barely tried.
@@ -91,7 +98,7 @@ The comparison of a person's ratings with the GoodWatch score of the same titles
 The page where a person browses by moving across a map of islands.
 
 **Island**:
-The titles of one group on the Explorer map under the chosen grouping, such as one genre, streaming service, or decade.
+The titles of one group on the Explorer map under the chosen grouping, such as one mood, theme, genre, or decade.
 
 **Bridge**:
 The island that forms between two islands a person combines, holding the titles they share or, for groupings where a title belongs to one island only, the titles closest to both.

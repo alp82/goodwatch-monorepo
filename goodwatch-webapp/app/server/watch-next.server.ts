@@ -224,7 +224,7 @@ function sortValue(
 			return entry.releaseDay === null || entry.releaseDay > today
 				? null
 				: entry.releaseDay
-		case "score":
+		case "top":
 			return entry.score
 		case "popular":
 			return entry.popularity || null

@@ -24,8 +24,8 @@ import type { TitleKey } from "~/utils/title-key"
 // - Members: GET /api/discover/results?<filter bar parameters>&page=1
 // - Guests: POST /api/discover/results?<filter bar parameters>&page=1 with { guest: { interactions, country,
 //   services } }, the guest progress their browser holds. A signed-in member's POST ignores `guest`.
-// Parameters are the filter bar's URL state (services, unseen, type, moods, genres, score, released, similar, people,
-// sort, foryou, and the legacy Discover filters). In search mode, `ranked` carries the search's ranked list in its plain
+// Parameters are the filter bar's URL state (services, unseen, type, moods, genres, score, match, released, similar,
+// people, sort, foryou, and the legacy Discover filters). In search mode, `ranked` carries the search's ranked list in its plain
 // order (title keys, comma-separated, at most SEARCH_RESULTS; empty when the search found nothing), and the results are
 // that list filtered in memory, with Relevance as the default sort. Served while REC_FILTER_BAR lets the viewer see
 // it; not found otherwise.

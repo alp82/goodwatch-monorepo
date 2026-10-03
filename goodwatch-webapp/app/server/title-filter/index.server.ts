@@ -1,6 +1,6 @@
 // The title filter: the in-memory engine behind the filter bar on Discover, Watch next, and Explorer. It filters and
 // sorts a universe of titles by the filter state, counts what each filter hides and what each option would leave, and
-// applies For you. Everything runs over the title snapshot and the availability index in webapp memory; only the
+// applies taste: the taste match filter, the Best match sort, and For you. Everything runs over the title snapshot and the availability index in webapp memory; only the
 // filters that aren't snapshot facts (Similar to, cast and crew, legacy Discover filters) read Qdrant or Crate, once
 // per parameter set per 30 minutes.
 import {
@@ -11,7 +11,7 @@ import {
 	type SortKey,
 } from "~/domain/filter-state"
 import {
-	FOR_YOU_WINDOW,
+	BROWSE_QUALITY_FLOOR,
 	type ForYouSurface,
 	rankForYou,
 } from "~/domain/for-you"
@@ -23,6 +23,7 @@ import {
 import type { Taste } from "~/server/taste/index.server"
 import {
 	type TitleSnapshot,
+	UNKNOWN_SCORE,
 	getTitleSnapshot,
 } from "~/server/title-snapshot/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
@@ -34,7 +35,14 @@ import {
 	similarTitles,
 	titlesOnServicesByColumn,
 } from "./id-sets.server"
-import { catalogRows, compareRows } from "./order.server"
+import { universeMatches } from "./matches.server"
+import {
+	type PlainSort,
+	byMatch,
+	catalogRows,
+	compareRows,
+	sortToUse,
+} from "./order.server"
 import {
 	type DayRange,
 	type ServicesFilter,
@@ -43,8 +51,18 @@ import {
 } from "./passes.server"
 
 export interface FilterResult {
-	/** Passing titles in the requested order (For you applied). */
+	/** Passing titles in the order of `sortUsed` (For you applied). */
 	keys: TitleKey[]
+	/**
+	 * The sort the titles are in. It differs from the requested sort for Best match without taste (then Popular, or
+	 * Relevance for a ranked list), and for Relevance over the catalog (Popular).
+	 */
+	sortUsed: SortKey
+	/**
+	 * Whether the person has taste. Without it no title has a taste match: the taste match filter doesn't narrow
+	 * (every minMatch option leaves the same), and Best match falls back.
+	 */
+	hasTaste: boolean
 	total: number
 	/** Universe size minus total. */
 	hidden: number
@@ -56,11 +74,14 @@ export interface FilterResult {
 	/**
 	 * What each option would leave, the other filters unchanged. Keys: services `all`, `mine`, and service ids;
 	 * notSeenYet `on`, `off`; type `all`, `movie`, `show`; anime `any`, `only`, `none`; moods by key; genres by name;
-	 * minScore `0`, `60`, `70`, `80`; released by option; similarTo and people only for the chosen options (what
+	 * minScore `0`, `60`, `70`, `80`; minMatch `0`, `70`, `80`, `90`; released by option; similarTo and people only for the chosen options (what
 	 * removing each would leave); legacy `on`, `off`.
 	 */
 	optionCounts: Record<FilterName, Record<string, number>>
-	/** For you movement against the plain order: titles whose place changed, `by` > 0 moved up. */
+	/**
+	 * For you movement against the plain order: titles whose place changed, `by` > 0 moved up. Missing when For you
+	 * didn't apply: it is off, the person has no taste, or the sort is Best match, which leaves it nothing to blend.
+	 */
 	moved?: { key: TitleKey; by: number }[]
 	/** The "↑N moved" count. */
 	movedUp?: number
@@ -76,7 +97,13 @@ export interface FilterInput {
 	universe: Iterable<TitleKey> | "catalog"
 	state: FilterState
 	sort: SortKey
-	forYou: { taste: Taste; surface: ForYouSurface } | null
+	/**
+	 * The person's taste. The taste match filter and Best match go by it whether For you is on or not. Null counts as
+	 * no taste.
+	 */
+	taste: Taste | null
+	/** The For you switch: the surface whose rule applies, or null when it's off. */
+	forYou: ForYouSurface | null
 	viewer: ViewerContext
 }
 
@@ -109,7 +136,19 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		servicesFilterBase(state, viewer),
 	])
 
-	const { rows, keys } = universeInOrder(snapshot, input.universe, input.sort)
+	const taste = input.taste?.signal === "some" ? input.taste : null
+	const sortUsed = sortToUse(
+		input.sort,
+		taste !== null,
+		input.universe !== "catalog",
+	)
+	// Best match reorders the Top rated order, so titles with the same match go by GoodWatch score.
+	const { rows, keys } = universeInOrder(
+		snapshot,
+		input.universe,
+		sortUsed === "match" ? "top" : sortUsed,
+	)
+	const matches = taste && universeMatches(snapshot, taste, rows, keys)
 	const releasedOptions = releasedRanges(new Date())
 	const genreBits = state.genres.reduce((bits, name) => {
 		const b = snapshot.columns.genreNames.indexOf(name)
@@ -153,6 +192,8 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		genres: genreBits,
 		genresChosen: state.genres.length > 0,
 		minScore: state.minScore,
+		minMatch: state.minMatch,
+		matches,
 		released: releasedOptions[state.released],
 		releasedOptions,
 		similarTo: sets(similarTo),
@@ -160,24 +201,42 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		legacy: legacy && titleSet(legacy, snapshot),
 	})
 
-	const ordered = Array.from(passing, (i) => keys[i])
+	const inOrder =
+		sortUsed === "match" && matches ? byMatch(passing, matches) : passing
+	const ordered = Array.from(inOrder, (i) => keys[i])
 	let moved: FilterResult["moved"]
 	let movedUp: number | undefined
-	if (input.forYou?.taste.signal === "some") {
-		const { taste, surface } = input.forYou
-		const considered =
-			surface === "browse" ? ordered.slice(0, FOR_YOU_WINDOW) : ordered.slice()
-		const ranking = rankForYou(considered, taste.match(considered), surface)
-		for (let j = 0; j < ranking.order.length; j++) ordered[j] = ranking.order[j]
+	if (input.forYou && matches && sortUsed !== "match") {
+		const { scores } = snapshot.columns
+		// NO_MATCH (0) reads as no match in rankForYou.
+		const matchInOrder = new Uint8Array(inOrder.length)
+		// The quality floor of the browse rule.
+		const liftable = new Uint8Array(inOrder.length)
+		for (let j = 0; j < inOrder.length; j++) {
+			const i = inOrder[j]
+			const row = rows[i]
+			matchInOrder[j] = matches[i]
+			if (
+				row >= 0 &&
+				scores[row] !== UNKNOWN_SCORE &&
+				scores[row] >= BROWSE_QUALITY_FLOOR
+			)
+				liftable[j] = 1
+		}
+		const ranking = rankForYou(ordered, matchInOrder, input.forYou, liftable)
 		moved = []
-		ranking.order.forEach((key, j) => {
-			if (ranking.moved[j] !== 0) moved?.push({ key, by: ranking.moved[j] })
-		})
+		for (let j = 0; j < ranking.order.length; j++) {
+			ordered[j] = ranking.order[j]
+			if (ranking.moved[j] !== 0)
+				moved.push({ key: ordered[j], by: ranking.moved[j] })
+		}
 		movedUp = ranking.movedUp
 	}
 
 	return {
 		keys: ordered,
+		sortUsed,
+		hasTaste: taste !== null,
 		total: passing.length,
 		hidden: rows.length - passing.length,
 		recoveries,
@@ -192,9 +251,10 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 function universeInOrder(
 	snapshot: TitleSnapshot,
 	universe: Iterable<TitleKey> | "catalog",
-	sort: SortKey,
+	sort: PlainSort | "relevance",
 ): { rows: Int32Array; keys: Float64Array } {
-	if (universe === "catalog") return catalogRows(snapshot, sort)
+	if (universe === "catalog")
+		return catalogRows(snapshot, sort === "relevance" ? "popular" : sort)
 	let found = [...new Set(universe)].map((key) => ({
 		key,
 		row: snapshot.rowOf(key),

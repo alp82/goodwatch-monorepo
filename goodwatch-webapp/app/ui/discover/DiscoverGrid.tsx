@@ -1,6 +1,6 @@
 // Discover's grid of title cards. The grid is never replaced: titles in both the old and the new list glide to their
 // new places, new ones scale in, leaving ones fade out. After For you flips, each moved card shows how far it moved
-// ("↑4", "↓2") for a moment. With reduced motion, only short opacity fades run: MotionConfig alone still let the
+// ("↑4", "↓2", "↑1.2k" for a title For you brought from far down the sort) for a moment. With reduced motion, only short opacity fades run: MotionConfig alone still let the
 // layout glide run, so the grid turns layout animation off itself.
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/20/solid"
 import {
@@ -11,6 +11,7 @@ import {
 } from "framer-motion"
 import type { ReactNode } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
+import { compactCount } from "~/ui/filter-bar/labels"
 import { SPRING } from "~/ui/filter-bar/motion"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { TitleKey } from "~/utils/title-key"
@@ -31,7 +32,10 @@ export function DiscoverGrid({
 	children,
 }: {
 	cards: TitleCard[]
-	/** How far each title moved when For you last flipped (positive: up); null when no marks show. */
+	/**
+	 * How far each title moved when For you last flipped (positive: up); null when no marks show. Turned on, it is the
+	 * distance in the whole list, which can be thousands of places.
+	 */
 	marks: Map<TitleKey, number> | null
 	/** For you just reordered the list. */
 	flipping?: boolean
@@ -92,8 +96,9 @@ function MoveMark({ delta, reduce }: { delta: number; reduce: boolean }) {
 						) : (
 							<ArrowDownIcon className="h-3.5 w-3.5" aria-hidden />
 						)}
-						{Math.abs(delta)}
+						<span aria-hidden>{compactCount(Math.abs(delta))}</span>
 						<span className="sr-only">
+							{Math.abs(delta).toLocaleString("en")}
 							{delta > 0 ? " places up" : " places down"}
 						</span>
 					</motion.span>

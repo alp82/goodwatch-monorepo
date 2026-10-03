@@ -10,6 +10,9 @@ import {
 	UNKNOWN_SCORE,
 } from "~/server/title-snapshot/index.server"
 
+/** The sorts that are an order of the titles' own facts. Relevance is a ranked list's order; Best match is per person. */
+export type PlainSort = Exclude<SortKey, "relevance" | "match">
+
 /** Discover's eligibility, as its SQL has it: enough votes, a poster, a release date, and not adult. */
 export const MIN_VOTES = 1000
 
@@ -19,7 +22,7 @@ export const MIN_VOTES = 1000
  */
 export function compareRows(
 	columns: TitleColumns,
-	sort: Exclude<SortKey, "relevance">,
+	sort: PlainSort,
 ): (a: number, b: number) => number {
 	const { popularity, scores, releaseDays, votes, pointIds } = columns
 	const tieBreak = (a: number, b: number) =>
@@ -47,7 +50,7 @@ export function compareRows(
 interface CatalogOrders {
 	version: string
 	eligible: Int32Array
-	sorted: Map<Exclude<SortKey, "relevance">, CatalogOrder>
+	sorted: Map<PlainSort, CatalogOrder>
 }
 
 /** The catalog in one plain order: snapshot rows and their title keys. */
@@ -79,13 +82,12 @@ function catalogOrders(snapshot: TitleSnapshot): CatalogOrders {
 	return orders
 }
 
-/** The catalog's eligible titles in a plain order (Relevance means Popular: the catalog has no ranking). */
+/** The catalog's eligible titles in a plain order. */
 export function catalogRows(
 	snapshot: TitleSnapshot,
-	sort: SortKey,
+	plain: PlainSort,
 ): CatalogOrder {
 	const catalog = catalogOrders(snapshot)
-	const plain = sort === "relevance" ? "popular" : sort
 	let sorted = catalog.sorted.get(plain)
 	if (!sorted) {
 		const rows = catalog.eligible
@@ -96,4 +98,40 @@ export function catalogRows(
 		catalog.sorted.set(plain, sorted)
 	}
 	return sorted
+}
+
+/**
+ * The sort the results are in for a requested sort. Best match needs taste: without it the results are in the plain
+ * default, Popular for the catalog and Relevance for a ranked list. Relevance means Popular for the catalog, which has
+ * no ranking.
+ */
+export function sortToUse(
+	sort: SortKey,
+	hasTaste: boolean,
+	ranked: boolean,
+): SortKey {
+	if (sort === "match" && hasTaste) return sort
+	if (sort === "match" || sort === "relevance")
+		return ranked ? "relevance" : "popular"
+	return sort
+}
+
+/**
+ * Best match: universe positions that are in the Top rated order, reordered by taste match, highest first, titles
+ * without one last. `matches` is per universe position. Titles with the same match keep their order, so ties go by
+ * GoodWatch score, then votes, then the title key.
+ */
+export function byMatch(
+	positions: Int32Array,
+	matches: Uint8Array,
+): Int32Array {
+	// A stable counting sort: a match is one byte.
+	const starts = new Uint32Array(257)
+	for (let p = 0; p < positions.length; p++)
+		starts[256 - matches[positions[p]]]++
+	for (let b = 1; b < starts.length; b++) starts[b] += starts[b - 1]
+	const out = new Int32Array(positions.length)
+	for (let p = 0; p < positions.length; p++)
+		out[starts[255 - matches[positions[p]]]++] = positions[p]
+	return out
 }

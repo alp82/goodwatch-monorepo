@@ -15,7 +15,7 @@ import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { TitleKey } from "~/utils/title-key"
 import { titleHref } from "./WatchNextHero"
 import {
-	SORT_LABEL,
+	SORT_WORDS,
 	TIER_LABEL,
 	TIER_NOTE,
 	moodWords,
@@ -187,7 +187,7 @@ export function SteppedGrid({
 	const fitWords = data.moods.length
 		? `${moodWords(data.moods)}${data.onMyServices ? " on your services" : ""}`
 		: "What's on your services"
-	const by = SORT_LABEL[data.sort].toLowerCase()
+	const by = SORT_WORDS[data.sort]
 	return (
 		<section aria-label="The rest of your Wishlist">
 			<header className="mb-6 md:grid md:grid-cols-[12rem_1fr] md:gap-8">

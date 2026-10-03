@@ -2,8 +2,7 @@
 // the session; a guest from the guest progress in a POST body), and the options in the URL.
 import { json } from "@remix-run/node"
 import { z } from "zod"
-import { parseMoods } from "~/domain/moods"
-import { isWatchNextSort } from "~/domain/watch-next"
+import { watchNextChoiceOf } from "~/domain/watch-next"
 import { getFeatureMode, isEnabled } from "~/server/features.server"
 import {
 	type GuestProgress,
@@ -41,15 +40,9 @@ export function parseKeys(value: string | null): TitleKey[] | null {
 /** Sort, moods, services, and passed-over titles from the URL: `sort=waiting&moods=funny,scary&services=all`. */
 export function parseWatchNextOptions(url: URL): WatchNextOptions | null {
 	const params = url.searchParams
-	const sort = params.get("sort")
 	const notTonight = parseKeys(params.get("notTonight"))
 	if (!notTonight) return null
-	return {
-		sort: sort && isWatchNextSort(sort) ? sort : null,
-		moods: parseMoods(params.get("moods")),
-		onMyServices: params.get("services") !== "all",
-		notTonight,
-	}
+	return { ...watchNextChoiceOf(params), notTonight }
 }
 
 /**

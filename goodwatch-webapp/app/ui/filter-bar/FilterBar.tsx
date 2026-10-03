@@ -1,7 +1,8 @@
-// The shared filter bar. Desktop: one row (On my services, Not seen yet, the sort, For you where the surface has it,
+// The shared filter bar. Desktop: one row (On my services, Not seen yet, For you where the surface has it, the sort,
 // and Filters), a sub-bar with removable chips and the hidden-titles insight, and the Filters side sheet. Phones: the
 // active chips where the bar sits, and the slab fixed at the bottom. The surface owns the data: it binds the state
-// with useFilterState, fetches counts for `filters.query`, and passes them in.
+// with useFilterState, fetches counts for `filters.query`, and passes them in. It also says whether the viewer has
+// taste (`taste`), which Best match and the Taste match filter need.
 import { useNavigate } from "@remix-run/react"
 import { MotionConfig } from "framer-motion"
 import { type ReactNode, useMemo, useState } from "react"
@@ -14,8 +15,14 @@ import {
 } from "./controls"
 import type { FilterGroupsData } from "./FilterGroups"
 import { FiltersSheet } from "./FiltersSheet"
-import { ForYouSwitch } from "./ForYou"
-import { type SortOption, activeChips, discoverSorts } from "./labels"
+import { FOR_YOU_SWITCH, ForYouSwitch, useForYouUnderBestMatch } from "./ForYou"
+import {
+	type SortOption,
+	type TasteState,
+	activeChips,
+	discoverSorts,
+	sortShown,
+} from "./labels"
 import { Slab } from "./Slab"
 import { FilterChips, HiddenInsight } from "./SubBar"
 import type { FilterBarCounts, ForYouControl } from "./types"
@@ -26,8 +33,12 @@ export interface FilterBarProps {
 	filters: FilterStateBinding
 	/** What the title filter counted for `filters.query`; null while the first answer is on its way. */
 	counts: FilterBarCounts | null
-	/** Discover's For you switch, next to the sort. */
+	/** Discover's For you switch, before the sort. */
 	forYou?: ForYouControl
+	/** Whether the viewer has taste, or why not (tasteStateOf of the results); ready by default. */
+	taste?: TasteState
+	/** Under the sorts in their menu, for example the sign-up prompt while Best match needs an account. */
+	sortFooter?: ReactNode
 	/** The sort choices; Discover's by default (Relevance only while searching). */
 	sorts?: SortOption[]
 	sort?: string
@@ -48,10 +59,11 @@ export interface FilterBarProps {
 }
 
 export function FilterBar(props: FilterBarProps) {
-	const { filters, counts, forYou } = props
+	const { filters, counts, taste = "ready" } = props
 	const { state } = filters
 	const navigate = useNavigate()
 	const [sheetOpen, setSheetOpen] = useState(false)
+	const [sortOpen, setSortOpen] = useState(false)
 	const services = useMyServices()
 	const titles = useTitleNames(state.similarTo ?? [], "")
 	const people = usePeopleNames(state.people ?? [], "")
@@ -67,8 +79,8 @@ export function FilterBar(props: FilterBarProps) {
 			}),
 		[state, services.countryProviders, titles.byKey, people.byId],
 	)
-	const sorts = props.sorts ?? discoverSorts(filters.searching)
-	const sort = props.sort ?? filters.sort
+	const sorts = props.sorts ?? discoverSorts(filters.searching, taste)
+	const sort = props.sort ?? sortShown(filters.sort, filters.searching, taste)
 	const onSort =
 		props.onSort ??
 		((key: string) => filters.setSort(key as typeof filters.sort))
@@ -89,7 +101,17 @@ export function FilterBar(props: FilterBarProps) {
 		onChange,
 		myServices: services.ids,
 		countryProviders: services.countryProviders,
+		taste,
 	}
+	// The desktop row's For you under Best match; the slab runs its own over its own sort menu.
+	const { forYou, pick } = useForYouUnderBestMatch({
+		forYou: props.forYou,
+		sort,
+		onSort,
+		open: sortOpen,
+		onOpen: () => setSortOpen(true),
+		onClose: () => setSortOpen(false),
+	})
 
 	return (
 		<MotionConfig reducedMotion="user">
@@ -110,13 +132,17 @@ export function FilterBar(props: FilterBarProps) {
 						hides={notSeenHides}
 						onChange={(on) => filters.set({ notSeenYet: on })}
 					/>
+					{forYou && <ForYouSwitch forYou={forYou} />}
 					<SortControl
 						options={sorts}
 						value={sort}
-						onChange={onSort}
+						onChange={pick}
 						footnote={sortFootnote}
+						footer={props.sortFooter}
+						open={sortOpen}
+						onOpenChange={setSortOpen}
+						outsideIgnore={FOR_YOU_SWITCH}
 					/>
-					{forYou && <ForYouSwitch forYou={forYou} />}
 					<div className="ml-auto flex items-center gap-2.5">
 						{props.rowTrail}
 						<FiltersButton
@@ -185,7 +211,8 @@ export function FilterBar(props: FilterBarProps) {
 					sort={sort}
 					onSort={onSort}
 					sortFootnote={sortFootnote}
-					forYou={forYou}
+					sortFooter={props.sortFooter}
+					forYou={props.forYou}
 					searching={filters.searching}
 					groups={groups}
 					line={props.slabLine}

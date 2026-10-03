@@ -1,30 +1,37 @@
 // The Filters sheet's content: a search field over every option, then the groups in order (Movies or shows, Anime,
-// Mood, Genre, GoodWatch score, Released, Streaming services, Similar to, Cast and crew). Each option shows what the
-// result would be if tapped; an option that would leave nothing is dimmed. Typing two letters or more also finds
-// titles for Similar to and people for Cast and crew.
+// Mood, Genre, GoodWatch score, Taste match, Released, Streaming services, Similar to, Cast and crew). Each option
+// shows what the result would be if tapped; an option that would leave nothing is dimmed. Typing two letters or more
+// also finds titles for Similar to and people for Cast and crew. Taste match needs taste: without it the group shows
+// dimmed with the way to get it.
 import {
 	CheckIcon,
 	MagnifyingGlassIcon,
 	XMarkIcon,
 } from "@heroicons/react/20/solid"
+import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
 import { type ReactNode, type RefObject, useEffect, useState } from "react"
 import {
 	type FilterName,
 	type FilterState,
+	MIN_MATCHES,
 	MIN_SCORES,
 	RELEASED,
 } from "~/domain/filter-state"
 import { MOODS, toggleMood } from "~/domain/moods"
 import { ANIME_CHOICES } from "~/domain/title-type"
+import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { goodwatchVibeIndex } from "~/utils/ratings"
 import type { TitleKey } from "~/utils/title-key"
 import {
 	ANIME_LABELS,
 	FILTER_ACCENTS,
+	MATCH_LABELS,
+	RATE_TITLES_PATH,
 	RELEASED_LABELS,
 	SCORE_LABELS,
 	TYPE_LABELS,
+	type TasteState,
 } from "./labels"
 import { TAP } from "./motion"
 import type { FilterBarCounts } from "./types"
@@ -49,6 +56,8 @@ interface Option {
 	toggle: () => void
 	swatch?: ReactNode
 	img?: string | null
+	/** Shown dimmed and can't be tapped. */
+	disabled?: boolean
 }
 
 interface Group {
@@ -61,6 +70,8 @@ interface Group {
 	empty?: string
 	/** Active options count toward the header badge, except a default choice. */
 	badge: number
+	/** Why the group can't be used yet: taste is missing. Shown under its options. */
+	needs?: Exclude<TasteState, "ready">
 }
 
 export interface FilterGroupsData {
@@ -69,6 +80,8 @@ export interface FilterGroupsData {
 	onChange: (state: FilterState) => void
 	myServices: number[]
 	countryProviders: StreamingProvider[]
+	/** Whether the viewer has taste, for the Taste match group; ready by default. */
+	taste?: TasteState
 }
 
 interface Found {
@@ -111,6 +124,7 @@ function buildGroups(
 
 	const similar = state.similarTo ?? []
 	const people = state.people ?? []
+	const taste = data.taste ?? "ready"
 
 	return [
 		{
@@ -188,6 +202,29 @@ function buildGroups(
 					/>
 				) : undefined,
 				toggle: () => set({ minScore: score }),
+			})),
+		},
+		{
+			key: "minMatch",
+			title: "Taste match",
+			note: taste === "ready" ? "How well a title fits your taste" : undefined,
+			badge: state.minMatch ? 1 : 0,
+			needs: taste === "ready" ? undefined : taste,
+			options: MIN_MATCHES.map((match) => ({
+				id: String(match),
+				label: MATCH_LABELS[match],
+				active: state.minMatch === match,
+				// Without taste no title has a match, so the counts would only repeat the total.
+				count: taste === "ready" ? count("minMatch", String(match)) : null,
+				// Any match stays, so a filter from a shared link can be taken off.
+				disabled: taste !== "ready" && match !== 0,
+				swatch: match ? (
+					<span
+						className="h-2 w-2 rounded-full bg-amber-400"
+						style={{ opacity: 0.4 + (match - 60) / 50 }}
+					/>
+				) : undefined,
+				toggle: () => set({ minMatch: match }),
 			})),
 		},
 		{
@@ -277,19 +314,20 @@ function buildGroups(
 }
 
 function OptionChip({ option }: { option: Option }) {
-	const dead = !option.active && option.count === 0
+	const dead = option.disabled || (!option.active && option.count === 0)
 	return (
 		<motion.button
 			type="button"
 			aria-pressed={option.active}
+			aria-disabled={option.disabled || undefined}
 			aria-label={
 				option.count === null
 					? option.label
 					: `${option.label}, ${option.count.toLocaleString("en")} titles`
 			}
-			whileTap={TAP}
-			onClick={option.toggle}
-			className={`flex h-9 items-center gap-2 rounded-full pl-3 pr-2.5 text-sm whitespace-nowrap cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${
+			whileTap={option.disabled ? undefined : TAP}
+			onClick={() => !option.disabled && option.toggle()}
+			className={`flex h-9 items-center gap-2 rounded-full pl-3 pr-2.5 text-sm whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${option.disabled ? "cursor-not-allowed" : "cursor-pointer"} ${
 				option.active
 					? "bg-white font-bold text-gray-950 shadow-[0_6px_20px_-6px_rgba(255,255,255,.35)]"
 					: dead
@@ -368,6 +406,30 @@ function OptionPoster({ option }: { option: Option }) {
 				</span>
 			)}
 		</motion.button>
+	)
+}
+
+/** Under the Taste match group while the viewer has no taste: how to get it. */
+function NeedsTaste({ needs }: { needs: Exclude<TasteState, "ready"> }) {
+	if (needs === "signUp")
+		return (
+			<SignUpPrompt
+				feature="tasteMatch"
+				stage="learn"
+				size="chip"
+				className="mt-2.5"
+			/>
+		)
+	return (
+		<p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-gray-400">
+			Rate a few more titles you love and every title gets a taste match.
+			<Link
+				to={RATE_TITLES_PATH}
+				className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-bold text-amber-200 ring-1 ring-amber-500/40 hover:bg-amber-500/25"
+			>
+				Rate titles
+			</Link>
+		</p>
 	)
 }
 
@@ -501,6 +563,7 @@ export function FilterGroups({
 							{g.key === "moods" && notice && (
 								<p className="mt-2 text-xs text-amber-300">{notice}</p>
 							)}
+							{g.needs && <NeedsTaste needs={g.needs} />}
 						</section>
 					))}
 				</div>

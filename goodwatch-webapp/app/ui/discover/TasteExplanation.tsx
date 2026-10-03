@@ -1,5 +1,6 @@
-// The explanation at the top right of Discover. Browsing with For you on: what the person's taste leans to, as small
-// chips in the fingerprint's colors; without enough liked titles, a nudge to rate a few more. Searching: "Read as" and
+// The explanation at the top right of Discover. Browsing with For you lifting titles: what the person's taste leans
+// to, as small chips in the fingerprint's colors (the rule itself is in For you's own tooltip); without enough liked
+// titles, a nudge to rate a few more. Searching: "Read as" and
 // how the search read the query, as chips, in the same slot. Guests with taste also get the sign-up prompt to keep it.
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
@@ -7,13 +8,11 @@ import { AnimatePresence, motion } from "framer-motion"
 import { SEARCH_MAX_MOVE } from "~/domain/for-you"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { ForYouStatus } from "~/server/discover-results.server"
+import { RATE_TITLES_PATH } from "~/ui/filter-bar/labels"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { ReasonChips } from "~/ui/title-card/ReasonChips"
 import { ReadAsChips, readAsChips } from "./ReadAsChips"
 import { useNudge } from "./motion"
-
-/** Where "Rate titles" goes: the taste quiz, picking up where the person left off. */
-export const RATE_TITLES_PATH = "/taste/quiz?resume=1"
 
 /** The search's side of the explanation. */
 export interface SearchExplanation {

@@ -26,8 +26,10 @@ import {
 	FilterBar,
 	ForYouExplanation,
 	SLAB_CLEARANCE,
+	tasteStateOf,
 	useFilterState,
 } from "~/ui/filter-bar"
+import { sortShown } from "~/ui/filter-bar/labels"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
@@ -104,6 +106,8 @@ export default function DevFilterBar() {
 		enabled: enabled && !loading && (Boolean(user) || guest !== null),
 	})
 	const data = results.data ?? null
+	const taste = tasteStateOf(data)
+	const bestMatch = sortShown(filters.sort, false, taste) === "match"
 
 	const cards = useFetcher<typeof action>()
 	const keys = data?.keys.slice(0, 24).join(",") ?? ""
@@ -131,13 +135,15 @@ export default function DevFilterBar() {
 				<FilterBar
 					filters={filters}
 					counts={data}
+					taste={taste}
 					forYou={{
 						on: forYouOn,
 						onChange: setForYouOn,
 						movedUp: data?.movedUp ?? 0,
 						explanation: (
 							<ForYouExplanation
-								on={forYouOn}
+								on={forYouOn || bestMatch}
+								bestMatch={bestMatch}
 								leanings={data?.explanation?.leanings ?? []}
 								ratings={data?.explanation?.ratings}
 								movedUp={data?.movedUp ?? 0}

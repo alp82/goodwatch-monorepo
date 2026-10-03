@@ -6,10 +6,15 @@ export { FilterGroups, FilterSearchField } from "./FilterGroups"
 export { FiltersSheet, ShowTitlesButton } from "./FiltersSheet"
 export {
 	DISCOVER_SORTS,
+	RATE_MORE,
+	RATE_TITLES_PATH,
 	type SortOption,
+	type TasteState,
 	activeChips,
+	compactCount,
 	discoverSorts,
 	recoveryLabel,
+	tasteStateOf,
 } from "./labels"
 export { SLAB_SEGMENT, Slab, SlabNav, SlabShell, useScrollFold } from "./Slab"
 export { SHEET_SNAPS, SnapSheet } from "./SnapSheet"

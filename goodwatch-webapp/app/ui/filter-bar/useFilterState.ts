@@ -25,14 +25,18 @@ export interface FilterStateBinding {
 	query: string
 	update: (change: (state: FilterState) => FilterState) => void
 	set: (patch: Partial<FilterState>) => void
-	setSort: (sort: SortKey) => void
+	/**
+	 * `also` changes other URL parameters in the same step (For you's `foryou`): two URL writes in one tick would lose
+	 * the first.
+	 */
+	setSort: (sort: SortKey, also?: (params: URLSearchParams) => void) => void
 	/** A one-tap recovery: the group back at its widest. */
 	drop: (name: FilterName) => void
 	clearSecondary: () => void
 }
 
 /**
- * The filter bar's state, bound to the URL (`services`, `unseen`, `type`, `moods`, `genres`, `score`, `released`,
+ * The filter bar's state, bound to the URL (`services`, `unseen`, `type`, `moods`, `genres`, `score`, `match`, `released`,
  * `similar`, `people`, `sort`, and the legacy filters). Defaults are omitted from the URL; other parameters (`q`,
  * `foryou`) are kept. A change shows at once: the hook holds it until the URL catches up, so a toggle doesn't wait
  * for the navigation. URL changes replace the history entry and keep the scroll position.
@@ -70,7 +74,10 @@ export function useFilterState({
 	latest.current = current
 
 	const write = useCallback(
-		(next: { state: FilterState; sort: SortKey }) => {
+		(
+			next: { state: FilterState; sort: SortKey },
+			also?: (params: URLSearchParams) => void,
+		) => {
 			latest.current = next
 			setPending(next)
 			setParams(
@@ -85,6 +92,7 @@ export function useFilterState({
 					else out.set("sort", next.sort)
 					// A new filter starts the list from its first page.
 					out.delete("page")
+					also?.(out)
 					return out
 				},
 				{ replace: true, preventScrollReset: true },
@@ -115,7 +123,8 @@ export function useFilterState({
 			[update],
 		),
 		setSort: useCallback(
-			(sort: SortKey) => write({ ...latest.current, sort }),
+			(sort: SortKey, also?: (params: URLSearchParams) => void) =>
+				write({ ...latest.current, sort }, also),
 			[write],
 		),
 		drop: useCallback(

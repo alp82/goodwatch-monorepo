@@ -390,6 +390,7 @@ interface FilterState {
   moods: MoodKey[]               // up to 3
   genres: string[]
   minScore: 0 | 60 | 70 | 80
+  minMatch: 0 | 70 | 80 | 90     // least taste match; doesn't narrow for a person without taste
   released: "any" | "recent" | "2010s" | "2000s" | "before2000"
   similarTo?: TitleKey[]         // resolved to an id set before filtering
   people?: number[]              // cast and crew, resolved to an id set before filtering
@@ -432,9 +433,15 @@ function filterTitles(input: {
   yet confirmed by the owner). New links never write them.
 - **For you** is `rankForYou` from `app/domain/for-you.ts`, a pure function shared with the browser so the moved
   counts agree:
-  - Browse: over the plain-sorted window of the first `W` titles (proposed `W = 400`), score
-    `0.4 * (1 - i / W) + 0.6 * (match / 100)`, with a missing match counted as 50. Ties keep the plain order. Titles
-    beyond the window keep their plain order after it.
+  - Browse: over every passing title, with no window. A title at plain index `i` lands at `i * (1 - lift)`, and the
+    titles are sorted by that. The lift (`browseLift`) is 0 up to a match of 79, rises in a straight line from there,
+    and is 1 from a match of 98, so the higher the match the further a title rises and the best matches go to the top.
+    Only titles with a GoodWatch score of at least 60 are lifted; a title without a match isn't. Nothing is pushed
+    down by its match. Ties keep the plain order. The four numbers are constants in `app/domain/for-you.ts`
+    (`BROWSE_LIFT_START`, `BROWSE_LIFT_FULL`, `BROWSE_LIFT_EXPONENT`, `BROWSE_QUALITY_FLOOR`) and can be tried out on
+    the development page `/dev/for-you`.
+  - With the Best match sort the order is the taste match already, so For you has nothing to blend and reports no
+    movement.
   - Search: score `-(i - 3 * lean)` with `lean = clamp((match - 50) / 50, -1, 1)`, so no title moves 5 places or more.
     It runs over the whole ranked list of up to 100 titles.
   - `moved = plainIndex - newIndex`. "↑N moved" is the number of titles with `moved > 0`.
@@ -534,8 +541,8 @@ function createSeaRenderer(canvas: HTMLCanvasElement, prefs: { reducedMotion: bo
 Tabs are routes so that each is linkable and the browser's back button moves between them.
 
 **URL state.** Filters, sort, and For you live in the URL so a page can be shared and reloaded:
-`services=mine|all|<ids>`, `unseen=0|1`, `type`, `moods=funny,scary`, `genres`, `score`, `released`, `similar`,
-`people`, `sort`, `foryou=0|1`, `q`. Defaults are omitted. Discover keeps accepting today's parameters (`withGenres`,
+`services=mine|all|<ids>`, `unseen=0|1`, `type`, `moods=funny,scary`, `genres`, `score`, `match=70|80|90`,
+`released`, `similar`, `people`, `sort` (`match` is Best match), `foryou=0|1`, `q`. Defaults are omitted. Discover keeps accepting today's parameters (`withGenres`,
 `minScore`, `withStreamingProviders`, `sortBy`, `watchedType`, and so on) and rewrites them to the new names with a
 redirect, so existing links keep working. The parameters for filters the new sheet doesn't offer keep their old names
 and apply as [legacy filters](#title-filter-appservertitle-filter).
@@ -576,12 +583,13 @@ Used on Discover (browse and search), Watch next, and Explorer (Explorer uses on
   services" for a viewer without saved services and opens the services setting.
 - **Not seen yet:** a switch that shows how many titles it hides ("−53"): Seen titles and titles marked Not
   interested.
-- **Sort:** a fixed-width button opening a popover. Discover browse sorts: Popular, Top rated, Newest; Relevance joins
-  them only while searching. Watch next sorts: see [Watch next](#watch-next).
-- **For you** (Discover only) sits next to the sort; see [Discover and Search](#discover-and-search).
+- **Sort:** a fixed-width button opening a popover. Discover's sorts: Best match, Popular, Top rated, Newest;
+  Relevance joins them only while searching. Popular stays the default. Best match needs taste: without it the option
+  shows unavailable with the reason. Watch next sorts: see [Watch next](#watch-next).
+- **For you** (Discover only) sits before the sort; see [Discover and Search](#discover-and-search).
 - **Filters:** opens a 480 px side sheet from the right, with a search field (focused on open) that filters option
   labels, and these groups in order: Movies or shows, Mood (the 11 moods), Genre, GoodWatch score (Any, 60+, 70+,
-  80+), Released (Any, last 3 years, 2010s, 2000s, before 2000), Streaming services (logos), Similar to, Cast and
+  80+), Taste match (Any, 70%+, 80%+, 90%+; unavailable without taste, with the reason), Released (Any, last 3 years, 2010s, 2000s, before 2000), Streaming services (logos), Similar to, Cast and
   crew. Each option shows what the result would be if tapped; an option that would leave 0 titles is dimmed. The
   footer has Clear all, "N hidden", and a live "Show N titles" that counts as the state changes.
 - **Sub-bar:** removable chips for every active filter (legacy filters from old URLs included), Clear filters, and the
@@ -595,7 +603,7 @@ Used on Discover (browse and search), Watch next, and Explorer (Explorer uses on
 **Mobile slab**: one fixed panel at the bottom that merges the filter strip with the site navigation:
 
 - From top to bottom: the hidden line (meter, "N hidden by filters", the top recovery; with a query, "N matches, M
-  hidden"), the strip (On my services, Not seen yet, Sort, and For you on Discover), a 52 px Filters key with a badge
+  hidden"), the strip (On my services, Not seen yet, For you on Discover, and Sort), a 52 px Filters key with a badge
   of active secondary filters, and the navigation dock.
 - Scrolling down more than 10 px folds the hidden line and the dock away; the strip stays. Near the top (under 80 px)
   both always show.
@@ -790,13 +798,18 @@ One page at `/discover`. Browsing and searching share the heading, the filter ba
 - **Heading:** while browsing it names the list ("Discover"). Tapping it turns it into the search field (the heading
   and field share one plate that morphs in 240 ms). Typing commits after 800 ms or on Enter. The query becomes the
   heading, with a clear button. Clearing returns to browsing and to the sort used before the search.
-- **Sort:** Popular, Top rated, Newest. **Relevance** appears only while searching and is the search default.
-- **For you:** an on/off switch integrated with the sort control, on by default and saved per member (see
+- **Sort:** Best match, Popular (the default), Top rated, Newest. **Relevance** appears only while searching and is
+  the search default. **Best match** orders the whole filtered list by taste match; without taste the results fall
+  back to Popular (Relevance on a search) and the control shows that sort.
+- **For you:** an on/off switch before the sort control, on by default and saved per member (see
   the For you setting in [Routes and API](#routes-and-api)), with an amber glow when on, a
   fingerprint icon inside it (hovering or focusing the icon explains it), and "↑N moved" after it changes the order.
-  It applies to whichever sort is chosen; on a search it moves results at most 5 places
+  It applies to whichever sort is chosen: browsing, the higher a title's taste match the further it rises, and the
+  best matches go to the top; on a search it moves results at most 5 places
   ([Title filter](#title-filter-appservertitle-filter)). Per-card up and down marks show for 2.6 s after the switch
-  flips.
+  flips. Under Best match the switch shows on without a moved count, whatever the saved setting, which choosing Best
+  match doesn't change. Flipping it there turns it off for the moment and opens the sorts: picking another sort
+  applies it with For you off; closing them without picking turns it back on.
 - **Explanation chips** (top right, small colored chips):
   - Browsing with For you on: "Your taste leans to" and three chips from `Taste.leanings(3)`, in fingerprint colors,
     plus "from N ratings".
@@ -852,36 +865,45 @@ confirmed by the owner).
 A full-viewport map at `/explorer`. The page never scrolls; nothing sits below the map. Controls are always visible and
 at least 44 px.
 
-**Groupings**, chosen up front in a segmented control: Genre, Mood, Streaming, Decade, Country, Taste distance.
+**Groupings**, chosen up front in a segmented control: Mood (the default), Theme, Style, Occasion, Genre, Decade,
+Country, Your taste.
 
 | Grouping | Islands | Membership |
 |---|---|---|
+| Mood | Up to 14 islands for how a title feels, such as "Laugh out loud" or "Edge of your seat" | Several; a title that fits none sits on no island |
+| Theme | Up to 14 islands for what a title is about, such as "True stories" or "Growing up" | Several, or none |
+| Style | Up to 14 islands for how a title looks, sounds, and is told, such as "Big spectacle" or "Slow burn" | Several, or none |
+| Occasion | Up to 12 islands for who and what a title suits, such as "Date night" or "Comfort watch" | Several, or none |
 | Genre | Up to 13 genre buckets | A title can sit on several islands |
-| Mood | The 11 Watch next moods (owner) | Several; titles in no mood sit on no island (default, not yet confirmed by the owner) |
-| Streaming | The viewer's services, plus "Rent or buy" | Several; not offered to guests without services (owner) |
 | Decade | 7 bands | One |
 | Country | Origin countries with at least 50 pool titles, at most 13, plus "Rest of world" (owner) | One |
-| Taste distance | Match bands 90+, 80 to 89, 65 to 79, below 65 | One; hidden without taste |
+| Your taste | Match bands 90+, 80 to 89, 65 to 79, below 65 | One; hidden without taste |
 
 **Pool:** the snapshot titles with a poster and a backdrop, up to 9,000 movies with at least 800 votes and 3,000 shows
 with at least 200 votes (about 12,000 titles). Islands with fewer than 3 titles are dropped.
 
-**Grouping rules** (owner, [#193](https://github.com/alp82/goodwatch-monorepo/issues/193)):
+**Grouping rules** (owner, 2026-10-03; they replace the rules of
+[#193](https://github.com/alp82/goodwatch-monorepo/issues/193) for Mood and Streaming):
 
-- **Mood** uses the 11 moods of the moods module, the same rules as Watch next. The prototype's 9 hard-coded mood
-  families don't ship.
+- **Mood, Theme, and Style** are Explorer's own islands, each a rule over the fingerprint
+  (`app/server/explorer/groupings.server.ts`). They are not the 11 moods of the moods module, which stay as they are
+  for Watch next: most of those restate a genre. An island's threshold moves up while it holds more than a quarter of
+  the pool, and one step down when it holds less than 1 percent. The thresholds haven't been tuned against the real
+  pool yet; each build logs the island sizes and the share of the pool that sits on an island.
+- **Occasion** uses the title analysis's suitability and viewing-context flags. The snapshot doesn't hold them, so the
+  pool reads them from Crate with its display fields, once per snapshot version. An occasion that more than half the
+  pool has is left out.
+- **Streaming** is gone as a grouping: On my services already covers it, and combining two services says nothing.
+  A link to `grouping=streaming` opens Mood.
 - **Country** buckets come from the pool's origins: each origin country with at least 50 pool titles gets an island,
   and the rest join "Rest of world". The bucket list is computed per snapshot version. When more than 13 countries
   qualify, the 13 largest keep islands and the others also join "Rest of world", which keeps the grouping within the
   renderer's island limit (default, not yet confirmed by the owner).
-- **Streaming** needs services. Guests without services fall back to the Genre grouping: the Streaming segment isn't
-  shown, and a link to `grouping=streaming` opens Genre. Members without saved services get the same fallback (default,
-  not yet confirmed by the owner).
 
 **Server:** `getExplorerMap` computes islands from snapshot facts, positions them by a two-component PCA of their mean
 descriptive vectors (the craft keys and homage and reference left out), and returns per island: id, name, color, count,
 median match, the three match bands, position, a "what sets it apart" phrase, and the top 12 titles by quality plus the
-top 5 of each match band. Non-personal groupings are cached per country and grouping for 6 hours in memory; the
+top 5 of each match band. Non-personal groupings are cached per grouping for 6 hours in memory; the
 personal part (match, Seen, Want to See, on my services) is added per request.
 
 - `getIsland` returns an island's tree: its first 2 to 5 posters, then each title's closest titles in the island by
@@ -918,9 +940,9 @@ personal part (match, Seen, Want to See, on my services) is added per request.
   when nothing moves (the prototype's never stopped, which breaks the rendering-budget rule of
   [#190](https://github.com/alp82/goodwatch-monorepo/issues/190)).
 
-**Guests:** the map works for everyone. Taste distance, match bands, and the why line need taste: guests with taste
+**Guests:** the map works for everyone. Your taste, match bands, and the why line need taste: guests with taste
 (5 liked titles among their guest ratings) get them from their guest taste; guests without it get the groupings without
-Taste distance and a sign-up prompt in the card. Guests without services get Genre in place of Streaming.
+Your taste and a sign-up prompt in the card.
 
 ### Navigation
 
@@ -969,7 +991,7 @@ not yet confirmed by the owner: the placement within the sheet).
 | Search | For you moves results at most 5 places | 5+ guest ratings: as members, with the prompt; fewer: Relevance only and the prompt |
 | Watch next | Best match default, moods, tiers | Guest Wishlist; 5+ guest ratings: Best match works, with the prompt; fewer: Last added default and the prompt on Best match; moods work |
 | Taste | All three tabs | 5+ guest ratings: tabs from their ratings, with the prompt; fewer: a labeled sample taste and a prompt to rate |
-| Explorer | All groupings | Taste distance and match with guest taste; no Streaming grouping without services (Genre instead); otherwise the card shows the prompt in place of match |
+| Explorer | All groupings | Your taste and match with guest taste; otherwise the card shows the prompt in place of match |
 | Navigation | Avatar, Tonight's pick | Sign up, Wishlist thumb |
 
 Guests with at least 5 guest ratings get For you and Best match working, with a sign-up prompt to keep them (owner,
@@ -1021,6 +1043,8 @@ the snapshot) run in the background, and requests during their load degrade as d
 - **Blur:** the backdrop collages were blurred with canvas `filter`, which Safari may not support. The ticket checks
   Safari and pre-blurs tiles in a small shader pass, or ships pre-blurred images, when it isn't supported.
 - **Debugging:** `?gl=webgl2|webgl1|canvas` forces an adapter outside production only.
+- **No list view:** the map has no list mode (owner, 2026-10-03); a keyboard and screen-reader alternative to the
+  canvas is open.
 - **Without JavaScript and for search engines:** the server renders the grouping's islands as a list of headings with
   their top titles as links. The canvas replaces it after hydration.
 

@@ -3,10 +3,9 @@
 import { UserPlusIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
-import { SLAB_SEGMENT } from "~/ui/filter-bar"
+import { RATE_TITLES_PATH, SLAB_SEGMENT } from "~/ui/filter-bar"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { SIGN_UP_MESSAGES } from "~/ui/sign-up-prompt/messages"
-import { RATE_TITLES_PATH } from "./TasteExplanation"
 
 /**
  * The sign-up prompt in For you's place: the prompt chip in the desktop row, and a compact segment in the phone slab
@@ -51,8 +50,9 @@ export function ForYouNeedsTaste() {
 				For you
 			</p>
 			<p className="mt-2 text-[13px] leading-relaxed text-gray-300">
-				For you lets titles you'd likely rate highly rise within the sort. It
-				needs a few titles you loved to learn your taste.
+				For you lifts titles in the sort you chose: the higher the taste match,
+				the further up, and your best matches go to the top. It needs a few
+				titles you loved to learn your taste.
 			</p>
 			<Link
 				to={RATE_TITLES_PATH}

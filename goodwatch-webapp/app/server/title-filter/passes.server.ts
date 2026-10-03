@@ -5,6 +5,7 @@
 import {
 	FILTER_NAMES,
 	type FilterName,
+	MIN_MATCHES,
 	MIN_SCORES,
 } from "~/domain/filter-state"
 import { MOOD_KEYS } from "~/domain/moods"
@@ -93,6 +94,10 @@ export interface PassInput {
 	genres: number
 	genresChosen: boolean
 	minScore: number
+	/** The least taste match; 0 when off, and always 0 without `matches`. */
+	minMatch: number
+	/** Taste match (50 to 99) per universe title, 0 for a title without one; null for a person without taste. */
+	matches: Uint8Array | null
 	released: DayRange | null
 	releasedOptions: Record<string, DayRange | null>
 	/** One set per chosen title or person; a title passes when any set holds it. Empty when off. */
@@ -165,6 +170,9 @@ export function runPasses(input: PassInput): PassOutput {
 	const genreMask = input.genres >>> 0
 	const genresOn = input.genresChosen
 	const minScore = input.minScore
+	const matches = input.matches
+	// Without taste no title has a match, and the filter doesn't narrow.
+	const minMatch = matches ? input.minMatch : 0
 	const released = input.released
 	const similar = input.similarTo
 	const people = input.people
@@ -219,6 +227,7 @@ export function runPasses(input: PassInput): PassOutput {
 			(row < 0 || scores[row] === UNKNOWN_SCORE || scores[row] < minScore)
 		)
 			mask |= BIT.minScore
+		if (matches && minMatch > 0 && matches[i] < minMatch) mask |= BIT.minMatch
 		if (released) {
 			const day = row < 0 ? UNKNOWN_DAY : releaseDays[row]
 			if (day === UNKNOWN_DAY || day < released.from || day >= released.to)
@@ -447,6 +456,25 @@ export function runPasses(input: PassInput): PassOutput {
 		)
 		optionCounts.released = Object.fromEntries(
 			releasedEntries.map(([name], o) => [name, releasedCounts[o]]),
+		)
+	}
+
+	// Taste match: one choice. Titles per match first (0 is no match), then each option sums the matches it keeps.
+	// Without taste every option leaves the same.
+	{
+		const perMatch = new Uint32Array(256)
+		const minMatchBit = BIT.minMatch
+		for (let i = 0; i < n; i++) {
+			if ((masks[i] & ~minMatchBit) !== 0) continue
+			perMatch[matches ? matches[i] : 0]++
+		}
+		const matchCounts = new Uint32Array(MIN_MATCHES.length)
+		for (let match = 0; match < 256; match++)
+			for (let o = 0; o < MIN_MATCHES.length; o++)
+				if (!matches || match >= MIN_MATCHES[o])
+					matchCounts[o] += perMatch[match]
+		optionCounts.minMatch = Object.fromEntries(
+			MIN_MATCHES.map((min, o) => [String(min), matchCounts[o]]),
 		)
 	}
 

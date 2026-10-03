@@ -1,5 +1,6 @@
 // Discover's results: in browse mode the catalog, in search mode the search's ranked list, filtered and sorted in
-// memory by the filter bar's state, For you applied, and one page of title cards. Serves the Discover route's first
+// memory by the filter bar's state, taste applied (the taste match filter, Best match, For you), and one page of title
+// cards. Serves the Discover route's first
 // view and /api/discover/results for every page after.
 import type { FilterState, SortKey } from "~/domain/filter-state"
 import { type FingerprintKey, loadTaste } from "~/server/taste/index.server"
@@ -8,6 +9,10 @@ import {
 	type FilterResult,
 	filterTitles,
 } from "~/server/title-filter/index.server"
+import {
+	UNKNOWN_SCORE,
+	getTitleSnapshot,
+} from "~/server/title-snapshot/index.server"
 import type { ViewerContext } from "~/server/viewer.server"
 import type { TitleKey } from "~/utils/title-key"
 
@@ -30,6 +35,7 @@ export type ForYouStatus = "ready" | "needsTaste" | "signUp"
 export interface DiscoverResults extends Omit<FilterResult, "keys" | "moved"> {
 	page: number
 	pageSize: number
+	/** The sort as requested; `sortUsed` is the one the titles are in (Best match falls back without taste). */
 	sort: SortKey
 	state: FilterState
 	/** This page's titles, in order. */
@@ -43,7 +49,7 @@ export interface DiscoverResults extends Omit<FilterResult, "keys" | "moved"> {
 	forYou: {
 		/** The switch as the request set it. */
 		on: boolean
-		/** Whether it changed the order: on, and the viewer has taste. */
+		/** Whether it changed the order: on, the viewer has taste, and the sort isn't Best match. */
 		applied: boolean
 		status: ForYouStatus
 		/** The viewer's ratings, member or guest. */
@@ -81,17 +87,17 @@ export async function getDiscoverResults(
 			: taste.signal === "some"
 				? "ready"
 				: "needsTaste"
-	const applied = input.forYou && status === "ready"
 
 	const result = await filterTitles({
 		universe: searching ? ranked : "catalog",
 		state,
 		sort,
-		forYou: applied
-			? { taste, surface: searching ? "search" : "browse" }
-			: null,
+		taste,
+		forYou: input.forYou ? (searching ? "search" : "browse") : null,
 		viewer: ctx,
 	})
+	// With Best match the order is the taste match already: For you has nothing to blend.
+	const applied = result.moved !== undefined
 
 	const from = (page - 1) * DISCOVER_PAGE_SIZE
 	const keys = result.keys.slice(from, from + DISCOVER_PAGE_SIZE)
@@ -113,6 +119,52 @@ export async function getDiscoverResults(
 				? { leanings: taste.leanings(LEANINGS), ratings: taste.ratings }
 				: null,
 		searching,
+	}
+}
+
+/**
+ * What For you's browse rule reads, for tuning it (the dev page /dev/for-you): every passing title in the plain order
+ * of the sort, as parallel arrays, so the browser can rank the whole list again with other numbers.
+ */
+export interface ForYouPreview {
+	/** The plain sort the titles are in. Best match has no plain order to blend into, so it reads as Popular. */
+	sortUsed: SortKey
+	hasTaste: boolean
+	/** Every passing title, in the plain order. */
+	keys: TitleKey[]
+	/** Taste match (50 to 99) per title of `keys`; 0 without one. */
+	matches: number[]
+	/** GoodWatch score (0 to 100) per title of `keys`; -1 when unknown. */
+	scores: number[]
+}
+
+/** The plain order of the catalog for the viewer's filters and sort, with each title's taste match and score. */
+export async function getForYouPreview(
+	ctx: ViewerContext,
+	input: { state: FilterState; sort: SortKey },
+): Promise<ForYouPreview> {
+	const taste = await loadTaste(ctx.viewer)
+	const result = await filterTitles({
+		universe: "catalog",
+		state: input.state,
+		sort: input.sort === "match" ? "popular" : input.sort,
+		taste,
+		forYou: null,
+		viewer: ctx,
+	})
+	// filterTitles throws SnapshotNotLoaded without one.
+	const snapshot = getTitleSnapshot()
+	const scores = result.keys.map((key) => {
+		const row = snapshot?.rowOf(key) ?? -1
+		const score = row < 0 ? UNKNOWN_SCORE : snapshot?.columns.scores[row]
+		return score === undefined || score === UNKNOWN_SCORE ? -1 : score
+	})
+	return {
+		sortUsed: result.sortUsed,
+		hasTaste: result.hasTaste,
+		keys: result.keys,
+		matches: taste.match(result.keys).map((match) => match ?? 0),
+		scores,
 	}
 }
 

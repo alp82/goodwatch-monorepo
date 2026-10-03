@@ -10,34 +10,21 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query"
 import { useCallback, useMemo, useState } from "react"
-import { type MoodKey, parseMoods } from "~/domain/moods"
-import { type WatchNextSort, isWatchNextSort } from "~/domain/watch-next"
+import { type WatchNextChoice, watchNextChoiceOf } from "~/domain/watch-next"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
 import type { TasteInteraction } from "~/ui/taste/types"
 import { useUser } from "~/utils/auth"
 import { useGuestInteractions } from "~/utils/guest-progress"
 import type { TitleKey } from "~/utils/title-key"
 
-export interface WatchNextChoice {
-	/** Null: the viewer's default sort (Best match, or Last added without taste). */
-	sort: WatchNextSort | null
-	moods: MoodKey[]
-	onMyServices: boolean
-}
+export type { WatchNextChoice }
 
 /** Cards per request to /api/watch-next/cards (the title cards' MAX_KEYS). */
 export const CARDS_PER_REQUEST = 60
 
 const SERVICES_PENDING_RETRY_MS = 3000
 
-export function choiceFromParams(params: URLSearchParams): WatchNextChoice {
-	const sort = params.get("sort")
-	return {
-		sort: sort && isWatchNextSort(sort) ? sort : null,
-		moods: parseMoods(params.get("moods")),
-		onMyServices: params.get("services") !== "all",
-	}
-}
+export const choiceFromParams = watchNextChoiceOf
 
 /** The page URL's parameters for a choice, keeping any others. */
 function choiceToParams(choice: WatchNextChoice, current: URLSearchParams) {

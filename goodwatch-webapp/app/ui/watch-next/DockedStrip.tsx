@@ -1,12 +1,14 @@
 // The glass strip docked on the hero's top edge: moods, how many titles fit, On my services, and the sort. Once it
 // scrolls away, the same line pins under the site header. From the large breakpoint up; phones use PhoneControls.
-import { GlobeAltIcon, PlusIcon } from "@heroicons/react/24/solid"
+import { PlusIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import type { WatchNextSort } from "~/domain/watch-next"
 import type { WatchNext } from "~/server/watch-next.server"
+import { ServicesControl } from "~/ui/filter-bar/controls"
+import { SHELL } from "~/ui/filter-bar/motion"
 import {
 	MoodButton,
 	type MoodControl,
@@ -14,7 +16,7 @@ import {
 	PickedMoods,
 } from "./MoodPicker"
 import { SortMenu } from "./SortMenu"
-import { EASE, WRAP, logoUrl } from "./style"
+import { EASE, WRAP } from "./style"
 
 export interface StripProps {
 	data: WatchNext
@@ -26,6 +28,11 @@ export interface StripProps {
 // The site header's height: the pinned line sits right under it.
 const HEADER_PX = 64
 
+/**
+ * On my services, with Everywhere one tap away: the filter bar's services control at the strip's height. Here it puts
+ * what the person can play first instead of hiding the rest, which the tooltips say. Without saved services a link
+ * to add them stands in its place: Everywhere is all there is then.
+ */
 function ServicesToggle({
 	data,
 	setOnMyServices,
@@ -39,41 +46,26 @@ function ServicesToggle({
 		return (
 			<Link
 				to="/settings/streaming"
-				className="inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 pl-2 pr-3 text-sm font-semibold text-gray-100 ring-1 ring-white/15 transition-colors hover:bg-white/20"
+				className={`inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap pl-2.5 pr-3 text-sm font-bold text-gray-200 outline-none transition-colors hover:text-white hover:ring-white/20 focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL}`}
 			>
-				<PlusIcon className="h-4 w-4 text-amber-300" aria-hidden />
+				<PlusIcon className="h-4 w-4 shrink-0" aria-hidden />
 				Add my services
 			</Link>
 		)
-	const on = data.onMyServices
 	return (
-		<button
-			type="button"
-			aria-pressed={on}
-			onClick={() => setOnMyServices(!on)}
-			title={
-				on
-					? "Showing what you can play on your services first. Tap to include everywhere."
-					: "Including titles on any service. Tap to put your services first."
-			}
-			className={`inline-flex h-9 shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full pl-1.5 pr-3 text-sm font-semibold transition-colors ${on ? "bg-white text-black hover:bg-gray-200" : "bg-white/10 text-gray-100 ring-1 ring-white/15 hover:bg-white/20"}`}
-		>
-			{on ? (
-				<span className="flex -space-x-1.5" aria-hidden>
-					{data.myServices.slice(0, 3).map((service) => (
-						<img
-							key={service.id}
-							src={logoUrl(service.logo_path)}
-							alt=""
-							className="h-6 w-6 rounded-full ring-2 ring-white"
-						/>
-					))}
-				</span>
-			) : (
-				<GlobeAltIcon className="ml-0.5 h-5 w-5 text-gray-300" aria-hidden />
-			)}
-			{on ? "On my services" : compact ? "All" : "Everywhere"}
-		</button>
+		<ServicesControl
+			size="sm"
+			on={data.onMyServices}
+			hasServices
+			providers={data.myServices}
+			onChange={setOnMyServices}
+			onAddServices={() => {}}
+			labels={compact ? { mine: "My services", everywhere: "All" } : undefined}
+			titles={{
+				mine: "What you can play on your services comes first.",
+				everywhere: "Titles on any service count the same.",
+			}}
+		/>
 	)
 }
 

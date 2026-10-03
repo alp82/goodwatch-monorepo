@@ -47,7 +47,7 @@ export type LoaderData = {
 const WATCH_NEXT_SORT: Partial<Record<string, string>> = {
 	most_recently_added: "added",
 	least_recently_added: "waiting",
-	highest_score: "score",
+	highest_score: "top",
 	most_popular: "popular",
 }
 

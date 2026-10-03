@@ -6,54 +6,60 @@ import type {
 	WatchNextTierKey,
 	WatchNextTierSize,
 } from "~/domain/watch-next"
-import type { WatchNextTitle } from "~/server/watch-next.server"
+import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
+import {
+	DISCOVER_SORTS,
+	RATE_MORE,
+	type SortOption,
+} from "~/ui/filter-bar/labels"
 
-export const SORT_OPTIONS: {
-	key: WatchNextSort
-	label: string
-	line: string
-}[] = [
-	{
-		key: "match",
-		label: "Best match",
-		line: "Closest to your taste, from your scores and the title analysis.",
-	},
+export { RATE_MORE }
+
+// The sorts Discover has too say what Discover says.
+export const SORT_OPTIONS: SortOption<WatchNextSort>[] = [
+	{ ...DISCOVER_SORTS.match, key: "match" },
 	{
 		key: "waiting",
 		label: "Waiting longest",
-		line: "The titles that have been on your Wishlist the longest.",
+		hint: "Longest on your Wishlist",
 	},
-	{
-		key: "added",
-		label: "Last added",
-		line: "The titles you added most recently.",
-	},
-	{
-		key: "newest",
-		label: "Newest release",
-		line: "Latest films, and shows with the newest episodes.",
-	},
-	{
-		key: "score",
-		label: "Top rated",
-		line: "Highest GoodWatch score first.",
-	},
-	{
-		key: "popular",
-		label: "Popular now",
-		line: "What most people are watching right now, from TMDB.",
-	},
+	{ key: "added", label: "Last added", hint: "Added most recently" },
+	{ ...DISCOVER_SORTS.newest, key: "newest" },
+	{ ...DISCOVER_SORTS.top, key: "top" },
+	{ ...DISCOVER_SORTS.popular, key: "popular" },
 ]
+
+/**
+ * The sorts for the viewer: Best match needs taste, so without it the option shows but can't be picked, and says why
+ * while the person has too few liked titles (a guest gets the sign-up prompt under the list instead).
+ */
+export const sortOptionsFor = (
+	bestMatch: WatchNext["bestMatch"],
+): SortOption<WatchNextSort>[] =>
+	bestMatch.available
+		? SORT_OPTIONS
+		: SORT_OPTIONS.map((option) =>
+				option.key === "match"
+					? {
+							...option,
+							disabled: true,
+							...(bestMatch.prompt === "rateMore" ? { hint: RATE_MORE } : {}),
+						}
+					: option,
+			)
 
 export const SORT_LABEL = Object.fromEntries(
 	SORT_OPTIONS.map((option) => [option.key, option.label]),
 ) as Record<WatchNextSort, string>
 
-/** The sort's name on the phone slab's narrow button. */
-export const SORT_SHORT: Record<WatchNextSort, string> = {
-	...SORT_LABEL,
-	newest: "Newest",
-	popular: "Popular",
+/** The sort inside a sentence: "The rest of your Wishlist, by newest release." */
+export const SORT_WORDS: Record<WatchNextSort, string> = {
+	match: "best match",
+	waiting: "waiting longest",
+	added: "last added",
+	newest: "newest release",
+	top: "top rated",
+	popular: "popularity",
 }
 
 /** The phone slab's moods button: "Any mood", "Funny", "Funny +2". */
@@ -88,7 +94,7 @@ export function heroLabel(
 			return m ? `Last added in ${m}` : "Last added to your Wishlist"
 		case "newest":
 			return m ? `Newest release in ${m}` : "Newest release on your Wishlist"
-		case "score":
+		case "top":
 			return m ? `Top rated in ${m}` : "Top rated on your Wishlist"
 		case "popular":
 			return m
@@ -138,7 +144,7 @@ export function sortFact(
 			return title.media_type === "show"
 				? `Latest episode ${dayLabel(title.releaseDate)}`
 				: `Released ${dayLabel(title.releaseDate)}`
-		case "score":
+		case "top":
 			return title.goodwatch_overall_score_normalized_percent
 				? `GoodWatch score ${Math.round(title.goodwatch_overall_score_normalized_percent)}`
 				: null

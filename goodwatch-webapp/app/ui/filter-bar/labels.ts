@@ -4,6 +4,7 @@ import type {
 	FilterName,
 	FilterState,
 	LegacyParam,
+	MinMatch,
 	MinScore,
 	Released,
 	SortKey,
@@ -19,7 +20,42 @@ export interface SortOption<K extends string = string> {
 	key: K
 	label: string
 	hint: string
+	/** Taste decides this sort (Best match): the sort control marks it amber. */
+	taste?: boolean
+	/** Shown but not pickable; `hint` says why. */
+	disabled?: boolean
 }
+
+/**
+ * Whether the viewer has taste, for everything that needs it (Best match, the Taste match filter), or why not:
+ * rateMore for fewer than 5 liked titles, signUp for a guest with too few guest ratings.
+ */
+export type TasteState = "ready" | "rateMore" | "signUp"
+
+/** The taste state from a results answer; ready until the first answer says otherwise. */
+export const tasteStateOf = (
+	results:
+		| {
+				hasTaste: boolean
+				forYou: { status: "ready" | "needsTaste" | "signUp" }
+		  }
+		| null
+		| undefined,
+): TasteState =>
+	!results
+		? "ready"
+		: results.forYou.status === "signUp"
+			? "signUp"
+			: results.hasTaste
+				? "ready"
+				: "rateMore"
+
+/** Where "Rate titles" goes: the taste quiz, picking up where the person left off. */
+export const RATE_TITLES_PATH = "/taste/quiz?resume=1"
+
+/** Best match's line while the person has too few liked titles. */
+export const RATE_MORE =
+	"Rate a few more titles you love and Best match learns your taste."
 
 export const DISCOVER_SORTS: Record<SortKey, SortOption<SortKey>> = {
 	relevance: {
@@ -27,16 +63,60 @@ export const DISCOVER_SORTS: Record<SortKey, SortOption<SortKey>> = {
 		label: "Relevance",
 		hint: "Closest to your search",
 	},
+	match: {
+		key: "match",
+		label: "Best match",
+		hint: "Closest to your taste",
+		taste: true,
+	},
 	popular: { key: "popular", label: "Popular", hint: "What people watch now" },
 	top: { key: "top", label: "Top rated", hint: "Highest GoodWatch score" },
 	newest: { key: "newest", label: "Newest", hint: "Latest releases first" },
 }
 
-/** Discover's sorts: Popular, Top rated, Newest, and Relevance only while searching. */
-export const discoverSorts = (searching: boolean): SortOption<SortKey>[] =>
-	(["relevance", "popular", "top", "newest"] as const)
+/**
+ * Discover's sorts: Best match, Popular, Top rated, Newest, and Relevance only while searching. Without taste Best
+ * match shows but can't be picked; while the person has too few liked titles its line says so (a guest who needs to
+ * sign up gets the sign-up prompt under the list instead).
+ */
+export const discoverSorts = (
+	searching: boolean,
+	taste: TasteState = "ready",
+): SortOption<SortKey>[] =>
+	(["match", "relevance", "popular", "top", "newest"] as const)
 		.filter((key) => searching || key !== "relevance")
-		.map((key) => DISCOVER_SORTS[key])
+		.map((key) =>
+			key === "match" && taste !== "ready"
+				? {
+						...DISCOVER_SORTS.match,
+						disabled: true,
+						...(taste === "rateMore" ? { hint: RATE_MORE } : {}),
+					}
+				: DISCOVER_SORTS[key],
+		)
+
+/**
+ * The sort the sort control shows. Best match needs taste: without it the results are in Popular (Relevance while
+ * searching), as the server's `sortUsed` says, and so is the control, whatever the URL asked for.
+ */
+export const sortShown = (
+	sort: SortKey,
+	searching: boolean,
+	taste: TasteState,
+): SortKey =>
+	sort === "match" && taste !== "ready"
+		? searching
+			? "relevance"
+			: "popular"
+		: sort
+
+/** "953", "1.2k", "12k": a count short enough for a fixed slot. Say the full number where there's room. */
+export function compactCount(n: number): string {
+	if (n < 1000) return String(n)
+	if (n < 9950) return `${(n / 1000).toFixed(1)}k`
+	if (n < 999_500) return `${Math.round(n / 1000)}k`
+	return `${(n / 1_000_000).toFixed(1)}M`
+}
 
 export const TYPE_LABELS: Record<FilterState["type"], string> = {
 	all: "Movies & shows",
@@ -54,6 +134,13 @@ export const SCORE_LABELS: Record<MinScore, string> = {
 	80: "80 and up",
 }
 
+export const MATCH_LABELS: Record<MinMatch, string> = {
+	0: "Any match",
+	70: "70% and up",
+	80: "80% and up",
+	90: "90% and up",
+}
+
 export const RELEASED_LABELS: Record<Released, string> = {
 	any: "Any year",
 	recent: "Last 3 years",
@@ -62,7 +149,10 @@ export const RELEASED_LABELS: Record<Released, string> = {
 	before2000: "Before 2000",
 }
 
-/** Each filter group's color: the dot on its chip and the bar on its sheet section. */
+/**
+ * Each filter group's color: the dot on its chip and the bar on its sheet section. Amber is what taste decides, so it
+ * is the Taste match group's; genres are fuchsia.
+ */
 export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 	{
 		services: { dot: "bg-emerald-400", bar: "bg-emerald-500" },
@@ -70,15 +160,19 @@ export const FILTER_ACCENTS: Record<FilterName, { dot: string; bar: string }> =
 		type: { dot: "bg-teal-400", bar: "bg-teal-500" },
 		anime: { dot: "bg-pink-400", bar: "bg-pink-500" },
 		moods: { dot: "bg-indigo-400", bar: "bg-indigo-500" },
-		genres: { dot: "bg-amber-400", bar: "bg-amber-500" },
+		genres: { dot: "bg-fuchsia-400", bar: "bg-fuchsia-500" },
 		minScore: { dot: "bg-lime-400", bar: "bg-lime-500" },
+		minMatch: { dot: "bg-amber-400", bar: "bg-amber-500" },
 		released: { dot: "bg-cyan-400", bar: "bg-cyan-500" },
 		similarTo: { dot: "bg-rose-400", bar: "bg-rose-500" },
 		people: { dot: "bg-purple-400", bar: "bg-purple-500" },
 		legacy: { dot: "bg-gray-400", bar: "bg-gray-500" },
 	}
 
-/** The hidden meter's segment color per recovery. */
+/**
+ * The hidden meter's segment color per recovery. The meter's first segment (what shows) is amber, so the Taste match
+ * recovery keeps the neutral gray rather than a second amber.
+ */
 export const METER_COLORS: Partial<Record<FilterName, string>> = {
 	services: "bg-emerald-600",
 	notSeenYet: "bg-blue-600",
@@ -120,6 +214,8 @@ export function recoveryLabel(
 			return `${n} in other genres`
 		case "minScore":
 			return `${n} below ${state.minScore}`
+		case "minMatch":
+			return `${n} below ${state.minMatch}% match`
 		case "released":
 			return `${n} from other years`
 		case "similarTo":
@@ -199,6 +295,13 @@ export function activeChips(
 			group: "minScore",
 			label: `Score ${state.minScore}+`,
 			remove: (s) => ({ ...s, minScore: 0 }),
+		})
+	if (state.minMatch)
+		chips.push({
+			key: "match",
+			group: "minMatch",
+			label: `Match ${state.minMatch}%+`,
+			remove: (s) => ({ ...s, minMatch: 0 }),
 		})
 	if (state.released !== "any")
 		chips.push({

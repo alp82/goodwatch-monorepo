@@ -1,4 +1,6 @@
-// The desktop row's controls. Every control has a fixed width, so nothing shifts when a label or a count changes.
+// The desktop row's controls. At the row's size (md) every control has a fixed width, so nothing shifts when a label or
+// a count changes. The small size (sm, 36 px high) is for a strip that shares its line with other things, such as
+// Watch next's: there a control is as wide as its words.
 import {
 	AdjustmentsHorizontalIcon,
 	ArrowsUpDownIcon,
@@ -15,10 +17,12 @@ import {
 	type ReactNode,
 	useEffect,
 	useId,
+	useLayoutEffect,
 	useRef,
 	useState,
 } from "react"
-import type { SortOption } from "./labels"
+import { createPortal } from "react-dom"
+import { type SortOption, compactCount } from "./labels"
 import { Knob, MENU, SHELL, SPRING, TAP } from "./motion"
 import { PROVIDER_LOGO, type StreamingProvider } from "./useFilterData"
 
@@ -29,7 +33,7 @@ export function ServiceStack({
 	size = 20,
 	max = 3,
 }: {
-	providers: StreamingProvider[]
+	providers: Pick<StreamingProvider, "id" | "logo_path">[]
 	on: boolean
 	size?: number
 	max?: number
@@ -87,16 +91,24 @@ export function ServicesControl({
 	providers,
 	onChange,
 	onAddServices,
+	size = "md",
+	labels,
+	titles,
 }: {
 	on: boolean
 	hasServices: boolean
-	providers: StreamingProvider[]
+	providers: Pick<StreamingProvider, "id" | "logo_path">[]
 	onChange: (on: boolean) => void
 	onAddServices: () => void
+	size?: "md" | "sm"
+	/** Other words for the two halves where room is short, for example "My services" and "All". */
+	labels?: { mine?: string; everywhere?: string }
+	/** A tooltip per half, for a surface where the choice means something else than hiding. */
+	titles?: { mine?: string; everywhere?: string }
 }) {
 	const layoutId = useId()
-	const seg =
-		"relative z-10 flex h-full items-center justify-center gap-2 rounded-xl px-3.5 text-sm font-bold whitespace-nowrap cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+	const sm = size === "sm"
+	const seg = `relative z-10 flex h-full items-center justify-center gap-2 rounded-xl ${sm ? "px-2.5" : "px-3.5"} text-sm font-bold whitespace-nowrap cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-amber-400`
 	const pickMine = () => (hasServices ? onChange(true) : onAddServices())
 	return (
 		<div
@@ -107,7 +119,7 @@ export function ServicesControl({
 					index === 0 ? pickMine() : onChange(false),
 				)
 			}
-			className={`relative flex h-12 shrink-0 p-1 ${SHELL}`}
+			className={`relative flex shrink-0 ${sm ? "h-9 p-0.5" : "h-12 p-1"} ${SHELL}`}
 		>
 			<motion.button
 				// biome-ignore lint/a11y/useSemanticElements: a segmented control; the buttons carry the radio role and arrow keys
@@ -117,7 +129,8 @@ export function ServicesControl({
 				tabIndex={on ? 0 : -1}
 				whileTap={TAP}
 				onClick={pickMine}
-				className={`${seg} w-48 ${on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+				title={titles?.mine}
+				className={`${seg} ${sm ? "" : "w-48"} ${on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
 			>
 				{on && (
 					<motion.span
@@ -127,11 +140,11 @@ export function ServicesControl({
 					/>
 				)}
 				{hasServices ? (
-					<ServiceStack providers={providers} on={on} />
+					<ServiceStack providers={providers} on={on} size={sm ? 18 : 20} />
 				) : (
 					<PlusIcon className="h-4 w-4 shrink-0" />
 				)}
-				{hasServices ? "On my services" : "Add my services"}
+				{hasServices ? (labels?.mine ?? "On my services") : "Add my services"}
 			</motion.button>
 			<motion.button
 				// biome-ignore lint/a11y/useSemanticElements: a segmented control; the buttons carry the radio role and arrow keys
@@ -141,7 +154,8 @@ export function ServicesControl({
 				tabIndex={on ? -1 : 0}
 				whileTap={TAP}
 				onClick={() => onChange(false)}
-				className={`${seg} w-36 ${!on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+				title={titles?.everywhere}
+				className={`${seg} ${sm ? "" : "w-36"} ${!on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
 			>
 				{!on && (
 					<motion.span
@@ -151,38 +165,47 @@ export function ServicesControl({
 					/>
 				)}
 				<GlobeAltIcon className="h-4 w-4 shrink-0" />
-				Everywhere
+				{labels?.everywhere ?? "Everywhere"}
 			</motion.button>
 		</div>
 	)
 }
 
 /** "−53", or "−1.2k" past a thousand, so the slot keeps its width. */
-export const hiddenShort = (n: number) =>
-	n >= 1000 ? `−${(n / 1000).toFixed(n >= 10_000 ? 0 : 1)}k` : `−${n}`
+export const hiddenShort = (n: number) => `−${compactCount(n)}`
 
-/** Not seen yet: a labeled switch that says how many titles it hides (seen, and marked Not interested). */
+/**
+ * Not seen yet: a labeled switch that says how many titles it hides (seen, and marked Not interested), when the
+ * surface counts them.
+ */
 export function NotSeenSwitch({
 	on,
-	hides,
+	hides = null,
 	onChange,
+	size = "md",
+	className = "",
 }: {
 	on: boolean
-	hides: number | null
+	hides?: number | null
 	onChange: (on: boolean) => void
+	size?: "md" | "sm"
+	className?: string
 }) {
 	const shown = on && hides ? hides : 0
+	const sm = size === "sm"
 	return (
 		<motion.button
 			type="button"
 			role="switch"
 			aria-checked={on}
 			aria-label={
-				shown ? `Not seen yet, hides ${shown} titles` : "Not seen yet"
+				shown
+					? `Not seen yet, hides ${shown.toLocaleString("en")} titles`
+					: "Not seen yet"
 			}
 			whileTap={TAP}
 			onClick={() => onChange(!on)}
-			className={`relative flex h-12 w-56 shrink-0 items-center gap-2 px-3.5 text-sm font-bold whitespace-nowrap cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL} ${on ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
+			className={`relative flex shrink-0 items-center gap-2 text-sm font-bold whitespace-nowrap cursor-pointer outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${sm ? "h-9 px-3" : "h-12 w-56 px-3.5"} ${SHELL} ${on ? "text-white" : "text-gray-400 hover:text-gray-200"} ${className}`}
 		>
 			{on ? (
 				<EyeSlashIcon className="h-4 w-4 shrink-0 text-blue-400" />
@@ -190,12 +213,15 @@ export function NotSeenSwitch({
 				<EyeIcon className="h-4 w-4 shrink-0" />
 			)}
 			<span className="flex-1 text-left">Not seen yet</span>
-			<span
-				aria-hidden
-				className={`w-9 shrink-0 text-right text-xs tabular-nums ${shown ? "text-blue-300/80" : "text-transparent"}`}
-			>
-				{hiddenShort(shown)}
-			</span>
+			{/* The small size has no fixed slot: the count shows only on a surface that counts. */}
+			{(!sm || hides !== null) && (
+				<span
+					aria-hidden
+					className={`w-9 shrink-0 text-right text-xs tabular-nums ${shown ? "text-blue-300/80" : "text-transparent"}`}
+				>
+					{hiddenShort(shown)}
+				</span>
+			)}
 			<Knob
 				on={on}
 				onClass="bg-blue-600 shadow-[0_0_14px_rgba(37,99,235,.6)]"
@@ -204,19 +230,25 @@ export function NotSeenSwitch({
 	)
 }
 
-/** The sort choices as a menu of radio items, with arrow keys. Used in the desktop popover and the phone menu. */
+/**
+ * The sort choices as a menu of radio items, with arrow keys. Used in the desktop popover and the phone menu. A
+ * disabled choice shows dimmed with its reason and can't be picked; `footer` goes under the list, for example the
+ * sign-up prompt for a sort that needs taste. Each item carries `data-sort`.
+ */
 export function SortItems<K extends string>({
 	options,
 	value,
 	onPick,
 	dense = false,
 	footnote,
+	footer,
 }: {
 	options: SortOption<K>[]
 	value: K
 	onPick: (key: K) => void
 	dense?: boolean
 	footnote?: string
+	footer?: ReactNode
 }) {
 	const layoutId = useId()
 	const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -247,10 +279,12 @@ export function SortItems<K extends string>({
 						type="button"
 						role="menuitemradio"
 						aria-checked={on}
+						aria-disabled={s.disabled || undefined}
 						data-checked={on || undefined}
-						whileTap={TAP}
-						onClick={() => onPick(s.key)}
-						className={`relative flex items-center gap-3 rounded-xl px-3 ${dense ? "py-2" : "py-2.5"} text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? "" : "hover:bg-white/5"}`}
+						data-sort={s.key}
+						whileTap={s.disabled ? undefined : TAP}
+						onClick={() => !s.disabled && onPick(s.key)}
+						className={`relative flex items-center gap-3 rounded-xl px-3 ${dense ? "py-2" : "py-2.5"} text-left outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${s.disabled ? "cursor-default opacity-60" : "cursor-pointer"} ${on || s.disabled ? "" : "hover:bg-white/5"}`}
 					>
 						{on && (
 							<motion.span
@@ -259,7 +293,7 @@ export function SortItems<K extends string>({
 								className="absolute inset-0 rounded-xl bg-white/[0.07] ring-1 ring-white/10"
 							/>
 						)}
-						<span className="relative flex-1">
+						<span className="relative min-w-0 flex-1">
 							<span
 								className={`block text-sm font-bold ${on ? "text-white" : "text-gray-300"}`}
 							>
@@ -267,8 +301,9 @@ export function SortItems<K extends string>({
 							</span>
 							<span className="block text-xs text-gray-500">{s.hint}</span>
 						</span>
+						{/* Amber marks what taste decides. */}
 						<CheckIcon
-							className={`relative h-4 w-4 text-white ${on ? "" : "invisible"}`}
+							className={`relative h-4 w-4 shrink-0 ${s.taste ? "text-amber-400" : "text-white"} ${on ? "" : "invisible"}`}
 						/>
 					</motion.button>
 				)
@@ -276,6 +311,7 @@ export function SortItems<K extends string>({
 			{footnote && (
 				<p className="px-3 pt-1.5 pb-2 text-xs text-gray-500">{footnote}</p>
 			)}
+			{footer}
 		</div>
 	)
 }
@@ -305,6 +341,8 @@ export function useMenu(
 		const down = (event: Event) => {
 			const target = event.target as HTMLElement
 			if (root.current?.contains(target)) return
+			// The trigger toggles the menu itself; it can sit outside the root when the menu is in a portal.
+			if (trigger.current?.contains(target)) return
 			if (outsideIgnore && target.closest(outsideIgnore)) return
 			closeRef.current()
 		}
@@ -325,24 +363,128 @@ export function useMenu(
 	}, [open, root, trigger, outsideIgnore])
 }
 
-/** The fixed-width sort button and its popover. The label rolls when the sort changes. */
+// A menu in a portal closes once its button has scrolled this close to the top: under the site header.
+const PORTAL_MIN_BOTTOM = 60
+
+/**
+ * The sort button and its popover. The label rolls when the sort changes; the icon is amber while taste decides the
+ * sort (Best match).
+ * - `size`: md is the row's fixed-width button; sm is 36 px high and as wide as its words.
+ * - `align`: which edge of the button the menu hangs from.
+ * - `portal`: the menu renders in the body with fixed positioning and follows the button, for a strip that pins or
+ *   clips (Watch next's).
+ * - `open` and `onOpenChange` let the surface open the menu, as For you does under Best match; without them the
+ *   control keeps its own state. `outsideIgnore` names elements whose press doesn't close it.
+ */
 export function SortControl<K extends string>({
 	options,
 	value,
 	onChange,
 	footnote,
+	footer,
+	size = "md",
+	align = "left",
+	portal = false,
+	menuClassName = "w-72",
+	open: openProp,
+	onOpenChange,
+	outsideIgnore,
 }: {
 	options: SortOption<K>[]
 	value: K
 	onChange: (key: K) => void
 	footnote?: string
+	footer?: ReactNode
+	size?: "md" | "sm"
+	align?: "left" | "right"
+	portal?: boolean
+	/** The menu's width. */
+	menuClassName?: string
+	open?: boolean
+	onOpenChange?: (open: boolean) => void
+	outsideIgnore?: string
 }) {
-	const [open, setOpen] = useState(false)
+	const [openState, setOpenState] = useState(false)
+	const open = openProp ?? openState
+	const setOpen = (next: boolean) => {
+		setOpenState(next)
+		onOpenChange?.(next)
+	}
+	const close = useRef(() => setOpen(false))
+	close.current = () => setOpen(false)
 	const root = useRef<HTMLDivElement>(null)
+	const portalRoot = useRef<HTMLDivElement>(null)
 	const trigger = useRef<HTMLButtonElement>(null)
 	const menuId = useId()
-	useMenu(open, () => setOpen(false), root, trigger)
-	const label = options.find((s) => s.key === value)?.label ?? ""
+	const [box, setBox] = useState<{
+		top: number
+		left?: number
+		right?: number
+	} | null>(null)
+	useMenu(
+		open && (!portal || box !== null),
+		() => setOpen(false),
+		portal ? portalRoot : root,
+		trigger,
+		outsideIgnore,
+	)
+	// In a portal the menu follows its button as the page scrolls, and closes once the button is gone.
+	useLayoutEffect(() => {
+		if (!open || !portal) return
+		const place = () => {
+			const r = trigger.current?.getBoundingClientRect()
+			if (!r) return
+			if (r.bottom < PORTAL_MIN_BOTTOM) return close.current()
+			setBox(
+				align === "right"
+					? {
+							top: r.bottom + 8,
+							right: Math.max(8, window.innerWidth - r.right),
+						}
+					: { top: r.bottom + 8, left: Math.max(8, r.left) },
+			)
+		}
+		place()
+		window.addEventListener("scroll", place, { passive: true })
+		window.addEventListener("resize", place)
+		return () => {
+			window.removeEventListener("scroll", place)
+			window.removeEventListener("resize", place)
+		}
+	}, [open, portal, align])
+
+	const chosen = options.find((s) => s.key === value)
+	const label = chosen?.label ?? ""
+	const sm = size === "sm"
+	const menu = (
+		<AnimatePresence>
+			{open && (!portal || box) && (
+				<motion.div
+					id={menuId}
+					role="menu"
+					aria-label="Sort"
+					initial={{ opacity: 0, y: -6, scale: 0.98 }}
+					animate={{ opacity: 1, y: 0, scale: 1 }}
+					exit={{ opacity: 0, y: -4, scale: 0.98 }}
+					transition={{ duration: 0.16 }}
+					style={portal && box ? box : undefined}
+					className={`${portal ? "fixed z-[70]" : `absolute z-40 mt-2 ${align === "right" ? "right-0" : "left-0"}`} ${menuClassName} max-w-[calc(100vw-1.5rem)] ${align === "right" ? "origin-top-right" : "origin-top-left"} p-1.5 ${MENU}`}
+				>
+					<SortItems
+						options={options}
+						value={value}
+						footnote={footnote}
+						footer={footer}
+						onPick={(key) => {
+							onChange(key)
+							setOpen(false)
+							trigger.current?.focus()
+						}}
+					/>
+				</motion.div>
+			)}
+		</AnimatePresence>
+	)
 	return (
 		<div ref={root} className="relative shrink-0">
 			<motion.button
@@ -353,12 +495,24 @@ export function SortControl<K extends string>({
 				aria-expanded={open}
 				aria-controls={open ? menuId : undefined}
 				aria-label={`Sort: ${label}`}
-				onClick={() => setOpen((o) => !o)}
-				className={`flex h-12 w-52 items-center gap-2 px-4 text-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}
+				data-sort-button
+				onClick={() => setOpen(!open)}
+				onKeyDown={(event) => {
+					if (open) return
+					if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+						event.preventDefault()
+						setOpen(true)
+					}
+				}}
+				className={`flex items-center text-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${sm ? "h-9 gap-1.5 px-3 whitespace-nowrap" : "h-12 w-52 gap-2 px-4"} ${SHELL} ${open ? "ring-white/25" : "hover:ring-white/20"}`}
 			>
-				<ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
+				<ArrowsUpDownIcon
+					className={`h-4 w-4 shrink-0 ${chosen?.taste ? "text-amber-400" : "text-gray-400"}`}
+				/>
 				<span className="text-gray-400">Sort</span>
-				<span className="relative flex-1 overflow-hidden text-left">
+				<span
+					className={`relative overflow-hidden text-left ${sm ? "" : "flex-1"}`}
+				>
 					<AnimatePresence mode="popLayout" initial={false}>
 						<motion.span
 							key={value}
@@ -366,7 +520,7 @@ export function SortControl<K extends string>({
 							animate={{ y: 0, opacity: 1 }}
 							exit={{ y: -14, opacity: 0 }}
 							transition={SPRING}
-							className="block truncate font-bold text-white"
+							className={`block font-bold text-white ${sm ? "" : "truncate"}`}
 						>
 							{label}
 						</motion.span>
@@ -376,31 +530,10 @@ export function SortControl<K extends string>({
 					className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
 				/>
 			</motion.button>
-			<AnimatePresence>
-				{open && (
-					<motion.div
-						id={menuId}
-						role="menu"
-						aria-label="Sort"
-						initial={{ opacity: 0, y: -6, scale: 0.98 }}
-						animate={{ opacity: 1, y: 0, scale: 1 }}
-						exit={{ opacity: 0, y: -4, scale: 0.98 }}
-						transition={{ duration: 0.16 }}
-						className={`absolute left-0 z-40 mt-2 w-72 max-w-[calc(100vw-1.5rem)] origin-top-left p-1.5 ${MENU}`}
-					>
-						<SortItems
-							options={options}
-							value={value}
-							footnote={footnote}
-							onPick={(key) => {
-								onChange(key)
-								setOpen(false)
-								trigger.current?.focus()
-							}}
-						/>
-					</motion.div>
-				)}
-			</AnimatePresence>
+			{portal
+				? typeof document !== "undefined" &&
+					createPortal(<div ref={portalRoot}>{menu}</div>, document.body)
+				: menu}
 		</div>
 	)
 }

@@ -1,0 +1,138 @@
+import assert from "node:assert/strict"
+import { test } from "node:test"
+import "../../server/title-filter/test-alias.ts"
+
+const { FILTER_NAMES, MIN_MATCHES, defaultFilterState } = await import(
+	"~/domain/filter-state"
+)
+const {
+	DISCOVER_SORTS,
+	FILTER_ACCENTS,
+	MATCH_LABELS,
+	RATE_MORE,
+	activeChips,
+	compactCount,
+	discoverSorts,
+	recoveryLabel,
+	sortShown,
+	tasteStateOf,
+} = await import("./labels.ts")
+const { SORT_OPTIONS, sortOptionsFor } = await import("~/ui/watch-next/labels")
+
+const state = defaultFilterState({ onMyServices: false, notSeenYet: false })
+
+test("Best match is the first sort, browsing and searching, and taste marks it", () => {
+	assert.deepEqual(
+		discoverSorts(false).map((s) => s.key),
+		["match", "popular", "top", "newest"],
+	)
+	assert.deepEqual(
+		discoverSorts(true).map((s) => s.key),
+		["match", "relevance", "popular", "top", "newest"],
+	)
+	const [match, ...rest] = discoverSorts(false)
+	assert.equal(match.label, "Best match")
+	assert.equal(match.taste, true)
+	assert.ok(!match.disabled)
+	assert.ok(rest.every((s) => !s.taste && !s.disabled))
+})
+
+test("without taste Best match shows but can't be picked, with the reason", () => {
+	const rateMore = discoverSorts(false, "rateMore")[0]
+	assert.equal(rateMore.disabled, true)
+	assert.equal(rateMore.hint, RATE_MORE)
+	// A guest who has to sign up gets the prompt under the list; the line stays.
+	const signUp = discoverSorts(true, "signUp")[0]
+	assert.equal(signUp.disabled, true)
+	assert.equal(signUp.hint, DISCOVER_SORTS.match.hint)
+	assert.ok(
+		discoverSorts(false, "rateMore")
+			.slice(1)
+			.every((s) => !s.disabled),
+	)
+})
+
+test("the control shows the sort in use when Best match can't sort", () => {
+	assert.equal(sortShown("match", false, "ready"), "match")
+	assert.equal(sortShown("match", false, "rateMore"), "popular")
+	assert.equal(sortShown("match", true, "signUp"), "relevance")
+	assert.equal(sortShown("top", false, "rateMore"), "top")
+})
+
+test("the taste state follows the results", () => {
+	assert.equal(tasteStateOf(null), "ready")
+	const results = (
+		hasTaste: boolean,
+		status: "ready" | "needsTaste" | "signUp",
+	) => tasteStateOf({ hasTaste, forYou: { status } })
+	assert.equal(results(true, "ready"), "ready")
+	assert.equal(results(false, "needsTaste"), "rateMore")
+	assert.equal(results(false, "signUp"), "signUp")
+	// Taste match off for the viewer: no taste, whatever the ratings say.
+	assert.equal(results(false, "ready"), "rateMore")
+})
+
+test("Watch next says what Discover says for the sorts they share", () => {
+	const byKey = Object.fromEntries(SORT_OPTIONS.map((s) => [s.key, s]))
+	for (const key of ["match", "newest", "top", "popular"] as const) {
+		assert.equal(byKey[key].label, DISCOVER_SORTS[key].label)
+		assert.equal(byKey[key].hint, DISCOVER_SORTS[key].hint)
+	}
+	assert.equal(SORT_OPTIONS.length, 6)
+	assert.equal(sortOptionsFor({ available: true, prompt: null }), SORT_OPTIONS)
+	const rateMore = sortOptionsFor({ available: false, prompt: "rateMore" })
+	assert.deepEqual(
+		rateMore.filter((s) => s.disabled).map((s) => s.key),
+		["match"],
+	)
+	assert.equal(rateMore[0].hint, RATE_MORE)
+	const signUp = sortOptionsFor({ available: false, prompt: "signUpToLearn" })
+	assert.equal(signUp[0].disabled, true)
+	assert.equal(signUp[0].hint, DISCOVER_SORTS.match.hint)
+})
+
+test("a count is short enough for a fixed slot", () => {
+	const cases: [number, string][] = [
+		[0, "0"],
+		[7, "7"],
+		[999, "999"],
+		[1000, "1.0k"],
+		[1249, "1.2k"],
+		[9949, "9.9k"],
+		[9950, "10k"],
+		[12_345, "12k"],
+		[48_600, "49k"],
+		[999_499, "999k"],
+		[1_200_000, "1.2M"],
+	]
+	for (const [n, short] of cases) assert.equal(compactCount(n), short)
+	for (const [n] of cases) assert.ok(compactCount(n).length <= 4)
+})
+
+test("the taste match filter has a label per option, a chip, and its recovery wording", () => {
+	assert.deepEqual(Object.keys(MATCH_LABELS).map(Number), [...MIN_MATCHES])
+	assert.equal(MATCH_LABELS[0], "Any match")
+	assert.equal(MATCH_LABELS[80], "80% and up")
+
+	assert.deepEqual(activeChips(state), [])
+	const chips = activeChips({ ...state, minMatch: 80 })
+	assert.equal(chips.length, 1)
+	assert.equal(chips[0].label, "Match 80%+")
+	assert.equal(chips[0].group, "minMatch")
+	assert.equal(chips[0].remove({ ...state, minMatch: 80 }).minMatch, 0)
+
+	const filtered = { ...state, minMatch: 80 as const }
+	assert.equal(recoveryLabel("minMatch", 12, filtered), "12 below 80% match")
+	assert.equal(
+		recoveryLabel("minMatch", 12_345, filtered),
+		"12,345 below 80% match",
+	)
+	assert.equal(recoveryLabel("minMatch", 12, filtered, true), "12 more")
+})
+
+test("every filter group has its own accent, and amber is the taste match's", () => {
+	assert.deepEqual(Object.keys(FILTER_ACCENTS).sort(), [...FILTER_NAMES].sort())
+	const dots = FILTER_NAMES.map((name) => FILTER_ACCENTS[name].dot)
+	assert.equal(new Set(dots).size, dots.length)
+	assert.equal(FILTER_ACCENTS.minMatch.dot, "bg-amber-400")
+})

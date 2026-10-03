@@ -13,10 +13,9 @@ import type React from "react"
 import { useRef, useState } from "react"
 import { MAX_MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import type { WatchNextSort } from "~/domain/watch-next"
-import type { CardService } from "~/server/title-cards.server"
 import type { WatchNext } from "~/server/watch-next.server"
 import { SlabShell, SnapSheet } from "~/ui/filter-bar"
-import { radioKeys } from "~/ui/filter-bar/controls"
+import { ServiceStack, radioKeys } from "~/ui/filter-bar/controls"
 import { Knob, SPRING, TAP } from "~/ui/filter-bar/motion"
 import { DockStrip, useHasDock } from "~/ui/navigation"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
@@ -26,9 +25,13 @@ import {
 	SPECTRUM,
 	useRefusalHint,
 } from "./MoodPicker"
-import { RATE_MORE } from "./SortMenu"
-import { SORT_OPTIONS, SORT_SHORT, moodsShort, titleCount } from "./labels"
-import { logoUrl } from "./style"
+import {
+	RATE_MORE,
+	SORT_LABEL,
+	SORT_OPTIONS,
+	moodsShort,
+	titleCount,
+} from "./labels"
 
 type Drawer = "moods" | "services" | "sort"
 
@@ -69,22 +72,6 @@ function MoodDots({ moods }: { moods: readonly MoodKey[] }) {
 						background: MOOD_BY_KEY[mood].hue,
 						opacity: moods.length ? 1 : 0.55,
 					}}
-				/>
-			))}
-		</span>
-	)
-}
-
-function Logos({ services, size }: { services: CardService[]; size: number }) {
-	return (
-		<span className="flex -space-x-1.5" aria-hidden>
-			{services.slice(0, 3).map((service) => (
-				<img
-					key={service.id}
-					src={logoUrl(service.logo_path)}
-					alt=""
-					className="rounded-full ring-2 ring-gray-950"
-					style={{ width: size, height: size }}
 				/>
 			))}
 		</span>
@@ -193,7 +180,7 @@ function ServicesBody({
 					className="flex w-full items-center gap-3 rounded-xl bg-white/[0.05] p-3 text-left ring-1 ring-white/10"
 				>
 					<span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10">
-						<PlusIcon className="h-5 w-5 text-amber-300" aria-hidden />
+						<PlusIcon className="h-5 w-5 text-gray-200" aria-hidden />
 					</span>
 					<span className="min-w-0 flex-1">
 						<span className="block text-sm font-bold text-white">
@@ -218,7 +205,7 @@ function ServicesBody({
 				onClick={() => setOnMyServices(!on)}
 				className="flex w-full cursor-pointer items-center gap-3 rounded-xl bg-white/[0.05] p-3 text-left ring-1 ring-white/10 outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
 			>
-				<Logos services={data.myServices} size={28} />
+				<ServiceStack providers={data.myServices} on={on} size={28} />
 				<span className="min-w-0 flex-1">
 					<span className="block text-sm font-bold text-white">
 						On my services
@@ -286,7 +273,8 @@ function SortBody({
 							data-sort={option.key}
 							whileTap={unavailable ? undefined : TAP}
 							onClick={() => pick(option.key)}
-							className={`flex cursor-pointer flex-col items-start rounded-xl p-2.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-300 ${on ? "bg-amber-400 text-black" : "bg-white/[0.05] text-white ring-1 ring-white/10"} ${unavailable ? "cursor-default opacity-60" : ""}`}
+							// Amber marks what taste decides: only Best match lights up amber.
+							className={`flex cursor-pointer flex-col items-start rounded-xl p-2.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 ${on ? (option.key === "match" ? "bg-amber-400 text-black" : "bg-white text-black") : "bg-white/[0.05] text-white ring-1 ring-white/10"} ${unavailable ? "cursor-default opacity-60" : ""}`}
 						>
 							<span className="text-sm font-bold">{option.label}</span>
 							<span
@@ -294,7 +282,7 @@ function SortBody({
 							>
 								{unavailable && bestMatch.prompt === "rateMore"
 									? RATE_MORE
-									: option.line}
+									: option.hint}
 							</span>
 						</motion.button>
 					)
@@ -354,9 +342,9 @@ function Segments({
 				className={`${SEGMENT} flex-1 ${data.hasServices && data.onMyServices ? "text-white" : "text-gray-300"}`}
 			>
 				{!data.hasServices ? (
-					<PlusIcon className="h-4 w-4 text-amber-300" aria-hidden />
+					<PlusIcon className="h-4 w-4" aria-hidden />
 				) : data.onMyServices ? (
-					<Logos services={data.myServices} size={16} />
+					<ServiceStack providers={data.myServices} on size={16} />
 				) : (
 					<GlobeAltIcon className="h-[18px] w-[18px]" aria-hidden />
 				)}
@@ -364,10 +352,13 @@ function Segments({
 			</motion.button>
 			<motion.button
 				{...segment("sort")}
-				aria-label={`Sort: ${SORT_OPTIONS.find((o) => o.key === data.sort)?.label}`}
+				aria-label={`Sort: ${SORT_LABEL[data.sort]}`}
 				className={`${SEGMENT} flex-1 text-white`}
 			>
-				<ArrowsUpDownIcon className="h-4 w-4 text-amber-400" aria-hidden />
+				<ArrowsUpDownIcon
+					className={`h-4 w-4 ${data.sort === "match" ? "text-amber-400" : "text-gray-400"}`}
+					aria-hidden
+				/>
 				<span className="relative w-full overflow-hidden text-center">
 					<AnimatePresence mode="popLayout" initial={false}>
 						<motion.span
@@ -378,7 +369,7 @@ function Segments({
 							transition={SPRING}
 							className="block truncate"
 						>
-							{SORT_SHORT[data.sort]}
+							{SORT_LABEL[data.sort]}
 						</motion.span>
 					</AnimatePresence>
 				</span>
