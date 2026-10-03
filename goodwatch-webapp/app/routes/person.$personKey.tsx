@@ -47,8 +47,10 @@ import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
 import { Portrait } from "~/ui/person/Portrait"
 import {
 	countCrawlerTurnedAway,
+	hasBrowserCookie,
 	isCrawler,
 	limitFilteredViews,
+	toBrowserCheck,
 } from "~/server/crawlers.server"
 import { NoTitlesOfType, TypeFilter } from "~/ui/type-filter"
 import { personPath, pluralize, titleToDashed } from "~/utils/helpers"
@@ -71,6 +73,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		countCrawlerTurnedAway()
 		return redirect(url.pathname, 301)
 	}
+	// A crawler that pretends to be a browser doesn't have the cookie that pages set with a script.
+	if (url.search && !hasBrowserCookie(request)) return toBrowserCheck(url)
 
 	const profile = url.search
 		? await limitFilteredViews(request, () => getPersonProfile(id))

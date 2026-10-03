@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/remix"
 import posthog from "posthog-js"
 import { StrictMode, startTransition, useEffect } from "react"
 import { hydrateRoot } from "react-dom/client"
+import { setBrowserCookie } from "~/utils/browser-cookie"
 
 Sentry.init({
  beforeSend: redactSearchTelemetry,
@@ -29,6 +30,8 @@ Sentry.init({
 		}),
 	],
 })
+
+setBrowserCookie()
 
 startTransition(() => {
 	hydrateRoot(
