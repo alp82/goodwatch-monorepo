@@ -15,6 +15,20 @@ point id order: point id (float64), genre bits (uint32), release day (int32), vo
 score (uint8, 255 unknown), origin index (uint8, 255 unknown) and flags (uint8): 101 bytes
 per title.
 
+Next to it sits the optional ratings sidecar, format 1, which the webapp's age and content
+filter reads. A webapp that predates it ignores it, and the snapshot above is the same bytes
+with or without it:
+
+- `title-snapshot:<version>:ratings:<n>` holds its bytes, again in chunks of at most 1 MB.
+- The manifest's `ratings` field holds its format, chunk count and SHA-256, the `countries`
+  with an age column (sorted, at most 64) and each one's `ladders` entry: the steps of that
+  country's rating ladder, ascending by age.
+
+Joined, its chunks are uint8 columns in the snapshot's row order: content bits (`CONTENT_*`),
+the estimate (the lower median age across the countries that rated the title), then one age
+column per country in `countries` order, each the strictest of the title's ratings there.
+255 is no rating. That is 2 + countries bytes per title.
+
 One run:
 
 1. Reads a mark of the analyses in Crate: per table, the count and the sum of
@@ -24,7 +38,10 @@ One run:
    `dna_updated_at` (a timestamp with doc values). The 74 scores come from the typed
    `fingerprint_scores[...]` subcolumns; reading the whole object column is about five
    times slower and has pages near the 10 s timeout.
-3. Writes the chunks of the new version, swaps `title-snapshot:current`, and deletes the
+3. Builds the ratings sidecar from a second, narrow read of the same titles and the
+   `age_certification` lookup table. Whatever fails there is logged and the snapshot is
+   published without the `ratings` field: the sidecar never stops a publish.
+4. Writes the chunks of the new version, swaps `title-snapshot:current`, and deletes the
    chunks of every version but the new and the previous one.
 
 It runs after each scheduled vector copy (`f/sync/copy/vector_data` starts it), nightly on
@@ -37,13 +54,16 @@ hours later would be older than a snapshot built in between, and never published
 
 import json
 import math
+import re
 import sys
 import time
+import traceback
 import uuid
 from array import array
 from collections import Counter
 from contextlib import nullcontext
 from datetime import datetime, timezone
+from functools import lru_cache
 from hashlib import sha256
 from typing import Any, Callable, Iterable, Optional
 
@@ -80,6 +100,75 @@ UINT32_MAX = 0xFFFFFFFF
 TABLES = {"movie": ("movie", "release_date", MOVIE_BASE), "show": ("show", "last_air_date", SHOW_BASE)}
 
 assert len(KEY_ORDER) == FINGERPRINT_LENGTH
+
+RATINGS_FORMAT = 1
+NO_AGE = 255
+MAX_AGE = 18
+MAX_RATING_COUNTRIES = 64
+MIN_LADDER_STEPS = 2
+CONTENT_VIOLENCE = 1
+CONTENT_SEX = 2
+CONTENT_DISTURBING = 4
+CONTENT_LANGUAGE = 8
+CONTENT_DRUGS = 16
+
+# The `ContentAdvisory` tags of a title analysis (f/dna/models.py) as the filter's content kinds.
+# A tag that is not listed sets no bit.
+ADVISORY_CONTENT = {
+    "Violence": CONTENT_VIOLENCE,
+    "Nudity": CONTENT_SEX,
+    "Sexual Content": CONTENT_SEX,
+    "Strong Language": CONTENT_LANGUAGE,
+    "Drug Use": CONTENT_DRUGS,
+    "Suicide Themes": CONTENT_DISTURBING,
+    "Disturbing Imagery": CONTENT_DISTURBING,
+}
+
+# Ages for the rating codes that are words, per country. A code that is not listed falls back
+# to the first number in it, then to `ALL_AGES`. Codes are matched without case and spaces.
+_PARENTAL_GUIDANCE = 8
+_US_AGES = {
+    "G": 0, "PG": _PARENTAL_GUIDANCE, "PG-13": 13, "R": 17, "NC-17": 18,
+    "TV-Y": 0, "TV-Y7": 7, "TV-G": 0, "TV-PG": _PARENTAL_GUIDANCE, "TV-14": 14, "TV-MA": 17,
+}
+WORD_AGES = {
+    "US": _US_AGES,
+    "PR": _US_AGES,
+    "GB": {"U": 0, "PG": _PARENTAL_GUIDANCE, "12A": 12, "12": 12, "15": 15, "18": 18, "R18": 18},
+    "IE": {"G": 0, "PG": _PARENTAL_GUIDANCE},
+    "AU": {"G": 0, "PG": _PARENTAL_GUIDANCE, "M": 15, "MA 15+": 15, "R 18+": 18, "X 18+": 18,
+           "P": 0, "C": 0, "AV 15+": 15},
+    "NZ": {"G": 0, "PG": _PARENTAL_GUIDANCE, "M": 16, "R": 18},
+    "CA": {"G": 0, "PG": _PARENTAL_GUIDANCE, "14A": 14, "18A": 18, "R": 18, "A": 18,
+           "C": 0, "C8": 8, "14+": 14, "18+": 18},
+    "IN": {"U": 0, "UA": 12, "U/A": 12, "A": 18, "S": 18},
+    "SG": {"G": 0, "PG": _PARENTAL_GUIDANCE},
+    "PH": {"G": 0, "PG": _PARENTAL_GUIDANCE, "X": 18},
+    "ZA": {"A": 0, "PG": _PARENTAL_GUIDANCE, "XX": 18},
+    "HK": {"I": 0, "II": 12, "IIA": 12, "IIB": 16, "III": 18},
+    "MX": {"AA": 0, "A": 0, "B": 12, "B-15": 15, "B15": 15, "C": 18, "D": 18},
+    "BG": {"A": 0, "B": 0, "C": 12, "D": 16, "X": 18},
+    "VN": {"P": 0, "K": _PARENTAL_GUIDANCE, "C": 18},
+    "AR": {"ATP": 0, "C": 18},
+    "ES": {"A": 0, "Ai": 0, "APTA": 0, "X": 18},
+    "HU": {"KN": 0, "X": 18},
+    "LT": {"V": 0, "S": 18},
+    "FI": {"S": 0},
+    "SE": {"Btl": 0},
+    "GR": {"K": 0},
+    "PT": {"Públicos": 0},
+    "KR": {"All": 0, "Restricted Screening": 18},
+}
+ALL_AGES = {"AL", "ALL", "TP", "U", "T", "A", "AA", "L", "G", "ATP", "SU", "EA", "TE"}
+
+# The US rates films and shows on two ladders that do not share ages, so its steps are fixed.
+US_LADDER = [
+    {"age": 0, "label": "G", "show": "TV-G"},
+    {"age": 8, "label": "PG", "show": "TV-PG"},
+    {"age": 14, "label": "PG-13", "show": "TV-14"},
+    {"age": 17, "label": "R", "show": "TV-MA"},
+]
+LABEL_PREFIX = {"DE": "FSK "}
 
 
 # ---- Rows ------------------------------------------------------------------
@@ -161,12 +250,182 @@ def _with_retries(read: Callable[[], list]) -> list:
 
 def source_mark(select: Callable[[str, list], list]) -> dict:
     """Per table, the count and sum of dna_updated_at: moves when an analysis is added, changed
-    or removed. Two aggregates over a timestamp column, well under a second."""
+    or removed. Two aggregates over a timestamp column, well under a second. `ratings` is the
+    sidecar's format, so that the first run of a publisher that writes a new one publishes."""
     mark = {}
     for media_type, (table, _, _) in TABLES.items():
         count, total = select(f"SELECT count(dna_updated_at), sum(dna_updated_at) FROM {table}", [])[0]
         mark[media_type] = [int(count or 0), int(total or 0)]
+    mark["ratings"] = RATINGS_FORMAT
     return mark
+
+
+# ---- Ratings ---------------------------------------------------------------
+
+
+def _code_key(code: str) -> str:
+    return "".join(code.split()).upper()
+
+
+_WORD_AGES = {country: {_code_key(code): age for code, age in ages.items()} for country, ages in WORD_AGES.items()}
+_COUNTRY = re.compile(r"[A-Z]{2}")
+_NUMBER = re.compile(r"\d+")
+
+
+def code_age(country: str, code: str) -> Optional[int]:
+    """The age a rating code stands for, 0 to 18; None when it is not an age rating (NR,
+    Unrated, free text)."""
+    key = _code_key(code)
+    age = _WORD_AGES.get(country, {}).get(key)
+    if age is not None:
+        return age
+    number = _NUMBER.search(key)
+    if number:
+        return min(MAX_AGE, int(number.group()))
+    return 0 if key in ALL_AGES else None
+
+
+@lru_cache(maxsize=65536)
+def parse_certification(text: str) -> Optional[tuple[str, int]]:
+    """Country and age of one `age_certifications` entry such as `DE_12` or `AU_MA 15+`: the
+    country, an underscore, then the code, which may hold spaces and more underscores. Cached:
+    the titles share a few thousand distinct entries."""
+    country, separator, code = text.partition("_")
+    country = country.strip().upper()
+    if not separator or not _COUNTRY.fullmatch(country):
+        return None
+    age = code_age(country, code)
+    return None if age is None else (country, age)
+
+
+def strictest_ages(ratings: Iterable[tuple[str, int]]) -> dict[str, int]:
+    """Per country, the highest age among a title's ratings there."""
+    ages: dict[str, int] = {}
+    for country, age in ratings:
+        if age > ages.get(country, -1):
+            ages[country] = age
+    return ages
+
+
+def estimate_age(ages: Iterable[int]) -> int:
+    """The median age across the countries that rated a title, the lower one of an even count;
+    `NO_AGE` when none did."""
+    ordered = sorted(ages)
+    return ordered[(len(ordered) - 1) // 2] if ordered else NO_AGE
+
+
+def content_bits(advisories: Optional[Iterable]) -> int:
+    bits = 0
+    for tag in advisories or []:
+        bits |= ADVISORY_CONTENT.get(tag, 0) if isinstance(tag, str) else 0
+    return bits
+
+
+def build_ladders(certifications: Iterable[list]) -> dict[str, list[dict]]:
+    """Each country's rating ladder from the `age_certification` rows (code, country, media
+    type, order): the distinct ages of its movie codes, each labelled by the code with the
+    lowest order; show codes add steps only for the ages the movie codes lack. A step carries
+    `show` where the country's show codes have that age but none of them is the step's own
+    code. Countries with fewer than two steps are left out."""
+    codes: dict[str, dict[str, list]] = {}
+    for code, country, media_type, order in certifications:
+        if not isinstance(code, str) or not isinstance(country, str) or not _COUNTRY.fullmatch(country):
+            continue
+        if media_type not in TABLES:
+            continue
+        age = code_age(country, code)
+        if age is not None:
+            rank = order if isinstance(order, (int, float)) else math.inf
+            codes.setdefault(country, {m: [] for m in TABLES})[media_type].append((rank, code.strip(), age))
+    ladders = {}
+    for country, by_type in codes.items():
+        prefix = LABEL_PREFIX.get(country, "")
+        movie: dict[int, str] = {}
+        show: dict[int, list[str]] = {}
+        for _, code, age in sorted(by_type["movie"]):
+            movie.setdefault(age, code)
+        for _, code, age in sorted(by_type["show"]):
+            show.setdefault(age, []).append(code)
+        steps = []
+        for age in sorted(movie.keys() | show.keys()):
+            if age not in movie:
+                steps.append({"age": age, "label": prefix + show[age][0]})
+            elif age in show and _code_key(movie[age]) not in {_code_key(code) for code in show[age]}:
+                steps.append({"age": age, "label": prefix + movie[age], "show": prefix + show[age][0]})
+            else:
+                steps.append({"age": age, "label": prefix + movie[age]})
+        ladders[country] = steps
+    ladders["US"] = [dict(step) for step in US_LADDER]
+    return {country: steps for country, steps in ladders.items() if len(steps) >= MIN_LADDER_STEPS}
+
+
+def read_ladders(select: Callable[[str, list], list]) -> dict[str, list[dict]]:
+    return build_ladders(_with_retries(lambda: select(
+        "SELECT certification_code, country_code, media_type, order_default FROM age_certification", [])))
+
+
+def read_ratings(select: Callable[[str, list], list], media_type: str) -> dict[int, tuple[int, tuple]]:
+    """Per point id, the content bits and the (country, age) ratings of every title of one media
+    type that has any. Its own pages rather than two more columns on the snapshot's, so that a
+    page that fails or times out here cannot fail the snapshot."""
+    table, _, base = TABLES[media_type]
+    sql = (
+        f"SELECT tmdb_id, age_certifications, content_advisories FROM {table}"
+        f" WHERE dna_updated_at IS NOT NULL AND tmdb_id > ? ORDER BY tmdb_id LIMIT {PAGE_SIZE}"
+    )
+    titles: dict[int, tuple[int, tuple]] = {}
+    last = -1
+    while True:
+        records = _with_retries(lambda: select(sql, [last]))
+        for tmdb_id, certifications, advisories in records:
+            parsed = (parse_certification(c) for c in certifications or [] if isinstance(c, str))
+            ratings = tuple(rating for rating in parsed if rating)
+            bits = content_bits(advisories)
+            if ratings or bits:
+                titles[base + int(tmdb_id)] = (bits, ratings)
+        if len(records) < PAGE_SIZE:
+            return titles
+        last = records[-1][0]
+
+
+def encode_ratings(point_ids: list[int], titles: dict[int, tuple[int, tuple]], ladders: dict[str, list[dict]]
+                   ) -> tuple[dict, list[bytes]]:
+    """The manifest's `ratings` field and the sidecar's chunks, for the snapshot's titles in its
+    row order. Of more countries than the format holds, those that rated the most titles stay."""
+    count = len(point_ids)
+    content = bytearray(count)
+    estimate = bytearray([NO_AGE]) * count
+    columns = {country: bytearray([NO_AGE]) * count for country in ladders}
+    rated: Counter = Counter()
+    for row, point_id in enumerate(point_ids):
+        bits, ratings = titles.get(point_id, (0, ()))
+        content[row] = bits
+        ages = strictest_ages(ratings)
+        estimate[row] = estimate_age(ages.values())
+        for country, age in ages.items():
+            if country in columns:
+                columns[country][row] = age
+                rated[country] += 1
+    countries = sorted(sorted(columns, key=lambda c: (-rated[c], c))[:MAX_RATING_COUNTRIES])
+    data = b"".join([bytes(content), bytes(estimate), *(bytes(columns[c]) for c in countries)])
+    assert len(data) == count * (2 + len(countries))
+    chunks = [data[at:at + CHUNK_BYTES] for at in range(0, len(data), CHUNK_BYTES)] or [b""]
+    field = {
+        "format": RATINGS_FORMAT,
+        "chunks": len(chunks),
+        "sha256": sha256(data).hexdigest(),
+        "countries": countries,
+        "ladders": {country: ladders[country] for country in countries},
+    }
+    return field, chunks
+
+
+def build_ratings(select: Callable[[str, list], list], point_ids: list[int]) -> tuple[dict, list[bytes]]:
+    ladders = read_ladders(select)
+    titles: dict[int, tuple[int, tuple]] = {}
+    for media_type in TABLES:
+        titles.update(read_ratings(select, media_type))
+    return encode_ratings(point_ids, titles, ladders)
 
 
 # ---- Encoding --------------------------------------------------------------
@@ -245,6 +504,10 @@ def chunk_key(version: str, n: int) -> str:
     return f"title-snapshot:{version}:{n}"
 
 
+def ratings_chunk_key(version: str, n: int) -> str:
+    return f"title-snapshot:{version}:ratings:{n}"
+
+
 def version_of(built_at: datetime) -> str:
     return built_at.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
@@ -271,9 +534,23 @@ def _scan(redis, match: str) -> Iterable[bytes]:
         yield from redis.scan_iter(match=match, count=5000)
 
 
+def write_ratings(redis, version: str, chunks: list[bytes]) -> None:
+    """Writes the sidecar's chunks; when a write fails, deletes the ones written and raises."""
+    try:
+        for n, chunk in enumerate(chunks):
+            redis.set(ratings_chunk_key(version, n), chunk)
+    except Exception:
+        for n in range(len(chunks)):
+            try:
+                redis.delete(ratings_chunk_key(version, n))
+            except Exception:
+                pass
+        raise
+
+
 def publish(redis, manifest: dict, chunks: list[bytes], previous: Optional[dict]) -> int:
     """Writes the chunks, swaps the manifest, then deletes the chunks of every other version but
-    the previous one. Returns the number of chunks deleted."""
+    the previous one, ratings chunks included. Returns the number of chunks deleted."""
     version = manifest["version"]
     for n, chunk in enumerate(chunks):
         redis.set(chunk_key(version, n), chunk)
@@ -306,6 +583,12 @@ class _Lock:
 
 
 # ---- Entrypoint for Windmill ------------------------------------------------
+
+
+def _without_ratings(step: str, error: Exception) -> str:
+    print(f"RATINGS SIDECAR FAILED while {step}: {error!r}. Publishing the snapshot without it; the age and"
+          f" content filter stays unavailable until a later run publishes one.\n{traceback.format_exc()}", flush=True)
+    return f"{step}: {error!r}"
 
 
 def run(redis, select: Callable[[str, list], list], *, force: bool = False, dry_run: bool = False,
@@ -342,8 +625,26 @@ def run(redis, select: Callable[[str, list], list], *, force: bool = False, dry_
             "origins": len(manifest["origins"]), "sha256": manifest["sha256"], "source": "crate",
             "source_mark": mark, "previous_version": previous.get("version") if previous else None,
         }
+        # The sidecar is built and written apart from the snapshot, so that nothing in it can
+        # stop the publish: a failure leaves the manifest without `ratings`.
+        ratings = None
+        at = time.monotonic()
+        try:
+            ratings = build_ratings(select, sorted(row["point_id"] for row in rows))
+            summary["ratings"] = {"countries": len(ratings[0]["countries"]), "chunks": ratings[0]["chunks"],
+                                  "bytes": manifest["count"] * (2 + len(ratings[0]["countries"]))}
+        except Exception as error:
+            summary["ratings_error"] = _without_ratings("building it", error)
+        timings["ratings_seconds"] = round(time.monotonic() - at, 1)
         if not dry_run:
             at = time.monotonic()
+            if ratings:
+                try:
+                    write_ratings(redis, version, ratings[1])
+                    manifest["ratings"] = ratings[0]
+                except Exception as error:
+                    summary.pop("ratings", None)
+                    summary["ratings_error"] = _without_ratings("writing it", error)
             summary["pruned_chunks"] = publish(redis, manifest, chunks, previous)
             timings["write_seconds"] = round(time.monotonic() - at, 1)
             summary["published"] = True

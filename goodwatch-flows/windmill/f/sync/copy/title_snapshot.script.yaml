@@ -3,9 +3,11 @@ description: "Reads every movie and show with a title analysis from Crate and
   publishes them as the webapp's binary title snapshot (format 1): 1 MB chunks
   under title-snapshot:<version>:<n>, then the manifest at
   title-snapshot:current, then deletes every version but the new and the
-  previous one. Publishes only when an analysis was added, changed or removed
-  since the current version. Started after each scheduled vector copy, nightly,
-  and on demand."
+  previous one. Next to it, the ratings sidecar for the age and content filter
+  (title-snapshot:<version>:ratings:<n> and the manifest's ratings field); a
+  failure there is logged and the snapshot is published without it. Publishes
+  only when an analysis was added, changed or removed since the current
+  version. Started after each scheduled vector copy, nightly, and on demand."
 lock: '!inline f/sync/copy/title_snapshot.script.lock'
 kind: script
 schema:
