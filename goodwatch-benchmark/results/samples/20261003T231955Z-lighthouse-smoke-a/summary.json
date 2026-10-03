@@ -1,0 +1,213 @@
+{
+  "schema": 1,
+  "run_id": "20261003T231955Z-lighthouse-smoke-a",
+  "kind": "lighthouse",
+  "label": "smoke-a",
+  "meta": {
+    "run_id": "20261003T231955Z-lighthouse-smoke-a",
+    "kind": "lighthouse",
+    "label": "smoke-a",
+    "smoke": false,
+    "mode": "smoke",
+    "cache_mode": "warm",
+    "url_set": "lh-smoke.txt",
+    "path": "public",
+    "target_url": "https://goodwatch.app",
+    "resolve_ip": "",
+    "rate_plan": null,
+    "planned_requests": null,
+    "effective_k6_inputs": null,
+    "git_commit": "70006d016ecdf084f9a7ebbb435f393178432b29",
+    "git_dirty": true,
+    "generator_host": "10.0.0.32",
+    "jump": true,
+    "k6_image": "grafana/k6:1.8.1",
+    "metric_hosts": [
+      {
+        "host": "10.0.0.21",
+        "role": "target",
+        "file": "host-0.jsonl"
+      },
+      {
+        "host": "10.0.0.32",
+        "role": "generator",
+        "file": "host-1.jsonl"
+      }
+    ],
+    "started_at": "2026-10-03T23:21:23.397Z",
+    "ended_at": "2026-10-03T23:26:04.156Z",
+    "k6_exit_code": null,
+    "lighthouse": {
+      "runs": 3,
+      "where": "generator"
+    }
+  },
+  "load": null,
+  "hosts": {},
+  "lighthouse": {
+    "home": {
+      "url": "https://goodwatch.app/",
+      "runs": 3,
+      "median": {
+        "performance_score": 35,
+        "fcp_ms": 5268.5615,
+        "lcp_ms": 10015.896499999997,
+        "tbt_ms": 1766.9999999999982,
+        "cls": 0,
+        "speed_index_ms": 6255.782461907548,
+        "ttfb_ms": 29,
+        "total_bytes": 1401447,
+        "requests": 127,
+        "bytes_by_type": {
+          "script": 843559,
+          "stylesheet": 44747,
+          "image": 435505,
+          "font": 41571,
+          "document": 16382,
+          "other": 19650
+        }
+      },
+      "all_runs": [
+        {
+          "performance_score": 37,
+          "fcp_ms": 4081.5210000000006,
+          "lcp_ms": 7916.338,
+          "tbt_ms": 1766.9999999999982,
+          "cls": 0,
+          "speed_index_ms": 5114.2121702494605,
+          "ttfb_ms": 43,
+          "total_bytes": 1401447,
+          "requests": 127,
+          "bytes_by_type": {
+            "script": 843541,
+            "stylesheet": 44797,
+            "image": 435498,
+            "font": 41571,
+            "document": 16382,
+            "other": 19658
+          }
+        },
+        {
+          "performance_score": 32,
+          "fcp_ms": 5268.5615,
+          "lcp_ms": 10015.896499999997,
+          "tbt_ms": 1938.3599999999997,
+          "cls": 0,
+          "speed_index_ms": 6255.782461907548,
+          "ttfb_ms": 19,
+          "total_bytes": 1401442,
+          "requests": 127,
+          "bytes_by_type": {
+            "script": 843559,
+            "stylesheet": 44747,
+            "image": 435579,
+            "font": 41571,
+            "document": 16382,
+            "other": 19604
+          }
+        },
+        {
+          "performance_score": 35,
+          "fcp_ms": 5350.038,
+          "lcp_ms": 10269.62325,
+          "tbt_ms": 1274.0420000000004,
+          "cls": 0,
+          "speed_index_ms": 6494.105581820388,
+          "ttfb_ms": 29,
+          "total_bytes": 1401477,
+          "requests": 127,
+          "bytes_by_type": {
+            "script": 843627,
+            "stylesheet": 44742,
+            "image": 435505,
+            "font": 41571,
+            "document": 16382,
+            "other": 19650
+          }
+        }
+      ]
+    },
+    "movie": {
+      "url": "https://goodwatch.app/movie/603-the-matrix",
+      "runs": 3,
+      "median": {
+        "performance_score": 30,
+        "fcp_ms": 3211.06625,
+        "lcp_ms": 11721.665500000006,
+        "tbt_ms": 8667.989250000002,
+        "cls": 0.00009159335411809668,
+        "speed_index_ms": 10130.102719371547,
+        "ttfb_ms": 131,
+        "total_bytes": 16950803,
+        "requests": 949,
+        "bytes_by_type": {
+          "script": 1873184,
+          "stylesheet": 102011,
+          "image": 14335298,
+          "font": 34700,
+          "document": 125913,
+          "other": 477844
+        }
+      },
+      "all_runs": [
+        {
+          "performance_score": 30,
+          "fcp_ms": 3211.06625,
+          "lcp_ms": 11721.665500000006,
+          "tbt_ms": 8667.989250000002,
+          "cls": 0.001380024900635186,
+          "speed_index_ms": 10130.102719371547,
+          "ttfb_ms": 200,
+          "total_bytes": 16954660,
+          "requests": 951,
+          "bytes_by_type": {
+            "script": 1873184,
+            "stylesheet": 102010,
+            "image": 14335441,
+            "font": 34700,
+            "document": 127448,
+            "other": 481877
+          }
+        },
+        {
+          "performance_score": 28.999999999999996,
+          "fcp_ms": 3441.0692499999996,
+          "lcp_ms": 15034.69855376434,
+          "tbt_ms": 7620.423750000016,
+          "cls": 0,
+          "speed_index_ms": 11753.373391913852,
+          "ttfb_ms": 98,
+          "total_bytes": 16947652,
+          "requests": 949,
+          "bytes_by_type": {
+            "script": 1871941,
+            "stylesheet": 102011,
+            "image": 14335298,
+            "font": 34700,
+            "document": 125913,
+            "other": 477789
+          }
+        },
+        {
+          "performance_score": 59,
+          "fcp_ms": 1995.8245000000002,
+          "lcp_ms": 2786.0015000000003,
+          "tbt_ms": 10014.352000000003,
+          "cls": 0.00009159335411809668,
+          "speed_index_ms": 5854.490805048508,
+          "ttfb_ms": 131,
+          "total_bytes": 16950803,
+          "requests": 949,
+          "bytes_by_type": {
+            "script": 1873407,
+            "stylesheet": 104416,
+            "image": 14334747,
+            "font": 34700,
+            "document": 125689,
+            "other": 477844
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "run_id": "20261003T231802Z-load-smoke-hot-cold-2rps",
+  "kind": "load",
+  "label": "smoke-hot-cold-2rps",
+  "smoke": true,
+  "mode": "smoke",
+  "cache_mode": "cold",
+  "url_set": "hot",
+  "path": "private",
+  "target_url": "https://goodwatch.app",
+  "resolve_ip": "10.0.0.21",
+  "rate_plan": [
+    {
+      "name": "s01",
+      "rate": 2,
+      "start_s": 0,
+      "end_s": 60
+    }
+  ],
+  "planned_requests": 120,
+  "effective_k6_inputs": {
+    "URLS_FILE": "/work/urls.json",
+    "TARGET_URL": "https://goodwatch.app",
+    "RESOLVE_IP": "10.0.0.21",
+    "SHARE_LIST_PATH": "",
+    "SHARE_LIST_OG_PATH": "",
+    "RATE_START": "2",
+    "RATE_STEP": "5",
+    "RATE_MAX": "2",
+    "STEP_DURATION": "60",
+    "RAMP_SECONDS": "5",
+    "PRE_VUS": "20",
+    "MAX_VUS": "50",
+    "CACHE_MODE": "cold",
+    "COOKIE": "[redacted]",
+    "COOKIE_TEMPLATE": "[redacted]",
+    "ACCEPT_LANGUAGE": "en-US,en;q=0.9",
+    "ACCEPT_LANGUAGES": "en-US,en;q=0.9|de-DE,de;q=0.9,en;q=0.8|fr-FR,fr;q=0.9|es-ES,es;q=0.9|pt-BR,pt;q=0.9",
+    "CACHE_BUST_QUERY": "0",
+    "BROWSER_UA": "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+    "BOT_UA": "facebookexternalhit/1.1",
+    "ACCEPT_ENCODING": "br, gzip",
+    "REQUEST_TIMEOUT": "30s",
+    "ABORT_ERROR_RATE": "0.02",
+    "ABORT_P95_MS": "10000",
+    "ABORT_DELAY": "10s",
+    "ABORT_DROPPED": "6",
+    "SEQUENTIAL": "0",
+    "PREWARM_MAX": "200",
+    "OUT_DIR": "/work"
+  },
+  "git_commit": "70006d016ecdf084f9a7ebbb435f393178432b29",
+  "git_dirty": true,
+  "generator_host": "10.0.0.32",
+  "jump": true,
+  "k6_image": "grafana/k6:1.8.1",
+  "metric_hosts": [
+    {
+      "host": "10.0.0.21",
+      "role": "target",
+      "file": "host-0.jsonl"
+    },
+    {
+      "host": "10.0.0.32",
+      "role": "generator",
+      "file": "host-1.jsonl"
+    }
+  ],
+  "started_at": "2026-10-03T23:18:16.971Z",
+  "ended_at": "2026-10-03T23:19:18.497Z",
+  "k6_exit_code": 0,
+  "lighthouse": null
+}

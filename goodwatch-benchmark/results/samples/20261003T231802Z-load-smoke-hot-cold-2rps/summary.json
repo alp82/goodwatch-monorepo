@@ -1,0 +1,414 @@
+{
+  "schema": 1,
+  "run_id": "20261003T231802Z-load-smoke-hot-cold-2rps",
+  "kind": "load",
+  "label": "smoke-hot-cold-2rps",
+  "meta": {
+    "run_id": "20261003T231802Z-load-smoke-hot-cold-2rps",
+    "kind": "load",
+    "label": "smoke-hot-cold-2rps",
+    "smoke": true,
+    "mode": "smoke",
+    "cache_mode": "cold",
+    "url_set": "hot",
+    "path": "private",
+    "target_url": "https://goodwatch.app",
+    "resolve_ip": "10.0.0.21",
+    "rate_plan": [
+      {
+        "name": "s01",
+        "rate": 2,
+        "start_s": 0,
+        "end_s": 60
+      }
+    ],
+    "planned_requests": 120,
+    "effective_k6_inputs": {
+      "URLS_FILE": "/work/urls.json",
+      "TARGET_URL": "https://goodwatch.app",
+      "RESOLVE_IP": "10.0.0.21",
+      "SHARE_LIST_PATH": "",
+      "SHARE_LIST_OG_PATH": "",
+      "RATE_START": "2",
+      "RATE_STEP": "5",
+      "RATE_MAX": "2",
+      "STEP_DURATION": "60",
+      "RAMP_SECONDS": "5",
+      "PRE_VUS": "20",
+      "MAX_VUS": "50",
+      "CACHE_MODE": "cold",
+      "COOKIE": "[redacted]",
+      "COOKIE_TEMPLATE": "[redacted]",
+      "ACCEPT_LANGUAGE": "en-US,en;q=0.9",
+      "ACCEPT_LANGUAGES": "en-US,en;q=0.9|de-DE,de;q=0.9,en;q=0.8|fr-FR,fr;q=0.9|es-ES,es;q=0.9|pt-BR,pt;q=0.9",
+      "CACHE_BUST_QUERY": "0",
+      "BROWSER_UA": "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+      "BOT_UA": "facebookexternalhit/1.1",
+      "ACCEPT_ENCODING": "br, gzip",
+      "REQUEST_TIMEOUT": "30s",
+      "ABORT_ERROR_RATE": "0.02",
+      "ABORT_P95_MS": "10000",
+      "ABORT_DELAY": "10s",
+      "ABORT_DROPPED": "6",
+      "SEQUENTIAL": "0",
+      "PREWARM_MAX": "200",
+      "OUT_DIR": "/work"
+    },
+    "git_commit": "70006d016ecdf084f9a7ebbb435f393178432b29",
+    "git_dirty": true,
+    "generator_host": "10.0.0.32",
+    "jump": true,
+    "k6_image": "grafana/k6:1.8.1",
+    "metric_hosts": [
+      {
+        "host": "10.0.0.21",
+        "role": "target",
+        "file": "host-0.jsonl"
+      },
+      {
+        "host": "10.0.0.32",
+        "role": "generator",
+        "file": "host-1.jsonl"
+      }
+    ],
+    "started_at": "2026-10-03T23:18:16.971Z",
+    "ended_at": "2026-10-03T23:19:18.497Z",
+    "k6_exit_code": 0,
+    "lighthouse": null
+  },
+  "load": {
+    "aborted": false,
+    "abort_reason": null,
+    "duration_s": 60.003631735000006,
+    "requests": 119,
+    "rps": 1.983213291581275,
+    "error_rate": 0,
+    "latency_ms": {
+      "p50": 297.725989,
+      "p95": 2475.5381258999973,
+      "p99": 4311.397737639996,
+      "avg": 666.7095944117643,
+      "max": 4796.602467
+    },
+    "ttfb_ms": {
+      "p50": 106.829567,
+      "p95": 521.0367132,
+      "p99": 883.7050923399997
+    },
+    "status": {
+      "0": 0,
+      "2xx": 119,
+      "3xx": 0,
+      "4xx": 0,
+      "5xx": 0
+    },
+    "response_bytes_avg": 0,
+    "dropped_iterations": 0,
+    "routes": {
+      "discover": {
+        "requests": 14,
+        "rps": 0.23331921077426765,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 248.09632349999998,
+          "p95": 2124.5540345999993,
+          "p99": 2870.736820519999,
+          "avg": 567.6897010714285,
+          "max": 3057.282517
+        },
+        "ttfb_ms": {
+          "p50": 142.38968799999998,
+          "p95": 234.76163885,
+          "p99": 245.83878857
+        },
+        "status": {
+          "0": 0,
+          "2xx": 14,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "home": {
+        "requests": 7,
+        "rps": 0.11665960538713382,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 127.207793,
+          "p95": 621.7832995999996,
+          "p99": 752.8739727199998,
+          "avg": 217.72573685714286,
+          "max": 785.646641
+        },
+        "ttfb_ms": {
+          "p50": 32.713173,
+          "p95": 298.06449559999993,
+          "p99": 331.06373671999995
+        },
+        "status": {
+          "0": 0,
+          "2xx": 7,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "og_person": {
+        "requests": 2,
+        "rps": 0.03333131582489538,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 39.240714,
+          "p95": 56.6311314,
+          "p99": 58.17694628,
+          "avg": 39.240714,
+          "max": 58.5634
+        },
+        "ttfb_ms": {
+          "p50": 9.083008,
+          "p95": 9.9440911,
+          "p99": 10.02063182
+        },
+        "status": {
+          "0": 0,
+          "2xx": 2,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "og_title": {
+        "requests": 5,
+        "rps": 0.08332828956223845,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 48.600607,
+          "p95": 193.71734059999997,
+          "p99": 209.53403451999998,
+          "avg": 89.00304379999999,
+          "max": 213.488208
+        },
+        "ttfb_ms": {
+          "p50": 38.525392,
+          "p95": 182.84773439999998,
+          "p99": 198.26825248
+        },
+        "status": {
+          "0": 0,
+          "2xx": 5,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "person": {
+        "requests": 3,
+        "rps": 0.04999697373734307,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 168.820314,
+          "p95": 353.35931999999997,
+          "p99": 369.7627872,
+          "avg": 224.97887233333336,
+          "max": 373.863654
+        },
+        "ttfb_ms": {
+          "p50": 55.262282,
+          "p95": 69.3005315,
+          "p99": 70.5483759
+        },
+        "status": {
+          "0": 0,
+          "2xx": 3,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "title_movie": {
+        "requests": 84,
+        "rps": 1.399915264645606,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 384.3689335,
+          "p95": 2404.249331299999,
+          "p99": 4467.019720820001,
+          "avg": 714.3604075952384,
+          "max": 4796.602467
+        },
+        "ttfb_ms": {
+          "p50": 106.28576699999999,
+          "p95": 525.9820347,
+          "p99": 981.6084785000008
+        },
+        "status": {
+          "0": 0,
+          "2xx": 84,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "title_show": {
+        "requests": 4,
+        "rps": 0.06666263164979076,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 2106.7713105000003,
+          "p95": 3300.2202813999993,
+          "p99": 3442.9250210799996,
+          "avg": 2165.499565,
+          "max": 3478.601206
+        },
+        "ttfb_ms": {
+          "p50": 364.6721045,
+          "p95": 647.4754456,
+          "p99": 680.8724291199999
+        },
+        "status": {
+          "0": 0,
+          "2xx": 4,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      }
+    },
+    "steps": [
+      {
+        "name": "s01",
+        "target_rps": 2,
+        "requests": 119,
+        "rps": 1.9833333333333334,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 297.725989,
+          "p95": 2475.5381258999973,
+          "p99": 4311.397737639996,
+          "avg": 666.7095944117643,
+          "max": 4796.602467
+        },
+        "ttfb_ms": {
+          "p50": 106.829567,
+          "p95": 521.0367132,
+          "p99": 883.7050923399997
+        },
+        "status": {
+          "0": 0,
+          "2xx": 119,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      }
+    ]
+  },
+  "hosts": {
+    "abio": {
+      "role": "target",
+      "nproc": 8,
+      "samples": 13,
+      "containers": {
+        "gk4owk8-122325782866": {
+          "cpu_pct": {
+            "avg": 136.0676923076923,
+            "max": 302.12
+          },
+          "mem_mb": {
+            "avg": 2927.4584617614746,
+            "max": 2933.760000228882
+          }
+        },
+        "coolify-proxy": {
+          "cpu_pct": {
+            "avg": 95.3076923076923,
+            "max": 116.94
+          },
+          "mem_mb": {
+            "avg": 257.2615385055542,
+            "max": 268.6000003814697
+          }
+        }
+      },
+      "cpu_busy_pct": {
+        "avg": 38.88438461538461,
+        "max": 50.453
+      },
+      "iowait_pct": {
+        "avg": 0.0038461538461538464,
+        "max": 0.025
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 3.2561538461538455,
+        "max": 3.68
+      },
+      "mem_used_pct": {
+        "avg": 35.53210378937936,
+        "max": 35.84402338668794
+      },
+      "net_rx_mbps": {
+        "avg": 10.160824615384616,
+        "max": 14.2254704
+      },
+      "net_tx_mbps": {
+        "avg": 9.517750543384617,
+        "max": 12.3028192
+      },
+      "tcp_estab": {
+        "avg": 13.23076923076923,
+        "max": 14
+      }
+    },
+    "gw-worker3": {
+      "role": "generator",
+      "nproc": 4,
+      "samples": 12,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 10.457166666666668,
+        "max": 17.935
+      },
+      "iowait_pct": {
+        "avg": 0.033499999999999995,
+        "max": 0.2
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 0.32,
+        "max": 0.39
+      },
+      "mem_used_pct": {
+        "avg": 16.54865081788822,
+        "max": 17.1304485425366
+      },
+      "net_rx_mbps": {
+        "avg": 0.17418195533333333,
+        "max": 0.34168
+      },
+      "net_tx_mbps": {
+        "avg": 0.130862022,
+        "max": 0.17313279999999998
+      },
+      "tcp_estab": {
+        "avg": 23.75,
+        "max": 27
+      }
+    }
+  },
+  "lighthouse": {}
+}

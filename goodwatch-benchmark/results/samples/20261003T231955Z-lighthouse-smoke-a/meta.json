@@ -1,0 +1,39 @@
+{
+  "run_id": "20261003T231955Z-lighthouse-smoke-a",
+  "kind": "lighthouse",
+  "label": "smoke-a",
+  "smoke": false,
+  "mode": "smoke",
+  "cache_mode": "warm",
+  "url_set": "lh-smoke.txt",
+  "path": "public",
+  "target_url": "https://goodwatch.app",
+  "resolve_ip": "",
+  "rate_plan": null,
+  "planned_requests": null,
+  "effective_k6_inputs": null,
+  "git_commit": "70006d016ecdf084f9a7ebbb435f393178432b29",
+  "git_dirty": true,
+  "generator_host": "10.0.0.32",
+  "jump": true,
+  "k6_image": "grafana/k6:1.8.1",
+  "metric_hosts": [
+    {
+      "host": "10.0.0.21",
+      "role": "target",
+      "file": "host-0.jsonl"
+    },
+    {
+      "host": "10.0.0.32",
+      "role": "generator",
+      "file": "host-1.jsonl"
+    }
+  ],
+  "started_at": "2026-10-03T23:21:23.397Z",
+  "ended_at": "2026-10-03T23:26:04.156Z",
+  "k6_exit_code": null,
+  "lighthouse": {
+    "runs": 3,
+    "where": "generator"
+  }
+}
