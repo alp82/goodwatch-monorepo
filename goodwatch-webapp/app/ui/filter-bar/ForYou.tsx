@@ -9,7 +9,6 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useEffect, useId, useRef, useState } from "react"
 import {
 	BROWSE_QUALITY_FLOOR,
-	SEARCH_MAX_MOVE,
 	browseLiftRange,
 } from "~/domain/for-you"
 import { ReasonChips } from "~/ui/title-card/ReasonChips"
@@ -87,8 +86,7 @@ export function ForYouExplanation({
 			</p>
 			{searching ? (
 				<p className="mt-2 text-[13px] leading-relaxed text-gray-300">
-					Your search stays in charge; taste only swaps close matches,{" "}
-					{SEARCH_MAX_MOVE} places at most.
+					Your search stays in charge; taste only swaps close matches.
 				</p>
 			) : (
 				<>
