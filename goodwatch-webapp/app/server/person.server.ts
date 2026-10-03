@@ -467,7 +467,50 @@ export async function getPersonName(personId: number): Promise<string | null> {
 	return person?.name ?? null
 }
 
+// Parsed profiles kept in this process: a profile is up to 1 MB of JSON, so repeated hits on
+// one person skip Redis and the parse. Least recently used first; a missing person is kept too.
+// Callers must not change a profile they get back: it is shared between requests.
+const RECENT_PROFILES_MAX = 50
+const RECENT_PROFILE_MS = 5 * 60 * 1000
+const recentProfiles = new Map<
+	number,
+	{ profile: PersonProfile | null; expires: number }
+>()
+// Loads under way, so simultaneous requests for one person share a single load.
+const loadingProfiles = new Map<number, Promise<PersonProfile | null>>()
+
 export async function getPersonProfile(
+	personId: number,
+): Promise<PersonProfile | null> {
+	const recent = recentProfiles.get(personId)
+	if (recent) {
+		recentProfiles.delete(personId)
+		if (recent.expires > Date.now()) {
+			recentProfiles.set(personId, recent)
+			return recent.profile
+		}
+	}
+
+	const loading = loadingProfiles.get(personId)
+	if (loading) return loading
+
+	const load = getCachedPersonProfile(personId)
+		.then((profile) => {
+			recentProfiles.set(personId, {
+				profile,
+				expires: Date.now() + RECENT_PROFILE_MS,
+			})
+			if (recentProfiles.size > RECENT_PROFILES_MAX) {
+				recentProfiles.delete(recentProfiles.keys().next().value as number)
+			}
+			return profile
+		})
+		.finally(() => loadingProfiles.delete(personId))
+	loadingProfiles.set(personId, load)
+	return load
+}
+
+async function getCachedPersonProfile(
 	personId: number,
 ): Promise<PersonProfile | null> {
 	// The cache stores objects only, so a missing person is wrapped too.

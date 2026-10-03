@@ -4,8 +4,9 @@ import type {
 	LoaderFunctionArgs,
 	MetaFunction,
 } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
+import { isCrawler } from "~/server/crawlers.server";
 import CustomAuthForm from "~/ui/auth/CustomAuthForm";
 import { useUser } from "~/utils/auth";
 import { useEffect } from "react";
@@ -35,6 +36,9 @@ export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
 	const url = new URL(request.url);
+	// Every page links here with its own return page, which is an endless set of URLs for a crawler.
+	if (url.searchParams.has("redirectTo") && isCrawler(request))
+		return redirect("/sign-in", 301);
 	const redirectUri = url.searchParams.get("redirectTo") || "";
 
 	return json({ redirectUri });

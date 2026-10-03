@@ -5,8 +5,9 @@ import {
 } from "@heroicons/react/20/solid"
 // Cast and crew page: who the person is, what their work feels like compared with the
 // catalog, who they work with, and all their titles, filtered and grouped on the server.
-// Every link is a server-rendered <a href>, so search engines can follow them; the type filter is the site's shared
-// control and goes to the filtered URL.
+// Every link is a server-rendered <a href>. Links to a filtered view of this page are nofollow and crawlers are sent
+// to the unfiltered page, because the filter combinations are endless. The type filter is the site's shared control
+// and goes to the filtered URL.
 import {
 	FilmIcon,
 	StarIcon,
@@ -44,6 +45,7 @@ import {
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
 import { Portrait } from "~/ui/person/Portrait"
+import { isCrawler, limitFilteredViews } from "~/server/crawlers.server"
 import { NoTitlesOfType, TypeFilter } from "~/ui/type-filter"
 import { personPath, pluralize, titleToDashed } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
@@ -58,11 +60,17 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const id = Number((params.personKey ?? "").split("-")[0])
 	if (!Number.isSafeInteger(id) || id <= 0)
 		throw new Response("Not found", { status: 404 })
-	const profile = await getPersonProfile(id)
+
+	// Crawlers only get the unfiltered page, and get sent there before the profile is loaded.
+	const url = new URL(request.url)
+	if (url.search && isCrawler(request)) return redirect(url.pathname, 301)
+
+	const profile = url.search
+		? await limitFilteredViews(() => getPersonProfile(id))
+		: await getPersonProfile(id)
 	if (!profile) throw new Response("Not found", { status: 404 })
 
 	// One URL per person: /person/287 and misspelled slugs redirect to the canonical path.
-	const url = new URL(request.url)
 	const canonical = personPath(profile.tmdb_id, profile.name)
 	if (url.pathname !== canonical) return redirect(canonical + url.search, 301)
 
@@ -432,6 +440,8 @@ function Fact({
 	return href ? (
 		<Link
 			to={href}
+			// A link that starts with "?" is a filtered view of this page.
+			rel={href.startsWith("?") ? "nofollow" : undefined}
 			prefetch="intent"
 			className="block rounded-lg px-4 py-3 hover:bg-white/5"
 		>

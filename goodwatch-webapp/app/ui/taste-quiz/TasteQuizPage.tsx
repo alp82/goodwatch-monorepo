@@ -362,6 +362,7 @@ function KeepAsk({ q }: { q: TasteQuiz }) {
 				<p className="mt-3 text-sm text-gray-500">
 					Continue with Google: no password.{" "}
 					<Link
+						rel="nofollow"
 						to={`/sign-up?redirectTo=${encodeURIComponent(SAVED_RETURN)}`}
 						className="underline hover:text-gray-300"
 					>

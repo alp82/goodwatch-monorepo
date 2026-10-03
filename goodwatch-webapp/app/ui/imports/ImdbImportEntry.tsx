@@ -34,6 +34,7 @@ export function ImdbImportEntry({
 			<p className="min-w-0">
 				Already rate on IMDb?{" "}
 				<Link
+					rel={member ? undefined : "nofollow"}
 					to={
 						member
 							? IMPORTS_PATH

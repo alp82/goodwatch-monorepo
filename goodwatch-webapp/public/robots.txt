@@ -1,5 +1,9 @@
 User-agent: *
 Disallow: /api/
+Disallow: /person/*?
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /discover?
 
 Allow: /
 

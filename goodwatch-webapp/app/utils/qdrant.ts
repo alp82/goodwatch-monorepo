@@ -27,6 +27,21 @@ type PayloadSelection = boolean | string[] | { include?: string[]; exclude?: str
 const MOVIE_BASE = 1_000_000_000_000
 const SHOW_BASE = 2_000_000_000_000
 
+// Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
+const MAX_LOG_CHARS = 2000
+
+const capLog = (value: unknown, indent?: number): string => {
+	let text: string
+	try {
+		text = typeof value === 'string' ? value : (JSON.stringify(value, null, indent) ?? String(value))
+	} catch {
+		text = String(value)
+	}
+	return text.length > MAX_LOG_CHARS
+		? `${text.slice(0, MAX_LOG_CHARS)}... (${text.length - MAX_LOG_CHARS} more characters cut)`
+		: text
+}
+
 class QdrantClientWrapper {
 	private client: QdrantClient
 
@@ -257,7 +272,7 @@ class QdrantClientWrapper {
 			console.error("====================")
 			console.error(formattedLog)
 			console.error("Collection:", params.collectionName)
-			console.error("Params:", JSON.stringify(params, null, 2))
+			console.error("Params:", capLog(params, 2))
 			console.error("Error:", error)
 			console.error("Stack trace:")
 			console.trace()
@@ -326,7 +341,7 @@ class QdrantClientWrapper {
 			return this.toScoredResults<T>(response.result)
 		} catch (error) {
 			console.error(this.formatLog(summary, performance.now() - startTime, 0, true))
-			console.error("Filter:", JSON.stringify(params.filter))
+			console.error("Filter:", capLog(params.filter))
 			console.error("Error:", error)
 			throw error
 		}
@@ -389,7 +404,7 @@ class QdrantClientWrapper {
 			console.error("====================")
 			console.error(formattedLog)
 			console.error("Collection:", params.collectionName)
-			console.error("Params:", JSON.stringify(params, null, 2))
+			console.error("Params:", capLog(params, 2))
 			console.error("Error:", error)
 			console.error("Stack trace:")
 			console.trace()

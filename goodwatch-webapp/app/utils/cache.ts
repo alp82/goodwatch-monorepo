@@ -132,13 +132,15 @@ async function cacheSet<CacheData extends JsonData>(
 
 async function cacheGet<CacheData extends JsonData>(
 	key: string,
-): Promise<{ data: CacheData; timestamp: number } | null> {
+): Promise<{ data: CacheData; timestamp: number; length: number } | null> {
 	const redis = getRedisCluster()
 	if (!redis) return null
 
 	try {
 		const result = await redis.get(key)
-		return result ? JSON.parse(result) : null
+		if (!result) return null
+		// The raw length stands in for the size, so a hit never serializes the value again.
+		return { ...JSON.parse(result), length: result.length }
 	} catch (e) {
 		console.log("Error while getting cache value:", e)
 		return null
@@ -156,6 +158,20 @@ async function cacheDelete(key: string): Promise<number> {
 		console.log("Error while deleting cache value:", e)
 		return 0
 	}
+}
+
+// Keys already reported as big, so a hot key warns once instead of on every hit.
+const MAX_WARNED_BIG_KEYS = 500
+const warnedBigKeys = new Set<string>()
+
+function shouldWarnBig(key: string): boolean {
+	if (warnedBigKeys.has(key)) return false
+	if (warnedBigKeys.size >= MAX_WARNED_BIG_KEYS) {
+		// Sets iterate in insertion order: drop the oldest key.
+		warnedBigKeys.delete(warnedBigKeys.values().next().value as string)
+	}
+	warnedBigKeys.add(key)
+	return true
 }
 
 export type TargetFunction<Params, Return> = (args: Params) => Promise<Return>
@@ -186,17 +202,13 @@ export const cached = async <
 	try {
 		const cachedResult = await cacheGet<Return>(cacheKey)
 		if (cachedResult) {
-			const { timestamp, data } = cachedResult
+			const { timestamp, data, length } = cachedResult
 			if (Date.now() - timestamp < 1000 * 60 * ttlMinutes) {
-				const sizeKB = Math.round(
-					Buffer.byteLength(JSON.stringify(data)) / 1024,
-				)
-				const size =
-					sizeKB < 1000 ? `${sizeKB} KB` : `${(sizeKB / 1024).toFixed(2)} MB`
-				if (sizeKB >= 500) {
+				const sizeKB = Math.round(length / 1024)
+				if (sizeKB >= 500 && shouldWarnBig(cacheKey)) {
+					const size =
+						sizeKB < 1000 ? `${sizeKB} KB` : `${(sizeKB / 1024).toFixed(2)} MB`
 					console.warn("cached (big)", { cacheName, size, params })
-				} else {
-					// console.info("cached", { cacheName, params })
 				}
 				return data as Return
 			}

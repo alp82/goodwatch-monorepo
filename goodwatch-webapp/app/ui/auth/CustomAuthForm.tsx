@@ -254,7 +254,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 						{mode === "sign-up" ? (
 							<p className="text-gray-400">
 								Already have an account?{" "}
-								<Link to={`/sign-in?redirectTo=${encodeURIComponent(authReturnTo)}`} className="text-amber-500 hover:text-amber-400 font-medium">
+								<Link rel="nofollow" to={`/sign-in?redirectTo=${encodeURIComponent(authReturnTo)}`} className="text-amber-500 hover:text-amber-400 font-medium">
 									Sign in
 								</Link>
 							</p>
@@ -267,7 +267,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 								</p>
 								<p className="text-gray-400 mt-2">
 									Don't have an account?{" "}
-									<Link to={`/sign-up?redirectTo=${encodeURIComponent(authReturnTo)}`} className="text-amber-500 hover:text-amber-400 font-medium">
+									<Link rel="nofollow" to={`/sign-up?redirectTo=${encodeURIComponent(authReturnTo)}`} className="text-amber-500 hover:text-amber-400 font-medium">
 										Sign up
 									</Link>
 								</p>
