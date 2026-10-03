@@ -343,11 +343,8 @@ export function DiscoverPage({
 							status={status}
 							on={applied}
 							leanings={leanings}
-							ratings={ratings}
 							guest={!member}
-							search={
-								q ? { q, reading: search.reading, forYou: applied } : null
-							}
+							search={q ? { q, reading: search.reading } : null}
 						/>
 					}
 				/>

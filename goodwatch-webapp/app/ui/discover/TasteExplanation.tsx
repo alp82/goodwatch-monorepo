@@ -5,7 +5,6 @@
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
-import { SEARCH_MAX_MOVE } from "~/domain/for-you"
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server"
 import type { ForYouStatus } from "~/server/discover-results.server"
 import { RATE_TITLES_PATH } from "~/ui/filter-bar/labels"
@@ -20,15 +19,12 @@ export interface SearchExplanation {
 	q: string
 	/** The reading's chips; null until the reading arrives, empty when the basic search served. */
 	reading: ReadingChip[] | null
-	/** For you is moving results (at most SEARCH_MAX_MOVE places). */
-	forYou: boolean
 }
 
 export function TasteExplanation({
 	status,
 	on,
 	leanings,
-	ratings,
 	guest,
 	search = null,
 	className = "",
@@ -36,7 +32,6 @@ export function TasteExplanation({
 	status: ForYouStatus
 	on: boolean
 	leanings: string[]
-	ratings: number
 	guest: boolean
 	/** Set while searching: "Read as" replaces the taste. */
 	search?: SearchExplanation | null
@@ -73,9 +68,6 @@ export function TasteExplanation({
 							<>
 								<span>Your taste leans to</span>
 								<ReasonChips reasons={leanings} />
-								<span className="text-gray-500">
-									from {ratings.toLocaleString("en")} ratings
-								</span>
 							</>
 						) : (
 							<>
@@ -116,11 +108,6 @@ function SearchLine({ search }: { search: SearchExplanation }) {
 		<>
 			<span>Read as</span>
 			<ReadAsChips reading={search.reading} />
-			{search.forYou && (
-				<span className="text-gray-500">
-					taste moves results {SEARCH_MAX_MOVE} places at most
-				</span>
-			)}
 		</>
 	)
 }
