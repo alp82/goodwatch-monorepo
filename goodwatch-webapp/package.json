@@ -11,6 +11,7 @@
 		"typecheck": "tsc",
 		"test": "node --test 'app/**/*.test.ts'",
 		"check:share-cards": "vite-node scripts/check-share-cards.tsx",
+		"prototype:age-filter": "vite --config app/ui/discover/prototype-age-filter/mock/vite.config.mjs",
 		"postinstall": "patch-package"
 	},
 	"dependencies": {

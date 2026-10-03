@@ -1,0 +1,3 @@
+/* PROTOTYPE (throwaway): the app's Tailwind, scanning the app's components from this page's own Vite root. */
+@import "../../../../tailwind.css";
+@source "../../../../ui";

@@ -29,6 +29,7 @@ export function DiscoverGrid({
 	cards,
 	marks,
 	flipping = false,
+	overlay,
 	children,
 }: {
 	cards: TitleCard[]
@@ -39,6 +40,8 @@ export function DiscoverGrid({
 	marks: Map<TitleKey, number> | null
 	/** For you just reordered the list. */
 	flipping?: boolean
+	/** PROTOTYPE (age filter): drawn over each card. */
+	overlay?: (card: TitleCard) => ReactNode
 	/** After the last card, for example the hidden-titles cell. */
 	children?: ReactNode
 }) {
@@ -68,6 +71,7 @@ export function DiscoverGrid({
 						>
 							<TitlePosterCard card={card} prefetch={index < 12} />
 							<MoveMark delta={delta} reduce={reduce} />
+							{overlay?.(card)}
 						</motion.div>
 					)
 				})}

@@ -32,6 +32,7 @@ import {
 	useFilterState,
 } from "~/ui/filter-bar"
 import { sortShown } from "~/ui/filter-bar/labels"
+import { useMyServices } from "~/ui/filter-bar/useFilterData"
 import { SearchPeople } from "~/ui/search/SearchPeople"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { Spinner } from "~/ui/wait/Spinner"
@@ -40,6 +41,7 @@ import { DiscoverGrid } from "./DiscoverGrid"
 import { DiscoverHeading } from "./DiscoverHeading"
 import { ForYouNeedsTaste, ForYouSignUp } from "./ForYouStates"
 import { HiddenTitles } from "./HiddenTitles"
+import { useAgeFilterPrototype } from "./prototype-age-filter/AgeFilterPrototype"
 import { TasteExplanation } from "./TasteExplanation"
 import {
 	type InitialBrowse,
@@ -176,6 +178,10 @@ export function DiscoverPage({
 	const first: DiscoverResults | null = pages[0] ?? null
 	const cards = useMemo(() => pages.flatMap((page) => page.cards), [pages])
 	const answered = !browse.isPlaceholderData && Boolean(first)
+	// PROTOTYPE (age filter): on with ?variant=A|B|C, off otherwise.
+	const agePrototype = useAgeFilterPrototype(cards, {
+		country: useMyServices().country,
+	})
 	// Until a search's own results land, the grid keeps the last list, and the counts wait.
 	const stale = searching ? !first?.searching || !answered : false
 
@@ -353,6 +359,7 @@ export function DiscoverPage({
 						counts={counts}
 						forYou={forYouControl}
 						taste={taste}
+						rowTrail={agePrototype?.rowTrail}
 						sortFooter={
 							taste === "signUp" ? (
 								<div className="px-2 pt-2 pb-1">
@@ -370,6 +377,8 @@ export function DiscoverPage({
 						}
 					/>
 				</div>
+				{agePrototype?.panel}
+				{agePrototype?.switcher}
 				{searching && search.error && (
 					<p className="mt-4 flex flex-wrap items-center gap-3 text-sm text-gray-400">
 						{search.error}
@@ -402,7 +411,10 @@ export function DiscoverPage({
 						</div>
 					) : (
 						<DiscoverGrid
-							cards={first.total === 0 && !stale ? [] : cards}
+							cards={
+								first.total === 0 && !stale ? [] : (agePrototype?.cards ?? cards)
+							}
+							overlay={agePrototype?.overlay}
 							marks={marks}
 							flipping={Boolean(flip)}
 						>
