@@ -31,8 +31,8 @@ integrated relevance/rollout criterion has passed.
 
 ## Runtime configuration
 
-Use Node 20 or later and the committed npm lockfile. Apply the additive, repeatable
-`goodwatch-webapp/migrations/20260921_search_crate.sql` to the existing CrateDB.
+Use Node 20 or later and the committed npm lockfile. The `search_*` tables are defined in
+`goodwatch-flows/windmill/f/sync/models/crate_schemas.py`; the Windmill script `f/sync/init/cratedb` creates them.
 There is no PostgreSQL dependency, migration, or `SEARCH_DATABASE_URL` requirement.
 
 Configure `TYPESAFE_API_KEY` and a stable `SEARCH_STORAGE_KEY` (64 hexadecimal

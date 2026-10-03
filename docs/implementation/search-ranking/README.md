@@ -608,8 +608,8 @@ Done in #144, in `goodwatch-webapp/app/server/search-ranking/`. Nothing calls it
   Adult titles are always excluded, whatever `includeAdult` says. The title table can't test the genre and streaming
   chip filters: the Qdrant queries apply them, the in-memory parts (the mix statistics, reference titles and peers
   before round 2) don't.
-- **Versions:** `search_history.ranker_version` (added with
-  `goodwatch-webapp/migrations/20260925_search_history_ranker_version.sql`, applied on September 25, 2026) records
+- **Versions:** `search_history.ranker_version` (added on September 25, 2026; defined in
+  `goodwatch-flows/windmill/f/sync/models/crate_schemas.py`) records
   the ranking that produced the served list: `hybrid-v1` (`RANKER_VERSION`), `essence-text-v1` (the basic search),
   and `fingerprint-text-v1` for the previous ranking, which served until September 26, 2026. The Jev contract and
   question version strings are unchanged.
@@ -663,8 +663,8 @@ Built in #146 (`5dee4328`). Shadow mode ran on production on September 25, 2026,
 timings stay; shadow mode was removed with the previous ranking (see
 [removal of the previous ranking](#removal-of-the-previous-ranking)).
 
-- **Stage timings:** every `search_history` row has `stage_ms` (`OBJECT(IGNORED)`, added with
-  `goodwatch-webapp/migrations/20260925_search_stage_timings_and_shadow.sql`, applied on September 25, 2026):
+- **Stage timings:** every `search_history` row has `stage_ms` (`OBJECT(IGNORED)`, added on September 25, 2026, with the
+  `search_shadow` table; both defined in `goodwatch-flows/windmill/f/sync/models/crate_schemas.py`):
   `language`, `reading` (Jev), `ranking` (the current ranking, with `rankingQdrant` for its Qdrant time),
   `titleLookup` (the extra wait for the TMDB title lookup that runs alongside), `display` (catalog metadata and the
   blend) and `total`. Read the whole object: its keys aren't indexed.
@@ -715,8 +715,8 @@ ranking was removed, the ranking always serves and the fallbacks below get the b
   the filters, the adult exclusion, the eligibility check and the IMDb deduplication stay as they are. The session
   snapshot keeps the whole list, so pagination shows 3 pages instead of up to 5. TMDB person rows (non-clickable
   cards) aren't part of the new list.
-- **Fallbacks:** today's ranking serves, and `search_history.ranker_fallback` records why (added with
-  `goodwatch-webapp/migrations/20260925_search_history_ranker_fallback.sql`, applied on September 25, 2026):
+- **Fallbacks:** today's ranking serves, and `search_history.ranker_fallback` records why (added on September 25, 2026; defined in
+  `goodwatch-flows/windmill/f/sync/models/crate_schemas.py`):
   - `basic search`: no reading;
   - `index not loaded`, `encoder not ready`, `encoder queue full`: checked before the ranking starts;
   - `timeout`: the ranking missed its deadline, 1,500 ms by default (`SEARCH_RANKING_DEADLINE_MS` overrides it). The

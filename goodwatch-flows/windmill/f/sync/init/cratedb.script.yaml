@@ -5,5 +5,9 @@ kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
-  properties: {}
+  properties:
+    dry_run:
+      type: boolean
+      description: Only report what would be created or added. Nothing is changed.
+      default: false
   required: []
