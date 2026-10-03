@@ -22,6 +22,7 @@ Join our Discord to be part of the wonderful community and learn more about the 
 
 | Directory | Description |
 |-----------|-------------|
+| `goodwatch-benchmark/` | Load tests and Lighthouse before-and-after comparisons |
 | `goodwatch-webapp/` | Remix web application (frontend + API) |
 | `goodwatch-hq/` | Admin tools and internal services |
 | `goodwatch-remote/` | Ansible deployment scripts and Windmill Workers |

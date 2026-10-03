@@ -1,0 +1,4 @@
+config.env
+urls/longtail.json
+results/*
+!results/samples/

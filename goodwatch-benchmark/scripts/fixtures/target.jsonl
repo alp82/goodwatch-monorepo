@@ -1,0 +1,4 @@
+{"type":"header","host":"10.0.0.21","nproc":4,"mem_total_kb":1000000,"kernel":"fixture"}
+{"ts":1767225599,"host":"10.0.0.21","cpu_busy_pct":99,"iowait_pct":0,"steal_pct":0,"load1":9,"mem_total_kb":1000000,"mem_available_kb":0,"net_rx_bytes_s":0,"net_tx_bytes_s":0,"tcp_estab":0,"containers":[]}
+{"ts":1767225605,"host":"10.0.0.21","cpu_busy_pct":25,"iowait_pct":2,"steal_pct":0,"load1":1,"mem_total_kb":1000000,"mem_available_kb":600000,"net_rx_bytes_s":125000,"net_tx_bytes_s":250000,"tcp_estab":8,"containers":[{"name":"gk4owk8-fixture","cpu_pct":80,"mem_bytes":104857600}]}
+{"ts":1767225611,"host":"10.0.0.21","cpu_busy_pct":99,"iowait_pct":0,"steal_pct":0,"load1":9,"mem_total_kb":1000000,"mem_available_kb":0,"net_rx_bytes_s":0,"net_tx_bytes_s":0,"tcp_estab":0,"containers":[]}

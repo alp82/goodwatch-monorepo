@@ -1,0 +1,6 @@
+home https://goodwatch.app/
+movie https://goodwatch.app/movie/603-the-matrix
+show https://goodwatch.app/show/1396-breaking-bad
+person https://goodwatch.app/person/138-quentin-tarantino
+discover https://goodwatch.app/discover
+# share_list https://goodwatch.app/u/<handle>/lists/<id>

@@ -1,0 +1,2 @@
+{"type":"header","host":"10.0.0.32","nproc":4,"mem_total_kb":1000000,"kernel":"fixture"}
+{"ts":1767225605,"host":"10.0.0.32","cpu_busy_pct":10,"iowait_pct":0,"steal_pct":1,"load1":0.4,"mem_total_kb":1000000,"mem_available_kb":800000,"net_rx_bytes_s":250000,"net_tx_bytes_s":125000,"tcp_estab":4,"containers":[]}

@@ -1,0 +1,114 @@
+{
+  "name": "hot",
+  "description": "Viral title and link previews.",
+  "entries": [
+    {
+      "route": "title_movie",
+      "path": "/movie/603-the-matrix",
+      "weight": 60,
+      "client": "browser",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "share_list",
+      "path": "${SHARE_LIST_PATH}",
+      "weight": 8,
+      "client": "browser",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "home",
+      "path": "/",
+      "weight": 5,
+      "client": "browser",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "title_show",
+      "path": "/show/1396-breaking-bad",
+      "weight": 5,
+      "client": "browser",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "person",
+      "path": "/person/138-quentin-tarantino",
+      "weight": 5,
+      "client": "browser",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "discover",
+      "path": "/discover",
+      "weight": 7,
+      "client": "browser",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "title_movie",
+      "path": "/movie/603-the-matrix",
+      "weight": 3,
+      "client": "bot",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "share_list",
+      "path": "${SHARE_LIST_PATH}",
+      "weight": 1,
+      "client": "bot",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "og_title",
+      "path": "/og/movie/603-the-matrix.png",
+      "weight": 3,
+      "client": "bot",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "og_title",
+      "path": "/og/show/1396-breaking-bad.png",
+      "weight": 1,
+      "client": "bot",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "og_person",
+      "path": "/og/person/138-quentin-tarantino.png",
+      "weight": 1,
+      "client": "bot",
+      "expect": [
+        200
+      ]
+    },
+    {
+      "route": "og_share_list",
+      "path": "${SHARE_LIST_OG_PATH}",
+      "weight": 1,
+      "client": "bot",
+      "expect": [
+        200
+      ]
+    }
+  ]
+}
