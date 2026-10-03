@@ -62,6 +62,8 @@ export interface BridgeState {
 	kind: BridgeKind
 	grow: number
 	to: 0 | 1
+	/** Risen before its titles arrived: its surface pulses until they do. */
+	pending: boolean
 }
 
 export interface MapIsland {
@@ -188,6 +190,7 @@ export function makeBridge(
 	joined: [MapIsland, MapIsland],
 	tree: ExplorerTree & { kind: BridgeKind },
 	at: { x: number; y: number },
+	pending = false,
 ): MapIsland {
 	const [a, b] = joined
 	const shape: WorldIsland = {
@@ -216,7 +219,13 @@ export function makeBridge(
 		shape,
 	)
 	island.tint = luminous(mixRgb(a.tint, b.tint, 0.5))
-	island.bridge = { of: [a.id, b.id], kind: tree.kind, grow: 0, to: 1 }
+	island.bridge = {
+		of: [a.id, b.id],
+		kind: tree.kind,
+		grow: 0,
+		to: 1,
+		pending,
+	}
 	showTree(island, tree)
 	return island
 }

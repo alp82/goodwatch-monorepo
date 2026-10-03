@@ -1,4 +1,4 @@
-// Explorer: the islands map. A grouping (Mood, Theme, Style, Occasion, Genre, Decade, Country, Your taste) splits the
+// Explorer: the islands map. A grouping (Mood, Theme, Style, Occasion, Decade, Country, Your taste) splits the
 // Explorer's pool of titles into islands; islands can be combined into bridges. These are the shapes the server's
 // `/api/explorer/*` endpoints return and the browser draws. Pure and shared by the server and the browser.
 import type { TitleKey } from "~/utils/title-key"
@@ -9,7 +9,6 @@ export const GROUPINGS = [
 	"theme",
 	"style",
 	"occasion",
-	"genre",
 	"decade",
 	"country",
 	"taste",
@@ -22,7 +21,6 @@ export const GROUPING_NAMES: Record<Grouping, string> = {
 	theme: "Theme",
 	style: "Style",
 	occasion: "Occasion",
-	genre: "Genre",
 	decade: "Decade",
 	country: "Country",
 	taste: "Your taste",
@@ -44,10 +42,13 @@ export const DEFAULT_BRANCHING = [6, 2, 2]
 export const firstPosters = (count: number) =>
 	count < 40 ? 2 : count < 220 ? 3 : count < 800 ? 4 : 5
 
-/** The three match bands an island's titles fall into (matches run from 50 to 99). */
+/**
+ * The three match bands an island's titles fall into (matches run from 50 to 99). At the full ceiling of the match,
+ * Near you is the top 31 percent of well-known titles and A step out the top 64 percent.
+ */
 export const MATCH_BANDS = [
-	{ key: "near", name: "Near you", min: 85 },
-	{ key: "step", name: "A step out", min: 68 },
+	{ key: "near", name: "Near you", min: 70 },
+	{ key: "step", name: "A step out", min: 60 },
 	{ key: "far", name: "Unexplored", min: 0 },
 ] as const
 
@@ -148,7 +149,7 @@ export interface ExplorerIslandTree extends ExplorerTree {
 }
 
 /**
- * both: titles on both islands (Mood, Theme, Style, Occasion, and Genre, where titles sit on several islands, when at
+ * both: titles on both islands (Mood, Theme, Style, and Occasion, where titles sit on several islands, when at
  * least 6 exist); between: titles of either island that sit closest to both.
  */
 export type BridgeKind = "both" | "between"

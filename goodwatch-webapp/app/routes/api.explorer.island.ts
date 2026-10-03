@@ -6,7 +6,7 @@ import {
 } from "~/server/explorer/http.server"
 import { getIsland } from "~/server/explorer/index.server"
 
-// One island's tree: GET /api/explorer/island?grouping=genre&id=horror[&branching=6,2,2] (members), or POST with the
+// One island's tree: GET /api/explorer/island?grouping=mood&id=scary[&branching=6,2,2] (members), or POST with the
 // guest progress (guests). Takes the map's filters. Returns ExplorerIslandTree.
 
 const answer = ({ request }: { request: Request }) =>

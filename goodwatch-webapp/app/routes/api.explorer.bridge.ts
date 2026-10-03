@@ -6,7 +6,7 @@ import {
 } from "~/server/explorer/http.server"
 import { getBridge } from "~/server/explorer/index.server"
 
-// The bridge between two islands: GET /api/explorer/bridge?grouping=genre&a=horror&b=comedy[&branching=6,2,2]
+// The bridge between two islands: GET /api/explorer/bridge?grouping=mood&a=scary&b=funny[&branching=6,2,2]
 // (members), or POST with the guest progress (guests). Takes the map's filters. Returns ExplorerBridge.
 
 const answer = ({ request }: { request: Request }) =>

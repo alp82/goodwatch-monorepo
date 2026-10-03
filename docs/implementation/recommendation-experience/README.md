@@ -865,16 +865,15 @@ confirmed by the owner).
 A full-viewport map at `/explorer`. The page never scrolls; nothing sits below the map. Controls are always visible and
 at least 44 px.
 
-**Groupings**, chosen up front in a segmented control: Mood (the default), Theme, Style, Occasion, Genre, Decade,
-Country, Your taste.
+**Groupings**, chosen up front in a segmented control: Mood (the default), Theme, Style, Occasion, Decade, Country,
+Your taste.
 
 | Grouping | Islands | Membership |
 |---|---|---|
-| Mood | Up to 14 islands for how a title feels, such as "Laugh out loud" or "Edge of your seat" | Several; a title that fits none sits on no island |
+| Mood | Up to 14 islands for how a title feels, such as "Funny" or "Tense" | Several; a title that fits none sits on no island |
 | Theme | Up to 14 islands for what a title is about, such as "True stories" or "Growing up" | Several, or none |
-| Style | Up to 14 islands for how a title looks, sounds, and is told, such as "Big spectacle" or "Slow burn" | Several, or none |
-| Occasion | Up to 12 islands for who and what a title suits, such as "Date night" or "Comfort watch" | Several, or none |
-| Genre | Up to 13 genre buckets | A title can sit on several islands |
+| Style | 10 islands for how a title looks, sounds, and is told, such as "Spectacle" or "Slow burn", with Animated and Documentary by TMDB genre | Several, or none |
+| Occasion | Up to 12 islands for who and what a title suits, such as "Date night" or "Comfort" | Several, or none |
 | Decade | 7 bands | One |
 | Country | Origin countries with at least 50 pool titles, at most 13, plus "Rest of world" (owner) | One |
 | Your taste | Match bands 90+, 80 to 89, 65 to 79, below 65 | One; hidden without taste |
@@ -886,13 +885,16 @@ with at least 200 votes (about 12,000 titles). Islands with fewer than 3 titles 
 [#193](https://github.com/alp82/goodwatch-monorepo/issues/193) for Mood and Streaming):
 
 - **Mood, Theme, and Style** are Explorer's own islands, each a rule over the fingerprint
-  (`app/server/explorer/groupings.server.ts`). They are not the 11 moods of the moods module, which stay as they are
-  for Watch next: most of those restate a genre. An island's threshold moves up while it holds more than a quarter of
+  (`app/server/explorer/islands.server.ts`, the one file that holds every grouping's islands and rules). They are not the 11 moods of the moods module, which stay as they are
+  for Watch next: most of those restate a genre. Each island stands on a score of its own and no score feeds two islands,
+  so combining two shows something worth finding; names are one or two plain words (owner, 2026-10-03). An island's threshold moves up while it holds more than a quarter of
   the pool, and one step down when it holds less than 1 percent. The thresholds haven't been tuned against the real
   pool yet; each build logs the island sizes and the share of the pool that sits on an island.
 - **Occasion** uses the title analysis's suitability and viewing-context flags. The snapshot doesn't hold them, so the
   pool reads them from Crate with its display fields, once per snapshot version. An occasion that more than half the
   pool has is left out.
+- **Genre** is gone as a grouping (owner, 2026-10-03): Mood, Theme, and Occasion hold what its islands held, and
+  Animated and Documentary moved to Style. Westerns have no island. A link to `grouping=genre` opens Mood.
 - **Streaming** is gone as a grouping: On my services already covers it, and combining two services says nothing.
   A link to `grouping=streaming` opens Mood.
 - **Country** buckets come from the pool's origins: each origin country with at least 50 pool titles gets an island,
@@ -931,8 +933,12 @@ personal part (match, Seen, Want to See, on my services) is added per request.
   islands and grows to the main thing on screen; the joined islands stay medium; the rest shrink, grey, dim, and
   simplify. The bridge shows 3 to 5 posters at map level. The view zooms out slightly when a bridge layout spills over
   the edges. Let go, Separate, Escape, and the browser's back button spring the map back.
+- **A bridge rises at once:** combining shows the bridge immediately, pulsing until its titles arrive (owner,
+  2026-10-03); it doesn't wait for the request.
+- **Order on an island:** where titles sit on several islands, an island's titles are ordered by how well they fit it
+  (`FIT_WEIGHT`) together with quality, so one well-known title doesn't lead every island it sits on.
 - **History:** every grouping change, island entry, and bridge is a history entry (`history.pushState`), so the
-  browser's back and forward buttons work. The top bar shows the last two steps and a dropdown of the rest.
+  browser's back and forward buttons work. The top bar has one icon button that opens the steps (owner, 2026-10-03).
 - **Filters:** On my services and Not seen yet hide titles (never dim them).
 - **Minimap**, keyboard, pinch, and wheel as in [Accessibility](#accessibility-and-reduced-motion).
 - **Level of detail and budget:** device pixel ratio capped at 1.5 for WebGL and 2 for Canvas 2D; posters load at

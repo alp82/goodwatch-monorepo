@@ -441,6 +441,7 @@ const subLineOf = (island: MapIsland, phone: boolean) => {
 		island.medianMatch != null && !phone
 			? `, ${island.medianMatch}% your taste`
 			: ""
+	if (island.bridge?.pending && !island.count) return "Finding titles…"
 	if (island.bridge)
 		return island.bridge.kind === "both"
 			? `${n} in both${taste}`

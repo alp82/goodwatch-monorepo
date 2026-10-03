@@ -931,6 +931,8 @@ export function createMapEngine(
 					: clamp(b.grow + (b.to ? 1 : -1) * dt * (b.to ? 1.15 : 3), 0, 1)
 				if (next !== b.grow) moving = true
 				b.grow = next
+				// It pulses until its titles arrive (it holds still with reduced motion).
+				if (b.pending && b.to && !reduce) moving = true
 			}
 		}
 		// While they move, shores keep apart (the targets never overlap; this holds for the way there too).
@@ -959,6 +961,7 @@ export function createMapEngine(
 
 	function seaIslands(): IslandShape[] {
 		const ml = mapLevel()
+		const pulse = reduce ? 0.45 : 0.45 + 0.4 * Math.sin(performance.now() / 240)
 		return islands.map((island) => {
 			// Out of focus: toward grey and darker; in focus: a little brighter and more vivid.
 			const m = island.look.mute * ml
@@ -981,7 +984,8 @@ export function createMapEngine(
 					island.emph * (1 - m) +
 					1.05 * island.look.lit +
 					0.2 * vivid -
-					0.8 * m,
+					0.8 * m +
+					(island.bridge?.pending ? pulse : 0),
 				saturation: 1 + 0.16 * vivid - 0.88 * m,
 				// Out at the map, the night closes in around a bridge, so it's what the person sees first.
 				spotlight: island.bridge
@@ -1502,12 +1506,14 @@ export function createMapEngine(
 		},
 		/**
 		 * Raises a bridge between two islands with its titles: it rises between them and grows into the main thing on
-		 * screen, the two stay medium beside it, and the rest shrink and grey. A bridge already up sinks.
+		 * screen, the two stay medium beside it, and the rest shrink and grey. A bridge already up sinks. Without a tree
+		 * the bridge rises at once and pulses until fillBridge gives it its titles; `expected` is what it's known to hold.
 		 */
 		raiseBridge(
 			a: string,
 			b: string,
-			tree: ExplorerTree & { kind: BridgeKind },
+			tree: (ExplorerTree & { kind: BridgeKind }) | null,
+			expected: { count: number; kind: BridgeKind } | null = null,
 		): MapIsland | null {
 			const A = live().find((x) => x.id === a && !x.bridge)
 			const B = live().find((x) => x.id === b && !x.bridge)
@@ -1515,13 +1521,55 @@ export function createMapEngine(
 			// At most one bridge sinks while the next rises (the sea's atlas holds 16 surfaces).
 			islands = islands.filter((i) => !(i.bridge && i.bridge.to === 0))
 			for (const i of islands) if (i.bridge) i.bridge.to = 0
-			const island = makeBridge([A, B], tree, seedOf(A, B))
+			const island = makeBridge(
+				[A, B],
+				tree ?? {
+					count: expected?.count ?? 0,
+					kind: expected?.kind ?? "both",
+					titles: [],
+					parent: [],
+					generation: [],
+				},
+				seedOf(A, B),
+				!tree,
+			)
 			islands.push(island)
-			void paintSurface(island)
+			if (tree) void paintSurface(island)
 			computeScales()
 			relayout()
 			// Out at the map, framing the new layout: the bridge is the main thing on screen.
 			flyTo(homeCam(), reduce ? 1 : 950)
+			return island
+		},
+		/** Gives a bridge that rose without its titles its tree: it stops pulsing, where and as big as it is now. */
+		fillBridge(tree: ExplorerTree & { kind: BridgeKind }): MapIsland | null {
+			const was = bridgeOf()
+			if (!was?.bridge?.pending) return null
+			const [a, b] = was.bridge.of
+			const A = live().find((x) => x.id === a && !x.bridge)
+			const B = live().find((x) => x.id === b && !x.bridge)
+			if (!A || !B) return null
+			const island = makeBridge([A, B], tree, {
+				x: was.shape.cx,
+				y: was.shape.cy,
+			})
+			if (island.bridge) island.bridge.grow = was.bridge.grow
+			island.look = was.look
+			island.target = was.target
+			island.vx = was.vx
+			island.vy = was.vy
+			island.vs = was.vs
+			island.role = was.role
+			island.emph = was.emph
+			island.sx = was.sx
+			island.sy = was.sy
+			island.sr = was.sr
+			island.on = was.on
+			islands[islands.indexOf(was)] = island
+			void paintSurface(island)
+			computeScales()
+			relayout(true)
+			wake()
 			return island
 		},
 		/** Lets the bridge go: it sinks and every island springs back. False when there's none. */

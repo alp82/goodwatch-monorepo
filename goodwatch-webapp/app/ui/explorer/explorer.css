@@ -112,10 +112,6 @@ body:has(.ex-stage) > main {
 	gap: 12px;
 	min-width: 0;
 }
-.ex-row2 {
-	margin-top: 10px;
-	gap: 16px;
-}
 .ex-brand {
 	font-size: 32px;
 	font-weight: 800;
@@ -922,100 +918,28 @@ body:has(.ex-stage) > main {
 	color: var(--mute);
 }
 
-/* ---- the history: a back button, the last two steps, and every step in a dropdown */
-.ex-hist-top {
-	display: none;
-}
+/* ---- the history: one icon button that opens every step */
 .ex-hist {
 	position: relative;
 	flex: none;
-	min-width: 0;
-}
-.ex-crumbs {
-	display: flex;
-	align-items: center;
-	gap: 3px;
-	height: 44px;
-	padding: 0 4px;
-	border-radius: 13px;
-	background: var(--glass);
-	border: 1px solid var(--line);
-	backdrop-filter: blur(18px);
-	-webkit-backdrop-filter: blur(18px);
-	min-width: 0;
-}
-.ex-back {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 38px;
-	height: 36px;
-	border-radius: 10px;
-	color: #fff;
-	flex: none;
-}
-.ex-back:hover {
-	background: rgba(255, 255, 255, 0.1);
-}
-.ex-back:disabled {
-	color: rgba(255, 255, 255, 0.25);
-	background: none;
-}
-.ex-crumb {
-	display: flex;
-	align-items: center;
-	gap: 7px;
-	height: 36px;
-	padding: 0 11px 0 9px;
-	border-radius: 10px;
-	font-size: 14.5px;
-	font-weight: 600;
-	color: var(--mute);
-	min-width: 0;
-	max-width: 14rem;
-}
-button.ex-crumb:hover {
-	background: rgba(255, 255, 255, 0.08);
-	color: #fff;
-}
-.ex-crumb-on {
-	color: #fff;
-	background: rgba(255, 255, 255, 0.1);
-}
-.ex-crumb-t {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-.ex-sep {
-	color: rgba(255, 255, 255, 0.25);
-	font-size: 12px;
 }
 .ex-hist-btn {
 	display: flex;
 	align-items: center;
-	gap: 3px;
-	height: 36px;
-	padding: 0 9px;
-	border-radius: 10px;
-	color: var(--mute);
-	flex: none;
-}
-.ex-hist-btn:hover {
-	background: rgba(255, 255, 255, 0.1);
-	color: #fff;
-}
-.ex-hist-n {
-	font-size: 12px;
-	font-weight: 700;
-	min-width: 20px;
-	height: 20px;
-	border-radius: 6px;
-	background: rgba(255, 255, 255, 0.1);
-	display: inline-flex;
-	align-items: center;
 	justify-content: center;
-	padding: 0 4px;
+	width: 44px;
+	height: 44px;
+	border-radius: 13px;
+	color: var(--mute);
+	background: var(--glass);
+	border: 1px solid var(--line);
+	backdrop-filter: blur(18px);
+	-webkit-backdrop-filter: blur(18px);
+}
+.ex-hist-btn:hover,
+.ex-hist-btn[aria-expanded="true"] {
+	color: #fff;
+	border-color: var(--line-2);
 }
 .ex-hist-menu {
 	position: absolute;
@@ -1074,43 +998,22 @@ button.ex-crumb:hover {
 	flex: none;
 }
 @media (max-width: 767px) {
-	.ex-hist-top {
-		display: block;
-		flex: 1;
-		min-width: 0;
-	}
-	.ex-hist-side {
-		display: none;
-	}
-	.ex-hist-top .ex-hist {
-		flex: 1;
-	}
 	.ex-row .ex-pick {
 		flex: none;
 	}
 	.ex-row .ex-pick select {
 		width: auto;
 	}
-	/* Only the step you're on; the rest are in the dropdown. */
-	.ex-crumbs > .ex-crumb:not(.ex-crumb-on),
-	.ex-crumbs > .ex-sep {
-		display: none;
-	}
-	.ex-crumb-on {
-		flex: 0 1 auto;
-	}
-	.ex-crumb {
-		max-width: 9.5rem;
-	}
-	.ex-hist-n {
-		display: none;
-	}
-	.ex-hist-btn {
-		padding: 0 6px;
+	/* The steps open across the screen, under the controls. */
+	.ex-hist {
+		position: static;
 	}
 	.ex-hist-menu {
-		left: auto;
-		right: 0;
+		left: 12px;
+		right: 12px;
+		top: calc(100% - 26px);
+		width: auto;
+		max-width: none;
 	}
 }
 

@@ -58,7 +58,7 @@ export const meta: MetaFunction = () => {
 	const pageMeta: PageMeta = {
 		title: "Explorer | GoodWatch",
 		description:
-			"Explore movies and TV shows as a map of islands by mood, theme, style, occasion, genre, decade, country, or how close they are to your taste. Zoom in on an island to find titles you'll love.",
+			"Explore movies and TV shows as a map of islands by mood, theme, style, occasion, decade, country, or how close they are to your taste. Zoom in on an island to find titles you'll love.",
 		url: "https://goodwatch.app/explorer",
 		image: "https://goodwatch.app/images/heroes/hero-movies.png",
 		alt: "Movies and TV shows as islands on a map on GoodWatch",

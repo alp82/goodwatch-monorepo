@@ -69,7 +69,7 @@ export function buildTree(
 	return { titles, parent, generation }
 }
 
-/** An island's titles that pass the filters, best quality first. */
+/** An island's titles that pass the filters, best first. */
 export function visibleMembers(
 	layout: Layout,
 	island: number,
@@ -87,7 +87,7 @@ const betweenShare = (total: number) =>
 
 /**
  * The titles a bridge between islands a and b holds, in the order its first posters are picked. Where titles sit on
- * several islands and at least 6 sit on both, those ("both"), best quality first. Otherwise ("between"), from each
+ * several islands and at least 6 sit on both, those ("both"), best on both islands first. Otherwise ("between"), from each
  * island the titles closest to both islands' centers (by their smaller cosine), each side best quality first, taking
  * turns so the bridge leans to neither.
  */
@@ -103,7 +103,16 @@ export function bridgeMembers(
 	if (layout.multi) {
 		const bit = 1 << b
 		const both = fromA.filter((i) => layout.mask[i] & bit)
-		if (both.length >= MIN_BOTH) return { kind: "both", members: both }
+		if (both.length >= MIN_BOTH) {
+			// By where they stand on both islands together, so a title that leads one island alone doesn't lead here.
+			const place = new Map<number, number>()
+			fromA.forEach((i, at) => place.set(i, at / fromA.length))
+			fromB.forEach((i, at) =>
+				place.set(i, (place.get(i) ?? 1) + at / fromB.length),
+			)
+			both.sort((x, y) => (place.get(x) ?? 0) - (place.get(y) ?? 0) || x - y)
+			return { kind: "both", members: both }
+		}
 	}
 	const inB = new Set(fromB)
 	const overlap = fromA.filter((i) => inB.has(i)).length

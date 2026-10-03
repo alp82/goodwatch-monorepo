@@ -23,7 +23,7 @@ interface TopBarProps {
 	/** The format (every title, movies, or shows) and anime (with it, only it, or without it). */
 	titleType: TitleTypeFilter
 	onTitleType: (type: TitleTypeFilter) => void
-	/** Where the person has been (the last two steps and a dropdown): second row, first row on phones. */
+	/** Where the person has been: an icon button that opens the steps. */
 	history?: ReactNode
 }
 
@@ -112,7 +112,7 @@ export function TopBar({
 						/>
 					</svg>
 				</label>
-				{history && <div className="ex-hist-top">{history}</div>}
+				{history}
 				<TypeFilter
 					value={titleType}
 					onChange={onTitleType}
@@ -158,11 +158,6 @@ export function TopBar({
 					</button>
 				</div>
 			</div>
-			{history && (
-				<div className="ex-row ex-row2">
-					<div className="ex-hist-side">{history}</div>
-				</div>
-			)}
 		</header>
 	)
 }

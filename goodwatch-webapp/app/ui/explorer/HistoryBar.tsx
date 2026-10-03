@@ -1,4 +1,4 @@
-import { ArrowUturnLeftIcon, ChevronDownIcon } from "@heroicons/react/24/solid"
+import { ClockIcon } from "@heroicons/react/24/solid"
 import { useEffect, useRef, useState } from "react"
 
 export interface StepView {
@@ -16,8 +16,8 @@ const KIND: Record<StepView["kind"], string> = {
 }
 
 /**
- * Where the person has been, like a browser's back button: a back button, the last two steps, and every step of the
- * visit in a dropdown (newest first). Moving to a step goes through the browser's history.
+ * Where the person has been: one icon button that opens every step of the visit (newest first). Moving to a step
+ * goes through the browser's history.
  */
 export function HistoryBar({
 	steps,
@@ -51,8 +51,6 @@ export function HistoryBar({
 			window.removeEventListener("keydown", esc, true)
 		}
 	}, [open])
-	const cur = steps[at]
-	const prev = at > 0 ? steps[at - 1] : null
 	const dot = (s: StepView) =>
 		s.color ? (
 			<span
@@ -62,55 +60,17 @@ export function HistoryBar({
 		) : null
 	return (
 		<div ref={box} className="ex-hist">
-			<nav aria-label="Where you've been" className="ex-crumbs">
-				<button
-					type="button"
-					disabled={!prev}
-					onClick={() => onGo(-1)}
-					aria-label={prev ? `Back to ${prev.label}` : "Back"}
-					className="ex-back"
-				>
-					<ArrowUturnLeftIcon className="ex-i" />
-				</button>
-				{prev && (
-					<>
-						<button
-							type="button"
-							onClick={() => onGo(-1)}
-							className="ex-crumb"
-							title={prev.label}
-							tabIndex={-1}
-						>
-							{dot(prev)}
-							<span className="ex-crumb-t">{prev.label}</span>
-						</button>
-						<span className="ex-sep" aria-hidden="true">
-							/
-						</span>
-					</>
-				)}
-				<span
-					className="ex-crumb ex-crumb-on"
-					aria-current="step"
-					title={cur?.label}
-				>
-					{cur && dot(cur)}
-					<span className="ex-crumb-t">{cur?.label}</span>
-				</span>
-				<button
-					ref={toggle}
-					type="button"
-					aria-expanded={open}
-					aria-label={`All ${steps.length} steps`}
-					onClick={() => setOpen((o) => !o)}
-					className="ex-hist-btn"
-				>
-					<span className="ex-hist-n" aria-hidden="true">
-						{steps.length}
-					</span>
-					<ChevronDownIcon className="ex-i" />
-				</button>
-			</nav>
+			<button
+				ref={toggle}
+				type="button"
+				aria-expanded={open}
+				aria-label={`Where you've been: ${steps.length} ${steps.length === 1 ? "step" : "steps"}`}
+				title="Where you've been"
+				onClick={() => setOpen((o) => !o)}
+				className="ex-hist-btn"
+			>
+				<ClockIcon className="ex-i" />
+			</button>
 			{open && (
 				<ol className="ex-hist-menu" aria-label="Steps, newest first">
 					{steps

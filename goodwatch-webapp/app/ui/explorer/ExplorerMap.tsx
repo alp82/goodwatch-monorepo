@@ -251,24 +251,17 @@ export function ExplorerMap({
 		const measure = () => {
 			const w = el.clientWidth
 			const h = el.clientHeight
-			const top = el.querySelector<HTMLElement>(".ex-top")
 			const rows = [
 				...el.querySelectorAll<HTMLElement>(".ex-top .ex-row"),
 			].filter((r) => r.offsetHeight > 0)
 			const last = rows[rows.length - 1]
 			const t = last ? last.offsetTop + last.offsetHeight + 12 : 120
-			// Phones: the combine bar gets its own row under the controls; wider screens: it sits in the second row.
-			const row2 = top?.querySelector<HTMLElement>(".ex-row2")
-			setBarTop(w < 768 ? t - 4 : (row2?.offsetTop ?? 70) - 3)
+			// The combine bar gets its own row under the controls, and the map leaves room for it.
+			setBarTop(t - 4)
 			padRef.current =
 				w >= 1024
-					? { t: t + 8, r: 80, b: 72, l: 24 }
-					: {
-							t: t + (w < 768 ? 54 : 8),
-							r: 12,
-							b: w < 640 ? 150 : 120,
-							l: 12,
-						}
+					? { t: t + 54, r: 80, b: 72, l: 24 }
+					: { t: t + 54, r: 12, b: w < 640 ? 150 : 120, l: 12 }
 			el.style.setProperty("--ex-pad-t", `${padRef.current.t}px`)
 			setWidth(w)
 			const p = padRef.current
@@ -405,8 +398,8 @@ export function ExplorerMap({
 	const worldToken = useRef(0)
 
 	/**
-	 * Raises the bridge between two islands: lit while its titles load, then it rises between them. A new step unless
-	 * it comes from the history. False when there's nothing to raise.
+	 * Raises the bridge between two islands: it rises between them at once and pulses while its titles load. A new step
+	 * unless it comes from the history. False when there's nothing to raise.
 	 */
 	const combine = async (a: string, b: string, step = true) => {
 		const e = engineRef.current
@@ -414,8 +407,16 @@ export function ExplorerMap({
 		if (!e || !q || a === b || !e.island(a) || !e.island(b)) return false
 		const token = worldToken.current
 		setLit([])
-		// In focus while their bridge is found, so the map doesn't fall back to normal in between.
-		e.setLit([a, b])
+		const known = pairsRef.current?.get(pairKey(a, b))
+		if (known && !known.count) {
+			say(
+				`${e.island(a)?.name ?? "They"} and ${e.island(b)?.name ?? "the other"} share no titles with these filters`,
+			)
+			return false
+		}
+		if (bridgeRef.current) setBridge(null)
+		// Up at once, pulsing until its titles arrive.
+		if (!e.raiseBridge(a, b, null, known ?? null)) return false
 		setForming([a, b])
 		unpin()
 		const tree = await queryClient
@@ -426,10 +427,17 @@ export function ExplorerMap({
 			.catch(() => null)
 		if (engineRef.current !== e || worldToken.current !== token) return false
 		setForming(null)
-		e.setLit(litRef.current)
 		const A = e.island(a)
 		const B = e.island(b)
+		// Still the bridge that's waiting: not let go, and not replaced by another, since.
+		const waiting = e.bridge()
+		if (
+			!waiting?.bridge?.pending ||
+			pairKey(...waiting.bridge.of) !== pairKey(a, b)
+		)
+			return false
 		if (!tree || !tree.titles.length || !A || !B) {
+			e.lowerBridge()
 			say(
 				tree
 					? `${A?.name ?? "They"} and ${B?.name ?? "the other"} share no titles with these filters`
@@ -437,7 +445,7 @@ export function ExplorerMap({
 			)
 			return false
 		}
-		const island = e.raiseBridge(a, b, tree)
+		const island = e.fillBridge(tree)
 		if (!island) return false
 		setBridge({
 			id: island.id,
@@ -455,14 +463,17 @@ export function ExplorerMap({
 	const dropBridge = () => {
 		const e = engineRef.current
 		const b = bridgeRef.current
-		if (!e || !b) return
-		if (activeRef.current?.island === b.id) unpin()
+		if (!e || !(b || waitingBridge())) return
+		if (b && activeRef.current?.island === b.id) unpin()
 		e.lowerBridge()
 		setBridge(null)
+		setForming(null)
 	}
+	/** A bridge is up without its titles yet. */
+	const waitingBridge = () => !!engineRef.current?.bridge()?.bridge?.pending
 	/** Separate: the map springs back, a step of its own so Back raises the bridge again. */
 	const separate = (keepLit: string[] = []) => {
-		if (!bridgeRef.current) return
+		if (!bridgeRef.current && !waitingBridge()) return
 		dropBridge()
 		setLit(keepLit)
 		navigateFocus({ island: null, bridge: null })
@@ -522,8 +533,11 @@ export function ExplorerMap({
 		const b = bridgeRef.current
 		const want = focus.bridge ? pairKey(...focus.bridge) : null
 		const have = b ? pairKey(b.a, b.b) : null
+		// Already rising and waiting for its titles.
+		const rising = e.bridge()?.bridge
+		if (want && rising?.pending && pairKey(...rising.of) === want) return
 		if (want !== have) {
-			if (b) dropBridge()
+			dropBridge()
 			if (focus.bridge) {
 				void combine(focus.bridge[0], focus.bridge[1], false).then((ok) => {
 					if (ok && focus.island) enter()
@@ -1013,7 +1027,7 @@ export function ExplorerMap({
 				ev.preventDefault()
 				if (a) k.unpin()
 				else if (litRef.current.length) k.setLit([])
-				else if (bridgeRef.current) k.separate()
+				else if (bridgeRef.current || e.bridge()?.bridge?.pending) k.separate()
 				else e.stepZoom(-1)
 				return
 			}
@@ -1295,7 +1309,7 @@ export function ExplorerMap({
 					<CombineBar
 						state={bar}
 						onUndo={() => {
-							if (bar?.k === "bridge") separate()
+							if (bar?.k === "bridge" || bar?.k === "forming") separate()
 							else setLit([])
 						}}
 						onGo={() => {
