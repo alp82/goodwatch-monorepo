@@ -1,5 +1,6 @@
-// The Remote ("Grid, tiles", #186): power and the IR window, a one-line screen, the D-pad wheel with OK, the
-// Back / Home / Search row, a well of four feature tiles, and the four streaming keys low on the body. Every
+// The Remote ("Grid, tiles", #186): power, the IR window, and the Menu key, a one-line screen, the D-pad wheel
+// with OK, the Back / Home / Search row, a well of four feature tiles, and the four streaming keys low on the
+// body. The feature tiles open the moods on the TV or leave for a place's page. Every
 // control sends a TV flow action; the Remote keeps no state of its own besides the wheel's arrow flash.
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import disneyMark from "~/img/disneyplus-logo.svg"
@@ -18,17 +19,17 @@ export const ICON = {
 	power: "M12 3v8M6.3 7.3a8 8 0 1 0 11.4 0",
 	more: "M5 12h.01M12 12h.01M19 12h.01",
 	mood: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8M9 9.5h.01M15 9.5h.01",
-	pickForMe:
-		"M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
+	heart: "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
+	info: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 8h.01",
 } as const
 
-/** The four apps: name, one line, icon, and tint. */
+/** The four places: name, one line, icon, tint, and page. */
 export const APP: Record<
 	TvApp,
 	{ name: string; line: string; d: string; tint: string; href: string }
 > = {
-	"watch-now": {
-		name: "Watch now",
+	"watch-next": {
+		name: "Watch next",
 		line: "Your Wishlist, best match first, on your services.",
 		d: "M6 4h12v16l-6-4-6 4z",
 		tint: "#38bdf8",
@@ -85,12 +86,13 @@ const BRAND: Record<RemoteServiceKey, { src: string; ink: string; w: string }> =
 		hulu: { src: huluMark, ink: "#1ce783", w: "40%" },
 	}
 
-type Feature = "mood" | "watch-now" | "explorer" | "taste"
-const FEATURES: Feature[] = ["mood", "watch-now", "explorer", "taste"]
+type Feature = "mood" | "watch-next" | "explorer" | "taste"
+const FEATURES: Feature[] = ["mood", "watch-next", "explorer", "taste"]
 
 export type RemoteProps = {
 	screen: TvScreen
 	power: "off" | "booting" | "on"
+	menuOpen: boolean
 	/** The one-line screen: what is focused, and what the wheel does. */
 	lcd: [string, string]
 	/** The service a streaming key stands for, as the catalog spells it. */
@@ -105,6 +107,7 @@ export type RemoteProps = {
 export function Remote({
 	screen,
 	power,
+	menuOpen,
 	lcd,
 	serviceName,
 	activeService,
@@ -112,10 +115,8 @@ export function Remote({
 	onOk,
 }: RemoteProps) {
 	const waking = useRef(false)
-	const featureOn = (f: Feature) =>
-		f === "mood"
-			? screen.name === "moods"
-			: screen.name === "app" && screen.app === f
+	// The places leave the living room, so only the moods can be the screen showing.
+	const featureOn = (f: Feature) => f === "mood" && screen.name === "moods"
 	const runFeature = (f: Feature) =>
 		dispatch(
 			f === "mood" ? { type: "open-moods" } : { type: "open-app", app: f },
@@ -162,7 +163,16 @@ export function Remote({
 						<Icon d={ICON.power} className="h-4 w-4" />
 					</button>
 					<div className="h-2 w-20 rounded-full bg-black/70" aria-hidden />
-					<span className="h-9 w-9" aria-hidden />
+					<button
+						type="button"
+						aria-label="Menu"
+						title="Menu"
+						aria-pressed={menuOpen}
+						onClick={() => dispatch({ type: "toggle-menu" })}
+						className="remote-key flex h-9 w-9 items-center justify-center rounded-full"
+					>
+						<Icon d={ICON.more} className="h-4 w-4" />
+					</button>
 				</div>
 				{/* Ends where the hand photo leaves the window, so the streaming keys sit low but stay visible. */}
 				<div className="mt-4 flex h-[612px] w-full flex-col items-center gap-5">

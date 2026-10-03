@@ -1,8 +1,9 @@
-// Binds the TV flow to the router: the screen and focus come from the URL, power and the More menu from React
+// Binds the TV flow to the router: the screen and focus come from the URL, power and the menu from React
 // state, and the in-app history depth from the history entry's state. Both TV editions use this hook.
 import { useLocation, useNavigate, useSearchParams } from "@remix-run/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
+	MENU_ITEMS,
 	type TvAction,
 	type TvContext,
 	type TvEffect,
@@ -28,11 +29,12 @@ export function useTvFlow(
 	const navigate = useNavigate()
 	const [power, setPower] = useState<TvPower>("on")
 	const [menuOpen, setMenuOpen] = useState(false)
+	const [menuFocus, setMenuFocus] = useState<string | null>(null)
 	const depth = (location.state as HistoryEntryState)?.tvDepth ?? 0
 
 	const state: TvState = useMemo(
-		() => ({ ...readTvState(params, depth), power, menuOpen }),
-		[params, depth, power, menuOpen],
+		() => ({ ...readTvState(params, depth), power, menuOpen, menuFocus }),
+		[params, depth, power, menuOpen, menuFocus],
 	)
 	const latest = useRef({ state, ctx, onEffect })
 	latest.current = { state, ctx, onEffect }
@@ -43,6 +45,7 @@ export function useTvFlow(
 			const next = transition(current, action, context)
 			setPower(next.state.power)
 			setMenuOpen(next.state.menuOpen)
+			setMenuFocus(next.state.menuFocus)
 			if (next.history === "back") navigate(-1)
 			else if (next.history !== "none") {
 				const search = writeTvParams(next.state, params).toString()
@@ -69,7 +72,7 @@ export function useTvFlow(
 	return {
 		state,
 		screen: state.screen,
-		items: tvItems(state.screen, ctx),
+		items: state.menuOpen ? MENU_ITEMS : tvItems(state.screen, ctx),
 		focused: focusedItem(state, ctx),
 		dispatch,
 	}

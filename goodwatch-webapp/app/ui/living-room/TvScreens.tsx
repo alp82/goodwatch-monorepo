@@ -17,18 +17,19 @@ import {
 	type LivingRoomTitle,
 	moodCounts,
 	myServices,
+	sourceFor,
 	titleOf,
 	titlesFor,
 } from "./living-room-data"
 import {
+	ANY_NIGHT,
+	MENU_ITEMS,
 	MIN_ANSWERS_FOR_PICKS,
 	type Night,
-	TV_APPS,
 	type TvAction,
 	type TvApp,
 	type TvScreen,
 	type TvState,
-	resolvedSource,
 } from "./tv-flow"
 
 export const EASE = [0.2, 0.7, 0.1, 1] as const
@@ -42,7 +43,6 @@ export type TvView = {
 	/** The on-screen keyboard's text. */
 	draft: string
 	setDraft: (update: (draft: string) => string) => void
-	signInHref: string
 	/** Rates a title from 1 to 10. The phone title screen offers it (#224); without it, no rating shows. */
 	onRate?: (titleKey: string, score: RatingScore) => void
 	/** The taste quiz's titles, scores, and picks (#226). The TV flow owns its step and focus. */
@@ -82,27 +82,23 @@ function itemLabel(
 	switch (kind) {
 		case "title":
 			return titleOf(data, arg)?.title ?? "Title"
-		case "app":
-			return APP[arg as TvApp].name
+		case "menu":
+			return menuEntry(item).label
 		case "mood":
 			return arg === "any" ? "Any mood" : MOOD_BY_KEY[arg as MoodKey].name
 		case "service":
 			return arg
 		case "answer":
 			return arg === "a" ? "This one" : arg === "b" ? "That one" : "Skip"
-		case "source":
-			return arg === "wishlist" ? "From my Wishlist" : "Something new"
 		case "full-page":
-			return screen.name === "app" && screen.app === "watch-now"
-				? "Create a free account"
-				: "Open full page"
+			return "Open full page"
 		default:
 			return (
 				(
 					{
-						"find-my-tonight": "Find my tonight",
+						"watch-next": "Watch next",
+						"something-new": "Something new",
 						"just-show-me": "Just show me",
-						about: "What is GoodWatch?",
 						continue: "Continue",
 						"show-picks": "Show my picks",
 						moods: "Pick a mood",
@@ -201,13 +197,11 @@ export function TvScreens({ view }: { view: TvView }) {
 	const key =
 		s.name === "title"
 			? `title-${s.title}`
-			: s.name === "app"
-				? `app-${s.app}`
-				: s.name === "search"
-					? `search-${s.query ?? ""}`
-					: s.name === "quiz"
-						? `quiz-${s.quiz.screen}`
-						: s.name
+			: s.name === "search"
+				? `search-${s.query ?? ""}`
+				: s.name === "quiz"
+					? `quiz-${s.quiz.screen}`
+					: s.name
 	if (state.power === "off")
 		return <div className="absolute inset-0 bg-black" aria-hidden />
 	return (
@@ -240,7 +234,7 @@ function Screen({ view }: { view: TvView }) {
 	switch (s.name) {
 		case "home":
 			return view.data.member ? (
-				<Moods view={view} night={null} home />
+				<MemberHome view={view} />
 			) : (
 				<Welcome view={view} />
 			)
@@ -251,15 +245,11 @@ function Screen({ view }: { view: TvView }) {
 		case "this-or-that":
 			return <ThisOrThat view={view} />
 		case "moods":
-			return <Moods view={view} night={s.night} home={false} />
-		case "source":
-			return <Source view={view} night={s.night} />
+			return <Moods view={view} night={s.night} />
 		case "picks":
 			return <Picks view={view} night={s.night} />
 		case "title":
 			return <TitleScreen view={view} titleKey={s.title} />
-		case "app":
-			return <AppScreen view={view} app={s.app} />
 		case "search":
 			return s.query ? (
 				<SearchResults view={view} query={s.query} />
@@ -434,34 +424,27 @@ export function Poster({
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Home.
+// Home: a selection. Guests get three cards with the taste quiz large in the middle; members get two tiles.
 
+// The guest home is the same HTML for every guest (#233): its labels and layout never depend on what the guest
+// has done. Their progress only changes where a card leads.
 function Welcome({ view }: { view: TvView }) {
 	const best = view.data.suggestions
-	const cols = [
-		{
-			id: "find-my-tonight",
-			label: "Find my tonight",
-			line: "Three quick questions, then your picks.",
-			art: <Fan titles={best.slice(3, 6)} heart />,
-		},
-		{
-			id: "taste-quiz",
-			label: "Rate what you've seen",
-			line: "Score five titles, get picks made for you.",
-			art: <Fan titles={best.slice(0, 3)} />,
-		},
-		{
-			id: "about",
-			label: "What is GoodWatch?",
-			line: "One score, how it feels, where it streams.",
-			art: (
-				<div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle,rgba(34,197,94,0.22),transparent_65%)]">
-					<img src={gwLogo} alt="" className="h-20" />
+	const side = (id: string, label: string, line: string, art: ReactNode) => (
+		<Item
+			view={view}
+			id={id}
+			className="flex h-[300px] flex-col overflow-hidden rounded-3xl"
+		>
+			<div className="relative h-[176px] w-full">{art}</div>
+			<div className="px-6 pt-2">
+				<div className="text-[23px] font-extrabold leading-tight">{label}</div>
+				<div className="mt-1 text-[15px] leading-snug text-white/60">
+					{line}
 				</div>
-			),
-		},
-	]
+			</div>
+		</Item>
+	)
 	return (
 		<>
 			<Backdrop title={best[0]} dim={0.18} />
@@ -470,25 +453,52 @@ function Welcome({ view }: { view: TvView }) {
 				title="Let's find something good for tonight."
 				line={ABOUT_LINE}
 			/>
-			<div className="absolute inset-x-12 bottom-12 top-[120px] grid grid-cols-3 gap-6">
-				{cols.map((c) => (
-					<Item
-						key={c.id}
-						view={view}
-						id={c.id}
-						className="flex flex-col overflow-hidden rounded-3xl"
-					>
-						<div className="relative h-[200px] w-full">{c.art}</div>
-						<div className="px-6 pt-2">
-							<div className="text-[24px] font-extrabold leading-tight">
-								{c.label}
-							</div>
-							<div className="mt-1 text-[15px] leading-snug text-white/60">
-								{c.line}
-							</div>
+			<div className="absolute inset-x-12 bottom-9 top-[120px] grid grid-cols-[1fr_1.3fr_1fr] items-center gap-5">
+				{side(
+					"watch-next",
+					"Watch next",
+					"Picks for tonight, on your services.",
+					<Fan titles={best.slice(3, 6)} heart />,
+				)}
+				<Item
+					view={view}
+					id="taste-quiz"
+					className="flex h-full flex-col overflow-hidden rounded-3xl"
+					on="ring-amber-300 bg-amber-400/[0.16]"
+					off="ring-amber-300/40 bg-amber-400/[0.08]"
+					grow="scale-[1.03]"
+				>
+					<div className="relative h-[206px] w-full">
+						<Fan titles={best.slice(0, 3)} size={104} />
+					</div>
+					<div className="px-7 pt-2">
+						<div className="text-[30px] font-extrabold leading-tight">
+							Rate what you've seen
 						</div>
-					</Item>
-				))}
+						<div className="mt-1 text-[16px] leading-snug text-white/70">
+							Rate a few titles, get picks made for you.
+						</div>
+						<span className="mt-3 inline-block rounded-full bg-amber-400 px-5 py-2 text-[15px] font-bold text-black">
+							Rate titles
+						</span>
+					</div>
+				</Item>
+				{side(
+					"moods",
+					"Pick a mood",
+					"Funny, scary, mind-bending: you choose.",
+					<div className="absolute inset-0 flex flex-wrap content-center justify-center gap-1.5 px-6">
+						{MOODS.slice(0, 8).map((m) => (
+							<span
+								key={m.key}
+								className="rounded-full px-2.5 py-0.5 text-[12px] font-bold text-black"
+								style={{ background: m.hue }}
+							>
+								{m.name}
+							</span>
+						))}
+					</div>,
+				)}
 			</div>
 		</>
 	)
@@ -532,116 +542,137 @@ export function Fan({
 	)
 }
 
-export function greeting() {
-	const hour = new Date().getHours()
-	return hour < 12
-		? "Good morning."
-		: hour < 18
-			? "Good afternoon."
-			: "Good evening."
+/** What the member home's two tiles say and show: the Wishlist's best, and new titles closest to their taste. */
+export function memberTiles(view: TvView) {
+	const { data, choices } = view
+	const n = data.wishlist.length
+	return [
+		{
+			id: "watch-next",
+			title: "Watch next",
+			line: n
+				? `${n} on your Wishlist, best match first.`
+				: "Your Wishlist is empty. Want to See adds a title here.",
+			short: n ? `${n} on your Wishlist` : "Your Wishlist is empty",
+			art: titlesFor({ ...ANY_NIGHT, source: "wishlist" }, data, choices),
+		},
+		{
+			id: "something-new",
+			title: "Something new",
+			line: "Not seen yet, on your services, closest to your taste.",
+			short: "Close to your taste",
+			art: titlesFor({ ...ANY_NIGHT, source: "new" }, data, choices),
+		},
+	]
 }
 
-// The moods. Members see how many fit on their Wishlist. On the member home, the apps sit underneath.
-function Moods({
-	view,
-	night,
-	home,
-}: { view: TvView; night: Night | null; home: boolean }) {
-	const counts = view.data.member ? moodCounts(view.data, view.choices) : null
-	const current = night?.mood ?? null
+function MemberHome({ view }: { view: TvView }) {
 	return (
 		<>
 			<div className="absolute inset-0 bg-[radial-gradient(110%_90%_at_30%_0%,#2b1706_0%,#08070a_62%)]" />
 			<Head
-				eyebrow={home ? greeting() : undefined}
-				title="What kind of night?"
-				line={
-					counts
-						? "Numbers are what fits on your Wishlist, on your services."
-						: undefined
-				}
+				title="What are we watching?"
+				line="Everything else is in the menu, top right."
 			/>
-			<div
-				className={`absolute inset-x-12 grid grid-cols-4 gap-2.5 ${home ? "top-[128px]" : "top-[140px]"}`}
-			>
-				<Item
-					view={view}
-					id="mood:any"
-					className="flex h-[60px] items-center gap-3 rounded-2xl px-4"
-				>
-					<span className="h-7 w-1.5 rounded-full bg-white/60" />
-					<span className="text-[17px] font-bold">Any mood</span>
-				</Item>
-				{MOODS.map((m) => {
-					const n = counts ? counts[m.key] : null
-					return (
-						<Item
-							key={m.key}
-							view={view}
-							id={`mood:${m.key}`}
-							className="flex h-[60px] items-center gap-3 rounded-2xl px-4"
-						>
-							<span
-								className="h-7 w-1.5 shrink-0 rounded-full"
-								style={{ background: m.hue }}
-							/>
-							<span
-								className={`min-w-0 flex-1 truncate text-[17px] font-bold ${current === m.key ? "text-amber-200" : ""}`}
-							>
-								{m.name}
-							</span>
-							{n != null && (
+			<div className="absolute inset-x-12 top-[132px] grid grid-cols-2 gap-6">
+				{memberTiles(view).map((tile) => (
+					<Item
+						key={tile.id}
+						view={view}
+						id={tile.id}
+						className="flex h-[300px] flex-col justify-end overflow-hidden rounded-3xl p-7"
+						grow="scale-[1.03]"
+					>
+						<span className="absolute -right-4 top-6 flex -space-x-10">
+							{tile.art.slice(0, 3).map((t, i) => (
 								<span
-									className={`text-[13px] tabular-nums ${n ? "text-white/60" : "text-white/25"}`}
+									key={t.key}
+									style={{ transform: `rotate(${(i - 1) * 6}deg)` }}
+									className="block"
 								>
-									{n}
+									<Poster
+										title={t}
+										size="w185"
+										className="h-[180px] w-[120px] rounded-lg object-cover shadow-2xl ring-1 ring-white/10"
+									/>
 								</span>
-							)}
-						</Item>
-					)
-				})}
+							))}
+						</span>
+						<span className="absolute inset-0 bg-gradient-to-r from-[#0b0c10] via-[#0b0c10]/80 to-transparent" />
+						<span className="relative max-w-[62%]">
+							<span className="block text-[32px] font-extrabold leading-none">
+								{tile.title}
+							</span>
+							<span className="mt-2 block text-[15px] text-white/60">
+								{tile.line}
+							</span>
+						</span>
+					</Item>
+				))}
 			</div>
-			{home && <OrOpen view={view} />}
 		</>
 	)
 }
 
-// Watch now, Taste, Discover, and Explorer as a thin row near the bottom of the member home.
-function OrOpen({ view }: { view: TvView }) {
-	return (
-		<div className="absolute inset-x-12 bottom-8 flex items-center gap-3">
-			<span className="mr-1 text-[12px] font-bold uppercase tracking-[0.2em] text-white/35">
-				Or open
-			</span>
-			{TV_APPS.map((a) => (
-				<Item
-					key={a}
-					view={view}
-					id={`app:${a}`}
-					className="flex h-10 items-center gap-2 rounded-full px-4 text-[14px] font-semibold"
-					grow="scale-[1.06]"
+// The moods and nothing else: eleven, and Any mood last, which clears the mood of the picks. A member sees how
+// many Wishlist titles fit the focused mood.
+function Moods({ view, night }: { view: TvView; night: Night }) {
+	const counts = view.data.member ? moodCounts(view.data, view.choices) : null
+	const tile = (
+		id: string,
+		name: string,
+		hue: string,
+		current: boolean,
+		n: number | null,
+	) => (
+		<Item
+			key={id}
+			view={view}
+			id={id}
+			className="flex h-[92px] items-center gap-3.5 rounded-2xl px-5"
+		>
+			<span
+				className="h-10 w-1.5 shrink-0 rounded-full"
+				style={{ background: hue }}
+			/>
+			<span className="min-w-0 flex-1">
+				<span
+					className={`block truncate text-[20px] font-bold ${current ? "text-amber-200" : ""}`}
 				>
-					<span style={{ color: APP[a].tint }}>
-						<Icon d={APP[a].d} className="h-[18px] w-[18px]" />
+					{name}
+				</span>
+				{n != null && (
+					<span
+						className={`block truncate text-[13px] text-white/55 ${view.focused === id ? "" : "invisible"}`}
+					>
+						{n ? `${n} on your Wishlist` : "None on your Wishlist"}
 					</span>
-					{APP[a].name}
-				</Item>
-			))}
-			<Item
-				view={view}
-				id="taste-quiz"
-				className="flex h-10 items-center gap-2 rounded-full px-4 text-[14px] font-semibold"
-				grow="scale-[1.06]"
-			>
-				<span className="text-amber-300">♥</span>
-				Rate titles
-			</Item>
-		</div>
+				)}
+			</span>
+		</Item>
+	)
+	return (
+		<>
+			<div className="absolute inset-0 bg-[radial-gradient(110%_90%_at_30%_0%,#2b1706_0%,#08070a_62%)]" />
+			<Head title="What kind of night?" />
+			<div className="absolute inset-x-12 top-[124px] grid grid-cols-4 gap-3">
+				{MOODS.map((m) =>
+					tile(
+						`mood:${m.key}`,
+						m.name,
+						m.hue,
+						night.mood === m.key,
+						counts ? counts[m.key] : null,
+					),
+				)}
+				{tile("mood:any", "Any mood", "rgba(255,255,255,0.6)", false, null)}
+			</div>
+		</>
 	)
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Find my tonight.
+// What is GoodWatch?, and a guest's Watch next: services, then this or that.
 
 function About({ view }: { view: TvView }) {
 	const best = view.data.suggestions[0]
@@ -693,12 +724,12 @@ function About({ view }: { view: TvView }) {
 			<div className="absolute bottom-10 left-12 flex gap-3">
 				<Item
 					view={view}
-					id="find-my-tonight"
+					id="watch-next"
 					className="rounded-full px-6 py-3 text-[17px] font-bold"
 					on="ring-amber-300 bg-amber-400 text-black"
 					off="ring-transparent bg-amber-400/90 text-black"
 				>
-					Find my tonight
+					Watch next
 				</Item>
 				<Item
 					view={view}
@@ -888,81 +919,12 @@ function ThisOrThat({ view }: { view: TvView }) {
 	)
 }
 
-function Source({ view, night }: { view: TvView; night: Night }) {
-	const mood = night.mood ? MOOD_BY_KEY[night.mood as MoodKey]?.name : null
-	const wish = titlesFor(
-		{ ...night, source: "wishlist" },
-		view.data,
-		view.choices,
-	)
-	const fresh = titlesFor({ ...night, source: "new" }, view.data, view.choices)
-	const card = (
-		id: string,
-		title: string,
-		line: string,
-		art: LivingRoomTitle[],
-	) => (
-		<Item
-			view={view}
-			id={id}
-			className="flex h-[250px] flex-col justify-end overflow-hidden rounded-3xl p-6"
-		>
-			<span className="absolute -right-4 top-4 flex -space-x-10">
-				{art.slice(0, 3).map((t, i) => (
-					<span
-						key={t.key}
-						style={{ transform: `rotate(${(i - 1) * 6}deg)` }}
-						className="block"
-					>
-						<Poster
-							title={t}
-							size="w185"
-							className="h-[150px] w-[100px] rounded-lg object-cover shadow-2xl ring-1 ring-white/10"
-						/>
-					</span>
-				))}
-			</span>
-			<span className="absolute inset-0 bg-gradient-to-r from-[#0b0c10] via-[#0b0c10]/80 to-transparent" />
-			<span className="relative max-w-[62%]">
-				<span className="block text-[28px] font-extrabold leading-none">
-					{title}
-				</span>
-				<span className="mt-2 block text-[15px] text-white/60">{line}</span>
-			</span>
-		</Item>
-	)
-	return (
-		<>
-			<Head title={mood ? `${mood}. From where?` : "From where?"} />
-			<div className="absolute inset-x-12 top-[120px] grid grid-cols-2 gap-6">
-				{card(
-					"source:wishlist",
-					"From my Wishlist",
-					wish.length
-						? `${wish.length} fit, on your services, best match first.`
-						: "Nothing on your Wishlist fits.",
-					wish,
-				)}
-				{card(
-					"source:new",
-					"Something new",
-					"Not seen yet, on your services, closest to your taste.",
-					fresh,
-				)}
-			</div>
-		</>
-	)
-}
-
 // The answer: three picks, the first one big. Every pick opens its title screen.
 function Picks({ view, night }: { view: TvView; night: Night }) {
 	const { data, choices } = view
 	const [first, ...rest] = titlesFor(night, data, choices).slice(0, 3)
 	const mood = night.mood ? MOOD_BY_KEY[night.mood as MoodKey]?.name : null
-	const source = resolvedSource(night, {
-		member: data.member,
-		wishlistKeys: data.wishlist.map((t) => String(t.key)),
-	})
+	const source = sourceFor(night, data, choices)
 	const where = night.service
 		? `only ${night.service}`
 		: myServices(data, choices).length
@@ -1083,13 +1045,20 @@ function Picks({ view, night }: { view: TvView; night: Night }) {
 							: "♥ Make it mine: 3 quick questions"}
 					</Item>
 				)}
+				<Item
+					view={view}
+					id="full-page"
+					className="rounded-full px-4 py-2 text-[14px] font-semibold text-white/80"
+				>
+					{source === "wishlist" ? "All of Watch next ↗" : "More in Discover ↗"}
+				</Item>
 			</div>
 		</>
 	)
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// A title and the apps.
+// A title.
 
 function TitleScreen({ view, titleKey }: { view: TvView; titleKey: string }) {
 	const t = titleOf(view.data, titleKey)
@@ -1187,196 +1156,6 @@ function TitleScreen({ view, titleKey }: { view: TvView; titleKey: string }) {
 				</Item>
 			</div>
 		</>
-	)
-}
-
-// The apps open on the TV as a glimpse; the full page is one step further, through the TV.
-function AppScreen({ view, app }: { view: TvView; app: TvApp }) {
-	const { data } = view
-	const a = APP[app]
-	const guest = !data.member && app === "watch-now"
-	const line =
-		app === "watch-now" && data.member
-			? `${data.wishlist.length} on your Wishlist, best match first.`
-			: a.line
-	return (
-		<>
-			<div
-				className="absolute inset-0"
-				style={{
-					background: `radial-gradient(90% 80% at 20% 0%, ${a.tint}33 0%, #07080b 60%)`,
-				}}
-			/>
-			<div className="absolute left-12 top-9 flex items-center gap-3">
-				<span style={{ color: a.tint }}>
-					<Icon d={a.d} className="h-8 w-8" />
-				</span>
-				<div>
-					<div className="text-[34px] font-extrabold leading-none">
-						{a.name}
-					</div>
-					<div className="mt-1 text-[14px] text-white/60">{line}</div>
-				</div>
-			</div>
-			{guest ? (
-				<SignUpCard view={view} />
-			) : (
-				<>
-					<AppGlimpse view={view} app={app} />
-					<div className="absolute bottom-9 left-12">
-						<Item
-							view={view}
-							id="full-page"
-							className="rounded-full px-6 py-3 text-[16px] font-bold"
-							on="ring-amber-300 bg-white text-black"
-							off="ring-transparent bg-white/90 text-black"
-						>
-							Open {a.name} ↗
-						</Item>
-					</div>
-				</>
-			)}
-		</>
-	)
-}
-
-// Guests pressing Watch now: the sign-up card. Its focusable key is the flow's `full-page` item, which the page
-// sends to sign-up instead of the Watch now page.
-function SignUpCard({ view }: { view: TvView }) {
-	return (
-		<div className="absolute left-12 top-[140px] w-[560px]">
-			<div className="text-[18px] leading-snug text-white/75">
-				With a free account, the TV opens on the best match from your Wishlist
-				that you can play tonight, and keeps what you've seen out of the way.
-			</div>
-			<div className="mt-6 flex items-center gap-3">
-				<Item
-					view={view}
-					id="full-page"
-					className="rounded-full px-6 py-3 text-[16px] font-bold"
-					on="ring-amber-300 bg-white text-black"
-					off="ring-transparent bg-white/90 text-black"
-				>
-					Create a free account
-				</Item>
-				<a
-					href={view.signInHref}
-					className="rounded-full px-5 py-3 text-[16px] font-semibold ring-1 ring-white/20 hover:bg-white/10"
-				>
-					Sign in
-				</a>
-			</div>
-		</div>
-	)
-}
-
-function AppGlimpse({ view, app }: { view: TvView; app: TvApp }) {
-	const { data } = view
-	if (app === "watch-now")
-		return (
-			<div className="absolute inset-x-12 top-[132px] flex gap-3">
-				{data.wishlist.slice(0, 6).map((t) => (
-					<Item
-						key={t.key}
-						view={view}
-						id={`title:${t.key}`}
-						className="w-[128px] rounded-2xl p-1.5"
-						grow="scale-[1.06]"
-					>
-						<Poster
-							title={t}
-							size="w185"
-							className="h-[180px] w-full rounded-xl object-cover"
-						/>
-						<div className="mt-1 truncate text-[13px] font-bold">{t.title}</div>
-						<div className="truncate text-[11px] text-white/50">
-							{whereLine(view, t).text}
-						</div>
-					</Item>
-				))}
-				{!data.wishlist.length && (
-					<div className="text-[18px] text-white/60">
-						Your Wishlist is empty. Want to See adds a title here.
-					</div>
-				)}
-			</div>
-		)
-	if (app === "taste") {
-		const moods = [...new Set(data.wishlist.flatMap((t) => t.moods))].slice(
-			0,
-			6,
-		)
-		return (
-			<div className="absolute inset-x-12 top-[130px]">
-				<div className="text-[20px] text-white/70">
-					{data.member
-						? "Your taste, from what you've rated and saved."
-						: "Answer a few this-or-thats and watch your taste take shape."}
-				</div>
-				<div className="mt-3 flex flex-wrap gap-2">
-					{moods.map((m) => (
-						<span
-							key={m}
-							className="rounded-full px-3 py-1 text-[13px] font-bold text-black"
-							style={{ background: MOOD_BY_KEY[m].hue }}
-						>
-							{MOOD_BY_KEY[m].name}
-						</span>
-					))}
-				</div>
-			</div>
-		)
-	}
-	if (app === "discover")
-		return (
-			<div className="absolute inset-x-12 top-[132px] grid grid-cols-8 gap-2.5">
-				{data.suggestions.slice(0, 16).map((t) => (
-					<div key={t.key} className="relative">
-						<Poster
-							title={t}
-							size="w154"
-							className="aspect-[2/3] w-full rounded-lg object-cover"
-						/>
-						<Match
-							title={t}
-							className="absolute bottom-1 right-1 !px-1.5 !text-[10px]"
-						/>
-					</div>
-				))}
-			</div>
-		)
-	// Explorer: islands of moods, a few posters each.
-	const islands = MOODS.slice(0, 6).map((m) => ({
-		m,
-		titles: data.suggestions.filter((t) => t.moods.includes(m.key)).slice(0, 3),
-	}))
-	return (
-		<div className="absolute inset-x-12 top-[128px] grid grid-cols-3 gap-4">
-			{islands.map(({ m, titles }) => (
-				<div
-					key={m.key}
-					className="flex items-center gap-3 rounded-[40px] px-4 py-3"
-					style={{
-						background: `${m.hue}1f`,
-						boxShadow: `inset 0 0 0 1px ${m.hue}40`,
-					}}
-				>
-					<div className="flex -space-x-4">
-						{titles.map((t) => (
-							<Poster
-								key={t.key}
-								title={t}
-								size="w92"
-								className="h-[66px] w-[44px] rounded-md object-cover ring-2 ring-black/60"
-							/>
-						))}
-					</div>
-					<span className="text-[15px] font-bold" style={{ color: m.hue }}>
-						{m.name}
-					</span>
-				</div>
-			))}
-		</div>
 	)
 }
 
@@ -1507,7 +1286,58 @@ function SearchResults({ view, query }: { view: TvView; query: string }) {
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// The on-screen bar: Back and Home away from home, Search, and a More menu that mirrors the remote's well.
+// The on-screen bar: Back and Home away from home, Search, and the menu. The menu is the main navigation, the
+// same on every screen: the wheel moves through it while it is open, and Back closes it.
+
+/** A menu item's label, icon, and tint. */
+export function menuEntry(item: string): {
+	label: string
+	d: string
+	tint?: string
+} {
+	const to = item.slice("menu:".length)
+	switch (to) {
+		case "home":
+			return { label: "Home", d: ICON.home }
+		case "moods":
+			return { label: "Mood", d: ICON.mood, tint: "#fbbf24" }
+		case "taste-quiz":
+			return { label: "Rate titles", d: ICON.heart, tint: "#fb923c" }
+		case "about":
+			return { label: "What is GoodWatch?", d: ICON.info }
+		case "off":
+			return { label: "Turn off", d: ICON.power }
+		default: {
+			const app = APP[to as TvApp]
+			return { label: app.name, d: app.d, tint: app.tint }
+		}
+	}
+}
+
+/** One menu row: focusable like any item on the TV. */
+export function MenuItem({
+	view,
+	id,
+	className,
+}: { view: TvView; id: string; className: string }) {
+	const { label, d, tint } = menuEntry(id)
+	const focused = view.focused === id
+	return (
+		<button
+			type="button"
+			data-tv-item={id}
+			aria-current={focused || undefined}
+			onMouseEnter={() => view.dispatch({ type: "focus", item: id })}
+			onClick={() => view.dispatch({ type: "choose", item: id })}
+			className={`flex items-center text-left font-medium text-white/90 ring-2 ${focused ? "bg-white/10 ring-amber-300" : "ring-transparent"} ${className}`}
+		>
+			<span style={tint ? { color: tint } : undefined}>
+				<Icon d={d} className="h-[18px] w-[18px] opacity-80" />
+			</span>
+			<span className="truncate">{label}</span>
+		</button>
+	)
+}
 
 function Bar({ view }: { view: TvView }) {
 	const { state, dispatch } = view
@@ -1523,19 +1353,6 @@ function Bar({ view }: { view: TvView }) {
 			<Icon d={d} className="h-[18px] w-[18px]" />
 		</button>
 	)
-	const item = (label: string, d: string, action: TvAction, tint?: string) => (
-		<button
-			key={label}
-			type="button"
-			onClick={() => dispatch(action)}
-			className="flex items-center gap-3 rounded-xl px-3 py-2 text-left text-[15px] font-medium text-white/90 hover:bg-white/10"
-		>
-			<span style={tint ? { color: tint } : undefined}>
-				<Icon d={d} className="h-[18px] w-[18px] opacity-80" />
-			</span>
-			{label}
-		</button>
-	)
 	return (
 		<div className="absolute right-6 top-5 z-20 flex flex-col items-end gap-2">
 			<div className="flex items-center gap-2">
@@ -1547,35 +1364,27 @@ function Bar({ view }: { view: TvView }) {
 					{ type: "open-search" },
 					state.screen.name === "search",
 				)}
-				{btn("More", ICON.more, { type: "toggle-menu" }, state.menuOpen)}
+				{btn("Menu", ICON.more, { type: "toggle-menu" }, state.menuOpen)}
 			</div>
 			<AnimatePresence>
 				{state.menuOpen && (
-					<motion.div
-						className="flex w-[220px] flex-col gap-0.5 rounded-2xl bg-[#0c0e12]/95 p-2 ring-1 ring-white/10"
+					<motion.nav
+						aria-label="Menu"
+						className="flex w-[240px] flex-col gap-0.5 rounded-2xl bg-[#0c0e12]/95 p-2 ring-1 ring-white/10"
 						initial={{ opacity: 0, y: -6 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -6 }}
 						transition={{ duration: 0.15 }}
 					>
-						{item("Mood", ICON.mood, { type: "open-moods" }, "#fbbf24")}
-						{TV_APPS.map((a) =>
-							item(
-								APP[a].name,
-								APP[a].d,
-								{ type: "open-app", app: a },
-								APP[a].tint,
-							),
-						)}
-						{item(
-							"Pick for me",
-							ICON.pickForMe,
-							{ type: "pick-for-me" },
-							"#fb923c",
-						)}
-						<div className="mx-2 my-1 h-px bg-white/10" />
-						{item("Turn off", ICON.power, { type: "power", on: false })}
-					</motion.div>
+						{MENU_ITEMS.map((id) => (
+							<MenuItem
+								key={id}
+								view={view}
+								id={id}
+								className="gap-3 rounded-xl px-3 py-2 text-[15px] hover:bg-white/10"
+							/>
+						))}
+					</motion.nav>
 				)}
 			</AnimatePresence>
 		</div>

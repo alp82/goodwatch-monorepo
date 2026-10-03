@@ -6,7 +6,7 @@
 // for a night are derived here, so D-pad moves never need the loader.
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
-import { type Night, type TvContext, resolvedSource } from "./tv-flow"
+import type { Night, TvContext } from "./tv-flow"
 
 export type LivingRoomTitle = TitleCard & { moods: MoodKey[] }
 
@@ -41,6 +41,23 @@ export type LivingRoomChoices = {
 }
 
 export const NO_CHOICES: LivingRoomChoices = { services: [], answers: [] }
+
+/** Reads a guest's stored choices, so a reload keeps their services and answers. Anything malformed is dropped. */
+export function parseChoices(raw: string | null): LivingRoomChoices {
+	try {
+		const value = JSON.parse(raw ?? "null")
+		const services = Array.isArray(value?.services) ? value.services : []
+		const answers = Array.isArray(value?.answers) ? value.answers : []
+		return {
+			services: services.filter((s: unknown) => typeof s === "string"),
+			answers: answers.filter(
+				(a: unknown) => a === "a" || a === "b" || a === "skip",
+			),
+		}
+	} catch {
+		return NO_CHOICES
+	}
+}
 
 /** The remote's four streaming keys, by TMDB provider id. The name is the fallback when the catalog lacks it. */
 export const REMOTE_SERVICES = [
@@ -99,31 +116,54 @@ export function answeredMoods(
 }
 
 /**
- * Titles for a night, best first: the source (Wishlist or new), the mood, and the services. A single service
- * narrows strictly; the person's own services narrow only when something is left.
+ * A list narrowed to a night: the mood and the services. A single service narrows strictly; the person's own
+ * services narrow only when something is left.
  */
+function narrow(
+	list: LivingRoomTitle[],
+	night: Night,
+	data: LivingRoomData,
+	choices: LivingRoomChoices,
+): LivingRoomTitle[] {
+	let out = list
+	if (night.mood) {
+		const mood = night.mood as MoodKey
+		out = out.filter((t) => t.moods.includes(mood))
+	}
+	if (night.service) {
+		const only = night.service
+		return out.filter((t) => streamsOn(t, [only]))
+	}
+	const mine = myServices(data, choices)
+	const onMine = mine.length ? out.filter((t) => streamsOn(t, mine)) : out
+	return onMine.length ? onMine : out
+}
+
+/** Where a night's picks come from. `auto` is the Wishlist when it has titles for this night, else new titles. */
+export function sourceFor(
+	night: Night,
+	data: LivingRoomData,
+	choices: LivingRoomChoices,
+): "wishlist" | "new" {
+	if (night.source !== "auto") return night.source
+	return data.member && narrow(data.wishlist, night, data, choices).length
+		? "wishlist"
+		: "new"
+}
+
+/** Titles for a night, best first, from its source (see `sourceFor`). */
 export function titlesFor(
 	night: Night,
 	data: LivingRoomData,
 	choices: LivingRoomChoices,
 ): LivingRoomTitle[] {
-	const source = resolvedSource(night, {
-		member: data.member,
-		wishlistKeys: data.wishlist.map((t) => String(t.key)),
-	})
-	let list = source === "wishlist" ? data.wishlist : data.suggestions
-	if (night.mood) {
-		const mood = night.mood as MoodKey
-		list = list.filter((t) => t.moods.includes(mood))
-	}
-	if (night.service) {
-		const only = night.service
-		list = list.filter((t) => streamsOn(t, [only]))
-	} else {
-		const mine = myServices(data, choices)
-		const onMine = mine.length ? list.filter((t) => streamsOn(t, mine)) : list
-		if (onMine.length) list = onMine
-	}
+	const source = sourceFor(night, data, choices)
+	const list = narrow(
+		source === "wishlist" ? data.wishlist : data.suggestions,
+		night,
+		data,
+		choices,
+	)
 	const leaning = answeredMoods(data, choices)
 	if (!leaning.size || source === "wishlist") return list
 	const leans = (t: LivingRoomTitle) => t.moods.some((m) => leaning.has(m))
@@ -158,6 +198,7 @@ export function tvContextOf(
 		member: data.member,
 		pickKeys: picks.slice(0, 3).map((t) => String(t.key)),
 		wishlistKeys: data.wishlist.map((t) => String(t.key)),
+		source: night ? sourceFor(night, data, choices) : "new",
 		serviceNames: data.catalog.map((s) => s.name),
 		moodKeys: MOOD_KEYS,
 		hasServices: myServices(data, choices).length > 0,

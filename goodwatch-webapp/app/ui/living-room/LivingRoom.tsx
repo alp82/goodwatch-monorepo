@@ -37,6 +37,7 @@ import {
 	type LivingRoomChoices,
 	type LivingRoomData,
 	NO_CHOICES,
+	parseChoices,
 	remoteServiceName,
 	tvContextOf,
 } from "./living-room-data"
@@ -76,32 +77,44 @@ export type LivingRoomProps = {
 	data: LivingRoomData
 	/**
 	 * Effects the page carries out: `leave`, `watch`, `want-to-see`, `seen`, and `not-for-me`. The living room
-	 * handles `toggle-service` and `answer-pair` itself (in `choices`) and reports them here too.
+	 * handles `toggle-service`, `answer-pair`, and `restart-pairs` itself (in `choices`) and reports them here too.
 	 */
 	onEffect: (effect: TvEffect, choices: LivingRoomChoices) => void
-	signInHref: string
 	/** Rates a title from 1 to 10 (the phone title screen's rating). */
 	onRate?: (titleKey: string, score: RatingScore) => void
 }
 
 function nightOf(screen: TvScreen): Night | null {
-	return screen.name === "moods" ||
-		screen.name === "source" ||
-		screen.name === "picks"
+	return screen.name === "moods" || screen.name === "picks"
 		? screen.night
 		: null
 }
 
-export function LivingRoom({
-	data,
-	onEffect,
-	signInHref,
-	onRate,
-}: LivingRoomProps) {
+/** Where a guest's services and answers are kept, so a reload or a later visit doesn't ask again. */
+const CHOICES_KEY = "living-room:choices"
+
+function storeChoices(choices: LivingRoomChoices) {
+	try {
+		localStorage.setItem(CHOICES_KEY, JSON.stringify(choices))
+	} catch {
+		// Without storage the choices last for this visit.
+	}
+}
+
+export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 	const phone = usePhoneOrientation()
 	useReturnIntoTv()
 	const [params] = useSearchParams()
 	const [choices, setChoices] = useState<LivingRoomChoices>(NO_CHOICES)
+	// A guest's stored choices arrive after hydration: they change where the home's cards lead, never the cards.
+	useEffect(() => {
+		if (data.member) return
+		try {
+			setChoices(parseChoices(localStorage.getItem(CHOICES_KEY)))
+		} catch {
+			// No storage: start without choices.
+		}
+	}, [data.member])
 	const [draft, setDraftState] = useState("")
 	const screen = useMemo(() => readTvState(params).screen, [params])
 	const night = useMemo(() => nightOf(screen), [screen])
@@ -131,9 +144,14 @@ export function LivingRoom({
 
 	const choicesRef = useRef(choices)
 	choicesRef.current = choices
+	const pairsRef = useRef(data.pairs.length)
+	pairsRef.current = data.pairs.length
+	const memberRef = useRef(data.member)
+	memberRef.current = data.member
 	const handleEffect = useCallback(
 		(effect: TvEffect) => {
-			let next = choicesRef.current
+			const before = choicesRef.current
+			let next = before
 			if (effect.type === "toggle-service") {
 				const on = next.services.includes(effect.service)
 				next = {
@@ -144,6 +162,11 @@ export function LivingRoom({
 				}
 			} else if (effect.type === "answer-pair") {
 				next = { ...next, answers: [...next.answers, effect.side] }
+			} else if (effect.type === "restart-pairs") {
+				// Only once the pairs are loaded and all answered; before that there is nothing to start again.
+				const pairs = pairsRef.current
+				if (!pairs || next.answers.length < pairs) return
+				next = { ...next, answers: [] }
 			} else if (effect.type.startsWith("quiz-")) {
 				handleQuizEffect(effect, quizRef.current, (e) =>
 					onEffect(e, choicesRef.current),
@@ -152,6 +175,7 @@ export function LivingRoom({
 			}
 			choicesRef.current = next
 			setChoices(next)
+			if (next !== before && !memberRef.current) storeChoices(next)
 			onEffect(effect, next)
 		},
 		[onEffect],
@@ -176,8 +200,12 @@ export function LivingRoom({
 
 	useRemoteKeys({
 		power: state.power,
-		searching,
-		quiz: state.screen.name === "quiz" ? state.screen.quiz : null,
+		searching: searching && !state.menuOpen,
+		// The menu takes the keys while it is open.
+		quiz:
+			state.screen.name === "quiz" && !state.menuOpen
+				? state.screen.quiz
+				: null,
 		dispatch,
 		ok,
 		setDraft,
@@ -245,7 +273,6 @@ export function LivingRoom({
 		choices,
 		draft,
 		setDraft,
-		signInHref,
 		onRate,
 		quiz,
 	}
@@ -253,6 +280,7 @@ export function LivingRoom({
 	const remote: RemoteProps = {
 		screen: state.screen,
 		power: state.power,
+		menuOpen: state.menuOpen,
 		lcd: lcdLines(state, flow.focused, data, draft),
 		serviceName: (key) => remoteServiceName(key, data.catalog),
 		activeService,
@@ -445,7 +473,7 @@ export function LivingRoom({
 }
 
 // The keyboard works like the Remote: arrows turn the wheel, Enter is OK, Escape and Backspace are Back, H is
-// Home. On the search keyboard, typing goes to the TV. While the set is off, any key turns it on.
+// Home, M is the menu. On the search keyboard, typing goes to the TV. While the set is off, any key turns it on.
 function useRemoteKeys({
 	power,
 	searching,
@@ -523,6 +551,10 @@ function useRemoteKeys({
 				case "h":
 				case "H":
 					k.dispatch({ type: "home" })
+					break
+				case "m":
+				case "M":
+					k.dispatch({ type: "toggle-menu" })
 					break
 				default:
 					return

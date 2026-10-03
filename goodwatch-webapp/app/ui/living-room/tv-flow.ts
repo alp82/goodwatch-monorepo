@@ -4,7 +4,11 @@
 // changes (`push` for a new TV screen, `replace` for focus moves and in-place changes, `back` to pop), and the
 // effects the page must carry out (rate a title, toggle a service, leave the living room). The screen and its
 // keys live in the URL search params (`/?tv=picks&mood=cozy`); `readTvState` and `writeTvParams` convert.
-// Power, the More menu, and the in-app history depth are not in the URL.
+// Power, the menu, and the in-app history depth are not in the URL.
+//
+// Home is a selection: guests choose Watch next, the taste quiz, or a mood; members choose Watch next (their
+// Wishlist) or Something new. The menu is the same on every screen and jumps to any place. Back is one step back
+// in the browser history; only a deep link without history falls back to home.
 //
 // The taste quiz (#226) is one TV screen whose step (rate, keep, picks), goal, and picks page follow the shared
 // quiz flow (`quiz-flow.ts`) and live in the URL too, so Back and "Back to my picks" land on the same picks page.
@@ -19,15 +23,26 @@ import {
 	quizTransition,
 } from "../taste-quiz/quiz-flow.ts"
 
-export type TvApp = "watch-now" | "taste" | "discover" | "explorer"
+/** The places outside the TV. Opening one leaves the living room for its page. */
+export type TvApp = "watch-next" | "discover" | "taste" | "explorer"
 export const TV_APPS: readonly TvApp[] = [
-	"watch-now",
-	"taste",
+	"watch-next",
 	"discover",
+	"taste",
 	"explorer",
 ]
 
-/** Where tonight's picks come from. `auto` is the Wishlist for members who have matches, otherwise new titles. */
+/** The menu, the same on every screen: home, the places, the moods, the taste quiz, What is GoodWatch?, off. */
+export const MENU_ITEMS: readonly string[] = [
+	"menu:home",
+	...TV_APPS.map((a) => `menu:${a}`),
+	"menu:moods",
+	"menu:taste-quiz",
+	"menu:about",
+	"menu:off",
+]
+
+/** Where tonight's picks come from. `auto` is the Wishlist when it has titles for the night, otherwise new titles. */
 export type PicksSource = "auto" | "wishlist" | "new"
 
 /** What narrows tonight's picks: a mood (null is Any mood), a source, and a single streaming service. */
@@ -41,19 +56,15 @@ export type TvScreen =
 	| { name: "home" }
 	/** What is GoodWatch? */
 	| { name: "about" }
-	/** Find my tonight, step 1: where do you watch. */
+	/** A guest's Watch next, step 1: where do you watch. */
 	| { name: "services" }
-	/** Find my tonight, step 2: "Which one, tonight?" pairs. */
+	/** A guest's Watch next, step 2: "Which one, tonight?" pairs. */
 	| { name: "this-or-that" }
 	/** What kind of night? `refine` means a mood chosen here replaces the picks it came from. */
 	| { name: "moods"; night: Night; refine: boolean }
-	/** Members: From my Wishlist or Something new. */
-	| { name: "source"; night: Night }
 	/** Here's tonight: three picks. */
 	| { name: "picks"; night: Night }
 	| { name: "title"; title: string }
-	/** A glimpse of Watch now, Taste, Discover, or Explorer on the TV. */
-	| { name: "app"; app: TvApp }
 	/** The on-screen keyboard without a query, the results with one. */
 	| { name: "search"; query: string | null }
 	/** The taste quiz: rate one title at a time, "Keep these 5?", then picks three at a time. */
@@ -69,6 +80,8 @@ export type TvState = {
 	focus: string | null
 	power: TvPower
 	menuOpen: boolean
+	/** The focused menu item while the menu is open, or null for its first item. */
+	menuFocus: string | null
 	/** How many TV screens were pushed onto the browser history in this visit. Zero on a deep link. */
 	depth: number
 }
@@ -78,8 +91,10 @@ export type TvContext = {
 	member: boolean
 	/** Title keys of tonight's picks for the current night, best first. */
 	pickKeys: readonly string[]
-	/** Title keys on the member's Wishlist (the Watch now glimpse). */
+	/** Title keys on the member's Wishlist. */
 	wishlistKeys: readonly string[]
+	/** Where the picks on screen come from, with `auto` resolved for their night. */
+	source: "wishlist" | "new"
 	/** Streaming service names offered on the services screen. */
 	serviceNames: readonly string[]
 	moodKeys: readonly string[]
@@ -97,6 +112,8 @@ export type TvContext = {
 export type TvEffect =
 	| { type: "toggle-service"; service: string }
 	| { type: "answer-pair"; side: "a" | "b" | "skip" }
+	/** Every pair is answered and the person asks for them again: forget the answers. */
+	| { type: "restart-pairs" }
 	| { type: "watch"; title: string }
 	| { type: "want-to-see"; title: string }
 	| { type: "seen"; title: string }
@@ -135,7 +152,6 @@ export type TvAction =
 	| { type: "open-app"; app: TvApp }
 	| { type: "open-search" }
 	| { type: "submit-search"; query: string }
-	| { type: "pick-for-me" }
 	/** A streaming key on the remote. */
 	| { type: "service-key"; service: string }
 	| { type: "power"; on: boolean }
@@ -159,10 +175,8 @@ const SCREEN_NAMES: readonly TvScreenName[] = [
 	"services",
 	"this-or-that",
 	"moods",
-	"source",
 	"picks",
 	"title",
-	"app",
 	"search",
 	"quiz",
 ]
@@ -191,16 +205,11 @@ function readScreen(params: URLSearchParams): TvScreen {
 				night: readNight(params),
 				refine: params.get("refine") === "1",
 			}
-		case "source":
 		case "picks":
 			return { name, night: readNight(params) }
 		case "title": {
 			const title = params.get("title")
 			return title ? { name, title } : { name: "home" }
-		}
-		case "app": {
-			const app = params.get("app") as TvApp | null
-			return app && TV_APPS.includes(app) ? { name, app } : { name: "home" }
 		}
 		case "search":
 			return { name, query: params.get("q")?.trim() || null }
@@ -228,6 +237,7 @@ export function readTvState(params: URLSearchParams, depth = 0): TvState {
 		focus: params.get("focus") || null,
 		power: "on",
 		menuOpen: false,
+		menuFocus: null,
 		depth,
 	}
 }
@@ -239,7 +249,6 @@ const TV_KEYS = [
 	"service",
 	"refine",
 	"title",
-	"app",
 	"q",
 	"step",
 	"goal",
@@ -257,14 +266,13 @@ export function writeTvParams(
 	for (const key of TV_KEYS) out.delete(key)
 	const s = state.screen
 	if (s.name !== "home") out.set("tv", s.name)
-	if (s.name === "moods" || s.name === "source" || s.name === "picks") {
+	if (s.name === "moods" || s.name === "picks") {
 		if (s.night.mood) out.set("mood", s.night.mood)
 		if (s.night.source !== "auto") out.set("from", s.night.source)
 		if (s.night.service) out.set("service", s.night.service)
 	}
 	if (s.name === "moods" && s.refine) out.set("refine", "1")
 	if (s.name === "title") out.set("title", s.title)
-	if (s.name === "app") out.set("app", s.app)
 	if (s.name === "search" && s.query) out.set("q", s.query)
 	if (s.name === "quiz") {
 		if (s.quiz.screen !== "quiz") out.set("step", s.quiz.screen)
@@ -298,10 +306,10 @@ export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 	switch (screen.name) {
 		case "home":
 			return ctx.member
-				? [...moodItems(ctx), ...TV_APPS.map((a) => `app:${a}`), "taste-quiz"]
-				: ["find-my-tonight", "taste-quiz", "about"]
+				? ["watch-next", "something-new"]
+				: ["watch-next", "taste-quiz", "moods"]
 		case "about":
-			return ["find-my-tonight", "just-show-me"]
+			return ["watch-next", "just-show-me"]
 		case "services":
 			return [...ctx.serviceNames.map((n) => `service:${n}`), "continue"]
 		case "this-or-that":
@@ -312,9 +320,8 @@ export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 				...(ctx.answered >= MIN_ANSWERS_FOR_PICKS ? ["show-picks"] : []),
 			]
 		case "moods":
-			return moodItems(ctx)
-		case "source":
-			return ["source:wishlist", "source:new"]
+			// Any mood comes last: it clears the mood of the picks.
+			return [...ctx.moodKeys.map((m) => `mood:${m}`), "mood:any"]
 		case "picks":
 			return [
 				...ctx.pickKeys.slice(0, 3).map((k) => `title:${k}`),
@@ -324,16 +331,10 @@ export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 					: ctx.answered
 						? "this-or-that"
 						: "services",
+				"full-page",
 			]
 		case "title":
 			return ["watch", "want-to-see", "seen", "not-for-me", "full-page"]
-		case "app":
-			return screen.app === "watch-now" && ctx.member
-				? [
-						...ctx.wishlistKeys.slice(0, 6).map((k) => `title:${k}`),
-						"full-page",
-					]
-				: ["full-page"]
 		case "search":
 			return []
 		case "quiz":
@@ -388,25 +389,40 @@ export function quizScoreOf(item: string): Score | null {
 	return null
 }
 
-function moodItems(ctx: TvContext) {
-	return ["mood:any", ...ctx.moodKeys.map((m) => `mood:${m}`)]
+/** What the wheel moves through right now: the menu while it is open, else the screen's items. */
+function activeItems(state: TvState, ctx: TvContext): readonly string[] {
+	return state.menuOpen ? MENU_ITEMS : tvItems(state.screen, ctx)
 }
 
-/** The focused item id, falling back to the first item when the stored focus is gone. */
+/** Where the focus starts on a screen: the guest home's middle card, a member's Wishlist if any, the mood in use. */
+function defaultItem(
+	screen: TvScreen,
+	items: readonly string[],
+	ctx: TvContext,
+): string | null {
+	const preferred =
+		screen.name === "home"
+			? ctx.member
+				? ctx.wishlistKeys.length
+					? "watch-next"
+					: "something-new"
+				: "taste-quiz"
+			: screen.name === "moods" && screen.night.mood
+				? `mood:${screen.night.mood}`
+				: null
+	return preferred && items.includes(preferred) ? preferred : (items[0] ?? null)
+}
+
+/** The focused item id: the menu's while it is open, else the screen's, falling back to where the focus starts. */
 export function focusedItem(state: TvState, ctx: TvContext): string | null {
+	if (state.menuOpen)
+		return state.menuFocus && MENU_ITEMS.includes(state.menuFocus)
+			? state.menuFocus
+			: MENU_ITEMS[0]
 	const items = tvItems(state.screen, ctx)
 	return state.focus && items.includes(state.focus)
 		? state.focus
-		: (items[0] ?? null)
-}
-
-/** The source the picks actually use once `auto` is resolved. */
-export function resolvedSource(
-	night: Night,
-	ctx: Pick<TvContext, "member" | "wishlistKeys">,
-): "wishlist" | "new" {
-	if (night.source !== "auto") return night.source
-	return ctx.member && ctx.wishlistKeys.length ? "wishlist" : "new"
+		: defaultItem(state.screen, items, ctx)
 }
 
 // ---------------------------------------------------------------------------------------------------------
@@ -429,6 +445,7 @@ function push(
 			screen,
 			focus: null,
 			menuOpen: false,
+			menuFocus: null,
 			depth: state.depth + 1,
 		},
 		history: "push",
@@ -442,15 +459,24 @@ function replace(
 	effects: TvEffect[] = [],
 ): TvTransition {
 	return {
-		state: { ...state, screen, focus: null, menuOpen: false },
+		state: { ...state, screen, focus: null, menuOpen: false, menuFocus: null },
 		history: "replace",
 		effects,
 	}
 }
 
-/** Back: close the menu, pop a screen this visit pushed, or (on a deep link) replace with home. Home stays. */
+const closeMenu = (state: TvState): TvState => ({
+	...state,
+	menuOpen: false,
+	menuFocus: null,
+})
+
+/**
+ * Back: close the menu, else go one step back in this visit's history, home included. Without history (a deep
+ * link), replace the screen with home; home itself stays.
+ */
 function back(state: TvState, effects: TvEffect[] = []): TvTransition {
-	if (state.menuOpen) return none({ ...state, menuOpen: false }, effects)
+	if (state.menuOpen) return none(closeMenu(state), effects)
 	// Back from Rate more returns to the same picks page.
 	const s = state.screen
 	if (s.name === "quiz" && s.quiz.screen === "quiz" && s.quiz.pickedBefore)
@@ -459,25 +485,95 @@ function back(state: TvState, effects: TvEffect[] = []): TvTransition {
 			{ name: "quiz", quiz: quizTransition(s.quiz, { type: "show-picks" }) },
 			effects,
 		)
-	if (state.screen.name === "home") return none(state, effects)
 	if (state.depth > 0) return { state, history: "back", effects }
+	if (state.screen.name === "home") return none(state, effects)
 	return replace(state, { name: "home" }, effects)
 }
 
 function nightOf(screen: TvScreen): Night {
-	return screen.name === "moods" ||
-		screen.name === "source" ||
-		screen.name === "picks"
+	return screen.name === "moods" || screen.name === "picks"
 		? screen.night
 		: ANY_NIGHT
 }
 
-function pickForMe(state: TvState, ctx: TvContext): TvTransition {
+/** A jump from the menu or the Remote: a new screen, unless that screen is already showing. */
+function jump(state: TvState, screen: TvScreen): TvTransition {
+	return state.screen.name === screen.name
+		? none(closeMenu(state))
+		: push(state, screen)
+}
+
+function thisOrThat(state: TvState, ctx: TvContext): TvTransition {
+	return push(
+		state,
+		{ name: "this-or-that" },
+		ctx.pairsLeft === 0 ? [{ type: "restart-pairs" }] : [],
+	)
+}
+
+/**
+ * Watch next: a member's picks from their Wishlist. A guest has no Wishlist to pick from, so theirs are new
+ * titles: straight away once they answered enough pairs, else after the services and the pairs.
+ */
+function watchNext(state: TvState, ctx: TvContext): TvTransition {
 	if (ctx.member)
-		return push(state, { name: "moods", night: ANY_NIGHT, refine: false })
+		return push(state, {
+			name: "picks",
+			night: { ...ANY_NIGHT, source: "wishlist" },
+		})
+	if (ctx.answered >= MIN_ANSWERS_FOR_PICKS)
+		return push(state, {
+			name: "picks",
+			night: { ...ANY_NIGHT, source: "new" },
+		})
 	if (!ctx.hasServices && !ctx.answered)
-		return push(state, { name: "services" })
-	return push(state, { name: "this-or-that" })
+		return jump(state, { name: "services" })
+	return state.screen.name === "this-or-that"
+		? none(closeMenu(state))
+		: thisOrThat(state, ctx)
+}
+
+/** Opens a place's page. A guest's Watch next is their flow on the TV, since the page needs a Wishlist. */
+function openApp(state: TvState, app: TvApp, ctx: TvContext): TvTransition {
+	if (app === "watch-next" && !ctx.member) return watchNext(state, ctx)
+	return none(closeMenu(state), [{ type: "leave", to: { kind: "app", app } }])
+}
+
+function openQuiz(state: TvState, ctx: TvContext): TvTransition {
+	return jump(state, {
+		name: "quiz",
+		quiz: initialQuizState({ progress: ctx.quizProgress, member: ctx.member }),
+	})
+}
+
+function goHome(state: TvState): TvTransition {
+	return jump(state, { name: "home" })
+}
+
+function chooseInMenu(
+	state: TvState,
+	item: string,
+	ctx: TvContext,
+): TvTransition {
+	const to = item.slice("menu:".length)
+	switch (to) {
+		case "home":
+			return goHome(state)
+		case "moods":
+			return jump(state, {
+				name: "moods",
+				night: nightOf(state.screen),
+				refine: state.screen.name === "picks",
+			})
+		case "taste-quiz":
+			return openQuiz(state, ctx)
+		case "about":
+			return jump(state, { name: "about" })
+		case "off":
+			return none({ ...closeMenu(state), power: "off" })
+		default:
+			return openApp(state, to as TvApp, ctx)
+	}
 }
 
 function chooseInQuiz(
@@ -545,25 +641,16 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 	const [kind, ...rest] = item.split(":")
 	const arg = rest.join(":")
 	switch (kind) {
-		case "find-my-tonight":
-			return pickForMe(state, ctx)
+		case "watch-next":
+			return watchNext(state, ctx)
+		case "something-new":
 		case "just-show-me":
 			return push(state, {
 				name: "picks",
 				night: { ...ANY_NIGHT, source: "new" },
 			})
-		case "about":
-			return push(state, { name: "about" })
 		case "taste-quiz":
-			return push(state, {
-				name: "quiz",
-				quiz: initialQuizState({
-					progress: ctx.quizProgress,
-					member: ctx.member,
-				}),
-			})
-		case "app":
-			return push(state, { name: "app", app: arg as TvApp })
+			return openQuiz(state, ctx)
 		case "moods":
 			return push(state, {
 				name: "moods",
@@ -574,32 +661,22 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 			return push(state, { name: "services" })
 		case "this-or-that":
 		case "continue":
-			return push(state, { name: "this-or-that" })
+			return thisOrThat(state, ctx)
 		case "mood": {
-			const night = {
-				...nightOf(s),
-				mood: arg === "any" ? null : arg,
-				source: "auto" as const,
-			}
-			if (s.name === "moods" && s.refine)
-				return replace(state, { name: "picks", night })
-			if (ctx.member) return push(state, { name: "source", night })
-			return push(state, { name: "picks", night })
+			// The mood changes; where the picks come from stays.
+			const night = { ...nightOf(s), mood: arg === "any" ? null : arg }
+			return s.name === "moods" && s.refine
+				? replace(state, { name: "picks", night })
+				: push(state, { name: "picks", night })
 		}
-		case "source":
-			return push(state, {
-				name: "picks",
-				night: { ...nightOf(s), source: arg as "wishlist" | "new" },
-			})
-		case "switch-source": {
-			const night = nightOf(s)
-			const next =
-				resolvedSource(night, ctx) === "wishlist" ? "new" : "wishlist"
+		case "switch-source":
 			return replace(state, {
 				name: "picks",
-				night: { ...night, source: next },
+				night: {
+					...nightOf(s),
+					source: ctx.source === "wishlist" ? "new" : "wishlist",
+				},
 			})
-		}
 		case "service":
 			return none(state, [{ type: "toggle-service", service: arg }])
 		case "answer": {
@@ -635,8 +712,12 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 				return none(state, [
 					{ type: "leave", to: { kind: "title", title: s.title } },
 				])
-			if (s.name === "app")
-				return none(state, [{ type: "leave", to: { kind: "app", app: s.app } }])
+			if (s.name === "picks")
+				return openApp(
+					state,
+					ctx.source === "wishlist" ? "watch-next" : "discover",
+					ctx,
+				)
 			return none(state)
 		default:
 			return none(state)
@@ -649,7 +730,7 @@ export function transition(
 	ctx: TvContext,
 ): TvTransition {
 	if (action.type === "power") {
-		if (!action.on) return none({ ...state, power: "off", menuOpen: false })
+		if (!action.on) return none({ ...closeMenu(state), power: "off" })
 		return state.power === "off"
 			? none({ ...state, power: "booting" })
 			: none(state)
@@ -664,13 +745,19 @@ export function transition(
 
 	switch (action.type) {
 		case "step": {
-			const items = tvItems(state.screen, ctx)
-			if (!items.length || state.menuOpen) return none(state)
+			const items = activeItems(state, ctx)
+			if (!items.length) return none(state)
 			const at = Math.max(0, items.indexOf(focusedItem(state, ctx) ?? ""))
 			const focus = items[(at + action.by + items.length) % items.length]
+			// The menu's focus is not in the URL, so the screen keeps its own focus underneath.
+			if (state.menuOpen) return none({ ...state, menuFocus: focus })
 			return { state: { ...state, focus }, history: "replace", effects: [] }
 		}
 		case "focus":
+			if (state.menuOpen)
+				return MENU_ITEMS.includes(action.item)
+					? none({ ...state, menuFocus: action.item })
+					: none(state)
 			if (
 				!tvItems(state.screen, ctx).includes(action.item) ||
 				state.focus === action.item
@@ -683,39 +770,35 @@ export function transition(
 			}
 		case "ok": {
 			const item = focusedItem(state, ctx)
-			return item ? choose(state, item, ctx) : none(state)
+			if (!item) return none(state)
+			return state.menuOpen
+				? chooseInMenu(state, item, ctx)
+				: choose(state, item, ctx)
 		}
 		case "choose":
+			// With the menu open, pressing anything behind it only closes it.
+			if (state.menuOpen)
+				return MENU_ITEMS.includes(action.item)
+					? chooseInMenu(state, action.item, ctx)
+					: none(closeMenu(state))
 			return tvItems(state.screen, ctx).includes(action.item)
 				? choose(state, action.item, ctx)
 				: none(state)
 		case "back":
 			return back(state)
 		case "home":
-			if (state.screen.name === "home")
-				return none({ ...state, menuOpen: false })
-			return {
-				state: {
-					...state,
-					screen: { name: "home" },
-					focus: null,
-					menuOpen: false,
-					depth: 0,
-				},
-				history: "push",
-				effects: [],
-			}
+			return goHome(state)
 		case "toggle-menu":
-			return none({ ...state, menuOpen: !state.menuOpen })
+			return none({ ...state, menuOpen: !state.menuOpen, menuFocus: null })
 		case "open-moods":
-			if (state.screen.name === "moods") return back(state)
+			if (state.screen.name === "moods") return back(closeMenu(state))
 			return push(state, {
 				name: "moods",
 				night: nightOf(state.screen),
 				refine: state.screen.name === "picks",
 			})
 		case "open-app":
-			return push(state, { name: "app", app: action.app })
+			return openApp(state, action.app, ctx)
 		case "open-search":
 			return state.screen.name === "search" && !state.screen.query
 				? back(state)
@@ -728,8 +811,6 @@ export function transition(
 				? replace(state, screen)
 				: push(state, screen)
 		}
-		case "pick-for-me":
-			return pickForMe(state, ctx)
 		case "service-key": {
 			if (state.screen.name === "services")
 				return none(state, [

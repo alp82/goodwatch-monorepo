@@ -6,13 +6,12 @@
 import { AnimatePresence, motion } from "framer-motion"
 import { type ReactNode, createContext, useContext, useState } from "react"
 import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
-import gwLogo from "~/img/goodwatch-logo-white.svg"
 import type { Score as RatingScore } from "~/server/scores.server"
 import { RATING_LEVELS, levelOf } from "~/ui/taste-quiz/quiz-flow"
 import { runtimeLabel } from "~/ui/watch-next/labels"
 import { logoUrl } from "~/ui/watch-next/style"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
-import { APP, ICON, Icon } from "./Remote"
+import { ICON, Icon } from "./Remote"
 import { TvQuiz } from "./TvQuiz"
 import {
 	Backdrop,
@@ -22,27 +21,27 @@ import {
 	Item,
 	KEY_ROWS,
 	Match,
+	MenuItem,
 	Poster,
 	SEARCH_PRESETS,
 	Score,
 	type TvView,
+	memberTiles,
 	searchHits,
 	whereLine,
 } from "./TvScreens"
 import {
-	type LivingRoomTitle,
 	moodCounts,
 	myServices,
+	sourceFor,
 	titleOf,
 	titlesFor,
 } from "./living-room-data"
 import {
+	MENU_ITEMS,
 	MIN_ANSWERS_FOR_PICKS,
 	type Night,
-	TV_APPS,
 	type TvAction,
-	type TvApp,
-	resolvedSource,
 } from "./tv-flow"
 
 // True for the copy drawn inside the desktop scene before the window is measured: the desktop edition's
@@ -70,13 +69,11 @@ function PhoneTvScreen({ view }: { view: TvView }) {
 	const key =
 		s.name === "title"
 			? `title-${s.title}`
-			: s.name === "app"
-				? `app-${s.app}`
-				: s.name === "search"
-					? `search-${s.query ?? ""}`
-					: s.name === "quiz"
-						? `quiz-${s.quiz.screen}`
-						: s.name
+			: s.name === "search"
+				? `search-${s.query ?? ""}`
+				: s.name === "quiz"
+					? `quiz-${s.quiz.screen}`
+					: s.name
 	if (state.power === "off")
 		return <div className="absolute inset-0 bg-black" aria-hidden />
 	return (
@@ -121,14 +118,10 @@ function Screen({ view }: { view: TvView }) {
 			return <ThisOrThat view={view} />
 		case "moods":
 			return <Moods view={view} night={s.night} />
-		case "source":
-			return <Source view={view} night={s.night} />
 		case "picks":
 			return <Picks view={view} night={s.night} />
 		case "title":
 			return <TitleScreen view={view} titleKey={s.title} />
-		case "app":
-			return <AppScreen view={view} app={s.app} />
 		case "search":
 			return s.query ? (
 				<SearchResults view={view} query={s.query} />
@@ -229,58 +222,73 @@ function Head({
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Home: the guest Welcome as three full-width rows, or the member's moods with the "Or open" column.
+// Home: a selection. The guest Welcome is three full-width rows with the taste quiz taller in the middle; a
+// member gets two tiles.
 
+// Like the desktop edition, the same HTML for every guest (#233): only where a row leads depends on the guest.
 function Welcome({ view }: { view: TvView }) {
 	const best = view.data.suggestions
-	const rows = [
-		{
-			id: "find-my-tonight",
-			label: "Find my tonight",
-			line: "Three quick questions, then your picks.",
-			art: <Fan titles={best.slice(3, 6)} heart size={38} />,
-		},
-		{
-			id: "taste-quiz",
-			label: "Rate what you've seen",
-			line: "Score five, get picks made for you.",
-			art: <Fan titles={best.slice(0, 3)} size={38} />,
-		},
-		{
-			id: "about",
-			label: "What is GoodWatch?",
-			line: "One score, how it feels, where it streams.",
-			art: (
-				<div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle,rgba(34,197,94,0.22),transparent_65%)]">
-					<img src={gwLogo} alt="" className="h-9" />
+	const side = (id: string, label: string, line: string, art: ReactNode) => (
+		<PItem
+			view={view}
+			id={id}
+			className="flex min-h-0 flex-1 items-center gap-3 overflow-hidden rounded-2xl pr-4"
+			grow="scale-[1.02]"
+		>
+			<div className="relative h-full w-[120px] shrink-0">{art}</div>
+			<div className="min-w-0">
+				<div className="text-[20px] font-extrabold leading-tight">{label}</div>
+				<div className="truncate text-[18px] leading-snug text-white/60">
+					{line}
 				</div>
-			),
-		},
-	]
+			</div>
+		</PItem>
+	)
 	return (
 		<>
 			<Backdrop title={best[0]} dim={0.18} />
 			<Head view={view} as="h1" title="Something good tonight?" />
 			<div className="absolute inset-x-5 bottom-3 top-[56px] flex flex-col gap-2">
-				{rows.map((r) => (
-					<PItem
-						key={r.id}
-						view={view}
-						id={r.id}
-						className="flex min-h-0 flex-1 items-center gap-3 overflow-hidden rounded-2xl pr-4"
-						grow="scale-[1.02]"
-					>
-						<div className="relative h-full w-[120px] shrink-0">{r.art}</div>
-						<div className="min-w-0">
-							<div className="text-[21px] font-extrabold leading-tight">
-								{r.label}
-							</div>
-							<div className="truncate text-[18px] leading-snug text-white/60">
-								{r.line}
-							</div>
+				{side(
+					"watch-next",
+					"Watch next",
+					"Picks for tonight, on your services.",
+					<Fan titles={best.slice(3, 6)} heart size={30} />,
+				)}
+				<PItem
+					view={view}
+					id="taste-quiz"
+					className="flex min-h-0 flex-[1.7] items-center gap-3 overflow-hidden rounded-2xl pr-4"
+					on="ring-amber-300 bg-amber-400/[0.16]"
+					off="ring-amber-300/40 bg-amber-400/[0.08]"
+					grow="scale-[1.02]"
+				>
+					<div className="relative h-full w-[150px] shrink-0">
+						<Fan titles={best.slice(0, 3)} size={50} />
+					</div>
+					<div className="min-w-0">
+						<div className="text-[26px] font-extrabold leading-tight">
+							Rate what you've seen
 						</div>
-					</PItem>
-				))}
+						<div className="truncate text-[18px] leading-snug text-white/70">
+							Rate a few, get picks made for you.
+						</div>
+					</div>
+				</PItem>
+				{side(
+					"moods",
+					"Pick a mood",
+					"Funny, scary, mind-bending.",
+					<div className="absolute inset-0 flex flex-wrap content-center justify-center gap-1 px-4">
+						{MOODS.slice(0, 6).map((m) => (
+							<span
+								key={m.key}
+								className="h-3 w-7 rounded-full"
+								style={{ background: m.hue }}
+							/>
+						))}
+					</div>,
+				)}
 			</div>
 		</>
 	)
@@ -340,82 +348,59 @@ function MoodItem({
 	)
 }
 
-// All thirteen moods in two columns, and the four apps in a column on the right.
+// Two tiles: Watch next (the Wishlist's best) and Something new.
 function MemberHome({ view }: { view: TvView }) {
-	const counts = moodCounts(view.data, view.choices)
 	return (
 		<>
 			{moodBackground()}
-			<Head view={view} title="What kind of night?" />
-			<div className="absolute bottom-3 left-5 right-[150px] top-[52px] grid grid-flow-col grid-cols-2 grid-rows-7 gap-x-2 gap-y-0.5">
-				<MoodItem
-					view={view}
-					mood={null}
-					count={null}
-					current={false}
-					height={30}
-				/>
-				{MOODS.map((m) => (
-					<MoodItem
-						key={m.key}
-						view={view}
-						mood={m.key}
-						count={counts[m.key]}
-						current={false}
-						height={30}
-					/>
-				))}
-			</div>
-			<div className="absolute bottom-3 right-5 top-[52px] flex w-[122px] flex-col gap-1.5">
-				<span className="text-[18px] font-bold text-white/40">Or open</span>
-				{TV_APPS.map((a) => (
+			<Head view={view} title="What are we watching?" />
+			<div className="absolute inset-x-5 bottom-4 top-[58px] grid grid-cols-2 gap-4">
+				{memberTiles(view).map((tile) => (
 					<PItem
-						key={a}
+						key={tile.id}
 						view={view}
-						id={`app:${a}`}
-						className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[18px] font-semibold"
-						grow="scale-[1.05]"
+						id={tile.id}
+						className="flex flex-col justify-end overflow-hidden rounded-2xl p-4"
 					>
-						<span style={{ color: APP[a].tint }}>
-							<Icon d={APP[a].d} className="h-[18px] w-[18px]" />
+						<span className="absolute -right-3 top-3 flex -space-x-7">
+							{tile.art.slice(0, 3).map((t, i) => (
+								<span
+									key={t.key}
+									className="block"
+									style={{ transform: `rotate(${(i - 1) * 6}deg)` }}
+								>
+									<Poster
+										title={t}
+										size="w185"
+										className="h-[108px] w-[72px] rounded-lg object-cover shadow-2xl ring-1 ring-white/10"
+									/>
+								</span>
+							))}
 						</span>
-						<span className="whitespace-nowrap">{APP[a].name}</span>
+						<span className="absolute inset-0 bg-gradient-to-r from-[#0b0c10] via-[#0b0c10]/80 to-transparent" />
+						<span className="relative">
+							<span className="block text-[24px] font-extrabold leading-none">
+								{tile.title}
+							</span>
+							<span className="mt-1 block text-[18px] text-white/60">
+								{tile.short}
+							</span>
+						</span>
 					</PItem>
 				))}
-				<PItem
-					view={view}
-					id="taste-quiz"
-					className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[18px] font-semibold"
-					grow="scale-[1.05]"
-				>
-					<span className="text-amber-300">♥</span>
-					<span className="whitespace-nowrap">Rate titles</span>
-				</PItem>
 			</div>
 		</>
 	)
 }
 
+// The eleven moods and Any mood last, three across.
 function Moods({ view, night }: { view: TvView; night: Night }) {
 	const counts = view.data.member ? moodCounts(view.data, view.choices) : null
 	return (
 		<>
 			{moodBackground()}
-			<Head
-				view={view}
-				title="What kind of night?"
-				line={counts ? "Numbers fit your Wishlist." : undefined}
-			/>
-			<div
-				className={`absolute inset-x-5 grid grid-cols-3 gap-x-2 gap-y-1.5 ${counts ? "top-[82px]" : "top-[56px]"}`}
-			>
-				<MoodItem
-					view={view}
-					mood={null}
-					count={null}
-					current={false}
-					height={counts ? 40 : 46}
-				/>
+			<Head view={view} title="What kind of night?" />
+			<div className="absolute inset-x-5 top-[56px] grid grid-cols-3 gap-x-2 gap-y-2">
 				{MOODS.map((m) => (
 					<MoodItem
 						key={m.key}
@@ -423,16 +408,23 @@ function Moods({ view, night }: { view: TvView; night: Night }) {
 						mood={m.key}
 						count={counts ? counts[m.key] : null}
 						current={night.mood === m.key}
-						height={counts ? 40 : 46}
+						height={50}
 					/>
 				))}
+				<MoodItem
+					view={view}
+					mood={null}
+					count={null}
+					current={false}
+					height={50}
+				/>
 			</div>
 		</>
 	)
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Find my tonight.
+// What is GoodWatch?, and a guest's Watch next: services, then this or that.
 
 function About({ view }: { view: TvView }) {
 	const best = view.data.suggestions[0]
@@ -476,8 +468,8 @@ function About({ view }: { view: TvView }) {
 				)}
 			</div>
 			<div className="absolute bottom-3 left-5 flex gap-2.5">
-				<Pill view={view} id="find-my-tonight" primary>
-					Find my tonight
+				<Pill view={view} id="watch-next" primary>
+					Watch next
 				</Pill>
 				<Pill view={view} id="just-show-me">
 					Just show me
@@ -607,74 +599,12 @@ function ThisOrThat({ view }: { view: TvView }) {
 	)
 }
 
-function Source({ view, night }: { view: TvView; night: Night }) {
-	const mood = night.mood ? MOOD_BY_KEY[night.mood as MoodKey]?.name : null
-	const wish = titlesFor(
-		{ ...night, source: "wishlist" },
-		view.data,
-		view.choices,
-	)
-	const fresh = titlesFor({ ...night, source: "new" }, view.data, view.choices)
-	const card = (
-		id: string,
-		title: string,
-		line: string,
-		art: LivingRoomTitle[],
-	) => (
-		<PItem
-			view={view}
-			id={id}
-			className="flex flex-col justify-end overflow-hidden rounded-2xl p-4"
-		>
-			<span className="absolute -right-3 top-3 flex -space-x-7">
-				{art.slice(0, 3).map((t, i) => (
-					<span
-						key={t.key}
-						className="block"
-						style={{ transform: `rotate(${(i - 1) * 6}deg)` }}
-					>
-						<Poster
-							title={t}
-							size="w185"
-							className="h-[108px] w-[72px] rounded-lg object-cover shadow-2xl ring-1 ring-white/10"
-						/>
-					</span>
-				))}
-			</span>
-			<span className="absolute inset-0 bg-gradient-to-r from-[#0b0c10] via-[#0b0c10]/80 to-transparent" />
-			<span className="relative">
-				<span className="block text-[24px] font-extrabold leading-none">
-					{title}
-				</span>
-				<span className="mt-1 block text-[18px] text-white/60">{line}</span>
-			</span>
-		</PItem>
-	)
-	return (
-		<>
-			<Head view={view} title={mood ? `${mood}. From where?` : "From where?"} />
-			<div className="absolute inset-x-5 bottom-4 top-[58px] grid grid-cols-2 gap-4">
-				{card(
-					"source:wishlist",
-					"My Wishlist",
-					wish.length ? `${wish.length} fit` : "Nothing fits",
-					wish,
-				)}
-				{card("source:new", "Something new", "Close to your taste", fresh)}
-			</div>
-		</>
-	)
-}
-
 // Tonight: one big pick and two posters.
 function Picks({ view, night }: { view: TvView; night: Night }) {
 	const { data, choices } = view
 	const [first, ...rest] = titlesFor(night, data, choices).slice(0, 3)
 	const mood = night.mood ? MOOD_BY_KEY[night.mood as MoodKey]?.name : null
-	const source = resolvedSource(night, {
-		member: data.member,
-		wishlistKeys: data.wishlist.map((t) => String(t.key)),
-	})
+	const source = sourceFor(night, data, choices)
 	const from =
 		source === "wishlist"
 			? "From your Wishlist"
@@ -762,13 +692,16 @@ function Picks({ view, night }: { view: TvView; night: Night }) {
 						{answered ? "♥ Refine" : "♥ Make it mine"}
 					</PItem>
 				)}
+				<Pill view={view} id="full-page">
+					{source === "wishlist" ? "All ↗" : "More ↗"}
+				</Pill>
 			</div>
 		</>
 	)
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// A title and the apps.
+// A title.
 
 function TitleScreen({ view, titleKey }: { view: TvView; titleKey: string }) {
 	const t = titleOf(view.data, titleKey)
@@ -893,140 +826,6 @@ function Rating({ onRate }: { onRate: (score: RatingScore) => void }) {
 	)
 }
 
-function AppScreen({ view, app }: { view: TvView; app: TvApp }) {
-	const { data } = view
-	const a = APP[app]
-	const guest = !data.member && app === "watch-now"
-	const line = guest
-		? "With a free account, this is your Wishlist, best match first."
-		: app === "watch-now"
-			? `${data.wishlist.length} on your Wishlist, best match first.`
-			: a.line
-	return (
-		<>
-			<div
-				className="absolute inset-0"
-				style={{
-					background: `radial-gradient(90% 80% at 20% 0%, ${a.tint}33 0%, #07080b 60%)`,
-				}}
-			/>
-			<div className="absolute left-5 right-[206px] top-3.5 flex items-center gap-2.5">
-				<span style={{ color: a.tint }}>
-					<Icon d={a.d} className="h-7 w-7" />
-				</span>
-				<h2 className="truncate text-[26px] font-extrabold leading-none">
-					{a.name}
-				</h2>
-			</div>
-			<div className="absolute left-5 right-5 top-[56px] line-clamp-2 text-[18px] leading-snug text-white/65">
-				{line}
-			</div>
-			{guest ? (
-				<div className="absolute bottom-3 left-5 flex items-center gap-2.5">
-					<PItem
-						view={view}
-						id="full-page"
-						className="rounded-full px-5 py-1.5 text-[18px] font-bold"
-						on="ring-amber-300 bg-white text-black"
-						off="ring-transparent bg-white/90 text-black"
-					>
-						Create a free account
-					</PItem>
-					<a
-						href={view.signInHref}
-						className="rounded-full px-4 py-1.5 text-[18px] font-semibold ring-1 ring-white/20"
-					>
-						Sign in
-					</a>
-				</div>
-			) : (
-				<>
-					<AppGlimpse view={view} app={app} />
-					<div className="absolute bottom-3 left-5">
-						<Pill view={view} id="full-page" primary>
-							Open {a.name} ↗
-						</Pill>
-					</div>
-				</>
-			)}
-		</>
-	)
-}
-
-function AppGlimpse({ view, app }: { view: TvView; app: TvApp }) {
-	const { data } = view
-	if (app === "watch-now")
-		return (
-			<div className="absolute inset-x-5 top-[112px] flex gap-2">
-				{data.wishlist.slice(0, 6).map((t) => (
-					<PItem
-						key={t.key}
-						view={view}
-						id={`title:${t.key}`}
-						className="min-w-0 flex-1 rounded-xl p-1"
-						grow="scale-[1.06]"
-					>
-						<Poster
-							title={t}
-							size="w185"
-							className="aspect-[2/3] w-full rounded-lg object-cover"
-						/>
-					</PItem>
-				))}
-				{!data.wishlist.length && (
-					<div className="text-[18px] text-white/60">
-						Your Wishlist is empty. Want to See adds a title here.
-					</div>
-				)}
-			</div>
-		)
-	if (app === "discover")
-		return (
-			<div className="absolute inset-x-5 top-[116px] grid grid-cols-7 gap-2">
-				{data.suggestions.slice(0, 7).map((t) => (
-					<Poster
-						key={t.key}
-						title={t}
-						size="w154"
-						className="aspect-[2/3] w-full rounded-lg object-cover"
-					/>
-				))}
-			</div>
-		)
-	if (app === "explorer")
-		return (
-			<div className="absolute inset-x-5 top-[118px] grid grid-cols-3 gap-2">
-				{MOODS.slice(0, 6).map((m) => (
-					<div
-						key={m.key}
-						className="truncate rounded-full px-3 py-1 text-[18px] font-bold"
-						style={{
-							color: m.hue,
-							background: `${m.hue}1f`,
-							boxShadow: `inset 0 0 0 1px ${m.hue}40`,
-						}}
-					>
-						{m.name}
-					</div>
-				))}
-			</div>
-		)
-	const moods = [...new Set(data.wishlist.flatMap((t) => t.moods))].slice(0, 6)
-	return (
-		<div className="absolute inset-x-5 top-[118px] flex flex-wrap gap-2">
-			{moods.map((m) => (
-				<span
-					key={m}
-					className="rounded-full px-3 py-0.5 text-[18px] font-bold text-black"
-					style={{ background: MOOD_BY_KEY[m].hue }}
-				>
-					{MOOD_BY_KEY[m].name}
-				</span>
-			))}
-		</div>
-	)
-}
-
 // ---------------------------------------------------------------------------------------------------------
 // Search: the on-screen keyboard without a query, the results with one.
 
@@ -1128,7 +927,7 @@ function SearchResults({ view, query }: { view: TvView; query: string }) {
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// The on-screen bar, scaled up: Back and Home away from home, Search, and More.
+// The on-screen bar, scaled up: Back and Home away from home, Search, and the menu in two columns.
 
 function Bar({ view }: { view: TvView }) {
 	const { state, dispatch } = view
@@ -1143,19 +942,6 @@ function Bar({ view }: { view: TvView }) {
 			<Icon d={d} className="h-6 w-6" />
 		</button>
 	)
-	const item = (label: string, d: string, action: TvAction, tint?: string) => (
-		<button
-			key={label}
-			type="button"
-			onClick={() => dispatch(action)}
-			className="flex items-center gap-2.5 rounded-lg px-2.5 py-1 text-left text-[18px] font-medium text-white/90"
-		>
-			<span style={tint ? { color: tint } : undefined}>
-				<Icon d={d} className="h-5 w-5 opacity-80" />
-			</span>
-			{label}
-		</button>
-	)
 	return (
 		<div className="absolute right-3 top-3 z-20 flex flex-col items-end gap-1.5">
 			<div className="flex items-center gap-1.5">
@@ -1167,34 +953,27 @@ function Bar({ view }: { view: TvView }) {
 					{ type: "open-search" },
 					state.screen.name === "search",
 				)}
-				{btn("More", ICON.more, { type: "toggle-menu" }, state.menuOpen)}
+				{btn("Menu", ICON.more, { type: "toggle-menu" }, state.menuOpen)}
 			</div>
 			<AnimatePresence>
 				{state.menuOpen && (
-					<motion.div
-						className="flex w-[210px] flex-col rounded-2xl bg-[#0c0e12]/95 p-1 ring-1 ring-white/10"
+					<motion.nav
+						aria-label="Menu"
+						className="grid w-[440px] grid-cols-2 gap-1 rounded-2xl bg-[#0c0e12]/95 p-1.5 ring-1 ring-white/10"
 						initial={{ opacity: 0, y: -4 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0 }}
 						transition={{ duration: 0.15 }}
 					>
-						{item("Mood", ICON.mood, { type: "open-moods" }, "#fbbf24")}
-						{TV_APPS.map((a) =>
-							item(
-								APP[a].name,
-								APP[a].d,
-								{ type: "open-app", app: a },
-								APP[a].tint,
-							),
-						)}
-						{item(
-							"Pick for me",
-							ICON.pickForMe,
-							{ type: "pick-for-me" },
-							"#fb923c",
-						)}
-						{item("Turn off", ICON.power, { type: "power", on: false })}
-					</motion.div>
+						{MENU_ITEMS.map((id) => (
+							<MenuItem
+								key={id}
+								view={view}
+								id={id}
+								className="gap-2.5 rounded-lg px-2.5 py-1.5 text-[18px] !ring-4"
+							/>
+						))}
+					</motion.nav>
 				)}
 			</AnimatePresence>
 		</div>

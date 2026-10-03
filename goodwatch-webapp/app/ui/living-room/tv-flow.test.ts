@@ -1,9 +1,11 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
 import {
+	MENU_ITEMS,
 	type TvAction,
 	type TvContext,
 	type TvState,
+	focusedItem,
 	isTvOnlyChange,
 	readTvState,
 	transition,
@@ -22,12 +24,14 @@ const guest: TvContext = {
 	pairsLeft: 6,
 	quizProgress: 0,
 	quizPicks: [],
+	source: "new",
 }
 const member: TvContext = {
 	...guest,
 	member: true,
 	wishlistKeys: ["movie-9"],
 	hasServices: true,
+	source: "wishlist",
 }
 
 const at = (query: string, depth = 0) =>
@@ -58,10 +62,9 @@ describe("TV state in the URL", () => {
 		)
 	})
 
-	it("round-trips a title, an app, a search, and the focus", () => {
+	it("round-trips a title, a search, and the focus", () => {
 		for (const q of [
 			"tv=title&title=movie-1",
-			"tv=app&app=taste",
 			"tv=search&q=heist",
 			"tv=moods&refine=1&focus=mood%3Acozy",
 		]) {
@@ -70,7 +73,7 @@ describe("TV state in the URL", () => {
 	})
 
 	it("falls back to home for unknown screens and incomplete keys", () => {
-		for (const q of ["tv=nope", "tv=title", "tv=app&app=settings"])
+		for (const q of ["tv=nope", "tv=title", "tv=source", "tv=app"])
 			assert.deepEqual(at(q).screen, { name: "home" })
 	})
 
@@ -85,26 +88,55 @@ describe("TV state in the URL", () => {
 	})
 })
 
-describe("guest home: Find my tonight", () => {
-	it("offers Find my tonight, the taste quiz, and What is GoodWatch?", () => {
+describe("guest home: Watch next, the taste quiz, Pick a mood", () => {
+	it("offers the three cards and starts on the taste quiz in the middle", () => {
 		assert.deepEqual(tvItems({ name: "home" }, guest), [
-			"find-my-tonight",
+			"watch-next",
 			"taste-quiz",
-			"about",
+			"moods",
 		])
+		assert.equal(focusedItem(at(""), guest), "taste-quiz")
 	})
 
-	it("goes to services first when the guest has none, pushing history", () => {
-		const t = run(at(""), guest, { type: "ok" })
+	it("Watch next goes to services first when the guest has none, pushing history", () => {
+		const t = run(at(""), guest, { type: "choose", item: "watch-next" })
 		assert.equal(t.history, "push")
 		assert.equal(t.url, "tv=services")
 	})
 
-	it("goes straight to this or that when the guest has services", () => {
+	it("Watch next goes straight to this or that when the guest has services", () => {
 		assert.equal(
-			run(at(""), { ...guest, hasServices: true }, { type: "ok" }).url,
+			run(
+				at(""),
+				{ ...guest, hasServices: true },
+				{ type: "choose", item: "watch-next" },
+			).url,
 			"tv=this-or-that",
 		)
+	})
+
+	it("Watch next goes straight to the picks once the guest answered enough", () => {
+		assert.equal(
+			run(
+				at(""),
+				{ ...guest, hasServices: true, answered: 3 },
+				{ type: "choose", item: "watch-next" },
+			).url,
+			"tv=picks&from=new",
+		)
+	})
+
+	it("Pick a mood shows the moods with Any mood last, then the picks", () => {
+		const moods = run(at(""), guest, { type: "choose", item: "moods" })
+		assert.equal(moods.url, "tv=moods")
+		assert.deepEqual(tvItems(moods.state.screen, guest), [
+			"mood:cozy",
+			"mood:thrilling",
+			"mood:any",
+		])
+		const picks = run(moods.state, guest, { type: "ok" })
+		assert.equal(picks.history, "push")
+		assert.equal(picks.url, "tv=picks&mood=cozy")
 	})
 
 	it("toggles a service on the services screen without navigating", () => {
@@ -152,9 +184,19 @@ describe("guest home: Find my tonight", () => {
 		assert.equal(t.history, "none")
 		assert.equal(t.url, "tv=this-or-that")
 	})
+
+	it("starts the pairs again when Refine my picks finds none left", () => {
+		const t = run(
+			at("tv=picks&from=new", 1),
+			{ ...guest, answered: 6, pairsLeft: 0 },
+			{ type: "choose", item: "this-or-that" },
+		)
+		assert.equal(t.url, "tv=this-or-that")
+		assert.deepEqual(t.effects, [{ type: "restart-pairs" }])
+	})
 })
 
-describe("guest home: Just show me and What is GoodWatch?", () => {
+describe("What is GoodWatch? and the guest picks", () => {
 	it("shows new picks right away from What is GoodWatch?", () => {
 		assert.equal(
 			run(at("tv=about"), guest, { type: "choose", item: "just-show-me" }).url,
@@ -162,83 +204,110 @@ describe("guest home: Just show me and What is GoodWatch?", () => {
 		)
 	})
 
-	it("opens What is GoodWatch? with both ways onward", () => {
-		const t = run(at(""), guest, { type: "choose", item: "about" })
-		assert.equal(t.url, "tv=about")
-		assert.deepEqual(tvItems(t.state.screen, guest), [
-			"find-my-tonight",
+	it("offers Watch next and Just show me", () => {
+		assert.deepEqual(tvItems({ name: "about" }, guest), [
+			"watch-next",
 			"just-show-me",
 		])
 	})
 
 	it("offers Refine my picks once the guest answered, else Make it mine via services", () => {
+		const night = { mood: null, source: "new", service: null } as const
+		assert.equal(tvItems({ name: "picks", night }, guest).at(-2), "services")
 		assert.equal(
-			tvItems(
-				{ name: "picks", night: { mood: null, source: "new", service: null } },
-				guest,
-			).at(-1),
-			"services",
-		)
-		assert.equal(
-			tvItems(
-				{ name: "picks", night: { mood: null, source: "new", service: null } },
-				{ ...guest, answered: 2 },
-			).at(-1),
+			tvItems({ name: "picks", night }, { ...guest, answered: 2 }).at(-2),
 			"this-or-that",
 		)
 	})
 })
 
-describe("member home: mood, source, picks", () => {
-	it("lists Any mood, the moods, the four apps, and the taste quiz", () => {
+describe("member home: Watch next and Something new", () => {
+	it("offers two tiles and starts on Watch next", () => {
 		assert.deepEqual(tvItems({ name: "home" }, member), [
-			"mood:any",
-			"mood:cozy",
-			"mood:thrilling",
-			"app:watch-now",
-			"app:taste",
-			"app:discover",
-			"app:explorer",
-			"taste-quiz",
+			"watch-next",
+			"something-new",
 		])
+		assert.equal(focusedItem(at(""), member), "watch-next")
 	})
 
-	it("asks Wishlist or new after a mood, then shows the picks", () => {
-		const t = run(
-			at(""),
-			member,
-			{ type: "choose", item: "mood:cozy" },
-			{ type: "choose", item: "source:wishlist" },
+	it("starts on Something new while the Wishlist is empty", () => {
+		assert.equal(
+			focusedItem(at(""), { ...member, wishlistKeys: [] }),
+			"something-new",
 		)
-		assert.equal(t.history, "push")
-		assert.equal(t.url, "tv=picks&mood=cozy&from=wishlist")
-		assert.equal(t.state.depth, 2)
 	})
 
-	it("switches between Wishlist and new in place", () => {
+	it("Watch next shows the Wishlist picks in one press", () => {
+		const t = run(at(""), member, { type: "ok" })
+		assert.equal(t.history, "push")
+		assert.equal(t.url, "tv=picks&from=wishlist")
+		assert.equal(t.state.depth, 1)
+	})
+
+	it("Something new shows new picks in one press", () => {
+		assert.equal(
+			run(at(""), member, { type: "choose", item: "something-new" }).url,
+			"tv=picks&from=new",
+		)
+	})
+
+	it("switches between Wishlist and new in place, by the source on screen", () => {
 		const t = run(at("tv=picks&mood=cozy"), member, {
 			type: "choose",
 			item: "switch-source",
 		})
 		assert.equal(t.history, "replace")
 		assert.equal(t.url, "tv=picks&mood=cozy&from=new")
-	})
-
-	it("Pick a mood from the picks replaces them with the new mood", () => {
-		const t = run(
-			at("tv=picks&mood=cozy&from=new", 3),
-			member,
-			{ type: "choose", item: "moods" },
-			{ type: "choose", item: "mood:thrilling" },
-		)
-		assert.equal(t.history, "replace")
-		assert.equal(t.url, "tv=picks&mood=thrilling")
-	})
-
-	it("Pick for me opens the moods", () => {
+		// Nothing on the Wishlist fits this night, so the picks on screen are new ones.
 		assert.equal(
-			run(at("tv=about"), member, { type: "pick-for-me" }).url,
-			"tv=moods",
+			run(
+				at("tv=picks&mood=cozy"),
+				{ ...member, source: "new" },
+				{ type: "choose", item: "switch-source" },
+			).url,
+			"tv=picks&mood=cozy&from=wishlist",
+		)
+	})
+
+	it("Pick a mood from the picks replaces the mood and keeps the source", () => {
+		const moods = run(at("tv=picks&mood=cozy&from=new", 3), member, {
+			type: "choose",
+			item: "moods",
+		})
+		assert.equal(moods.url, "tv=moods&mood=cozy&from=new&refine=1")
+		assert.equal(focusedItem(moods.state, member), "mood:cozy")
+		const t = run(moods.state, member, {
+			type: "choose",
+			item: "mood:thrilling",
+		})
+		assert.equal(t.history, "replace")
+		assert.equal(t.url, "tv=picks&mood=thrilling&from=new")
+	})
+
+	it("Any mood clears the mood of the picks", () => {
+		const refine = at("tv=moods&mood=cozy&from=wishlist&refine=1", 2)
+		assert.equal(tvItems(refine.screen, member).at(-1), "mood:any")
+		assert.equal(
+			run(refine, member, { type: "choose", item: "mood:any" }).url,
+			"tv=picks&from=wishlist",
+		)
+	})
+
+	it("opens the full page behind the picks: Watch next or Discover", () => {
+		assert.deepEqual(
+			run(at("tv=picks&from=wishlist"), member, {
+				type: "choose",
+				item: "full-page",
+			}).effects,
+			[{ type: "leave", to: { kind: "app", app: "watch-next" } }],
+		)
+		assert.deepEqual(
+			run(
+				at("tv=picks&from=new"),
+				{ ...member, source: "new" },
+				{ type: "choose", item: "full-page" },
+			).effects,
+			[{ type: "leave", to: { kind: "app", app: "discover" } }],
 		)
 	})
 })
@@ -281,27 +350,24 @@ describe("title screen", () => {
 	})
 })
 
-describe("apps, search, and the More menu", () => {
-	it("opens an app glimpse and leaves for its full page", () => {
-		const t = run(
-			at(""),
-			member,
-			{ type: "open-app", app: "explorer" },
-			{ type: "ok" },
-		)
+describe("places and search", () => {
+	it("opens a place's page right away, without a screen in between", () => {
+		const t = run(at("tv=picks"), member, { type: "open-app", app: "explorer" })
+		assert.equal(t.history, "none")
+		assert.equal(t.url, "tv=picks")
 		assert.deepEqual(t.effects, [
 			{ type: "leave", to: { kind: "app", app: "explorer" } },
 		])
 	})
 
-	it("shows the member's Wishlist in the Watch now glimpse, only Full page for guests", () => {
-		assert.deepEqual(tvItems({ name: "app", app: "watch-now" }, member), [
-			"title:movie-9",
-			"full-page",
-		])
-		assert.deepEqual(tvItems({ name: "app", app: "watch-now" }, guest), [
-			"full-page",
-		])
+	it("Watch next is the page for members and the guest's own flow for guests", () => {
+		assert.deepEqual(
+			run(at(""), member, { type: "open-app", app: "watch-next" }).effects,
+			[{ type: "leave", to: { kind: "app", app: "watch-next" } }],
+		)
+		const t = run(at(""), guest, { type: "open-app", app: "watch-next" })
+		assert.deepEqual(t.effects, [])
+		assert.equal(t.url, "tv=services")
 	})
 
 	it("opens the keyboard (push), then shows and refines the results in place (replace)", () => {
@@ -329,35 +395,115 @@ describe("apps, search, and the More menu", () => {
 			"none",
 		)
 	})
+})
 
-	it("Back closes the open menu before anything else", () => {
+describe("the menu", () => {
+	const open = (query: string, ctx: TvContext, depth = 1) =>
+		run(at(query, depth), ctx, { type: "toggle-menu" }).state
+
+	it("lists the same places on every screen, for guests and members", () => {
+		assert.deepEqual(MENU_ITEMS, [
+			"menu:home",
+			"menu:watch-next",
+			"menu:discover",
+			"menu:taste",
+			"menu:explorer",
+			"menu:moods",
+			"menu:taste-quiz",
+			"menu:about",
+			"menu:off",
+		])
+	})
+
+	it("takes the wheel while open, without touching the URL or the screen's focus", () => {
+		const s = open("tv=picks&focus=moods", member)
+		assert.equal(focusedItem(s, member), "menu:home")
+		const t = run(s, member, { type: "step", by: 1 }, { type: "step", by: 1 })
+		assert.equal(t.history, "none")
+		assert.equal(focusedItem(t.state, member), "menu:discover")
+		assert.equal(t.url, "tv=picks&focus=moods")
+		const closed = run(t.state, member, { type: "back" })
+		assert.equal(closed.state.menuOpen, false)
+		assert.equal(closed.history, "none")
+		assert.equal(focusedItem(closed.state, member), "moods")
+	})
+
+	it("opens a place with OK and closes", () => {
 		const t = run(
-			at("tv=about", 1),
-			guest,
-			{ type: "toggle-menu" },
-			{ type: "back" },
+			open("tv=picks", member),
+			member,
+			{ type: "focus", item: "menu:taste" },
+			{ type: "ok" },
 		)
 		assert.equal(t.state.menuOpen, false)
+		assert.deepEqual(t.effects, [
+			{ type: "leave", to: { kind: "app", app: "taste" } },
+		])
+	})
+
+	it("jumps to the moods, the taste quiz, and What is GoodWatch? as new screens", () => {
+		for (const [item, to] of [
+			["menu:moods", "tv=moods"],
+			["menu:taste-quiz", "tv=quiz"],
+			["menu:about", "tv=about"],
+		]) {
+			const t = run(open("tv=title&title=m", guest), guest, {
+				type: "choose",
+				item,
+			})
+			assert.equal(t.history, "push")
+			assert.equal(t.url, to)
+			assert.equal(t.state.depth, 2)
+			assert.equal(t.state.menuOpen, false)
+		}
+	})
+
+	it("only closes when it points at the screen already showing", () => {
+		const t = run(open("tv=about", guest), guest, {
+			type: "choose",
+			item: "menu:about",
+		})
 		assert.equal(t.history, "none")
-		assert.equal(t.url, "tv=about")
+		assert.equal(t.state.menuOpen, false)
+	})
+
+	it("turns the TV off", () => {
+		const t = run(open("", guest), guest, { type: "choose", item: "menu:off" })
+		assert.equal(t.state.power, "off")
+		assert.equal(t.state.menuOpen, false)
+	})
+
+	it("closes instead of choosing an item behind it", () => {
+		const t = run(open("", member), member, {
+			type: "choose",
+			item: "something-new",
+		})
+		assert.equal(t.state.menuOpen, false)
+		assert.equal(t.history, "none")
+		assert.equal(t.url, "")
 	})
 })
 
 describe("focus", () => {
 	it("moves with the D-pad, wraps, and replaces history", () => {
-		const t = run(at(""), guest, { type: "step", by: -1 })
+		const t = run(
+			at(""),
+			guest,
+			{ type: "step", by: 1 },
+			{ type: "step", by: 1 },
+		)
 		assert.equal(t.history, "replace")
-		assert.equal(t.url, "focus=about")
+		assert.equal(t.url, "focus=watch-next")
 	})
 
 	it("resets on a new screen", () => {
-		assert.equal(run(at("focus=about"), guest, { type: "ok" }).url, "tv=about")
+		assert.equal(run(at("focus=moods"), guest, { type: "ok" }).url, "tv=moods")
 	})
 
-	it("falls back to the first item when the focused item is gone", () => {
+	it("falls back to the screen's first choice when the focused item is gone", () => {
 		assert.equal(
 			run(at("focus=title%3Agone"), guest, { type: "ok" }).url,
-			"tv=services",
+			"tv=quiz",
 		)
 	})
 })
@@ -376,15 +522,20 @@ describe("Back, Home, and deep links", () => {
 		assert.equal(t.url, "")
 	})
 
-	it("does nothing on home", () => {
+	it("does nothing on home without history", () => {
 		assert.equal(run(at(""), guest, { type: "back" }).history, "none")
 	})
 
-	it("Home pushes home and starts a new depth", () => {
-		const t = run(at("tv=title&title=m", 4), guest, { type: "home" })
-		assert.equal(t.history, "push")
-		assert.equal(t.url, "")
-		assert.equal(t.state.depth, 0)
+	it("Home is one more step, so Back returns to the screen before it", () => {
+		const home = run(at("tv=title&title=m", 4), guest, { type: "home" })
+		assert.equal(home.history, "push")
+		assert.equal(home.url, "")
+		assert.equal(home.state.depth, 5)
+		assert.equal(run(home.state, guest, { type: "back" }).history, "back")
+	})
+
+	it("Home on home does nothing", () => {
+		assert.equal(run(at("", 2), guest, { type: "home" }).history, "none")
 	})
 })
 
@@ -454,8 +605,8 @@ describe("taste quiz", () => {
 	const quizGuest: TvContext = { ...guest, quizPicks: picks }
 	const rate = { type: "choose", item: "level:good" } as const
 
-	it("opens from home tile 2 with the Remote alone", () => {
-		const t = run(at(""), guest, { type: "step", by: 1 }, { type: "ok" })
+	it("opens from the home's middle card with OK alone", () => {
+		const t = run(at(""), guest, { type: "ok" })
 		assert.equal(t.history, "push")
 		assert.equal(t.url, "tv=quiz")
 		assert.equal(t.state.depth, 1)

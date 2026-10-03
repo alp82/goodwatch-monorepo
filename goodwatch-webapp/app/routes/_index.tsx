@@ -120,26 +120,21 @@ export const meta: MetaFunction = () => [
 export default function Index() {
 	const initial = useLoaderData<typeof livingRoomLoader>()
 	const leave = useLeaveThroughTv()
-	const { pathname, search } = useLocation()
+	const { search } = useLocation()
 	const tvParams = new URLSearchParams(search)
 	const screen = tvParams.get("tv") ?? "home"
-	// The Discover and Explorer apps draw their poster grids from the pool too, and so do the guest
-	// Welcome's tile thumbnails (fetched after first paint, so the cached HTML stays the same for everyone).
-	const poolApp =
-		(screen === "app" &&
-			["discover", "explorer"].includes(tvParams.get("app") ?? "")) ||
-		(screen === "home" && !initial.member)
+	// The home's tiles draw their posters from the pool too (fetched after first paint, so the cached guest HTML
+	// stays the same for everyone).
 	const pool = useQuery<LivingRoomData>({
 		queryKey: ["living-room-pool", initial],
-		enabled:
-			[
-				"services",
-				"this-or-that",
-				"moods",
-				"source",
-				"picks",
-				"title",
-			].includes(screen) || poolApp,
+		enabled: [
+			"home",
+			"services",
+			"this-or-that",
+			"moods",
+			"picks",
+			"title",
+		].includes(screen),
 		queryFn: async () => {
 			const response = await fetch("/api/living-room/picks?view=pool", {
 				method: "POST",
@@ -154,9 +149,6 @@ export default function Index() {
 	})
 	const data: LivingRoomData = pool.data ?? initial
 
-	const here = encodeURIComponent(pathname + search)
-	const signUpHref = `/sign-up?redirectTo=${here}`
-	const signInHref = `/sign-in?redirectTo=${here}`
 	const wishlist = useWishlistMutation()
 	const watched = useWatchedMutation()
 	const skipped = useSkippedMutation()
@@ -186,12 +178,7 @@ export default function Index() {
 				case "leave": {
 					const to = effect.to
 					if (to.kind === "page") leave(to.href)
-					else if (to.kind === "app")
-						leave(
-							to.app === "watch-now" && !data.member
-								? signUpHref
-								: APP[to.app].href,
-						)
+					else if (to.kind === "app") leave(APP[to.app].href)
 					else {
 						const t = titleOf(data, to.title)
 						if (t) leave(titleHref(t))
@@ -214,15 +201,8 @@ export default function Index() {
 					return
 			}
 		},
-		[data, leave, signUpHref, wishlist, watched, skipped],
+		[data, leave, wishlist, watched, skipped],
 	)
 
-	return (
-		<LivingRoom
-			data={data}
-			onEffect={onEffect}
-			signInHref={signInHref}
-			onRate={onRate}
-		/>
-	)
+	return <LivingRoom data={data} onEffect={onEffect} onRate={onRate} />
 }
