@@ -45,7 +45,11 @@ import {
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { FINGERPRINT_META } from "~/ui/fingerprint/fingerprintMeta"
 import { Portrait } from "~/ui/person/Portrait"
-import { isCrawler, limitFilteredViews } from "~/server/crawlers.server"
+import {
+	countCrawlerTurnedAway,
+	isCrawler,
+	limitFilteredViews,
+} from "~/server/crawlers.server"
 import { NoTitlesOfType, TypeFilter } from "~/ui/type-filter"
 import { personPath, pluralize, titleToDashed } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
@@ -63,10 +67,13 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 	// Crawlers only get the unfiltered page, and get sent there before the profile is loaded.
 	const url = new URL(request.url)
-	if (url.search && isCrawler(request)) return redirect(url.pathname, 301)
+	if (url.search && isCrawler(request)) {
+		countCrawlerTurnedAway()
+		return redirect(url.pathname, 301)
+	}
 
 	const profile = url.search
-		? await limitFilteredViews(() => getPersonProfile(id))
+		? await limitFilteredViews(request, () => getPersonProfile(id))
 		: await getPersonProfile(id)
 	if (!profile) throw new Response("Not found", { status: 404 })
 
@@ -210,6 +217,21 @@ const titleCounts = (movies: number, shows: number) =>
 		.filter(Boolean)
 		.join(" and ")
 
+// The parameters this page reads. Links carry only these: a crawler that garbles a link ("genre=Sci-Fi+&+Fantasy")
+// would otherwise get its own invention back in every link of the page, and a longer one on each visit.
+const FILTER_PARAMS = [
+	"type",
+	"anime",
+	"role",
+	"genre",
+	"decade",
+	"trait",
+	"minScore",
+	"group",
+	"order",
+	"expand",
+]
+
 /** Builds a link to this page with some filters changed; `null` removes a filter. */
 function useFilterHref() {
 	const [params] = useSearchParams()
@@ -217,7 +239,11 @@ function useFilterHref() {
 		patch: Partial<Record<keyof GridFilters, string | null>>,
 		hash = "",
 	) => {
-		const next = new URLSearchParams(params)
+		const next = new URLSearchParams()
+		for (const name of FILTER_PARAMS) {
+			const value = params.get(name)
+			if (value) next.set(name, value)
+		}
 		if (!("expand" in patch)) next.delete("expand")
 		for (const [k, v] of Object.entries(patch)) {
 			if (v == null || v === "") next.delete(k)

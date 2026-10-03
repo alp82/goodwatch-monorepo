@@ -1,7 +1,9 @@
 // One log line a minute with the server process's memory, its longest event loop stall and the query encoder's
 // queue, so an outage leaves a trail in the container logs. The memory includes the query encoder's worker thread;
-// the share card renderers are separate processes and aren't counted.
+// the share card renderers are separate processes and aren't counted. A second line says what happened to the requests
+// for filtered person pages, when there were any.
 import { monitorEventLoopDelay } from "node:perf_hooks"
+import { reportFilteredViews } from "~/server/crawlers.server"
 import { queryEncoderState } from "~/server/search-ranking/query-encoder.server"
 
 const LOG_EVERY_MS = 60_000
@@ -23,6 +25,8 @@ export function startProcessStats(): void {
 				`query encoder ${encoder.ready ? "ready" : "not ready"} with ${encoder.pending} waiting, up ${Math.round(process.uptime() / 60)} min`,
 		)
 		loopDelay.reset()
+		const filteredViews = reportFilteredViews()
+		if (filteredViews) console.info(`Filtered person views: ${filteredViews}`)
 	}, LOG_EVERY_MS)
 	timer.unref()
 }
