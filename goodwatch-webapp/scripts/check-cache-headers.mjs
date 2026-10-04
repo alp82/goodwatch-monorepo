@@ -98,11 +98,27 @@ async function main() {
 				errors.push("member response is not private")
 			if (response.status >= 400 && !headerHas(control, "no-store"))
 				errors.push("error response lacks no-store")
-			if (path === options[1]) {
+			if (path === options[1] && variant.member) {
 				if (control !== privatePolicy)
 					errors.push("share list is not private, no-store")
 			} else if (!variant.member && response.status === 200) {
 				if (variant.keyed) {
+					if (path === options[1]) {
+						const seconds = (directive) => {
+							const match = new RegExp(
+								`(?:^|,)\\s*${directive}=(\\d+)\\s*(?:,|$)`,
+								"i",
+							).exec(control)
+							return match ? Number(match[1]) : NaN
+						}
+						if (
+							!headerHas(control, "public") ||
+							!(seconds("s-maxage") <= 10) ||
+							!(seconds("stale-while-revalidate") <= 10) ||
+							headerHas(control, "stale-if-error")
+						)
+							errors.push("share list exceeds its public lifetime")
+					}
 					if (
 						!headerHas(control, "s-maxage") ||
 						!headerHas(vary, "gw-cache-identity")

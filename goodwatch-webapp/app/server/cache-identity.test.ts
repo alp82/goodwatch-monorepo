@@ -327,3 +327,51 @@ test("member HTML is never shared across the actual route inventory", () => {
 		}
 	}
 })
+
+test("route lifetimes shorten the public policy without weakening private responses", () => {
+	const short = "public, max-age=0, s-maxage=10, stale-while-revalidate=10"
+	for (const fromCache of [false, true]) {
+		for (const scenario of ["anon", "member", "404"]) {
+			const incoming = new Headers()
+			if (fromCache) incoming.set(CACHE_IDENTITY_HEADER, "anon;US;en")
+			if (scenario === "member") incoming.set("Cookie", memberCookie)
+			const headers = new Headers({ "Cache-Control": short })
+			applyCachePolicy(
+				request(incoming),
+				scenario === "404" ? 404 : 200,
+				headers,
+			)
+			assert.equal(
+				headers.get("Cache-Control"),
+				scenario !== "anon"
+					? PRIVATE_CACHE_CONTROL
+					: fromCache
+						? short
+						: KEYED_PAGE_CACHE_CONTROL,
+			)
+		}
+	}
+	for (const [policy, expected] of [
+		[
+			"public, s-maxage=99999, stale-while-revalidate=99999",
+			SHARED_PAGE_CACHE_CONTROL,
+		],
+		[
+			"public, s-maxage=10, stale-while-revalidate=99999, stale-if-error=86400",
+			"public, max-age=0, s-maxage=10, stale-while-revalidate=7200",
+		],
+		[
+			"public, s-maxage=10, stale-while-revalidate=0",
+			"public, max-age=0, s-maxage=10",
+		],
+		["public, s-maxage=10", "public, max-age=0, s-maxage=10"],
+	]) {
+		const headers = new Headers({ "Cache-Control": policy })
+		applyCachePolicy(
+			request({ [CACHE_IDENTITY_HEADER]: "anon;US;en" }),
+			200,
+			headers,
+		)
+		assert.equal(headers.get("Cache-Control"), expected)
+	}
+})

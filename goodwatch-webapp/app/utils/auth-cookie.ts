@@ -3,6 +3,10 @@ export const PRIVATE_CACHE_CONTROL = "private, no-store"
 export const SHARED_PAGE_CACHE_CONTROL =
 	"public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400"
 
+// The page adds at most 20 seconds to the view cache's 20 seconds. See docs/page-cache.md.
+export const SHARE_LIST_PAGE_CACHE_CONTROL =
+	"public, max-age=0, s-maxage=10, stale-while-revalidate=10"
+
 /** The configured project's base cookie name, or null for missing/invalid configuration. */
 export function authCookieName(
 	supabaseUrl = process.env.SUPABASE_URL,

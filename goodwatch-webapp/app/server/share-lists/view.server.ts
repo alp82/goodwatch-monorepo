@@ -83,8 +83,8 @@ type ViewResult =
 	| { found: false }
 const VIEW_CACHE = {
 	name: "share-list-view-v1",
-	ttlMinutes: 5,
-	staleMinutes: 5,
+	ttlMinutes: 10 / 60,
+	staleMinutes: 10 / 60,
 } as const
 declareResettableCache(VIEW_CACHE)
 const PROFILE_CACHE = {
@@ -194,6 +194,8 @@ export async function resetListView(id: string): Promise<void> {
 	// The stored page of this list, in this process (see docs/page-cache.md for other processes).
 	resetPageCache((path) => path.endsWith(`/lists/${id}`))
 	await resetCacheConfirmed({ name: VIEW_CACHE.name, params: { id } })
+	// Drop pages rendered while the old data was still readable, even if the reset was unconfirmed.
+	resetPageCache((path) => path.endsWith(`/lists/${id}`))
 	try {
 		const [row] = await select<{ user_id: string }>(
 			"SELECT user_id FROM doc.user_list WHERE id = ?",
@@ -209,8 +211,8 @@ export async function getListView(id: string): Promise<ListView | null> {
 	if (!/^[0-9A-Za-z]{10}$/.test(id)) return null
 	// No viewer, country or language affects this value today. Future localized titles must
 	// add country and language to the key (owner decision in map 237).
-	// Resets now reach other processes. 5 + 5 minutes costs one refresh per five minutes
-	// under load and bounds manual DB changes, timed-out writes landing later, and unconfirmed resets.
+	// The 10 + 10 second lifetime bounds staleness when a reset is lost. Confirmed resets
+	// make subsequent reads fresh immediately in every process. See docs/page-cache.md.
 	const result = await cached({
 		...VIEW_CACHE,
 		params: { id },

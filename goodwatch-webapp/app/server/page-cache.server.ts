@@ -10,18 +10,21 @@
 //   whether a front cache named that identity (the two differ in `Cache-Control` and `Vary`).
 // - What is stored: a 200 document that `applyCachePolicy` called `keyed` or `shared`, without `Set-Cookie` and without
 //   a render error, on its second request within a minute. The page's own `Cache-Control` decides: a private route
-//   (share lists today) and a title page without its related panel (`no-store`) are never stored. The server entry
-//   hands over the HTML (`pageCacheWants`), and this module compresses it once per encoding off the request path.
+//   (search, an unlisted share list) and a title page without its related panel (`no-store`) are never stored. The
+//   server entry hands over the HTML (`pageCacheWants`), and this module compresses it once per encoding off the
+//   request path.
 // - Tracking parameters (`utm_*`, `fbclid`, ...) aren't part of the key, and the app never sees them on a request
 //   whose page may be stored, so that no visitor's click id ends up in a page for everyone. A redirect gets them back.
 // - One render per key: while the first render of a repeated URL runs, later requests wait for it (at most 3 seconds)
 //   instead of rendering. A URL that turned out not to be storable isn't waited for again (a pass period that
 //   doubles from 5 seconds to 5 minutes).
 // - Lifetime: from the response's own policy (`s-maxage`, `stale-while-revalidate`). A stale page is served while one
-//   background render refreshes it. A failed refresh keeps the stale page and pauses for 30 seconds.
+//   background render refreshes it. Lifetime and Age count from the render's start, including compression.
+//   A failed refresh keeps the page only until that deadline and pauses for 30 seconds.
 // - Bounds: bytes and entries, least recently used first. The admission counters are bounded too.
 // - Reset: `resetPageCache` reaches only this process. The data cache's reset markers (ADR 0006) don't reach a stored
-//   page: a page with a reset path needs a short lifetime or a reset log that every process reads.
+//   page, so a page with a reset path has a short lifetime: a share list page lives 10 + 10 seconds, which is what
+//   bounds an old page in the other process.
 // - Off switch: PAGE_CACHE=off.
 import { AsyncLocalStorage } from "node:async_hooks"
 import { createHash } from "node:crypto"
@@ -32,9 +35,9 @@ import { constants, brotliCompress, gunzip, gzip } from "node:zlib"
 import { gateAnswer } from "./browser-gate.server.ts"
 import {
 	type CacheDecision,
-	SHARED_PAGE_CACHE_CONTROL,
 	cacheIdentityOf,
 	hasAuthCookie,
+	pageLifetime,
 } from "./cache-identity.server.ts"
 import { isHealthPath, isShuttingDown, onShutdown } from "./lifecycle.server.ts"
 import { counter, gauge } from "./metrics/registry.server.ts"
@@ -251,11 +254,6 @@ const omitHeaders =
 	/^(content-length|content-encoding|transfer-encoding|connection|keep-alive|date|set-cookie|etag|vary|age|gw-page-cache)$/i
 const hopHeaders =
 	/^(connection|keep-alive|transfer-encoding|upgrade|te|trailer|proxy-.*|if-none-match|if-modified-since|range|content-length)$/i
-function seconds(policy: string, directive: string): number {
-	return Number(
-		new RegExp(`(?:^|,)\\s*${directive}=(\\d+)`, "i").exec(policy)?.[1] ?? 0,
-	)
-}
 function fromRequest(request: Request): KeyInput {
 	return {
 		method: request.method,
@@ -615,6 +613,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		status: number,
 		headers: Headers,
 		decision: CacheDecision,
+		routePolicy?: string | null,
 	) {
 		if (
 			!enabled() ||
@@ -668,14 +667,16 @@ export function createPageCache(options: PageCacheOptions = {}) {
 						if (!alive(flight) || draining()) return
 						const size = compressed.br.length + compressed.gzip.length + 1024
 						if (size > limits.MAX_ENTRY_BYTES) return refuse("too_large")
-						const storedAt = now()
-						const ownPolicy = snapshot.get("cache-control") ?? ""
-						const policy = /(?:^|,)\s*s-maxage=/i.test(ownPolicy)
-							? ownPolicy
-							: SHARED_PAGE_CACHE_CONTROL
+						const storedAt = flight.startedAt
+						const lifetime = pageLifetime(
+							/(?:^|,)\s*s-maxage=/i.test(routePolicy ?? "")
+								? routePolicy
+								: snapshot.get("cache-control"),
+						)
 						const freshUntil =
-							storedAt +
-							Math.min(seconds(policy, "s-maxage") * 1000, limits.MAX_FRESH_MS)
+							storedAt + Math.min(lifetime.fresh * 1000, limits.MAX_FRESH_MS)
+						const staleUntil = freshUntil + lifetime.stale * 1000
+						if (now() >= staleUntil) return refuse("expired")
 						const storedHeaders: HeadersObject = {}
 						for (const [name, value] of snapshot)
 							if (!omitHeaders.test(name)) storedHeaders[name] = value
@@ -700,8 +701,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 							route: routeLabel(page.path),
 							storedAt,
 							freshUntil,
-							staleUntil:
-								freshUntil + seconds(policy, "stale-while-revalidate") * 1000,
+							staleUntil,
 							br: variant(compressed.br, "br", "-br"),
 							gzip: variant(compressed.gzip, "gzip", "-gz"),
 							identityLength,

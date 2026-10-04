@@ -39,12 +39,13 @@ import {
 } from "~/ui/share-card/links"
 import { type CardTitle, THEMES, cardDate, listByline } from "~/ui/share-card/model"
 import { getUserIdFromRequest } from "~/utils/auth"
+import { SHARE_LIST_PAGE_CACHE_CONTROL } from "~/utils/auth-cookie"
 import { titleToDashed } from "~/utils/helpers"
 import type { SizeRule } from "~/utils/tmdb-image"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 import { countryFlagUrl } from "~/utils/country-flag"
 
-// Never cache the HTTP response. The data cache holds "not found" for a few minutes;
+// Never cache a 404 response. The data cache holds "not found" for at most 20 seconds;
 // every write that can bring a list back resets it.
 const notFound = () => new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } })
 
@@ -110,8 +111,15 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 				...shareCardPreviewSize(design),
 			},
 		},
-		// Lists are live: after an edit, the page (and its og:image URL) must change right away, so no shared caching.
-		{ headers: { "Cache-Control": "private, no-store" } },
+		// Only anonymous public views share the short lifetime. Members and hidden lists stay private.
+		{
+			headers: {
+				"Cache-Control":
+					list.visibility === "public" && viewerId == null
+						? SHARE_LIST_PAGE_CACHE_CONTROL
+						: "private, no-store",
+			},
+		},
 	)
 }
 

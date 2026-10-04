@@ -392,7 +392,7 @@ test("stale data is served before a delete, never after its reset", async () => 
 	const entry = JSON.parse(redis.values.get(keyOf()) ?? "")
 	redis.values.set(
 		keyOf(),
-		serializeCacheEntry(entry.data, Date.now() - 6 * 60_000),
+		serializeCacheEntry(entry.data, Date.now() - 11_000),
 	)
 	assert.deepEqual(await getListView(id), original)
 	assert.match(renderMetrics(), /cache="share-list-view-v1",result="stale"\} 1/)
@@ -634,3 +634,59 @@ test("failed owner lookup preserves list reset; failed handle lookup preserves b
 	await resetProfileViews(user)
 	assert.equal(redis.values.has(profileKey()), false)
 })
+
+test("view lifetime is 10 seconds fresh and 20 seconds physical", async (t) => {
+	t.mock.timers.enable({ apis: ["Date"], now: Date.now() })
+	await getListView(id)
+	assert.equal(redis.writes.find((write) => write.key === keyOf())?.ttl, 20)
+	t.mock.timers.tick(9999)
+	await getListView(id)
+	assert.match(renderMetrics(), /cache="share-list-view-v1",result="hit"\} 1/)
+	t.mock.timers.tick(2)
+	await getListView(id)
+	assert.match(renderMetrics(), /cache="share-list-view-v1",result="stale"\} 1/)
+	await tick()
+	await resetListView(id)
+	assert.equal(
+		redis.calls.find(
+			(call) => call.command === "gwCacheReset" && call.args[0] === keyOf(),
+		)?.args[3],
+		320,
+	)
+})
+
+for (const confirmed of [false, true])
+	test(`list reset drops a page stored during the data reset: confirmed=${confirmed}`, async (t) => {
+		const reset = redis.gwCacheReset.bind(redis)
+		redis.failDelete = !confirmed
+		t.mock.method(
+			redis,
+			"gwCacheReset",
+			async (...args: Parameters<typeof reset>) => {
+				if (args[0] === keyOf()) {
+					const variant = { body: Buffer.from("old"), etag: "old", headers: {} }
+					pageCache.entries.set("during-reset", {
+						key: "during-reset",
+						path: `/u/filmfan/lists/${id}`,
+						route: "list",
+						storedAt: 0,
+						freshUntil: 10_000,
+						staleUntil: 20_000,
+						br: variant,
+						gzip: variant,
+						identityLength: 3,
+						identityEtag: "old",
+						headers: {},
+						bytes: 0,
+					})
+				}
+				return reset(...args)
+			},
+		)
+		try {
+			await resetListView(id)
+			assert.equal(pageCache.entries.has("during-reset"), false)
+		} finally {
+			resetPageCache()
+		}
+	})

@@ -61,8 +61,15 @@ export default function handleRequest(
 		const send = () => {
 			shellRendered = true
 			responseHeaders.set("Content-Type", "text/html")
+			const routePolicy = responseHeaders.get("Cache-Control")
 			const decision = applyCachePolicy(request, status, responseHeaders)
-			const offer = pageCacheWants(request, status, responseHeaders, decision)
+			const offer = pageCacheWants(
+				request,
+				status,
+				responseHeaders,
+				decision,
+				routePolicy,
+			)
 			const body = new HtmlStream(
 				offer
 					? (html) => {

@@ -20,6 +20,7 @@ import {
 	SHARED_PAGE_CACHE_CONTROL,
 	applyCachePolicy,
 } from "./cache-identity.server.ts"
+import { SHARE_LIST_PAGE_CACHE_CONTROL } from "../utils/auth-cookie.ts"
 import { HtmlStream } from "./html-stream.server.ts"
 import {
 	renderMetrics,
@@ -101,7 +102,13 @@ async function fixture(t: TestContext, options: PageCacheOptions = {}) {
 		if (app.cookie) outgoing.set("Set-Cookie", "foo=bar")
 		if (app.location) response.setHeader("Location", app.location)
 		const decision = applyCachePolicy(request, app.status, outgoing)
-		const offer = cache.wants(request, app.status, outgoing, decision)
+		const offer = cache.wants(
+			request,
+			app.status,
+			outgoing,
+			decision,
+			app.policy,
+		)
 		if (!app.errored) offer?.(body)
 		response.writeHead(app.status, Object.fromEntries(outgoing))
 		response.end(incoming.method === "HEAD" ? undefined : body)
@@ -925,4 +932,113 @@ test("HtmlStream completion contains every pass and never runs for a destroyed s
 	stream.destroy()
 	await tick()
 	assert.equal(completed, false)
+})
+
+for (const shared of [false, true]) {
+	for (const refresh of ["error", "private", "404"] as const) {
+		test(`share list lifetime starts before rendering: shared=${shared}, refresh=${refresh}`, async (t) => {
+			let now = 0
+			let renders = 0
+			const gate = deferred()
+			const f = await fixture(t, {
+				now: () => now,
+				compress: async (html) => {
+					now += 2000
+					return { br: brotliCompressSync(html), gzip: gzipSync(html) }
+				},
+				render: async (request) => {
+					renders++
+					await gate.promise
+					if (refresh === "error") throw new Error("failed refresh")
+					const status = refresh === "404" ? 404 : 200
+					const headers = new Headers({ "Cache-Control": "private, no-store" })
+					assert.equal(
+						f.cache.wants(
+							request,
+							status,
+							headers,
+							applyCachePolicy(request, status, headers),
+						),
+						null,
+					)
+					return { status }
+				},
+			})
+			const path = "/u/filmfan/lists/AbCd012345"
+			const headers: Record<string, string> = shared
+				? { "gw-cache-identity": "anon;US;en" }
+				: {}
+			f.app.policy = SHARE_LIST_PAGE_CACHE_CONTROL
+			await f.get(path, headers)
+			await until(() => f.cache.stats().flights === 0)
+			const renderGate = deferred()
+			f.app.delay = renderGate.promise
+			const pending = f.get(path, headers)
+			await until(() => f.app.calls === 2)
+			now = 3000
+			renderGate.resolve()
+			await pending
+			await until(() => f.cache.stats().flights === 0)
+			const entry = [...f.cache.entries.values()][0]
+			assert.equal(entry.storedAt, 0)
+			assert.equal(entry.freshUntil, 10_000)
+			assert.equal(entry.staleUntil, 20_000)
+			assert.equal((await f.get(path, headers)).headers.age, "5")
+			now = 9999
+			assert.equal((await f.get(path, headers)).headers["gw-page-cache"], "hit")
+			const cookie = `sb-${new URL(process.env.SUPABASE_URL ?? "https://test.supabase.co").hostname.split(".")[0]}-auth-token=x`
+			assert.equal(
+				(await f.get(path, { ...headers, cookie })).headers["gw-page-cache"],
+				"bypass",
+			)
+			now = 10_000
+			for (let i = 0; i < 3; i++)
+				assert.equal(
+					(await f.get(path, headers)).headers["gw-page-cache"],
+					"stale",
+				)
+			assert.equal(renders, 1)
+			gate.resolve()
+			await until(() => f.cache.stats().flights === 0)
+			if (refresh === "404") assert.equal(f.cache.stats().entries, 0)
+			else {
+				now = 19_999
+				assert.equal(
+					(await f.get(path, headers)).headers["gw-page-cache"],
+					"stale",
+				)
+				assert.equal(renders, 1)
+			}
+			f.app.policy = "private, no-store"
+			now = 20_000
+			for (const time of [20_000, 21_000]) {
+				now = time
+				assert.equal(
+					(await f.get(path, headers)).headers["gw-page-cache"],
+					"miss",
+				)
+				await until(() => f.cache.stats().flights === 0)
+				assert.equal(f.cache.stats().entries, 0)
+			}
+		})
+	}
+}
+
+test("compression that reaches the lifetime end refuses storage as expired", async (t) => {
+	resetMetricsForTest()
+	let now = 0
+	const f = await fixture(t, {
+		now: () => now,
+		compress: async (html) => {
+			now = 20_000
+			return { br: brotliCompressSync(html), gzip: gzipSync(html) }
+		},
+	})
+	f.app.policy = SHARE_LIST_PAGE_CACHE_CONTROL
+	await f.warm()
+	assert.equal(f.cache.stats().entries, 0)
+	assert.match(
+		renderMetrics(),
+		/goodwatch_page_cache_not_stored_total\{route="page",reason="expired"\} 1/,
+	)
 })

@@ -134,6 +134,29 @@ export function cacheIdentityOf({
 	return identity
 }
 
+// Routes can shorten either lifetime, but cannot exceed the shared defaults.
+export function pageLifetime(policy?: string | null) {
+	const seconds = (value: string, directive: string) => {
+		const match = new RegExp(
+			`(?:^|,)\\s*${directive}=(\\d+)\\s*(?:,|$)`,
+			"i",
+		).exec(value)
+		return match ? Number(match[1]) : undefined
+	}
+	const fresh = seconds(SHARED_PAGE_CACHE_CONTROL, "s-maxage")!
+	const stale = seconds(SHARED_PAGE_CACHE_CONTROL, "stale-while-revalidate")!
+	const routeFresh = seconds(policy ?? "", "s-maxage")
+	return routeFresh === undefined
+		? { fresh, stale }
+		: {
+				fresh: Math.min(routeFresh, fresh),
+				stale: Math.min(
+					seconds(policy ?? "", "stale-while-revalidate") ?? 0,
+					stale,
+				),
+			}
+}
+
 export type CacheDecision = "shared" | "keyed" | "private" | "unset"
 /** Keyed responses can be stored by the in-process cache under URL + identity. */
 export function applyCachePolicy(
@@ -161,11 +184,14 @@ export function applyCachePolicy(
 		return "private"
 	}
 	if (policy === null) return "unset"
+	const lifetime = pageLifetime(policy)
+	const sharedPolicy =
+		lifetime.fresh < pageLifetime().fresh
+			? `public, max-age=0, s-maxage=${lifetime.fresh}${lifetime.stale ? `, stale-while-revalidate=${lifetime.stale}` : ""}`
+			: SHARED_PAGE_CACHE_CONTROL
 	headers.set(
 		"Cache-Control",
-		identity.keyFromCache
-			? SHARED_PAGE_CACHE_CONTROL
-			: KEYED_PAGE_CACHE_CONTROL,
+		identity.keyFromCache ? sharedPolicy : KEYED_PAGE_CACHE_CONTROL,
 	)
 	headers.set(
 		"Vary",

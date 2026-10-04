@@ -90,7 +90,7 @@ A response is stored only when all of these hold:
 | --- | --- |
 | The request has no auth cookie | `cacheIdentity`, before any lookup. A member's request never reaches the store, the counters, or a waiting line. |
 | GET, status 200, `text/html` document | The server entry offers only a document render. `pageCacheWants` refuses any other method or status. |
-| The applied policy is `keyed` or `shared` | The server entry passes the result of `applyCachePolicy`. A route that says `private` or `no-store` is never offered: share list pages, search, settings. |
+| The applied policy is `keyed` or `shared` | The server entry passes the result of `applyCachePolicy`. A route that says `private` or `no-store` is never offered: hidden share lists, member views, search, settings. |
 | No `Set-Cookie` | `applyCachePolicy` makes such a response private, and `pageCacheWants` checks again. |
 | No render error | The server entry drops the offer when React reported an error or the abort timer fired. |
 | The gate wouldn't answer the request | `gateAnswer`, before any lookup and again when the render is offered. |
@@ -102,8 +102,8 @@ A response is stored only when all of these hold:
   When the lookup runs out of time or fails, the page has no embedded panel. The loader then answers
   `Cache-Control: no-store`, which the page headers turn into `private, no-store`. The page cache and a cache in front
   both follow it. The lookup keeps running and fills the data cache, so the next render is complete.
-- **Share list pages** send `private, no-store` today, so they aren't stored. The cache follows the page's own
-  `Cache-Control`: when the owner makes them cacheable, it stores them without a code change.
+- **Share list pages** are stored only for anonymous visitors to a public list. Their lifetime is 10 seconds fresh
+  and 10 more seconds stale. Hidden lists and member views send `private, no-store`.
 - **The stored bytes:** the HTML compressed once with Brotli (quality 5) and once with gzip (level 6), on the thread
   pool, after the response of the render. The uncompressed HTML isn't kept. A client that accepts neither encoding
   gets the gzip copy decompressed on the thread pool.
@@ -117,13 +117,16 @@ A response is stored only when all of these hold:
   waits for it, up to 3 seconds, and is answered from the store when the render is stored. A cold URL that 500
   clients ask for at once renders once.
 - If the render turns out not to be storable, the waiting requests go to the app, and the key gets a pass period:
-  nobody waits for that key for 5 seconds, doubling up to 5 minutes each time it fails again. A share list page under
-  load costs one probe per pass period and no waiting.
+  nobody waits for that key for 5 seconds, doubling up to 5 minutes each time it fails again. A hidden share list page
+  under load costs one probe per pass period and no waiting. A public list shares one render per key.
 - At most 1,000 renders are tracked and at most 2,000 requests wait. Beyond that, requests go to the app.
 
 ## Lifetime
 
-The cache follows the response's own policy, `s-maxage=1800, stale-while-revalidate=7200`:
+The default policy is `s-maxage=1800, stale-while-revalidate=7200`. A route can shorten its lifetime, including for
+keyed pages whose final HTTP policy is private. Neither lifetime can exceed the defaults. Lifetime and `Age` count
+from the start of the render request, including loader, render, and compression time. A render that finishes at or
+after its stale deadline is not stored. The defaults give:
 
 - **Fresh for 30 minutes.**
 - **Stale for 2 more hours:** the stored page is served, and one background render per key refreshes it. At most two
@@ -152,15 +155,50 @@ recently used page goes first. The process holds about 2.2 GB today, against a p
 
 - `resetPageCache(match)` deletes every stored page whose path matches, for all hosts, identities, and query strings,
   and stops renders in flight for those paths from storing.
-- `resetListView` calls it for `/u/<handle>/lists/<id>`, so a share list write clears the list's page as soon as share
-  list pages are cacheable.
+- `resetListView` calls it for `/u/<handle>/lists/<id>` before and after the data reset. The first call cancels
+  in-flight renders early. The second removes any page built while the old data was still readable.
 - A reset reaches only its own process. With two instances, the other instance keeps its copy until the lifetime
   ends. The data cache's reset markers ([ADR 0006](adr/0006-reset-markers-for-the-data-cache.md)) make the data
   under a page correct in every process, but a stored page can't check a marker without a network read per hit.
-- No page that is stored today has a reset path, so this costs nothing yet. Before share list pages become
-  cacheable, they need one of two things: a short `s-maxage` of their own (the page cache follows it), or a reset
-  that reaches every process, for example a reset log in Valkey that each process reads every few seconds.
+- For share list pages, the 10 + 10 second lifetime bounds the old page in the other process. The reset clears only
+  the writing process. There is no reset log or pub/sub.
 - A deploy and a feature flag change restart the process, which empties the cache.
+
+## Share list pages
+
+The owner accepts at most 60 seconds of old anonymous HTML after an edit, hide, or delete, across all cache layers
+and both webapp processes. Lifetimes provide the bound even when a reset is lost:
+
+- **Layers:** each process has a page cache with 10 seconds fresh and 10 seconds stale, counted from the render's
+  start. The view data cache in Valkey is shared by all processes, with 10 seconds fresh and 10 seconds stale.
+  It has no in-process copy: every lookup reads Valkey. Crate supplies the rows.
+- **Confirmed reset:** after `REFRESH TABLE`, the reset script deletes the value and writes a marker in one step in
+  Valkey. Every subsequent lookup in every process misses the old value and reads Crate, or a new value read from
+  Crate. A run that started before the reset cannot store because of the marker check, and later lookups cannot join
+  it. A render that starts after the reset is correct in every process. The last old page leaves a store at most
+  20 seconds after the reset. The writing process drops its pages at once.
+- **Without a reset:** if Valkey did not confirm and the process exited, a timed-out write landed later, or someone
+  changed rows by hand, the data is at most 20 seconds old plus the Crate read time. The page adds at most 20 seconds.
+  The bound is **40 seconds plus the read time**. The 60-second target therefore leaves 20 seconds for that read.
+- **Hidden and deleted lists:** an unlisted list answers `private, no-store` and is never stored. A deleted list
+  answers 404 and is never stored. A background refresh that gets a 404 or redirect deletes the stored page.
+  A refresh that gets a private 200 keeps the previously public stale page only until its 20-second deadline.
+- **Members:** the owner and other members bypass the page cache and read the data cache, which the reset emptied.
+  The owner sees the edit at once.
+- **A cache in front:** it must honor `s-maxage=10, stale-while-revalidate=10` and the `Age` sent by the in-process
+  cache. It then adds nothing beyond its own revalidation time. It is inside the 60-second target only if it counts
+  `Age` and the read and revalidation times fit the remaining budget. No `stale-if-error` extends this lifetime.
+
+Measured with two processes on one Valkey and requests every 0.1 seconds, three rounds each (see "Share list pages"
+in [viral-spike-page-cache.md](benchmarks/viral-spike-page-cache.md)):
+
+| Case | A member's request to either process | Last old anonymous page, either process |
+| --- | --- | --- |
+| The reset script runs | New page 0.1 seconds after the reset | 3.7 to 7.8 seconds after the reset |
+| No reset | Old page until the data runs out | 23.7 to 27.3 seconds after the edit |
+
+The reset reaches the other process with its next lookup, because the value is gone from Valkey. Under steady
+traffic a stored page is replaced when its 10 fresh seconds end, so the old page leaves earlier than the bound.
 
 ## How to turn it off
 
@@ -190,6 +228,6 @@ and the Node process about 0.5 ms. A cache in front must follow [cache-identity.
   the same for all of them.
 - Not store a response with `GW-Page-Cache: bypass`: it's a member's page or the gate's answer, and both say
   `private, no-store` anyway.
-- Expect `Age` on a response from the in-process cache. The front cache's own fresh time starts when it stores the
-  response, so a page can be up to 30 minutes older than the front cache thinks. Subtract `Age` if that matters.
+- Honor `Age` on a response from the in-process cache. Subtract it from the remaining lifetime instead of starting
+  a new lifetime when the response arrives. Share list pages depend on this to stay within their staleness bound.
 - Purge its own copies. `resetPageCache` doesn't reach it.
