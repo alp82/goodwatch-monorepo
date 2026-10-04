@@ -4,39 +4,37 @@ x-logging: &default-logging
     max-size: "100m"
     max-file: "10"
 
+# One Valkey cluster node. main/ runs on cache1 and replica/ on cache2 and cache3.
+# All three are masters: the directory and service names are historical and set the
+# Compose project, container, and volume names, so they stay.
+# Keep this file identical in main/ and replica/ except for the service name.
+# Nothing here creates or resets a cluster: the node reads nodes.conf from its volume.
 services:
   redis-main:
-    image: docker.io/bitnami/redis-cluster:7.2
+    image: valkey/valkey:8.1.10@sha256:640c5e62cea04b6d6f2084232651d0cc70362d31f4f805e7be94dbed6855e8f2
     restart: unless-stopped
+    # The data volume was written by the Bitnami image as user 1001, group 0.
+    user: "1001:0"
+    # A shutdown writes an RDB file first (about 30 seconds for 5 GB).
+    stop_grace_period: 5m
     volumes:
-      - redis-data:/bitnami/redis/data
+      - redis-data:/data
+      - ../valkey.conf:/etc/valkey/valkey.conf:ro
     network_mode: host
     environment:
-      - 'REDIS_NODES=10.0.0.14 10.0.0.15 10.0.0.16'
-      - 'REDIS_CLUSTER_DYNAMIC_IPS=no'
-      - 'REDIS_CLUSTER_ANNOUNCE_IP=${REDIS_PRIVATE_IP:?Set the node private address (10.0.0.14-16)}'
-      - 'REDIS_PASSWORD=${REDIS_PASSWORD}'
-      - 'REDISCLI_AUTH=${REDIS_PASSWORD}'
-      - 'REDIS_CLUSTER_REPLICAS=0'
-      - 'REDIS_CLUSTER_CREATOR=yes'
+      - 'REDIS_PRIVATE_IP=${REDIS_PRIVATE_IP:?Set the node private address (10.0.0.14-16)}'
+      - 'REDIS_PASSWORD=${REDIS_PASSWORD:?Set the cluster password}'
     logging: *default-logging
+    # The shell reads the address and the password from the container's environment
+    # ($$ keeps Compose from expanding them), so the password isn't in the command.
     command:
-      - /opt/bitnami/scripts/redis-cluster/run.sh
-      - --cluster-announce-ip
-      - "${REDIS_PRIVATE_IP:?Set the node private address (10.0.0.14-16)}"
-      - --cluster-announce-port
-      - "6379"
-      - --cluster-announce-bus-port
-      - "16379"
-      # Decided settings: docs/adr/0003-redis-cluster-of-masters-with-volatile-lfu.md.
-      # This image ignores REDIS_EXTRA_FLAGS, so they are passed as arguments.
-      # Keep these lines identical in main/ and replica/.
-      - --maxmemory
-      - 7gb
-      - --maxmemory-policy
-      - volatile-lfu
-      - --cluster-require-full-coverage
-      - "no"
+      - sh
+      - -c
+      - >-
+        exec valkey-server /etc/valkey/valkey.conf
+        --cluster-announce-ip "$$REDIS_PRIVATE_IP"
+        --requirepass "$$REDIS_PASSWORD"
+        --masterauth "$$REDIS_PASSWORD"
 
 volumes:
   redis-data:

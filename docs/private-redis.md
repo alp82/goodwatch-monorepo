@@ -2,7 +2,7 @@
 
 ## Inventory and ownership
 
-The Redis 7.2.4 cluster runs on `10.0.0.14`, `.15` and `.16`, with three masters, no replicas, and all 16,384 slots assigned. The historical `replica` directory/service names on `.15/.16` do not describe their actual roles. Each node uses host networking and the existing Bitnami 7.2 image, with AOF and `nodes.conf` in its named `/bitnami/redis/data` volume. Required ports are TCP 6379 for authenticated clients and TCP 16379 for the cluster bus; 16380/16381 are unused.
+The cache cluster runs on `10.0.0.14`, `.15` and `.16` (cache1 to cache3), with three masters, no replicas, and all 16,384 slots assigned. Since October 4, 2026, the software is Valkey 8.1 from the official `valkey/valkey` image ([ADR 0004](adr/0004-valkey-8-from-the-official-image.md)). Before that it was Redis 7.2.4 from `bitnami/redis-cluster:7.2`, and the firewall sections below describe the rollout on that image. The historical `replica` directory/service names on `.15/.16` do not describe their actual roles. Each node uses host networking, with the append-only file, `dump.rdb` and `nodes.conf` in its named data volume. Required ports are TCP 6379 for authenticated clients and TCP 16379 for the cluster bus; 16380/16381 are unused. Clients don't change: the webapp (`ioredis`) and the Windmill scripts (`redis-py`) connect as before, and the variable and resource names still say Redis.
 
 Before rollout, bootstrap variables were private but `CLUSTER NODES`/`CLUSTER SLOTS` advertised public addresses `78.46.209.172`, `168.119.242.21` and `91.107.208.205`. Actual frontend connections from `159.69.247.66` and inter-node bus sockets used public addresses. The application bootstrap addresses are already `10.0.0.14–16`; changing those alone cannot fix discovery.
 
@@ -17,11 +17,11 @@ Decision: [ADR 0003](adr/0003-redis-cluster-of-masters-with-volatile-lfu.md). Al
 | `maxmemory` | `7gb` (7,516,192,768 bytes) | The hosts have 15.6 GB and no swap, and the Windmill worker on each host can use 4 GiB. |
 | `maxmemory-policy` | `volatile-lfu` | At the limit, Redis evicts the least frequently used keys that have an expiry. Keys without an expiry stay. |
 | `cluster-require-full-coverage` | `no` | A failed node no longer stops the other two. |
-| `appendonly` | `yes` (the image's default, `appendfsync everysec`) | A restarted node loads its data again. |
+| `appendonly` | `yes`, with `appendfsync everysec` | A restarted node loads its data again. |
 
-The settings are `command` arguments in `goodwatch-cache/main/docker-compose.yml` (cache1) and `goodwatch-cache/replica/docker-compose.yml` (cache2 and cache3). Keep those lines identical in both files. `REDIS_EXTRA_FLAGS` doesn't work: the `run.sh` of this `bitnami/redis-cluster:7.2` image never reads the variable. The earlier `--maxmemory 6000mb --maxmemory-policy allkeys-lfu` in the `main` file therefore never took effect, and all three nodes ran without a limit.
+The settings are in `goodwatch-cache/valkey.conf`, one file for all three nodes. [Software and configuration](#software-and-configuration) describes how a node reads it.
 
-A container gets the arguments only when it's recreated. `CONFIG SET` changes a running node at once, but Redis runs without a config file, so `CONFIG REWRITE` fails and a plain `docker restart` returns to the arguments the container was created with. To see what a container starts with, run `docker inspect <container> --format '{{json .Config.Cmd}}'`.
+A container reads the file only when it starts. `CONFIG SET` changes a running node at once, but it doesn't change the file: the mount is read-only, so `CONFIG REWRITE` fails on purpose. To see what a node runs with, use `CONFIG GET <setting>`. `INFO server` shows `config_file:/etc/valkey/valkey.conf`.
 
 ### When a node fails
 
@@ -43,12 +43,103 @@ To repeat the measurement, compare `keys` and `expires` in `INFO keyspace`: the 
 ### Change the limit
 
 1. On each node: `CONFIG SET maxmemory <value>`. This takes effect at once and needs no restart.
-2. Change `--maxmemory` in both Compose files, merge to `main`, and check out the two files on each host.
-3. Recreate one container at a time with the procedure in the next section, or leave it for the next planned recreation. Until then, a restart of that container returns to its old value.
+2. Change `maxmemory` in `goodwatch-cache/valkey.conf`, merge to `main`, and check out the file on each host.
+3. Restart one container at a time with the procedure in [Recreate a node](#recreate-a-node), or leave it for the next planned restart. Until then, a restart of that container returns to the value in the file it started with.
 
 Keep the limit plus 4 GiB for the Windmill worker plus about 4 GiB of headroom under the host's 15.6 GB. A background save or an append-only-file rewrite forks the process. The hosts run with `vm.overcommit_memory=1` and transparent huge pages in `madvise` mode, so the fork doesn't fail, and it copies only the pages that change during the save (8 to 13 MB in the measured saves).
 
+## Software and configuration
+
+Decision: [ADR 0004](adr/0004-valkey-8-from-the-official-image.md).
+
+| Part | Value |
+|---|---|
+| Image | `valkey/valkey:8.1.10@sha256:640c5e62cea04b6d6f2084232651d0cc70362d31f4f805e7be94dbed6855e8f2`, pinned in both Compose files |
+| Compose files | `goodwatch-cache/main/docker-compose.yml` (cache1) and `goodwatch-cache/replica/docker-compose.yml` (cache2 and cache3). They differ only in the service name. |
+| Config file | `goodwatch-cache/valkey.conf`, shared by all nodes, mounted read-only at `/etc/valkey/valkey.conf` |
+| Per-node values | `REDIS_PRIVATE_IP` and `REDIS_PASSWORD` in the root-only `.env` file next to each Compose file on the host. Never commit them. |
+| Data volume | `main_redis-data` (cache1) or `replica_redis-data` (cache2 and cache3), mounted at `/data`: `appendonlydir/`, `dump.rdb`, `nodes.conf` |
+| User | `1001:0`, the owner of the data files since the Bitnami image |
+| Containers | `main-redis-main-1` (cache1), `replica-redis-replica-1` (cache2 and cache3) |
+
+The Compose command starts a shell that runs `valkey-server /etc/valkey/valkey.conf` and adds `--cluster-announce-ip`, `--requirepass`, and `--masterauth` from the container's environment. The password is in the container's environment, as it was before, and not in its command, the config file, or the repository. `tini` is process 1 and forwards the stop signal, so `docker stop` shuts Valkey down cleanly.
+
+Nothing in the image or the Compose files creates or resets a cluster. A node reads its identity and slots from `nodes.conf` in its volume. A container that starts on an empty volume is a blank node that owns no slots and knows no other node.
+
+To run a command on a node without printing the password:
+
+```sh
+docker exec replica-redis-replica-1 sh -c 'REDISCLI_AUTH="$REDIS_PASSWORD" valkey-cli CLUSTER INFO'
+```
+
+`INFO server` reports `valkey_version:8.1.10` and, for compatibility with clients, `redis_version:7.2.4`.
+
+## Recreate a node
+
+Use this after a change to `valkey.conf`, a Compose file, or the image. One node at a time. With no replicas, the node's slots are unavailable while it's down, and the webapp answers those lookups from the databases. A node with 5.4 GB of data takes about one minute: the shutdown writes an RDB file, and the start loads the append-only file.
+
+1. Check first:
+   - No webapp deploy is running. A webapp that starts while a node is down has no title snapshot until the node is back.
+   - `cluster_state:ok` on all three nodes, and no node is flagged `fail` in `CLUSTER NODES`.
+   - On the node: `aof_last_write_status:ok`, `aof_rewrite_in_progress:0`, and `rdb_bgsave_in_progress:0` in `INFO persistence`.
+   - Note the node ID, the slots, and the key count (`INFO keyspace`).
+2. Get the files. The host checkouts have local changes, so check out single files and never pull:
+
+   ```sh
+   cd /root/goodwatch/goodwatch-monorepo
+   git fetch origin main
+   git checkout FETCH_HEAD -- goodwatch-cache/valkey.conf goodwatch-cache/replica/docker-compose.yml   # main/ on cache1
+   ```
+
+3. For a new image, pull it before the node goes down: `docker compose pull` in the Compose directory.
+4. Stop the node cleanly, then recreate it:
+
+   ```sh
+   cd /root/goodwatch/goodwatch-monorepo/goodwatch-cache/replica   # main on cache1
+   docker stop --timeout=-1 replica-redis-replica-1                 # main-redis-main-1 on cache1
+   docker compose up -d --no-deps --pull never --no-build --force-recreate redis-replica   # redis-main on cache1
+   ```
+
+5. Wait until `PING` answers `PONG` instead of `LOADING`. Then check the version, the node ID, the slots, the key count, the settings (`CONFIG GET maxmemory`, `maxmemory-policy`, `cluster-require-full-coverage`), and `cluster_state:ok` on all three nodes. The other nodes clear the `fail` flag of the returned node some seconds later.
+6. On abio, check that the webapp's lookup errors stop rising:
+
+   ```sh
+   docker run --rm --network coolify busybox:1.37-musl wget -qO- http://goodwatch-webapp:9464/metrics | grep goodwatch_data_cache
+   ```
+
+A change to `valkey.conf` alone needs only `docker restart --timeout=-1 <container>` after the checkout, because the file is read at start. `git checkout` replaces the file, and a running container keeps seeing the old one until it restarts.
+
+Never run `FLUSHALL`, `CLUSTER RESET`, or `CLUSTER FORGET`, and never remove a data volume or `nodes.conf`.
+
+## Roll back to the Bitnami image
+
+Redis 7.2.4 reads data that Valkey 8.1 has written. Valkey 8.1 writes the same RDB version (11), append-only format, and `nodes.conf` format. A rehearsal on October 4, 2026, proved it: a node went from Redis 7.2.4 to Valkey 8.1.10, rewrote its append-only file and its RDB file, and went back to Redis 7.2.4 on the same volume with its ID, slots, and all keys. A later Valkey major version can change the formats, so rehearse again before relying on this after an upgrade.
+
+The Bitnami image can't be pulled any more. Each cache host keeps a local copy (`bitnami/redis-cluster:7.2`, image ID `35f5a97548f3`). Don't remove it while this way back matters. `docker save` and `docker load` copy it to another host.
+
+To take one node back:
+
+1. Restore the Compose file from before the move: `/root/.gw288/docker-compose.yml.before-288` on each host, or the file from commit `0f77e98e`. It mounts the same volume at `/bitnami/redis/data`.
+2. `docker stop --timeout=-1 <container>`, then the `docker compose up` command from the section above.
+3. Verify as in step 5 above.
+
+A mixed cluster works: Redis 7.2.4 and Valkey 8.1.10 nodes gossip with each other, so one node can go back alone.
+
+### Volume copies from the move
+
+Each host has a copy of its data volume, taken on October 4, 2026, after the clean shutdown of Redis 7.2.4 and before the first start of Valkey:
+
+```
+/root/.gw288/volume-copy-before-valkey/
+```
+
+The copy holds `appendonlydir/`, `dump.rdb`, and `nodes.conf` with their owners (3.4 to 4.5 GB per host). It's a second way back if the volume itself is damaged: stop the container, replace the volume's content (`/var/lib/docker/volumes/<volume>/_data`) with the copy, and start the Bitnami container. The data in the copy is as old as the move, so most cache entries in it are expired after a few days.
+
+Delete the copies once all three nodes have run Valkey for a day without problems, on or after October 6, 2026: `rm -rf /root/.gw288/volume-copy-before-valkey` on each host.
+
 ## Persistent topology
+
+This section and the next two record the private-address and firewall rollout of September 2026, on the Bitnami image. The addresses, ports, and firewall rules are still current. The Bitnami environment variables and the recreation command are not: use [Recreate a node](#recreate-a-node).
 
 The owning `goodwatch-cache/main` and `replica` Compose files set private `REDIS_NODES`, disable automatic IP rewriting with `REDIS_CLUSTER_DYNAMIC_IPS=no`, and require the host's `REDIS_PRIVATE_IP`. Both Bitnami's announce environment and the actual Redis command-line argument use that address, with explicit client/bus ports 6379/16379. Ignored host-network port mappings, including unused ports, are removed.
 

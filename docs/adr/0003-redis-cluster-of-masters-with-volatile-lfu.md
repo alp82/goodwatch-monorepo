@@ -32,8 +32,10 @@ would have failed every write, and one failed node stopped all three.
   keys without an expiry used about 30 MB per node. [Private Redis](../private-redis.md) has the measurement.
 - When a node reaches the limit, Redis evicts the least frequently used cache entries. `evicted_keys` above zero is
   normal from now on. A node that stays at the limit is the signal to add a node or raise the limit.
-- The Bitnami image ignores `REDIS_EXTRA_FLAGS`, and Redis runs without a config file, so `CONFIG REWRITE` fails. The
-  settings live in the `command` of both Compose files and take effect only when a container is recreated.
+- The settings live in `goodwatch-cache/valkey.conf` since the move to Valkey 8
+  ([ADR 0004](0004-valkey-8-from-the-official-image.md)) and take effect when a container starts. Before that, they
+  were `command` arguments in both Compose files, because the Bitnami image ignored `REDIS_EXTRA_FLAGS` and ran Redis
+  without a config file.
 - If the Windmill workers move off the cache hosts, the limit can go to about 10 GiB per node.
 
 Evidence: [Redis topology research](https://github.com/alp82/goodwatch-monorepo/blob/research/redis-topology/docs/research/viral-spike/redis-topology.md)

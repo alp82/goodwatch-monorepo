@@ -65,11 +65,8 @@ Running the whole infrastructure to run GoodWatch is more complex. The guide bel
 
 ### Cache Cluster
 
-https://github.com/bitnami/containers/blob/main/bitnami/redis/README.md
-
-```
-redis-cli --cluster create 78.46.209.172:6379 168.119.242.21:6379 91.107.208.205:6379 --cluster-replicas 0 -a <REDIS_PASSWORD>
-```
+Three Valkey 8 nodes in cluster mode, from the Compose files in `goodwatch-cache/`. See
+[docs/private-redis.md](docs/private-redis.md) for the configuration and the procedures.
 
 ### Data Pipeline DB Cluster
 
