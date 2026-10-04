@@ -12,6 +12,9 @@ traffic spike" map. The cache is described in [page-cache.md](../page-cache.md).
   20 per second and fails at 22.
 - **The benchmark's hot mix holds 400 requests per second** (25 before). Share list pages are private and still
   rendered, and OG images take the other threads: they set the new limit.
+- **With share list pages in the cache, the hot mix holds 2,000 requests per second** and fails at 2,500. An old
+  share list page leaves both processes within 8 seconds of a reset, and within 28 seconds without one. See
+  [Share list pages](#share-list-pages).
 - **Analytics cookies, tracking parameters, and several languages don't defeat it.**
 - **A long-tail crawl next to a hot URL stores nothing** and doesn't evict the hot page.
 - **After a deploy, a hot URL renders once per process.** The first stored answer leaves 0.35 seconds after the first
@@ -115,6 +118,87 @@ page, a show, a person, Discover, and 6% OG images. A link-preview bot sends 10%
   threads (OG image rendering and compression) take 1.5 cores of a host that also runs the load generator.
 - The cache held 5 pages and 373 KB.
 
+## Share list pages
+
+Measured later on October 4, 2026, for the ticket "Design public caching and purge for share list pages". The
+anonymous page of a public list now lives 10 seconds fresh and 10 more seconds stale in the page cache. The design
+and the proof of its staleness bound are in [page-cache.md](../page-cache.md#share-list-pages).
+
+Conditions as above, with these differences: "before" is `origin/main` at `13509b73`, "after" is that commit plus the
+change, both built on the host from the Dockerfile. Share cards come from Valkey as JPEG since the ticket "Serve Open
+Graph cards from a cache and render them off the main thread", so the other threads are almost idle in both builds.
+
+### The hot mix
+
+30 seconds per step, after a warm-up of 20 seconds each at 20 and 50 per second.
+
+| Rate | Before: page p95 | Before: main thread | Before: dropped | After: page p95 | After: main thread | After: dropped |
+| --- | --- | --- | --- | --- | --- | --- |
+| 100/s | 23 ms | 30% | 0 | 2.0 ms | 17% | 0 |
+| 300/s | 27 ms | 65% | 0 | 2.6 ms | 35% | 0 |
+| 400/s | 35 to 49 ms | 75% | 0 to 4 | 3.5 ms | 42% | 0 |
+| 500/s | 150 ms (p99 693 ms) | 84% | 97 | 3.6 ms | 45% | 0 |
+| 600/s | | | | 4.2 ms | 50% | 0 |
+| 800/s | | | | 4.6 ms | 58% | 0 |
+| 1,000/s | | | | 5.4 ms | 67% | 0 |
+| 1,300/s | | | | 7.0 ms | 74% | 0 |
+| 1,600/s | | | | 11 ms | 83% | 0 |
+| 2,000/s | | | | 16 ms | 90% | 0 |
+| 2,500/s | | | | 258 ms (p99 6,316 ms) | 83% | 4,695 |
+
+- **Before:** holds 400 per second and fails at 500, as in the table above. Every share list request is a render:
+  1,076 misses in 30 seconds at 400 per second.
+- **After:** holds 2,000 per second and fails at 2,500. The main thread is the limit, at 90%.
+- **Renders of the share list page:** one every 10 seconds, whatever the rate. In every step, the page was stored 3
+  times, and 3 to 31 requests got the stale page while a refresh ran. All 40 background refreshes stored their page.
+- The cache held 6 pages and 421 KB.
+
+The benchmark tool's own ramp (`./bench.sh load --mode ramp --urls hot --path public` with the instance as its
+target, 30 seconds per step, p95 over all routes with OG images):
+
+| Rate | Before: p95 | After: p95 |
+| --- | --- | --- |
+| 400/s | 42 ms | 4.3 ms |
+| 500/s | 731 ms | 4.5 ms |
+| 600/s | 3,143 ms, aborted | 5.1 ms |
+| 1,000/s | | 7.1 ms |
+| 1,500/s | | 14 ms |
+| 2,000/s | | 595 ms |
+
+No request failed or was dropped in the "after" run. The tool reads the response bodies, so the load generator on
+the same host takes more of the CPU than in the table above, and the limit shows earlier.
+
+### How long an old page lives
+
+Two processes of the "after" build on one Valkey. `stale-list.mjs` plants a list view with a marker in the title in
+Valkey, as if Crate had held it, and requests the page from both processes until each serves the marker from its
+store, for a keyed and a shared page. Then the "edit": the planting stops. It writes nothing to Crate. Requests
+follow every 0.1 seconds for 70 seconds. Three rounds per case.
+
+| Case | A member's request, 0.1 seconds later | Last old anonymous page | Bound |
+| --- | --- | --- | --- |
+| The data cache's reset script runs at the edit (3 ms). No process resets its page cache. | New page from both processes, `bypass`, `private, no-store` | 7.7, 3.7, and 5.8 seconds after the edit (the maximum over both processes and both pages) | 20 seconds |
+| No reset | Old page from both processes | 27.3, 24.0, and 23.7 seconds after the edit | 40 seconds plus the Crate read |
+
+- **The reset reaches the other process at once.** The value is gone from Valkey, and a process holds no copy of
+  it, so its next lookup reads Crate.
+- **The last old page was a stale one**, sent while the refresh that replaced it ran. With requests every 0.1
+  seconds, a page is replaced when its 10 fresh seconds end. A page that nobody requests for 10 seconds isn't sent
+  again after its 20 seconds.
+- Both processes stand for the process that didn't get the write. The process that gets the write also resets its
+  own pages (`resetListView`), which the unit tests cover.
+
+### Headers
+
+| Request for a public list | `Cache-Control` | `GW-Page-Cache` on the third request |
+| --- | --- | --- |
+| Anonymous | `private, max-age=0` | `hit` |
+| Anonymous, with `GW-Cache-Identity` | `public, max-age=0, s-maxage=10, stale-while-revalidate=10` | `hit` |
+| With the auth cookie | `private, no-store` | `bypass` |
+| A list that doesn't exist (404) | `private, no-store` | `miss` |
+
+The stored page has no edit link.
+
 ## A long-tail crawl next to the hot URL
 
 The hot movie page at 300 per second, with a crawl of production's long tail next to it for 120 seconds. The paths
@@ -169,7 +253,7 @@ and requests 3 to 5 come from the store as Brotli, gzip, and without an encoding
 | Movie, show | Yes, in all three encodings | No: the related panel's query state holds the time of the render (`dataUpdatedAt`). Equal without that number on a warm process. |
 | Person, filtered person, home, Discover, About | Yes | Yes |
 | Category list (`/movies/moods`) | Yes | Yes on a warm process. The first render after a start listed other titles. |
-| Share list | Not stored (`private, no-store`): five misses | Yes |
+| Share list | Not stored (`private, no-store`): five misses. Stored for 10 + 10 seconds since the ticket "Design public caching and purge for share list pages". | Yes |
 
 - The time in a title page is the only value that differs per request on a warm process: five renders in a row of
   the movie page, the show page, Discover, and the home page, with the cache off, are equal without that number. The
@@ -208,6 +292,10 @@ docker run --rm --network gw-pagecache-net -v /opt/gw-pagecache/work:/work:ro --
 docker run --rm --network gw-pagecache-net -v /opt/gw-pagecache/work:/work:ro --entrypoint node <image> \
   /work/fresh.mjs http://172.31.247.20:3000 /movie/603-the-matrix /
 ```
+
+For the share list check, start a second process on `172.31.247.21` with the same image and environment, and run
+`stale-list.mjs` in the app image, once with `MODE=reset` and once with `MODE=noreset` (the command is in the
+script's header).
 
 `hot-movie.txt` holds one line, `1 browser /movie/603-the-matrix`. The hot mix file has one `weight client path` line
 per entry of `goodwatch-benchmark/urls/hot.json`, with the share list paths from the ignored `config.env`. Remove the

@@ -110,7 +110,8 @@
       "id": "share-list",
       "path": "${SHARE_LIST_PATH}",
       "html": { "minTitleLinks": 1, "image": true },
-      "guards": "The share list page, the primary viral scenario. The path comes from config.env and is never printed."
+      "header": { "cache-control": "^private, max-age=0$", "gw-cache-identity": "^anon;" },
+      "guards": "The share list page, the primary viral scenario. An anonymous request for a public list gets the keyed policy, so the page cache may store it: private, no-store here means every request renders again. The path comes from config.env and is never printed."
     },
     {
       "id": "share-list-og-image",
