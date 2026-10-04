@@ -1,4 +1,10 @@
 @import "tailwindcss";
+/* The small sheets every page needs, in this one file: each separate stylesheet blocks rendering with a request of
+   its own. They are outside Tailwind's layers, so their rules win over utilities as they did as separate files. */
+@import "./main.css";
+@import "swiper/css";
+@import "swiper/css/navigation";
+@import "react-toastify/dist/ReactToastify.css";
 
 /* Safelist */
 @source inline("bg-vibe-{{0..100..10}}{/35,}"); /* /35 for desktop score selector*/

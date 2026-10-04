@@ -2,6 +2,8 @@
    The page never scrolls, the footer is hidden on this route, and every control sits on the map, glass over the
    islands, at least 44 px. */
 
+@import "../../fonts/gabarito.css";
+
 html:has(.ex-stage) {
 	overflow: hidden;
 	scrollbar-gutter: auto !important;

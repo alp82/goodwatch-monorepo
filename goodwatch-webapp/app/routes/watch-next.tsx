@@ -12,6 +12,7 @@ import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import { isEnabled } from "~/server/features.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { type WatchNext, getWatchNext } from "~/server/watch-next.server"
+import gabaritoCss from "~/fonts/gabarito.css?url"
 import { WatchNextPage } from "~/ui/watch-next/WatchNextPage"
 import { apiQuery, choiceFromParams } from "~/ui/watch-next/useWatchNext"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -30,10 +31,7 @@ export const meta: MetaFunction = () => [
 ]
 
 export const links: LinksFunction = () => [
-	{
-		rel: "stylesheet",
-		href: "https://fonts.googleapis.com/css2?family=Gabarito:wght@400..900&display=swap",
-	},
+	{ rel: "stylesheet", href: gabaritoCss },
 ]
 
 // The sort, moods, and services change the URL, not the page: the browser reads /api/watch-next for them.

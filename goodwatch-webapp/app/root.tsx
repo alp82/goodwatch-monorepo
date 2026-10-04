@@ -50,15 +50,11 @@ import BottomNav from "~/ui/nav/BottomNav"
 import type { EnabledFeatures } from "~/utils/features"
 import { LocaleContext, getLocaleFromRequest } from "~/utils/locale"
 
-import "swiper/css"
-import "swiper/css/effect-coverflow"
+// One stylesheet for every page: it imports main.css, Swiper's, and the toast styles.
 import cssTailwind from "~/tailwind.css?url"
-import cssToastify from "react-toastify/dist/ReactToastify.css?url"
 import App from "~/app"
 import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
 import { useOgImageWarmup } from "~/ui/og-image/useOgImageWarmup"
-// import cssRemixDevTools from 'remix-development-tools/index.css?url'
-import cssMain from "~/main.css?url"
 import { getAuthFromRequest } from "./utils/auth"
 
 export const links: LinksFunction = () => [
@@ -76,23 +72,10 @@ export const links: LinksFunction = () => [
 		href: "/favicon-16x16.png",
 	},
 	{ rel: "manifest", href: "/site.webmanifest" },
-	{ rel: "stylesheet", href: cssMain },
 	{ rel: "stylesheet", href: cssTailwind },
-	{ rel: "stylesheet", href: cssToastify },
-	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
-	{
-		rel: "preconnect",
-		href: "https://fonts.gstatic.com",
-		crossOrigin: "anonymous",
-	},
 	{
 		rel: "preconnect",
 		href: "https://image.tmdb.org",
-	},
-	{
-		rel: "preload",
-		as: "style",
-		href: "https://fonts.googleapis.com/css2?family=Gabarito:wght@700&display=swap",
 	},
 ]
 

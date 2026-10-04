@@ -68,10 +68,6 @@ export const meta: MetaFunction = () => {
 
 export const links = () => [
 	{ rel: "stylesheet", href: explorerCss },
-	{
-		rel: "stylesheet",
-		href: "https://fonts.googleapis.com/css2?family=Gabarito:wght@400..900&display=swap",
-	},
 ]
 
 // Without JavaScript the list shows in place of the map, and the controls that need the map step aside.

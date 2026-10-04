@@ -1,6 +1,9 @@
 /* The living room. Rendering budget (#190): only transform and opacity animate or follow the pointer, nothing
    loops at idle, and no blend modes or live blur sit over the room photo. */
 
+@import "../../fonts/gabarito.css";
+@import "../../fonts/vt323.css";
+
 .living-room {
 	font-family: "Gabarito", ui-sans-serif, system-ui, sans-serif;
 }
