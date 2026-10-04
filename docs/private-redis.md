@@ -18,6 +18,7 @@ Decision: [ADR 0003](adr/0003-redis-cluster-of-masters-with-volatile-lfu.md). Al
 | `maxmemory-policy` | `volatile-lfu` | At the limit, Redis evicts the least frequently used keys that have an expiry. Keys without an expiry stay. |
 | `cluster-require-full-coverage` | `no` | A failed node no longer stops the other two. |
 | `appendonly` | `yes`, with `appendfsync everysec` | A restarted node loads its data again. |
+| `client-output-buffer-limit normal` | `64mb 32mb 10` | A client that doesn't read its replies is disconnected instead of filling the node. See [Client output buffer limit](#client-output-buffer-limit). |
 
 The settings are in `goodwatch-cache/valkey.conf`, one file for all three nodes. [Software and configuration](#software-and-configuration) describes how a node reads it.
 
@@ -39,6 +40,36 @@ The other two nodes keep answering for their slots. Commands for the failed node
 Every other prefix had an expiry on every key. The largest are `related-movie` (1.9 to 2.1 GB per node), `related-show` (1.6 to 1.8 GB), and `person-profile-v2` (1.2 to 1.3 GB). The longest lifetimes belong to small sets: `taste:*` (180 days), `og-image:*` and `share-card:*` (30 days).
 
 To repeat the measurement, compare `keys` and `expires` in `INFO keyspace`: the difference is the number of keys without an expiry. A new Redis write must set an expiry unless it's meant to survive eviction.
+
+### Client output buffer limit
+
+Replies that a client hasn't read yet wait in the node's memory, and that memory counts toward `maxmemory`. Until October 4, 2026, normal clients had no limit (`0 0 0`, the default). On that day, thirteen local test servers on a development machine read the cluster through the VPN. Each one asked for the title snapshot again every two seconds, gave up after the one-second command timeout, and never finished reading. They held 1.25 GB of replies on cache2 and 1.04 GB on cache3, up to 229 MB per connection, and cache2 stood at 6.35 GB of its 7 GB.
+
+| Limit | Value | Effect |
+|---|---|---|
+| Hard | 64 MB | The node closes the connection as soon as its pending replies pass 64 MB. |
+| Soft | 32 MB for 10 seconds | The node closes a connection whose pending replies stay above 32 MB for 10 seconds. |
+
+The setting is `client-output-buffer-limit normal 64mb 32mb 10`. The `replica` (256 MB, 64 MB for 60 seconds) and `pubsub` (32 MB, 8 MB for 60 seconds) classes keep their defaults.
+
+Why these values:
+
+- The largest legitimate burst is a starting webapp. It asks for all chunks of one title snapshot version at once (`Promise.all` over `getBuffer`), so each node queues its whole share for that one connection: 10.5 to 14.6 MB per node on October 4, 2026, in chunks of 1 MB (11 to 14 chunks per node, ratings included). The reader accepts chunks of up to 4 MB, and the size grows with the catalog. The hard limit leaves room for four times today's burst.
+- On the private network, the webapp reads that burst in under half a second (463 ms for all three nodes in the first start after the change). A connection that is still above 32 MB after 10 seconds isn't reading.
+- Every other reply is small next to the limits: an OG or share card image is up to 0.7 MB, a cached value up to about 1 MB, and the snapshot writer (`f/sync/copy/title_snapshot.py`) sends large `SET` commands, which fill the input buffer, and gets small replies to `SCAN`, `SET`, and `DEL`.
+- The limit is per connection. Twenty stuck connections can still hold 1.3 GB for a moment. It bounds a slow client, and it doesn't replace stopping one.
+
+A closed connection shows as `client_output_buffer_limit_disconnections` in `INFO stats`. The webapp's client reconnects by itself. To see who holds reply memory, sort `CLIENT LIST` by `omem`: `addr` names the source host, and a connection that comes through the VPN shows the gateway's address (`10.0.0.10`).
+
+If the snapshot outgrows the limit, a starting webapp logs `Title snapshot not loaded:` again and again while the counter above rises on one node. Raise the hard limit to at least twice the node's share of one version, or make the loader read the chunks in smaller groups.
+
+To change the limit on a running node, name only the class to change:
+
+```sh
+docker exec replica-redis-replica-1 sh -c 'REDISCLI_AUTH="$REDIS_PASSWORD" valkey-cli CONFIG SET client-output-buffer-limit "normal 67108864 33554432 10"'
+```
+
+Then change `goodwatch-cache/valkey.conf`, merge to `main`, and check out the file on each host, as for `maxmemory` below. No restart is needed: the running node has the value, and the file is read at the next start.
 
 ### Change the limit
 
