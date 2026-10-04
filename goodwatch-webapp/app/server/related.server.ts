@@ -279,12 +279,14 @@ async function getRelatedTitles({
 
 	const filterConditions = { must, must_not }
 
-	// Build payload fields using shared utility
+	// Build payload fields using shared utility. Only the lookup by streaming service reads streaming_availability
+	// (getRelatedByCategory). Title pages and /api/related don't, and decoding it for 100 results cost a title page
+	// that missed the cache about 60 ms of main-thread time (docs/benchmarks/viral-spike-render-profile.md).
 	const payloadFields = buildPayloadFields({
 		includeRatings: true,
 		includeFingerprintKey:
 			withKey && fingerprint_key ? fingerprint_key : undefined,
-		includeStreaming: true,
+		includeStreaming: Boolean(streaming_combinations?.length),
 	})
 
 	const results = await recommend<QdrantMediaPayload>({
