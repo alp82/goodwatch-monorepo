@@ -1,8 +1,15 @@
 import type { Score } from "~/server/scores.server"
 import type { UserData, MediaType } from "~/types/user-data"
 import { createMediaKey } from "~/types/user-data"
-import { cached, resetCache } from "~/utils/cache"
+import { cached, declareResettableCache, resetCache } from "~/utils/cache"
 import { query } from "~/utils/crate"
+
+const USER_DATA_CACHE = {
+	name: "user-data",
+	ttlMinutes: 0,
+	staleMinutes: 0,
+} as const
+declareResettableCache(USER_DATA_CACHE)
 
 // Normalized user data (optimized for performance)
 
@@ -12,12 +19,9 @@ type GetUserDataParams = {
 
 export const getUserData = async (params: GetUserDataParams): Promise<UserData> => {
 	return await cached<GetUserDataParams, UserData>({
-		name: "user-data",
+		...USER_DATA_CACHE,
 		target: _getUserData,
 		params,
-		//ttlMinutes: 1,
-		ttlMinutes: 0,
-		staleMinutes: 0,
 	})
 }
 
@@ -124,7 +128,7 @@ export const resetUserDataCache = async (params: GetUserDataParams) => {
 	}
 
 	return await resetCache({
-		name: "user-data",
+		name: USER_DATA_CACHE.name,
 		params,
 	})
 }

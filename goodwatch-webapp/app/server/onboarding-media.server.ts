@@ -1,8 +1,16 @@
 import { queryKeyOnboardingMedia } from "~/routes/api.onboarding.media"
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
-import { cached, resetCache } from "~/utils/cache"
+import { cached, declareResettableCache, resetCache } from "~/utils/cache"
 import { query } from "~/utils/crate"
 import { type AllRatings, getRatingKeys } from "~/utils/ratings"
+
+const ONBOARDING_CACHE = {
+	name: "onboarding-media",
+	// TTL can't be set here because every user action affects the results
+	ttlMinutes: 0,
+	staleMinutes: 0,
+} as const
+declareResettableCache(ONBOARDING_CACHE)
 
 const LIMIT_PER_MEDIA_TYPE = 1
 const LIMIT_PER_SEARCH = 6
@@ -37,12 +45,9 @@ export interface OnboardingMediaParams {
 
 export const getOnboardingMedia = async (params: OnboardingMediaParams) => {
 	return await cached<OnboardingMediaParams, OnboardingMediaResult>({
-		name: "onboarding-media",
+		...ONBOARDING_CACHE,
 		target: _getOnboardingMedia,
 		params,
-		// TTL can't be set here because every user action affects the results
-		ttlMinutes: 0,
-		staleMinutes: 0,
 	})
 }
 
@@ -189,7 +194,7 @@ export const resetOnboardingMediaCache = async ({
 	searchTerm = "",
 }: ResetOnboardingMediaCacheParams) => {
 	return await resetCache({
-		name: "onboarding-media",
+		name: ONBOARDING_CACHE.name,
 		params: { userId, searchTerm },
 	})
 }

@@ -41,7 +41,19 @@ export const REDIS_COMMAND_TIMEOUT_MS = 1000
 // Keep the offline queue for nodes connecting on demand. ioredis ends a closed
 // cluster instead of reconnecting it; our lifecycle disconnects it before replacing
 // it, with a 1-second exponential backoff capped at 30 seconds.
+export const cacheScripts = {
+	gwCacheStore: {
+		numberOfKeys: 2,
+		lua: "local m = redis.call('GET', KEYS[2]); if (m or '') ~= ARGV[1] then return 0 end; redis.call('SET', KEYS[1], ARGV[3], 'EX', ARGV[2]); return 1",
+	},
+	gwCacheReset: {
+		numberOfKeys: 2,
+		lua: "redis.call('SET', KEYS[2], ARGV[1], 'EX', ARGV[2]); return redis.call('DEL', KEYS[1])",
+	},
+}
+
 export const redisOptions: ClusterOptions = {
+	scripts: cacheScripts,
 	clusterRetryStrategy: () => null,
 	dnsLookup: (address, callback) => callback(null, address),
 	lazyConnect: true,
@@ -206,7 +218,21 @@ function logRedisFailure(
 	redisFailures.set(operation, { loggedAt: now, suppressed: 0 })
 }
 
-type CacheRedis = {
+export type CacheRedis = {
+	mget?(...keys: string[]): Promise<(string | null)[]>
+	gwCacheStore?(
+		valueKey: string,
+		markerKey: string,
+		expected: string,
+		ttl: number,
+		value: string,
+	): Promise<number>
+	gwCacheReset?(
+		valueKey: string,
+		markerKey: string,
+		token: string,
+		markerTtl: number,
+	): Promise<number>
 	get(key: string): Promise<string | null>
 	setex(key: string, ttl: number, value: string): Promise<unknown>
 	del(key: string): Promise<number>
@@ -285,7 +311,51 @@ export function cachePhysicalTtlSeconds(
 	return Math.max(1, Math.round((ttlMinutes + stale) * 60))
 }
 
+// Reset guard (docs/adr/0006-reset-markers-for-the-data-cache.md): a cache with a reset path
+// declares it. A reset in any process writes a new token to the marker key, which shares the
+// value key's slot. A lookup reads the marker with the value, and a run stores only if the
+// marker is still the one its lookup saw. Undeclared caches keep one GET and one SETEX.
+// A run older than this minus 30 seconds stores nothing; markers outlive values by this long.
+export const RESET_GUARD_MAX_RUN_SECONDS = 300
+export interface ResettableCacheDeclaration {
+	name: string
+	ttlMinutes: number
+	staleMinutes?: number
+}
+const declarations = new Map<
+	string,
+	{ physicalTtlSeconds: number; markerTtlSeconds: number; enabled: boolean }
+>()
+export function declareResettableCache({
+	name,
+	ttlMinutes,
+	staleMinutes,
+}: ResettableCacheDeclaration): void {
+	if (/[{}]/.test(name))
+		throw new Error(`Cache name ${name} must not contain braces`)
+	const physicalTtlSeconds = cachePhysicalTtlSeconds(ttlMinutes, staleMinutes)
+	declarations.set(name, {
+		physicalTtlSeconds,
+		markerTtlSeconds: physicalTtlSeconds + RESET_GUARD_MAX_RUN_SECONDS,
+		enabled: ttlMinutes > 0,
+	})
+}
+export function cacheResetMarkerKey(cacheKey: string): string {
+	return `cached-reset:{${cacheKey}}`
+}
+const resetGuard = counter(
+	"goodwatch_data_cache_reset_guard_total",
+	"Cross-process reset guard events.",
+	["cache", "event"],
+	64,
+)
+let runClock = () => performance.now()
+export function setResetRunClockForTest(clock: (() => number) | null): void {
+	runClock = clock ?? (() => performance.now())
+}
+
 type InFlight = {
+	marker: string | null | undefined
 	promise: Promise<JsonData>
 	startedAt: number
 	background: boolean
@@ -396,7 +466,10 @@ export function startRedisClusterForTest(
 }
 
 // At shutdown, after the last request: closes the node connections and cancels a pending reconnect.
-onShutdown("redis cluster", stopRedisClusterForTest)
+onShutdown("redis cluster", () => {
+	resetPendingResetsForTest()
+	stopRedisClusterForTest()
+})
 
 // Tests and deployments without Redis configuration never attempt a connection.
 if (process.env.REDIS_HOST) connectToRedisCluster()
@@ -465,19 +538,6 @@ async function cacheGet<CacheData extends JsonData>(
 	return { ...JSON.parse(result), length: result.length }
 }
 
-async function cacheDelete(key: string): Promise<number | null> {
-	const redis = getRedisCluster()
-	if (!redis) return null
-
-	try {
-		const result = await withRedisDeadline(redis.del(key))
-		return result
-	} catch (e) {
-		if (!(e instanceof RedisNodeDownError)) logRedisFailure("del", e)
-		return null
-	}
-}
-
 // Keys already reported as big, so a hot key warns once instead of on every hit.
 const MAX_WARNED_BIG_KEYS = 500
 const warnedBigKeys = new Set<string>()
@@ -516,6 +576,16 @@ export const cached = async <
 	staleMinutes = Math.min(ttlMinutes, DEFAULT_MAX_STALE_MINUTES),
 }: CachedParams<Params, Return>): Promise<Return> => {
 	const label = metricName ?? name
+	const declaration = declarations.get(name)
+	const guarded = declaration?.enabled === true
+	if (
+		guarded &&
+		cachePhysicalTtlSeconds(ttlMinutes, staleMinutes) >
+			declaration.physicalTtlSeconds
+	) {
+		throw new Error(`Cache ${name} exceeds its declared physical TTL`)
+	}
+	let marker: string | null | undefined
 	const runTarget = async () => {
 		const start = performance.now()
 		try {
@@ -537,8 +607,10 @@ export const cached = async <
 		if (inFlight.size >= MAX_IN_FLIGHT) {
 			return runTarget()
 		}
+		const runStarted = runClock()
 		// Defer execution so the entry exists before the target can settle or reset it.
 		const entry: InFlight = {
+			marker,
 			startedAt: Date.now(),
 			background,
 			promise: Promise.resolve().then(async () => {
@@ -547,12 +619,39 @@ export const cached = async <
 					let outcome = "discarded"
 					if (inFlight.get(cacheKey) === entry) {
 						try {
-							outcome = (await cacheSet(cacheKey, data, physicalTtl))
-								? "ok"
-								: "error"
+							if (guarded) {
+								if (
+									entry.marker === undefined ||
+									pendingResets.has(cacheKey) ||
+									runClock() - runStarted >=
+										(RESET_GUARD_MAX_RUN_SECONDS - 30) * 1000
+								) {
+									resetGuard.inc([label, "store_skipped"])
+								} else {
+									const redis = getRedisCluster() as CacheRedis | null
+									if (!redis?.gwCacheStore)
+										throw new Error("Redis reset guard unavailable")
+									const stored = await withRedisDeadline(
+										redis.gwCacheStore(
+											cacheKey,
+											cacheResetMarkerKey(cacheKey),
+											entry.marker ?? "",
+											physicalTtl,
+											serializeCacheEntry(data),
+										),
+									)
+									outcome = stored === 1 ? "ok" : "discarded"
+									if (stored === 0) resetGuard.inc([label, "store_rejected"])
+								}
+							} else {
+								outcome = (await cacheSet(cacheKey, data, physicalTtl))
+									? "ok"
+									: "error"
+							}
 						} catch (error) {
 							outcome = "error"
-							console.error({ error })
+							if (!(error instanceof RedisNodeDownError))
+								logRedisFailure("set", error)
 						}
 					}
 					if (background) {
@@ -588,7 +687,27 @@ export const cached = async <
 
 	let result = getRedisCluster() ? "miss" : "unavailable"
 	try {
-		const cachedResult = await cacheGet<Return>(cacheKey)
+		let cachedResult: {
+			data: Return
+			timestamp: number
+			length: number
+		} | null = null
+		if (guarded) {
+			if (pendingReset(cacheKey)) result = "reset_pending"
+			else {
+				const redis = getRedisCluster() as CacheRedis | null
+				if (redis) {
+					if (!redis.mget || !redis.gwCacheStore || !redis.gwCacheReset)
+						throw new Error("Redis reset guard unavailable")
+					const [value, token] = await withRedisDeadline(
+						redis.mget(cacheKey, cacheResetMarkerKey(cacheKey)),
+					)
+					marker = token
+					if (value)
+						cachedResult = { ...JSON.parse(value), length: value.length }
+				}
+			}
+		} else cachedResult = await cacheGet<Return>(cacheKey)
 		if (cachedResult) {
 			const { timestamp, data, length } = cachedResult
 			const age = Date.now() - timestamp
@@ -605,22 +724,33 @@ export const cached = async <
 			if (staleMinutes > 0 && age < (ttlMinutes + staleMinutes) * 60_000) {
 				cacheRequests.inc([label, "stale"])
 				if (
-					!inFlight.has(cacheKey) &&
+					(!inFlight.has(cacheKey) ||
+						(guarded && inFlight.get(cacheKey)?.marker !== marker)) &&
 					!isRefreshPaused(cacheKey) &&
 					inFlight.size < MAX_IN_FLIGHT &&
 					backgroundRefreshes < MAX_BACKGROUND_REFRESHES
-				)
+				) {
+					if (guarded && inFlight.has(cacheKey))
+						resetGuard.inc([label, "join_refused"])
 					startRun(true)
+				}
 				return data
 			}
 		}
 	} catch (error) {
+		marker = undefined
 		result = error instanceof RedisNodeDownError ? "open" : "error"
 		if (!(error instanceof RedisNodeDownError)) logRedisFailure("get", error)
 	}
 	const existing = inFlight.get(cacheKey)
-	if (existing && Date.now() - existing.startedAt < MAX_JOIN_AGE_MS) {
-		cacheRequests.inc([label, "joined"])
+	if (existing && guarded && existing.marker !== marker)
+		resetGuard.inc([label, "join_refused"])
+	if (
+		existing &&
+		(!guarded || existing.marker === marker) &&
+		Date.now() - existing.startedAt < MAX_JOIN_AGE_MS
+	) {
+		cacheRequests.inc([label, result === "reset_pending" ? result : "joined"])
 		const data = await existing.promise
 		try {
 			return structuredClone(data) as Return
@@ -637,23 +767,133 @@ export interface ResetCacheParams {
 	name: string
 }
 
-export const resetCache = async ({
-	params,
+type PendingReset = {
+	name: string
+	markerTtlSeconds: number
+	until: number
+	retryAt: number
+}
+const pendingResets = new Map<string, PendingReset>()
+const RESET_RETRY_MS = 5000
+const MAX_PENDING_RESETS = 1000
+let resetRetryMs = RESET_RETRY_MS
+let resetTimer: ReturnType<typeof setInterval> | undefined
+export const pendingResetCount = () => pendingResets.size
+gauge(
+	"goodwatch_data_cache_pending_resets",
+	"Unconfirmed cache resets.",
+	[],
+	() => [{ labels: [], value: pendingResetCount() }],
+)
+export function resetPendingResetsForTest(): void {
+	pendingResets.clear()
+	if (resetTimer) clearInterval(resetTimer)
+	resetTimer = undefined
+}
+export function setResetRetryMsForTest(ms: number | null): void {
+	resetRetryMs = ms ?? RESET_RETRY_MS
+	if (resetTimer) clearInterval(resetTimer)
+	resetTimer = undefined
+	startResetTimer()
+}
+function removePending(key: string, pending: PendingReset): void {
+	if (pendingResets.get(key) === pending) pendingResets.delete(key)
+	if (!pendingResets.size && resetTimer) {
+		clearInterval(resetTimer)
+		resetTimer = undefined
+	}
+}
+async function attemptReset(
+	key: string,
+	pending: PendingReset,
+	retry: boolean,
+): Promise<number | null> {
+	let deleted: number | null = null
+	try {
+		const redis = getRedisCluster() as CacheRedis | null
+		if (redis) {
+			if (!redis.gwCacheReset) throw new Error("Redis reset guard unavailable")
+			deleted = await withRedisDeadline(
+				redis.gwCacheReset(
+					key,
+					cacheResetMarkerKey(key),
+					crypto.randomBytes(9).toString("base64url"),
+					pending.markerTtlSeconds,
+				),
+			)
+		}
+	} catch (error) {
+		if (!(error instanceof RedisNodeDownError)) logRedisFailure("del", error)
+	}
+	if (deleted !== null) {
+		removePending(key, pending)
+		resetGuard.inc([
+			pending.name,
+			retry ? "retry_confirmed" : "reset_confirmed",
+		])
+	} else if (!retry) resetGuard.inc([pending.name, "reset_unconfirmed"])
+	return deleted
+}
+function retryReset(key: string, pending: PendingReset): void {
+	pending.retryAt = Date.now() + resetRetryMs
+	void attemptReset(key, pending, true)
+}
+function pendingReset(key: string): boolean {
+	const pending = pendingResets.get(key)
+	if (!pending) return false
+	if (pending.until <= Date.now()) {
+		removePending(key, pending)
+		return false
+	}
+	if (pending.retryAt <= Date.now()) retryReset(key, pending)
+	return true
+}
+function startResetTimer(): void {
+	if (resetTimer || !pendingResets.size) return
+	resetTimer = setInterval(() => {
+		let retries = 0
+		const now = Date.now()
+		for (const [key, pending] of pendingResets) {
+			if (pending.until <= now) removePending(key, pending)
+			else if (pending.retryAt <= now && retries < 20) {
+				retries++
+				retryReset(key, pending)
+			}
+		}
+	}, resetRetryMs)
+	resetTimer.unref()
+}
+async function resetDeclaredCache({
 	name,
-}: ResetCacheParams): Promise<number> => {
+	params,
+}: ResetCacheParams): Promise<number | null> {
+	const declaration = declarations.get(name)
+	if (!declaration)
+		throw new Error(
+			`Cache ${name}: call declareResettableCache before resetting`,
+		)
 	const key = cacheEntryKey(name, params)
 	inFlight.delete(key)
 	refreshPauses.delete(key)
-	return (await cacheDelete(key)) ?? 0
+	if (!declaration.enabled) return 0
+	const now = Date.now()
+	const pending = {
+		name,
+		markerTtlSeconds: declaration.markerTtlSeconds,
+		until: now + declaration.markerTtlSeconds * 1000,
+		retryAt: now + resetRetryMs,
+	}
+	pendingResets.delete(key)
+	if (pendingResets.size >= MAX_PENDING_RESETS)
+		pendingResets.delete(pendingResets.keys().next().value as string)
+	pendingResets.set(key, pending)
+	startResetTimer()
+	return attemptReset(key, pending, false)
 }
+export const resetCache = async (options: ResetCacheParams): Promise<number> =>
+	(await resetDeclaredCache(options)) ?? 0
 
-/** True only when Redis acknowledged the deletion, including an already absent key. */
-export const resetCacheConfirmed = async ({
-	params,
-	name,
-}: ResetCacheParams): Promise<boolean> => {
-	const key = cacheEntryKey(name, params)
-	inFlight.delete(key)
-	refreshPauses.delete(key)
-	return (await cacheDelete(key)) !== null
-}
+/** True only when Redis acknowledged the reset, including an already absent key. */
+export const resetCacheConfirmed = async (
+	options: ResetCacheParams,
+): Promise<boolean> => (await resetDeclaredCache(options)) !== null

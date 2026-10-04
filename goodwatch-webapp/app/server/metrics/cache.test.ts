@@ -5,7 +5,10 @@ import { afterEach, beforeEach, test } from "node:test"
 // Loaded before the alias hook, which rewrites relative imports.
 import Redis from "ioredis"
 import "../title-filter/test-alias.ts"
+import { CacheTestRedis } from "../../utils/cache-test-redis.ts"
 const {
+	declareResettableCache,
+	resetPendingResetsForTest,
 	cached,
 	cacheEntryKey,
 	cacheInFlightCount,
@@ -28,6 +31,8 @@ const { renderMetrics, resetMetricsForTest } = await import(
 const unhandled: unknown[] = []
 const unhandledListener = (error: unknown) => unhandled.push(error)
 beforeEach(() => {
+	resetPendingResetsForTest()
+	declareResettableCache({ ...options, ttlMinutes: 0 })
 	resetRefreshPausesForTest()
 	unhandled.length = 0
 	process.on("unhandledRejection", unhandledListener)
@@ -39,6 +44,7 @@ afterEach(async () => {
 	process.off("unhandledRejection", unhandledListener)
 	assert.deepEqual(unhandled, [])
 })
+afterEach(() => resetPendingResetsForTest())
 afterEach(() => setRedisCommandTimeoutForTest(null))
 afterEach(() => assert.equal(cacheInFlightCount(), 0))
 
@@ -169,34 +175,17 @@ test("metricName bounds many distinct keys and both cache metrics cap at 100", a
 })
 
 function fakeRedis() {
-	const store = new Map<string, string>()
-	const writes: { key: string; ttl: number }[] = []
-	let reads = 0
-	let deletes = 0
-	const client = {
-		async get(key: string) {
-			reads++
-			return store.get(key) ?? null
-		},
-		async setex(key: string, ttl: number, value: string) {
-			writes.push({ key, ttl })
-			store.set(key, value)
-		},
-		async del(key: string) {
-			deletes++
-			return Number(store.delete(key))
-		},
-	}
+	const client = new CacheTestRedis()
 	setRedisClusterForTest(client)
 	return {
-		store,
-		writes,
 		client,
+		store: client.values,
+		writes: client.writes,
 		get reads() {
-			return reads
+			return client.reads
 		},
 		get deletes() {
-			return deletes
+			return client.deletes
 		},
 	}
 }
@@ -338,6 +327,7 @@ test("a cold target error reaches all ten callers and writes nothing", async () 
 
 test("reset discards a pending background refresh without resurrecting its value", async () => {
 	const redis = fakeRedis()
+	declareResettableCache(options)
 	const { key } = seedStale(redis)
 	const pending = deferred<{ answer: string }>()
 	await cached({ ...options, target: () => pending.promise })
@@ -356,6 +346,7 @@ test("reset discards a pending background refresh without resurrecting its value
 
 test("reset detaches a cold run and a subsequent caller starts a new run", async () => {
 	const redis = fakeRedis()
+	declareResettableCache(options)
 	const first = deferred<{ answer: string }>()
 	const second = deferred<{ answer: string }>()
 	let runs = 0
@@ -378,6 +369,7 @@ test("reset detaches a cold run and a subsequent caller starts a new run", async
 
 test("member caches never serve stale, use the logical TTL, and reload after reset", async () => {
 	const redis = fakeRedis()
+	declareResettableCache(options)
 	const { key } = seedStale(redis)
 	const pending = deferred<{ answer: string }>()
 	let returned = false
@@ -697,7 +689,8 @@ test("a stalled background write records a refresh error and preserves stale dat
 
 test("a stalled del makes resetCache return zero within the deadline", async () => {
 	const redis = fakeRedis()
-	redis.client.del = () => new Promise(() => {})
+	declareResettableCache(options)
+	redis.client.gwCacheReset = () => new Promise(() => {})
 	setRedisCommandTimeoutForTest(TEST_TIMEOUT_MS)
 	const start = performance.now()
 	assert.equal(await resetCache(options), 0)
@@ -721,7 +714,9 @@ test("a get rejecting after its deadline never causes an unhandled rejection", a
 
 test("cache writes never call INFO", async (t) => {
 	const redis = fakeRedis()
-	const client = { ...redis.client, info: t.mock.fn(async () => "") }
+	const client = Object.assign(redis.client, {
+		info: t.mock.fn(async () => ""),
+	})
 	setRedisClusterForTest(client)
 	await cached({ ...options, target: async () => ({ answer: 42 }) })
 	assert.equal(redis.writes.length, 1)
@@ -875,6 +870,7 @@ test("a successful refresh after the pause clears it and later lookups hit", asy
 
 test("resetCache clears the pause and a reseeded stale value refreshes immediately", async (t) => {
 	const redis = fakeRedis()
+	declareResettableCache(options)
 	seedStale(redis)
 	t.mock.method(console, "warn", () => {})
 	const target = t.mock.fn(async () => {
@@ -994,6 +990,7 @@ test("cachePhysicalTtlSeconds shares the default stale window and clamps invalid
 
 test("confirmed resets distinguish acknowledged deletion from unavailable Redis", async () => {
 	const { RedisNodeDownError } = await import("../../utils/redis-breaker.ts")
+	declareResettableCache({ name: "confirmed-reset", ttlMinutes: 1 })
 	for (const outcome of [
 		1,
 		0,
@@ -1001,20 +998,12 @@ test("confirmed resets distinguish acknowledged deletion from unavailable Redis"
 		new RedisNodeDownError("test-node"),
 		null,
 	]) {
-		setRedisClusterForTest(
-			outcome === null
-				? null
-				: {
-						async get() {
-							return null
-						},
-						async setex() {},
-						async del() {
-							if (outcome instanceof Error) throw outcome
-							return outcome
-						},
-					},
-		)
+		const client = new CacheTestRedis()
+		client.gwCacheReset = async () => {
+			if (outcome instanceof Error) throw outcome
+			return outcome ?? 0
+		}
+		setRedisClusterForTest(outcome === null ? null : client)
 		assert.equal(
 			await resetCacheConfirmed({ name: "confirmed-reset", params: {} }),
 			typeof outcome === "number",

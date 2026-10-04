@@ -5,8 +5,8 @@ import {
 	isThemeKey,
 } from "~/ui/share-card/model"
 import {
-	cachePhysicalTtlSeconds,
 	cached,
+	declareResettableCache,
 	resetCacheConfirmed,
 } from "~/utils/cache"
 import { query } from "~/utils/crate"
@@ -79,13 +79,12 @@ export interface ListView {
 type ViewResult =
 	| { found: true; list: ShareList; owner: Profile; titles: CardTitle[] }
 	| { found: false }
-const NAME = "share-list-view-v1"
-const MAX_UNCONFIRMED_RESETS = 1000
-const unconfirmed = new Map<string, { until: number; retryAt: number }>()
-
-export function resetUnconfirmedListResetsForTest(): void {
-	unconfirmed.clear()
-}
+const VIEW_CACHE = {
+	name: "share-list-view-v1",
+	ttlMinutes: 5,
+	staleMinutes: 5,
+} as const
+declareResettableCache(VIEW_CACHE)
 
 async function readListView(id: string): Promise<ViewResult> {
 	const list = await getList(id)
@@ -98,51 +97,20 @@ async function readListView(id: string): Promise<ViewResult> {
 }
 
 export async function resetListView(id: string): Promise<void> {
-	// Mark before awaiting DEL so concurrent reads also bypass a reset still awaiting confirmation.
-	const pending = {
-		until: Date.now() + cachePhysicalTtlSeconds(5, 5) * 1000,
-		retryAt: Date.now() + 5000,
-	}
-	unconfirmed.delete(id)
-	if (unconfirmed.size >= MAX_UNCONFIRMED_RESETS) {
-		unconfirmed.delete(unconfirmed.keys().next().value as string)
-	}
-	unconfirmed.set(id, pending)
-	if (await resetCacheConfirmed({ name: NAME, params: { id } })) {
-		if (unconfirmed.get(id) === pending) unconfirmed.delete(id)
-	}
+	await resetCacheConfirmed({ name: VIEW_CACHE.name, params: { id } })
 }
 
 export async function getListView(id: string): Promise<ListView | null> {
 	if (!/^[0-9A-Za-z]{10}$/.test(id)) return null
-	const pending = unconfirmed.get(id)
-	const now = Date.now()
-	let result: ViewResult
-	if (pending && pending.until > now) {
-		if (pending.retryAt <= now) {
-			pending.retryAt = now + 5000
-			void resetCacheConfirmed({ name: NAME, params: { id } }).then(
-				(confirmed) => {
-					if (confirmed && unconfirmed.get(id) === pending)
-						unconfirmed.delete(id)
-				},
-			)
-		}
-		result = await readListView(id)
-	} else {
-		if (pending) unconfirmed.delete(id)
-		// No viewer, country or language affects this value today. Future localized titles must
-		// add country and language to the key (owner decision in map 237).
-		// 5 + 5 minutes costs one refresh per five minutes under load and bounds manual DB
-		// changes, timed-out writes landing later, and resets in another process (one today).
-		result = await cached({
-			name: NAME,
-			params: { id },
-			ttlMinutes: 5,
-			staleMinutes: 5,
-			target: () => readListView(id),
-		})
-	}
+	// No viewer, country or language affects this value today. Future localized titles must
+	// add country and language to the key (owner decision in map 237).
+	// Resets now reach other processes. 5 + 5 minutes costs one refresh per five minutes
+	// under load and bounds manual DB changes, timed-out writes landing later, and unconfirmed resets.
+	const result = await cached({
+		...VIEW_CACHE,
+		params: { id },
+		target: () => readListView(id),
+	})
 	return result.found
 		? { list: result.list, owner: result.owner, titles: result.titles }
 		: null

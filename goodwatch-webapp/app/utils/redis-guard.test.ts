@@ -6,6 +6,9 @@ import { Command } from "ioredis"
 import "../server/title-filter/test-alias.ts"
 const {
 	GuardedCluster,
+	cacheScripts,
+	declareResettableCache,
+	resetPendingResetsForTest,
 	cached,
 	cacheEntryKey,
 	getRedisCluster,
@@ -31,12 +34,15 @@ const ownerFor = (key: string) =>
 const unhandled: unknown[] = []
 const onUnhandled = (error: unknown) => unhandled.push(error)
 beforeEach(() => {
+	declareResettableCache({ name: "guard", ttlMinutes: 1 })
+	resetPendingResetsForTest()
 	resetRedisBreakersForTest()
 	resetMetricsForTest()
 	unhandled.length = 0
 	process.on("unhandledRejection", onUnhandled)
 })
 afterEach(async () => {
+	resetPendingResetsForTest()
 	stopRedisClusterForTest()
 	setRedisCommandTimeoutForTest(null)
 	await pause()
@@ -50,7 +56,7 @@ class FakeCluster extends GuardedCluster {
 	store = new Map<string, string>()
 	commands: Command[] = []
 	constructor() {
-		super([], { lazyConnect: true })
+		super([], { lazyConnect: true, scripts: cacheScripts })
 		this.status = "ready"
 		for (let slot = 0; slot < 16384; slot++)
 			this.slots[slot] = [owners[Math.min(2, Math.floor(slot / 5461))]]
@@ -71,11 +77,27 @@ class FakeCluster extends GuardedCluster {
 				return command.promise
 			}
 		}
-		if (command.name === "get")
+		if (command.name === "mget")
+			command.resolve(
+				command.args.map((key) => this.store.get(String(key)) ?? null),
+			)
+		else if (command.name === "get")
 			command.resolve(this.store.get(key ?? "") ?? null)
 		else if (command.name === "setex") {
 			this.store.set(key ?? "", String(command.args[2]))
 			command.resolve("OK")
+		} else if (command.name === "eval" || command.name === "evalsha") {
+			const [, , valueKey, markerKey, token, , value] = command.args.map(String)
+			if (command.args.length === 7) {
+				if ((this.store.get(markerKey) ?? "") !== token) command.resolve(0)
+				else {
+					this.store.set(valueKey, value)
+					command.resolve(1)
+				}
+			} else {
+				this.store.set(markerKey, token)
+				command.resolve(Number(this.store.delete(valueKey)))
+			}
 		} else command.resolve(1)
 		return command.promise
 	}
@@ -162,7 +184,7 @@ test("silent owner costs one second once; later cache lookups fail fast through 
 		'goodwatch_redis_breaker_events_total{node="fake-a:1",event="closed"} 1',
 	)
 	metric(
-		'goodwatch_redis_breaker_events_total{node="fake-a:1",event="rejected"} 44',
+		'goodwatch_redis_breaker_events_total{node="fake-a:1",event="rejected"} 22',
 	)
 	await fast(() => lookup(params[22]))
 	await fast(() => lookup(params[22]))

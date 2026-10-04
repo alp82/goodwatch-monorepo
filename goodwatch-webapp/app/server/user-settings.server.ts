@@ -6,8 +6,16 @@ import {
 } from "~/routes/api.user-settings.get";
 import type { SetUserSettingsOptions } from "~/routes/api.user-settings.set";
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch";
-import { cached, resetCache } from "~/utils/cache";
+import { cached, declareResettableCache, resetCache } from "~/utils/cache";
 import { execute, query, upsert } from "~/utils/crate";
+
+const SETTINGS_CACHE = {
+	name: "user-settings",
+	// can't use TTL on this, e.g. because of onboarding
+	ttlMinutes: 1,
+	staleMinutes: 0,
+} as const;
+declareResettableCache(SETTINGS_CACHE);
 
 interface UserSettingRow {
 	key: keyof UserSettingsMap;
@@ -22,12 +30,9 @@ type GetUserSettingsParams = {
 
 export const getUserSettings = async (params: GetUserSettingsParams) => {
 	return await cached<GetUserSettingsParams, GetUserSettingsResult>({
-		name: "user-settings",
+		...SETTINGS_CACHE,
 		target: _getUserSettings,
 		params,
-		// can't use TTL on this, e.g. because of onboarding
-		ttlMinutes: 1,
-		staleMinutes: 0,
 	});
 };
 
@@ -156,7 +161,7 @@ export const resetUserSettingsCache = async (
 	}
 
 	return await resetCache({
-		name: "user-settings",
+		name: SETTINGS_CACHE.name,
 		params: { userId: params.user_id },
 	});
 };

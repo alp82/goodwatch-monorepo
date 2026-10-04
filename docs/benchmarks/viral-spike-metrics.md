@@ -89,6 +89,8 @@ Read them in Grafana Cloud under **Explore**, with the Prometheus data source th
 | `goodwatch_data_cache_in_flight` | Gauge | None | Registered cache runs at scrape time. |
 | `goodwatch_related_lookups_total` | Counter | `result` | Related titles panels asked of the server: `no_fingerprint` (the title snapshot doesn't hold the source title, so the panel is empty without a Qdrant call or a cache entry), `no_point` (the same answer from Qdrant while the snapshot isn't loaded), `lookup` (went to the `related-cards` data cache). |
 | `goodwatch_related_requests_total` | Counter | `variant` | `/api/related` requests: `panel` (one panel with movies and shows), `legacy` (pages from before October 4, 2026 that ask with `mediaType`). Remove the legacy branch when it stays at zero. |
+| `goodwatch_data_cache_reset_guard_total` | Counter | `cache`, `event` | Events of the reset guard on caches that have a reset path. Capped at 64 label sets. |
+| `goodwatch_data_cache_pending_resets` | Gauge | None | Resets that Redis hasn't confirmed yet in this process. Zero in normal hours. |
 | `goodwatch_process_resident_memory_bytes`, `goodwatch_process_heap_used_bytes` | Gauge | None | Memory of the server process. |
 | `goodwatch_process_event_loop_delay_seconds` | Gauge | `quantile` (`0.5`, `0.99`, `max`) | How late the event loop ran since the previous scrape. |
 | `goodwatch_process_uptime_seconds`, `goodwatch_build_info` | Gauge | `commit` on the second | A restart or deploy shows as a reset or a new commit. |
@@ -103,7 +105,7 @@ Label values:
 - `cache`: the cache name passed to `cached()`. The three related-title caches have request data in their name, so they report as `related-movie`, `related-show`, and `related-by-category`.
 Share list reads report as `share-list-view-v1` and `share-list-availability-v1`.
 
-For `goodwatch_data_cache_requests_total`, `result` has eight values:
+For `goodwatch_data_cache_requests_total`, `result` has nine values:
 
 - `hit`: The lookup returned a fresh value.
 - `stale`: The lookup returned an expired value while a refresh may run in the background.
@@ -113,12 +115,22 @@ For `goodwatch_data_cache_requests_total`, `result` has eight values:
 - `error`: The cache read failed or exceeded the 1-second Redis command limit, and this call ran the target.
 - `open`: The key's Redis node is marked down. The lookup skipped Redis and ran the target.
 - `bypass`: The lifetime was zero or negative, so the call ran the target without using Redis or deduplication.
+- `reset_pending`: This process has an unconfirmed reset for the key. The lookup skipped Redis, ran the target or waited for a run, and stored nothing.
 
 The breaker opens at the first timeout or connection failure of a node. It fails commands for that node's slots at once. While traffic continues, it probes in the background, with at most one probe in flight: one second after it opened, and one second after each failed probe. A probe to a silent node takes up to one second, so probes run about every two seconds. The first answer closes the breaker. Healthy nodes keep serving their slots. The client disconnects an ended or failed cluster before retrying, with delays from one to 30 seconds.
 
 Before this change, `stale` meant "expired value found, target run inline".
 
 For `goodwatch_data_cache_refreshes_total`, `result` is `ok` (value stored), `error` (target threw or storage failed), or `discarded` (a reset or newer run replaced the refresh, so it stored nothing). After a refresh with result `error`, no new refresh starts for that key for 30 seconds; lookups keep counting `stale`.
+
+For `goodwatch_data_cache_reset_guard_total`, `event` has six values. Only caches declared with `declareResettableCache` report them (`user-settings` and `share-list-view-v1` today). The design is [ADR 0006](../adr/0006-reset-markers-for-the-data-cache.md).
+
+- `reset_confirmed`: Redis acknowledged a reset at the first attempt.
+- `reset_unconfirmed`: Redis didn't acknowledge a reset. The key stays pending in this process, which retries every 5 seconds.
+- `retry_confirmed`: A retried reset was acknowledged.
+- `store_rejected`: A run finished after a reset in any process, so the store script refused its value. A background refresh also counts `discarded`.
+- `store_skipped`: A run didn't try to store, because its lookup couldn't read the marker, the key was pending, or the run took 270 seconds or longer.
+- `join_refused`: A lookup found a registered run that had seen another marker, and started its own run.
 
 Histogram buckets are 0.05, 0.1, 0.2, 0.3, 0.5, 1, 2, 5, and 10 seconds. The map's target of 300 ms is a bucket edge, so the share of requests under 300 ms is exact. Percentiles are estimates between two edges.
 
@@ -216,6 +228,14 @@ Background refresh outcomes per second, by result:
 sum by (cache, result) (rate(goodwatch_data_cache_refreshes_total{job="goodwatch_webapp"}[5m]))
 ```
 
+Reset guard events per second, and resets that wait for Redis:
+
+```promql
+sum by (cache, event) (rate(goodwatch_data_cache_reset_guard_total{job="goodwatch_webapp"}[5m]))
+
+max(goodwatch_data_cache_pending_resets{job="goodwatch_webapp"})
+```
+
 Registered cache runs at scrape time:
 
 ```promql
@@ -254,12 +274,14 @@ sum by (instance, cache) (rate(goodwatch_data_cache_requests_total{job="goodwatc
 | `goodwatch_http_requests_in_flight`, `goodwatch_data_cache_in_flight` | `sum(...)` for the site, plain for each process. |
 | `goodwatch_redis_breaker_open_nodes` | `max(...)`: each process has its own breakers, and one open breaker is enough to look. |
 | `goodwatch_redis_client_ready` | `min(...)`: zero when any process has no client. |
+| `goodwatch_data_cache_pending_resets` | `max(...)`: a reset is pending only in the process that issued it. |
 | `goodwatch_process_resident_memory_bytes`, `goodwatch_process_heap_used_bytes` | Per instance. A sum is the footprint across hosts, which no single host has. |
 | `goodwatch_process_event_loop_delay_seconds{quantile="0.99"}` | Per instance, or `max(...)`. Never average quantiles. |
 | `goodwatch_process_uptime_seconds`, `goodwatch_build_info` | Per instance. Two different `commit` values mean a deploy is between the two hosts: `count(count by (commit) (goodwatch_build_info{job="goodwatch_webapp"})) > 1`. |
 | `up{job="goodwatch_webapp"}` | Per instance. `sum(...)` is the number of instances that answer the scrape. |
 
 - **Breaker events** (`goodwatch_redis_breaker_events_total`) add up across instances in `sum by (node, event)`. Each process opens and closes its own breaker, so one node outage shows two `opened` events.
+- **Reset guard events** (`goodwatch_data_cache_reset_guard_total`) show a reset in the process that received the write (`reset_confirmed`) and its effect in the other one (`store_rejected`, `join_refused`).
 - **The series count doubles**: `count({job="goodwatch_webapp"})` counts both instances. Check it against the tenant's limit after the second instance starts.
 - **The page cache formula** keeps working: its numerator sums the responses of all instances.
 

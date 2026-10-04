@@ -8,6 +8,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import * as nodeModule from "node:module"
 import { afterEach, beforeEach, test } from "node:test"
+import { CacheTestRedis as FakeRedis } from "../../utils/cache-test-redis.ts"
 
 // The view imports only plain TS. Write-path coverage also loads the real store's
 // JSX designs and Vite raw SVG import, without rendering or replacing validation.
@@ -62,6 +63,7 @@ registerHooks({
 process.env.REDIS_HOST = ""
 const { setCrateClientForTest } = await import("../../utils/crate.ts")
 const {
+	resetPendingResetsForTest,
 	cacheEntryKey,
 	serializeCacheEntry,
 	setRedisClusterForTest,
@@ -70,8 +72,7 @@ const {
 const { renderMetrics, resetMetricsForTest } = await import(
 	"../metrics/registry.server.ts"
 )
-const { getListView, resetListView, resetUnconfirmedListResetsForTest } =
-	await import("./view.server.ts")
+const { getListView, resetListView } = await import("./view.server.ts")
 const { getListAvailability } = await import("./availability.server.ts")
 const store = await import("./store.server.ts")
 
@@ -234,24 +235,6 @@ class FakeCrate {
 	}
 }
 
-class FakeRedis {
-	values = new Map<string, string>()
-	reads = 0
-	deletes = 0
-	failDelete = false
-	async get(key: string) {
-		this.reads++
-		return this.values.get(key) ?? null
-	}
-	async setex(key: string, _ttl: number, value: string) {
-		this.values.set(key, value)
-	}
-	async del(key: string) {
-		this.deletes++
-		if (this.failDelete) throw new Error("Redis down")
-		return Number(this.values.delete(key))
-	}
-}
 let db: FakeCrate
 let redis: FakeRedis
 beforeEach(() => {
@@ -259,7 +242,7 @@ beforeEach(() => {
 	redis = new FakeRedis()
 	setCrateClientForTest(db)
 	setRedisClusterForTest(redis)
-	resetUnconfirmedListResetsForTest()
+	resetPendingResetsForTest()
 	resetMetricsForTest()
 })
 afterEach(async () => {
@@ -267,7 +250,7 @@ afterEach(async () => {
 	assert.equal(cacheInFlightCount(), 0)
 	setCrateClientForTest(null)
 	setRedisClusterForTest(null)
-	resetUnconfirmedListResetsForTest()
+	resetPendingResetsForTest()
 })
 
 test("warm view and availability reads send no Crate statements and count hits", async () => {
@@ -452,7 +435,7 @@ test("write and refresh failures still invalidate; validation failures do not", 
 	}
 })
 
-test("unconfirmed reset expires after the physical TTL and drops the oldest at its bound", async (t) => {
+test("unconfirmed reset expires after the marker TTL and drops the oldest at its bound", async (t) => {
 	t.mock.timers.enable({ apis: ["Date"], now: Date.now() })
 	redis.failDelete = true
 	await resetListView(id)
@@ -464,7 +447,7 @@ test("unconfirmed reset expires after the physical TTL and drops the oldest at i
 	await getListView(id)
 	assert.equal(redis.reads, reads + 1)
 	await resetListView(id)
-	t.mock.timers.tick(600_000)
+	t.mock.timers.tick(900_000)
 	// Real Redis expires old entries at this point.
 	redis.values.clear()
 	await getListView(id)
