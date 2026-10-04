@@ -1,0 +1,506 @@
+{
+  "window_s": 62.66152572631836,
+  "commit": "86e011c8",
+  "restarted": false,
+  "containers": {
+    "before": 1,
+    "after": 1
+  },
+  "total_rps": 54.100182858716636,
+  "benchmark_rps": 0,
+  "background_rps": 54.100182858716636,
+  "crawler_loop_rps": 37.93396302512373,
+  "server_error_rps": 0,
+  "by_route_status": [
+    {
+      "route": "/person/:personKey",
+      "status_class": "3xx",
+      "rps": 19.198383474641922
+    },
+    {
+      "route": "/browser-check",
+      "status_class": "2xx",
+      "rps": 18.73557955048181
+    },
+    {
+      "route": "/person/:personKey",
+      "status_class": "2xx",
+      "rps": 3.909895221352677
+    },
+    {
+      "route": "/movie/:movieKey",
+      "status_class": "2xx",
+      "rps": 3.0959986650710993
+    },
+    {
+      "route": "static",
+      "status_class": "2xx",
+      "rps": 1.8831332086514936
+    },
+    {
+      "route": "/sign-up",
+      "status_class": "3xx",
+      "rps": 1.5160818205245075
+    },
+    {
+      "route": "/sign-up",
+      "status_class": "2xx",
+      "rps": 1.4203292844913806
+    },
+    {
+      "route": "/show/:showKey",
+      "status_class": "2xx",
+      "rps": 1.212865456419606
+    },
+    {
+      "route": "/",
+      "status_class": "2xx",
+      "rps": 0.7021852642429298
+    },
+    {
+      "route": "/api/e",
+      "status_class": "2xx",
+      "rps": 0.5425977041877185
+    },
+    {
+      "route": "/api/search-config",
+      "status_class": "2xx",
+      "rps": 0.5266389481821974
+    },
+    {
+      "route": "/api/tonight",
+      "status_class": "2xx",
+      "rps": 0.5266389481821974
+    },
+    {
+      "route": "/api/og-image-warm",
+      "status_class": "2xx",
+      "rps": 0.38301014413250717
+    },
+    {
+      "route": "/sign-in",
+      "status_class": "3xx",
+      "rps": 0.11171129203864792
+    },
+    {
+      "route": "/discover/:type?",
+      "status_class": "3xx",
+      "rps": 0.09575253603312679
+    }
+  ],
+  "routes": {
+    "/browser-check": {
+      "requests": 1174,
+      "rps": 18.73557955048181,
+      "full_ms": {
+        "p50": 29.948979591836732,
+        "p95": 113.60655737704911,
+        "p99": 190.59016393442624
+      },
+      "headers_ms": {
+        "p50": 26.5370705244123,
+        "p95": 58.45454545454542
+      },
+      "share_under_300_ms": 1
+    },
+    "/person/:personKey": {
+      "requests": 245,
+      "rps": 3.909895221352677,
+      "full_ms": {
+        "p50": 193.82022471910113,
+        "p95": 898.8095238095239,
+        "p99": 1693.7500000000014
+      },
+      "headers_ms": {
+        "p50": 86.68831168831169,
+        "p95": 253.4090909090909
+      },
+      "share_under_300_ms": 0.7142857142857143
+    },
+    "/movie/:movieKey": {
+      "requests": 194,
+      "rps": 3.0959986650710993,
+      "full_ms": {
+        "p50": 314.2857142857143,
+        "p95": 1488.235294117646,
+        "p99": 1944.7058823529412
+      },
+      "headers_ms": {
+        "p50": 187.3831775700935,
+        "p95": 483.9130434782607
+      },
+      "share_under_300_ms": 0.4845360824742268
+    },
+    "static": {
+      "requests": 118,
+      "rps": 1.8831332086514936,
+      "full_ms": {
+        "p50": 27.314814814814817,
+        "p95": 84.16666666666661,
+        "p99": 170.49999999999983
+      },
+      "headers_ms": null,
+      "share_under_300_ms": 1
+    },
+    "/sign-up": {
+      "requests": 89,
+      "rps": 1.4203292844913806,
+      "full_ms": {
+        "p50": 110.00000000000001,
+        "p95": 777.4999999999999,
+        "p99": 955.5
+      },
+      "headers_ms": {
+        "p50": 28.8961038961039,
+        "p95": 97.18749999999999
+      },
+      "share_under_300_ms": 0.7191011235955056
+    },
+    "/show/:showKey": {
+      "requests": 76,
+      "rps": 1.212865456419606,
+      "full_ms": {
+        "p50": 461.53846153846155,
+        "p95": 1654.5454545454547,
+        "p99": 1930.9090909090905
+      },
+      "headers_ms": {
+        "p50": 262.96296296296293,
+        "p95": 493.6
+      },
+      "share_under_300_ms": 0.2236842105263158
+    },
+    "/": {
+      "requests": 44,
+      "rps": 0.7021852642429298,
+      "full_ms": {
+        "p50": 37.93103448275862,
+        "p95": 159.99999999999991,
+        "p99": 780.0000000000011
+      },
+      "headers_ms": {
+        "p50": 29.545454545454547,
+        "p95": 83.74999999999999
+      },
+      "share_under_300_ms": 0.9772727272727273
+    },
+    "/api/e": {
+      "requests": 34,
+      "rps": 0.5425977041877185,
+      "full_ms": {
+        "p50": 452.3809523809524,
+        "p95": 1299.9999999999973,
+        "p99": 3979.99999999999
+      },
+      "headers_ms": null,
+      "share_under_300_ms": 0.029411764705882353
+    },
+    "/api/search-config": {
+      "requests": 33,
+      "rps": 0.5266389481821974,
+      "full_ms": {
+        "p50": 45.833333333333336,
+        "p95": 183.74999999999997,
+        "p99": 267.00000000000017
+      },
+      "headers_ms": null,
+      "share_under_300_ms": 1
+    },
+    "/api/tonight": {
+      "requests": 33,
+      "rps": 0.5266389481821974,
+      "full_ms": {
+        "p50": 33,
+        "p95": 95.35714285714285,
+        "p99": 167.00000000000017
+      },
+      "headers_ms": null,
+      "share_under_300_ms": 1
+    },
+    "/api/og-image-warm": {
+      "requests": 24,
+      "rps": 0.38301014413250717,
+      "full_ms": {
+        "p50": 25,
+        "p95": 47.49999999999999,
+        "p99": 49.49999999999999
+      },
+      "headers_ms": null,
+      "share_under_300_ms": 1
+    },
+    "/sign-in": {
+      "requests": 6,
+      "rps": 0.09575253603312679,
+      "full_ms": {
+        "p50": 200,
+        "p95": 849.9999999999997,
+        "p99": 969.9999999999998
+      },
+      "headers_ms": {
+        "p50": 30,
+        "p95": 84.99999999999997
+      },
+      "share_under_300_ms": 0.6666666666666666
+    },
+    "/api/poster-impressions": {
+      "requests": 1,
+      "rps": 0.015958756005521133,
+      "full_ms": {
+        "p50": 100,
+        "p95": 190,
+        "p99": 198
+      },
+      "headers_ms": null,
+      "share_under_300_ms": 1
+    },
+    "/discover/:type?": {
+      "requests": 1,
+      "rps": 0.015958756005521133,
+      "full_ms": {
+        "p50": 500,
+        "p95": 950,
+        "p99": 990
+      },
+      "headers_ms": {
+        "p50": 150,
+        "p95": 285
+      },
+      "share_under_300_ms": 0
+    },
+    "/api/discover/results": {
+      "requests": 1,
+      "rps": 0.015958756005521133,
+      "full_ms": {
+        "p50": 50,
+        "p95": 95,
+        "p99": 99
+      },
+      "headers_ms": null,
+      "share_under_300_ms": 1
+    },
+    "/about": {
+      "requests": 1,
+      "rps": 0.015958756005521133,
+      "full_ms": {
+        "p50": 50,
+        "p95": 95,
+        "p99": 99
+      },
+      "headers_ms": {
+        "p50": 25,
+        "p95": 47.5
+      },
+      "share_under_300_ms": 1
+    },
+    "/how-it-works": {
+      "requests": 1,
+      "rps": 0.015958756005521133,
+      "full_ms": {
+        "p50": 100,
+        "p95": 190,
+        "p99": 198
+      },
+      "headers_ms": {
+        "p50": 50,
+        "p95": 95
+      },
+      "share_under_300_ms": 1
+    }
+  },
+  "caches": {
+    "person-profile-v2": {
+      "lookups": 220,
+      "lookups_per_s": 3.510926321214649,
+      "hit": 57,
+      "miss": 163,
+      "other": 0,
+      "miss_ratio": 0.740909090909091,
+      "miss_ms": {
+        "p50": 80.93750000000001,
+        "p95": 185.70000000000002
+      }
+    },
+    "person-fingerprint-baseline": {
+      "lookups": 163,
+      "lookups_per_s": 2.6012772288999444,
+      "hit": 163,
+      "miss": 0,
+      "other": 0,
+      "miss_ratio": 0,
+      "miss_ms": null
+    },
+    "user-settings": {
+      "lookups": 274,
+      "lookups_per_s": 4.37269914551279,
+      "hit": 273,
+      "miss": 1,
+      "other": 0,
+      "miss_ratio": 0.0036496350364964014,
+      "miss_ms": {
+        "p50": 25,
+        "p95": 47.5
+      }
+    },
+    "related-show": {
+      "lookups": 274,
+      "lookups_per_s": 4.37269914551279,
+      "hit": 63,
+      "miss": 211,
+      "other": 0,
+      "miss_ratio": 0.7700729927007299,
+      "miss_ms": {
+        "p50": 46.681415929203546,
+        "p95": 276.33333333333326
+      }
+    },
+    "details-movie": {
+      "lookups": 198,
+      "lookups_per_s": 3.159833689093184,
+      "hit": 4,
+      "miss": 194,
+      "other": 0,
+      "miss_ratio": 0.9797979797979798,
+      "miss_ms": {
+        "p50": 111.32075471698114,
+        "p95": 193.67924528301887
+      }
+    },
+    "related-movie": {
+      "lookups": 274,
+      "lookups_per_s": 4.37269914551279,
+      "hit": 63,
+      "miss": 211,
+      "other": 0,
+      "miss_ratio": 0.7700729927007299,
+      "miss_ms": {
+        "p50": 46.681415929203546,
+        "p95": 376.6666666666664
+      }
+    },
+    "availability-evidence-v1": {
+      "lookups": 271,
+      "lookups_per_s": 4.324822877496227,
+      "hit": 6,
+      "miss": 265,
+      "other": 0,
+      "miss_ratio": 0.977859778597786,
+      "miss_ms": {
+        "p50": 25.775193798449614,
+        "p95": 48.97286821705427
+      }
+    },
+    "details-show": {
+      "lookups": 76,
+      "lookups_per_s": 1.212865456419606,
+      "hit": 2,
+      "miss": 74,
+      "other": 0,
+      "miss_ratio": 0.9736842105263158,
+      "miss_ms": {
+        "p50": 126,
+        "p95": 192.6
+      }
+    },
+    "episode-grid": {
+      "lookups": 76,
+      "lookups_per_s": 1.212865456419606,
+      "hit": 7,
+      "miss": 69,
+      "other": 0,
+      "miss_ratio": 0.9078947368421053,
+      "miss_ms": {
+        "p50": 26.953125,
+        "p95": 65.49999999999997
+      }
+    }
+  },
+  "qdrant": {
+    "grpc /qdrant.Points/Get 0": {
+      "calls": 426,
+      "calls_per_s": 6.798430058352002,
+      "avg_ms": 4.675002347415875
+    },
+    "grpc /qdrant.Points/Recommend 0": {
+      "calls": 160,
+      "calls_per_s": 2.553400960883381,
+      "avg_ms": 60.52755000000616
+    }
+  },
+  "in_flight": {
+    "avg": 5.916666666666667,
+    "max": 11
+  },
+  "resident_memory_mb": 2733.21484375,
+  "loop_delay_ms": {
+    "p99_max": 80.532223,
+    "max": 168.35046300000002
+  },
+  "thread_cpu_pct": {
+    "main": {
+      "avg": 79.37915078370972,
+      "max": 89.1522568923932
+    },
+    "libuv-worker": {
+      "avg": 18.073827738347145,
+      "max": 24.829685581872667
+    },
+    "V8Worker": {
+      "avg": 14.032462860985355,
+      "max": 28.472907870720935
+    }
+  },
+  "main_thread_by_time": [
+    {
+      "t_s": 8,
+      "cpu_pct": 83
+    },
+    {
+      "t_s": 13,
+      "cpu_pct": 81
+    },
+    {
+      "t_s": 18,
+      "cpu_pct": 75
+    },
+    {
+      "t_s": 23,
+      "cpu_pct": 81
+    },
+    {
+      "t_s": 28,
+      "cpu_pct": 77
+    },
+    {
+      "t_s": 33,
+      "cpu_pct": 76
+    },
+    {
+      "t_s": 38,
+      "cpu_pct": 79
+    },
+    {
+      "t_s": 43,
+      "cpu_pct": 78
+    },
+    {
+      "t_s": 48,
+      "cpu_pct": 81
+    },
+    {
+      "t_s": 53,
+      "cpu_pct": 75
+    },
+    {
+      "t_s": 58,
+      "cpu_pct": 89
+    }
+  ],
+  "proxy_cpu_pct": {
+    "avg": 116.29298564650809,
+    "max": 146.04547346188096
+  },
+  "proxy_accepts_per_s": {
+    "avg": 47.99499656884131,
+    "max": 63.93155263993986
+  }
+}

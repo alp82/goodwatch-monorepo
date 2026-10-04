@@ -1,0 +1,74 @@
+{
+  "run_id": "20261004T034350Z-lighthouse-baseline",
+  "kind": "lighthouse",
+  "label": "baseline",
+  "smoke": false,
+  "mode": "smoke",
+  "cache_mode": "warm",
+  "url_set": "lh-urls.txt",
+  "path": "public",
+  "target_url": "https://goodwatch.app",
+  "resolve_ip": "",
+  "rate_plan": null,
+  "planned_requests": null,
+  "effective_k6_inputs": null,
+  "git_commit": "88af219ad16c3a75c7caf51916849256c1da8a5c",
+  "git_dirty": false,
+  "generator_host": "10.0.0.32",
+  "jump": true,
+  "k6_image": "grafana/k6:1.8.1",
+  "metric_hosts": [
+    {
+      "host": "10.0.0.21",
+      "role": "target",
+      "file": "host-0.jsonl"
+    },
+    {
+      "host": "10.0.0.11",
+      "role": "data",
+      "file": "host-1.jsonl"
+    },
+    {
+      "host": "10.0.0.12",
+      "role": "data",
+      "file": "host-2.jsonl"
+    },
+    {
+      "host": "10.0.0.13",
+      "role": "data",
+      "file": "host-3.jsonl"
+    },
+    {
+      "host": "10.0.0.14",
+      "role": "data",
+      "file": "host-4.jsonl"
+    },
+    {
+      "host": "10.0.0.15",
+      "role": "data",
+      "file": "host-5.jsonl"
+    },
+    {
+      "host": "10.0.0.16",
+      "role": "data",
+      "file": "host-6.jsonl"
+    },
+    {
+      "host": "10.0.0.20",
+      "role": "data",
+      "file": "host-7.jsonl"
+    },
+    {
+      "host": "10.0.0.32",
+      "role": "generator",
+      "file": "host-8.jsonl"
+    }
+  ],
+  "started_at": "2026-10-04T03:43:58.182Z",
+  "ended_at": "2026-10-04T03:56:43.204Z",
+  "k6_exit_code": null,
+  "lighthouse": {
+    "runs": 3,
+    "where": "generator"
+  }
+}
