@@ -5,9 +5,9 @@
 // 2. A page that is hidden (a background tab, or the visitor switches away) runs the tools at once: nobody is waiting
 //    for that page.
 // 3. Otherwise the trigger waits for the load event, and then until the page has been quiet for `quietMs`: no long
-//    task on the main thread and no finished request in that time. That is the lab definition of "interactive" with a
-//    longer window: Lighthouse ends its measurement after 1 second of quiet, so the tools' start-up work stays out of
-//    its Total Blocking Time.
+//    task on the main thread and no finished request in that time (beacons don't count). That is the lab definition
+//    of "interactive" with a longer window: Lighthouse ends its measurement after 1 second of quiet, so the tools'
+//    start-up work stays out of its Total Blocking Time.
 // 4. A page that never gets quiet runs the tools `maxWaitMs` after the load event.
 
 export interface LoadTriggerEnv {
@@ -137,6 +137,17 @@ export function browserLoadTriggerEnv(win: Window): LoadTriggerEnv {
 	}
 }
 
+/**
+ * Whether a performance entry is work of the page. A beacon is not: the page sends it and forgets it, as the share
+ * card warm-up does 3 seconds into every page view.
+ */
+export function isPageActivity(entry: {
+	entryType: string
+	initiatorType?: string
+}): boolean {
+	return !(entry.entryType === "resource" && entry.initiatorType === "beacon")
+}
+
 function browserActivityObserver(
 	win: Window,
 ): LoadTriggerEnv["observeActivity"] {
@@ -151,7 +162,9 @@ function browserActivityObserver(
 	if (entryTypes.length === 0) return undefined
 	return (onActivity) => {
 		try {
-			const observer = new Observer(() => onActivity())
+			const observer = new Observer((list) => {
+				if (list.getEntries().some(isPageActivity)) onActivity()
+			})
 			observer.observe({ entryTypes })
 			return () => observer.disconnect()
 		} catch {

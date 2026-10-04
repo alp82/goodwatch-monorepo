@@ -1,9 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 
-const { INTERACTION_EVENTS, whenPageIsInteractive } = await import(
-	"./load-trigger.ts"
-)
+const { INTERACTION_EVENTS, isPageActivity, whenPageIsInteractive } =
+	await import("./load-trigger.ts")
 type LoadTriggerEnv = import("./load-trigger.ts").LoadTriggerEnv
 
 // A browser stand-in with a clock the test moves by hand.
@@ -185,4 +184,20 @@ test("a cancelled trigger never runs", () => {
 	browser.advance(60_000)
 	assert.deepEqual(reasons, [])
 	assert.equal(browser.leftovers(), 0)
+})
+
+test("long tasks and finished requests are page activity, beacons are not", () => {
+	assert.equal(isPageActivity({ entryType: "longtask" }), true)
+	assert.equal(
+		isPageActivity({ entryType: "resource", initiatorType: "script" }),
+		true,
+	)
+	assert.equal(
+		isPageActivity({ entryType: "resource", initiatorType: "fetch" }),
+		true,
+	)
+	assert.equal(
+		isPageActivity({ entryType: "resource", initiatorType: "beacon" }),
+		false,
+	)
 })
