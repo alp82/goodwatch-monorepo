@@ -24,10 +24,8 @@ export interface RelatedPanel {
 export interface RelatedPanelParams {
 	tmdbId: number
 	sourceMediaType: MediaType
-	/** Missing for the overall panel. */
+	/** Missing for the overall panel. The server looks up the source title's score for the key. */
 	fingerprintKey?: string
-	/** The source title's score for the fingerprint key. */
-	sourceFingerprintScore?: number
 }
 
 export interface RelatedPanelSource {
@@ -35,7 +33,6 @@ export interface RelatedPanelSource {
 	details: { tmdb_id: number }
 	fingerprint?: {
 		highlightKeys?: string[]
-		scores?: Partial<Record<string, number>>
 	} | null
 }
 
@@ -59,11 +56,7 @@ export const relatedPanelParams = (
 		sourceMediaType: media.mediaType,
 	}
 	if (panelKey === OVERALL_PANEL) return params
-	return {
-		...params,
-		fingerprintKey: panelKey,
-		sourceFingerprintScore: media.fingerprint?.scores?.[panelKey],
-	}
+	return { ...params, fingerprintKey: panelKey }
 }
 
 export const queryKeyRelatedPanel = ["related-panel"]
@@ -72,29 +65,25 @@ export const getQueryKeyRelatedPanel = ({
 	tmdbId,
 	sourceMediaType,
 	fingerprintKey,
-	sourceFingerprintScore,
 }: RelatedPanelParams) =>
 	queryKeyRelatedPanel.concat([
 		tmdbId.toString(),
 		sourceMediaType,
 		fingerprintKey ?? OVERALL_PANEL,
-		sourceFingerprintScore?.toString() ?? "none",
 	])
 
-/** One request per panel: without `mediaType`, /api/related answers with the movies and the shows. */
+// One request per panel: /api/related answers with the movies and the shows. The URL holds only
+// the title and the panel, so a title has a small, fixed set of URLs that a shared cache can keep.
 export const relatedPanelUrl = ({
 	tmdbId,
 	sourceMediaType,
 	fingerprintKey,
-	sourceFingerprintScore,
 }: RelatedPanelParams): string => {
 	const search = new URLSearchParams({
 		tmdbId: tmdbId.toString(),
 		sourceMediaType,
 	})
 	if (fingerprintKey) search.set("fingerprintKey", fingerprintKey)
-	if (sourceFingerprintScore !== undefined)
-		search.set("sourceFingerprintScore", sourceFingerprintScore.toString())
 	return `/api/related?${search}`
 }
 

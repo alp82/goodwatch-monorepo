@@ -30,7 +30,6 @@ const matrix: RelatedPanelSource = {
 	details: { tmdb_id: 603 },
 	fingerprint: {
 		highlightKeys: ["futuristic", "philosophical", "spectacle"],
-		scores: { futuristic: 9, philosophical: 8, spectacle: 9 },
 	},
 }
 
@@ -126,7 +125,7 @@ describe("related panel", () => {
 		)
 		assert.equal(
 			relatedPanelUrl(relatedPanelParams(matrix, "futuristic")),
-			"/api/related?tmdbId=603&sourceMediaType=movie&fingerprintKey=futuristic&sourceFingerprintScore=9",
+			"/api/related?tmdbId=603&sourceMediaType=movie&fingerprintKey=futuristic",
 		)
 	})
 
@@ -156,7 +155,7 @@ describe("related panel", () => {
 		assert.equal(result.isPending, false)
 		assert.deepEqual(result.data, panelOf(2))
 		assert.deepEqual(requests, [
-			"/api/related?tmdbId=603&sourceMediaType=movie&fingerprintKey=futuristic&sourceFingerprintScore=9",
+			"/api/related?tmdbId=603&sourceMediaType=movie&fingerprintKey=futuristic",
 		])
 	})
 
