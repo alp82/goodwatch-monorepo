@@ -206,8 +206,11 @@ function useController() {
 		return () => clearTimeout(timer);
 	}, [q, active, ready]);
 
+	// The version only keys search batches, so it loads with the search page. The controller runs on every page,
+	// and without this condition every page load and every tab focus asked for it.
 	const config = useQuery<{ version: string }>({
 		queryKey: ["search-policy"],
+		enabled: active,
 		queryFn: async ({ signal }) => {
 			const response = await fetch("/api/search-config", {
 				signal,

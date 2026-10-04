@@ -1,6 +1,6 @@
 import { Link } from "@remix-run/react"
 import React from "react"
-import { useGenres } from "~/routes/api.genres.all"
+import { useGenreLinks } from "~/routes/api.genres.all"
 import type { DNAItem } from "~/server/details.server"
 import type { MediaType } from "~/server/search.server"
 import { DNATag } from "~/ui/dna/DNATag"
@@ -20,9 +20,7 @@ export default function Genres({
 	withLinks = true,
 	compact = false,
 }: GenresProps) {
-	const allGenresResult = useGenres()
-	const allGenres = allGenresResult?.data || []
-	const genresToShow = allGenres.filter((genre) => genres?.includes(genre.name))
+	const genresToShow = useGenreLinks(genres).data ?? []
 
 	const sizeClasses = compact ? "px-2 py-0.5 text-xs" : "px-2.5 py-0.5"
 

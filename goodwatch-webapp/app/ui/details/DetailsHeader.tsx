@@ -16,6 +16,7 @@ import type {
 import AgeRating from "~/ui/details/AgeRating"
 import Runtime from "~/ui/details/Runtime"
 import Genres from "~/ui/details/Genres"
+import { HEADER_GENRE_COUNT } from "~/utils/title-extras"
 import Cycle from "~/ui/list/Cycle"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
@@ -118,7 +119,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 								<span className="hidden sm:inline mx-2">&middot;</span>
 								<span className="hidden sm:inline">
 									<Genres
-										genres={genres.slice(0, 2)}
+										genres={genres.slice(0, HEADER_GENRE_COUNT)}
 										type={mediaType === "movie" ? "movie" : "show"}
 										compact={true}
 									/>

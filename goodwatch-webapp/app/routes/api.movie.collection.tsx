@@ -10,6 +10,10 @@ import type {
 } from "~/server/collection.server"
 import { getMoviesInCollection } from "~/server/collection.server"
 import type { MovieDetails } from "~/server/details.server"
+import {
+	TITLE_EXTRAS_STALE_TIME,
+	movieCollectionQueryKey,
+} from "~/utils/title-extras"
 
 type LoaderData = {
 	collectionId: string
@@ -35,8 +39,10 @@ export const useMovieCollection = ({
 	movieIds,
 }: MovieCollectionParams) =>
 	useQuery<MoviesInCollection>({
-		queryKey: ["movie-collection", collectionId, movieIds],
+		queryKey: movieCollectionQueryKey(collectionId, movieIds),
 		enabled: Boolean(collectionId && movieIds),
+		// The movies come with the document; see TITLE_EXTRAS_STALE_TIME for the reason.
+		staleTime: TITLE_EXTRAS_STALE_TIME,
 		queryFn: async ({ signal }) => {
 			const params = new URLSearchParams({ collectionId, movieIds })
 			const response = await fetch(`/api/movie/collection?${params}`, {

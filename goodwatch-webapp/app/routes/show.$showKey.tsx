@@ -15,6 +15,8 @@ import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { type EpisodeGridWire, packEpisodeGrid, unpackEpisodeGrid } from "~/utils/episode-grid-wire"
 import { resolveCountry } from "~/server/country.server"
 import { prefetchRelatedTitlesState } from "~/server/related.server"
+import { prefetchTitleExtrasState } from "~/server/title-extras.server"
+import { mergeDehydratedStates } from "~/utils/title-extras"
 import { getUserSettings } from "~/server/user-settings.server"
 import Details from "~/ui/details/Details"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -55,12 +57,14 @@ export const loader: LoaderFunction = async ({
 		countryDefault: userSettings?.country_default,
 	})
 	const language = url.searchParams.get("language") || "en"
-	const [media, episodeGrid, dehydratedState] = await Promise.all([
-		getDetailsForShow({
-			showId,
-			country,
-			language,
-		}),
+	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
+	const details = getDetailsForShow({
+		showId,
+		country,
+		language,
+	})
+	const [media, episodeGrid, relatedState, extrasState] = await Promise.all([
+		details,
 		// A failed grid read hides the grid; it never fails the page.
 		getEpisodeGrid({ showId })
 			.then((grid) => grid && packEpisodeGrid(grid))
@@ -71,9 +75,17 @@ export const loader: LoaderFunction = async ({
 		prefetchRelatedTitlesState({
 			tmdbId: Number(showId),
 			sourceMediaType: "show",
-			budgetMs: relatedPrefetchBudgetMs(isCrawler(request)),
+			budgetMs,
 		}),
+		// The header's genre links, which the page requested after load before.
+		details.then(
+			(media) =>
+				prefetchTitleExtrasState({ genres: media.details.genres, budgetMs }),
+			// A failed details read fails the page above.
+			() => null,
+		),
 	])
+	const dehydratedState = mergeDehydratedStates(relatedState, extrasState)
 
 	return {
 		media,

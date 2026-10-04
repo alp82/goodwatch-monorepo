@@ -13,6 +13,8 @@ import { getDetailsForMovie } from "~/server/details.server"
 import { isCrawler } from "~/server/crawlers.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import { prefetchRelatedTitlesState } from "~/server/related.server"
+import { prefetchTitleExtrasState } from "~/server/title-extras.server"
+import { mergeDehydratedStates } from "~/utils/title-extras"
 import type { MovieQueryResult } from "~/server/types/details-types"
 import { resolveCountry } from "~/server/country.server"
 import { getUserSettings } from "~/server/user-settings.server"
@@ -60,18 +62,32 @@ export const loader: LoaderFunction = async ({
 		countryDefault: userSettings?.country_default,
 	})
 	const language = url.searchParams.get("language") || "en"
-	const [media, dehydratedState] = await Promise.all([
-		getDetailsForMovie({
-			movieId,
-			country,
-			language,
-		}),
+	const budgetMs = relatedPrefetchBudgetMs(isCrawler(request))
+	const details = getDetailsForMovie({
+		movieId,
+		country,
+		language,
+	})
+	const [media, relatedState, extrasState] = await Promise.all([
+		details,
 		prefetchRelatedTitlesState({
 			tmdbId: Number(movieId),
 			sourceMediaType: "movie",
-			budgetMs: relatedPrefetchBudgetMs(isCrawler(request)),
+			budgetMs,
 		}),
+		// The header's genre links and the collection's movies, which the page requested after load before.
+		details.then(
+			(media) =>
+				prefetchTitleExtrasState({
+					genres: media.details.genres,
+					movieSeries: media.movie_series,
+					budgetMs,
+				}),
+			// A failed details read fails the page above.
+			() => null,
+		),
 	])
+	const dehydratedState = mergeDehydratedStates(relatedState, extrasState)
 
 	return {
 		media,
