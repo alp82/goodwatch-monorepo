@@ -34,7 +34,7 @@ export default function DetailsContent({
 	sectionProps,
 	navigateToSection,
 }: DetailsContentProps) {
-	const { details, cast, crew, videos } = media
+	const { details, cast, cast_total, crew, videos } = media
 
 	return (
 		<div className="flex flex-col gap-12">
@@ -56,7 +56,12 @@ export default function DetailsContent({
 				<About media={media} navigateToSection={navigateToSection} />
 			</div>
 			<div {...sectionProps.actors_and_crew}>
-				<Actors cast={cast} />
+				<Actors
+					cast={cast}
+					total={cast_total}
+					mediaType={media.mediaType}
+					tmdbId={details.tmdb_id}
+				/>
 			</div>
 			<div>
 				<Crew crew={crew} />
