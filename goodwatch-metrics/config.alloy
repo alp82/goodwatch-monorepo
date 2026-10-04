@@ -8,7 +8,7 @@ prometheus.scrape "node" {
   targets = [
     {"__address__" = "node-exporter:9100"},
   ]
-  forward_to = [prometheus.relabel.add_instance_label.receiver]
+  forward_to = [prometheus.relabel.trim_node_metrics.receiver]
 
   // Add this line for better scrape monitoring:
   extra_metrics = true
@@ -19,7 +19,57 @@ prometheus.scrape "node" {
   // job_name = "node_exporter"
 }
 
-// 2. Relabel the scraped metrics before sending them
+// 2. Drop node series that nobody reads, to stay under the active series
+// limit of the Grafana Cloud tenant. Delete a rule to get its series back.
+prometheus.relabel "trim_node_metrics" {
+  forward_to = [prometheus.relabel.add_instance_label.receiver]
+
+  // Per-collector scrape bookkeeping, and node_exporter's own Go runtime and
+  // HTTP handler metrics. process_* stays.
+  rule {
+    action        = "drop"
+    source_labels = ["__name__"]
+    regex         = "node_scrape_collector_.*|go_.*|promhttp_.*"
+  }
+
+  // Per-CPU detail beyond node_cpu_seconds_total, which stays per core and mode.
+  rule {
+    action        = "drop"
+    source_labels = ["__name__"]
+    regex         = "node_cpu_guest_seconds_total|node_softnet_.*|node_schedstat_.*|node_cooling_device_.*"
+  }
+
+  // Virtual network interfaces: Docker veth pairs and bridges, and loopback.
+  // Physical, WireGuard and Tailscale interfaces stay.
+  rule {
+    action        = "drop"
+    source_labels = ["__name__", "device"]
+    regex         = "node_network_.*;(veth.*|br-.*|docker.*|lo)"
+  }
+
+  // Pseudo and container filesystems. Real mounts such as /, /boot/efi and
+  // the backup mounts stay.
+  rule {
+    action        = "drop"
+    source_labels = ["__name__", "fstype"]
+    regex         = "node_filesystem_.*;(tmpfs|devtmpfs|overlay|squashfs|nsfs|shm|ramfs)"
+  }
+
+  rule {
+    action        = "drop"
+    source_labels = ["__name__", "mountpoint"]
+    regex         = "node_filesystem_.*;(/run|/var/lib/docker)(/.*)?"
+  }
+
+  // Virtual CD-ROM, loop and RAM block devices.
+  rule {
+    action        = "drop"
+    source_labels = ["__name__", "device"]
+    regex         = "node_disk_.*;(sr|loop|ram)\\d+"
+  }
+}
+
+// 3. Relabel the scraped metrics before sending them
 prometheus.relabel "add_instance_label" {
   // Forward relabeled metrics to the remote_write component's receiver
   forward_to = [prometheus.remote_write.grafana_cloud.receiver]
@@ -47,7 +97,7 @@ prometheus.relabel "add_instance_label" {
   }
 }
 
-// 3. Send relabeled metrics to Grafana Cloud Prometheus Remote Write endpoint.
+// 4. Send relabeled metrics to Grafana Cloud Prometheus Remote Write endpoint.
 prometheus.remote_write "grafana_cloud" {
   endpoint {
     url = env("GRAFANA_CLOUD_PROM_URL")
