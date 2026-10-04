@@ -73,7 +73,11 @@ export default function DetailsContent({
 				<SequelsPrequelsFranchise media={media} />
 			</div>
 			<div {...sectionProps.media}>
-				<Media videos={videos || []} />
+				<Media
+					videos={videos || []}
+					title={details.title}
+					backdropPath={details.backdrop_path}
+				/>
 			</div>
 			<div {...sectionProps.faq}>
 				<DetailsQuestions media={media} country={country} />

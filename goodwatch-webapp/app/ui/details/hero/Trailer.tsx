@@ -2,10 +2,10 @@ import { Dialog, DialogPanel } from "@headlessui/react"
 import { PlayIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import type React from "react"
 import { useState } from "react"
-import ReactPlayer from "react-player/youtube"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
+import { YoutubePlayer } from "~/ui/details/YoutubePlayer"
 import type { SizeRule } from "~/utils/tmdb-image"
 
 type Media = MovieResult | ShowResult
@@ -45,14 +45,14 @@ function TrailerDialog({ media, open, onClose }: { media: Media; open: boolean; 
 					>
 						<XMarkIcon className="h-5 w-5" />
 					</button>
-					{open && <ReactPlayer url={`https://www.youtube.com/watch?v=${key}`} width="100%" height="100%" controls config={{ playerVars: { autoplay: 1 } }} />}
+					{open && <YoutubePlayer videoKey={key} />}
 				</DialogPanel>
 			</div>
 		</Dialog>
 	)
 }
 
-function PlayPill() {
+export function PlayPill({ label = "Play trailer" }: { label?: string }) {
 	return (
 		<span
 			aria-hidden="true"
@@ -61,7 +61,7 @@ function PlayPill() {
 			<span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white">
 				<PlayIcon className="h-3.5 w-3.5 translate-x-px" />
 			</span>
-			Play trailer
+			{label}
 		</span>
 	)
 }

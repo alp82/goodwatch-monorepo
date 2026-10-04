@@ -1,9 +1,11 @@
-import React, { useState } from "react"
-import ReactPlayer from "react-player/youtube"
-import { ClientOnly } from "remix-utils/client-only"
+import { useState } from "react"
 import type { Videos as VideosType } from "~/server/details.server"
 import InfoBox from "~/ui/InfoBox"
+import { TmdbImage } from "~/ui/TmdbImage"
+import { YoutubePlayer } from "~/ui/details/YoutubePlayer"
+import { PlayPill } from "~/ui/details/hero/Trailer"
 import Tabs, { type Tab } from "~/ui/tabs/Tabs"
+import type { SizeRule } from "~/utils/tmdb-image"
 
 export const allTypes = [
 	"trailers",
@@ -17,14 +19,28 @@ export const allTypes = [
 
 export interface MediaProps {
 	videos: VideosType
+	/** The title's name and backdrop, for the image a video shows until it is played. */
+	title: string
+	backdropPath?: string | null
 }
 
-export default function Media({ videos }: MediaProps) {
+// The video is as wide as the page content.
+const VIDEO_POSTER_SIZES: SizeRule[] = [
+	["(min-width: 1280px)", "1216px"],
+	[null, "100vw"],
+]
+
+const typeLabel = (type: string) =>
+	type.charAt(0).toUpperCase() + type.slice(1, -1)
+
+export default function Media({ videos, title, backdropPath }: MediaProps) {
 	const types = Object.keys(videos || {})
 	const [selectedType, setSelectedType] = useState(
 		allTypes.find((type) => types.includes(type)) || allTypes[0],
 	)
 	const [selectedNumber, setSelectedNumber] = useState(0)
+	// The key of the video the visitor started. The player and YouTube's scripts load only then.
+	const [playingKey, setPlayingKey] = useState<string | null>(null)
 	const selectedVideos = videos?.[selectedType] || []
 
 	const typeTabs: Tab[] = allTypes
@@ -32,7 +48,7 @@ export default function Media({ videos }: MediaProps) {
 		.map((type) => {
 			return {
 				key: type,
-				label: type.charAt(0).toUpperCase() + type.slice(1, -1),
+				label: typeLabel(type),
 				current: type === selectedType,
 			}
 		})
@@ -55,14 +71,8 @@ export default function Media({ videos }: MediaProps) {
 		setSelectedNumber(Number.parseInt(tab.key) - 1)
 	}
 
-	const videoOpts = {
-		width: "100%",
-		height: "100%",
-		playerVars: {
-			// https://developers.google.com/youtube/player_parameters
-			autoplay: 0,
-		},
-	}
+	const selectedKey = selectedVideos[selectedNumber]?.key
+	const playLabel = `Play ${typeLabel(selectedType).toLowerCase()}`
 
 	return (
 		<div className="mt-8">
@@ -81,19 +91,33 @@ export default function Media({ videos }: MediaProps) {
 							/>
 						</div>
 					)}
-					{selectedVideos[selectedNumber]?.key && (
-						<ClientOnly fallback={<div>Loading video…</div>}>
-							{() => (
-								<div className="aspect-16/9">
-									<ReactPlayer
-										url={`https://www.youtube.com/watch?v=${selectedVideos[selectedNumber].key}`}
-										width="100%"
-										height="100%"
-										controls
+					{selectedKey && (
+						<div className="relative aspect-16/9 overflow-hidden bg-black">
+							{playingKey === selectedKey ? (
+								<YoutubePlayer key={selectedKey} videoKey={selectedKey} />
+							) : (
+								<button
+									type="button"
+									onClick={() => setPlayingKey(selectedKey)}
+									aria-label={`${playLabel} for ${title}`}
+									className="group absolute inset-0 block h-full w-full cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-amber-300"
+								>
+									<TmdbImage
+										kind="backdrop"
+										path={backdropPath}
+										sizes={VIDEO_POSTER_SIZES}
+										maxWidth={1216}
+										className="absolute inset-0 h-full w-full object-cover"
+										draggable={false}
 									/>
-								</div>
+									<span
+										aria-hidden="true"
+										className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-black/40 motion-reduce:transition-none"
+									/>
+									<PlayPill label={playLabel} />
+								</button>
 							)}
-						</ClientOnly>
+						</div>
 					)}
 				</>
 			) : (
