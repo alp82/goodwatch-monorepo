@@ -7,6 +7,7 @@ import re
 from crate import client
 from dotenv import load_dotenv
 
+from sitemap_query import detail_query
 from utils import title_to_dashed
 
 load_dotenv()
@@ -15,17 +16,6 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SITEMAP_DIR = os.path.join(SCRIPT_DIR, "../public/sitemaps/")
 CATEGORY_DIR = os.path.join(SCRIPT_DIR, "../app/ui/explore/category/")
 BASE_URL = "https://goodwatch.app"
-
-# A small site gets little crawl budget, so the sitemap lists only the titles
-# most likely to be searched. Raise these once Google indexes most of them.
-TITLE_LIMIT = {
-    "movie": 700,
-    "show": 300,
-}
-FILTER_CONDITION = ("goodwatch_overall_score_voting_count > 5000 "
-                    "AND goodwatch_overall_score_normalized_percent > 30 "
-                    "AND release_year IS NOT NULL "
-                    "AND poster_path IS NOT NULL")
 
 # Must match mainHierarchy in app/ui/explore/main-nav.ts
 MAIN_CATEGORIES = [
@@ -142,14 +132,8 @@ def latest_date(*timestamps) -> Optional[date]:
 
 def create_detail_sitemaps(crate_cursor, table_name: Literal["movie", "show"]):
     """Create sitemaps for the most popular movie and show detail pages."""
-    # lastmod reflects changes to what the page shows: TMDB details and the fingerprint.
-    crate_cursor.execute(
-        f"SELECT tmdb_id, title, original_title, tmdb_details_updated_at, dna_updated_at "
-        f"FROM {table_name} "
-        f"WHERE {FILTER_CONDITION} "
-        f"ORDER BY popularity DESC, tmdb_id ASC "
-        f"LIMIT {TITLE_LIMIT[table_name]}"
-    )
+    # Which titles are listed, and why: see sitemap_query.py.
+    crate_cursor.execute(detail_query(table_name))
     rows = crate_cursor.fetchall()
 
     entries = []

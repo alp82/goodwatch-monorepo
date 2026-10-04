@@ -28,7 +28,7 @@ export function useStreamingLinks(media: Media, country: string, types: Streamin
 				id: l.streaming_service_id,
 				name: s ? brandName(getShorterProviderLabel(s.name)) : "",
 				logoPath: s?.logo ?? "",
-				url: getStreamingUrl(l as never, details as never, country, mediaType),
+				url: getStreamingUrl(l, details, country, mediaType),
 				type: l.streaming_type,
 				owned: owned.includes(l.streaming_service_id),
 				order: s?.order_default ?? 999,

@@ -216,6 +216,8 @@ export interface ShowDetails extends BaseDetails {
 	first_air_date: string
 	last_air_date: string
 	in_production: boolean
+	/** Episode lengths in minutes. Missing on values cached before the field was read, and on many shows. */
+	episode_runtime?: number[] | null
 }
 
 export interface AlternativeTitle {

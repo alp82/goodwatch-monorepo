@@ -1,9 +1,3 @@
-import type {
-	MovieDetails,
-	StreamingLink,
-	TVDetails,
-} from "~/server/details.server"
-
 export const duplicateProviders = [
 	24, // Quickflix Store
 	188, // YouTube Premium
@@ -50,49 +44,21 @@ export const getShorterProviderLabel = (label: string) => {
 	}
 }
 
+/** The title's "where to watch" page on TMDB for a country, which lists every offer with its link. */
+export const tmdbWatchUrl = (
+	mediaType: "movie" | "show",
+	tmdbId: number,
+	country: string,
+) =>
+	`https://www.themoviedb.org/${mediaType === "movie" ? "movie" : "tv"}/${tmdbId}/watch?locale=${encodeURIComponent(country.toUpperCase())}`
+
+/**
+ * Where an offer's tile links to: the offer's own link, or the title's TMDB watch page when the offer has none.
+ * About half of the offers come without a link of their own.
+ */
 export const getStreamingUrl = (
-	link: StreamingLink,
-	details: MovieDetails | TVDetails,
+	offer: { stream_url?: string | null },
+	details: { tmdb_id: number },
 	country: string,
 	mediaType: "movie" | "show",
-) => {
-	if (link.stream_url) return link.stream_url
-
-	const { title, release_year } = details
-	const titleAndYear = `${title}%20${release_year}`
-	if (link.provider_name === "Apple TV") {
-		return `https://tv.apple.com/search?term=${titleAndYear}`
-	}
-	if (link.provider_name === "Google Play Movies") {
-		return `https://play.google.com/store/search?q=${titleAndYear}&c=movies&hl=en`
-	}
-	if (["Amazon Prime Video", "Amazon Video"].includes(link.provider_name)) {
-		return `https://www.amazon.${country}/s?k=${title}&i=instant-video`
-	}
-	if (link.provider_name === "YouTube") {
-		return `https://www.youtube.com/results?sp=mAEB&search_query=${titleAndYear}`
-	}
-	if (link.provider_name === "Netflix") {
-		return `https://www.netflix.com/search?q=${title}`
-	}
-	if (link.provider_name === "Rakuten TV") {
-		return `https://www.rakuten.tv/en/search?q=${title}`
-	}
-	if (link.provider_name === "Microsoft Store") {
-		return `https://www.microsoft.com/en-us/search/explore?q=${title}`
-	}
-	if (link.provider_name === "maxdome Store") {
-		return `https://store.maxdome.de/suche/${titleAndYear}`
-	}
-	if (link.provider_name === "MagentaTV") {
-		return `https://store.maxdome.de/suche/${titleAndYear}`
-	}
-	if (link.provider_name === "MUBI") {
-		return `https://mubi.com/en/search/films?query=${titleAndYear}`
-	}
-	if (link.provider_name === "RTL+") {
-		return `https://plus.rtl.de/suche?term=${titleAndYear}&scopes=watch`
-	}
-
-	return link.tmdb_url
-}
+) => offer.stream_url || tmdbWatchUrl(mediaType, details.tmdb_id, country)

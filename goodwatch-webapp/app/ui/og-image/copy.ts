@@ -17,6 +17,17 @@ type PageCopy = { tag: string; title: string; subtitle: string }
 
 // Movies and shows: the tag above the title, such as "Movie · 2010 · 2h 28m".
 export const MEDIA_LABELS = { movie: "Movie", show: "TV Show" } as const
+/** A movie's length, such as "2h 16m", "1h", or "45m". Empty without a positive whole number of minutes. */
+export const runtimeLabel = (minutes: number | null | undefined) => {
+	if (!minutes || !Number.isFinite(minutes) || minutes <= 0) return ""
+	const whole = Math.round(minutes)
+	const hours = Math.floor(whole / 60)
+	const rest = whole % 60
+	return [hours ? `${hours}h` : "", rest ? `${rest}m` : ""]
+		.filter(Boolean)
+		.join(" ")
+}
+
 export const seasonsLabel = (count: number) =>
 	`${count} season${count > 1 ? "s" : ""}`
 

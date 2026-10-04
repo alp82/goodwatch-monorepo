@@ -34,19 +34,16 @@ export default function About() {
 
 			<h2 className="mt-12 mb-4 text-2xl font-bold">What's unique?</h2>
 			<section className="prose prose-invert lg:prose-xl mx-auto">
-				<p>
-					GoodWatch is the only site (that I know of) that combines:
-					<ol>
-						<li>
-							streaming information from most services (e.g. Netflix, Prime,
-							etc.)
-						</li>
-						<li>
-							scores from popular rating pages (e.g. IMDb, Metacritic, Rotten
-							Tomatoes)
-						</li>
-					</ol>
-				</p>
+				<p>GoodWatch is the only site (that I know of) that combines:</p>
+				<ol>
+					<li>
+						streaming information from most services (e.g. Netflix, Prime, etc.)
+					</li>
+					<li>
+						scores from popular rating pages (e.g. IMDb, Metacritic, Rotten
+						Tomatoes)
+					</li>
+				</ol>
 			</section>
 
 			<h2 className="mt-12 mb-4 text-2xl font-bold">

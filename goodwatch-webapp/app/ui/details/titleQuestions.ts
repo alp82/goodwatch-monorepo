@@ -89,7 +89,7 @@ function lengthAnswer(media: MovieResult | ShowResult) {
 	}
 	const seasons = d.number_of_seasons as number
 	const eps = d.number_of_episodes as number
-	const ep = (d.episode_run_time as number[])?.[0]
+	const ep = (d.episode_runtime as number[] | null | undefined)?.[0]
 	if (!seasons) return null
 	const running = d.in_production ? " and is still in production" : ""
 	return `It has ${seasons} season${seasons === 1 ? "" : "s"} with ${eps} episodes${ep ? ` of about ${ep} minutes each` : ""}${running}.`

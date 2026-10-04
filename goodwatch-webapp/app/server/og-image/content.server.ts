@@ -27,6 +27,7 @@ import {
 	categoryIndexCopy,
 	collectionCopy,
 	personTag,
+	runtimeLabel,
 	seasonsLabel,
 	typeIndexCopy,
 } from "~/ui/og-image/copy"
@@ -176,16 +177,17 @@ async function titleContent(
 	const media = await loadDetails(type, id)
 	if (!media) return null
 	const d = media.details
-	// Only shows get this part of the tag. The details never carried a media type, so the movie
-	// branch that formatted the runtime here never ran.
-	const runtime =
-		"number_of_seasons" in d && d.number_of_seasons
-			? seasonsLabel(d.number_of_seasons)
-			: ""
+	// A movie's length or a show's season count.
+	const length =
+		media.mediaType === "movie"
+			? runtimeLabel(media.details.runtime)
+			: media.details.number_of_seasons
+				? seasonsLabel(media.details.number_of_seasons)
+				: ""
 	const score = d.goodwatch_overall_score_normalized_percent
 	return {
 		kind: "title",
-		tag: [MEDIA_LABELS[type], d.release_year, runtime]
+		tag: [MEDIA_LABELS[type], d.release_year, length]
 			.filter(Boolean)
 			.join(" · "),
 		title: clip(d.title),

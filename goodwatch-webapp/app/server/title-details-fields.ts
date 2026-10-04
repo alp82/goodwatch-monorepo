@@ -35,6 +35,8 @@ export const SHOW_DETAILS_FIELDS = [
 	"first_air_date",
 	"last_air_date",
 	"in_production",
+	// The length answer of the title page's questions reads the first value.
+	"episode_runtime",
 ] as const
 export const FINGERPRINT_INPUT_FIELDS = [
 	"original_title",

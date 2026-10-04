@@ -9,7 +9,7 @@ import type {
 	TVDetails,
 } from "~/server/details.server"
 import InfoBox from "~/ui/InfoBox"
-import { getStreamingUrl } from "~/utils/streaming-links"
+import { getStreamingUrl, tmdbWatchUrl } from "~/utils/streaming-links"
 import { countryFlagUrl } from "~/utils/country-flag"
 import justwatchLogo from "~/img/justwatch-logo.svg"
 
@@ -188,7 +188,7 @@ export default function Streaming({
 				<div className="mt-12 w-auto h-3 flex gap-2 items-center">
 					<small>Streaming data by</small>
 					<a
-						href={links[0].tmdb_url}
+						href={tmdbWatchUrl(media_type, details.tmdb_id, currentCountryCode)}
 						target="_blank"
 						className=""
 						rel="noreferrer"
