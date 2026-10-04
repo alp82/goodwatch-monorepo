@@ -3,6 +3,7 @@
 import type { ListEntry } from "~/server/share-lists/titles.server"
 import { type MediaType, titleKey } from "~/ui/share-card/model"
 import { AVAILABILITY_MAX_AGE_MS } from "~/utils/availability-evidence"
+import { cached } from "~/utils/cache"
 import { query } from "~/utils/crate"
 import {
 	brandName,
@@ -56,8 +57,30 @@ type ServiceRow = {
 const asCountry = (country: string) =>
 	/^[A-Z]{2}$/.test(country) ? country : null
 
-/** Offers per title key ("movie:603"), best first: streaming before rent and buy, then the country's service order. */
+// Offers depend on country, not language: none of this value is localized.
+// Title keys, rather than a list id, make edits select a new entry without resets.
 export async function getListAvailability(
+	entries: ListEntry[],
+	rawCountry: string,
+): Promise<Record<string, TitleAvailability>> {
+	const country = asCountry(rawCountry.toUpperCase())
+	if (!country || !entries.length)
+		return readListAvailability(entries, rawCountry)
+	return cached({
+		name: "share-list-availability-v1",
+		params: {
+			country,
+			titles: [
+				...new Set(entries.map((e) => titleKey(e.media_type, e.tmdb_id))),
+			].sort(),
+		},
+		ttlMinutes: 30,
+		target: () => readListAvailability(entries, country),
+	})
+}
+
+/** Offers per title key ("movie:603"), best first: streaming before rent and buy, then the country's service order. */
+export async function readListAvailability(
 	entries: ListEntry[],
 	rawCountry: string,
 ): Promise<Record<string, TitleAvailability>> {

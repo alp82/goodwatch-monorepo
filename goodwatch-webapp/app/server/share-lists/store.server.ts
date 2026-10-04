@@ -11,6 +11,9 @@ import { isPromptId, isThemeKey, LIST_SIZE, type ThemeKey, TITLE_MAX_LENGTH } fr
 import { execute, query } from "~/utils/crate"
 import { HANDLE_MAX, handleFromText, handleProblem, normalizeHandle } from "~/utils/handles"
 
+import { LIST_COLUMNS, type ListRow, fromRow, getList, getProfileByUserId, resetListView } from "./view.server"
+
+export { type ListView, getList, getListView, getProfileByUserId, resetListView } from "./view.server"
 export { HANDLE_MAX, HANDLE_MIN, handleProblem, normalizeHandle } from "~/utils/handles"
 
 export type Visibility = "public" | "unlisted"
@@ -108,44 +111,7 @@ export async function validateList(input: ShareListInput) {
 	return { title, design: input.design, theme: input.theme, promptId, visibility, items: entries }
 }
 
-type ListRow = {
-	id: string
-	user_id: string
-	title: string
-	prompt_id: string | null
-	design: string
-	theme: string
-	items: ListEntry[]
-	visibility: Visibility
-	remixed_from: string | null
-	content_hash: string
-	created_at: number
-	updated_at: number
-}
-const LIST_COLUMNS = "id, user_id, title, prompt_id, design, theme, items, visibility, remixed_from, content_hash, created_at, updated_at"
-
-const fromRow = (r: ListRow): ShareList => ({
-	id: r.id,
-	userId: r.user_id,
-	title: r.title,
-	promptId: r.prompt_id,
-	design: r.design,
-	theme: (isThemeKey(r.theme) ? r.theme : "ember") as ThemeKey,
-	items: (r.items ?? []).map((i) => ({ media_type: i.media_type, tmdb_id: Number(i.tmdb_id) })),
-	visibility: r.visibility,
-	remixedFrom: r.remixed_from,
-	contentHash: r.content_hash,
-	createdAt: new Date(r.created_at).toISOString(),
-	updatedAt: new Date(r.updated_at).toISOString(),
-})
-
 const refreshLists = () => run("REFRESH TABLE doc.user_list", [])
-
-export async function getList(id: string): Promise<ShareList | null> {
-	if (!/^[0-9A-Za-z]{10}$/.test(id)) return null
-	const [row] = await select<ListRow>(`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE id = ? AND deleted_at IS NULL`, [id])
-	return row ? fromRow(row) : null
-}
 
 async function ownedList(userId: string, id: string) {
 	const list = await getList(id)
@@ -174,11 +140,15 @@ export async function createList(userId: string, input: ShareListInput): Promise
 	const now = new Date()
 	const id = newListId()
 	const hash = contentHash(valid)
-	await run(
-		`INSERT INTO doc.user_list (${LIST_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		[id, userId, valid.title, valid.promptId, valid.design, valid.theme, valid.items, valid.visibility, remixedFrom, hash, now, now],
-	)
-	await refreshLists()
+	try {
+		await run(
+			`INSERT INTO doc.user_list (${LIST_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			[id, userId, valid.title, valid.promptId, valid.design, valid.theme, valid.items, valid.visibility, remixedFrom, hash, now, now],
+		)
+		await refreshLists()
+	} finally {
+		await resetListView(id)
+	}
 	return (await getList(id)) as ShareList
 }
 
@@ -186,12 +156,16 @@ export async function updateList(userId: string, id: string, input: ShareListInp
 	await requireHandle(userId)
 	const current = await ownedList(userId, id)
 	const valid = await validateList({ ...input, visibility: input.visibility ?? current.visibility })
-	await run(
-		`UPDATE doc.user_list SET title = ?, prompt_id = ?, design = ?, theme = ?, items = ?, visibility = ?,
-		 content_hash = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL`,
-		[valid.title, valid.promptId, valid.design, valid.theme, valid.items, valid.visibility, contentHash(valid), new Date(), id, userId],
-	)
-	await refreshLists()
+	try {
+		await run(
+			`UPDATE doc.user_list SET title = ?, prompt_id = ?, design = ?, theme = ?, items = ?, visibility = ?,
+			 content_hash = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL`,
+			[valid.title, valid.promptId, valid.design, valid.theme, valid.items, valid.visibility, contentHash(valid), new Date(), id, userId],
+		)
+		await refreshLists()
+	} finally {
+		await resetListView(id)
+	}
 	return (await getList(id)) as ShareList
 }
 
@@ -199,13 +173,17 @@ export async function setListVisibility(userId: string, id: string, visibility: 
 	if (visibility !== "public" && visibility !== "unlisted") throw new ShareListError(400, "Unknown visibility.")
 	await requireHandle(userId)
 	await ownedList(userId, id)
-	await run("UPDATE doc.user_list SET visibility = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL", [
-		visibility,
-		new Date(),
-		id,
-		userId,
-	])
-	await refreshLists()
+	try {
+		await run("UPDATE doc.user_list SET visibility = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL", [
+			visibility,
+			new Date(),
+			id,
+			userId,
+		])
+		await refreshLists()
+	} finally {
+		await resetListView(id)
+	}
 	return (await getList(id)) as ShareList
 }
 
@@ -213,8 +191,12 @@ export async function setListVisibility(userId: string, id: string, visibility: 
 export async function deleteList(userId: string, id: string): Promise<void> {
 	await ownedList(userId, id)
 	const now = new Date()
-	await run("UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL", [now, now, id, userId])
-	await refreshLists()
+	try {
+		await run("UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL", [now, now, id, userId])
+		await refreshLists()
+	} finally {
+		await resetListView(id)
+	}
 }
 
 /** How long after a delete its owner can still undo it. Older deletes are restored by hand only. */
@@ -224,11 +206,15 @@ export const UNDO_DELETE_MS = 10 * 60 * 1000
 export async function restoreList(userId: string, id: string): Promise<ShareList> {
 	if (!/^[0-9A-Za-z]{10}$/.test(id)) throw new ShareListError(404, "This list doesn't exist.")
 	await requireHandle(userId)
-	await run(
-		"UPDATE doc.user_list SET deleted_at = NULL, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at >= ?",
-		[new Date(), id, userId, new Date(Date.now() - UNDO_DELETE_MS)],
-	)
-	await refreshLists()
+	try {
+		await run(
+			"UPDATE doc.user_list SET deleted_at = NULL, updated_at = ? WHERE id = ? AND user_id = ? AND deleted_at >= ?",
+			[new Date(), id, userId, new Date(Date.now() - UNDO_DELETE_MS)],
+		)
+		await refreshLists()
+	} finally {
+		await resetListView(id)
+	}
 	const list = await getList(id)
 	if (!list || list.userId !== userId) throw new ShareListError(404, "This list can't be restored anymore.")
 	return list
@@ -242,11 +228,6 @@ export async function restoreList(userId: string, id: string): Promise<ShareList
 
 type ProfileRow = { user_id: string; handle: string }
 const toProfile = (r: ProfileRow): Profile => ({ userId: r.user_id, handle: r.handle })
-
-export async function getProfileByUserId(userId: string): Promise<Profile | null> {
-	const [row] = await select<ProfileRow>("SELECT user_id, handle FROM doc.user_profile WHERE user_id = ? AND deleted_at IS NULL", [userId])
-	return row ? toProfile(row) : null
-}
 
 /** The profile a handle belongs to, or null when the handle is invalid, unclaimed, or its account is deleted. */
 export async function getProfileByHandle(handle: string): Promise<Profile | null> {
@@ -300,17 +281,22 @@ export async function claimHandle(userId: string, rawHandle: string): Promise<Pr
 	}
 
 	const now = new Date()
-	await run("INSERT INTO doc.user_handle (handle, user_id, claimed_at) VALUES (?, ?, ?) ON CONFLICT (handle) DO NOTHING", [handle, userId, now])
-	await run("REFRESH TABLE doc.user_handle", [])
-	if ((await handleOwner(handle)) !== userId) throw new ShareListError(409, "That handle is taken.")
+	const ids = await select<{ id: string }>("SELECT id FROM doc.user_list WHERE user_id = ? LIMIT 1000", [userId])
+	try {
+		await run("INSERT INTO doc.user_handle (handle, user_id, claimed_at) VALUES (?, ?, ?) ON CONFLICT (handle) DO NOTHING", [handle, userId, now])
+		await run("REFRESH TABLE doc.user_handle", [])
+		if ((await handleOwner(handle)) !== userId) throw new ShareListError(409, "That handle is taken.")
 
-	await run("INSERT INTO doc.user_profile (user_id, handle, created_at, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT (user_id) DO NOTHING", [
-		userId,
-		handle,
-		now,
-		now,
-	])
-	await run("REFRESH TABLE doc.user_profile", [])
+		await run("INSERT INTO doc.user_profile (user_id, handle, created_at, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT (user_id) DO NOTHING", [
+			userId,
+			handle,
+			now,
+			now,
+		])
+		await run("REFRESH TABLE doc.user_profile", [])
+	} finally {
+		await Promise.all(ids.map(({ id }) => resetListView(id)))
+	}
 	return (await getProfileByUserId(userId)) as Profile
 }
 
@@ -320,8 +306,13 @@ export async function claimHandle(userId: string, rawHandle: string): Promise<Pr
  */
 export async function deleteAccountData(userId: string): Promise<void> {
 	const now = new Date()
-	await run("UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, now, userId])
-	await run("UPDATE doc.user_profile SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, now, userId])
-	await run("UPDATE doc.user_handle SET deleted_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, userId])
-	await run("REFRESH TABLE doc.user_list, doc.user_profile, doc.user_handle", [])
+	const ids = await select<{ id: string }>("SELECT id FROM doc.user_list WHERE user_id = ? LIMIT 1000", [userId])
+	try {
+		await run("UPDATE doc.user_list SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, now, userId])
+		await run("UPDATE doc.user_profile SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, now, userId])
+		await run("UPDATE doc.user_handle SET deleted_at = ? WHERE user_id = ? AND deleted_at IS NULL", [now, userId])
+		await run("REFRESH TABLE doc.user_list, doc.user_profile, doc.user_handle", [])
+	} finally {
+		await Promise.all(ids.map(({ id }) => resetListView(id)))
+	}
 }

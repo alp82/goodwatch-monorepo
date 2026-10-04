@@ -185,6 +185,22 @@ class CrateClient {
 
 let client: CrateClient | null = null
 
+export function setCrateClientForTest(
+	fake: {
+		execute(
+			sql: string,
+			params?: unknown[],
+		): Promise<{ json: unknown[]; rowcount?: number }>
+	} | null,
+): void {
+	// Reuse select's mapping without constructing a client or connecting to Crate.
+	client = fake
+		? Object.assign(Object.create(CrateClient.prototype), {
+				execute: fake.execute.bind(fake),
+			})
+		: null
+}
+
 export const getCrateClient = () => {
 	if (!client) {
 		const hosts = (process.env.CRATE_HOSTS || "").split(",")

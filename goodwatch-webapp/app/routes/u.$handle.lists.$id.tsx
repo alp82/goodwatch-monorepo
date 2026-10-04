@@ -22,8 +22,7 @@ import {
 	type TitleAvailability,
 	getListAvailability,
 } from "~/server/share-lists/availability.server"
-import { getList, getProfileByUserId } from "~/server/share-lists/store.server"
-import { resolveCardTitles } from "~/server/share-lists/titles.server"
+import { getListView } from "~/server/share-lists/store.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { CardFonts, ScaledCard } from "~/ui/share-card/ScaledCard"
 import { designByKey } from "~/ui/share-card/designs"
@@ -42,7 +41,8 @@ import { getUserIdFromRequest } from "~/utils/auth"
 import { titleToDashed } from "~/utils/helpers"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 
-// A list or profile can come back (Undo, a restored account), so "not found" must never be cached.
+// Never cache the HTTP response. The data cache holds "not found" for a few minutes;
+// every write that can bring a list back resets it.
 const notFound = () => new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } })
 
 export { pageHeaders as headers } from "~/utils/headers"
@@ -51,10 +51,9 @@ export { pageHeaders as headers } from "~/utils/headers"
 const OFFERS_SHOWN = 4
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
-	const list = await getList(params.id ?? "")
-	if (!list) throw notFound()
-	const owner = await getProfileByUserId(list.userId)
-	if (!owner) throw notFound()
+	const view = await getListView(params.id ?? "")
+	if (!view) throw notFound()
+	const { list, owner, titles: items } = view
 	if (params.handle !== owner.handle)
 		return redirect(shareListPath(owner.handle, list.id), 301)
 
@@ -70,10 +69,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		request,
 		countryDefault: settings?.country_default,
 	})
-	const [items, availability] = await Promise.all([
-		resolveCardTitles(list.items),
-		getListAvailability(list.items, country),
-	])
+	const availability = await getListAvailability(list.items, country)
 
 	// The viewer's own services come first and get a check mark, as on title pages.
 	const owned = new Set(

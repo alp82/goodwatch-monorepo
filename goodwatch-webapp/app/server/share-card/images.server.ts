@@ -4,8 +4,11 @@
 // Renders run in child processes (render.server.tsx), and one render draws both images. Images are cached in process
 // and in Redis, keyed by list id and hash, so a changed list is rendered once and its old images age out.
 import { type ShareCardImages, renderShareCard } from "~/server/share-card/render.server"
-import { type ShareList, getList, getProfileByUserId } from "~/server/share-lists/store.server"
-import { resolveCardTitles } from "~/server/share-lists/titles.server"
+import {
+	type ListView,
+	type ShareList,
+	getListView,
+} from "~/server/share-lists/store.server"
 import { designByKey } from "~/ui/share-card/designs"
 import { cardDate, listByline } from "~/ui/share-card/model"
 import { getRedisCluster } from "~/utils/cache"
@@ -67,13 +70,16 @@ async function cacheWrite(key: string, png: Buffer) {
 
 export type ShareCardKind = keyof ShareCardImages
 
-async function render(list: ShareList, byline: string): Promise<ShareCardImages> {
+async function render({
+	list,
+	owner,
+	titles: items,
+}: ListView): Promise<ShareCardImages> {
 	const started = Date.now()
 	const design = designByKey(list.design)
-	const items = await resolveCardTitles(list.items)
 	const images = await renderShareCard(design, {
 		title: list.title,
-		name: byline,
+		name: listByline(owner.handle),
 		theme: list.theme,
 		items,
 		date: cardDate(new Date(list.createdAt)),
@@ -92,11 +98,12 @@ const cacheKey = (list: ShareList, kind: ShareCardKind) =>
 // Concurrent requests for the same list and hash share one render, which caches both images.
 const pending = new Map<string, Promise<ShareCardImages>>()
 
-function renderBoth(list: ShareList, byline: string): Promise<ShareCardImages> {
+function renderBoth(view: ListView): Promise<ShareCardImages> {
+	const { list } = view
 	const key = `${list.id}:${list.contentHash}`
 	let rendering = pending.get(key)
 	if (!rendering) {
-		rendering = render(list, byline)
+		rendering = render(view)
 			.then(async (images) => {
 				await Promise.all([cacheWrite(cacheKey(list, "card"), images.card), cacheWrite(cacheKey(list, "preview"), images.preview)])
 				return images
@@ -107,16 +114,10 @@ function renderBoth(list: ShareList, byline: string): Promise<ShareCardImages> {
 	return rendering
 }
 
-async function imageFor(list: ShareList, byline: string, kind: ShareCardKind): Promise<Buffer> {
-	const hit = await cacheRead(cacheKey(list, kind))
+async function imageFor(view: ListView, kind: ShareCardKind): Promise<Buffer> {
+	const hit = await cacheRead(cacheKey(view.list, kind))
 	if (hit) return hit
-	return (await renderBoth(list, byline))[kind]
-}
-
-/** The byline a list's images show, or null when its owner has no profile (a deleted account). */
-async function bylineOf(list: ShareList) {
-	const owner = await getProfileByUserId(list.userId)
-	return owner ? listByline(owner.handle) : null
+	return (await renderBoth(view))[kind]
 }
 
 /**
@@ -128,11 +129,12 @@ export async function getShareCardImage(
 	hash: string,
 	kind: ShareCardKind,
 ): Promise<{ image: Buffer; current: boolean } | null> {
-	const list = await getList(id)
-	if (!list) return null
-	const byline = await bylineOf(list)
-	if (byline === null) return null
-	return { image: await imageFor(list, byline, kind), current: list.contentHash === hash }
+	const view = await getListView(id)
+	if (!view) return null
+	return {
+		image: await imageFor(view, kind),
+		current: view.list.contentHash === hash,
+	}
 }
 
 const warmTimers = new Map<string, NodeJS.Timeout>()
@@ -147,14 +149,12 @@ export function warmShareCard(list: Pick<ShareList, "id">) {
 		list.id,
 		setTimeout(() => {
 			warmTimers.delete(list.id)
-			getList(list.id)
+			getListView(list.id)
 				.then(async (current) => {
 					if (!current) return
-					const byline = await bylineOf(current)
-					if (byline === null) return
 					// A miss on either image renders both; the second read then hits.
-					await imageFor(current, byline, "preview")
-					await imageFor(current, byline, "card")
+					await imageFor(current, "preview")
+					await imageFor(current, "card")
 				})
 				.catch((error) => console.warn("[share-card] warmup failed", list.id, error))
 		}, WARM_DEBOUNCE_MS),

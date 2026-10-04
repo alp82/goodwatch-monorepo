@@ -461,16 +461,16 @@ async function cacheGet<CacheData extends JsonData>(
 	return { ...JSON.parse(result), length: result.length }
 }
 
-async function cacheDelete(key: string): Promise<number> {
+async function cacheDelete(key: string): Promise<number | null> {
 	const redis = getRedisCluster()
-	if (!redis) return 0
+	if (!redis) return null
 
 	try {
 		const result = await withRedisDeadline(redis.del(key))
 		return result
 	} catch (e) {
 		if (!(e instanceof RedisNodeDownError)) logRedisFailure("del", e)
-		return 0
+		return null
 	}
 }
 
@@ -640,5 +640,16 @@ export const resetCache = async ({
 	const key = cacheEntryKey(name, params)
 	inFlight.delete(key)
 	refreshPauses.delete(key)
-	return await cacheDelete(key)
+	return (await cacheDelete(key)) ?? 0
+}
+
+/** True only when Redis acknowledged the deletion, including an already absent key. */
+export const resetCacheConfirmed = async ({
+	params,
+	name,
+}: ResetCacheParams): Promise<boolean> => {
+	const key = cacheEntryKey(name, params)
+	inFlight.delete(key)
+	refreshPauses.delete(key)
+	return (await cacheDelete(key)) !== null
 }

@@ -99,6 +99,8 @@ Label values:
 - `audience`: `member` when the request carries the Supabase auth cookie, else `anon`. Only the cookie's presence is read.
 - `cache_control`: what the response's `Cache-Control` header allows. `shared` has `public` or `s-maxage` and nothing private. `private` has `private`, `no-store`, or `no-cache`. `none` is everything else.
 - `cache`: the cache name passed to `cached()`. The three related-title caches have request data in their name, so they report as `related-movie`, `related-show`, and `related-by-category`.
+Share list reads report as `share-list-view-v1` and `share-list-availability-v1`.
+
 For `goodwatch_data_cache_requests_total`, `result` has eight values:
 
 - `hit`: The lookup returned a fresh value.

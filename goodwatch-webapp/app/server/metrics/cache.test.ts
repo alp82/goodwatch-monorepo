@@ -13,6 +13,7 @@ const {
 	cacheRefreshPauseCount,
 	resetRefreshPausesForTest,
 	resetCache,
+	resetCacheConfirmed,
 	serializeCacheEntry,
 	setRedisClusterForTest,
 	setRedisCommandTimeoutForTest,
@@ -989,4 +990,34 @@ test("cachePhysicalTtlSeconds shares the default stale window and clamps invalid
 		Number.NEGATIVE_INFINITY,
 	])
 		assert.equal(cachePhysicalTtlSeconds(1440, stale), 86400)
+})
+
+test("confirmed resets distinguish acknowledged deletion from unavailable Redis", async () => {
+	const { RedisNodeDownError } = await import("../../utils/redis-breaker.ts")
+	for (const outcome of [
+		1,
+		0,
+		new Error("DEL failed"),
+		new RedisNodeDownError("test-node"),
+		null,
+	]) {
+		setRedisClusterForTest(
+			outcome === null
+				? null
+				: {
+						async get() {
+							return null
+						},
+						async setex() {},
+						async del() {
+							if (outcome instanceof Error) throw outcome
+							return outcome
+						},
+					},
+		)
+		assert.equal(
+			await resetCacheConfirmed({ name: "confirmed-reset", params: {} }),
+			typeof outcome === "number",
+		)
+	}
 })
