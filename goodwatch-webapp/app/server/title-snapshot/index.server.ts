@@ -41,7 +41,8 @@ export {
 } from "./format.server"
 
 const CHECK_EVERY_MS = 60_000
-// Until the first load, while Redis is still connecting after the server starts.
+// Before the first load, retry connection and transient load failures quickly.
+// Nothing published or a refused manifest keeps the normal 60-second cadence.
 const RETRY_UNCONNECTED_MS = 2_000
 
 interface SnapshotRedis {
@@ -67,7 +68,7 @@ async function snapshotRedis(): Promise<SnapshotRedis | null> {
 	return getRedisCluster()
 }
 
-/** One check: loads the snapshot the manifest names when it's new. Returns false while Redis isn't connected. */
+/** One check: loads the snapshot the manifest names when it's new. Returns false when a connection or transient load failure needs a retry. */
 async function check(): Promise<boolean> {
 	const redis = await snapshotRedis()
 	if (!redis) return false
@@ -124,13 +125,14 @@ async function check(): Promise<boolean> {
 				: "Title snapshot not loaded:",
 			error instanceof SnapshotRefused ? error.message : error,
 		)
+		if (!current && !(error instanceof SnapshotRefused)) return false
 	}
 	return true
 }
 
 function schedule(delayMs: number) {
 	timer = setTimeout(async () => {
-		let connected = true
+		let connected = false
 		try {
 			connected = await check()
 		} catch (error) {

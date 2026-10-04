@@ -1,7 +1,8 @@
 // Drives every cache outcome with a fake Redis client while preserving target behavior.
 import assert from "node:assert/strict"
+import { type Socket, createServer } from "node:net"
 import { afterEach, beforeEach, test } from "node:test"
-import "ioredis"
+import Redis from "ioredis"
 import "../title-filter/test-alias.ts"
 const {
 	cached,
@@ -10,13 +11,21 @@ const {
 	resetCache,
 	serializeCacheEntry,
 	setRedisClusterForTest,
+	setRedisCommandTimeoutForTest,
+	resetRedisFailureLogsForTest,
+	REDIS_COMMAND_TIMEOUT_MS,
+	redisOptions,
 } = await import("../../utils/cache.ts")
 const { renderMetrics, resetMetricsForTest } = await import(
 	"./registry.server.ts"
 )
 // Allow the import-time Redis connection attempt to finish before installing each fake.
 await new Promise((resolve) => setTimeout(resolve, 1000))
-beforeEach(resetMetricsForTest)
+beforeEach(() => {
+	resetMetricsForTest()
+	resetRedisFailureLogsForTest()
+})
+afterEach(() => setRedisCommandTimeoutForTest(null))
 afterEach(() => assert.equal(cacheInFlightCount(), 0))
 
 test("all cache results count once and only target execution records duration", async () => {
@@ -52,9 +61,6 @@ test("all cache results count once and only target execution records duration", 
 						},
 						async del() {
 							return 0
-						},
-						async info() {
-							return ""
 						},
 					},
 		)
@@ -165,9 +171,6 @@ function fakeRedis() {
 		async del(key: string) {
 			deletes++
 			return Number(store.delete(key))
-		},
-		async info() {
-			return ""
 		},
 	}
 	setRedisClusterForTest(client)
@@ -610,4 +613,171 @@ test("background refresh metrics use metricName and cap label sets at 100", asyn
 	)
 	assert.ok(!renderMetrics().includes('cache="refresh-'))
 	count("label-0", "ok", 1, true)
+})
+
+const TEST_TIMEOUT_MS = 30
+function assertDeadlineElapsed(start: number) {
+	const elapsed = performance.now() - start
+	// Node may fire a timer a millisecond early by this clock.
+	assert.ok(elapsed >= TEST_TIMEOUT_MS - 5, `elapsed ${elapsed} ms`)
+	assert.ok(elapsed < 800, `elapsed ${elapsed} ms`)
+}
+
+test("a stalled get falls through to one target run and records error only", async () => {
+	const redis = fakeRedis()
+	redis.client.get = () => new Promise(() => {})
+	setRedisCommandTimeoutForTest(TEST_TIMEOUT_MS)
+	let runs = 0
+	const start = performance.now()
+	assert.deepEqual(
+		await cached({
+			...options,
+			target: async () => {
+				runs++
+				return { answer: 42 }
+			},
+		}),
+		{ answer: 42 },
+	)
+	assertDeadlineElapsed(start)
+	assert.equal(runs, 1)
+	assert.equal(redis.writes.length, 1)
+	const stored = redis.store.get(cacheEntryKey(options.name, {}))
+	assert.ok(stored)
+	assert.deepEqual(JSON.parse(stored).data, { answer: 42 })
+	count("catalog", "error", 1)
+	assert.ok(!renderMetrics().includes('result="miss"'))
+	assert.ok(!renderMetrics().includes('result="unavailable"'))
+})
+
+test("a stalled set returns the target value without an unhandled rejection", async (t) => {
+	const redis = fakeRedis()
+	redis.client.setex = () => new Promise(() => {})
+	setRedisCommandTimeoutForTest(TEST_TIMEOUT_MS)
+	const unhandled: unknown[] = []
+	const listener = (error: unknown) => unhandled.push(error)
+	process.on("unhandledRejection", listener)
+	t.after(() => process.off("unhandledRejection", listener))
+	const start = performance.now()
+	assert.deepEqual(
+		await cached({ ...options, target: async () => ({ answer: 42 }) }),
+		{ answer: 42 },
+	)
+	assertDeadlineElapsed(start)
+	await tick()
+	assert.deepEqual(unhandled, [])
+})
+
+test("a stalled background write records a refresh error and preserves stale data", async () => {
+	const redis = fakeRedis()
+	const { key, value } = seedStale(redis)
+	redis.client.setex = () => new Promise(() => {})
+	setRedisCommandTimeoutForTest(TEST_TIMEOUT_MS)
+	await cached({ ...options, target: async () => ({ answer: "new" }) })
+	await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUT_MS + 20))
+	count("catalog", "error", 1, true)
+	assert.equal(redis.store.get(key), value)
+})
+
+test("a stalled del makes resetCache return zero within the deadline", async () => {
+	const redis = fakeRedis()
+	redis.client.del = () => new Promise(() => {})
+	setRedisCommandTimeoutForTest(TEST_TIMEOUT_MS)
+	const start = performance.now()
+	assert.equal(await resetCache(options), 0)
+	assertDeadlineElapsed(start)
+})
+
+test("a get rejecting after its deadline never causes an unhandled rejection", async (t) => {
+	const redis = fakeRedis()
+	const pending = deferred<string | null>()
+	redis.client.get = () => pending.promise
+	setRedisCommandTimeoutForTest(TEST_TIMEOUT_MS)
+	const unhandled: unknown[] = []
+	const listener = (error: unknown) => unhandled.push(error)
+	process.on("unhandledRejection", listener)
+	t.after(() => process.off("unhandledRejection", listener))
+	await cached({ ...options, target: async () => ({ answer: 42 }) })
+	pending.reject(new Error("Late failure"))
+	await tick()
+	assert.deepEqual(unhandled, [])
+})
+
+test("cache writes never call INFO", async (t) => {
+	const redis = fakeRedis()
+	const client = { ...redis.client, info: t.mock.fn(async () => "") }
+	setRedisClusterForTest(client)
+	await cached({ ...options, target: async () => ({ answer: 42 }) })
+	assert.equal(redis.writes.length, 1)
+	assert.equal(client.info.mock.callCount(), 0)
+})
+
+test("Redis options bound node commands and never reconnect the cluster", () => {
+	assert.equal(REDIS_COMMAND_TIMEOUT_MS, 1000)
+	assert.equal(
+		redisOptions.redisOptions?.commandTimeout,
+		REDIS_COMMAND_TIMEOUT_MS,
+	)
+	// A closed cluster ends and rejects its queued commands instead of holding them for a reconnect.
+	assert.equal(redisOptions.clusterRetryStrategy?.(1), null)
+	assert.equal(redisOptions.redisOptions?.maxRetriesPerRequest, 0)
+	// Off would reject commands to a node that is still connecting.
+	assert.notEqual(redisOptions.enableOfflineQueue, false)
+})
+
+test("ioredis times out a command against a silent TCP server", async () => {
+	const sockets = new Set<Socket>()
+	const server = createServer((socket) => {
+		sockets.add(socket)
+		socket.on("close", () => sockets.delete(socket))
+	})
+	let client: Redis | undefined
+	try {
+		await new Promise<void>((resolve, reject) => {
+			server.once("error", reject)
+			server.listen(0, "127.0.0.1", resolve)
+		})
+		const address = server.address()
+		assert.ok(address && typeof address !== "string")
+		client = new Redis({
+			host: "127.0.0.1",
+			port: address.port,
+			...redisOptions.redisOptions,
+			commandTimeout: 50,
+			lazyConnect: false,
+		})
+		client.on("error", () => {})
+		const start = performance.now()
+		await assert.rejects(client.get("silent"), /Command timed out/)
+		assert.ok(performance.now() - start < 800)
+	} finally {
+		client?.disconnect()
+		for (const socket of sockets) socket.destroy()
+		if (server.listening)
+			await new Promise<void>((resolve, reject) =>
+				server.close((error) => (error ? reject(error) : resolve())),
+			)
+	}
+})
+
+test("50 failing lookups log once and the next window reports suppressed failures", async (t) => {
+	const redis = fakeRedis()
+	redis.client.get = async () => {
+		throw new Error("Read\nfailed")
+	}
+	let now = Date.now()
+	t.mock.method(Date, "now", () => now)
+	const warn = t.mock.method(console, "warn", () => {})
+	for (let i = 0; i < 50; i++)
+		await cached({ ...options, target: async () => ({}) })
+	assert.equal(warn.mock.callCount(), 1)
+	assert.deepEqual(warn.mock.calls[0].arguments, [
+		"Redis get failed: Read failed (suppressed: 0)",
+	])
+	now += 10_000
+	await cached({ ...options, target: async () => ({}) })
+	assert.equal(warn.mock.callCount(), 2)
+	assert.deepEqual(warn.mock.calls[1].arguments, [
+		"Redis get failed: Read failed (suppressed: 49)",
+	])
 })

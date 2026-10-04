@@ -26,33 +26,86 @@ const clusterNodes: ClusterNode[] = [
 		port: Number.parseInt(process.env.REDIS_PORT || ""),
 	},
 ]
-const redisOptions: ClusterOptions = {
-	clusterRetryStrategy: () => {
-		// Don't retry - fail immediately
-		return null
-	},
+// Redis answers in 30 to 40 microseconds; values reach about 1 MB (snapshot chunks 4 MB).
+// Only a stalled event loop or Redis reaches this limit. Routine event loop stalls are
+// 100 to 330 ms about once a minute; this is three times the largest routine stall.
+// Startup stalls reach 2.4 s; a lookup cut there falls through to the target.
+export const REDIS_COMMAND_TIMEOUT_MS = 1000
+
+// Every command fails fast. commandTimeout starts when a command reaches a node connection, so it also bounds
+// the wait in that node's offline queue and MOVED/ASK redirections. The cluster never reconnects by itself
+// (clusterRetryStrategy returns null): when it closes, ioredis ends it and rejects every command it had queued.
+// The cluster-level offline queue stays on, because turning it off rejects commands to a node that is still
+// connecting, and node connections open on their first command.
+export const redisOptions: ClusterOptions = {
+	clusterRetryStrategy: () => null,
 	dnsLookup: (address, callback) => callback(null, address),
 	lazyConnect: true,
-	slotsRefreshTimeout: 200, // Reduced timeout
+	slotsRefreshTimeout: 200,
 	redisOptions: {
-		connectTimeout: 300, // Very small timeout
+		commandTimeout: REDIS_COMMAND_TIMEOUT_MS,
+		connectTimeout: 300,
 		lazyConnect: true,
-		maxLoadingRetryTime: 200, // Reduced retry time
-		maxRetriesPerRequest: 0, // No retries
-		offlineQueue: false,
+		maxLoadingRetryTime: 200,
+		maxRetriesPerRequest: 0,
 		password: process.env.REDIS_PASS || "",
-		sentinelRetryStrategy: () => {
-			// Don't retry - fail immediately
-			return null
-		},
+		sentinelRetryStrategy: () => null,
 	},
+}
+
+let commandTimeoutMs = REDIS_COMMAND_TIMEOUT_MS
+export function setRedisCommandTimeoutForTest(ms: number | null): void {
+	commandTimeoutMs = ms ?? REDIS_COMMAND_TIMEOUT_MS
+}
+
+function withRedisDeadline<T>(operation: Promise<T>): Promise<T> {
+	return new Promise((resolve, reject) => {
+		const timer = setTimeout(
+			() => reject(new Error("Redis command timed out")),
+			commandTimeoutMs,
+		)
+		operation.then(
+			(value) => {
+				clearTimeout(timer)
+				resolve(value)
+			},
+			(error) => {
+				clearTimeout(timer)
+				reject(error)
+			},
+		)
+	})
+}
+
+const redisFailures = new Map<
+	string,
+	{ loggedAt: number; suppressed: number }
+>()
+export function resetRedisFailureLogsForTest(): void {
+	redisFailures.clear()
+}
+
+function logRedisFailure(
+	operation: "get" | "set" | "del",
+	error: unknown,
+): void {
+	const now = Date.now()
+	const previous = redisFailures.get(operation)
+	if (previous && now - previous.loggedAt < 10_000) {
+		previous.suppressed++
+		return
+	}
+	const message = error instanceof Error ? error.message : String(error)
+	console.warn(
+		`Redis ${operation} failed: ${message.replace(/[\r\n]+/g, " ")} (suppressed: ${previous?.suppressed ?? 0})`,
+	)
+	redisFailures.set(operation, { loggedAt: now, suppressed: 0 })
 }
 
 type CacheRedis = {
 	get(key: string): Promise<string | null>
 	setex(key: string, ttl: number, value: string): Promise<unknown>
 	del(key: string): Promise<number>
-	info(): Promise<string>
 }
 let redisCluster: Cluster | null = null
 export function setRedisClusterForTest(client: CacheRedis | null): void {
@@ -178,15 +231,13 @@ async function cacheSet<CacheData extends JsonData>(
 ): Promise<boolean> {
 	const redis = getRedisCluster()
 	if (!redis) return false
-	redis.info()
-
-	const jsonData = serializeCacheEntry(data)
 
 	try {
-		await redis.setex(key, ttl || 1, jsonData)
+		const jsonData = serializeCacheEntry(data)
+		await withRedisDeadline(redis.setex(key, ttl || 1, jsonData))
 		return true
 	} catch (e) {
-		console.log("Error while setting cache value:", e)
+		logRedisFailure("set", e)
 		return false
 	}
 }
@@ -197,7 +248,7 @@ async function cacheGet<CacheData extends JsonData>(
 	const redis = getRedisCluster()
 	if (!redis) return null
 
-	const result = await redis.get(key)
+	const result = await withRedisDeadline(redis.get(key))
 	if (!result) return null
 	// The raw length stands in for the size, so a hit never serializes the value again.
 	return { ...JSON.parse(result), length: result.length }
@@ -208,10 +259,10 @@ async function cacheDelete(key: string): Promise<number> {
 	if (!redis) return 0
 
 	try {
-		const result = await redis.del(key)
+		const result = await withRedisDeadline(redis.del(key))
 		return result
 	} catch (e) {
-		console.log("Error while deleting cache value:", e)
+		logRedisFailure("del", e)
 		return 0
 	}
 }
@@ -347,7 +398,7 @@ export const cached = async <
 		}
 	} catch (error) {
 		result = "error"
-		console.log("Cache get failed, continuing with target function", error)
+		logRedisFailure("get", error)
 	}
 	const existing = inFlight.get(cacheKey)
 	if (existing && Date.now() - existing.startedAt < MAX_JOIN_AGE_MS) {

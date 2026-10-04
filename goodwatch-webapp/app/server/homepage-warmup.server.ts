@@ -100,16 +100,23 @@ export async function warmAnonymousHomepage() {
 		};
 	} finally {
 		// Never release another invocation's lease, including after our lease expires.
-		await redis.eval(
-			`
-			if redis.call('GET', KEYS[1]) == ARGV[1] then
-				return redis.call('DEL', KEYS[1])
-			end
-			return 0
-		`,
-			1,
-			LEASE_KEY,
-			owner,
-		);
+		try {
+			await redis.eval(
+				`
+				if redis.call('GET', KEYS[1]) == ARGV[1] then
+					return redis.call('DEL', KEYS[1])
+				end
+				return 0
+			`,
+				1,
+				LEASE_KEY,
+				owner,
+			);
+		} catch (error) {
+			const message = (error instanceof Error ? error.message : String(error))
+				.replace(/rediss?:\/\/[^\s]+/gi, "[redacted Redis URL]")
+				.replace(/[\r\n]+/g, " ");
+			console.warn("Homepage warm-up lease release failed", message);
+		}
 	}
 }

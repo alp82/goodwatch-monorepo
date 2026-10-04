@@ -102,7 +102,7 @@ For `goodwatch_data_cache_requests_total`, `result` has seven values:
 - `miss`: No usable value was found, and this call ran the target.
 - `joined`: No usable value was found, and this call waited for an existing run.
 - `unavailable`: No Redis client was available, and this call ran the target.
-- `error`: The cache read failed, and this call ran the target.
+- `error`: The cache read failed or exceeded the 1-second Redis command limit, and this call ran the target.
 - `bypass`: The lifetime was zero or negative, so the call ran the target without using Redis or deduplication.
 
 Before this change, `stale` meant "expired value found, target run inline".
