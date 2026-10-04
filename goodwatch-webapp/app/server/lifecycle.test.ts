@@ -182,7 +182,7 @@ test("an idle process exits right after the delay, and idle keep-alive connectio
 	keepAlive.destroy()
 })
 
-test("a request longer than the quiet wait finishes after the listener closed", async () => {
+test("a recent request longer than the quiet wait finishes after the listener closed", async () => {
 	const server = await start({ SHUTDOWN_DELAY_MS: "0" })
 	const slow = server.get("/slow?ms=3000")
 	await sleep(100)
@@ -192,7 +192,7 @@ test("a request longer than the quiet wait finishes after the listener closed", 
 	assert.equal(await refused(server.port), true)
 	assert.equal((await slow).body, "done")
 	assert.equal((await server.exited).code, 0)
-	assert.match(server.log(), /with 1 requests in flight, 0 cut/)
+	assert.match(server.log(), /0 requests cut/)
 })
 
 test("a request that outlasts the drain time is cut, and the exit code is still 0", async () => {
@@ -208,7 +208,37 @@ test("a request that outlasts the drain time is cut, and the exit code is still 
 	const exit = await server.exited
 	assert.equal(exit.code, 0)
 	assert.ok(exit.at - signalAt < 3_500, `took ${exit.at - signalAt} ms`)
-	assert.match(server.log(), /1 cut/)
+	assert.match(server.log(), /1 requests cut \(GET \/slow after 0 s\)/)
+})
+
+test("a long-lived request doesn't close the listener early: the process serves until it exits, then cuts it", async () => {
+	const server = await start({
+		SHUTDOWN_DELAY_MS: "800",
+		SHUTDOWN_DRAIN_MS: "400",
+	})
+	const longLived = server.get("/slow?ms=20000")
+	// Older than the drain time when the signal arrives.
+	await sleep(500)
+	const signalAt = performance.now()
+	server.child.kill("SIGTERM")
+	// A container that runs without listening is what a proxy answers with 502, so that state must stay short.
+	let served = 0
+	while (performance.now() - signalAt < 700) {
+		assert.equal((await server.get("/fast")).status, 200)
+		served++
+		await sleep(50)
+	}
+	assert.ok(served >= 8, `served ${served} requests during the delay`)
+	await assert.rejects(longLived)
+	const exit = await server.exited
+	assert.equal(exit.code, 0)
+	const took = exit.at - signalAt
+	assert.ok(took >= 800 && took < 1_300, `took ${took} ms`)
+	const log = server.log()
+	assert.match(log, /1 requests cut \(GET \/slow after 1 s\)/)
+	const closedAfter = Number(log.match(/stopped listening after (\d+) ms/)?.[1])
+	const exitAfter = Number(log.match(/exit 0 after (\d+) ms/)?.[1])
+	assert.ok(exitAfter - closedAfter < 100, `${exitAfter - closedAfter} ms`)
 })
 
 test("the hard deadline exits with code 1 whatever is in flight", async () => {

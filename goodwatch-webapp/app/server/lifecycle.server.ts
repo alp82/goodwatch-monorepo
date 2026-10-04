@@ -14,9 +14,12 @@
 // 1. Readiness turns 503 and every response says `Connection: close`, so the proxy keeps no idle connection to this
 //    process. The process keeps serving for SHUTDOWN_DELAY_MS (8 seconds): a proxy that checks readiness every 5
 //    seconds stops sending requests in that time, and one that doesn't loses nothing by it.
-// 2. It waits for a moment without a request in flight (at most QUIET_WAIT_MS), then stops listening, which also
-//    closes idle connections. Requests still in flight get SHUTDOWN_DRAIN_MS to finish before their connections are
-//    cut.
+// 2. It waits for a moment without a recent request in flight (at most QUIET_WAIT_MS) and then stops listening, which
+//    also closes idle connections. Recent requests still in flight may finish. A request that has been in flight for
+//    longer than SHUTDOWN_DRAIN_MS (5 seconds, the time after which the server render gives up) isn't waited for: its
+//    connection is cut. The listener closes this late because a container that runs without listening is what the
+//    proxy answers with 502: the first version of this file stopped listening and then waited 10 seconds for three
+//    requests that never finished, and every second request answered 502 in that time.
 // 3. The registered stops run (timers, the metrics listener, Redis, the query encoder, the share card renderers).
 // 4. The process exits with code 0. A timer set at the signal exits with code 1 after SHUTDOWN_HARD_MS, whatever
 //    state the steps are in. Coolify stops a container with `docker stop --time=30`, so the default leaves 5 seconds
@@ -39,7 +42,7 @@ import {
 export const READY_PATH = "/health/ready"
 export const LIVE_PATH = "/health/live"
 
-// How long a moment without requests is waited for before the listener closes anyway.
+// How long a moment without recent requests is waited for before the listener closes anyway.
 const QUIET_WAIT_MS = 2_000
 // How long the registered stops may take together.
 const STOPS_MS = 1_000
@@ -54,8 +57,9 @@ const shared = globalThis as typeof globalThis & {
 		servers: Set<Server>
 		internal: WeakSet<Server>
 		inFlight: number
-		responses: Set<ServerResponse>
-		whenQuiet: Array<() => void>
+		// The requests in flight, with the time each one began.
+		responses: Map<ServerResponse, number>
+		onRequestEnd: Array<() => void>
 		stops: Map<string, () => unknown>
 		checks: Map<string, () => boolean>
 	}
@@ -66,8 +70,8 @@ shared[key] ??= {
 	servers: new Set(),
 	internal: new WeakSet(),
 	inFlight: 0,
-	responses: new Set(),
-	whenQuiet: [],
+	responses: new Map(),
+	onRequestEnd: [],
 	stops: new Map(),
 	checks: new Map(),
 }
@@ -173,27 +177,46 @@ function requestEnded(this: ServerResponse) {
 		setImmediate(() => {
 			for (const server of state.servers) server.closeIdleConnections()
 		})
-	if (state.inFlight > 0) return
-	for (const resolve of state.whenQuiet.splice(0)) resolve()
+	for (const resolve of state.onRequestEnd.splice(0)) resolve()
 }
 
 const sleep = (ms: number) =>
 	new Promise<false>((resolve) => setTimeout(() => resolve(false), ms))
 
-// True when no request is in flight, now or within the time given.
-function quiet(withinMs: number): Promise<boolean> {
-	if (state.inFlight <= 0) return Promise.resolve(true)
-	return Promise.race([
-		new Promise<true>((resolve) => state.whenQuiet.push(() => resolve(true))),
-		sleep(withinMs),
-	])
+// How long until every request in flight has been in flight for at least `drainMs`: 0 when none is more recent.
+function untilNoneRecent(drainMs: number): number {
+	let wait = 0
+	const now = performance.now()
+	for (const began of state.responses.values())
+		wait = Math.max(wait, began + drainMs - now)
+	return wait
+}
+
+// True when no recent request is in flight, now or within the time given.
+async function noneRecent(drainMs: number, withinMs: number): Promise<boolean> {
+	const deadline = performance.now() + withinMs
+	for (;;) {
+		const wait = untilNoneRecent(drainMs)
+		if (wait <= 0) return true
+		const left = deadline - performance.now()
+		if (left <= 0) return false
+		await Promise.race([
+			new Promise<void>((resolve) => state.onRequestEnd.push(resolve)),
+			sleep(Math.min(wait, left)),
+		])
+	}
+}
+
+// What a cut request was, without anything a visitor chose: the method and the start of the path.
+function describe(response: ServerResponse, began: number): string {
+	const [, first = "", second = ""] = (response.req.url ?? "").split(/[/?]/)
+	const path = first === "api" ? `/api/${second}` : `/${first}`
+	return `${response.req.method} ${path} after ${Math.round((performance.now() - began) / 1000)} s`
 }
 
 // The real close: `close` on the server itself does nothing once a shutdown has begun.
-const closed = (server: Server) =>
-	new Promise<true>((resolve) =>
-		HttpServer.prototype.close.call(server, () => resolve(true)),
-	)
+const stopListening = (server: Server) =>
+	HttpServer.prototype.close.call(server)
 
 async function shutDown(signal: NodeJS.Signals): Promise<void> {
 	if (state.phase !== "running") {
@@ -212,7 +235,7 @@ async function shutDown(signal: NodeJS.Signals): Promise<void> {
 	}, hardMs)
 	// `remix-serve`'s own signal listener runs after this one and calls close().
 	for (const server of state.servers) server.close = () => server
-	for (const response of state.responses)
+	for (const response of state.responses.keys())
 		if (!response.headersSent) response.setHeader("Connection", "close")
 	const delayMs =
 		signal === "SIGTERM" && state.servers.size
@@ -222,20 +245,21 @@ async function shutDown(signal: NodeJS.Signals): Promise<void> {
 		`Shutdown: ${signal} received with ${state.inFlight} requests in flight; serving for ${delayMs} ms more, not ready`,
 	)
 	try {
+		const drainMs = setting("SHUTDOWN_DRAIN_MS", 5_000)
 		if (delayMs) await sleep(delayMs)
-		await quiet(QUIET_WAIT_MS)
+		await noneRecent(drainMs, QUIET_WAIT_MS)
 		state.phase = "closing"
-		const inFlightAtClose = state.inFlight
+		const closedAt = elapsed()
 		const servers = [...state.servers]
-		const allClosed = Promise.all(servers.map(closed))
-		const drained = await Promise.race([
-			allClosed,
-			sleep(setting("SHUTDOWN_DRAIN_MS", 10_000)),
-		])
-		const cut = drained ? 0 : state.inFlight
-		if (!drained) for (const server of servers) server.closeAllConnections()
+		for (const server of servers) stopListening(server)
+		// Ends by itself after at most drainMs: by then every request in flight is older than that.
+		await noneRecent(drainMs, drainMs)
+		const cut = [...state.responses].map(([response, began]) =>
+			describe(response, began),
+		)
+		for (const server of servers) server.closeAllConnections()
 		console.info(
-			`Shutdown: stopped listening after ${elapsed()} ms with ${inFlightAtClose} requests in flight, ${cut} cut`,
+			`Shutdown: stopped listening after ${closedAt} ms, closed the connections after ${elapsed()} ms, ${cut.length} requests cut${cut.length ? ` (${cut.slice(0, 10).join(", ")})` : ""}`,
 		)
 		state.phase = "stopping"
 		const failed: string[] = []
@@ -279,7 +303,7 @@ export function startLifecycle(): void {
 			if (state.phase === "draining") server.close = () => server
 		}
 		state.inFlight++
-		state.responses.add(response)
+		state.responses.set(response, performance.now())
 		response.once("close", requestEnded)
 		if (state.phase !== "running" && !response.headersSent)
 			response.setHeader("Connection", "close")
