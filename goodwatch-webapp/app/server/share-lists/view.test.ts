@@ -74,6 +74,7 @@ const { renderMetrics, resetMetricsForTest } = await import(
 )
 const { getListView, resetListView } = await import("./view.server.ts")
 const { getListAvailability } = await import("./availability.server.ts")
+const { pageCache, resetPageCache } = await import("../page-cache.server.ts")
 const store = await import("./store.server.ts")
 
 type Row = Record<string, unknown>
@@ -268,6 +269,32 @@ test("warm view and availability reads send no Crate statements and count hits",
 				`goodwatch_data_cache_requests_total\\{cache="${cache}",result="hit"\\} 1`,
 			),
 		)
+	}
+})
+
+test("list reset cancels matching page renders in this process", async () => {
+	const makeFlight = (key: string, path: string) => ({
+		key,
+		path,
+		route: "list",
+		startedAt: Date.now(),
+		joinable: true,
+		waiters: new Set<never>(),
+		offered: false,
+		kind: "request" as const,
+		cancelled: false,
+	})
+	const matching = makeFlight("list:de:query", `/u/filmfan/lists/${id}`)
+	const other = makeFlight("other", "/other")
+	pageCache.flights.set(matching.key, matching)
+	pageCache.flights.set(other.key, other)
+	try {
+		await resetListView(id)
+		assert.equal(pageCache.flights.has(matching.key), false)
+		assert.equal(matching.cancelled, true)
+		assert.equal(pageCache.flights.has(other.key), true)
+	} finally {
+		resetPageCache()
 	}
 })
 

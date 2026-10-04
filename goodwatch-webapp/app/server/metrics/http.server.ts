@@ -39,6 +39,22 @@ const MAX_REMEMBERED_PATHS = 5000
 
 type RouteLabeler = (pathname: string, statusCode: number) => string
 
+let labelRoute: RouteLabeler | undefined
+let loadingLabelRoute = false
+export function routeLabelFor(pathname: string, statusCode: number): string {
+	if (!loadingLabelRoute) {
+		loadingLabelRoute = true
+		void loadRouteLabeler()
+			.then((ready) => {
+				labelRoute = ready
+			})
+			.catch(() => {
+				console.error("Metrics route manifest could not be loaded")
+			})
+	}
+	return labelRoute?.(pathname, statusCode) ?? "unmatched"
+}
+
 // The lazy import avoids evaluating the build while its route modules are still loading.
 async function loadRouteLabeler(): Promise<RouteLabeler> {
 	const build = await import("virtual:remix/server-build")
@@ -107,14 +123,7 @@ type HttpEvent = {
 export function startHttpMetrics(): void {
 	if (state.started) return
 	state.started = true
-	let labelRoute: RouteLabeler | undefined
-	void loadRouteLabeler()
-		.then((ready) => {
-			labelRoute = ready
-		})
-		.catch(() => {
-			console.error("Metrics route manifest could not be loaded")
-		})
+	routeLabelFor("/", 200)
 	const duration = histogram(
 		"goodwatch_http_request_duration_seconds",
 		"Time from request start to response finish.",
@@ -198,9 +207,7 @@ export function startHttpMetrics(): void {
 		const url = request.url ?? "/"
 		const query = url.indexOf("?")
 		const pathname = query < 0 ? url : url.slice(0, query)
-		const route = labelRoute
-			? labelRoute(pathname, response.statusCode)
-			: "unmatched"
+		const route = routeLabelFor(pathname, response.statusCode)
 		const audience = audienceLabel(request.headers.cookie)
 		const status = statusClass(response.statusCode)
 		duration.observe([route, status, audience], seconds)

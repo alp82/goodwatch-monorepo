@@ -1,4 +1,5 @@
 // Viewer-independent share-list reads. Store writes invalidate the combined view after refreshing Crate.
+import { resetPageCache } from "~/server/page-cache.server"
 import {
 	type CardTitle,
 	type ThemeKey,
@@ -97,6 +98,8 @@ async function readListView(id: string): Promise<ViewResult> {
 }
 
 export async function resetListView(id: string): Promise<void> {
+	// The stored page of this list, in this process (see docs/page-cache.md for other processes).
+	resetPageCache((path) => path.endsWith(`/lists/${id}`))
 	await resetCacheConfirmed({ name: VIEW_CACHE.name, params: { id } })
 }
 

@@ -52,15 +52,16 @@ export function requestLocale(request: Request): RequestLocale {
 	}
 }
 
-function readLocale(request: Request, useIdentity: boolean): RequestLocale {
-	const header = request.headers.get(CACHE_IDENTITY_HEADER)
+function readLocale(
+	header: string | null | undefined,
+	languageHeader: string | null | undefined,
+	useIdentity: boolean,
+): RequestLocale {
 	if (useIdentity && header && identityPattern.test(header)) {
 		const [, country, language] = header.split(";")
 		return { country, language, source: "identity-header" }
 	}
-	const entries = acceptLanguage.parse(
-		request.headers.get("Accept-Language") ?? "",
-	)
+	const entries = acceptLanguage.parse(languageHeader ?? "")
 	const preferred = entries[0]?.code ?? ""
 	const region = entries.find((entry) =>
 		/^[a-z]{2}$/i.test(entry.region ?? ""),
@@ -94,18 +95,42 @@ const identities = new WeakMap<Request, CacheIdentity>()
 export function cacheIdentity(request: Request): CacheIdentity {
 	const remembered = identities.get(request)
 	if (remembered) return remembered
-	const member = hasAuthCookie(request.headers.get("Cookie"))
-	const { country, language, source } = readLocale(request, !member)
+	const identity = cacheIdentityOf({
+		method: request.method,
+		cookie: request.headers.get("Cookie"),
+		acceptLanguage: request.headers.get("Accept-Language"),
+		identityHeader: request.headers.get(CACHE_IDENTITY_HEADER),
+	})
+	identities.set(request, identity)
+	return identity
+}
+
+/** The same identity rule without allocating a Fetch Request on the HTTP hit path. */
+export function cacheIdentityOf({
+	method,
+	cookie,
+	acceptLanguage,
+	identityHeader,
+}: {
+	method: string
+	cookie?: string | null
+	acceptLanguage?: string | null
+	identityHeader?: string | null
+}): CacheIdentity {
+	const member = hasAuthCookie(cookie)
+	const { country, language, source } = readLocale(
+		identityHeader,
+		acceptLanguage,
+		!member,
+	)
 	const identity: CacheIdentity = {
 		audience: member ? "member" : "anon",
 		country,
 		language,
 		key: member ? null : `anon;${country};${language}`,
 		keyFromCache: !member && source === "identity-header",
-		cacheable:
-			!member && (request.method === "GET" || request.method === "HEAD"),
+		cacheable: !member && (method === "GET" || method === "HEAD"),
 	}
-	identities.set(request, identity)
 	return identity
 }
 

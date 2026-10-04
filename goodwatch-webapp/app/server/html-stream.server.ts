@@ -15,9 +15,12 @@ const WRITE_BUFFER_BYTES = 16 * 1024 * 1024
 
 export class HtmlStream extends Transform {
 	#parts: Uint8Array[] = []
+	#complete: Uint8Array[] = []
+	#onComplete?: (html: Buffer) => void
 
-	constructor() {
+	constructor(onComplete?: (html: Buffer) => void) {
 		super({ writableHighWaterMark: WRITE_BUFFER_BYTES })
+		this.#onComplete = onComplete
 	}
 
 	_transform(
@@ -34,11 +37,30 @@ export class HtmlStream extends Transform {
 		if (this.#parts.length === 0 || this.destroyed) return
 		const parts = this.#parts
 		this.#parts = []
-		this.push(parts.length === 1 ? parts[0] : Buffer.concat(parts))
+		const chunk = parts.length === 1 ? parts[0] : Buffer.concat(parts)
+		if (this.#onComplete) this.#complete.push(chunk)
+		this.push(chunk)
 	}
 
 	_flush(callback: TransformCallback): void {
 		this.flush()
+		if (!this.destroyed && this.#onComplete) {
+			const complete = this.#onComplete
+			this.#onComplete = undefined
+			complete(
+				this.#complete.length === 1 && Buffer.isBuffer(this.#complete[0])
+					? this.#complete[0]
+					: Buffer.concat(this.#complete),
+			)
+			this.#complete = []
+		}
 		callback()
+	}
+
+	_destroy(error: Error | null, callback: (error: Error | null) => void): void {
+		this.#parts = []
+		this.#complete = []
+		this.#onComplete = undefined
+		callback(error)
 	}
 }

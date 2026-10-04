@@ -216,7 +216,7 @@ export async function buildStaticManifest(
 }
 
 const encodings = new Map<string, { br: boolean; gzip: boolean }>()
-function accepted(header: string) {
+export function accepted(header: string) {
 	const known = encodings.get(header)
 	if (known) return known
 	const qualities = new Map<string, number>()

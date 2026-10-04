@@ -12,6 +12,12 @@ import { renderToPipeableStream } from "react-dom/server"
 import { applyCachePolicy } from "~/server/cache-identity.server"
 import { HtmlStream } from "~/server/html-stream.server"
 import { startLifecycle } from "~/server/lifecycle.server"
+import { routeLabelFor } from "~/server/metrics/http.server"
+import {
+	configurePageCache,
+	pageCacheWants,
+	startPageCache,
+} from "~/server/page-cache.server"
 import { startStaticFiles } from "~/server/static-files.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 
@@ -20,6 +26,12 @@ import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 // waits for. The root loader starts the snapshot too, but a health check that asks /health/ready never reaches it.
 startLifecycle()
 startTitleSnapshot()
+// The page cache answers repeated anonymous pages before Express (see page-cache.server.ts). It starts before the
+// static files, so that the static handler is the outer one and its requests never reach the cache. The first call
+// of the route labeler starts loading the route list for the cache's metrics.
+configurePageCache({ routeLabel: routeLabelFor })
+routeLabelFor("/", 200)
+startPageCache()
 // Also before the first request: the files of the client build are answered before Express (see
 // static-files.server.ts). The root loader starts the gate and the metrics, but a static request never reaches it.
 startStaticFiles()
@@ -40,14 +52,25 @@ export default function handleRequest(
 	return new Promise((resolve, reject) => {
 		let shellRendered = false
 		let status = responseStatusCode
+		let errored = false
 		// Gives up on parts that are still suspended after ABORT_DELAY. Cleared when the response is done.
-		const abortTimer = setTimeout(() => abort(), ABORT_DELAY)
+		const abortTimer = setTimeout(() => {
+			errored = true
+			abort()
+		}, ABORT_DELAY)
 		const send = () => {
 			shellRendered = true
-			const body = new HtmlStream()
-			body.once("close", () => clearTimeout(abortTimer))
 			responseHeaders.set("Content-Type", "text/html")
-			applyCachePolicy(request, status, responseHeaders)
+			const decision = applyCachePolicy(request, status, responseHeaders)
+			const offer = pageCacheWants(request, status, responseHeaders, decision)
+			const body = new HtmlStream(
+				offer
+					? (html) => {
+							if (!errored) offer(html)
+						}
+					: undefined,
+			)
+			body.once("close", () => clearTimeout(abortTimer))
 			resolve(
 				new Response(createReadableStreamFromReadable(body), {
 					headers: responseHeaders,
@@ -74,6 +97,7 @@ export default function handleRequest(
 					reject(error)
 				},
 				onError(error: unknown) {
+					errored = true
 					status = 500
 					// Errors during the shell render reject above, and Remix logs them. Log the ones that come after.
 					if (shellRendered) console.error(error)
