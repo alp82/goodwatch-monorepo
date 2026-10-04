@@ -5,7 +5,7 @@ const prod = new Redis.Cluster(
 	[process.env.PROD_REDIS_HOST, process.env.PROD_REDIS_HOST2, process.env.PROD_REDIS_HOST3].map((host) => ({ host, port: Number(process.env.PROD_REDIS_PORT) })),
 	{ dnsLookup: (a, cb) => cb(null, a), redisOptions: { password: process.env.PROD_REDIS_PASS } },
 )
-const local = new Redis.Cluster([{ host: "172.31.251.10", port: 6379 }], { dnsLookup: (a, cb) => cb(null, a), redisOptions: { password: "bench" } })
+const local = new Redis.Cluster([{ host: process.env.LOCAL_REDIS_HOST ?? "172.31.251.10", port: 6379 }], { dnsLookup: (a, cb) => cb(null, a), redisOptions: { password: "bench" } })
 await Promise.all([prod, local].map((c) => (c.status === "ready" ? null : new Promise((resolve, reject) => { c.once("ready", resolve); c.once("error", reject) }))))
 const patterns = (process.argv[2] ?? "title-snapshot:*").split(",")
 let keys = 0, bytes = 0

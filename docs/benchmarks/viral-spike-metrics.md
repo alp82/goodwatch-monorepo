@@ -91,6 +91,16 @@ Read them in Grafana Cloud under **Explore**, with the Prometheus data source th
 | `goodwatch_related_requests_total` | Counter | `variant` | `/api/related` requests: `panel` (one panel with movies and shows), `legacy` (pages from before October 4, 2026 that ask with `mediaType`). Remove the legacy branch when it stays at zero. |
 | `goodwatch_data_cache_reset_guard_total` | Counter | `cache`, `event` | Events of the reset guard on caches that have a reset path. Capped at 64 label sets. |
 | `goodwatch_data_cache_pending_resets` | Gauge | None | Resets that Redis hasn't confirmed yet in this process. Zero in normal hours. |
+| `goodwatch_page_cache_requests_total` | Counter | `route`, `result`, `audience` | Page requests that the in-process page cache saw, by how they were answered. |
+| `goodwatch_page_cache_bypass_total` | Counter | `route`, `reason` | Requests that must not use the cache. |
+| `goodwatch_page_cache_misses_total` | Counter | `route`, `reason` | Requests that the app rendered, by why. |
+| `goodwatch_page_cache_stores_total` | Counter | `route` | Pages stored, including refreshed ones. |
+| `goodwatch_page_cache_not_stored_total` | Counter | `route`, `reason` | Renders that the cache tracked and didn't store. |
+| `goodwatch_page_cache_evictions_total` | Counter | `reason` | Stored pages removed. |
+| `goodwatch_page_cache_refreshes_total` | Counter | `route`, `result` | Finished background refreshes of stale pages. |
+| `goodwatch_page_cache_not_modified_total` | Counter | `route` | 304 answers from the store. They also count as `hit` or `stale`. |
+| `goodwatch_page_cache_entries`, `goodwatch_page_cache_bytes` | Gauge | None | Pages held, and their compressed bytes plus 1 KB each. |
+| `goodwatch_page_cache_flights`, `goodwatch_page_cache_waiters`, `goodwatch_page_cache_admission_keys` | Gauge | None | Renders the cache tracks, requests waiting for one, and URLs in the admission counters. |
 | `goodwatch_process_resident_memory_bytes`, `goodwatch_process_heap_used_bytes` | Gauge | None | Memory of the server process. |
 | `goodwatch_process_event_loop_delay_seconds` | Gauge | `quantile` (`0.5`, `0.99`, `max`) | How late the event loop ran since the previous scrape. |
 | `goodwatch_process_uptime_seconds`, `goodwatch_build_info` | Gauge | `commit` on the second | A restart or deploy shows as a reset or a new commit. |
@@ -131,6 +141,28 @@ For `goodwatch_data_cache_reset_guard_total`, `event` has six values. Only cache
 - `store_rejected`: A run finished after a reset in any process, so the store script refused its value. A background refresh also counts `discarded`.
 - `store_skipped`: A run didn't try to store, because its lookup couldn't read the marker, the key was pending, or the run took 270 seconds or longer.
 - `join_refused`: A lookup found a registered run that had seen another marker, and started its own run.
+
+The page cache metrics come from `goodwatch-webapp/app/server/page-cache.server.ts`. The cache is described in [page-cache.md](../page-cache.md). Its counters appear with the first page request, and its gauges with the start of the process. With `PAGE_CACHE=off`, none of them exist.
+
+For `goodwatch_page_cache_requests_total`, `result` has five values. The response header `GW-Page-Cache` says `hit`, `stale`, `miss` (for `miss` and `joined`), or `bypass`.
+
+- `hit`: answered from the store, fresh.
+- `stale`: answered from the store past its fresh time, while one background render refreshes it.
+- `joined`: waited for another request's render and was answered from the store.
+- `miss`: the app rendered it. `goodwatch_page_cache_misses_total` says why.
+- `bypass`: the request must not use the cache. `goodwatch_page_cache_bypass_total` says why.
+
+`audience` is read from the cookie again when the request is counted, apart from the cache's own decision. A `member` row with `hit`, `stale`, or `joined` would mean that a member got a stored page.
+
+| Metric | Label | Values |
+| --- | --- | --- |
+| `goodwatch_page_cache_bypass_total` | `reason` | `member` (the auth cookie), `gate` (the browser gate answers the request), `long_url` (over 2,048 characters), `shutdown` |
+| `goodwatch_page_cache_misses_total` | `reason` | `not_admitted` (first request for the URL in 60 seconds), `lead` (a repeated URL: this render is stored, and others wait for it), `probe` (a repeated URL that wasn't storable before: nobody waits), `pass` (the URL wasn't storable and is inside its pass period), `busy` (a render is in flight that can't be joined, or a limit is reached), `wait_timeout` (waited 3 seconds), `released` (waited, and the render wasn't stored), `head` (a HEAD request without a stored page) |
+| `goodwatch_page_cache_not_stored_total` | `reason` | `not_admitted` (the URL didn't repeat during the render), `unstorable` (a 200 response that no cache may store: a private route, a cookie, an incomplete title page, a render error), `status` (not 200), `aborted` (the client left), `too_large`, `compress_error`, `reset` |
+| `goodwatch_page_cache_evictions_total` | `reason` | `lru` (a bound was reached), `expired` (past the stale time), `reset`, `gone` (a refresh answered a redirect or a 404) |
+| `goodwatch_page_cache_refreshes_total` | `result` | `ok`, `error` (the render failed or took over 15 seconds), `not_storable` (a 200 response that may not be stored this time), `gone` |
+
+Before the route list has loaded (the first requests after a start), `route` is `unmatched`.
 
 Histogram buckets are 0.05, 0.1, 0.2, 0.3, 0.5, 1, 2, 5, and 10 seconds. The map's target of 300 ms is a bucket edge, so the share of requests under 300 ms is exact. Percentiles are estimates between two edges.
 
@@ -287,7 +319,51 @@ sum by (instance, cache) (rate(goodwatch_data_cache_requests_total{job="goodwatc
 
 ### Page cache hit ratio
 
-No HTTP page cache exists yet. Two numbers stand in for it today, and one formula is ready for the day a cache layer exists.
+The in-process page cache answers repeated anonymous page requests. No cache runs in front of the webapp yet.
+
+The share of page requests answered from the in-process store, in total and per route:
+
+```promql
+sum(rate(goodwatch_page_cache_requests_total{job="goodwatch_webapp", result=~"hit|stale|joined"}[5m]))
+/
+sum(rate(goodwatch_page_cache_requests_total{job="goodwatch_webapp"}[5m]))
+
+sum by (route) (rate(goodwatch_page_cache_requests_total{job="goodwatch_webapp", result=~"hit|stale|joined"}[5m]))
+/
+sum by (route) (rate(goodwatch_page_cache_requests_total{job="goodwatch_webapp", result!="bypass"}[5m]))
+```
+
+A member that got a stored page. This must stay empty:
+
+```promql
+sum by (route, result) (rate(goodwatch_page_cache_requests_total{job="goodwatch_webapp", audience="member", result=~"hit|stale|joined"}[5m])) > 0
+```
+
+Why requests were rendered, why they bypassed, and why renders weren't stored:
+
+```promql
+sum by (reason) (rate(goodwatch_page_cache_misses_total{job="goodwatch_webapp"}[5m]))
+
+sum by (reason) (rate(goodwatch_page_cache_bypass_total{job="goodwatch_webapp"}[5m]))
+
+sum by (route, reason) (rate(goodwatch_page_cache_not_stored_total{job="goodwatch_webapp"}[5m]))
+```
+
+What the store holds, how fast it turns over, and whether refreshes work:
+
+```promql
+goodwatch_page_cache_entries{job="goodwatch_webapp"}
+
+goodwatch_page_cache_bytes{job="goodwatch_webapp"}
+
+sum by (reason) (rate(goodwatch_page_cache_evictions_total{job="goodwatch_webapp"}[5m]))
+
+sum by (result) (rate(goodwatch_page_cache_refreshes_total{job="goodwatch_webapp"}[5m]))
+```
+
+- Evictions with `lru` while `goodwatch_page_cache_bytes` sits at 134,217,728 mean the byte bound is too small for the URLs that repeat.
+- `goodwatch_page_cache_waiters` above zero for more than a few seconds means renders are slow: waiting requests go to the app after 3 seconds.
+- With two instances, each process has its own store. Sum the counters, and read the gauges per instance.
 
 The share of anonymous responses that a shared cache could store, per route. This is the upper limit of a page cache hit ratio:
 
@@ -309,7 +385,7 @@ Error responses that a shared cache could store. This must stay empty:
 sum by (route, status_class) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", status_class=~"4xx|5xx", cache_control="shared"}[5m])) > 0
 ```
 
-When a page cache (Varnish is the likely choice) sits in front of the webapp, every request that reaches the webapp is a page cache miss or a pass. The cache layer exports its own request counter, and the hit ratio is one minus the webapp's share:
+When a page cache (Varnish is the likely choice) also sits in front of the webapp, every request that reaches the webapp is a miss or a pass of that cache. The cache layer exports its own request counter, and the hit ratio is one minus the webapp's share:
 
 ```promql
 1 - sum(rate(goodwatch_http_responses_total{job="goodwatch_webapp"}[5m])) / sum(rate(<the cache layer's request counter>[5m]))

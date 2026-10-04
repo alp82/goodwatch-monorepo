@@ -4,7 +4,8 @@ This page says which stored response a request may get. One rule serves the brow
 a cache in front of the app. The code is `goodwatch-webapp/app/server/cache-identity.server.ts`. The decision is
 [ADR 0005](adr/0005-cache-identity-for-anonymous-html.md).
 
-No page cache runs today. Both planned caches must follow this page.
+The in-process page cache follows this page: see [page-cache.md](page-cache.md). No cache runs in front of the app
+yet. It must follow this page too.
 
 ## The identity
 
@@ -48,6 +49,7 @@ the final status.
 | Member | `private, no-store` | none | none |
 | Any status other than 200: errors, not-found pages, error boundaries | `private, no-store` | none | none |
 | A response that sets a cookie, a method other than GET or HEAD, or a route that says `private` or `no-store` (share list pages, search, settings) | `private, no-store` | none | none |
+| A title page without its embedded related panel, genre links, or collection (a lookup ran out of its budget or failed) | `private, no-store` | none | none |
 | Anonymous `_data` response of a loader that sets no `Cache-Control` | unchanged (none) | unchanged | none |
 
 Compression adds `Accept-Encoding` to `Vary`. No response of the app varies on `Cookie`, except the gate's 403 and
@@ -84,10 +86,11 @@ Compression adds `Accept-Encoding` to `Vary`. No response of the app varies on `
 | Analytics cookies (`_ga*`, `ph_*`) | Irrelevant. The server doesn't read them. |
 | `gw_recording_sample`, `gw_stale_chunk_reload` | Browser storage keys, not cookies. Irrelevant. |
 | Feature flags (`REC_*`) | Environment variables. Preview users are members, so anonymous HTML doesn't depend on a visitor. A flag change needs a restart, and a purge of any page cache. |
-| `?country=`, `?language=`, filters, `?tv=`, every other query parameter | Part of the URL, which is part of the key. Dropping tracking parameters (`utm_*`, `fbclid`, `gclid`) before the lookup is a later decision for the cache. |
+| `?country=`, `?language=`, filters, `?tv=`, every other query parameter | Part of the URL, which is part of the key. |
+| Tracking parameters (`utm_*`, `fbclid`, `gclid`, and the other click ids listed in [page-cache.md](page-cache.md)) | Not part of the key. The in-process page cache removes them from the request before the app sees it, because some pages copy the query string into links. No loader reads them. |
 | `?_data=` | Remix's loader request. Same rule as the page. |
 | A member's saved country and services | Members only. Never in an anonymous response. |
-| `User-Agent` | Not part of the key. Two places read it. The gate and the person loader redirect a declared crawler away from filtered URLs, and those redirects aren't stored. A title page waits 1,000 ms for the related titles for a declared crawler and 150 ms for everyone else, so a page rendered for a browser can lack the embedded related panel (0.1% of movie pages in production). A page cache must decide whether to store such a page. |
+| `User-Agent` | Not part of the key. Two places read it. The gate and the person loader redirect a declared crawler away from filtered URLs, and those redirects aren't stored. A title page waits 1,000 ms for the related titles for a declared crawler and 150 ms for everyone else, so a page rendered for a browser can lack the embedded related panel (0.1% of movie pages in production). Such a page answers `private, no-store`, so no cache stores it. |
 
 ## Inventory
 
@@ -134,16 +137,20 @@ Where each header is set:
 | `app/server/browser-gate.server.ts` | The 403, 410, and crawler 301, before Express and Remix. |
 | `remix-serve` and the static file handler | Files from the client build. Compression adds `Vary: Accept-Encoding`. |
 
-## What the in-process page cache must do
+## What the in-process page cache does
 
-1. Call `cacheIdentity(request)`. If `cacheable` is false (a member, or a method other than GET or HEAD), don't look
-   up and don't store.
-2. Use the full URL plus `identity.key` as the key.
-3. Store a response only when `applyCachePolicy` returned `keyed` or `shared` for it. That excludes errors,
-   redirects, responses that set a cookie, and routes that say private.
-4. Send a stored response with the headers it was stored with. A `keyed` response keeps `private, max-age=0`.
-5. The gate runs before the cache, so a request without `gw_browser` for a gated URL never reaches it.
-6. Empty the cache on a deploy, and when a feature flag changes.
+The cache is described in [page-cache.md](page-cache.md). It keeps these rules:
+
+1. It asks the identity for every request (`cacheIdentityOf`, the rule behind `cacheIdentity`). If `cacheable` is
+   false (a member, or a method other than GET or HEAD), it doesn't look up and doesn't store.
+2. The key is the URL without tracking parameters, plus `identity.key`, the `Host`, the build commit, and whether a
+   front cache named the identity.
+3. It stores a response only when `applyCachePolicy` returned `keyed` or `shared` for it. That excludes errors,
+   redirects, responses that set a cookie, routes that say private, and incomplete title pages.
+4. It sends a stored response with the headers it was stored with. A `keyed` response keeps `private, max-age=0`.
+5. It takes the gate's decision again with the gate's own function, so a request without `gw_browser` for a gated URL
+   never gets a stored page, whatever order the gate and the cache run in.
+6. A deploy and a feature flag change restart the process, which empties the cache.
 
 ## What a front cache must do
 
