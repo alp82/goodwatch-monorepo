@@ -1,5 +1,6 @@
 import { motion } from "framer-motion"
 import { Link } from "@remix-run/react"
+import { useAuthHref } from "~/utils/auth-href"
 import { LockClosedIcon, SparklesIcon } from "@heroicons/react/24/outline"
 import type { LastRatedItem, ScoringMedia } from "~/ui/scoring/types"
 import { FEATURES, getNextUnlockableFeature, getUnlockedFeatures } from "../features"
@@ -30,6 +31,7 @@ export default function TasteStream({
 	onViewPicks,
 	onContinueRating,
 }: TasteStreamProps) {
+	const authHref = useAuthHref()
 	const nextFeature = getNextUnlockableFeature(ratingsCount)
 	const unlockedFeatures = getUnlockedFeatures(ratingsCount)
 	const lastUnlockedFeature = unlockedFeatures[unlockedFeatures.length - 1]
@@ -123,7 +125,7 @@ export default function TasteStream({
 						<div className="md:ml-24 flex flex-col gap-1.5">
 							{/* Save Progress Button (guests only) */}
 							{isGuest && (
-								<Link rel="nofollow" to="/sign-up?redirectTo=/taste">
+								<Link rel="nofollow" to={authHref("sign-up", "/taste")}>
 									<Button
 										disabled={lastRated.length == 0}
 										highlight="gray"

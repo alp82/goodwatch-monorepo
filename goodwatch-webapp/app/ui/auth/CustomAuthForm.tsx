@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate } from "@remix-run/react"
 import { toast } from "react-toastify"
 import { useSupabase } from "~/utils/auth"
+import { useAuthHref } from "~/utils/auth-href"
 import { Spinner } from "~/ui/wait/Spinner"
 
 interface CustomAuthFormProps {
@@ -25,6 +26,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 	const [authReturnTo, setAuthReturnTo] = useState(redirectTo || "/taste/quiz")
 	useEffect(() => setAuthReturnTo(discoveryReturnTo(redirectTo)), [redirectTo])
 	const returnTo = () => authReturnTo
+	const authHref = useAuthHref()
 
 	const handleEmailAuth = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -254,7 +256,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 						{mode === "sign-up" ? (
 							<p className="text-gray-400">
 								Already have an account?{" "}
-								<Link rel="nofollow" to={`/sign-in?redirectTo=${encodeURIComponent(authReturnTo)}`} className="text-amber-500 hover:text-amber-400 font-medium">
+								<Link rel="nofollow" to={authHref("sign-in", authReturnTo)} className="text-amber-500 hover:text-amber-400 font-medium">
 									Sign in
 								</Link>
 							</p>
@@ -267,7 +269,7 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 								</p>
 								<p className="text-gray-400 mt-2">
 									Don't have an account?{" "}
-									<Link rel="nofollow" to={`/sign-up?redirectTo=${encodeURIComponent(authReturnTo)}`} className="text-amber-500 hover:text-amber-400 font-medium">
+									<Link rel="nofollow" to={authHref("sign-up", authReturnTo)} className="text-amber-500 hover:text-amber-400 font-medium">
 										Sign up
 									</Link>
 								</p>

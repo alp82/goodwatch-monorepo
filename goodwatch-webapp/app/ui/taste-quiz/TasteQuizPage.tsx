@@ -5,6 +5,7 @@ import { type ReactNode, useEffect } from "react"
 import type { Score } from "~/server/scores.server"
 import { DockStrip, useHasDock } from "~/ui/navigation"
 import type { ScoringMedia } from "~/ui/scoring/types"
+import { useAuthHref } from "~/utils/auth-href"
 import { titleToDashed } from "~/utils/helpers"
 import { getVibeColorValue } from "~/utils/ratings"
 import { GoogleMark } from "./GoogleMark"
@@ -298,6 +299,7 @@ function RateMoreActions({
 // ------------------------------------------------------------- Keep these 5?
 
 function KeepAsk({ q }: { q: TasteQuiz }) {
+	const authHref = useAuthHref()
 	const google = useContinueWithGoogle()
 	return (
 		<Section>
@@ -363,7 +365,7 @@ function KeepAsk({ q }: { q: TasteQuiz }) {
 					Continue with Google: no password.{" "}
 					<Link
 						rel="nofollow"
-						to={`/sign-up?redirectTo=${encodeURIComponent(SAVED_RETURN)}`}
+						to={authHref("sign-up", SAVED_RETURN)}
 						className="underline hover:text-gray-300"
 					>
 						Use email instead

@@ -2,17 +2,18 @@
 // switch's place, and a viewer without enough liked titles gets the switch disabled with a way to rate more.
 import { UserPlusIcon } from "@heroicons/react/20/solid"
 import { FingerPrintIcon } from "@heroicons/react/24/solid"
-import { Link, useLocation } from "@remix-run/react"
+import { Link } from "@remix-run/react"
 import { RATE_TITLES_PATH, SLAB_SEGMENT } from "~/ui/filter-bar"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
 import { SIGN_UP_MESSAGES } from "~/ui/sign-up-prompt/messages"
+import { useAuthHref } from "~/utils/auth-href"
 
 /**
  * The sign-up prompt in For you's place: the prompt chip in the desktop row, and a compact segment in the phone slab
  * that opens the same sign-up.
  */
 export function ForYouSignUp() {
-	const { pathname, search } = useLocation()
+	const authHref = useAuthHref()
 	const message = SIGN_UP_MESSAGES.forYou.learn
 	return (
 		<>
@@ -26,7 +27,7 @@ export function ForYouSignUp() {
 			</span>
 			<Link
 				rel="nofollow"
-				to={`/sign-up?redirectTo=${encodeURIComponent(pathname + search)}`}
+				to={authHref("sign-up")}
 				aria-label={message.title}
 				className={`${SLAB_SEGMENT} text-amber-200 lg:hidden`}
 			>

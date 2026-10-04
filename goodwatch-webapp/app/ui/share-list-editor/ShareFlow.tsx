@@ -7,6 +7,7 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useLocation, useNavigate } from "@remix-run/react"
 import { Link } from "@remix-run/react"
+import { useAuthHref } from "~/utils/auth-href"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "react-toastify"
 import {
@@ -198,7 +199,7 @@ export function DialogShell({
 }
 
 function AccountDialog({ onClose }: { onClose: () => void }) {
-	const returnTo = encodeURIComponent(RESUME_SHARE_PATH)
+	const authHref = useAuthHref()
 	return (
 		<DialogShell label="Create an account to share" onClose={onClose}>
 			<h2 className="text-2xl font-black">Share your list</h2>
@@ -208,7 +209,7 @@ function AccountDialog({ onClose }: { onClose: () => void }) {
 			</p>
 			<Link
 				rel="nofollow"
-				to={`/sign-up?redirectTo=${returnTo}`}
+				to={authHref("sign-up", RESUME_SHARE_PATH)}
 				className="rounded-full bg-white py-2.5 text-center font-black text-black"
 			>
 				Sign up
@@ -217,7 +218,7 @@ function AccountDialog({ onClose }: { onClose: () => void }) {
 				Already have an account?{" "}
 				<Link
 					rel="nofollow"
-					to={`/sign-in?redirectTo=${returnTo}`}
+					to={authHref("sign-in", RESUME_SHARE_PATH)}
 					className="font-semibold text-white underline underline-offset-4"
 				>
 					Sign in

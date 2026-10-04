@@ -3,9 +3,6 @@
 // pretends to be a browser sends browser headers but doesn't run scripts. It says nothing about the visitor.
 export const BROWSER_COOKIE = "gw_browser"
 
-/** The script that sets the cookie, for a page and for the browser check alike. */
-export const SET_BROWSER_COOKIE = `document.cookie="${BROWSER_COOKIE}=1; Path=/; Max-Age=31536000; SameSite=Lax"`
-
 /** Sets the cookie in the browser. */
 export function setBrowserCookie(): void {
 	document.cookie = `${BROWSER_COOKIE}=1; Path=/; Max-Age=31536000; SameSite=Lax`

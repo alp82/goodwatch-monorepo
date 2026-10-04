@@ -1,7 +1,7 @@
 import { UserPlusIcon } from "@heroicons/react/20/solid"
-import { Link, useLocation } from "@remix-run/react"
+import { Link } from "@remix-run/react"
 import { useUser } from "~/utils/auth"
-import { authReturnQuery } from "~/utils/auth-return"
+import { useAuthHref } from "~/utils/auth-href"
 import {
 	SIGN_UP_MESSAGES,
 	type SignUpFeature,
@@ -19,11 +19,6 @@ interface SignUpPromptProps {
 	className?: string
 }
 
-// The page the person is on, so sign-up (and sign-in) bring them back to it. Guest progress transfers as usual.
-function useReturnQuery() {
-	return authReturnQuery(useLocation())
-}
-
 /**
  * The sign-up call to action for a taste-dependent feature. Signed-in members never see it.
  */
@@ -34,10 +29,11 @@ export function SignUpPrompt({
 	className = "",
 }: SignUpPromptProps) {
 	const { user } = useUser()
-	const returnQuery = useReturnQuery()
+	// Sign-up and sign-in bring the person back to the page they're on. Guest progress transfers as usual.
+	const authHref = useAuthHref()
 	if (user) return null
 	const message = SIGN_UP_MESSAGES[feature][stage]
-	const signUp = `/sign-up${returnQuery}`
+	const signUp = authHref("sign-up")
 
 	if (size === "chip")
 		return (
@@ -80,7 +76,7 @@ export function SignUpPrompt({
 					</Link>
 					<Link
 						rel="nofollow"
-						to={`/sign-in${returnQuery}`}
+						to={authHref("sign-in")}
 						className="text-sm text-gray-400 underline-offset-2 hover:text-gray-200 hover:underline"
 					>
 						I have an account

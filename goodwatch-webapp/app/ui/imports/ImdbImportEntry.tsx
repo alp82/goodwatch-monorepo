@@ -3,6 +3,7 @@
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { useEffect, useState } from "react"
+import { useAuthHref } from "~/utils/auth-href"
 import { IMPORTS_PATH } from "./shared"
 
 const DISMISSED_KEY = "goodwatch_imdb_import_entry_dismissed"
@@ -11,6 +12,7 @@ export function ImdbImportEntry({
 	member,
 	className = "",
 }: { member: boolean; className?: string }) {
+	const authHref = useAuthHref()
 	const [dismissed, setDismissed] = useState(false)
 	useEffect(() => {
 		try {
@@ -35,11 +37,7 @@ export function ImdbImportEntry({
 				Already rate on IMDb?{" "}
 				<Link
 					rel={member ? undefined : "nofollow"}
-					to={
-						member
-							? IMPORTS_PATH
-							: `/sign-up?redirectTo=${encodeURIComponent(IMPORTS_PATH)}`
-					}
+					to={member ? IMPORTS_PATH : authHref("sign-up", IMPORTS_PATH)}
 					className="inline-flex min-h-11 items-center font-semibold text-amber-300 underline-offset-2 hover:text-amber-200 hover:underline md:min-h-9"
 				>
 					{member

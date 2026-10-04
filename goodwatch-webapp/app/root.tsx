@@ -9,6 +9,7 @@ import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
 import { getEnabledFeatures } from "~/server/features.server"
 import { capLogLines } from "~/server/log-cap.server"
+import { startBrowserGate } from "~/server/browser-gate.server"
 import { startMetrics } from "~/server/metrics/index.server"
 import { startProcessStats } from "~/server/process-stats.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
@@ -145,6 +146,7 @@ export const loader: LoaderFunction = async ({
 	startTitleSnapshot()
 	startProcessStats()
 	startMetrics()
+	startBrowserGate()
 	const { locale } = getLocaleFromRequest(request)
 	const { user, headers } = await getAuthFromRequest({ request })
 	const queryClient = new QueryClient()

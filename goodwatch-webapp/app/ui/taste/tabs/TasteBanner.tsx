@@ -11,6 +11,7 @@ import { GoogleMark } from "~/ui/taste-quiz/GoogleMark"
 import { QUIZ_PATH, RatingDots } from "~/ui/taste-quiz/TasteQuizPage"
 import { useContinueWithGoogle } from "~/ui/taste-quiz/continue-with-google"
 import { QUIZ_GOAL } from "~/ui/taste-quiz/quiz-flow"
+import { useAuthHref } from "~/utils/auth-href"
 import { useGuestInteractions } from "~/utils/guest-progress"
 
 /** Below this many ratings a member is new, and the banner still asks for more. */
@@ -54,6 +55,7 @@ function MemberBanner() {
 }
 
 function GuestBanner() {
+	const authHref = useAuthHref()
 	const rated = useGuestInteractions().filter((i) => i.type === "score").length
 	const google = useContinueWithGoogle()
 	if (rated >= QUIZ_GOAL)
@@ -89,7 +91,7 @@ function GuestBanner() {
 					</Link>
 					<Link
 						rel="nofollow"
-						to="/sign-in?redirectTo=/taste"
+						to={authHref("sign-in", "/taste")}
 						className="inline-flex min-h-11 items-center text-sm font-semibold text-amber-200/80 hover:text-amber-100 md:min-h-9"
 					>
 						Have an account? Sign in

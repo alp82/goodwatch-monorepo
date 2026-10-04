@@ -6,7 +6,7 @@ import { useFeatures } from "~/hooks/useFeature"
 import logoWhite from "~/img/goodwatch-logo-white.svg"
 import { UserMenu } from "~/ui/main/UserMenu"
 import { useUser } from "~/utils/auth"
-import { authReturnQuery } from "~/utils/auth-return"
+import { useAuthHref } from "~/utils/auth-href"
 import { currentDestination, getDestinations } from "./destinations"
 import { useTonightsPick } from "./useTonightsPick"
 
@@ -26,7 +26,7 @@ export function GoodWatchMark({ size = 22 }: { size?: number }) {
 
 /** Sign up, bringing the person back to the page they're on. Guest progress transfers as usual. */
 export function useSignUpHref() {
-	return `/sign-up${authReturnQuery(useLocation())}`
+	return useAuthHref()("sign-up")
 }
 
 /** Tonight's pick as a tiny poster: one tap opens Watch next. Guests see their last Wishlist title, or the icon. */

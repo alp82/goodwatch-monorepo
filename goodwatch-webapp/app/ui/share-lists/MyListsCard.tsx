@@ -17,6 +17,7 @@ import {
 import { RESUME_SHARE_PATH } from "~/ui/share-list-editor/ShareFlow"
 import { readBrowserDraft } from "~/ui/share-list-editor/autosave"
 import type { ListDraft } from "~/ui/share-list-editor/list-state"
+import { useAuthHref } from "~/utils/auth-href"
 
 export function MyListsLink() {
 	return (
@@ -43,6 +44,7 @@ export function MyListsLink() {
 
 /** The guest's browser draft, if they started a list. Renders nothing until it has read the browser. */
 export function GuestDraftCard() {
+	const authHref = useAuthHref()
 	const [draft, setDraft] = useState<ListDraft | null>(null)
 	useEffect(() => {
 		const found = readBrowserDraft()
@@ -100,7 +102,10 @@ export function GuestDraftCard() {
 					</Link>
 					<Link
 						rel="nofollow"
-						to={`/sign-up?redirectTo=${encodeURIComponent(missing > 0 ? newListPath() : RESUME_SHARE_PATH)}`}
+						to={authHref(
+							"sign-up",
+							missing > 0 ? newListPath() : RESUME_SHARE_PATH,
+						)}
 						className="rounded-full px-3.5 py-1.5 text-sm font-black text-black hover:brightness-110"
 						style={{
 							backgroundImage: `linear-gradient(90deg, ${theme.accent}, ${theme.accent2})`,
