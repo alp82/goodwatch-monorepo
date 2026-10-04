@@ -182,6 +182,81 @@ class ReconcileTest(unittest.TestCase):
             self.assertEqual(plan["add"][0][7:10], [destination, "port", "6379"])
             self.assertEqual(plan["add"][0][-1], "gw-worker:windmill_default:6379")
 
+    def test_unlabeled_network_gets_owner_and_purpose_comments(self) -> None:
+        settings = config()
+        settings["networks"].append(
+            {
+                "name": "coolify",
+                "labels": {},
+                "owner": "gw-webapp",
+                "subnets": ["172.25.0.0/16"],
+            }
+        )
+        coolify = {
+            "Name": "coolify",
+            "Id": "e" * 64,
+            "Driver": "bridge",
+            "Internal": False,
+            "EnableIPv6": False,
+            "Options": {},
+            "Labels": {},
+            "IPAM": {"Config": [{"Subnet": "172.25.0.0/16"}]},
+        }
+        host = Host()
+        windmill = host.network
+        reconcile(config(), host, apply=True)
+        worker_rules = list(host.rules)
+        host.inspect = lambda name: coolify if name == "coolify" else windmill
+        plan = reconcile(settings, host, apply=True)
+        self.assertEqual(plan["remove"], [])
+        self.assertEqual(
+            [rule[3:10:2] + [rule[-1]] for rule in plan["add"]],
+            [
+                [
+                    "br-eeeeeeeeeeee",
+                    "172.25.0.0/16",
+                    "10.0.0.20",
+                    "6333",
+                    "gw-webapp: coolify network to local Qdrant HTTP",
+                ],
+                [
+                    "br-eeeeeeeeeeee",
+                    "172.25.0.0/16",
+                    "10.0.0.20",
+                    "6334",
+                    "gw-webapp: coolify network to local Qdrant gRPC",
+                ],
+            ],
+        )
+        self.assertEqual(host.rules[:2], worker_rules)
+        host.commands.clear()
+        self.assertEqual(reconcile(settings, host, apply=True)["add"], [])
+        self.assertEqual(host.commands, [])
+        # The old configuration no longer covers the webapp rules: fail closed.
+        with self.assertRaises(ValueError):
+            reconcile(config(), host, apply=True)
+        # A label that appears on the network later is a different network.
+        coolify["Labels"] = {"com.docker.compose.project": "other"}
+        with self.assertRaises(ValueError):
+            reconcile(settings, host, apply=True)
+        coolify["Labels"] = {}
+        # A removed network takes only its own rules with it.
+        host.inspect = lambda name: None if name == "coolify" else windmill
+        self.assertEqual(len(reconcile(settings, host, apply=True)["remove"]), 2)
+        self.assertEqual(host.rules, worker_rules)
+
+    def test_unknown_owner_and_mixed_identity_are_rejected(self) -> None:
+        for change in (
+            {"owner": "someone"},
+            {"labels": {}},
+            {"labels": {"a": 1}, "project": None, "compose_network": None},
+        ):
+            with self.subTest(change=change):
+                settings = config()
+                settings["networks"][0].update(change)
+                with self.assertRaises(ValueError):
+                    reconcile(settings, Host())
+
     def test_dry_run_then_apply_scopes_ports_and_is_idempotent(self) -> None:
         host = Host()
         plan = reconcile(config(), host)

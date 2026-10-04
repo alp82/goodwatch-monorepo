@@ -2,13 +2,26 @@
 
 The worker deployment owns five host INPUT permissions: local Windmill workers to Crate HTTP on `10.0.0.11–13:4200`, and to Qdrant REST/gRPC on `10.0.0.20:6333/6334`. Remote private clients retain their existing rules. These are not forwarding permissions; no general inter-bridge access or extra database/cluster ports are introduced.
 
+On `10.0.0.20`, the same reconciler owns two more permissions for the webapp instance that Coolify runs there: Coolify's `coolify` network to Qdrant REST/gRPC on `10.0.0.20:6333/6334`.
+
+## Rule comments
+
+Every firewall rule on every host carries a short comment that names the owner and the purpose. The reconciler writes them, and recognizes its own rules by the owner prefix:
+
+| Owner | Comment | Example |
+| --- | --- | --- |
+| `gw-worker` | `gw-worker:<network>:<port>` | `gw-worker:windmill_default:6333` |
+| `gw-webapp` | `gw-webapp: <network> network to local <service>` | `gw-webapp: coolify network to local Qdrant HTTP` |
+
+A rule added by hand needs a comment too, for example `ufw allow from 10.0.0.0/24 to any port 5432 proto tcp comment 'Crate SQL - private clients'`. Don't start a hand-written comment with `gw-worker:` or `gw-webapp:`: the reconciler treats those rules as its own, and stops with an error when one doesn't match its configuration.
+
 ## Ownership and reconciliation
 
-`goodwatch-remote/firewall/` contains the host reconciler, explicit host configurations, installer and systemd units. It matches the Docker network's exact name and Compose project/network labels, inspects its actual bridge interface and subnet, and permits only the configured private destination and required ports. The configured subnet allowlist covers the current `172.18.0.0/16` deployment and the repository's future `172.28.0.0/24` configuration. Only the subnet actually present is granted access. The pinned `br-windmill` option in the default Compose configuration remains supported; rollout does not require changing a running network's subnet.
+`goodwatch-remote/firewall/` contains the host reconciler, explicit host configurations, installer and systemd units. It matches the Docker network's exact name and Compose project/network labels, inspects its actual bridge interface and subnet, and permits only the configured private destination and required ports. A network that Compose didn't create, such as Coolify's `coolify` network, has no Compose labels: its entry declares `"labels"` with the network's complete label set instead of `"project"` and `"compose_network"` (`{}` for no labels), and `"owner": "gw-webapp"`. A network whose labels differ from the declared set doesn't match. The configured subnet allowlist covers the current `172.18.0.0/16` deployment and the repository's future `172.28.0.0/24` configuration. Only the subnet actually present is granted access. The pinned `br-windmill` option in the default Compose configuration remains supported; rollout does not require changing a running network's subnet.
 
 Existing exact `Windmill to local Crate HTTP` / `Windmill to local Qdrant HTTP` / `Windmill to local Qdrant gRPC` rules are adopted without reapplying working permissions. Newly generated rules use the `gw-worker:` ownership prefix. Additions precede removal of obsolete owned rules, and the reconciler verifies persistent UFW configuration and active INPUT rules. Unrelated SSH, web, shared etcd, application, IPv6 and forwarding rules are preserved.
 
-Network identity, driver or subnet mismatches and Docker inspection failures abort without firewall writes. A successfully observed missing network allows obsolete owned rules to be removed. Root-owned configuration prevents network labels alone from granting permission. Concurrent executions serialize through a local lock. The systemd service/timer reconciles 30 seconds after boot and every 30 seconds, covering Docker network recreation and firewall reload without replacing UFW or Docker's firewall chains.
+Network identity, driver or subnet mismatches and Docker inspection failures abort without firewall writes. One mismatching network stops the whole run on that host, so the other network's rules aren't reconciled either until the configuration and the network agree: if Coolify recreates its `coolify` network with another subnet, add that subnet to `host-20.json` and install it. A successfully observed missing network allows obsolete owned rules to be removed. Root-owned configuration prevents network labels alone from granting permission. Concurrent executions serialize through a local lock. The systemd service/timer reconciles 30 seconds after boot and every 30 seconds, covering Docker network recreation and firewall reload without replacing UFW or Docker's firewall chains.
 
 ## Rollout and verification
 
@@ -23,7 +36,7 @@ sudo systemctl enable --now goodwatch-worker-firewall.timer
 sudo systemctl status goodwatch-worker-firewall.timer --no-pager
 ```
 
-`install.sh` installs artifacts and prints a plan; only the explicit service start applies it. For a manual plan, run `sudo python3 /usr/local/lib/goodwatch-worker-firewall/reconcile.py --config /etc/goodwatch-worker-firewall.json`. Mutation snapshots are saved under `/var/lib/goodwatch-worker-firewall/rollback-*.json`; unchanged periodic checks do not create snapshots. A recreation outside the controlled rollout can take up to one timer interval to reconcile; invoke the service synchronously before starting workers when immediate readiness is required.
+`install.sh` installs artifacts and prints a plan; only the explicit service start applies it. On a host where the timer already runs, the timer applies the installed configuration within 30 seconds, so review the plan before installing: copy the directory to a root-only temporary directory and run `python3 reconcile.py --config host-20.json` there. For a manual plan, run `sudo python3 /usr/local/lib/goodwatch-worker-firewall/reconcile.py --config /etc/goodwatch-worker-firewall.json`. Mutation snapshots are saved under `/var/lib/goodwatch-worker-firewall/rollback-*.json`; unchanged periodic checks do not create snapshots. A recreation outside the controlled rollout can take up to one timer interval to reconcile; invoke the service synchronously before starting workers when immediate readiness is required.
 
 For controlled recreation, inspect `windmill_default` and verify its members are only the owning `default_worker` and, on `.20`, `highperf_worker` containers. Save their IDs, images and network aliases, plus the network's labels, IPAM settings and options. Drain with `docker stop --timeout=-1 <worker IDs>` and wait for graceful completion; never substitute the ordinary finite stop timeout or cancel running jobs to accelerate a test. Other hosts continue processing work.
 

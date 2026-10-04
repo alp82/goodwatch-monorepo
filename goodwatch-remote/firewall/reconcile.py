@@ -20,6 +20,16 @@ class Host(Protocol):
 
 
 PREFIX = "gw-worker:"
+# Every rule carries a comment that names its owner and its purpose. The worker
+# rules keep their original "gw-worker:<network>:<port>" form. Other owners get
+# a sentence: "gw-webapp: coolify network to local Qdrant HTTP".
+OWNERS = ("gw-worker", "gw-webapp")
+SERVICES = {
+    4200: "Crate HTTP",
+    6333: "Qdrant HTTP",
+    6334: "Qdrant gRPC",
+    6379: "Redis",
+}
 PORTS = {
     "10.0.0.11": [4200],
     "10.0.0.12": [4200],
@@ -34,6 +44,28 @@ LEGACY = {
     6333: "Windmill to local Qdrant HTTP",
     6334: "Windmill to local Qdrant gRPC",
 }
+
+
+def owner_of(entry: dict[str, Any]) -> str:
+    return entry.get("owner", "gw-worker")
+
+
+def comment_for(entry: dict[str, Any], port: int | str) -> str:
+    owner = owner_of(entry)
+    if owner == "gw-worker":
+        return PREFIX + entry["name"] + ":" + str(port)
+    return f"{owner}: {entry['name']} network to local {SERVICES[int(port)]}"
+
+
+def labels_match(entry: dict[str, Any], labels: dict[str, str]) -> bool:
+    """A Compose network matches by its project and network labels. A network
+    that isn't from Compose (Coolify's) declares its complete label set."""
+    if "labels" in entry:
+        return labels == entry["labels"]
+    return (
+        labels.get("com.docker.compose.project") == entry["project"]
+        and labels.get("com.docker.compose.network") == entry["compose_network"]
+    )
 
 
 class InputRule(NamedTuple):
@@ -94,9 +126,26 @@ def reconcile(
     ):
         raise ValueError("Ambiguous configured networks")
     for entry in entries:
+        if owner_of(entry) not in OWNERS:
+            raise ValueError("Unknown rule owner")
+        if "labels" in entry:
+            identity = ("name",)
+            if (
+                "project" in entry
+                or "compose_network" in entry
+                or not isinstance(entry["labels"], dict)
+                or not all(
+                    isinstance(k, str) and isinstance(v, str)
+                    for k, v in entry["labels"].items()
+                )
+            ):
+                raise ValueError("Invalid network identity")
+        else:
+            identity = ("name", "project", "compose_network")
         if not all(
-            re.fullmatch(r"[a-zA-Z0-9_-]{1,64}", entry[k])
-            for k in ("name", "project", "compose_network")
+            isinstance(entry.get(k), str)
+            and re.fullmatch(r"[a-zA-Z0-9_-]{1,64}", entry[k])
+            for k in identity
         ):
             raise ValueError("Invalid network identity")
         for subnet in entry["subnets"]:
@@ -111,14 +160,13 @@ def reconcile(
         network = host.inspect(entry["name"])
         if network is None:
             continue
-        labels = network["Labels"]
+        labels = network.get("Labels") or {}
         if (
             network["Name"] != entry["name"]
             or network["Driver"] != "bridge"
             or network.get("EnableIPv6")
             or network.get("Internal")
-            or labels.get("com.docker.compose.project") != entry["project"]
-            or labels.get("com.docker.compose.network") != entry["compose_network"]
+            or not labels_match(entry, labels)
             or len(network["IPAM"]["Config"]) != 1
             or network["IPAM"]["Config"][0]["Subnet"] not in entry["subnets"]
             or not re.fullmatch("[0-9a-f]{64}", network["Id"])
@@ -137,14 +185,14 @@ def reconcile(
                     subnet,
                     destination,
                     str(port),
-                    PREFIX + entry["name"] + ":" + str(port),
+                    comment_for(entry, port),
                 ).argv()
             )
     current = host.persistent()
     owned = []
     for rule in current:
         comment = rule[-1] if len(rule) >= 2 and rule[-2] == "comment" else ""
-        managed = comment.startswith(PREFIX)
+        managed = any(comment.startswith(owner + ":") for owner in OWNERS)
         legacy = comment in LEGACY.values()
         if not managed and not legacy:
             continue
@@ -160,7 +208,7 @@ def reconcile(
             matching = [
                 e
                 for e in entries
-                if comment == PREFIX + e["name"] + ":" + parsed_rule.port
+                if comment == comment_for(e, parsed_rule.port)
             ]
             scope = (
                 scope
