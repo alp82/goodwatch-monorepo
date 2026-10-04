@@ -1,4 +1,5 @@
 import { Agent, fetch } from "undici";
+import { onShutdown } from "../lifecycle.server";
 import {
 	APIError,
 	TypeSafeClient,
@@ -54,6 +55,7 @@ export function keepJevConnectionsWarm(): void {
 	both();
 	keepWarm = setInterval(both, KEEP_WARM_EVERY_MS);
 	keepWarm.unref();
+	onShutdown("search connection pings", () => clearInterval(keepWarm));
 }
 
 type Reading = SystemOneResult<Questions>;

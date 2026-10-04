@@ -7,6 +7,7 @@ import {
 	type RoutePatternMatcher,
 	createRoutePatternMatcher,
 } from "~/utils/route-pattern"
+import { isHealthPath } from "../lifecycle.server"
 import {
 	audienceLabel,
 	cacheControlLabel,
@@ -151,7 +152,8 @@ export function startHttpMetrics(): void {
 	// Node 24 documents request, response, socket and server on both channels.
 	subscribe("http.server.request.start", (message) => {
 		const { request, response, server } = message as HttpEvent
-		if (state.ignored.has(server)) return
+		// Health probes aren't traffic: a 503 from readiness during a start or a shutdown isn't a failed request.
+		if (state.ignored.has(server) || isHealthPath(request.url)) return
 		inFlight++
 		let released = false
 		const release = () => {

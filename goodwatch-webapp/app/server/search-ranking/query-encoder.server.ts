@@ -10,6 +10,7 @@
 // the lists short.
 import { createHash } from "node:crypto"
 import { Worker } from "node:worker_threads"
+import { onShutdown } from "~/server/lifecycle.server"
 import { separateEntryUrl } from "~/server/separate-entry.server"
 import {
 	type LocalQueryModels,
@@ -158,6 +159,7 @@ async function start(): Promise<RunningEncoder> {
 			},
 		})
 	})
+	onShutdown("query encoder", () => worker.terminate())
 	const onGone = (error: Error) => {
 		running = undefined
 		loaded = false

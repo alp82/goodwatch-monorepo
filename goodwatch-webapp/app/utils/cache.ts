@@ -5,6 +5,7 @@ import crypto from "node:crypto"
 import Redis, { type Cluster, Command } from "ioredis"
 import type { ClusterNode } from "ioredis/built/cluster"
 import type { ClusterOptions } from "ioredis/built/cluster/ClusterOptions"
+import { onShutdown } from "~/server/lifecycle.server"
 import {
 	counter,
 	durationBuckets,
@@ -393,6 +394,9 @@ export function startRedisClusterForTest(
 		: [1000, 2000, 4000, 8000, 16000, 30000]
 	connectToRedisCluster()
 }
+
+// At shutdown, after the last request: closes the node connections and cancels a pending reconnect.
+onShutdown("redis cluster", stopRedisClusterForTest)
 
 // Tests and deployments without Redis configuration never attempt a connection.
 if (process.env.REDIS_HOST) connectToRedisCluster()

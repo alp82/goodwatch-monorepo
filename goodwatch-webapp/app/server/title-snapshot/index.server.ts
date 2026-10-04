@@ -12,6 +12,11 @@
 // scripts/write-title-snapshot.ts filled with a sample); without it, it reads the webapp's Redis cluster.
 import Redis from "ioredis"
 import { getFeatureMode } from "~/server/features.server"
+import {
+	addReadinessCheck,
+	isShuttingDown,
+	onShutdown,
+} from "~/server/lifecycle.server"
 import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
 import {
 	CURRENT_KEY,
@@ -21,6 +26,7 @@ import {
 	joinChunks,
 } from "./format.server"
 import { loadRatings } from "./ratings.server"
+import { retryDelayMs } from "./retry.server"
 import { type TitleSnapshot, buildSnapshot } from "./snapshot.server"
 
 export type { CatalogStats } from "./catalog-stats.server"
@@ -41,9 +47,6 @@ export {
 } from "./format.server"
 
 const CHECK_EVERY_MS = 60_000
-// Before the first load, retry connection and transient load failures quickly.
-// Nothing published or a refused manifest keeps the normal 60-second cadence.
-const RETRY_UNCONNECTED_MS = 2_000
 
 interface SnapshotRedis {
 	get(key: string): Promise<string | null>
@@ -53,6 +56,11 @@ interface SnapshotRedis {
 let current: TitleSnapshot | null = null
 let started = false
 let timer: NodeJS.Timeout | undefined
+// Checks in a row that failed before the first load. Each one doubles the wait for the next (see retryDelayMs).
+let failures = 0
+// Whether a check has come back with an answer: a loaded snapshot, nothing published, or a refused manifest. Readiness
+// waits for this and not for a snapshot, because waiting longer doesn't help in the last two cases.
+let settled = false
 // The manifest text of a snapshot that was refused, so it's refused (and logged) once, not every minute.
 let refusedManifest: string | null = null
 let reportedMissing = false
@@ -138,8 +146,10 @@ function schedule(delayMs: number) {
 		} catch (error) {
 			console.error("Title snapshot check failed:", error)
 		}
-		if (started)
-			schedule(connected || current ? CHECK_EVERY_MS : RETRY_UNCONNECTED_MS)
+		if (connected) settled = true
+		failures = connected || current ? 0 : failures + 1
+		if (started && !isShuttingDown())
+			schedule(failures ? retryDelayMs(failures) : CHECK_EVERY_MS)
 	}, delayMs)
 	timer.unref()
 }
@@ -148,6 +158,8 @@ function schedule(delayMs: number) {
 export function startTitleSnapshot(): void {
 	if (started) return
 	started = true
+	addReadinessCheck("title snapshot", () => settled)
+	onShutdown("title snapshot", stopTitleSnapshot)
 	schedule(0)
 }
 

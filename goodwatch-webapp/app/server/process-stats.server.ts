@@ -4,6 +4,7 @@
 // for filtered person pages, when there were any.
 import { monitorEventLoopDelay } from "node:perf_hooks"
 import { reportFilteredViews } from "~/server/crawlers.server"
+import { onShutdown } from "~/server/lifecycle.server"
 import { queryEncoderState } from "~/server/search-ranking/query-encoder.server"
 
 const LOG_EVERY_MS = 60_000
@@ -29,4 +30,8 @@ export function startProcessStats(): void {
 		if (filteredViews) console.info(`Filtered person views: ${filteredViews}`)
 	}, LOG_EVERY_MS)
 	timer.unref()
+	onShutdown("process stats", () => {
+		clearInterval(timer)
+		loopDelay.disable()
+	})
 }

@@ -4,6 +4,7 @@
 //
 // Built once per snapshot version. The display fields (title, year, poster, backdrop, genres) and the title analysis's
 // occasion flags, which the snapshot doesn't hold, are the only thing read from Crate, in the background by primary key, once per version; no request reads Crate for the pool.
+import { onShutdown } from "~/server/lifecycle.server"
 import type {
 	TitleFacts,
 	TitleKey,
@@ -143,6 +144,7 @@ export function keepExplorerPoolWarm(
 	}
 	warming = setTimeout(check, 0)
 	warming.unref()
+	onShutdown("explorer pool warm-up", () => clearTimeout(warming))
 }
 
 async function buildPool(snapshot: TitleSnapshot): Promise<ExplorerPool> {

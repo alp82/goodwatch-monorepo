@@ -10,6 +10,7 @@ import { createHash } from "node:crypto"
 import http from "node:http"
 import { promisify } from "node:util"
 import { gunzip as gunzipCallback } from "node:zlib"
+import { addReadinessCheck, onShutdown } from "../lifecycle.server.ts"
 import { normalized, singular } from "./text-rules.server.ts"
 import { prepareTitleBlend } from "./title-blend.server.ts"
 
@@ -550,6 +551,7 @@ function watch() {
 			// Logged in refresh; the loaded build stays in use.
 		})
 	}, CHECK_EVERY_MS)
+	onShutdown("search index refresh", () => clearInterval(timer))
 	timer.unref()
 }
 
@@ -569,6 +571,12 @@ export function loadedSearchIndexBuild(): string | null {
 
 /** Starts loading the index in the background, so the first search doesn't wait for it. */
 export function startSearchIndex(): void {
+	// The first load blocks the event loop for about 2 seconds while it parses the index. Readiness waits until that
+	// load has succeeded or failed, so that the process gets its first requests after the stall, not during it.
+	addReadinessCheck(
+		"search index",
+		() => current !== undefined || lastFailure !== undefined,
+	)
 	getSearchIndex().catch(() => {
 		// Logged in refresh.
 	})

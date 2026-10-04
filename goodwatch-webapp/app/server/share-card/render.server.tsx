@@ -5,6 +5,7 @@ import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Fragment, type ReactElement, type ReactNode, isValidElement } from "react"
+import { onShutdown } from "~/server/lifecycle.server"
 import { toDataUri } from "~/server/og-image/render.server"
 import { separateEntryUrl } from "~/server/separate-entry.server"
 import { CARD_FONTS, CARD_FONT_DIR } from "~/ui/share-card/fonts"
@@ -42,6 +43,13 @@ type Slot = { child: ChildProcess | null; ready: Promise<void> | null; job: Job 
 const slots: Slot[] = Array.from({ length: POOL_SIZE }, () => ({ child: null, ready: null, job: null }))
 const queue: Job[] = []
 let nextId = 1
+
+onShutdown("share card renderers", () => {
+	for (const slot of slots) {
+		clearTimeout(slot.timer)
+		slot.child?.kill("SIGKILL")
+	}
+})
 
 function fail(slot: Slot, error: Error) {
 	clearTimeout(slot.timer)

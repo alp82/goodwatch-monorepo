@@ -1,5 +1,6 @@
 // Exposes metrics on a separate container port so the public Remix server has no metrics route.
 import { createServer } from "node:http"
+import { ignoreInLifecycle, onShutdown } from "../lifecycle.server"
 import { ignoreMetricsServer } from "./http.server"
 import { renderMetrics } from "./registry.server"
 
@@ -24,6 +25,12 @@ export function startMetricsListener(): void {
 		response.end(renderMetrics())
 	})
 	ignoreMetricsServer(server)
+	// Not the public server: its requests don't count as in flight, and it closes with the other stops.
+	ignoreInLifecycle(server)
+	onShutdown("metrics listener", () => {
+		server.close()
+		server.closeAllConnections()
+	})
 	server.once("error", (error: NodeJS.ErrnoException) => {
 		console.error(`Metrics listener disabled: ${error.code ?? "listen error"}`)
 	})
