@@ -49,6 +49,7 @@ export function DiscoverGrid({
 			<AnimatePresence initial={false} mode="popLayout">
 				{cards.map((card, index) => {
 					const delta = marks?.get(card.key) ?? 0
+					const priority = gridPosterPriority(index)
 					return (
 						<motion.div
 							key={card.key}
@@ -67,9 +68,12 @@ export function DiscoverGrid({
 							transition={flipping ? FLIP_GLIDE : GLIDE}
 							className="relative"
 						>
+							{/* A browser requests a lazy image up to 3,000 px ahead, which is ten rows of posters on a
+							    phone. A skipped card holds its poster back until it is about one and a half screens away. */}
 							<TitlePosterCard
 								card={card}
-								posterPriority={gridPosterPriority(index)}
+								posterPriority={priority}
+								skipOffscreen={priority === "lazy"}
 							/>
 							<MoveMark delta={delta} reduce={reduce} />
 						</motion.div>

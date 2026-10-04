@@ -8,11 +8,14 @@ export function TitlePosterCard({
 	card,
 	prefetch,
 	posterPriority,
+	skipOffscreen,
 }: {
 	card: TitleCard
 	prefetch?: boolean
 	/** Set by a page for the cards it shows without scrolling. Every other poster loads lazily. */
 	posterPriority?: ImagePriority
+	/** For a card far down a long grid, see MovieTvCard. */
+	skipOffscreen?: boolean
 }) {
 	const details = {
 		...card,
@@ -28,6 +31,7 @@ export function TitlePosterCard({
 			mediaType={card.media_type}
 			prefetch={prefetch}
 			posterPriority={posterPriority}
+			skipOffscreen={skipOffscreen}
 			taste={{ match: card.match, reasons: card.reasons }}
 			rating={card.rating}
 		/>

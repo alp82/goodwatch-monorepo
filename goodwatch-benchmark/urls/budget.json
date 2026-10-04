@@ -97,16 +97,16 @@
         "host_requests": { "max": 41 },
         "script_count": { "max": 31 },
         "script_bytes": { "max": 362496 },
-        "image_count": { "max": 30 },
-        "image_bytes": { "max": 952320 },
+        "image_count": { "max": 18 },
+        "image_bytes": { "max": 460800 },
         "font_requests": { "max": 1 },
         "blocking_requests": { "max": 1 },
         "third_party_origins": { "max": 1 },
-        "total_bytes": { "max": 1331200 },
+        "total_bytes": { "max": 881664 },
         "lcp_ms": { "max": 5800 },
-        "tbt_ms": { "max": 550 },
+        "tbt_ms": { "max": 300 },
         "cls": { "max": 0.04 },
-        "score": { "min": 62 }
+        "score": { "min": 67 }
       }
     },
     "share_list": {

@@ -33,6 +33,11 @@ interface MovieTvCardProps {
 	posterSizes?: PosterProps["sizes"]
 	/** Set by a page for the cards it shows without scrolling. Every other poster loads lazily. */
 	posterPriority?: PosterProps["priority"]
+	/**
+	 * For a card far down a long grid: the browser skips the poster and its badges until the card is near the
+	 * viewport, so a lazy poster isn't requested screens ahead. The box keeps the poster's 2:3 shape meanwhile.
+	 */
+	skipOffscreen?: boolean
 }
 
 export function MovieTvCard({
@@ -43,6 +48,7 @@ export function MovieTvCard({
 	rating,
 	posterSizes,
 	posterPriority,
+	skipOffscreen = false,
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
 	const userScoreData = useUserScore(mediaType, details.tmdb_id)
@@ -64,7 +70,13 @@ export function MovieTvCard({
 			prefetch={prefetch ? "viewport" : "intent"}
 			draggable="false"
 		>
-			<div className="relative">
+			<div
+				className={
+					skipOffscreen
+						? "relative aspect-[2/3] [content-visibility:auto]"
+						: "relative"
+				}
+			>
 				<UserDataOverlay score={userScore} onWishList={onWishList} />
 				<RatingOverlay ratings={ratings}>
 					{tasteMatch && typeof taste?.match === "number" && (

@@ -301,6 +301,38 @@ the sign-in client, the dialogs, and the animation library on first use" does.
   25, 170, and 255 px. A wrong height moves nothing a visitor sees: a section gets its real height while it is still
   more than a screen away.
 
+## Posters on Discover
+
+Ticket "Load only the first screen of posters on Discover".
+
+- **Cause:** Chromium requests a lazy image up to 3,000 px ahead of the viewport in Lighthouse's browser (1,250 px on
+  a real 4G connection). That is ten rows of the grid on a phone: 26 posters.
+- **Change:** a card past the first six skips its poster box with `content-visibility: auto`. A skipped box doesn't
+  request its image. Chromium lays a box out when it is within one and a half screens, which is 14 posters on
+  Lighthouse's phone.
+- **`sizes`:** correct as they are. A poster is 167 px wide on Lighthouse's phone, and at its pixel ratio of 1.75 the
+  browser requests the 342 px file. The next smaller file is 185 px wide and would be blurred.
+
+Median of 3 runs, same setup as above:
+
+| Line | Before | After |
+| --- | --- | --- |
+| Images before scrolling | 28 | 16 |
+| Image bytes before scrolling | 741 KB | 357 KB |
+| Total bytes | 1,167 KB | 783 KB |
+| LCP | 5,182 ms | 5,023 ms |
+| TBT | 377 ms | 165 ms |
+| Score | 67 | 74 |
+
+- **Image bytes are 357 KB, 7 KB above the ticket's 350 KB.** The posters are 346 KB, and two logos make up the
+  rest.
+- **LCP isn't under 4.0 s.** The simulation gives every image on a connection the same share of it, so the first
+  poster arrives with the other 13. Six posters would be needed, and the browser decides the distance at which it
+  lays out a skipped box. The way there is a loader of our own that holds a poster back until it is a few hundred
+  pixels away, at the price of posters that appear late during fast scrolling.
+- The poster box keeps its 2:3 shape while skipped. The grid's rows, the page height, the appended pages while
+  scrolling, and CLS are the same as on production (14 wheel steps on a phone and on a desktop).
+
 ## Not verified
 
 - A real phone. Every number here is Lighthouse's simulation on a server.
