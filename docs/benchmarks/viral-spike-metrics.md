@@ -1,0 +1,217 @@
+# Where to read the viral spike metrics
+
+This page says where each number for the "Serve a viral traffic spike" map lives, and the exact query to read it. Two tools hold them:
+
+- **PostHog** holds field Web Vitals from real visitors, by route pattern and device type.
+- **Grafana Cloud** holds server response time, the cacheable share of responses, and the data cache hit ratio, by route pattern or cache name.
+
+Both use the same route names. A route pattern is the route's path with its parameters, for example `/movie/:movieKey` or `/u/:handle/lists/:id`. No metric stores a concrete URL, a handle, a title key, or a query string.
+
+## Field Web Vitals in PostHog
+
+PostHog's JavaScript SDK captures LCP, INP, CLS, and FCP as `$web_vitals` events. The webapp adds three properties in `goodwatch-webapp/app/utils/web-vitals-telemetry.ts`:
+
+| Property | On | Meaning |
+| --- | --- | --- |
+| `route_pattern` | Every event that has a path | The route the visitor was on when the event was sent. |
+| `landing_route_pattern` | `$web_vitals` | The route the browser loaded from the server. |
+| `ttfb_ms` | The `$web_vitals` event that carries FCP | Time to first byte of the page load, from Navigation Timing. Once per page load. |
+
+PostHog adds `$device_type` (`Mobile`, `Tablet`, `Desktop`) by itself. Values are in milliseconds, except CLS, which has no unit.
+
+Group by `landing_route_pattern`. LCP, FCP, and TTFB always describe the page load. CLS and INP keep counting during in-app navigation and are sent when the page is hidden, so their `route_pattern` is the last route of the visit, not the route that caused them.
+
+A page load sends one to three `$web_vitals` events: one about 5 seconds after the first metric, and more when the page is hidden. Each event carries only the metrics that were ready, so use the `...If` aggregates below instead of `count()`.
+
+### Query: p75 per landing route and device type
+
+Run this in PostHog under **SQL editor** (or **Product analytics > New insight > SQL**):
+
+```sql
+SELECT
+    properties.landing_route_pattern AS route,
+    properties.$device_type AS device,
+    countIf(properties.$web_vitals_LCP_value IS NOT NULL) AS lcp_samples,
+    round(quantileIf(0.75)(toFloat(properties.$web_vitals_LCP_value), properties.$web_vitals_LCP_value IS NOT NULL)) AS lcp_p75_ms,
+    round(quantileIf(0.75)(toFloat(properties.$web_vitals_INP_value), properties.$web_vitals_INP_value IS NOT NULL)) AS inp_p75_ms,
+    round(quantileIf(0.75)(toFloat(properties.$web_vitals_CLS_value), properties.$web_vitals_CLS_value IS NOT NULL), 3) AS cls_p75,
+    round(quantileIf(0.75)(toFloat(properties.$web_vitals_FCP_value), properties.$web_vitals_FCP_value IS NOT NULL)) AS fcp_p75_ms,
+    round(quantileIf(0.75)(toFloat(properties.ttfb_ms), properties.ttfb_ms IS NOT NULL)) AS ttfb_p75_ms
+FROM events
+WHERE event = '$web_vitals'
+    AND timestamp > now() - INTERVAL 7 DAY
+    AND properties.landing_route_pattern IS NOT NULL
+GROUP BY route, device
+HAVING lcp_samples >= 20
+ORDER BY lcp_samples DESC
+```
+
+"Good" is at or below 2,500 ms for LCP, 200 ms for INP, 0.1 for CLS, 1,800 ms for FCP, and 800 ms for TTFB, each at the 75th percentile. The landing surfaces of the map are `/`, `/movie/:movieKey`, `/show/:showKey`, `/u/:handle/lists/:id`, and `/person/:personKey`.
+
+Events from before the deploy of this change have no `landing_route_pattern`. To read those, group by `properties.$pathname` instead.
+
+### Insight: one metric over time
+
+To chart one metric, create a **Trends** insight:
+
+- Series: `$web_vitals`, aggregated by **Property value > 75th percentile** of `$web_vitals_LCP_value`.
+- Breakdown: `landing_route_pattern`. Add `$device_type` as a second breakdown, or filter `$device_type = Mobile`.
+
+PostHog's own **Web analytics > Web vitals** tab also works, but it groups by concrete path.
+
+### What the browser data leaves out
+
+- PostHog doesn't start on `localhost`, and it drops events from browsers it takes for bots. Lighthouse runs from the benchmark scripts may be dropped for that reason.
+- Safari and Firefox report fewer of these metrics than Chromium browsers. LCP and INP come mostly from Chromium.
+- The SDK in use (1.295.0) has no TTFB metric of its own. `ttfb_ms` is the webapp's addition.
+
+## Server metrics in Grafana Cloud
+
+The webapp process counts its own requests in memory (`goodwatch-webapp/app/server/metrics/`) and serves them in Prometheus text format on a second port, `9464`, at `/metrics`. Coolify doesn't publish that port and Traefik routes only to port 3000, so the endpoint is reachable only from containers on the same Docker network. Port 3000 has no metrics route. The Alloy instance on abio scrapes the port every 15 seconds and sends the samples to Grafana Cloud with `job="goodwatch_webapp"`.
+
+Read them in Grafana Cloud under **Explore**, with the Prometheus data source that holds the node metrics (`job="vps_node_metrics"`).
+
+### Metrics
+
+| Metric | Type | Labels | Meaning |
+| --- | --- | --- | --- |
+| `goodwatch_http_request_duration_seconds` | Histogram | `route`, `status_class`, `audience` | Request start to the last byte handed to the socket. |
+| `goodwatch_http_response_headers_seconds` | Histogram | `route`, `audience` | Request start to the response headers. Only `GET` responses with `text/html`. This is the server's part of the time to first byte for streamed pages. |
+| `goodwatch_http_responses_total` | Counter | `route`, `status_class`, `audience`, `cache_control` | Finished responses. |
+| `goodwatch_http_requests_in_flight` | Gauge | None | Requests being served at scrape time. |
+| `goodwatch_data_cache_requests_total` | Counter | `cache`, `result` | Lookups in the Redis-backed data cache (`cached()` in `app/utils/cache.ts`). |
+| `goodwatch_data_cache_miss_duration_seconds` | Histogram | `cache` | Time in the wrapped function whenever it ran, which is every result except `hit`. |
+| `goodwatch_process_resident_memory_bytes`, `goodwatch_process_heap_used_bytes` | Gauge | None | Memory of the server process. |
+| `goodwatch_process_event_loop_delay_seconds` | Gauge | `quantile` (`0.5`, `0.99`, `max`) | How late the event loop ran since the previous scrape. |
+| `goodwatch_process_uptime_seconds`, `goodwatch_build_info` | Gauge | `commit` on the second | A restart or deploy shows as a reset or a new commit. |
+| `goodwatch_metrics_dropped_label_sets_total` | Counter | `metric` | Label sets refused by the per-metric cap. Anything above zero is a bug. |
+
+Label values:
+
+- `route`: a route pattern, `static` (files under `/assets/` and from `public/`), or `unmatched` (no route, status 400 or above).
+- `status_class`: `2xx`, `3xx`, `4xx`, `5xx`.
+- `audience`: `member` when the request carries the Supabase auth cookie, else `anon`. Only the cookie's presence is read.
+- `cache_control`: what the response's `Cache-Control` header allows. `shared` has `public` or `s-maxage` and nothing private. `private` has `private`, `no-store`, or `no-cache`. `none` is everything else.
+- `cache`: the cache name passed to `cached()`. The three related-title caches have request data in their name, so they report as `related-movie`, `related-show`, and `related-by-category`.
+- `result`: `hit`, `miss`, `stale` (an entry older than its lifetime), `unavailable` (no Redis connection), `error` (the read failed), `bypass` (a lifetime of zero).
+
+Histogram buckets are 0.05, 0.1, 0.2, 0.3, 0.5, 1, 2, 5, and 10 seconds. The map's target of 300 ms is a bucket edge, so the share of requests under 300 ms is exact. Percentiles are estimates between two edges.
+
+### Queries
+
+Set the range to the benchmark run. With a 15 second scrape, `[1m]` is the shortest window that works. Use `[5m]` for normal traffic.
+
+Response time per route, 95th percentile, full response and time to headers:
+
+```promql
+histogram_quantile(0.95, sum by (le, route) (rate(goodwatch_http_request_duration_seconds_bucket{job="goodwatch_webapp", audience="anon"}[5m])))
+
+histogram_quantile(0.95, sum by (le, route) (rate(goodwatch_http_response_headers_seconds_bucket{job="goodwatch_webapp", audience="anon"}[5m])))
+```
+
+Share of anonymous responses under 300 ms, per route (the target is 0.95 or higher):
+
+```promql
+sum by (route) (rate(goodwatch_http_request_duration_seconds_bucket{job="goodwatch_webapp", audience="anon", le="0.3"}[5m]))
+/
+sum by (route) (rate(goodwatch_http_request_duration_seconds_count{job="goodwatch_webapp", audience="anon"}[5m]))
+```
+
+Requests per second per route, and the server error ratio:
+
+```promql
+sum by (route) (rate(goodwatch_http_responses_total{job="goodwatch_webapp"}[5m]))
+
+sum(rate(goodwatch_http_responses_total{job="goodwatch_webapp", status_class="5xx"}[5m]))
+/
+sum(rate(goodwatch_http_responses_total{job="goodwatch_webapp"}[5m]))
+```
+
+Data cache hit ratio per cache name, and the cost of a miss:
+
+```promql
+sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result="hit"}[5m]))
+/
+sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result!="bypass"}[5m]))
+
+histogram_quantile(0.95, sum by (le, cache) (rate(goodwatch_data_cache_miss_duration_seconds_bucket{job="goodwatch_webapp"}[5m])))
+
+sum by (cache, result) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result=~"stale|unavailable|error"}[5m]))
+```
+
+Event loop lateness, and whether the scrape works:
+
+```promql
+goodwatch_process_event_loop_delay_seconds{job="goodwatch_webapp", quantile="0.99"}
+
+up{job="goodwatch_webapp"}
+```
+
+### Page cache hit ratio
+
+No HTTP page cache exists yet. Two numbers stand in for it today, and one formula is ready for the day a cache layer exists.
+
+The share of anonymous responses that a shared cache could store, per route. This is the upper limit of a page cache hit ratio:
+
+```promql
+sum by (route) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", audience="anon", cache_control="shared"}[5m]))
+/
+sum by (route) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", audience="anon"}[5m]))
+```
+
+Member responses that a shared cache could store. This must stay empty, because member HTML must never enter the page cache:
+
+```promql
+sum by (route) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", audience="member", cache_control="shared", route!="static"}[5m])) > 0
+```
+
+When a page cache (Varnish is the likely choice) sits in front of the webapp, every request that reaches the webapp is a page cache miss or a pass. The cache layer exports its own request counter, and the hit ratio is one minus the webapp's share:
+
+```promql
+1 - sum(rate(goodwatch_http_responses_total{job="goodwatch_webapp"}[5m])) / sum(rate(<the cache layer's request counter>[5m]))
+```
+
+Add the cache layer's exporter as one more scrape target in `goodwatch-metrics/webapp.alloy`, with a `job` label of its own, so that both numbers sit in the same data source. A per-route ratio needs the cache layer to label its counter with the same route patterns, or to send a header that the webapp can count.
+
+### Limits of the server data
+
+- The first request after a start isn't counted: the counting starts in the root loader of that request. Coolify's health check sends it within seconds of the start.
+- A request that the client drops before the response finishes isn't counted in the histograms.
+- All counters restart at zero on a deploy. `rate()` handles that. During the rolling switch, scrapes can alternate between the old and the new container for a few seconds.
+- The time is measured inside the Node process. It leaves out Traefik, TLS, and the network. The k6 numbers from `goodwatch-benchmark/` include them.
+- The health check requests `/` every 5 seconds, so `/` always shows 0.2 requests per second of its own.
+
+## How the scrape is deployed
+
+`goodwatch-metrics/config.alloy` and `docker-compose.yml` stay the same on all hosts. abio adds two files:
+
+- `webapp.alloy` scrapes `goodwatch-webapp:9464` (override with `WEBAPP_METRICS_TARGET`) and forwards to the remote write of `config.alloy`.
+- `docker-compose.webapp.yml` mounts that file, starts Alloy with the directory so that both files load, and attaches Alloy to the `coolify` network.
+
+The name `goodwatch-webapp` is a network alias that Coolify gives the container: the **Network aliases** field in the application's settings in Coolify. It takes effect with the next deploy. The container's own name changes on every deploy, so Alloy can't use it.
+
+On abio, in the `goodwatch-metrics` directory of the repository checkout:
+
+```sh
+git pull
+grep -q '^COMPOSE_FILE=' .env || echo 'COMPOSE_FILE=docker-compose.yml:docker-compose.webapp.yml' >> .env
+docker compose up -d grafana-alloy
+docker logs --since 2m grafana-alloy 2>&1 | grep -iE 'level=error|webapp'
+```
+
+`COMPOSE_FILE` in `.env` makes every later `docker compose` command on abio use both files. To check the endpoint from the host without Grafana:
+
+```sh
+# Inside the webapp container: does the process serve metrics?
+docker exec "$(docker ps -q --filter label=coolify.resourceName=goodwatch-webapp | head -1)" wget -qO- http://localhost:9464/metrics | grep -c '^goodwatch_'
+# From the coolify network: does the alias reach it? This is the path Alloy uses.
+docker run --rm --network coolify busybox:1.37-musl wget -qO- http://goodwatch-webapp:9464/metrics | grep -c '^goodwatch_'
+```
+
+To check the added series count in Grafana Cloud, and to drop a metric if the count is too high:
+
+```promql
+count({job="goodwatch_webapp"})
+```
+
+Add a `rule { source_labels = ["__name__"], regex = "<metric>_bucket", action = "drop" }` block to the `prometheus.relabel "webapp"` component in `webapp.alloy`.
