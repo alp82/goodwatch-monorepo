@@ -10,7 +10,7 @@ BENCH_METRIC_HOSTS=${BENCH_METRIC_HOSTS-10.0.0.21:target:coolify-proxy+gk4owk8}
 BENCH_METRIC_INTERVAL=${BENCH_METRIC_INTERVAL:-5}
 fail() { echo "$*" >&2; exit 2; }
 usage() { cat <<'HELP'
-Usage: ./bench.sh <load|lighthouse|smoke|compare|summarize|longtail|doctor> [options]
+Usage: ./bench.sh <load|lighthouse|smoke|deploy-watch|compare|summarize|longtail|doctor> [options]
 load: --mode smoke|ramp --cache warm|cold --urls hot|surfaces|longtail|file.json
       --label TEXT --rate N --duration S --start N --step N --max N --rates N,N,...
       --routes ROUTE[:CLIENT],...
@@ -21,6 +21,7 @@ summarize: RUN
 longtail: [--sitemaps DIR] [--out FILE] [--limit N] [--seed S] [--og-share F]
 doctor: [--path private|public]
 smoke: [--commit SHA] [--newer-than CONTAINER] [--host NAME] [--target production|local] (run after every deploy; --help lists all)
+deploy-watch: [--now] [--max-wait S] [--label TEXT] (watches the next deploy: 2 requests per second and the containers)
 HELP
 }
 command=${1:-help}; shift || true
@@ -29,6 +30,7 @@ case $command in
   help|-h|--help) usage; exit 0 ;;
   longtail) exec node "$ROOT/scripts/build-longtail.mjs" "$@" ;;
   smoke) exec node "$ROOT/scripts/smoke.mjs" "$@" ;;
+  deploy-watch) exec "$ROOT/scripts/deploy-watch.sh" "$@" ;;
   summarize) [[ $# == 1 ]] || fail 'Expected a run id or directory'; exec node "$ROOT/scripts/summarize.mjs" "$(resolve_run "$1")" ;;
   compare) [[ $# -ge 2 ]] || fail 'Expected two runs'; a=$(resolve_run "$1"); b=$(resolve_run "$2"); shift 2; exec node "$ROOT/scripts/compare.mjs" "$a" "$b" "$@" ;;
   load|lighthouse|doctor) ;;
