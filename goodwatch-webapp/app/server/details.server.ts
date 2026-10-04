@@ -1,106 +1,29 @@
-import { getAvailabilityEvidence } from "~/server/availability.server"
-import { canonicalTitleId } from "~/utils/title-identity"
-import { cached } from "~/utils/cache"
-import { getRatingKeys } from "~/utils/ratings"
-import {
-	duplicateProviderMapping,
-	duplicateProviders,
-} from "~/utils/streaming-links"
+import { CREW_ROLES } from "~/ui/details/crew-roles"
 import { query } from "~/utils/crate"
+import { CAST_DOCUMENT_SIZE } from "~/utils/title-cast"
+import { castRowsCTEs, selectedCastRows } from "./title-cast-sql"
+import { createTitleDetailsGetters } from "./title-details-cache"
 import {
-	buildFingerprint,
-	type DNAAnalysis,
-	type FingerprintResult,
-} from "~/server/utils/fingerprint"
-import {
-	type MovieDetails,
-	type ShowDetails,
-	type DetailsMovieParams,
-	type DetailsShowParams,
-	getFieldsByMediaType,
 	generateMediaFieldAssignments,
-	type QueryResult,
-	type MovieQueryResult,
-	type ShowQueryResult,
-	type RawMediaResult,
-	type ShowResult,
-	type MovieResult,
-} from "~/server/types/details-types"
+	getFieldsByMediaType,
+} from "./title-details-fields"
+import type { RawTitleDetails } from "./title-details-shape"
+export {
+	DETAILS_MOVIE_CACHE_NAME,
+	DETAILS_SHOW_CACHE_NAME,
+	DETAILS_TTL_MINUTES,
+	DETAILS_STALE_MINUTES,
+} from "./title-details-cache"
 
-export const getDetailsForMovie = async (params: DetailsMovieParams, options?: { bypassCache: boolean }) => {
-	params = { ...params, movieId: String(canonicalTitleId("movie", Number(params.movieId))) }
-	if (options?.bypassCache) return { ...await _getDetailsForMovie(params), availability_evidence: await getAvailabilityEvidence({ mediaType: "movie", tmdbId: Number(params.movieId), country: params.country }, options) }
-	const result = await cached<DetailsMovieParams, MovieResult>({
-		name: "details-movie",
-		target: _getDetailsForMovie,
-		params,
-		ttlMinutes: 30,
-		//ttlMinutes: 0,
-	})
-	return { ...result, availability_evidence: await getAvailabilityEvidence({ mediaType: "movie", tmdbId: Number(params.movieId), country: params.country }) }
-}
-
-export const getDetailsForShow = async (params: DetailsShowParams, options?: { bypassCache: boolean }) => {
-	if (options?.bypassCache) return { ...await _getDetailsForShow(params), availability_evidence: await getAvailabilityEvidence({ mediaType: "show", tmdbId: Number(params.showId), country: params.country }, options) }
-	const result = await cached<DetailsShowParams, ShowResult>({
-		name: "details-show",
-		target: _getDetailsForShow,
-		params,
-		ttlMinutes: 30,
-		//ttlMinutes: 0,
-	})
-	return { ...result, availability_evidence: await getAvailabilityEvidence({ mediaType: "show", tmdbId: Number(params.showId), country: params.country }) }
-}
-
-const _getDetailsForMovie = async ({
-	movieId,
-	country,
-	language,
-}: DetailsMovieParams): Promise<MovieResult> => {
-	const mediaType = "movie"
-	const result = (await _fetchFromDB(
-		mediaType,
-		movieId,
-		country,
-		language,
-	)) as MovieQueryResult
-
-	const fingerprint = _processFingerprint(result)
-
-	return {
-		...result,
-		mediaType,
-		fingerprint,
-	}
-}
-
-const _getDetailsForShow = async ({
-	showId,
-	country,
-	language,
-}: DetailsShowParams): Promise<ShowResult> => {
-	const mediaType = "show"
-	const result = (await _fetchFromDB(
-		mediaType,
-		showId,
-		country,
-		language,
-	)) as ShowQueryResult
-	const fingerprint = _processFingerprint(result)
-
-	return {
-		...result,
-		mediaType,
-		fingerprint,
-	}
-}
+const creditedCrew = (job: string, limit: number) =>
+	`ARRAY(SELECT {id = id, name = name} FROM crew_rows WHERE job = '${job}' ORDER BY popularity DESC LIMIT ${limit})`
 
 const _fetchFromDB = async (
 	mediaType: "movie" | "show",
 	mediaId: string,
 	country: string,
-	language: string,
-): Promise<QueryResult> => {
+	_language: string,
+): Promise<RawTitleDetails> => {
 	// mediaId and country are interpolated into the SQL below, so only safe shapes may pass.
 	if (!/^\d+$/.test(mediaId)) throw new Response("Not Found", { status: 404 })
 	const safeCountry = /^[A-Za-z]{2}$/.test(country) ? country : ""
@@ -125,9 +48,6 @@ const _fetchFromDB = async (
 						? `movie_series AS (
 								SELECT {
 										id = ms.tmdb_id,
-										name = ms.name,
-										poster_path = ms.poster_path,
-										backdrop_path = ms.backdrop_path,
 										movie_ids = (
 												SELECT array_agg(m.tmdb_id)
 												FROM movie m
@@ -145,14 +65,8 @@ const _fetchFromDB = async (
 					mediaType === "show"
 						? `seasons AS (
 								SELECT {
-										id = s.tmdb_id,
-										name = s.name,
 										season_number = s.season_number,
-										air_date = s.air_date,
-										episode_count = s.episode_count,
-										overview = s.overview,
-										poster_path = s.poster_path,
-										vote_average = s.vote_average
+										episode_count = s.episode_count
 								} AS val
 								FROM season s
 								WHERE s.show_id = (SELECT tmdb_id FROM media_data) 
@@ -160,88 +74,6 @@ const _fetchFromDB = async (
 						),`
 						: ""
 				}
-
-				-- translations
-				alternative_titles AS (
-						SELECT array_agg(obj) AS val
-						FROM (
-								SELECT {country_code = country_code, title = title} AS obj
-								FROM alternative_title
-								WHERE media_tmdb_id = (SELECT val FROM params_media_tmdb_id)
-									AND media_type = (SELECT val FROM params_media_type)
-									AND country_code = (SELECT val FROM params_country_code)
-								GROUP BY 1 -- Group by the object itself to use raw values
-						) AS sub
-				),
-		
-				translations AS (
-						SELECT array_agg(obj) AS val
-						FROM (
-								SELECT {
-										language_code = language_code,
-										country_code = country_code,
-										title = title,
-										overview = overview,
-										tagline = tagline,
-										homepage = homepage,
-										runtime = runtime
-								} AS obj
-								FROM translation
-								WHERE media_tmdb_id = (SELECT val FROM params_media_tmdb_id)
-									AND media_type = (SELECT val FROM params_media_type)
-									AND country_code = (SELECT val FROM params_country_code)
-								GROUP BY 1
-						) AS sub
-				),
-
-				-- releases & age ratings
-				releases AS (
-						SELECT array_agg(obj) AS val
-						FROM (
-								SELECT {
-										country_code = country_code,
-										release_type = release_type,
-										release_date = release_date,
-										certification = certification,
-										note = note,
-										descriptors = descriptors
-								} AS obj
-								FROM release_event
-								WHERE media_tmdb_id = (SELECT val FROM params_media_tmdb_id)
-									AND media_type = (SELECT val FROM params_media_type)
-									AND country_code = (SELECT val FROM params_country_code)
-								GROUP BY 1
-						) AS sub
-				),
-
-				release_certifications AS (
-					SELECT array_agg(certification) AS certs
-					FROM (
-								 SELECT certification
-								 FROM release_event
-								 WHERE media_tmdb_id = (SELECT val FROM params_media_tmdb_id)
-									 AND media_type = (SELECT val FROM params_media_type)
-									 AND country_code = (SELECT val FROM params_country_code)
-									 AND certification IS NOT NULL
-								 GROUP BY certification
-							 ) as sub
-				),
-
-				age_certifications AS (
-					SELECT array_agg(obj) AS val
-					FROM (
-								 SELECT {
-									 certification_code = certification_code,
-									 meaning = meaning,
-									 order_default = order_default
-									 } AS obj
-								 FROM age_certification
-								 WHERE media_type = (SELECT val FROM params_media_type)
-									 AND country_code = (SELECT val FROM params_country_code)
-									 AND certification_code = ANY((SELECT certs FROM release_certifications))
-								 GROUP BY 1
-							 ) AS sub
-				),
 
 				-- Streaming
 				streaming_availabilities AS (
@@ -291,13 +123,13 @@ const _fetchFromDB = async (
 
 				-- Actor and crew fetching
 				appeared_in_data AS (
-						SELECT person_tmdb_id, credit_id, character, order_default, episode_count_character, episode_count_total
+						SELECT person_tmdb_id, character, order_default
 						FROM person_appeared_in
 						WHERE media_tmdb_id = (SELECT val FROM params_media_tmdb_id)
 							AND media_type = (SELECT val FROM params_media_type)
 				),
 				worked_on_data AS (
-						SELECT person_tmdb_id, credit_id, job, department, episode_count_job, episode_count_total
+						SELECT person_tmdb_id, credit_id, job, department, episode_count_total
 						FROM person_worked_on
 						WHERE media_tmdb_id = (SELECT val FROM params_media_tmdb_id)
 							AND media_type = (SELECT val FROM params_media_type)
@@ -315,84 +147,12 @@ const _fetchFromDB = async (
 						WHERE tmdb_id = ANY((SELECT ids FROM person_ids))
 				),
 
-				actors AS (
-					SELECT ARRAY(
-							SELECT
-									{
-											id = p.tmdb_id,
-											credit_id = pa.credit_id,
-											name = p.name,
-											character = pa.character,
-											popularity = p.popularity,
-											profile_path = p.profile_path,
-											order_default = pa.order_default,
-											episode_count_character = pa.episode_count_character,
-											episode_count_total = pa.episode_count_total
-									} AS obj
-							FROM appeared_in_data pa
-							JOIN people_data p ON pa.person_tmdb_id = p.tmdb_id
-							ORDER BY pa.order_default ASC
-					) AS val
-			),
-						    
-				crew AS (
-					SELECT ARRAY(
-							SELECT
-									{	
-											id = p.tmdb_id,
-											credit_id = pw.credit_id,
-											name = p.name,
-											job = pw.job,
-											department = pw.department,
-											popularity = p.popularity,
-											episode_count_job = pw.episode_count_job,
-											episode_count_total = pw.episode_count_total
-									} AS obj
-							FROM worked_on_data pw
-							JOIN people_data p ON pw.person_tmdb_id = p.tmdb_id
-							ORDER BY p.popularity DESC
-					) AS val
-			),
-						    
-				-- images & videos
-				logos AS (
-						SELECT array_agg(obj) as val
-						FROM (
-								SELECT {
-										width = width,
-										height = height,
-										file_path = url_path,
-										iso_639_1 = language_code,
-										vote_count = tmdb_vote_count,
-										aspect_ratio = aspect_ratio,
-										vote_average = tmdb_vote_average
-								} AS obj
-								FROM media_image
-								WHERE media_tmdb_id = (SELECT val FROM params_media_tmdb_id)
-									AND media_type = (SELECT val FROM params_media_type)
-									AND image_type = 'logos'
-								GROUP BY 1
-						) as sub
-				),
-				posters AS (
-						SELECT array_agg(obj) as val
-						FROM (
-								SELECT {
-										width = width,
-										height = height,
-										file_path = url_path,
-										iso_639_1 = language_code,
-										vote_count = tmdb_vote_count,
-										aspect_ratio = aspect_ratio,
-										vote_average = tmdb_vote_average
-								} AS obj
-								FROM media_image
-								WHERE media_tmdb_id = (SELECT val FROM params_media_tmdb_id)
-									AND media_type = (SELECT val FROM params_media_type)
-									AND image_type = 'posters'
-								GROUP BY 1
-						) as sub
-				),
+                ${castRowsCTEs},
+                top_cast AS (SELECT array_agg(id) AS ids FROM (SELECT id FROM cast_people ORDER BY ord ASC, id ASC LIMIT ${CAST_DOCUMENT_SIZE}) AS t),
+                crew_rows AS (
+                  SELECT p.tmdb_id AS id, pw.credit_id AS credit_id, p.name AS name, pw.job AS job, pw.department AS department, p.popularity AS popularity, pw.episode_count_total AS episode_count_total
+                  FROM worked_on_data pw JOIN people_data p ON pw.person_tmdb_id = p.tmdb_id
+                ),
 				backdrops AS (
 						SELECT array_agg(obj) as val
 						FROM (
@@ -413,8 +173,6 @@ const _fetchFromDB = async (
 				),
 				images AS (
 						SELECT {
-								logos = (SELECT val FROM logos),
-								posters = (SELECT val FROM posters),
 								backdrops = (SELECT val FROM backdrops)
 						} as val
 				),
@@ -500,24 +258,32 @@ const _fetchFromDB = async (
 				},
 				${mediaType === "movie" ? "movie_series = (SELECT val FROM movie_series)," : ""}
 				${mediaType === "show" ? "seasons = ARRAY(SELECT val FROM seasons)," : ""}
-				alternative_titles = (SELECT val FROM alternative_titles),
-				translations = (SELECT val FROM translations),
-				releases = (SELECT val FROM releases),
-				age_certifications = (SELECT val FROM age_certifications),
 				streaming_availabilities = (SELECT val FROM streaming_availabilities),
 				streaming_services = (SELECT val FROM streaming_services),
-		    actors = (SELECT val FROM actors),
-				crew = (SELECT val FROM crew),
-				images = (SELECT val FROM images),
+				cast_total = (SELECT count(*) FROM cast_people),
+                cast_lead_rows = ARRAY(SELECT {id = id, name = name} FROM cast_rows ORDER BY order_default ASC, id ASC LIMIT 5),
+                cast_rows = ${selectedCastRows("top_cast")},
+                crew = {${Object.entries(CREW_ROLES)
+									.map(
+										([key, role]) =>
+											`${key} = ARRAY(SELECT {id = id, credit_id = credit_id, name = name} FROM crew_rows WHERE job = '${role.job}' OR department = '${role.department}' ORDER BY episode_count_total DESC NULLS LAST, popularity DESC NULLS LAST, credit_id ASC LIMIT 3)`,
+									)
+									.join(",")}},
+                credits = {
+                  directors = ${creditedCrew("Director", 5)},
+                  composers = ${creditedCrew("Original Music Composer", 5)},
+                  executive_producers = ${creditedCrew("Executive Producer", 3)}
+                },
+                images = (SELECT val FROM images),
 				videos = (SELECT val FROM videos)
 		} AS media
 		FROM media_data m;
-	`)) as { media: QueryResult }[]
+	`)) as { media: RawTitleDetails }[]
 
 	if (!result[0]) throw new Response("Not Found", { status: 404 })
 	const { media } = result[0]
 	if (!media.details.title) {
-		media.details.title = media.details.original_title
+		media.details.title = media.details.original_title || ""
 	}
 	if (!media.details.genres) {
 		media.details.genres = []
@@ -525,63 +291,5 @@ const _fetchFromDB = async (
 	return media
 }
 
-// Internal function to process fingerprint data
-function _processFingerprint(result: QueryResult): FingerprintResult | null {
-	const {
-		content_advisories,
-		context_is_background_friendly,
-		context_is_binge_friendly,
-		context_is_comfort_watch,
-		context_is_drop_in_friendly,
-		context_is_pure_escapism,
-		context_is_thought_provoking,
-		essence_tags,
-		essence_text,
-		fingerprint_scores,
-		fingerprint_highlight_keys,
-		suitability_adults,
-		suitability_date_night,
-		suitability_family,
-		suitability_friends,
-		suitability_group_party,
-		suitability_intergenerational,
-		suitability_kids,
-		suitability_partner,
-		suitability_public_viewing_safe,
-		suitability_solo_watch,
-		suitability_teens,
-		...rawMedia
-	} = result.details as RawMediaResult
-
-	if (!fingerprint_scores) {
-		return null
-	}
-
-	const dnaAnalysis: DNAAnalysis = {
-		scores: fingerprint_scores,
-		highlightKeys: fingerprint_highlight_keys,
-		genres: rawMedia.genres,
-		essenceTags: essence_tags,
-		essenceText: essence_text,
-		content_advisories,
-		context_is_background_friendly,
-		context_is_binge_friendly,
-		context_is_comfort_watch,
-		context_is_drop_in_friendly,
-		context_is_pure_escapism,
-		context_is_thought_provoking,
-		suitability_adults,
-		suitability_date_night,
-		suitability_family,
-		suitability_friends,
-		suitability_group_party,
-		suitability_intergenerational,
-		suitability_kids,
-		suitability_partner,
-		suitability_public_viewing_safe,
-		suitability_solo_watch,
-		suitability_teens,
-	}
-
-	return buildFingerprint(dnaAnalysis)
-}
+export const { getDetailsForMovie, getDetailsForShow } =
+	createTitleDetailsGetters(_fetchFromDB)

@@ -95,13 +95,16 @@ function lengthAnswer(media: MovieResult | ShowResult) {
 	return `It has ${seasons} season${seasons === 1 ? "" : "s"} with ${eps} episodes${ep ? ` of about ${ep} minutes each` : ""}${running}.`
 }
 
+/** The keywords the source answer tests. The details payload keeps only these. */
+export const SOURCE_KEYWORDS = ["based on true story", "based on novel or book", "based on comic", "based on video game"] as const
+
 function sourceAnswer(media: MovieResult | ShowResult) {
-	const kw = media.details.keywords ?? []
+	const kw: readonly string[] = media.details.keywords ?? []
 	const bio = media.fingerprint?.scores.biographical ?? 0
-	if (kw.includes("based on true story") || bio >= 7) return "Yes. It's based on real events or a real person's life."
-	if (kw.includes("based on novel or book")) return "No. It's adapted from a novel."
-	if (kw.includes("based on comic")) return "No. It's adapted from a comic."
-	if (kw.includes("based on video game")) return "No. It's adapted from a video game."
+	if (kw.includes(SOURCE_KEYWORDS[0]) || bio >= 7) return "Yes. It's based on real events or a real person's life."
+	if (kw.includes(SOURCE_KEYWORDS[1])) return "No. It's adapted from a novel."
+	if (kw.includes(SOURCE_KEYWORDS[2])) return "No. It's adapted from a comic."
+	if (kw.includes(SOURCE_KEYWORDS[3])) return "No. It's adapted from a video game."
 	return null
 }
 
@@ -162,7 +165,7 @@ function boxOfficeAnswer(media: MovieResult | ShowResult) {
 // that leading run and fill up with a stable sample from the alphabetical
 // rest, so the chips don't all start with "A". Seeded, so SSR and client match.
 // A page payload carries only the featured tropes, already in this order.
-export function featuredTropes(media: MovieResult | ShowResult, n = FEATURED_TROPES) {
+export function featuredTropes(media: { details: { tmdb_id: number; tropes?: string[] | null; tropes_count?: number } }, n = FEATURED_TROPES) {
 	const tropes = media.details.tropes ?? []
 	if (media.details.tropes_count !== undefined) return tropes.slice(0, n)
 	let start = tropes.length - 1

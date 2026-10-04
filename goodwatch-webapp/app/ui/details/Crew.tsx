@@ -6,41 +6,16 @@ import {
 } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import React from "react"
-import type { Crew as CrewType } from "~/server/types/details-types"
+import type { CrewLines, CrewPerson } from "~/server/types/details-types"
 import { personPath } from "~/utils/helpers"
 
 export interface CrewProps {
-	crew: CrewType[]
+	/** The four crew lines, already chosen and ordered by the details statement. */
+	crew: CrewLines
 }
 
-/** The job and department of each crew line. A crew member shows when either matches. */
-export const CREW_ROLES = {
-	directors: { job: "Director", department: "Directing" },
-	writers: { job: "Writer", department: "Writing" },
-	producers: { job: "Producer", department: "Production" },
-	composers: { job: "Original Music Composer", department: "Sound" },
-} as const
-
 export default function Crew({ crew }: CrewProps) {
-	const filterCrew = (crew: CrewType[], { job, department }: { job: string; department: string }) => {
-		return (crew || [])
-			.filter(
-				(crewMember) =>
-					crewMember.job === job || crewMember.department === department,
-			)
-			.sort((a, b) => (a.popularity ? b.popularity - a.popularity : 0))
-			.sort((a, b) =>
-				a.episode_count_total && b.episode_count_total
-					? b.episode_count_total - a.episode_count_total
-					: 0,
-			)
-			.slice(0, 3)
-	}
-
-	const directors = filterCrew(crew, CREW_ROLES.directors)
-	const writers = filterCrew(crew, CREW_ROLES.writers)
-	const producers = filterCrew(crew, CREW_ROLES.producers)
-	const composers = filterCrew(crew, CREW_ROLES.composers)
+	const { directors, writers, producers, composers } = crew
 
 	const RenderInfo = ({
 		title,
@@ -49,7 +24,7 @@ export default function Crew({ crew }: CrewProps) {
 	}: {
 		title: string
 		Icon: React.ComponentType<{ className?: string }>
-		people: CrewType[]
+		people: CrewPerson[]
 	}) => {
 		if (people.length === 0) return null
 

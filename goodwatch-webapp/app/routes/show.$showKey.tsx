@@ -9,7 +9,6 @@ import { useLoaderData } from "@remix-run/react"
 import React, { useEffect, useMemo } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { getDetailsForShow, getDetailsForMovie } from "~/server/details.server"
-import { detailsPagePayload } from "~/server/details-page.server"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { type EpisodeGridWire, packEpisodeGrid, unpackEpisodeGrid } from "~/utils/episode-grid-wire"
 import { resolveCountry } from "~/server/country.server"
@@ -59,7 +58,7 @@ export const loader: LoaderFunction = async ({
 			showId,
 			country,
 			language,
-		}).then(detailsPagePayload),
+		}),
 		// A failed grid read hides the grid; it never fails the page.
 		getEpisodeGrid({ showId })
 			.then((grid) => grid && packEpisodeGrid(grid))

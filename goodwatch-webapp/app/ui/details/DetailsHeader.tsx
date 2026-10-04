@@ -46,7 +46,7 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 	}, [onHeightChange])
 	const journey = useSearchJourney()
 	const { details, mediaType } = media
-	const { genres, release_year, title, fingerprint } = details
+	const { genres, release_year, title } = details
 
 	const ageCertifications = details.age_certifications || []
 	const ageCertification =
@@ -156,20 +156,6 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 						<ShareButton />
 					</div>
 				</div>
-				{fingerprint?.tags && (
-					<div className="relative top-5 h-8 text-xs lg:text-sm">
-						<Cycle
-							items={fingerprint.tags.map((tag) => (
-								<span
-									key={tag}
-									className="relative px-2 py-0.5 rounded-sm border-2 border-amber-900 bg-amber-950 text-white"
-								>
-									{tag}
-								</span>
-							))}
-						/>
-					</div>
-				)}
 			</div>
 			{journey?.active && (
 				<JourneyNavigation

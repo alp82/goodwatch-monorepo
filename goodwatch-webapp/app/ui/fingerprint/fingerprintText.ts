@@ -12,7 +12,11 @@ export interface TitleInput {
 	mediaType: "movie" | "show"
 	year: string
 	genres: string[]
-	fingerprint: FingerprintResult
+	/** The part of a fingerprint the texts read. The details payload carries no more than this. */
+	fingerprint: Pick<FingerprintResult, "scores" | "pillars"> & {
+		socialSuitability: { name: string }[]
+		viewingContext: { name: string }[]
+	}
 }
 
 // Adjectives for keys that describe how a title feels. `strong` is used at 9+.

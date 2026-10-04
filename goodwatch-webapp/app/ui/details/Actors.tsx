@@ -3,44 +3,24 @@ import React from "react"
 import { SwiperSlide } from "swiper/react"
 import "swiper/css"
 import "swiper/css/navigation"
+import type { CastMember } from "~/server/types/details-types"
 import ListSwiper from "~/ui/ListSwiper"
 import { TmdbImage } from "~/ui/TmdbImage"
-import type { Actor } from "~/server/types/details-types"
 import { personPath } from "~/utils/helpers"
 
 export interface CastProps {
-	actors: Actor[]
+	/** The top-billed cast, which is in the document. */
+	cast: CastMember[]
 }
 
-export default function Actors({ actors }: CastProps) {
-	const actorsWithPhotos = (actors || []).filter(
-		(castMember) => castMember.profile_path,
-	)
-
-	const uniqueActors = actorsWithPhotos
-		.reduce<(Actor & { characters: string[] })[]>((acc, actor) => {
-			const existing = acc.find((a) => a.id === actor.id)
-			if (existing) {
-				if (actor.character && !existing.characters.includes(actor.character)) {
-					existing.characters.push(actor.character)
-				}
-			} else {
-				acc.push({
-					...actor,
-					characters: actor.character ? [actor.character] : [],
-				} as Actor & { characters: string[] })
-			}
-			return acc
-		}, [])
-		.sort((a, b) => a.order_default - b.order_default)
-
-	if (!uniqueActors.length) return null
+export default function Actors({ cast }: CastProps) {
+	if (!cast.length) return null
 	return (
 		<>
 			<h2 className="text-2xl font-bold mb-4">Actors</h2>
 			<ListSwiper>
-				{uniqueActors.map((actor) => {
-					const characterText = actor.characters?.join(", ") || undefined
+				{cast.map((actor) => {
+					const characterText = actor.characters.join(", ") || undefined
 					return (
 						<SwiperSlide key={actor.id}>
 							<Link
@@ -51,7 +31,7 @@ export default function Actors({ actors }: CastProps) {
 								<div className="w-36 h-36 mb-2 rounded-full overflow-hidden border-2 border-stone-400 shadow-lg group-hover:border-slate-200 transition-all">
 									<TmdbImage
 										kind="profile"
-										path={actor.profile_path as string}
+										path={actor.profile_path}
 										width={144}
 										className="w-full h-full object-cover"
 										alt={`${actor.name} profile`}

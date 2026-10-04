@@ -176,14 +176,12 @@ async function titleContent(
 	const media = await loadDetails(type, id)
 	if (!media) return null
 	const d = media.details
+	// Only shows get this part of the tag. The details never carried a media type, so the movie
+	// branch that formatted the runtime here never ran.
 	const runtime =
-		d.media_type === "movie"
-			? d.runtime
-				? `${Math.floor(d.runtime / 60)}h ${d.runtime % 60}m`
-				: ""
-			: d.number_of_seasons
-				? seasonsLabel(d.number_of_seasons)
-				: ""
+		"number_of_seasons" in d && d.number_of_seasons
+			? seasonsLabel(d.number_of_seasons)
+			: ""
 	const score = d.goodwatch_overall_score_normalized_percent
 	return {
 		kind: "title",

@@ -94,11 +94,6 @@ const buildJsonLdDetail = (data: PageMeta, media: MovieResult | ShowResult) => {
 		name: p.name,
 		url: `https://goodwatch.app${personPath(p.id, p.name)}`,
 	})
-	const crewWith = (job: string) =>
-		media.crew
-			.filter((c) => c.job === job)
-			.slice(0, 5)
-			.map(person)
 
 	const jsonLd: Record<string, unknown> = {
 		"@context": "https://schema.org",
@@ -126,8 +121,8 @@ const buildJsonLdDetail = (data: PageMeta, media: MovieResult | ShowResult) => {
 		sameAs: details.imdb_id
 			? [`https://www.imdb.com/title/${details.imdb_id}/`]
 			: undefined,
-		actor: media.actors.length
-			? media.actors.slice(0, 5).map(person)
+		actor: media.credits.actors.length
+			? media.credits.actors.map(person)
 			: undefined,
 	}
 
@@ -142,9 +137,9 @@ const buildJsonLdDetail = (data: PageMeta, media: MovieResult | ShowResult) => {
 			jsonLd.datePublished = new Date(d.release_date).toISOString().slice(0, 10)
 		if (d.runtime)
 			jsonLd.duration = `PT${Math.floor(d.runtime / 60)}H${d.runtime % 60}M`
-		const directors = crewWith("Director")
+		const directors = media.credits.directors.map(person)
 		if (directors.length) jsonLd.director = directors
-		const composers = crewWith("Original Music Composer")
+		const composers = media.credits.composers.map(person)
 		if (composers.length) jsonLd.musicBy = composers
 	} else {
 		const d = media.details
@@ -154,7 +149,7 @@ const buildJsonLdDetail = (data: PageMeta, media: MovieResult | ShowResult) => {
 			jsonLd.endDate = new Date(d.last_air_date).toISOString().slice(0, 10)
 		jsonLd.numberOfSeasons = d.number_of_seasons
 		jsonLd.numberOfEpisodes = d.number_of_episodes
-		const creators = crewWith("Executive Producer").slice(0, 3)
+		const creators = media.credits.executive_producers.map(person)
 		if (creators.length) jsonLd.producer = creators
 	}
 

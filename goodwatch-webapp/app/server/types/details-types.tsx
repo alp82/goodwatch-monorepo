@@ -1,5 +1,5 @@
-import type { AllRatings } from "~/utils/ratings"
 import type { FingerprintResult } from "~/server/utils/fingerprint"
+import type { AllRatings } from "~/utils/ratings"
 
 export interface Collection {
 	id: number
@@ -172,75 +172,50 @@ export interface Season {
 	season_number: number
 }
 
-export interface BaseDetails extends AllRatings {
+export interface BaseDetails
+	extends Pick<
+		AllRatings,
+		| "imdb_url"
+		| "metacritic_url"
+		| "rotten_tomatoes_url"
+		| "imdb_user_score_original"
+		| "metacritic_meta_score_original"
+		| "metacritic_user_score_original"
+		| "rotten_tomatoes_tomato_score_original"
+		| "rotten_tomatoes_audience_score_original"
+		| "goodwatch_overall_score_normalized_percent"
+	> {
 	tmdb_id: number
 	title: string
-	original_title: string
+	release_year: string
+	genres: string[]
 	tagline: string
 	synopsis: string
-	popularity: number
-	status: string
-	adult: boolean
 	poster_path: string
 	backdrop_path: string
-	release_year: string
 	budget: number | null
 	revenue: number | null
-
 	age_certifications: string[]
-	genres: string[]
 	keywords: string[]
 	tropes: string[]
-	/** The full trope count when a page payload cut `tropes` to the featured ones. */
-	tropes_count?: number
-	homepage: string | null
 	imdb_id: string | null
-	freebase_mid: string | null
-	freebase_id: string | null
-	tvdb_id: number | null
-	tvrage_id: number | null
-	wikidata_id: string | null
-	facebook_id: string | null
-	instagram_id: string | null
-	twitter_id: string | null
-
-	production_company_ids: number[]
 	production_country_codes: string[]
-	origin_country_codes: string[]
 	original_language_code: string
 	spoken_language_codes: string[]
 	streaming_country_codes: string[]
-	streaming_service_ids: number[]
-	streaming_availabilities: string[]
-	tmdb_recommendation_ids: number[]
-	tmdb_similar_ids: number[]
-
-	is_anime: boolean | null
-	production_method: string | null
-	animation_style: string | null
-	// TODO remove raw fingerprint fields from result
-	fingerprint: FingerprintResult | null
+	content_advisories: string[]
+	tropes_count: number
 }
-
 export interface MovieDetails extends BaseDetails {
-	media_type: "movie"
-	collection?: Collection
-	release_date: string
 	runtime: number | null
+	release_date: string
 }
-
 export interface ShowDetails extends BaseDetails {
-	media_type: "show"
-	// TODO add created_by
-	in_production: boolean
+	number_of_seasons: number
+	number_of_episodes: number
 	first_air_date: string
 	last_air_date: string
-	// TODO add last_episode_to_air
-	// TODO add next_episode_to_air
-	episode_run_time: number[]
-	number_of_episodes: number
-	number_of_seasons: number
-	network_ids: Network[]
+	in_production: boolean
 }
 
 export interface AlternativeTitle {
@@ -270,210 +245,85 @@ export interface DetailsShowParams {
 	language: string
 }
 
-// Dynamic field definitions based on database schema
-export const COMMON_FIELDS = [
-	"tmdb_id",
-	"title",
-	"original_title",
-	"tagline",
-	"synopsis",
-	"popularity",
-	"status",
-	"adult",
-	"poster_path",
-	"backdrop_path",
-	"release_year",
-	"budget",
-	"revenue",
-	"age_certifications",
-	"genres",
-	"keywords",
-	"tropes",
-	"homepage",
-	"imdb_id",
-	"wikidata_id",
-	"facebook_id",
-	"instagram_id",
-	"twitter_id",
-	"production_company_ids",
-	"production_country_codes",
-	"origin_country_codes",
-	"original_language_code",
-	"spoken_language_codes",
-	"is_anime",
-	"production_method",
-	"animation_style",
-	"tmdb_url",
-	"tmdb_user_score_original",
-	"tmdb_user_score_normalized_percent",
-	"tmdb_user_score_rating_count",
-	"imdb_url",
-	"imdb_user_score_original",
-	"imdb_user_score_normalized_percent",
-	"imdb_user_score_rating_count",
-	"metacritic_url",
-	"metacritic_user_score_original",
-	"metacritic_user_score_normalized_percent",
-	"metacritic_user_score_rating_count",
-	"metacritic_meta_score_original",
-	"metacritic_meta_score_normalized_percent",
-	"metacritic_meta_score_review_count",
-	"rotten_tomatoes_url",
-	"rotten_tomatoes_audience_score_original",
-	"rotten_tomatoes_audience_score_normalized_percent",
-	"rotten_tomatoes_audience_score_rating_count",
-	"rotten_tomatoes_tomato_score_original",
-	"rotten_tomatoes_tomato_score_normalized_percent",
-	"rotten_tomatoes_tomato_score_review_count",
-	"goodwatch_user_score_normalized_percent",
-	"goodwatch_user_score_rating_count",
-	"goodwatch_official_score_normalized_percent",
-	"goodwatch_official_score_review_count",
-	"goodwatch_overall_score_normalized_percent",
-	"goodwatch_overall_score_voting_count",
-	"streaming_country_codes",
-	"streaming_service_ids",
-	"streaming_availabilities",
-	"tmdb_recommendation_ids",
-	"tmdb_similar_ids",
-	"essence_text",
-	"essence_tags",
-	"fingerprint_scores",
-	"fingerprint_highlight_keys",
-	"content_advisories",
-	"suitability_solo_watch",
-	"suitability_date_night",
-	"suitability_group_party",
-	"suitability_family",
-	"suitability_partner",
-	"suitability_friends",
-	"suitability_kids",
-	"suitability_teens",
-	"suitability_adults",
-	"suitability_intergenerational",
-	"suitability_public_viewing_safe",
-	"context_is_thought_provoking",
-	"context_is_pure_escapism",
-	"context_is_background_friendly",
-	"context_is_comfort_watch",
-	"context_is_binge_friendly",
-	"context_is_drop_in_friendly",
-	"tmdb_details_created_at",
-	"tmdb_details_updated_at",
-	"tmdb_providers_created_at",
-	"tmdb_providers_updated_at",
-	"imdb_ratings_created_at",
-	"imdb_ratings_updated_at",
-	"metacritic_ratings_created_at",
-	"metacritic_ratings_updated_at",
-	"rotten_tomatoes_ratings_created_at",
-	"rotten_tomatoes_ratings_updated_at",
-	"tvtropes_tags_created_at",
-	"tvtropes_tags_updated_at",
-	"dna_created_at",
-	"dna_updated_at",
-] as const
+export {
+	COMMON_FIELDS,
+	MOVIE_SPECIFIC_FIELDS,
+	SHOW_SPECIFIC_FIELDS,
+	MOVIE_FIELDS,
+	SHOW_FIELDS,
+	getFieldsByMediaType,
+	generateMediaFieldAssignments,
+} from "~/server/title-details-fields"
 
-export const MOVIE_SPECIFIC_FIELDS = [
-	"release_date",
-	"movie_series_id",
-	"runtime",
-] as const
-
-export const SHOW_SPECIFIC_FIELDS = [
-	"first_air_date",
-	"last_air_date",
-	"number_of_seasons",
-	"number_of_episodes",
-	"episode_runtime",
-	"in_production",
-	"network_ids",
-] as const
-
-export type CommonField = (typeof COMMON_FIELDS)[number]
-export type MovieSpecificField = (typeof MOVIE_SPECIFIC_FIELDS)[number]
-export type ShowSpecificField = (typeof SHOW_SPECIFIC_FIELDS)[number]
-
-export const MOVIE_FIELDS = [
-	...COMMON_FIELDS,
-	...MOVIE_SPECIFIC_FIELDS,
-] as const
-export const SHOW_FIELDS = [...COMMON_FIELDS, ...SHOW_SPECIFIC_FIELDS] as const
-
-export type MovieField = (typeof MOVIE_FIELDS)[number]
-export type ShowField = (typeof SHOW_FIELDS)[number]
-
-// Helper function to dynamically get fields based on media type
-export const getFieldsByMediaType = (
-	mediaType: "movie" | "show",
-): readonly string[] => {
-	return mediaType === "movie" ? MOVIE_FIELDS : SHOW_FIELDS
+/** One actor with a photo and all their characters in this title. */
+export interface CastMember {
+	id: number
+	name: string
+	characters: string[]
+	profile_path: string
 }
-
-// Helper function to generate SQL field assignments for the media object
-export const generateMediaFieldAssignments = (
-	mediaType: "movie" | "show",
-): string => {
-	const fields = getFieldsByMediaType(mediaType)
-	return fields.map((field) => `${field} = m.${field}`).join(",\n\t\t\t\t\t\t")
+export interface CrewPerson {
+	id: number
+	credit_id: string
+	name: string
 }
-
-// Raw query result types for database fetch
+/** The four crew lines, at most three people each. */
+export interface CrewLines {
+	directors: CrewPerson[]
+	writers: CrewPerson[]
+	producers: CrewPerson[]
+	composers: CrewPerson[]
+}
+export interface CreditedPeople {
+	actors: { id: number; name: string }[]
+	directors: { id: number; name: string }[]
+	composers: { id: number; name: string }[]
+	executive_producers: { id: number; name: string }[]
+}
 export interface MovieSeriesResult {
 	id: number
-	name: string
-	poster_path: string | null
-	backdrop_path: string | null
 	movie_ids: number[]
 }
-
 export interface SeasonResult {
-	id: number
-	name: string
 	season_number: number
-	air_date: string | null
 	episode_count: number
-	overview: string | null
-	poster_path: string | null
-	vote_average: number
 }
-
-export interface RawMediaResult {
-	[key: string]: unknown // This allows for dynamic fields based on mediaType
+/** The fingerprint as the details carry it: what the title page and the server consumers read. */
+export interface TitleFingerprint
+	extends Pick<
+		FingerprintResult,
+		"scores" | "highlightKeys" | "essenceTags" | "pillars"
+	> {
+	socialSuitability: { name: string }[]
+	viewingContext: { name: string }[]
 }
-
-export interface QueryResultBase {
-	details: RawMediaResult
-	alternative_titles: AlternativeTitle[]
-	translations: Translation[]
-	releases: Release[]
-	age_certifications: AgeCertification[]
-	streaming_availabilities: StreamingAvailability[]
+export interface ResultBase {
+	streaming_availabilities: Pick<
+		StreamingAvailability,
+		"streaming_service_id" | "streaming_type" | "stream_url"
+	>[]
 	streaming_services: StreamingService[]
-	actors: Actor[]
-	crew: Crew[]
-	images: Images
-	videos: Videos
+	images: { backdrops: { file_path: string }[] }
+	videos: {
+		clips: { key: string }[] | null
+		trailers: { key: string }[] | null
+		featurettes: { key: string }[] | null
+	}
+	cast: CastMember[]
+	cast_total: number
+	crew: CrewLines
+	credits: CreditedPeople
+	fingerprint: TitleFingerprint | null
 }
-
-export interface MovieQueryResult extends QueryResultBase {
-	movie_series?: MovieSeriesResult
-}
-
-export interface ShowQueryResult extends QueryResultBase {
-	seasons: SeasonResult[]
-}
-
-export type QueryResult = MovieQueryResult | ShowQueryResult
-
-export interface MovieResult extends MovieQueryResult {
+export interface MovieResult extends ResultBase {
 	details: MovieDetails
 	mediaType: "movie"
-	fingerprint: FingerprintResult
+	movie_series?: MovieSeriesResult
 }
-
-export interface ShowResult extends ShowQueryResult {
+export interface ShowResult extends ResultBase {
 	details: ShowDetails
 	mediaType: "show"
-	fingerprint: FingerprintResult
+	seasons: SeasonResult[]
 }
+export type MovieQueryResult = MovieResult
+export type ShowQueryResult = ShowResult
