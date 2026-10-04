@@ -1,10 +1,10 @@
+import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { getUserData } from "~/server/userData.server"
 import { type MediaKey, parseMediaKey } from "~/types/user-data"
 import type { TasteInteraction } from "~/ui/taste/types"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { normalizeGuestInteractions } from "~/utils/guest-progress"
-import { getLocaleFromRequest } from "~/utils/locale"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 

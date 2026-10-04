@@ -1,5 +1,6 @@
 // Reduces request metadata to bounded labels without retaining paths or cookie values.
 import type { RoutePatternMatcher } from "~/utils/route-pattern"
+import { createAuthCookieMatcher } from "../cache-identity.server"
 
 // Files from `public/` are served before any route gets the request, and a wide route such as `/:type` would also
 // match `/favicon.ico`. The set of public file paths says which requests those are.
@@ -25,27 +26,21 @@ export function statusClass(statusCode: number): string {
 export function createAudienceLabel(
 	supabaseUrl?: string,
 ): (cookieHeader?: string) => "member" | "anon" {
-	let project: string | undefined
-	try {
-		project = supabaseUrl
-			? new URL(supabaseUrl).hostname.split(".")[0]
-			: undefined
-	} catch {
-		/* Missing or invalid configuration uses the bounded fallback. */
-	}
-	const name = project
-		? `sb-${project.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-auth-token`
-		: "sb-[^=;\\s]+-auth-token"
-	const pattern = new RegExp(`(?:^|;)[ \\t]*${name}(?:\\.[0-9]+)?=`)
-	return (cookieHeader) =>
-		cookieHeader && pattern.test(cookieHeader) ? "member" : "anon"
+	const matches = createAuthCookieMatcher(supabaseUrl)
+	return (cookieHeader) => (matches(cookieHeader) ? "member" : "anon")
 }
 export const audienceLabel = createAudienceLabel(process.env.SUPABASE_URL)
 
 export function cacheControlLabel(
 	headerValue: string | number | string[] | undefined,
+	identityHeader?: string,
 ): string {
 	const value = String(headerValue ?? "")
+	if (
+		identityHeader?.startsWith("anon;") &&
+		/^(?:private\s*,\s*max-age=0|max-age=0\s*,\s*private)$/i.test(value.trim())
+	)
+		return "keyed"
 	if (/(?:^|,)\s*(?:private|no-store|no-cache)\s*(?:=|,|$)/i.test(value))
 		return "private"
 	if (/(?:^|,)\s*(?:s-maxage|public)\s*(?:=|,|$)/i.test(value)) return "shared"

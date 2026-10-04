@@ -41,7 +41,11 @@ export const loader: LoaderFunction = async ({
 	// pretending to be a browser) only this time.
 	if (url.searchParams.has("redirectTo")) {
 		if (isCrawler(request)) return redirect("/sign-in", 301);
-		if (!hasBrowserCookie(request)) return redirect("/sign-in", 302);
+		if (!hasBrowserCookie(request))
+			return redirect("/sign-in", {
+				status: 302,
+				headers: { "Cache-Control": "private, no-store" },
+			});
 	}
 	const redirectUri = url.searchParams.get("redirectTo") || "";
 

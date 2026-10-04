@@ -66,7 +66,9 @@ export const loader: LoaderFunction = async ({
 		return loadTasteTab(request, "sides", userId)
 
 	if (!user) {
-		return redirect("/taste/quiz")
+		return redirect("/taste/quiz", {
+			headers: { "Cache-Control": "private, no-store" },
+		})
 	}
 
 	const queryClient = new QueryClient()

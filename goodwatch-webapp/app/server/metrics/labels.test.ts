@@ -78,3 +78,26 @@ test("cache directives prioritize private restrictions", () => {
 	])
 		assert.equal(cacheControlLabel(header), "private")
 })
+
+test("keyed labels require the exact private browser policy and an anonymous identity", () => {
+	for (const policy of [
+		"private, max-age=0",
+		"max-age=0, private",
+		"PRIVATE, max-age=0",
+	])
+		assert.equal(cacheControlLabel(policy, "anon;US;en"), "keyed")
+	for (const identity of [undefined, "", "member"])
+		assert.equal(cacheControlLabel("private, max-age=0", identity), "private")
+	for (const policy of [
+		"private, max-age=0, no-store",
+		"private, max-age=0, no-cache",
+		"private, max-age=300",
+		"private, max-age=0, s-maxage=1800",
+	])
+		assert.equal(cacheControlLabel(policy, "anon;US;en"), "private")
+	assert.equal(
+		cacheControlLabel("public, s-maxage=1800", "anon;US;en"),
+		"shared",
+	)
+	assert.equal(cacheControlLabel(undefined, "anon;US;en"), "none")
+})

@@ -1,6 +1,7 @@
 import type { HeadersFunction } from "@remix-run/node"
 
 // Child routes must not replace the root's authenticated-response policy.
+// Only inherit Cache-Control; the final response policy owns Vary.
 // Remix preserves Set-Cookie from loaders and parent routes automatically.
 export const pageHeaders: HeadersFunction = ({
 	parentHeaders,
@@ -9,9 +10,10 @@ export const pageHeaders: HeadersFunction = ({
 	errorHeaders,
 }) => {
 	const headers = new Headers(parentHeaders)
-	for (const name of ["Cache-Control", "Vary"]) {
-		if (!headers.has(name) && loaderHeaders.has(name)) {
-			headers.set(name, loaderHeaders.get(name)!)
+	for (const name of ["Cache-Control"]) {
+		const value = loaderHeaders.get(name)
+		if (!headers.has(name) && value !== null) {
+			headers.set(name, value)
 		}
 	}
 	for (const source of [

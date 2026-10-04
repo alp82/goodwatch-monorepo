@@ -87,6 +87,8 @@ Read them in Grafana Cloud under **Explore**, with the Prometheus data source th
 | `goodwatch_redis_client_ready` | Gauge | None | One when a Redis client is published, otherwise zero. |
 | `goodwatch_redis_client_events_total` | Counter | `event` | Client events: `ready`, `connect_failed`, and `ended`. A connect attempt against an unreachable cluster counts as `ended`. Each `ended` or `connect_failed` is followed by a new connect attempt after 1, 2, 4, 8, 16, then 30 seconds. |
 | `goodwatch_data_cache_in_flight` | Gauge | None | Registered cache runs at scrape time. |
+| `goodwatch_related_lookups_total` | Counter | `result` | Related titles panels asked of the server: `no_fingerprint` (the title snapshot doesn't hold the source title, so the panel is empty without a Qdrant call or a cache entry), `no_point` (the same answer from Qdrant while the snapshot isn't loaded), `lookup` (went to the `related-cards` data cache). |
+| `goodwatch_related_requests_total` | Counter | `variant` | `/api/related` requests: `panel` (one panel with movies and shows), `legacy` (pages from before October 4, 2026 that ask with `mediaType`). Remove the legacy branch when it stays at zero. |
 | `goodwatch_process_resident_memory_bytes`, `goodwatch_process_heap_used_bytes` | Gauge | None | Memory of the server process. |
 | `goodwatch_process_event_loop_delay_seconds` | Gauge | `quantile` (`0.5`, `0.99`, `max`) | How late the event loop ran since the previous scrape. |
 | `goodwatch_process_uptime_seconds`, `goodwatch_build_info` | Gauge | `commit` on the second | A restart or deploy shows as a reset or a new commit. |
@@ -97,7 +99,7 @@ Label values:
 - `route`: a route pattern, `static` (files under `/assets/` and from `public/`), or `unmatched` (no route, status 400 or above).
 - `status_class`: `2xx`, `3xx`, `4xx`, `5xx`.
 - `audience`: `member` when the request carries the Supabase auth cookie, else `anon`. Only the cookie's presence is read.
-- `cache_control`: what the response's `Cache-Control` header allows. `shared` has `public` or `s-maxage` and nothing private. `private` has `private`, `no-store`, or `no-cache`. `none` is everything else.
+- `cache_control`: what the response's `Cache-Control` header allows. `shared` has `public` or `s-maxage` and nothing private. `keyed` has exactly `private, max-age=0` and a `GW-Cache-Identity` starting with `anon;`: the in-process page cache may store it under URL plus identity, but intermediaries must honor private. Other `private` responses have `private`, `no-store`, or `no-cache`. `none` is everything else.
 - `cache`: the cache name passed to `cached()`. The three related-title caches have request data in their name, so they report as `related-movie`, `related-show`, and `related-by-category`.
 Share list reads report as `share-list-view-v1` and `share-list-availability-v1`.
 
@@ -268,7 +270,7 @@ No HTTP page cache exists yet. Two numbers stand in for it today, and one formul
 The share of anonymous responses that a shared cache could store, per route. This is the upper limit of a page cache hit ratio:
 
 ```promql
-sum by (route) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", audience="anon", cache_control="shared"}[5m]))
+sum by (route) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", audience="anon", cache_control=~"shared|keyed"}[5m]))
 /
 sum by (route) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", audience="anon"}[5m]))
 ```
@@ -276,7 +278,13 @@ sum by (route) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", audi
 Member responses that a shared cache could store. This must stay empty, because member HTML must never enter the page cache:
 
 ```promql
-sum by (route) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", audience="member", cache_control="shared", route!="static"}[5m])) > 0
+sum by (route) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", audience="member", cache_control="shared", route!~"static|/api/.*|/og/.*"}[5m])) > 0
+```
+
+Error responses that a shared cache could store. This must stay empty:
+
+```promql
+sum by (route, status_class) (rate(goodwatch_http_responses_total{job="goodwatch_webapp", status_class=~"4xx|5xx", cache_control="shared"}[5m])) > 0
 ```
 
 When a page cache (Varnish is the likely choice) sits in front of the webapp, every request that reaches the webapp is a page cache miss or a pass. The cache layer exports its own request counter, and the hit ratio is one minus the webapp's share:

@@ -1,10 +1,6 @@
 // The start page is the living room (the desktop scene, or the phone scene on phones). The TV's screen and keys live
 // in the search params (`?tv=picks&mood=cozy`); changing only those never reruns the loader.
-import type {
-	HeadersFunction,
-	LinksFunction,
-	MetaFunction,
-} from "@remix-run/node"
+import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
 	useLoaderData,
@@ -31,18 +27,8 @@ import { snapshotGuestProgress } from "~/utils/guest-progress"
 
 export { livingRoomLoader as loader } from "~/server/living-room.server"
 import type { livingRoomLoader } from "~/server/living-room.server"
-import { pageHeaders } from "~/utils/headers"
+export { pageHeaders as headers } from "~/utils/headers"
 import { buildMeta, ogImageUrl } from "~/utils/meta"
-
-// Keep auth refreshes private, but use this route's exact guest policy instead of the root's public default.
-export const headers: HeadersFunction = (args) => {
-	const result = new Headers(pageHeaders(args))
-	if (!/private|no-store/i.test(result.get("Cache-Control") ?? "")) {
-		const policy = args.loaderHeaders.get("Cache-Control")
-		if (policy) result.set("Cache-Control", policy)
-	}
-	return result
-}
 
 export const shouldRevalidate: ShouldRevalidateFunction = ({
 	currentUrl,

@@ -146,6 +146,7 @@ export function startHttpMetrics(): void {
 			headerSeconds?: number
 			contentType: string
 			cacheControl: string
+			cacheIdentity: string
 			release: () => void
 		}
 	>()
@@ -167,6 +168,7 @@ export function startHttpMetrics(): void {
 			headerSeconds: undefined as number | undefined,
 			contentType: "",
 			cacheControl: "",
+			cacheIdentity: "",
 			release,
 		}
 		pending.set(request, timing)
@@ -180,6 +182,7 @@ export function startHttpMetrics(): void {
 				timing.headerSeconds = (performance.now() - timing.start) / 1000
 				timing.contentType = sentHeader(this, args, "content-type")
 				timing.cacheControl = sentHeader(this, args, "cache-control")
+				timing.cacheIdentity = sentHeader(this, args, "gw-cache-identity")
 			}
 			// Compression may wrap this function later. Preserve its receiver and arguments.
 			return Reflect.apply(writeHead, this, args)
@@ -205,7 +208,7 @@ export function startHttpMetrics(): void {
 			route,
 			status,
 			audience,
-			cacheControlLabel(timing.cacheControl),
+			cacheControlLabel(timing.cacheControl, timing.cacheIdentity),
 		])
 		if (
 			request.method === "GET" &&

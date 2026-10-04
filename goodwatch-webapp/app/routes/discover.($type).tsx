@@ -155,7 +155,10 @@ export const loader = async ({
 		const userId = (await getUserIdFromRequest({ request })) ?? null
 		if (isEnabled("filterBar", { userId })) {
 			const moved = await legacyDiscoverRedirect(request)
-			if (moved) return moved
+			if (moved) {
+				moved.headers.set("Cache-Control", "private, no-store")
+				return moved
+			}
 			// The type is a filter now: /discover/movies is /discover?type=movie. Temporary, while the flag can roll back.
 			if (routeParams.type) {
 				const type = (
@@ -163,7 +166,10 @@ export const loader = async ({
 				)[routeParams.type]
 				if (type && !urlParams.has("type")) urlParams.set("type", type)
 				const search = urlParams.toString()
-				return redirect(`/discover${search ? `?${search}` : ""}`, 302)
+				return redirect(`/discover${search ? `?${search}` : ""}`, {
+					status: 302,
+					headers: { "Cache-Control": "private, no-store" },
+				})
 			}
 			return browseLoader(request, userId)
 		}

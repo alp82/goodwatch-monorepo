@@ -31,7 +31,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null;
 	if (!isEnabled("filterBar", { userId })) return null;
 	const params = new URL(request.url).searchParams;
-	return redirect(discoverSearchPath(params), mode === "on" ? 301 : 302);
+	// The redirect depends on who asks (preview members), so no cache may keep it.
+	return redirect(discoverSearchPath(params), {
+		status: mode === "on" ? 301 : 302,
+		headers: { "Cache-Control": "private, no-store" },
+	});
 }
 
 // The search page changes only its query parameters as the person types: the loader has nothing to add then.

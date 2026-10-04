@@ -3,6 +3,7 @@ import { z } from "zod"
 import { isMoodKey } from "~/domain/moods"
 import { getViewerContext } from "~/server/viewer.server"
 import type { TasteInteraction } from "~/ui/taste/types"
+import { applyCachePolicy } from "../cache-identity.server"
 import { PRIVATE_CACHE_CONTROL, livingRoomAuth } from "./data.server"
 import { LivingRoomUnavailable, getLivingRoomPicks } from "./picks.server"
 import { getLivingRoomPool } from "./pool.server"
@@ -55,6 +56,7 @@ export async function livingRoomPicksResponse(request: Request) {
 		headers.set("Cache-Control", PRIVATE_CACHE_CONTROL)
 	const failure = (error: string, status = 400) => {
 		headers.set("Cache-Control", PRIVATE_CACHE_CONTROL)
+		applyCachePolicy(request, status, headers)
 		return json({ error }, { status, headers })
 	}
 	if (request.method !== "GET" && request.method !== "POST") {
@@ -96,6 +98,7 @@ export async function livingRoomPicksResponse(request: Request) {
 			params.get("view") === "pool"
 				? await getLivingRoomPool(viewer)
 				: await getLivingRoomPicks(viewer, { mood, source, service })
+		applyCachePolicy(request, 200, headers)
 		return json(result, { headers })
 	} catch (error) {
 		if (error instanceof LivingRoomUnavailable) {

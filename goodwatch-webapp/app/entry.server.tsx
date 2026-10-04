@@ -9,6 +9,7 @@ import { createReadableStreamFromReadable } from "@remix-run/node"
 import { RemixServer } from "@remix-run/react"
 import { isbot } from "isbot"
 import { renderToPipeableStream } from "react-dom/server"
+import { applyCachePolicy } from "~/server/cache-identity.server"
 import { HtmlStream } from "~/server/html-stream.server"
 import { startLifecycle } from "~/server/lifecycle.server"
 import { startStaticFiles } from "~/server/static-files.server"
@@ -46,6 +47,7 @@ export default function handleRequest(
 			const body = new HtmlStream()
 			body.once("close", () => clearTimeout(abortTimer))
 			responseHeaders.set("Content-Type", "text/html")
+			applyCachePolicy(request, status, responseHeaders)
 			resolve(
 				new Response(createReadableStreamFromReadable(body), {
 					headers: responseHeaders,
@@ -79,4 +81,12 @@ export default function handleRequest(
 			},
 		)
 	})
+}
+
+export function handleDataRequest(
+	response: Response,
+	{ request }: { request: Request },
+) {
+	applyCachePolicy(request, response.status, response.headers)
+	return response
 }

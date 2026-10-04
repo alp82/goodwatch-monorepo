@@ -10,6 +10,7 @@ import {
 	QueryClient,
 	dehydrate,
 } from "@tanstack/react-query"
+import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { isEnabled } from "~/server/features.server"
 import {
 	type DiscoveryResult,
@@ -27,7 +28,6 @@ import { GuestShareListEntry } from "~/ui/share-lists/ShareTopFiveCard"
 import { TasteQuizPage } from "~/ui/taste-quiz/TasteQuizPage"
 import TasteQuiz from "~/ui/taste/TasteQuiz"
 import { getUserFromRequest } from "~/utils/auth"
-import { getLocaleFromRequest } from "~/utils/locale"
 import { type PageMeta, buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"

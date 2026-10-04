@@ -4,9 +4,14 @@ import {
 } from "~/server/streaming-providers.server"
 import { getAuthFromRequest } from "~/utils/auth"
 
-export const PRIVATE_CACHE_CONTROL = "private, no-store"
-export const GUEST_CACHE_CONTROL =
-	"public, max-age=0, s-maxage=1800, stale-while-revalidate=7200"
+import {
+	PRIVATE_CACHE_CONTROL,
+	SHARED_PAGE_CACHE_CONTROL,
+} from "../cache-identity.server"
+export {
+	PRIVATE_CACHE_CONTROL,
+	SHARED_PAGE_CACHE_CONTROL,
+} from "../cache-identity.server"
 
 /** Keep auth refresh cookies, and never make an invalid/expired auth-cookie response public. */
 export async function livingRoomAuth(request: Request) {
@@ -17,7 +22,7 @@ export async function livingRoomAuth(request: Request) {
 		auth.headers.get("Cache-Control")?.includes("private")
 	) {
 		auth.headers.set("Cache-Control", PRIVATE_CACHE_CONTROL)
-	} else auth.headers.set("Cache-Control", GUEST_CACHE_CONTROL)
+	} else auth.headers.set("Cache-Control", SHARED_PAGE_CACHE_CONTROL)
 	return auth
 }
 

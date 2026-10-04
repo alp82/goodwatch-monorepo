@@ -8,7 +8,7 @@ const notFound = () =>
 		status: 404,
 		headers: {
 			"Content-Type": "text/plain",
-			"Cache-Control": "public, max-age=60",
+			"Cache-Control": "no-store",
 		},
 	})
 

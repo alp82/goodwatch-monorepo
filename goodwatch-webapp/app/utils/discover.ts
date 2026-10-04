@@ -6,7 +6,7 @@ import type {
 import type { FilterMediaType } from "~/server/search.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { getUserIdFromRequest } from "~/utils/auth"
-import { getLocaleFromRequest } from "~/utils/locale"
+import { getLocaleFromRequest } from "~/server/cache-identity.server"
 
 export const buildDiscoverParams = async (request: Request) => {
 	const userId = await getUserIdFromRequest({ request })

@@ -2,23 +2,23 @@ import type { User } from "@supabase/auth-js"
 import { createServerClient, parse, serialize } from "@supabase/ssr"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createContext, useContext } from "react"
+import {
+	PRIVATE_CACHE_CONTROL,
+	SHARED_PAGE_CACHE_CONTROL,
+	hasAuthCookie,
+} from "./auth-cookie"
 
 // server
 
 export const getAuthFromRequest = async ({ request }: { request: Request }) => {
 	const cookies = parse(request.headers.get("Cookie") ?? "")
-	const headers = new Headers({ Vary: "Cookie, Accept-Language" })
-	const cookieName = `sb-${new URL(process.env.SUPABASE_URL!).hostname.split(".")[0]}-auth-token`
-	const hasAuthCookie = Object.keys(cookies).some(
-		(name) => name === cookieName || name.startsWith(`${cookieName}.`),
-	)
+	const headers = new Headers()
+	const member = hasAuthCookie(request.headers.get("Cookie"))
 	headers.set(
 		"Cache-Control",
-		hasAuthCookie
-			? "private, no-store"
-			: "max-age=300, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+		member ? PRIVATE_CACHE_CONTROL : SHARED_PAGE_CACHE_CONTROL,
 	)
-	if (!hasAuthCookie) return { user: null, headers }
+	if (!member) return { user: null, headers }
 
 	const supabase = createServerClient(
 		process.env.SUPABASE_URL!,

@@ -37,7 +37,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 	const userId = await getUserIdFromRequest({ request })
 	if (userId !== list.userId)
-		return redirect(shareListPath(owner.handle, list.id))
+		return redirect(shareListPath(owner.handle, list.id), {
+			headers: { "Cache-Control": "private, no-store" },
+		})
 	if (params.handle !== owner.handle)
 		return redirect(shareListEditPath(owner.handle, list.id), 301)
 

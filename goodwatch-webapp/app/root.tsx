@@ -6,6 +6,7 @@ export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
 import type { User } from "@supabase/auth-js"
+import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { getEnabledFeatures } from "~/server/features.server"
 import { capLogLines } from "~/server/log-cap.server"
 import { startBrowserGate } from "~/server/browser-gate.server"
@@ -48,7 +49,7 @@ import InfoBox from "~/ui/InfoBox"
 import Header from "~/ui/main/Header"
 import BottomNav from "~/ui/nav/BottomNav"
 import type { EnabledFeatures } from "~/utils/features"
-import { LocaleContext, getLocaleFromRequest } from "~/utils/locale"
+import { LocaleContext } from "~/utils/locale"
 
 // One stylesheet for every page: it imports main.css, Swiper's, and the toast styles.
 import cssTailwind from "~/tailwind.css?url"

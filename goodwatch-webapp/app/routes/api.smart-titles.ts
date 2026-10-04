@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import { useQuery } from "@tanstack/react-query"
 import { getSmartTitlesForGuest, getSmartTitlesForUser } from "~/server/smart-titles.server"
-import { getLocaleFromRequest } from "~/utils/locale"
+import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 import type { ScoringMedia } from "~/ui/scoring/types"
 

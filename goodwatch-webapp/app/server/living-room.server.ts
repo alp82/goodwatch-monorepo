@@ -1,11 +1,11 @@
 import { json } from "@remix-run/node"
+import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { loadMemberTaste } from "~/server/taste/member.server"
 import { getServiceCards } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import type { ViewerContext } from "~/server/viewer.server"
 import type { LivingRoomData } from "~/ui/living-room/living-room-data"
-import { getLocaleFromRequest } from "~/utils/locale"
 import { livingRoomAuth } from "./living-room/data.server"
 import { livingRoomWishlistCards } from "./living-room/pool.server"
 import { loadLivingRoomWishlist } from "./living-room/wishlist.server"
@@ -13,8 +13,7 @@ import { loadLivingRoomWishlist } from "./living-room/wishlist.server"
 /** First paint never selects picks. Guests need only the shared empty UI contract. */
 export async function loadLivingRoom(request: Request) {
 	const { user, headers } = await livingRoomAuth(request)
-	const localeCountry = getLocaleFromRequest(request).locale.country
-	const country = /^[A-Z]{2}$/.test(localeCountry) ? localeCountry : "DE"
+	const country = getLocaleFromRequest(request).locale.country
 	const data: LivingRoomData = {
 		member: !!user,
 		suggestions: [],

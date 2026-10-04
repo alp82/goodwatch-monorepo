@@ -1,10 +1,14 @@
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import {
-	GUEST_CACHE_CONTROL,
+	CACHE_IDENTITY_HEADER,
+	getLocaleFromRequest,
+	requestLocale,
+} from "~/server/cache-identity.server"
+import {
 	PRIVATE_CACHE_CONTROL,
+	SHARED_PAGE_CACHE_CONTROL,
 	livingRoomServices,
 } from "~/server/living-room/data.server"
-import { getLocaleFromRequest } from "~/utils/locale"
 
 // Public metadata only, independent of identity and saved preferences.
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -13,9 +17,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		getLocaleFromRequest(request).locale.country
 	).toUpperCase()
 	const headers = new Headers({
-		"Cache-Control": GUEST_CACHE_CONTROL,
-		Vary: "Accept-Language",
+		"Cache-Control": SHARED_PAGE_CACHE_CONTROL,
 	})
+	if (!new URL(request.url).searchParams.has("country")) {
+		headers.set(
+			"Vary",
+			requestLocale(request).source === "identity-header"
+				? CACHE_IDENTITY_HEADER
+				: "Accept-Language",
+		)
+	}
 	if (!/^[A-Z]{2}$/.test(country)) {
 		headers.set("Cache-Control", PRIVATE_CACHE_CONTROL)
 		return json({ error: "Invalid country" }, { status: 400, headers })

@@ -1,8 +1,4 @@
-import acceptLanguage from "accept-language-parser"
-
-// Google crawls from the US, so that is the last resort for visitors who
-// tell us nothing about where they are.
-const FALLBACK_COUNTRY = "US"
+import { requestLocale } from "./cache-identity.server"
 
 const asCountryCode = (value: string | null | undefined) => {
 	const code = value?.trim().toUpperCase() ?? ""
@@ -31,12 +27,5 @@ export const resolveCountry = ({
 		asCountryCode(countryDefault)
 	if (explicit) return { country: explicit, countryIsFallback: false }
 
-	const languages = acceptLanguage.parse(
-		request.headers.get("Accept-Language") || "",
-	)
-	const fromLanguage = languages
-		.map((language) => asCountryCode(language.region))
-		.find((code) => code !== null)
-
-	return { country: fromLanguage || FALLBACK_COUNTRY, countryIsFallback: true }
+	return { country: requestLocale(request).country, countryIsFallback: true }
 }
