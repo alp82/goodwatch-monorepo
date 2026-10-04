@@ -1,0 +1,116 @@
+## A no search, no snapshot  [GW_BENCH_SKIP=encoder,index,people,jevwarm,snapshot]
+listening_after_s=7.055457193
+first_page_request_s=0.099220 status=200
+probes=713  slowest (offset_s latency_s):
+2.408604208 0.834703;4.042029050 0.326894;1.725472384 0.287568;5.362849052 0.162973;6.399259210 0.113299;1.022631299 0.097081;
+probes_over_100ms=5 over_500ms=1
+t=1791077300.351 uptime_s=76
+Rss: 617.7 MB  Pss_Anon: 556.8 MB  Pss_File: 60.8 MB  Anonymous: 556.8 MB  
+VmHWM:   631796 kB Threads: 15 
+thread DelayedTaskSche n=1 user_ticks=0 sys_ticks=0
+thread libuv-worker n=4 user_ticks=1 sys_ticks=5
+thread MainThread n=1 user_ticks=1181 sys_ticks=196
+thread SignalInspector n=1 user_ticks=0 sys_ticks=0
+thread tokio-runtime-w n=4 user_ticks=0 sys_ticks=0
+thread V8Worker n=4 user_ticks=263 sys_ticks=25
+2026-10-04T01:27:10.185585047Z [remix-serve] http://localhost:3000 (http://<ip>:3000)
+2026-10-04T01:27:13.522578239Z Title snapshot 20261003T233732Z loaded: 237867 titles, 3000 in the reference pool, ratings for 51 countries, in 1248 ms (482 ms reading Redis)
+docker_mem=576.3MiB / 4GiB
+## B title snapshot only  [GW_BENCH_SKIP=encoder,index,people,jevwarm]
+listening_after_s=4.674461916
+first_page_request_s=0.093452 status=200
+probes=717  slowest (offset_s latency_s):
+2.540666976 0.898304;3.939002832 0.348975;2.199885326 0.253037;5.895317439 0.173381;6.159569553 0.106122;2.022265441 0.082153;
+probes_over_100ms=5 over_500ms=1
+t=1791077376.957 uptime_s=74
+Rss: 557.3 MB  Pss_Anon: 496.4 MB  Pss_File: 60.8 MB  Anonymous: 496.4 MB  
+VmHWM:   583736 kB Threads: 15 
+thread DelayedTaskSche n=1 user_ticks=0 sys_ticks=0
+thread libuv-worker n=4 user_ticks=1 sys_ticks=5
+thread MainThread n=1 user_ticks=1049 sys_ticks=174
+thread SignalInspector n=1 user_ticks=0 sys_ticks=0
+thread tokio-runtime-w n=4 user_ticks=0 sys_ticks=0
+thread V8Worker n=4 user_ticks=291 sys_ticks=23
+2026-10-04T01:28:26.753393549Z [remix-serve] http://localhost:3000 (http://<ip>:3000)
+2026-10-04T01:28:30.250994575Z Title snapshot 20261003T233732Z loaded: 237867 titles, 3000 in the reference pool, ratings for 51 countries, in 1491 ms (766 ms reading Redis)
+docker_mem=514.2MiB / 4GiB
+## C search index only  [GW_BENCH_SKIP=encoder,people,jevwarm,snapshot]
+listening_after_s=4.156114611
+first_page_request_s=0.084905 status=200
+probes=689  slowest (offset_s latency_s):
+5.054028635 2.386957;2.106284859 1.157324;3.888095829 0.358657;.821675342 0.183186;.362671935 0.141813;4.543993167 0.126113;
+probes_over_100ms=6 over_500ms=2
+t=1791077453.142 uptime_s=73
+Rss: 840.4 MB  Pss_Anon: 779.7 MB  Pss_File: 60.6 MB  Anonymous: 779.7 MB  
+VmHWM:  1096444 kB Threads: 15 
+thread DelayedTaskSche n=1 user_ticks=0 sys_ticks=0
+thread libuv-worker n=4 user_ticks=105 sys_ticks=17
+thread MainThread n=1 user_ticks=1296 sys_ticks=259
+thread SignalInspector n=1 user_ticks=0 sys_ticks=0
+thread tokio-runtime-w n=4 user_ticks=0 sys_ticks=0
+thread V8Worker n=4 user_ticks=664 sys_ticks=24
+2026-10-04T01:29:42.849787658Z [remix-serve] http://localhost:3000 (http://<ip>:3000)
+2026-10-04T01:29:45.990620967Z Title snapshot 20261003T233732Z loaded: 237867 titles, 3000 in the reference pool, ratings for 51 countries, in 1124 ms (370 ms reading Redis)
+2026-10-04T01:29:50.394804798Z Search index build 20261003T041503Z loaded in 7480 ms
+docker_mem=799.9MiB / 4GiB
+## D query encoder only (models on disk)  [GW_BENCH_SKIP=index,people,jevwarm,snapshot]
+listening_after_s=4.368705081
+first_page_request_s=0.094545 status=200
+probes=715  slowest (offset_s latency_s):
+2.488649329 1.026289;3.889092429 0.474597;1.970468605 0.209085;5.532546396 0.157240;4.467475954 0.141446;2.268252550 0.138201;
+probes_over_100ms=6 over_500ms=1
+t=1791077529.415 uptime_s=73
+Rss: 1920.2 MB  Pss_Anon: 1833.6 MB  Pss_File: 84.5 MB  Anonymous: 1833.6 MB  
+VmHWM:  2299968 kB Threads: 23 
+thread DelayedTaskSche n=1 user_ticks=0 sys_ticks=0
+thread libuv-worker n=4 user_ticks=0 sys_ticks=6
+thread MainThread n=1 user_ticks=1036 sys_ticks=158
+thread query-encoder n=8 user_ticks=484 sys_ticks=312
+thread SignalInspector n=1 user_ticks=0 sys_ticks=0
+thread tokio-runtime-w n=4 user_ticks=0 sys_ticks=0
+thread V8Worker n=4 user_ticks=324 sys_ticks=38
+2026-10-04T01:30:59.159206800Z [remix-serve] http://localhost:3000 (http://<ip>:3000)
+2026-10-04T01:31:02.819328548Z Title snapshot 20261003T233732Z loaded: 237867 titles, 3000 in the reference pool, ratings for 51 countries, in 1639 ms (730 ms reading Redis)
+2026-10-04T01:31:06.150409194Z Search ranking: query models ready in 7097 ms
+docker_mem=1.82GiB / 4GiB
+## E people index only  [GW_BENCH_SKIP=encoder,index,jevwarm,snapshot]
+listening_after_s=7.073486645
+first_page_request_s=0.216279 status=200
+probes=713  slowest (offset_s latency_s):
+2.481373357 0.872181;.707756694 0.435681;3.933513481 0.265327;1.980799225 0.170688;2.232303246 0.152678;5.211028823 0.142754;
+probes_over_100ms=6 over_500ms=1
+t=1791077608.548 uptime_s=76
+Rss: 608.5 MB  Pss_Anon: 546.9 MB  Pss_File: 61.4 MB  Anonymous: 546.9 MB  
+VmHWM:   622680 kB Threads: 15 
+thread DelayedTaskSche n=1 user_ticks=0 sys_ticks=0
+thread libuv-worker n=4 user_ticks=1 sys_ticks=5
+thread MainThread n=1 user_ticks=1162 sys_ticks=210
+thread SignalInspector n=1 user_ticks=0 sys_ticks=0
+thread tokio-runtime-w n=4 user_ticks=0 sys_ticks=0
+thread V8Worker n=4 user_ticks=321 sys_ticks=35
+2026-10-04T01:32:18.333361159Z [remix-serve] http://localhost:3000 (http://<ip>:3000)
+2026-10-04T01:32:19.564016982Z People index ready: 58546 people in 1350 ms
+2026-10-04T01:32:21.807951172Z Title snapshot 20261003T233732Z loaded: 237867 titles, 3000 in the reference pool, ratings for 51 countries, in 1452 ms (669 ms reading Redis)
+docker_mem=566.2MiB / 4GiB
+## F everything, as in production  []
+listening_after_s=4.189321940
+first_page_request_s=0.246494 status=200
+probes=883  slowest (offset_s latency_s):
+6.376118401 2.587843;2.501600495 1.041659;3.769227971 0.585878;1.959705532 0.329549;.531809143 0.283643;1.355634578 0.189983;
+probes_over_100ms=11 over_500ms=3
+t=1791077704.715 uptime_s=93
+Rss: 2351.4 MB  Pss_Anon: 2263.8 MB  Pss_File: 85.4 MB  Anonymous: 2263.8 MB  
+VmHWM:  2544488 kB Threads: 23 
+thread DelayedTaskSche n=1 user_ticks=0 sys_ticks=0
+thread libuv-worker n=4 user_ticks=90 sys_ticks=20
+thread MainThread n=1 user_ticks=1504 sys_ticks=248
+thread query-encoder n=8 user_ticks=517 sys_ticks=321
+thread SignalInspector n=1 user_ticks=0 sys_ticks=0
+thread tokio-runtime-w n=4 user_ticks=0 sys_ticks=0
+thread V8Worker n=4 user_ticks=685 sys_ticks=42
+2026-10-04T01:33:34.394521091Z [remix-serve] http://localhost:3000 (http://<ip>:3000)
+2026-10-04T01:33:35.383784553Z People index ready: 58544 people in 1092 ms
+2026-10-04T01:33:38.118669013Z Title snapshot 20261003T233732Z loaded: 237867 titles, 3000 in the reference pool, ratings for 51 countries, in 1690 ms (830 ms reading Redis)
+2026-10-04T01:33:43.533707705Z Search index build 20261003T041503Z loaded in 9070 ms
+2026-10-04T01:33:43.534791888Z Search ranking: query models ready in 9245 ms
+docker_mem=2.238GiB / 4GiB

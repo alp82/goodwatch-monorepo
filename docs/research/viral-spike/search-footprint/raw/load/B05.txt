@@ -1,0 +1,34 @@
+## B05 [PAGE_WARM_RATE=2 PAGE_MISS_RATE=2 DURATION=60 SEARCH_KIND=discover SEARCH_RATE=5 MISS_OFFSET=2250]
+wall_s=61.687097601
+resident_memory_bytes 2725748736
+heap_used_bytes 850317096
+event_loop_delay_seconds{quantile="0.5"} 0.0011845109999999992
+event_loop_delay_seconds{quantile="0.99"} 0.111137535
+event_loop_delay_seconds{quantile="max"} 0.219992831
+cpu_s libuv-worker 0.47 (1% of one core)
+cpu_s MainThread 37.90 (61% of one core)
+cpu_s query-encoder 74.97 (122% of one core)
+cpu_s V8Worker 8.39 (14% of one core)
+host_cpu_busy_pct=61 (4 cores)
+search outcomes (outcome, reason, ranker fallback): {('basic', 'configuration', 'basic search'): 301}
+stage total                  n=  301 p50=   121.0 p95=   248.0 max=   378.0
+stage ranking                n=  301 p50=    40.3 p95=   129.9 max=   185.6
+stage display                n=  301 p50=    47.3 p95=   110.4 max=   197.2
+stage titleLookup            n=  301 p50=     0.0 p95=     0.0 max=     0.0
+k6 dropped_iterations                     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:page_miss}     {"rate": 0, "count": 0}
+k6 dropped_iterations{kind:page_warm}     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:search}        {"count": 0, "rate": 0}
+k6 http_req_duration{expected_response:true} n=543 p50=   165.3 p95=   416.1 p99=   519.6 max=   842.4
+k6 http_req_duration{kind:page_miss}      n=121 p50=   365.6 p95=   497.7 p99=   605.4 max=   842.4
+k6 http_req_duration{kind:page_warm}      n=121 p50=   123.2 p95=   214.9 p99=   267.5 max=   286.2
+k6 http_req_duration{kind:search}         n=301 p50=   152.1 p95=   283.8 p99=   350.0 max=   424.5
+k6 http_req_failed{kind:page_miss}        failed=0 of 121
+k6 http_req_failed{kind:page_warm}        failed=0 of 121
+k6 http_req_failed{kind:search}           failed=0 of 301
+k6 http_req_waiting{kind:page_miss}       n=121 p50=   363.8 p95=   495.8 p99=   599.9 max=   839.2
+k6 http_req_waiting{kind:page_warm}       n=121 p50=   120.6 p95=   211.6 p99=   264.6 max=   280.7
+k6 http_req_waiting{kind:search}          n=301 p50=   151.0 p95=   283.4 p99=   346.6 max=   424.1
+k6 http_reqs                              {"count": 543, "rate": 9.0}
+k6 search_basic                           {"rate": 5.0, "count": 301}
+k6 search_server_elapsed_ms               {"p(90)": 220, "p(95)": 248, "p(99)": 310, "max": 378, "count": 301, "avg": 135.8, "med": 121}

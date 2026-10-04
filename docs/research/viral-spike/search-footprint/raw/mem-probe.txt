@@ -1,0 +1,37 @@
+t=1791077727.514 uptime_s=116
+Rss: 2351.4 MB  Pss_Anon: 2263.8 MB  Pss_File: 85.4 MB  Anonymous: 2263.8 MB  
+VmHWM:  2544488 kB Threads: 23 
+order ['english', 'multilingual']
+  bare node                                  10 ms  rss    46.1  anon     9.2  file   36.8  heap    4.2  ext    2.0
+  import onnxruntime-node                    55 ms  rss    55.8  anon    11.6  file   44.2  heap    4.7  ext    2.0
+  import @huggingface/tokenizers             22 ms  rss    56.8  anon    12.6  file   44.2  heap    5.0  ext    2.1
+  english: tokenizer                         95 ms  rss    75.0  anon    25.4  file   49.6  heap    8.4  ext    2.0
+  english: InferenceSession.create         2568 ms  rss   734.5  anon   666.9  file   67.6  heap    8.5  ext    2.0
+  english: 3 warm-up runs                    86 ms  rss   735.9  anon   667.2  file   68.6  heap    8.5  ext    2.1
+  multilingual: tokenizer                  1708 ms  rss   967.7  anon   899.0  file   68.8  heap  165.2  ext    2.0
+  multilingual: InferenceSession.create    3495 ms  rss  1324.3  anon  1299.1  file   25.2  heap  165.2  ext    2.0
+  multilingual: 3 warm-up runs              298 ms  rss  1330.3  anon  1299.8  file   30.5  heap  165.2  ext    2.1
+order ['multilingual', 'english']
+  bare node                                   7 ms  rss    44.9  anon     9.2  file   35.7  heap    4.2  ext    2.0
+  import onnxruntime-node                    91 ms  rss    54.3  anon    11.6  file   42.7  heap    4.7  ext    2.0
+  import @huggingface/tokenizers             21 ms  rss    55.2  anon    12.5  file   42.8  heap    5.0  ext    2.1
+  multilingual: tokenizer                  1856 ms  rss   328.2  anon   280.1  file   48.1  heap  161.7  ext    2.0
+  multilingual: InferenceSession.create    2662 ms  rss   882.8  anon   817.6  file   65.2  heap  161.7  ext    2.0
+  multilingual: 3 warm-up runs              285 ms  rss   884.7  anon   818.4  file   66.3  heap  161.8  ext    2.1
+  english: tokenizer                        254 ms  rss   887.7  anon   821.4  file   66.3  heap  165.2  ext    2.0
+  english: InferenceSession.create         1905 ms  rss  1505.9  anon  1439.6  file   66.3  heap  165.2  ext    2.0
+  english: 3 warm-up runs                   357 ms  rss  1506.3  anon  1440.0  file   66.3  heap  165.2  ext    2.1
+order ['english']
+  bare node                                   9 ms  rss    45.2  anon     9.2  file   36.0  heap    4.2  ext    2.0
+  import onnxruntime-node                    41 ms  rss    54.8  anon    11.7  file   43.1  heap    4.7  ext    2.0
+  import @huggingface/tokenizers             19 ms  rss    55.6  anon    12.5  file   43.1  heap    5.0  ext    2.1
+  english: tokenizer                        105 ms  rss    71.2  anon    25.3  file   45.9  heap    8.4  ext    2.0
+  english: InferenceSession.create         2025 ms  rss   527.7  anon   462.2  file   65.5  heap    8.5  ext    2.0
+  english: 3 warm-up runs                   102 ms  rss   529.0  anon   462.5  file   66.5  heap    8.5  ext    2.1
+order ['multilingual']
+  bare node                                   7 ms  rss    45.2  anon     9.2  file   35.9  heap    4.2  ext    2.0
+  import onnxruntime-node                    42 ms  rss    54.7  anon    11.7  file   43.0  heap    4.7  ext    2.0
+  import @huggingface/tokenizers             20 ms  rss    55.5  anon    12.5  file   43.1  heap    5.0  ext    2.1
+  multilingual: tokenizer                  1625 ms  rss   312.6  anon   264.2  file   48.4  heap  161.7  ext    2.0
+  multilingual: InferenceSession.create    2270 ms  rss   869.9  anon   804.4  file   65.5  heap  161.7  ext    2.0
+  multilingual: 3 warm-up runs              189 ms  rss   871.3  anon   804.7  file   66.6  heap  161.8  ext    2.1

@@ -1,0 +1,34 @@
+## B-warmup [DURATION=57 SEARCH_KIND=discover SEARCH_RATE=3]
+wall_s=57.859195017
+resident_memory_bytes 2228137984
+heap_used_bytes 340702480
+event_loop_delay_seconds{quantile="0.5"} 0.00023423900000000067
+event_loop_delay_seconds{quantile="0.99"} 0.010883839
+event_loop_delay_seconds{quantile="max"} 0.038163198999999995
+cpu_s libuv-worker 0.04 (0% of one core)
+cpu_s MainThread 6.41 (11% of one core)
+cpu_s query-encoder 39.39 (68% of one core)
+cpu_s V8Worker 2.32 (4% of one core)
+host_cpu_busy_pct=28 (4 cores)
+search outcomes (outcome, reason, ranker fallback): {('basic', 'configuration', 'basic search'): 171}
+stage total                  n=  171 p50=    97.0 p95=   154.0 max=   221.0
+stage ranking                n=  171 p50=    36.9 p95=    62.1 max=   104.1
+stage display                n=  171 p50=    41.4 p95=    60.3 max=    83.2
+stage titleLookup            n=  171 p50=     0.0 p95=     6.1 max=   123.9
+k6 dropped_iterations                     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:page_miss}     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:page_warm}     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:search}        {"count": 0, "rate": 0}
+k6 http_req_duration{expected_response:true} n=171 p50=   106.9 p95=   162.2 p99=   210.3 max=   227.3
+k6 http_req_duration{kind:page_miss}      n=0 p50=     0.0 p95=     0.0 p99=     0.0 max=     0.0
+k6 http_req_duration{kind:page_warm}      n=0 p50=     0.0 p95=     0.0 p99=     0.0 max=     0.0
+k6 http_req_duration{kind:search}         n=171 p50=   106.9 p95=   162.2 p99=   210.3 max=   227.3
+k6 http_req_failed{kind:page_miss}        failed=0 of 0
+k6 http_req_failed{kind:page_warm}        failed=0 of 0
+k6 http_req_failed{kind:search}           failed=0 of 171
+k6 http_req_waiting{kind:page_miss}       n=0 p50=     0.0 p95=     0.0 p99=     0.0 max=     0.0
+k6 http_req_waiting{kind:page_warm}       n=0 p50=     0.0 p95=     0.0 p99=     0.0 max=     0.0
+k6 http_req_waiting{kind:search}          n=171 p50=   106.4 p95=   161.6 p99=   209.8 max=   226.7
+k6 http_reqs                              {"count": 171, "rate": 3.0}
+k6 search_basic                           {"count": 171, "rate": 3.0}
+k6 search_server_elapsed_ms               {"p(95)": 150.5, "p(99)": 201.3, "max": 221, "count": 171, "avg": 100.9, "med": 97, "p(90)": 131}

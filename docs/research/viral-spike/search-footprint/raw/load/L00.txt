@@ -1,0 +1,27 @@
+## L00 [PAGE_WARM_RATE=2 PAGE_MISS_RATE=2 DURATION=60 SEARCH_KIND=discover SEARCH_RATE=0 MISS_OFFSET=0]
+wall_s=61.252785947
+resident_memory_bytes 2430693376
+heap_used_bytes 591060976
+event_loop_delay_seconds{quantile="0.5"} 0.0004472309999999993
+event_loop_delay_seconds{quantile="0.99"} 0.080859903
+event_loop_delay_seconds{quantile="max"} 0.119984895
+cpu_s libuv-worker 0.63 (1% of one core)
+cpu_s MainThread 31.89 (52% of one core)
+cpu_s V8Worker 6.48 (11% of one core)
+host_cpu_busy_pct=24 (4 cores)
+search outcomes (outcome, reason, ranker fallback): {}
+k6 dropped_iterations                     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:page_miss}     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:page_warm}     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:search}        {"count": 0, "rate": 0}
+k6 http_req_duration{expected_response:true} n=241 p50=   149.2 p95=   357.7 p99=   394.6 max=   417.7
+k6 http_req_duration{kind:page_miss}      n=120 p50=   304.5 p95=   370.3 p99=   398.7 max=   417.7
+k6 http_req_duration{kind:page_warm}      n=121 p50=    92.7 p95=   123.7 p99=   146.7 max=   192.0
+k6 http_req_duration{kind:search}         n=0 p50=     0.0 p95=     0.0 p99=     0.0 max=     0.0
+k6 http_req_failed{kind:page_miss}        failed=0 of 120
+k6 http_req_failed{kind:page_warm}        failed=0 of 121
+k6 http_req_failed{kind:search}           failed=0 of 0
+k6 http_req_waiting{kind:page_miss}       n=120 p50=   300.5 p95=   368.4 p99=   396.1 max=   414.0
+k6 http_req_waiting{kind:page_warm}       n=121 p50=    90.0 p95=   119.5 p99=   143.3 max=   186.6
+k6 http_req_waiting{kind:search}          n=0 p50=     0.0 p95=     0.0 p99=     0.0 max=     0.0
+k6 http_reqs                              {"count": 241, "rate": 4.0}
