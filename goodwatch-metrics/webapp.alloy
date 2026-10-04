@@ -1,4 +1,6 @@
-// Loaded only on the webapp host by the Compose override.
+// Loaded only on hosts that run a webapp instance, by the Compose override. Each host's Alloy scrapes the instance
+// on its own coolify network. VPS_INSTANCE_NAME in .env becomes the instance and host labels, which tell the
+// instances apart.
 prometheus.scrape "webapp" {
 	targets         = [{"__address__" = coalesce(env("WEBAPP_METRICS_TARGET"), "goodwatch-webapp:9464")}]
 	scrape_interval = "15s"

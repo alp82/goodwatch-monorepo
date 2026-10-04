@@ -1,4 +1,5 @@
-# Use only on abio, where Coolify supplies the goodwatch-webapp network alias.
+# Use only on hosts that run a webapp instance (abio, vector1), where Coolify supplies the goodwatch-webapp network
+# alias on the coolify network. Each host's Alloy scrapes its own instance.
 # docker compose -f docker-compose.yml -f docker-compose.webapp.yml up -d grafana-alloy
 services:
   grafana-alloy:

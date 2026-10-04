@@ -228,6 +228,39 @@ goodwatch_process_event_loop_delay_seconds{job="goodwatch_webapp", quantile="0.9
 up{job="goodwatch_webapp"}
 ```
 
+### Two instances
+
+Each webapp instance is scraped by the Alloy on its own host, and its series carry that host's `VPS_INSTANCE_NAME` as the `instance` and `host` labels (`gw-abio`, `gw-vector1`). Counters and histograms are per process. What that means for the queries above:
+
+- **Rates, ratios, and percentiles work as written.** Every query that starts with `sum(...)`, `sum by (route) (...)`, `sum by (cache) (...)`, or `histogram_quantile(..., sum by (le, ...) (...))` already adds the instances up, because `instance` isn't in the `by` list. The result is the site's number.
+- **Add `instance` to the `by` list to compare the instances**, for example to see whether the proxy balances evenly or whether one host is slower:
+
+```promql
+sum by (instance) (rate(goodwatch_http_responses_total{job="goodwatch_webapp"}[5m]))
+
+histogram_quantile(0.95, sum by (le, instance) (rate(goodwatch_http_request_duration_seconds_bucket{job="goodwatch_webapp", audience="anon"}[5m])))
+
+sum by (instance, cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result="hit"}[5m]))
+/
+sum by (instance, cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result!="bypass"}[5m]))
+```
+
+- **Gauges return one series per instance.** Read them per instance, or aggregate them on purpose:
+
+| Query | With two instances |
+| --- | --- |
+| `goodwatch_http_requests_in_flight`, `goodwatch_data_cache_in_flight` | `sum(...)` for the site, plain for each process. |
+| `goodwatch_redis_breaker_open_nodes` | `max(...)`: each process has its own breakers, and one open breaker is enough to look. |
+| `goodwatch_redis_client_ready` | `min(...)`: zero when any process has no client. |
+| `goodwatch_process_resident_memory_bytes`, `goodwatch_process_heap_used_bytes` | Per instance. A sum is the footprint across hosts, which no single host has. |
+| `goodwatch_process_event_loop_delay_seconds{quantile="0.99"}` | Per instance, or `max(...)`. Never average quantiles. |
+| `goodwatch_process_uptime_seconds`, `goodwatch_build_info` | Per instance. Two different `commit` values mean a deploy is between the two hosts: `count(count by (commit) (goodwatch_build_info{job="goodwatch_webapp"})) > 1`. |
+| `up{job="goodwatch_webapp"}` | Per instance. `sum(...)` is the number of instances that answer the scrape. |
+
+- **Breaker events** (`goodwatch_redis_breaker_events_total`) add up across instances in `sum by (node, event)`. Each process opens and closes its own breaker, so one node outage shows two `opened` events.
+- **The series count doubles**: `count({job="goodwatch_webapp"})` counts both instances. Check it against the tenant's limit after the second instance starts.
+- **The page cache formula** keeps working: its numerator sums the responses of all instances.
+
 ### Page cache hit ratio
 
 No HTTP page cache exists yet. Two numbers stand in for it today, and one formula is ready for the day a cache layer exists.
@@ -264,7 +297,7 @@ Add the cache layer's exporter as one more scrape target in `goodwatch-metrics/w
 
 ## How the scrape is deployed
 
-`goodwatch-metrics/config.alloy` and `docker-compose.yml` are the same on all hosts. abio adds two files:
+`goodwatch-metrics/config.alloy` and `docker-compose.yml` are the same on all hosts. A host that runs a webapp instance (abio, and vector1 for the second instance) adds two files:
 
 - `webapp.alloy` scrapes `goodwatch-webapp:9464` (override with `WEBAPP_METRICS_TARGET`) and forwards to the remote write of `config.alloy`.
 - `docker-compose.webapp.yml` mounts that file, starts Alloy with the directory so that both files load, and attaches Alloy to the `coolify` network.
@@ -280,7 +313,23 @@ docker compose up -d grafana-alloy
 docker logs --since 2m grafana-alloy 2>&1 | grep -iE 'level=error|webapp'
 ```
 
-`COMPOSE_FILE` in `.env` makes every later `docker compose` command on abio use both files. To check the endpoint from the host without Grafana:
+`COMPOSE_FILE` in `.env` makes every later `docker compose` command on abio use both files.
+
+On vector1, the checkout is at an old commit with local changes, so check the two files out one by one instead of pulling:
+
+```sh
+cd /root/goodwatch/goodwatch-monorepo
+git fetch origin main
+git checkout FETCH_HEAD -- goodwatch-metrics/webapp.alloy goodwatch-metrics/docker-compose.webapp.yml
+cd goodwatch-metrics
+grep -q '^COMPOSE_FILE=' .env || echo 'COMPOSE_FILE=docker-compose.yml:docker-compose.webapp.yml' >> .env
+docker compose up -d grafana-alloy
+docker logs --since 2m grafana-alloy 2>&1 | grep -iE 'level=error|webapp'
+```
+
+Coolify gives the container on every server the same alias, so the target is `goodwatch-webapp:9464` on both hosts. While no instance runs on a host, the name doesn't resolve: Alloy logs nothing at its `info` level and reports `up{job="goodwatch_webapp"}` as 0 for that host. The scrape starts by itself with the first deploy.
+
+To check the endpoint from the host without Grafana:
 
 ```sh
 # Inside the webapp container: does the process serve metrics?
