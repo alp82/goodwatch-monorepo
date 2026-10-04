@@ -1,136 +1,105 @@
 import React, { useMemo } from "react"
+import { useRelatedPanel } from "~/routes/api.related"
+import type { DiscoverResults } from "~/server/discover.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import { useRelatedMovies, useRelatedShows } from "~/routes/api.related"
+import ListSwiperSkeleton from "~/ui/ListSwiperSkeleton"
 import MovieTvSwiper from "~/ui/explore/MovieTvSwiper"
 import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
-import ListSwiperSkeleton from "~/ui/ListSwiperSkeleton"
+import { type RelatedCard, relatedPanelParams } from "~/utils/related-panel"
 
 export interface RelatedTitlesProps {
-    media: MovieResult | ShowResult
-	fingerprintKey?: string
+	media: MovieResult | ShowResult
+	/** "overall", or one of the title's fingerprint highlight keys. */
+	panelKey: string
 }
 
-// Skeleton now mirrors ListSwiper dimensions
+const NO_CARDS: RelatedCard[] = []
 
 // Empty state with consistent height
 function EmptyRelatedState() {
+	return <div className="h-[170px] flex items-center justify-center" />
+}
+
+function RelatedSwiper({
+	title,
+	mediaType,
+	cards,
+	isLoading,
+}: {
+	title: string
+	mediaType: "movie" | "show"
+	cards: RelatedCard[]
+	isLoading: boolean
+}) {
+	// A card reads the same few fields from a related title as from a discover result.
+	const results = useMemo(
+		() =>
+			cards.map((card) => ({
+				...card,
+				media_type: mediaType,
+			})) as unknown as DiscoverResults,
+		[cards, mediaType],
+	)
+	const hasResults = !isLoading && results.length > 0
+	const isEmpty = !isLoading && results.length === 0
+
 	return (
-		<div className="h-[170px] flex items-center justify-center">
-			{/* Empty state - could add message if needed */}
+		<div className="mt-6">
+			<h3 className="flex items-center gap-2 text-xl font-bold">{title}</h3>
+			<div>
+				{/* The skeleton has the height of a row of cards, so the page doesn't move when the cards arrive. */}
+				{isLoading && <ListSwiperSkeleton />}
+				{isEmpty && <EmptyRelatedState />}
+				{hasResults && <MovieTvSwiper results={results} />}
+			</div>
 		</div>
 	)
 }
 
-function RelatedSwiper({
-    title,
-    results,
-    isLoading,
-}: {
-    title: string
-    results: any[]
-    isLoading: boolean
-}) {
-    const hasResults = !isLoading && results.length > 0
-    const isEmpty = !isLoading && results.length === 0
+/** The selected panel of the related titles section: its description, and a row each of movies and shows. */
+export default function RelatedTitles({ media, panelKey }: RelatedTitlesProps) {
+	const { mediaType } = media
 
-    return (
-        <div className="mt-6">
-            <h3 className="flex items-center gap-2 text-xl font-bold">
-                {title}
-            </h3>
-            <div>
-                {isLoading && <ListSwiperSkeleton />}
-                {isEmpty && <EmptyRelatedState />}
-                {hasResults && <MovieTvSwiper results={results} />}
-            </div>
-        </div>
-    )
-}
+	// The default panel's data comes with the document. Any other panel is one request, made
+	// when its tab shows intent or gets selected, and kept for the rest of the visit.
+	const panel = useRelatedPanel(relatedPanelParams(media, panelKey))
+	const isLoading = panel.isPending
 
-export default function RelatedTitles({ media, fingerprintKey }: RelatedTitlesProps) {
-	const { mediaType, details, fingerprint } = media
-    
-	const sourceFingerprintScore = fingerprintKey ? fingerprint.scores[fingerprintKey as keyof typeof fingerprint.scores] : undefined
+	const meta = getFingerprintMeta(panelKey)
 
-    const relatedMovies = useRelatedMovies({
-		tmdbId: details.tmdb_id,
-		fingerprintKey,
-		sourceFingerprintScore,
-		sourceMediaType: mediaType,
-	})
+	const movieSwiper = (
+		<RelatedSwiper
+			key="movies"
+			title="Movies"
+			mediaType="movie"
+			cards={panel.data?.movies ?? NO_CARDS}
+			isLoading={isLoading}
+		/>
+	)
+	const showSwiper = (
+		<RelatedSwiper
+			key="shows"
+			title="Shows"
+			mediaType="show"
+			cards={panel.data?.shows ?? NO_CARDS}
+			isLoading={isLoading}
+		/>
+	)
 
-	const relatedShows = useRelatedShows({
-		tmdbId: details.tmdb_id,
-		fingerprintKey,
-		sourceFingerprintScore,
-		sourceMediaType: mediaType,
-	})
-
-	// Transform related results to match MovieTvSwiper expected format
-	const movieResults = useMemo(() => {
-		return relatedMovies.data?.map(movie => ({
-			...movie,
-			media_type: "movie" as const,
-		})) ?? []
-	}, [relatedMovies.data])
-
-	const showResults = useMemo(() => {
-		return relatedShows.data?.map(show => ({
-			...show,
-			media_type: "show" as const,
-		})) ?? []
-	}, [relatedShows.data])
-
-    // Meta for fingerprint key (fallback to overall when undefined)
-    const meta = getFingerprintMeta(fingerprintKey ?? "overall")
-
-    // Reorder so that top 4 by voting_count come first, rest keep original order
-    const reorderTopByVotes = <T extends { tmdb_id: number; goodwatch_overall_score_voting_count?: number }>(items: T[]): T[] => {
-        if (!items?.length) return items
-        const sortedByVotesDesc = [...items].sort(
-            (a, b) => (b.goodwatch_overall_score_voting_count ?? 0) - (a.goodwatch_overall_score_voting_count ?? 0),
-        )
-        const top = sortedByVotesDesc.slice(0, 2)
-        const topIds = new Set(top.map((x) => x.tmdb_id))
-        const rest = items.filter((x) => !topIds.has(x.tmdb_id))
-        return [...top, ...rest]
-    }
-
-    const movieResultsReordered = useMemo(() => reorderTopByVotes(movieResults), [movieResults])
-    const showResultsReordered = useMemo(() => reorderTopByVotes(showResults), [showResults])
-
-    const swipers = useMemo(() => {
-        const movieSwiper = (
-            <RelatedSwiper
-                key="movies"
-                title="Movies"
-                results={movieResultsReordered}
-                isLoading={relatedMovies.isLoading || relatedMovies.isFetching}
-            />
-        )
-        const showSwiper = (
-            <RelatedSwiper
-                key="shows"
-                title="Shows"
-                results={showResultsReordered}
-                isLoading={relatedShows.isLoading || relatedShows.isFetching}
-            />
-        )
-        return mediaType === "movie" ? [movieSwiper, showSwiper] : [showSwiper, movieSwiper]
-    }, [mediaType, movieResultsReordered, showResultsReordered, relatedMovies.isLoading, relatedMovies.isFetching, relatedShows.isLoading, relatedShows.isFetching])
-
-    return (
-        <div className="flex flex-col gap-4">
-            <div className="my-1">
-                <p className="mt-2 text-xl text-gray-300">
-                    <span className="flex items-center gap-2 text-xl">
-                        <span aria-hidden>{meta.emoji}</span>
-                        <span className="font-bold">{meta.label}: </span>
-                        {meta.description}
-                    </span>
-                </p>
-            </div>
-            {swipers}
-        </div>
-    )
+	return (
+		<div className="flex flex-col gap-4" aria-busy={isLoading}>
+			<div className="my-1">
+				<p className="mt-2 text-xl text-gray-300">
+					<span className="flex items-center gap-2 text-xl">
+						<span aria-hidden>{meta.emoji}</span>
+						<span className="font-bold">{meta.label}: </span>
+						{meta.description}
+					</span>
+				</p>
+			</div>
+			{mediaType === "movie"
+				? [movieSwiper, showSwiper]
+				: [showSwiper, movieSwiper]}
+		</div>
+	)
 }

@@ -5,9 +5,11 @@ import {
 } from "@tanstack/react-query"
 import { cached } from "~/utils/cache"
 import {
-	getQueryKeyRelatedMovies,
-	getQueryKeyRelatedShows,
-} from "~/utils/related-query-keys"
+	type RelatedPanel,
+	type RelatedPanelParams,
+	getQueryKeyRelatedPanel,
+	toRelatedPanel,
+} from "~/utils/related-panel"
 import { MEDIA_COLLECTION, recommend, makePointId } from "~/utils/qdrant"
 import type { AllRatings } from "~/utils/ratings"
 import {
@@ -107,12 +109,36 @@ export const getRelatedShows = async (params: RelatedShowParams) => {
 }
 
 /**
- * Prefetches the default ("overall") related movies and shows for a title page
- * and returns them as dehydrated query state for the loader. The title page
- * then server-renders real links to related titles, and the client hooks start
- * with this data instead of refetching. The query doesn't depend on the user,
- * so every visitor, including crawlers, gets the same sets. A failed query is
- * logged and left out, so the page still renders and the client retries.
+ * One panel of a title page's related titles section: the movies and the shows, as cards in
+ * display order. Both lookups run in parallel, and each has its own data cache entry. The
+ * result doesn't depend on the viewer.
+ */
+export const getRelatedPanel = async ({
+	tmdbId,
+	sourceMediaType,
+	fingerprintKey,
+	sourceFingerprintScore,
+}: RelatedPanelParams): Promise<RelatedPanel> => {
+	const params = {
+		tmdb_id: tmdbId,
+		fingerprint_key: fingerprintKey,
+		source_fingerprint_score: sourceFingerprintScore,
+		source_media_type: sourceMediaType,
+	}
+	const [movies, shows] = await Promise.all([
+		getRelatedMovies(params),
+		getRelatedShows(params),
+	])
+	return toRelatedPanel({ movies, shows })
+}
+
+/**
+ * Prefetches the default ("overall") panel of related titles for a title page and returns it
+ * as dehydrated query state for the loader. The title page then server-renders real links to
+ * related titles, and the client hook starts with this data instead of requesting it. Only the
+ * fields a card shows are embedded in the HTML. The query doesn't depend on the user, so every
+ * visitor, including crawlers, gets the same panel. A failed lookup is logged and left out, so
+ * the page still renders and the browser requests the panel.
  */
 export const prefetchRelatedTitlesState = async ({
 	tmdbId,
@@ -124,40 +150,19 @@ export const prefetchRelatedTitlesState = async ({
 	const queryClient = new QueryClient()
 	if (!Number.isSafeInteger(tmdbId)) return dehydrate(queryClient)
 
-	const keyParams = { tmdbId, sourceMediaType }
-	const params = { tmdb_id: tmdbId, source_media_type: sourceMediaType }
-	const logFailure = (target: string) => (error: unknown) => {
-		console.error("Related titles prefetch failed", {
-			target,
-			tmdbId,
-			sourceMediaType,
-			error: error instanceof Error ? error.message : error,
-		})
-		throw error
-	}
-
-	// The cards don't read streaming_availability, and it's about half of the
-	// payload that gets embedded in the HTML.
-	const withoutStreaming = <T extends RelatedMovie | RelatedShow>(
-		titles: T[],
-	) => titles.map(({ streaming_availability, ...title }) => title)
-
-	await Promise.all([
-		queryClient.prefetchQuery({
-			queryKey: getQueryKeyRelatedMovies(keyParams),
-			queryFn: () =>
-				getRelatedMovies(params)
-					.then(withoutStreaming)
-					.catch(logFailure("movies")),
-		}),
-		queryClient.prefetchQuery({
-			queryKey: getQueryKeyRelatedShows(keyParams),
-			queryFn: () =>
-				getRelatedShows(params)
-					.then(withoutStreaming)
-					.catch(logFailure("shows")),
-		}),
-	])
+	const params = { tmdbId, sourceMediaType }
+	await queryClient.prefetchQuery({
+		queryKey: getQueryKeyRelatedPanel(params),
+		queryFn: () =>
+			getRelatedPanel(params).catch((error: unknown) => {
+				console.error("Related titles prefetch failed", {
+					tmdbId,
+					sourceMediaType,
+					error: error instanceof Error ? error.message : error,
+				})
+				throw error
+			}),
+	})
 
 	return dehydrate(queryClient)
 }

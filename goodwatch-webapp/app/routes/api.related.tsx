@@ -8,18 +8,27 @@ import {
 	type RelatedMovie,
 	type RelatedShow,
 	getRelatedMovies,
+	getRelatedPanel,
 	getRelatedShows,
 } from "~/server/related.server"
-import type { MediaType } from "~/server/utils/query-db"
 import { isValidFingerprintKey } from "~/server/utils/fingerprint"
+import type { MediaType } from "~/server/utils/query-db"
 import {
-	getQueryKeyRelatedMovies,
-	getQueryKeyRelatedShows,
-} from "~/utils/related-query-keys"
+	type RelatedPanel,
+	type RelatedPanelParams,
+	relatedPanelQueryOptions,
+} from "~/utils/related-panel"
 
 export type GetRelatedMoviesResult = RelatedMovie[]
 export type GetRelatedShowsResult = RelatedShow[]
+export type GetRelatedPanelResult = RelatedPanel
 
+const isMediaType = (value: string | null): value is MediaType =>
+	value === "movie" || value === "show"
+
+// Without `mediaType`, the answer is one panel of a title page's related titles section: the
+// movies and the shows as cards, in one request. With `mediaType`, it is the full list of that
+// type, which pages rendered before the panel request existed still ask for.
 export const loader: LoaderFunction = async ({
 	request,
 }: LoaderFunctionArgs) => {
@@ -27,10 +36,10 @@ export const loader: LoaderFunction = async ({
 	const tmdbId = url.searchParams.get("tmdbId")
 	const fingerprintKey = url.searchParams.get("fingerprintKey")
 	const sourceFingerprintScore = url.searchParams.get("sourceFingerprintScore")
-	const mediaType = url.searchParams.get("mediaType") as MediaType
-	const sourceMediaType = url.searchParams.get("sourceMediaType") as MediaType
+	const mediaType = url.searchParams.get("mediaType")
+	const sourceMediaType = url.searchParams.get("sourceMediaType")
 
-	if (!tmdbId || !mediaType || !sourceMediaType) {
+	if (!tmdbId || !sourceMediaType) {
 		throw new Response("Missing required parameters", { status: 400 })
 	}
 
@@ -38,101 +47,43 @@ export const loader: LoaderFunction = async ({
 		throw new Response("Invalid fingerprint key", { status: 400 })
 	}
 
+	if (!mediaType) {
+		if (!isMediaType(sourceMediaType) || !/^\d+$/.test(tmdbId)) {
+			throw new Response("Invalid parameters", { status: 400 })
+		}
+		const panel = await getRelatedPanel({
+			tmdbId: Number.parseInt(tmdbId),
+			sourceMediaType,
+			fingerprintKey: fingerprintKey || undefined,
+			sourceFingerprintScore: sourceFingerprintScore
+				? Number.parseFloat(sourceFingerprintScore)
+				: undefined,
+		})
+		return json<GetRelatedPanelResult>(panel)
+	}
+
 	const params = {
-		tmdb_id: parseInt(tmdbId),
+		tmdb_id: Number.parseInt(tmdbId),
 		fingerprint_key: fingerprintKey || undefined,
 		source_fingerprint_score: sourceFingerprintScore
-			? parseFloat(sourceFingerprintScore)
+			? Number.parseFloat(sourceFingerprintScore)
 			: undefined,
-		source_media_type: sourceMediaType,
+		source_media_type: sourceMediaType as MediaType,
 	}
 
 	if (mediaType === "movie") {
 		const movies = await getRelatedMovies(params)
 		return json<GetRelatedMoviesResult>(movies)
-	} else if (mediaType === "show") {
+	}
+	if (mediaType === "show") {
 		const shows = await getRelatedShows(params)
 		return json<GetRelatedShowsResult>(shows)
-	} else {
-		throw new Response("Invalid media type", { status: 400 })
 	}
+	throw new Response("Invalid media type", { status: 400 })
 }
 
-// Query hooks
+// Query hook
 
-export {
-	queryKeyRelatedMovies,
-	queryKeyRelatedShows,
-} from "~/utils/related-query-keys"
-
-export interface UseRelatedMoviesParams {
-	tmdbId: number
-	fingerprintKey?: string
-	sourceFingerprintScore?: number
-	sourceMediaType: MediaType
-}
-
-export interface UseRelatedShowsParams {
-	tmdbId: number
-	fingerprintKey?: string
-	sourceFingerprintScore?: number
-	sourceMediaType: MediaType
-}
-
-export const useRelatedMovies = ({
-	tmdbId,
-	fingerprintKey,
-	sourceFingerprintScore,
-	sourceMediaType,
-}: UseRelatedMoviesParams) => {
-	const url = new URL("/api/related", "https://goodwatch.app")
-	url.searchParams.append("tmdbId", tmdbId.toString())
-	if (fingerprintKey) url.searchParams.append("fingerprintKey", fingerprintKey)
-	if (sourceFingerprintScore !== undefined)
-		url.searchParams.append(
-			"sourceFingerprintScore",
-			sourceFingerprintScore.toString(),
-		)
-	url.searchParams.append("mediaType", "movie")
-	url.searchParams.append("sourceMediaType", sourceMediaType)
-
-	return useQuery<GetRelatedMoviesResult>({
-		queryKey: getQueryKeyRelatedMovies({
-			tmdbId,
-			fingerprintKey,
-			sourceFingerprintScore,
-			sourceMediaType,
-		}),
-		queryFn: async () => await (await fetch(url.pathname + url.search)).json(),
-		placeholderData: (previousData) => previousData,
-	})
-}
-
-export const useRelatedShows = ({
-	tmdbId,
-	fingerprintKey,
-	sourceFingerprintScore,
-	sourceMediaType,
-}: UseRelatedShowsParams) => {
-	const url = new URL("/api/related", "https://goodwatch.app")
-	url.searchParams.append("tmdbId", tmdbId.toString())
-	if (fingerprintKey) url.searchParams.append("fingerprintKey", fingerprintKey)
-	if (sourceFingerprintScore !== undefined)
-		url.searchParams.append(
-			"sourceFingerprintScore",
-			sourceFingerprintScore.toString(),
-		)
-	url.searchParams.append("mediaType", "show")
-	url.searchParams.append("sourceMediaType", sourceMediaType)
-
-	return useQuery<GetRelatedShowsResult>({
-		queryKey: getQueryKeyRelatedShows({
-			tmdbId,
-			fingerprintKey,
-			sourceFingerprintScore,
-			sourceMediaType,
-		}),
-		queryFn: async () => await (await fetch(url.pathname + url.search)).json(),
-		placeholderData: (previousData) => previousData,
-	})
-}
+/** One panel of related titles. The default panel's data comes with the document. */
+export const useRelatedPanel = (params: RelatedPanelParams) =>
+	useQuery<GetRelatedPanelResult>(relatedPanelQueryOptions(params))
