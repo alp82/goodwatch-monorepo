@@ -94,12 +94,6 @@ export const links: LinksFunction = () => [
 	},
 	{
 		rel: "preload",
-		as: "image",
-		fetchpriority: "high",
-		href: "https://image.tmdb.org/t/p/w780/gqby0RhyehP3uRrzmdyUZ0CgPPe.jpg",
-	},
-	{
-		rel: "preload",
 		as: "style",
 		href: "https://fonts.googleapis.com/css2?family=Gabarito:wght@700&display=swap",
 	},
