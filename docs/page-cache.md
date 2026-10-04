@@ -102,8 +102,9 @@ A response is stored only when all of these hold:
   When the lookup runs out of time or fails, the page has no embedded panel. The loader then answers
   `Cache-Control: no-store`, which the page headers turn into `private, no-store`. The page cache and a cache in front
   both follow it. The lookup keeps running and fills the data cache, so the next render is complete.
-- **Share list pages** are stored only for anonymous visitors to a public list. Their lifetime is 10 seconds fresh
-  and 10 more seconds stale. Hidden lists and member views send `private, no-store`.
+- **Share list and profile pages** are stored only for anonymous visitors, and a list page only for a public list.
+  Their lifetime is 10 seconds fresh and 10 more seconds stale. Hidden lists and member views send
+  `private, no-store`.
 - **The stored bytes:** the HTML compressed once with Brotli (quality 5) and once with gzip (level 6), on the thread
   pool, after the response of the render. The uncompressed HTML isn't kept. A client that accepts neither encoding
   gets the gzip copy decompressed on the thread pool.
@@ -157,21 +158,25 @@ recently used page goes first. The process holds about 2.2 GB today, against a p
   and stops renders in flight for those paths from storing.
 - `resetListView` calls it for `/u/<handle>/lists/<id>` before and after the data reset. The first call cancels
   in-flight renders early. The second removes any page built while the old data was still readable.
+- `resetProfileViews` does the same for the owner's profile page, `/u/<handle>`. Every write to a list calls it
+  through `resetListView`.
 - A reset reaches only its own process. With two instances, the other instance keeps its copy until the lifetime
   ends. The data cache's reset markers ([ADR 0006](adr/0006-reset-markers-for-the-data-cache.md)) make the data
   under a page correct in every process, but a stored page can't check a marker without a network read per hit.
-- For share list pages, the 10 + 10 second lifetime bounds the old page in the other process. The reset clears only
-  the writing process. There is no reset log or pub/sub.
+- For share list and profile pages, the 10 + 10 second lifetime bounds the old page in the other process. The reset
+  clears only the writing process. There is no reset log or pub/sub.
 - A deploy and a feature flag change restart the process, which empties the cache.
 
 ## Share list pages
 
 The owner accepts at most 60 seconds of old anonymous HTML after an edit, hide, or delete, across all cache layers
-and both webapp processes. Lifetimes provide the bound even when a reset is lost:
+and both webapp processes. The rule covers the list page, `/u/<handle>/lists/<id>`, and the profile page,
+`/u/<handle>`, which shows a person's public lists. Lifetimes provide the bound even when a reset is lost:
 
 - **Layers:** each process has a page cache with 10 seconds fresh and 10 seconds stale, counted from the render's
-  start. The view data cache in Valkey is shared by all processes, with 10 seconds fresh and 10 seconds stale.
-  It has no in-process copy: every lookup reads Valkey. Crate supplies the rows.
+  start. The data caches in Valkey are shared by all processes, with 10 seconds fresh and 10 seconds stale:
+  `share-list-view-v1` for a list page and `share-profile-page-v1` for a profile page. They have no in-process
+  copy: every lookup reads Valkey. Crate supplies the rows.
 - **Confirmed reset:** after `REFRESH TABLE`, the reset script deletes the value and writes a marker in one step in
   Valkey. Every subsequent lookup in every process misses the old value and reads Crate, or a new value read from
   Crate. A run that started before the reset cannot store because of the marker check, and later lookups cannot join
@@ -183,6 +188,10 @@ and both webapp processes. Lifetimes provide the bound even when a reset is lost
 - **Hidden and deleted lists:** an unlisted list answers `private, no-store` and is never stored. A deleted list
   answers 404 and is never stored. A background refresh that gets a 404 or redirect deletes the stored page.
   A refresh that gets a private 200 keeps the previously public stale page only until its 20-second deadline.
+- **Profile pages:** the anonymous profile page shows public lists only, and is stored with the same lifetime. A
+  hidden or deleted list leaves it under the same bound as an edit. Until the ticket "Bound the staleness of share
+  profile pages and test the unlisted branch", the profile page was `private, no-store` for everyone and its data
+  cache lived 5 minutes fresh and 5 minutes stale, so a hidden list could stay on it for 10 minutes.
 - **Members:** the owner and other members bypass the page cache and read the data cache, which the reset emptied.
   The owner sees the edit at once.
 - **A cache in front:** it must honor `s-maxage=10, stale-while-revalidate=10` and the `Age` sent by the in-process
@@ -199,6 +208,26 @@ in [viral-spike-page-cache.md](benchmarks/viral-spike-page-cache.md)):
 
 The reset reaches the other process with its next lookup, because the value is gone from Valkey. Under steady
 traffic a stored page is replaced when its 10 fresh seconds end, so the old page leaves earlier than the bound.
+
+Measured again on October 5, 2026, for the profile page and for a hide and a delete: a development machine, two
+processes of a local production build on one throwaway Valkey, requests every 0.1 seconds, three rounds each.
+Nothing was written to Crate. The old state, or the new one, was planted in Valkey, as in the first measurement.
+
+| Case | Last old anonymous page, either process | After that |
+| --- | --- | --- |
+| Profile page with a list that was hidden since, the reset script runs | 4.7 to 8.2 seconds after the reset | A member's request shows the new page 0.2 seconds after the reset |
+| Profile page with a list that was hidden since, no reset | 20.7 to 25.8 seconds after the edit | |
+| List page, the list is hidden and the new view is readable at once | 12.1 to 19.6 seconds | Every answer is `private, no-store` and a miss |
+| List page, the list is deleted and the new view is readable at once | 5.3 to 9.8 seconds | Every answer is 404 with `private, no-store` |
+| List page of an unlisted list, 600 requests as anonymous visitors and as a member | None | Every answer is `private, no-store`. None came from the store |
+
+A hidden list's page stays longer than a deleted one's: the background refresh gets a private 200 and keeps the
+public stale page until its 20-second deadline, while a 404 deletes it.
+
+Not verified in a running instance: an edit, a hide, and a delete by a signed-in owner, which need a real session.
+Tests cover that every write resets the list view, both profile caches, and the stored pages
+(`app/server/share-lists/view.test.ts`), and what each loader answers to whom
+(`app/server/share-lists/page-loaders.test.ts`).
 
 ## How to turn it off
 

@@ -46,15 +46,15 @@ the final status.
 | --- | --- | --- | --- |
 | Anonymous, GET or HEAD, status 200, with a valid identity header | `public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400` | `GW-Cache-Identity` | The key |
 | Anonymous, GET or HEAD, status 200, no identity header | `private, max-age=0` | `Accept-Language` | The key |
-| Anonymous public share list, status 200, with a valid identity header | `public, max-age=0, s-maxage=10, stale-while-revalidate=10` | `GW-Cache-Identity` | The key |
+| Anonymous public share list or share profile page, status 200, with a valid identity header | `public, max-age=0, s-maxage=10, stale-while-revalidate=10` | `GW-Cache-Identity` | The key |
 | Member | `private, no-store` | none | none |
 | Any status other than 200: errors, not-found pages, error boundaries | `private, no-store` | none | none |
 | A response that sets a cookie, a method other than GET or HEAD, or a route that says `private` or `no-store` (hidden share lists, search, settings) | `private, no-store` | none | none |
 | A title page without its embedded related panel, genre links, or collection (a lookup ran out of its budget or failed) | `private, no-store` | none | none |
 | Anonymous `_data` response of a loader that sets no `Cache-Control` | unchanged (none) | unchanged | none |
 
-A route can shorten the shared policy. Public share lists without an identity header use the anonymous keyed policy
-above. Hidden lists and all member views stay `private, no-store`.
+A route can shorten the shared policy. Public share lists and profile pages without an identity header use the
+anonymous keyed policy above. Hidden lists and all member views stay `private, no-store`.
 
 Compression adds `Accept-Encoding` to `Vary`. No response of the app varies on `Cookie`, except the gate's 403 and
 410, which are `private, no-store`.
@@ -131,8 +131,9 @@ a request with the auth cookie. `Accept-Encoding` in `Vary` comes from compressi
 | Files from `public/` and `/assets/` | Set by the static file handler | unchanged | unchanged |
 
 After this change (October 4, 2026), anonymous public share list pages use 10 seconds fresh and 10 seconds stale
-with an identity header, or `private, max-age=0` with the identity key without it. Hidden lists and member views
-stay `private, no-store`. The measured inventory above records the earlier behavior.
+with an identity header, or `private, max-age=0` with the identity key without it. Since October 5, 2026, anonymous
+share profile pages (`/u/<handle>`) do the same. Hidden lists and member views stay `private, no-store`. The
+measured inventory above records the earlier behavior.
 
 Where each header is set:
 
@@ -141,7 +142,7 @@ Where each header is set:
 | `app/utils/auth.ts`, `getAuthFromRequest` | The root loader's `Cache-Control`: private with the auth cookie, the shared policy without. It only says whether the route allows sharing. |
 | `app/utils/headers.ts`, `pageHeaders` | Every page's `headers` export. A child can shorten the shared lifetime but cannot replace the root's private policy. `Set-Cookie` or `private` anywhere forces `private, no-store`. |
 | `app/entry.server.tsx` | `applyCachePolicy` on every document, with the final status, and on every `_data` response through `handleDataRequest`. This is the last word. |
-| Route loaders | `private, no-store` on hidden share lists, member list views, search, settings, and member data. Anonymous public share lists use the 10 + 10 second policy. Their own public lifetimes on `/api/related`, `/api/title-cast`, and OG images. |
+| Route loaders | `private, no-store` on hidden share lists, member list and profile views, search, settings, and member data. Anonymous public share lists and profile pages use the 10 + 10 second policy. Their own public lifetimes on `/api/related`, `/api/title-cast`, and OG images. |
 | `app/server/browser-gate.server.ts` | The 403, 410, and crawler 301, before Express and Remix. |
 | `remix-serve` and the static file handler | Files from the client build. Compression adds `Vary: Accept-Encoding`. |
 
@@ -155,7 +156,7 @@ The cache is described in [page-cache.md](page-cache.md). It keeps these rules:
    front cache named the identity.
 3. It stores a response only when `applyCachePolicy` returned `keyed` or `shared` for it. That excludes errors,
    redirects, responses that set a cookie, routes that say private, and incomplete title pages. Anonymous public share
-   lists are eligible with a 10 + 10 second lifetime. Hidden lists and member views are excluded.
+   lists and profile pages are eligible with a 10 + 10 second lifetime. Hidden lists and member views are excluded.
 4. It sends a stored response with the headers it was stored with. A `keyed` response keeps `private, max-age=0`.
 5. It takes the gate's decision again with the gate's own function, so a request without `gw_browser` for a gated URL
    never gets a stored page, whatever order the gate and the cache run in.
@@ -189,6 +190,8 @@ The cache is described in [page-cache.md](page-cache.md). It keeps these rules:
   `private, no-store`, whatever the route allows.
 - `node scripts/check-cache-headers.mjs <base-url> [--list <share list path>]` in `goodwatch-webapp` requests the
   landing routes of a running app as an anonymous visitor, with the identity header, and with a forged auth cookie,
-  and fails on a broken rule.
+  and fails on a broken rule. With `--list`, it also checks the list owner's profile page.
+- `app/server/share-lists/page-loaders.test.ts` covers the share list and profile loaders: public, unlisted, member,
+  and owner views, missing pages, and redirects.
 - The metric queries are in [viral-spike-metrics.md](benchmarks/viral-spike-metrics.md): member responses and error
   responses with `cache_control="shared"` must stay empty.

@@ -22,7 +22,7 @@ What the webapp caches per member, how long, and which write resets it. The rese
 | `user-data` | user ID | 5 minutes | none | Scores, Want to See, watched, favorites, skipped |
 | `user-settings` | user ID | 5 minutes | none | Country, services, onboarding state, For you |
 | `share-profile-by-user-v1` | user ID | 5 minutes | none | The member's handle, or that there's none |
-| `share-profile-page-v1` | handle | 5 minutes | 5 minutes | A public profile: handle, public lists, their titles |
+| `share-profile-page-v1` | handle | 10 seconds | 10 seconds | A public profile: handle, public lists, their titles. The short lifetime bounds an old anonymous profile page, see [page-cache.md](page-cache.md#share-list-pages) |
 | `onboarding-media` | user ID, search text | 0 | none | Not cached: only the rating quiz reads it |
 
 Five minutes bounds what a reset can't reach: a write that timed out and lands later, a change made in Crate by hand,

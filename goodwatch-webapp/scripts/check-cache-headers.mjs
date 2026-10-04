@@ -73,7 +73,8 @@ async function main() {
 		"/person/6384-keanu-reeves",
 		"/discover",
 	]
-	if (options.length) paths.push(options[1])
+	const profilePath = options[1]?.split("/lists/")[0]
+	if (options.length) paths.push(options[1], profilePath)
 	paths.push(
 		"/movie/999999999-nothing",
 		"/person/999999999-nothing",
@@ -86,8 +87,11 @@ async function main() {
 			const control = response.headers.get("cache-control") ?? ""
 			const vary = response.headers.get("vary") ?? ""
 			const key = response.headers.get("gw-cache-identity") ?? ""
-			// The share list's path holds a handle: it isn't printed.
-			const label = path === options[1] ? "<share list>" : path
+			// Share paths hold a handle, so never print them.
+			const sharePage = path === options[1] || path === profilePath
+			const label = path === options[1]
+				? "<share list>"
+				: path === profilePath ? "<share profile>" : path
 			console.log(
 				`${label} (${variant.name}): ${response.status} | ${control || "-"} | ${vary || "-"} | ${key || "-"}`,
 			)
@@ -98,12 +102,12 @@ async function main() {
 				errors.push("member response is not private")
 			if (response.status >= 400 && !headerHas(control, "no-store"))
 				errors.push("error response lacks no-store")
-			if (path === options[1] && variant.member) {
+			if (sharePage && variant.member) {
 				if (control !== privatePolicy)
-					errors.push("share list is not private, no-store")
+					errors.push("share page is not private, no-store")
 			} else if (!variant.member && response.status === 200) {
 				if (variant.keyed) {
-					if (path === options[1]) {
+					if (sharePage) {
 						const seconds = (directive) => {
 							const match = new RegExp(
 								`(?:^|,)\\s*${directive}=(\\d+)\\s*(?:,|$)`,
@@ -117,11 +121,12 @@ async function main() {
 							!(seconds("stale-while-revalidate") <= 10) ||
 							headerHas(control, "stale-if-error")
 						)
-							errors.push("share list exceeds its public lifetime")
+							errors.push("share page exceeds its public lifetime")
 					}
 					if (
 						!headerHas(control, "s-maxage") ||
-						!headerHas(vary, "gw-cache-identity")
+						!headerHas(vary, "gw-cache-identity") ||
+						(sharePage && key !== identity)
 					)
 						errors.push("identity response lacks shared policy or Vary")
 				} else if (control !== keyedPolicy || key !== identity) {

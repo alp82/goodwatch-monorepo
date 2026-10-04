@@ -19,10 +19,11 @@ async function run(broken = "") {
 			const keyed = !!options.headers["GW-Cache-Identity"]
 			const missing = url.pathname.includes("nothing") || url.pathname.includes("does/not")
 			const list = url.pathname === "/u/sample/lists/sample"
+			const profile = url.pathname === "/u/sample"
 			const headers = {}
 			if (member || missing) headers["Cache-Control"] = "private, no-store"
 			else {
-				headers["Cache-Control"] = keyed ? (list ? "public, max-age=0, s-maxage=10, stale-while-revalidate=10" : "public, max-age=0, s-maxage=1800") : "private, max-age=0"
+				headers["Cache-Control"] = keyed ? ((list || profile) ? "public, max-age=0, s-maxage=10, stale-while-revalidate=10" : "public, max-age=0, s-maxage=1800") : "private, max-age=0"
 				headers.Vary = keyed ? "GW-Cache-Identity" : "Accept-Language"
 				headers["GW-Cache-Identity"] = "anon;US;en"
 			}
@@ -38,6 +39,14 @@ async function run(broken = "") {
 				if (broken === "list-stale") headers["Cache-Control"] = "public, s-maxage=10, stale-while-revalidate=11"
 				if (broken === "list-error") headers["Cache-Control"] += ", stale-if-error=1"
 			}
+			if (profile && keyed && !member) {
+				if (broken === "profile-fresh") headers["Cache-Control"] = "public, s-maxage=11, stale-while-revalidate=10"
+				if (broken === "profile-stale") headers["Cache-Control"] = "public, s-maxage=10, stale-while-revalidate=11"
+				if (broken === "profile-error") headers["Cache-Control"] += ", stale-if-error=1"
+				if (broken === "profile-key") delete headers["GW-Cache-Identity"]
+			}
+			if (broken === "profile" && profile) headers["Cache-Control"] = "public"
+			if (broken === "profile-member" && profile && member) headers["Cache-Control"] = "private, max-age=0"
 			if (broken === "list-member" && list && member) headers["Cache-Control"] = "private, max-age=0"
 			return new Response("fixture", { status: missing ? 404 : 200, headers })
 		}
@@ -71,14 +80,15 @@ async function run(broken = "") {
 	}
 }
 
-test("header checker covers all five audiences and nine paths without disclosing the project", async () => {
+test("header checker covers all five audiences and ten paths without disclosing the project", async () => {
 	const result = await run()
 	assert.equal(result.status, 0, result.stderr)
-	assert.equal(result.stdout.trim().split("\n").length, 45)
+	assert.equal(result.stdout.trim().split("\n").length, 50)
 	assert.match(result.stdout, /member identity/)
+	assert.match(result.stdout, /<share profile>/)
 	assert.doesNotMatch(
 		result.stdout + result.stderr,
-		/testproject|sb-.*-auth-token|\/u\/sample\/lists\/sample/,
+		/testproject|sb-.*-auth-token|\/u\/sample/,
 	)
 })
 
@@ -94,13 +104,19 @@ test("header checker fails for each cache contract violation", async () => {
 		"list-stale",
 		"list-error",
 		"list-member",
+		"profile",
+		"profile-fresh",
+		"profile-stale",
+		"profile-error",
+		"profile-key",
+		"profile-member",
 	]) {
 		const result = await run(violation)
 		assert.equal(result.status, 1, violation)
 		assert.match(result.stderr, /FAIL/)
 		assert.doesNotMatch(
 			result.stdout + result.stderr,
-			/testproject|sb-.*-auth-token|\/u\/sample\/lists\/sample/,
+			/testproject|sb-.*-auth-token|\/u\/sample/,
 		)
 	}
 })

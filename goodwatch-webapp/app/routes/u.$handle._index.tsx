@@ -3,22 +3,18 @@
 // and deleted handles answer 404. For the owner, this page is also My lists: it shows their unlisted lists too, marked,
 // with Edit, Share, Delete, and a Public or Unlisted switch under each.
 import { PlusIcon } from "@heroicons/react/20/solid"
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-	redirect,
-} from "@remix-run/node"
+import type { MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData, useRevalidator } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import { toast } from "react-toastify"
 import { useShareListOwnerAction } from "~/routes/api.share-lists"
+import { createProfilePageLoader } from "~/server/share-lists/page-loaders.server"
 import { listsByUser } from "~/server/share-lists/store.server"
-import { entryKey, resolveCardTitles } from "~/server/share-lists/titles.server"
+import { resolveCardTitles } from "~/server/share-lists/titles.server"
 import { getProfilePage } from "~/server/share-lists/view.server"
 import { CardFonts } from "~/ui/share-card/ScaledCard"
-import { newListPath, profilePath } from "~/ui/share-card/links"
-import { type CardTitle, THEMES, cardDate } from "~/ui/share-card/model"
+import { newListPath } from "~/ui/share-card/links"
+import { THEMES } from "~/ui/share-card/model"
 import { OwnerListControls } from "~/ui/share-lists/OwnerListControls"
 import {
 	type ShareListSummary,
@@ -27,54 +23,14 @@ import {
 import { getUserIdFromRequest } from "~/utils/auth"
 import { pluralize } from "~/utils/helpers"
 
-// A list or profile can come back (Undo, a restored account), so "not found" must never be cached.
-const notFound = () => new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } })
-
 export { pageHeaders as headers } from "~/utils/headers"
 
-export async function loader({ params, request }: LoaderFunctionArgs) {
-	const requested = params.handle ?? ""
-	const page = await getProfilePage(requested)
-	if (!page) throw notFound()
-	const { profile } = page
-	if (requested !== profile.handle)
-		return redirect(profilePath(profile.handle), 301)
-
-	const viewerId = await getUserIdFromRequest({ request })
-	const isOwner = viewerId === profile.userId
-	// Newest first for everyone, so the grid doesn't reorder when the owner changes a list.
-	const lists = (
-		isOwner
-			? await listsByUser(profile.userId)
-			: page.lists
-	).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-	// One catalog lookup for every card on the page.
-	const titles = isOwner
-		? await resolveCardTitles(lists.flatMap((list) => list.items))
-		: page.titles
-	const byKey = new Map(titles.map((t) => [t.key, t]))
-	const summaries: ShareListSummary[] = lists.map((list) => ({
-		id: list.id,
-		title: list.title,
-		design: list.design,
-		theme: list.theme,
-		items: list.items
-			.map((e) => byKey.get(entryKey(e)))
-			.filter((t): t is CardTitle => t !== undefined),
-		date: cardDate(new Date(list.createdAt)),
-		...(isOwner ? { visibility: list.visibility } : {}),
-	}))
-	return json(
-		{
-			profile: { handle: profile.handle },
-			lists: summaries,
-			isOwner,
-		},
-		// Never cached by shared caches: the owner's view differs from a visitor's, and an unlisted or deleted list
-		// must leave the profile right away.
-		{ headers: { "Cache-Control": "private, no-store" } },
-	)
-}
+export const loader = createProfilePageLoader({
+	getProfilePage,
+	getUserIdFromRequest,
+	listsByUser,
+	resolveCardTitles,
+})
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data)

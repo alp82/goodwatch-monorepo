@@ -690,3 +690,59 @@ for (const confirmed of [false, true])
 			resetPageCache()
 		}
 	})
+
+test("profile page lifetime is 10 seconds fresh and 20 seconds physical", async (t) => {
+	t.mock.timers.enable({ apis: ["Date"], now: Date.now() })
+	await getProfilePage("filmfan")
+	assert.equal(redis.writes.find((write) => write.key === pageKey())?.ttl, 20)
+	t.mock.timers.tick(9999)
+	await getProfilePage("filmfan")
+	assert.match(renderMetrics(), /cache="share-profile-page-v1",result="hit"\} 1/)
+	t.mock.timers.tick(2)
+	await getProfilePage("filmfan")
+	assert.match(renderMetrics(), /cache="share-profile-page-v1",result="stale"\} 1/)
+	await tick()
+	await resetProfileViews(user)
+	assert.equal(
+		redis.calls.find(
+			(call) => call.command === "gwCacheReset" && call.args[0] === pageKey(),
+		)?.args[3],
+		320,
+	)
+})
+
+for (const confirmed of [false, true])
+	test(`profile reset drops a page stored during the data reset: confirmed=${confirmed}`, async (t) => {
+		const variant = { body: Buffer.from("old"), etag: "old", headers: {} }
+		const storePage = (key: string, path: string) => pageCache.entries.set(key, {
+			key, path, route: "profile", storedAt: 0, freshUntil: 10_000,
+			staleUntil: 20_000, br: variant, gzip: variant, identityLength: 3,
+			identityEtag: "old", headers: {}, bytes: 0,
+		})
+		storePage("before-reset", "/u/filmfan")
+		storePage("trailing-slash", "/u/FilmFan/")
+		storePage("list-page", `/u/filmfan/lists/${id}`)
+		storePage("other-profile", "/u/filmfan2")
+		const reset = redis.gwCacheReset.bind(redis)
+		redis.failDelete = !confirmed
+		t.mock.method(
+			redis,
+			"gwCacheReset",
+			async (...args: Parameters<typeof reset>) => {
+				if (args[0] === pageKey()) {
+					assert.equal(pageCache.entries.has("before-reset"), false)
+					assert.equal(pageCache.entries.has("trailing-slash"), false)
+					storePage("during-reset", "/u/FILMFAN/")
+				}
+				return reset(...args)
+			},
+		)
+		try {
+			await resetProfileViews(user)
+			assert.equal(pageCache.entries.has("during-reset"), false)
+			assert.equal(pageCache.entries.has("list-page"), true)
+			assert.equal(pageCache.entries.has("other-profile"), true)
+		} finally {
+			resetPageCache()
+		}
+	})

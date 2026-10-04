@@ -94,8 +94,8 @@ const PROFILE_CACHE = {
 } as const
 const PROFILE_PAGE_CACHE = {
 	name: "share-profile-page-v1",
-	ttlMinutes: 5,
-	staleMinutes: 5,
+	ttlMinutes: 10 / 60,
+	staleMinutes: 10 / 60,
 } as const
 declareResettableCache(PROFILE_CACHE)
 declareResettableCache(PROFILE_PAGE_CACHE)
@@ -173,11 +173,18 @@ export async function resetProfileViews(userId: string): Promise<void> {
 		console.error("Looking up profile for cache reset failed:", error)
 	}
 	await resetCacheConfirmed({ name: PROFILE_CACHE.name, params: { userId } })
-	if (handle)
+	if (handle) {
+		const profilePath = `/u/${normalizeHandle(handle)}`
+		const matchesProfile = (path: string) =>
+			path.toLowerCase().replace(/\/$/, "") === profilePath
+		resetPageCache(matchesProfile)
 		await resetCacheConfirmed({
 			name: PROFILE_PAGE_CACHE.name,
 			params: { handle: normalizeHandle(handle) },
 		})
+		// Drop pages rendered while the old data was still readable.
+		resetPageCache(matchesProfile)
+	}
 }
 
 async function readListView(id: string): Promise<ViewResult> {

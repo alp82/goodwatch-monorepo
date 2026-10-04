@@ -9,20 +9,15 @@ import {
 	PlusIcon,
 	Square2StackIcon,
 } from "@heroicons/react/24/outline"
-import {
-	type LoaderFunctionArgs,
-	type MetaFunction,
-	json,
-	redirect,
-} from "@remix-run/node"
+import type { MetaFunction } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
-import { resolveCountry } from "~/server/country.server"
 import { ensureShareCard } from "~/server/share-card/images.server"
 import {
 	type ListOffer,
 	type TitleAvailability,
 	getListAvailability,
 } from "~/server/share-lists/availability.server"
+import { createShareListPageLoader } from "~/server/share-lists/page-loaders.server"
 import { getListView } from "~/server/share-lists/store.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { CardFonts, ScaledCard } from "~/ui/share-card/ScaledCard"
@@ -30,98 +25,27 @@ import { designByKey } from "~/ui/share-card/designs"
 import {
 	newListPath,
 	profilePath,
-	publicOrigin,
 	shareListEditPath,
 	SHARE_CARD_PREVIEW,
-	shareCardPreviewPath,
-	shareCardPreviewSize,
-	shareListPath,
 } from "~/ui/share-card/links"
-import { type CardTitle, THEMES, cardDate, listByline } from "~/ui/share-card/model"
+import { type CardTitle, THEMES } from "~/ui/share-card/model"
 import { getUserIdFromRequest } from "~/utils/auth"
-import { SHARE_LIST_PAGE_CACHE_CONTROL } from "~/utils/auth-cookie"
 import { titleToDashed } from "~/utils/helpers"
 import type { SizeRule } from "~/utils/tmdb-image"
-import { duplicateProviderMapping } from "~/utils/streaming-links"
 import { countryFlagUrl } from "~/utils/country-flag"
-
-// Never cache a 404 response. The data cache holds "not found" for at most 20 seconds;
-// every write that can bring a list back resets it.
-const notFound = () => new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } })
 
 export { pageHeaders as headers } from "~/utils/headers"
 
 // Offers shown per title before the rest collapse into "+N".
 const OFFERS_SHOWN = 4
 
-export async function loader({ params, request }: LoaderFunctionArgs) {
-	const view = await getListView(params.id ?? "")
-	if (!view) throw notFound()
-	ensureShareCard(view)
-	const { list, owner, titles: items } = view
-	if (params.handle !== owner.handle)
-		return redirect(shareListPath(owner.handle, list.id), 301)
-
-	const viewerId = await getUserIdFromRequest({ request })
-	// Settings only refine the page (country, the viewer's services); the list still shows without them.
-	const settings = viewerId
-		? await getUserSettings({ userId: viewerId }).catch((error) => {
-				console.error("[share-list] user settings failed", error)
-				return null
-			})
-		: null
-	const { country } = resolveCountry({
-		request,
-		countryDefault: settings?.country_default,
-	})
-	const availability = await getListAvailability(list.items, country)
-
-	// The viewer's own services come first and get a check mark, as on title pages.
-	const owned = new Set(
-		(settings?.streaming_providers_default ?? "")
-			.split(",")
-			.filter(Boolean)
-			.map(Number)
-			.flatMap((id) => [id, ...(duplicateProviderMapping[id] ?? [])]),
-	)
-
-	const design = designByKey(list.design)
-	const origin = publicOrigin()
-	const byline = listByline(owner.handle)
-	return json(
-		{
-			list: {
-				id: list.id,
-				title: list.title,
-				design: design.key,
-				theme: list.theme,
-				byline,
-				date: cardDate(new Date(list.createdAt)),
-				unlisted: list.visibility === "unlisted",
-			},
-			items,
-			availability,
-			owned: [...owned],
-			country,
-			owner: { handle: owner.handle },
-			isOwner: viewerId === list.userId,
-			share: {
-				url: `${origin}${shareListPath(owner.handle, list.id)}`,
-				image: `${origin}${shareCardPreviewPath(list)}`,
-				...shareCardPreviewSize(design),
-			},
-		},
-		// Only anonymous public views share the short lifetime. Members and hidden lists stay private.
-		{
-			headers: {
-				"Cache-Control":
-					list.visibility === "public" && viewerId == null
-						? SHARE_LIST_PAGE_CACHE_CONTROL
-						: "private, no-store",
-			},
-		},
-	)
-}
+export const loader = createShareListPageLoader({
+	getListView,
+	ensureShareCard,
+	getUserIdFromRequest,
+	getUserSettings,
+	getListAvailability,
+})
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data)
