@@ -1,0 +1,497 @@
+{
+ "generated": "2026-10-04",
+ "method": "Headless Chrome 154 through Playwright, Pixel 7 emulation (412x823, DPR 2.625), no cookies, no throttling, /api/og-image-warm blocked. Phases: load = navigation plus 10 s; scroll = one viewport every 400 ms to the bottom plus 6 s.",
+ "surfaces": {
+  "home": {
+   "url": "https://goodwatch.app/",
+   "load": {
+    "requests": 121,
+    "bytes": 1391645,
+    "sameOrigin": {
+     "total": 94,
+     "static": 88,
+     "staticBytes": 829460,
+     "scripts": 75,
+     "dynamic": 6,
+     "dynamicBytes": 32285,
+     "dynamicByEndpoint": {
+      "GET document": 1,
+      "POST /api/tonight": 1,
+      "POST /api/living-room/picks": 1,
+      "GET /api/search-config": 1,
+      "POST /api/e": 1,
+      "POST /api/og-image-warm": 1
+     }
+    },
+    "tmdb": {
+     "requests": 8,
+     "redirects": 0,
+     "bytes": 162414
+    },
+    "otherThirdParty": 19
+   },
+   "scroll": {
+    "requests": 0,
+    "bytes": 0,
+    "sameOrigin": {
+     "total": 0,
+     "static": 0,
+     "staticBytes": 0,
+     "scripts": 0,
+     "dynamic": 0,
+     "dynamicBytes": 0,
+     "dynamicByEndpoint": {}
+    },
+    "tmdb": {
+     "requests": 0,
+     "redirects": 0,
+     "bytes": 0
+    },
+    "otherThirdParty": 0
+   },
+   "html": {
+    "transferBytes": 16198,
+    "decodedBytes": 60806,
+    "remixContextBytes": 964
+   },
+   "dom": {
+    "elements": 430,
+    "anchors": 29,
+    "documentHeightPx": 860
+   },
+   "tmdbImages": {
+    "count": 7,
+    "lazy": 0,
+    "srcset": 0,
+    "withDimensions": 0,
+    "inFirstViewport": 7
+   },
+   "linkRels": {
+    "canonical": 1,
+    "alternate": 2,
+    "stylesheet": 6,
+    "apple-touch-icon": 1,
+    "icon": 2,
+    "manifest": 1,
+    "preconnect": 3,
+    "preload:image": 1,
+    "preload:style": 1,
+    "modulepreload": 75
+   },
+   "lcpElement": {
+    "tag": "IMG",
+    "url": "https://goodwatch.app/assets/room-phone-CEfznqzv.avif",
+    "fetchpriority": "high"
+   }
+  },
+  "movie": {
+   "url": "https://goodwatch.app/movie/603-the-matrix",
+   "load": {
+    "requests": 928,
+    "bytes": 15851223,
+    "sameOrigin": {
+     "total": 131,
+     "static": 107,
+     "staticBytes": 1066906,
+     "scripts": 93,
+     "dynamic": 24,
+     "dynamicBytes": 313543,
+     "dynamicByEndpoint": {
+      "GET document": 1,
+      "POST /api/tonight": 1,
+      "GET /api/genres/all": 1,
+      "GET /api/related": 16,
+      "GET /api/movie/collection": 1,
+      "GET /api/search-config": 1,
+      "POST /api/e": 1,
+      "GET loader data (prefetch)": 1,
+      "POST /api/og-image-warm": 1
+     }
+    },
+    "tmdb": {
+     "requests": 763,
+     "redirects": 381,
+     "bytes": 14124673
+    },
+    "otherThirdParty": 34
+   },
+   "scroll": {
+    "requests": 23,
+    "bytes": 81887,
+    "sameOrigin": {
+     "total": 22,
+     "static": 19,
+     "staticBytes": 74226,
+     "scripts": 19,
+     "dynamic": 3,
+     "dynamicBytes": 7641,
+     "dynamicByEndpoint": {
+      "GET loader data (prefetch)": 3
+     }
+    },
+    "tmdb": {
+     "requests": 0,
+     "redirects": 0,
+     "bytes": 0
+    },
+    "otherThirdParty": 1
+   },
+   "html": {
+    "transferBytes": 60897,
+    "decodedBytes": 442841,
+    "remixContextBytes": 140067
+   },
+   "dom": {
+    "elements": 7906,
+    "anchors": 678,
+    "documentHeightPx": 10381
+   },
+   "tmdbImages": {
+    "count": 613,
+    "lazy": 0,
+    "srcset": 0,
+    "withDimensions": 0,
+    "inFirstViewport": 5
+   },
+   "linkRels": {
+    "canonical": 1,
+    "stylesheet": 5,
+    "apple-touch-icon": 1,
+    "icon": 2,
+    "manifest": 1,
+    "preconnect": 3,
+    "preload:image": 1,
+    "preload:style": 1,
+    "prefetch:fetch": 1,
+    "modulepreload": 115,
+    "prefetch:style": 2
+   },
+   "lcpElement": {
+    "tag": "IMG",
+    "url": "https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/tlm8UkiQsitc8rSuIAscQDCnP8d.jpg",
+    "fetchpriority": null
+   }
+  },
+  "show": {
+   "url": "https://goodwatch.app/show/1396-breaking-bad",
+   "load": {
+    "requests": 1155,
+    "bytes": 38237984,
+    "sameOrigin": {
+     "total": 130,
+     "static": 107,
+     "staticBytes": 1067122,
+     "scripts": 93,
+     "dynamic": 23,
+     "dynamicBytes": 326155,
+     "dynamicByEndpoint": {
+      "GET document": 1,
+      "POST /api/tonight": 1,
+      "GET /api/genres/all": 1,
+      "GET /api/related": 16,
+      "GET /api/search-config": 1,
+      "POST /api/e": 1,
+      "GET loader data (prefetch)": 1,
+      "POST /api/og-image-warm": 1
+     }
+    },
+    "tmdb": {
+     "requests": 991,
+     "redirects": 495,
+     "bytes": 36498351
+    },
+    "otherThirdParty": 34
+   },
+   "scroll": {
+    "requests": 23,
+    "bytes": 81900,
+    "sameOrigin": {
+     "total": 22,
+     "static": 19,
+     "staticBytes": 74226,
+     "scripts": 19,
+     "dynamic": 3,
+     "dynamicBytes": 7654,
+     "dynamicByEndpoint": {
+      "GET loader data (prefetch)": 3
+     }
+    },
+    "tmdb": {
+     "requests": 0,
+     "redirects": 0,
+     "bytes": 0
+    },
+    "otherThirdParty": 1
+   },
+   "html": {
+    "transferBytes": 84077,
+    "decodedBytes": 638028,
+    "remixContextBytes": 151567
+   },
+   "dom": {
+    "elements": 9442,
+    "anchors": 851,
+    "documentHeightPx": 10580
+   },
+   "tmdbImages": {
+    "count": 797,
+    "lazy": 0,
+    "srcset": 0,
+    "withDimensions": 0,
+    "inFirstViewport": 3
+   },
+   "linkRels": {
+    "canonical": 1,
+    "stylesheet": 5,
+    "apple-touch-icon": 1,
+    "icon": 2,
+    "manifest": 1,
+    "preconnect": 3,
+    "preload:image": 1,
+    "preload:style": 1,
+    "prefetch:fetch": 1,
+    "modulepreload": 115,
+    "prefetch:style": 2
+   },
+   "lcpElement": {
+    "tag": "IMG",
+    "url": "https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg",
+    "fetchpriority": null
+   }
+  },
+  "person": {
+   "url": "https://goodwatch.app/person/138-quentin-tarantino",
+   "load": {
+    "requests": 233,
+    "bytes": 2967207,
+    "sameOrigin": {
+     "total": 101,
+     "static": 95,
+     "staticBytes": 686979,
+     "scripts": 85,
+     "dynamic": 6,
+     "dynamicBytes": 31718,
+     "dynamicByEndpoint": {
+      "GET document": 1,
+      "POST /api/tonight": 1,
+      "GET /api/search-config": 1,
+      "POST /api/e": 1,
+      "GET loader data (prefetch)": 1,
+      "POST /api/og-image-warm": 1
+     }
+    },
+    "tmdb": {
+     "requests": 116,
+     "redirects": 50,
+     "bytes": 1923219
+    },
+    "otherThirdParty": 16
+   },
+   "scroll": {
+    "requests": 23,
+    "bytes": 78416,
+    "sameOrigin": {
+     "total": 22,
+     "static": 19,
+     "staticBytes": 70742,
+     "scripts": 19,
+     "dynamic": 3,
+     "dynamicBytes": 7654,
+     "dynamicByEndpoint": {
+      "GET loader data (prefetch)": 3
+     }
+    },
+    "tmdb": {
+     "requests": 0,
+     "redirects": 0,
+     "bytes": 0
+    },
+    "otherThirdParty": 1
+   },
+   "html": {
+    "transferBytes": 30672,
+    "decodedBytes": 185068,
+    "remixContextBytes": 31942
+   },
+   "dom": {
+    "elements": 1403,
+    "anchors": 147,
+    "documentHeightPx": 9860
+   },
+   "tmdbImages": {
+    "count": 65,
+    "lazy": 0,
+    "srcset": 0,
+    "withDimensions": 0,
+    "inFirstViewport": 3
+   },
+   "linkRels": {
+    "canonical": 1,
+    "stylesheet": 4,
+    "apple-touch-icon": 1,
+    "icon": 2,
+    "manifest": 1,
+    "preconnect": 3,
+    "preload:image": 1,
+    "preload:style": 1,
+    "prefetch:fetch": 1,
+    "modulepreload": 107,
+    "prefetch:style": 2
+   },
+   "lcpElement": {
+    "tag": "IMG",
+    "url": "https://image.tmdb.org/t/p/w1280/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg",
+    "fetchpriority": null
+   }
+  },
+  "discover": {
+   "url": "https://goodwatch.app/discover",
+   "load": {
+    "requests": 290,
+    "bytes": 2586535,
+    "sameOrigin": {
+     "total": 123,
+     "static": 116,
+     "staticBytes": 815749,
+     "scripts": 107,
+     "dynamic": 7,
+     "dynamicBytes": 26727,
+     "dynamicByEndpoint": {
+      "GET document": 1,
+      "POST /api/tonight": 1,
+      "GET /api/search-config": 1,
+      "POST /api/e": 1,
+      "GET loader data (prefetch)": 1,
+      "POST /api/poster-impressions": 1,
+      "POST /api/og-image-warm": 1
+     }
+    },
+    "tmdb": {
+     "requests": 151,
+     "redirects": 75,
+     "bytes": 1418660
+    },
+    "otherThirdParty": 16
+   },
+   "scroll": {
+    "requests": 852,
+    "bytes": 10980319,
+    "sameOrigin": {
+     "total": 10,
+     "static": 0,
+     "staticBytes": 0,
+     "scripts": 0,
+     "dynamic": 10,
+     "dynamicBytes": 70650,
+     "dynamicByEndpoint": {
+      "POST /api/discover/results": 9,
+      "POST /api/poster-impressions": 1
+     }
+    },
+    "tmdb": {
+     "requests": 842,
+     "redirects": 421,
+     "bytes": 10909669
+    },
+    "otherThirdParty": 0
+   },
+   "html": {
+    "transferBytes": 25738,
+    "decodedBytes": 157693,
+    "remixContextBytes": 33111
+   },
+   "dom": {
+    "elements": 1278,
+    "anchors": 67,
+    "documentHeightPx": 7590
+   },
+   "tmdbImages": {
+    "count": 152,
+    "lazy": 0,
+    "srcset": 0,
+    "withDimensions": 0,
+    "inFirstViewport": 6
+   },
+   "linkRels": {
+    "canonical": 1,
+    "stylesheet": 4,
+    "apple-touch-icon": 1,
+    "icon": 2,
+    "manifest": 1,
+    "preconnect": 3,
+    "preload:image": 1,
+    "preload:style": 1,
+    "prefetch:fetch": 1,
+    "modulepreload": 380,
+    "prefetch:style": 2
+   },
+   "lcpElement": {
+    "tag": "IMG",
+    "url": "https://www.themoviedb.org/t/p/w300_and_h450_bestv2/y4fGncqELtnvRQuwSpuH8LncZqU.jpg",
+    "fetchpriority": null
+   }
+  },
+  "list404": {
+   "url": "https://goodwatch.app/u/nobody-here/lists/none",
+   "load": {
+    "requests": 145,
+    "bytes": 1029336,
+    "sameOrigin": {
+     "total": 129,
+     "static": 120,
+     "staticBytes": 808790,
+     "scripts": 112,
+     "dynamic": 9,
+     "dynamicBytes": 19057,
+     "dynamicByEndpoint": {
+      "GET document": 1,
+      "GET /api/search-config": 1,
+      "GET loader data (prefetch)": 6,
+      "POST /api/e": 1
+     }
+    },
+    "tmdb": {
+     "requests": 1,
+     "redirects": 0,
+     "bytes": 54796
+    },
+    "otherThirdParty": 15
+   },
+   "scroll": null,
+   "html": {
+    "transferBytes": 10817,
+    "decodedBytes": 33654,
+    "remixContextBytes": 958
+   },
+   "dom": {
+    "elements": 701,
+    "anchors": 28,
+    "documentHeightPx": 1706
+   },
+   "tmdbImages": {
+    "count": 0,
+    "lazy": 0,
+    "srcset": 0,
+    "withDimensions": 0,
+    "inFirstViewport": 0
+   },
+   "linkRels": {
+    "stylesheet": 4,
+    "apple-touch-icon": 1,
+    "icon": 2,
+    "manifest": 1,
+    "preconnect": 3,
+    "preload:image": 1,
+    "preload:style": 1,
+    "prefetch:fetch": 12,
+    "modulepreload": 499,
+    "prefetch:style": 7
+   },
+   "lcpElement": {
+    "tag": "P",
+    "url": "",
+    "fetchpriority": null
+   }
+  }
+ }
+}
