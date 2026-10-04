@@ -1,0 +1,85 @@
+# Balances goodwatch.app across two webapp instances. DRAFT: not installed anywhere yet.
+#
+# Where it goes: the proxy on abio (Traefik v2.10), as a dynamic configuration. In Coolify: Servers > abio > Proxy >
+# Dynamic Configurations > + Add, file name goodwatch-balance.yaml. Traefik loads it without a restart. Deleting the
+# file there restores today's routing at once, because Coolify's own routers stay in place underneath.
+#
+# How it works:
+# - Coolify generates routers for goodwatch.app from the container's labels (http-0-gk4owk8, https-0-gk4owk8). Their
+#   priority is the length of their rule, 39. The routers here match the same host with priority 1000, so they win
+#   while this file exists. The www routers stay Coolify's: they only redirect.
+# - The first server is the instance on abio, addressed by its network alias on the coolify network. The container's
+#   name and address change with every deploy; the alias doesn't. While a deploy runs two containers, the alias
+#   resolves to both.
+# - The second server is the instance on vector1, reached through vector1's proxy on the private network with plain
+#   HTTP. goodwatch-instance.yaml on vector1 routes it to the container there.
+# - The health check asks each instance's readiness endpoint every 2 seconds. An instance that is starting, draining
+#   (the first 8 seconds after SIGTERM), or gone gets no requests, and the other one carries on. With both down, the
+#   answer is 503.
+# - The retry sends a request to the other instance when the chosen one refuses the connection or closes it before
+#   it sent any response, for example in the seconds between a crash on abio and the next health check. It can't
+#   cover a crash on vector1: vector1's proxy answers 502 for it, until the next health check.
+# - Sticky sessions: the proxy sets the cookie gw_instance on a visitor's first response and sends that visitor to
+#   the same instance afterwards, while it is healthy. Member sessions don't need it: they are a signed cookie that
+#   both instances verify the same way. Deploys need it: Coolify deploys the instances one after the other, so for
+#   some minutes they run different builds, and a page from one build asks for script files that the other build
+#   doesn't have. Clients that keep no cookies (crawlers, the benchmark) alternate between the instances.
+# - The middlewares are defined here and not taken from the container's labels (gzip@docker,
+#   redirect-to-https@docker): those disappear while no container runs on abio, and a router with a missing
+#   middleware answers 404.
+#
+# Test it before installing it: ./test-local.sh in this directory.
+http:
+  routers:
+    gw-webapp-https:
+      entryPoints:
+        - https
+      rule: Host(`goodwatch.app`)
+      priority: 1000
+      middlewares:
+        - gw-webapp-gzip
+        - gw-webapp-retry
+      service: gw-webapp
+      tls:
+        certResolver: letsencrypt
+    gw-webapp-http:
+      entryPoints:
+        - http
+      rule: Host(`goodwatch.app`)
+      priority: 1000
+      middlewares:
+        - gw-webapp-redirect-to-https
+      service: gw-webapp
+
+  middlewares:
+    gw-webapp-gzip:
+      compress: {}
+    gw-webapp-redirect-to-https:
+      redirectScheme:
+        scheme: https
+    gw-webapp-retry:
+      retry:
+        attempts: 2
+        initialInterval: 100ms
+
+  services:
+    gw-webapp:
+      loadBalancer:
+        passHostHeader: true
+        sticky:
+          cookie:
+            name: gw_instance
+            secure: true
+            httpOnly: true
+            sameSite: lax
+        healthCheck:
+          path: /health/ready
+          interval: 2s
+          timeout: 2s
+          # vector1's proxy routes by this host name. The app ignores it.
+          hostname: goodwatch.app
+        servers:
+          # The instance on abio, by its network alias on the coolify network.
+          - url: http://goodwatch-webapp:3000
+          # The instance on vector1, through vector1's proxy on the private network.
+          - url: http://10.0.0.20:80

@@ -1,0 +1,33 @@
+# Lets abio's proxy reach the webapp instance on vector1. DRAFT: not installed anywhere yet.
+#
+# Where it goes: the proxy on vector1 (Traefik v3.6), as a dynamic configuration. In Coolify: Servers > vector1 >
+# Proxy > Dynamic Configurations > + Add, file name goodwatch-instance.yaml.
+#
+# How it works:
+# - It matches requests for goodwatch.app that come from abio's private address, on the plain HTTP entry point, and
+#   hands them to the container by its network alias. No TLS between the two proxies: the private network carries
+#   it, and abio's proxy ends the visitor's TLS.
+# - Coolify also generates routers for goodwatch.app on vector1 from the container's labels. Their HTTP router
+#   redirects to HTTPS, which would send abio's proxy in a circle. This router has the higher priority (1000 against
+#   39), so requests from abio never reach that redirect. Requests from anywhere else still do.
+# - No compression and no health check here: abio's proxy does both.
+#
+# It needs one line in the proxy's own configuration (Servers > vector1 > Proxy > Configuration, in the command
+# list, then Restart Proxy), so that the visitor's address and scheme from abio's proxy are kept:
+#   - '--entrypoints.http.forwardedHeaders.trustedIPs=10.0.0.21'
+# Without it, the app on vector1 sees abio's address as the visitor (X-Real-Ip, X-Forwarded-For) and http as the
+# scheme. The search limits and the poster impression limit count by that address, so all visitors would share one.
+http:
+  routers:
+    gw-webapp-from-abio:
+      entryPoints:
+        - http
+      rule: Host(`goodwatch.app`) && ClientIP(`10.0.0.21`)
+      priority: 1000
+      service: gw-webapp-local
+  services:
+    gw-webapp-local:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: http://goodwatch-webapp:3000
