@@ -10,12 +10,14 @@ BENCH_METRIC_HOSTS=${BENCH_METRIC_HOSTS-10.0.0.21:target:coolify-proxy+gk4owk8}
 BENCH_METRIC_INTERVAL=${BENCH_METRIC_INTERVAL:-5}
 fail() { echo "$*" >&2; exit 2; }
 usage() { cat <<'HELP'
-Usage: ./bench.sh <load|lighthouse|smoke|deploy-watch|compare|summarize|longtail|doctor> [options]
+Usage: ./bench.sh <load|lighthouse|budget|smoke|deploy-watch|compare|summarize|longtail|doctor> [options]
 load: --mode smoke|ramp --cache warm|cold --urls hot|surfaces|longtail|file.json
       --label TEXT --rate N --duration S --start N --step N --max N --rates N,N,...
       --routes ROUTE[:CLIENT],...
       --step-duration S --path private|public --raw --yes-ramp-production
 lighthouse: --urls FILE --runs N --where generator|local --label TEXT --path public|private
+budget: [--runs N] [--where generator|local] [--label TEXT] [--path public|private] [--budget FILE] [--run RUN]
+        (Lighthouse per landing surface against urls/budget.json; exits 1 when a line fails)
 compare: RUN_A RUN_B [--out FILE] [--json]
 summarize: RUN
 longtail: [--sitemaps DIR] [--out FILE] [--limit N] [--seed S] [--og-share F]
@@ -33,6 +35,30 @@ case $command in
   deploy-watch) exec "$ROOT/scripts/deploy-watch.sh" "$@" ;;
   summarize) [[ $# == 1 ]] || fail 'Expected a run id or directory'; exec node "$ROOT/scripts/summarize.mjs" "$(resolve_run "$1")" ;;
   compare) [[ $# -ge 2 ]] || fail 'Expected two runs'; a=$(resolve_run "$1"); b=$(resolve_run "$2"); shift 2; exec node "$ROOT/scripts/compare.mjs" "$a" "$b" "$@" ;;
+  budget)
+    # Lighthouse per landing surface, then the comparison with the budget file. --run checks an existing run again.
+    budget_file="$ROOT/urls/budget.json"; checked_run=''; pass=()
+    while (($#)); do
+      [[ $# -ge 2 ]] || fail "Missing value: $1"
+      case $1 in
+        --budget) budget_file=$2 ;; --run) checked_run=$(resolve_run "$2") ;;
+        --runs|--where|--label|--path) pass+=("$1" "$2") ;;
+        *) fail "Unknown option: $1" ;;
+      esac
+      shift 2
+    done
+    [[ -f $budget_file ]] || fail "Budget file does not exist: $budget_file"
+    if [[ -z $checked_run ]]; then
+      list=$(mktemp); log=$(mktemp); trap 'rm -f "$list" "$log"' EXIT
+      node "$ROOT/scripts/budget.mjs" urls "$budget_file" "$BENCH_TARGET_URL" > "$list" || exit 2
+      # A failed Lighthouse run of one surface doesn't end the command: the comparison reports the surface.
+      "$ROOT/bench.sh" lighthouse --label budget "${pass[@]}" --urls "$list" | tee "$log" || echo 'Lighthouse reported a failure' >&2
+      checked_run=$(sed -n 's/^Run directory: //p' "$log" | tail -1)
+      [[ -d $checked_run ]] || fail 'The Lighthouse run left no result directory'
+      echo
+    fi
+    node "$ROOT/scripts/budget.mjs" check "$checked_run" "$budget_file"
+    exit $? ;;
   load|lighthouse|doctor) ;;
   *) usage; exit 2 ;;
 esac

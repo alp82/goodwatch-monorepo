@@ -1,0 +1,133 @@
+{
+  "name": "render-path-budget",
+  "description": "Limits per landing surface for a first-time mobile visitor who doesn't scroll, checked by ./bench.sh budget (Lighthouse on the generator, median of the runs). A limit is a measured value plus a margin, so the budget passes today and fails on a regression. Byte limits are in bytes. targets holds what counts as good and never fails a run. See docs/benchmarks/viral-spike-render-path-budget.md.",
+  "calibrated": "2026-10-04",
+  "targets": {
+    "lcp_ms": 2500,
+    "tbt_ms": 200,
+    "cls": 0.1,
+    "score": 90
+  },
+  "surfaces": {
+    "home": {
+      "path": "/",
+      "lcp_element": { "tag": "img", "contains": "/assets/room-phone-" },
+      "budget": {
+        "html_bytes": { "max": 18944 },
+        "host_requests": { "max": 39 },
+        "script_count": { "max": 18 },
+        "script_bytes": { "max": 327680 },
+        "image_count": { "max": 20 },
+        "image_bytes": { "max": 378880 },
+        "font_requests": { "max": 2 },
+        "blocking_requests": { "max": 2 },
+        "third_party_origins": { "max": 1 },
+        "total_bytes": { "max": 808960 },
+        "lcp_ms": { "max": 4300 },
+        "tbt_ms": { "max": 300 },
+        "cls": { "max": 0.01 },
+        "score": { "min": 76 }
+      }
+    },
+    "movie": {
+      "path": "/movie/603-the-matrix",
+      "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w780/" },
+      "budget": {
+        "html_bytes": { "max": 55808 },
+        "host_requests": { "max": 36 },
+        "script_count": { "max": 24 },
+        "script_bytes": { "max": 327680 },
+        "image_count": { "max": 12 },
+        "image_bytes": { "max": 88064 },
+        "font_requests": { "max": 1 },
+        "blocking_requests": { "max": 1 },
+        "third_party_origins": { "max": 1 },
+        "total_bytes": { "max": 552960 },
+        "lcp_ms": { "max": 4300 },
+        "tbt_ms": { "max": 900 },
+        "cls": { "max": 0.01 },
+        "score": { "min": 61 }
+      }
+    },
+    "show": {
+      "path": "/show/1396-breaking-bad",
+      "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w780/" },
+      "budget": {
+        "html_bytes": { "max": 58880 },
+        "host_requests": { "max": 36 },
+        "script_count": { "max": 24 },
+        "script_bytes": { "max": 327680 },
+        "image_count": { "max": 10 },
+        "image_bytes": { "max": 155648 },
+        "font_requests": { "max": 1 },
+        "blocking_requests": { "max": 1 },
+        "third_party_origins": { "max": 1 },
+        "total_bytes": { "max": 614400 },
+        "lcp_ms": { "max": 4550 },
+        "tbt_ms": { "max": 1000 },
+        "cls": { "max": 0.01 },
+        "score": { "min": 58 }
+      }
+    },
+    "person": {
+      "path": "/person/138-quentin-tarantino",
+      "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w780/" },
+      "budget": {
+        "html_bytes": { "max": 32768 },
+        "host_requests": { "max": 30 },
+        "script_count": { "max": 20 },
+        "script_bytes": { "max": 315392 },
+        "image_count": { "max": 19 },
+        "image_bytes": { "max": 230400 },
+        "font_requests": { "max": 1 },
+        "blocking_requests": { "max": 1 },
+        "third_party_origins": { "max": 1 },
+        "total_bytes": { "max": 645120 },
+        "lcp_ms": { "max": 4450 },
+        "tbt_ms": { "max": 400 },
+        "cls": { "max": 0.01 },
+        "score": { "min": 75 }
+      }
+    },
+    "discover": {
+      "path": "/discover",
+      "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w342/" },
+      "budget": {
+        "html_bytes": { "max": 29184 },
+        "host_requests": { "max": 41 },
+        "script_count": { "max": 31 },
+        "script_bytes": { "max": 362496 },
+        "image_count": { "max": 30 },
+        "image_bytes": { "max": 952320 },
+        "font_requests": { "max": 1 },
+        "blocking_requests": { "max": 1 },
+        "third_party_origins": { "max": 1 },
+        "total_bytes": { "max": 1331200 },
+        "lcp_ms": { "max": 5800 },
+        "tbt_ms": { "max": 550 },
+        "cls": { "max": 0.04 },
+        "score": { "min": 62 }
+      }
+    },
+    "share_list": {
+      "path": "${SHARE_LIST_PATH}",
+      "lcp_element": { "tag": "div", "contains": "data-edit=\"title\"" },
+      "budget": {
+        "html_bytes": { "max": 24576 },
+        "host_requests": { "max": 28 },
+        "script_count": { "max": 12 },
+        "script_bytes": { "max": 273408 },
+        "image_count": { "max": 33 },
+        "image_bytes": { "max": 225280 },
+        "font_requests": { "max": 2 },
+        "blocking_requests": { "max": 1 },
+        "third_party_origins": { "max": 1 },
+        "total_bytes": { "max": 655360 },
+        "lcp_ms": { "max": 4100 },
+        "tbt_ms": { "max": 250 },
+        "cls": { "max": 0.02 },
+        "score": { "min": 80 }
+      }
+    }
+  }
+}

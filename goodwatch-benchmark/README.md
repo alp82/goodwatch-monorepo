@@ -83,7 +83,7 @@ Set `PRE_VUS` and `MAX_VUS` to override the default allocation of `max(20, RATE_
 | `--label <text>` | `run` | Name the run. |
 | `--path public\|private` | `public` | Use normal DNS or a Chrome resolver rule. |
 
-The image builds on the chosen host if missing. It includes Chromium, fonts, and Lighthouse. Each run uses Lighthouse's default mobile emulation and simulated throttling. No desktop preset is used. The container gets 1 GiB of shared memory. Extra Chrome flags come from `LH_EXTRA_CHROME_FLAGS`. Private mode derives each hostname from its URL and maps it to the resolve address. TLS verification stays enabled.
+The image builds on the chosen host if missing. It includes Chromium, fonts, and Lighthouse. Each run uses Lighthouse's default mobile emulation and simulated throttling. No desktop preset is used. The container gets 1 GiB of shared memory. Extra Chrome flags come from `LH_EXTRA_CHROME_FLAGS`. Chromium runs with `--hide-scrollbars`: without it, the first paint is observed about one second late (see [the render path budget](../docs/benchmarks/viral-spike-render-path-budget.md#the-late-first-paint-on-the-generator)). Private mode derives each hostname from its URL and maps it to the resolve address. TLS verification stays enabled.
 
 Lighthouse runs on the generator by default. That host is idle, has a fixed size, and sits in a data center, so two runs days apart see the same CPU and network. A laptop doesn't give that. Never run Lighthouse during a load test: the lock on the generator prevents it.
 
@@ -92,6 +92,46 @@ Lighthouse drives a real browser, so the page's own script runs. After each page
 The image tag ends with a hash of `lighthouse/Dockerfile` and `lighthouse/run.sh`. A change to either file builds a new image. Remove old `gw-bench-lighthouse` images on the generator by hand.
 
 Failed individual runs are logged. Other runs continue. The container exits nonzero only when all runs fail. The report uses successful runs and computes a separate median for each metric. Performance scores range from 0 to 100. Fractional median request counts are possible with an even number of runs.
+
+### Render path budget
+
+```sh
+./bench.sh budget
+./bench.sh budget --runs 5 --label after-fonts
+./bench.sh budget --run 20261004T190000Z-lighthouse-budget
+```
+
+`budget` runs Lighthouse for each landing surface in [`urls/budget.json`](urls/budget.json) (home, movie, show, person, Discover, and the share list), takes the median of the runs per line, and compares it with the budget. It prints `pass` or `FAIL` per line with the measured value, and exits with 1 when a line fails. Run it after a change to scripts, styles, fonts, images, or the page markup.
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `--runs N` | `3` | Lighthouse runs per surface. The comparison uses the median. |
+| `--where generator\|local` | `generator` | The Docker host. The time lines of the budget are calibrated for the generator. |
+| `--path public\|private` | `public` | The network path, as for `lighthouse`. |
+| `--label <text>` | `budget` | Name the run. |
+| `--budget <file>` | `urls/budget.json` | Another budget file. |
+| `--run <run>` | None | Compare an existing Lighthouse run again, without measuring. |
+
+The lines, all for a first-time mobile visitor who doesn't scroll:
+
+| Line | Read from the Lighthouse report |
+| --- | --- |
+| `html_bytes` | Transfer size of the document |
+| `host_requests` | Requests to the page's own origin |
+| `script_count`, `script_bytes` | Script requests and their transfer size |
+| `image_count`, `image_bytes` | Image requests and their transfer size. Lighthouse doesn't scroll, so these are the images before scrolling. |
+| `font_requests` | Font requests |
+| `blocking_requests` | Render-blocking requests (stylesheets and scripts) |
+| `third_party_origins` | Origins other than the page's own |
+| `total_bytes` | Transfer size of all requests |
+| `lcp_ms`, `tbt_ms`, `cls`, `score` | Lighthouse's simulated LCP and TBT, CLS, and the performance score |
+| `lcp_element` | The LCP element's tag, and a text that its markup must contain. It passes when more than half of the runs match. |
+
+In the budget file, a line has either `max` or `min`. `targets` holds the values that count as good (LCP 2.5 s, TBT 200 ms, CLS 0.1, score 90): the report shows the gap to them, and they never fail a run. A surface's `path` can name a setting, such as `${SHARE_LIST_PATH}` from `config.env`. The report never prints a URL.
+
+Each surface's header line shows the observed FCP and Lighthouse's CPU benchmark of the host. An observed FCP above one second, or a benchmark far from 1,100 on the generator, means the measurement was disturbed: check for other containers on the generator and repeat.
+
+The limits come from a measured run plus a margin: about 5% on bytes, one or two requests, and the spread between runs on the time lines. When a change improves a line for good, lower its limit in the same commit. When a change has to raise a line, raise the limit in that commit and say why. The run writes `budget.json` and `budget.md` into its result directory. The comparison logic has tests: `node --test scripts/budget.test.mjs`.
 
 ### Long-tail URL generation
 
