@@ -62,6 +62,27 @@
 	}
 }
 
+/* A share card that fills its box (ui/share-card/ScaledCard.tsx), sized here until the script has measured the box.
+   --card-w and --card-h are the design's size in pixels, without a unit. The box is the nearest size container.
+   tan(atan2(a, b)) divides two lengths into the number that scale() needs. A browser without it keeps the card
+   hidden until the script sizes it. */
+.share-card-fit {
+	--card-fit-w: min(100cqw, 100cqh * var(--card-w) / var(--card-h));
+	width: var(--card-fit-w);
+	aspect-ratio: var(--card-w) / var(--card-h);
+	visibility: hidden;
+}
+
+.share-card-fit > div {
+	transform: scale(tan(atan2(var(--card-fit-w), var(--card-w) * 1px)));
+}
+
+@supports (transform: scale(tan(atan2(1cqw, 1px)))) {
+	.share-card-fit {
+		visibility: visible;
+	}
+}
+
 /* Tropes */
 
 .tropes img {

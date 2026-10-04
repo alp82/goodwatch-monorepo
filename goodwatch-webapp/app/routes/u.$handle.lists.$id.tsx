@@ -39,6 +39,7 @@ import {
 import { type CardTitle, THEMES, cardDate, listByline } from "~/ui/share-card/model"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { titleToDashed } from "~/utils/helpers"
+import type { SizeRule } from "~/utils/tmdb-image"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
 import { countryFlagUrl } from "~/utils/country-flag"
 
@@ -158,6 +159,17 @@ export default function ShareListPage() {
 	const t = THEMES[list.theme]
 	const ownedIds = new Set(owned)
 	const gradient = `linear-gradient(90deg, ${t.accent}, ${t.accent2})`
+	// The card's box is the page width on a phone and at most 640 px high, and a column of at most 624 px by 860 px
+	// from lg up. These widths are upper limits for the image sizes.
+	const shape = design.w / design.h
+	const phoneWidth = Math.round(640 * shape)
+	const cardDisplay = {
+		rules: [
+			["(min-width: 1024px)", `${Math.round(Math.min(624, 860 * shape))}px`],
+			[null, phoneWidth < 400 ? `${phoneWidth}px` : "calc(100vw - 32px)"],
+		] satisfies SizeRule[],
+		maxWidth: Math.round(Math.min(624, 860 * shape)),
+	}
 	return (
 		<main className="relative isolate min-h-screen overflow-hidden pb-24 text-white">
 			<CardFonts />
@@ -181,6 +193,7 @@ export default function ShareListPage() {
 								date: list.date,
 							}}
 							fill
+							display={cardDisplay}
 							className="rounded-[18px] shadow-2xl shadow-black/60"
 						/>
 					</div>

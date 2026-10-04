@@ -371,7 +371,7 @@ function MemberHome({ view }: { view: TvView }) {
 								>
 									<Poster
 										title={t}
-										size="w185"
+										size="w92"
 										className="h-[108px] w-[72px] rounded-lg object-cover shadow-2xl ring-1 ring-white/10"
 									/>
 								</span>
@@ -555,7 +555,7 @@ function ThisOrThat({ view }: { view: TvView }) {
 			>
 				<Poster
 					title={t}
-					size="w185"
+					size="w92"
 					className="h-[138px] w-[92px] shrink-0 rounded-lg object-cover"
 				/>
 				<div className="min-w-0 text-[20px] font-extrabold leading-tight">
@@ -664,7 +664,7 @@ function Picks({ view, night }: { view: TvView; night: Night }) {
 					>
 						<Poster
 							title={t}
-							size="w185"
+							size="w92"
 							className="h-[118px] w-[79px] rounded-lg object-cover"
 						/>
 						<div className="w-[79px] truncate text-[18px] font-bold">
@@ -915,7 +915,7 @@ function SearchResults({ view, query }: { view: TvView; query: string }) {
 					<div key={t.key} className="min-w-0">
 						<Poster
 							title={t}
-							size="w185"
+							size="w92"
 							className="aspect-[2/3] w-full rounded-lg object-cover"
 						/>
 						<div className="mt-1 truncate text-[18px] font-bold">{t.title}</div>
