@@ -40,7 +40,7 @@ const UNDO_BATCH = 500
 const refreshScores = () => run("REFRESH TABLE user_score")
 
 /** Once per apply or undo, not per row. None of these throw away the member's data, so a failure is only logged. */
-async function ratingsChanged(userId: string) {
+export async function ratingsChanged(userId: string) {
 	const results = await Promise.allSettled([
 		resetUserDataCache({ user_id: userId }),
 		markTasteChanged(userId),

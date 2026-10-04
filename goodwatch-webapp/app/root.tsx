@@ -26,7 +26,6 @@ import {
 	Meta,
 	Scripts,
 	ScrollRestoration,
-	type ShouldRevalidateFunction,
 	useLoaderData,
 	useLocation,
 	useRouteError,
@@ -96,22 +95,8 @@ type LoaderData = {
 	}
 }
 
-// Root data (user, features, locale, env) never depends on the query string, so filter and
-// search text changes must not rerun the auth check and the user data prefetch.
-export const shouldRevalidate: ShouldRevalidateFunction = ({
-	currentUrl,
-	nextUrl,
-	formMethod,
-	defaultShouldRevalidate,
-}) => {
-	if (
-		!formMethod &&
-		currentUrl.pathname === nextUrl.pathname &&
-		currentUrl.search !== nextUrl.search
-	)
-		return false
-	return defaultShouldRevalidate
-}
+// A navigation never reruns the root loader: utils/root-revalidation.ts has the rule.
+export { shouldRevalidateRoot as shouldRevalidate } from "~/utils/root-revalidation"
 
 export const loader: LoaderFunction = async ({
 	request,

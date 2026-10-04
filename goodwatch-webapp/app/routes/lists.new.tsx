@@ -14,13 +14,14 @@ import {
 	prefillTitles,
 	topRatedEntries,
 } from "~/server/share-lists/prefill.server"
-import { getList, getProfileByUserId } from "~/server/share-lists/store.server"
+import { getList } from "~/server/share-lists/store.server"
 import {
 	type ListEntry,
 	getQuickPicks,
 	parseTitleKey,
 	resolveCardTitles,
 } from "~/server/share-lists/titles.server"
+import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { DEFAULT_DESIGN } from "~/ui/share-card/designs"
 import {
 	DEFAULT_PROMPT_ID,
@@ -70,7 +71,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const [quickPicks, source, profile, rated] = await Promise.all([
 		getQuickPicks(),
 		remixId ? getList(remixId) : null,
-		userId ? getProfileByUserId(userId) : null,
+		userId ? getCachedProfileByUserId(userId) : null,
 		fromRatings ? ratedEntries(params, userId).then(prefillTitles) : [],
 	])
 	// A remix is a new list with the source's prompt, titles, design, and colors, signed by the viewer.

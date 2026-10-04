@@ -11,7 +11,7 @@ import { isPromptId, isThemeKey, LIST_SIZE, type ThemeKey, TITLE_MAX_LENGTH } fr
 import { execute, query } from "~/utils/crate"
 import { HANDLE_MAX, handleFromText, handleProblem, normalizeHandle } from "~/utils/handles"
 
-import { LIST_COLUMNS, type ListRow, fromRow, getList, getProfileByUserId, resetListView } from "./view.server"
+import { LIST_COLUMNS, type ListRow, fromRow, getList, getProfileByUserId, resetListView, resetProfileViews } from "./view.server"
 
 export { type ListView, getList, getListView, getProfileByUserId, resetListView } from "./view.server"
 export { HANDLE_MAX, HANDLE_MIN, handleProblem, normalizeHandle } from "~/utils/handles"
@@ -125,13 +125,7 @@ export async function listsByUser(userId: string): Promise<ShareList[]> {
 	return rows.map(fromRow)
 }
 
-export async function publicListsByUser(userId: string): Promise<ShareList[]> {
-	const rows = await select<ListRow>(
-		`SELECT ${LIST_COLUMNS} FROM doc.user_list WHERE user_id = ? AND visibility = 'public' AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 200`,
-		[userId],
-	)
-	return rows.map(fromRow)
-}
+export { publicListsByUser, getProfileByHandle } from "./view.server"
 
 export async function createList(userId: string, input: ShareListInput): Promise<ShareList> {
 	await requireHandle(userId)
@@ -226,17 +220,6 @@ export async function restoreList(userId: string, id: string): Promise<ShareList
 // keyed by the handle: an insert with ON CONFLICT DO NOTHING lets exactly one person claim it. A deleted account's
 // handle stays claimed for good, so nobody can take over someone else's name and links.
 
-type ProfileRow = { user_id: string; handle: string }
-const toProfile = (r: ProfileRow): Profile => ({ userId: r.user_id, handle: r.handle })
-
-/** The profile a handle belongs to, or null when the handle is invalid, unclaimed, or its account is deleted. */
-export async function getProfileByHandle(handle: string): Promise<Profile | null> {
-	const normalized = normalizeHandle(handle)
-	if (handleProblem(normalized)) return null
-	const [row] = await select<ProfileRow>("SELECT user_id, handle FROM doc.user_profile WHERE handle = ? AND deleted_at IS NULL", [normalized])
-	return row ? toProfile(row) : null
-}
-
 // Reads by primary key are real-time in Crate, so this sees a claim made a moment ago.
 async function handleOwner(handle: string): Promise<string | null> {
 	const [row] = await select<{ user_id: string }>("SELECT user_id FROM doc.user_handle WHERE handle = ?", [handle])
@@ -296,6 +279,7 @@ export async function claimHandle(userId: string, rawHandle: string): Promise<Pr
 		await run("REFRESH TABLE doc.user_profile", [])
 	} finally {
 		await Promise.all(ids.map(({ id }) => resetListView(id)))
+		await resetProfileViews(userId)
 	}
 	return (await getProfileByUserId(userId)) as Profile
 }
@@ -314,5 +298,6 @@ export async function deleteAccountData(userId: string): Promise<void> {
 		await run("REFRESH TABLE doc.user_list, doc.user_profile, doc.user_handle", [])
 	} finally {
 		await Promise.all(ids.map(({ id }) => resetListView(id)))
+		await resetProfileViews(userId)
 	}
 }

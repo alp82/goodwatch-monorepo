@@ -2,11 +2,13 @@ import type { Score } from "~/server/scores.server"
 import type { UserData, MediaType } from "~/types/user-data"
 import { createMediaKey } from "~/types/user-data"
 import { cached, declareResettableCache, resetCache } from "~/utils/cache"
-import { query } from "~/utils/crate"
+import { execute, query } from "~/utils/crate"
 
 const USER_DATA_CACHE = {
 	name: "user-data",
-	ttlMinutes: 0,
+	// Five minutes bounds late timed-out writes, manual changes, old deploys without resets,
+	// and unconfirmed resets, matching the share-list view lifetime.
+	ttlMinutes: 5,
 	staleMinutes: 0,
 } as const
 declareResettableCache(USER_DATA_CACHE)
@@ -17,12 +19,32 @@ type GetUserDataParams = {
 	user_id?: string
 }
 
-export const getUserData = async (params: GetUserDataParams): Promise<UserData> => {
-	return await cached<GetUserDataParams, UserData>({
+export const getUserData = async (
+	params: GetUserDataParams,
+): Promise<UserData> => {
+	const { user_id } = params
+	if (!user_id)
+		return { scores: {}, wishlist: {}, watched: {}, favorites: {}, skipped: {} }
+	const data = await cached<GetUserDataParams, UserData>({
 		...USER_DATA_CACHE,
 		target: _getUserData,
-		params,
+		params: { user_id },
 	})
+	// JSON cache hits and fresh Crate reads must expose the same Date-valued API.
+	for (const collection of [
+		data.scores,
+		data.wishlist,
+		data.watched,
+		data.favorites,
+		data.skipped,
+	]) {
+		for (const item of Object.values(collection)) {
+			item.updatedAt = new Date(item.updatedAt)
+		}
+	}
+	for (const item of Object.values(data.wishlist))
+		item.createdAt = new Date(item.createdAt)
+	return data
 }
 
 async function _getUserData({
@@ -127,8 +149,20 @@ export const resetUserDataCache = async (params: GetUserDataParams) => {
 		return 0
 	}
 
-	return await resetCache({
+	const key = {
 		name: USER_DATA_CACHE.name,
-		params,
-	})
+		params: { user_id: params.user_id },
+	}
+	try {
+		await execute(
+			"REFRESH TABLE user_score, user_wishlist, user_watch_history, user_favorite, user_skipped",
+		)
+	} catch (error) {
+		console.error("Refreshing member data before cache reset failed:", error)
+		// Drop any old rows cached before Crate's periodic refresh catches up.
+		setTimeout(() => {
+			void resetCache(key)
+		}, 2000).unref()
+	}
+	return await resetCache(key)
 }

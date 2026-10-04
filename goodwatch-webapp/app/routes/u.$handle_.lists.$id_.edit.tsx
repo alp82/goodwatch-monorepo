@@ -8,11 +8,12 @@ import {
 	redirect,
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
-import { getList, getProfileByUserId } from "~/server/share-lists/store.server"
+import { getList } from "~/server/share-lists/store.server"
 import {
 	getQuickPicks,
 	resolveCardTitles,
 } from "~/server/share-lists/titles.server"
+import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import {
 	publicOrigin,
 	shareListEditPath,
@@ -32,7 +33,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const list = await getList(params.id ?? "")
 	if (!list) throw notFound()
-	const owner = await getProfileByUserId(list.userId)
+	const owner = await getCachedProfileByUserId(list.userId)
 	if (!owner) throw notFound()
 
 	const userId = await getUserIdFromRequest({ request })

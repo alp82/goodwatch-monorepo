@@ -6,6 +6,10 @@ import { useRevalidator } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { AuthContext } from "~/utils/auth"
+import {
+	requestRootRevalidation,
+	rootRevalidated,
+} from "~/utils/root-revalidation"
 
 export function AuthProvider({
 	supabase,
@@ -23,13 +27,12 @@ export function AuthProvider({
 
 	// The loader's user replaces the browser's only when the person changed. For the same person the browser session
 	// is at least as complete: a session verified from the token alone has no identities or creation time.
-	useEffect(
-		() =>
-			setUser((current) =>
-				current && current.id === initialUser?.id ? current : initialUser,
-			),
-		[initialUser],
-	)
+	useEffect(() => {
+		rootRevalidated()
+		setUser((current) =>
+			current && current.id === initialUser?.id ? current : initialUser,
+		)
+	}, [initialUser])
 
 	useEffect(() => {
 		const {
@@ -51,6 +54,8 @@ export function AuthProvider({
 			queryClient.removeQueries({ queryKey: ["user-data", oldUserId] })
 			queryClient.removeQueries({ queryKey: ["user-settings", oldUserId] })
 		}
+		// The root loader holds the member and their data, and a navigation alone doesn't rerun it.
+		requestRootRevalidation()
 		revalidate()
 	}, [user?.id, queryClient, revalidate])
 

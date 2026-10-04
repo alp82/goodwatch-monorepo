@@ -1,12 +1,12 @@
 // Share lists API. GET tells the editor who is sharing: signed in or not, their handle, or a suggested one.
 // POST writes: create, update, set visibility, delete, and undo a recent delete. The signed-in person must own the list.
 import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from "@remix-run/node"
+import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { warmShareCard } from "~/server/share-card/images.server"
 import {
 	createList,
 	deleteList,
-	getProfileByUserId,
 	type ShareList,
 	ShareListError,
 	type ShareListInput,
@@ -36,7 +36,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const noStore = { headers: { "Cache-Control": "private, no-store" } }
 	const user = await getUserFromRequest({ request })
 	if (!user) return json<ShareViewer>({ signedIn: false }, noStore)
-	const profile = await getProfileByUserId(user.id)
+	const profile = await getCachedProfileByUserId(user.id)
 	if (profile) return json<ShareViewer>({ signedIn: true, handle: profile.handle, suggestedHandle: null }, noStore)
 	const meta = user.user_metadata ?? {}
 	const suggestedHandle = await suggestHandle(user.id, [

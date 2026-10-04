@@ -7,9 +7,8 @@ import { z } from "zod";
 import { getAuthFromRequest } from "~/utils/auth";
 import { execute, query, upsert } from "~/utils/crate";
 import { canonicalTitleId } from "~/utils/title-identity";
-import { getUserData, resetUserDataCache } from "~/server/userData.server";
-import { resetUserSettingsCache } from "~/server/user-settings.server";
-import { markTasteChanged } from "~/server/taste/index.server";
+import { resetGuestImportCaches } from "~/server/guest-import.server";
+import { getUserData } from "~/server/userData.server";
 
 const changeSchema = z
 	.object({
@@ -284,11 +283,7 @@ export async function action({ request }: ActionFunctionArgs) {
 			{ status: 503, headers },
 		);
 	} finally {
-		await Promise.all([
-			resetUserDataCache({ user_id: user.id }),
-			resetUserSettingsCache({ user_id: user.id }),
-			markTasteChanged(user.id),
-		]);
+		await resetGuestImportCaches(user.id);
 	}
 }
 

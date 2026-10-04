@@ -72,7 +72,13 @@ const {
 const { renderMetrics, resetMetricsForTest } = await import(
 	"../metrics/registry.server.ts"
 )
-const { getListView, resetListView } = await import("./view.server.ts")
+const {
+	getListView,
+	resetListView,
+	getProfilePage,
+	getCachedProfileByUserId,
+	resetProfileViews,
+} = await import("./view.server.ts")
 const { getListAvailability } = await import("./availability.server.ts")
 const { pageCache, resetPageCache } = await import("../page-cache.server.ts")
 const store = await import("./store.server.ts")
@@ -118,6 +124,8 @@ class FakeCrate {
 	profiles = new Map<string, Row>([
 		[user, { user_id: user, handle: "filmfan", deleted_at: null }],
 	])
+	visibleLists: Map<string, Row> | undefined
+	visibleProfiles: Map<string, Row> | undefined
 	handles = new Map<string, Row>()
 	statements: string[] = []
 	pauseRead: (() => Promise<void>) | undefined
@@ -134,6 +142,10 @@ class FakeCrate {
 		const result = (json: unknown[] = []) => ({ json, rowcount: json.length })
 		if (statement.startsWith("REFRESH")) {
 			if (this.failRefresh) throw new Error("refresh timeout")
+			if (statement.includes("doc.user_list"))
+				this.visibleLists = structuredClone(this.lists)
+			if (statement.includes("doc.user_profile"))
+				this.visibleProfiles = structuredClone(this.profiles)
 			return result()
 		}
 		const table = statement.match(/(?:FROM|INTO|UPDATE) ([\w.]+)/)?.[1]
@@ -177,7 +189,14 @@ class FakeCrate {
 				])
 			assert.ok(table?.startsWith("doc.user_"), statement)
 			const field = statement.match(/WHERE (\w+) = \?/)?.[1]
-			let selected = [...rows.values()].filter(
+			// Only primary-key reads see writes before a refresh.
+			const readable =
+				table === "doc.user_list" && field !== "id"
+					? (this.visibleLists ?? rows)
+					: table === "doc.user_profile" && field !== "user_id"
+						? (this.visibleProfiles ?? rows)
+						: rows
+			let selected = [...readable.values()].filter(
 				(row) => !field || row[field] === params[0],
 			)
 			if (statement.includes("deleted_at IS NULL"))
@@ -193,6 +212,10 @@ class FakeCrate {
 			return result(snapshot)
 		}
 		if (this.failWrite) throw new Error("write timeout")
+		if (table === "doc.user_list")
+			this.visibleLists ??= structuredClone(this.lists)
+		if (table === "doc.user_profile")
+			this.visibleProfiles ??= structuredClone(this.profiles)
 		if (statement.startsWith("INSERT")) {
 			const columns = statement.match(/\(([^)]+)\) VALUES/)?.[1].split(", ")
 			assert.ok(columns, statement)
@@ -410,13 +433,28 @@ test("failed DEL bypasses surviving Redis data, throttles retries and recovers",
 	assert.equal(await getListView(id), null)
 	assert.equal(redis.reads, reads)
 	assert.equal(redis.values.get(keyOf()), old)
-	assert.equal(redis.deletes, 1)
+	assert.equal(
+		redis.calls.filter(
+			(c) => c.command === "gwCacheReset" && c.args[0] === keyOf(),
+		).length,
+		1,
+	)
 	t.mock.timers.tick(5000)
 	await getListView(id)
 	await tick()
-	assert.equal(redis.deletes, 2)
+	assert.equal(
+		redis.calls.filter(
+			(c) => c.command === "gwCacheReset" && c.args[0] === keyOf(),
+		).length,
+		2,
+	)
 	await getListView(id)
-	assert.equal(redis.deletes, 2)
+	assert.equal(
+		redis.calls.filter(
+			(c) => c.command === "gwCacheReset" && c.args[0] === keyOf(),
+		).length,
+		2,
+	)
 	redis.failDelete = false
 	t.mock.timers.tick(5000)
 	assert.equal(await getListView(id), null)
@@ -479,4 +517,120 @@ test("unconfirmed reset expires after the marker TTL and drops the oldest at its
 	redis.values.clear()
 	await getListView(id)
 	assert.equal(redis.reads, reads + 2)
+})
+
+const profileKey = (userId = user) =>
+	cacheEntryKey("share-profile-by-user-v1", { userId })
+const pageKey = (handle = "filmfan") =>
+	cacheEntryKey("share-profile-page-v1", { handle })
+async function warmProfiles() {
+	await getCachedProfileByUserId(user)
+	await getProfilePage("filmfan")
+}
+function profilesReset() {
+	assert.equal(redis.values.has(profileKey()), false)
+	assert.equal(redis.values.has(pageKey()), false)
+}
+test("profile caches hit without Crate, normalize handles and exclude unlisted lists", async () => {
+	db.lists.set("Other01234", {
+		...listRow("Other01234"),
+		visibility: "unlisted",
+	})
+	const page = await getProfilePage("FILMFAN")
+	assert.deepEqual(
+		page?.lists.map((l) => l.id),
+		[id],
+	)
+	const profile = await getCachedProfileByUserId(user)
+	db.statements.length = 0
+	assert.deepEqual(await getProfilePage("filmfan"), page)
+	assert.deepEqual(await getCachedProfileByUserId(user), profile)
+	assert.equal(db.statements.length, 0)
+	const calls = redis.calls.length
+	for (const invalid of ["", "../bad", "a".repeat(100)])
+		assert.equal(await getProfilePage(invalid), null)
+	assert.equal(redis.calls.length, calls)
+	assert.equal(await getProfilePage("unknown"), null)
+	const count = db.statements.length
+	assert.equal(await getProfilePage("unknown"), null)
+	assert.equal(db.statements.length, count)
+})
+test("profile caches separate users", async () => {
+	db.profiles.set("second", { user_id: "second", handle: "otherfan" })
+	const profiles = await Promise.all([
+		getCachedProfileByUserId(user),
+		getCachedProfileByUserId("second"),
+	])
+	assert.notDeepEqual(profiles[0], profiles[1])
+	assert.notEqual(profileKey(), profileKey("second"))
+	assert.deepEqual(
+		await Promise.all([
+			getCachedProfileByUserId(user),
+			getCachedProfileByUserId("second"),
+		]),
+		profiles,
+	)
+})
+for (const operation of [
+	"create",
+	"update",
+	"visibility",
+	"delete",
+	"restore",
+] as const)
+	test(`${operation} resets both profile caches`, async () => {
+		if (operation === "restore") await store.deleteList(user, id)
+		await warmProfiles()
+		if (operation === "create") await store.createList(user, input)
+		if (operation === "update")
+			await store.updateList(user, id, { ...input, title: "Changed" })
+		if (operation === "visibility")
+			await store.setListVisibility(user, id, "unlisted")
+		if (operation === "delete") await store.deleteList(user, id)
+		if (operation === "restore") await store.restoreList(user, id)
+		profilesReset()
+		const page = await getProfilePage("filmfan")
+		assert.equal(
+			page?.lists.length,
+			operation === "create"
+				? 2
+				: operation === "delete" || operation === "visibility"
+					? 0
+					: 1,
+		)
+		if (operation === "update") assert.equal(page?.lists[0].title, "Changed")
+	})
+for (const withLists of [true, false])
+	test(`claim and account deletion reset profiles, lists=${withLists}`, async () => {
+		if (!withLists) db.lists.clear()
+		db.profiles.clear()
+		assert.equal(await getCachedProfileByUserId(user), null)
+		assert.equal(await getProfilePage("filmfan"), null)
+		await store.claimHandle(user, "filmfan")
+		profilesReset()
+		await warmProfiles()
+		assert.ok(await getCachedProfileByUserId(user))
+		await store.deleteAccountData(user)
+		profilesReset()
+		assert.equal(await getProfilePage("filmfan"), null)
+		assert.equal(await getCachedProfileByUserId(user), null)
+	})
+test("failed owner lookup preserves list reset; failed handle lookup preserves by-user reset", async (t) => {
+	await getListView(id)
+	await warmProfiles()
+	t.mock.method(console, "error", () => {})
+	const execute = db.execute.bind(db)
+	t.mock.method(db, "execute", async (sql: string, params?: unknown[]) => {
+		if (
+			sql.startsWith("SELECT user_id FROM doc.user_list") ||
+			sql.startsWith("SELECT handle FROM doc.user_profile")
+		)
+			throw new Error("lookup failed")
+		return execute(sql, params)
+	})
+	setCrateClientForTest(db)
+	await resetListView(id)
+	assert.equal(redis.values.has(keyOf()), false)
+	await resetProfileViews(user)
+	assert.equal(redis.values.has(profileKey()), false)
 })

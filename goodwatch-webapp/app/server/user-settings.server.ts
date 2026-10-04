@@ -11,8 +11,8 @@ import { execute, query, upsert } from "~/utils/crate";
 
 const SETTINGS_CACHE = {
 	name: "user-settings",
-	// can't use TTL on this, e.g. because of onboarding
-	ttlMinutes: 1,
+	// Writes refresh Crate and reset; five minutes bounds changes a reset cannot reach.
+	ttlMinutes: 5,
 	staleMinutes: 0,
 } as const;
 declareResettableCache(SETTINGS_CACHE);
@@ -29,10 +29,11 @@ type GetUserSettingsParams = {
 // server call
 
 export const getUserSettings = async (params: GetUserSettingsParams) => {
+	if (!params.userId) return {};
 	return await cached<GetUserSettingsParams, GetUserSettingsResult>({
 		...SETTINGS_CACHE,
 		target: _getUserSettings,
-		params,
+		params: { userId: params.userId },
 	});
 };
 
@@ -119,9 +120,6 @@ export async function setUserSettings({
 		conflictColumns: ["user_id", "key"],
 		ignoreUpdate: options.ignoreUpdate,
 	});
-	// Make the write visible right away. Without it, the refetch after saving (for example the next onboarding step)
-	// can read the old values for up to a second.
-	await execute("REFRESH TABLE user_setting");
 
 	await resetUserSettingsCache({ user_id });
 	return result;
@@ -160,10 +158,17 @@ export const resetUserSettingsCache = async (
 		return 0;
 	}
 
-	return await resetCache({
-		name: SETTINGS_CACHE.name,
-		params: { userId: params.user_id },
-	});
+	const key = { name: SETTINGS_CACHE.name, params: { userId: params.user_id } };
+	try {
+		await execute("REFRESH TABLE user_setting");
+	} catch (error) {
+		console.error("Refreshing member settings before cache reset failed:", error);
+		// Drop any old settings cached before Crate's periodic refresh catches up.
+		setTimeout(() => {
+			void resetCache(key);
+		}, 2000).unref();
+	}
+	return await resetCache(key);
 };
 
 // loader prefetch

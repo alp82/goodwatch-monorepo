@@ -13,12 +13,9 @@ import { Link, useLoaderData, useRevalidator } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import { toast } from "react-toastify"
 import { useShareListOwnerAction } from "~/routes/api.share-lists"
-import {
-	getProfileByHandle,
-	listsByUser,
-	publicListsByUser,
-} from "~/server/share-lists/store.server"
+import { listsByUser } from "~/server/share-lists/store.server"
 import { entryKey, resolveCardTitles } from "~/server/share-lists/titles.server"
+import { getProfilePage } from "~/server/share-lists/view.server"
 import { CardFonts } from "~/ui/share-card/ScaledCard"
 import { newListPath, profilePath } from "~/ui/share-card/links"
 import { type CardTitle, THEMES, cardDate } from "~/ui/share-card/model"
@@ -37,8 +34,9 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const requested = params.handle ?? ""
-	const profile = await getProfileByHandle(requested)
-	if (!profile) throw notFound()
+	const page = await getProfilePage(requested)
+	if (!page) throw notFound()
+	const { profile } = page
 	if (requested !== profile.handle)
 		return redirect(profilePath(profile.handle), 301)
 
@@ -48,10 +46,12 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const lists = (
 		isOwner
 			? await listsByUser(profile.userId)
-			: await publicListsByUser(profile.userId)
+			: page.lists
 	).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 	// One catalog lookup for every card on the page.
-	const titles = await resolveCardTitles(lists.flatMap((list) => list.items))
+	const titles = isOwner
+		? await resolveCardTitles(lists.flatMap((list) => list.items))
+		: page.titles
 	const byKey = new Map(titles.map((t) => [t.key, t]))
 	const summaries: ShareListSummary[] = lists.map((list) => ({
 		id: list.id,

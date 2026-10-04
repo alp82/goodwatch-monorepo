@@ -8,7 +8,7 @@ import {
 } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import React from "react"
-import { getProfileByUserId } from "~/server/share-lists/store.server"
+import { getCachedProfileByUserId } from "~/server/share-lists/view.server"
 import { profilePath } from "~/ui/share-card/links"
 import { HandlePicker } from "~/ui/share-lists/HandlePicker"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -17,7 +17,7 @@ export { pageHeaders as headers } from "~/utils/headers"
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = await getUserIdFromRequest({ request })
-	const profile = userId ? await getProfileByUserId(userId) : null
+	const profile = userId ? await getCachedProfileByUserId(userId) : null
 	return json(
 		{ signedIn: !!userId, handle: profile?.handle ?? null },
 		{ headers: { "Cache-Control": "private, no-store" } },

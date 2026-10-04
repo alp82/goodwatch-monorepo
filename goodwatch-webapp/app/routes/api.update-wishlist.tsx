@@ -1,6 +1,5 @@
 import type { ActionFunction, ActionFunctionArgs } from "@remix-run/node"
 import { updateWishList } from "~/server/wishList.server"
-import { resetUserDataCache } from "~/server/userData.server"
 import { getUserIdFromRequest } from "~/utils/auth"
 
 export const action: ActionFunction = async ({
@@ -19,8 +18,6 @@ export const action: ActionFunction = async ({
 		action: params.action,
 		user_id,
 	})
-
-	await resetUserDataCache({ user_id: user_id })
 
 	return result
 }
