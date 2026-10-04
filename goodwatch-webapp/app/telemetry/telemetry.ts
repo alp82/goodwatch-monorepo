@@ -9,6 +9,12 @@ import {
 	browserLoadTriggerEnv,
 	whenPageIsInteractive,
 } from "./load-trigger"
+import {
+	type NavigationType,
+	type PageViewTracker,
+	createPageViewQueue,
+	createPageViewTracker,
+} from "./page-views"
 import { createReadyQueue } from "./ready-queue"
 
 type PostHogModule = typeof import("./posthog-browser")
@@ -25,6 +31,7 @@ interface State {
 	posthogReady: boolean
 	sentry: SentryModule | null
 	boundaryErrors: unknown[]
+	pageViews: PageViewTracker | null
 }
 
 const state: State = {
@@ -38,7 +45,11 @@ const state: State = {
 	posthogReady: false,
 	sentry: null,
 	boundaryErrors: [],
+	pageViews: null,
 }
+
+// Pages the visitor opened before PostHog loaded. They are sent after the landing page view, oldest first.
+const pendingPageViews = createPageViewQueue()
 
 // Calls for PostHog, such as identifying a member, wait here until it has loaded.
 const posthogCalls = createReadyQueue<PostHog>((error) =>
@@ -70,6 +81,7 @@ async function loadTools(reason: LoadReason) {
 				landingTitle: state.landingTitle,
 				isMember: state.isMember,
 			})
+			for (const view of pendingPageViews.drain()) module.capturePageView(view)
 			state.posthogReady = true
 			posthogCalls.ready(module.posthog)
 		}
@@ -132,6 +144,27 @@ export function telemetryRouteChanged(routeId: string): void {
 	if (isLanding) state.landingRouteId = routeId
 	state.currentRouteId = routeId
 	if (!isLanding) state.sentry?.sentryRouteChanged(routeId)
+}
+
+/**
+ * Reports the address after a route change, with the title the route rendered. Sends a page view when the visitor is
+ * on a new page (see page-views.ts for the rule). The first call is the page the browser loaded, whose page view
+ * `startPostHog` sends.
+ */
+export function telemetryLocationChanged(to: {
+	href: string
+	title: string
+	navigationType: NavigationType
+}): void {
+	if (typeof window === "undefined") return
+	state.pageViews ??= createPageViewTracker(
+		readEarlyTelemetry(window).landing.href,
+	)
+	const view = state.pageViews.navigated({ ...to, time: Date.now() })
+	// Local development sends no analytics.
+	if (!view || isLocalhost()) return
+	if (state.posthogReady) state.posthogModule?.capturePageView(view)
+	else pendingPageViews.add(view)
 }
 
 /** Reports an error that reached a route's error boundary. */

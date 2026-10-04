@@ -1,12 +1,19 @@
-import { useLocation, useMatches } from "@remix-run/react"
+import { useLocation, useMatches, useNavigationType } from "@remix-run/react"
 import { useEffect, useRef } from "react"
 import { useUser } from "~/utils/auth"
 import {
 	setTelemetryMember,
 	startTelemetry,
+	telemetryLocationChanged,
 	telemetryRouteChanged,
 	withPostHog,
 } from "./telemetry"
+
+const NAVIGATION_TYPES = {
+	PUSH: "pushState",
+	REPLACE: "replaceState",
+	POP: "popstate",
+} as const
 
 /**
  * Starts analytics and error tracking for the document it is rendered in, and keeps them informed about the route and
@@ -16,11 +23,20 @@ export function TelemetryBoot() {
 	const { user } = useUser()
 	const location = useLocation()
 	const matches = useMatches()
+	const navigationType = useNavigationType()
 	const identified = useRef(false)
 
+	// Runs after the new route is on the page, so the document title is the new route's. PostHog's scroll record
+	// still holds the old page (the scroll reset reaches it with the next scroll event), so the page view carries the
+	// previous page's scroll depth.
 	useEffect(() => {
 		const routeId = matches[matches.length - 1]?.id
 		if (routeId) telemetryRouteChanged(routeId)
+		telemetryLocationChanged({
+			href: window.location.href,
+			title: document.title,
+			navigationType: NAVIGATION_TYPES[navigationType],
+		})
 	}, [location])
 
 	useEffect(() => {
