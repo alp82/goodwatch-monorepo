@@ -31,6 +31,21 @@ export interface TitleExtrasParams {
 	}
 }
 
+/**
+ * Whether the document holds every extra that the title has: the genre links, and the collection of a movie that is
+ * part of one. A document that left one out (the budget ran out, or a lookup failed) is incomplete, and no cache may
+ * keep it. The conditions are the ones `prefetchTitleExtras` uses.
+ */
+export function titleExtrasEmbedded(
+	state: { queries: readonly unknown[] } | null | undefined,
+	{ genres, movieSeries }: Pick<TitleExtrasParams, "genres" | "movieSeries">,
+): boolean {
+	const expected =
+		((genres ?? []).length ? 1 : 0) +
+		(movieSeries?.id && (movieSeries.movie_ids ?? []).length ? 1 : 0)
+	return (state?.queries.length ?? 0) >= expected
+}
+
 export async function prefetchTitleExtras({
 	genres: names,
 	movieSeries,

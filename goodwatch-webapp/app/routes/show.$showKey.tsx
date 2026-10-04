@@ -11,11 +11,13 @@ import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { getDetailsForShow, getDetailsForMovie } from "~/server/details.server"
 import { isCrawler } from "~/server/crawlers.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
+import { relatedPanelEmbedded } from "~/server/related-prefetch"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { type EpisodeGridWire, packEpisodeGrid, unpackEpisodeGrid } from "~/utils/episode-grid-wire"
 import { resolveCountry } from "~/server/country.server"
 import { prefetchRelatedTitlesState } from "~/server/related.server"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
+import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { mergeDehydratedStates } from "~/utils/title-extras"
 import { getUserSettings } from "~/server/user-settings.server"
 import Details from "~/ui/details/Details"
@@ -87,7 +89,7 @@ export const loader: LoaderFunction = async ({
 	])
 	const dehydratedState = mergeDehydratedStates(relatedState, extrasState)
 
-	return {
+	const data = {
 		media,
 		episodeGrid,
 		params: {
@@ -96,6 +98,14 @@ export const loader: LoaderFunction = async ({
 		countryIsFallback,
 		dehydratedState,
 	}
+	// Without the embedded related panel or an extra (a lookup ran out of its budget or failed) the page is incomplete:
+	// no cache may keep it. The page cache and a cache in front follow this header.
+	const complete =
+		relatedPanelEmbedded(relatedState) &&
+		titleExtrasEmbedded(extrasState, { genres: media.details.genres })
+	return complete
+		? data
+		: json(data, { headers: { "Cache-Control": "no-store" } })
 }
 
 export default function DetailsTV() {

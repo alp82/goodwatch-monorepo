@@ -3,7 +3,9 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "./title-filter/test-alias.ts"
 const { relatedPrefetchBudgetMs } = await import("./related-budget.ts")
-const { prefetchRelatedState } = await import("./related-prefetch.ts")
+const { prefetchRelatedState, relatedPanelEmbedded } = await import(
+	"./related-prefetch.ts"
+)
 const { renderMetrics, resetMetricsForTest } = await import(
 	"./metrics/registry.server.ts"
 )
@@ -20,6 +22,7 @@ test("crawler budgets and fast, slow, failing lookups", async (t) => {
 		async () => panel,
 	)
 	assert.equal(fast.queries.length, 1)
+	assert.equal(relatedPanelEmbedded(fast), true)
 	let finish: (value: typeof panel) => void = () => {}
 	let completed = false
 	const pending = new Promise<typeof panel>((resolve) => {
@@ -33,6 +36,7 @@ test("crawler budgets and fast, slow, failing lookups", async (t) => {
 		() => pending,
 	)
 	assert.deepEqual(slow, { mutations: [], queries: [] })
+	assert.equal(relatedPanelEmbedded(slow), false)
 	assert.equal(completed, false)
 	finish(panel)
 	await pending
@@ -42,6 +46,7 @@ test("crawler budgets and fast, slow, failing lookups", async (t) => {
 		throw new Error("failed")
 	})
 	assert.deepEqual(failed, { mutations: [], queries: [] })
+	assert.equal(relatedPanelEmbedded(failed), false)
 	let reject: (reason: Error) => void = () => {}
 	const late = new Promise<typeof panel>((_, r) => {
 		reject = r

@@ -4,9 +4,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 
 import "./title-filter/test-alias.ts"
-const { prefetchTitleExtras: prefetchTitleExtrasState } = await import(
-	"./title-extras-prefetch.ts"
-)
+const { prefetchTitleExtras: prefetchTitleExtrasState, titleExtrasEmbedded } =
+	await import("./title-extras-prefetch.ts")
 const {
 	genreLinksOf,
 	genreLinksQueryKey,
@@ -121,4 +120,47 @@ test("merged states keep every query", () => {
 	const a = { mutations: [], queries: [{ queryKey: ["a"] }] } as never
 	const b = { mutations: [], queries: [{ queryKey: ["b"] }] } as never
 	assert.deepEqual(keysOf(mergeDehydratedStates(a, null, b)), [["a"], ["b"]])
+})
+
+test("a document is complete when its state holds every extra the title has", async () => {
+	const title = {
+		genres: ["Action"],
+		movieSeries: { id: 2344, movie_ids: [603, 604] },
+	}
+	const complete = await prefetchTitleExtrasState({
+		...title,
+		budgetMs: 1000,
+		lookups: { genres: async () => ALL, collection },
+	})
+	assert.equal(titleExtrasEmbedded(complete, title), true)
+	const withoutCollection = await prefetchTitleExtrasState({
+		...title,
+		budgetMs: 1000,
+		lookups: {
+			genres: async () => ALL,
+			collection: async () => {
+				throw new Error("down")
+			},
+		},
+	})
+	assert.equal(titleExtrasEmbedded(withoutCollection, title), false)
+	const timedOut = await prefetchTitleExtrasState({
+		...title,
+		budgetMs: 5,
+		lookups: { genres: () => new Promise(() => {}), collection },
+	})
+	assert.equal(titleExtrasEmbedded(timedOut, title), false)
+	assert.equal(titleExtrasEmbedded(null, title), false)
+	assert.equal(titleExtrasEmbedded(null, { genres: [] }), true)
+	assert.equal(
+		titleExtrasEmbedded({ queries: [] }, { genres: null, movieSeries: null }),
+		true,
+	)
+	assert.equal(
+		titleExtrasEmbedded(
+			{ queries: [{}] },
+			{ genres: ["Drama"], movieSeries: { id: 0, movie_ids: [] } },
+		),
+		true,
+	)
 })

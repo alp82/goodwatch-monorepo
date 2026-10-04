@@ -11,6 +11,12 @@ const outcomes = counter(
 	["source", "result"],
 )
 
+export function relatedPanelEmbedded(state: {
+	queries: readonly unknown[]
+}): boolean {
+	return state.queries.length > 0
+}
+
 /** A timed-out lookup keeps filling its data cache; only the document stops waiting. */
 export async function prefetchRelatedState(
 	{
