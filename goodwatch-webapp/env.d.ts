@@ -5,4 +5,5 @@
 declare module "virtual:remix/server-build" {
 	export const routes: import("@remix-run/server-runtime").ServerBuild["routes"]
 	export const assetsBuildDirectory: string
+	export const publicPath: string
 }

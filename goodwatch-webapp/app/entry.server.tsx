@@ -11,6 +11,7 @@ import { isbot } from "isbot"
 import { renderToPipeableStream } from "react-dom/server"
 import { HtmlStream } from "~/server/html-stream.server"
 import { startLifecycle } from "~/server/lifecycle.server"
+import { startStaticFiles } from "~/server/static-files.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 
 // While the server build loads, before `remix-serve` registers its signal listeners and before the first request:
@@ -18,6 +19,9 @@ import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 // waits for. The root loader starts the snapshot too, but a health check that asks /health/ready never reaches it.
 startLifecycle()
 startTitleSnapshot()
+// Also before the first request: the files of the client build are answered before Express (see
+// static-files.server.ts). The root loader starts the gate and the metrics, but a static request never reaches it.
+startStaticFiles()
 
 const ABORT_DELAY = 5_000
 

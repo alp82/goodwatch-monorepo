@@ -7,7 +7,7 @@
 	"scripts": {
 		"dev": "remix vite:dev",
 		"start": "remix-serve ./build/server/index.js",
-		"build": "patch-package && remix vite:build",
+		"build": "patch-package && remix vite:build && node scripts/precompress.mjs",
 		"typecheck": "tsc",
 		"test": "node --test 'app/**/*.test.ts'",
 		"check:share-cards": "vite-node scripts/check-share-cards.tsx",
