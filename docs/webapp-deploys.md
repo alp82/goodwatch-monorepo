@@ -1,6 +1,6 @@
 # Webapp deploys: readiness and shutdown
 
-How a deploy of the webapp switches containers, what the webapp does at its start and its end, and which Coolify settings belong to it. Measured on October 4, 2026 for [Stop deploys from answering 502](https://github.com/alp82/goodwatch-monorepo/issues/298).
+How a deploy of the webapp switches containers, what the webapp does at its start and its end, how two instances on different builds serve each other's files, and which Coolify settings belong to it. Measured on October 4, 2026 for [Stop deploys from answering 502](https://github.com/alp82/goodwatch-monorepo/issues/298).
 
 ## What a deploy does
 
@@ -93,6 +93,49 @@ In production, at 2 requests per second from outside:
 | Exit of the old container | SIGKILL after 30 seconds, code 137 | Code 0 after 8.1 seconds |
 
 Docker reported the old container's end 0.5 seconds after the process had exited. That half second, plus Traefik's reaction, is the window that remains: every second request in it fails. At 50 requests per second, that's about 15 failed requests per deploy.
+
+## Two instances on different builds
+
+The webapp runs as two instances behind a balancing route (`goodwatch-proxy/traefik/goodwatch-balance.yaml`). Coolify deploys them one after the other, about 2 minutes each, so for 2 to 4 minutes one instance runs the new build and the other one the old build. On each host, the old and the new container also run side by side for some seconds.
+
+A page names the script and style files of the build that rendered it. Those files carry a content hash in their name, and only that build has them. A browser sends the sticky cookie `gw_instance` and reaches the instance that rendered the page. A client without cookies (a crawler, a link preview, the smoke check) alternates between the instances, and got a 404 for every second file. Confirmed on October 4, 2026, for [Serve a build's script files from every instance during a deploy](https://github.com/alp82/goodwatch-monorepo/issues/312).
+
+### The shared store for build files
+
+`goodwatch-webapp/app/server/build-file-store.server.ts` holds the store, and `static-files.server.ts` uses it.
+
+- **Publish:** a process writes the hashed files of its build to Valkey when it starts: every file under `/assets/` except source maps, in its Brotli form when the build has one. The readiness check `build files` waits for the first attempt, so a new instance gets no page requests before the other instance can serve its files. The process writes them again every 8 hours, and after 1 minute when a write failed.
+- **Lookup:** on a request under `/assets/` for a file that the build doesn't have, the process reads the file from Valkey once, keeps it in memory (32 MB at most), and answers it like a file of its own build: the same `ETag`, `immutable` for a year, Brotli for clients that accept it. The first read of a file logs `Build file from the shared store: <path>`.
+- **Miss:** a file that Valkey doesn't have answers 404 with `no-store`, as before. The process remembers the miss for 5 seconds.
+
+| Item | Value |
+| --- | --- |
+| Key | `build-file:v1:<path>`, for example `build-file:v1:/assets/root-AbCd1234.js` |
+| Expiry | 24 hours, renewed every 8 hours while a process of that build runs |
+| Files per build | 220 in production on October 4, 2026: scripts, style sheets, and the images and fonts that scripts import |
+| Size per build | About 3 MB. A file that two builds share is one key, so a deploy adds only the files that changed |
+| Largest stored file | 2 MB. A larger file isn't stored |
+| Read time limit | 1 second |
+| Reads in flight | 32 different files at most. Requests for the same file share one read |
+
+Why Valkey, and not a request to the other instance or the previous build's files in the image:
+
+- Both instances already share Valkey. Neither needs the other's address, and no route between them: the instance on vector1 can't reach the instance on abio today (abio's proxy has no route to its local instance alone, and the container's port isn't published).
+- No request is passed on, so nothing can loop and nothing is proxied. A request path is only used as part of a key, and only when it has the shape of a hashed build file name.
+- It works in both directions. The old instance serves the new build's files, which an image with the previous build's files can't do.
+- It works for more than two instances, and for the two containers of one host during the switch.
+- If static files move to a file server or a CDN later ([Decide where static assets are served from](https://github.com/alp82/goodwatch-monorepo/issues/310)), the store does no harm: a CDN that fetches from the instances without a cookie needs exactly this, and with a shared directory the lookups just stop happening.
+
+What it doesn't cover:
+
+- A route that only the new build has, such as a new URL pattern. The old instance answers what it answers for an unknown path.
+- Source maps and files larger than 2 MB.
+- A tab that was opened more than a day before, when no process of its build has run since. Its script requests get the 404, and the page reloads (`goodwatch-webapp/app/utils/stale-chunk.ts`).
+- Valkey being down during a deploy. The lookups then fail fast and answer 404, as before the store.
+
+### Check it locally
+
+Run two production builds with different hashes as two processes against a throwaway Valkey (a single-node cluster in a container), never against the production cluster. Request a file of each build from the other process and compare the bytes and the headers. On October 4, 2026: all 223 files of one local build, requested from the other build's process, answered 200 with the same bytes, and with Valkey stopped an unknown file answered 404 in under 1 ms.
 
 ## Coolify settings
 
