@@ -1,6 +1,7 @@
 // Pieces the Taste page's three tabs share: title pictures and links, the person's own score, the poster with that
 // score, the suggestion card, and the On my services switch.
 import { Link } from "@remix-run/react"
+import { TmdbImage } from "~/ui/TmdbImage"
 import { useState } from "react"
 import type {
 	PortraitService,
@@ -159,10 +160,12 @@ export function ServicesSwitch({
 		>
 			<span className="flex -space-x-1.5">
 				{services.slice(0, 4).map((service) => (
-					<img
+					<TmdbImage
 						key={service.id}
-						src={`https://www.themoviedb.org/t/p/original/${service.logo_path}`}
-						alt=""
+						kind="logo"
+						path={service.logo_path}
+						width={20}
+						ratio={1}
 						className={`h-5 w-5 rounded-md ring-2 ring-gray-950 ${filter.onlyMine ? "" : "opacity-60 grayscale"}`}
 					/>
 				))}

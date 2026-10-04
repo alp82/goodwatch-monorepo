@@ -7,7 +7,7 @@ import ListActions from "~/ui/details/hero/ListActions"
 import RateButton from "~/ui/details/hero/RateButton"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
-import { BackdropTrailer, PosterTrailer, backdropUrl } from "~/ui/details/hero/Trailer"
+import { BackdropTrailer, HeroBackdropImage, PosterTrailer } from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
 import type { Section, SectionProps } from "~/utils/scroll"
 
@@ -123,7 +123,7 @@ function PosterMatchedRow({ media, children }: { media: Media; children: React.R
 			{/* z-30 keeps the rate, country, and all-services popovers above the sections below. */}
 			<div ref={boxRef} className="relative isolate z-30 flex min-w-0 flex-col rounded-2xl border border-white/10 bg-stone-950 md:rounded-xl">
 				<div className="absolute inset-0 -z-10 overflow-hidden rounded-2xl md:rounded-xl" aria-hidden="true">
-					<img src={backdropUrl(media)} alt="" className="h-full w-full scale-110 object-cover object-[center_25%]" />
+					<HeroBackdropImage media={media} className="h-full w-full scale-110 object-cover object-[center_25%]" />
 					<div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
 					<div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70" />
 				</div>

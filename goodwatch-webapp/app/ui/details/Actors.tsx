@@ -4,6 +4,7 @@ import { SwiperSlide } from "swiper/react"
 import "swiper/css"
 import "swiper/css/navigation"
 import ListSwiper from "~/ui/ListSwiper"
+import { TmdbImage } from "~/ui/TmdbImage"
 import type { Actor } from "~/server/types/details-types"
 import { personPath } from "~/utils/helpers"
 
@@ -48,9 +49,11 @@ export default function Actors({ actors }: CastProps) {
 								className="flex flex-col items-center group px-2"
 							>
 								<div className="w-36 h-36 mb-2 rounded-full overflow-hidden border-2 border-stone-400 shadow-lg group-hover:border-slate-200 transition-all">
-									<img
+									<TmdbImage
+										kind="profile"
+										path={actor.profile_path as string}
+										width={144}
 										className="w-full h-full object-cover"
-										src={`https://www.themoviedb.org/t/p/original/${actor.profile_path}`}
 										alt={`${actor.name} profile`}
 									/>
 								</div>

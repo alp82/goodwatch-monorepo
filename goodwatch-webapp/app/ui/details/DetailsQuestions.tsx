@@ -18,6 +18,7 @@ import type React from "react"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { useStreamingLinks } from "~/ui/details/hero/WhereToWatch"
+import { TmdbImage } from "~/ui/TmdbImage"
 import { type QuestionId, ageInfo, agreement, FEATURED_TROPES, featuredTropes, money, titleQuestions, tropeCount } from "~/ui/details/titleQuestions"
 
 type Media = MovieResult | ShowResult
@@ -90,7 +91,7 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 			<div className="mt-4 flex flex-wrap gap-2">
 				{links.slice(0, 8).map((l) => (
 					<a key={l.id} href={l.url} target="_blank" rel="noreferrer" className="flex h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/5 pr-3 hover:bg-white/10">
-						<img src={l.logo} alt="" className="h-full aspect-square rounded-md" />
+						<TmdbImage kind="logo" path={l.logoPath} width={40} ratio={1} className="h-full w-auto aspect-square rounded-md" />
 						<span className="text-sm font-medium">{l.name}</span>
 					</a>
 				))}

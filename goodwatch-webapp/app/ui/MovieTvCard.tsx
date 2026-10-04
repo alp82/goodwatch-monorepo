@@ -7,7 +7,7 @@ import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { DiscoverResult } from "~/server/discover.server"
 import type { OnboardingResult } from "~/server/onboarding-media.server"
 import type { TitleCard } from "~/server/title-cards.server"
-import { Poster } from "~/ui/Poster"
+import { Poster, type PosterProps } from "~/ui/Poster"
 import RatingOverlay from "~/ui/ratings/RatingOverlay"
 import StreamingOverlay from "~/ui/streaming/StreamingOverlay"
 import { RatingMark } from "~/ui/title-card/RatingMark"
@@ -29,6 +29,10 @@ interface MovieTvCardProps {
 	taste?: CardTaste
 	/** The title's age rating for the viewer, shown while an age limit is on. */
 	rating?: RatingBadge | null
+	/** The poster's displayed widths, when the card isn't in the grid. */
+	posterSizes?: PosterProps["sizes"]
+	/** Set by a page for the cards it shows without scrolling. Every other poster loads lazily. */
+	posterPriority?: PosterProps["priority"]
 }
 
 export function MovieTvCard({
@@ -37,6 +41,8 @@ export function MovieTvCard({
 	prefetch = false,
 	taste,
 	rating,
+	posterSizes,
+	posterPriority,
 }: MovieTvCardProps) {
 	const ratings = extractRatings(details)
 	const userScoreData = useUserScore(mediaType, details.tmdb_id)
@@ -68,7 +74,14 @@ export function MovieTvCard({
 				{details.streaming_links && (
 					<StreamingOverlay links={details.streaming_links} />
 				)}
-				<Poster path={details.poster_path} title={details.title} mediaType={mediaType} tmdbId={details.tmdb_id} />
+				<Poster
+					path={details.poster_path}
+					title={details.title}
+					mediaType={mediaType}
+					tmdbId={details.tmdb_id}
+					sizes={posterSizes}
+					priority={posterPriority}
+				/>
 
 				{/* The bottom left is the one free corner; a card too narrow for its title keeps the badge there. */}
 				{rating && (

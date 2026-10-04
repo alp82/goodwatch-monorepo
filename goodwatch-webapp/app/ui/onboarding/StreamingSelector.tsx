@@ -1,4 +1,5 @@
 import { FilmIcon } from "@heroicons/react/24/solid"
+import { TmdbImage } from "~/ui/TmdbImage"
 import { useState } from "react"
 import { type StreamingProvider, useStreamingProviders } from "~/routes/api.streaming-providers"
 import { useUserSettings } from "~/routes/api.user-settings.get"
@@ -94,9 +95,12 @@ export default function StreamingSelector({ onSelect, onCancel }: StreamingSelec
 							if (!provider) return null
 							return (
 								<div key={provider.id} className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 rounded overflow-hidden bg-white/5">
-									<img
+									<TmdbImage
+										kind="logo"
+										path={provider.logo_path}
+										width={40}
+										ratio={1}
 										className="w-full h-full object-cover"
-										src={`https://www.themoviedb.org/t/p/original/${provider.logo_path}`}
 										alt={provider.name}
 										title={provider.name}
 									/>

@@ -190,6 +190,7 @@ function Accordion({
 									<Portrait
 										path={p.profile}
 										name={p.name}
+										width={160}
 										className="h-full w-full"
 									/>
 								</Link>
@@ -221,6 +222,7 @@ function Accordion({
 								<Portrait
 									path={p.profile}
 									name={p.name}
+									width={160}
 									className={`absolute inset-0 h-full w-full opacity-50 grayscale transition-[filter,opacity] duration-150 group-hover:opacity-100 group-hover:grayscale-0 ${noMotion}`}
 								/>
 								<span className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/90 via-black/30 to-transparent" />
@@ -259,6 +261,7 @@ function Banner({
 						<Portrait
 							path={current.profile}
 							name={current.name}
+							width={96}
 							className="h-36 w-24 rounded-lg shadow-2xl"
 						/>
 					</Link>

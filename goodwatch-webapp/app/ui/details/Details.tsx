@@ -8,6 +8,7 @@ import DetailsHero from "~/ui/details/hero/DetailsHero"
 import { useScrollSections } from "~/utils/scroll"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
+import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 
 export interface DetailsProps {
@@ -20,7 +21,8 @@ export default function Details({ media, country, episodeGrid }: DetailsProps) {
 	const [headerHeight, setHeaderHeight] = useState(112)
 	const { details } = media
 	const { backdrop_path } = details
-	const backdropUrl = `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces/${backdrop_path}`
+	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
+	const backdropUrl = backdrop_path ? tmdbImageUrl(backdrop_path, "w300") : ""
 
 	// Scroll Sections
 	const { activeSections, sectionProps, navigateToSection } = useScrollSections(

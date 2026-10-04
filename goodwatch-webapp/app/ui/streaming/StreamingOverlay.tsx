@@ -1,5 +1,6 @@
 import React from "react"
 import { type StreamingLink, StreamingProviders } from "~/server/details.server"
+import { TmdbImage } from "~/ui/TmdbImage"
 
 export interface StreamingOverlayProps {
 	links?: StreamingLink[]
@@ -20,10 +21,13 @@ export default function StreamingOverlay({ links }: StreamingOverlayProps) {
 		<div className="hidden @5xs:flex items-center gap-1 absolute top-5 left-1 w-full overflow-hidden opacity-80">
 			{hasProviders ? (
 				uniqueLinks.map((link, index) => (
-					<img
+					<TmdbImage
 						key={`${link.provider_id}`}
+						kind="logo"
+						path={link.provider_logo_path}
+						width={32}
+						ratio={1}
 						className="w-8 h-8 rounded-lg border-2 border-gray-500"
-						src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
 						alt={link.provider_name}
 					/>
 				))

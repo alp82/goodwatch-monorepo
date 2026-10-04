@@ -1,4 +1,5 @@
 import React from "react"
+import { TmdbImage } from "~/ui/TmdbImage"
 import type { StreamingProvider } from "~/routes/api.streaming-providers"
 
 interface StreamingProviderToggleProps {
@@ -32,9 +33,12 @@ export default function StreamingProviderToggle({
 			onClick={handleToggle}
 		>
 			<div className="w-12 h-12 md:w-14 md:h-14 rounded-md overflow-hidden bg-white/5 flex items-center justify-center">
-				<img
+				<TmdbImage
+					kind="logo"
+					path={provider.logo_path}
+					width={56}
+					ratio={1}
 					className="w-full h-full object-cover"
-					src={`https://www.themoviedb.org/t/p/original/${provider.logo_path}`}
 					alt={provider.name}
 				/>
 			</div>

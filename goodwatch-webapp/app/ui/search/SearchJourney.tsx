@@ -1,4 +1,5 @@
 // Production search journey: accepted inline-filter variant, isolated from taste storage.
+import { tmdbImageUrl } from "~/utils/tmdb-image"
 import {
 	createContext,
 	useContext,
@@ -752,7 +753,7 @@ function JourneyList() {
 	const j = useSearchJourney()!;
 	const posterUrl = (r: Row) =>
 		r.poster
-			? `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${r.poster}`
+			? tmdbImageUrl(r.poster, "w342")
 			: placeholder;
 	const meta = (r: Row) => `${r.year} · ${r.type}`;
 	const active = (r: Row) =>
@@ -802,6 +803,8 @@ function JourneyList() {
 					const body = (
 						<>
 							<img
+								loading="lazy"
+								decoding="async"
 								src={posterUrl(r)}
 								alt=""
 								className="h-full w-full object-cover transition-transform duration-300 motion-reduce:transition-none group-hover:scale-105 group-focus-within:scale-105"

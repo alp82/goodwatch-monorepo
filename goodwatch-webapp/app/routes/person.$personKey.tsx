@@ -56,11 +56,13 @@ import {
 	limitFilteredViews,
 	toUnfiltered,
 } from "~/server/crawlers.server"
+import { TmdbImage } from "~/ui/TmdbImage"
 import { NoTitlesOfType, TypeFilter } from "~/ui/type-filter"
 import { personPath, pluralize, titleToDashed } from "~/utils/helpers"
 import { useHydrated } from "~/utils/hydrated"
 import { buildMeta } from "~/utils/meta"
 import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
+import type { SizeRule } from "~/utils/tmdb-image"
 
 export { pageHeaders as headers } from "~/utils/headers"
 export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
@@ -211,8 +213,7 @@ const traitLabel = (key: string) =>
 const traitEmoji = (key: string) => FINGERPRINT_META[key]?.emoji ?? ""
 const titleHref = (c: { media_type: string; tmdb_id: number; title: string }) =>
 	`/${c.media_type}/${c.tmdb_id}-${titleToDashed(c.title)}`
-const img = (path: string | null, size = "w300_and_h450_bestv2") =>
-	path ? `https://image.tmdb.org/t/p/${size}${path}` : undefined
+const HERO_BACKDROP_SIZES: SizeRule[] = [[null, "100vw"]]
 const AMBER = "#fbbf24" // more than the catalog average
 const SKY = "#38bdf8" // less than the catalog average
 const MUTED = "#6b7280"
@@ -347,9 +348,14 @@ function Hero({ data, children }: { data: Data; children?: React.ReactNode }) {
 	return (
 		<header className="relative isolate overflow-hidden">
 			{hero && (
-				<img
-					src={img(hero.backdrop_path, "w1280")}
-					alt=""
+				// The page's largest image. It is dimmed to 30%, so it is requested at the width of
+				// the viewport, not at the width it is cropped from.
+				<TmdbImage
+					kind="backdrop"
+					path={hero.backdrop_path as string}
+					sizes={HERO_BACKDROP_SIZES}
+					maxWidth={1280}
+					priority="high"
 					className="absolute inset-0 -z-10 h-full w-full object-cover opacity-30"
 				/>
 			)}
@@ -359,6 +365,8 @@ function Hero({ data, children }: { data: Data; children?: React.ReactNode }) {
 					<Portrait
 						path={p.profile_path}
 						name={p.name}
+						width={120}
+						priority="eager"
 						className="h-36 w-24 shrink-0 rounded-lg shadow-2xl sm:h-44 sm:w-30"
 					/>
 					<div className="min-w-0">
@@ -573,8 +581,10 @@ function Facts({ data }: { data: Data }) {
 				<Fact label="Highest rated" href={titleHref(s.best)}>
 					<div className="flex items-center gap-3">
 						{s.best.poster_path && (
-							<img
-								src={img(s.best.poster_path, "w92")}
+							<TmdbImage
+								kind="poster"
+								path={s.best.poster_path}
+								width={32}
 								alt={`Poster for ${s.best.title}`}
 								className="h-12 w-8 rounded object-cover"
 							/>
@@ -841,6 +851,7 @@ function CollaboratorCards({ data }: { data: Data }) {
 						<Portrait
 							path={c.profile_path}
 							name={c.name}
+							width={48}
 							className="h-16 w-12 shrink-0 rounded-md"
 						/>
 						<div className="min-w-0">

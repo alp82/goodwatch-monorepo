@@ -1,4 +1,5 @@
 import { CheckIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid"
+import { TmdbImage } from "~/ui/TmdbImage"
 import { FilmIcon } from "@heroicons/react/24/solid"
 import React from "react"
 import Highlighter from "react-highlight-words"
@@ -91,9 +92,11 @@ export default function SectionSimilar({
 				className={`w-full flex items-center justify-between gap-4 ${isSelected ? "text-green-400" : ""}`}
 			>
 				<span className="flex items-center gap-4">
-					<img
+					<TmdbImage
+						kind="poster"
+						path={item.img}
+						width={32}
 						className="w-auto h-12 rounded-sm"
-						src={`https://www.themoviedb.org/t/p/original/${item.img}`}
 						alt={`${item.label} poster`}
 					/>
 					<div className="text-sm font-medium truncate">

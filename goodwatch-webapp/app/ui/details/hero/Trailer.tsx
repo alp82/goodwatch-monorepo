@@ -5,11 +5,27 @@ import { useState } from "react"
 import ReactPlayer from "react-player/youtube"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { TmdbImage } from "~/ui/TmdbImage"
+import type { SizeRule } from "~/utils/tmdb-image"
 
 type Media = MovieResult | ShowResult
 
-export const backdropUrl = (media: Media) => `https://www.themoviedb.org/t/p/w1920_and_h800_multi_faces${media.details.backdrop_path}`
-export const posterUrl = (media: Media) => `https://www.themoviedb.org/t/p/w300_and_h450_bestv2${media.details.poster_path}`
+// The hero shows the backdrop twice with one request: sharp in the phone banner, and blurred and
+// darkened behind the box. Both images carry the same sources so the browser picks the same file,
+// and that file is the page's largest image. From md up only the blurred one shows, so it
+// declares half the box width there.
+const HERO_BACKDROP_SIZES: SizeRule[] = [
+	["(min-width: 768px)", "390px"],
+	[null, "100vw"],
+]
+
+export function HeroBackdropImage({ media, className }: { media: Media; className: string }) {
+	if (!media.details.backdrop_path) return null
+	return <TmdbImage kind="backdrop" path={media.details.backdrop_path} sizes={HERO_BACKDROP_SIZES} maxWidth={780} priority="high" className={className} />
+}
+
+// The poster column is 192 to 352 px wide and shows from md up. Lazy, so a phone never requests it.
+const HERO_POSTER_SIZES: SizeRule[] = [[null, "340px"]]
 
 const trailerKey = (media: Media) => media.videos?.trailers?.[0]?.key
 
@@ -79,9 +95,12 @@ export function PosterTrailer({ media, className = "" }: { media: Media; classNa
 			media={media}
 			className={`overflow-hidden rounded-xl shadow-2xl shadow-black/60 ${className}`}
 			image={
-				<img
-					ref={impressionRef}
-					src={posterUrl(media)}
+				<TmdbImage
+					imgRef={impressionRef}
+					kind="poster"
+					path={media.details.poster_path}
+					sizes={HERO_POSTER_SIZES}
+					maxWidth={352}
 					alt={`Poster for ${media.details.title}`}
 					className="h-full w-full bg-white/5 object-cover"
 					draggable={false}
@@ -97,7 +116,7 @@ export function BackdropTrailer({ media, className = "" }: { media: Media; class
 		<TrailerImage
 			media={media}
 			className={`w-full overflow-hidden [mask-image:linear-gradient(to_bottom,black_65%,transparent)] ${className}`}
-			image={<img src={backdropUrl(media)} alt="" className="absolute inset-0 h-full w-full object-cover object-[center_25%]" />}
+			image={<HeroBackdropImage media={media} className="absolute inset-0 h-full w-full object-cover object-[center_25%]" />}
 		/>
 	)
 }

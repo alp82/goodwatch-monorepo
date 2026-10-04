@@ -6,6 +6,7 @@ import type { DiscoverParams, DiscoverResult } from "~/server/discover.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
 import { Spinner } from "~/ui/wait/Spinner"
 import { seededRandomSin } from "~/utils/random"
+import { gridPosterPriority } from "~/utils/tmdb-image"
 import { useLocation } from "@remix-run/react"
 import { usePageTracking } from "~/hooks/usePageTracking"
 import {
@@ -122,6 +123,7 @@ export default function MovieTvGrid({
 										details={result as DiscoverResult}
 										mediaType={result.media_type}
 										prefetch={false}
+										posterPriority={gridPosterPriority(index)}
 									/>
 								</motion.div>
 							</div>

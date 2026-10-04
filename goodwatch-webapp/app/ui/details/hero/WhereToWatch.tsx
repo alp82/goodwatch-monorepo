@@ -4,6 +4,7 @@ import { Link } from "@remix-run/react"
 import React, { useEffect, useRef, useState } from "react"
 import { useUserStreamingProviders } from "~/routes/api.user-settings.get"
 import type { MovieResult, ShowResult, StreamingType } from "~/server/types/details-types"
+import { TmdbImage } from "~/ui/TmdbImage"
 import { useClickOutside } from "~/ui/details/hero/useClickOutside"
 import CountrySelector from "~/ui/streaming/CountrySelector"
 import type { Section } from "~/utils/scroll"
@@ -25,7 +26,7 @@ export function useStreamingLinks(media: Media, country: string, types: Streamin
 			return {
 				id: l.streaming_service_id,
 				name: s ? brandName(getShorterProviderLabel(s.name)) : "",
-				logo: s ? `https://www.themoviedb.org/t/p/original/${s.logo}` : "",
+				logoPath: s?.logo ?? "",
 				url: getStreamingUrl(l as never, details as never, country, mediaType),
 				type: l.streaming_type,
 				owned: owned.includes(l.streaming_service_id),
@@ -89,7 +90,7 @@ export default function WhereToWatch({ media, country, navigateToSection }: { me
 			}`}
 			style={{ height: TILE_H }}
 		>
-			<img src={l.logo} alt={l.name} className="aspect-square h-full rounded-md" />
+			<TmdbImage kind="logo" path={l.logoPath} width={44} ratio={1} alt={l.name} className="aspect-square h-full w-auto rounded-md" />
 			<span className="hidden truncate text-sm font-medium md:inline" aria-hidden="true">
 				{l.name}
 			</span>

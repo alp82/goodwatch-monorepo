@@ -1,12 +1,26 @@
+import { TmdbImage, type TmdbImageProps } from "~/ui/TmdbImage"
+
 // A person's portrait from TMDB, or their initial when there is none. Shared by the person page and search.
 export function Portrait({
 	path,
 	name,
 	className,
-}: { path: string | null; name: string; className: string }) {
+	width,
+	priority,
+}: {
+	path: string | null
+	name: string
+	className: string
+	/** The widest the portrait is displayed, in CSS pixels. */
+	width: number
+	priority?: TmdbImageProps["priority"]
+}) {
 	return path ? (
-		<img
-			src={`https://image.tmdb.org/t/p/w300_and_h450_bestv2${path}`}
+		<TmdbImage
+			kind="profile"
+			path={path}
+			width={width}
+			priority={priority}
 			alt={`Portrait of ${name}`}
 			className={`object-cover ${className}`}
 		/>

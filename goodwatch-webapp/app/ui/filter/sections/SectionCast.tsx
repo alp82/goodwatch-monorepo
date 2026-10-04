@@ -1,3 +1,4 @@
+import { TmdbImage } from "~/ui/TmdbImage"
 import {
 	CheckIcon,
 	MagnifyingGlassIcon,
@@ -98,9 +99,11 @@ export default function SectionCast({
 				className={`w-full flex items-center justify-between gap-4 ${isSelected ? "text-green-400" : ""}`}
 			>
 				<span className="flex items-center gap-4">
-					<img
+					<TmdbImage
+						kind="profile"
+						path={item.img}
+						width={28}
 						className="w-7 h-10 rounded-sm"
-						src={`https://www.themoviedb.org/t/p/original/${item.img}`}
 						alt={`${item.label} profile`}
 					/>
 					<div className="text-sm font-medium truncate">

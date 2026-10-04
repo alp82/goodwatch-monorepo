@@ -276,9 +276,14 @@ export default function ShareListPage() {
 									>
 										{item.poster ? (
 											<img
-												src={item.poster.replace("/w500/", "/w185/")}
+												loading="lazy"
+												decoding="async"
+												width={56}
+												height={84}
+												srcSet={`${item.poster.replace("/w500/", "/w92/")} 1x, ${item.poster.replace("/w500/", "/w154/")} 2x`}
+												src={item.poster.replace("/w500/", "/w92/")}
 												alt=""
-												className="aspect-[2/3] w-12 rounded-md object-cover shadow-lg shadow-black/50 sm:w-14"
+												className="aspect-[2/3] h-auto w-12 rounded-md object-cover shadow-lg shadow-black/50 sm:w-14"
 											/>
 										) : (
 											<div className="aspect-[2/3] w-12 rounded-md bg-gray-800 sm:w-14" />
@@ -387,7 +392,7 @@ function Availability({
 				const mine = ownedIds.has(o.serviceId)
 				const label = `${KIND_LABEL[o.kind]} on ${o.name}${mine ? ", one of your services" : ""}`
 				const logo = o.logo ? (
-					<img src={o.logo} alt={label} className="size-7 rounded-md" />
+					<img loading="lazy" decoding="async" width={28} height={28} src={o.logo} alt={label} className="size-7 rounded-md" />
 				) : (
 					<span className="flex h-7 items-center rounded-md bg-white/10 px-2 text-xs">
 						{o.name}

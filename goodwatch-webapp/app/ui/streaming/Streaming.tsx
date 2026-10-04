@@ -1,4 +1,5 @@
 import { ExclamationTriangleIcon } from "@heroicons/react/24/solid"
+import { TmdbImage } from "~/ui/TmdbImage"
 import { Link } from "@remix-run/react"
 import React from "react"
 import tmdb_logo from "~/img/tmdb-logo.svg"
@@ -76,9 +77,12 @@ export default function Streaming({
 									className="rounded-xl border-4 border-gray-600 hover:border-gray-500"
 									rel="noreferrer"
 								>
-									<img
+									<TmdbImage
+										kind="logo"
+										path={link.provider_logo_path}
+										width={112}
+										ratio={1}
 										className="w-28 h-28 rounded-lg"
-										src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
 										alt={link.provider_name}
 									/>
 								</a>
@@ -105,9 +109,12 @@ export default function Streaming({
 									className="rounded-xl border-4 border-gray-600 hover:border-gray-500"
 									rel="noreferrer"
 								>
-									<img
+									<TmdbImage
+										kind="logo"
+										path={link.provider_logo_path}
+										width={40}
+										ratio={1}
 										className="w-10 h-10 rounded-lg"
-										src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
 										alt={link.provider_name}
 									/>
 								</a>
@@ -134,9 +141,12 @@ export default function Streaming({
 									className="rounded-xl border-4 border-gray-600 hover:border-gray-500"
 									rel="noreferrer"
 								>
-									<img
+									<TmdbImage
+										kind="logo"
+										path={link.provider_logo_path}
+										width={40}
+										ratio={1}
 										className="w-10 h-10 rounded-lg"
-										src={`https://www.themoviedb.org/t/p/original/${link.provider_logo_path}`}
 										alt={link.provider_name}
 									/>
 								</a>
