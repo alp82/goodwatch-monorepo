@@ -8,7 +8,12 @@
 // - A request path is only ever looked up in the manifest. No path from a request reaches the file system, so there is
 //   nothing to traverse. Whatever the manifest doesn't know goes on to Express and Remix, with one exception: an unknown
 //   path under `/assets/` answers 404 with `no-store`. Those names carry a content hash, so a miss is a file of another
-//   build (a tab opened before a deploy), and a redirect to `/` would hand a script tag an HTML page.
+//   build, and a redirect to `/` would hand a script tag an HTML page.
+// - Before that 404, a file of another build is looked up in the shared store (see build-file-store.server.ts). A
+//   deploy updates the instances one after the other, so for some minutes a page of one build asks an instance of the
+//   other build for its files. Every process writes the hashed files of its build to Valkey at its start, before it
+//   reports ready, and again every eight hours. A file that comes from there is kept in memory and answered like a
+//   file of this build. No request is passed on to another instance.
 // - Hashed files are `immutable` for a year. Files from `public/` keep their URL when their content changes, so they
 //   get a short lifetime and are revalidated with their ETag (see `cachePolicy`). The ETag comes from the content, so it
 //   stays the same across deploys and across processes.
@@ -31,6 +36,15 @@ import type {
 import { availableParallelism } from "node:os"
 import { extname, join, relative, resolve, sep } from "node:path"
 
+import {
+	BUILD_FILE_REPUBLISH_MS,
+	BUILD_FILE_RETRY_MS,
+	type BuildFile,
+	createBuildFileStore,
+	isBuildFilePath,
+} from "./build-file-store.server.ts"
+import { addReadinessCheck, onShutdown } from "./lifecycle.server.ts"
+
 type Headers = Record<string, string | number>
 type Variant = {
 	path: string
@@ -52,7 +66,7 @@ export type StaticManifest = {
 	assetsPrefix: string
 	fallback: Set<string>
 }
-const contentTypes: Record<string, string> = {
+export const contentTypes: Record<string, string> = {
 	js: "text/javascript; charset=utf-8",
 	mjs: "text/javascript; charset=utf-8",
 	css: "text/css; charset=utf-8",
@@ -291,10 +305,54 @@ function sendBody(
 		stream.pipe(response)
 	})
 }
+// Weak keys release the headers and ETag when the store evicts the buffers.
+const storedEntries = new WeakMap<BuildFile, StaticEntry>()
+function storedEntry(path: string, file: BuildFile): StaticEntry {
+	const known = storedEntries.get(file)
+	if (known) return known
+	const tag = createHash("sha1")
+		.update(file.identity)
+		.digest("base64url")
+		.slice(0, 20)
+	const conditionalHeaders: Headers = {
+		"Cache-Control": "public, max-age=31536000, immutable",
+	}
+	if (file.br) conditionalHeaders.Vary = "Accept-Encoding"
+	const make = (body: Buffer, br = false): Variant => {
+		const etag = `"${tag}${br ? "-br" : ""}"`
+		return {
+			path: "",
+			size: body.length,
+			body,
+			etag,
+			headers: {
+				...conditionalHeaders,
+				"Content-Type": contentTypes[extname(path).slice(1).toLowerCase()],
+				"Content-Length": body.length,
+				ETag: etag,
+				...(br ? { "Content-Encoding": "br" } : {}),
+				...(!file.br ? { "Accept-Ranges": "bytes" } : {}),
+			},
+		}
+	}
+	const identity = make(file.identity)
+	const br = file.br ? make(file.br, true) : undefined
+	const entry = {
+		size: identity.size,
+		identity,
+		br,
+		conditionalHeaders,
+		etags: new Set([identity.etag, ...(br ? [br.etag] : [])]),
+	}
+	storedEntries.set(file, entry)
+	return entry
+}
+type BuildFileLookup = Pick<ReturnType<typeof createBuildFileStore>, "lookup">
 export function answerStatic(
 	manifest: StaticManifest,
 	request: IncomingMessage,
 	response: ServerResponse,
+	store?: BuildFileLookup,
 ): boolean {
 	if (request.method !== "GET" && request.method !== "HEAD") return false
 	const url = request.url ?? "/"
@@ -318,14 +376,34 @@ export function answerStatic(
 				!decoded.startsWith(manifest.assetsPrefix))
 		)
 			return false
-		response.writeHead(404, {
-			"Content-Type": "text/plain; charset=utf-8",
-			"Cache-Control": "no-store",
-			"Content-Length": 9,
-		})
-		response.end(request.method === "HEAD" ? undefined : "Not found")
+		const notFound = () => {
+			if (response.destroyed) return
+			response.writeHead(404, {
+				"Content-Type": "text/plain; charset=utf-8",
+				"Cache-Control": "no-store",
+				"Content-Length": 9,
+			})
+			response.end(request.method === "HEAD" ? undefined : "Not found")
+		}
+		if (store && isBuildFilePath(path, manifest.assetsPrefix, contentTypes)) {
+			void Promise.resolve()
+				.then(() => store.lookup(path))
+				.then((file) => {
+					if (response.destroyed) return
+					if (file) answerEntry(storedEntry(path, file), request, response)
+					else notFound()
+				})
+				.catch(notFound)
+		} else notFound()
 		return true
 	}
+	return answerEntry(entry, request, response)
+}
+function answerEntry(
+	entry: StaticEntry,
+	request: IncomingMessage,
+	response: ServerResponse,
+): boolean {
 	const encoding = accepted(request.headers["accept-encoding"] ?? "")
 	let variant = entry.identity
 	if (entry.gzip && encoding.gzip) variant = entry.gzip
@@ -356,6 +434,7 @@ const MANIFEST_WAIT_MS = 10_000
 const key = Symbol.for("goodwatch.static-files")
 const initial = {
 	started: false,
+	store: undefined as ReturnType<typeof createBuildFileStore> | undefined,
 	wrapped: new WeakSet<Server>(),
 	manifest: undefined as StaticManifest | undefined,
 	// Resolves when the manifest is there, when building it failed, or after MANIFEST_WAIT_MS.
@@ -373,6 +452,14 @@ type RequestEvent = { server: Server; request: IncomingMessage }
 export function startStaticFiles(): void {
 	if (process.env.NODE_ENV !== "production" || state.started) return
 	state.started = true
+	let published = false
+	addReadinessCheck("build files", () => published)
+	let stopped = false
+	let republish: ReturnType<typeof setTimeout> | undefined
+	onShutdown("build files", () => {
+		stopped = true
+		clearTimeout(republish)
+	})
 	// Lazy import lets the route modules finish evaluating before reading the build.
 	const loading = (async () => {
 		const build = await import("virtual:remix/server-build")
@@ -380,9 +467,56 @@ export function startStaticFiles(): void {
 			build.assetsBuildDirectory,
 			`${build.publicPath}assets/`,
 		)
-	})().catch((error) =>
-		console.error("Static manifest could not be loaded:", error),
-	)
+		const { getRedisCluster } = await import("~/utils/cache")
+		const logged = new Set<string>()
+		const store = createBuildFileStore({
+			redis: getRedisCluster,
+			onStoreHit: (path) => {
+				if (logged.has(path)) return
+				logged.add(path)
+				console.info(`Build file from the shared store: ${path}`)
+			},
+		})
+		state.store = store
+		const manifest = state.manifest
+		const files = [...manifest.files]
+			.filter(([path]) =>
+				isBuildFilePath(path, manifest.assetsPrefix, contentTypes),
+			)
+			.map(([urlPath, entry]) => ({
+				urlPath,
+				...(entry.br ?? entry.identity),
+				encoding: entry.br ? ("br" as const) : ("identity" as const),
+			}))
+		const publish = async () => {
+			const started = performance.now()
+			const { written, skipped, failed } = await store.publish(files)
+			console.info(
+				`Build files published: ${written} written, ${skipped} skipped, ${failed} failed, ${Math.round(performance.now() - started)} ms`,
+			)
+			return failed === 0
+		}
+		// The Redis client connects while the server build loads. A process without Redis gives up after 10 seconds.
+		const deadline = performance.now() + 10_000
+		while (!getRedisCluster() && performance.now() < deadline && !stopped)
+			await new Promise((resolve) => setTimeout(resolve, 250))
+		// After a failed write the next attempt comes soon: the other instance can't serve this build until then.
+		const cycle = async () => {
+			const complete = await publish()
+			if (stopped) return
+			republish = setTimeout(
+				() => void cycle(),
+				complete ? BUILD_FILE_REPUBLISH_MS : BUILD_FILE_RETRY_MS,
+			).unref()
+		}
+		await cycle()
+	})()
+		.catch((error) =>
+			console.error("Static manifest could not be loaded:", error),
+		)
+		.finally(() => {
+			published = true
+		})
 	state.settled = Promise.race([
 		loading,
 		new Promise<void>((resolve) =>
@@ -415,7 +549,10 @@ export function startStaticFiles(): void {
 				return
 			}
 			try {
-				if (state.manifest && answerStatic(state.manifest, request, response))
+				if (
+					state.manifest &&
+					answerStatic(state.manifest, request, response, state.store)
+				)
 					return
 			} catch {
 				// The app answers when no headers have been sent.
