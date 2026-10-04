@@ -65,15 +65,16 @@ export const getRatingKeys = () => {
 	return keys
 }
 
+const RATING_KEYS = getRatingKeys()
+
 // Any object with some of the rating fields: details, discover results, title cards (whose missing scores are null).
-export const extractRatings = (details: Partial<Record<keyof AllRatings, unknown>>) => {
-	const keys = getRatingKeys()
-	return keys.reduce((acc, key) => {
-		return {
-			...acc,
-			[key]: details[key],
-		}
-	}, {}) as AllRatings
+// Every title card calls this, so it fills one object instead of copying a growing one per key.
+export const extractRatings = (
+	details: Partial<Record<keyof AllRatings, unknown>>,
+) => {
+	const ratings: Partial<Record<keyof AllRatings, unknown>> = {}
+	for (const key of RATING_KEYS) ratings[key] = details[key]
+	return ratings as AllRatings
 }
 
 // A GoodWatch score (0 to 100) as shown everywhere: whole points, rounded down, so 95.6 reads 95.
