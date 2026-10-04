@@ -134,6 +134,19 @@ The URL list covers a well-known movie and show, a title without a poster, witho
 
 To add a check after a regression, add an entry to `smoke/urls.json` or a pattern to `smoke/log-patterns.json`. Use public catalog entries only. The share list entries read `SHARE_LIST_PATH` and `SHARE_LIST_OG_PATH` from `config.env`, print a warning when they're unset, and never print the path.
 
+#### Check one instance
+
+With more than one webapp instance, the public route reaches either of them, and the default check reads the log and the metrics of the container on abio only. `--host` checks one instance by itself:
+
+```sh
+./bench.sh smoke --host vector1 --commit "$(git rev-parse origin/main)"
+./bench.sh smoke --host abio --commit "$(git rev-parse origin/main)"
+```
+
+`--host` takes a name from `goodwatch-hq/ansible/hosts.ini` or a private address. The check finds the `gk4owk8-*` container on that host, opens an SSH tunnel from a free local port to the container's port 3000 on its Docker network, and sends every request through it. No proxy, no load balancer, and no public route is involved, so the result describes that process alone, and it works before the instance takes traffic. The log and the metrics come from the same container. SSH jumps through `BENCH_SSH_JUMP`, or through the host that the target's name resolves to when it's unset.
+
+After a deploy to two instances, run the check three times: once per host, and once without `--host` for the public route. Coolify deploys the additional server after the primary one finishes, so start the check for the second host with `--commit` and let it wait.
+
 #### Check a local build
 
 `--target local` checks a production build on the development machine, for example to prove that the check catches a bug:
@@ -182,6 +195,20 @@ Cold mode skips prewarming. Browser requests get a unique cookie from `COOKIE_TE
 `CACHE_BUST_QUERY=1` also adds a unique `_cb` query parameter to cold requests, including bots and OG images. It never adds this parameter to person pages without `gw_browser=1`. Cookie variation does not affect bot requests. Query variation does not make Redis data caches cold.
 
 Today, no shared page cache sits in front of the app. Both modes reach the app. The meaningful cache difference today is the state of app data caches, including warming from the setup pass. Redis caches use title or person keys, not cookies or query strings. Cold header variation becomes meaningful at the HTTP layer when a shared page cache exists. For a true cold-data-cache workload, use the long-tail set with `SEQUENTIAL=1` and titles that are not already cached. This visits each entry once per pass; later passes can be warm. The tooling does not flush Redis. OG variants can also reuse data from a title already visited.
+
+## One instance
+
+The load test's target is the proxy of one host: `BENCH_RESOLVE_IP` sets the address that `goodwatch.app` resolves to on the generator, and `BENCH_METRIC_HOSTS` names the host whose CPU and containers are sampled. The default is abio. To load the instance on vector1 by itself, through vector1's proxy:
+
+```sh
+BENCH_RESOLVE_IP=10.0.0.20 BENCH_INSECURE_TLS=1 \
+  BENCH_METRIC_HOSTS='10.0.0.20:target:coolify-proxy+gk4owk8' \
+  ./bench.sh load --mode smoke --rate 5 --duration 30 --label vector1-only
+```
+
+`BENCH_INSECURE_TLS=1` turns off the certificate check in k6. vector1's proxy has no certificate for `goodwatch.app`, because the name's public address is abio. Use it only on the private path. `meta.json` and the summary record `insecure_tls`.
+
+Once abio's proxy balances across both instances, a run against abio's address measures both together, and no request path reaches abio's instance alone. Split the result by instance with the server metrics instead: see "Two instances" in [`docs/benchmarks/viral-spike-metrics.md`](../docs/benchmarks/viral-spike-metrics.md). k6 keeps no cookies, so the proxy's sticky cookie doesn't apply and the requests alternate between the instances.
 
 ## Private and public paths
 

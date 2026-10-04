@@ -20,7 +20,7 @@ compare: RUN_A RUN_B [--out FILE] [--json]
 summarize: RUN
 longtail: [--sitemaps DIR] [--out FILE] [--limit N] [--seed S] [--og-share F]
 doctor: [--path private|public]
-smoke: [--commit SHA] [--newer-than CONTAINER] [--target production|local] (run after every deploy; --help lists all)
+smoke: [--commit SHA] [--newer-than CONTAINER] [--host NAME] [--target production|local] (run after every deploy; --help lists all)
 HELP
 }
 command=${1:-help}; shift || true
@@ -127,7 +127,10 @@ export ACCEPT_ENCODING=${ACCEPT_ENCODING-'br, gzip'} REQUEST_TIMEOUT=${REQUEST_T
 export ABORT_ERROR_RATE=${ABORT_ERROR_RATE:-0.02} ABORT_P95_MS=${ABORT_P95_MS:-3000} ABORT_DELAY=${ABORT_DELAY:-10s} ABORT_DROPPED=${ABORT_DROPPED:-$(((RATE_MAX*STEP_DURATION+19)/20))}
 export SHARE_LIST_PATH=${SHARE_LIST_PATH:-} SHARE_LIST_OG_PATH=${SHARE_LIST_OG_PATH:-}
 export TARGET_URL=$BENCH_TARGET_URL URLS_FILE=/work/urls.json OUT_DIR=/work
-export K6_KEYS='URLS_FILE TARGET_URL RESOLVE_IP SHARE_LIST_PATH SHARE_LIST_OG_PATH RATE_START RATE_STEP RATE_MAX RATE_LIST ONLY_ROUTES STEP_DURATION RAMP_SECONDS PRE_VUS MAX_VUS CACHE_MODE COOKIE COOKIE_TEMPLATE ACCEPT_LANGUAGE ACCEPT_LANGUAGES CACHE_BUST_QUERY BROWSER_UA BOT_UA ACCEPT_ENCODING REQUEST_TIMEOUT ABORT_ERROR_RATE ABORT_P95_MS ABORT_DELAY ABORT_DROPPED SEQUENTIAL PREWARM_MAX OUT_DIR'
+# For a target whose certificate doesn't cover the name, such as one instance behind another host's proxy.
+export INSECURE_TLS=${BENCH_INSECURE_TLS:-0}
+[[ $INSECURE_TLS == 0 || $INSECURE_TLS == 1 ]] || fail 'BENCH_INSECURE_TLS must be 0 or 1'
+export K6_KEYS='URLS_FILE TARGET_URL RESOLVE_IP INSECURE_TLS SHARE_LIST_PATH SHARE_LIST_OG_PATH RATE_START RATE_STEP RATE_MAX RATE_LIST ONLY_ROUTES STEP_DURATION RAMP_SECONDS PRE_VUS MAX_VUS CACHE_MODE COOKIE COOKIE_TEMPLATE ACCEPT_LANGUAGE ACCEPT_LANGUAGES CACHE_BUST_QUERY BROWSER_UA BOT_UA ACCEPT_ENCODING REQUEST_TIMEOUT ABORT_ERROR_RATE ABORT_P95_MS ABORT_DELAY ABORT_DROPPED SEQUENTIAL PREWARM_MAX OUT_DIR'
 resolved_urls=''
 if [[ $command == load ]]; then resolved_urls=$(node "$ROOT/scripts/prepare-load.mjs" "$urls"); fi
 plan=$(node "$ROOT/scripts/run-meta.mjs" plan)

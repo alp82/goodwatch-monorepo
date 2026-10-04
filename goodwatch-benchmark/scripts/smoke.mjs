@@ -7,10 +7,13 @@
 // fewer than 60, and changes nothing on the serving host.
 //
 // --target production (default): the container is found over SSH on the host that the target's name resolves to.
+// --host NAME: one instance on a named host. The container is found on that host, and the requests go straight to
+//   it through an SSH tunnel, not through the public route or a proxy.
 // --target local: a local production build. Pass --base-url, and --log-file or --container, and --metrics-url.
-import { execFileSync } from "node:child_process"
+import { execFileSync, spawn } from "node:child_process"
 import { lookup } from "node:dns/promises"
 import { readFileSync } from "node:fs"
+import { connect, createServer } from "node:net"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -19,6 +22,9 @@ const USAGE = `Usage: ./bench.sh smoke [options]
   --target production|local   Where the webapp runs. Default: production.
   --commit SHA                Wait for a container that runs this commit (production).
   --newer-than NAME           Wait for a container other than NAME, such as the one before the deploy (production).
+  --host NAME                 Check the instance on this host directly, such as vector1 or abio: a name from
+                              goodwatch-hq/ansible/hosts.ini or a private address. Without it, the requests use the
+                              public route and the container is the one on the host that the target's name resolves to.
   --deploy-timeout S          How long to wait for that container and for its health. Default: 600.
   --base-url URL              Default: BENCH_TARGET_URL or https://goodwatch.app. Required for local.
   --log-file FILE             Local: the server's log, from its start.
@@ -53,7 +59,8 @@ for (let i = 0; i < argv.length; i += 2) {
 }
 const local = options.target === "local"
 if (!local && options.target !== "production") usageError("Target must be production or local")
-const baseUrl = (options["base-url"] || (local ? "" : process.env.BENCH_TARGET_URL || "https://goodwatch.app")).replace(/\/$/, "")
+if (local && options.host) usageError("--host is for production instances, not for a local target")
+let baseUrl = (options["base-url"] || (local ? "" : process.env.BENCH_TARGET_URL || "https://goodwatch.app")).replace(/\/$/, "")
 if (!baseUrl) usageError("A local target needs --base-url")
 const skipped = new Set(options.skip.split(",").filter(Boolean))
 const logWaitSeconds = Number(options["log-wait"])
@@ -91,13 +98,58 @@ const sleep = (ms) => new Promise((done) => setTimeout(done, ms))
 
 // ---- The serving host (production) ----
 let sshHost = ""
+// With --host: the host that SSH jumps through to reach the private network.
+let sshJump = ""
+const sshUser = process.env.BENCH_SSH_USER || "root"
+const sshArgs = () => ["-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "-o", "LogLevel=ERROR", ...(sshJump ? ["-J", sshJump] : [])]
 /** Runs a Bash script on the serving host and returns its output. The address is never printed. */
 function onHost(script, timeoutSeconds = 60) {
 	return execFileSync(
 		"ssh",
-		["-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "-o", "LogLevel=ERROR", `${process.env.BENCH_SSH_USER || "root"}@${sshHost}`, "bash -s"],
+		[...sshArgs(), `${sshUser}@${sshHost}`, "bash -s"],
 		{ input: script, encoding: "utf8", timeout: timeoutSeconds * 1000, maxBuffer: 64 * 1024 * 1024, stdio: ["pipe", "pipe", "inherit"] },
 	)
+}
+
+/** The private address of a host: an address as given, or a name from the Ansible inventory. */
+function privateAddress(host) {
+	if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return host
+	const inventory = readFileSync(process.env.SMOKE_HOSTS_FILE || resolve(ROOT, "../goodwatch-hq/ansible/hosts.ini"), "utf8")
+	const address = inventory.match(new RegExp(`^${host.replace(/[^a-zA-Z0-9_-]/g, "")}\\s+ansible_host=(\\S+)`, "m"))?.[1]
+	if (!address) usageError(`No host "${host}" in goodwatch-hq/ansible/hosts.ini. Pass a name from that file or a private address.`)
+	return address
+}
+
+/**
+ * Opens an SSH tunnel from a local port to the container's HTTP port on its Docker network, and returns the local
+ * origin. The requests then reach this one process: no proxy, no load balancer, no public route.
+ */
+let tunnel = null
+async function openTunnel() {
+	const [address, port] = onHost(
+		`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' ${quote(container.name)} | awk '{print $1}'; docker exec ${quote(container.name)} sh -c 'echo \${PORT:-3000}'`,
+	).trim().split(/\s+/)
+	if (!/^\d+\.\d+\.\d+\.\d+$/.test(address ?? "") || !/^\d+$/.test(port ?? "")) fail("the container has no network address or port")
+	const localPort = await new Promise((done, failed) => {
+		const probe = createServer()
+		probe.on("error", failed)
+		probe.listen(0, "127.0.0.1", () => {
+			const free = probe.address().port
+			probe.close(() => done(free))
+		})
+	})
+	tunnel = spawn("ssh", [...sshArgs(), "-o", "ExitOnForwardFailure=yes", "-N", "-L", `127.0.0.1:${localPort}:${address}:${port}`, `${sshUser}@${sshHost}`], { stdio: "ignore" })
+	for (let attempt = 0; attempt < 40; attempt++) {
+		if (tunnel.exitCode !== null) fail("the SSH tunnel to the container closed")
+		const open = await new Promise((done) => {
+			const socket = connect(localPort, "127.0.0.1")
+			socket.once("connect", () => done(true) || socket.destroy())
+			socket.once("error", () => done(false))
+		})
+		if (open) return `http://127.0.0.1:${localPort}`
+		await sleep(250)
+	}
+	fail("the SSH tunnel to the container didn't open within 10 s")
 }
 const quote = (text) => `'${String(text).replace(/'/g, `'\\''`)}'`
 
@@ -281,14 +333,33 @@ let processStartedAt = null
 
 if (!local) {
 	const hostname = new URL(baseUrl).hostname
-	sshHost = process.env.SMOKE_SSH_HOST || (await lookup(hostname)).address
+	const publicHost = process.env.SMOKE_SSH_HOST || (await lookup(hostname)).address
+	if (options.host) {
+		// The named host is on the private network. SSH jumps through BENCH_SSH_JUMP, or through the host that the
+		// target's name resolves to. That host itself (abio) needs no jump.
+		sshHost = privateAddress(options.host)
+		sshJump = process.env.BENCH_SSH_JUMP || `${sshUser}@${publicHost}`
+		if (sshHost === (process.env.BENCH_RESOLVE_IP || "10.0.0.21") && !process.env.BENCH_SSH_JUMP) {
+			sshHost = publicHost
+			sshJump = ""
+		}
+	} else {
+		sshHost = publicHost
+	}
 	await check("deploy:container", () => {
 		container = findContainer()
 		processStartedAt = container.startedAt
 		if (options.commit && !container.commit.startsWith(options.commit)) fail(`runs ${container.commit}`)
-		return `${container.name}, commit ${container.commit.slice(0, 8)}, healthy, up ${Math.round((Date.now() - container.startedAt) / 1000)} s`
+		return `${container.name}${options.host ? ` on ${options.host}` : ""}, commit ${container.commit.slice(0, 8)}, healthy, up ${Math.round((Date.now() - container.startedAt) / 1000)} s`
 	})
 	if (!container) finish()
+	if (options.host) {
+		await check("deploy:tunnel", async () => {
+			baseUrl = await openTunnel()
+			return `requests go to the container on ${options.host} through an SSH tunnel`
+		})
+		if (!tunnel) finish()
+	}
 }
 
 // A deploy answers 502 while the proxy switches containers. Wait for the home page before counting anything.
@@ -400,6 +471,7 @@ if (metricsBefore) {
 finish()
 
 function finish() {
+	tunnel?.kill()
 	const seconds = Math.round((Date.now() - startedAt) / 1000)
 	console.log(`\n${counts.fail ? "SMOKE CHECK FAILED" : "Smoke check passed"}: ${counts.pass} passed, ${counts.fail} failed, ${counts.warn} warnings, ${counts.skip} skipped, in ${seconds} s`)
 	process.exit(counts.fail ? 1 : 0)

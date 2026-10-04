@@ -121,6 +121,8 @@ export const options = {
     },
   },
   ...(env("RESOLVE_IP", "") ? { hosts: { [hostname]: __ENV.RESOLVE_IP } } : {}),
+  // For one instance behind another host's proxy, whose certificate doesn't cover the name (BENCH_INSECURE_TLS=1).
+  ...(env("INSECURE_TLS", "0") === "1" ? { insecureSkipTLSVerify: true } : {}),
   thresholds,
   discardResponseBodies: true,
   summaryTrendStats: ["avg", "min", "med", "p(90)", "p(95)", "p(99)", "max", "count"],
@@ -183,6 +185,7 @@ export function handleSummary(data) {
   const config = {
     target_url: target,
     resolve_ip: env("RESOLVE_IP", ""),
+    insecure_tls: env("INSECURE_TLS", "0") === "1",
     cache_mode: cache,
     url_set: set.name,
     sequential: env("SEQUENTIAL", "0"),
