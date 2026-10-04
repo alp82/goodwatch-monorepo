@@ -10,6 +10,7 @@
 // the lists short.
 import { createHash } from "node:crypto"
 import { Worker } from "node:worker_threads"
+import { separateEntryUrl } from "~/server/separate-entry.server"
 import {
 	type LocalQueryModels,
 	type QueryModelName,
@@ -90,7 +91,7 @@ function failAll(error: Error) {
 
 function workerUrl() {
 	// In the build, vite.config.js copies the worker next to build/server/index.js.
-	return new URL("./query-encoder.worker.js", import.meta.url)
+	return separateEntryUrl("query-encoder.worker.js", import.meta.url)
 }
 
 async function start(): Promise<RunningEncoder> {

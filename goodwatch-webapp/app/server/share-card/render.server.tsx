@@ -6,6 +6,7 @@ import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Fragment, type ReactElement, type ReactNode, isValidElement } from "react"
 import { toDataUri } from "~/server/og-image/render.server"
+import { separateEntryUrl } from "~/server/separate-entry.server"
 import { CARD_FONTS, CARD_FONT_DIR } from "~/ui/share-card/fonts"
 import { SHARE_CARD_PREVIEW } from "~/ui/share-card/links"
 import type { CardDesign, CardProps, CardTitle } from "~/ui/share-card/model"
@@ -50,7 +51,7 @@ function fail(slot: Slot, error: Error) {
 }
 
 function spawn(slot: Slot) {
-	const child = fork(new URL("./render.child.js", import.meta.url), [JSON.stringify({ fontDir: fontDir(), fonts: CARD_FONTS })], {
+	const child = fork(separateEntryUrl("render.child.js", import.meta.url), [JSON.stringify({ fontDir: fontDir(), fonts: CARD_FONTS })], {
 		serialization: "advanced",
 		stdio: ["ignore", "inherit", "inherit", "ipc"],
 	})
