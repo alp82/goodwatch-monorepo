@@ -9,6 +9,8 @@ import { useLoaderData } from "@remix-run/react"
 import React, { useEffect, useMemo } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { getDetailsForShow, getDetailsForMovie } from "~/server/details.server"
+import { isCrawler } from "~/server/crawlers.server"
+import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { type EpisodeGridWire, packEpisodeGrid, unpackEpisodeGrid } from "~/utils/episode-grid-wire"
 import { resolveCountry } from "~/server/country.server"
@@ -69,6 +71,7 @@ export const loader: LoaderFunction = async ({
 		prefetchRelatedTitlesState({
 			tmdbId: Number(showId),
 			sourceMediaType: "show",
+			budgetMs: relatedPrefetchBudgetMs(isCrawler(request)),
 		}),
 	])
 

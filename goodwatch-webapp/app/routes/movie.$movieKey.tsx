@@ -10,6 +10,8 @@ import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { getDetailsForMovie } from "~/server/details.server"
+import { isCrawler } from "~/server/crawlers.server"
+import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import { prefetchRelatedTitlesState } from "~/server/related.server"
 import type { MovieQueryResult } from "~/server/types/details-types"
 import { resolveCountry } from "~/server/country.server"
@@ -67,6 +69,7 @@ export const loader: LoaderFunction = async ({
 		prefetchRelatedTitlesState({
 			tmdbId: Number(movieId),
 			sourceMediaType: "movie",
+			budgetMs: relatedPrefetchBudgetMs(isCrawler(request)),
 		}),
 	])
 

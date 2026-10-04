@@ -1,13 +1,7 @@
-import {
-	type DehydratedState,
-	QueryClient,
-	dehydrate,
-} from "@tanstack/react-query"
 import { cached } from "~/utils/cache"
 import {
 	type RelatedPanel,
 	type RelatedPanelParams,
-	getQueryKeyRelatedPanel,
 	toRelatedPanel,
 } from "~/utils/related-panel"
 import { MEDIA_COLLECTION, recommend, makePointId } from "~/utils/qdrant"
@@ -22,6 +16,7 @@ import {
 import type { CoreScores } from "~/server/utils/fingerprint"
 import { getStreamingProviders } from "~/server/streaming-providers.server"
 import type { StreamingProvider } from "~/routes/api.streaming-providers"
+import { prefetchRelatedState } from "~/server/related-prefetch"
 
 const STREAMING_PROVIDERS_WHITELIST: number[] = [
 	2, // Apple TV
@@ -140,32 +135,12 @@ export const getRelatedPanel = async ({
  * visitor, including crawlers, gets the same panel. A failed lookup is logged and left out, so
  * the page still renders and the browser requests the panel.
  */
-export const prefetchRelatedTitlesState = async ({
-	tmdbId,
-	sourceMediaType,
-}: {
+export const prefetchRelatedTitlesState = (params: {
 	tmdbId: number
 	sourceMediaType: "movie" | "show"
-}): Promise<DehydratedState> => {
-	const queryClient = new QueryClient()
-	if (!Number.isSafeInteger(tmdbId)) return dehydrate(queryClient)
-
-	const params = { tmdbId, sourceMediaType }
-	await queryClient.prefetchQuery({
-		queryKey: getQueryKeyRelatedPanel(params),
-		queryFn: () =>
-			getRelatedPanel(params).catch((error: unknown) => {
-				console.error("Related titles prefetch failed", {
-					tmdbId,
-					sourceMediaType,
-					error: error instanceof Error ? error.message : error,
-				})
-				throw error
-			}),
-	})
-
-	return dehydrate(queryClient)
-}
+	/** How long the document waits for the lookup. Without it, the document waits until the lookup settles. */
+	budgetMs?: number
+}) => prefetchRelatedState(params, () => getRelatedPanel(params))
 
 const extractRatingsFromPayload = (payload: QdrantMediaPayload): AllRatings => {
 	return {

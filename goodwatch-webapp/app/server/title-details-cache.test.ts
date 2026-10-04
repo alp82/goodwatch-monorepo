@@ -146,3 +146,8 @@ test("details cache stores trimmed values in versioned normalized keys for the l
 		setRedisClusterForTest(null)
 	}
 })
+
+test("title details are fresh for 12 hours and never served older than 24 hours", () => {
+	assert.equal(DETAILS_TTL_MINUTES, 12 * 60)
+	assert.equal(DETAILS_TTL_MINUTES + DETAILS_STALE_MINUTES, 24 * 60)
+})

@@ -10,8 +10,12 @@ import { type RawTitleDetails, trimTitleDetails } from "./title-details-shape"
 // that expects the full statement result (the unversioned names) must never read these values.
 export const DETAILS_MOVIE_CACHE_NAME = "details-movie-v2"
 export const DETAILS_SHOW_CACHE_NAME = "details-show-v2"
-export const DETAILS_TTL_MINUTES = 30
-export const DETAILS_STALE_MINUTES = 30
+// Title data may be up to 24 hours old. A value is fresh for 12 hours, and for 12 more hours it is
+// served while one refresh runs. So a title that is requested often is at most 12 hours behind, the
+// data cache keeps every value for 24 hours, and nothing older than that is served. The value holds
+// the country's streaming offers and the scores: this is how far behind the imports they can be.
+export const DETAILS_TTL_MINUTES = 12 * 60
+export const DETAILS_STALE_MINUTES = 12 * 60
 
 type FetchDetails = (
 	mediaType: "movie" | "show",
