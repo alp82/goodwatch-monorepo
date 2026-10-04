@@ -23,7 +23,10 @@ export const MEMORY_CACHE_MAX_BYTES = 32 * 1024 * 1024
 export const OG_WAIT_MS = 4000
 export type CachedCard = { image: Buffer; renderedAt: number; etag: string }
 export type OgResult =
-	| ({ status: "ok" } & CachedCard)
+	| ({
+			status: "ok"
+			source: "memory" | "store" | "stale" | "rendered"
+	  } & CachedCard)
 	| { status: "missing" | "busy" | "failed" }
 type Redis = {
 	getBuffer(key: string): Promise<Buffer | null>
@@ -84,7 +87,7 @@ export function createOgStore(deps: Dependencies) {
 		const hit = memory.get(path)
 		if (hit) {
 			remember(path, hit)
-			return { card: hit, source: "memory" }
+			return { card: hit, source: "memory" as const }
 		}
 		try {
 			const value = await bounded(
@@ -100,7 +103,7 @@ export function createOgStore(deps: Dependencies) {
 				etag: imageEtag(image),
 			}
 			remember(path, card)
-			return { card, source: "store" }
+			return { card, source: "store" as const }
 		} catch {
 			return null
 		}
@@ -172,6 +175,7 @@ export function createOgStore(deps: Dependencies) {
 			if (stale) renderAndStore(path).catch(() => {})
 			return finish(stale ? "stale" : cached.source, {
 				status: "ok",
+				source: stale ? "stale" : cached.source,
 				...cached.card,
 			})
 		}
@@ -183,7 +187,7 @@ export function createOgStore(deps: Dependencies) {
 			)
 			if (card === undefined) return finish("busy", { status: "busy" })
 			if (!card) return finish("missing", { status: "missing" })
-			return finish("rendered", { status: "ok", ...card })
+			return finish("rendered", { status: "ok", source: "rendered", ...card })
 		} catch (error) {
 			if (error instanceof CardRendererBusyError)
 				return finish("busy", { status: "busy" })

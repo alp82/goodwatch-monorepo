@@ -57,11 +57,14 @@ const outcomes = counter(
 	["result"],
 	7,
 )
+export function countOgCard(result: string) {
+	outcomes.inc([result])
+}
 const store = createOgStore({
 	redis: getRedisCluster,
 	render,
 	canonical: canonicalOgPath,
-	count: (result) => outcomes.inc([result]),
+	count: countOgCard,
 })
 // The generic card: the home page's headline without a picture. It is drawn once per process, on the first card
 // request, and kept for the life of the process, so that it exists when the renderer is busy.

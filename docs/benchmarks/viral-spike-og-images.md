@@ -1,6 +1,6 @@
 # Open Graph images: render cost, storage, and weight
 
-This page says what an Open Graph (OG) card costs when it isn't cached, what the per-page-view warm request costs, how heavy the cards are, and what the changes of October 4, 2026 did to each. It belongs to the "Serve a viral traffic spike" map and covers three tickets: "Measure the OG render cost on a miss under load", "Render OG cards off the main thread and store them outside the process", and "Cut the weight of OG images". It follows the [production baseline](viral-spike-baseline.md), which measured only cached cards.
+This page says what an Open Graph (OG) card costs when it isn't cached, what the per-page-view warm request costs, how heavy the cards are, and what the changes of October 4, 2026 did to each. It belongs to the "Serve a viral traffic spike" map and covers three tickets: "Measure the OG render cost on a miss under load", "Render OG cards off the main thread and store them outside the process", and "Cut the weight of OG images". A fourth ticket, "Serve a cached OG card without reading it from Redis on every request", added the section [A hot card](#a-hot-card) on October 5, 2026. It follows the [production baseline](viral-spike-baseline.md), which measured only cached cards.
 
 The scripts are in [`viral-spike-og-images/`](viral-spike-og-images/). The production check after the deploy is in the tickets' resolutions, not here.
 
@@ -13,6 +13,7 @@ The scripts are in [`viral-spike-og-images/`](viral-spike-og-images/). The produ
 - **After the change a title card miss costs 25 ms of main-thread CPU** and 354 ms in a child process. Next to 5 title pages per second, the page p95 is 71 ms at 1 card per second and 81 ms at 2. At 10 and 20 per second the renderer answers what it can (about 3 cards per second on this 4-core host) and the rest get a generic card after 4 seconds, with no error.
 - **Cards are JPEG now, 58 to 144 KB for titles (median 132 KB), from 24 to 770 KB as PNG (median 554 KB).** Every title card in a sample of 60 is under 150 KB. Before, 56 of 60 were over.
 - **Cards live in Valkey for 7 days**, so they survive a deploy and two instances share them. Estimated memory: 0.1 to 0.3 GB per cache node at most.
+- **A hot card is answered before Express since October 5, 2026.** It cost five times as much main-thread time as a stored page, and the cause wasn't a read from Valkey: the process's copy answered, but the request still went through Express and Remix. On a development machine a hot card went from 0.61 ms to 0.10 ms, which is what a stored page costs there. See [A hot card](#a-hot-card).
 
 ## Conditions
 
@@ -130,7 +131,8 @@ Share list cards are the exception, because one takes about 20 seconds: a list's
 
 - **Store:** Valkey, key `og-card:v1:<canonical path>`, for example `og-card:v1:/movie/603`. The version covers the design, the text rules, and the image format.
 - **Lifetime:** 7 days in Valkey. After 24 hours a card is still served and redrawn once in the background, so changed title data reaches a card within a day of its next request.
-- **In process:** 32 MB per process (about 250 cards) in front of Valkey.
+- **In process:** 32 MB per process (about 250 cards) in front of Valkey. A repeated request for a card that is in this copy reads nothing from Valkey.
+- **Before Express:** each complete answer stays under its request path for 10 seconds, see [A hot card](#a-hot-card).
 - **Deduplication:** concurrent requests for one card share one render per process. No lock across processes: two instances draw a cold card at most once each, about 0.35 seconds of child CPU.
 
 ### Memory estimate
@@ -141,6 +143,41 @@ Share list cards are the exception, because one takes about 20 seconds: a list's
 - **With the warm request kept**, its 1,300 renders per day would add 0.16 GB per day, 1.1 GB per week.
 - **As PNG** (505 KB on average) the same cards would need four times as much.
 - Share list images are stored as before: 30 days, one 2.2 MB card and one preview per list and content.
+
+## A hot card
+
+The [checkpoint](viral-spike-checkpoint.md) measured 3.1 to 3.6 ms of main-thread time for a cached card in production, three to five times a stored page, and both instances full at about 500 cards per second. It took the cause to be a read of 132 KB from Valkey per request. That isn't what happens.
+
+### Cause
+
+- **The in-process copy answers.** In a local production build, 18,000 repeated requests for one title card counted as `memory` in `goodwatch_og_cards_total` and one as `rendered`. No request read Valkey.
+- **The cost is the way to the loader and back.** A CPU profile of the main thread during 4,500 requests for one hot card: about 0.26 ms of the 0.56 ms per request is Remix matching the path against the app's routes (129 route files), and the rest is Express (the static file lookup, compression, the request log), the Remix request and response objects, and Node's HTTP code.
+- **The body doesn't matter.** A 304 without a body cost 0.58 ms, the 139 KB answer 0.61 ms.
+- **A share list image does read Valkey on every request:** the list view (10 + 10 seconds, no copy in the process), to learn whether the list still exists and which content hash is current. The image itself comes from the process.
+
+### Change
+
+The `/og/` routes leave each complete answer (headers and a reference to the image buffer) in `app/server/og-image/hot-cards.server.ts` for 10 seconds, under the request path. A request for that path within that time is answered before Express, like a stored page: one map lookup and one write.
+
+- **After 10 seconds** the next request takes the route again, which checks the card's age (and starts a redraw after 24 hours) or the share list's view. So one request per card, process, and 10 seconds costs what every request cost before.
+- **Bounds:** 32 MB of referenced images, oldest first. The entries hold no copies. Share list images of the current content hash only, not an old hash's short-lived answer, not the generic card, and no 404.
+- **Share lists:** the process that gets a write drops the list's images at once. In the other process, a deleted list's image outlives the list view's 20 seconds by at most 10 more. Its URL was `immutable` for a year before the delete, so every client that fetched it keeps it anyway.
+- **Headers:** the same as from the route, plus `X-OG-Card: hot`. The route's own answers now say where the card came from: `X-OG-Card: memory`, `store`, `stale`, or `rendered`.
+
+### Cost
+
+A development machine (a 16-core desktop processor, several times faster per core than the production hosts), one process of a local production build on a throwaway Valkey, production Crate read only. 300 requests per second for 15 seconds over keep-alive connections, three runs each, before and after next to each other. Main-thread CPU comes from `/proc` in ticks of 10 ms.
+
+| Request | Before | After | Wall p50, before and after |
+| --- | --- | --- | --- |
+| Title card, 139 KB | 0.61 to 0.65 ms | 0.09 to 0.13 ms | 0.70 and 0.20 ms |
+| Title card, 304 | 0.58 to 0.63 ms | 0.08 to 0.09 ms | 0.65 and 0.16 ms |
+| Share list preview, 145 KB | 0.45 to 0.50 ms | 0.09 to 0.12 ms | 0.58 and 0.20 ms |
+| For comparison: a stored page (the About page, Brotli) | 0.12 to 0.14 ms | | 0.20 ms |
+
+- **A hot card costs what a stored page costs.** In production a stored page costs 0.5 to 0.8 ms of main-thread time when measured alone and 0.6 to 1.5 ms in the checkpoint's ramps, which include background work.
+- 4,498 of 4,500 requests per run were answered before Express. Two took the route, one per 10 seconds.
+- **Not measured:** the production hosts under load. The checkpoint's OG image ramps are the measurement to repeat.
 
 ## Weight
 
@@ -239,7 +276,7 @@ The comparison images aren't in Git, because they show film posters. [`compare-f
 
 | Answer | Before | After |
 | --- | --- | --- |
-| A page's card | `public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400`, no validator | The same `Cache-Control`, plus a strong `ETag` and `Last-Modified`. A matching `If-None-Match` gets 304 |
+| A page's card | `public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400`, no validator | The same `Cache-Control`, plus a strong `ETag` and `Last-Modified`. A matching `If-None-Match` gets 304. Since October 5, 2026, also `X-OG-Card` with the card's source: `hot`, `memory`, `store`, `stale`, or `rendered` |
 | A missing page's card | 404, `no-store` | The same |
 | Renderer busy or render failed | 500, `no-store` for a failure. No busy answer existed | 200 with the generic card and `public, max-age=60`, or 503 with `Retry-After: 2` and `no-store` |
 | Share list image, current content | `public, max-age=31536000, immutable` | The same, plus an `ETag` |
@@ -249,7 +286,8 @@ A card changes when its title's data changes, so its URL carries no version and 
 
 ## Metrics
 
-- `goodwatch_og_cards_total{result}`: `memory`, `store`, `stale`, `rendered`, `missing`, `busy`, `failed`. The cold share of card requests is `rendered` plus `busy` over the total.
+- `goodwatch_og_cards_total{result}`: `memory`, `store`, `stale`, `rendered`, `missing`, `busy`, `failed`. The cold share of card requests is `rendered` plus `busy` over the total. A page's card that is answered before Express counts as `memory`.
+- `goodwatch_og_hot_cards_entries` and `goodwatch_og_hot_cards_bytes`: the answers kept for requests before Express, share list images included.
 - `goodwatch_card_renderer_running` and `goodwatch_card_renderer_waiting{kind}`.
 
 ## Repeat a run

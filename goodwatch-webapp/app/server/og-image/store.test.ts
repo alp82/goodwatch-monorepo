@@ -47,6 +47,7 @@ test("versioned key, binary header, expiry, store hit fills memory", async () =>
 	}
 	const first = await createOgStore(deps).getOgImage(path)
 	assert.equal(first.status, "ok")
+	if (first.status === "ok") assert.equal(first.source, "rendered")
 	assert.equal(CACHE_PREFIX + path, "og-card:v1:/movie/603")
 	assert.equal(f.writes[0].key, "og-card:v1:/movie/603")
 	assert.equal(f.writes[0].seconds, 7 * 24 * 60 * 60)
@@ -54,9 +55,9 @@ test("versioned key, binary header, expiry, store hit fills memory", async () =>
 	assert.equal(f.writes[0].value.readBigUInt64BE(), BigInt(123456))
 	assert.deepEqual(f.writes[0].value.subarray(8), image)
 	const store = createOgStore(deps)
-	assert.deepEqual(await store.getOgImage(path), first)
+	assert.deepEqual(await store.getOgImage(path), { ...first, source: "store" })
 	const reads = f.reads()
-	assert.deepEqual(await store.getOgImage(path), first)
+	assert.deepEqual(await store.getOgImage(path), { ...first, source: "memory" })
 	assert.equal(f.reads(), reads)
 	assert.deepEqual(count, ["rendered", "store", "memory"])
 })
@@ -84,6 +85,10 @@ test("stale served while one redraw runs, failures preserve old image", async ()
 	])
 	assert.equal(renders, 2)
 	assert.equal(hits[0].status, "ok")
+	for (const hit of hits) {
+		assert.equal(hit.status, "ok")
+		if (hit.status === "ok") assert.equal(hit.source, "stale")
+	}
 	pending.resolve(Buffer.from("new"))
 	await new Promise((r) => setImmediate(r))
 	now += FRESH_MS + 1

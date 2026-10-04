@@ -8,8 +8,10 @@
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import type { OgResult } from "~/server/og-image/store.server"
 import { OG_IMAGE } from "~/ui/og-image/format"
+import { type HotCard, hotCards } from "./hot-cards.server.ts"
 
 type Dependencies = {
+	remember?: (pathname: string, card: HotCard) => void
 	getOgImage: (path: string) => Promise<OgResult>
 	getFallbackCard: () => Buffer | null
 }
@@ -39,7 +41,8 @@ export function matchesEtag(request: Request, etag: string) {
 }
 export function createOgImageLoader(deps: Dependencies) {
 	return async ({ request }: Pick<LoaderFunctionArgs, "request">) => {
-		const file = new URL(request.url).pathname.replace(/^\/og\//, "")
+		const pathname = new URL(request.url).pathname
+		const file = pathname.replace(/^\/og\//, "")
 		if (!/\.(jpg|png)$/.test(file)) return text(404, "Not Found")
 		const stem = file.slice(0, -4)
 		const result = await deps.getOgImage(stem === "index" ? "/" : `/${stem}`)
@@ -58,6 +61,15 @@ export function createOgImageLoader(deps: Dependencies) {
 			})
 		}
 		const headers = { "Cache-Control": CACHE, ETag: result.etag }
+		const lastModified = new Date(result.renderedAt).toUTCString()
+		// Before the 304: a card that is only ever revalidated is hot too.
+		deps.remember?.(pathname, {
+			image: result.image,
+			etag: result.etag,
+			contentType: OG_IMAGE.type,
+			cacheControl: CACHE,
+			lastModified,
+		})
 		if (matchesEtag(request, result.etag))
 			return new Response(null, { status: 304, headers })
 		return new Response(result.image, {
@@ -65,12 +77,20 @@ export function createOgImageLoader(deps: Dependencies) {
 				...headers,
 				"Content-Type": OG_IMAGE.type,
 				"Content-Length": String(result.image.length),
-				"Last-Modified": new Date(result.renderedAt).toUTCString(),
+				"Last-Modified": lastModified,
+				"X-OG-Card": result.source,
 			},
 		})
 	}
 }
 export async function ogImageLoader(args: LoaderFunctionArgs) {
 	const deps = await import("~/server/og-image/og-image.server")
-	return createOgImageLoader(deps)(args)
+	return createOgImageLoader({
+		...deps,
+		remember: (pathname, card) =>
+			hotCards.remember(pathname, {
+				...card,
+				onHit: () => deps.countOgCard("memory"),
+			}),
+	})(args)
 }

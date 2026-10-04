@@ -1,4 +1,5 @@
 // Viewer-independent share-list reads. Store writes invalidate the combined view after refreshing Crate.
+import { hotCards } from "~/server/og-image/hot-cards.server"
 import { resetPageCache } from "~/server/page-cache.server"
 import {
 	type CardTitle,
@@ -200,9 +201,11 @@ async function readListView(id: string): Promise<ViewResult> {
 export async function resetListView(id: string): Promise<void> {
 	// The stored page of this list, in this process (see docs/page-cache.md for other processes).
 	resetPageCache((path) => path.endsWith(`/lists/${id}`))
+	hotCards.forget((path) => path.startsWith(`/og/lists/${id}/`))
 	await resetCacheConfirmed({ name: VIEW_CACHE.name, params: { id } })
 	// Drop pages rendered while the old data was still readable, even if the reset was unconfirmed.
 	resetPageCache((path) => path.endsWith(`/lists/${id}`))
+	hotCards.forget((path) => path.startsWith(`/og/lists/${id}/`))
 	try {
 		const [row] = await select<{ user_id: string }>(
 			"SELECT user_id FROM doc.user_list WHERE id = ?",

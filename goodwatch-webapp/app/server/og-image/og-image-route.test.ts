@@ -7,7 +7,13 @@ const { createOgImageLoader } = await import("./og-image-route.server.ts")
 const { imageEtag } = await import("./store.server.ts")
 const image = Buffer.from("jpeg")
 const etag = imageEtag(image)
-const ok: OgResult = { status: "ok", image, renderedAt: 1000, etag }
+const ok: OgResult = {
+	status: "ok",
+	source: "memory",
+	image,
+	renderedAt: 1000,
+	etag,
+}
 const cache =
 	"public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400"
 const request = (path: string, headers = {}) => ({
@@ -37,6 +43,7 @@ test("JPEG and legacy PNG bytes, home mapping, and exact headers", async () => {
 			"cache-control": cache,
 			etag,
 			"last-modified": new Date(1000).toUTCString(),
+			"x-og-card": "memory",
 		})
 	}
 	assert.deepEqual(paths, ["/", "/", "/movie/603", "/movie/603"])
@@ -87,4 +94,37 @@ test("busy and failed use short fallback or retryable text", async () => {
 						},
 			)
 		}
+})
+
+test("ok answers, also revalidated ones, are remembered with their pathname and headers", async () => {
+	const remembered: unknown[] = []
+	let result: OgResult = ok
+	const loader = createOgImageLoader({
+		getOgImage: async () => result,
+		getFallbackCard: () => image,
+		remember: (pathname, card) => remembered.push({ pathname, card }),
+	})
+	await loader(request("movie/603.jpg?version=1"))
+	assert.deepEqual(remembered, [{
+		pathname: "/og/movie/603.jpg",
+		card: {
+			image,
+			etag,
+			contentType: "image/jpeg",
+			cacheControl: cache,
+			lastModified: new Date(1000).toUTCString(),
+		},
+	}])
+	const revalidated = await loader(
+		request("movie/603.jpg", { "If-None-Match": etag }),
+	)
+	assert.equal(revalidated.status, 304)
+	assert.equal(remembered.length, 2)
+	assert.deepEqual(remembered[1], remembered[0])
+	await loader(request("movie/603.webp"))
+	for (const status of ["missing", "busy", "failed"] as const) {
+		result = { status }
+		await loader(request("movie/603.jpg"))
+	}
+	assert.equal(remembered.length, 2)
 })

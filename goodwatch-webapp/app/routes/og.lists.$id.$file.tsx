@@ -3,6 +3,7 @@
 // with the current image but only briefly.
 import type { LoaderFunctionArgs } from "@remix-run/node"
 import { CardRendererBusyError } from "~/server/card-renderer/pool.server"
+import { hotCards } from "~/server/og-image/hot-cards.server"
 import { matchesEtag } from "~/server/og-image/og-image-route.server"
 import {
 	type ShareCardKind,
@@ -48,6 +49,14 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const cache = result.current
 		? "public, max-age=31536000, immutable"
 		: "public, max-age=60"
+	// The current image is answered before Express for a moment (see hot-cards.server.ts). An old hash isn't.
+	if (result.current)
+		hotCards.remember(new URL(request.url).pathname, {
+			image: result.image,
+			etag: result.etag,
+			contentType: format.type,
+			cacheControl: cache,
+		})
 	if (matchesEtag(request, result.etag))
 		return new Response(null, {
 			status: 304,

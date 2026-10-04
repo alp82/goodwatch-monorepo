@@ -12,6 +12,7 @@ import { renderToPipeableStream } from "react-dom/server"
 import { applyCachePolicy } from "~/server/cache-identity.server"
 import { HtmlStream } from "~/server/html-stream.server"
 import { startLifecycle } from "~/server/lifecycle.server"
+import { startHotCards } from "~/server/og-image/hot-cards.server"
 import { routeLabelFor } from "~/server/metrics/http.server"
 import {
 	configurePageCache,
@@ -35,6 +36,9 @@ startPageCache()
 // Also before the first request: the files of the client build are answered before Express (see
 // static-files.server.ts). The root loader starts the gate and the metrics, but a static request never reaches it.
 startStaticFiles()
+// Hot cards answer before Express and route matching (see og-image/hot-cards.server.ts).
+// The routes keep complete answers here briefly after a successful card request.
+startHotCards()
 
 const ABORT_DELAY = 5_000
 

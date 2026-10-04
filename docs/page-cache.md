@@ -194,6 +194,10 @@ and both webapp processes. The rule covers the list page, `/u/<handle>/lists/<id
   cache lived 5 minutes fresh and 5 minutes stale, so a hidden list could stay on it for 10 minutes.
 - **Members:** the owner and other members bypass the page cache and read the data cache, which the reset emptied.
   The owner sees the edit at once.
+- **Images:** a list's card and preview under `/og/lists/<id>/` aren't HTML and aren't part of this bound. Their
+  URL carries the content hash and is `immutable` for a year, so an edit gets a new URL. After a delete, a process
+  can answer the old URL for up to 30 seconds: 20 for the list view and 10 for the answer kept in front of Express
+  (see "A hot card" in [viral-spike-og-images.md](benchmarks/viral-spike-og-images.md#a-hot-card)).
 - **A cache in front:** it must honor `s-maxage=10, stale-while-revalidate=10` and the `Age` sent by the in-process
   cache. It then adds nothing beyond its own revalidation time. It is inside the 60-second target only if it counts
   `Age` and the read and revalidation times fit the remaining budget. No `stale-if-error` extends this lifetime.

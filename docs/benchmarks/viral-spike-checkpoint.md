@@ -212,7 +212,7 @@ A straight line through the steps of each ramp gives the CPU per request. Read t
 | Full movie page view, per request (33 of 34 are static files) | 0.7 ms | 0.5 ms | 1.5 ms | 1.5 ms |
 
 - **The proxy uses more CPU per request than the app.** At 500 stored pages per second, Traefik on abio used 1.2 to 1.6 cores, and each Node main thread 0.4 to 0.5.
-- **An OG image costs three to five times as much as a stored page,** on the main thread and in the proxy. The app reads 132 KB from Valkey for every request and holds no copy in the process.
+- **An OG image costs three to five times as much as a stored page,** on the main thread and in the proxy. The app reads 132 KB from Valkey for every request and holds no copy in the process. (Corrected on October 5, 2026: the process's copy did answer. The cost was the way through Express and Remix, see "A hot card" in [viral-spike-og-images.md](viral-spike-og-images.md#a-hot-card).)
 
 ## A full page view
 
@@ -335,7 +335,7 @@ None of the following is in the app's page render any more. The numbers are the 
 | --- | --- | --- |
 | [Page cache](viral-spike-page-cache.md): a stored page costs 0.5 to 0.8 ms of main-thread time. One process holds the hot mix at 2,000 requests per second, with the main thread at 45% at 500 | 0.6 to 1.5 ms per request. At 250 requests per second per instance, the main thread is at 43% to 49%. Extrapolated: 1,000 to 1,400 per second for both instances | Not isolated. Candidates: 14 background requests per second take 17% to 24% of each main thread, the mix's OG images cost 3.1 to 3.6 ms each here, and requests arrive through one or two proxies. The number of connections isn't the cause: each container accepted 9 connections for 126 to 150 responses |
 | [Static assets](viral-spike-static-assets.md): 0.24 to 0.31 ms of main-thread time per static request under load, 3,000 per second per process | 0.5 to 0.7 ms per request in the page view mix | Not isolated. Same candidates. The static document also didn't measure the proxy, which costs more than Node per request |
-| [OG images](viral-spike-og-images.md): no rate for cached cards. The baseline held 35 per second without a change in the main thread | 3.1 to 3.6 ms of main-thread time per cached card. Two instances are full at about 500 per second | Each request reads the card from Valkey |
+| [OG images](viral-spike-og-images.md): no rate for cached cards. The baseline held 35 per second without a change in the main thread | 3.1 to 3.6 ms of main-thread time per cached card. Two instances are full at about 500 per second | Each request takes the way through Express and Remix. The card comes from the process, not from Valkey, see "A hot card" in that document |
 | [Render profile](viral-spike-render-profile.md): after its fixes, 97.6% of movie responses under 300 ms in production | 99.5% to 100% of uncached movie responses under 300 ms, p95 244 to 261 ms | Agrees. Later changes (cast cap, shorter miss path) and less background load |
 | [Render path budget](viral-spike-render-path-budget.md): first run 63 to 85, LCP 3.83 to 4.98 s | 65 to 84, LCP 3.76 to 5.20 s | Agrees within the spread between runs |
 
