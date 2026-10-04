@@ -54,6 +54,7 @@ export const getUserRecommendations = async (params: GetUserRecommendationsParam
 		target: _getUserRecommendations as any,
 		params,
 		ttlMinutes: 1,
+		staleMinutes: 0,
 		//ttlMinutes: 0,
 	}) as unknown as UserRecommendation[]
 }

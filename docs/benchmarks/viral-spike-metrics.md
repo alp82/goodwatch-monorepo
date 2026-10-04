@@ -80,7 +80,9 @@ Read them in Grafana Cloud under **Explore**, with the Prometheus data source th
 | `goodwatch_http_responses_total` | Counter | `route`, `status_class`, `audience`, `cache_control` | Finished responses. |
 | `goodwatch_http_requests_in_flight` | Gauge | None | Requests being served at scrape time. |
 | `goodwatch_data_cache_requests_total` | Counter | `cache`, `result` | Lookups in the Redis-backed data cache (`cached()` in `app/utils/cache.ts`). |
-| `goodwatch_data_cache_miss_duration_seconds` | Histogram | `cache` | Time in the wrapped function whenever it ran, which is every result except `hit`. |
+| `goodwatch_data_cache_miss_duration_seconds` | Histogram | `cache` | Time for every target run: `miss`, `unavailable`, `error`, `bypass`, and background refreshes. |
+| `goodwatch_data_cache_refreshes_total` | Counter | `cache`, `result` | Finished background refreshes. |
+| `goodwatch_data_cache_in_flight` | Gauge | None | Registered cache runs at scrape time. |
 | `goodwatch_process_resident_memory_bytes`, `goodwatch_process_heap_used_bytes` | Gauge | None | Memory of the server process. |
 | `goodwatch_process_event_loop_delay_seconds` | Gauge | `quantile` (`0.5`, `0.99`, `max`) | How late the event loop ran since the previous scrape. |
 | `goodwatch_process_uptime_seconds`, `goodwatch_build_info` | Gauge | `commit` on the second | A restart or deploy shows as a reset or a new commit. |
@@ -93,7 +95,19 @@ Label values:
 - `audience`: `member` when the request carries the Supabase auth cookie, else `anon`. Only the cookie's presence is read.
 - `cache_control`: what the response's `Cache-Control` header allows. `shared` has `public` or `s-maxage` and nothing private. `private` has `private`, `no-store`, or `no-cache`. `none` is everything else.
 - `cache`: the cache name passed to `cached()`. The three related-title caches have request data in their name, so they report as `related-movie`, `related-show`, and `related-by-category`.
-- `result`: `hit`, `miss`, `stale` (an entry older than its lifetime), `unavailable` (no Redis connection), `error` (the read failed), `bypass` (a lifetime of zero).
+For `goodwatch_data_cache_requests_total`, `result` has seven values:
+
+- `hit`: The lookup returned a fresh value.
+- `stale`: The lookup returned an expired value while a refresh may run in the background.
+- `miss`: No usable value was found, and this call ran the target.
+- `joined`: No usable value was found, and this call waited for an existing run.
+- `unavailable`: No Redis client was available, and this call ran the target.
+- `error`: The cache read failed, and this call ran the target.
+- `bypass`: The lifetime was zero or negative, so the call ran the target without using Redis or deduplication.
+
+Before this change, `stale` meant "expired value found, target run inline".
+
+For `goodwatch_data_cache_refreshes_total`, `result` is `ok` (value stored), `error` (target threw or storage failed), or `discarded` (a reset or newer run replaced the refresh, so it stored nothing).
 
 Histogram buckets are 0.05, 0.1, 0.2, 0.3, 0.5, 1, 2, 5, and 10 seconds. The map's target of 300 ms is a bucket edge, so the share of requests under 300 ms is exact. Percentiles are estimates between two edges.
 
@@ -136,7 +150,41 @@ sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp",
 
 histogram_quantile(0.95, sum by (le, cache) (rate(goodwatch_data_cache_miss_duration_seconds_bucket{job="goodwatch_webapp"}[5m])))
 
-sum by (cache, result) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result=~"stale|unavailable|error"}[5m]))
+sum by (cache, result) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result=~"unavailable|error"}[5m]))
+```
+
+Share of lookups served without waiting for the target, per cache:
+
+```promql
+sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result=~"hit|stale"}[5m]))
+/
+sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result!="bypass"}[5m]))
+```
+
+Share of lookups that ran the target, excluding bypasses and background refreshes:
+
+```promql
+sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result=~"miss|unavailable|error"}[5m]))
+/
+sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result!="bypass"}[5m]))
+```
+
+Joined calls per second:
+
+```promql
+sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result="joined"}[5m]))
+```
+
+Background refresh outcomes per second, by result:
+
+```promql
+sum by (cache, result) (rate(goodwatch_data_cache_refreshes_total{job="goodwatch_webapp"}[5m]))
+```
+
+Registered cache runs at scrape time:
+
+```promql
+goodwatch_data_cache_in_flight{job="goodwatch_webapp"}
 ```
 
 Event loop lateness, and whether the scrape works:

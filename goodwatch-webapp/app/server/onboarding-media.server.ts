@@ -42,6 +42,7 @@ export const getOnboardingMedia = async (params: OnboardingMediaParams) => {
 		params,
 		// TTL can't be set here because every user action affects the results
 		ttlMinutes: 0,
+		staleMinutes: 0,
 	})
 }
 

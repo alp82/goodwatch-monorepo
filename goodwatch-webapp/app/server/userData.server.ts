@@ -17,6 +17,7 @@ export const getUserData = async (params: GetUserDataParams): Promise<UserData> 
 		params,
 		//ttlMinutes: 1,
 		ttlMinutes: 0,
+		staleMinutes: 0,
 	})
 }
 

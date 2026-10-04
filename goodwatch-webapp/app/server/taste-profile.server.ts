@@ -63,6 +63,7 @@ export const getTasteGenreStats = async (params: GetTasteStatsParams) => {
 		target: _getTasteGenreStats as any,
 		params,
 		ttlMinutes: 60,
+		staleMinutes: 0,
 	}) as unknown as GenreStat[]
 }
 
@@ -72,6 +73,7 @@ export const getTasteDecadeStats = async (params: GetTasteStatsParams) => {
 		target: _getTasteDecadeStats as any,
 		params,
 		ttlMinutes: 60,
+		staleMinutes: 0,
 	}) as unknown as DecadeStat[]
 }
 
@@ -81,6 +83,7 @@ export const getTasteCreatorStats = async (params: GetTasteStatsParams) => {
 		target: _getTasteCreatorStats as any,
 		params,
 		ttlMinutes: 60,
+		staleMinutes: 0,
 	}) as unknown as { directors: CreatorStat[]; actors: CreatorStat[] }
 }
 
@@ -90,6 +93,7 @@ export const getTasteFingerprintStats = async (params: GetTasteStatsParams) => {
 		target: _getTasteFingerprintStats as any,
 		params,
 		ttlMinutes: 60,
+		staleMinutes: 0,
 	}) as unknown as TasteFingerprintStats
 }
 

@@ -143,6 +143,7 @@ export const getSmartTitlesForUser = async (
 		target: _getSmartTitlesForUser,
 		params,
 		ttlMinutes: 1,
+		staleMinutes: 0,
 		//ttlMinutes: 0,
 	})
 }

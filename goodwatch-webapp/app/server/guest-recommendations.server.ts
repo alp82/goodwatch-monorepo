@@ -85,6 +85,7 @@ export const getGuestMovieRecommendations = async (params: GuestMovieRecommendat
 		params,
 		//ttlMinutes: 5,
 		ttlMinutes: 0,
+		staleMinutes: 0,
 	}) as unknown as GuestRecommendation[]
 }
 
@@ -95,6 +96,7 @@ export const getGuestShowRecommendations = async (params: GuestShowRecommendatio
 		params,
 		//ttlMinutes: 5,
 		ttlMinutes: 0,
+		staleMinutes: 0,
 	}) as unknown as GuestRecommendation[]
 }
 

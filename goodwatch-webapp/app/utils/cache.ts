@@ -1,4 +1,5 @@
-// The Redis-backed data cache: `cached()` wraps a function with a lookup, and counts every outcome per cache name
+// The Redis-backed data cache deduplicates target runs and serves stale catalog data during refreshes.
+// Lookup and refresh outcomes are counted per cache name
 // (see docs/benchmarks/viral-spike-metrics.md).
 import crypto from "node:crypto"
 import Redis, { type Cluster } from "ioredis"
@@ -7,6 +8,7 @@ import type { ClusterOptions } from "ioredis/built/cluster/ClusterOptions"
 import {
 	counter,
 	durationBuckets,
+	gauge,
 	histogram,
 } from "~/server/metrics/registry.server"
 
@@ -70,6 +72,30 @@ const cacheDuration = histogram(
 	durationBuckets,
 	100,
 )
+const cacheRefreshes = counter(
+	"goodwatch_data_cache_refreshes_total",
+	"Background cache refresh outcomes.",
+	["cache", "result"],
+	100,
+)
+const DEFAULT_MAX_STALE_MINUTES = 60
+const MAX_BACKGROUND_REFRESHES = 8
+const MAX_JOIN_AGE_MS = 30_000
+const MAX_IN_FLIGHT = 1000
+type InFlight = {
+	promise: Promise<JsonData>
+	startedAt: number
+	background: boolean
+}
+const inFlight = new Map<string, InFlight>()
+// Keep counting detached refreshes until they settle, even after a reset.
+let backgroundRefreshes = 0
+export function cacheInFlightCount(): number {
+	return inFlight.size
+}
+gauge("goodwatch_data_cache_in_flight", "Registered cache runs.", [], () => [
+	{ labels: [], value: cacheInFlightCount() },
+])
 export const getRedisCluster = () => redisCluster
 
 const connectToRedisCluster = async () => {
@@ -149,17 +175,19 @@ async function cacheSet<CacheData extends JsonData>(
 	key: string,
 	data: CacheData,
 	ttl: number,
-): Promise<void> {
+): Promise<boolean> {
 	const redis = getRedisCluster()
-	if (!redis) return
+	if (!redis) return false
 	redis.info()
 
 	const jsonData = serializeCacheEntry(data)
 
 	try {
 		await redis.setex(key, ttl || 1, jsonData)
+		return true
 	} catch (e) {
 		console.log("Error while setting cache value:", e)
+		return false
 	}
 }
 
@@ -210,6 +238,8 @@ export interface CachedParams<Params, Return> {
 	name: string
 	metricName?: string
 	ttlMinutes: number
+	// Catalog data uses the default; caches whose params or result depend on a member (user id) pass 0.
+	staleMinutes?: number
 }
 
 export const cached = async <
@@ -221,6 +251,7 @@ export const cached = async <
 	name,
 	metricName,
 	ttlMinutes,
+	staleMinutes = Math.min(ttlMinutes, DEFAULT_MAX_STALE_MINUTES),
 }: CachedParams<Params, Return>): Promise<Return> => {
 	const label = metricName ?? name
 	const runTarget = async () => {
@@ -238,14 +269,62 @@ export const cached = async <
 	const cacheName = `cached-${name}`
 	const cacheKey = cacheEntryKey(name, params)
 
-	// check cache for existing entries within TTL
+	staleMinutes = Number.isFinite(staleMinutes) ? Math.max(0, staleMinutes) : 0
+	const physicalTtl = Math.max(1, Math.round((ttlMinutes + staleMinutes) * 60))
+	const startRun = (background: boolean): Promise<Return> => {
+		if (inFlight.size >= MAX_IN_FLIGHT) {
+			return runTarget()
+		}
+		// Defer execution so the entry exists before the target can settle or reset it.
+		const entry: InFlight = {
+			startedAt: Date.now(),
+			background,
+			promise: Promise.resolve().then(async () => {
+				try {
+					const data = await runTarget()
+					let outcome = "discarded"
+					if (inFlight.get(cacheKey) === entry) {
+						try {
+							outcome = (await cacheSet(cacheKey, data, physicalTtl))
+								? "ok"
+								: "error"
+						} catch (error) {
+							outcome = "error"
+							console.error({ error })
+						}
+					}
+					if (background) cacheRefreshes.inc([label, outcome])
+					return data
+				} catch (error) {
+					if (background) {
+						cacheRefreshes.inc([label, "error"])
+						const message =
+							error instanceof Error ? error.message : String(error)
+						console.warn(
+							`Cache refresh failed (${name}): ${message.replace(/[\r\n]+/g, " ")}`,
+						)
+					}
+					throw error
+				} finally {
+					if (inFlight.get(cacheKey) === entry) inFlight.delete(cacheKey)
+					if (background) backgroundRefreshes--
+				}
+			}),
+		}
+		inFlight.set(cacheKey, entry)
+		if (background) backgroundRefreshes++
+		// Background failures must be handled even when no caller joins the run.
+		entry.promise.catch(() => {})
+		return entry.promise as Promise<Return>
+	}
+
 	let result = getRedisCluster() ? "miss" : "unavailable"
 	try {
 		const cachedResult = await cacheGet<Return>(cacheKey)
 		if (cachedResult) {
-			result = "stale"
 			const { timestamp, data, length } = cachedResult
-			if (Date.now() - timestamp < 1000 * 60 * ttlMinutes) {
+			const age = Date.now() - timestamp
+			if (age < 60_000 * ttlMinutes) {
 				const sizeKB = Math.round(length / 1024)
 				if (sizeKB >= 500 && shouldWarnBig(cacheKey)) {
 					const size =
@@ -253,26 +332,35 @@ export const cached = async <
 					console.warn("cached (big)", { cacheName, size, params })
 				}
 				cacheRequests.inc([label, "hit"])
-				return data as Return
+				return data
+			}
+			if (staleMinutes > 0 && age < (ttlMinutes + staleMinutes) * 60_000) {
+				cacheRequests.inc([label, "stale"])
+				if (
+					!inFlight.has(cacheKey) &&
+					inFlight.size < MAX_IN_FLIGHT &&
+					backgroundRefreshes < MAX_BACKGROUND_REFRESHES
+				)
+					startRun(true)
+				return data
 			}
 		}
 	} catch (error) {
 		result = "error"
 		console.log("Cache get failed, continuing with target function", error)
 	}
-	cacheRequests.inc([label, result])
-
-	// fetch data if no cache hit
-	const results = await runTarget()
-
-	// update cache
-	try {
-		await cacheSet<Return>(cacheKey, results, ttlMinutes * 60)
-	} catch (error) {
-		console.error({ error })
+	const existing = inFlight.get(cacheKey)
+	if (existing && Date.now() - existing.startedAt < MAX_JOIN_AGE_MS) {
+		cacheRequests.inc([label, "joined"])
+		const data = await existing.promise
+		try {
+			return structuredClone(data) as Return
+		} catch {
+			return data as Return
+		}
 	}
-
-	return results
+	cacheRequests.inc([label, result])
+	return await startRun(false)
 }
 
 export interface ResetCacheParams {
@@ -284,5 +372,7 @@ export const resetCache = async ({
 	params,
 	name,
 }: ResetCacheParams): Promise<number> => {
-	return await cacheDelete(cacheEntryKey(name, params))
+	const key = cacheEntryKey(name, params)
+	inFlight.delete(key)
+	return await cacheDelete(key)
 }

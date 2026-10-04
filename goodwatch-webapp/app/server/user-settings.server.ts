@@ -27,6 +27,7 @@ export const getUserSettings = async (params: GetUserSettingsParams) => {
 		params,
 		// can't use TTL on this, e.g. because of onboarding
 		ttlMinutes: 1,
+		staleMinutes: 0,
 	});
 };
 
