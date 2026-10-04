@@ -1,4 +1,8 @@
 import { redactSearchTelemetry } from "~/utils/search-telemetry"
+import {
+	WEB_VITALS_CAPTURE,
+	browserRouteTagger,
+} from "~/utils/web-vitals-telemetry"
 export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
@@ -200,10 +204,14 @@ const PostHogInit = () => {
 			window.location.hostname === "127.0.0.1"
 		if (isLocalhost) return
 
+		// Web Vitals (LCP, INP, CLS, FCP) are PostHog's own `$web_vitals` events. The tagger adds the route pattern and
+		// the time to first byte, so the report can group by route instead of by URL.
+		const tagRoute = browserRouteTagger()
 		posthog.init("phc_RM4XKAExwoQJUw6LoaNDUqCPLXuFLN6lPWybGsbJASq", {
 			// api_host: 'https://eu.i.posthog.com',
 			api_host: "https://a.goodwatch.app",
-			before_send: redactSearchTelemetry,
+			before_send: (event) => tagRoute(redactSearchTelemetry(event)),
+			capture_performance: WEB_VITALS_CAPTURE,
 			session_recording: {
 				blockSelector: ".search-private",
 				maskTextSelector: ".search-private",
