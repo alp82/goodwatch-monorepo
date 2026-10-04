@@ -1,0 +1,274 @@
+diff --git a/goodwatch-webapp/app/entry.server.tsx b/goodwatch-webapp/app/entry.server.tsx
+new file mode 100644
+index 00000000..f441e6f4
+--- /dev/null
++++ b/goodwatch-webapp/app/entry.server.tsx
+@@ -0,0 +1,92 @@
++// MEASUREMENT BUILD ONLY. GW_ENTRY=default is Remix's default Node entry; GW_ENTRY=fix is the entry of the fix
++// (HtmlStream and a cleared abort timer). Both record marks for the render profile.
++import { PassThrough } from "node:stream"
++
++import type { AppLoadContext, EntryContext } from "@remix-run/node"
++import { createReadableStreamFromReadable } from "@remix-run/node"
++import { RemixServer } from "@remix-run/react"
++import { isbot } from "isbot"
++import { renderToPipeableStream } from "react-dom/server"
++import { HtmlStream } from "~/server/html-stream.server"
++
++const ABORT_DELAY = 5_000
++
++type Gw = { mark(name: string): void; add(name: string, value: number): void }
++const gw = (): Gw | undefined => (globalThis as { __gw?: Gw }).__gw
++
++// Wrap every route's loader once, so each request records when each loader started and ended.
++void import("virtual:remix/server-build").then((build) => {
++	for (const [id, route] of Object.entries(build.routes) as [string, { module: Record<string, unknown> }][]) {
++		const loader = route.module.loader as ((args: unknown) => unknown) | undefined
++		if (typeof loader !== "function") continue
++		route.module = {
++			...route.module,
++			loader: async (args: unknown) => {
++				gw()?.mark(`loader_start:${id}`)
++				try {
++					return await loader(args)
++				} finally {
++					gw()?.mark(`loader_end:${id}`)
++				}
++			},
++		}
++	}
++})
++
++export default function handleRequest(
++	request: Request,
++	responseStatusCode: number,
++	responseHeaders: Headers,
++	remixContext: EntryContext,
++	_loadContext: AppLoadContext,
++) {
++	const waitForAll = isbot(request.headers.get("user-agent") ?? "") || remixContext.isSpaMode
++	const fix = process.env.GW_ENTRY === "fix"
++	gw()?.mark("render_start")
++	return new Promise((resolve, reject) => {
++		let shellRendered = false
++		let status = responseStatusCode
++		let chunks = 0
++		let bytes = 0
++		const abortTimer = setTimeout(() => abort(), ABORT_DELAY)
++		const send = () => {
++			shellRendered = true
++			gw()?.mark(waitForAll ? "all_ready" : "shell_ready")
++			const body = fix ? new HtmlStream() : new PassThrough()
++			if (fix) body.once("close", () => clearTimeout(abortTimer))
++			body.on("data", (chunk: Buffer) => {
++				chunks++
++				bytes += chunk.length
++			})
++			body.on("end", () => {
++				gw()?.add("react_chunks", chunks)
++				gw()?.add("react_bytes", bytes)
++				gw()?.mark("react_stream_end")
++			})
++			responseHeaders.set("Content-Type", "text/html")
++			resolve(new Response(createReadableStreamFromReadable(body), { headers: responseHeaders, status }))
++			pipe(body)
++			gw()?.mark("pipe_returned")
++		}
++		const { pipe, abort } = renderToPipeableStream(
++			<RemixServer context={remixContext} url={request.url} abortDelay={ABORT_DELAY} />,
++			{
++				onShellReady() {
++					if (!waitForAll) send()
++				},
++				onAllReady() {
++					if (waitForAll) send()
++					else gw()?.mark("all_ready")
++				},
++				onShellError(error: unknown) {
++					clearTimeout(abortTimer)
++					reject(error)
++				},
++				onError(error: unknown) {
++					status = 500
++					if (shellRendered) console.error(error)
++				},
++			},
++		)
++	})
++}
+diff --git a/goodwatch-webapp/app/root.tsx b/goodwatch-webapp/app/root.tsx
+index d64152d9..49327097 100644
+--- a/goodwatch-webapp/app/root.tsx
++++ b/goodwatch-webapp/app/root.tsx
+@@ -143,7 +143,7 @@ export const loader: LoaderFunction = async ({
+ }: LoaderFunctionArgs) => {
+ 	// The title snapshot loads in the background from the server's first page request on.
+ 	capLogLines()
+-	startTitleSnapshot()
++	if (!(process.env.GW_BENCH_SKIP ?? "").split(",").includes("snapshot")) startTitleSnapshot()
+ 	startProcessStats()
+ 	startMetrics()
+ 	startBrowserGate()
+diff --git a/goodwatch-webapp/app/routes/api.user-data.tsx b/goodwatch-webapp/app/routes/api.user-data.tsx
+index d78db1ed..41331faa 100644
+--- a/goodwatch-webapp/app/routes/api.user-data.tsx
++++ b/goodwatch-webapp/app/routes/api.user-data.tsx
+@@ -1,5 +1,5 @@
+ import { type LoaderFunction, json } from "@remix-run/node"
+-import { useQuery } from "@tanstack/react-query"
++import { useQuery, useQueryClient } from "@tanstack/react-query"
+ import type { UserData } from "~/types/user-data"
+ import { getUserData } from "~/server/userData.server"
+ import { getAuthFromRequest, useUser } from "~/utils/auth"
+@@ -20,7 +20,18 @@ export const loader: LoaderFunction = async ({ request }) => {
+ import { guestUserData, useGuestInteractions } from "~/utils/guest-progress"
+ import { useMemo } from "react"
+ 
++// MEASUREMENT BUILD ONLY: candidate fix behind a switch, plus a call counter.
++const SERVER_GUEST_DATA = typeof document === "undefined" ? guestUserData([]) : undefined
++const useUserDataOnServer = () => {
++	;(globalThis as { __gw?: { add(name: string, value: number): void } }).__gw?.add("useUserData_calls", 1)
++	const { user } = useUser()
++	const queryClient = useQueryClient()
++	const data = user ? queryClient.getQueryData<UserData>(getQueryKeyUserData(user.id)) : SERVER_GUEST_DATA
++	return { data, isLoading: Boolean(user) && data === undefined }
++}
+ export const useUserData = () => {
++	if (typeof document === "undefined" && (process.env.GW_FIX ?? "").split(",").includes("userdata")) return useUserDataOnServer() as never
++	;(globalThis as { __gw?: { add(name: string, value: number): void } }).__gw?.add("useUserData_calls", 1)
+ 	const interactions = useGuestInteractions()
+ 	const guestData = useMemo(() => guestUserData(interactions), [interactions])
+ 	const { user, loading } = useUser()
+diff --git a/goodwatch-webapp/app/server/combined-search/search.server.ts b/goodwatch-webapp/app/server/combined-search/search.server.ts
+index e46868e9..a9d0bcab 100644
+--- a/goodwatch-webapp/app/server/combined-search/search.server.ts
++++ b/goodwatch-webapp/app/server/combined-search/search.server.ts
+@@ -56,11 +56,11 @@ import {
+ } from "../search-people/people.server";
+ 
+ // The ranking's index and query models load at server start.
+-startSearchRanking();
++if (!(process.env.GW_BENCH_SKIP ?? "").split(",").includes("search")) startSearchRanking();
+ // The names a search can find inside a phrase load at server start too.
+-startPeopleIndex();
++if (!(process.env.GW_BENCH_SKIP ?? "").split(",").includes("people")) startPeopleIndex();
+ // The connections to TypeSafe stay open between searches.
+-keepJevConnectionsWarm();
++if (!(process.env.GW_BENCH_SKIP ?? "").split(",").includes("jevwarm")) keepJevConnectionsWarm();
+ 
+ export interface SearchBatch {
+ 	q: string;
+diff --git a/goodwatch-webapp/app/server/related.server.ts b/goodwatch-webapp/app/server/related.server.ts
+index 0a41d199..964d610c 100644
+--- a/goodwatch-webapp/app/server/related.server.ts
++++ b/goodwatch-webapp/app/server/related.server.ts
+@@ -140,7 +140,7 @@ export const prefetchRelatedTitlesState = async ({
+ 	// payload that gets embedded in the HTML.
+ 	const withoutStreaming = <T extends RelatedMovie | RelatedShow>(
+ 		titles: T[],
+-	) => titles.map(({ streaming_availability, ...title }) => title)
++	) => titles.slice(0, Number(process.env.GW_RELATED_LIMIT) || titles.length).map(({ streaming_availability, ...title }) => title)
+ 
+ 	await Promise.all([
+ 		queryClient.prefetchQuery({
+@@ -284,7 +284,7 @@ async function getRelatedTitles({
+ 		includeRatings: true,
+ 		includeFingerprintKey:
+ 			withKey && fingerprint_key ? fingerprint_key : undefined,
+-		includeStreaming: true,
++		includeStreaming: (process.env.GW_FIX ?? "").split(",").includes("nostreaming") ? Boolean(streaming_combinations?.length) : true,
+ 	})
+ 
+ 	const results = await recommend<QdrantMediaPayload>({
+diff --git a/goodwatch-webapp/app/server/search-ranking/serve.server.ts b/goodwatch-webapp/app/server/search-ranking/serve.server.ts
+index 01f72760..fe365383 100644
+--- a/goodwatch-webapp/app/server/search-ranking/serve.server.ts
++++ b/goodwatch-webapp/app/server/search-ranking/serve.server.ts
+@@ -27,7 +27,9 @@ let started = false
+ export function startSearchRanking(): void {
+ 	if (started) return
+ 	started = true
+-	startSearchIndex()
++	const skip = (process.env.GW_BENCH_SKIP ?? "").split(",")
++	if (!skip.includes("index")) startSearchIndex()
++	if (skip.includes("encoder")) return
+ 	startQueryEncoder().then(
+ 		(startup) =>
+ 			console.info(
+diff --git a/goodwatch-webapp/app/ui/details/DetailsRelated.tsx b/goodwatch-webapp/app/ui/details/DetailsRelated.tsx
+index 836ad9fe..f02ab9d7 100644
+--- a/goodwatch-webapp/app/ui/details/DetailsRelated.tsx
++++ b/goodwatch-webapp/app/ui/details/DetailsRelated.tsx
+@@ -21,6 +21,7 @@ export default function DetailsRelated({ media }: DetailsRelatedProps) {
+     }, [keys])
+ 
+     if (!keys.length || !fingerprint) return null
++    if (typeof process !== "undefined" && (process.env.GW_UI ?? "").split(",").includes("norelated")) return null
+ 
+     return (
+         <section className="flex flex-col gap-6 rounded-xl border border-white/10 bg-white/5 p-4 sm:p-6">
+@@ -65,7 +66,7 @@ export default function DetailsRelated({ media }: DetailsRelatedProps) {
+             </div>
+ 
+             <div className="relative">
+-                {keys.map((key) => (
++                {(typeof process !== "undefined" && (process.env.GW_UI ?? "").split(",").includes("onepanel") ? keys.filter((key) => key === selectedKey) : keys).map((key) => (
+                     <div
+                         key={key}
+                         aria-hidden={selectedKey !== key}
+diff --git a/goodwatch-webapp/app/utils/cache.ts b/goodwatch-webapp/app/utils/cache.ts
+index 0ae3fd5c..62751ba9 100644
+--- a/goodwatch-webapp/app/utils/cache.ts
++++ b/goodwatch-webapp/app/utils/cache.ts
+@@ -180,7 +180,11 @@ async function cacheSet<CacheData extends JsonData>(
+ 	if (!redis) return false
+ 	redis.info()
+ 
++	const gwSet = (globalThis as { __gw?: { add(name: string, value: number): void } }).__gw
++	const stringifyStart = performance.now()
+ 	const jsonData = serializeCacheEntry(data)
++	gwSet?.add("cache_stringify_ms", performance.now() - stringifyStart)
++	gwSet?.add("cache_stringify_chars", jsonData.length)
+ 
+ 	try {
+ 		await redis.setex(key, ttl || 1, jsonData)
+@@ -197,10 +201,19 @@ async function cacheGet<CacheData extends JsonData>(
+ 	const redis = getRedisCluster()
+ 	if (!redis) return null
+ 
++	// MEASUREMENT BUILD ONLY: time the Redis read (wall) and the parse (synchronous).
++	const gw = (globalThis as { __gw?: { add(name: string, value: number): void } }).__gw
++	const readStart = performance.now()
+ 	const result = await redis.get(key)
++	gw?.add("redis_get_wall_ms", performance.now() - readStart)
++	gw?.add("redis_gets", 1)
+ 	if (!result) return null
++	const parseStart = performance.now()
++	const parsed = JSON.parse(result)
++	gw?.add("cache_parse_ms", performance.now() - parseStart)
++	gw?.add("cache_parse_chars", result.length)
+ 	// The raw length stands in for the size, so a hit never serializes the value again.
+-	return { ...JSON.parse(result), length: result.length }
++	return { ...parsed, length: result.length }
+ }
+ 
+ async function cacheDelete(key: string): Promise<number> {
+diff --git a/goodwatch-webapp/app/utils/ratings.ts b/goodwatch-webapp/app/utils/ratings.ts
+index 4d4949a1..2f674ccb 100644
+--- a/goodwatch-webapp/app/utils/ratings.ts
++++ b/goodwatch-webapp/app/utils/ratings.ts
+@@ -66,7 +66,14 @@ export const getRatingKeys = () => {
+ }
+ 
+ // Any object with some of the rating fields: details, discover results, title cards (whose missing scores are null).
++const RATING_KEYS = getRatingKeys()
++const fixRatings = typeof document === "undefined" && (process.env.GW_FIX ?? "").split(",").includes("ratings")
+ export const extractRatings = (details: Partial<Record<keyof AllRatings, unknown>>) => {
++	if (fixRatings) {
++		const ratings: Partial<Record<keyof AllRatings, unknown>> = {}
++		for (const key of RATING_KEYS) ratings[key] = details[key]
++		return ratings as AllRatings
++	}
+ 	const keys = getRatingKeys()
+ 	return keys.reduce((acc, key) => {
+ 		return {
