@@ -107,7 +107,7 @@ For `goodwatch_data_cache_requests_total`, `result` has seven values:
 
 Before this change, `stale` meant "expired value found, target run inline".
 
-For `goodwatch_data_cache_refreshes_total`, `result` is `ok` (value stored), `error` (target threw or storage failed), or `discarded` (a reset or newer run replaced the refresh, so it stored nothing).
+For `goodwatch_data_cache_refreshes_total`, `result` is `ok` (value stored), `error` (target threw or storage failed), or `discarded` (a reset or newer run replaced the refresh, so it stored nothing). After a refresh with result `error`, no new refresh starts for that key for 30 seconds; lookups keep counting `stale`.
 
 Histogram buckets are 0.05, 0.1, 0.2, 0.3, 0.5, 1, 2, 5, and 10 seconds. The map's target of 300 ms is a bucket edge, so the share of requests under 300 ms is exact. Percentiles are estimates between two edges.
 

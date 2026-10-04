@@ -135,6 +135,52 @@ const DEFAULT_MAX_STALE_MINUTES = 60
 const MAX_BACKGROUND_REFRESHES = 8
 const MAX_JOIN_AGE_MS = 30_000
 const MAX_IN_FLIGHT = 1000
+// Crate, Qdrant, Postgres or Redis failures last seconds to minutes, not milliseconds.
+// Retry hot keys at most twice a minute, still allowing 120 attempts in the default
+// 60-minute stale window. This equals MAX_JOIN_AGE_MS, when a run counts as stuck.
+const REFRESH_PAUSE_MS = 30_000
+const MAX_REFRESH_PAUSES = 1000
+const refreshPauses = new Map<string, number>()
+
+export function cacheRefreshPauseCount(): number {
+	return refreshPauses.size
+}
+
+export function resetRefreshPausesForTest(): void {
+	refreshPauses.clear()
+}
+
+function isRefreshPaused(key: string): boolean {
+	const until = refreshPauses.get(key)
+	if (until === undefined) return false
+	if (until > Date.now()) return true
+	refreshPauses.delete(key)
+	return false
+}
+
+function pauseRefresh(key: string): void {
+	const now = Date.now()
+	refreshPauses.delete(key)
+	if (refreshPauses.size >= MAX_REFRESH_PAUSES) {
+		for (const [pausedKey, until] of refreshPauses) {
+			if (until <= now) refreshPauses.delete(pausedKey)
+		}
+		if (refreshPauses.size >= MAX_REFRESH_PAUSES) {
+			// Maps iterate in insertion order: drop the oldest pause.
+			refreshPauses.delete(refreshPauses.keys().next().value as string)
+		}
+	}
+	refreshPauses.set(key, now + REFRESH_PAUSE_MS)
+}
+
+export function cachePhysicalTtlSeconds(
+	ttlMinutes: number,
+	staleMinutes = Math.min(ttlMinutes, DEFAULT_MAX_STALE_MINUTES),
+): number {
+	const stale = Number.isFinite(staleMinutes) ? Math.max(0, staleMinutes) : 0
+	return Math.max(1, Math.round((ttlMinutes + stale) * 60))
+}
+
 type InFlight = {
 	promise: Promise<JsonData>
 	startedAt: number
@@ -321,7 +367,7 @@ export const cached = async <
 	const cacheKey = cacheEntryKey(name, params)
 
 	staleMinutes = Number.isFinite(staleMinutes) ? Math.max(0, staleMinutes) : 0
-	const physicalTtl = Math.max(1, Math.round((ttlMinutes + staleMinutes) * 60))
+	const physicalTtl = cachePhysicalTtlSeconds(ttlMinutes, staleMinutes)
 	const startRun = (background: boolean): Promise<Return> => {
 		if (inFlight.size >= MAX_IN_FLIGHT) {
 			return runTarget()
@@ -344,10 +390,16 @@ export const cached = async <
 							console.error({ error })
 						}
 					}
-					if (background) cacheRefreshes.inc([label, outcome])
+					if (background) {
+						if (outcome === "error") pauseRefresh(cacheKey)
+						if (outcome === "ok") refreshPauses.delete(cacheKey)
+						cacheRefreshes.inc([label, outcome])
+					}
 					return data
 				} catch (error) {
 					if (background) {
+						// A refresh that a reset outdated says nothing about the key's next run.
+						if (inFlight.get(cacheKey) === entry) pauseRefresh(cacheKey)
 						cacheRefreshes.inc([label, "error"])
 						const message =
 							error instanceof Error ? error.message : String(error)
@@ -389,6 +441,7 @@ export const cached = async <
 				cacheRequests.inc([label, "stale"])
 				if (
 					!inFlight.has(cacheKey) &&
+					!isRefreshPaused(cacheKey) &&
 					inFlight.size < MAX_IN_FLIGHT &&
 					backgroundRefreshes < MAX_BACKGROUND_REFRESHES
 				)
@@ -425,5 +478,6 @@ export const resetCache = async ({
 }: ResetCacheParams): Promise<number> => {
 	const key = cacheEntryKey(name, params)
 	inFlight.delete(key)
+	refreshPauses.delete(key)
 	return await cacheDelete(key)
 }

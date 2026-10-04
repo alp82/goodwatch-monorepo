@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { cacheEntryKey, getRedisCluster, serializeCacheEntry } from "~/utils/cache";
+import { cacheEntryKey, cachePhysicalTtlSeconds, getRedisCluster, serializeCacheEntry } from "~/utils/cache";
 import {
 	computeShowcaseExamples,
 	SHOWCASE_ITEMS,
@@ -7,6 +7,7 @@ import {
 	type ShowcaseExamplesResult,
 } from "~/server/showcase-examples.server";
 
+const SHOWCASE_REDIS_TTL_SECONDS = cachePhysicalTtlSeconds(SHOWCASE_CACHE_TTL_SECONDS / 60);
 const LEASE_SECONDS = 5 * 60;
 const CACHE_KEY = cacheEntryKey("showcase-examples", { country: "DE" });
 // The existing cache key has no hash tag. This tag places the lease in its slot.
@@ -81,9 +82,9 @@ export async function warmAnonymousHomepage() {
 			CACHE_KEY,
 			owner,
 			serialized,
-			SHOWCASE_CACHE_TTL_SECONDS,
+			SHOWCASE_REDIS_TTL_SECONDS,
 		);
-		if (confirmed !== SHOWCASE_CACHE_TTL_SECONDS) {
+		if (confirmed !== SHOWCASE_REDIS_TTL_SECONDS) {
 			throw new HomepageWarmupFailure(
 				confirmed === 0 ? "lease_lost" : "write_unverified",
 			);
@@ -96,6 +97,7 @@ export async function warmAnonymousHomepage() {
 			identities: examples.map((item) => `${item.mediaType}/${item.tmdb_id}`),
 			computed_at: new Date(timestamp).toISOString(),
 			ttl_seconds: SHOWCASE_CACHE_TTL_SECONDS,
+			redis_ttl_seconds: SHOWCASE_REDIS_TTL_SECONDS,
 			write_verified: true,
 		};
 	} finally {

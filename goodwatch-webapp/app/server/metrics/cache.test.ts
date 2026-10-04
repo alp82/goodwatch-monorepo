@@ -8,6 +8,9 @@ const {
 	cached,
 	cacheEntryKey,
 	cacheInFlightCount,
+	cachePhysicalTtlSeconds,
+	cacheRefreshPauseCount,
+	resetRefreshPausesForTest,
 	resetCache,
 	serializeCacheEntry,
 	setRedisClusterForTest,
@@ -21,9 +24,19 @@ const { renderMetrics, resetMetricsForTest } = await import(
 )
 // Allow the import-time Redis connection attempt to finish before installing each fake.
 await new Promise((resolve) => setTimeout(resolve, 1000))
+const unhandled: unknown[] = []
+const unhandledListener = (error: unknown) => unhandled.push(error)
 beforeEach(() => {
+	resetRefreshPausesForTest()
+	unhandled.length = 0
+	process.on("unhandledRejection", unhandledListener)
 	resetMetricsForTest()
 	resetRedisFailureLogsForTest()
+})
+afterEach(async () => {
+	await tick()
+	process.off("unhandledRejection", unhandledListener)
+	assert.deepEqual(unhandled, [])
 })
 afterEach(() => setRedisCommandTimeoutForTest(null))
 afterEach(() => assert.equal(cacheInFlightCount(), 0))
@@ -319,6 +332,7 @@ test("a cold target error reaches all ten callers and writes nothing", async () 
 	assert.equal(redis.writes.length, 0)
 	count("catalog", "miss", 1)
 	count("catalog", "joined", 9)
+	assert.equal(cacheRefreshPauseCount(), 0)
 })
 
 test("reset discards a pending background refresh without resurrecting its value", async () => {
@@ -336,6 +350,7 @@ test("reset discards a pending background refresh without resurrecting its value
 	assert.equal(redis.store.has(key), false)
 	assert.equal(redis.writes.length, 0)
 	count("catalog", "discarded", 1, true)
+	assert.equal(cacheRefreshPauseCount(), 0)
 })
 
 test("reset detaches a cold run and a subsequent caller starts a new run", async () => {
@@ -780,4 +795,198 @@ test("50 failing lookups log once and the next window reports suppressed failure
 	assert.deepEqual(warn.mock.calls[1].arguments, [
 		"Redis get failed: Read failed (suppressed: 49)",
 	])
+})
+
+test("50 stale lookups retry a failing target only once per 30-second pause", async (t) => {
+	const redis = fakeRedis()
+	let now = Date.now()
+	const start = now
+	t.mock.method(Date, "now", () => now)
+	t.mock.method(console, "warn", () => {})
+	seedStale(redis)
+	let runs = 0
+	const target = async () => {
+		runs++
+		throw new Error("Backend unavailable")
+	}
+	for (let i = 0; i < 50; i++) {
+		now = start + i * 500
+		assert.deepEqual(await cached({ ...options, target }), { answer: "old" })
+		await tick()
+	}
+	assert.equal(runs, 1)
+	assert.equal(cacheRefreshPauseCount(), 1)
+	count("catalog", "stale", 50)
+	count("catalog", "error", 1, true)
+	now = start + 30_001
+	for (let i = 0; i < 10; i++) {
+		assert.deepEqual(await cached({ ...options, target }), { answer: "old" })
+		await tick()
+		now += 500
+	}
+	assert.equal(runs, 2)
+	count("catalog", "stale", 60)
+	count("catalog", "error", 2, true)
+})
+
+test("a rejected background cache write pauses the key", async (t) => {
+	const redis = fakeRedis()
+	const { key, value } = seedStale(redis)
+	t.mock.method(console, "warn", () => {})
+	redis.client.setex = async () => {
+		throw new Error("Write failed")
+	}
+	const target = t.mock.fn(async () => ({ answer: "new" }))
+	for (let i = 0; i < 3; i++) {
+		assert.deepEqual(await cached({ ...options, target }), { answer: "old" })
+		await tick()
+	}
+	assert.equal(target.mock.callCount(), 1)
+	assert.equal(cacheRefreshPauseCount(), 1)
+	assert.equal(redis.store.get(key), value)
+	count("catalog", "error", 1, true)
+	count("catalog", "stale", 3)
+})
+
+test("a successful refresh after the pause clears it and later lookups hit", async (t) => {
+	const redis = fakeRedis()
+	let now = Date.now()
+	t.mock.method(Date, "now", () => now)
+	t.mock.method(console, "warn", () => {})
+	seedStale(redis)
+	let runs = 0
+	const target = async () => {
+		if (++runs === 1) throw new Error("Temporary failure")
+		return { answer: "new" }
+	}
+	await cached({ ...options, target })
+	await tick()
+	assert.equal(cacheRefreshPauseCount(), 1)
+	now += 30_000
+	assert.deepEqual(await cached({ ...options, target }), { answer: "old" })
+	await tick()
+	assert.equal(cacheRefreshPauseCount(), 0)
+	assert.deepEqual(await cached({ ...options, target }), { answer: "new" })
+	assert.equal(runs, 2)
+	count("catalog", "ok", 1, true)
+	count("catalog", "hit", 1)
+})
+
+test("resetCache clears the pause and a reseeded stale value refreshes immediately", async (t) => {
+	const redis = fakeRedis()
+	seedStale(redis)
+	t.mock.method(console, "warn", () => {})
+	const target = t.mock.fn(async () => {
+		throw new Error("Backend unavailable")
+	})
+	await cached({ ...options, target })
+	await tick()
+	assert.equal(cacheRefreshPauseCount(), 1)
+	await resetCache(options)
+	assert.equal(cacheRefreshPauseCount(), 0)
+	seedStale(redis)
+	await cached({ ...options, target })
+	await tick()
+	assert.equal(target.mock.callCount(), 2)
+})
+
+test("a pause does not block absent or expired cold lookups or change their errors", async (t) => {
+	const redis = fakeRedis()
+	t.mock.method(console, "warn", () => {})
+	const error = new Error("Backend unavailable")
+	for (const absent of [true, false]) {
+		const { key } = seedStale(redis)
+		await cached({
+			...options,
+			target: async () => {
+				throw error
+			},
+		})
+		await tick()
+		assert.equal(cacheRefreshPauseCount(), 1)
+		if (absent) redis.store.delete(key)
+		else
+			redis.store.set(
+				key,
+				serializeCacheEntry({ answer: "expired" }, Date.now() - 180_000),
+			)
+		await assert.rejects(
+			cached({
+				...options,
+				target: async () => {
+					throw error
+				},
+			}),
+			(caught) => caught === error,
+		)
+		assert.deepEqual(
+			await cached({ ...options, target: async () => ({ answer: "cold" }) }),
+			{ answer: "cold" },
+		)
+		resetRefreshPausesForTest()
+	}
+	count("catalog", "miss", 4)
+	count("catalog", "error", 2, true)
+})
+
+test("refresh pauses cap at 1000, evict the oldest, and drop expired entries first", async (t) => {
+	const redis = fakeRedis()
+	let now = Date.now()
+	t.mock.method(Date, "now", () => now)
+	t.mock.method(console, "warn", () => {})
+	let runs = 0
+	const fail = async (id: number) => {
+		const params = { id }
+		redis.store.set(
+			cacheEntryKey(options.name, params),
+			serializeCacheEntry({ answer: "old" }, now - 90_000),
+		)
+		await cached({
+			...options,
+			params,
+			target: async () => {
+				runs++
+				throw new Error("Backend unavailable")
+			},
+		})
+		await tick()
+	}
+	for (let id = 0; id < 1100; id++) {
+		await fail(id)
+		assert.ok(cacheRefreshPauseCount() <= 1000)
+	}
+	assert.equal(cacheRefreshPauseCount(), 1000)
+	assert.equal(runs, 1100)
+	await fail(100)
+	assert.equal(runs, 1100)
+	await fail(0)
+	assert.equal(runs, 1101)
+	resetRefreshPausesForTest()
+	// Insert live pauses before older pauses: expiration must take priority over insertion order.
+	now += 10_000
+	for (let id = 0; id < 500; id++) await fail(id)
+	now -= 10_000
+	for (let id = 500; id < 1000; id++) await fail(id)
+	now += 30_000
+	assert.equal(cacheRefreshPauseCount(), 1000)
+	await fail(1000)
+	assert.equal(cacheRefreshPauseCount(), 501)
+	const before = runs
+	await fail(0)
+	assert.equal(runs, before)
+})
+
+test("cachePhysicalTtlSeconds shares the default stale window and clamps invalid windows", () => {
+	assert.equal(cachePhysicalTtlSeconds(1440), 90000)
+	assert.equal(cachePhysicalTtlSeconds(30), 3600)
+	assert.equal(cachePhysicalTtlSeconds(1440, 0), 86400)
+	assert.equal(cachePhysicalTtlSeconds(0.001, 0), 1)
+	assert.equal(cachePhysicalTtlSeconds(0.027, 0), 2)
+	for (const stale of [
+		-1,
+		Number.NaN,
+		Number.POSITIVE_INFINITY,
+		Number.NEGATIVE_INFINITY,
+	])
+		assert.equal(cachePhysicalTtlSeconds(1440, stale), 86400)
 })
