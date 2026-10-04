@@ -1,7 +1,10 @@
-// Called by the browser after a page view, so the page's Open Graph card is ready and current
-// by the time someone shares the link. See useOgImageWarmup.
+// Called by the browser when a list's owner shares it, so the list's card image is current by the time the link is
+// pasted somewhere. A share list card takes about 20 seconds to render, too long for a link-preview bot to wait.
+//
+// Pages used to send this request after every page view, for every kind of page. Cards of other pages are drawn on
+// their first request now, so any other path is answered and ignored: pages that were loaded before October 4, 2026
+// still send it.
 import type { ActionFunctionArgs } from "@remix-run/node"
-import { warmOgImage } from "~/server/og-image/og-image.server"
 import { warmShareCard } from "~/server/share-card/images.server"
 
 const MAX_PATH_LENGTH = 512
@@ -22,16 +25,9 @@ export async function action({ request }: ActionFunctionArgs) {
 	if (!path.startsWith("/") || path.length > MAX_PATH_LENGTH)
 		return new Response(null, { status: 400 })
 
-	// Share list pages carry their own card image, rendered by the share card renderer.
-	const list = /^\/u\/[a-z][a-z0-9_]{2,29}\/lists\/([0-9A-Za-z]{10})$/.exec(path)
-	if (list) {
-		warmShareCard({ id: list[1] })
-		return new Response(null, { status: 204 })
-	}
-
-	// Answer right away; the render runs on its own.
-	warmOgImage(path).catch((error) =>
-		console.warn("[og-image] warmup failed", path, error),
+	const list = /^\/u\/[a-z][a-z0-9_]{2,29}\/lists\/([0-9A-Za-z]{10})$/.exec(
+		path,
 	)
+	if (list) warmShareCard({ id: list[1] })
 	return new Response(null, { status: 204 })
 }

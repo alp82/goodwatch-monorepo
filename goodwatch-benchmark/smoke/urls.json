@@ -134,11 +134,20 @@
     },
     {
       "id": "title-og-image",
+      "path": "/og/movie/603-the-matrix.jpg",
+      "client": "bot",
+      "contentType": "^image/jpeg",
+      "minBytes": 10000,
+      "header": { "cache-control": "s-maxage=604800", "etag": "[0-9a-f]{16}" },
+      "guards": "A title's link preview image, read from the cache cluster as a buffer or rendered in a child process. A generic busy answer has a lifetime of 60 seconds and no ETag, and fails here."
+    },
+    {
+      "id": "title-og-image-old-url",
       "path": "/og/movie/603-the-matrix.png",
       "client": "bot",
-      "contentType": "^image/png",
+      "contentType": "^image/jpeg",
       "minBytes": 10000,
-      "guards": "A title's link preview image, read from Redis as a buffer or rendered."
+      "guards": "Links shared before October 4, 2026 name the .png URL. It answers with the same JPEG."
     },
     {
       "id": "robots",

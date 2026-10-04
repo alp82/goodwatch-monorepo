@@ -1,41 +1,76 @@
-// Serves the Open Graph image for a page: /og/<page path>.png, and /og/index.png for the
-// home page. Used by the og.* routes.
+// Serves the Open Graph image for a page: /og/<page path>.jpg, and /og/index.jpg for the home page. Used by the og.*
+// routes. The cards are JPEG. /og/<page path>.png answers with the same JPEG: links shared while the cards were PNG
+// still name that URL, and link-preview clients go by the content type, not by the extension.
+//
+// A card that can't be drawn in time (the renderer is busy, or the render failed) is answered with a generic card and
+// a lifetime of one minute, never with an error: platforms keep what they fetched, and a missing preview is worse
+// than a generic one that is replaced on the next fetch.
 import type { LoaderFunctionArgs } from "@remix-run/node"
-import { getOgImage } from "~/server/og-image/og-image.server"
+import type { OgResult } from "~/server/og-image/store.server"
+import { OG_IMAGE } from "~/ui/og-image/format"
 
-const notFound = () =>
-	new Response("Not Found", {
-		status: 404,
+type Dependencies = {
+	getOgImage: (path: string) => Promise<OgResult>
+	getFallbackCard: () => Buffer | null
+}
+// A card changes when its title's data changes, so it isn't immutable: browsers keep it for a day and shared caches
+// for a week, and the ETag lets both revalidate without the body.
+const CACHE =
+	"public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400"
+const text = (status: number, body: string, extra = {}) =>
+	new Response(body, {
+		status,
 		headers: {
 			"Content-Type": "text/plain",
 			"Cache-Control": "no-store",
+			...extra,
 		},
 	})
-
-export const ogImageLoader = async ({ request }: LoaderFunctionArgs) => {
-	const file = new URL(request.url).pathname.replace(/^\/og\//, "")
-	if (!file.endsWith(".png")) return notFound()
-	const pagePath =
-		file === "index.png" ? "/" : `/${file.slice(0, -".png".length)}`
-
-	let png: Buffer | null
-	try {
-		png = await getOgImage(pagePath)
-	} catch (error) {
-		console.error("[og-image] render failed", pagePath, error)
-		return new Response("Render failed", {
-			status: 500,
-			headers: { "Content-Type": "text/plain", "Cache-Control": "no-store" },
+export function matchesEtag(request: Request, etag: string) {
+	return (
+		request.headers
+			.get("If-None-Match")
+			?.split(",")
+			.some(
+				(value) =>
+					value.trim() === "*" || value.trim().replace(/^W\//, "") === etag,
+			) ?? false
+	)
+}
+export function createOgImageLoader(deps: Dependencies) {
+	return async ({ request }: Pick<LoaderFunctionArgs, "request">) => {
+		const file = new URL(request.url).pathname.replace(/^\/og\//, "")
+		if (!/\.(jpg|png)$/.test(file)) return text(404, "Not Found")
+		const stem = file.slice(0, -4)
+		const result = await deps.getOgImage(stem === "index" ? "/" : `/${stem}`)
+		if (result.status === "missing") return text(404, "Not Found")
+		if (result.status !== "ok") {
+			const fallback = deps.getFallbackCard()
+			if (!fallback)
+				return text(503, "Renderer unavailable", { "Retry-After": "2" })
+			return new Response(fallback, {
+				headers: {
+					"Content-Type": OG_IMAGE.type,
+					"Content-Length": String(fallback.length),
+					"Cache-Control": "public, max-age=60",
+					"X-OG-Card": "fallback",
+				},
+			})
+		}
+		const headers = { "Cache-Control": CACHE, ETag: result.etag }
+		if (matchesEtag(request, result.etag))
+			return new Response(null, { status: 304, headers })
+		return new Response(result.image, {
+			headers: {
+				...headers,
+				"Content-Type": OG_IMAGE.type,
+				"Content-Length": String(result.image.length),
+				"Last-Modified": new Date(result.renderedAt).toUTCString(),
+			},
 		})
 	}
-	if (!png) return notFound()
-
-	return new Response(png, {
-		headers: {
-			"Content-Type": "image/png",
-			"Content-Length": String(png.length),
-			"Cache-Control":
-				"public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
-		},
-	})
+}
+export async function ogImageLoader(args: LoaderFunctionArgs) {
+	const deps = await import("~/server/og-image/og-image.server")
+	return createOgImageLoader(deps)(args)
 }

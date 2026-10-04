@@ -17,6 +17,7 @@ import {
 } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import { resolveCountry } from "~/server/country.server"
+import { ensureShareCard } from "~/server/share-card/images.server"
 import {
 	type ListOffer,
 	type TitleAvailability,
@@ -55,6 +56,7 @@ const OFFERS_SHOWN = 4
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const view = await getListView(params.id ?? "")
 	if (!view) throw notFound()
+	ensureShareCard(view)
 	const { list, owner, titles: items } = view
 	if (params.handle !== owner.handle)
 		return redirect(shareListPath(owner.handle, list.id), 301)

@@ -3,7 +3,13 @@
 // warm them.
 // Renders run in child processes (render.server.tsx), and one render draws both images. Images are cached in process
 // and in Redis, keyed by list id and hash, so a changed list is rendered once and its old images age out.
-import { type ShareCardImages, renderShareCard } from "~/server/share-card/render.server"
+// A render takes about 20 seconds, too long for a link-preview bot, so a list's images are drawn when it is saved
+// (warmShareCard) and checked when its page is viewed (ensureShareCard).
+import { imageEtag } from "~/server/og-image/store.server"
+import {
+	type ShareCardImages,
+	renderShareCard,
+} from "~/server/share-card/render.server"
 import {
 	type ListView,
 	type ShareList,
@@ -105,7 +111,10 @@ function renderBoth(view: ListView): Promise<ShareCardImages> {
 	if (!rendering) {
 		rendering = render(view)
 			.then(async (images) => {
-				await Promise.all([cacheWrite(cacheKey(list, "card"), images.card), cacheWrite(cacheKey(list, "preview"), images.preview)])
+				await Promise.all([
+					cacheWrite(cacheKey(list, "card"), images.card),
+					cacheWrite(cacheKey(list, "preview"), images.preview),
+				])
 				return images
 			})
 			.finally(() => pending.delete(key))
@@ -128,11 +137,13 @@ export async function getShareCardImage(
 	id: string,
 	hash: string,
 	kind: ShareCardKind,
-): Promise<{ image: Buffer; current: boolean } | null> {
+): Promise<{ image: Buffer; current: boolean; etag: string } | null> {
 	const view = await getListView(id)
 	if (!view) return null
+	const image = await imageFor(view, kind)
 	return {
-		image: await imageFor(view, kind),
+		image,
+		etag: etagFor(image),
 		current: view.list.contentHash === hash,
 	}
 }
@@ -156,7 +167,43 @@ export function warmShareCard(list: Pick<ShareList, "id">) {
 					await imageFor(current, "preview")
 					await imageFor(current, "card")
 				})
-				.catch((error) => console.warn("[share-card] warmup failed", list.id, error))
+				.catch((error) =>
+					console.warn("[share-card] warmup failed", list.id, error),
+				)
 		}, WARM_DEBOUNCE_MS),
 	)
+}
+
+// One hash per image buffer, however often it is served.
+const etags = new WeakMap<Buffer, string>()
+function etagFor(image: Buffer) {
+	let tag = etags.get(image)
+	if (!tag) {
+		tag = imageEtag(image)
+		etags.set(image, tag)
+	}
+	return tag
+}
+// The lists and hashes whose preview this process has already looked for.
+const CHECKED_MAX = 5000
+const checked = new Set<string>()
+
+/**
+ * Makes sure a list's images exist, in the background: after an eviction or an expiry, the first page view draws
+ * them again, before a link-preview bot asks. Returns at once and never throws.
+ */
+export function ensureShareCard(view: ListView): void {
+	const key = cacheKey(view.list, "preview")
+	if (memoryRead(key) || checked.has(key)) return
+	if (checked.size >= CHECKED_MAX)
+		checked.delete(checked.values().next().value as string)
+	checked.add(key)
+	void cacheRead(key)
+		.then(async (hit) => {
+			if (!hit) await renderBoth(view)
+		})
+		.catch((error) => {
+			checked.delete(key)
+			console.warn("[share-card] ensure failed", error)
+		})
 }

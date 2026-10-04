@@ -23,8 +23,8 @@ export const shareCardImagePath = (list: { id: string; contentHash: string }) =>
 	`/og/lists/${list.id}/${list.contentHash}.png`
 
 /**
- * The link preview: the same card as a JPEG, 720 pixels wide, about 70 to 180 KB. WhatsApp skips og:image files over
- * 600 KB, and the full card is up to 2.4 MB.
+ * The link preview: the same card as a JPEG, 720 pixels wide, at most 145 KB (a lower quality is tried when the
+ * first one is larger). WhatsApp skips og:image files over 600 KB, and the full card is up to 2.4 MB.
  */
 export const SHARE_CARD_PREVIEW = { width: 720, quality: 82, type: "image/jpeg" } as const
 export const shareCardPreviewPath = (list: { id: string; contentHash: string }) =>

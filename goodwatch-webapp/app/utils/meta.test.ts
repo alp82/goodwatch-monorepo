@@ -2,7 +2,9 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../server/title-filter/test-alias.ts"
 
-const { buildJsonLdDetail, jsonLdPeople } = await import("./meta.ts")
+const { buildJsonLdDetail, jsonLdPeople, ogImageUrl } = await import(
+	"./meta.ts"
+)
 
 const page = {
 	title: "Stranger Things",
@@ -70,4 +72,19 @@ test("the title's structured data names each actor and producer once", () => {
 test("a title without actors has no actor property", () => {
 	const jsonLd = buildJsonLdDetail(page, show([])) as { actor?: unknown }
 	assert.equal(jsonLd.actor, undefined)
+})
+
+test("a page's Open Graph image is the JPEG under /og/, with index for the home page", () => {
+	assert.equal(
+		ogImageUrl("https://goodwatch.app/"),
+		"https://goodwatch.app/og/index.jpg",
+	)
+	assert.equal(
+		ogImageUrl("https://goodwatch.app/movie/603-the-matrix"),
+		"https://goodwatch.app/og/movie/603-the-matrix.jpg",
+	)
+	assert.equal(
+		ogImageUrl("/movies/moods/"),
+		"https://goodwatch.app/og/movies/moods.jpg",
+	)
 })

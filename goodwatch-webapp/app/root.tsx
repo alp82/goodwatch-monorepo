@@ -54,7 +54,6 @@ import { LocaleContext } from "~/utils/locale"
 import cssTailwind from "~/tailwind.css?url"
 import App from "~/app"
 import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
-import { useOgImageWarmup } from "~/ui/og-image/useOgImageWarmup"
 import { getAuthFromRequest } from "./utils/auth"
 
 export const links: LinksFunction = () => [
@@ -210,7 +209,6 @@ export function ErrorBoundary() {
 function Root() {
 	const { locale, env, user } = useLoaderData<LoaderData>()
 	const location = useLocation()
-	useOgImageWarmup()
 
 	// Add check for custom scroll handling
 	const [shouldUseScrollRestoration, setShouldUseScrollRestoration] =

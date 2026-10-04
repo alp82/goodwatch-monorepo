@@ -1,5 +1,6 @@
 import type { MovieDetails, TVDetails } from "~/server/details.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { OG_IMAGE } from "~/ui/og-image/format"
 import { personPath } from "~/utils/helpers"
 
 export interface PageMeta {
@@ -18,7 +19,7 @@ export type PageItem = MovieDetails | TVDetails
 export const ogImageUrl = (pageUrl: string) => {
 	const { pathname } = new URL(pageUrl, "https://goodwatch.app")
 	const path = pathname.replace(/\/+$/, "")
-	return `https://goodwatch.app/og${path || "/index"}.png`
+	return `https://goodwatch.app/og${path || "/index"}${OG_IMAGE.extension}`
 }
 
 export interface MetaOptions {
@@ -66,9 +67,9 @@ export const buildMeta = (params: MetaOptions) => {
 		{ property: "og:description", content: params.pageMeta.description },
 		{ property: "og:url", content: params.pageMeta.url },
 		{ property: "og:image", content: image },
-		{ property: "og:image:type", content: "image/png" },
-		{ property: "og:image:width", content: "1200" },
-		{ property: "og:image:height", content: "630" },
+		{ property: "og:image:type", content: OG_IMAGE.type },
+		{ property: "og:image:width", content: String(OG_IMAGE.width) },
+		{ property: "og:image:height", content: String(OG_IMAGE.height) },
 		{ property: "og:image:alt", content: params.pageMeta.alt },
 
 		// Twitter Cards

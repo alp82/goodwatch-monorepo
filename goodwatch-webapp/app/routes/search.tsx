@@ -2,6 +2,7 @@ import { type LoaderFunctionArgs, redirect } from "@remix-run/node";
 import type { ShouldRevalidateFunction } from "@remix-run/react";
 import { discoverSearchPath } from "~/domain/discover-search";
 import { getFeatureMode, isEnabled } from "~/server/features.server";
+import { OG_IMAGE } from "~/ui/og-image/format";
 import { JourneyResultsPage } from "~/ui/search/SearchJourney";
 import { getUserIdFromRequest } from "~/utils/auth";
 import { ogImageUrl } from "~/utils/meta";
@@ -11,9 +12,9 @@ export const meta = () => [
 	{ name: "robots", content: "noindex, follow" },
 	{ property: "og:title", content: "Search movies and shows · GoodWatch" },
 	{ property: "og:image", content: ogImageUrl("/search") },
-	{ property: "og:image:type", content: "image/png" },
-	{ property: "og:image:width", content: "1200" },
-	{ property: "og:image:height", content: "630" },
+	{ property: "og:image:type", content: OG_IMAGE.type },
+	{ property: "og:image:width", content: String(OG_IMAGE.width) },
+	{ property: "og:image:height", content: String(OG_IMAGE.height) },
 	{ name: "twitter:card", content: "summary_large_image" },
 	{ name: "twitter:image", content: ogImageUrl("/search") },
 ];

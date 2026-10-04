@@ -247,7 +247,7 @@ Card images move from the prototype endpoint into the production Open Graph imag
   answers with the current image.
 - **Size:** the card is a PNG at each design's native size (1080×1920, 1080×1350, or 1080×1080), not the 1200×630
   page-card size, and up to about 2.4 MB. The link preview is the same card as a JPEG, 720 pixels wide (720×1280,
-  720×900, or 720×720) at quality 82, about 55 to 190 KB. WhatsApp skips `og:image` files over 600 KB. One render
+  720×900, or 720×720), at most 145 KB: quality 82, or 76 or 70 when the file would be larger. WhatsApp skips `og:image` files over 600 KB. One render
   draws both images from the same satori layout, and `npm run check:share-cards` fails a preview over 300 KB.
 - **Rendering off the main thread:** satori plus resvg blocks the Node event loop for about 1 to 6 seconds per card
   (Marquee is about 6 seconds). Render share cards in a worker pool (`worker_threads`) so page requests keep flowing.

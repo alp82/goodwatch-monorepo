@@ -111,7 +111,7 @@ export const meta: MetaFunction = () => {
 		title: "Make your top 5 · GoodWatch",
 		description: "Rank your five favorite movies or shows and share them as a card.",
 		url: "https://goodwatch.app/lists/new",
-		image: "https://goodwatch.app/og/lists/new.png",
+		image: "https://goodwatch.app/og/lists/new.jpg",
 		alt: "Rank your top 5 movies or shows on GoodWatch and share them",
 	}
 	return [

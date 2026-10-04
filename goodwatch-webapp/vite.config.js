@@ -11,10 +11,10 @@ import tsconfigPaths from "vite-tsconfig-paths"
 installGlobals()
 
 // The query encoder worker thread and the share card renderer process each need their own file next to the
-// server bundle. query-encoder.server.ts and share-card/render.server.tsx load them from there.
+// server bundle. query-encoder.server.ts and card-renderer/pool.server.ts load them from there.
 const SEPARATE_ENTRIES = [
 	"app/server/search-ranking/query-encoder.worker.js",
-	"app/server/share-card/render.child.js",
+	"app/server/card-renderer/render.child.js",
 ]
 function separateEntryFiles() {
 	let root
