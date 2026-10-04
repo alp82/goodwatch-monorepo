@@ -19,7 +19,8 @@ export function Poster({ path, title, loading = false, mediaType, tmdbId }: Post
 	return (
 		<img
 			ref={impressionRef}
-			className={`block w-full rounded-md pointer-events-none ${loading ? "animate-pulse brightness-50" : ""}`}
+			// Every poster is 2:3. The ratio reserves the height before the image arrives.
+			className={`block w-full aspect-[2/3] rounded-md pointer-events-none ${loading ? "animate-pulse brightness-50" : ""}`}
 			src={url}
 			alt={title && `Poster for ${title}`}
 			draggable="false"
