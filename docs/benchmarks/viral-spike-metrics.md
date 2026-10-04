@@ -183,7 +183,7 @@ Add the cache layer's exporter as one more scrape target in `goodwatch-metrics/w
 
 ## How the scrape is deployed
 
-`goodwatch-metrics/config.alloy` and `docker-compose.yml` stay the same on all hosts. abio adds two files:
+`goodwatch-metrics/config.alloy` and `docker-compose.yml` are the same on all hosts. abio adds two files:
 
 - `webapp.alloy` scrapes `goodwatch-webapp:9464` (override with `WEBAPP_METRICS_TARGET`) and forwards to the remote write of `config.alloy`.
 - `docker-compose.webapp.yml` mounts that file, starts Alloy with the directory so that both files load, and attaches Alloy to the `coolify` network.
@@ -215,3 +215,35 @@ count({job="goodwatch_webapp"})
 ```
 
 Add a `rule { source_labels = ["__name__"], regex = "<metric>_bucket", action = "drop" }` block to the `prometheus.relabel "webapp"` component in `webapp.alloy`.
+
+## Node series that Alloy drops
+
+The Grafana Cloud tenant has a limit of 15,000 active series. Over the limit, Mimir rejects every new series with `err-mimir-max-active-series` and keeps accepting the ones it already knows. So the newest series, such as the webapp's, are the ones that go missing.
+
+To stay under the limit, the `prometheus.relabel "trim_node_metrics"` component in `config.alloy` drops these node series on every host before the remote write:
+
+| Dropped | Rule |
+|---|---|
+| `node_scrape_collector_*`, `go_*`, `promhttp_*` | Scrape bookkeeping and node_exporter's own runtime metrics |
+| `node_cpu_guest_seconds_total`, `node_softnet_*`, `node_schedstat_*`, `node_cooling_device_*` | Per-CPU detail beyond `node_cpu_seconds_total` |
+| `node_network_*` with `device` matching `veth*`, `br-*`, `docker*`, or `lo` | Virtual interfaces |
+| `node_filesystem_*` with a pseudo `fstype` such as `tmpfs` or `overlay`, or a `mountpoint` under `/run` or `/var/lib/docker` | Pseudo and container filesystems |
+| `node_disk_*` with `device` matching `sr`, `loop`, or `ram` plus a number | Virtual block devices |
+
+Everything else stays, including `node_cpu_seconds_total` per core and mode, memory, load, pressure, and all series for real disks, mounts, and interfaces. On October 4, 2026, the rules took the 15 hosts from 13,638 to 5,366 node series.
+
+To get a family back, delete its rule or narrow its `regex`, then roll the file out. The hosts don't follow `main` on their own. On each host, in the repository checkout:
+
+```sh
+git fetch origin main
+git checkout FETCH_HEAD -- goodwatch-metrics/config.alloy
+cd goodwatch-metrics && docker compose restart grafana-alloy
+```
+
+To count what one host sends, read Alloy's own metrics from the host. Alloy listens only inside its container:
+
+```sh
+nsenter -t "$(docker inspect -f '{{.State.Pid}}' grafana-alloy)" -n \
+  curl -s http://127.0.0.1:12345/metrics | grep -E '^prometheus_remote_(storage_samples_(failed_)?total|write_wal_storage_active_series)'
+docker logs --since 5m grafana-alloy 2>&1 | grep -c max-active-series
+```
