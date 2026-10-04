@@ -12,9 +12,11 @@ proxy=${5:-coolify-proxy}
 [[ $interval =~ ^[1-9][0-9]*$ && $duration =~ ^[1-9][0-9]*$ ]] || exit 2
 container=$(docker ps -q --filter "label=$label" | head -1)
 [[ -n $container ]] || { echo 'No webapp container' >&2; exit 1; }
-# The server is the container's process with the most threads.
+# The server is the container's remix-serve process. The OG card renderer starts short-lived child processes with
+# more threads, so "the most threads" alone can pick a child that is gone a moment later. It stays as the fallback.
 pid=''; most=0
 for candidate in $(docker top "$container" -o pid | tail -n +2); do
+  if tr '\0' ' ' < "/proc/$candidate/cmdline" 2>/dev/null | grep -q 'remix-serve'; then pid=$candidate; break; fi
   count=$(ls "/proc/$candidate/task" 2>/dev/null | wc -l)
   if ((count > most)); then most=$count; pid=$candidate; fi
 done

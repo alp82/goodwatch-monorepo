@@ -95,11 +95,12 @@ const stats = (values) => {
   return v.length ? { avg: v.reduce((a, b) => a + b, 0) / v.length, max: Math.max(...v) } : { avg: null, max: null };
 };
 
-export async function webappSummary(dir, meta, benchmarkRequests) {
+// `sub` is the probe's directory inside the run: "webapp" for the resolve address, "webapp-<host>" for another instance.
+export async function webappSummary(dir, meta, benchmarkRequests, sub = "webapp") {
   const [first, last, sampleText] = await Promise.all([
-    read(`${dir}/webapp/before.txt`),
-    read(`${dir}/webapp/after.txt`),
-    read(`${dir}/webapp/samples.jsonl`),
+    read(`${dir}/${sub}/before.txt`),
+    read(`${dir}/${sub}/after.txt`),
+    read(`${dir}/${sub}/samples.jsonl`),
   ]);
   if (!first || !last) return null;
   const a = parse(first),
@@ -152,6 +153,12 @@ export async function webappSummary(dir, meta, benchmarkRequests) {
       miss_ratio: 1 - count("hit") / lookups,
       miss_ms: missTime[cache] ? { p50: missTime[cache].p50_ms, p95: missTime[cache].p95_ms } : null,
     };
+  }
+  // The in-process page cache: how page requests were answered, per route pattern.
+  const pageCache = {};
+  for (const [route, rows] of group(deltas(a.webapp, b.webapp, "goodwatch_page_cache_requests_total"), (l) => l.route)) {
+    const count = (result) => rows.filter((r) => r.labels.result === result).reduce((sum, r) => sum + r.delta, 0);
+    pageCache[route] = { hit: count("hit"), stale: count("stale"), joined: count("joined"), miss: count("miss"), bypass: count("bypass") };
   }
   // Qdrant reports a sum and a count per endpoint, so only the average is available.
   const qdrant = {};
@@ -210,6 +217,8 @@ export async function webappSummary(dir, meta, benchmarkRequests) {
     by_route_status: byRoute.slice(0, 15),
     routes,
     caches,
+    page_cache: pageCache,
+    page_cache_entries: gauge(b, "goodwatch_page_cache_entries")?.value ?? null,
     qdrant,
     in_flight: stats(samples.map((s) => s.in_flight)),
     resident_memory_mb: (gauge(b, "goodwatch_process_resident_memory_bytes")?.value ?? NaN) / 1024 ** 2 || null,

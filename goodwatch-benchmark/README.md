@@ -290,7 +290,8 @@ Only relevant files exist for a given run. Metadata records the Git commit and d
 
 - `load` holds abort status and reason, duration in seconds, request count and rate, error fraction, latency and TTFB in milliseconds, dropped iterations, `routes`, and `steps`. Steps include their target rate. Step req/s divides requests by the planned step length, including transitions. For the step in which a run aborts, it divides by the time the step ran. Route status buckets are `2xx`, `3xx`, `4xx`, `5xx`, and `0` for transport failures.
 - `hosts` is keyed by hostname. Each host includes its role, sample count, averages and maxima, and container metrics. Samples are trimmed to the run timestamps when both timestamps exist. Network rates use decimal Mbps. Container memory uses MiB despite the stable `mem_mb` field name.
-- `webapp` exists only with the webapp probe. It holds the window length, the deployed commit, a restart flag, request rates (`total_rps`, `benchmark_rps`, `background_rps`, `crawler_loop_rps`), `routes`, `caches`, `qdrant`, `thread_cpu_pct`, `main_thread_by_time`, `proxy_cpu_pct`, `proxy_accepts_per_s`, `in_flight`, and `loop_delay_ms`.
+- `webapp_instances` exists only with `BENCH_WEBAPP_PROBE_EXTRA`. It is keyed by host, and each entry has the fields of `webapp` without the benchmark's share.
+- `webapp` exists only with the webapp probe. It holds the window length, the deployed commit, a restart flag, request rates (`total_rps`, `benchmark_rps`, `background_rps`, `crawler_loop_rps`), `routes`, `caches`, `qdrant`, `page_cache` (hits, stale answers, joined requests, misses, and bypasses per route pattern), `thread_cpu_pct`, `main_thread_by_time`, `proxy_cpu_pct`, `proxy_accepts_per_s`, `in_flight`, and `loop_delay_ms`.
 - `lighthouse` is keyed by URL label. Each entry includes the URL, successful run count, per-metric `median`, and `all_runs`. Bytes by resource type come from `resource-summary` or fall back to `network-requests`.
 
 `response_bytes_avg` uses Content-Length when present. It is not total transferred bytes. Chunked responses without Content-Length are skipped. Error fractions and status buckets are distinct: an expected 301 is successful and still counts as 3xx.
@@ -316,6 +317,10 @@ The summary gets a `webapp` section and a "Webapp process" table:
 - Response time per route pattern from the webapp's histograms. These are estimates between bucket edges, and they exclude the proxy, TLS, and the network.
 - Data cache lookups, hits, and misses per cache name, and Qdrant calls with their average time per endpoint.
 - CPU of the main thread, the libuv and V8 worker threads, and the proxy, in percent of one core.
+
+With more than one instance behind the balanced route, name the other instances' hosts in `BENCH_WEBAPP_PROBE_EXTRA` (private addresses, separated by commas, for example `10.0.0.20`). Each is read the same way into `webapp-<host>/`, and the summary gets a "Webapp instances" section: requests per second, 5xx responses, main-thread CPU, requests in flight, and memory per instance, the background rate over all instances, and the page cache's hits, stale answers, and misses per route pattern. "From the benchmark" and "background" in the "Webapp process" section are wrong for one instance of several, because k6 can't tell which instance answered.
+
+The probe reads the `remix-serve` process of the container. The OG card renderer starts short-lived child processes, which the probe ignores.
 
 The event loop delay gauge restarts on every scrape. The probe scrapes every `BENCH_METRIC_INTERVAL` seconds, so Grafana's own samples of that gauge cover shorter windows during a run.
 
@@ -352,6 +357,8 @@ Normal cleanup removes each remote run directory and its lock. Docker images and
 ## Production baseline
 
 `results/baseline-2026-10-04/` holds the summaries of the baseline runs from October 4, 2026. [`docs/benchmarks/viral-spike-baseline.md`](../docs/benchmarks/viral-spike-baseline.md) explains them and lists the command for each run.
+
+`results/checkpoint-2026-10-04/` holds the summaries of the same runs after the page load optimizations, on two instances, and the output of `./bench.sh compare` for each pair in `compare/`. [`docs/benchmarks/viral-spike-checkpoint.md`](../docs/benchmarks/viral-spike-checkpoint.md) explains them.
 
 ## Sample smoke run
 

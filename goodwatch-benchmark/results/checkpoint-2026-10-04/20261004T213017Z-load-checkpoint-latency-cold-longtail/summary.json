@@ -1,0 +1,1717 @@
+{
+  "schema": 1,
+  "run_id": "20261004T213017Z-load-checkpoint-latency-cold-longtail",
+  "kind": "load",
+  "label": "checkpoint-latency-cold-longtail",
+  "meta": {
+    "run_id": "20261004T213017Z-load-checkpoint-latency-cold-longtail",
+    "kind": "load",
+    "label": "checkpoint-latency-cold-longtail",
+    "smoke": true,
+    "mode": "smoke",
+    "cache_mode": "cold",
+    "url_set": "longtail",
+    "path": "private",
+    "target_url": "https://goodwatch.app",
+    "resolve_ip": "10.0.0.21",
+    "rate_plan": [
+      {
+        "name": "s01",
+        "rate": 1,
+        "start_s": 0,
+        "end_s": 120
+      }
+    ],
+    "planned_requests": 120,
+    "effective_k6_inputs": {
+      "URLS_FILE": "/work/urls.json",
+      "TARGET_URL": "https://goodwatch.app",
+      "RESOLVE_IP": "10.0.0.21",
+      "INSECURE_TLS": "0",
+      "SHARE_LIST_PATH": "[redacted]",
+      "SHARE_LIST_OG_PATH": "[redacted]",
+      "RATE_START": "1",
+      "RATE_STEP": "5",
+      "RATE_MAX": "1",
+      "RATE_LIST": "",
+      "ONLY_ROUTES": "",
+      "STEP_DURATION": "120",
+      "RAMP_SECONDS": "5",
+      "PRE_VUS": "20",
+      "MAX_VUS": "50",
+      "CACHE_MODE": "cold",
+      "COOKIE": "[redacted]",
+      "COOKIE_TEMPLATE": "[redacted]",
+      "ACCEPT_LANGUAGE": "en-US,en;q=0.9",
+      "ACCEPT_LANGUAGES": "en-US,en;q=0.9|de-DE,de;q=0.9,en;q=0.8|fr-FR,fr;q=0.9|es-ES,es;q=0.9|pt-BR,pt;q=0.9",
+      "CACHE_BUST_QUERY": "0",
+      "BROWSER_UA": "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+      "BOT_UA": "facebookexternalhit/1.1",
+      "ACCEPT_ENCODING": "br, gzip",
+      "REQUEST_TIMEOUT": "30s",
+      "ABORT_ERROR_RATE": "0.02",
+      "ABORT_P95_MS": "3000",
+      "ABORT_DELAY": "10s",
+      "ABORT_DROPPED": "6",
+      "SEQUENTIAL": "1",
+      "PREWARM_MAX": "200",
+      "OUT_DIR": "/work"
+    },
+    "git_commit": "392439b7ed9bdc686ffe17a8e5a6defbb6c62874",
+    "git_dirty": true,
+    "generator_host": "10.0.0.32",
+    "jump": false,
+    "k6_image": "grafana/k6:1.8.1",
+    "metric_hosts": [
+      {
+        "host": "10.0.0.21",
+        "role": "target",
+        "file": "host-0.jsonl"
+      },
+      {
+        "host": "10.0.0.11",
+        "role": "data",
+        "file": "host-1.jsonl"
+      },
+      {
+        "host": "10.0.0.12",
+        "role": "data",
+        "file": "host-2.jsonl"
+      },
+      {
+        "host": "10.0.0.13",
+        "role": "data",
+        "file": "host-3.jsonl"
+      },
+      {
+        "host": "10.0.0.14",
+        "role": "data",
+        "file": "host-4.jsonl"
+      },
+      {
+        "host": "10.0.0.15",
+        "role": "data",
+        "file": "host-5.jsonl"
+      },
+      {
+        "host": "10.0.0.16",
+        "role": "data",
+        "file": "host-6.jsonl"
+      },
+      {
+        "host": "10.0.0.20",
+        "role": "target",
+        "file": "host-7.jsonl"
+      },
+      {
+        "host": "10.0.0.32",
+        "role": "generator",
+        "file": "host-8.jsonl"
+      }
+    ],
+    "started_at": "2026-10-04T21:30:41.784Z",
+    "ended_at": "2026-10-04T21:32:43.629Z",
+    "k6_exit_code": 0,
+    "lighthouse": null
+  },
+  "load": {
+    "aborted": false,
+    "abort_reason": null,
+    "duration_s": 120.052409537,
+    "requests": 119,
+    "rps": 0.9912337491512351,
+    "error_rate": 0.008403361344537815,
+    "latency_ms": {
+      "p50": 211.437007,
+      "p95": 327.1689942,
+      "p99": 414.08258303999986,
+      "avg": 214.21371678991596,
+      "max": 1216.296121
+    },
+    "ttfb_ms": {
+      "p50": 209.481046,
+      "p95": 325.3922075,
+      "p99": 408.5225840399997
+    },
+    "status": {
+      "0": 0,
+      "2xx": 118,
+      "3xx": 0,
+      "4xx": 1,
+      "5xx": 0
+    },
+    "response_bytes_avg": 0,
+    "dropped_iterations": 0,
+    "routes": {
+      "discover": {
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "home": {
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "og_title": {
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "other": {
+        "requests": 15,
+        "rps": 0.12494543056528173,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 211.437007,
+          "p95": 657.4522829999992,
+          "p99": 1104.5273533999996,
+          "avg": 256.0316238666667,
+          "max": 1216.296121
+        },
+        "ttfb_ms": {
+          "p50": 209.481046,
+          "p95": 654.7212632999991,
+          "p99": 1099.4715838599996
+        },
+        "status": {
+          "0": 0,
+          "2xx": 15,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "title_movie": {
+        "requests": 76,
+        "rps": 0.6330568481974275,
+        "error_rate": 0.013157894736842105,
+        "latency_ms": {
+          "p50": 198.661155,
+          "p95": 277.85215125,
+          "p99": 309.47061525,
+          "avg": 195.33445363157892,
+          "max": 348.442545
+        },
+        "ttfb_ms": {
+          "p50": 196.981272,
+          "p95": 276.0157475,
+          "p99": 307.62013275
+        },
+        "status": {
+          "0": 0,
+          "2xx": 75,
+          "3xx": 0,
+          "4xx": 1,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      },
+      "title_show": {
+        "requests": 28,
+        "rps": 0.2332314703885259,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 241.67823099999998,
+          "p95": 356.92531069999995,
+          "p99": 390.17189031000004,
+          "avg": 243.05498085714277,
+          "max": 396.474459
+        },
+        "ttfb_ms": {
+          "p50": 239.40234199999998,
+          "p95": 355.17093959999994,
+          "p99": 372.10461083999996
+        },
+        "status": {
+          "0": 0,
+          "2xx": 28,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      }
+    },
+    "steps": [
+      {
+        "name": "s01",
+        "target_rps": 1,
+        "requests": 119,
+        "rps": 0.9916666666666667,
+        "error_rate": 0.008403361344537815,
+        "latency_ms": {
+          "p50": 211.437007,
+          "p95": 327.1689942,
+          "p99": 414.08258303999986,
+          "avg": 214.21371678991596,
+          "max": 1216.296121
+        },
+        "ttfb_ms": {
+          "p50": 209.481046,
+          "p95": 325.3922075,
+          "p99": 408.5225840399997
+        },
+        "status": {
+          "0": 0,
+          "2xx": 118,
+          "3xx": 0,
+          "4xx": 1,
+          "5xx": 0
+        },
+        "response_bytes_avg": 0
+      }
+    ]
+  },
+  "hosts": {
+    "abusive": {
+      "role": "target",
+      "nproc": 8,
+      "samples": 24,
+      "containers": {
+        "gk4owk8-181009560892": {
+          "cpu_pct": {
+            "avg": 24.267083333333343,
+            "max": 41.38
+          },
+          "mem_mb": {
+            "avg": 2259.7546665668488,
+            "max": 2263.039999961853
+          }
+        },
+        "coolify-proxy": {
+          "cpu_pct": {
+            "avg": 34.01958333333334,
+            "max": 48.61
+          },
+          "mem_mb": {
+            "avg": 97.08458340167999,
+            "max": 99.42000007629395
+          }
+        }
+      },
+      "cpu_busy_pct": {
+        "avg": 14.306708333333328,
+        "max": 18.846
+      },
+      "iowait_pct": {
+        "avg": 0.0031250000000000006,
+        "max": 0.025
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 1.6675000000000002,
+        "max": 2.46
+      },
+      "mem_used_pct": {
+        "avg": 34.45786271129482,
+        "max": 34.66423465920758
+      },
+      "net_rx_mbps": {
+        "avg": 3.645051800000001,
+        "max": 4.9324096
+      },
+      "net_tx_mbps": {
+        "avg": 4.734134866666666,
+        "max": 6.7540368
+      },
+      "tcp_estab": {
+        "avg": 8,
+        "max": 8
+      }
+    },
+    "pgnode01": {
+      "role": "data",
+      "nproc": 16,
+      "samples": 24,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 10.139583333333333,
+        "max": 16.348
+      },
+      "iowait_pct": {
+        "avg": 0.058958333333333335,
+        "max": 0.186
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 2.0095833333333335,
+        "max": 3.05
+      },
+      "mem_used_pct": {
+        "avg": 70.45078769384737,
+        "max": 70.58976279115052
+      },
+      "net_rx_mbps": {
+        "avg": 3.7983380776666666,
+        "max": 8.397667199999999
+      },
+      "net_tx_mbps": {
+        "avg": 7.050139499999998,
+        "max": 59.130601336000005
+      },
+      "tcp_estab": {
+        "avg": 11,
+        "max": 11
+      }
+    },
+    "pgnode02": {
+      "role": "data",
+      "nproc": 16,
+      "samples": 24,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 10.568499999999998,
+        "max": 15.809
+      },
+      "iowait_pct": {
+        "avg": 0.05591666666666667,
+        "max": 0.311
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 1.3291666666666668,
+        "max": 2.13
+      },
+      "mem_used_pct": {
+        "avg": 71.39192417191751,
+        "max": 71.50398225587365
+      },
+      "net_rx_mbps": {
+        "avg": 5.638791766666667,
+        "max": 69.3713568
+      },
+      "net_tx_mbps": {
+        "avg": 6.281232089000003,
+        "max": 74.35883840000001
+      },
+      "tcp_estab": {
+        "avg": 12,
+        "max": 12
+      }
+    },
+    "pgnode03": {
+      "role": "data",
+      "nproc": 16,
+      "samples": 24,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 12.103208333333335,
+        "max": 18.047
+      },
+      "iowait_pct": {
+        "avg": 0.06516666666666666,
+        "max": 0.273
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 1.7687500000000005,
+        "max": 2.62
+      },
+      "mem_used_pct": {
+        "avg": 65.48786182303117,
+        "max": 65.61786222112407
+      },
+      "net_rx_mbps": {
+        "avg": 0.09658568900000002,
+        "max": 0.2401552
+      },
+      "net_tx_mbps": {
+        "avg": 0.11726126666666668,
+        "max": 0.2371584
+      },
+      "tcp_estab": {
+        "avg": 3,
+        "max": 3
+      }
+    },
+    "gw-cache1": {
+      "role": "data",
+      "nproc": 8,
+      "samples": 24,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 2.516958333333333,
+        "max": 5.405
+      },
+      "iowait_pct": {
+        "avg": 0.027083333333333348,
+        "max": 0.05
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 0.25958333333333333,
+        "max": 0.51
+      },
+      "mem_used_pct": {
+        "avg": 33.99956896983164,
+        "max": 34.22880007206774
+      },
+      "net_rx_mbps": {
+        "avg": 0.7506118110000001,
+        "max": 1.6755824
+      },
+      "net_tx_mbps": {
+        "avg": 0.47799222233333344,
+        "max": 1.6105664
+      },
+      "tcp_estab": {
+        "avg": 7,
+        "max": 7
+      }
+    },
+    "gw-cache2": {
+      "role": "data",
+      "nproc": 8,
+      "samples": 24,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 2.1790416666666665,
+        "max": 6.67
+      },
+      "iowait_pct": {
+        "avg": 0.029166666666666678,
+        "max": 0.05
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 0.45083333333333325,
+        "max": 0.58
+      },
+      "mem_used_pct": {
+        "avg": 33.38349187800048,
+        "max": 33.653542262799206
+      },
+      "net_rx_mbps": {
+        "avg": 0.8008999333333332,
+        "max": 2.1573504
+      },
+      "net_tx_mbps": {
+        "avg": 0.4048850666666666,
+        "max": 0.7248064000000001
+      },
+      "tcp_estab": {
+        "avg": 7,
+        "max": 7
+      }
+    },
+    "gw-cache3": {
+      "role": "data",
+      "nproc": 8,
+      "samples": 25,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 3.6768400000000008,
+        "max": 13.747
+      },
+      "iowait_pct": {
+        "avg": 0.031000000000000014,
+        "max": 0.075
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 0.29560000000000003,
+        "max": 0.53
+      },
+      "mem_used_pct": {
+        "avg": 33.85449383333296,
+        "max": 34.306422307152
+      },
+      "net_rx_mbps": {
+        "avg": 0.794285216,
+        "max": 2.0990352000000003
+      },
+      "net_tx_mbps": {
+        "avg": 0.33486690144000003,
+        "max": 0.6241088
+      },
+      "tcp_estab": {
+        "avg": 8,
+        "max": 8
+      }
+    },
+    "gw-vector1": {
+      "role": "target",
+      "nproc": 16,
+      "samples": 24,
+      "containers": {
+        "gk4owk8-181159928589": {
+          "cpu_pct": {
+            "avg": 37.04625000000001,
+            "max": 61.79
+          },
+          "mem_mb": {
+            "avg": 2261.5039999485016,
+            "max": 2327.5520000457764
+          }
+        },
+        "coolify-proxy": {
+          "cpu_pct": {
+            "avg": 4.299166666666666,
+            "max": 7.24
+          },
+          "mem_mb": {
+            "avg": 40.25624986489614,
+            "max": 40.84000015258789
+          }
+        },
+        "qdrant-main": {
+          "cpu_pct": {
+            "avg": 49.14208333333334,
+            "max": 101.49
+          },
+          "mem_mb": {
+            "avg": 4068.0106666882834,
+            "max": 4080.6400003433228
+          }
+        }
+      },
+      "cpu_busy_pct": {
+        "avg": 11.611166666666668,
+        "max": 17.994
+      },
+      "iowait_pct": {
+        "avg": 0.6056666666666667,
+        "max": 1.808
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 2.542083333333333,
+        "max": 4.4
+      },
+      "mem_used_pct": {
+        "avg": 49.038031926441654,
+        "max": 49.31477837701057
+      },
+      "net_rx_mbps": {
+        "avg": 0.13627377766666668,
+        "max": 0.387264
+      },
+      "net_tx_mbps": {
+        "avg": 0.23770151099999995,
+        "max": 0.5110592
+      },
+      "tcp_estab": {
+        "avg": 6.041666666666667,
+        "max": 7
+      }
+    },
+    "gw-worker3": {
+      "role": "generator",
+      "nproc": 4,
+      "samples": 24,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 4.667375000000001,
+        "max": 15.642
+      },
+      "iowait_pct": {
+        "avg": 0.02504166666666667,
+        "max": 0.201
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 0.26333333333333336,
+        "max": 0.43
+      },
+      "mem_used_pct": {
+        "avg": 20.61471508382141,
+        "max": 21.32111565670768
+      },
+      "net_rx_mbps": {
+        "avg": 0.08119754433333333,
+        "max": 0.580248
+      },
+      "net_tx_mbps": {
+        "avg": 0.08439824433333333,
+        "max": 0.14428639999999998
+      },
+      "tcp_estab": {
+        "avg": 19.916666666666668,
+        "max": 22
+      }
+    }
+  },
+  "lighthouse": {},
+  "webapp": {
+    "window_s": 124.29652833938599,
+    "commit": "392439b7",
+    "restarted": false,
+    "containers": {
+      "before": 1,
+      "after": 1
+    },
+    "total_rps": 7.69128480716441,
+    "benchmark_rps": 0.9573879623980803,
+    "background_rps": 6.73389684476633,
+    "crawler_loop_rps": 0,
+    "server_error_rps": 0,
+    "by_route_status": [
+      {
+        "route": "/person/:personKey",
+        "status_class": "4xx",
+        "rps": 2.502081145426916
+      },
+      {
+        "route": "/movie/:movieKey",
+        "status_class": "2xx",
+        "rps": 2.437718929467381
+      },
+      {
+        "route": "/person/:personKey",
+        "status_class": "2xx",
+        "rps": 1.842368431841684
+      },
+      {
+        "route": "/show/:showKey",
+        "status_class": "2xx",
+        "rps": 0.42639968073191814
+      },
+      {
+        "route": "static",
+        "status_class": "2xx",
+        "rps": 0.27353941782802293
+      },
+      {
+        "route": "/discover/:type?",
+        "status_class": "3xx",
+        "rps": 0.12067915492412777
+      },
+      {
+        "route": "/:type/:category/:page",
+        "status_class": "2xx",
+        "rps": 0.03218110797976741
+      },
+      {
+        "route": "/api/e",
+        "status_class": "2xx",
+        "rps": 0.024135830984825555
+      },
+      {
+        "route": "/movie/:movieKey",
+        "status_class": "4xx",
+        "rps": 0.016090553989883703
+      },
+      {
+        "route": "/",
+        "status_class": "2xx",
+        "rps": 0.008045276994941852
+      },
+      {
+        "route": "/:type",
+        "status_class": "2xx",
+        "rps": 0.008045276994941852
+      }
+    ],
+    "routes": {
+      "/movie/:movieKey": {
+        "requests": 303,
+        "rps": 2.437718929467381,
+        "full_ms": {
+          "p50": 146.5909090909091,
+          "p95": 257.121212121212,
+          "p99": 293.84848484848476
+        },
+        "headers_ms": {
+          "p50": 140.8898305084746,
+          "p95": 199.04661016949154
+        },
+        "share_under_300_ms": 0.9966996699669967
+      },
+      "/person/:personKey": {
+        "requests": 229,
+        "rps": 1.842368431841684,
+        "full_ms": {
+          "p50": 85.85526315789474,
+          "p95": 193.73563218390805,
+          "p99": 292.75000000000017
+        },
+        "headers_ms": {
+          "p50": 35.340314136125656,
+          "p95": 169.86301369863017
+        },
+        "share_under_300_ms": 0.9912663755458515
+      },
+      "/show/:showKey": {
+        "requests": 53,
+        "rps": 0.42639968073191814,
+        "full_ms": {
+          "p50": 157.81250000000003,
+          "p95": 294.090909090909,
+          "p99": 446.99999999999983
+        },
+        "headers_ms": {
+          "p50": 147.14285714285717,
+          "p95": 276.42857142857133
+        },
+        "share_under_300_ms": 0.9622641509433962
+      },
+      "static": {
+        "requests": 34,
+        "rps": 0.27353941782802293,
+        "full_ms": {
+          "p50": 25,
+          "p95": 47.5,
+          "p99": 49.49999999999999
+        },
+        "headers_ms": null,
+        "share_under_300_ms": 1
+      },
+      "/:type/:category/:page": {
+        "requests": 4,
+        "rps": 0.03218110797976741,
+        "full_ms": {
+          "p50": 150.00000000000003,
+          "p95": 279.99999999999994,
+          "p99": 296
+        },
+        "headers_ms": {
+          "p50": 150.00000000000003,
+          "p95": 279.99999999999994
+        },
+        "share_under_300_ms": 1
+      },
+      "/api/e": {
+        "requests": 3,
+        "rps": 0.024135830984825555,
+        "full_ms": {
+          "p50": 150,
+          "p95": 284.99999999999994,
+          "p99": 296.99999999999994
+        },
+        "headers_ms": null,
+        "share_under_300_ms": 1
+      },
+      "/": {
+        "requests": 1,
+        "rps": 0.008045276994941852,
+        "full_ms": {
+          "p50": 25,
+          "p95": 47.5,
+          "p99": 49.5
+        },
+        "headers_ms": {
+          "p50": 25,
+          "p95": 47.5
+        },
+        "share_under_300_ms": 1
+      },
+      "/:type": {
+        "requests": 1,
+        "rps": 0.008045276994941852,
+        "full_ms": {
+          "p50": 25,
+          "p95": 47.5,
+          "p99": 49.5
+        },
+        "headers_ms": {
+          "p50": 25,
+          "p95": 47.5
+        },
+        "share_under_300_ms": 1
+      }
+    },
+    "caches": {
+      "details-movie-v2": {
+        "lookups": 305,
+        "lookups_per_s": 2.4538094834572646,
+        "hit": 40,
+        "miss": 265,
+        "other": 0,
+        "miss_ratio": 0.8688524590163934,
+        "miss_ms": {
+          "p50": 135.42713567839195,
+          "p95": 195.35175879396988
+        }
+      },
+      "related-cards": {
+        "lookups": 188,
+        "lookups_per_s": 1.5125120750490681,
+        "hit": 56,
+        "miss": 132,
+        "other": 0,
+        "miss_ratio": 0.7021276595744681,
+        "miss_ms": {
+          "p50": 69.72477064220183,
+          "p95": 96.97247706422019
+        }
+      },
+      "genres-movie": {
+        "lookups": 1,
+        "lookups_per_s": 0.008045276994941852,
+        "hit": 1,
+        "miss": 0,
+        "other": 0,
+        "miss_ratio": 0,
+        "miss_ms": null
+      },
+      "person-profile-v2": {
+        "lookups": 223,
+        "lookups_per_s": 1.794096769872033,
+        "hit": 56,
+        "miss": 167,
+        "other": 0,
+        "miss_ratio": 0.7488789237668161,
+        "miss_ms": {
+          "p50": 74.69512195121952,
+          "p95": 184.12500000000003
+        }
+      },
+      "person-fingerprint-baseline": {
+        "lookups": 167,
+        "lookups_per_s": 1.3435612581552892,
+        "hit": 167,
+        "miss": 0,
+        "other": 0,
+        "miss_ratio": 0,
+        "miss_ms": null
+      },
+      "details-show-v2": {
+        "lookups": 53,
+        "lookups_per_s": 0.42639968073191814,
+        "hit": 11,
+        "miss": 42,
+        "other": 0,
+        "miss_ratio": 0.7924528301886793,
+        "miss_ms": {
+          "p50": 147.22222222222223,
+          "p95": 199.72222222222226
+        }
+      },
+      "episode-grid": {
+        "lookups": 53,
+        "lookups_per_s": 0.42639968073191814,
+        "hit": 8,
+        "miss": 41,
+        "other": 4,
+        "miss_ratio": 0.8490566037735849,
+        "miss_ms": {
+          "p50": 25.56818181818182,
+          "p95": 48.57954545454546
+        }
+      },
+      "movie-collection": {
+        "lookups": 46,
+        "lookups_per_s": 0.3700827417673252,
+        "hit": 23,
+        "miss": 23,
+        "other": 0,
+        "miss_ratio": 0.5,
+        "miss_ms": {
+          "p50": 25,
+          "p95": 47.5
+        }
+      },
+      "media_fingerprint_v1:discover": {
+        "lookups": 4,
+        "lookups_per_s": 0.03218110797976741,
+        "hit": 0,
+        "miss": 4,
+        "other": 0,
+        "miss_ratio": 1,
+        "miss_ms": {
+          "p50": 100,
+          "p95": 190
+        }
+      }
+    },
+    "page_cache": {
+      "/movie/:movieKey": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 305,
+        "bypass": 0
+      },
+      "/discover/:type?": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 15,
+        "bypass": 0
+      },
+      "/person/:personKey": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 229,
+        "bypass": 0
+      },
+      "/show/:showKey": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 53,
+        "bypass": 0
+      },
+      "/": {
+        "hit": 1,
+        "stale": 0,
+        "joined": 0,
+        "miss": 0,
+        "bypass": 0
+      },
+      "/:type": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 1,
+        "bypass": 0
+      },
+      "/:type/:category/:page": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 4,
+        "bypass": 0
+      }
+    },
+    "page_cache_entries": 269,
+    "qdrant": {
+      "grpc /qdrant.Points/Recommend 0": {
+        "calls": 572,
+        "calls_per_s": 4.601898441106739,
+        "avg_ms": 25.269655594431267
+      },
+      "grpc /qdrant.Points/UpdateBatch 0": {
+        "calls": 2,
+        "calls_per_s": 0.016090553989883703,
+        "avg_ms": 34.48950000165496
+      },
+      "grpc /qdrant.Points/Get 0": {
+        "calls": 574,
+        "calls_per_s": 4.617988995096623,
+        "avg_ms": 1.483911149824794
+      }
+    },
+    "in_flight": {
+      "avg": 0.625,
+      "max": 2
+    },
+    "resident_memory_mb": 2262.29296875,
+    "loop_delay_ms": {
+      "p99_max": 36.557567,
+      "max": 153.932543
+    },
+    "thread_cpu_pct": {
+      "main": {
+        "avg": 21.920545821032512,
+        "max": 34.08237431910986
+      },
+      "V8Worker": {
+        "avg": 4.543912695440019,
+        "max": 20.377731693448172
+      },
+      "libuv-worker": {
+        "avg": 3.528340793631904,
+        "max": 5.944600171937767
+      }
+    },
+    "main_thread_by_time": [
+      {
+        "t_s": 9,
+        "cpu_pct": 30
+      },
+      {
+        "t_s": 14,
+        "cpu_pct": 28
+      },
+      {
+        "t_s": 19,
+        "cpu_pct": 14
+      },
+      {
+        "t_s": 24,
+        "cpu_pct": 24
+      },
+      {
+        "t_s": 29,
+        "cpu_pct": 24
+      },
+      {
+        "t_s": 34,
+        "cpu_pct": 17
+      },
+      {
+        "t_s": 39,
+        "cpu_pct": 31
+      },
+      {
+        "t_s": 44,
+        "cpu_pct": 19
+      },
+      {
+        "t_s": 49,
+        "cpu_pct": 34
+      },
+      {
+        "t_s": 54,
+        "cpu_pct": 19
+      },
+      {
+        "t_s": 59,
+        "cpu_pct": 21
+      },
+      {
+        "t_s": 64,
+        "cpu_pct": 14
+      },
+      {
+        "t_s": 69,
+        "cpu_pct": 15
+      },
+      {
+        "t_s": 74,
+        "cpu_pct": 27
+      },
+      {
+        "t_s": 79,
+        "cpu_pct": 15
+      },
+      {
+        "t_s": 84,
+        "cpu_pct": 19
+      },
+      {
+        "t_s": 89,
+        "cpu_pct": 15
+      },
+      {
+        "t_s": 95,
+        "cpu_pct": 25
+      },
+      {
+        "t_s": 100,
+        "cpu_pct": 22
+      },
+      {
+        "t_s": 105,
+        "cpu_pct": 18
+      },
+      {
+        "t_s": 110,
+        "cpu_pct": 29
+      },
+      {
+        "t_s": 115,
+        "cpu_pct": 26
+      },
+      {
+        "t_s": 120,
+        "cpu_pct": 19
+      }
+    ],
+    "proxy_cpu_pct": {
+      "avg": 32.69933626117351,
+      "max": 41.859246121437096
+    },
+    "proxy_accepts_per_s": {
+      "avg": 13.06623778504976,
+      "max": 16.86272948019978
+    }
+  },
+  "webapp_instances": {
+    "10.0.0.20": {
+      "window_s": 124.45806622505188,
+      "commit": "392439b7",
+      "restarted": false,
+      "containers": {
+        "before": 1,
+        "after": 1
+      },
+      "total_rps": 8.82224859588077,
+      "benchmark_rps": null,
+      "background_rps": null,
+      "crawler_loop_rps": 0,
+      "server_error_rps": 0,
+      "by_route_status": [
+        {
+          "route": "/movie/:movieKey",
+          "status_class": "2xx",
+          "rps": 3.31838676693876
+        },
+        {
+          "route": "/person/:personKey",
+          "status_class": "4xx",
+          "rps": 2.900575358026374
+        },
+        {
+          "route": "/person/:personKey",
+          "status_class": "2xx",
+          "rps": 1.7756984878776416
+        },
+        {
+          "route": "/show/:showKey",
+          "status_class": "2xx",
+          "rps": 0.49815975678015284
+        },
+        {
+          "route": "/discover/:type?",
+          "status_class": "3xx",
+          "rps": 0.10445285222809657
+        },
+        {
+          "route": "/:type/:category/:page",
+          "status_class": "2xx",
+          "rps": 0.08034834786776658
+        },
+        {
+          "route": "/api/e",
+          "status_class": "2xx",
+          "rps": 0.04820900872065995
+        },
+        {
+          "route": "/",
+          "status_class": "2xx",
+          "rps": 0.024104504360329976
+        },
+        {
+          "route": "/movie/:movieKey",
+          "status_class": "4xx",
+          "rps": 0.024104504360329976
+        },
+        {
+          "route": "static",
+          "status_class": "2xx",
+          "rps": 0.016069669573553318
+        },
+        {
+          "route": "/tv/:showKey",
+          "status_class": "3xx",
+          "rps": 0.008034834786776659
+        },
+        {
+          "route": "/discover/:type?",
+          "status_class": "2xx",
+          "rps": 0.008034834786776659
+        },
+        {
+          "route": "/og/:first/:second",
+          "status_class": "2xx",
+          "rps": 0.008034834786776659
+        },
+        {
+          "route": "/api/poster-impressions",
+          "status_class": "2xx",
+          "rps": 0.008034834786776659
+        }
+      ],
+      "routes": {
+        "/movie/:movieKey": {
+          "requests": 413,
+          "rps": 3.31838676693876,
+          "full_ms": {
+            "p50": 150.00000000000003,
+            "p95": 272.16417910447757,
+            "p99": 296.82089552238807
+          },
+          "headers_ms": {
+            "p50": 142.32081911262802,
+            "p95": 246.66666666666666
+          },
+          "share_under_300_ms": 0.9951573849878934
+        },
+        "/person/:personKey": {
+          "requests": 221,
+          "rps": 1.7756984878776416,
+          "full_ms": {
+            "p50": 84.34065934065934,
+            "p95": 230.93749999999994,
+            "p99": 286.18749999999994
+          },
+          "headers_ms": {
+            "p50": 34.23529411764706,
+            "p95": 171.01694915254234
+          },
+          "share_under_300_ms": 1
+        },
+        "/show/:showKey": {
+          "requests": 62,
+          "rps": 0.49815975678015284,
+          "full_ms": {
+            "p50": 188.46153846153845,
+            "p95": 396.66666666666663,
+            "p99": 479.33333333333337
+          },
+          "headers_ms": {
+            "p50": 166.66666666666669,
+            "p95": 293.88888888888886
+          },
+          "share_under_300_ms": 0.9032258064516129
+        },
+        "/:type/:category/:page": {
+          "requests": 10,
+          "rps": 0.08034834786776658,
+          "full_ms": {
+            "p50": 233.33333333333334,
+            "p95": 1500,
+            "p99": 1900.0000000000005
+          },
+          "headers_ms": {
+            "p50": 200,
+            "p95": 1500
+          },
+          "share_under_300_ms": 0.7
+        },
+        "/api/e": {
+          "requests": 6,
+          "rps": 0.04820900872065995,
+          "full_ms": {
+            "p50": 224.99999999999997,
+            "p95": 849.9999999999997,
+            "p99": 969.9999999999998
+          },
+          "headers_ms": null,
+          "share_under_300_ms": 0.6666666666666666
+        },
+        "/": {
+          "requests": 3,
+          "rps": 0.024104504360329976,
+          "full_ms": {
+            "p50": 25,
+            "p95": 47.49999999999999,
+            "p99": 49.49999999999999
+          },
+          "headers_ms": {
+            "p50": 25,
+            "p95": 47.49999999999999
+          },
+          "share_under_300_ms": 1
+        },
+        "static": {
+          "requests": 2,
+          "rps": 0.016069669573553318,
+          "full_ms": {
+            "p50": 25,
+            "p95": 47.5,
+            "p99": 49.5
+          },
+          "headers_ms": null,
+          "share_under_300_ms": 1
+        },
+        "/discover/:type?": {
+          "requests": 1,
+          "rps": 0.008034834786776659,
+          "full_ms": {
+            "p50": 100,
+            "p95": 190,
+            "p99": 198
+          },
+          "headers_ms": {
+            "p50": 100,
+            "p95": 190
+          },
+          "share_under_300_ms": 1
+        },
+        "/og/:first/:second": {
+          "requests": 1,
+          "rps": 0.008034834786776659,
+          "full_ms": {
+            "p50": 1000,
+            "p95": 1900,
+            "p99": 1980
+          },
+          "headers_ms": null,
+          "share_under_300_ms": 0
+        },
+        "/api/poster-impressions": {
+          "requests": 1,
+          "rps": 0.008034834786776659,
+          "full_ms": {
+            "p50": 25,
+            "p95": 47.5,
+            "p99": 49.5
+          },
+          "headers_ms": null,
+          "share_under_300_ms": 1
+        }
+      },
+      "caches": {
+        "details-movie-v2": {
+          "lookups": 417,
+          "lookups_per_s": 3.3505261060858667,
+          "hit": 59,
+          "miss": 358,
+          "other": 0,
+          "miss_ratio": 0.8585131894484412,
+          "miss_ms": {
+            "p50": 134.79853479853483,
+            "p95": 193.80952380952382
+          }
+        },
+        "genres-movie": {
+          "lookups": 5,
+          "lookups_per_s": 0.04017417393388329,
+          "hit": 5,
+          "miss": 0,
+          "other": 0,
+          "miss_ratio": 0,
+          "miss_ms": null
+        },
+        "details-show-v2": {
+          "lookups": 62,
+          "lookups_per_s": 0.49815975678015284,
+          "hit": 11,
+          "miss": 51,
+          "other": 0,
+          "miss_ratio": 0.8225806451612903,
+          "miss_ms": {
+            "p50": 148.8095238095238,
+            "p95": 236.24999999999991
+          }
+        },
+        "episode-grid": {
+          "lookups": 62,
+          "lookups_per_s": 0.49815975678015284,
+          "hit": 14,
+          "miss": 45,
+          "other": 3,
+          "miss_ratio": 0.7741935483870968,
+          "miss_ms": {
+            "p50": 26.086956521739133,
+            "p95": 49.565217391304344
+          }
+        },
+        "person-profile-v2": {
+          "lookups": 218,
+          "lookups_per_s": 1.7515939835173115,
+          "hit": 55,
+          "miss": 163,
+          "other": 0,
+          "miss_ratio": 0.7477064220183487,
+          "miss_ms": {
+            "p50": 69.92753623188406,
+            "p95": 181.66666666666666
+          }
+        },
+        "person-fingerprint-baseline": {
+          "lookups": 163,
+          "lookups_per_s": 1.3096780702445954,
+          "hit": 163,
+          "miss": 0,
+          "other": 0,
+          "miss_ratio": 0,
+          "miss_ms": null
+        },
+        "related-cards": {
+          "lookups": 226,
+          "lookups_per_s": 1.8158726618115248,
+          "hit": 71,
+          "miss": 155,
+          "other": 0,
+          "miss_ratio": 0.6858407079646018,
+          "miss_ms": {
+            "p50": 70.20833333333334,
+            "p95": 99.27083333333334
+          }
+        },
+        "movie-collection": {
+          "lookups": 45,
+          "lookups_per_s": 0.36156756540494966,
+          "hit": 20,
+          "miss": 25,
+          "other": 0,
+          "miss_ratio": 0.5555555555555556,
+          "miss_ms": {
+            "p50": 25,
+            "p95": 47.5
+          }
+        },
+        "media_fingerprint_v1:discover": {
+          "lookups": 10,
+          "lookups_per_s": 0.08034834786776658,
+          "hit": 0,
+          "miss": 10,
+          "other": 0,
+          "miss_ratio": 1,
+          "miss_ms": {
+            "p50": 150.00000000000003,
+            "p95": 1500
+          }
+        }
+      },
+      "page_cache": {
+        "/movie/:movieKey": {
+          "hit": 0,
+          "stale": 0,
+          "joined": 0,
+          "miss": 416,
+          "bypass": 0
+        },
+        "/show/:showKey": {
+          "hit": 0,
+          "stale": 0,
+          "joined": 0,
+          "miss": 62,
+          "bypass": 0
+        },
+        "/person/:personKey": {
+          "hit": 0,
+          "stale": 0,
+          "joined": 0,
+          "miss": 221,
+          "bypass": 0
+        },
+        "/": {
+          "hit": 3,
+          "stale": 0,
+          "joined": 0,
+          "miss": 0,
+          "bypass": 0
+        },
+        "/discover/:type?": {
+          "hit": 0,
+          "stale": 0,
+          "joined": 0,
+          "miss": 14,
+          "bypass": 0
+        },
+        "/tv/:showKey": {
+          "hit": 0,
+          "stale": 0,
+          "joined": 0,
+          "miss": 1,
+          "bypass": 0
+        },
+        "/:type/:category/:page": {
+          "hit": 0,
+          "stale": 0,
+          "joined": 0,
+          "miss": 10,
+          "bypass": 0
+        }
+      },
+      "page_cache_entries": 309,
+      "qdrant": {
+        "grpc /qdrant.Points/Recommend 0": {
+          "calls": 566,
+          "calls_per_s": 4.547716489315589,
+          "avg_ms": 25.288678445249
+        },
+        "grpc /qdrant.Points/Get 0": {
+          "calls": 568,
+          "calls_per_s": 4.563786158889142,
+          "avg_ms": 1.491373239434939
+        },
+        "grpc /qdrant.Points/UpdateBatch 0": {
+          "calls": 2,
+          "calls_per_s": 0.016069669573553318,
+          "avg_ms": 34.48950000165496
+        }
+      },
+      "in_flight": {
+        "avg": 1.125,
+        "max": 3
+      },
+      "resident_memory_mb": 2277.75390625,
+      "loop_delay_ms": {
+        "p99_max": 52.417279,
+        "max": 67.752703
+      },
+      "thread_cpu_pct": {
+        "main": {
+          "avg": 28.15933652173972,
+          "max": 38.36515103482273
+        },
+        "V8Worker": {
+          "avg": 4.889087043728636,
+          "max": 24.328536964399152
+        },
+        "libuv-worker": {
+          "avg": 3.5799252757561946,
+          "max": 5.67887329414694
+        }
+      },
+      "main_thread_by_time": [
+        {
+          "t_s": 9,
+          "cpu_pct": 29
+        },
+        {
+          "t_s": 14,
+          "cpu_pct": 26
+        },
+        {
+          "t_s": 19,
+          "cpu_pct": 29
+        },
+        {
+          "t_s": 24,
+          "cpu_pct": 23
+        },
+        {
+          "t_s": 29,
+          "cpu_pct": 23
+        },
+        {
+          "t_s": 34,
+          "cpu_pct": 23
+        },
+        {
+          "t_s": 39,
+          "cpu_pct": 33
+        },
+        {
+          "t_s": 45,
+          "cpu_pct": 38
+        },
+        {
+          "t_s": 50,
+          "cpu_pct": 38
+        },
+        {
+          "t_s": 55,
+          "cpu_pct": 24
+        },
+        {
+          "t_s": 60,
+          "cpu_pct": 24
+        },
+        {
+          "t_s": 65,
+          "cpu_pct": 28
+        },
+        {
+          "t_s": 70,
+          "cpu_pct": 30
+        },
+        {
+          "t_s": 75,
+          "cpu_pct": 23
+        },
+        {
+          "t_s": 80,
+          "cpu_pct": 28
+        },
+        {
+          "t_s": 85,
+          "cpu_pct": 22
+        },
+        {
+          "t_s": 90,
+          "cpu_pct": 24
+        },
+        {
+          "t_s": 95,
+          "cpu_pct": 25
+        },
+        {
+          "t_s": 101,
+          "cpu_pct": 30
+        },
+        {
+          "t_s": 106,
+          "cpu_pct": 31
+        },
+        {
+          "t_s": 111,
+          "cpu_pct": 32
+        },
+        {
+          "t_s": 116,
+          "cpu_pct": 31
+        },
+        {
+          "t_s": 121,
+          "cpu_pct": 33
+        }
+      ],
+      "proxy_cpu_pct": {
+        "avg": 2.4006492905270647,
+        "max": 4.5039339919096415
+      },
+      "proxy_accepts_per_s": {
+        "avg": 0.5038207164714913,
+        "max": 0.9791160851977482
+      }
+    }
+  }
+}

@@ -145,6 +145,12 @@ export async function summarize(directory) {
   }
   const webapp = raw ? await webappSummary(dir, meta, raw.metrics?.http_reqs?.values.count ?? null) : null;
   if (webapp) summary.webapp = webapp;
+  // Further instances behind the balanced route (BENCH_WEBAPP_PROBE_EXTRA). k6 can't tell which instance answered,
+  // so the benchmark's share per instance is unknown here.
+  for (const sub of (await files(dir)).filter((f) => f.startsWith("webapp-")).sort()) {
+    const extra = raw ? await webappSummary(dir, meta, null, sub) : null;
+    if (extra) (summary.webapp_instances ||= {})[sub.slice("webapp-".length)] = extra;
+  }
   for (const label of await files(`${dir}/lighthouse`)) {
     const runs = [];
     let url = "";
@@ -340,6 +346,20 @@ export async function summarize(directory) {
           ["Qdrant endpoint and status", "Calls", "Calls/s", "Avg ms"],
           Object.entries(w.qdrant).map(([endpoint, q]) => [endpoint, q.calls, q.calls_per_s, q.avg_ms]),
         );
+  }
+  if (webapp && summary.webapp_instances) {
+    const all = { [meta.resolve_ip || "resolve address"]: webapp, ...summary.webapp_instances };
+    const k6 = webapp.benchmark_rps == null ? null : webapp.benchmark_rps * webapp.window_s;
+    const total = Object.values(all).reduce((sum, w) => sum + w.total_rps * w.window_s, 0);
+    md += `\n## Webapp instances\n\nThe load spreads over ${Object.keys(all).length} instances, so "from the benchmark" and "background" in the section above are wrong for one instance. All instances together finished ${fmt(total / webapp.window_s)} req/s, of which ${fmt(k6 == null ? null : (total - k6) / webapp.window_s)} are background traffic.\n\n`;
+    md += table(
+      ["Instance", "Commit", "Req/s", "5xx/s", "Main thread avg %", "Main thread max %", "In flight max", "Loop delay max ms", "Memory MB"],
+      Object.entries(all).map(([host, w]) => [host, w.commit, w.total_rps, w.server_error_rps, w.thread_cpu_pct.main?.avg ?? null, w.thread_cpu_pct.main?.max ?? null, w.in_flight.max, w.loop_delay_ms.max, w.resident_memory_mb]),
+    );
+    const rows = Object.entries(all).flatMap(([host, w]) =>
+      Object.entries(w.page_cache || {}).map(([route, c]) => [host, route, c.hit, c.stale, c.joined, c.miss, c.bypass]),
+    );
+    if (rows.length) md += "\n" + table(["Instance", "Page cache route", "Hit", "Stale", "Joined", "Miss", "Bypass"], rows);
   }
   if (Object.keys(summary.lighthouse).length)
     md +=

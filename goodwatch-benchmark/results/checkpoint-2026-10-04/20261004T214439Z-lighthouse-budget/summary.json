@@ -1,0 +1,576 @@
+{
+  "schema": 1,
+  "run_id": "20261004T214439Z-lighthouse-budget",
+  "kind": "lighthouse",
+  "label": "budget",
+  "meta": {
+    "run_id": "20261004T214439Z-lighthouse-budget",
+    "kind": "lighthouse",
+    "label": "budget",
+    "smoke": false,
+    "mode": "smoke",
+    "cache_mode": "warm",
+    "url_set": "tmp.rKnlLWuubQ",
+    "path": "public",
+    "target_url": "https://goodwatch.app",
+    "resolve_ip": "",
+    "rate_plan": null,
+    "planned_requests": null,
+    "effective_k6_inputs": null,
+    "git_commit": "392439b7ed9bdc686ffe17a8e5a6defbb6c62874",
+    "git_dirty": true,
+    "generator_host": "10.0.0.32",
+    "jump": false,
+    "k6_image": "grafana/k6:1.8.1",
+    "metric_hosts": [
+      {
+        "host": "10.0.0.21",
+        "role": "target",
+        "file": "host-0.jsonl"
+      },
+      {
+        "host": "10.0.0.11",
+        "role": "data",
+        "file": "host-1.jsonl"
+      },
+      {
+        "host": "10.0.0.12",
+        "role": "data",
+        "file": "host-2.jsonl"
+      },
+      {
+        "host": "10.0.0.13",
+        "role": "data",
+        "file": "host-3.jsonl"
+      },
+      {
+        "host": "10.0.0.14",
+        "role": "data",
+        "file": "host-4.jsonl"
+      },
+      {
+        "host": "10.0.0.15",
+        "role": "data",
+        "file": "host-5.jsonl"
+      },
+      {
+        "host": "10.0.0.16",
+        "role": "data",
+        "file": "host-6.jsonl"
+      },
+      {
+        "host": "10.0.0.20",
+        "role": "target",
+        "file": "host-7.jsonl"
+      },
+      {
+        "host": "10.0.0.32",
+        "role": "generator",
+        "file": "host-8.jsonl"
+      }
+    ],
+    "started_at": "2026-10-04T21:44:45.307Z",
+    "ended_at": "2026-10-04T21:53:37.385Z",
+    "k6_exit_code": null,
+    "lighthouse": {
+      "runs": 3,
+      "where": "generator"
+    }
+  },
+  "load": null,
+  "hosts": {},
+  "lighthouse": {
+    "discover": {
+      "url": "https://goodwatch.app/discover",
+      "runs": 3,
+      "median": {
+        "performance_score": 69,
+        "fcp_ms": 2981.949,
+        "lcp_ms": 5202.9575,
+        "tbt_ms": 291.5,
+        "cls": 0.02787271768963089,
+        "speed_index_ms": 2981.949,
+        "ttfb_ms": 3,
+        "total_bytes": 1197621,
+        "requests": 69,
+        "bytes_by_type": {
+          "script": 344931,
+          "stylesheet": 33249,
+          "image": 758383,
+          "font": 34313,
+          "document": 24635,
+          "other": 2124
+        }
+      },
+      "all_runs": [
+        {
+          "performance_score": 69,
+          "fcp_ms": 2981.949,
+          "lcp_ms": 5109.9490000000005,
+          "tbt_ms": 309.00000000000045,
+          "cls": 0.02787271768963089,
+          "speed_index_ms": 2981.949,
+          "ttfb_ms": 2,
+          "total_bytes": 1197591,
+          "requests": 68,
+          "bytes_by_type": {
+            "script": 344931,
+            "stylesheet": 33263,
+            "image": 758347,
+            "font": 34313,
+            "document": 24629,
+            "other": 2108
+          }
+        },
+        {
+          "performance_score": 68,
+          "fcp_ms": 3177.9575,
+          "lcp_ms": 5202.9575,
+          "tbt_ms": 291.5,
+          "cls": 0.02787271768963089,
+          "speed_index_ms": 3177.9575,
+          "ttfb_ms": 3,
+          "total_bytes": 1197627,
+          "requests": 69,
+          "bytes_by_type": {
+            "script": 344911,
+            "stylesheet": 33249,
+            "image": 758390,
+            "font": 34318,
+            "document": 24635,
+            "other": 2124
+          }
+        },
+        {
+          "performance_score": 70,
+          "fcp_ms": 2889.781,
+          "lcp_ms": 5206.781,
+          "tbt_ms": 278,
+          "cls": 0.02787271768963089,
+          "speed_index_ms": 2889.781,
+          "ttfb_ms": 3,
+          "total_bytes": 1197621,
+          "requests": 69,
+          "bytes_by_type": {
+            "script": 344937,
+            "stylesheet": 33222,
+            "image": 758383,
+            "font": 34313,
+            "document": 24635,
+            "other": 2131
+          }
+        }
+      ]
+    },
+    "home": {
+      "url": "https://goodwatch.app/",
+      "runs": 3,
+      "median": {
+        "performance_score": 83,
+        "fcp_ms": 2861.556,
+        "lcp_ms": 3759.892,
+        "tbt_ms": 94.5,
+        "cls": 0,
+        "speed_index_ms": 2861.556,
+        "ttfb_ms": 5,
+        "total_bytes": 733827,
+        "requests": 50,
+        "bytes_by_type": {
+          "script": 310915,
+          "stylesheet": 35116,
+          "image": 300785,
+          "font": 52359,
+          "document": 16751,
+          "other": 17864
+        }
+      },
+      "all_runs": [
+        {
+          "performance_score": 84,
+          "fcp_ms": 2859.892,
+          "lcp_ms": 3759.892,
+          "tbt_ms": 86.5,
+          "cls": 0,
+          "speed_index_ms": 2859.892,
+          "ttfb_ms": 5,
+          "total_bytes": 851360,
+          "requests": 50,
+          "bytes_by_type": {
+            "script": 310933,
+            "stylesheet": 35116,
+            "image": 418314,
+            "font": 52359,
+            "document": 16751,
+            "other": 17887
+          }
+        },
+        {
+          "performance_score": 83,
+          "fcp_ms": 2861.556,
+          "lcp_ms": 3686.556,
+          "tbt_ms": 148,
+          "cls": 0,
+          "speed_index_ms": 2861.556,
+          "ttfb_ms": 55,
+          "total_bytes": 733699,
+          "requests": 50,
+          "bytes_by_type": {
+            "script": 310888,
+            "stylesheet": 35107,
+            "image": 300737,
+            "font": 52361,
+            "document": 16742,
+            "other": 17864
+          }
+        },
+        {
+          "performance_score": 82,
+          "fcp_ms": 3009.058,
+          "lcp_ms": 3834.058,
+          "tbt_ms": 94.5,
+          "cls": 0,
+          "speed_index_ms": 3009.058,
+          "ttfb_ms": 4,
+          "total_bytes": 733827,
+          "requests": 50,
+          "bytes_by_type": {
+            "script": 310915,
+            "stylesheet": 35175,
+            "image": 300785,
+            "font": 52341,
+            "document": 16751,
+            "other": 17860
+          }
+        }
+      ]
+    },
+    "movie": {
+      "url": "https://goodwatch.app/movie/603-the-matrix",
+      "runs": 3,
+      "median": {
+        "performance_score": 69,
+        "fcp_ms": 2945.5685,
+        "lcp_ms": 3928.3475,
+        "tbt_ms": 453,
+        "cls": 0.0003081062827493722,
+        "speed_index_ms": 2945.5685,
+        "ttfb_ms": 4,
+        "total_bytes": 498342,
+        "requests": 45,
+        "bytes_by_type": {
+          "script": 311245,
+          "stylesheet": 33240,
+          "image": 69918,
+          "font": 34336,
+          "document": 47498,
+          "other": 2058
+        }
+      },
+      "all_runs": [
+        {
+          "performance_score": 69,
+          "fcp_ms": 3209.918,
+          "lcp_ms": 4034.918,
+          "tbt_ms": 453,
+          "cls": 0.0003081062827493722,
+          "speed_index_ms": 3209.918,
+          "ttfb_ms": 4,
+          "total_bytes": 498365,
+          "requests": 45,
+          "bytes_by_type": {
+            "script": 311299,
+            "stylesheet": 33240,
+            "image": 69896,
+            "font": 34372,
+            "document": 47495,
+            "other": 2063
+          }
+        },
+        {
+          "performance_score": 72,
+          "fcp_ms": 2900.3475,
+          "lcp_ms": 3928.3475,
+          "tbt_ms": 431.5,
+          "cls": 0.0003081062827493722,
+          "speed_index_ms": 2900.3475,
+          "ttfb_ms": 3,
+          "total_bytes": 498226,
+          "requests": 45,
+          "bytes_by_type": {
+            "script": 311172,
+            "stylesheet": 33240,
+            "image": 69932,
+            "font": 34327,
+            "document": 47498,
+            "other": 2057
+          }
+        },
+        {
+          "performance_score": 69,
+          "fcp_ms": 2945.5685,
+          "lcp_ms": 3862.5685,
+          "tbt_ms": 543.9999999999998,
+          "cls": 0.0002147086542260149,
+          "speed_index_ms": 2945.5685,
+          "ttfb_ms": 5,
+          "total_bytes": 498342,
+          "requests": 45,
+          "bytes_by_type": {
+            "script": 311245,
+            "stylesheet": 33281,
+            "image": 69918,
+            "font": 34336,
+            "document": 47504,
+            "other": 2058
+          }
+        }
+      ]
+    },
+    "person": {
+      "url": "https://goodwatch.app/person/138-quentin-tarantino",
+      "runs": 3,
+      "median": {
+        "performance_score": 78,
+        "fcp_ms": 2863.308,
+        "lcp_ms": 4082.0625,
+        "tbt_ms": 224.5,
+        "cls": 0,
+        "speed_index_ms": 2863.308,
+        "ttfb_ms": 5,
+        "total_bytes": 581206,
+        "requests": 46,
+        "bytes_by_type": {
+          "script": 300042,
+          "stylesheet": 33219,
+          "image": 183265,
+          "font": 34354,
+          "document": 28208,
+          "other": 2097
+        }
+      },
+      "all_runs": [
+        {
+          "performance_score": 72,
+          "fcp_ms": 2866.378,
+          "lcp_ms": 4966.378,
+          "tbt_ms": 261,
+          "cls": 0,
+          "speed_index_ms": 2866.378,
+          "ttfb_ms": 12,
+          "total_bytes": 800806,
+          "requests": 46,
+          "bytes_by_type": {
+            "script": 300042,
+            "stylesheet": 33219,
+            "image": 402886,
+            "font": 34354,
+            "document": 28208,
+            "other": 2097
+          }
+        },
+        {
+          "performance_score": 78,
+          "fcp_ms": 2863.308,
+          "lcp_ms": 4063.308,
+          "tbt_ms": 224.5,
+          "cls": 0,
+          "speed_index_ms": 2863.308,
+          "ttfb_ms": 5,
+          "total_bytes": 581206,
+          "requests": 46,
+          "bytes_by_type": {
+            "script": 300051,
+            "stylesheet": 33249,
+            "image": 183265,
+            "font": 34336,
+            "document": 28208,
+            "other": 2097
+          }
+        },
+        {
+          "performance_score": 80,
+          "fcp_ms": 2753.0625,
+          "lcp_ms": 4082.0625,
+          "tbt_ms": 173.50000000000023,
+          "cls": 0,
+          "speed_index_ms": 2753.0625,
+          "ttfb_ms": 4,
+          "total_bytes": 581129,
+          "requests": 46,
+          "bytes_by_type": {
+            "script": 299998,
+            "stylesheet": 33210,
+            "image": 183258,
+            "font": 34368,
+            "document": 28200,
+            "other": 2095
+          }
+        }
+      ]
+    },
+    "share_list": {
+      "url": "https://goodwatch.app/u/<handle>/lists/<id>",
+      "runs": 3,
+      "median": {
+        "performance_score": 81,
+        "fcp_ms": 2879.57,
+        "lcp_ms": 4147.941000000001,
+        "tbt_ms": 43.00000000000023,
+        "cls": 0.01035105828980473,
+        "speed_index_ms": 2879.57,
+        "ttfb_ms": 75,
+        "total_bytes": 585472,
+        "requests": 54,
+        "bytes_by_type": {
+          "script": 260341,
+          "stylesheet": 33210,
+          "image": 178645,
+          "font": 88818,
+          "document": 22386,
+          "other": 2065
+        }
+      },
+      "all_runs": [
+        {
+          "performance_score": 86,
+          "fcp_ms": 2438.7975,
+          "lcp_ms": 3771.7974999999997,
+          "tbt_ms": 48.49999999999977,
+          "cls": 0.01035105828980473,
+          "speed_index_ms": 2438.7975,
+          "ttfb_ms": 93,
+          "total_bytes": 585472,
+          "requests": 54,
+          "bytes_by_type": {
+            "script": 260350,
+            "stylesheet": 33222,
+            "image": 178631,
+            "font": 88818,
+            "document": 22386,
+            "other": 2065
+          }
+        },
+        {
+          "performance_score": 81,
+          "fcp_ms": 3022.941,
+          "lcp_ms": 4147.941000000001,
+          "tbt_ms": 43.00000000000023,
+          "cls": 0.01035105828980473,
+          "speed_index_ms": 3022.941,
+          "ttfb_ms": 75,
+          "total_bytes": 585429,
+          "requests": 54,
+          "bytes_by_type": {
+            "script": 260341,
+            "stylesheet": 33210,
+            "image": 178645,
+            "font": 88782,
+            "document": 22386,
+            "other": 2065
+          }
+        },
+        {
+          "performance_score": 81,
+          "fcp_ms": 2879.57,
+          "lcp_ms": 4154.57,
+          "tbt_ms": 38.5,
+          "cls": 0.01035105828980473,
+          "speed_index_ms": 2879.57,
+          "ttfb_ms": 73,
+          "total_bytes": 585482,
+          "requests": 54,
+          "bytes_by_type": {
+            "script": 260323,
+            "stylesheet": 33201,
+            "image": 178681,
+            "font": 88827,
+            "document": 22386,
+            "other": 2064
+          }
+        }
+      ]
+    },
+    "show": {
+      "url": "https://goodwatch.app/show/1396-breaking-bad",
+      "runs": 3,
+      "median": {
+        "performance_score": 65,
+        "fcp_ms": 2919.0879999999997,
+        "lcp_ms": 4153.088,
+        "tbt_ms": 644.5,
+        "cls": 0,
+        "speed_index_ms": 2919.0879999999997,
+        "ttfb_ms": 5,
+        "total_bytes": 555422,
+        "requests": 43,
+        "bytes_by_type": {
+          "script": 311510,
+          "stylesheet": 33210,
+          "image": 123977,
+          "font": 34327,
+          "document": 50326,
+          "other": 2080
+        }
+      },
+      "all_runs": [
+        {
+          "performance_score": 71,
+          "fcp_ms": 3042.663,
+          "lcp_ms": 4167.6630000000005,
+          "tbt_ms": 381.5,
+          "cls": 0,
+          "speed_index_ms": 3042.663,
+          "ttfb_ms": 5,
+          "total_bytes": 555470,
+          "requests": 43,
+          "bytes_by_type": {
+            "script": 311535,
+            "stylesheet": 33219,
+            "image": 123983,
+            "font": 34327,
+            "document": 50326,
+            "other": 2080
+          }
+        },
+        {
+          "performance_score": 65,
+          "fcp_ms": 2919.0879999999997,
+          "lcp_ms": 4153.088,
+          "tbt_ms": 644.5,
+          "cls": 0,
+          "speed_index_ms": 2919.0879999999997,
+          "ttfb_ms": 5,
+          "total_bytes": 555422,
+          "requests": 43,
+          "bytes_by_type": {
+            "script": 311510,
+            "stylesheet": 33210,
+            "image": 123977,
+            "font": 34322,
+            "document": 50344,
+            "other": 2059
+          }
+        },
+        {
+          "performance_score": 63,
+          "fcp_ms": 2888.9845,
+          "lcp_ms": 4082.9845000000005,
+          "tbt_ms": 774.0000000000005,
+          "cls": 0,
+          "speed_index_ms": 2888.9845,
+          "ttfb_ms": 5,
+          "total_bytes": 555337,
+          "requests": 43,
+          "bytes_by_type": {
+            "script": 311455,
+            "stylesheet": 33210,
+            "image": 123930,
+            "font": 34336,
+            "document": 50326,
+            "other": 2080
+          }
+        }
+      ]
+    }
+  }
+}

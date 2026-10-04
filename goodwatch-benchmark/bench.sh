@@ -217,14 +217,31 @@ if [[ $command == load ]]; then
     sleep 1
   done
   # BENCH_WEBAPP_PROBE=1 also reads the webapp's own metrics and its CPU per thread on the serving host.
-  probe() { { printf 'set -- %q %q %q\n' "$1" "$BENCH_METRIC_INTERVAL" "$((planned_duration+30))"; cat "$ROOT/scripts/webapp-probe.sh"; } | ssh "${ssh_opts[@]}" "$BENCH_SSH_USER@$BENCH_RESOLVE_IP" 'bash -s'; }
+  # BENCH_WEBAPP_PROBE_EXTRA names further hosts with a webapp instance (private addresses, separated by commas).
+  # The balanced route spreads the load over all instances, so each one is read the same way, into webapp-<host>/.
+  probe_on() { local host=$1; shift; { printf 'set -- %q %q %q\n' "$1" "$BENCH_METRIC_INTERVAL" "$((planned_duration+30))"; cat "$ROOT/scripts/webapp-probe.sh"; } | ssh "${ssh_opts[@]}" "$BENCH_SSH_USER@$host" 'bash -s'; }
+  probe() { probe_on "$BENCH_RESOLVE_IP" "$@"; }
+  probe_extra=()
   if [[ ${BENCH_WEBAPP_PROBE:-0} == 1 ]]; then
+    IFS=',' read -ra probe_extra <<< "${BENCH_WEBAPP_PROBE_EXTRA:-}"
+    for host in "${probe_extra[@]}"; do [[ $host =~ ^[a-zA-Z0-9.-]+$ ]] || fail "Invalid probe host: $host"; done
     mkdir -p "$run/webapp"
     probe sample > "$run/webapp/samples.jsonl" 2> "$run/webapp/samples.log" &
     pids+=("$!")
+    for host in "${probe_extra[@]}"; do
+      mkdir -p "$run/webapp-$host"
+      probe_on "$host" sample > "$run/webapp-$host/samples.jsonl" 2> "$run/webapp-$host/samples.log" &
+      pids+=("$!")
+    done
   fi
+  snapshots() {
+    probe snapshot > "$run/webapp/$1.txt" 2> "$run/webapp/$1.log" || echo 'Webapp snapshot failed' >&2
+    for host in "${probe_extra[@]}"; do
+      probe_on "$host" snapshot > "$run/webapp-$host/$1.txt" 2> "$run/webapp-$host/$1.log" || echo "Webapp snapshot on $host failed" >&2
+    done
+  }
   sleep 10
-  [[ ${BENCH_WEBAPP_PROBE:-0} != 1 ]] || probe snapshot > "$run/webapp/before.txt" 2> "$run/webapp/before.log" || echo 'Webapp snapshot failed' >&2
+  [[ ${BENCH_WEBAPP_PROBE:-0} != 1 ]] || snapshots before
   node "$ROOT/scripts/run-meta.mjs" start "$run/meta.json"
   extra=(); ((raw == 0)) || extra+=(--out json=/work/k6-raw.json.gz)
   set +e
@@ -232,7 +249,7 @@ if [[ $command == load ]]; then
   RUN_EXIT=${PIPESTATUS[0]}
   set -e
   node "$ROOT/scripts/run-meta.mjs" finish "$run/meta.json"
-  [[ ${BENCH_WEBAPP_PROBE:-0} != 1 ]] || probe snapshot > "$run/webapp/after.txt" 2> "$run/webapp/after.log" || echo 'Webapp snapshot failed' >&2
+  [[ ${BENCH_WEBAPP_PROBE:-0} != 1 ]] || snapshots after
   for pid in "${pids[@]}"; do kill "$pid" 2>/dev/null || true; done
   for pid in "${pids[@]}"; do wait "$pid" 2>/dev/null || true; done
   pids=()

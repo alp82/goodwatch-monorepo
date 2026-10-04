@@ -1,0 +1,755 @@
+{
+  "pass": true,
+  "surfaces": {
+    "home": {
+      "pass": true,
+      "lines": [
+        {
+          "key": "html_bytes",
+          "value": 16751,
+          "pass": true,
+          "max": 18944
+        },
+        {
+          "key": "host_requests",
+          "value": 37,
+          "pass": true,
+          "max": 39
+        },
+        {
+          "key": "script_count",
+          "value": 18,
+          "pass": true,
+          "max": 18
+        },
+        {
+          "key": "script_bytes",
+          "value": 310915,
+          "pass": true,
+          "max": 327680
+        },
+        {
+          "key": "image_count",
+          "value": 18,
+          "pass": true,
+          "max": 20
+        },
+        {
+          "key": "image_bytes",
+          "value": 300785,
+          "pass": true,
+          "max": 378880
+        },
+        {
+          "key": "font_requests",
+          "value": 2,
+          "pass": true,
+          "max": 2
+        },
+        {
+          "key": "blocking_requests",
+          "value": 2,
+          "pass": true,
+          "max": 2
+        },
+        {
+          "key": "third_party_origins",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "total_bytes",
+          "value": 733827,
+          "pass": true,
+          "max": 808960
+        },
+        {
+          "key": "lcp_ms",
+          "value": 3759.892,
+          "pass": true,
+          "max": 4300,
+          "target": 2500,
+          "gap": 1259.8919999999998
+        },
+        {
+          "key": "tbt_ms",
+          "value": 94.5,
+          "pass": true,
+          "max": 300,
+          "target": 200,
+          "gap": 0
+        },
+        {
+          "key": "cls",
+          "value": 0,
+          "pass": true,
+          "max": 0.01,
+          "target": 0.1,
+          "gap": 0
+        },
+        {
+          "key": "score",
+          "value": 83,
+          "pass": true,
+          "min": 76,
+          "target": 90,
+          "gap": 7
+        },
+        {
+          "key": "lcp_element",
+          "pass": true,
+          "expected": {
+            "tag": "img",
+            "contains": "/assets/room-phone-"
+          },
+          "value": "3 of 3 runs"
+        }
+      ],
+      "runs": 3,
+      "measured": {
+        "html_bytes": 16751,
+        "host_requests": 37,
+        "script_count": 18,
+        "script_bytes": 310915,
+        "image_count": 18,
+        "image_bytes": 300785,
+        "font_requests": 2,
+        "blocking_requests": 2,
+        "third_party_origins": 1,
+        "total_bytes": 733827,
+        "lcp_ms": 3759.892,
+        "tbt_ms": 94.5,
+        "cls": 0,
+        "score": 83,
+        "observed_fcp_ms": 492,
+        "benchmark_index": 1045.5
+      }
+    },
+    "movie": {
+      "pass": true,
+      "lines": [
+        {
+          "key": "html_bytes",
+          "value": 47498,
+          "pass": true,
+          "max": 55808
+        },
+        {
+          "key": "host_requests",
+          "value": 34,
+          "pass": true,
+          "max": 36
+        },
+        {
+          "key": "script_count",
+          "value": 24,
+          "pass": true,
+          "max": 24
+        },
+        {
+          "key": "script_bytes",
+          "value": 311245,
+          "pass": true,
+          "max": 327680
+        },
+        {
+          "key": "image_count",
+          "value": 10,
+          "pass": true,
+          "max": 12
+        },
+        {
+          "key": "image_bytes",
+          "value": 69918,
+          "pass": true,
+          "max": 88064
+        },
+        {
+          "key": "font_requests",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "blocking_requests",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "third_party_origins",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "total_bytes",
+          "value": 498342,
+          "pass": true,
+          "max": 552960
+        },
+        {
+          "key": "lcp_ms",
+          "value": 3928.3475,
+          "pass": true,
+          "max": 4300,
+          "target": 2500,
+          "gap": 1428.3474999999999
+        },
+        {
+          "key": "tbt_ms",
+          "value": 453,
+          "pass": true,
+          "max": 900,
+          "target": 200,
+          "gap": 253
+        },
+        {
+          "key": "cls",
+          "value": 0.0003081062827493722,
+          "pass": true,
+          "max": 0.01,
+          "target": 0.1,
+          "gap": 0
+        },
+        {
+          "key": "score",
+          "value": 69,
+          "pass": true,
+          "min": 61,
+          "target": 90,
+          "gap": 21
+        },
+        {
+          "key": "lcp_element",
+          "pass": true,
+          "expected": {
+            "tag": "img",
+            "contains": "src=\"https://image.tmdb.org/t/p/w780/"
+          },
+          "value": "3 of 3 runs"
+        }
+      ],
+      "runs": 3,
+      "measured": {
+        "html_bytes": 47498,
+        "host_requests": 34,
+        "script_count": 24,
+        "script_bytes": 311245,
+        "image_count": 10,
+        "image_bytes": 69918,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 498342,
+        "lcp_ms": 3928.3475,
+        "tbt_ms": 453,
+        "cls": 0.0003081062827493722,
+        "score": 69,
+        "observed_fcp_ms": 541,
+        "benchmark_index": 1213
+      }
+    },
+    "show": {
+      "pass": true,
+      "lines": [
+        {
+          "key": "html_bytes",
+          "value": 50326,
+          "pass": true,
+          "max": 58880
+        },
+        {
+          "key": "host_requests",
+          "value": 34,
+          "pass": true,
+          "max": 36
+        },
+        {
+          "key": "script_count",
+          "value": 24,
+          "pass": true,
+          "max": 24
+        },
+        {
+          "key": "script_bytes",
+          "value": 311510,
+          "pass": true,
+          "max": 327680
+        },
+        {
+          "key": "image_count",
+          "value": 8,
+          "pass": true,
+          "max": 10
+        },
+        {
+          "key": "image_bytes",
+          "value": 123977,
+          "pass": true,
+          "max": 155648
+        },
+        {
+          "key": "font_requests",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "blocking_requests",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "third_party_origins",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "total_bytes",
+          "value": 555422,
+          "pass": true,
+          "max": 614400
+        },
+        {
+          "key": "lcp_ms",
+          "value": 4153.088,
+          "pass": true,
+          "max": 4550,
+          "target": 2500,
+          "gap": 1653.0879999999997
+        },
+        {
+          "key": "tbt_ms",
+          "value": 644.5,
+          "pass": true,
+          "max": 1000,
+          "target": 200,
+          "gap": 444.5
+        },
+        {
+          "key": "cls",
+          "value": 0,
+          "pass": true,
+          "max": 0.01,
+          "target": 0.1,
+          "gap": 0
+        },
+        {
+          "key": "score",
+          "value": 65,
+          "pass": true,
+          "min": 58,
+          "target": 90,
+          "gap": 25
+        },
+        {
+          "key": "lcp_element",
+          "pass": true,
+          "expected": {
+            "tag": "img",
+            "contains": "src=\"https://image.tmdb.org/t/p/w780/"
+          },
+          "value": "3 of 3 runs"
+        }
+      ],
+      "runs": 3,
+      "measured": {
+        "html_bytes": 50326,
+        "host_requests": 34,
+        "script_count": 24,
+        "script_bytes": 311510,
+        "image_count": 8,
+        "image_bytes": 123977,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 555422,
+        "lcp_ms": 4153.088,
+        "tbt_ms": 644.5,
+        "cls": 0,
+        "score": 65,
+        "observed_fcp_ms": 559,
+        "benchmark_index": 1174.5
+      }
+    },
+    "person": {
+      "pass": true,
+      "lines": [
+        {
+          "key": "html_bytes",
+          "value": 28208,
+          "pass": true,
+          "max": 32768
+        },
+        {
+          "key": "host_requests",
+          "value": 28,
+          "pass": true,
+          "max": 30
+        },
+        {
+          "key": "script_count",
+          "value": 20,
+          "pass": true,
+          "max": 20
+        },
+        {
+          "key": "script_bytes",
+          "value": 300042,
+          "pass": true,
+          "max": 315392
+        },
+        {
+          "key": "image_count",
+          "value": 17,
+          "pass": true,
+          "max": 19
+        },
+        {
+          "key": "image_bytes",
+          "value": 183265,
+          "pass": true,
+          "max": 230400
+        },
+        {
+          "key": "font_requests",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "blocking_requests",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "third_party_origins",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "total_bytes",
+          "value": 581206,
+          "pass": true,
+          "max": 645120
+        },
+        {
+          "key": "lcp_ms",
+          "value": 4082.0625,
+          "pass": true,
+          "max": 4450,
+          "target": 2500,
+          "gap": 1582.0625
+        },
+        {
+          "key": "tbt_ms",
+          "value": 224.5,
+          "pass": true,
+          "max": 400,
+          "target": 200,
+          "gap": 24.5
+        },
+        {
+          "key": "cls",
+          "value": 0,
+          "pass": true,
+          "max": 0.01,
+          "target": 0.1,
+          "gap": 0
+        },
+        {
+          "key": "score",
+          "value": 78,
+          "pass": true,
+          "min": 75,
+          "target": 90,
+          "gap": 12
+        },
+        {
+          "key": "lcp_element",
+          "pass": true,
+          "expected": {
+            "tag": "img",
+            "contains": "src=\"https://image.tmdb.org/t/p/w780/"
+          },
+          "value": "3 of 3 runs"
+        }
+      ],
+      "runs": 3,
+      "measured": {
+        "html_bytes": 28208,
+        "host_requests": 28,
+        "script_count": 20,
+        "script_bytes": 300042,
+        "image_count": 17,
+        "image_bytes": 183265,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 581206,
+        "lcp_ms": 4082.0625,
+        "tbt_ms": 224.5,
+        "cls": 0,
+        "score": 78,
+        "observed_fcp_ms": 457,
+        "benchmark_index": 1188
+      }
+    },
+    "discover": {
+      "pass": true,
+      "lines": [
+        {
+          "key": "html_bytes",
+          "value": 24635,
+          "pass": true,
+          "max": 29184
+        },
+        {
+          "key": "host_requests",
+          "value": 39,
+          "pass": true,
+          "max": 41
+        },
+        {
+          "key": "script_count",
+          "value": 31,
+          "pass": true,
+          "max": 31
+        },
+        {
+          "key": "script_bytes",
+          "value": 344931,
+          "pass": true,
+          "max": 362496
+        },
+        {
+          "key": "image_count",
+          "value": 28,
+          "pass": true,
+          "max": 30
+        },
+        {
+          "key": "image_bytes",
+          "value": 758383,
+          "pass": true,
+          "max": 952320
+        },
+        {
+          "key": "font_requests",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "blocking_requests",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "third_party_origins",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "total_bytes",
+          "value": 1197621,
+          "pass": true,
+          "max": 1331200
+        },
+        {
+          "key": "lcp_ms",
+          "value": 5202.9575,
+          "pass": true,
+          "max": 5800,
+          "target": 2500,
+          "gap": 2702.9575000000004
+        },
+        {
+          "key": "tbt_ms",
+          "value": 291.5,
+          "pass": true,
+          "max": 550,
+          "target": 200,
+          "gap": 91.5
+        },
+        {
+          "key": "cls",
+          "value": 0.02787271768963089,
+          "pass": true,
+          "max": 0.04,
+          "target": 0.1,
+          "gap": 0
+        },
+        {
+          "key": "score",
+          "value": 69,
+          "pass": true,
+          "min": 62,
+          "target": 90,
+          "gap": 21
+        },
+        {
+          "key": "lcp_element",
+          "pass": true,
+          "expected": {
+            "tag": "img",
+            "contains": "src=\"https://image.tmdb.org/t/p/w342/"
+          },
+          "value": "3 of 3 runs"
+        }
+      ],
+      "runs": 3,
+      "measured": {
+        "html_bytes": 24635,
+        "host_requests": 39,
+        "script_count": 31,
+        "script_bytes": 344931,
+        "image_count": 28,
+        "image_bytes": 758383,
+        "font_requests": 1,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 1197621,
+        "lcp_ms": 5202.9575,
+        "tbt_ms": 291.5,
+        "cls": 0.02787271768963089,
+        "score": 69,
+        "observed_fcp_ms": 402,
+        "benchmark_index": 1236
+      }
+    },
+    "share_list": {
+      "pass": true,
+      "lines": [
+        {
+          "key": "html_bytes",
+          "value": 22386,
+          "pass": true,
+          "max": 24576
+        },
+        {
+          "key": "host_requests",
+          "value": 26,
+          "pass": true,
+          "max": 28
+        },
+        {
+          "key": "script_count",
+          "value": 12,
+          "pass": true,
+          "max": 12
+        },
+        {
+          "key": "script_bytes",
+          "value": 260341,
+          "pass": true,
+          "max": 273408
+        },
+        {
+          "key": "image_count",
+          "value": 31,
+          "pass": true,
+          "max": 33
+        },
+        {
+          "key": "image_bytes",
+          "value": 178645,
+          "pass": true,
+          "max": 225280
+        },
+        {
+          "key": "font_requests",
+          "value": 2,
+          "pass": true,
+          "max": 2
+        },
+        {
+          "key": "blocking_requests",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "third_party_origins",
+          "value": 1,
+          "pass": true,
+          "max": 1
+        },
+        {
+          "key": "total_bytes",
+          "value": 585472,
+          "pass": true,
+          "max": 655360
+        },
+        {
+          "key": "lcp_ms",
+          "value": 4147.941000000001,
+          "pass": true,
+          "max": 4700,
+          "target": 2500,
+          "gap": 1647.9410000000007
+        },
+        {
+          "key": "tbt_ms",
+          "value": 43.00000000000023,
+          "pass": true,
+          "max": 250,
+          "target": 200,
+          "gap": 0
+        },
+        {
+          "key": "cls",
+          "value": 0.01035105828980473,
+          "pass": true,
+          "max": 0.02,
+          "target": 0.1,
+          "gap": 0
+        },
+        {
+          "key": "score",
+          "value": 81,
+          "pass": true,
+          "min": 80,
+          "target": 90,
+          "gap": 9
+        },
+        {
+          "key": "lcp_element",
+          "pass": true,
+          "expected": {
+            "tag": "div",
+            "contains": "data-edit=\"title\""
+          },
+          "value": "3 of 3 runs"
+        }
+      ],
+      "runs": 3,
+      "measured": {
+        "html_bytes": 22386,
+        "host_requests": 26,
+        "script_count": 12,
+        "script_bytes": 260341,
+        "image_count": 31,
+        "image_bytes": 178645,
+        "font_requests": 2,
+        "blocking_requests": 1,
+        "third_party_origins": 1,
+        "total_bytes": 585472,
+        "lcp_ms": 4147.941000000001,
+        "tbt_ms": 43.00000000000023,
+        "cls": 0.01035105828980473,
+        "score": 81,
+        "observed_fcp_ms": 519,
+        "benchmark_index": 1271.5
+      }
+    }
+  }
+}

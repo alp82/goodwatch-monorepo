@@ -1,6 +1,6 @@
 # Production baseline for the viral spike map
 
-This page records how production behaved on October 4, 2026, before any change from the "Serve a viral traffic spike" map. Every later ticket compares against these numbers. Repeat the commands in [Repeat the runs](#repeat-the-runs) for an "after" comparison.
+This page records how production behaved on October 4, 2026, before any change from the "Serve a viral traffic spike" map. Every later ticket compares against these numbers. Repeat the commands in [Repeat the runs](#repeat-the-runs) for an "after" comparison. The first one, after the page load optimizations, is the [checkpoint](viral-spike-checkpoint.md).
 
 The run summaries are in [`goodwatch-benchmark/results/baseline-2026-10-04/`](../../goodwatch-benchmark/results/baseline-2026-10-04/). Where each metric lives is in [viral-spike-metrics.md](viral-spike-metrics.md).
 

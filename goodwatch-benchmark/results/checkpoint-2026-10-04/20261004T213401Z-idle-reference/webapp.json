@@ -1,0 +1,692 @@
+{
+  "started_at": "2026-10-04T21:34:01Z",
+  "ended_at": "2026-10-04T21:35:13Z",
+  "abio": {
+    "window_s": 69.50186729431152,
+    "commit": "392439b7",
+    "restarted": false,
+    "containers": {
+      "before": 1,
+      "after": 1
+    },
+    "total_rps": 6.17249603069459,
+    "benchmark_rps": 0,
+    "background_rps": 6.17249603069459,
+    "crawler_loop_rps": 0,
+    "server_error_rps": 0,
+    "by_route_status": [
+      {
+        "route": "/person/:personKey",
+        "status_class": "4xx",
+        "rps": 2.3164845243399275
+      },
+      {
+        "route": "/person/:personKey",
+        "status_class": "2xx",
+        "rps": 1.884841445270376
+      },
+      {
+        "route": "/movie/:movieKey",
+        "status_class": "2xx",
+        "rps": 1.4388102635651725
+      },
+      {
+        "route": "/show/:showKey",
+        "status_class": "2xx",
+        "rps": 0.31653825798433793
+      },
+      {
+        "route": "/discover/:type?",
+        "status_class": "3xx",
+        "rps": 0.11510482108521379
+      },
+      {
+        "route": "/movie/:movieKey",
+        "status_class": "4xx",
+        "rps": 0.057552410542606895
+      },
+      {
+        "route": "/api/e",
+        "status_class": "2xx",
+        "rps": 0.028776205271303448
+      },
+      {
+        "route": "/",
+        "status_class": "2xx",
+        "rps": 0.014388102635651724
+      }
+    ],
+    "routes": {
+      "/person/:personKey": {
+        "requests": 131,
+        "rps": 1.884841445270376,
+        "full_ms": {
+          "p50": 75.50000000000001,
+          "p95": 188.33333333333331,
+          "p99": 234.4999999999999
+        },
+        "headers_ms": {
+          "p50": 35.4368932038835,
+          "p95": 161.81818181818176
+        },
+        "share_under_300_ms": 1
+      },
+      "/movie/:movieKey": {
+        "requests": 100,
+        "rps": 1.4388102635651725,
+        "full_ms": {
+          "p50": 146.75324675324674,
+          "p95": 244.44444444444443,
+          "p99": 288.88888888888886
+        },
+        "headers_ms": {
+          "p50": 141.3793103448276,
+          "p95": 195.17241379310346
+        },
+        "share_under_300_ms": 1
+      },
+      "/show/:showKey": {
+        "requests": 22,
+        "rps": 0.31653825798433793,
+        "full_ms": {
+          "p50": 153.84615384615387,
+          "p95": 277.99999999999994,
+          "p99": 295.59999999999997
+        },
+        "headers_ms": {
+          "p50": 143.75000000000003,
+          "p95": 244.99999999999994
+        },
+        "share_under_300_ms": 1
+      },
+      "/api/e": {
+        "requests": 2,
+        "rps": 0.028776205271303448,
+        "full_ms": {
+          "p50": 150,
+          "p95": 285,
+          "p99": 297
+        },
+        "headers_ms": null,
+        "share_under_300_ms": 1
+      },
+      "/": {
+        "requests": 1,
+        "rps": 0.014388102635651724,
+        "full_ms": {
+          "p50": 25,
+          "p95": 47.5,
+          "p99": 49.5
+        },
+        "headers_ms": {
+          "p50": 25,
+          "p95": 47.5
+        },
+        "share_under_300_ms": 1
+      }
+    },
+    "caches": {
+      "details-movie-v2": {
+        "lookups": 104,
+        "lookups_per_s": 1.4963626741077793,
+        "hit": 14,
+        "miss": 90,
+        "other": 0,
+        "miss_ratio": 0.8653846153846154,
+        "miss_ms": {
+          "p50": 143.03797468354432,
+          "p95": 194.30379746835445
+        }
+      },
+      "related-cards": {
+        "lookups": 59,
+        "lookups_per_s": 0.8488980555034518,
+        "hit": 13,
+        "miss": 46,
+        "other": 0,
+        "miss_ratio": 0.7796610169491526,
+        "miss_ms": {
+          "p50": 70.51282051282051,
+          "p95": 97.05128205128204
+        }
+      },
+      "person-profile-v2": {
+        "lookups": 130,
+        "lookups_per_s": 1.870453342634724,
+        "hit": 40,
+        "miss": 90,
+        "other": 0,
+        "miss_ratio": 0.6923076923076923,
+        "miss_ms": {
+          "p50": 72.3404255319149,
+          "p95": 176.31578947368422
+        }
+      },
+      "person-fingerprint-baseline": {
+        "lookups": 90,
+        "lookups_per_s": 1.2949292372086552,
+        "hit": 90,
+        "miss": 0,
+        "other": 0,
+        "miss_ratio": 0,
+        "miss_ms": null
+      },
+      "details-show-v2": {
+        "lookups": 22,
+        "lookups_per_s": 0.31653825798433793,
+        "hit": 4,
+        "miss": 18,
+        "other": 0,
+        "miss_ratio": 0.8181818181818181,
+        "miss_ms": {
+          "p50": 135.71428571428572,
+          "p95": 193.57142857142856
+        }
+      },
+      "episode-grid": {
+        "lookups": 22,
+        "lookups_per_s": 0.31653825798433793,
+        "hit": 3,
+        "miss": 18,
+        "other": 1,
+        "miss_ratio": 0.8636363636363636,
+        "miss_ms": {
+          "p50": 26.388888888888893,
+          "p95": 52.50000000000004
+        }
+      },
+      "movie-collection": {
+        "lookups": 4,
+        "lookups_per_s": 0.057552410542606895,
+        "hit": 1,
+        "miss": 3,
+        "other": 0,
+        "miss_ratio": 0.75,
+        "miss_ms": {
+          "p50": 25,
+          "p95": 47.49999999999999
+        }
+      }
+    },
+    "page_cache": {
+      "/movie/:movieKey": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 104,
+        "bypass": 0
+      },
+      "/discover/:type?": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 8,
+        "bypass": 0
+      },
+      "/person/:personKey": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 131,
+        "bypass": 0
+      },
+      "/show/:showKey": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 22,
+        "bypass": 0
+      },
+      "/": {
+        "hit": 1,
+        "stale": 0,
+        "joined": 0,
+        "miss": 0,
+        "bypass": 0
+      }
+    },
+    "page_cache_entries": 272,
+    "qdrant": {
+      "grpc /qdrant.Points/Recommend 0": {
+        "calls": 192,
+        "calls_per_s": 2.762515706045131,
+        "avg_ms": 24.225770833406084
+      },
+      "grpc /qdrant.Points/UpdateBatch 0": {
+        "calls": 2,
+        "calls_per_s": 0.028776205271303448,
+        "avg_ms": 45.516500002122484
+      },
+      "grpc /qdrant.Points/Get 0": {
+        "calls": 200,
+        "calls_per_s": 2.877620527130345,
+        "avg_ms": 1.1230599999908009
+      }
+    },
+    "in_flight": {
+      "avg": 0.7692307692307693,
+      "max": 3
+    },
+    "resident_memory_mb": 2263.09765625,
+    "loop_delay_ms": {
+      "p99_max": 37.573375000000006,
+      "max": 43.504383
+    },
+    "thread_cpu_pct": {
+      "main": {
+        "avg": 17.11896697537703,
+        "max": 28.34890262086234
+      },
+      "V8Worker": {
+        "avg": 4.2248543382333485,
+        "max": 20.815627798535285
+      },
+      "libuv-worker": {
+        "avg": 2.7021893561253396,
+        "max": 4.7578577825223505
+      }
+    },
+    "main_thread_by_time": [
+      {
+        "t_s": 9,
+        "cpu_pct": 21
+      },
+      {
+        "t_s": 14,
+        "cpu_pct": 16
+      },
+      {
+        "t_s": 19,
+        "cpu_pct": 17
+      },
+      {
+        "t_s": 24,
+        "cpu_pct": 12
+      },
+      {
+        "t_s": 30,
+        "cpu_pct": 18
+      },
+      {
+        "t_s": 35,
+        "cpu_pct": 15
+      },
+      {
+        "t_s": 40,
+        "cpu_pct": 21
+      },
+      {
+        "t_s": 45,
+        "cpu_pct": 16
+      },
+      {
+        "t_s": 50,
+        "cpu_pct": 28
+      },
+      {
+        "t_s": 55,
+        "cpu_pct": 13
+      },
+      {
+        "t_s": 60,
+        "cpu_pct": 17
+      },
+      {
+        "t_s": 65,
+        "cpu_pct": 11
+      }
+    ],
+    "proxy_cpu_pct": {
+      "avg": 31.16531797939795,
+      "max": 42.027743745614096
+    },
+    "proxy_accepts_per_s": {
+      "avg": 11.976026416672864,
+      "max": 16.256014090284697
+    }
+  },
+  "vector1": {
+    "window_s": 69.45914578437805,
+    "commit": "392439b7",
+    "restarted": false,
+    "containers": {
+      "before": 1,
+      "after": 1
+    },
+    "total_rps": 7.932720648630904,
+    "benchmark_rps": 0,
+    "background_rps": 7.932720648630904,
+    "crawler_loop_rps": 0,
+    "server_error_rps": 0,
+    "by_route_status": [
+      {
+        "route": "/movie/:movieKey",
+        "status_class": "2xx",
+        "rps": 3.0089630046531015
+      },
+      {
+        "route": "/person/:personKey",
+        "status_class": "4xx",
+        "rps": 2.346703204585912
+      },
+      {
+        "route": "/person/:personKey",
+        "status_class": "2xx",
+        "rps": 2.1307489219553064
+      },
+      {
+        "route": "/show/:showKey",
+        "status_class": "2xx",
+        "rps": 0.24474818698135276
+      },
+      {
+        "route": "/discover/:type?",
+        "status_class": "3xx",
+        "rps": 0.11517561740298954
+      },
+      {
+        "route": "/api/e",
+        "status_class": "2xx",
+        "rps": 0.04319085652612108
+      },
+      {
+        "route": "/movie/:movieKey",
+        "status_class": "4xx",
+        "rps": 0.028793904350747385
+      },
+      {
+        "route": "/",
+        "status_class": "2xx",
+        "rps": 0.014396952175373692
+      }
+    ],
+    "routes": {
+      "/movie/:movieKey": {
+        "requests": 209,
+        "rps": 3.0089630046531015,
+        "full_ms": {
+          "p50": 147.00000000000003,
+          "p95": 260.62499999999994,
+          "p99": 295.4583333333333
+        },
+        "headers_ms": {
+          "p50": 141.30434782608697,
+          "p95": 204.09090909090898
+        },
+        "share_under_300_ms": 0.9952153110047847
+      },
+      "/person/:personKey": {
+        "requests": 148,
+        "rps": 2.1307489219553064,
+        "full_ms": {
+          "p50": 79.62962962962963,
+          "p95": 192.91666666666669,
+          "p99": 263.0000000000002
+        },
+        "headers_ms": {
+          "p50": 37.023809523809526,
+          "p95": 171.4772727272727
+        },
+        "share_under_300_ms": 1
+      },
+      "/show/:showKey": {
+        "requests": 17,
+        "rps": 0.24474818698135276,
+        "full_ms": {
+          "p50": 161.11111111111111,
+          "p95": 329.99999999999966,
+          "p99": 465.99999999999966
+        },
+        "headers_ms": {
+          "p50": 145.00000000000003,
+          "p95": 271.66666666666663
+        },
+        "share_under_300_ms": 0.9411764705882353
+      },
+      "/api/e": {
+        "requests": 3,
+        "rps": 0.04319085652612108,
+        "full_ms": {
+          "p50": 224.99999999999997,
+          "p95": 4549.999999999999,
+          "p99": 4909.999999999999
+        },
+        "headers_ms": null,
+        "share_under_300_ms": 0.6666666666666666
+      },
+      "/": {
+        "requests": 1,
+        "rps": 0.014396952175373692,
+        "full_ms": {
+          "p50": 25,
+          "p95": 47.5,
+          "p99": 49.5
+        },
+        "headers_ms": {
+          "p50": 25,
+          "p95": 47.5
+        },
+        "share_under_300_ms": 1
+      }
+    },
+    "caches": {
+      "details-movie-v2": {
+        "lookups": 211,
+        "lookups_per_s": 3.037756909003849,
+        "hit": 25,
+        "miss": 186,
+        "other": 0,
+        "miss_ratio": 0.8815165876777251,
+        "miss_ms": {
+          "p50": 134.965034965035,
+          "p95": 193.4965034965035
+        }
+      },
+      "details-show-v2": {
+        "lookups": 17,
+        "lookups_per_s": 0.24474818698135276,
+        "hit": 3,
+        "miss": 14,
+        "other": 0,
+        "miss_ratio": 0.8235294117647058,
+        "miss_ms": {
+          "p50": 140,
+          "p95": 229.9999999999999
+        }
+      },
+      "episode-grid": {
+        "lookups": 17,
+        "lookups_per_s": 0.24474818698135276,
+        "hit": 2,
+        "miss": 15,
+        "other": 0,
+        "miss_ratio": 0.8823529411764706,
+        "miss_ms": {
+          "p50": 26.78571428571429,
+          "p95": 62.5
+        }
+      },
+      "person-profile-v2": {
+        "lookups": 148,
+        "lookups_per_s": 2.1307489219553064,
+        "hit": 40,
+        "miss": 108,
+        "other": 0,
+        "miss_ratio": 0.7297297297297297,
+        "miss_ms": {
+          "p50": 68.5,
+          "p95": 175.68181818181816
+        }
+      },
+      "person-fingerprint-baseline": {
+        "lookups": 108,
+        "lookups_per_s": 1.5548708349403588,
+        "hit": 108,
+        "miss": 0,
+        "other": 0,
+        "miss_ratio": 0,
+        "miss_ms": null
+      },
+      "related-cards": {
+        "lookups": 72,
+        "lookups_per_s": 1.0365805566269057,
+        "hit": 17,
+        "miss": 55,
+        "other": 0,
+        "miss_ratio": 0.7638888888888888,
+        "miss_ms": {
+          "p50": 65,
+          "p95": 112.5
+        }
+      },
+      "movie-collection": {
+        "lookups": 11,
+        "lookups_per_s": 0.1583664739291106,
+        "hit": 1,
+        "miss": 10,
+        "other": 0,
+        "miss_ratio": 0.9090909090909091,
+        "miss_ms": {
+          "p50": 25,
+          "p95": 47.5
+        }
+      }
+    },
+    "page_cache": {
+      "/movie/:movieKey": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 211,
+        "bypass": 0
+      },
+      "/show/:showKey": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 17,
+        "bypass": 0
+      },
+      "/person/:personKey": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 149,
+        "bypass": 0
+      },
+      "/": {
+        "hit": 1,
+        "stale": 0,
+        "joined": 0,
+        "miss": 0,
+        "bypass": 0
+      },
+      "/discover/:type?": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 8,
+        "bypass": 0
+      }
+    },
+    "page_cache_entries": 307,
+    "qdrant": {
+      "grpc /qdrant.Points/UpdateBatch 0": {
+        "calls": 2,
+        "calls_per_s": 0.028793904350747385,
+        "avg_ms": 45.516500002122484
+      },
+      "grpc /qdrant.Points/Get 0": {
+        "calls": 202,
+        "calls_per_s": 2.908184339425486,
+        "avg_ms": 1.127103960405491
+      },
+      "grpc /qdrant.Points/Recommend 0": {
+        "calls": 194,
+        "calls_per_s": 2.7930087220224964,
+        "avg_ms": 24.32357731962951
+      }
+    },
+    "in_flight": {
+      "avg": 1.9230769230769231,
+      "max": 7
+    },
+    "resident_memory_mb": 2277.93359375,
+    "loop_delay_ms": {
+      "p99_max": 36.393727,
+      "max": 46.813950999999996
+    },
+    "thread_cpu_pct": {
+      "main": {
+        "avg": 23.594667859152867,
+        "max": 32.464737540722815
+      },
+      "V8Worker": {
+        "avg": 3.7384505002761412,
+        "max": 26.562057987864122
+      },
+      "libuv-worker": {
+        "avg": 2.8859413707496504,
+        "max": 4.7309378257817984
+      }
+    },
+    "main_thread_by_time": [
+      {
+        "t_s": 9,
+        "cpu_pct": 19
+      },
+      {
+        "t_s": 15,
+        "cpu_pct": 21
+      },
+      {
+        "t_s": 20,
+        "cpu_pct": 19
+      },
+      {
+        "t_s": 25,
+        "cpu_pct": 22
+      },
+      {
+        "t_s": 30,
+        "cpu_pct": 24
+      },
+      {
+        "t_s": 35,
+        "cpu_pct": 32
+      },
+      {
+        "t_s": 40,
+        "cpu_pct": 26
+      },
+      {
+        "t_s": 45,
+        "cpu_pct": 24
+      },
+      {
+        "t_s": 50,
+        "cpu_pct": 31
+      },
+      {
+        "t_s": 55,
+        "cpu_pct": 22
+      },
+      {
+        "t_s": 60,
+        "cpu_pct": 21
+      },
+      {
+        "t_s": 65,
+        "cpu_pct": 22
+      }
+    ],
+    "proxy_cpu_pct": {
+      "avg": 2.262774818163679,
+      "max": 2.759713731706049
+    },
+    "proxy_accepts_per_s": {
+      "avg": 0.5081835447575442,
+      "max": 0.7883306574354336
+    }
+  }
+}
