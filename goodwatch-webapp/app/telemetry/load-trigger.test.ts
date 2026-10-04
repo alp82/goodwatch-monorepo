@@ -186,8 +186,10 @@ test("a cancelled trigger never runs", () => {
 	assert.equal(browser.leftovers(), 0)
 })
 
-test("long tasks and finished requests are page activity, beacons are not", () => {
+test("long tasks, paints and finished requests are page activity, beacons are not", () => {
 	assert.equal(isPageActivity({ entryType: "longtask" }), true)
+	assert.equal(isPageActivity({ entryType: "paint" }), true)
+	assert.equal(isPageActivity({ entryType: "largest-contentful-paint" }), true)
 	assert.equal(
 		isPageActivity({ entryType: "resource", initiatorType: "script" }),
 		true,

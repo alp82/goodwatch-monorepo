@@ -20,9 +20,10 @@ export const SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE = 1
 
 /**
  * When the tools load, in milliseconds. See load-trigger.ts for the rule.
- * - `quietMs`: how long the page must be quiet after the load event (no long task, no finished request) before the
- *   tools load. Lighthouse ends its measurement after 1 second of quiet, so a value near 1 second puts the tools'
- *   main-thread work back into its Total Blocking Time. A visitor who taps, types or scrolls doesn't wait.
+ * - `quietMs`: how long the page must be quiet after the load event (no long task, no finished request, no first or
+ *   largest paint) before the tools load. Lighthouse ends its measurement about 2.2 seconds after the last of these,
+ *   so a lower value puts the tools' main-thread work back into its Total Blocking Time. A visitor who taps, types or
+ *   scrolls doesn't wait.
  * - `maxWaitMs`: the longest wait after the load event, for a page that never gets quiet.
  */
-export const TELEMETRY_LOAD = { quietMs: 3_000, maxWaitMs: 10_000 } as const
+export const TELEMETRY_LOAD = { quietMs: 3_500, maxWaitMs: 10_000 } as const

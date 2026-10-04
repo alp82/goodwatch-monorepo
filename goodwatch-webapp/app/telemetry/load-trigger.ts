@@ -5,9 +5,9 @@
 // 2. A page that is hidden (a background tab, or the visitor switches away) runs the tools at once: nobody is waiting
 //    for that page.
 // 3. Otherwise the trigger waits for the load event, and then until the page has been quiet for `quietMs`: no long
-//    task on the main thread and no finished request in that time (beacons don't count). That is the lab definition
-//    of "interactive" with a longer window: Lighthouse ends its measurement after 1 second of quiet, so the tools'
-//    start-up work stays out of its Total Blocking Time.
+//    task on the main thread, no finished request (beacons don't count) and no first or largest paint in that time.
+//    That is the lab definition of "interactive" with a longer window: Lighthouse ends its measurement about 2.2
+//    seconds after the last of these, so the tools' start-up work stays out of its Total Blocking Time.
 // 4. A page that never gets quiet runs the tools `maxWaitMs` after the load event.
 
 export interface LoadTriggerEnv {
@@ -28,7 +28,8 @@ export interface LoadTriggerEnv {
 	setTimeout: (callback: () => void, ms: number) => unknown
 	clearTimeout: (handle: unknown) => void
 	/**
-	 * Calls `onActivity` after every long task and every finished request, and returns a function that stops it.
+	 * Calls `onActivity` after every long task, finished request and paint milestone, and returns a function that stops
+	 * it.
 	 * Absent in browsers that can't observe either: there the load event starts the quiet time and nothing restarts it.
 	 */
 	observeActivity?: (onActivity: () => void) => () => void
@@ -138,7 +139,7 @@ export function browserLoadTriggerEnv(win: Window): LoadTriggerEnv {
 }
 
 /**
- * Whether a performance entry is work of the page. A beacon is not: the page sends it and forgets it, as the share
+ * Whether a performance entry is work of the page. Long tasks, finished requests and paints are. A beacon is not: the page sends it and forgets it, as the share
  * card warm-up does 3 seconds into every page view.
  */
 export function isPageActivity(entry: {
@@ -156,9 +157,13 @@ function browserActivityObserver(
 	).PerformanceObserver
 	if (typeof Observer !== "function") return undefined
 	const supported = Observer.supportedEntryTypes ?? []
-	const entryTypes = ["longtask", "resource"].filter((type) =>
-		supported.includes(type),
-	)
+	// The paint entries matter when the first paint comes after the load event: a lab run waits for it.
+	const entryTypes = [
+		"longtask",
+		"resource",
+		"paint",
+		"largest-contentful-paint",
+	].filter((type) => supported.includes(type))
 	if (entryTypes.length === 0) return undefined
 	return (onActivity) => {
 		try {
