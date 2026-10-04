@@ -84,6 +84,7 @@ export const getRelatedMovies = async (params: RelatedMovieParams) => {
 
 	return (await cached({
 		name: `${MEDIA_COLLECTION}:${cacheKey}`,
+		metricName: "related-movie",
 		target: _getRelatedMovies as any,
 		params,
 		ttlMinutes: 60 * 24,
@@ -97,6 +98,7 @@ export const getRelatedShows = async (params: RelatedShowParams) => {
 
 	return (await cached({
 		name: `${MEDIA_COLLECTION}:${cacheKey}`,
+		metricName: "related-show",
 		target: _getRelatedShows as any,
 		params,
 		ttlMinutes: 60 * 24,
@@ -406,6 +408,7 @@ export const getRelatedByCategory = async (params: RelatedByCategoryParams) => {
 
 	return (await cached({
 		name: `${MEDIA_COLLECTION}:${cacheKey}`,
+		metricName: "related-by-category",
 		target: _getRelatedByCategory as any,
 		params,
 		ttlMinutes: 60 * 24,

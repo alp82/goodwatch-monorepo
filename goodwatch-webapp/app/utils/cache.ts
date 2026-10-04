@@ -1,7 +1,14 @@
+// The Redis-backed data cache: `cached()` wraps a function with a lookup, and counts every outcome per cache name
+// (see docs/benchmarks/viral-spike-metrics.md).
 import crypto from "node:crypto"
 import Redis, { type Cluster } from "ioredis"
 import type { ClusterNode } from "ioredis/built/cluster"
 import type { ClusterOptions } from "ioredis/built/cluster/ClusterOptions"
+import {
+	counter,
+	durationBuckets,
+	histogram,
+} from "~/server/metrics/registry.server"
 
 const clusterNodes: ClusterNode[] = [
 	{
@@ -39,7 +46,30 @@ const redisOptions: ClusterOptions = {
 	},
 }
 
+type CacheRedis = {
+	get(key: string): Promise<string | null>
+	setex(key: string, ttl: number, value: string): Promise<unknown>
+	del(key: string): Promise<number>
+	info(): Promise<string>
+}
 let redisCluster: Cluster | null = null
+export function setRedisClusterForTest(client: CacheRedis | null): void {
+	// Only cache tests use this seam; production callers retain the complete Redis API.
+	redisCluster = client as Cluster | null
+}
+const cacheRequests = counter(
+	"goodwatch_data_cache_requests_total",
+	"Redis cache lookup outcomes.",
+	["cache", "result"],
+	100,
+)
+const cacheDuration = histogram(
+	"goodwatch_data_cache_miss_duration_seconds",
+	"Time spent running the cache target.",
+	["cache"],
+	durationBuckets,
+	100,
+)
 export const getRedisCluster = () => redisCluster
 
 const connectToRedisCluster = async () => {
@@ -108,7 +138,10 @@ export function cacheEntryKey(name: string, params: JsonData): string {
 	return `cached-${name}:${generateCacheKey(params)}`
 }
 
-export function serializeCacheEntry(data: JsonData, timestamp = Date.now()): string {
+export function serializeCacheEntry(
+	data: JsonData,
+	timestamp = Date.now(),
+): string {
 	return JSON.stringify({ data, timestamp })
 }
 
@@ -136,15 +169,10 @@ async function cacheGet<CacheData extends JsonData>(
 	const redis = getRedisCluster()
 	if (!redis) return null
 
-	try {
-		const result = await redis.get(key)
-		if (!result) return null
-		// The raw length stands in for the size, so a hit never serializes the value again.
-		return { ...JSON.parse(result), length: result.length }
-	} catch (e) {
-		console.log("Error while getting cache value:", e)
-		return null
-	}
+	const result = await redis.get(key)
+	if (!result) return null
+	// The raw length stands in for the size, so a hit never serializes the value again.
+	return { ...JSON.parse(result), length: result.length }
 }
 
 async function cacheDelete(key: string): Promise<number> {
@@ -180,6 +208,7 @@ export interface CachedParams<Params, Return> {
 	target: TargetFunction<Params, Return>
 	params: Params
 	name: string
+	metricName?: string
 	ttlMinutes: number
 }
 
@@ -190,18 +219,31 @@ export const cached = async <
 	target,
 	params,
 	name,
+	metricName,
 	ttlMinutes,
 }: CachedParams<Params, Return>): Promise<Return> => {
+	const label = metricName ?? name
+	const runTarget = async () => {
+		const start = performance.now()
+		try {
+			return await target(params)
+		} finally {
+			cacheDuration.observe([label], (performance.now() - start) / 1000)
+		}
+	}
 	if (ttlMinutes <= 0) {
-		return await target(params)
+		cacheRequests.inc([label, "bypass"])
+		return await runTarget()
 	}
 	const cacheName = `cached-${name}`
 	const cacheKey = cacheEntryKey(name, params)
 
 	// check cache for existing entries within TTL
+	let result = getRedisCluster() ? "miss" : "unavailable"
 	try {
 		const cachedResult = await cacheGet<Return>(cacheKey)
 		if (cachedResult) {
+			result = "stale"
 			const { timestamp, data, length } = cachedResult
 			if (Date.now() - timestamp < 1000 * 60 * ttlMinutes) {
 				const sizeKB = Math.round(length / 1024)
@@ -210,15 +252,18 @@ export const cached = async <
 						sizeKB < 1000 ? `${sizeKB} KB` : `${(sizeKB / 1024).toFixed(2)} MB`
 					console.warn("cached (big)", { cacheName, size, params })
 				}
+				cacheRequests.inc([label, "hit"])
 				return data as Return
 			}
 		}
 	} catch (error) {
+		result = "error"
 		console.log("Cache get failed, continuing with target function", error)
 	}
+	cacheRequests.inc([label, result])
 
 	// fetch data if no cache hit
-	const results = await target(params)
+	const results = await runTarget()
 
 	// update cache
 	try {
