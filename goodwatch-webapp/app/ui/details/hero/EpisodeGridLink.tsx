@@ -1,15 +1,18 @@
 import { TableCellsIcon } from "@heroicons/react/20/solid"
 import type React from "react"
+import { useBelowFold } from "~/ui/details/below-fold"
 import { EPISODE_GRID_ANCHOR } from "~/ui/details/episode-grid/scale"
 
 // A quiet text link in the ratings row that scrolls down to the episode grid. It is a real
 // in-page link, so it works without JavaScript and from the keyboard; with JavaScript it scrolls
 // smoothly and moves focus to the grid's heading.
 export default function EpisodeGridLink({ className = "" }: { className?: string }) {
+	const { layOutAll } = useBelowFold()
 	const onClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
 		const section = document.getElementById(EPISODE_GRID_ANCHOR)
 		if (!section) return
 		event.preventDefault()
+		layOutAll()
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 		section.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" })
 		history.replaceState(history.state, "", `#${EPISODE_GRID_ANCHOR}`)

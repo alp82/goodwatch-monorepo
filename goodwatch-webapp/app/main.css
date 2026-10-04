@@ -226,3 +226,16 @@ html[data-tv-transition="in"]::view-transition-old(root) {
 		animation: none !important;
 	}
 }
+
+/* A title page section below the first screen (ui/details/below-fold.tsx). The browser skips the section's style
+   and layout work until it is near the viewport, and reserves the estimated height until then: --reserve below the
+   md breakpoint, --reserve-md from it up. Once a section is laid out, the browser remembers its real height. */
+.below-fold {
+	content-visibility: auto;
+	contain-intrinsic-height: auto var(--reserve, 0px);
+}
+@media (min-width: 768px) {
+	.below-fold {
+		contain-intrinsic-height: auto var(--reserve-md, 0px);
+	}
+}

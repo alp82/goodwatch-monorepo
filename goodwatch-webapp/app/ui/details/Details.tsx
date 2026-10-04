@@ -10,6 +10,8 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
+import { BelowFoldProvider, useBelowFold } from "~/ui/details/below-fold"
+import type { Section } from "~/utils/scroll"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -17,7 +19,16 @@ export interface DetailsProps {
 	episodeGrid?: EpisodeGrid | null
 }
 
-export default function Details({ media, country, episodeGrid }: DetailsProps) {
+export default function Details(props: DetailsProps) {
+	const { details } = props.media
+	return (
+		<BelowFoldProvider titleKey={`${props.media.mediaType}-${details.tmdb_id}`}>
+			<DetailsPage {...props} />
+		</BelowFoldProvider>
+	)
+}
+
+function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 	const [headerHeight, setHeaderHeight] = useState(112)
 	const { details } = media
 	const { backdrop_path } = details
@@ -25,11 +36,19 @@ export default function Details({ media, country, episodeGrid }: DetailsProps) {
 	const backdropUrl = backdrop_path ? tmdbImageUrl(backdrop_path, "w300") : ""
 
 	// Scroll Sections
-	const { activeSections, sectionProps, navigateToSection } = useScrollSections(
-		{
-			sections,
-		},
-	)
+	const {
+		activeSections,
+		sectionProps,
+		navigateToSection: scrollToSection,
+	} = useScrollSections({
+		sections,
+	})
+	// A section's place is exact only when every section above it is laid out.
+	const { layOutAll } = useBelowFold()
+	const navigateToSection = (section: Section) => {
+		layOutAll()
+		scrollToSection(section)
+	}
 
 	const content = (
 		<>

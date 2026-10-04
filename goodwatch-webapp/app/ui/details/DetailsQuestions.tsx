@@ -19,13 +19,22 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { useStreamingLinks } from "~/ui/details/hero/WhereToWatch"
 import { TmdbImage } from "~/ui/TmdbImage"
-import { type QuestionId, ageInfo, agreement, FEATURED_TROPES, featuredTropes, money, titleQuestions, tropeCount } from "~/ui/details/titleQuestions"
+import { type QuestionId, type TitleQuestion, ageInfo, agreement, FEATURED_TROPES, featuredTropes, money, titleQuestions, tropeCount } from "~/ui/details/titleQuestions"
 import { countryFlagUrl } from "~/utils/country-flag"
 
 type Media = MovieResult | ShowResult
 
-export default function DetailsQuestions({ media, country }: { media: Media; country: string }) {
-	const faqs = titleQuestions(media, country)
+export default function DetailsQuestions({
+	media,
+	country,
+	questions,
+}: {
+	media: Media
+	country: string
+	/** The title's questions, when the caller has them already. */
+	questions?: TitleQuestion[]
+}) {
+	const faqs = questions ?? titleQuestions(media, country)
 	if (!faqs.length) return null
 	const jsonLd = {
 		"@context": "https://schema.org",

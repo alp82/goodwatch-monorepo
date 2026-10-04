@@ -7,7 +7,7 @@ import type { SectionIds } from "~/ui/details/sections"
 import Ratings from "~/ui/ratings/Ratings"
 import Streaming from "~/ui/streaming/Streaming"
 import { extractRatings } from "~/utils/ratings"
-import type { Section, SectionProps } from "~/utils/scroll"
+import type { PropsForSection, Section, SectionProps } from "~/utils/scroll"
 import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
 import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import DetailsRelated from "~/ui/details/DetailsRelated"
@@ -15,6 +15,19 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
 import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
+import { belowFoldProps, useBelowFold } from "~/ui/details/below-fold"
+import {
+	aboutHeight,
+	actorsHeight,
+	crewHeight,
+	episodeGridHeight,
+	mediaHeight,
+	questionsHeight,
+	relatedHeight,
+	sequelsHeight,
+	type ReservedHeight,
+} from "~/ui/details/section-heights"
+import { titleQuestions } from "~/ui/details/titleQuestions"
 
 export interface DetailsContentProps {
 	media: MovieResult | ShowResult
@@ -35,11 +48,21 @@ export default function DetailsContent({
 	navigateToSection,
 }: DetailsContentProps) {
 	const { details, cast, cast_total, crew, videos } = media
+	const questions = titleQuestions(media, country)
+	// Every section here starts below the first screen, so each one skips its layout until it is near the viewport.
+	const { skipping } = useBelowFold()
+	const section = (
+		reserved: ReservedHeight,
+		props?: PropsForSection<SectionIds>,
+	) => ({
+		...props,
+		...belowFoldProps(skipping, reserved, props?.className),
+	})
 
 	return (
 		<div className="flex flex-col gap-12">
 			{hasEpisodeGrid(episodeGrid) && (
-				<div>
+				<div {...section(episodeGridHeight(episodeGrid))}>
 					<EpisodeGrid grid={episodeGrid} headerHeight={headerHeight} />
 				</div>
 			)}
@@ -52,10 +75,10 @@ export default function DetailsContent({
 			{/*		countryCodes={streaming_country_codes}*/}
 			{/*	/>*/}
 			{/*</div>*/}
-			<div {...sectionProps.about}>
+			<div {...section(aboutHeight(), sectionProps.about)}>
 				<About media={media} navigateToSection={navigateToSection} />
 			</div>
-			<div {...sectionProps.actors_and_crew}>
+			<div {...section(actorsHeight(media), sectionProps.actors_and_crew)}>
 				<Actors
 					cast={cast}
 					total={cast_total}
@@ -63,24 +86,28 @@ export default function DetailsContent({
 					tmdbId={details.tmdb_id}
 				/>
 			</div>
-			<div>
+			<div {...section(crewHeight(media))}>
 				<Crew crew={crew} />
 			</div>
-			<div {...sectionProps.related}>
+			<div {...section(relatedHeight(media), sectionProps.related)}>
 				<DetailsRelated media={media} />
 			</div>
-			<div>
+			<div {...section(sequelsHeight(media))}>
 				<SequelsPrequelsFranchise media={media} />
 			</div>
-			<div {...sectionProps.media}>
+			<div {...section(mediaHeight(media), sectionProps.media)}>
 				<Media
 					videos={videos || []}
 					title={details.title}
 					backdropPath={details.backdrop_path}
 				/>
 			</div>
-			<div {...sectionProps.faq}>
-				<DetailsQuestions media={media} country={country} />
+			<div {...section(questionsHeight(questions.length), sectionProps.faq)}>
+				<DetailsQuestions
+					media={media}
+					country={country}
+					questions={questions}
+				/>
 			</div>
 		</div>
 	)

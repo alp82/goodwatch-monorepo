@@ -232,6 +232,75 @@ that limit was too tight and is now 4,700 ms.
 
 A run whose header lines show a CPU benchmark under 1,050 or an observed FCP near one second is disturbed. Repeat it.
 
+## Skipped sections on title pages
+
+Ticket "Skip the layout of title page sections below the fold". The sections under the fingerprint have
+`content-visibility: auto` on a document load, with a reserved height each.
+
+### How it was measured
+
+The lane's build ran as a container on the generator, next to Lighthouse, before the merge:
+
+- The image of `origin/main`, with each build's `build/` directory mounted over it. A throwaway single-node Valkey
+  with the title snapshot copied in. Production Crate and Qdrant, read only.
+- A TLS proxy in front that answers HTTP/2 and passes Brotli through, as production's proxy does. Lighthouse over
+  plain HTTP reads different numbers: Chromium doesn't ask for Brotli there, and Lighthouse's simulation of HTTP/1.1
+  differs.
+- `./bench.sh budget` with `BENCH_TARGET_URL` on the proxy and `LH_EXTRA_CHROME_FLAGS=--ignore-certificate-errors`.
+
+The baseline build in this setup reads like production: the movie page scores 68 with an LCP of 3,977 ms there, and
+68 with 3,850 ms on production on the same day.
+
+### Result
+
+Median of 3 runs each, same setup:
+
+| Surface | Style and layout | Observed FCP | Simulated FCP | LCP | TBT | Score |
+| --- | --- | --- | --- | --- | --- | --- |
+| Movie | 1,719 to 1,430 ms | 583 to 479 ms | 3,077 to 3,050 ms | 3,977 to 3,948 ms | 539 to 412 ms | 68 to 71 |
+| Show | 2,152 to 1,411 ms | 667 to 458 ms | 2,902 to 2,887 ms | 4,090 to 4,093 ms | 985 to 578 ms | 60 to 68 |
+
+- A phone lays out 7 or 8 sections less before its first paint. Lighthouse's time for style and layout falls by 17%
+  on the movie page and by 34% on the show page, and the first paint it observes comes 100 to 200 ms earlier.
+- **The simulated FCP didn't move, and the ticket's 2.2 s isn't reached.** The cause is in the next section.
+- CLS stays 0. Every byte and request line is the same, so no budget line changes with this ticket.
+
+### What sets the simulated FCP
+
+Lighthouse's simulation counts a request as render-blocking when it has a high priority and finished before the
+observed first paint. Remix preloads a page's scripts with `<link rel="modulepreload">`, which Chromium fetches at
+high priority. On the generator, they arrive within 100 ms, before the first paint. The simulation therefore puts
+all 300 KB of script in front of the first paint, on a 1.6 Mbit/s connection: that is the 2.6 to 3.0 s that every
+surface shows, whatever its layout costs.
+
+An experiment confirms it. With `fetchpriority="low"` added to the script preloads by the test proxy, and nothing
+else changed, the simulated FCP falls to 1.4 s:
+
+| Surface | Simulated FCP | LCP | TBT | Score |
+| --- | --- | --- | --- | --- |
+| Home | 3,033 to 1,377 ms | 3,858 to 3,861 ms | 124 to 713 ms | 81 to 71 |
+| Movie | 3,050 to 1,452 ms | 3,948 to 3,953 ms | 412 to 921 ms | 71 to 66 |
+| Show | 2,887 to 1,397 ms | 4,093 to 4,247 ms | 578 to 997 ms | 68 to 64 |
+
+It isn't shipped: LCP doesn't move, and TBT and the score get worse, because the simulation then counts hydration
+after the first paint. Fewer script bytes lower the simulated FCP without that cost, which is what the ticket "Load
+the sign-in client, the dialogs, and the animation library on first use" does.
+
+### Checks
+
+- **Layout:** after scrolling to the bottom, every element's box is the same as before the change, on 12 title pages
+  at 412, 768, 1,024, and 1,440 px (titles without a poster, backdrop, cast, trailer, or streaming offers, and shows
+  with 22 and 38 seasons). Screenshots differ only in the antialiasing of text inside a skipped section.
+- **CLS while scrolling to the bottom:** the same as before on every page (0 on phones).
+- **Section links** land on the same pixel as before in Chromium, WebKit, and Firefox, on phones and desktops.
+- **A URL with a section hash** lands on the section. Before the change, it ended above it.
+- **In-page search** finds text in a skipped section and scrolls to it in WebKit and Firefox (`window.find`). In
+  headless Chromium, `window.find` finds nothing with or without the change, so Chromium is unchecked.
+- **Reserved heights:** exact for the cast, crew, and sequels sections, and within 8 px for related titles and the
+  episode grid (68 px on a title with few related titles). The media, about, and questions sections are off by up to
+  25, 170, and 255 px. A wrong height moves nothing a visitor sees: a section gets its real height while it is still
+  more than a screen away.
+
 ## Not verified
 
 - A real phone. Every number here is Lighthouse's simulation on a server.
