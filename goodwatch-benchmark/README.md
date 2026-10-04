@@ -4,6 +4,8 @@
 
 Use k6 to compare server response times and capacity before and after a change. Use Lighthouse to compare mobile page performance. The scripts use Bash, Docker, and Node.js without local npm dependencies. They send only GET requests in the load test.
 
+Every webapp deploy ends with `./bench.sh smoke`. It checks the new container's startup log and a fixed list of pages with edge cases. See [Smoke check after a deploy](#smoke-check-after-a-deploy).
+
 ## Prerequisites
 
 - Install Node.js 20 or later, Bash, SSH, scp, and Git on the development machine.
@@ -109,6 +111,47 @@ Every entry has weight 1. Movie and show pages use `title_movie` and `title_show
 ```
 
 Doctor checks SSH, Docker, images, file limits, free disk, and the generator lock. It sends exactly one GET for the target's `/` from the generator, using curl without following redirects. Curl must be available there. It expects status 200. Doctor reports findings and changes nothing. An existing lock can mean an active run or a stale lock. Inspect the host before removing it.
+
+### Smoke check after a deploy
+
+**Every deploy of the webapp ends with this command.** A push to `main` deploys, also for files outside the webapp. Run the check from the development machine, with the commit that you pushed:
+
+```sh
+./bench.sh smoke --commit "$(git rev-parse origin/main)"
+```
+
+It prints one line per check (`PASS`, `FAIL`, `WARN`, or `SKIP`) and exits with 1 when any check fails. A run takes 6 seconds on a container that is older than a minute, and up to about two minutes on a new one, because it waits for the first per-minute `Process:` log line. It sends about 30 GET requests over the public address. It never sends `POST /api/combined-search` or another writing request.
+
+What it does, in order:
+
+1. **Finds the container.** It connects with SSH to the host that the target's name resolves to, and waits until exactly one `gk4owk8-*` container runs, is healthy, and fits the options. `--commit SHA` compares with `SOURCE_COMMIT` in the container's environment. `--newer-than NAME` refuses the container with that name: note the name before a deploy when you don't know the commit. `--deploy-timeout` (default 600 seconds) limits the wait. Then it waits until the home page answers 200, because the proxy answers 502 for about 35 seconds during a deploy.
+2. **Reads the metrics** from the private port inside the container (`goodwatch_http_responses_total`, the process uptime, and the build's commit).
+3. **Requests the pages** in [`smoke/urls.json`](smoke/urls.json) and checks the status, markers in the body, headers, and for HTML pages the rendered markers: the title text in `<title>` and `<h1>`, links to titles in the server HTML, an image `src` on the image host, and JSON-LD blocks that parse. No response may contain `Unexpected Server Error`.
+4. **Scans the container's log from its start** with the patterns in [`smoke/log-patterns.json`](smoke/log-patterns.json), after the requests, so that errors from the edge-case pages are in it. The people index, the title snapshot, and the search index must report that they loaded. The latest `Process:` line must say `query encoder ready`. Slow subsystems have until 120 seconds after the process start (`--log-wait`). No line may match a failure pattern, such as `failed to start`, `Cannot find module`, or `TypeError`.
+5. **Reads the metrics again.** The Redis client must be ready, no Redis breaker may be open, and no route's 5xx counter may have risen since step 2. Background traffic counts too: a 5xx that a crawler caused during the run fails the check. 5xx responses from before the run print a warning.
+
+The URL list covers a well-known movie and show, a title without a poster, without a backdrop, without cast, without a trailer, and without streaming data, a show with more than 3,300 cast rows, a person with and without a department, a filtered person URL without the cookie (403), with it (200), and from a crawler (301), home, Discover with and without a filter, the share list and its image, a missing share list and a missing title (404), a title's OG image, `robots.txt`, a script that the home page references, `/metrics` on the public port, and the GET endpoints that pages call. Each entry's `guards` field says which regression or edge it's for, and a failure prints it.
+
+To add a check after a regression, add an entry to `smoke/urls.json` or a pattern to `smoke/log-patterns.json`. Use public catalog entries only. The share list entries read `SHARE_LIST_PATH` and `SHARE_LIST_OG_PATH` from `config.env`, print a warning when they're unset, and never print the path.
+
+#### Check a local build
+
+`--target local` checks a production build on the development machine, for example to prove that the check catches a bug:
+
+```sh
+./bench.sh smoke --target local --base-url http://127.0.0.1:3304 \
+  --log-file /path/to/server.log --metrics-url http://127.0.0.1:9304/metrics
+```
+
+Start the server with `NODE_ENV=production`, a `METRICS_PORT`, and its output in the log file. `--container NAME` reads a local Docker container's log instead of a file. `--skip ID,ID` skips checks by the id that each line prints, such as `log:search-index`: a local server that reads Crate through the VPN doesn't load the people index, the search index, and the availability index in time. Point a local server at a throwaway Valkey, never at the production cluster.
+
+#### Limits
+
+- The log scan needs the log from the process start. `docker logs` keeps a limited local copy, so on a container that has run for a long time the start can be gone: the three "loaded" checks then print a warning and don't fail.
+- The check requests one URL per case. It doesn't replace watching the 5xx counters after a deploy, because crawlers reach titles that no list holds.
+- It doesn't run page scripts. A crash during hydration and requests that only a browser sends need Lighthouse or a browser.
+- It doesn't send a search (`POST /api/combined-search`), so a search that fails with a ready encoder stays unseen.
+- Catalog entries change: when TMDB adds a poster to the title without one, the entry still passes and guards nothing. Check the list against the data from time to time.
 
 ### Summarize and compare
 

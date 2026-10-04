@@ -1,0 +1,44 @@
+{
+  "description": "What the smoke check reads in the webapp's log, from the process start. Patterns are extended regular expressions that both grep -E and JavaScript accept. Each entry says what it guards.",
+  "start": "^\\[remix-serve\\] http://",
+  "required": [
+    {
+      "id": "people-index",
+      "pattern": "People index ready: [0-9]+ people",
+      "guards": "The people index of the search loaded (search-people/people.server.ts)."
+    },
+    {
+      "id": "title-snapshot",
+      "pattern": "Title snapshot [^ ]+ loaded: [0-9]+ titles",
+      "guards": "The title snapshot loaded from Redis (title-snapshot/index.server.ts). Discover, taste, and the explorer need it."
+    },
+    {
+      "id": "search-index",
+      "pattern": "Search index build [^ ]+ loaded in [0-9]+ ms",
+      "guards": "The search index loaded (search-ranking/search-index.server.ts)."
+    }
+  ],
+  "lastLine": [
+    {
+      "id": "query-encoder",
+      "pattern": "^Process: ",
+      "mustMatch": "query encoder ready with",
+      "guards": "631ae6c4: the query encoder's worker file wasn't found in the split server bundle, and search answered with basic results only. The per-minute Process: line then says 'query encoder not ready'. The first line is written one minute after the start."
+    }
+  ],
+  "forbidden": [
+    { "pattern": "failed to start", "guards": "631ae6c4: 'Query encoder failed to start'. Also the share card renderer's 'Renderer failed to start'." },
+    { "pattern": "Cannot find module", "guards": "631ae6c4: a file that the server bundle no longer contains at the expected path." },
+    { "pattern": "failed to load", "guards": "'Search index failed to load' and 'People index failed to load'." },
+    { "pattern": "TypeError", "guards": "1e459198: 'Cannot read properties of null (reading replace)' on titles without a poster. Earlier: toLowerCase() on a missing department." },
+    { "pattern": "ReferenceError", "guards": "A name that the build dropped or renamed." },
+    { "pattern": "Unexpected Server Error", "guards": "Remix's text for a 500 from a loader or a render." },
+    { "pattern": "Title snapshot not loaded|Title snapshot check failed|Title snapshot not updated", "guards": "A snapshot that Redis didn't deliver or that was refused." },
+    { "pattern": "loads without ratings", "guards": "The age and content filter has no data." },
+    { "pattern": "Metrics listener disabled|Metrics route manifest could not be loaded", "guards": "The metrics endpoint is off or reports no route patterns." },
+    { "pattern": "Availability index: (preload failed|loading [A-Z]+ failed)", "guards": "A country's streaming availability index didn't load, so the streaming filters have no data." },
+    { "pattern": "Explorer pool not built", "guards": "The explorer has no titles." },
+    { "pattern": "REDIS_HOST is empty", "guards": "The webapp runs without its cache." },
+    { "pattern": "Unhandled(PromiseRejection| rejection)|uncaughtException", "guards": "An error that no handler caught." }
+  ]
+}

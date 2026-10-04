@@ -1,0 +1,183 @@
+{
+  "description": "The requests of ./bench.sh smoke. Every entry is a GET. 'guards' says which regression or edge the entry is for. Titles and people are public catalog entries. Never add a user's handle or list: the share list comes from config.env.",
+  "imageHost": "https://image.tmdb.org/",
+  "neverContains": ["Unexpected Server Error", "Application Error"],
+  "defaults": { "client": "browser", "cookie": true, "expect": [200] },
+  "entries": [
+    {
+      "id": "home",
+      "path": "/",
+      "html": { "title": "GoodWatch", "jsonLd": true },
+      "guards": "The landing page renders, and it references the static asset that a later entry requests."
+    },
+    {
+      "id": "movie-well-known",
+      "path": "/movie/603-the-matrix",
+      "html": { "title": "The Matrix", "h1": "The Matrix", "minTitleLinks": 1, "image": true, "jsonLd": true },
+      "guards": "A full movie page: the title, related title links in the server HTML, images from the image host, and JSON-LD."
+    },
+    {
+      "id": "show-well-known",
+      "path": "/show/1396-breaking-bad",
+      "html": { "title": "Breaking Bad", "h1": "Breaking Bad", "minTitleLinks": 1, "image": true, "jsonLd": true },
+      "guards": "A full show page, with seasons and episode scores."
+    },
+    {
+      "id": "movie-no-poster",
+      "path": "/movie/1596275-drive-the-pretenders",
+      "html": { "title": "Drive - The Pretenders", "h1": "Drive - The Pretenders", "jsonLd": true },
+      "guards": "1e459198: a title without a poster answered 500, because the image helper called replace() on a null path."
+    },
+    {
+      "id": "show-no-backdrop",
+      "path": "/show/62992-das",
+      "html": { "title": "DAS!", "h1": "DAS!", "jsonLd": true },
+      "guards": "1e459198, the other null path: a title with a poster and no backdrop. Also a show with more than 1,000 cast links."
+    },
+    {
+      "id": "movie-no-cast",
+      "path": "/movie/1005737-alone",
+      "html": { "title": "Alone", "h1": "Alone", "jsonLd": true },
+      "guards": "A title with no cast rows and no related titles: empty lists must render, not crash."
+    },
+    {
+      "id": "movie-no-trailer",
+      "path": "/movie/8390-definitely-maybe",
+      "html": { "title": "Definitely, Maybe", "h1": "Definitely, Maybe", "minTitleLinks": 1, "jsonLd": true },
+      "guards": "A title without any video: the trailer section has nothing to show."
+    },
+    {
+      "id": "movie-no-streaming",
+      "path": "/movie/12104-pink-floyd-the-wall",
+      "html": { "title": "Pink Floyd: The Wall", "h1": "Pink Floyd: The Wall", "minTitleLinks": 1, "jsonLd": true },
+      "guards": "A title without streaming data in any country."
+    },
+    {
+      "id": "show-large-cast",
+      "path": "/show/1416-grey-s-anatomy",
+      "contains": ["Anatomy"],
+      "html": { "minTitleLinks": 1, "image": true, "jsonLd": true },
+      "guards": "Grey's Anatomy has more than 3,300 cast rows: the largest page render, and the first to time out or run out of memory."
+    },
+    {
+      "id": "person-with-department",
+      "path": "/person/138-quentin-tarantino",
+      "html": { "title": "Quentin Tarantino", "h1": "Quentin Tarantino", "minTitleLinks": 1, "image": true, "jsonLd": true },
+      "guards": "A full person page."
+    },
+    {
+      "id": "person-no-department",
+      "path": "/person/5793387-basetsana-khumalo",
+      "html": { "title": "Basetsana Khumalo", "h1": "Basetsana Khumalo", "jsonLd": true },
+      "guards": "Fixed in 0c0825ec: 6,603 people without a department answered 500, because the meta text called toLowerCase() on null."
+    },
+    {
+      "id": "person-filtered-no-cookie",
+      "path": "/person/138-quentin-tarantino?department=Directing",
+      "cookie": false,
+      "expect": [403],
+      "contains": ["gw_browser=1", "location.reload()"],
+      "header": { "cache-control": "no-store" },
+      "guards": "The gate for the endless filtered person URLs: a browser without the cookie gets the small check page, which no cache may store."
+    },
+    {
+      "id": "person-filtered-with-cookie",
+      "path": "/person/138-quentin-tarantino?department=Directing",
+      "html": { "title": "Quentin Tarantino", "h1": "Quentin Tarantino", "minTitleLinks": 1 },
+      "guards": "90aa853c: with the cookie, the filtered person page itself answers."
+    },
+    {
+      "id": "person-filtered-crawler",
+      "path": "/person/138-quentin-tarantino?department=Directing",
+      "client": "bot",
+      "expect": [301],
+      "header": { "location": "^/person/138-quentin-tarantino$" },
+      "guards": "A crawler that names itself is sent to the unfiltered person page."
+    },
+    {
+      "id": "discover",
+      "path": "/discover",
+      "html": { "title": "Discover", "minTitleLinks": 1, "image": true, "jsonLd": true },
+      "guards": "Discover renders its first rows on the server. It needs the title snapshot, so it is empty right after a failed snapshot load."
+    },
+    {
+      "id": "discover-filtered",
+      "path": "/discover?type=movie",
+      "html": { "title": "Discover", "minTitleLinks": 1, "image": true },
+      "guards": "Discover with a filter in the URL."
+    },
+    {
+      "id": "share-list",
+      "path": "${SHARE_LIST_PATH}",
+      "html": { "minTitleLinks": 1, "image": true },
+      "guards": "The share list page, the primary viral scenario. The path comes from config.env and is never printed."
+    },
+    {
+      "id": "share-list-og-image",
+      "path": "${SHARE_LIST_OG_PATH}",
+      "client": "bot",
+      "contentType": "^image/(png|jpeg)",
+      "minBytes": 10000,
+      "guards": "The share list's link preview image, as a link-preview bot requests it. da485db3 also fixed how the share card renderer finds its file."
+    },
+    {
+      "id": "share-list-missing",
+      "path": "/u/smoke-check-no-such-user/lists/00000000-0000-0000-0000-000000000000",
+      "expect": [404],
+      "guards": "A share list that doesn't exist answers 404, not 500 and not 200."
+    },
+    {
+      "id": "title-missing",
+      "path": "/movie/999999999-no-such-title",
+      "expect": [404],
+      "guards": "A title that doesn't exist answers 404, not 500 and not 200."
+    },
+    {
+      "id": "title-og-image",
+      "path": "/og/movie/603-the-matrix.png",
+      "client": "bot",
+      "contentType": "^image/png",
+      "minBytes": 10000,
+      "guards": "A title's link preview image, read from Redis as a buffer or rendered."
+    },
+    {
+      "id": "robots",
+      "path": "/robots.txt",
+      "contains": ["User-agent:", "Disallow: /api/"],
+      "contentType": "^text/plain",
+      "guards": "The public directory is in the image, and crawlers get their rules."
+    },
+    {
+      "id": "static-asset",
+      "pathFrom": { "entry": "home", "pattern": "/assets/[A-Za-z0-9._-]+\\.js" },
+      "header": { "cache-control": "max-age=31536000" },
+      "minBytes": 100,
+      "guards": "631ae6c4 moved build files: a script that the home page's HTML references must exist, with a one-year cache lifetime."
+    },
+    {
+      "id": "metrics-not-public",
+      "path": "/metrics",
+      "expect": [301, 302, 403, 404],
+      "notContains": ["goodwatch_http_responses_total", "# HELP"],
+      "guards": "The metrics are on a private port only. The public port must not serve them."
+    },
+    {
+      "id": "api-related-panel",
+      "path": "/api/related?tmdbId=603&sourceMediaType=movie&fingerprintKey=futuristic&sourceFingerprintScore=10",
+      "json": { "arrays": ["movies", "shows"], "minItems": 1 },
+      "guards": "A related titles panel other than the default one. The page requests it when a visitor selects a panel, so no server render covers it."
+    },
+    {
+      "id": "api-search-config",
+      "path": "/api/search-config",
+      "json": { "keys": ["version"] },
+      "guards": "Every page requests the search configuration after it loads."
+    },
+    {
+      "id": "api-command-palette",
+      "path": "/api/command-palette?q=mat",
+      "json": { "arrays": ["titles"], "minItems": 1 },
+      "guards": "The header search: it reads the search index and the people index in memory, and sends no model call."
+    }
+  ]
+}

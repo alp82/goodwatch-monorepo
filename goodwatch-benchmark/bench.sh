@@ -10,7 +10,7 @@ BENCH_METRIC_HOSTS=${BENCH_METRIC_HOSTS-10.0.0.21:target:coolify-proxy+gk4owk8}
 BENCH_METRIC_INTERVAL=${BENCH_METRIC_INTERVAL:-5}
 fail() { echo "$*" >&2; exit 2; }
 usage() { cat <<'HELP'
-Usage: ./bench.sh <load|lighthouse|compare|summarize|longtail|doctor> [options]
+Usage: ./bench.sh <load|lighthouse|smoke|compare|summarize|longtail|doctor> [options]
 load: --mode smoke|ramp --cache warm|cold --urls hot|surfaces|longtail|file.json
       --label TEXT --rate N --duration S --start N --step N --max N --rates N,N,...
       --routes ROUTE[:CLIENT],...
@@ -20,6 +20,7 @@ compare: RUN_A RUN_B [--out FILE] [--json]
 summarize: RUN
 longtail: [--sitemaps DIR] [--out FILE] [--limit N] [--seed S] [--og-share F]
 doctor: [--path private|public]
+smoke: [--commit SHA] [--newer-than CONTAINER] [--target production|local] (run after every deploy; --help lists all)
 HELP
 }
 command=${1:-help}; shift || true
@@ -27,6 +28,7 @@ resolve_run() { if [[ -d $1 ]]; then printf '%s' "$1"; else printf '%s/results/%
 case $command in
   help|-h|--help) usage; exit 0 ;;
   longtail) exec node "$ROOT/scripts/build-longtail.mjs" "$@" ;;
+  smoke) exec node "$ROOT/scripts/smoke.mjs" "$@" ;;
   summarize) [[ $# == 1 ]] || fail 'Expected a run id or directory'; exec node "$ROOT/scripts/summarize.mjs" "$(resolve_run "$1")" ;;
   compare) [[ $# -ge 2 ]] || fail 'Expected two runs'; a=$(resolve_run "$1"); b=$(resolve_run "$2"); shift 2; exec node "$ROOT/scripts/compare.mjs" "$a" "$b" "$@" ;;
   load|lighthouse|doctor) ;;
