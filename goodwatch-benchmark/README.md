@@ -56,6 +56,8 @@ With a working local Docker daemon, run `bash scripts/test-local.sh`. It starts 
 | `--duration S` | `10` | Smoke duration in seconds. |
 | `--start N --step N --max N` | `5`, `5`, `5` | Ramp start, increment, and maximum rate. Set these explicitly for a ramp. |
 | `--step-duration S` | `10` | Seconds per plateau. |
+| `--rates N,N,...` | None | An explicit, increasing plateau list for a ramp, such as `2,4,6,10,15`. It replaces `--start`, `--step`, and `--max`. |
+| `--routes ROUTE[:CLIENT],...` | None | Keep only these entries of the URL set, such as `home` or `title_movie:browser`. Use it to ramp one surface at a time. |
 | `--path private\|public` | `private` | Select the network path. |
 | `--raw` | Off | Save compressed k6 JSON time series for deeper analysis. |
 | `--yes-ramp-production` | Off | Required for every ramp. |
@@ -157,6 +159,9 @@ results/<run-id>/
   k6-raw.json.gz            # With --raw
   host-metrics/*.jsonl
   host-metrics/*.log
+  webapp/before.txt         # With BENCH_WEBAPP_PROBE=1
+  webapp/after.txt
+  webapp/samples.jsonl
   lighthouse/<label>/run-*.json
   lighthouse.log
   summary.json
@@ -171,6 +176,7 @@ Only relevant files exist for a given run. Metadata records the Git commit and d
 
 - `load` holds abort status and reason, duration in seconds, request count and rate, error fraction, latency and TTFB in milliseconds, dropped iterations, `routes`, and `steps`. Steps include their target rate. Step req/s divides requests by the planned step length, including transitions. For the step in which a run aborts, it divides by the time the step ran. Route status buckets are `2xx`, `3xx`, `4xx`, `5xx`, and `0` for transport failures.
 - `hosts` is keyed by hostname. Each host includes its role, sample count, averages and maxima, and container metrics. Samples are trimmed to the run timestamps when both timestamps exist. Network rates use decimal Mbps. Container memory uses MiB despite the stable `mem_mb` field name.
+- `webapp` exists only with the webapp probe. It holds the window length, the deployed commit, a restart flag, request rates (`total_rps`, `benchmark_rps`, `background_rps`, `crawler_loop_rps`), `routes`, `caches`, `qdrant`, `thread_cpu_pct`, `main_thread_by_time`, `proxy_cpu_pct`, `proxy_accepts_per_s`, `in_flight`, and `loop_delay_ms`.
 - `lighthouse` is keyed by URL label. Each entry includes the URL, successful run count, per-metric `median`, and `all_runs`. Bytes by resource type come from `resource-summary` or fall back to `network-requests`.
 
 `response_bytes_avg` uses Content-Length when present. It is not total transferred bytes. Chunked responses without Content-Length are skipped. Error fractions and status buckets are distinct: an expected 301 is successful and still counts as 3xx.
@@ -181,7 +187,23 @@ Each sampler emits a header and JSON Lines with CPU busy, iowait, steal, load av
 
 `BENCH_METRIC_HOSTS` uses `host:role[:prefix+prefix]`, separated by commas. The default target prefixes are `coolify-proxy` and `gk4owk8`. Add data hosts with role `data`, for example `10.0.0.22:data`. The generator is added automatically. Docker is optional for the sampler. Container CPU and memory come from one background `docker stats` call, filtered by prefix. The next sample includes the latest completed result so Docker's roughly two-second sampling time does not stretch the host interval.
 
-Samplers start ten seconds before k6, run for at most the planned duration plus 30 seconds, and stop after k6 exits. Long prewarming can consume that allowance. Use Grafana Cloud as a cross-check for CPU, Redis, databases, network saturation, and any gaps in the sampler output. Aggregate host metrics include setup time because run timestamps bracket the k6 invocation.
+Samplers start one second apart, so that a jump host doesn't reset connections that open at the same moment. They start at least ten seconds before k6, run for at most the planned duration plus 30 seconds, and stop after k6 exits. Long prewarming can consume that allowance. Use Grafana Cloud as a cross-check for CPU, Redis, databases, network saturation, and any gaps in the sampler output. Aggregate host metrics include setup time because run timestamps bracket the k6 invocation.
+
+### Webapp probe
+
+Set `BENCH_WEBAPP_PROBE=1` to read the webapp's own numbers for the same window as the load. `scripts/webapp-probe.sh` runs on the serving host over SSH and changes nothing there. It needs `docker`, `nsenter`, and `curl` on that host.
+
+- Before and after k6, it saves the webapp's `/metrics` text from port `9464` and Qdrant's request counters. It reaches Qdrant with the webapp container's own settings, and never prints the key.
+- During the run, it samples CPU time per thread name of the webapp process, CPU time of the proxy, the connections the proxy accepted, the requests in flight, and the event loop delay.
+
+The summary gets a `webapp` section and a "Webapp process" table:
+
+- Requests per second in total, from the benchmark, and from background traffic (everything the webapp finished minus what k6 sent). The crawler loop is `/person/:personKey` redirects plus `/browser-check`.
+- Response time per route pattern from the webapp's histograms. These are estimates between bucket edges, and they exclude the proxy, TLS, and the network.
+- Data cache lookups, hits, and misses per cache name, and Qdrant calls with their average time per endpoint.
+- CPU of the main thread, the libuv and V8 worker threads, and the proxy, in percent of one core.
+
+The event loop delay gauge restarts on every scrape. The probe scrapes every `BENCH_METRIC_INTERVAL` seconds, so Grafana's own samples of that gauge cover shorter windows during a run.
 
 ## Automatic stop rules
 
@@ -212,6 +234,10 @@ The launcher refuses a generator address equal to the resolve address. Use the p
 ## Leave no trace
 
 Normal cleanup removes each remote run directory and its lock. Docker images and an empty work directory remain on the generator. Set `BENCH_KEEP_REMOTE=1` to retain a run for diagnosis. Retained runs include the environment file, which can contain cookies. Local results remain until you remove them.
+
+## Production baseline
+
+`results/baseline-2026-10-04/` holds the summaries of the baseline runs from October 4, 2026. [`docs/benchmarks/viral-spike-baseline.md`](../docs/benchmarks/viral-spike-baseline.md) explains them and lists the command for each run.
 
 ## Sample smoke run
 
