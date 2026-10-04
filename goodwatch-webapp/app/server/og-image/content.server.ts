@@ -200,9 +200,10 @@ async function titleContent(
 async function personContent(id: number): Promise<OgContent | null> {
 	const person = await getPersonProfile(id)
 	if (!person) return null
-	const department =
-		DEPARTMENT_LABELS[person.known_for_department] ??
-		person.known_for_department
+	const department = person.known_for_department
+		? (DEPARTMENT_LABELS[person.known_for_department] ??
+			person.known_for_department)
+		: null
 	return {
 		kind: "person",
 		tag: personTag(department, person.stats.titles),

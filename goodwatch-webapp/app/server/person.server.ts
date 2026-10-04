@@ -60,7 +60,8 @@ export interface PersonProfile {
 	tmdb_id: number
 	name: string
 	profile_path: string | null
-	known_for_department: string
+	// TMDB leaves the department empty for some people.
+	known_for_department: string | null
 	credits: PersonCredit[]
 	signature: {
 		basedOn: number
@@ -535,7 +536,7 @@ async function loadPersonProfile(id: number): Promise<PersonProfile | null> {
 			tmdb_id: number
 			name: string
 			profile_path: string | null
-			known_for_department: string
+			known_for_department: string | null
 		}>(
 			"SELECT tmdb_id, name, profile_path, known_for_department FROM person WHERE tmdb_id = ?",
 			[id],

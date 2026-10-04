@@ -30,6 +30,7 @@ import {
 	useSearchParams,
 } from "@remix-run/react"
 import type React from "react"
+import { personMetaText, titleCounts } from "~/domain/person-meta"
 import {
 	type TitleTypeFilter,
 	isAllTitleTypes,
@@ -131,27 +132,26 @@ type Stats = Data["profile"]["stats"]
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) return [{ title: "Person not found | GoodWatch" }]
 	const p = data.profile
-	const top = data.knownFor
-		.slice(0, 3)
-		.map((c) => c.title)
-		.join(", ")
-	const role =
-		p.known_for_department === "Acting"
-			? "movies and TV shows"
-			: `${p.known_for_department.toLowerCase()} credits`
+	const text = personMetaText({
+		name: p.name,
+		department: p.known_for_department,
+		movies: p.stats.movies,
+		shows: p.stats.shows,
+		titles: p.stats.titles,
+		knownFor: data.knownFor.map((c) => c.title),
+		hasPortrait: !!p.profile_path,
+	})
 	const url = `https://goodwatch.app${personPath(p.tmdb_id, p.name)}` // filtered views share the unfiltered canonical
 	const image = p.profile_path
 		? `https://image.tmdb.org/t/p/h632${p.profile_path}`
 		: ""
-	const counts = titleCounts(p.stats.movies, p.stats.shows)
 	const tags = buildMeta({
 		pageMeta: {
-			title: `${p.name}: ${p.known_for_department === "Acting" ? "Movies and TV Shows" : "Filmography"} | GoodWatch`,
-			description: `${p.name}'s ${role}${counts ? `: ${counts}` : ""}${top ? `, including ${top}` : ""}. See what their work feels like, who they work with, and their best-rated titles.`,
+			title: text.title,
+			description: text.description,
 			url,
 			image,
-			// Describes the share card: name, role, title count, and the portrait when there is one.
-			alt: `${p.name} (${p.known_for_department === "Acting" ? "actor" : p.known_for_department.toLowerCase()}, ${p.stats.titles} titles) on GoodWatch${p.profile_path ? ", with portrait" : ""}`,
+			alt: text.alt,
 		},
 	}).filter((tag) => !("script:ld+json" in tag))
 	return [
@@ -163,7 +163,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 				name: p.name,
 				url,
 				image: image || undefined,
-				jobTitle: p.known_for_department,
+				jobTitle: text.jobTitle,
 				// The person table has no IMDb or social ids, so TMDB is the one profile to link.
 				sameAs: [`https://www.themoviedb.org/person/${p.tmdb_id}`],
 			},
@@ -216,15 +216,6 @@ const img = (path: string | null, size = "w300_and_h450_bestv2") =>
 const AMBER = "#fbbf24" // more than the catalog average
 const SKY = "#38bdf8" // less than the catalog average
 const MUTED = "#6b7280"
-
-/** Movie and TV show counts in words, leaving out a zero part: "18 movies", "4 movies and 1 TV show". */
-const titleCounts = (movies: number, shows: number) =>
-	[
-		movies > 0 && pluralize(movies, "movie"),
-		shows > 0 && pluralize(shows, "TV show"),
-	]
-		.filter(Boolean)
-		.join(" and ")
 
 // The parameters this page reads. Links carry only these: a crawler that garbles a link ("genre=Sci-Fi+&+Fantasy")
 // would otherwise get its own invention back in every link of the page, and a longer one on each visit.
@@ -371,9 +362,11 @@ function Hero({ data, children }: { data: Data; children?: React.ReactNode }) {
 						className="h-36 w-24 shrink-0 rounded-lg shadow-2xl sm:h-44 sm:w-30"
 					/>
 					<div className="min-w-0">
-						<p className="text-sm uppercase tracking-[0.2em] text-amber-400">
-							{p.known_for_department}
-						</p>
+						{p.known_for_department && (
+							<p className="text-sm uppercase tracking-[0.2em] text-amber-400">
+								{p.known_for_department}
+							</p>
+						)}
 						<h1 className="text-4xl font-black sm:text-6xl">{p.name}</h1>
 					</div>
 				</div>

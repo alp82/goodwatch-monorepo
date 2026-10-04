@@ -27,8 +27,9 @@ export const DEPARTMENT_LABELS: Record<string, string> = {
 	Writing: "Writer",
 	Production: "Producer",
 }
-export const personTag = (department: string, titles: number) =>
-	`${department} · ${titles} titles`
+// TMDB leaves the department empty for some people: the tag is then the title count alone.
+export const personTag = (department: string | null, titles: number) =>
+	[department, `${titles} titles`].filter(Boolean).join(" · ")
 
 // /movies and /shows. typeLabel is "Movies" or "TV Shows".
 export const typeIndexCopy = (typeLabel: string): PageCopy => ({
