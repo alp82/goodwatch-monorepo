@@ -19,7 +19,6 @@ services:
       - 'REDISCLI_AUTH=${REDIS_PASSWORD}'
       - 'REDIS_CLUSTER_REPLICAS=0'
       - 'REDIS_CLUSTER_CREATOR=yes'
-      - 'REDIS_EXTRA_FLAGS=--maxmemory 6000mb --maxmemory-policy allkeys-lfu'
     logging: *default-logging
     command:
       - /opt/bitnami/scripts/redis-cluster/run.sh
@@ -29,6 +28,15 @@ services:
       - "6379"
       - --cluster-announce-bus-port
       - "16379"
+      # Decided settings: docs/adr/0003-redis-cluster-of-masters-with-volatile-lfu.md.
+      # This image ignores REDIS_EXTRA_FLAGS, so they are passed as arguments.
+      # Keep these lines identical in main/ and replica/.
+      - --maxmemory
+      - 7gb
+      - --maxmemory-policy
+      - volatile-lfu
+      - --cluster-require-full-coverage
+      - "no"
 
 volumes:
   redis-data:
