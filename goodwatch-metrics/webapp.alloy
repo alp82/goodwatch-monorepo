@@ -1,0 +1,27 @@
+// Loaded only on the webapp host by the Compose override.
+prometheus.scrape "webapp" {
+	targets         = [{"__address__" = coalesce(env("WEBAPP_METRICS_TARGET"), "goodwatch-webapp:9464")}]
+	scrape_interval = "15s"
+	scrape_timeout  = "5s"
+	metrics_path    = "/metrics"
+	forward_to      = [prometheus.relabel.webapp.receiver]
+}
+
+prometheus.relabel "webapp" {
+	forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+
+	rule {
+		target_label = "job"
+		replacement  = "goodwatch_webapp"
+	}
+
+	rule {
+		target_label = "instance"
+		replacement  = env("VPS_INSTANCE_NAME")
+	}
+
+	rule {
+		target_label = "host"
+		replacement  = env("VPS_INSTANCE_NAME")
+	}
+}

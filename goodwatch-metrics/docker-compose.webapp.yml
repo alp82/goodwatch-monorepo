@@ -1,0 +1,14 @@
+# Use only on abio, where Coolify supplies the goodwatch-webapp network alias.
+# docker compose -f docker-compose.yml -f docker-compose.webapp.yml up -d grafana-alloy
+services:
+  grafana-alloy:
+    volumes:
+      - ./webapp.alloy:/etc/alloy/webapp.alloy:ro
+    command: run /etc/alloy/
+    networks:
+      - default
+      - coolify
+
+networks:
+  coolify:
+    external: true
