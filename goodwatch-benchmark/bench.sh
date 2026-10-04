@@ -180,6 +180,8 @@ if [[ $command == load ]]; then
     { printf 'set -- %q %q %q\n' "$BENCH_METRIC_INTERVAL" "$((planned_duration+30))" "${prefixes//+/,}"; cat "$ROOT/scripts/host-metrics.sh"; } > "$tmp/sampler-$i.sh"
     ssh "${ssh_opts[@]}" "$BENCH_SSH_USER@$host" 'bash -s' < "$tmp/sampler-$i.sh" > "$run/host-metrics/host-$i.jsonl" 2> "$run/host-metrics/host-$i.log" &
     pids+=("$!"); i=$((i+1))
+    # A jump host resets SSH connections that open at the same moment (sshd's MaxStartups).
+    sleep 1
   done
   # BENCH_WEBAPP_PROBE=1 also reads the webapp's own metrics and its CPU per thread on the serving host.
   probe() { { printf 'set -- %q %q %q\n' "$1" "$BENCH_METRIC_INTERVAL" "$((planned_duration+30))"; cat "$ROOT/scripts/webapp-probe.sh"; } | ssh "${ssh_opts[@]}" "$BENCH_SSH_USER@$BENCH_RESOLVE_IP" 'bash -s'; }
