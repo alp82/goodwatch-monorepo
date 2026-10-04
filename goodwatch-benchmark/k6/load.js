@@ -14,10 +14,22 @@ const start = number("RATE_START", 5, 1),
 const duration = number("STEP_DURATION", 10, 1),
   ramp = number("RAMP_SECONDS", 5);
 if (start > max) throw new Error("RATE_START exceeds RATE_MAX");
+// RATE_LIST is an explicit plateau list, such as "2,4,6,10,15". It replaces start, step, and max.
+const rates = env("RATE_LIST", "")
+  ? env("RATE_LIST", "").split(",").map(Number)
+  : (() => {
+      const list = [];
+      for (let rate = start; ; rate = Math.min(max, rate + increment)) {
+        list.push(rate);
+        if (rate === max) return list;
+      }
+    })();
+if (rates.some((rate, i) => !Number.isFinite(rate) || rate < 1 || (i && rate <= rates[i - 1])))
+  throw new Error("RATE_LIST must be increasing positive numbers");
 const steps = [],
   stages = [];
 let elapsed = 0;
-for (let rate = start; ; rate = Math.min(max, rate + increment)) {
+for (const rate of rates) {
   const transition = steps.length ? ramp : 0;
   if (transition) stages.push({ duration: `${transition}s`, target: rate });
   stages.push({ duration: `${duration}s`, target: rate });
@@ -28,7 +40,6 @@ for (let rate = start; ; rate = Math.min(max, rate + increment)) {
     end_s: elapsed + transition + duration,
   });
   elapsed += transition + duration;
-  if (rate === max) break;
 }
 const cache = env("CACHE_MODE", "warm");
 if (!["warm", "cold"].includes(cache)) throw new Error("CACHE_MODE must be warm or cold");
@@ -101,7 +112,7 @@ export const options = {
   scenarios: {
     load: {
       executor: "ramping-arrival-rate",
-      startRate: start,
+      startRate: rates[0],
       timeUnit: "1s",
       stages,
       preAllocatedVUs: preVUs,

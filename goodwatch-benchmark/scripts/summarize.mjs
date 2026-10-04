@@ -1,6 +1,7 @@
 import { readFile, writeFile, readdir } from "node:fs/promises";
 import { resolve, basename } from "node:path";
 import { fileURLToPath } from "node:url";
+import { webappSummary } from "./webapp-metrics.mjs";
 
 async function json(path, fallback = null) {
   try {
@@ -142,6 +143,8 @@ export async function summarize(directory) {
     }
     summary.hosts[host] = result;
   }
+  const webapp = raw ? await webappSummary(dir, meta, raw.metrics?.http_reqs?.values.count ?? null) : null;
+  if (webapp) summary.webapp = webapp;
   for (const label of await files(`${dir}/lighthouse`)) {
     const runs = [];
     let url = "";
@@ -209,7 +212,9 @@ export async function summarize(directory) {
           "p50 ms",
           "p95 ms",
           "p99 ms",
+          "TTFB p50 ms",
           "TTFB p95 ms",
+          "TTFB p99 ms",
           "Statuses (2xx/3xx/4xx/5xx/0)",
         ],
         Object.entries(l.routes).map(([r, s]) => [
@@ -220,21 +225,27 @@ export async function summarize(directory) {
           s.latency_ms.p50,
           s.latency_ms.p95,
           s.latency_ms.p99,
+          s.ttfb_ms.p50,
           s.ttfb_ms.p95,
+          s.ttfb_ms.p99,
           ["2xx", "3xx", "4xx", "5xx", "0"].map((k) => s.status[k]).join("/"),
         ]),
       );
     md +=
       "\n## Steps\n\n" +
       table(
-        ["Step", "Target req/s", "Requests", "Req/s", "Error %", "p95 ms"],
+        ["Step", "Target req/s", "Requests", "Req/s", "Error %", "p50 ms", "p95 ms", "p99 ms", "TTFB p50 ms", "TTFB p95 ms"],
         l.steps.map((s) => [
           s.name,
           s.target_rps,
           s.requests,
           s.rps,
           s.error_rate == null ? null : s.error_rate * 100,
+          s.latency_ms.p50,
           s.latency_ms.p95,
+          s.latency_ms.p99,
+          s.ttfb_ms.p50,
+          s.ttfb_ms.p95,
         ]),
       );
   }
@@ -287,6 +298,49 @@ export async function summarize(directory) {
     md +=
       "\n## Containers\n\nCPU is in percent of one core.\n\n" +
       table(["Host", "Container", "CPU avg %", "CPU max %", "Memory avg MB", "Memory max MB"], containers);
+  if (webapp) {
+    const w = webapp;
+    md += `\n## Webapp process\n\nFrom the webapp's own counters over ${fmt(w.window_s)} s, commit ${fmt(w.commit)}${w.restarted ? ", **restarted during the run**" : ""}. The times exclude the proxy, TLS, and the network.\n\n`;
+    md += `Finished ${fmt(w.total_rps)} req/s in total: ${fmt(w.benchmark_rps)} from the benchmark and ${fmt(w.background_rps)} of background traffic, of which ${fmt(w.crawler_loop_rps)} are the crawler loop. Server errors: ${fmt(w.server_error_rps)} per second. Requests in flight: ${fmt(w.in_flight.avg)} on average, ${fmt(w.in_flight.max)} at most. Event loop delay: ${fmt(w.loop_delay_ms.max)} ms at most.\n\n`;
+    md +=
+      "CPU in percent of one core:\n\n" +
+      table(
+        ["Part", "Avg %", "Max %"],
+        [
+          ...Object.entries(w.thread_cpu_pct).map(([name, s]) => [`webapp ${name}`, s.avg, s.max]),
+          ["proxy", w.proxy_cpu_pct.avg, w.proxy_cpu_pct.max],
+        ],
+      );
+    md += `\nThe proxy accepted ${fmt(w.proxy_accepts_per_s.avg)} connections per second on average, ${fmt(w.proxy_accepts_per_s.max)} at most.\n\n`;
+    md += table(
+      ["Route pattern (anonymous, 2xx)", "Requests", "Req/s", "p50 ms", "p95 ms", "p99 ms", "Headers p50 ms", "Headers p95 ms", "Under 300 ms %"],
+      Object.entries(w.routes).map(([route, r]) => [
+        route,
+        r.requests,
+        r.rps,
+        r.full_ms.p50,
+        r.full_ms.p95,
+        r.full_ms.p99,
+        r.headers_ms?.p50 ?? null,
+        r.headers_ms?.p95 ?? null,
+        r.share_under_300_ms * 100,
+      ]),
+    );
+    if (Object.keys(w.caches).length)
+      md +=
+        "\n" +
+        table(
+          ["Data cache", "Lookups", "Hits", "Misses", "Miss %", "Miss p50 ms", "Miss p95 ms"],
+          Object.entries(w.caches).map(([cache, c]) => [cache, c.lookups, c.hit, c.miss, c.miss_ratio * 100, c.miss_ms?.p50 ?? null, c.miss_ms?.p95 ?? null]),
+        );
+    if (Object.keys(w.qdrant).length)
+      md +=
+        "\n" +
+        table(
+          ["Qdrant endpoint and status", "Calls", "Calls/s", "Avg ms"],
+          Object.entries(w.qdrant).map(([endpoint, q]) => [endpoint, q.calls, q.calls_per_s, q.avg_ms]),
+        );
+  }
   if (Object.keys(summary.lighthouse).length)
     md +=
       "\n## Lighthouse (mobile, median)\n\n" +

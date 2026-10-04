@@ -12,7 +12,14 @@ if (process.argv[2] === "finish" || process.argv[2] === "start") {
   let seconds = 0,
     requests = 0,
     previous = Number(e.RATE_START);
-  for (let rate = previous; ; rate = Math.min(Number(e.RATE_MAX), rate + Number(e.RATE_STEP))) {
+  const rates = e.RATE_LIST ? e.RATE_LIST.split(",").map(Number) : [];
+  if (!rates.length)
+    for (let rate = previous; ; rate = Math.min(Number(e.RATE_MAX), rate + Number(e.RATE_STEP))) {
+      rates.push(rate);
+      if (rate === Number(e.RATE_MAX)) break;
+    }
+  previous = rates[0];
+  for (const rate of rates) {
     const transition = steps.length ? Number(e.RAMP_SECONDS) : 0;
     const length = Number(e.STEP_DURATION) + transition;
     steps.push({
@@ -24,7 +31,6 @@ if (process.argv[2] === "finish" || process.argv[2] === "start") {
     seconds += length;
     requests += rate * Number(e.STEP_DURATION) + ((previous + rate) / 2) * transition;
     previous = rate;
-    if (rate === Number(e.RATE_MAX)) break;
   }
   if (process.argv[2] === "plan") {
     console.log(

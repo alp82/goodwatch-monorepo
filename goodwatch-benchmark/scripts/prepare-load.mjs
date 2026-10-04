@@ -53,6 +53,17 @@ try {
       fail("Person query strings require gw_browser=1");
     return [{ ...entry, path, expect }];
   });
+  // ONLY_ROUTES keeps a subset, such as "home,title_movie:browser". An item is a route or a route and client.
+  const only = (e.ONLY_ROUTES || "").split(",").filter(Boolean);
+  if (only.length) {
+    const unknown = only.filter(
+      (item) => !set.entries.some((entry) => item === entry.route || item === `${entry.route}:${entry.client}`),
+    );
+    if (unknown.length) fail(`No entry matches: ${unknown.join(", ")}`);
+    set.entries = set.entries.filter(
+      (entry) => only.includes(entry.route) || only.includes(`${entry.route}:${entry.client}`),
+    );
+  }
   if (!set.entries.length) fail("URL set is empty after resolving placeholders");
   console.log(JSON.stringify(set, null, 2));
 } catch (error) {

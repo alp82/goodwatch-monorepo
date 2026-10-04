@@ -12,7 +12,8 @@ fail() { echo "$*" >&2; exit 2; }
 usage() { cat <<'HELP'
 Usage: ./bench.sh <load|lighthouse|compare|summarize|longtail|doctor> [options]
 load: --mode smoke|ramp --cache warm|cold --urls hot|surfaces|longtail|file.json
-      --label TEXT --rate N --duration S --start N --step N --max N
+      --label TEXT --rate N --duration S --start N --step N --max N --rates N,N,...
+      --routes ROUTE[:CLIENT],...
       --step-duration S --path private|public --raw --yes-ramp-production
 lighthouse: --urls FILE --runs N --where generator|local --label TEXT --path public|private
 compare: RUN_A RUN_B [--out FILE] [--json]
@@ -37,6 +38,7 @@ urls=hot; raw=0; approved=0
 [[ $command != lighthouse ]] || { PATH_MODE=public; urls="$ROOT/lighthouse/urls.txt"; }
 export RATE_START=${RATE_START:-5} RATE_STEP=${RATE_STEP:-5} RATE_MAX=${RATE_MAX:-5} STEP_DURATION=${STEP_DURATION:-10} RAMP_SECONDS=${RAMP_SECONDS:-5}
 smoke_rate_set=0; ramp_set=0
+export RATE_LIST=${RATE_LIST:-} ONLY_ROUTES=${ONLY_ROUTES:-}
 while (($#)); do
   case $1 in
     --raw) raw=1; shift; continue ;;
@@ -47,8 +49,8 @@ while (($#)); do
   case $1 in
     --mode) MODE=$2 ;; --cache) CACHE_MODE=$2 ;; --urls) urls=$2 ;; --label) LABEL=$2 ;;
     --rate) RATE_START=$2; RATE_MAX=$2; smoke_rate_set=1 ;; --duration) STEP_DURATION=$2; smoke_rate_set=1 ;;
-    --start) RATE_START=$2; ramp_set=1 ;; --step) RATE_STEP=$2; ramp_set=1 ;; --max) RATE_MAX=$2; ramp_set=1 ;; --step-duration) STEP_DURATION=$2; ramp_set=1 ;;
-    --path) PATH_MODE=$2 ;; --runs) LH_RUNS=$2 ;; --where) WHERE=$2 ;;
+    --start) RATE_START=$2; ramp_set=1 ;; --step) RATE_STEP=$2; ramp_set=1 ;; --max) RATE_MAX=$2; ramp_set=1 ;; --rates) RATE_LIST=$2; ramp_set=1 ;; --step-duration) STEP_DURATION=$2; ramp_set=1 ;;
+    --routes) ONLY_ROUTES=$2 ;; --path) PATH_MODE=$2 ;; --runs) LH_RUNS=$2 ;; --where) WHERE=$2 ;;
     *) fail "Unknown option: $1" ;;
   esac
   shift 2
@@ -64,6 +66,13 @@ for key in RATE_START RATE_STEP RATE_MAX STEP_DURATION LH_RUNS BENCH_METRIC_INTE
   [[ ${!key} =~ ^[1-9][0-9]*$ ]] || fail "$key must be a positive integer"
 done
 [[ $RAMP_SECONDS =~ ^[0-9]+$ ]] || fail 'RAMP_SECONDS must be a nonnegative integer'
+if [[ -n $RATE_LIST ]]; then
+  # An explicit plateau list replaces start, step, and max. The caps and VU defaults use its ends.
+  [[ $RATE_LIST =~ ^[1-9][0-9]*(,[1-9][0-9]*)*$ ]] || fail 'Rates must be positive integers separated by commas'
+  IFS=',' read -ra rate_list <<< "$RATE_LIST"
+  for ((n=1; n<${#rate_list[@]}; n++)); do ((rate_list[n] > rate_list[n-1])) || fail 'Rates must increase'; done
+  RATE_START=${rate_list[0]}; RATE_MAX=${rate_list[-1]}
+fi
 ((RATE_START <= RATE_MAX)) || fail 'Start must not exceed max'
 export RESOLVE_IP=''
 [[ $PATH_MODE != private ]] || RESOLVE_IP=$BENCH_RESOLVE_IP
@@ -116,7 +125,7 @@ export ACCEPT_ENCODING=${ACCEPT_ENCODING-'br, gzip'} REQUEST_TIMEOUT=${REQUEST_T
 export ABORT_ERROR_RATE=${ABORT_ERROR_RATE:-0.02} ABORT_P95_MS=${ABORT_P95_MS:-3000} ABORT_DELAY=${ABORT_DELAY:-10s} ABORT_DROPPED=${ABORT_DROPPED:-$(((RATE_MAX*STEP_DURATION+19)/20))}
 export SHARE_LIST_PATH=${SHARE_LIST_PATH:-} SHARE_LIST_OG_PATH=${SHARE_LIST_OG_PATH:-}
 export TARGET_URL=$BENCH_TARGET_URL URLS_FILE=/work/urls.json OUT_DIR=/work
-export K6_KEYS='URLS_FILE TARGET_URL RESOLVE_IP SHARE_LIST_PATH SHARE_LIST_OG_PATH RATE_START RATE_STEP RATE_MAX STEP_DURATION RAMP_SECONDS PRE_VUS MAX_VUS CACHE_MODE COOKIE COOKIE_TEMPLATE ACCEPT_LANGUAGE ACCEPT_LANGUAGES CACHE_BUST_QUERY BROWSER_UA BOT_UA ACCEPT_ENCODING REQUEST_TIMEOUT ABORT_ERROR_RATE ABORT_P95_MS ABORT_DELAY ABORT_DROPPED SEQUENTIAL PREWARM_MAX OUT_DIR'
+export K6_KEYS='URLS_FILE TARGET_URL RESOLVE_IP SHARE_LIST_PATH SHARE_LIST_OG_PATH RATE_START RATE_STEP RATE_MAX RATE_LIST ONLY_ROUTES STEP_DURATION RAMP_SECONDS PRE_VUS MAX_VUS CACHE_MODE COOKIE COOKIE_TEMPLATE ACCEPT_LANGUAGE ACCEPT_LANGUAGES CACHE_BUST_QUERY BROWSER_UA BOT_UA ACCEPT_ENCODING REQUEST_TIMEOUT ABORT_ERROR_RATE ABORT_P95_MS ABORT_DELAY ABORT_DROPPED SEQUENTIAL PREWARM_MAX OUT_DIR'
 resolved_urls=''
 if [[ $command == load ]]; then resolved_urls=$(node "$ROOT/scripts/prepare-load.mjs" "$urls"); fi
 plan=$(node "$ROOT/scripts/run-meta.mjs" plan)
@@ -172,7 +181,15 @@ if [[ $command == load ]]; then
     ssh "${ssh_opts[@]}" "$BENCH_SSH_USER@$host" 'bash -s' < "$tmp/sampler-$i.sh" > "$run/host-metrics/host-$i.jsonl" 2> "$run/host-metrics/host-$i.log" &
     pids+=("$!"); i=$((i+1))
   done
+  # BENCH_WEBAPP_PROBE=1 also reads the webapp's own metrics and its CPU per thread on the serving host.
+  probe() { { printf 'set -- %q %q %q\n' "$1" "$BENCH_METRIC_INTERVAL" "$((planned_duration+30))"; cat "$ROOT/scripts/webapp-probe.sh"; } | ssh "${ssh_opts[@]}" "$BENCH_SSH_USER@$BENCH_RESOLVE_IP" 'bash -s'; }
+  if [[ ${BENCH_WEBAPP_PROBE:-0} == 1 ]]; then
+    mkdir -p "$run/webapp"
+    probe sample > "$run/webapp/samples.jsonl" 2> "$run/webapp/samples.log" &
+    pids+=("$!")
+  fi
   sleep 10
+  [[ ${BENCH_WEBAPP_PROBE:-0} != 1 ]] || probe snapshot > "$run/webapp/before.txt" 2> "$run/webapp/before.log" || echo 'Webapp snapshot failed' >&2
   node "$ROOT/scripts/run-meta.mjs" start "$run/meta.json"
   extra=(); ((raw == 0)) || extra+=(--out json=/work/k6-raw.json.gz)
   set +e
@@ -180,6 +197,7 @@ if [[ $command == load ]]; then
   RUN_EXIT=${PIPESTATUS[0]}
   set -e
   node "$ROOT/scripts/run-meta.mjs" finish "$run/meta.json"
+  [[ ${BENCH_WEBAPP_PROBE:-0} != 1 ]] || probe snapshot > "$run/webapp/after.txt" 2> "$run/webapp/after.log" || echo 'Webapp snapshot failed' >&2
   for pid in "${pids[@]}"; do kill "$pid" 2>/dev/null || true; done
   for pid in "${pids[@]}"; do wait "$pid" 2>/dev/null || true; done
   pids=()
