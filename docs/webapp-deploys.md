@@ -137,6 +137,25 @@ What it doesn't cover:
 
 Run two production builds with different hashes as two processes against a throwaway Valkey (a single-node cluster in a container), never against the production cluster. Request a file of each build from the other process and compare the bytes and the headers. On October 4, 2026: all 223 files of one local build, requested from the other build's process, answered 200 with the same bytes, and with Valkey stopped an unknown file answered 404 in under 1 ms.
 
+## The build's commit
+
+The process reads the commit of its build from the environment variable `SOURCE_COMMIT`.
+
+- **Where it comes from:** Coolify sets it in the container's environment when it starts the container. The image
+  doesn't hold it: the Dockerfile has no `ARG` or `ENV` for it. Checked on October 5, 2026, on both instances: the
+  variable in the container's configuration and in the Node process is the full commit, the same as the image's tag.
+- **Who reads it:** the page cache's key (`page-cache.server.ts`), the metric `goodwatch_build_info`
+  (`metrics/process.server.ts`), and the smoke check's `--commit` option, which reads the variable in the container
+  with `docker exec`. Without the variable, the first two say `unknown`.
+- **No shared store has it in a key.** The page cache lives in the process. The shared store for build files uses
+  the file's path, which carries a content hash. A store that two builds share and that keys on the commit would get
+  the right value in production as things are.
+- **A container that Coolify didn't start** (a local run of the image, a measurement host) has no commit unless you
+  pass one: `docker run -e SOURCE_COMMIT=<commit> ...`.
+- **Why the image doesn't hold it:** nothing reads it at build time. A build argument that changes with every commit
+  ends the layer cache at the first instruction that uses it, and Coolify's setting for it is off for that reason
+  (see the table below).
+
 ## Coolify settings
 
 Agents don't change Coolify settings. These are for the owner, in the application's **Configuration** pages.
@@ -147,6 +166,7 @@ Agents don't change Coolify settings. These are for the owner, in the applicatio
 | **Healthcheck**, section **Timing and retries** | Keep interval 5, timeout 5, retries 10, start period 5 | Readiness took 9 seconds in the watched deploy, so the second or third check passes. 10 retries leave room up to 50 seconds. |
 | **General**, section **Container labels**, field **Label management** | **Managed manually (edit labels yourself)**, then add the three labels below | Traefik asks `/health/ready` itself and stops sending requests to a container that is shutting down, before it exits. This closes the remaining window. |
 | **Advanced**, field **Stop grace period (seconds)** | Keep empty (30) | The shutdown needs at most 25 seconds. |
+| **Advanced**, checkbox **Include Source Commit in Build** | Keep off | Coolify then passes the commit only to the running container, which is all the webapp needs, and the image layers stay cached between commits. |
 
 The labels, for the service of the main domain:
 

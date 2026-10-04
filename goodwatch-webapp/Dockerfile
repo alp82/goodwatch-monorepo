@@ -10,7 +10,8 @@
 #
 # Secrets: the build needs no secrets. The runtime stage has no RUN instruction, so build arguments that Coolify passes
 # or injects as ARG lines can't end up in the image's history. Runtime environment variables come from Coolify when the
-# container starts.
+# container starts. One of them is SOURCE_COMMIT, the build's commit: the image doesn't hold it, and nothing reads it at
+# build time (see "The build's commit" in docs/webapp-deploys.md).
 
 ARG NODE_IMAGE=node:24-bookworm-slim
 

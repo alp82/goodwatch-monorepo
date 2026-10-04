@@ -49,8 +49,9 @@ A process that is shutting down answers hits and stale pages in the same way. Se
 
 `<build commit> | <Host> | <path and query without tracking parameters> | <identity> | <who named the identity>`
 
-- **Build commit:** `SOURCE_COMMIT`. A deploy starts a new process with an empty cache. The commit is in the key so
-  that a later shared store can't serve another build's HTML.
+- **Build commit:** `SOURCE_COMMIT`, which Coolify sets when it starts the container (see "The build's commit" in
+  [webapp-deploys.md](webapp-deploys.md)). A deploy starts a new process with an empty cache. The commit is in the
+  key so that a later shared store can't serve another build's HTML.
 - **Host:** the `Host` header, lowercase.
 - **Path and query:** parsed the way Remix parses the request. Every parameter keeps its bytes and its place, so
   `?a=1&b=2` and `?b=2&a=1` are two entries.
