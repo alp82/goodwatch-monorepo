@@ -124,7 +124,7 @@ It prints one line per check (`PASS`, `FAIL`, `WARN`, or `SKIP`) and exits with 
 
 What it does, in order:
 
-1. **Finds the container.** It connects with SSH to the host that the target's name resolves to, and waits until exactly one `gk4owk8-*` container runs, is healthy, and fits the options. `--commit SHA` compares with `SOURCE_COMMIT` in the container's environment. `--newer-than NAME` refuses the container with that name: note the name before a deploy when you don't know the commit. `--deploy-timeout` (default 600 seconds) limits the wait. Then it waits until the home page answers 200, because the proxy answers 502 for about 35 seconds during a deploy.
+1. **Finds the container.** It connects with SSH to the host that the target's name resolves to, and waits until exactly one `gk4owk8-*` container runs, is healthy, and fits the options. `--commit SHA` compares with `SOURCE_COMMIT` in the container's environment. `--newer-than NAME` refuses the container with that name: note the name before a deploy when you don't know the commit. `--deploy-timeout` (default 600 seconds) limits the wait. Then it waits until the home page answers 200, because requests can fail for a moment while the proxy switches containers (see [webapp deploys](../docs/webapp-deploys.md)).
 2. **Reads the metrics** from the private port inside the container (`goodwatch_http_responses_total`, the process uptime, and the build's commit).
 3. **Requests the pages** in [`smoke/urls.json`](smoke/urls.json) and checks the status, markers in the body, headers, and for HTML pages the rendered markers: the title text in `<title>` and `<h1>`, links to titles in the server HTML, an image `src` on the image host, and JSON-LD blocks that parse. No response may contain `Unexpected Server Error`.
 4. **Scans the container's log from its start** with the patterns in [`smoke/log-patterns.json`](smoke/log-patterns.json), after the requests, so that errors from the edge-case pages are in it. The people index, the title snapshot, and the search index must report that they loaded. The latest `Process:` line must say `query encoder ready`. Slow subsystems have until 120 seconds after the process start (`--log-wait`). No line may match a failure pattern, such as `failed to start`, `Cannot find module`, or `TypeError`.
@@ -146,6 +146,10 @@ With more than one webapp instance, the public route reaches either of them, and
 `--host` takes a name from `goodwatch-hq/ansible/hosts.ini` or a private address. The check finds the `gk4owk8-*` container on that host, opens an SSH tunnel from a free local port to the container's port 3000 on its Docker network, and sends every request through it. No proxy, no load balancer, and no public route is involved, so the result describes that process alone, and it works before the instance takes traffic. The log and the metrics come from the same container. SSH jumps through `BENCH_SSH_JUMP`, or through the host that the target's name resolves to when it's unset.
 
 After a deploy to two instances, run the check three times: once per host, and once without `--host` for the public route. Coolify deploys the additional server after the primary one finishes, so start the check for the second host with `--commit` and let it wait.
+
+#### Watch a deploy
+
+`./bench.sh deploy-watch` waits for the next push to `main` (or starts at once with `--now`), sends 2 requests per second over the public address while the deploy runs, and reads Docker's events, the webapp containers' state and health, and their logs on the serving host. It changes nothing there. The report lists the container events, the `Shutdown:` log lines of the old container, and every failed request with its time. The recording stays in `results/`. [Webapp deploys](../docs/webapp-deploys.md) explains what to expect.
 
 #### Check a local build
 
