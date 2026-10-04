@@ -1,5 +1,11 @@
-// The two query models and their files. The files are downloaded from Hugging Face at a pinned revision the first
-// time the encoder starts, checked against pinned SHA-256 hashes, and kept in SEARCH_MODEL_DIR.
+// The two query models and their files, from Hugging Face at a pinned revision, checked against pinned SHA-256 hashes,
+// and kept in SEARCH_MODEL_DIR.
+//
+// The Docker image holds the files: the Dockerfile's `models` stage runs scripts/fetch-search-models.mjs, which calls
+// ensureQueryModelFiles() below, so the build and the app check the same list and hashes. That stage's only inputs are
+// this file and the script: a change here, even to a comment, makes the next build download the files again (882 MB).
+// A process that doesn't find the files (a dev machine, or a directory that a volume hides) downloads them when the
+// encoder starts, and logs it.
 //
 // The query side must match how the titles were embedded (ADR 0002, f/search/text_encoder in Windmill):
 // - english (text_en_v1): bge-base-en-v1.5, CLS pooling, the bge query instruction as prefix.
@@ -157,6 +163,9 @@ async function download(
 	path: string,
 ) {
 	const url = `https://huggingface.co/${spec.repo}/resolve/${spec.revision}/${file.path}`
+	console.warn(
+		`Search models: ${spec.repo}/${file.path} isn't in ${dirname(path)}, downloading ${Math.round(file.bytes / 1e6)} MB from Hugging Face`,
+	)
 	const response = await fetch(url)
 	if (!response.ok || !response.body) {
 		throw new Error(
@@ -197,7 +206,7 @@ async function ensureFile(
 	file: QueryModelFile,
 ) {
 	const path = localPath(dir, spec, file)
-	if (await isVerified(path, file)) return path
+	if (await isVerified(path, file)) return { path, downloaded: false }
 	// A file without a marker (for example copied in by hand) is kept when its hash matches.
 	const existing = await stat(path).catch(() => undefined)
 	if (
@@ -205,10 +214,46 @@ async function ensureFile(
 		(await sha256OfFile(path)) === file.sha256
 	) {
 		await writeFile(`${path}.sha256`, file.sha256)
-		return path
+		return { path, downloaded: false }
 	}
 	await download(spec, file, path)
-	return path
+	return { path, downloaded: true }
+}
+
+/** Checks the files of `models` in `dir` and downloads the missing or damaged ones. Logs where the files came from. */
+export async function ensureModelFiles<Name extends string>(
+	dir: string,
+	models: Record<Name, QueryModelSpec>,
+): Promise<Record<Name, LocalQueryModel>> {
+	let files = 0
+	let downloaded = 0
+	const entries = await Promise.all(
+		(Object.keys(models) as Name[]).map(async (name) => {
+			const spec = models[name]
+			const [model, tokenizer, tokenizerConfig] = await Promise.all([
+				ensureFile(dir, spec, spec.files.model),
+				ensureFile(dir, spec, spec.files.tokenizer),
+				ensureFile(dir, spec, spec.files.tokenizerConfig),
+			])
+			for (const file of [model, tokenizer, tokenizerConfig]) {
+				files++
+				if (file.downloaded) downloaded++
+			}
+			return [
+				name,
+				{
+					spec,
+					modelPath: model.path,
+					tokenizerPath: tokenizer.path,
+					tokenizerConfigPath: tokenizerConfig.path,
+				},
+			] as const
+		}),
+	)
+	console.info(
+		`Search models: ${files} files verified in ${dir}, ${downloaded} downloaded now`,
+	)
+	return Object.fromEntries(entries) as Record<Name, LocalQueryModel>
 }
 
 let pending: Promise<LocalQueryModels> | undefined
@@ -218,24 +263,7 @@ export function ensureQueryModelFiles(
 	dir = queryModelDir(),
 ): Promise<LocalQueryModels> {
 	if (!pending) {
-		pending = (async () => {
-			const entries = await Promise.all(
-				(Object.keys(QUERY_MODELS) as QueryModelName[]).map(async (name) => {
-					const spec = QUERY_MODELS[name]
-					const [modelPath, tokenizerPath, tokenizerConfigPath] =
-						await Promise.all([
-							ensureFile(dir, spec, spec.files.model),
-							ensureFile(dir, spec, spec.files.tokenizer),
-							ensureFile(dir, spec, spec.files.tokenizerConfig),
-						])
-					return [
-						name,
-						{ spec, modelPath, tokenizerPath, tokenizerConfigPath },
-					] as const
-				}),
-			)
-			return Object.fromEntries(entries) as LocalQueryModels
-		})()
+		pending = ensureModelFiles(dir, QUERY_MODELS)
 		pending.catch(() => {
 			pending = undefined
 		})
