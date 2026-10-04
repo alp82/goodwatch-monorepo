@@ -1,4 +1,4 @@
-# Balances goodwatch.app across two webapp instances. DRAFT: not installed anywhere yet.
+# Balances goodwatch.app across two webapp instances. Installed on abio's proxy on October 4, 2026.
 #
 # Where it goes: the proxy on abio (Traefik v2.10), as a dynamic configuration. In Coolify: Servers > abio > Proxy >
 # Dynamic Configurations > + Add, file name goodwatch-balance.yaml. Traefik loads it without a restart. Deleting the
@@ -37,7 +37,6 @@ http:
       rule: Host(`goodwatch.app`)
       priority: 1000
       middlewares:
-        - gw-webapp-gzip
         - gw-webapp-retry
       service: gw-webapp
       tls:
@@ -52,8 +51,6 @@ http:
       service: gw-webapp
 
   middlewares:
-    gw-webapp-gzip:
-      compress: {}
     gw-webapp-redirect-to-https:
       redirectScheme:
         scheme: https
@@ -74,8 +71,8 @@ http:
             sameSite: lax
         healthCheck:
           path: /health/ready
-          interval: 2s
-          timeout: 2s
+          interval: 5s
+          timeout: 4s
           # vector1's proxy routes by this host name. The app ignores it.
           hostname: goodwatch.app
         servers:

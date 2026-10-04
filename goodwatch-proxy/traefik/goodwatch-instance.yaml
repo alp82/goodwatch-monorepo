@@ -1,4 +1,4 @@
-# Lets abio's proxy reach the webapp instance on vector1. DRAFT: not installed anywhere yet.
+# Lets abio's proxy reach the webapp instance on vector1. Installed on vector1's proxy on October 4, 2026.
 #
 # Where it goes: the proxy on vector1 (Traefik v3.6), as a dynamic configuration. In Coolify: Servers > vector1 >
 # Proxy > Dynamic Configurations > + Add, file name goodwatch-instance.yaml.
