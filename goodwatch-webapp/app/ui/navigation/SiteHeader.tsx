@@ -57,7 +57,7 @@ export function SiteHeader() {
 				<div className="mx-auto flex h-16 max-w-7xl items-center gap-[18px] px-8">
 					<Link
 						to="/"
-						prefetch="render"
+						prefetch="intent"
 						className="flex shrink-0 items-baseline"
 						aria-label="GoodWatch home"
 					>

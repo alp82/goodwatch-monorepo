@@ -1,7 +1,9 @@
 // Production search journey: accepted inline-filter variant, isolated from taste storage.
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import {
+	Suspense,
 	createContext,
+	lazy,
 	useContext,
 	useEffect,
 	useRef,
@@ -29,17 +31,28 @@ import {
 	matchesRow,
 	searchFiltersKey,
 } from "~/server/combined-search/search-filters";
-import SectionGenre from "~/ui/filter/sections/SectionGenre";
-import SectionStreaming from "~/ui/filter/sections/SectionStreaming";
 import type { StreamingPreset } from "~/server/discover.server";
 import { useUserSettings } from "~/routes/api.user-settings.get";
-import SectionRelease from "~/ui/filter/sections/SectionRelease";
-import SectionType, { type TitleType } from "~/ui/filter/sections/SectionType";
-import AddFilterMenu from "~/ui/filter/AddFilterMenu";
+import type { TitleType } from "~/ui/filter/sections/SectionType";
 import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
 import { useFeature } from "~/hooks/useFeature";
-import { SearchPeople } from "./SearchPeople";
+
+// The provider below is on every page, but the filter sections and the people results are only on screen inside an
+// open search. They load with it, so that a page that never opens the search doesn't download them.
+const SectionGenre = lazy(() => import("~/ui/filter/sections/SectionGenre"));
+const SectionStreaming = lazy(
+	() => import("~/ui/filter/sections/SectionStreaming"),
+);
+const SectionRelease = lazy(() => import("~/ui/filter/sections/SectionRelease"));
+const SectionType = lazy(() => import("~/ui/filter/sections/SectionType"));
+// The cast keeps the menu's type parameter, which `lazy` drops.
+const AddFilterMenu = lazy(
+	() => import("~/ui/filter/AddFilterMenu"),
+) as unknown as typeof import("~/ui/filter/AddFilterMenu").default;
+const SearchPeople = lazy(() =>
+	import("./SearchPeople").then((module) => ({ default: module.SearchPeople })),
+);
 
 // --- Tunables ----------------------------------------------------------------------------
 
@@ -781,11 +794,13 @@ function JourneyList() {
 				) : null}
 			</div>
 			{j.batch?.q === j.q && (
-				<SearchPeople
-					people={j.batch.people}
-					scope={j.batch.creditScope}
-					allTitlesHref={j.resultsHref({ q: j.q, page: null, allTitles: "1" })}
-				/>
+				<Suspense fallback={null}>
+					<SearchPeople
+						people={j.batch.people}
+						scope={j.batch.creditScope}
+						allTitlesHref={j.resultsHref({ q: j.q, page: null, allTitles: "1" })}
+					/>
+				</Suspense>
 			)}
 			{/* Columns of 2, 4, and 5 all divide the page size of 20, so a full page
 			    always ends on a complete row. */}
@@ -911,7 +926,11 @@ const filterKeys: FilterKey[] = ["type", "streaming", "genre", "release"]
 export function JourneyFilters() {
 	// With the new filter bar, Discover's search mode has the filters; these chips don't render.
 	if (useFeature("filterBar")) return null
-	return <JourneyFilterChips />
+	return (
+		<Suspense fallback={null}>
+			<JourneyFilterChips />
+		</Suspense>
+	)
 }
 function JourneyFilterChips() {
 	const j = useSearchJourney()!

@@ -230,7 +230,7 @@ export default function Footer() {
 									<Link
 										className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
 										to={item.href}
-										prefetch="viewport"
+										prefetch="intent"
 									>
 										{item.name}
 									</Link>
@@ -253,7 +253,7 @@ export default function Footer() {
 								<Link
 									className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
 									to="/about"
-									prefetch="viewport"
+									prefetch="intent"
 								>
 									About
 								</Link>
@@ -262,7 +262,7 @@ export default function Footer() {
 								<Link
 									className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
 									to="/how-it-works"
-									prefetch="viewport"
+									prefetch="intent"
 								>
 									How it works
 								</Link>
@@ -271,7 +271,7 @@ export default function Footer() {
 								<Link
 									className="text-sm leading-6 underline underline-offset-4 text-gray-400 hover:text-gray-100"
 									to="/disclaimer"
-									prefetch="viewport"
+									prefetch="intent"
 								>
 									Disclaimer
 								</Link>

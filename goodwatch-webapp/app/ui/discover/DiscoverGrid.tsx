@@ -69,7 +69,6 @@ export function DiscoverGrid({
 						>
 							<TitlePosterCard
 								card={card}
-								prefetch={index < 12}
 								posterPriority={gridPosterPriority(index)}
 							/>
 							<MoveMark delta={delta} reduce={reduce} />

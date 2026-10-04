@@ -1,9 +1,7 @@
 import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
-import { AccountTransfer } from "~/ui/onboarding/AccountTransfer"
 import { GuestProgressNotice } from "~/ui/GuestProgressNotice"
 import { Outlet, useLocation } from "@remix-run/react"
-import { AnimatePresence, motion } from "framer-motion"
-import React from "react"
+import { Suspense, lazy } from "react"
 
 import Footer from "~/ui/Footer"
 import Header from "~/ui/main/Header"
@@ -19,6 +17,13 @@ import { useUser } from "~/utils/auth"
 import { useFeature } from "~/hooks/useFeature"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
 
+// Only members see the onboarding banner, so its code loads for them alone.
+const AccountTransfer = lazy(() =>
+	import("~/ui/onboarding/AccountTransfer").then((module) => ({
+		default: module.AccountTransfer,
+	})),
+)
+
 function App() {
 	const location = useLocation()
 	const { user } = useUser()
@@ -30,20 +35,14 @@ function App() {
 		<>
 			{navigation ? <SiteHeader /> : <Header />}
 			{/* Show smart onboarding banner for logged-in users */}
-			{user && <AccountTransfer key={user.id} />}
+			{user && (
+				<Suspense fallback={null}>
+					<AccountTransfer key={user.id} />
+				</Suspense>
+			)}
 			<main className="relative grow mx-auto mt-16 pb-2 w-full text-neutral-300">
 				<GuestProgressNotice />
-				<AnimatePresence mode="wait">
-					{/*<motion.div*/}
-					{/*	key={location.pathname}*/}
-					{/*	initial={{ x: "-2%", opacity: 0 }}*/}
-					{/*	animate={{ x: "0", opacity: 1 }}*/}
-					{/*	exit={{ x: "2%", opacity: 0 }}*/}
-					{/*	transition={{ duration: 0.2, type: "tween" }}*/}
-					{/*>*/}
-					<Outlet />
-					{/*</motion.div>*/}
-				</AnimatePresence>
+				<Outlet />
 			</main>
 			<Footer />
 			{navigation ? (

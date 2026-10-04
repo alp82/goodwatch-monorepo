@@ -3,12 +3,26 @@
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
-import { useEffect, useState } from "react"
-import { CommandPalette } from "./CommandPalette"
+import { Suspense, lazy, useEffect, useState } from "react"
 import { useNavigation } from "./NavigationContext"
 import { currentSearchQuery } from "./destinations"
 
 const SEARCH_LABEL = "Search titles, people, moods"
+
+// The palette is only on screen inside the open dialog. Its code loads when a visitor reaches for a search entry
+// (pointer, touch or focus), or at the latest when the dialog opens.
+const loadCommandPalette = () => import("./CommandPalette")
+const CommandPalette = lazy(() =>
+	loadCommandPalette().then((module) => ({ default: module.CommandPalette })),
+)
+const preloadCommandPalette = () => {
+	void loadCommandPalette().catch(() => {})
+}
+const preloadOnIntent = {
+	onPointerEnter: preloadCommandPalette,
+	onTouchStart: preloadCommandPalette,
+	onFocus: preloadCommandPalette,
+}
 
 /** "⌘K" on Apple platforms, "Ctrl K" elsewhere; empty until the browser tells which (the server can't). */
 function useShortcutLabel() {
@@ -39,6 +53,7 @@ export function Omnibox() {
 		<button
 			type="button"
 			onClick={() => navigation?.setSearchOpen(true)}
+			{...preloadOnIntent}
 			aria-haspopup="dialog"
 			aria-keyshortcuts="Meta+K Control+K /"
 			data-search-entry
@@ -67,6 +82,7 @@ export function DockSearchKey() {
 		<button
 			type="button"
 			onClick={() => navigation?.setSearchOpen(true)}
+			{...preloadOnIntent}
 			aria-haspopup="dialog"
 			data-search-entry
 			className={`flex h-11 items-center gap-1.5 justify-self-end rounded-full pr-4 pl-3 text-[13.5px] font-bold ${on ? "bg-amber-500/20 text-amber-200" : "bg-white/[0.08] text-gray-100"}`}
@@ -124,7 +140,9 @@ export function SearchDialog() {
 					transition
 					className="h-[92%] overflow-y-auto rounded-t-3xl bg-[#0b1120] px-4 pt-4 pb-[calc(22px+env(safe-area-inset-bottom))] shadow-[0_-20px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.09)] transition duration-200 ease-out data-closed:translate-y-9 data-closed:opacity-0 motion-reduce:transition-opacity motion-reduce:data-closed:translate-y-0 lg:h-auto lg:max-h-[70vh] lg:w-[640px] lg:rounded-[18px] lg:p-3.5 lg:data-closed:-translate-y-3"
 				>
-					<CommandPalette onDone={close} />
+					<Suspense fallback={<div className="h-64" aria-busy="true" />}>
+						<CommandPalette onDone={close} />
+					</Suspense>
 				</DialogPanel>
 			</div>
 		</Dialog>
