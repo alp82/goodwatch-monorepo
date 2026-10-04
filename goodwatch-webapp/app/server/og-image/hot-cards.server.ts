@@ -16,7 +16,6 @@
 // as the static file handler and the page cache do. The order of the wrappers doesn't matter.
 import { subscribe } from "node:diagnostics_channel"
 import type { IncomingMessage, Server, ServerResponse } from "node:http"
-import { isShuttingDown } from "../lifecycle.server.ts"
 import { gauge } from "../metrics/registry.server.ts"
 
 export const HOT_CARD_MS = 10_000
@@ -139,7 +138,7 @@ export function startHotCards() {
 		server.removeAllListeners("request")
 		server.on("request", (request, response) => {
 			try {
-				if (!isShuttingDown() && hotCards.answer(request, response)) return
+				if (hotCards.answer(request, response)) return
 			} catch {
 				// The app answers when no headers have been sent.
 				if (response.headersSent) return void response.destroy()

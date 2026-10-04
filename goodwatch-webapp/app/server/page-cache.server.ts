@@ -18,6 +18,9 @@
 // - One render per key: while the first render of a repeated URL runs, later requests wait for it (at most 3 seconds)
 //   instead of rendering. A URL that turned out not to be storable isn't waited for again (a pass period that
 //   doubles from 5 seconds to 5 minutes).
+// - At most four renders of one key are in flight, whatever the reason: a lead render that is slow or failed, a pass
+//   period, a shutdown. A request beyond that gets a busy answer: 503 with `no-store` and `Retry-After`, and a page
+//   that reloads by itself.
 // - Lifetime: from the response's own policy (`s-maxage`, `stale-while-revalidate`). A stale page is served while one
 //   background render refreshes it. Lifetime and Age count from the render's start, including compression.
 //   A failed refresh keeps the page only until that deadline and pauses for 30 seconds.
@@ -25,6 +28,8 @@
 // - Reset: `resetPageCache` reaches only this process. The data cache's reset markers (ADR 0006) don't reach a stored
 //   page, so a page with a reset path has a short lifetime: a share list page lives 10 + 10 seconds, which is what
 //   bounds an old page in the other process.
+// - Shutdown: while the process still serves, stored pages are answered as before. Nothing is stored, refreshed,
+//   counted, or waited for.
 // - Off switch: PAGE_CACHE=off.
 import { AsyncLocalStorage } from "node:async_hooks"
 import { createHash } from "node:crypto"
@@ -122,7 +127,6 @@ type KeyInput = {
 	identityHeader?: string | null
 	userAgent?: string
 	build?: string
-	draining?: boolean
 }
 type PageKey = { key: string; path: string }
 export function pageCacheKey(
@@ -155,7 +159,6 @@ export function pageCacheKey(
 		return { bypass: "gate", path }
 	const identity = cacheIdentityOf({ ...input, method })
 	if (!identity.cacheable) return { bypass: "member", path }
-	if (input.draining) return { bypass: "shutdown", path }
 	return {
 		key: `${input.build ?? (process.env.SOURCE_COMMIT || "unknown")}|${(input.host ?? "").toLowerCase()}|${normalizePageUrl(url)}|${identity.key}|${identity.keyFromCache ? "h" : "a"}`,
 		path,
@@ -170,6 +173,13 @@ export const PAGE_CACHE_LIMITS = {
 	ADMIT_AFTER: 2,
 	ADMIT_WINDOW_MS: 60_000,
 	ADMIT_MAX_KEYS: 20_000,
+	// Renders of one key in flight, the lead included. More than one, so that a render that hangs doesn't make the URL
+	// unanswerable. Few, because the process renders about 20 title pages per second: four renders take about 160 ms of
+	// the main thread, which leaves it to other URLs.
+	MAX_RENDERS_PER_KEY: 4,
+	// What the busy answer says in `Retry-After`. A waiter has waited 3 seconds by then, and the server render gives up
+	// after 5 seconds, so 2 seconds later the lead render has stored its page or has ended.
+	BUSY_RETRY_SECONDS: 2,
 	MAX_FLIGHTS: 1000,
 	MAX_WAITERS: 2000,
 	JOIN_MAX_AGE_MS: 3000,
@@ -245,6 +255,7 @@ const audienceOf = (request: IncomingMessage) =>
 	hasAuthCookie(request.headers.cookie) ? "member" : "anon"
 const bypasses = metric("bypass", ["route", "reason"])
 const misses = metric("misses", ["route", "reason"])
+const busyAnswers = metric("busy", ["route", "reason"])
 const stores = metric("stores", ["route"])
 const notStored = metric("not_stored", ["route", "reason"])
 const evictions = metric("evictions", ["reason"])
@@ -272,8 +283,12 @@ export function createPageCache(options: PageCacheOptions = {}) {
 	const entries = new Map<string, PageEntry>()
 	const admission = new Map<string, Admission>()
 	const flights = new Map<string, Flight>()
+	const renders = new Map<string, number>()
 	const pauses = new Map<string, number>()
 	const context = new AsyncLocalStorage<Flight>()
+	const busyBody = Buffer.from(
+		`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="${limits.BUSY_RETRY_SECONDS}"><meta name="robots" content="noindex"><title>GoodWatch is busy</title></head><body><p>This page is busy right now. It reloads by itself in a moment.</p></body></html>`,
+	)
 	let bytes = 0
 	let waiters = 0
 	let stopped = false
@@ -369,6 +384,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		if (
 			!options.render ||
 			flights.has(entry.key) ||
+			(renders.get(entry.key) ?? 0) >= limits.MAX_RENDERS_PER_KEY ||
 			flights.size >= limits.MAX_FLIGHTS ||
 			activeRefreshes >= limits.MAX_REFRESHES ||
 			refreshFlights >= limits.MAX_REFRESHES ||
@@ -489,7 +505,6 @@ export function createPageCache(options: PageCacheOptions = {}) {
 				acceptLanguage: request.headers["accept-language"],
 				identityHeader: String(request.headers["gw-cache-identity"] ?? ""),
 				userAgent: request.headers["user-agent"],
-				draining: draining(),
 			})
 		} catch {
 			// A target that doesn't parse. The app answers it.
@@ -502,8 +517,34 @@ export function createPageCache(options: PageCacheOptions = {}) {
 			bypasses.inc([route, page.bypass])
 			return next()
 		}
+		const full = () =>
+			(renders.get(page.key) ?? 0) >= limits.MAX_RENDERS_PER_KEY
+		// The answer for a request that would be one render too many for its key. No cache may keep it.
+		const busy = (reason: string) => {
+			if (response.destroyed || response.writableEnded) return
+			const route = routeLabel(page.path)
+			requests.inc([route, "busy", audienceOf(request)])
+			busyAnswers.inc([route, reason])
+			response.writeHead(503, {
+				"Content-Type": "text/html; charset=utf-8",
+				"Cache-Control": "private, no-store",
+				"Retry-After": limits.BUSY_RETRY_SECONDS,
+				"X-Robots-Tag": "noindex",
+				"GW-Page-Cache": "busy",
+				"Content-Length": busyBody.length,
+			})
+			response.end(request.method === "HEAD" ? undefined : busyBody)
+		}
 		const pass = (reason: string, flight?: Flight) => {
 			if (response.destroyed || response.writableEnded) return
+			if (full()) return busy(reason)
+			renders.set(page.key, (renders.get(page.key) ?? 0) + 1)
+			// Before the other close listeners: a lead render gives its slot back before it releases its waiters.
+			response.prependOnceListener("close", () => {
+				const remaining = (renders.get(page.key) ?? 1) - 1
+				if (remaining) renders.set(page.key, remaining)
+				else renders.delete(page.key)
+			})
 			const route = routeLabel(page.path)
 			response.setHeader("GW-Page-Cache", "miss")
 			requests.inc([route, "miss", audienceOf(request)])
@@ -540,6 +581,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 			}
 			remove(page.key, "expired")
 		}
+		if (draining()) return pass("shutdown")
 		if (request.method === "HEAD") return pass("head")
 		const row = count(page.key)
 		if (now() < row.passUntil) return pass("pass")
@@ -576,6 +618,12 @@ export function createPageCache(options: PageCacheOptions = {}) {
 			return
 		}
 		if (!existing && flights.size < limits.MAX_FLIGHTS) {
+			const reason = !admitted(page.key)
+				? "not_admitted"
+				: row.passStreak === 0
+					? "lead"
+					: "probe"
+			if (full()) return busy(reason)
 			const flight = newFlight(page, "request", row.passStreak === 0)
 			response.once("close", () => {
 				if (!alive(flight) || flight.offered) return
@@ -597,14 +645,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 				}
 				end(flight)
 			})
-			return pass(
-				!admitted(page.key)
-					? "not_admitted"
-					: flight.joinable
-						? "lead"
-						: "probe",
-				flight,
-			)
+			return pass(reason, flight)
 		}
 		pass("busy")
 	}

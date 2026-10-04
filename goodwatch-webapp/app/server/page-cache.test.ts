@@ -800,7 +800,7 @@ test("reset releases waiters and an old render cannot offer to a replacement fli
 	assert.equal(f.cache.stats().entries, 1)
 })
 
-test("shutdown releases waiters and bypasses further requests", async (t) => {
+test("stop releases waiters and further requests miss without growing state", async (t) => {
 	const f = await fixture(t)
 	const gate = deferred()
 	f.app.delay = gate.promise
@@ -811,7 +811,8 @@ test("shutdown releases waiters and bypasses further requests", async (t) => {
 	f.cache.stop()
 	gate.resolve()
 	await Promise.all([leader, waiter])
-	assert.equal((await f.get()).headers["gw-page-cache"], "bypass")
+	assert.equal((await f.get()).headers["gw-page-cache"], "miss")
+	assert.equal(f.app.calls, 3)
 	assert.deepEqual(f.cache.stats(), {
 		entries: 0,
 		bytes: 0,
@@ -1041,4 +1042,223 @@ test("compression that reaches the lifetime end refuses storage as expired", asy
 		renderMetrics(),
 		/goodwatch_page_cache_not_stored_total\{route="page",reason="expired"\} 1/,
 	)
+})
+
+test("draining serves fresh and stale pages without starting refreshes", async (t) => {
+	let draining = false
+	let now = 0
+	let renders = 0
+	const f = await fixture(t, {
+		draining: () => draining,
+		now: () => now,
+		render: async () => {
+			renders++
+			return { status: 200 }
+		},
+	})
+	await f.warm()
+	draining = true
+	assert.equal((await f.get()).headers["gw-page-cache"], "hit")
+	now = 1_800_000
+	assert.equal((await f.get()).headers["gw-page-cache"], "stale")
+	assert.equal(f.app.calls, 2)
+	assert.equal(renders, 0)
+})
+
+test("draining misses never store, count admission, create flights or wait", async (t) => {
+	const f = await fixture(t, { draining: () => true })
+	for (let i = 0; i < 5; i++) {
+		assert.equal((await f.get()).headers["gw-page-cache"], "miss")
+		assert.equal(f.app.calls, i + 1)
+		assert.deepEqual(f.cache.stats(), {
+			entries: 0,
+			bytes: 0,
+			flights: 0,
+			waiters: 0,
+			admission_keys: 0,
+		})
+	}
+	const gate = deferred()
+	f.app.delay = gate.promise
+	let busy = 0
+	const pending = Array.from({ length: 50 }, () =>
+		f.get().then((answer) => {
+			if (answer.status === 503) busy++
+			return answer
+		}),
+	)
+	await until(() => busy === 50 - f.cache.limits.MAX_RENDERS_PER_KEY)
+	assert.equal(f.app.calls, 5 + f.cache.limits.MAX_RENDERS_PER_KEY)
+	assert.equal((await f.get()).status, 503)
+	assert.equal(f.cache.stats().flights, 0)
+	assert.equal(f.cache.stats().waiters, 0)
+	assert.equal(f.cache.stats().admission_keys, 0)
+	gate.resolve()
+	const answers = await Promise.all(pending)
+	assert.equal(answers.filter((a) => a.status === 200).length, 4)
+	assert.equal(f.cache.stats().entries, 0)
+})
+
+test("a slow lead bounds timed out and late requests and frees slots on close", async (t) => {
+	resetMetricsForTest()
+	let now = 0
+	const f = await fixture(t, {
+		now: () => now,
+		limits: { JOIN_WAIT_MS: 20 },
+	})
+	const gate = deferred()
+	f.app.delay = gate.promise
+	const leader = f.get()
+	await until(() => f.app.calls === 1)
+	let busy = 0
+	const pending = Array.from({ length: 49 }, () =>
+		f.get().then((answer) => {
+			if (answer.status === 503) busy++
+			return answer
+		}),
+	)
+	await until(() => busy === 50 - f.cache.limits.MAX_RENDERS_PER_KEY)
+	assert.equal(f.app.calls, f.cache.limits.MAX_RENDERS_PER_KEY)
+	assert.equal(f.cache.stats().waiters, 0)
+	now = 3000
+	assert.equal((await f.get()).status, 503)
+	assert.match(
+		renderMetrics(),
+		/goodwatch_page_cache_busy_total\{route="page",reason="wait_timeout"\} 46/,
+	)
+	assert.match(
+		renderMetrics(),
+		/goodwatch_page_cache_busy_total\{route="page",reason="busy"\} 1/,
+	)
+	gate.resolve()
+	await Promise.all([leader, ...pending])
+	assert.equal((await f.get()).status, 200)
+})
+
+test("a failed lead frees its slot before releasing 50 waiters", async (t) => {
+	const f = await fixture(t)
+	const leadGate = deferred()
+	f.app.delay = leadGate.promise
+	f.app.status = 500
+	const leader = f.get()
+	await until(() => f.app.calls === 1)
+	let busy = 0
+	const pending = Array.from({ length: 50 }, () =>
+		f.get().then((answer) => {
+			if (answer.status === 503) busy++
+			return answer
+		}),
+	)
+	await until(() => f.cache.stats().waiters === 50)
+	const waiterGate = deferred()
+	f.app.delay = waiterGate.promise
+	leadGate.resolve()
+	assert.equal((await leader).status, 500)
+	await until(() => busy === 50 - f.cache.limits.MAX_RENDERS_PER_KEY)
+	assert.equal(f.app.calls, 1 + f.cache.limits.MAX_RENDERS_PER_KEY)
+	assert.equal(f.cache.stats().waiters, 0)
+	waiterGate.resolve()
+	await Promise.all(pending)
+})
+
+test("pass periods bound concurrent renders for unstorable pages", async (t) => {
+	for (const change of [{ policy: "private, no-store" }, { cookie: true }]) {
+		const f = await fixture(t)
+		Object.assign(f.app, change)
+		await f.warm()
+		assert.ok([...f.cache.admission.values()][0].passUntil > Date.now())
+		const calls = f.app.calls
+		const gate = deferred()
+		f.app.delay = gate.promise
+		let busy = 0
+		const pending = Array.from({ length: 50 }, () =>
+			f.get().then((answer) => {
+				if (answer.status === 503) busy++
+				return answer
+			}),
+		)
+		await until(() => busy === 50 - f.cache.limits.MAX_RENDERS_PER_KEY)
+		assert.equal(f.app.calls - calls, f.cache.limits.MAX_RENDERS_PER_KEY)
+		assert.equal(f.cache.stats().flights, 0)
+		gate.resolve()
+		await Promise.all(pending)
+		assert.equal((await f.get()).status, 200)
+		assert.equal(f.app.calls - calls, f.cache.limits.MAX_RENDERS_PER_KEY + 1)
+	}
+})
+
+test("busy answers have retry HTML and HEAD headers while members bypass", async (t) => {
+	const f = await fixture(t, { limits: { MAX_WAITERS: 0 } })
+	const gate = deferred()
+	f.app.delay = gate.promise
+	const pending = Array.from(
+		{ length: f.cache.limits.MAX_RENDERS_PER_KEY },
+		() => f.get(),
+	)
+	await until(() => f.app.calls === f.cache.limits.MAX_RENDERS_PER_KEY)
+	const answer = await f.get()
+	assert.equal(answer.status, 503)
+	assert.equal(answer.headers["cache-control"], "private, no-store")
+	assert.equal(answer.headers["retry-after"], "2")
+	assert.equal(answer.headers["gw-page-cache"], "busy")
+	assert.equal(answer.headers["x-robots-tag"], "noindex")
+	assert.equal(answer.headers["content-type"], "text/html; charset=utf-8")
+	assert.equal(Number(answer.headers["content-length"]), answer.body.length)
+	assert.match(decode(answer), /<html lang="en">/)
+	assert.match(decode(answer), /<meta http-equiv="refresh" content="2">/)
+	f.cache.reset()
+	assert.equal((await f.get()).status, 503)
+	assert.equal(f.cache.stats().flights, 0)
+	const head = await f.get("/page", {}, "HEAD")
+	assert.equal(head.status, 503)
+	assert.equal(head.body.length, 0)
+	assert.equal(head.headers["content-length"], answer.headers["content-length"])
+	const cookie = `sb-${new URL(process.env.SUPABASE_URL ?? "https://test.supabase.co").hostname.split(".")[0]}-auth-token=x`
+	const member = f.get("/page", { cookie })
+	await until(() => f.app.calls === f.cache.limits.MAX_RENDERS_PER_KEY + 1)
+	gate.resolve()
+	assert.equal((await member).headers["gw-page-cache"], "bypass")
+	await Promise.all(pending)
+})
+
+test("busy answers preserve preset connection headers during drain", () => {
+	const cache = createPageCache({
+		draining: () => true,
+		limits: { MAX_RENDERS_PER_KEY: 0 },
+	})
+	const request = new IncomingMessage(
+		new Duplex({ read() {}, write() {} }) as Socket,
+	)
+	request.method = "GET"
+	request.url = "/page"
+	const response = new ServerResponse(request)
+	response.setHeader("Connection", "close")
+	cache.handle(request, response, () => assert.fail("must not render"))
+	assert.equal(response.statusCode, 503)
+	assert.equal(response.getHeader("Connection"), "close")
+	assert.equal(cache.stats().flights, 0)
+	assert.equal(cache.stats().admission_keys, 0)
+})
+
+test("every stale request is served while one refresh is blocked", async (t) => {
+	let now = 0
+	let renders = 0
+	const gate = deferred()
+	const f = await fixture(t, {
+		now: () => now,
+		render: async () => {
+			renders++
+			await gate.promise
+			return { status: 500 }
+		},
+	})
+	await f.warm()
+	now = 1_800_000
+	const answers = await Promise.all(Array.from({ length: 50 }, () => f.get()))
+	assert.ok(answers.every((a) => a.status === 200))
+	assert.ok(answers.every((a) => a.headers["gw-page-cache"] === "stale"))
+	assert.equal(renders, 1)
+	assert.equal(f.app.calls, 2)
+	gate.resolve()
+	await until(() => f.cache.stats().flights === 0)
 })

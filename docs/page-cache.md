@@ -33,13 +33,17 @@ request -> browser gate -> static files -> page cache -> health endpoints -> Exp
 1. **Not a page:** a method other than GET or HEAD, a path under `/api/`, `/og/`, `/assets/`, or `/health/`, a path
    whose last segment has a dot, or a `_data` request. The cache does nothing.
 2. **Bypass:** the gate answers it, the request has the auth cookie (`cacheIdentity` says it isn't cacheable), the URL
-   is longer than 2,048 characters, or the process is shutting down. The response gets `GW-Page-Cache: bypass` and
-   comes from the app.
+   is longer than 2,048 characters. The response gets `GW-Page-Cache: bypass` and comes from the app.
 3. **Hit:** a fresh stored page exists for the key. The cache sends it with `GW-Page-Cache: hit`.
 4. **Stale:** the stored page is past its fresh time. The cache sends it with `GW-Page-Cache: stale` and starts one
    background render for the key.
 5. **Miss:** the app renders the page, and the response says `GW-Page-Cache: miss`. If the URL repeats, the render is
    stored, and requests that arrive while it runs wait for it.
+6. **Busy:** the key already has four renders in flight. The cache answers 503 with `GW-Page-Cache: busy` and the app
+   isn't called. See [Four renders per key](#four-renders-per-key).
+
+A process that is shutting down answers hits and stale pages in the same way. See
+[During a shutdown](#during-a-shutdown).
 
 ## Key
 
@@ -120,7 +124,64 @@ A response is stored only when all of these hold:
 - If the render turns out not to be storable, the waiting requests go to the app, and the key gets a pass period:
   nobody waits for that key for 5 seconds, doubling up to 5 minutes each time it fails again. A hidden share list page
   under load costs one probe per pass period and no waiting. A public list shares one render per key.
-- At most 1,000 renders are tracked and at most 2,000 requests wait. Beyond that, requests go to the app.
+- At most 1,000 renders are tracked and at most 2,000 requests wait. Beyond that, requests go to the app, within
+  the bound below.
+
+## Four renders per key
+
+At most four renders of one key are in flight at a time (`MAX_RENDERS_PER_KEY`), the lead render included. The cache
+counts every request that it passes to the app, for any reason, until the response closes. A request that would be
+the fifth isn't passed. It gets the busy answer.
+
+- **Why a bound:** a waiting request goes to the app after 3 seconds, and a request that arrives when the lead render
+  is older than 3 seconds doesn't wait at all. Without the bound, one slow lead render (a slow data store) turned
+  every request for a hot URL into a render. So did a lead render that failed, and a pass period.
+- **Why four:** more than one, so that a render that hangs doesn't make the URL unanswerable for as long as it hangs.
+  Few, because the process renders about 20 title pages per second: four renders take about 160 ms of the main
+  thread, which leaves it to other URLs.
+- **A stored page comes first.** A fresh or stale page is answered before any of this, so a slow background refresh
+  never produces a busy answer: every request gets the stale page, and one render runs.
+- **The busy answer:** status 503, `Cache-Control: private, no-store`, `Retry-After: 2`, `X-Robots-Tag: noindex`, and
+  `GW-Page-Cache: busy`. The body is a small page that reloads by itself after 2 seconds. No cache may keep it. Why
+  2 seconds: a waiting request has waited 3 seconds by then, and the server render gives up after 5 seconds, so the
+  lead render has stored its page or has ended when the reload arrives.
+- **Who is never limited:** a request with a bypass (a member, the gate's answer, a long URL) and everything that
+  isn't a page.
+- **What the bound doesn't cover:** renders of different URLs. Each URL has its own four.
+
+Measured on October 5, 2026, on a development machine: a local production build, a throwaway Valkey, no other data
+store, and 300 requests per second for one URL for 12 seconds. A hook in front of Express delayed every render.
+
+| Case | | Before | After |
+| --- | --- | --- | --- |
+| A cold URL whose renders take 4 seconds | Renders | 616 | 4 |
+| | Most renders in flight | 616 | 4 |
+| | Busy answers | 0 | 614 of 3,600 requests |
+| A page that is never stored (`/search`), renders take 1 second | Renders | 3,600 | 45 |
+| | Most renders in flight | 613 | 4 |
+| | Busy answers | 0 | 3,555 of 3,600 requests |
+
+## During a shutdown
+
+After SIGTERM the process keeps serving for 8 seconds (see [webapp-deploys.md](webapp-deploys.md)). In that time:
+
+- A fresh or stale page is answered from the store, as before the signal.
+- Nothing is stored, no background refresh starts, no request waits for another one, and admission isn't counted.
+- A request without a stored page goes to the app with `GW-Page-Cache: miss`, within the bound of four renders per
+  key.
+- Hot share cards and static files are answered before Express as well.
+
+Until October 5, 2026, a process that was shutting down passed every page request to the app
+(`GW-Page-Cache: bypass`). A deploy in a spike then rendered every request for 8 seconds. Measured on the setup
+above, with one stored page, 300 requests per second, and SIGTERM after 3 seconds:
+
+| In the 8 seconds after SIGTERM | Before | After |
+| --- | --- | --- |
+| Requests | 2,401 | 2,401 |
+| Renders | 2,399 | 0 |
+| Answered from the store | 1 | 2,401 |
+| With 40 ms of main-thread time per render, as for a title page: answered | 233, with a median of 4.8 seconds. The others were refused or cut, and the process exited 2 seconds late | 2,401, 99% within 1 ms |
+| Requests for a hot share card that reached Express | 2,400 | 0 |
 
 ## Lifetime
 
@@ -148,6 +209,7 @@ getting requests, and up to 2.5 hours for the first request after a quiet period
 | Stored pages | 2,000 | `PAGE_CACHE_MAX_ENTRIES` |
 | One page, compressed | 4 MB | |
 | Admission counters | 20,000 keys | |
+| Renders of one key in flight | 4 | |
 
 A movie page takes about 106 KB (47 KB Brotli, 59 KB gzip), so 128 MB holds about 1,200 title pages. The least
 recently used page goes first. The process holds about 2.2 GB today, against a planned limit of 4 GB.
@@ -241,7 +303,7 @@ cache, and no response carries `GW-Page-Cache`. Without a restart there is no sw
 ## Metrics
 
 See "Page cache" in [viral-spike-metrics.md](benchmarks/viral-spike-metrics.md). The response header
-`GW-Page-Cache` says `hit`, `stale`, `miss`, or `bypass` for every page request.
+`GW-Page-Cache` says `hit`, `stale`, `miss`, `bypass`, or `busy` for every page request.
 
 ## What changes with two instances
 
@@ -264,3 +326,5 @@ and the Node process about 0.5 ms. A cache in front must follow [cache-identity.
 - Honor `Age` on a response from the in-process cache. Subtract it from the remaining lifetime instead of starting
   a new lifetime when the response arrives. Share list pages depend on this to stay within their staleness bound.
 - Purge its own copies. `resetPageCache` doesn't reach it.
+- Not store the busy answer (503 with `GW-Page-Cache: busy`), which says `private, no-store`. It may answer with its
+  own stale copy instead.

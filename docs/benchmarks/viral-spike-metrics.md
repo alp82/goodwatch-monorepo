@@ -94,6 +94,7 @@ Read them in Grafana Cloud under **Explore**, with the Prometheus data source th
 | `goodwatch_page_cache_requests_total` | Counter | `route`, `result`, `audience` | Page requests that the in-process page cache saw, by how they were answered. |
 | `goodwatch_page_cache_bypass_total` | Counter | `route`, `reason` | Requests that must not use the cache. |
 | `goodwatch_page_cache_misses_total` | Counter | `route`, `reason` | Requests that the app rendered, by why. |
+| `goodwatch_page_cache_busy_total` | Counter | `route`, `reason` | Requests that got the busy answer (503) because their key had four renders in flight, by why they would have been rendered. |
 | `goodwatch_page_cache_stores_total` | Counter | `route` | Pages stored, including refreshed ones. |
 | `goodwatch_page_cache_not_stored_total` | Counter | `route`, `reason` | Renders that the cache tracked and didn't store. |
 | `goodwatch_page_cache_evictions_total` | Counter | `reason` | Stored pages removed. |
@@ -144,20 +145,22 @@ For `goodwatch_data_cache_reset_guard_total`, `event` has six values. Only cache
 
 The page cache metrics come from `goodwatch-webapp/app/server/page-cache.server.ts`. The cache is described in [page-cache.md](../page-cache.md). Its counters appear with the first page request, and its gauges with the start of the process. With `PAGE_CACHE=off`, none of them exist.
 
-For `goodwatch_page_cache_requests_total`, `result` has five values. The response header `GW-Page-Cache` says `hit`, `stale`, `miss` (for `miss` and `joined`), or `bypass`.
+For `goodwatch_page_cache_requests_total`, `result` has six values. The response header `GW-Page-Cache` says `hit`, `stale`, `miss` (for `miss` and `joined`), `bypass`, or `busy`.
 
 - `hit`: answered from the store, fresh.
 - `stale`: answered from the store past its fresh time, while one background render refreshes it.
 - `joined`: waited for another request's render and was answered from the store.
 - `miss`: the app rendered it. `goodwatch_page_cache_misses_total` says why.
 - `bypass`: the request must not use the cache. `goodwatch_page_cache_bypass_total` says why.
+- `busy`: the key had four renders in flight, and the request got the busy answer (503). `goodwatch_page_cache_busy_total` says why it would have been rendered.
 
 `audience` is read from the cookie again when the request is counted, apart from the cache's own decision. A `member` row with `hit`, `stale`, or `joined` would mean that a member got a stored page.
 
 | Metric | Label | Values |
 | --- | --- | --- |
-| `goodwatch_page_cache_bypass_total` | `reason` | `member` (the auth cookie), `gate` (the browser gate answers the request), `long_url` (over 2,048 characters), `shutdown` |
-| `goodwatch_page_cache_misses_total` | `reason` | `not_admitted` (first request for the URL in 60 seconds), `lead` (a repeated URL: this render is stored, and others wait for it), `probe` (a repeated URL that wasn't storable before: nobody waits), `pass` (the URL wasn't storable and is inside its pass period), `busy` (a render is in flight that can't be joined, or a limit is reached), `wait_timeout` (waited 3 seconds), `released` (waited, and the render wasn't stored), `head` (a HEAD request without a stored page) |
+| `goodwatch_page_cache_bypass_total` | `reason` | `member` (the auth cookie), `gate` (the browser gate answers the request), `long_url` (over 2,048 characters) |
+| `goodwatch_page_cache_misses_total` | `reason` | `not_admitted` (first request for the URL in 60 seconds), `lead` (a repeated URL: this render is stored, and others wait for it), `probe` (a repeated URL that wasn't storable before: nobody waits), `pass` (the URL wasn't storable and is inside its pass period), `busy` (a render is in flight that can't be joined, or a limit is reached), `wait_timeout` (waited 3 seconds), `released` (waited, and the render wasn't stored), `head` (a HEAD request without a stored page), `shutdown` (no stored page, and the process is shutting down) |
+| `goodwatch_page_cache_busy_total` | `reason` | The same values as for a miss |
 | `goodwatch_page_cache_not_stored_total` | `reason` | `not_admitted` (the URL didn't repeat during the render), `unstorable` (a 200 response that no cache may store: a private route, a cookie, an incomplete title page, a render error), `status` (not 200), `aborted` (the client left), `too_large`, `compress_error`, `reset` |
 | `goodwatch_page_cache_evictions_total` | `reason` | `lru` (a bound was reached), `expired` (past the stale time), `reset`, `gone` (a refresh answered a redirect or a 404) |
 | `goodwatch_page_cache_refreshes_total` | `result` | `ok`, `error` (the render failed or took over 15 seconds), `not_storable` (a 200 response that may not be stored this time), `gone` |

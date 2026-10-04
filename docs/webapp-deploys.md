@@ -49,7 +49,7 @@ A deploy could also pass without a 502: one of the three deploys watched before 
 
 | Step | What happens | Bound |
 | --- | --- | --- |
-| 1 | Readiness answers 503. Every response says `Connection: close`, so the proxy keeps no idle connection. The process keeps serving. | `SHUTDOWN_DELAY_MS`, 8 seconds |
+| 1 | Readiness answers 503. Every response says `Connection: close`, so the proxy keeps no idle connection. The process keeps serving. Stored pages, hot share cards, and static files are answered before Express as before the signal. The page cache stores nothing new (see "During a shutdown" in [page-cache.md](page-cache.md)). | `SHUTDOWN_DELAY_MS`, 8 seconds |
 | 2 | It waits for a moment without a recent request in flight, then stops listening. Idle connections close. | 2 seconds |
 | 3 | Recent requests still in flight finish. A request that has been in flight for longer than the bound isn't waited for: its connection is cut, and the log names its method and the start of its path. | `SHUTDOWN_DRAIN_MS`, 5 seconds |
 | 4 | The registered stops run: timers, the metrics listener, the Redis client, the query encoder, the share card renderers. | 1 second |
