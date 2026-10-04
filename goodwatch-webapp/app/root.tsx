@@ -50,8 +50,9 @@ import BottomNav from "~/ui/nav/BottomNav"
 import type { EnabledFeatures } from "~/utils/features"
 import { LocaleContext } from "~/utils/locale"
 
-// One stylesheet for every page: it imports main.css, Swiper's, and the toast styles.
+// One stylesheet for every page: it imports main.css, the brand font's rules, Swiper's, and the toast styles.
 import cssTailwind from "~/tailwind.css?url"
+import gabaritoLatin from "~/fonts/gabarito-latin.woff2"
 import App from "~/app"
 import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
 import { getAuthFromRequest } from "./utils/auth"
@@ -72,6 +73,16 @@ export const links: LinksFunction = () => [
 	},
 	{ rel: "manifest", href: "/site.webmanifest" },
 	{ rel: "stylesheet", href: cssTailwind },
+	// The site header's title is brand text and sits at the top of every page, on phones too. The preload starts
+	// the font's download next to the stylesheet's, so the swap from the fallback font comes early. It's the
+	// only font request of a page: the Latin Extended file loads only when a page shows such a letter.
+	{
+		rel: "preload",
+		as: "font",
+		type: "font/woff2",
+		href: gabaritoLatin,
+		crossOrigin: "anonymous",
+	},
 	{
 		rel: "preconnect",
 		href: "https://image.tmdb.org",

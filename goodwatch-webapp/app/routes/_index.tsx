@@ -8,7 +8,6 @@ import {
 } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
 import { useCallback } from "react"
-import gabaritoLatin from "~/fonts/gabarito-latin.woff2"
 import {
 	useScoreMutation,
 	useSkippedMutation,
@@ -42,15 +41,6 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export const links: LinksFunction = () => [
 	{ rel: "stylesheet", href: livingRoomCss },
-	// The TV's text is visible without scrolling and uses this font. The TV has a fixed size, so the swap from
-	// the fallback font moves nothing.
-	{
-		rel: "preload",
-		as: "font",
-		type: "font/woff2",
-		href: gabaritoLatin,
-		crossOrigin: "anonymous",
-	},
 	{ rel: "preconnect", href: "https://image.tmdb.org" },
 ]
 

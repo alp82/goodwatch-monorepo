@@ -3,7 +3,6 @@
 // A member's first view is computed here; after that, and for guests (whose Wishlist lives in their browser), the
 // page reads /api/watch-next as the sort, moods, and On my services change.
 import {
-	type LinksFunction,
 	type LoaderFunctionArgs,
 	type MetaFunction,
 	json,
@@ -12,7 +11,6 @@ import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import { isEnabled } from "~/server/features.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { type WatchNext, getWatchNext } from "~/server/watch-next.server"
-import gabaritoCss from "~/fonts/gabarito.css?url"
 import { WatchNextPage } from "~/ui/watch-next/WatchNextPage"
 import { apiQuery, choiceFromParams } from "~/ui/watch-next/useWatchNext"
 import { getUserIdFromRequest } from "~/utils/auth"
@@ -28,10 +26,6 @@ export const meta: MetaFunction = () => [
 	},
 	// Personal to each viewer.
 	{ name: "robots", content: "noindex, follow" },
-]
-
-export const links: LinksFunction = () => [
-	{ rel: "stylesheet", href: gabaritoCss },
 ]
 
 // The sort, moods, and services change the URL, not the page: the browser reads /api/watch-next for them.

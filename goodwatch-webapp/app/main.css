@@ -1,5 +1,6 @@
 .brand-header {
-	font-family: "Gabarito", sans-serif;
+	font-family: "Gabarito Brand", "Gabarito Fallback", "Gabarito Fallback Roboto",
+		sans-serif;
 	font-weight: 700;
 }
 
