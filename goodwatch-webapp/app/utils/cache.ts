@@ -2,7 +2,7 @@
 // Lookup and refresh outcomes are counted per cache name
 // (see docs/benchmarks/viral-spike-metrics.md).
 import crypto from "node:crypto"
-import Redis, { type Cluster } from "ioredis"
+import Redis, { type Cluster, Command } from "ioredis"
 import type { ClusterNode } from "ioredis/built/cluster"
 import type { ClusterOptions } from "ioredis/built/cluster/ClusterOptions"
 import {
@@ -11,6 +11,8 @@ import {
 	gauge,
 	histogram,
 } from "~/server/metrics/registry.server"
+
+import { RedisNodeDownError, createRedisBreakers } from "./redis-breaker"
 
 const clusterNodes: ClusterNode[] = [
 	{
@@ -32,11 +34,12 @@ const clusterNodes: ClusterNode[] = [
 // Startup stalls reach 2.4 s; a lookup cut there falls through to the target.
 export const REDIS_COMMAND_TIMEOUT_MS = 1000
 
-// Every command fails fast. commandTimeout starts when a command reaches a node connection, so it also bounds
-// the wait in that node's offline queue and MOVED/ASK redirections. The cluster never reconnects by itself
-// (clusterRetryStrategy returns null): when it closes, ioredis ends it and rejects every command it had queued.
-// The cluster-level offline queue stays on, because turning it off rejects commands to a node that is still
-// connecting, and node connections open on their first command.
+// The guard bounds commands across the cluster queue and redirection loop. A node's
+// first failure opens its breaker; later commands bypass it while detached probes
+// check recovery. Node commandTimeout also bounds individual connection attempts.
+// Keep the offline queue for nodes connecting on demand. ioredis ends a closed
+// cluster instead of reconnecting it; our lifecycle disconnects it before replacing
+// it, with a 1-second exponential backoff capped at 30 seconds.
 export const redisOptions: ClusterOptions = {
 	clusterRetryStrategy: () => null,
 	dnsLookup: (address, callback) => callback(null, address),
@@ -56,6 +59,106 @@ export const redisOptions: ClusterOptions = {
 let commandTimeoutMs = REDIS_COMMAND_TIMEOUT_MS
 export function setRedisCommandTimeoutForTest(ms: number | null): void {
 	commandTimeoutMs = ms ?? REDIS_COMMAND_TIMEOUT_MS
+}
+
+const breakerEvents = counter(
+	"goodwatch_redis_breaker_events_total",
+	"Redis node breaker transitions and rejected commands.",
+	["node", "event"],
+	64,
+)
+const breakers = createRedisBreakers({
+	onEvent: (node, event) => breakerEvents.inc([node, event]),
+})
+export const resetRedisBreakersForTest = () => breakers.reset()
+export const redisBreakerStates = () => breakers.states()
+gauge(
+	"goodwatch_redis_breaker_open_nodes",
+	"Open Redis node breakers.",
+	[],
+	() => [{ labels: [], value: breakers.openCount() }],
+)
+
+export function isRedisNodeFailure(error: unknown): boolean {
+	if (error instanceof RedisNodeDownError) return false
+	if (typeof error !== "object" || error === null) return true
+	return !(
+		"name" in error &&
+		error.name === "ReplyError" &&
+		"message" in error &&
+		typeof error.message === "string" &&
+		!/^(CLUSTERDOWN|LOADING|MASTERDOWN|TRYAGAIN)/.test(error.message)
+	)
+}
+
+type DispatchArgs = Parameters<Cluster["sendCommand"]>
+
+export class GuardedCluster extends Redis.Cluster {
+	sendCommand(...[command, stream, node]: DispatchArgs): unknown {
+		const slot = node ? node.slot : command.getSlot()
+		const owner =
+			command.name === "cluster" || slot == null
+				? undefined
+				: this.slots[slot]?.[0]
+		if (!owner) return this.dispatch(command, stream, node)
+		if (breakers.isOpen(owner)) {
+			const key = command.getKeys()[0]
+			if (key && breakers.claimProbe(owner)) {
+				const probe = new Command("exists", [key])
+				this.track(probe, undefined, undefined, owner, true)
+				probe.promise.catch(() => {})
+			}
+			breakerEvents.inc([owner, "rejected"])
+			command.reject(new RedisNodeDownError(owner))
+			return command.promise
+		}
+		return this.track(command, stream, node, owner, false)
+	}
+
+	protected dispatch(...args: DispatchArgs): unknown {
+		return super.sendCommand(...args)
+	}
+
+	private track(
+		command: Command,
+		stream: DispatchArgs[1],
+		node: DispatchArgs[2],
+		owner: string,
+		probe: boolean,
+	): unknown {
+		let settled = false
+		let timedOut = false
+		const failure = () =>
+			probe ? breakers.probeFailed(owner) : breakers.failure(owner)
+		const timer = setTimeout(() => {
+			if (settled) return
+			timedOut = true
+			failure()
+			command.reject(new Error("Command timed out"))
+		}, commandTimeoutMs)
+		command.promise
+			.then(
+				() => {
+					settled = true
+					clearTimeout(timer)
+					breakers.success(owner)
+				},
+				(error: unknown) => {
+					settled = true
+					clearTimeout(timer)
+					if (timedOut || error instanceof RedisNodeDownError) return
+					if (isRedisNodeFailure(error)) failure()
+					else breakers.success(owner)
+				},
+			)
+			.catch(() => {})
+		try {
+			this.dispatch(command, stream, node)
+		} catch (error) {
+			command.reject(error as Error)
+		}
+		return command.promise
+	}
 }
 
 function withRedisDeadline<T>(operation: Promise<T>): Promise<T> {
@@ -86,7 +189,7 @@ export function resetRedisFailureLogsForTest(): void {
 }
 
 function logRedisFailure(
-	operation: "get" | "set" | "del",
+	operation: "get" | "set" | "del" | "cluster",
 	error: unknown,
 ): void {
 	const now = Date.now()
@@ -197,45 +300,103 @@ gauge("goodwatch_data_cache_in_flight", "Registered cache runs.", [], () => [
 ])
 export const getRedisCluster = () => redisCluster
 
-const connectToRedisCluster = async () => {
-	if (redisCluster) return null
+export interface ClusterLike {
+	on(event: "error", listener: (error: Error) => void): unknown
+	on(event: "ready" | "end", listener: () => void): unknown
+	connect(): Promise<void>
+	disconnect(): void
+}
+const clientEvents = counter(
+	"goodwatch_redis_client_events_total",
+	"Redis cluster lifecycle events.",
+	["event"],
+	3,
+)
+gauge("goodwatch_redis_client_ready", "Redis client is published.", [], () => [
+	{ labels: [], value: redisCluster ? 1 : 0 },
+])
+let currentClient: ClusterLike | null = null
+let reconnectTimer: ReturnType<typeof setTimeout> | undefined
+let reconnectAttempt = 0
+let createClient: () => ClusterLike = () =>
+	new GuardedCluster(clusterNodes, redisOptions)
+let reconnectDelays = [1000, 2000, 4000, 8000, 16000, 30000]
 
-	console.log("Connecting to Redis Cluster...")
-	const cluster = new Redis.Cluster(clusterNodes, redisOptions)
-
-	cluster.once("ready", () => {
-		console.log("Connected to Redis Cluster")
-		redisCluster = cluster
-
-		// Handle errors to prevent crashes
-		cluster.on("error", (err) => {
-			console.error("Redis Cluster Error:", err)
-			// Potentially set redisCluster to null if connection is unusable
-			if (
-				err.message &&
-				(err.message.includes("connection") ||
-					err.message.includes("timeout") ||
-					err.message.includes("closed"))
-			) {
-				console.log("Redis connection lost, will operate without cache")
-				redisCluster = null
-				connectToRedisCluster()
-			}
-		})
-	})
-
-	cluster.once("end", () => {
-		console.log("Redis connection ended")
-		redisCluster = null
-	})
-
-	cluster.connect().catch((err) => {
-		console.error("Redis connect error, skipping:", err)
-		redisCluster = null
-	})
+function retireClient(cluster: ClusterLike): void {
+	if (currentClient !== cluster) return
+	currentClient = null
+	if (redisCluster === cluster) redisCluster = null
+	// Invalidate listeners before disconnect(), which can emit end synchronously.
+	cluster.disconnect()
 }
 
-connectToRedisCluster()
+function scheduleReconnect(): void {
+	if (reconnectTimer) return
+	const delay =
+		reconnectDelays[Math.min(reconnectAttempt++, reconnectDelays.length - 1)]
+	reconnectTimer = setTimeout(() => {
+		reconnectTimer = undefined
+		connectToRedisCluster()
+	}, delay)
+	reconnectTimer.unref()
+}
+
+function connectToRedisCluster(): void {
+	if (currentClient) return
+	const cluster = createClient()
+	currentClient = cluster
+	cluster.on("error", (error: Error) => {
+		if (currentClient === cluster) logRedisFailure("cluster", error)
+	})
+	cluster.on("ready", () => {
+		if (currentClient !== cluster) return
+		redisCluster = cluster as Cluster
+		reconnectAttempt = 0
+		clientEvents.inc(["ready"])
+	})
+	cluster.on("end", () => {
+		if (currentClient !== cluster) return
+		clientEvents.inc(["ended"])
+		retireClient(cluster)
+		scheduleReconnect()
+	})
+	const failed = (error: unknown) => {
+		if (currentClient !== cluster) return
+		clientEvents.inc(["connect_failed"])
+		logRedisFailure("cluster", error)
+		retireClient(cluster)
+		scheduleReconnect()
+	}
+	try {
+		cluster.connect().catch(failed)
+	} catch (error) {
+		failed(error)
+	}
+}
+
+export function stopRedisClusterForTest(): void {
+	if (reconnectTimer) clearTimeout(reconnectTimer)
+	reconnectTimer = undefined
+	if (currentClient) retireClient(currentClient)
+	redisCluster = null
+	reconnectAttempt = 0
+}
+
+export function startRedisClusterForTest(
+	create: () => ClusterLike,
+	delaysMs?: number[],
+): void {
+	stopRedisClusterForTest()
+	createClient = create
+	reconnectDelays = delaysMs?.length
+		? delaysMs
+		: [1000, 2000, 4000, 8000, 16000, 30000]
+	connectToRedisCluster()
+}
+
+// Tests and deployments without Redis configuration never attempt a connection.
+if (process.env.REDIS_HOST) connectToRedisCluster()
+else console.log("REDIS_HOST is empty, running without a cache")
 
 interface JsonObject {
 	[key: string]: unknown
@@ -283,7 +444,7 @@ async function cacheSet<CacheData extends JsonData>(
 		await withRedisDeadline(redis.setex(key, ttl || 1, jsonData))
 		return true
 	} catch (e) {
-		logRedisFailure("set", e)
+		if (!(e instanceof RedisNodeDownError)) logRedisFailure("set", e)
 		return false
 	}
 }
@@ -308,7 +469,7 @@ async function cacheDelete(key: string): Promise<number> {
 		const result = await withRedisDeadline(redis.del(key))
 		return result
 	} catch (e) {
-		logRedisFailure("del", e)
+		if (!(e instanceof RedisNodeDownError)) logRedisFailure("del", e)
 		return 0
 	}
 }
@@ -450,8 +611,8 @@ export const cached = async <
 			}
 		}
 	} catch (error) {
-		result = "error"
-		logRedisFailure("get", error)
+		result = error instanceof RedisNodeDownError ? "open" : "error"
+		if (!(error instanceof RedisNodeDownError)) logRedisFailure("get", error)
 	}
 	const existing = inFlight.get(cacheKey)
 	if (existing && Date.now() - existing.startedAt < MAX_JOIN_AGE_MS) {

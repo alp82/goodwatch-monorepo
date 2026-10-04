@@ -2,6 +2,7 @@
 import assert from "node:assert/strict"
 import { type Socket, createServer } from "node:net"
 import { afterEach, beforeEach, test } from "node:test"
+// Loaded before the alias hook, which rewrites relative imports.
 import Redis from "ioredis"
 import "../title-filter/test-alias.ts"
 const {
@@ -22,8 +23,7 @@ const {
 const { renderMetrics, resetMetricsForTest } = await import(
 	"./registry.server.ts"
 )
-// Allow the import-time Redis connection attempt to finish before installing each fake.
-await new Promise((resolve) => setTimeout(resolve, 1000))
+// An empty REDIS_HOST skips connection startup, so fakes can be installed immediately.
 const unhandled: unknown[] = []
 const unhandledListener = (error: unknown) => unhandled.push(error)
 beforeEach(() => {

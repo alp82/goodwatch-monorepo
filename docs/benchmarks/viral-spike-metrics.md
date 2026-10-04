@@ -80,8 +80,12 @@ Read them in Grafana Cloud under **Explore**, with the Prometheus data source th
 | `goodwatch_http_responses_total` | Counter | `route`, `status_class`, `audience`, `cache_control` | Finished responses. |
 | `goodwatch_http_requests_in_flight` | Gauge | None | Requests being served at scrape time. |
 | `goodwatch_data_cache_requests_total` | Counter | `cache`, `result` | Lookups in the Redis-backed data cache (`cached()` in `app/utils/cache.ts`). |
-| `goodwatch_data_cache_miss_duration_seconds` | Histogram | `cache` | Time for every target run: `miss`, `unavailable`, `error`, `bypass`, and background refreshes. |
+| `goodwatch_data_cache_miss_duration_seconds` | Histogram | `cache` | Time for every target run: `miss`, `unavailable`, `error`, `open`, `bypass`, and background refreshes. |
 | `goodwatch_data_cache_refreshes_total` | Counter | `cache`, `result` | Finished background refreshes. |
+| `goodwatch_redis_breaker_open_nodes` | Gauge | None | Redis nodes with an open breaker. Zero when all are closed. |
+| `goodwatch_redis_breaker_events_total` | Counter | `node`, `event` | Breaker events: `opened`, `closed`, `probe_failed`, and `rejected`. Capped at 64 label sets. |
+| `goodwatch_redis_client_ready` | Gauge | None | One when a Redis client is published, otherwise zero. |
+| `goodwatch_redis_client_events_total` | Counter | `event` | Client events: `ready`, `connect_failed`, and `ended`. A connect attempt against an unreachable cluster counts as `ended`. Each `ended` or `connect_failed` is followed by a new connect attempt after 1, 2, 4, 8, 16, then 30 seconds. |
 | `goodwatch_data_cache_in_flight` | Gauge | None | Registered cache runs at scrape time. |
 | `goodwatch_process_resident_memory_bytes`, `goodwatch_process_heap_used_bytes` | Gauge | None | Memory of the server process. |
 | `goodwatch_process_event_loop_delay_seconds` | Gauge | `quantile` (`0.5`, `0.99`, `max`) | How late the event loop ran since the previous scrape. |
@@ -95,7 +99,7 @@ Label values:
 - `audience`: `member` when the request carries the Supabase auth cookie, else `anon`. Only the cookie's presence is read.
 - `cache_control`: what the response's `Cache-Control` header allows. `shared` has `public` or `s-maxage` and nothing private. `private` has `private`, `no-store`, or `no-cache`. `none` is everything else.
 - `cache`: the cache name passed to `cached()`. The three related-title caches have request data in their name, so they report as `related-movie`, `related-show`, and `related-by-category`.
-For `goodwatch_data_cache_requests_total`, `result` has seven values:
+For `goodwatch_data_cache_requests_total`, `result` has eight values:
 
 - `hit`: The lookup returned a fresh value.
 - `stale`: The lookup returned an expired value while a refresh may run in the background.
@@ -103,7 +107,10 @@ For `goodwatch_data_cache_requests_total`, `result` has seven values:
 - `joined`: No usable value was found, and this call waited for an existing run.
 - `unavailable`: No Redis client was available, and this call ran the target.
 - `error`: The cache read failed or exceeded the 1-second Redis command limit, and this call ran the target.
+- `open`: The key's Redis node is marked down. The lookup skipped Redis and ran the target.
 - `bypass`: The lifetime was zero or negative, so the call ran the target without using Redis or deduplication.
+
+The breaker opens at the first timeout or connection failure of a node. It fails commands for that node's slots at once. While traffic continues, it probes in the background, with at most one probe in flight: one second after it opened, and one second after each failed probe. A probe to a silent node takes up to one second, so probes run about every two seconds. The first answer closes the breaker. Healthy nodes keep serving their slots. The client disconnects an ended or failed cluster before retrying, with delays from one to 30 seconds.
 
 Before this change, `stale` meant "expired value found, target run inline".
 
@@ -150,7 +157,31 @@ sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp",
 
 histogram_quantile(0.95, sum by (le, cache) (rate(goodwatch_data_cache_miss_duration_seconds_bucket{job="goodwatch_webapp"}[5m])))
 
-sum by (cache, result) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result=~"unavailable|error"}[5m]))
+sum by (cache, result) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result=~"unavailable|error|open"}[5m]))
+```
+
+Lookups that skipped an open Redis node, per cache:
+
+```promql
+sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result="open"}[5m]))
+```
+
+Open breakers per process:
+
+```promql
+goodwatch_redis_breaker_open_nodes{job="goodwatch_webapp"}
+```
+
+Breaker events per node:
+
+```promql
+sum by (node, event) (rate(goodwatch_redis_breaker_events_total{job="goodwatch_webapp"}[5m]))
+```
+
+Redis client ready per process:
+
+```promql
+goodwatch_redis_client_ready{job="goodwatch_webapp"}
 ```
 
 Share of lookups served without waiting for the target, per cache:
@@ -164,7 +195,7 @@ sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp",
 Share of lookups that ran the target, excluding bypasses and background refreshes:
 
 ```promql
-sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result=~"miss|unavailable|error"}[5m]))
+sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result=~"miss|unavailable|error|open"}[5m]))
 /
 sum by (cache) (rate(goodwatch_data_cache_requests_total{job="goodwatch_webapp", result!="bypass"}[5m]))
 ```
