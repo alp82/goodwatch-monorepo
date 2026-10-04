@@ -1,8 +1,7 @@
-import { redactSearchTelemetry } from "~/utils/search-telemetry"
-import {
-	WEB_VITALS_CAPTURE,
-	browserRouteTagger,
-} from "~/utils/web-vitals-telemetry"
+import { TelemetryBoot } from "~/telemetry/TelemetryBoot"
+import { EARLY_TELEMETRY_SCRIPT } from "~/telemetry/early"
+import { GOOGLE_TAG_INLINE_SCRIPT } from "~/telemetry/google-tag"
+import { reportBoundaryError } from "~/telemetry/telemetry"
 export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
 import { DiscoveryContinuity } from "~/ui/DiscoveryContinuity"
 import { json } from "@remix-run/node"
@@ -31,7 +30,6 @@ import {
 	useLocation,
 	useRouteError,
 } from "@remix-run/react"
-import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix"
 import { createBrowserClient } from "@supabase/ssr"
 import {
 	type DehydratedState,
@@ -41,8 +39,7 @@ import {
 	QueryClientProvider,
 } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
-import posthog from "posthog-js"
-import React, { useEffect } from "react"
+import React from "react"
 import { ToastContainer } from "react-toastify"
 import { useDehydratedState } from "use-dehydrated-state"
 
@@ -62,7 +59,7 @@ import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
 import { useOgImageWarmup } from "~/ui/og-image/useOgImageWarmup"
 // import cssRemixDevTools from 'remix-development-tools/index.css?url'
 import cssMain from "~/main.css?url"
-import { getAuthFromRequest, useUser } from "./utils/auth"
+import { getAuthFromRequest } from "./utils/auth"
 
 export const links: LinksFunction = () => [
 	{ rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
@@ -165,68 +162,11 @@ export const loader: LoaderFunction = async ({
 	)
 }
 
-const PostHogInit = () => {
-	const { user } = useUser()
-
-	const [posthogInitialized, setPosthogInitialized] = React.useState(false)
-	useEffect(() => {
-		const isLocalhost =
-			window.location.hostname === "localhost" ||
-			window.location.hostname === "127.0.0.1"
-		if (!user || isLocalhost) {
-			if (posthogInitialized) {
-				posthog.reset()
-				setPosthogInitialized(false)
-			}
-			return
-		}
-
-		posthog.identify(user.email, user)
-
-		posthog.capture("$set", {
-			$set_once: { initial_login: new Date() },
-		})
-
-		posthog.capture("Pageview", {
-			full_referrer: document.referrer,
-		})
-
-		setPosthogInitialized(true)
-	}, [user])
-
-	// const { consentGiven } = useCookieConsent()
-	const consentGiven = "yes"
-	useEffect(() => {
-		const isLocalhost =
-			window.location.hostname === "localhost" ||
-			window.location.hostname === "127.0.0.1"
-		if (isLocalhost) return
-
-		// Web Vitals (LCP, INP, CLS, FCP) are PostHog's own `$web_vitals` events. The tagger adds the route pattern and
-		// the time to first byte, so the report can group by route instead of by URL.
-		const tagRoute = browserRouteTagger()
-		posthog.init("phc_RM4XKAExwoQJUw6LoaNDUqCPLXuFLN6lPWybGsbJASq", {
-			// api_host: 'https://eu.i.posthog.com',
-			api_host: "https://a.goodwatch.app",
-			before_send: (event) => tagRoute(redactSearchTelemetry(event)),
-			capture_performance: WEB_VITALS_CAPTURE,
-			session_recording: {
-				blockSelector: ".search-private",
-				maskTextSelector: ".search-private",
-			},
-			persistence: consentGiven === "yes" ? "localStorage+cookie" : "memory",
-			person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
-		})
-	}, [consentGiven])
-
-	return null
-}
-
 export function ErrorBoundary() {
 	// TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
 	const error = useRouteError()
 	console.error(error)
-	captureRemixErrorBoundaryError(error)
+	reportBoundaryError(error)
 
 	const [queryClient] = React.useState(
 		() =>
@@ -245,6 +185,8 @@ export function ErrorBoundary() {
 		<html lang="en">
 			<head>
 				<title>Oh no!</title>
+				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, see telemetry/early.ts */}
+				<script dangerouslySetInnerHTML={{ __html: EARLY_TELEMETRY_SCRIPT }} />
 				<meta httpEquiv="Content-Type" content="text/html;charset=utf-8" />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Meta />
@@ -286,7 +228,7 @@ export function ErrorBoundary() {
 						<BottomNav />
 						<ToastContainer />
 						{/* <CookieConsent /> */}
-						<PostHogInit />
+						<TelemetryBoot />
 						<ScrollRestoration />
 						<Scripts />
 					</SearchJourneyProvider>
@@ -351,6 +293,9 @@ function Root() {
 		>
 			<head>
 				<meta charSet="utf-8" />
+				{/* Records the landing URL and early errors until analytics and error tracking load. */}
+				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, see telemetry/early.ts */}
+				<script dangerouslySetInnerHTML={{ __html: EARLY_TELEMETRY_SCRIPT }} />
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<Meta />
 				<Links />
@@ -364,23 +309,13 @@ function Root() {
 								<App />
 								{/* <CookieConsent /> */}
 								<ToastContainer />
-								<PostHogInit />
+								<TelemetryBoot />
 								{shouldUseScrollRestoration && <ScrollRestoration />}
 								<Scripts />
+								{/* The tag's script loads after the page is interactive, see telemetry/google-tag.ts. */}
 								<script
-									async
-									src="https://www.googletagmanager.com/gtag/js?id=G-5NK4EX51SM"
-								/>
-								<script
-									dangerouslySetInnerHTML={{
-										__html: `
-window['ga-disable-G-5NK4EX51SM'] = ['localhost', '127.0.0.1'].includes(location.hostname);
-window.dataLayer = window.dataLayer || [];
-function gtag(){window.dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-5NK4EX51SM');
-                  `,
-									}}
+									// biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script
+									dangerouslySetInnerHTML={{ __html: GOOGLE_TAG_INLINE_SCRIPT }}
 								/>
 							</HydrationBoundary>
 						</AuthProvider>
@@ -392,4 +327,4 @@ gtag('config', 'G-5NK4EX51SM');
 	)
 }
 
-export default withSentry(Root)
+export default Root

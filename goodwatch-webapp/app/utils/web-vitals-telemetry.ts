@@ -65,8 +65,11 @@ export function createRouteTagger(
 	}
 }
 
-/** Reads the page load from the browser. `null` outside a browser. */
-export function readLanding(): Landing | null {
+/**
+ * Reads the page load from the browser. `null` outside a browser. Pass the pathname of the page load when the caller
+ * runs later than the load: the visitor can be on another page of the app by then.
+ */
+export function readLanding(landingPathname?: string): Landing | null {
 	if (typeof window === "undefined") return null
 	let ttfbMs: number | null = null
 	try {
@@ -82,11 +85,14 @@ export function readLanding(): Landing | null {
 	} catch {
 		// An old browser without Navigation Timing sends no TTFB.
 	}
-	return { pathname: window.location.pathname, ttfbMs }
+	return { pathname: landingPathname ?? window.location.pathname, ttfbMs }
 }
 
-/** The `before_send` step for this browser: route patterns from the manifest Remix put on the page. */
-export function browserRouteTagger() {
+/**
+ * The `before_send` step for this browser: route patterns from the manifest Remix put on the page.
+ * `landingPathname` is the pathname of the page load, for a caller that runs later than the load.
+ */
+export function browserRouteTagger(landingPathname?: string) {
 	const manifest =
 		typeof window === "undefined"
 			? undefined
@@ -98,7 +104,7 @@ export function browserRouteTagger() {
 	if (!manifest) return <T>(event: T): T => event
 	const tag = createRouteTagger(
 		createRoutePatternMatcher(manifest),
-		readLanding(),
+		readLanding(landingPathname),
 	)
 	return <T>(event: T): T => {
 		try {
