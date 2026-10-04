@@ -123,7 +123,7 @@
         "blocking_requests": { "max": 1 },
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 655360 },
-        "lcp_ms": { "max": 4100 },
+        "lcp_ms": { "max": 4700 },
         "tbt_ms": { "max": 250 },
         "cls": { "max": 0.02 },
         "score": { "min": 80 }

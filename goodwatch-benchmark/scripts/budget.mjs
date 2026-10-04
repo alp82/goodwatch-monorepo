@@ -149,7 +149,7 @@ const number = (value) => Math.round(value).toLocaleString("en-US");
 export function formatValue(key, value) {
   if (typeof value !== "number") return value ?? "not measured";
   const unit = LINES[key]?.unit;
-  if (unit === "bytes") return `${(value / 1024).toFixed(1)} KB`;
+  if (unit === "bytes") return `${(value / 1024).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} KB`;
   if (unit === "ms") return `${number(value)} ms`;
   if (unit === "score") return value.toFixed(3);
   return number(value);
