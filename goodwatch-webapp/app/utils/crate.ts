@@ -31,6 +31,9 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number): Promise<T
 }
 
 // Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
+// The clock time on every log line. One formatter for the process: toLocaleTimeString builds a new one per call.
+const LOG_TIME = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false })
+
 const MAX_LOG_CHARS = 2000
 
 const capLog = (value: unknown, indent?: number): string => {
@@ -83,7 +86,7 @@ class CrateClient {
 	}
 
 	private formatLog(querySummary: string, duration: number, failed = false): string {
-		const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false })
+		const timestamp = LOG_TIME.format(new Date())
 		const coloredDuration = this.colorDuration(duration, failed)
 		const label = pc.dim(`[${pc.cyan('CrateDB')}]`)
 		const status = failed ? pc.red('FAILED') : ''

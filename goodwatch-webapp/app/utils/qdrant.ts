@@ -28,6 +28,9 @@ const MOVIE_BASE = 1_000_000_000_000
 const SHOW_BASE = 2_000_000_000_000
 
 // Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
+// The clock time on every log line. One formatter for the process: toLocaleTimeString builds a new one per call.
+const LOG_TIME = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false })
+
 const MAX_LOG_CHARS = 2000
 
 const capLog = (value: unknown, indent?: number): string => {
@@ -414,7 +417,7 @@ class QdrantClientWrapper {
 
 
 	private formatLog(summary: string, duration: number, resultCount: number, failed = false): string {
-		const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false })
+		const timestamp = LOG_TIME.format(new Date())
 		const coloredDuration = this.colorDuration(duration, failed)
 		const label = pc.dim(`[${pc.magentaBright('Qdrant')}]`)
 		const status = failed ? pc.red('FAILED') : ''
