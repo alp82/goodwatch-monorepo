@@ -214,7 +214,7 @@ async function persistChange(userId: string, c: Change) {
 	);
 }
 export async function action({ request }: ActionFunctionArgs) {
-	const { user, headers } = await getAuthFromRequest({ request });
+	const { user, headers } = await getAuthFromRequest({ request, fresh: true });
 	headers.set("Cache-Control", "private, no-store");
 	if (!user)
 		return json(

@@ -16,9 +16,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return json<HandleCheck>({ handle, available: !taken, problem: taken ? "That handle is taken." : null })
 }
 
+// A handle is permanent, so the claim asks the auth server instead of trusting a recent check.
 export async function action({ request }: ActionFunctionArgs) {
 	if (request.method !== "POST") return json({ error: "Method not allowed" }, { status: 405 })
-	const userId = await getUserIdFromRequest({ request })
+	const userId = await getUserIdFromRequest({ request, fresh: true })
 	if (!userId) return json({ error: "Sign in to choose a handle." }, { status: 401 })
 	let body: { handle?: string }
 	try {

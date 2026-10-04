@@ -21,7 +21,15 @@ export function AuthProvider({
 	const queryClient = useQueryClient()
 	const { revalidate } = useRevalidator()
 
-	useEffect(() => setUser(initialUser), [initialUser])
+	// The loader's user replaces the browser's only when the person changed. For the same person the browser session
+	// is at least as complete: a session verified from the token alone has no identities or creation time.
+	useEffect(
+		() =>
+			setUser((current) =>
+				current && current.id === initialUser?.id ? current : initialUser,
+			),
+		[initialUser],
+	)
 
 	useEffect(() => {
 		const {

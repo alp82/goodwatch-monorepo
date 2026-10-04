@@ -42,6 +42,7 @@
 		"ioredis": "^5.4.1",
 		"is-ip": "^5.0.1",
 		"isbot": "^5.1.17",
+		"jose": "^6.2.12",
 		"jpeg-js": "^0.4.4",
 		"node-crate": "^3.0.0",
 		"onnxruntime-node": "1.30.0",

@@ -1,60 +1,39 @@
 import type { User } from "@supabase/auth-js"
-import { createServerClient, parse, serialize } from "@supabase/ssr"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createContext, useContext } from "react"
 import {
 	PRIVATE_CACHE_CONTROL,
 	SHARED_PAGE_CACHE_CONTROL,
 	hasAuthCookie,
-} from "./auth-cookie"
+} from "./auth-cookie.ts"
+
+import { resolveSession } from "./auth-session.ts"
 
 // server
 
-export const getAuthFromRequest = async ({ request }: { request: Request }) => {
-	const cookies = parse(request.headers.get("Cookie") ?? "")
+type AuthRequest = { request: Request; fresh?: boolean }
+
+export const getAuthFromRequest = async ({ request, fresh }: AuthRequest) => {
+	const cookieHeader = request.headers.get("Cookie")
+	const { user, setCookies } = await resolveSession(cookieHeader, { fresh })
 	const headers = new Headers()
-	const member = hasAuthCookie(request.headers.get("Cookie"))
 	headers.set(
 		"Cache-Control",
-		member ? PRIVATE_CACHE_CONTROL : SHARED_PAGE_CACHE_CONTROL,
+		hasAuthCookie(cookieHeader)
+			? PRIVATE_CACHE_CONTROL
+			: SHARED_PAGE_CACHE_CONTROL,
 	)
-	if (!member) return { user: null, headers }
-
-	const supabase = createServerClient(
-		process.env.SUPABASE_URL!,
-		process.env.SUPABASE_ANON_KEY!,
-		{
-			cookies: {
-				getAll() {
-					return Object.entries(cookies).map(([name, value]) => ({
-						name,
-						value: value ?? "",
-					}))
-				},
-				setAll(updates) {
-					for (const { name, value, options } of updates) {
-						cookies[name] = value
-						headers.append("Set-Cookie", serialize(name, value, options))
-					}
-				},
-			},
-		},
-	)
-	const {
-		data: { user },
-	} = await supabase.auth.getUser()
+	for (const cookie of setCookies) headers.append("Set-Cookie", cookie)
 	return { user, headers }
 }
 
-export const getUserFromRequest = async ({ request }: { request: Request }) => {
-	const { user } = await getAuthFromRequest({ request })
+export const getUserFromRequest = async ({ request, fresh }: AuthRequest) => {
+	const { user } = await getAuthFromRequest({ request, fresh })
 	return user
 }
 
-export const getUserIdFromRequest = async ({
-	request,
-}: { request: Request }) => {
-	const user = await getUserFromRequest({ request })
+export const getUserIdFromRequest = async ({ request, fresh }: AuthRequest) => {
+	const user = await getUserFromRequest({ request, fresh })
 	return user?.id
 }
 
