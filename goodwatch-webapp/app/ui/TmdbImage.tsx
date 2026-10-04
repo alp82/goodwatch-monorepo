@@ -15,7 +15,8 @@ type ImgProps = Omit<
 
 export interface TmdbImageProps extends ImgProps {
 	kind: TmdbImageKind
-	path: string
+	/** A title or person without this image has no path. Nothing is rendered then. */
+	path: string | null | undefined
 	/**
 	 * The displayed width in CSS pixels, for an image that is the same width in every layout.
 	 * For an image whose width follows the viewport, pass `sizes` instead, and the largest
@@ -57,6 +58,7 @@ export function TmdbImage({
 	alt = "",
 	...rest
 }: TmdbImageProps) {
+	if (!path) return null
 	const base = width ?? maxWidth ?? 300
 	const source = sizes
 		? tmdbFluidImage(kind, path, sizes, {
