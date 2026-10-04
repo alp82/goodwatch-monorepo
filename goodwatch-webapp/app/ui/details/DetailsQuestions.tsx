@@ -20,6 +20,7 @@ import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { useStreamingLinks } from "~/ui/details/hero/WhereToWatch"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { type QuestionId, ageInfo, agreement, FEATURED_TROPES, featuredTropes, money, titleQuestions, tropeCount } from "~/ui/details/titleQuestions"
+import { countryFlagUrl } from "~/utils/country-flag"
 
 type Media = MovieResult | ShowResult
 
@@ -204,7 +205,7 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 				<span className="text-3xl font-bold tabular-nums">{codes.length}</span>
 				<span className="flex flex-wrap gap-1">
 					{codes.slice(0, 14).map((c) => (
-						<img key={c} src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${c}.svg`} alt={c} title={c} className="h-3.5 rounded-[2px]" />
+						<img key={c} loading="lazy" decoding="async" width={21} height={14} src={countryFlagUrl(c)} alt={c} title={c} className="h-3.5 w-auto rounded-[2px]" />
 					))}
 					{codes.length > 14 && <span className="text-xs text-gray-400">+{codes.length - 14}</span>}
 				</span>

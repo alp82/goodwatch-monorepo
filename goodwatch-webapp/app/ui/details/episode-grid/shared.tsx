@@ -4,8 +4,8 @@ import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useSta
 import { createPortal } from "react-dom"
 import type { GridEpisode, GridSeason, GridSpecial } from "~/server/episode-grid.server"
 import imdbLogo from "~/img/imdb-logo-250.png"
-import metacriticLogoIcon from "~/img/metacritic-logo-icon-250.png"
-import rottenLogoIcon from "~/img/rotten-logo-icon-250.png"
+import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp"
+import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
 import tmdbLogo from "~/img/tmdb-logo.svg"
 import {
 	LOW_VOTE_THRESHOLD,

@@ -3,6 +3,7 @@ import {
 	useUserSettings,
 	useUserStreamingProviders,
 } from "~/routes/api.user-settings.get"
+import { countryFlagUrl } from "~/utils/country-flag"
 
 export const SubHeader = () => {
 	const { data: userSettings } = useUserSettings()
@@ -20,11 +21,13 @@ export const SubHeader = () => {
 				<div className="flex flex-wrap items-center justify-center space-x-4 text-white text-lg">
 					<span className="hidden sm:block">You are watching in</span>
 
-					<img
-						src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${userSettings?.country_default}.svg`}
-						alt={`Watching in ${userSettings?.country_default}`}
-						className="h-6 w-8"
-					/>
+					{userSettings?.country_default && (
+						<img
+							src={countryFlagUrl(userSettings.country_default)}
+							alt={`Watching in ${userSettings.country_default}`}
+							className="h-6 w-8"
+						/>
+					)}
 
 					<span>on</span>
 

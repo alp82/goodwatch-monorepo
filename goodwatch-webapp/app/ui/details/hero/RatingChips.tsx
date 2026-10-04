@@ -1,7 +1,7 @@
 import type React from "react"
 import imdbLogo from "~/img/imdb-logo-250.png"
-import metacriticLogoIcon from "~/img/metacritic-logo-icon-250.png"
-import rottenLogoIcon from "~/img/rotten-logo-icon-250.png"
+import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp"
+import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 // IMDb, Metacritic (critics | audience), and Rotten Tomatoes (critics | audience) as compact

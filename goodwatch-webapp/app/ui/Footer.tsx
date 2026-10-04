@@ -3,9 +3,15 @@ import {
 	ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
+import avatarAneka from "~/img/avatars/aneka.svg"
+import avatarFelix from "~/img/avatars/felix.svg"
+import avatarMark from "~/img/avatars/mark.svg"
+import avatarSarah from "~/img/avatars/sarah.svg"
 import discordColor from "~/img/discord-mark-blue.svg"
+import justwatchLogo from "~/img/justwatch-logo.svg"
 import redditColor from "~/img/reddit-color.svg"
-import shieldazeBanner from "~/img/secured-by-shieldaze-transparent.webp"
+import texture from "~/img/texture-diagmonds-light.png"
+import shieldazeBanner from "~/img/secured-by-shieldaze-120.webp"
 import tmdbLogo from "~/img/tmdb-logo.svg"
 
 const DISCORD_GOODWATCH_URL = "https://discord.gg/TVAcrfQzcA"
@@ -114,7 +120,10 @@ export default function Footer() {
 			<section className="pb-16 px-4 sm:px-6 lg:px-8">
 				<div className="max-w-7xl mx-auto">
 					<div className="relative rounded-3xl overflow-hidden bg-[#5865F2] p-1">
-						<div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10" />
+						<div
+							className="absolute inset-0 opacity-10"
+							style={{ backgroundImage: `url(${texture})` }}
+						/>
 
 						<div className="relative bg-indigo-950/90 backdrop-blur-xl rounded-[22px] p-8 md:p-12 overflow-hidden">
 							<div className="absolute -top-24 -right-24 w-64 h-64 bg-[#5865F2] rounded-full blur-[100px] opacity-40" />
@@ -139,25 +148,41 @@ export default function Footer() {
 									<div className="flex items-center justify-center md:justify-start mt-6 -space-x-3">
 										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
 											<img
-												src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+												loading="lazy"
+												decoding="async"
+												width={36}
+												height={36}
+												src={avatarFelix}
 												alt="User"
 											/>
 										</div>
 										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
 											<img
-												src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka"
+												loading="lazy"
+												decoding="async"
+												width={36}
+												height={36}
+												src={avatarAneka}
 												alt="User"
 											/>
 										</div>
 										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
 											<img
-												src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mark"
+												loading="lazy"
+												decoding="async"
+												width={36}
+												height={36}
+												src={avatarMark}
 												alt="User"
 											/>
 										</div>
 										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
 											<img
-												src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
+												loading="lazy"
+												decoding="async"
+												width={36}
+												height={36}
+												src={avatarSarah}
 												alt="User"
 											/>
 										</div>
@@ -311,7 +336,8 @@ export default function Footer() {
 							<img
 								alt="JustWatch"
 								className="h-3 w-16"
-								src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg"
+								loading="lazy"
+								src={justwatchLogo}
 							/>
 						</a>
 					</div>
@@ -339,6 +365,9 @@ export default function Footer() {
 						>
 							<img
 								alt="Shieldaze"
+								loading="lazy"
+								width={144}
+								height={40}
 								className="h-10 w-auto"
 								src={shieldazeBanner}
 							/>

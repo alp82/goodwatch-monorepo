@@ -17,6 +17,7 @@ import { Spinner } from "~/ui/wait/Spinner"
 import { useUser } from "~/utils/auth"
 import useLocale from "~/utils/locale"
 import { useNav } from "~/utils/navigation"
+import { countryFlagUrl } from "~/utils/country-flag"
 
 const EVERYWHERE_LIMIT = 3
 
@@ -161,7 +162,7 @@ export default function SectionStreaming({
 	})
 	const streamingProviders = streamingProvidersResult?.data || []
 
-	const countryIcon = `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg`
+	const countryIcon = countryFlagUrl(country)
 
 	// autocomplete data
 
@@ -184,7 +185,7 @@ export default function SectionStreaming({
 		return {
 			key: country.code,
 			label: country.name,
-			icon: `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country.code}.svg`,
+			icon: countryFlagUrl(country.code),
 		}
 	})
 

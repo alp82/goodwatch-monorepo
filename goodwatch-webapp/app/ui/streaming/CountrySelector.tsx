@@ -2,6 +2,7 @@ import { useNavigate } from "@remix-run/react"
 import React, { useState } from "react"
 import FilterCountries from "~/ui/filter/FilterCountries"
 import type { Section } from "~/utils/scroll"
+import { countryFlagUrl } from "~/utils/country-flag"
 
 export interface StreamingBlockProps {
 	mediaType: "movie" | "show"
@@ -40,7 +41,7 @@ export default function CountrySelector({
 					onClick={toggleEditing}
 				>
 					<img
-						src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${currentCountryCode}.svg`}
+						src={countryFlagUrl(currentCountryCode)}
 						alt={`Flag of ${currentCountryCode}`}
 						className="h-4"
 					/>

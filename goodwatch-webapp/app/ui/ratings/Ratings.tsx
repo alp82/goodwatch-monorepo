@@ -1,8 +1,8 @@
 import React, { useState } from "react"
 import logo from "~/img/goodwatch-logo.png"
 import imdbLogo from "~/img/imdb-logo-250.png"
-import metacriticLogo from "~/img/metacritic-logo-250.png"
-import rottenLogo from "~/img/rotten-logo-250.png"
+import metacriticLogo from "~/img/metacritic-logo-96.webp"
+import rottenLogo from "~/img/rotten-logo-96.webp"
 import InfoBox from "~/ui/InfoBox"
 import {
 	type AllRatings,

@@ -5,7 +5,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import disneyMark from "~/img/disneyplus-logo.svg"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
-import huluMark from "~/img/hulu-logo.png"
+import huluMark from "~/img/hulu-logo-120.webp"
 import netflixMark from "~/img/netflix-logo.svg"
 import primeMark from "~/img/primevideo-logo.svg"
 import { REMOTE_SERVICES, type RemoteServiceKey } from "./living-room-data"

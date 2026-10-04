@@ -6,6 +6,7 @@ import { toast } from "react-toastify"
 import { createServerClient } from "@supabase/ssr"
 import { parse, serialize } from "@supabase/ssr"
 import { type PageMeta, buildMeta } from "~/utils/meta"
+import { AuthHookImage } from "~/ui/auth/AuthHookImage"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -161,11 +162,7 @@ export default function ForgotPassword() {
 			{/* Right side - Imagery/Video */}
 			<div className="hidden lg:block lg:flex-1 relative shadow-xl overflow-hidden">
 				<div className="absolute inset-0 bg-gradient-to-br from-green-600/20 to-orange-600/20 z-10" />
-				<img
-					src="/images/hooks/sign-up-hook.png"
-					alt="Movies and Shows"
-					className="absolute inset-0 w-full h-full object-cover opacity-25"
-				/>
+				<AuthHookImage />
 				<div className="absolute inset-0 flex items-center justify-center z-20">
 					<div className="text-center text-white p-8">
 						<h2 className="text-5xl font-bold mb-8">

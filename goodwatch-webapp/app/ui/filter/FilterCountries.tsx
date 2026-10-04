@@ -1,5 +1,6 @@
 import { useCountries } from "~/routes/api.countries"
 import Select, { type SelectItem } from "~/ui/form/Select"
+import { countryFlagUrl } from "~/utils/country-flag"
 
 export interface FilterCountriesProps {
 	mediaType: "movie" | "show"
@@ -20,7 +21,7 @@ export default function FilterCountries({
 		return {
 			key: country.code,
 			label: country.name,
-			icon: `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country.code}.svg`,
+			icon: countryFlagUrl(country.code),
 		}
 	})
 	selectItems.sort((a, b) => {

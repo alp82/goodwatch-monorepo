@@ -1,5 +1,6 @@
 import { motion } from "framer-motion"
 import { useState } from "react"
+import { countryFlagUrl } from "~/utils/country-flag"
 
 export const CountryFlag = ({ countryCode }: { countryCode: string }) => {
 	const [rotateX, setRotateX] = useState(0)
@@ -42,7 +43,7 @@ export const CountryFlag = ({ countryCode }: { countryCode: string }) => {
 		>
 			<motion.img
 				className="w-full h-full object-cover rounded-md shadow-lg"
-				src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`}
+				src={countryFlagUrl(countryCode)}
 				alt={getCountryName(countryCode)}
 				initial={{ scale: 1 }}
 				animate={{

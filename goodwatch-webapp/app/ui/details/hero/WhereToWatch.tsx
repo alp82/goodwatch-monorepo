@@ -9,6 +9,7 @@ import { useClickOutside } from "~/ui/details/hero/useClickOutside"
 import CountrySelector from "~/ui/streaming/CountrySelector"
 import type { Section } from "~/utils/scroll"
 import { brandName, duplicateProviderMapping, getShorterProviderLabel, getStreamingUrl, ignoredProviders } from "~/utils/streaming-links"
+import { countryFlagUrl } from "~/utils/country-flag"
 
 type Media = MovieResult | ShowResult
 
@@ -76,7 +77,7 @@ export default function WhereToWatch({ media, country, navigateToSection }: { me
 	}, [])
 	const overflow = links.length > capacity
 	const shown = overflow ? links.slice(0, capacity - 1) : links
-	const flag = country ? `https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg` : null
+	const flag = country ? countryFlagUrl(country) : null
 
 	const tile = (l: (typeof links)[number]) => (
 		<a

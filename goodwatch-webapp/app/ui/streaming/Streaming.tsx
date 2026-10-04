@@ -10,6 +10,8 @@ import type {
 } from "~/server/details.server"
 import InfoBox from "~/ui/InfoBox"
 import { getStreamingUrl } from "~/utils/streaming-links"
+import { countryFlagUrl } from "~/utils/country-flag"
+import justwatchLogo from "~/img/justwatch-logo.svg"
 
 export interface StreamingProps {
 	details: MovieDetails | TVDetails
@@ -172,7 +174,7 @@ export default function Streaming({
 								prefetch="intent"
 							>
 								<img
-									src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${countryCode}.svg`}
+									src={countryFlagUrl(countryCode)}
 									alt={`Flag of ${countryCode}`}
 									className="h-4"
 								/>
@@ -204,7 +206,7 @@ export default function Streaming({
 						<img
 							alt="JustWatch"
 							className="h-3 w-16"
-							src="https://widget.justwatch.com/assets/JW_logo_color_10px.svg"
+							src={justwatchLogo}
 						/>
 					</a>
 				</div>

@@ -40,6 +40,7 @@ import { type CardTitle, THEMES, cardDate, listByline } from "~/ui/share-card/mo
 import { getUserIdFromRequest } from "~/utils/auth"
 import { titleToDashed } from "~/utils/helpers"
 import { duplicateProviderMapping } from "~/utils/streaming-links"
+import { countryFlagUrl } from "~/utils/country-flag"
 
 // Never cache the HTTP response. The data cache holds "not found" for a few minutes;
 // every write that can bring a list back resets it.
@@ -246,9 +247,11 @@ export default function ShareListPage() {
 							</h2>
 							<span className="flex items-center gap-1.5 text-xs text-gray-400">
 								<img
-									src={`https://purecatamphetamine.github.io/country-flag-icons/3x2/${country}.svg`}
+									src={countryFlagUrl(country)}
 									alt=""
-									className="h-2.5 rounded-[1px]"
+									width={15}
+									height={10}
+									className="h-2.5 w-auto rounded-[1px]"
 								/>
 								Where to watch in {country}
 							</span>
