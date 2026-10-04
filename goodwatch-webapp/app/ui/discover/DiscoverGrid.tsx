@@ -14,6 +14,7 @@ import type { TitleCard } from "~/server/title-cards.server"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { SPRING } from "~/ui/filter-bar/motion"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
+import { gridPosterPriority } from "~/utils/tmdb-image"
 import type { TitleKey } from "~/utils/title-key"
 
 export const DISCOVER_GRID =
@@ -66,7 +67,11 @@ export function DiscoverGrid({
 							transition={flipping ? FLIP_GLIDE : GLIDE}
 							className="relative"
 						>
-							<TitlePosterCard card={card} prefetch={index < 12} />
+							<TitlePosterCard
+								card={card}
+								prefetch={index < 12}
+								posterPriority={gridPosterPriority(index)}
+							/>
 							<MoveMark delta={delta} reduce={reduce} />
 						</motion.div>
 					)
