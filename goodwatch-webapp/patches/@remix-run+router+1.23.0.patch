@@ -1,0 +1,58 @@
+diff --git a/node_modules/@remix-run/router/dist/router.cjs.js b/node_modules/@remix-run/router/dist/router.cjs.js
+index 10dcee9..68ff778 100644
+--- a/node_modules/@remix-run/router/dist/router.cjs.js
++++ b/node_modules/@remix-run/router/dist/router.cjs.js
+@@ -752,14 +752,20 @@ function matchRoutes(routes, locationArg, basename) {
+   }
+   return matchRoutesImpl(routes, locationArg, basename, false);
+ }
++const rankedBranchesCache = new WeakMap();
+ function matchRoutesImpl(routes, locationArg, basename, allowPartial) {
+   let location = typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
+   let pathname = stripBasename(location.pathname || "/", basename);
+   if (pathname == null) {
+     return null;
+   }
+-  let branches = flattenRoutes(routes);
+-  rankRouteBranches(branches);
++  // GoodWatch patch: the flattened and ranked branches of a route tree are computed once per tree, not per call.
++  let branches = rankedBranchesCache.get(routes);
++  if (!branches) {
++    branches = flattenRoutes(routes);
++    rankRouteBranches(branches);
++    rankedBranchesCache.set(routes, branches);
++  }
+   let matches = null;
+   for (let i = 0; matches == null && i < branches.length; ++i) {
+     // Incoming pathnames are generally encoded from either window.location
+@@ -1071,6 +1077,7 @@ function matchPath(pattern, pathname) {
+     pattern
+   };
+ }
++const compiledPathCache = new Map();
+ function compilePath(path, caseSensitive, end) {
+   if (caseSensitive === void 0) {
+     caseSensitive = false;
+@@ -1078,6 +1085,10 @@ function compilePath(path, caseSensitive, end) {
+   if (end === void 0) {
+     end = true;
+   }
++  // GoodWatch patch: a path pattern compiles to the same matcher every time, so keep it.
++  let cacheKey = (caseSensitive ? "1" : "0") + (end ? "1" : "0") + path;
++  let compiled = compiledPathCache.get(cacheKey);
++  if (compiled) return compiled;
+   warning(path === "*" || !path.endsWith("*") || path.endsWith("/*"), "Route path \"" + path + "\" will be treated as if it were " + ("\"" + path.replace(/\*$/, "/*") + "\" because the `*` character must ") + "always follow a `/` in the pattern. To get rid of this warning, " + ("please change the route path to \"" + path.replace(/\*$/, "/*") + "\"."));
+   let params = [];
+   let regexpSource = "^" + path.replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
+@@ -1110,7 +1121,10 @@ function compilePath(path, caseSensitive, end) {
+     regexpSource += "(?:(?=\\/|$))";
+   } else ;
+   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
+-  return [matcher, params];
++  compiled = [matcher, params];
++  if (compiledPathCache.size >= 2000) compiledPathCache.clear();
++  compiledPathCache.set(cacheKey, compiled);
++  return compiled;
+ }
+ function decodePath(value) {
+   try {
