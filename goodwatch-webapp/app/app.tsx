@@ -16,12 +16,15 @@ import {
 import { useUser } from "~/utils/auth"
 import { useFeature } from "~/hooks/useFeature"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 // Only members see the onboarding banner, so its code loads for them alone.
-const AccountTransfer = lazy(() =>
-	import("~/ui/onboarding/AccountTransfer").then((module) => ({
-		default: module.AccountTransfer,
-	})),
+const AccountTransfer = lazy(
+	reloadOnStaleChunk(() =>
+		import("~/ui/onboarding/AccountTransfer").then((module) => ({
+			default: module.AccountTransfer,
+		})),
+	),
 )
 
 function App() {

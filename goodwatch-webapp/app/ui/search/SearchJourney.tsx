@@ -37,21 +37,32 @@ import type { TitleType } from "~/ui/filter/sections/SectionType";
 import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
 import { useFeature } from "~/hooks/useFeature";
+import { reloadOnStaleChunk } from "~/utils/stale-chunk";
 
 // The provider below is on every page, but the filter sections and the people results are only on screen inside an
 // open search. They load with it, so that a page that never opens the search doesn't download them.
-const SectionGenre = lazy(() => import("~/ui/filter/sections/SectionGenre"));
-const SectionStreaming = lazy(
-	() => import("~/ui/filter/sections/SectionStreaming"),
+const SectionGenre = lazy(
+	reloadOnStaleChunk(() => import("~/ui/filter/sections/SectionGenre")),
 );
-const SectionRelease = lazy(() => import("~/ui/filter/sections/SectionRelease"));
-const SectionType = lazy(() => import("~/ui/filter/sections/SectionType"));
+const SectionStreaming = lazy(
+	reloadOnStaleChunk(() => import("~/ui/filter/sections/SectionStreaming")),
+);
+const SectionRelease = lazy(
+	reloadOnStaleChunk(() => import("~/ui/filter/sections/SectionRelease")),
+);
+const SectionType = lazy(
+	reloadOnStaleChunk(() => import("~/ui/filter/sections/SectionType")),
+);
 // The cast keeps the menu's type parameter, which `lazy` drops.
 const AddFilterMenu = lazy(
-	() => import("~/ui/filter/AddFilterMenu"),
+	reloadOnStaleChunk(() => import("~/ui/filter/AddFilterMenu")),
 ) as unknown as typeof import("~/ui/filter/AddFilterMenu").default;
-const SearchPeople = lazy(() =>
-	import("./SearchPeople").then((module) => ({ default: module.SearchPeople })),
+const SearchPeople = lazy(
+	reloadOnStaleChunk(() =>
+		import("./SearchPeople").then((module) => ({
+			default: module.SearchPeople,
+		})),
+	),
 );
 
 // --- Tunables ----------------------------------------------------------------------------

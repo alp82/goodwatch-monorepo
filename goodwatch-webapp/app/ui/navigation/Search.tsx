@@ -4,6 +4,7 @@ import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import { Suspense, lazy, useEffect, useState } from "react"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { useNavigation } from "./NavigationContext"
 import { currentSearchQuery } from "./destinations"
 
@@ -12,8 +13,12 @@ const SEARCH_LABEL = "Search titles, people, moods"
 // The palette is only on screen inside the open dialog. Its code loads when a visitor reaches for a search entry
 // (pointer, touch or focus), or at the latest when the dialog opens.
 const loadCommandPalette = () => import("./CommandPalette")
-const CommandPalette = lazy(() =>
-	loadCommandPalette().then((module) => ({ default: module.CommandPalette })),
+const CommandPalette = lazy(
+	reloadOnStaleChunk(() =>
+		loadCommandPalette().then((module) => ({
+			default: module.CommandPalette,
+		})),
+	),
 )
 const preloadCommandPalette = () => {
 	void loadCommandPalette().catch(() => {})
