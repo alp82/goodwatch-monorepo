@@ -13,6 +13,7 @@ import type { ReactNode } from "react"
 import type { TitleCard } from "~/server/title-cards.server"
 import { compactCount } from "~/ui/filter-bar/labels"
 import { SPRING } from "~/ui/filter-bar/motion"
+import { HiddenTileContext, useKeptCards } from "~/ui/title-actions/hide-feedback"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import { gridPosterPriority } from "~/utils/tmdb-image"
 import type { TitleKey } from "~/utils/title-key"
@@ -27,7 +28,7 @@ const GLIDE: Transition = { duration: 0.26, ease: [0.3, 1.35, 0.55, 1] }
 const FLIP_GLIDE: Transition = { type: "spring", stiffness: 140, damping: 22 }
 
 export function DiscoverGrid({
-	cards,
+	cards: listed,
 	marks,
 	flipping = false,
 	children,
@@ -44,8 +45,12 @@ export function DiscoverGrid({
 	children?: ReactNode
 }) {
 	const reduce = useReducedMotion() ?? false
+	// A guest's list reloads on every title mark, without the title just marked Not interested. Its card stays in
+	// place, as its "Hidden" tile with Undo, until the list changes after that.
+	const { cards, keeper } = useKeptCards(listed)
 	return (
 		<div className={DISCOVER_GRID}>
+			<HiddenTileContext.Provider value={keeper}>
 			<AnimatePresence initial={false} mode="popLayout">
 				{cards.map((card, index) => {
 					const delta = marks?.get(card.key) ?? 0
@@ -80,6 +85,7 @@ export function DiscoverGrid({
 					)
 				})}
 			</AnimatePresence>
+			</HiddenTileContext.Provider>
 			{children}
 		</div>
 	)

@@ -1,5 +1,6 @@
 import type { TitleCard } from "~/server/title-cards.server"
 import { MovieTvCard } from "~/ui/MovieTvCard"
+import type { ActionsPlacement } from "~/ui/title-actions/TitleActionsFrame"
 import type { ImagePriority } from "~/utils/tmdb-image"
 
 // The existing poster card for a title card from getTitleCards: its services as streaming badges, its taste match as
@@ -9,6 +10,7 @@ export function TitlePosterCard({
 	prefetch,
 	posterPriority,
 	skipOffscreen,
+	actions,
 }: {
 	card: TitleCard
 	prefetch?: boolean
@@ -16,6 +18,8 @@ export function TitlePosterCard({
 	posterPriority?: ImagePriority
 	/** For a card far down a long grid, see MovieTvCard. */
 	skipOffscreen?: boolean
+	/** Where the title actions sit on the poster, see MovieTvCard. */
+	actions?: ActionsPlacement | false
 }) {
 	const details = {
 		...card,
@@ -32,6 +36,7 @@ export function TitlePosterCard({
 			prefetch={prefetch}
 			posterPriority={posterPriority}
 			skipOffscreen={skipOffscreen}
+			actions={actions}
 			taste={{ match: card.match, reasons: card.reasons }}
 			rating={card.rating}
 		/>

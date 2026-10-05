@@ -37,6 +37,7 @@ import type { TitleType } from "~/ui/filter/sections/SectionType";
 import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
 import { useFeature } from "~/hooks/useFeature";
+import { TitleActionsFrame } from "~/ui/title-actions/TitleActionsFrame";
 import { reloadOnStaleChunk } from "~/utils/stale-chunk";
 
 // The provider below is on every page, but the filter sections and the people results are only on screen inside an
@@ -868,15 +869,27 @@ function JourneyList() {
 						"group relative block aspect-[2/3] overflow-hidden rounded-lg border-4 bg-gray-900";
 					return (
 						<li key={r.key} className="min-w-0">
-							<Link
-								prefetch="intent"
-								data-result={r.key}
-								to={j.detailHref(r)}
-								onClick={j.remember}
-								className={`${card} hover:border-amber-700/50 focus-visible:outline focus-visible:outline-cyan-300 ${active(r) ? "border-cyan-300/70" : "border-gray-800"}`}
+							{/* The title actions sit along the top: the bottom holds the title and its reasons. */}
+							<TitleActionsFrame
+								media={{
+									mediaType: r.type === "show" ? "show" : "movie",
+									details: {
+										tmdb_id: Number(r.key.split(":")[1]),
+										title: r.title,
+									},
+								}}
+								placement="top"
 							>
-								{body}
-							</Link>
+								<Link
+									prefetch="intent"
+									data-result={r.key}
+									to={j.detailHref(r)}
+									onClick={j.remember}
+									className={`${card} hover:border-amber-700/50 focus-visible:outline focus-visible:outline-cyan-300 ${active(r) ? "border-cyan-300/70" : "border-gray-800"}`}
+								>
+									{body}
+								</Link>
+							</TitleActionsFrame>
 						</li>
 					);
 				})}

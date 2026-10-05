@@ -121,6 +121,18 @@
 	}
 }
 
+/* A mouse or trackpad that can hover, and everything else (phones, tablets): the title cards show their quick actions
+   on hover for the first and a "more" button for the second. app/ui/title-actions/pointer.ts asks the same question. */
+@custom-variant can-hover {
+	@media (hover: hover) and (pointer: fine) {
+		@slot;
+	}
+}
+@custom-variant touch {
+	@media not all and (hover: hover) and (pointer: fine) {
+		@slot;
+	}
+}
 @custom-variant sm-h {
 	@media (max-height: 1000px) {
 		@slot;

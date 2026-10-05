@@ -9,7 +9,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { type WatchNextChoice, watchNextChoiceOf } from "~/domain/watch-next"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
 import type { TasteInteraction } from "~/ui/taste/types"
@@ -196,4 +196,21 @@ export function useRefreshWatchNext() {
 		() => client.invalidateQueries({ queryKey: watchNextQueryKey }),
 		[client],
 	)
+}
+
+/**
+ * A member's saved title mark (a score, Want to See, Seen, Not interested) made anywhere on the page, such as on a
+ * poster card, refreshes Watch next. A guest's marks change the guest progress, which is part of the query.
+ */
+export function useRefreshAfterMarks() {
+	const client = useQueryClient()
+	const refresh = useRefreshWatchNext()
+	const { user } = useUser()
+	const member = Boolean(user)
+	useEffect(() => {
+		if (!member) return
+		return client.getMutationCache().subscribe((event) => {
+			if (event.type === "updated" && event.action.type === "success") refresh()
+		})
+	}, [client, refresh, member])
 }

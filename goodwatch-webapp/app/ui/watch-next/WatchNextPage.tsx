@@ -9,6 +9,8 @@ import { useUserData } from "~/routes/api.user-data"
 import type { TitleCard } from "~/server/title-cards.server"
 import type { WatchNext } from "~/server/watch-next.server"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
+import { UndoToast } from "~/ui/title-actions/UndoToast"
+import { type HideFeedback, HideFeedbackContext } from "~/ui/title-actions/hide-feedback"
 import { DockedStrip } from "./DockedStrip"
 import { FinishPrompt, FinishToast } from "./FinishPrompt"
 import { type MoodControl, refusalText } from "./MoodPicker"
@@ -17,7 +19,11 @@ import { SteppedGrid, WorthAdding } from "./SteppedGrid"
 import { WatchNextHero } from "./WatchNextHero"
 import { WRAP } from "./style"
 import { useFinish } from "./useFinish"
-import { useRefreshWatchNext, useWatchNext } from "./useWatchNext"
+import {
+	useRefreshAfterMarks,
+	useRefreshWatchNext,
+	useWatchNext,
+} from "./useWatchNext"
 
 export function WatchNextPage({
 	initial,
@@ -31,6 +37,24 @@ export function WatchNextPage({
 	const refresh = useRefreshWatchNext()
 	const { mutate: updateWishlist } = useWishlistMutation()
 	const { data: userData } = useUserData()
+	useRefreshAfterMarks()
+
+	// Not interested on a card: the title leaves the page at once, so the Undo is a toast instead of a tile in the grid.
+	const [hid, setHid] = useState<{
+		id: number
+		text: string
+		undo: () => void
+	} | null>(null)
+	const onHide = useCallback<HideFeedback>(
+		(media, undo) =>
+			setHid({
+				id: Date.now(),
+				text: `${media.details.title} is hidden from your recommendations`,
+				undo,
+			}),
+		[],
+	)
+	const dismissHid = useCallback(() => setHid(null), [])
 
 	// Moods: the dropdown's state and the refusal of a fourth pick, announced politely.
 	const [moodsOpen, setMoodsOpen] = useState(false)
@@ -140,8 +164,10 @@ export function WatchNextPage({
 				<div
 					className={`${WRAP} pt-8 transition-opacity ${state.isFetching && !state.isLoading ? "opacity-80" : ""}`}
 				>
-					<SteppedGrid data={data} state={state} showMatch={showMatch} />
-					<WorthAdding data={data} onWant={want} isWanted={isWanted} />
+					<HideFeedbackContext.Provider value={onHide}>
+						<SteppedGrid data={data} state={state} showMatch={showMatch} />
+						<WorthAdding data={data} onWant={want} isWanted={isWanted} />
+					</HideFeedbackContext.Provider>
 					{state.guest && (
 						<SignUpPrompt
 							feature="watchNext"
@@ -167,6 +193,15 @@ export function WatchNextPage({
 				data={data}
 				onUndo={finishing.undo}
 				onDismiss={finishing.dismissToast}
+			/>
+			<UndoToast
+				toast={hid}
+				onUndo={() => {
+					hid?.undo()
+					setHid(null)
+				}}
+				onDismiss={dismissHid}
+				className="bottom-40 lg:bottom-6"
 			/>
 		</div>
 	)

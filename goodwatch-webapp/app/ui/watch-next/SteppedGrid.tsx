@@ -4,6 +4,7 @@
 import { BookmarkIcon, CheckIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
+import { useIsNotInterested } from "~/hooks/useUserDataAccessors"
 import { TIER_CAPS, type WatchNextTierSize } from "~/domain/watch-next"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import type {
@@ -244,41 +245,59 @@ export function WorthAdding({
 				</p>
 			</div>
 			<div className="-mx-4 flex snap-x gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-				{data.worthAdding.map((card) => {
-					const wanted = isWanted(card)
-					return (
-						<div
-							key={card.key}
-							className="relative w-[8.5rem] shrink-0 snap-start md:w-[10.5rem]"
-						>
-							<TitlePosterCard card={card} />
-							<div className="absolute inset-x-2 bottom-4 z-10 flex justify-end">
-								<button
-									type="button"
-									onClick={() => onWant(card)}
-									aria-pressed={wanted}
-									aria-label={
-										wanted
-											? `${card.title} is on your Wishlist`
-											: `Want to See: ${card.title}`
-									}
-									className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-xs font-bold shadow-lg shadow-black/50 transition-colors ${wanted ? "bg-amber-400 text-black hover:bg-amber-300" : "bg-white/95 text-black hover:bg-white"}`}
-								>
-									<BookmarkIcon
-										className={`h-4 w-4 ${wanted ? "" : "text-amber-600"}`}
-										aria-hidden
-									/>
-									{wanted ? (
-										<CheckIcon className="h-3.5 w-3.5" aria-hidden />
-									) : (
-										"Want to See"
-									)}
-								</button>
-							</div>
-						</div>
-					)
-				})}
+				{data.worthAdding.map((card) => (
+					<WorthAddingCard
+						key={card.key}
+						card={card}
+						wanted={isWanted(card)}
+						onWant={onWant}
+					/>
+				))}
 			</div>
 		</section>
+	)
+}
+
+function WorthAddingCard({
+	card,
+	wanted,
+	onWant,
+}: {
+	card: TitleCard
+	wanted: boolean
+	onWant: (card: TitleCard) => void
+}) {
+	// The card turns into its "Hidden" tile after Not interested; the pill goes with it.
+	const hidden = useIsNotInterested(card.media_type, card.tmdb_id)
+	return (
+		<div className="relative w-[8.5rem] shrink-0 snap-start md:w-[10.5rem]">
+			{/* The card's other actions sit above the pill. */}
+			<TitlePosterCard card={card} actions="raised" />
+			{!hidden && (
+				<div className="pointer-events-none absolute inset-x-2 bottom-4 z-40 flex justify-end">
+					<button
+						type="button"
+						onClick={() => onWant(card)}
+						aria-pressed={wanted}
+						aria-label={
+							wanted
+								? `${card.title} is on your Wishlist`
+								: `Want to See: ${card.title}`
+						}
+						className={`pointer-events-auto inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-xs font-bold shadow-lg shadow-black/50 transition-colors ${wanted ? "bg-amber-400 text-black hover:bg-amber-300" : "bg-white/95 text-black hover:bg-white"}`}
+					>
+						<BookmarkIcon
+							className={`h-4 w-4 ${wanted ? "" : "text-amber-600"}`}
+							aria-hidden
+						/>
+						{wanted ? (
+							<CheckIcon className="h-3.5 w-3.5" aria-hidden />
+						) : (
+							"Want to See"
+						)}
+					</button>
+				</div>
+			)}
+		</div>
 	)
 }

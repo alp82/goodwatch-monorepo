@@ -7,6 +7,8 @@ interface DrawerProps {
 	onClose: () => void
 	children: React.ReactNode
 	className?: string
+	/** Also on md and wider screens, for a sheet opened by touch on a tablet. */
+	allSizes?: boolean
 }
 
 /**
@@ -24,6 +26,7 @@ const Drawer: React.FC<DrawerProps> = ({
 	onClose,
 	children,
 	className = "",
+	allSizes = false,
 }) => {
 	const startY = useRef<number | null>(null)
 	const lastY = useRef<number>(0)
@@ -124,7 +127,7 @@ const Drawer: React.FC<DrawerProps> = ({
 
 	return createPortal(
 		<div
-			className={`fixed inset-0 z-100 flex items-end md:hidden ${isOpen ? "visible" : "invisible pointer-events-none"}`}
+			className={`fixed inset-0 z-100 flex items-end ${allSizes ? "" : "md:hidden"} ${isOpen ? "visible" : "invisible pointer-events-none"}`}
 			aria-modal="true"
 			tabIndex={-1}
 		>
