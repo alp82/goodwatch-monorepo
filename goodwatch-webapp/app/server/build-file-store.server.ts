@@ -54,7 +54,7 @@ export function isBuildFilePath(
 	const name = path.slice(assetsPrefix.length)
 	const extension = name.slice(name.lastIndexOf(".") + 1).toLowerCase()
 	return (
-		/^[A-Za-z0-9_][A-Za-z0-9_.~-]{0,199}$/.test(name) &&
+		/^[A-Za-z0-9_][A-Za-z0-9_.~()-]{0,199}$/.test(name) &&
 		!name.includes("..") &&
 		name.includes(".") &&
 		!["map", "br", "gz", "html"].includes(extension) &&

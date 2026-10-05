@@ -183,6 +183,7 @@ test("build paths accept only raw filenames with supported extensions", () => {
 		"/assets/root-AbCd1234.js",
 		"/assets/_font-123.woff2",
 		"/assets/a~b.css",
+		"/assets/discover.(_type)-Bv4H16Oa.js",
 	])
 		assert.equal(isBuildFilePath(path, "/assets/", contentTypes), true, path)
 	for (const path of [
