@@ -9,7 +9,7 @@ The run summaries are in [`goodwatch-benchmark/results/page-views-2026-10-05/`](
 ## Summary
 
 - **A movie page view on the public path with new connections holds at 100 page views per second,** is slow at 110, and fails at 120. The limit is the CPU of the host that runs the proxy: 92% to 96% of abio's 8 cores, of which the proxy uses 6.1 to 6.3. The destination is 500.
-- **The primary scenario's mix holds only 30 visitors per second** with a document p95 under 300 ms, and fails at 80. The limit there isn't the proxy. It is the home page's `POST /api/living-room/picks?view=pool`, which costs about 350 ms of Node main-thread time per home page view. The home page alone holds 2 page views per second.
+- **The primary scenario's mix holds only 30 visitors per second** with a document p95 under 300 ms, and fails at 80. The limit there isn't the proxy. It is the home page's `POST /api/living-room/picks?view=pool`, which costs about 350 ms of Node main-thread time per home page view. The home page alone holds 2 page views per second. A later change cut this request, see [The home page's pool request after the fix](#the-home-pages-pool-request-after-the-fix).
 - **The same mix without the home page behaves like the movie page:** it holds 100 visitors per second, and the host CPU on abio is the limit.
 - **Over the private path with reused connections, a movie page view holds at 140 per second,** and both Node main threads are the limit (85% to 88%, and 94% to 96% at the failing step). So TLS handshakes cost about 40 page views per second of today's capacity.
 - **A new TLS connection costs 14 to 16 ms of proxy CPU** (measured, 25 to 400 new connections per second). The baseline estimated 20 to 25 ms. abio's 8 cores are full at about 470 to 500 new connections per second.
@@ -453,6 +453,27 @@ Two findings that aren't proxy options but decide the primary scenario first:
 
 - **The home page's pool request** limits the primary mix at 30 visitors per second, in front of or behind any proxy or CDN, because it is a POST with `private, no-store`. The map already lists "whether the home page's pool request moves into the loader" as an open owner question.
 - **The crawler's connections** use about 0.9 of the proxy's 1.5 idle cores at 14 ms each (estimated from the rate). An ECDSA certificate is the change that makes them cheap, which is what the owner asked for in the ticket.
+
+## The home page's pool request after the fix
+
+The numbers above are from before this change. The pool request's cost was one pass over the title snapshot per request, and it now runs once per snapshot version and UTC day in each process.
+
+- **Where the time went:** a CPU profile of a local production build puts 99% of the request's time under `getLivingRoomPool`: 66% in the walk over all 238,894 titles of the snapshot (`facts` builds a genre list and a mood list for every title), and 33% in sorting the titles that pass and filtering them once per mood. The title cards, the service list, and the taste together are under 1%.
+- **What the result depends on:** the snapshot version, the day, the visitor's country and services, and the guest progress in the request body (rated, skipped, and Want to See titles, and the taste they give). An anonymous visitor without progress gets the order by popularity.
+- **The change:** `app/server/living-room/pool-keys.server.ts` keeps the titles that pass the pool's conditions, in popularity order, per snapshot version and day. They are the same for everyone. Each request still leaves out the viewer's own seen, skipped, and Want to See titles and reads its lists off the front. A viewer with a taste still gets their own ranking and sort on every request, without the walk over the snapshot. No response is stored, so the request stays a POST with `private, no-store`, and a member's answer is computed from the member's own data as before.
+- **Not changed:** the first request after a new snapshot version or after midnight UTC pays the walk once in each process.
+
+Measured on a development machine (faster cores than production's), one process of a local production build at `85603eab` and at the fix, with its own single-node Valkey that holds a copy of the title snapshot, and production Crate read only. Main-thread CPU time is from `/proc`, less the idle process's 11 ms per second. Each run follows 30 warm-up requests, with the body the benchmark replays (an anonymous visitor without progress).
+
+| Build | Requests per second | Requests | Main-thread ms per request | Client p50 / p95 ms |
+| --- | --- | --- | --- | --- |
+| Before | 2 | 60 | 42.1 | 41 / 49 |
+| Before | 5 | 100 | 41.5 | 39 / 43 |
+| After | 5 | 100 | 2.1 | 3 / 4 |
+| After | 50 | 1,500 | 2.4 | 2 / 3 |
+
+- **The response is the same** before and after: the same 23 titles in the same order, the same pairs, and the same catalog. Only the order of the services within a title differs between any two processes, because it follows the order in which Crate returned them when the process loaded the country's availability.
+- **Not measured:** the same request costs about 350 ms on a production instance where it costs 42 ms here, so the absolute numbers don't carry over. By the same ratio the request would cost about 20 ms there, most of it the request's own handling (reading the body, 23 title cards from the cache, and 44 KB of JSON). The load runs on production weren't repeated, so the new limits of the home page and of the primary mix aren't measured.
 
 ## Not measured or not verified
 

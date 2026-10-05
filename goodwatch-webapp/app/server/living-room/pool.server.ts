@@ -1,4 +1,4 @@
-import { MOOD_BY_KEY, MOOD_KEYS, type MoodKey } from "~/domain/moods"
+import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { loadTaste } from "~/server/taste/index.server"
 import {
 	MAX_KEYS,
@@ -15,9 +15,7 @@ import type {
 } from "~/ui/living-room/living-room-data"
 import { livingRoomServices } from "./data.server"
 import { LivingRoomUnavailable, rankOf } from "./picks.server"
-
-const PER_MOOD = 3
-const BEST = 6
+import { poolCandidates, selectPoolKeys } from "./pool-keys.server"
 
 // Contrasting moods for "Which one, tonight?".
 const PAIRS: [MoodKey, MoodKey][] = [
@@ -38,55 +36,16 @@ export async function getLivingRoomPool(
 	const taste = await loadTaste(ctx.viewer)
 	const member = ctx.viewer.kind === "member"
 
-	// The best few for any mood, then a few per mood, without repeats.
-	const keys: number[] = []
-	const byMood = new Map<MoodKey, number[]>()
-	const add = (list: number[]) => {
-		for (const k of list) if (!keys.includes(k)) keys.push(k)
-	}
-	// Rank directly from the current snapshot on each request, without a process-cached suggestion pool.
+	// The best few for any mood, then a few per mood, without repeats. The candidates are kept per snapshot version and
+	// UTC day. The viewer's seen, skipped, and Want to See titles and their taste order apply on every request (see
+	// pool-keys.server.ts).
 	const today = Math.floor(Date.now() / 86_400_000)
-	const ranked: {
-		key: number
-		rank: number
-		popularity: number
-		moods: MoodKey[]
-	}[] = []
-	snapshot.forEach((key) => {
-		if (ctx.seen.has(key) || ctx.skipped.has(key) || ctx.wishlist.has(key))
-			return
-		const facts = snapshot.facts(key)
-		if (
-			!facts ||
-			facts.adult ||
-			!facts.hasPoster ||
-			(facts.releaseDay !== null && facts.releaseDay > today) ||
-			(facts.score ?? 0) < 70 ||
-			facts.votes < 1000
-		)
-			return
-		ranked.push({
-			key,
-			rank:
-				ctx.forYou && taste.signal === "some"
-					? rankOf(taste, key)
-					: facts.popularity,
-			popularity: facts.popularity,
-			moods: facts.moods,
-		})
-	})
-	ranked.sort(
-		(a, b) => b.rank - a.rank || b.popularity - a.popularity || a.key - b.key,
+	const candidates = poolCandidates(snapshot, today)
+	const { keys, byMood } = selectPoolKeys(
+		candidates,
+		ctx,
+		ctx.forYou && taste.signal === "some" ? (key) => rankOf(taste, key) : null,
 	)
-	add(ranked.slice(0, BEST).map(({ key }) => key))
-	for (const mood of MOOD_KEYS) {
-		const list = ranked
-			.filter((title) => title.moods.includes(mood))
-			.slice(0, PER_MOOD + 2)
-			.map(({ key }) => key)
-		byMood.set(mood, list)
-		add(list.slice(0, PER_MOOD))
-	}
 
 	const [cards, wishlist, saved, catalog] = await Promise.all([
 		getTitleCards(keys.slice(0, MAX_KEYS), ctx, taste),
