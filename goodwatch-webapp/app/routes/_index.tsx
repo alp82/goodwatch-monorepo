@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useCallback } from "react"
 import {
 	useScoreMutation,
-	useSkippedMutation,
+	useNotInterestedMutation,
 	useWatchedMutation,
 	useWishlistMutation,
 } from "~/hooks/useUserDataMutations"
@@ -21,6 +21,7 @@ import { type LivingRoomData, titleOf } from "~/ui/living-room/living-room-data"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import { type TvEffect, isTvOnlyChange } from "~/ui/living-room/tv-flow"
 import { useLeaveThroughTv } from "~/ui/living-room/tv-transition"
+import { useUndoToast } from "~/ui/title-actions/UndoToast"
 import { titleHref } from "~/ui/watch-next/WatchNextHero"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 
@@ -133,7 +134,8 @@ export default function Index() {
 
 	const wishlist = useWishlistMutation()
 	const watched = useWatchedMutation()
-	const skipped = useSkippedMutation()
+	const notInterested = useNotInterestedMutation()
+	const hideToast = useUndoToast()
 	const score = useScoreMutation()
 	const onRate = useCallback(
 		(titleKey: string, value: Score) => {
@@ -179,12 +181,28 @@ export default function Index() {
 						watched.mutate({ ...target, action: "add" })
 					return
 				case "not-for-me":
-					if (target) skipped.mutate({ ...target, action: "add" })
+					if (target && title) {
+						// Taking it back also restores Want to See, which Not interested cleared.
+						const undo = () =>
+							title.wantToSee
+								? wishlist.mutate({ ...target, action: "add" })
+								: notInterested.mutate({ ...target, action: "remove" })
+						notInterested.mutate({ ...target, action: "add" })
+						hideToast.say(
+							`${title.title} is hidden from your recommendations`,
+							undo,
+						)
+					}
 					return
 			}
 		},
-		[data, leave, wishlist, watched, skipped],
+		[data, leave, wishlist, watched, notInterested, hideToast.say],
 	)
 
-	return <LivingRoom data={data} onEffect={onEffect} onRate={onRate} />
+	return (
+		<>
+			<LivingRoom data={data} onEffect={onEffect} onRate={onRate} />
+			{hideToast.node}
+		</>
+	)
 }
