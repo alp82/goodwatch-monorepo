@@ -9,8 +9,3 @@
 - use proper meta tags and Open Graph tags
 - use proper hreflang tags
 - use proper canonical tags
-
-# QA & Testing
-- The dev server is always running under http://localhost:3003/, don't run it yourself
-- Use Chrome Devtools MCP and use the browser to test UI changes and analyze lighthouse scores
-- Don't write automated tests
