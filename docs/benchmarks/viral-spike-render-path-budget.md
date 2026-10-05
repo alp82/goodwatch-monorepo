@@ -298,7 +298,9 @@ the sign-in client, the dialogs, and the animation library on first use" does.
   with 22 and 38 seasons). Screenshots differ only in the antialiasing of text inside a skipped section.
 - **CLS while scrolling to the bottom:** the same as before on every page (0 on phones).
 - **Section links** land on the same pixel as before in Chromium, WebKit, and Firefox, on phones and desktops.
-- **A URL with a section hash** lands on the section. Before the change, it ended above it.
+- **A URL with a section hash** lands on the section in Chromium and Firefox. Before the change, it ended above it.
+  In WebKit on production it still ends above the section: content that arrives later moves the page, and WebKit
+  doesn't keep the scroll position anchored.
 - **In-page search** finds text in a skipped section and scrolls to it in WebKit and Firefox (`window.find`). In
   headless Chromium, `window.find` finds nothing with or without the change, so Chromium is unchecked.
 - **Reserved heights:** exact for the cast, crew, and sequels sections, and within 8 px for related titles and the
@@ -382,6 +384,28 @@ In a local production build, in Chromium, WebKit, and Firefox, on a phone and a 
 
 Not checked: a completed sign-in or sign-up, a member's page (the account menu, sign-out, the password change), and
 the rating limit dialog. No member session and no test account were available.
+
+## Production after the three changes
+
+Runs `20261005T002135Z-lighthouse-prod-before` at `c09b526f` and `20261005T005340Z-lighthouse-prod-after` at
+`74170b05`, 30 minutes apart, median of 3 runs each. The second run passes 90 of 90 lines of the lowered budget.
+
+| Surface | Score | Simulated FCP | LCP | TBT | CLS | Script bytes | Image bytes | Total bytes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Home | 84 to 85 | 2,882 to 2,571 ms | 3,709 to 3,455 ms | 104 to 148 ms | 0 | 304 to 232 KB | 294 KB | 717 to 645 KB |
+| Movie | 68 to 74 | 2,899 to 2,725 ms | 3,850 to 3,550 ms | 560 to 501 ms | 0 | 304 to 234 KB | 68 KB | 490 to 420 KB |
+| Show | 67 to 68 | 2,899 to 2,601 ms | 4,089 to 3,781 ms | 584 to 519 ms | 0 | 304 to 234 KB | 121 KB | 546 to 476 KB |
+| Person | 80 to 86 | 2,875 to 2,139 ms | 4,075 to 3,460 ms | 159 to 197 ms | 0 | 293 to 175 KB | 179 KB | 569 to 451 KB |
+| Discover | 70 to 76 | 3,033 to 2,788 ms | 5,200 to 4,896 ms | 280 to 194 ms | 0.028 | 337 to 307 KB | 751 to 388 KB | 1,182 to 786 KB |
+| Share list | 81 to 85 | 2,561 to 2,418 ms | 4,430 to 3,843 ms | 48 to 48 ms | 0.010 | 254 to 184 KB | 322 to 174 KB | 719 to 502 KB |
+
+- Against the tickets: script bytes on title pages are 234 KB (under 240 KB). The simulated FCP of the movie and
+  show page is 2.7 and 2.6 s (not under 2.2 s). Discover's image bytes are 388 KB and its LCP is 4.9 s (not under
+  350 KB and 4.0 s).
+- **The image host answers the same URL with files of different sizes.** The share list's 31 images were 322 KB in
+  the first run and 174 KB in the second, with the same URLs and no change to the page. Discover's 14 posters were
+  346 KB on the test container and 377 KB on production. The first run failed the share list's image and total
+  lines for that reason. A failed image line needs a second run before it counts.
 
 ## Not verified
 
