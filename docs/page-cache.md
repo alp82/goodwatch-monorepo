@@ -95,7 +95,7 @@ A response is stored only when all of these hold:
 | --- | --- |
 | The request has no auth cookie | `cacheIdentity`, before any lookup. A member's request never reaches the store, the counters, or a waiting line. |
 | GET, status 200, `text/html` document | The server entry offers only a document render. `pageCacheWants` refuses any other method or status. |
-| The applied policy is `keyed` or `shared` | The server entry passes the result of `applyCachePolicy`. A route that says `private` or `no-store` is never offered: hidden share lists, member views, search, settings. |
+| The applied policy is `keyed` or `shared` | The server entry passes the result of `applyCachePolicy`. A route that says `private` or `no-store` is never offered: hidden share lists, member views, search. See [Pages that are never stored](#pages-that-are-never-stored). |
 | No `Set-Cookie` | `applyCachePolicy` makes such a response private, and `pageCacheWants` checks again. |
 | No render error | The server entry drops the offer when React reported an error or the abort timer fired. |
 | The gate wouldn't answer the request | `gateAnswer`, before any lookup and again when the render is offered. |
@@ -122,9 +122,16 @@ A response is stored only when all of these hold:
 - The first request for a URL is rendered by the app as before. While it runs, a second request for the same key
   waits for it, up to 3 seconds, and is answered from the store when the render is stored. A cold URL that 500
   clients ask for at once renders once.
-- If the render turns out not to be storable, the waiting requests go to the app, and the key gets a pass period:
-  nobody waits for that key for 5 seconds, doubling up to 5 minutes each time it fails again. A hidden share list page
-  under load costs one probe per pass period and no waiting. A public list shares one render per key.
+- If the render turns out not to be storable, the key gets a pass period: nobody new waits for that key for
+  5 seconds, doubling up to 5 minutes each time it fails again. A hidden share list page under load costs one probe
+  per pass period and no waiting. A public list shares one render per key.
+- **One retry render:** the requests that waited for a render that ended without a stored page (it failed, the
+  client left, the page wasn't storable, or a reset cancelled it) share one more render. The first of them leads it
+  with `GW-Page-Cache: miss`, and the others wait for it. When the retry is stored, they're answered from the store.
+  When it isn't, they go to the app within the bound below. A request waits for at most two renders and never past
+  its first 3 seconds. A retry runs even inside the pass period that the first render set: an incomplete page answers
+  `no-store`, and its next render is often complete. A retry that isn't stored counts as one more failure for the
+  pass period. No retry starts while the process shuts down.
 - At most 1,000 renders are tracked and at most 2,000 requests wait. Beyond that, requests go to the app, within
   the bound below.
 
@@ -137,6 +144,11 @@ the fifth isn't passed. It gets the busy answer.
 - **Why a bound:** a waiting request goes to the app after 3 seconds, and a request that arrives when the lead render
   is older than 3 seconds doesn't wait at all. Without the bound, one slow lead render (a slow data store) turned
   every request for a hot URL into a render. So did a lead render that failed, and a pass period.
+- **After a lead render that isn't stored:** the waiting requests share one retry render first (see above). Until
+  the ticket "Narrow the busy answer: let released waiters join a new render and list the pages that are never
+  stored", they went to the app at once: 4 of 50 waiting requests rendered and 46 got the busy answer. Now one
+  renders, and 49 get the page when the retry is stored. When the retry isn't stored either, 4 more render and the
+  rest get the busy answer.
 - **Why four:** more than one, so that a render that hangs doesn't make the URL unanswerable for as long as it hangs.
   Few, because the process renders about 20 title pages per second: four renders take about 160 ms of the main
   thread, which leaves it to other URLs.
@@ -149,6 +161,29 @@ the fifth isn't passed. It gets the busy answer.
 - **Who is never limited:** a request with a bypass (a member, the gate's answer, a long URL) and everything that
   isn't a page.
 - **What the bound doesn't cover:** renders of different URLs. Each URL has its own four.
+
+### Pages that are never stored
+
+The bound also applies to a URL whose page is never stored. No render of such a page can be shared, so more than four
+identical anonymous requests in flight get the busy answer. For an anonymous visitor, these pages are never stored:
+
+| Page | Why |
+| --- | --- |
+| `/search` | The route answers `private, no-store`. With the filter bar on, it redirects to `/discover?q=...`, which is storable. |
+| `/explorer` | The loader answers `private, no-store` (404 while the feature is off). |
+| `/watch-next` | The loader answers `private, no-store` (404 while the feature is off). |
+| `/lists/new`, `/settings/imports`, `/settings/profile` | The loader answers `private, no-store`. |
+| `/lists/mine`, `/u/<handle>/lists/<id>/edit` | A redirect, or 404. |
+| `/u/<handle>/lists/<id>` of an unlisted list | The loader answers `private, no-store`. |
+| An incomplete page | `no-store` for this render only. See [What is stored](#what-is-stored). |
+| A redirect, a 404, an error | The status isn't 200. This includes `/discover/<type>` and Discover's old parameter names with the filter bar on, and `/wishlist` with Watch next on. |
+| A filtered person URL, `/sign-in` and `/sign-up` with `redirectTo`, without the `gw_browser` cookie | The gate answers. These bypass the cache and aren't limited. |
+
+Every other page is storable for an anonymous visitor, including the settings pages without a loader (`/settings`,
+`/settings/account`, `/settings/country`, `/settings/streaming`) and `/taste/quiz`.
+
+`goodwatch_page_cache_busy_total` counts the busy answers per route. See
+[viral-spike-metrics.md](benchmarks/viral-spike-metrics.md).
 
 Measured on October 5, 2026, on a development machine: a local production build, a throwaway Valkey, no other data
 store, and 300 requests per second for one URL for 12 seconds. A hook in front of Express delayed every render.

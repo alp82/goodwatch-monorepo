@@ -17,7 +17,7 @@
 //   whose page may be stored, so that no visitor's click id ends up in a page for everyone. A redirect gets them back.
 // - One render per key: while the first render of a repeated URL runs, later requests wait for it (at most 3 seconds)
 //   instead of rendering. A URL that turned out not to be storable isn't waited for again (a pass period that
-//   doubles from 5 seconds to 5 minutes).
+//   doubles from 5 seconds to 5 minutes). Released waiters share one retry render within their original deadline.
 // - At most four renders of one key are in flight, whatever the reason: a lead render that is slow or failed, a pass
 //   period, a shutdown. A request beyond that gets a busy answer: 503 with `no-store` and `Retry-After`, and a page
 //   that reloads by itself.
@@ -211,11 +211,15 @@ type Admission = {
 	passUntil: number
 	passStreak: number
 }
-type Waiter = { finish: (entry?: PageEntry, reason?: string) => void }
+type Waiter = {
+	flight?: Flight
+	finish: (entry?: PageEntry, reason?: string) => void
+}
 type Flight = PageKey & {
 	route: string
 	startedAt: number
 	joinable: boolean
+	retry: boolean
 	waiters: Set<Waiter>
 	offered: boolean
 	kind: "request" | "refresh"
@@ -343,7 +347,8 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		if (flight.kind === "refresh") refreshFlights--
 		flight.cancelled = true
 		clearTimeout(flight.timer)
-		for (const waiter of [...flight.waiters]) waiter.finish(entry)
+		for (const waiter of [...flight.waiters])
+			if (waiter.flight === flight) waiter.finish(entry)
 	}
 	function pause(key: string) {
 		pauses.delete(key)
@@ -371,6 +376,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 			route: routeLabel(page.path),
 			startedAt: now(),
 			joinable,
+			retry: false,
 			kind,
 			waiters: new Set(),
 			offered: false,
@@ -584,47 +590,16 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		if (draining()) return pass("shutdown")
 		if (request.method === "HEAD") return pass("head")
 		const row = count(page.key)
-		if (now() < row.passUntil) return pass("pass")
-		const existing = flights.get(page.key)
-		if (
-			existing?.joinable &&
-			now() - existing.startedAt < limits.JOIN_MAX_AGE_MS &&
-			admitted(page.key) &&
-			waiters < limits.MAX_WAITERS
-		) {
-			let done = false
-			const waiter: Waiter = {
-				finish(entry, reason = "released") {
-					if (done) return
-					done = true
-					clearTimeout(timer)
-					response.removeListener("close", closed)
-					existing.waiters.delete(waiter)
-					waiters--
-					if (entry)
-						serve(entry, request, response, "joined", () => pass("released"))
-					else if (reason !== "closed") pass(reason)
-				},
+		const lead = (reason: string, previous?: Flight) => {
+			const retry = !!previous
+			const flight = newFlight(page, "request", retry || row.passStreak === 0)
+			flight.retry = retry
+			// Move the remaining waiters before the app can finish or refuse the retry.
+			for (const waiter of previous?.waiters ?? []) {
+				waiter.flight = flight
+				flight.waiters.add(waiter)
 			}
-			const closed = () => waiter.finish(undefined, "closed")
-			const timer = setTimeout(
-				() => waiter.finish(undefined, "wait_timeout"),
-				limits.JOIN_WAIT_MS,
-			)
-			timer.unref()
-			response.once("close", closed)
-			existing.waiters.add(waiter)
-			waiters++
-			return
-		}
-		if (!existing && flights.size < limits.MAX_FLIGHTS) {
-			const reason = !admitted(page.key)
-				? "not_admitted"
-				: row.passStreak === 0
-					? "lead"
-					: "probe"
-			if (full()) return busy(reason)
-			const flight = newFlight(page, "request", row.passStreak === 0)
+			previous?.waiters.clear()
 			response.once("close", () => {
 				if (!alive(flight) || flight.offered) return
 				const route = flight.route
@@ -646,6 +621,63 @@ export function createPageCache(options: PageCacheOptions = {}) {
 				end(flight)
 			})
 			return pass(reason, flight)
+		}
+		if (now() < row.passUntil) return pass("pass")
+		const existing = flights.get(page.key)
+		if (
+			existing?.joinable &&
+			now() - existing.startedAt < limits.JOIN_MAX_AGE_MS &&
+			admitted(page.key) &&
+			waiters < limits.MAX_WAITERS
+		) {
+			const waiter: Waiter = {
+				flight: existing,
+				finish(entry, reason = "released") {
+					const previous = waiter.flight
+					if (!previous) return
+					previous.waiters.delete(waiter)
+					waiter.flight = undefined
+					const retry =
+						!entry &&
+						reason === "released" &&
+						!previous.retry &&
+						!draining() &&
+						!response.destroyed &&
+						!response.writableEnded
+					clearTimeout(timer)
+					response.removeListener("close", closed)
+					waiters--
+					if (entry)
+						serve(entry, request, response, "joined", () => pass("released"))
+					else if (
+						retry &&
+						!flights.has(page.key) &&
+						!full() &&
+						flights.size < limits.MAX_FLIGHTS
+					)
+						lead("retry", previous)
+					else if (reason !== "closed") pass(reason)
+				},
+			}
+			const closed = () => waiter.finish(undefined, "closed")
+			const timer = setTimeout(
+				() => waiter.finish(undefined, "wait_timeout"),
+				limits.JOIN_WAIT_MS,
+			)
+			timer.unref()
+			response.once("close", closed)
+			existing.waiters.add(waiter)
+			waiters++
+			return
+		}
+		if (!existing && flights.size < limits.MAX_FLIGHTS) {
+			const reason = !admitted(page.key)
+				? "not_admitted"
+				: row.passStreak === 0
+					? "lead"
+					: "probe"
+			if (full()) return busy(reason)
+			return lead(reason)
 		}
 		pass("busy")
 	}

@@ -564,10 +564,11 @@ test("unstorable leaders release waiters; pass periods double and probes never c
 	gate.resolve()
 	await Promise.all([one, two])
 	const row = [...f.cache.admission.values()][0]
-	assert.equal(row.passUntil, 5000)
+	assert.equal(row.passUntil, 10_000)
+	assert.equal(row.passStreak, 2)
 	await f.get()
 	assert.equal(f.cache.stats().flights, 0)
-	for (let streak = 2; streak <= 8; streak++) {
+	for (let streak = 3; streak <= 8; streak++) {
 		now = row.passUntil
 		// Keep this probe admitted even when a capped pass outlives the admission window.
 		row.windowStart = now
@@ -1136,6 +1137,7 @@ test("a slow lead bounds timed out and late requests and frees slots on close", 
 })
 
 test("a failed lead frees its slot before releasing 50 waiters", async (t) => {
+	resetMetricsForTest()
 	const f = await fixture(t)
 	const leadGate = deferred()
 	f.app.delay = leadGate.promise
@@ -1150,15 +1152,175 @@ test("a failed lead frees its slot before releasing 50 waiters", async (t) => {
 		}),
 	)
 	await until(() => f.cache.stats().waiters === 50)
-	const waiterGate = deferred()
-	f.app.delay = waiterGate.promise
+	const retryGate = deferred()
+	f.app.delay = retryGate.promise
 	leadGate.resolve()
 	assert.equal((await leader).status, 500)
-	await until(() => busy === 50 - f.cache.limits.MAX_RENDERS_PER_KEY)
-	assert.equal(f.app.calls, 1 + f.cache.limits.MAX_RENDERS_PER_KEY)
+	await until(() => f.app.calls === 2)
+	assert.equal(f.cache.stats().waiters, 49)
+	assert.equal(f.cache.stats().flights, 1)
+	assert.equal(busy, 0)
+	assert.match(
+		renderMetrics(),
+		/goodwatch_page_cache_misses_total\{route="page",reason="retry"\} 1/,
+	)
+	f.app.status = 200
+	retryGate.resolve()
+	const answers = await Promise.all(pending)
+	assert.ok(answers.every((a) => a.status === 200))
+	assert.ok(answers.every((a) => a.headers["gw-page-cache"] === "miss"))
+	assert.match(
+		renderMetrics(),
+		/goodwatch_page_cache_requests_total\{route="page",result="joined",audience="anon"\} 49/,
+	)
+	assert.equal(f.app.calls, 2)
 	assert.equal(f.cache.stats().waiters, 0)
-	waiterGate.resolve()
+	assert.equal(busy, 0)
+})
+
+for (const failure of ["status", "policy"] as const) {
+	test(`a failed retry releases waiters within the render bound: ${failure}`, async (t) => {
+		const f = await fixture(t)
+		if (failure === "status") f.app.status = 500
+		else f.app.policy = "private, no-store"
+		const leadGate = deferred()
+		f.app.delay = leadGate.promise
+		const leader = f.get()
+		await until(() => f.app.calls === 1)
+		let busy = 0
+		const pending = Array.from({ length: 50 }, () =>
+			f.get().then((answer) => {
+				if (answer.status === 503) busy++
+				return answer
+			}),
+		)
+		await until(() => f.cache.stats().waiters === 50)
+		const retryGate = deferred()
+		f.app.delay = retryGate.promise
+		leadGate.resolve()
+		await leader
+		await until(() => f.app.calls === 2)
+		assert.equal(f.cache.stats().waiters, 49)
+		assert.equal(busy, 0)
+		assert.equal([...f.cache.flights.values()][0].retry, true)
+		const passGate = deferred()
+		f.app.delay = passGate.promise
+		retryGate.resolve()
+		await until(() => busy === 49 - f.cache.limits.MAX_RENDERS_PER_KEY)
+		assert.equal(f.app.calls, 2 + f.cache.limits.MAX_RENDERS_PER_KEY)
+		assert.equal(f.cache.stats().waiters, 0)
+		assert.equal(f.cache.stats().flights, 0)
+		assert.equal(f.cache.stats().entries, 0)
+		passGate.resolve()
+		await Promise.all(pending)
+	})
+}
+
+test("an unstorable lead retries despite its pass period while new requests pass", async (t) => {
+	const f = await fixture(t)
+	f.app.policy = "private, no-store"
+	const leadGate = deferred()
+	f.app.delay = leadGate.promise
+	const leader = f.get()
+	await until(() => f.app.calls === 1)
+	const pending = [f.get(), f.get()]
+	await until(() => f.cache.stats().waiters === 2)
+	const retryGate = deferred()
+	f.app.delay = retryGate.promise
+	leadGate.resolve()
+	await leader
+	await until(() => f.app.calls === 2)
+	assert.equal(f.cache.stats().waiters, 1)
+	assert.ok([...f.cache.admission.values()][0].passUntil > Date.now())
+	const newcomer = f.get()
+	await until(() => f.app.calls === 3)
+	assert.equal(f.cache.stats().waiters, 1)
+	f.app.policy = SHARED_PAGE_CACHE_CONTROL
+	retryGate.resolve()
+	const answers = await Promise.all([...pending, newcomer])
+	assert.ok(answers.every((a) => a.status === 200))
+	assert.equal(f.cache.stats().entries, 1)
+	assert.equal(f.cache.stats().waiters, 0)
+})
+
+test("a waiter keeps its first deadline across a retry", async (t) => {
+	resetMetricsForTest()
+	const f = await fixture(t, { limits: { JOIN_WAIT_MS: 400 } })
+	const leadGate = deferred()
+	f.app.delay = leadGate.promise
+	f.app.status = 500
+	const leader = f.get()
+	await until(() => f.app.calls === 1)
+	const pending = [f.get(), f.get()]
+	await until(() => f.cache.stats().waiters === 2)
+	await new Promise((resolve) => setTimeout(resolve, 250))
+	const retryGate = deferred()
+	f.app.delay = retryGate.promise
+	leadGate.resolve()
+	await leader
+	await until(() => f.app.calls === 2)
+	assert.equal(f.cache.stats().waiters, 1)
+	const retryStarted = performance.now()
+	await until(() => f.app.calls === 3)
+	assert.ok(performance.now() - retryStarted < 300)
+	assert.equal(f.cache.stats().waiters, 0)
+	assert.match(
+		renderMetrics(),
+		/goodwatch_page_cache_misses_total\{route="page",reason="wait_timeout"\} 1/,
+	)
+	retryGate.resolve()
 	await Promise.all(pending)
+})
+
+test("draining at release passes waiters without a retry flight", async (t) => {
+	let draining = false
+	const f = await fixture(t, { draining: () => draining })
+	const leadGate = deferred()
+	f.app.delay = leadGate.promise
+	f.app.status = 500
+	const leader = f.get()
+	await until(() => f.app.calls === 1)
+	const pending = [f.get(), f.get()]
+	await until(() => f.cache.stats().waiters === 2)
+	const passGate = deferred()
+	f.app.delay = passGate.promise
+	draining = true
+	leadGate.resolve()
+	await leader
+	await until(() => f.app.calls === 3)
+	assert.equal(f.cache.stats().waiters, 0)
+	assert.equal(f.cache.stats().flights, 0)
+	passGate.resolve()
+	await Promise.all(pending)
+})
+
+test("reset during a lead moves released waiters to one retry", async (t) => {
+	const f = await fixture(t)
+	const leadGate = deferred()
+	f.app.delay = leadGate.promise
+	const leader = f.get()
+	await until(() => f.app.calls === 1)
+	const pending = [f.get(), f.get(), f.get()]
+	await until(() => f.cache.stats().waiters === 3)
+	const oldFlight = [...f.cache.flights.values()][0]
+	const retryGate = deferred()
+	f.app.delay = retryGate.promise
+	f.cache.reset()
+	await until(() => f.app.calls === 2)
+	assert.equal(oldFlight.waiters.size, 0)
+	assert.equal(f.cache.stats().waiters, 2)
+	assert.equal(f.cache.stats().flights, 1)
+	assert.equal([...f.cache.flights.values()][0].retry, true)
+	assert.equal([...f.cache.flights.values()][0].waiters.size, 2)
+	leadGate.resolve()
+	await leader
+	assert.equal(f.cache.stats().entries, 0)
+	retryGate.resolve()
+	const answers = await Promise.all(pending)
+	assert.ok(answers.every((a) => a.status === 200))
+	assert.equal(f.app.calls, 2)
+	assert.equal(f.cache.stats().waiters, 0)
+	assert.equal(f.cache.stats().entries, 1)
 })
 
 test("pass periods bound concurrent renders for unstorable pages", async (t) => {
