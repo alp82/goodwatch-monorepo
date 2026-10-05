@@ -144,7 +144,15 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 		// remixDevTools(),
 		remix({
 			serverMinify: false,
-			// ignoredRouteFiles: ["**/.*"],
+			// The recommendation, share list and title actions prototypes are kept in the repository for context. They
+			// are routes in development only: a production build leaves them out.
+			ignoredRouteFiles: process.argv.some((arg) => arg === "vite:build" || arg === "build")
+				? [
+						"**/prototype.rec-*",
+						"**/prototype.share-list*",
+						"**/prototype.title-actions*",
+					]
+				: [],
 			// TODO remove
 			// serverModuleFormat: "cjs",
 		}),
