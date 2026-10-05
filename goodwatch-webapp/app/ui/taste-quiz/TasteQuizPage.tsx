@@ -6,10 +6,10 @@ import type { Score } from "~/server/scores.server"
 import { DockStrip, useHasDock } from "~/ui/navigation"
 import type { ScoringMedia } from "~/ui/scoring/types"
 import { useAuthHref } from "~/utils/auth-href"
+import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import { titleToDashed } from "~/utils/helpers"
 import { getVibeColorValue } from "~/utils/ratings"
 import { GoogleMark } from "./GoogleMark"
-import { StackControl } from "./StackControl"
 import { useContinueWithGoogle } from "./continue-with-google"
 import { QUIZ_GOAL, readQuizKey } from "./quiz-flow"
 import type { QuizPick } from "./use-quiz-picks"
@@ -241,7 +241,7 @@ function QuizStep({ q }: { q: TasteQuiz }) {
 									.join(" · ")}
 							</div>
 							<div className="mt-5">
-								<StackControl onRate={q.rate} />
+								<ScoreControl onRate={q.rate} fit="screen" />
 							</div>
 							<div className="mt-3 flex flex-wrap items-center gap-2">
 								<button type="button" className={ghost} onClick={q.skip}>

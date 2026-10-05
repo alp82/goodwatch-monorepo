@@ -1,21 +1,18 @@
-import { MapPinIcon, XMarkIcon } from "@heroicons/react/24/solid"
+import { MapPinIcon, NoSymbolIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { forwardRef } from "react"
 import type { ExplorerCard, ExplorerTitle } from "~/domain/explorer"
-import {
-	useIsOnWishlist,
-	useIsWatched,
-	useUserScore,
-} from "~/hooks/useUserDataAccessors"
-import {
-	useWatchedMutation,
-	useWishlistMutation,
-} from "~/hooks/useUserDataMutations"
+import { useUserScore } from "~/hooks/useUserDataAccessors"
 import type { MovieResult } from "~/server/types/details-types"
 import UserAction from "~/ui/auth/UserAction"
-import { ActionButton } from "~/ui/details/hero/ListActions"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { SignUpPrompt } from "~/ui/sign-up-prompt/SignUpPrompt"
+import { ActionButton } from "~/ui/title-actions/ActionButton"
+import { TitleScore } from "~/ui/title-actions/TitleScore"
+import {
+	SEEN_INSTRUCTIONS,
+	useTitleActions,
+} from "~/ui/title-actions/useTitleActions"
 import { titleToDashed } from "~/utils/helpers"
 import { matchColor } from "./color"
 import { TMDB } from "./images"
@@ -37,8 +34,10 @@ interface ProximityCardProps {
 	peek: boolean
 	onPin: () => void
 	onClose: () => void
-	/** Want to See or Seen it changed, for a short confirmation. */
+	/** A score, Want to See, or Seen it changed, for a short confirmation. */
 	onAction: (message: string, seen?: boolean) => void
+	/** Not interested was turned on; `undo` takes it back. */
+	onHide: (undo: () => void) => void
 }
 
 /** Title and match under a poster near the focus: the small form of the card. */
@@ -62,11 +61,12 @@ export const Caption = forwardRef<
 
 /**
  * The card of the title nearest the focus, over the live map: the title's backdrop, its GoodWatch score, its taste
- * match (or the viewer's rating), the services that carry it, why it fits, and Want to See and Seen it.
+ * match (or the viewer's rating), the services that carry it, why it fits, and the title actions: the score control,
+ * Want to See, Seen it, and Not interested as a link beside the one to the title page.
  */
 export const ProximityCard = forwardRef<HTMLDivElement, ProximityCardProps>(
 	function ProximityCard(
-		{ title, where, card, pinned, form, peek, onPin, onClose, onAction },
+		{ title, where, card, pinned, form, peek, onPin, onClose, onAction, onHide },
 		ref,
 	) {
 		const kind = title.mediaType === "show" ? "Series" : "Film"
@@ -153,10 +153,7 @@ export const ProximityCard = forwardRef<HTMLDivElement, ProximityCardProps>(
 									Looking at why it fits you…
 								</p>
 							)}
-							<Actions title={title} onAction={onAction} />
-							<Link to={titlePath(title)} className="ex-open">
-								Open the title page
-							</Link>
+							<Actions title={title} onAction={onAction} onHide={onHide} />
 						</>
 					)}
 					{peek && (
@@ -223,54 +220,73 @@ function Services({
 	)
 }
 
-/** Want to See and Seen it, as the title page draws them. */
+/** The score control, Want to See and Seen it as the title page draws them, and the two links under them. */
 function Actions({
 	title,
 	onAction,
+	onHide,
 }: {
 	title: ExplorerTitle
 	onAction: ProximityCardProps["onAction"]
+	onHide: ProximityCardProps["onHide"]
 }) {
-	const want = useIsOnWishlist(title.mediaType, title.tmdbId)
-	const watched = useIsWatched(title.mediaType, title.tmdbId)
-	const { mutate: updateWishlist, isPending: wantPending } =
-		useWishlistMutation()
-	const { mutate: updateWatched, isPending: seenPending } = useWatchedMutation()
-	const seen = watched || title.seen
+	const media = {
+		mediaType: title.mediaType,
+		details: { tmdb_id: title.tmdbId, title: title.title },
+	}
+	const a = useTitleActions(media)
+	const seen = a.seen || title.seen
 	return (
-		<div className="ex-acts">
-			<ActionButton
-				kind="want"
-				active={want}
-				disabled={wantPending}
-				onClick={() => {
-					updateWishlist({
-						mediaType: title.mediaType,
-						tmdbId: title.tmdbId,
-						action: want ? "remove" : "add",
-					})
-					onAction(want ? "Removed from Wishlist" : "Added to Wishlist")
-				}}
-			/>
-			<UserAction
-				instructions={
-					<>Your history shows every title you ever have watched.</>
-				}
-			>
+		<>
+			<div className="mt-3">
+				<TitleScore
+					media={media}
+					size="compact"
+					onRated={() => onAction("Score saved", true)}
+				/>
+			</div>
+			<div className="ex-acts">
 				<ActionButton
-					kind="seen"
-					active={seen}
-					disabled={seenPending}
+					kind="want"
+					active={a.want}
+					disabled={a.wantPending}
 					onClick={() => {
-						updateWatched({
-							mediaType: title.mediaType,
-							tmdbId: title.tmdbId,
-							action: watched ? "remove" : "add",
-						})
-						onAction(watched ? "Unmarked as seen" : "Marked as seen", !watched)
+						a.toggleWant()
+						onAction(a.want ? "Removed from Wishlist" : "Added to Wishlist")
 					}}
 				/>
-			</UserAction>
-		</div>
+				<UserAction instructions={<>{SEEN_INSTRUCTIONS}</>}>
+					<ActionButton
+						kind="seen"
+						active={seen}
+						disabled={a.seenPending}
+						onClick={() => {
+							a.toggleSeen()
+							onAction(
+								a.seen ? "Unmarked as seen" : "Marked as seen",
+								!a.seen,
+							)
+						}}
+					/>
+				</UserAction>
+			</div>
+			<div className="flex items-center justify-between gap-3">
+				<Link to={titlePath(title)} className="ex-open">
+					Open the title page
+				</Link>
+				{/* For a title the person hasn't seen: not offered once it's seen or scored. */}
+				{!seen && a.score == null && title.rating == null && !a.hidden && (
+					<button
+						type="button"
+						className="ex-open cursor-pointer gap-1.5"
+						disabled={a.hidePending}
+						onClick={() => onHide(a.hide())}
+					>
+						<NoSymbolIcon className="h-4 w-4" aria-hidden />
+						Not interested
+					</button>
+				)}
+			</div>
+		</>
 	)
 }

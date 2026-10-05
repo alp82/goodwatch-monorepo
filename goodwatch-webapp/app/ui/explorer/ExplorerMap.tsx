@@ -39,6 +39,7 @@ import {
 } from "./CombineBar"
 import { HistoryBar, type StepView } from "./HistoryBar"
 import { Minimap } from "./Minimap"
+import { useUndoToast } from "~/ui/title-actions/UndoToast"
 import { Caption, ProximityCard } from "./ProximityCard"
 import { TopBar } from "./TopBar"
 import { ZoomRail } from "./ZoomRail"
@@ -184,13 +185,24 @@ export function ExplorerMap({
 		[query.type, query.anime],
 	)
 	const [seenNow, setSeenNow] = useState<ReadonlySet<number>>(new Set())
+	/** Titles marked Not interested this visit: they leave the map at once (the next load leaves them out). */
+	const [hiddenNow, setHiddenNow] = useState<ReadonlySet<number>>(new Set())
+	const hideToast = useUndoToast()
 	/** The filters hide titles, never dim them, as soon as they're switched. */
 	const visible = useCallback(
 		(t: ExplorerTitle) =>
+			!hiddenNow.has(t.key) &&
 			(!onMyServices || !!map?.approximate || t.services.length > 0) &&
 			(!notSeenYet || !(t.seen || seenNow.has(t.key))) &&
 			passesTitleType(titleType, t),
-		[onMyServices, notSeenYet, titleType, seenNow, map?.approximate],
+		[
+			onMyServices,
+			notSeenYet,
+			titleType,
+			seenNow,
+			hiddenNow,
+			map?.approximate,
+		],
 	)
 
 	/** Island names and colors of every grouping seen this visit, for the history's labels. */
@@ -1106,6 +1118,25 @@ export function ExplorerMap({
 						return next
 					})
 			}}
+			onHide={(undo) => {
+				const { key, title } = active
+				const setHidden = (hidden: boolean) =>
+					setHiddenNow((s) => {
+						const next = new Set(s)
+						if (hidden) next.add(key)
+						else next.delete(key)
+						return next
+					})
+				setHidden(true)
+				unpin()
+				hideToast.say(
+					`${title.title} is hidden from your recommendations`,
+					() => {
+						undo()
+						setHidden(false)
+					},
+				)
+			}}
 		/>
 	)
 	const loadingGrouping =
@@ -1403,6 +1434,7 @@ export function ExplorerMap({
 				<p className="ex-hint">{hint}</p>
 			)}
 			{toast && <output className="ex-toast">{toast}</output>}
+			{hideToast.node}
 		</div>
 	)
 }

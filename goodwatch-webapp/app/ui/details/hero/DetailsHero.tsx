@@ -4,7 +4,6 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import type { SectionIds } from "~/ui/details/sections"
 import EpisodeGridLink from "~/ui/details/hero/EpisodeGridLink"
 import ListActions from "~/ui/details/hero/ListActions"
-import RateButton from "~/ui/details/hero/RateButton"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { BackdropTrailer, HeroBackdropImage, PosterTrailer } from "~/ui/details/hero/Trailer"
@@ -23,8 +22,8 @@ export interface DetailsHeroProps {
 }
 
 // The poster on the left plays the trailer (md and up); beside it one box sits on the blurred
-// backdrop: the GoodWatch score with the rate button, the site ratings, where to watch, and the
-// list actions, separated by thin lines. Phones get a backdrop banner that plays the trailer on
+// backdrop: the GoodWatch score beside the site ratings, where to watch, and the title actions (the
+// score control, Want to See, Seen, Not interested), separated by thin lines. Phones get a backdrop banner that plays the trailer on
 // top of the same box instead of the poster.
 export default function DetailsHero({ media, country, hasEpisodeGrid = false, sectionProps, navigateToSection }: DetailsHeroProps) {
 	return (
@@ -38,8 +37,7 @@ export default function DetailsHero({ media, country, hasEpisodeGrid = false, se
 						<div className="hidden md:block">
 							<ScoreRing media={media} size={96} label={false} />
 						</div>
-						<RateButton media={media} className="min-w-0" />
-						<div className="col-span-2 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 empty:hidden">
+						<div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
 							<RatingChips media={media} />
 							{hasEpisodeGrid && <EpisodeGridLink className="ml-auto" />}
 						</div>
@@ -66,10 +64,11 @@ function Divider({ className }: { className: string }) {
 // A ResizeObserver sets the column width to 2/3 of the box height, clamped to
 // [POSTER_MIN_W, min(POSTER_MAX_W, 40% of the row)]. A narrower column means a wider and maybe
 // shorter box, and so on, so it re-measures until it settles, or gives up after MAX_CHANGES.
-// The server renders a per-breakpoint default close to the settled value, so hydration rarely
-// shifts the layout.
+// The server renders the upper limit as the default (in CSS: POSTER_MAX_W, or POSTER_MAX_SHARE of the
+// row, which is the screen minus the page padding). The box with the score control is tall enough
+// that the limit is the settled value, so hydration rarely shifts the layout.
 const POSTER_MIN_W = 192
-const POSTER_MAX_W = 352
+const POSTER_MAX_W = 400
 const POSTER_MAX_SHARE = 0.4
 // Width changes allowed in one burst before it stops, in case the two sizes keep flipping.
 const MAX_CHANGES = 6
@@ -113,14 +112,14 @@ function PosterMatchedRow({ media, children }: { media: Media; children: React.R
 		<div
 			ref={rowRef}
 			style={style}
-			className="grid gap-4 md:min-h-[18rem] md:grid-cols-[var(--poster-w)_minmax(0,1fr)] md:[--poster-w:21rem] lg:[--poster-w:20.5rem] [&>*]:min-w-0"
+			className="grid gap-4 md:min-h-[18rem] md:grid-cols-[var(--poster-w)_minmax(0,1fr)] md:[--poster-w:min(25rem,calc((100vw_-_3rem)_*_0.4))] lg:[--poster-w:min(25rem,calc((100vw_-_4rem)_*_0.4))] [&>*]:min-w-0"
 		>
 			<div className="relative hidden md:block">
 				<div className="absolute left-0 top-0 aspect-[2/3] h-[min(100%,var(--poster-w)*1.5)]">
 					<PosterTrailer media={media} className="block h-full w-full" />
 				</div>
 			</div>
-			{/* z-30 keeps the rate, country, and all-services popovers above the sections below. */}
+			{/* z-30 keeps the country and all-services popovers above the sections below. */}
 			<div ref={boxRef} className="relative isolate z-30 flex min-w-0 flex-col rounded-2xl border border-white/10 bg-stone-950 md:rounded-xl">
 				<div className="absolute inset-0 -z-10 overflow-hidden rounded-2xl md:rounded-xl" aria-hidden="true">
 					<HeroBackdropImage media={media} className="h-full w-full scale-110 object-cover object-[center_25%]" />

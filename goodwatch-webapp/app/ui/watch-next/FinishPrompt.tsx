@@ -1,11 +1,10 @@
-// After "I watched it": the existing score prompt (the title page's Rate picker) in a dialog, with Rate later, and the
-// toast that names what rose into the hero, with Undo.
+// After "I watched it": the score control in a dialog, with Rate later, and the toast that names what rose into the
+// hero, with Undo.
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react"
 import { CheckIcon } from "@heroicons/react/24/solid"
-import { AnimatePresence, motion } from "framer-motion"
-import { useEffect } from "react"
 import type { WatchNext } from "~/server/watch-next.server"
-import { ScorePicker } from "~/ui/details/hero/RateButton"
+import { TitleScore } from "~/ui/title-actions/TitleScore"
+import { UndoToast } from "~/ui/title-actions/UndoToast"
 import { posterUrl } from "./style"
 import type { Finished } from "./useFinish"
 
@@ -47,12 +46,13 @@ export function FinishPrompt({
 							</div>
 						</div>
 						<div className="mt-4">
-							<ScorePicker
+							<TitleScore
 								media={{
 									mediaType: title.media_type,
 									details: { tmdb_id: title.tmdb_id, title: title.title },
 								}}
-								onDone={() => onClose(true)}
+								size="compact"
+								onRated={() => onClose(true)}
 								// "I watched it" already recorded the watch; recording it again would move its time.
 								recordWatch={false}
 							/>
@@ -73,8 +73,6 @@ export function FinishPrompt({
 	)
 }
 
-const TOAST_MS = 6000
-
 export function FinishToast({
 	toast,
 	data,
@@ -86,44 +84,22 @@ export function FinishToast({
 	onUndo: () => void
 	onDismiss: () => void
 }) {
-	useEffect(() => {
-		if (!toast) return
-		const id = setTimeout(onDismiss, TOAST_MS)
-		return () => clearTimeout(id)
-	}, [toast, onDismiss])
 	const next =
 		data?.hero && data.hero.key !== toast?.title.key ? data.hero : null
 	return (
-		<div
+		<UndoToast
+			toast={
+				toast && {
+					id: toast.id,
+					text: next
+						? `Watch next: ${next.title}`
+						: `${toast.title.title} moved to Seen`,
+				}
+			}
+			onUndo={onUndo}
+			onDismiss={onDismiss}
 			// Phones: above the slab (its buttons and the navigation).
-			className="pointer-events-none fixed inset-x-0 bottom-40 z-[1050] flex justify-center px-4 lg:bottom-6"
-			aria-live="polite"
-		>
-			<AnimatePresence>
-				{toast && (
-					<motion.div
-						key={toast.id}
-						initial={{ y: 12, opacity: 0 }}
-						animate={{ y: 0, opacity: 1 }}
-						exit={{ y: 12, opacity: 0 }}
-						className="pointer-events-auto flex max-w-full items-center gap-3 rounded-2xl border border-white/10 bg-stone-900/95 py-2 pl-4 pr-2 text-sm text-white shadow-2xl shadow-black/60 backdrop-blur"
-						data-toast
-					>
-						<span className="min-w-0">
-							{next
-								? `Watch next: ${next.title}`
-								: `${toast.title.title} moved to Seen`}
-						</span>
-						<button
-							type="button"
-							onClick={onUndo}
-							className="shrink-0 cursor-pointer rounded-full bg-white/10 px-3 py-1 font-semibold text-amber-300 hover:bg-white/20"
-						>
-							Undo
-						</button>
-					</motion.div>
-				)}
-			</AnimatePresence>
-		</div>
+			className="bottom-40 lg:bottom-6"
+		/>
 	)
 }
