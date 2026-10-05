@@ -1,6 +1,7 @@
 import {
 	ArrowDownTrayIcon,
 	AtSymbolIcon,
+	EyeSlashIcon,
 	FlagIcon,
 	TvIcon,
 	UserIcon,
@@ -54,6 +55,11 @@ const navigation = [
 		name: "Imports",
 		to: "/settings/imports",
 		icon: ArrowDownTrayIcon,
+	},
+	{
+		name: "Hidden titles",
+		to: "/settings/hidden",
+		icon: EyeSlashIcon,
 	},
 	{
 		name: "Account",
