@@ -122,7 +122,8 @@ def copy_media(
         }
 
         for tmdb_details in tmdb_details_batch:
-            tmdb_id = tmdb_details["tmdb_id"]
+            # The dump stores ids as strings, and the flagged ids are numbers.
+            tmdb_id = int(tmdb_details["tmdb_id"])
             media_type = "movie" if tmdb_details["type"] == "movie" else "show"
             if tmdb_id in flagged_ids[media_type]:
                 continue

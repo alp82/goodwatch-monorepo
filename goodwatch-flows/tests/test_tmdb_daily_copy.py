@@ -102,6 +102,15 @@ class DailyCopyTests(unittest.TestCase):
         self.assertEqual(result["movie_counts"]["rows_upserted"], 1)
         self.assertEqual(self.sleeps, [])
 
+    def test_a_title_flagged_as_deleted_on_tmdb_is_not_written(self):
+        crate = Crate()
+        db = dump(("movie", 1, "One", 1.5), ("movie", 2, "Two", 1.5), ("tv", 2, "Two", 1.5), ("tv", 3, "Three", 1.5))
+        db.tmdb_movie_details.insert_one({"tmdb_id": 2, "tmdb_deleted": True})
+        db.tmdb_tv_details.insert_one({"tmdb_id": 3, "tmdb_deleted": True})
+        self.copy(db, crate)
+        self.assertEqual([(table, [row["tmdb_id"] for row in rows]) for table, rows in crate.upserts],
+                         [("movie", [1]), ("show", [2])])
+
     def test_a_title_without_an_original_title_is_not_written(self):
         crate = Crate()
         self.copy(dump(("movie", 1, "", 1.5)), crate)
