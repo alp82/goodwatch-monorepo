@@ -29,6 +29,7 @@ export interface UserData {
 	watched: Record<MediaKey, ActionTimestamp>
 	favorites: Record<MediaKey, ActionTimestamp>
 	skipped: Record<MediaKey, ActionTimestamp>
+	notInterested: Record<MediaKey, ActionTimestamp>
 	[key: string]: unknown
 }
 

@@ -97,10 +97,12 @@ async function memberPortrait(
 	tab: PortraitTab,
 	snapshot: TitleSnapshot,
 ): Promise<PortraitView> {
-	const cached = await readCachedPortrait(userId, tab)
-	if (cached) return cached
 	const readFrom = Date.now()
-	const [ctx, taste] = await Promise.all([who.context(), loadTaste(who.viewer)])
+	const ctx = await who.context()
+	const hiddenKey = [...ctx.notInterested].sort().join(",")
+	const cached = await readCachedPortrait(userId, tab, hiddenKey)
+	if (cached) return cached
+	const taste = await loadTaste(who.viewer)
 	const input = inputOf("member", ctx, taste)
 	const view = await buildView(snapshot, input, tab)
 	// While the person's country loads into the availability index, On my services can't be told yet: keep that view
@@ -110,6 +112,7 @@ async function memberPortrait(
 		view,
 		readFrom,
 		availabilityLoading(input) ? 60 : undefined,
+		hiddenKey,
 	)
 	return view
 }
@@ -155,6 +158,7 @@ async function guestPortrait(
 					[...ctx.seen].sort(),
 					[...ctx.wishlist.keys()].sort(),
 					[...ctx.skipped].sort(),
+					[...ctx.notInterested].sort(),
 				]),
 			)
 			.digest("base64url")
@@ -163,9 +167,9 @@ async function guestPortrait(
 			return buildView(snapshot, inputOf("guest", ctx, taste), tab)
 		})
 	}
-	// The sample taste depends only on the snapshot and where the guest watches.
+	// The sample taste is fixed; its suggestions also respect the guest's hidden titles.
 	return keep(
-		`sample:${snapshot.version}:${tab}:${where.join(":")}`,
+		`sample:${snapshot.version}:${tab}:${where.join(":")}:${[...ctx.notInterested].sort().join(",")}`,
 		SAMPLE_KEEP_MS,
 		async () => {
 			const sample = sampleContext(ctx)
@@ -232,6 +236,7 @@ function inputOf(
 		chosen: ctx.seen,
 		wantToSee: new Set(ctx.wishlist.keys()),
 		skipped: ctx.skipped,
+		notInterested: ctx.notInterested,
 		country: ctx.country,
 		services: ctx.services,
 		taste,

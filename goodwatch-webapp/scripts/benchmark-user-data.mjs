@@ -95,6 +95,7 @@ try {
 							"user_watch_history",
 							"user_favorite",
 							"user_skipped",
+							"user_not_interested",
 						].map(async (table) => {
 							const rows = await query(
 								`SELECT count(*) AS count FROM ${table} WHERE user_id = ?`,

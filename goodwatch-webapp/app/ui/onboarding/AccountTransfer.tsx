@@ -123,7 +123,8 @@ export function AccountTransfer() {
 			if (
 				(i.type === "score" && before === i.score) ||
 				// A title the account already rated, watched, or listed never regresses to plan-to-watch.
-				(i.type === "plan" && known !== null)
+				(i.type === "plan" && known !== null) ||
+				(i.type === "not-interested" && !!account.notInterested?.[key])
 			)
 				continue;
 			changes.push({
@@ -136,8 +137,8 @@ export function AccountTransfer() {
 				title:
 					titles.data[key] ||
 					`${i.media_type === "movie" ? "Movie" : "Show"} ${i.tmdb_id}`,
-				accountLabel: known ?? "Not added",
-				browserLabel: i.type === "score" ? `${i.score}/10` : "Add to Wishlist",
+				accountLabel: account.notInterested?.[key] ? "Not interested" : known ?? "Not added",
+				browserLabel: i.type === "score" ? `${i.score}/10` : i.type === "not-interested" ? "Not interested (clears Wishlist)" : "Add to Wishlist",
 				fresh: !before,
 			});
 		}

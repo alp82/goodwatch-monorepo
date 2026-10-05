@@ -480,7 +480,7 @@ export function worthwhileSuggestions(
 	for (let i = 0; i < keys.length; i++) {
 		const key = keys[i]
 		if (moodMask && !(moodMasks[i] & moodMask)) continue
-		if (ctx.wishlist.has(key) || ctx.seen.has(key) || ctx.skipped.has(key))
+		if (ctx.notInterested.has(key) || ctx.wishlist.has(key) || ctx.seen.has(key) || ctx.skipped.has(key))
 			continue
 		// While the country's availability loads, services don't narrow.
 		if (onMyServices && isOnServices(ctx.country, ctx.services, key) === false)

@@ -35,7 +35,7 @@ One view on the TV, such as the boot screen, home, a feature explanation, moods,
 The living room's main control. Everything on the remote is also reachable on the TV itself.
 
 **Shared guest progress**:
-A guest's title interactions available across Taste, title details, and Wishlist. A guest title interaction is a rating, Want to See, or Skip; a later interaction replaces the previous one for that title.
+A guest's title interactions available across Taste, title details, and Wishlist. A guest title interaction is a rating, Want to See, Not interested, or Skip; a later interaction replaces the previous one for that title.
 
 **Want to See**:
 The action expressing an intention to watch a title and placing it in Wishlist.
@@ -55,8 +55,11 @@ The single title GoodWatch puts forward for tonight: for a member, the first tit
 A title the person has watched or rated.
 
 **Not seen yet**:
-The filter that hides every title the person has seen or marked Not interested (skipped).
+The filter that hides titles the person has watched, rated, or passed in the taste quiz (skipped). Not interested titles are always hidden from recommendations, independently of this filter.
 _Avoid_: Hide seen, Unwatched
+
+**Not interested**:
+A title the person has not seen and does not want to watch. It is always hidden from recommendations, but remains findable by search. It is neither a score nor a taste signal. It clears Want to See; rating, watching, or adding Want to See clears Not interested. It transfers from guest progress at sign-up. Skip remains a separate action meaning passed in the taste quiz.
 
 **On my services**:
 The filter that keeps only titles streaming on the person's saved services in their country. It is on by default for members with saved services.

@@ -1,4 +1,4 @@
-// Members' portraits, cached in Redis per person and tab for 10 minutes at `taste-portrait:v4:<user_id>:<tab>`, and
+// Members' portraits, cached in Redis per person and tab for 10 minutes at `taste-portrait:v5:<user_id>:<tab>`, and
 // cleared when their taste changes (markTasteChanged calls clearTastePortrait).
 //
 // A cached view is used only when it was built after the person's latest write had settled: Crate shows a write to
@@ -11,7 +11,7 @@ import Redis from "ioredis"
 import { PORTRAIT_TABS, type PortraitTab, type PortraitView } from "./view"
 
 // Bump when a view's shape or computation changes, so cached views of the old kind are never read.
-const CACHE_VERSION = "v4"
+const CACHE_VERSION = "v5"
 const TTL_SECONDS = 10 * 60
 const SETTLE_MS = 1_500
 
@@ -46,12 +46,14 @@ interface Entry {
 	/** When the build started reading the person's rows (ms since 1970). */
 	readFrom: number
 	view: PortraitView
+	hiddenKey: string
 }
 
 /** The cached view, or null when there is none or it may predate the person's latest write. */
 export async function readCachedPortrait(
 	userId: string,
 	tab: PortraitTab,
+	hiddenKey = "",
 ): Promise<PortraitView | null> {
 	const redis = await portraitRedis()
 	if (!redis) return null
@@ -62,6 +64,7 @@ export async function readCachedPortrait(
 		])
 		if (!raw) return null
 		const entry = JSON.parse(raw) as Entry
+		if (entry.hiddenKey !== hiddenKey) return null
 		if (entry.readFrom < (Number(touched) || 0) + SETTLE_MS) return null
 		return entry.view
 	} catch (error) {
@@ -75,11 +78,12 @@ export async function writeCachedPortrait(
 	view: PortraitView,
 	readFrom: number,
 	ttlSeconds = TTL_SECONDS,
+	hiddenKey = "",
 ): Promise<void> {
 	const redis = await portraitRedis()
 	if (!redis) return
 	try {
-		const entry: Entry = { readFrom, view }
+		const entry: Entry = { readFrom, view, hiddenKey }
 		await redis.set(
 			cacheKey(userId, view.tab),
 			JSON.stringify(entry),

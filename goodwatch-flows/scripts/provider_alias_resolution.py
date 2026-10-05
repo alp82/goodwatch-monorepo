@@ -21,7 +21,7 @@ MOVIE_CHILD_TABLES = (
     "translation", "trope",
 )
 USER_TABLES = (
-    "user_favorite", "user_score", "user_skipped", "user_watch_history", "user_wishlist",
+    "user_favorite", "user_score", "user_skipped", "user_not_interested", "user_watch_history", "user_wishlist",
 )
 
 

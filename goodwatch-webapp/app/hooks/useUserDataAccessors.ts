@@ -88,3 +88,14 @@ export const useFavoritesCount = () => {
 		return Object.keys(data.favorites).length
 	}, [data])
 }
+
+export const useIsNotInterested = (mediaType: MediaType, tmdbId: number) => {
+	const { data } = useUserData()
+
+	return useMemo(() => {
+		if (!data) return false
+		const key = createMediaKey(mediaType, tmdbId)
+		return key in data.notInterested
+	}, [data, mediaType, tmdbId])
+}
+

@@ -1,3 +1,4 @@
+import { readNotInterested, excludeNotInterested } from "~/server/not-interested-store.server"
 import { shuffleArray } from "~/utils/array"
 import { cached } from "~/utils/cache"
 import { query as crateQuery } from "~/utils/crate"
@@ -138,7 +139,7 @@ async function _getSmartTitlesForGuest({
 export const getSmartTitlesForUser = async (
 	params: GetSmartTitlesForUserParams,
 ) => {
-	return await cached<GetSmartTitlesForUserParams, SmartTitle[]>({
+	const titles = await cached<GetSmartTitlesForUserParams, SmartTitle[]>({
 		name: "smart-titles-user",
 		target: _getSmartTitlesForUser,
 		params,
@@ -146,6 +147,7 @@ export const getSmartTitlesForUser = async (
 		staleMinutes: 0,
 		//ttlMinutes: 0,
 	})
+	return excludeNotInterested(params.userId, titles)
 }
 
 async function _getSmartTitlesForUser({
@@ -153,6 +155,7 @@ async function _getSmartTitlesForUser({
 	count = 20,
 	excludeIds = [],
 }: GetSmartTitlesForUserParams): Promise<SmartTitle[]> {
+	excludeIds = [...excludeIds, ...await readNotInterested(userId)]
 	// Additional excludeIds from client (items already in queue)
 	const excludeMovieIds = excludeIds.filter(item => item.media_type === 'movie').map(item => item.tmdb_id)
 	const excludeShowIds = excludeIds.filter(item => item.media_type === 'show').map(item => item.tmdb_id)

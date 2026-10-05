@@ -27,7 +27,8 @@ export interface ViewerContext {
 	seen: ReadonlySet<TitleKey> // scored or watched
 	ratings: ReadonlyMap<TitleKey, number> // the person's scores, 1 to 10
 	wishlist: ReadonlyMap<TitleKey, Date> // added-at
-	skipped: ReadonlySet<TitleKey> // Not interested; hidden by Not seen yet
+	skipped: ReadonlySet<TitleKey> // Passed in the taste quiz
+	notInterested: ReadonlySet<TitleKey> // Always hidden from recommendations
 	forYou: boolean // the member's saved For you setting; true for guests
 }
 
@@ -83,6 +84,7 @@ export async function getMemberViewerContext(
 		skipped: new Set(
 			Object.keys(userData.skipped).map((key) => toTitleKey(key as MediaKey)),
 		),
+		notInterested: new Set(Object.keys(userData.notInterested).map((key) => toTitleKey(key as MediaKey))),
 		forYou: settings.for_you !== "no",
 	}
 }
@@ -96,12 +98,14 @@ function guestContext(
 	const ratings = new Map<TitleKey, number>()
 	const wishlist = new Map<TitleKey, Date>()
 	const skipped = new Set<TitleKey>()
+	const notInterested = new Set<TitleKey>()
 	for (const item of interactions) {
 		const key = titleKey(item.media_type, item.tmdb_id)
 		if (item.type === "score") {
 			seen.add(key)
 			if (item.score) ratings.set(key, item.score)
 		} else if (item.type === "plan") wishlist.set(key, new Date(item.timestamp))
+		else if (item.type === "not-interested") notInterested.add(key)
 		else skipped.add(key)
 	}
 	return {
@@ -119,6 +123,7 @@ function guestContext(
 		ratings,
 		wishlist,
 		skipped,
+		notInterested,
 		forYou: true,
 	}
 }

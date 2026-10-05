@@ -42,6 +42,8 @@ interface UseSkippedMutationParams {
 	action: "add" | "remove"
 }
 
+type UseNotInterestedMutationParams = UseSkippedMutationParams
+
 interface MutationContext {
 	previousData?: UserData
 }
@@ -56,11 +58,12 @@ const updateScoreOptimistic = (
 	if (!data) return data
 
 	const key = createMediaKey(mediaType, tmdbId)
-	const updated = { ...data, scores: { ...data.scores } }
+	const updated = { ...data, scores: { ...data.scores }, notInterested: { ...data.notInterested } }
 
 	if (score === null) {
 		delete updated.scores[key]
 	} else {
+		delete updated.notInterested[key]
 		updated.scores[key] = {
 			score,
 			review,
@@ -80,9 +83,10 @@ const updateWishlistOptimistic = (
 	if (!data) return data
 
 	const key = createMediaKey(mediaType, tmdbId)
-	const updated = { ...data, wishlist: { ...data.wishlist } }
+	const updated = { ...data, wishlist: { ...data.wishlist }, notInterested: { ...data.notInterested } }
 
 	if (action === "add") {
+		delete updated.notInterested[key]
 		const now = new Date()
 		updated.wishlist[key] = { createdAt: now, updatedAt: now }
 	} else {
@@ -101,9 +105,10 @@ const updateWatchedOptimistic = (
 	if (!data) return data
 
 	const key = createMediaKey(mediaType, tmdbId)
-	const updated = { ...data, watched: { ...data.watched } }
+	const updated = { ...data, watched: { ...data.watched }, notInterested: { ...data.notInterested } }
 
 	if (action === "add") {
+		delete updated.notInterested[key]
 		updated.watched[key] = { updatedAt: new Date() }
 	} else {
 		delete updated.watched[key]
@@ -147,6 +152,27 @@ const updateSkippedOptimistic = (
 		updated.skipped[key] = { updatedAt: new Date() }
 	} else {
 		delete updated.skipped[key]
+	}
+
+	return updated
+}
+
+const updateNotInterestedOptimistic = (
+	data: UserData | undefined,
+	mediaType: MediaType,
+	tmdbId: number,
+	action: "add" | "remove",
+): UserData | undefined => {
+	if (!data) return data
+
+	const key = createMediaKey(mediaType, tmdbId)
+	const updated = { ...data, notInterested: { ...data.notInterested }, wishlist: { ...data.wishlist } }
+
+	if (action === "add") {
+		updated.notInterested[key] ??= { updatedAt: new Date() }
+		delete updated.wishlist[key]
+	} else {
+		delete updated.notInterested[key]
 	}
 
 	return updated
@@ -379,6 +405,60 @@ export const useSkippedMutation = () => {
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
 				updateSkippedOptimistic(old, mediaType, tmdbId, action),
+			)
+
+			return { previousData }
+		},
+		onError: (_, __, context) => {
+			if (context?.previousData) {
+				queryClient.setQueryData(userDataQueryKey, context.previousData)
+			}
+		},
+	})
+}
+
+export const useNotInterestedMutation = () => {
+	const queryClient = useQueryClient()
+	const { user } = useUser()
+	const userDataQueryKey = getQueryKeyUserData(user?.id)
+
+	return useMutation<
+		MutationResult,
+		Error,
+		UseNotInterestedMutationParams,
+		MutationContext
+	>({
+		mutationFn: async ({ mediaType, tmdbId, action }) => {
+			if (!user) {
+				updateGuestInteraction(
+					mediaType,
+					tmdbId,
+					"not-interested",
+					undefined,
+					action === "remove",
+				)
+				return { status: "success" }
+			}
+			const response = await fetch("/api/update-not-interested", {
+				method: "POST",
+				body: JSON.stringify({
+					tmdb_id: tmdbId,
+					media_type: mediaType,
+					action,
+				}),
+			})
+			const result: MutationResult = await response.json()
+			if (!response.ok || result.status !== "success") throw new Error("Updating Not interested failed")
+			return result
+		},
+		onMutate: async ({ mediaType, tmdbId, action }) => {
+			if (!user) return {}
+			await queryClient.cancelQueries({ queryKey: userDataQueryKey })
+
+			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
+
+			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
+				updateNotInterestedOptimistic(old, mediaType, tmdbId, action),
 			)
 
 			return { previousData }

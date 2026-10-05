@@ -66,6 +66,7 @@ export interface TitleCard extends TitleDisplay {
 	/** Scored or watched. */
 	seen: boolean
 	wantToSee: boolean
+	notInterested: boolean
 	/**
 	 * The title's rating for the viewer while an age limit is on: the step of their country's ladder it falls under,
 	 * or `~<age>` (estimated) for a title that goes by its ratings elsewhere. Null without an age limit, and for a
@@ -109,6 +110,7 @@ export async function getTitleCards(
 			services: cardServices(services[i], own, providers),
 			seen: viewer.seen.has(key),
 			wantToSee: viewer.wishlist.has(key),
+			notInterested: viewer.notInterested.has(key),
 			rating: badges ? badges[i] : null,
 		})
 	})

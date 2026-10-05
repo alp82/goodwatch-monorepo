@@ -1,7 +1,7 @@
 import type { Score } from "~/server/scores.server"
 import type { ScoringMedia } from "~/ui/scoring/types"
 
-export type InteractionType = "score" | "skip" | "plan"
+export type InteractionType = "score" | "skip" | "plan" | "not-interested"
 
 export interface TasteInteraction {
 	tmdb_id: number

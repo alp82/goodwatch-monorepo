@@ -110,6 +110,8 @@ export interface FilterResult {
 export interface FilterInput {
 	/** "catalog" is every title Discover shows; a list is a ranked search, a Wishlist, or an Explorer pool. */
 	universe: Iterable<TitleKey> | "catalog"
+	/** Text search keeps hidden titles findable. */
+	includeNotInterested?: boolean
 	state: FilterState
 	sort: SortKey
 	/**
@@ -158,11 +160,17 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		input.universe !== "catalog",
 	)
 	// Best match reorders the Top rated order, so titles with the same match go by GoodWatch score.
-	const { rows, keys } = universeInOrder(
+	let { rows, keys } = universeInOrder(
 		snapshot,
 		input.universe,
 		sortUsed === "match" ? "top" : sortUsed,
 	)
+	// Remove pure hides before computing recoveries and counts: no filter can bring them back.
+	if (!input.includeNotInterested && viewer.notInterested.size) {
+		const kept = Array.from(keys, (_, i) => i).filter((i) => !viewer.notInterested.has(keys[i]))
+		rows = Int32Array.from(kept, (i) => rows[i])
+		keys = Float64Array.from(kept, (i) => keys[i])
+	}
 	const universe = taste && universeTaste(snapshot, taste, rows, keys)
 	const matches = universe ? universe.matches : null
 	const releasedOptions = releasedRanges(new Date())

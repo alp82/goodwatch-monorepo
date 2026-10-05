@@ -241,7 +241,7 @@ test("warm member reads cost one MGET and no Crate; dates survive JSON", async (
 	await updateWatchHistory({ ...params, action: "add" })
 	db.statements.length = 0
 	const first = await getUserData({ user_id: user })
-	assert.equal(db.statements.length, 5)
+	assert.equal(db.statements.length, 6)
 	assert.ok(db.statements.every((s) => s.startsWith("SELECT")))
 	db.statements.length = 0
 	redis.calls.length = 0
@@ -273,6 +273,7 @@ test("anonymous data and settings bypass Crate, Redis and metrics", async () => 
 		watched: {},
 		favorites: {},
 		skipped: {},
+	notInterested: {},
 	})
 	assert.deepEqual(await getUserSettings({}), {})
 	assert.equal(db.statements.length, 0)
@@ -437,7 +438,7 @@ test("in-flight pre-write data cannot repopulate the cache", async () => {
 		(await getUserData({ user_id: user })).scores["movie-123"].score,
 		8,
 	)
-	assert.equal(db.statements.length, 5)
+	assert.equal(db.statements.length, 6)
 })
 for (const settings of [false, true])
 	test(`failed refresh still resets and repeats after two seconds: settings=${settings}`, async (t) => {

@@ -1,3 +1,4 @@
+import { excludeNotInterested } from "~/server/not-interested-store.server"
 import { getFeatureMode, isEnabled } from "~/server/features.server"
 import { loadTaste, logRecommendedOverlap } from "~/server/taste/index.server"
 import { cached } from "~/utils/cache"
@@ -49,7 +50,7 @@ const MAX_NEGATIVE_EXAMPLES = 50
 const MIN_VOTING_COUNT = 50000
 const MIN_SCORE = 60
 export const getUserRecommendations = async (params: GetUserRecommendationsParams) => {
-	return await cached({
+	const titles = await cached({
 		name: `${MEDIA_COLLECTION}:user-recommendations`,
 		target: _getUserRecommendations as any,
 		params,
@@ -57,6 +58,7 @@ export const getUserRecommendations = async (params: GetUserRecommendationsParam
 		staleMinutes: 0,
 		//ttlMinutes: 0,
 	}) as unknown as UserRecommendation[]
+	return excludeNotInterested(params.userId, titles)
 }
 
 async function _getUserRecommendations({

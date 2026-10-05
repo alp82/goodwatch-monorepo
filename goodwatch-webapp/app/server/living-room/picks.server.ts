@@ -47,7 +47,7 @@ export async function getLivingRoomPicks(
 	const candidates = (wishlist: boolean) => {
 		const ranked: { key: number; rank: number; popularity: number }[] = []
 		const consider = (key: number) => {
-			if (viewer.seen.has(key) || viewer.skipped.has(key)) return
+			if (viewer.notInterested.has(key) || viewer.seen.has(key) || viewer.skipped.has(key)) return
 			if (!wishlist && viewer.wishlist.has(key)) return
 			const facts = snapshot.facts(key)
 			if (!facts || facts.adult || !facts.hasPoster) return

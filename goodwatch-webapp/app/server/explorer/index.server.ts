@@ -145,6 +145,7 @@ async function seatFor(
 	const visible = new Uint8Array(pool.n)
 	for (let i = 0; i < pool.n; i++) {
 		const key = pool.keys[i]
+		if (ctx.notInterested.has(key)) continue
 		if (!passesTitleType(filters.type, pool.facts[i])) continue
 		if (filters.notSeenYet && (ctx.seen.has(key) || ctx.skipped.has(key)))
 			continue
@@ -264,6 +265,7 @@ function titleOf(seat: Seat, i: number): ExplorerTitle {
 		services: seat.lists ? seat.lists[i].filter((id) => seat.mine.has(id)) : [],
 		seen: ctx.seen.has(key),
 		wantToSee: ctx.wishlist.has(key),
+		notInterested: ctx.notInterested.has(key),
 		rating: ctx.ratings.get(key) ?? null,
 	}
 }

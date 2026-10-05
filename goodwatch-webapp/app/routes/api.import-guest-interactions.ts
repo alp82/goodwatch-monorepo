@@ -8,12 +8,14 @@ import { getAuthFromRequest } from "~/utils/auth";
 import { execute, query, upsert } from "~/utils/crate";
 import { canonicalTitleId } from "~/utils/title-identity";
 import { resetGuestImportCaches } from "~/server/guest-import.server";
+import { updateNotInterested } from "~/server/not-interested.server";
+import { readNotInterested, clearNotInterested } from "~/server/not-interested-store.server";
 import { getUserData } from "~/server/userData.server";
 
 const changeSchema = z
 	.object({
 		id: z.string().min(1),
-		kind: z.enum(["score", "plan", "country", "services"]),
+		kind: z.enum(["score", "plan", "not-interested", "country", "services"]),
 		tmdb_id: z.number().int().positive().optional(),
 		media_type: z.enum(["movie", "show"]).optional(),
 		value: z.string(),
@@ -21,7 +23,7 @@ const changeSchema = z
 	})
 	.superRefine((c, ctx) => {
 		const invalid =
-			(["score", "plan"].includes(c.kind) &&
+			(["score", "plan", "not-interested"].includes(c.kind) &&
 				(!c.tmdb_id || !c.media_type)) ||
 			(c.kind === "score" &&
 				(!/^(10|[1-9])$/.test(c.value) ||
@@ -162,6 +164,15 @@ async function persistChange(userId: string, c: Change) {
 		return;
 	}
 	const id = canonicalTitleId(c.media_type!, c.tmdb_id!);
+	if (c.kind === "not-interested") {
+		const result = await updateNotInterested({ user_id: userId, tmdb_id: id, media_type: c.media_type!, action: "add" });
+		if (result.status !== "success") throw new Error("Persistence could not be confirmed. Retry to finish.");
+		await visible(
+			() => readNotInterested(userId),
+			(rows) => rows.some((row) => row.tmdb_id === id && row.media_type === c.media_type),
+		);
+		return;
+	}
 	const table = c.kind === "score" ? "user_score" : "user_wishlist";
 	const read = () =>
 		query<{ score?: number }>(
@@ -206,6 +217,7 @@ async function persistChange(userId: string, c: Change) {
 			conflictColumns: ["user_id", "tmdb_id", "media_type"],
 			ignoreUpdate: true,
 		});
+	await clearNotInterested(userId, id, c.media_type!);
 	await visible(
 		read,
 		(rows) =>

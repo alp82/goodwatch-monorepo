@@ -90,6 +90,7 @@ export async function getDiscoverResults(
 
 	const result = await filterTitles({
 		universe: searching ? ranked : "catalog",
+		includeNotInterested: searching,
 		state,
 		sort,
 		taste,

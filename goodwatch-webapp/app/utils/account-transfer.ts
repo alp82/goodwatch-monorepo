@@ -9,7 +9,7 @@ import {
 export type TransferChange = {
 	id: string;
 	// "skip" only appears in transfers saved by earlier versions and is never sent.
-	kind: "score" | "plan" | "skip" | "country" | "services";
+	kind: "score" | "plan" | "skip" | "not-interested" | "country" | "services";
 	tmdb_id?: number;
 	media_type?: "movie" | "show";
 	value: string;

@@ -1,3 +1,4 @@
+import { clearNotInterested } from "~/server/not-interested-store.server"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server";
 import { markTasteChanged } from "~/server/taste/index.server";
@@ -63,6 +64,8 @@ export const updateWishList = async ({
 		const params = [user_id, tmdb_id, media_type];
 		result = await execute(sql, params);
 	}
+
+	if (action === "add") await clearNotInterested(user_id, tmdb_id, media_type)
 
 	await resetUserDataCache({ user_id });
 	await markTasteChanged(user_id);

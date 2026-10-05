@@ -32,6 +32,7 @@ export interface PortraitInput {
 	chosen: ReadonlySet<TitleKey>
 	wantToSee: ReadonlySet<TitleKey>
 	skipped: ReadonlySet<TitleKey>
+	notInterested: ReadonlySet<TitleKey>
 	country: string
 	services: number[]
 	/** The person's taste match, for the match shown on suggestions. */
@@ -212,6 +213,7 @@ export function readPerson(
 	)
 
 	const excluded = (key: TitleKey) =>
+		input.notInterested.has(key) ||
 		input.chosen.has(key) ||
 		input.scores.has(key) ||
 		input.wantToSee.has(key) ||

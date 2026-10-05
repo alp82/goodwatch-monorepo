@@ -626,6 +626,17 @@ SCHEMAS = {
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 3,
     },
+    "user_not_interested": {
+        "columns": {
+            "user_id": "TEXT",
+            "tmdb_id": "INTEGER",
+            "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
+            "created_at": "TIMESTAMP",
+            "updated_at": "TIMESTAMP",
+        },
+        "primary_key": ["user_id", "tmdb_id", "media_type"],
+        "shards": 3,
+    },
     "user_wishlist": {
         "columns": {
             "user_id": "TEXT",

@@ -197,7 +197,7 @@ export default function RecommendationSwiper({
 	const [isMobile, setIsMobile] = useState(false)
 	const { data: history } = useUserData()
 	const excluded = new Set(
-		["scores", "skipped", "watched", "wishlist"].flatMap((key) =>
+		["scores", "skipped", "watched", "wishlist", "notInterested"].flatMap((key) =>
 			Object.keys(history?.[key] || {}),
 		),
 	)

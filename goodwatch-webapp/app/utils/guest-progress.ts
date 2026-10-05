@@ -31,7 +31,7 @@ export function normalizeGuestInteractions(parsed: unknown): TasteInteraction[] 
 			value.tmdb_id = canonicalTitleId(value.media_type, value.tmdb_id)
 			const type = value.type || (value.score ? "score" : undefined)
 			if (
-				!["score", "plan", "skip"].includes(type) ||
+				!["score", "plan", "skip", "not-interested"].includes(type) ||
 				(type === "score" &&
 					(!Number.isInteger(value.score) ||
 						value.score < 1 ||
@@ -157,6 +157,7 @@ export function guestUserData(interactions: TasteInteraction[]): UserData {
 		scores: {},
 		wishlist: {},
 		skipped: {},
+		notInterested: {},
 		watched: {},
 		favorites: {},
 	}
@@ -167,6 +168,7 @@ export function guestUserData(interactions: TasteInteraction[]): UserData {
 			data.scores[key] = { score: item.score!, review: null, updatedAt }
 		else if (item.type === "plan")
 			data.wishlist[key] = { createdAt: updatedAt, updatedAt }
+		else if (item.type === "not-interested") data.notInterested[key] = { updatedAt }
 		else data.skipped[key] = { updatedAt }
 	}
 	return data

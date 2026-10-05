@@ -1,3 +1,4 @@
+import { readNotInterested, excludeNotInterested } from "~/server/not-interested-store.server"
 import { queryKeyOnboardingMedia } from "~/routes/api.onboarding.media"
 import { type PrefetchParams, prefetchQuery } from "~/server/utils/prefetch"
 import { cached, declareResettableCache, resetCache } from "~/utils/cache"
@@ -44,11 +45,13 @@ export interface OnboardingMediaParams {
 }
 
 export const getOnboardingMedia = async (params: OnboardingMediaParams) => {
-	return await cached<OnboardingMediaParams, OnboardingMediaResult>({
+	const result = await cached<OnboardingMediaParams, OnboardingMediaResult>({
 		...ONBOARDING_CACHE,
 		target: _getOnboardingMedia,
 		params,
 	})
+	if (params.searchTerm) return result
+	return { movies: await excludeNotInterested(params.userId, result.movies), shows: await excludeNotInterested(params.userId, result.shows) }
 }
 
 async function _getOnboardingMedia({
@@ -91,6 +94,7 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 }: CombinedResultProps) => {
 	const mediaType = tableName === "movie" ? "movie" : "show"
 
+	const hidden = searchTerm ? [] : (await readNotInterested(userId)).filter((item) => item.media_type === mediaType).map((item) => item.tmdb_id)
 	const commonQuery = `
 		WITH ranked_movies AS (
 			SELECT
@@ -126,6 +130,7 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 				AND user_score.tmdb_id IS NULL
 				AND user_skipped.tmdb_id IS NULL
 				AND user_wishlist.tmdb_id IS NULL
+				${hidden.length ? `AND m.tmdb_id NOT IN (${hidden.map(() => "?").join(",")})` : ""}
 		)
 		SELECT *
 		FROM ranked_movies
@@ -161,7 +166,7 @@ const _getCombinedResults = async <T extends OnboardingResult>({
 		.replace("%WHERE_CONDITIONS%", groupWhereConditions)
 		.replace("%ORDER_BY%", "")
 		.replace("%LIMIT%", "10")
-	const groupedRows = await query<T>(groupQuery)
+	const groupedRows = await query<T>(groupQuery, hidden)
 
 	return [searchRows, groupedRows]
 }

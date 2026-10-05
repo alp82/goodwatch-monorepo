@@ -73,12 +73,13 @@ export function selectPoolKeys(
 	viewer: {
 		seen: ReadonlySet<number>
 		skipped: ReadonlySet<number>
+	notInterested: ReadonlySet<number>
 		wishlist: { has(key: number): boolean }
 	},
 	rankOf: ((key: number) => number) | null,
 ): { keys: number[]; byMood: Map<MoodKey, number[]> } {
 	const excluded = (key: number) =>
-		viewer.seen.has(key) || viewer.skipped.has(key) || viewer.wishlist.has(key)
+		viewer.notInterested.has(key) || viewer.seen.has(key) || viewer.skipped.has(key) || viewer.wishlist.has(key)
 	const keys: number[] = []
 	const byMood = new Map<MoodKey, number[]>()
 	const add = (list: number[]) => {

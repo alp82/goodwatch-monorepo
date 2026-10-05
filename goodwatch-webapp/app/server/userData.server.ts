@@ -1,3 +1,4 @@
+import { readNotInterested, refreshNotInterested } from "~/server/not-interested-store.server"
 import type { Score } from "~/server/scores.server"
 import type { UserData, MediaType } from "~/types/user-data"
 import { createMediaKey } from "~/types/user-data"
@@ -24,12 +25,13 @@ export const getUserData = async (
 ): Promise<UserData> => {
 	const { user_id } = params
 	if (!user_id)
-		return { scores: {}, wishlist: {}, watched: {}, favorites: {}, skipped: {} }
+		return { scores: {}, wishlist: {}, watched: {}, favorites: {}, notInterested: {}, skipped: {} }
 	const data = await cached<GetUserDataParams, UserData>({
 		...USER_DATA_CACHE,
 		target: _getUserData,
 		params: { user_id },
 	})
+	data.notInterested ??= {}
 	// JSON cache hits and fresh Crate reads must expose the same Date-valued API.
 	for (const collection of [
 		data.scores,
@@ -37,6 +39,7 @@ export const getUserData = async (
 		data.watched,
 		data.favorites,
 		data.skipped,
+		data.notInterested,
 	]) {
 		for (const item of Object.values(collection)) {
 			item.updatedAt = new Date(item.updatedAt)
@@ -57,11 +60,12 @@ async function _getUserData({
 			watched: {},
 			favorites: {},
 			skipped: {},
+			notInterested: {},
 		}
 	}
 
 	// Query each table separately
-	const [scores, wishlist, watchHistory, favorites, skipped] = await Promise.all([
+	const [scores, wishlist, watchHistory, favorites, skipped, notInterested] = await Promise.all([
 		query<{ tmdb_id: number; media_type: string; score: number; review: string | null; updated_at: Date }>(
 			`SELECT tmdb_id, media_type, score, review, updated_at 
 			 FROM user_score WHERE user_id = ?`,
@@ -87,6 +91,7 @@ async function _getUserData({
 			 FROM user_skipped WHERE user_id = ?`,
 			[user_id],
 		),
+		readNotInterested(user_id),
 	])
 
 	const result: UserData = {
@@ -95,6 +100,7 @@ async function _getUserData({
 		watched: {},
 		favorites: {},
 		skipped: {},
+		notInterested: {},
 	}
 
 	// Populate scores
@@ -141,6 +147,10 @@ async function _getUserData({
 		}
 	})
 
+	for (const item of notInterested) {
+		result.notInterested[createMediaKey(item.media_type, item.tmdb_id)] = { updatedAt: new Date(item.updated_at) }
+	}
+
 	return result
 }
 
@@ -154,6 +164,7 @@ export const resetUserDataCache = async (params: GetUserDataParams) => {
 		params: { user_id: params.user_id },
 	}
 	try {
+		await refreshNotInterested()
 		await execute(
 			"REFRESH TABLE user_score, user_wishlist, user_watch_history, user_favorite, user_skipped",
 		)

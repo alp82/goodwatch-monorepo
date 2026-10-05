@@ -92,6 +92,7 @@ export interface ExplorerTitle {
 	services: number[]
 	seen: boolean
 	wantToSee: boolean
+	notInterested: boolean
 	/** The viewer's score, 1 to 10. */
 	rating: number | null
 }

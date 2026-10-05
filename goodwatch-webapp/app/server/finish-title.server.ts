@@ -2,6 +2,7 @@
 // again and restores Want to See with its original added-at time, so the title keeps its place in Waiting longest.
 // Members only; a guest's Wishlist lives in the browser.
 
+import { clearNotInterested } from "~/server/not-interested-store.server"
 import { resetUserDataCache } from "~/server/userData.server"
 import { updateWatchHistory } from "~/server/watchHistory.server"
 import { updateWishList } from "~/server/wishList.server"
@@ -52,6 +53,8 @@ export async function finishTitle(
 			? new Date(recorded.first_watched_at).toISOString()
 			: null
 	}
+	await clearNotInterested(userId, tmdbId, mediaType)
+	await resetUserDataCache({ user_id: userId })
 	const added = wish[0]
 	if (added)
 		await updateWishList({

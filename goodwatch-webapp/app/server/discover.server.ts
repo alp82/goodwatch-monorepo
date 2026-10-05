@@ -1,3 +1,4 @@
+import { readNotInterested, excludeNotInterested } from "~/server/not-interested-store.server"
 import { query } from "~/utils/crate"
 import { DISCOVER_PAGE_SIZE } from "~/utils/constants"
 import type { AllRatings } from "~/utils/ratings"
@@ -112,13 +113,14 @@ export const getDiscoverResults = async (params: DiscoverParams): Promise<Discov
 		page: params.page,
 	}
 
-	return await cached<DiscoverParams, DiscoverResults>({
+	const titles = await cached<DiscoverParams, DiscoverResults>({
 		name: `${MEDIA_COLLECTION}:discover`,
 		target: _getSimpleDiscoverResults,
 		params,
 		ttlMinutes: 30,
 		// ttlMinutes: 0,
 	})
+	return params.userId ? excludeNotInterested(params.userId, titles) : titles
 }
 
 async function _getSimpleDiscoverResults({
@@ -582,6 +584,12 @@ async function getMediaResults({
 		}
 	}
 	
+	const hidden = (await readNotInterested(userId)).filter((item) => item.media_type === mediaType)
+	if (hidden.length) {
+		conditions.push(`m.tmdb_id NOT IN (${hidden.map(() => "?").join(",")})`)
+		params.push(...hidden.map((item) => item.tmdb_id))
+	}
+
 	// Add candidate IDs filter from Qdrant
 	if (candidateIds && candidateIds.size > 0) {
 		const ids = Array.from(candidateIds)

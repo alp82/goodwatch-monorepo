@@ -1,3 +1,4 @@
+import { clearNotInterested } from "~/server/not-interested-store.server"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { resetUserDataCache } from "~/server/userData.server";
 import { execute, upsert } from "~/utils/crate";
@@ -67,6 +68,8 @@ export const updateWatchHistory = async ({
 		const params = [user_id, tmdb_id, media_type];
 		result = await execute(sql, params);
 	}
+
+	if (action === "add") await clearNotInterested(user_id, tmdb_id, media_type)
 
 	await resetUserDataCache({ user_id });
 

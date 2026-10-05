@@ -13,7 +13,7 @@ const input = z.object({
 				.object({
 					tmdb_id: z.number().int().positive(),
 					media_type: z.enum(["movie", "show"]),
-					type: z.enum(["score", "skip", "plan"]),
+					type: z.enum(["score", "skip", "plan", "not-interested"]),
 					score: z
 						.union([
 							z.literal(1),

@@ -29,7 +29,7 @@ export async function getInterestDiscovery(
 ): Promise<DiscoveryResult> {
 	const excluded = [
 		...new Set(
-			["scores", "skipped", "watched", "wishlist"].flatMap((key) =>
+			["scores", "skipped", "watched", "wishlist", "notInterested"].flatMap((key) =>
 				Object.keys(data?.[key] || {}),
 			),
 		),

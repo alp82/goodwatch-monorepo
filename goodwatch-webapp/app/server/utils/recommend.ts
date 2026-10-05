@@ -1,3 +1,4 @@
+import { readNotInterested } from "~/server/not-interested-store.server"
 import { rankStep } from "~/domain/taste-match"
 import type { Taste } from "~/server/taste/index.server"
 import { query } from "~/utils/crate"
@@ -141,7 +142,8 @@ export async function searchByTaste<T>({
 export async function getUserExcludeItems(userId: string): Promise<{ tmdb_id: number; media_type: string }[]> {
 	// Fetch all items to exclude: scored, skipped, watched, and wishlist
 	// Only include items that have essence_tags (which means they have vectors in Qdrant)
-	const [scored, skipped, watched, wishlist] = await Promise.all([
+	const [notInterested, scored, skipped, watched, wishlist] = await Promise.all([
+		readNotInterested(userId),
 		query<{ tmdb_id: number; media_type: string }>(`
 			SELECT us.tmdb_id, us.media_type FROM user_score us
 			INNER JOIN movie m ON us.tmdb_id = m.tmdb_id AND us.media_type = 'movie'
@@ -181,7 +183,7 @@ export async function getUserExcludeItems(userId: string): Promise<{ tmdb_id: nu
 	])
 
 	// Combine all items and remove duplicates
-	const allItems = [...scored, ...skipped, ...watched, ...wishlist]
+	const allItems = [...notInterested, ...scored, ...skipped, ...watched, ...wishlist]
 	const uniqueItems = allItems.filter((item, index, arr) => 
 		arr.findIndex(i => i.tmdb_id === item.tmdb_id && i.media_type === item.media_type) === index
 	)

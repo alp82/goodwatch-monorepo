@@ -16,7 +16,7 @@ import type { ScoringMedia, LastRatedItem } from "~/ui/scoring/types"
 import { fetchSmartTitles } from "~/routes/api.smart-titles"
 import { useFingerprintPreview } from "~/routes/api.fingerprint-preview"
 import FeatureTooltip from "./components/modals/FeatureTooltip"
-import type { GuestRating, Recommendation } from "./types"
+import type { GuestRating, Recommendation, TasteInteraction } from "./types"
 import { GUEST_LIMITS, FEATURES, type Feature } from "./features"
 import TasteRating from "./screens/TasteRating"
 import { useTasteScoring } from "./hooks/useTasteScoring"
@@ -119,7 +119,7 @@ export default function TasteQuiz({
 	// For guests, derive items to exclude from recommendations (skips + plan-to-watch)
 	const guestExcludeIds = useMemo(() => {
 		return interactions
-			.filter((i) => i.type === "skip" || i.type === "plan")
+			.filter((i) => i.type === "skip" || i.type === "plan" || i.type === "not-interested")
 			.map((i) => ({
 				tmdb_id: i.tmdb_id,
 				media_type: i.media_type,
@@ -274,6 +274,7 @@ export default function TasteQuiz({
 	const guestLastRatedItems: LastRatedItem[] = useMemo(() => {
 		if (isAuthenticated) return []
 		return interactions
+			.filter((interaction): interaction is TasteInteraction & { type: LastRatedItem["actionType"] } => interaction.type !== "not-interested")
 			.slice(-GUEST_LIMITS.FIRST_UNLOCK)
 			.reverse()
 			.map((interaction) => {

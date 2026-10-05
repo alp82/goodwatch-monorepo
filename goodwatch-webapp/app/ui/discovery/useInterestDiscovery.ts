@@ -28,7 +28,7 @@ export function useInterestDiscovery(genre = "") {
 	})
 	// Hide newly acted-on titles immediately, including while fresh suggestions load.
 	const excluded = new Set(
-		["scores", "skipped", "watched", "wishlist"].flatMap((key) =>
+		["scores", "skipped", "watched", "wishlist", "notInterested"].flatMap((key) =>
 			Object.keys(history?.[key] || {}),
 		),
 	)
