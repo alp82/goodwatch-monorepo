@@ -13,7 +13,7 @@ Each run does the following, in this order:
 1. Takes a lock on `/var/lock/backup_crate.lock`. If another run holds the
    lock, the run logs one line and exits with code 75.
 2. Creates the snapshot `hourly_<timestamp>` in the file system repository
-   `goodwatch-db-backup`. At hour 0 it also creates `daily_<timestamp>`, and on
+   `goodwatch-db-backup-v2`. At hour 0 it also creates `daily_<timestamp>`, and on
    Sundays at hour 0 also `weekly_<timestamp>`.
 3. Drops expired snapshots, oldest first: hourly snapshots after 3 hours,
    daily snapshots after 3 days, weekly snapshots after 21 days. A run drops at
@@ -45,7 +45,7 @@ snapshot whose name doesn't start with a retention prefix. With one drop taking
 
   ```sql
   SELECT name, state, finished FROM sys.snapshots
-  WHERE repository = 'goodwatch-db-backup' AND state = 'SUCCESS'
+  WHERE repository = 'goodwatch-db-backup-v2' AND state = 'SUCCESS'
   ORDER BY finished DESC LIMIT 1;
   ```
 
@@ -78,9 +78,9 @@ readable on every node before you register the repository again.
 files.
 
 ```sql
-DROP REPOSITORY "goodwatch-db-backup";
-CREATE REPOSITORY "goodwatch-db-backup" TYPE fs
-  WITH (location = '/snapshots', compress = true);
+DROP REPOSITORY "goodwatch-db-backup-v2";
+CREATE REPOSITORY "goodwatch-db-backup-v2" TYPE fs
+  WITH (location = '/snapshots/v2', compress = true);
 ```
 
 `/snapshots` is the path inside the container. The compose file mounts it on
@@ -99,3 +99,26 @@ The tests stub `run_sql`, so no request leaves the process.
 cd goodwatch-crate
 uv run --no-project --with requests python -m unittest test_backup
 ```
+
+## The two repositories
+
+Two repositories are registered since October 5, 2026:
+
+- `goodwatch-db-backup-v2` at `/snapshots/v2` is the one that `backup.py`
+  writes to. It started empty, so a `DROP SNAPSHOT` there is fast.
+- `goodwatch-db-backup` at `/snapshots` is the archive. It holds the snapshots
+  up to October 5, 2026, among them about 2,130 `snap_*` snapshots from an
+  earlier version of the script that never expired. Nothing writes to it
+  anymore. A `DROP SNAPSHOT` there takes about 14 minutes, which is why the
+  old snapshots weren't dropped one by one.
+
+The new repository's directory is inside the archive's directory, because the
+nodes mount only `/snapshots` and a second mount needs a restart of every
+node. That's safe only while nothing writes to the archive: don't create or
+drop snapshots in `goodwatch-db-backup`, and don't run `cleanup_legacy.py`
+against it.
+
+To retire the archive once the new repository holds a full set of hourly,
+daily, and weekly snapshots (21 days), run `DROP REPOSITORY
+"goodwatch-db-backup";` and then delete everything in the backup directory
+except `v2/`. Deleting those files is the owner's step.

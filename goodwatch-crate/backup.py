@@ -15,7 +15,7 @@ import requests
 
 # --- CONFIGURATION ---
 CRATE_HOST = "http://10.0.0.11:4200"
-REPO_NAME = "goodwatch-db-backup"
+REPO_NAME = "goodwatch-db-backup-v2"
 # Tiered retention (matches goodwatch-qdrant/backup.py pattern).
 # CrateDB snapshots are incremental: adding daily/weekly alongside hourly
 # does not duplicate segment storage, but old segments are only freed once

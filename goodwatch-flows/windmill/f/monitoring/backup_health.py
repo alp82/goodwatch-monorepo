@@ -13,7 +13,7 @@ from typing import Any
 from f.monitoring.cluster_health import safe_detail
 
 BACKUP_PATH = "f/monitoring/crate_backup"
-REPOSITORY = "goodwatch-db-backup"
+REPOSITORY = "goodwatch-db-backup-v2"
 # The backup runs hourly, so 3 hours means at least two missed snapshots.
 MAX_AGE_SECONDS = 3 * 3600
 
