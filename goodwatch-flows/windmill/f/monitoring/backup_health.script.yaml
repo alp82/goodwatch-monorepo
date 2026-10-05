@@ -1,0 +1,9 @@
+summary: Assess the age of the newest successful Crate snapshot
+description: Pure assessment of a read-only sys.snapshots observation.
+lock: '!inline f/monitoring/backup_health.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties: {}
+  required: []

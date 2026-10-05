@@ -45,9 +45,16 @@ CAUSES = {
     "crate_translog_oversized",
     "crate_disk_near_watermark",
     "crate_disk_watermark",
+    "crate_backup_stale",
+    "crate_backup_missing",
+    "crate_backup_unreadable",
 }
 # Infrastructure incidents have no Windmill execution to link.
-INFRASTRUCTURE_PIPELINES = {"f/monitoring/crate_shards", "f/monitoring/crate_disk"}
+INFRASTRUCTURE_PIPELINES = {
+    "f/monitoring/crate_shards",
+    "f/monitoring/crate_disk",
+    "f/monitoring/crate_backup",
+}
 DETAIL_PATTERN = r"[A-Za-z0-9_.#%(),;:+ -]{1,300}"
 
 

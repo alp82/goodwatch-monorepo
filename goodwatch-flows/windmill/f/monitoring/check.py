@@ -54,6 +54,7 @@ RUNTIME_HOURS = {
     "f/tmdb_daily/tmdb_extract_daily_dump_data": 6,
     "f/tmdb_api/tmdb_init_details": 6,
     "f/tmdb_daily/tmdb_check_daily_dump_availability": 2,
+    "f/monitoring/backup_check": 0.25,
 }
 
 

@@ -29,6 +29,18 @@ The same five-minute check reads `sys.shards`, `sys.nodes` and `sys.cluster` (re
 
 A stuck replica checkpoint pins the retention leases, so the translog and every soft-deleted document above it are kept and the shard grows with each update. In September 2026 this left `movie` shards 8 and 9 at 24–29 GB instead of 0.2 GB. The fix is to cancel the lagging replica with `ALTER TABLE <table> REROUTE CANCEL SHARD <id> ON '<replica node>'`, one shard at a time, so it recovers from the primary. Thresholds live in `f/monitoring/cluster_health.py`. A failed system table read is `unknown` and never counts as recovery.
 
+## Crate backup age
+
+`f/monitoring/backup_check` is a separate hourly script, because a read of `sys.snapshots` takes 15 to 90 seconds on the backup repository and doesn't fit the five-minute check's budget. It reads the newest snapshot with state `SUCCESS` in the repository `goodwatch-db-backup` (read only) and reports `f/monitoring/crate_backup` through the same ledger and Discord path:
+
+- `crate_backup_stale`: the newest successful snapshot finished more than **3 hours** ago. The backup runs hourly, so this means at least two missed snapshots.
+- `crate_backup_missing`: the query returned 0 rows. A disabled repository returns 0 rows without an error.
+- `crate_backup_unreadable`: the query failed or didn't return within 240 seconds.
+
+Unlike the shard and disk reports, a failed read is unhealthy here, not `unknown`: a silent failure is the case this check exists for. The read runs before the script takes the monitoring lease, and the script then waits up to 240 seconds for the lease, so the five-minute check is blocked for a few seconds at most. If the lease stays busy, the job fails, and the five-minute check reports the `f/monitoring/backup_check` schedule after three failures. The Windmill job timeout is 600 seconds.
+
+To activate it after the deploy, create a schedule with path `f/monitoring/backup_check`, script `f/monitoring/backup_check`, cron `0 40 * * * *`, and args `{"notify":true}`. Minute 40 is after the hourly backup's snapshot, which starts at minute 5. For the recovery steps, see [the Crate backup README](../goodwatch-crate/README.md).
+
 ## Configuration and rollout
 
 1. Create the Windmill **secret** variable `f/monitoring/discord_webhook_url` with the chosen channel's Discord webhook URL. Never put it in Git, job arguments, or chat. The adapter accepts the fixed HTTPS Discord webhook host/path, sends Discord's required identifying User-Agent, and disables redirects and mentions. A corrected delivery-client identity also invalidates an old permanent-error gate while preserving the pending incident.
