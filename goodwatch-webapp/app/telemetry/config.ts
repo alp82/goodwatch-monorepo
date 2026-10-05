@@ -9,11 +9,38 @@
  */
 export const POSTHOG_ANONYMOUS_SESSION_RECORDING_SHARE: number | null = null
 
-/** The share of page loads and navigations that send a performance trace to Sentry, from 0 to 1. */
-export const SENTRY_TRACES_SAMPLE_RATE = 1
+/**
+ * The share of page loads and navigations that send a performance trace to Sentry, from 0 to 1. Every trace is one
+ * POST through the app's tunnel, so at 1 each page view costs an upload, a proxy hop and Sentry quota. Web vitals
+ * reach PostHog for every page view, independent of this share. Errors aren't sampled by this setting.
+ */
+export const SENTRY_TRACES_SAMPLE_RATE = 0.05
 
-/** The share of sessions that Sentry records as a replay from the start, from 0 to 1. */
+/**
+ * The kinds of loaded resources that a Sentry trace leaves out, as the browser's initiator types. A span per image,
+ * script and stylesheet was about 90% of a trace's 50 to 100 KB. An empty list brings the resource waterfall back.
+ */
+export const SENTRY_IGNORED_RESOURCE_SPANS: string[] = [
+	"resource.img",
+	"resource.script",
+	"resource.link",
+	"resource.css",
+	"resource.other",
+	"resource.video",
+	"resource.audio",
+	"resource.iframe",
+	"resource.beacon",
+]
+
+/** The share of members' sessions that Sentry records as a replay from the start, from 0 to 1. */
 export const SENTRY_REPLAY_SESSION_SAMPLE_RATE = 0.1
+
+/**
+ * The same share for anonymous visitors. At 0, an anonymous session sends a replay only after an error (see
+ * SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE). A replay from the start uploads about 90 KB and more with every activity.
+ * The share is fixed when Sentry starts: a visitor who signs in later keeps it until the next page load.
+ */
+export const SENTRY_ANONYMOUS_REPLAY_SESSION_SAMPLE_RATE = 0
 
 /** The share of sessions with an error whose last minute Sentry sends as a replay, from 0 to 1. */
 export const SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE = 1

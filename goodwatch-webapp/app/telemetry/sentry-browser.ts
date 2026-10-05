@@ -4,6 +4,8 @@ import * as Sentry from "@sentry/remix"
 import type { PostHog } from "posthog-js"
 import { redactSearchTelemetry } from "~/utils/search-telemetry"
 import {
+	SENTRY_ANONYMOUS_REPLAY_SESSION_SAMPLE_RATE,
+	SENTRY_IGNORED_RESOURCE_SPANS,
 	SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE,
 	SENTRY_REPLAY_SESSION_SAMPLE_RATE,
 	SENTRY_TRACES_SAMPLE_RATE,
@@ -22,6 +24,8 @@ export interface SentryStart {
 	currentRouteId: string | null
 	/** When the page was hydrated, in milliseconds since the epoch. */
 	hydratedAt: number | null
+	/** Whether the visitor is signed in at this moment. Decides the share of sessions recorded from the start. */
+	isMember: boolean
 }
 
 // The browser hands the buffered entries of the page load (LCP, time to first byte) to a late observer in a later
@@ -34,11 +38,14 @@ export function startSentry({
 	landingRouteId,
 	currentRouteId,
 	hydratedAt,
+	isMember,
 }: SentryStart): void {
 	const integrations = [
 		// The page load span starts here, with the browser's own start time. The route hooks stay out: the root reports
 		// route changes through `sentryRouteChanged`.
-		Sentry.browserTracingIntegration({}),
+		Sentry.browserTracingIntegration({
+			ignoreResourceSpans: SENTRY_IGNORED_RESOURCE_SPANS,
+		}),
 		Sentry.replayIntegration({
 			beforeAddRecordingEvent: redactSearchTelemetry,
 			block: [".search-private"],
@@ -59,7 +66,9 @@ export function startSentry({
 		dsn: "https://305f3d4bb8cd891b11d6ae7886692de2@o4507456417169408.ingest.de.sentry.io/4507456420184144",
 		tunnel: "/api/e",
 		tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
-		replaysSessionSampleRate: SENTRY_REPLAY_SESSION_SAMPLE_RATE,
+		replaysSessionSampleRate: isMember
+			? SENTRY_REPLAY_SESSION_SAMPLE_RATE
+			: SENTRY_ANONYMOUS_REPLAY_SESSION_SAMPLE_RATE,
 		replaysOnErrorSampleRate: SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE,
 		integrations,
 	})

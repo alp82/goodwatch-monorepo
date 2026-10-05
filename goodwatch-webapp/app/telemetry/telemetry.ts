@@ -98,6 +98,7 @@ async function loadTools(reason: LoadReason) {
 			landingRouteId: state.landingRouteId,
 			currentRouteId: state.currentRouteId,
 			hydratedAt: state.hydratedAt,
+			isMember: state.isMember,
 		})
 		state.sentry = module
 		const errors = state.boundaryErrors.splice(0, state.boundaryErrors.length)
