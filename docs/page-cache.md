@@ -99,14 +99,30 @@ A response is stored only when all of these hold:
 | No `Set-Cookie` | `applyCachePolicy` makes such a response private, and `pageCacheWants` checks again. |
 | No render error | The server entry drops the offer when React reported an error or the abort timer fired. |
 | The gate wouldn't answer the request | `gateAnswer`, before any lookup and again when the render is offered. |
-| The page is complete | A title page without its embedded related panel answers `Cache-Control: no-store`. See below. |
+| The page is complete | A loader that left out a part of the page answers `Cache-Control: no-store`. See below. |
 | The URL repeated | The admission rule, checked when the render is offered. |
 | At most 8 MB of HTML and 4 MB compressed | Checked before and after compression. |
 
-- **Incomplete title pages:** a title page waits 150 ms for its related titles (1,000 ms for a declared crawler).
-  When the lookup runs out of time or fails, the page has no embedded panel. The loader then answers
-  `Cache-Control: no-store`, which the page headers turn into `private, no-store`. The page cache and a cache in front
-  both follow it. The lookup keeps running and fills the data cache, so the next render is complete.
+- **Incomplete pages:** a page is incomplete when a part that the document normally holds is missing, because a
+  data source wasn't ready, ran out of time, or failed. The loader then answers `Cache-Control: no-store`
+  (`INCOMPLETE_PAGE_HEADERS` in `app/server/incomplete-page.ts`), which the page headers turn into
+  `private, no-store`. The page cache and a cache in front both follow it. A loader that renders a page without one
+  of its parts must answer this header. Today these renders do:
+  - **A title page without its related panel or an extra.** It waits 150 ms for its related titles, genre links, and
+    collection (1,000 ms for a declared crawler). When a lookup runs out of time or fails, the document goes out
+    without that part. The lookup keeps running and fills the data cache, so the next render is complete.
+  - **A show page whose episode grid read failed.** The page renders without the grid.
+  - **Discover without the title snapshot.** The first view has no titles, only a spinner, and the browser asks for
+    them. Search mode has no titles in the document by design and stays storable.
+- **When Discover can render without the snapshot:** readiness (`/health/ready`) waits for the snapshot's first check,
+  and Docker's health check asks it, so the proxy sends no request to a new container before that. But readiness
+  doesn't wait for a snapshot. It answers 200 when the first check found nothing published or refused the manifest,
+  and after 30 seconds (`READY_MAX_WAIT_MS`) whatever the check did, for example while the snapshot's Valkey doesn't
+  answer. A process in that state serves Discover with a spinner until a later check loads the snapshot. A container
+  without a health check, such as a test container, gets requests at once. A loaded snapshot is replaced in one
+  assignment and kept when a later load fails, so a render never sees a missing snapshot after the first load.
+- **What still counts as complete:** a part that is empty without an error. A title without related titles (no
+  fingerprint, or no match) and a listing without results render their empty state and are stored.
 - **Share list and profile pages** are stored only for anonymous visitors, and a list page only for a public list.
   Their lifetime is 10 seconds fresh and 10 more seconds stale. Hidden lists and member views send
   `private, no-store`.

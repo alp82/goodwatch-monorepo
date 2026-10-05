@@ -10,6 +10,7 @@ import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { getDetailsForMovie } from "~/server/details.server"
+import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { isCrawler } from "~/server/crawlers.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import { relatedPanelEmbedded } from "~/server/related-prefetch"
@@ -109,7 +110,7 @@ export const loader: LoaderFunction = async ({
 		})
 	return complete
 		? data
-		: json(data, { headers: { "Cache-Control": "no-store" } })
+		: json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 }
 
 export default function DetailsMovie() {

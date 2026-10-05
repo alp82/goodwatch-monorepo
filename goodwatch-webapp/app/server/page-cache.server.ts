@@ -10,8 +10,8 @@
 //   whether a front cache named that identity (the two differ in `Cache-Control` and `Vary`).
 // - What is stored: a 200 document that `applyCachePolicy` called `keyed` or `shared`, without `Set-Cookie` and without
 //   a render error, on its second request within a minute. The page's own `Cache-Control` decides: a private route
-//   (search, an unlisted share list) and a title page without its related panel (`no-store`) are never stored. The
-//   server entry hands over the HTML (`pageCacheWants`), and this module compresses it once per encoding off the
+//   (search, an unlisted share list) and an incomplete page (`no-store`, see incomplete-page.ts) are never stored.
+//   The server entry hands over the HTML (`pageCacheWants`), and this module compresses it once per encoding off the
 //   request path.
 // - Tracking parameters (`utm_*`, `fbclid`, ...) aren't part of the key, and the app never sees them on a request
 //   whose page may be stored, so that no visitor's click id ends up in a page for everyone. A redirect gets them back.

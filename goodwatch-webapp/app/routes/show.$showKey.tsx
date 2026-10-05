@@ -9,6 +9,7 @@ import { useLoaderData } from "@remix-run/react"
 import React, { useEffect, useMemo } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
 import { getDetailsForShow, getDetailsForMovie } from "~/server/details.server"
+import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { isCrawler } from "~/server/crawlers.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import { relatedPanelEmbedded } from "~/server/related-prefetch"
@@ -65,12 +66,14 @@ export const loader: LoaderFunction = async ({
 		country,
 		language,
 	})
+	let episodeGridFailed = false
 	const [media, episodeGrid, relatedState, extrasState] = await Promise.all([
 		details,
 		// A failed grid read hides the grid; it never fails the page.
 		getEpisodeGrid({ showId })
 			.then((grid) => grid && packEpisodeGrid(grid))
 			.catch((error) => {
+				episodeGridFailed = true
 				console.error("episode grid failed", { showId, error })
 				return null
 			}),
@@ -98,14 +101,15 @@ export const loader: LoaderFunction = async ({
 		countryIsFallback,
 		dehydratedState,
 	}
-	// Without the embedded related panel or an extra (a lookup ran out of its budget or failed) the page is incomplete:
-	// no cache may keep it. The page cache and a cache in front follow this header.
+	// A failed grid read or a missing related panel or extra makes the page incomplete.
+	// No cache may keep it. A grid read that resolves to null is complete.
 	const complete =
+		!episodeGridFailed &&
 		relatedPanelEmbedded(relatedState) &&
 		titleExtrasEmbedded(extrasState, { genres: media.details.genres })
 	return complete
 		? data
-		: json(data, { headers: { "Cache-Control": "no-store" } })
+		: json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 }
 
 export default function DetailsTV() {

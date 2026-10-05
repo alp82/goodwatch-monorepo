@@ -2,6 +2,8 @@ import { ClockIcon, FireIcon, StarIcon } from "@heroicons/react/20/solid"
 import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
+	type TypedResponse,
+	json,
 	redirect,
 } from "@remix-run/node"
 import {
@@ -48,6 +50,7 @@ import {
 } from "~/server/discover.server"
 import { getFeatureMode, isEnabled } from "~/server/features.server"
 import { getGenresUnique } from "~/server/genres.server"
+import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { getPersonName } from "~/server/person.server"
 import {
 	getStreamingProviders,
@@ -290,7 +293,7 @@ export interface BrowseLoaderData {
 async function browseLoader(
 	request: Request,
 	userId: string | null,
-): Promise<BrowseLoaderData> {
+): Promise<BrowseLoaderData | TypedResponse<BrowseLoaderData>> {
 	const params = new URL(request.url).searchParams
 	// A guest's progress lives in their browser: the first view is the plain guest's, and the browser asks again with it.
 	const ctx = await getViewerContext(request, undefined, userId)
@@ -302,6 +305,7 @@ async function browseLoader(
 	const count = Math.min(Math.max(1, requested), MAX_INITIAL_PAGES)
 	// Search mode: the browser runs the search (its reading streams in), so the first view has no results yet.
 	const searching = searchText(params.get("q")) !== null
+	let snapshotNotLoaded = false
 	let pages: BrowseResults[] | null = null
 	try {
 		if (!searching)
@@ -313,8 +317,9 @@ async function browseLoader(
 	} catch (error) {
 		// Right after a restart: the browser asks /api/discover/results once the snapshot has loaded.
 		if (!(error instanceof SnapshotNotLoaded)) throw error
+		snapshotNotLoaded = true
 	}
-	return {
+	const data: BrowseLoaderData = {
 		browse: {
 			initial: pages
 				? { key: browseKey(filterQuery(state, sort, defaults), forYou), pages }
@@ -326,6 +331,9 @@ async function browseLoader(
 		},
 		mediaType: "all",
 	}
+	return snapshotNotLoaded
+		? json(data, { headers: INCOMPLETE_PAGE_HEADERS })
+		: data
 }
 
 // Set while the new Discover renders: its filters, sort, For you, and search query change only the URL's parameters,
