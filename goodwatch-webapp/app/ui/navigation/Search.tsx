@@ -1,32 +1,24 @@
 // The navigation's search entry: the omnibox in the desktop header, the dock's Search key, and the hub sheet's search
 // field all open one dialog holding the command palette, as do ⌘K / Ctrl K and "/" outside text fields.
-import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react"
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
-import { Suspense, lazy, useEffect, useState } from "react"
-import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { useEffect, useState } from "react"
 import { useNavigation } from "./NavigationContext"
 import { currentSearchQuery } from "./destinations"
 
 const SEARCH_LABEL = "Search titles, people, moods"
 
-// The palette is only on screen inside the open dialog. Its code loads when a visitor reaches for a search entry
-// (pointer, touch or focus), or at the latest when the dialog opens.
-const loadCommandPalette = () => import("./CommandPalette")
-const CommandPalette = lazy(
-	reloadOnStaleChunk(() =>
-		loadCommandPalette().then((module) => ({
-			default: module.CommandPalette,
-		})),
-	),
-)
-const preloadCommandPalette = () => {
-	void loadCommandPalette().catch(() => {})
-}
+// The dialog and the palette are only on screen once opened. Their code loads when a visitor reaches for a search
+// entry (pointer, touch or focus), or at the latest when the dialog opens.
 const preloadOnIntent = {
-	onPointerEnter: preloadCommandPalette,
-	onTouchStart: preloadCommandPalette,
-	onFocus: preloadCommandPalette,
+	onPointerEnter: preloadSearch,
+	onTouchStart: preloadSearch,
+	onFocus: preloadSearch,
+}
+function preloadSearch() {
+	void import("./SearchPanel")
+		.then((module) => module.preloadCommandPalette())
+		.catch(() => {})
 }
 
 /** "⌘K" on Apple platforms, "Ctrl K" elsewhere; empty until the browser tells which (the server can't). */
@@ -98,8 +90,8 @@ export function DockSearchKey() {
 	)
 }
 
-/** The search dialog, plus the keyboard shortcuts that open it. */
-export function SearchDialog() {
+/** The keyboard shortcuts that open the search dialog: ⌘K / Ctrl K, and "/" outside text fields. */
+export function useSearchShortcuts() {
 	const navigation = useNavigation()
 	const setSearchOpen = navigation?.setSearchOpen
 	useEffect(() => {
@@ -127,29 +119,4 @@ export function SearchDialog() {
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
 	}, [setSearchOpen])
-	if (!navigation) return null
-	const close = () => navigation.setSearchOpen(false)
-	return (
-		<Dialog
-			open={navigation.searchOpen}
-			onClose={close}
-			className="relative z-[1100]"
-			aria-label="Search or go to"
-		>
-			<DialogBackdrop
-				transition
-				className="fixed inset-0 bg-black/55 transition-opacity duration-200 data-closed:opacity-0"
-			/>
-			<div className="fixed inset-0 flex flex-col justify-end lg:items-center lg:justify-start lg:pt-[12vh]">
-				<DialogPanel
-					transition
-					className="h-[92%] overflow-y-auto rounded-t-3xl bg-[#0b1120] px-4 pt-4 pb-[calc(22px+env(safe-area-inset-bottom))] shadow-[0_-20px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.09)] transition duration-200 ease-out data-closed:translate-y-9 data-closed:opacity-0 motion-reduce:transition-opacity motion-reduce:data-closed:translate-y-0 lg:h-auto lg:max-h-[70vh] lg:w-[640px] lg:rounded-[18px] lg:p-3.5 lg:data-closed:-translate-y-3"
-				>
-					<Suspense fallback={<div className="h-64" aria-busy="true" />}>
-						<CommandPalette onDone={close} />
-					</Suspense>
-				</DialogPanel>
-			</div>
-		</Dialog>
-	)
 }

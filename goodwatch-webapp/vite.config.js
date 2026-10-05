@@ -120,6 +120,14 @@ function clientChunks() {
 	}
 }
 
+// Browser code imports utils/auth.ts for its hooks. That module also holds the server's session check, which imports
+// the Supabase packages. The browser uses none of that: it loads the Supabase client on first use, through the
+// dynamic import in utils/supabase-browser.ts. Rollup still kept the packages as an import of every page, because
+// they don't declare themselves free of side effects (the auth package patches `globalThis` when it loads). This
+// says so for them: a file of these packages that nothing is imported from is left out. A file that is in use keeps
+// everything it does when it loads.
+const UNUSED_IS_SAFE_TO_DROP = /\/node_modules\/(@supabase\/[^/]+|cookie)\//
+
 export default defineConfig(({ mode, isSsrBuild }) => ({
 	// resvg is a native module used only on the server to render share cards. Keep the client dependency scan away
 	// from it, or the optimizer fails on its .node binary and the dev server can't serve client scripts.
@@ -162,6 +170,9 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 		rollupOptions: isSsrBuild
 			? undefined
 			: {
+					treeshake: {
+						moduleSideEffects: (id) => !UNUSED_IS_SAFE_TO_DROP.test(id),
+					},
 					output: {
 						manualChunks: clientChunks(),
 					},

@@ -13,6 +13,7 @@ import type React from "react"
 import { useFeatures } from "~/hooks/useFeature"
 import { myListsPath } from "~/ui/share-card/links"
 import { useUser } from "~/utils/auth"
+import { useOpenAfterMount } from "~/utils/first-use"
 import { useNavigation } from "./NavigationContext"
 import { GoodWatchMark, tmdbImage, useSignUpHref } from "./bits"
 import {
@@ -226,11 +227,13 @@ function HubContent() {
 /** The hub sheet (phones) and Browse panel (desktop): one dialog, opened from the hub key or the Browse button. */
 export function HubDialog() {
 	const navigation = useNavigation()
+	// This module loads with the hub's first opening (see LazyDialogs.tsx).
+	const open = useOpenAfterMount(Boolean(navigation?.hubOpen))
 	if (!navigation) return null
-	const { hubOpen, setHubOpen } = navigation
+	const { setHubOpen } = navigation
 	return (
 		<Dialog
-			open={hubOpen}
+			open={open}
 			onClose={() => setHubOpen(false)}
 			className="relative z-[1100]"
 		>

@@ -1,11 +1,11 @@
-import { Dialog, DialogPanel } from "@headlessui/react"
-import { PlayIcon, XMarkIcon } from "@heroicons/react/24/solid"
+import { PlayIcon } from "@heroicons/react/24/solid"
 import type React from "react"
-import { useState } from "react"
+import { Suspense, lazy, useState } from "react"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
-import { YoutubePlayer } from "~/ui/details/YoutubePlayer"
+import { useOpenedOnce } from "~/utils/first-use"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import type { SizeRule } from "~/utils/tmdb-image"
 
 type Media = MovieResult | ShowResult
@@ -29,27 +29,12 @@ const HERO_POSTER_SIZES: SizeRule[] = [[null, "340px"]]
 
 const trailerKey = (media: Media) => media.videos?.trailers?.[0]?.key
 
-function TrailerDialog({ media, open, onClose }: { media: Media; open: boolean; onClose: () => void }) {
-	const key = trailerKey(media)
-	if (!key) return null
-	return (
-		<Dialog open={open} onClose={onClose} className="relative z-50">
-			<div className="fixed inset-0 bg-black/80" aria-hidden="true" />
-			<div className="fixed inset-0 flex items-center justify-center p-4">
-				<DialogPanel className="relative aspect-video w-full max-w-5xl">
-					<button
-						type="button"
-						onClick={onClose}
-						aria-label="Close trailer"
-						className="absolute -top-11 right-0 rounded-full bg-white/10 p-2 hover:bg-white/20 cursor-pointer"
-					>
-						<XMarkIcon className="h-5 w-5" />
-					</button>
-					{open && <YoutubePlayer videoKey={key} />}
-				</DialogPanel>
-			</div>
-		</Dialog>
-	)
+// The dialog that plays the trailer. Its code, with the dialog library, loads when a visitor reaches for the play
+// button (pointer, touch or focus), or at the latest when the dialog opens.
+const loadTrailerDialog = () => import("~/ui/details/hero/TrailerDialog")
+const TrailerDialog = lazy(reloadOnStaleChunk(loadTrailerDialog))
+const preloadTrailerDialog = () => {
+	void loadTrailerDialog().catch(() => {})
 }
 
 export function PlayPill({ label = "Play trailer" }: { label?: string }) {
@@ -70,12 +55,17 @@ export function PlayPill({ label = "Play trailer" }: { label?: string }) {
 // plain image.
 function TrailerImage({ media, image, className }: { media: Media; image: React.ReactNode; className: string }) {
 	const [open, setOpen] = useState(false)
-	if (!trailerKey(media)) return <div className={`relative ${className}`}>{image}</div>
+	const opened = useOpenedOnce(open)
+	const key = trailerKey(media)
+	if (!key) return <div className={`relative ${className}`}>{image}</div>
 	return (
 		<>
 			<button
 				type="button"
 				onClick={() => setOpen(true)}
+				onPointerEnter={preloadTrailerDialog}
+				onTouchStart={preloadTrailerDialog}
+				onFocus={preloadTrailerDialog}
 				aria-label={`Play trailer for ${media.details.title}`}
 				className={`group relative block cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300 ${className}`}
 			>
@@ -83,7 +73,11 @@ function TrailerImage({ media, image, className }: { media: Media; image: React.
 				<span aria-hidden="true" className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/30 motion-reduce:transition-none" />
 				<PlayPill />
 			</button>
-			<TrailerDialog media={media} open={open} onClose={() => setOpen(false)} />
+			{opened && (
+				<Suspense fallback={null}>
+					<TrailerDialog videoKey={key} open={open} onClose={() => setOpen(false)} />
+				</Suspense>
+			)}
 		</>
 	)
 }

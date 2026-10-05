@@ -28,10 +28,10 @@ const googleLogo = (
 type GoogleSignInButtonProps = {};
 
 export const GoogleSignInButton = ({}: GoogleSignInButtonProps) => {
-	const { supabase } = useSupabase();
+	const { getSupabase } = useSupabase();
 
-	const handleSignInWithGoogle = () => {
-		if (!supabase) return;
+	const handleSignInWithGoogle = async () => {
+		const supabase = await getSupabase();
 
 		beginAuthentication("oauth", window.location.pathname + window.location.search)
 		const redirectHash = `#redirect=${encodeURIComponent(window.location.pathname + window.location.search + window.location.hash)}`;

@@ -13,6 +13,11 @@ The limits are in [`goodwatch-benchmark/urls/budget.json`](../../goodwatch-bench
   setup, not the page. With `--hide-scrollbars`, the observed first paint is at 0.4 to 0.7 s (1.2 to 2.3 s before).
 - **With the corrected setup, the scores are 65 to 87** (63 to 82 with the old setup on the same build), and LCP is
   3.6 to 5.1 s. With the brand font on every page, the first run reads 63 to 85 and passes every line.
+- **Three changes on October 5, 2026** cut the scripts of a first page view by 30 to 117 KB and Discover's posters
+  before scrolling from 26 to 14. Scores are 70 to 86, and LCP is 3.4 to 3.8 s outside Discover. See
+  [Skipped sections on title pages](#skipped-sections-on-title-pages), [Posters on Discover](#posters-on-discover),
+  and [Scripts on first use](#scripts-on-first-use). The budget table below shows the limits of the calibration
+  run: the current limits are in the budget file.
 - **No surface meets the targets yet.** The largest gaps are the first render's style and layout work, hydration on
   title pages, and the posters that Discover loads before scrolling.
 
@@ -332,6 +337,51 @@ Median of 3 runs, same setup as above:
   pixels away, at the price of posters that appear late during fast scrolling.
 - The poster box keeps its 2:3 shape while skipped. The grid's rows, the page height, the appended pages while
   scrolling, and CLS are the same as on production (14 wheel steps on a phone and on a desktop).
+
+## Scripts on first use
+
+Ticket "Load the sign-in client, the dialogs, and the animation library on first use".
+
+- **The Supabase client (27 KB)** loads at once for a member, for a URL with a sign-in answer, and on the sign-in
+  and sign-up pages. Elsewhere, it loads when the page is interactive.
+- **The dialog library (40 KB)** is off every page except Discover, whose filters use its list box. The hub and the
+  search dialog load when the page is interactive, and the other dialogs when a visitor reaches for their button.
+- **The animation library (35 KB)** is off the person page: the type filter's popover and sheet load on first use.
+  Home and Discover still load it.
+
+Median of 3 runs, same setup as above, against the build with the two changes before it:
+
+| Surface | Scripts | Script bytes | Total bytes | Simulated FCP | LCP | TBT | Score |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Home | 18 to 16 | 301 to 229 KB | 714 to 643 KB | 2,894 to 2,586 ms | 3,719 to 3,411 ms | 134 to 139 ms | 82 to 86 |
+| Movie | 24 to 22 | 300 to 230 KB | 486 to 415 KB | 2,921 to 2,637 ms | 3,870 to 3,491 ms | 446 to 568 ms | 73 to 73 |
+| Show | 24 to 22 | 301 to 230 KB | 542 to 471 KB | 3,009 to 2,490 ms | 4,099 to 3,735 ms | 516 to 590 ms | 67 to 70 |
+| Person | 20 to 14 | 289 to 172 KB | 566 to 448 KB | 2,743 to 2,123 ms | 4,072 to 3,485 ms | 186 to 213 ms | 78 to 85 |
+| Discover | 32 to 32 | 332 to 302 KB | 783 to 753 KB | 3,052 to 2,777 ms | 5,023 to 5,092 ms | 165 to 132 ms | 74 to 75 |
+| Share list | 12 to 11 | 252 to 181 KB | 569 to 499 KB | 2,585 to 2,278 ms | 3,859 to 3,778 ms | 89 to 81 ms | 84 to 86 |
+
+- Script bytes on title pages are 230 KB, under the ticket's 240 KB.
+- LCP falls by 0.3 to 0.6 s on every surface but Discover and the share list. The simulated FCP falls with it, to
+  2.5 to 2.6 s on title pages: still above the 2.2 s of the first ticket.
+- TBT on title pages is within the spread of its runs (401 to 713 ms on the movie page).
+
+### Checks
+
+In a local production build, in Chromium, WebKit, and Firefox, on a phone and a desktop viewport:
+
+- No request for the Supabase client or the dialog library before the first interaction. Both arrive after the
+  first key press.
+- The hub opens, lists its destinations, closes with Escape, and returns the focus to its button. The search dialog
+  opens from its button and with Ctrl K, with the focus in its field. The trailer dialog opens with the player and
+  closes. The country list opens with its options. The person page's type filter opens as a popover and as a sheet
+  at the same place and size, takes the focus, and returns it.
+- **Sign-in:** wrong credentials reach Supabase and show "Invalid login credentials". "Sign in with Google" sends
+  the browser to Supabase's authorize URL with the right return path. A URL with a sign-in code and a stored code
+  verifier starts the code exchange, as before.
+- Every element's box is the same as before on 21 pages at four widths.
+
+Not checked: a completed sign-in or sign-up, a member's page (the account menu, sign-out, the password change), and
+the rating limit dialog. No member session and no test account were available.
 
 ## Not verified
 

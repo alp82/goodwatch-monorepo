@@ -1,14 +1,12 @@
-import {
-	Description,
-	Dialog,
-	DialogPanel,
-	DialogTitle,
-} from "@headlessui/react";
-import React, { useState } from "react";
+import React, { Suspense, lazy, useState } from "react";
 
-import { GoogleSignInButton } from "~/ui/auth/GoogleSignInButton";
-import { SignInButton } from "~/ui/auth/SignInButton";
 import { useUser } from "~/utils/auth";
+import { reloadOnStaleChunk } from "~/utils/stale-chunk";
+
+// Only a guest who presses a member's action sees the prompt. Its code, with the dialog library, loads then.
+const SignInPrompt = lazy(
+	reloadOnStaleChunk(() => import("~/ui/auth/SignInPrompt")),
+);
 
 export interface UserActionProps {
 	children: React.ReactElement;
@@ -66,26 +64,13 @@ export default function UserAction({
 		<>
 			{React.cloneElement(children, { onClick: handleClick })}
 			{!isLoggedIn && isOpen && (
-				<Dialog open={isOpen} onClose={() => setIsOpen(false)}>
-					<div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-					<div
-						className="absolute w-[400px] p-8 z-10 bg-gray-700 border-8 border-gray-600 rounded-lg shadow-2xl z-50"
-						style={{ top: modalPosition.top, left: modalPosition.left }}
-					>
-						<DialogTitle className="text-xl font-bold text-gray-100">
-							Please Sign In
-						</DialogTitle>
-						<Description className="mt-4 text-lg text-gray-300 leading-6">
-							{instructions}
-						</Description>
-						<DialogPanel className="mt-8 flex flex-col gap-3">
-							<SignInButton />
-							<div className="text-gray-300 text-xs text-center">
-								It's 100% free.
-							</div>
-						</DialogPanel>
-					</div>
-				</Dialog>
+				<Suspense fallback={null}>
+					<SignInPrompt
+						onClose={() => setIsOpen(false)}
+						position={modalPosition}
+						instructions={instructions}
+					/>
+				</Suspense>
 			)}
 		</>
 	);

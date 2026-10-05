@@ -4,7 +4,6 @@ import { Outlet, useLocation } from "@remix-run/react"
 import { Suspense, lazy } from "react"
 
 import Footer from "~/ui/Footer"
-import Header from "~/ui/main/Header"
 import BottomNav from "~/ui/nav/BottomNav"
 import {
 	HubDialog,
@@ -17,6 +16,10 @@ import { useUser } from "~/utils/auth"
 import { useFeature } from "~/hooks/useFeature"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+
+// The header while REC_NAVIGATION is off. Its menus bring the dialog library, so its code stays out of the pages
+// that show the new navigation.
+const Header = lazy(reloadOnStaleChunk(() => import("~/ui/main/Header")))
 
 // Only members see the onboarding banner, so its code loads for them alone.
 const AccountTransfer = lazy(
@@ -36,7 +39,13 @@ function App() {
 
 	const page = (
 		<>
-			{navigation ? <SiteHeader /> : <Header />}
+			{navigation ? (
+				<SiteHeader />
+			) : (
+				<Suspense fallback={null}>
+					<Header />
+				</Suspense>
+			)}
 			{/* Show smart onboarding banner for logged-in users */}
 			{user && (
 				<Suspense fallback={null}>

@@ -4,23 +4,36 @@ import type { User } from "@supabase/auth-js"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { useRevalidator } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
-import { type ReactNode, useEffect, useRef, useState } from "react"
+import {
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react"
 import { AuthContext } from "~/utils/auth"
+import { createAuthCookieMatcher } from "~/utils/auth-cookie"
+import { whenInteractive } from "~/utils/page-interactive"
+import { isAuthCallbackUrl, loadSupabaseClient } from "~/utils/supabase-browser"
 import {
 	requestRootRevalidation,
 	rootRevalidated,
 } from "~/utils/root-revalidation"
 
 export function AuthProvider({
-	supabase,
+	supabaseUrl,
+	supabaseAnonKey,
 	initialUser,
 	children,
 }: {
-	supabase: SupabaseClient
+	supabaseUrl: string
+	supabaseAnonKey: string
 	initialUser: User | null
 	children: ReactNode
 }) {
 	const [user, setUser] = useState(initialUser)
+	const [supabase, setSupabase] = useState<SupabaseClient>()
 	const previousUserId = useRef(initialUser?.id)
 	const queryClient = useQueryClient()
 	const { revalidate } = useRevalidator()
@@ -34,14 +47,41 @@ export function AuthProvider({
 		)
 	}, [initialUser])
 
+	// The client's code loads on first use. Whoever asks for the client gets it after the provider has subscribed to
+	// its auth changes, so a sign-in that follows can't be missed.
+	const subscription = useRef<{ unsubscribe: () => void }>()
+	const mounted = useRef(true)
+	const getSupabase = useCallback(async () => {
+		const client = await loadSupabaseClient(supabaseUrl, supabaseAnonKey)
+		if (mounted.current && !subscription.current) {
+			subscription.current = client.auth.onAuthStateChange((_event, session) =>
+				setUser(session?.user ?? null),
+			).data.subscription
+			setSupabase(client)
+		}
+		return client
+	}, [supabaseUrl, supabaseAnonKey])
+
 	useEffect(() => {
-		const {
-			data: { subscription },
-		} = supabase.auth.onAuthStateChange((_event, session) =>
-			setUser(session?.user ?? null),
-		)
-		return () => subscription.unsubscribe()
-	}, [supabase])
+		mounted.current = true
+		const load = () => {
+			getSupabase().catch(() => {})
+		}
+		// A member's session is kept fresh by the client, and the answer of a sign-in is read by it: both need it now.
+		// An anonymous page needs it when the visitor signs in, or to notice a sign-in in another tab.
+		const needsClientNow =
+			Boolean(initialUser) ||
+			createAuthCookieMatcher(supabaseUrl)(document.cookie) ||
+			isAuthCallbackUrl(new URL(window.location.href))
+		const cancel = needsClientNow ? load() : whenInteractive(load)
+		return () => {
+			mounted.current = false
+			cancel?.()
+			subscription.current?.unsubscribe()
+			subscription.current = undefined
+		}
+		// Decided once, when the page opens: a later sign-in comes through getSupabase.
+	}, [getSupabase])
 
 	useEffect(() => {
 		if (previousUserId.current === user?.id) return
@@ -49,8 +89,12 @@ export function AuthProvider({
 		previousUserId.current = user?.id
 		// Reconcile server-rendered pages on login/logout, including other tabs.
 		if (oldUserId) {
-			try { cleanupCompletedTransferOnLogout(oldUserId) } catch {}
-			queryClient.removeQueries({ queryKey: ["account-transfer-review", oldUserId] })
+			try {
+				cleanupCompletedTransferOnLogout(oldUserId)
+			} catch {}
+			queryClient.removeQueries({
+				queryKey: ["account-transfer-review", oldUserId],
+			})
 			queryClient.removeQueries({ queryKey: ["user-data", oldUserId] })
 			queryClient.removeQueries({ queryKey: ["user-settings", oldUserId] })
 		}
@@ -59,8 +103,12 @@ export function AuthProvider({
 		revalidate()
 	}, [user?.id, queryClient, revalidate])
 
+	const value = useMemo(
+		() => ({ supabase, getSupabase, user, loading: false }),
+		[supabase, getSupabase, user],
+	)
 	return (
-		<AuthContext.Provider value={{ supabase, user, loading: false }}>
+		<AuthContext.Provider value={value}>
 			<AuthCallbackError />
 			{children}
 		</AuthContext.Provider>

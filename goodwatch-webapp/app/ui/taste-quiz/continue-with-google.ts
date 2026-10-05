@@ -5,16 +5,16 @@ import { beginAuthentication } from "~/utils/account-transfer"
 import { useSupabase } from "~/utils/auth"
 
 export function useContinueWithGoogle() {
-	const { supabase } = useSupabase()
+	const { getSupabase } = useSupabase()
 	return useCallback(
-		(returnTo: string) => {
-			if (!supabase) return
+		async (returnTo: string) => {
+			const supabase = await getSupabase()
 			beginAuthentication("oauth", returnTo)
 			supabase.auth.signInWithOAuth({
 				provider: "google",
 				options: { redirectTo: `${window.location.origin}${returnTo}` },
 			})
 		},
-		[supabase],
+		[getSupabase],
 	)
 }

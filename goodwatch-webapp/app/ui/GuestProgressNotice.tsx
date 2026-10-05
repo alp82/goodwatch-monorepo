@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react"
-import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react"
+import { Suspense, lazy, useEffect, useState } from "react"
 import { useUser } from "~/utils/auth"
 import {
 	useGuestInteractions,
@@ -7,6 +6,13 @@ import {
 	reminderKey,
 } from "~/utils/guest-progress"
 import { SignInButton } from "~/ui/auth/SignInButton"
+import { useOpenedOnce } from "~/utils/first-use"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+
+// The dialog shows after a guest's 20th rating. Its code, with the dialog library, loads then.
+const GuestLimitDialog = lazy(
+	reloadOnStaleChunk(() => import("~/ui/GuestLimitDialog")),
+)
 
 export function GuestProgressNotice() {
 	const { user } = useUser()
@@ -23,6 +29,7 @@ export function GuestProgressNotice() {
 		window.addEventListener(guestLimitEvent, show)
 		return () => window.removeEventListener(guestLimitEvent, show)
 	}, [user?.id])
+	const limitShown = useOpenedOnce(limit)
 	if (user) return null
 	const message =
 		"Your ratings, Wishlist and skips are saved in this browser. Clearing browser data can erase them. Create an account to keep your progress and country/services across visits and devices."
@@ -50,34 +57,15 @@ export function GuestProgressNotice() {
 						</button>
 					</aside>
 				)}
-			<Dialog
-				open={limit}
-				onClose={() => setLimit(false)}
-				className="relative z-50"
-			>
-				<div className="fixed inset-0 bg-black/70" aria-hidden="true" />
-				<div className="fixed inset-0 flex items-center justify-center p-4">
-					<DialogPanel className="max-w-md rounded-lg bg-gray-800 p-6 text-gray-100 space-y-4">
-						<DialogTitle className="text-xl font-semibold">
-							Keep rating with a free account
-						</DialogTitle>
-						<p>
-							You've rated 20 titles in this browser. Create an account to rate
-							another title. You can still edit ratings, use Want to See or
-							Skip, and keep exploring.
-						</p>
-						<p className="text-sm text-gray-300">{message}</p>
-						<SignInButton />
-						<button
-							type="button"
-							className="block underline"
-							onClick={() => setLimit(false)}
-						>
-							Keep exploring
-						</button>
-					</DialogPanel>
-				</div>
-			</Dialog>
+			{limitShown && (
+				<Suspense fallback={null}>
+					<GuestLimitDialog
+						open={limit}
+						onClose={() => setLimit(false)}
+						message={message}
+					/>
+				</Suspense>
+			)}
 		</>
 	)
 }

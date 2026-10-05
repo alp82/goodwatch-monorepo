@@ -13,7 +13,11 @@ interface CustomAuthFormProps {
 }
 
 export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps) {
-	const { supabase } = useSupabase()
+	const { getSupabase } = useSupabase()
+	// This page is for signing in: start loading the client now, not at the first press of a button.
+	useEffect(() => {
+		getSupabase().catch(() => {})
+	}, [getSupabase])
 	const navigate = useNavigate()
 	const [email, setEmail] = useState("")
 	const [password, setPassword] = useState("")
@@ -31,10 +35,10 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 
 	const handleEmailAuth = async (e: React.FormEvent) => {
 		e.preventDefault()
-		if (!supabase) return
 
 		setLoading(true)
 		try {
+			const supabase = await getSupabase()
 			beginAuthentication(mode, returnTo())
 			if (mode === "sign-up") {
 				const { error, data } = await supabase.auth.signUp({
@@ -92,9 +96,10 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 	}
 
 	const resendConfirmation = async () => {
-		if (!supabase || !confirmationEmail || resending) return
+		if (!confirmationEmail || resending) return
 		setResending(true)
 		try {
+			const supabase = await getSupabase()
 			const { error } = await supabase.auth.resend({
 				type: "signup",
 				email: confirmationEmail,
@@ -110,10 +115,9 @@ export default function CustomAuthForm({ mode, redirectTo }: CustomAuthFormProps
 	}
 
 	const handleGoogleSignIn = async () => {
-		if (!supabase) return
-
 		setOAuthLoading(true)
 		try {
+			const supabase = await getSupabase()
 			beginAuthentication("oauth", returnTo())
 			const { error } = await supabase.auth.signInWithOAuth({
 				provider: "google",

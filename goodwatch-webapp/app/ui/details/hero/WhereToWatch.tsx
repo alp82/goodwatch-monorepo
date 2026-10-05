@@ -1,17 +1,25 @@
 import { CheckIcon } from "@heroicons/react/20/solid"
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import React, { useEffect, useRef, useState } from "react"
+import React, { Suspense, lazy, useEffect, useRef, useState } from "react"
 import { useUserStreamingProviders } from "~/routes/api.user-settings.get"
 import type { MovieResult, ShowResult, StreamingType } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { useClickOutside } from "~/ui/details/hero/useClickOutside"
-import CountrySelector from "~/ui/streaming/CountrySelector"
 import type { Section } from "~/utils/scroll"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { brandName, duplicateProviderMapping, getShorterProviderLabel, getStreamingUrl, ignoredProviders } from "~/utils/streaming-links"
 import { countryFlagUrl } from "~/utils/country-flag"
 
 type Media = MovieResult | ShowResult
+
+// The country list opens from the "Change country" button. Its code, with the list box of the dialog library, loads
+// when a visitor reaches for the button (pointer, touch or focus), or at the latest when the list opens.
+const loadCountrySelector = () => import("~/ui/streaming/CountrySelector")
+const CountrySelector = lazy(reloadOnStaleChunk(loadCountrySelector))
+const preloadCountrySelector = () => {
+	void loadCountrySelector().catch(() => {})
+}
 
 export const OFFER_LABEL: Record<string, string> = { flatrate: "Stream", rent: "Rent", buy: "Buy", free: "Free", ads: "Free with ads" }
 
@@ -125,6 +133,9 @@ export default function WhereToWatch({ media, country, navigateToSection }: { me
 					<button
 						type="button"
 						onClick={() => setPopover(popover === "country" ? "none" : "country")}
+						onPointerEnter={preloadCountrySelector}
+						onTouchStart={preloadCountrySelector}
+						onFocus={preloadCountrySelector}
 						aria-expanded={popover === "country"}
 						aria-label="Change country"
 						className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-gray-300 hover:bg-white/10 cursor-pointer"
@@ -136,12 +147,15 @@ export default function WhereToWatch({ media, country, navigateToSection }: { me
 					{popover === "country" && (
 						<div className="absolute right-0 top-full z-40 mt-2 w-72 rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
 							<h3 className="mb-2 text-xs font-semibold text-gray-400">Show services in</h3>
-							<CountrySelector
-								mediaType={media.mediaType}
-								countryCodes={media.details.streaming_country_codes}
-								currentCountryCode={country}
-								navigateToSection={navigateToSection}
-							/>
+							{/* The fallback has the height of the closed list, so the popover doesn't grow when it arrives. */}
+							<Suspense fallback={<div className="h-9" aria-busy="true" />}>
+								<CountrySelector
+									mediaType={media.mediaType}
+									countryCodes={media.details.streaming_country_codes}
+									currentCountryCode={country}
+									navigateToSection={navigateToSection}
+								/>
+							</Suspense>
 						</div>
 					)}
 				</div>

@@ -40,13 +40,17 @@ export const getUserIdFromRequest = async ({ request, fresh }: AuthRequest) => {
 // client: the provider owns a single auth subscription for the whole app.
 
 interface AuthContext {
+	/** The client once its code has loaded. To use it, call `getSupabase`. */
 	supabase?: SupabaseClient
+	/** The client, loading its code first when no one has needed it yet. Rejects when the code can't be loaded. */
+	getSupabase: () => Promise<SupabaseClient>
 	user: User | null
 	loading: boolean
 }
 
 export const AuthContext = createContext<AuthContext>({
 	supabase: undefined,
+	getSupabase: () => Promise.reject(new Error("No auth provider")),
 	user: null,
 	loading: true,
 })

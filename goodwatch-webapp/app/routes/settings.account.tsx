@@ -43,7 +43,7 @@ export const meta: MetaFunction = () => {
 
 export default function SettingsAccount() {
 	const autoFocusRef = useAutoFocus<HTMLInputElement>();
-	const { supabase } = useSupabase();
+	const { getSupabase } = useSupabase();
 	const { user } = useUser();
 
 	const userIdentityProviders = (user?.identities || []).map(
@@ -67,8 +67,6 @@ export default function SettingsAccount() {
 		setStatus("idle");
 		setErrors([]);
 
-		if (!supabase) return;
-
 		// Validate password
 		const validation = validatePassword(password);
 		if (!validation.isValid) {
@@ -86,6 +84,7 @@ export default function SettingsAccount() {
 
 		// Simulate API call
 		setStatus("loading");
+		const supabase = await getSupabase();
 		const { data, error } = await supabase.auth.updateUser({
 			password,
 		});

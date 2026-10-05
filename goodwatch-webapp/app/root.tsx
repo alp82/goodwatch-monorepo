@@ -30,7 +30,6 @@ import {
 	useLocation,
 	useRouteError,
 } from "@remix-run/react"
-import { createBrowserClient } from "@supabase/ssr"
 import {
 	type DehydratedState,
 	dehydrate,
@@ -39,16 +38,16 @@ import {
 	QueryClientProvider,
 } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
-import React from "react"
+import React, { Suspense, lazy } from "react"
 import { ToastContainer } from "react-toastify"
 import { useDehydratedState } from "use-dehydrated-state"
 
 import Footer from "~/ui/Footer"
 import InfoBox from "~/ui/InfoBox"
-import Header from "~/ui/main/Header"
 import BottomNav from "~/ui/nav/BottomNav"
 import type { EnabledFeatures } from "~/utils/features"
 import { LocaleContext } from "~/utils/locale"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 // One stylesheet for every page: it imports main.css, the brand font's rules, Swiper's, and the toast styles.
 import cssTailwind from "~/tailwind.css?url"
@@ -141,6 +140,10 @@ export const loader: LoaderFunction = async ({
 	)
 }
 
+// The error page shows the header of the old navigation. Its menus bring the dialog library, so its code loads with
+// the error page and not with every page.
+const Header = lazy(reloadOnStaleChunk(() => import("~/ui/main/Header")))
+
 export function ErrorBoundary() {
 	// TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
 	const error = useRouteError()
@@ -174,7 +177,9 @@ export function ErrorBoundary() {
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
 					<SearchJourneyProvider>
-						<Header />
+						<Suspense fallback={null}>
+							<Header />
+						</Suspense>
 						<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
 							<InfoBox text="Sorry, but an error occurred" />
 							<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
@@ -245,10 +250,6 @@ function Root() {
 		}
 	}, [])
 
-	const [supabase] = React.useState(() =>
-		createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY),
-	)
-
 	const [queryClient] = React.useState(
 		() =>
 			new QueryClient({
@@ -281,7 +282,11 @@ function Root() {
 			<body className="flex flex-col h-screen bg-gray-900">
 				<QueryClientProvider client={queryClient}>
 					<LocaleContext.Provider value={{ locale }}>
-						<AuthProvider supabase={supabase} initialUser={user}>
+						<AuthProvider
+							supabaseUrl={env.SUPABASE_URL}
+							supabaseAnonKey={env.SUPABASE_ANON_KEY}
+							initialUser={user}
+						>
 							<HydrationBoundary state={dehydratedState}>
 								<DiscoveryContinuity />
 								<App />

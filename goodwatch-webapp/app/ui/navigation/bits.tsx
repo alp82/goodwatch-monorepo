@@ -4,7 +4,7 @@ import { BookmarkIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import { useFeatures } from "~/hooks/useFeature"
 import logoWhite from "~/img/goodwatch-logo-white.svg"
-import { UserMenu } from "~/ui/main/UserMenu"
+import { LazyUserMenu } from "~/ui/main/LazyUserMenu"
 import { useUser } from "~/utils/auth"
 import { useAuthHref } from "~/utils/auth-href"
 import { currentDestination, getDestinations } from "./destinations"
@@ -83,7 +83,7 @@ export function AccountSlot({ compact }: { compact?: boolean }) {
 	const { user, loading } = useUser()
 	const signUp = useSignUpHref()
 	if (loading) return null
-	if (user) return <UserMenu user={user} />
+	if (user) return <LazyUserMenu user={user} />
 	return (
 		<Link
 			rel="nofollow"

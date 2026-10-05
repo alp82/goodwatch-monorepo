@@ -13,11 +13,11 @@ export const SignOutLink = React.forwardRef<HTMLButtonElement, SignOutLinkProps>
 	{ active }: SignOutLinkProps,
 	ref,
 ) {
-	const { supabase } = useSupabase()
+	const { getSupabase } = useSupabase()
 	const queryClient = useQueryClient()
 
 	const handleSignOut = async () => {
-		if (!supabase) return
+		const supabase = await getSupabase()
 
 		// Clear onboarding banner state
 		sessionStorage.removeItem("onboarding-banner-dismissed")
