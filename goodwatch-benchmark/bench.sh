@@ -15,6 +15,8 @@ load: --mode smoke|ramp --cache warm|cold --urls hot|surfaces|longtail|file.json
       --label TEXT --rate N --duration S --start N --step N --max N --rates N,N,...
       --routes ROUTE[:CLIENT],...
       --step-duration S --path private|public --raw --yes-ramp-production
+      --scenario requests|page-view --connections new|reuse --identity 'anon;US;en' --page-assets FILE
+      --allow-above-500   (page-view: rates are visitors per second, each with a new connection and a full page view)
 lighthouse: --urls FILE --runs N --where generator|local --label TEXT --path public|private
 budget: [--runs N] [--where generator|local] [--label TEXT] [--path public|private] [--budget FILE] [--run RUN]
         (Lighthouse per landing surface against urls/budget.json; exits 1 when a line fails)
@@ -64,7 +66,8 @@ case $command in
 esac
 export KIND=$command MODE=smoke CACHE_MODE=${CACHE_MODE:-warm} LABEL=run WHERE=generator
 export PATH_MODE=private LH_RUNS=${LH_RUNS:-3}
-urls=hot; raw=0; approved=0
+urls=hot; raw=0; approved=0; page_assets=''
+export SCENARIO=${SCENARIO:-requests} CONNECTIONS=${CONNECTIONS:-} CAPTURE_SETTLE=${CAPTURE_SETTLE:-10}
 [[ $command != lighthouse ]] || { PATH_MODE=public; urls="$ROOT/lighthouse/urls.txt"; }
 export RATE_START=${RATE_START:-5} RATE_STEP=${RATE_STEP:-5} RATE_MAX=${RATE_MAX:-5} STEP_DURATION=${STEP_DURATION:-10} RAMP_SECONDS=${RAMP_SECONDS:-5}
 smoke_rate_set=0; ramp_set=0
@@ -73,6 +76,7 @@ while (($#)); do
   case $1 in
     --raw) raw=1; shift; continue ;;
     --yes-ramp-production) approved=1; shift; continue ;;
+    --allow-above-500) export BENCH_ALLOW_ABOVE_500=1; shift; continue ;;
     --help|-h) usage; exit 0 ;;
   esac
   [[ $# -ge 2 ]] || fail "Missing value: $1"
@@ -80,6 +84,7 @@ while (($#)); do
     --mode) MODE=$2 ;; --cache) CACHE_MODE=$2 ;; --urls) urls=$2 ;; --label) LABEL=$2 ;;
     --rate) RATE_START=$2; RATE_MAX=$2; smoke_rate_set=1 ;; --duration) STEP_DURATION=$2; smoke_rate_set=1 ;;
     --start) RATE_START=$2; ramp_set=1 ;; --step) RATE_STEP=$2; ramp_set=1 ;; --max) RATE_MAX=$2; ramp_set=1 ;; --rates) RATE_LIST=$2; ramp_set=1 ;; --step-duration) STEP_DURATION=$2; ramp_set=1 ;;
+    --scenario) SCENARIO=$2 ;; --connections) CONNECTIONS=$2 ;; --identity) export CACHE_IDENTITY=$2 ;; --page-assets) page_assets=$2 ;;
     --routes) ONLY_ROUTES=$2 ;; --path) PATH_MODE=$2 ;; --runs) LH_RUNS=$2 ;; --where) WHERE=$2 ;;
     *) fail "Unknown option: $1" ;;
   esac
@@ -88,6 +93,18 @@ done
 [[ $PATH_MODE == private || $PATH_MODE == public ]] || fail 'Path must be private or public'
 [[ $MODE == smoke || $MODE == ramp ]] || fail 'Mode must be smoke or ramp'
 [[ $CACHE_MODE == warm || $CACHE_MODE == cold ]] || fail 'Cache must be warm or cold'
+[[ $SCENARIO == requests || $SCENARIO == page-view ]] || fail 'Scenario must be requests or page-view'
+# A page view is a new visitor: its own connection, the cache identity that a front cache would send, and no cookie.
+if [[ $SCENARIO == page-view ]]; then
+  CONNECTIONS=${CONNECTIONS:-new}; export CACHE_IDENTITY=${CACHE_IDENTITY-'anon;US;en'} COOKIE=${COOKIE-}
+  [[ $CACHE_MODE == warm ]] || fail 'The page-view scenario has no cold mode'
+  [[ -z $page_assets || -f $page_assets ]] || fail "Page assets file does not exist: $page_assets"
+else
+  [[ -z $page_assets ]] || fail '--page-assets requires --scenario page-view'
+fi
+CONNECTIONS=${CONNECTIONS:-reuse}; export CACHE_IDENTITY=${CACHE_IDENTITY-}
+[[ $CONNECTIONS == new || $CONNECTIONS == reuse ]] || fail 'Connections must be new or reuse'
+[[ $CAPTURE_SETTLE =~ ^[1-9][0-9]*$ ]] || fail 'CAPTURE_SETTLE must be a positive integer'
 [[ $WHERE == local || $WHERE == generator ]] || fail 'Where must be local or generator'
 [[ $BENCH_REMOTE_DIR =~ ^/[a-zA-Z0-9_/-]+$ && $BENCH_REMOTE_DIR != / ]] || fail 'Remote directory must be an absolute simple path'
 [[ $BENCH_GENERATOR =~ ^[a-zA-Z0-9.-]+$ && $BENCH_SSH_USER =~ ^[a-zA-Z0-9_-]+$ ]] || fail 'Invalid SSH destination'
@@ -133,12 +150,14 @@ if [[ $command == load ]]; then
   if [[ $MODE == smoke ]]; then
     ((ramp_set == 0)) || fail 'Ramp options require --mode ramp'
     ((RATE_START == RATE_MAX && RATE_MAX <= 20 && STEP_DURATION <= 120)) || fail 'Smoke caps: one plateau, at most 20 req/s and 120 s. Use --mode ramp --yes-ramp-production.'
+    [[ $SCENARIO != page-view ]] || ((RATE_MAX <= 2)) || fail 'Smoke cap for page views: at most 2 visitors per second. Use --mode ramp --yes-ramp-production.'
   else
     ((smoke_rate_set == 0)) || fail '--rate and --duration are smoke-only options'
     ((approved)) || fail 'Ramp requires --yes-ramp-production'
-    ((RATE_MAX <= 500)) || [[ ${BENCH_ALLOW_ABOVE_500:-0} == 1 ]] || fail 'Above 500 req/s requires BENCH_ALLOW_ABOVE_500=1'
+    # The page-view scenario checks its request rate after the page loads are captured.
+    [[ $SCENARIO == page-view ]] || ((RATE_MAX <= 500)) || [[ ${BENCH_ALLOW_ABOVE_500:-0} == 1 ]] || fail 'Above 500 req/s requires --allow-above-500'
   fi
-  case $urls in hot|surfaces) urls="$ROOT/urls/$urls.json" ;; longtail) urls="$ROOT/urls/longtail.json"; [[ -f $urls ]] || node "$ROOT/scripts/build-longtail.mjs" ;; esac
+  case $urls in hot|surfaces|handshake) urls="$ROOT/urls/$urls.json" ;; longtail) urls="$ROOT/urls/longtail.json"; [[ -f $urls ]] || node "$ROOT/scripts/build-longtail.mjs" ;; esac
 fi
 [[ -f $urls ]] || fail "URL file does not exist: $urls"
 export LABEL=$(printf '%s' "$LABEL" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g; s/^-*//; s/-*$//')
@@ -152,19 +171,21 @@ export ACCEPT_LANGUAGE=${ACCEPT_LANGUAGE-'en-US,en;q=0.9'} ACCEPT_LANGUAGES=${AC
 export CACHE_BUST_QUERY=${CACHE_BUST_QUERY:-0} SEQUENTIAL=${SEQUENTIAL:-0} PREWARM_MAX=${PREWARM_MAX:-200}
 export BROWSER_UA=${BROWSER_UA-'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36'} BOT_UA=${BOT_UA-'facebookexternalhit/1.1'}
 export ACCEPT_ENCODING=${ACCEPT_ENCODING-'br, gzip'} REQUEST_TIMEOUT=${REQUEST_TIMEOUT:-30s}
+export ABORT_PAGE_P95_MS=${ABORT_PAGE_P95_MS:-10000} SLICE_SECONDS=${SLICE_SECONDS:-0}
 export ABORT_ERROR_RATE=${ABORT_ERROR_RATE:-0.02} ABORT_P95_MS=${ABORT_P95_MS:-3000} ABORT_DELAY=${ABORT_DELAY:-10s} ABORT_DROPPED=${ABORT_DROPPED:-$(((RATE_MAX*STEP_DURATION+19)/20))}
 export SHARE_LIST_PATH=${SHARE_LIST_PATH:-} SHARE_LIST_OG_PATH=${SHARE_LIST_OG_PATH:-}
 export TARGET_URL=$BENCH_TARGET_URL URLS_FILE=/work/urls.json OUT_DIR=/work
 # For a target whose certificate doesn't cover the name, such as one instance behind another host's proxy.
 export INSECURE_TLS=${BENCH_INSECURE_TLS:-0}
 [[ $INSECURE_TLS == 0 || $INSECURE_TLS == 1 ]] || fail 'BENCH_INSECURE_TLS must be 0 or 1'
-export K6_KEYS='URLS_FILE TARGET_URL RESOLVE_IP INSECURE_TLS SHARE_LIST_PATH SHARE_LIST_OG_PATH RATE_START RATE_STEP RATE_MAX RATE_LIST ONLY_ROUTES STEP_DURATION RAMP_SECONDS PRE_VUS MAX_VUS CACHE_MODE COOKIE COOKIE_TEMPLATE ACCEPT_LANGUAGE ACCEPT_LANGUAGES CACHE_BUST_QUERY BROWSER_UA BOT_UA ACCEPT_ENCODING REQUEST_TIMEOUT ABORT_ERROR_RATE ABORT_P95_MS ABORT_DELAY ABORT_DROPPED SEQUENTIAL PREWARM_MAX OUT_DIR'
+export K6_KEYS='URLS_FILE TARGET_URL RESOLVE_IP INSECURE_TLS SHARE_LIST_PATH SHARE_LIST_OG_PATH RATE_START RATE_STEP RATE_MAX RATE_LIST ONLY_ROUTES SCENARIO CONNECTIONS CACHE_IDENTITY ABORT_PAGE_P95_MS SLICE_SECONDS STEP_DURATION RAMP_SECONDS PRE_VUS MAX_VUS CACHE_MODE COOKIE COOKIE_TEMPLATE ACCEPT_LANGUAGE ACCEPT_LANGUAGES CACHE_BUST_QUERY BROWSER_UA BOT_UA ACCEPT_ENCODING REQUEST_TIMEOUT ABORT_ERROR_RATE ABORT_P95_MS ABORT_DELAY ABORT_DROPPED SEQUENTIAL PREWARM_MAX OUT_DIR'
 resolved_urls=''
 if [[ $command == load ]]; then resolved_urls=$(node "$ROOT/scripts/prepare-load.mjs" "$urls"); fi
 plan=$(node "$ROOT/scripts/run-meta.mjs" plan)
 planned_duration=${plan##*$'\n'}
 if [[ $command == load ]]; then
   printf '%s\n' "${plan%$'\n'*}"
+  [[ $SCENARIO != page-view ]] || echo "Page-view scenario: the rates are visitors per second, on $CONNECTIONS connections. One visitor sends a whole page view."
   if [[ $MODE == ramp && ${BENCH_NO_COUNTDOWN:-0} != 1 ]]; then echo 'Starting in 10 seconds. Press Ctrl-C to cancel.'; sleep 10; fi
 fi
 mkdir -p "$run/host-metrics"
@@ -200,6 +221,29 @@ fi
 export RUN_EXIT=0
 if [[ $command == load ]]; then
   cp "$ROOT/k6/load.js" "$tmp/load.js"; printf '%s\n' "$resolved_urls" > "$tmp/urls.json"
+  if [[ $SCENARIO == page-view ]]; then
+    # What a page view sends comes from a real page load of the deployed build: file names change with every build.
+    if [[ -n $page_assets ]]; then
+      cp "$page_assets" "$run/page-view-capture.json"
+    else
+      mapfile -t view_paths < <(node -e 'const s=JSON.parse(require("fs").readFileSync(process.argv[1]));console.log([...new Set(s.entries.filter(e=>e.client==="browser"&&!e.single).map(e=>e.path))].join("\n"))' "$tmp/urls.json")
+      if ((${#view_paths[@]})) && [[ -n ${view_paths[0]} ]]; then
+        image=gw-bench-lighthouse:13.5.0-$(cat "$ROOT/lighthouse/Dockerfile" "$ROOT/lighthouse/run.sh" | sha256sum | cut -c1-8)
+        copy_to "$ROOT/lighthouse" "$remote_run/"; copy_to "$ROOT/page-view" "$remote_run/"
+        remote "$BENCH_GENERATOR" docker image inspect "$image" >/dev/null 2>&1 || remote "$BENCH_GENERATOR" docker build -t "$image" "$remote_run/lighthouse"
+        echo "Capturing ${#view_paths[@]} page loads in a browser on the generator"
+        remote "$BENCH_GENERATOR" docker run --rm --name "$container" --shm-size=1g -v "$remote_run/page-view:/capture:ro" -e "BROWSER_UA=$BROWSER_UA" --entrypoint node "$image" /capture/capture.mjs "$BENCH_TARGET_URL" "$CAPTURE_SETTLE" "$RESOLVE_IP" "${view_paths[@]}" > "$run/page-view-capture.json" 2> "$run/page-view-capture.log" || fail 'The page load capture failed. See page-view-capture.log in the run directory.'
+      else
+        echo '{"pages":[]}' > "$run/page-view-capture.json"
+      fi
+    fi
+    node "$ROOT/scripts/page-view-set.mjs" "$tmp/urls.json" "$run/page-view-capture.json" > "$tmp/view.json" || fail 'Could not build the page-view set'
+    mv "$tmp/view.json" "$tmp/urls.json"
+    # 500 requests per second is the limit without --allow-above-500. A page view is many requests.
+    peak=$(node -e 'const s=JSON.parse(require("fs").readFileSync(process.argv[1]));console.log(Math.ceil(s.requests_per_visit*Number(process.argv[2])))' "$tmp/urls.json" "$RATE_MAX")
+    echo "Highest step: $RATE_MAX visitors per second, about $peak requests per second"
+    ((peak <= 500)) || [[ ${BENCH_ALLOW_ABOVE_500:-0} == 1 ]] || fail "About $peak requests per second at the highest step: above 500 requires --allow-above-500"
+  fi
   for key in $K6_KEYS; do
     [[ ${!key} != *$'\n'* && ${!key} != *$'\r'* ]] || fail "Newlines are not supported in $key"
     printf '%s=%s\n' "$key" "${!key}" >> "$tmp/k6.env"

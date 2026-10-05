@@ -89,15 +89,129 @@ export async function summarize(directory) {
       steps: [],
     };
     for (const route of raw.plan?.routes || []) summary.load.routes[route] = stats(`phase:main,route:${route}`);
+    // The page-view scenario: one iteration is one visitor, and a browser visitor sends a whole page view.
+    const pageViews = raw.plan?.config?.scenario === "page-view";
+    const kinds = ["document", "asset", "api", "side", "single"];
+    const views = (selector, time) => ({
+      visits: values("visits", selector).count ?? 0,
+      visits_per_s: (values("visits", selector).count ?? 0) / time,
+      page_views: values("page_views", selector).count ?? 0,
+      page_views_per_s: (values("page_views", selector).count ?? 0) / time,
+      page_view_error_rate: values("page_view_failed", selector).rate ?? null,
+      page_view_ms: latency("page_view_duration", selector),
+      tls_handshakes: values("tls_handshakes", selector).count ?? 0,
+      tls_handshakes_per_s: (values("tls_handshakes", selector).count ?? 0) / time,
+      tls_handshake_ms: latency("tls_handshake_duration", selector),
+    });
+    if (pageViews) {
+      summary.load.page_view = {
+        connections: raw.plan.config.connections,
+        cache_identity: raw.plan.config.cache_identity,
+        side_share: raw.plan.config.side_share,
+        pages: raw.plan.pages,
+        not_warm: raw.plan.not_warm,
+        ...views("phase:main", Math.max(1, seconds)),
+        // With SLICE_SECONDS: the first request of a visit and the whole page view, per slice of the run.
+        slices: Object.keys(raw.metrics || {})
+          .map((key) => key.match(/^visits\{slice:(t\d+)\}$/)?.[1])
+          .filter(Boolean)
+          .sort()
+          .map((name, index) => ({
+            start_s: index * raw.plan.config.slice_seconds,
+            visits: values("visits", `slice:${name}`).count ?? 0,
+            page_view_error_rate: values("page_view_failed", `slice:${name}`).rate ?? null,
+            first_request_ms: latency("first_request_duration", `slice:${name}`, true),
+            page_view_ms: latency("page_view_duration", `slice:${name}`, true),
+          })),
+        routes: Object.fromEntries(
+          (raw.plan.routes || []).map((route) => [
+            route,
+            { page_views: values("page_views", `phase:main,route:${route}`).count ?? 0, page_view_ms: latency("page_view_duration", `phase:main,route:${route}`) },
+          ]),
+        ),
+      };
+    }
     for (const step of raw.plan?.steps || []) {
       const s = stats(`phase:main,step:${step.name}`);
+      // An aborted run ends inside a step, so divide by the time the step really ran.
+      const ran = Math.max(1, Math.min(step.end_s, meta.k6_exit_code === 99 ? seconds : Infinity) - step.start_s);
       summary.load.steps.push({
         name: step.name,
         target_rps: step.rate,
         ...s,
-        // An aborted run ends inside a step, so divide by the time the step really ran.
-        rps:
-          s.requests / Math.max(1, Math.min(step.end_s, meta.k6_exit_code === 99 ? seconds : Infinity) - step.start_s),
+        rps: s.requests / ran,
+        ...(pageViews
+          ? {
+              ...views(`phase:main,step:${step.name}`, ran),
+              kinds: Object.fromEntries(
+                kinds.map((kind) => {
+                  const selector = `phase:main,step:${step.name},kind:${kind}`;
+                  return [kind, { requests: values("http_reqs", selector).count ?? 0, error_rate: values("http_req_failed", selector).rate ?? null, latency_ms: latency("http_req_duration", selector), ttfb_ms: latency("http_req_waiting", selector) }];
+                }),
+              ),
+            }
+          : {}),
+      });
+    }
+    // Place each step on the clock, and read the samplers' lines that fall inside it. The first seconds of a step
+    // are the transition from the step before, so they are left out.
+    const t0 = raw.plan?.scenario_start_ms ? raw.plan.scenario_start_ms / 1000 : null;
+    if (t0 != null) {
+      const lines = async (path) => {
+        const rows = [];
+        let header = {};
+        for (const line of ((await readFile(path, "utf8").catch(() => "")) || "").split("\n").filter(Boolean)) {
+          try {
+            const row = JSON.parse(line);
+            if (row.type === "header") header = row;
+            else rows.push(row);
+          } catch {
+            // A partial last line of an interrupted sampler.
+          }
+        }
+        return { header, rows };
+      };
+      const probes = { [meta.resolve_ip || "10.0.0.21"]: await lines(`${dir}/webapp/samples.jsonl`) };
+      for (const sub of (await files(dir)).filter((f) => f.startsWith("webapp-")).sort()) probes[sub.slice("webapp-".length)] = await lines(`${dir}/${sub}/samples.jsonl`);
+      const hostFiles = [];
+      for (const file of (await files(`${dir}/host-metrics`)).filter((f) => f.endsWith(".jsonl")).sort()) hostFiles.push({ file, ...(await lines(`${dir}/host-metrics/${file}`)) });
+      const transition = Number(meta.effective_k6_inputs?.RAMP_SECONDS ?? 5);
+      summary.load.steps.forEach((step, index) => {
+        const plan = raw.plan.steps[index];
+        const from = t0 + plan.start_s + (index ? transition : 0),
+          to = t0 + Math.min(plan.end_s, meta.k6_exit_code === 99 ? seconds : Infinity);
+        const resources = { window_s: Math.max(0, to - from), instances: {}, hosts: {} };
+        for (const [host, probe] of Object.entries(probes)) {
+          const inside = probe.rows.filter((r) => r.ts >= from && r.ts <= to);
+          if (inside.length < 2) continue;
+          const a = inside[0],
+            b = inside.at(-1),
+            dt = b.ts - a.ts,
+            tick = probe.header.clk_tck || 100;
+          resources.instances[host] = {
+            main_thread_pct: (100 * ((b.threads?.main ?? 0) - (a.threads?.main ?? 0))) / tick / dt,
+            proxy_pct: (100 * (b.proxy_ticks - a.proxy_ticks)) / tick / dt,
+            proxy_accepts_per_s: (b.proxy_accepts - a.proxy_accepts) / dt,
+            in_flight_max: Math.max(...inside.map((r) => r.in_flight ?? 0)),
+            loop_delay_max_ms: Math.max(...inside.map((r) => (r.loop_delay_max_s ?? 0) * 1000)),
+          };
+        }
+        for (const { file, header, rows } of hostFiles) {
+          const inside = rows.filter((r) => r.ts >= from && r.ts <= to);
+          if (!inside.length) continue;
+          const mean = (get) => inside.reduce((sum, r) => sum + get(r), 0) / inside.length;
+          const name = header.host || inside[0].host || file;
+          resources.hosts[name] = {
+            role: meta.metric_hosts?.find((h) => h.file === file)?.role || "data",
+            nproc: header.nproc ?? null,
+            cpu_busy_pct: mean((r) => r.cpu_busy_pct),
+            cpu_busy_max_pct: Math.max(...inside.map((r) => r.cpu_busy_pct)),
+            net_tx_mbps: mean((r) => (r.net_tx_bytes_s * 8) / 1e6),
+            net_rx_mbps: mean((r) => (r.net_rx_bytes_s * 8) / 1e6),
+            mem_used_pct: mean((r) => (r.mem_total_kb ? 100 * (1 - r.mem_available_kb / r.mem_total_kb) : 0)),
+          };
+        }
+        step.resources = resources;
       });
     }
   }
@@ -201,7 +315,7 @@ export async function summarize(directory) {
     summary.lighthouse[label] = { url, runs: runs.length, median: med, all_runs: runs };
   }
   let md = `# ${fmt(summary.run_id)}\n\n${meta.smoke ? "**Smoke run. Not a baseline.**\n\n" : ""}`;
-  md += `Label: ${fmt(summary.label)}. Time: ${fmt(meta.started_at)}. Target: ${fmt(meta.target_url)}. Path: ${fmt(meta.path)}. ${summary.kind === "load" ? `Cache: ${fmt(meta.cache_mode)}. ` : ""}URL set: ${fmt(meta.url_set)}. Git: ${fmt(meta.git_commit)}${meta.git_dirty ? " (dirty)" : ""}.\n\n${meta.rate_plan || raw?.plan?.steps ? `Rate plan: ${(meta.rate_plan || raw.plan.steps).map((s) => `${s.rate} req/s for ${s.end_s - s.start_s} s`).join(", then ")}.\n\n` : ""}`;
+  md += `Label: ${fmt(summary.label)}. Time: ${fmt(meta.started_at)}. Target: ${fmt(meta.target_url)}. Path: ${fmt(meta.path)}. ${summary.kind === "load" ? `Cache: ${fmt(meta.cache_mode)}. ` : ""}URL set: ${fmt(meta.url_set)}. Git: ${fmt(meta.git_commit)}${meta.git_dirty ? " (dirty)" : ""}.\n\n${meta.rate_plan || raw?.plan?.steps ? `Rate plan: ${(meta.rate_plan || raw.plan.steps).map((s) => `${s.rate} ${meta.scenario === "page-view" ? "visitors/s" : "req/s"} for ${s.end_s - s.start_s} s`).join(", then ")}.\n\n` : ""}`;
   if (summary.load) {
     const l = summary.load;
     if (l.aborted) md += `**Aborted:** ${fmt(l.abort_reason)}\n\n`;
@@ -252,6 +366,45 @@ export async function summarize(directory) {
           s.latency_ms.p99,
           s.ttfb_ms.p50,
           s.ttfb_ms.p95,
+        ]),
+      );
+  }
+  if (summary.load?.page_view) {
+    const v = summary.load.page_view;
+    md += `\n## Page views\n\nOne visitor is one iteration, on ${v.connections === "new" ? "a new connection with a full TLS handshake" : "a reused connection"}. A page view is the document plus the files and API requests of a real page load, and it fails when any of them fails. Cache identity sent with page requests: ${fmt(v.cache_identity?.join(", ") || "none")}.\n\n`;
+    md += `${fmt(v.visits)} visitors; ${fmt(v.page_views)} complete page views; ${fmt(v.page_view_error_rate == null ? null : v.page_view_error_rate * 100)}% failed page views; page view p95 ${fmt(v.page_view_ms.p95)} ms; ${fmt(v.tls_handshakes)} TLS handshakes.\n\n`;
+    md += table(
+      ["Step", "Visitors/s target", "Visitors/s", "Page views/s", "Failed page views %", "Document p50 ms", "Document p95 ms", "Page view p50 ms", "Page view p95 ms", "Requests/s", "Request errors %", "TLS handshakes/s", "Handshake p50 ms", "Handshake p95 ms"],
+      summary.load.steps.map((s) => {
+        const first = s.kinds.document.requests ? s.kinds.document : s.kinds.single;
+        return [s.name, s.target_rps, s.visits_per_s, s.page_views_per_s, s.page_view_error_rate == null ? null : s.page_view_error_rate * 100, first.latency_ms.p50, first.latency_ms.p95, s.page_view_ms.p50, s.page_view_ms.p95, s.rps, s.error_rate == null ? null : s.error_rate * 100, s.tls_handshakes_per_s, s.tls_handshake_ms.p50, s.tls_handshake_ms.p95];
+      }),
+    );
+    if (v.pages && Object.keys(v.pages).length)
+      md +=
+        "\nThe last response of each page before the run:\n\n" +
+        table(["Page", "Status", "Cache-Control", "Vary", "GW-Page-Cache", "GW-Cache-Identity", "Protocol", "TLS", "Cipher suite"], Object.entries(v.pages).map(([page, h]) => [page, h.status, h.cache_control, h.vary, h.page_cache, h.cache_identity, h.protocol, h.tls_version, h.tls_cipher_suite]));
+    if (v.slices?.length)
+      md +=
+        "\nOver time, per slice of the run. The first request is the document, or the only request of a visitor without a page view:\n\n" +
+        table(
+          ["From second", "Visitors", "Failed page views %", "First request p50 ms", "First request p95 ms", "First request p99 ms", "First request max ms", "Page view p50 ms", "Page view p95 ms", "Page view p99 ms", "Page view max ms"],
+          v.slices.map((x) => [x.start_s, x.visits, x.page_view_error_rate == null ? null : x.page_view_error_rate * 100, x.first_request_ms.p50, x.first_request_ms.p95, x.first_request_ms.p99, x.first_request_ms.max, x.page_view_ms.p50, x.page_view_ms.p95, x.page_view_ms.p99, x.page_view_ms.max]),
+        );
+    if (v.not_warm?.length) md += `\n**Not answered from the page store before the run:** ${fmt(v.not_warm.join(", "))}.\n`;
+  }
+  if (summary.load?.steps.some((s) => s.resources)) {
+    const instances = [...new Set(summary.load.steps.flatMap((s) => Object.keys(s.resources?.instances || {})))];
+    const hosts = [...new Set(summary.load.steps.flatMap((s) => Object.entries(s.resources?.hosts || {}).filter(([, h]) => h.role !== "data").map(([name]) => name)))];
+    md +=
+      "\n## Resources per step\n\nMain thread and proxy are in percent of one core. Host CPU is in percent of all cores. Each step leaves out its transition seconds.\n\n" +
+      table(
+        ["Step", "Target", ...instances.flatMap((i) => [`${i} main thread %`, `${i} proxy %`, `${i} proxy accepts/s`, `${i} loop delay max ms`]), ...hosts.flatMap((h) => [`${h} CPU %`, `${h} CPU max %`, `${h} TX Mbps`, `${h} RX Mbps`])],
+        summary.load.steps.map((s) => [
+          s.name,
+          s.target_rps,
+          ...instances.flatMap((i) => { const r = s.resources?.instances[i]; return [r?.main_thread_pct ?? null, r?.proxy_pct ?? null, r?.proxy_accepts_per_s ?? null, r?.loop_delay_max_ms ?? null]; }),
+          ...hosts.flatMap((h) => { const r = s.resources?.hosts[h]; return [r?.cpu_busy_pct ?? null, r?.cpu_busy_max_pct ?? null, r?.net_tx_mbps ?? null, r?.net_rx_mbps ?? null]; }),
         ]),
       );
   }

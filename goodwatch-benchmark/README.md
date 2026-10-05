@@ -2,7 +2,7 @@
 
 ## What this is
 
-Use k6 to compare server response times and capacity before and after a change. Use Lighthouse to compare mobile page performance. The scripts use Bash, Docker, and Node.js without local npm dependencies. They send only GET requests in the load test.
+Use k6 to compare server response times and capacity before and after a change. Use Lighthouse to compare mobile page performance. The scripts use Bash, Docker, and Node.js without local npm dependencies. The load test sends only GET requests, with one exception: the page-view scenario replays a read that the home page sends with POST (see [Page views](#page-views)).
 
 Every webapp deploy ends with `./bench.sh smoke`. It checks the new container's startup log and a fixed list of pages with edge cases. See [Smoke check after a deploy](#smoke-check-after-a-deploy).
 
@@ -35,7 +35,9 @@ To check the scripts without SSH or target traffic:
 bash scripts/selftest.sh
 ```
 
-With a working local Docker daemon, run `bash scripts/test-local.sh`. It starts a Node HTTP stub bound to loopback, runs the pinned k6 image at 5 req/s for 10 seconds in each cache mode, checks headers, and checks exit code 99 against a failing route. It does not use SSH or contact the app. Docker may pull the pinned image if it is missing.
+With a working local Docker daemon, run `bash scripts/test-local.sh` and `bash scripts/test-page-view.sh`. The second one runs the page-view scenario against an HTTP/2 stub with TLS on loopback and checks that every visitor arrives on its own connection, that no TLS session is resumed, and which requests carry the cache identity header.
+
+About the first one: It starts a Node HTTP stub bound to loopback, runs the pinned k6 image at 5 req/s for 10 seconds in each cache mode, checks headers, and checks exit code 99 against a failing route. It does not use SSH or contact the app. Docker may pull the pinned image if it is missing.
 
 `config.env` uses Bash assignment syntax. The entry point sources it and exports its settings. Run `./bench.sh` directly from fish. Do not source the config in fish. Results and the config are ignored by Git. Review any sample before publishing it: results can include user paths, hostnames, logs, and private infrastructure details.
 
@@ -63,10 +65,57 @@ With a working local Docker daemon, run `bash scripts/test-local.sh`. It starts 
 | `--path private\|public` | `private` | Select the network path. |
 | `--raw` | Off | Save compressed k6 JSON time series for deeper analysis. |
 | `--yes-ramp-production` | Off | Required for every ramp. |
+| `--scenario requests\|page-view` | `requests` | `requests`: one iteration sends one request. `page-view`: one iteration is one visitor with a whole page view. |
+| `--connections new\|reuse` | `reuse`, and `new` for page views | `new`: every iteration opens its own connection with a full TLS handshake. |
+| `--identity VALUE` | None, and `anon;US;en` for page views | The `GW-Cache-Identity` header for page requests. Several values separated by `\|` rotate. |
+| `--page-assets FILE` | None | Reuse the `page-view-capture.json` of an earlier run of the same deploy instead of capturing again. |
+| `--allow-above-500` | Off | Allow more than 500 requests per second. Same as `BENCH_ALLOW_ABOVE_500=1`. |
 
 `RAMP_SECONDS` sets the transition length, default 5 seconds. Transitions belong to the following step. The printed request budget includes the linear transitions. There is one open-model arrival-rate scenario. One iteration sends one request. No redirects are followed. The script assigns labels such as `s01` and `s02` from elapsed scenario time.
 
 Set `PRE_VUS` and `MAX_VUS` to override the default allocation of `max(20, RATE_MAX)` and `max(50, RATE_MAX * 4)`. Insufficient VUs cause dropped iterations rather than a slower closed-model workload.
+
+### Page views
+
+```sh
+./bench.sh load --scenario page-view --mode smoke --rate 1 --duration 30 --urls hot --path public --label page-views
+./bench.sh load --scenario page-view --mode ramp --rates 10,20,40,60,80,100 --step-duration 30 --urls hot --routes title_movie:browser \
+  --path public --allow-above-500 --yes-ramp-production --label movie-page-views
+./bench.sh load --scenario page-view --mode ramp --rates 25,50,100,200,300,400 --step-duration 30 --urls handshake \
+  --path public --yes-ramp-production --label tls-handshakes
+```
+
+In this scenario the rates are **visitors per second**, and the summary reports page views per second. One iteration is one first-time visitor:
+
+1. **A new connection.** With `--connections new` (the default here), k6 closes the visitor's connection after the iteration (`noVUConnectionReuse`). The next visitor does a full TLS handshake: k6 keeps no TLS session cache, so no session is resumed. All requests of one visitor share the connection over HTTP/2, as in a browser.
+2. **The document,** with `GW-Cache-Identity: anon;US;en` (`--identity`), as a cache in front of the app would send it (see [`docs/cache-identity.md`](../docs/cache-identity.md)). The app then answers with the shared policy. Only page requests get the header: files, images, and API requests don't.
+3. **Everything else the page loads from its own origin,** at once: scripts, styles, fonts, images, and API requests. A new visitor has an empty browser cache, so nothing is skipped.
+4. **Requests on a second connection.** Chrome fetches the web app manifest without credentials, on its own connection with its own handshake. One k6 virtual user has one connection, so a second k6 scenario (`side`) sends those requests at the same rate, each on a new connection.
+
+A `bot` entry and a `browser` entry with `"single": true` send their one request, on their own connection. `urls/handshake.json` is one such entry (`/health/live`): it measures new TLS connections alone.
+
+**Where the list of requests comes from.** File names change with every build, so the list is read at the start of every run. The launcher starts headless Chromium (in the Lighthouse image, on the generator), loads each browser path of the URL set once with an empty profile and a mobile viewport, waits `CAPTURE_SETTLE` seconds (default 10) for the late analytics scripts, and records every request. `scripts/page-view-set.mjs` turns that into the run's URL set and prints one line per surface: requests, connections, bytes, and what it left out. The capture is `page-view-capture.json` in the run directory. It counts as one page view per surface in analytics. Before the measurement, k6 requests every page until the page store answers it and every file once, and stops when a file doesn't answer 200 (a list from another build).
+
+**What a page view leaves out:**
+
+- **Requests to other hosts:** TMDB images, the analytics host, and Google's tag.
+- **`POST /api/e`, the error tracking tunnel.** The app forwards every envelope to the vendor, so a replay would create events there or load a third party. Every page view sends one, with 38 to 75 KB of request body. Its cost isn't in any page-view number.
+- **Other requests with a body,** such as `POST /api/poster-impressions` on Discover, which writes.
+- **One exception:** `POST /api/living-room/picks?view=pool`, the home page's read of its title pool, is replayed with the body that the captured browser sent. It only reads. The list of replayed requests is `REPLAYED_POSTS` in `scripts/page-view-set.mjs`.
+
+**Cookies.** A visitor starts without cookies (`COOKIE` is empty in this scenario unless you set it). The requests of one visitor share a cookie jar, so the balanced route's instance cookie from the document comes back with the page's files, and one visitor's page view stays on one instance.
+
+**The 500 limit.** A plan whose highest step is above 500 requests per second (visitors times requests per visit, printed before the run) needs `--allow-above-500`. Smoke mode allows at most 2 visitors per second.
+
+**Stop rules,** per step: 2% of page views failed (a page view fails when any of its requests fails), document p95 above `ABORT_P95_MS`, page view p95 above `ABORT_PAGE_P95_MS` (default 10,000 ms), and the dropped iterations limit.
+
+**Summary.** `summary.md` gets a "Page views" table (visitors, complete page views, failed page views, document and page view percentiles, TLS handshakes and their time, per step) and the response headers of each page from before the run. Every load run with the webapp probe also gets "Resources per step": each instance's main thread and proxy CPU, the connections the proxy accepted, and CPU and network of the target hosts and the generator. A step whose generator CPU is near 100% isn't valid.
+
+**A long plateau.** `SLICE_SECONDS=60` cuts the run into slices and adds the first request's and the page view's percentiles per slice, to see a page's lifetime ending or a snapshot reload. For a hold, use ramp mode with one rate: `--mode ramp --rates 40 --step-duration 600`.
+
+**Reused connections.** `--connections reuse --path private` sends the same page views over each virtual user's open connection. The difference to a run with new connections on the public path is the cost of the TLS handshakes.
+
+**Two generators.** worker3 has four cores, and 50 movie page views per second with new connections use about 60% of them. Above about 60 movie page views per second, split the rate over two generators: start the same command twice at the same moment, the second one with `BENCH_GENERATOR=<other host> BENCH_METRIC_HOSTS= BENCH_WEBAPP_PROBE=0` and `--page-assets` pointing at a capture of the same deploy, and add the two summaries per step. When one run stops, stop the other run's container with `docker stop` on its generator, so that its summary is still written.
 
 ### Lighthouse
 
@@ -292,6 +341,8 @@ Only relevant files exist for a given run. Metadata records the Git commit and d
 - `hosts` is keyed by hostname. Each host includes its role, sample count, averages and maxima, and container metrics. Samples are trimmed to the run timestamps when both timestamps exist. Network rates use decimal Mbps. Container memory uses MiB despite the stable `mem_mb` field name.
 - `webapp_instances` exists only with `BENCH_WEBAPP_PROBE_EXTRA`. It is keyed by host, and each entry has the fields of `webapp` without the benchmark's share.
 - `webapp` exists only with the webapp probe. It holds the window length, the deployed commit, a restart flag, request rates (`total_rps`, `benchmark_rps`, `background_rps`, `crawler_loop_rps`), `routes`, `caches`, `qdrant`, `page_cache` (hits, stale answers, joined requests, misses, and bypasses per route pattern), `thread_cpu_pct`, `main_thread_by_time`, `proxy_cpu_pct`, `proxy_accepts_per_s`, `in_flight`, and `loop_delay_ms`.
+- `load.page_view` exists only for the page-view scenario: the connection mode, the cache identity, the response headers of each page before the run (`pages`), totals, `slices` with `SLICE_SECONDS`, and page views per route. Each step then also has `visits`, `page_views`, `page_view_error_rate`, `page_view_ms`, `tls_handshakes`, `tls_handshake_ms`, and `kinds` (document, asset, api, side, single).
+- `load.steps[].resources` exists when the run knows when its scenario started: per instance the main thread and proxy CPU in percent of one core, accepted connections, and the highest event loop delay, and per host CPU, network rates, and memory. The transition seconds at the start of a step are left out.
 - `lighthouse` is keyed by URL label. Each entry includes the URL, successful run count, per-metric `median`, and `all_runs`. Bytes by resource type come from `resource-summary` or fall back to `network-requests`.
 
 `response_bytes_avg` uses Content-Length when present. It is not total transferred bytes. Chunked responses without Content-Length are skipped. Error fractions and status buckets are distinct: an expected 301 is successful and still counts as 3xx.
@@ -342,8 +393,9 @@ The launcher refuses a generator address equal to the resolve address. Use the p
 
 ## Known limitations
 
-- Load traffic is GET only. It excludes `POST /api/combined-search`, which can trigger paid model calls or guest quota writes, and `POST /api/og-image-warm`, which triggers rendering.
-- k6 does not fetch browser subresources. Static assets and client API calls after hydration are not modeled. Explicit search GET entries cover only those requested API endpoints.
+- Load traffic is GET only, apart from the one replayed read in the page-view scenario. It excludes `POST /api/combined-search`, which can trigger paid model calls or guest quota writes, `POST /api/og-image-warm`, which triggers rendering, and `POST /api/e`, which the app forwards to the error tracking vendor.
+- In the `requests` scenario, k6 does not fetch browser subresources. The page-view scenario does, from a captured page load. It sends them all at once after the document, where a browser discovers them in several rounds over about five seconds, and it doesn't model third-party hosts or a returning visitor's browser cache.
+- The page-view scenario opens two connections per browser visitor because the captured Chrome does. Browsers that don't fetch the manifest open one.
 - Lighthouse is lab data, not field data. Its browser loads page subresources and can execute normal page code. GET-only load guarantees apply to k6, not browser-side application behavior in Lighthouse.
 - Docker stats are coarse and can lag a host sample. Container CPU can exceed 100% across multiple cores.
 - Per-route summary percentiles cover the whole measured run. A per-step route breakdown requires `--raw`. Summary percentiles cannot be averaged into new percentiles.
@@ -359,6 +411,8 @@ Normal cleanup removes each remote run directory and its lock. Docker images and
 `results/baseline-2026-10-04/` holds the summaries of the baseline runs from October 4, 2026. [`docs/benchmarks/viral-spike-baseline.md`](../docs/benchmarks/viral-spike-baseline.md) explains them and lists the command for each run.
 
 `results/checkpoint-2026-10-04/` holds the summaries of the same runs after the page load optimizations, on two instances, and the output of `./bench.sh compare` for each pair in `compare/`. [`docs/benchmarks/viral-spike-checkpoint.md`](../docs/benchmarks/viral-spike-checkpoint.md) explains them.
+
+`results/page-views-2026-10-05/` holds the summaries of the page-view runs, the ramp of new TLS connections, and the repeated OG image ramps from October 5, 2026. [`docs/benchmarks/viral-spike-page-views.md`](../docs/benchmarks/viral-spike-page-views.md) explains them.
 
 ## Sample smoke run
 

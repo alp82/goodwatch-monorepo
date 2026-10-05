@@ -1,6 +1,6 @@
 import http from "k6/http";
 import exec from "k6/execution";
-import { Counter, Trend } from "k6/metrics";
+import { Counter, Rate, Trend } from "k6/metrics";
 
 const env = (key, fallback) => (__ENV[key] === undefined ? fallback : __ENV[key]);
 const number = (key, fallback, min = 0) => {
@@ -43,6 +43,23 @@ for (const rate of rates) {
 }
 const cache = env("CACHE_MODE", "warm");
 if (!["warm", "cold"].includes(cache)) throw new Error("CACHE_MODE must be warm or cold");
+// SCENARIO=page-view: one iteration is one visitor. A browser entry sends its document, then the files and API
+// requests of its "view" (written by scripts/page-view-set.mjs from a real page load). Other entries send one request.
+const scenario = env("SCENARIO", "requests");
+if (!["requests", "page-view"].includes(scenario)) throw new Error("SCENARIO must be requests or page-view");
+const pageViews = scenario === "page-view";
+// CONNECTIONS=new: every visitor opens its own connection, with a full TLS handshake. k6 keeps no TLS session
+// cache, so no handshake is resumed. CONNECTIONS=reuse keeps each virtual user's connection across iterations.
+const connections = env("CONNECTIONS", "reuse");
+if (!["new", "reuse"].includes(connections)) throw new Error("CONNECTIONS must be new or reuse");
+// What a cache in front of the app would send with every page request. See docs/cache-identity.md.
+const identities = env("CACHE_IDENTITY", "").split("|").filter(Boolean);
+if (identities.some((value) => !/^anon;[A-Z]{2};[a-z]{2,3}$/.test(value))) throw new Error("Invalid CACHE_IDENTITY");
+// The page cache's own rule for "a page": not an API, image, asset, or health path, and no dot in the last segment.
+const isPage = (path) => {
+  const pathname = path.split("?")[0];
+  return !/^\/(api|og|assets|health)\//.test(pathname) && !pathname.split("/").pop().includes(".");
+};
 const target = env("TARGET_URL", "https://goodwatch.app").replace(/\/$/, "");
 const hostname = target.match(/^https?:\/\/([^/:]+)(?::\d+)?$/)?.[1];
 if (!hostname) throw new Error("TARGET_URL must be an HTTP(S) origin");
@@ -77,12 +94,31 @@ const entries = set.entries.flatMap((entry) => {
   if (!/^[a-z_]+$/.test(entry.route) || !["browser", "bot"].includes(entry.client) || !(Number(entry.weight) > 0))
     throw new Error("Invalid URL entry");
   totalWeight += Number(entry.weight);
-  return [{ ...entry, path, expect: entry.expect || [200], cumulative: totalWeight }];
+  const view = pageViews && entry.client === "browser" && entry.view ? entry.view : null;
+  return [{ ...entry, path, expect: entry.expect || [200], cumulative: totalWeight, view }];
 });
 if (!entries.length) throw new Error("URL set is empty");
+// Requests that a browser sends on a second connection (the web app manifest, which Chrome fetches without
+// credentials). One virtual user has one connection, so a second scenario sends them at the same rate.
+let sideWeight = 0;
+const sideEntries = entries
+  .filter((entry) => entry.view?.side?.length)
+  .map((entry) => ({ ...entry, sideCumulative: (sideWeight += Number(entry.weight)) }));
 const routes = [...new Set(entries.map((e) => e.route))].sort();
 const responseBytes = new Trend("response_bytes");
 const statuses = Object.fromEntries(["2xx", "3xx", "4xx", "5xx", "0"].map((s) => [s, new Counter(`status_${s}`)]));
+const visits = new Counter("visits"),
+  pageViewCount = new Counter("page_views"),
+  pageViewFailed = new Rate("page_view_failed"),
+  pageViewDuration = new Trend("page_view_duration", true),
+  handshakes = new Counter("tls_handshakes"),
+  handshakeDuration = new Trend("tls_handshake_duration", true);
+const kinds = ["document", "asset", "api", "side", "single"];
+// SLICE_SECONDS cuts a long plateau into slices of that length, so that the summary shows how the first request
+// of a visit and the whole page view behave over time (a page's lifetime ending, a snapshot reload).
+const sliceSeconds = number("SLICE_SECONDS", 0);
+const firstDuration = new Trend("first_request_duration", true);
+const sliceName = (seconds) => `t${String(Math.floor(seconds / sliceSeconds)).padStart(4, "0")}`;
 const thresholds = {};
 function metrics(selector) {
   for (const metric of ["http_req_duration", "http_req_waiting", "response_bytes"])
@@ -103,11 +139,47 @@ for (const step of steps) {
   thresholds[`http_req_duration{${selector}}`] = [
     { threshold: `p(95)<${number("ABORT_P95_MS", 3000)}`, abortOnFail: true, delayAbortEval: delay },
   ];
+  if (!pageViews) continue;
+  // A page view fails when any of its requests fails. The whole page view has its own, longer limit.
+  thresholds[`page_view_failed{${selector}}`] = [
+    { threshold: `rate<${number("ABORT_ERROR_RATE", 0.02)}`, abortOnFail: true, delayAbortEval: delay },
+  ];
+  thresholds[`page_view_duration{${selector}}`] = [
+    { threshold: `p(95)<${number("ABORT_PAGE_P95_MS", 10000)}`, abortOnFail: true, delayAbortEval: delay },
+  ];
+  for (const name of ["visits", "page_views", "tls_handshakes"]) thresholds[`${name}{${selector}}`] = ["count>=0"];
+  thresholds[`tls_handshake_duration{${selector}}`] = ["max>=0"];
+  for (const kind of kinds) {
+    for (const metric of ["http_req_duration", "http_req_waiting"]) thresholds[`${metric}{${selector},kind:${kind}}`] = ["max>=0"];
+    thresholds[`http_reqs{${selector},kind:${kind}}`] = ["count>=0"];
+    thresholds[`http_req_failed{${selector},kind:${kind}}`] = ["rate>=0"];
+  }
+}
+if (pageViews && sliceSeconds) {
+  for (let seconds = 0; seconds < elapsed; seconds += sliceSeconds) {
+    const selector = `slice:${sliceName(seconds)}`;
+    thresholds[`first_request_duration{${selector}}`] = ["max>=0"];
+    thresholds[`page_view_duration{${selector}}`] = ["max>=0"];
+    thresholds[`page_view_failed{${selector}}`] = ["rate>=0"];
+    thresholds[`visits{${selector}}`] = ["count>=0"];
+  }
+}
+if (pageViews) {
+  for (const name of ["visits", "page_views", "tls_handshakes"]) thresholds[`${name}{phase:main}`] = ["count>=0"];
+  thresholds["page_view_failed{phase:main}"] = ["rate>=0"];
+  thresholds["page_view_duration{phase:main}"] = ["max>=0"];
+  for (const route of routes) {
+    thresholds[`page_view_duration{phase:main,route:${route}}`] = ["max>=0"];
+    thresholds[`page_views{phase:main,route:${route}}`] = ["count>=0"];
+  }
 }
 const dropped = number("ABORT_DROPPED", Math.max(1, Math.ceil(max * duration * 0.05)));
 thresholds.dropped_iterations = [{ threshold: `count<${dropped}`, abortOnFail: true, delayAbortEval: delay }];
 const preVUs = number("PRE_VUS", Math.max(20, max), 1),
   maxVUs = number("MAX_VUS", Math.max(50, max * 4), 1);
+// The side scenario follows the same stages at the share of visitors that have side requests. Rates are scaled
+// by 100 so that a share such as 0.9 stays exact.
+const sideShare = pageViews && sideEntries.length ? sideWeight / totalWeight : 0;
 export const options = {
   scenarios: {
     load: {
@@ -119,7 +191,24 @@ export const options = {
       maxVUs,
       gracefulStop: "0s",
     },
+    ...(sideShare
+      ? {
+          side: {
+            executor: "ramping-arrival-rate",
+            exec: "side",
+            startRate: Math.round(rates[0] * sideShare * 100),
+            timeUnit: "100s",
+            stages: stages.map((stage) => ({ ...stage, target: Math.round(stage.target * sideShare * 100) })),
+            preAllocatedVUs: Math.max(5, Math.ceil(preVUs / 4)),
+            maxVUs,
+            gracefulStop: "0s",
+          },
+        }
+      : {}),
   },
+  ...(connections === "new" ? { noVUConnectionReuse: true } : {}),
+  // A browser sends a page's requests at once over one HTTP/2 connection. k6's default is 6 at a time per host.
+  ...(pageViews ? { batch: 256, batchPerHost: 256 } : {}),
   ...(env("RESOLVE_IP", "") ? { hosts: { [hostname]: __ENV.RESOLVE_IP } } : {}),
   // For one instance behind another host's proxy, whose certificate doesn't cover the name (BENCH_INSECURE_TLS=1).
   ...(env("INSECURE_TLS", "0") === "1" ? { insecureSkipTLSVerify: true } : {}),
@@ -146,6 +235,7 @@ function request(entry, phase, step, id, index) {
     (!path.startsWith("/person/") || /(?:^|;\s*)gw_browser=1(?:;|$)/.test(effectiveCookie))
   )
     path += `${path.includes("?") ? "&" : "?"}_cb=${id}`;
+  Object.assign(headers, identityHeader(entry.path, index));
   const tags = { route: entry.route, client: entry.client, step, phase, name: entry.route };
   // Disable the cookie jar so Set-Cookie cannot affect later browser or bot requests.
   const response = http.get(target + path, {
@@ -161,8 +251,129 @@ function request(entry, phase, step, id, index) {
   const length = response.headers["Content-Length"];
   if (length !== undefined && Number.isFinite(Number(length))) responseBytes.add(Number(length), tags);
 }
+// One visitor of the page-view scenario. Its requests share one cookie jar, so a cookie that the proxy sets with the
+// document (the balanced route's instance cookie) comes back with the page's files, as in a browser.
+function send(method, path, body, kind, entry, tags, jar, extraHeaders) {
+  return {
+    method,
+    url: target + path,
+    body: body ?? null,
+    params: {
+      headers: {
+        "User-Agent": entry.client === "bot" ? botUA : browserUA,
+        "Accept-Encoding": env("ACCEPT_ENCODING", "br, gzip"),
+        ...(entry.client === "browser" ? { "Accept-Language": language } : {}),
+        ...(body ? { "Content-Type": "application/json" } : {}),
+        ...extraHeaders,
+      },
+      tags: { ...tags, kind },
+      redirects: 0,
+      timeout: env("REQUEST_TIMEOUT", "30s"),
+      jar,
+      responseCallback: http.expectedStatuses(...(kind === "document" || kind === "single" ? entry.expect : [200])),
+    },
+  };
+}
+function record(response, tags, kind, expect) {
+  const status = response.status >= 200 && response.status < 600 ? `${Math.floor(response.status / 100)}xx` : "0";
+  // One sample per request, to keep the generator's own CPU low at thousands of requests per second.
+  statuses[status].add(1, tags);
+  // A request that opened the connection has a handshake time. Requests on an open connection report zero.
+  const handshake = response.timings?.tls_handshaking || 0;
+  if (handshake > 0) {
+    handshakes.add(1, tags);
+    handshakeDuration.add(handshake, tags);
+  }
+  return expect.includes(response.status);
+}
+function identityHeader(path, index) {
+  return identities.length && isPage(path) ? { "GW-Cache-Identity": identities[index % identities.length] } : {};
+}
+function visit(entry, phase, step, index) {
+  const tags = { route: entry.route, client: entry.client, step, phase, name: entry.route };
+  const jar = new http.CookieJar();
+  if (entry.client === "browser" && cookie) for (const pair of cookie.split(/;\s*/)) {
+    const at = pair.indexOf("=");
+    if (at > 0) jar.set(target, pair.slice(0, at), pair.slice(at + 1));
+  }
+  const started = Date.now();
+  const kind = entry.view ? "document" : "single";
+  const first = send("GET", entry.path, null, kind, entry, tags, jar, identityHeader(entry.path, index));
+  const document = http.request(first.method, first.url, first.body, first.params);
+  let ok = record(document, tags, kind, entry.expect);
+  if (entry.view && ok && entry.view.requests.length) {
+    const batch = entry.view.requests.map((r) => send(r.method, r.path, r.body, r.method === "GET" && !r.path.startsWith("/api/") ? "asset" : "api", entry, tags, jar));
+    const responses = http.batch(batch);
+    for (let i = 0; i < responses.length; i++) if (!record(responses[i], tags, batch[i].params.tags.kind, [200])) ok = false;
+  }
+  if (phase !== "main") return { document, ok };
+  const sliced = sliceSeconds ? { ...tags, slice: sliceName((started - exec.scenario.startTime) / 1000) } : tags;
+  visits.add(1, sliced);
+  if (sliceSeconds) firstDuration.add(document.timings.duration, sliced);
+  if (entry.view) {
+    pageViewCount.add(ok ? 1 : 0, tags);
+    pageViewFailed.add(!ok, sliced);
+    pageViewDuration.add(Date.now() - started, sliced);
+  }
+  return { document, ok };
+}
+function currentStep() {
+  const seconds = (Date.now() - exec.scenario.startTime) / 1000;
+  return (steps.find((s) => seconds < s.end_s) || steps[steps.length - 1]).name;
+}
+export function side() {
+  const pick = Math.random() * sideWeight;
+  const entry = sideEntries.find((e) => pick < e.sideCumulative);
+  const tags = { route: entry.route, client: entry.client, step: currentStep(), phase: "main", name: entry.route };
+  const jar = new http.CookieJar();
+  const batch = entry.view.side.map((r) => send(r.method, r.path, r.body, "side", entry, tags, jar));
+  for (const response of http.batch(batch)) record(response, tags, "side", [200]);
+}
 export function setup() {
-  if (cache !== "warm") return;
+  if (pageViews) {
+    // The page cache stores a URL on its second request within 60 seconds, per instance and identity, and the
+    // balanced route alternates between the instances. So each page is requested until it comes from a store,
+    // and each file once. A file that doesn't answer 200 means the list is from another build: stop.
+    const pages = {};
+    const seen = new Set();
+    const notWarm = [];
+    for (const entry of entries) {
+      for (let n = 0; n < Math.max(1, identities.length); n++) {
+        const key = `${entry.client}:${entry.path}:${n}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        let response;
+        for (let attempt = 0, hits = 0; attempt < 12 && hits < 3; attempt++) {
+          const result = visit(entry, "prewarm", "prewarm", n);
+          response = result.document;
+          if (!result.ok) throw new Error(`Prewarm: ${entry.route} or one of its files answered ${response.status || "an error"}`);
+          if (!isPage(entry.path) || cache !== "warm") break;
+          hits = response.headers["Gw-Page-Cache"] === "hit" ? hits + 1 : 0;
+        }
+        if (isPage(entry.path) && !pages[`${entry.route}:${entry.client}`])
+          pages[`${entry.route}:${entry.client}`] = {
+            status: response.status,
+            cache_control: response.headers["Cache-Control"] || null,
+            vary: response.headers["Vary"] || null,
+            page_cache: response.headers["Gw-Page-Cache"] || null,
+            cache_identity: response.headers["Gw-Cache-Identity"] || null,
+            protocol: response.proto || null,
+            tls_version: response.tls_version || null,
+            tls_cipher_suite: response.tls_cipher_suite || null,
+          };
+        if (cache === "warm" && isPage(entry.path) && response.headers["Gw-Page-Cache"] !== "hit") notWarm.push(entry.route);
+      }
+      for (const r of entry.view?.side || []) {
+        if (seen.has(`side:${r.path}`)) continue;
+        seen.add(`side:${r.path}`);
+        const q = send(r.method, r.path, r.body, "side", entry, { phase: "prewarm", step: "prewarm", route: entry.route, name: entry.route }, new http.CookieJar());
+        const response = http.request(q.method, q.url, q.body, q.params);
+        if (response.status !== 200) throw new Error(`Prewarm: a file of ${entry.route} answered ${response.status}`);
+      }
+    }
+    return { scenario_start_ms: Date.now(), pages, not_warm: [...new Set(notWarm)] };
+  }
+  if (cache !== "warm") return { scenario_start_ms: Date.now() };
   const seen = new Set();
   for (const entry of entries) {
     const key = `${entry.client}:${entry.path}`;
@@ -171,18 +382,24 @@ export function setup() {
     seen.add(key);
     request(entry, "prewarm", "prewarm", `prewarm-${seen.size}`, seen.size);
   }
+  return { scenario_start_ms: Date.now() };
 }
 export default function () {
   const index = exec.scenario.iterationInTest;
-  const seconds = (Date.now() - exec.scenario.startTime) / 1000;
-  const step = steps.find((s) => seconds < s.end_s) || steps[steps.length - 1];
+  const step = currentStep();
   const pick = Math.random() * totalWeight;
   const entry =
     env("SEQUENTIAL", "0") === "1" ? entries[index % entries.length] : entries.find((e) => pick < e.cumulative);
-  request(entry, "main", step.name, `${exec.scenario.startTime}-${index}`, index);
+  if (pageViews) visit(entry, "main", step, index);
+  else request(entry, "main", step, `${exec.scenario.startTime}-${index}`, index);
 }
 export function handleSummary(data) {
   const config = {
+    scenario,
+    connections,
+    cache_identity: identities,
+    side_share: sideShare,
+    slice_seconds: sliceSeconds,
     target_url: target,
     resolve_ip: env("RESOLVE_IP", ""),
     insecure_tls: env("INSECURE_TLS", "0") === "1",
@@ -210,7 +427,18 @@ export function handleSummary(data) {
   const latency = data.metrics["http_req_duration{phase:main}"]?.values["p(95)"];
   return {
     [`${env("OUT_DIR", "/work")}/k6-summary.json`]: JSON.stringify(
-      { ...data, plan: { steps, routes, config } },
+      {
+        ...data,
+        plan: {
+          steps,
+          routes,
+          config,
+          // The scenario starts when setup ends. The summary places the steps on the clock with it.
+          scenario_start_ms: data.setup_data?.scenario_start_ms ?? null,
+          pages: data.setup_data?.pages ?? null,
+          not_warm: data.setup_data?.not_warm ?? null,
+        },
+      },
       null,
       2,
     ),

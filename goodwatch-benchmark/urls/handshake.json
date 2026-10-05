@@ -1,0 +1,16 @@
+{
+  "name": "handshake",
+  "description": "One small request per visitor. With --scenario page-view --connections new, each one is a new TLS connection.",
+  "entries": [
+    {
+      "route": "health",
+      "path": "/health/live",
+      "weight": 1,
+      "client": "browser",
+      "single": true,
+      "expect": [
+        200
+      ]
+    }
+  ]
+}
