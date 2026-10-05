@@ -5,5 +5,17 @@ kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
-  properties: {}
+  properties:
+    batch_size:
+      type: integer
+      description: Rows per Crate request, for the read of the stored rows and for the upsert.
+      default: 2000
+    pause_seconds:
+      type: number
+      description: Pause after every upsert request, so that reads get their turn on Crate.
+      default: 0.5
+    skip_unchanged:
+      type: boolean
+      description: Write only rows that are new or differ in original_title, popularity, or adult.
+      default: true
   required: []
