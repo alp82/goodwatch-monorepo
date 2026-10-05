@@ -360,8 +360,8 @@ See "Page cache" in [viral-spike-metrics.md](benchmarks/viral-spike-metrics.md).
 ## What changes with two instances
 
 - Each process has its own store. A hot URL renders once per instance.
-- The balanced route's sticky cookie doesn't matter for anonymous pages: both instances store the same page for the
-  same key and build.
+- Anonymous requests reach the instances in turn, and both store the same page for the same key and build. The
+  balanced route's sticky cookie is for members only (see [webapp-deploys.md](webapp-deploys.md)).
 - Resets are per process, as described above.
 
 ## What a cache in front must still do

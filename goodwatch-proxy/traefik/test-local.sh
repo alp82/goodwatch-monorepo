@@ -106,17 +106,33 @@ echo '== 2. Both files installed: the file routers win over the label routers'
 install
 check 'requests alternate' "$(instances 20)" 'abio=10 vector1=10'
 check 'HTTP redirects to HTTPS' "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' --resolve goodwatch.app:38307:127.0.0.1 http://goodwatch.app:38307/x)" '302 https://goodwatch.app/x'
-check 'responses are compressed' "$(get / -H 'Accept-Encoding: gzip' -o /dev/null -w '%header{content-encoding}')" 'gzip'
+check 'the proxy leaves compression to the app' "$(get / -H 'Accept-Encoding: gzip' -o /dev/null -w '%header{content-encoding}')" ''
 check 'vector1 proxy no longer redirects abio' "$(from_abio /)" '200'
 check 'the readiness path reaches the vector1 instance' "$(from_abio /health/ready)" '200'
 check 'another client of vector1 proxy still gets the redirect' "$(docker run --rm --name "$prefix-other" --network "$prefix-private" "$curl_image" -s -o /dev/null -w '%{http_code}' -H 'Host: goodwatch.app' "http://$net.20/")" '302'
 
-echo '== 2b. Sticky cookie'
-cookie=$(get / -o /dev/null -w '%header{set-cookie}' | cut -d';' -f1)
-echo "      first response sets: $(get / -o /dev/null -w '%header{set-cookie}' | sed -E 's/=[^;]*/=<value>/')"
-sticky() { for _ in $(seq 10); do get / -H "Cookie: $cookie" -o /dev/null -w '%header{x-instance}\n'; done | sort | uniq -c | awk '{printf "%s%s=%s", sep, $2, $1; sep=" "} END {print ""}'; }
-check 'ten requests with the cookie reach one instance' "$(sticky | grep -cE '^(abio|vector1)=10$')" '1'
+echo '== 2b. No cookie for anonymous requests, a sticky cookie for members'
+# The auth cookie's name with a made-up project reference. The value doesn't matter to the proxy or to the app's rule.
+auth='sb-abcdefghijklmnopqrst-auth-token'
+# count ARGS: which instances answer ten requests sent with ARGS, as "abio=5 vector1=5".
+count() { for _ in $(seq 10); do get / "$@" -o /dev/null -w '%header{x-instance}\n'; done | sort | uniq -c | awk '{printf "%s%s=%s", sep, $2, $1; sep=" "} END {print ""}'; }
+set_cookie() { get "$@" -o /dev/null -w '%header{set-cookie}'; }
+check 'an anonymous response sets no cookie' "$(set_cookie /)" ''
+check 'the readiness path sets no cookie' "$(set_cookie /health/ready)" ''
+check 'analytics cookies alone set no cookie' "$(set_cookie / -H 'Cookie: _ga=GA1.1.1; gw_browser=1')" ''
+check 'a name that only ends like the auth cookie sets no cookie' "$(set_cookie / -H "Cookie: not-$auth=1; x=$auth")" ''
+check 'anonymous requests alternate' "$(count)" 'abio=5 vector1=5'
+first=$(set_cookie / -H "Cookie: $auth=x")
+echo "      first member response sets: $(sed -E 's/=[^;]*/=<value>/' <<< "$first")"
+cookie=$(cut -d';' -f1 <<< "$first")
+check 'a member response sets the sticky cookie' "$(grep -c '^gw_instance=[^;]\+; Path=/; HttpOnly; Secure; SameSite=Lax$' <<< "$first")" '1'
 check 'the cookie value holds no address' "$(grep -cE '[0-9]+\.[0-9]+\.[0-9]+|goodwatch-webapp' <<< "$cookie")" '0'
+check 'ten member requests with the cookie reach one instance' "$(count -H "Cookie: $auth=x; $cookie" | grep -cE '^(abio|vector1)=10$')" '1'
+check 'a member with the cookie gets no second one' "$(set_cookie / -H "Cookie: $auth=x; $cookie")" ''
+check 'the auth cookie in numbered parts, after other cookies, is a member' "$(set_cookie / -H "Cookie: _ga=GA1.1.1; $auth.0=x; $auth.1=y" | grep -c '^gw_instance=')" '1'
+check 'the member rule also holds over HTTP/1.1' "$(set_cookie / --http1.1 -H "Cookie: $auth=x" | grep -c '^gw_instance=')" '1'
+check 'a signed-out visitor with a leftover sticky cookie alternates' "$(count -H "Cookie: $cookie")" 'abio=5 vector1=5'
+check 'and gets no cookie' "$(set_cookie / -H "Cookie: $cookie")" ''
 
 echo '== 3. Forwarded headers on the vector1 leg'
 seen() { for _ in 1 2 3 4; do get / -H 'X-Probe: 1' | grep -o '"instance":"vector1".*"forwardedProto":"[a-z]*"' | sed 's/,"padding.*//' && return; done; }
@@ -152,7 +168,8 @@ docker rm "$prefix-vector1" >/dev/null; stub vector1 vector1 "${coolify_labels[@
 check 'vector1 is back' "$(instances 20 | grep -c 'vector1=')" '1'
 
 echo '== 7. Both instances down'
-docker kill "$prefix-abio-new" "$prefix-vector1" >/dev/null; sleep 8
+# A health check runs every 5 seconds and gives up after 4, so both servers are out after 9 seconds at most.
+docker kill "$prefix-abio-new" "$prefix-vector1" >/dev/null; sleep 12
 check 'the answer is 503' "$(get / -o /dev/null -w '%{http_code}')" '503'
 
 echo '== 8. File removed on abio: back to the label routers'

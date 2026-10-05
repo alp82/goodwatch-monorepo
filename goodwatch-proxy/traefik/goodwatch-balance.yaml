@@ -13,17 +13,25 @@
 #   resolves to both.
 # - The second server is the instance on vector1, reached through vector1's proxy on the private network with plain
 #   HTTP. goodwatch-instance.yaml on vector1 routes it to the container there.
-# - The health check asks each instance's readiness endpoint every 2 seconds. An instance that is starting, draining
+# - The health check asks each instance's readiness endpoint every 5 seconds. An instance that is starting, draining
 #   (the first 8 seconds after SIGTERM), or gone gets no requests, and the other one carries on. With both down, the
 #   answer is 503.
 # - The retry sends a request to the other instance when the chosen one refuses the connection or closes it before
 #   it sent any response, for example in the seconds between a crash on abio and the next health check. It can't
 #   cover a crash on vector1: vector1's proxy answers 502 for it, until the next health check.
-# - Sticky sessions: the proxy sets the cookie gw_instance on a visitor's first response and sends that visitor to
-#   the same instance afterwards, while it is healthy. Member sessions don't need it: they are a signed cookie that
-#   both instances verify the same way. Deploys need it: Coolify deploys the instances one after the other, so for
-#   some minutes they run different builds, and a page from one build asks for script files that the other build
-#   doesn't have. Clients that keep no cookies (crawlers, the benchmark) alternate between the instances.
+# - Sticky sessions, for members only: a request with the auth cookie (sb-<ref>-auth-token, also in its numbered
+#   parts) matches the member router, whose service sets the cookie gw_instance once and sends that member to the
+#   same instance afterwards, while it is healthy. Sessions don't need it: both instances verify the same signed
+#   cookie. It keeps what one process remembers for a member in use (the taste portrait, Explorer layouts, Watch
+#   next, the guard against a second undo of an import). Member responses are private, so the cookie costs no cache
+#   anything.
+# - Every other request goes to the instances in turn, and its response carries no cookie from the proxy, so a
+#   cache in front can store it (docs/cache-identity.md). Nothing an anonymous visitor gets depends on the
+#   instance: both store the same page for the same key, the limits count in Valkey, and during a deploy each
+#   instance serves the other build's script files from the shared store (docs/webapp-deploys.md).
+# - The member rule matches the cookie's name the way the app does (app/utils/auth-cookie.ts), for any project
+#   reference. Traefik v2.10 has no cookie matcher, so the rule reads the Cookie header with HeadersRegexp. The
+#   expression has no backslash, so that it survives Coolify's rewrite of the file unchanged.
 # - The middlewares are defined here and not taken from the container's labels (gzip@docker,
 #   redirect-to-https@docker): those disappear while no container runs on abio, and a router with a missing
 #   middleware answers 404.
@@ -39,6 +47,16 @@ http:
       middlewares:
         - gw-webapp-retry
       service: gw-webapp
+      tls:
+        certResolver: letsencrypt
+    gw-webapp-member-https:
+      entryPoints:
+        - https
+      rule: Host(`goodwatch.app`) && HeadersRegexp(`Cookie`, `(^|;) *sb-[^=; ]+-auth-token([.][0-9]+)?=`)
+      priority: 1001
+      middlewares:
+        - gw-webapp-retry
+      service: gw-webapp-member
       tls:
         certResolver: letsencrypt
     gw-webapp-http:
@@ -60,7 +78,23 @@ http:
         initialInterval: 100ms
 
   services:
+    # Anonymous visitors, crawlers, and everything else without the auth cookie: no cookie from the proxy.
     gw-webapp:
+      loadBalancer:
+        passHostHeader: true
+        healthCheck:
+          path: /health/ready
+          interval: 5s
+          timeout: 4s
+          # vector1's proxy routes by this host name. The app ignores it.
+          hostname: goodwatch.app
+        servers:
+          # The instance on abio, by its network alias on the coolify network.
+          - url: http://goodwatch-webapp:3000
+          # The instance on vector1, through vector1's proxy on the private network.
+          - url: http://10.0.0.20:80
+    # Members: the same servers and health check, with the sticky cookie.
+    gw-webapp-member:
       loadBalancer:
         passHostHeader: true
         sticky:

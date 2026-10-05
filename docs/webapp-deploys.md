@@ -98,7 +98,7 @@ Docker reported the old container's end 0.5 seconds after the process had exited
 
 The webapp runs as two instances behind a balancing route (`goodwatch-proxy/traefik/goodwatch-balance.yaml`). Coolify deploys them one after the other, about 2 minutes each, so for 2 to 4 minutes one instance runs the new build and the other one the old build. On each host, the old and the new container also run side by side for some seconds.
 
-A page names the script and style files of the build that rendered it. Those files carry a content hash in their name, and only that build has them. A browser sends the sticky cookie `gw_instance` and reaches the instance that rendered the page. A client without cookies (a crawler, a link preview, the smoke check) alternates between the instances, and got a 404 for every second file. Confirmed on October 4, 2026, for [Serve a build's script files from every instance during a deploy](https://github.com/alp82/goodwatch-monorepo/issues/312).
+A page names the script and style files of the build that rendered it. Those files carry a content hash in their name, and only that build has them. A member's browser sends the sticky cookie `gw_instance` and reaches the instance that rendered the page (see [The sticky cookie is for members only](#the-sticky-cookie-is-for-members-only)). Every other client alternates between the instances, and got a 404 for every second file before the shared store. Confirmed on October 4, 2026, for [Serve a build's script files from every instance during a deploy](https://github.com/alp82/goodwatch-monorepo/issues/312).
 
 ### The shared store for build files
 
@@ -136,6 +136,78 @@ What it doesn't cover:
 ### Check it locally
 
 Run two production builds with different hashes as two processes against a throwaway Valkey (a single-node cluster in a container), never against the production cluster. Request a file of each build from the other process and compare the bytes and the headers. On October 4, 2026: all 223 files of one local build, requested from the other build's process, answered 200 with the same bytes, and with Valkey stopped an unknown file answered 404 in under 1 ms.
+
+## The sticky cookie is for members only
+
+Decided on October 5, 2026, for "Stop the balancing route from setting its cookie on shared-cacheable responses".
+
+Before, the balancing route's one service had a sticky cookie, so the proxy added `Set-Cookie: gw_instance=...` to the first response of every client, and to every response of a client that keeps no cookies. A cache in front must not store a response with `Set-Cookie` ([cache-identity.md](cache-identity.md)), so it would have stored nothing.
+
+### What needs one instance per visitor
+
+| State | Where it lives | Needs stickiness? |
+| --- | --- | --- |
+| Member sessions | A signed Supabase cookie that each instance verifies per request | No |
+| Anonymous pages in the page cache | Per process. Both instances store the same page for the same key and build | No |
+| Page cache resets | Per process. Members are never served from it, and the 10 + 10 second lifetime bounds a share list page in the other process ([page-cache.md](page-cache.md)) | No. A cookie can't help: other visitors reach the other instance anyway |
+| Data cache and its reset markers | Valkey | No |
+| Search and poster impression limits | Valkey, by client address | No |
+| Script and style files of two builds during a deploy | The shared store for build files, in both directions | No |
+| What a process keeps for a member for a short time: the taste portrait, Explorer layouts, the Watch next pool | Per process | Useful: without it, a member's requests compute these once per instance |
+| The guard against a second undo of the same IMDb import | Per process | Useful: two clicks that reach two instances would both start |
+| Loader data during a deploy | A page from the new build can ask the old build's instance for loader data, for the 2 to 4 minutes in which the builds differ | Helps a little. Stickiness only halves it: the instance a browser sticks to is replaced during the same deploy |
+
+Nothing breaks without stickiness. Members get some use out of it, and their responses are `private, no-store` anyway.
+
+### The design
+
+Two routers for `goodwatch.app` on the HTTPS entry point, in `goodwatch-proxy/traefik/goodwatch-balance.yaml`:
+
+- **`gw-webapp-member-https`, priority 1001:** matches a request whose `Cookie` header has the auth cookie, by the same name pattern as `app/utils/auth-cookie.ts`. Its service `gw-webapp-member` has the sticky cookie.
+- **`gw-webapp-https`, priority 1000:** every other request. Its service `gw-webapp` has the same servers and health check, and no cookie.
+
+Traefik sets the sticky cookie only on a response to a request that came without a valid one, so a member gets it once per browser session.
+
+Options that lost:
+
+- **No stickiness at all:** one router fewer, but members lose the reuse above and gain nothing.
+- **A middleware that removes `Set-Cookie` from `public` responses:** Traefik v2.10's `headers` middleware can remove a response header, but not on a condition, and it would remove the app's own cookies too.
+- **A cookie that the app sets:** needs a new route between the app and the proxy's choice of server. The auth cookie already says who is a member.
+
+What changes for visitors:
+
+- An anonymous browser now alternates between the instances, like crawlers and the benchmark always did. During a deploy it relies on the shared store for build files, and a client-side navigation can get loader data from the other build. Not measured.
+- A browser that already has `gw_instance` keeps sending it until it closes. The cookie-free service ignores it.
+- The proxy checks each instance's readiness twice per interval, once per service.
+
+### Test it
+
+`goodwatch-proxy/traefik/test-local.sh` builds both proxies and two stub instances from throwaway containers. Section 2b checks that anonymous responses carry no cookie (also with analytics cookies, with a leftover `gw_instance`, and with a cookie whose name only ends like the auth cookie), and that a request with the auth cookie gets the sticky cookie once and stays on one instance.
+
+### Owner steps
+
+Agents don't change the proxy. Traefik loads a dynamic configuration without a restart, and no connection is dropped.
+
+1. In Coolify, open **Servers**, then **abio**, then **Proxy**, then **Dynamic Configurations**.
+2. Open `goodwatch-balance.yaml` and copy its current content to a local file, for the rollback.
+3. Replace the content with `goodwatch-proxy/traefik/goodwatch-balance.yaml` from the repository, and save. Coolify removes the comments.
+4. On abio, check that the member rule arrived unchanged:
+
+   ```sh
+   grep HeadersRegexp /data/coolify/proxy/dynamic/goodwatch-balance.yaml
+   ```
+
+   It must show `` HeadersRegexp(`Cookie`, `(^|;) *sb-[^=; ]+-auth-token([.][0-9]+)?=`) ``.
+5. From any machine, check both cases. The first command must print nothing. The second must print one `set-cookie: gw_instance=...` line.
+
+   ```sh
+   curl -sI https://goodwatch.app/ | grep -i '^set-cookie: gw_instance'
+   curl -sI -H 'Cookie: sb-check-auth-token=x' https://goodwatch.app/ | grep -i '^set-cookie: gw_instance'
+   ```
+
+6. Run `./bench.sh smoke` in `goodwatch-benchmark`.
+
+**Roll back:** put the saved content back into `goodwatch-balance.yaml` in the same place and save. If the site answers 404 or 503 after step 3 and the old content isn't at hand, delete the file there: Coolify's own routers then serve the site from abio's instance alone.
 
 ## The build's commit
 
