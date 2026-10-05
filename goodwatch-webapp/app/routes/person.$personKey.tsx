@@ -65,7 +65,6 @@ import { goodwatchScoreDisplay, goodwatchVibeIndex } from "~/utils/ratings"
 import type { SizeRule } from "~/utils/tmdb-image"
 
 export { pageHeaders as headers } from "~/utils/headers"
-export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
 
 const PER_GROUP = 12
 
