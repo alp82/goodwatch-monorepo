@@ -9,7 +9,7 @@ The run summaries are in [`goodwatch-benchmark/results/page-views-2026-10-05/`](
 ## Summary
 
 - **A movie page view on the public path with new connections holds at 100 page views per second,** is slow at 110, and fails at 120. The limit is the CPU of the host that runs the proxy: 92% to 96% of abio's 8 cores, of which the proxy uses 6.1 to 6.3. The destination is 500.
-- **The primary scenario's mix holds only 30 visitors per second** with a document p95 under 300 ms, and fails at 80. The limit there isn't the proxy. It is the home page's `POST /api/living-room/picks?view=pool`, which costs about 350 ms of Node main-thread time per home page view. The home page alone holds 2 page views per second. A later change cut this request, see [The home page's pool request after the fix](#the-home-pages-pool-request-after-the-fix).
+- **The primary scenario's mix holds only 30 visitors per second** with a document p95 under 300 ms, and fails at 80. The limit there isn't the proxy. It is the home page's `POST /api/living-room/picks?view=pool`, which costs about 350 ms of Node main-thread time per home page view. The home page alone holds 2 page views per second. A later change cut this request, see [The home page's pool request after the fix](#the-home-pages-pool-request-after-the-fix). With the change deployed, the home page holds 60 and the mix 110, see [After the home pool fix](#after-the-home-pool-fix).
 - **The same mix without the home page behaves like the movie page:** it holds 100 visitors per second, and the host CPU on abio is the limit.
 - **Over the private path with reused connections, a movie page view holds at 140 per second,** and both Node main threads are the limit (85% to 88%, and 94% to 96% at the failing step). So TLS handshakes cost about 40 page views per second of today's capacity.
 - **A new TLS connection costs 14 to 16 ms of proxy CPU** (measured, 25 to 400 new connections per second). The baseline estimated 20 to 25 ms. abio's 8 cores are full at about 470 to 500 new connections per second.
@@ -473,7 +473,7 @@ Measured on a development machine (faster cores than production's), one process 
 | After | 50 | 1,500 | 2.4 | 2 / 3 |
 
 - **The response is the same** before and after: the same 23 titles in the same order, the same pairs, and the same catalog. Only the order of the services within a title differs between any two processes, because it follows the order in which Crate returned them when the process loaded the country's availability.
-- **Not measured:** the same request costs about 350 ms on a production instance where it costs 42 ms here, so the absolute numbers don't carry over. By the same ratio the request would cost about 20 ms there, most of it the request's own handling (reading the body, 23 title cards from the cache, and 44 KB of JSON). The load runs on production weren't repeated, so the new limits of the home page and of the primary mix aren't measured.
+- **Not measured:** the same request costs about 350 ms on a production instance where it costs 42 ms here, so the absolute numbers don't carry over. By the same ratio the request would cost about 20 ms there, most of it the request's own handling (reading the body, 23 title cards from the cache, and 44 KB of JSON). The load runs on production were repeated later, see [After the home pool fix](#after-the-home-pool-fix).
 
 ## Not measured or not verified
 
@@ -554,3 +554,161 @@ Full and resumed handshakes without a request, four clients for 20 seconds each,
 openssl s_time -connect <site>:443 -new -tls1_2 -time 20
 openssl s_time -connect <site>:443 -reuse -tls1_2 -time 20
 ```
+
+## After the home pool fix
+
+Three ramps were repeated with `833a2e53` deployed, the commit that keeps the pool's candidates per process. Everything above this section is from before that commit.
+
+- **The home page alone holds 60 page views per second,** where it held 2. It is slow at 80 and fails at 100.
+- **The primary mix holds 110 visitors per second** on the public path with new connections, where it held 30. It is slow at 120 and fails at 130. That is the limit that the mix without the home page had before.
+- **The limit of the mix is now abio's CPU, not the pool request:** 92% of 8 cores at 110 visitors per second and 98% at 120, of which the proxy uses 6.4 to 6.5 cores. The main threads are at 67% to 78%.
+- **Over the private path with reused connections, the mix holds 160 visitors per second.** At 180 and 200 the page view p95 is over 1 second, with both main threads at 93%. No stop rule fired up to 200, the highest planned step.
+- **No answer carried `GW-Page-Cache: busy`** in any step of the three ramps.
+
+### Conditions of these runs
+
+| Item | Value |
+| --- | --- |
+| Date | Monday, October 5, 2026, 05:31 to 05:48 UTC |
+| Commit deployed | `833a2e53` on both instances, no restart and no deploy during the runs |
+| Generators | worker3 and worker1, half of each step's rate each, for all three ramps |
+| Commands | The page-view commands under [Repeat the runs](#repeat-the-runs), with higher rates. Home: `--rates 2,5,10,20,30,40,50,60 --step-duration 20` per generator. Mix, public: `--rates 15,30,40,45,50,55,60,65 --step-duration 30` per generator. Mix, private with `--connections reuse`: `--rates 20,40,50,60,70,80,90,100 --step-duration 30` per generator |
+| Page assets | One capture of the deployed build, from a 15-second run at 1 visitor per second, passed to every run with `--page-assets` |
+| Stop rules and step lengths | As before |
+| Background traffic | 50 to 80 requests per second finished by the two instances together, and 65 to 85 new connections per second at abio's proxy |
+
+- **Before and after every ramp:** `./bench.sh smoke --commit 833a2e53` passed on the public route, on abio, and on vector1.
+- **One change to the benchmark scripts:** `summary.json` now counts the 503 answers with `GW-Page-Cache: busy` as `page_cache_busy`, per step. The requests that the scripts send didn't change.
+- **The earlier home ramp and the earlier low rates of the mix ran from worker3 alone.** These ramps ran from two generators from the first step, so the per-step rates differ from the earlier tables.
+
+### What holds, before and after
+
+Rates are visitors per second, summed over both generators. All values are measured.
+
+| Run | Step | Before (`3a45fcfd`) | After (`833a2e53`) |
+| --- | --- | --- | --- |
+| Home page alone, public path, new connections | Highest step that holds | 2 | 60 |
+| | First slow step | 3 (document p95 313 ms) | 80 (page view p95 2.1 s) |
+| | First failing step | 6 | 100 (68 reached) |
+| | What limits it | The pool request on the Node main threads | vector1's main thread (100% at 80), with abio's main thread (88%) and abio's CPU (91%) close behind |
+| Primary mix, public path, new connections | Highest step that holds | 30 (document p95 under 300 ms) | 110 (document p95 52 to 61 ms) |
+| | First slow step | 35 (document p95 397 ms) | 120 (page view p95 0.8 to 1.1 s) |
+| | First failing step | 80 (36 reached) | 130 (89 reached) |
+| | What limits it | The pool request on the Node main threads | abio's CPU (92% to 98%), most of it the proxy |
+| Primary mix, private path, reused connections | Highest step that holds | 20 (document p95 under 300 ms) | 160 |
+| | First slow step | 30 (document p95 325 ms) | 180 (page view p95 1.1 s) |
+| | First failing step | Not reached at 40 | Not reached at 200 |
+| | What limits it | The pool request on the Node main threads | Both Node main threads (89% to 93%) |
+
+The pool request in the webapp's own histogram, on abio, over a whole ramp:
+
+| Run | Before: p50 / p95 ms | After: p50 / p95 ms |
+| --- | --- | --- |
+| Primary mix, public path, two generators | 667 / 1,753 | 31 / 123 |
+| Home page alone | Not recorded in this document (357 to 403 ms at the median for the client) | 41 / 243 |
+
+These are wall times that include the overloaded steps, not main-thread time.
+
+### Home page alone, after
+
+Public path, new connections, two generators. In the columns with two values separated by a comma, the values are the two generators.
+
+| Visitors per second | Page views per second | Failed page views | 5xx answers | Of which `GW-Page-Cache: busy` | Document p50 / p95 ms | Page view p50 / p95 ms | New TLS connections per second | abio proxy % | abio main thread % | vector1 proxy % | vector1 main thread % | abio CPU % of 8 cores | abio sends Mbit/s | Generator CPU % | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 4 | 3.9 | 0 | 0 | 0 | 5 / 18, 5 / 29 | 75 / 108, 75 / 106 | 8 | 197 | 31 | 17 | 34 | 35 | 32 | 6, 6 |  |
+| 10 | 9.4 | 0 | 0 | 0 | 5 / 17, 6 / 23 | 76 / 120, 75 / 108 | 19 | 244 | 35 | 32 | 47 | 45 | 71 | 14, 12 |  |
+| 20 | 19.0 | 0 | 0 | 0 | 5 / 33, 5 / 39 | 76 / 153, 76 / 158 | 38 | 308 | 46 | 56 | 56 | 53 | 133 | 18, 19 |  |
+| 40 | 38.0 | 0 | 0 | 0 | 6 / 30, 5 / 32 | 76 / 160, 74 / 178 | 76 | 415 | 61 | 87 | 71 | 67 | 259 | 34, 30 |  |
+| 60 | 58.0 | 0 | 0 | 0 | 10 / 46, 9 / 47 | 97 / 247, 94 / 257 | 116 | 495 | 72 | 129 | 88 | 79 | 387 | 40, 42 | Holds |
+| 80 | 76.8 | 0 | 0 | 0 | 47 / 147, 36 / 129 | 287 / 2,119, 231 / 2,081 | 155 | 564 | 88 | 164 | 100 | 91 | 488 | 49, 47 | Slow: page view p95 over 2 s |
+| 100 | 68.3 | 0 | 0 | 0 | 105 / 510, 84 / 430 | 529 / 1,713, 477 / 3,361 | 165 | n/a | n/a | n/a | n/a | 94 | 515 | 53, 54 | Fails: 68 of 100 reached |
+
+Dropped iterations: 132. Requests: 244,848. The planned step at 120 didn't start.
+
+- **Break point:** 60 page views per second hold, with a document p95 of 47 ms and a page view p95 of about 250 ms. At 80 every request is answered, but the page view p95 is over 2 seconds. At 100 the stop rule fired on dropped iterations. The rates between 60 and 80 weren't measured.
+- **What limits it:** the Node main threads first. vector1's is at 100% at 80 page views per second and abio's at 88%. abio's CPU is at 91% in the same step, so the proxy's limit is close behind.
+- **Errors:** no page view failed and no answer had a 5xx status. Nine requests of the failing step got no answer before the run stopped.
+- **A home page view is fast again for the visitor:** 75 ms at the median up to 40 page views per second, where it took 400 to 480 ms.
+
+### Primary scenario (`hot` mix), after
+
+Public path, new connections, two generators.
+
+| Visitors per second | Page views per second | Failed page views | 5xx answers | Of which `GW-Page-Cache: busy` | Document p50 / p95 ms | Page view p50 / p95 ms | New TLS connections per second | abio proxy % | abio main thread % | vector1 proxy % | vector1 main thread % | abio CPU % of 8 cores | abio sends Mbit/s | Generator CPU % | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 30 | 27.1 | 0 | 0 | 0 | 5 / 18, 5 / 18 | 54 / 78, 54 / 83 | 57 | 357 | 39 | 62 | 50 | 57 | 157 | 20, 21 |  |
+| 60 | 51.6 | 0 | 0 | 0 | 5 / 24, 5 / 21 | 55 / 93, 55 / 89 | 110 | 475 | 47 | 102 | 61 | 71 | 269 | 39, 39 |  |
+| 80 | 69.7 | 0 | 0 | 0 | 7 / 29, 7 / 34 | 59 / 110, 59 / 119 | 149 | 554 | 59 | 130 | 66 | 82 | 364 | 46, 48 |  |
+| 90 | 79.9 | 0 | 0 | 0 | 9 / 61, 9 / 56 | 66 / 203, 66 / 197 | 170 | 578 | 63 | 144 | 76 | 87 | 411 | 48, 50 |  |
+| 100 | 88.9 | 0 | 0 | 0 | 12 / 58, 12 / 59 | 75 / 184, 77 / 195 | 189 | 601 | 65 | 154 | 80 | 91 | 458 | 52, 49 |  |
+| 110 | 98.4 | 0 | 0 | 0 | 15 / 61, 12 / 52 | 83 / 218, 79 / 171 | 208 | 637 | 67 | 158 | 77 | 92 | 493 | 51, 58 | Holds |
+| 120 | 107.0 | 0 | 0 | 0 | 44 / 293, 36 / 174 | 222 / 1,110, 174 / 843 | 226 | 653 | 71 | 175 | 78 | 98 | 549 | 59, 82 | Slow: page view p95 about 1 s. One generator near its limit |
+| 130 | 80.2 | 0 | 0 | 0 | 301 / 1,109, 177 / 800 | 1,548 / 2,638, 853 / 2,410 | 189 | n/a | n/a | n/a | n/a | 99 | 474 | 52, 85 | Fails: 89 of 130 visitors reached |
+
+Dropped iterations: 250. Requests: 712,409.
+
+- **Break point:** 110 visitors per second hold (98 page views plus the bot requests), with a document p95 of 52 to 61 ms and a page view p95 of about 200 ms. At 120 the page view p95 is about 1 second. At 130 the stop rule fired on dropped iterations.
+- **What limits it:** abio's CPU, at 92% at 110 visitors per second, 98% at 120, and 99% at 130. The proxy uses 6.4 to 6.5 of the 8 cores. The main threads are at 67% to 78%, so Node is second in line, as for the movie page.
+- **The same limit as the mix without the home page had before the fix** (100 held, 110 and 120 were slow, 130 failed). The home page no longer changes what the mix holds.
+- **The generator on worker1 used 82% and 85% of its cores at 120 and 130,** where worker3 used 59% and 52%. In the earlier runs both stayed under 65% at these rates, and the reason for the difference wasn't looked into. Read the latencies of those two steps with that in mind. abio's CPU was at 98% to 99% in both, so the steps aren't the generator's failure alone, and the step at 110 is clean (51% and 58%).
+- **Errors:** no request failed and no answer had a 5xx status.
+
+### Primary scenario over the private path with reused connections, after
+
+`--path private --connections reuse`, two generators.
+
+| Visitors per second | Page views per second | Failed page views | 5xx answers | Of which `GW-Page-Cache: busy` | Document p50 / p95 ms | Page view p50 / p95 ms | New TLS connections per second | abio proxy % | abio main thread % | vector1 proxy % | vector1 main thread % | abio CPU % of 8 cores | abio sends Mbit/s | Generator CPU % | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 40 | 35.9 | 0 | 0 | 0 | 5 / 21, 5 / 24 | 31 / 68, 32 / 70 | 8 | 296 | 46 | 76 | 44 | 50 | 199 | 23, 25 |  |
+| 80 | 69.9 | 0 | 0 | 0 | 5 / 25, 5 / 20 | 28 / 63, 29 / 59 | 0 | 371 | 59 | 127 | 62 | 59 | 371 | 33, 35 |  |
+| 100 | 88.9 | 0 | 0 | 0 | 6 / 24, 6 / 26 | 30 / 68, 31 / 67 | 0 | 389 | 67 | 160 | 66 | 64 | 456 | 43, 41 |  |
+| 120 | 106.7 | 0 | 0 | 0 | 8 / 35, 8 / 35 | 34 / 90, 34 / 93 | 0 | 421 | 72 | 171 | 80 | 68 | 546 | 42, 44 |  |
+| 140 | 124.3 | 0 | 0 | 0 | 9 / 42, 9 / 40 | 36 / 110, 36 / 108 | 0 | 436 | 84 | 198 | 79 | 71 | 606 | 49, 50 |  |
+| 160 | 142.3 | 0 | 0 | 0 | 18 / 69, 15 / 61 | 57 / 347, 53 / 189 | 0 | 461 | 89 | 218 | 92 | 76 | 713 | 53, 56 | Holds |
+| 180 | 162.3 | 1 | 1 | 0 | 19 / 98, 20 / 104 | 63 / 1,122, 63 / 1,168 | 0 | 498 | 93 | 250 | 93 | 80 | 816 | 56, 59 | Slow: page view p95 over 1 s |
+| 200 | 170.9 | 0 | 0 | 0 | 23 / 106, 27 / 98 | 70 / 1,279, 80 / 1,273 | 0 | 465 | 85 | 261 | 93 | 81 | 837 | 59, 62 | Slow. 191 of 200 visitors reached |
+
+Dropped iterations: 4. Requests: 1,159,432.
+
+- **Break point:** 160 visitors per second hold, with a page view p95 of 190 to 350 ms. At 180 and 200 the documents still arrive within about 100 ms at p95, but the page view p95 is over 1 second.
+- **No stop rule fired.** The ramp ended at its highest planned step, so the first failing step on this path isn't measured. The plan wasn't extended, because production already answered slowly at 180.
+- **What limits it:** both Node main threads, at 89% to 92% at 160 and 93% at 180, with abio's CPU at 76% to 81%. This is the limit the mix without the home page had before the fix (140 held, 160 failed).
+- **One 5xx answer** in 1.16 million requests, at 180 visitors per second. It didn't carry `GW-Page-Cache: busy`, and neither instance's 5xx counter moved, so it came from a proxy. It wasn't traced further.
+- **vector1's proxy** used 2.5 to 2.6 cores at 180 and 200. The 6.5 to 8.2 cores of the earlier failing private steps didn't recur.
+- **The last step is short on one generator:** the run on worker3 was stopped about 3 seconds before its end, when the run on worker1 finished. That is the reason for 191 instead of 200.
+
+### The pool request's main-thread cost in production
+
+Measured: the two main threads together, in percent of one core, over the valid steps of the home ramp.
+
+| Page views per second | Before: both main threads % | After: both main threads % |
+| --- | --- | --- |
+| 1.0 | 89 | Not run |
+| 1.9 | 115 | Not run |
+| 2.9 | 150 | Not run |
+| 3.9 | 170 | 65 |
+| 9.4 | Not run | 82 |
+| 19.0 | Not run | 101 |
+| 38.0 | Not run | 132 |
+| 58.0 | Not run | 159 |
+
+Derived from these values, not measured directly:
+
+- **A home page view costs 15 to 17 ms of main-thread time across both instances,** from the slope between 19 and 58 and between 3.9 and 58 page views per second. Before, it cost 340 to 420 ms.
+- **The pool request costs at most about 6 to 8 ms of that.** A movie page view costs 9 ms (see [Cost per page view](#cost-per-page-view)), and a home page view sends three more files than a movie page view plus the pool request. The request wasn't profiled on its own in production.
+- **The estimate of about 20 ms** in [The home page's pool request after the fix](#the-home-pages-pool-request-after-the-fix) was too high.
+
+### Not measured in these runs
+
+- **The home page between 60 and 80 page views per second,** and the mix between 110 and 120.
+- **The first failing step of the mix on the private path.**
+- **The first pool request after a new snapshot version or after midnight UTC** under load. Each process pays the walk over the snapshot once then.
+- **A visitor with guest progress or a member.** The replayed body is an anonymous visitor without progress, who gets the order by popularity without a ranking of their own.
+- **The movie page and the mix without the home page.** They weren't repeated, because the fix doesn't touch them.
+
+### Incidents and end state of these runs
+
+- **Real visitors were affected** in the slow and failing steps: for about 40 seconds in the home ramp, about 60 seconds in the public mix, and about 70 seconds in the private mix, pages loaded slowly (page view p95 from 1 to 3.4 seconds). Documents stayed under 1.2 seconds at p95.
+- **Benchmark requests that failed:** nine without an answer in the failing step of the home ramp, and one 5xx answer in the private mix at 180 visitors per second. None in a step that this section calls "holds".
+- **End state at 05:48 UTC:** the smoke check passed on the public route and on both instances, and each instance's 5xx counter was at 0 over every run.
+- **Generators:** no container left on worker3 or worker1. On worker1, the k6 image and the work directory that the runs created were removed. worker3 keeps its benchmark images and an empty run directory, as before.

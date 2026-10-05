@@ -107,6 +107,9 @@ const sideEntries = entries
 const routes = [...new Set(entries.map((e) => e.route))].sort();
 const responseBytes = new Trend("response_bytes");
 const statuses = Object.fromEntries(["2xx", "3xx", "4xx", "5xx", "0"].map((s) => [s, new Counter(`status_${s}`)]));
+// 503 answers of the page store that carry `GW-Page-Cache: busy`. They are also counted as 5xx.
+const busyAnswers = new Counter("status_busy");
+const isBusy = (response) => response.status === 503 && response.headers["Gw-Page-Cache"] === "busy";
 const visits = new Counter("visits"),
   pageViewCount = new Counter("page_views"),
   pageViewFailed = new Rate("page_view_failed"),
@@ -126,6 +129,7 @@ function metrics(selector) {
   thresholds[`http_req_failed{${selector}}`] = ["rate>=0"];
   thresholds[`http_reqs{${selector}}`] = ["count>=0"];
   for (const status of Object.keys(statuses)) thresholds[`status_${status}{${selector}}`] = ["count>=0"];
+  thresholds[`status_busy{${selector}}`] = ["count>=0"];
 }
 metrics("phase:main");
 for (const route of routes) metrics(`phase:main,route:${route}`);
@@ -248,6 +252,7 @@ function request(entry, phase, step, id, index) {
   });
   const status = response.status >= 200 && response.status < 600 ? `${Math.floor(response.status / 100)}xx` : "0";
   for (const key of Object.keys(statuses)) statuses[key].add(key === status ? 1 : 0, tags);
+  busyAnswers.add(isBusy(response) ? 1 : 0, tags);
   const length = response.headers["Content-Length"];
   if (length !== undefined && Number.isFinite(Number(length))) responseBytes.add(Number(length), tags);
 }
@@ -278,6 +283,7 @@ function record(response, tags, kind, expect) {
   const status = response.status >= 200 && response.status < 600 ? `${Math.floor(response.status / 100)}xx` : "0";
   // One sample per request, to keep the generator's own CPU low at thousands of requests per second.
   statuses[status].add(1, tags);
+  if (isBusy(response)) busyAnswers.add(1, tags);
   // A request that opened the connection has a handshake time. Requests on an open connection report zero.
   const handshake = response.timings?.tls_handshaking || 0;
   if (handshake > 0) {

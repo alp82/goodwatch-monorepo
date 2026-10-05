@@ -109,7 +109,7 @@ A `bot` entry and a `browser` entry with `"single": true` send their one request
 
 **Stop rules,** per step: 2% of page views failed (a page view fails when any of its requests fails), document p95 above `ABORT_P95_MS`, page view p95 above `ABORT_PAGE_P95_MS` (default 10,000 ms), and the dropped iterations limit.
 
-**Summary.** `summary.md` gets a "Page views" table (visitors, complete page views, failed page views, document and page view percentiles, TLS handshakes and their time, per step) and the response headers of each page from before the run. Every load run with the webapp probe also gets "Resources per step": each instance's main thread and proxy CPU, the connections the proxy accepted, and CPU and network of the target hosts and the generator. A step whose generator CPU is near 100% isn't valid.
+**Summary.** `summary.md` gets a "Page views" table (visitors, complete page views, failed page views, document and page view percentiles, TLS handshakes and their time, per step) and the response headers of each page from before the run. Every load run with the webapp probe also gets "Resources per step": each instance's main thread and proxy CPU, the connections the proxy accepted, and CPU and network of the target hosts and the generator. A step whose generator CPU is near 100% isn't valid. `summary.json` counts the 503 answers that carry `GW-Page-Cache: busy` per step, route, and run as `page_cache_busy`. They are also part of the 5xx count.
 
 **A long plateau.** `SLICE_SECONDS=60` cuts the run into slices and adds the first request's and the page view's percentiles per slice, to see a page's lifetime ending or a snapshot reload. For a hold, use ramp mode with one rate: `--mode ramp --rates 40 --step-duration 600`.
 

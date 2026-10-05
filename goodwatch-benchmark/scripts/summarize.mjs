@@ -72,6 +72,8 @@ export async function summarize(directory) {
       status: Object.fromEntries(
         ["2xx", "3xx", "4xx", "5xx", "0"].map((s) => [s, values(`status_${s}`, selector).count ?? 0]),
       ),
+      // 503 answers with `GW-Page-Cache: busy`, which are also in the 5xx count.
+      page_cache_busy: values("status_busy", selector).count ?? 0,
       response_bytes_avg: values("response_bytes", selector).avg ?? null,
     });
     const failed = Object.entries(raw.metrics || {}).flatMap(([name, metric]) =>
