@@ -2,7 +2,8 @@
 // votes and the 3,000 most voted shows with at least 200 (about 12,000 titles), with what every request needs about
 // them precomputed: descriptive vectors for closeness, a quality score, and display fields.
 //
-// Built once per snapshot version. The display fields (title, year, poster, backdrop, genres) and the title analysis's
+// Built once per snapshot version. Candidates are selected from snapshot columns; facts are created only for the
+// top rows kept for each media type. The display fields (title, year, poster, backdrop, genres) and the title analysis's
 // occasion flags, which the snapshot doesn't hold, are the only thing read from Crate, in the background by primary key, once per version; no request reads Crate for the pool.
 import { onShutdown } from "~/server/lifecycle.server"
 import type {
@@ -12,11 +13,8 @@ import type {
 } from "~/server/title-snapshot/index.server"
 import { VALID_FINGERPRINT_KEYS } from "~/server/utils/fingerprint"
 import { query } from "~/utils/crate"
+import { selectCandidateRows } from "./pool-select.server"
 
-const POOL = {
-	movie: { minVotes: 800, size: 9000 },
-	show: { minVotes: 200, size: 3000 },
-}
 const DISPLAY_BATCH = 1000
 const MISSING_SCORE = 255
 
@@ -149,26 +147,11 @@ export function keepExplorerPoolWarm(
 
 async function buildPool(snapshot: TitleSnapshot): Promise<ExplorerPool> {
 	const startedAt = performance.now()
-	const found = { movie: [] as Candidate[], show: [] as Candidate[] }
-	snapshot.forEach((_, row) => {
-		const facts = snapshot.factsAt(row)
-		const rule = POOL[facts.mediaType]
-		if (
-			facts.hasPoster &&
-			facts.hasBackdrop &&
-			!facts.adult &&
-			facts.votes >= rule.minVotes
-		)
-			found[facts.mediaType].push({ row, facts })
-	})
-	const top = (list: Candidate[], size: number) =>
-		list
-			.sort((a, b) => b.facts.votes - a.facts.votes || a.row - b.row)
-			.slice(0, size)
-	const candidates = [
-		...top(found.movie, POOL.movie.size),
-		...top(found.show, POOL.show.size),
-	]
+	const selected = selectCandidateRows(snapshot)
+	const candidates = [...selected.movie, ...selected.show].map((row) => ({
+		row,
+		facts: snapshot.factsAt(row),
+	}))
 	const selectMs = performance.now() - startedAt
 
 	const displayStartedAt = performance.now()
