@@ -41,6 +41,10 @@ CLEARED_COLUMNS = (
     "rotten_tomatoes_tomato_score_normalized_percent",
     "rotten_tomatoes_tomato_score_review_count",
     "goodwatch_official_score_normalized_percent",
+    # Averages of the scores this copy has just read: with no score left, a kept value
+    # would show a GoodWatch score for a title that has none.
+    "goodwatch_user_score_normalized_percent",
+    "goodwatch_overall_score_normalized_percent",
 )
 
 tmdb_details_projection = {

@@ -69,7 +69,9 @@ class RatingsPublicationTest(unittest.TestCase):
         self.assertLessEqual({'rotten_tomatoes_url', 'rotten_tomatoes_tomato_score_original',
                               'rotten_tomatoes_audience_score_rating_count', 'metacritic_url',
                               'metacritic_meta_score_original', 'metacritic_user_score_original',
-                              'goodwatch_official_score_normalized_percent'}, cleared)
+                              'goodwatch_official_score_normalized_percent',
+                              'goodwatch_user_score_normalized_percent',
+                              'goodwatch_overall_score_normalized_percent'}, cleared)
         self.assertNotIn('imdb_user_score_original', cleared)
 
     def test_every_recently_changed_title_is_published_once_across_batches(self):
