@@ -28,7 +28,6 @@ import { detailsPageMeta } from "~/utils/detailsMeta"
 import { buildMeta } from "~/utils/meta"
 
 export { pageHeaders as headers } from "~/utils/headers"
-export { retryNetworkLoader as clientLoader } from "~/utils/retry-network-loader"
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) return [{ title: "Not Found | GoodWatch" }]

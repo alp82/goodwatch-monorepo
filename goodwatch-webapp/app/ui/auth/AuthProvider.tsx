@@ -6,6 +6,7 @@ import { useRevalidator } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
 import {
 	type ReactNode,
+	startTransition,
 	useCallback,
 	useEffect,
 	useMemo,
@@ -14,6 +15,7 @@ import {
 } from "react"
 import { AuthContext } from "~/utils/auth"
 import { createAuthCookieMatcher } from "~/utils/auth-cookie"
+import { keptLoaderData } from "~/utils/loader-request-retry"
 import { whenInteractive } from "~/utils/page-interactive"
 import { isAuthCallbackUrl, loadSupabaseClient } from "~/utils/supabase-browser"
 import {
@@ -41,6 +43,9 @@ export function AuthProvider({
 	// The loader's user replaces the browser's only when the person changed. For the same person the browser session
 	// is at least as complete: a session verified from the token alone has no identities or creation time.
 	useEffect(() => {
+		// Data that a failed revalidation kept is not the server's answer about the person. The request stays pending,
+		// so the next navigation asks again.
+		if (keptLoaderData("root")) return
 		rootRevalidated()
 		setUser((current) =>
 			current && current.id === initialUser?.id ? current : initialUser,
@@ -49,15 +54,18 @@ export function AuthProvider({
 
 	// The client's code loads on first use. Whoever asks for the client gets it after the provider has subscribed to
 	// its auth changes, so a sign-in that follows can't be missed.
+	// The client can arrive while a part of the page still waits to hydrate. Its state changes are transitions, so
+	// React hydrates that part first. An urgent change makes React drop the part's server markup, render it again in
+	// the browser, and report React error 421.
 	const subscription = useRef<{ unsubscribe: () => void }>()
 	const mounted = useRef(true)
 	const getSupabase = useCallback(async () => {
 		const client = await loadSupabaseClient(supabaseUrl, supabaseAnonKey)
 		if (mounted.current && !subscription.current) {
 			subscription.current = client.auth.onAuthStateChange((_event, session) =>
-				setUser(session?.user ?? null),
+				startTransition(() => setUser(session?.user ?? null)),
 			).data.subscription
-			setSupabase(client)
+			startTransition(() => setSupabase(client))
 		}
 		return client
 	}, [supabaseUrl, supabaseAnonKey])

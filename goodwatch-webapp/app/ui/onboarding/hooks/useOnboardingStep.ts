@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useFetcher } from "@remix-run/react"
+import { useQuery } from "@tanstack/react-query"
 import { useShareViewer } from "~/routes/api.share-lists"
 import { useUserSettings } from "~/routes/api.user-settings.get"
 
@@ -17,7 +17,17 @@ export const useOnboardingStep = () => {
 		isLoading: settingsLoading,
 		isFetched: settingsFetched,
 	} = useUserSettings()
-	const guessCountryFetcher = useFetcher<{ country: string }>()
+	// The guess only preselects a country. A plain query, not a Remix fetcher: a fetcher's failed request replaces the
+	// whole page with the error page, and a failed query leaves the default.
+	const { data: guessedCountry } = useQuery<string | undefined>({
+		queryKey: ["guess-country"],
+		queryFn: async () => {
+			const response = await fetch("/api/guess-country")
+			if (!response.ok) throw new Error("Guessing the country failed")
+			const data: { country?: string } = await response.json()
+			return data.country
+		},
+	})
 	const viewer = useShareViewer(settingsFetched)
 	// Null while unknown. A failed check skips the step rather than blocking onboarding.
 	const needsHandle = viewer.isError
@@ -32,17 +42,6 @@ export const useOnboardingStep = () => {
 		userSettings?.onboarding_country_completed === "yes" &&
 		userSettings?.onboarding_streaming_completed === "yes"
 
-	// Fetch country guess on mount
-	useEffect(() => {
-		if (!guessCountryFetcher.data) {
-			guessCountryFetcher.submit({}, {
-				method: "get",
-				action: "/api/guess-country",
-			})
-		}
-	}, [])
-
-	
 	// Determine current step when settings change
 	useEffect(() => {
 		if (!settingsFetched || settingsLoading) {
@@ -70,7 +69,7 @@ export const useOnboardingStep = () => {
 		const streamingCompleted = userSettings?.onboarding_streaming_completed === "yes"
 
 		if (!countryCompleted) {
-			const countryCode = userSettings?.country_default || guessCountryFetcher.data?.country || "US"
+			const countryCode = userSettings?.country_default || guessedCountry || "US"
 			setCurrentStep((prev) => {
 				if (prev?.type === "country" && prev.countryCode === countryCode) {
 					return prev
@@ -85,12 +84,12 @@ export const useOnboardingStep = () => {
 				return { type: "streaming" }
 			})
 		}
-	}, [settingsFetched, settingsLoading, onboardingCompleted, userSettings, guessCountryFetcher.data, needsHandle, suggestion])
+	}, [settingsFetched, settingsLoading, onboardingCompleted, userSettings, guessedCountry, needsHandle, suggestion])
 
 	return {
 		isResolved: settingsFetched,
 		currentStep,
 		setCurrentStep,
-		guessedCountry: guessCountryFetcher.data?.country,
+		guessedCountry,
 	}
 }
