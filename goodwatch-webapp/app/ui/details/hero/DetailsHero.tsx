@@ -9,6 +9,7 @@ import ScoreRing from "~/ui/details/hero/ScoreRing"
 import { BackdropTrailer, HeroBackdropImage, PosterTrailer } from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
 import type { Section, SectionProps } from "~/utils/scroll"
+import { Measured } from "~/measure/ablation"
 
 type Media = MovieResult | ShowResult
 
@@ -43,10 +44,10 @@ export default function DetailsHero({ media, country, hasEpisodeGrid = false, se
 						</div>
 					</div>
 					<Divider className="my-6 md:my-7" />
-					<WhereToWatch media={media} country={country} navigateToSection={navigateToSection} />
+					<Measured name="hero_actions" part="where_to_watch"><WhereToWatch media={media} country={country} navigateToSection={navigateToSection} /></Measured>
 					<div className="min-h-6 grow" />
 					<Divider className="mb-6 md:mb-7" />
-					<ListActions media={media} />
+					<Measured name="hero_actions" part="list_actions"><ListActions media={media} /></Measured>
 				</PosterMatchedRow>
 			</div>
 		</div>

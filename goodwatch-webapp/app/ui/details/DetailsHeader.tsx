@@ -19,6 +19,7 @@ import Genres from "~/ui/details/Genres"
 import { HEADER_GENRE_COUNT } from "~/utils/title-extras"
 import Cycle from "~/ui/list/Cycle"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
+import { Measured } from "~/measure/ablation"
 
 interface DetailsHeaderProps {
 	media: MovieResult | ShowResult
@@ -163,10 +164,12 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 					current={{ tmdb_id: details.tmdb_id, media_type: mediaType, title }}
 				/>
 			)}
+			<Measured name="navs" part="inline_nav">
 			<DetailsInlineNav
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
 			/>
+			</Measured>
 		</div>
 	)
 }

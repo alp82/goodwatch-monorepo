@@ -28,6 +28,7 @@ import {
 	type ReservedHeight,
 } from "~/ui/details/section-heights"
 import { titleQuestions } from "~/ui/details/titleQuestions"
+import { Measured } from "~/measure/ablation"
 
 export interface DetailsContentProps {
 	media: MovieResult | ShowResult
@@ -62,9 +63,9 @@ export default function DetailsContent({
 	return (
 		<div className="flex flex-col gap-12">
 			{hasEpisodeGrid(episodeGrid) && (
-				<div {...section(episodeGridHeight(episodeGrid))}>
+				<Measured name="episodes"><div {...section(episodeGridHeight(episodeGrid))}>
 					<EpisodeGrid grid={episodeGrid} headerHeight={headerHeight} />
-				</div>
+				</div></Measured>
 			)}
 			{/*<div>*/}
 			{/*	<Streaming*/}
@@ -75,40 +76,40 @@ export default function DetailsContent({
 			{/*		countryCodes={streaming_country_codes}*/}
 			{/*	/>*/}
 			{/*</div>*/}
-			<div {...section(aboutHeight(), sectionProps.about)}>
+			<Measured name="about_crew" part="about"><div {...section(aboutHeight(), sectionProps.about)}>
 				<About media={media} navigateToSection={navigateToSection} />
-			</div>
-			<div {...section(actorsHeight(media), sectionProps.actors_and_crew)}>
+			</div></Measured>
+			<Measured name="actors"><div {...section(actorsHeight(media), sectionProps.actors_and_crew)}>
 				<Actors
 					cast={cast}
 					total={cast_total}
 					mediaType={media.mediaType}
 					tmdbId={details.tmdb_id}
 				/>
-			</div>
-			<div {...section(crewHeight(media))}>
+			</div></Measured>
+			<Measured name="about_crew" part="crew"><div {...section(crewHeight(media))}>
 				<Crew crew={crew} />
-			</div>
-			<div {...section(relatedHeight(media), sectionProps.related)}>
+			</div></Measured>
+			<Measured name="related"><div {...section(relatedHeight(media), sectionProps.related)}>
 				<DetailsRelated media={media} />
-			</div>
-			<div {...section(sequelsHeight(media))}>
+			</div></Measured>
+			<Measured name="sequels"><div {...section(sequelsHeight(media))}>
 				<SequelsPrequelsFranchise media={media} />
-			</div>
-			<div {...section(mediaHeight(media), sectionProps.media)}>
+			</div></Measured>
+			<Measured name="media"><div {...section(mediaHeight(media), sectionProps.media)}>
 				<Media
 					videos={videos || []}
 					title={details.title}
 					backdropPath={details.backdrop_path}
 				/>
-			</div>
-			<div {...section(questionsHeight(questions.length), sectionProps.faq)}>
+			</div></Measured>
+			<Measured name="faq"><div {...section(questionsHeight(questions.length), sectionProps.faq)}>
 				<DetailsQuestions
 					media={media}
 					country={country}
 					questions={questions}
 				/>
-			</div>
+			</div></Measured>
 		</div>
 	)
 }

@@ -16,6 +16,7 @@ import { useUser } from "~/utils/auth"
 import { useFeature } from "~/hooks/useFeature"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { Measured } from "~/measure/ablation"
 
 // The header while REC_NAVIGATION is off. Its menus bring the dialog library, so its code stays out of the pages
 // that show the new navigation.
@@ -39,6 +40,7 @@ function App() {
 
 	const page = (
 		<>
+			<Measured name="sitenav" part="site_header">
 			{navigation ? (
 				<SiteHeader />
 			) : (
@@ -46,6 +48,7 @@ function App() {
 					<Header />
 				</Suspense>
 			)}
+			</Measured>
 			{/* Show smart onboarding banner for logged-in users */}
 			{user && (
 				<Suspense fallback={null}>
@@ -54,9 +57,10 @@ function App() {
 			)}
 			<main className="relative grow mx-auto mt-16 pb-2 w-full text-neutral-300">
 				<GuestProgressNotice />
-				<Outlet />
+				<Measured name="outlet"><Outlet /></Measured>
 			</main>
-			<Footer />
+			<Measured name="footer"><Footer /></Measured>
+			<Measured name="sitenav" part="dock">
 			{navigation ? (
 				<>
 					<MobileDock />
@@ -66,6 +70,7 @@ function App() {
 			) : (
 				<BottomNav />
 			)}
+			</Measured>
 		</>
 	)
 	return navigation ? <NavigationProvider>{page}</NavigationProvider> : page

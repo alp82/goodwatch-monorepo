@@ -4,14 +4,17 @@ import { RemixBrowser } from "@remix-run/react"
 import { StrictMode, startTransition } from "react"
 import { hydrateRoot } from "react-dom/client"
 import { setBrowserCookie } from "~/utils/browser-cookie"
+import { RootProfiler } from "~/measure/ablation"
 
 setBrowserCookie()
 
+performance.mark("gw:entry")
 startTransition(() => {
+	performance.mark("gw:hydrate-call")
 	hydrateRoot(
 		document,
 		<StrictMode>
-			<RemixBrowser />
+			<RootProfiler><RemixBrowser /></RootProfiler>
 		</StrictMode>,
 	)
 })

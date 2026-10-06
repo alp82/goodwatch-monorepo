@@ -12,6 +12,7 @@ import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 import { BelowFoldProvider, useBelowFold } from "~/ui/details/below-fold"
 import type { Section } from "~/utils/scroll"
+import { Measured, useAblated } from "~/measure/ablation"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -21,6 +22,8 @@ export interface DetailsProps {
 
 export default function Details(props: DetailsProps) {
 	const { details } = props.media
+	const ablated = useAblated()
+	if (ablated("page")) return null
 	return (
 		<BelowFoldProvider titleKey={`${props.media.mediaType}-${details.tmdb_id}`}>
 			<DetailsPage {...props} />
@@ -65,6 +68,7 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 				/>
 			)}
 
+			<Measured name="header">
 			<DetailsHeader
 				onHeightChange={setHeaderHeight}
 				media={media}
@@ -72,13 +76,17 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
 			/>
+			</Measured>
 
+			<Measured name="navs" part="side_nav">
 			<DetailsSideNav
 				headerHeight={headerHeight}
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
 			/>
+			</Measured>
 
+			<Measured name="hero">
 			<DetailsHero
 				media={media}
 				country={country}
@@ -86,11 +94,15 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 				sectionProps={sectionProps}
 				navigateToSection={navigateToSection}
 			/>
+			</Measured>
 
+			<Measured name="fingerprint">
 			<div className="isolate">
 				<DetailsFingerprint media={media} sectionProps={sectionProps.fingerprint} />
 			</div>
+			</Measured>
 
+			<Measured name="content">
 			<div className="isolate flex flex-col items-center">
 				<div className="px-4 sm:px-6 lg:px-8 w-full max-w-7xl">
 					<DetailsContent
@@ -103,6 +115,7 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 					/>
 				</div>
 			</div>
+			</Measured>
 		</>
 	)
 	return content

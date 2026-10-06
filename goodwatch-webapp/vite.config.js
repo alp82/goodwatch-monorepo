@@ -246,6 +246,11 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 	define: {
 		"process.env.NODE_ENV": JSON.stringify(mode),
 	},
+	// THROWAWAY: GW_PROFILE=1 builds the browser bundle with the profiling build of react-dom.
+	resolve:
+		process.env.GW_PROFILE && !isSsrBuild
+			? { alias: [{ find: /^react-dom(\/client)?$/, replacement: "react-dom/profiling" }] }
+			: undefined,
 
 	server: {
 		port: 3003,

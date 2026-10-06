@@ -25,7 +25,8 @@ let started = false
 
 /** At server start: loads the index and the query models in the background, so the first searches don't wait. */
 export function startSearchRanking(): void {
-	if (started) return
+	// THROWAWAY (measure/hydration-ablation): a measurement server needs no search, and no 900 MB of model files.
+	if (started || process.env.GW_MEASURE_NO_SEARCH) return
 	started = true
 	startSearchIndex()
 	startQueryEncoder().then(

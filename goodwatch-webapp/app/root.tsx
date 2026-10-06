@@ -263,6 +263,13 @@ function Root() {
 			}),
 	)
 	const dehydratedState = useDehydratedState()
+	// THROWAWAY measurement marks: the root's effects run after every child's.
+	React.useLayoutEffect(() => {
+		performance.mark("gw:hydrate-layout-effects")
+	}, [])
+	React.useEffect(() => {
+		performance.mark("gw:hydrate-passive-effects")
+	}, [])
 
 	return (
 		<html
