@@ -1011,9 +1011,10 @@ SCHEMAS = {
     # ============================
     # One row per uploaded file. status: preview (nothing written to user_score yet), running, done, failed, undone.
     # counts is the preview's outcome counts as JSON text. added, updated, kept and failed count what the apply
-    # wrote. updated_at is the apply's heartbeat: a running import whose heartbeat is old has stalled and can be
-    # resumed. confirmed_at is written to user_score.created_at/updated_at by this import, which is how the apply
-    # recognises its own writes after an interruption.
+    # wrote. updated_at is the apply's heartbeat: the webapp instance that applies the import sets it from Crate's
+    # clock every 10 seconds, and a running import whose heartbeat is older than 60 seconds has stalled and can be
+    # resumed by either instance. confirmed_at is written to user_score.created_at/updated_at by this import, which
+    # is how the apply recognises its own writes after an interruption.
     "user_import": {
         "columns": {
             "id": "TEXT",
