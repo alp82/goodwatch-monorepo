@@ -550,6 +550,7 @@ async function getMediaResults({
 		"m.release_year IS NOT NULL",
 		"m.poster_path IS NOT NULL",
 		"m.popularity IS NOT NULL",
+		"m.goodwatch_overall_score_normalized_percent IS NOT NULL",
 		"m.goodwatch_overall_score_voting_count >= 1000"
 	]
 	
@@ -708,8 +709,6 @@ async function getMediaResults({
 	let orderByClause = "m.popularity DESC"
 	if (sortBy === "aggregated_score") {
 		orderByClause = `m.goodwatch_overall_score_normalized_percent ${sortDirection === "asc" ? "ASC" : "DESC"}`
-		// Add minimum vote count requirement for score sorting
-		conditions.push("m.goodwatch_overall_score_normalized_percent IS NOT NULL")
 	} else if (sortBy === "release_date") {
 		orderByClause = `${releaseField} ${sortDirection === "asc" ? "ASC" : "DESC"}`
 		conditions.push(`${releaseField} IS NOT NULL`)

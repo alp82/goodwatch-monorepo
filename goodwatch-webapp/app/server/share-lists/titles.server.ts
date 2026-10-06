@@ -74,7 +74,8 @@ async function loadQuickPicks(): Promise<Record<string, CardTitle[]>> {
 					const genre = type === "movie" ? prompt.movieGenre : prompt.showGenre
 					const rows = await query<Row>(
 						`SELECT ${COLUMNS} FROM ${type}
-						 WHERE poster_path IS NOT NULL AND goodwatch_overall_score_voting_count >= 20000
+						 WHERE poster_path IS NOT NULL AND goodwatch_overall_score_normalized_percent IS NOT NULL
+						   AND goodwatch_overall_score_voting_count >= 20000
 						 ${genre ? "AND ? = ANY(genres)" : ""}
 						 ORDER BY goodwatch_overall_score_voting_count DESC LIMIT ${QUICK_PICKS}`,
 						genre ? [genre] : [],

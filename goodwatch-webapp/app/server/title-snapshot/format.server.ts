@@ -121,6 +121,20 @@ export interface Columns {
 	flags: Uint8Array
 }
 
+/**
+ * Whether the row is a presentable title (CONTEXT.md): it has a poster and a GoodWatch score. The lists GoodWatch puts
+ * together hold only these.
+ */
+export function presentableAt(
+	columns: Pick<Columns, "flags" | "scores">,
+	row: number,
+): boolean {
+	return (
+		(columns.flags[row] & FLAG_POSTER) !== 0 &&
+		columns.scores[row] !== UNKNOWN_SCORE
+	)
+}
+
 export class SnapshotRefused extends Error {
 	constructor(message: string) {
 		super(message)

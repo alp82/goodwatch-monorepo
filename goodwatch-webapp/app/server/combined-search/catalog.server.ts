@@ -1,4 +1,5 @@
 import { fetch } from "undici"
+import { ELIGIBLE_VOTES } from "../search-ranking/search-filter.server"
 import type { Eligibility } from "./reading-retrieval.server"
 
 // Search text never passes through the general-purpose SQL logger.
@@ -41,6 +42,8 @@ export interface Metadata {
 	adult: boolean | null
 	imdb_id: string | null
 	goodwatch_overall_score_voting_count: number | null
+	poster_path: string | null
+	goodwatch_overall_score_normalized_percent: number | null
 }
 export async function metadataFor(keys: string[]) {
 	return (
@@ -52,13 +55,18 @@ export async function metadataFor(keys: string[]) {
 					.filter(Number.isSafeInteger)
 				if (!ids.length) return []
 				return searchQuery<Metadata>(
-					`SELECT tmdb_id, genres, adult, imdb_id, goodwatch_overall_score_voting_count, '${type}' AS media_type FROM ${type} WHERE tmdb_id IN (${ids.map(() => "?").join(",")})`,
+					`SELECT tmdb_id, genres, adult, imdb_id, goodwatch_overall_score_voting_count, poster_path, goodwatch_overall_score_normalized_percent, '${type}' AS media_type FROM ${type} WHERE tmdb_id IN (${ids.map(() => "?").join(",")})`,
 					ids,
 				)
 			}),
 		)
 	).flat()
 }
+/**
+ * Whether the search may show the title. A discovery row, one the ranking found, must be a presentable title
+ * (CONTEXT.md) with enough votes; a lesser-known search lifts the votes only. A title the person typed is shown
+ * without either.
+ */
 export function eligible(
 	metadata: Metadata | undefined,
 	policy: Eligibility,
@@ -67,7 +75,10 @@ export function eligible(
 	return (
 		(policy.includeAdult || metadata?.adult !== true) &&
 		(!discovery ||
-			policy.lesserKnown ||
-			(metadata?.goodwatch_overall_score_voting_count ?? 0) >= 2000)
+			(!!metadata?.poster_path &&
+				metadata.goodwatch_overall_score_normalized_percent != null &&
+				(policy.lesserKnown ||
+					(metadata.goodwatch_overall_score_voting_count ?? 0) >=
+						ELIGIBLE_VOTES)))
 	)
 }

@@ -45,6 +45,7 @@ import {
 	prepareSearch,
 } from "../search-ranking/rank-search.server";
 import { HEAD_LENGTH } from "../search-ranking/ranking.server";
+import { ELIGIBLE_VOTES } from "../search-ranking/search-filter.server";
 import {
 	type CreditScope,
 	type LookupPerson,
@@ -211,6 +212,7 @@ async function lookupTitles(
 					.filter(
 						(t) =>
 							(t.media_type === "movie" || t.media_type === "tv") &&
+							t.poster_path &&
 							(policy.includeAdult || t.adult !== true),
 					)
 					.map((t) => ({
@@ -240,7 +242,7 @@ async function literal(q: string, policy: Eligibility): Promise<Result[]> {
 				genres: string[];
 				_score: number;
 			}>(
-				`SELECT tmdb_id,title,release_year,poster_path,genres,_score FROM ${type} WHERE essence_text IS NOT NULL AND ${policy.lesserKnown ? "true" : "goodwatch_overall_score_voting_count >= 2000"} AND ${policy.includeAdult ? "true" : "NOT coalesce(adult,false)"}${chips.sql} AND match((essence_text 2.0, synopsis), ?) ORDER BY _score DESC LIMIT 100`,
+				`SELECT tmdb_id,title,release_year,poster_path,genres,_score FROM ${type} WHERE essence_text IS NOT NULL AND poster_path IS NOT NULL AND goodwatch_overall_score_normalized_percent IS NOT NULL AND ${policy.lesserKnown ? "true" : `goodwatch_overall_score_voting_count >= ${ELIGIBLE_VOTES}`} AND ${policy.includeAdult ? "true" : "NOT coalesce(adult,false)"}${chips.sql} AND match((essence_text 2.0, synopsis), ?) ORDER BY _score DESC LIMIT 100`,
 				[...chips.params, q],
 			).then((rows) => rows.map((r) => ({ ...r, media_type: type })));
 		}),

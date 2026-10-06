@@ -1,8 +1,8 @@
-// Which snapshot rows make the Explorer's pool: the most voted movies and shows with a poster and a backdrop. It reads
+// Which snapshot rows make the Explorer's pool: the most voted presentable movies and shows with a backdrop. It reads
 // the snapshot's columns only. A facts object per row (238,000 of them) blocked the event loop for 500 to 850 ms after
 // every snapshot reload.
 import { FLAG_BACKDROP } from "~/server/title-snapshot/format.server"
-import { FLAG_ADULT, FLAG_POSTER } from "~/server/title-snapshot/index.server"
+import { FLAG_ADULT, presentableAt } from "~/server/title-snapshot/index.server"
 import type { TitleSnapshot } from "~/server/title-snapshot/index.server"
 
 const POOL = {
@@ -15,13 +15,14 @@ export function selectCandidateRows(snapshot: TitleSnapshot): {
 	movie: number[]
 	show: number[]
 } {
-	const { pointIds, flags, votes } = snapshot.columns
+	const columns = snapshot.columns
+	const { pointIds, flags, votes } = columns
 	const found = { movie: [] as number[], show: [] as number[] }
-	const images = FLAG_POSTER | FLAG_BACKDROP
 	for (let row = 0; row < pointIds.length; row++) {
 		const mediaType = pointIds[row] >= 2e12 ? "show" : "movie"
 		if (
-			(flags[row] & images) === images &&
+			presentableAt(columns, row) &&
+			(flags[row] & FLAG_BACKDROP) !== 0 &&
 			(flags[row] & FLAG_ADULT) === 0 &&
 			votes[row] >= POOL[mediaType].minVotes
 		)

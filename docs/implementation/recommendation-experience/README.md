@@ -419,8 +419,8 @@ function filterTitles(input: {
   empty mask pass. A title with exactly one bit set is the recovery count of that group. Per-option counts come from
   one pass per group over the titles that pass every other group. This is about eight passes over the universe
   instead of one count per option.
-- **Universe.** Browse uses the catalog titles that meet Discover's current eligibility (poster, votes threshold,
-  no adult). Search passes its ranked list. Watch next passes the Wishlist. Explorer passes its pool.
+- **Universe.** Browse uses the catalog titles that meet Discover's current eligibility (a presentable title,
+  votes threshold, no adult). Search passes its ranked list. Watch next passes the Wishlist. Explorer passes its pool.
 - **Id-set filters.** Similar to and cast and crew are resolved to id sets before filtering, through the existing
   similar-titles recommend path and a Crate credit read, each cached in Redis for 30 minutes per parameter set. Their
   per-option counts show only for the options already chosen.
@@ -878,7 +878,7 @@ Your taste.
 | Country | Origin countries with at least 50 pool titles, at most 13, plus "Rest of world" (owner) | One |
 | Your taste | Match bands 90+, 80 to 89, 65 to 79, below 65 | One; hidden without taste |
 
-**Pool:** the snapshot titles with a poster and a backdrop, up to 9,000 movies with at least 800 votes and 3,000 shows
+**Pool:** the presentable snapshot titles with a backdrop, up to 9,000 movies with at least 800 votes and 3,000 shows
 with at least 200 votes (about 12,000 titles). Islands with fewer than 3 titles are dropped.
 
 **Grouping rules** (owner, 2026-10-03; they replace the rules of

@@ -121,6 +121,9 @@ Guest progress retained in its original browser while its transfer to an account
 **Duplicate listings**:
 Catalog entries reliably identified as the same underlying film or show. A shared title alone does not establish identity; remakes, sequels, and distinct series remain separate works.
 
+**Presentable title**:
+A title with a poster and a GoodWatch score. The lists GoodWatch puts together hold only presentable titles: Discover, search results, recommendations, and Explorer. A list that is complete by nature or belongs to the person shows every title: a title the person typed, a person's credits, a collection, the Wishlist, a share list. How many votes a title needs is each list's own choice and not part of being presentable.
+
 **Title analysis**:
 The per-title model call that reads a title's details and produces its fingerprint, essence text, essence tags, content advisories and suitability flags. A title without a title analysis has no fingerprint and can't be found by search. The code still names it DNA (`f/dna/...`, `dna_movie`, `dna_tv`, `dna_created_at`).
 _Avoid_: DNA

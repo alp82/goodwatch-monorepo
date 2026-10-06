@@ -56,6 +56,7 @@ function reference(snapshot: TitleSnapshot) {
 		const facts = snapshot.factsAt(row)
 		if (
 			facts.hasPoster &&
+			facts.score !== null &&
 			facts.hasBackdrop &&
 			!facts.adult &&
 			facts.votes >= rules[facts.mediaType].minVotes
@@ -86,13 +87,14 @@ test("column selection matches facts for thresholds, flags and tied votes withou
 				title(base + 6, { votes: minVotes + 1 }),
 				title(base + 7, { votes: minVotes + 1, anime: true }),
 				title(base + 8, { votes: minVotes + 2 }),
+				title(base + 9, { score: null }),
 			]
 		}),
 	)
 	const expected = reference(snapshot)
 	assert.deepStrictEqual(expected, {
 		movie: [7, 5, 6, 1],
-		show: [15, 13, 14, 9],
+		show: [16, 14, 15, 10],
 	})
 	t.mock.method(snapshot, "factsAt", () => {
 		throw new Error("Selection must not materialize facts.")

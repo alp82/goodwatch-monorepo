@@ -35,7 +35,7 @@ export async function getPaletteTitles(text: string): Promise<PaletteTitle[]> {
 		return tmdbTitles(prefix)
 	}
 	const { titles } = await cached({
-		name: "command-palette-titles-v1",
+		name: "command-palette-titles-v2",
 		params: { prefix },
 		ttlMinutes: CACHE_MINUTES,
 		target: async () => ({ titles: await indexTitles(prefix) }),
@@ -52,9 +52,13 @@ async function indexTitles(prefix: string): Promise<PaletteTitle[]> {
 	const displays = await getDisplayFields(keys)
 	const titles: PaletteTitle[] = []
 	for (const key of keys) {
-		// Titles Crate lacks are left out; the spare candidates fill in.
+		// Titles Crate lacks and ones that aren't presentable are left out; the spare candidates fill in.
 		const display = displays.get(key)
-		if (!display) continue
+		if (
+			!display?.poster_path ||
+			display.goodwatch_overall_score_normalized_percent == null
+		)
+			continue
 		titles.push({
 			mediaType: display.media_type,
 			tmdbId: display.tmdb_id,

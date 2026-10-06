@@ -4,9 +4,9 @@ import {
 	type Columns,
 	FINGERPRINT_LENGTH,
 	FLAG_BACKDROP,
-	FLAG_POSTER,
 	MISSING_SCORE,
 	SHOW_BASE,
+	presentableAt,
 } from "./format.server"
 
 export interface CatalogStats {
@@ -24,7 +24,7 @@ export interface CatalogStats {
 	readonly share: readonly number[]
 }
 
-// The reference pool: the most voted titles with a poster and a backdrop, movies with at least 3,000 votes and shows
+// The reference pool: the most voted presentable titles with a backdrop, movies with at least 3,000 votes and shows
 // with at least 1,000, as the Taste and fingerprint prototypes built it.
 const POOL_MOVIES = { minVotes: 3000, size: 2200 }
 const POOL_SHOWS = { minVotes: 1000, size: 800 }
@@ -34,9 +34,8 @@ const MIN_THRESHOLD = 3
 export function referencePool(c: Columns): number[] {
 	const movies: number[] = []
 	const shows: number[] = []
-	const images = FLAG_POSTER | FLAG_BACKDROP
 	for (let row = 0; row < c.count; row++) {
-		if ((c.flags[row] & images) !== images) continue
+		if (!presentableAt(c, row) || (c.flags[row] & FLAG_BACKDROP) === 0) continue
 		const isShow = c.pointIds[row] >= SHOW_BASE
 		const rule = isShow ? POOL_SHOWS : POOL_MOVIES
 		if (c.votes[row] >= rule.minVotes) (isShow ? shows : movies).push(row)

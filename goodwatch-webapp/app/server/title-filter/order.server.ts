@@ -3,17 +3,17 @@
 import type { SortKey } from "~/domain/filter-state"
 import {
 	FLAG_ADULT,
-	FLAG_POSTER,
 	type TitleColumns,
 	type TitleSnapshot,
 	UNKNOWN_DAY,
 	UNKNOWN_SCORE,
+	presentableAt,
 } from "~/server/title-snapshot/index.server"
 
 /** The sorts that are an order of the titles' own facts. Relevance is a ranked list's order; Best match is per person. */
 export type PlainSort = Exclude<SortKey, "relevance" | "match">
 
-/** Discover's eligibility, as its SQL has it: enough votes, a poster, a release date, and not adult. */
+/** Discover's eligibility: a presentable title with enough votes and a release date, and not adult. */
 export const MIN_VOTES = 1000
 
 /**
@@ -63,12 +63,13 @@ let orders: CatalogOrders | null = null
 
 function catalogOrders(snapshot: TitleSnapshot): CatalogOrders {
 	if (orders?.version === snapshot.version) return orders
-	const { votes, flags, releaseDays } = snapshot.columns
+	const columns = snapshot.columns
+	const { votes, flags, releaseDays } = columns
 	const rows: number[] = []
 	for (let row = 0; row < snapshot.count; row++) {
 		if (
 			votes[row] >= MIN_VOTES &&
-			(flags[row] & FLAG_POSTER) !== 0 &&
+			presentableAt(columns, row) &&
 			(flags[row] & FLAG_ADULT) === 0 &&
 			releaseDays[row] !== UNKNOWN_DAY
 		)
