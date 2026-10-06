@@ -49,11 +49,12 @@ export async function _getStreamingProviders(
 		"order_default",
 	]
 
+	// order_default is selected because Crate refuses to order a DISTINCT result by a column that isn't in it.
 	for (const orderByField of orderByFields) {
 		try {
 			const sql = `
 				SELECT DISTINCT
-					tmdb_id as id, name, logo_path, order_by_country
+					tmdb_id as id, name, logo_path, order_by_country, order_default
 				FROM
 					streaming_service
 				WHERE

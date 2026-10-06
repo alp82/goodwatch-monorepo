@@ -108,6 +108,9 @@ test("a country without a key gets the default order", async () => {
 		"order_by_country['CN']",
 		"order_default",
 	])
+	// Crate refuses to order a DISTINCT result by a column that isn't selected.
+	for (const stmt of statements)
+		assert.match(stmt, /SELECT DISTINCT[^]*order_default[^]*FROM/)
 	assert.deepEqual(
 		providers.map(({ id }) => id),
 		[8, 337],
