@@ -51,15 +51,46 @@ _Avoid_: Queue, Up next, Priority queue
 **Tonight's pick**:
 The single title GoodWatch puts forward for tonight: for a member, the first title of Watch next.
 
+**Watch**:
+One viewing of a film or of an episode, with the date it happened when the person knows it. A title or episode can have several watches; a watch never gets a date nobody recorded.
+_Avoid_: Play, View, Check-in, Scrobble
+
+**Pass**:
+One run through a show's episodes. Watching a show again from the start begins a new pass.
+_Avoid_: Rewatch session
+
 **Seen**:
-A title the person has watched or rated.
+A film the person has watched or rated. A show the person has rated, or has watched through with no season still airing. A show stays Seen when later episodes air.
+_Avoid_: Finished, Completed
+
+**Show status**:
+Where a person stands with a show they have not watched through: Watching, On hold, or Dropped. A show has at most one. Films have none.
+
+**Watching**:
+The show status of a show the person has started and intends to continue. The first watched episode sets it.
+_Avoid_: In progress, Currently watching, Continue watching
+
+**Caught up**:
+A Watching show whose aired regular episodes the person has all watched while its season is still airing.
+
+**On hold**:
+The show status of a show the person has set aside and may return to. Only the person sets it.
+_Avoid_: Paused
+
+**Dropped**:
+The show status of a show the person has given up on. It is always hidden from recommendations, but remains findable by search. It is not a taste signal. It clears Want to See, and adding Want to See clears it. Watching an episode turns it back to Watching.
+_Avoid_: Abandoned, Quit
+
+**Next episode**:
+The earliest aired regular episode of a show the person has not watched.
+_Avoid_: Up next
 
 **Not seen yet**:
-The filter that hides titles the person has watched, rated, or passed in the taste quiz (skipped). Not interested titles are always hidden from recommendations, independently of this filter.
+The filter that hides titles that are Seen, that have a show status, or that the person passed in the taste quiz (skipped). Not interested and Dropped titles are always hidden from recommendations, independently of this filter.
 _Avoid_: Hide seen, Unwatched
 
 **Not interested**:
-A title the person has not seen and does not want to watch. It is always hidden from recommendations, but remains findable by search. It is neither a score nor a taste signal. It clears Want to See; rating, watching, or adding Want to See clears Not interested. It transfers from guest progress at sign-up. Skip remains a separate action meaning passed in the taste quiz.
+A title the person has not seen and does not want to watch. It is always hidden from recommendations, but remains findable by search. It is neither a score nor a taste signal. It clears Want to See; rating, watching, or adding Want to See clears Not interested. Once the person has watched an episode of a show, Dropped takes its place. It transfers from guest progress at sign-up. Skip remains a separate action meaning passed in the taste quiz.
 
 **On my services**:
 The filter that keeps only titles streaming on the person's saved services in their country. It is on by default for members with saved services.
@@ -173,8 +204,14 @@ The page listing a person's public share lists under their handle. For its owner
 **Episode grid**:
 A show's episode ratings laid out with one row per season and one cell per episode, in IMDb's season and episode numbering.
 
+**Episode list**:
+A show's episodes by season in TMDB's numbering, where a person marks the episodes they have watched. It is distinct from the episode grid, which shows ratings in IMDb's numbering.
+
+**Regular episode**:
+An episode that belongs to a numbered season. Only aired regular episodes count toward a show being watched through.
+
 **Special**:
-An episode IMDb lists without a season number. It gets its own row in the episode grid and counts toward no season score.
+An episode outside the numbered seasons. In the episode grid it is an episode IMDb lists without a season number; it gets its own row there and counts toward no season score. A special can be watched, but never counts toward a show being watched through.
 _Avoid_: Season 0
 
 **Season score**:
