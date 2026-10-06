@@ -1,0 +1,46 @@
+{
+  "run_id": "20261006T210756Z-tap-baseline",
+  "kind": "tap",
+  "label": "baseline",
+  "smoke": false,
+  "mode": "smoke",
+  "cache_mode": "warm",
+  "scenario": null,
+  "connections": null,
+  "cache_identity": null,
+  "url_set": "budget.json",
+  "path": "public",
+  "target_url": "https://goodwatch.app",
+  "resolve_ip": "",
+  "rate_plan": null,
+  "planned_requests": null,
+  "effective_k6_inputs": null,
+  "git_commit": "e2d3fd68e23cee0174105b1ee731955db8ff5acc",
+  "git_dirty": false,
+  "generator_host": "10.0.0.32",
+  "jump": false,
+  "k6_image": "grafana/k6:1.8.1",
+  "metric_hosts": [
+    {
+      "host": "10.0.0.21",
+      "role": "target",
+      "file": "host-0.jsonl"
+    },
+    {
+      "host": "10.0.0.32",
+      "role": "generator",
+      "file": "host-1.jsonl"
+    }
+  ],
+  "started_at": "2026-10-06T21:08:05.242Z",
+  "ended_at": "2026-10-06T21:39:32.637Z",
+  "k6_exit_code": null,
+  "lighthouse": null,
+  "tap": {
+    "runs": 5,
+    "where": "generator",
+    "pages": "movie=/movie/603-the-matrix,show=/show/1396-breaking-bad",
+    "cpu": 4,
+    "network": "none"
+  }
+}

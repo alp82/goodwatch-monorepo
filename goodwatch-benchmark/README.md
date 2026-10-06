@@ -493,6 +493,8 @@ Normal cleanup removes each remote run directory and its lock. Docker images and
 
 `results/page-views-2026-10-05/` holds the summaries of the page-view runs, the ramp of new TLS connections, and the repeated OG image ramps from October 5, 2026. [`docs/benchmarks/viral-spike-page-views.md`](../docs/benchmarks/viral-spike-page-views.md) explains them.
 
+`results/tap-baseline-2026-10-06/` holds the tap test's production baseline from October 6, 2026 (21:08 to 21:39 UTC, on the generator, five runs per control and mode): `summary.md`, `summary.json`, and the measurements in `tap.jsonl`. Compare a later `./bench.sh tap` run on the generator against it.
+
 ## Sample smoke run
 
 **Smoke numbers. Not a baseline.** These runs prove that the tooling works. They are short, slow, and ran while the serving host carried other traffic.
