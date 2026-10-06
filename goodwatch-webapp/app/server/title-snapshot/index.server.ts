@@ -111,7 +111,7 @@ async function check(): Promise<boolean> {
 	reportedMissing = false
 	if (raw === refusedManifest) return true
 	try {
-		const startedAt = performance.now()
+		let startedAt = performance.now()
 		let parsed: unknown
 		try {
 			parsed = JSON.parse(raw)
@@ -121,7 +121,11 @@ async function check(): Promise<boolean> {
 		const manifest = checkManifest(parsed, VALID_FINGERPRINT_KEYS)
 		if (manifest.version === current?.version) return true
 		if (!started) return true
-		if (current && !(await waitForReload())) return true
+		if (current) {
+			if (!(await waitForReload())) return true
+			// The load time in the log line leaves the wait out.
+			startedAt = performance.now()
+		}
 		const chunks = await Promise.all(
 			Array.from({ length: manifest.chunks }, (_, n) =>
 				redis.getBuffer(chunkKey(manifest.version, n)),
