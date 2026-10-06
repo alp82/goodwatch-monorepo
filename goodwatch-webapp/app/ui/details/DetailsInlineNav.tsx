@@ -1,16 +1,21 @@
 import React, { useState, useRef, useEffect } from "react"
 import { sections } from "~/ui/details/sections"
-import type { Section } from "~/utils/scroll"
+import {
+	type ActiveSections,
+	type Section,
+	useActiveSections,
+} from "~/utils/scroll"
 
 export type DetailsInlineNavProps = {
-	activeSections: string[]
+	activeSections: ActiveSections
 	navigateToSection: (section: Section) => void
 }
 
 export default function DetailsInlineNav({
-	activeSections,
+	activeSections: active,
 	navigateToSection,
 }: DetailsInlineNavProps) {
+	const activeSections = useActiveSections(active)
 	const [dropdownOpen, setDropdownOpen] = useState(false)
 	const dropdownRef = useRef<HTMLDivElement>(null)
 

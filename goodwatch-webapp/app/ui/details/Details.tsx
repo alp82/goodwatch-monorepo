@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React from "react"
 import DetailsContent from "~/ui/details/DetailsContent"
 import DetailsSideNav from "~/ui/details/DetailsSideNav"
 import { sections } from "~/ui/details/sections"
@@ -29,13 +29,13 @@ export default function Details(props: DetailsProps) {
 }
 
 function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
-	const [headerHeight, setHeaderHeight] = useState(112)
 	const { details } = media
 	const { backdrop_path } = details
 	// Blurred by 64 px across the whole page, so the smallest backdrop is enough.
 	const backdropUrl = backdrop_path ? tmdbImageUrl(backdrop_path, "w300") : ""
 
-	// Scroll Sections
+	// Scroll Sections. Which sections are on screen is not state of this component, so that the observer's reports
+	// render the two navigations and not the whole page.
 	const {
 		activeSections,
 		sectionProps,
@@ -66,7 +66,6 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 			)}
 
 			<DetailsHeader
-				onHeightChange={setHeaderHeight}
 				media={media}
 				country={country}
 				activeSections={activeSections}
@@ -74,7 +73,6 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 			/>
 
 			<DetailsSideNav
-				headerHeight={headerHeight}
 				activeSections={activeSections}
 				navigateToSection={navigateToSection}
 			/>
@@ -97,7 +95,6 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 						media={media}
 						country={country}
 						episodeGrid={episodeGrid}
-						headerHeight={headerHeight}
 						sectionProps={sectionProps}
 						navigateToSection={navigateToSection}
 					/>

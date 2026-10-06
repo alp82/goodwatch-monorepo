@@ -1,26 +1,30 @@
 import React from "react"
 import { sections } from "~/ui/details/sections"
-import type { Section } from "~/utils/scroll"
+import { HEADER_HEIGHT } from "~/ui/details/header-height"
+import {
+	type ActiveSections,
+	type Section,
+	useActiveSections,
+} from "~/utils/scroll"
 
 export type DetailsSideNavProps = {
-	headerHeight: number
-	activeSections: string[]
+	activeSections: ActiveSections
 	navigateToSection: (section: Section) => void
 }
 
 export default function DetailsSideNav({
-	headerHeight,
-	activeSections,
+	activeSections: active,
 	navigateToSection,
 }: DetailsSideNavProps) {
+	const activeSections = useActiveSections(active)
 	return (
 		<div
 			className="hidden 2xl:block absolute left-0 right-0 m-auto max-w-[104rem] h-full"
-			style={{ top: headerHeight + 12 }}
+			style={{ top: `calc(${HEADER_HEIGHT} + 12px)` }}
 		>
 			<aside
 				className="sticky mr-4 w-32 z-20"
-				style={{ top: 64 + headerHeight + 12 }}
+				style={{ top: `calc(${HEADER_HEIGHT} + 76px)` }}
 			>
 				<nav
 					aria-label="Details sections"
