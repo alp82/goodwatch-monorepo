@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowRightIcon, UserPlusIcon } from "@heroicons/react/24/outline"
-import logo from "~/img/goodwatch-logo.png"
+import logo from "~/img/goodwatch-logo.webp?no-inline"
 import TasteRotator from "./TasteRotator"
 import VerticalTimeline from "./VerticalTimeline"
 import type { Feature } from "../features"

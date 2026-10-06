@@ -3,7 +3,7 @@
 // body. The feature tiles open the moods on the TV or leave for a place's page. Every
 // control sends a TV flow action; the Remote keeps no state of its own besides the wheel's arrow flash.
 import { type ReactNode, useEffect, useRef, useState } from "react"
-import disneyMark from "~/img/disneyplus-logo.svg"
+import disneyMark from "~/img/disneyplus-mark-160.webp"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import huluMark from "~/img/hulu-logo-120.webp"
 import netflixMark from "~/img/netflix-logo.svg"

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import gwLogo from "~/img/goodwatch-logo.png"
+import gwLogo from "~/img/goodwatch-logo.webp?no-inline"
 import {
 	type AllRatings,
 	goodwatchScoreDisplay,

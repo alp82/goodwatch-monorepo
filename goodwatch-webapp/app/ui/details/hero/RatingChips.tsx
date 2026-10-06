@@ -1,6 +1,6 @@
 import type React from "react"
-import imdbLogo from "~/img/imdb-logo-250.png"
-import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp"
+import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
+import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
 import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 

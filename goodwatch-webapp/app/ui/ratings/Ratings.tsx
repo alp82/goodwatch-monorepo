@@ -1,6 +1,6 @@
 import React, { useState } from "react"
-import logo from "~/img/goodwatch-logo.png"
-import imdbLogo from "~/img/imdb-logo-250.png"
+import logo from "~/img/goodwatch-logo.webp?no-inline"
+import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-96.webp"
 import rottenLogo from "~/img/rotten-logo-96.webp"
 import InfoBox from "~/ui/InfoBox"
