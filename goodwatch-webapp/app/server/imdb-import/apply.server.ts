@@ -7,6 +7,8 @@
 //   the score the preview saw. A rating the member set since the preview is never overwritten.
 // - Every row the import writes gets the import's confirm time as updated_at. The read-back recognises the import's
 //   own writes by it, also after a restart or a write that timed out and landed later.
+// - While it runs, the apply sets the import's updated_at every few seconds. The other webapp instance reads from it
+//   that the import is alive, and offers a resume only once it has been silent for STALL_MS.
 // - The written review, Want to See, skipped and favorites are never touched. That is why this doesn't go through
 //   updateScores, which replaces the review and takes a rated movie off the Wishlist.
 // - A rated movie is Seen through the watch its score owns (docs/implementation/tracking/data-model.md, C2). After
@@ -28,6 +30,7 @@ import {
 	activeRuns,
 	chunks,
 	getImportRow,
+	HEARTBEAT_MS,
 	isStalled,
 	listImportRows,
 	marks,
@@ -192,9 +195,32 @@ async function countWithoutFingerprint(importId: string): Promise<number | null>
 	return rows.filter((row) => !snapshot.fingerprint(titleKey(row.media_type, Number(row.tmdb_id)))).length
 }
 
+/**
+ * Reports that the import is alive until the returned function is called, which also waits for a report on its way.
+ * The write goes by the primary key alone, so every read of the import by its key sees it at once.
+ */
+function startHeartbeat(importId: string) {
+	let beat: Promise<unknown> | null = null
+	const timer = setInterval(() => {
+		// A report that Crate hasn't answered yet is not sent again.
+		beat ??= run("UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [importId])
+			.catch((error) => console.error(`IMDb import ${importId}: reporting that it's alive failed:`, error))
+			.finally(() => {
+				beat = null
+			})
+	}, HEARTBEAT_MS)
+	// The import doesn't keep a process alive that is shutting down.
+	timer.unref()
+	return async () => {
+		clearInterval(timer)
+		await beat
+	}
+}
+
 /** The background task. Picks up whatever the import hasn't settled yet, so starting and resuming are the same. */
 async function apply(userId: string, importId: string) {
 	let wrote = false
+	const stopHeartbeat = startHeartbeat(importId)
 	try {
 		const row = await getImportRow(userId, importId)
 		if (!row.confirmed_at || !row.conflict_choice) throw new Error("The import was never confirmed")
@@ -222,8 +248,8 @@ async function apply(userId: string, importId: string) {
 		let processed = Math.max(0, total - pending.length)
 		const report = () =>
 			run(
-				"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = ? WHERE id = ?",
-				[processed, tally.added, tally.updated, tally.kept, tally.failed, new Date(), importId],
+				"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+				[processed, tally.added, tally.updated, tally.kept, tally.failed, importId],
 			)
 		await report()
 
@@ -243,6 +269,8 @@ async function apply(userId: string, importId: string) {
 			console.error("IMDb import: counting titles without a fingerprint failed:", error)
 			return null
 		})
+		// From here on updated_at belongs to the result: a late heartbeat would change it under a resume.
+		await stopHeartbeat()
 		const now = new Date()
 		await run(
 			`UPDATE doc.user_import
@@ -266,6 +294,7 @@ async function apply(userId: string, importId: string) {
 		)
 	} catch (error) {
 		console.error(`IMDb import ${importId} stopped:`, error)
+		await stopHeartbeat()
 		await run("UPDATE doc.user_import SET status = 'failed', error = ?, updated_at = ? WHERE id = ?", [
 			"The import stopped before it finished. Nothing is lost: try again to finish it.",
 			new Date(),
@@ -295,7 +324,6 @@ export async function confirmImport(userId: string, importId: string, choice: Im
 	if (row.status === "undone") throw new ImdbImportError(409, "This import was undone. Upload the file again to import it.")
 	if (row.status === "running" && !isStalled(row)) return summarize(row)
 
-	const now = new Date()
 	let claim: { rowcount?: number }
 	if (row.status === "preview") {
 		const running = await listImportRows(userId, "running")
@@ -304,16 +332,17 @@ export async function confirmImport(userId: string, importId: string, choice: Im
 		const counts = JSON.parse(row.counts) as ImdbImportCounts
 		const total = counts.new + counts.update + (choice === "imdb" ? counts.conflict : 0)
 		claim = await run(
-			`UPDATE doc.user_import SET status = 'running', conflict_choice = ?, total = ?, confirmed_at = ?, updated_at = ?
+			`UPDATE doc.user_import SET status = 'running', conflict_choice = ?, total = ?, confirmed_at = ?, updated_at = CURRENT_TIMESTAMP
 			 WHERE id = ? AND status = 'preview'`,
-			[choice, total, now, now, importId],
+			[choice, total, new Date(), importId],
 		)
 	} else {
-		// Failed or stalled. Only one of several simultaneous requests gets to resume it.
+		// Failed or stalled. Only one of several simultaneous requests gets to resume it, in either process, and none
+		// does if the import has reported since it was read.
 		claim = await run(
-			`UPDATE doc.user_import SET status = 'running', error = NULL, updated_at = ?
+			`UPDATE doc.user_import SET status = 'running', error = NULL, updated_at = CURRENT_TIMESTAMP
 			 WHERE id = ? AND status = ? AND updated_at = ?`,
-			[now, importId, row.status, new Date(row.updated_at)],
+			[importId, row.status, new Date(row.updated_at)],
 		)
 	}
 	if (claim.rowcount === 1) startApply(userId, importId)
