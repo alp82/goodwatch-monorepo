@@ -36,6 +36,75 @@ function separateEntryFiles() {
 	}
 }
 
+// The recommendation, share list and title actions prototypes are kept in the repository for context. They are
+// routes in development only: a production build leaves the routes out, and the stylesheet doesn't get the
+// class names that only they use (about a quarter of its rules).
+const PROTOTYPES = {
+	// Files in app/routes.
+	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*"],
+	// Directories in app/ui that only those routes import.
+	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions"],
+}
+const PROTOTYPE_SOURCES = [
+	...PROTOTYPES.routes.map((name) => `./routes/${name}`),
+	...PROTOTYPES.ui.map((name) => `./ui/${name}`),
+]
+const PROTOTYPE_MODULE = new RegExp(
+	`/app/(${PROTOTYPE_SOURCES.map((source) =>
+		source
+			.slice(2)
+			.replace(/[.]/g, "\\.")
+			.replace(/\*/g, "[^/]*"),
+	).join("|")})(/|\\.[^/]*$|$)`,
+)
+const TAILWIND_ENTRY = /\/app\/tailwind\.css$/
+const APP_MODULE_FILE = /\/app\/.*\.[jt]sx?$/
+
+// Swiper's stylesheet embeds an icon font for its own arrow buttons (1.6 KB of the compressed stylesheet). Every
+// carousel here brings its own buttons, so no element uses that font.
+const SWIPER_ICON_FONT = /@font-face\s*\{[^}]*swiper-icons[^}]*\}/
+const SWIPER_OWN_ARROWS = /swiper-button-(prev|next)(?![\w-])|createElements/
+
+// Two cuts to the one stylesheet that blocks every page's first paint. It has two parts, around the Tailwind plugin:
+// - Before it, in a production build: tell Tailwind not to read the prototypes' files, so their class names stay out.
+// - After it: drop Swiper's icon font from the generated sheet.
+// A missing class or font fails silently, so both cuts stop the build when code starts to need what they left out:
+// a module of the build that is a prototype file, or app code that uses Swiper's own arrow buttons.
+function leanStylesheet() {
+	const entry = (id) => TAILWIND_ENTRY.test(id.split("?", 1)[0])
+	return {
+		before: {
+			name: "lean-stylesheet:sources",
+			apply: "build",
+			enforce: "pre",
+			transform(code, id) {
+				const file = id.split("?", 1)[0]
+				if (PROTOTYPE_MODULE.test(file))
+					this.error(
+						`${file} is a prototype file, and the production stylesheet has no class names from it. Move the code out of the prototype, or change PROTOTYPES in vite.config.js.`,
+					)
+				if (APP_MODULE_FILE.test(file) && SWIPER_OWN_ARROWS.test(code))
+					this.error(
+						`${file} uses Swiper's own arrow buttons, and the stylesheet has no icon font for them. Bring your own buttons (see ui/ListSwiper.tsx), or keep the font: SWIPER_ICON_FONT in vite.config.js.`,
+					)
+				if (!entry(id) || !code.includes("@import")) return
+				return {
+					code: `${code}\n${PROTOTYPE_SOURCES.map((source) => `@source not "${source}";`).join("\n")}\n`,
+					map: null,
+				}
+			},
+		},
+		after: {
+			name: "lean-stylesheet:fonts",
+			enforce: "pre",
+			transform(code, id) {
+				if (!entry(id) || !SWIPER_ICON_FONT.test(code)) return
+				return { code: code.replace(SWIPER_ICON_FONT, ""), map: null }
+			},
+		},
+	}
+}
+
 // Client chunking. Every route module is an entry point for Rollup, and Rollup gives each module that a different set
 // of entry points shares its own file. A title page loaded 88 files that way, 53 of them under 2 KB (one icon each).
 // The rules, first match wins:
@@ -144,14 +213,8 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 		// remixDevTools(),
 		remix({
 			serverMinify: false,
-			// The recommendation, share list and title actions prototypes are kept in the repository for context. They
-			// are routes in development only: a production build leaves them out.
 			ignoredRouteFiles: process.argv.some((arg) => arg === "vite:build" || arg === "build")
-				? [
-						"**/prototype.rec-*",
-						"**/prototype.share-list*",
-						"**/prototype.title-actions*",
-					]
+				? PROTOTYPES.routes.map((name) => `**/${name}`)
 				: [],
 			// TODO remove
 			// serverModuleFormat: "cjs",
@@ -169,7 +232,9 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 			org: "goodwatch",
 			project: "webapp",
 		}),
+		leanStylesheet().before,
 		tailwindcss(),
+		leanStylesheet().after,
 		separateEntryFiles(),
 	],
 

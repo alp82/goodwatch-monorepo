@@ -1,0 +1,101 @@
+/* Styles for the trope texts that Tropes.tsx shows. No route renders that component, so no stylesheet imports this
+   file: it was 21 rules in the stylesheet that blocks every page. Import it from the route that brings the
+   component back. */
+
+.tropes img {
+	display: none;
+}
+
+.tropes .asscaps {
+	color: hotpink;
+}
+
+.tropes .blue {
+	color: cadetblue;
+}
+
+.tropes .createlink {
+	color: dodgerblue;
+}
+
+.tropes .disambiglink {
+	color: cadetblue;
+}
+
+.tropes .esc-seq {
+	color: deeppink;
+}
+
+.tropes .evil {
+	color: red;
+}
+
+.tropes .flamebait1 {
+	color: deeppink;
+}
+
+.tropes .font-s {
+	font-size: .84em;
+}
+
+.tropes .font-xs {
+	font-size: .7em;
+}
+
+.tropes .indent {
+	margin-left: 18px;
+}
+
+.tropes .inlinefolder {
+	color: deeppink;
+}
+
+.tropes .notelabel {
+	color: deeppink;
+}
+
+.tropes .quoteblock {
+	border-left: 3px solid hsla(0, 0%, 50%, 0.5);
+	font-size: smaller;
+	margin-bottom: 8px;
+	margin-left: 35px;
+	padding: 0 0 0 10px;
+}
+
+.tropes .quoteright {
+	float: none !important;
+	margin-left: 0 !important;
+}
+
+.tropes .red {
+	color: #c80815;
+}
+
+.tropes .rounded {
+	border-radius: 3px;
+}
+
+.tropes .spoiler {
+	color: #ffffff22;
+	cursor: crosshair;
+}
+
+.tropes .spoiler:hover {
+	color: #ffffffbb;
+}
+
+.tropes .trivia1 {
+	color: deeppink;
+}
+
+.tropes .twikilink {
+	color: dodgerblue;
+}
+
+.tropes .urllink {
+	color: dodgerblue;
+}
+
+.tropes .ymmv1 {
+	color: deeppink;
+}
