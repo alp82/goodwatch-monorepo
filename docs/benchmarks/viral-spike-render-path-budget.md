@@ -407,6 +407,72 @@ Runs `20261005T002135Z-lighthouse-prod-before` at `c09b526f` and `20261005T00534
   346 KB on the test container and 377 KB on production. The first run failed the share list's image and total
   lines for that reason. A failed image line needs a second run before it counts.
 
+## The stylesheet and local images
+
+Tickets "Cut the stylesheet to the rules that pages use" and "Shrink the remaining local images". These numbers are
+from a production build on the development machine, not from Lighthouse. The Lighthouse run and the budget lines
+are still open.
+
+### The stylesheet
+
+| Line | Before | After |
+| --- | --- | --- |
+| Raw | 460,087 bytes | 355,554 bytes |
+| Brotli | 39,634 bytes | 31,205 bytes |
+| Rules | 4,810 | 3,547 |
+| Utility classes | 3,967 | 2,873 |
+
+The sheet had grown since the calibration run (359 KB raw, 33 KB compressed), because the prototypes moved to
+`main`.
+
+- **Prototypes: 6.4 KB less, compressed.** Tailwind read the files of the prototypes that a production build leaves
+  out, which added 1,093 classes. A production build now tells Tailwind not to read them (`PROTOTYPES` in
+  `vite.config.js`). A development build still reads them. The build stops when a module of the build is one of
+  those files.
+- **Swiper's icon font: 1.6 KB less.** Swiper's stylesheet embeds a font for its own arrow buttons, and every
+  carousel here brings its own buttons. The build stops when app code uses Swiper's arrow classes.
+- **Two unused blocks: 0.4 KB less.** The trope text rules moved next to their component, which no route renders,
+  and the `animate-shimmer` rule had no user.
+- **The new sheet is the old sheet with rules taken out.** Every declaration of the new sheet is in the old one,
+  and declarations of the same property keep their order.
+
+The ticket's 22 KB isn't reached. What is left has no single large part: 1,841 plain utilities (10.9 KB of the
+compressed sheet), the color variables (2.5 KB), the `color-mix` variants of colors with opacity (2.3 KB),
+gradients (2.1 KB), hover variants (1.7 KB), and shadows and rings (1.6 KB). Taking a whole feature's files out of
+the scan saves about 1 KB each. Getting further needs one of these decisions: delete the 74 app files outside the
+prototypes that no bundle of the build contains (1.0 KB), drop the `color-mix` variants, or accept a second
+stylesheet for routes outside the landing surfaces, which changes the order of utilities and adds a request.
+
+### Local images
+
+Transfer bytes of the local images that a first page view on a phone requests:
+
+| Surface | Before | After |
+| --- | --- | --- |
+| Home | 165,540 | 133,009 |
+| Movie, show | 23,807 | 11,349 |
+| Person | 15,434 | 10,379 |
+| Share list | 1,749 | 1,749 |
+
+- **The Disney+ key of the Remote: 41.0 to 9.1 KB.** The SVG was a wrapper around a 589 x 320 PNG. The Remote uses it
+  as a mask about 21 px high, so it now gets the image's alpha channel at 160 px. The "How it works" page gets the
+  same pixels as a lossless WebP.
+- **Lossless re-encodes:** the IMDb logo (6.5 to 3.5 KB) and the GoodWatch score logo (9.5 to 4.4 KB) as WebP, with
+  the same pixels.
+- **Metadata removed, image data untouched:** the Metacritic icon carried 4.4 KB of XMP, EXIF, and an sRGB profile
+  around 1.7 KB of image (6.1 to 1.7 KB). The two 96 px rating logos lose their sRGB profile.
+- **SVG cleanup:** the Prime Video logo on the Remote (3.2 to 2.6 KB compressed) and the JustWatch logo in the
+  footer (4.9 to 2.1 KB). The footer isn't in the table: its images are lazy.
+- **Not inlined on purpose.** Vite inlines a file under 4 KB as a data URL. The smaller files are imported with
+  `?no-inline`, so the HTML keeps its size: the score logo is on a title page about 25 times.
+
+Left as they are: the room photo and the hand (re-encoding a lossy file again would show), and files that sit
+just above the 4 KB inline limit and repeat in the HTML (the header logo, the poster placeholder).
+
+Lighthouse's estimates for the person and the show page are mostly TMDB images, which these tickets don't touch.
+The person photo is requested as `h632` (55 KB) for a 120 px slot, because TMDB's profile steps jump from 185 to
+421 px.
+
 ## Not verified
 
 - A real phone. Every number here is Lighthouse's simulation on a server.
