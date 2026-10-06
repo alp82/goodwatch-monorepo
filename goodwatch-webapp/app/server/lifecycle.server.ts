@@ -2,8 +2,8 @@
 // a shutdown that finishes what it has accepted and then exits.
 //
 // Readiness (GET /health/ready) answers 200 once every registered check passes: the title snapshot's first check
-// (Discover needs it) and the search index's first load (it blocks the event loop for about 2 seconds, which a new
-// process should get behind it before it takes requests). After READY_MAX_WAIT_MS it answers 200 without them: a
+// (Discover needs it) and the search index's first load (the command palette and search need their index when the
+// proxy sends the first requests). After READY_MAX_WAIT_MS it answers 200 without them: a
 // process that can't reach Redis or Crate still serves most pages, and a container that never turns healthy is taken
 // out of the proxy. The query encoder isn't waited for: it loads in a worker thread, and searches get basic results
 // until it's there. Readiness answers 503 from the moment a shutdown begins. Liveness

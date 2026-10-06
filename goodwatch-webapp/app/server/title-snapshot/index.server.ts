@@ -1,7 +1,10 @@
 // The title snapshot in webapp memory. It loads from Redis when the server starts and again whenever the manifest at
-// `title-snapshot:current` names a new version (checked once a minute). A load reads every chunk, checks the checksum
-// and the fingerprint key order, derives what the webapp needs, and only then replaces the loaded snapshot, in one
-// assignment. A failed load keeps the previous snapshot and logs why.
+// `title-snapshot:current` names a new version (checked once a minute). A load reads every chunk on the main thread
+// and hands the bytes to a worker thread that lives for one load (title-snapshot.worker.ts). The worker checks the
+// checksum and the rows and derives what the webapp needs: on the main thread that blocked the event loop for about a
+// second per load. The main thread then wraps the result and replaces the loaded snapshot, in one assignment. A
+// failed load keeps the previous snapshot and logs why. A reload waits a random time first (see retry.server.ts), so
+// that the instances don't reload at the same second.
 //
 // The ratings sidecar (what the age and content filter reads) is optional: a manifest without `ratings`, a missing
 // ratings chunk, ratings that are refused (a bad shape, size, or checksum), or a Redis error on the ratings keys leave
@@ -23,10 +26,10 @@ import {
 	SnapshotRefused,
 	checkManifest,
 	chunkKey,
-	joinChunks,
 } from "./format.server"
-import { loadRatings } from "./ratings.server"
-import { retryDelayMs } from "./retry.server"
+import { readRatingsChunks } from "./ratings.server"
+import { reloadDelayMs, retryDelayMs } from "./retry.server"
+import { prepareInWorker, stopSnapshotWorkers } from "./prepare-worker.server"
 import { type TitleSnapshot, buildSnapshot } from "./snapshot.server"
 
 export type { CatalogStats } from "./catalog-stats.server"
@@ -51,6 +54,24 @@ const CHECK_EVERY_MS = 60_000
 interface SnapshotRedis {
 	get(key: string): Promise<string | null>
 	getBuffer(key: string): Promise<Buffer | null>
+}
+
+let cancelReload: (() => void) | undefined
+
+// The wait before a reload. Resolves false when the loader was stopped meanwhile.
+function waitForReload(): Promise<boolean> {
+	return new Promise((resolve) => {
+		const wait = setTimeout(() => {
+			cancelReload = undefined
+			resolve(true)
+		}, reloadDelayMs())
+		wait.unref()
+		cancelReload = () => {
+			clearTimeout(wait)
+			cancelReload = undefined
+			resolve(false)
+		}
+	})
 }
 
 let current: TitleSnapshot | null = null
@@ -99,6 +120,8 @@ async function check(): Promise<boolean> {
 		}
 		const manifest = checkManifest(parsed, VALID_FINGERPRINT_KEYS)
 		if (manifest.version === current?.version) return true
+		if (!started) return true
+		if (current && !(await waitForReload())) return true
 		const chunks = await Promise.all(
 			Array.from({ length: manifest.chunks }, (_, n) =>
 				redis.getBuffer(chunkKey(manifest.version, n)),
@@ -110,17 +133,23 @@ async function check(): Promise<boolean> {
 			throw new Error(
 				`Title snapshot ${manifest.version} lacks chunk ${missing}; retrying at the next check`,
 			)
-		const ratings = await loadRatings(
+		const ratingsInput = await readRatingsChunks(
 			redis,
 			manifest,
 			getFeatureMode("ageFilter") !== "off",
 		)
 		const readMs = performance.now() - startedAt
-		const snapshot = buildSnapshot(
-			manifest,
-			joinChunks(manifest, chunks as Buffer[]),
-			ratings,
+		if (!started) return true
+		const { columns, derived, ratings, ratingsRefusal } = await prepareInWorker(
+			{ manifest, chunks: chunks as Buffer[], ratings: ratingsInput },
 		)
+		if (!started) return true
+		if (ratingsRefusal)
+			console.error(
+				`Title snapshot ${manifest.version} loads without ratings:`,
+				ratingsRefusal,
+			)
+		const snapshot = buildSnapshot(manifest, columns, ratings, derived)
 		current = snapshot
 		console.info(
 			`Title snapshot ${snapshot.version} loaded: ${snapshot.count} titles, ${snapshot.stats.pool} in the reference pool, ${ratings ? `ratings for ${ratings.countries.length} countries` : "no ratings"}, in ${Math.round(performance.now() - startedAt)} ms (${Math.round(readMs)} ms reading Redis)`,
@@ -172,6 +201,8 @@ export function getTitleSnapshot(): TitleSnapshot | null {
 /** Stops checking for new versions (for scripts). The loaded snapshot stays readable. */
 export function stopTitleSnapshot(): void {
 	started = false
+	cancelReload?.()
+	void stopSnapshotWorkers()
 	if (timer) clearTimeout(timer)
 	timer = undefined
 	singleRedis?.disconnect()

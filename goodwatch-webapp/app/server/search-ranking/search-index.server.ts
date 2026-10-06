@@ -1,42 +1,32 @@
-// Loads the search indexes that f/search/build_indexes writes to Crate, and keeps them current.
+// Keeps the search indexes that f/search/build_indexes writes to Crate loaded and current.
 //
 // A build is ten gzipped JSON files in the blob table `search_index_files`, listed by the manifest in the
-// `search_index_builds` row `build_id = 'current'`. The loader downloads every file, checks its SHA-1, parses it into
+// `search_index_builds` row `build_id = 'current'`. A load downloads every file, checks its SHA-1, parses it into
 // typed tables, and swaps the new build in only when all files have loaded, so a search never sees two builds at once.
-// It checks the current row every few minutes and loads a new build in the background.
+// The loader checks the current row every few minutes and loads a new build in the background.
+//
+// The download, the parsing, and the table building (search-index-build.server.ts) run in a worker thread that lives
+// for one load (search-index.worker.ts): on the main thread they blocked the event loop for 2.4 seconds per load. The
+// worker hands the finished index over in bounded pieces (search-index-pieces.server.ts), one piece per turn of the
+// event loop, and the main thread assembles them. Without the bundled worker file (development, scripts, tests) the
+// same build code runs on the main thread.
 //
 // Nothing loads on import. Formats: "Index files" in docs/implementation/search-ranking/README.md.
-import { createHash } from "node:crypto"
-import http from "node:http"
-import { promisify } from "node:util"
-import { gunzip as gunzipCallback } from "node:zlib"
+import { existsSync } from "node:fs"
+import { Worker } from "node:worker_threads"
 import { addReadinessCheck, onShutdown } from "../lifecycle.server.ts"
-import { normalized, singular } from "./text-rules.server.ts"
+import { separateEntryUrl } from "../separate-entry.server.ts"
+import {
+	BlobMissing,
+	loadBuild,
+	readManifest,
+} from "./search-index-build.server.ts"
+import { createAssembler } from "./search-index-pieces.server.ts"
+import { reloadDelayMs } from "./search-index-retry.server.ts"
 import { prepareTitleBlend } from "./title-blend.server.ts"
-
-const gunzip = promisify(gunzipCallback)
 
 const CHECK_EVERY_MS = 5 * 60_000
 const RETRY_AFTER_MS = 60_000
-const REQUEST_TIMEOUT_MS = 60_000
-const INDEX_FILES = [
-	"title_table",
-	"term_statistics",
-	"word_frequencies",
-	"collocations",
-	"name_index",
-	"peers",
-	"negation_labels",
-	"alternate_cuts",
-	"intent_examples",
-	"mix_vectors",
-] as const
-type IndexFile = (typeof INDEX_FILES)[number]
-
-// Votes a title needs to be a "like X" reference.
-const REFERENCE_TITLE_VOTES = 10_000
-// Votes a title needs to belong to a franchise ("like X" pulls in the titles containing X's title).
-const FRANCHISE_VOTES = 2000
 
 export interface Manifest {
 	format: number
@@ -165,338 +155,9 @@ export interface SearchIndex {
 	timings: Record<string, number>
 }
 
-// --- Crate access -------------------------------------------------------------------------------------------------
-
-class BlobMissing extends Error {}
-
-function crateConfig() {
-	const hosts = (process.env.CRATE_HOSTS ?? "")
-		.split(",")
-		.map((h) => h.trim())
-		.filter(Boolean)
-	if (!hosts.length) throw new Error("CRATE_HOSTS is not set")
-	return {
-		hosts,
-		port: Number(process.env.CRATE_PORT || "4200"),
-		auth: `Basic ${Buffer.from(`${process.env.CRATE_USER || ""}:${process.env.CRATE_PASS || ""}`).toString("base64")}`,
-	}
-}
-
-const agent = new http.Agent({ keepAlive: true, maxSockets: 8 })
-
-function request(
-	url: URL,
-	method: "GET" | "POST",
-	headers: Record<string, string>,
-	body?: string,
-): Promise<{
-	status: number
-	headers: http.IncomingHttpHeaders
-	body: Buffer
-}> {
-	return new Promise((resolve, reject) => {
-		const req = http.request(
-			url,
-			{
-				method,
-				agent,
-				headers: body
-					? { ...headers, "Content-Length": Buffer.byteLength(body) }
-					: headers,
-			},
-			(res) => {
-				const chunks: Buffer[] = []
-				res.on("data", (chunk: Buffer) => chunks.push(chunk))
-				res.on("end", () =>
-					resolve({
-						status: res.statusCode ?? 0,
-						headers: res.headers,
-						body: Buffer.concat(chunks),
-					}),
-				)
-				res.on("error", reject)
-			},
-		)
-		req.setTimeout(REQUEST_TIMEOUT_MS, () =>
-			req.destroy(new Error(`Crate request timed out: ${url.pathname}`)),
-		)
-		req.on("error", reject)
-		req.end(body)
-	})
-}
-
-async function readManifest(): Promise<Manifest> {
-	const { hosts, port, auth } = crateConfig()
-	let lastError: unknown
-	for (const host of hosts) {
-		try {
-			const res = await request(
-				new URL(`http://${host}:${port}/_sql`),
-				"POST",
-				{ "Content-Type": "application/json", Authorization: auth },
-				JSON.stringify({
-					stmt: "SELECT manifest FROM search_index_builds WHERE build_id = 'current'",
-				}),
-			)
-			if (res.status !== 200)
-				throw new Error(`Crate answered HTTP ${res.status}`)
-			const rows = (
-				JSON.parse(res.body.toString("utf8")) as { rows: unknown[][] }
-			).rows
-			if (!rows.length) throw new Error("No current search index build")
-			const raw = rows[0][0]
-			return (typeof raw === "string" ? JSON.parse(raw) : raw) as Manifest
-		} catch (error) {
-			lastError = error
-		}
-	}
-	throw lastError
-}
-
-/** One blob, following the redirect of a node that doesn't hold it, checked against its SHA-1. */
-async function readBlob(sha1: string): Promise<Buffer> {
-	const { hosts, port, auth } = crateConfig()
-	let url = new URL(
-		`http://${hosts[0]}:${port}/_blobs/search_index_files/${sha1}`,
-	)
-	for (let hop = 0; hop < 4; hop++) {
-		const res = await request(url, "GET", { Authorization: auth })
-		if (res.status === 307 || res.status === 301 || res.status === 302) {
-			const location = res.headers.location
-			if (!location) throw new Error("Crate redirect without a location")
-			url = new URL(location, url)
-			continue
-		}
-		if (res.status === 404) throw new BlobMissing(`Index file ${sha1} is gone`)
-		if (res.status !== 200)
-			throw new Error(`Crate blob ${sha1} answered HTTP ${res.status}`)
-		const digest = createHash("sha1").update(res.body).digest("hex")
-		if (digest !== sha1)
-			throw new Error(`Index file ${sha1} has the wrong SHA-1 ${digest}`)
-		return res.body
-	}
-	throw new Error(`Too many redirects for index file ${sha1}`)
-}
-
-// --- Decoding -----------------------------------------------------------------------------------------------------
-
-interface Matrix {
-	shape: [number, number] | [number]
-	float32?: string
-	int8?: string
-}
-
-function float32(m: Matrix): Float32Array {
-	const bytes = Buffer.from(m.float32 as string, "base64")
-	// Copy into an aligned buffer: base64 decoding may return a pooled, unaligned slice.
-	const out = new Float32Array(bytes.length / 4)
-	new Uint8Array(out.buffer).set(bytes)
-	return out
-}
-
-function int8(m: Matrix): Int8Array {
-	const bytes = Buffer.from(m.int8 as string, "base64")
-	return new Int8Array(bytes.buffer, bytes.byteOffset, bytes.length).slice()
-}
-
-// biome-ignore lint/suspicious/noExplicitAny: parsed JSON documents
-type Json = any
-
-function titleTable(d: Json): TitleTable {
-	const pointIds = d.point_ids as number[]
-	const rowOf = new Map<number, number>()
-	pointIds.forEach((id, row) => rowOf.set(id, row))
-	return {
-		size: pointIds.length,
-		pointIds,
-		titles: d.titles,
-		originalTitles: d.original_titles,
-		years: Int32Array.from(d.years as number[]),
-		votes: Float64Array.from(d.votes as number[]),
-		goodwatchScores: Float64Array.from(
-			(d.goodwatch_scores as (number | null)[]).map((x) => x ?? Number.NaN),
-		),
-		popularity: Float64Array.from(d.popularity as number[]),
-		imdbIds: (d.imdb_ids as (string | null)[]).map((x) => x?.trim() || null),
-		flagNames: d.flag_names,
-		flags: Int32Array.from(d.flags as number[]),
-		productionMethods: d.production_methods,
-		rowOf,
-	}
-}
-
-function termStatistics(d: Json): TermStatistics {
-	const terms = d.terms as string[]
-	const ids = Int32Array.from(d.ids as number[])
-	const indexOf = new Map<string, number>()
-	terms.forEach((t, i) => indexOf.set(t, i))
-	const order = Array.from(ids.keys()).sort((a, b) => ids[a] - ids[b])
-	return {
-		n: d.n,
-		terms,
-		ids,
-		df: Int32Array.from(d.df as number[]),
-		indexOf,
-		sortedIds: Int32Array.from(order, (i) => ids[i]),
-		sortedIdTerm: Int32Array.from(order),
-	}
-}
-
-function wordFrequencies(d: Json): WordFrequencies {
-	const df = new Map<string, number>()
-	;(d.words as string[]).forEach((w, i) => df.set(w, d.df[i]))
-	const spellVocabulary = d.spell_vocabulary as string[]
-	const spellByLength = new Map<number, number[]>()
-	spellVocabulary.forEach((w, i) => {
-		const list = spellByLength.get(w.length) ?? []
-		list.push(i)
-		spellByLength.set(w.length, list)
-	})
-	return { df, spellVocabulary, spellByLength }
-}
-
-function nameIndex(d: Json): NameIndex {
-	const entityOf = new Map<string, number>()
-	;(d.keys as string[]).forEach((k, i) => entityOf.set(k, d.entity[i]))
-	return {
-		entityOf,
-		entities: (d.entities as Json[]).map((e) => ({
-			id: e.id,
-			kind: e.kind,
-			name: e.name,
-			members: e.members,
-			mass: e.mass,
-			titles: new Map(e.titles as [number, number][]),
-			codirected: e.codirected,
-			mention: e.mention,
-		})),
-		fullNames: (d.keys as string[]).filter((k) => k.includes(" ")),
-	}
-}
-
-function negationLabels(d: Json): NegationLabels {
-	const labelsWithStem = new Map<string, number[]>()
-	;(d.stems as string[][]).forEach((stems, label) => {
-		// Builds since #168 store singular() forms already; older ones don't, and singular() is idempotent.
-		for (const s of new Set(stems.map(singular))) {
-			const list = labelsWithStem.get(s) ?? []
-			list.push(label)
-			labelsWithStem.set(s, list)
-		}
-	})
-	return { titles: d.titles, labelsWithStem }
-}
-
-function alternateCuts(d: Json): Map<number, Set<number>> {
-	const out = new Map<number, Set<number>>()
-	for (const [a, b] of d.pairs as [number, number][]) {
-		if (!out.has(a)) out.set(a, new Set())
-		if (!out.has(b)) out.set(b, new Set())
-		out.get(a)?.add(b)
-		out.get(b)?.add(a)
-	}
-	return out
-}
-
-function quantized(d: Json): QuantizedVectors {
-	const scale = float32(d.scale)
-	return { dim: scale.length, scale, values: int8(d.values) }
-}
-
-function derivedTitles(t: TitleTable) {
-	const referenceTitles = new Map<string, number>()
-	const franchiseTitles: SearchIndex["franchiseTitles"] = []
-	const titleNames: SearchIndex["titleNames"] = []
-	for (let row = 0; row < t.size; row++) {
-		const names = [...new Set([t.titles[row], t.originalTitles[row]])]
-		if (t.votes[row] >= REFERENCE_TITLE_VOTES) {
-			for (const name of names) {
-				const n = normalized(name)
-				const keys = new Set([n, n.startsWith("the ") ? n.slice(4) : n])
-				for (const key of keys) {
-					const current = referenceTitles.get(key)
-					if (key && (current === undefined || t.votes[row] > t.votes[current]))
-						referenceTitles.set(key, row)
-				}
-			}
-		}
-		if (t.votes[row] >= FRANCHISE_VOTES)
-			franchiseTitles.push({
-				row,
-				title: ` ${normalized(t.titles[row])} `,
-				original: ` ${normalized(t.originalTitles[row])} `,
-			})
-		for (const name of names) {
-			const n = normalized(name)
-			if (n) titleNames.push({ name: n, row })
-		}
-	}
-	return { referenceTitles, franchiseTitles, titleNames }
-}
-
-async function loadBuild(manifest: Manifest): Promise<SearchIndex> {
-	const started = performance.now()
-	const timings: Record<string, number> = {}
-	const docs = {} as Record<IndexFile, Json>
-	await Promise.all(
-		INDEX_FILES.map(async (name) => {
-			const file = manifest.files[name]
-			if (!file)
-				throw new Error(`Search index build ${manifest.build_id} lacks ${name}`)
-			const t = performance.now()
-			const gz = await readBlob(file.sha1)
-			docs[name] = JSON.parse((await gunzip(gz)).toString("utf8"))
-			timings[name] = performance.now() - t
-		}),
-	)
-	const title = titleTable(docs.title_table)
-	const mix = docs.mix_vectors
-	const mixIds = mix.point_ids as number[]
-	if (
-		mixIds.length !== title.size ||
-		mixIds.some((id: number, i: number) => id !== title.pointIds[i])
-	)
-		throw new Error("mix_vectors rows don't match the title table")
-	const peers = docs.peers
-	const peerFingerprints = float32(peers.fingerprints)
-	const intents = docs.intent_examples
-	if (!intents.vectors) throw new Error("intent_examples has no vectors")
-	const intentVectors = float32(intents.vectors)
-	const index: SearchIndex = {
-		buildId: manifest.build_id,
-		manifest,
-		loadedAt: new Date(),
-		titleTable: title,
-		termStatistics: termStatistics(docs.term_statistics),
-		words: wordFrequencies(docs.word_frequencies),
-		collocations: new Set(docs.collocations.bigrams as string[]),
-		names: nameIndex(docs.name_index),
-		peers: {
-			members: peers.members,
-			fingerprints: peerFingerprints,
-			dim: peers.fingerprints.shape[1] ?? 74,
-			titles: peers.titles,
-		},
-		negationLabels: negationLabels(docs.negation_labels),
-		alternateCuts: alternateCuts(docs.alternate_cuts),
-		intents: {
-			labels: intents.labels,
-			dim: intents.vectors.shape[1],
-			vectors: intentVectors,
-		},
-		mixVectors: {
-			multilingual: quantized(mix.text_multi_v1),
-			english: quantized(mix.text_en_v1),
-		},
-		...derivedTitles(title),
-		timings,
-	}
-	timings.total = performance.now() - started
-	return index
-}
-
 // --- The current build ----------------------------------------------------------------------------------------------
 
+let generation = 0
 let current: SearchIndex | undefined
 let loading: Promise<SearchIndex> | undefined
 let failedAt = 0
@@ -505,11 +166,17 @@ let timer: NodeJS.Timeout | undefined
 
 /** Loads the current build; on a missing file (a newer build's cleanup removed it), reads the current row again. */
 async function loadCurrent(): Promise<SearchIndex> {
+	const beganIn = generation
 	for (let attempt = 0; ; attempt++) {
 		const manifest = await readManifest()
+		if (beganIn !== generation) throw new Error("Search index load stopped")
 		if (current && manifest.build_id === current.buildId) return current
 		try {
-			return await loadBuild(manifest)
+			if (current) await waitForReload()
+			if (beganIn !== generation) throw new Error("Search index load stopped")
+			const index = await loadIndexBuild(manifest)
+			if (beganIn !== generation) throw new Error("Search index load stopped")
+			return index
 		} catch (error) {
 			if (!(error instanceof BlobMissing) || attempt >= 2) throw error
 		}
@@ -551,7 +218,7 @@ function watch() {
 			// Logged in refresh; the loaded build stays in use.
 		})
 	}, CHECK_EVERY_MS)
-	onShutdown("search index refresh", () => clearInterval(timer))
+	onShutdown("search index refresh", stopSearchIndex)
 	timer.unref()
 }
 
@@ -571,8 +238,7 @@ export function loadedSearchIndexBuild(): string | null {
 
 /** Starts loading the index in the background, so the first search doesn't wait for it. */
 export function startSearchIndex(): void {
-	// The first load blocks the event loop for about 2 seconds while it parses the index. Readiness waits until that
-	// load has succeeded or failed, so that the process gets its first requests after the stall, not during it.
+	// Readiness waits for the first load so the command palette and search have their index for the first requests.
 	addReadinessCheck(
 		"search index",
 		() => current !== undefined || lastFailure !== undefined,
@@ -582,9 +248,99 @@ export function startSearchIndex(): void {
 	})
 }
 
-/** Stops the periodic check and drops the loaded build. */
+/** Stops the periodic check, a waiting or running load, and drops the loaded build. */
 export function stopSearchIndex(): void {
+	generation++
+	cancelReload?.()
+	for (const worker of activeWorkers) void worker.terminate()
 	if (timer) clearInterval(timer)
 	timer = undefined
 	current = undefined
+}
+
+const activeWorkers = new Set<Worker>()
+let warnedMissingWorker = false
+let cancelReload: (() => void) | undefined
+
+// The wait before a reload (see search-index-retry.server.ts). The first load doesn't wait.
+function waitForReload(): Promise<void> {
+	return new Promise((resolve, reject) => {
+		const wait = setTimeout(() => {
+			cancelReload = undefined
+			resolve()
+		}, reloadDelayMs())
+		wait.unref()
+		cancelReload = () => {
+			clearTimeout(wait)
+			cancelReload = undefined
+			reject(new Error("Search index reload stopped"))
+		}
+	})
+}
+
+/**
+ * Loads one build: in a worker thread when the bundled worker file exists, else on the main thread. Tests pass the
+ * worker's source file as `url` to run the worker path.
+ */
+export async function loadIndexBuild(
+	manifest: Manifest,
+	url = separateEntryUrl("search-index.worker.js", import.meta.url),
+): Promise<SearchIndex> {
+	const began = performance.now()
+	if (!existsSync(url)) {
+		if (process.env.NODE_ENV === "production" && !warnedMissingWorker) {
+			warnedMissingWorker = true
+			console.error(
+				`Missing ${url.pathname}; search index load runs on the main thread`,
+			)
+		}
+		return loadBuild(manifest)
+	}
+	const worker = new Worker(url, { workerData: { manifest } })
+	activeWorkers.add(worker)
+	onShutdown("search index workers", () =>
+		Promise.all([...activeWorkers].map((worker) => worker.terminate())),
+	)
+	let timeout: NodeJS.Timeout | undefined
+	try {
+		return await new Promise<SearchIndex>((resolve, reject) => {
+			const assembler = createAssembler()
+			let done = false
+			timeout = setTimeout(
+				() => reject(new Error("Search index worker timed out")),
+				5 * 60_000,
+			)
+			worker.on("error", reject)
+			worker.on("exit", (code) => {
+				if (!done || code !== 0)
+					reject(new Error(`Search index worker exited early (${code})`))
+			})
+			worker.on("message", (message) => {
+				try {
+					if (message.type === "error")
+						throw message.blobMissing
+							? new BlobMissing(message.message)
+							: new Error(message.message)
+					if (message.type === "piece") {
+						assembler.add(message.piece)
+						// Not sent from here: Node drains a port's queue in one go, and a worker that answers within
+						// microseconds would keep the main thread in that drain for the whole transfer. From
+						// setImmediate, the event loop turns once per piece and serves waiting requests in between.
+						setImmediate(() => worker.postMessage({ type: "next" }))
+					} else if (message.type === "done") {
+						const index = assembler.finish()
+						index.timings.total = performance.now() - began
+						done = true
+						resolve(index)
+					}
+				} catch (error) {
+					reject(error)
+				}
+			})
+		})
+	} finally {
+		clearTimeout(timeout)
+		await worker.terminate()
+		activeWorkers.delete(worker)
+	}
 }

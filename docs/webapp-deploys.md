@@ -37,7 +37,7 @@ A deploy could also pass without a 502: one of the three deploys watched before 
 ### Readiness
 
 - `GET /health/ready` answers 200 when the process should get requests, and 503 with the reason otherwise.
-- It waits for the title snapshot's first check (Discover needs the snapshot) and for the search index's first load (it blocks the event loop for about 2 seconds, which a new process should have behind it).
+- It waits for the title snapshot's first check (Discover needs the snapshot) and for the search index's first load (the command palette and search need their index when the proxy sends the first requests).
 - It doesn't wait for the query encoder: it loads in a worker thread, and searches get basic results until then.
 - After 30 seconds (`READY_MAX_WAIT_MS`) it answers 200 without them. A process that can't reach Redis or Crate still serves most pages, and a container that never turns healthy would be taken out of the proxy.
 - It answers 503 from the moment a shutdown begins.

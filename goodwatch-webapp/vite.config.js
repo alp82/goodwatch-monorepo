@@ -1,4 +1,5 @@
 import { copyFileSync } from "node:fs"
+import { createRequire } from "node:module"
 import { basename, join, resolve } from "node:path"
 import { vitePlugin as remix } from "@remix-run/dev"
 import { installGlobals } from "@remix-run/node"
@@ -8,13 +9,25 @@ import { defineConfig } from "vite"
 // import { remixDevTools } from "remix-development-tools/vite";
 import tsconfigPaths from "vite-tsconfig-paths"
 
+// The esbuild that Vite itself depends on: npm nests it under Vite, because another package pins an older one at the
+// top level.
+const require = createRequire(import.meta.url)
+const { build: bundleWorker } = createRequire(require.resolve("vite"))("esbuild")
+
 installGlobals()
 
 // The query encoder worker thread and the share card renderer process each need their own file next to the
-// server bundle. query-encoder.server.ts and card-renderer/pool.server.ts load them from there.
+// server bundle. query-encoder.server.ts and card-renderer/pool.server.ts load them from there. The two are plain
+// JavaScript and are copied. The workers that load the search index and the title snapshot share TypeScript modules
+// with the server, so each is bundled into one file there (search-index.server.ts and
+// title-snapshot/prepare-worker.server.ts start them). A bundle that fails, fails the build.
 const SEPARATE_ENTRIES = [
 	"app/server/search-ranking/query-encoder.worker.js",
 	"app/server/card-renderer/render.child.js",
+]
+const BUNDLED_WORKERS = [
+	"app/server/search-ranking/search-index.worker.ts",
+	"app/server/title-snapshot/title-snapshot.worker.ts",
 ]
 function separateEntryFiles() {
 	let root
@@ -28,10 +41,22 @@ function separateEntryFiles() {
 			outDir = config.build.outDir
 			ssr = Boolean(config.build.ssr)
 		},
-		closeBundle() {
+		async closeBundle() {
 			if (!ssr) return
 			for (const file of SEPARATE_ENTRIES)
 				copyFileSync(join(root, file), resolve(root, outDir, basename(file)))
+			await bundleWorker({
+				entryPoints: BUNDLED_WORKERS.map((file) => join(root, file)),
+				outdir: resolve(root, outDir),
+				// Flat, next to index.js: without it esbuild keeps each entry's directory.
+				entryNames: "[name]",
+				bundle: true,
+				platform: "node",
+				format: "esm",
+				target: "node24",
+				external: ["node:*"],
+				tsconfig: join(root, "tsconfig.json"),
+			})
 		},
 	}
 }

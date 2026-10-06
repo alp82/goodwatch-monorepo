@@ -1,5 +1,5 @@
 // The loaded title snapshot: every title with a title analysis, its fingerprint and the facts filters and sorts need,
-// in webapp memory. Built once per snapshot version from the decoded columns; never changed afterwards.
+// in webapp memory. Row data is derived in a worker, then wrapped once per version; never changed afterwards.
 import type { LadderStep } from "~/domain/age-content"
 import { type MoodKey, moodMaskOf, moodsInMask } from "~/domain/moods"
 import {
@@ -129,6 +129,32 @@ export interface TitleSnapshot {
 
 const K = FINGERPRINT_LENGTH
 
+/** Derive all row-wise data off-thread before constructing the cheap snapshot wrapper. */
+export function deriveSnapshot(manifest: Manifest, c: Columns) {
+	const inverseNorms = new Float32Array(c.count)
+	const moodMasks = new Uint16Array(c.count)
+	const genreLists = new Map<number, string[]>()
+	for (let row = 0; row < c.count; row++) {
+		const fp = c.fingerprints.subarray(row * K, row * K + K)
+		let squares = 0
+		for (let k = 0; k < K; k++) {
+			const v = fp[k]
+			if (v !== MISSING_SCORE) squares += v * v
+		}
+		inverseNorms[row] = squares > 0 ? 1 / Math.sqrt(squares) : 0
+		const bits = c.genres[row]
+		let genres = genreLists.get(bits)
+		if (!genres) {
+			genres = manifest.genres.filter((_, bit) => (bits & (1 << bit)) !== 0)
+			genreLists.set(bits, genres)
+		}
+		moodMasks[row] = moodMaskOf(fp, genres)
+	}
+	const referenceRows = referencePool(c)
+	const stats = catalogStats(c, referenceRows)
+	return { inverseNorms, moodMasks, referenceRows, stats }
+}
+
 class LoadedSnapshot implements TitleSnapshot {
 	readonly version: string
 	readonly builtAt: Date
@@ -143,37 +169,24 @@ class LoadedSnapshot implements TitleSnapshot {
 	// Bit i is MOOD_KEYS[i].
 	private readonly moodMasks: Uint16Array
 
+	private readonly c: Columns
+
 	constructor(
 		manifest: Manifest,
-		private readonly c: Columns,
+		c: Columns,
 		ratings: RatingColumns | null,
+		derived: ReturnType<typeof deriveSnapshot>,
 	) {
+		this.c = c
 		this.version = manifest.version
 		this.builtAt = new Date(manifest.builtAt)
 		this.count = c.count
 		this.genreNames = manifest.genres
 		this.originNames = manifest.origins
-		this.inverseNorms = new Float32Array(c.count)
-		this.moodMasks = new Uint16Array(c.count)
-		const genreLists = new Map<number, string[]>()
-		for (let row = 0; row < c.count; row++) {
-			const fp = c.fingerprints.subarray(row * K, row * K + K)
-			let squares = 0
-			for (let k = 0; k < K; k++) {
-				const v = fp[k]
-				if (v !== MISSING_SCORE) squares += v * v
-			}
-			this.inverseNorms[row] = squares > 0 ? 1 / Math.sqrt(squares) : 0
-			const bits = c.genres[row]
-			let genres = genreLists.get(bits)
-			if (!genres) {
-				genres = this.genresOf(bits)
-				genreLists.set(bits, genres)
-			}
-			this.moodMasks[row] = moodMaskOf(fp, genres)
-		}
-		this.referenceRows = referencePool(c)
-		this.stats = catalogStats(c, this.referenceRows)
+		this.inverseNorms = derived.inverseNorms
+		this.moodMasks = derived.moodMasks
+		this.referenceRows = derived.referenceRows
+		this.stats = derived.stats
 		this.columns = {
 			pointIds: c.pointIds,
 			genres: c.genres,
@@ -278,13 +291,14 @@ class LoadedSnapshot implements TitleSnapshot {
 }
 
 /**
- * Derives the inverse norms, mood masks, and catalog statistics from decoded, checked columns. `ratings` are the
- * decoded sidecar's columns, or null without one.
+ * Wraps checked columns and precomputed derivations. Inline callers can omit derived to compute it here.
+ * Ratings are the decoded sidecar columns, or null without one.
  */
 export function buildSnapshot(
 	manifest: Manifest,
 	columns: Columns,
 	ratings: RatingColumns | null = null,
+	derived = deriveSnapshot(manifest, columns),
 ): TitleSnapshot {
-	return new LoadedSnapshot(manifest, columns, ratings)
+	return new LoadedSnapshot(manifest, columns, ratings, derived)
 }

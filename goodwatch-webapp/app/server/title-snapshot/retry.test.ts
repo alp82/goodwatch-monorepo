@@ -1,7 +1,8 @@
-// The wait between failed title snapshot loads: it doubles, stops at a minute, and varies a little.
+// The wait between failed title snapshot loads: it doubles, stops at a minute, and varies a little. And the random
+// wait before a reload.
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { retryDelayMs } from "./retry.server.ts"
+import { reloadDelayMs, retryDelayMs } from "./retry.server.ts"
 
 test("each failure in a row doubles the wait, up to a minute", () => {
 	const longest = (failures: number) => retryDelayMs(failures, 0.999999)
@@ -27,4 +28,24 @@ test("ten failed checks take minutes, not 20 seconds", () => {
 		total += retryDelayMs(failures, 0)
 	// Every 2 seconds, as before, ten retries took 20 seconds.
 	assert.ok(total >= 4 * 60_000, String(total))
+})
+
+test("reload jitter bounds and measurement cap", () => {
+	const previous = process.env.RELOAD_JITTER_MAX_MS
+	try {
+		delete process.env.RELOAD_JITTER_MAX_MS
+		assert.equal(reloadDelayMs(0), 0)
+		assert.equal(reloadDelayMs(0.999999), 44999)
+		process.env.RELOAD_JITTER_MAX_MS = "100"
+		assert.equal(reloadDelayMs(0.5), 50)
+		process.env.RELOAD_JITTER_MAX_MS = "0"
+		assert.equal(reloadDelayMs(0.99), 0)
+		process.env.RELOAD_JITTER_MAX_MS = "999999"
+		assert.equal(reloadDelayMs(0.5), 22500)
+		process.env.RELOAD_JITTER_MAX_MS = "invalid"
+		assert.equal(reloadDelayMs(0.5), 22500)
+	} finally {
+		if (previous === undefined) delete process.env.RELOAD_JITTER_MAX_MS
+		else process.env.RELOAD_JITTER_MAX_MS = previous
+	}
 })
