@@ -230,7 +230,10 @@ Every measurement is its own page load in a new browser: empty cache, no cookies
 | `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. |
 | `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap |
 
-The selectors use section ids, roles, and accessible names. The carousel arrows have no name: they are the last `button` that is a direct child of a `.swiper` element. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
+| `related_more` | Carousel prototype, list variant: the first "Show more" step in `#related` | Its `<details>` is open. Runs only when `--controls` names it. |
+| `related_explore` | Carousel prototype, explore variant: "Explore from here" in `#related` | The walk through similar titles is in the document with its first neighbors. Runs only when `--controls` names it. |
+
+The selectors use section ids, roles, and accessible names. The carousel arrows have no name: they are the last `button` that is a direct child of a `.swiper` element. On a page of the carousel prototype (a path with `?proto=rows`, `list`, or `explore` on a server that runs with `PROTO_CAROUSELS=1`; `bench.sh` accepts no query in `--movie` and `--show`, so set `TAP_PAGES` and run `tap/tap.mjs` directly), a row is a `[data-nrow]` element, its arrow is the `button[data-nrow-dir="1"]` in it, and the effect of an arrow is that the row has scrolled. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
 
 **What a measurement can end as.**
 

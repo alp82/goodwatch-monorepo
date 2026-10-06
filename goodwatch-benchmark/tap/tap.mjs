@@ -32,7 +32,11 @@ const CONTROLS = {
   cast_next: "Cast row: next arrow",
   related_tab: "Related tab (the first one that isn't selected)",
   related_next: "Related row: next arrow (the first row)",
+  related_more: "Related list: the first \"more\" step (carousel prototype, list variant)",
+  related_explore: "Related titles: \"Explore from here\" (carousel prototype, explore variant)",
 };
+// Controls that only a prototype variant has. They run only when TAP_CONTROLS names them.
+const OPT_IN = ["related_more", "related_explore"];
 const MODES = ["early", "scroll"];
 const NETWORKS = {
   none: null,
@@ -82,6 +86,31 @@ function pageLib(plan) {
     },
     ready: (el) => Boolean(el.parentElement?.classList.contains("swiper-initialized")),
   });
+  // A native row (the carousel prototype): a scroll container with its two arrow buttons as its siblings. Effect of
+  // an arrow: the container has scrolled. One inline script handles the arrows of every row from the first parse on.
+  const nativeArrow = (scope) => {
+    const next = () => document.querySelector(`${scope} [data-nrow] > button[data-nrow-dir="1"]`);
+    const track = (el) => el?.parentElement?.querySelector(":scope > [data-nrow-track]") ?? null;
+    return {
+      find: next,
+      begin: (el) => ({ left: track(el)?.scrollLeft ?? 0 }),
+      done: (el, ctx) => {
+        const row = track(el.isConnected ? el : next());
+        return row != null && Math.abs(row.scrollLeft - ctx.left) > 4;
+      },
+      ready: () => Boolean(window.__gwRows),
+    };
+  };
+  // The first of the kinds whose control is in the document. A page has one of them.
+  const either = (...kinds) => {
+    const pick = () => kinds.find((kind) => kind.find()) ?? kinds[0];
+    return {
+      find: () => pick().find(),
+      begin: (el) => pick().begin?.(el) ?? {},
+      done: (el, ctx) => pick().done(el, ctx),
+      ready: (el) => pick().ready(el),
+    };
+  };
   // Effect of a toggle or tab: the button with the tapped one's name reports the state "true".
   const toggle = (selector, attribute, pick) => ({
     find: () => q(selector).find((el) => el.getAttribute(attribute) === "false" && (!pick || pick(el))) ?? null,
@@ -110,10 +139,25 @@ function pageLib(plan) {
       done: () => document.querySelector('div[data-float-id^="ep-"][aria-hidden="true"]') != null,
       ready: reactReady,
     },
-    cast_next: arrow("#actors_and_crew .swiper"),
-    // The tab row is a Swiper element too, without arrow buttons.
-    related_tab: toggle("#related .swiper:not(:has(> button)) button[aria-pressed]", "aria-pressed"),
-    related_next: arrow("#related .swiper"),
+    cast_next: either(arrow("#actors_and_crew .swiper"), nativeArrow("#actors_and_crew")),
+    // The tab row is a Swiper element too, without arrow buttons. In the prototype it is a native row.
+    related_tab: toggle(
+      "#related .swiper:not(:has(> button)) button[aria-pressed], #related [data-nrow]:not(:has(> button)) button[aria-pressed]",
+      "aria-pressed",
+    ),
+    related_next: either(arrow("#related .swiper"), nativeArrow("#related")),
+    // Effect: the <details> is open. The browser does that without script.
+    related_more: {
+      find: () => document.querySelector("#related details > summary"),
+      done: (el) => Boolean(el.parentElement?.open),
+      ready: () => true,
+    },
+    // Effect: the walk through similar titles is in the document with its first neighbors.
+    related_explore: {
+      find: () => document.querySelector("#related button[data-early-tap]"),
+      done: () => document.querySelector('#related .px-orbit[aria-busy="false"]') != null,
+      ready: reactReady,
+    },
   };
 
   const T = (window.__tap = { fcp: null, armed: null });
@@ -315,7 +359,7 @@ function settings() {
   const list = (name, all) => {
     const picked = (env[name] || "").split(",").filter(Boolean);
     for (const item of picked) if (!all.includes(item)) throw new Error(`Unknown entry in ${name}: ${item}. Known: ${all.join(", ")}`);
-    return picked.length ? all.filter((item) => picked.includes(item)) : all;
+    return picked.length ? all.filter((item) => picked.includes(item)) : all.filter((item) => !OPT_IN.includes(item));
   };
   const network = env.TAP_NETWORK || "none";
   if (!(network in NETWORKS)) throw new Error(`TAP_NETWORK must be one of: ${Object.keys(NETWORKS).join(", ")}`);
