@@ -564,6 +564,12 @@ export interface CachedParams<Params, Return> {
 	staleMinutes?: number
 }
 
+// A Response body can be read only once.
+// Callers of one shared run must not share its rejected Response.
+function rethrowCacheError(error: unknown): never {
+	throw error instanceof Response ? error.clone() : error
+}
+
 export const cached = async <
 	Params extends Partial<Record<keyof Params, unknown>>,
 	Return extends JsonData,
@@ -751,7 +757,7 @@ export const cached = async <
 		Date.now() - existing.startedAt < MAX_JOIN_AGE_MS
 	) {
 		cacheRequests.inc([label, result === "reset_pending" ? result : "joined"])
-		const data = await existing.promise
+		const data = await existing.promise.catch(rethrowCacheError)
 		try {
 			return structuredClone(data) as Return
 		} catch {
@@ -759,7 +765,7 @@ export const cached = async <
 		}
 	}
 	cacheRequests.inc([label, result])
-	return await startRun(false)
+	return await startRun(false).catch(rethrowCacheError)
 }
 
 export interface ResetCacheParams {
