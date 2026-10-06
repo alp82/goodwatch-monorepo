@@ -1,4 +1,7 @@
-@import "tailwindcss";
+/* Tailwind reads class names from app/ only: every module of the webapp is in there. Without a source, it reads
+   the whole package (scripts, sitemaps, flags). A production build also leaves out the prototypes that it doesn't
+   ship: vite.config.js adds the `@source not` lines for them (see PROTOTYPES there). */
+@import "tailwindcss" source(".");
 /* The small sheets every page needs, in this one file: each separate stylesheet blocks rendering with a request of
    its own. They are outside Tailwind's layers, so their rules win over utilities as they did as separate files. */
 @import "./fonts/gabarito.css";
@@ -146,35 +149,6 @@
 @custom-variant xl-h {
 	@media (min-height: 1301px) {
 		@slot;
-	}
-}
-
-/* animiations */
-
-@keyframes shimmer {
-	0% {
-		background-position: -200px 0;
-	}
-	100% {
-		background-position: 200px 0;
-	}
-}
-@layer utilities {
-	.animate-shimmer {
-		background: linear-gradient(
-			90deg,
-			rgba(255, 177, 15, 0) 0%,
-			rgba(255, 177, 15, 0.2) 25%,
-			rgba(255, 177, 15, 0.2) 50%,
-			rgba(255, 177, 15, 0) 100%
-		);
-		background-size: 200px 100%;
-		animation: shimmer 2s infinite;
-	}
-}
-@media (prefers-reduced-motion: reduce) {
-	.animate-shimmer {
-		animation: none;
 	}
 }
 
