@@ -1,8 +1,8 @@
 import React from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
-import imdbLogo from "~/img/imdb-logo-250.png"
+import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import metacriticLogo from "~/img/metacritic-logo-96.webp"
-import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp"
+import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
 import rottenLogo from "~/img/rotten-logo-96.webp"
 import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
 import {
