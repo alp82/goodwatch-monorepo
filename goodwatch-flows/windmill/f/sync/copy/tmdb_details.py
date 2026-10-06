@@ -202,6 +202,11 @@ def delete_stale_seasons(connector: CrateConnector, season_ids_by_show: dict[int
     return deleted
 
 
+def utc_stamp() -> str:
+    """The UTC time for a log line. Windmill keeps only the tail of a log, without times."""
+    return f"{datetime.utcnow().isoformat(timespec='seconds')}Z"
+
+
 def details_collection(mongo_db, media_type: str):
     return mongo_db.tmdb_movie_details if media_type == "movie" else mongo_db.tmdb_tv_details
 
@@ -278,8 +283,10 @@ def copy_media(
     # main() deletes before it copies, so a failed copy doesn't stop the deletion.
     deleted_titles = delete_flagged_titles(connector, media_type, query_selector) if delete_flagged else None
 
+    print(f"{utc_stamp()} {media_type} selection starts: "
+          f"{'changes since ' + since.isoformat() if since else 'every title'}", flush=True)
     tmdb_ids = window_tmdb_ids(mongo_collection, query_selector, since)
-    print(f"Total {media_type} entries: {len(tmdb_ids)}", flush=True)
+    print(f"{utc_stamp()} {media_type} selection done. Total {media_type} entries: {len(tmdb_ids)}", flush=True)
 
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     entity_ids = defaultdict(set)
@@ -300,7 +307,7 @@ def copy_media(
         listed_scopes_by_title = {}
 
         # Insert batch of media
-        print(f"\nBatch from {start} to {start + len(tmdb_details_batch)} of {len(tmdb_ids)} {media_type}s", flush=True)
+        print(f"\n{utc_stamp()} Batch from {start} to {start + len(tmdb_details_batch)} of {len(tmdb_ids)} {media_type}s", flush=True)
 
         media_ids = set()
         for index, tmdb_details in enumerate(tmdb_details_batch):
@@ -720,6 +727,7 @@ def copy_media(
         add_stats(stale_child_rows, delete_stale_child_rows(
             connector, media_type, listed_scopes_by_title, entity_batches))
 
+    print(f"{utc_stamp()} {media_type} copy done", flush=True)
     if deleted_titles is not None:
         entity_counts["deleted_titles"] = deleted_titles
     entity_counts["stale_child_rows"] = stale_child_rows
@@ -751,15 +759,16 @@ def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies = Fals
         # Deletion runs first and on its own for each media type, so a failing or slow
         # copy never keeps flagged titles in CrateDB (#185).
         for media_type, selector in selectors.items():
-            print(f"\nDeleting flagged {media_type}s...", flush=True)
+            print(f"\n{utc_stamp()} Deleting flagged {media_type}s...", flush=True)
             try:
                 deleted[media_type] = delete_flagged_titles(connector, media_type, selector)
+                print(f"{utc_stamp()} {media_type} deletion done", flush=True)
             except Exception as error:
                 print(f"!!! {media_type} deletion failed: {error!r}", flush=True)
                 failures[f"{media_type} deletion"] = repr(error)
 
         for media_type, selector in selectors.items():
-            print(f"\nProcessing {media_type}s...", flush=True)
+            print(f"\n{utc_stamp()} Processing {media_type}s...", flush=True)
             key = "movies" if media_type == "movie" else "shows"
             selection = selections.get(media_type)
             try:
