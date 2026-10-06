@@ -157,7 +157,7 @@ class MainIsolationTests(unittest.TestCase):
                 raise RuntimeError(f"{media_type} delete failed")
             return {"titles_flagged": 0}
 
-        def copy(*, connector, query_selector, media_type, delete_flagged):
+        def copy(*, connector, query_selector, media_type, delete_flagged, since):
             calls.append(("copy", media_type))
             self.assertFalse(delete_flagged)
             if ("copy", media_type) in fail:
@@ -165,7 +165,8 @@ class MainIsolationTests(unittest.TestCase):
             return {"movies" if media_type == "movie" else "shows": {"rows_upserted": 1}}
 
         with patch.object(tmdb_details, "init_mongodb"), patch.object(tmdb_details, "close_mongodb"), \
-                patch.object(tmdb_details, "CrateConnector"), patch.object(tmdb_details, "get_db"), \
+                patch.object(tmdb_details, "CrateConnector"), \
+                patch.object(tmdb_details, "get_db", return_value=mongomock.MongoClient().db), \
                 patch.object(tmdb_details, "delete_flagged_titles_from_crate", side_effect=delete), \
                 patch.object(tmdb_details, "copy_media", side_effect=copy):
             try:
@@ -196,7 +197,8 @@ class MainIsolationTests(unittest.TestCase):
     def test_skip_movies_leaves_movies_alone(self):
         calls = []
         with patch.object(tmdb_details, "init_mongodb"), patch.object(tmdb_details, "close_mongodb"), \
-                patch.object(tmdb_details, "CrateConnector"), patch.object(tmdb_details, "get_db"), \
+                patch.object(tmdb_details, "CrateConnector"), \
+                patch.object(tmdb_details, "get_db", return_value=mongomock.MongoClient().db), \
                 patch.object(tmdb_details, "delete_flagged_titles_from_crate",
                              side_effect=lambda connector, media_type, *a, **k: calls.append(("delete", media_type)) or {}), \
                 patch.object(tmdb_details, "copy_media",

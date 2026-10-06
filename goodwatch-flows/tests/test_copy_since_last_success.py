@@ -10,7 +10,8 @@ import mongomock
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
-from f.sync.copy import sync_state, vector_data
+from f.sync.copy import sync_state, tmdb_details, vector_data
+from test_details_copy_paging import Crate
 
 NOW = datetime(2026, 10, 6, 12, 0, 0)
 HOUR = timedelta(hours=1)
@@ -208,6 +209,187 @@ class VectorCopyTests(unittest.TestCase):
             vector_data.copy_to_qdrant(MagicMock(), "movie", {}, recent_only=False)
 
         self.assertEqual(written, [1])
+        self.assertEqual(list(self.db.sync_state.find()), before)
+
+
+class DetailsCrate(Crate):
+    def disconnect(self):
+        pass
+
+
+class DetailsCopyTests(unittest.TestCase):
+    """f/sync/copy/tmdb_details main() against an in-memory Mongo and a recording Crate."""
+
+    def setUp(self):
+        self.db = mongomock.MongoClient().db
+        self.now = NOW
+        self.fail = set()
+
+    def movie(self, tmdb_id, updated_at):
+        self.db.tmdb_movie_details.replace_one(
+            {"tmdb_id": tmdb_id}, {"tmdb_id": tmdb_id, "title": f"Movie {tmdb_id}", "updated_at": updated_at},
+            upsert=True)
+
+    def show(self, tmdb_id, updated_at):
+        self.db.tmdb_tv_details.replace_one(
+            {"tmdb_id": tmdb_id}, {"tmdb_id": tmdb_id, "title": f"Show {tmdb_id}", "updated_at": updated_at},
+            upsert=True)
+
+    def run_main(self, **arguments):
+        """Returns (movie ids copied, show ids copied, results, error)."""
+        copied = {"movie": [], "show": []}
+
+        def on_upsert(table, records):
+            if ("copy", table) in self.fail:
+                raise RuntimeError(f"{table} copy failed")
+            copied[table].extend(record.tmdb_id for record in records)
+
+        def delete(connector, media_type, *args, **kwargs):
+            if ("delete", media_type) in self.fail:
+                raise RuntimeError(f"{media_type} delete failed")
+            return {"titles_flagged": 0}
+
+        with patch.object(tmdb_details, "init_mongodb"), patch.object(tmdb_details, "close_mongodb"), \
+                patch.object(tmdb_details, "CrateConnector", return_value=DetailsCrate(on_upsert=on_upsert)), \
+                patch.object(tmdb_details, "get_db", return_value=self.db), \
+                patch.object(tmdb_details, "delete_flagged_titles_from_crate", side_effect=delete), \
+                patch.object(tmdb_details, "delete_stale_child_rows", return_value={}), \
+                patch.object(sync_state, "utc_now", return_value=self.now):
+            try:
+                results, error = tmdb_details.main(**arguments), None
+            except tmdb_details.CopyFailed as failed:
+                results, error = failed.results, failed
+        return sorted(copied["movie"]), sorted(copied["show"]), results, error
+
+    def test_the_first_run_copies_the_48_hour_window_and_records_its_start(self):
+        self.movie(1, NOW - HOUR)
+        self.movie(2, NOW - timedelta(hours=49))
+        self.show(3, NOW - 47 * HOUR)
+
+        movies, shows, results, error = self.run_main()
+
+        self.assertIsNone(error)
+        self.assertEqual((movies, shows), ([1], [3]))
+        self.assertEqual(last_success(self.db, "tmdb_details", "movie"), NOW)
+        self.assertEqual(last_success(self.db, "tmdb_details", "show"), NOW)
+        self.assertTrue(results["movies"]["selection"]["fallback"])
+        self.assertEqual(results["movies"]["selection"]["since"], (NOW - timedelta(hours=48)).isoformat())
+        self.assertEqual(state(self.db, "tmdb_details", "movie")["last_run"]["counts"],
+                         {"records_received": 1, "rows_upserted": 1})
+
+    def test_the_next_run_copies_only_what_changed_since_with_the_overlap(self):
+        self.movie(1, NOW - 2 * HOUR)
+        self.movie(2, NOW - timedelta(minutes=20))
+        self.run_main()
+
+        self.now = NOW + 12 * HOUR
+        self.movie(3, NOW + HOUR)
+        movies, _, results, _ = self.run_main()
+
+        # 2 changed within the 30 minutes before the first run started and is read again.
+        self.assertEqual(movies, [2, 3])
+        self.assertFalse(results["movies"]["selection"]["fallback"])
+        self.assertEqual(results["movies"]["selection"]["since"], (NOW - timedelta(minutes=30)).isoformat())
+        self.assertEqual(last_success(self.db, "tmdb_details", "movie"), NOW + 12 * HOUR)
+
+    def test_a_failed_movie_copy_keeps_the_movie_time_and_the_next_run_covers_the_gap(self):
+        self.run_main()
+        self.movie(1, NOW + HOUR)
+        self.show(2, NOW + HOUR)
+
+        self.now = NOW + 12 * HOUR
+        self.fail = {("copy", "movie")}
+        movies, shows, results, error = self.run_main()
+
+        self.assertIn("movie copy", str(error))
+        self.assertEqual((movies, shows), ([], [2]))
+        self.assertEqual(last_success(self.db, "tmdb_details", "movie"), NOW)
+        # The shows succeeded in every step, so their time advances on its own.
+        self.assertEqual(last_success(self.db, "tmdb_details", "show"), NOW + 12 * HOUR)
+        self.assertEqual(results["movies"]["selection"]["since"], (NOW - timedelta(minutes=30)).isoformat())
+
+        self.now = NOW + 24 * HOUR
+        self.fail = set()
+        movies, shows, _, error = self.run_main()
+
+        self.assertIsNone(error)
+        self.assertEqual((movies, shows), ([1], []))
+        self.assertEqual(last_success(self.db, "tmdb_details", "movie"), NOW + 24 * HOUR)
+
+    def test_a_failed_deletion_keeps_the_time_of_that_media_type(self):
+        self.run_main()
+
+        self.now = NOW + 12 * HOUR
+        self.fail = {("delete", "show")}
+        _, _, _, error = self.run_main()
+
+        self.assertIn("show deletion", str(error))
+        self.assertEqual(last_success(self.db, "tmdb_details", "movie"), NOW + 12 * HOUR)
+        self.assertEqual(last_success(self.db, "tmdb_details", "show"), NOW)
+
+    def test_a_run_reaches_back_7_days_at_most_and_says_so(self):
+        self.run_main()
+        self.movie(1, NOW + 2 * DAY)
+        self.movie(2, NOW + 4 * DAY)
+
+        self.now = NOW + 10 * DAY
+        movies, _, results, error = self.run_main()
+
+        self.assertIsNone(error)
+        self.assertEqual(movies, [2])
+        selection = results["movies"]["selection"]
+        self.assertTrue(selection["lookback_capped"])
+        self.assertEqual(selection["since"], (NOW + 3 * DAY).isoformat())
+        self.assertIn("Run a full copy", selection["warning"])
+
+    def test_a_run_restricted_to_ids_leaves_the_state_alone(self):
+        self.run_main()
+        # A restricted run keeps the fixed window, which ends at the real clock.
+        self.movie(1, datetime.utcnow() - HOUR)
+        self.show(2, datetime.utcnow() - HOUR)
+        movie_id = str(self.db.tmdb_movie_details.find_one({"tmdb_id": 1})["_id"])
+        show_id = str(self.db.tmdb_tv_details.find_one({"tmdb_id": 2})["_id"])
+        before = list(self.db.sync_state.find())
+
+        self.now = NOW + 12 * HOUR
+        movies, shows, results, _ = self.run_main(movie_ids=[movie_id], show_ids=[show_id])
+
+        self.assertEqual((movies, shows), ([1], [2]))
+        self.assertEqual(list(self.db.sync_state.find()), before)
+        self.assertNotIn("selection", results["movies"])
+
+    def test_only_the_restricted_media_type_is_left_out_of_the_state(self):
+        self.run_main()
+        self.movie(1, datetime.utcnow() - HOUR)
+        movie_id = str(self.db.tmdb_movie_details.find_one({"tmdb_id": 1})["_id"])
+
+        self.now = NOW + 12 * HOUR
+        self.run_main(movie_ids=[movie_id])
+
+        self.assertEqual(last_success(self.db, "tmdb_details", "movie"), NOW)
+        self.assertEqual(last_success(self.db, "tmdb_details", "show"), NOW + 12 * HOUR)
+
+    def test_skipped_movies_keep_their_time(self):
+        self.run_main()
+
+        self.now = NOW + 12 * HOUR
+        self.run_main(skip_movies=True)
+
+        self.assertEqual(last_success(self.db, "tmdb_details", "movie"), NOW)
+        self.assertEqual(last_success(self.db, "tmdb_details", "show"), NOW + 12 * HOUR)
+
+    def test_a_full_copy_neither_reads_nor_moves_the_time(self):
+        self.run_main()
+        self.movie(1, NOW - 30 * DAY)
+        before = list(self.db.sync_state.find())
+        crate = DetailsCrate()
+
+        with patch.object(tmdb_details, "get_db", return_value=self.db), \
+                patch.object(tmdb_details, "delete_flagged_titles_from_crate", return_value={}), \
+                patch.object(tmdb_details, "delete_stale_child_rows", return_value={}):
+            tmdb_details.copy_media(crate, {}, "movie", recent_only=False)
+
+        self.assertEqual(crate.titles, [1])
         self.assertEqual(list(self.db.sync_state.find()), before)
 
 
