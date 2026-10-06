@@ -21,6 +21,7 @@ import { useStreamingLinks } from "~/ui/details/hero/WhereToWatch"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { type QuestionId, type TitleQuestion, ageInfo, agreement, FEATURED_TROPES, featuredTropes, money, titleQuestions, tropeCount } from "~/ui/details/titleQuestions"
 import { countryFlagUrl } from "~/utils/country-flag"
+import { languageName } from "~/utils/display-names"
 
 type Media = MovieResult | ShowResult
 
@@ -201,7 +202,7 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 			<div className="mt-4 flex flex-wrap gap-1.5">
 				{langs.map((c, i) => (
 					<span key={c} className={`rounded-full px-2.5 py-1 text-sm ${i === 0 ? "bg-white text-black font-semibold" : "bg-white/10 text-gray-200"}`}>
-						{langLabel(c)}
+						{languageName(c)}
 					</span>
 				))}
 			</div>
@@ -235,13 +236,5 @@ function AnswerVisual({ media, country, id }: { media: Media; country: string; i
 		)
 	}
 	return null
-}
-
-const langLabel = (code: string) => {
-	try {
-		return new Intl.DisplayNames(["en"], { type: "language" }).of(code) ?? code
-	} catch {
-		return code
-	}
 }
 
