@@ -55,8 +55,10 @@ export function readGuestInteractions(): TasteInteraction[] {
 	if (raw === lastRaw) return cached
 	lastRaw = raw
 	try {
-		const parsed = JSON.parse(raw)
-		cached = normalizeGuestInteractions(parsed)
+		const interactions = normalizeGuestInteractions(JSON.parse(raw))
+		// No marks is the list the server rendered with, by identity: the first read in the browser then changes
+		// nothing for a new visitor, where a new empty list rendered every title card again right after hydration.
+		cached = interactions.length ? interactions : empty
 	} catch {
 		cached = empty
 	}
