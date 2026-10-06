@@ -134,12 +134,12 @@ export function useFloat() {
 
 /**
  * Draws the float above its anchor, or below when the sticky headers would cover it, inside
- * the viewport. `topInset` is how far down the viewport those headers reach.
+ * the viewport. `topInset` answers how far down the viewport those headers reach, and is asked when a float opens.
  *
  * The float goes into a portal on the body: the grid sits in an `isolate` stacking context,
  * where no z-index can lift the float over the sticky title header.
  */
-export function FloatLayer({ state, topInset }: { state: FloatState | null; topInset: number }) {
+export function FloatLayer({ state, topInset: headersBottom }: { state: FloatState | null; topInset: () => number }) {
 	const ref = useRef<HTMLDivElement>(null)
 	const [position, setPosition] = useState<{ left: number; top: number } | null>(null)
 
@@ -148,6 +148,7 @@ export function FloatLayer({ state, topInset }: { state: FloatState | null; topI
 		if (!state || !el) return setPosition(null)
 		const { width, height } = el.getBoundingClientRect()
 		const { anchor } = state
+		const topInset = headersBottom()
 		const gap = 6
 		const margin = 8
 		const left = Math.min(Math.max(margin, anchor.left + anchor.width / 2 - width / 2), window.innerWidth - width - margin)
@@ -162,7 +163,7 @@ export function FloatLayer({ state, topInset }: { state: FloatState | null; topI
 				? below
 				: Math.max(topInset + margin, above)
 		setPosition({ left, top })
-	}, [state, topInset])
+	}, [state, headersBottom])
 
 	if (!state) return null
 	return createPortal(

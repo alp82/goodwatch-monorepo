@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useMemo } from "react"
 import About from "~/ui/details/About"
 import Actors from "~/ui/details/Actors"
 import Crew from "~/ui/details/Crew"
@@ -33,8 +33,6 @@ export interface DetailsContentProps {
 	media: MovieResult | ShowResult
 	country: string
 	episodeGrid?: EpisodeGridData | null
-	/** Height of the sticky title header, so anchored sections scroll clear of it. */
-	headerHeight?: number
 	sectionProps: SectionProps<SectionIds>
 	navigateToSection: (section: Section) => void
 }
@@ -43,12 +41,14 @@ export default function DetailsContent({
 	media,
 	country,
 	episodeGrid,
-	headerHeight,
 	sectionProps,
 	navigateToSection,
 }: DetailsContentProps) {
 	const { details, cast, cast_total, crew, videos } = media
-	const questions = titleQuestions(media, country)
+	const questions = useMemo(
+		() => titleQuestions(media, country),
+		[media, country],
+	)
 	// Every section here starts below the first screen, so each one skips its layout until it is near the viewport.
 	const { skipping } = useBelowFold()
 	const section = (
@@ -63,7 +63,7 @@ export default function DetailsContent({
 		<div className="flex flex-col gap-12">
 			{hasEpisodeGrid(episodeGrid) && (
 				<div {...section(episodeGridHeight(episodeGrid))}>
-					<EpisodeGrid grid={episodeGrid} headerHeight={headerHeight} />
+					<EpisodeGrid grid={episodeGrid} />
 				</div>
 			)}
 			{/*<div>*/}

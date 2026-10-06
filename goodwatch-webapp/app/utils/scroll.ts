@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 
 export interface PropsForSection<T> {
 	id: T
@@ -13,6 +13,50 @@ export interface Section {
 	label: string
 }
 
+/**
+ * The sections that are on screen now. It lives outside React state on purpose: the page that owns the sections
+ * doesn't render again when the list changes, only the components that read it with `useActiveSections` do.
+ */
+export interface ActiveSections {
+	subscribe: (listener: () => void) => () => void
+	get: () => readonly string[]
+}
+
+const NO_SECTIONS: readonly string[] = []
+
+export function createActiveSections(): ActiveSections & {
+	enter: (id: string) => void
+	leave: (id: string) => void
+} {
+	let active = NO_SECTIONS
+	const listeners = new Set<() => void>()
+	const set = (next: readonly string[]) => {
+		active = next
+		for (const listener of listeners) listener()
+	}
+	return {
+		subscribe: (listener) => {
+			listeners.add(listener)
+			return () => {
+				listeners.delete(listener)
+			}
+		},
+		get: () => active,
+		enter: (id) => {
+			if (!active.includes(id)) set([...active, id])
+		},
+		leave: (id) => {
+			if (active.includes(id)) set(active.filter((other) => other !== id))
+		},
+	}
+}
+
+const noSections = () => NO_SECTIONS
+
+/** The ids of the sections on screen. Empty in the server's HTML and until the observer's first report. */
+export const useActiveSections = (active: ActiveSections) =>
+	useSyncExternalStore(active.subscribe, active.get, noSections)
+
 export interface UseScrollSectionsProps<T extends string> {
 	sections: Record<T, Section>
 }
@@ -20,7 +64,7 @@ export interface UseScrollSectionsProps<T extends string> {
 export const useScrollSections = <T extends string>({
 	sections,
 }: UseScrollSectionsProps<T>) => {
-	const [activeSections, setActiveSections] = useState<string[]>([])
+	const [activeSections] = useState(createActiveSections)
 	const sectionRefs = useRef<Record<T, HTMLDivElement | null>>(
 		{} as Record<T, null>,
 	)
@@ -70,18 +114,8 @@ export const useScrollSections = <T extends string>({
 		const callback = (entries: IntersectionObserverEntry[]) => {
 			for (const entry of entries) {
 				const { id } = entry.target
-				if (entry.isIntersecting) {
-					setActiveSections((prev) => {
-						if (!prev.includes(id)) {
-							return [...prev, id]
-						}
-						return prev
-					})
-				} else {
-					setActiveSections((prev) =>
-						prev.filter((sectionId) => sectionId !== id),
-					)
-				}
+				if (entry.isIntersecting) activeSections.enter(id)
+				else activeSections.leave(id)
 			}
 		}
 
@@ -103,7 +137,11 @@ export const useScrollSections = <T extends string>({
 				}
 			}
 		}
-	}, [sections])
+	}, [sections, activeSections])
 
-	return { activeSections, sectionProps, navigateToSection }
+	return {
+		activeSections: activeSections as ActiveSections,
+		sectionProps,
+		navigateToSection,
+	}
 }

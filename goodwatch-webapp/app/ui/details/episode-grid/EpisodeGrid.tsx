@@ -15,6 +15,7 @@
 // IMDb season score; hovering, focusing or tapping it opens every site's season score.
 // Titles and votes open the same way on an episode, and the key sits behind the info button.
 import { InformationCircleIcon } from "@heroicons/react/24/outline"
+import { HEADER_HEIGHT, stickyHeadersBottom } from "~/ui/details/header-height"
 import type { EpisodeGrid as EpisodeGridData, GridEpisode, GridSeason, GridSpecial } from "~/server/episode-grid.server"
 import {
 	EPISODE_GRID_ANCHOR,
@@ -76,8 +77,9 @@ const tilePaint = (episode: Pick<Episode, "score" | "votes">) => {
 
 // The site bar above the sticky title header.
 const SITE_BAR_HEIGHT = 64
+const headersBottom = () => stickyHeadersBottom(SITE_BAR_HEIGHT)
 
-export default function EpisodeGrid({ grid, headerHeight }: { grid: EpisodeGridData; headerHeight?: number }) {
+export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 	const float = useFloat()
 
 	const first = grid.hasEpisodeZero ? 0 : 1
@@ -260,9 +262,8 @@ export default function EpisodeGrid({ grid, headerHeight }: { grid: EpisodeGridD
 			id={EPISODE_GRID_ANCHOR}
 			aria-labelledby="episode-grid-title"
 			// Scroll clear of the site bar and the sticky title header, which grows on phones and
-			// with the discovery bar; the classes cover the server render before it is measured.
-			className="scroll-mt-60 sm:scroll-mt-64 md:scroll-mt-72"
-			style={headerHeight ? { scrollMarginTop: SITE_BAR_HEIGHT + headerHeight + 16 } : undefined}
+			// with the discovery bar.
+			style={{ scrollMarginTop: `calc(${HEADER_HEIGHT} + ${SITE_BAR_HEIGHT + 16}px)` }}
 		>
 			<div className="flex items-center justify-between gap-4">
 				<h2 id="episode-grid-title" tabIndex={-1} className="text-2xl font-bold focus:outline-none">
@@ -292,7 +293,7 @@ export default function EpisodeGrid({ grid, headerHeight }: { grid: EpisodeGridD
 					{narrow}
 				</div>
 			</div>
-			<FloatLayer state={float.state} topInset={SITE_BAR_HEIGHT + (headerHeight ?? 0)} />
+			<FloatLayer state={float.state} topInset={headersBottom} />
 		</section>
 	)
 }
