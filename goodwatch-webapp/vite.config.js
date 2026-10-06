@@ -63,14 +63,14 @@ function separateEntryFiles() {
 	}
 }
 
-// The recommendation, share list and title actions prototypes are kept in the repository for context. They are
+// The recommendation, share list, title actions and watch log prototypes are kept in the repository for context. They are
 // routes in development only: a production build leaves the routes out, and the stylesheet doesn't get the
 // class names that only they use (about a quarter of its rules).
 const PROTOTYPES = {
 	// Files in app/routes.
-	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*"],
+	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*"],
 	// Directories in app/ui that only those routes import.
-	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions"],
+	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log"],
 }
 const PROTOTYPE_SOURCES = [
 	...PROTOTYPES.routes.map((name) => `./routes/${name}`),
