@@ -18,12 +18,14 @@ installGlobals()
 
 // The query encoder worker thread and the share card renderer process each need their own file next to the
 // server bundle. query-encoder.server.ts and card-renderer/pool.server.ts load them from there. The two are plain
-// JavaScript and are copied. The workers that load the search index and the title snapshot share TypeScript modules
+// JavaScript and are copied, together with svg-filters.js, which the renderer imports. The workers that load the
+// search index and the title snapshot share TypeScript modules
 // with the server, so each is bundled into one file there (search-index.server.ts and
 // title-snapshot/prepare-worker.server.ts start them). A bundle that fails, fails the build.
 const SEPARATE_ENTRIES = [
 	"app/server/search-ranking/query-encoder.worker.js",
 	"app/server/card-renderer/render.child.js",
+	"app/server/card-renderer/svg-filters.js",
 ]
 const BUNDLED_WORKERS = [
 	"app/server/search-ranking/search-index.worker.ts",

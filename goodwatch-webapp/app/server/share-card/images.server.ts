@@ -21,7 +21,7 @@ import { getRedisCluster } from "~/utils/cache"
 
 // Bump when a design changes in a way that should redraw cached images.
 // v2: cards are signed with the owner's @handle instead of a free-text signature.
-// Link previews live under the same prefix with a ":preview" suffix.
+// Link previews use a ":preview900" suffix so cached 720-pixel previews cannot serve the 900-pixel image tags.
 const CACHE_PREFIX = "share-card:v2:"
 const STORE_SECONDS = 30 * 24 * 60 * 60
 const MEMORY_CACHE_MAX_BYTES = 128 * 1024 * 1024
@@ -99,7 +99,7 @@ async function render({
 
 // A list's handle never changes, so the content hash alone identifies its images.
 const cacheKey = (list: ShareList, kind: ShareCardKind) =>
-	`${CACHE_PREFIX}${list.id}:${list.contentHash}${kind === "preview" ? ":preview" : ""}`
+	`${CACHE_PREFIX}${list.id}:${list.contentHash}${kind === "preview" ? ":preview900" : ""}`
 
 // Concurrent requests for the same list and hash share one render, which caches both images.
 const pending = new Map<string, Promise<ShareCardImages>>()

@@ -51,12 +51,12 @@ if (out) mkdirSync(out, { recursive: true })
 
 const started = Date.now()
 const failures: string[] = []
-// WhatsApp skips og:image files over 600 KB; stay well under.
-const PREVIEW_MAX_BYTES = 300 * 1024
+// Previews stay under 150 KB, the weight limit for OG images.
+const PREVIEW_MAX_BYTES = 150 * 1024
 let largestPreview = { bytes: 0, label: "" }
-await Promise.all(
-	designs.flatMap((design) =>
-		CASES.map(async (c) => {
+// The renderer's queue is bounded and rejects a burst, so a few renders run at a time.
+const jobs = designs.flatMap((design) =>
+		CASES.map((c) => async () => {
 			const label = `${design.key}/${c.name}`
 			const t0 = Date.now()
 			try {
@@ -73,7 +73,12 @@ await Promise.all(
 				console.log(`FAIL  ${label}: ${error instanceof Error ? error.message : error}`)
 			}
 		}),
-	),
+)
+const CONCURRENCY = 3
+await Promise.all(
+	Array.from({ length: CONCURRENCY }, async () => {
+		for (let job = jobs.shift(); job; job = jobs.shift()) await job()
+	}),
 )
 stopShareCardRenderers()
 console.log(`\nLargest preview: ${largestPreview.label}, ${Math.round(largestPreview.bytes / 1024)} KB`)

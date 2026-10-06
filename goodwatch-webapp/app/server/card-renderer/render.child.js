@@ -1,7 +1,8 @@
 // The card renderer's child process, started by pool.server.ts.
 //
 // satori lays a card out as SVG and resvg rasterizes it. Both block their thread and resvg aborts its whole process on
-// some inputs, so they run here instead of in the web server.
+// some inputs, so they run here instead of in the web server. Tightening oversized satori shadow regions keeps
+// resvg from blurring areas beyond the shadow's reach while preserving the rendered pixels.
 // Messages in:
 // - { fonts: { <set>: [{ name, weight, style, data }] } }: a font set that exists only as bytes in the server bundle.
 // - { id, tree, width, height, fontSet, dynamicAssets, outputs }: a job. tree is a card with every component already
@@ -21,6 +22,7 @@ import { Resvg } from "@resvg/resvg-js"
 import jpeg from "jpeg-js"
 import { createElement } from "react"
 import satori from "satori"
+import { tightenShadowFilters } from "./svg-filters.js"
 const { fontDir, fonts: fontList } = JSON.parse(process.argv[2])
 const share = fontList.map((f) => ({
 	name: f.name,
@@ -176,12 +178,13 @@ process.on(
 				fonts: fontSets[fontSet],
 				...(dynamicAssets ? { loadAdditionalAsset } : {}),
 			})
+			const tightenedSvg = tightenShadowFilters(svg)
 			const renders = new Map()
 			const images = {}
 			for (const output of outputs) {
 				let render = renders.get(output.width)
 				if (!render) {
-					render = new Resvg(svg, {
+					render = new Resvg(tightenedSvg, {
 						fitTo: { mode: "width", value: output.width },
 					}).render()
 					renders.set(output.width, render)

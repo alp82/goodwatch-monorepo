@@ -4,6 +4,17 @@ import { renderCard, resolveTree } from "~/server/card-renderer/pool.server"
 import { toDataUri } from "~/server/og-image/render.server"
 import { SHARE_CARD_PREVIEW } from "~/ui/share-card/links"
 import type { CardDesign, CardProps, CardTitle } from "~/ui/share-card/model"
+// A 9:16 card at 900 pixels wide needs about quality 52 to stay under 145 KB, and the busiest design needs about 40.
+// There is no chroma subsampling, so text edges stay clean.
+export const PREVIEW_QUALITIES = [
+	SHARE_CARD_PREVIEW.quality,
+	70,
+	60,
+	52,
+	46,
+	40,
+]
+
 // Posters and backdrops repeat across cards and renders, so their data URIs are shared, with one retry.
 const IMAGE_CACHE_MAX = 300
 const imageCache = new Map<string, Promise<string | null>>()
@@ -56,8 +67,8 @@ export async function renderShareCard(
 				name: "preview",
 				format: "jpeg",
 				width: SHARE_CARD_PREVIEW.width,
-				// The preview stays under 150 KB: a lower quality is tried when the first one is too large.
-				qualities: [SHARE_CARD_PREVIEW.quality, 76, 70],
+				// The preview stays under 145 KB: a lower quality is tried when the first one is too large.
+				qualities: PREVIEW_QUALITIES,
 				maxBytes: 145_000,
 			},
 		],
