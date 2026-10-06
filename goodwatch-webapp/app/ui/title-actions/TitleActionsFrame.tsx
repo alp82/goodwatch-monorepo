@@ -1,11 +1,12 @@
 // Wraps a poster card (a link to the title page) and gives it the title actions: on a device that hovers, a row of
 // four icon buttons over the poster on hover or keyboard focus; on phones and tablets a "more" button that opens a
-// sheet with the whole set. The frame itself is all the server renders. The actions load as their own chunk when the
-// browser is idle and mount on the first hover, focus, or press. After Not interested, a "Hidden" tile with Undo
+// sheet with the whole set. The frame itself is all the server renders. The actions load as their own chunk at the
+// first interaction with the page and mount on the first hover, focus, or press. After Not interested, a "Hidden" tile with Undo
 // covers the card until the grid is next loaded.
 import { EllipsisHorizontalIcon } from "@heroicons/react/24/solid"
 import { type ReactNode, Suspense, lazy, useCallback, useContext, useEffect, useRef, useState } from "react"
 import type { ScoredMedia } from "~/ui/user/actions/ScoreAction"
+import { onFirstInteraction } from "~/utils/first-interaction"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { HiddenTileContext } from "./hide-feedback"
 import { useTouchPointer } from "./pointer"
@@ -13,13 +14,13 @@ import { useTouchPointer } from "./pointer"
 const loadCardActions = reloadOnStaleChunk(() => import("./CardActions"))
 const CardActions = lazy(loadCardActions)
 
+// Fetched at the first sign that a person uses the page, so the first hover or press finds the actions loaded and a
+// first view without interaction requests nothing.
 let preloaded = false
 function preloadCardActions() {
 	if (preloaded) return
 	preloaded = true
-	const load = () => void loadCardActions().catch(() => {})
-	if ("requestIdleCallback" in window) window.requestIdleCallback(load, { timeout: 5000 })
-	else setTimeout(load, 2000)
+	onFirstInteraction(() => void loadCardActions().catch(() => {}))
 }
 
 /**

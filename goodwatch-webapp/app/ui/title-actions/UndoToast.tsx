@@ -1,7 +1,7 @@
-// A short message at the bottom of the screen with an Undo button, gone after a few seconds.
+// A short message at the bottom of the screen with an Undo button, gone after a few seconds. It brings the animation
+// library, so a surface that only shows it after an action uses useUndoToast, which loads it on first use.
 import { AnimatePresence, motion } from "framer-motion"
-import { type ReactNode, useCallback, useEffect, useState } from "react"
-import { createPortal } from "react-dom"
+import { useEffect } from "react"
 
 const TOAST_MS = 6000
 
@@ -56,34 +56,4 @@ export function UndoToast({
 			</AnimatePresence>
 		</div>
 	)
-}
-
-/**
- * The toast for one surface. `say(text, undo)` shows it; `node` goes anywhere in the surface's markup (it renders at
- * the end of the page, so no ancestor can clip or offset it).
- */
-export function useUndoToast(className?: string): { say: (text: string, undo: () => void) => void; node: ReactNode } {
-	const [toast, setToast] = useState<(UndoToastMessage & { undo: () => void }) | null>(null)
-	// Stays mounted after the first message, so a later one can animate out.
-	const [used, setUsed] = useState(false)
-	const say = useCallback((text: string, undo: () => void) => {
-		setUsed(true)
-		setToast({ id: Date.now(), text, undo })
-	}, [])
-	const dismiss = useCallback(() => setToast(null), [])
-	const node = used
-		? createPortal(
-				<UndoToast
-					toast={toast}
-					className={className}
-					onDismiss={dismiss}
-					onUndo={() => {
-						toast?.undo()
-						setToast(null)
-					}}
-				/>,
-				document.body,
-			)
-		: null
-	return { say, node }
 }
