@@ -439,12 +439,13 @@ def _build_payload(
         if fp_scores:
             payload["fingerprint_scores_v1"] = fp_scores
 
-        # vectors
-        v_fp = dna.get("vector_fingerprint")
-        if v_fp:
-            vectors["fingerprint_v1"] = v_fp
+        # vectors: both are built from the scores, so they can't disagree with each other
+        # or with the payload. The stored vector_fingerprint only says the title has one;
+        # it can be older than the scores. Without valid scores no vector is written.
+        if dna.get("vector_fingerprint"):
             raw = _raw_fingerprint(fp_scores) if isinstance(fp_scores, dict) else None
             if raw:
+                vectors["fingerprint_v1"] = raw
                 vectors[FINGERPRINT_RAW_VECTOR] = raw
 
     # --- Tropes (optional tags list for payload filtering)
@@ -529,6 +530,10 @@ def copy_to_qdrant(
     unknown_streaming_ids: set = set()
     carried = set(carried_ids)
     carried_written = 0
+    # Titles whose stored vector_fingerprint differs from their scores, and titles with a
+    # stored one but no valid scores to build the vector from. The second kind isn't written.
+    stale_stored_fingerprints = 0
+    invalid_fingerprint_scores = 0
     # Titles deleted on TMDB: collected over the whole run, removed once at the end.
     flagged_ids: set = set()
 
@@ -582,6 +587,11 @@ def copy_to_qdrant(
             )
 
             have_vectors = bool(vectors["fingerprint_v1"])
+            stored_fingerprint = (dna_map.get(tmdb_id) or {}).get("vector_fingerprint")
+            if stored_fingerprint and not have_vectors:
+                invalid_fingerprint_scores += 1
+            elif stored_fingerprint and list(stored_fingerprint) != vectors["fingerprint_v1"]:
+                stale_stored_fingerprints += 1
             if have_vectors:
                 upsert_buffer.append((tmdb_id, payload, vectors))
             # else: skip this id quietly (no vectors yet)
@@ -654,6 +664,8 @@ def copy_to_qdrant(
             "skipped_unknown_streaming": len(unknown_streaming_ids),
             "unknown_streaming_ids": sorted(unknown_streaming_ids),
             "carried": len(carried), "carried_written": carried_written,
+            "stale_stored_fingerprints": stale_stored_fingerprints,
+            "invalid_fingerprint_scores": invalid_fingerprint_scores,
             "publication": publication_stats, "deleted_titles": deleted_titles}
 
 

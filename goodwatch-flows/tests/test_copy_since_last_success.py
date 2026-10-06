@@ -10,10 +10,12 @@ import mongomock
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
+from f.dna.models import CoreScores, create_fingerprint
 from f.sync.copy import sync_state, tmdb_details, vector_data
 from test_details_copy_paging import Crate
 
 NOW = datetime(2026, 10, 6, 12, 0, 0)
+SCORES = {name: index % 11 for index, name in enumerate(CoreScores.model_fields)}
 HOUR = timedelta(hours=1)
 DAY = timedelta(days=1)
 
@@ -47,7 +49,8 @@ class VectorCopyTests(unittest.TestCase):
         for collection, updated_at, fields in (
             (f"tmdb_{suffix}_details", details, {"title": f"Title {tmdb_id}"}),
             (f"imdb_{suffix}_rating", imdb, {"user_score_normalized_percent": 70}),
-            (f"dna_{suffix}", dna, {"vector_fingerprint": [0.1, 0.2]}),
+            (f"dna_{suffix}", dna, {"dna": {"fingerprint": {"scores": SCORES}},
+                                    "vector_fingerprint": create_fingerprint(SCORES)}),
             (f"tv_tropes_{suffix}_tags", tropes, {"tropes": [{"name": "Red Herring"}]}),
         ):
             self.db[collection].replace_one(
@@ -280,6 +283,19 @@ class VectorCopyTests(unittest.TestCase):
         self.assertEqual(movies, [2])
         self.assertEqual(result["movies"]["carried"], 0)
         self.assertEqual(list(self.db.sync_state.find()), before)
+
+    def test_stored_fingerprints_that_disagree_with_the_scores_are_counted(self):
+        for tmdb_id in (1, 2, 3):
+            self.title("movie", tmdb_id, dna=NOW - HOUR)
+        # 2 has scores newer than its stored fingerprint, 3 has no valid scores any more.
+        self.db.dna_movie.update_one({"tmdb_id": 2}, {"$set": {"dna.fingerprint.scores.adrenaline": 10}})
+        self.db.dna_movie.update_one({"tmdb_id": 3}, {"$unset": {"dna.fingerprint.scores.adrenaline": ""}})
+
+        movies, _, result, _ = self.run_main()
+
+        self.assertEqual(movies, [1, 2])
+        self.assertEqual(result["movies"]["stale_stored_fingerprints"], 1)
+        self.assertEqual(result["movies"]["invalid_fingerprint_scores"], 1)
 
     def test_a_full_copy_neither_reads_nor_moves_the_time(self):
         self.run_main()
