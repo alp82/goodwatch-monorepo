@@ -604,7 +604,8 @@ class VectorCopyTriggerTest(unittest.TestCase):
                 patch.object(vector_data, "QdrantConnector"), \
                 patch.object(vector_data, "get_db", return_value=mongomock.MongoClient().db), \
                 patch.object(vector_data, "copy_to_qdrant", side_effect=lambda *args, **kwargs: {
-                    "selected": 0, "upserts": 0, "skipped_unknown_streaming": 0}), \
+                    "selected": 0, "upserts": 0, "skipped_unknown_streaming": 0, "unknown_streaming_ids": [],
+                    "carried": 0, "carried_written": 0}), \
                 patch("wmill.run_script_by_path_async", return_value="job-1") as start:
             scheduled = vector_data.main()
             targeted = vector_data.main(movie_ids=["603"])

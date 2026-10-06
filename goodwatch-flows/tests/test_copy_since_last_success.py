@@ -33,7 +33,12 @@ class VectorCopyTests(unittest.TestCase):
     def setUp(self):
         self.db = mongomock.MongoClient().db
         self.now = NOW
-        self.fail = set()
+        self.failing = set()
+        # Titles Crate has no published streaming for.
+        self.unpublished = set()
+
+    def carried(self, media_type):
+        return state(self.db, "vector_data", media_type).get("carried_ids")
 
     def title(self, media_type, tmdb_id, *, details=None, imdb=None, dna=None, tropes=None):
         """Store a title with a fingerprint; each named source gets that updated_at."""
@@ -56,7 +61,7 @@ class VectorCopyTests(unittest.TestCase):
         def write(client, collection, operations, check_owned):
             for point in operations[0].upsert.points:
                 media_type = point.payload["media_type"]
-                if media_type in self.fail:
+                if media_type in self.failing:
                     raise RuntimeError(f"{media_type} write failed")
                 written[media_type].append(point.payload["tmdb_id"])
             return {"attempts": 1, "retries": 0, "errors": {}}
@@ -69,7 +74,8 @@ class VectorCopyTests(unittest.TestCase):
                 patch.object(vector_data, "TmdbTvDetails", MagicMock(_get_collection=lambda: collections["show"])), \
                 patch.object(vector_data, "_collection_vector_names", return_value={"fingerprint_v1"}), \
                 patch.object(vector_data, "publication_lease", side_effect=lambda *args: nullcontext(lambda: None)), \
-                patch.object(vector_data, "_published_streaming", side_effect=lambda media_type, ids: {i: [] for i in ids}), \
+                patch.object(vector_data, "_published_streaming", side_effect=lambda media_type, ids: {
+                    i: [] for i in ids if i not in self.unpublished}), \
                 patch.object(vector_data, "write_with_retry", side_effect=write), \
                 patch.object(vector_data, "delete_titles_from_qdrant", return_value={}), \
                 patch.object(vector_data, "_start_title_snapshot", return_value="job-1"), \
@@ -94,7 +100,8 @@ class VectorCopyTests(unittest.TestCase):
         self.assertTrue(result["movies"]["selection"]["fallback"])
         self.assertEqual(result["movies"]["selected"], 1)
         self.assertEqual(state(self.db, "vector_data", "movie")["last_run"]["counts"],
-                         {"selected": 1, "upserts": 1, "skipped_unknown_streaming": 0})
+                         {"selected": 1, "upserts": 1, "skipped_unknown_streaming": 0,
+                          "carried": 0, "carried_written": 0})
 
     def test_the_next_run_copies_what_any_of_the_four_sources_changed_since(self):
         self.title("movie", 1, details=NOW - 2 * HOUR)
@@ -120,7 +127,7 @@ class VectorCopyTests(unittest.TestCase):
         self.title("show", 2, dna=NOW + HOUR)
 
         self.now = NOW + 4 * HOUR
-        self.fail = {"movie"}
+        self.failing = {"movie"}
         movies, shows, _, error = self.run_main()
 
         # The movies fail the run before the shows start, so neither time moves.
@@ -130,7 +137,7 @@ class VectorCopyTests(unittest.TestCase):
         self.assertEqual(last_success(self.db, "vector_data", "show"), NOW)
 
         self.now = NOW + 8 * HOUR
-        self.fail = set()
+        self.failing = set()
         movies, shows, result, error = self.run_main()
 
         self.assertIsNone(error)
@@ -144,7 +151,7 @@ class VectorCopyTests(unittest.TestCase):
         self.title("show", 2, details=NOW + HOUR)
 
         self.now = NOW + 4 * HOUR
-        self.fail = {"show"}
+        self.failing = {"show"}
         movies, _, _, error = self.run_main()
 
         self.assertIn("show write failed", str(error))
@@ -191,6 +198,89 @@ class VectorCopyTests(unittest.TestCase):
         self.assertEqual(last_success(self.db, "vector_data", "movie"), NOW)
         self.assertEqual(last_success(self.db, "vector_data", "show"), NOW + 4 * HOUR)
 
+    def test_a_title_without_published_streaming_is_copied_again_until_it_is_written(self):
+        self.title("movie", 1, dna=NOW - HOUR)
+        self.title("movie", 2, dna=NOW - HOUR)
+        self.unpublished = {1}
+        movies, _, result, _ = self.run_main()
+
+        self.assertEqual(movies, [2])
+        self.assertEqual(result["movies"]["skipped_unknown_streaming"], 1)
+        self.assertNotIn("unknown_streaming_ids", result["movies"])
+        self.assertEqual(self.carried("movie"), [1])
+
+        # No driver of 1 moves again, and the next run's selection starts after its change.
+        self.now = NOW + 4 * HOUR
+        movies, _, result, _ = self.run_main()
+        self.assertEqual(movies, [])
+        self.assertEqual(self.carried("movie"), [1])
+        self.assertEqual(result["movies"]["selection"]["carried_ids"], 1)
+        self.assertEqual((result["movies"]["carried"], result["movies"]["carried_written"]), (1, 0))
+
+        self.now = NOW + 8 * HOUR
+        self.unpublished = set()
+        movies, _, result, _ = self.run_main()
+        self.assertEqual(movies, [1])
+        self.assertEqual(self.carried("movie"), [])
+        self.assertEqual((result["movies"]["carried"], result["movies"]["carried_written"]), (1, 1))
+        self.assertEqual(state(self.db, "vector_data", "movie")["last_run"]["counts"], {
+            "selected": 1, "upserts": 1, "skipped_unknown_streaming": 0, "carried": 1, "carried_written": 1})
+
+        self.now = NOW + 12 * HOUR
+        self.assertEqual(self.run_main()[0], [])
+
+    def test_a_failed_run_keeps_the_carried_titles_and_the_next_run_adds_its_own(self):
+        self.title("movie", 1, dna=NOW - HOUR)
+        self.unpublished = {1, 2}
+        self.run_main()
+        self.title("movie", 2, dna=NOW + HOUR)
+        self.title("movie", 3, dna=NOW + HOUR)
+
+        self.now = NOW + 4 * HOUR
+        self.failing = {"movie"}
+        _, _, _, error = self.run_main()
+
+        self.assertIn("movie write failed", str(error))
+        self.assertEqual(self.carried("movie"), [1])
+
+        # The gap is read again, so 2 is found without published streaming a second time.
+        self.now = NOW + 8 * HOUR
+        self.failing = set()
+        movies, _, _, _ = self.run_main()
+        self.assertEqual(movies, [3])
+        self.assertEqual(self.carried("movie"), [1, 2])
+
+    def test_a_carried_title_that_can_no_longer_be_copied_is_dropped(self):
+        for tmdb_id in (1, 2, 3):
+            self.title("movie", tmdb_id, dna=NOW - HOUR)
+        self.unpublished = {1, 2, 3}
+        self.run_main()
+        self.assertEqual(self.carried("movie"), [1, 2, 3])
+
+        # 1 lost its fingerprint, 2 was deleted on TMDB, 3 still waits for its streaming.
+        self.db.dna_movie.update_one({"tmdb_id": 1}, {"$unset": {"vector_fingerprint": ""}})
+        self.db.tmdb_movie_details.update_one({"tmdb_id": 2}, {"$set": {"tmdb_deleted": True}})
+        self.now = NOW + 4 * HOUR
+        movies, _, _, _ = self.run_main()
+
+        self.assertEqual(movies, [])
+        self.assertEqual(self.carried("movie"), [3])
+
+    def test_a_run_restricted_to_ids_neither_copies_nor_changes_the_carried_titles(self):
+        self.title("movie", 1, dna=NOW - HOUR)
+        self.unpublished = {1}
+        self.run_main()
+        before = list(self.db.sync_state.find())
+        self.title("movie", 2, details=datetime.utcnow() - HOUR)
+
+        self.now = NOW + 4 * HOUR
+        self.unpublished = set()
+        movies, shows, result, _ = self.run_main(movie_ids=["2"], show_ids=["9"])
+
+        self.assertEqual(movies, [2])
+        self.assertEqual(result["movies"]["carried"], 0)
+        self.assertEqual(list(self.db.sync_state.find()), before)
+
     def test_a_full_copy_neither_reads_nor_moves_the_time(self):
         self.run_main()
         self.title("movie", 1, details=NOW - 30 * DAY)
@@ -223,7 +313,7 @@ class DetailsCopyTests(unittest.TestCase):
     def setUp(self):
         self.db = mongomock.MongoClient().db
         self.now = NOW
-        self.fail = set()
+        self.failing = set()
 
     def movie(self, tmdb_id, updated_at):
         self.db.tmdb_movie_details.replace_one(
@@ -240,12 +330,12 @@ class DetailsCopyTests(unittest.TestCase):
         copied = {"movie": [], "show": []}
 
         def on_upsert(table, records):
-            if ("copy", table) in self.fail:
+            if ("copy", table) in self.failing:
                 raise RuntimeError(f"{table} copy failed")
             copied[table].extend(record.tmdb_id for record in records)
 
         def delete(connector, media_type, *args, **kwargs):
-            if ("delete", media_type) in self.fail:
+            if ("delete", media_type) in self.failing:
                 raise RuntimeError(f"{media_type} delete failed")
             return {"titles_flagged": 0}
 
@@ -298,7 +388,7 @@ class DetailsCopyTests(unittest.TestCase):
         self.show(2, NOW + HOUR)
 
         self.now = NOW + 12 * HOUR
-        self.fail = {("copy", "movie")}
+        self.failing = {("copy", "movie")}
         movies, shows, results, error = self.run_main()
 
         self.assertIn("movie copy", str(error))
@@ -309,7 +399,7 @@ class DetailsCopyTests(unittest.TestCase):
         self.assertEqual(results["movies"]["selection"]["since"], (NOW - timedelta(minutes=30)).isoformat())
 
         self.now = NOW + 24 * HOUR
-        self.fail = set()
+        self.failing = set()
         movies, shows, _, error = self.run_main()
 
         self.assertIsNone(error)
@@ -320,7 +410,7 @@ class DetailsCopyTests(unittest.TestCase):
         self.run_main()
 
         self.now = NOW + 12 * HOUR
-        self.fail = {("delete", "show")}
+        self.failing = {("delete", "show")}
         _, _, _, error = self.run_main()
 
         self.assertIn("show deletion", str(error))

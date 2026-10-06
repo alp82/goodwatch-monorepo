@@ -102,6 +102,48 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(document["last_success_started_at"], NOW)
         self.assertEqual(document["last_run"]["counts"], {"upserts": 2})
 
+    def test_carried_ids_reach_the_next_run(self):
+        first = sync_state.begin(self.db, "vector_data", "movie", now=NOW - 4 * HOUR)
+        self.assertEqual(first.carried_ids, ())
+        sync_state.commit(self.db, first, {}, carried_ids=[7, 3])
+
+        selection = sync_state.begin(self.db, "vector_data", "movie", now=NOW)
+
+        self.assertEqual(selection.carried_ids, (3, 7))
+        self.assertEqual(selection.report()["carried_ids"], 2)
+
+    def test_a_run_without_a_commit_keeps_the_carried_ids(self):
+        sync_state.commit(self.db, sync_state.begin(self.db, "vector_data", "movie", now=NOW - 8 * HOUR), {},
+                          carried_ids=[3])
+        sync_state.begin(self.db, "vector_data", "movie", now=NOW - 4 * HOUR)
+
+        self.assertEqual(sync_state.begin(self.db, "vector_data", "movie", now=NOW).carried_ids, (3,))
+
+    def test_a_commit_replaces_the_carried_ids_and_one_without_them_keeps_them(self):
+        sync_state.commit(self.db, sync_state.begin(self.db, "vector_data", "movie", now=NOW - 8 * HOUR), {},
+                          carried_ids=[3, 5])
+        sync_state.commit(self.db, sync_state.begin(self.db, "vector_data", "movie", now=NOW - 4 * HOUR), {})
+        self.assertEqual(state(self.db, "vector_data", "movie")["carried_ids"], [3, 5])
+
+        sync_state.commit(self.db, sync_state.begin(self.db, "vector_data", "movie", now=NOW), {}, carried_ids=[])
+        self.assertEqual(state(self.db, "vector_data", "movie")["carried_ids"], [])
+
+    def test_an_overtaken_run_does_not_replace_the_carried_ids(self):
+        earlier = sync_state.begin(self.db, "vector_data", "movie", now=NOW - 4 * HOUR)
+        later = sync_state.begin(self.db, "vector_data", "movie", now=NOW)
+        sync_state.commit(self.db, later, {}, carried_ids=[1, 2])
+        sync_state.commit(self.db, earlier, {}, carried_ids=[1])
+
+        self.assertEqual(state(self.db, "vector_data", "movie")["carried_ids"], [1, 2])
+
+    def test_many_carried_ids_are_logged_as_a_warning(self):
+        selection = sync_state.begin(self.db, "vector_data", "movie", now=NOW)
+
+        with patch("builtins.print") as log:
+            sync_state.commit(self.db, selection, {}, carried_ids=range(sync_state.CARRIED_IDS_WARNING + 1))
+
+        self.assertIn("WARNING: vector_data:movie carries 5001 ids", log.call_args.args[0])
+
     def test_each_job_and_media_type_has_its_own_time(self):
         sync_state.commit(self.db, sync_state.begin(self.db, "vector_data", "movie", now=NOW - HOUR), {})
 
@@ -119,6 +161,7 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(report, {
             "started_at": "2026-10-06T12:00:00", "since": "2026-10-04T12:00:00",
             "last_success_started_at": None, "fallback": True, "lookback_capped": False,
+            "carried_ids": 0,
         })
 
 
