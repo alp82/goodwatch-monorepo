@@ -10,6 +10,8 @@ export type StreamingProviderParams = {
 	country: string
 }
 
+const COUNTRY_CODE = /^[A-Z]{2}$/
+
 export const getStreamingProviders = async (
 	params: StreamingProviderParams,
 ) => {
@@ -19,7 +21,8 @@ export const getStreamingProviders = async (
 	>({
 		name: "streaming-providers",
 		target: _getStreamingProviders,
-		params,
+		// One cache entry for every value that isn't a country code, not one per value a request sends.
+		params: { country: COUNTRY_CODE.test(params.country) ? params.country : "" },
 		ttlMinutes: 60 * 24,
 		//ttlMinutes: 0,
 	})
@@ -36,8 +39,13 @@ export const getStreamingProviders = async (
 export async function _getStreamingProviders(
 	params: StreamingProviderParams,
 ): Promise<StreamingProviderResults> {
+	// `order_by_country` is an object column: Crate refuses a subscript that no row has a key for
+	// (ColumnUnknownException), so a country without streaming data gets the default order. The country is part of the
+	// statement text and comes from the URL or a saved setting: only a two-letter code gets there.
 	const orderByFields = [
-		`order_by_country['${params.country}']`,
+		...(COUNTRY_CODE.test(params.country)
+			? [`order_by_country['${params.country}']`]
+			: []),
 		"order_default",
 	]
 

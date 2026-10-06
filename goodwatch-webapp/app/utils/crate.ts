@@ -18,6 +18,29 @@ export class CrateTimeoutError extends Error {
 	}
 }
 
+// node-crate rejects a statement that Crate refused with the response's `error` object ({ message, code }), which is
+// not an Error. Callers test `instanceof Error`, and Remix sends a thrown value that isn't an Error to the browser as
+// it is. Every failure that leaves the client is therefore an Error: this one for a refused statement, with Crate's
+// message (it starts with the exception name, such as ColumnUnknownException) and Crate's error code (4043 for it).
+export class CrateError extends Error {
+	code?: number
+
+	constructor(message: string, code?: number) {
+		super(message)
+		this.name = "CrateError"
+		this.code = code
+	}
+}
+
+export const toCrateError = (error: unknown): Error => {
+	if (error instanceof Error) return error
+	const refused = (error ?? {}) as { message?: unknown; code?: unknown }
+	return new CrateError(
+		typeof refused.message === "string" ? refused.message : capLog(error),
+		typeof refused.code === "number" ? refused.code : undefined,
+	)
+}
+
 const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
 	let timer: ReturnType<typeof setTimeout> | undefined
 	const timeout = new Promise<never>((_, reject) => {
@@ -81,7 +104,7 @@ class CrateClient {
 			console.error('Error:', error)
 			console.error('Stack trace:')
 			console.trace()
-			throw error
+			throw toCrateError(error)
 		}
 	}
 
