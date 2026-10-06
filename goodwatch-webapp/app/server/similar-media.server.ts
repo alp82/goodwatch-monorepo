@@ -1,6 +1,7 @@
 import type { WithSimilar } from "~/routes/api.similar-media";
 import { cached } from "~/utils/cache";
 import { query } from "~/utils/crate";
+import { parseWithSimilar } from "./similar-media-input";
 import { type AllRatings, getRatingKeys } from "~/utils/ratings";
 
 const LIMIT_PER_SEARCH = 100;
@@ -46,7 +47,7 @@ async function _getSimilarMedia({
 	searchTerm,
 	withSimilarJson,
 }: SimilarMediaParams): Promise<SimilarMediaResult> {
-	const withSimilar = JSON.parse(withSimilarJson);
+	const withSimilar = parseWithSimilar(withSimilarJson) as unknown as WithSimilar[];
 
 	const movies = await _getSearchResults({
 		tableName: "movie",
