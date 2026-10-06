@@ -80,6 +80,7 @@ if (process.argv[2] === "finish" || process.argv[2] === "start") {
           ended_at: null,
           k6_exit_code: null,
           lighthouse: e.KIND === "lighthouse" ? { runs: Number(e.LH_RUNS), where: e.WHERE } : null,
+          tap: e.KIND === "tap" ? { runs: Number(e.TAP_RUNS), where: e.WHERE, pages: e.TAP_PAGES, cpu: Number(e.TAP_CPU), network: e.TAP_NETWORK } : null,
         },
         null,
         2,
