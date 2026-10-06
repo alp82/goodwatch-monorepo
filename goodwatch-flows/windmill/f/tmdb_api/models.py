@@ -575,9 +575,56 @@ class TmdbTvDetails(BaseTmdbDetails):
     videos = EmbeddedDocumentListField(Video)
     watch_providers = EmbeddedDocumentField(WatchProviders)
 
+    # Crawl state of the episode catalog (f/tmdb_api/tmdb_fetch_episodes_from_api), written
+    # with $set only. A missing episodes_due_at means the episodes were never fetched.
+    episodes_due_at = DateTimeField()
+    episodes_selected_at = DateTimeField()
+    # Last fetch that left the season documents usable, including "TMDB lists no season".
+    episodes_updated_at = DateTimeField()
+    # Every listed season was fetched, so the Crate copy may mark missing episodes removed.
+    episodes_complete = BooleanField()
+    episodes_failed_at = DateTimeField()
+    episodes_error = StringField()
+    # Last time TMDB's change feed named the show.
+    episodes_changed_at = DateTimeField()
+
     meta = {
         "indexes": [
             "external_ids.imdb_id",
+            # The episode queue reads the shows that are due, longest due first.
+            "episodes_due_at",
+            # Covers the Crate copy's read of the shows fetched since its checkpoint.
+            ("episodes_updated_at", "tmdb_id", "episodes_complete"),
+        ],
+    }
+
+
+class TmdbTvSeasonDetails(Document):
+    """One season of a show with its episodes, as TMDB lists them (episode catalog).
+
+    Written by f/tmdb_api/tmdb_fetch_episodes_from_api/fetch through pymongo. Each
+    episode is TMDB's episode object without crew and guest_stars.
+    """
+
+    # The show's TMDB id.
+    tmdb_id = IntField(required=True)
+    season_number = IntField(required=True)
+    # TMDB's season id, from the show's seasons[]; the appended season carries none.
+    season_id = IntField()
+    name = StringField()
+    air_date = StringField()
+    overview = StringField()
+    poster_path = StringField()
+    vote_average = FloatField()
+    episodes = ListField(DictField())
+
+    created_at = DateTimeField()
+    updated_at = DateTimeField()
+
+    meta = {
+        "collection": "tmdb_tv_season_details",
+        "indexes": [
+            {"fields": ["tmdb_id", "season_number"], "unique": True},
         ],
     }
 

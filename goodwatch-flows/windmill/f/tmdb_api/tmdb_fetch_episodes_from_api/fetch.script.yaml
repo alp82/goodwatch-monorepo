@@ -1,0 +1,15 @@
+summary: ''
+description: Fetch the seasons and episodes of the reserved shows from the TMDB API
+lock: '!inline f/tmdb_api/tmdb_fetch_episodes_from_api/fetch.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    next_ids:
+      type: object
+      description: ''
+      default: null
+      properties: {}
+  required:
+    - next_ids

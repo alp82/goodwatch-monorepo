@@ -271,6 +271,24 @@ class Season(BaseModel):
     vote_average: Optional[float] = None
 
 
+class Episode(BaseModel):
+    """A TMDB episode. Only the columns the catalog copy owns; it overwrites all of them."""
+
+    show_id: int
+    tmdb_id: int
+    season_tmdb_id: Optional[int] = None
+    season_number: int  # 0 for specials
+    episode_number: Optional[int] = None
+    name: Optional[str] = None
+    air_date: Optional[int] = None  # midnight UTC in milliseconds
+    runtime: Optional[int] = None
+    still_path: Optional[str] = None
+    episode_type: Optional[str] = None
+    tmdb_user_score_original: Optional[float] = None
+    tmdb_user_score_rating_count: Optional[int] = None
+    removed_at: Optional[int] = None
+
+
 class ImdbEpisode(BaseModel):
     show_id: int
     imdb_episode_id: str
