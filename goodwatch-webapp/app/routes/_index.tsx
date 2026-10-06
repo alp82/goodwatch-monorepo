@@ -21,7 +21,7 @@ import { type LivingRoomData, titleOf } from "~/ui/living-room/living-room-data"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import { type TvEffect, isTvOnlyChange } from "~/ui/living-room/tv-flow"
 import { useLeaveThroughTv } from "~/ui/living-room/tv-transition"
-import { useUndoToast } from "~/ui/title-actions/UndoToast"
+import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { titleHref } from "~/ui/watch-next/WatchNextHero"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 

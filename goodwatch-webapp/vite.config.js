@@ -139,7 +139,8 @@ function leanStylesheet() {
 //    `shell`, which changes with most deploys, and the remaining library code to `vendor`.
 // 3. App modules under 3 KB that more than one module imports (helpers, hooks, small components) also go to `shell`.
 //    Together they are about 30 KB minified, and each was a request of its own.
-// 4. Rollup splits the rest by route, as before.
+// 4. Feature modules that load together get one chunk per group, see FEATURE_CHUNKS.
+// 5. Rollup splits the rest by route, as before.
 // Rollup puts a module's own imports into the same manual chunk unless a rule names another one. Rule 3 therefore only
 // takes modules whose imports are on every page already or match rule 3 themselves, so it can't pull a large module or
 // a library such as framer-motion onto every page.
@@ -162,6 +163,19 @@ const SHELL_ROOTS = /\/app\/(root|entry\.client)\.tsx$/
 const APP_MODULE = /\/app\/(?!routes\/)/
 // A shared module above this size stays with the routes that use it.
 const SHARED_SMALL_MODULE_MAX_BYTES = 3_000
+
+// Rule 4: modules that always load together but that Rollup would split, because different sets of routes import each.
+// The title action set (score control, Want to See, Seen, Not interested) is on the first view of every title page and
+// was four files there. A group lists every module it should hold: a module that a group's module imports and that no
+// rule names is pulled into the group, for every page that uses it. That is why the mutation hooks, which the home page
+// also loads, are a group of their own.
+const FEATURE_CHUNKS = [
+	["user-data", /\/app\/hooks\/useUserDataMutations\.ts$/],
+	[
+		"title-actions",
+		/\/app\/ui\/(title-actions\/(ScoreControl|TitleScore|TitleActionSet|useTitleActions|ActionButton)|user\/actions\/ScoreAction)\.tsx?$/,
+	],
+]
 
 function clientChunks() {
 	const vendorChunk = (id) => {
@@ -210,6 +224,7 @@ function clientChunks() {
 		if (isOnEveryPage(id, graph))
 			return id.includes("/node_modules/") ? "vendor" : "shell"
 		if (isSharedSmallModule(id, graph)) return "shell"
+		for (const [name, pattern] of FEATURE_CHUNKS) if (pattern.test(id)) return name
 		return undefined
 	}
 }

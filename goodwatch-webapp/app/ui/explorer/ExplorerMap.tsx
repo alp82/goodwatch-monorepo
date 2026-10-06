@@ -39,7 +39,7 @@ import {
 } from "./CombineBar"
 import { HistoryBar, type StepView } from "./HistoryBar"
 import { Minimap } from "./Minimap"
-import { useUndoToast } from "~/ui/title-actions/UndoToast"
+import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { Caption, ProximityCard } from "./ProximityCard"
 import { TopBar } from "./TopBar"
 import { ZoomRail } from "./ZoomRail"
