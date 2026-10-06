@@ -15,6 +15,7 @@ from f.db.mongodb import (
 )
 from f.db.qdrant import QdrantConnector
 from f.db.cratedb import CrateConnector
+from f.sync.copy import sync_state
 from f.sync.copy.deleted_titles import delete_titles_from_qdrant, flag_spike, flagged_among, flagged_oldest_first
 from f.sync.copy.tmdb_streaming import SCHEDULED_LEASE_WAIT_SECONDS, publication_lease
 from f.sync.copy.qdrant_retry import (
@@ -30,7 +31,10 @@ from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 # the 4 GB worker limit.
 BATCH_SIZE = 500
 UPSERT_BATCH_SIZE = 1000  # points per Qdrant write request
-HOURS_TO_FETCH = 24 * 2  # time window for "recent" updates
+# Window for "recent" updates of a run restricted to ids. A scheduled run reads from its
+# last successful run instead (f/sync/copy/sync_state).
+HOURS_TO_FETCH = 24 * 2
+SYNC_JOB = "vector_data"
 
 # The 74 raw 0-10 scores in the same dimension order as fingerprint_v1, for Dot
 # distance. Written only when the collection has this named vector.
@@ -463,9 +467,12 @@ def copy_to_qdrant(
     media_type: str,  # "movie" | "show"
     query_selector: dict,
     *, recent_only: bool = True, strict_writes: bool = False,
+    since: Optional[datetime] = None,
 ):
     """
     Combined copy into Qdrant.
+    - a recent copy takes the titles whose drivers changed since `since`, by default in
+      the last HOURS_TO_FETCH hours.
     - only writes points **with vectors**: creates missing points and, for
       existing ones, replaces the fingerprint vectors and the payload. Vectors
       that other writers own stay untouched.
@@ -488,7 +495,7 @@ def copy_to_qdrant(
     c_dna = db.dna_movie if is_movie else db.dna_tv
     c_tropes = db.tv_tropes_movie_tags if is_movie else db.tv_tropes_tv_tags
 
-    updated = {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
+    updated = {"$gte": since or datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
     sel = dict(query_selector or {})
 
     drivers = _drivers(c_details, c_imdb, c_dna, c_tropes, recent_only=recent_only)
@@ -502,6 +509,8 @@ def copy_to_qdrant(
     }
 
     processed = 0
+    # Titles with a fingerprint that Crate has no published streaming for yet. They aren't written.
+    skipped_unknown_streaming = 0
     # Titles deleted on TMDB: collected over the whole run, removed once at the end.
     flagged_ids: set = set()
 
@@ -573,6 +582,7 @@ def copy_to_qdrant(
                     # NULL/missing aggregates are unknown; only an explicit empty
                     # array is evidence that clearing existing availability is safe.
                     if tmdb_id not in published_streaming:
+                        skipped_unknown_streaming += 1
                         continue
                     payload["streaming_availability"] = published_streaming[tmdb_id]
                     points.append(qm.PointStruct(
@@ -612,7 +622,8 @@ def copy_to_qdrant(
         QdrantMediaPoint.make_point_id, spike=spike,
     )
 
-    return {"upserts": total_upserts, "payload_updates": total_payload_updates,
+    return {"selected": processed, "upserts": total_upserts, "payload_updates": total_payload_updates,
+            "skipped_unknown_streaming": skipped_unknown_streaming,
             "publication": publication_stats, "deleted_titles": deleted_titles}
 
 
@@ -623,7 +634,8 @@ def main(
     movie_ids: Optional[List[str]] = None,
     show_ids: Optional[List[str]] = None,
 ):
-    """Publish recent fingerprints, optionally restricting each media type to IDs."""
+    """Publish the fingerprints changed since the last successful run, optionally restricting
+    each media type to IDs."""
     def _id_selector(ids: Optional[List[str]]) -> dict:
         if not ids:
             return {}
@@ -636,10 +648,18 @@ def main(
         stack.callback(close_mongodb)
         qc = QdrantConnector(timeout=REQUEST_TIMEOUT_SECONDS)
         stack.callback(qc.close)
-        result = {
-            "movies": copy_to_qdrant(qc, "movie", _id_selector(movie_ids)),
-            "shows": copy_to_qdrant(qc, "show", _id_selector(show_ids)),
-        }
+        result = {}
+        for key, media_type, ids in (("movies", "movie", movie_ids), ("shows", "show", show_ids)):
+            # A media type restricted to ids doesn't cover every change, so it keeps the
+            # fixed window and leaves the sync state alone.
+            selection = None if ids else sync_state.begin(get_db(), SYNC_JOB, media_type)
+            result[key] = copy_to_qdrant(
+                qc, media_type, _id_selector(ids), since=selection.since if selection else None)
+            if selection:
+                # Reached only when the whole media type succeeded: a failure raises above.
+                sync_state.commit(get_db(), selection, {
+                    count: result[key][count] for count in ("selected", "upserts", "skipped_unknown_streaming")})
+                result[key]["selection"] = selection.report()
     if not movie_ids and not show_ids:
         result["title_snapshot"] = _start_title_snapshot()
     return result
