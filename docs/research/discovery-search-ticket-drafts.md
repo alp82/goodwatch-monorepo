@@ -1,6 +1,29 @@
 # Discovery search: draft ticket breakdown
 
-Date: 2026-10-06. **Unpublished drafts.** No GitHub issue exists for any of these; they are published only after the owner approves the breakdown. Evidence for every ticket is in [discovery-search-opportunity.md](discovery-search-opportunity.md).
+Date: 2026-10-06. Evidence for every ticket is in [discovery-search-opportunity.md](discovery-search-opportunity.md).
+
+## Published on 2026-10-06
+
+The owner approved the breakdown on 2026-10-06 and moved the PostHog ticket to the front, so that visitor evidence exists before and after the changes. The drafts below keep their original numbering and are superseded by these issues, which hold the agreed scope.
+
+Map: [#347: Find out whether Google keeps GoodWatch's pages, then test discovery pages](https://github.com/alp82/goodwatch-monorepo/issues/347)
+
+| Issue | Ticket | Draft | Blocked by |
+| --- | --- | --- | --- |
+| [#348](https://github.com/alp82/goodwatch-monorepo/issues/348) | Restore PostHog access and record the search-landing baseline | 11 | none |
+| [#349](https://github.com/alp82/goodwatch-monorepo/issues/349) | Read the Search Console reports the API can't show, and resubmit the sitemap | 1 | none |
+| [#350](https://github.com/alp82/goodwatch-monorepo/issues/350) | Stop sending crawlers to hubs for unknown and old URLs | 2 | #348 |
+| [#351](https://github.com/alp82/goodwatch-monorepo/issues/351) | Regenerate the sitemap with honest dates, on a schedule | 3 | #348 |
+| [#352](https://github.com/alp82/goodwatch-monorepo/issues/352) | Give the start page crawlable links to titles and hubs | 4 | #348 |
+| [#353](https://github.com/alp82/goodwatch-monorepo/issues/353) | Record the index state of a fixed sample every week | 5 | none |
+| [#354](https://github.com/alp82/goodwatch-monorepo/issues/354) | Decide whether a bounded set of pages stays indexed | 6 | #349 to #353 |
+| [#355](https://github.com/alp82/goodwatch-monorepo/issues/355) | Decide how the title page answers "movies like X" | 7 | #354 |
+| [#356](https://github.com/alp82/goodwatch-monorepo/issues/356) | Make the title page answer "movies like X" | 8 | #355 |
+| [#357](https://github.com/alp82/goodwatch-monorepo/issues/357) | Repair the mood pages as theme pages | 9 | #354 |
+| [#358](https://github.com/alp82/goodwatch-monorepo/issues/358) | Check the German results by hand and decide on German | 10 | #354 |
+| [#359](https://github.com/alp82/goodwatch-monorepo/issues/359) | Decide whether to scale, hold or drop search as a channel | 12 | #348, #356, #357, #358 |
+
+## Drafts as written before approval
 
 ## Proposed focused map: Find out whether Google will keep GoodWatch's pages, then test discovery pages
 
