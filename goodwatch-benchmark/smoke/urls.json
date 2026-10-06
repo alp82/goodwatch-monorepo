@@ -188,6 +188,12 @@
       "path": "/api/command-palette?q=mat",
       "json": { "arrays": ["titles"], "minItems": 1 },
       "guards": "The header search: it reads the search index and the people index in memory, and sends no model call."
+    },
+    {
+      "id": "api-living-room-pool-no-streaming-country",
+      "path": "/api/living-room/picks?view=pool&country=CN",
+      "json": { "keys": ["catalog", "pairs"], "arrays": ["suggestions"], "minItems": 1 },
+      "guards": "The home page's pool for a country without a key in the streaming order answered 503 (ColumnUnknownException). The page sends it as a POST with the guest's progress: the GET reads the same pool for a guest without progress."
     }
   ]
 }
