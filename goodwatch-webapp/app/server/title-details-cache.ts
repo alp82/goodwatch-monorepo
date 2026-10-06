@@ -2,7 +2,7 @@ import type {
 	DetailsMovieParams,
 	DetailsShowParams,
 } from "~/server/types/details-types"
-import { cached } from "~/utils/cache"
+import { cached, readCacheMarker, writeCacheMarker } from "~/utils/cache"
 import { canonicalTitleId } from "~/utils/title-identity"
 import { type RawTitleDetails, trimTitleDetails } from "./title-details-shape"
 
@@ -17,12 +17,35 @@ export const DETAILS_SHOW_CACHE_NAME = "details-show-v2"
 export const DETAILS_TTL_MINUTES = 12 * 60
 export const DETAILS_STALE_MINUTES = 12 * 60
 
+// A title that doesn't exist gets a marker under its own cache name, so that a burst of requests
+// for one dead link sends one statement to Crate per minute instead of one per request. The
+// marker is per title, not per country or language. It is written only when the statement ran
+// and returned no row: a failed or timed-out statement throws and stores nothing. A title that
+// the pipelines add later answers 404 for at most this long after its first failed lookup, and
+// a marker is never served stale.
+export const DETAILS_MISSING_CACHE_NAME = "details-missing-v1"
+export const DETAILS_MISSING_TTL_SECONDS = 60
+
+// Crosses the data cache as a plain error, so that all callers of one shared run can share it.
+// Each caller gets its own 404 Response from the getters below.
+class TitleNotFound extends Error {
+	constructor() {
+		super("title not found")
+	}
+}
+const notFound = (error: unknown): never => {
+	throw error instanceof TitleNotFound
+		? new Response("Not Found", { status: 404 })
+		: error
+}
+
+/** Resolves with null when the title doesn't exist, and rejects when the lookup itself failed. */
 type FetchDetails = (
 	mediaType: "movie" | "show",
 	id: string,
 	country: string,
 	language: string,
-) => Promise<RawTitleDetails>
+) => Promise<RawTitleDetails | null>
 function normalized(
 	id: string,
 	country: string,
@@ -42,24 +65,52 @@ function normalized(
 }
 /** The production cache wiring with an injectable raw fetch for offline tests. */
 export function createTitleDetailsGetters(fetchDetails: FetchDetails) {
-	const movieTarget = async ({
-		movieId,
-		country,
-		language,
-	}: DetailsMovieParams) => ({
+	// The marker is read only after the details cache missed, so a stored title costs one lookup.
+	const fetchExisting = async (
+		mediaType: "movie" | "show",
+		id: string,
+		country: string,
+		language: string,
+		useMarker: boolean,
+	) => {
+		const marker = { mediaType, id }
+		if (
+			useMarker &&
+			(await readCacheMarker(
+				DETAILS_MISSING_CACHE_NAME,
+				marker,
+				DETAILS_MISSING_TTL_SECONDS,
+			))
+		)
+			throw new TitleNotFound()
+		const details = await fetchDetails(mediaType, id, country, language)
+		if (details === null) {
+			if (useMarker)
+				await writeCacheMarker(
+					DETAILS_MISSING_CACHE_NAME,
+					marker,
+					DETAILS_MISSING_TTL_SECONDS,
+				)
+			throw new TitleNotFound()
+		}
+		return details
+	}
+	const movieTarget = async (
+		{ movieId, country, language }: DetailsMovieParams,
+		useMarker = true,
+	) => ({
 		...trimTitleDetails(
-			await fetchDetails("movie", movieId, country, language),
+			await fetchExisting("movie", movieId, country, language, useMarker),
 			"movie",
 			country,
 		),
 	})
-	const showTarget = async ({
-		showId,
-		country,
-		language,
-	}: DetailsShowParams) => ({
+	const showTarget = async (
+		{ showId, country, language }: DetailsShowParams,
+		useMarker = true,
+	) => ({
 		...trimTitleDetails(
-			await fetchDetails("show", showId, country, language),
+			await fetchExisting("show", showId, country, language, useMarker),
 			"show",
 			country,
 		),
@@ -75,15 +126,17 @@ export function createTitleDetailsGetters(fetchDetails: FetchDetails) {
 				language,
 			} = normalized(params.movieId, params.country, params.language, "movie")
 			const clean = { movieId, country, language }
-			return options?.bypassCache
-				? movieTarget(clean)
-				: cached({
-						name: DETAILS_MOVIE_CACHE_NAME,
-						target: movieTarget,
-						params: clean,
-						ttlMinutes: DETAILS_TTL_MINUTES,
-						staleMinutes: DETAILS_STALE_MINUTES,
-					})
+			return (
+				options?.bypassCache
+					? movieTarget(clean, false)
+					: cached({
+							name: DETAILS_MOVIE_CACHE_NAME,
+							target: movieTarget,
+							params: clean,
+							ttlMinutes: DETAILS_TTL_MINUTES,
+							staleMinutes: DETAILS_STALE_MINUTES,
+						})
+			).catch(notFound)
 		},
 		async getDetailsForShow(
 			params: DetailsShowParams,
@@ -95,15 +148,17 @@ export function createTitleDetailsGetters(fetchDetails: FetchDetails) {
 				language,
 			} = normalized(params.showId, params.country, params.language, "show")
 			const clean = { showId, country, language }
-			return options?.bypassCache
-				? showTarget(clean)
-				: cached({
-						name: DETAILS_SHOW_CACHE_NAME,
-						target: showTarget,
-						params: clean,
-						ttlMinutes: DETAILS_TTL_MINUTES,
-						staleMinutes: DETAILS_STALE_MINUTES,
-					})
+			return (
+				options?.bypassCache
+					? showTarget(clean, false)
+					: cached({
+							name: DETAILS_SHOW_CACHE_NAME,
+							target: showTarget,
+							params: clean,
+							ttlMinutes: DETAILS_TTL_MINUTES,
+							staleMinutes: DETAILS_STALE_MINUTES,
+						})
+			).catch(notFound)
 		},
 	}
 }

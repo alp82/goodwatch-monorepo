@@ -538,6 +538,43 @@ async function cacheGet<CacheData extends JsonData>(
 	return { ...JSON.parse(result), length: result.length }
 }
 
+// A marker is a small entry under its own cache name: it records an outcome that a cache
+// target can't return as its value without changing that cache's stored shape (for example
+// "this title doesn't exist"). It lives for exactly ttlSeconds and is never served stale.
+// Without Redis, or when a command fails, a read answers false and a write stores nothing.
+export async function readCacheMarker(
+	name: string,
+	params: JsonData,
+	ttlSeconds: number,
+): Promise<boolean> {
+	let result = getRedisCluster() ? "miss" : "unavailable"
+	try {
+		const entry = await cacheGet(cacheEntryKey(name, params))
+		if (entry && Date.now() - entry.timestamp < ttlSeconds * 1000) {
+			cacheRequests.inc([name, "hit"])
+			return true
+		}
+	} catch (e) {
+		result = e instanceof RedisNodeDownError ? "open" : "error"
+		if (!(e instanceof RedisNodeDownError)) logRedisFailure("get", e)
+	}
+	cacheRequests.inc([name, result])
+	return false
+}
+
+export async function writeCacheMarker(
+	name: string,
+	params: JsonData,
+	ttlSeconds: number,
+): Promise<void> {
+	// cacheSet logs and swallows Redis failures.
+	await cacheSet(
+		cacheEntryKey(name, params),
+		{ marker: true },
+		Math.max(1, Math.round(ttlSeconds)),
+	)
+}
+
 // Keys already reported as big, so a hot key warns once instead of on every hit.
 const MAX_WARNED_BIG_KEYS = 500
 const warnedBigKeys = new Set<string>()

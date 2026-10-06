@@ -9,6 +9,8 @@ import {
 } from "./title-details-fields"
 import type { RawTitleDetails } from "./title-details-shape"
 export {
+	DETAILS_MISSING_CACHE_NAME,
+	DETAILS_MISSING_TTL_SECONDS,
 	DETAILS_MOVIE_CACHE_NAME,
 	DETAILS_SHOW_CACHE_NAME,
 	DETAILS_TTL_MINUTES,
@@ -23,9 +25,9 @@ const _fetchFromDB = async (
 	mediaId: string,
 	country: string,
 	_language: string,
-): Promise<RawTitleDetails> => {
+): Promise<RawTitleDetails | null> => {
 	// mediaId and country are interpolated into the SQL below, so only safe shapes may pass.
-	if (!/^\d+$/.test(mediaId)) throw new Response("Not Found", { status: 404 })
+	if (!/^\d+$/.test(mediaId)) return null
 	const safeCountry = /^[A-Za-z]{2}$/.test(country) ? country : ""
 
 	const mediaTable = mediaType === "movie" ? "movie" : "show"
@@ -280,7 +282,7 @@ const _fetchFromDB = async (
 		FROM media_data m;
 	`)) as { media: RawTitleDetails }[]
 
-	if (!result[0]) throw new Response("Not Found", { status: 404 })
+	if (!result[0]) return null
 	const { media } = result[0]
 	if (!media.details.title) {
 		media.details.title = media.details.original_title || ""
