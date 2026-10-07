@@ -62,25 +62,6 @@ export const memberWatches = (log: readonly WatchLogEntry[]) =>
 export const scoredOnly = (log: readonly WatchLogEntry[]) =>
 	log.length > 0 && memberWatches(log).length === 0
 
-/** "3×" on the Seen button, from two watches on. */
-export const countLabel = (count: number) => (count >= 2 ? `${count}×` : null)
-
-/**
- * What the member data map says about a movie with this log: its rows, the latest dated watch, and how exact that
- * is. Null for an empty log, which is a movie that is not Seen.
- */
-export function summaryOf(
-	log: readonly WatchLogEntry[],
-): { count: number; watchedAt: Date | null; precision: WatchPrecision } | null {
-	if (!log.length) return null
-	const [latest] = orderWatches(log)
-	return {
-		count: log.length,
-		watchedAt: latest.at === null ? null : new Date(latest.at),
-		precision: latest.at === null ? "unknown" : latest.precision,
-	}
-}
-
 // ---------------------------------------------------------------------------------------------------------
 // Dates as they read
 // ---------------------------------------------------------------------------------------------------------

@@ -268,7 +268,7 @@ test("rating a show changes no watch state and leaves the Wishlist; it takes the
 // The movie watch log
 // ---------------------------------------------------------------------------------------------------------
 
-const { afterWatchLog } = await import("./member-data-updates.ts")
+const { afterWatchLog } = await import("./member-data-updates-watch-log.ts")
 type WatchLogEntry = import("./watch-log.ts").WatchLogEntry
 
 const logged = (

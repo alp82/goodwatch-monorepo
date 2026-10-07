@@ -4,7 +4,6 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 
 const {
-	countLabel,
 	dayBefore,
 	localDay,
 	memberWatches,
@@ -12,7 +11,6 @@ const {
 	orderWatches,
 	scoredOnly,
 	sourceName,
-	summaryOf,
 	watchLabel,
 	whenText,
 	withDate,
@@ -128,35 +126,6 @@ test("the score's watch is not a watch the member logged", () => {
 	assert.equal(scoredOnly([watch("w")]), false)
 	assert.deepEqual(memberWatches([scoreRow(603)]), [])
 	assert.deepEqual(ids(memberWatches([watch("w"), undated("u")])), ["w", "u"])
-})
-
-test("the count shows from two watches on", () => {
-	assert.equal(countLabel(0), null)
-	assert.equal(countLabel(1), null)
-	assert.equal(countLabel(2), "2×")
-	assert.equal(countLabel(3), "3×")
-})
-
-test("what the member data says about a log: the count and the latest dated watch", () => {
-	assert.equal(summaryOf([]), null)
-	assert.deepEqual(summaryOf([scoreRow(603)]), {
-		count: 1,
-		watchedAt: null,
-		precision: "unknown",
-	})
-	assert.deepEqual(
-		summaryOf([
-			undated("u"),
-			day("d", "2026-10-01"),
-			watch("m", { at: at("2026-09-28T19:40:00Z") }),
-		]),
-		{ count: 3, watchedAt: new Date("2026-10-01T00:00:00Z"), precision: "day" },
-	)
-	assert.deepEqual(summaryOf([day("d", "2026-09-01"), watch("m")]), {
-		count: 2,
-		watchedAt: new Date("2026-10-06T19:40:00Z"),
-		precision: "moment",
-	})
 })
 
 test("a new watch is the member's own: now, a day at midnight UTC, or no date", () => {

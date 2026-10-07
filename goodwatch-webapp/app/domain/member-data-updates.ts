@@ -1,14 +1,14 @@
 // What the browser expects the member data map to be right after an action, before the server has answered
 // (docs/implementation/tracking/data-model.md, "The browser"). Outside a show's page the browser has the map only,
 // so these are guesses from the map: the refetched member data replaces them. Pure, no clock.
-import { type WatchLogEntry, summaryOf } from "~/domain/watch-log"
+//
+// This module is in the first view of the home and title pages. The update for an action in a movie's watch log is in
+// member-data-updates-watch-log.ts, which loads with the log.
 import type { Score } from "~/server/scores.server"
 import {
-	type ActionTimestamp,
 	type MediaType,
 	type UserData,
 	type WatchStateEntry,
-	type WishlistEntry,
 	createMediaKey,
 } from "~/types/user-data"
 
@@ -122,54 +122,5 @@ export function afterScore(
 		updated.wishlist = { ...data.wishlist }
 		delete updated.wishlist[key]
 	}
-	return updated
-}
-
-/**
- * A movie's watch log after an action in it, as the browser expects it: the entry follows the log. The count, the
- * latest dated watch and the last activity are the log's; an empty log is a movie that is not Seen.
- *
- * `watched`: the action logged a watch, which takes the movie off the Wishlist and off Not interested. `back`: Undo
- * of the first watch puts the movie back where that watch took it from, with its place in the Wishlist.
- */
-export function afterWatchLog(
-	data: UserData | undefined,
-	tmdbId: number,
-	log: readonly WatchLogEntry[],
-	change: {
-		watched?: boolean
-		back?: { wishlist?: WishlistEntry; notInterested?: ActionTimestamp }
-	} = {},
-): UserData | undefined {
-	if (!data) return data
-	const key = createMediaKey("movie", tmdbId)
-	const updated = {
-		...data,
-		watchState: { ...data.watchState },
-		wishlist: { ...data.wishlist },
-		notInterested: { ...data.notInterested },
-	}
-	const summary = summaryOf(log)
-	if (!summary) delete updated.watchState[key]
-	else {
-		// "Watched lately": the dated watches, and the undated ones that were not imported by when they were recorded.
-		const activity = log
-			.map(
-				(watch) =>
-					watch.at ?? (watch.origin === "import" ? null : watch.createdAt),
-			)
-			.filter((at): at is number => at !== null)
-		updated.watchState[key] = seenEntry(data.watchState[key], {
-			...summary,
-			lastActivityAt: activity.length ? new Date(Math.max(...activity)) : null,
-		})
-	}
-	if (change.watched) {
-		delete updated.wishlist[key]
-		delete updated.notInterested[key]
-	}
-	if (change.back?.wishlist) updated.wishlist[key] = change.back.wishlist
-	if (change.back?.notInterested)
-		updated.notInterested[key] = change.back.notInterested
 	return updated
 }
