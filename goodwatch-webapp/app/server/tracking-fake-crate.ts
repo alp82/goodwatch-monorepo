@@ -95,6 +95,58 @@ const TABLES: Record<string, Table> = {
 			"removed_at",
 		],
 	},
+	// Only what the show page's tracking reads of a show, and the tables of the episode grid, whose ratings it uses.
+	show: { key: ["tmdb_id"], columns: ["tmdb_id", "status"] },
+	imdb_episode: {
+		key: ["show_id", "imdb_episode_id"],
+		columns: [
+			"show_id",
+			"imdb_episode_id",
+			"season_number",
+			"episode_number",
+			"name",
+			"imdb_user_score_original",
+			"imdb_user_score_rating_count",
+		],
+	},
+	imdb_season: {
+		key: ["show_id", "season_number"],
+		columns: [
+			"show_id",
+			"season_number",
+			"imdb_user_score_original",
+			"imdb_user_score_rating_count",
+			"max_episode_number",
+		],
+	},
+	season: {
+		key: ["show_id", "season_number"],
+		columns: ["show_id", "season_number", "vote_average", "episode_count"],
+	},
+	rotten_tomatoes_season: {
+		key: ["show_id", "season_number"],
+		columns: [
+			"show_id",
+			"season_number",
+			"rotten_tomatoes_url",
+			"rotten_tomatoes_tomato_score_original",
+			"rotten_tomatoes_tomato_score_review_count",
+			"rotten_tomatoes_audience_score_original",
+			"rotten_tomatoes_audience_score_rating_count",
+		],
+	},
+	metacritic_season: {
+		key: ["show_id", "season_number"],
+		columns: [
+			"show_id",
+			"season_number",
+			"metacritic_url",
+			"metacritic_meta_score_original",
+			"metacritic_meta_score_review_count",
+			"metacritic_user_score_original",
+			"metacritic_user_score_rating_count",
+		],
+	},
 	user_score: {
 		key: USER_TITLE,
 		columns: [...USER_TITLE, "score", "review", "created_at", "updated_at"],
@@ -347,12 +399,18 @@ export class FakeTrackingCrate {
 					groupedQuery(matched as unknown as LogRow[]) as unknown as Row[],
 				)
 			}
-			const columns = columnList.split(", ")
-			for (const column of columns) column_(table, column, sql, true)
+			// A column, or "column AS name".
+			const columns = columnList.split(", ").map((text) => {
+				const [column, name = column] = text.split(" AS ")
+				return { column, name }
+			})
+			for (const { column } of columns) column_(table, column, sql, true)
 			return done(
 				structuredClone(
 					matched.map((row) =>
-						Object.fromEntries(columns.map((column) => [column, row[column]])),
+						Object.fromEntries(
+							columns.map(({ column, name }) => [name, row[column]]),
+						),
 					),
 				),
 			)
