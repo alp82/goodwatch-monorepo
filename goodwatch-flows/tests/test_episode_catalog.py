@@ -325,6 +325,38 @@ class AiredTests(unittest.TestCase):
         self.assertFalse(catalog.has_aired(episode(1, 1791331200000), self.TODAY))
 
 
+class AiredEpisodeCountTests(unittest.TestCase):
+    TODAY = date(2026, 10, 6)
+
+    def count(self, episodes):
+        return catalog.aired_episode_count(episodes, self.TODAY)
+
+    def test_regular_episodes_dated_today_or_earlier_are_counted(self):
+        self.assertEqual(self.count([episode(1, "2008-01-20"), episode(2, "2026-10-05"), episode(3, "2026-10-06")]), 3)
+
+    def test_an_episode_dated_tomorrow_is_not_counted(self):
+        self.assertEqual(self.count([episode(1, "2026-10-06"), episode(2, "2026-10-07")]), 1)
+
+    def test_specials_are_not_counted(self):
+        self.assertEqual(self.count([episode(1, "2008-01-20", season=0), episode(1, "2008-01-27")]), 1)
+
+    def test_removed_episodes_are_not_counted(self):
+        self.assertEqual(self.count([episode(1, "2008-01-20", removed_at=1790000000000), episode(2, "2008-01-27")]), 1)
+
+    def test_an_episode_without_a_date_is_not_counted(self):
+        self.assertEqual(self.count([episode(1, "2008-01-20"), episode(2, None)]), 1)
+
+    def test_episodes_of_every_regular_season_are_counted(self):
+        self.assertEqual(self.count([episode(1, "2008-01-20"), episode(1, "2009-03-08", season=2)]), 2)
+
+    def test_a_crate_timestamp_counts_like_tmdbs_date(self):
+        # 2026-10-06 and 2026-10-07, midnight UTC, as Crate returns them.
+        self.assertEqual(self.count([episode(1, 1791244800000), episode(2, 1791331200000)]), 1)
+
+    def test_a_show_without_episodes_counts_zero(self):
+        self.assertEqual(self.count([]), 0)
+
+
 class StillAiringTests(unittest.TestCase):
     TODAY = date(2026, 10, 6)
 

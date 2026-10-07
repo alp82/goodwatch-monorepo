@@ -318,6 +318,11 @@ SCHEMAS = {
             # Last time the show's episodes were fetched from TMDB and copied to `episode`.
             # Set for a show without episodes too; NULL means not crawled yet.
             "episodes_updated_at": "TIMESTAMP",
+            # How many regular episodes have aired: season_number > 0, not removed, air_date today
+            # (UTC) or earlier. Written by f/sync/copy/tmdb_episodes whenever it copies the show, so
+            # it is up to a day behind the calendar. NULL means not crawled yet. Member tracking
+            # compares it with a member's watched episodes to find Seen shows with new episodes.
+            "aired_episode_count": "INTEGER",
         },
         "primary_key": ["tmdb_id"],
         "shards": 12,

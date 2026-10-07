@@ -11,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
 with patch("wmill.get_variable", return_value="unused"):
     from f.sync.copy import tmdb_episodes
+    from f.tmdb_api.tmdb_fetch_episodes_from_api import fetch
+    from f.tmdb_api.tmdb_fetch_episodes_from_api import next as next_shows
 
 NOW = datetime(2026, 10, 6, 9, 30)
 FETCHED_AT = NOW - timedelta(minutes=5)
@@ -21,11 +23,13 @@ def millis(moment: datetime) -> int:
 
 
 class EpisodeTable:
-    """A fake Crate connector holding the episode table and the shows' episodes_updated_at."""
+    """A fake Crate connector holding the episode table and what the copy writes on the show rows."""
 
     def __init__(self, rows=()):
         self.rows = {(row["show_id"], row["tmdb_id"]): dict(row) for row in rows}
         self.checked_shows = {}
+        # show.aired_episode_count; a show the copy never wrote has no entry, which is NULL in Crate.
+        self.aired_counts = {}
         self.selected_show_ids = []
         self.upserted = 0
         self.cur = MagicMock(rowcount=0)
@@ -52,8 +56,9 @@ class EpisodeTable:
             for removed_at, _, show_id, episode_ids in params:
                 for episode_id in episode_ids:
                     self.rows[(show_id, episode_id)]["removed_at"] = removed_at
-        elif sql == "UPDATE show SET episodes_updated_at = ? WHERE tmdb_id = ?":
-            self.checked_shows.update({show_id: checked_at for checked_at, show_id in params})
+        elif sql == "UPDATE show SET episodes_updated_at = ?, aired_episode_count = ? WHERE tmdb_id = ?":
+            self.checked_shows.update({show_id: checked_at for checked_at, _, show_id in params})
+            self.aired_counts.update({show_id: count for _, count, show_id in params})
         else:
             raise AssertionError(sql)
 
@@ -248,6 +253,8 @@ class EpisodeCopyTests(unittest.TestCase):
 
         self.assertEqual(copy(self.crate, self.db, tmdb_ids=[9])["shows_copied"], 0)
         self.assertEqual(self.crate.checked_shows, {})
+        # Its aired_episode_count stays NULL: unknown, not zero.
+        self.assertEqual(self.crate.aired_counts, {})
 
     def test_removed_episodes_are_deleted_after_180_days(self):
         self.crate = EpisodeTable([
@@ -274,6 +281,183 @@ class EpisodeCopyTests(unittest.TestCase):
         self.assertEqual(len(self.crate.rows), 12)
 
 
+class AiredEpisodeCountTests(unittest.TestCase):
+    """show.aired_episode_count, written with every copy of a show. NOW is 2026-10-06."""
+
+    def setUp(self):
+        self.db = mongomock.MongoClient().db
+        self.crate = EpisodeTable()
+
+    def test_a_copied_show_gets_the_number_of_its_aired_regular_episodes(self):
+        fetched_show(self.db, 7, {
+            0: [tmdb_episode(50, 1, air_date="2026-09-01")],
+            1: [tmdb_episode(51, 1, air_date="2026-09-29"), tmdb_episode(52, 2, air_date="2026-10-06"),
+                tmdb_episode(53, 3, air_date="2026-10-07"), tmdb_episode(54, 4, air_date=None)],
+        })
+
+        copy(self.crate, self.db)
+
+        # Not the special, not tomorrow's episode, not the one without a date.
+        self.assertEqual(self.crate.aired_counts, {7: 2})
+
+    def test_today_is_the_utc_date_of_the_run(self):
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1, air_date="2026-10-06"),
+                                      tmdb_episode(52, 2, air_date="2026-10-07")]},
+                     fetched_at=datetime(2026, 10, 6, 23, 50))
+
+        copy(self.crate, self.db, now=datetime(2026, 10, 6, 23, 59))
+        self.assertEqual(self.crate.aired_counts, {7: 1})
+
+        copy(self.crate, self.db, now=datetime(2026, 10, 7, 0, 1))
+        self.assertEqual(self.crate.aired_counts, {7: 2})
+
+    def test_a_crawled_show_with_no_aired_regular_episode_counts_zero(self):
+        fetched_show(self.db, 7, {0: [tmdb_episode(50, 1)], 1: [tmdb_episode(51, 1, air_date="2026-11-01")]})
+        fetched_show(self.db, 8, {}, complete=False)
+
+        copy(self.crate, self.db)
+
+        self.assertEqual(self.crate.aired_counts, {7: 0, 8: 0})
+
+    def test_an_episode_tmdb_removed_no_longer_counts(self):
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1), tmdb_episode(52, 2)]})
+        copy(self.crate, self.db)
+        self.assertEqual(self.crate.aired_counts, {7: 2})
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1)]})
+
+        copy(self.crate, self.db)
+        self.assertEqual(self.crate.aired_counts, {7: 1})
+
+        # The removed row is still stored and still does not count on the next copy.
+        copy(self.crate, self.db)
+        self.assertEqual(self.crate.aired_counts, {7: 1})
+
+    def test_after_an_incomplete_fetch_the_episodes_kept_in_crate_still_count(self):
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1)], 2: [tmdb_episode(61, 1)]})
+        copy(self.crate, self.db)
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1), tmdb_episode(53, 3)]}, complete=False)
+
+        copy(self.crate, self.db)
+
+        self.assertEqual(self.crate.aired_counts, {7: 3})
+
+    def test_a_removed_episode_that_comes_back_counts_again(self):
+        self.crate = EpisodeTable([{"show_id": 7, "tmdb_id": 51, "season_number": 1, "episode_number": 1,
+                                    "air_date": 1200787200000, "removed_at": 1790000000000}])
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1)]})
+
+        copy(self.crate, self.db)
+
+        self.assertEqual(self.crate.aired_counts, {7: 1})
+
+    def test_a_named_show_gets_its_count_too(self):
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1)]}, fetched_at=NOW - timedelta(days=20))
+
+        copy(self.crate, self.db, tmdb_ids=[7])
+
+        self.assertEqual(self.crate.aired_counts, {7: 1})
+
+
+class AiredEpisodeCountFreshnessTests(unittest.TestCase):
+    """The count moves with the calendar, so it is only as fresh as the show's last fetch and copy.
+
+    These run the real queue, fetch and copy against a TMDB that changes nothing. Another
+    show is fetched in every run, as in production, so the copy's checkpoint moves on and
+    the show under test is copied only when it was fetched again.
+    """
+
+    SHOW = 7
+    OTHER_SHOW = 99
+
+    def setUp(self):
+        self.db = mongomock.MongoClient().db
+        self.db.tmdb_tv_details.insert_one(
+            {"tmdb_id": self.SHOW, "title": "Weekly show", "seasons": [{"id": 701, "season_number": 1}]})
+        # The other show is written by hand in every run and never handed out by the queue.
+        self.db.tmdb_tv_details.insert_one({"tmdb_id": self.OTHER_SHOW, "episodes_due_at": datetime(2100, 1, 1)})
+        self.crate = EpisodeTable()
+        self.tmdb_requests = 0
+
+    def tmdb(self, tmdb_id, season_numbers):
+        """TMDB lists the same three episodes on every request: one aired, one on 2026-10-07, one a week later."""
+        self.tmdb_requests += 1
+        return {"id": tmdb_id, "seasons": [{"id": 701, "season_number": 1}], "season/1": {
+            "name": "Season 1", "season_number": 1, "episodes": [
+                tmdb_episode(51, 1, air_date="2026-09-30"),
+                tmdb_episode(52, 2, air_date="2026-10-07"),
+                tmdb_episode(53, 3, air_date="2026-10-14"),
+            ]}}
+
+    def run_flow_and_copy(self, now):
+        """One scheduled run of the fetch flow and of the copy. Returns the shows the queue handed out."""
+        due = next_shows.reserve_due_shows(self.db.tmdb_tv_details, 500, now)
+        fetch.fetch_episodes(self.db, due, get=self.tmdb, now=lambda: now)
+        fetched_show(self.db, self.OTHER_SHOW, {}, fetched_at=now)
+        self.crate.selected_show_ids.clear()
+        copy(self.crate, self.db, now=now + timedelta(minutes=1))
+        return due
+
+    def copied_shows(self):
+        """The shows the last copy compared with Crate."""
+        return {show_id for group in self.crate.selected_show_ids for show_id in group}
+
+    def count(self):
+        return self.crate.aired_counts[self.SHOW]
+
+    def test_an_episode_airing_today_is_counted_on_the_day_it_airs(self):
+        day_before = datetime(2026, 10, 6, 9, 30)
+        self.assertEqual(self.run_flow_and_copy(day_before), [self.SHOW])
+        self.assertEqual(self.count(), 1)
+
+        # Until the show is fetched again the copy passes it by, on the air date too: the
+        # count is a day old. (The run right after a fetch reads it once more, as an overlap.)
+        self.run_flow_and_copy(datetime(2026, 10, 6, 10, 0))
+        self.assertEqual(self.run_flow_and_copy(datetime(2026, 10, 7, 9, 25)), [])
+        self.assertEqual(self.copied_shows(), {self.OTHER_SHOW})
+        self.assertEqual(self.count(), 1)
+
+        # A day after its last fetch the show is due again. TMDB changed nothing and no episode
+        # row is written, and the count is still brought up to date.
+        self.crate.upserted = 0
+        self.assertEqual(self.run_flow_and_copy(datetime(2026, 10, 7, 9, 35)), [self.SHOW])
+        self.assertEqual(self.crate.upserted, 0)
+        self.assertEqual(self.count(), 2)
+
+    def test_a_fetch_that_runs_late_counts_the_episode_just_after_the_day_it_airs(self):
+        # The last fetch before the air date ran late in the evening.
+        self.run_flow_and_copy(datetime(2026, 10, 6, 23, 40))
+        self.run_flow_and_copy(datetime(2026, 10, 6, 23, 58))
+        self.assertEqual(self.count(), 1)
+
+        # The show is due at 23:40 on the air date, and the queue is 25 minutes behind.
+        self.assertEqual(self.run_flow_and_copy(datetime(2026, 10, 7, 23, 39)), [])
+        self.assertEqual(self.copied_shows(), {self.OTHER_SHOW})
+        self.assertEqual(self.count(), 1)
+
+        self.assertEqual(self.run_flow_and_copy(datetime(2026, 10, 8, 0, 5)), [self.SHOW])
+        self.assertEqual(self.count(), 2)
+
+    def test_a_show_keeps_being_counted_daily_from_a_week_before_an_episode_until_two_weeks_after(self):
+        # Fetched 20 days before its only upcoming episode, the show waits until a week before it.
+        self.tmdb = lambda tmdb_id, season_numbers: {
+            "id": tmdb_id, "seasons": [{"id": 701, "season_number": 1}], "season/1": {
+                "name": "Season 1", "season_number": 1, "episodes": [tmdb_episode(51, 1, air_date="2026-10-26")]}}
+        now = datetime(2026, 10, 6, 9, 30)
+        self.run_flow_and_copy(now)
+        fetched_on = []
+        while now < datetime(2026, 11, 20):
+            now += timedelta(minutes=30)
+            if self.run_flow_and_copy(now):
+                fetched_on.append(now.date())
+                expected = 1 if now.date() >= datetime(2026, 10, 26).date() else 0
+                self.assertEqual(self.count(), expected, now)
+
+        days = [(day - datetime(2026, 10, 26).date()).days for day in fetched_on]
+        # Every day from 7 days before the episode to 14 days after it, then the 30-day cycle.
+        self.assertEqual(days[:22], list(range(-7, 15)))
+        self.assertEqual(self.count(), 1)
+
+
 class EpisodeSchemaTests(unittest.TestCase):
     def test_the_table_is_keyed_by_show_and_episode_id_and_routed_by_show(self):
         from f.sync.init.cratedb import create_table_sql
@@ -292,6 +476,7 @@ class EpisodeSchemaTests(unittest.TestCase):
         self.assertLessEqual(set(Episode.model_fields), columns)
         self.assertLessEqual(set(tmdb_episodes.STORED_COLUMNS), columns)
         self.assertIn("episodes_updated_at", SCHEMAS["show"]["columns"])
+        self.assertEqual(SCHEMAS["show"]["columns"]["aired_episode_count"], "INTEGER")
 
 
 if __name__ == "__main__":

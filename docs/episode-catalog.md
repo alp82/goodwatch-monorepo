@@ -1,7 +1,8 @@
 # Episode catalog
 
 Issue [#376](https://github.com/alp82/goodwatch-monorepo/issues/376). Every show's episodes from TMDB, in the Crate
-table `episode`, kept fresh. It feeds the Episode list; nothing member-facing reads it yet. Design and the TMDB facts
+table `episode`, kept fresh, and one number per show, `show.aired_episode_count`. It feeds the Episode list and
+member tracking; nothing member-facing reads it yet. Design and the TMDB facts
 behind it: [tmdb-episode-catalog.md](research/season-episode-scores/tmdb-episode-catalog.md). Paths under
 `goodwatch-flows/windmill/` are shortened to `f/...`.
 
@@ -9,11 +10,11 @@ behind it: [tmdb-episode-catalog.md](research/season-episode-scores/tmdb-episode
 
 | Part | Path | What it does |
 |---|---|---|
-| Rules | `f/tmdb_api/episode_catalog.py` | Request batching, rows, diff, when a show is due, aired, still airing. No I/O. |
+| Rules | `f/tmdb_api/episode_catalog.py` | Request batching, rows, diff, when a show is due, aired, the aired count, still airing. No I/O. |
 | Change feed | `f/tmdb_api/tmdb_fetch_episodes_from_api/changes` | Reads TMDB's `/tv/changes` and makes the listed shows due. |
 | Fetch flow | `f/tmdb_api/tmdb_fetch_episodes_from_api` | Step `next` reserves the shows that are due, step `fetch` requests their seasons and stores them in Mongo. |
-| Copy | `f/sync/copy/tmdb_episodes` | Compares the fetched seasons with the `episode` table and writes the difference. |
-| Schema | `f/sync/models/crate_schemas.py` | Table `episode` and column `show.episodes_updated_at`. Created by `f/sync/init/cratedb`. |
+| Copy | `f/sync/copy/tmdb_episodes` | Compares the fetched seasons with the `episode` table, writes the difference and the show's aired count. |
+| Schema | `f/sync/models/crate_schemas.py` | Table `episode` and the columns `show.episodes_updated_at` and `show.aired_episode_count`. Created by `f/sync/init/cratedb`. |
 
 ## Storage
 
@@ -38,6 +39,9 @@ run, `episodes_copy` the copy's checkpoint (`copied_until`).
 are `season_number = 0`. `removed_at` is set when TMDB no longer lists the episode. `imdb_id` and `tvdb_id` exist for
 later imports; the copy never writes them. `show.episodes_updated_at` is the fetch time of the copied state; `NULL`
 means the show was not crawled yet, a value with no rows means TMDB lists no episodes.
+
+**Crate `show.aired_episode_count`**: how many regular episodes of the show have aired, see
+[The aired episode count](#the-aired-episode-count). `NULL` until the show's first copy.
 
 ## How a show becomes due
 
@@ -86,17 +90,59 @@ For each show it compares the episodes of all its season documents with the stor
   still show its name.
 - Removed more than 180 days ago: deleted, because TMDB's terms forbid keeping its data longer than 6 months.
 
-Unchanged episodes are not written. Then `show.episodes_updated_at` is set.
+Unchanged episodes are not written. Then `show.episodes_updated_at` and `show.aired_episode_count` are set, for
+every copied show, whether or not an episode changed.
 
 ## Aired and still airing
 
-Neither is stored, because both change with the calendar. `has_aired` and `airing_season_number` in
-`f/tmdb_api/episode_catalog.py` are the tested definition; a reader of the table applies the same rules.
+Both change with the calendar, so a reader of the table works them out when it reads. `has_aired` and
+`airing_season_number` in `f/tmdb_api/episode_catalog.py` are the tested definition. The one stored value is the
+aired count below.
 
 - **Aired**: not removed, and the air date is today (UTC) or earlier. An episode without a date has not aired.
 - **Season still airing**: only the highest-numbered regular season with a dated episode, and only when the show's
   status is not Ended or Canceled. It is airing when it has an episode dated after today, or when its last aired
   episode is not a `finale` and aired within the last 45 days. An episode without a date does not keep a season open.
+
+## The aired episode count
+
+`show.aired_episode_count` is the number of the show's episodes with `season_number > 0`, `removed_at IS NULL` and an
+`air_date` of today (UTC) or earlier: `aired_episode_count` in `f/tmdb_api/episode_catalog.py`, which uses `has_aired`.
+Specials and episodes without a date never count.
+
+**Who reads it.** Member tracking: it compares the count with the number of episodes a member has watched and so
+finds the Seen shows with new episodes in one read, without counting `episode` rows per show.
+
+**Who writes it.** Only the copy, each time it copies a show. It counts the rows the show has in `episode` once that
+copy is written (upserts applied, removals marked, rows an incomplete fetch did not list kept), with the UTC date of
+the run as today.
+
+| Value | Meaning |
+|---|---|
+| `NULL` | The show's episodes were never copied. Unknown, not zero. |
+| `0` | Copied, and no regular episode has aired, including a show without episodes. |
+
+**How it stays right.** The count changes when an episode's air date arrives, even if TMDB changed nothing. No job
+of its own recounts it. A show with an episode in the last 14 or the next 7 days is fetched once a day
+([How a show becomes due](#how-a-show-becomes-due)), every successful fetch sets `episodes_updated_at`, and the copy
+takes every show by that time and writes the count whether or not an episode changed. A show outside that window has
+no episode whose date is about to arrive, so its count does not move between fetches.
+
+**Worst-case lag.** A show is due 24 hours after its last fetch, so an episode that airs on a day is counted at the
+latest 24 hours after the show's last fetch before that day, plus the time the queue and the copy are behind (both
+run every 5 minutes). In practice that is during the air date (UTC), and at worst a few minutes after it ends, when
+the last fetch ran just before midnight and the next one starts late. `AiredEpisodeCountFreshnessTests` in
+`tests/test_episode_copy.py` runs the queue, the fetch and the copy over these days.
+
+It is later than that in three cases:
+
+- The show's fetch fails outright. Nothing is copied and the show is tried again a day later, so every failed day
+  adds a day. A partial fetch is copied and counted.
+- The flow or the copy is not running, or the queue is more than a day behind. The count is as old as the last copy.
+- TMDB lists the episode or its date only after it aired. The count follows when the change feed (once a day) makes
+  the show due, or with the 30-day cycle.
+
+To recount named shows without a fetch, run the copy with `tmdb_ids`.
 
 ## Tests
 
@@ -119,13 +165,14 @@ Merging to `main` deploys the scripts, so steps 1 and 2 come first.
    ```
    `tmdb_tv_season_details` gets its unique index from the first fetch, while it is empty.
 2. **Merge and wait for the "Push Windmill workspace" action.**
-3. **Create the table.** Run `f/sync/init/cratedb` with `dry_run: true`. It must report exactly two changes:
-   `CREATE TABLE episode …` and `ALTER TABLE show ADD COLUMN episodes_updated_at TIMESTAMP`. Then run it without
-   `dry_run`.
+3. **Create the table.** Run `f/sync/init/cratedb` with `dry_run: true`. It must report exactly three changes:
+   `CREATE TABLE episode …`, `ALTER TABLE show ADD COLUMN episodes_updated_at TIMESTAMP` and
+   `ALTER TABLE show ADD COLUMN aired_episode_count INTEGER`. Then run it without `dry_run`.
 4. **Try a small batch.** Run the flow `f/tmdb_api/tmdb_fetch_episodes_from_api` with `count: 20`, then
    `f/sync/copy/tmdb_episodes`. Check a known show:
    ```sql
    SELECT season_number, count(*) FROM episode WHERE show_id = 1396 GROUP BY 1 ORDER BY 1;
+   SELECT aired_episode_count FROM show WHERE tmdb_id = 1396;            -- the rows above without season 0
    ```
 5. **First crawl.** Schedule the flow every minute with `count: 1000` and no overlapping runs, and the copy every
    5 minutes. That is about 216,000 requests at 17 per second on average, roughly 4 hours for 233,582 shows; lower
@@ -138,6 +185,7 @@ Merging to `main` deploys the scripts, so steps 1 and 2 come first.
    ```sql
    SELECT count(*), count(DISTINCT show_id) FROM episode;               -- about 6.7 million rows, over 200,000 shows
    SELECT count(*) FROM show WHERE episodes_updated_at IS NULL;         -- goes to about 0
+   SELECT count(*) FROM show WHERE aired_episode_count IS NULL;         -- the same number
    ```
 7. **Steady state.** Set the flow's schedule to every 5 minutes with the default `count: 500`, keep the copy at every
    5 minutes, and schedule `f/tmdb_api/tmdb_fetch_episodes_from_api/changes` once a day. A day is about 13,000

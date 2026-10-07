@@ -14,6 +14,7 @@ from f.tmdb_api.episode_catalog import (
     EPISODE_COLUMNS,
     SEASON_COLLECTION,
     STATE_COLLECTION,
+    aired_episode_count,
     diff_episodes,
     episode_rows,
 )
@@ -37,7 +38,7 @@ EPOCH = datetime(1970, 1, 1)
 STORED_COLUMNS = ("show_id", "tmdb_id", *EPISODE_COLUMNS, "removed_at")
 SELECT_STORED = f"SELECT {', '.join(STORED_COLUMNS)} FROM episode WHERE show_id = ANY(?)"
 MARK_REMOVED = "UPDATE episode SET removed_at = ?, updated_at = ? WHERE show_id = ? AND tmdb_id = ANY(?)"
-MARK_SHOW = "UPDATE show SET episodes_updated_at = ? WHERE tmdb_id = ?"
+MARK_SHOW = "UPDATE show SET episodes_updated_at = ?, aired_episode_count = ? WHERE tmdb_id = ?"
 PURGE_REMOVED = "DELETE FROM episode WHERE removed_at < ?"
 
 
@@ -84,7 +85,12 @@ def row_groups(rows_by_show: dict[int, list[dict]]) -> list[list[int]]:
 
 
 def copy_shows(connector, db, shows: list[dict], now: datetime) -> dict:
-    """Bring the episode rows of these shows in line with their season documents."""
+    """Bring the episode rows of these shows in line with their season documents.
+
+    Each show also gets aired_episode_count, counted from the rows it has once this copy
+    is written, with the UTC date of `now` as today. It is written even when no episode
+    changed, because an episode listed last week airs today.
+    """
     stats = {"episodes_upserted": 0, "episodes_removed": 0}
     complete = {show["tmdb_id"]: show.get("episodes_complete") is True for show in shows}
     documents_by_show = {show_id: [] for show_id in complete}
@@ -93,6 +99,8 @@ def copy_shows(connector, db, shows: list[dict], now: datetime) -> dict:
     rows_by_show = {show_id: episode_rows(show_id, documents) for show_id, documents in documents_by_show.items()}
 
     now_millis = millis(now)
+    today = now.date()
+    aired_counts = {}
     for group in row_groups(rows_by_show):
         stored_by_show = {show_id: [] for show_id in group}
         for row in connector.select(SELECT_STORED, (group,)):
@@ -104,6 +112,10 @@ def copy_shows(connector, db, shows: list[dict], now: datetime) -> dict:
             if diff.removed_ids:
                 removals.append((now_millis, now_millis, show_id, diff.removed_ids))
                 stats["episodes_removed"] += len(diff.removed_ids)
+            # Stored episodes the fetch did not list stay as they are, unless they were just removed.
+            replaced = {row["tmdb_id"] for row in rows_by_show[show_id]} | set(diff.removed_ids)
+            kept = [row for row in stored_by_show[show_id] if row["tmdb_id"] not in replaced]
+            aired_counts[show_id] = aired_episode_count(rows_by_show[show_id] + kept, today)
         if upserts:
             # replace_nulls: the copy owns every column it writes, so a runtime TMDB dropped and
             # the removed_at of an episode that came back are cleared.
@@ -119,7 +131,10 @@ def copy_shows(connector, db, shows: list[dict], now: datetime) -> dict:
             connector.run_many(MARK_REMOVED, removals)
 
     # Last, so a show is only marked once its rows are written.
-    connector.run_many(MARK_SHOW, [(millis(show["episodes_updated_at"]), show["tmdb_id"]) for show in shows])
+    connector.run_many(
+        MARK_SHOW,
+        [(millis(show["episodes_updated_at"]), aired_counts[show["tmdb_id"]], show["tmdb_id"]) for show in shows],
+    )
     return stats
 
 

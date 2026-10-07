@@ -277,8 +277,9 @@ def changes_window(now: datetime, last_success_at: Optional[datetime]) -> tuple[
 
 # ===== Aired and still airing =====
 #
-# Both depend on the calendar and are computed when read, never stored. Whoever reads
-# the episode table (the Episode list, Seen, Caught up, Next episode) applies these rules.
+# Both depend on the calendar. Whoever reads the episode table (the Episode list, Seen,
+# Caught up, Next episode) applies these rules when reading. The one stored value is
+# show.aired_episode_count, which the copy writes each time it copies a show.
 
 def has_aired(episode: dict, today: date) -> bool:
     """An episode has aired when it is not removed and its air date is today or earlier.
@@ -290,6 +291,15 @@ def has_aired(episode: dict, today: date) -> bool:
         return False
     day = parse_air_date(episode.get("air_date"))
     return day is not None and day <= today
+
+
+def aired_episode_count(episodes: Iterable[dict], today: date) -> int:
+    """How many regular episodes of a show have aired: specials (season 0) do not count.
+
+    Stored as show.aired_episode_count and compared with how many episodes a member has
+    watched, so a Seen show with new episodes is found without reading its episodes.
+    """
+    return sum(1 for episode in episodes if (episode.get("season_number") or 0) > 0 and has_aired(episode, today))
 
 
 def airing_season_number(episodes: Iterable[dict], show_status: Optional[str], today: date) -> Optional[int]:
