@@ -315,6 +315,14 @@ SCHEMAS = {
             "tvtropes_tags_updated_at": "TIMESTAMP",
             "dna_created_at": "TIMESTAMP",
             "dna_updated_at": "TIMESTAMP",
+            # Last time the show's episodes were fetched from TMDB and copied to `episode`.
+            # Set for a show without episodes too; NULL means not crawled yet.
+            "episodes_updated_at": "TIMESTAMP",
+            # How many regular episodes have aired: season_number > 0, not removed, air_date today
+            # (UTC) or earlier. Written by f/sync/copy/tmdb_episodes whenever it copies the show, so
+            # it is up to a day behind the calendar. NULL means not crawled yet. Member tracking
+            # compares it with a member's watched episodes to find Seen shows with new episodes.
+            "aired_episode_count": "INTEGER",
         },
         "primary_key": ["tmdb_id"],
         "shards": 12,
@@ -343,6 +351,34 @@ SCHEMAS = {
         },
         "primary_key": ["tmdb_id"],
         "shards": 12,
+    },
+    # The episodes of every show in TMDB's numbering (Episode list), one row per TMDB episode
+    # (f/sync/copy/tmdb_episodes, docs/episode-catalog.md). Season 0 holds the specials. One
+    # show's list is one routed read. The key is the episode id, not season and number, because
+    # a watch stores the id: a renumbered episode stays the same row.
+    "episode": {
+        "columns": {
+            "show_id": "INTEGER",
+            "tmdb_id": "INTEGER",  # TMDB episode id
+            "season_tmdb_id": "INTEGER",  # season.tmdb_id
+            "season_number": "INTEGER",  # 0 = special
+            "episode_number": "INTEGER",
+            "name": "TEXT",
+            "air_date": "TIMESTAMP",  # midnight UTC of TMDB's date, NULL when unknown
+            "runtime": "INTEGER",
+            "still_path": "TEXT",
+            "episode_type": "TEXT",  # standard, mid_season, finale
+            "tmdb_user_score_original": "DOUBLE",
+            "tmdb_user_score_rating_count": "INTEGER",
+            # NULL until an import or backfill resolves them; the copy never writes them.
+            "imdb_id": "TEXT",
+            "tvdb_id": "INTEGER",
+            # Set when TMDB no longer lists the episode. The row is deleted 180 days later.
+            "removed_at": "TIMESTAMP",
+        },
+        "primary_key": ["show_id", "tmdb_id"],
+        "clustered_by": "show_id",
+        "shards": 6,
     },
     # IMDb episode ratings in IMDb's numbering (f/imdb_datasets/ingest), one row per TMDB show
     # and IMDb episode. A special has a NULL season_number. One show's grid is one routed read.

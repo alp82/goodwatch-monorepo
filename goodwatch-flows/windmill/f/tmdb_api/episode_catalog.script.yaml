@@ -1,0 +1,8 @@
+summary: Episode catalog rules
+description: Internal shared module
+kind: script
+lock: '!inline f/tmdb_api/episode_catalog.script.lock'
+schema:
+  type: object
+  properties: {}
+  required: []

@@ -1,0 +1,33 @@
+summary: Fetch TMDB episodes from API
+description: Fetch the seasons and episodes of the shows that are due and persist them
+value:
+  modules:
+    - id: a
+      value:
+        type: script
+        input_transforms:
+          count:
+            type: javascript
+            expr: flow_input.count
+        path: f/tmdb_api/tmdb_fetch_episodes_from_api/next
+        tag_override: null
+      timeout: 60
+    - id: b
+      value:
+        type: script
+        input_transforms:
+          next_ids:
+            type: javascript
+            expr: results.a
+        path: f/tmdb_api/tmdb_fetch_episodes_from_api/fetch
+        tag_override: null
+      timeout: 600
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    count:
+      type: integer
+      description: Shows per run
+      default: 500
+  required: []
