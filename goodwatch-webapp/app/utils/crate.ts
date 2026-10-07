@@ -377,3 +377,55 @@ export const upsert = async ({
 		return { rowcount: totalRowcount }
 	}
 }
+
+export type CrateValue = string | number | boolean | Date | null
+
+interface InsertRowsOptions {
+	/** The key columns. A row whose key is already stored is left as it is. */
+	conflict: string[]
+	/** Rows per statement. */
+	chunk?: number
+}
+
+/**
+ * Inserts many rows with one multi-row `INSERT ... ON CONFLICT DO NOTHING` per chunk of 500, where `upsert` sends one
+ * statement and one read-back per row. Every row has one value per column, in the order of `columns`.
+ *
+ * It never updates a stored row, so the caller must fix every key before the write. That is also what makes a timeout
+ * harmless: the statement may have landed or not, and sending it again inserts only what is missing. It is sent again
+ * once; a second timeout reaches the caller, who can call again with the same rows.
+ *
+ * `rowcount` is the number of rows Crate says it inserted, so rows that were already stored do not count.
+ */
+export const insertRows = async (
+	table: string,
+	columns: string[],
+	rows: CrateValue[][],
+	{ conflict, chunk = 500 }: InsertRowsOptions,
+): Promise<{ rowcount: number; statements: number }> => {
+	for (const row of rows)
+		if (row.length !== columns.length)
+			throw new Error(
+				`insertRows into ${table}: a row has ${row.length} values for ${columns.length} columns`,
+			)
+	const quoted = (names: string[]) => names.map((name) => `"${name}"`).join(", ")
+	const tuple = `(${columns.map(() => "?").join(", ")})`
+	const client = getCrateClient()
+	let rowcount = 0
+	let statements = 0
+	for (let start = 0; start < rows.length; start += chunk) {
+		const batch = rows.slice(start, start + chunk)
+		const sql = `INSERT INTO ${table} (${quoted(columns)}) VALUES ${batch.map(() => tuple).join(", ")} ON CONFLICT (${quoted(conflict)}) DO NOTHING`
+		const params = batch.flat() as (string | number | Date)[]
+		let result: { rowcount?: number }
+		try {
+			result = await client.execute(sql, params)
+		} catch (error) {
+			if (!(error instanceof CrateTimeoutError)) throw error
+			result = await client.execute(sql, params)
+		}
+		rowcount += result.rowcount || 0
+		statements += 1
+	}
+	return { rowcount, statements }
+}
