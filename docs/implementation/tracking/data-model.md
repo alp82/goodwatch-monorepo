@@ -1060,9 +1060,12 @@ would write, `--user` for one member, batches of 500 rows per insert, one member
 4. **Time the grouped query** for the largest member, as section 3 says, and decide before any list is built.
 5. Deploy the webapp that reads and writes the new tables.
 6. Run the script again. It picks up what the old build wrote to the old table between steps 3 and 5.
-7. 30 days after the switch, without a rollback: drop `user_watch_history` by hand, remove it from
-   `crate_schemas.py` and from the refresh in `resetUserDataCache`, and delete the prototype readers. Until then the
-   table is the backup and nothing reads or writes it.
+7. 30 days after the switch, without a rollback: drop `user_watch_history` by hand and remove it from
+   `crate_schemas.py`. Until then the table is the backup and nothing reads or writes it.
+
+Steps 5 to 7 in detail, what the second run has to do for movies, and what happens to a watch made while both builds
+answer: [switch-to-the-watch-state.md](switch-to-the-watch-state.md). As built, the webapp of step 5 no longer
+refreshes the old table, and the prototype readers read `user_watch_state`.
 
 **Idempotent.** Every `watch_id` is fixed by the member, the title and the episode, and every insert is `ON CONFLICT
 DO NOTHING`, into `user_watch_state` too, so a row the new webapp has written since is never overwritten. A run that
@@ -1239,8 +1242,11 @@ a member filter (0.1 seconds).
 
 ## 10. Built
 
-[#380](https://github.com/alp82/goodwatch-monorepo/issues/380) built the storage and the writer. No page reads or
-writes through them yet, and `user_watch_history` and its readers are unchanged.
+[#380](https://github.com/alp82/goodwatch-monorepo/issues/380) built the storage and the writer.
+[#382](https://github.com/alp82/goodwatch-monorepo/issues/382) switched every reader and writer of Seen to them; its
+part is [further down](#the-readers-of-seen-382).
+
+### The storage and the writer (#380)
 
 | What | Where |
 | --- | --- |
@@ -1265,7 +1271,73 @@ Where the build differs from the text above, or settles what it left open:
   table. One case stays behind: a single watch or a group deleted in the log from a Seen show, stopped before the
   state row, leaves Seen, which the machine allows.
 - When the state row was changed in between, the next round first deletes the log rows the round before inserted.
-- `resetUserDataCache` does not list the two tables yet. The writer refreshes them itself before it calls it.
+- `resetUserDataCache` did not list the two tables, and the writer refreshed them itself. #382 moved the refresh
+  into `resetUserDataCache`.
 - Rating a movie takes it off the Wishlist whenever the score's watch is its only watch, also on a later rating.
 - The episode list is cached for 10 minutes per show (`tracking-episode-list-v1`).
 - The prototype under `domain/prototype-tracking-machine/` keeps its own copy of the machine.
+
+### The readers of Seen (#382)
+
+Nothing in the webapp reads or writes `user_watch_history` any more. How this goes live, and what a member can lose
+between the migration and the deploy: [switch-to-the-watch-state.md](switch-to-the-watch-state.md).
+
+| What | Where |
+| --- | --- |
+| The member data entry `watchState`, read with QS and QG; the refresh of the two tables | `server/userData.server.ts` |
+| `isSeen`, `seenKeys`, the key of a query that depends on the watch state | `types/user-data.ts` |
+| The viewer context: `seen`, and `hidden` for Not interested and Dropped | `server/viewer.server.ts` (`seenAndHidden`) |
+| The readers with their own SQL | `server/utils/recommend.ts`, `server/smart-titles.server.ts`, `server/discover.server.ts` (`watchedTypeJoin`) |
+| Today's Seen button and "I watched it" | `server/watchHistory.server.ts` (`markSeen`, `unmarkSeen`), `server/finish-title.server.ts` |
+| A score tells tracking | `server/scores.server.ts`, `routes/api.import-guest-interactions.ts`, `server/imdb-import/apply.server.ts` |
+| The movie rule for many movies | `settleMovies` in `server/tracking.server.ts` |
+| What the browser shows before the server answers | `domain/member-data-updates.ts`, used by `hooks/useUserDataMutations.ts` |
+| The Seen button in the browser | `hooks/useSeenToggle.ts`, `hooks/useUserDataAccessors.ts` (`useWatchState`, `useIsSeen`) |
+| Deleting a member's tracking data | `deleteTrackingData` in `server/tracking.server.ts`, called by `server/account-deletion.server.ts` |
+
+Tests: `node --test app/server/watch-state.test.ts app/domain/member-data-updates.test.ts app/server/userData.test.ts`.
+
+Where the build differs from the text above, or settles what it left open:
+
+- **The Seen button is still one button that toggles.** The watch log and the episode list replace it later. Until
+  then: a movie's press records one watch dated now, and one more press deletes every watch the member logged for
+  it. A show's press is the Seen press, and one more press takes that press back; a show that is Seen with no
+  standing press has nothing to take back, which no action in the interface produces yet. A second "mark" on a
+  title that is Seen writes nothing.
+- **The button shows the state Seen, not "counts as Seen".** A rated show that was never marked counts as Seen for
+  the filters and through `isSeen`, and its button is off, because a press there has to mark it. Until now rating a
+  show lit the button, since the rating recorded a watch.
+- **A rated movie can't be taken back with the button.** Its score's watch keeps it Seen. The browser says so and
+  sends nothing; the server leaves the score's watch alone.
+- **The viewer context has two sets.** `notInterested` is the mark a card shows. `hidden` is what recommendations
+  always leave out: Not interested, and Dropped. The surfaces that hid `notInterested` now hide `hidden`.
+- **The always-hidden set and Not seen yet for a guest** are unchanged: a guest has no watch state.
+- **`updateScores` sends the machine's `rate` event** after it stored the score, for movies and shows. A show's
+  first score by hand opens `seen_question`, though nothing asks the question yet. The taste quiz and the guest
+  transfer send `byHand: false`. The request to `/api/update-scores` takes `by_hand: false` for that.
+- **The IMDb import does not go through `rate`.** It settles its movies in bulk after each batch and after an undo,
+  and it leaves the Wishlist alone, as it always has. So a movie that an import rated can be Seen and on the
+  Wishlist, which invariant 5 lists. Whether an import clears Want to See is open, with the same question for the
+  migration (section 6).
+- **Want to See can still be added to a Seen title,** as before ("Want to See Again"). `updateWishList` and the Not
+  interested writer do not send the machine's events yet. The only row they would take is Want to See on a Dropped
+  show (row 24), and nothing drops a show yet.
+- **Not interested is offered only for a title without a state and without a score,** where it was "not Seen and
+  not scored". The two differ only for Watching, On hold and Dropped.
+- **Undo of "I watched it" carries the id of what was recorded** (`watchId`: the movie's watch, or the show's Seen
+  press) where it carried the time of the watch. It removes only that.
+- **The request to `/api/update-watch-history` takes `action_id`,** the id the browser made for the press. Without
+  one the server makes it.
+- **The member data cache is `user-data-v2`.** The build before can't read an entry with `watchState`, and this one
+  can't read one with `watched`.
+- **Tonight's pick's key** holds the number of titles per state and the number of watches, not the entries: the
+  entries of a large member would make a key of several kilobytes.
+- **Account deletion** has one function a future flow calls, `deleteMemberData`. It soft-deletes the share lists
+  and hard-deletes the tracking tables and the imports. The other user tables still have no deletion.
+- **`USER_TABLES` in `provider_alias_resolution.py`** lists the two tables. Nothing in that script reads the list.
+- **The prototypes** (`server/prototype-rec-*.server.ts`) read `user_watch_state` with `state <> 'not_started'`.
+  Two of them, `prototype-rec-watch-next-2` and `-3`, read the member data map and now read `watchState`; the list
+  in section 4 did not name them.
+- **`scripts/benchmark-user-data.mjs` is not updated.** It cuts `_getUserData` out of the source and runs it with
+  two names in scope. By its code that stopped working when Not interested was added, before this change; it was
+  not run to confirm.
