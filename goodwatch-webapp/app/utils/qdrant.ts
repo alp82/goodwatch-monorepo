@@ -1,3 +1,4 @@
+import { BackendTimeoutError, timeoutSetting } from "./backend-timeout.ts"
 import { QdrantClient, RecommendStrategy, type ScoredPoint, type Value } from "@qdrant/js-client-grpc"
 import pc from "picocolors"
 
@@ -45,8 +46,20 @@ const capLog = (value: unknown, indent?: number): string => {
 		: text
 }
 
+// The client aborts a call at its timeout, and nothing else aborts one, so a cancelled call is a timeout. The
+// transport reports it as a ConnectError with gRPC code 1 (canceled). Matched by shape: @bufbuild/connect is the
+// client's dependency, not the webapp's.
+const GRPC_CANCELED = 1
+
+const toQdrantError = (error: unknown, timeoutMs: number): unknown => {
+	const raw = error as { name?: unknown; code?: unknown } | null
+	if (raw?.name !== "ConnectError" || raw.code !== GRPC_CANCELED) return error
+	return Object.assign(new BackendTimeoutError("Qdrant", timeoutMs), { cause: error })
+}
+
 class QdrantClientWrapper {
 	private client: QdrantClient
+	private timeoutMs = timeoutSetting("QDRANT_TIMEOUT_MS", QDRANT_TIMEOUT_MS)
 
 	constructor(url: string, apiKey?: string) {
 		this.client = new QdrantClient({
@@ -54,7 +67,7 @@ class QdrantClientWrapper {
 			apiKey,
 			// The client's default is 300 s, which let a stalled call hold a page
 			// render for minutes. Recommendation calls take about 40 ms in Qdrant.
-			timeout: QDRANT_TIMEOUT_MS,
+			timeout: this.timeoutMs,
 		})
 	}
 
@@ -279,7 +292,7 @@ class QdrantClientWrapper {
 			console.error("Error:", error)
 			console.error("Stack trace:")
 			console.trace()
-			throw error
+			throw toQdrantError(error, this.timeoutMs)
 		}
 	}
 
@@ -346,7 +359,7 @@ class QdrantClientWrapper {
 			console.error(this.formatLog(summary, performance.now() - startTime, 0, true))
 			console.error("Filter:", capLog(params.filter))
 			console.error("Error:", error)
-			throw error
+			throw toQdrantError(error, this.timeoutMs)
 		}
 	}
 
@@ -411,7 +424,7 @@ class QdrantClientWrapper {
 			console.error("Error:", error)
 			console.error("Stack trace:")
 			console.trace()
-			throw error
+			throw toQdrantError(error, this.timeoutMs)
 		}
 	}
 

@@ -1,9 +1,12 @@
+import type { ClientRequest, IncomingMessage } from "node:http"
+import { BackendTimeoutError, withBackendTimeout } from "./backend-timeout.ts"
 import crate from "node-crate"
 import pc from "picocolors"
 
 // node-crate has no request timeout: a request whose response never arrives awaits forever. Every call is capped at
-// CRATE_TIMEOUT_MS (default 10 s; webapp queries finish in well under 2 s). The timeout only stops waiting: the HTTP
-// request is not cancelled, so a write may still land after it fires. `upsert` reads its row back to find out.
+// CRATE_TIMEOUT_MS (default 10 s; webapp queries finish in well under 2 s). Timeout closes the HTTP request.
+// On production CrateDB 5.10.9 (October 7, 2026), a statement on sys tables still ran to its end after closing
+// the request. A write may still land after timeout, so `upsert` reads its row back to find out.
 const DEFAULT_TIMEOUT_MS = 10_000
 
 const getTimeoutMs = () => {
@@ -11,9 +14,9 @@ const getTimeoutMs = () => {
 	return configured > 0 ? configured : DEFAULT_TIMEOUT_MS
 }
 
-export class CrateTimeoutError extends Error {
+export class CrateTimeoutError extends BackendTimeoutError {
 	constructor(timeoutMs: number) {
-		super(`CrateDB did not respond within ${timeoutMs} ms`)
+		super("CrateDB", timeoutMs)
 		this.name = "CrateTimeoutError"
 	}
 }
@@ -41,17 +44,8 @@ export const toCrateError = (error: unknown): Error => {
 	)
 }
 
-const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
-	let timer: ReturnType<typeof setTimeout> | undefined
-	const timeout = new Promise<never>((_, reject) => {
-		timer = setTimeout(() => reject(new CrateTimeoutError(timeoutMs)), timeoutMs)
-	})
-	try {
-		return await Promise.race([promise, timeout])
-	} finally {
-		clearTimeout(timer)
-	}
-}
+let captureRequest: ((request: ClientRequest) => void) | undefined
+let requestCaptureInstalled = false
 
 // Queries, parameters and filters can be megabytes, and one production log line reached 108 MB. Nothing printed here exceeds this.
 // The clock time on every log line. One formatter for the process: toLocaleTimeString builds a new one per call.
@@ -74,6 +68,18 @@ const capLog = (value: unknown, indent?: number): string => {
 class CrateClient {
 	constructor(hosts: string[]) {
 		crate.connect(hosts.join(" "))
+		if (!requestCaptureInstalled) {
+			const pool = (crate as typeof crate & {
+				connectionPool: { getSqlRequest(callback: (response: IncomingMessage) => void): ClientRequest }
+			}).connectionPool
+			const getSqlRequest = pool.getSqlRequest
+			pool.getSqlRequest = function(this: typeof pool, callback: (response: IncomingMessage) => void) {
+				const request = getSqlRequest.call(this, callback)
+				captureRequest?.(request)
+				return request
+			}
+			requestCaptureInstalled = true
+		}
 	}
 
 	async execute(
@@ -82,7 +88,26 @@ class CrateClient {
 	) {
 		const startTime = performance.now()
 		try {
-			const result = await withTimeout(crate.execute(query, params), getTimeoutMs())
+			const timeoutMs = getTimeoutMs()
+			const result = await withBackendTimeout("CrateDB", timeoutMs, async (signal) => {
+				let request: ClientRequest | undefined
+				const previousCapture = captureRequest
+				let pending: ReturnType<typeof crate.execute>
+				// node-crate creates the request synchronously, before another statement can run.
+				captureRequest = (created) => { request = created }
+				try {
+					pending = crate.execute(query, params)
+				} finally {
+					captureRequest = previousCapture
+				}
+				const destroy = () => { request?.destroy(signal.reason) }
+				signal.addEventListener("abort", destroy, { once: true })
+				try {
+					return await pending
+				} finally {
+					signal.removeEventListener("abort", destroy)
+				}
+			}, { error: () => new CrateTimeoutError(timeoutMs) })
 			const duration = performance.now() - startTime
 			const querySummary = this.getQuerySummary(query)
 			const formattedLog = this.formatLog(querySummary, duration)

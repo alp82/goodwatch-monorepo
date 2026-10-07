@@ -2,16 +2,23 @@ import assert from "node:assert/strict"
 import { createServer } from "node:http"
 import { after, beforeEach, test } from "node:test"
 import { SignJWT, exportJWK, generateKeyPair } from "jose"
+import { withBackendTimeout } from "./backend-timeout.ts"
 
 const pair = await generateKeyPair("ES256")
 const jwk = { ...(await exportJWK(pair.publicKey)), kid: "test-key" }
 const requests = new Map<string, number>()
 const accepted = new Map<string, string>()
+let stalledPath: string | undefined
+const stalledClosures: Promise<void>[] = []
 let userStatus = 200
 let refresh: ReturnType<typeof session> | undefined
 const server = createServer((req, res) => {
 	const path = new URL(req.url ?? "/", "http://localhost").pathname
 	requests.set(path, (requests.get(path) ?? 0) + 1)
+	if (path === stalledPath) {
+		stalledClosures.push(new Promise((resolve) => req.socket.once("close", resolve)))
+		return
+	}
 	res.setHeader("Content-Type", "application/json")
 	if (path.endsWith("jwks.json"))
 		return res.end(JSON.stringify({ keys: [jwk] }))
@@ -60,6 +67,8 @@ beforeEach(() => {
 	requests.clear()
 	accepted.clear()
 	userStatus = 200
+	stalledPath = undefined
+	stalledClosures.length = 0
 	refresh = undefined
 })
 function user(id: string) {
@@ -271,3 +280,36 @@ test("500 failures are retried and counted; 401 failures are memoized", async ()
 test("garbage cookie resolves to null without throwing", async () => {
 	assert.equal((await resolveSession("sb-127-auth-token=forged")).user, null)
 })
+
+for (const endpoint of ["user", "token"]) {
+	test(`stalled /${endpoint} is transient, not memoized, and closes its socket`, async (t) => {
+		const previous = process.env.SUPABASE_TIMEOUT_MS
+		process.env.SUPABASE_TIMEOUT_MS = "200"
+		t.after(() => {
+			if (previous === undefined) delete process.env.SUPABASE_TIMEOUT_MS
+			else process.env.SUPABASE_TIMEOUT_MS = previous
+		})
+		t.mock.method(console, "error", () => {})
+		stalledPath = `/auth/v1/${endpoint}`
+		const expired = endpoint === "token" ? Math.floor(Date.now() / 1000) - 100 : undefined
+		const header = cookie(await token("stalled", { hs: true, exp: expired }), expired)
+		for (let attempt = 1; attempt <= 2; attempt++) {
+			const started = performance.now()
+			const result = await resolveSession(header)
+			assert.equal(result.user, null)
+			assert.ok(performance.now() - started >= 180)
+			assert.ok(performance.now() - started < 1000)
+			assert.equal(authCheckCounts.error, attempt)
+			assert.equal(authCheckCounts.memo, 0)
+			assert.equal(count(endpoint), attempt)
+			assert.equal(stalledClosures.length, attempt)
+			await withBackendTimeout("Socket close", 700, async () => { await stalledClosures[attempt - 1] })
+		}
+		if (endpoint === "token") {
+			// Let auth-js drain aborted retries without waiting out its 30-second retry window.
+			t.mock.timers.enable({ apis: ["Date"], now: Date.now() + 31_000 })
+			await new Promise((resolve) => setTimeout(resolve, 500))
+			assert.equal(count(endpoint), 2)
+		}
+	})
+}

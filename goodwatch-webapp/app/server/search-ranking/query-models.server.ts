@@ -12,6 +12,7 @@
 // - multilingual (text_multi_v1): multilingual-e5-small, mean pooling, "query: " as prefix.
 // Both: at most 512 tokens, L2-normalized. The ONNX files are the fp32 Xenova exports; their vectors match the
 // Python models (see results/bench/encoders.json in the ranking benchmark).
+import { timeoutSetting } from "../../utils/backend-timeout.ts"
 import { createHash } from "node:crypto"
 import { createReadStream, createWriteStream } from "node:fs"
 import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises"
@@ -166,7 +167,7 @@ async function download(
 	console.warn(
 		`Search models: ${spec.repo}/${file.path} isn't in ${dirname(path)}, downloading ${Math.round(file.bytes / 1e6)} MB from Hugging Face`,
 	)
-	const response = await fetch(url)
+	const response = await fetch(url, { signal: AbortSignal.timeout(timeoutSetting("SEARCH_MODEL_DOWNLOAD_TIMEOUT_MS", 600_000)) })
 	if (!response.ok || !response.body) {
 		throw new Error(
 			`Downloading ${spec.repo}/${file.path} failed: HTTP ${response.status}`,
