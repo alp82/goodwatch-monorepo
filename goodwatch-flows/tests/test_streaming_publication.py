@@ -23,6 +23,7 @@ from f.tmdb_web.provider_identity import provider_name_from_url
 from f.sync.copy.deleted_titles import flagged_among
 from f.sync.availability_evidence import build_evidence, quarantine_evidence
 from f.sync.models.crate_models import StreamingEvidence
+from f.tmdb_api.provider_evidence import snapshot_id, utc_ms, validated_results
 from test_provider_identity import clickout_url
 
 
@@ -94,7 +95,8 @@ def load_copy(db: Any) -> Callable[..., dict]:
                      Movie=Record, Show=Record, StreamingAvailability=Record, StreamingEvidence=StreamingEvidence, build_evidence=build_evidence, quarantine_evidence=quarantine_evidence,
                      SCHEMAS={name: {"primary_key": ["tmdb_id"]} for name in ("movie", "show", "streaming_availability", "streaming_evidence")},
                      get_db=lambda: db, provider_name_from_url=provider_name_from_url,
-                     flagged_among=flagged_among)
+                     flagged_among=flagged_among,
+                     snapshot_id=snapshot_id, utc_ms=utc_ms, validated_results=validated_results)
     model_tree = ast.parse((ROOT / "sync" / "models" / "crate_models.py").read_text())
     model = next(node for node in model_tree.body if isinstance(node, ast.ClassDef) and node.name == "StreamingAvailability")
     namespace["MediaType"] = str
@@ -488,6 +490,121 @@ class StreamingPublicationTests(unittest.TestCase):
         result = self.publish(crate)
         self.assertFalse(any(sql not in ("REFRESH TABLE streaming_availability", "REFRESH TABLE streaming_evidence", "streaming_evidence") for sql in crate.writes))
         self.assertEqual(result["publication"]["titles"]["42"]["provider_state"], "absent")
+
+    def check(self, results: dict, at: Optional[datetime] = None, **fields: Any) -> None:
+        """Store a provider fetch of show 42 the way the details fetch does, with its proof."""
+        at = at or self.now
+        payload = {"results": results}
+        self.db.tmdb_tv_details.update_one({"tmdb_id": 42}, {"$set": {
+            "updated_at": at, "watch_providers": payload, "watch_providers_attempted_at": at, "watch_providers_error": "",
+            "watch_providers_check": {"checked_at": utc_ms(at), "payload_hash": snapshot_id(payload), "countries": sorted(results)},
+        } | fields})
+
+    def test_check_without_any_country_publishes_an_empty_aggregate(self) -> None:
+        # TMDB lists such a title in no country, so it has no country scrape and no
+        # offer to publish. Its aggregate stayed NULL, which the vector copy reads as unknown.
+        self.check({})
+        for scheduled in (False, True):
+            with self.subTest(scheduled=scheduled):
+                crate = Crate()
+                result = self.copy(crate, {}, "show") if scheduled else self.publish(crate)
+                self.assertEqual(crate.rows, [])
+                for field in ("streaming_country_codes", "streaming_service_ids", "streaming_availabilities"):
+                    self.assertEqual(crate.media[42][field], [])
+                self.assertNotIn("tmdb_providers_updated_at", crate.media[42])
+                if not scheduled:
+                    self.assertEqual(result["publication"]["titles"]["42"]["streaming_availability"], [])
+                self.assertEqual(self.db.streaming_publication_leases.count_documents({}), 0)
+
+    def test_check_without_any_country_removes_no_published_availability(self) -> None:
+        self.check({})
+        crate = Crate([availability(), availability("DE", tmdb_link="https://tmdb", display_priority=1)])
+        published = deepcopy(crate.rows)
+        self.publish(crate)
+        self.assertEqual(crate.rows, published)
+        self.assertEqual(crate.media[42]["streaming_availabilities"], ["DE_8", "US_8"])
+        self.assertNotIn("streaming_availability", crate.writes)
+
+    def test_empty_payload_without_a_usable_check_stays_unknown(self) -> None:
+        empty = {"results": {}}
+        listed = {"results": {"US": {"link": "https://tmdb"}}}
+        for name, fields in (
+            ("never attempted", {"updated_at": self.now, "watch_providers": empty}),
+            ("failed fetch after an empty check", {"watch_providers_error": "provider_request_failed"}),
+            ("response without providers", {"watch_providers_error": "missing_or_invalid_provider_response"}),
+            ("check of another payload", {"watch_providers_check": {
+                "checked_at": utc_ms(self.now), "payload_hash": snapshot_id({"results": {"US": {}}}), "countries": ["US"]}}),
+            ("check without a time", {"watch_providers_check": {"payload_hash": snapshot_id(empty), "countries": []}}),
+            ("check that lists a country, on details never refreshed", {"updated_at": None, "watch_providers": listed, "watch_providers_check": {
+                "checked_at": utc_ms(self.now), "payload_hash": snapshot_id(listed), "countries": ["US"]}}),
+            ("check 30 days ago", {"watch_providers_check": {
+                "checked_at": utc_ms(self.now - timedelta(days=30)), "payload_hash": snapshot_id(empty), "countries": []}}),
+        ):
+            for published in ([], [availability()]):
+                with self.subTest(name, published=len(published)):
+                    self.db.tmdb_tv_details.replace_one({"tmdb_id": 42}, {"tmdb_id": 42})
+                    if name != "never attempted":
+                        self.check({})
+                    self.db.tmdb_tv_details.update_one({"tmdb_id": 42}, {"$set": fields})
+                    crate = Crate(published)
+                    result = self.publish(crate)
+                    self.assertEqual(crate.media, {})
+                    self.assertEqual(crate.rows, published)
+                    self.assertEqual(result["publication"]["titles"]["42"]["streaming_availability"],
+                                     ["8_US"] if published else None)
+
+    def test_check_without_any_country_counts_until_it_is_30_days_old(self) -> None:
+        self.check({}, at=self.now - timedelta(days=29))
+        crate = Crate()
+        self.publish(crate)
+        self.assertEqual(crate.media[42]["streaming_availabilities"], [])
+
+    def test_check_without_any_country_waits_for_a_country_scrape(self) -> None:
+        # A scrape row means TMDB listed that country before; its scrape still decides it.
+        self.check({})
+        self.db.tmdb_tv_providers.insert_one({"tmdb_id": 42, "country_code": "US"})
+        crate = Crate()
+        result = self.publish(crate)
+        self.assertEqual(crate.media, {})
+        self.assertIsNone(result["publication"]["titles"]["42"]["streaming_availability"])
+
+    def test_title_checked_without_any_country_gets_a_point_and_an_unchecked_one_does_not(self) -> None:
+        from f.sync.copy import tmdb_streaming
+        from test_priority_publish import VectorSerializationTests, written_points
+
+        class PublishedCrate(Crate):
+            def disconnect(self) -> None:
+                pass
+
+            def select(self, sql: str, params: tuple | None = None) -> list[dict]:
+                if "FROM movie WHERE" in sql:
+                    return list(self.media.values())
+                return super().select(sql, params)
+
+        empty = {"results": {}}
+        check = {"watch_providers_attempted_at": self.now, "watch_providers_error": "", "watch_providers_check": {
+            "checked_at": utc_ms(self.now), "payload_hash": snapshot_id(empty), "countries": []}}
+        for checked in (True, False):
+            with self.subTest(checked=checked):
+                self.db.tmdb_movie_details.replace_one({"tmdb_id": 42}, {
+                    "tmdb_id": 42, "title": "Example", "updated_at": self.now, "watch_providers": empty,
+                } | (check if checked else {}), upsert=True)
+                crate = PublishedCrate()
+                with patch.object(tmdb_streaming, "get_db", return_value=self.db):
+                    tmdb_streaming.copy_media(crate, {"tmdb_id": {"$in": [42]}}, "movie", recent_only=False)
+                vector = VectorSerializationTests()
+                vector.setUp()
+                vector.db = self.db
+                vector.crate = crate
+                result = vector.publish(targeted=False)
+                if checked:
+                    self.assertEqual(crate.media[42]["streaming_availabilities"], [])
+                    self.assertEqual((result["upserts"], result["skipped_unknown_streaming"]), (1, 0))
+                    self.assertEqual(written_points(vector.qc.client)[0].payload["streaming_availability"], [])
+                else:
+                    self.assertEqual(crate.media, {})
+                    self.assertEqual((result["upserts"], result["unknown_streaming_ids"]), (0, [42]))
+                    vector.qc.client.batch_update_points.assert_not_called()
 
     def test_api_empty_clears_only_api_contribution_while_scrape_is_pending(self) -> None:
         self.db.tmdb_tv_details.update_one({"tmdb_id": 42}, {"$set": {"updated_at": self.now,

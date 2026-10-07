@@ -25,6 +25,7 @@ from f.sync.models.crate_models import (
 )
 from f.sync.models.crate_schemas import SCHEMAS
 from f.sync.availability_evidence import build_evidence, quarantine_evidence
+from f.tmdb_api.provider_evidence import snapshot_id, utc_ms, validated_results
 from f.tmdb_web.provider_identity import provider_name_from_url
 
 BATCH_SIZE = 5000
@@ -40,6 +41,8 @@ LEASE_POLL_SECONDS = 2
 # Longer than a targeted publish of one title, far below the 15-minute lease.
 SCHEDULED_LEASE_WAIT_SECONDS = 120
 HOURS_TO_FETCH = 24*2
+# A provider check this old no longer says where a title streams.
+PROVIDER_CHECK_MAX_AGE = timedelta(days=30)
 
 
 # ===== Helper Functions =====
@@ -447,6 +450,24 @@ def reconcile_deferring_unmapped(
             deferred.add(error.country)
 
 
+def checked_without_offers(details: dict, providers: list[dict]) -> bool:
+    """Whether TMDB's latest provider check found the title in no country.
+
+    Country scrapes exist only for the countries TMDB lists, so this check is the
+    only source such a title has. It counts while its proof covers the stored
+    payload and is younger than PROVIDER_CHECK_MAX_AGE. A failed fetch, an older
+    check and an empty payload without proof all leave the title unknown.
+    """
+    payload = details.get("watch_providers") or {}
+    proof = details.get("watch_providers_check") or {}
+    checked_at = proof.get("checked_at")
+    if providers or details.get("watch_providers_error") or validated_results(payload) != {}:
+        return False
+    if not isinstance(checked_at, int) or proof.get("payload_hash") != snapshot_id(payload):
+        return False
+    return utc_ms(datetime.utcnow()) - checked_at < PROVIDER_CHECK_MAX_AGE.total_seconds() * 1000
+
+
 def publication_writes(
     tmdb_id: int, media_type: str, MediaClass: Any, existing: list[dict], details: dict,
     providers: list[dict], rows: dict, verified: dict, api_results: dict,
@@ -454,11 +475,13 @@ def publication_writes(
 ) -> tuple[list[BaseModel], list[BaseModel], list[tuple], Optional[BaseModel]]:
     """Evidence, changed and removed availability, and the aggregate one title publishes.
 
-    Without a confirmed source only the evidence is written.
+    Without a confirmed source only the evidence is written. A check that found the
+    title in no country confirms no country, so it removes nothing: the aggregate
+    then holds the published availability, or is empty when there is none.
     """
     evidence: list[BaseModel] = [StreamingEvidence(**record) for record in build_evidence(
         tmdb_id, media_type, details, providers, rows, verified, scoped_provider_id, service_ids, prior_countries)]
-    if not verified and not api_results:
+    if not verified and not api_results and not checked_without_offers(details, providers):
         return evidence, [], [], None
     old_rows = {availability_key(row): StreamingAvailability(**row).model_dump() for row in existing}
     changed: list[BaseModel] = [StreamingAvailability(**row) for key, row in rows.items() if row != old_rows.get(key)]
@@ -531,7 +554,8 @@ def publish_title(
                    "deferred_country_count": len(unverified),
                    "unidentified_country_count": sum(not row.get("country_code") for row in unverified),
                    "streaming_availability": (sorted({f"{row['streaming_service_id']}_{row['country_code']}" for row in rows.values()})
-                                              if existing or verified or api_results else None)}
+                                              if existing or verified or api_results
+                                              or checked_without_offers(details, providers) else None)}
         if unverified or not providers:
             publication["status"] = "partial_success"
         if targeted:
