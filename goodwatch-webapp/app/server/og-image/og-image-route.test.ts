@@ -10,6 +10,7 @@ const etag = imageEtag(image)
 const ok: OgResult = {
 	status: "ok",
 	source: "memory",
+	kept: true,
 	image,
 	renderedAt: 1000,
 	etag,
@@ -127,4 +128,53 @@ test("ok answers, also revalidated ones, are remembered with their pathname and 
 		await loader(request("movie/603.jpg"))
 	}
 	assert.equal(remembered.length, 2)
+})
+
+test("first renders have all response headers but are not remembered", async () => {
+	const remembered: unknown[] = []
+	const loader = createOgImageLoader({
+		getOgImage: async () => ({ ...ok, source: "rendered", kept: false }),
+		getFallbackCard: () => null,
+		remember: (...args) => remembered.push(args),
+	})
+	const response = await loader(request("movie/603.jpg"))
+	assert.equal(response.status, 200)
+	assert.deepEqual(Buffer.from(await response.arrayBuffer()), image)
+	assert.deepEqual(Object.fromEntries(response.headers), {
+		"content-type": "image/jpeg",
+		"content-length": "4",
+		"cache-control": cache,
+		etag,
+		"last-modified": new Date(1000).toUTCString(),
+		"x-og-card": "rendered",
+	})
+	assert.deepEqual(remembered, [])
+})
+
+test("client counts record each store request and its outcome", async () => {
+	const counts: string[][] = []
+	let result: OgResult = { ...ok, source: "rendered", kept: false }
+	const loader = createOgImageLoader({
+		getOgImage: async () => result,
+		getFallbackCard: () => image,
+		countClient: (client, outcome) => counts.push([client, outcome]),
+	})
+	for (const [userAgent, client] of [
+		["facebookexternalhit/1.1", "preview"],
+		["Googlebot-Image/1.0", "crawler"],
+		[
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+			"other",
+		],
+	]) {
+		await loader(request("movie/603.jpg", { "User-Agent": userAgent }))
+		assert.deepEqual(counts.at(-1), [client, "rendered"])
+	}
+	for (const status of ["busy", "missing"] as const) {
+		result = { status }
+		await loader(request("movie/603.jpg"))
+		assert.deepEqual(counts.at(-1), ["other", status])
+	}
+	await loader(request("movie/603.webp"))
+	assert.equal(counts.length, 5)
 })

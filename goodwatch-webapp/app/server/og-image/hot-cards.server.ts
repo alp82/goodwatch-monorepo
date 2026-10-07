@@ -27,7 +27,7 @@ export type HotCard = {
 	contentType: string
 	cacheControl: string
 	lastModified?: string
-	onHit?: () => void
+	onHit?: (userAgent?: string) => void
 }
 
 export function createHotCards({
@@ -79,7 +79,7 @@ export function createHotCards({
 				(tag) =>
 					tag.trim() === "*" || tag.trim().replace(/^W\//, "") === card.etag,
 			)
-		card.onHit?.()
+		card.onHit?.(request.headers["user-agent"])
 		if (matches) {
 			response.writeHead(304, headers)
 			response.end()

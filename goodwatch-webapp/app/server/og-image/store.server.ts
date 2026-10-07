@@ -1,7 +1,9 @@
 // Where rendered Open Graph cards are kept, and how a request gets one.
 //
 // A card lives in Valkey, so it survives a deploy and both webapp instances share it, with a small in-process cache
-// in front for the cards that are requested again and again. A stored card is served for seven days. After one day it
+// in front for the cards that are requested again and again. Cards requested once by crawlers must not fill the cache:
+// a first render lives for thirty minutes, and a second request keeps it for seven days. Link previews of shared pages
+// are requested again. Requests sharing a pending render all count as the first request. After one day a kept card
 // is still served, and one redraw runs in the background, so title data that changed reaches the card within a day
 // of its next request. A card that isn't stored is rendered while the request waits, for a few seconds at most:
 // link-preview bots give up after a few seconds, so a late answer is worth less than a generic one.
@@ -13,7 +15,9 @@ import { CardRendererBusyError } from "~/server/card-renderer/pool.server"
 // The key holds the card's version: bump it when the card's design, its text rules, or the image format change, so
 // that stored cards are drawn again. Keys of an older version expire by themselves.
 export const CACHE_PREFIX = "og-card:v1:"
-// How long Valkey keeps a card. Every key has an expiry, and the cluster's LFU policy may evict a card sooner.
+// First renders expire soon so cards fetched only once do not fill Valkey.
+export const FIRST_SECONDS = 30 * 60
+// How long Valkey keeps a requested-again card. The cluster's LFU policy may evict it sooner.
 export const STORE_SECONDS = 7 * 24 * 60 * 60
 // A card older than this is still served, and redrawn in the background for the next request.
 export const FRESH_MS = 24 * 60 * 60 * 1000
@@ -21,7 +25,12 @@ export const FRESH_MS = 24 * 60 * 60 * 1000
 export const MEMORY_CACHE_MAX_BYTES = 32 * 1024 * 1024
 // How long a request waits for a card that isn't stored before it gets the busy answer.
 export const OG_WAIT_MS = 4000
-export type CachedCard = { image: Buffer; renderedAt: number; etag: string }
+export type CachedCard = {
+	image: Buffer
+	renderedAt: number
+	etag: string
+	kept: boolean
+}
 export type OgResult =
 	| ({
 			status: "ok"
@@ -30,6 +39,7 @@ export type OgResult =
 	| { status: "missing" | "busy" | "failed" }
 type Redis = {
 	getBuffer(key: string): Promise<Buffer | null>
+	expire(key: string, seconds: number): Promise<number>
 	setex(key: string, seconds: number, value: Buffer): Promise<unknown>
 }
 type Dependencies = {
@@ -39,6 +49,8 @@ type Dependencies = {
 	count?: (result: string) => void
 	now?: () => number
 	redisTimeoutMs?: number
+	firstSeconds?: number
+	keptSeconds?: number
 }
 /** A strong ETag for an image: computed once per stored image and kept with it. */
 export function imageEtag(image: Buffer) {
@@ -96,11 +108,14 @@ export function createOgStore(deps: Dependencies) {
 				undefined,
 			)
 			if (!value || value.length <= 8) return null
+			const existing = memory.get(path)
+			if (existing) return { card: existing, source: "memory" as const }
 			const image = value.subarray(8)
 			const card = {
 				image,
 				renderedAt: Number(value.readBigUInt64BE(0)),
 				etag: imageEtag(image),
+				kept: false,
 			}
 			remember(path, card)
 			return { card, source: "store" as const }
@@ -108,25 +123,60 @@ export function createOgStore(deps: Dependencies) {
 			return null
 		}
 	}
-	function renderAndStore(path: string) {
+	function value(card: CachedCard) {
+		const header = Buffer.alloc(8)
+		header.writeBigUInt64BE(BigInt(card.renderedAt))
+		return Buffer.concat([header, card.image])
+	}
+	function keep(path: string, card: CachedCard) {
+		if (card.kept) return
+		card.kept = true
+		// Mark before starting work so concurrent hits only extend the lifetime once.
+		const work = Promise.resolve().then(async () => {
+			const redis = deps.redis()
+			// No cache right now: nothing to keep, and a later request tries again without a warning per request.
+			if (!redis) {
+				card.kept = false
+				return
+			}
+			const key = CACHE_PREFIX + path
+			const seconds = deps.keptSeconds ?? STORE_SECONDS
+			if ((await redis.expire(key, seconds)) === 0)
+				await redis.setex(key, seconds, value(card))
+		})
+		const timedOut = Symbol()
+		void bounded<unknown>(work, deps.redisTimeoutMs ?? 1000, timedOut)
+			.then((result) => {
+				if (result === timedOut) throw new Error("cache keep timed out")
+			})
+			.catch((error) => {
+				card.kept = false
+				console.warn("[og-image] cache keep failed", error)
+			})
+	}
+	function renderAndStore(path: string, kept = false) {
 		let work = pending.get(path)
 		if (!work) {
 			work = Promise.resolve()
 				.then(() => deps.render(path))
 				.then(async (image) => {
 					if (!image) return null
-					const card = { image, renderedAt: now(), etag: imageEtag(image) }
-					remember(path, card)
+					const card = {
+						image,
+						renderedAt: now(),
+						etag: imageEtag(image),
+						kept,
+					}
 					try {
-						const header = Buffer.alloc(8)
-						header.writeBigUInt64BE(BigInt(card.renderedAt))
 						const write = Promise.resolve(
 							deps
 								.redis()
 								?.setex(
 									CACHE_PREFIX + path,
-									STORE_SECONDS,
-									Buffer.concat([header, image]),
+									kept
+										? (deps.keptSeconds ?? STORE_SECONDS)
+										: (deps.firstSeconds ?? FIRST_SECONDS),
+									value(card),
 								),
 						)
 						const timedOut = Symbol()
@@ -141,6 +191,7 @@ export function createOgStore(deps: Dependencies) {
 					} catch (error) {
 						console.warn("[og-image] cache write failed", error)
 					}
+					remember(path, card)
 					return card
 				})
 				.catch((error) => {
@@ -169,10 +220,12 @@ export function createOgStore(deps: Dependencies) {
 		}
 		const path = deps.canonical(pagePath)
 		if (!path) return finish("missing", { status: "missing" })
-		const cached = await read(path)
+		const rendering = pending.get(path)
+		const cached = rendering && !memory.has(path) ? null : await read(path)
 		if (cached) {
 			const stale = now() - cached.card.renderedAt > FRESH_MS
-			if (stale) renderAndStore(path).catch(() => {})
+			keep(path, cached.card)
+			if (stale) renderAndStore(path, true).catch(() => {})
 			return finish(stale ? "stale" : cached.source, {
 				status: "ok",
 				source: stale ? "stale" : cached.source,
@@ -181,13 +234,18 @@ export function createOgStore(deps: Dependencies) {
 		}
 		try {
 			const card = await bounded<CachedCard | null | undefined>(
-				renderAndStore(path),
+				rendering ?? renderAndStore(path),
 				waitMs,
 				undefined,
 			)
 			if (card === undefined) return finish("busy", { status: "busy" })
 			if (!card) return finish("missing", { status: "missing" })
-			return finish("rendered", { status: "ok", source: "rendered", ...card })
+			return finish("rendered", {
+				status: "ok",
+				source: "rendered",
+				...card,
+				kept: false,
+			})
 		} catch (error) {
 			if (error instanceof CardRendererBusyError)
 				return finish("busy", { status: "busy" })

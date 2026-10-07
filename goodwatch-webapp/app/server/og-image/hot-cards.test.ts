@@ -170,3 +170,42 @@ test("remember prunes expired oldest entries and retains the original buffer", a
 	assert.equal(response.body.toString(), "same")
 	assert.equal(response.headers["last-modified"], undefined)
 })
+
+test("hot hits receive the User-Agent and share list cards still answer", async (t) => {
+	const { cards, get } = await fixture(t)
+	const agents: (string | undefined)[] = []
+	const listPath = "/og/lists/abc/hash.jpg"
+	cards.remember(listPath, {
+		...card,
+		onHit: (userAgent) => agents.push(userAgent),
+	})
+	const response = await get(listPath, "GET", {
+		"User-Agent": "facebookexternalhit/1.1",
+	})
+	assert.equal(response.status, 200)
+	assert.deepEqual(response.body, card.image)
+	assert.deepEqual(response.headers, {
+		"cache-control": card.cacheControl,
+		etag: card.etag,
+		"x-og-card": "hot",
+		connection: "close",
+		"content-type": card.contentType,
+		"content-length": "4",
+		"last-modified": card.lastModified,
+	})
+	assert.equal((await get(listPath, "HEAD")).status, 200)
+	assert.equal(
+		(
+			await get(listPath, "GET", {
+				"If-None-Match": card.etag,
+				"User-Agent": "Googlebot-Image/1.0",
+			})
+		).status,
+		304,
+	)
+	assert.deepEqual(agents, [
+		"facebookexternalhit/1.1",
+		undefined,
+		"Googlebot-Image/1.0",
+	])
+})

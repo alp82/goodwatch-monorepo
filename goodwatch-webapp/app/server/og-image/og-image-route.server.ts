@@ -9,8 +9,10 @@ import type { LoaderFunctionArgs } from "@remix-run/node"
 import type { OgResult } from "~/server/og-image/store.server"
 import { OG_IMAGE } from "~/ui/og-image/format"
 import { type HotCard, hotCards } from "./hot-cards.server.ts"
+import { cardClient, type CardClient } from "./clients.ts"
 
 type Dependencies = {
+	countClient?: (client: CardClient, result: string) => void
 	remember?: (pathname: string, card: HotCard) => void
 	getOgImage: (path: string) => Promise<OgResult>
 	getFallbackCard: () => Buffer | null
@@ -46,6 +48,10 @@ export function createOgImageLoader(deps: Dependencies) {
 		if (!/\.(jpg|png)$/.test(file)) return text(404, "Not Found")
 		const stem = file.slice(0, -4)
 		const result = await deps.getOgImage(stem === "index" ? "/" : `/${stem}`)
+		deps.countClient?.(
+			cardClient(request.headers.get("User-Agent")),
+			result.status === "ok" ? result.source : result.status,
+		)
 		if (result.status === "missing") return text(404, "Not Found")
 		if (result.status !== "ok") {
 			const fallback = deps.getFallbackCard()
@@ -63,13 +69,15 @@ export function createOgImageLoader(deps: Dependencies) {
 		const headers = { "Cache-Control": CACHE, ETag: result.etag }
 		const lastModified = new Date(result.renderedAt).toUTCString()
 		// Before the 304: a card that is only ever revalidated is hot too.
-		deps.remember?.(pathname, {
-			image: result.image,
-			etag: result.etag,
-			contentType: OG_IMAGE.type,
-			cacheControl: CACHE,
-			lastModified,
-		})
+		// A first-time card must reach the route on its second request so the store learns of it.
+		if (result.kept)
+			deps.remember?.(pathname, {
+				image: result.image,
+				etag: result.etag,
+				contentType: OG_IMAGE.type,
+				cacheControl: CACHE,
+				lastModified,
+			})
 		if (matchesEtag(request, result.etag))
 			return new Response(null, { status: 304, headers })
 		return new Response(result.image, {
@@ -87,10 +95,14 @@ export async function ogImageLoader(args: LoaderFunctionArgs) {
 	const deps = await import("~/server/og-image/og-image.server")
 	return createOgImageLoader({
 		...deps,
+		countClient: deps.countOgCardClient,
 		remember: (pathname, card) =>
 			hotCards.remember(pathname, {
 				...card,
-				onHit: () => deps.countOgCard("memory"),
+				onHit: (userAgent) => {
+					deps.countOgCard("memory")
+					deps.countOgCardClient(cardClient(userAgent), "memory")
+				},
 			}),
 	})(args)
 }
