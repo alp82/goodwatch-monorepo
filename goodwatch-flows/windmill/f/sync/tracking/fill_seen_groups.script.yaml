@@ -1,0 +1,17 @@
+summary: Fill the watches of Seen presses made without an episode list
+description: Insert the watches of a Seen press whose show had no episodes when it was pressed. A dry run unless dry_run is false.
+lock: '!inline f/sync/tracking/fill_seen_groups.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      description: Only report what would be written. Nothing is changed unless this is false.
+      default: true
+    user_id:
+      type: string
+      description: Only this member
+      default: ''
+  required: []
