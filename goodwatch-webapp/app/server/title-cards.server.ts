@@ -5,9 +5,10 @@
 // Redis for 6 hours, so a page usually needs no Crate read at all. Everything personal is computed in memory on every
 // call and never cached. The rating badge is read from the title snapshot's ratings in memory as well, since it
 // depends on the viewer's country; it is no display field and stays out of the cache.
+// A bounded memory layer keeps display fields for 10 minutes to skip repeated Redis reads and JSON parsing.
 //
 // TITLE_CARDS_REDIS_URL points the cache at a single Redis (for development); without it, it uses the webapp's Redis
-// cluster. Without a Redis connection, every call reads Crate.
+// cluster. Without a Redis connection, memory misses read Crate.
 import Redis from "ioredis"
 import {
 	type RatingBadge,
@@ -15,6 +16,7 @@ import {
 	ratingBadge,
 } from "~/domain/age-content"
 import { servicesFor } from "~/server/availability-index.server"
+import { createDisplayMemory } from "~/server/title-display-memory.server"
 import type { FingerprintKey, Taste } from "~/server/taste/index.server"
 import {
 	NO_RATING,
@@ -28,6 +30,7 @@ import { type TitleKey, parseTitleKey, titleKey } from "~/utils/title-key"
 
 export const MAX_KEYS = 60
 const REASONS = 2
+const displayMemory = createDisplayMemory<TitleDisplay>()
 const CACHE_TTL_SECONDS = 6 * 60 * 60
 const SERVICE_NAMES_TTL_MS = 24 * 60 * 60 * 1000
 // Bump when the cached fields change.
@@ -242,20 +245,34 @@ async function readDisplays(
 ): Promise<Map<TitleKey, TitleDisplay>> {
 	const displays = new Map<TitleKey, TitleDisplay>()
 	if (!keys.length) return displays
+	const uncached = keys.filter((key) => {
+		const display = displayMemory.get(key)
+		if (!display) return true
+		displays.set(key, display)
+		return false
+	})
+	if (!uncached.length) return displays
 	const redis = await cardsRedis()
 	if (redis) {
 		const cached = await Promise.all(
-			keys.map((key) => redis.get(cacheKey(key)).catch(() => null)),
+			uncached.map((key) => redis.get(cacheKey(key)).catch(() => null)),
 		)
 		cached.forEach((raw, i) => {
-			if (raw) displays.set(keys[i], JSON.parse(raw) as TitleDisplay)
+			if (raw) {
+				const display = JSON.parse(raw) as TitleDisplay
+				displays.set(uncached[i], display)
+				displayMemory.set(uncached[i], display)
+			}
 		})
 	}
 	const missing = keys.filter((key) => !displays.has(key))
 	if (!missing.length) return displays
 
 	const read = await readFromCrate(missing)
-	for (const display of read) displays.set(display.key, display)
+	for (const display of read) {
+		displays.set(display.key, display)
+		displayMemory.set(display.key, display)
+	}
 	if (redis)
 		for (const display of read)
 			redis
