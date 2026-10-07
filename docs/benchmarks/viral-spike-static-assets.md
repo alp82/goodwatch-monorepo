@@ -193,7 +193,7 @@ Ways to keep the old files for a while:
 
 - 500 page views per second with 30 to 40 static files each is 15,000 to 20,000 static requests per second: 4 to 6 fully used main threads, or 5 to 7 processes at the measured 3,000 per second.
 - A first title page view costs about 12 ms of main-thread time in static files (40 files at 0.3 ms). A warm title page render costs about 69 ms. If a page cache answers the HTML in 2 to 3 ms, static files are about 80% of what a page view costs the process.
-- A first title page view downloads about 0.72 MB of own static files. At 500 per second that's about 360 MB per second, or 2.9 Gbit per second. The host's uplink speed isn't verified here, but this is likely above it. TMDB images aren't in this number: they come from TMDB.
+- A first title page view downloads about 0.72 MB of own static files. At 500 per second that's about 360 MB per second, or 2.9 Gbit per second. That was an estimate from before the script and image cuts: the checkpoint measured 453 KB per movie page view from the host, which is 1.8 Gbit per second at 500 per second (see [the checkpoint](viral-spike-checkpoint.md)). The host's uplink speed isn't verified here, but this is likely above it. TMDB images aren't in this number: they come from TMDB.
 
 **Options:**
 
