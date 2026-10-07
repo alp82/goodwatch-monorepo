@@ -62,7 +62,10 @@ export const vibeWash = (vibe: number) => `color-mix(in oklab, var(--color-vibe-
  */
 export const vibeTextColor = (vibe: number) => `color-mix(in oklab, var(--color-vibe-${vibe}) 72%, white)`
 
-export const formatCount = (count: number) => count.toLocaleString("en-US")
+// One formatter for all counts. `count.toLocaleString("en-US")` builds a formatter on every call, and the grid
+// formats one count per episode: for a show with about 800 episodes, that was half of the page's server render.
+const countFormat = new Intl.NumberFormat("en-US")
+export const formatCount = (count: number) => countFormat.format(count)
 
 export type ProviderKey = keyof SeasonScores
 
