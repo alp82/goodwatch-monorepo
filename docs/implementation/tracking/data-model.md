@@ -1236,3 +1236,36 @@ and `unnest` with literal values. Two of them joined `user_watch_history` to ano
 row and listed episodes per member were counted member by member, each statement filtered by `user_id`; and the
 status and episode totals of the 650 marked shows were read once with a subquery over `user_watch_history` without
 a member filter (0.1 seconds).
+
+## 10. Built
+
+[#380](https://github.com/alp82/goodwatch-monorepo/issues/380) built the storage and the writer. No page reads or
+writes through them yet, and `user_watch_history` and its readers are unchanged.
+
+| What | Where |
+| --- | --- |
+| The two tables | `goodwatch-flows/windmill/f/sync/models/crate_schemas.py` |
+| The state machine: the table, `step`, `derive`, the aired rule (`serverShow`, `showAiredBy`) | `domain/tracking/machine.ts` |
+| Rows to the machine's record and back, the movie rule, the grouped query's rows to `watchState` | `domain/tracking/storage.ts` |
+| The writer `applyTrackingEvent`, `settleMovie`, and the reads | `server/tracking.server.ts`, statements in `server/tracking-sql.ts` |
+| `insertRows` | `utils/crate.ts` |
+| Timing the grouped query | `goodwatch-webapp/scripts/measure-watch-groups.mjs` |
+
+Tests: `node --test 'app/domain/tracking/*.test.ts' app/server/tracking.test.ts app/utils/crate-insert-rows.test.ts`
+from `goodwatch-webapp`. The server tests run against an in-memory Crate (`server/tracking-fake-crate.ts`); nothing
+here has run against a real one, so the "Not verified" table of section 9 still stands.
+
+Where the build differs from the text above, or settles what it left open:
+
+- `wantToSee` and `notInterested` say which way (`on`), because a request that is sent again must not toggle back.
+- The writer deletes from `user_wishlist` and `user_not_interested` and never adds to them or writes `user_score`.
+  Those writes stay with `updateWishList`, the Not interested writer and `updateScores` until they are switched over.
+- The server runs the machine in a mode for requests that are sent again (`resend`): watches that carry the action's
+  id are left out before the event is applied, and a deletion whose rows are already gone still takes its row of the
+  table. One case stays behind: a single watch or a group deleted in the log from a Seen show, stopped before the
+  state row, leaves Seen, which the machine allows.
+- When the state row was changed in between, the next round first deletes the log rows the round before inserted.
+- `resetUserDataCache` does not list the two tables yet. The writer refreshes them itself before it calls it.
+- Rating a movie takes it off the Wishlist whenever the score's watch is its only watch, also on a later rating.
+- The episode list is cached for 10 minutes per show (`tracking-episode-list-v1`).
+- The prototype under `domain/prototype-tracking-machine/` keeps its own copy of the machine.
