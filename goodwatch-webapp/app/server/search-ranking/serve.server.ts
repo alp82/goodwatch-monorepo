@@ -5,6 +5,7 @@ import type {
 	Eligibility,
 	ReadingFields,
 } from "../combined-search/reading-retrieval.server.ts"
+import { searchAdmission } from "../search-runtime/admission.server.ts"
 import { queryEncoderState, startQueryEncoder } from "./query-encoder.server.ts"
 import {
 	type RankedSearch,
@@ -23,15 +24,21 @@ const SERVE_DEADLINE_MS = 1500
 
 let started = false
 
-/** At server start: loads the index and the query models in the background, so the first searches don't wait. */
-export function startSearchRanking(): void {
+/** At server start: loads the index and, when readings are possible, the query models in the background. */
+export function startSearchRanking(options: { queryModels?: boolean } = {}): void {
 	if (started) return
 	started = true
 	startSearchIndex()
+	if (options.queryModels === false) {
+		console.info(
+			"Search ranking: query models not loaded, because SEARCH_STORAGE_KEY is not set and no search can have a reading",
+		)
+		return
+	}
 	startQueryEncoder().then(
 		(startup) =>
 			console.info(
-				`Search ranking: query models ready in ${Math.round(startup.totalMs)} ms`,
+				`Search ranking: query models ready in ${Math.round(startup.totalMs)} ms, ${startup.threads} encoder threads`,
 			),
 		() => {
 			// Logged by the encoder; it retries on a later search.
@@ -73,7 +80,7 @@ export class RankingDeadlineError extends Error {
 
 /**
  * rankSearch with a deadline. On a miss it rejects with RankingDeadlineError; the ranking itself can't be cancelled,
- * so it finishes in the background and its result is dropped.
+ * so it finishes in the background, still counts as in flight, and its result is dropped.
  */
 export function rankForServing(
 	reading: ReadingFields,
@@ -87,6 +94,7 @@ export function rankForServing(
 	const deadline = new Promise<never>((_, reject) => {
 		timer = setTimeout(() => {
 			missed = true
+			searchAdmission.hold(ranking)
 			reject(new RankingDeadlineError(deadlineMs))
 		}, deadlineMs)
 	})

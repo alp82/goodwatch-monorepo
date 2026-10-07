@@ -10,6 +10,7 @@
 // the lists short.
 import { createHash } from "node:crypto"
 import { Worker } from "node:worker_threads"
+import { encoderThreads } from "../search-runtime/limits.server.ts"
 import { onShutdown } from "~/server/lifecycle.server"
 import { separateEntryUrl } from "~/server/separate-entry.server"
 import {
@@ -18,7 +19,6 @@ import {
 	ensureQueryModelFiles,
 } from "./query-models.server.ts"
 
-const INTRA_OP_THREADS = 4
 // More requests than this waiting in the queue means the encoder can't keep up. Reject instead of queueing more.
 const MAX_PENDING = 32
 // After a failed start (download or load), wait this long before trying again instead of retrying on every search.
@@ -41,6 +41,7 @@ export interface QueryVectors {
 }
 
 export interface QueryEncoderStartup {
+	threads: number
 	/** Download and checksum time for the model files; near zero when they are cached. */
 	filesMs: number
 	loadMs: Record<QueryModelName, number>
@@ -99,8 +100,9 @@ async function start(): Promise<RunningEncoder> {
 	const started = performance.now()
 	const models = await ensureQueryModelFiles()
 	const filesMs = performance.now() - started
+	const threads = encoderThreads()
 	const worker = new Worker(workerUrl(), {
-		workerData: { models, threads: INTRA_OP_THREADS },
+		workerData: { models, threads },
 		name: "query-encoder",
 	})
 	// Remove only these listeners afterwards: Worker.removeAllListeners() also stops message delivery.
@@ -173,6 +175,7 @@ async function start(): Promise<RunningEncoder> {
 		worker,
 		models,
 		startup: {
+			threads,
 			filesMs,
 			loadMs: ready.loadMs,
 			warmMs: ready.warmMs,
