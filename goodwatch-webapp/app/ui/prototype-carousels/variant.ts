@@ -33,8 +33,21 @@
 // - dive5: the compass with a dial. Two axes are few: the visitor picks what up and down mean from five, and
 //   lighter and darker stay left and right. Added after building the four, because every one of them is limited to
 //   the two axes the server chose.
-// The floating bar shows today, the calm ring and the compass of the third round for comparison, and these four.
-// The other variants still answer to the URL.
+//
+// Fifth round, after the owner tried the fourth: nine forms built on the labeled ring (see ring-model.ts for the
+// scheme and RingSection.tsx for what changed): three titles per side, a dive with its own way out, distance from
+// the middle that means "a bit" to "much" in every direction, several dials, and forms with one axis or three.
+// - ring1: the baseline. The labeled ring with only the fixes.
+// - ring2: the ring whose words choose what their axis is about. Both axes.
+// - ring3: the ring with presets that set both axes at once.
+// - ring4: the ring whose up and down is one of the title's own traits.
+// - ring5: three axes, six spokes.
+// - ring6: one axis as a line that scrolls outward, with a list of what the line can mean. No dive mode.
+// - ring7: one axis up and down, as ranks. The words choose what it means. No dive mode.
+// - ring8: two axes as four arms that scroll outward. The words choose. No dive mode.
+// - ring9: one axis left and right, as ranks, from the title's own traits. No dive mode.
+// The floating bar shows today and the fourth round's labeled ring for comparison, and these nine. The other
+// variants still answer to the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
 
@@ -58,19 +71,31 @@ export const CAROUSEL_VARIANTS = [
 	"dive3",
 	"dive4",
 	"dive5",
+	"ring1",
+	"ring2",
+	"ring3",
+	"ring4",
+	"ring5",
+	"ring6",
+	"ring7",
+	"ring8",
+	"ring9",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
 /** The variants the floating bar cycles through. */
 export const CAROUSEL_BAR: CarouselVariant[] = [
 	"today",
-	"walk1",
-	"walk2",
 	"dive1",
-	"dive2",
-	"dive3",
-	"dive4",
-	"dive5",
+	"ring1",
+	"ring2",
+	"ring3",
+	"ring4",
+	"ring5",
+	"ring6",
+	"ring7",
+	"ring8",
+	"ring9",
 ]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
@@ -93,6 +118,15 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	dive3: "D3 Lanes",
 	dive4: "D4 Piles that open",
 	dive5: "D5 Compass with a dial",
+	ring1: "R1 Ring, fixed",
+	ring2: "R2 Words choose",
+	ring3: "R3 Presets",
+	ring4: "R4 Own traits",
+	ring5: "R5 Six ways",
+	ring6: "R6 One line",
+	ring7: "R7 Up and down",
+	ring8: "R8 Four arms",
+	ring9: "R9 Trait bow",
 }
 
 export const CAROUSEL_PROTOTYPE_COOKIE = "gw_proto_carousels"
@@ -112,6 +146,8 @@ export interface CarouselPrototypeData {
 	walk?: { html: string }
 	/** dive1 to dive5: the section's markup, driven the same way. */
 	dive?: { html: string }
+	/** ring1 to ring9: the section's markup, driven the same way. */
+	ring?: { html: string }
 }
 
 /** The prototype's data from the title route's loader, or null for today's page. */

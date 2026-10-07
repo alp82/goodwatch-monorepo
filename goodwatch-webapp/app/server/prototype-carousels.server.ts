@@ -1,13 +1,15 @@
 // PROTOTYPE for "Prototype native-scroll carousels on title pages". Throwaway code: not for production.
 //
 // The switch of the prototype. It is off unless the server runs with PROTO_CAROUSELS=1, so a stray merge ships
-// nothing. With it on, `?proto=today|rows|list|explore|explore1..5|walk1..5|dive1..5` on a title page picks a variant and sets a cookie, so the
+// nothing. With it on, `?proto=today|rows|list|explore|explore1..5|walk1..5|dive1..5|ring1..9` on a title page picks a variant and sets a cookie, so the
 // choice survives navigation between titles. `?proto=off` clears it. A page rendered with a variant is `no-store`:
 // the page cache never keeps it. The cookie isn't part of the page cache key, so run the prototype with
 // PAGE_CACHE=off (a stored plain page would otherwise answer a visitor who holds the cookie).
 import { MOODS } from "~/server/explorer/islands.server"
 import { diveSectionHtml } from "~/server/prototype-dive-view.server"
 import { diveModel } from "~/server/prototype-dive.server"
+import { ringSectionHtml } from "~/server/prototype-ring-view.server"
+import { ringModel } from "~/server/prototype-ring.server"
 import { walkSectionHtml } from "~/server/prototype-walk.server"
 import { getRelatedPanel } from "~/server/related.server"
 import { MISSING_SCORE } from "~/server/title-snapshot/format.server"
@@ -30,6 +32,11 @@ import {
 	buildExploreModel,
 	isExploreVariant,
 } from "~/ui/prototype-carousels/explore-model"
+import {
+	type RingModel,
+	type RingVariant,
+	isRingVariant,
+} from "~/ui/prototype-carousels/ring-model"
 import {
 	CAROUSEL_PROTOTYPE_COOKIE,
 	type CarouselPrototypeData,
@@ -56,7 +63,9 @@ type Scores = (key: string) => number | undefined
  * no query. A server without a snapshot (the development machine can't load it) reads them from Qdrant in one
  * request, the way related.server.ts reads the source title's score without a snapshot. Not cached: prototype only.
  */
-async function fingerprintsOf(keys: number[]): Promise<Map<number, Scores>> {
+export async function fingerprintsOf(
+	keys: number[],
+): Promise<Map<number, Scores>> {
 	const found = new Map<number, Scores>()
 	const snapshot = getTitleSnapshot()
 	if (snapshot) {
@@ -258,7 +267,10 @@ export async function walkModel(input: {
 }
 
 /** The text links of a dive section: the related titles of the overall panel, the page's type first. */
-function diveLinks(type: PxType, panel: RelatedPanel): DiveModel["links"] {
+export function diveLinks(
+	type: PxType,
+	panel: RelatedPanel,
+): DiveModel["links"] {
 	const year = new Date().getFullYear()
 	const of = (listType: PxType, cards: RelatedCard[]) =>
 		cards
@@ -340,6 +352,78 @@ export async function diveStage(input: {
 		lock: input.lock,
 		from: input.from,
 		links: panel ? diveLinks(input.type, panel) : undefined,
+	})
+}
+
+/**
+ * What a ring variant shows around a title (fifth round). The page passes the title it already has and its related
+ * panel. A step in the browser passes the walk's axes and the page title's traits on, so nothing is chosen again:
+ * the related panel of the title stepped onto is read only when the server has to choose (no axes yet, a preset, or
+ * "surprise me").
+ */
+export async function ringStage(input: {
+	variant: RingVariant
+	type: PxType
+	tmdbId: number
+	axes?: string[]
+	traits?: string[]
+	pick?: { preset?: string; slot?: number } | null
+	lock?: string | null
+	from?: { type: PxType; id: number; via: string } | null
+	anchor?: { type: PxType; id: number; dir: string } | null
+	more?: string | null
+	panel?: RelatedPanel
+	center?: {
+		title: string
+		year: string
+		poster: string
+		scores: Record<string, number>
+	}
+}): Promise<RingModel | undefined> {
+	let loaded: Promise<RelatedPanel> | undefined
+	const panelOf = () => {
+		loaded ??= input.panel
+			? Promise.resolve(input.panel)
+			: getRelatedPanel({ tmdbId: input.tmdbId, sourceMediaType: input.type })
+		return loaded
+	}
+	const center = input.center
+	return ringModel({
+		variant: input.variant,
+		type: input.type,
+		tmdbId: input.tmdbId,
+		center: center
+			? {
+					title: {
+						type: input.type,
+						id: input.tmdbId,
+						title: center.title,
+						year: center.year,
+						poster: center.poster,
+						score: 0,
+					},
+					scores: (key) => center.scores[key],
+				}
+			: undefined,
+		axes: input.axes,
+		traits: input.traits,
+		pick: input.pick,
+		neighbors: async () => {
+			const panel = await panelOf()
+			return [
+				...(
+					await fingerprintsOf([
+						...panel.movies.map((card) => titleKey("movie", card.tmdb_id)),
+						...panel.shows.map((card) => titleKey("show", card.tmdb_id)),
+					])
+				).values(),
+			]
+		},
+		lock: input.lock,
+		from: input.from,
+		anchor: input.anchor,
+		more: input.more,
+		links: input.panel ? diveLinks(input.type, input.panel) : undefined,
 	})
 }
 
@@ -454,6 +538,38 @@ export async function carouselPrototype(
 				: undefined
 		data.dive = {
 			html: diveSectionHtml({
+				variant,
+				title: media.details.title,
+				rootKey: `${media.mediaType}-${tmdbId}`,
+				model,
+			}),
+		}
+	}
+	if (isRingVariant(variant)) {
+		const panel = (
+			relatedState.queries[0] as { state?: { data?: RelatedPanel } } | undefined
+		)?.state?.data
+		const scores = media.fingerprint?.scores as
+			| Record<string, number>
+			| undefined
+		const tmdbId = media.details.tmdb_id
+		const model =
+			panel && scores
+				? await ringStage({
+						variant,
+						type: media.mediaType,
+						tmdbId,
+						panel,
+						center: {
+							title: media.details.title,
+							year: String(media.details.release_year ?? ""),
+							poster: media.details.poster_path,
+							scores,
+						},
+					})
+				: undefined
+		data.ring = {
+			html: ringSectionHtml({
 				variant,
 				title: media.details.title,
 				rootKey: `${media.mediaType}-${tmdbId}`,

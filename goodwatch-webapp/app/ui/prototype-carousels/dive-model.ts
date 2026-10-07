@@ -53,6 +53,8 @@ export interface Axis {
 	highFrom: number
 	/** The level the center needs before the low word is offered ("more serious" needs a center that is funny). */
 	lowFrom: number
+	/** The smallest difference in level the words are claimed for. MIN_STEP unless the axis says otherwise. */
+	step?: number
 }
 
 export const TONE: Axis = {
@@ -154,7 +156,36 @@ export const SECOND_AXES: Axis[] = [
 ]
 
 export const ALL_AXES = [TONE, ...SECOND_AXES]
-export const axisOf = (id: string) => ALL_AXES.find((axis) => axis.id === id)
+
+/**
+ * Fifth round: an axis that is one fingerprint attribute ("more tension", "less tension"), for the dials that draw
+ * their choices from the title's own traits. Its id is `t.` and the attribute. One attribute is coarser than a mean
+ * of several, so the words are claimed only from a difference of two points.
+ */
+export function traitAxis(key: string): Axis | undefined {
+	const noun = SHARED[key]
+	if (!noun) return undefined
+	return {
+		id: `t.${key}`,
+		name: noun.charAt(0).toUpperCase() + noun.slice(1),
+		low: `Less ${noun}`,
+		high: `More ${noun}`,
+		lowWord: `less ${noun}`,
+		highWord: `more ${noun}`,
+		lowMost: `low on ${noun}`,
+		highMost: `rich in ${noun}`,
+		plus: [key],
+		minus: [],
+		highFrom: 5,
+		lowFrom: 4,
+		step: 1.5,
+	}
+}
+
+export const axisOf = (id: string) =>
+	id.startsWith("t.")
+		? traitAxis(id.slice(2))
+		: ALL_AXES.find((axis) => axis.id === id)
 
 const mean = (values: number[]) =>
 	values.length ? values.reduce((sum, v) => sum + v, 0) / values.length : 0
@@ -226,7 +257,7 @@ export function farther(
 ): number | null {
 	const { axis, sign } = direction
 	const delta = (levelOf(axis, s) - levelOf(axis, center)) * sign
-	if (delta < MIN_STEP) return null
+	if (delta < (axis.step ?? MIN_STEP)) return null
 	const a = halves(axis, center)
 	const b = halves(axis, s)
 	// "Darker" for a title with less of everything dark, only because it is less hopeful, reads wrong.
@@ -256,14 +287,19 @@ export interface DivePick extends PxTitle {
 	near: number
 }
 
-export const gradeOf = (direction: Direction, delta: number) =>
-	delta < 1.5
-		? `a bit ${direction.word}`
-		: delta < 3
-			? direction.word
-			: `much ${direction.word}`
+/** 0 for "a bit", 1 for the plain word, 2 for "much". */
+export const bandOf = (direction: Direction, delta: number) => {
+	const step = direction.axis.step ?? MIN_STEP
+	return delta < 2 * step ? 0 : delta < 4 * step ? 1 : 2
+}
 
-const cap = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+export const gradeOf = (direction: Direction, delta: number) =>
+	[`a bit ${direction.word}`, direction.word, `much ${direction.word}`][
+		bandOf(direction, delta)
+	]
+
+export const cap = (text: string) =>
+	text.charAt(0).toUpperCase() + text.slice(1)
 
 // A trait worth naming next to a direction: both titles are strong on it. Niche and craft traits say nothing here.
 const NO_SHARED = new Set([
@@ -281,7 +317,7 @@ const NO_SHARED = new Set([
 	"grotesque",
 ])
 
-function sharedTrait(
+export function sharedTrait(
 	direction: Direction,
 	center: Scores,
 	s: Scores,
@@ -326,14 +362,12 @@ export function runOf(
 		)
 	if (!found.length) return []
 	const far = Math.max(...found.map((entry) => entry.delta))
+	const from = direction.axis.step ?? MIN_STEP
 	// Buckets no narrower than half a point, so that a short range gives a short run and not a crowd on one level.
-	const width = Math.max(0.5, (far - MIN_STEP + 0.001) / count)
+	const width = Math.max(0.5, (far - from + 0.001) / count)
 	const buckets = new Map<number, { candidate: Candidate; delta: number }>()
 	for (const entry of found) {
-		const bucket = Math.min(
-			count - 1,
-			Math.floor((entry.delta - MIN_STEP) / width),
-		)
+		const bucket = Math.min(count - 1, Math.floor((entry.delta - from) / width))
 		const held = buckets.get(bucket)
 		if (!held || entry.candidate.near > held.candidate.near)
 			buckets.set(bucket, entry)
