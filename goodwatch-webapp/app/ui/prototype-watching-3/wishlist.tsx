@@ -159,7 +159,8 @@ function SwitchPage({ nav }: { nav: Nav }) {
 	const [q, setQ] = useState("")
 	const [unrated, setUnrated] = useState(side === "unrated")
 	const [withProgress, setWithProgress] = useState(false)
-	const progress = useMemo(() => inProgress(store), [store.entries])
+	const { entries } = store
+	const progress = useMemo(() => inProgress(entries), [entries])
 	// Not rated is a question about Seen titles only.
 	const base = useMemo(() => (withProgress && !unrated ? [...progress, ...seen] : seen), [withProgress, unrated, progress, seen])
 	const list = useMemo(() => sortSeen(base.filter((s) => ofKind(kind)(s.t) && has(q)(s.t.title) && (!unrated || s.mine == null)), sort), [base, kind, q, unrated, sort])
@@ -263,7 +264,8 @@ function Diary({ nav }: { nav: Nav }) {
 	const [from, setFrom] = useState<number | null>(null)
 	const [n, setN] = useState(60)
 	const titles = useMemo(() => seen.filter((s) => ofKind(kind)(s.t) && has(q)(s.t.title) && (!unrated || s.mine == null)), [seen, kind, q, unrated])
-	const rows = useMemo(() => diaryOf(titles, store, episodes && !unrated && kind !== "movie").filter((r) => has(q)(r.t.title)), [titles, store.entries, episodes, unrated, kind, q])
+	const { entries } = store
+	const rows = useMemo(() => diaryOf(titles, entries, episodes && !unrated && kind !== "movie").filter((r) => has(q)(r.t.title)), [titles, entries, episodes, unrated, kind, q])
 	const dated = useMemo(() => rows.filter((r) => r.watch.days != null), [rows])
 	const unknown = useMemo(() => rows.filter((r) => r.watch.days == null), [rows])
 	const years = useMemo(() => {
@@ -469,7 +471,8 @@ function LibraryPage({ nav }: { nav: Nav }) {
 	const [sort, setSort] = useState<SeenSort>("last")
 	const [showSort, setShowSort] = useState<"last" | "title">("last")
 	const [q, setQ] = useState("")
-	const byStatus = useMemo(() => ({ watching: inProgress(store, "watching"), onhold: inProgress(store, "onhold"), dropped: inProgress(store, "dropped") }), [store.entries])
+	const { entries } = store
+	const byStatus = useMemo(() => ({ watching: inProgress(entries, "watching"), onhold: inProgress(entries, "onhold"), dropped: inProgress(entries, "dropped") }), [entries])
 	const unrated = useMemo(() => seen.filter((s) => s.mine == null), [seen])
 	const counts: Record<Side, number> = { want: store.wishlist.length, watching: byStatus.watching.length, onhold: byStatus.onhold.length, dropped: byStatus.dropped.length, seen: seen.length, unrated: unrated.length }
 	const seenList = useMemo(() => sortSeen((side === "unrated" ? unrated : seen).filter((s) => ofKind(kind)(s.t) && has(q)(s.t.title)), sort), [seen, unrated, side, kind, q, sort])
@@ -645,7 +648,7 @@ function SeenPage({ nav }: { nav: Nav }) {
 	const movies = seen.filter((s) => s.t.type === "movie").length
 	const year = new Date(`${store.today}T00:00:00Z`).getUTCFullYear()
 	const thisYear = seen.filter((s) => s.last != null && yearOf(store.today, s.watches[0]) === year).length
-	const progress = inProgress(store).length
+	const progress = inProgress(store.entries).length
 	// A short list shows whole; in a long one every group starts with two rows of posters.
 	const cap = list.length <= 60 ? 9e9 : 14
 	return (

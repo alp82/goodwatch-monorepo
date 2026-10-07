@@ -175,18 +175,18 @@ export const seenHistory = (pool: SeenTitle[], size: SeenSize): SeenItem[] => (s
  * Everything the member has Seen: the made-up history, the tracked shows that are Seen (one that is watched through
  * during the visit joins them, not rated), and the movies marked "I watched it" during the visit.
  */
-export function seenOf(history: SeenItem[], store: Store, finished: string[], ratings: Record<string, number | null>): SeenItem[] {
-	const shows = store.entries
+export function seenOf(history: SeenItem[], entries: Entry[], titles: Store["titles"], finished: string[], ratings: Record<string, number | null>): SeenItem[] {
+	const shows = entries
 		.filter((e) => e.kind === "seen" || e.kind === "seenNew" || e.kind === "comingBack")
 		.map((e) => item(e.show.key, e.show, e.track.lastWatch === 0 ? null : 8, [{ days: e.track.lastWatch, time: null, origin: "manual" }], e))
-	const now = finished.map((key) => store.titles[key]).filter(Boolean).map((t) => item(t.key, t, null, [{ days: 0, time: "just now", origin: "manual" }]))
+	const now = finished.map((key) => titles[key]).filter(Boolean).map((t) => item(t.key, t, null, [{ days: 0, time: "just now", origin: "manual" }]))
 	return [...now, ...shows, ...history].map((s) => (s.id in ratings ? { ...s, mine: ratings[s.id] } : s))
 }
 
 /** The tracked shows the member has not watched through: Watching, On hold, Dropped. */
-export function inProgress(store: Store, status?: "watching" | "onhold" | "dropped"): SeenItem[] {
+export function inProgress(entries: Entry[], status?: "watching" | "onhold" | "dropped"): SeenItem[] {
 	const want = (e: Entry) => (e.track.status === "watching" ? "watching" : e.track.status === "on-hold" ? "onhold" : e.track.status === "dropped" ? "dropped" : null)
-	return store.entries
+	return entries
 		.filter((e) => (status ? want(e) === status : want(e) !== null))
 		.map((e) => item(e.show.key, e.show, null, e.track.lastWatch == null ? [] : [{ days: e.track.lastWatch, time: null, origin: "manual" }], e))
 }
@@ -249,7 +249,7 @@ export interface DiaryRow {
 	rewatch: boolean
 }
 
-export function diaryOf(seen: SeenItem[], store: Store, episodes: boolean): DiaryRow[] {
+export function diaryOf(seen: SeenItem[], entries: Entry[], episodes: boolean): DiaryRow[] {
 	const rows: DiaryRow[] = []
 	for (const s of seen) {
 		const n = s.watches.length
@@ -263,7 +263,7 @@ export function diaryOf(seen: SeenItem[], store: Store, episodes: boolean): Diar
 		})
 	}
 	if (episodes)
-		for (const e of store.entries) {
+		for (const e of entries) {
 			const st = e.track.status
 			if ((st !== "watching" && st !== "on-hold" && st !== "dropped") || e.track.lastWatch == null || e.track.watched < 1) continue
 			const ep = e.show.episodes[e.track.watched - 1]

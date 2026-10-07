@@ -380,21 +380,21 @@ them passed:
 - No page scrolls sideways on any of them.
 - The arrow keys switch the variant and the State panel prints the state.
 
-With 1,500 Seen titles nothing took longer than half a second from the click to the next painted frame: sorting 100
-to 180 ms, filtering 190 to 350 ms, the search 50 to 75 ms, opening the Seen page 450 to 470 ms. The largest page
-drew 266 posters and stayed under 6,000 DOM nodes; no variant draws 1,500 of anything.
+With 1,500 Seen titles, measured from the click to the next painted frame in two runs of the development build on a
+busy machine: sorting 90 to 240 ms, filtering 180 to 350 ms, the search 50 to 105 ms. The slowest actions were
+opening the Seen page from the Browse panel (440 to 730 ms) and loading 120 more diary rows (290 to 670 ms). The
+largest page drew 266 posters, and A's grid stayed under 6,000 DOM nodes after a step; no variant draws 1,500 of
+anything.
 
-The prototype made no request other than GET. In one run the app shell's own Sentry tunnel (`POST /api/e`) fired
-once, which the prototype does not call.
+The prototype made no request other than GET. The app shell's own Sentry tunnel (`POST /api/e`) fired during the
+run, which the prototype does not call.
 
 `biome lint` passes on the new files and `tsc` reports no error in them.
 
 Not checked, or with a caveat:
 
-- The dev server restarted several times during the runs (it is run in a restart loop on this machine and shared
-  with another prototype). Scenarios that were cut off were run again; every scenario passed in full at least once,
-  but not all in one uninterrupted run. One page error was logged in such a moment (a Vite dependency chunk that
-  failed to load after a restart).
+- The dev server is shared with another prototype and restarted several times during the first runs, which cut
+  scenarios off. The last run went through uninterrupted: 206 checks, no failure, no page error.
 - A production build, phone landscape, keyboard and screen reader use, guests, and the real TV flow (the home is
   drawn on the room, not wired into `tv-flow`).
 - Real data: no real member's Seen list, watch log or scores were read. The 1,500 are 500 titles three times.

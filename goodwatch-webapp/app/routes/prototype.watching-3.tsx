@@ -83,16 +83,19 @@ function Page({
 	const [ratings, setRatings] = useState<Record<string, number | null>>({})
 	const [asking, setAsking] = useState<string | null>(null)
 	const history = useMemo(() => seenHistory(fixture.pool, seenSize), [fixture.pool, seenSize])
+	const { entries, titles } = store
+	// Undo puts a movie back on the Wishlist; then it is not Seen. The store builds its Wishlist anew on every render, so the keys stand in for it.
+	const wantedKeys = store.wishlist.map((t) => t.key).join("|")
 	const seen = useMemo(() => {
-		// Undo puts a movie back on the Wishlist; then it is not Seen.
-		const wanted = new Set(store.wishlist.map((t) => t.key))
+		const wanted = new Set(wantedKeys.split("|"))
 		return seenOf(
 			history,
-			store,
+			entries,
+			titles,
 			finished.filter((key) => !wanted.has(key)),
 			ratings,
 		)
-	}, [history, store.entries, store.wishlist, finished, ratings])
+	}, [history, entries, titles, wantedKeys, finished, ratings])
 	const finish = (key: string) => {
 		store.finishTitle(key)
 		setFinished((list) => [key, ...list.filter((k) => k !== key)])

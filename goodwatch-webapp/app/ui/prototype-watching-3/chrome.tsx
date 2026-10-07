@@ -292,7 +292,7 @@ function StatePanel({ nav }: { nav: Nav }) {
 	const open = seen.filter((s) => s.mine == null)
 	const watches = seen.reduce((n, s) => n + s.watches.length, 0)
 	const undated = seen.reduce((n, s) => n + s.watches.filter((w) => w.days == null).length, 0)
-	const by = (status: Side) => inProgress(store, status as "watching" | "onhold" | "dropped").map((s) => s.t.title)
+	const by = (status: Side) => inProgress(store.entries, status as "watching" | "onhold" | "dropped").map((s) => s.t.title)
 	return (
 		<div className="max-h-[60vh] w-[min(92vw,34rem)] overflow-auto rounded-xl bg-white p-3 text-xs text-black shadow-2xl ring-2 ring-fuchsia-500" data-state>
 			<p>
