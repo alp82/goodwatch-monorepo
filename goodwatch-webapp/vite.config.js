@@ -70,7 +70,7 @@ const PROTOTYPES = {
 	// Files in app/routes.
 	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.watching*", "prototype.tracking*"],
 	// Directories in app/ui that only those routes import.
-	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-watching", "prototype-tracking-hub"],
+	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-watching", "prototype-watching-2", "prototype-tracking-hub"],
 }
 const PROTOTYPE_SOURCES = [
 	...PROTOTYPES.routes.map((name) => `./routes/${name}`),
