@@ -1,3 +1,6 @@
+# extra_requirements:
+# qdrant-client==1.19.1
+
 """Publish the streaming aggregate and the Qdrant point of listed titles that stream nowhere (#386).
 
 The streaming copy (f/sync/copy/tmdb_streaming) used to leave the Crate aggregate NULL for a
