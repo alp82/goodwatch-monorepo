@@ -1,7 +1,7 @@
 // PROTOTYPE for "Prototype native-scroll carousels on title pages". Throwaway code: not for production.
 //
 // The switch of the prototype. It is off unless the server runs with PROTO_CAROUSELS=1, so a stray merge ships
-// nothing. With it on, `?proto=today|rows|list|explore|explore1..5|walk1..5|dive1..5|ring1..9` on a title page picks a variant and sets a cookie, so the
+// nothing. With it on, `?proto=today|rows|list|explore|explore1..5|walk1..5|dive1..5|ring1..9|sea1..6` on a title page picks a variant and sets a cookie, so the
 // choice survives navigation between titles. `?proto=off` clears it. A page rendered with a variant is `no-store`:
 // the page cache never keeps it. The cookie isn't part of the page cache key, so run the prototype with
 // PAGE_CACHE=off (a stored plain page would otherwise answer a visitor who holds the cookie).
@@ -10,6 +10,7 @@ import { diveSectionHtml } from "~/server/prototype-dive-view.server"
 import { diveModel } from "~/server/prototype-dive.server"
 import { ringSectionHtml } from "~/server/prototype-ring-view.server"
 import { ringModel } from "~/server/prototype-ring.server"
+import { seaSectionHtml } from "~/server/prototype-sea-view.server"
 import { walkSectionHtml } from "~/server/prototype-walk.server"
 import { getRelatedPanel } from "~/server/related.server"
 import { MISSING_SCORE } from "~/server/title-snapshot/format.server"
@@ -34,8 +35,9 @@ import {
 } from "~/ui/prototype-carousels/explore-model"
 import {
 	type RingModel,
-	type RingVariant,
+	type RingShape,
 	isRingVariant,
+	isSeaVariant,
 } from "~/ui/prototype-carousels/ring-model"
 import {
 	CAROUSEL_PROTOTYPE_COOKIE,
@@ -362,7 +364,7 @@ export async function diveStage(input: {
  * "surprise me").
  */
 export async function ringStage(input: {
-	variant: RingVariant
+	variant: RingShape
 	type: PxType
 	tmdbId: number
 	axes?: string[]
@@ -570,6 +572,38 @@ export async function carouselPrototype(
 				: undefined
 		data.ring = {
 			html: ringSectionHtml({
+				variant,
+				title: media.details.title,
+				rootKey: `${media.mediaType}-${tmdbId}`,
+				model,
+			}),
+		}
+	}
+	if (isSeaVariant(variant)) {
+		const panel = (
+			relatedState.queries[0] as { state?: { data?: RelatedPanel } } | undefined
+		)?.state?.data
+		const scores = media.fingerprint?.scores as
+			| Record<string, number>
+			| undefined
+		const tmdbId = media.details.tmdb_id
+		const model =
+			panel && scores
+				? await ringStage({
+						variant,
+						type: media.mediaType,
+						tmdbId,
+						panel,
+						center: {
+							title: media.details.title,
+							year: String(media.details.release_year ?? ""),
+							poster: media.details.poster_path,
+							scores,
+						},
+					})
+				: undefined
+		data.sea = {
+			html: seaSectionHtml({
 				variant,
 				title: media.details.title,
 				rootKey: `${media.mediaType}-${tmdbId}`,

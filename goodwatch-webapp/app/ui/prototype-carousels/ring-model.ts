@@ -74,7 +74,24 @@ export type RingLayout = "ring" | "star" | "line" | "bow" | "glass" | "arms"
  */
 export type RingDial = "none" | "words" | "presets" | "traits" | "list"
 
+/** Sixth round: the sea forms use the same model in a shape of their own (see sea-model.ts). */
+export const SEA_VARIANTS = ["sea1", "sea2", "sea3", "sea4", "sea5", "sea6"] as const
+export type SeaVariant = (typeof SEA_VARIANTS)[number]
+export const isSeaVariant = (value: unknown): value is SeaVariant =>
+	SEA_VARIANTS.includes(value as SeaVariant)
+/** What a model can be built for: a ring form, or a sea form. */
+export type RingShape = RingVariant | SeaVariant
+
+interface Counts {
+	rest: number
+	ranks: number[]
+	long: number
+	show: number
+}
+
 export interface RingForm {
+	/** Sea forms: how many titles a direction holds, in place of the layout's. */
+	counts?: Counts
 	layout: RingLayout
 	axes: 1 | 2 | 3
 	dial: RingDial
@@ -83,7 +100,23 @@ export interface RingForm {
 	hint: string
 }
 
-export const RING_FORMS: Record<RingVariant, RingForm> = {
+const seaForm = (ranks: number[], rest = 0): RingForm => ({
+	layout: "star",
+	axes: 3,
+	dial: "none",
+	dive: false,
+	hint: "",
+	counts: { rest, ranks, long: 0, show: 0 },
+})
+
+export const RING_FORMS: Record<RingShape, RingForm> = {
+	// Six directions, every one in ranks from "a bit" to "much". How many titles a rank holds depends on the form.
+	sea1: seaForm([2, 3, 2]),
+	sea2: seaForm([1, 2, 2]),
+	sea3: seaForm([2, 3, 3]),
+	sea4: seaForm([], 2),
+	sea5: seaForm([2, 3, 3]),
+	sea6: seaForm([2, 2, 2]),
 	ring1: {
 		layout: "ring",
 		axes: 2,
@@ -183,10 +216,7 @@ const PLACES: Record<RingLayout, [RingPos, RingPos][]> = {
 }
 
 /** How many titles a direction holds at rest, and the ranks of a dive (or of a form that is all ranks). */
-const COUNTS: Record<
-	RingLayout,
-	{ rest: number; ranks: number[]; long: number; show: number }
-> = {
+const COUNTS: Record<RingLayout, Counts> = {
 	ring: { rest: 3, ranks: [3, 3, 3], long: 0, show: 0 },
 	star: { rest: 2, ranks: [3, 3, 3], long: 0, show: 0 },
 	line: { rest: 0, ranks: [], long: 16, show: 5 },
@@ -431,7 +461,7 @@ export interface RingDirection {
 }
 
 export interface RingModel {
-	variant: RingVariant
+	variant: RingShape
 	center: PxTitle
 	/** The axes of the walk, in the order of the form's places. */
 	axes: string[]
@@ -453,7 +483,7 @@ export const fixedOptions = (): RingOption[] =>
 	FIXED.map((axis) => optionOf(axis))
 
 /** The directions of a walk on these axes, with their places in the form's layout. */
-export function ringDirections(variant: RingVariant, axes: Axis[]) {
+export function ringDirections(variant: RingShape, axes: Axis[]) {
 	const places = PLACES[RING_FORMS[variant].layout]
 	return axes.slice(0, places.length).flatMap((axis, slot) =>
 		([-1, 1] as const).map((sign) => ({
@@ -473,7 +503,7 @@ const sameKind = (center: Scores, s: Scores) =>
 	(center("educational") ?? 0) < 7 || (s("educational") ?? 0) >= 5
 
 export function buildRingModel(input: {
-	variant: RingVariant
+	variant: RingShape
 	center: PxTitle
 	scores: Scores
 	axes: Axis[]
@@ -487,7 +517,7 @@ export function buildRingModel(input: {
 	more?: string | null
 }): RingModel {
 	const form = RING_FORMS[input.variant]
-	const counts = COUNTS[form.layout]
+	const counts = form.counts ?? COUNTS[form.layout]
 	const directions = ringDirections(input.variant, input.axes)
 	const lock =
 		form.dive && directions.some((d) => d.id === input.lock) ? input.lock : null
@@ -597,7 +627,7 @@ export function buildRingModel(input: {
  * more than one axis and no dial that sets them all.
  */
 export function startAxes(
-	variant: RingVariant,
+	variant: RingShape,
 	center: Scores,
 	neighbors: Scores[],
 	traits: RingOption[],
