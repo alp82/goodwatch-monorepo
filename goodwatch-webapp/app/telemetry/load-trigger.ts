@@ -9,6 +9,12 @@
 //    That is the lab definition of "interactive" with a longer window: Lighthouse ends its measurement about 2.2
 //    seconds after the last of these, so the tools' start-up work stays out of its Total Blocking Time.
 // 4. A page that never gets quiet runs the tools `maxWaitMs` after the load event.
+//
+// With `afterInteraction`, rule 1 changes for tools whose start-up work is too heavy to share a moment with the
+// visitor's gesture: the first interaction doesn't run them at once. They run when the visitor has paused and the
+// work the gesture started is done: `afterInteraction.quietMs` without a further interaction, long task, finished
+// request or paint. A visitor who never pauses gets them `afterInteraction.maxWaitMs` after the first interaction.
+// Rule 2 still applies during that wait, and rules 3 and 4 end with the first interaction.
 
 export interface LoadTriggerEnv {
 	/** `document.readyState === "complete"`. */
@@ -38,6 +44,8 @@ export interface LoadTriggerEnv {
 export interface LoadTriggerOptions {
 	quietMs: number
 	maxWaitMs: number
+	/** Wait for a pause after the first interaction, instead of running at once. See the rule above. */
+	afterInteraction?: { quietMs: number; maxWaitMs: number }
 }
 
 /** What made the tools load. Sent nowhere; tests and debugging read it. */
@@ -64,9 +72,11 @@ const listenerOptions = (type: string): AddEventListenerOptions => ({
 export function whenPageIsInteractive(
 	run: (reason: LoadReason) => void,
 	env: LoadTriggerEnv,
-	{ quietMs, maxWaitMs }: LoadTriggerOptions,
+	{ quietMs, maxWaitMs, afterInteraction }: LoadTriggerOptions,
 ): () => void {
 	let done = false
+	// The visitor has used the page, and the tools wait for a pause.
+	let interacted = false
 	let quietTimer: unknown
 	let maxTimer: unknown
 	let stopObserving: (() => void) | undefined
@@ -89,14 +99,35 @@ export function whenPageIsInteractive(
 		cleanup()
 		run(reason)
 	}
-	const onInteraction = () => fire("interaction")
-	const onVisibility = () => {
-		if (env.isHidden()) fire("hidden")
-	}
 	const restartQuietTime = () => {
 		if (done) return
 		if (quietTimer !== undefined) env.clearTimeout(quietTimer)
-		quietTimer = env.setTimeout(() => fire("quiet"), quietMs)
+		quietTimer = interacted
+			? env.setTimeout(
+					() => fire("interaction"),
+					afterInteraction?.quietMs ?? 0,
+				)
+			: env.setTimeout(() => fire("quiet"), quietMs)
+	}
+	const onInteraction = () => {
+		if (!afterInteraction) {
+			fire("interaction")
+			return
+		}
+		if (!interacted) {
+			interacted = true
+			env.removeEventListener("load", onLoad)
+			if (maxTimer !== undefined) env.clearTimeout(maxTimer)
+			maxTimer = env.setTimeout(
+				() => fire("interaction"),
+				afterInteraction.maxWaitMs,
+			)
+			stopObserving ??= env.observeActivity?.(restartQuietTime)
+		}
+		restartQuietTime()
+	}
+	const onVisibility = () => {
+		if (env.isHidden()) fire("hidden")
 	}
 	const onLoad = () => {
 		env.removeEventListener("load", onLoad)
