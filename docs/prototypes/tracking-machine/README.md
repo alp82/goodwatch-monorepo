@@ -174,9 +174,10 @@ No further decision was added. Places where the brief was silent or contradicted
    (row 12), and one more press removes that group and leaves the show Seen with the episodes new again (row 13).
    Without new episodes the button takes the press back. A show that is Seen because every episode was ticked by hand
    has no press to take back: the button is off and says "untick one to change that".
-2. **Seen again with episodes ticked before, pressed from On hold or Dropped.** The brief says "some left → Watching",
-   so On hold with 3 of 6, Seen, Seen again gives Watching, not On hold. Built as written (row 14). If the second press
-   should be an exact undo, row 14 becomes "the state before the press".
+2. **Seen again with episodes ticked before, pressed from On hold or Dropped.** The brief said "some left → Watching",
+   which made On hold with 3 of 6, Seen, Seen again come back as Watching. The owner's rule is that one more press
+   undoes the first, so this was changed after the first build: rows 15 and 16 return the show to On hold or Dropped
+   whether or not a watch remains, and are tried before row 14.
 3. **Want to See on a Dropped show that has watches.** "Dropped → Not started with Want to See" would give Not started
    with episodes watched. Built: the row needs "no watch remains" (row 24); with watches, Want to See is off and says
    that Resume brings the show back.
