@@ -1102,6 +1102,7 @@ A small module, `app/server/features.server.ts`, reads one environment variable 
 | `REC_TASTE_PAGE` | `off`, `preview`, `on` | New Taste tabs |
 | `REC_EXPLORER` | `off`, `preview`, `on` | `/explorer` |
 | `REC_NAVIGATION` | `off`, `preview`, `on` | Dock, hub sheet, Browse panel, palette |
+| `REC_TRACKING` | `off`, `preview`, `on` | The movie watch log: Seen opens the log once a movie is Seen, and `/api/watch-log` ([data model, section 10](../tracking/data-model.md#the-movie-watch-log-383)) |
 
 `preview` shows the feature only to the members listed in `REC_PREVIEW_USERS` (user ids), so the owner can use it in
 production before everyone. With `off`, the old page serves. Flags are read per request, so a change needs only a
