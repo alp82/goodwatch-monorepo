@@ -20,8 +20,14 @@ MOVIE_CHILD_TABLES = (
     "streaming_availability", "person_appeared_in", "person_worked_on",
     "translation", "trope",
 )
+# Every table with a member's rows per title. user_watch_state has the title in its key like the others.
+# user_watch_log does not: its key is (user_id, watch_id), so moving its rows to the canonical title is an
+# update of tmdb_id, and a movie's score watch is renamed with it (watch_id 'score-<movie id>').
+# user_watch_history is retired and stays listed until it is dropped
+# (docs/implementation/tracking/switch-to-the-watch-state.md).
 USER_TABLES = (
-    "user_favorite", "user_score", "user_skipped", "user_not_interested", "user_watch_history", "user_wishlist",
+    "user_favorite", "user_score", "user_skipped", "user_not_interested", "user_watch_history", "user_watch_log",
+    "user_watch_state", "user_wishlist",
 )
 
 
