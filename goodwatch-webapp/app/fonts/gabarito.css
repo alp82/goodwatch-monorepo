@@ -25,9 +25,10 @@
 		U+2215, U+FEFF, U+FFFD;
 }
 
-/* The same two files under a second name, for .brand-header (main.css). Pages with share cards declare their
-   own "Gabarito" faces from other files (ui/share-card/fonts.ts), and those would win there: the brand header
-   would wait for a card font, and the preloaded file would go unused. A browser downloads each file once. */
+/* The same two files under a second name, for .brand-header (main.css). Pages with share cards declare more
+   "Gabarito" faces (ui/share-card/font-faces.ts): a slice per weight with the characters these two files
+   lack. A character in both, such as a thin space, comes from the card's slice there. Under its own name, the
+   brand header never waits for a card font. A browser downloads each file once. */
 @font-face {
 	font-family: "Gabarito Brand";
 	font-style: normal;

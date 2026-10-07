@@ -111,7 +111,7 @@
     },
     "share_list": {
       "path": "${SHARE_LIST_PATH}",
-      "lcp_element": { "tag": "div", "contains": "data-edit=\"title\"" },
+      "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w780/" },
       "budget": {
         "html_bytes": { "max": 24576 },
         "host_requests": { "max": 27 },
@@ -122,10 +122,10 @@
         "font_requests": { "max": 2 },
         "blocking_requests": { "max": 1 },
         "third_party_origins": { "max": 1 },
-        "total_bytes": { "max": 582656 },
+        "total_bytes": { "max": 517120 },
         "lcp_ms": { "max": 4700 },
         "tbt_ms": { "max": 250 },
-        "cls": { "max": 0.02 },
+        "cls": { "max": 0.01 },
         "score": { "min": 80 }
       }
     }

@@ -135,7 +135,7 @@ The LCP element per surface, which the budget also checks:
 | Movie, show | The hero backdrop | `image.tmdb.org`, `w780`, 30 to 80 KB, `fetchpriority="high"` |
 | Person | The hero backdrop | `image.tmdb.org`, `w780`, 28 KB, `fetchpriority="high"` |
 | Discover | The first poster | `image.tmdb.org`, `w342`, `fetchpriority="high"` |
-| Share list | The card's title | Text in the card font (Anton), in the server HTML |
+| Share list | The card's title | Text in the card font (Anton), in the server HTML. Since the card fonts are WOFF2 slices, the card's first title image: see [Card fonts on the share list](#card-fonts-on-the-share-list) |
 
 ### Margins
 
@@ -473,7 +473,50 @@ Lighthouse's estimates for the person and the show page are mostly TMDB images, 
 The person photo is requested as `h632` (55 KB) for a 120 px slot, because TMDB's profile steps jump from 185 to
 421 px.
 
+## Card fonts on the share list
+
+Ticket "Serve the share list card's fonts to the browser as WOFF2 subsets". These numbers are from production
+builds on the development machine with the benchmark's share list, not from the generator. The time lines of the
+budget are still open.
+
+A page now loads each card font as WOFF2 slices (`latin`, `latin-ext`, and `rest` for everything else the TTF
+file has) and only the slices whose characters the card shows. The image renderer keeps reading the TTF files.
+The share list page declares only its design's fonts and preloads the font of the card's title. Gabarito's Latin
+characters come from the brand font's files. `scripts/subset-share-card-fonts.py` in the webapp builds the files.
+
+| Line | Before | After |
+| --- | --- | --- |
+| Anton, the title's font | 54,647 bytes (TTF with Brotli) | 11,329 bytes (`latin`) |
+| Font bytes of the page | 89,139 | 45,821 |
+| Font requests | 2 | 2 |
+| HTML | 23,197 bytes | 23,662 bytes |
+| Scripts | 423,721 bytes | 425,838 bytes |
+| Total bytes | 762,271 | 721,538 |
+| CLS | 0.0104 | 0 |
+
+The values are medians of 5 Lighthouse runs. The local build requests more scripts than production does, so
+only the differences carry over: 40.7 KB less in total. The page's rules for the fonts and their fallback fonts
+add 0.5 KB to the HTML and 2.1 KB to the script that holds them.
+
+- **The title was the LCP element only in its fallback font.** The designs name one font per element and no
+  fallback, so a title whose font hadn't arrived showed in the browser's default serif font. That text is wider
+  than Anton: 34,968 px² against 28,469 px² on a phone. The card's first title image covers 30,824 px². A run
+  whose first paint came before Anton reported the title, with a shift of 0.010 when Anton arrived. A run whose
+  first paint came after Anton reported the image. This is why the share list's LCP read either 3.6 to 3.8 s or
+  4.2 to 4.4 s. Of 5 local runs before the change, 3 reported the title (2.8 to 3.2 s) and 2 the image (3.7 and
+  5.4 s).
+- **The LCP element is now the image, in every run.** The title shows in Anton from the first paint, or in a
+  local font of Anton's width. Local LCP: 3.0 to 4.2 s, median 3.5 s (before: median 3.2 s). The simulated FCP
+  fell from 2.76 to 2.48 s. The budget's LCP element for the share list is the image now, as on title pages.
+- **The LCP no longer depends on a font.** What is left between the first paint and the LCP is the image from
+  `image.tmdb.org`, which already has `fetchpriority="high"`.
+- **No shift when a font arrives late.** With every font held back for 1.5 s, CLS is 0.001 (before: 0.0105). Each
+  card font has a local stand-in with its width, ascent, and descent.
+
 ## Not verified
+
+- The card fonts change on the generator: the numbers of that section are local, and the share list's limits for
+  LCP, TBT, and the score still come from before it.
 
 - A real phone. Every number here is Lighthouse's simulation on a server.
 - Whether Chromium on a real phone can show the same one-second hold. The measurements here only show it for the

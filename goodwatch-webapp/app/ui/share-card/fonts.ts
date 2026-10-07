@@ -1,5 +1,5 @@
 // The fonts card designs use. The files ship in public/fonts/share-card with their licenses.
-// The browser preview loads them through cardFontFaceCss; the image renderer reads the same files.
+// The image renderer reads these TTF files. A browser loads WOFF2 slices of them: see font-faces.ts.
 
 export interface CardFont {
 	name: string
@@ -28,8 +28,3 @@ export const CARD_FONTS: CardFont[] = [
 	{ name: "Permanent Marker", file: "PermanentMarker-Regular.ttf", weight: 400, style: "normal" },
 	{ name: "Rubik Mono One", file: "RubikMonoOne-Regular.ttf", weight: 400, style: "normal" },
 ]
-
-export const cardFontFaceCss = CARD_FONTS.map(
-	(f) =>
-		`@font-face{font-family:"${f.name}";src:url("${CARD_FONT_DIR}/${f.file}") format("truetype");font-weight:${f.weight};font-style:${f.style};font-display:swap}`,
-).join("\n")
