@@ -204,6 +204,9 @@ def copy_episodes(
 
 
 def main(tmdb_ids: list[int] = [], max_seconds: int = MAX_RUN_SECONDS):
+    # Windmill passes None for an argument the caller left out, so the defaults above don't apply.
+    tmdb_ids = tmdb_ids or []
+    max_seconds = max_seconds or MAX_RUN_SECONDS
     init_mongodb()
     connector = CrateConnector()
     try:

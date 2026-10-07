@@ -39,6 +39,8 @@ def reserve_due_shows(collection, count: int, now: datetime) -> list[int]:
 
 
 def main(count: int = BATCH_SIZE):
+    # Windmill passes None for an argument the caller left out, so the default above doesn't apply.
+    count = count or BATCH_SIZE
     init_mongodb()
     try:
         tmdb_ids = reserve_due_shows(get_db()[DETAILS_COLLECTION], count, datetime.utcnow())
