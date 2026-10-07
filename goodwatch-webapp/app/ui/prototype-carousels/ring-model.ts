@@ -316,10 +316,9 @@ export function ownTraits(
 				high: axis.high,
 				side,
 			},
+			// The title's strongest traits first. Between equals, the one with titles both ways.
 			value:
-				(side === "both" ? 2 * Math.min(up, down, 10) : 4) +
-				0.5 * Math.min(up + down, 20) +
-				2 * (score - 6),
+				2 * score + (side === "both" ? 1.5 : 0) + 0.1 * Math.min(up, down, 10),
 		})
 	}
 	return found
@@ -457,6 +456,14 @@ export function ringDirections(variant: RingVariant, axes: Axis[]) {
 	)
 }
 
+/**
+ * A far end must not leave the kind of title: from a nature documentary, "much faster" was a disaster movie. The
+ * fingerprint has one attribute that tells non-fiction from fiction well enough for a prototype (educational
+ * value), so a title that is strongly non-fiction only leads to titles that are at least somewhat so.
+ */
+const sameKind = (center: Scores, s: Scores) =>
+	(center("educational") ?? 0) < 7 || (s("educational") ?? 0) >= 5
+
 export function buildRingModel(input: {
 	variant: RingVariant
 	center: PxTitle
@@ -494,7 +501,9 @@ export function buildRingModel(input: {
 		const back = backAt === direction.id && input.from ? input.from.title : null
 		const pool = (input.candidates[direction.id] ?? []).filter(
 			(candidate) =>
-				candidate.near >= MIN_NEAR && !shown.has(keyOf(candidate.title)),
+				candidate.near >= MIN_NEAR &&
+				!shown.has(keyOf(candidate.title)) &&
+				sameKind(input.scores, candidate.s),
 		)
 		const less = (sizes: number[]) =>
 			back ? [Math.max(0, sizes[0] - 1), ...sizes.slice(1)] : sizes
@@ -512,12 +521,21 @@ export function buildRingModel(input: {
 				input.more === direction.id ? run.slice(show) : run.slice(0, show)
 			more = input.more !== direction.id && run.length > show
 		} else if (counts.rest) {
-			titles = runOf(
-				direction,
-				input.scores,
-				pool,
-				counts.rest - (back ? 1 : 0),
-			).map((pick) => ({ ...pick, rank: 0 }))
+			const want = counts.rest - (back ? 1 : 0)
+			titles = runOf(direction, input.scores, pool, want).map((pick) => ({
+				...pick,
+				rank: 0,
+			}))
+			// A short range of levels gives fewer grades than places. The most similar titles that way fill them.
+			if (titles.length < want) {
+				const have = new Set(titles.map(keyOf))
+				titles = [
+					...titles,
+					...ranksOf(direction, input.scores, pool, [want + titles.length])
+						.filter((pick) => !have.has(keyOf(pick)))
+						.slice(0, want - titles.length),
+				].sort((a, b) => a.delta - b.delta)
+			}
 		} else titles = ranksOf(direction, input.scores, pool, less(counts.ranks))
 		for (const title of titles) shown.add(keyOf(title))
 		const level = levelOf(direction.axis, input.scores)

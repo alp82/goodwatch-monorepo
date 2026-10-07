@@ -181,7 +181,7 @@ function Label({
 					aria-label={`${direction.label}: choose what ${axisLetter(model, direction.slot)} means`}
 				>
 					{word}
-					<u aria-hidden="true">▾</u>
+					<u>▾</u>
 				</button>
 			) : ended ? (
 				<button
@@ -206,7 +206,7 @@ function Label({
 					}
 				>
 					{word}
-					{locked && <u aria-hidden="true">✕</u>}
+					{locked && <u>✕</u>}
 				</button>
 			) : (
 				<span className="rg-l rg-plain">{word}</span>
@@ -534,11 +534,8 @@ function fanOf(pos: RingPos): Fan {
 	}
 }
 
-const RANK_WORDS = (direction: RingDirection) => [
-	"a bit",
-	direction.word,
-	"much",
-]
+// The same three words in every direction, short enough for a rank's place.
+const RANK_WORDS = ["a bit", "more", "much"]
 
 /** Posters of one direction put on ranks: per rank, the places are filled in order. */
 function ranked(
@@ -653,7 +650,7 @@ function Placed({ model, rest }: { model: RingModel; rest: Rest }) {
 						{ghost && <Ghost style={at(ghost, width)} />}
 						{fan &&
 							isLocked &&
-							RANK_WORDS(direction).map(
+							RANK_WORDS.map(
 								(text, rank) =>
 									posters.some((poster) => poster.rank === rank) && (
 										<span
@@ -959,7 +956,6 @@ function Menus({ model }: { model: RingModel }) {
 					className="rg-menu"
 					data-rg-menu={slot}
 					hidden={true}
-					role="group"
 					aria-label={`What ${axisLetter(model, slot)} means`}
 				>
 					<p>
@@ -1003,11 +999,7 @@ function ChipDial({ model }: { model: RingModel }) {
 			axes: preset.axes ?? (own.length === 2 ? own : null),
 		})).filter((preset) => preset.axes)
 		return (
-			<div
-				className="rg-dial"
-				role="group"
-				aria-label="What the axes are about"
-			>
+			<div className="rg-dial" aria-label="What the axes are about">
 				{presets.map((preset) => (
 					<button
 						key={preset.id}
@@ -1029,7 +1021,6 @@ function ChipDial({ model }: { model: RingModel }) {
 		return (
 			<div
 				className="rg-dial"
-				role="group"
 				aria-label={`What ${axisLetter(model, slot)} means`}
 			>
 				{model.axes.length > 1 && <span aria-hidden="true">↕</span>}
@@ -1064,7 +1055,7 @@ function ChipDial({ model }: { model: RingModel }) {
 /** list: every choice for the one axis, with both of its ends spelled out. Inside the map, under the line. */
 function ListDial({ model }: { model: RingModel }) {
 	return (
-		<div className="rg-list" role="group" aria-label="What the line means">
+		<div className="rg-list" aria-label="What the line means">
 			{optionsOf(model)
 				.slice(0, 7)
 				.map((option) => (

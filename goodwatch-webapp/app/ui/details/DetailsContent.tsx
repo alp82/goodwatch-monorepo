@@ -101,16 +101,16 @@ export default function DetailsContent({
 		dive3: { form: DiveSection, phone: 590, desktop: 614 },
 		dive4: { form: DiveSection, phone: 590, desktop: 582 },
 		dive5: { form: DiveSection, phone: 590, desktop: 582 },
-		// The fifth round's forms. Each has its own fixed height.
+		// The fifth round's forms. Each has its own fixed height, measured the same way.
 		ring1: { form: RingSection, phone: 590, desktop: 582 },
 		ring2: { form: RingSection, phone: 590, desktop: 582 },
-		ring3: { form: RingSection, phone: 590, desktop: 582 },
-		ring4: { form: RingSection, phone: 590, desktop: 582 },
+		ring3: { form: RingSection, phone: 589, desktop: 586 },
+		ring4: { form: RingSection, phone: 589, desktop: 586 },
 		ring5: { form: RingSection, phone: 590, desktop: 582 },
-		ring6: { form: RingSection, phone: 590, desktop: 582 },
+		ring6: { form: RingSection, phone: 503, desktop: 465 },
 		ring7: { form: RingSection, phone: 590, desktop: 582 },
-		ring8: { form: RingSection, phone: 590, desktop: 582 },
-		ring9: { form: RingSection, phone: 590, desktop: 582 },
+		ring8: { form: RingSection, phone: 510, desktop: 484 },
+		ring9: { form: RingSection, phone: 586, desktop: 577 },
 	}[variant as string]
 	const relatedReserve = (reserved: ReservedHeight): ReservedHeight =>
 		!reserved.phone

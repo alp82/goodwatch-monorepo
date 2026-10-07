@@ -208,6 +208,8 @@ color:#fff;font-size:.6875rem;font-weight:700;line-height:1.125rem;border:1px so
 .rg-star:not([data-lock]) [data-rg-label="e"],.rg-star:not([data-lock]) [data-rg-label="w"]{flex-wrap:wrap;white-space:normal;max-width:26cqw}
 .rg-map[data-lock] .rg-sm{white-space:normal;max-width:37cqw}
 .rg-map[data-lock] .rg-sm .rg-fu{display:none}
+.wk-ring2 .rg-ring .rg-l{font-size:.75rem}
+.wk-ring2 .rg-ring:not([data-lock]) [data-rg-label="e"],.wk-ring2 .rg-ring:not([data-lock]) [data-rg-label="w"]{max-width:34cqw}
 [data-on] .rg-ch{background:#fbbf24;color:#000;border-color:#fbbf24}
 .rg-glass .rg-lb,.rg-bow .rg-lb{max-width:38cqw;white-space:normal}
 .rg-bow [data-rg-label="w"]{translate:0 0}
@@ -238,7 +240,7 @@ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rg-arm{display:flex;flex-direction:column;gap:4px;min-width:0}
 .rg-west{grid-column:1;align-items:flex-end}
 .rg-east{grid-column:3;align-items:flex-start}
-.rg-arm .rg-lb{max-width:100%;min-height:2.125rem;align-items:flex-end;white-space:normal}
+.rg-arm .rg-lb{max-width:100%;height:2.25rem;overflow:hidden;align-items:flex-end;white-space:normal}
 .rg-arm .rg-l{line-height:1rem;font-size:.75rem}
 .rg-west .rg-l{text-align:right}
 .rg-strip{align-self:stretch;display:flex;gap:6px;min-width:0;padding:3px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;
