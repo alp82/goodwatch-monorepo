@@ -10,7 +10,8 @@
 # - Coolify also generates routers for goodwatch.app on vector1 from the container's labels. Their HTTP router
 #   redirects to HTTPS, which would send abio's proxy in a circle. This router has the higher priority (1000 against
 #   39), so requests from abio never reach that redirect. Requests from anywhere else still do.
-# - No compression and no health check here: abio's proxy does both.
+# - No compression here and none on abio's proxy: the app compresses its own responses. No health check here
+#   either: abio's proxy checks each instance.
 #
 # It needs one line in the proxy's own configuration (Servers > vector1 > Proxy > Configuration, in the command
 # list, then Restart Proxy), so that the visitor's address and scheme from abio's proxy are kept:
