@@ -215,6 +215,7 @@ color:#fff;font-size:.6875rem;font-weight:700;line-height:1.125rem;border:1px so
 .wk-ring4 .rg-ring:not([data-lock]) [data-rg-label="n"]{max-width:50cqw}
 .wk-ring4 .rg-ring:not([data-lock]) [data-rg-label="w"],.wk-ring4 .rg-ring:not([data-lock]) [data-rg-label="e"]{max-width:25cqw}
 .wk-ring3 .rg-ring:not([data-lock]) .rg-l,.wk-ring4 .rg-ring:not([data-lock]) .rg-l{font-size:.75rem;line-height:.9375rem}
+.wk-ring3 .rg-ring:not([data-lock]) [data-rg-label="w"],.wk-ring3 .rg-ring:not([data-lock]) [data-rg-label="e"]{max-width:23.5cqw}
 [data-on] .rg-ch{background:#fbbf24;color:#000;border-color:#fbbf24}
 .rg-star[data-lock] .rg-sm{white-space:nowrap;max-width:none}
 .rg-glass .rg-lb{max-width:38cqw;white-space:normal}
