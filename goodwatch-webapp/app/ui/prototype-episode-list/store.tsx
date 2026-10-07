@@ -28,6 +28,9 @@ import {
 	unwatchedUpTo,
 } from "./model"
 
+/** The id of round 2's score control, which turns into the rate prompt. */
+export const SCORE_ANCHOR = "gw-prototype-score"
+
 export type VariantKey = "A" | "B" | "C"
 
 /** How each variant handles bulk marks and "watched up to here". */
@@ -220,6 +223,15 @@ export function StoreProvider({
 						: after.caughtUp
 							? `Caught up. ${after.upcoming?.air_date ? `Next episode airs ${after.upcoming.air_date}.` : ""}`
 							: `${epCode(show, ep)} marked as watched`
+				// Round 2 (/prototype/episode-list-2): the page's one score control carries the prompt, so the toast points
+				// at it. Round 1 has no such element and gets no extra action.
+				const score = typeof document === "undefined" ? null : document.getElementById(SCORE_ANCHOR)
+				if (score && after.ratePrompt && !d.ratePrompt)
+					actions.push({ label: "Rate it", run: () => {
+						setSheet(false)
+						setToast(null)
+						requestAnimationFrame(() => score.scrollIntoView({ behavior: "smooth", block: "center" }))
+					} })
 				change(next, text, actions)
 			},
 			unmarkOne: (ep) => change(unmark(show, st, today, [ep], `${epCode(show, ep)} watch removed`), `${epCode(show, ep)} is unwatched again`),
