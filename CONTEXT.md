@@ -1,14 +1,14 @@
 # GoodWatch
 
-GoodWatch helps people discover films and TV shows and choose something they want to watch.
+GoodWatch helps people discover movies and TV shows and choose something they want to watch.
 
 ## Language
 
 **Worthwhile suggestion**:
-An appealing film or TV show unfamiliar to the person and available on their streaming services in their country. Finding a worthwhile suggestion and actually watching it are distinct outcomes.
+An appealing movie or TV show unfamiliar to the person and available on their streaming services in their country. Finding a worthwhile suggestion and actually watching it are distinct outcomes.
 
 **Interest discovery**:
-Finding films and TV shows the person wants to watch, without requiring availability on their services. Interest discovery precedes the decision about what they can watch next. For members with saved services, On my services still narrows it by default, and one tap widens it to everywhere.
+Finding movies and TV shows the person wants to watch, without requiring availability on their services. Interest discovery precedes the decision about what they can watch next. For members with saved services, On my services still narrows it by default, and one tap widens it to everywhere.
 
 **Watchability check**:
 The follow-up assessment of where a title of interest can be watched in the person's country and on their services.
@@ -41,56 +41,75 @@ A guest's title interactions available across Taste, title details, and Wishlist
 The action expressing an intention to watch a title and placing it in Wishlist.
 _Avoid_: Save
 
+**Movie**:
+A feature-length title in the catalog, as opposed to a show.
+_Avoid_: Film
+
 **Wishlist**:
-The person's collection of titles marked Want to See. It has no manual order; the person chooses a sort.
+The person's collection of titles marked Want to See, movies and shows together. It has no manual order; the person chooses a sort. My movies lists its movies and My shows lists its shows to start.
 
 **Watch next**:
-The top of the Wishlist under the person's chosen sort and moods. It is a view of the Wishlist, not a separate list, and nothing but Want to See adds to it.
+The top of My movies, or of the shows to start in My shows, under the person's chosen sort and moods. It is a view of the Want to See titles of one kind, not a separate list, and nothing but Want to See adds to it.
 _Avoid_: Queue, Up next, Priority queue
 
 **Tonight's pick**:
-The single title GoodWatch puts forward for tonight: for a member, the first title of Watch next.
+The single title or episode GoodWatch puts forward for tonight. For a member, the Next episode of the Watching show they watched most recently in the last 30 days; without one, the first movie of My movies; without one, the first show to start.
+
+**My shows**:
+The page for a member's shows tonight: one list with the Next episode of each show to continue, then the Want to See shows to start. Under it are the shows waiting for episodes and the On hold shows.
+_Avoid_: Shows, Watchlist, Continue watching, Up next
+
+**My movies**:
+The page for choosing a movie: the person's Want to See movies under their chosen sort, moods, On my services and the time they have. A movie leaves it when it is Seen.
+_Avoid_: Movies, My films, Watchlist, Queue
+
+**My library**:
+The page that holds every title a member has marked, one status at a time. Want to see and Seen are shown side by side; Watching, On hold, Dropped and Not rated are one step away.
+_Avoid_: Watched, History, Watch history, Diary, Collection, Archive, Watchlist
 
 **Watch**:
-One viewing of a film or of an episode, with the date it happened when the person knows it. A title or episode can have several watches; a watch never gets a date nobody recorded.
+One viewing of a movie or of an episode, with the date it happened when the person knows it. A title or episode can have several watches; a watch never gets a date nobody recorded.
 _Avoid_: Play, View, Check-in, Scrobble
 
 **Pass**:
-One run through a show's episodes. Watching a show again from the start begins a new pass.
+One run through a show's episodes. Watch again on a Seen show begins a new pass; progress and the Next episode count only the current pass, and the watches of earlier passes are kept.
 _Avoid_: Rewatch session
 
 **Seen**:
-A film the person has watched or rated. A show the person has rated, or has watched through with no season still airing. A show stays Seen when later episodes air.
-_Avoid_: Finished, Completed
+A movie the person has watched or rated. For a show, the show status reached by watching its last aired regular episode or by pressing Seen; pressing Seen again takes that press back. A show stays Seen when later episodes air, and then says how many are new. A rated show is not in the status Seen, but counts as Seen for Not seen yet.
+_Avoid_: Finished, Completed, Watched
 
 **Show status**:
-Where a person stands with a show they have not watched through: Watching, On hold, or Dropped. A show has at most one. Films have none.
+The member's stored state for a show: Not started, Watching, On hold, Dropped, or Seen. A show has exactly one, and only the member's own action or an import changes it; an episode airing or a show ending never does. Movies have none.
+
+**Not started**:
+The show status of a show the member has not begun. Every show is in it until the member watches a regular episode, presses Seen, or an import brings another status.
 
 **Watching**:
-The show status of a show the person has started and intends to continue. The first watched episode sets it.
+The show status of a show the person has started and intends to continue. The first watched episode sets it, unless that was the last aired one, which makes the show Seen.
 _Avoid_: In progress, Currently watching, Continue watching
 
 **Caught up**:
-A Watching show whose aired regular episodes the person has all watched while its season is still airing.
+What a Seen show is called while it is still running. It is a label, not a show status; once the show has ended it reads Seen.
 
 **On hold**:
-The show status of a show the person has set aside and may return to. Only the person sets it.
+The show status of a show the person has set aside and may return to. Only the person sets it, and only from Watching.
 _Avoid_: Paused
 
 **Dropped**:
-The show status of a show the person has given up on. It is always hidden from recommendations, but remains findable by search. It is not a taste signal. It clears Want to See, and adding Want to See clears it. Watching an episode turns it back to Watching.
+The show status of a show the person has given up on, offered from the first watched episode on; an import can bring it with nothing watched. It is always hidden from recommendations, but remains findable by search. It is not a taste signal. It clears Want to See. Watching an episode or resuming ends it; adding Want to See ends it only when nothing is watched.
 _Avoid_: Abandoned, Quit
 
 **Next episode**:
-The earliest aired regular episode of a show the person has not watched.
+The first aired regular episode after the furthest one the person has watched in the current pass that they have not watched in it; when there is none after it, the earliest one they have not watched. Watching, On hold, and Seen shows with new episodes have one.
 _Avoid_: Up next
 
 **Not seen yet**:
-The filter that hides titles that are Seen, that have a show status, or that the person passed in the taste quiz (skipped). Not interested and Dropped titles are always hidden from recommendations, independently of this filter.
+The filter that hides titles that are Seen or have a score, shows in any show status but Not started, and titles the person passed in the taste quiz (skipped). Not interested and Dropped titles are always hidden from recommendations, independently of this filter.
 _Avoid_: Hide seen, Unwatched
 
 **Not interested**:
-A title the person has not seen and does not want to watch. It is always hidden from recommendations, but remains findable by search. It is neither a score nor a taste signal. It clears Want to See; rating, watching, or adding Want to See clears Not interested. Once the person has watched an episode of a show, Dropped takes its place. It transfers from guest progress at sign-up. Skip remains a separate action meaning passed in the taste quiz.
+A title the person has not seen and does not want to watch. It is always hidden from recommendations, but remains findable by search. It is neither a score nor a taste signal. It clears Want to See; rating, watching, or adding Want to See clears Not interested. It is offered for a show only while the show is Not started; once the person has watched an episode, Dropped takes its place. It transfers from guest progress at sign-up. Skip remains a separate action meaning passed in the taste quiz.
 
 **On my services**:
 The filter that keeps only titles streaming on the person's saved services in their country. It is on by default for members with saved services.
@@ -150,7 +169,7 @@ The comparison of guest progress and preferences with an existing account, in wh
 Guest progress retained in its original browser while its transfer to an account is awaiting completion.
 
 **Duplicate listings**:
-Catalog entries reliably identified as the same underlying film or show. A shared title alone does not establish identity; remakes, sequels, and distinct series remain separate works.
+Catalog entries reliably identified as the same underlying movie or show. A shared title alone does not establish identity; remakes, sequels, and distinct series remain separate works.
 
 **Presentable title**:
 A title with a poster and a GoodWatch score. The lists GoodWatch puts together hold only presentable titles: Discover, search results, recommendations, and Explorer. A list that is complete by nature or belongs to the person shows every title: a title the person typed, a person's credits, a collection, the Wishlist, a share list. How many votes a title needs is each list's own choice and not part of being presentable.
@@ -176,7 +195,7 @@ DNA generated 180 or more days ago. DNA age counts from when the DNA was generat
 A reviewer's assessment of how faithfully a fingerprint describes a title, supported by explanations of implausible attribute scores. An existing model's output is not a reference answer.
 
 **Share list**:
-A person's ranking of exactly five films or shows under a title, published at its own link under its owner's handle and shown as a share card. A share list is separate from ratings, Want to See, and the taste profile.
+A person's ranking of exactly five movies or shows under a title, published at its own link under its owner's handle and shown as a share card. A share list is separate from ratings, Want to See, and the taste profile.
 _Avoid_: Top list, Collection
 
 **Share card**:
