@@ -1,8 +1,14 @@
 // Discover's results: in browse mode the catalog, in search mode the search's ranked list, filtered and sorted in
 // memory by the filter bar's state, taste applied (the taste match filter, Best match, For you), and one page of title
 // cards. Serves the Discover route's first
-// view and /api/discover/results for every page after.
+// view and /api/discover/results for every page after. Plain guests share browse filter results in process memory.
 import type { FilterState, SortKey } from "~/domain/filter-state"
+import { availabilityLoadedAt } from "~/server/availability-index.server"
+import {
+	discoverFilterCache,
+	discoverFilterKey,
+} from "~/server/discover-filter-cache.server"
+import { isEnabled } from "~/server/features.server"
 import { type FingerprintKey, loadTaste } from "~/server/taste/index.server"
 import { type TitleCard, getTitleCards } from "~/server/title-cards.server"
 import {
@@ -88,15 +94,32 @@ export async function getDiscoverResults(
 				? "ready"
 				: "needsTaste"
 
-	const result = await filterTitles({
-		universe: searching ? ranked : "catalog",
-		includeNotInterested: searching,
-		state,
-		sort,
-		taste,
-		forYou: input.forYou ? (searching ? "search" : "browse") : null,
-		viewer: ctx,
-	})
+	const compute = () =>
+		filterTitles({
+			universe: searching ? ranked : "catalog",
+			includeNotInterested: searching,
+			state,
+			sort,
+			taste,
+			forYou: input.forYou ? (searching ? "search" : "browse") : null,
+			viewer: ctx,
+		})
+	const snapshot = searching ? null : getTitleSnapshot()
+	const key = snapshot
+		? discoverFilterKey({
+				viewer: ctx,
+				taste,
+				state,
+				sort,
+				snapshotVersion: snapshot.version,
+				availabilityLoadedAt: availabilityLoadedAt(ctx.country),
+				ageFilter: isEnabled("ageFilter", { userId: null }),
+				year: new Date().getUTCFullYear(),
+			})
+		: null
+	const result = await (searching
+		? compute()
+		: discoverFilterCache.run(key, compute))
 	// With Best match the order is the taste match already: For you has nothing to blend.
 	const applied = result.moved !== undefined
 
