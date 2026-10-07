@@ -1,0 +1,25 @@
+summary: Migrate the watch history into the watch log
+description: Write user_watch_log and user_watch_state from user_watch_history and the scores. A dry run unless dry_run is false.
+lock: '!inline f/sync/tracking/migrate_watch_history.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    dry_run:
+      type: boolean
+      description: Only report what would be written. Nothing is changed unless this is false.
+      default: true
+    verify:
+      type: boolean
+      description: Check the two new tables against the old ones instead of migrating. Reads only, and fails when something is wrong.
+      default: false
+    user_id:
+      type: string
+      description: Only this member
+      default: ''
+    since:
+      type: string
+      description: Only old rows and scores changed at or after this UTC time, such as 2026-10-08T12:00:00Z. For the second run after the switch.
+      default: ''
+  required: []
