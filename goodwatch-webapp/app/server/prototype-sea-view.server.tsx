@@ -312,10 +312,11 @@ function Isles({ isles }: { isles: Isle[] }) {
 						<use href={`#sea-o${isle.seed % SEEDS.length}`} />
 					</svg>
 				) : (
-					// biome-ignore lint/a11y/useSemanticElements: an island is a shape, and SVG has no button.
 					<svg
 						key={`l${isle.key}`}
 						{...props}
+						// biome-ignore lint/a11y/useSemanticElements: an island is a shape, and SVG has no button.
+						// biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: the same.
 						role="button"
 						tabIndex={0}
 						aria-label={isle.label}
@@ -531,10 +532,10 @@ function pocket(model: RingModel): Scene {
 							style={{ "--isl": tintOf(colorOf(direction)) } as CSSProperties}
 							aria-label={`${direction.label}: look at this island`}
 						>
-							{direction.pos === "w" && <i aria-hidden="true">‹</i>}
+							{direction.pos === "w" && <i>‹</i>}
 							<span className="sea-dot" />
 							{direction.label}
-							{direction.pos === "e" && <i aria-hidden="true">›</i>}
+							{direction.pos === "e" && <i>›</i>}
 						</button>
 					))}
 				<div className="sea-mini" data-sea-mini="-116,-58,116,58">
@@ -1033,7 +1034,7 @@ const HEADINGS: Record<string, number> = {
 	nw: 240,
 	ne: 300,
 }
-const HORIZON = { dists: [24, 52, 86], widths: [13.5, 13.5, 13.5], counts: [2, 3, 3] }
+const HORIZON = { dists: [26, 56, 92], widths: [15.5, 15.5, 15.5], counts: [2, 3, 3] }
 
 /** Where an arm lies when another is ahead: 0 ahead, 1 and 5 to the sides, 2 and 4 behind to the sides, 3 behind. */
 const relOf = (heading: number, ahead: number) =>
@@ -1044,13 +1045,14 @@ const turnOf = (pos: RingPos) => -90 - (HEADINGS[pos] ?? 0)
 
 function horizon(model: RingModel): Scene {
 	const isles: Isle[] = [homeIsle(12, 12)]
-	const start =
-		model.directions.find((d) => d.back)?.id.replace(/[+-]$/, (s) =>
-			s === "+" ? "-" : "+",
-		) ??
-		model.directions.find((d) => d.pos === "e" && d.titles.length)?.id ??
-		model.directions.find((d) => d.titles.length)?.id ??
-		model.directions[0]?.id
+	// Ahead at the start: further the way the visitor came when there is something, else the way with the most titles.
+	const onward = model.directions
+		.find((d) => d.back)
+		?.id.replace(/[+-]$/, (sign) => (sign === "+" ? "-" : "+"))
+	const start = (
+		model.directions.find((d) => d.id === onward && d.titles.length) ??
+		[...model.directions].sort((a, b) => b.titles.length - a.titles.length)[0]
+	)?.id
 	const arms = model.directions.map((direction) => {
 		const angle = HEADINGS[direction.pos] ?? 0
 		const tip = polar(angle, 1)
@@ -1064,13 +1066,13 @@ function horizon(model: RingModel): Scene {
 			isles.push({
 				key: `${direction.id}${rank}`,
 				place: { t: c, d: c },
-				r: radius([16, 23, 25][rank], [16, 23, 25][rank]),
+				r: radius([18, 26, 27][rank], [18, 26, 27][rank]),
 				color: colorOf(direction),
 				seed: direction.slot * 2 + rank,
 				emphasis: [0.5, 0, -0.3][rank],
 			})
 		})
-		const sign = polar(angle, 112)
+		const sign = polar(angle, 118)
 		return { direction, ranks, sign: { t: sign, d: sign } as Both }
 	})
 	const startPos = model.directions.find((d) => d.id === start)?.pos ?? "e"
@@ -1088,7 +1090,7 @@ function horizon(model: RingModel): Scene {
 				<span className="sea-b sea-at" style={at(HOME)}>
 					<Center
 						model={model}
-						place={{ t: { x: 0, y: 0, w: 15.5 }, d: { x: 0, y: 0, w: 15.5 } }}
+						place={{ t: { x: 0, y: 0, w: 17 }, d: { x: 0, y: 0, w: 17 } }}
 						className="sea-up"
 					/>
 				</span>
@@ -1221,11 +1223,11 @@ function Card({
 				<p className="sea-wh">
 					<span className="sea-dot" data-sea-pk-dot="" />
 					<span data-sea-pk-where="" />
+					<em>tap to sail there</em>
 				</p>
 				<p className="sea-ti">
 					<b data-sea-pk-t="" />
 					<span data-sea-pk-y="" />
-					<em>tap to sail there</em>
 				</p>
 				<p className="sea-why" data-sea-pk-why="" />
 			</div>
@@ -1328,7 +1330,7 @@ export function seaSectionHtml(input: {
 						/>
 					)}
 				</div>
-				<i className="sea-unit" data-sea-unit="" aria-hidden="true" />
+				<i className="sea-unit" data-sea-unit="" />
 			</div>
 			{/* Always there, so that the section is as high with links as without. */}
 			<p className="sea-more">

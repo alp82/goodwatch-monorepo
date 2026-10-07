@@ -12,8 +12,8 @@
 // 2. SEA_SCRIPT, inline: taps. A step, the way back, going to an island, zooming, turning the heading. The camera is a
 //    CSS transform of the world with a transition.
 // 3. sea-live.ts, loaded when the section comes near the viewport or is first touched: the Explorer's own sea
-//    renderer on a canvas under the posters, dragging with momentum, the minimap as a handle, pinch, the compass as a
-//    dial. Nothing of it runs while the page hydrates.
+//    renderer on a canvas under the posters, dragging with momentum, the minimap as a handle, pinch, and the compass
+//    as a dial. Nothing of it runs while the page hydrates.
 //
 // Real: the titles, the levels behind the directions and ranks, every step (one request). Faked: islands have no
 // painted surface (the Explorer blurs backdrops into them), no title actions on posters, and a voyage is forgotten
@@ -237,7 +237,10 @@ padding:3px 5px;border-radius:10px;background:rgba(10,14,26,.58);border:1px soli
 .sea-cd{position:absolute;inset:0;padding:9px 12px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:14px 24px 32px;column-gap:11px;align-content:center}
 .sea-cd-peek{display:none}
 .sea-map[data-sea-peek] .sea-cd-peek{display:grid}
-.sea-map[data-sea-peek] .sea-cd-here{display:none}
+.sea-map[data-sea-peek] .sea-cd-here{visibility:hidden}
+.sea-map[data-sea-peek] .sea-cd-here .sea-open{visibility:visible}
+.sea-cd-peek .sea-ti{padding-right:68px}
+.sea-wh em{margin-left:auto;padding-left:8px;font-style:normal;font-weight:500;color:rgba(222,229,255,.5)}
 .sea-th{grid-row:1/4;width:44px;align-self:center}
 .sea-th img{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:4px;background:#141a2c}
 .sea-wh{display:flex;align-items:center;gap:6px;min-width:0;font-size:11px;line-height:14px;font-weight:600;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden}
@@ -286,6 +289,7 @@ padding:3px 5px;border-radius:10px;background:rgba(10,14,26,.58);border:1px soli
 .sea-z[data-near] .sea-rw.sea-r0{translate:-100% calc(-50% - 6.7*var(--u))}
 .sea-z[data-near] .sea-nm{translate:-50% calc(-50% - 4.6*var(--u))}
 .sea-z .sea-nm{max-width:calc(27*var(--u))}
+.sea-z .sea-nm b{font-size:14px}
 .sea-rw{width:max-content;translate:-100% -50%;transform-origin:100% 50%;font-size:10.5px;font-weight:600;color:rgba(235,240,255,.75);white-space:nowrap;z-index:2;text-shadow:0 0 6px #03060e}
 .sea-rail{position:absolute;right:8px;bottom:104px;display:flex;flex-direction:column;gap:2px;padding:4px;border-radius:14px}
 .sea-zb{width:38px;height:38px;border-radius:10px;color:#fff;font-size:22px;line-height:1;font-weight:400}
@@ -300,7 +304,7 @@ padding:3px 5px;border-radius:10px;background:rgba(10,14,26,.58);border:1px soli
 .sea-ghost{aspect-ratio:2/3;visibility:hidden}
 
 .sea-m-sea5 .sea-view{perspective:calc(88*var(--u));perspective-origin:50% 4%}
-.sea-m-sea5 .sea-world{top:70%;transform:rotateX(52deg);transform-style:preserve-3d;transition:none}
+.sea-m-sea5 .sea-world{top:68%;transform:rotateX(52deg);transform-style:preserve-3d;transition:none}
 .sea-m-sea5 .sea-here{transform-style:preserve-3d}
 .sea-turn{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;transform:rotateZ(var(--sea-rot))}
 .sea-b{width:0!important;height:0;transform-style:preserve-3d;transform:rotateZ(calc(-1*var(--sea-rot))) rotateX(-52deg)}
@@ -310,7 +314,7 @@ padding:3px 5px;border-radius:10px;background:rgba(10,14,26,.58);border:1px soli
 .sea-d[data-on] .sea-sign{opacity:1}
 .sea-sign b{font-size:24px}
 .sea-sign small{font-size:15px}
-.sea-m-sea5 .sea-view::after{content:"";position:absolute;left:0;right:0;top:0;height:30%;pointer-events:none;background:linear-gradient(#050810 30%,rgba(5,8,16,0))}
+.sea-m-sea5 .sea-view::after{content:"";position:absolute;left:0;right:0;top:0;height:22%;pointer-events:none;background:linear-gradient(#050810 30%,rgba(5,8,16,0))}
 .sea-m-sea5 .sea-p,.sea-m-sea5 .sea-sign{transition:opacity .35s,scale .15s}
 .sea-m-sea5 .sea-d:not([data-rel="0"]) .sea-p img{filter:brightness(.55) saturate(.7)}
 .sea-m-sea5 .sea-d:not([data-rel="0"]) .sea-p:not([data-sea-back]){opacity:0;pointer-events:none}
@@ -345,6 +349,13 @@ padding:3px 5px;border-radius:10px;background:rgba(10,14,26,.58);border:1px soli
 .sea-trail button{width:20px}
 .sea-card{left:auto;right:12px;top:12px;bottom:12px;width:260px;height:auto;border-radius:18px}
 .sea-cd{padding:18px;grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:auto;row-gap:8px;align-content:start}
+.sea-card{display:flex;flex-direction:column}
+.sea-cd{position:static;flex:none}
+.sea-map[data-sea-peek] .sea-cd-here{visibility:visible}
+.sea-cd-peek{margin:0 18px;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.12)}
+.sea-cd-peek .sea-th{display:none}
+.sea-cd-peek .sea-ti{padding-right:0}
+.sea-cd-peek .sea-ti b{font-size:18px}
 .sea-th{grid-row:auto;width:128px;margin-bottom:6px}
 .sea-th img{border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .sea-wh{font-size:12px;line-height:16px}
