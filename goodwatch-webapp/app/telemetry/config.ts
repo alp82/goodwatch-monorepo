@@ -50,7 +50,21 @@ export const SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE = 1
  * - `quietMs`: how long the page must be quiet after the load event (no long task, no finished request, no first or
  *   largest paint) before the tools load. Lighthouse ends its measurement about 2.2 seconds after the last of these,
  *   so a lower value puts the tools' main-thread work back into its Total Blocking Time. A visitor who taps, types or
- *   scrolls doesn't wait.
+ *   scrolls ends this wait: see TELEMETRY_AFTER_INTERACTION.
  * - `maxWaitMs`: the longest wait after the load event, for a page that never gets quiet.
  */
 export const TELEMETRY_LOAD = { quietMs: 3_500, maxWaitMs: 10_000 } as const
+
+/**
+ * How the tools load for a visitor who uses the page before they have loaded, in milliseconds. Their start-up work
+ * is several long tasks (Sentry's session replay alone reads the whole document in one), and anything the visitor's
+ * tap starts would wait behind them. So the first interaction doesn't load the tools: a pause does.
+ * - `quietMs`: how long the visitor must pause, with the work of the last gesture done (no interaction, long task,
+ *   finished request or paint in that time).
+ * - `maxWaitMs`: the longest wait after the first interaction, for a visitor who never pauses.
+ * A visitor who leaves the tab in that time gets the tools at once, as before. See load-trigger.ts for the rule.
+ */
+export const TELEMETRY_AFTER_INTERACTION = {
+	quietMs: 1_500,
+	maxWaitMs: 8_000,
+} as const
