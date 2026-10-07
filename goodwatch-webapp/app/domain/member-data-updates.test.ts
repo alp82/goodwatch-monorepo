@@ -143,7 +143,10 @@ test("Seen pressed on a rated movie replaces the watch its score owns: still one
 	})
 	const after = afterSeenPress(before, "movie", 2, "add", NOW)
 	assert.deepEqual(
-		[after?.watchState["movie-2"].count, after?.watchState["movie-2"].watchedAt],
+		[
+			after?.watchState["movie-2"].count,
+			after?.watchState["movie-2"].watchedAt,
+		],
 		[1, NOW],
 	)
 })
@@ -262,4 +265,40 @@ test("rating a show changes no watch state and leaves the Wishlist; it takes the
 	assert.deepEqual(after?.wishlist, before.wishlist)
 	assert.deepEqual(after?.notInterested, {})
 	assert.equal(afterScore(undefined, "show", 3, 9, null, NOW), undefined)
+})
+
+test("the show page tells the map where the show stands: its entry, and a started show leaves both lists", async () => {
+	const { afterShowTracking } = await import("./member-data-updates.ts")
+	const member = data({
+		wishlist: { "show-7": wish, "movie-7": wish },
+		notInterested: { "show-7": stamp },
+		watchState: { "show-8": entry() },
+	})
+	const watching = entry({
+		state: "watching",
+		episodesWatched: 1,
+		furthest: [1, 1],
+	})
+	const started = afterShowTracking(member, 7, watching)
+	assert.deepEqual(started?.watchState, {
+		"show-8": entry(),
+		"show-7": watching,
+	})
+	assert.deepEqual(started?.wishlist, { "movie-7": wish })
+	assert.deepEqual(started?.notInterested, {})
+	assert.deepEqual(
+		member.wishlist,
+		{ "show-7": wish, "movie-7": wish },
+		"the map that was given is not changed",
+	)
+
+	// Back to Not started: the entry goes, and the lists are the server's to restore.
+	const undone = afterShowTracking(started, 7, null)
+	assert.deepEqual(undone?.watchState, { "show-8": entry() })
+	assert.deepEqual(undone?.wishlist, { "movie-7": wish })
+
+	// A special alone changes nothing the map holds, and neither does the same entry again.
+	assert.equal(afterShowTracking(member, 9, null), member)
+	assert.equal(afterShowTracking(started, 7, { ...watching }), started)
+	assert.equal(afterShowTracking(undefined, 7, watching), undefined)
 })
