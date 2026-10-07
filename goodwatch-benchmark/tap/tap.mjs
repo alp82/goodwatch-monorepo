@@ -351,7 +351,9 @@ function settings() {
     .split(",")
     .filter(Boolean)
     .map((entry) => {
-      const [label, path] = entry.split("=");
+      // The path can hold a query, such as ?proto=rows: split at the first "=" only.
+      const at = entry.indexOf("=");
+      const [label, path] = at < 0 ? [entry, ""] : [entry.slice(0, at), entry.slice(at + 1)];
       if (!/^[a-z0-9_-]+$/.test(label || "") || !/^\/[^\s]*$/.test(path || "")) throw new Error(`Invalid page: ${entry}`);
       return { label, path };
     });

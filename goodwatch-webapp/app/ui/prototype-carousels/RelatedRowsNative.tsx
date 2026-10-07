@@ -102,6 +102,14 @@ export default function RelatedRowsNative({ media }: { media: Media }) {
 	}
 	useEffect(() => cancelIntent, [])
 
+	// A tap on a tab that came before hydration (NativeRow's inline script marked the button) selects it now.
+	const tabs = useRef<HTMLDivElement>(null)
+	useEffect(() => {
+		const tapped = tabs.current?.querySelectorAll<HTMLElement>("[data-tapped]")
+		const key = tapped?.[tapped.length - 1]?.dataset.panelKey
+		if (key) setSelectedKey(key)
+	}, [])
+
 	const panel = useRelatedPanel(relatedPanelParams(media, activeKey))
 	const isLoading = panel.isPending
 	const meta = getFingerprintMeta(activeKey)
@@ -126,7 +134,7 @@ export default function RelatedRowsNative({ media }: { media: Media }) {
 			<h2 className="text-2xl font-extrabold tracking-tight">
 				Related Movies and Shows
 			</h2>
-			<div className="-mx-2">
+			<div className="-mx-2" ref={tabs}>
 				<NativeRow
 					arrows={false}
 					label="Related titles by attribute"
@@ -139,6 +147,8 @@ export default function RelatedRowsNative({ media }: { media: Media }) {
 							<button
 								key={key}
 								type="button"
+								data-early-tap=""
+								data-panel-key={key}
 								onClick={() => {
 									cancelIntent()
 									setSelectedKey(key)
