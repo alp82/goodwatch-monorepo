@@ -21,7 +21,7 @@ const TODAY = 20_000
 const anonymous = () => ({
 	seen: new Set<number>(),
 	skipped: new Set<number>(),
-	notInterested: new Set<number>(),
+	hidden: new Set<number>(),
 	wishlist: new Set<number>(),
 })
 

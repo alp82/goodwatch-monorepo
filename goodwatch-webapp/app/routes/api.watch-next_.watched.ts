@@ -22,7 +22,10 @@ const bodySchema = z.union([
 		undo: z.object({
 			key: keySchema,
 			addedAt: isoSchema,
-			watchedAt: isoSchema,
+			// The id of the watch that was recorded. A page loaded from the build before the watch log sends
+			// `watchedAt` instead, which names a row of the retired table: its Undo restores Want to See only.
+			watchId: z.string().max(80).nullable().optional(),
+			watchedAt: isoSchema.optional(),
 		}),
 	}),
 ])

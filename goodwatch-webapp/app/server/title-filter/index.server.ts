@@ -166,8 +166,8 @@ export async function filterTitles(input: FilterInput): Promise<FilterResult> {
 		sortUsed === "match" ? "top" : sortUsed,
 	)
 	// Remove pure hides before computing recoveries and counts: no filter can bring them back.
-	if (!input.includeNotInterested && viewer.notInterested.size) {
-		const kept = Array.from(keys, (_, i) => i).filter((i) => !viewer.notInterested.has(keys[i]))
+	if (!input.includeNotInterested && viewer.hidden.size) {
+		const kept = Array.from(keys, (_, i) => i).filter((i) => !viewer.hidden.has(keys[i]))
 		rows = Int32Array.from(kept, (i) => rows[i])
 		keys = Float64Array.from(kept, (i) => keys[i])
 	}

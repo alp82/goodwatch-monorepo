@@ -48,7 +48,7 @@ export function discoverFilterKey(input: {
 		viewer.viewer.kind !== "guest" ||
 		viewer.seen.size !== 0 ||
 		viewer.skipped.size !== 0 ||
-		viewer.notInterested.size !== 0 ||
+		viewer.hidden.size !== 0 ||
 		taste.signal === "some" ||
 		input.availabilityLoadedAt === null
 	)

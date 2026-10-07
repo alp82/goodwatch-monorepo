@@ -44,6 +44,7 @@ export async function loadLivingRoom(request: Request) {
 			seen: new Set(),
 			skipped: new Set(),
 			notInterested: new Set(),
+			hidden: new Set(),
 			ratings: new Map(),
 			wishlist: new Map(wishlist.keys.map((key) => [key, new Date(0)])),
 			forYou: settings.for_you !== "no",
