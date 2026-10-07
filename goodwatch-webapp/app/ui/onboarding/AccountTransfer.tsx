@@ -113,7 +113,7 @@ export function AccountTransfer() {
 			const known =
 				score !== undefined && score !== null
 					? `${score}/10`
-					: account.watched[key]
+					: account.watchState?.[key]?.state === "seen"
 						? "Watched"
 						: account.favorites[key]
 							? "Favorite"

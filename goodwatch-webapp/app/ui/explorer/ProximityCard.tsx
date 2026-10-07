@@ -261,7 +261,8 @@ function Actions({
 						active={seen}
 						disabled={a.seenPending}
 						onClick={() => {
-							a.toggleSeen()
+							// A rated movie stays Seen through its score: the press says so and sends nothing.
+							if (!a.toggleSeen()) return
 							onAction(
 								a.seen ? "Unmarked as seen" : "Marked as seen",
 								!a.seen,

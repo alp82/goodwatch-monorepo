@@ -1,6 +1,5 @@
 import React from "react"
-import { useIsWatched } from "~/hooks/useUserDataAccessors"
-import { useWatchedMutation } from "~/hooks/useUserDataMutations"
+import { useSeenToggle } from "~/hooks/useSeenToggle"
 import UserAction from "~/ui/auth/UserAction"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
@@ -18,18 +17,10 @@ export default function WatchHistoryAction({
 	const { details, mediaType } = media
 	const { tmdb_id } = details
 
-	const isWatched = useIsWatched(mediaType, tmdb_id)
-	const { mutate: updateWatched, isPending } = useWatchedMutation()
+	const { toggle, isPending } = useSeenToggle(mediaType, tmdb_id)
 
 	const handleClick = () => {
-		const toggleAction = isWatched ? "remove" : "add"
-		const action = actionOverwrite ? actionOverwrite : toggleAction
-
-		updateWatched({
-			mediaType,
-			tmdbId: tmdb_id,
-			action,
-		})
+		toggle(actionOverwrite)
 	}
 
 	return (

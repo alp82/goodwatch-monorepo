@@ -19,6 +19,7 @@ const viewer = (): ViewerContext => ({
 	seen: new Set(),
 	skipped: new Set(),
 	notInterested: new Set(),
+	hidden: new Set(),
 	ratings: new Map(),
 	wishlist: new Map(),
 	forYou: true,
@@ -91,7 +92,7 @@ test("only plain guests with loaded availability get a key", () => {
 		{ viewer: { kind: "member", userId: "member" } },
 		{ seen: new Set([1]) },
 		{ skipped: new Set([1]) },
-		{ notInterested: new Set([1]) },
+		{ hidden: new Set([1]) },
 	]
 	for (const change of variants)
 		assert.equal(

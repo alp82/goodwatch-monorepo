@@ -1,7 +1,7 @@
 import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { getUserData } from "~/server/userData.server"
-import { type MediaKey, parseMediaKey } from "~/types/user-data"
+import { type MediaKey, type UserData, parseMediaKey } from "~/types/user-data"
 import type { TasteInteraction } from "~/ui/taste/types"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { normalizeGuestInteractions } from "~/utils/guest-progress"
@@ -24,12 +24,37 @@ export interface ViewerContext {
 	viewer: Viewer
 	country: string
 	services: number[] // saved, expanded through duplicateProviderMapping; [] for none
-	seen: ReadonlySet<TitleKey> // scored or watched
+	// Hidden by Not seen yet: scored, or in any watch state but Not started (Watching, On hold, Dropped, Seen).
+	seen: ReadonlySet<TitleKey>
 	ratings: ReadonlyMap<TitleKey, number> // the person's scores, 1 to 10
 	wishlist: ReadonlyMap<TitleKey, Date> // added-at
 	skipped: ReadonlySet<TitleKey> // Passed in the taste quiz
-	notInterested: ReadonlySet<TitleKey> // Always hidden from recommendations
+	notInterested: ReadonlySet<TitleKey> // Marked Not interested: the mark a card shows
+	// Always hidden from recommendations, whatever the filters say: Not interested, or a Dropped show.
+	hidden: ReadonlySet<TitleKey>
 	forYou: boolean // the member's saved For you setting; true for guests
+}
+
+/**
+ * What a member's data says about Seen and hidden (docs/implementation/tracking/data-model.md, "stored versus
+ * derived"). Not seen yet hides a scored title and a title in any state but Not started. Recommendations always
+ * hide a Not interested title and a Dropped show.
+ */
+export function seenAndHidden(
+	userData: Pick<UserData, "scores" | "watchState" | "notInterested">,
+): Pick<ViewerContext, "seen" | "notInterested" | "hidden"> {
+	const keys = (entries: Record<string, unknown>) =>
+		Object.keys(entries).map((key) => toTitleKey(key as MediaKey))
+	const notInterested = new Set(keys(userData.notInterested))
+	const dropped = Object.entries(userData.watchState)
+		.filter(([, entry]) => entry.state === "dropped")
+		.map(([key]) => toTitleKey(key as MediaKey))
+	return {
+		// The map holds no entry for Not started, so every entry counts.
+		seen: new Set([...keys(userData.scores), ...keys(userData.watchState)]),
+		notInterested,
+		hidden: new Set([...notInterested, ...dropped]),
+	}
 }
 
 /**
@@ -73,18 +98,12 @@ export async function getMemberViewerContext(
 		viewer: { kind: "member", userId },
 		country: countryCode(settings.country_default) ?? guessedCountry,
 		services: expandServices(settings.streaming_providers_default),
-		seen: new Set([
-			...Object.keys(userData.scores).map((key) => toTitleKey(key as MediaKey)),
-			...Object.keys(userData.watched).map((key) =>
-				toTitleKey(key as MediaKey),
-			),
-		]),
+		...seenAndHidden(userData),
 		ratings,
 		wishlist,
 		skipped: new Set(
 			Object.keys(userData.skipped).map((key) => toTitleKey(key as MediaKey)),
 		),
-		notInterested: new Set(Object.keys(userData.notInterested).map((key) => toTitleKey(key as MediaKey))),
 		forYou: settings.for_you !== "no",
 	}
 }
@@ -124,6 +143,8 @@ function guestContext(
 		wishlist,
 		skipped,
 		notInterested,
+		// A guest has no watch state, so nothing is Dropped.
+		hidden: notInterested,
 		forYou: true,
 	}
 }

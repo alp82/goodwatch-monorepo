@@ -205,7 +205,7 @@ function wantAndNotInterested(title: TrackedTitle = show) {
 	db.seed("user_wishlist", [titleRow(title)])
 	db.seed("user_not_interested", [titleRow(title)])
 }
-const userDataKey = cacheEntryKey("user-data", { user_id: user })
+const userDataKey = cacheEntryKey("user-data-v2", { user_id: user })
 const resets = () =>
 	redis.calls.filter(
 		(c) => c.command === "gwCacheReset" && c.args[0] === userDataKey,
@@ -278,9 +278,8 @@ test("the first tick: refresh, read, the log row, the state row, the clears, the
 		"DELETE user_wishlist",
 		"SELECT user_not_interested",
 		// 7
-		"REFRESH TABLE user_watch_log, user_watch_state",
 		"REFRESH TABLE user_not_interested",
-		"REFRESH TABLE user_score, user_wishlist, user_watch_history, user_favorite, user_skipped",
+		"REFRESH TABLE user_score, user_wishlist, user_watch_log, user_watch_state, user_favorite, user_skipped",
 	])
 	assert.equal(resets(), 1)
 	assert.equal(tasteTouched(), true, "a Want to See row went")
@@ -970,9 +969,8 @@ test("Edit a watch's date in the log: the row gets a day or no date, and no stat
 	assert.equal(edited.status, "applied")
 	assert.deepEqual(sent, [
 		"UPDATE user_watch_log",
-		"REFRESH TABLE user_watch_log, user_watch_state",
 		"REFRESH TABLE user_not_interested",
-		"REFRESH TABLE user_score, user_wishlist, user_watch_history, user_favorite, user_skipped",
+		"REFRESH TABLE user_score, user_wishlist, user_watch_log, user_watch_state, user_favorite, user_skipped",
 	])
 	assert.equal(
 		db.statements.find((s) => s.sql.startsWith("UPDATE user_watch_log"))?.sql,
@@ -1088,9 +1086,8 @@ test("Movie: Seen in one tap inserts one single watch now, makes the state row, 
 		"DELETE user_wishlist",
 		"SELECT user_not_interested",
 		"DELETE user_not_interested",
-		"REFRESH TABLE user_watch_log, user_watch_state",
 		"REFRESH TABLE user_not_interested",
-		"REFRESH TABLE user_score, user_wishlist, user_watch_history, user_favorite, user_skipped",
+		"REFRESH TABLE user_score, user_wishlist, user_watch_log, user_watch_state, user_favorite, user_skipped",
 	])
 	const [row] = logOf(movie)
 	assert.deepEqual(
@@ -1266,7 +1263,7 @@ test("Movie: setting a date on the score's watch makes it the member's own, whic
 		"UPDATE user_watch_log",
 	])
 	assert.equal(
-		db.statements[db.statements.length - 4].sql,
+		db.statements[db.statements.length - 3].sql,
 		"UPDATE user_watch_log SET origin = 'single', updated_at = ? WHERE user_id = ? AND watch_id = ? AND origin = 'score'",
 	)
 	assert.deepEqual(movieLog(), [["score-603", "single", "day"]])
@@ -1381,7 +1378,7 @@ test("a Seen press on a 327-episode show is one insert statement, and its undo o
 		"INSERT user_watch_state",
 	])
 	// Seven to nine statements whatever the number of episodes; resetUserDataCache refreshes in two.
-	assert.equal(sent.length, 11)
+	assert.equal(sent.length, 10)
 	const insert = db.statements.find((s) =>
 		s.sql.startsWith("INSERT INTO user_watch_log"),
 	)

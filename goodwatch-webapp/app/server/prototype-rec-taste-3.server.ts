@@ -190,12 +190,13 @@ async function loadSignals(userId: string | null, payload: Payload) {
 		...[
 			"user_wishlist",
 			"user_skipped",
-			"user_watch_history",
+			"user_watch_state",
 			"user_favorite",
 		].map((table) =>
-			query<R>(`SELECT tmdb_id, media_type FROM ${table} WHERE user_id = ?`, [
-				userId,
-			]),
+			query<R>(
+				`SELECT tmdb_id, media_type FROM ${table} WHERE user_id = ?${table === "user_watch_state" ? " AND state <> 'not_started'" : ""}`,
+				[userId],
+			),
 		),
 	])
 	for (const r of scores) {

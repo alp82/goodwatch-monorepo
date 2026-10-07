@@ -229,7 +229,7 @@ async function loadMember(userId: string): Promise<Signals> {
 	const [scores, wish, watched, settings] = await Promise.all([
 		query<R & { score: number }>("SELECT tmdb_id, media_type, score FROM user_score WHERE user_id = ?", [userId]),
 		query<R>("SELECT tmdb_id, media_type FROM user_wishlist WHERE user_id = ?", [userId]),
-		query<R>("SELECT tmdb_id, media_type FROM user_watch_history WHERE user_id = ?", [userId]),
+		query<R>("SELECT tmdb_id, media_type FROM user_watch_state WHERE user_id = ? AND state <> 'not_started'", [userId]),
 		query<{ key: string; value: string }>("SELECT key, value FROM user_setting WHERE user_id = ?", [userId]),
 	])
 	const setting = (k: string) => settings.find((s) => s.key === k)?.value

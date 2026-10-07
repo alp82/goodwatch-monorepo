@@ -7,12 +7,18 @@
 //   the score the preview saw. A rating the member set since the preview is never overwritten.
 // - Every row the import writes gets the import's confirm time as updated_at. The read-back recognises the import's
 //   own writes by it, also after a restart or a write that timed out and landed later.
-// - The written review, watch history, Want to See, skipped and favorites are never touched. That is why this
-//   doesn't go through updateScores, which replaces the review.
+// - The written review, Want to See, skipped and favorites are never touched. That is why this doesn't go through
+//   updateScores, which replaces the review and takes a rated movie off the Wishlist.
+// - A rated movie is Seen through the watch its score owns (docs/implementation/tracking/data-model.md, C2). After
+//   each batch of scores, and after an undo took scores back, the batch's movies are settled by the movie rule:
+//   the score's watch is written where a movie now has a score and no watch, and removed where the score went.
+//   A watch the member logged is never touched. Settling again writes nothing, so it runs before the items are
+//   marked and a run that broke off settles them again.
 import type { ImdbConflictChoice, ImdbImportCounts, ImdbImportSummary } from "~/domain/imdb-import"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
 import { markTasteChanged } from "~/server/taste/index.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
+import { settleMovies } from "~/server/tracking.server"
 import { resetUserDataCache } from "~/server/userData.server"
 import { CrateTimeoutError } from "~/utils/crate"
 import { titleKey } from "~/utils/title-key"
@@ -49,6 +55,13 @@ export async function ratingsChanged(userId: string) {
 	for (const result of results)
 		if (result.status === "rejected") console.error("IMDb import: clearing a cache failed:", result.reason)
 }
+
+/** The movie rule for the movies among an import's titles, after their scores were written or taken back. */
+export const settleImportedMovies = (userId: string, items: readonly { tmdb_id: number; media_type: ImportMediaType }[]) =>
+	settleMovies(
+		userId,
+		items.filter((item) => item.media_type === "movie").map((item) => Number(item.tmdb_id)),
+	)
 
 /** A row the import still has to write. */
 interface Pending {
@@ -217,6 +230,7 @@ async function apply(userId: string, importId: string) {
 		for (const batch of chunks(pending, APPLY_BATCH)) {
 			wrote = true
 			const states = await applyBatch(userId, stamp, batch)
+			await settleImportedMovies(userId, batch)
 			await recordStates(importId, states)
 			for (const state of states.values()) tally[state]++
 			processed += batch.length
@@ -345,6 +359,8 @@ export async function undoImport(userId: string, importId: string): Promise<Imdb
 					)
 			}
 		}
+		// A movie whose score went loses the watch that score owned; one that got its earlier score back keeps it.
+		await settleImportedMovies(userId, written)
 		// Every statement above is a no-op the second time, so an undo that broke off here can simply run again.
 		await run("UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added', 'updated')", [
 			importId,

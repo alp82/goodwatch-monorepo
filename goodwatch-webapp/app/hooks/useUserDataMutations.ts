@@ -1,6 +1,7 @@
 import { updateGuestInteraction } from "~/utils/guest-progress"
 import { useCallback } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { afterScore, afterSeenPress } from "~/domain/member-data-updates"
 import type { UserData, MediaType, MediaKey } from "~/types/user-data"
 import { createMediaKey } from "~/types/user-data"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
@@ -16,6 +17,11 @@ interface UseScoreMutationParams {
 	tmdbId: number
 	score: Score | null
 	review?: string
+	/**
+	 * False for a score the taste quiz gives. A score given by hand on a show that is Not started opens "Have you
+	 * seen all of it?" on the server; the quiz's scores never do.
+	 */
+	byHand?: boolean
 }
 
 interface UseWishlistMutationParams {
@@ -48,32 +54,6 @@ interface MutationContext {
 	previousData?: UserData
 }
 
-const updateScoreOptimistic = (
-	data: UserData | undefined,
-	mediaType: MediaType,
-	tmdbId: number,
-	score: Score | null,
-	review: string | null = null,
-): UserData | undefined => {
-	if (!data) return data
-
-	const key = createMediaKey(mediaType, tmdbId)
-	const updated = { ...data, scores: { ...data.scores }, notInterested: { ...data.notInterested } }
-
-	if (score === null) {
-		delete updated.scores[key]
-	} else {
-		delete updated.notInterested[key]
-		updated.scores[key] = {
-			score,
-			review,
-			updatedAt: new Date(),
-		}
-	}
-
-	return updated
-}
-
 const updateWishlistOptimistic = (
 	data: UserData | undefined,
 	mediaType: MediaType,
@@ -91,27 +71,6 @@ const updateWishlistOptimistic = (
 		updated.wishlist[key] = { createdAt: now, updatedAt: now }
 	} else {
 		delete updated.wishlist[key]
-	}
-
-	return updated
-}
-
-const updateWatchedOptimistic = (
-	data: UserData | undefined,
-	mediaType: MediaType,
-	tmdbId: number,
-	action: "add" | "remove",
-): UserData | undefined => {
-	if (!data) return data
-
-	const key = createMediaKey(mediaType, tmdbId)
-	const updated = { ...data, watched: { ...data.watched }, notInterested: { ...data.notInterested } }
-
-	if (action === "add") {
-		delete updated.notInterested[key]
-		updated.watched[key] = { updatedAt: new Date() }
-	} else {
-		delete updated.watched[key]
 	}
 
 	return updated
@@ -189,7 +148,7 @@ export const useScoreMutation = () => {
 		UseScoreMutationParams,
 		MutationContext
 	>({
-		mutationFn: async ({ mediaType, tmdbId, score, review }) => {
+		mutationFn: async ({ mediaType, tmdbId, score, review, byHand }) => {
 			if (!user) {
 				updateGuestInteraction(
 					mediaType,
@@ -207,6 +166,7 @@ export const useScoreMutation = () => {
 					media_type: mediaType,
 					score,
 					review,
+					...(byHand === false ? { by_hand: false } : {}),
 				}),
 			})
 			return await response.json()
@@ -217,8 +177,9 @@ export const useScoreMutation = () => {
 
 			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
 
+			// A rated movie is Seen: the server records the watch its score owns with the score.
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
-				updateScoreOptimistic(old, mediaType, tmdbId, score, review || null),
+				afterScore(old, mediaType, tmdbId, score, review || null, new Date()),
 			)
 
 			return { previousData }
@@ -227,6 +188,11 @@ export const useScoreMutation = () => {
 			if (context?.previousData) {
 				queryClient.setQueryData(userDataQueryKey, context.previousData)
 			}
+		},
+		onSettled: (_, __, { mediaType, score }) => {
+			// Whether a movie stays Seen without its score depends on its watch log, which the map only sums up.
+			if (user && mediaType === "movie" && score === null)
+				void queryClient.invalidateQueries({ queryKey: userDataQueryKey })
 		},
 	})
 }
@@ -301,6 +267,9 @@ export const useWatchedMutation = () => {
 					tmdb_id: tmdbId,
 					media_type: mediaType,
 					action,
+					// Names the watch (or a show's Seen press), so a request that is sent twice records once.
+					action_id:
+						action === "add" ? globalThis.crypto?.randomUUID?.() : undefined,
 				}),
 			})
 			return await response.json()
@@ -311,7 +280,7 @@ export const useWatchedMutation = () => {
 			const previousData = queryClient.getQueryData<UserData>(userDataQueryKey)
 
 			queryClient.setQueryData<UserData>(userDataQueryKey, (old) =>
-				updateWatchedOptimistic(old, mediaType, tmdbId, action),
+				afterSeenPress(old, mediaType, tmdbId, action, new Date()),
 			)
 
 			return { previousData }
@@ -320,6 +289,10 @@ export const useWatchedMutation = () => {
 			if (context?.previousData) {
 				queryClient.setQueryData(userDataQueryKey, context.previousData)
 			}
+		},
+		// The map can't say which episodes a show's press ticked, or which state taking it back returns to.
+		onSettled: () => {
+			void queryClient.invalidateQueries({ queryKey: userDataQueryKey })
 		},
 	})
 }

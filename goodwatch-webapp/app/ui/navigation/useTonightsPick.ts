@@ -1,12 +1,13 @@
 // Tonight's pick for the dock, the header, and the hub sheet's Watch next tile. Members read it with a GET; a guest's
 // Wishlist lives in their browser, so their pick comes from a POST with the guest progress, and a guest with an empty
 // Wishlist sends no request. It refetches when the
-// viewer's Wishlist, scores, or watched titles change, since each can change the pick.
+// viewer's Wishlist, scores, or watch state change, since each can change the pick.
 import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import { useFeature } from "~/hooks/useFeature"
 import { useUserData } from "~/routes/api.user-data"
 import type { TonightsPick } from "~/server/tonight.server"
+import { watchStateSignature } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
 
@@ -36,7 +37,7 @@ export function useTonightsPick(): {
 	const signature = useMemo(() => {
 		if (!data) return ""
 		const wishlist = Object.keys(data.wishlist).sort().join(",")
-		return `${wishlist}|${Object.keys(data.scores).length}|${Object.keys(data.watched).length}`
+		return `${wishlist}|${Object.keys(data.scores).length}|${watchStateSignature(data.watchState)}`
 	}, [data])
 	const wishlistCount = data ? Object.keys(data.wishlist).length : 0
 	// A guest's pick is the last title on the Wishlist in their browser, so a guest with an empty Wishlist has none,

@@ -286,7 +286,8 @@ export async function claimHandle(userId: string, rawHandle: string): Promise<Pr
 
 /**
  * Soft-deletes everything share lists store for a person: their lists, profile, and handle. The handle stays claimed,
- * so nobody else can take over their name or links. Call it from the account-deletion flow.
+ * so nobody else can take over their name or links. The account-deletion flow calls it through `deleteMemberData`
+ * (server/account-deletion.server.ts), which also deletes the member's watch log, watch states and imports.
  */
 export async function deleteAccountData(userId: string): Promise<void> {
 	const now = new Date()

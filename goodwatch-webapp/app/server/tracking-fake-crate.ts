@@ -1,5 +1,6 @@
-// For the tests of tracking only: an in-memory Crate that knows the statements the tracking writer and its reads
-// issue, and nothing more. Pass it to `setCrateClientForTest`.
+// For the tests of tracking and of the member data only: an in-memory Crate that knows the statements the tracking
+// writer, the other writers of a member's titles (`upsert`) and their reads issue, and nothing more. Pass it to
+// `setCrateClientForTest`. It has no `user_watch_history`: a statement that names the retired table fails the test.
 //
 // It keeps what matters about Crate for this writer:
 // - A statement that names a row by its whole primary key works on the row as it is now. Every other statement sees
@@ -106,10 +107,24 @@ const TABLES: Record<string, Table> = {
 		key: USER_TITLE,
 		columns: [...USER_TITLE, "created_at", "updated_at"],
 	},
-	// Refreshed by resetUserDataCache; nothing here reads them.
-	user_watch_history: { key: USER_TITLE, columns: USER_TITLE },
-	user_favorite: { key: USER_TITLE, columns: USER_TITLE },
-	user_skipped: { key: USER_TITLE, columns: USER_TITLE },
+	user_favorite: {
+		key: USER_TITLE,
+		columns: [...USER_TITLE, "created_at", "updated_at"],
+	},
+	user_skipped: {
+		key: USER_TITLE,
+		columns: [...USER_TITLE, "created_at", "updated_at"],
+	},
+	user_setting: {
+		key: ["user_id", "key"],
+		columns: ["user_id", "key", "value", "created_at", "updated_at"],
+	},
+	// Only what account deletion needs of the import tables.
+	user_import: { key: ["id"], columns: ["id", "user_id"] },
+	user_import_item: {
+		key: ["import_id", "row_index"],
+		columns: ["import_id", "row_index", "user_id"],
+	},
 }
 
 const SYSTEM = ["_seq_no", "_primary_term"]
@@ -246,6 +261,40 @@ export class FakeTrackingCrate {
 			return done([], written)
 		}
 
+		// `upsert`: one row, and a stored key takes the new values of the listed columns.
+		const upsert = sql.match(
+			/^INSERT INTO (\w+) \(([^)]+)\) VALUES \([?, ]+\) ON CONFLICT \(([^)]+)\) DO UPDATE SET (.+)$/,
+		)
+		if (upsert) {
+			const [, name, columnList, conflictList, assignments] = upsert
+			const table = known(name, sql)
+			const columns = names(columnList)
+			for (const column of columns) column_(table, column, sql, false)
+			if (names(conflictList).join() !== table.key.join())
+				throw new Error(`ON CONFLICT is not the key of ${name}: ${sql}`)
+			const row: Row = {}
+			for (const column of table.columns) row[column] = null
+			for (const column of columns) row[column] = take()
+			const old = this.table(name).find((r) =>
+				table.key.every((k) => r[k] === row[k]),
+			)
+			if (old) {
+				for (const assignment of assignments.split(", ")) {
+					const [column, value] = names(assignment.replace(" = ", ", "))
+					if (value !== `excluded.${column}`)
+						throw new Error(`Unknown assignment "${assignment}": ${sql}`)
+					old[column] = row[column]
+				}
+				old._seq_no = ++this.writes
+			} else
+				this.table(name).push({
+					...row,
+					_seq_no: ++this.writes,
+					_primary_term: 1,
+				})
+			return done([], 1)
+		}
+
 		const update = sql.match(/^UPDATE (\w+) SET (.+?) WHERE (.+)$/)
 		if (update) {
 			const [, name, assignments, where] = update
@@ -254,7 +303,12 @@ export class FakeTrackingCrate {
 			for (const assignment of assignments.split(", ")) {
 				const [column, value] = assignment.split(" = ")
 				column_(table, column, sql, false)
-				changes[column] = value === "?" ? take() : literal(value, sql)
+				changes[column] =
+					value === "?"
+						? take()
+						: value === "CURRENT_TIMESTAMP"
+							? Date.now()
+							: literal(value, sql)
 			}
 			const matched = this.match(name, table, where, take, sql)
 			for (const row of matched) {

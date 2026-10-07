@@ -1,14 +1,17 @@
 // Tracking on the server: the one writer for the watch log and the watch state, and their reads
 // (docs/implementation/tracking/data-model.md, ADR 0008, ADR 0009).
 //
-// The interface is `applyTrackingEvent` for every action on a title, `settleMovie` for the paths that write a
-// movie's score themselves, and four reads. Everything else is hidden here and in domain/tracking: the state
-// machine, the mapping between its record and the two tables, the order of the writes, the check that keeps two
-// actions on one show from overwriting each other, and what a request that is sent twice does.
+// The interface is `applyTrackingEvent` for every action on a title, `settleMovie` and `settleMovies` for the paths
+// that write movies' scores themselves, `deleteTrackingData`, and four reads. Everything else is hidden here and in
+// domain/tracking: the state machine, the mapping between its record and the two tables, the order of the writes,
+// the check that keeps two actions on one show from overwriting each other, and what a request that is sent twice
+// does.
 //
 // The writer does not write `user_score`, and it only ever deletes from `user_wishlist` and `user_not_interested`.
-// Setting a score, adding to the Wishlist and marking Not interested stay with their own writers
-// (scores.server.ts, wishList.server.ts, not-interested.server.ts), which call in here once they are switched over.
+// Setting a score, adding to the Wishlist and marking Not interested stay with their own writers. The score's
+// writers call in here with `rate` after their write (scores.server.ts, the guest transfer) or settle their movies
+// (the IMDb import). wishList.server.ts and not-interested.server.ts do not call in yet: the only row of the table
+// they would take is Want to See on a Dropped show, and nothing in the interface drops a show yet.
 import {
 	type ListedEpisode,
 	type TrackingEvent,
@@ -378,18 +381,10 @@ async function clearIntentions(
 }
 
 /**
- * The last step of every write. `resetUserDataCache` refreshes the member's other tables; the two of tracking are
- * refreshed here until it lists them, which it will when the member data reads them.
+ * The last step of every write. `resetUserDataCache` refreshes the member's tables, the two of tracking among them,
+ * so the next read of the member data sees this write.
  */
 async function finish(userId: string) {
-	try {
-		await run("REFRESH TABLE user_watch_log, user_watch_state")
-	} catch (error) {
-		console.error(
-			"Refreshing the watch log before the cache reset failed:",
-			error,
-		)
-	}
 	await resetUserDataCache({ user_id: userId })
 }
 
@@ -441,8 +436,20 @@ export interface EpisodeListRow {
 	[key: string]: string | number | null
 }
 
-const readEpisodeList = ({ showId }: { showId: number }) =>
-	query<EpisodeListRow>(EPISODE_LIST_QUERY, [showId])
+/**
+ * A show without a listed episode has no list, and so has every show while the episode catalog's table is not
+ * there: rating a show and its Seen press must not depend on the catalog being deployed. A show marked Seen without
+ * a list gets its press filled later (data-model.md, C5).
+ */
+async function readEpisodeList({ showId }: { showId: number }) {
+	try {
+		return await query<EpisodeListRow>(EPISODE_LIST_QUERY, [showId])
+	} catch (error) {
+		if (!isMissingTable(error, "episode")) throw error
+		console.error("The episode catalog's table is missing: no show has a list")
+		return []
+	}
+}
 
 /** A show's episodes as TMDB lists them, specials in season 0. Public data, the same for everyone. */
 export async function getEpisodeList(
@@ -660,6 +667,92 @@ export async function settleMovie(
 	}
 }
 
+const SETTLE_CHUNK = 500
+
+/**
+ * The movie rule for many movies at once, for a path that wrote or removed many scores: an import and its undo.
+ * A handful of statements per 500 movies, where `settleMovie` takes five for one. Like `settleMovie`, it leaves the
+ * Wishlist and the member data cache to the caller.
+ */
+export async function settleMovies(
+	userId: string,
+	movieIds: readonly number[],
+): Promise<{ inserted: string[]; deleted: string[] }> {
+	const ids = [
+		...new Set(movieIds.map((id) => canonicalTitleId("movie", Number(id)))),
+	].filter(whole)
+	const inserted: string[] = []
+	const deleted: string[] = []
+	for (let start = 0; start < ids.length; start += SETTLE_CHUNK) {
+		const chunk = ids.slice(start, start + SETTLE_CHUNK)
+		// The scores were written a moment ago, and none of these reads names a row by its whole key.
+		await run("REFRESH TABLE user_score, user_watch_log, user_watch_state")
+		const where = `WHERE user_id = ? AND media_type = 'movie' AND tmdb_id IN (${marks(chunk.length)})`
+		const [scores, log, states] = await Promise.all([
+			read<{ tmdb_id: number }>(`SELECT tmdb_id FROM user_score ${where}`, [
+				userId,
+				...chunk,
+			]),
+			read<{ tmdb_id: number; watch_id: string; origin: LogRow["origin"] }>(
+				`SELECT tmdb_id, watch_id, origin FROM user_watch_log ${where}`,
+				[userId, ...chunk],
+			),
+			read<{ tmdb_id: number }>(
+				`SELECT tmdb_id FROM user_watch_state ${where}`,
+				[userId, ...chunk],
+			),
+		])
+		const scored = new Set(scores.map((r) => Number(r.tmdb_id)))
+		const stated = new Set(states.map((r) => Number(r.tmdb_id)))
+		const now = Date.now()
+		const insert: LogRow[] = []
+		const remove: string[] = []
+		const stateInsert: number[] = []
+		const stateDelete: number[] = []
+		for (const movieId of chunk) {
+			const settled = settleMovieRows({
+				movieId,
+				log: log
+					.filter((r) => Number(r.tmdb_id) === movieId)
+					.map((r) => ({
+						...movieLogRow(movieId, r.watch_id, r.origin, undefined, now),
+					})),
+				hasScore: scored.has(movieId),
+				hasState: stated.has(movieId),
+				now,
+			})
+			insert.push(...settled.insert)
+			remove.push(...settled.deleteIds)
+			if (settled.stateWrite === "insert") stateInsert.push(movieId)
+			if (settled.stateWrite === "delete") stateDelete.push(movieId)
+		}
+		await insertLog(userId, insert, now)
+		await deleteLog(userId, remove)
+		if (stateInsert.length)
+			await insertRows(
+				"user_watch_state",
+				STATE_COLUMNS,
+				stateInsert.map((movieId) => [
+					userId,
+					movieId,
+					"movie",
+					...stateValues(movieStateRow(now)),
+					new Date(now),
+					new Date(now),
+				]),
+				{ conflict: STATE_KEY },
+			)
+		if (stateDelete.length)
+			await run(
+				`DELETE FROM user_watch_state WHERE user_id = ? AND media_type = 'movie' AND tmdb_id IN (${marks(stateDelete.length)})`,
+				[userId, ...stateDelete],
+			)
+		inserted.push(...insert.map((r) => r.watch_id))
+		deleted.push(...remove)
+	}
+	return { inserted, deleted }
+}
+
 async function applyMovieEvent(
 	userId: string,
 	movieId: number,
@@ -790,6 +883,43 @@ async function setGroupDate(
 }
 
 // ---------------------------------------------------------------------------------------------------------
+// Account deletion
+// ---------------------------------------------------------------------------------------------------------
+
+const TRACKING_TABLES = [
+	"user_watch_log",
+	"user_watch_state",
+	"user_import_item",
+	"user_import",
+]
+
+const isMissingTable = (error: unknown, table: string) => {
+	const message = String(
+		(error as { message?: unknown } | null)?.message ?? error,
+	)
+	return /RelationUnknown|SchemaUnknown/.test(message) && message.includes(table)
+}
+
+/**
+ * Deletes everything tracking stores for a member: their watch log, their watch states, and their imports with the
+ * rows of the files. Hard deletes: the rows are private and nothing public points at them. Their rows in the
+ * retired `user_watch_history` go too, while that table still exists as the backup.
+ */
+export async function deleteTrackingData(userId: string): Promise<void> {
+	if (!userId) return
+	// A delete by member names no row by its whole key, so it works on the rows of the last refresh.
+	await run(`REFRESH TABLE ${TRACKING_TABLES.join(", ")}`)
+	for (const table of TRACKING_TABLES)
+		await run(`DELETE FROM ${table} WHERE user_id = ?`, [userId])
+	try {
+		await run("DELETE FROM user_watch_history WHERE user_id = ?", [userId])
+	} catch (error) {
+		if (!isMissingTable(error, "user_watch_history")) throw error
+	}
+	await resetUserDataCache({ user_id: userId })
+}
+
+// ---------------------------------------------------------------------------------------------------------
 // Reads
 // ---------------------------------------------------------------------------------------------------------
 
@@ -816,8 +946,8 @@ export async function getWatchTotals(
 }
 
 /**
- * The `watchState` entry of the member data map: one entry per title whose state is not Not started. Not read by
- * `getUserData` yet.
+ * The `watchState` entry of the member data map: one entry per title whose state is not Not started, read fresh.
+ * `getUserData` builds the same entry from the same two statements beside its other reads, and caches it.
  */
 export async function getWatchState(
 	userId: string,

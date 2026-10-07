@@ -521,6 +521,51 @@ interface MediaQueryParams {
 	offset: number
 }
 
+/**
+ * The join that narrows the titles `m` to one of the member's lists. It takes two parameters, the member and the
+ * media type. The watch state (docs/implementation/tracking/data-model.md): "watched" is the state Seen; "didn't
+ * watch" is a title without a state, and a Not started row only remembers a prompt, so it doesn't count as one.
+ */
+export function watchedTypeJoin(watchedType: WatchedType): {
+	join: string
+	condition: string | null
+} | null {
+	if (watchedType === "watched")
+		return {
+			join: `
+				INNER JOIN user_watch_state uws ON
+					uws.user_id = ? AND
+					uws.tmdb_id = m.tmdb_id AND
+					uws.media_type = ? AND
+					uws.state = 'seen'
+			`,
+			condition: null,
+		}
+	if (watchedType === "didnt-watch")
+		return {
+			join: `
+				LEFT JOIN user_watch_state uws ON
+					uws.user_id = ? AND
+					uws.tmdb_id = m.tmdb_id AND
+					uws.media_type = ? AND
+					uws.state <> 'not_started'
+			`,
+			condition: "uws.user_id IS NULL",
+		}
+	if (watchedType === "want-to-watch")
+		return {
+			join: `
+				INNER JOIN user_wishlist uwl ON
+					uwl.user_id = ? AND
+					uwl.tmdb_id = m.tmdb_id AND
+					uwl.media_type = ?
+			`,
+			condition: null,
+		}
+	// The value comes from a URL.
+	return null
+}
+
 async function getMediaResults({
 	mediaType,
 	tableName,
@@ -556,33 +601,11 @@ async function getMediaResults({
 	
 	// Build user join first (parameters must be added before WHERE conditions)
 	let userJoin = ""
-	if (userId && watchedType) {
-		if (watchedType === "watched") {
-			userJoin = `
-				INNER JOIN user_watch_history uwh ON
-					uwh.user_id = ? AND
-					uwh.tmdb_id = m.tmdb_id AND
-					uwh.media_type = ?
-			`
-			params.push(userId, mediaType)
-		} else if (watchedType === "didnt-watch") {
-			userJoin = `
-				LEFT JOIN user_watch_history uwh ON
-					uwh.user_id = ? AND
-					uwh.tmdb_id = m.tmdb_id AND
-					uwh.media_type = ?
-			`
-			conditions.push("uwh.user_id IS NULL")
-			params.push(userId, mediaType)
-		} else if (watchedType === "want-to-watch") {
-			userJoin = `
-				INNER JOIN user_wishlist uwl ON
-					uwl.user_id = ? AND
-					uwl.tmdb_id = m.tmdb_id AND
-					uwl.media_type = ?
-			`
-			params.push(userId, mediaType)
-		}
+	const userFilter = userId && watchedType ? watchedTypeJoin(watchedType) : null
+	if (userFilter) {
+		userJoin = userFilter.join
+		if (userFilter.condition) conditions.push(userFilter.condition)
+		params.push(userId, mediaType)
 	}
 	
 	const hidden = (await readNotInterested(userId)).filter((item) => item.media_type === mediaType)
