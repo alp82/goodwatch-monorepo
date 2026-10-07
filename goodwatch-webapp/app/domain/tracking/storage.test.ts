@@ -1199,7 +1199,13 @@ function movieSide() {
 				hasState: s.state !== null,
 				now,
 			}),
-			{ insert: [], deleteIds: [], stateWrite: "none", seen: settled.seen },
+			{
+				insert: [],
+				deleteIds: [],
+				stateWrite: "none",
+				seen: settled.seen,
+				byScoreAlone: settled.byScoreAlone,
+			},
 		)
 		return settled
 	}
@@ -1208,7 +1214,7 @@ function movieSide() {
 		rate(score: number, now: number) {
 			s.score = score
 			s.notInterested = false
-			if (settle(now).insert.length) s.wishlist = false
+			if (settle(now).byScoreAlone) s.wishlist = false
 		},
 		clearScore(now: number) {
 			s.score = null

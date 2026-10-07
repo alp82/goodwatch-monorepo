@@ -297,6 +297,8 @@ export interface MovieSettlement {
 	stateWrite: "insert" | "delete" | "none"
 	/** The movie has a log row afterwards, so it is Seen. */
 	seen: boolean
+	/** The score's watch stands afterwards: the movie is Seen through its score alone. */
+	byScoreAlone: boolean
 }
 
 /**
@@ -334,6 +336,7 @@ export function settleMovieRows(input: {
 		stateWrite:
 			seen && !hasState ? "insert" : !seen && hasState ? "delete" : "none",
 		seen,
+		byScoreAlone: wanted,
 	}
 }
 

@@ -780,9 +780,10 @@ export interface StepOptions {
 	 * (a timeout, a crash between the log and the state, a retry after another action on the show).
 	 *
 	 * With it, watches that carry this action's id are left out before the event is applied, so the event gives the
-	 * same watches and the right state again; a Seen press that already stands under this id changes nothing; an
-	 * unwatch of an episode that is no longer watched still takes its row of the table; and a deletion that finds
-	 * nothing left to delete only makes a Watching or Seen show with no watch Not started.
+	 * same watches and the right state again; a Seen press that already stands under this id, and a Drop of a
+	 * Dropped show, only clear what they clear; an unwatch of an episode that is no longer watched still takes its
+	 * row of the table; and a deletion that finds nothing left to delete only makes a Watching show with no watch
+	 * Not started.
 	 */
 	resend?: boolean
 }
@@ -1049,10 +1050,24 @@ export function step(
 			let base = world
 			if (resend && event.type === "watch")
 				base = without((w) => w.id === actionId)
+			// Dropped already: the state is written. What Drop clears may not be.
+			if (resend && event.type === "drop" && from === "dropped")
+				return done(
+					{ ...world.record, wantToSee: false, notInterested: false },
+					[],
+				)
 			if (resend && event.type === "pressSeen") {
-				// The press already stands: it was applied in full.
+				// The press already stands: its watches and the state are written. What it clears may not be.
 				if (actionId && world.record.seenPress?.group === actionId)
-					return done(world.record, [])
+					return done(
+						{
+							...world.record,
+							wantToSee: false,
+							notInterested: false,
+							seenQuestion: answered(world.record),
+						},
+						[],
+					)
 				base = without((w) => w.group === actionId)
 			}
 			const result = single(base, event, actionId, resend)
