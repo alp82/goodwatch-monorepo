@@ -1254,6 +1254,8 @@ a member filter (0.1 seconds).
 [#380](https://github.com/alp82/goodwatch-monorepo/issues/380) built the storage and the writer.
 [#382](https://github.com/alp82/goodwatch-monorepo/issues/382) switched every reader and writer of Seen to them; its
 part is [further down](#the-readers-of-seen-382).
+[#383](https://github.com/alp82/goodwatch-monorepo/issues/383) built the movie watch log behind the flag
+`REC_TRACKING`; its part is [the last one](#the-movie-watch-log-383).
 
 ### The storage and the writer (#380)
 
@@ -1317,7 +1319,8 @@ Tests: `node --test app/server/watch-state.test.ts app/domain/member-data-update
 
 Where the build differs from the text above, or settles what it left open:
 
-- **The Seen button is still one button that toggles.** The watch log and the episode list replace it later. Until
+- **The Seen button is still one button that toggles.** The watch log and the episode list replace it later; for
+  movies #383 did, behind `REC_TRACKING` ([below](#the-movie-watch-log-383)). Until
   then: a movie's press records one watch dated now, and one more press deletes every watch the member logged for
   it. A show's press is the Seen press, and one more press takes that press back; a show that is Seen with no
   standing press has nothing to take back, which no action in the interface produces yet. A second "mark" on a
@@ -1359,3 +1362,125 @@ Where the build differs from the text above, or settles what it left open:
 - **`scripts/benchmark-user-data.mjs` is not updated.** It cuts `_getUserData` out of the source and runs it with
   two names in scope. By its code that stopped working when Not interested was added, before this change; it was
   not run to confirm.
+
+### The movie watch log (#383)
+
+The watch log of a movie as [the owner chose it](../../prototypes/watch-log/README.md) (variant C), for members,
+behind a flag. Shows are not part of it: a show's Seen button is the toggle of #382 until the show page is built.
+
+**The flag.** `REC_TRACKING` takes `off`, `preview` or `on`, like the other flags of
+`goodwatch-webapp/app/server/features.server.ts`; unset means off. It is set in Coolify and read on every request,
+so a change needs a container restart and no build. `preview` shows the log to the members in `REC_PREVIEW_USERS`.
+While it is off for a viewer, everything is as #382 left it: one press marks a movie Seen, one more takes it back,
+and `/api/watch-log` answers 404.
+
+| What | Where |
+| --- | --- |
+| The log's endpoint | `routes/api.watch-log.ts` |
+| The read (Q4, with the platform of each import) and the log's actions | `server/watch-log.server.ts` |
+| The writer's two new movie actions, `removeWatches` and `restoreWatches` | `server/tracking.server.ts` |
+| The order of the log, how a date reads, the log right after an action | `domain/watch-log.ts` |
+| The member data entry right after an action in the log | `domain/member-data-updates-watch-log.ts` |
+| The host in the app shell that a Seen button hands its press to | `ui/watch-log/WatchLogHost.tsx`, mounted in `app.tsx` |
+| What the press does: the watch for now and its toast, the popover and the sheet | `ui/watch-log/WatchLogSurface.tsx` |
+| The log, the date choice, the read and the action in the browser | `ui/watch-log/WatchLog.tsx`, `DateChoice.tsx`, `useWatchLog.ts` |
+| The date line of Watch next's "I watched it" dialog | `ui/watch-log/WatchedLine.tsx`, shown by `ui/watch-next/FinishPrompt.tsx` |
+| The count and the arrow on Seen | `ui/title-actions/ActionButton.tsx`, fed by `useTitleActions.ts` |
+| The toast's second button | `ui/title-actions/UndoToast.tsx` |
+
+**The endpoint.** `/api/watch-log` is for members: `Cache-Control: private, no-store`, 401 for a guest, 404 while the
+flag hides the log from the viewer. The member is the session's and the movie is the request's; no row in a request
+says whose it is or which title it belongs to, and an action or a row that carries a key the schema does not know
+is refused.
+
+| Request | Does | Refused when |
+| --- | --- | --- |
+| `GET ?tmdb_id=` | Answers `{ watches }`: dated watches newest first, undated below, each with its id, date, precision, origin, import and the import's platform | |
+| `POST { tmdb_id, action: { type: "watch", watchId, when? } }` | Adds a watch under the id the browser made: now, a day, or no date. It replaces the watch a score owns and takes the movie off the Wishlist and off Not interested | The id is not one a browser makes; the day has not come (later than tomorrow by the UTC date) |
+| `… { type: "editDate", watchId, when }` | Sets a day or unknown, never a time. A day on the score's watch makes it the member's own | The watch is not in this movie's log; the day has not come |
+| `… { type: "delete", watchId, back? }` | Deletes one watch. `back` is Undo of a first watch: when that delete leaves the movie not Seen, the movie returns to the Wishlist with its added-at time, or to Not interested | The watch is the one a score owns |
+| `… { type: "removeAll" }` | Deletes every watch the member logged; the score's watch stays or comes back | |
+| `… { type: "restore", rows }` | Undo of a delete: inserts the rows again under their ids, with their dates and the time they were recorded. A stored id is left as it is, so sending it twice restores once | See below |
+
+Every `POST` answers `{ status, refused, watches }` with the log as it is afterwards, also after a refusal.
+
+**What a restored row has to pass.** Undo sends back what the log showed, so each row is checked as a member's
+input: at most 200 rows, no id twice; the origin is `single` or `import`; an id of a `single` row is one a browser
+makes, or this movie's `score-<id>`, or this movie's `mig-movie-<id>`; an `import` row has an id of the form
+`i-<32 hex>` and names an import that belongs to the member; a `day` is midnight UTC, `unknown` has no date, and no
+date or recording time is in the future. When the row carries the score's id and the movie rule has put the score's
+watch back under that id since the delete, that row becomes the member's own again.
+
+**In the browser.** The log is read under its own key per movie, `["watch-log", member, movie]`, when it first
+opens. An action sets the expected log and the movie's entry in the member data at once (`state`, `watchedAt`,
+`precision`, `count`, `lastActivityAt`); the answer replaces the log, and the member data is read again. On an
+error both go back to what they were and a message says so. A movie that is not Seen has an empty log, so the first
+tap needs no read. A score set or cleared marks the movie's log as stale.
+
+**The first view.** The log, the date choice, the sheet and the toast load at the first press or when the pointer
+or the focus reaches a Seen button. Client scripts of the first view, entry and root and route with their static
+imports, measured with `npm run build` on October 8, 2026 against `main` at `57133603`:
+
+| Page | Raw | Brotli | Of which |
+| --- | --- | --- | --- |
+| Movie page | 822,193 to 823,941 (+1,748) | 235,040 to 235,721 (+681) | `shell` +719 (the flag, the host), `title-actions` +963 (count, arrow, the press), `user-data` +65 |
+| Home | 832,303 to 833,090 (+787) | 234,657 to 234,958 (+301) | `shell` +719, `user-data` +65 |
+| Watch next | 1,002,297 to 1,004,858 (+2,561) | 288,047 to 289,114 (+1,067) | the above, `watch-next` +673 (the dialog's lazy line), `UndoToast` +140 |
+
+The Brotli totals move by some tens of bytes from one build to the next, because every chunk's file name is in the
+chunks that import it. Loaded on first use: `WatchLogSurface` 10,986 bytes (3,828 Brotli), `useWatchLog` 7,410
+(2,984), `WatchedLine` 1,804 (876). The poster card's actions, which load on first interaction as before, went from
+6,959 to 5,033 bytes because the sheet they share with the log became a chunk of its own, `Drawer`, 2,644 (1,150).
+`./bench.sh budget` needs a deployed site and was not run. To check there: `script_bytes` and `script_count` of
+every landing surface against `goodwatch-benchmark/urls/budget.json`. This change adds no script file to a first
+view and between 0.2 and 0.7 KB of compressed script, on every surface the 0.2 KB of the shell. If a limit's margin
+is smaller than that, the limit is raised with the reason, as `goodwatch-webapp/AGENTS.md` asks.
+
+**Where the build differs from the prototype and from the text above, or settles what they left open:**
+
+- **A rated movie without a watch** reads Seen on the button, without a count. Its log says "Scored, no watch
+  logged" and offers "I watched it" with now, another day, or don't know when. That logs a watch of the member's own,
+  which replaces the score's. The score is cleared at the score control, not in the log. Section 4 called the row
+  "Rated, date unknown" with "Set a date"; the wording is the ticket's.
+- **One host for the page.** A Seen button hands its press to a host in the app shell. With a toast per button, a
+  card that leaves its list when its movie becomes Seen (My movies, Not seen yet) would take "Change date" and Undo
+  with it.
+- **The popover opens under its button, or above it** when there is no room below, and in the middle of the screen
+  when the button is gone. On a phone a card's sheet closes when Seen opens the log's sheet.
+- **"Remove all N watches"** shows from two watches on. One watch is removed with its bin. It offers Undo too.
+- **Undo of the first tap** sends the Wishlist's added-at time from the member data the browser had, where section
+  "The browser" has the server's answer carry it.
+- **A day in the future is refused** for a movie's watch and for every edit of a date. The date field stops at the
+  device's today; the server allows tomorrow by the UTC date, as for episodes (C4).
+- **The watch a score owned can be deleted** once a date made it the member's own. Until then the writer refused
+  every delete of the id `score-<id>`, whatever its origin.
+- **An import without a known platform** reads "Imported".
+- **The Explorer's card** hands its Seen press to the same host and shows no message of its own for it.
+- **The Living room's remote** still only marks Seen, as before.
+- **`afterWatchLog` is a file of its own** beside `domain/member-data-updates.ts`, because that module is in the
+  first view of the home and title pages.
+
+**How it was checked.** Tests: `node --test app/server/watch-log.test.ts app/server/tracking.test.ts
+app/domain/watch-log.test.ts app/domain/member-data-updates.test.ts`, against the in-memory Crate. The components
+were driven in headless Chromium at 1280 and 390 pixels wide on `/prototype/watch-log-real`, a development route
+that mounts the real title actions, card actions, log and Watch next dialog with a member who does not exist and a
+server that lives in the tab (`ui/prototype-watch-log/harness-server.ts`); 79 checks at 1280 and 73 at 390, all
+passing, with the flag on and off. The script is [`movie-watch-log/drive.mjs`](movie-watch-log/drive.mjs):
+
+```
+cd goodwatch-webapp
+REC_TRACKING=on  node_modules/.bin/remix vite:dev --port 3105 --strictPort
+REC_TRACKING=off node_modules/.bin/remix vite:dev --port 3106 --strictPort   # one after the other: they share a cache
+node drive.mjs desktop 3105 3106 <screenshot dir>      # with playwright-core installed beside it, and system Chromium
+node drive.mjs phone 3105 3106 <screenshot dir>
+```
+
+Screenshots, in [`movie-watch-log/`](movie-watch-log/): `watch-log-1-one-tap` (the toast with Change date and
+Undo), `-2-change-date`, `-3-log` (popover and sheet), `-4-another-day`, `-5-delete-undo`, `-6-remove-all`,
+`-7-scored`, `-8-card-one-tap`, `-8-card-sheet`, `-9-card-log`, `-10-watch-next`, `-11-watch-next-changed`,
+`-13-flag-off`.
+
+**Not checked,** because each needs a signed-in session, the real tables or a real device: every statement against
+a real Crate (the tests' Crate is in memory); the title page, a poster grid, the Explorer and Watch next with real
+data; a card leaving My movies while its toast shows; the refetched member data after each action; a touch device,
+Safari's and Firefox's date fields, a screen reader; `./bench.sh budget`.
