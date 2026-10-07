@@ -14,7 +14,15 @@
 // - explore3: a walk in place, one title per direction.
 // - explore4: this title's traits as chips that pick the titles.
 // - explore5: a map with two named axes of difference.
-// `rows` and `list` still answer to the URL, but the floating bar leaves them out.
+//
+// Third round, after the owner tried the second: five forms built from the constellation, in which a tap on a
+// poster never leaves the page and never moves it (see WalkSection.tsx for the rule and how it is kept):
+// - walk1: a calm ring of eight, one reason line.
+// - walk2: a compass, four named ways to differ.
+// - walk3: a path, with the trail as part of the picture.
+// - walk4: an orbit whose caption explains one neighbor at a time.
+// - walk5: four named piles that spread out in place.
+// The floating bar shows today, the constellation, and these five. The other variants still answer to the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
 
@@ -28,18 +36,23 @@ export const CAROUSEL_VARIANTS = [
 	"explore3",
 	"explore4",
 	"explore5",
+	"walk1",
+	"walk2",
+	"walk3",
+	"walk4",
+	"walk5",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
 /** The variants the floating bar cycles through. */
 export const CAROUSEL_BAR: CarouselVariant[] = [
 	"today",
-	"explore",
 	"explore1",
-	"explore2",
-	"explore3",
-	"explore4",
-	"explore5",
+	"walk1",
+	"walk2",
+	"walk3",
+	"walk4",
+	"walk5",
 ]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
@@ -52,6 +65,11 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	explore3: "3 Walk",
 	explore4: "4 Trait chips",
 	explore5: "5 Map",
+	walk1: "W1 Calm ring",
+	walk2: "W2 Compass",
+	walk3: "W3 Path",
+	walk4: "W4 One voice",
+	walk5: "W5 Piles",
 }
 
 export const CAROUSEL_PROTOTYPE_COOKIE = "gw_proto_carousels"
@@ -67,6 +85,8 @@ export interface CarouselPrototypeData {
 	island: { id: string; name: string; color: string } | null
 	/** explore1 to explore5: what the section shows. */
 	explore?: ExploreModel
+	/** walk1 to walk5: the section's markup. An inline script drives it, React doesn't. */
+	walk?: { html: string }
 }
 
 /** The prototype's data from the title route's loader, or null for today's page. */

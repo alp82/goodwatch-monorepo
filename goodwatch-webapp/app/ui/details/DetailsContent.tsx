@@ -40,6 +40,7 @@ import { PrototypeSwitcher } from "~/ui/prototype-carousels/PrototypeSwitcher"
 import RelatedExplore from "~/ui/prototype-carousels/RelatedExplore"
 import RelatedList from "~/ui/prototype-carousels/RelatedList"
 import RelatedRowsNative from "~/ui/prototype-carousels/RelatedRowsNative"
+import WalkSection from "~/ui/prototype-carousels/WalkSection"
 import { useCarouselPrototype } from "~/ui/prototype-carousels/variant"
 
 export interface DetailsContentProps {
@@ -86,6 +87,12 @@ export default function DetailsContent({
 		explore3: { form: Explore3Walk, phone: 522, desktop: 416 },
 		explore4: { form: Explore4Chips, phone: 401, desktop: 366 },
 		explore5: { form: Explore5Map, phone: 668, desktop: 623 },
+		// The third round's forms: one component, and the same height for all five by design.
+		walk1: { form: WalkSection, phone: 590, desktop: 582 },
+		walk2: { form: WalkSection, phone: 590, desktop: 582 },
+		walk3: { form: WalkSection, phone: 590, desktop: 614 },
+		walk4: { form: WalkSection, phone: 590, desktop: 582 },
+		walk5: { form: WalkSection, phone: 590, desktop: 582 },
 	}[variant as string]
 	const relatedReserve = (reserved: ReservedHeight): ReservedHeight =>
 		!reserved.phone

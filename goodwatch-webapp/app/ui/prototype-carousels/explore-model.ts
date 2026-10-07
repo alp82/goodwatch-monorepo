@@ -69,7 +69,7 @@ export interface ExploreModel {
 	more: Pick<PxTitle, "type" | "id" | "title" | "year">[]
 }
 
-interface Neighbor {
+export interface Neighbor {
 	title: PxTitle
 	s: Scores
 	/** Position in the related list of its own type; the other type starts later. */
@@ -78,7 +78,7 @@ interface Neighbor {
 
 // How a difference reads: [more, less, group]. Attributes of one group say nearly the same thing, so a title gets at
 // most one reason per group. Craft attributes (direction, acting, ...) are left out: "better acted" is a judgment.
-const DIFF: Record<string, [string, string, string?]> = {
+export const DIFF: Record<string, [string, string, string?]> = {
 	adrenaline: ["more adrenaline", "less adrenaline", "pace"],
 	fast_pace: ["faster", "slower", "pace"],
 	tension: ["tenser", "more relaxed"],
@@ -138,7 +138,7 @@ const DIFF: Record<string, [string, string, string?]> = {
 }
 
 // How a shared attribute reads after "Same".
-const SHARED: Record<string, string> = {
+export const SHARED: Record<string, string> = {
 	adrenaline: "adrenaline",
 	tension: "tension",
 	scare: "scares",
@@ -203,7 +203,7 @@ const DIFF_FROM = 6
 const REPEAT_COST = 2.5
 const RANK_COST = 0.04
 
-interface Reason {
+export interface Reason {
 	key: string
 	group: string
 	/** "+", "-" for a difference, "=" for a shared attribute. */
@@ -212,9 +212,9 @@ interface Reason {
 	strength: number
 }
 
-const cap = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+export const cap = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
-function meanOf(neighbors: Neighbor[]): Map<string, number> {
+export function meanOf(neighbors: Neighbor[]): Map<string, number> {
 	const mean = new Map<string, number>()
 	for (const key of new Set([...Object.keys(DIFF), ...Object.keys(SHARED)])) {
 		let sum = 0
@@ -287,7 +287,7 @@ function shared(
 }
 
 /** Counts how often a reason was used in a view, so the next title gets another one. */
-class Usage {
+export class Usage {
 	private used = new Map<string, number>()
 	private id = (reason: Reason) => `${reason.key}${reason.dir}`
 	cost(reason: Reason) {
@@ -312,7 +312,7 @@ class Usage {
 	}
 }
 
-interface Context {
+export interface Context {
 	center: Scores
 	highlights: Set<string>
 	mean: Map<string, number>
@@ -376,7 +376,7 @@ function reasonOf(
 	return { why, tag }
 }
 
-interface Option {
+export interface Option {
 	id: string
 	group: string
 	value: (neighbor: Neighbor) => number | null
@@ -386,7 +386,7 @@ interface Option {
  * Splits neighbors into groups: again and again, the option whose best unassigned members are strongest takes
  * them. An option that nearly every neighbor fits equally has low values and loses to one that sets a few apart.
  */
-function split(
+export function split(
 	neighbors: Neighbor[],
 	options: Option[],
 	groups: number,
@@ -653,7 +653,7 @@ function chips(context: Context, neighbors: Neighbor[]) {
 // explore5: a map. An axis is the mean of some attributes minus the mean of their opposites. The two axes are the
 // ones on which the neighbors spread most relative to the center, the second one chosen to say something else than
 // the first. A title's place is its difference from the center on both.
-const AXES: {
+export const AXES: {
 	id: string
 	low: string
 	high: string
@@ -882,7 +882,7 @@ function map(context: Context, neighbors: Neighbor[]) {
 	}
 }
 
-const toTitle = (type: PxType, card: RelatedCard): PxTitle => ({
+export const toTitle = (type: PxType, card: RelatedCard): PxTitle => ({
 	type,
 	id: card.tmdb_id,
 	title: card.title,
@@ -892,7 +892,7 @@ const toTitle = (type: PxType, card: RelatedCard): PxTitle => ({
 })
 
 /** The other type's titles count as further away: a movie page shows mostly movies. */
-const OTHER_TYPE_RANK = 6
+export const OTHER_TYPE_RANK = 6
 
 export function buildExploreModel(input: {
 	variant: ExploreVariant
