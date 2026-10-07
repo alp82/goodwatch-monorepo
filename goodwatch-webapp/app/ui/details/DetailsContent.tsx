@@ -1,22 +1,18 @@
 import React, { useMemo } from "react"
+import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import About from "~/ui/details/About"
 import Actors from "~/ui/details/Actors"
 import Crew from "~/ui/details/Crew"
-import Media from "~/ui/details/Media"
-import type { SectionIds } from "~/ui/details/sections"
-import Ratings from "~/ui/ratings/Ratings"
-import Streaming from "~/ui/streaming/Streaming"
-import { extractRatings } from "~/utils/ratings"
-import type { PropsForSection, Section, SectionProps } from "~/utils/scroll"
-import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
 import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import DetailsRelated from "~/ui/details/DetailsRelated"
-import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
+import Media from "~/ui/details/Media"
+import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
+import { belowFoldProps, useBelowFold } from "~/ui/details/below-fold"
 import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
-import { belowFoldProps, useBelowFold } from "~/ui/details/below-fold"
 import {
+	type ReservedHeight,
 	aboutHeight,
 	actorsHeight,
 	crewHeight,
@@ -25,11 +21,12 @@ import {
 	questionsHeight,
 	relatedHeight,
 	sequelsHeight,
-	type ReservedHeight,
 } from "~/ui/details/section-heights"
+import type { SectionIds } from "~/ui/details/sections"
 import { titleQuestions } from "~/ui/details/titleQuestions"
 // PROTOTYPE (native-scroll carousels): everything from ui/prototype-carousels is throwaway.
 import ActorsNative from "~/ui/prototype-carousels/ActorsNative"
+import DiveSection from "~/ui/prototype-carousels/DiveSection"
 import Explore1Constellation from "~/ui/prototype-carousels/Explore1Constellation"
 import Explore2Clusters from "~/ui/prototype-carousels/Explore2Clusters"
 import Explore3Walk from "~/ui/prototype-carousels/Explore3Walk"
@@ -40,9 +37,13 @@ import { PrototypeSwitcher } from "~/ui/prototype-carousels/PrototypeSwitcher"
 import RelatedExplore from "~/ui/prototype-carousels/RelatedExplore"
 import RelatedList from "~/ui/prototype-carousels/RelatedList"
 import RelatedRowsNative from "~/ui/prototype-carousels/RelatedRowsNative"
-import DiveSection from "~/ui/prototype-carousels/DiveSection"
+import RingSection from "~/ui/prototype-carousels/RingSection"
 import WalkSection from "~/ui/prototype-carousels/WalkSection"
 import { useCarouselPrototype } from "~/ui/prototype-carousels/variant"
+import Ratings from "~/ui/ratings/Ratings"
+import Streaming from "~/ui/streaming/Streaming"
+import { extractRatings } from "~/utils/ratings"
+import type { PropsForSection, Section, SectionProps } from "~/utils/scroll"
 
 export interface DetailsContentProps {
 	media: MovieResult | ShowResult
@@ -100,6 +101,16 @@ export default function DetailsContent({
 		dive3: { form: DiveSection, phone: 590, desktop: 614 },
 		dive4: { form: DiveSection, phone: 590, desktop: 582 },
 		dive5: { form: DiveSection, phone: 590, desktop: 582 },
+		// The fifth round's forms. Each has its own fixed height.
+		ring1: { form: RingSection, phone: 590, desktop: 582 },
+		ring2: { form: RingSection, phone: 590, desktop: 582 },
+		ring3: { form: RingSection, phone: 590, desktop: 582 },
+		ring4: { form: RingSection, phone: 590, desktop: 582 },
+		ring5: { form: RingSection, phone: 590, desktop: 582 },
+		ring6: { form: RingSection, phone: 590, desktop: 582 },
+		ring7: { form: RingSection, phone: 590, desktop: 582 },
+		ring8: { form: RingSection, phone: 590, desktop: 582 },
+		ring9: { form: RingSection, phone: 590, desktop: 582 },
 	}[variant as string]
 	const relatedReserve = (reserved: ReservedHeight): ReservedHeight =>
 		!reserved.phone
@@ -142,7 +153,12 @@ export default function DetailsContent({
 			<div {...section(aboutHeight(), sectionProps.about)}>
 				<About media={media} navigateToSection={navigateToSection} />
 			</div>
-			<div {...section(castReserve(actorsHeight(media)), sectionProps.actors_and_crew)}>
+			<div
+				{...section(
+					castReserve(actorsHeight(media)),
+					sectionProps.actors_and_crew,
+				)}
+			>
 				<CastRow
 					cast={cast}
 					total={cast_total}
@@ -153,7 +169,9 @@ export default function DetailsContent({
 			<div {...section(crewHeight(media))}>
 				<Crew crew={crew} />
 			</div>
-			<div {...section(relatedReserve(relatedHeight(media)), sectionProps.related)}>
+			<div
+				{...section(relatedReserve(relatedHeight(media)), sectionProps.related)}
+			>
 				<Related media={media} />
 			</div>
 			<div {...section(sequelsHeight(media))}>

@@ -6,13 +6,19 @@ import { type LoaderFunctionArgs, json } from "@remix-run/node"
 import {
 	diveStage,
 	exploreModel,
+	ringStage,
 	walkModel,
 } from "~/server/prototype-carousels.server"
 import { diveStageHtml } from "~/server/prototype-dive-view.server"
+import {
+	ringMoreHtml,
+	ringStageHtml,
+} from "~/server/prototype-ring-view.server"
 import { walkStageHtml } from "~/server/prototype-walk.server"
 import { getRelatedPanel } from "~/server/related.server"
 import { isDiveVariant } from "~/ui/prototype-carousels/dive-model"
 import { isExploreVariant } from "~/ui/prototype-carousels/explore-model"
+import { isRingVariant } from "~/ui/prototype-carousels/ring-model"
 import { isWalkVariant } from "~/ui/prototype-carousels/walk-model"
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -27,7 +33,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		!(
 			isExploreVariant(variant) ||
 			isWalkVariant(variant) ||
-			isDiveVariant(variant)
+			isDiveVariant(variant) ||
+			isRingVariant(variant)
 		) ||
 		(type !== "movie" && type !== "show") ||
 		!/^\d+$/.test(id)
@@ -57,6 +64,48 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return new Response(diveStageHtml(dive, params.get("root") ?? ""), {
 			headers: { ...headers, "Content-Type": "text/html; charset=utf-8" },
 		})
+	}
+	// Fifth round: the stage around a title in a walk whose axes and traits the browser passes on. `anchor` and
+	// `adir` say where the visitor started walking in one direction, `pick` and `preset` let the server choose an
+	// axis, and `more` asks for the further titles of one strip.
+	if (isRingVariant(variant)) {
+		const keyOf = (value: string | null) => {
+			const found = /^(movie|show)-(\d+)$/.exec(value ?? "")
+			return found
+				? { type: found[1] as "movie" | "show", id: Number.parseInt(found[2]) }
+				: null
+		}
+		const list = (name: string) =>
+			params.has(name)
+				? (params.get(name) ?? "").split(",").filter(Boolean)
+				: undefined
+		const from = keyOf(params.get("from"))
+		const anchor = keyOf(params.get("anchor"))
+		const more = params.get("more")
+		const ring = await ringStage({
+			variant,
+			type,
+			tmdbId,
+			axes: list("axes"),
+			traits: list("traits"),
+			pick: params.has("preset")
+				? { preset: params.get("preset") ?? "" }
+				: params.has("pick")
+					? { slot: Number.parseInt(params.get("pick") ?? "0") || 0 }
+					: null,
+			lock: params.get("lock"),
+			from: from ? { ...from, via: params.get("via") ?? "" } : null,
+			anchor: anchor ? { ...anchor, dir: params.get("adir") ?? "" } : null,
+			more,
+		})
+		if (!ring) throw new Response("Not found", { status: 404, headers })
+		if (params.has("debug")) return json(ring, { headers })
+		return new Response(
+			more
+				? ringMoreHtml(ring, more, 0)
+				: ringStageHtml(ring, params.get("root") ?? ""),
+			{ headers: { ...headers, "Content-Type": "text/html; charset=utf-8" } },
+		)
 	}
 	const panel = await getRelatedPanel({ tmdbId, sourceMediaType: type })
 	// Third round: the stage around a title as markup, which the section's script swaps in. `debug` gives the model.

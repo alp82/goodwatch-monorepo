@@ -155,7 +155,7 @@ async function findCandidates(params: {
 }
 
 /** The titles that lie in a direction from a center, most similar first. */
-async function candidatesOf(
+export async function candidatesOf(
 	type: PxType,
 	id: number,
 	scores: Scores,
@@ -182,13 +182,13 @@ async function candidatesOf(
 	}))
 }
 
-interface Known {
+export interface Known {
 	title: PxTitle
 	scores: Scores
 }
 
 /** Titles by key, with their scores: the center of a step, and the title the visitor came from. */
-async function titlesOf(
+export async function titlesOf(
 	keys: { type: PxType; id: number }[],
 ): Promise<Map<string, Known>> {
 	const found = new Map<string, Known>()
