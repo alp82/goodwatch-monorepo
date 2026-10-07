@@ -1,7 +1,7 @@
 // The page's one door to analytics and error tracking (PostHog, Sentry, the Google tag). The tools load after the page
 // is interactive, so nothing here imports an SDK statically. Calls made before a tool loaded wait in a queue.
 import type { PostHog } from "posthog-js"
-import { TELEMETRY_LOAD } from "./config"
+import { TELEMETRY_AFTER_INTERACTION, TELEMETRY_LOAD } from "./config"
 import { readEarlyTelemetry } from "./early"
 import { loadGoogleTag } from "./google-tag"
 import {
@@ -117,10 +117,11 @@ export function startTelemetry(): void {
 	state.started = true
 	state.landingTitle = document.title
 	state.hydratedAt = Date.now()
+	// The tools never start inside a visitor's gesture: an interaction makes them wait for a pause.
 	whenPageIsInteractive(
 		(reason) => void loadTools(reason),
 		browserLoadTriggerEnv(window),
-		TELEMETRY_LOAD,
+		{ ...TELEMETRY_LOAD, afterInteraction: TELEMETRY_AFTER_INTERACTION },
 	)
 }
 

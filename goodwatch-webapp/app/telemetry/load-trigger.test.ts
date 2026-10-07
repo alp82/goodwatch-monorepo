@@ -145,6 +145,134 @@ for (const type of INTERACTION_EVENTS) {
 	})
 }
 
+// The rule for tools whose start-up work is too heavy to share a moment with the visitor's gesture.
+const waiting = {
+	...options,
+	afterInteraction: { quietMs: 1000, maxWaitMs: 5000 },
+}
+
+function armWaiting(browser: ReturnType<typeof fakeBrowser>) {
+	const reasons: string[] = []
+	const cancel = whenPageIsInteractive(
+		(reason) => reasons.push(reason),
+		browser.env,
+		waiting,
+	)
+	return { reasons, cancel }
+}
+
+for (const type of INTERACTION_EVENTS) {
+	test(`with a wait after interactions, ${type} runs the tools one quiet time later, even before the load event`, () => {
+		const browser = fakeBrowser({ loaded: false })
+		const { reasons } = armWaiting(browser)
+		browser.dispatch(type)
+		assert.deepEqual(reasons, [])
+		browser.advance(999)
+		assert.deepEqual(reasons, [])
+		browser.advance(1)
+		assert.deepEqual(reasons, ["interaction"])
+		assert.equal(browser.leftovers(), 0)
+	})
+}
+
+test("a further interaction restarts the quiet time after an interaction", () => {
+	const browser = fakeBrowser()
+	const { reasons } = armWaiting(browser)
+	browser.dispatch("scroll")
+	browser.advance(900)
+	browser.dispatch("pointerdown")
+	browser.advance(999)
+	assert.deepEqual(reasons, [])
+	browser.advance(1)
+	assert.deepEqual(reasons, ["interaction"])
+})
+
+test("the work an interaction starts restarts the quiet time after it", () => {
+	const browser = fakeBrowser()
+	const { reasons } = armWaiting(browser)
+	browser.dispatch("pointerdown")
+	browser.advance(900)
+	browser.activity()
+	browser.advance(999)
+	assert.deepEqual(reasons, [])
+	browser.advance(1)
+	assert.deepEqual(reasons, ["interaction"])
+})
+
+test("activity counts after an interaction that came before the load event", () => {
+	const browser = fakeBrowser({ loaded: false })
+	const { reasons } = armWaiting(browser)
+	browser.dispatch("pointerdown")
+	browser.advance(900)
+	browser.activity()
+	browser.advance(999)
+	assert.deepEqual(reasons, [])
+	browser.advance(1)
+	assert.deepEqual(reasons, ["interaction"])
+	assert.equal(browser.leftovers(), 0)
+})
+
+test("a visitor who never pauses gets the tools at the longest wait after the first interaction", () => {
+	const browser = fakeBrowser()
+	const { reasons } = armWaiting(browser)
+	browser.advance(2000)
+	for (let elapsed = 0; elapsed < 4500; elapsed += 500) {
+		browser.dispatch("scroll")
+		browser.advance(500)
+	}
+	assert.deepEqual(reasons, [])
+	browser.dispatch("scroll")
+	browser.advance(500)
+	assert.deepEqual(reasons, ["interaction"])
+	assert.equal(browser.leftovers(), 0)
+})
+
+test("an interaction ends the wait for a quiet page: the tools don't run in the middle of it", () => {
+	const browser = fakeBrowser()
+	const { reasons } = armWaiting(browser)
+	browser.advance(2900)
+	browser.dispatch("pointerdown")
+	browser.advance(999)
+	assert.deepEqual(reasons, [])
+	browser.advance(1)
+	assert.deepEqual(reasons, ["interaction"])
+	browser.advance(60_000)
+	assert.deepEqual(reasons, ["interaction"])
+})
+
+test("the load event doesn't restart the wait after an interaction", () => {
+	const browser = fakeBrowser({ loaded: false })
+	const { reasons } = armWaiting(browser)
+	browser.dispatch("pointerdown")
+	browser.advance(500)
+	browser.dispatch("load")
+	browser.advance(500)
+	assert.deepEqual(reasons, ["interaction"])
+	browser.advance(60_000)
+	assert.deepEqual(reasons, ["interaction"])
+	assert.equal(browser.leftovers(), 0)
+})
+
+test("a page that becomes hidden during the wait after an interaction runs the tools at once", () => {
+	const browser = fakeBrowser()
+	const { reasons } = armWaiting(browser)
+	browser.dispatch("pointerdown")
+	browser.advance(100)
+	browser.hide()
+	assert.deepEqual(reasons, ["hidden"])
+	assert.equal(browser.leftovers(), 0)
+})
+
+test("a trigger cancelled during the wait after an interaction never runs", () => {
+	const browser = fakeBrowser()
+	const { reasons, cancel } = armWaiting(browser)
+	browser.dispatch("pointerdown")
+	cancel()
+	browser.advance(60_000)
+	assert.deepEqual(reasons, [])
+	assert.equal(browser.leftovers(), 0)
+})
+
 test("a page that becomes hidden runs the tools at once", () => {
 	const browser = fakeBrowser({ loaded: false })
 	const { reasons } = arm(browser)
