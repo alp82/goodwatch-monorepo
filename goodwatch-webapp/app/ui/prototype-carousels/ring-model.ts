@@ -321,9 +321,17 @@ export function ownTraits(
 				2 * score + (side === "both" ? 1.5 : 0) + 0.1 * Math.min(up, down, 10),
 		})
 	}
-	return found
+	// A title's very strongest traits are mostly one-sided (hardly anything has more), so the choices are the
+	// strongest traits with titles both ways, and the rest of the places go to the strongest one-sided ones.
+	const sorted = found.sort((a, b) => b.value - a.value)
+	const both = sorted
+		.filter((entry) => entry.option.side === "both")
+		.slice(0, Math.max(1, limit - 1))
+	const rest = sorted
+		.filter((entry) => entry.option.side !== "both")
+		.slice(0, limit - both.length)
+	return [...both, ...rest]
 		.sort((a, b) => b.value - a.value)
-		.slice(0, limit)
 		.map((entry) => entry.option)
 }
 

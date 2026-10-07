@@ -500,7 +500,7 @@ const FANS: Record<"e" | "n" | "ne", Fan> = {
 		back: [-37, 36],
 		head: { at: [-50, -50.5], align: "l" },
 		exit: { at: [-50, 6.5], align: "l" },
-		opposite: { at: [-50, 48], align: "l" },
+		opposite: { at: [-50, 50.5], align: "l" },
 	},
 }
 
