@@ -1048,9 +1048,11 @@ unaired and later-aired episodes. 8,161 state rows: 6,319 movies and 1,842 shows
 
 ### How it runs
 
-`goodwatch-flows/scripts/migrate_watch_history.py`, in the style of `migrate_priority_queue.py` there: run with
-`uv run --no-project --with crate --with python-dotenv`, credentials from an env file, `--dry-run` printing what it
-would write, `--user` for one member, batches of 500 rows per insert, one member at a time.
+Built as the Windmill script `f/sync/tracking/migrate_watch_history` in `goodwatch-flows`, and not as the local
+script this section first named, because the operator runs Windmill scripts against production and not local
+Python. It is a dry run unless `dry_run` is `false`, takes `user_id` for one member, and inserts 500 rows per
+request. The commands, the expected counts, the undo and what "crawl complete" means are in
+[migration.md](migration.md); the list below is the order.
 
 1. The episode catalog is live and has crawled the shows (its own ticket). Without it only the movie steps can run.
 2. `f/sync/init/cratedb` with `dry_run: true` must report exactly: two `CREATE TABLE`, the new `user_import_item`
@@ -1059,23 +1061,29 @@ would write, `--user` for one member, batches of 500 rows per insert, one member
    deletes in `user_watch_history`, `user_score` or `user_wishlist`.
 4. **Time the grouped query** for the largest member, as section 3 says, and decide before any list is built.
 5. Deploy the webapp that reads and writes the new tables.
-6. Run the script again. It picks up what the old build wrote to the old table between steps 3 and 5.
+6. Run the script again, with `since` set to the start of the run of step 3. It picks up what the old build wrote
+   to the old table between steps 3 and 5. Without `since` it would plan every old row again and bring back a title
+   a member has taken back in the new build, because the old row is still there.
 7. 30 days after the switch, without a rollback: drop `user_watch_history` by hand, remove it from
    `crate_schemas.py` and from the refresh in `resetUserDataCache`, and delete the prototype readers. Until then the
    table is the backup and nothing reads or writes it.
 
 **Idempotent.** Every `watch_id` is fixed by the member, the title and the episode, and every insert is `ON CONFLICT
 DO NOTHING`, into `user_watch_state` too, so a row the new webapp has written since is never overwritten. A run that
-stopped is started again. The score step inserts only for a movie that has no log row at that moment. What step 6
-can't see is a mark removed in the old table between steps 3 and 5; those minutes are accepted.
+stopped is started again. The score step inserts only for a movie that has no log row at that moment. A movie
+that got its score's watch in step 3 and a watch row in the old table afterwards gets the dated watch in step 6, and
+the score's watch is deleted then, as the rule of section 4 says. A show's episode watches are written only while
+its state row is Seen with the press standing, so a show whose state the new build has changed gets none. What
+step 6 can't see is a mark removed in the old table between steps 3 and 5; those minutes are accepted.
 
 **Want to See on Seen titles.** Invariant 5 says a Seen title has no Want to See row. Today nothing clears the
 Wishlist when a title is rated or marked watched outside "I watched it", so such rows exist; they were not counted.
 The script leaves `user_wishlist` alone and the dry run prints the count. Whether they are deleted then, or My movies
 hides Seen movies until the member's next action clears each, is the owner's call with the number in hand.
 
-**The fill job** (C5) is the show step run again, alone (`--fill`), first by hand after the first crawl and then as
-a small scheduled job. It looks for a `user_watch_state` row with `state = 'seen'`, `seen_press_group` set,
+**The fill job** (C5) is the show step run again, alone (the Windmill script `f/sync/tracking/fill_seen_groups`;
+the migration fills its shows through the same code), first by hand after the first crawl and then as a small
+scheduled job. A show has an episode list once the copy has marked it (`show.episodes_updated_at` is set). It looks for a `user_watch_state` row with `state = 'seen'`, `seen_press_group` set,
 `seen_press_from` not `'seen'`, and no log row with that `group_id`. For each, when the show's episode list now has
 regular episodes that aired on or before the UTC day of `state_changed_at` (the day of the press) and are not
 watched in the current pass, it inserts them: no date, origin `seen`, the row's own `seen_press_group`, the row's
@@ -1096,7 +1104,8 @@ WHERE s.media_type = 'show' AND s.seen_press_group LIKE 'mig-seen-%'
   AND NOT EXISTS (SELECT 1 FROM user_watch_log w WHERE w.user_id = s.user_id AND w.group_id = s.seen_press_group);
 ```
 
-Then the consistency check of section 5 for the five largest members, and by eye: the largest member's Seen list
+The script's `verify` mode checks the same and more without these statements, for every member
+([migration.md](migration.md)). Then the consistency check of section 5 for the five largest members, and by eye: the largest member's Seen list
 before and after, one long show, one show without a list, one rated movie that had no watch.
 
 ## 7. Imports
@@ -1250,6 +1259,7 @@ writes through them yet, and `user_watch_history` and its readers are unchanged.
 | The writer `applyTrackingEvent`, `settleMovie`, and the reads | `server/tracking.server.ts`, statements in `server/tracking-sql.ts` |
 | `insertRows` | `utils/crate.ts` |
 | Timing the grouped query | `goodwatch-webapp/scripts/measure-watch-groups.mjs` |
+| The migration, its verification and the fill job ([#381](https://github.com/alp82/goodwatch-monorepo/issues/381)) | `goodwatch-flows/windmill/f/sync/tracking/`; how to run them: [migration.md](migration.md) |
 
 Tests: `node --test 'app/domain/tracking/*.test.ts' app/server/tracking.test.ts app/utils/crate-insert-rows.test.ts`
 from `goodwatch-webapp`. The server tests run against an in-memory Crate (`server/tracking-fake-crate.ts`); nothing
@@ -1269,3 +1279,11 @@ Where the build differs from the text above, or settles what it left open:
 - Rating a movie takes it off the Wishlist whenever the score's watch is its only watch, also on a later rating.
 - The episode list is cached for 10 minutes per show (`tracking-episode-list-v1`).
 - The prototype under `domain/prototype-tracking-machine/` keeps its own copy of the machine.
+
+Where the migration differs from section 6, or settles what it left open:
+
+- A migrated row's `updated_at` is its `created_at`, not the time of the run. A movie row without a `created_at`
+  takes `first_watched_at`. An old row or a score without any time is left out and reported.
+- The fill job fills a group only while it has no watch at all, as section 6 says. A group that was written from an
+  incomplete episode list is therefore not completed by it; the verification lists it.
+- Want to See rows on titles that become Seen are counted by the dry run and left alone.
