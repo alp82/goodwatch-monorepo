@@ -84,7 +84,7 @@ export default function DetailsContent({
 		explore1: { form: Explore1Constellation, phone: 704, desktop: 610 },
 		explore2: { form: Explore2Clusters, phone: 498, desktop: 335 },
 		explore3: { form: Explore3Walk, phone: 522, desktop: 416 },
-		explore4: { form: Explore4Chips, phone: 397, desktop: 362 },
+		explore4: { form: Explore4Chips, phone: 401, desktop: 366 },
 		explore5: { form: Explore5Map, phone: 668, desktop: 623 },
 	}[variant as string]
 	const relatedReserve = (reserved: ReservedHeight): ReservedHeight =>
