@@ -18,7 +18,7 @@ import {
 
 const CHIPS = [0, 1, 2, 3, 4]
 const CSS = `
-.px4-c{display:flex;gap:.5rem;overflow-x:auto;scrollbar-width:none;padding:2px}
+.px4-c{display:flex;gap:.5rem;overflow-x:auto;scrollbar-width:none;padding:4px 2px}
 .px4-c::-webkit-scrollbar{display:none}
 .px4-c input{position:absolute;opacity:0;pointer-events:none}
 .px4-c label{flex:none;cursor:pointer;border-radius:9999px;border:1px solid rgba(255,255,255,.2);padding:.375rem .75rem;
