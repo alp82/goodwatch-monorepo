@@ -3,7 +3,11 @@ set -euo pipefail
 : "${LH_URLS_FILE:=/work/urls.txt}"
 : "${LH_RUNS:=3}"
 : "${LH_OUT:=/out}"
+# The CPU slowdown of Lighthouse's simulation. Lighthouse's own default of 4 is made for a host whose CPU benchmark
+# is about 1,530. The generator's reads about 1,170, which Lighthouse's calculator maps to 2.7.
+: "${LH_CPU_SLOWDOWN:=2.7}"
 [[ $LH_RUNS =~ ^[1-9][0-9]*$ ]] || { echo 'LH_RUNS must be positive' >&2; exit 2; }
+[[ $LH_CPU_SLOWDOWN =~ ^[0-9]+(\.[0-9]+)?$ ]] || { echo 'LH_CPU_SLOWDOWN must be a number, such as 2.7' >&2; exit 2; }
 success=0
 while read -r label url rest || [[ -n ${label:-} ]]; do
   [[ -z $label || $label == \#* ]] && continue
@@ -17,11 +21,12 @@ while read -r label url rest || [[ -n ${label:-} ]]; do
     host=${url#*://}; host=${host%%/*}; host=${host%%:*}
     flags+=" --host-resolver-rules=\"MAP $host $LH_RESOLVE_IP\""
   fi
-  # Requests the page's own script would send but a benchmark must not: they change server state.
+  # Requests that the browser must not send because they change server state. No landing page sends one today:
+  # the default pattern is left from the warm request that every page view sent until October 4, 2026.
   blocked=()
   for pattern in ${LH_BLOCKED_URL_PATTERNS-*/api/og-image-warm*}; do blocked+=("--blocked-url-patterns=$pattern"); done
   for ((n=1;n<=LH_RUNS;n++)); do
-    if lighthouse "$url" "${blocked[@]}" --only-categories=performance --form-factor=mobile --output=json --output-path="$LH_OUT/$label/run-$n.json" --quiet --chrome-flags="$flags"; then
+    if lighthouse "$url" "${blocked[@]}" --only-categories=performance --form-factor=mobile --throttling.cpuSlowdownMultiplier="$LH_CPU_SLOWDOWN" --output=json --output-path="$LH_OUT/$label/run-$n.json" --quiet --chrome-flags="$flags"; then
       success=$((success + 1))
     else
       echo "Lighthouse failed: $label run $n" >&2

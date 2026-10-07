@@ -23,6 +23,9 @@ export const LINES = {
   score: { label: "Performance score", unit: "points" },
 };
 
+// The lines that Lighthouse's CPU slowdown changes. Bytes, requests, and CLS don't depend on it.
+export const SLOWDOWN_LINES = ["lcp_ms", "tbt_ms", "score"];
+
 const isHttp = (url) => /^https?:\/\//.test(url);
 const sum = (items, key) => items.reduce((total, item) => total + (item[key] || 0), 0);
 
@@ -61,6 +64,7 @@ export function extractMetrics(lhr) {
     // Not budget lines: they tell whether the measurement itself was sound.
     observed_fcp_ms: observed.observedFirstContentfulPaint,
     benchmark_index: lhr.environment?.benchmarkIndex,
+    cpu_slowdown: lhr.configSettings?.throttling?.cpuSlowdownMultiplier,
   };
 }
 
@@ -140,7 +144,15 @@ export function compareRun(budget, reports) {
     }
     const measured = medianMetrics(runs.map(extractMetrics));
     const result = compareSurface(measured, runs.map(lcpElement), surface, budget.targets);
-    surfaces[name] = { ...result, runs: runs.length, measured };
+    // The time lines are calibrated for one CPU slowdown. Reports with another one can't be compared with them.
+    const slowdowns = [...new Set(runs.map((run) => extractMetrics(run).cpu_slowdown))];
+    const other = budget.cpu_slowdown == null ? [] : slowdowns.filter((value) => value !== budget.cpu_slowdown);
+    if (other.length) {
+      for (const line of result.lines) if (SLOWDOWN_LINES.includes(line.key)) line.pass = false;
+      result.pass = false;
+      result.slowdown_mismatch = { expected: budget.cpu_slowdown, found: other.map((value) => value ?? null) };
+    }
+    surfaces[name] = { ...result, runs: runs.length, measured, slowdowns };
   }
   return { pass: Object.values(surfaces).every((surface) => surface.pass), surfaces };
 }
@@ -172,7 +184,9 @@ export function formatReport(result, { markdown = false } = {}) {
   for (const [name, surface] of Object.entries(result.surfaces)) {
     const info = surface.error
       ? surface.error
-      : `median of ${surface.runs}, observed FCP ${formatValue("lcp_ms", surface.measured.observed_fcp_ms)}, CPU benchmark ${number(surface.measured.benchmark_index ?? 0)}`;
+      : `median of ${surface.runs}, observed FCP ${formatValue("lcp_ms", surface.measured.observed_fcp_ms)}, CPU benchmark ${number(surface.measured.benchmark_index ?? 0)}, CPU slowdown ${(surface.slowdowns ?? []).map((value) => value ?? "not reported").join(" and ")}${
+          surface.slowdown_mismatch ? ` where the budget is calibrated for ${surface.slowdown_mismatch.expected}, so LCP, TBT, and the score aren't comparable` : ""
+        }`;
     if (markdown) {
       out.push(`### ${name}`, "", `${surface.pass ? "Pass" : "Fail"}: ${info}.`, "");
       if (surface.lines.length) out.push("| Line | Measured | Budget | Target | Gap to target | Result |", "| --- | --- | --- | --- | --- | --- |");

@@ -18,6 +18,10 @@ The limits are in [`goodwatch-benchmark/urls/budget.json`](../../goodwatch-bench
   [Skipped sections on title pages](#skipped-sections-on-title-pages), [Posters on Discover](#posters-on-discover),
   and [Scripts on first use](#scripts-on-first-use). The budget table below shows the limits of the calibration
   run: the current limits are in the budget file.
+- **Since October 7, 2026, Lighthouse runs with a CPU slowdown of 2.7 instead of 4,** the value that Lighthouse's
+  calculator gives for the generator's CPU benchmark. TBT falls by 40% to 75% and the score rises by 0 to 5 points.
+  LCP, TBT, and the score of earlier runs aren't comparable with later ones. Every table above
+  [CPU slowdown of the generator](#cpu-slowdown-of-the-generator) on this page is from the old setting.
 - **No surface meets the targets yet.** The largest gaps are the first render's style and layout work, hydration on
   title pages, and the posters that Discover loads before scrolling.
 
@@ -33,8 +37,9 @@ The limits are in [`goodwatch-benchmark/urls/budget.json`](../../goodwatch-bench
 
 Lighthouse's documentation puts a CPU benchmark of 1,000 to 1,500 in the "low-end desktop" class and calibrates the
 4x slowdown for a benchmark of 1,500 to 2,000. On worker3, 4x therefore models a slower phone than Lighthouse
-intends, and the development machine (benchmark 4,700) models a much faster one. The budget keeps 4x on worker3, so
-that numbers stay comparable with earlier runs. Read TBT and the score as pessimistic.
+intends, and the development machine (benchmark 4,700) models a much faster one. Until October 7, 2026, the budget
+kept 4x on worker3: read TBT and the score of those runs as pessimistic. Since then the slowdown is 2.7 (see
+[CPU slowdown of the generator](#cpu-slowdown-of-the-generator)).
 
 ## The late first paint on the generator
 
@@ -174,7 +179,7 @@ What stands between today and the targets, with measured sizes. Times are Lighth
 | The stylesheet | All | 33 KB compressed, 359 KB raw, about 4,300 rules for all routes. Lighthouse estimates 150 to 450 ms of blocking time | Proposed, 5 |
 | Local and oversized images | Home, person, show | Estimated savings: 164 KB on home (a 40 KB provider logo as SVG among them), 136 KB on person, 89 KB on show | Proposed, 6 |
 | Card fonts | Share list | Anton as a 53 KB TTF transfer for the LCP text. 16 card fonts are declared as TTF | Proposed, 7 |
-| CPU calibration of the generator | All | 4x on a host with benchmark 1,100: TBT and the score read worse than on Lighthouse's reference | Proposed, 8 |
+| CPU calibration of the generator | All | 4x on a host with benchmark 1,100: TBT and the score read worse than on Lighthouse's reference | Done: [CPU slowdown of the generator](#cpu-slowdown-of-the-generator) |
 | The trailer | Title pages | Nothing loads before a click, after "Load the trailer player on click" | None needed |
 | Loader data in the HTML | Title pages | 46 to 52 KB of compressed HTML | "Stop the JSON round trip of loader data" |
 
@@ -203,7 +208,7 @@ What stands between today and the targets, with measured sizes. Times are Lighth
 7. **Serve the share card fonts as WOFF2.** The share list page's LCP element is the card title in Anton, which
    arrives as a 53 KB TTF transfer. Done when the browser loads card fonts as WOFF2 subsets, the card looks the same
    in the browser and in the image, and the share list's total bytes are under 560 KB.
-8. **Calibrate Lighthouse's CPU slowdown for the generator.** worker3's CPU benchmark is about 1,100, below the
+8. **Calibrate Lighthouse's CPU slowdown for the generator.** (Done on October 7, 2026.) worker3's CPU benchmark is about 1,100, below the
    1,500 to 2,000 that Lighthouse's 4x is made for. Pick the multiplier from Lighthouse's calibration guidance,
    record how the six surfaces shift, and reset the budget's time lines. Done when the multiplier is a documented
    setting and the budget passes with it.
@@ -513,11 +518,112 @@ add 0.5 KB to the HTML and 2.1 KB to the script that holds them.
 - **No shift when a font arrives late.** With every font held back for 1.5 s, CLS is 0.001 (before: 0.0105). Each
   card font has a local stand-in with its width, ascent, and descent.
 
+## CPU slowdown of the generator
+
+Ticket "Calibrate Lighthouse's CPU slowdown for the generator". Since October 7, 2026, `./bench.sh lighthouse` and
+`./bench.sh budget` run with a CPU slowdown of 2.7 (`LH_CPU_SLOWDOWN`), where Lighthouse's own default is 4.
+
+### Method
+
+Lighthouse's simulation multiplies the main-thread times that it observed on the host by the slowdown. Its guidance
+(`docs/throttling.md` in Lighthouse 13.5.0) says to pick the slowdown from the host's CPU benchmark, and names a
+calculator for it. The calculator's formula, read from its source:
+
+| CPU benchmark | Slowdown | Range that the calculator states |
+| --- | --- | --- |
+| 1,300 and above | `3 + (benchmark - 1300) / 233` | At least 0.75 either way |
+| 800 to 1,300 | `2 + (benchmark - 800) / 500` | 0.75 either way |
+| 150 to 800 | `1 + (benchmark - 150) / 650` | 0.25 either way |
+
+By this formula, the default of 4 fits a benchmark of 1,533. The guidance's table says the same more roughly: a
+"low-end desktop" (1,000 to 1,500) needs 2x for a mid-tier phone, within a range of 1x to 5x.
+
+No phone and no host of Lighthouse's reference class was measured. The calibration is the measured CPU benchmark
+of the generator put through Lighthouse's own formula, and runs that show what the result does to each surface.
+
+### The generator's CPU benchmark
+
+| Runs | Reports | Median | Spread |
+| --- | --- | --- | --- |
+| Seven runs of October 6 and 7, 2026 (other tickets) | 158 | 1,176 (run medians 1,113 to 1,205) | 809 to 1,329 |
+| The calibration runs of October 7, 2026, 17:51 to 19:31 UTC | 162 | 1,188 (mean 1,175) | 861 to 1,326, with 80% between 1,083 and 1,251 |
+
+A Windmill worker shares the host, which is where the low readings come from. The formula gives 2.75 for 1,176
+and 2.78 for 1,188. The setting is 2.7: the limits below were measured with it, and the difference to 2.8 is 4% of
+CPU time, far inside the calculator's own range and below the spread between runs.
+
+### How the six surfaces shift
+
+Production at `b038a381` over the public path, on the generator, all on October 7, 2026 between 18:08 and 19:31
+UTC. Each cell holds the medians of two runs of five reports, one of them before and one after the 2.7 runs.
+
+| Surface | Score at 4 | Score at 2.7 | TBT at 4 | TBT at 2.7 | LCP at 4 | LCP at 2.7 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Home | 86, 85 | 88, 88 | 125, 150 ms | 55, 53 ms | 3,464, 3,389 ms | 3,387, 3,396 ms |
+| Movie | 81, 80 | 85, 85 | 282, 319 ms | 165, 162 ms | 3,466, 3,478 ms | 3,479, 3,474 ms |
+| Show | 78, 79 | 83, 83 | 272, 302 ms | 157, 169 ms | 3,832, 3,783 ms | 3,838, 3,839 ms |
+| Person | 87, 87 | 90, 90 | 158, 161 ms | 72, 106 ms | 3,389, 3,394 ms | 3,325, 3,324 ms |
+| Discover | 77, 76 | 77, 77 | 147, 188 ms | 67, 96 ms | 4,567, 4,775 ms | 4,905, 4,903 ms |
+| Share list | 88, 88 | 88, 89 | 74, 65 ms | 19, 17 ms | 3,534, 3,552 ms | 3,540, 3,541 ms |
+
+- **TBT falls by 40% to 75%,** more than the slowdown's 33%, because TBT counts only the part of a task above
+  50 ms. Every surface is now under the 200 ms target.
+- **The score rises by 4 to 5 points on title pages, 2 to 3 on home and person pages, and 0 to 1 on Discover and
+  the share list,** whose scores are held by LCP.
+- **LCP doesn't move** (under 1% on five surfaces, 2% earlier on the person page). It is set by the simulated
+  connection, not by the CPU. Discover's LCP reads either about 4.6 or about 4.9 s at both settings.
+- Bytes, requests, and CLS are the same at both settings.
+
+The ends of the calculator's range, one run of three reports each:
+
+| Surface | Score at 2.0 | Score at 3.5 | TBT at 2.0 | TBT at 3.5 |
+| --- | --- | --- | --- | --- |
+| Home | 88 | 87 | 27 ms | 119 ms |
+| Movie | 87 | 83 | 116 ms | 219 ms |
+| Show | 84 | 79 | 121 ms | 294 ms |
+| Person | 90 | 88 | 33 ms | 145 ms |
+| Discover | 78 | 75 | 52 ms | 119 ms |
+| Share list | 88 | 88 | 4 ms | 55 ms |
+
+So the calculator's uncertainty is worth 4 to 5 score points on title pages, and decides whether their TBT reads
+as under or over the 200 ms target. A measurement on a real mid-tier phone would settle it.
+
+### What it does to the recorded lines
+
+- **Not comparable across October 7, 2026:** LCP, TBT, the score, and every other simulated time (FCP, Speed
+  Index, main-thread time) of a run before that date, against a run after it. That includes every table above
+  this section, the tables in the benchmark README's samples, and the scores quoted in the map's decisions. For a
+  before and after comparison across the date, run once more with `LH_CPU_SLOWDOWN=4`.
+- **Still comparable:** bytes, requests, counts, the LCP element, CLS, and the observed FCP.
+- **A guard in the check:** the budget file names its slowdown (`cpu_slowdown`). `./bench.sh budget` fails the LCP,
+  TBT, and score lines of a run that used another one, and says so, instead of comparing two scales.
+- **The targets** (LCP 2.5 s, TBT 200 ms, CLS 0.1, score 90) are unchanged. The gaps of "Targets and gaps" above
+  are from the old setting: at 2.7, TBT meets its target on every surface, and LCP is the remaining gap.
+- **The tap test keeps a slowdown of 4.** It slows the real CPU and has its own baseline of October 6, 2026.
+
+The budget's limits, reset from the two 2.7 runs above:
+
+| Line | Home | Movie | Show | Person | Discover | Share list |
+| --- | --- | --- | --- | --- | --- | --- |
+| TBT, before (ms) | 300 | 900 | 1,000 | 400 | 300 | 250 |
+| TBT, now (ms) | 150 | 350 | 350 | 250 | 200 | 100 |
+| Score, before | 79 | 66 | 63 | 78 | 68 | 84 |
+| Score, now | 81 | 78 | 76 | 83 | 70 | 84 |
+| LCP, unchanged (ms) | 3,850 | 3,950 | 4,200 | 3,950 | 5,800 | 3,900 |
+
+- **TBT:** twice the higher of the two medians, rounded up to 50 ms, and at least 100 ms. The old limits had also
+  become loose: the title pages' TBT at 4x was about 300 ms on this build against limits of 900 and 1,000 ms.
+- **Score:** 7 points under the median. The share list keeps its 84.
+- **LCP:** unchanged, because it didn't move.
+
+Run `20261007T193155Z-lighthouse-calibrated` with the default settings (three reports per surface, 19:31 to 19:40 UTC) passes
+90 of 90 lines of the new limits: scores 88, 84, 82, 90, 77, and 88, and TBT 50, 162, 173, 79, 62, and 14 ms.
+
 ## Not verified
 
-- The card fonts change on the generator: the numbers of that section are local, and the share list's limits for
-  LCP, TBT, and the score still come from before it.
-
+- A real phone or a host of Lighthouse's reference class for the CPU slowdown: 2.7 comes from Lighthouse's formula
+  and the generator's benchmark, whose stated range is 2.0 to 3.5.
+- The CPU slowdown on any host other than worker3.
 - A real phone. Every number here is Lighthouse's simulation on a server.
 - Whether Chromium on a real phone can show the same one-second hold. The measurements here only show it for the
   blank start page under emulation.

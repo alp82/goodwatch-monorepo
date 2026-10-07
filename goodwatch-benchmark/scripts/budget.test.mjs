@@ -6,11 +6,12 @@ import { compareRun, compareSurface, extractMetrics, formatReport, lcpElement, l
 const request = (url, resourceType, transferSize) => ({ url, resourceType, transferSize, finished: true, statusCode: 200 });
 
 /** A Lighthouse report with the parts the budget reads. */
-function report({ lcp = 3000, tbt = 300, cls = 0, score = 0.7, extra = [], snippet = '<img fetchpriority="high" src="https://images.example/t/w780/a.jpg">' } = {}) {
+function report({ lcp = 3000, tbt = 300, cls = 0, score = 0.7, slowdown = 2.7, extra = [], snippet = '<img fetchpriority="high" src="https://images.example/t/w780/a.jpg">' } = {}) {
   return {
     finalDisplayedUrl: "https://site.example/movie/1",
     mainDocumentUrl: "https://site.example/movie/1",
     environment: { benchmarkIndex: 1100 },
+    configSettings: { throttling: { cpuSlowdownMultiplier: slowdown } },
     categories: { performance: { score } },
     audits: {
       "largest-contentful-paint": { numericValue: lcp },
@@ -126,6 +127,21 @@ test("a regression fails its line: one more script, a second font, a slower LCP"
   const runs = [1, 2, 3].map(() => report({ lcp: 3600, extra: [third, font] }));
   const { surfaces } = compareRun({ ...budget, surfaces: { movie: budget.surfaces.movie } }, { movie: runs });
   assert.deepEqual(Object.fromEntries(surfaces.movie.lines.map((line) => [line.key, line.pass])), { lcp_ms: false, script_count: false, font_requests: false, lcp_element: true });
+});
+
+test("reports with another CPU slowdown than the budget's fail the time lines only", () => {
+  const surfaces = { movie: { path: "/movie/1", budget: { lcp_ms: { max: 3500 }, tbt_ms: { max: 400 }, score: { min: 60 }, script_count: { max: 2 }, cls: { max: 0.01 } } } };
+  const same = compareRun({ cpu_slowdown: 2.7, surfaces }, { movie: [report(), report()] });
+  assert.equal(same.pass, true);
+  assert.equal(same.surfaces.movie.measured.cpu_slowdown, 2.7);
+  // One report of the old setting among them is enough: the median would mix two scales.
+  const mixed = compareRun({ cpu_slowdown: 2.7, surfaces }, { movie: [report(), report({ slowdown: 4 }), report()] });
+  assert.equal(mixed.pass, false);
+  assert.deepEqual(Object.fromEntries(mixed.surfaces.movie.lines.map((line) => [line.key, line.pass])), { lcp_ms: false, tbt_ms: false, score: false, script_count: true, cls: true });
+  assert.deepEqual(mixed.surfaces.movie.slowdown_mismatch, { expected: 2.7, found: [4] });
+  assert.match(formatReport(mixed), /CPU slowdown 2\.7 and 4 where the budget is calibrated for 2\.7/);
+  // A budget file without the setting compares as before.
+  assert.equal(compareRun({ surfaces }, { movie: [report({ slowdown: 4 })] }).pass, true);
 });
 
 test("the report names each line and never prints a URL", () => {
