@@ -1,0 +1,8 @@
+summary: Watch log migration rules
+description: Internal shared module
+kind: script
+lock: '!inline f/sync/tracking/rules.script.lock'
+schema:
+  type: object
+  properties: {}
+  required: []
