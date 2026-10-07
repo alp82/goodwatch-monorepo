@@ -181,6 +181,7 @@ function Label({
 					aria-label={`${direction.label}: choose what ${axisLetter(model, direction.slot)} means`}
 				>
 					{word}
+					{ended && <em> ends</em>}
 					<u>▾</u>
 				</button>
 			) : ended ? (
@@ -211,24 +212,16 @@ function Label({
 			) : (
 				<span className="rg-l rg-plain">{word}</span>
 			)}
-			{chooses &&
-				(ended ? (
-					<button type="button" className="rg-fu rg-fe" data-rg-end={endNote}>
-						ends
-					</button>
-				) : (
-					form.dive &&
-					!locked && (
-						<button
-							type="button"
-							className="rg-fu"
-							data-rg-lock={direction.id}
-							aria-label={`See further: ${direction.word}`}
-						>
-							further
-						</button>
-					)
-				))}
+			{chooses && !ended && form.dive && !locked && (
+				<button
+					type="button"
+					className="rg-fu"
+					data-rg-lock={direction.id}
+					aria-label={`See further: ${direction.word}`}
+				>
+					further
+				</button>
+			)}
 		</span>
 	)
 }
@@ -307,6 +300,7 @@ interface Rest {
 }
 
 // ring: three per side. Rows above and below, columns left and right, with the columns' words in the corners.
+// The columns sit a little low, so that a long word of two or three lines has room above them.
 const RING_REST: Rest = {
 	center: { at: [0, 0], w: 22 },
 	sides: {
@@ -332,9 +326,9 @@ const RING_REST: Rest = {
 		},
 		e: {
 			places: [
-				[41, 0],
-				[41, -25.5],
-				[41, 25.5],
+				[41, 5],
+				[41, -20.5],
+				[41, 30.5],
 			],
 			w: 16,
 			label: [50, -53.2],
@@ -342,9 +336,9 @@ const RING_REST: Rest = {
 		},
 		w: {
 			places: [
-				[-41, 0],
-				[-41, 25.5],
-				[-41, -25.5],
+				[-41, 5],
+				[-41, 30.5],
+				[-41, -20.5],
 			],
 			w: 16,
 			label: [-50, -53.2],

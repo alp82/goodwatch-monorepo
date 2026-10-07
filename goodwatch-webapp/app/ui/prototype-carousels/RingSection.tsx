@@ -210,8 +210,8 @@ color:#fff;font-size:.6875rem;font-weight:700;line-height:1.125rem;border:1px so
 .rg-map[data-lock] .rg-sm .rg-fu{display:none}
 .wk-ring2 .rg-ring .rg-l{font-size:.75rem}
 .wk-ring2 .rg-ring:not([data-lock]) .rg-lb{flex-direction:column;flex-wrap:nowrap;align-items:center}
-.wk-ring2 .rg-ring:not([data-lock]) [data-rg-label="w"]{max-width:27cqw;align-items:flex-start}
-.wk-ring2 .rg-ring:not([data-lock]) [data-rg-label="e"]{max-width:27cqw;align-items:flex-end}
+.wk-ring2 .rg-ring:not([data-lock]) [data-rg-label="w"]{max-width:23.5cqw;align-items:flex-start}
+.wk-ring2 .rg-ring:not([data-lock]) [data-rg-label="e"]{max-width:23.5cqw;align-items:flex-end}
 .wk-ring4 .rg-ring:not([data-lock]) [data-rg-label="n"]{max-width:50cqw}
 .wk-ring4 .rg-ring:not([data-lock]) [data-rg-label="w"],.wk-ring4 .rg-ring:not([data-lock]) [data-rg-label="e"]{max-width:25cqw}
 .wk-ring3 .rg-ring:not([data-lock]) .rg-l,.wk-ring4 .rg-ring:not([data-lock]) .rg-l{font-size:.75rem;line-height:.9375rem}
