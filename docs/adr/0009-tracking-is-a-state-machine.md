@@ -7,8 +7,9 @@ status: accepted
 A member has one stored state per show: Not started, Watching, On hold, Dropped or Seen. It changes when the member
 acts, or when an import replays such acts, and at no other time. Decided on October 7, 2026, with
 [#368](https://github.com/alp82/goodwatch-monorepo/issues/368). The transition table is the specification:
-[the prototype's notes](../prototypes/tracking-machine/README.md). How it is stored:
-[the data model](../implementation/tracking/data-model.md) and [ADR 0008](0008-one-row-per-watch.md).
+[the prototype's notes](../prototypes/tracking-machine/README.md). How it is stored: the state in
+`user_watch_state`, the watches in `user_watch_log`, as
+[the data model](../implementation/tracking/data-model.md) and [ADR 0008](0008-one-row-per-watch.md) say.
 
 The first set of rules made a show Seen "when watched through with no season still airing", worked out from unaired
 episodes, finale flags and a 45-day wait. A show's state then changed on days when nobody did anything, and a logic
@@ -28,6 +29,14 @@ prototype of those rules produced 27 surprises. The owner asked for a state mach
 - **Pressing Seen can be taken back exactly.** The press's watches form one group, and the state it was pressed from
   is remembered while the show stays Seen. One more press removes that group and returns the state, also to On hold
   or Dropped.
+- **Watch again needs at least one watched regular episode.** It starts the next pass and makes the show Watching.
+  Without the guard, a show marked Seen while it had no episode list would become Watching with nothing watched.
+- **An import never changes On hold, Dropped or Seen set here.** It adds its watches to the log. It sets the state
+  only for a show that had no state before the import (from the watches, then from the source's status) or that is
+  Not started or Watching (from the watches). What the member decided here is newer than what a file says.
+- **The server reads the calendar in UTC.** Which episodes have aired, and so "up to date" and how many are new,
+  goes by the UTC date. The browser decides what can be ticked by the date on the device, and the server accepts a
+  watch for an episode that airs up to one day after the UTC date.
 
 Rejected:
 
@@ -37,3 +46,5 @@ Rejected:
   Watching, and the Seen press could no longer be taken back.
 - **Deriving Watching from the watches.** Whether a show with every aired episode watched is Seen, or has since
   received new episodes and is still Seen, depends on when the member last acted.
+- **An import replays as if the member acted now.** An old watch in a file would resume a show the member has put
+  on hold or dropped here.

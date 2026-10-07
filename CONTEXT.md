@@ -68,19 +68,19 @@ The page that holds every title a member has marked, one status at a time. Want 
 _Avoid_: Watched, History, Watch history, Diary, Collection, Archive, Watchlist
 
 **Watch**:
-One viewing of a movie or of an episode, with the date it happened when the person knows it. A title or episode can have several watches; a watch never gets a date nobody recorded.
+One viewing of a movie or of an episode, with the date it happened when the person knows it. A title or episode can have several watches; a watch never gets a date nobody recorded. Rating a movie that has no watch records one without a date; it goes when the score is cleared, and a watch the person logs takes its place.
 _Avoid_: Play, View, Check-in, Scrobble
 
 **Pass**:
-One run through a show's episodes. Watch again on a Seen show begins a new pass; progress and the Next episode count only the current pass, and the watches of earlier passes are kept.
+One run through a show's episodes. Watch again on a Seen show begins a new pass, and needs at least one watched regular episode; progress and the Next episode count only the current pass, and the watches of earlier passes are kept.
 _Avoid_: Rewatch session
 
 **Seen**:
-A movie the person has watched or rated. For a show, the show status reached by watching its last aired regular episode or by pressing Seen; pressing Seen again takes that press back. A show stays Seen when later episodes air, and then says how many are new. A rated show is not in the status Seen, but counts as Seen for Not seen yet.
+A movie the person has watched or rated; rating a movie records a watch, so the two are one rule. For a show, the show status reached by watching its last aired regular episode or by pressing Seen; pressing Seen again takes that press back. A show stays Seen when later episodes air, and then says how many are new. Rating a show never changes its show status; a rated show still counts as Seen wherever titles are filtered or marked as seen, such as Not seen yet.
 _Avoid_: Finished, Completed, Watched
 
 **Show status**:
-The member's stored state for a show: Not started, Watching, On hold, Dropped, or Seen. A show has exactly one, and only the member's own action or an import changes it; an episode airing or a show ending never does. Movies have none.
+The member's stored state for a show: Not started, Watching, On hold, Dropped, or Seen. A show has exactly one, and only the member's own action or an import changes it; an episode airing or a show ending never does. An import sets it only for a show the member has not started or is Watching, and never changes On hold, Dropped or Seen. Movies have none.
 
 **Not started**:
 The show status of a show the member has not begun. Every show is in it until the member watches a regular episode, presses Seen, or an import brings another status.
@@ -225,6 +225,9 @@ A show's episode ratings laid out with one row per season and one cell per episo
 
 **Episode list**:
 A show's episodes by season in TMDB's numbering, where a person marks the episodes they have watched. It is distinct from the episode grid, which shows ratings in IMDb's numbering.
+
+**Aired**:
+An episode whose air date has come. GoodWatch counts aired episodes by the UTC date, the same for everyone; which episodes a person can mark goes by the date on their device, so the two can differ by one episode for a few hours.
 
 **Regular episode**:
 An episode that belongs to a numbered season. Only aired regular episodes count toward a show being watched through.
