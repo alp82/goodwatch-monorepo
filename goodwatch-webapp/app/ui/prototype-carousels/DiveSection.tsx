@@ -241,7 +241,10 @@ border:1px dashed rgba(255,255,255,.16)}
 .dv4-k0{z-index:3;transform:translate(-8px,3px)}
 .dv4-k1{z-index:2;transform:translate(2px,-1px) rotate(5deg)}
 .dv4-k2{z-index:1;transform:translate(12px,-5px) rotate(10deg)}
-.dv4-g .dv-l{position:absolute;left:0;translate:-50% 0;z-index:4}
+.dv4-g .dv-l{position:absolute;z-index:4}
+.dv4-left .dv-l{left:-38px}
+.dv4-right .dv-l{right:-38px}
+.dv4-g[data-on] .dv-l{left:0;right:auto;translate:-50% 0}
 .dv4-top .dv-l{bottom:50px}
 .dv4-bottom .dv-l{top:50px}
 .dv4-g[data-on]{left:50%}
@@ -287,6 +290,8 @@ font-size:.6875rem;line-height:1rem;color:#9ca3af;white-space:nowrap}
 .dv4 .wk-c{width:16.3%}
 .dv4-g{--oy:137px}
 .dv4-g .wk-p,.dv4-g .dv-g{width:72px}
+.dv4-left .dv-l{left:-44px}
+.dv4-right .dv-l{right:-44px}
 .dv4-top .dv-l{bottom:60px}
 .dv4-bottom .dv-l{top:60px}
 .dv4-g[data-on] .wk-p{width:60px}
