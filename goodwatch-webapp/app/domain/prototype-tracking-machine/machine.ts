@@ -238,8 +238,8 @@ export const GUARDS = {
 	noWatchRemains: { says: "no watch remains", test: (g: GuardInput) => !g.facts.watchRemains },
 	newEpisodes: { says: "episodes aired since", test: (g: GuardInput) => g.factsBefore.watched < g.factsBefore.aired },
 	pressedFromSeen: { says: "the press was made on a Seen show", test: (g: GuardInput) => g.before.seenPress?.from === "seen" },
-	noWatchPressedOnHold: { says: "no watch remains, pressed from On hold", test: (g: GuardInput) => !g.facts.watchRemains && g.before.seenPress?.from === "on_hold" },
-	noWatchPressedDropped: { says: "no watch remains, pressed from Dropped", test: (g: GuardInput) => !g.facts.watchRemains && g.before.seenPress?.from === "dropped" },
+	noWatchPressedOnHold: { says: "the press was made on an On hold show", test: (g: GuardInput) => g.before.seenPress?.from === "on_hold" },
+	noWatchPressedDropped: { says: "the press was made on a Dropped show", test: (g: GuardInput) => g.before.seenPress?.from === "dropped" },
 } as const
 export type Guard = keyof typeof GUARDS
 
@@ -281,9 +281,9 @@ export const TABLE: readonly Row[] = [
 	{ id: "11", from: BEFORE_SEEN, event: "pressSeen", guard: null, to: "seen", says: "Seen marks every aired episode not yet watched, as one group without dates." },
 	{ id: "12", from: ["seen"], event: "pressSeen", guard: "newEpisodes", to: "same", says: "On a Seen show with new episodes, Seen marks the new ones as a group of their own." },
 	{ id: "13", from: ["seen"], event: "undoSeen", guard: "pressedFromSeen", to: "same", says: "The press only added new episodes; taking it back leaves the show Seen with them new again." },
-	{ id: "14", from: ["seen"], event: "undoSeen", guard: "watchRemains", to: "watching", says: "The press is taken back and episodes ticked before it stay: Watching." },
-	{ id: "15", from: ["seen"], event: "undoSeen", guard: "noWatchPressedOnHold", to: "on_hold", says: "The press is taken back and nothing was ticked before it: On hold, as before." },
-	{ id: "16", from: ["seen"], event: "undoSeen", guard: "noWatchPressedDropped", to: "dropped", says: "The press is taken back and nothing was ticked before it: Dropped, as before." },
+	{ id: "15", from: ["seen"], event: "undoSeen", guard: "noWatchPressedOnHold", to: "on_hold", says: "The press is taken back: On hold, as before, with the episodes ticked before it." },
+	{ id: "16", from: ["seen"], event: "undoSeen", guard: "noWatchPressedDropped", to: "dropped", says: "The press is taken back: Dropped, as before, with the episodes ticked before it." },
+	{ id: "14", from: ["seen"], event: "undoSeen", guard: "watchRemains", to: "watching", says: "The press is taken back and episodes ticked before it stay: Watching, as before." },
 	{ id: "17", from: ["seen"], event: "undoSeen", guard: "noWatchRemains", to: "not_started", says: "The press is taken back and nothing else was watched: Not started." },
 	// On hold, Dropped, Resume
 	{ id: "18", from: ["watching"], event: "hold", guard: null, to: "on_hold", says: "Set aside, may return." },

@@ -116,8 +116,8 @@ test("Seen again with nothing ticked before returns to where the member was", ()
 	const held = run("ended", [w(1, 1), { type: "hold" }, u(1, 1), SEEN, AGAIN])
 	assert.deepEqual(held.rows, ["3", "18", "10", "11", "15"])
 	assert.equal(held.view.state, "on_hold")
-	// With episodes ticked before, the specification says Watching, also from On hold.
-	assert.equal(run("ended", [w(1, 1), { type: "hold" }, SEEN, AGAIN]).view.state, "watching")
+	// With episodes ticked before, Seen again is still an exact undo: On hold stays On hold.
+	assert.equal(run("ended", [w(1, 1), { type: "hold" }, SEEN, AGAIN]).view.state, "on_hold")
 })
 
 test("a Seen press on a Seen show marks only the new episodes, and its undo keeps the show Seen", () => {
@@ -408,4 +408,11 @@ test("every row of the table was walked", () => {
 	const missed = TABLE.filter((row) => !used.has(row.id)).map((row) => row.id)
 	assert.deepEqual(missed, [])
 	assert.ok(TABLE.some((row) => !rowIsActive(row, RECOMMENDED)))
+})
+
+test("Seen and Seen again from On hold with episodes ticked returns to On hold", () => {
+	const r = run("ended", [w(1, 1), w(1, 2), { type: "hold" }, SEEN, AGAIN])
+	assert.equal(r.view.state, "on_hold")
+	assert.equal(r.rows.at(-1), "15")
+	assert.equal(r.world.member.watches.length, 2)
 })
