@@ -14,11 +14,15 @@ import {
 	ringMoreHtml,
 	ringStageHtml,
 } from "~/server/prototype-ring-view.server"
+import { seaStageHtml } from "~/server/prototype-sea-view.server"
 import { walkStageHtml } from "~/server/prototype-walk.server"
 import { getRelatedPanel } from "~/server/related.server"
 import { isDiveVariant } from "~/ui/prototype-carousels/dive-model"
 import { isExploreVariant } from "~/ui/prototype-carousels/explore-model"
-import { isRingVariant } from "~/ui/prototype-carousels/ring-model"
+import {
+	isRingVariant,
+	isSeaVariant,
+} from "~/ui/prototype-carousels/ring-model"
 import { isWalkVariant } from "~/ui/prototype-carousels/walk-model"
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -34,7 +38,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			isExploreVariant(variant) ||
 			isWalkVariant(variant) ||
 			isDiveVariant(variant) ||
-			isRingVariant(variant)
+			isRingVariant(variant) ||
+			isSeaVariant(variant)
 		) ||
 		(type !== "movie" && type !== "show") ||
 		!/^\d+$/.test(id)
@@ -68,7 +73,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	// Fifth round: the stage around a title in a walk whose axes and traits the browser passes on. `anchor` and
 	// `adir` say where the visitor started walking in one direction, `pick` and `preset` let the server choose an
 	// axis, and `more` asks for the further titles of one strip.
-	if (isRingVariant(variant)) {
+	// The sea forms (sixth round) are the same model in a six-direction shape, with markup of their own.
+	if (isRingVariant(variant) || isSeaVariant(variant)) {
 		const keyOf = (value: string | null) => {
 			const found = /^(movie|show)-(\d+)$/.exec(value ?? "")
 			return found
@@ -101,9 +107,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		if (!ring) throw new Response("Not found", { status: 404, headers })
 		if (params.has("debug")) return json(ring, { headers })
 		return new Response(
-			more
-				? ringMoreHtml(ring, more, 0)
-				: ringStageHtml(ring, params.get("root") ?? ""),
+			isSeaVariant(variant)
+				? seaStageHtml(ring, params.get("root") ?? "")
+				: more
+					? ringMoreHtml(ring, more, 0)
+					: ringStageHtml(ring, params.get("root") ?? ""),
 			{ headers: { ...headers, "Content-Type": "text/html; charset=utf-8" } },
 		)
 	}

@@ -46,7 +46,17 @@
 // - ring7: one axis up and down, as ranks. The words choose what it means. No dive mode.
 // - ring8: two axes as four arms that scroll outward. The words choose. No dive mode.
 // - ring9: one axis left and right, as ranks, from the title's own traits. No dive mode.
-// The floating bar shows today and the fourth round's labeled ring for comparison, and these nine. The other
+//
+// Sixth round, after the owner tried the fifth: breadth instead of refinement. Six different ideas, each taking the
+// look and feel of the Explorer (its sea, islands, names, minimap, proximity card, zoom) and shrinking it into the
+// section (see server/prototype-sea-view.server.tsx for the forms and SeaSection.tsx for the layers):
+// - sea1: a pocket sea. A map wider than the stage with an island per direction, dragged sideways, with a minimap.
+// - sea2: ranks on water. Six arms of islets on range rings: the fifth round's six ways and its graded ranks.
+// - sea3: zoom levels. An archipelago seen from afar, and islands you go into.
+// - sea4: a voyage. Every step adds a leg to a route that stays on the map.
+// - sea5: compass and horizon. The sea tilted away from you, and a compass that turns what lies ahead.
+// - sea6: the minimap as the control. The stage shows one island up close, and the small map moves you.
+// The floating bar shows today, the fifth round's six ways and trait bow for comparison, and these six. The other
 // variants still answer to the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
@@ -80,22 +90,26 @@ export const CAROUSEL_VARIANTS = [
 	"ring7",
 	"ring8",
 	"ring9",
+	"sea1",
+	"sea2",
+	"sea3",
+	"sea4",
+	"sea5",
+	"sea6",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
 /** The variants the floating bar cycles through. */
 export const CAROUSEL_BAR: CarouselVariant[] = [
 	"today",
-	"dive1",
-	"ring1",
-	"ring2",
-	"ring3",
-	"ring4",
 	"ring5",
-	"ring6",
-	"ring7",
-	"ring8",
 	"ring9",
+	"sea1",
+	"sea2",
+	"sea3",
+	"sea4",
+	"sea5",
+	"sea6",
 ]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
@@ -127,6 +141,12 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	ring7: "R7 Up and down",
 	ring8: "R8 Four arms",
 	ring9: "R9 Trait bow",
+	sea1: "S1 Pocket sea",
+	sea2: "S2 Ranks on water",
+	sea3: "S3 Islands to go into",
+	sea4: "S4 Voyage",
+	sea5: "S5 Compass and horizon",
+	sea6: "S6 Small map steers",
 }
 
 export const CAROUSEL_PROTOTYPE_COOKIE = "gw_proto_carousels"
@@ -148,6 +168,8 @@ export interface CarouselPrototypeData {
 	dive?: { html: string }
 	/** ring1 to ring9: the section's markup, driven the same way. */
 	ring?: { html: string }
+	/** sea1 to sea6: the section's markup. An inline script drives the taps, a lazy module the rest. */
+	sea?: { html: string }
 }
 
 /** The prototype's data from the title route's loader, or null for today's page. */

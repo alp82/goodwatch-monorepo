@@ -38,6 +38,7 @@ import RelatedExplore from "~/ui/prototype-carousels/RelatedExplore"
 import RelatedList from "~/ui/prototype-carousels/RelatedList"
 import RelatedRowsNative from "~/ui/prototype-carousels/RelatedRowsNative"
 import RingSection from "~/ui/prototype-carousels/RingSection"
+import SeaSection from "~/ui/prototype-carousels/SeaSection"
 import WalkSection from "~/ui/prototype-carousels/WalkSection"
 import { useCarouselPrototype } from "~/ui/prototype-carousels/variant"
 import Ratings from "~/ui/ratings/Ratings"
@@ -111,6 +112,13 @@ export default function DetailsContent({
 		ring7: { form: RingSection, phone: 590, desktop: 582 },
 		ring8: { form: RingSection, phone: 510, desktop: 484 },
 		ring9: { form: RingSection, phone: 586, desktop: 577 },
+		// The sixth round's forms: one component, one height.
+		sea1: { form: SeaSection, phone: 583, desktop: 548 },
+		sea2: { form: SeaSection, phone: 583, desktop: 548 },
+		sea3: { form: SeaSection, phone: 583, desktop: 548 },
+		sea4: { form: SeaSection, phone: 583, desktop: 548 },
+		sea5: { form: SeaSection, phone: 583, desktop: 548 },
+		sea6: { form: SeaSection, phone: 583, desktop: 548 },
 	}[variant as string]
 	const relatedReserve = (reserved: ReservedHeight): ReservedHeight =>
 		!reserved.phone

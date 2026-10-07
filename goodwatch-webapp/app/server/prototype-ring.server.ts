@@ -22,7 +22,7 @@ import {
 	RING_FORMS,
 	type RingModel,
 	type RingOption,
-	type RingVariant,
+	type RingShape,
 	buildRingModel,
 	ownTraits,
 	presetAxes,
@@ -35,7 +35,7 @@ import {
 type Key = { type: PxType; id: number }
 
 export async function ringModel(input: {
-	variant: RingVariant
+	variant: RingShape
 	type: PxType
 	tmdbId: number
 	center?: Known
