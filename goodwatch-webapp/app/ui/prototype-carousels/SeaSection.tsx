@@ -13,7 +13,7 @@
 //    CSS transform of the world with a transition.
 // 3. sea-live.ts, loaded when the section comes near the viewport or is first touched: the Explorer's own sea
 //    renderer on a canvas under the posters, dragging with momentum, the minimap as a handle, pinch, the compass as a
-//    dial, and the light. Nothing of it runs while the page hydrates.
+//    dial. Nothing of it runs while the page hydrates.
 //
 // Real: the titles, the levels behind the directions and ranks, every step (one request). Faked: islands have no
 // painted surface (the Explorer blurs backdrops into them), no title actions on posters, and a voyage is forgotten
@@ -328,24 +328,24 @@ padding:3px 5px;border-radius:10px;background:rgba(10,14,26,.58);border:1px soli
 
 
 @media (min-width:1024px){
-.sea-map{aspect-ratio:auto;height:520px;--u:min(5.2px,(100cqw - 336px)/176)}
+.sea-map{aspect-ratio:auto;height:520px;--u:min(5.2px,(100cqw - 296px)/134)}
 .sea-m-sea1 .sea-cd{padding-left:18px}
-.sea-m-sea6 .sea-mini{left:auto;right:348px;bottom:14px;width:190px}
+.sea-m-sea6 .sea-mini{left:auto;right:296px;bottom:14px;width:170px}
 .sea-m-sea6 .sea-mini-t{display:none}
 .sea-m-sea6 .sea-mini-d{display:block}
-.sea-m-sea6 .sea-z .sea-p.sea-r0{translate:-50% calc(-50% - 7.4*var(--u))}
-.sea-m-sea6 .sea-z .sea-rw.sea-r0{translate:-100% calc(-50% - 7.4*var(--u))}
-.sea-m-sea6 .sea-z .sea-nm{translate:-50% calc(-50% - 5.1*var(--u))}
+.sea-m-sea6 .sea-z .sea-p.sea-r0{translate:-50% calc(-50% - 6.9*var(--u))}
+.sea-m-sea6 .sea-z .sea-rw.sea-r0{translate:-100% calc(-50% - 6.9*var(--u))}
+.sea-m-sea6 .sea-z .sea-nm{translate:-50% calc(-50% - 4.7*var(--u))}
 .sea-m-sea1 .sea-th{display:block}
 .sea-m-sea1 .sea-ti span{display:inline}
-.sea-world{left:calc((100% - 324px)/2);top:50%}
+.sea-world{left:calc((100% - 284px)/2);top:51%}
 .sea-at{left:calc(var(--X)*var(--u));top:calc(var(--Y)*var(--u));width:calc(var(--W)*var(--u))}
-.sea-top{right:324px;height:48px;padding:0 16px 8px}
+.sea-top{right:284px;height:48px;padding:0 16px 8px}
 .sea-h{font-size:20px}
 .sea-trail button{width:20px}
-.sea-card{left:auto;right:12px;top:12px;bottom:12px;width:300px;height:auto;border-radius:18px}
+.sea-card{left:auto;right:12px;top:12px;bottom:12px;width:260px;height:auto;border-radius:18px}
 .sea-cd{padding:18px;grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:auto;row-gap:8px;align-content:start}
-.sea-th{grid-row:auto;width:150px;margin-bottom:6px}
+.sea-th{grid-row:auto;width:128px;margin-bottom:6px}
 .sea-th img{border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .sea-wh{font-size:12px;line-height:16px}
 .sea-ti{flex-wrap:wrap;row-gap:6px}
@@ -359,22 +359,22 @@ padding:3px 5px;border-radius:10px;background:rgba(10,14,26,.58);border:1px soli
 .sea-tl,.sea-tr{translate:-50% -50%;align-items:center;text-align:center}
 .sea-wl{translate:0 -50%;align-items:flex-start;text-align:left}
 .sea-wr{translate:-100% -50%;align-items:flex-end;text-align:right}
-.sea-ring{aspect-ratio:1.72}
+.sea-ring{aspect-ratio:1.42}
 .sea-ring i{left:50%;top:0;font-size:11px}
 .sea-edge,.sea-m-sea1 .sea-mini{display:none}
-.sea-rail{right:336px;bottom:14px}
-.sea-z[data-near] .sea-p.sea-r0{translate:-50% calc(-50% - 7.4*var(--u))}
-.sea-z[data-near] .sea-rw.sea-r0{translate:-100% calc(-50% - 7.4*var(--u))}
-.sea-z[data-near] .sea-nm{translate:-50% calc(-50% - 5.1*var(--u))}
+.sea-rail{right:296px;bottom:14px}
+.sea-z[data-near] .sea-p.sea-r0{translate:-50% calc(-50% - 6.9*var(--u))}
+.sea-z[data-near] .sea-rw.sea-r0{translate:-100% calc(-50% - 6.9*var(--u))}
+.sea-z[data-near] .sea-nm{translate:-50% calc(-50% - 4.7*var(--u))}
 .sea-rw{font-size:12px}
 .sea-m-sea2 .sea-world{top:50%}
 .sea-m-sea5 .sea-world{top:72%}
-.sea-m-sea5 .sea-view{perspective:calc(150*var(--u));perspective-origin:calc((100% - 324px)/2) 16%}
+.sea-m-sea5 .sea-view{perspective:calc(150*var(--u));perspective-origin:calc((100% - 284px)/2) 8%}
 .sea-hd{left:14px;bottom:14px}
-.sea-rose{right:340px;bottom:14px;width:108px;height:108px}
+.sea-rose{right:300px;bottom:14px;width:108px;height:108px}
 .sea-rose::before{inset:32px}
 .sea-tick{transform:rotate(var(--a)) translate(38px)}
-.sea-needle{right:388px;bottom:124px}
+.sea-needle{right:348px;bottom:124px}
 }
 @media (prefers-reduced-motion:reduce){
 .sea-world,.sea-map,.sea-p,.sea-bg,.sea-isl,.sea-near,.sea-z .sea-r0,.sea-z .sea-nm{transition:none}

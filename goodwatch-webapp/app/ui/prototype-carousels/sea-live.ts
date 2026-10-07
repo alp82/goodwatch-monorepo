@@ -11,7 +11,7 @@
 // - dragging the sea with momentum (sea1, sea4, and sea3 once inside an island), with the vertical swipe left to
 //   the page.
 // - the minimap as a handle (sea1), pinch and ctrl+wheel as zoom (sea3), the compass and the sea itself as a dial
-//   (sea5), and the light (sea6).
+//   (sea5), and the minimap again, in both directions (sea6).
 // - the card naming the title nearest the middle of the map after a pan, as the Explorer's proximity card does.
 import { createSeaRenderer } from "~/ui/explorer/sea/renderer"
 import type { IslandShape, Rgb, SeaRenderer } from "~/ui/explorer/sea/types"

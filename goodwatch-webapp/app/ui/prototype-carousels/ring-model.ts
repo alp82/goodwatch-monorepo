@@ -116,7 +116,7 @@ export const RING_FORMS: Record<RingShape, RingForm> = {
 	sea3: seaForm([2, 3, 3]),
 	sea4: seaForm([], 2),
 	sea5: seaForm([2, 3, 3]),
-	sea6: seaForm([2, 2, 2]),
+	sea6: seaForm([2, 3, 3]),
 	ring1: {
 		layout: "ring",
 		axes: 2,

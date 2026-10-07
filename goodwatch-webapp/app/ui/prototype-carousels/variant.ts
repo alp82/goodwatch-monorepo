@@ -55,7 +55,7 @@
 // - sea3: zoom levels. An archipelago seen from afar, and islands you go into.
 // - sea4: a voyage. Every step adds a leg to a route that stays on the map.
 // - sea5: compass and horizon. The sea tilted away from you, and a compass that turns what lies ahead.
-// - sea6: a lantern. Every title where it lies, small, and a light that names what it falls on.
+// - sea6: the minimap as the control. The stage shows one island up close, and the small map moves you.
 // The floating bar shows today, the fifth round's six ways and trait bow for comparison, and these six. The other
 // variants still answer to the URL.
 import { useMatches } from "@remix-run/react"
@@ -146,7 +146,7 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	sea3: "S3 Islands to go into",
 	sea4: "S4 Voyage",
 	sea5: "S5 Compass and horizon",
-	sea6: "S6 Lantern",
+	sea6: "S6 Small map steers",
 }
 
 export const CAROUSEL_PROTOTYPE_COOKIE = "gw_proto_carousels"

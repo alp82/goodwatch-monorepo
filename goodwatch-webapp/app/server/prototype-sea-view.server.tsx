@@ -412,21 +412,21 @@ const POCKET: Record<Mode, { at: Record<string, Pt>; r: number; rows: number[][]
 	},
 	d: {
 		at: {
-			w: { x: -70, y: 0 },
-			e: { x: 70, y: 0 },
-			ne: { x: 35, y: -26.5 },
-			sw: { x: -35, y: 26.5 },
-			se: { x: 35, y: 26.5 },
-			nw: { x: -35, y: -26.5 },
+			w: { x: -60, y: 0 },
+			e: { x: 60, y: 0 },
+			ne: { x: 27.5, y: -26 },
+			sw: { x: -27.5, y: 26 },
+			se: { x: 27.5, y: 26 },
+			nw: { x: -27.5, y: -26 },
 		},
-		r: 21,
+		r: 21.5,
 		rows: [
-			[-5.2, 5.2],
-			[-10, 0, 10],
-			[-5.2, 5.2],
+			[-4.7, 4.7],
+			[-9.2, 0, 9.2],
+			[-4.7, 4.7],
 		],
-		w: 8.6,
-		cw: 14,
+		w: 8.2,
+		cw: 12.5,
 	},
 }
 
@@ -442,22 +442,14 @@ function pocketPlaces(direction: RingDirection): {
 		// The island's name is written on its upper shore, so the titles sit a little low.
 		const low = table.r * 0.11
 		// The nearest rank is the row that faces the title: the lower row of an island above it, and so on.
-		const facing = c.y < 0 ? 1 : c.y > 0 ? -1 : 0
-		const ranks = table.rows.map((xs, rank) => {
-			if (facing !== 0)
-				return xs.map((x) => ({
-					x: c.x + x,
-					y: c.y + low + facing * (1 - rank) * rowGap,
-					w: table.w,
-				}))
-			// Left and right islands: columns, the nearest column toward the title.
-			const side = c.x < 0 ? 1 : -1
-			return xs.map((x) => ({
-				x: c.x + side * (1 - rank) * (table.w + 1.4),
-				y: c.y + low + x * 1.42,
+		const facing = c.y > 0 ? -1 : 1
+		const ranks = table.rows.map((xs, rank) =>
+			xs.map((x) => ({
+				x: c.x + x,
+				y: c.y + low + facing * (1 - rank) * rowGap,
 				w: table.w,
-			}))
-		})
+			})),
+		)
 		return {
 			c,
 			ranks,
@@ -502,7 +494,7 @@ function pocket(model: RingModel): Scene {
 		hint: "Drag the sea sideways, or tap an island. Tap a poster to sail there.",
 		here: (
 			<>
-				<Isles isles={[homeIsle(12, 12.5), ...parts.map((p) => p.isle)]} />
+				<Isles isles={[homeIsle(12, 10.5), ...parts.map((p) => p.isle)]} />
 				<Center model={model} place={center} />
 				{parts.map(({ direction, ranks, name }) => (
 					<div key={direction.id} className="sea-d" {...dirProps(direction)}>
@@ -599,7 +591,7 @@ const RANKS: Record<
 		label: 57.5,
 	},
 	d: {
-		kx: 1.72,
+		kx: 1.42,
 		dists: () => [18.5, 31, 42],
 		widths: [11.5, 10, 8.6],
 		counts: [1, 2, 2],
@@ -639,10 +631,10 @@ function ranksOnWater(model: RingModel): Scene {
 								y: centers[2].y + Math.sign(tip.y) * 14,
 							}
 					: Math.abs(tip.y) < 0.01
-						? { x: centers[2].x + Math.sign(tip.x) * 4.5, y: -19.5 }
+						? { x: centers[2].x + Math.sign(tip.x) * 5.5, y: -18.5 }
 						: {
-								x: centers[2].x + Math.sign(tip.x) * 13,
-								y: centers[2].y + Math.sign(tip.y) * 6,
+								x: centers[2].x + Math.sign(tip.x) * 11.5,
+								y: centers[2].y + Math.sign(tip.y) * 7,
 							}
 			return { ranks, centers, name, upright, tip }
 		}
@@ -668,9 +660,13 @@ function ranksOnWater(model: RingModel): Scene {
 					: m.tip.x > 0
 						? "r"
 						: "l"
-				: m.tip.x > 0
-					? "l"
-					: "r"
+				: Math.abs(m.tip.y) < 0.01
+					? m.tip.x > 0
+						? "r"
+						: "l"
+					: m.tip.x > 0
+						? "l"
+						: "r"
 		return {
 			direction,
 			ranks: t.ranks.map((row, i) => zip(row, d.ranks[i])),
@@ -741,15 +737,15 @@ const ZOOM: Record<Mode, { at: Record<string, Pt>; r: number; cw: number }> = {
 	},
 	d: {
 		at: {
-			w: { x: -67, y: 0 },
-			e: { x: 67, y: 0 },
-			ne: { x: 33.5, y: -25.5 },
-			sw: { x: -33.5, y: 25.5 },
-			se: { x: 33.5, y: 25.5 },
-			nw: { x: -33.5, y: -25.5 },
+			w: { x: -50.5, y: 0 },
+			e: { x: 50.5, y: 0 },
+			ne: { x: 25.5, y: -27.5 },
+			sw: { x: -25.5, y: 27.5 },
+			se: { x: 25.5, y: 27.5 },
+			nw: { x: -25.5, y: -27.5 },
 		},
-		r: 20.5,
-		cw: 13,
+		r: 19,
+		cw: 12,
 	},
 }
 // Inside an island, as parts of its radius: the two nearest titles, then two rows that only show from near.
@@ -800,7 +796,7 @@ function archipelago(model: RingModel, control: "zoom" | "mini" = "zoom"): Scene
 	})
 	// sea6: the whole neighborhood small, per layout, with the part the stage shows outlined.
 	const minimap = (mode: Mode) => {
-		const [bx, by] = mode === "t" ? [56, 60] : [92, 50]
+		const [bx, by] = mode === "t" ? [56, 60] : [74, 50]
 		const spot = (p: Pt) => ({
 			left: `${r2(((p.x + bx) / (2 * bx)) * 100)}%`,
 			top: `${r2(((p.y + by) / (2 * by)) * 100)}%`,
@@ -837,10 +833,14 @@ function archipelago(model: RingModel, control: "zoom" | "mini" = "zoom"): Scene
 			</div>
 		)
 	}
-	const first =
-		model.directions.find((d) => d.back)?.id.replace(/[+-]$/, (sign) =>
-			sign === "+" ? "-" : "+",
-		) ?? model.directions.find((d) => d.titles.length)?.id
+	// The stage starts on the island further the way the visitor came, when it has titles, else on the first that has.
+	const onward = model.directions
+		.find((d) => d.back)
+		?.id.replace(/[+-]$/, (sign) => (sign === "+" ? "-" : "+"))
+	const first = (
+		model.directions.find((d) => d.id === onward && d.titles.length) ??
+		model.directions.find((d) => d.titles.length)
+	)?.id
 	return {
 		hint:
 			control === "mini"
@@ -849,7 +849,7 @@ function archipelago(model: RingModel, control: "zoom" | "mini" = "zoom"): Scene
 		start: control === "mini" ? first : undefined,
 		here: (
 			<>
-				<Isles isles={[homeIsle(10.5, 12), ...parts.map((p) => p.isle)]} />
+				<Isles isles={[homeIsle(10.5, 11), ...parts.map((p) => p.isle)]} />
 				<Center
 					model={model}
 					place={{
@@ -933,7 +933,7 @@ function archipelago(model: RingModel, control: "zoom" | "mini" = "zoom"): Scene
 
 const VOYAGE: Record<Mode, { kx: number; dists: number[]; widths: number[]; cw: number; label: number }> = {
 	t: { kx: 1, dists: [23.5, 38.5], widths: [12.5, 9.5], cw: 17, label: 49.5 },
-	d: { kx: 1.25, dists: [21, 34], widths: [11, 8.5], cw: 15, label: 43 },
+	d: { kx: 1.2, dists: [23, 37.5], widths: [12.5, 9.5], cw: 16.5, label: 47.5 },
 }
 
 function voyage(model: RingModel): Scene {
@@ -964,7 +964,7 @@ function voyage(model: RingModel): Scene {
 			isles.push({
 				key: `${direction.id}${i}`,
 				place,
-				r: radius([10, 8][i], [9.6, 8][i]),
+				r: radius([10, 8][i], [10, 8][i]),
 				color: colorOf(direction),
 				seed: direction.slot * 2 + i,
 				emphasis: i ? -0.4 : 0.4,
