@@ -65,7 +65,7 @@ export function attach(s: SeaSectionElement): () => void {
 	let plane = 0
 	const sizePlane = () => {
 		// sea5: the canvas lies on the tilted sea and turns with it, so it is a square larger than the stage.
-		plane = Math.round(Math.max(map.clientWidth, 600) * 1.5)
+		plane = Math.round(Math.min(Math.max(map.clientWidth, 420) * 1.6, 1100))
 		canvas.style.cssText = `left:${-plane / 2}px;top:${-plane / 2}px;width:${plane}px;height:${plane}px`
 	}
 	if (flat) bg.appendChild(canvas)
