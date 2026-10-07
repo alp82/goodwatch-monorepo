@@ -1,11 +1,12 @@
 // PROTOTYPE for "Prototype native-scroll carousels on title pages". Throwaway code: not for production.
 //
 // The switch of the prototype. It is off unless the server runs with PROTO_CAROUSELS=1, so a stray merge ships
-// nothing. With it on, `?proto=today|rows|list|explore|explore1..5` on a title page picks a variant and sets a cookie, so the
+// nothing. With it on, `?proto=today|rows|list|explore|explore1..5|walk1..5` on a title page picks a variant and sets a cookie, so the
 // choice survives navigation between titles. `?proto=off` clears it. A page rendered with a variant is `no-store`:
 // the page cache never keeps it. The cookie isn't part of the page cache key, so run the prototype with
 // PAGE_CACHE=off (a stored plain page would otherwise answer a visitor who holds the cookie).
 import { MOODS } from "~/server/explorer/islands.server"
+import { walkSectionHtml } from "~/server/prototype-walk.server"
 import { MISSING_SCORE } from "~/server/title-snapshot/format.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -26,6 +27,12 @@ import {
 	type CarouselPrototypeData,
 	isCarouselVariant,
 } from "~/ui/prototype-carousels/variant"
+import {
+	type WalkModel,
+	type WalkVariant,
+	buildWalkModel,
+	isWalkVariant,
+} from "~/ui/prototype-carousels/walk-model"
 import { MEDIA_COLLECTION, scroll } from "~/utils/qdrant"
 import type { RelatedCard, RelatedPanel } from "~/utils/related-panel"
 import { titleKey } from "~/utils/title-key"
@@ -168,6 +175,80 @@ export async function exploreModel(input: {
 	})
 }
 
+const first = (value: string | string[] | undefined) =>
+	Array.isArray(value) ? value[0] : value
+
+/**
+ * What a walk variant shows around a title. The page passes the title it already has; a step in the browser
+ * passes only the id, and the title's name, poster, and scores are read from Qdrant with one more point.
+ */
+export async function walkModel(input: {
+	variant: WalkVariant
+	type: PxType
+	tmdbId: number
+	panel: RelatedPanel
+	center?: {
+		title: string
+		year: string
+		poster: string
+		score: number
+		scores: Record<string, number>
+	}
+}): Promise<WalkModel | undefined> {
+	const keys = [
+		...input.panel.movies.map((card) => titleKey("movie", card.tmdb_id)),
+		...input.panel.shows.map((card) => titleKey("show", card.tmdb_id)),
+	]
+	let center = input.center
+	const [fingerprints] = await Promise.all([
+		fingerprintsOf(keys),
+		center
+			? undefined
+			: scroll<QdrantMediaPayload>({
+					collectionName: MEDIA_COLLECTION,
+					filter: { must: [{ has_id: [titleKey(input.type, input.tmdbId)] }] },
+					limit: 1,
+					withPayload: {
+						include: [
+							"title",
+							"poster_path",
+							"release_year",
+							"goodwatch_overall_score_normalized_percent",
+							"fingerprint_scores_v1",
+						],
+					},
+					withVector: false,
+				})
+					.then(([point]) => {
+						const payload = point?.payload
+						if (!payload?.fingerprint_scores_v1) return
+						center = {
+							title: first(payload.title) ?? "",
+							year: String(payload.release_year ?? ""),
+							poster: first(payload.poster_path) ?? "",
+							score: Math.round(
+								payload.goodwatch_overall_score_normalized_percent ?? 0,
+							),
+							scores: payload.fingerprint_scores_v1,
+						}
+					})
+					.catch((error) =>
+						console.error("Carousel prototype: center lookup failed", error),
+					),
+	])
+	if (!center) return undefined
+	const { scores, ...card } = center
+	return buildWalkModel({
+		variant: input.variant,
+		center: { type: input.type, id: input.tmdbId, ...card },
+		scores: (key) => scores[key],
+		movies: input.panel.movies,
+		shows: input.panel.shows,
+		fingerprint: (type, id) => fingerprints.get(titleKey(type, id)),
+		year: new Date().getFullYear(),
+	})
+}
+
 const cookieOf = (request: Request) =>
 	new RegExp(`(?:^|;\\s*)${CAROUSEL_PROTOTYPE_COOKIE}=([a-z0-9]+)`).exec(
 		request.headers.get("Cookie") ?? "",
@@ -220,6 +301,39 @@ export async function carouselPrototype(
 				scores: (key) => scores[key],
 				highlightKeys: media.fingerprint?.highlightKeys ?? [],
 			})
+	}
+	if (isWalkVariant(variant)) {
+		const panel = (
+			relatedState.queries[0] as { state?: { data?: RelatedPanel } } | undefined
+		)?.state?.data
+		const scores = media.fingerprint?.scores as
+			| Record<string, number>
+			| undefined
+		const tmdbId = media.details.tmdb_id
+		const model =
+			panel && scores
+				? await walkModel({
+						variant,
+						type: media.mediaType,
+						tmdbId,
+						panel,
+						center: {
+							title: media.details.title,
+							year: String(media.details.release_year ?? ""),
+							poster: media.details.poster_path,
+							score: 0,
+							scores,
+						},
+					})
+				: undefined
+		data.walk = {
+			html: walkSectionHtml({
+				variant,
+				title: media.details.title,
+				rootKey: `${media.mediaType}-${tmdbId}`,
+				model,
+			}),
+		}
 	}
 	if (variant === "list") {
 		const panel = (
