@@ -2,7 +2,7 @@
 
 ## What this is
 
-Use k6 to compare server response times and capacity before and after a change. Use Lighthouse to compare mobile page performance. The scripts use Bash, Docker, and Node.js without local npm dependencies. The load test sends only GET requests, with one exception: the page-view scenario replays a read that the home page sends with POST (see [Page views](#page-views)).
+Use k6 to compare server response times and capacity before and after a change. Use Lighthouse to compare mobile page performance. Use the tap test to check that the controls of a title page answer a tap. The scripts use Bash, Docker, and Node.js without local npm dependencies. The load test sends only GET requests, with one exception: the page-view scenario replays a read that the home page sends with POST (see [Page views](#page-views)).
 
 Every webapp deploy ends with `./bench.sh smoke`. It checks the new container's startup log and a fixed list of pages with edge cases. See [Smoke check after a deploy](#smoke-check-after-a-deploy).
 
@@ -182,6 +182,83 @@ Each surface's header line shows the observed FCP and Lighthouse's CPU benchmark
 
 The limits come from a measured run plus a margin: about 5% on bytes, one or two requests, and the spread between runs on the time lines. When a change improves a line for good, lower its limit in the same commit. When a change has to raise a line, raise the limit in that commit and say why. The run writes `budget.json` and `budget.md` into its result directory. The comparison logic has tests: `node --test scripts/budget.test.mjs`.
 
+### Tap test
+
+```sh
+./bench.sh tap
+./bench.sh tap --runs 7 --label after-carousel
+./bench.sh tap --controls cast_next,related_tab --modes early --runs 3
+./bench.sh tap --base-url http://127.0.0.1:3304 --label branch
+```
+
+`tap` answers one question for a title page: does a tap right after the page loads, or right after a fast scroll, always do something? It taps each control that needs script on the movie page and the show page of [`urls/budget.json`](urls/budget.json), and reports per control whether the tap had its effect and how long the effect took. A tap without its effect inside the limit is a lost tap.
+
+Every measurement is its own page load in a new browser: empty cache, no cookies, a signed-out visitor. The browser is the Chromium of the Lighthouse image with a phone viewport (412 by 823), touch input, and the CPU slowed four times, which is Lighthouse's mobile setting. The network isn't throttled unless you ask for it.
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `--base-url URL` | `BENCH_TARGET_URL` | The origin to test, such as a branch instance. For `127.0.0.1` or `localhost`, the container uses the Docker host's network. |
+| `--runs N` | `5` | Measurements per page, control, and mode. |
+| `--controls ID,ID` | All | Only these controls. |
+| `--modes early,scroll` | Both | Only these modes. |
+| `--movie PATH`, `--show PATH` | From `urls/budget.json` | Other titles. A path that starts with `/movie/` gets no episode cell. |
+| `--where generator\|local` | `generator` | The Docker host. Times are only comparable between runs on the same machine. |
+| `--path public\|private` | `public` | The network path, as for `lighthouse`. |
+| `--resolve ADDRESS` | None | Resolve the base URL's host name to this address, for one instance behind its own proxy. With `BENCH_INSECURE_TLS=1`, the browser accepts a certificate for another name. |
+| `--timeout MS` | `5000` | The limit after which a tap is lost. |
+| `--settle MS` | `3000` | Scroll mode: the wait between the load event and the first drag. |
+| `--cpu N` | `4` | The CPU slowdown. |
+| `--network none\|slow4g` | `none` | `slow4g` adds 150 ms per round trip and limits the download to 1.6 Mbit/s. |
+| `--label <text>` | `run` | Name the run. |
+| `--strict` | Off | Exit with 1 when a tap was lost. |
+
+**The two modes.**
+
+- `early`: the tap goes out as soon as the browser reports the first contentful paint and the control is in the document. A control below the first screen is brought into view with one jump of the scroll position, not with a gesture, and the tap waits until the control is where a tap can reach it. "Tap at" in the report is when the tap arrived, counted from the start of the navigation.
+- `scroll`: the page loads and rests for the settle time. Then touch drags scroll to the control, each at 8,000 CSS pixels per second (`TAP_SCROLL_SPEED`) with a rest of a tenth of a second before the finger lifts, so that the browser adds no fling and every run scrolls the same distance. A control in the first screen is scrolled away and back first. The tap follows the last drag as soon as the scroll position holds for two frames. Sections below the fold reserve estimated heights, so the control can land outside the screen: further drags then correct that, and the report counts them.
+
+**The controls and their effects.** An effect is a change in the document that the script watches with a `MutationObserver`. The time to effect runs from the finger going down (the browser's time stamp of the input) to that change.
+
+| Control | What is tapped | The effect |
+| --- | --- | --- |
+| `streaming_tab` | The first offer type tab in `#streaming` that isn't selected, such as "Rent" | That tab has `aria-selected="true"` |
+| `action_want` | "Want to See" | The button has `aria-pressed="true"`. A signed-out visitor's Wishlist lives in the browser, so nothing is saved on the server. |
+| `action_seen` | "Mark as Seen" | The sign-in prompt is in the document (a `dialog` with "Sign in" in its text). Its code loads on this first press, so the time includes one script request. |
+| `fingerprint_switch` | The first "See all ... traits" button in `#fingerprint` | One of the six detail views is displayed |
+| `episode_cell` | The first displayed episode cell in `#episode-ratings` (show page only) | The episode's tip is in the document |
+| `cast_next` | The next arrow of the cast row in `#actors_and_crew` | The row's active slide is another one than before the tap |
+| `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. |
+| `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap |
+
+The selectors use section ids, roles, and accessible names. The carousel arrows have no name: they are the last `button` that is a direct child of a `.swiper` element. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
+
+**What a measurement can end as.**
+
+- `effect`: the tap reached the control and the effect came inside the limit.
+- `lost`: the tap reached the control and no effect came inside the limit. The script then waits up to 10 more seconds for script to take the control over, and 3 seconds after that: an effect in that time is listed under "Late effects". The tap still counts as lost.
+  - "Lost: click elsewhere" counts the lost taps whose click went to another element. The browser picks the click's element when it handles the tap. When the main thread is busy at that moment and the layout moves, for example because a carousel starts, the click goes to whatever is under the finger afterwards, such as a link to another title.
+- `absent`: the control wasn't in the document, for example a related row that came without cards.
+- `missed`: the tap landed on another element, for example because the layout moved. This is a fault of the check, or a control that something covers. The report names what the tap hit.
+- `invalid`: the effect was there before the tap.
+- `error`: the page didn't load, or the tap left the page.
+
+The "Effect" and "Lost" columns count only taps that reached the control. The rest is in "Other".
+
+**The diagnosis columns.** "Script took over at" is when React had attached the control's node, or Swiper had started the row, counted from the start of the navigation. An early tap before that moment is lost unless the browser still holds the click when the script starts. `tap.jsonl` also has, per measurement, `input_delay_ms` and `click_delay_ms` (how long the main thread was busy before the page's script saw the tap and the click), the requests that started after the tap, and the console's error messages.
+
+**Requests.** The page's own script runs, so every measurement counts as a page view in analytics, and a run with the defaults is 150 page views. Requests that write are blocked in the browser: `/api/update-*`, `/api/poster-impressions`, and `/api/og-image-warm` (`TAP_BLOCKED_URL_PATTERNS`, patterns separated by spaces). The report lists every request other than GET that a page sent.
+
+**Results.** `tap.jsonl` has one line per measurement, written as the run goes, and `tap.log` the progress. `summary.json` and `summary.md` have one row per page, mode, and control: taps with an effect, lost taps, and the median, lowest, and highest time to effect. The console section counts React errors by number, such as 418 or 421. `node scripts/tap-report.mjs <run>` writes the summary again. Its logic has tests: `node --test scripts/tap-report.test.mjs`.
+
+The run takes the generator's lock, like a Lighthouse run. With the defaults it takes about 30 minutes.
+
+To run the script without Docker, point it at a directory that can resolve `puppeteer-core` and at a Chromium binary:
+
+```sh
+TAP_PUPPETEER_FROM=/path/with/node_modules/ CHROME_PATH=/usr/bin/chromium \
+  TAP_BASE_URL=https://example.org TAP_PAGES=movie=/movie/603-the-matrix TAP_RUNS=1 node tap/tap.mjs > tap.jsonl
+```
+
 ### Long-tail URL generation
 
 ```sh
@@ -327,6 +404,8 @@ results/<run-id>/
   webapp/samples.jsonl
   lighthouse/<label>/run-*.json
   lighthouse.log
+  tap.jsonl                 # Tap test: one line per measurement
+  tap.log
   summary.json
   summary.md
 ```
@@ -389,7 +468,7 @@ k6 exit code 99 marks an abort or threshold failure. The summary lists failed th
 
 Smoke mode allows one plateau, at most 20 req/s and 120 seconds. Larger tests require ramp mode. Every ramp requires `--yes-ramp-production`, prints its full plan, and waits ten seconds. Set `BENCH_NO_COUNTDOWN=1` only when an intentional automated run needs to skip the wait. Rates above 500 req/s also require `BENCH_ALLOW_ABOVE_500=1`.
 
-The launcher refuses a generator address equal to the resolve address. Use the private serving address in this setting even for public tests so the check remains effective. A directory lock prevents load and Lighthouse runs from overlapping on the generator. Local Lighthouse runs do not acquire that lock. Ctrl-C stops the named container and samplers and releases the lock. A killed client or lost connection can leave a stale lock; inspect the named container before clearing it.
+The launcher refuses a generator address equal to the resolve address. Use the private serving address in this setting even for public tests so the check remains effective. A directory lock prevents load, Lighthouse, and tap test runs from overlapping on the generator. Local Lighthouse runs do not acquire that lock. Ctrl-C stops the named container and samplers and releases the lock. A killed client or lost connection can leave a stale lock; inspect the named container before clearing it.
 
 ## Known limitations
 
@@ -413,6 +492,8 @@ Normal cleanup removes each remote run directory and its lock. Docker images and
 `results/checkpoint-2026-10-04/` holds the summaries of the same runs after the page load optimizations, on two instances, and the output of `./bench.sh compare` for each pair in `compare/`. [`docs/benchmarks/viral-spike-checkpoint.md`](../docs/benchmarks/viral-spike-checkpoint.md) explains them.
 
 `results/page-views-2026-10-05/` holds the summaries of the page-view runs, the ramp of new TLS connections, and the repeated OG image ramps from October 5, 2026. [`docs/benchmarks/viral-spike-page-views.md`](../docs/benchmarks/viral-spike-page-views.md) explains them.
+
+`results/tap-baseline-2026-10-06/` holds the tap test's production baseline from October 6, 2026 (21:08 to 21:39 UTC, on the generator, five runs per control and mode): `summary.md`, `summary.json`, and the measurements in `tap.jsonl`. Compare a later `./bench.sh tap` run on the generator against it.
 
 ## Sample smoke run
 

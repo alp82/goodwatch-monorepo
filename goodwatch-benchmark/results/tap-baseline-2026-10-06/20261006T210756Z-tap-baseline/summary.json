@@ -1,0 +1,2331 @@
+{
+  "schema": 1,
+  "kind": "tap",
+  "run_id": "20261006T210756Z-tap-baseline",
+  "label": "baseline",
+  "started_at": "2026-10-06T21:08:07.804Z",
+  "browser": "Chrome/154.0.8037.92",
+  "viewport": {
+    "width": 412,
+    "height": 823,
+    "deviceScaleFactor": 2.625,
+    "isMobile": true,
+    "hasTouch": true
+  },
+  "config": {
+    "pages": [
+      {
+        "label": "movie",
+        "path": "/movie/603-the-matrix"
+      },
+      {
+        "label": "show",
+        "path": "/show/1396-breaking-bad"
+      }
+    ],
+    "controls": [
+      "streaming_tab",
+      "action_want",
+      "action_seen",
+      "fingerprint_switch",
+      "episode_cell",
+      "cast_next",
+      "related_tab",
+      "related_next"
+    ],
+    "modes": [
+      "early",
+      "scroll"
+    ],
+    "runs": 5,
+    "cpu": 4,
+    "network": "none",
+    "timeout_ms": 5000,
+    "settle_ms": 3000,
+    "ready_wait_ms": 10000,
+    "scroll_speed": 8000,
+    "insecure_tls": false,
+    "blocked": [
+      "*/api/og-image-warm*",
+      "*/api/update-*",
+      "*/api/poster-impressions*"
+    ],
+    "user_agent": "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+    "resolve": false
+  },
+  "control_names": {
+    "streaming_tab": "Streaming tab (the first offer type that isn't selected)",
+    "action_want": "Title action: Want to See",
+    "action_seen": "Title action: Mark as Seen",
+    "fingerprint_switch": "Fingerprint switcher (the first area's \"See all\" button)",
+    "episode_cell": "Episode cell (the first one of the grid)",
+    "cast_next": "Cast row: next arrow",
+    "related_tab": "Related tab (the first one that isn't selected)",
+    "related_next": "Related row: next arrow (the first row)"
+  },
+  "meta": {
+    "run_id": "20261006T210756Z-tap-baseline",
+    "target_url": "https://goodwatch.app",
+    "path": "public",
+    "where": "generator",
+    "git_commit": "e2d3fd68e23cee0174105b1ee731955db8ff5acc",
+    "git_dirty": false
+  },
+  "planned": 150,
+  "measured": 150,
+  "totals": {
+    "taps": 148,
+    "effect": 68,
+    "lost": 80,
+    "other": 2
+  },
+  "rows": [
+    {
+      "page": "movie",
+      "mode": "early",
+      "control": "streaming_tab",
+      "name": "Rent",
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 1066,
+        "min": 968,
+        "max": 1139,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 644,
+        "min": 604,
+        "max": 768,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 2584,
+        "min": 2275,
+        "max": 3000,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 610,
+        "min": 480,
+        "max": 743,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 630,
+        "min": 494,
+        "max": 762,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "scroll",
+      "control": "streaming_tab",
+      "name": "Rent",
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 709,
+        "min": 262,
+        "max": 907,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 724,
+        "min": 276,
+        "max": 927,
+        "count": 5
+      },
+      "effect_ms_all": [
+        821,
+        262,
+        709,
+        368,
+        907
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 11715,
+        "min": 10651,
+        "max": 11934,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 656,
+        "min": 556,
+        "max": 740,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 11709,
+        "min": 10645,
+        "max": 11928,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 413,
+        "min": 86,
+        "max": 611,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 500,
+        "min": 129,
+        "max": 704,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 4876,
+        "min": 3749,
+        "max": 5383,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 1039,
+        "min": 931,
+        "max": 2555,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "early",
+      "control": "action_want",
+      "name": "Want to See",
+      "runs": 5,
+      "taps": 5,
+      "effect": 1,
+      "lost": 4,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 3832,
+        "min": 3832,
+        "max": 3832,
+        "count": 1
+      },
+      "frame_ms": {
+        "median": 3852,
+        "min": 3852,
+        "max": 3852,
+        "count": 1
+      },
+      "effect_ms_all": [
+        3832
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 1164,
+        "min": 976,
+        "max": 1619,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 616,
+        "min": 540,
+        "max": 788,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 2616,
+        "min": 2369,
+        "max": 4808,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 532,
+        "min": 281,
+        "max": 790,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 550,
+        "min": 296,
+        "max": 3604,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "scroll",
+      "control": "action_want",
+      "name": "Want to See",
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 420,
+        "min": 315,
+        "max": 678,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 439,
+        "min": 335,
+        "max": 700,
+        "count": 5
+      },
+      "effect_ms_all": [
+        318,
+        575,
+        315,
+        420,
+        678
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 6265,
+        "min": 5535,
+        "max": 8164,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 652,
+        "min": 544,
+        "max": 952,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 6260,
+        "min": 5528,
+        "max": 8160,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 150,
+        "min": 82,
+        "max": 415,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 206,
+        "min": 119,
+        "max": 447,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 378,
+        "min": 340,
+        "max": 1095,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 506,
+        "min": 87,
+        "max": 737,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "early",
+      "control": "action_seen",
+      "name": "Mark as Seen",
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [
+        5105
+      ],
+      "tap_at_ms": {
+        "median": 1203,
+        "min": 1096,
+        "max": 1494,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 716,
+        "min": 584,
+        "max": 924,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 2611,
+        "min": 2397,
+        "max": 5181,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 645,
+        "min": 255,
+        "max": 849,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 667,
+        "min": 260,
+        "max": 3811,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "scroll",
+      "control": "action_seen",
+      "name": "Mark as Seen",
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [
+        5505,
+        5717,
+        5300,
+        5863,
+        5587
+      ],
+      "tap_at_ms": {
+        "median": 6129,
+        "min": 5714,
+        "max": 7326,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 640,
+        "min": 604,
+        "max": 652,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 6124,
+        "min": 5708,
+        "max": 7320,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 207,
+        "min": 123,
+        "max": 327,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 243,
+        "min": 153,
+        "max": 367,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 427,
+        "min": 387,
+        "max": 1045,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 411,
+        "min": 144,
+        "max": 647,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "early",
+      "control": "fingerprint_switch",
+      "name": "See all Energy traits",
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 1210,
+        "min": 1038,
+        "max": 1438,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 684,
+        "min": 564,
+        "max": 724,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 2693,
+        "min": 2543,
+        "max": 2759,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 467,
+        "min": 230,
+        "max": 553,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 481,
+        "min": 247,
+        "max": 569,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "scroll",
+      "control": "fingerprint_switch",
+      "name": "See all Energy traits",
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 327,
+        "min": 305,
+        "max": 1776,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 350,
+        "min": 322,
+        "max": 1801,
+        "count": 5
+      },
+      "effect_ms_all": [
+        1776,
+        334,
+        327,
+        305,
+        319
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 6371,
+        "min": 6287,
+        "max": 7211,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 600,
+        "min": 536,
+        "max": 704,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 6363,
+        "min": 6281,
+        "max": 7206,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 138,
+        "min": 121,
+        "max": 1502,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 174,
+        "min": 166,
+        "max": 1559,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 984,
+        "min": 914,
+        "max": 1505,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 321,
+        "min": 72,
+        "max": 601,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "early",
+      "control": "cast_next",
+      "name": null,
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 2236,
+        "min": 2014,
+        "max": 2279,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 624,
+        "min": 524,
+        "max": 748,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 6032,
+        "min": 5241,
+        "max": 7070,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 278,
+        "min": 235,
+        "max": 332,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 311,
+        "min": 257,
+        "max": 364,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "scroll",
+      "control": "cast_next",
+      "name": null,
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 256,
+        "min": 209,
+        "max": 470,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 280,
+        "min": 229,
+        "max": 491,
+        "count": 5
+      },
+      "effect_ms_all": [
+        212,
+        312,
+        470,
+        209,
+        256
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 13997,
+        "min": 13268,
+        "max": 15223,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 656,
+        "min": 580,
+        "max": 840,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 13992,
+        "min": 13260,
+        "max": 15218,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 39,
+        "min": 27,
+        "max": 318,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 121,
+        "min": 97,
+        "max": 380,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 8312,
+        "min": 7833,
+        "max": 9886,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 80,
+        "min": 49,
+        "max": 210,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "early",
+      "control": "related_tab",
+      "name": "🚀Futuristic",
+      "runs": 5,
+      "taps": 5,
+      "effect": 1,
+      "lost": 4,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 3281,
+        "min": 3281,
+        "max": 3281,
+        "count": 1
+      },
+      "frame_ms": {
+        "median": 3309,
+        "min": 3309,
+        "max": 3309,
+        "count": 1
+      },
+      "effect_ms_all": [
+        3281
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 2491,
+        "min": 1951,
+        "max": 3079,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 612,
+        "min": 488,
+        "max": 648,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 4073,
+        "min": 3559,
+        "max": 5569,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 323,
+        "min": 286,
+        "max": 417,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 390,
+        "min": 307,
+        "max": 3024,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "scroll",
+      "control": "related_tab",
+      "name": "🚀Futuristic",
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 663,
+        "min": 568,
+        "max": 934,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 690,
+        "min": 597,
+        "max": 975,
+        "count": 5
+      },
+      "effect_ms_all": [
+        568,
+        751,
+        663,
+        934,
+        658
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 14368,
+        "min": 13942,
+        "max": 14760,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 612,
+        "min": 520,
+        "max": 652,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 14362,
+        "min": 13934,
+        "max": 14752,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 22,
+        "min": 12,
+        "max": 85,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 56,
+        "min": 54,
+        "max": 150,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 8846,
+        "min": 8213,
+        "max": 9196,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 105,
+        "min": 48,
+        "max": 179,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "movie",
+      "mode": "early",
+      "control": "related_next",
+      "name": null,
+      "runs": 5,
+      "taps": 3,
+      "effect": 0,
+      "lost": 3,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {
+        "missed": 2
+      },
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 2439,
+        "min": 2422,
+        "max": 2756,
+        "count": 3
+      },
+      "fcp_ms": {
+        "median": 636,
+        "min": 616,
+        "max": 972,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 6295,
+        "min": 5322,
+        "max": 7176,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 311,
+        "min": 286,
+        "max": 368,
+        "count": 3
+      },
+      "click_delay_ms": {
+        "median": 331,
+        "min": 312,
+        "max": 388,
+        "count": 3
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": [
+        "missed: The page saw no tap"
+      ]
+    },
+    {
+      "page": "movie",
+      "mode": "scroll",
+      "control": "related_next",
+      "name": null,
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 204,
+        "min": 154,
+        "max": 306,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 222,
+        "min": 172,
+        "max": 332,
+        "count": 5
+      },
+      "effect_ms_all": [
+        204,
+        306,
+        216,
+        189,
+        154
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 13908,
+        "min": 13126,
+        "max": 15208,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 616,
+        "min": 572,
+        "max": 928,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 13902,
+        "min": 13122,
+        "max": 15204,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 22,
+        "min": 14,
+        "max": 40,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 94,
+        "min": 74,
+        "max": 113,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 8402,
+        "min": 7886,
+        "max": 9205,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 171,
+        "min": 49,
+        "max": 379,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "early",
+      "control": "streaming_tab",
+      "name": "Rent",
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 1010,
+        "min": 955,
+        "max": 1097,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 628,
+        "min": 576,
+        "max": 648,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 2524,
+        "min": 2326,
+        "max": 2659,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 573,
+        "min": 457,
+        "max": 663,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 596,
+        "min": 473,
+        "max": 673,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "scroll",
+      "control": "streaming_tab",
+      "name": "Rent",
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 596,
+        "min": 441,
+        "max": 724,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 616,
+        "min": 471,
+        "max": 765,
+        "count": 5
+      },
+      "effect_ms_all": [
+        596,
+        559,
+        649,
+        441,
+        724
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 11955,
+        "min": 11616,
+        "max": 14738,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 620,
+        "min": 528,
+        "max": 800,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 11948,
+        "min": 11611,
+        "max": 14729,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 444,
+        "min": 228,
+        "max": 484,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 506,
+        "min": 288,
+        "max": 561,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 5800,
+        "min": 5099,
+        "max": 7236,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 830,
+        "min": 438,
+        "max": 1653,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "early",
+      "control": "action_want",
+      "name": "Want to See",
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 1122,
+        "min": 1082,
+        "max": 1369,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 584,
+        "min": 580,
+        "max": 864,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 2599,
+        "min": 2342,
+        "max": 2889,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 722,
+        "min": 176,
+        "max": 986,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 737,
+        "min": 193,
+        "max": 1001,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "scroll",
+      "control": "action_want",
+      "name": "Want to See",
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 583,
+        "min": 345,
+        "max": 629,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 603,
+        "min": 365,
+        "max": 650,
+        "count": 5
+      },
+      "effect_ms_all": [
+        387,
+        583,
+        629,
+        589,
+        345
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 6325,
+        "min": 5720,
+        "max": 7198,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 648,
+        "min": 636,
+        "max": 676,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 6320,
+        "min": 5715,
+        "max": 7193,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 358,
+        "min": 110,
+        "max": 404,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 395,
+        "min": 164,
+        "max": 440,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 456,
+        "min": 398,
+        "max": 1087,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 322,
+        "min": 66,
+        "max": 753,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "early",
+      "control": "action_seen",
+      "name": "Mark as Seen",
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 1224,
+        "min": 1096,
+        "max": 1567,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 744,
+        "min": 624,
+        "max": 952,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 2756,
+        "min": 2605,
+        "max": 2885,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 587,
+        "min": 257,
+        "max": 619,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 598,
+        "min": 275,
+        "max": 643,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "scroll",
+      "control": "action_seen",
+      "name": "Mark as Seen",
+      "runs": 5,
+      "taps": 5,
+      "effect": 1,
+      "lost": 4,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 4995,
+        "min": 4995,
+        "max": 4995,
+        "count": 1
+      },
+      "frame_ms": {
+        "median": 5041,
+        "min": 5041,
+        "max": 5041,
+        "count": 1
+      },
+      "effect_ms_all": [
+        4995
+      ],
+      "late_effect_ms_all": [
+        5642,
+        6071,
+        5510,
+        5778
+      ],
+      "tap_at_ms": {
+        "median": 6241,
+        "min": 5881,
+        "max": 7211,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 616,
+        "min": 520,
+        "max": 656,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 6235,
+        "min": 5874,
+        "max": 7203,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 154,
+        "min": 130,
+        "max": 377,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 186,
+        "min": 166,
+        "max": 411,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 577,
+        "min": 409,
+        "max": 1013,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 306,
+        "min": 74,
+        "max": 803,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "early",
+      "control": "fingerprint_switch",
+      "name": "See all Energy traits",
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 1178,
+        "min": 1100,
+        "max": 1215,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 656,
+        "min": 596,
+        "max": 712,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 2716,
+        "min": 2503,
+        "max": 2843,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 549,
+        "min": 524,
+        "max": 600,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 591,
+        "min": 563,
+        "max": 767,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "scroll",
+      "control": "fingerprint_switch",
+      "name": "See all Energy traits",
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 1598,
+        "min": 267,
+        "max": 1963,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 1631,
+        "min": 288,
+        "max": 1985,
+        "count": 5
+      },
+      "effect_ms_all": [
+        267,
+        1598,
+        275,
+        1963,
+        1901
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 7490,
+        "min": 6868,
+        "max": 8855,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 632,
+        "min": 524,
+        "max": 672,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 7485,
+        "min": 6864,
+        "max": 8849,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 1282,
+        "min": 52,
+        "max": 1641,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 1372,
+        "min": 91,
+        "max": 1701,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 1792,
+        "min": 1161,
+        "max": 2230,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 439,
+        "min": 238,
+        "max": 1858,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "early",
+      "control": "episode_cell",
+      "name": "Season 1, episode 1: Pilot. Rated 9.1, 85,939 IMDb votes.",
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 1973,
+        "min": 1804,
+        "max": 2038,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 624,
+        "min": 600,
+        "max": 672,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 3460,
+        "min": 3303,
+        "max": 3663,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 293,
+        "min": 286,
+        "max": 335,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 311,
+        "min": 303,
+        "max": 354,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "scroll",
+      "control": "episode_cell",
+      "name": "Season 1, episode 1: Pilot. Rated 9.1, 85,939 IMDb votes.",
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 165,
+        "min": 161,
+        "max": 253,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 323,
+        "min": 298,
+        "max": 433,
+        "count": 5
+      },
+      "effect_ms_all": [
+        253,
+        209,
+        165,
+        164,
+        161
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 13506,
+        "min": 12964,
+        "max": 13992,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 756,
+        "min": 608,
+        "max": 840,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 13500,
+        "min": 12957,
+        "max": 13983,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 32,
+        "min": 24,
+        "max": 73,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 183,
+        "min": 176,
+        "max": 276,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 7553,
+        "min": 7054,
+        "max": 8088,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 150,
+        "min": 59,
+        "max": 946,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "early",
+      "control": "cast_next",
+      "name": null,
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 2407,
+        "min": 1959,
+        "max": 3351,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 648,
+        "min": 560,
+        "max": 688,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 6256,
+        "min": 5906,
+        "max": 7570,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 317,
+        "min": 291,
+        "max": 331,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 341,
+        "min": 316,
+        "max": 353,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "scroll",
+      "control": "cast_next",
+      "name": null,
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 197,
+        "min": 177,
+        "max": 229,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 216,
+        "min": 192,
+        "max": 248,
+        "count": 5
+      },
+      "effect_ms_all": [
+        229,
+        177,
+        220,
+        178,
+        197
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 14723,
+        "min": 14533,
+        "max": 15312,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 596,
+        "min": 516,
+        "max": 720,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 14718,
+        "min": 14527,
+        "max": 15307,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 37,
+        "min": 29,
+        "max": 78,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 96,
+        "min": 84,
+        "max": 146,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 9299,
+        "min": 8691,
+        "max": 9715,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 496,
+        "min": 54,
+        "max": 777,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "early",
+      "control": "related_tab",
+      "name": "🧩Character Depth",
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 2609,
+        "min": 2570,
+        "max": 2884,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 704,
+        "min": 604,
+        "max": 744,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 4079,
+        "min": 4050,
+        "max": 4360,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 309,
+        "min": 302,
+        "max": 325,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 327,
+        "min": 323,
+        "max": 342,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "scroll",
+      "control": "related_tab",
+      "name": "🧩Character Depth",
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 646,
+        "min": 622,
+        "max": 676,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 678,
+        "min": 646,
+        "max": 707,
+        "count": 5
+      },
+      "effect_ms_all": [
+        658,
+        676,
+        646,
+        622,
+        642
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 14939,
+        "min": 14599,
+        "max": 16341,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 640,
+        "min": 616,
+        "max": 720,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 14934,
+        "min": 14592,
+        "max": 16337,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 31,
+        "min": 12,
+        "max": 69,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 81,
+        "min": 54,
+        "max": 105,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 9481,
+        "min": 9440,
+        "max": 10666,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 118,
+        "min": 64,
+        "max": 144,
+        "count": 5
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "early",
+      "control": "related_next",
+      "name": null,
+      "runs": 5,
+      "taps": 5,
+      "effect": 0,
+      "lost": 5,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "frame_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "effect_ms_all": [],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 2526,
+        "min": 2412,
+        "max": 3020,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 652,
+        "min": 628,
+        "max": 672,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 6354,
+        "min": 5889,
+        "max": 8263,
+        "count": 5
+      },
+      "ready_at_tap": 0,
+      "input_delay_ms": {
+        "median": 309,
+        "min": 307,
+        "max": 412,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 337,
+        "min": 326,
+        "max": 441,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "scroll_end_to_tap_ms": {
+        "median": null,
+        "min": null,
+        "max": null,
+        "count": 0
+      },
+      "details": []
+    },
+    {
+      "page": "show",
+      "mode": "scroll",
+      "control": "related_next",
+      "name": null,
+      "runs": 5,
+      "taps": 5,
+      "effect": 5,
+      "lost": 0,
+      "lost_click_elsewhere": 0,
+      "lost_without_click": 0,
+      "other": {},
+      "effect_ms": {
+        "median": 188,
+        "min": 152,
+        "max": 295,
+        "count": 5
+      },
+      "frame_ms": {
+        "median": 209,
+        "min": 168,
+        "max": 328,
+        "count": 5
+      },
+      "effect_ms_all": [
+        188,
+        155,
+        252,
+        295,
+        152
+      ],
+      "late_effect_ms_all": [],
+      "tap_at_ms": {
+        "median": 14973,
+        "min": 14501,
+        "max": 16558,
+        "count": 5
+      },
+      "fcp_ms": {
+        "median": 640,
+        "min": 560,
+        "max": 724,
+        "count": 5
+      },
+      "ready_ms": {
+        "median": 14967,
+        "min": 14496,
+        "max": 16553,
+        "count": 5
+      },
+      "ready_at_tap": 5,
+      "input_delay_ms": {
+        "median": 34,
+        "min": 12,
+        "max": 84,
+        "count": 5
+      },
+      "click_delay_ms": {
+        "median": 97,
+        "min": 69,
+        "max": 156,
+        "count": 5
+      },
+      "scroll_ms": {
+        "median": 9532,
+        "min": 8689,
+        "max": 10669,
+        "count": 5
+      },
+      "scroll_end_to_tap_ms": {
+        "median": 102,
+        "min": 40,
+        "max": 454,
+        "count": 5
+      },
+      "details": []
+    }
+  ],
+  "react_errors": [],
+  "console_errors": [
+    {
+      "message": "Failed to load resource: the server responded with a status of 429 () [/api/e]",
+      "measurements": 4
+    }
+  ],
+  "requests_with_body": [
+    "POST a.goodwatch.app",
+    "POST region1.google-analytics.com",
+    "POST /api/tonight",
+    "POST /api/e"
+  ],
+  "blocked_requests": [
+    "POST /api/poster-impressions"
+  ]
+}

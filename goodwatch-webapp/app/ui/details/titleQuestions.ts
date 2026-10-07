@@ -5,15 +5,8 @@
 
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { list } from "~/ui/fingerprint/fingerprintText"
+import { languageName, regionName } from "~/utils/display-names"
 import { seededRandomFromString } from "~/utils/random"
-
-const regionName = (code: string) => {
-	try {
-		return new Intl.DisplayNames(["en"], { type: "region" }).of(code) ?? code
-	} catch {
-		return code
-	}
-}
 
 // JustWatch lists add-on channels as separate services; keep the main brands.
 const isChannel = (name: string) => /channel/i.test(name)
@@ -116,14 +109,6 @@ export interface TitleQuestion {
 
 export type QuestionId = "stream" | "worth" | "rated" | "length" | "source" | "agree" | "boxoffice" | "tropes" | "language" | "countries" | "aired"
 
-const langName = (code: string) => {
-	try {
-		return new Intl.DisplayNames(["en"], { type: "language" }).of(code) ?? code
-	} catch {
-		return code
-	}
-}
-
 // Critics vs audiences on the same 0-100 scale.
 export function agreement(media: MovieResult | ShowResult) {
 	const d = media.details
@@ -196,9 +181,9 @@ function tropesAnswer(media: MovieResult | ShowResult) {
 function languageAnswer(media: MovieResult | ShowResult) {
 	const d = media.details
 	if (!d.original_language_code) return null
-	const others = (d.spoken_language_codes ?? []).filter((c) => c !== d.original_language_code).map(langName)
-	const made = (d.production_country_codes ?? []).map(regionName)
-	return `It was made in ${langName(d.original_language_code)}${others.length ? `, with some ${others.join(", ")}` : ""}.${made.length ? ` Produced in ${made.join(", ")}.` : ""}`
+	const others = (d.spoken_language_codes ?? []).filter((c) => c !== d.original_language_code).map((code) => languageName(code))
+	const made = (d.production_country_codes ?? []).map((code) => regionName(code))
+	return `It was made in ${languageName(d.original_language_code)}${others.length ? `, with some ${others.join(", ")}` : ""}.${made.length ? ` Produced in ${made.join(", ")}.` : ""}`
 }
 
 function countriesAnswer(media: MovieResult | ShowResult) {

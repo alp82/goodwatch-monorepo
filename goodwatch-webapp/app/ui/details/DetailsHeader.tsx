@@ -6,7 +6,8 @@ import ExploreBar from "~/ui/explore/ExploreBar"
 import React, { useEffect, useRef } from "react"
 import ShareButton from "~/ui/button/ShareButton"
 import DetailsInlineNav from "~/ui/details/DetailsInlineNav"
-import type { Section } from "~/utils/scroll"
+import { publishHeaderHeight } from "~/ui/details/header-height"
+import type { ActiveSections, Section } from "~/utils/scroll"
 import type {
 	ContentRatingResult,
 	MovieDetails,
@@ -23,8 +24,7 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 interface DetailsHeaderProps {
 	media: MovieResult | ShowResult
 	country: string
-	onHeightChange: (height: number) => void
-	activeSections: string[]
+	activeSections: ActiveSections
 	navigateToSection: (section: Section) => void
 }
 
@@ -32,19 +32,13 @@ const DetailsHeader: React.FC<DetailsHeaderProps> = ({
 	media,
 	country,
 	activeSections,
-	onHeightChange,
 	navigateToSection,
 }) => {
 	const headerRef = useRef<HTMLDivElement>(null)
 	useEffect(() => {
 		const header = headerRef.current
-		if (!header) return
-		const measure = () => onHeightChange(header.getBoundingClientRect().height)
-		measure()
-		const observer = new ResizeObserver(measure)
-		observer.observe(header)
-		return () => observer.disconnect()
-	}, [onHeightChange])
+		if (header) return publishHeaderHeight(header)
+	}, [])
 	const journey = useSearchJourney()
 	const { details, mediaType } = media
 	const { genres, release_year, title } = details

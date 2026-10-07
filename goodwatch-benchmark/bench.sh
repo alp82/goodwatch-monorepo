@@ -10,7 +10,7 @@ BENCH_METRIC_HOSTS=${BENCH_METRIC_HOSTS-10.0.0.21:target:coolify-proxy+gk4owk8}
 BENCH_METRIC_INTERVAL=${BENCH_METRIC_INTERVAL:-5}
 fail() { echo "$*" >&2; exit 2; }
 usage() { cat <<'HELP'
-Usage: ./bench.sh <load|lighthouse|budget|smoke|deploy-watch|compare|summarize|longtail|doctor> [options]
+Usage: ./bench.sh <load|lighthouse|budget|tap|smoke|deploy-watch|compare|summarize|longtail|doctor> [options]
 load: --mode smoke|ramp --cache warm|cold --urls hot|surfaces|longtail|file.json
       --label TEXT --rate N --duration S --start N --step N --max N --rates N,N,...
       --routes ROUTE[:CLIENT],...
@@ -20,6 +20,10 @@ load: --mode smoke|ramp --cache warm|cold --urls hot|surfaces|longtail|file.json
 lighthouse: --urls FILE --runs N --where generator|local --label TEXT --path public|private
 budget: [--runs N] [--where generator|local] [--label TEXT] [--path public|private] [--budget FILE] [--run RUN]
         (Lighthouse per landing surface against urls/budget.json; exits 1 when a line fails)
+tap: [--base-url URL] [--runs N] [--controls ID,ID] [--modes early,scroll] [--movie PATH] [--show PATH]
+     [--where generator|local] [--path public|private] [--resolve ADDRESS] [--timeout MS] [--settle MS]
+     [--cpu N] [--network none|slow4g] [--label TEXT] [--strict]
+     (taps the controls of a title page in a phone browser with a slowed CPU; --strict exits 1 on a lost tap)
 compare: RUN_A RUN_B [--out FILE] [--json]
 summarize: RUN
 longtail: [--sitemaps DIR] [--out FILE] [--limit N] [--seed S] [--og-share F]
@@ -61,7 +65,7 @@ case $command in
     fi
     node "$ROOT/scripts/budget.mjs" check "$checked_run" "$budget_file"
     exit $? ;;
-  load|lighthouse|doctor) ;;
+  load|lighthouse|doctor|tap) ;;
   *) usage; exit 2 ;;
 esac
 export KIND=$command MODE=smoke CACHE_MODE=${CACHE_MODE:-warm} LABEL=run WHERE=generator
@@ -69,6 +73,11 @@ export PATH_MODE=private LH_RUNS=${LH_RUNS:-3}
 urls=hot; raw=0; approved=0; page_assets=''
 export SCENARIO=${SCENARIO:-requests} CONNECTIONS=${CONNECTIONS:-} CAPTURE_SETTLE=${CAPTURE_SETTLE:-10}
 [[ $command != lighthouse ]] || { PATH_MODE=public; urls="$ROOT/lighthouse/urls.txt"; }
+# The tap check uses the movie and the show of the render path budget, so that both measure the same titles.
+[[ $command != tap ]] || { PATH_MODE=public; urls="$ROOT/urls/budget.json"; }
+export TAP_RUNS=${TAP_RUNS:-5} TAP_CONTROLS=${TAP_CONTROLS:-} TAP_MODES=${TAP_MODES:-} TAP_TIMEOUT_MS=${TAP_TIMEOUT_MS:-5000}
+export TAP_SETTLE_MS=${TAP_SETTLE_MS:-3000} TAP_CPU=${TAP_CPU:-4} TAP_NETWORK=${TAP_NETWORK:-none} TAP_STRICT=0
+tap_movie=''; tap_show=''; tap_resolve=''
 export RATE_START=${RATE_START:-5} RATE_STEP=${RATE_STEP:-5} RATE_MAX=${RATE_MAX:-5} STEP_DURATION=${STEP_DURATION:-10} RAMP_SECONDS=${RAMP_SECONDS:-5}
 smoke_rate_set=0; ramp_set=0
 export RATE_LIST=${RATE_LIST:-} ONLY_ROUTES=${ONLY_ROUTES:-}
@@ -77,6 +86,7 @@ while (($#)); do
     --raw) raw=1; shift; continue ;;
     --yes-ramp-production) approved=1; shift; continue ;;
     --allow-above-500) export BENCH_ALLOW_ABOVE_500=1; shift; continue ;;
+    --strict) TAP_STRICT=1; shift; continue ;;
     --help|-h) usage; exit 0 ;;
   esac
   [[ $# -ge 2 ]] || fail "Missing value: $1"
@@ -85,7 +95,14 @@ while (($#)); do
     --rate) RATE_START=$2; RATE_MAX=$2; smoke_rate_set=1 ;; --duration) STEP_DURATION=$2; smoke_rate_set=1 ;;
     --start) RATE_START=$2; ramp_set=1 ;; --step) RATE_STEP=$2; ramp_set=1 ;; --max) RATE_MAX=$2; ramp_set=1 ;; --rates) RATE_LIST=$2; ramp_set=1 ;; --step-duration) STEP_DURATION=$2; ramp_set=1 ;;
     --scenario) SCENARIO=$2 ;; --connections) CONNECTIONS=$2 ;; --identity) export CACHE_IDENTITY=$2 ;; --page-assets) page_assets=$2 ;;
-    --routes) ONLY_ROUTES=$2 ;; --path) PATH_MODE=$2 ;; --runs) LH_RUNS=$2 ;; --where) WHERE=$2 ;;
+    --routes) ONLY_ROUTES=$2 ;; --path) PATH_MODE=$2 ;; --runs) LH_RUNS=$2; TAP_RUNS=$2 ;; --where) WHERE=$2 ;;
+    --base-url|--controls|--modes|--movie|--show|--resolve|--timeout|--settle|--cpu|--network)
+      [[ $command == tap ]] || fail "$1 belongs to the tap command"
+      case $1 in
+        --base-url) export BENCH_TARGET_URL=${2%/} ;; --controls) TAP_CONTROLS=$2 ;; --modes) TAP_MODES=$2 ;;
+        --movie) tap_movie=$2 ;; --show) tap_show=$2 ;; --resolve) tap_resolve=$2 ;; --timeout) TAP_TIMEOUT_MS=$2 ;;
+        --settle) TAP_SETTLE_MS=$2 ;; --cpu) TAP_CPU=$2 ;; --network) TAP_NETWORK=$2 ;;
+      esac ;;
     *) fail "Unknown option: $1" ;;
   esac
   shift 2
@@ -123,6 +140,19 @@ fi
 ((RATE_START <= RATE_MAX)) || fail 'Start must not exceed max'
 export RESOLVE_IP=''
 [[ $PATH_MODE != private ]] || RESOLVE_IP=$BENCH_RESOLVE_IP
+if [[ $command == tap ]]; then
+  [[ $BENCH_TARGET_URL =~ ^https?://[a-zA-Z0-9.-]+(:[0-9]+)?$ ]] || fail 'The base URL must be an origin, such as https://example.org or http://127.0.0.1:3304'
+  [[ -z $tap_resolve || $tap_resolve =~ ^[a-fA-F0-9.:]+$ ]] || fail '--resolve takes an address'
+  [[ -z $tap_resolve ]] || RESOLVE_IP=$tap_resolve
+  for key in TAP_RUNS TAP_TIMEOUT_MS TAP_CPU; do [[ ${!key} =~ ^[1-9][0-9]*$ ]] || fail "$key must be a positive integer"; done
+  [[ $TAP_SETTLE_MS =~ ^[0-9]+$ ]] || fail 'The settle time must be a nonnegative integer'
+  [[ $TAP_NETWORK == none || $TAP_NETWORK == slow4g ]] || fail 'Network must be none or slow4g'
+  [[ $TAP_CONTROLS =~ ^[a-z_,]*$ && $TAP_MODES =~ ^[a-z,]*$ ]] || fail 'Controls and modes are lists of names separated by commas'
+  [[ -n $tap_movie ]] || tap_movie=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1])).surfaces.movie.path)' "$urls")
+  [[ -n $tap_show ]] || tap_show=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1])).surfaces.show.path)' "$urls")
+  [[ $tap_movie =~ ^/[a-zA-Z0-9/_.~%-]+$ && $tap_show =~ ^/[a-zA-Z0-9/_.~%-]+$ ]] || fail 'A page is a path, such as /movie/603-the-matrix'
+  export TAP_PAGES="movie=$tap_movie,show=$tap_show"
+fi
 ssh_opts=(-o BatchMode=yes -o ConnectTimeout=15)
 [[ -z $BENCH_SSH_JUMP ]] || ssh_opts+=(-J "$BENCH_SSH_JUMP")
 # Remote login shells only parse the literal command "bash -s". All quoting
@@ -299,6 +329,34 @@ if [[ $command == load ]]; then
   pids=()
   copy_from "$remote_run/k6-summary.json" "$run/" || { echo 'k6 summary unavailable' >&2; [[ $RUN_EXIT != 0 ]] || RUN_EXIT=1; }
   if ((raw)); then copy_from "$remote_run/k6-raw.json.gz" "$run/" || { [[ $RUN_EXIT != 0 ]] || RUN_EXIT=1; }; fi
+elif [[ $command == tap ]]; then
+  # The tap check runs in the Lighthouse image, which holds Chromium and puppeteer-core. Its script is mounted.
+  image=gw-bench-lighthouse:13.5.0-$(cat "$ROOT/lighthouse/Dockerfile" "$ROOT/lighthouse/run.sh" | sha256sum | cut -c1-8)
+  tap_args=(--rm --name "$container" --shm-size=1g --entrypoint node)
+  # An instance that listens on the Docker host itself is reached through the host's network.
+  [[ ! $BENCH_TARGET_URL =~ ^https?://(127\.0\.0\.1|localhost)(:|$) ]] || tap_args+=(--network host)
+  for key in TAP_PAGES TAP_RUNS TAP_CONTROLS TAP_MODES TAP_TIMEOUT_MS TAP_SETTLE_MS TAP_CPU TAP_NETWORK; do tap_args+=(-e "$key=${!key}"); done
+  tap_args+=(-e "TAP_BASE_URL=$BENCH_TARGET_URL" -e "TAP_RESOLVE_IP=$RESOLVE_IP" -e "TAP_INSECURE_TLS=${BENCH_INSECURE_TLS:-0}")
+  for key in TAP_READY_WAIT_MS TAP_SCROLL_SPEED TAP_BLOCKED_URL_PATTERNS BROWSER_UA; do [[ -z ${!key+x} ]] || tap_args+=(-e "$key=${!key}"); done
+  if [[ $WHERE == local ]]; then
+    docker image inspect "$image" >/dev/null 2>&1 || docker build -t "$image" "$ROOT/lighthouse"
+    local_container=1
+    node "$ROOT/scripts/run-meta.mjs" start "$run/meta.json"
+    set +e
+    docker run "${tap_args[@]}" -v "$ROOT/tap:/tap:ro" "$image" /tap/tap.mjs > "$run/tap.jsonl" 2> >(tee "$run/tap.log" >&2)
+    RUN_EXIT=$?
+    set -e
+    local_container=0
+  else
+    copy_to "$ROOT/lighthouse" "$remote_run/"; copy_to "$ROOT/tap" "$remote_run/"
+    remote "$BENCH_GENERATOR" docker image inspect "$image" >/dev/null 2>&1 || remote "$BENCH_GENERATOR" docker build -t "$image" "$remote_run/lighthouse"
+    node "$ROOT/scripts/run-meta.mjs" start "$run/meta.json"
+    set +e
+    remote "$BENCH_GENERATOR" docker run "${tap_args[@]}" -v "$remote_run/tap:/tap:ro" "$image" /tap/tap.mjs > "$run/tap.jsonl" 2> >(tee "$run/tap.log" >&2)
+    RUN_EXIT=$?
+    set -e
+  fi
+  node "$ROOT/scripts/run-meta.mjs" finish "$run/meta.json"
 else
   # The tag carries a hash of the image sources, so an edited run.sh or Dockerfile gets a new image.
   image=gw-bench-lighthouse:13.5.0-$(cat "$ROOT/lighthouse/Dockerfile" "$ROOT/lighthouse/run.sh" | sha256sum | cut -c1-8)
@@ -329,7 +387,12 @@ else
   fi
   node "$ROOT/scripts/run-meta.mjs" finish "$run/meta.json"
 fi
-node "$ROOT/scripts/summarize.mjs" "$run"
+if [[ $command == tap ]]; then
+  strict=(); ((TAP_STRICT == 0)) || strict=(--strict)
+  node "$ROOT/scripts/tap-report.mjs" "$run" "${strict[@]}" || { rc=$?; [[ $RUN_EXIT != 0 ]] || RUN_EXIT=$rc; }
+else
+  node "$ROOT/scripts/summarize.mjs" "$run"
+fi
 cat "$run/summary.md"
 printf '\nRun directory: %s\n' "$run"
 exit "$RUN_EXIT"
