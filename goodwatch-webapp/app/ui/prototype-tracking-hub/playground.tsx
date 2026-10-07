@@ -26,7 +26,7 @@ import type { Score } from "~/server/scores.server"
 import { ScoreButton } from "~/ui/title-actions/ActionButton"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import { AnswerControl, countAnswered, isAnswered, useAnswers } from "./answers"
-import { HUB } from "./questions"
+import { OLD_RULE_QUESTIONS } from "./questions"
 
 const STORAGE_KEY = "PROTOTYPE-tracking-rules-wipe-me"
 const SURFACE = "bg-[#141923]"
@@ -34,7 +34,7 @@ const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 const CHIP = `inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${FOCUS}`
 const CHIP_OFF = "bg-white/10 text-gray-100 hover:bg-white/20"
 const TOOL = `inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-white px-3 text-xs font-bold text-black cursor-pointer hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40 ${FOCUS}`
-const RULE_QUESTIONS = HUB[0].questions
+const RULE_QUESTIONS = OLD_RULE_QUESTIONS
 
 // ---- state: the case, the presses, the rules ---------------------------------------------------------------
 

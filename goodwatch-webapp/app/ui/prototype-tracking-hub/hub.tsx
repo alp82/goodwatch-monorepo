@@ -1,4 +1,4 @@
-// PROTOTYPE - throwaway (map #365). The hub at /prototype/tracking: the four tracking prototypes, each with its
+// PROTOTYPE - throwaway (map #365). The hub at /prototype/tracking: the tracking prototypes, each with its
 // open questions to answer, and the answers as text to paste back to the agent.
 import { ArrowTopRightOnSquareIcon, ClipboardDocumentIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
@@ -36,6 +36,13 @@ function PrototypeSection({ prototype }: { prototype: HubPrototype }) {
 							issue #{prototype.issue}
 						</a>
 					</p>
+					{prototype.earlier && (
+						<p className="mt-1 text-xs text-gray-500">
+							<Link to={prototype.earlier.link} className="underline underline-offset-2 hover:text-gray-300" data-testid={`earlier-${prototype.key}`}>
+								{prototype.earlier.label}
+							</Link>
+						</p>
+					)}
 				</div>
 				<div className="flex flex-wrap items-center gap-2">
 					<Link to={prototype.link} className={`${BUTTON} bg-white text-black hover:bg-neutral-200`}>
@@ -107,11 +114,11 @@ export function Hub() {
 		<div className="mx-auto max-w-5xl overflow-x-clip px-3 pb-32 pt-5 text-white sm:px-5">
 			<h1 className="text-2xl font-bold">Tracking decisions</h1>
 			<p className="mt-1 max-w-3xl text-sm text-gray-400">
-				Every open question of the four tracking prototypes (map{" "}
+				Every open question of the tracking prototypes (map{" "}
 				<a href={`${ISSUES}/365`} className="underline underline-offset-2 hover:text-gray-200">
 					#365
 				</a>
-				). Open a question in its prototype with "See it", answer here or in the playground, then copy the answers and paste them back to the agent. Answers stay in this browser.
+				). Open a question in its prototype with "See it", answer here or in the prototype, then copy the answers and paste them back to the agent. Answers stay in this browser.
 			</p>
 
 			<div className={`sticky top-16 z-30 mt-4 rounded-2xl border border-white/10 p-3 shadow-2xl ${SURFACE}`}>

@@ -1,7 +1,9 @@
-// PROTOTYPE - throwaway (map #365). Every open question of the four tracking prototypes as an answerable item:
+// PROTOTYPE - throwaway (map #365). Every open question of the tracking prototypes as an answerable item:
 // the options, which one the prototype's notes suggest, and a link that opens the prototype where it shows.
-// The tracking-rules questions come from the cases of the playground; the rest are the numbered questions that
-// end docs/prototypes/{watch-log,episode-list,watching}/README.md.
+// The first list is the decisions the tracking state machine leaves (m1..m6). It replaced the 27 questions of the
+// earlier tracking-rules playground, which that playground still shows (OLD_RULE_QUESTIONS). The rest are the
+// numbered questions that end docs/prototypes/{watch-log,episode-list,watching}/README.md.
+import { DECISIONS, decisionLink } from "~/domain/prototype-tracking-machine/presets"
 import { CASES, caseParam } from "~/domain/prototype-tracking-rules/cases"
 
 export interface HubOption {
@@ -13,7 +15,7 @@ export interface HubOption {
 }
 
 export interface HubQuestion {
-	/** Unique across the prototypes: r1..r27, wl1..wl10, el1..el10, w1..w10. */
+	/** Unique across the prototypes: m1..m6, wl1..wl10, el1..el10, w1..w10 (and r1..r27 in the earlier playground). */
 	id: string
 	/** A few words, for the copied summary. */
 	short: string
@@ -33,6 +35,8 @@ export interface HubPrototype {
 	readme: string
 	issue: number
 	questions: HubQuestion[]
+	/** A superseded version that is still reachable. */
+	earlier?: { link: string; label: string }
 }
 
 const q = (id: string, short: string, text: string, link: string, suggested: number, labels: string[]): HubQuestion => ({
@@ -47,29 +51,42 @@ const WL = "/prototype/watch-log"
 const EL = "/prototype/episode-list"
 const W = "/prototype/watching"
 
+/** The 27 questions of the earlier tracking-rules playground. Only that playground shows them now. */
+export const OLD_RULE_QUESTIONS: HubQuestion[] = CASES.flatMap((found) =>
+	found.questions.map((question) => ({
+		id: question.id,
+		short: question.title,
+		text: found.questions.length > 1 ? `${question.title}. ${found.problem}` : found.problem,
+		link: `/prototype/tracking-rules?case=${caseParam(found, found.setups[0])}`,
+		group: found.group === "wording" ? "Changes settled wording" : "The rest",
+		options: question.options.map((option) => ({
+			id: option.id,
+			label: option.label,
+			detail: option.detail,
+			suggested: option.recommended,
+		})),
+	})),
+)
+
+/** The decisions the state machine leaves, one per switch of the machine page. */
+export const MACHINE_QUESTIONS: HubQuestion[] = DECISIONS.map((decision) => ({
+	id: decision.id,
+	short: decision.title,
+	text: decision.text,
+	link: decisionLink(decision),
+	options: decision.options.map((option) => ({ id: option.id, label: option.label, suggested: option.recommended })),
+}))
+
 export const HUB: HubPrototype[] = [
 	{
-		key: "tracking-rules",
-		title: "Tracking rules",
-		about: "What Seen, Watching, caught up and the next episode do in the cases where the settled rules disagree, surprise, or say nothing. A playground: set a case up, press, flip the rule.",
-		link: "/prototype/tracking-rules",
-		readme: "docs/prototypes/tracking-rules/README.md",
+		key: "tracking-machine",
+		title: "Tracking state machine",
+		about: "One stored state per member and show (Not started, Watching, On hold, Dropped, Seen) that changes only when the member acts. The page shows the statechart, the transition table that is the specification, and a show to press through. Six decisions are left.",
+		link: "/prototype/tracking-machine",
+		readme: "docs/prototypes/tracking-machine/README.md",
 		issue: 368,
-		questions: CASES.flatMap((found) =>
-			found.questions.map((question) => ({
-				id: question.id,
-				short: question.title,
-				text: found.questions.length > 1 ? `${question.title}. ${found.problem}` : found.problem,
-				link: `/prototype/tracking-rules?case=${caseParam(found, found.setups[0])}`,
-				group: found.group === "wording" ? "Changes settled wording" : "The rest",
-				options: question.options.map((option) => ({
-					id: option.id,
-					label: option.label,
-					detail: option.detail,
-					suggested: option.recommended,
-				})),
-			})),
-		),
+		questions: MACHINE_QUESTIONS,
+		earlier: { link: "/prototype/tracking-rules", label: "Earlier version: the tracking rules playground with its 27 questions" },
 	},
 	{
 		key: "watch-log",
