@@ -1,5 +1,6 @@
 // Downloads, checks, decodes, and derives a search build in a per-load worker or inline in development.
 import { createHash } from "node:crypto"
+import { BackendTimeoutError } from "../../utils/backend-timeout.ts"
 import http from "node:http"
 import { promisify } from "node:util"
 import { gunzip as gunzipCallback } from "node:zlib"
@@ -90,7 +91,7 @@ function request(
 			},
 		)
 		req.setTimeout(REQUEST_TIMEOUT_MS, () =>
-			req.destroy(new Error(`Crate request timed out: ${url.pathname}`)),
+			req.destroy(new BackendTimeoutError("CrateDB", REQUEST_TIMEOUT_MS, `Crate request timed out: ${url.pathname}`)),
 		)
 		req.on("error", reject)
 		req.end(body)

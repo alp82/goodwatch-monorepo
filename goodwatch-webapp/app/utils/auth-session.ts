@@ -2,6 +2,19 @@ import type { User } from "@supabase/auth-js"
 import { createServerClient, parse, serialize } from "@supabase/ssr"
 import { createRemoteJWKSet, decodeProtectedHeader, jwtVerify } from "jose"
 import { authCookieName, hasAuthCookie } from "./auth-cookie.ts"
+import { fetchWithBackendTimeout, timeoutSetting, withBackendTimeout } from "./backend-timeout.ts"
+
+export const SUPABASE_TIMEOUT_DEFAULT_MS = 5000
+
+export function authFetch(signal?: AbortSignal): typeof fetch {
+	return (input, init) => {
+		const callerSignal = init?.signal ?? (input instanceof Request ? input.signal : undefined)
+		return fetchWithBackendTimeout("Supabase auth", timeoutSetting("SUPABASE_TIMEOUT_MS", SUPABASE_TIMEOUT_DEFAULT_MS), input, {
+			...init,
+			signal: signal && callerSignal ? AbortSignal.any([signal, callerSignal]) : signal ?? callerSignal,
+		})
+	}
+}
 
 export type SessionSource = "none" | "memo" | "local" | "server"
 export interface ResolvedSession {
@@ -82,12 +95,13 @@ export function resolveSession(
 		let tokenExpiresAt = Number.POSITIVE_INFINITY
 		let result: ResolvedSession = { user: null, setCookies, source: "server" }
 		let transient = false
-		try {
+		const checkAuth = async (signal: AbortSignal) => {
 			const url = (process.env.SUPABASE_URL ?? "").replace(/\/+$/, "")
 			const supabase = createServerClient(
 				url,
 				process.env.SUPABASE_ANON_KEY ?? "",
 				{
+					global: { fetch: authFetch(signal) },
 					cookies: {
 						getAll: () =>
 							Object.entries(cookies).map(([name, value]) => ({
@@ -95,6 +109,7 @@ export function resolveSession(
 								value: value ?? "",
 							})),
 						setAll(updates) {
+							if (signal.aborted) return
 							for (const { name, value, options } of updates) {
 								cookies[name] = value
 								setCookies.push(serialize(name, value, options))
@@ -108,6 +123,7 @@ export function resolveSession(
 					const {
 						data: { session },
 					} = await supabase.auth.getSession()
+					signal.throwIfAborted()
 					if (session) {
 						const token = session.access_token
 						const header = decodeProtectedHeader(token)
@@ -129,6 +145,7 @@ export function resolveSession(
 								algorithms,
 								clockTolerance: 5,
 							})
+							signal.throwIfAborted()
 							if (
 								typeof payload.sub === "string" &&
 								payload.sub.length > 0 &&
@@ -162,12 +179,18 @@ export function resolveSession(
 					// Unsupported keys, invalid tokens, and unavailable JWKS fall back to Auth.
 				}
 			}
+			signal.throwIfAborted()
 			if (result.source === "server") {
 				const { data, error } = await supabase.auth.getUser()
+				signal.throwIfAborted()
 				result.user = data.user ?? null
 				transient = !result.user && !definitive(error)
 			}
+		}
+		try {
+			await withBackendTimeout("Supabase auth", timeoutSetting("SUPABASE_TIMEOUT_MS", SUPABASE_TIMEOUT_DEFAULT_MS), checkAuth)
 		} catch {
+			result.user = null
 			transient = true
 		}
 		authCheckCounts[result.source]++

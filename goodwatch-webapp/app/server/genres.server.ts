@@ -1,3 +1,4 @@
+import { fetchJsonWithBackendTimeout, timeoutSetting, TMDB_TIMEOUT_DEFAULT_MS } from "../utils/backend-timeout.ts"
 import { cached } from "~/utils/cache"
 
 export const genreDuplicates = {
@@ -60,9 +61,10 @@ export const getGenresMovie = async (params: GenresMovieParams) => {
 }
 
 export async function _getGenresMovie({}: GenresMovieParams): Promise<GenresResults> {
-	return await fetch(
+	return await fetchJsonWithBackendTimeout(
+		"TMDB", timeoutSetting("TMDB_TIMEOUT_MS", TMDB_TIMEOUT_DEFAULT_MS),
 		`https://api.themoviedb.org/3/genre/movie/list?api_key=${process.env.TMDB_API_KEY}`,
-	).then((res) => res.json())
+	)
 }
 
 export const getGenresTV = async (params: GenresTVParams) => {
@@ -75,9 +77,10 @@ export const getGenresTV = async (params: GenresTVParams) => {
 }
 
 export async function _getGenresTV({}: GenresTVParams): Promise<GenresResults> {
-	return await fetch(
+	return await fetchJsonWithBackendTimeout(
+		"TMDB", timeoutSetting("TMDB_TIMEOUT_MS", TMDB_TIMEOUT_DEFAULT_MS),
 		`https://api.themoviedb.org/3/genre/tv/list?api_key=${process.env.TMDB_API_KEY}`,
-	).then((res) => res.json())
+	)
 }
 
 export const getGenresUnique = async () => {

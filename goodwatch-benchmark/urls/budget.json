@@ -1,7 +1,8 @@
 {
   "name": "render-path-budget",
-  "description": "Limits per landing surface for a first-time mobile visitor who doesn't scroll, checked by ./bench.sh budget (Lighthouse on the generator, median of the runs). A limit is a measured value plus a margin, so the budget passes today and fails on a regression. Byte limits are in bytes. targets holds what counts as good and never fails a run. See docs/benchmarks/viral-spike-render-path-budget.md.",
-  "calibrated": "2026-10-05",
+  "description": "Limits per landing surface for a first-time mobile visitor who doesn't scroll, checked by ./bench.sh budget (Lighthouse on the generator, median of the runs). A limit is a measured value plus a margin, so the budget passes today and fails on a regression. Byte limits are in bytes. targets holds what counts as good and never fails a run. cpu_slowdown is Lighthouse's CPU slowdown that the LCP, TBT, and score limits are calibrated for: a run with another one fails those lines. See docs/benchmarks/viral-spike-render-path-budget.md.",
+  "calibrated": "2026-10-07",
+  "cpu_slowdown": 2.7,
   "targets": {
     "lcp_ms": 2500,
     "tbt_ms": 200,
@@ -24,9 +25,9 @@
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 723968 },
         "lcp_ms": { "max": 3850 },
-        "tbt_ms": { "max": 300 },
+        "tbt_ms": { "max": 150 },
         "cls": { "max": 0.01 },
-        "score": { "min": 79 }
+        "score": { "min": 81 }
       }
     },
     "movie": {
@@ -44,9 +45,9 @@
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 468992 },
         "lcp_ms": { "max": 3950 },
-        "tbt_ms": { "max": 900 },
+        "tbt_ms": { "max": 350 },
         "cls": { "max": 0.01 },
-        "score": { "min": 66 }
+        "score": { "min": 78 }
       }
     },
     "show": {
@@ -64,9 +65,9 @@
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 531456 },
         "lcp_ms": { "max": 4200 },
-        "tbt_ms": { "max": 1000 },
+        "tbt_ms": { "max": 350 },
         "cls": { "max": 0.01 },
-        "score": { "min": 63 }
+        "score": { "min": 76 }
       }
     },
     "person": {
@@ -84,9 +85,9 @@
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 504832 },
         "lcp_ms": { "max": 3950 },
-        "tbt_ms": { "max": 400 },
+        "tbt_ms": { "max": 250 },
         "cls": { "max": 0.01 },
-        "score": { "min": 78 }
+        "score": { "min": 83 }
       }
     },
     "discover": {
@@ -104,14 +105,14 @@
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 848896 },
         "lcp_ms": { "max": 5800 },
-        "tbt_ms": { "max": 300 },
+        "tbt_ms": { "max": 200 },
         "cls": { "max": 0.04 },
-        "score": { "min": 68 }
+        "score": { "min": 70 }
       }
     },
     "share_list": {
       "path": "${SHARE_LIST_PATH}",
-      "lcp_element": { "tag": "div", "contains": "data-edit=\"title\"" },
+      "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w780/" },
       "budget": {
         "html_bytes": { "max": 24576 },
         "host_requests": { "max": 27 },
@@ -122,11 +123,11 @@
         "font_requests": { "max": 2 },
         "blocking_requests": { "max": 1 },
         "third_party_origins": { "max": 1 },
-        "total_bytes": { "max": 582656 },
-        "lcp_ms": { "max": 4700 },
-        "tbt_ms": { "max": 250 },
-        "cls": { "max": 0.02 },
-        "score": { "min": 80 }
+        "total_bytes": { "max": 494592 },
+        "lcp_ms": { "max": 3900 },
+        "tbt_ms": { "max": 100 },
+        "cls": { "max": 0.01 },
+        "score": { "min": 84 }
       }
     }
   }

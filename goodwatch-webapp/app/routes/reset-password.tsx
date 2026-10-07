@@ -1,3 +1,4 @@
+import { authFetch } from "~/utils/auth-session"
 import type { LoaderFunction, LoaderFunctionArgs, MetaFunction, ActionFunction } from "@remix-run/node"
 import { json } from "@remix-run/node"
 import { Form, Link, useActionData, useLoaderData, useNavigate } from "@remix-run/react"
@@ -52,6 +53,7 @@ export const action: ActionFunction = async ({ request }: LoaderFunctionArgs) =>
 		process.env.SUPABASE_URL!,
 		process.env.SUPABASE_ANON_KEY!,
 		{
+			global: { fetch: authFetch() },
 			cookies: {
 				get(key) {
 					return cookies[key]

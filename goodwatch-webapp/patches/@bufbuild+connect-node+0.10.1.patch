@@ -1,0 +1,52 @@
+diff --git a/node_modules/@bufbuild/connect-node/dist/cjs/node-universal-client.js b/node_modules/@bufbuild/connect-node/dist/cjs/node-universal-client.js
+index f82feec..e647aab 100644
+--- a/node_modules/@bufbuild/connect-node/dist/cjs/node-universal-client.js
++++ b/node_modules/@bufbuild/connect-node/dist/cjs/node-universal-client.js
+@@ -160,7 +160,10 @@ function h2Request(sentinel, sm, url, method, headers, options, onStream) {
+         return;
+     }
+     sm.request(method, requestUrl.pathname + requestUrl.search, headers, {}).then((stream) => {
+-        stream.session.on("error", sentinel.reject);
++        // GoodWatch patch: no "error" listener on the session per call. It was never removed, because Node clears
++        // stream.session when the stream closes, so the session collected one listener per call. A session that
++        // fails destroys its streams with the same error, which reaches the sentinel through the stream's "error"
++        // listener below. @connectrpc/connect-node 2 has no session listener here either.
+         sentinel
+             .catch((reason) => {
+             if (stream.closed) {
+@@ -176,9 +179,6 @@ function h2Request(sentinel, sm, url, method, headers, options, onStream) {
+                 ? node_error_js_1.H2Code.CANCEL
+                 : node_error_js_1.H2Code.INTERNAL_ERROR;
+             return new Promise((resolve) => stream.close(rstCode, resolve));
+-        })
+-            .finally(() => {
+-            stream.session.off("error", sentinel.reject);
+         })
+             .catch(() => {
+             // We intentionally swallow sentinel rejection - errors must
+diff --git a/node_modules/@bufbuild/connect-node/dist/esm/node-universal-client.js b/node_modules/@bufbuild/connect-node/dist/esm/node-universal-client.js
+index eaf26de..d863aeb 100644
+--- a/node_modules/@bufbuild/connect-node/dist/esm/node-universal-client.js
++++ b/node_modules/@bufbuild/connect-node/dist/esm/node-universal-client.js
+@@ -157,7 +157,10 @@ function h2Request(sentinel, sm, url, method, headers, options, onStream) {
+         return;
+     }
+     sm.request(method, requestUrl.pathname + requestUrl.search, headers, {}).then((stream) => {
+-        stream.session.on("error", sentinel.reject);
++        // GoodWatch patch: no "error" listener on the session per call. It was never removed, because Node clears
++        // stream.session when the stream closes, so the session collected one listener per call. A session that
++        // fails destroys its streams with the same error, which reaches the sentinel through the stream's "error"
++        // listener below. @connectrpc/connect-node 2 has no session listener here either.
+         sentinel
+             .catch((reason) => {
+             if (stream.closed) {
+@@ -173,9 +176,6 @@ function h2Request(sentinel, sm, url, method, headers, options, onStream) {
+                 ? H2Code.CANCEL
+                 : H2Code.INTERNAL_ERROR;
+             return new Promise((resolve) => stream.close(rstCode, resolve));
+-        })
+-            .finally(() => {
+-            stream.session.off("error", sentinel.reject);
+         })
+             .catch(() => {
+             // We intentionally swallow sentinel rejection - errors must

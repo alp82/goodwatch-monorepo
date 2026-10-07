@@ -6,6 +6,7 @@ import {
 	randomUUID,
 } from "node:crypto"
 import { searchStatement } from "../combined-search/catalog.server"
+import { readingsConfigured } from "./limits.server"
 import { SearchCoordination } from "./coordination.server"
 
 export const DAILY_NANO = 1_000_000_000
@@ -37,12 +38,12 @@ type Reservation = { cache_key: string; budget_at: number; amount_nano: number }
 
 export function productionStore() {
 	const key = process.env.SEARCH_STORAGE_KEY
-	if (!key || !/^[a-fA-F0-9]{64}$/.test(key))
+	if (!readingsConfigured())
 		throw new Error("Search storage key is not configured")
 	return new SearchStore(
 		searchStatement,
 		new SearchCoordination(),
-		Buffer.from(key, "hex"),
+		Buffer.from(key!, "hex"),
 	)
 }
 

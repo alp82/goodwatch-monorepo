@@ -801,8 +801,10 @@ function JourneyList() {
 				)}
 				<span>{j.status}</span>
 				<HiddenResultsLink />
+				{/* "Search is busy" is the server's answer when too many searches run at once. */}
 				{j.batch?.errors.length ||
-				j.status.startsWith("Search is unavailable") ? (
+				j.status.startsWith("Search is unavailable") ||
+				j.status.startsWith("Search is busy") ? (
 					<button onClick={j.retry} className="ml-2 underline text-cyan-300">
 						Retry
 					</button>

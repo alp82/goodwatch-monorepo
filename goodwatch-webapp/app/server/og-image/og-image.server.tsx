@@ -60,7 +60,23 @@ const outcomes = counter(
 export function countOgCard(result: string) {
 	outcomes.inc([result])
 }
+const clients = counter(
+	"goodwatch_og_card_clients_total",
+	"Open Graph card requests by client class and outcome.",
+	["client", "result"],
+	32,
+)
+export function countOgCardClient(client: string, result: string) {
+	clients.inc([client, result])
+}
+// Invalid or unset lifetimes use the store defaults.
+function lifetime(value: string | undefined) {
+	const seconds = Number(value)
+	return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined
+}
 const store = createOgStore({
+	firstSeconds: lifetime(process.env.OG_CARD_FIRST_SECONDS),
+	keptSeconds: lifetime(process.env.OG_CARD_KEPT_SECONDS),
 	redis: getRedisCluster,
 	render,
 	canonical: canonicalOgPath,

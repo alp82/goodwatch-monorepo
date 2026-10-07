@@ -11,7 +11,7 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { cardFontFaceCss } from "~/ui/share-card/fonts"
+import { cardFontCss } from "~/ui/share-card/font-faces"
 import type { CardDesign, CardProps } from "~/ui/share-card/model"
 import { type CardDisplay, cardForPage } from "~/ui/share-card/page-images"
 
@@ -92,8 +92,11 @@ export function ScaledCard({
 	)
 }
 
-/** The @font-face rules for card fonts. Render once on any page that shows cards. */
+/**
+ * The font rules for cards. Render once on any page that shows cards. A page that shows cards of one design
+ * names it, and gets only that design's fonts.
+ */
 // Set as raw HTML: as a text child, the quotes would be escaped differently on the server and in the browser.
-export const CardFonts = () => (
-	<style dangerouslySetInnerHTML={{ __html: cardFontFaceCss }} />
+export const CardFonts = ({ design }: { design?: string }) => (
+	<style dangerouslySetInnerHTML={{ __html: cardFontCss(design) }} />
 )

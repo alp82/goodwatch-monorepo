@@ -22,6 +22,7 @@ import { getListView } from "~/server/share-lists/store.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import { CardFonts, ScaledCard } from "~/ui/share-card/ScaledCard"
 import { designByKey } from "~/ui/share-card/designs"
+import { titleFontPreload } from "~/ui/share-card/font-faces"
 import {
 	newListPath,
 	profilePath,
@@ -59,8 +60,23 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		.map((item, i) => `${i + 1}. ${item.title}`)
 		.join("  ")
 	const alt = `${list.title}: ${items.map((item) => item.title).join(", ")}`
+	// The card's title is the page's largest text. The preload starts its font's download next to the
+	// stylesheet's, so the title rarely shows in its fallback font first.
+	const titleFont = titleFontPreload(designByKey(list.design).key)
 	return [
 		{ title },
+		...(titleFont
+			? [
+					{
+						tagName: "link",
+						rel: "preload",
+						as: "font",
+						type: "font/woff2",
+						href: titleFont,
+						crossOrigin: "anonymous",
+					},
+				]
+			: []),
 		{ name: "description", content: description },
 		{ name: "robots", content: "noindex, nofollow" },
 		{ tagName: "link", rel: "canonical", href: share.url },
@@ -106,7 +122,7 @@ export default function ShareListPage() {
 	}
 	return (
 		<main className="relative isolate min-h-screen overflow-hidden pb-24 text-white">
-			<CardFonts />
+			<CardFonts design={design.key} />
 			<div
 				aria-hidden
 				className="pointer-events-none absolute inset-0 -z-10 opacity-40"

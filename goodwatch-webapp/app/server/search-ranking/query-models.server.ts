@@ -166,7 +166,12 @@ async function download(
 	console.warn(
 		`Search models: ${spec.repo}/${file.path} isn't in ${dirname(path)}, downloading ${Math.round(file.bytes / 1e6)} MB from Hugging Face`,
 	)
-	const response = await fetch(url)
+	// The limit is read here and not through utils/backend-timeout: the image build runs this file alone (see the
+	// Dockerfile's models stage), so it imports nothing from the app.
+	const configured = Number(process.env.SEARCH_MODEL_DOWNLOAD_TIMEOUT_MS)
+	const timeoutMs =
+		Number.isSafeInteger(configured) && configured > 0 ? configured : 600_000
+	const response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
 	if (!response.ok || !response.body) {
 		throw new Error(
 			`Downloading ${spec.repo}/${file.path} failed: HTTP ${response.status}`,

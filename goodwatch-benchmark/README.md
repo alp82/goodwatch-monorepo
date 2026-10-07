@@ -2,7 +2,7 @@
 
 ## What this is
 
-Use k6 to compare server response times and capacity before and after a change. Use Lighthouse to compare mobile page performance. The scripts use Bash, Docker, and Node.js without local npm dependencies. The load test sends only GET requests, with one exception: the page-view scenario replays a read that the home page sends with POST (see [Page views](#page-views)).
+Use k6 to compare server response times and capacity before and after a change. Use Lighthouse to compare mobile page performance. Use the tap test to check that the controls of a title page answer a tap. The scripts use Bash, Docker, and Node.js without local npm dependencies. The load test sends only GET requests, with one exception: the page-view scenario replays a read that the home page sends with POST (see [Page views](#page-views)).
 
 Every webapp deploy ends with `./bench.sh smoke`. It checks the new container's startup log and a fixed list of pages with edge cases. See [Smoke check after a deploy](#smoke-check-after-a-deploy).
 
@@ -132,15 +132,25 @@ A `bot` entry and a `browser` entry with `"single": true` send their one request
 | `--label <text>` | `run` | Name the run. |
 | `--path public\|private` | `public` | Use normal DNS or a Chrome resolver rule. |
 
-The image builds on the chosen host if missing. It includes Chromium, fonts, and Lighthouse. Each run uses Lighthouse's default mobile emulation and simulated throttling. No desktop preset is used. The container gets 1 GiB of shared memory. Extra Chrome flags come from `LH_EXTRA_CHROME_FLAGS`. Chromium runs with `--hide-scrollbars`: without it, the first paint is observed about one second late (see [the render path budget](../docs/benchmarks/viral-spike-render-path-budget.md#the-late-first-paint-on-the-generator)). Private mode derives each hostname from its URL and maps it to the resolve address. TLS verification stays enabled.
+The image builds on the chosen host if missing. It includes Chromium, fonts, and Lighthouse. Each run uses Lighthouse's default mobile emulation and simulated throttling, with a CPU slowdown that is calibrated for the generator (see [CPU slowdown](#cpu-slowdown)). No desktop preset is used. The container gets 1 GiB of shared memory. Extra Chrome flags come from `LH_EXTRA_CHROME_FLAGS`. Chromium runs with `--hide-scrollbars`: without it, the first paint is observed about one second late (see [the render path budget](../docs/benchmarks/viral-spike-render-path-budget.md#the-late-first-paint-on-the-generator)). Private mode derives each hostname from its URL and maps it to the resolve address. TLS verification stays enabled.
 
 Lighthouse runs on the generator by default. That host is idle, has a fixed size, and sits in a data center, so two runs days apart see the same CPU and network. A laptop doesn't give that. Never run Lighthouse during a load test: the lock on the generator prevents it.
 
-Lighthouse drives a real browser, so the page's own script runs. After each page view, the page posts to `/api/og-image-warm`, which starts a render on the server. The runner blocks that request with `LH_BLOCKED_URL_PATTERNS` (default `*/api/og-image-warm*`, patterns separated by spaces). Analytics requests are not blocked, because they are part of the page's real cost. Each Lighthouse run therefore shows up as a page view in analytics.
+Lighthouse drives a real browser, so the page's own script runs. No landing page sends a request that changes server state while it loads, so nothing has to be blocked today. `LH_BLOCKED_URL_PATTERNS` (patterns separated by spaces) blocks requests in the browser when a page needs it. Its default, `*/api/og-image-warm*`, is left from the warm request that every page view sent until October 4, 2026. Today only a share list's owner sends that request, after an edit, and the default stays as a guard. Analytics requests are not blocked, because they are part of the page's real cost. Each Lighthouse run therefore shows up as a page view in analytics.
 
 The image tag ends with a hash of `lighthouse/Dockerfile` and `lighthouse/run.sh`. A change to either file builds a new image. Remove old `gw-bench-lighthouse` images on the generator by hand.
 
 Failed individual runs are logged. Other runs continue. The container exits nonzero only when all runs fail. The report uses successful runs and computes a separate median for each metric. Performance scores range from 0 to 100. Fractional median request counts are possible with an even number of runs.
+
+#### CPU slowdown
+
+Lighthouse simulates a mid-tier phone by multiplying the main-thread times that it observed on the host. Its default factor of 4 is made for a host whose CPU benchmark (`benchmarkIndex` in a report, "CPU benchmark" in the budget's output) is about 1,530. The generator's reads 1,170 to 1,190, so a factor of 4 models a slower phone than Lighthouse intends. `LH_CPU_SLOWDOWN` sets the factor (`--throttling.cpuSlowdownMultiplier`), and its default is `2.7`, from Lighthouse's [CPU slowdown calculator](https://lighthouse-cpu-throttling-calculator.vercel.app/): `2 + (benchmark - 800) / 500` for a benchmark between 800 and 1,300, with a stated range of 0.75 either way.
+
+- **The default fits the generator only.** For `--where local`, read the CPU benchmark from a first run and set `LH_CPU_SLOWDOWN` from the calculator. Numbers from another machine stay rough: don't compare them with the budget's time lines.
+- **Numbers are comparable from October 7, 2026.** LCP, TBT, and the score of earlier runs used a factor of 4. Byte and request lines, and CLS, don't depend on the factor. For one more run with the old factor, set `LH_CPU_SLOWDOWN=4`.
+- **Recalibrate when the generator changes** (another host, another machine type, or a new Chromium whose benchmark reads differently): take the median CPU benchmark of an undisturbed run, set the default in `bench.sh` and `lighthouse/run.sh`, set `cpu_slowdown` in `urls/budget.json`, and reset the budget's time lines from new runs in the same commit.
+
+`meta.json` records the factor of a run as `lighthouse.cpu_slowdown`. The method and the numbers are in [the render path budget](../docs/benchmarks/viral-spike-render-path-budget.md#cpu-slowdown-of-the-generator).
 
 ### Render path budget
 
@@ -155,7 +165,7 @@ Failed individual runs are logged. Other runs continue. The container exits nonz
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `--runs N` | `3` | Lighthouse runs per surface. The comparison uses the median. |
-| `--where generator\|local` | `generator` | The Docker host. The time lines of the budget are calibrated for the generator. |
+| `--where generator\|local` | `generator` | The Docker host. The time lines of the budget and the CPU slowdown are calibrated for the generator. |
 | `--path public\|private` | `public` | The network path, as for `lighthouse`. |
 | `--label <text>` | `budget` | Name the run. |
 | `--budget <file>` | `urls/budget.json` | Another budget file. |
@@ -178,9 +188,86 @@ The lines, all for a first-time mobile visitor who doesn't scroll:
 
 In the budget file, a line has either `max` or `min`. `targets` holds the values that count as good (LCP 2.5 s, TBT 200 ms, CLS 0.1, score 90): the report shows the gap to them, and they never fail a run. A surface's `path` can name a setting, such as `${SHARE_LIST_PATH}` from `config.env`. The report never prints a URL.
 
-Each surface's header line shows the observed FCP and Lighthouse's CPU benchmark of the host. An observed FCP above one second, or a benchmark far from 1,100 on the generator, means the measurement was disturbed: check for other containers on the generator and repeat.
+Each surface's header line shows the observed FCP, Lighthouse's CPU benchmark of the host, and the CPU slowdown of the reports. An observed FCP above one second, or a benchmark under 1,050 on the generator, means the measurement was disturbed: check for other containers on the generator and repeat. The budget file names the slowdown that its time lines are calibrated for (`cpu_slowdown`). When a run used another one, its LCP, TBT, and score lines fail, because they aren't comparable.
 
 The limits come from a measured run plus a margin: about 5% on bytes, one or two requests, and the spread between runs on the time lines. When a change improves a line for good, lower its limit in the same commit. When a change has to raise a line, raise the limit in that commit and say why. The run writes `budget.json` and `budget.md` into its result directory. The comparison logic has tests: `node --test scripts/budget.test.mjs`.
+
+### Tap test
+
+```sh
+./bench.sh tap
+./bench.sh tap --runs 7 --label after-carousel
+./bench.sh tap --controls cast_next,related_tab --modes early --runs 3
+./bench.sh tap --base-url http://127.0.0.1:3304 --label branch
+```
+
+`tap` answers one question for a title page: does a tap right after the page loads, or right after a fast scroll, always do something? It taps each control that needs script on the movie page and the show page of [`urls/budget.json`](urls/budget.json), and reports per control whether the tap had its effect and how long the effect took. A tap without its effect inside the limit is a lost tap.
+
+Every measurement is its own page load in a new browser: empty cache, no cookies, a signed-out visitor. The browser is the Chromium of the Lighthouse image with a phone viewport (412 by 823), touch input, and the CPU slowed four times, which is Lighthouse's default for a phone. The tap test slows the real CPU and keeps that factor, so that its runs stay comparable with the baseline of October 6, 2026. It's stricter than the calibrated factor that Lighthouse runs use here (see [CPU slowdown](#cpu-slowdown)). The network isn't throttled unless you ask for it.
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `--base-url URL` | `BENCH_TARGET_URL` | The origin to test, such as a branch instance. For `127.0.0.1` or `localhost`, the container uses the Docker host's network. |
+| `--runs N` | `5` | Measurements per page, control, and mode. |
+| `--controls ID,ID` | All | Only these controls. |
+| `--modes early,scroll` | Both | Only these modes. |
+| `--movie PATH`, `--show PATH` | From `urls/budget.json` | Other titles. A path that starts with `/movie/` gets no episode cell. |
+| `--where generator\|local` | `generator` | The Docker host. Times are only comparable between runs on the same machine. |
+| `--path public\|private` | `public` | The network path, as for `lighthouse`. |
+| `--resolve ADDRESS` | None | Resolve the base URL's host name to this address, for one instance behind its own proxy. With `BENCH_INSECURE_TLS=1`, the browser accepts a certificate for another name. |
+| `--timeout MS` | `5000` | The limit after which a tap is lost. |
+| `--settle MS` | `3000` | Scroll mode: the wait between the load event and the first drag. |
+| `--cpu N` | `4` | The CPU slowdown. |
+| `--network none\|slow4g` | `none` | `slow4g` adds 150 ms per round trip and limits the download to 1.6 Mbit/s. |
+| `--label <text>` | `run` | Name the run. |
+| `--strict` | Off | Exit with 1 when a tap was lost. |
+
+**The two modes.**
+
+- `early`: the tap goes out as soon as the browser reports the first contentful paint and the control is in the document. A control below the first screen is brought into view with one jump of the scroll position, not with a gesture, and the tap waits until the control is where a tap can reach it. "Tap at" in the report is when the tap arrived, counted from the start of the navigation.
+- `scroll`: the page loads and rests for the settle time. Then touch drags scroll to the control, each at 8,000 CSS pixels per second (`TAP_SCROLL_SPEED`) with a rest of a tenth of a second before the finger lifts, so that the browser adds no fling and every run scrolls the same distance. A control in the first screen is scrolled away and back first. The tap follows the last drag as soon as the scroll position holds for two frames. Sections below the fold reserve estimated heights, so the control can land outside the screen: further drags then correct that, and the report counts them.
+
+**The controls and their effects.** An effect is a change in the document that the script watches with a `MutationObserver`. The time to effect runs from the finger going down (the browser's time stamp of the input) to that change.
+
+| Control | What is tapped | The effect |
+| --- | --- | --- |
+| `streaming_tab` | The first offer type tab in `#streaming` that isn't selected, such as "Rent" | That tab has `aria-selected="true"` |
+| `action_want` | "Want to See" | The button has `aria-pressed="true"`. A signed-out visitor's Wishlist lives in the browser, so nothing is saved on the server. |
+| `action_seen` | "Mark as Seen" | The sign-in prompt is in the document (a `dialog` with "Sign in" in its text). Its code loads on this first press, so the time includes one script request. |
+| `fingerprint_switch` | The first "See all ... traits" button in `#fingerprint` | One of the six detail views is displayed |
+| `episode_cell` | The first displayed episode cell in `#episode-ratings` (show page only) | The episode's tip is in the document |
+| `cast_next` | The next arrow of the cast row in `#actors_and_crew` | The row's active slide is another one than before the tap |
+| `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. |
+| `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap |
+
+The selectors use section ids, roles, and accessible names. The carousel arrows have no name: they are the last `button` that is a direct child of a `.swiper` element. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
+
+**What a measurement can end as.**
+
+- `effect`: the tap reached the control and the effect came inside the limit.
+- `lost`: the tap reached the control and no effect came inside the limit. The script then waits up to 10 more seconds for script to take the control over, and 3 seconds after that: an effect in that time is listed under "Late effects". The tap still counts as lost.
+  - "Lost: click elsewhere" counts the lost taps whose click went to another element. The browser picks the click's element when it handles the tap. When the main thread is busy at that moment and the layout moves, for example because a carousel starts, the click goes to whatever is under the finger afterwards, such as a link to another title.
+- `absent`: the control wasn't in the document, for example a related row that came without cards.
+- `missed`: the tap landed on another element, for example because the layout moved. This is a fault of the check, or a control that something covers. The report names what the tap hit.
+- `invalid`: the effect was there before the tap.
+- `error`: the page didn't load, or the tap left the page.
+
+The "Effect" and "Lost" columns count only taps that reached the control. The rest is in "Other".
+
+**The diagnosis columns.** "Script took over at" is when React had attached the control's node, or Swiper had started the row, counted from the start of the navigation. An early tap before that moment is lost unless the browser still holds the click when the script starts. `tap.jsonl` also has, per measurement, `input_delay_ms` and `click_delay_ms` (how long the main thread was busy before the page's script saw the tap and the click), the requests that started after the tap, and the console's error messages.
+
+**Requests.** The page's own script runs, so every measurement counts as a page view in analytics, and a run with the defaults is 150 page views. Requests that write are blocked in the browser: `/api/update-*` and `/api/poster-impressions`, and also `/api/og-image-warm`, which title pages no longer send (`TAP_BLOCKED_URL_PATTERNS`, patterns separated by spaces). The report lists every request other than GET that a page sent.
+
+**Results.** `tap.jsonl` has one line per measurement, written as the run goes, and `tap.log` the progress. `summary.json` and `summary.md` have one row per page, mode, and control: taps with an effect, lost taps, and the median, lowest, and highest time to effect. The console section counts React errors by number, such as 418 or 421. `node scripts/tap-report.mjs <run>` writes the summary again. Its logic has tests: `node --test scripts/tap-report.test.mjs`.
+
+The run takes the generator's lock, like a Lighthouse run. With the defaults it takes about 30 minutes.
+
+To run the script without Docker, point it at a directory that can resolve `puppeteer-core` and at a Chromium binary:
+
+```sh
+TAP_PUPPETEER_FROM=/path/with/node_modules/ CHROME_PATH=/usr/bin/chromium \
+  TAP_BASE_URL=https://example.org TAP_PAGES=movie=/movie/603-the-matrix TAP_RUNS=1 node tap/tap.mjs > tap.jsonl
+```
 
 ### Long-tail URL generation
 
@@ -277,7 +364,7 @@ Each entry contains `route`, `path`, `weight`, `client`, and optional `expect` (
 
 `/search?q=heist` expects 301. The script treats an unexpected status or transport error as a failure. It never follows a redirect. Person URLs with a query string require the `gw_browser=1` cookie.
 
-To include your share list, set `SHARE_LIST_PATH` to its page path and `SHARE_LIST_OG_PATH` to the `og:image` path from its HTML. Store these only in `config.env`. Do not commit a user's list URL. Missing placeholders are dropped with a warning. Remaining weights still apply. Share-list pages are private and do not use a shared HTTP cache. Add your list to the ignored copy of a Lighthouse URL file when testing it with Lighthouse.
+To include your share list, set `SHARE_LIST_PATH` to its page path and `SHARE_LIST_OG_PATH` to the `og:image` path from its HTML. Store these only in `config.env`. Do not commit a user's list URL. Missing placeholders are dropped with a warning. Remaining weights still apply. An anonymous request for a public share list is answered from the app's page store for 10 seconds, plus 10 seconds stale, and is `public` with a short `s-maxage` when the request carries the cache identity header (see [`docs/page-cache.md`](../docs/page-cache.md)). Hidden lists and member views stay `private, no-store`. Add your list to the ignored copy of a Lighthouse URL file when testing it with Lighthouse.
 
 ## Cache modes
 
@@ -327,6 +414,8 @@ results/<run-id>/
   webapp/samples.jsonl
   lighthouse/<label>/run-*.json
   lighthouse.log
+  tap.jsonl                 # Tap test: one line per measurement
+  tap.log
   summary.json
   summary.md
 ```
@@ -389,11 +478,11 @@ k6 exit code 99 marks an abort or threshold failure. The summary lists failed th
 
 Smoke mode allows one plateau, at most 20 req/s and 120 seconds. Larger tests require ramp mode. Every ramp requires `--yes-ramp-production`, prints its full plan, and waits ten seconds. Set `BENCH_NO_COUNTDOWN=1` only when an intentional automated run needs to skip the wait. Rates above 500 req/s also require `BENCH_ALLOW_ABOVE_500=1`.
 
-The launcher refuses a generator address equal to the resolve address. Use the private serving address in this setting even for public tests so the check remains effective. A directory lock prevents load and Lighthouse runs from overlapping on the generator. Local Lighthouse runs do not acquire that lock. Ctrl-C stops the named container and samplers and releases the lock. A killed client or lost connection can leave a stale lock; inspect the named container before clearing it.
+The launcher refuses a generator address equal to the resolve address. Use the private serving address in this setting even for public tests so the check remains effective. A directory lock prevents load, Lighthouse, and tap test runs from overlapping on the generator. Local Lighthouse runs do not acquire that lock. Ctrl-C stops the named container and samplers and releases the lock. A killed client or lost connection can leave a stale lock; inspect the named container before clearing it.
 
 ## Known limitations
 
-- Load traffic is GET only, apart from the one replayed read in the page-view scenario. It excludes `POST /api/combined-search`, which can trigger paid model calls or guest quota writes, `POST /api/og-image-warm`, which triggers rendering, and `POST /api/e`, which the app forwards to the error tracking vendor.
+- Load traffic is GET only, apart from the one replayed read in the page-view scenario. It excludes `POST /api/combined-search`, which can trigger paid model calls or guest quota writes, `POST /api/og-image-warm`, which starts a card render and which only a share list's owner sends, and `POST /api/e`, which the app forwards to the error tracking vendor.
 - In the `requests` scenario, k6 does not fetch browser subresources. The page-view scenario does, from a captured page load. It sends them all at once after the document, where a browser discovers them in several rounds over about five seconds, and it doesn't model third-party hosts or a returning visitor's browser cache.
 - The page-view scenario opens two connections per browser visitor because the captured Chrome does. Browsers that don't fetch the manifest open one.
 - Lighthouse is lab data, not field data. Its browser loads page subresources and can execute normal page code. GET-only load guarantees apply to k6, not browser-side application behavior in Lighthouse.
@@ -413,6 +502,8 @@ Normal cleanup removes each remote run directory and its lock. Docker images and
 `results/checkpoint-2026-10-04/` holds the summaries of the same runs after the page load optimizations, on two instances, and the output of `./bench.sh compare` for each pair in `compare/`. [`docs/benchmarks/viral-spike-checkpoint.md`](../docs/benchmarks/viral-spike-checkpoint.md) explains them.
 
 `results/page-views-2026-10-05/` holds the summaries of the page-view runs, the ramp of new TLS connections, and the repeated OG image ramps from October 5, 2026. [`docs/benchmarks/viral-spike-page-views.md`](../docs/benchmarks/viral-spike-page-views.md) explains them.
+
+`results/tap-baseline-2026-10-06/` holds the tap test's production baseline from October 6, 2026 (21:08 to 21:39 UTC, on the generator, five runs per control and mode): `summary.md`, `summary.json`, and the measurements in `tap.jsonl`. Compare a later `./bench.sh tap` run on the generator against it.
 
 ## Sample smoke run
 

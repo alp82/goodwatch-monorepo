@@ -44,6 +44,7 @@ import {
 	type PreparedSearch,
 	prepareSearch,
 } from "../search-ranking/rank-search.server";
+import { readingsConfigured } from "../search-runtime/limits.server";
 import { HEAD_LENGTH } from "../search-ranking/ranking.server";
 import { ELIGIBLE_VOTES } from "../search-ranking/search-filter.server";
 import {
@@ -56,8 +57,8 @@ import {
 	startPeopleIndex,
 } from "../search-people/people.server";
 
-// The ranking's index and query models load at server start.
-startSearchRanking();
+// The index loads at server start; query models load only when the storage key allows readings.
+startSearchRanking({ queryModels: readingsConfigured() });
 // The names a search can find inside a phrase load at server start too.
 startPeopleIndex();
 // The connections to TypeSafe stay open between searches.
@@ -325,7 +326,7 @@ async function rankedList(
 	readText: string,
 	readings: Parameters<typeof readingFields>[1],
 	policy: Eligibility,
-	// Started before the reading: the title matches with their catalog rows, and the ranking's prepared part.
+	// Title matches start early; the prepared part starts only when a fresh reading is claimed.
 	early: {
 		titles: Promise<TitleMatches>;
 		prepared?: Promise<PreparedSearch>;
@@ -519,23 +520,27 @@ export async function combinedSearch(
 	chargedNano += language.chargedNano;
 	// Jev reads the normalized text, so the reading and its cache entry don't depend on case or spacing.
 	const readText = readingText(language.text);
-	// Work that needs no reading starts now and runs while Jev reads: the title matches' catalog rows, and the
-	// ranking's prepared part (references, the texts known without the reading, the reference's vectors). Skipped
-	// when the ranking can't serve anyway. Failures surface in rankedList, which then falls back as before.
-	const early = {
+	// Title matches load now. Preparation waits until a fresh reading is claimed, so basic searches save encoder CPU.
+	// The fresh reading's call takes about 300 ms at p50, enough for preparation to fit inside it. A cached reading
+	// prepares after the cache lookup instead of alongside it, through rankSearch when prepared is undefined.
+	const early: {
+		titles: ReturnType<typeof titleMatches>;
+		prepared?: Promise<PreparedSearch>;
+	} = {
 		titles: titleMatches(titlePromise, policy),
-		prepared: servingFallback({ hasReading: true })
-			? undefined
-			: prepareSearch({
-					query: q,
-					text: language.text,
-					nonEnglish: language.policy.mode !== "english",
-				}),
 	};
 	early.titles.catch(() => {});
-	early.prepared?.catch(() => {});
 	const readingSteps: Record<string, number> = {};
 	const outcome: JevOutcome = await runJevStage({
+		onClaimed: () => {
+			if (servingFallback({ hasReading: true })) return;
+			early.prepared = prepareSearch({
+				query: q,
+				text: language.text,
+				nonEnglish: language.policy.mode !== "english",
+			});
+			early.prepared.catch(() => {});
+		},
 		timings: readingSteps,
 		requestText: readingText(q),
 		questionVersion: "accepted-d4-corrected-v1",

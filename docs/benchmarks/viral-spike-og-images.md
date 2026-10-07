@@ -130,7 +130,7 @@ Share list cards are the exception, because one takes about 20 seconds: a list's
 ## Storage
 
 - **Store:** Valkey, key `og-card:v1:<canonical path>`, for example `og-card:v1:/movie/603`. The version covers the design, the text rules, and the image format.
-- **Lifetime:** 7 days in Valkey. After 24 hours a card is still served and redrawn once in the background, so changed title data reaches a card within a day of its next request.
+- **Lifetime:** 30 minutes for a card that was rendered for its first request, and 7 days once it's requested again (`OG_CARD_FIRST_SECONDS` and `OG_CARD_KEPT_SECONDS`). See [Cards that are requested once](#cards-that-are-requested-once). After 24 hours a card is still served and redrawn once in the background, so changed title data reaches a card within a day of its next request.
 - **In process:** 32 MB per process (about 250 cards) in front of Valkey. A repeated request for a card that is in this copy reads nothing from Valkey.
 - **Before Express:** each complete answer stays under its request path for 10 seconds, see [A hot card](#a-hot-card).
 - **Deduplication:** concurrent requests for one card share one render per process. No lock across processes: two instances draw a cold card at most once each, about 0.35 seconds of child CPU.
@@ -143,6 +143,19 @@ Share list cards are the exception, because one takes about 20 seconds: a list's
 - **With the warm request kept**, its 1,300 renders per day would add 0.16 GB per day, 1.1 GB per week.
 - **As PNG** (505 KB on average) the same cards would need four times as much.
 - Share list images are stored as before: 30 days, one 2.2 MB card and one preview per list and content.
+
+### Cards that are requested once
+
+Added on October 7, 2026 by the ticket "Keep cards that are requested once from filling the cache". The memory estimate above assumed 300 to 1,100 card requests per day. Three days later the rate was about 250,000 per day, and all three cache nodes were at their 7 GB limit.
+
+- **Who:** in 23 minutes of both instances' request logs, 3,992 card requests named 3,986 different cards. 3,928 of them (98%) followed a request for the card's own page, 3.6 to 17 seconds later (10th to 90th percentile, median 6.7 seconds). 3,989 used the `.jpg` URL, which appears only in the page's `og:image` and `twitter:image` tags. So a client that walks title and person pages fetches each page's `og:image` once. About one page request in five was followed by a card request. The request log has no user agent, so the client isn't named: `goodwatch_og_card_clients_total` counts it from now on.
+- **Renders:** 3,982 of the 3,992 requests were renders, about 2.9 per second across both instances. The 7-day store answered almost none of them, because no card was requested twice.
+- **Rule:** a card that is rendered for a request is stored for 30 minutes. The next request for it, from any client and on either instance, sets the 7-day lifetime (one `EXPIRE`, or a write if the key is gone). Requests that wait for the same render count as one. A redraw after 24 hours keeps the 7 days. The key and the stored value are unchanged, so cards stored before the change stay readable, and a request for one keeps it.
+- **Why not by client:** an undeclared crawler can send any user agent, and a rule that trusts the user agent would need a list that someone maintains. The client class is counted, not used.
+- **Why not "store only on the second request":** the second request of a link preview would render again whenever it reaches the other instance. With the short lifetime it reads the card from Valkey.
+- **Before Express:** a card enters the hot store only once it's kept, so the second request reaches the route. It costs about 0.6 ms of main-thread time instead of 0.1 ms, once per card.
+- **Memory (estimate):** at 2.9 new cards per second and 115 KB each, 30 minutes hold about 5,200 cards, 0.6 GB across the cluster and 0.2 GB per node. Before the change the same rate wrote 29 GB per day into a cluster that holds 21 GB.
+- **Render rate:** unchanged. Every one of these requests was a render before, too. A card that is requested again after more than 30 minutes and wasn't kept renders again: 6 of 3,992 requests were repeats, all within 70 seconds.
 
 ## A hot card
 
@@ -287,6 +300,7 @@ A card changes when its title's data changes, so its URL carries no version and 
 ## Metrics
 
 - `goodwatch_og_cards_total{result}`: `memory`, `store`, `stale`, `rendered`, `missing`, `busy`, `failed`. The cold share of card requests is `rendered` plus `busy` over the total. A page's card that is answered before Express counts as `memory`.
+- `goodwatch_og_card_clients_total{client,result}`: the same outcomes by client class, from the user agent: `preview` (link preview clients such as Facebook, WhatsApp, Slack, X, Discord, Telegram, and Apple Messages), `crawler` (every other declared crawler), and `other` (a browser user agent or none).
 - `goodwatch_og_hot_cards_entries` and `goodwatch_og_hot_cards_bytes`: the answers kept for requests before Express, share list images included.
 - `goodwatch_card_renderer_running` and `goodwatch_card_renderer_waiting{kind}`.
 
