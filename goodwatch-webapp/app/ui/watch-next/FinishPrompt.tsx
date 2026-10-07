@@ -53,8 +53,6 @@ export function FinishPrompt({
 								}}
 								size="compact"
 								onRated={() => onClose(true)}
-								// "I watched it" already recorded the watch; recording it again would move its time.
-								recordWatch={false}
 							/>
 						</div>
 						<div className="mt-4 flex justify-end">

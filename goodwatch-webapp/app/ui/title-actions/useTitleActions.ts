@@ -2,8 +2,9 @@
 // that shows the title action set.
 import { useCallback } from "react"
 import { toast } from "react-toastify"
-import { useIsNotInterested, useIsOnWishlist, useIsWatched, useUserScore } from "~/hooks/useUserDataAccessors"
-import { useNotInterestedMutation, useWatchedMutation, useWishlistMutation } from "~/hooks/useUserDataMutations"
+import { useSeenToggle } from "~/hooks/useSeenToggle"
+import { useIsNotInterested, useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
+import { useNotInterestedMutation, useWishlistMutation } from "~/hooks/useUserDataMutations"
 import type { ScoredMedia } from "~/ui/user/actions/ScoreAction"
 
 export const SEEN_INSTRUCTIONS = "Your history shows every title you ever have watched."
@@ -17,11 +18,11 @@ export function useTitleActions(media: ScoredMedia) {
 
 	const score = useUserScore(mediaType, tmdbId)?.score ?? null
 	const want = useIsOnWishlist(mediaType, tmdbId)
-	const seen = useIsWatched(mediaType, tmdbId)
+	// The Seen button shows the state Seen, which is what one more press takes back.
+	const { seen, tracked, toggle, isPending: seenPending } = useSeenToggle(mediaType, tmdbId)
 	const hidden = useIsNotInterested(mediaType, tmdbId)
 
 	const { mutate: updateWishlist, isPending: wantPending } = useWishlistMutation()
-	const { mutate: updateWatched, isPending: seenPending } = useWatchedMutation()
 	const { mutate: updateNotInterested, isPending: hidePending } = useNotInterestedMutation()
 
 	const toggleWant = useCallback(
@@ -29,10 +30,7 @@ export function useTitleActions(media: ScoredMedia) {
 		[updateWishlist, mediaType, tmdbId, want],
 	)
 	/** Members only: wrap the button in UserAction so a guest gets the sign-in prompt instead. */
-	const toggleSeen = useCallback(
-		() => updateWatched({ mediaType, tmdbId, action: seen ? "remove" : "add" }),
-		[updateWatched, mediaType, tmdbId, seen],
-	)
+	const toggleSeen = useCallback(() => toggle(), [toggle])
 
 	const unhide = useCallback(
 		() =>
@@ -65,8 +63,11 @@ export function useTitleActions(media: ScoredMedia) {
 		want,
 		seen,
 		hidden,
-		/** Not interested means "haven't seen it, don't want to": not offered once the title is seen or scored. */
-		canHide: hidden || (!seen && score == null),
+		/**
+		 * Not interested means "haven't seen it, don't want to": offered only while the title is Not started and has
+		 * no score.
+		 */
+		canHide: hidden || (!tracked && score == null),
 		toggleWant,
 		toggleSeen,
 		hide,

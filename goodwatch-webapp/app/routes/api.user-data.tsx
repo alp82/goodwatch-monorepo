@@ -1,6 +1,10 @@
 import { type LoaderFunction, json } from "@remix-run/node"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import type { UserData } from "~/types/user-data"
+import {
+	type UserData,
+	withLegacyWatched,
+	withWatchState,
+} from "~/types/user-data"
 import { getUserData } from "~/server/userData.server"
 import { getAuthFromRequest, useUser } from "~/utils/auth"
 
@@ -14,7 +18,10 @@ export const loader: LoaderFunction = async ({ request }) => {
 	headers.set("Cache-Control", "private, no-store")
 	const userData = await getUserData({ user_id: user?.id })
 
-	return json<UserData>(userData, { headers })
+	// A member's answer still carries `watched` for a page loaded before the watch state was deployed.
+	return json<UserData>(user ? withLegacyWatched(userData) : userData, {
+		headers,
+	})
 }
 
 import { guestUserData, useGuestInteractions } from "~/utils/guest-progress"
@@ -27,7 +34,7 @@ const useUserDataInBrowser = () => {
 	const url = "/api/user-data"
 	const query = useQuery<UserData>({
 		queryKey: getQueryKeyUserData(user?.id),
-		queryFn: async () => await (await fetch(url)).json(),
+		queryFn: async () => withWatchState(await (await fetch(url)).json()),
 		enabled: !loading && Boolean(user?.id),
 	})
 	return user ? query : { ...query, data: guestData, isLoading: false }

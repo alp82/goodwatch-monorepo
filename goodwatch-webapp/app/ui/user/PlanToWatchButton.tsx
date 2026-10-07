@@ -1,6 +1,6 @@
 import { BookmarkIcon } from "@heroicons/react/20/solid"
 import React from "react"
-import { useIsOnWishlist, useIsWatched } from "~/hooks/useUserDataAccessors"
+import { useIsOnWishlist, useIsSeen } from "~/hooks/useUserDataAccessors"
 import ToWatchAction from "~/ui/user/actions/ToWatchAction"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import ActionButton from "~/ui/button/ActionButton"
@@ -18,7 +18,7 @@ export default function PlanToWatchButton({
 	const { tmdb_id } = details
 
 	const isInWishList = useIsOnWishlist(mediaType, tmdb_id)
-	const isInWatchHistory = useIsWatched(mediaType, tmdb_id)
+	const isInWatchHistory = useIsSeen(mediaType, tmdb_id)
 	const labelText = isInWatchHistory ? "Want to See Again" : "Want to See"
 	const labelAction = isInWatchHistory ? "Want to See Again" : "Want to See"
 

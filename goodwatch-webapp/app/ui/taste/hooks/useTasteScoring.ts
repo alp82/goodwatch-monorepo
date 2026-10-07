@@ -74,6 +74,8 @@ export const useTasteScoring = ({ isAuthenticated }: UseTasteScoringProps) => {
 					mediaType: media.media_type,
 					tmdbId: media.tmdb_id,
 					score,
+					// A quiz score on a show never asks "Have you seen all of it?".
+					byHand: false,
 				})
 			}
 

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useRouteLoaderData } from "@remix-run/react"
 import { useGuestInteractions } from "~/utils/guest-progress"
 import { useUserData } from "~/routes/api.user-data"
+import { ACTED_ON } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
 import type { DiscoveryResult } from "~/server/interest-discovery.server"
 export function useInterestDiscovery(genre = "") {
@@ -28,7 +29,7 @@ export function useInterestDiscovery(genre = "") {
 	})
 	// Hide newly acted-on titles immediately, including while fresh suggestions load.
 	const excluded = new Set(
-		["scores", "skipped", "watched", "wishlist", "notInterested"].flatMap((key) =>
+		ACTED_ON.flatMap((key) =>
 			Object.keys(history?.[key] || {}),
 		),
 	)
