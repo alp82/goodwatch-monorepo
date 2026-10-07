@@ -122,11 +122,11 @@
         "font_requests": { "max": 2 },
         "blocking_requests": { "max": 1 },
         "third_party_origins": { "max": 1 },
-        "total_bytes": { "max": 517120 },
-        "lcp_ms": { "max": 4700 },
+        "total_bytes": { "max": 494592 },
+        "lcp_ms": { "max": 3900 },
         "tbt_ms": { "max": 250 },
         "cls": { "max": 0.01 },
-        "score": { "min": 80 }
+        "score": { "min": 84 }
       }
     }
   }
