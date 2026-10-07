@@ -1,12 +1,15 @@
 // PROTOTYPE for "Prototype native-scroll carousels on title pages". Throwaway code: not for production.
 //
 // The switch of the prototype. It is off unless the server runs with PROTO_CAROUSELS=1, so a stray merge ships
-// nothing. With it on, `?proto=today|rows|list|explore|explore1..5|walk1..5` on a title page picks a variant and sets a cookie, so the
+// nothing. With it on, `?proto=today|rows|list|explore|explore1..5|walk1..5|dive1..5` on a title page picks a variant and sets a cookie, so the
 // choice survives navigation between titles. `?proto=off` clears it. A page rendered with a variant is `no-store`:
 // the page cache never keeps it. The cookie isn't part of the page cache key, so run the prototype with
 // PAGE_CACHE=off (a stored plain page would otherwise answer a visitor who holds the cookie).
 import { MOODS } from "~/server/explorer/islands.server"
+import { diveSectionHtml } from "~/server/prototype-dive-view.server"
+import { diveModel } from "~/server/prototype-dive.server"
 import { walkSectionHtml } from "~/server/prototype-walk.server"
+import { getRelatedPanel } from "~/server/related.server"
 import { MISSING_SCORE } from "~/server/title-snapshot/format.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
@@ -15,6 +18,11 @@ import {
 	VALID_FINGERPRINT_KEYS,
 } from "~/server/utils/fingerprint"
 import type { QdrantMediaPayload } from "~/server/utils/recommend"
+import {
+	type DiveModel,
+	type DiveVariant,
+	isDiveVariant,
+} from "~/ui/prototype-carousels/dive-model"
 import {
 	type ExploreModel,
 	type ExploreVariant,
@@ -249,6 +257,92 @@ export async function walkModel(input: {
 	})
 }
 
+/** The text links of a dive section: the related titles of the overall panel, the page's type first. */
+function diveLinks(type: PxType, panel: RelatedPanel): DiveModel["links"] {
+	const year = new Date().getFullYear()
+	const of = (listType: PxType, cards: RelatedCard[]) =>
+		cards
+			.filter(
+				(card) =>
+					card.poster_path &&
+					Number(card.release_year) > 0 &&
+					Number(card.release_year) <= year,
+			)
+			.map((card) => ({
+				type: listType,
+				id: card.tmdb_id,
+				title: card.title,
+				year: card.release_year,
+			}))
+	const movies = of("movie", panel.movies)
+	const shows = of("show", panel.shows)
+	return type === "movie" ? [...movies, ...shows] : [...shows, ...movies]
+}
+
+/**
+ * What a dive variant shows around a title. The page passes the title it already has and its related panel: the
+ * walk's second axis is chosen from the panel's fingerprints, and the panel gives the text links. A step in the
+ * browser passes the axis on. A request without one (the page's panel missed its time budget) chooses it here.
+ */
+export async function diveStage(input: {
+	variant: DiveVariant
+	type: PxType
+	tmdbId: number
+	axis?: string
+	lock?: string | null
+	from?: { type: PxType; id: number; via: string } | null
+	panel?: RelatedPanel
+	center?: {
+		title: string
+		year: string
+		poster: string
+		scores: Record<string, number>
+	}
+}): Promise<DiveModel | undefined> {
+	const panel =
+		input.panel ??
+		(input.axis
+			? undefined
+			: await getRelatedPanel({
+					tmdbId: input.tmdbId,
+					sourceMediaType: input.type,
+				}))
+	const neighbors = panel
+		? [
+				...(
+					await fingerprintsOf([
+						...panel.movies.map((card) => titleKey("movie", card.tmdb_id)),
+						...panel.shows.map((card) => titleKey("show", card.tmdb_id)),
+					])
+				).values(),
+			]
+		: undefined
+	const center = input.center
+	return diveModel({
+		variant: input.variant,
+		type: input.type,
+		tmdbId: input.tmdbId,
+		center: center
+			? {
+					title: {
+						type: input.type,
+						id: input.tmdbId,
+						title: center.title,
+						year: center.year,
+						poster: center.poster,
+						score: 0,
+					},
+					scores: (key) => center.scores[key],
+				}
+			: undefined,
+		axis: input.axis,
+		neighbors,
+		lock: input.lock,
+		from: input.from,
+		links: panel ? diveLinks(input.type, panel) : undefined,
+	})
+}
+
 const cookieOf = (request: Request) =>
 	new RegExp(`(?:^|;\\s*)${CAROUSEL_PROTOTYPE_COOKIE}=([a-z0-9]+)`).exec(
 		request.headers.get("Cookie") ?? "",
@@ -328,6 +422,38 @@ export async function carouselPrototype(
 				: undefined
 		data.walk = {
 			html: walkSectionHtml({
+				variant,
+				title: media.details.title,
+				rootKey: `${media.mediaType}-${tmdbId}`,
+				model,
+			}),
+		}
+	}
+	if (isDiveVariant(variant)) {
+		const panel = (
+			relatedState.queries[0] as { state?: { data?: RelatedPanel } } | undefined
+		)?.state?.data
+		const scores = media.fingerprint?.scores as
+			| Record<string, number>
+			| undefined
+		const tmdbId = media.details.tmdb_id
+		const model =
+			panel && scores
+				? await diveStage({
+						variant,
+						type: media.mediaType,
+						tmdbId,
+						panel,
+						center: {
+							title: media.details.title,
+							year: String(media.details.release_year ?? ""),
+							poster: media.details.poster_path,
+							scores,
+						},
+					})
+				: undefined
+		data.dive = {
+			html: diveSectionHtml({
 				variant,
 				title: media.details.title,
 				rootKey: `${media.mediaType}-${tmdbId}`,

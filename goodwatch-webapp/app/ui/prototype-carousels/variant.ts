@@ -22,7 +22,19 @@
 // - walk3: a path, with the trail as part of the picture.
 // - walk4: an orbit whose caption explains one neighbor at a time.
 // - walk5: four named piles that spread out in place.
-// The floating bar shows today, the constellation, and these five. The other variants still answer to the URL.
+//
+// Fourth round, after the owner tried the third: four forms in which the directions keep their words and places for
+// the whole walk, the title you came from sits opposite the step, and a direction can be dived into (see
+// dive-model.ts for the scheme and DiveSection.tsx for the forms):
+// - dive1: a ring with labeled sides. A dive opens one side into a fan.
+// - dive2: a compass with steady axes. A dive makes one arm a long row.
+// - dive3: a path with four lanes. A dive loads a lane further.
+// - dive4: four piles. Opening a pile lays it out from a bit to much.
+// - dive5: the compass with a dial. Two axes are few: the visitor picks what up and down mean from five, and
+//   lighter and darker stay left and right. Added after building the four, because every one of them is limited to
+//   the two axes the server chose.
+// The floating bar shows today, the calm ring and the compass of the third round for comparison, and these four.
+// The other variants still answer to the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
 
@@ -41,18 +53,24 @@ export const CAROUSEL_VARIANTS = [
 	"walk3",
 	"walk4",
 	"walk5",
+	"dive1",
+	"dive2",
+	"dive3",
+	"dive4",
+	"dive5",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
 /** The variants the floating bar cycles through. */
 export const CAROUSEL_BAR: CarouselVariant[] = [
 	"today",
-	"explore1",
 	"walk1",
 	"walk2",
-	"walk3",
-	"walk4",
-	"walk5",
+	"dive1",
+	"dive2",
+	"dive3",
+	"dive4",
+	"dive5",
 ]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
@@ -70,6 +88,11 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	walk3: "W3 Path",
 	walk4: "W4 One voice",
 	walk5: "W5 Piles",
+	dive1: "D1 Labeled ring",
+	dive2: "D2 Steady compass",
+	dive3: "D3 Lanes",
+	dive4: "D4 Piles that open",
+	dive5: "D5 Compass with a dial",
 }
 
 export const CAROUSEL_PROTOTYPE_COOKIE = "gw_proto_carousels"
@@ -87,6 +110,8 @@ export interface CarouselPrototypeData {
 	explore?: ExploreModel
 	/** walk1 to walk5: the section's markup. An inline script drives it, React doesn't. */
 	walk?: { html: string }
+	/** dive1 to dive5: the section's markup, driven the same way. */
+	dive?: { html: string }
 }
 
 /** The prototype's data from the title route's loader, or null for today's page. */
