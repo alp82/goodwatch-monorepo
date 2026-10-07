@@ -97,13 +97,15 @@ export interface Rules {
 	/** Whose calendar decides "today" for "aired". Map: the member's. Research: UTC. */
 	airedBy: "member-date" | "utc-date"
 	/** A watch whose episode id TMDB no longer lists. ADR 0008: kept, never counts. */
-	goneEpisode: "never-counts" | "same-number"
+	/** `same-number-and-date`: the same, and the removed row (while it is still stored) must have the same air date. */
+	goneEpisode: "never-counts" | "same-number" | "same-number-and-date"
 	/** Glossary: the earliest aired regular episode without a watch. */
 	nextEpisode: "earliest-unwatched" | "after-furthest"
 	/** Map: removing Seen removes only bulk watches. Whether that means every bulk watch or only Seen's own. */
 	removeSeenRemoves: "all-bulk" | "show-bulk"
 	/** Research: the highest season with an aired or dated episode is the one judged, so a dated premiere counts. */
-	upcomingSeason: "airing" | "not-airing"
+	/** `airing-from-a-week-before`: a season nothing has aired of counts from 7 days before its premiere. */
+	upcomingSeason: "airing" | "not-airing" | "airing-from-a-week-before"
 	/** Research: an episode without a date has not aired, so it keeps its season airing. */
 	undatedEpisode: "keeps-airing" | "ignored"
 	/** Research: status Ended or Canceled means no season is airing, whatever is listed. */
@@ -115,7 +117,8 @@ export interface Rules {
 	/** Map: a show stays Seen when later episodes air. `reopen`: not when they belong to a season already begun. */
 	laterEpisodes: "stay-seen" | "reopen"
 	/** Proposal. Pressing Seen while a season is airing. The glossary's Seen needs "no season still airing". */
-	seenPressWhileAiring: "caught-up" | "seen"
+	/** `not-offered`: Seen is not offered while a season airs; the episode list marks all aired in its place. */
+	seenPressWhileAiring: "caught-up" | "seen" | "not-offered"
 	/** Proposal. Unmarking an episode that had aired when the show became Seen. */
 	unmarkOnSeen: "removes-seen" | "keeps-seen"
 	/** Proposal. Seen is decided when somebody looks, or worked out from the dates of the watches. */
@@ -200,7 +203,13 @@ export function episodeOfWatch(
 	const sameNumber = live.filter(
 		(e) => e.season === of.season && e.number === of.number,
 	)
-	return sameNumber.length === 1 ? sameNumber[0] : null
+	if (sameNumber.length !== 1) return null
+	if (rules.goneEpisode === "same-number-and-date") {
+		// A re-add keeps the date. A renumbering puts another episode, with another date, on the number.
+		const gone = show.episodes.find((e) => e.tmdbId === of.tmdbId)
+		if (gone && gone.airDate !== sameNumber[0].airDate) return null
+	}
+	return sameNumber[0]
 }
 
 /**
@@ -218,7 +227,9 @@ export function seasonStillAiring(
 		.filter((e) =>
 			rules.upcomingSeason === "airing"
 				? e.airDate !== null
-				: hasAired(e, today),
+				: rules.upcomingSeason === "airing-from-a-week-before"
+					? hasAired(e, addDays(today, 7))
+					: hasAired(e, today),
 		)
 		.map((e) => e.season)
 	if (judgedSeasons.length === 0) return null
@@ -396,7 +407,9 @@ export function view(world: World, rules: Rules = SETTLED): View {
 		notInterested: member.notInterested,
 		offered: {
 			// Not while the list says nothing has aired yet. A show without a list can still be marked as a whole.
-			seen: !(regular.length > 0 && airedRegular.length === 0),
+			seen:
+				!(regular.length > 0 && airedRegular.length === 0) &&
+				!(rules.seenPressWhileAiring === "not-offered" && facts.airingSeason !== null),
 			notInterested: !seen && !started && status === null,
 			onHold: started && open && status !== "on_hold",
 			dropped: started && open && status !== "dropped",
@@ -638,7 +651,11 @@ export function step(
 		}
 		case "pressSeen": {
 			if (!view(world, rules).offered.seen)
-				return refused("Seen is not offered before the first episode has aired.")
+				return refused(
+					facts().airedRegular.length === 0
+						? "Seen is not offered before the first episode has aired."
+						: "Seen is not offered while a season is airing.",
+				)
 			const fresh = bulkMark(listed(show).filter(isRegular), "show")
 			note = `${plural(fresh.length, "bulk watch")}, date unknown.`
 			member.wantToSee = false
