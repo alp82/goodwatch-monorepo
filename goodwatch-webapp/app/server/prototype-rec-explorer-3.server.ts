@@ -153,7 +153,7 @@ async function memberSignals(userId: string) {
 			[userId],
 		),
 		query<KeyRow>(
-			"SELECT tmdb_id, media_type FROM user_watch_history WHERE user_id = ? LIMIT 5000",
+			"SELECT tmdb_id, media_type FROM user_watch_state WHERE user_id = ? AND state <> 'not_started' LIMIT 5000",
 			[userId],
 		),
 		query<KeyRow>(

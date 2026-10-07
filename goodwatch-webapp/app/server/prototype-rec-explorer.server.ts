@@ -89,7 +89,7 @@ async function memberSignals(userId: string) {
 	const [scores, wish, watched, skipped] = await Promise.all([
 		query<KeyRow & { score: number }>("SELECT tmdb_id, media_type, score FROM user_score WHERE user_id = ? LIMIT 5000", [userId]),
 		query<KeyRow>("SELECT tmdb_id, media_type FROM user_wishlist WHERE user_id = ? LIMIT 5000", [userId]),
-		query<KeyRow>("SELECT tmdb_id, media_type FROM user_watch_history WHERE user_id = ? LIMIT 5000", [userId]),
+		query<KeyRow>("SELECT tmdb_id, media_type FROM user_watch_state WHERE user_id = ? AND state <> 'not_started' LIMIT 5000", [userId]),
 		query<KeyRow>("SELECT tmdb_id, media_type FROM user_skipped WHERE user_id = ? LIMIT 5000", [userId]),
 	])
 	// A later, stronger signal wins: rating over seen over Want to See over skip.
