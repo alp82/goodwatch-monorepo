@@ -7,7 +7,7 @@ import { useLocation } from "@remix-run/react"
 import { useEffect } from "react"
 import { useBelowFold } from "~/ui/details/below-fold"
 import {
-	CAROUSEL_VARIANTS,
+	CAROUSEL_BAR,
 	CAROUSEL_VARIANT_NAMES,
 	type CarouselVariant,
 } from "~/ui/prototype-carousels/variant"
@@ -17,18 +17,15 @@ const SCROLL_KEY = "gw-proto-carousels-scroll"
 export function PrototypeSwitcher({ variant }: { variant: CarouselVariant }) {
 	const location = useLocation()
 	const { layOutAll } = useBelowFold()
-	const at = CAROUSEL_VARIANTS.indexOf(variant)
+	// A variant that isn't in the bar (rows, list) counts as the first one.
+	const at = Math.max(0, CAROUSEL_BAR.indexOf(variant))
 	const hrefOf = (name: string) => {
 		const params = new URLSearchParams(location.search)
 		params.set("proto", name)
 		return `${location.pathname}?${params}`
 	}
 	const step = (by: number) =>
-		hrefOf(
-			CAROUSEL_VARIANTS[
-				(at + by + CAROUSEL_VARIANTS.length) % CAROUSEL_VARIANTS.length
-			],
-		)
+		hrefOf(CAROUSEL_BAR[(at + by + CAROUSEL_BAR.length) % CAROUSEL_BAR.length])
 	const prev = step(-1)
 	const next = step(1)
 
@@ -84,7 +81,7 @@ export function PrototypeSwitcher({ variant }: { variant: CarouselVariant }) {
 			</a>
 			<span className="whitespace-nowrap px-1 text-center leading-tight">
 				<span className="block text-[10px] uppercase tracking-wide opacity-70">
-					Prototype {at + 1}/{CAROUSEL_VARIANTS.length}
+					Prototype {at + 1}/{CAROUSEL_BAR.length}
 				</span>
 				<span className="font-bold">{CAROUSEL_VARIANT_NAMES[variant]}</span>
 			</span>

@@ -1,7 +1,7 @@
 // PROTOTYPE for "Prototype native-scroll carousels on title pages". Throwaway code: not for production.
 //
 // The switch of the prototype. It is off unless the server runs with PROTO_CAROUSELS=1, so a stray merge ships
-// nothing. With it on, `?proto=today|rows|list|explore` on a title page picks a variant and sets a cookie, so the
+// nothing. With it on, `?proto=today|rows|list|explore|explore1..5` on a title page picks a variant and sets a cookie, so the
 // choice survives navigation between titles. `?proto=off` clears it. A page rendered with a variant is `no-store`:
 // the page cache never keeps it. The cookie isn't part of the page cache key, so run the prototype with
 // PAGE_CACHE=off (a stored plain page would otherwise answer a visitor who holds the cookie).
@@ -14,6 +14,13 @@ import {
 	VALID_FINGERPRINT_KEYS,
 } from "~/server/utils/fingerprint"
 import type { QdrantMediaPayload } from "~/server/utils/recommend"
+import {
+	type ExploreModel,
+	type ExploreVariant,
+	type PxType,
+	buildExploreModel,
+	isExploreVariant,
+} from "~/ui/prototype-carousels/explore-model"
 import {
 	CAROUSEL_PROTOTYPE_COOKIE,
 	type CarouselPrototypeData,
@@ -119,8 +126,50 @@ function moodIslandOf(media: MovieResult | ShowResult) {
 	return best
 }
 
+/**
+ * What an explore variant shows around a title: its related titles with reasons. Without `scores` (a step onto
+ * another title in the browser) the center's fingerprint is read together with its neighbors'.
+ */
+export async function exploreModel(input: {
+	variant: ExploreVariant
+	type: PxType
+	tmdbId?: number
+	panel: RelatedPanel
+	scores?: Scores
+	highlightKeys?: string[]
+}): Promise<ExploreModel | undefined> {
+	const keys = [
+		...input.panel.movies.map((card) => titleKey("movie", card.tmdb_id)),
+		...input.panel.shows.map((card) => titleKey("show", card.tmdb_id)),
+	]
+	const centerKey =
+		input.tmdbId === undefined ? undefined : titleKey(input.type, input.tmdbId)
+	const fingerprints = await fingerprintsOf(
+		input.scores || centerKey === undefined ? keys : [centerKey, ...keys],
+	)
+	const scores =
+		input.scores ??
+		(centerKey === undefined ? undefined : fingerprints.get(centerKey))
+	if (!scores) return undefined
+	// A title stepped onto has no highlight attributes at hand: its highest scores stand in.
+	const highlightKeys =
+		input.highlightKeys ??
+		[...DISTINCT]
+			.sort((a, b) => (scores(b) ?? 0) - (scores(a) ?? 0))
+			.slice(0, 5)
+	return buildExploreModel({
+		variant: input.variant,
+		type: input.type,
+		scores,
+		highlightKeys,
+		movies: input.panel.movies,
+		shows: input.panel.shows,
+		fingerprint: (type, id) => fingerprints.get(titleKey(type, id)),
+	})
+}
+
 const cookieOf = (request: Request) =>
-	new RegExp(`(?:^|;\\s*)${CAROUSEL_PROTOTYPE_COOKIE}=([a-z]+)`).exec(
+	new RegExp(`(?:^|;\\s*)${CAROUSEL_PROTOTYPE_COOKIE}=([a-z0-9]+)`).exec(
 		request.headers.get("Cookie") ?? "",
 	)?.[1]
 
@@ -154,7 +203,24 @@ export async function carouselPrototype(
 			`${CAROUSEL_PROTOTYPE_COOKIE}=${variant}; Path=/; Max-Age=604800; SameSite=Lax`
 
 	const data: CarouselPrototypeData = { variant, reasons: {}, island: null }
-	if (variant === "explore") data.island = moodIslandOf(media)
+	if (variant === "explore" || isExploreVariant(variant))
+		data.island = moodIslandOf(media)
+	if (isExploreVariant(variant)) {
+		const panel = (
+			relatedState.queries[0] as { state?: { data?: RelatedPanel } } | undefined
+		)?.state?.data
+		const scores = media.fingerprint?.scores as
+			| Record<string, number>
+			| undefined
+		if (panel && scores)
+			data.explore = await exploreModel({
+				variant,
+				type: media.mediaType,
+				panel,
+				scores: (key) => scores[key],
+				highlightKeys: media.fingerprint?.highlightKeys ?? [],
+			})
+	}
 	if (variant === "list") {
 		const panel = (
 			relatedState.queries[0] as { state?: { data?: RelatedPanel } } | undefined

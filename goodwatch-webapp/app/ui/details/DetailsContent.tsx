@@ -30,6 +30,11 @@ import {
 import { titleQuestions } from "~/ui/details/titleQuestions"
 // PROTOTYPE (native-scroll carousels): everything from ui/prototype-carousels is throwaway.
 import ActorsNative from "~/ui/prototype-carousels/ActorsNative"
+import Explore1Constellation from "~/ui/prototype-carousels/Explore1Constellation"
+import Explore2Clusters from "~/ui/prototype-carousels/Explore2Clusters"
+import Explore3Walk from "~/ui/prototype-carousels/Explore3Walk"
+import Explore4Chips from "~/ui/prototype-carousels/Explore4Chips"
+import Explore5Map from "~/ui/prototype-carousels/Explore5Map"
 import { NativeRowAssets } from "~/ui/prototype-carousels/NativeRow"
 import { PrototypeSwitcher } from "~/ui/prototype-carousels/PrototypeSwitcher"
 import RelatedExplore from "~/ui/prototype-carousels/RelatedExplore"
@@ -74,16 +79,27 @@ export default function DetailsContent({
 	// Measured at 412 and 1,350 px wide on The Matrix and Breaking Bad.
 	const castReserve = (reserved: ReservedHeight): ReservedHeight =>
 		native && reserved.phone ? { phone: 212, desktop: 244 } : reserved
+	// The second round's forms and the height each one reserves, measured the same way.
+	const explore = {
+		explore1: { form: Explore1Constellation, phone: 704, desktop: 610 },
+		explore2: { form: Explore2Clusters, phone: 498, desktop: 335 },
+		explore3: { form: Explore3Walk, phone: 522, desktop: 416 },
+		explore4: { form: Explore4Chips, phone: 397, desktop: 362 },
+		explore5: { form: Explore5Map, phone: 668, desktop: 623 },
+	}[variant as string]
 	const relatedReserve = (reserved: ReservedHeight): ReservedHeight =>
 		!reserved.phone
 			? reserved
-			: variant === "list"
-				? { phone: 1470, desktop: 880 }
-				: variant === "explore"
-					? { phone: 736, desktop: 632 }
-					: reserved
-	const Related =
-		variant === "rows"
+			: explore
+				? { phone: explore.phone, desktop: explore.desktop }
+				: variant === "list"
+					? { phone: 1470, desktop: 880 }
+					: variant === "explore"
+						? { phone: 736, desktop: 632 }
+						: reserved
+	const Related = explore
+		? explore.form
+		: variant === "rows"
 			? RelatedRowsNative
 			: variant === "list"
 				? RelatedList
