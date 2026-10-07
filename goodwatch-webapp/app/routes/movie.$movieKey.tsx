@@ -15,6 +15,7 @@ import { isCrawler } from "~/server/crawlers.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
 import { relatedPanelEmbedded } from "~/server/related-prefetch"
 import { prefetchRelatedTitlesState } from "~/server/related.server"
+import { carouselPrototype } from "~/server/prototype-carousels.server"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { mergeDehydratedStates } from "~/utils/title-extras"
@@ -90,6 +91,8 @@ export const loader: LoaderFunction = async ({
 		),
 	])
 	const dehydratedState = mergeDehydratedStates(relatedState, extrasState)
+	// PROTOTYPE (native-scroll carousels): null unless the server runs with PROTO_CAROUSELS=1 and the request asks.
+	const prototype = await carouselPrototype(request, media, relatedState)
 
 	const data = {
 		media,
@@ -98,7 +101,9 @@ export const loader: LoaderFunction = async ({
 		},
 		countryIsFallback,
 		dehydratedState,
+		...(prototype?.data && { carouselPrototype: prototype.data }),
 	}
+	if (prototype) return json(data, { headers: prototype.headers })
 	// Without the embedded related panel or an extra (a lookup ran out of its budget or failed) the page is incomplete:
 	// no cache may keep it. The page cache and a cache in front follow this header.
 	const complete =

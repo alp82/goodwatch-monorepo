@@ -28,6 +28,14 @@ import {
 	type ReservedHeight,
 } from "~/ui/details/section-heights"
 import { titleQuestions } from "~/ui/details/titleQuestions"
+// PROTOTYPE (native-scroll carousels): everything from ui/prototype-carousels is throwaway.
+import ActorsNative from "~/ui/prototype-carousels/ActorsNative"
+import { NativeRowAssets } from "~/ui/prototype-carousels/NativeRow"
+import { PrototypeSwitcher } from "~/ui/prototype-carousels/PrototypeSwitcher"
+import RelatedExplore from "~/ui/prototype-carousels/RelatedExplore"
+import RelatedList from "~/ui/prototype-carousels/RelatedList"
+import RelatedRowsNative from "~/ui/prototype-carousels/RelatedRowsNative"
+import { useCarouselPrototype } from "~/ui/prototype-carousels/variant"
 
 export interface DetailsContentProps {
 	media: MovieResult | ShowResult
@@ -59,8 +67,34 @@ export default function DetailsContent({
 		...belowFoldProps(skipping, reserved, props?.className),
 	})
 
+	// PROTOTYPE (native-scroll carousels): null on today's page.
+	const variant = useCarouselPrototype()?.variant
+	const native = variant !== undefined && variant !== "today"
+	const CastRow = native ? ActorsNative : Actors
+	// Measured at 412 and 1,350 px wide on The Matrix and Breaking Bad.
+	const castReserve = (reserved: ReservedHeight): ReservedHeight =>
+		native && reserved.phone ? { phone: 212, desktop: 244 } : reserved
+	const relatedReserve = (reserved: ReservedHeight): ReservedHeight =>
+		!reserved.phone
+			? reserved
+			: variant === "list"
+				? { phone: 1470, desktop: 880 }
+				: variant === "explore"
+					? { phone: 736, desktop: 632 }
+					: reserved
+	const Related =
+		variant === "rows"
+			? RelatedRowsNative
+			: variant === "list"
+				? RelatedList
+				: variant === "explore"
+					? RelatedExplore
+					: DetailsRelated
+
 	return (
 		<div className="flex flex-col gap-12">
+			{variant && <PrototypeSwitcher variant={variant} />}
+			{native && <NativeRowAssets />}
 			{hasEpisodeGrid(episodeGrid) && (
 				<div {...section(episodeGridHeight(episodeGrid))}>
 					<EpisodeGrid grid={episodeGrid} />
@@ -78,8 +112,8 @@ export default function DetailsContent({
 			<div {...section(aboutHeight(), sectionProps.about)}>
 				<About media={media} navigateToSection={navigateToSection} />
 			</div>
-			<div {...section(actorsHeight(media), sectionProps.actors_and_crew)}>
-				<Actors
+			<div {...section(castReserve(actorsHeight(media)), sectionProps.actors_and_crew)}>
+				<CastRow
 					cast={cast}
 					total={cast_total}
 					mediaType={media.mediaType}
@@ -89,8 +123,8 @@ export default function DetailsContent({
 			<div {...section(crewHeight(media))}>
 				<Crew crew={crew} />
 			</div>
-			<div {...section(relatedHeight(media), sectionProps.related)}>
-				<DetailsRelated media={media} />
+			<div {...section(relatedReserve(relatedHeight(media)), sectionProps.related)}>
+				<Related media={media} />
 			</div>
 			<div {...section(sequelsHeight(media))}>
 				<SequelsPrequelsFranchise media={media} />
