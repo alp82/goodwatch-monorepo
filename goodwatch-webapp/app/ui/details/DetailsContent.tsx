@@ -40,6 +40,7 @@ import { PrototypeSwitcher } from "~/ui/prototype-carousels/PrototypeSwitcher"
 import RelatedExplore from "~/ui/prototype-carousels/RelatedExplore"
 import RelatedList from "~/ui/prototype-carousels/RelatedList"
 import RelatedRowsNative from "~/ui/prototype-carousels/RelatedRowsNative"
+import DiveSection from "~/ui/prototype-carousels/DiveSection"
 import WalkSection from "~/ui/prototype-carousels/WalkSection"
 import { useCarouselPrototype } from "~/ui/prototype-carousels/variant"
 
@@ -93,6 +94,12 @@ export default function DetailsContent({
 		walk3: { form: WalkSection, phone: 590, desktop: 614 },
 		walk4: { form: WalkSection, phone: 590, desktop: 582 },
 		walk5: { form: WalkSection, phone: 590, desktop: 582 },
+		// The fourth round's forms, at the third round's heights.
+		dive1: { form: DiveSection, phone: 590, desktop: 582 },
+		dive2: { form: DiveSection, phone: 590, desktop: 582 },
+		dive3: { form: DiveSection, phone: 590, desktop: 614 },
+		dive4: { form: DiveSection, phone: 590, desktop: 582 },
+		dive5: { form: DiveSection, phone: 590, desktop: 582 },
 	}[variant as string]
 	const relatedReserve = (reserved: ReservedHeight): ReservedHeight =>
 		!reserved.phone
