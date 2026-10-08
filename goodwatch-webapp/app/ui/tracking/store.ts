@@ -4,6 +4,7 @@
 // episode in the list. Loaded on first use, never with the page.
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useSyncExternalStore } from "react"
+import type { DateWords } from "~/domain/tracking/seen-press"
 import { afterShowTracking } from "~/domain/tracking/show-member-data"
 import {
 	type ActionAnswer,
@@ -94,7 +95,7 @@ export interface DateRequest {
 	group: string
 	count: number
 }
-/** An episode to open in the episode list; null opens the list at its start. */
+/** An episode to open in the episode list; null opens the list at its start. `at` tells one request from the next. */
 export interface OpenRequest {
 	episodeId: number | null
 	at: number
@@ -114,6 +115,7 @@ export class ShowStore {
 	private listeners = new Set<() => void>()
 	private timer: ReturnType<typeof setTimeout> | undefined
 	private made = 0
+	private asked = 0
 	snapshot: Snapshot = {
 		page: null,
 		copy: null,
@@ -205,7 +207,9 @@ export class ShowStore {
 
 	/** Opens the episode list at an episode, loading the list's code if the page has not yet. */
 	openEpisode(episodeId: number | null) {
-		this.set({ open: { episodeId, at: deviceClock.now() } })
+		// A number of its own per request, so that asking twice in one tick of the clock is asking twice.
+		this.asked += 1
+		this.set({ open: { episodeId, at: this.asked } })
 		window.dispatchEvent(new Event(OPEN_EPISODES_EVENT))
 	}
 
@@ -298,7 +302,12 @@ export function useShowTracking(showId: number): ShowTracking {
 	const view = useMemo(
 		() =>
 			page && copy && page.episodes.length
-				? viewOf(copy, page.episodes, { today, running: page.running, score })
+				? viewOf(copy, page.episodes, {
+						today,
+						running: page.running,
+						score,
+						words: LOCALE_DATES,
+					})
 				: null,
 		[page, copy, today, score],
 	)
@@ -372,6 +381,20 @@ const MONTHS = [
 	"Nov",
 	"Dec",
 ]
+
+const DAY_WORDS = { day: "numeric", month: "short", year: "numeric" } as const
+/**
+ * Dates in the member's locale, "19 Oct 2024" or "Oct 19, 2024": a moment as its day on the device, a calendar day
+ * as that day. Only code that runs in the browser after hydration reads it.
+ */
+export const LOCALE_DATES: DateWords = {
+	moment: (at) => new Intl.DateTimeFormat(undefined, DAY_WORDS).format(at),
+	day: (day) =>
+		new Intl.DateTimeFormat(undefined, {
+			...DAY_WORDS,
+			timeZone: "UTC",
+		}).format(Date.parse(`${day}T00:00:00Z`)),
+}
 
 /** A calendar day, "YYYY-MM-DD", in words. */
 export function formatDay(day: string, today?: string): string {

@@ -20,6 +20,13 @@ import {
 	watchedIds,
 } from "./machine.ts"
 import {
+	type DateWords,
+	PLAIN_DATES,
+	type SeenPress,
+	seenPressOf,
+} from "./seen-press.ts"
+import { type MenuEntry, statusMenu } from "./status-menu.ts"
+import {
 	type LogRow,
 	type StateRow,
 	type WatchStateEntry,
@@ -208,15 +215,15 @@ export interface SeenControl {
 	newEpisodes: number
 }
 
-export type StatusAction = "hold" | "drop" | "resume" | "watchAgain"
-
 export interface ShowView {
 	derived: Derived
 	/** The member has a state for the show or a watch of it. */
 	tracked: boolean
 	seen: SeenControl
-	/** What the status pill's menu offers, in order. */
-	menu: StatusAction[]
+	/** What the status pill's menu offers, in order: every action the machine allows now (status-menu.ts). */
+	menu: MenuEntry[]
+	/** The Seen press that stands for the show, with what it covered; null when none stands. */
+	press: SeenPress | null
 	/** Want to See can be pressed: the show is Not started, or Dropped with nothing watched. */
 	wantToSee: { ok: boolean; why: string }
 	/** The prompt to rate, when it is due: the show is Seen ("all"), or three episodes are watched ("partway"). */
@@ -234,7 +241,13 @@ export interface ShowView {
 export function viewOf(
 	copy: ShowCopy,
 	episodes: readonly ListedEpisode[],
-	context: { today: string; running: boolean; score: number | null },
+	context: {
+		today: string
+		running: boolean
+		score: number | null
+		/** How dates read in the menu. The page gives the member's locale. */
+		words?: DateWords
+	},
 ): ShowView {
 	const show = showAiredBy(episodes, context.today, context.running)
 	const record = recordFromRows(copy.state, copy.log, {
@@ -264,9 +277,8 @@ export function viewOf(
 					(a.watched_at ?? Number.NEGATIVE_INFINITY) ||
 				b.created_at - a.created_at,
 		)
-	const menu = (["hold", "resume", "drop", "watchAgain"] as const).filter(
-		(type) => offer(world, { type }).ok,
-	)
+	const press = seenPressOf(copy, episodes)
+	const menu = statusMenu(world, press, context.words ?? PLAIN_DATES)
 	const regular = show.episodes.filter((e) => e.season > 0)
 	return {
 		derived,
@@ -283,6 +295,7 @@ export function viewOf(
 			newEpisodes: button.newEpisodes,
 		},
 		menu,
+		press,
 		wantToSee: offer(world, { type: "wantToSee", on: true }),
 		ratePrompt: !derived.ratePrompt
 			? null

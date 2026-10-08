@@ -93,11 +93,11 @@ _Avoid_: In progress, Currently watching, Continue watching
 What a Seen show is called while it is still running. It is a label, not a show status; once the show has ended it reads Seen.
 
 **On hold**:
-The show status of a show the person has set aside and may return to. Only the person sets it, and only from Watching.
+The show status of a show the person has set aside and may return to. Only the person sets it, from Watching or from a Seen show with new episodes.
 _Avoid_: Paused
 
 **Dropped**:
-The show status of a show the person has given up on, offered from the first watched episode on; an import can bring it with nothing watched. It is always hidden from recommendations, but remains findable by search. It is not a taste signal. It clears Want to See. Watching an episode or resuming ends it; adding Want to See ends it only when nothing is watched.
+The show status of a show the person has given up on, offered from the first watched episode on, and on a Seen show only while it has new episodes; an import can bring it with nothing watched. It is always hidden from recommendations, but remains findable by search. It is not a taste signal. It clears Want to See. Watching an episode or resuming ends it; adding Want to See ends it only when nothing is watched.
 _Avoid_: Abandoned, Quit
 
 **Next episode**:

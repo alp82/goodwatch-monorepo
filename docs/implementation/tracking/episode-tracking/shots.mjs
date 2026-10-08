@@ -10,7 +10,7 @@ const SIZES = { phone: { width: 390, height: 844, deviceScaleFactor: 1.5, isMobi
 
 async function open(size, query) {
 	const { width, height, ...rest } = SIZES[size]
-	const context = await browser.newContext({ viewport: { width, height }, ...rest })
+	const context = await browser.newContext({ viewport: { width, height }, ...rest, locale: "en-GB" })
 	const page = await context.newPage()
 	await page.goto(`${BASE}?${query}&${T}`, { waitUntil: "domcontentloaded" })
 	await page.waitForSelector("[data-harness]", { timeout: 90000 })
@@ -41,7 +41,7 @@ const list = async (page) => {
 const season = (page, n) => page.locator(`[data-season-press="${n}"]`).click({ position: { x: 12, y: 8 } })
 
 for (const size of ["phone", "desktop"]) {
-	let page = await open(size, "show=supernatural&scenario=watching")
+	let page = await open(size, "show=supernatural&scenario=watching&overviews=1")
 	await save(page, "[data-hero]", `hero-watching-${size}`)
 	await page.locator("[data-status-pill]").click()
 	await settle(page, 200)
@@ -55,6 +55,10 @@ for (const size of ["phone", "desktop"]) {
 	await page.locator("[data-episode]", { hasText: "Crossroad Blues" }).locator("[data-row]").click()
 	await settle(page, 600)
 	await save(page, "[data-episode-list]", `list-row-open-${size}`)
+	await page.locator("[data-cover='image']").click()
+	await page.locator("[data-cover='text']").click()
+	await settle(page, 900)
+	await save(page, "[data-episode-list]", `list-row-uncovered-${size}`)
 	await page.locator("[data-mark-season]").click()
 	await settle(page, 400)
 	await page.locator("[data-tracking-toast]").scrollIntoViewIfNeeded()
@@ -68,6 +72,25 @@ for (const size of ["phone", "desktop"]) {
 
 	page = await open(size, "show=supernatural&scenario=seen_new")
 	await save(page, "[data-hero]", `hero-seen-new-episodes-${size}`)
+	await page.context().close()
+
+	// Marked Seen on 19 Oct 2024; two seasons have aired since.
+	page = await open(size, "show=slow-horses&scenario=seen_old")
+	await page.locator("[data-status-pill]").click()
+	await settle(page, 200)
+	await view(page, `hero-menu-seen-new-episodes-${size}`)
+	await page.keyboard.press("Escape")
+	await list(page)
+	await save(page, "[data-episode-list]", `list-seen-press-${size}`)
+	await page.locator("[data-view-toggle]").click()
+	await settle(page, 400)
+	await save(page, "[data-episode-list]", `list-ratings-grid-${size}`)
+	await page.context().close()
+
+	page = await open(size, "show=chernobyl&scenario=dropped")
+	await page.locator("[data-status-pill]").click()
+	await settle(page, 200)
+	await save(page, "[data-hero]", `hero-menu-dropped-${size}`)
 	await page.context().close()
 
 	page = await open(size, "show=chernobyl&scenario=fresh")

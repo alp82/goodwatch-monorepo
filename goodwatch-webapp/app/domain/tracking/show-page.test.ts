@@ -67,6 +67,7 @@ const view = (
 		score: null,
 		...context,
 	})
+const menuOf = (v: ReturnType<typeof view>) => v.menu.map((entry) => entry.id)
 const ticks = (copy: ShowCopy) =>
 	copy.log.map((r) => `${r.season_number}.${r.episode_number}`).sort()
 
@@ -286,9 +287,10 @@ test("a show nobody started: no state, nothing watched, the Seen button marks, a
 			v.derived.next,
 			v.seen.mode,
 			v.menu,
+			v.press,
 			v.ratePrompt,
 		],
-		[false, "Not started", 0, 5, null, "mark", [], null],
+		[false, "Not started", 0, 5, null, "mark", [], null, null],
 	)
 	assert.deepEqual([v.unaired, v.specialsWatched, v.wantToSee.ok], [1, 0, true])
 	assert.deepEqual(v.derived.offers, ["notInterested"])
@@ -307,7 +309,7 @@ test("Watching: progress counts aired regular episodes, the next episode follows
 		["Watching", 2, 5, 201, 1],
 	)
 	assert.deepEqual([...v.watched].sort(), [100, 101, 103])
-	assert.deepEqual(v.menu, ["hold", "drop"])
+	assert.deepEqual(menuOf(v), ["markAll", "hold", "drop"])
 	assert.deepEqual(v.derived.offers, ["drop"])
 	assert.equal(v.wantToSee.ok, false)
 	assert.match(v.wantToSee.why, /Watching/)
@@ -324,13 +326,13 @@ test("a special alone starts nothing, and is still the member's watch", () => {
 test("On hold offers Resume and Drop, Dropped offers Resume, and neither loses its status with nothing watched", () => {
 	const held = after([watch(1, 1), { type: "hold" }])
 	assert.deepEqual(
-		[view(held).derived.label, view(held).menu],
-		["On hold", ["resume", "drop"]],
+		[view(held).derived.label, menuOf(view(held))],
+		["On hold", ["resume", "markAll", "drop"]],
 	)
 	const dropped = after([{ type: "drop" }], held)
 	assert.deepEqual(
-		[view(dropped).derived.label, view(dropped).menu],
-		["Dropped", ["resume"]],
+		[view(dropped).derived.label, menuOf(view(dropped))],
+		["Dropped", ["resume", "markAll"]],
 	)
 	const emptied = after([{ type: "unwatch", season: 1, number: 1 }], dropped)
 	const v = view(emptied)
@@ -354,7 +356,16 @@ test("a Seen show reads Caught up while it runs and Seen once it has ended, and 
 		],
 		["Seen", 5, 5, "takeBack", null],
 	)
-	assert.deepEqual(ended.menu, ["watchAgain"])
+	assert.deepEqual(menuOf(ended), ["watchAgain", "takeBack", "setDate"])
+	// The press as the page reads it: made now, five undated watches, the first season whole and two of season 2.
+	assert.deepEqual(
+		[ended.press?.at, ended.press?.count, ended.press?.dated],
+		[NOW, 5, 0],
+	)
+	assert.equal(
+		ended.menu[1].note,
+		"Removes the 5 episodes marked on 8 Oct 2026. The show is then Not started.",
+	)
 	assert.equal(
 		view(after([{ type: "undoSeen" }], seen)).derived.state,
 		"not_started",
@@ -440,7 +451,7 @@ test("Watch again is not offered for a show marked Seen with no episode watched"
 		context,
 	).copy
 	const v = viewOf(seen, [], { today: TODAY, running: false, score: null })
-	assert.deepEqual([v.derived.state, v.menu], ["seen", []])
+	assert.deepEqual([v.derived.state, menuOf(v)], ["seen", ["takeBack"]])
 })
 
 test("the prompt to rate is due after three episodes or a Seen press, until there is a score or Not now", () => {

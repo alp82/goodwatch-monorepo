@@ -3,7 +3,8 @@
 // faded and the Next episode ringed; a press on a season row opens it into one-line rows with tick, name, air date
 // and rating; a press on a row opens it for the still, the date and "Watched up to here". On a wide screen the open
 // season sits beside the matrix. A show with one season shows only its rows. For a member who never tracked the
-// show the matrix is the ratings overview, and the grid in IMDb's numbering is one link below.
+// show the matrix is the ratings overview. The toggle at the right of the heading line swaps the matrix for the
+// grid in IMDb's numbering, in place. An unwatched episode's still and description stay covered until asked for.
 //
 // Loaded when the member comes near the section or asks for it; a show without an episode list keeps today's grid.
 import {
@@ -22,6 +23,7 @@ import {
 	useState,
 } from "react"
 import { episodeLabel } from "~/domain/tracking/machine"
+import { seenPressLine } from "~/domain/tracking/seen-press"
 import type { PageEpisode, ShowView } from "~/domain/tracking/show-page"
 import type { LogRow } from "~/domain/tracking/storage"
 import { useBelowFold } from "~/ui/details/below-fold"
@@ -38,6 +40,7 @@ import { type TrackingActions, useTrackingActions } from "./actions"
 import type { TrackedMedia } from "./gate"
 import {
 	FOCUS,
+	LOCALE_DATES,
 	SURFACE,
 	type Season,
 	type ShowTracking,
@@ -95,6 +98,22 @@ export function ScoreTile({
 }
 
 const SITE_BAR_HEIGHT = 64
+
+/** The view of the episodes section the member chose last in this browser: the list, or the grid. */
+const VIEW_KEY = "gw:episodes-view"
+function recall(): boolean {
+	try {
+		return window.localStorage.getItem(VIEW_KEY) === "grid"
+	} catch {
+		return false
+	}
+}
+function remember(grid: boolean) {
+	try {
+		if (grid) window.localStorage.setItem(VIEW_KEY, "grid")
+		else window.localStorage.removeItem(VIEW_KEY)
+	} catch {}
+}
 const PANEL = `min-w-0 overflow-hidden rounded-xl border border-white/[0.06] ${SURFACE}`
 const norm = (name: string | null) =>
 	(name ?? "").toLowerCase().replace(/[^a-z0-9]/g, "")
@@ -272,7 +291,12 @@ function List({
 	const { page, seasons, today } = tracking
 	const { layOutAll } = useBelowFold()
 	const section = useRef<HTMLElement>(null)
-	const [gridOpen, setGridOpen] = useState(false)
+	// Which of the two views the section shows: the matrix, or the grid in IMDb's numbering. Remembered per browser.
+	const [gridOpen, setGridOpen] = useState(() => Boolean(children) && recall())
+	const chooseGrid = (on: boolean) => {
+		setGridOpen(on)
+		remember(on)
+	}
 	const model = useMemo<Model>(() => {
 		const aired = (episode: PageEpisode) =>
 			episode.airDate !== null && episode.airDate <= today
@@ -309,28 +333,36 @@ function List({
 		if (!asked || asked.at === handled.current) return
 		handled.current = asked.at
 		tracking.store.openHandled()
-		layOutAll()
-		const episode =
-			asked.episodeId === null
-				? null
-				: seasons
-						.flatMap((season) => season.episodes)
-						.find((each) => each.id === asked.episodeId)
-		if (episode) nav.goEpisode(episode, { page: true })
-		else {
-			section.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-			section.current
-				?.querySelector<HTMLElement>("h2")
-				?.focus({ preventScroll: true })
-		}
+		// After this render is through: laying out the page's sections is a render of its own.
+		queueMicrotask(() => {
+			layOutAll()
+			const episode =
+				asked.episodeId === null
+					? null
+					: seasons
+							.flatMap((season) => season.episodes)
+							.find((each) => each.id === asked.episodeId)
+			if (episode) nav.goEpisode(episode, { page: true })
+			else {
+				section.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+				section.current
+					?.querySelector<HTMLElement>("h2")
+					?.focus({ preventScroll: true })
+			}
+		})
 	}, [asked?.at])
+	// The finder, Next and the hero's link lead to a row of the list, so they bring the list back.
+	useEffect(() => {
+		if (nav.target) setGridOpen(false)
+	}, [nav.target?.at])
 
 	return (
 		<section
 			ref={section}
-			// The link in the hero's ratings row leads here. The grid carries the same anchor while it is unfolded.
+			// The link in the hero's ratings row leads here. The grid carries the same anchor while it is shown.
 			id={gridOpen ? undefined : EPISODE_GRID_ANCHOR}
 			data-episode-list={nav.many ? "matrix" : "rows"}
+			data-view={gridOpen ? "grid" : "list"}
 			// The list keeps a pressed season row in place itself; the browser doing the same would move it twice.
 			className="[overflow-anchor:none]"
 			aria-labelledby="episode-list-title"
@@ -343,38 +375,55 @@ function List({
 					"@keyframes gwt-flash{0%,40%{background-color:rgb(255 255 255/.22)}100%{background-color:transparent}}.gwt-flash{animation:gwt-flash 1.5s ease-out}@media (prefers-reduced-motion:reduce){.gwt-flash{animation:none;outline:2px solid white;outline-offset:-2px}}"
 				}
 			</style>
-			<Tools nav={nav} model={model} />
-			<div className="mt-3">
-				{nav.many ? (
-					<Matrix nav={nav} model={model} />
-				) : (
-					<div className={`max-w-3xl ${PANEL}`}>
-						<SeasonHead nav={nav} model={model} only />
-						<Rows
-							key={nav.season.number}
-							season={nav.season}
-							nav={nav}
-							model={model}
-							layout="fold"
-							limit={12}
-						/>
-					</div>
-				)}
-			</div>
-			{children && (
-				<div className="mt-4" data-imdb-grid={gridOpen ? "open" : "folded"}>
-					<button
-						type="button"
-						aria-expanded={gridOpen}
-						onClick={() => setGridOpen(!gridOpen)}
-						className={`min-h-10 cursor-pointer text-left text-sm text-gray-400 underline decoration-white/20 underline-offset-4 hover:text-white ${FOCUS}`}
-					>
-						{gridOpen
-							? "Hide the ratings grid"
-							: "All ratings as one grid, in IMDb's numbering"}
-					</button>
-					{gridOpen && <div className="mt-3">{children}</div>}
+			<Tools
+				nav={nav}
+				model={model}
+				grid={children ? { on: gridOpen, choose: chooseGrid } : null}
+			/>
+			{gridOpen ? (
+				// The grid brings its own heading; this section's stands for both.
+				<div
+					data-imdb-grid
+					className="mt-1 [&>section>div:first-child]:justify-end [&_#episode-grid-title]:sr-only"
+				>
+					{children}
 				</div>
+			) : (
+				<>
+					{view.press && (
+						<p
+							data-seen-press
+							className="mt-2 flex flex-wrap items-baseline gap-x-2 text-xs leading-5 text-gray-400"
+						>
+							<span>{seenPressLine(view.press, LOCALE_DATES)}</span>
+							<button
+								type="button"
+								data-take-back
+								onClick={actions.undoSeen}
+								className={`-my-2 cursor-pointer py-2 font-semibold text-gray-300 underline decoration-white/30 underline-offset-4 hover:text-white ${FOCUS}`}
+							>
+								Take back
+							</button>
+						</p>
+					)}
+					<div className="mt-3">
+						{nav.many ? (
+							<Matrix nav={nav} model={model} />
+						) : (
+							<div className={`max-w-3xl ${PANEL}`}>
+								<SeasonHead nav={nav} model={model} only />
+								<Rows
+									key={nav.season.number}
+									season={nav.season}
+									nav={nav}
+									model={model}
+									layout="fold"
+									limit={12}
+								/>
+							</div>
+						)}
+					</div>
+				</>
 			)}
 			<TrackingToastHost tracking={tracking} actions={actions} />
 		</section>
@@ -547,7 +596,56 @@ function Finder({
 	)
 }
 
-function Tools({ nav, model }: { nav: Nav; model: Model }) {
+/** Twelve cells in the grid's colours: what the toggle leads to, in small. */
+const MINIATURE = [8.2, 8.6, 7.9, 9.1, 7.4, 8.3, 8.8, 6.6, 8.0, 9.3, 8.5, 7.7]
+
+/** The switch between the list and the ratings grid in IMDb's numbering. It stays in the heading line. */
+function ViewToggle({
+	on,
+	choose,
+}: {
+	on: boolean
+	choose: (on: boolean) => void
+}) {
+	return (
+		<button
+			type="button"
+			data-view-toggle
+			aria-pressed={on}
+			aria-label="All ratings as one grid, in IMDb's numbering"
+			title={
+				on
+					? "Back to the episode list"
+					: "All ratings as one grid, in IMDb's numbering"
+			}
+			onClick={() => choose(!on)}
+			className={`inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg px-2 ring-1 lg:ml-auto lg:h-8 ${on ? "bg-white/20 text-white ring-white/60" : "bg-white/[0.07] text-gray-300 ring-white/10 hover:bg-white/[0.12]"} ${FOCUS}`}
+		>
+			<span aria-hidden="true" className="grid grid-cols-4 gap-px">
+				{MINIATURE.map((score, index) => (
+					<span
+						// biome-ignore lint/suspicious/noArrayIndexKey: a fixed drawing
+						key={index}
+						className="h-[5px] w-[7px] rounded-[1px]"
+						style={{ background: vibeTileColor(imdbVibe(score)) }}
+					/>
+				))}
+			</span>
+			<span className="hidden text-xs font-semibold lg:inline">Grid</span>
+		</button>
+	)
+}
+
+function Tools({
+	nav,
+	model,
+	grid,
+}: {
+	nav: Nav
+	model: Model
+	/** The switch to the ratings grid; null for a show without one. */
+	grid: { on: boolean; choose: (on: boolean) => void } | null
+}) {
 	const desktop = useIsDesktop()
 	const [finding, setFinding] = useState(false)
 	// A short single season is in view as a whole: nothing to find and nothing to jump to.
@@ -597,6 +695,7 @@ function Tools({ nav, model }: { nav: Nav; model: Model }) {
 					Next · {episodeLabel(next)}
 				</button>
 			)}
+			{grid && <ViewToggle {...grid} />}
 		</div>
 	)
 }
@@ -1118,7 +1217,37 @@ function DateChoice({
 	)
 }
 
-/** What a row opens to: the still, the description, when it was watched, "Watched up to here", removing the watch. */
+// The icons only tracking draws (Heroicons 24 solid, MIT), written out here: imported from the icon package, or kept
+// in a small module of their own, they would be added to a chunk that every page loads.
+const icon = (paths: string[]) =>
+	function TrackingIcon({ className }: { className?: string }) {
+		return (
+			<svg
+				viewBox="0 0 24 24"
+				fill="currentColor"
+				aria-hidden="true"
+				className={className}
+			>
+				{paths.map((d) => (
+					<path key={d} fillRule="evenodd" clipRule="evenodd" d={d} />
+				))}
+			</svg>
+		)
+	}
+
+const EyeSlashIcon = icon([
+	"M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z",
+	"M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z",
+	"M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z",
+])
+
+const COVER = `flex cursor-pointer flex-col items-center justify-center gap-1 rounded-md bg-white/[0.06] text-xs font-semibold text-gray-300 ring-1 ring-inset ring-white/10 hover:bg-white/[0.1] hover:text-white ${FOCUS}`
+
+/**
+ * What a row opens to: the still, the description, when it was watched, "Watched up to here", removing the watch.
+ * For an episode the member has not watched in any pass, the still and the description are each behind a cover of
+ * their own size, so that uncovering one moves nothing.
+ */
 function RowDetail({
 	episode,
 	model,
@@ -1135,6 +1264,15 @@ function RowDetail({
 	const pass = view.derived.pass
 	const watches = view.watchesOf.get(episode.id) ?? []
 	const current = watches.find((row) => row.pass === pass) ?? null
+	// A rewatcher has seen it: a watch in any pass uncovers everything.
+	const seenIt = watches.length > 0
+	const [uncovered, setUncovered] = useState({ image: false, text: false })
+	const detail = useRef<HTMLDivElement>(null)
+	const uncover = (what: "image" | "text") => {
+		setUncovered((now) => ({ ...now, [what]: true }))
+		// The cover that had the focus is gone; keep the keyboard in the row.
+		detail.current?.focus({ preventScroll: true })
+	}
 	// Aired regular episodes up to and including this one that are not watched in this pass.
 	const upTo =
 		special || watched || !aired
@@ -1152,19 +1290,32 @@ function RowDetail({
 					).length
 	return (
 		<div
+			ref={detail}
 			data-detail
-			className="mx-2 mb-2 rounded-lg bg-black/25 p-2.5 lg:ml-10"
+			tabIndex={-1}
+			className="mx-2 mb-2 rounded-lg bg-black/25 p-2.5 focus:outline-none lg:ml-10"
 		>
 			<div className="flex flex-col gap-2.5 sm:flex-row">
-				{episode.still && (
-					<img
-						src={tmdbImageUrl(episode.still, "w300")}
-						alt=""
-						loading="lazy"
-						className="aspect-video w-full rounded-md object-cover sm:w-40 sm:shrink-0"
-					/>
-				)}
-				<div className="min-w-0">
+				{episode.still &&
+					(seenIt || uncovered.image ? (
+						<img
+							src={tmdbImageUrl(episode.still, "w300")}
+							alt=""
+							loading="lazy"
+							className="aspect-video w-full rounded-md bg-white/[0.06] object-cover sm:w-40 sm:shrink-0"
+						/>
+					) : (
+						<button
+							type="button"
+							data-cover="image"
+							onClick={() => uncover("image")}
+							className={`${COVER} aspect-video w-full sm:w-40 sm:shrink-0`}
+						>
+							<EyeSlashIcon className="h-4 w-4" />
+							Show image
+						</button>
+					))}
+				<div className="min-w-0 flex-1">
 					<p className="text-xs text-gray-500">
 						{episode.airDate
 							? aired
@@ -1176,11 +1327,34 @@ function RowDetail({
 							? ` · IMDb ${formatScore(episode.rating)}${episode.ratedBy === "title" ? " (matched by title)" : ""}`
 							: ""}
 					</p>
-					{episode.overview && (
-						<p className="mt-1 text-sm leading-relaxed text-gray-300">
-							{episode.overview}
-						</p>
-					)}
+					{episode.overview &&
+						(seenIt || uncovered.text ? (
+							<p
+								data-overview
+								className="mt-1 text-sm leading-relaxed text-gray-300"
+							>
+								{episode.overview}
+							</p>
+						) : (
+							<div className="relative mt-1 min-h-10">
+								{/* The text holds its place under the cover, unseen and unread. */}
+								<p
+									aria-hidden="true"
+									className="invisible select-none text-sm leading-relaxed"
+								>
+									{episode.overview}
+								</p>
+								<button
+									type="button"
+									data-cover="text"
+									onClick={() => uncover("text")}
+									className={`${COVER} absolute inset-0 w-full flex-row gap-1.5`}
+								>
+									<EyeSlashIcon className="h-4 w-4" />
+									Show description
+								</button>
+							</div>
+						))}
 				</div>
 			</div>
 			{aired ? (
@@ -1328,28 +1502,32 @@ function Row({
 				/>
 			)}
 			<div
-				className={`flex h-11 items-center pr-1.5 lg:h-9 ${aired ? "" : "opacity-50"}`}
+				className={`flex h-11 items-center pr-1.5 lg:h-9 lg:pointer-coarse:h-11 ${aired ? "" : "opacity-50"}`}
 			>
 				<button
 					type="button"
+					// biome-ignore lint/a11y/useSemanticElements: a checkbox that records at once and shows a clock while the episode has not aired; a button carries both
+					role="checkbox"
 					data-tick
 					disabled={!aired}
 					onClick={() =>
 						watched ? actions.unwatch(episode) : actions.watch(episode)
 					}
-					aria-pressed={watched}
-					aria-label={`${watched ? "Watched" : "Mark as watched"}: ${episode.name ?? episodeLabel(episode)}`}
-					className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed lg:h-9 lg:w-9 ${FOCUS}`}
+					aria-checked={watched}
+					aria-label={`Watched: ${episodeLabel(episode)}${episode.name ? `, ${episode.name}` : ""}${aired ? "" : ", not aired yet"}`}
+					// The press target is 44 px wherever the pointer is a finger; the box drawn in it is smaller.
+					className={`flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg disabled:cursor-not-allowed lg:h-9 lg:w-9 lg:pointer-coarse:h-11 lg:pointer-coarse:w-11 ${FOCUS}`}
 				>
 					<span
-						className={`flex h-6 w-6 items-center justify-center rounded-full lg:h-5 lg:w-5 ${
+						data-tick-box
+						className={`flex h-6 w-6 items-center justify-center rounded-md lg:h-5 lg:w-5 lg:rounded-[5px] ${
 							!aired
 								? "border-2 border-dashed border-white/25 text-gray-500"
 								: watched
 									? special
 										? "border-2 border-green-400/70 text-green-300"
 										: "bg-green-500 text-black"
-									: "border-2 border-white/30 text-transparent hover:border-green-400 hover:text-green-400/60"
+									: "border-2 border-white/40 text-transparent hover:border-green-400 hover:text-green-400/60"
 						}`}
 					>
 						{aired ? (

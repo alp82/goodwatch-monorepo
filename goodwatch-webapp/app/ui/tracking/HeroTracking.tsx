@@ -1,20 +1,24 @@
 import { PauseIcon } from "@heroicons/react/20/solid"
 // The hero's title actions on a show page for a member who tracks episodes (#369, #384): the box with the status
-// pill and its menu, the progress and the Next episode with one-press Watched; the page's one score control, which
-// carries the prompt to rate and the question after a first score; and Want to See, Seen and Not interested or Drop.
+// pill and its menu, the progress and the Next episode as a link to its row in the episode list; the page's one
+// score control, which carries the prompt to rate and the question after a first score; and Want to See, Seen and
+// Not interested or Drop.
 // Loaded after the page is up; until its data is there, and for a show without an episode list, it shows what the
 // first paint showed.
 import {
 	CheckIcon,
 	ChevronDownIcon,
+	ClockIcon,
 	EyeIcon,
 	NoSymbolIcon,
 	PlayIcon,
 } from "@heroicons/react/24/solid"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import { episodeLabel } from "~/domain/tracking/machine"
-import type { ShowView, StatusAction } from "~/domain/tracking/show-page"
+import type { ShowView } from "~/domain/tracking/show-page"
+import type { MenuEntry, MenuEntryId } from "~/domain/tracking/status-menu"
 import { useUserScore } from "~/hooks/useUserDataAccessors"
+import { EPISODE_GRID_ANCHOR } from "~/ui/details/episode-grid/scale"
 import { ActionButton } from "~/ui/title-actions/ActionButton"
 import { ScoreControl } from "~/ui/title-actions/ScoreControl"
 import {
@@ -44,12 +48,7 @@ export default function HeroTracking({
 	return (
 		<div data-tracking-hero={view.derived.state}>
 			{view.derived.state !== "not_started" && (
-				<StatusBox
-					media={media}
-					tracking={tracking}
-					view={view}
-					actions={actions}
-				/>
+				<StatusBox tracking={tracking} view={view} actions={actions} />
 			)}
 			<div className="@container">
 				<Score
@@ -69,34 +68,51 @@ export default function HeroTracking({
 // The box: status, progress, Next episode
 // ---------------------------------------------------------------------------------------------------------
 
-const MENU: Record<
-	StatusAction,
-	{ label: string; note: string; Icon: typeof PlayIcon; tint: string }
+// The icons only tracking draws (Heroicons 24 solid, MIT), written out here: imported from the icon package, or kept
+// in a small module of their own, they would be added to a chunk that every page loads.
+const icon = (paths: string[]) =>
+	function TrackingIcon({ className }: { className?: string }) {
+		return (
+			<svg
+				viewBox="0 0 24 24"
+				fill="currentColor"
+				aria-hidden="true"
+				className={className}
+			>
+				{paths.map((d) => (
+					<path key={d} fillRule="evenodd" clipRule="evenodd" d={d} />
+				))}
+			</svg>
+		)
+	}
+
+const ArrowDownIcon = icon([
+	"M12 2.25a.75.75 0 0 1 .75.75v16.19l6.22-6.22a.75.75 0 1 1 1.06 1.06l-7.5 7.5a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 1 1 1.06-1.06l6.22 6.22V3a.75.75 0 0 1 .75-.75Z",
+])
+const ArrowPathIcon = icon([
+	"M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z",
+])
+const ArrowUturnLeftIcon = icon([
+	"M9.53 2.47a.75.75 0 0 1 0 1.06L4.81 8.25H15a6.75 6.75 0 0 1 0 13.5h-3a.75.75 0 0 1 0-1.5h3a5.25 5.25 0 1 0 0-10.5H4.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z",
+])
+const BookmarkIcon = icon([
+	"M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z",
+])
+
+/** How each entry of the menu looks. What it says and whether it is offered is the machine's (status-menu.ts). */
+const MENU_LOOK: Record<
+	MenuEntryId,
+	{ Icon: (props: { className?: string }) => React.ReactNode; tint: string }
 > = {
-	hold: {
-		label: "On hold",
-		note: "Set aside for now. Watching an episode brings it back.",
-		Icon: PauseIcon,
-		tint: "text-violet-300",
-	},
-	resume: {
-		label: "Resume",
-		note: "Back to it.",
-		Icon: PlayIcon,
-		tint: "text-sky-300",
-	},
-	drop: {
-		label: "Drop",
-		note: "Given up. Hidden from your recommendations.",
-		Icon: NoSymbolIcon,
-		tint: "text-pink-300",
-	},
-	watchAgain: {
-		label: "Watch again",
-		note: "Start a new pass from the first episode.",
-		Icon: PlayIcon,
-		tint: "text-sky-300",
-	},
+	markNew: { Icon: CheckIcon, tint: "text-green-300" },
+	markAll: { Icon: CheckIcon, tint: "text-green-300" },
+	wantToSee: { Icon: BookmarkIcon, tint: "text-amber-300" },
+	resume: { Icon: PlayIcon, tint: "text-sky-300" },
+	hold: { Icon: PauseIcon, tint: "text-violet-300" },
+	watchAgain: { Icon: ArrowPathIcon, tint: "text-sky-300" },
+	takeBack: { Icon: ArrowUturnLeftIcon, tint: "text-gray-400" },
+	setDate: { Icon: ClockIcon, tint: "text-gray-300" },
+	drop: { Icon: NoSymbolIcon, tint: "text-pink-300/80" },
 }
 
 function StatusPill({
@@ -109,10 +125,19 @@ function StatusPill({
 	const [open, setOpen] = useState(false)
 	const [confirming, setConfirming] = useState(false)
 	const root = useRef<HTMLDivElement>(null)
+	const pillButton = useRef<HTMLButtonElement>(null)
 	const close = () => {
 		setOpen(false)
 		setConfirming(false)
 	}
+	const menuBox = useRef<HTMLDivElement>(null)
+	// The menu takes the focus when it opens, so that the arrow keys and a screen reader are in it.
+	useEffect(() => {
+		if (open && !confirming)
+			menuBox.current
+				?.querySelector<HTMLElement>("[role=menuitem]")
+				?.focus({ preventScroll: true })
+	}, [open, confirming])
 	useEffect(() => {
 		if (!open) return
 		const onPress = (event: PointerEvent) => {
@@ -120,7 +145,9 @@ function StatusPill({
 		}
 		window.addEventListener("pointerdown", onPress)
 		const onKey = (event: KeyboardEvent) => {
-			if (event.key === "Escape") close()
+			if (event.key !== "Escape") return
+			close()
+			pillButton.current?.focus()
 		}
 		window.addEventListener("keydown", onKey)
 		return () => {
@@ -128,7 +155,7 @@ function StatusPill({
 			window.removeEventListener("keydown", onKey)
 		}
 	}, [open])
-	const { derived, menu } = view
+	const { derived, menu, press } = view
 	if (derived.state === "not_started") return null
 	const pill = `inline-flex h-9 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-lg px-2.5 text-xs font-semibold ${STATUS_LOOK[derived.state].pill}`
 	if (!menu.length)
@@ -137,14 +164,38 @@ function StatusPill({
 				{derived.label}
 			</span>
 		)
-	const run = (action: StatusAction) => {
-		if (action === "watchAgain") return setConfirming(true)
+	const run = (entry: MenuEntry) => {
+		if (entry.confirm) return setConfirming(true)
 		close()
-		actions[action]()
+		switch (entry.id) {
+			case "markNew":
+			case "markAll":
+				return actions.pressSeen()
+			case "takeBack":
+				return actions.undoSeen()
+			case "setDate":
+				return press && actions.askGroupDate(press.group, press.count)
+			case "wantToSee":
+				return void actions.wantToSee()
+			default:
+				return actions[entry.id]()
+		}
+	}
+	/** Up and down move through the entries, as in any menu. */
+	const onMenuKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+		const by = event.key === "ArrowDown" ? 1 : event.key === "ArrowUp" ? -1 : 0
+		if (!by) return
+		event.preventDefault()
+		const items = [
+			...event.currentTarget.querySelectorAll<HTMLElement>("[role=menuitem]"),
+		]
+		const at = items.indexOf(document.activeElement as HTMLElement)
+		items[(at + by + items.length) % items.length]?.focus()
 	}
 	return (
 		<div ref={root} className="relative">
 			<button
+				ref={pillButton}
 				type="button"
 				data-status-pill
 				aria-haspopup="menu"
@@ -157,8 +208,11 @@ function StatusPill({
 			</button>
 			{open && (
 				<div
+					ref={menuBox}
 					role="menu"
-					className="absolute left-0 top-full z-40 mt-1 w-72 max-w-[calc(100vw-4rem)] rounded-xl border border-white/10 bg-gray-900 p-1 shadow-2xl"
+					aria-label="Change the status"
+					onKeyDown={onMenuKey}
+					className="absolute left-0 top-full z-40 mt-1 w-80 max-w-[calc(100vw-4rem)] rounded-xl border border-white/10 bg-gray-900 p-1 shadow-2xl"
 				>
 					{confirming ? (
 						<div className="p-3">
@@ -191,26 +245,31 @@ function StatusPill({
 							</div>
 						</div>
 					) : (
-						menu.map((action) => {
-							const item = MENU[action]
+						menu.map((entry) => {
+							const look = MENU_LOOK[entry.id]
 							return (
 								<button
-									key={action}
+									key={entry.id}
 									type="button"
 									role="menuitem"
-									data-status-action={action}
-									onClick={() => run(action)}
+									data-status-action={entry.id}
+									data-quiet={entry.quiet || undefined}
+									onClick={() => run(entry)}
 									className={`flex min-h-11 w-full cursor-pointer items-start gap-3 rounded-lg px-3 py-2 text-left hover:bg-white/10 ${FOCUS}`}
 								>
-									<item.Icon
-										className={`mt-0.5 h-4 w-4 shrink-0 ${item.tint}`}
+									<look.Icon
+										className={`mt-0.5 h-4 w-4 shrink-0 ${look.tint}`}
 									/>
 									<span className="min-w-0 flex-1">
-										<span className="block text-sm font-semibold text-white">
-											{item.label}
+										<span
+											className={`block text-sm ${entry.quiet ? "font-medium text-gray-300" : "font-semibold text-white"}`}
+										>
+											{entry.label}
 										</span>
-										<span className="block text-xs text-gray-400">
-											{item.note}
+										<span
+											className={`block text-xs ${entry.quiet ? "text-gray-500" : "text-gray-400"}`}
+										>
+											{entry.note}
 										</span>
 									</span>
 								</button>
@@ -223,13 +282,15 @@ function StatusPill({
 	)
 }
 
+/** The chip that says where the box's link leads: down to the episode list. */
+const GO =
+	"inline-flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/10 px-3 text-sm font-semibold text-white ring-1 ring-white/15 hover:bg-white/20 group-hover:bg-white/20"
+
 function StatusBox({
-	media,
 	tracking,
 	view,
 	actions,
 }: {
-	media: TrackedMedia
 	tracking: ShowTracking
 	view: ShowView
 	actions: TrackingActions
@@ -286,13 +347,18 @@ function StatusBox({
 			</span>
 			<div className="mt-3 flex h-11 items-center gap-3">
 				{next ? (
-					<>
-						<button
-							type="button"
-							data-next-episode
-							onClick={() => tracking.store.openEpisode(next.id)}
-							className={`min-w-0 flex-1 cursor-pointer rounded text-left ${FOCUS}`}
-						>
+					// Navigation, not an action: the whole line leads to the episode's row, where it is marked.
+					<a
+						href={`#${EPISODE_GRID_ANCHOR}`}
+						data-next-episode
+						aria-label={`${derived.newEpisodes ? "New since you saw it" : "Next episode"}: ${episodeLabel(next)}${next.name ? `, ${next.name}` : ""}. Go to it in the episode list`}
+						onClick={(event) => {
+							event.preventDefault()
+							tracking.store.openEpisode(next.id)
+						}}
+						className={`group flex min-w-0 flex-1 items-center gap-3 rounded-lg ${FOCUS}`}
+					>
+						<span className="min-w-0 flex-1">
 							<span className="block text-xs font-semibold uppercase tracking-wide text-gray-400">
 								{derived.newEpisodes ? "New since you saw it" : "Next episode"}
 							</span>
@@ -300,36 +366,50 @@ function StatusBox({
 								{episodeLabel(next)}
 								{next.name ? ` · ${next.name}` : ""}
 							</span>
-						</button>
-						<button
-							type="button"
-							data-next-watched
-							onClick={() => actions.watch(next)}
-							className={`inline-flex h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-green-500 px-4 text-sm font-semibold text-black hover:bg-green-400 ${FOCUS}`}
-						>
-							<CheckIcon className="h-4 w-4" />
-							Watched
-						</button>
-					</>
+						</span>
+						<span data-go-episodes className={GO}>
+							{episodeLabel(next)}
+							<ArrowDownIcon className="h-3.5 w-3.5" />
+						</span>
+					</a>
 				) : (
-					<p data-no-next className="min-w-0 text-sm text-gray-300">
-						{derived.state === "dropped" ? (
-							`You dropped ${media.details.title}. Resume brings it back.`
-						) : derived.aired === 0 ? (
-							"No episode has aired yet."
-						) : derived.watched < derived.aired ? (
-							`${plural(derived.aired - derived.watched, "episode")} left.`
-						) : (
-							<>
-								<span className="font-semibold text-white">
-									You've watched every episode.
-								</span>
-								{upcoming?.airDate
-									? ` ${episodeLabel(upcoming)} airs ${upcoming.airDate === tracking.today ? "today" : upcoming.airDate}.`
-									: ""}
-							</>
-						)}
-					</p>
+					<>
+						<p
+							data-no-next
+							className="min-w-0 flex-1 text-xs leading-snug text-gray-300 sm:text-sm"
+						>
+							{derived.state === "dropped" ? (
+								// Short: the line shares its row with the link, and the title is above.
+								"You dropped it. Resume brings it back."
+							) : derived.aired === 0 ? (
+								"No episode has aired yet."
+							) : derived.watched < derived.aired ? (
+								`${plural(derived.aired - derived.watched, "episode")} left.`
+							) : (
+								<>
+									<span className="font-semibold text-white">
+										You've watched every episode.
+									</span>
+									{upcoming?.airDate
+										? ` ${episodeLabel(upcoming)} airs ${upcoming.airDate === tracking.today ? "today" : upcoming.airDate}.`
+										: ""}
+								</>
+							)}
+						</p>
+						<a
+							href={`#${EPISODE_GRID_ANCHOR}`}
+							data-go-episodes
+							aria-label="Go to episodes"
+							onClick={(event) => {
+								event.preventDefault()
+								tracking.store.openEpisode(null)
+							}}
+							className={`${GO} ${FOCUS}`}
+						>
+							Episodes
+							<ArrowDownIcon className="h-3.5 w-3.5" />
+						</a>
+					</>
 				)}
 			</div>
 		</StatusBoxFrame>

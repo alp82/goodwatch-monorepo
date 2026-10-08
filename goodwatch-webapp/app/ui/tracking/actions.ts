@@ -24,6 +24,8 @@ import {
 
 const plural = (count: number, word: string) =>
 	`${count} ${word}${count === 1 ? "" : "s"}`
+const watches = (count: number) =>
+	`${count} ${count === 1 ? "watch" : "watches"}`
 
 const stateOf = (store: ShowStore): State =>
 	store.snapshot.copy?.state?.state ?? "not_started"
@@ -232,12 +234,18 @@ export function useTrackingActions(store: ShowStore, title: string) {
 				const kept = store.snapshot.copy?.log.length ?? 0
 				const removed = before - kept
 				store.say(
-					`Seen taken back${removed ? `: ${plural(removed, "watch")} removed` : ""}${kept ? `. ${plural(kept, "watch")} you marked yourself ${kept === 1 ? "stays" : "stay"}.` : ""}`,
+					`Seen taken back${removed ? `: ${watches(removed)} removed` : ""}${kept ? `. ${watches(kept)} you marked yourself ${kept === 1 ? "stays" : "stay"}.` : ""}`,
 				)
 			},
 
 			hold() {
-				if (!store.act({ type: "hold" }).ok) return
+				const from = stateOf(store)
+				if (!store.act({ type: "hold", today: today() }).ok) return
+				// From Seen (row 28) there is no way back to Seen but the episodes: Resume leads to Watching.
+				if (from === "seen")
+					return store.say(
+						`${title} is on hold. Resume brings it back as Watching.`,
+					)
 				store.say(`${title} is on hold`, [
 					{
 						label: "Undo",
@@ -251,8 +259,12 @@ export function useTrackingActions(store: ShowStore, title: string) {
 
 			drop() {
 				const from = stateOf(store)
-				if (!store.act({ type: "drop" }).ok) return
-				store.say(`${title} is dropped and hidden from your recommendations`, [
+				if (!store.act({ type: "drop", today: today() }).ok) return
+				const said = `${title} is dropped and hidden from your recommendations`
+				// From Seen (row 29), as for On hold above.
+				if (from === "seen")
+					return store.say(`${said}. Resume brings it back as Watching.`)
+				store.say(said, [
 					{
 						label: "Undo",
 						run: () => {
@@ -312,6 +324,12 @@ export function useTrackingActions(store: ShowStore, title: string) {
 			deleteWatch(watchId: string) {
 				if (!store.act({ type: "deleteWatch", watchId }).ok) return
 				store.say("Watch removed")
+			},
+
+			/** Opens the dialog that gives the watches of a group one day: the toast's "Set a date", and the menu's. */
+			askGroupDate(group: string, count: number) {
+				store.dismissToast()
+				store.askDate({ group, count })
 			},
 
 			setGroupDate(group: string, day: string) {

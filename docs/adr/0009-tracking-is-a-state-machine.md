@@ -24,6 +24,12 @@ prototype of those rules produced 27 surprises. The owner asked for a state mach
 - **What the calendar can change is derived when it is read:** the label (a Seen show that is still running reads
   "Caught up"), progress, the Next episode, and how many episodes are new. A Seen show with new episodes stays Seen
   and says how many are new until the member acts.
+- **A Seen show with new episodes can be put on hold or dropped** (rows 28 and 29, added 2026-10-08 after the
+  owner used the show page). A member who has seen the earlier seasons and will not continue had no way to say so
+  without ticking an episode first. Both need episodes that aired since; a Seen show with nothing new has neither.
+  No watch is touched, and the standing Seen press ends, as with every step that leaves Seen. From there the rows
+  of any On hold or Dropped show apply: Resume and a tick lead back to Watching, and the tick that leaves nothing
+  aired unwatched makes the show Seen.
 - **A score, Want to See and Not interested are not states.** A scored show counts as Seen for the Not seen yet
   filter without being in the state Seen.
 - **Pressing Seen can be taken back exactly.** The press's watches form one group, and the state it was pressed from

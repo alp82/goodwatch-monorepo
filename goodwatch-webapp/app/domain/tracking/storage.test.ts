@@ -172,7 +172,7 @@ function listView(stored: Stored, show: Show) {
 		offers:
 			state === "not_started"
 				? ["notInterested"]
-				: state === "watching" || state === "on_hold"
+				: state === "watching" || state === "on_hold" || newEpisodes > 0
 					? ["drop"]
 					: [],
 		seenQuestion: stored.state?.seen_question === "open",
@@ -856,7 +856,7 @@ test("3,000 seeded walks of 50 actions: the rows and the machine never part", ()
 			)
 	}
 	// Every row of the table a member's event can take was walked.
-	for (let id = 1; id <= 26; id++)
+	for (const id of [...Array.from({ length: 26 }, (_, i) => i + 1), 28, 29])
 		assert.ok(stats.rows.has(String(id)), `row ${id} was never walked`)
 	// The checks ran on enough of each kind to mean something.
 	assert.ok(stats.catalog > 10_000, "catalog changes")

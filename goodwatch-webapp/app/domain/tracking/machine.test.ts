@@ -69,7 +69,7 @@ test("the table is well formed", () => {
 	assert.equal(new Set(TABLE.map((row) => row.id)).size, TABLE.length)
 	assert.deepEqual(
 		TABLE.map((row) => Number(row.id)).sort((a, b) => a - b),
-		Array.from({ length: 27 }, (_, index) => index + 1),
+		Array.from({ length: 29 }, (_, index) => index + 1),
 	)
 	for (const row of TABLE) {
 		assert.ok(row.from.length > 0, row.id)
@@ -246,6 +246,67 @@ test("On hold and back", () => {
 	assert.equal(
 		offer(play(findShow("weekly"), []).world, { type: "hold" }).ok,
 		false,
+	)
+})
+
+test("a Seen show with new episodes can be put on hold or dropped: the watches stay and the press ends (rows 28, 29)", () => {
+	const AIRS: Action = { type: "episodeAirs" }
+	for (const [type, id, to] of [
+		["hold", "28", "on_hold"],
+		["drop", "29", "dropped"],
+	] as const) {
+		// Nothing new: a show the member has seen all of is neither set aside nor given up.
+		const upToDate = run("weekly", [SEEN, { type }])
+		assert.deepEqual(upToDate.rows, ["11", "refused"], type)
+		assert.equal(
+			offer(play(findShow("weekly"), [SEEN]).world, { type }).ok,
+			false,
+		)
+		const before: World = play(findShow("weekly"), [SEEN, AIRS]).world
+		assert.equal(offer(before, { type }).ok, true, type)
+		const r = run("weekly", [SEEN, AIRS, { type }])
+		assert.deepEqual(r.rows, ["11", "catalog", id])
+		assert.equal(r.view.state, to)
+		assert.deepEqual(
+			r.world.record.watches,
+			before.record.watches,
+			"no watch is touched",
+		)
+		assert.equal(r.world.record.seenPress, null, "the press ends")
+		assert.deepEqual([r.view.watched, r.view.aired], [5, 6])
+		// The rows that leave On hold and Dropped apply as for any other show.
+		const resumed = run("weekly", [SEEN, AIRS, { type }, { type: "resume" }])
+		assert.deepEqual([resumed.rows[3], resumed.view.state], ["20", "watching"])
+		const ticked = run("weekly", [SEEN, AIRS, { type }, w(2, 3)])
+		assert.deepEqual([ticked.rows[3], ticked.view.state], ["2", "seen"])
+		assert.equal(ticked.world.record.seenPress, null)
+		const some = run("weekly", [SEEN, AIRS, AIRS, { type }, w(2, 3)])
+		assert.deepEqual([some.rows[4], some.view.state], ["3", "watching"])
+	}
+	const dropped = run("weekly", [
+		SEEN,
+		{ type: "episodeAirs" },
+		{ type: "drop" },
+	])
+	assert.equal(dropped.view.hiddenFromRecommendations, true)
+	assert.equal(dropped.view.next, null)
+	const held = run("weekly", [SEEN, { type: "episodeAirs" }, { type: "hold" }])
+	assert.equal(nextLabel(held.view), "S2 E3")
+	// A press that marked nothing (no episode list at the time) and episodes listed since: On hold with nothing watched.
+	const none = step(
+		{
+			show: findShow("weekly"),
+			record: {
+				...newRecord(),
+				state: "seen",
+				seenPress: { group: "g", from: "not_started" },
+			},
+		},
+		{ type: "hold" },
+	)
+	assert.deepEqual(
+		[none.row?.id, none.to, none.world.record.seenPress],
+		["28", "on_hold", null],
 	)
 })
 
@@ -1042,6 +1103,35 @@ test("the server reads aired by the UTC date, and accepts a tick of an episode t
 		"p",
 	)
 	assert.deepEqual([ticked.row?.id, ticked.to], ["4", "seen"])
+})
+
+test("On hold and Drop on a Seen show go by the device's date, at most one day on, for what aired since", () => {
+	const listed: ListedEpisode[] = [
+		{ id: 1, season: 1, number: 1, airDate: "2026-10-01" },
+		{ id: 2, season: 1, number: 2, airDate: "2026-10-09" },
+		{ id: 3, season: 1, number: 3, airDate: "2026-10-10" },
+	]
+	for (const type of ["hold", "drop"] as const) {
+		const seen = step(
+			{ show: showAiredBy(listed, "2026-10-08"), record: newRecord() },
+			{ type: "pressSeen" },
+			"press-1",
+		).world.record
+		// The device is a day ahead of UTC and shows tomorrow's episode as new.
+		const ahead = { type, today: "2026-10-09" } as const
+		const tomorrow = serverShow(listed, ahead, "2026-10-08")
+		assert.deepEqual(airedIds(tomorrow), [1, 2])
+		assert.equal(step({ show: tomorrow, record: seen }, ahead).refused, null)
+		// A device that claims a later day gets one day and no more.
+		assert.deepEqual(
+			airedIds(serverShow(listed, { type, today: "2026-10-20" }, "2026-10-08")),
+			[1, 2],
+		)
+		// Without the device's date it is the UTC date: nothing is new, and the show is one the member has seen.
+		const utc = serverShow(listed, { type }, "2026-10-08")
+		assert.deepEqual(airedIds(utc), [1])
+		assert.notEqual(step({ show: utc, record: seen }, { type }).refused, null)
+	}
 })
 
 test("a group action marks by the later of the UTC date and the device's date, at most one day on", () => {
