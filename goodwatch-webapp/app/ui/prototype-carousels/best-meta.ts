@@ -17,7 +17,7 @@ export const BEST_NAMES: Record<string, string> = {
 export const BEST_WORDS: [string, string, string][] = [
 	["situational_comedy", "Comedy", "😂"],
 	["romance", "Romance", "💘"],
-	["hopefulness", "Hope", "🌤️"],
+	["hopefulness", "Hope", "🌅"],
 	["scare", "Scares", "😱"],
 	["wholesome", "Warmth", "🤗"],
 	["wit_wordplay", "Wit", "💬"],
@@ -29,10 +29,10 @@ export const BEST_WORDS: [string, string, string][] = [
 	["complexity", "Complexity", "🧩"],
 	["violence", "Violence", "🩸"],
 	["spectacle", "Spectacle", "🎆"],
-	["fast_pace", "Pace", "🏎️"],
+	["fast_pace", "Pace", "⏩"],
 	["slow_burn", "Slow burn", "🕯️"],
 	["absurdist_humor", "Absurdity", "🤪"],
-	["bleakness", "Bleakness", "🌫️"],
+	["bleakness", "Bleakness", "🌑"],
 	["melancholy", "Melancholy", "🌧️"],
 	["dialogue_centrality", "Talk", "🗣️"],
 ]

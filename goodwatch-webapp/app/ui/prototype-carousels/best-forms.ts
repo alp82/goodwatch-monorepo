@@ -33,7 +33,8 @@ interface BestItem {
 	g?: boolean
 	l?: string
 }
-type Strip = HTMLElement
+/** `__ok`: the strip stands where its form put it, so a scroll from here on is the visitor's. */
+type Strip = HTMLElement & { __ok?: boolean }
 
 export function bestKit(core: PlayCore, X: BestExtra) {
 	const { esc, val } = core
@@ -57,13 +58,24 @@ export function bestKit(core: PlayCore, X: BestExtra) {
 		core.query(mem.tr ? `&v=2&tr=${mem.tr.join(",")}` : `&v=2${mode}`)
 		return (mem.tr as string[] | undefined) ?? []
 	}
+	/** After a draw: the focused title under the marker, and how much of the strip the small map's window covers. */
+	const settle = (s: Element) => {
+		const strip = stripOf(s)
+		const mine = strip?.querySelector("[data-on]")
+		if (strip && mine) strip.scrollLeft = Number(mine.getAttribute("data-x"))
+		if (strip) strip.__ok = true
+		const small = s.querySelector("[data-b-map]") as HTMLElement | null
+		if (strip && small) small.style.setProperty("--vis", String(Math.max(1, Math.round(strip.clientWidth / PITCH))))
+	}
 	const adopt = (st: PlayState, stage: Element) => {
 		try {
 			const kept = stage.firstElementChild?.getAttribute("data-b-mem")
 			if (kept) Object.assign(st.mem, JSON.parse(kept))
 		} catch {}
 		if (st.mem.tr) core.query(`&v=2&tr=${(st.mem.tr as string[]).join(",")}`)
+		settle(stage)
 	}
+	const stripOf = (s: Element) => s.querySelector("[data-b-strip]") as Strip | null
 	const memAttr = (ctx: PlayCtx) => ` data-b-mem="${esc(JSON.stringify(ctx.st.mem))}"`
 
 	/** The titles a form can show: where you stand, the neighborhood nearest first, where you came from, the page. */
@@ -150,7 +162,7 @@ export function bestKit(core: PlayCore, X: BestExtra) {
 		)}</b><small>${esc(t.y)}${t.k.charAt(0) === "s" ? " · Show" : ""}</small></p><p class="bs-rs">${reason}</p></div><p class="bs-ac">${
 			here
 				? '<span class="bs-you">You are here</span>'
-				: `<button type="button" class="bs-cta"${step}>${came ? "← Back to here" : "Explore from here ›"}</button>`
+				: `<button type="button" class="bs-cta"${step}>${came ? "← Back to here" : "Explore here ›"}</button>`
 		}${open}</p>`
 	}
 	/** The strip: posters in a row that scrolls sideways, with the marker where `mk` says. */
@@ -198,7 +210,6 @@ export function bestKit(core: PlayCore, X: BestExtra) {
 			.join("")
 		return `<div class="bs-map" data-b-map="" data-pl-drag="" role="group" aria-label="${esc(`All ${items.length} titles by ${name}. Drag to move along.`)}" style="--n:${items.length};--i:${at}"><span class="bs-win" aria-hidden="true"></span>${cells}</div>`
 	}
-	const stripOf = (s: Element) => s.querySelector("[data-b-strip]") as Strip | null
 	/** The title under the marker of a strip. */
 	const under = (strip: Strip) => {
 		const left = strip.scrollLeft
@@ -239,15 +250,6 @@ export function bestKit(core: PlayCore, X: BestExtra) {
 			break
 		}
 	}
-	/** After a draw: the focused title under the marker, and how much of the strip the small map's window covers. */
-	const settle = (s: Element) => {
-		const strip = stripOf(s)
-		const mine = strip?.querySelector("[data-on]")
-		if (strip && mine) strip.scrollLeft = Number(mine.getAttribute("data-x"))
-		const small = s.querySelector("[data-b-map]") as HTMLElement | null
-		if (strip && small) small.style.setProperty("--vis", String(Math.max(1, Math.round(strip.clientWidth / PITCH))))
-	}
-
 	return { X, PITCH, word, emo, low, nm, hue, traits, adopt, memAttr, pool, ladder, xs, differs, sentence, journey, head, rail, map, stripOf, under, mark, nudge, settle }
 }
 
@@ -341,7 +343,8 @@ const best1: BestForm = (core, kit) => {
 			return true
 		},
 		input: (ctx, el, s) => {
-			if (!el.hasAttribute("data-b-strip")) return
+			// Until the strip stands where the form put it, a scroll event is the browser snapping, not a scrub.
+			if (!el.hasAttribute("data-b-strip") || !(el as Strip).__ok) return
 			const key = kit.under(el as HTMLElement)
 			if (!key || s.querySelector("[data-b-head]")?.getAttribute("data-k") === key) return
 			const item = model(ctx).items.find((entry) => entry.t.k === key)
@@ -617,7 +620,8 @@ const best3: BestForm = (core, kit) => {
 			return true
 		},
 		input: (ctx, el, s) => {
-			if (!el.hasAttribute("data-b-strip")) return
+			// Until the strip stands where the form put it, a scroll event is the browser snapping, not a scrub.
+			if (!el.hasAttribute("data-b-strip") || !(el as Strip).__ok) return
 			const key = kit.under(el as HTMLElement)
 			if (!key || s.querySelector("[data-b-head]")?.getAttribute("data-k") === key) return
 			const item = model(ctx).items.find((entry) => entry.t.k === key)
@@ -642,11 +646,16 @@ const best3: BestForm = (core, kit) => {
 					return `<div class="b3-st" style="--c:${kit.hue(key)};--v:${own}"${state[key] ? ` data-s="${state[key] > 0 ? "+" : "-"}"` : ""}>${half(-1)}<span><em>${kit.nm(key)}</em><b>${own}</b></span>${half(1)}</div>`
 				})
 				.join("")
+			// The card shows the road's titles, so the title you stand on gets its "Open" next to its name.
+			const open =
+				ctx.c.k === ctx.root.k
+					? ""
+					: ` <a class="b3-open" data-pl-nav="" data-pl-open="" href="${core.esc(core.href(ctx.c))}">Open<span class="pl-sr"> ${core.esc(ctx.c.t)}</span></a>`
 			const none = m.items.length < 2 ? (m.r.length ? "Nothing close has that. Tap a lit sign to drop it." : "Nothing close yet.") : ""
 			return `<div class="bs bs3"${kit.memAttr(ctx)}><b hidden data-pl-here="">${core.esc(ctx.c.t)}</b><p class="b3-say">${
 				m.r.length
-					? `Like <b>${core.esc(ctx.c.t)}</b>, with ${says(m.r)}. <button type="button" data-pl-act="clear">Clear</button>`
-					: `Like <b>${core.esc(ctx.c.t)}</b>. Tap <b>+</b> or <b>−</b> to ask for more or less of something.`
+					? `Like <b>${core.esc(ctx.c.t)}</b>${open}, with ${says(m.r)}. <button type="button" data-pl-act="clear">Clear</button>`
+					: `Like <b>${core.esc(ctx.c.t)}</b>${open}, closest first. A <b>+</b> or a <b>−</b> below changes that.`
 			}</p><div class="b3-mix" role="group" aria-label="More or less of a trait">${steppers}</div><div class="bs-f"><div class="bs-hd" data-b-head="" data-k="${f.k}">${kit.head(
 				ctx,
 				f,

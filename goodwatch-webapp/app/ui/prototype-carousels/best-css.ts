@@ -103,6 +103,8 @@ background:rgba(251,191,36,.1);pointer-events:none}
 .b3-say b{color:#fff;font-weight:700}
 .b3-say button{margin-left:.25rem;border-radius:9999px;border:1px solid rgba(253,230,138,.45);padding:0 .5rem;font-size:.75rem;font-weight:700;line-height:1rem;color:#fde68a}
 .b3-say button:hover{background:rgba(253,230,138,.18)}
+.b3-open{border-radius:9999px;background:#fbbf24;padding:0 .5rem;font-size:.75rem;font-weight:700;line-height:1rem;color:#000;white-space:nowrap}
+.b3-open:hover{background:#fcd34d}
 .b3-mix{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .b3-st{display:grid;grid-template-columns:2rem minmax(0,1fr) 2rem;height:34px;border-radius:9999px;border:1px solid rgba(255,255,255,.16);overflow:hidden}
 .b3-st[data-s]{border-color:#fbbf24}
