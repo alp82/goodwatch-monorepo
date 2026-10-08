@@ -1,4 +1,4 @@
-"""The ratings and analysis copies read the changes since their last successful run (#391)."""
+"""The ratings, analysis and tropes copies read the changes since their last successful run (#391)."""
 import sys
 import unittest
 from datetime import datetime, timedelta
@@ -10,7 +10,7 @@ import mongomock
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
 from f.dna.models import CoreScores
-from f.sync.copy import all_ratings, dna_data, sync_state
+from f.sync.copy import all_ratings, dna_data, sync_state, tvtropes
 
 NOW = datetime(2026, 10, 6, 12, 0, 0)
 HOUR = timedelta(hours=1)
@@ -495,6 +495,263 @@ class AnalysisCopyTests(CopyTests):
 
         self.assertEqual([record.tmdb_id for record in crate.records["movie"]], [1])
         self.assertEqual(result["movies"], {"records_received": 1, "rows_upserted": 1})
+        self.assertEqual(list(self.db.sync_state.find()), [])
+
+
+class TropesCopyTests(CopyTests):
+    """f/sync/copy/tvtropes"""
+
+    module = tvtropes
+    job = "tvtropes"
+
+    def tropes(self, media_type, tmdb_id, updated_at, *, details=True, tropes=({"name": "Red Herring"},)):
+        suffix = "movie" if media_type == "movie" else "tv"
+        self.db[f"tv_tropes_{suffix}_tags"].replace_one({"tmdb_id": tmdb_id}, {
+            "tmdb_id": tmdb_id, "created_at": LONG_AGO, "updated_at": updated_at,
+            "tropes": tropes and list(tropes)}, upsert=True)
+        if details:
+            self.details(media_type, tmdb_id)
+
+    def carried(self, media_type):
+        return state(self.db, "tvtropes", media_type).get("carried_ids")
+
+    def test_the_first_run_copies_the_48_hour_window_and_records_its_start(self):
+        self.tropes("movie", 1, NOW - HOUR)
+        self.tropes("movie", 2, NOW - timedelta(hours=49))
+        self.tropes("show", 3, NOW - 47 * HOUR)
+        self.tropes("show", 4, NOW - HOUR, tropes=None)
+
+        movies, shows, results, error = self.run_main()
+
+        self.assertIsNone(error)
+        self.assertEqual((movies, shows), ([1], [3]))
+        self.assertEqual([(trope.media_tmdb_id, trope.media_type, trope.name) for trope in self.crate.records["trope"]],
+                         [(1, "movie", "Red Herring"), (3, "show", "Red Herring")])
+        self.assertEqual(self.last_success("movie"), NOW)
+        self.assertEqual(self.last_success("show"), NOW)
+        self.assertTrue(results["movies"]["selection"]["fallback"])
+        self.assertEqual(results["movies"]["movies"], {"records_received": 1, "rows_upserted": 1})
+        self.assertEqual(results["movies"]["trope"], {"records_received": 1, "rows_upserted": 1})
+        self.assertEqual(state(self.db, "tvtropes", "movie")["last_run"]["counts"], {
+            "selected": 1, "skipped_flagged": 0, "carried": 0, "carried_written": 0,
+            "records_received": 1, "rows_upserted": 1})
+        self.assertEqual(self.carried("movie"), [])
+
+    def test_the_next_run_copies_only_what_changed_since_with_the_overlap(self):
+        self.tropes("movie", 1, NOW - 2 * HOUR)
+        self.tropes("movie", 2, NOW - timedelta(minutes=20))
+        self.run_main()
+
+        self.now = NOW + 6 * HOUR
+        self.tropes("movie", 3, NOW + HOUR)
+        movies, _, results, _ = self.run_main()
+
+        # 2 changed within the 30 minutes before the first run started and is read again.
+        self.assertEqual(movies, [2, 3])
+        self.assertEqual(results["movies"]["selection"]["since"], OVERLAP_START)
+        self.assertEqual(self.last_success("movie"), NOW + 6 * HOUR)
+
+    def test_a_failed_run_keeps_the_time_and_the_next_run_covers_the_gap(self):
+        self.run_main()
+        self.tropes("movie", 1, NOW + HOUR)
+        self.tropes("show", 2, NOW + HOUR)
+
+        self.now = NOW + 6 * HOUR
+        # The title rows are written, the trope rows fail: a partly written media type.
+        self.failing = {"trope"}
+        movies, shows, _, error = self.run_main()
+
+        self.assertIn("trope write failed", str(error))
+        self.assertEqual((movies, shows), ([1], []))
+        self.assertEqual(self.last_success("movie"), NOW)
+        self.assertEqual(self.last_success("show"), NOW)
+
+        self.now = NOW + 12 * HOUR
+        self.failing = set()
+        movies, shows, results, error = self.run_main()
+
+        self.assertIsNone(error)
+        self.assertEqual((movies, shows), ([1], [2]))
+        self.assertEqual(sorted(trope.media_tmdb_id for trope in self.crate.records["trope"]), [1, 2])
+        self.assertEqual(results["movies"]["selection"]["since"], OVERLAP_START)
+
+    def test_movies_that_succeeded_advance_even_when_the_shows_fail(self):
+        self.run_main()
+        self.tropes("movie", 1, NOW + HOUR)
+        self.tropes("show", 2, NOW + HOUR)
+
+        self.now = NOW + 6 * HOUR
+        self.failing = {"show"}
+        movies, _, _, error = self.run_main()
+
+        self.assertIn("show write failed", str(error))
+        self.assertEqual(movies, [1])
+        self.assertEqual(self.last_success("movie"), NOW + 6 * HOUR)
+        self.assertEqual(self.last_success("show"), NOW)
+
+    def test_tropes_of_a_title_without_details_fail_the_run_until_the_details_exist(self):
+        self.run_main()
+        self.tropes("movie", 1, NOW + HOUR, details=False)
+        self.tropes("movie", 2, NOW + HOUR)
+
+        self.now = NOW + 6 * HOUR
+        movies, _, _, error = self.run_main()
+        self.assertIsInstance(error, KeyError)
+        self.assertEqual(movies, [])
+        self.assertEqual(self.last_success("movie"), NOW)
+
+        self.details("movie", 1)
+        self.now = NOW + 12 * HOUR
+        movies, _, _, error = self.run_main()
+        self.assertIsNone(error)
+        self.assertEqual(movies, [1, 2])
+
+    def test_a_title_flagged_as_deleted_is_carried_and_copied_when_it_is_restored(self):
+        self.run_main()
+        self.tropes("movie", 1, NOW + HOUR)
+        self.tropes("movie", 2, NOW + HOUR)
+        self.flag("movie", 1)
+
+        self.now = NOW + 6 * HOUR
+        movies, _, results, _ = self.run_main()
+        self.assertEqual(movies, [2])
+        self.assertEqual(results["movies"]["skipped_flagged"], 1)
+        self.assertEqual(self.carried("movie"), [1])
+
+        # No later selection reaches back to its change; only the carried id reads it.
+        self.now = NOW + 12 * HOUR
+        movies, _, results, _ = self.run_main()
+        self.assertEqual(movies, [])
+        self.assertEqual(results["movies"]["selection"]["carried_ids"], 1)
+        self.assertEqual((results["movies"]["selected"], results["movies"]["carried"],
+                          results["movies"]["carried_written"]), (1, 1, 0))
+        self.assertEqual(self.carried("movie"), [1])
+
+        self.flag("movie", 1, False)
+        self.now = NOW + 18 * HOUR
+        movies, _, results, _ = self.run_main()
+        self.assertEqual(movies, [1])
+        self.assertEqual([trope.media_tmdb_id for trope in self.crate.records["trope"]], [1])
+        self.assertEqual((results["movies"]["carried"], results["movies"]["carried_written"]), (1, 1))
+        self.assertEqual(self.carried("movie"), [])
+
+        self.now = NOW + 24 * HOUR
+        self.assertEqual(self.run_main()[0], [])
+
+    def test_a_deleted_title_is_carried_only_as_long_as_the_48_hour_window_selected_it(self):
+        self.run_main()
+        self.tropes("movie", 1, NOW + HOUR)
+        self.flag("movie", 1)
+
+        self.now = NOW + 6 * HOUR
+        self.run_main()
+        self.now = NOW + 48 * HOUR
+        self.run_main()
+        self.assertEqual(self.carried("movie"), [1])
+
+        self.now = NOW + 50 * HOUR
+        _, _, results, _ = self.run_main()
+        self.assertEqual(results["movies"]["skipped_flagged"], 1)
+        self.assertEqual(self.carried("movie"), [])
+
+        self.now = NOW + 54 * HOUR
+        _, _, results, _ = self.run_main()
+        self.assertEqual(results["movies"]["selected"], 0)
+
+    def test_a_failed_run_keeps_the_carried_titles_and_the_next_run_adds_its_own(self):
+        self.run_main()
+        self.tropes("movie", 1, NOW + HOUR)
+        self.flag("movie", 1)
+        self.now = NOW + 6 * HOUR
+        self.run_main()
+        self.tropes("movie", 2, NOW + 7 * HOUR)
+        self.flag("movie", 2)
+        self.tropes("movie", 3, NOW + 7 * HOUR)
+
+        self.now = NOW + 12 * HOUR
+        self.failing = {"movie"}
+        _, _, _, error = self.run_main()
+        self.assertIn("movie write failed", str(error))
+        self.assertEqual(self.carried("movie"), [1])
+
+        # The gap is read again, so 2 is found flagged a second time.
+        self.now = NOW + 18 * HOUR
+        self.failing = set()
+        movies, _, _, _ = self.run_main()
+        self.assertEqual(movies, [3])
+        self.assertEqual(self.carried("movie"), [1, 2])
+
+    def test_a_carried_title_that_lost_its_tropes_is_dropped(self):
+        self.run_main()
+        self.tropes("movie", 1, NOW + HOUR)
+        self.flag("movie", 1)
+        self.now = NOW + 6 * HOUR
+        self.run_main()
+        self.assertEqual(self.carried("movie"), [1])
+
+        self.db.tv_tropes_movie_tags.update_one({"tmdb_id": 1}, {"$set": {"tropes": None}})
+        self.now = NOW + 12 * HOUR
+        _, _, results, _ = self.run_main()
+
+        self.assertEqual(results["movies"]["selected"], 0)
+        self.assertEqual(self.carried("movie"), [])
+
+    def test_a_run_restricted_to_ids_neither_copies_nor_changes_the_carried_titles(self):
+        self.run_main()
+        self.tropes("movie", 1, NOW + HOUR)
+        self.flag("movie", 1)
+        self.now = NOW + 6 * HOUR
+        self.run_main()
+        self.flag("movie", 1, False)
+        self.tropes("movie", 2, datetime.utcnow() - HOUR)
+        self.tropes("show", 3, datetime.utcnow() - 3 * DAY)
+        movie_id = str(self.db.tv_tropes_movie_tags.find_one({"tmdb_id": 2})["_id"])
+        show_id = str(self.db.tv_tropes_tv_tags.find_one({"tmdb_id": 3})["_id"])
+        before = list(self.db.sync_state.find())
+
+        self.now = NOW + 12 * HOUR
+        movies, shows, results, _ = self.run_main(movie_ids=[movie_id], show_ids=[show_id])
+
+        self.assertEqual((movies, shows), ([2], []))
+        self.assertEqual(results["movies"]["carried"], 0)
+        self.assertEqual(list(self.db.sync_state.find()), before)
+        self.assertNotIn("selection", results["movies"])
+
+    def test_skipped_movies_keep_their_time(self):
+        self.run_main()
+
+        self.now = NOW + 6 * HOUR
+        _, _, results, _ = self.run_main(skip_movies=True)
+
+        self.assertIsNone(results["movies"])
+        self.assertEqual(self.last_success("movie"), NOW)
+        self.assertEqual(self.last_success("show"), NOW + 6 * HOUR)
+
+    def test_a_run_reaches_back_7_days_at_most_and_says_so(self):
+        self.run_main()
+        self.tropes("movie", 1, NOW + 2 * DAY)
+        self.tropes("movie", 2, NOW + 4 * DAY)
+
+        self.now = NOW + 10 * DAY
+        movies, _, results, _ = self.run_main()
+
+        self.assertEqual(movies, [2])
+        self.assertTrue(results["movies"]["selection"]["lookback_capped"])
+
+    def test_the_priority_publish_call_copies_its_ids_and_returns_the_counts_only(self):
+        self.tropes("movie", 1, NOW - 30 * DAY)
+        self.tropes("movie", 2, NOW - 30 * DAY)
+        self.flag("movie", 2)
+        crate = Crate(set(), {})
+
+        with patch.object(tvtropes, "get_db", return_value=self.db):
+            result = tvtropes.copy_media(
+                connector=crate, query_selector={"tmdb_id": {"$in": [1, 2]}, "tropes": {"$ne": None}},
+                media_type="movie", recent_only=False)
+
+        self.assertEqual([record.tmdb_id for record in crate.records["movie"]], [1])
+        self.assertEqual(result["movies"], {"records_received": 1, "rows_upserted": 1})
+        self.assertEqual(result["skipped_flagged"], 1)
         self.assertEqual(list(self.db.sync_state.find()), [])
 
 
