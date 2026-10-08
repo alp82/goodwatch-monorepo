@@ -281,6 +281,15 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 		separateEntryFiles(),
 	],
 
+	experimental: {
+		// A lazy chunk's preloads follow the chunk: their addresses are relative to the script that asks for them, not
+		// to the page. A page can get its scripts from the static hostname (see app/utils/asset-url.ts).
+		renderBuiltUrl: (filename, { hostType, ssr }) =>
+			!ssr && hostType === "js" && filename.endsWith(".js")
+				? { relative: true }
+				: undefined,
+	},
+
 	build: {
 		sourcemap: true,
 		rollupOptions: isSsrBuild

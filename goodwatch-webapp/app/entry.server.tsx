@@ -9,6 +9,11 @@ import { createReadableStreamFromReadable } from "@remix-run/node"
 import { RemixServer } from "@remix-run/react"
 import { isbot } from "isbot"
 import { renderToPipeableStream } from "react-dom/server"
+import {
+	currentAssetBase,
+	manifestForBase,
+	renderWithAssetBase,
+} from "~/server/asset-address.server"
 import { applyCachePolicy } from "~/server/cache-identity.server"
 import { HtmlStream } from "~/server/html-stream.server"
 import { startLifecycle } from "~/server/lifecycle.server"
@@ -48,6 +53,25 @@ export default function handleRequest(
 	responseHeaders: Headers,
 	remixContext: EntryContext,
 	_loadContext: AppLoadContext,
+) {
+	// Where this response's files are: the site's own host or the static hostname (see asset-address.server.ts). Remix
+	// takes the addresses of scripts, preloads and route style sheets from the build's file list, so the render gets
+	// the copy of the list for that address. `assetUrl` reads the same address for everything else.
+	const assetBase = currentAssetBase()
+	const context = {
+		...remixContext,
+		manifest: manifestForBase(remixContext.manifest, assetBase),
+	}
+	return renderWithAssetBase(assetBase, () =>
+		renderDocument(request, responseStatusCode, responseHeaders, context),
+	)
+}
+
+function renderDocument(
+	request: Request,
+	responseStatusCode: number,
+	responseHeaders: Headers,
+	remixContext: EntryContext,
 ) {
 	// Crawlers get the complete document in one piece. Browsers get the shell first and suspended parts as they finish.
 	const waitForAll =
