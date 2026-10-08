@@ -385,7 +385,7 @@ export function answerStatic(
 	}
 	if (!entry || !readable) {
 		const fallback = manifest.fallback.has(path) ? path : decoded
-		if (manifest.fallback.has(fallback)) {
+		if (readable && manifest.fallback.has(fallback)) {
 			// Express still serves files without compressed variants, with the same CORS policy.
 			if (
 				fallback.startsWith(manifest.assetsPrefix) ||
@@ -499,8 +499,6 @@ export function startStaticFiles(): void {
 			build.assetsBuildDirectory,
 			`${build.publicPath}assets/`,
 		)
-		// Files can be served before publishing and probing, including a probe routed back here.
-		manifestReady()
 		const { getRedisCluster } = await import("~/utils/cache")
 		const logged = new Set<string>()
 		const store = createBuildFileStore({
@@ -512,6 +510,9 @@ export function startStaticFiles(): void {
 			},
 		})
 		state.store = store
+		// Files can be served before publishing and probing, including a probe routed back here. The store is in place
+		// first, so a file of the previous build that is asked for right after a start still gets its lookup.
+		manifestReady()
 		const manifest = state.manifest
 		const files = [...manifest.files]
 			.filter(([path]) =>

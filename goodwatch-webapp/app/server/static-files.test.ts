@@ -212,7 +212,7 @@ test("file-only decisions block pages, health, unknown paths and non-GET methods
 		"*",
 	)
 	assert.equal(answer("/fallback.css").handled, false)
-	assert.equal(answer("/fallback.css", "POST").handled, false)
+	assert.equal(answer("/fallback.css", "POST").status, 404)
 	assert.equal(answer("/%66allback.css").handled, false)
 	assert.equal(answer("/health/live", "GET", false).handled, false)
 	assert.equal(answer("/", "GET", true, false).status, 503)
