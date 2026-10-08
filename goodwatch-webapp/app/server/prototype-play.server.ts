@@ -37,6 +37,8 @@ import {
 	playMeta,
 } from "~/ui/prototype-carousels/play-meta"
 import { playCss } from "~/ui/prototype-carousels/play-css"
+import { SCRUB_FORMS, scrubKit } from "~/ui/prototype-carousels/scrub-forms"
+import { scrubExtra } from "~/ui/prototype-carousels/scrub-meta"
 import { cached } from "~/utils/cache"
 import { MEDIA_COLLECTION, recommend, scroll } from "~/utils/qdrant"
 import { titleKey } from "~/utils/title-key"
@@ -219,9 +221,11 @@ export function playHead(variant: PlayVariant): Promise<PlayHead> {
 	let head = heads.get(variant)
 	if (!head) {
 		head = (async () => {
-			let script = `(${playEngine.toString()})(${JSON.stringify(metaOf())},window,{${variant}:${PLAY_FORMS[
-				variant
-			].toString()}})`
+			// A scrub form is its own function and the kit the scrub forms share (ui/prototype-carousels/scrub-forms.ts).
+			const form = SCRUB_FORMS[variant]
+				? `function(c){return(${SCRUB_FORMS[variant].toString()})(c,(${scrubKit.toString()})(c,${JSON.stringify(scrubExtra())}))}`
+				: PLAY_FORMS[variant].toString()
+			let script = `(${playEngine.toString()})(${JSON.stringify(metaOf())},window,{${variant}:${form}})`
 			try {
 				const name = "esbuild"
 				const esbuild = (await import(/* @vite-ignore */ name)) as {
