@@ -1424,3 +1424,40 @@ test("every stale request is served while one refresh is blocked", async (t) => 
 	gate.resolve()
 	await until(() => f.cache.stats().flights === 0)
 })
+
+test("the asset address is the last part of the page key", () => {
+	const origin = pageCacheKey({ url: "/page", assets: "" })
+	const staticHost = pageCacheKey({
+		url: "/page",
+		assets: "https://static.example.com",
+	})
+	assert.ok(origin && "key" in origin && staticHost && "key" in staticHost)
+	assert.equal(staticHost.key, `${origin.key}https://static.example.com`)
+	assert.ok(origin.key.endsWith("|"))
+})
+
+test("a stored page is not served after the asset address switches", async (t) => {
+	let assets = ""
+	const f = await fixture(t, { assets: () => assets })
+	await f.warm()
+	assert.equal((await f.get()).headers["gw-page-cache"], "hit")
+	assets = "https://static.example.com"
+	const calls = f.app.calls
+	assert.notEqual((await f.get()).headers["gw-page-cache"], "hit")
+	assert.equal(f.app.calls, calls + 1)
+})
+
+test("a render offered after an asset switch finds no flight and is not stored", async (t) => {
+	let assets = ""
+	const f = await fixture(t, { assets: () => assets })
+	await f.get()
+	const delay = deferred()
+	f.app.delay = delay.promise
+	const pending = f.get()
+	await until(() => f.app.calls === 2)
+	assets = "https://static.example.com"
+	delay.resolve()
+	await pending
+	await until(() => f.cache.stats().flights === 0)
+	assert.equal(f.cache.stats().entries, 0)
+})
