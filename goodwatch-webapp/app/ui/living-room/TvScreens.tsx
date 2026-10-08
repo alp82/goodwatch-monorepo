@@ -1,7 +1,13 @@
 // The desktop TV screens of the "Ask, then answer" flow (#187), drawn on the fixed 960 x 528 canvas. They render
 // the TV flow's state and send its actions: hovering an item focuses it, clicking chooses it. No data fetching.
 import { AnimatePresence, motion } from "framer-motion"
-import type { CSSProperties, ReactNode } from "react"
+import {
+	type CSSProperties,
+	type ReactNode,
+	Suspense,
+	lazy,
+	useEffect,
+} from "react"
 import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import type { Score as RatingScore } from "~/server/scores.server"
@@ -9,6 +15,7 @@ import type { TasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { runtimeLabel } from "~/ui/watch-next/labels"
 import { offersOf, watchLine } from "~/ui/watch-next/services"
 import { backdropUrl, logoUrl, posterUrl } from "~/ui/watch-next/style"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { APP, ICON, Icon } from "./Remote"
 import { TvQuiz, quizItemLabel } from "./TvQuiz"
 import {
@@ -97,6 +104,12 @@ function itemLabel(
 				(
 					{
 						"watch-next": "Watch next",
+						door:
+							arg === "continue"
+								? "Continue"
+								: arg === "start"
+									? "Start a show"
+									: "A movie",
 						"something-new": "Something new",
 						"just-show-me": "Just show me",
 						continue: "Continue",
@@ -193,6 +206,7 @@ const SITE_LINKS = [
 
 export function TvScreens({ view }: { view: TvView }) {
 	const { state } = view
+	usePreloadHomeDoors(view.data)
 	const s = state.screen
 	const key =
 		s.name === "title"
@@ -566,7 +580,32 @@ export function memberTiles(view: TvView) {
 	]
 }
 
+// Home's doors (#385) are a chunk only a member whose home has them requests. It is asked for while the TV boots.
+const loadHomeDoors = reloadOnStaleChunk(() => import("./HomeDoors"))
+export const LazyHomeDoors = lazy(loadHomeDoors)
+export function usePreloadHomeDoors(data: LivingRoomData) {
+	const has = Boolean(data.doors)
+	useEffect(() => {
+		// A failed request here is asked for again when the doors render.
+		if (has) loadHomeDoors().catch(() => {})
+	}, [has])
+}
+
 function MemberHome({ view }: { view: TvView }) {
+	const { doors } = view.data
+	if (doors)
+		return (
+			<>
+				<div className="absolute inset-0 bg-[radial-gradient(110%_90%_at_30%_0%,#2b1706_0%,#08070a_62%)]" />
+				<Suspense fallback={<Head title="What are we watching?" />}>
+					<LazyHomeDoors
+						view={view}
+						doors={doors}
+						head={(line) => <Head title="What are we watching?" line={line} />}
+					/>
+				</Suspense>
+			</>
+		)
 	return (
 		<>
 			<div className="absolute inset-0 bg-[radial-gradient(110%_90%_at_30%_0%,#2b1706_0%,#08070a_62%)]" />

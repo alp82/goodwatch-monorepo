@@ -135,7 +135,15 @@ function AccountRow() {
 			<span className="min-w-0 truncate">{name}</span>
 			<span className="grow" />
 			<nav aria-label="Your account" className="flex text-[13px] font-medium">
-				<Link to={destinations.watchNext.href} className={link}>
+				<Link
+					to={
+						// With REC_TRACKING the Wishlist is the first choice of My library.
+						destinations.myLibrary.available
+							? destinations.myLibrary.href
+							: destinations.watchNext.href
+					}
+					className={link}
+				>
 					Wishlist
 				</Link>
 				<Link to={myListsPath} className={link}>
@@ -156,6 +164,9 @@ function HubContent() {
 	const here = currentDestination(pathname)
 	const d = getDestinations(useFeatures())
 	const { pick, wishlistCount } = useTonightsPick()
+	// With REC_TRACKING a member has My shows, My movies and My library in place of Watch next (#385).
+	const tracked = Boolean(user) && d.myShows.available
+	const pickOn = pick?.href ? currentDestination(pick.href.split("#")[0]) : null
 	const openSearch = () => {
 		navigation?.setHubOpen(false)
 		navigation?.setSearchOpen(true)
@@ -182,12 +193,39 @@ function HubContent() {
 				Search titles, people, moods
 			</button>
 			<div className="grid grid-cols-2 gap-2.5">
-				<Tile
-					destination={d.watchNext}
-					subtitle={watchSubtitle}
-					here={here === "watchNext"}
-					backdrop={pick?.title.backdrop_path}
-				/>
+				{tracked ? (
+					<>
+						<Tile
+							destination={d.myShows}
+							subtitle={
+								pickOn === "myShows" && pick
+									? `${pick.title.title}${pick.episode ? ` ${pick.episode.code}` : ""} tonight`
+									: "Continue, or start one"
+							}
+							here={here === "myShows"}
+							backdrop={pickOn === "myShows" ? pick?.title.backdrop_path : null}
+						/>
+						<Tile
+							destination={d.myMovies}
+							subtitle={
+								pickOn === "myMovies" && pick
+									? `${pick.title.title} tonight`
+									: "Movies you want to see"
+							}
+							here={here === "myMovies"}
+							backdrop={
+								pickOn === "myMovies" ? pick?.title.backdrop_path : null
+							}
+						/>
+					</>
+				) : (
+					<Tile
+						destination={d.watchNext}
+						subtitle={watchSubtitle}
+						here={here === "watchNext"}
+						backdrop={pick?.title.backdrop_path}
+					/>
+				)}
 				<Tile
 					destination={d.discover}
 					subtitle="Browse and search"
@@ -203,6 +241,13 @@ function HubContent() {
 					subtitle={d.explorer.available ? "Islands map" : "Coming soon"}
 					here={here === "explorer"}
 				/>
+				{tracked && (
+					<Tile
+						destination={d.myLibrary}
+						subtitle={`${wishlistCount} to see, and what you have seen`}
+						here={here === "myLibrary"}
+					/>
+				)}
 			</div>
 			<div className="grid grid-cols-2 gap-2.5">
 				<SecondaryKey destination={d.movies} here={here === "movies"} />

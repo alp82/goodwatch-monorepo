@@ -15,7 +15,7 @@ async function respond(request: Request) {
 	const viewer = await watchNextViewer(request)
 	if ("response" in viewer) return viewer.response
 	return json<{ pick: TonightsPick | null }>(
-		{ pick: await getTonightsPick(viewer.ctx) },
+		{ pick: await getTonightsPick(viewer.ctx, viewer.tracking) },
 		{ headers },
 	)
 }
