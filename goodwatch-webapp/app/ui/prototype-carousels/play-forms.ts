@@ -239,7 +239,7 @@ const play1: Form = (core) => {
 				)},${fan.cs}"${isOn ? ' data-on="" data-full=""' : ""}${under === direction.id ? ' data-under=""' : ""}>${posters}</div>`
 				const more = side.all.length - side.rest.length
 				const word = `<i>${direction.emoji}</i><b>${core.esc(direction.label)}</b>`
-				const ended = Boolean(ctx.list) && !side.all.length
+				const ended = Boolean(ctx.list) && !ctx.soft && !side.all.length
 				labels +=
 					more > 0
 						? `<button type="button" class="p1-l p1-a${home.al}" style="${at(home.lb)}" data-pl-act="deep" data-arg="${direction.id}" data-label="${pos}" aria-label="${core.esc(
@@ -429,7 +429,7 @@ const play3: Form = (core) => {
 				const first = cells.find(
 					(entry) => entry.cell.far === 1 && entry.cell.parts[0][0] === pos,
 				)
-				const ended = Boolean(ctx.list) && !first?.title
+				const ended = Boolean(ctx.list) && !ctx.soft && !first?.title
 				const west = label.al === "l"
 				labels += `<span class="p3-l p3-a${label.al}${ended ? " p3-e" : ""}" style="--x:${label.at[0]};--y:${label.at[1]}" data-label="${pos}">${
 					west ? `<u>${label.arrow}</u>` : ""
@@ -481,7 +481,7 @@ const play6: Form = (core) => {
 						? pick.d
 								.map(
 									({ k, d }) =>
-										`<span data-s="${d > 0 ? "+" : "-"}" style="--c:${core.M.traits[k].c}">${core.M.traits[k].e} ${d > 0 ? "more" : "less"} ${core.esc(core.M.traits[k].n)}</span>`,
+										`<span data-s="${d > 0 ? "+" : "-"}" style="--c:${core.M.traits[k].c}" title="${d > 0 ? "More" : "Less"} ${core.esc(core.M.traits[k].n)}"><u>${d > 0 ? "▲" : "▼"}</u>${core.M.traits[k].e} ${core.esc(core.M.traits[k].n)}</span>`,
 								)
 								.join("")
 						: "<span>much the same mix</span>"
@@ -677,7 +677,7 @@ const play10: Form = (core) => {
 				.map((i) => {
 					const pick = three[i]
 					if (!pick)
-						return ctx.list
+						return ctx.list && !ctx.soft
 							? '<span class="p10-none">Nothing else pulls another way from here.</span>'
 							: `<span class="p10-k">${core.poster(undefined, { cls: "p10-p" })}</span>`
 					return core.poster(pick.t, {
@@ -712,10 +712,15 @@ const play10: Form = (core) => {
 const play2: Form = (core) => {
 	// Per axis, the angle of its high lane from straight ahead. The low lane is its mirror.
 	const ANGLES = [78, 47, 17]
-	const RADII = [31, 50, 67]
-	const WIDTHS = [12.5, 11, 9.5]
+	// Per axis, how far out its three ranks stand. The lanes straight ahead start further out and stand closer.
+	const RADII = [
+		[33, 50, 66],
+		[33, 50, 65],
+		[38, 50, 60],
+	]
+	const WIDTHS = [12, 10.5, 9]
 	const O: [number, number] = [0, 33]
-	const KX = 0.68
+	const KX = 0.7
 	const KY = 1.2
 	const r1 = (v: number) => Math.round(v * 10) / 10
 	const place = (angle: number, radius: number): [number, number] => {
@@ -747,7 +752,7 @@ const play2: Form = (core) => {
 				let posters = ""
 				const came = cameAt === direction.id ? ctx.prev : null
 				for (let rank = 0; rank < 3; rank++) {
-					const at = place(angle, RADII[rank])
+					const at = place(angle, RADII[direction.slot][rank])
 					const style = `--x:${at[0]};--y:${at[1]};--w:${WIDTHS[rank]}`
 					if (came && rank === 0) {
 						posters += core.poster(came, { via: direction.id, came: true, cls: "p2-p", style })
@@ -762,14 +767,14 @@ const play2: Form = (core) => {
 								style,
 								attrs: ` data-rk="${rank}"${rank === 2 ? ' data-pl-far=""' : ""}`,
 							})
-						: ctx.list
+						: ctx.list && !ctx.soft
 							? ""
 							: core.poster(undefined, { cls: "p2-p", style })
 				}
 				lanes += `<div class="p2-d" data-dir="${direction.id}">${posters}</div>`
 				const label = LABELS[direction.slot]
 				const west = direction.sign < 0
-				const ended = Boolean(ctx.list) && !picks.length
+				const ended = Boolean(ctx.list) && !ctx.soft && !picks.length
 				labels += `<span class="p2-l p2-a${west ? (label.al === "r" ? "l" : "r") : label.al}${ended ? " p2-e" : ""}" style="--x:${
 					label.at[0] * direction.sign
 				};--y:${label.at[1]}" data-label="${direction.id}"><i>${direction.emoji}</i><b>${core.esc(direction.label)}</b>${ended ? "<em>ends</em>" : ""}</span>`
@@ -932,8 +937,15 @@ const play5: Form = (core) => {
 	}
 	// How far a spoke of a level reaches, as a share of the way to its poster.
 	const reach = (level: number) => 0.3 + 0.062 * level
-	const keysOf = (ctx: PlayCtx): string[] =>
-		ctx.st.mem.hub ?? (ctx.root.s ? core.own(ctx.root, N) : ctx.st.traits.slice(0, N))
+	// The page title's four strongest traits, and four it has room to grow on: a spoke at 10 can only be matched.
+	const keysOf = (ctx: PlayCtx): string[] => {
+		if (ctx.st.mem.hub) return ctx.st.mem.hub
+		if (!ctx.root.s) return ctx.st.traits.slice(0, N)
+		const all = core.own(ctx.root, 16)
+		const top = all.slice(0, 4)
+		const room = all.slice(4).filter((key) => core.val(ctx.root, key) <= 8)
+		return top.concat(room, all.slice(4)).filter((key, i, list) => list.indexOf(key) === i).slice(0, N)
+	}
 	return {
 		hint: "Each spoke is a trait of this title. The poster at its end has more of it. Tap one to stand there.",
 		adopt: (st, stage) => {
@@ -976,7 +988,7 @@ const play5: Form = (core) => {
 				const tag = `<span class="p5-t" style="--c:${trait.c}"><i>${trait.e}</i>${pick ? (more ? `+${more}` : "=") : ""}</span>`
 				posters += pick
 					? core.poster(pick, { via: `t.${key}+`, cls: "p5-p", style, inner: tag })
-					: ctx.list
+					: ctx.list && !ctx.soft
 						? `<span class="p5-p p5-none" style="${style}"><i>${trait.e}</i>${now >= 8 ? "tops out" : "no more nearby"}</span>`
 						: core.poster(undefined, { cls: "p5-p", style })
 				const lx = cx * (RX * reach(now) + 4.5)

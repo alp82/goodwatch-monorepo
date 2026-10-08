@@ -3,7 +3,7 @@
 // The related titles section of the play forms (play1 to play10). Three layers, by weight:
 // 1. The server's HTML: the form's picture of the page's title, drawn by the engine itself, and the plain title
 //    links.
-// 2. The inline script: the engine and the one form (see play-engine.ts). Taps work before hydration. The script and
+// 2. The inline script: the engine and the page's one form (see play-engine.ts). Taps work before hydration. The script and
 //    the style come from the server only, so neither is part of the title route's own script.
 // 3. Nothing else. A page opened by a navigation inside the app has no inline script: it loads the engine as a lazy
 //    chunk when the section mounts.
@@ -24,10 +24,13 @@ interface PlayWindow {
 	__gwPlay?: { boot: () => void; nav: ((href: string) => void) | null }
 }
 /** Set by server/prototype-play.server.ts. Not there in the browser. */
-const headOf = () =>
+const headOf = (variant: string) =>
 	typeof document === "undefined"
-		? (globalThis as { __gwPlayHead?: { css: string; script: string } })
-				.__gwPlayHead
+		? (
+				globalThis as {
+					__gwPlayHead?: Record<string, { css: string; script: string }>
+				}
+			).__gwPlayHead?.[variant]
 		: undefined
 
 export default function PlaySection({
@@ -59,7 +62,7 @@ export default function PlaySection({
 		}
 	}, [navigate, rootKey])
 	if (!html || !prototype) return null
-	const head = headOf()
+	const head = headOf(prototype.variant)
 	return (
 		<>
 			<style

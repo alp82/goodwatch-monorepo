@@ -89,8 +89,14 @@ export interface PlayCtx {
 	e: PlayEntry
 	/** The title you stand on. */
 	c: PlayTitle
-	/** Its neighborhood, nearest first, or null while the pack is on its way. */
+	/** Its neighborhood, nearest first, or null while the pack is on its way and nothing can stand in for it. */
 	list: PlayTitle[] | null
+	/**
+	 * True while the neighborhood is a stand-in: the titles around the title you came from, ordered by how alike they
+	 * are to this one. Every claim about a title is still computed from its own levels, but a direction that looks
+	 * empty may not be, so nothing is said to end.
+	 */
+	soft: boolean
 	/** The title you came from, and the page's title. */
 	prev: PlayTitle | null
 	root: PlayTitle
@@ -188,10 +194,11 @@ export function playEngine(
 	const G: {
 		t: Record<string, PlayTitle>
 		packs: Record<string, PlayTitle[]>
+		soft: Record<string, PlayTitle[]>
 		wait: Record<string, Promise<unknown>>
 		asked: number
 		nav: ((href: string) => void) | null
-	} = { t: {}, packs: {}, wait: {}, asked: 0, nav: null }
+	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null }
 	const ESC: Record<string, string> = {
 		"&": "&amp;",
 		"<": "&lt;",
@@ -532,14 +539,31 @@ export function playEngine(
 		return built[name]
 	}
 
+	/** A stand-in for a pack that is on its way: what is known around the title you came from, seen from here. */
+	const softOf = (key: string, from: string) => {
+		if (G.soft[key]) return G.soft[key]
+		const c = G.t[key]
+		const source = G.packs[from] ?? G.soft[from]
+		if (!source || !c?.s) return null
+		const origin = G.t[from]
+		G.soft[key] = source
+			.concat(origin?.s ? [origin] : [])
+			.filter((t) => t.k !== key)
+			.map((t) => ({ ...t, n: sim(c, t) }))
+			.sort((a, b) => b.n - a.n)
+		return G.soft[key]
+	}
 	const ctxOf = (st: PlayState): PlayCtx => {
 		const e = st.trail[st.trail.length - 1]
 		const before = st.trail[st.trail.length - 2]
+		const real = G.packs[e.k] ?? null
+		const list = real ?? (before ? softOf(e.k, before.k) : null)
 		return {
 			st,
 			e,
 			c: G.t[e.k],
-			list: G.packs[e.k] ?? null,
+			list,
+			soft: Boolean(list) && !real,
 			prev: before ? (G.t[before.k] ?? null) : null,
 			root: G.t[st.root],
 		}
@@ -758,6 +782,8 @@ export function playEngine(
 		stage.setAttribute("data-pl-at", p.ctx.c.k)
 		if (p.ctx.list) stage.removeAttribute("data-pl-cold")
 		else stage.setAttribute("data-pl-cold", "")
+		if (p.ctx.soft) stage.setAttribute("data-pl-soft", "")
+		else stage.removeAttribute("data-pl-soft")
 		if (kind && !still()) stage.setAttribute("data-pl-in", `${kind}${++beat % 2}`)
 		else stage.removeAttribute("data-pl-in")
 		const bar = q(s, "[data-pl-bar]")
@@ -798,11 +824,13 @@ export function playEngine(
 			const st = stateOf(s)
 			const here = st.trail[st.trail.length - 1].k
 			const stage = q(s, "[data-pl-stage]")
-			if (here === key && stage?.hasAttribute("data-pl-cold")) {
+			const cold = stage?.hasAttribute("data-pl-cold")
+			if (here === key && (cold || stage?.hasAttribute("data-pl-soft"))) {
 				if (!st.axes.length && G.packs[st.root])
 					st.axes = startAxes(G.t[st.root], G.packs[st.root])
 				if (!st.traits.length) st.traits = own(G.t[st.root], 8)
-				draw(s, "fill")
+				// Placeholders fill in with a short fade. A stand-in is corrected without one.
+				draw(s, cold ? "fill" : "")
 				ahead(s)
 			} else if (here === key) ahead(s)
 			// A form that shows a second title's neighborhood asked for this pack.
@@ -881,7 +909,18 @@ export function playEngine(
 		if (why.__d == null) why.__d = why.innerHTML
 		why.textContent = text
 	}
-	doc.addEventListener("click", (event: MouseEvent) => {
+	// A tap on one of the section's own controls is this script's alone: it is handled in the capture phase at the
+	// window and stopped there, so that no other listener of the page (the app's root, analytics) runs before the new
+	// stage is painted. `?plshare=1` leaves the events alone, for comparing.
+	const OWN = "[data-pl-step],[data-pl-act],[data-pl-to],[data-pl-back]"
+	const share = /[?&]plshare=1/.test(win.location.search)
+	const mine = (event: Event) => {
+		if (!share && hit(event, OWN) && sec(event.target as Element))
+			event.stopImmediatePropagation()
+	}
+	for (const type of ["pointerup", "mousedown", "mouseup", "touchend"])
+		win.addEventListener(type, mine, { capture: true, passive: true })
+	win.addEventListener("click", (event: MouseEvent) => {
 		const s = sec(event.target as Element)
 		if (!s) return
 		const link = hit(event, "a[data-pl-nav]")
@@ -894,6 +933,7 @@ export function playEngine(
 			}
 			return
 		}
+		mine(event)
 		wake(s)
 		const st = stateOf(s)
 		const form = formOf(st.form)
@@ -923,8 +963,12 @@ export function playEngine(
 			return
 		}
 		const button = hit(event, "[data-pl-step]")
-		if (button) step(s, button)
-	})
+		if (button) {
+			// For the checks: when the tap happened, by the browser's clock.
+			if (win.__plClicks) win.__plClicks.push(event.timeStamp)
+			step(s, button)
+		}
+	}, true)
 	const changed = (event: Event) => {
 		const el = hit(event, "[data-pl-input]")
 		const s = sec(el)
@@ -937,6 +981,7 @@ export function playEngine(
 	doc.addEventListener("scroll", changed, true)
 	/** A poster being pressed or pointed at: its pack is wanted now. */
 	const intent = (event: Event) => {
+		mine(event)
 		const button = hit(event, "[data-pl-step]")
 		const s = sec(button)
 		if (!s || !button) {
@@ -948,8 +993,8 @@ export function playEngine(
 		if (!button.hasAttribute("data-pl-came") && !noAhead())
 			ask(button.getAttribute("data-pl-step") ?? "", true)
 	}
-	doc.addEventListener("pointerdown", intent, true)
-	doc.addEventListener("touchstart", intent, { capture: true, passive: true })
+	win.addEventListener("pointerdown", intent, true)
+	win.addEventListener("touchstart", intent, { capture: true, passive: true })
 	const over = (event: Event) => {
 		const button = hit(event, "[data-pl-step]")
 		const s = sec(button)

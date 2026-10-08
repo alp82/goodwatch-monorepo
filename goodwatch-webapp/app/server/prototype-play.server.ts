@@ -36,7 +36,7 @@ import {
 	type PlayVariant,
 	playMeta,
 } from "~/ui/prototype-carousels/play-meta"
-import { PLAY_CSS } from "~/ui/prototype-carousels/play-css"
+import { playCss } from "~/ui/prototype-carousels/play-css"
 import { cached } from "~/utils/cache"
 import { MEDIA_COLLECTION, recommend, scroll } from "~/utils/qdrant"
 import { titleKey } from "~/utils/title-key"
@@ -209,38 +209,40 @@ interface PlayHead {
 	script: string
 }
 
-let head: Promise<PlayHead> | undefined
+const heads = new Map<string, Promise<PlayHead>>()
 /**
- * The section's style and inline script, built once: the engine's own source with the fingerprint vocabulary as its
- * argument. Minified when the build tool's minifier is at hand (it is on the development machine).
+ * The section's style and inline script for one form, built once: the engine's own source with the fingerprint
+ * vocabulary and the form as its arguments. Minified when the build tool's minifier is at hand (it is on the
+ * development machine). The section reads it from a global while the server renders (see PlaySection.tsx).
  */
-export function playHead(): Promise<PlayHead> {
-	head ??= (async () => {
-		// The page's script holds the engine and all forms: about 4 KB more per form, compressed. A real build
-		// would give a page its one form.
-		let script = `(${playEngine.toString()})(${JSON.stringify(metaOf())},window,{${Object.entries(
-			PLAY_FORMS,
-		)
-			.map(([name, form]) => `${name}:${form.toString()}`)
-			.join(",")}})`
-		try {
-			const name = "esbuild"
-			const esbuild = (await import(/* @vite-ignore */ name)) as {
-				transform: (
-					code: string,
-					options: Record<string, unknown>,
-				) => Promise<{ code: string }>
+export function playHead(variant: PlayVariant): Promise<PlayHead> {
+	let head = heads.get(variant)
+	if (!head) {
+		head = (async () => {
+			let script = `(${playEngine.toString()})(${JSON.stringify(metaOf())},window,{${variant}:${PLAY_FORMS[
+				variant
+			].toString()}})`
+			try {
+				const name = "esbuild"
+				const esbuild = (await import(/* @vite-ignore */ name)) as {
+					transform: (
+						code: string,
+						options: Record<string, unknown>,
+					) => Promise<{ code: string }>
+				}
+				script = (
+					await esbuild.transform(script, { minify: true, target: "es2019" })
+				).code.trim()
+			} catch (error) {
+				console.error("Carousel prototype: the engine is not minified", error)
 			}
-			script = (
-				await esbuild.transform(script, { minify: true, target: "es2019" })
-			).code.trim()
-		} catch (error) {
-			console.error("Carousel prototype: the engine is not minified", error)
-		}
-		const ready = { css: PLAY_CSS, script }
-		;(globalThis as { __gwPlayHead?: PlayHead }).__gwPlayHead = ready
-		return ready
-	})()
+			const ready = { css: playCss(variant), script }
+			const all = globalThis as { __gwPlayHead?: Record<string, PlayHead> }
+			all.__gwPlayHead = { ...all.__gwPlayHead, [variant]: ready }
+			return ready
+		})()
+		heads.set(variant, head)
+	}
 	return head
 }
 
@@ -255,7 +257,7 @@ export async function playSectionHtml(input: {
 }): Promise<string> {
 	const [pack] = await Promise.all([
 		playPack(input.type, input.id),
-		playHead(),
+		playHead(input.variant),
 	])
 	const engine = playEngine(metaOf(), null, PLAY_FORMS)
 	return engine.section({

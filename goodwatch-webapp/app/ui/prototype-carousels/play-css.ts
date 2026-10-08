@@ -4,7 +4,7 @@
 // inside the app gets it from the lazy chunk (play-client.ts). Never part of the title route's own script.
 export const PLAY_CSS = `
 .pl{position:relative;display:flex;flex-direction:column;gap:.5rem;border-radius:.75rem;border:1px solid rgba(255,255,255,.1);
-background:rgba(255,255,255,.05);padding:1rem;overflow:hidden}
+background:rgba(255,255,255,.05);padding:1rem;overflow:hidden;contain:layout style}
 .pl:focus{outline:none}
 .pl :where(button){cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font:inherit;color:inherit}
 .pl button:focus-visible{outline:2px solid #fff;outline-offset:1px}
@@ -146,12 +146,14 @@ border-radius:9999px;padding:0 .4375rem;color:#fde68a;background:rgba(10,13,22,.
 .p6-m .pl-mk{font-size:.8125rem}
 .p6-m .pl-mk b{font-size:.5625rem}
 .p6-wd{display:grid;grid-template-columns:auto minmax(0,1fr);text-align:left}
-.p6-wd{grid-template-columns:38% minmax(0,1fr)}
+.p6-wd{grid-template-columns:34% minmax(0,1fr)}
 .p6-wd img{border-radius:.375rem 0 0 .375rem}
-.p6-w{display:flex;flex-direction:column;justify-content:center;gap:1px;min-width:0;padding:0 .375rem;font-size:.6875rem;line-height:.9375rem;color:#d1d5db}
+.p6-w{display:flex;flex-direction:column;justify-content:center;gap:1px;min-width:0;padding:0 .25rem 0 .375rem;font-size:.6875rem;line-height:.9375rem;color:#d1d5db}
 .p6-w b{font-size:.75rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .p6-w span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .p6-w span[data-s="+"]{color:#fff}
+.p6-w u{text-decoration:none;font-size:.5rem;margin-right:2px;color:var(--c)}
+.p6-w span[data-s="-"] u{color:#9ca3af}
 
 .p7{position:absolute;inset:0;display:flex;flex-direction:column;gap:5px}
 .p7-chips{flex:none;display:flex;gap:.375rem;height:1.75rem;align-items:center;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;touch-action:pan-x pan-y;padding:0 2px;
@@ -203,10 +205,12 @@ box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
 .p2 line{stroke-width:1.5;vector-effect:non-scaling-stroke}
 .p2 ellipse{fill:none;stroke:rgba(125,211,252,.13);stroke-width:1;stroke-dasharray:2 6;vector-effect:non-scaling-stroke}
 .p2-d{display:contents}
+.p2-p[data-rk="0"],.p2-p[data-pl-came]{z-index:3}
+.p2-p[data-rk="1"]{z-index:2}
 .p2-p,.p2-c,.p2-l{position:absolute;left:50%;top:50%;translate:calc(var(--x)*var(--ux) - 50%) calc(var(--y)*var(--u) - 50%)}
 .p2-p{width:calc(var(--w)*var(--u));z-index:1;box-shadow:0 0 0 1px rgba(125,211,252,.25),0 6px 16px rgba(0,0,0,.7)}
-.p2-c{width:calc(19*var(--u));z-index:2;box-shadow:0 0 22px 2px rgba(125,211,252,.45)}
-.p2-l{z-index:3;display:inline-flex;align-items:center;gap:.1875rem;white-space:nowrap;pointer-events:none;font-size:.6875rem;line-height:1.125rem;border-radius:9999px;padding:0 .4375rem;
+.p2-c{width:calc(18*var(--u));z-index:4;box-shadow:0 0 22px 2px rgba(125,211,252,.45)}
+.p2-l{z-index:5;display:inline-flex;align-items:center;gap:.1875rem;white-space:nowrap;pointer-events:none;font-size:.6875rem;line-height:1.125rem;border-radius:9999px;padding:0 .4375rem;
 color:#e0f2fe;background:rgba(8,14,30,.8);border:1px solid rgba(125,211,252,.35)}
 .p2-l b{font-weight:800}
 .p2-l em{font-style:normal;font-weight:400;color:#94a3b8}
@@ -301,8 +305,8 @@ padding:0 calc(50% - 26px)}
 
 .p9{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px}
 .p9 small{font-size:.625rem;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;white-space:nowrap}
-.p9-top{flex:none;height:132px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:.5rem;align-items:center;padding:3px}
-.p9-a,.p9-b{height:126px;aspect-ratio:2/3;width:auto}
+.p9-top{flex:1;min-height:0;max-height:150px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:.5rem;align-items:center;padding:3px}
+.p9-a,.p9-b{height:calc(100% - 6px);max-height:144px;aspect-ratio:2/3;width:auto}
 .p9-a img,.p9-b img{height:100%}
 .p9-b{outline:3px solid #7dd3fc}
 .p9-mid{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
@@ -324,9 +328,8 @@ border:1px solid color-mix(in srgb,var(--c) 60%,transparent)}
 .p9-bt small span{min-width:0;overflow:hidden;text-overflow:ellipsis;flex:1}
 .p9-bt small span:last-child{text-align:right}
 .p9-bt small b{flex:none;text-transform:uppercase;letter-spacing:.06em;color:#d1d5db}
-.p9-row{flex:1;min-height:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:2px}
+.p9-row{flex:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:2px}
 .p9-p{min-height:0;overflow:hidden}
-.p9-p img{height:100%;aspect-ratio:auto;object-position:50% 15%}
 
 @media (min-width:1024px){
 .pl-body{flex-direction:row;gap:1.5rem;align-items:stretch}
@@ -364,8 +367,9 @@ border:1px solid color-mix(in srgb,var(--c) 60%,transparent)}
 .p8-tx{font-size:.875rem;line-height:1.25rem}
 .p8-tx b{font-size:1.25rem;line-height:1.5rem}
 .pl-stage.pl-play9{--sw:640px}
-.p9-top{height:170px}
-.p9-a,.p9-b{height:164px}
+.p9-top{max-height:190px}
+.p9-a,.p9-b{max-height:184px}
+.p9-row{grid-template-columns:repeat(5,104px);justify-content:space-between}
 .p9-w{width:38px}
 .pl-stage.pl-play10{--sw:520px}
 .p10-path{height:84px}
@@ -379,3 +383,37 @@ border:1px solid color-mix(in srgb,var(--c) 60%,transparent)}
 .pl-stage[data-pl-in] .p3-w{animation:none}
 }
 `
+
+/** The style of one form: the shared rules and its own. Rules that name another form are left out. */
+export function playCss(variant: string): string {
+	const own = variant.replace("play", "")
+	// play9 draws its trait bars with play7's rule.
+	const mine = (selector: string) => {
+		if (own === "9" && selector.includes(".p7-b")) return true
+		const named = selector.match(/\.p(\d+)[-[]|\.pl-play(\d+)|\bp(\d+)-(?:in|m)\d/g) ?? []
+		return named.every((name) => (name.match(/\d+/) ?? [""])[0] === own)
+	}
+	const rules = (css: string): string => {
+		let out = ""
+		let i = 0
+		while (i < css.length) {
+			const open = css.indexOf("{", i)
+			if (open < 0) break
+			const selector = css.slice(i, open)
+			let depth = 1
+			let end = open + 1
+			while (end < css.length && depth) {
+				if (css[end] === "{") depth++
+				else if (css[end] === "}") depth--
+				end++
+			}
+			const body = css.slice(open + 1, end - 1)
+			if (selector.trim().startsWith("@media"))
+				out += `${selector}{${rules(body)}}`
+			else if (mine(selector)) out += `${selector}{${body}}`
+			i = end
+		}
+		return out
+	}
+	return rules(PLAY_CSS)
+}
