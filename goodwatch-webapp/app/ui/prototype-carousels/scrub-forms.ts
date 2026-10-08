@@ -315,9 +315,10 @@ export function scrubKit(core: PlayCore, X: ScrubExtra) {
 
 	/** A form from its model: the stage, the scrubbing, the level ruler's taps, and what a step keeps. */
 	const form = (spec: ScrubSpec): PlayForm => {
-		let memo: { e: PlayEntry; m: ScrubModel } | null = null
+		let memo: { e: PlayEntry; l: PlayTitle[] | null; m: ScrubModel } | null = null
 		const modelOf = (ctx: PlayCtx) => {
-			if (!memo || memo.e !== ctx.e) memo = { e: ctx.e, m: spec.model(ctx) }
+			if (!memo || memo.e !== ctx.e || memo.l !== ctx.list)
+				memo = { e: ctx.e, l: ctx.list, m: spec.model(ctx) }
 			return memo.m
 		}
 		const show = (ctx: PlayCtx, s: Element, m: ScrubModel, t: PlayTitle, from: Element | null) => {
@@ -412,9 +413,11 @@ export function scrubKit(core: PlayCore, X: ScrubExtra) {
 					}
 				}
 				const focus = s.querySelector("[data-sc-focus]")
-				const t = core.title(key)
-				if (!t?.s || !focus || focus.getAttribute("data-k") === key) return
-				show(ctx, s, modelOf(ctx), t, strip)
+				if (!key || !focus || focus.getAttribute("data-k") === key || !core.title(key)?.s) return
+				// The strip's own copy of the title: a pack cached on another day may hold other levels for it.
+				const m = modelOf(ctx)
+				const t = titleIn(m, key)
+				if (t) show(ctx, s, m, t, strip)
 			},
 			after: (s) => {
 				// A chosen chip that lies outside its row comes into view.
@@ -438,7 +441,7 @@ export function scrubKit(core: PlayCore, X: ScrubExtra) {
 			},
 			stage: (ctx) => {
 				const m = spec.model(ctx)
-				memo = { e: ctx.e, m }
+				memo = { e: ctx.e, l: ctx.list, m }
 				const kept = ctx.e.ui.f ? titleIn(m, ctx.e.ui.f) : undefined
 				const f = kept ?? ctx.c
 				if (!kept) ctx.e.ui.f = undefined
@@ -877,9 +880,9 @@ const scrub6: ScrubForm = (core, kit) => {
 					.filter((s) => `${kit.T[s.key].l} ${kit.T[s.key].n} ${s.key}`.toLowerCase().indexOf(q) >= 0)
 					.slice(0, 12)
 			: spreads
-					.filter((s) => !flat(s))
-					.slice(0, 10)
-					.concat(spreads.filter(flat).slice(-4))
+					.filter((s) => s.key === mem.a)
+					.concat(spreads.filter((s) => !flat(s) && s.key !== mem.a).slice(0, 10))
+					.concat(spreads.filter((s) => flat(s) && s.key !== mem.a).slice(-4))
 		if (!shown.length) return '<small class="sc-none">No trait by that name</small>'
 		return shown
 			.map(
@@ -1133,7 +1136,13 @@ const scrub10: ScrubForm = (core, kit) =>
 		act: (ctx, name, arg) => {
 			const mem = ctx.st.mem
 			if (name === "lane") {
-				mem.lt[arg] = ((mem.lt[arg] ?? 0) + 1) % 4
+				// The next trait of the family, among the four this neighborhood spreads on most.
+				const keys = kit
+					.spread(kit.pool(ctx), kit.X.groups[Number(arg)]?.k ?? [])
+					.sort((p, q) => q.sd - p.sd)
+					.slice(0, 4)
+					.map((entry) => entry.key)
+				mem.lk[arg] = keys[(keys.indexOf(mem.lk[arg]) + 1) % Math.max(1, keys.length)] ?? mem.lk[arg]
 				return true
 			}
 			if (name !== "grp") return false
@@ -1161,13 +1170,13 @@ const scrub10: ScrubForm = (core, kit) =>
 					.slice(0, 3)
 					.map((entry) => entry.i)
 					.sort((p: number, q: number) => p - q)
-			mem.lt ??= {}
+			// A lane's trait is chosen once and kept for the walk, so that a step doesn't change what a lane means.
+			mem.lk ??= {}
 			const g = mem.g as number[]
 			const titles = kit.capped(ctx, all, 26)
 			const lanes = g.map((index) => {
-				const list = ranked[index]
-				const key = list[(mem.lt[index] ?? 0) % Math.max(1, list.length)]?.key ?? kit.X.groups[index].k[0]
-				return { index, key, group: kit.X.groups[index] }
+				mem.lk[index] ??= ranked[index][0]?.key ?? kit.X.groups[index].k[0]
+				return { index, key: mem.lk[index] as string, group: kit.X.groups[index] }
 			})
 			const level = (key: string, t: PlayTitle) => `<b>${core.val(t, key)}</b> ${kit.word(core.val(t, key))}`
 			return {
