@@ -1,14 +1,13 @@
-import importlib.util
+import sys
 import unittest
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
-MODELS_PATH = (
-    Path(__file__).parents[1] / "windmill" / "f" / "tmdb_api" / "models.py"
-)
-SPEC = importlib.util.spec_from_file_location("tmdb_models", MODELS_PATH)
-tmdb_models = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(tmdb_models)
+# Import the module by its real name. Loading the file a second time under another name
+# defines the document classes twice; mongoengine's registry then knows only the copies,
+# and `disconnect()` no longer resets the collection of the real classes.
+from f.tmdb_api import models as tmdb_models
 
 
 class RecommendationResultSchemaTest(unittest.TestCase):
