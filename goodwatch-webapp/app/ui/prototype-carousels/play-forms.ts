@@ -14,6 +14,8 @@ import type {
 	PlayTitle,
 } from "~/ui/prototype-carousels/play-engine"
 
+import { BEST_FORMS, bestKit } from "~/ui/prototype-carousels/best-forms"
+import { bestExtra } from "~/ui/prototype-carousels/best-meta"
 import { SCRUB_FORMS, scrubKit } from "~/ui/prototype-carousels/scrub-forms"
 import { scrubExtra } from "~/ui/prototype-carousels/scrub-meta"
 
@@ -1227,6 +1229,13 @@ export const PLAY_FORMS: Record<string, Form> = {
 		Object.entries(SCRUB_FORMS).map(([name, form]): [string, Form] => [
 			name,
 			(core) => form(core, scrubKit(core, scrubExtra())),
+		]),
+	),
+	// Ninth round: the combined forms, with their kit.
+	...Object.fromEntries(
+		Object.entries(BEST_FORMS).map(([name, form]): [string, Form] => [
+			name,
+			(core) => form(core, bestKit(core, bestExtra())),
 		]),
 	),
 }

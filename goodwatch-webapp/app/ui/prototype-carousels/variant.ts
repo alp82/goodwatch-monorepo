@@ -85,11 +85,18 @@
 // - scrub8: hold and scrub. One trait held high, another scrubbed.
 // - scrub9: recipe. Up to three chips, more of this and less of that.
 // - scrub10: three lanes. Three linked strips, one per fingerprint family.
-// The floating bar shows today, the seventh round's scrub strip for comparison, and the scrub forms. The other
-// variants still answer to the URL.
+//
+// Ninth round, after the owner tried the eighth: the trait play is fun but the results are too alike, the trait
+// choice of the recipe is not intuitive, the honest ruler shows too little of the field, and strips in several rows
+// did not work. Three combined forms on a pack that reaches further along four traits per title (see best-forms.ts):
+// - best1: trait strip. One trait at a time, the card's bars are the switch, and a small map of the whole strip.
+// - best2: trait compass. Three traits as six directions on a honeycomb, near and far, with the combinations between.
+// - best3: more and less. Four steppers bend the road of similar titles, and the bend stays while you walk.
+// The floating bar shows today, the favourite of every earlier round, and the combined forms. The other variants
+// still answer to the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
-import { PLAY_BAR, PLAY_NAMES } from "~/ui/prototype-carousels/play-names"
+import { PLAY_NAMES } from "~/ui/prototype-carousels/play-names"
 
 export const CAROUSEL_VARIANTS = [
 	"today",
@@ -146,13 +153,30 @@ export const CAROUSEL_VARIANTS = [
 	"scrub8",
 	"scrub9",
 	"scrub10",
+	"best1",
+	"best2",
+	"best3",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
-/** The variants the floating bar cycles through: today, the seventh round's scrub strip, and the eighth round's forms. */
+/**
+ * The variants the floating bar cycles through. Ninth round: today, the favourite of every round so far, and the
+ * combined forms.
+ */
 export const CAROUSEL_BAR: CarouselVariant[] = [
 	"today",
-	...(PLAY_BAR as CarouselVariant[]),
+	"explore1",
+	"walk1",
+	"dive1",
+	"ring5",
+	"ring9",
+	"sea2",
+	"play8",
+	"scrub1",
+	"scrub9",
+	"best1",
+	"best2",
+	"best3",
 ]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
@@ -210,6 +234,9 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	scrub8: "",
 	scrub9: "",
 	scrub10: "",
+	best1: "",
+	best2: "",
+	best3: "",
 	...PLAY_NAMES,
 }
 

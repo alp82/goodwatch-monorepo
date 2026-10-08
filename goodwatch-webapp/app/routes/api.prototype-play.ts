@@ -3,7 +3,7 @@
 // One title's pack for the play forms: its neighborhood with fingerprint levels, small enough to prefetch (see
 // server/prototype-play.server.ts). Not found unless the server runs with PROTO_CAROUSELS=1.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
-import { playPack } from "~/server/prototype-play.server"
+import { playPack, playPack2 } from "~/server/prototype-play.server"
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	if (process.env.PROTO_CAROUSELS !== "1")
@@ -16,10 +16,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	)
 	if (!key) throw new Response("Invalid parameters", { status: 400 })
 	const started = performance.now()
-	const pack = await playPack(
-		key[1] === "m" ? "movie" : "show",
-		Number.parseInt(key[2]),
-	)
+	// Ninth round: `v=2` asks for the pack that reaches further, along the walk's traits when `tr` names them.
+	const params = new URL(request.url).searchParams
+	const type = key[1] === "m" ? "movie" : "show"
+	const pack =
+		params.get("v") === "2"
+			? await playPack2(
+					type,
+					Number.parseInt(key[2]),
+					(params.get("tr") ?? "").split(",").filter(Boolean).slice(0, 4),
+					params.get("m") ?? "",
+				)
+			: await playPack(type, Number.parseInt(key[2]))
 	if (!pack) throw new Response("Not found", { status: 404 })
 	// A pack is the same for every visitor and changes with the catalog: the browser may keep it for ten minutes.
 	return json(pack, {

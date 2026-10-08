@@ -30,6 +30,13 @@ import {
 } from "~/ui/prototype-carousels/dive-model"
 import type { PxType, Scores } from "~/ui/prototype-carousels/explore-model"
 import { playEngine } from "~/ui/prototype-carousels/play-engine"
+import { BEST_FORMS, bestKit } from "~/ui/prototype-carousels/best-forms"
+import {
+	BEST_WORDS,
+	bestExtra,
+	bestTraits,
+	sameFranchise,
+} from "~/ui/prototype-carousels/best-meta"
 import { PLAY_FORMS } from "~/ui/prototype-carousels/play-forms"
 import {
 	type PlayMeta,
@@ -45,9 +52,10 @@ import { titleKey } from "~/utils/title-key"
 
 /** A title in a pack: key ("m603", "s1396"), title, year, poster path, similarity in thousandths, score string. */
 export type PackTitle = [string, string, string, string, number, string]
-export type PlayPack = { c: PackTitle; n: PackTitle[] }
+/** `tr`: the four traits a ninth round pack was widened along. */
+export type PlayPack = { c: PackTitle; n: PackTitle[]; tr?: string[] }
 /** What the cache keeps: a pack, or the note that the title has no fingerprint. */
-type Kept = { c: PackTitle | null; n: PackTitle[] }
+type Kept = { c: PackTitle | null; n: PackTitle[]; tr?: string[] }
 
 const POOL = 180
 const PACK_TITLES = 110
@@ -200,6 +208,202 @@ export async function playPack(
 	return kept?.c ? { c: kept.c, n: kept.n } : null
 }
 
+// --- Ninth round: a pack that reaches further ---------------------------------------------------------------------
+//
+// The seventh round's pack is a slice of the 180 nearest titles, and they agree with the title on almost every
+// attribute: whatever trait a form lays them out along, the same crowd reshuffles. This pack keeps the size and the
+// one-request-per-title rule, and spends it differently:
+// - Four traits per title (ui/prototype-carousels/best-meta.ts), or the walk's four when the browser names them, so
+//   that a walk keeps its directions.
+// - The 24 nearest titles, as before.
+// - Per trait a ladder: for every level from 0 to 10, the nearest titles that sit on it, far levels first. The
+//   nearest 180 rarely reach three levels away, so each direction with room gets one or two filtered requests
+//   ("at least three more", "at least six more") that find the nearest titles out there.
+// - At most one more title of the page title's franchise, and one per other franchise.
+const NEAR2 = 24
+const PACK2 = 84
+const PER_LEVEL = 3
+const WORDS = new Set(BEST_WORDS.map(([key]) => key))
+
+async function buildPack2(params: {
+	type: PxType
+	id: number
+	tr: string
+	mode: string
+}): Promise<Kept> {
+	const point = titleKey(params.type, params.id)
+	const base = (extra: unknown[] = []) =>
+		buildBaseFilterConditions({
+			mediaType: "all",
+			minVotingCount: 10000,
+			minScore: 60,
+			additionalMust: [
+				{ key: "release_year", range: { lte: new Date().getFullYear() } },
+				...extra,
+			],
+		})
+	const around = (extra: unknown[], limit: number) => {
+		const { must, must_not } = base(extra)
+		return recommend<QdrantMediaPayload>({
+			collectionName: MEDIA_COLLECTION,
+			positive: [point],
+			using: "fingerprint_v1",
+			filter: { must, must_not },
+			limit,
+			withPayload: { include: PAYLOAD },
+			hnswEf: 128,
+			exact: false,
+		})
+	}
+	const [own, results] = await Promise.all([
+		scroll<QdrantMediaPayload>({
+			collectionName: MEDIA_COLLECTION,
+			filter: { must: [{ has_id: [point] }] },
+			limit: 1,
+			withPayload: { include: PAYLOAD },
+			withVector: false,
+		}),
+		around([], POOL),
+	])
+	const center = own[0]?.payload
+	const centerScores = center?.fingerprint_scores_v1
+	if (!center || !centerScores) return { c: null, n: [] }
+	type Entry = { payload: QdrantMediaPayload; near: number; key: string }
+	const entry = (hit: { payload: QdrantMediaPayload; score: number }): Entry => ({
+		payload: hit.payload,
+		near: Math.round((hit.score + knownBonus(hit.payload)) * 1000),
+		key: `${hit.payload.media_type}${hit.payload.tmdb_id}`,
+	})
+	const usable = (hit: { payload: QdrantMediaPayload }) =>
+		Boolean(hit.payload.fingerprint_scores_v1 && first(hit.payload.poster_path))
+	const level = (e: { payload: QdrantMediaPayload }, key: string) =>
+		Math.round(e.payload.fingerprint_scores_v1?.[key] ?? 0)
+	const pool = results
+		.filter(usable)
+		.map(entry)
+		.sort((a, b) => b.near - a.near)
+	const asked = params.tr.split(",").filter((key) => WORDS.has(key))
+	const traits =
+		asked.length >= 2
+			? asked.slice(0, 4)
+			: bestTraits(
+					(key) => centerScores[key] ?? 0,
+					pool.slice(0, 64).map((e) => (key: string) => level(e, key)),
+					params.mode === "mid" ? 3 : 4,
+					params.mode === "mid",
+				)
+	// The far ends: per trait and direction with room, the nearest titles at least three and at least six away.
+	const wanted: { key: string; range: Record<string, number>; limit: number }[] = []
+	for (const key of traits) {
+		const at = Math.round(centerScores[key] ?? 0)
+		for (const [step, limit] of [
+			[3, 12],
+			[6, 8],
+		]) {
+			if (at + step <= 10) wanted.push({ key, range: { gte: at + step }, limit })
+			if (at - step >= 0) wanted.push({ key, range: { lte: at - step }, limit })
+		}
+	}
+	const far = await Promise.all(
+		wanted.map(({ key, range, limit }) =>
+			around([{ key: `fingerprint_scores_v1.${key}`, range }], limit).catch(
+				() => [],
+			),
+		),
+	)
+	const all = new Map<string, Entry>()
+	for (const e of pool) all.set(e.key, e)
+	for (const hits of far)
+		for (const hit of hits.filter(usable)) {
+			const e = entry(hit)
+			if (!all.has(e.key)) all.set(e.key, e)
+		}
+	const candidates = [...all.values()].sort((a, b) => b.near - a.near)
+	const name = (e: Entry) => first(e.payload.title) ?? ""
+	const centerName = first(center.title) ?? ""
+	const chosen: Entry[] = []
+	const taken = new Set<string>()
+	const add = (e: Entry) => {
+		if (taken.has(e.key) || e.key === `${center.media_type}${center.tmdb_id}`)
+			return false
+		const title = name(e)
+		if (
+			sameFranchise(centerName, title)
+				? chosen.some((c) => sameFranchise(centerName, name(c)))
+				: chosen.some((c) => sameFranchise(name(c), title))
+		)
+			return false
+		taken.add(e.key)
+		chosen.push(e)
+		return true
+	}
+	let nearest = 0
+	for (const e of pool) {
+		if (nearest >= NEAR2) break
+		if (add(e)) nearest++
+	}
+	const ladders = traits.map((key) => {
+		const by = new Map<number, Entry[]>()
+		for (const e of candidates) {
+			const l = level(e, key)
+			by.set(l, [...(by.get(l) ?? []), e])
+		}
+		return { key, by, at: Math.round(centerScores[key] ?? 0) }
+	})
+	for (let round = 0; round < PER_LEVEL; round++)
+		for (let d = 10; d >= 1; d--)
+			for (const { key, by, at } of ladders)
+				for (const sign of [1, -1]) {
+					const l = at + d * sign
+					if (l < 0 || l > 10 || chosen.length >= PACK2) continue
+					if (chosen.filter((e) => level(e, key) === l).length > round) continue
+					for (const e of by.get(l) ?? []) if (add(e)) break
+				}
+	const pack = (payload: QdrantMediaPayload, near: number): PackTitle => [
+		`${payload.media_type === "movie" ? "m" : "s"}${payload.tmdb_id}`,
+		first(payload.title) ?? "",
+		String(payload.release_year ?? ""),
+		(first(payload.poster_path) ?? "").replace(/^\/+/, ""),
+		near,
+		encode(payload.fingerprint_scores_v1),
+	]
+	return {
+		c: pack(center, 1000),
+		n: chosen
+			.sort((a, b) => b.near - a.near)
+			.map((e) => pack(e.payload, e.near)),
+		tr: traits,
+	}
+}
+
+/**
+ * The ninth round's pack of a title, widened along `traits` (the walk's four) or along the title's own four when
+ * none are named. Its own cache name: the shape differs from the seventh round's.
+ */
+export async function playPack2(
+	type: PxType,
+	id: number,
+	traits: string[] = [],
+	mode = "",
+): Promise<PlayPack | null> {
+	const kept = await cached({
+		name: "proto363-play-pack-v3",
+		metricName: "proto363-play-pack",
+		target: buildPack2,
+		params: {
+			type,
+			id,
+			tr: traits.filter((key) => WORDS.has(key)).join(","),
+			mode: mode === "mid" ? "mid" : "",
+		},
+		ttlMinutes: 60 * 24,
+	}).catch((error) => {
+		console.error("Carousel prototype: pack lookup failed", error)
+		return null
+	})
+	return kept?.c ? { c: kept.c, n: kept.n, tr: kept.tr } : null
+}
+
 let meta: PlayMeta | undefined
 export const metaOf = () => {
 	meta ??= playMeta()
@@ -224,7 +428,9 @@ export function playHead(variant: PlayVariant): Promise<PlayHead> {
 			// A scrub form is its own function and the kit the scrub forms share (ui/prototype-carousels/scrub-forms.ts).
 			const form = SCRUB_FORMS[variant]
 				? `function(c){return(${SCRUB_FORMS[variant].toString()})(c,(${scrubKit.toString()})(c,${JSON.stringify(scrubExtra())}))}`
-				: PLAY_FORMS[variant].toString()
+				: BEST_FORMS[variant]
+					? `function(c){return(${BEST_FORMS[variant].toString()})(c,(${bestKit.toString()})(c,${JSON.stringify(bestExtra())}))}`
+					: PLAY_FORMS[variant].toString()
 			let script = `(${playEngine.toString()})(${JSON.stringify(metaOf())},window,{${variant}:${form}})`
 			try {
 				const name = "esbuild"
@@ -259,8 +465,11 @@ export async function playSectionHtml(input: {
 	links: { type: PxType; id: number; title: string; year: string }[]
 	path: (title: { type: PxType; id: number; title: string }) => string
 }): Promise<string> {
+	// The ninth round's forms get the pack that reaches further. The compass asks for traits with room both ways.
 	const [pack] = await Promise.all([
-		playPack(input.type, input.id),
+		BEST_FORMS[input.variant]
+			? playPack2(input.type, input.id, [], input.variant === "best2" ? "mid" : "")
+			: playPack(input.type, input.id),
 		playHead(input.variant),
 	])
 	const engine = playEngine(metaOf(), null, PLAY_FORMS)
