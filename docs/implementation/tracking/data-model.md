@@ -1599,3 +1599,21 @@ against a real Crate and with a real session; the show page itself, where the he
 the episodes section among the page's sections; the first paint of the box from the member data on a page the
 server rendered; a show whose episode list the crawl has not reached; real IMDb ratings beside real TMDB episodes;
 two devices acting on one show; a touch screen, Safari and Firefox, a screen reader; `./bench.sh budget`.
+
+### Home doors, My shows, My movies and My library (#385)
+
+Behind `REC_TRACKING`. What was built, the routes, what replaces today's Watch next and Wishlist pages, the reads
+and how it was checked: [my-library/README.md](my-library/README.md).
+
+Where the build differs from the text above, or settles what it left open:
+
+- **The member data gained nothing.** `watchState` already carried `episodesWatched`, `furthest` and
+  `lastActivityAt`.
+- **Q5 also reads** `backdrop_path`, `number_of_seasons`, `number_of_episodes` and `episode_runtime`, and is asked
+  for the Want to See shows too, so that Start needs no second read.
+- **The library's titles** are kept in the webapp's memory per title for six hours, not with the member's map: a
+  title is public data.
+- **The gap read** asks for `tmdb_id, season_number, episode_number, pass` of the shows with a gap, not all of Q2's
+  columns.
+- **Tonight's pick** is the first row of Continue only while that row is a Watching show; a Seen show with new
+  episodes is never the pick.
