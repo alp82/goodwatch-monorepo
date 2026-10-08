@@ -17,6 +17,9 @@
 // The standing rule holds: posters are buttons, a step changes neither the URL nor the scroll position nor the
 // section's height, and "Open" is its own link.
 //
+// Ninth round (best-forms.ts): a pack request can carry a suffix (which pack, along which traits), a form can show
+// the title you stand on itself (`plain`), and a small map can be dragged (`drag`).
+//
 // The forms are in play-forms.ts. Each gets this engine's `core` and returns how to draw its stage.
 import type { PlayMeta } from "~/ui/prototype-carousels/play-meta"
 
@@ -24,6 +27,8 @@ export type RawTitle = [string, string, string, string, number, string]
 export interface RawPack {
 	c: RawTitle
 	n: RawTitle[]
+	/** Ninth round: the traits the pack was widened along. */
+	tr?: string[]
 }
 
 /** A title as the engine holds it. `n` is the similarity to the center of the pack it came from. */
@@ -131,6 +136,10 @@ export interface PlayForm {
 	fly?: boolean
 	/** A range input or a scrolled strip changed. */
 	input?: (ctx: PlayCtx, el: Element, section: Element) => void
+	/** A finger or the mouse is down on a `data-pl-drag` element, at `x` from its left edge. */
+	drag?: (ctx: PlayCtx, el: Element, section: Element, x: number) => void
+	/** True when the form shows the title you stand on, its reason, and "Open" itself: the card stays out. */
+	plain?: boolean
 }
 export interface PlayCore {
 	M: PlayMeta
@@ -182,6 +191,10 @@ export interface PlayCore {
 	title: (key: string) => PlayTitle | undefined
 	listOf: (key: string) => PlayTitle[] | null
 	need: (key: string) => void
+	/** Ninth round: the traits a title's pack was widened along, and what every later pack request carries. */
+	packTraits: (key: string) => string[] | null
+	query: (suffix: string) => void
+	href: (title: PlayTitle) => string
 }
 
 export function playEngine(
@@ -203,7 +216,9 @@ export function playEngine(
 		wait: Record<string, Promise<unknown>>
 		asked: number
 		nav: ((href: string) => void) | null
-	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null }
+		tr: Record<string, string[]>
+		q: string
+	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null, tr: {}, q: "" }
 	const ESC: Record<string, string> = {
 		"&": "&amp;",
 		"<": "&lt;",
@@ -239,6 +254,7 @@ export function playEngine(
 		const center = titleOf(raw.c)
 		G.t[center.k] = center
 		G.packs[center.k] = raw.n.map(titleOf)
+		if (raw.tr) G.tr[center.k] = raw.tr
 	}
 	const val = (title: PlayTitle, key: string) => {
 		const value = title.s ? title.s[IDX[key]] : 0
@@ -537,6 +553,11 @@ export function playEngine(
 		need: (key) => {
 			if (win) ask(key, true)
 		},
+		packTraits: (key) => G.tr[key] ?? null,
+		query: (suffix) => {
+			G.q = suffix
+		},
+		href: (title) => hrefOf(title),
 	}
 	const built: Record<string, PlayForm> = {}
 	const formOf = (name: string): PlayForm | undefined => {
@@ -604,7 +625,9 @@ export function playEngine(
 	const dirOf = (st: PlayState, id: string) =>
 		dirs(st).find((direction) => direction.id === id)
 	const cardOf = (ctx: PlayCtx, form: PlayForm) =>
-		`<p class="pl-here"><b data-pl-here="">${esc(ctx.c.t)}</b><span class="pl-meta">${esc(ctx.c.y)}${
+		form.plain
+			? ""
+			: `<p class="pl-here"><b data-pl-here="">${esc(ctx.c.t)}</b><span class="pl-meta">${esc(ctx.c.y)}${
 			ctx.c.k.charAt(0) === "s" ? " · Show" : ""
 		}</span>${
 			ctx.c.k === ctx.st.root
@@ -636,7 +659,7 @@ export function playEngine(
 			bar: barOf(ctx, form),
 			stage: form.stage(ctx),
 			card: cardOf(ctx, form),
-			print: printOf(ctx),
+			print: form.plain ? "" : printOf(ctx),
 		}
 	}
 
@@ -727,7 +750,7 @@ export function playEngine(
 			if (!urgent && G.asked >= SESSION_CAP) return Promise.resolve()
 			G.asked++
 			G.wait[key] = win
-				.fetch(`/api/prototype-play?key=${key}`, {
+				.fetch(`/api/prototype-play?key=${key}${G.q}`, {
 					priority: urgent ? "high" : "low",
 				})
 				.then((response: Response) => {
@@ -873,6 +896,8 @@ export function playEngine(
 		if (s.__awake) return
 		s.__awake = true
 		const st = stateOf(s)
+		// What the server's picture says about the walk (its traits) goes into the first request.
+		adopt(s)
 		ask(st.root, true).then(() => {
 			const stage = q(s, "[data-pl-stage]")
 			// A section that started without a picture (its pack missed the page's render) draws itself now.
@@ -1027,6 +1052,42 @@ export function playEngine(
 			ask(button.getAttribute("data-pl-step") ?? "", true)
 	}
 	win.addEventListener("pointerdown", intent, true)
+	// A small map that is dragged: the form hears where the finger is, from the press on.
+	let held: { el: Element; s: HTMLElement } | null = null
+	const dragged = (event: PointerEvent) => {
+		if (!held) return
+		const st = stateOf(held.s)
+		adopt(held.s)
+		formOf(st.form)?.drag?.(
+			ctxOf(st),
+			held.el,
+			held.s,
+			event.clientX - held.el.getBoundingClientRect().left,
+		)
+	}
+	win.addEventListener(
+		"pointerdown",
+		(event: PointerEvent) => {
+			const el = hit(event, "[data-pl-drag]")
+			const s = sec(el)
+			if (!el || !s) return
+			held = { el, s }
+			try {
+				el.setPointerCapture(event.pointerId)
+			} catch {}
+			dragged(event)
+		},
+		true,
+	)
+	win.addEventListener("pointermove", dragged, true)
+	for (const type of ["pointerup", "pointercancel"])
+		win.addEventListener(
+			type,
+			() => {
+				held = null
+			},
+			true,
+		)
 	win.addEventListener("touchstart", intent, { capture: true, passive: true })
 	const over = (event: Event) => {
 		const button = hit(event, "[data-pl-step]")

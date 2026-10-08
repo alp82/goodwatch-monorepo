@@ -2,6 +2,7 @@
 //
 // The style of the play forms. The server puts it into the page next to the section; a page opened by a navigation
 // inside the app gets it from the lazy chunk (play-client.ts). Never part of the title route's own script.
+import { BEST_CSS } from "~/ui/prototype-carousels/best-css"
 import { SCRUB_CSS } from "~/ui/prototype-carousels/scrub-css"
 
 export const PLAY_CSS = `
@@ -418,5 +419,10 @@ export function playCss(variant: string): string {
 		return out
 	}
 	// The scrub forms share one sheet of their own (scrub-css.ts) on top of the rules that name no form.
-	return variant.startsWith("scrub") ? rules(PLAY_CSS) + SCRUB_CSS : rules(PLAY_CSS)
+	// The ninth round's forms likewise (best-css.ts).
+	return variant.startsWith("scrub")
+		? rules(PLAY_CSS) + SCRUB_CSS
+		: variant.startsWith("best")
+			? rules(PLAY_CSS) + BEST_CSS
+			: rules(PLAY_CSS)
 }
