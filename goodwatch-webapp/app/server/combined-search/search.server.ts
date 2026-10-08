@@ -1,3 +1,4 @@
+import { runsSearch } from "../role.server.ts";
 import { createHash } from "node:crypto";
 import { fetch } from "undici";
 import {
@@ -57,12 +58,12 @@ import {
 	startPeopleIndex,
 } from "../search-people/people.server";
 
-// The index loads at server start; query models load only when the storage key allows readings.
-startSearchRanking({ queryModels: readingsConfigured() });
-// The names a search can find inside a phrase load at server start too.
-startPeopleIndex();
-// The connections to TypeSafe stay open between searches.
-keepJevConnectionsWarm();
+// The index loads at server start; query models load when stored or recorded readings are available.
+if (runsSearch()) {
+	startSearchRanking({ queryModels: readingsConfigured() || Boolean(process.env.GW_BENCH_READINGS) });
+	startPeopleIndex();
+	keepJevConnectionsWarm();
+}
 
 export interface SearchBatch {
 	q: string;
@@ -81,7 +82,7 @@ export interface SearchBatch {
 // Title lookups depend only on the text and the adult policy, never on filter chips,
 // so filter-only refetches reuse them. Search text is private: entries stay in this
 // process, keyed by a digest, and are never written to a shared store or logged.
-const TITLE_TTL_MS = 10 * 60 * 1000;
+const TITLE_TTL_MS = Number(process.env.GW_BENCH_TITLE_TTL_MS) || 10 * 60 * 1000;
 const TITLE_ENTRIES = 200;
 interface TitleLookup {
 	titles: Title[];

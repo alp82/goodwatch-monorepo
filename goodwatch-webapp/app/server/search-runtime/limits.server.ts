@@ -31,3 +31,13 @@ export function encoderThreads(
 export function readingsConfigured(env: Env = process.env): boolean {
 	return /^[a-fA-F0-9]{64}$/.test(env.SEARCH_STORAGE_KEY ?? "")
 }
+
+export function encoderWorkers(env: Env = process.env): number {
+	const value = Number(env.SEARCH_ENCODER_WORKERS)
+	return Number.isInteger(value) && value >= 1 && value <= 16 ? value : 1
+}
+
+export function encoderSpinning(env: Env = process.env): boolean | undefined {
+	return env.SEARCH_ENCODER_SPINNING === "0" ? false
+		: env.SEARCH_ENCODER_SPINNING === "1" ? true : undefined
+}

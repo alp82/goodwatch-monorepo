@@ -1,3 +1,4 @@
+import { runsSearch } from "../role.server.ts"
 // People in search results. Keeps the index of popular people in memory, loads the credits a named person narrows a
 // search to, and the known-for titles of people the title lookup didn't return. Every query is keyed by person id;
 // search text never reaches Crate here.
@@ -61,6 +62,7 @@ let indexLoad: Promise<void> | null = null
 
 /** Loads the index, or replaces an old one, in the background. Searches don't wait for it. */
 export function startPeopleIndex() {
+	if (!runsSearch()) return
 	if (indexLoad || (index && Date.now() - index.at < INDEX_MAX_AGE_MS)) return
 	const started = performance.now()
 	// Row arrays straight from Crate's HTTP endpoint: the general client turns 55k rows into objects and logs them.

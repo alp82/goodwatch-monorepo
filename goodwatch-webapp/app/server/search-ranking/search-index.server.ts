@@ -1,3 +1,4 @@
+import { runsSearch } from "../role.server.ts"
 // Keeps the search indexes that f/search/build_indexes writes to Crate loaded and current.
 //
 // A build is ten gzipped JSON files in the blob table `search_index_files`, listed by the manifest in the
@@ -224,6 +225,7 @@ function watch() {
 
 /** The loaded search index. The first call loads it; later calls return the current build at once. */
 export async function getSearchIndex(): Promise<SearchIndex> {
+	if (!runsSearch()) throw new Error("Search is disabled for the page role")
 	watch()
 	if (current) return current
 	if (lastFailure && !loading && Date.now() - failedAt < RETRY_AFTER_MS)
@@ -238,6 +240,7 @@ export function loadedSearchIndexBuild(): string | null {
 
 /** Starts loading the index in the background, so the first search doesn't wait for it. */
 export function startSearchIndex(): void {
+	if (!runsSearch()) return
 	// Readiness waits for the first load so the command palette and search have their index for the first requests.
 	addReadinessCheck(
 		"search index",

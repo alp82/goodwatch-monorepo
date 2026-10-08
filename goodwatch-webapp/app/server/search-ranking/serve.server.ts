@@ -1,3 +1,5 @@
+import { encoderSpinning } from "../search-runtime/limits.server.ts"
+import { runsSearch } from "../role.server.ts"
 // Serving the search ranking: loading it at server start, the checks before a search is ranked, and the deadline.
 // When a search can't be ranked (see servingFallback, or a ranking that fails or misses its deadline), the basic
 // search serves it, and combinedSearch records the reason on the search_history row (ranker_fallback).
@@ -26,7 +28,7 @@ let started = false
 
 /** At server start: loads the index and, when readings are possible, the query models in the background. */
 export function startSearchRanking(options: { queryModels?: boolean } = {}): void {
-	if (started) return
+	if (!runsSearch() || started) return
 	started = true
 	startSearchIndex()
 	if (options.queryModels === false) {
@@ -38,7 +40,7 @@ export function startSearchRanking(options: { queryModels?: boolean } = {}): voi
 	startQueryEncoder().then(
 		(startup) =>
 			console.info(
-				`Search ranking: query models ready in ${Math.round(startup.totalMs)} ms, ${startup.threads} encoder threads`,
+				`Search ranking: query models ready in ${Math.round(startup.totalMs)} ms, ${startup.threads} encoder threads${startup.workers > 1 ? `, ${startup.workers} encoders` : ""}${encoderSpinning() !== undefined ? `, spinning ${encoderSpinning() ? "1" : "0"}` : ""}`,
 			),
 		() => {
 			// Logged by the encoder; it retries on a later search.

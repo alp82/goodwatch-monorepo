@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { runsSearch } from "../role.server.ts";
 import { Agent, fetch } from "undici";
 import { onShutdown } from "../lifecycle.server";
 import {
@@ -43,7 +45,7 @@ let keepWarm: NodeJS.Timeout | undefined;
 
 /** Starts the pings that keep the TypeSafe connections open. No model calls, nothing billed. Once per process. */
 export function keepJevConnectionsWarm(): void {
-	if (keepWarm || !process.env.TYPESAFE_API_KEY) return;
+	if (!runsSearch() || keepWarm || !process.env.TYPESAFE_API_KEY) return;
 	const ping = () =>
 		typesafeFetch(`${TYPESAFE_ORIGIN}/health`, {
 			signal: AbortSignal.timeout(5000),
@@ -137,7 +139,18 @@ export interface JevStageInput {
 	timings?: Record<string, number>;
 }
 
+let benchReadings: Record<string, [Reading, Reading]> | undefined;
+function recordedReading(text: string): [Reading, Reading] | undefined {
+	const file = process.env.GW_BENCH_READINGS;
+	if (!file) return undefined;
+	benchReadings ??= JSON.parse(readFileSync(file, "utf8"));
+	return benchReadings?.[text];
+}
+
 export async function runJevStage(input: JevStageInput): Promise<JevOutcome> {
+	const readings = recordedReading(input.requestText);
+	if (readings) return { kind: "cached", readings, chargedNano: 0 };
+	if (process.env.GW_BENCH_NO_WRITES === "1") return basic("configuration");
 	let store: SearchStore;
 	try {
 		store = getSearchStore();
@@ -383,6 +396,11 @@ export async function executeJevStage(
 export async function recordSearchHistory(
 	input: Parameters<SearchStore["history"]>[0],
 ): Promise<{ recorded: boolean; id: string | null }> {
+	if (process.env.GW_BENCH_NO_WRITES === "1") {
+		const { outcome, reason, rankerFallback, stageMs } = input;
+		console.info(`GW_BENCH_STAGES ${JSON.stringify({ outcome, reason, rankerFallback, stageMs })}`);
+		return { recorded: false, id: null };
+	}
 	try {
 		const id = await getSearchStore().history(input);
 		return { recorded: true, id };

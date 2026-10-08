@@ -10,7 +10,7 @@ import { parentPort, workerData } from "node:worker_threads"
 import { Tokenizer } from "@huggingface/tokenizers"
 import * as ort from "onnxruntime-node"
 
-const { models, threads } = workerData
+const { models, threads, spinning } = workerData
 const now = () => performance.now()
 // Search text longer than this is cut. The models take 512 tokens, but a request of several 512-token texts held four
 // cores for 5 to 15 s; searches are a few words to a sentence.
@@ -31,6 +31,9 @@ async function loadModel(model) {
 	const started = now()
 	const { tokenizer, padId } = loadTokenizer(model)
 	const session = await ort.InferenceSession.create(model.modelPath, {
+		...(typeof spinning === "boolean" ? {
+			extra: { session: { intra_op: { allow_spinning: spinning ? "1" : "0" } } },
+		} : {}),
 		intraOpNumThreads: threads,
 		interOpNumThreads: 1,
 		executionMode: "sequential",

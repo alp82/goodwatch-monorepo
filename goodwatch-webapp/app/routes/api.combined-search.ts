@@ -1,18 +1,17 @@
+import { searchBody } from "~/server/combined-search/search-body.server";
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { isIP } from "node:net";
 import { getAuthFromRequest } from "~/utils/auth";
-import { combinedSearch } from "~/server/combined-search/search.server";
+import { runsSearch, searchRoleUrl } from "~/server/role.server";
+import { searchStream } from "~/server/combined-search/search-stream.server";
+import { forwardSearch } from "~/server/combined-search/search-role-client.server";
 import { parseSearchFilters } from "~/server/combined-search/search-filters";
 import { getFeatureMode } from "~/server/features.server";
 import {
 	searchAdmission,
 	searchBusyResponse,
 } from "~/server/search-runtime/admission.server";
-import { RESULT_LENGTH } from "~/server/search-ranking/ranking.server";
-import {
-	searchTaste,
-	withTaste,
-} from "~/server/combined-search/taste-rows.server";
+import { searchTaste } from "~/server/combined-search/taste-rows.server";
 
 export async function action({ request }: ActionFunctionArgs) {
 	let headers = new Headers({
@@ -31,36 +30,14 @@ export async function action({ request }: ActionFunctionArgs) {
 		request.headers.get("Origin") !== expectedOrigin
 	)
 		return json({ error: "Invalid origin" }, { status: 403, headers });
-	const release = searchAdmission.enter();
+	const roleUrl = searchRoleUrl();
+	if (!runsSearch() && !roleUrl) return searchBusyResponse();
+	const release = roleUrl ? () => {} : searchAdmission.enter();
 	if (!release) return searchBusyResponse();
 	let handedOver = false;
 	try {
-		// Bound the body before JSON parsing; Content-Length is not a trustworthy bound.
-		const reader = request.body?.getReader();
-		let bytes = 0,
-			raw = "";
-		const decoder = new TextDecoder();
-		if (!reader)
-			return json({ error: "Invalid search" }, { status: 400, headers });
-		while (true) {
-			const { done, value } = await reader.read();
-			if (done) break;
-			bytes += value.byteLength;
-			if (bytes > 8192) {
-				await reader.cancel();
-				return json({ error: "Search is too long" }, { status: 413, headers });
-			}
-			raw += decoder.decode(value, { stream: true });
-		}
-		raw += decoder.decode();
-		const body = JSON.parse(raw),
-			q = typeof body.q === "string" ? body.q.trim().normalize("NFC") : "";
-		if (q.length < 2 || Buffer.byteLength(q) > 4096)
-			return json(
-				{ error: "Enter between 2 and 4096 bytes of search text" },
-				{ status: 400, headers },
-			);
-		const filters = parseSearchFilters(body.filters);
+		const { body, q } = await searchBody(request, headers);
+		const filters = roleUrl ? undefined : parseSearchFilters(body.filters);
 		// Deployment must explicitly configure a header overwritten by its trusted ingress.
 		// Without that contract, all guests share a conservative scope; cookies cannot evade it.
 		const address = process.env.SEARCH_TRUSTED_IP_HEADER
@@ -73,7 +50,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		// search stops and the response is the error below, as before.
 		const searchAbort = new AbortController();
 		const stop = () => searchAbort.abort();
-		request.signal.addEventListener("abort", stop, { once: true });
+		if (!roleUrl) request.signal.addEventListener("abort", stop, { once: true });
 		const auth = getAuthFromRequest({ request });
 		const accountId = auth.then(
 			({ user }) => user?.id || null,
@@ -89,49 +66,27 @@ export async function action({ request }: ActionFunctionArgs) {
 		const forYou = body.forYou === true;
 		const fullList =
 			body.discover === true && getFeatureMode("filterBar") !== "off";
-		// Newline-delimited JSON: a "reading" line as soon as the interpretation is known,
-		// then the "batch" line with the results. "no-transform" keeps the compression
-		// middleware from holding the first line back until the response ends.
-		const encoder = new TextEncoder();
-		const stream = new ReadableStream({
-			async start(controller) {
-				const send = (message: object) =>
-					controller.enqueue(encoder.encode(`${JSON.stringify(message)}\n`));
-				try {
-					const batch = await combinedSearch(
-						q,
-						{
-							includeAdult: false,
-							lesserKnown: body.lesserKnown === true,
-							filters,
-						},
-						{ accountId, networkIdentity },
-						searchAbort.signal,
-						(reading) => send({ kind: "reading", reading }),
-						{
-							allTitles: body.allTitles === true,
-							// Discover's search mode filters and counts over the whole ranked list.
-							rows: fullList ? RESULT_LENGTH : undefined,
-						},
-					);
-					const memberTaste = await taste;
-					send({
-						kind: "batch",
-						batch: memberTaste
-							? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
-							: batch,
-					});
-				} catch {
-					send({
-						kind: "error",
-						error: "Search is unavailable. Your previous results are kept.",
-					});
-				} finally {
-					release();
-					controller.close();
-				}
-			},
-		});
+		let stream: ReadableStream<Uint8Array>;
+		if (roleUrl) {
+			headers = (await auth).headers;
+			const forwarded = await forwardSearch(roleUrl, {
+				q, filters: body.filters, lesserKnown: body.lesserKnown === true,
+				allTitles: body.allTitles === true, fullList,
+				accountId: await accountId, networkIdentity,
+			}, request.signal, taste, forYou);
+			if (!forwarded) {
+				const response = searchBusyResponse();
+				const busyHeaders = new Headers(headers);
+				response.headers.forEach((value, name) => busyHeaders.set(name, value));
+				return new Response(response.body, { status: response.status, headers: busyHeaders });
+			}
+			stream = forwarded;
+		} else {
+			stream = searchStream({
+				q, body, filters: filters!, accountId, networkIdentity, searchAbort,
+				taste, forYou, fullList, release,
+			});
+		}
 		handedOver = true;
 		// The response carries the session check's cookies, so it waits for the check (not for the search).
 		headers = (await auth).headers;
@@ -139,7 +94,8 @@ export async function action({ request }: ActionFunctionArgs) {
 		headers.set("Content-Type", "application/x-ndjson; charset=utf-8");
 		headers.set("Cache-Control", "private, no-store, no-transform");
 		return new Response(stream, { headers });
-	} catch {
+	} catch (error) {
+		if (error instanceof Response) return error;
 		return json(
 			{ error: "Search is unavailable. Your previous results are kept." },
 			{ status: 503, headers },

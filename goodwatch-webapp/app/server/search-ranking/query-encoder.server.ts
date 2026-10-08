@@ -1,4 +1,4 @@
-// Encodes search query texts with the two local query models (see query-models.server.ts) in one worker thread.
+// Encodes search query texts with the two local query models (see query-models.server.ts) in worker threads.
 //
 // Nothing starts on import. The first call to startQueryEncoder() or encodeQueryTexts() downloads the model files if
 // needed and starts the worker, which loads both models (about 1.35 GB) and warms them up.
@@ -10,7 +10,8 @@
 // the lists short.
 import { createHash } from "node:crypto"
 import { Worker } from "node:worker_threads"
-import { encoderThreads } from "../search-runtime/limits.server.ts"
+import { runsSearch } from "../role.server.ts"
+import { encoderThreads, encoderWorkers, encoderSpinning } from "../search-runtime/limits.server.ts"
 import { onShutdown } from "~/server/lifecycle.server"
 import { separateEntryUrl } from "~/server/separate-entry.server"
 import {
@@ -42,6 +43,7 @@ export interface QueryVectors {
 
 export interface QueryEncoderStartup {
 	threads: number
+	workers: number
 	/** Download and checksum time for the model files; near zero when they are cached. */
 	filesMs: number
 	loadMs: Record<QueryModelName, number>
@@ -67,6 +69,7 @@ type WorkerMessage =
 	| { type: "error"; id: number; message: string }
 
 interface Pending {
+	worker: Worker
 	started: number
 	counts: Record<QueryModelName, number>
 	dims: Record<QueryModelName, number>
@@ -75,12 +78,14 @@ interface Pending {
 }
 
 interface RunningEncoder {
-	worker: Worker
+	workers: Worker[]
+	stop: (error: Error) => Promise<void>
 	models: LocalQueryModels
 	startup: QueryEncoderStartup
 }
 
 let running: Promise<RunningEncoder> | undefined
+let generation = 0
 let failedAt = 0
 let lastFailure: Error | undefined
 let nextId = 1
@@ -96,113 +101,141 @@ function workerUrl() {
 	return separateEntryUrl("query-encoder.worker.js", import.meta.url)
 }
 
-async function start(): Promise<RunningEncoder> {
+async function start(startGeneration: number): Promise<RunningEncoder> {
 	const started = performance.now()
 	const models = await ensureQueryModelFiles()
 	const filesMs = performance.now() - started
 	const threads = encoderThreads()
-	const worker = new Worker(workerUrl(), {
-		workerData: { models, threads },
-		name: "query-encoder",
-	})
-	// Remove only these listeners afterwards: Worker.removeAllListeners() also stops message delivery.
-	let onStartupMessage: (message: WorkerMessage) => void = () => {}
-	let onStartupError: (error: Error) => void = () => {}
-	let onStartupExit: (code: number) => void = () => {}
-	const ready = await new Promise<Extract<WorkerMessage, { type: "ready" }>>(
-		(resolve, reject) => {
-			onStartupMessage = (message) => {
-				if (message.type === "ready") resolve(message)
-				if (message.type === "fatal")
-					reject(new Error(`Query encoder failed to load: ${message.message}`))
-			}
-			onStartupError = reject
-			onStartupExit = (code) =>
-				reject(
-					new Error(`Query encoder exited during startup with code ${code}`),
-				)
-			worker.on("message", onStartupMessage)
-			worker.on("error", onStartupError)
-			worker.on("exit", onStartupExit)
-		},
-	)
-		.catch(async (error) => {
-			await worker.terminate()
-			throw error
-		})
-		.finally(() => {
-			worker.off("message", onStartupMessage)
-			worker.off("error", onStartupError)
-			worker.off("exit", onStartupExit)
-		})
-	worker.on("message", (message: WorkerMessage) => {
-		if (message.type !== "result" && message.type !== "error") return
-		const request = pending.get(message.id)
-		if (!request) return
-		pending.delete(message.id)
-		if (message.type === "error") {
-			request.reject(new Error(`Query encoding failed: ${message.message}`))
-			return
+	const workers: Worker[] = []
+	let stopped = false
+	const stop = async (error: Error) => {
+		if (stopped) return
+		stopped = true
+		if (startGeneration === generation) {
+			running = undefined
+			loaded = false
+			failAll(error)
 		}
-		const unpack = (name: QueryModelName) => {
-			const packed = message.vectors[name]
-			const dim = request.dims[name]
-			return Array.from({ length: request.counts[name] }, (_, i) =>
-				(packed as Float32Array).subarray(i * dim, (i + 1) * dim),
-			)
-		}
-		request.resolve({
-			english: unpack("english"),
-			multilingual: unpack("multilingual"),
-			timings: {
-				totalMs: performance.now() - request.started,
-				queuedMs: message.queuedMs,
-				encodeMs: message.encodeMs,
-			},
-		})
-	})
-	onShutdown("query encoder", () => worker.terminate())
-	const onGone = (error: Error) => {
-		running = undefined
-		loaded = false
-		failAll(error)
+		await Promise.all(workers.map((worker) => worker.terminate()))
 	}
-	worker.on("error", (error) => onGone(error))
-	worker.on("exit", (code) =>
-		onGone(new Error(`Query encoder worker exited with code ${code}`)),
-	)
-	return {
-		worker,
-		models,
-		startup: {
-			threads,
-			filesMs,
-			loadMs: ready.loadMs,
-			warmMs: ready.warmMs,
-			totalMs: performance.now() - started,
-		},
+	const startWorker = async () => {
+		const worker = new Worker(workerUrl(), {
+			workerData: { models, threads, spinning: encoderSpinning() },
+			name: "query-encoder",
+		})
+		workers.push(worker)
+		// Remove only these listeners afterwards: Worker.removeAllListeners() also stops message delivery.
+		let onStartupMessage: (message: WorkerMessage) => void = () => {}
+		let onStartupError: (error: Error) => void = () => {}
+		let onStartupExit: (code: number) => void = () => {}
+		const ready = await new Promise<Extract<WorkerMessage, { type: "ready" }>>(
+			(resolve, reject) => {
+				onStartupMessage = (message) => {
+					if (message.type === "ready") resolve(message)
+					if (message.type === "fatal")
+						reject(new Error(`Query encoder failed to load: ${message.message}`))
+				}
+				onStartupError = reject
+				onStartupExit = (code) =>
+					reject(
+						new Error(`Query encoder exited during startup with code ${code}`),
+					)
+				worker.on("message", onStartupMessage)
+				worker.on("error", onStartupError)
+				worker.on("exit", onStartupExit)
+			},
+		)
+			.catch(async (error) => {
+				await worker.terminate()
+				throw error
+			})
+			.finally(() => {
+				worker.off("message", onStartupMessage)
+				worker.off("error", onStartupError)
+				worker.off("exit", onStartupExit)
+			})
+		worker.on("message", (message: WorkerMessage) => {
+			if (message.type !== "result" && message.type !== "error") return
+			const request = pending.get(message.id)
+			if (!request) return
+			pending.delete(message.id)
+			if (message.type === "error") {
+				request.reject(new Error(`Query encoding failed: ${message.message}`))
+				return
+			}
+			const unpack = (name: QueryModelName) => {
+				const packed = message.vectors[name]
+				const dim = request.dims[name]
+				return Array.from({ length: request.counts[name] }, (_, i) =>
+					(packed as Float32Array).subarray(i * dim, (i + 1) * dim),
+				)
+			}
+			request.resolve({
+				english: unpack("english"),
+				multilingual: unpack("multilingual"),
+				timings: {
+					totalMs: performance.now() - request.started,
+					queuedMs: message.queuedMs,
+					encodeMs: message.encodeMs,
+				},
+			})
+		})
+		worker.on("error", (error) => { void stop(error) })
+		worker.on("exit", (code) => {
+			void stop(new Error(`Query encoder worker exited with code ${code}`))
+		})
+		return ready
+	}
+	try {
+		const ready = await Promise.all(Array.from({ length: encoderWorkers() }, startWorker))
+		if (stopped) throw new Error("Query encoder exited during startup")
+		onShutdown("query encoder", () => stop(new Error("Query encoder stopped")))
+		return {
+			workers,
+			stop,
+			models,
+			startup: {
+				threads,
+				workers: workers.length,
+				filesMs,
+				loadMs: {
+					english: Math.max(...ready.map((worker) => worker.loadMs.english)),
+					multilingual: Math.max(...ready.map((worker) => worker.loadMs.multilingual)),
+				},
+				warmMs: Math.max(...ready.map((worker) => worker.warmMs)),
+				totalMs: performance.now() - started,
+			},
+		}
+	} catch (error) {
+		await stop(error instanceof Error ? error : new Error(String(error)))
+		throw error
 	}
 }
 
 function ensureRunning(): Promise<RunningEncoder> {
+	if (!runsSearch()) return Promise.reject(new Error("Search is disabled for the page role"))
 	if (running) return running
 	if (lastFailure && Date.now() - failedAt < RETRY_AFTER_MS) {
 		return Promise.reject(lastFailure)
 	}
-	running = start()
-	running.then(
+	const startGeneration = ++generation
+	const current = start(startGeneration)
+	running = current
+	current.then(
 		() => {
+			if (running !== current) return
 			lastFailure = undefined
 			loaded = true
 		},
 		(error: Error) => {
+			if (generation !== startGeneration) return
 			running = undefined
 			failedAt = Date.now()
 			lastFailure = error
 			console.error("Query encoder failed to start", error)
 		},
 	)
-	return running
+	return current
 }
 
 let loaded = false
@@ -249,7 +282,7 @@ export async function encodeQueryTexts(
 ): Promise<QueryVectors> {
 	const started = performance.now()
 	const key = requestKey(texts)
-	const hit = vectorCache.get(key)
+	const hit = process.env.GW_BENCH_NO_VECTOR_CACHE === "1" ? undefined : vectorCache.get(key)
 	if (hit) {
 		// Refresh recency so eviction drops the least recently used entry.
 		vectorCache.delete(key)
@@ -289,26 +322,36 @@ async function encodeUncached(texts: QueryTexts): Promise<QueryVectors> {
 		english: encoder.models.english.spec.dim,
 		multilingual: encoder.models.multilingual.spec.dim,
 	}
+	const countsByWorker = new Map(encoder.workers.map((worker) => [worker, 0]))
+	for (const request of pending.values()) {
+		countsByWorker.set(request.worker, (countsByWorker.get(request.worker) ?? 0) + 1)
+	}
+	const worker = encoder.workers.reduce((best, candidate) =>
+		countsByWorker.get(candidate)! < countsByWorker.get(best)! ? candidate : best,
+	)
 	const id = nextId++
 	return new Promise<QueryVectors>((resolve, reject) => {
 		pending.set(id, {
+			worker,
 			started: performance.now(),
 			counts,
 			dims,
 			resolve,
 			reject,
 		})
-		encoder.worker.postMessage({ id, texts })
+		try {
+			worker.postMessage({ id, texts })
+		} catch (error) {
+			pending.delete(id)
+			reject(error)
+		}
 	})
 }
 
 /** Stops the worker and frees the models. The next call starts them again. */
 export async function stopQueryEncoder(): Promise<void> {
 	const current = running
-	running = undefined
-	loaded = false
 	if (!current) return
 	const encoder = await current.catch(() => undefined)
-	if (encoder) await encoder.worker.terminate()
-	failAll(new Error("Query encoder stopped"))
+	if (encoder) await encoder.stop(new Error("Query encoder stopped"))
 }

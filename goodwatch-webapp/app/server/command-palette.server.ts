@@ -1,3 +1,5 @@
+import { runsSearch } from "./role.server.ts"
+import { searchRolePalette } from "./combined-search/search-role-client.server"
 import {
 	type SearchIndex,
 	getSearchIndex,
@@ -30,6 +32,7 @@ const CACHE_MINUTES = 6 * 60
 export async function getPaletteTitles(text: string): Promise<PaletteTitle[]> {
 	const prefix = normalizePrefix(text)
 	if (prefix.length < MIN_PREFIX_CHARS) return []
+	if (!runsSearch()) return (await searchRolePalette(prefix)) ?? tmdbTitles(prefix)
 	if (!loadedSearchIndexBuild()) {
 		startSearchIndex()
 		return tmdbTitles(prefix)
