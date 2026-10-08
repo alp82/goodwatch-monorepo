@@ -2,7 +2,7 @@
 // the log. The browser shows what it expects at once (the log, and the movie's entry in the member data); the
 // server's answer replaces the log, and the refetched member data replaces the entry. On an error both go back to
 // what they were, and a message says so (docs/implementation/tracking/data-model.md, "The browser").
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback } from "react"
 import { toast } from "react-toastify"
 import { afterWatchLog } from "~/domain/member-data-updates-watch-log"
@@ -63,6 +63,18 @@ export function useWatchLogAction() {
 	const client = useQueryClient()
 	const { user } = useUser()
 	const userId = user?.id
+	// Sent as a mutation, like every other mark a member makes: a page that reloads its list after a mark (Watch
+	// next) hears of it through the mutation cache.
+	const { mutateAsync: send } = useMutation({
+		mutationFn: async (body: { tmdb_id: number; action: WatchLogAction }) =>
+			(await (
+				await request({
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(body),
+				})
+			).json()) as WatchLogAnswer,
+	})
 	return useCallback(
 		async (
 			movieId: number,
@@ -100,12 +112,7 @@ export function useWatchLogAction() {
 				void client.invalidateQueries({ queryKey: dataKey })
 			}
 			try {
-				const response = await request({
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ tmdb_id: movieId, action }),
-				})
-				const answer = (await response.json()) as WatchLogAnswer
+				const answer = await send({ tmdb_id: movieId, action })
 				if (answer.status === "applied") {
 					settle(answer.watches, change)
 					return true
@@ -122,6 +129,6 @@ export function useWatchLogAction() {
 				return false
 			}
 		},
-		[client, userId],
+		[client, userId, send],
 	)
 }

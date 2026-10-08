@@ -48,6 +48,15 @@ export default function WatchLogHarness() {
 		startTransition(() => setReady(true))
 		return remove
 	}, [server])
+	// What a page such as Watch next listens to, to reload its list after a mark: a mutation that succeeded.
+	const [marks, heard] = useReducer((n: number) => n + 1, 0)
+	useEffect(
+		() =>
+			client.getMutationCache().subscribe((event) => {
+				if (event.type === "updated" && event.action.type === "success") heard()
+			}),
+		[client],
+	)
 	const auth = useMemo(
 		() => ({
 			supabase: undefined,
@@ -65,7 +74,7 @@ export default function WatchLogHarness() {
 				<h1 className="text-2xl font-bold">Movie watch log: the real components</h1>
 				<p className="mt-1 max-w-3xl text-sm text-gray-400">
 					Issue #383. The buttons, the log, the toast and the dialog are the app's own. The member and the server are stand-ins that live in this tab; nothing is
-					saved anywhere. <FlagNote />
+					saved anywhere. <FlagNote /> Marks the page heard of through the mutation cache: <b data-marks>{marks}</b>.
 				</p>
 				<div className="mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
 					<div className="lg:sticky lg:top-24 lg:order-2">

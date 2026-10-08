@@ -1423,18 +1423,19 @@ imports, measured with `npm run build` on October 8, 2026 against `main` at `571
 
 | Page | Raw | Brotli | Of which |
 | --- | --- | --- | --- |
-| Movie page | 822,193 to 823,941 (+1,748) | 235,040 to 235,721 (+681) | `shell` +719 (the flag, the host), `title-actions` +963 (count, arrow, the press), `user-data` +65 |
-| Home | 832,303 to 833,090 (+787) | 234,657 to 234,958 (+301) | `shell` +719, `user-data` +65 |
-| Watch next | 1,002,297 to 1,004,858 (+2,561) | 288,047 to 289,114 (+1,067) | the above, `watch-next` +673 (the dialog's lazy line), `UndoToast` +140 |
+| Movie page | 822,193 to 823,941 (+1,748) | 235,040 to 235,619 (+579) | `shell` +719 (the flag, the host), `title-actions` +963 (count, arrow, the press), `user-data` +65 |
+| Home | 832,303 to 833,090 (+787) | 234,657 to 234,796 (+139) | `shell` +719, `user-data` +65 |
+| Watch next | 1,002,297 to 1,004,858 (+2,561) | 288,047 to 288,874 (+827) | the above, `watch-next` +673 (the dialog's lazy line), `UndoToast` +140 |
 
-The Brotli totals move by some tens of bytes from one build to the next, because every chunk's file name is in the
-chunks that import it. Loaded on first use: `WatchLogSurface` 10,986 bytes (3,828 Brotli), `useWatchLog` 7,410
-(2,984), `WatchedLine` 1,804 (876). The poster card's actions, which load on first interaction as before, went from
-6,959 to 5,033 bytes because the sheet they share with the log became a chunk of its own, `Drawer`, 2,644 (1,150).
+The raw sizes were the same in every build of the branch. The Brotli totals were not: three builds gave +579 to
++807 for the movie page and +139 to +419 for home, so read them as some hundred bytes. Loaded on first use:
+`WatchLogSurface` 10,986 bytes (3,798 Brotli), `useWatchLog` 7,475 (3,012), `WatchedLine` 1,799 (868). The poster
+card's actions, which load on first interaction as before, went from 6,959 to 5,033 bytes because the sheet they
+share with the log became a chunk of its own, `Drawer`, 2,644 (1,170).
 `./bench.sh budget` needs a deployed site and was not run. To check there: `script_bytes` and `script_count` of
 every landing surface against `goodwatch-benchmark/urls/budget.json`. This change adds no script file to a first
-view and between 0.2 and 0.7 KB of compressed script, on every surface the 0.2 KB of the shell. If a limit's margin
-is smaller than that, the limit is raised with the reason, as `goodwatch-webapp/AGENTS.md` asks.
+view. If a limit's margin is smaller than what it adds, the limit is raised with the reason, as
+`goodwatch-webapp/AGENTS.md` asks.
 
 **Where the build differs from the prototype and from the text above, or settles what they left open:**
 
@@ -1444,7 +1445,7 @@ is smaller than that, the limit is raised with the reason, as `goodwatch-webapp/
   "Rated, date unknown" with "Set a date"; the wording is the ticket's.
 - **One host for the page.** A Seen button hands its press to a host in the app shell. With a toast per button, a
   card that leaves its list when its movie becomes Seen (My movies, Not seen yet) would take "Change date" and Undo
-  with it.
+  with it. The action is sent as a mutation, so Watch next reloads its list after it as after every other mark.
 - **The popover opens under its button, or above it** when there is no room below, and in the middle of the screen
   when the button is gone. On a phone a card's sheet closes when Seen opens the log's sheet.
 - **"Remove all N watches"** shows from two watches on. One watch is removed with its bin. It offers Undo too.
@@ -1464,7 +1465,7 @@ is smaller than that, the limit is raised with the reason, as `goodwatch-webapp/
 app/domain/watch-log.test.ts app/domain/member-data-updates.test.ts`, against the in-memory Crate. The components
 were driven in headless Chromium at 1280 and 390 pixels wide on `/prototype/watch-log-real`, a development route
 that mounts the real title actions, card actions, log and Watch next dialog with a member who does not exist and a
-server that lives in the tab (`ui/prototype-watch-log/harness-server.ts`); 79 checks at 1280 and 73 at 390, all
+server that lives in the tab (`ui/prototype-watch-log/harness-server.ts`); 80 checks at 1280 and 74 at 390, all
 passing, with the flag on and off. The script is [`movie-watch-log/drive.mjs`](movie-watch-log/drive.mjs):
 
 ```
