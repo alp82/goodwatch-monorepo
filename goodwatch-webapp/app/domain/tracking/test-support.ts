@@ -6,6 +6,7 @@ import {
 	type Show,
 	type Step,
 	type TrackingEvent,
+	type TrackingRecord,
 	type World,
 	airedRegular,
 	isSpecial,
@@ -195,6 +196,36 @@ export function play(show: Show, actions: readonly Action[]): Played {
 		world = done.world
 	}
 	return { world, steps }
+}
+
+/**
+ * The event that puts the standing Seen press of a record back after it is taken back (row 30), as the page builds
+ * it from the stored rows (`seenPressRestore`): here from the record, with no dates and `at` as every time.
+ */
+export function restoreOf(
+	record: TrackingRecord,
+	at = 1,
+): Extract<TrackingEvent, { type: "restoreSeen" }> {
+	const press = record.seenPress
+	if (!press) throw new Error("No Seen press stands")
+	return {
+		type: "restoreSeen",
+		group: press.group,
+		from: press.from,
+		pass: record.pass,
+		changedAt: at,
+		watches: record.watches
+			.filter((watch) => watch.group === press.group)
+			.map((watch) => ({
+				id: watch.id,
+				episodeId: watch.episodeId,
+				season: watch.season,
+				number: watch.number,
+				watchedAt: null,
+				precision: "unknown",
+				createdAt: at,
+			})),
+	}
 }
 
 // ---------------------------------------------------------------------------------------------------------

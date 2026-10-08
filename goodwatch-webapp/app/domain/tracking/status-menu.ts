@@ -26,6 +26,7 @@ import type { DateWords } from "./seen-press.ts"
 export const MENU_PLACE: Record<TableEvent, "menu" | (string & {})> = {
 	pressSeen: "menu",
 	undoSeen: "menu",
+	restoreSeen: "The Undo in the toast that follows Take back Seen.",
 	hold: "menu",
 	drop: "menu",
 	resume: "menu",

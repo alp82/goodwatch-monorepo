@@ -124,6 +124,43 @@ export function stateRowOf(
 	}
 }
 
+/**
+ * The event that puts the standing Seen press back once it is taken back (row 30): the press of the state row and
+ * its rows of the log, read before `undoSeen` removes them. Null when no press stands, and for a press with a row
+ * that no Seen press makes (another origin or pass), which the event could not write again as it was.
+ */
+export function seenPressRestore(
+	state: StateRow | null,
+	log: readonly LogRow[],
+): Extract<TrackingEvent, { type: "restoreSeen" }> | null {
+	if (
+		state?.state !== "seen" ||
+		!state.seen_press_group ||
+		!state.seen_press_from
+	)
+		return null
+	const group = state.seen_press_group
+	const own = log.filter((row) => row.group_id === group)
+	if (own.some((row) => row.origin !== "seen" || row.pass !== state.pass))
+		return null
+	return {
+		type: "restoreSeen",
+		group,
+		from: state.seen_press_from,
+		pass: state.pass,
+		changedAt: state.state_changed_at,
+		watches: own.map((row) => ({
+			id: row.watch_id,
+			episodeId: row.episode_tmdb_id,
+			season: row.season_number ?? 0,
+			number: row.episode_number ?? 0,
+			watchedAt: row.watched_at,
+			precision: row.watched_at_precision,
+			createdAt: row.created_at,
+		})),
+	}
+}
+
 /** The date columns of a watch made at `now`. A day is stored as 00:00:00 UTC of that day. */
 export function watchedAt(
 	when: WatchedWhen | undefined,
@@ -207,26 +244,41 @@ export function applyShowEvent(input: ShowEventInput): AppliedEvent {
 	const stored = new Set(log.map((r) => r.watch_id))
 	const kept = new Set(after.watches.map((w) => w.id))
 	const when = event.type === "watch" ? event.when : undefined
+	// A press that is put back: its rows as they were, with their dates and the time of the press.
+	const back =
+		event.type === "restoreSeen"
+			? new Map(event.watches.map((w) => [w.id, w]))
+			: null
 	const insert: LogRow[] = after.watches
 		.filter((w) => !stored.has(w.id))
-		.map((w) => ({
-			watch_id: w.id,
-			media_type: "show",
-			tmdb_id: showId,
-			episode_tmdb_id: w.episodeId,
-			season_number: w.season,
-			episode_number: w.number,
-			// A group action has no date: the member said what, not when.
-			...(w.origin === "single"
-				? watchedAt(when, now)
-				: { watched_at: null, watched_at_precision: "unknown" as const }),
-			origin: w.origin,
-			group_id: w.group,
-			import_id: null,
-			pass: w.pass,
-			created_at: now,
-		}))
-	const next = stateRowOf(after, state, now)
+		.map((w) => {
+			const was = back?.get(w.id)
+			return {
+				watch_id: w.id,
+				media_type: "show",
+				tmdb_id: showId,
+				episode_tmdb_id: w.episodeId,
+				season_number: w.season,
+				episode_number: w.number,
+				...(was
+					? { watched_at: was.watchedAt, watched_at_precision: was.precision }
+					: w.origin === "single"
+						? watchedAt(when, now)
+						: // A group action has no date: the member said what, not when.
+							{ watched_at: null, watched_at_precision: "unknown" as const }),
+				origin: w.origin,
+				group_id: w.group,
+				import_id: null,
+				pass: w.pass,
+				created_at: was?.createdAt ?? now,
+			}
+		})
+	const row = stateRowOf(after, state, now)
+	// The show is Seen since the time it was before the press was taken back, not since this Undo.
+	const next =
+		row && event.type === "restoreSeen" && state?.state !== "seen"
+			? { ...row, state_changed_at: event.changedAt }
+			: row
 	return {
 		refused: null,
 		row: done.row?.id ?? null,

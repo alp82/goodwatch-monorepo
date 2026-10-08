@@ -14,8 +14,10 @@
 // they would take is Want to See on a Dropped show, and nothing in the interface drops a show yet.
 import {
 	type ListedEpisode,
+	STATES,
 	type TrackingEvent,
 	type WatchedWhen,
+	groupWatchId,
 	isDay,
 	serverShow,
 	utcDay,
@@ -588,11 +590,65 @@ export async function applyTrackingEvent(
 
 const NEEDS_ID = ["watch", "pressSeen", "markSeason", "watchUpTo"]
 
-function invalid(event: TrackingEvent, actionId?: string): string | null {
+/** How many watches a Seen press that is put back can have: more than any show lists episodes. */
+const MAX_PRESS_WATCHES = 20_000
+const PRESS_NOT_RESTORABLE = "That Seen press can't be put back."
+
+/**
+ * Whether a Seen press could have stood for this show, by what it says about itself. The Undo of taking a press
+ * back sends the press as the page held it, so everything in it is checked as a member's input: the group is one
+ * the browser made, or the migration's for this show; every watch is a regular episode's and carries the id a
+ * press under that group gives it; the dates fit their precision and have come; and no time lies ahead.
+ */
+function restorablePress(
+	event: Extract<TrackingEvent, { type: "restoreSeen" }>,
+	showId: number,
+	now: number,
+): boolean {
+	const { group, from, pass, changedAt, watches } = event
+	if (!validId(group) && group !== `mig-seen-${showId}`) return false
+	if (!STATES.includes(from)) return false
+	if (!whole(pass) || pass < 1) return false
+	const past = (at: unknown) =>
+		typeof at === "number" && Number.isFinite(at) && at > 0 && at <= now + 60_000
+	if (!past(changedAt)) return false
+	if (!Array.isArray(watches) || watches.length > MAX_PRESS_WATCHES) return false
+	const ids = new Set<string>()
+	for (const watch of watches) {
+		if (!watch || typeof watch !== "object") return false
+		const { id, episodeId, season, number, watchedAt, precision } = watch
+		if (!whole(episodeId) || !whole(season) || season < 1 || !whole(number))
+			return false
+		if (id !== groupWatchId(group, episodeId) || ids.has(id)) return false
+		ids.add(id)
+		if (!past(watch.createdAt)) return false
+		if (precision === "unknown") {
+			if (watchedAt !== null) return false
+			continue
+		}
+		if (typeof watchedAt !== "number" || !Number.isFinite(watchedAt))
+			return false
+		if (watchedAt < 0 || watchedAt >= latestDay(now)) return false
+		if (precision === "day" ? watchedAt % DAY_MS !== 0 : precision !== "moment")
+			return false
+	}
+	return true
+}
+
+function invalid(
+	event: TrackingEvent,
+	showId: number,
+	actionId?: string,
+): string | null {
 	if (NEEDS_ID.includes(event.type) && !validId(actionId)) return BAD_ID
 	if ("season" in event && !whole(event.season)) return "No such season."
 	if ("number" in event && !whole(event.number)) return "No such episode."
 	if (event.type === "watch" && !validWhen(event.when)) return "No such day."
+	if (
+		event.type === "restoreSeen" &&
+		!restorablePress(event, showId, Date.now())
+	)
+		return PRESS_NOT_RESTORABLE
 	return null
 }
 
@@ -602,7 +658,7 @@ async function applyShowEventStored(
 	event: TrackingEvent,
 	actionId?: string,
 ): Promise<TrackingResult> {
-	const bad = invalid(event, actionId)
+	const bad = invalid(event, title.tmdbId, actionId)
 	if (bad) return refusal(bad)
 	// Log rows an earlier round of this call inserted. They were worked out from a state that has changed since.
 	let stale: string[] = []

@@ -28,6 +28,7 @@ import {
 	movieStateRow,
 	recordFromRows,
 	scoreWatchId,
+	seenPressRestore,
 	settleMovieRows,
 	titleTotals,
 	watchStateOf,
@@ -96,6 +97,7 @@ const stats = {
 	ticks: 0,
 	ticksStateUnchanged: 0,
 	resent: 0,
+	pressesPutBack: 0,
 	halfWritten: 0,
 	halfWrittenBehind: 0,
 	rows: new Set<string>(),
@@ -532,6 +534,41 @@ function apply(both: Both, action: Action, where: string): Both {
 				`${where}: Seen again deletes the group`,
 			)
 			assert.equal(after.state?.seen_press_group ?? null, null)
+		} else if (action.type === "restoreSeen") {
+			stats.pressesPutBack += 1
+			assert.equal(deleteIds.length, 0)
+			// Exactly the press's rows, as the event carries them: ids, dates, and when they were recorded.
+			assert.deepEqual(
+				insert.map((r) => [
+					r.watch_id,
+					r.episode_tmdb_id,
+					r.season_number,
+					r.episode_number,
+					r.watched_at,
+					r.watched_at_precision,
+					r.created_at,
+					r.origin,
+					r.group_id,
+					r.pass,
+				]),
+				action.watches.map((x) => [
+					x.id,
+					x.episodeId,
+					x.season,
+					x.number,
+					x.watchedAt,
+					x.precision,
+					x.createdAt,
+					"seen",
+					action.group,
+					action.pass,
+				]),
+				`${where}: the press's rows`,
+			)
+			assert.deepEqual(
+				[after.state?.seen_press_group, after.state?.seen_press_from],
+				[action.group, action.from],
+			)
 		} else if (action.type === "unmarkSeason") {
 			assert.equal(insert.length, 0)
 			assert.deepEqual(
@@ -844,20 +881,34 @@ test("every preset: the rows rebuild the record and every list value after each 
 	})
 })
 
+const byWatchId = (log: readonly LogRow[]) =>
+	[...log].sort((a, b) => a.watch_id.localeCompare(b.watch_id))
+
 test("3,000 seeded walks of 50 actions: the rows and the machine never part", () => {
 	for (let seed = 1; seed <= 3000; seed++) {
 		const rng = mulberry32(seed)
 		let both = start(SHOWS[seed % SHOWS.length])
-		for (let i = 0; i < 50; i++)
-			both = apply(
-				both,
-				randomAction(rng, both.ref),
-				`walk ${seed} action ${i + 1}`,
-			)
+		for (let i = 0; i < 50; i++) {
+			const where = `walk ${seed} action ${i + 1}`
+			const action = randomAction(rng, both.ref)
+			// Every other press that is taken back is put back at once (row 30), as the toast's Undo does.
+			const press =
+				action.type === "undoSeen" && (seed + i) % 2 === 0
+					? seenPressRestore(both.stored.state, both.stored.log)
+					: null
+			const before = both.stored
+			both = apply(both, action, where)
+			if (!press) continue
+			both = apply(both, press, `${where}, put back`)
+			// What is stored is what was stored before the press was taken back, to the last column.
+			assert.deepEqual(both.stored.state, before.state, `${where}: the state`)
+			assert.deepEqual(byWatchId(both.stored.log), byWatchId(before.log), where)
+		}
 	}
 	// Every row of the table a member's event can take was walked.
-	for (const id of [...Array.from({ length: 26 }, (_, i) => i + 1), 28, 29])
+	for (const id of [...Array.from({ length: 26 }, (_, i) => i + 1), 28, 29, 30])
 		assert.ok(stats.rows.has(String(id)), `row ${id} was never walked`)
+	assert.ok(stats.pressesPutBack > 1_000, "presses put back")
 	// The checks ran on enough of each kind to mean something.
 	assert.ok(stats.catalog > 10_000, "catalog changes")
 	assert.ok(stats.groupMarks > 1_000, "group marks")
@@ -983,6 +1034,130 @@ test("a watch can carry a day or no date, and state_changed_at moves only with t
 			dismissed.changes.state?.rate_prompt_dismissed_at,
 		],
 		["insert", "not_started", 7_000],
+	)
+})
+
+test("a press that is taken back and put back: the same rows and the same state row, also for a migrated press with dates set since", () => {
+	const show = findShow("ended")
+	const PRESSED = Date.UTC(2024, 9, 19, 18, 30)
+	const group = `mig-seen-${SHOW_ID}`
+	const flags = emptyStored().flags
+	// As the migration writes a Seen mark: one undated row per aired regular episode, recorded at the old mark's time.
+	const log: LogRow[] = show.episodes.map((e) => ({
+		watch_id: `g-${group}-${e.id}`,
+		media_type: "show",
+		tmdb_id: SHOW_ID,
+		episode_tmdb_id: e.id,
+		season_number: e.season,
+		episode_number: e.number,
+		watched_at: null,
+		watched_at_precision: "unknown",
+		origin: "seen",
+		group_id: group,
+		import_id: null,
+		pass: 1,
+		created_at: PRESSED,
+	}))
+	// Since then the member gave one of them a day.
+	log[2] = {
+		...log[2],
+		watched_at: Date.UTC(2024, 9, 1),
+		watched_at_precision: "day",
+	}
+	const state: StateRow = {
+		state: "seen",
+		state_changed_at: PRESSED,
+		pass: 1,
+		seen_press_group: group,
+		seen_press_from: "not_started",
+		rate_prompt_dismissed_at: null,
+		seen_question: null,
+	}
+	const restore = seenPressRestore(state, log)
+	assert.ok(restore)
+	assert.deepEqual(
+		[restore.group, restore.from, restore.changedAt, restore.watches.length],
+		[group, "not_started", PRESSED, 6],
+	)
+	const base = { showId: SHOW_ID, show, flags }
+	const taken = applyShowEvent({
+		...base,
+		state,
+		log,
+		event: { type: "undoSeen" },
+		now: 9_000_000_000_000,
+	})
+	// Nothing else was watched: no row is left of the show.
+	assert.deepEqual(
+		[taken.row, taken.changes.state, taken.changes.deleteIds.length],
+		["17", null, 6],
+	)
+	const put = applyShowEvent({
+		...base,
+		state: null,
+		log: [],
+		event: restore,
+		now: 9_000_000_060_000,
+	})
+	assert.deepEqual(
+		[put.refused, put.row, put.changes.stateWrite],
+		[null, "30", "insert"],
+	)
+	assert.deepEqual(put.changes.insert, log)
+	assert.deepEqual(put.changes.state, state)
+
+	// Pressed on a Watching show: the state row stayed, and gets the time it became Seen back.
+	const ticked: LogRow = {
+		...log[0],
+		watch_id: "tick-1",
+		origin: "single",
+		group_id: null,
+		watched_at: PRESSED - 1_000,
+		watched_at_precision: "moment",
+		created_at: PRESSED - 1_000,
+	}
+	const some = [ticked, ...log.slice(1)]
+	const pressedWatching: StateRow = {
+		...state,
+		seen_press_from: "watching",
+		rate_prompt_dismissed_at: PRESSED + 5,
+		seen_question: "answered",
+	}
+	const back = seenPressRestore(pressedWatching, some)
+	assert.ok(back)
+	const left = applyShowEvent({
+		...base,
+		state: pressedWatching,
+		log: some,
+		event: { type: "undoSeen" },
+		now: 9_000_000_000_000,
+	})
+	assert.deepEqual(
+		[left.row, left.changes.state?.state, left.changes.state?.state_changed_at],
+		["14", "watching", 9_000_000_000_000],
+	)
+	const again = applyShowEvent({
+		...base,
+		state: left.changes.state,
+		log: [ticked],
+		event: back,
+		now: 9_000_000_060_000,
+	})
+	assert.deepEqual(again.changes.insert, log.slice(1))
+	assert.deepEqual(again.changes.state, pressedWatching)
+	assert.equal(again.changes.stateWrite, "update")
+
+	// No press stands, or a row in its group that no press makes: nothing to put back.
+	assert.equal(seenPressRestore(left.changes.state, [ticked]), null)
+	assert.equal(seenPressRestore(null, []), null)
+	assert.equal(
+		seenPressRestore(state, [{ ...log[0], origin: "season" }, ...log.slice(1)]),
+		null,
+	)
+	assert.equal(
+		seenPressRestore({ ...state, pass: 2 }, log),
+		null,
+		"a row of another pass",
 	)
 })
 
