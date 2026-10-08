@@ -1,6 +1,7 @@
 // What the Watch next page says: sort names and lines, the hero's eyebrow, the value a sort read for a title, tier
 // names, and counts. Pure, so the words stay in one place.
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
+import { timeLabel } from "~/domain/my-movies"
 import type {
 	WatchNextSort,
 	WatchNextTierKey,
@@ -80,10 +81,10 @@ export function moodWords(moods: readonly MoodKey[]): string {
 export function heroLabel(
 	sort: WatchNextSort,
 	moods: readonly MoodKey[],
-	note: "closestToMoods" | "nothingOnServices" | null,
+	note: WatchNext["heroNote"],
 ): string {
 	if (note === "closestToMoods") return "Closest to your moods"
-	if (note === "nothingOnServices") return "Nothing on your services; closest"
+	if (note) return "Nothing on your services; closest"
 	const m = moodWords(moods)
 	switch (sort) {
 		case "match":
@@ -101,6 +102,26 @@ export function heroLabel(
 				? `Most popular in ${m} right now`
 				: "Most popular on your Wishlist right now"
 	}
+}
+
+/**
+ * The same line on My movies (#385): it names tonight's movie, so the page doesn't claim Tonight's pick when the
+ * pick is an episode, says "your movies" for "your Wishlist", and adds the time chosen under "How long?".
+ */
+export function movieHeroLabel(
+	sort: WatchNextSort,
+	moods: readonly MoodKey[],
+	note: WatchNext["heroNote"],
+	time: number | null,
+): string {
+	const limit = time === null ? "" : timeLabel(time).toLowerCase()
+	if (note === "nothingInTime")
+		return `Tonight's movie · Nothing ${limit}; the closest`
+	const line = heroLabel(sort, moods, note).replace(
+		/ (on|to) your Wishlist/,
+		" of your movies",
+	)
+	return `Tonight's movie · ${line}${limit && !note ? `, ${limit}` : ""}`
 }
 
 const DAY_MS = 86_400_000
@@ -153,13 +174,16 @@ export function sortFact(
 	}
 }
 
-/** "2h 12m", "95 min", "23 min episodes"; "Series" or "Film" without a runtime. */
-export function runtimeLabel(title: {
-	media_type: "movie" | "show"
-	runtime: number | null
-}): string {
+/** "2h 12m", "95 min", "23 min episodes"; "Series" or "Film" without a runtime ("Movie" on My movies). */
+export function runtimeLabel(
+	title: {
+		media_type: "movie" | "show"
+		runtime: number | null
+	},
+	movie = "Film",
+): string {
 	const { runtime } = title
-	if (!runtime) return title.media_type === "show" ? "Series" : "Film"
+	if (!runtime) return title.media_type === "show" ? "Series" : movie
 	if (title.media_type === "show") return `${runtime} min episodes`
 	if (runtime < 60) return `${runtime} min`
 	return `${Math.floor(runtime / 60)}h ${runtime % 60}m`
@@ -174,9 +198,11 @@ export const TIER_LABEL: Record<WatchNextTierKey, string> = {
 	elsewhere: "Elsewhere",
 	close: "Close",
 	notTonight: "Not tonight",
+	notTonightsFit: "Not tonight's fit",
 }
 
 export const TIER_NOTE: Partial<Record<WatchNextTierKey, string>> = {
+	notTonightsFit: "Each says why.",
 	otherMoods: "In another mood.",
 	elsewhere: "Not on your services.",
 	close:

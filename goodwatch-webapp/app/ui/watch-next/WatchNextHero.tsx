@@ -6,10 +6,12 @@ import { Link } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import type React from "react"
 import { MOOD_BY_KEY } from "~/domain/moods"
+import { misfitWords } from "~/domain/my-movies"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
 import { titleToDashed } from "~/utils/helpers"
-import { heroLabel, runtimeLabel, sortFact } from "./labels"
+import { heroLabel, movieHeroLabel, runtimeLabel, sortFact } from "./labels"
+import { useMoviesPage } from "./movies-page"
 import { type ServiceOffer, offersOf, watchLine } from "./services"
 import { DISPLAY, EASE, WRAP, backdropUrl, logoUrl, posterUrl } from "./style"
 
@@ -86,6 +88,7 @@ function Eyebrow({
 	hero: WatchNextTitle
 	showMatch: boolean
 }) {
+	const movies = useMoviesPage()
 	const fact =
 		data.sort === "match" ? null : sortFact(data.sort, hero, showMatch)
 	return (
@@ -98,9 +101,21 @@ function Eyebrow({
 			data-eyebrow
 		>
 			<span className="text-amber-300" data-herolabel>
-				{heroLabel(data.sort, data.moods, data.heroNote)}
+				{movies
+					? movieHeroLabel(
+							data.sort,
+							data.moods,
+							data.heroNote,
+							data.time ?? null,
+						)
+					: heroLabel(data.sort, data.moods, data.heroNote)}
 			</span>
 			{fact && <span className="text-gray-300">{fact}</span>}
+			{hero.misfit?.why === "time" && (
+				<span className="text-gray-300" data-misfit="time">
+					{misfitWords(hero.misfit)}
+				</span>
+			)}
 			{hero.moods.length > 0 && (
 				<span className="flex flex-wrap items-center gap-1.5">
 					{hero.moods.slice(0, 3).map((mood) => {
@@ -157,6 +172,7 @@ function ThenColumn({
 	titles,
 	mine,
 }: { titles: WatchNextTitle[]; mine: CardService[] }) {
+	const movieWord = useMoviesPage() ? "Movie" : undefined
 	if (!titles.length) return null
 	return (
 		<div className="min-w-0" data-then>
@@ -198,7 +214,7 @@ function ThenColumn({
 										{watchLine(offersOf(title, mine))}
 									</span>
 									<span className="hidden truncate text-xs text-gray-500 md:block">
-										{runtimeLabel(title)}
+										{runtimeLabel(title, movieWord)}
 									</span>
 								</span>
 							</Link>
@@ -225,6 +241,7 @@ export function WatchNextHero({
 	onPass: (title: WatchNextTitle) => void
 	onWant: (title: TitleCard) => void
 }) {
+	const movieWord = useMoviesPage() ? "Movie" : undefined
 	const hero = data?.hero ?? null
 	const start = data?.start ?? null
 	const stage = hero ?? start
@@ -287,7 +304,7 @@ export function WatchNextHero({
 								<p className="mt-1 text-sm text-gray-400">
 									{[
 										hero.release_year,
-										runtimeLabel(hero),
+										runtimeLabel(hero, movieWord),
 										showMatch && hero.match
 											? `${hero.match}% taste match`
 											: null,
@@ -329,7 +346,7 @@ export function WatchNextHero({
 								className="min-w-0 max-w-2xl"
 							>
 								<p className="text-sm font-semibold text-amber-300">
-									Your Wishlist is empty
+									{movieWord ? "No movies yet" : "Your Wishlist is empty"}
 								</p>
 								{start ? (
 									<>
@@ -345,7 +362,7 @@ export function WatchNextHero({
 											{showMatch && start.match
 												? `${start.match}% taste match. `
 												: ""}
-											{runtimeLabel(start)}.
+											{runtimeLabel(start, movieWord)}.
 										</p>
 										<div className="mt-5">
 											<ServiceTiles offers={offersOf(start, mine)} />

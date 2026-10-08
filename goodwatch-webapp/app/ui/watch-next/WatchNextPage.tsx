@@ -17,6 +17,7 @@ import { type MoodControl, refusalText } from "./MoodPicker"
 import { PhoneControls } from "./PhoneControls"
 import { SteppedGrid, WorthAdding } from "./SteppedGrid"
 import { WatchNextHero } from "./WatchNextHero"
+import { MoviesPageContext, type MoviesPageParts } from "./movies-page"
 import { WRAP } from "./style"
 import { useFinish } from "./useFinish"
 import {
@@ -27,10 +28,13 @@ import {
 
 export function WatchNextPage({
 	initial,
+	movies,
 }: {
 	initial: { query: string; data: WatchNext | null }
+	/** My movies (#385): this page for the Wishlist's movies, with the pieces of its "How long?" choice. */
+	movies?: MoviesPageParts
 }) {
-	const state = useWatchNext(initial)
+	const state = useWatchNext(initial, Boolean(movies))
 	const { data, choice, setChoice } = state
 	const showMatch = useFeature("tasteMatch")
 	const finishing = useFinish()
@@ -101,7 +105,11 @@ export function WatchNextPage({
 		moods: data.moods,
 		counts: data.moodCounts,
 		pictures: data.moodPictures,
-		countScope: data.onMyServices ? "on your services" : "on your Wishlist",
+		countScope: data.onMyServices
+			? "on your services"
+			: movies
+				? "of your movies"
+				: "on your Wishlist",
 		open: moodsOpen,
 		setOpen: setMoodsOpen,
 		toggle,
@@ -114,6 +122,9 @@ export function WatchNextPage({
 	const setSort = (sort: WatchNextSort) =>
 		setChoice({ sort: sort === data?.defaultSort ? null : sort })
 
+	const setTime = (time: number | null) => setChoice({ time })
+	const time = data?.time ?? choice.time ?? null
+
 	const strip =
 		data && moods ? (
 			<DockedStrip
@@ -121,6 +132,7 @@ export function WatchNextPage({
 				moods={moods}
 				setOnMyServices={setOnMyServices}
 				setSort={setSort}
+				extra={movies?.timeControl(time, setTime)}
 			/>
 		) : (
 			<div
@@ -132,9 +144,13 @@ export function WatchNextPage({
 	const guestStage =
 		data?.bestMatch.prompt === "signUpToKeep" ? "keep" : "learn"
 
-	return (
-		<div className="overflow-x-clip pb-24" data-watch-next>
-			<h1 className="sr-only">Watch next</h1>
+	const page = (
+		<div
+			className="overflow-x-clip pb-24"
+			data-watch-next
+			data-my-movies={movies ? "" : undefined}
+		>
+			{movies ? movies.head(data) : <h1 className="sr-only">Watch next</h1>}
 			<output aria-live="polite" className="sr-only">
 				{announcement}
 			</output>
@@ -149,7 +165,7 @@ export function WatchNextPage({
 			{state.isError && (
 				<div className={`${WRAP} pt-6`} role="alert">
 					<p className="text-gray-300">
-						Watch next couldn't load.{" "}
+						{movies ? "My movies" : "Watch next"} couldn't load.{" "}
 						<button
 							type="button"
 							className="cursor-pointer underline"
@@ -183,6 +199,16 @@ export function WatchNextPage({
 				moods={moods}
 				setOnMyServices={setOnMyServices}
 				setSort={setSort}
+				extra={
+					movies && {
+						key: "time",
+						title: "How long?",
+						label: movies.phoneTime.label(time),
+						icon: movies.phoneTime.icon(time),
+						on: time !== null,
+						body: movies.phoneTime.drawer(time, setTime),
+					}
+				}
 			/>
 			<FinishPrompt
 				finished={finishing.prompt}
@@ -204,5 +230,10 @@ export function WatchNextPage({
 				className="bottom-40 lg:bottom-6"
 			/>
 		</div>
+	)
+	return movies ? (
+		<MoviesPageContext.Provider value>{page}</MoviesPageContext.Provider>
+	) : (
+		page
 	)
 }
