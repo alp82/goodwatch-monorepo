@@ -2,7 +2,7 @@
 
 Issue [#376](https://github.com/alp82/goodwatch-monorepo/issues/376). Every show's episodes from TMDB, in the Crate
 table `episode`, kept fresh, and one number per show, `show.aired_episode_count`. It feeds the Episode list and
-member tracking; nothing member-facing reads it yet. Design and the TMDB facts
+member tracking on the show page. Design and the TMDB facts
 behind it: [tmdb-episode-catalog.md](research/season-episode-scores/tmdb-episode-catalog.md). Paths under
 `goodwatch-flows/windmill/` are shortened to `f/...`.
 
@@ -19,7 +19,8 @@ behind it: [tmdb-episode-catalog.md](research/season-episode-scores/tmdb-episode
 ## Storage
 
 **Mongo `tmdb_tv_season_details`**: one document per show and season (`tmdb_id`, `season_number`, unique together),
-with `season_id` and the season's `episodes` as TMDB lists them, without `crew` and `guest_stars`.
+with `season_id` and the season's `episodes` as TMDB lists them, without `crew` and `guest_stars`. Every other
+field of an episode is kept, so each stored episode has TMDB's `overview`.
 
 **Mongo `tmdb_tv_details`**: the crawl state of each show, next to its details.
 
@@ -32,13 +33,21 @@ with `season_id` and the season's `episodes` as TMDB lists them, without `crew` 
 | `episodes_failed_at`, `episodes_error` | The last failure. Cleared by the next success. |
 | `episodes_changed_at` | Last time the change feed named the show. |
 
-**Mongo `tmdb_episode_catalog_state`**: two documents. `tv_changes` holds the time of the last successful change feed
-run, `episodes_copy` the copy's checkpoint (`copied_until`).
+**Mongo `tmdb_episode_catalog_state`**: `tv_changes` holds the time of the last successful change feed run,
+`episodes_copy` the copy's checkpoint (`copied_until`), and `episodes_recopy` the cursor of a
+[recopy](#copying-every-show-again) (`after_tmdb_id`, `started_at`, `finished_at`), which exists only once one ran.
 
 **Crate `episode`**: key `(show_id, tmdb_id)`, clustered by `show_id`, so one show's list is one routed read. Specials
 are `season_number = 0`. `removed_at` is set when TMDB no longer lists the episode. `imdb_id` and `tvdb_id` exist for
 later imports; the copy never writes them. `show.episodes_updated_at` is the fetch time of the copied state; `NULL`
 means the show was not crawled yet, a value with no rows means TMDB lists no episodes.
+
+`overview` is the episode's description: TMDB's `overview`, trimmed, `NULL` when TMDB has none ([#387](https://github.com/alp82/goodwatch-monorepo/issues/387)).
+It is declared `TEXT INDEX OFF STORAGE WITH (columnstore = false)`, like the other texts that are only read back
+(`streaming_evidence.payload`, `search_index_builds.manifest`): an index and the column store each refuse a value
+above 32,766 bytes, and one such value would fail the upsert of its whole batch. The price is that the column is
+for selecting only. Don't filter, sort or count by it; a `WHERE overview IS NULL` over the table is at best a full
+scan.
 
 **Crate `show.aired_episode_count`**: how many regular episodes of the show have aired, see
 [The aired episode count](#the-aired-episode-count). `NULL` until the show's first copy.
@@ -93,6 +102,53 @@ For each show it compares the episodes of all its season documents with the stor
 Unchanged episodes are not written. Then `show.episodes_updated_at` and `show.aired_episode_count` are set, for
 every copied show, whether or not an episode changed.
 
+The compared columns are `EPISODE_COLUMNS` in `f/tmdb_api/episode_catalog.py`, the description among them: a
+description TMDB rewrote is updated, one it dropped is cleared.
+
+## Copying every show again
+
+The copy visits a show only after a fetch. A column added to `episode` later is therefore empty in every row
+already copied until the show's next fetch, up to 30 days away. `recopy_all: true` fills it from the stored season
+documents, without a TMDB request.
+
+- A run first does the normal copy. Only when that caught up, it spends the rest of its 240 s on the recopy.
+- The recopy reads the shows that have `episodes_updated_at`, 200 at a time in the order of `tmdb_id`, and copies
+  each batch like any other. It stores the last id of each batch in `episodes_recopy`, so the next run with
+  `recopy_all` continues after it. A show's id never changes, so no show is skipped or read twice.
+- It never reads or writes the checkpoint `episodes_copy`.
+- A show fetched for the first time while the recopy runs may lie behind the cursor. The normal copy picks it
+  up, with every column.
+- When no show is left it sets `finished_at`. From then on `recopy_all` does nothing but the normal copy.
+- Rows that already match are not written, so running it again costs reads only. To start over (for the next new
+  column), delete the document: `db.tmdb_episode_catalog_state.deleteOne({_id: "episodes_recopy"})`.
+
+**Run it from the schedule, not beside it.** Add `recopy_all: true` to the arguments of the copy's schedule and
+take it out again when it has finished. A manual run next to the scheduled one can read a show's documents, be
+overtaken by a fetch and the scheduled copy of that show, and then write the older episodes over the newer ones;
+that would stay wrong until the show's next fetch.
+
+**How long.** 233,582 shows are 1,168 batches of 200. A batch is about 5,700 episode rows (6.7 million rows over
+233,582 shows): one read of the season documents, one read of the stored rows and, the first time, an upsert of
+nearly all of them. The seconds per batch are not measured. The first crawl's copy, which wrote the same rows, was
+planned at "some hours" for the whole table; at 10 to 20 s per batch a 240 s run does 12 to 24 batches, which is 50
+to 100 runs, 4 to 8 hours on the 5-minute schedule. Every batch prints a line (`Copied 200 shows: …`), so the first
+run's log gives the real figure: 1,168 divided by the batches per run, times 5 minutes. While the first crawl
+still runs, the normal copy uses most of each run and the recopy advances slowly or not at all; nothing is lost,
+because every show that copy writes gets all columns.
+
+**When it is finished.** The run's result has `recopy: {shows_copied, after_tmdb_id, finished}`; `finished: true`
+is the end. The same from Mongo:
+
+```js
+db.tmdb_episode_catalog_state.findOne({_id: "episodes_recopy"})   // finished_at is set; after_tmdb_id shows progress
+```
+
+Then remove `recopy_all` from the schedule, and spot-check a show (by its key, not by the description):
+
+```sql
+SELECT season_number, episode_number, overview FROM episode WHERE show_id = 1396 ORDER BY 1, 2 LIMIT 5;
+```
+
 ## Aired and still airing
 
 Both change with the calendar, so a reader of the table works them out when it reads. `has_aired` and
@@ -143,6 +199,23 @@ It is later than that in three cases:
   the show due, or with the 30-day cycle.
 
 To recount named shows without a fetch, run the copy with `tmdb_ids`.
+
+## Adding the description to a running catalog
+
+The steps that put `episode.overview` live ([#387](https://github.com/alp82/goodwatch-monorepo/issues/387)), on a
+table that already has rows.
+
+1. **Merge and wait for the "Push Windmill workspace" action.** Until step 2 is done the copy fails, because it
+   selects a column that is not there. It loses nothing: its checkpoint stays and the next run catches up. To avoid
+   the failed runs, pause the copy's schedule first. The webapp reads the episode list without descriptions while
+   the column is missing.
+2. **Add the column.** Run `f/sync/init/cratedb` with `dry_run: true`. It must report exactly one change:
+   `ALTER TABLE episode ADD COLUMN overview TEXT INDEX OFF STORAGE WITH (columnstore = false)`. Then run it
+   without `dry_run`, and resume the copy's schedule if it was paused.
+3. **Check one show.** Run `f/sync/copy/tmdb_episodes` with `tmdb_ids: [1396]`, then the spot-check query of
+   [Copying every show again](#copying-every-show-again).
+4. **Backfill.** Add `recopy_all: true` to the copy's schedule arguments, wait for `finished: true`, and remove it
+   again, as described there.
 
 ## Tests
 

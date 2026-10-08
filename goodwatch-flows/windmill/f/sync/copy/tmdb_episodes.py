@@ -20,8 +20,12 @@ from f.tmdb_api.episode_catalog import (
 )
 
 COPY_STATE_ID = "episodes_copy"
+# The cursor of recopy_all, apart from the checkpoint: the highest show id it has copied.
+RECOPY_STATE_ID = "episodes_recopy"
 # The index that covers the read of the shows fetched since the checkpoint.
 FETCHED_INDEX = [("episodes_updated_at", 1), ("tmdb_id", 1), ("episodes_complete", 1)]
+# The index recopy_all walks, in the order of the show id, which a fetch never changes.
+TMDB_ID_INDEX = [("tmdb_id", 1)]
 SHOWS_PER_BATCH = 200
 # Shows are compared with Crate in groups of about this many episodes, so one long-running
 # daily show does not load with 199 others.
@@ -57,6 +61,20 @@ def fetched_shows(db, since: datetime, limit: int) -> list[dict]:
         )
         .hint(FETCHED_INDEX)
         .sort(FETCHED_INDEX[:2])
+        .limit(limit)
+    )
+
+
+def fetched_shows_after(db, tmdb_id: int, limit: int) -> list[dict]:
+    """Shows whose episodes were ever fetched, with an id above `tmdb_id`, lowest id first."""
+    return list(
+        db[DETAILS_COLLECTION]
+        .find(
+            {"tmdb_id": {"$gt": tmdb_id}, "episodes_updated_at": {"$ne": None}},
+            {"_id": 0, "tmdb_id": 1, "episodes_updated_at": 1, "episodes_complete": 1},
+        )
+        .hint(TMDB_ID_INDEX)
+        .sort(TMDB_ID_INDEX)
         .limit(limit)
     )
 
@@ -144,12 +162,19 @@ def copy_episodes(
     tmdb_ids: Optional[list[int]] = None,
     now: Optional[datetime] = None,
     max_seconds: float = MAX_RUN_SECONDS,
+    recopy_all: bool = False,
 ) -> dict:
     """Copy the shows fetched since the last run, or the named shows.
 
     Without ids the run continues at its checkpoint, the fetch time of the last show it
     copied, and works through the shows fetched since in batches until none is left or
     the time is up. A run for named shows leaves the checkpoint alone.
+
+    `recopy_all` then spends the time that is left on copying every fetched show once
+    more from its stored season documents, in the order of the show id. That fills a
+    column added after the rows were written, without a TMDB fetch. It keeps its own
+    cursor, so the following runs continue where this one stopped, and it does nothing
+    once it has reached the last show.
     """
     now = now or datetime.utcnow()
     result = {"shows_copied": 0, "episodes_upserted": 0, "episodes_removed": 0, "episodes_purged": 0}
@@ -198,19 +223,52 @@ def copy_episodes(
                 break
         result["copied_until"] = checkpoint.isoformat() if checkpoint else None
 
+        if recopy_all:
+            state = db[STATE_COLLECTION].find_one({"_id": RECOPY_STATE_ID}) or {}
+            after_tmdb_id = state.get("after_tmdb_id") or 0
+            finished = state.get("finished_at") is not None
+            recopied = 0
+
+            def save(fields: dict):
+                db[STATE_COLLECTION].update_one(
+                    {"_id": RECOPY_STATE_ID},
+                    {"$set": fields | {"updated_at": now}, "$setOnInsert": {"started_at": now}},
+                    upsert=True,
+                )
+
+            # The shows fetched since the checkpoint come first: only a run that caught up recopies.
+            while result["caught_up"] and not finished:
+                shows = fetched_shows_after(db, after_tmdb_id, SHOWS_PER_BATCH)
+                if not shows:
+                    finished = True
+                    save({"after_tmdb_id": after_tmdb_id, "finished_at": now})
+                    print("Recopy finished: every fetched show was copied again.", flush=True)
+                    break
+                copy_batch(shows)
+                recopied += len(shows)
+                after_tmdb_id = shows[-1]["tmdb_id"]
+                save({"after_tmdb_id": after_tmdb_id})
+                if time.monotonic() - started >= max_seconds:
+                    print(f"Out of time; the next run recopies the shows after {after_tmdb_id}.", flush=True)
+                    break
+            result["recopy"] = {"shows_copied": recopied, "after_tmdb_id": after_tmdb_id, "finished": finished}
+
     connector.run(PURGE_REMOVED, (millis(now - PURGE_REMOVED_AFTER),))
     result["episodes_purged"] = max(connector.cur.rowcount or 0, 0)
     return result
 
 
-def main(tmdb_ids: list[int] = [], max_seconds: int = MAX_RUN_SECONDS):
+def main(tmdb_ids: list[int] = [], max_seconds: int = MAX_RUN_SECONDS, recopy_all: bool = False):
     # Windmill passes None for an argument the caller left out, so the defaults above don't apply.
     tmdb_ids = tmdb_ids or []
     max_seconds = max_seconds or MAX_RUN_SECONDS
+    recopy_all = recopy_all is True
     init_mongodb()
     connector = CrateConnector()
     try:
-        return copy_episodes(connector, get_db(), tmdb_ids=tmdb_ids, max_seconds=max_seconds)
+        return copy_episodes(
+            connector, get_db(), tmdb_ids=tmdb_ids, max_seconds=max_seconds, recopy_all=recopy_all
+        )
     finally:
         connector.disconnect()
         close_mongodb()

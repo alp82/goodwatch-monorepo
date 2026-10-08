@@ -368,6 +368,9 @@ SCHEMAS = {
             "runtime": "INTEGER",
             "still_path": "TEXT",
             "episode_type": "TEXT",  # standard, mid_season, finale
+            # TMDB's description, shown when an episode is opened and never searched or filtered.
+            # No index and no column store: each refuses a value above 32,766 bytes.
+            "overview": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
             "tmdb_user_score_original": "DOUBLE",
             "tmdb_user_score_rating_count": "INTEGER",
             # NULL until an import or backfill resolves them; the copy never writes them.

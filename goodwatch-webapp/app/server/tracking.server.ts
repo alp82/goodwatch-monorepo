@@ -45,6 +45,7 @@ import {
 import { markTasteChanged } from "~/server/taste/index.server"
 import {
 	EPISODE_LIST_QUERY,
+	EPISODE_LIST_WITHOUT_OVERVIEW_QUERY,
 	GROUPED_QUERY,
 	MOVIE_LOG_QUERY,
 	SHOW_LOG_QUERY,
@@ -498,7 +499,9 @@ export interface EpisodeListRow {
 	runtime: number | null
 	still_path: string | null
 	episode_type: string | null
-	[key: string]: string | number | null
+	/** TMDB's description. Missing in a list cached before the read asked for it, and where the column is not there. */
+	overview?: string | null
+	[key: string]: string | number | null | undefined
 }
 
 /**
@@ -510,6 +513,9 @@ async function readEpisodeList({ showId }: { showId: number }) {
 	try {
 		return await query<EpisodeListRow>(EPISODE_LIST_QUERY, [showId])
 	} catch (error) {
+		// The webapp can be deployed before the catalog's table has the column (#387).
+		if (isMissingColumn(error, "overview"))
+			return query<EpisodeListRow>(EPISODE_LIST_WITHOUT_OVERVIEW_QUERY, [showId])
 		if (!isMissingTable(error, "episode")) throw error
 		console.error("The episode catalog's table is missing: no show has a list")
 		return []
@@ -1026,6 +1032,11 @@ const TRACKING_TABLES = [
 	"user_import_item",
 	"user_import",
 ]
+
+const isMissingColumn = (error: unknown, column: string) =>
+	new RegExp(`ColumnUnknown.*\\b${column}\\b`).test(
+		String((error as { message?: unknown } | null)?.message ?? error),
+	)
 
 const isMissingTable = (error: unknown, table: string) => {
 	const message = String(

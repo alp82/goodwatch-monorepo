@@ -1509,7 +1509,7 @@ off, for a visitor, and for a show without an episode list, the page is as it wa
 tracking from the viewer and 401 without a session.
 
 - `GET /api/tracking/show?id=<show id>`: the state row, every log row of the show, the episode list (id, season,
-  number, name, air date as a day, runtime, still, rating and how it was matched), `running` (the show's status is
+  number, name, air date as a day, runtime, still, description, rating and how it was matched), `running` (the show's status is
   neither Ended nor Canceled), the season scores, and a note per season that IMDb numbers differently.
 - `POST /api/tracking/show` with `{ id, event, actionId?, restore? }`: applies one event through
   `applyTrackingEvent` and answers `{ status, refused, state, rows, deleted, cleared }`. `rows` are the stored log
@@ -1520,9 +1520,12 @@ tracking from the viewer and 401 without a session.
 
 **Where the build differs from the text above and from the prototypes, or settles what they left open:**
 
-- **An episode has no description.** The episode catalog's `episode` table stores none, so an opened row shows
-  the still, the air date, the runtime and the rating. The row renders a description when the read sends one;
-  the catalog has to store TMDB's `overview` first.
+- **An episode's description comes from the catalog (#387).** `episode.overview` holds TMDB's `overview`; the
+  read sends it as `overview` with every episode, and only the opened row renders it, so a description is on
+  screen only for the episode the member opened. An episode without one (TMDB has none, or its row was copied
+  before the column existed and the catalog's recopy has not reached the show, see
+  [episode-catalog.md](../../episode-catalog.md#copying-every-show-again)) opens to the still, the air date, the
+  runtime and the rating, as before. While the table has no such column at all, the list is read without it.
 - **The show page does not know the show's status.** The details it loads have `in_production` only. The first
   paint of a Seen show's pill uses that; the read then brings `show.status`, which decides between Seen and Caught
   up.

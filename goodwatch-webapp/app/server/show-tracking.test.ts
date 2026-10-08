@@ -101,6 +101,7 @@ const episode = (
 	number: number,
 	name: string,
 	airDate: number | null,
+	overview: string | null = null,
 ): Row => ({
 	show_id: SHOW,
 	tmdb_id: id,
@@ -111,6 +112,7 @@ const episode = (
 	runtime: 45,
 	still_path: `/still-${id}.jpg`,
 	episode_type: "standard",
+	overview,
 	removed_at: null,
 })
 
@@ -627,6 +629,55 @@ test("the read endpoint answers a member privately, and refuses an id that is no
 	)
 	for (const search of ["", "?id=abc", "?id=0", "?id=1.5", "?id=-3"])
 		assert.equal((await get(search)).status, 400, search)
+})
+
+test("the read endpoint sends an episode's description, watched or not, and none where the catalog has none", async () => {
+	db.rows.set("episode", [])
+	db.seed("episode", [
+		episode(101, 1, 1, "Pilot", LONG_AGO, "A teacher starts over."),
+		episode(102, 1, 2, "Second", LONG_AGO, "The plan goes wrong."),
+		// Copied before the catalog stored descriptions, or TMDB has none.
+		episode(103, 1, 3, "Third", LONG_AGO),
+	])
+	await tick(1, 1, "watch-000001")
+	const page = await (await get(`?id=${SHOW}`)).json()
+	assert.deepEqual(
+		page.episodes.map((e: { id: number; overview: string | null }) => [
+			e.id,
+			e.overview,
+		]),
+		[
+			[101, "A teacher starts over."],
+			[102, "The plan goes wrong."],
+			[103, null],
+		],
+	)
+})
+
+test("the read endpoint still lists the episodes, without descriptions, while the catalog's table has no such column", async () => {
+	db.before = ({ sql }) => {
+		if (/\boverview\b/.test(sql))
+			throw new Error("ColumnUnknownException[Column overview unknown]")
+	}
+	const response = await get(`?id=${SHOW}`)
+	assert.equal(response.status, 200)
+	const page = await response.json()
+	assert.deepEqual(
+		page.episodes.map((e: { name: string; overview: string | null }) => [
+			e.name,
+			e.overview,
+		]),
+		[
+			["Making Of", null],
+			["Pilot", null],
+			["Second", null],
+			["Third", null],
+			["Return", null],
+			["Tomorrow", null],
+		],
+	)
+	// Ticking an episode needs the list too.
+	assert.equal((await tick(1, 1)).status, "applied")
 })
 
 test("the action endpoint applies a member's action privately, and refuses what it can't read", async () => {
