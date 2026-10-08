@@ -33,12 +33,25 @@ import {
 	titleCount,
 } from "./labels"
 
-type Drawer = "moods" | "services" | "sort"
+type Drawer = "moods" | "services" | "sort" | "time"
 
 const DRAWER_LABEL: Record<Drawer, string> = {
 	moods: "Moods",
 	services: "Where to watch",
 	sort: "Sort",
+	time: "How long?",
+}
+
+/** A fourth button and drawer, from the page that owns it: "How long?" on My movies (#385). */
+export interface ExtraDrawer {
+	key: "time"
+	title: string
+	/** What the button says: the choice in use. */
+	label: string
+	icon: React.ReactNode
+	/** A choice other than the default is in use. */
+	on: boolean
+	body: React.ReactNode
 }
 
 /** One of the slab's buttons: an icon over a short label. */
@@ -55,6 +68,7 @@ export interface PhoneControlsProps {
 	moods: MoodControl | null
 	setOnMyServices: (on: boolean) => void
 	setSort: (sort: WatchNextSort) => void
+	extra?: ExtraDrawer | false
 }
 
 function MoodDots({ moods }: { moods: readonly MoodKey[] }) {
@@ -81,11 +95,18 @@ function MoodDots({ moods }: { moods: readonly MoodKey[] }) {
 // "Show 23 that fit", "Show 151 on your services", "Show 349 titles"; "Done" when there is nothing to show.
 function showLabel(data: WatchNext | null): string {
 	if (!data) return "Done"
-	const filtered = data.moods.length > 0 || data.onMyServices
+	const timed = Boolean(data.time)
+	const filtered = data.moods.length > 0 || data.onMyServices || timed
 	const n = filtered ? data.fitting : data.total
 	if (!n) return "Done"
-	if (!filtered) return `Show ${titleCount(n)}`
-	return data.moods.length ? `Show ${n} that fit` : `Show ${n} on your services`
+	// `time` is there on My movies only, also for any length.
+	if (!filtered)
+		return data.time === undefined
+			? `Show ${titleCount(n)}`
+			: `Show ${n} ${n === 1 ? "movie" : "movies"}`
+	return data.moods.length || timed
+		? `Show ${n} that fit`
+		: `Show ${n} on your services`
 }
 
 function ShowButton({
@@ -306,9 +327,11 @@ function Segments({
 	moods,
 	open,
 	onOpen,
+	extra,
 }: {
 	data: WatchNext
 	moods: readonly MoodKey[]
+	extra?: ExtraDrawer | false
 	open: Drawer | null
 	onOpen: (drawer: Drawer) => void
 }) {
@@ -374,6 +397,16 @@ function Segments({
 					</AnimatePresence>
 				</span>
 			</motion.button>
+			{extra && (
+				<motion.button
+					{...segment(extra.key)}
+					aria-label={`${extra.title} ${extra.label}`}
+					className={`${SEGMENT} flex-1 ${extra.on ? "bg-white/[0.07] text-amber-200" : "text-gray-300"}`}
+				>
+					{extra.icon}
+					<span className="w-full truncate text-center">{extra.label}</span>
+				</motion.button>
+			)}
 		</>
 	)
 }
@@ -400,6 +433,7 @@ export function PhoneControls({
 	moods,
 	setOnMyServices,
 	setSort,
+	extra,
 }: PhoneControlsProps) {
 	const [open, setOpen] = useState<Drawer | null>(null)
 	const checkedSort = useRef<HTMLButtonElement>(null)
@@ -407,7 +441,13 @@ export function PhoneControls({
 	const close = () => setOpen(null)
 	const segments =
 		data && moods ? (
-			<Segments data={data} moods={moods.moods} open={open} onOpen={setOpen} />
+			<Segments
+				data={data}
+				moods={moods.moods}
+				open={open}
+				onOpen={setOpen}
+				extra={extra}
+			/>
 		) : (
 			<LoadingSegments />
 		)
@@ -472,6 +512,23 @@ export function PhoneControls({
 							/>
 						</div>
 					</SnapSheet>
+					{extra && (
+						<SnapSheet
+							{...sheet(extra.key)}
+							snaps={SERVICES_SNAPS}
+							header={
+								<DrawerHead>
+									<h2 className="text-base font-bold text-white">
+										{extra.title}
+									</h2>
+								</DrawerHead>
+							}
+						>
+							<div className="px-4 pb-4" data-drawer={extra.key}>
+								{extra.body}
+							</div>
+						</SnapSheet>
+					)}
 				</>
 			)}
 		</MotionConfig>

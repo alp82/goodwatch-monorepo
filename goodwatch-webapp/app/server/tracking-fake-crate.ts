@@ -96,8 +96,27 @@ const TABLES: Record<string, Table> = {
 			"removed_at",
 		],
 	},
-	// Only what the show page's tracking reads of a show, and the tables of the episode grid, whose ratings it uses.
-	show: { key: ["tmdb_id"], columns: ["tmdb_id", "status"] },
+	// Only what tracking reads of a title (the show page, My shows, My library), and the tables of the episode grid,
+	// whose ratings the show page uses.
+	show: {
+		key: ["tmdb_id"],
+		columns: [
+			"tmdb_id",
+			"status",
+			"aired_episode_count",
+			"title",
+			"poster_path",
+			"backdrop_path",
+			"release_year",
+			"number_of_seasons",
+			"number_of_episodes",
+			"episode_runtime",
+		],
+	},
+	movie: {
+		key: ["tmdb_id"],
+		columns: ["tmdb_id", "title", "poster_path", "release_year", "runtime"],
+	},
 	imdb_episode: {
 		key: ["show_id", "imdb_episode_id"],
 		columns: [

@@ -26,7 +26,7 @@ async function respond(request: Request) {
 	if ("response" in viewer) return viewer.response
 	const url = new URL(request.url)
 	const keys = parseKeys(url.searchParams.get("keys"))
-	const options = parseWatchNextOptions(url)
+	const options = parseWatchNextOptions(url, viewer.tracking)
 	if (!keys || keys.length > MAX_KEYS || !options)
 		return invalid(`Pass up to ${MAX_KEYS} title keys as keys=1,2,3`)
 	return json<{ titles: WatchNextTitle[] }>(

@@ -10,6 +10,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { timeOf } from "./labels"
 import { type WatchNextChoice, watchNextChoiceOf } from "~/domain/watch-next"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
 import type { TasteInteraction } from "~/ui/taste/types"
@@ -26,19 +27,39 @@ const SERVICES_PENDING_RETRY_MS = 3000
 
 export const choiceFromParams = watchNextChoiceOf
 
+/** My movies' choice (#385): Watch next's, and the time under "How long?" (`time=120`). */
+export type PageChoice = WatchNextChoice & { time?: number | null }
+
+/** The choice a page's URL carries. `movies`: the page is My movies, which also reads the time. */
+export const pageChoiceOf = (
+	params: URLSearchParams,
+	movies: boolean,
+): PageChoice =>
+	movies
+		? { ...choiceFromParams(params), time: timeOf(params.get("time")) }
+		: choiceFromParams(params)
+
 /** The page URL's parameters for a choice, keeping any others. */
-function choiceToParams(choice: WatchNextChoice, current: URLSearchParams) {
+function choiceToParams(choice: PageChoice, current: URLSearchParams) {
 	const params = new URLSearchParams(current)
 	for (const key of ["sort", "moods", "services"]) params.delete(key)
 	if (choice.sort) params.set("sort", choice.sort)
 	if (choice.moods.length) params.set("moods", choice.moods.join(","))
 	if (!choice.onMyServices) params.set("services", "all")
+	if (choice.time !== undefined) {
+		params.delete("time")
+		if (choice.time) params.set("time", String(choice.time))
+	}
 	return params
 }
 
-/** The API's query string for a choice and the titles passed over tonight. */
-export function apiQuery(choice: WatchNextChoice, passed: TitleKey[] = []) {
+/**
+ * The API's query string for a choice and the titles passed over tonight. A choice with a time (also "any length")
+ * is My movies', which asks for the Wishlist's movies only.
+ */
+export function apiQuery(choice: PageChoice, passed: TitleKey[] = []) {
 	const params = choiceToParams(choice, new URLSearchParams())
+	if (choice.time !== undefined) params.set("kind", "movie")
 	if (passed.length) params.set("notTonight", passed.join(","))
 	return params.toString()
 }
@@ -77,12 +98,16 @@ export const watchNextQueryKey = ["watch-next"] as const
  * The page's data. `initial` is what the loader computed for a member on the first request (null for guests, whose
  * progress only their browser holds).
  */
-export function useWatchNext(initial: {
-	query: string
-	data: WatchNext | null
-}) {
+export function useWatchNext(
+	initial: {
+		query: string
+		data: WatchNext | null
+	},
+	/** The page is My movies. */
+	movies = false,
+) {
 	const [params, setParams] = useSearchParams()
-	const choice = useMemo(() => choiceFromParams(params), [params])
+	const choice = useMemo(() => pageChoiceOf(params, movies), [params, movies])
 	const [passed, setPassed] = useState<TitleKey[]>([])
 	const { user, loading } = useUser()
 	const interactions = useGuestInteractions()
@@ -111,13 +136,13 @@ export function useWatchNext(initial: {
 	})
 
 	const setChoice = useCallback(
-		(next: Partial<WatchNextChoice>) =>
+		(next: Partial<PageChoice>) =>
 			setParams(
 				(current) =>
-					choiceToParams({ ...choiceFromParams(current), ...next }, current),
+					choiceToParams({ ...pageChoiceOf(current, movies), ...next }, current),
 				{ replace: true, preventScrollReset: true },
 			),
-		[setParams],
+		[setParams, movies],
 	)
 
 	/** Not tonight: the title goes to the end of the view for this visit. */

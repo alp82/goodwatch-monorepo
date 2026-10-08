@@ -3,7 +3,7 @@
 import { PlusIcon } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
 import { motion } from "framer-motion"
-import { useEffect, useRef, useState } from "react"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import type { WatchNextSort } from "~/domain/watch-next"
 import type { WatchNext } from "~/server/watch-next.server"
@@ -16,6 +16,7 @@ import {
 	PickedMoods,
 } from "./MoodPicker"
 import { SortMenu } from "./SortMenu"
+import { useMoviesPage } from "./WatchNextHero"
 import { EASE, WRAP } from "./style"
 
 export interface StripProps {
@@ -23,6 +24,8 @@ export interface StripProps {
 	moods: MoodControl
 	setOnMyServices: (on: boolean) => void
 	setSort: (sort: WatchNextSort) => void
+	/** One more control before On my services: My movies' "How long?". */
+	extra?: ReactNode
 }
 
 // The site header's height: the pinned line sits right under it.
@@ -74,13 +77,15 @@ function FitCount({
 	data,
 	className = "",
 }: { data: WatchNext; className?: string }) {
-	const filtered = data.moods.length > 0 || data.onMyServices
+	const word = useMoviesPage() ? "movie" : "title"
+	const timed = Boolean(data.time)
+	const filtered = data.moods.length > 0 || data.onMyServices || timed
 	if (!filtered)
 		return (
 			<span
 				className={`whitespace-nowrap text-sm tabular-nums text-gray-400 ${className}`}
 			>
-				{data.total} {data.total === 1 ? "title" : "titles"}
+				{data.total} {data.total === 1 ? word : `${word}s`}
 			</span>
 		)
 	return (
@@ -96,7 +101,7 @@ function FitCount({
 			>
 				{data.fitting}
 			</motion.span>{" "}
-			{data.moods.length ? "fit" : "on your services"}
+			{data.moods.length || timed ? "fit" : "on your services"}
 		</span>
 	)
 }
@@ -106,6 +111,7 @@ function StripBody({
 	moods,
 	setOnMyServices,
 	setSort,
+	extra,
 	pinned,
 }: StripProps & { pinned: boolean }) {
 	const anchor = useRef<HTMLDivElement>(null)
@@ -138,6 +144,7 @@ function StripBody({
 					/>
 				</div>
 				<div className="flex shrink-0 items-center gap-2">
+					{extra}
 					<ServicesToggle
 						data={data}
 						setOnMyServices={setOnMyServices}

@@ -1,7 +1,11 @@
 // The stepped grid under the hero: the rest of the Wishlist in tiers that get smaller further out, large now and small
 // later. Medium tiers show up to 40 posters and small ones up to 30, then a "+N" button. The server sends cards for
 // the first two tiers; later tiers load as they scroll into view.
-import { BookmarkIcon, CheckIcon } from "@heroicons/react/24/solid"
+import {
+	BookmarkIcon,
+	CheckIcon,
+	ChevronDownIcon,
+} from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import { useIsNotInterested } from "~/hooks/useUserDataAccessors"
@@ -14,7 +18,7 @@ import type {
 } from "~/server/watch-next.server"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { TitleKey } from "~/utils/title-key"
-import { titleHref } from "./WatchNextHero"
+import { titleHref, useMoviesPage } from "./WatchNextHero"
 import {
 	SORT_WORDS,
 	TIER_LABEL,
@@ -25,6 +29,7 @@ import {
 	tierHeadingClass,
 	titleCount,
 } from "./labels"
+import { misfitWords } from "./labels"
 import { offersOf } from "./services"
 import { DISPLAY, posterUrl } from "./style"
 import { type WatchNextState, useTierCards } from "./useWatchNext"
@@ -74,6 +79,11 @@ function TierRow({
 }) {
 	const [all, setAll] = useState(false)
 	const [ref, near] = useNear<HTMLLIElement>()
+	const movies = useMoviesPage()
+	// My movies' last group is closed until asked for: what does not fit tonight, each movie saying why.
+	const misfits = tier.key === "notTonightsFit"
+	const [opened, setOpened] = useState(false)
+	const open = !misfits || opened
 	const cap = TIER_CAPS[tier.size]
 	const shownKeys = all ? tier.keys : tier.keys.slice(0, cap)
 	const given = new Map((tier.titles ?? []).map((title) => [title.key, title]))
@@ -81,17 +91,21 @@ function TierRow({
 	const loaded = useTierCards(
 		state,
 		missing,
-		near && missing.length > 0,
+		near && open && missing.length > 0,
 		cap - (tier.titles?.length ?? 0),
 	)
 	const titleOf = (key: TitleKey) => given.get(key) ?? loaded.get(key)
 	const big = tier.size === "xl" || tier.size === "lg"
 	const note = TIER_NOTE[tier.key]
+	const count = movies
+		? `${tier.keys.length} ${tier.keys.length === 1 ? "movie" : "movies"}`
+		: titleCount(tier.keys.length)
 
 	const meta = (title: WatchNextTitle) => {
 		const offer = offersOf(title, mine)?.[0]
 		return [
-			sortFact(sort, title, showMatch) ?? runtimeLabel(title),
+			sortFact(sort, title, showMatch) ??
+				runtimeLabel(title, movies ? "Movie" : undefined),
 			offer?.owned ? `on ${offer.name}` : null,
 		]
 			.filter(Boolean)
@@ -108,14 +122,29 @@ function TierRow({
 				<h3
 					className={`${DISPLAY} leading-none ${tierHeadingClass[tier.size]}`}
 				>
-					{TIER_LABEL[tier.key]}
+					{misfits ? (
+						<button
+							type="button"
+							aria-expanded={opened}
+							onClick={() => setOpened(!opened)}
+							className="inline-flex cursor-pointer items-center gap-1.5 text-gray-400 hover:text-white"
+						>
+							<ChevronDownIcon
+								className={`h-4 w-4 transition-transform ${opened ? "" : "-rotate-90"}`}
+								aria-hidden
+							/>
+							{TIER_LABEL[tier.key]}
+						</button>
+					) : (
+						TIER_LABEL[tier.key]
+					)}
 				</h3>
 				<p className="mt-1 text-sm text-gray-400">
-					{note ? `${note} ` : ""}
-					{titleCount(tier.keys.length)}
+					{note && open ? `${note} ` : ""}
+					{count}
 				</p>
 			</div>
-			<div className={`min-w-0 ${GRID[tier.size]}`}>
+			<div className={`min-w-0 ${GRID[tier.size]} ${open ? "" : "hidden"}`}>
 				{shownKeys.map((key) => {
 					const title = titleOf(key)
 					if (!title)
@@ -153,8 +182,16 @@ function TierRow({
 									)}
 									alt={title.title}
 									loading="lazy"
-									className={`aspect-[2/3] w-full rounded-md bg-white/5 object-cover ring-1 ring-white/5 ${tier.size === "sm" ? "opacity-75 hover:opacity-100" : ""}`}
+									className={`aspect-[2/3] w-full rounded-md bg-white/5 object-cover ring-1 ring-white/5 ${tier.size === "sm" || misfits ? "opacity-75 hover:opacity-100" : ""}`}
 								/>
+								{title.misfit && (
+									<span
+										className="mt-1 block truncate text-xs text-gray-400"
+										data-misfit={title.misfit.why}
+									>
+										{misfitWords(title.misfit)}
+									</span>
+								)}
 							</Link>
 						</div>
 					)
@@ -183,14 +220,16 @@ export function SteppedGrid({
 	state: WatchNextState
 	showMatch: boolean
 }) {
+	const movies = useMoviesPage()
 	if (!data.tiers.length) return null
 	const filtered = data.moods.length > 0 || data.onMyServices
 	const fitWords = data.moods.length
 		? `${moodWords(data.moods)}${data.onMyServices ? " on your services" : ""}`
 		: "What's on your services"
 	const by = SORT_WORDS[data.sort]
+	const list = movies ? "movies" : "Wishlist"
 	return (
-		<section aria-label="The rest of your Wishlist">
+		<section aria-label={`The rest of your ${list}`}>
 			<header className="mb-6 md:grid md:grid-cols-[12rem_1fr] md:gap-8">
 				<span className="hidden md:block" />
 				<div>
@@ -198,13 +237,15 @@ export function SteppedGrid({
 						After that
 					</h2>
 					<p className="mt-1 text-sm text-gray-400">
-						{filtered
-							? `${fitWords} first and largest, by ${by}; near misses follow, smaller.`
-							: `The rest of your Wishlist, by ${by}. Each step further down gets smaller.`}
+						{movies
+							? `The rest of your movies that fit, by ${by}. Each step further down gets smaller.`
+							: filtered
+								? `${fitWords} first and largest, by ${by}; near misses follow, smaller.`
+								: `The rest of your Wishlist, by ${by}. Each step further down gets smaller.`}
 					</p>
 				</div>
 			</header>
-			<ol aria-label="Your Wishlist, stepped">
+			<ol aria-label={`Your ${list}, stepped`}>
 				{data.tiers.map((tier) => (
 					<TierRow
 						key={tier.key}
@@ -230,18 +271,24 @@ export function WorthAdding({
 	onWant: (card: TitleCard) => void
 	isWanted: (card: TitleCard) => boolean
 }) {
+	const movies = useMoviesPage()
 	if (!data.worthAdding.length) return null
 	return (
 		<section aria-label="Suggestions to add" className="mt-4">
 			<div className="mb-3">
 				<h2 className="text-lg font-bold text-white md:text-xl">
-					{data.total === 0 ? "Start your Wishlist" : "Worth adding"}
+					{data.total > 0
+						? "Worth adding"
+						: movies
+							? "Movies to start with"
+							: "Start your Wishlist"}
 				</h2>
 				<p className="text-sm text-gray-400">
 					{data.onMyServices
 						? "Your best matches on your services. "
 						: "Your best matches. "}
-					Tap Want to See and it joins Watch next under your sort.
+					Tap Want to See and it joins {movies ? "My movies" : "Watch next"}{" "}
+					under your sort.
 				</p>
 			</div>
 			<div className="-mx-4 flex snap-x gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">

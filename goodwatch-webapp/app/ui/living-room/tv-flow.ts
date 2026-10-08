@@ -32,6 +32,17 @@ export const TV_APPS: readonly TvApp[] = [
 	"explorer",
 ]
 
+/**
+ * A member's home with REC_TRACKING (#385): three doors in place of the two tiles, each to a page of its own.
+ * A door with nothing behind it is not there, and the Start door lands on the Start group of My shows.
+ */
+export type DoorKey = "continue" | "start" | "movie"
+export const DOOR_HREF: Record<DoorKey, string> = {
+	continue: "/my-shows",
+	start: "/my-shows#start",
+	movie: "/my-movies",
+}
+
 /** The menu, the same on every screen: home, the places, the moods, the taste quiz, What is GoodWatch?, off. */
 export const MENU_ITEMS: readonly string[] = [
 	"menu:home",
@@ -107,6 +118,8 @@ export type TvContext = {
 	quizProgress: number
 	/** Taste quiz picks as `<media_type>-<tmdb_id>`, best first. */
 	quizPicks: readonly string[]
+	/** The doors on a member's home, in order; none or absent means the two tiles. */
+	doors?: readonly DoorKey[]
 }
 
 export type TvEffect =
@@ -305,9 +318,10 @@ export function isTvOnlyChange(current: URL, next: URL): boolean {
 export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 	switch (screen.name) {
 		case "home":
-			return ctx.member
-				? ["watch-next", "something-new"]
-				: ["watch-next", "taste-quiz", "moods"]
+			if (!ctx.member) return ["watch-next", "taste-quiz", "moods"]
+			return ctx.doors?.length
+				? [...ctx.doors.map((door) => `door:${door}`), "something-new"]
+				: ["watch-next", "something-new"]
 		case "about":
 			return ["watch-next", "just-show-me"]
 		case "services":
@@ -403,9 +417,11 @@ function defaultItem(
 	const preferred =
 		screen.name === "home"
 			? ctx.member
-				? ctx.wishlistKeys.length
-					? "watch-next"
-					: "something-new"
+				? ctx.doors?.length
+					? `door:${ctx.doors[0]}`
+					: ctx.wishlistKeys.length
+						? "watch-next"
+						: "something-new"
 				: "taste-quiz"
 			: screen.name === "moods" && screen.night.mood
 				? `mood:${screen.night.mood}`
@@ -643,6 +659,15 @@ function choose(state: TvState, item: string, ctx: TvContext): TvTransition {
 	switch (kind) {
 		case "watch-next":
 			return watchNext(state, ctx)
+		case "door":
+			return arg in DOOR_HREF
+				? none(closeMenu(state), [
+						{
+							type: "leave",
+							to: { kind: "page", href: DOOR_HREF[arg as DoorKey] },
+						},
+					])
+				: none(state)
 		case "something-new":
 		case "just-show-me":
 			return push(state, {

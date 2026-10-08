@@ -38,16 +38,26 @@ export function TonightsPickThumb({
 	const { pathname } = useLocation()
 	const { pick } = useTonightsPick()
 	const watchNext = getDestinations(useFeatures()).watchNext
-	const here = currentDestination(pathname) === "watchNext"
+	// With REC_TRACKING a member's pick says which page it is the first thing on (#385), and may be an episode.
+	const to = pick?.href ?? watchNext.href
+	const here = pick?.href
+		? pathname === pick.href.split("#")[0]
+		: currentDestination(pathname) === "watchNext"
 	const title = pick?.title
 	const ring = here
 		? "ring-2 ring-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.55)]"
 		: "ring-[1.5px] ring-amber-400/85"
 	return (
 		<Link
-			to={watchNext.href}
+			to={to}
 			prefetch="intent"
-			aria-label={title ? `Watch next: ${title.title}` : "Watch next"}
+			aria-label={
+				pick?.href && title
+					? `Tonight's pick: ${title.title}${pick.episode ? `, ${pick.episode.code}` : ""}`
+					: title
+						? `Watch next: ${title.title}`
+						: "Watch next"
+			}
 			aria-current={here ? "page" : undefined}
 			className={`flex min-w-0 items-center gap-2 rounded-xl p-[3px] text-left ${className}`}
 		>
@@ -68,6 +78,7 @@ export function TonightsPickThumb({
 				<span className="flex min-w-0 flex-col leading-[1.15]">
 					<small className="text-[11px] font-bold text-amber-400">
 						{user ? "Tonight" : "Wishlist"}
+						{pick?.episode && ` · ${pick.episode.code}`}
 					</small>
 					<b className="max-w-[118px] truncate text-[13.5px] text-gray-100">
 						{title?.title ?? "Watch next"}

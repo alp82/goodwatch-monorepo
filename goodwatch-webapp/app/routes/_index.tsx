@@ -7,7 +7,7 @@ import {
 	useLocation,
 } from "@remix-run/react"
 import { useQuery } from "@tanstack/react-query"
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import {
 	useScoreMutation,
 	useNotInterestedMutation,
@@ -130,7 +130,14 @@ export default function Index() {
 			return response.json()
 		},
 	})
-	const data: LivingRoomData = pool.data ?? initial
+	// The pool has no doors: a member's doors (#385) come with the loader's data and stay.
+	const data: LivingRoomData = useMemo(
+		() =>
+			pool.data && initial.doors
+				? { ...pool.data, doors: initial.doors }
+				: (pool.data ?? initial),
+		[pool.data, initial],
+	)
 
 	const wishlist = useWishlistMutation()
 	const watched = useWatchedMutation()

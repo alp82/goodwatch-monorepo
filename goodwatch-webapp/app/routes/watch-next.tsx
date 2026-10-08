@@ -6,6 +6,7 @@ import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
 	json,
+	redirect,
 } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useLoaderData } from "@remix-run/react"
 import { isEnabled } from "~/server/features.server"
@@ -45,6 +46,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	if (!isEnabled("watchNext", { userId }))
 		throw new Response("Not found", { status: 404 })
+	// With REC_TRACKING a member picks a movie on My movies and a show on My shows (#385); the sort, moods and
+	// services choice in the URL go along. Guests keep Watch next.
+	if (userId && isEnabled("tracking", { userId }))
+		return redirect(`/my-movies${new URL(request.url).search}`, {
+			// Personal, and a flag can switch back: browsers must not keep the redirect.
+			headers: { ...headers, Vary: "Cookie" },
+		})
 	const choice = choiceFromParams(new URL(request.url).searchParams)
 	const query = apiQuery(choice)
 	if (!userId)

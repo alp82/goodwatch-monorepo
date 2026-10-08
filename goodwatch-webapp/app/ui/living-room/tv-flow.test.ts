@@ -776,3 +776,60 @@ describe("taste quiz", () => {
 		)
 	})
 })
+
+describe("a member's home with doors (#385)", () => {
+	const three: TvContext = { ...member, doors: ["continue", "start", "movie"] }
+
+	it("keeps the two tiles while the member has no doors", () => {
+		assert.deepEqual(tvItems(at("").screen, member), [
+			"watch-next",
+			"something-new",
+		])
+		assert.deepEqual(tvItems(at("").screen, { ...member, doors: [] }), [
+			"watch-next",
+			"something-new",
+		])
+	})
+
+	it("moves through the doors, then Something new, and starts on the first door", () => {
+		assert.deepEqual(tvItems(at("").screen, three), [
+			"door:continue",
+			"door:start",
+			"door:movie",
+			"something-new",
+		])
+		assert.equal(focusedItem(at(""), three), "door:continue")
+		const onlyMovie: TvContext = { ...member, doors: ["movie"] }
+		assert.deepEqual(tvItems(at("").screen, onlyMovie), [
+			"door:movie",
+			"something-new",
+		])
+		assert.equal(focusedItem(at(""), onlyMovie), "door:movie")
+	})
+
+	it("opens each door's page, the Start door at the Start group", () => {
+		const leave = (door: string) =>
+			run(at(""), three, { type: "choose", item: `door:${door}` }).effects
+		assert.deepEqual(leave("continue"), [
+			{ type: "leave", to: { kind: "page", href: "/my-shows" } },
+		])
+		assert.deepEqual(leave("start"), [
+			{ type: "leave", to: { kind: "page", href: "/my-shows#start" } },
+		])
+		assert.deepEqual(leave("movie"), [
+			{ type: "leave", to: { kind: "page", href: "/my-movies" } },
+		])
+		// OK on the focused door does the same.
+		assert.deepEqual(
+			run(at(""), three, { type: "step", by: 1 }, { type: "ok" }).effects,
+			[{ type: "leave", to: { kind: "page", href: "/my-shows#start" } }],
+		)
+	})
+
+	it("gives a guest no doors, whatever the context says", () => {
+		assert.deepEqual(
+			tvItems(at("").screen, { ...guest, doors: ["movie"] }),
+			["watch-next", "taste-quiz", "moods"],
+		)
+	})
+})

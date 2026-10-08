@@ -68,6 +68,11 @@ export const loader: LoaderFunction = async ({
 	const url = new URL(request.url)
 	// Watch next replaces the Wishlist page for viewers who see it (members in preview, everyone once on).
 	const userId = await getUserIdFromRequest({ request })
+	// With REC_TRACKING a member's Wishlist is the first choice of My library (#385). Guests keep what they have.
+	if (userId && isEnabled("tracking", { userId }))
+		return redirect("/my-library", {
+			headers: { "Cache-Control": "private, no-store", Vary: "Cookie" },
+		})
 	if (isEnabled("watchNext", { userId }))
 		return redirect(watchNextUrl(url), {
 			status: 301,
