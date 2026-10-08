@@ -2,11 +2,12 @@
 //
 // The style of the ninth round's forms (best1 to best3), added to the play forms' shared rules for those forms only
 // (see playCss in play-css.ts). On a strip a poster's place is 38 px wide and a new level starts 12 px later:
-// best-forms.ts computes the strip's positions from the same numbers. Posters grow toward the marker with a
-// scroll-driven animation where the browser has one, so nothing is computed while the strip moves.
+// best-forms.ts computes the strip's positions from the same numbers. The poster under the marker is large and
+// its two neighbors on each side make room: five attributes move when the title under the marker changes. (A
+// scroll-driven animation per poster looked smoother and made a step several times slower to paint at 4x CPU.)
 export const BEST_CSS = `
 .pl[class*="pl-best"] .pl-side{display:none}
-.pl-stage[class*="pl-best"]{height:470px}
+.pl-stage[class*="pl-best"]{height:468px}
 .bs,.bh{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px}
 .bs{--mk:50%}
 .bs s,.bs u,.bh s,.bh u{text-decoration:none}
@@ -47,6 +48,7 @@ border:1px solid transparent;font-size:.75rem;line-height:1rem;color:#d1d5db;tex
 .bs-b q,.bh-lv q{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;border-radius:1px;background:#fff}
 .bs-b b,.bh-lv b{color:#fff;text-align:right;font-variant-numeric:tabular-nums}
 
+.bs-ft{flex:none;display:flex;flex-direction:column;gap:6px;min-width:0}
 .bs-rail{position:relative;flex:none;height:104px}
 .bs-strip{display:flex;height:100%;align-items:flex-end;box-sizing:border-box;padding-bottom:5px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
 scroll-padding-right:calc(100% - 2*var(--mk));scrollbar-width:none;touch-action:pan-x pan-y;overscroll-behavior-x:contain}
@@ -61,19 +63,12 @@ scroll-padding-right:calc(100% - 2*var(--mk));scrollbar-width:none;touch-action:
 .bs-pg{background:#cbd5e1}
 .bs-i .pl-cm{font-size:0;line-height:0;padding:1px 3px;border-width:1px}
 .bs-i .pl-cm::before{content:"←";font-size:.6875rem;line-height:.875rem}
-@keyframes bs-lens{
-0%{transform:translateX(15px) scale(1);opacity:.62;z-index:0}
-25%{transform:translateX(15px) scale(1.14);opacity:.8;z-index:1}
-50%{transform:translateX(0) scale(1.85);opacity:1;z-index:2}
-75%{transform:translateX(-15px) scale(1.14);opacity:.8;z-index:1}
-100%{transform:translateX(-15px) scale(1);opacity:.62;z-index:0}}
-@supports (animation-timeline:view()){
-.pl-stage[class] .bs-strip .bs-i{animation:bs-lens linear both;animation-timeline:view(inline 0px calc(100% - 2*var(--mk)));animation-range:cover calc(50% - 76px) cover calc(50% + 76px)}
-}
-@supports not (animation-timeline:view()){
-.pl-stage[class] .bs-strip .bs-i{animation:none}
-.bs-i[data-on]{transform:scale(1.85);opacity:1;z-index:2}
-}
+.pl-stage[class] .bs-strip .bs-i{animation:none;transition:transform .12s ease-out,opacity .12s ease-out}
+.bs-i[data-d="-2"]{transform:translateX(-7px)}
+.bs-i[data-d="2"]{transform:translateX(7px)}
+.bs-i[data-d="-1"]{transform:translateX(-13px) scale(1.12);opacity:.85;z-index:1}
+.bs-i[data-d="1"]{transform:translateX(13px) scale(1.12);opacity:.85;z-index:1}
+.bs-i[data-d="0"]{transform:scale(1.85);opacity:1;z-index:2}
 .bs-mark{position:absolute;left:var(--mk);bottom:0;width:68px;height:102px;translate:-50% 0;border-radius:.5rem;border:2px solid #fbbf24;pointer-events:none;box-shadow:0 0 14px rgba(251,191,36,.35)}
 .bs-none{position:absolute;left:calc(var(--mk) + 44px);right:0;top:50%;translate:0 -50%;font-size:.8125rem;line-height:1.125rem;color:#9ca3af}
 .bs-nd{display:none;position:absolute;top:50%;translate:0 -50%;z-index:3;width:1.625rem;height:1.625rem;border-radius:9999px;background:rgba(13,17,28,.92);border:1px solid rgba(255,255,255,.3);color:#fff;font-weight:800;line-height:1.375rem}
@@ -154,5 +149,8 @@ background:linear-gradient(transparent,var(--c) 14%,var(--c) 86%,transparent)}
 .bh-why{height:auto;font-size:.9375rem;line-height:1.375rem;-webkit-line-clamp:3}
 .bh-lvs{display:flex;flex-direction:column;gap:.5rem;max-width:420px}
 .bh-lv{display:grid;grid-template-columns:7rem minmax(2rem,1fr) 1.25rem;align-items:center;gap:.5rem;font-size:.8125rem;color:#d1d5db}
+}
+@media (prefers-reduced-motion:reduce){
+.pl-stage[class] .bs-strip .bs-i,.bs-b u,.bh-lv u{transition:none}
 }
 `

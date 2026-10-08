@@ -103,6 +103,12 @@ export function bestKit(core: PlayCore, X: BestExtra) {
 		const by: PlayTitle[][] = []
 		for (let level = 0; level <= 10; level++) by.push([])
 		for (const t of pool(ctx)) by[Math.max(0, Math.min(10, val(t, key)))].push(t)
+		// You stand first on your level, so whatever you tap there lies to the right. Where you came from goes
+		// before you when it shares your level: it stays on the opposite side of the step.
+		const mine = by[Math.max(0, Math.min(10, val(ctx.c, key)))]
+		const came = ctx.prev?.k
+		const before = came ? mine.findIndex((t) => t.k === came) : -1
+		if (before > 0) mine.unshift(mine.splice(before, 1)[0])
 		const items: BestItem[] = []
 		by.forEach((group, level) => {
 			let free = cap
@@ -175,7 +181,10 @@ export function bestKit(core: PlayCore, X: BestExtra) {
 		const cells = items
 			.map((item, i) => {
 				const t = item.t
-				const attrs = ` data-k="${t.k}" data-x="${x[i]}"${item.g && i ? ' data-g=""' : ""}${t.k === fk ? ' data-on=""' : ""}`
+				// The lens: the poster under the marker is large and its two neighbors on each side make room.
+				const attrs = ` data-k="${t.k}" data-x="${x[i]}"${item.g && i ? ' data-g=""' : ""}${t.k === fk ? ' data-on=""' : ""}${
+					Math.abs(i - at) <= 2 ? ` data-d="${i - at}"` : ""
+				}`
 				const pin = t.k === ctx.c.k ? '<span class="bs-pin">you</span>' : t.k === ctx.root.k ? '<span class="bs-pin bs-pg">page</span>' : ""
 				return t.k === ctx.c.k
 					? `<span class="bs-i bs-me"${attrs}><img alt="" decoding="async" src="${esc(core.src(t.p))}">${pin}</span>`
@@ -227,8 +236,18 @@ export function bestKit(core: PlayCore, X: BestExtra) {
 	}
 	const mark = (s: Element, key: string) => {
 		const strip = stripOf(s)
-		strip?.querySelector("[data-on]")?.removeAttribute("data-on")
-		strip?.querySelector(`[data-k="${key}"]`)?.setAttribute("data-on", "")
+		if (strip) {
+			strip.querySelector("[data-on]")?.removeAttribute("data-on")
+			const lens = strip.querySelectorAll("[data-d]")
+			for (let i = 0; i < lens.length; i++) lens[i].removeAttribute("data-d")
+			const items = strip.querySelectorAll("[data-k]")
+			for (let i = 0; i < items.length; i++) {
+				if (items[i].getAttribute("data-k") !== key) continue
+				items[i].setAttribute("data-on", "")
+				for (let d = -2; d <= 2; d++) items[i + d]?.setAttribute("data-d", String(d))
+				break
+			}
+		}
 		const small = s.querySelector("[data-b-map]") as HTMLElement | null
 		if (!small) return
 		small.querySelector("[data-on]")?.removeAttribute("data-on")
@@ -307,6 +326,17 @@ const best1: BestForm = (core, kit) => {
 					)}</em><s><u style="width:${core.val(t, key) * 10}%"></u><q style="left:${core.val(ctx.c, key) * 10}%"></q></s><b>${core.val(t, key)}</b></button>`,
 			)
 			.join("")
+	const footOf = (ctx: PlayCtx, m: ReturnType<typeof model>, f: PlayTitle) =>
+		`${kit.rail(ctx, m.items, f.k)}${
+			m.a
+				? `<p class="bs-cap"><span>← less</span><b data-pl-why="">${kit.nm(m.a)} · ${core.esc(ctx.c.t)} has ${core.val(ctx.c, m.a)} of 10</b><span>more →</span></p>${kit.map(
+						ctx,
+						m.items,
+						f.k,
+						kit.word(m.a),
+					)}`
+				: ""
+		}`
 	const show = (ctx: PlayCtx, s: Element, t: PlayTitle) => {
 		const m = model(ctx)
 		ctx.e.ui.f = t.k
@@ -340,7 +370,18 @@ const best1: BestForm = (core, kit) => {
 			}
 			if (name !== "tr" || ctx.st.mem.a === arg) return false
 			ctx.st.mem.a = arg
-			return true
+			// Only the strip, its caption, and the small map are drawn again: the card and its bars stay.
+			const m = model(ctx)
+			const f = m.items.find((item) => item.t.k === ctx.e.ui.f)?.t ?? ctx.c
+			const foot = s.querySelector("[data-b-foot]")
+			if (!foot) return true
+			foot.innerHTML = footOf(ctx, m, f)
+			const all = s.querySelectorAll("[data-b-bar]")
+			for (let i = 0; i < all.length; i++) all[i].setAttribute("aria-pressed", String(all[i].getAttribute("data-b-bar") === arg))
+			const reason1 = s.querySelector("[data-b-head] .bs-rs")
+			if (reason1) reason1.innerHTML = reason(ctx, f, m.a)
+			kit.settle(s)
+			return false
 		},
 		input: (ctx, el, s) => {
 			// Until the strip stands where the form put it, a scroll event is the browser snapping, not a scrub.
@@ -364,21 +405,11 @@ const best1: BestForm = (core, kit) => {
 			const kept = ctx.e.ui.f ? m.items.find((item) => item.t.k === ctx.e.ui.f)?.t : undefined
 			const f = kept ?? ctx.c
 			if (!kept) ctx.e.ui.f = undefined
-			const own = m.a ? core.val(ctx.c, m.a) : 0
 			return `<div class="bs bs1"${kit.memAttr(ctx)}><b hidden data-pl-here="">${core.esc(ctx.c.t)}</b><div class="bs-f"><div class="bs-hd" data-b-head="" data-k="${f.k}">${kit.head(
 				ctx,
 				f,
 				reason(ctx, f, m.a),
-			)}</div><div class="bs-bars" role="group" aria-label="Line the titles up by a trait">${bars(ctx, f, m.tr, m.a)}</div></div>${kit.rail(ctx, m.items, f.k)}${
-				m.a
-					? `<p class="bs-cap"><span>← less</span><b data-pl-why="">${kit.nm(m.a)} · ${core.esc(ctx.c.t)} has ${own} of 10</b><span>more →</span></p>${kit.map(
-							ctx,
-							m.items,
-							f.k,
-							kit.word(m.a),
-						)}`
-					: ""
-			}<span hidden>${core.center(ctx)}</span></div>`
+			)}</div><div class="bs-bars" role="group" aria-label="Line the titles up by a trait">${bars(ctx, f, m.tr, m.a)}</div></div><div class="bs-ft" data-b-foot="">${footOf(ctx, m, f)}</div><span hidden>${core.center(ctx)}</span></div>`
 		},
 	}
 }
