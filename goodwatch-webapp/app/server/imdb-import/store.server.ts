@@ -124,7 +124,8 @@ export function listImportRows(userId: string, status?: ImdbImportStatus): Promi
 
 /**
  * Writes `set` to the import only if nothing has written to it since `row` was read, and tells whether it did.
- * Of several requests that read the same row, in either webapp instance, exactly one gets true.
+ * Of several requests that read the same row, in either webapp instance, at most one gets true: none does if
+ * something else, like a late heartbeat, wrote in between.
  *
  * Crate compares the version on the live row, which `status = ?` in the filter does not: a filter on anything but
  * the key is answered from the last refresh, and the write then lands on the row whatever it holds by now. On CrateDB
