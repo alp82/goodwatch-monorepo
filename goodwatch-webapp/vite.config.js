@@ -63,14 +63,15 @@ function separateEntryFiles() {
 	}
 }
 
-// The recommendation, share list, title actions, watch log, episode list, Watching and tracking prototypes are kept in the repository for context. They are
+// The recommendation, share list, title actions, watch log, episode list, Watching and tracking prototypes are kept in the repository for context, and so is
+// the harness that mounts the real episode tracking components on the prototypes' fixtures (prototype.episode-tracking-real). They are
 // routes in development only: a production build leaves the routes out, and the stylesheet doesn't get the
 // class names that only they use (about a quarter of its rules).
 const PROTOTYPES = {
 	// Files in app/routes.
-	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.watching*", "prototype.tracking*"],
+	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.episode-tracking*", "prototype.watching*", "prototype.tracking*"],
 	// Directories in app/ui that only those routes import.
-	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-episode-list-3", "prototype-episode-list-4", "prototype-watching", "prototype-watching-2", "prototype-watching-3", "prototype-tracking-hub"],
+	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-episode-list-3", "prototype-episode-list-4", "prototype-episode-tracking", "prototype-watching", "prototype-watching-2", "prototype-watching-3", "prototype-tracking-hub"],
 }
 const PROTOTYPE_SOURCES = [
 	...PROTOTYPES.routes.map((name) => `./routes/${name}`),
