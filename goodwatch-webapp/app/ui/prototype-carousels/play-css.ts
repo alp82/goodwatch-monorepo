@@ -30,7 +30,7 @@ background:rgba(255,255,255,.05);padding:1rem;overflow:hidden;contain:layout sty
 .pl-p{position:relative;display:block;padding:0;border-radius:.375rem;background:#1b2130;outline:2px solid rgba(255,255,255,.14);box-shadow:0 4px 14px rgba(0,0,0,.55)}
 .pl-p img,.pl-c img{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:.375rem}
 .pl-p:hover,.pl-p:focus-visible{outline-color:#fbbf24}
-.pl-p:active{scale:.96}
+.pl-p:active{filter:brightness(1.3)}
 .pl-ph{display:block;aspect-ratio:2/3;border-radius:.375rem;background:rgba(255,255,255,.045);outline:1px dashed rgba(255,255,255,.13)}
 .pl-c{display:block;border-radius:.375rem;background:#1b2130;outline:3px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.6)}
 .pl-p[data-pl-came]{outline:2px dashed rgba(255,255,255,.6)}

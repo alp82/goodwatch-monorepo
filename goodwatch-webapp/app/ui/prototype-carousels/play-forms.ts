@@ -1054,6 +1054,7 @@ const play8: Form = (core) => {
 	const at = (strip: Element) => Math.round((strip as HTMLElement).scrollLeft / ITEM)
 	return {
 		hint: "Drag the strip sideways to move along one axis. The chips choose what it means.",
+		settle: false,
 		carry: (ui) => ({ axis: ui.axis }),
 		act: (ctx, name, arg) => {
 			if (name !== "axis" || axisOfUi(ctx) === arg) return false

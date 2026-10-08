@@ -122,6 +122,11 @@ export interface PlayForm {
 	carry?: (ui: PlayEntry["ui"], button: Element) => PlayEntry["ui"]
 	/** Before the first draw in the browser: what the form has to remember of the server's picture. */
 	adopt?: (st: PlayState, stage: Element) => void
+	/**
+	 * False when a stand-in stays as drawn after its pack arrives, because the form's picture can't take new titles
+	 * without moving the ones already there (a strip in an order). The pack serves whatever is drawn next.
+	 */
+	settle?: boolean
 	/** False when the form moves its own picture on a step, and the tapped poster must not fly on top of that. */
 	fly?: boolean
 	/** A range input or a scrolled strip changed. */
@@ -849,7 +854,10 @@ export function playEngine(
 				}
 				G.packs[key] = shown.concat(G.packs[key].filter((t) => !known[t.k]))
 			}
-			if (here === key && (cold || soft)) {
+			if (here === key && soft && !cold && formOf(st.form)?.settle === false) {
+				stage?.removeAttribute("data-pl-soft")
+				ahead(s)
+			} else if (here === key && (cold || soft)) {
 				if (!st.axes.length && G.packs[st.root])
 					st.axes = startAxes(G.t[st.root], G.packs[st.root])
 				if (!st.traits.length) st.traits = own(G.t[st.root], 8)
