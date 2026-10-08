@@ -92,6 +92,7 @@ const TABLES: Record<string, Table> = {
 			"runtime",
 			"still_path",
 			"episode_type",
+			"overview",
 			"removed_at",
 		],
 	},

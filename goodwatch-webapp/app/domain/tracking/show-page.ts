@@ -38,7 +38,7 @@ export interface PageEpisode extends ListedEpisode {
 	runtime: number | null
 	/** TMDB's path of the still. */
 	still: string | null
-	/** The episode's description. The episode catalog does not store one yet, so the server sends null. */
+	/** TMDB's description; null where the episode catalog has none. Shown only in an opened row. */
 	overview: string | null
 	/** IMDb's rating, where IMDb and TMDB mean the same episode (see episode-ratings.ts). */
 	rating: number | null

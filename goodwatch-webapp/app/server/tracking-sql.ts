@@ -40,12 +40,17 @@ WHERE user_id = ? AND media_type = 'show' AND tmdb_id = ?
 ORDER BY season_number, episode_number, watched_at DESC NULLS LAST
 LIMIT 20000`
 
-/** Q3. The episode list. Public, cached per show. */
-export const EPISODE_LIST_QUERY = `
-SELECT tmdb_id, season_number, episode_number, name, air_date, runtime, still_path, episode_type
+const episodeListQuery = (columns: string) => `
+SELECT tmdb_id, season_number, episode_number, name, air_date, runtime, still_path, episode_type${columns}
 FROM episode
 WHERE show_id = ? AND removed_at IS NULL
 ORDER BY season_number, episode_number`
+
+/** Q3. The episode list. Public, cached per show. */
+export const EPISODE_LIST_QUERY = episodeListQuery(", overview")
+
+/** Q3 for an `episode` table that has no `overview` column yet (#387): the list without descriptions. */
+export const EPISODE_LIST_WITHOUT_OVERVIEW_QUERY = episodeListQuery("")
 
 /** Q4. A movie's watch log. */
 export const MOVIE_LOG_QUERY = `

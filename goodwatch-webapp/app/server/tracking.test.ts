@@ -112,6 +112,8 @@ const episode = (
 	runtime: 45,
 	still_path: null,
 	episode_type: "standard",
+	// As the catalog stores an episode it has no description of.
+	overview: null,
 	removed_at: null,
 })
 
@@ -2176,6 +2178,7 @@ test("the episode list is read once per show and then comes from the cache", asy
 		runtime: 45,
 		still_path: null,
 		episode_type: "standard",
+		overview: null,
 	})
 	const [again, second] = await sentBy(() => getEpisodeList(SHOW))
 	assert.deepEqual([again, second], [list, []])

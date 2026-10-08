@@ -89,7 +89,7 @@ export async function getShowTrackingPage(
 				airDate: row.air_date === null ? null : utcDay(row.air_date),
 				runtime: row.runtime,
 				still: row.still_path,
-				overview: null,
+				overview: row.overview || null,
 				rating: rated?.score ?? null,
 				ratedBy: rated?.how ?? null,
 			}
