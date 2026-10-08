@@ -25,6 +25,16 @@ export const PLAY_VARIANTS = [
 	"play8",
 	"play9",
 	"play10",
+	"scrub1",
+	"scrub2",
+	"scrub3",
+	"scrub4",
+	"scrub5",
+	"scrub6",
+	"scrub7",
+	"scrub8",
+	"scrub9",
+	"scrub10",
 ] as const
 export type PlayVariant = (typeof PLAY_VARIANTS)[number]
 export const isPlayVariant = (value: unknown): value is PlayVariant =>

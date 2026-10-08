@@ -14,6 +14,9 @@ import type {
 	PlayTitle,
 } from "~/ui/prototype-carousels/play-engine"
 
+import { SCRUB_FORMS, scrubKit } from "~/ui/prototype-carousels/scrub-forms"
+import { scrubExtra } from "~/ui/prototype-carousels/scrub-meta"
+
 type Form = (core: PlayCore) => PlayForm
 
 /**
@@ -1219,4 +1222,11 @@ export const PLAY_FORMS: Record<string, Form> = {
 	play8,
 	play9,
 	play10,
+	// Eighth round: the scrub forms get their shared kit next to the engine's core.
+	...Object.fromEntries(
+		Object.entries(SCRUB_FORMS).map(([name, form]): [string, Form] => [
+			name,
+			(core) => form(core, scrubKit(core, scrubExtra())),
+		]),
+	),
 }

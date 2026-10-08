@@ -2,6 +2,8 @@
 //
 // The style of the play forms. The server puts it into the page next to the section; a page opened by a navigation
 // inside the app gets it from the lazy chunk (play-client.ts). Never part of the title route's own script.
+import { SCRUB_CSS } from "~/ui/prototype-carousels/scrub-css"
+
 export const PLAY_CSS = `
 .pl{position:relative;display:flex;flex-direction:column;gap:.5rem;border-radius:.75rem;border:1px solid rgba(255,255,255,.1);
 background:rgba(255,255,255,.05);padding:1rem;overflow:hidden;contain:layout style}
@@ -415,5 +417,6 @@ export function playCss(variant: string): string {
 		}
 		return out
 	}
-	return rules(PLAY_CSS)
+	// The scrub forms share one sheet of their own (scrub-css.ts) on top of the rules that name no form.
+	return variant.startsWith("scrub") ? rules(PLAY_CSS) + SCRUB_CSS : rules(PLAY_CSS)
 }

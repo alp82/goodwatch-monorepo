@@ -70,11 +70,26 @@
 // - play8: scrub. A strip along one axis that scrolls sideways, with what is under the marker shown large.
 // - play9: blend. Two titles, what they share, and the titles between them.
 // - play10: pick a path. Three choices with their differences spelled out, and the path they add up to.
-// The floating bar shows today, the fifth round's six ways for comparison, and the play forms. The other variants
-// still answer to the URL.
+//
+// Eighth round, after the owner tried the seventh: the scrub strip impressed, but its scales read wrong (a title
+// that is big and talky at once sat at the "More intimate" end). Ten variations on the strip that differ in how a
+// scale is built from the fingerprint, how it is chosen, labeled, and combined, and how many strips there are (see
+// scrub-forms.ts):
+// - scrub1: honest ruler. One trait, absolute from 0 to 10, with ticks and gaps.
+// - scrub2: only clear claims. The old axes, but an end is claimed only where it holds.
+// - scrub3: of these, in general. The old order, read as relative and as absolute, side by side.
+// - scrub4: two at once. Two traits as two dimensions: along the strip, and as a band.
+// - scrub5: its own fingerprint. The title's fingerprint is the picker, all 74 attributes by family.
+// - scrub6: what varies here. The picker leads with the traits this neighborhood spreads on, and has a search.
+// - scrub7: both of two. Two traits combined, ordered by the lower of the two levels.
+// - scrub8: hold and scrub. One trait held high, another scrubbed.
+// - scrub9: recipe. Up to three chips, more of this and less of that.
+// - scrub10: three lanes. Three linked strips, one per fingerprint family.
+// The floating bar shows today, the seventh round's scrub strip for comparison, and the scrub forms. The other
+// variants still answer to the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
-import { PLAY_NAMES } from "~/ui/prototype-carousels/play-names"
+import { PLAY_BAR, PLAY_NAMES } from "~/ui/prototype-carousels/play-names"
 
 export const CAROUSEL_VARIANTS = [
 	"today",
@@ -121,14 +136,23 @@ export const CAROUSEL_VARIANTS = [
 	"play8",
 	"play9",
 	"play10",
+	"scrub1",
+	"scrub2",
+	"scrub3",
+	"scrub4",
+	"scrub5",
+	"scrub6",
+	"scrub7",
+	"scrub8",
+	"scrub9",
+	"scrub10",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
-/** The variants the floating bar cycles through: today, the fifth round's six ways, and the seventh round's forms. */
+/** The variants the floating bar cycles through: today, the seventh round's scrub strip, and the eighth round's forms. */
 export const CAROUSEL_BAR: CarouselVariant[] = [
 	"today",
-	"ring5",
-	...(Object.keys(PLAY_NAMES) as CarouselVariant[]),
+	...(PLAY_BAR as CarouselVariant[]),
 ]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
@@ -176,6 +200,16 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	play8: "",
 	play9: "",
 	play10: "",
+	scrub1: "",
+	scrub2: "",
+	scrub3: "",
+	scrub4: "",
+	scrub5: "",
+	scrub6: "",
+	scrub7: "",
+	scrub8: "",
+	scrub9: "",
+	scrub10: "",
 	...PLAY_NAMES,
 }
 
