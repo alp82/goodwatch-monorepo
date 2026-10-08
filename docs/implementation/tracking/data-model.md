@@ -672,6 +672,7 @@ only a state that is one step behind its log rows, and only for the events that 
 | Step 4, the untick of the only watched episode | Watching with no watch of a regular episode | The retry, or the check (invariant 1): Not started |
 | Step 4, a Seen press | The group's log rows, the state before the press, no standing press: every tick is there and the progress is full, the state is not Seen | The retry. Without it the press can't be taken back with one press; the member presses Seen again, which inserts nothing and stands on an empty group. The earlier group's rows are unticked one by one or stay |
 | Step 4, Seen pressed again | The group's rows are gone and the row still says Seen with the press standing | The retry. Without it the row has the signature the fill job looks for (C5, section 6): the job puts back the group's rows for the episodes that had aired by the day of the press, so the press stands again as the row says |
+| Step 4, a press put back (row 30) | The press's rows are there again and the state is still the one taking it back left: every tick is there, the state is not Seen and no press stands | The retry: step 4 inserts nothing, step 5 writes the state and the press. Without it, as after a stopped Seen press |
 | Step 4, a movie's first watch or the delete of its last | A log row without a state row, or a state row without a log row: the movie's log and the lists disagree on whether it is Seen | The retry, or the check (invariant 3): the row follows the log |
 | Step 5 | The state is right; Want to See or Not interested is still set on a started show | The retry. The check lists it (invariant 5) |
 | Step 6 | The member data cache holds the old map for at most 5 minutes | Its lifetime |
@@ -687,7 +688,8 @@ columns that change; `updated_at` always does.
 | "Set a date" on a group | `UPDATE user_watch_log SET watched_at = ?, watched_at_precision = 'day', updated_at = ? WHERE user_id = ? AND group_id = ?` | None | | The dates |
 | Unmark a season; Undo of a group mark | One delete for the rows of the season in the current pass, or `WHERE user_id = ? AND group_id = ?` | As if each were unwatched in turn | | The ticks gone, state |
 | Press Seen (rows 11, 12) | Insert one row per aired regular episode not yet watched in the pass: origin `seen`, the press's group id, no date | `state = 'seen'`, `seen_press_group`, `seen_press_from` = the state before | Clears Want to See and Not interested | Every tick, "Seen" or "Caught up", the prompt to rate |
-| Press Seen again (rows 13 to 17) | `DELETE FROM user_watch_log WHERE user_id = ? AND group_id = ?` | `state` by the row taken; press columns NULL | | The group's ticks gone, the state before |
+| Press Seen again (rows 13 to 17) | `DELETE FROM user_watch_log WHERE user_id = ? AND group_id = ?` | `state` by the row taken; press columns NULL | | The group's ticks gone, the state before. Toast with Undo |
+| Undo of Press Seen again (row 30) | Insert the press's rows as the browser held them: the same `watch_id`, `group_id`, origin `seen`, pass, `watched_at` with its precision, and `created_at` | `state = 'seen'`, `seen_press_group`, `seen_press_from`, and `state_changed_at` as it was before the press was taken back (a new row when taking it back had left none) | Clears Want to See and Not interested | The press's ticks, the state and the press's line as before |
 | Put on hold, drop, resume (rows 18 to 21, 28, 29) | None | `state`, `state_changed_at`; from Seen (rows 28, 29) the press columns NULL | Drop clears Want to See and Not interested | The status pill |
 | Rate a show (row 22) | None | Unchanged. A first score by hand on a show that is Not started sets `seen_question = 'open'` (a new row if there was none) | `user_score`, as today; a score clears Not interested | The score; the question |
 | Want to See (rows 23, 24) | None | Row 24 only: Dropped to Not started | `user_wishlist`; clears Not interested | The button |
@@ -776,6 +778,7 @@ below names only the columns that change. Rows 10b and 27b exist only under opti
 | 27 | The catalog changes | None | None. No job, no write | None |
 | 28 | Put on hold; from Seen, episodes aired since | None | `seen` → `on_hold`, `seen_press_*` → NULL | None |
 | 29 | Drop; from Seen, episodes aired since | None | `seen` → `dropped`, `seen_press_*` → NULL | Want to See and Not interested deleted (a Seen show has neither) |
+| 30 | Put a Seen press back (the Undo of rows 13 to 17); from the state that row left | + the group, as it was: ids, dates, `created_at` | → `seen`, `seen_press_group` and `seen_press_from` as they were, `state_changed_at` as it was (a new row after row 17) | Want to See and Not interested deleted |
 
 Rows 28 and 29 were added after the owner used the show page: a member who has seen the earlier seasons and will
 not continue had no way to say so without ticking an episode first. They need an episode that aired since, so the
@@ -784,6 +787,33 @@ by the later of the UTC date and that date, at most one day on. A Seen show with
 untouched; a press that stood can no longer be taken back, and its rows stay. From On hold and Dropped the rows
 above apply unchanged: Resume is row 20 (21 when a press that marked nothing was the only thing there), a tick is
 row 3, or row 2 when it leaves nothing aired unwatched.
+
+Row 30 was added with the Undo of taking a press back. No other event can make the press again: a new press
+marks what has aired by now, under a new group, recorded today, and the line that says "Marked Seen on 19 Oct
+2024" would then name today. So the event `restoreSeen` carries the press as it was stored: its group, the state
+it was pressed from, the pass, the time the show had become Seen, and each watch with its id, episode, date and
+`created_at`. The browser builds it from the rows it holds, before it sends `undoSeen` (`seenPressRestore` in
+`storage.ts`). The machine reads which episodes the watches are of; the mapping to rows writes the dates and times
+again as the event has them, and sets `state_changed_at` from it when the state moves to Seen (after row 13 the
+show stayed Seen and the column never moved). The event is taken only onto what taking the press back left:
+
+- the state that rows 13 to 17 lead to: Seen for a press made on a Seen show, On hold or Dropped for one made
+  there, and otherwise Watching or Not started;
+- the same pass, and no press standing;
+- none of the press's episodes watched in the pass since.
+
+Anything else is refused ("The show has changed since, so the Seen press can't be put back."), and nothing is
+written. Sent again while the press stands under its group, it only clears the two lists, as a Seen press sent
+again does. What the server gets is a member's input, so the writer checks all of it before it reads a row: the
+group is an id the browser can make or the migration's `mig-seen-<show id>` for this show; every watch is a
+regular episode's and has the id a press under that group gives it (`g-<group>-<episode id>`), once; a date fits
+its precision and has come; `created_at` and the time the show became Seen are not ahead of the clock; at most
+20,000 watches. A press whose group holds a row of another origin or pass (no press makes one) gets no Undo.
+
+What the Undo does not put back: `updated_at` of the rows, and the state row's own `created_at` when taking the
+press back had deleted the row. Nothing reads either. A press that is taken back before the server answered the
+press itself is put back with the times the browser guessed for it, which differ from the server's by the
+request's travel time.
 
 The two answers to a prompt are not rows of the table: "Not now" sets `rate_prompt_dismissed_at`; "I'm partway" and
 "Just rating" set `seen_question = 'answered'`. Row 22 is the machine's row for a show; a movie's score is in the
@@ -1530,6 +1560,8 @@ tracking from the viewer and 401 without a session.
   to Not interested, when the show is Not started afterwards. The events are the machine's, without `rate`,
   `notInterested` and `wantToSee` off, which other writers own, and the two edits of dates. `hold` and `drop`
   may carry `today`, the date on the device, as the group actions do (rows 28 and 29 need to know what aired).
+  `restoreSeen` carries a Seen press as the page held it (row 30); the answer's `rows` are then the press's rows
+  as they are stored again.
 
 **Where the build differs from the text above and from the prototypes, or settles what they left open:**
 
@@ -1555,7 +1587,13 @@ tracking from the viewer and 401 without a session.
   it is Watching or On hold, and a pressed Dropped (one press resumes) while it is Dropped. Want to See is off for
   a started show with the machine's reason as its tip. On a Dropped show with nothing watched it sends the
   machine's `wantToSee`, and the server adds the Wishlist row after the state returned to Not started.
-- **Watch again asks first,** inside the pill's menu, because a pass can't be taken back.
+- **Watch again and Take back Seen ask first,** in the pill's menu, in place of its entries: Watch again because
+  a pass can't be taken back, Take back Seen because it removes watches (changed after the owner's second use).
+  The question is one component (`ConfirmPanel` in `TrackingToast.tsx`): a title, what will happen, Cancel and the
+  action, with the focus on Cancel. Escape and a press outside close it. For Take back Seen it reads "Take back
+  Seen?" and then the menu entry's own line, which the machine words: "Removes the 16 episodes marked on 19 Oct
+  2024. The show is then Not started." The same question opens under the press's line in the episode list, over
+  the matrix, so that nothing moves. The Seen button pressed again does not ask.
 - **The box's button is a link, not a mark** (changed after the owner used the page). The line with the Next
   episode is one link to the Episodes section; its chip names where it leads ("S2 E5 ↓", or "Episodes ↓" when the
   show has no Next episode). It opens the episode's season with the row highlighted, loading the list's code if
@@ -1580,7 +1618,8 @@ tracking from the viewer and 401 without a session.
   Put on hold and Drop from Seen (rows 28, 29) have no Undo in their toast: the press they end can't be put back,
   and the toast says that Resume brings the show back as Watching.
 - **A standing Seen press is said in one line above the matrix:** "Marked Seen on 19 Oct 2024 · seasons 1 and 2
-  (16 episodes), no dates recorded", with "Take back" beside it (the machine's `undoSeen`). A member whose old
+  (16 episodes), no dates recorded", with "Take back" beside it (the machine's `undoSeen`, after the question
+  described above). A member whose old
   Seen mark was migrated sees there why some seasons are watched and later ones are new. The line describes the
   rows the press has now: a season counts as whole when the press has a row for every episode the catalog lists
   of it, and is otherwise said as "4 of the 10 episodes of season 3"; after "Set a date" it reads "dated 1 Oct
@@ -1597,11 +1636,28 @@ tracking from the viewer and 401 without a session.
 - **The grid in IMDb's numbering is a toggle in the heading line,** at its right: a button with a miniature of
   the grid, pressed while the grid is shown. It swaps the matrix for the grid in place and is remembered in the
   browser (`localStorage`, `gw:episodes-view`); the matrix is the default. The finder, "Next" and the box's link
-  lead to a row, so they bring the list back.
+  lead to a row, so they bring the list back. It looks as a streaming service does in the Discover filters
+  (`OptionLogo` in `ui/filter-bar/FilterGroups.tsx`): the miniature is grey and dim while off, and in colour
+  inside a green ring while on, with the amber focus ring of the filters. The class names are written out in the
+  episode list: as a module both import, they went into the shell, 267 bytes on every page. On a wide screen the word "Grid" stands
+  beside it; on a phone the miniature alone is the 40 pixel press target.
+- **The rows of a season are part of the page.** Nothing in the episodes section scrolls by itself (changed
+  after the owner's second use: beside the matrix the open season used to be a box of 328 pixels with its own
+  scrollbar). On every width a season opens as a window of rows around the Next or the asked-for episode, 10
+  beside the matrix, 8 under a phone's season row and 12 for a show with one season, with the rest folded into
+  one line above and one below that each open as many more. Opening a row or a fold makes the page longer and
+  leaves it where it is. A row the finder, "Next" or the box's link leads to is scrolled to in the page: to the
+  middle of the screen from the box, and otherwise just into view, clear of the sticky header (the row's scroll
+  margin is the header's measured height) and of a phone's dock. A press on a season row scrolls nothing.
 - **Undo of an untick records the episode again** with a new id, on the day it was watched (as "now" when the
   watch was made in the last ten minutes). The group it belonged to and a Seen press that the untick ended are not
   restored.
-- **Taking a Seen press back has no Undo.** The press's group and its day can't be made again by another press.
+- **Taking a Seen press back has an Undo** (changed after the owner's second use; row 30 in section 5). The toast
+  reads "Seen taken back: 16 watches removed" with Undo, from the menu, from the line and from the Seen button
+  alike. Undo sends `restoreSeen` with the press as the page held it, and the page then says "Seen is back, as it
+  was before." The rows have their ids, dates and `created_at` again, the state row its press and the time the
+  show became Seen, so the press's line reads as it did, also for a migrated mark of 2024. The Undo is gone with
+  the toast, after nine seconds or with the next action's toast; a press can't be put back later.
 - **There is no "Unmark season".** A season is taken back with the Undo of its toast, or row by row.
 - **Specials have no rating and no bulk mark.** IMDb lists them without a season, and the machine's group actions
   mark regular episodes only.
@@ -1640,13 +1696,22 @@ the hero box, and 30.5 KB (9.4 KB) for the episode list. The icons that only tra
 its two components: imported from the icon package they went into the chunk of every page (1,113 bytes), and as
 a small module of their own into the shell (1,831 bytes), by the build's rule for small shared modules.
 
+The second round (the question before Take back and its Undo, the toggle's look, the rows without a scrollbar of
+their own, row 30) adds no script to the first view either: built from `main` (`aef43052`) and from the branch,
+each from a copy of the tree outside the repository, the show route's 20 chunks are 823,499 bytes raw on both
+(272,498 against 272,525 gzip, 235,661 against 235,734 Brotli; only the hashed names inside differ). The
+stylesheet is 313 bytes smaller, 365,990 bytes (42,659 gzip, 32,053 Brotli). What loads afterwards, for a member
+with the flag on: 44.3 KB (13.4 KB Brotli) for the machine, the store, the actions and the question, where it was
+40.7 KB (12.6 KB); 13.4 KB (4.6 KB) for the hero box, where it was 14.0 KB (4.7 KB); and 31.0 KB (9.6 KB) for the
+episode list, where it was 30.3 KB (9.4 KB).
+
 **How it was checked.** Tests: `node --test 'app/domain/tracking/*.test.ts' app/server/show-tracking.test.ts`,
 the server's against the in-memory Crate. The components were driven in headless Chromium at 390 and 1280 pixels
 wide on `/prototype/episode-tracking-real`, a development route that mounts the real `ListActions` and episodes
 section with a member who does not exist and a server that lives in the tab
 (`ui/prototype-episode-tracking/fake-server.ts`), on the prototypes' fixtures. That server runs the real machine
-and the real mapping to rows, with aired as the server reads it. 211 checks at 390 pixels and 207 at 1280, all
-passing (137 at each width before the refinements); the script is
+and the real mapping to rows, with aired as the server reads it. 248 checks at 390 pixels and 244 at 1280, all
+passing (137 at each width before the refinements, 211 and 207 after the first round of them); the script is
 [`episode-tracking/drive.mjs`](episode-tracking/drive.mjs). It runs with the locale `en-GB`, so that the dates
 the page writes in the member's locale can be compared:
 
@@ -1660,7 +1725,21 @@ Screenshots, in [`episode-tracking/`](episode-tracking/), each `-phone` and `-de
 [`shots.mjs`](episode-tracking/shots.mjs): `hero-watching`, `hero-status-menu`, `hero-menu-seen-new-episodes`,
 `hero-menu-dropped`, `hero-seen-rate-prompt`, `hero-seen-new-episodes`, `hero-seen-question`, `list-matrix`,
 `list-never-tracked`, `list-seen-press`, `list-ratings-grid`, `list-season-open`, `list-row-open` (the covers),
-`list-row-uncovered`, `list-airing-season`, `list-specials`, `list-limited-series`, `toast-mark-season`.
+`list-row-uncovered`, `list-airing-season`, `list-specials`, `list-limited-series`, `toast-mark-season`, and of
+taking a press back `hero-menu-take-back`, `list-take-back` (the question) and `toast-take-back` (its Undo).
+
+The second round of refinements (the question before Take back and its Undo, the toggle's look, the rows without
+a scrollbar of their own) is checked there too. Take back: the question's words in the menu and under the line,
+that it fits the screen and moves nothing, Cancel, Escape and a press elsewhere, and that after Undo the stored
+state row and log rows are equal to the ones before, to the column, with the day of the press and a date set
+since. The toggle: grey and dim while off, in colour inside a green ring while on. The rows: no element of the
+section scrolls by itself, the window and its folds, that "Next" brings its row into view with nothing over it,
+and that a row or a fold that opens leaves the row and the page where they are. At the writer, against the
+in-memory Crate (`tracking.test.ts`): take back and Undo end in the same rows and state row for a press with
+ticks before it and dates set since, and for a migrated press of 2024 whose state row had been deleted; the same
+Undo sent twice writes once; 17 kinds of a press that could not have stood for the show are refused before
+anything is read; and a press whose episode was ticked since is refused. The walks of `storage.test.ts` put back
+every other press they take back, 2,252 times in the 3,000 walks, and compare what is stored with what was.
 
 In the development build the app shell reported "This Suspense boundary received an update before it finished
 hydrating" on a few loads of the harness, as it does on other prototype routes: there the shell's own lazy parts
@@ -1672,7 +1751,10 @@ the episodes section among the page's sections; the first paint of the box from 
 server rendered; a show whose episode list the crawl has not reached; real IMDb ratings beside real TMDB episodes;
 two devices acting on one show; a touch screen, Safari and Firefox, a screen reader; `./bench.sh budget`. Of the
 refinements also: the line of a migrated Seen mark on the owner's own shows (the harness makes its presses with
-the writer's rules, not with the migration's rows), and dates in a locale other than `en-GB`.
+the writer's rules, not with the migration's rows), and dates in a locale other than `en-GB`. Of the second round:
+the Undo of Take back against a real Crate, where rows are deleted and inserted again under the same keys within
+seconds (the writer refreshes the log before it reads, and the in-memory Crate of the tests has Crate's
+refresh), and on a mark the migration wrote, which the writer's test builds by hand in the migration's shape.
 
 ### Home doors, My shows, My movies and My library (#385)
 

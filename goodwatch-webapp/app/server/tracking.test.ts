@@ -10,6 +10,12 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import * as nodeModule from "node:module"
 import { afterEach, beforeEach, test } from "node:test"
+import {
+	PLAIN_DATES,
+	seenPressLine,
+	seenPressOf,
+} from "../domain/tracking/seen-press.ts"
+import { seenPressRestore } from "../domain/tracking/storage.ts"
 import { CacheTestRedis } from "../utils/cache-test-redis.ts"
 import { FakeTrackingCrate } from "./tracking-fake-crate.ts"
 
@@ -807,6 +813,224 @@ test("Press Seen again (rows 14 to 17): the group's rows go and the state return
 		["16", "dropped"],
 	)
 	assert.equal((await act({ type: "undoSeen" })).status, "refused")
+})
+
+/** Everything stored for the show, to the column, but for the two the store keeps for itself. */
+const storedExactly = (title: TrackedTitle = show) => {
+	const bare = ({ updated_at, ...row }: Row) => row
+	const state = stateOf(title)
+	return {
+		log: logOf(title)
+			.map(bare)
+			.sort((a, b) => String(a.watch_id).localeCompare(String(b.watch_id))),
+		// A state row that was deleted and written again is a new row to the store: its own `created_at` is new.
+		state: state && (({ created_at, ...row }) => row)(bare(state)),
+	}
+}
+/** The Undo of taking the standing press back, as the show page builds it from what it read. */
+const pressUndo = async (title: TrackedTitle = show) => {
+	const { state, log } = await getShowTracking(user, title.tmdbId)
+	const restore = seenPressRestore(state, log)
+	assert.ok(restore, "a press stands")
+	return restore
+}
+
+test("Undo of taking a press back (row 30): the same rows under the same ids, the press, and since when the show is Seen", async () => {
+	// Ticks before the press, a special, and a day set on the press's watches since.
+	await tick(0, 1)
+	await tick(1, 2, "tick-s1e2")
+	await act({ type: "hold" })
+	await act({ type: "pressSeen" }, "press-0001")
+	await act({ type: "setGroupDate", group: "press-0001", day: "2024-10-01" })
+	await act({
+		type: "editWatchDate",
+		watchId: "g-press-0001-103",
+		when: { precision: "unknown" },
+	})
+	// The press is older than this run: its rows and the state say so.
+	const PRESSED = Date.UTC(2024, 9, 19, 18, 30)
+	for (const row of db.table("user_watch_log"))
+		if (row.group_id === "press-0001") row.created_at = PRESSED
+	for (const row of db.table("user_watch_state")) row.state_changed_at = PRESSED
+	db.refresh("user_watch_log")
+	const before = storedExactly()
+	assert.equal(before.log.length, 6)
+	const restore = await pressUndo()
+	const taken = await act({ type: "undoSeen" })
+	assert.deepEqual(
+		[taken.row, stateOf()?.state, ticks()],
+		["15", "on_hold", ["0.1", "1.2"]],
+	)
+	wantAndNotInterested()
+	const [put, sent] = await sentBy(() => act(restore, undefined))
+	assert.deepEqual(writes(sent), [
+		"INSERT user_watch_log",
+		"UPDATE user_watch_state",
+		"DELETE user_wishlist",
+		"DELETE user_not_interested",
+	])
+	assert.deepEqual([put.status, put.row, put.deleted], ["applied", "30", []])
+	assert.deepEqual(put.inserted, [
+		"g-press-0001-101",
+		"g-press-0001-103",
+		"g-press-0001-201",
+		"g-press-0001-202",
+	])
+	assert.deepEqual(storedExactly(), before)
+	assert.deepEqual(
+		[
+			stateOf()?.state,
+			stateOf()?.seen_press_group,
+			stateOf()?.seen_press_from,
+			stateOf()?.state_changed_at,
+		],
+		["seen", "press-0001", "on_hold", PRESSED],
+	)
+	// A Seen show is on neither list.
+	assert.deepEqual([onWishlist(), notInterested()], [false, false])
+	// The same Undo sent again writes nothing, and the press can be taken back again, to the same place.
+	const stood = stored()
+	const again = await act(restore, undefined)
+	assert.deepEqual([again.status, again.inserted], ["applied", []])
+	assert.deepEqual(stored(), stood)
+	assert.deepEqual(
+		[(await act({ type: "undoSeen" })).row, stateOf()?.state, ticks()],
+		["15", "on_hold", ["0.1", "1.2"]],
+	)
+})
+
+test("Undo of taking a migrated press back: the rows of 2024 again, with the day they were made, and a new state row that says the same", async () => {
+	const PRESSED = Date.UTC(2024, 9, 19, 18, 30)
+	const group = `mig-seen-${SHOW}`
+	// As the migration wrote the old Seen mark: undated rows for the episodes aired by then, recorded at its time.
+	db.seed(
+		"user_watch_log",
+		[101, 102, 103].map((id, index) => ({
+			user_id: user,
+			watch_id: `g-${group}-${id}`,
+			media_type: "show",
+			tmdb_id: SHOW,
+			episode_tmdb_id: id,
+			season_number: 1,
+			episode_number: index + 1,
+			watched_at: null,
+			watched_at_precision: "unknown",
+			origin: "seen",
+			group_id: group,
+			import_id: null,
+			pass: 1,
+			created_at: PRESSED,
+			updated_at: PRESSED,
+		})),
+	)
+	db.seed("user_watch_state", [
+		titleRow(show, {
+			state: "seen",
+			state_changed_at: PRESSED,
+			pass: 1,
+			seen_press_group: group,
+			seen_press_from: "not_started",
+			rate_prompt_dismissed_at: null,
+			seen_question: null,
+			created_at: PRESSED,
+			updated_at: PRESSED,
+		}),
+	])
+	const before = storedExactly()
+	const line = async () => {
+		const { state, log } = await getShowTracking(user, SHOW)
+		const press = seenPressOf(
+			{ state, log },
+			(await getEpisodeList(SHOW)).map((e) => ({
+				id: e.tmdb_id,
+				season: e.season_number,
+				number: e.episode_number,
+				airDate: null,
+			})),
+		)
+		return press && seenPressLine(press, PLAIN_DATES)
+	}
+	const said = await line()
+	assert.equal(
+		said,
+		"Marked Seen on 19 Oct 2024 · season 1 (3 episodes), no dates recorded",
+	)
+	const restore = await pressUndo()
+	assert.deepEqual(
+		[restore.group, restore.from, restore.changedAt, restore.watches.length],
+		[group, "not_started", PRESSED, 3],
+	)
+	const taken = await act({ type: "undoSeen" })
+	assert.deepEqual([taken.row, stateOf(), logOf()], ["17", null, []])
+	assert.equal(await line(), null)
+
+	const [put, sent] = await sentBy(() => act(restore, undefined))
+	assert.deepEqual(writes(sent), [
+		"INSERT user_watch_log",
+		"INSERT user_watch_state",
+	])
+	assert.deepEqual([put.status, put.row], ["applied", "30"])
+	assert.deepEqual(storedExactly(), before)
+	assert.ok(logOf().every((r) => r.created_at === PRESSED))
+	assert.equal(await line(), said)
+	// The episodes that aired since are new again, as before: the show reads Seen with two new.
+	assert.equal(put.state?.state, "seen")
+	assert.deepEqual(put.state, (await getShowTracking(user, SHOW)).state)
+})
+
+test("a press is not put back when the show has changed since, or when it could not have stood for this show", async () => {
+	await tick(1, 1, "tick-s1e1")
+	await act({ type: "pressSeen" }, "press-0001")
+	const restore = await pressUndo()
+	await act({ type: "undoSeen" })
+	const untouched = stored()
+	const refusedFor = async (event: TrackingAction, why: string) => {
+		const [result, sent] = await sentBy(() => act(event, undefined))
+		assert.deepEqual([result.status, result.refused], ["refused", why])
+		assert.deepEqual(writes(sent), [])
+		assert.deepEqual(stored(), untouched)
+	}
+	const NOT = "That Seen press can't be put back."
+	const one = restore.watches[0]
+	const withWatch = (watch: object): TrackingAction => ({
+		...restore,
+		watches: [{ ...one, ...watch }, ...restore.watches.slice(1)],
+	})
+	// What the page sends is a member's input: every part of it is checked before anything is read.
+	await refusedFor({ ...restore, group: "g-press-0001" }, NOT)
+	await refusedFor({ ...restore, group: `mig-seen-${SHORT}` }, NOT)
+	await refusedFor({ ...restore, group: "short" }, NOT)
+	await refusedFor({ ...restore, from: "caught_up" as never }, NOT)
+	await refusedFor({ ...restore, pass: 0 }, NOT)
+	await refusedFor({ ...restore, changedAt: Date.now() + 3_600_000 }, NOT)
+	await refusedFor(withWatch({ id: "g-press-0002-102" }), NOT)
+	await refusedFor(withWatch({ id: "tick-s1e1" }), NOT)
+	await refusedFor(withWatch({ episodeId: 999 }), NOT)
+	await refusedFor(withWatch({ season: 0 }), NOT)
+	await refusedFor(withWatch({ createdAt: Date.now() + 3_600_000 }), NOT)
+	await refusedFor(withWatch({ createdAt: 0 }), NOT)
+	await refusedFor(withWatch({ watchedAt: 5, precision: "unknown" }), NOT)
+	await refusedFor(withWatch({ watchedAt: null, precision: "day" }), NOT)
+	await refusedFor(withWatch({ watchedAt: 12_345, precision: "day" }), NOT)
+	await refusedFor(
+		withWatch({ watchedAt: Date.now() + 3 * DAY, precision: "moment" }),
+		NOT,
+	)
+	await refusedFor({ ...restore, watches: [...restore.watches, one] }, NOT)
+	// A movie has no press.
+	assert.equal((await act(restore, undefined, movie)).status, "refused")
+
+	// One of its episodes was ticked since: the press would no longer be what it was.
+	await tick(1, 2, "tick-s1e2")
+	const changed = await act(restore, undefined)
+	assert.deepEqual(
+		[changed.status, changed.refused, ticks()],
+		[
+			"refused",
+			"The show has changed since, so the Seen press can't be put back.",
+			["1.1", "1.2"],
+		],
+	)
 })
 
 test("Put on hold, drop, resume (rows 18 to 21): no log row, the state and when it changed; Drop clears the lists", async () => {

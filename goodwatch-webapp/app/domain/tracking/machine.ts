@@ -130,6 +130,18 @@ export type TrackingEvent =
 	| { type: "deleteWatch"; watchId: string }
 	| { type: "pressSeen"; today?: string }
 	| { type: "undoSeen" }
+	/**
+	 * Undo of `undoSeen`: the press stands again, with the watches it had. `group` and `from` are the press's,
+	 * `pass` the pass its watches are of, and `changedAt` the time the show had become Seen, in milliseconds.
+	 */
+	| {
+			type: "restoreSeen"
+			group: string
+			from: State
+			pass: number
+			changedAt: number
+			watches: PressWatch[]
+	  }
 	/** On a Seen show both need an episode that aired since, so they carry `today` as a group action does. */
 	| { type: "hold"; today?: string }
 	| { type: "drop"; today?: string }
@@ -144,12 +156,29 @@ export type TrackingEvent =
 	/** "I'm partway" or "Just rating". "Yes, all of it" is a Seen press. Never a transition. */
 	| { type: "answerSeenQuestion"; answer: "partway" | "just_rating" }
 
+/**
+ * A watch of a Seen press as the log held it, handed back to put the press back. The machine reads which episode
+ * it is of. The dates are the log's own (storage.ts writes them again as they were).
+ */
+export interface PressWatch {
+	id: string
+	episodeId: number | null
+	season: number
+	number: number
+	/** Milliseconds: the instant, 00:00 UTC of the day, or null for an unknown date. */
+	watchedAt: number | null
+	precision: "moment" | "day" | "unknown"
+	/** When the watch was recorded: the time of the press. */
+	createdAt: number
+}
+
 /** The event column of the table. "catalog" stands for every change of the catalog. */
 export type TableEvent =
 	| "watch"
 	| "unwatch"
 	| "pressSeen"
 	| "undoSeen"
+	| "restoreSeen"
 	| "hold"
 	| "drop"
 	| "resume"
@@ -169,6 +198,7 @@ export const EVENT_LABEL: Record<TableEvent, string> = {
 	unwatch: "unwatch an episode",
 	pressSeen: "press Seen",
 	undoSeen: "press Seen again",
+	restoreSeen: "put a Seen press back",
 	hold: "put on hold",
 	drop: "drop",
 	resume: "resume",
@@ -311,7 +341,7 @@ export type Guard = keyof typeof GUARDS
 // THE TRANSITION TABLE. This is the specification. Rows are tried from the top; the first that matches is taken.
 // The ids are the ones the data model and ADR 0009 use. 10b and 27b belonged to options the owner did not choose.
 // 28 and 29 were added after the owner used the show page: a member who has seen the earlier seasons and will not
-// go on had no way to say so without ticking an episode first.
+// go on had no way to say so without ticking an episode first. 30 came with the Undo of taking a press back.
 // ---------------------------------------------------------------------------------------------------------
 
 export interface Row {
@@ -472,6 +502,14 @@ export const TABLE: readonly Row[] = [
 		guard: "noWatchRemains",
 		to: "not_started",
 		says: "The press is taken back and nothing else was watched: Not started.",
+	},
+	{
+		id: "30",
+		from: ANY,
+		event: "restoreSeen",
+		guard: null,
+		to: "seen",
+		says: "Taking a press back is undone: the press stands again with the watches it had, and the show is Seen.",
 	},
 	// On hold, Dropped, Resume
 	{
@@ -665,6 +703,27 @@ function effect(
 				),
 				seenPress: null,
 			}
+		case "restoreSeen": {
+			const have = new Set(record.watches.map((w) => w.id))
+			const watches: Watch[] = event.watches
+				.filter((w) => !have.has(w.id))
+				.map((w) => ({
+					id: w.id,
+					episodeId: w.episodeId,
+					season: w.season,
+					number: w.number,
+					origin: "seen",
+					group: event.group,
+					pass: event.pass,
+				}))
+			return {
+				...record,
+				watches: [...record.watches, ...watches],
+				seenPress: { group: event.group, from: event.from },
+				wantToSee: false,
+				notInterested: false,
+			}
+		}
 		case "drop":
 			return { ...record, wantToSee: false, notInterested: false }
 		case "rate":
@@ -695,6 +754,9 @@ function effect(
 // ---------------------------------------------------------------------------------------------------------
 // Why an event is not possible, in member words
 // ---------------------------------------------------------------------------------------------------------
+
+export const PRESS_NOT_RESTORABLE =
+	"The show has changed since, so the Seen press can't be put back."
 
 const hasNewEpisodes = (show: Show, record: TrackingRecord) => {
 	const f = facts(show, record)
@@ -737,6 +799,31 @@ function whyNot(
 			return state === "seen" && record.seenPress
 				? null
 				: "There is no Seen press to take back."
+		case "restoreSeen": {
+			if (!event.group) return "A Seen press has a group."
+			if (record.seenPress)
+				return record.seenPress.group === event.group
+					? "That Seen press stands already."
+					: "Another Seen press stands."
+			// Only onto what taking the press back left: the state rows 13 to 17 lead to, the same pass, and none
+			// of its episodes watched since.
+			const left =
+				event.from === "seen" ||
+				event.from === "on_hold" ||
+				event.from === "dropped"
+					? state === event.from
+					: state === "watching" || state === "not_started"
+			const mine = record.watches.filter((w) => w.pass === record.pass)
+			const watchedSince = event.watches.some((x) =>
+				mine.some(
+					(w) =>
+						w.id === x.id || (w.season === x.season && w.number === x.number),
+				),
+			)
+			return left && event.pass === record.pass && !watchedSince
+				? null
+				: PRESS_NOT_RESTORABLE
+		}
 		case "hold":
 			if (state === "watching") return null
 			// Seen with episodes aired since: the member is in the middle of it again.
@@ -808,8 +895,8 @@ export interface StepOptions {
 	 * (a timeout, a crash between the log and the state, a retry after another action on the show).
 	 *
 	 * With it, watches that carry this action's id are left out before the event is applied, so the event gives the
-	 * same watches and the right state again; a Seen press that already stands under this id, and a Drop of a
-	 * Dropped show, only clear what they clear; an unwatch of an episode that is no longer watched still takes its
+	 * same watches and the right state again; a Seen press that already stands under this id, a press that was
+	 * put back and stands, and a Drop of a Dropped show, only clear what they clear; an unwatch of an episode that is no longer watched still takes its
 	 * row of the table; and a deletion that finds nothing left to delete only makes a Watching show with no watch
 	 * Not started.
 	 */
@@ -1097,6 +1184,15 @@ export function step(
 						[],
 					)
 				base = without((w) => w.group === actionId)
+			}
+			if (resend && event.type === "restoreSeen") {
+				// The press stands again already: its watches and the state are written. What it clears may not be.
+				if (world.record.seenPress?.group === event.group)
+					return done(
+						{ ...world.record, wantToSee: false, notInterested: false },
+						[],
+					)
+				base = without((w) => w.group === event.group)
 			}
 			const result = single(base, event, actionId, resend)
 			if ("refused" in result) return nothing(result.refused)

@@ -4,6 +4,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
 	type ListedEpisode,
+	PRESS_NOT_RESTORABLE,
 	STATES,
 	type State,
 	TABLE,
@@ -30,6 +31,7 @@ import {
 	isCatalogChange,
 	mulberry32,
 	play,
+	restoreOf,
 } from "./test-support.ts"
 
 const w = (season: number, number: number): Action => ({
@@ -69,7 +71,7 @@ test("the table is well formed", () => {
 	assert.equal(new Set(TABLE.map((row) => row.id)).size, TABLE.length)
 	assert.deepEqual(
 		TABLE.map((row) => Number(row.id)).sort((a, b) => a - b),
-		Array.from({ length: 29 }, (_, index) => index + 1),
+		Array.from({ length: 30 }, (_, index) => index + 1),
 	)
 	for (const row of TABLE) {
 		assert.ok(row.from.length > 0, row.id)
@@ -230,6 +232,95 @@ test("a Seen press on a Seen show marks only the new episodes, and its undo keep
 		play(findShow("weekly"), [SEEN, { type: "episodeAirs" }]).world,
 	)
 	assert.deepEqual(button, { event: "pressSeen", newEpisodes: 1 })
+})
+
+test("taking a press back can be undone: the press stands again with exactly its watches, whatever it was pressed from (row 30)", () => {
+	const byId = (world: World) => ({
+		...world.record,
+		watches: [...world.record.watches].sort((a, b) => a.id.localeCompare(b.id)),
+	})
+	for (const [show, actions, back] of [
+		["ended", [SEEN], "17"],
+		["ended", [w(1, 1), w(1, 2), SEEN], "14"],
+		["ended", [w(1, 1), { type: "hold" }, SEEN], "15"],
+		["ended", [{ type: "drop" }, SEEN], "16"],
+		["weekly", [SEEN, { type: "episodeAirs" }, SEEN], "13"],
+		// A show without an episode list: the press marked nothing, and it stands again with nothing.
+		["nolist", [SEEN], "17"],
+	] as const) {
+		const pressed = play(findShow(show), [...actions]).world
+		const restore = restoreOf(pressed.record)
+		const taken = step(pressed, AGAIN)
+		assert.equal(taken.row?.id, back, show)
+		const put = step(taken.world, restore)
+		assert.equal(put.refused, null, `${show} ${back}`)
+		assert.deepEqual([put.row?.id, put.to], ["30", "seen"])
+		used.add("30")
+		assert.deepEqual(byId(put.world), byId(pressed), `${show} ${back}`)
+		assert.equal(seenButton(put.world).event, seenButton(pressed).event)
+		// And it can be taken back again, to the same place.
+		assert.deepEqual(step(put.world, AGAIN).world.record, taken.world.record)
+		// Sent again, when it stands and when only its watches were written: the same record.
+		const resend = { resend: true }
+		assert.deepEqual(
+			step(put.world, restore, "", resend).world.record,
+			put.world.record,
+		)
+		const half: World = {
+			show: pressed.show,
+			record: { ...taken.world.record, watches: put.world.record.watches },
+		}
+		assert.deepEqual(
+			byId(step(half, restore, "", resend).world),
+			byId(put.world),
+		)
+		// Without the option the machine is strict: a press that stands is not put back twice.
+		assert.equal(
+			step(put.world, restore).refused,
+			"That Seen press stands already.",
+		)
+	}
+})
+
+test("a press is put back only onto what taking it back left", () => {
+	const pressed = play(findShow("ended"), [w(1, 1), SEEN]).world
+	const restore = restoreOf(pressed.record)
+	const taken = step(pressed, AGAIN).world
+	const refused = (world: World, why = PRESS_NOT_RESTORABLE) =>
+		assert.equal(step(world, restore).refused, why)
+	// One of its episodes was ticked since.
+	refused(step(taken, w(1, 2) as TrackingEvent, "tick").world)
+	// The show was set aside, or dropped, since.
+	refused(step(taken, { type: "hold" }).world)
+	refused(step(taken, { type: "drop" }).world)
+	// Another press stands.
+	refused(
+		step(taken, { type: "pressSeen" }, "other").world,
+		"Another Seen press stands.",
+	)
+	// The show went on to another pass.
+	const again = play(findShow("ended"), [
+		w(1, 1),
+		SEEN,
+		AGAIN,
+		SEEN,
+		{ type: "watchAgain" },
+	]).world
+	assert.deepEqual([again.record.state, again.record.pass], ["watching", 2])
+	refused(again)
+	// A press that was made on an On hold show is not put back on one that is Watching again.
+	const held = play(findShow("ended"), [w(1, 1), { type: "hold" }, SEEN]).world
+	const heldRestore = restoreOf(held.record)
+	const resumed = step(step(held, AGAIN).world, { type: "resume" }).world
+	assert.equal(step(resumed, heldRestore).refused, PRESS_NOT_RESTORABLE)
+	// A refused event changes nothing.
+	assert.equal(step(resumed, heldRestore).world, resumed)
+	// Putting a press back takes the show off the lists a Seen show is never on.
+	const wanted: World = {
+		show: taken.show,
+		record: { ...step(pressed, AGAIN).world.record, wantToSee: true },
+	}
+	assert.equal(step(wanted, restore).world.record.wantToSee, false)
 })
 
 test("On hold and back", () => {
@@ -1264,13 +1355,21 @@ test("every event ends in a state the table names, and the record's invariants h
 	for (let seed = 1; seed <= 400; seed++) {
 		const next = mulberry32(seed * 7)
 		let world: World = { show: SHOWS[seed % SHOWS.length], record: newRecord() }
+		// The last press that was taken back: its Undo can come at any later time, and is then taken or refused.
+		let back: TrackingEvent | null = null
 		for (let i = 0; i < 40; i++) {
-			const all: Action[] = [...memberEvents(world), ...CATALOG]
+			const all: Action[] = [
+				...memberEvents(world),
+				...CATALOG,
+				...(back ? [back, back, back] : []),
+			]
 			const action = all[Math.floor(next() * all.length)]
 			if (isCatalogChange(action)) {
 				world = { show: changeCatalog(world, action), record: world.record }
 				continue
 			}
+			if (action.type === "undoSeen" && world.record.seenPress)
+				back = restoreOf(world.record)
 			const done = step(world, action, `a-${seed}-${i}`)
 			for (const r of done.rows) used.add(r.id)
 			assert.ok(STATES.includes(done.to))

@@ -13,6 +13,12 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import * as nodeModule from "node:module"
 import { afterEach, beforeEach, test } from "node:test"
+import {
+	PLAIN_DATES,
+	seenPressLine,
+	seenPressOf,
+} from "../domain/tracking/seen-press.ts"
+import { seenPressRestore } from "../domain/tracking/storage.ts"
 import { CacheTestRedis } from "../utils/cache-test-redis.ts"
 import { FakeTrackingCrate } from "./tracking-fake-crate.ts"
 
@@ -383,6 +389,48 @@ test("Mark season answers with the group's rows, and Set a date with the rows it
 	)
 })
 
+test("Take back and its Undo, as the page sends them: the answer hands back the press's rows, and the page reads as before", async () => {
+	await tick(1, 1, "watch-000001")
+	const pressed = await act({
+		event: { type: "pressSeen", today: iso(midnight(0)) },
+		actionId: "press-000001",
+	})
+	assert.equal(pressed.rows.length, 3)
+	await act({
+		event: { type: "setGroupDate", group: "press-000001", day: "2026-10-01" },
+	})
+	const before = await getShowTrackingPage(user, SHOW, grid)
+	const byId = (rows: typeof before.log) =>
+		[...rows].sort((a, b) => a.watch_id.localeCompare(b.watch_id))
+	const said = (page: typeof before) => {
+		const press = seenPressOf(page, page.episodes)
+		return press && seenPressLine(press, PLAIN_DATES)
+	}
+	assert.match(said(before) ?? "", /^Marked Seen on .* · /)
+	// The page builds the Undo from what it holds, before the press goes, and sends it as JSON.
+	const undo = JSON.parse(
+		JSON.stringify(seenPressRestore(before.state, before.log)),
+	)
+	assert.equal(undo.watches.length, 3)
+	const taken = await act({ event: { type: "undoSeen" } })
+	assert.deepEqual(
+		[taken.state?.state, taken.deleted.length, taken.rows],
+		["watching", 3, []],
+	)
+	const put = await act({ event: undo })
+	assert.deepEqual([put.status, put.deleted], ["applied", []])
+	// The rows the browser takes over are the stored ones: the same as it held before.
+	assert.deepEqual(
+		byId(put.rows),
+		byId(before.log.filter((row) => row.group_id === "press-000001")),
+	)
+	assert.deepEqual(put.state, before.state)
+	const after = await getShowTrackingPage(user, SHOW, grid)
+	assert.deepEqual(after.state, before.state)
+	assert.deepEqual(byId(after.log), byId(before.log))
+	assert.equal(said(after), said(before))
+})
+
 test("a date set on one watch answers with that row", async () => {
 	await tick(1, 1, "watch-000001")
 	const answer = await act({
@@ -523,6 +571,30 @@ test("a request that is not an action of the show page is not read", () => {
 			},
 		},
 		{ id: SHOW, event: { type: "answerSeenQuestion", answer: "yes" } },
+		// A press to put back names its group, its state, and whole watches.
+		{ id: SHOW, event: { type: "restoreSeen", group: "press-000001" } },
+		{
+			id: SHOW,
+			event: {
+				type: "restoreSeen",
+				group: "press-000001",
+				from: "caught_up",
+				pass: 1,
+				changedAt: 1_000,
+				watches: [],
+			},
+		},
+		{
+			id: SHOW,
+			event: {
+				type: "restoreSeen",
+				group: "press-000001",
+				from: "watching",
+				pass: 1,
+				changedAt: 1_000,
+				watches: [{ id: "g-press-000001-101", episodeId: 101 }],
+			},
+		},
 		{
 			id: SHOW,
 			event: { type: "hold" },

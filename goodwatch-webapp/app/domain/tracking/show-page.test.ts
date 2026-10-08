@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import type { ListedEpisode } from "./machine.ts"
+import { type ListedEpisode, PRESS_NOT_RESTORABLE } from "./machine.ts"
 import {
 	type ActionAnswer,
 	type PageAction,
@@ -10,7 +10,12 @@ import {
 	viewOf,
 	watchStateEntryOf,
 } from "./show-page.ts"
-import { type LogRow, type StateRow, watchStateOf } from "./storage.ts"
+import {
+	type LogRow,
+	type StateRow,
+	seenPressRestore,
+	watchStateOf,
+} from "./storage.ts"
 import { groupedQuery } from "./test-support.ts"
 
 const SHOW = 1399
@@ -150,6 +155,33 @@ test("Mark season and the Seen press mark what has aired on the device, as one g
 			seen.state?.seen_press_from,
 		],
 		["seen", "press-000001", "not_started"],
+	)
+})
+
+test("Take back and its Undo in the browser: the page shows the press as it was, to the row, a later time notwithstanding", () => {
+	const pressed = after([
+		[watch(1, 1), "watch-000001"],
+		[{ type: "pressSeen", today: TODAY }, "press-000001"],
+		{ type: "setGroupDate", group: "press-000001", day: "2026-09-30" },
+	])
+	const restore = seenPressRestore(pressed.state, pressed.log)
+	assert.ok(restore)
+	const later = NOW + 5 * 60_000
+	const at = { showId: SHOW, episodes: EPISODES, today: TODAY, now: later }
+	const taken = applyLocally(pressed, { type: "undoSeen" }, undefined, at)
+	assert.deepEqual(
+		[taken.copy.state?.state, ticks(taken.copy), view(taken.copy).press],
+		["watching", ["1.1"], null],
+	)
+	const put = applyLocally(taken.copy, restore, undefined, at)
+	assert.equal(put.refused, null)
+	assert.deepEqual(put.copy, pressed)
+	assert.deepEqual(view(put.copy).press, view(pressed).press)
+	// The page refuses it once the member has ticked one of the press's episodes.
+	const ticked = applyLocally(taken.copy, watch(1, 2), "watch-000002", at)
+	assert.equal(
+		applyLocally(ticked.copy, restore, undefined, at).refused,
+		PRESS_NOT_RESTORABLE,
 	)
 })
 

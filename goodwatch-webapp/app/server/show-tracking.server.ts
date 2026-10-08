@@ -4,7 +4,7 @@
 // what an Undo puts back.
 import { z } from "zod"
 import { matchEpisodeRatings } from "~/domain/tracking/episode-ratings"
-import { isDay, utcDay } from "~/domain/tracking/machine"
+import { STATES, isDay, utcDay } from "~/domain/tracking/machine"
 import type {
 	ActionAnswer,
 	PageAction,
@@ -149,6 +149,27 @@ const eventSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("deleteWatch"), watchId: id }),
 	z.object({ type: z.literal("pressSeen"), today }),
 	z.object({ type: z.literal("undoSeen") }),
+	// The Undo of taking a Seen press back: the press as the page held it. The writer checks every part of it.
+	z.object({
+		type: z.literal("restoreSeen"),
+		group: id,
+		from: z.enum(STATES),
+		pass: z.number().int().min(1).max(100_000),
+		changedAt: z.number().int().positive(),
+		watches: z
+			.array(
+				z.object({
+					id: z.string().min(3).max(120),
+					episodeId: z.number().int().positive().max(2_000_000_000),
+					season: whole,
+					number: whole,
+					watchedAt: z.number().int().nullable(),
+					precision: z.enum(["moment", "day", "unknown"]),
+					createdAt: z.number().int().positive(),
+				}),
+			)
+			.max(20_000),
+	}),
 	z.object({ type: z.literal("hold"), today }),
 	z.object({ type: z.literal("drop"), today }),
 	z.object({ type: z.literal("resume") }),
