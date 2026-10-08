@@ -25,10 +25,23 @@ export function chunks<T>(list: T[], size: number): T[][] {
 	return out
 }
 
-/** A running import that hasn't reported progress for this long has stopped, most likely with its process. */
+// Whether a running import is alive is read from its row, because the process that applies it may be the other
+// webapp instance. The apply sets updated_at every HEARTBEAT_MS, also in the middle of a slow batch, and every reader
+// compares it with Crate's clock from the same read, so the clocks of the webapp hosts don't matter.
+
+/** How often a running import reports that it's alive. */
+export const HEARTBEAT_MS = 10_000
+
+/**
+ * A running import that hasn't reported for this long has stopped, most likely with its process, and can be resumed.
+ * Six heartbeats, so a live import survives a few reports in a row that time out against Crate (10 s each).
+ */
 export const STALL_MS = 60_000
 
-/** The imports this process is applying right now. */
+/**
+ * The imports this process is applying right now. It knows these are alive without asking Crate, also while Crate
+ * is too slow to take the heartbeat.
+ */
 export const activeRuns = new Set<string>()
 
 export interface ImportRow {
@@ -50,14 +63,16 @@ export interface ImportRow {
 	updated_at: number | string | Date
 	confirmed_at: number | string | Date | null
 	finished_at: number | string | Date | null
+	/** Crate's clock when the row was read. */
+	read_at: number | string | Date
 }
 const IMPORT_COLUMNS =
-	"id, user_id, status, file_name, conflict_choice, counts, processed, total, added, updated, kept, failed, without_fingerprint, error, created_at, updated_at, confirmed_at, finished_at"
+	"id, user_id, status, file_name, conflict_choice, counts, processed, total, added, updated, kept, failed, without_fingerprint, error, created_at, updated_at, confirmed_at, finished_at, CURRENT_TIMESTAMP AS read_at"
 
 export const toMs = (value: number | string | Date) => new Date(value).getTime()
 
 export const isStalled = (row: ImportRow) =>
-	row.status === "running" && !activeRuns.has(row.id) && Date.now() - toMs(row.updated_at) > STALL_MS
+	row.status === "running" && !activeRuns.has(row.id) && toMs(row.read_at) - toMs(row.updated_at) > STALL_MS
 
 export function summarize(row: ImportRow): ImdbImportSummary {
 	return {
