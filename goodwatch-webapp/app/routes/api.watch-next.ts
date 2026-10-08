@@ -21,7 +21,7 @@ import { type WatchNext, getWatchNext } from "~/server/watch-next.server"
 async function respond(request: Request) {
 	const viewer = await watchNextViewer(request)
 	if ("response" in viewer) return viewer.response
-	const options = parseWatchNextOptions(new URL(request.url))
+	const options = parseWatchNextOptions(new URL(request.url), viewer.tracking)
 	if (!options) return invalid("Pass up to 100 title keys as notTonight=1,2,3")
 	return json<WatchNext>(await getWatchNext(viewer.ctx, options), { headers })
 }

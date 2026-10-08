@@ -32,7 +32,7 @@ const state = (s: State, watchedAt: Date | null, count = 1) => ({
 	furthest: null,
 	lastActivityAt: watchedAt,
 })
-const score = (n: number) => ({ score: n, review: null, updatedAt: at("2026-01-01") })
+const score = (n: number) => ({ score: n as 1, review: null, updatedAt: at("2026-01-01") })
 const wish = (day: string) => ({ createdAt: at(day), updatedAt: at(day) })
 
 const DATA = {
@@ -214,15 +214,15 @@ test("the choice lives in the URL, with the defaults left out", () => {
 
 test("a Seen row says when the title was last watched, as exactly as it is known, and how often", () => {
 	const now = Date.parse("2026-10-08T20:00:00Z")
-	assert.equal(watchedWords({ watchedAt: at("2024-03-12"), precision: "day", count: 1 }, now), "12 Mar 2024")
-	assert.equal(watchedWords({ watchedAt: null, precision: "unknown", count: 1 }, now), "Date unknown")
+	assert.equal(watchedWords({ watchedAt: at("2024-03-12"), count: 1 }, now), "12 Mar 2024")
+	assert.equal(watchedWords({ watchedAt: null, count: 1 }, now), "Date unknown")
 	assert.equal(
-		watchedWords({ watchedAt: at("2024-03-12"), precision: "day", count: 3 }, now),
+		watchedWords({ watchedAt: at("2024-03-12"), count: 3 }, now),
 		"Watched 3 times, last 12 Mar 2024",
 	)
-	assert.equal(watchedWords({ watchedAt: null, precision: "unknown", count: 2 }, now), "Watched 2 times, dates unknown")
-	assert.equal(watchedWords({ watchedAt: new Date(now - 3_600_000), precision: "moment", count: 1 }, now), "Today")
-	assert.equal(watchedWords({ watchedAt: at("2026-10-07"), precision: "day", count: 1 }, now), "Yesterday")
+	assert.equal(watchedWords({ watchedAt: null, count: 2 }, now), "Watched 2 times, dates unknown")
+	assert.equal(watchedWords({ watchedAt: new Date(now - 3_600_000), count: 1 }, now), "Today")
+	assert.equal(watchedWords({ watchedAt: at("2026-10-07"), count: 1 }, now), "Yesterday")
 	// A rated show without a watch state has no watch to tell of.
 	assert.equal(watchedWords(null, now), "Rated")
 })

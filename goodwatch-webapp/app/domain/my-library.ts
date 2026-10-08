@@ -100,7 +100,7 @@ export const libraryCounts = (data: LibraryData) =>
 const fold = (text: string) =>
 	text
 		.normalize("NFD")
-		.replace(/[̀-ͯ]/g, "")
+		.replace(/\p{M}/gu, "")
 		.toLowerCase()
 		.trim()
 

@@ -2,6 +2,7 @@
 // the session; a guest from the guest progress in a POST body), and the options in the URL.
 import { json } from "@remix-run/node"
 import { z } from "zod"
+import { timeOf } from "~/domain/my-movies"
 import { watchNextChoiceOf } from "~/domain/watch-next"
 import { getFeatureMode, isEnabled } from "~/server/features.server"
 import {
@@ -38,11 +39,17 @@ export function parseKeys(value: string | null): TitleKey[] | null {
 }
 
 /** Sort, moods, services, and passed-over titles from the URL: `sort=waiting&moods=funny,scary&services=all`. */
-export function parseWatchNextOptions(url: URL): WatchNextOptions | null {
+export function parseWatchNextOptions(
+	url: URL,
+	/** REC_TRACKING is on for the viewer: `kind=movie&time=120` asks for My movies (#385). */
+	tracking = false,
+): WatchNextOptions | null {
 	const params = url.searchParams
 	const notTonight = parseKeys(params.get("notTonight"))
 	if (!notTonight) return null
-	return { ...watchNextChoiceOf(params), notTonight }
+	const options = { ...watchNextChoiceOf(params), notTonight }
+	if (!tracking || params.get("kind") !== "movie") return options
+	return { ...options, kind: "movie", time: timeOf(params.get("time")) }
 }
 
 /**
@@ -53,7 +60,13 @@ export function parseWatchNextOptions(url: URL): WatchNextOptions | null {
 export async function watchNextViewer(
 	request: Request,
 ): Promise<
-	{ ctx: ViewerContext; body: Record<string, unknown> } | { response: Response }
+	| {
+			ctx: ViewerContext
+			body: Record<string, unknown>
+			/** REC_TRACKING is on for the viewer, and the viewer is a member: My movies is theirs to ask for. */
+			tracking: boolean
+	  }
+	| { response: Response }
 > {
 	if (getFeatureMode("watchNext") === "off") return { response: notFound() }
 	let body: Record<string, unknown> = {}
@@ -82,5 +95,9 @@ export async function watchNextViewer(
 	const ctx = await getViewerContext(request, guest)
 	const userId = ctx.viewer.kind === "member" ? ctx.viewer.userId : null
 	if (!isEnabled("watchNext", { userId })) return { response: notFound() }
-	return { ctx, body }
+	return {
+		ctx,
+		body,
+		tracking: Boolean(userId) && isEnabled("tracking", { userId }),
+	}
 }
