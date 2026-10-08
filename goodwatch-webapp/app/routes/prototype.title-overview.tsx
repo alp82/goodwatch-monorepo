@@ -1,6 +1,8 @@
 // PROTOTYPE - throwaway. What should the title page's overview (the panel beside the poster) look like for a
-// signed-in member? Four variants of it on one route, switchable with the floating bar or the arrow keys:
-//   /prototype/title-overview?v=A|B|C|D
+// signed-in member? Variants of it on one route, switchable with the floating bar or the arrow keys.
+// Round 2: the owner picked round 1's D (Banner), found it too tall, liked its ratings bar and A's two rings, and
+// rejected B and C. So E, F, G and H are four shorter descendants of D; A and D stay as they were, for reference.
+//   /prototype/title-overview?v=E|F|G|H|A|D
 //     &s=show-watching|show-new|show-caught-up|movie-new|movie-seen   the sample member and title
 //     &p=one|many|none                                                how many streaming services have the title
 // The owner's complaints about today's panel: the ratings are not grouped, the member's own score is not shown
@@ -9,9 +11,10 @@
 // reads nothing, and the page calls no endpoint. Notes and screenshots: docs/prototypes/title-overview/README.md.
 import { json } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useSearchParams } from "@remix-run/react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { PROVIDERS, type ProviderKey, SCENARIOS, type ScenarioKey, TITLES, useMember } from "~/ui/prototype-title-overview/model"
-import { VariantA, VariantB, VariantC, VariantD, type VariantProps } from "~/ui/prototype-title-overview/variants"
+import { VariantE, VariantF, VariantG, VariantH } from "~/ui/prototype-title-overview/banner"
+import { VariantA, VariantD, type VariantProps } from "~/ui/prototype-title-overview/variants"
 
 export async function loader() {
 	if (process.env.NODE_ENV === "production") throw new Response("Not found", { status: 404 })
@@ -22,17 +25,19 @@ export const meta = () => [{ title: "Title overview prototype · GoodWatch" }, {
 export const shouldRevalidate: ShouldRevalidateFunction = () => false
 
 const VARIANTS = {
-	A: { name: "Scoreboard", Component: VariantA, note: "Two rings, the title's and yours, beside a table of the sites with critics and audience in columns. Your ring opens the picker as a popover (a sheet on a phone). The poster follows the panel's height." },
-	B: { name: "Yours under the poster", Component: VariantB, note: "The panel is about the title; your score and your actions are one card under the poster, and the score tile opens the picker in place. Both columns stretch to the same height." },
-	C: { name: "One card, poster inset", Component: VariantC, note: "A strip of four tiles: GoodWatch, Critics, Audience, You. The You tile opens the picker in place. The poster is small and inside the card, and where to watch runs the full width under it." },
-	D: { name: "Banner", Component: VariantD, note: "The backdrop as a banner with a small poster over its edge, and one bar for every rating with your score as a pill in it. The pill opens the picker as a dialog (a sheet on a phone)." },
-} satisfies Record<string, { name: string; note: string; Component: (props: VariantProps) => React.ReactNode }>
+	E: { name: "E · Slim banner", ownTitle: true, Component: VariantE, note: "D with everything still visible and nothing tall: a lower banner carries the poster, the title and the ratings bar; under it three thin rows (site chips, tracking with the actions, service logos)." },
+	F: { name: "F · Dock", ownTitle: true, Component: VariantF, note: "The whole overview is the banner. The three sites are one chip that opens their table, and a dock along the bottom edge holds tracking, the service logos and the actions." },
+	G: { name: "G · Strip and three cards", ownTitle: true, Component: VariantG, note: "The banner is a strip for the poster and the title. Under it three cards side by side: ratings, your show, where to watch. They stack on a phone." },
+	H: { name: "H · One control", ownTitle: true, Component: VariantH, note: "The most folded, and the comparison for the score display: A's two rings instead of D's bar. A started show has no action buttons: Mark as Seen, Put on hold and Drop are in the status control's menu." },
+	A: { name: "A (round 1) · Scoreboard", Component: VariantA, note: "Round 1, kept for reference with its bugs fixed. Two rings, the title's and yours, beside a table of the sites. Your ring opens the picker as a popover (a sheet on a phone). The poster follows the panel's height." },
+	D: { name: "D (round 1) · Banner", Component: VariantD, note: "Round 1, kept for reference with its bugs fixed. The backdrop as a banner with a small poster over its edge, and one bar for every rating with your score as a pill in it." },
+} satisfies Record<string, { name: string; note: string; ownTitle?: boolean; Component: (props: VariantProps) => React.ReactNode }>
 type VariantKey = keyof typeof VARIANTS
 const KEYS = Object.keys(VARIANTS) as VariantKey[]
 
 export default function TitleOverviewPrototype() {
 	const [params, setParams] = useSearchParams()
-	const variant = (KEYS.includes(params.get("v") as VariantKey) ? params.get("v") : "A") as VariantKey
+	const variant = (KEYS.includes(params.get("v") as VariantKey) ? params.get("v") : "E") as VariantKey
 	const scenario = ((params.get("s") ?? "") in SCENARIOS ? params.get("s") : "show-watching") as ScenarioKey
 	const providers = ((params.get("p") ?? "") in PROVIDERS ? params.get("p") : "one") as ProviderKey
 	const set = (key: string, value: string) => {
@@ -51,9 +56,13 @@ export default function TitleOverviewPrototype() {
 		return () => window.removeEventListener("keydown", onKey)
 	})
 	const title = TITLES[SCENARIOS[scenario].kind]
+	// For the check scripts: the page answers presses from here on.
+	const [ready, setReady] = useState(false)
+	useEffect(() => setReady(true), [])
 	return (
-		<div data-prototype={variant} className="mx-auto max-w-7xl px-4 pb-44 pt-4 text-white sm:px-6 lg:px-8">
-			<header className="mb-4">
+		<div data-prototype={variant} data-ready={ready || undefined} className="mx-auto max-w-7xl px-4 pb-44 pt-4 text-white sm:px-6 lg:px-8">
+			{/* Round 2's variants carry the title on their banner. */}
+			<header className={`mb-4 ${"ownTitle" in VARIANTS[variant] ? "hidden" : ""}`}>
 				<h1 className="text-2xl font-bold tracking-tight sm:text-4xl">{title.name}</h1>
 				<p className="mt-1 text-sm text-gray-400">{title.facts.join(" · ")}</p>
 			</header>
@@ -74,7 +83,7 @@ export default function TitleOverviewPrototype() {
 							←
 						</button>
 						<span className="min-w-48 text-center text-sm">
-							{variant} · {VARIANTS[variant].name}
+							{VARIANTS[variant].name}
 						</span>
 						<button type="button" onClick={() => step(1)} aria-label="Next variant" className="h-8 w-9 cursor-pointer rounded-full text-base hover:bg-neutral-200">
 							→
@@ -111,7 +120,7 @@ function Stage({ variant, scenario, providers }: { variant: VariantKey; scenario
 			<Component title={title} m={m} api={api} providers={providers} />
 			<p data-prototype-note className="mt-4 max-w-3xl rounded-lg border border-dashed border-fuchsia-500/50 px-3 py-2 text-xs leading-relaxed text-fuchsia-200/90">
 				<span className="font-semibold">
-					Prototype, variant {variant}: {VARIANTS[variant].name}.
+					Prototype, variant {VARIANTS[variant].name}.
 				</span>{" "}
 				{note}
 			</p>

@@ -9,7 +9,7 @@ import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
 import type { Score } from "~/server/scores.server"
 import { RATING_LEVELS, levelOf } from "~/ui/taste-quiz/quiz-flow"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
-import { type Action, type Api, type Offer, PROVIDERS, type Provider, type ProviderKey, STATUS_LOOK, type Status, type Title, type Tracking, img } from "./model"
+import { type Action, type Api, type MenuEntry, type Offer, PROVIDERS, type Provider, type ProviderKey, STATUS_LOOK, type Status, type Title, type Tracking, img } from "./model"
 
 export const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
 export const EYEBROW = "text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400"
@@ -21,6 +21,45 @@ export const ink = (score: number) => (score <= 3 ? "#fff" : "#0a0a0a")
 /** The same for the GoodWatch score, 0 to 100. */
 export const gwTone = (gw: number) => `var(--color-vibe-${Math.min(100, Math.floor(gw / 10) * 10)})`
 export const gwWord = (gw: number) => scoreLabels[Math.max(1, Math.round(gw / 10))]
+
+/** The same thing at two sizes: `phone` below md, `wide` from md up. */
+export function Sized({ phone, wide, children }: { phone: number; wide: number; children: (size: number) => ReactNode }) {
+	return (
+		<>
+			<span className="contents md:hidden">{children(phone)}</span>
+			<span className="hidden md:contents">{children(wide)}</span>
+		</>
+	)
+}
+
+/**
+ * Keeps a popover that hangs under its anchor on the screen: it is pushed left or right until both edges are inside,
+ * and scrolled into view. A sheet or a dialog (fixed to the screen) is left alone.
+ */
+export function useFit(open: boolean) {
+	const ref = useRef<HTMLDivElement>(null)
+	useEffect(() => {
+		const el = ref.current
+		if (!open || !el) return
+		const fit = () => {
+			el.style.marginLeft = ""
+			if (getComputedStyle(el).position === "fixed") return
+			const pad = 12
+			const screen = document.documentElement.clientWidth
+			const r = el.getBoundingClientRect()
+			let by = 0
+			if (r.right > screen - pad) by = screen - pad - r.right
+			if (r.left + by < pad) by = pad - r.left
+			if (by) el.style.marginLeft = `${by}px`
+		}
+		fit()
+		// At once: the site scrolls smoothly, and a menu that is still on its way can't be pressed.
+		el.scrollIntoView({ block: "nearest", behavior: "instant" })
+		window.addEventListener("resize", fit)
+		return () => window.removeEventListener("resize", fit)
+	}, [open])
+	return ref
+}
 
 // ---------------------------------------------------------------------------------------------------------
 // Ring
@@ -180,7 +219,8 @@ export function ScorePicker({ value, kind, onRate, onClear, even = false }: { va
  * (the nearest positioned parent), "dialog" sits in the middle of the screen over a dimmed page.
  * No ancestor may have a transform, a filter or a container type: the sheet is fixed to the screen.
  */
-export function Floating({ open, onClose, title, wide = "popover", align = "left", children }: { open: boolean; onClose: () => void; title: string; wide?: "popover" | "dialog"; align?: "left" | "right" | "center"; children: ReactNode }) {
+export function Floating({ open, onClose, title, wide = "popover", width = "md:w-[30rem]", children }: { open: boolean; onClose: () => void; title: string; wide?: "popover" | "dialog"; width?: string; children: ReactNode }) {
+	const ref = useFit(open)
 	useEffect(() => {
 		if (!open) return
 		const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose()
@@ -191,11 +231,11 @@ export function Floating({ open, onClose, title, wide = "popover", align = "left
 	const place =
 		wide === "dialog"
 			? "md:left-1/2 md:top-1/2 md:bottom-auto md:right-auto md:w-[30rem] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:border md:p-5"
-			: `md:absolute md:bottom-auto md:top-full md:mt-3 md:w-[30rem] md:rounded-2xl md:border md:p-4 ${align === "left" ? "md:left-0 md:right-auto" : align === "right" ? "md:left-auto md:right-0" : "md:left-1/2 md:right-auto md:-translate-x-1/2"}`
+			: `md:absolute md:bottom-auto md:left-0 md:right-auto md:top-full md:mt-3 md:max-w-[calc(100vw-1.5rem)] md:rounded-2xl md:border md:p-4 ${width}`
 	return (
 		<>
 			<button type="button" aria-label="Close" tabIndex={-1} onClick={onClose} className={`fixed inset-0 z-[200] cursor-default bg-black/70 ${wide === "dialog" ? "" : "md:bg-transparent"}`} />
-			<div role="dialog" aria-label={title} data-floating className={`fixed inset-x-0 bottom-0 z-[201] rounded-t-3xl border-t border-white/15 bg-stone-900 p-4 pb-7 text-left shadow-[0_-12px_48px_rgba(0,0,0,.6)] md:shadow-2xl md:border-white/15 ${place}`}>
+			<div ref={ref} role="dialog" aria-label={title} data-floating className={`fixed inset-x-0 bottom-0 z-[201] rounded-t-3xl border-t border-white/15 bg-stone-900 p-4 pb-7 text-left shadow-[0_-12px_48px_rgba(0,0,0,.6)] md:shadow-2xl md:border-white/15 ${place}`}>
 				<div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20 md:hidden" aria-hidden="true" />
 				<div className="mb-3 flex items-center justify-between gap-3">
 					<h3 className="text-base font-bold text-white">{title}</h3>
@@ -213,9 +253,11 @@ export function Floating({ open, onClose, title, wide = "popover", align = "left
 // Status, progress, Next episode
 // ---------------------------------------------------------------------------------------------------------
 
-export function StatusPill({ status, tracking, api, size = "h-9" }: { status: Status; tracking: Tracking; api: Api; size?: string }) {
+/** A button with a menu under it. The menu stays on the screen (useFit) and closes on a press outside or Escape. */
+export function Menu({ label, entries, className = "", children }: { label: string; entries: MenuEntry[]; className?: string; children: (state: { open: boolean; toggle: () => void }) => ReactNode }) {
 	const [open, setOpen] = useState(false)
 	const root = useRef<HTMLDivElement>(null)
+	const box = useFit(open)
 	useEffect(() => {
 		if (!open) return
 		const onDown = (e: PointerEvent) => !root.current?.contains(e.target as Node) && setOpen(false)
@@ -227,16 +269,12 @@ export function StatusPill({ status, tracking, api, size = "h-9" }: { status: St
 			window.removeEventListener("keydown", onKey)
 		}
 	}, [open])
-	if (status === "not_started") return null
 	return (
-		<div ref={root} className="relative shrink-0">
-			<button type="button" data-status-pill aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)} className={`inline-flex ${size} cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-xs font-semibold ${STATUS_LOOK[status]} ${FOCUS}`}>
-				{tracking.label}
-				<ChevronDownIcon className="h-3.5 w-3.5" />
-			</button>
+		<div ref={root} className={`relative ${className}`}>
+			{children({ open, toggle: () => setOpen(!open) })}
 			{open && (
-				<div role="menu" aria-label="Change the status" className="absolute left-0 top-full z-40 mt-1 w-72 max-w-[calc(100vw-3rem)] rounded-xl border border-white/10 bg-stone-900 p-1 shadow-2xl">
-					{api.menu.map((entry) => (
+				<div ref={box} role="menu" aria-label={label} className="absolute left-0 top-full z-[150] mt-1 w-72 max-w-[calc(100vw-1.5rem)] rounded-xl border border-white/10 bg-stone-900 p-1 shadow-2xl">
+					{entries.map((entry) => (
 						<button
 							key={entry.id}
 							type="button"
@@ -249,12 +287,26 @@ export function StatusPill({ status, tracking, api, size = "h-9" }: { status: St
 							className={`block min-h-11 w-full cursor-pointer rounded-lg px-3 py-2 text-left hover:bg-white/10 ${FOCUS}`}
 						>
 							<span className="block text-sm font-semibold text-white">{entry.label}</span>
-							<span className="block text-xs text-gray-400">{entry.note}</span>
+							{entry.note && <span className="block text-xs text-gray-400">{entry.note}</span>}
 						</button>
 					))}
 				</div>
 			)}
 		</div>
+	)
+}
+
+export function StatusPill({ status, tracking, api, size = "h-9" }: { status: Status; tracking: Tracking; api: Api; size?: string }) {
+	if (status === "not_started") return null
+	return (
+		<Menu label="Change the status" entries={api.menu} className="shrink-0">
+			{({ open, toggle }) => (
+				<button type="button" data-status-pill aria-haspopup="menu" aria-expanded={open} onClick={toggle} className={`inline-flex ${size} cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-xs font-semibold ${STATUS_LOOK[status]} ${FOCUS}`}>
+					{tracking.label}
+					<ChevronDownIcon className="h-3.5 w-3.5" />
+				</button>
+			)}
+		</Menu>
 	)
 }
 
@@ -300,7 +352,7 @@ const ACTION_LOOK = {
 	hide: { Icon: NoSymbolIcon, on: "bg-pink-500 text-black", tint: "text-pink-300" },
 } as const
 
-export function ActionButton({ action, quiet = false, className = "" }: { action: Action; quiet?: boolean; className?: string }) {
+export function ActionButton({ action, quiet = false, compact = false, phoneIcon = false, className = "" }: { action: Action; quiet?: boolean; compact?: boolean; /** Below sm, the icon alone. */ phoneIcon?: boolean; className?: string }) {
 	const look = ACTION_LOOK[action.id]
 	return (
 		<button
@@ -310,12 +362,12 @@ export function ActionButton({ action, quiet = false, className = "" }: { action
 			disabled={action.disabled}
 			title={action.hint}
 			onClick={action.run}
-			className={`inline-flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${FOCUS} ${
+			className={`inline-flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${FOCUS} ${
 				action.active ? look.on : quiet ? "text-gray-300 hover:bg-white/10 hover:text-white" : "bg-white/10 text-gray-100 hover:bg-white/20"
-			} ${quiet ? "h-9 text-xs" : "h-11 text-sm"} ${className}`}
+			} ${compact ? "h-9 px-2.5 text-xs" : quiet ? "h-9 px-3 text-xs" : "h-11 px-3 text-sm"} ${className}`}
 		>
 			<look.Icon className={`h-4 w-4 shrink-0 ${action.active ? "" : look.tint}`} />
-			<span className="truncate">{action.label}</span>
+			<span className={`truncate ${phoneIcon ? "max-sm:sr-only" : ""}`}>{action.label}</span>
 		</button>
 	)
 }
@@ -407,17 +459,14 @@ export function WhereToWatch({ providers, max, named = true, kind }: { providers
 				{!all && more(list.length - max.phone, "flex md:hidden")}
 				{!all && more(list.length - max.wide, "hidden md:flex")}
 			</div>
-			<p className="mt-2 flex items-center justify-between gap-3 text-[11px] text-gray-400">
-				<span>Links go to licensed services. Data from JustWatch and TMDB.</span>
-				{list.some((p) => p.owned) && (
-					<span className="inline-flex shrink-0 items-center gap-1 text-xs text-green-300">
-						<span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-500 text-black">
-							<CheckIcon className="h-2.5 w-2.5" />
-						</span>
-						Your services
+			{list.some((p) => p.owned) && (
+				<p className="mt-2 flex items-center gap-1 text-xs text-green-300">
+					<span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-500 text-black">
+						<CheckIcon className="h-2.5 w-2.5" />
 					</span>
-				)}
-			</p>
+					On your services
+				</p>
+			)}
 		</div>
 	)
 }

@@ -122,6 +122,8 @@ export interface Member {
 	/** A movie is only ever not_started or seen. */
 	status: Status
 	watched: number
+	/** Shows: which run through the episodes this is. Watch again starts the next one. */
+	pass?: number
 	/** What Seen replaced, so that taking it back restores it. */
 	before?: { status: Status; watched: number }
 }
@@ -154,6 +156,8 @@ export interface MenuEntry {
 export interface Tracking {
 	label: string
 	count: string
+	/** "16/22" */
+	short: string
 	percent: number
 	eyebrow: string
 	line: string
@@ -187,20 +191,26 @@ export function useMember(title: Title, start: Member): { m: Member; api: Api } 
 	const toggleSeen = () =>
 		setM((now) =>
 			now.status === "seen"
-				? { ...now, status: now.before?.status ?? "not_started", watched: now.before?.watched ?? 0, before: undefined }
+				? { ...now, status: now.before?.status ?? "not_started", watched: now.before?.watched ?? 0, before: undefined, want: false }
 				: { ...now, before: { status: now.status, watched: now.watched }, status: "seen", watched: title.aired, want: false, hidden: false },
 		)
-	const seenLabel = seen ? (show && title.running ? "Caught up" : "Seen") : "Mark as Seen"
 
-	const want: Action = {
-		id: "want",
-		label: "Want to See",
-		active: m.want,
-		disabled: started,
-		hint: started ? (show ? "You've started it already." : "You've seen it already.") : undefined,
-		run: () => set({ want: !m.want, hidden: false }),
-	}
-	const seenAction: Action = { id: "seen", label: seenLabel, active: seen, hint: seen ? "Press to take it back." : undefined, run: toggleSeen }
+	// Want to See stays on a Seen title, where it means "again": it only puts the title back on the Wishlist.
+	const toggleWant = () => set({ want: !m.want, hidden: false })
+	const want: Action = seen
+		? {
+				id: "want",
+				label: "Want to rewatch",
+				active: m.want,
+				hint: m.want
+					? "On your Wishlist to watch again. Press to take it off."
+					: show
+						? "Puts it on your Wishlist to watch again some day. Your episodes stay ticked; Watch again starts a new pass now."
+						: "Puts it back on your Wishlist to watch again some day.",
+				run: toggleWant,
+			}
+		: { id: "want", label: "Want to See", active: m.want, run: toggleWant }
+	const seenAction: Action = { id: "seen", label: seen ? "Seen" : "Mark as Seen", active: seen, hint: seen ? "Press to take it back." : undefined, run: toggleSeen }
 	const hide: Action = {
 		id: "hide",
 		label: "Not interested",
@@ -208,26 +218,42 @@ export function useMember(title: Title, start: Member): { m: Member; api: Api } 
 		hint: "Hide it from your recommendations",
 		run: () => set({ hidden: !m.hidden, want: false }),
 	}
-	const drop: Action = { id: "drop", label: "Drop", active: false, hint: "Give it up. It is hidden from your recommendations.", run: () => set({ status: "dropped", want: false }) }
+	const drop: Action = { id: "drop", label: "Drop", active: false, hint: "Stop watching it. It is hidden from your recommendations.", run: () => set({ status: "dropped", want: false }) }
 	const dropped: Action = { id: "drop", label: "Dropped", active: true, hint: "Press to resume it.", run: () => set({ status: "watching" }) }
 
+	// A Seen show says so in its status pill (Seen or Caught up), so the row has no second Seen button: taking it
+	// back is in the pill's menu.
 	const actions: Action[] =
-		m.status === "not_started" ? [want, seenAction, hide] : m.status === "dropped" ? [seenAction, dropped] : seen ? [seenAction] : [seenAction, drop]
+		m.status === "not_started" ? [want, seenAction, hide] : m.status === "dropped" ? [seenAction, dropped] : seen ? (show ? [want] : [seenAction, want]) : [seenAction, drop]
 
 	const resume: MenuEntry = { id: "resume", label: "Resume", note: "Back to Watching.", run: () => set({ status: "watching" }) }
 	const hold: MenuEntry = { id: "hold", label: "Put on hold", note: "Set it aside. It stays in My shows.", run: () => set({ status: "on_hold" }) }
 	const all: MenuEntry = { id: "all", label: "Mark as Seen", note: `Ticks all ${title.aired} aired episodes.`, run: toggleSeen }
-	const dropEntry: MenuEntry = { id: "drop", label: "Drop", note: "Give it up. It is hidden from your recommendations.", run: drop.run }
+	const dropEntry: MenuEntry = { id: "drop", label: "Drop", note: "Stop watching it. It is hidden from your recommendations.", run: drop.run }
 	const takeBack: MenuEntry = { id: "takeBack", label: "Take back Seen", note: "Back to where you were before.", run: toggleSeen }
+	const pass = m.pass ?? 1
+	const watchAgain: MenuEntry = {
+		id: "watchAgain",
+		label: "Watch again",
+		note: `Starts pass ${pass + 1} now: the ticks start empty and it is Watching again.`,
+		run: () => set({ status: "watching", watched: 0, pass: pass + 1, want: false, before: undefined }),
+	}
+	const rewatch: MenuEntry = {
+		id: "rewatch",
+		label: m.want ? "On your Wishlist to rewatch" : "Want to rewatch",
+		note: m.want ? "Press to take it off. Nothing else changes." : "Only bookmarks it on your Wishlist. Your episodes stay ticked.",
+		run: toggleWant,
+	}
 	const menu: MenuEntry[] =
-		m.status === "watching" ? [all, hold, dropEntry] : m.status === "on_hold" ? [resume, all, dropEntry] : m.status === "dropped" ? [resume] : seen ? [takeBack] : []
+		m.status === "watching" ? [all, hold, dropEntry] : m.status === "on_hold" ? [resume, all, dropEntry] : m.status === "dropped" ? [resume, all] : seen ? [watchAgain, rewatch, takeBack] : []
 
 	const size = `${title.seasons} seasons · ${title.aired} episodes`
 	const tracking: Tracking | null = !show
 		? null
 		: {
 				label: { not_started: "Not started", watching: "Watching", on_hold: "On hold", dropped: "Dropped", seen: title.running ? "Caught up" : "Seen" }[m.status],
-				count: `${m.watched} of ${title.aired}`,
+				count: `${pass > 1 ? `Pass ${pass} · ` : ""}${m.watched} of ${title.aired}`,
+				short: `${m.watched}/${title.aired}`,
 				percent: title.aired ? (m.watched / title.aired) * 100 : 0,
 				...(m.status === "not_started"
 					? { eyebrow: "Already watching?", line: size, chip: "Episodes" }
