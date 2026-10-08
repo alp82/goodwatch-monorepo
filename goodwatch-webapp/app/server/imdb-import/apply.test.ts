@@ -85,9 +85,21 @@ const b = await loadProcess("b")
 const USER = "member-1"
 const IMPORT = "5b0c8f0e-7d0a-4c53-9f6b-0d1f1f6a2a10"
 
-/** Enough of Crate for one import with one new rating. Its clock is the test's clock. */
+/**
+ * Enough of Crate for one import with one new rating. Its clock is the test's clock.
+ *
+ * The import's row is kept twice, as CrateDB 5.10.9 was seen to behave (issue 313): `row` is the live row, which a
+ * read or a write by the key alone works on, and `searchable` is the row as of the last REFRESH, which is all that a
+ * filter on another column sees. An update with such a filter is matched against `searchable` and then written to
+ * `row`, whatever `row` holds by then. Every write that lands gives the row the next `_seq_no`, and a write that
+ * names `_seq_no` and `_primary_term` lands only while the live row still has them.
+ * Not modelled: Crate also refreshes by itself about once a second. Here only REFRESH does.
+ */
 class FakeCrate {
 	row: Record<string, unknown> = {}
+	searchable: Record<string, unknown> = {}
+	/** How often the import was set to running, which is how often an apply was started. */
+	starts = 0
 	itemState: string | null = null
 	score: { score: number; updated_at: Date } | null = null
 	scoreWrites = 0
@@ -99,6 +111,7 @@ class FakeCrate {
 		params: unknown[] = [],
 	): Promise<{ json: unknown[]; rowcount?: number }> {
 		const statement = sql.trim().replace(/\s+/g, " ")
+		if (statement === "REFRESH TABLE doc.user_import") this.refresh()
 		if (statement.startsWith("REFRESH")) return { json: [] }
 		if (/^SELECT .* FROM doc\.user_import WHERE id = \?$/.test(statement))
 			return {
@@ -110,8 +123,8 @@ class FakeCrate {
 		if (/^SELECT .* FROM doc\.user_import WHERE user_id = \?/.test(statement))
 			return {
 				json:
-					this.row.status === params[1]
-						? [{ ...this.row, read_at: Date.now() }]
+					this.searchable.status === params[1]
+						? [{ ...this.searchable, read_at: Date.now() }]
 						: [],
 			}
 		if (statement.startsWith("UPDATE doc.user_import SET "))
@@ -165,6 +178,10 @@ class FakeCrate {
 		throw new Error(`The fake Crate doesn't know this statement: ${statement}`)
 	}
 
+	refresh() {
+		this.searchable = { ...this.row }
+	}
+
 	/** `SET column = ?|CURRENT_TIMESTAMP|NULL|'text', ... WHERE column = ? AND ...`, with every condition on the one row. */
 	private updateImport(statement: string, params: unknown[]) {
 		const [, set, where] =
@@ -183,25 +200,35 @@ class FakeCrate {
 				? new Date(stored as Date).getTime() ===
 					new Date(wanted as Date).getTime()
 				: stored === wanted
-		const matches = where.split(" AND ").every((part) => {
-			const [column, text] = part.split(" = ")
-			return same(this.row[column], value(text))
-		})
-		if (matches) Object.assign(this.row, next)
-		return { json: [], rowcount: matches ? 1 : 0 }
+		const conditions = where.split(" AND ").map((part) => part.split(" = "))
+		const columns = conditions.map(([column]) => column).join(" ")
+		const versioned = /_seq_no|_primary_term/.test(columns)
+		if (versioned && columns !== "id _seq_no _primary_term")
+			throw new Error(
+				'VersioningValidationException["_seq_no" and "_primary_term" columns can only be used together in the WHERE clause with equals comparisons and if there are also equals comparisons on primary key columns]',
+			)
+		const byKey = versioned || columns === "id"
+		const seen = byKey ? this.row : this.searchable
+		const matches = conditions.every(([column, text]) =>
+			same(seen[column], value(text)),
+		)
+		if (!matches) return { json: [], rowcount: 0 }
+		if (next.status === "running") this.starts++
+		Object.assign(this.row, next, { _seq_no: Number(this.row._seq_no) + 1 })
+		return { json: [], rowcount: 1 }
 	}
 }
 
 let crate: FakeCrate
 
-function seed(status: "preview" | "running") {
+function seed(status: "preview" | "running" | "failed") {
 	const now = new Date()
 	crate.row = {
 		id: IMPORT,
 		user_id: USER,
 		status,
 		file_name: "ratings.csv",
-		conflict_choice: status === "running" ? "keep" : null,
+		conflict_choice: status === "preview" ? null : "keep",
 		counts: JSON.stringify({
 			rows: 1,
 			new: 1,
@@ -213,18 +240,21 @@ function seed(status: "preview" | "running") {
 			invalid: 0,
 		}),
 		processed: 0,
-		total: status === "running" ? 1 : 0,
+		total: status === "preview" ? 0 : 1,
 		added: 0,
 		updated: 0,
 		kept: 0,
 		failed: 0,
 		without_fingerprint: null,
-		error: null,
+		error: status === "failed" ? "The import stopped before it finished." : null,
 		created_at: now,
 		updated_at: now,
-		confirmed_at: status === "running" ? now : null,
+		confirmed_at: status === "preview" ? null : now,
 		finished_at: null,
+		_seq_no: 7,
+		_primary_term: 1,
 	}
+	crate.refresh()
 }
 
 /** Lets the background apply run until `done` holds. The apply only waits on the fake, so a few turns are enough. */
@@ -321,4 +351,60 @@ test("a finished import stops reporting, so a late look doesn't find it running"
 	await pass(a.STALL_MS)
 	assert.equal(crate.row.status, "done")
 	assert.deepEqual(crate.row.updated_at, finishedAt)
+})
+
+// On CrateDB 5.10.9 two claims that filtered on the status both reported one row, 40 times out of 40, as long as no
+// refresh came between them (issue 313). The claim goes by the row's version instead.
+for (const [situation, status] of [
+	["a preview", "preview"],
+	["a failed import", "failed"],
+	["an import whose process died", "running"],
+] as const)
+	test(`both processes confirm ${situation} at once and one apply starts`, async () => {
+		seed(status)
+		let finishWrite = () => {}
+		crate.slowWrite = new Promise((resolve) => {
+			finishWrite = resolve
+		})
+		if (status === "running") await pass(a.STALL_MS + 5000)
+
+		const answers = await Promise.all([
+			a.confirmImport(USER, IMPORT, "keep"),
+			b.confirmImport(USER, IMPORT, "keep"),
+		])
+		assert.deepEqual(
+			answers.map((answer) => [answer.status, answer.stalled]),
+			[
+				["running", false],
+				["running", false],
+			],
+			"both members' requests see the import running",
+		)
+		await until(() => crate.scoreWrites >= 1)
+		await pass(1000)
+		assert.equal(crate.starts, 1, "both requests won the claim")
+		assert.equal(crate.scoreWrites, 1, "two applies run side by side")
+
+		finishWrite()
+		await until(() => crate.row.status !== "running")
+		assert.equal(crate.row.status, "done")
+		assert.equal(crate.row.added, 1)
+		assert.equal(crate.scoreWrites, 1)
+	})
+
+test("a claim loses to a write that reached the import after it was read, and the next one wins", async () => {
+	seed("failed")
+	const read = await a.getImportRow(USER, IMPORT)
+	// A heartbeat that timed out and landed late, which is the only write a failed import can still get.
+	await crate.execute(
+		"UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+		[IMPORT],
+	)
+	assert.equal(await a.claimImport(read, "status = 'running'", []), false)
+	assert.equal(crate.row.status, "failed")
+
+	const resumed = await b.confirmImport(USER, IMPORT, "keep")
+	assert.equal(resumed.status, "running")
+	await until(() => crate.row.status !== "running")
+	assert.equal(crate.row.status, "done")
 })
