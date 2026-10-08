@@ -156,8 +156,9 @@ test("a failed first probe requires two minutes of successes, restarted by any f
 	time += 120_000
 	address.report(true)
 	assert.equal(address.base(), base)
-	assert.equal(lines.length, 3)
-	assert.match(lines[2], /2 minutes/)
+	assert.equal(lines.length, 4)
+	assert.match(lines[0], /first probe failed/)
+	assert.match(lines[3], /2 minutes/)
 })
 
 test("forced modes ignore probe reports", () => {

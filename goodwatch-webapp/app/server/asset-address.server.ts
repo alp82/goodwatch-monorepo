@@ -95,6 +95,7 @@ export function createAssetAddress(options: {
 			if (first) {
 				first = false
 				if (ok) switchTo(true, "first probe succeeded")
+				else log("Static assets stay on origin: first probe failed")
 				return
 			}
 			if (usingStatic) {
