@@ -11,6 +11,7 @@ from f.db.mongodb import (
     close_mongodb,
     build_query_selector_for_object_ids,
 )
+from f.sync.copy import sync_state
 from f.sync.copy.deleted_titles import flagged_among
 from f.sync.models.crate_models import (
     Movie,
@@ -20,7 +21,10 @@ from f.sync.models.crate_schemas import SCHEMAS
 
 BATCH_SIZE = 5000
 SUB_BATCH_SIZE = 50000
+# Window of a recent copy restricted by a selector. A scheduled run reads from its last
+# successful run instead (f/sync/copy/sync_state).
 HOURS_TO_FETCH = 24*2
+SYNC_JOB = "dna_data"
 
 
 # ===== Helper Functions =====
@@ -95,8 +99,17 @@ def copy_media(
     connector: CrateConnector, 
     query_selector: dict = {},
     media_type: str = "movie",
-    *, recent_only: bool = True,
+    *, recent_only: bool = True, since: Optional[datetime] = None,
 ):
+    """Copy the title analyses that match the selector to CrateDB.
+
+    A recent copy takes the analyses changed since `since`, by default in the last
+    HOURS_TO_FETCH hours. With recent_only=False it takes every analysis.
+
+    An analysis is left out while its title has no details document or is flagged as
+    deleted on TMDB. Nothing here retries it: the catch-up of a scheduled run copies it
+    once the title has a Crate row and can be copied.
+    """
     is_movie = media_type == "movie"
 
     mongo_db = get_db()
@@ -105,7 +118,7 @@ def copy_media(
     media_table_name = 'movie' if is_movie else 'show'
     MediaClass = Movie if is_movie else Show
 
-    updated_at_filter = {"updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}}
+    updated_at_filter = {"updated_at": {"$gte": since or datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}}
     if not recent_only:
         updated_at_filter = {}
     total_entry_count = mongo_dna.count_documents(query_selector | updated_at_filter)
@@ -113,7 +126,10 @@ def copy_media(
 
     start = 0
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
-    
+    selected = 0
+    skipped_without_details = 0
+    skipped_flagged = 0
+
     while True:
         media_documents = []
         entity_batches = defaultdict(list)
@@ -131,6 +147,7 @@ def copy_media(
         # Insert batch of media
         print(f"\nBatch from {start} to {start + len(dna_data_batch)} {media_type} DNA entries")
 
+        selected += len(dna_data_batch)
         tmdb_ids = [doc["tmdb_id"] for doc in dna_data_batch]
         # Do not re-insert derived rows for titles deleted on TMDB.
         flagged_ids = flagged_among(mongo_details, tmdb_ids)
@@ -144,6 +161,10 @@ def copy_media(
             tmdb_details = tmdb_details_by_id.get(tmdb_id)
 
             if not tmdb_details or tmdb_id in flagged_ids:
+                if tmdb_details:
+                    skipped_flagged += 1
+                else:
+                    skipped_without_details += 1
                 continue
      
             has_dna = "dna" in dna_data and "vector_fingerprint" in dna_data
@@ -219,12 +240,17 @@ def copy_media(
 
         start += BATCH_SIZE
 
+    entity_counts["selected"] = selected
+    entity_counts["skipped_without_details"] = skipped_without_details
+    entity_counts["skipped_flagged"] = skipped_flagged
     return entity_counts
 
 
-# An analysis reaches Crate only through the recent copy above, which reads the last
-# HOURS_TO_FETCH hours. An analysis that changed while the copy didn't run (analyses from
-# before the copy existed, outages) never got there. The catch-up finds and copies them.
+# An analysis reaches Crate through the recent copy above, which reads each change about
+# once: the changes since the last successful run. An analysis it left out (a title without
+# details or flagged as deleted at that moment), or that changed while the copy didn't run
+# (analyses from before the copy existed, outages), never got there. The catch-up finds
+# and copies them, so the recent copy carries no ids to its next run.
 PUBLISHABLE_DNA = {"dna": {"$ne": None}, "vector_fingerprint": {"$ne": None}, "updated_at": {"$ne": None}}
 
 
@@ -281,50 +307,52 @@ def catch_up(connector: CrateConnector, media_type: str) -> dict:
 
 
 def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies = False):
+    """Copy the analyses changed since the last successful run, per media type, then catch up."""
     init_mongodb()
     connector = CrateConnector()
 
     results = {}
+    try:
+        for key, media_type, ids in (("movies", "movie", movie_ids), ("shows", "show", show_ids)):
+            if media_type == "movie" and skip_movies:
+                results[key] = None
+                continue
+            if ids:
+                query_selector = build_query_selector_for_object_ids(ids=ids)
+            else:
+                print(f"\nProcessing all {key}...", flush=True)
+                query_selector = {}
 
-    if skip_movies:
-        results["movies"] = None
-    else:
-        # Process movies
-        if movie_ids is None or len(movie_ids) == 0:
-            print("Processing all movies...")
-            movie_query_selector = {}
-        else:
-            movie_query_selector = build_query_selector_for_object_ids(ids=movie_ids)
-        
-        results["movies"] = copy_media(
-            connector=connector, 
-            query_selector=movie_query_selector,
-            media_type="movie"
-        )
-    
-    # Process shows
-    if show_ids is None or len(show_ids) == 0:
-        print("\nProcessing all shows...")
-        show_query_selector = {}
-    else:
-        show_query_selector = build_query_selector_for_object_ids(ids=show_ids)
-    
-    results["shows"] = copy_media(
-        connector=connector, 
-        query_selector=show_query_selector,
-        media_type="show"
-    )
+            # A media type restricted to ids doesn't cover every change, so it keeps the
+            # fixed window and leaves the sync state alone.
+            selection = None if ids else sync_state.begin(get_db(), SYNC_JOB, media_type)
+            results[key] = copy_media(
+                connector=connector,
+                query_selector=query_selector,
+                media_type=media_type,
+                since=selection.since if selection else None,
+            )
+            if selection:
+                # Reached only when the media type's recent copy succeeded: a failure raises
+                # above, and the next run reads the same changes again. The catch-up below
+                # keeps no state, so its failure doesn't hold this time back.
+                sync_state.commit(get_db(), selection, {
+                    **{count: results[key][count]
+                       for count in ("selected", "skipped_without_details", "skipped_flagged")},
+                    **results[key].get(key, {"records_received": 0, "rows_upserted": 0}),
+                })
+                results[key]["selection"] = selection.report()
 
-    # A run for explicit ids leaves the rest alone.
-    if not movie_ids and not show_ids:
-        results["catch_up"] = {
-            "movies": None if skip_movies else catch_up(connector, "movie"),
-            "shows": catch_up(connector, "show"),
-        }
+        # A run for explicit ids leaves the rest alone.
+        if not movie_ids and not show_ids:
+            results["catch_up"] = {
+                "movies": None if skip_movies else catch_up(connector, "movie"),
+                "shows": catch_up(connector, "show"),
+            }
+    finally:
+        connector.disconnect()
+        close_mongodb()
 
-    connector.disconnect()
-    close_mongodb()
-    
     return results
 
 

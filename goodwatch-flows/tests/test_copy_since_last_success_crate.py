@@ -1,4 +1,4 @@
-"""The ratings copy reads the changes since its last successful run (#391)."""
+"""The ratings and analysis copies read the changes since their last successful run (#391)."""
 import sys
 import unittest
 from datetime import datetime, timedelta
@@ -9,7 +9,8 @@ import mongomock
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
-from f.sync.copy import all_ratings, sync_state
+from f.dna.models import CoreScores
+from f.sync.copy import all_ratings, dna_data, sync_state
 
 NOW = datetime(2026, 10, 6, 12, 0, 0)
 HOUR = timedelta(hours=1)
@@ -290,6 +291,206 @@ class RatingsCopyTests(CopyTests):
 
         with patch.object(all_ratings, "get_db", return_value=self.db):
             result = all_ratings.copy_media(
+                connector=crate, query_selector={"tmdb_id": {"$in": [1]}}, media_type="movie", recent_only=False)
+
+        self.assertEqual([record.tmdb_id for record in crate.records["movie"]], [1])
+        self.assertEqual(result["movies"], {"records_received": 1, "rows_upserted": 1})
+        self.assertEqual(list(self.db.sync_state.find()), [])
+
+
+DNA = {
+    "essence_text": "A hacker learns the world is a simulation.",
+    "fingerprint": {"scores": {name: index % 11 for index, name in enumerate(CoreScores.model_fields)},
+                    "highlight_keys": ["adrenaline"]},
+    "is_anime": False,
+    "production_info": {"method": "Live-Action", "animation_style": None},
+    "social_suitability": {name: True for name in (
+        "solo_watch", "date_night", "group_party", "family", "partner", "friends", "kids", "teens", "adults",
+        "intergenerational", "public_viewing_safe")},
+    "viewing_context": {name: False for name in (
+        "is_thought_provoking", "is_pure_escapism", "is_background_friendly", "is_comfort_watch",
+        "is_binge_friendly", "is_drop_in_friendly")},
+}
+
+
+class AnalysisCopyTests(CopyTests):
+    """f/sync/copy/dna_data"""
+
+    module = dna_data
+    job = "dna_data"
+
+    def analysis(self, media_type, tmdb_id, updated_at, *, details=True, crate_row=True):
+        """Store a title's analysis. By default the title has details and an up-to-date Crate row,
+        so only the recent copy would write it."""
+        suffix = "movie" if media_type == "movie" else "tv"
+        self.db[f"dna_{suffix}"].replace_one({"tmdb_id": tmdb_id}, {
+            "tmdb_id": tmdb_id, "created_at": LONG_AGO, "updated_at": updated_at, "dna": DNA,
+            "vector_fingerprint": [0.5]}, upsert=True)
+        if details:
+            self.details(media_type, tmdb_id)
+        if crate_row:
+            self.rows[(media_type, tmdb_id)] = updated_at.timestamp() * 1000
+
+    def test_the_first_run_copies_the_48_hour_window_and_records_its_start(self):
+        self.analysis("movie", 1, NOW - HOUR)
+        self.analysis("movie", 2, NOW - timedelta(hours=49))
+        self.analysis("show", 3, NOW - 47 * HOUR)
+
+        movies, shows, results, error = self.run_main()
+
+        self.assertIsNone(error)
+        self.assertEqual((movies, shows), ([1], [3]))
+        self.assertEqual(self.last_success("movie"), NOW)
+        self.assertEqual(self.last_success("show"), NOW)
+        self.assertTrue(results["movies"]["selection"]["fallback"])
+        self.assertEqual(results["movies"]["movies"], {"records_received": 1, "rows_upserted": 1})
+        self.assertEqual(results["catch_up"], {"movies": {"missing": 0}, "shows": {"missing": 0}})
+        self.assertEqual(state(self.db, "dna_data", "movie")["last_run"]["counts"], {
+            "selected": 1, "skipped_without_details": 0, "skipped_flagged": 0,
+            "records_received": 1, "rows_upserted": 1})
+
+    def test_the_next_run_copies_only_what_changed_since_with_the_overlap(self):
+        self.analysis("movie", 1, NOW - 2 * HOUR)
+        self.analysis("movie", 2, NOW - timedelta(minutes=20))
+        self.run_main()
+
+        self.now = NOW + 6 * HOUR
+        self.analysis("movie", 3, NOW + HOUR)
+        movies, _, results, _ = self.run_main()
+
+        # 2 changed within the 30 minutes before the first run started and is read again.
+        self.assertEqual(movies, [2, 3])
+        self.assertEqual(results["movies"]["selection"]["since"], OVERLAP_START)
+        self.assertEqual(self.last_success("movie"), NOW + 6 * HOUR)
+
+    def test_a_failed_run_keeps_the_time_and_the_next_run_covers_the_gap(self):
+        self.run_main()
+        self.analysis("movie", 1, NOW + HOUR)
+        self.analysis("show", 2, NOW + HOUR)
+
+        self.now = NOW + 6 * HOUR
+        self.failing = {"movie"}
+        movies, shows, _, error = self.run_main()
+
+        self.assertIn("movie write failed", str(error))
+        self.assertEqual((movies, shows), ([], []))
+        self.assertEqual(self.last_success("movie"), NOW)
+        self.assertEqual(self.last_success("show"), NOW)
+
+        self.now = NOW + 12 * HOUR
+        self.failing = set()
+        movies, shows, results, error = self.run_main()
+
+        self.assertIsNone(error)
+        self.assertEqual((movies, shows), ([1], [2]))
+        self.assertEqual(results["movies"]["selection"]["since"], OVERLAP_START)
+
+    def test_movies_that_succeeded_advance_even_when_the_shows_fail(self):
+        self.run_main()
+        self.analysis("movie", 1, NOW + HOUR)
+        self.analysis("show", 2, NOW + HOUR)
+
+        self.now = NOW + 6 * HOUR
+        self.failing = {"show"}
+        movies, _, _, error = self.run_main()
+
+        self.assertIn("show write failed", str(error))
+        self.assertEqual(movies, [1])
+        self.assertEqual(self.last_success("movie"), NOW + 6 * HOUR)
+        self.assertEqual(self.last_success("show"), NOW)
+
+    def test_a_failed_catch_up_fails_the_run_and_keeps_the_times_of_the_recent_copies(self):
+        self.run_main()
+        self.analysis("movie", 1, NOW + HOUR)
+
+        self.now = NOW + 6 * HOUR
+        self.failing = {"catch-up select"}
+        movies, _, _, error = self.run_main()
+
+        # The catch-up compares every analysis on each run, so it needs no state to repeat.
+        self.assertIn("catch-up select failed", str(error))
+        self.assertEqual(movies, [1])
+        self.assertEqual(self.last_success("movie"), NOW + 6 * HOUR)
+        self.assertEqual(self.last_success("show"), NOW + 6 * HOUR)
+
+    def test_an_analysis_left_out_for_missing_details_is_copied_by_a_later_catch_up(self):
+        self.run_main()
+        self.analysis("movie", 1, NOW + HOUR, details=False, crate_row=False)
+
+        self.now = NOW + 6 * HOUR
+        movies, _, results, _ = self.run_main()
+        self.assertEqual(movies, [])
+        self.assertEqual(results["movies"]["skipped_without_details"], 1)
+        self.assertEqual(self.last_success("movie"), NOW + 6 * HOUR)
+
+        # The next run's selection starts after the analysis changed.
+        self.now = NOW + 12 * HOUR
+        movies, _, results, _ = self.run_main()
+        self.assertEqual((movies, results["movies"]["selected"]), ([], 0))
+
+        # The details arrive and their copy creates the title's row, without an analysis.
+        self.details("movie", 1, NOW + 13 * HOUR)
+        self.rows[("movie", 1)] = None
+        self.now = NOW + 18 * HOUR
+        movies, _, results, _ = self.run_main()
+        self.assertEqual(movies, [1])
+        self.assertEqual(results["movies"]["selected"], 0)
+        self.assertEqual(results["catch_up"]["movies"]["missing"], 1)
+
+        self.now = NOW + 24 * HOUR
+        self.assertEqual(self.run_main()[0], [])
+
+    def test_an_analysis_left_out_for_a_deleted_title_is_copied_by_the_catch_up_once_restored(self):
+        self.run_main()
+        self.analysis("movie", 1, NOW + HOUR)
+        self.rows[("movie", 1)] = LONG_AGO.timestamp() * 1000
+        self.flag("movie", 1)
+
+        self.now = NOW + 6 * HOUR
+        movies, _, results, _ = self.run_main()
+        self.assertEqual(movies, [])
+        self.assertEqual(results["movies"]["skipped_flagged"], 1)
+        self.assertEqual(self.last_success("movie"), NOW + 6 * HOUR)
+
+        self.flag("movie", 1, False)
+        self.now = NOW + 12 * HOUR
+        movies, _, results, _ = self.run_main()
+        self.assertEqual(movies, [1])
+        self.assertEqual(results["movies"]["selected"], 0)
+
+    def test_a_run_restricted_to_ids_leaves_the_state_alone_and_does_not_catch_up(self):
+        self.run_main()
+        self.analysis("movie", 1, datetime.utcnow() - HOUR)
+        self.analysis("show", 2, datetime.utcnow() - 3 * DAY)
+        movie_id = str(self.db.dna_movie.find_one({"tmdb_id": 1})["_id"])
+        show_id = str(self.db.dna_tv.find_one({"tmdb_id": 2})["_id"])
+        before = list(self.db.sync_state.find())
+
+        self.now = NOW + 6 * HOUR
+        movies, shows, results, _ = self.run_main(movie_ids=[movie_id], show_ids=[show_id])
+
+        self.assertEqual((movies, shows), ([1], []))
+        self.assertEqual(list(self.db.sync_state.find()), before)
+        self.assertNotIn("selection", results["movies"])
+        self.assertNotIn("catch_up", results)
+
+    def test_skipped_movies_keep_their_time(self):
+        self.run_main()
+
+        self.now = NOW + 6 * HOUR
+        _, _, results, _ = self.run_main(skip_movies=True)
+
+        self.assertIsNone(results["movies"])
+        self.assertIsNone(results["catch_up"]["movies"])
+        self.assertEqual(self.last_success("movie"), NOW)
+        self.assertEqual(self.last_success("show"), NOW + 6 * HOUR)
+
+    def test_the_priority_publish_call_copies_its_ids_and_leaves_the_state_alone(self):
+        self.analysis("movie", 1, NOW - 30 * DAY)
+        crate = Crate(set(), {})
+
+        with patch.object(dna_data, "get_db", return_value=self.db):
+            result = dna_data.copy_media(
                 connector=crate, query_selector={"tmdb_id": {"$in": [1]}}, media_type="movie", recent_only=False)
 
         self.assertEqual([record.tmdb_id for record in crate.records["movie"]], [1])
