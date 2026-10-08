@@ -25,15 +25,22 @@ export function ActionButton({
 	label = "auto",
 	size = "md",
 	className = "",
+	count,
+	opensLog = false,
 	...rest
 }: {
 	kind: ActionKind
 	active: boolean
 	label?: "auto" | "long" | "none"
 	size?: "md" | "sm"
+	/** Seen with the movie watch log: "3×" from two watches on. */
+	count?: string | null
+	/** Seen with the movie watch log: the press opens the log and takes nothing back. */
+	opensLog?: boolean
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
 	const a = ACTIONS[kind]
 	const long = active ? a.on : a.off
+	const name = `${long}${count ? `, watched ${count}` : ""}${opensLog ? ". Open your watches" : ""}`
 	const padding =
 		label === "none"
 			? "px-0"
@@ -46,14 +53,16 @@ export function ActionButton({
 		<button
 			type="button"
 			aria-pressed={active}
-			aria-label={label === "none" ? long : undefined}
-			title={label === "none" ? long : undefined}
-			className={`inline-flex ${size === "md" ? "h-11" : "h-9"} w-full min-w-0 items-center justify-center gap-2 rounded-lg ${padding} font-semibold cursor-pointer transition-colors ${FOCUS} disabled:cursor-not-allowed disabled:opacity-40 ${
+			aria-label={label === "none" || opensLog ? name : undefined}
+			aria-haspopup={opensLog ? "dialog" : undefined}
+			title={label === "none" ? name : undefined}
+			className={`inline-flex ${size === "md" ? "h-11" : "h-9"} w-full min-w-0 items-center justify-center ${label === "none" && count ? "gap-1" : "gap-2"} rounded-lg ${padding} font-semibold cursor-pointer transition-colors ${FOCUS} disabled:cursor-not-allowed disabled:opacity-40 ${
 				active ? a.active : "bg-white/10 text-gray-100 hover:bg-white/20"
 			} ${className}`}
 			{...rest}
 		>
 			<a.Icon className={`h-4 w-4 shrink-0 ${active ? "" : a.tint}`} />
+			{label === "none" && count && <span className="text-xs tabular-nums">{count}</span>}
 			{label === "auto" && (
 				<>
 					<span className="truncate sm:hidden">{active ? a.on : a.short}</span>
@@ -61,6 +70,13 @@ export function ActionButton({
 				</>
 			)}
 			{label === "long" && <span className="truncate">{long}</span>}
+			{label !== "none" && count && <span className="shrink-0 tabular-nums opacity-80">{count}</span>}
+			{/* Drawn here: the icon library's arrow would join the scripts of every page. */}
+			{label !== "none" && opensLog && (
+				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 opacity-70" aria-hidden="true">
+					<path d="m4 6 4 4 4-4" />
+				</svg>
+			)}
 		</button>
 	)
 }

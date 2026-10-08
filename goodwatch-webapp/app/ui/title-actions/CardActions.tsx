@@ -103,13 +103,14 @@ export default function CardActions({
 						disabled={a.wantPending}
 						onClick={a.toggleWant}
 					/>
-					<UserAction instructions={<>{SEEN_INSTRUCTIONS}</>}>
+					<UserAction instructions={SEEN_INSTRUCTIONS}>
 						<ActionButton
 							kind="seen"
 							label="none"
 							size="sm"
 							active={a.seen}
 							disabled={a.seenPending}
+							{...a.seenLog}
 							onClick={a.toggleSeen}
 						/>
 					</UserAction>
@@ -139,7 +140,10 @@ export default function CardActions({
 				<Drawer open={open === "sheet"} onClose={() => setOpen(null)} allSizes>
 					<div className="mx-auto max-w-md p-1">
 						<h3 className="mb-3 truncate text-sm font-semibold text-gray-300">{media.details.title}</h3>
-						{open === "sheet" && <TitleActionSet media={media} onHide={onHide} />}
+						{/* The watch log is a sheet of its own, so this one closes when Seen opens it. */}
+						{open === "sheet" && (
+							<TitleActionSet media={media} onHide={onHide} onOpenLog={() => setOpen(null)} />
+						)}
 					</div>
 				</Drawer>
 			)}

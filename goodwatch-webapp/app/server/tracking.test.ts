@@ -65,6 +65,7 @@ const {
 } = await import("./tracking.server.ts")
 type TrackingAction = import("./tracking.server.ts").TrackingAction
 type TrackedTitle = import("./tracking.server.ts").TrackedTitle
+type RestoredWatch = import("./tracking.server.ts").RestoredWatch
 
 class Redis extends CacheTestRedis {
 	async set(key: string, value: string) {
@@ -1313,6 +1314,239 @@ test("Movie: deleting a watch in the log; the last one of a rated movie brings t
 	const refused = await movieAct({ type: "deleteWatch", watchId: "score-603" })
 	assert.equal(refused.status, "refused")
 	assert.equal(logOf(movie).length, 1)
+})
+
+test("Movie: a second and a third watch are recorded beside the first, each under its own id", async () => {
+	await movieAct({ type: "watch" }, "movie-watch-1")
+	const again = await movieAct(
+		{ type: "watch", when: { precision: "day", day: "2024-05-01" } },
+		"movie-watch-2",
+	)
+	assert.deepEqual([again.status, again.inserted], ["applied", ["movie-watch-2"]])
+	await movieAct(
+		{ type: "watch", when: { precision: "unknown" } },
+		"movie-watch-3",
+	)
+	assert.deepEqual(movieLog(), [
+		["movie-watch-1", "single", "moment"],
+		["movie-watch-2", "single", "day"],
+		["movie-watch-3", "single", "unknown"],
+	])
+	// The same request again records nothing more.
+	const resent = await movieAct({ type: "watch" }, "movie-watch-2")
+	assert.deepEqual([resent.status, resent.inserted], ["applied", []])
+	assert.equal(logOf(movie).length, 3)
+	assert.equal((await getWatchState(user))["movie-603"].count, 3)
+})
+
+test("Movie: a watch can't be dated on a day that has not come", async () => {
+	const ahead = iso(midnight(2))
+	const refused = await movieAct(
+		{ type: "watch", when: { precision: "day", day: ahead } },
+		"movie-watch-1",
+	)
+	assert.deepEqual([refused.status, logOf(movie)], ["refused", []])
+	await movieAct({ type: "watch" }, "movie-watch-1")
+	const edit = await movieAct({
+		type: "editWatchDate",
+		watchId: "movie-watch-1",
+		when: { precision: "day", day: ahead },
+	})
+	assert.equal(edit.status, "refused")
+	assert.equal(logOf(movie)[0].watched_at_precision, "moment")
+	// The device can be a day ahead of UTC.
+	const tomorrow = await movieAct({
+		type: "editWatchDate",
+		watchId: "movie-watch-1",
+		when: { precision: "day", day: iso(midnight(1)) },
+	})
+	assert.equal(tomorrow.status, "applied")
+})
+
+test("Movie: the score's watch that a date made the member's own can be deleted like any other", async () => {
+	score(8)
+	await movieAct({ type: "rate", score: 8 })
+	await movieAct({
+		type: "editWatchDate",
+		watchId: "score-603",
+		when: { precision: "day", day: "2024-05-01" },
+	})
+	score(null)
+	await movieAct({ type: "rate", score: null })
+	assert.deepEqual(movieLog(), [["score-603", "single", "day"]])
+	const gone = await movieAct({ type: "deleteWatch", watchId: "score-603" })
+	assert.deepEqual(
+		[gone.status, gone.deleted, logOf(movie), stateOf(movie)],
+		["applied", ["score-603"], [], null],
+	)
+})
+
+test("Movie: removing all watches deletes every watch the member logged in one statement; a rated movie stays Seen", async () => {
+	await movieAct({ type: "watch" }, "movie-watch-1")
+	await movieAct({ type: "watch", when: { precision: "unknown" } }, "movie-watch-2")
+	const [all, sent] = await sentBy(() => movieAct({ type: "removeWatches" }))
+	assert.deepEqual(writes(sent), [
+		"DELETE user_watch_log",
+		"DELETE user_watch_state",
+	])
+	assert.deepEqual(
+		[all.status, [...all.deleted].sort(), logOf(movie), stateOf(movie)],
+		["applied", ["movie-watch-1", "movie-watch-2"], [], null],
+	)
+	// Nothing left: the same request again changes nothing.
+	assert.deepEqual((await movieAct({ type: "removeWatches" })).deleted, [])
+
+	score(8)
+	await movieAct({ type: "watch" }, "movie-watch-3")
+	const rated = await movieAct({ type: "removeWatches" })
+	assert.deepEqual(rated.deleted, ["movie-watch-3"])
+	assert.deepEqual(movieLog(), [["score-603", "score", "unknown"]])
+	assert.equal(stateOf(movie)?.state, "seen")
+	// A show's watches are not removed this way.
+	assert.equal((await act({ type: "removeWatches" })).status, "refused")
+})
+
+const restored = (
+	watchId: string,
+	parts: Partial<RestoredWatch> = {},
+): RestoredWatch => ({
+	watchId,
+	watchedAt: Date.UTC(2024, 4, 1),
+	precision: "day",
+	origin: "single",
+	importId: null,
+	createdAt: Date.UTC(2024, 4, 2, 9),
+	...parts,
+})
+const restore = (...rows: RestoredWatch[]) =>
+	movieAct({ type: "restoreWatches", rows })
+
+test("Movie: Undo of a delete inserts the same row again, with its id, its date and when it was recorded", async () => {
+	await movieAct(
+		{ type: "watch", when: { precision: "day", day: "2024-05-01" } },
+		"movie-watch-1",
+	)
+	const [before] = logOf(movie)
+	await movieAct({ type: "deleteWatch", watchId: "movie-watch-1" })
+	assert.equal(stateOf(movie), null)
+	const [back, sent] = await sentBy(() =>
+		restore(restored("movie-watch-1", { createdAt: before.created_at })),
+	)
+	assert.deepEqual(writes(sent), [
+		"INSERT user_watch_log",
+		"INSERT user_watch_state",
+	])
+	assert.deepEqual([back.status, back.inserted], ["applied", ["movie-watch-1"]])
+	const { updated_at: _, ...row } = logOf(movie)[0]
+	const { updated_at: __, ...was } = before
+	assert.deepEqual(row, was)
+	assert.equal(stateOf(movie)?.state, "seen")
+	// Sent twice, it is there once and nothing is overwritten.
+	const twice = await restore(
+		restored("movie-watch-1", { watchedAt: null, precision: "unknown" }),
+	)
+	assert.deepEqual([twice.status, twice.inserted], ["applied", []])
+	assert.equal(logOf(movie)[0].watched_at, Date.UTC(2024, 4, 1))
+})
+
+test("Movie: Undo restores several watches at once, takes the place of the score's watch, and leaves the lists alone", async () => {
+	score(8)
+	await movieAct({ type: "rate", score: 8 })
+	db.seed("user_wishlist", [titleRow(movie)])
+	db.seed("user_import", [{ id: "imp-1", user_id: user, source: "letterboxd" }])
+	const back = await restore(
+		restored("movie-watch-1", { watchedAt: 1_700_000_000_000, precision: "moment" }),
+		restored("i-0123456789abcdef0123456789abcdef", {
+			origin: "import",
+			importId: "imp-1",
+			watchedAt: null,
+			precision: "unknown",
+		}),
+		restored("mig-movie-603"),
+	)
+	assert.equal(back.status, "applied")
+	assert.deepEqual(movieLog().sort(), [
+		["i-0123456789abcdef0123456789abcdef", "import", "unknown"],
+		["mig-movie-603", "single", "day"],
+		["movie-watch-1", "single", "moment"],
+	])
+	assert.equal(
+		logOf(movie).find((r) => r.origin === "import")?.import_id,
+		"imp-1",
+	)
+	assert.deepEqual(back.deleted, ["score-603"])
+	assert.equal(onWishlist(movie), true)
+})
+
+test("Movie: Undo of the deleted watch that carried the score's id makes the score's watch the member's own again", async () => {
+	score(8)
+	await movieAct({ type: "rate", score: 8 })
+	await movieAct({
+		type: "editWatchDate",
+		watchId: "score-603",
+		when: { precision: "day", day: "2024-05-01" },
+	})
+	// Deleted: the rule puts a score's watch back under the same id.
+	await movieAct({ type: "deleteWatch", watchId: "score-603" })
+	assert.deepEqual(movieLog(), [["score-603", "score", "unknown"]])
+	const back = await restore(restored("score-603"))
+	assert.equal(back.status, "applied")
+	assert.deepEqual(movieLog(), [["score-603", "single", "day"]])
+	assert.equal(logOf(movie)[0].watched_at, Date.UTC(2024, 4, 1))
+})
+
+test("Movie: a row that could not have been in this movie's log is not restored", async () => {
+	db.seed("user_import", [{ id: "imp-other", user_id: "member-B", source: "trakt" }])
+	const refusedRows: [string, RestoredWatch[]][] = [
+		["no row", []],
+		["a show's group watch", [restored("g-0193f6a3-64122")]],
+		["another movie's score watch", [restored("score-999")]],
+		["another movie's migrated watch", [restored("mig-movie-999")]],
+		["an id that is none", [restored("x")]],
+		[
+			"an origin only the server gives",
+			[restored("movie-watch-1", { origin: "score" as "single" })],
+		],
+		[
+			"a group origin",
+			[restored("movie-watch-1", { origin: "seen" as "single" })],
+		],
+		["an import without its id", [restored("movie-watch-1", { origin: "import" })]],
+		[
+			"an import of another member",
+			[
+				restored("i-0123456789abcdef0123456789abcdef", {
+					origin: "import",
+					importId: "imp-other",
+				}),
+			],
+		],
+		[
+			"an import id on a watch marked by hand",
+			[restored("movie-watch-1", { importId: "imp-other" })],
+		],
+		["a day with a time", [restored("movie-watch-1", { watchedAt: Date.UTC(2024, 4, 1, 12) })]],
+		["a date marked unknown", [restored("movie-watch-1", { precision: "unknown" })]],
+		["a moment without a time", [restored("movie-watch-1", { precision: "moment", watchedAt: null })]],
+		["a watch from the future", [restored("movie-watch-1", { watchedAt: midnight(3) })]],
+		["recorded in the future", [restored("movie-watch-1", { createdAt: Date.now() + 3 * DAY })]],
+		["a precision that is none", [restored("movie-watch-1", { precision: "week" as "day" })]],
+		["too many", Array.from({ length: 201 }, (_, i) => restored(`movie-watch-${1000 + i}`))],
+		["the same id twice", [restored("movie-watch-1"), restored("movie-watch-1")]],
+	]
+	for (const [why, rows] of refusedRows) {
+		const result = await restore(...rows)
+		assert.equal(result.status, "refused", why)
+	}
+	assert.deepEqual([logOf(movie), stateOf(movie)], [[], null])
+	// A show has no watch to restore this way, and one member's rows never land in another's log.
+	assert.equal(
+		(await act({ type: "restoreWatches", rows: [restored("movie-watch-1")] })).status,
+		"refused",
+	)
+	await restore(restored("movie-watch-1"))
+	assert.deepEqual(db.log("member-B"), [])
+	assert.equal(db.log(user).length, 1)
 })
 
 test("settleMovie is the rule for the paths that write a score themselves: it settles and leaves the cache to the caller", async () => {

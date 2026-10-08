@@ -189,10 +189,16 @@ export const useScoreMutation = () => {
 				queryClient.setQueryData(userDataQueryKey, context.previousData)
 			}
 		},
-		onSettled: (_, __, { mediaType, score }) => {
+		onSettled: (_, __, { mediaType, tmdbId, score }) => {
+			if (!user || mediaType !== "movie") return
 			// Whether a movie stays Seen without its score depends on its watch log, which the map only sums up.
-			if (user && mediaType === "movie" && score === null)
+			if (score === null)
 				void queryClient.invalidateQueries({ queryKey: userDataQueryKey })
+			// A score adds or removes the watch it owns, so a log that was read before is read again when it next
+			// opens. The key is `watchLogKey` of ui/watch-log/useWatchLog.ts, whose code loads with the log.
+			void queryClient.invalidateQueries({
+				queryKey: ["watch-log", user.id, tmdbId],
+			})
 		},
 	})
 }

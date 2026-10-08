@@ -86,6 +86,26 @@ export type TrackingAction =
 	| { type: "editWatchDate"; watchId: string; when: LoggedWhen }
 	/** "Set a date" on the watches of Mark season, Watched up to here or a Seen press. */
 	| { type: "setGroupDate"; group: string; day: string }
+	/** "Remove all N watches" in a movie's log: every watch the member logged. The score's watch is not theirs. */
+	| { type: "removeWatches" }
+	/** Undo of a delete in a movie's log: the same rows again, under the same ids. */
+	| { type: "restoreWatches"; rows: RestoredWatch[] }
+
+/**
+ * A watch that was deleted from a movie's log, as the browser hands it back for Undo. The member and the movie are
+ * not in it: they come from the session and from the request's title.
+ */
+export interface RestoredWatch {
+	watchId: string
+	/** Milliseconds: the instant, 00:00 UTC of the day, or null for an unknown date. */
+	watchedAt: number | null
+	precision: "moment" | "day" | "unknown"
+	/** A watch marked by hand or imported. No other origin is the member's to restore. */
+	origin: "single" | "import"
+	importId: string | null
+	/** When the watch was first recorded, in milliseconds. */
+	createdAt: number
+}
 
 export interface TrackingResult {
 	status: "applied" | "refused"
@@ -419,6 +439,51 @@ const validWhen = (when: WatchedWhen | undefined) =>
 	when.precision === "unknown" ||
 	(when.precision === "day" && isDay(when.day))
 
+const DAY_MS = 86_400_000
+/** The end of tomorrow by the UTC date: a device is never more than a day ahead of UTC (data-model.md, C4). */
+const latestDay = (now: number) => (Math.floor(now / DAY_MS) + 2) * DAY_MS
+/** The day a member names has come, where they are. */
+const dayHasCome = (when: WatchedWhen | undefined, now: number) =>
+	when?.precision !== "day" ||
+	Date.parse(`${when.day}T00:00:00Z`) < latestDay(now)
+const NOT_YET = "That day has not come yet."
+
+/** How many watches one Undo can put back. A movie's log is read up to 200 rows. */
+const MAX_RESTORED = 200
+const IMPORT_WATCH_ID = /^i-[0-9a-f]{32}$/
+const NOT_RESTORABLE = "That watch can't be put back."
+
+/**
+ * Whether a row could have been in this movie's log, by what it says about itself. Undo sends back what the log
+ * showed, so everything in it is checked as a member's input: the id is one the browser, the migration, an import
+ * or this movie's score made for this movie; the origin is the member's own; the date fits its precision and has
+ * come. Whose import an imported watch names is checked against the table.
+ */
+function restorable(row: RestoredWatch, movieId: number, now: number): boolean {
+	if (!row || typeof row !== "object") return false
+	const { watchId, watchedAt, precision, origin, importId, createdAt } = row
+	if (typeof watchId !== "string") return false
+	if (origin === "import") {
+		if (!IMPORT_WATCH_ID.test(watchId)) return false
+		if (typeof importId !== "string" || !importId || importId.length > 80)
+			return false
+	} else if (origin === "single") {
+		if (importId !== null) return false
+		const own =
+			validId(watchId) ||
+			watchId === scoreWatchId(movieId) ||
+			watchId === `mig-movie-${movieId}`
+		if (!own) return false
+	} else return false
+	if (!Number.isFinite(createdAt) || createdAt <= 0 || createdAt > now + 60_000)
+		return false
+	if (precision === "unknown") return watchedAt === null
+	if (watchedAt === null || !Number.isFinite(watchedAt)) return false
+	if (watchedAt < 0 || watchedAt >= latestDay(now)) return false
+	if (precision === "day") return watchedAt % DAY_MS === 0
+	return precision === "moment"
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // The episode list (Q3)
 // ---------------------------------------------------------------------------------------------------------
@@ -505,6 +570,8 @@ export async function applyTrackingEvent(
 		return applyMovieEvent(userId, canonical.tmdbId, event, actionId)
 	if (event.type === "watch" && !("season" in event))
 		return refusal("A watch of a show names an episode.")
+	if (event.type === "removeWatches" || event.type === "restoreWatches")
+		return refusal("A show's watches are changed in its episode list.")
 	return applyShowEventStored(
 		userId,
 		canonical,
@@ -768,6 +835,7 @@ async function applyMovieEvent(
 			if (!validId(actionId)) return refusal(BAD_ID)
 			if (!validWhen(event.when)) return refusal("No such day.")
 			const now = Date.now()
+			if (!dayHasCome(event.when, now)) return refusal(NOT_YET)
 			const { rowcount } = await insertLog(
 				userId,
 				[movieLogRow(movieId, actionId, "single", event.when, now)],
@@ -778,15 +846,80 @@ async function applyMovieEvent(
 			break
 		}
 		case "deleteWatch": {
-			if (event.watchId === scoreWatchId(movieId))
-				return refusal(
-					"This watch comes from your score. It goes when the score is cleared.",
+			// The watch a score owns is not the member's to delete: the rule would put it back. Once a date made it
+			// their own it is, though it keeps the id.
+			if (event.watchId === scoreWatchId(movieId)) {
+				const [owned] = await read<{ origin: string }>(
+					"SELECT origin FROM user_watch_log WHERE user_id = ? AND watch_id = ?",
+					[userId, event.watchId],
 				)
+				if (owned?.origin === "score")
+					return refusal(
+						"This watch comes from your score. It goes when the score is cleared.",
+					)
+			}
 			const result = await run(
 				"DELETE FROM user_watch_log WHERE user_id = ? AND watch_id = ? AND media_type = 'movie' AND tmdb_id = ?",
 				[userId, event.watchId, movieId],
 			)
 			if ((result.rowcount || 0) >= 1) deleted.push(event.watchId)
+			break
+		}
+		case "removeWatches": {
+			// Read by the movie, not by a key: the rows of the member's previous action have to be visible.
+			await run("REFRESH TABLE user_watch_log")
+			const mine = (await readLog(userId, title))
+				.filter((watch) => watch.origin !== "score")
+				.map((watch) => watch.watch_id)
+			await deleteLog(userId, mine)
+			deleted.push(...mine)
+			break
+		}
+		case "restoreWatches": {
+			const rows = Array.isArray(event.rows) ? event.rows : []
+			const now = Date.now()
+			const ids = new Set(rows.map((row) => row?.watchId))
+			if (!rows.length || rows.length > MAX_RESTORED || ids.size !== rows.length)
+				return refusal(NOT_RESTORABLE)
+			if (!rows.every((row) => restorable(row, movieId, now)))
+				return refusal(NOT_RESTORABLE)
+			// An imported watch names its import, and that import is this member's.
+			const imports = [
+				...new Set(rows.flatMap((row) => (row.importId ? [row.importId] : []))),
+			]
+			if (imports.length) {
+				const owned = await read<{ id: string }>(
+					`SELECT id FROM user_import WHERE user_id = ? AND id IN (${marks(imports.length)})`,
+					[userId, ...imports],
+				)
+				if (owned.length !== imports.length) return refusal(NOT_RESTORABLE)
+			}
+			for (const row of rows) {
+				const log: LogRow = {
+					...movieLogRow(movieId, row.watchId, row.origin, undefined, now),
+					watched_at: row.watchedAt,
+					watched_at_precision: row.precision,
+					import_id: row.importId,
+					created_at: row.createdAt,
+				}
+				// A stored id is left as it is, so the same Undo sent twice restores once.
+				const { rowcount } = await insertLog(userId, [log], now)
+				if (rowcount === 1) inserted.push(row.watchId)
+				// The deleted watch had the score's id (a date had made it the member's own), and the rule has put the
+				// score's watch back under that id since: that row becomes the member's own again.
+				else if (row.watchId === scoreWatchId(movieId))
+					await run(
+						`UPDATE user_watch_log SET origin = 'single', watched_at = ?, watched_at_precision = ?, updated_at = ?
+						 WHERE user_id = ? AND watch_id = ? AND origin = 'score'`,
+						[
+							at(row.watchedAt),
+							row.precision,
+							new Date(now),
+							userId,
+							row.watchId,
+						],
+					)
+			}
 			break
 		}
 		case "rate":
@@ -829,6 +962,7 @@ async function editWatchDate(
 	)
 		return refusal("No such day.")
 	const now = new Date()
+	if (!dayHasCome(when, now.getTime())) return refusal(NOT_YET)
 	const date = watchedAt(when, now.getTime())
 	const result = await run(
 		`UPDATE user_watch_log SET watched_at = ?, watched_at_precision = ?, updated_at = ?

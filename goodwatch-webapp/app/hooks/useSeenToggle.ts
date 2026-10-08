@@ -32,5 +32,12 @@ export function useSeenToggle(mediaType: MediaType, tmdbId: number) {
 		[mutate, mediaType, tmdbId, seen, rated],
 	)
 
-	return { seen, tracked: entry !== null, toggle, isPending }
+	return {
+		seen,
+		tracked: entry !== null,
+		/** The title's watches, the one a movie's score owns among them. */
+		watches: entry?.count ?? 0,
+		toggle,
+		isPending,
+	}
 }

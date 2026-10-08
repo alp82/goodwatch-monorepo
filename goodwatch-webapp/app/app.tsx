@@ -12,6 +12,7 @@ import {
 	SearchDialog,
 	SiteHeader,
 } from "~/ui/navigation"
+import { WatchLogHost } from "~/ui/watch-log/WatchLogHost"
 import { useUser } from "~/utils/auth"
 import { useFeature } from "~/hooks/useFeature"
 import { useInvalidateOnVisibility } from "~/hooks/useInvalidateOnVisibility"
@@ -63,6 +64,7 @@ function App() {
 	const location = useLocation()
 	const { user } = useUser()
 	const navigation = useFeature("navigation")
+	const tracking = useFeature("tracking")
 
 	useInvalidateOnVisibility()
 
@@ -86,6 +88,8 @@ function App() {
 				<Outlet />
 			</main>
 			<Footer />
+			{/* Where a movie's Seen button hands its press: nothing renders or loads before the first one. */}
+			{tracking && <WatchLogHost />}
 			{navigation ? (
 				<>
 					<MobileDock />

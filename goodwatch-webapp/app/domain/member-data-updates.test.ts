@@ -263,3 +263,104 @@ test("rating a show changes no watch state and leaves the Wishlist; it takes the
 	assert.deepEqual(after?.notInterested, {})
 	assert.equal(afterScore(undefined, "show", 3, 9, null, NOW), undefined)
 })
+
+// ---------------------------------------------------------------------------------------------------------
+// The movie watch log
+// ---------------------------------------------------------------------------------------------------------
+
+const { afterWatchLog } = await import("./member-data-updates-watch-log.ts")
+type WatchLogEntry = import("./watch-log.ts").WatchLogEntry
+
+const logged = (
+	id: string,
+	parts: Partial<WatchLogEntry> = {},
+): WatchLogEntry => ({
+	id,
+	at: NOW.getTime(),
+	precision: "moment",
+	origin: "single",
+	importId: null,
+	source: null,
+	createdAt: NOW.getTime(),
+	...parts,
+})
+
+test("a first watch in the log makes the movie Seen with its date and count, and takes it off both lists", () => {
+	const before = data({
+		wishlist: { "movie-603": wish },
+		notInterested: { "movie-603": stamp },
+	})
+	const after = afterWatchLog(before, 603, [logged("w1")], { watched: true })
+	assert.deepEqual(after?.watchState["movie-603"], {
+		state: "seen",
+		watchedAt: NOW,
+		precision: "moment",
+		count: 1,
+		pass: 1,
+		episodesWatched: 0,
+		furthest: null,
+		lastActivityAt: NOW,
+	})
+	assert.deepEqual([after?.wishlist, after?.notInterested], [{}, {}])
+	assert.equal("movie-603" in before.wishlist, true, "the map before is left")
+})
+
+test("the entry follows the log: the count, the latest dated watch, and no date when every watch is undated", () => {
+	const three = afterWatchLog(
+		data({ watchState: { "movie-603": entry() } }),
+		603,
+		[
+			logged("d", { at: Date.parse("2026-10-01T00:00:00Z"), precision: "day" }),
+			logged("m", { at: EARLIER.getTime() }),
+			logged("u", { at: null, precision: "unknown" }),
+		],
+	)
+	assert.deepEqual(
+		[
+			three?.watchState["movie-603"].count,
+			three?.watchState["movie-603"].watchedAt,
+			three?.watchState["movie-603"].precision,
+		],
+		[3, new Date("2026-10-01T00:00:00Z"), "day"],
+	)
+	const undated = afterWatchLog(data(), 603, [
+		logged("u", { at: null, precision: "unknown", origin: "import" }),
+	])
+	assert.deepEqual(
+		[
+			undated?.watchState["movie-603"].watchedAt,
+			undated?.watchState["movie-603"].precision,
+			// An undated imported watch counts for nothing in "watched lately".
+			undated?.watchState["movie-603"].lastActivityAt,
+		],
+		[null, "unknown", null],
+	)
+})
+
+test("editing or deleting a watch leaves the Wishlist alone; an empty log is a movie that is not Seen", () => {
+	const wished = data({
+		wishlist: { "movie-603": wish },
+		watchState: { "movie-603": entry({ count: 2 }) },
+	})
+	const edited = afterWatchLog(wished, 603, [logged("w1")])
+	assert.equal("movie-603" in (edited?.wishlist ?? {}), true)
+	const empty = afterWatchLog(wished, 603, [])
+	assert.equal(empty?.watchState["movie-603"], undefined)
+})
+
+test("Undo of the first watch puts the movie back on the lists it was taken off, with its place", () => {
+	const after = afterWatchLog(
+		data({ watchState: { "movie-603": entry() } }),
+		603,
+		[],
+		{ back: { wishlist: wish, notInterested: stamp } },
+	)
+	assert.deepEqual(
+		[after?.watchState, after?.wishlist, after?.notInterested],
+		[{}, { "movie-603": wish }, { "movie-603": stamp }],
+	)
+})
+
+test("no member data, no guess about the log", () => {
+	assert.equal(afterWatchLog(undefined, 603, [logged("w1")]), undefined)
+})
