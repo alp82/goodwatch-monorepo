@@ -6,13 +6,9 @@ import { PauseIcon } from "@heroicons/react/20/solid"
 // Loaded after the page is up; until its data is there, and for a show without an episode list, it shows what the
 // first paint showed.
 import {
-	ArrowDownIcon,
-	ArrowPathIcon,
-	ArrowUturnLeftIcon,
-	BookmarkIcon,
-	CalendarDaysIcon,
 	CheckIcon,
 	ChevronDownIcon,
+	ClockIcon,
 	EyeIcon,
 	NoSymbolIcon,
 	PlayIcon,
@@ -72,19 +68,52 @@ export default function HeroTracking({
 // The box: status, progress, Next episode
 // ---------------------------------------------------------------------------------------------------------
 
-/** How each entry of the menu looks. What it says and whether it is offered is the machine's (status-menu.ts). */
-const MENU_LOOK: Record<MenuEntryId, { Icon: typeof PlayIcon; tint: string }> =
-	{
-		markNew: { Icon: CheckIcon, tint: "text-green-300" },
-		markAll: { Icon: CheckIcon, tint: "text-green-300" },
-		wantToSee: { Icon: BookmarkIcon, tint: "text-amber-300" },
-		resume: { Icon: PlayIcon, tint: "text-sky-300" },
-		hold: { Icon: PauseIcon, tint: "text-violet-300" },
-		watchAgain: { Icon: ArrowPathIcon, tint: "text-sky-300" },
-		takeBack: { Icon: ArrowUturnLeftIcon, tint: "text-gray-400" },
-		setDate: { Icon: CalendarDaysIcon, tint: "text-gray-300" },
-		drop: { Icon: NoSymbolIcon, tint: "text-pink-300/80" },
+// The icons only tracking draws (Heroicons 24 solid, MIT), written out here: imported from the icon package, or kept
+// in a small module of their own, they would be added to a chunk that every page loads.
+const icon = (paths: string[]) =>
+	function TrackingIcon({ className }: { className?: string }) {
+		return (
+			<svg
+				viewBox="0 0 24 24"
+				fill="currentColor"
+				aria-hidden="true"
+				className={className}
+			>
+				{paths.map((d) => (
+					<path key={d} fillRule="evenodd" clipRule="evenodd" d={d} />
+				))}
+			</svg>
+		)
 	}
+
+const ArrowDownIcon = icon([
+	"M12 2.25a.75.75 0 0 1 .75.75v16.19l6.22-6.22a.75.75 0 1 1 1.06 1.06l-7.5 7.5a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 1 1 1.06-1.06l6.22 6.22V3a.75.75 0 0 1 .75-.75Z",
+])
+const ArrowPathIcon = icon([
+	"M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z",
+])
+const ArrowUturnLeftIcon = icon([
+	"M9.53 2.47a.75.75 0 0 1 0 1.06L4.81 8.25H15a6.75 6.75 0 0 1 0 13.5h-3a.75.75 0 0 1 0-1.5h3a5.25 5.25 0 1 0 0-10.5H4.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z",
+])
+const BookmarkIcon = icon([
+	"M6.32 2.577a49.255 49.255 0 0 1 11.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 0 1-1.085.67L12 18.089l-7.165 3.583A.75.75 0 0 1 3.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93Z",
+])
+
+/** How each entry of the menu looks. What it says and whether it is offered is the machine's (status-menu.ts). */
+const MENU_LOOK: Record<
+	MenuEntryId,
+	{ Icon: (props: { className?: string }) => React.ReactNode; tint: string }
+> = {
+	markNew: { Icon: CheckIcon, tint: "text-green-300" },
+	markAll: { Icon: CheckIcon, tint: "text-green-300" },
+	wantToSee: { Icon: BookmarkIcon, tint: "text-amber-300" },
+	resume: { Icon: PlayIcon, tint: "text-sky-300" },
+	hold: { Icon: PauseIcon, tint: "text-violet-300" },
+	watchAgain: { Icon: ArrowPathIcon, tint: "text-sky-300" },
+	takeBack: { Icon: ArrowUturnLeftIcon, tint: "text-gray-400" },
+	setDate: { Icon: ClockIcon, tint: "text-gray-300" },
+	drop: { Icon: NoSymbolIcon, tint: "text-pink-300/80" },
+}
 
 function StatusPill({
 	view,
