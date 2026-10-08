@@ -213,3 +213,29 @@ test("putting the gate first keeps the listeners that were there", async () => {
 		other.close()
 	}
 })
+
+test("the static hostname passes a gated URL to the file listener", () => {
+	const server = createServer()
+	let passed = false
+	server.on("request", () => {
+		passed = true
+	})
+	putGateFirst(server, (host) => host?.toLowerCase() === "static.example.com")
+	server.emit(
+		"request",
+		{
+			method: "GET",
+			url: FILTERED,
+			headers: { ...browser, host: "STATIC.EXAMPLE.COM" },
+		},
+		{
+			writeHead() {
+				assert.fail("the gate must not answer")
+			},
+			end() {
+				assert.fail("the gate must not answer")
+			},
+		},
+	)
+	assert.equal(passed, true)
+})

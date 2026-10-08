@@ -43,6 +43,7 @@ import {
 	createBuildFileStore,
 	isBuildFilePath,
 } from "./build-file-store.server.ts"
+import { isStaticHost, startAssetProbe } from "./asset-address.server.ts"
 import { addReadinessCheck, onShutdown } from "./lifecycle.server.ts"
 
 type Headers = Record<string, string | number>
@@ -166,6 +167,11 @@ export async function buildStaticManifest(
 		const identity = make(path, size)
 		const policy = cachePolicy(urlPath, extension, assetsPrefix)
 		const conditionalHeaders: Headers = { "Cache-Control": policy }
+		if (
+			urlPath.startsWith(assetsPrefix) ||
+			/^(woff2?|ttf|otf|webmanifest)$/.test(extension)
+		)
+			conditionalHeaders["Access-Control-Allow-Origin"] = "*"
 		const entry: StaticEntry = {
 			size,
 			identity,
@@ -316,6 +322,7 @@ function storedEntry(path: string, file: BuildFile): StaticEntry {
 		.slice(0, 20)
 	const conditionalHeaders: Headers = {
 		"Cache-Control": "public, max-age=31536000, immutable",
+		"Access-Control-Allow-Origin": "*",
 	}
 	if (file.br) conditionalHeaders.Vary = "Accept-Encoding"
 	const make = (body: Buffer, br = false): Variant => {
@@ -349,12 +356,20 @@ function storedEntry(path: string, file: BuildFile): StaticEntry {
 }
 type BuildFileLookup = Pick<ReturnType<typeof createBuildFileStore>, "lookup">
 export function answerStatic(
-	manifest: StaticManifest,
+	manifest: StaticManifest | undefined,
 	request: IncomingMessage,
 	response: ServerResponse,
 	store?: BuildFileLookup,
+	options: { filesOnly?: boolean } = {},
 ): boolean {
-	if (request.method !== "GET" && request.method !== "HEAD") return false
+	if (!manifest) {
+		if (!options.filesOnly) return false
+		response.writeHead(503, { "Cache-Control": "no-store" })
+		response.end()
+		return true
+	}
+	const readable = request.method === "GET" || request.method === "HEAD"
+	if (!readable && !options.filesOnly) return false
 	const url = request.url ?? "/"
 	const query = url.indexOf("?")
 	const path = query < 0 ? url : url.slice(0, query)
@@ -368,12 +383,21 @@ export function answerStatic(
 			/* Invalid escapes cannot name a manifest entry. */
 		}
 	}
-	if (!entry) {
+	if (!entry || !readable) {
+		const fallback = manifest.fallback.has(path) ? path : decoded
+		if (manifest.fallback.has(fallback)) {
+			// Express still serves files without compressed variants, with the same CORS policy.
+			if (
+				fallback.startsWith(manifest.assetsPrefix) ||
+				/\.(woff2?|ttf|otf|webmanifest)$/i.test(fallback)
+			)
+				response.setHeader("Access-Control-Allow-Origin", "*")
+			return false
+		}
 		if (
-			manifest.fallback.has(path) ||
-			manifest.fallback.has(decoded) ||
-			(!path.startsWith(manifest.assetsPrefix) &&
-				!decoded.startsWith(manifest.assetsPrefix))
+			!options.filesOnly &&
+			!path.startsWith(manifest.assetsPrefix) &&
+			!decoded.startsWith(manifest.assetsPrefix)
 		)
 			return false
 		const notFound = () => {
@@ -385,7 +409,11 @@ export function answerStatic(
 			})
 			response.end(request.method === "HEAD" ? undefined : "Not found")
 		}
-		if (store && isBuildFilePath(path, manifest.assetsPrefix, contentTypes)) {
+		if (
+			readable &&
+			store &&
+			isBuildFilePath(path, manifest.assetsPrefix, contentTypes)
+		) {
 			void Promise.resolve()
 				.then(() => store.lookup(path))
 				.then((file) => {
@@ -460,6 +488,10 @@ export function startStaticFiles(): void {
 		stopped = true
 		clearTimeout(republish)
 	})
+	let manifestReady!: () => void
+	const ready = new Promise<void>((resolve) => {
+		manifestReady = resolve
+	})
 	// Lazy import lets the route modules finish evaluating before reading the build.
 	const loading = (async () => {
 		const build = await import("virtual:remix/server-build")
@@ -467,6 +499,8 @@ export function startStaticFiles(): void {
 			build.assetsBuildDirectory,
 			`${build.publicPath}assets/`,
 		)
+		// Files can be served before publishing and probing, including a probe routed back here.
+		manifestReady()
 		const { getRedisCluster } = await import("~/utils/cache")
 		const logged = new Set<string>()
 		const store = createBuildFileStore({
@@ -510,6 +544,7 @@ export function startStaticFiles(): void {
 			).unref()
 		}
 		await cycle()
+		await startAssetProbe(build.assets.url)
 	})()
 		.catch((error) =>
 			console.error("Static manifest could not be loaded:", error),
@@ -518,6 +553,7 @@ export function startStaticFiles(): void {
 			published = true
 		})
 	state.settled = Promise.race([
+		ready,
 		loading,
 		new Promise<void>((resolve) =>
 			setTimeout(resolve, MANIFEST_WAIT_MS).unref(),
@@ -537,26 +573,34 @@ export function startStaticFiles(): void {
 		const listeners = server.listeners("request")
 		server.removeAllListeners("request")
 		const handle: RequestListener = (request, response) => {
+			const filesOnly = isStaticHost(request.headers.host)
 			// The manifest takes a moment to build after a start. A request that arrives before it waits: Express
 			// would answer a file from `public/` as immutable for a year, which is what this module is there to end.
-			// Only requests that can name a file wait (a dot in the path): pages and health checks go on at once.
+			// On the static host every path waits, so pages and health checks cannot slip through.
 			if (
 				state.settled &&
-				(request.method === "GET" || request.method === "HEAD") &&
-				request.url?.split("?", 1)[0].includes(".")
+				(filesOnly ||
+					((request.method === "GET" || request.method === "HEAD") &&
+						request.url?.split("?", 1)[0].includes(".")))
 			) {
 				void state.settled.then(() => handle(request, response))
 				return
 			}
 			try {
 				if (
-					state.manifest &&
-					answerStatic(state.manifest, request, response, state.store)
+					answerStatic(state.manifest, request, response, state.store, {
+						filesOnly,
+					})
 				)
 					return
 			} catch {
 				// The app answers when no headers have been sent.
 				if (response.headersSent) return void response.destroy()
+				if (filesOnly) {
+					response.writeHead(503, { "Cache-Control": "no-store" })
+					response.end()
+					return
+				}
 			}
 			for (const listener of listeners)
 				Reflect.apply(listener, server, [request, response])
