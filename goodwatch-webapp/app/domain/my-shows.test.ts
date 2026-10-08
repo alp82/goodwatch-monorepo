@@ -149,6 +149,19 @@ test("On hold and Dropped are groups of their own, whatever their activity", () 
 	assert.deepEqual(plan.continue, [])
 })
 
+test("a Seen show with new episodes that was dropped or put on hold leaves Continue for its status group", () => {
+	// Rows 28 and 29 of the machine: 16 of 22 watched, the last of them yesterday.
+	const seen = planMyShows({ shows: [show(1, "seen", 16, 22, daysAgo(1))], starts: [], now: NOW })
+	assert.deepEqual(ids(seen.continue), [1])
+	const plan = planMyShows({
+		shows: [show(1, "dropped", 16, 22, daysAgo(1)), show(2, "on_hold", 16, 22, daysAgo(1))],
+		starts: [],
+		now: NOW,
+	})
+	assert.deepEqual(plan.continue, [])
+	assert.deepEqual([ids(plan.dropped), ids(plan.onHold)], [[1], [2]])
+})
+
 test("a show the catalog has no aired count for stays where its state and activity put it", () => {
 	const plan = planMyShows({
 		shows: [

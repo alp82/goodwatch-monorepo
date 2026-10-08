@@ -242,13 +242,15 @@ function stored() {
 			.sort((a, b) => a.watch_id.localeCompare(b.watch_id)),
 		states: db
 			.table("user_watch_state")
-			.map(({ _seq_no, _primary_term, ...r }): Row => ({
-				...r,
-				state_changed_at: "set",
-				rate_prompt_dismissed_at: set(r.rate_prompt_dismissed_at),
-				created_at: "set",
-				updated_at: "set",
-			}))
+			.map(
+				({ _seq_no, _primary_term, ...r }): Row => ({
+					...r,
+					state_changed_at: "set",
+					rate_prompt_dismissed_at: set(r.rate_prompt_dismissed_at),
+					created_at: "set",
+					updated_at: "set",
+				}),
+			)
 			.sort((a, b) => Number(a.tmdb_id) - Number(b.tmdb_id)),
 		wishlist: db.table("user_wishlist").map((r) => r.tmdb_id),
 		notInterested: db.table("user_not_interested").map((r) => r.tmdb_id),
@@ -833,6 +835,57 @@ test("Put on hold, drop, resume (rows 18 to 21): no log row, the state and when 
 	assert.deepEqual([resumed.row, stateOf(short)], ["21", null])
 })
 
+test("Put on hold and drop a Seen show with new episodes (rows 28, 29): only the state row, the press ends, the watches stay", async () => {
+	for (const [type, row, to] of [
+		["hold", "28", "on_hold"],
+		["drop", "29", "dropped"],
+	] as const) {
+		fresh()
+		await act({ type: "pressSeen" }, "press-0001")
+		// Nothing aired since: a show the member has seen all of is neither set aside nor dropped.
+		const refused = await act({ type })
+		assert.equal(refused.status, "refused", type)
+		assert.equal(stateOf()?.state, "seen")
+		airs(episode(SHOW, 206, 2, 6, LONG_AGO))
+		const log = logOf()
+		const [done, sent] = await sentBy(() => act({ type }))
+		assert.deepEqual(writes(sent), ["UPDATE user_watch_state"], type)
+		assert.deepEqual(
+			[
+				done.row,
+				stateOf()?.state,
+				stateOf()?.seen_press_group,
+				stateOf()?.seen_press_from,
+			],
+			[row, to, null, null],
+		)
+		assert.deepEqual(logOf(), log, "no watch is touched")
+		assert.deepEqual([done.inserted, done.deleted], [[], []])
+		// Sent again: nothing more happens.
+		assert.equal(
+			(await act({ type })).status,
+			type === "drop" ? "applied" : "refused",
+		)
+		assert.deepEqual(logOf(), log)
+		// From there the rows of any On hold or Dropped show: Resume (20), and the tick that makes it Seen (2).
+		assert.equal((await act({ type: "resume" })).row, "20")
+		assert.equal(stateOf()?.state, "watching")
+		await act({ type })
+		assert.equal(stateOf()?.state, to)
+		const ticked = await tick(2, 6)
+		assert.deepEqual(
+			[ticked.row, stateOf()?.state, stateOf()?.seen_press_group],
+			["2", "seen", null],
+		)
+	}
+	// The device's date decides what aired since, at most one day ahead of UTC: S2 E3 airs tomorrow.
+	fresh()
+	await act({ type: "pressSeen" }, "press-0001")
+	assert.equal((await act({ type: "hold" })).status, "refused")
+	const ahead = await act({ type: "hold", today: iso(midnight(1)) })
+	assert.deepEqual([ahead.row, stateOf()?.state], ["28", "on_hold"])
+})
+
 test("Rate a show (row 22): the state is unchanged, and a first score by hand on a never-started show opens the question", async () => {
 	db.seed("user_not_interested", [titleRow(show)])
 	const [rated, sent] = await sentBy(() => act({ type: "rate", score: 8 }))
@@ -1324,7 +1377,10 @@ test("Movie: a second and a third watch are recorded beside the first, each unde
 		{ type: "watch", when: { precision: "day", day: "2024-05-01" } },
 		"movie-watch-2",
 	)
-	assert.deepEqual([again.status, again.inserted], ["applied", ["movie-watch-2"]])
+	assert.deepEqual(
+		[again.status, again.inserted],
+		["applied", ["movie-watch-2"]],
+	)
 	await movieAct(
 		{ type: "watch", when: { precision: "unknown" } },
 		"movie-watch-3",
@@ -1385,7 +1441,10 @@ test("Movie: the score's watch that a date made the member's own can be deleted 
 
 test("Movie: removing all watches deletes every watch the member logged in one statement; a rated movie stays Seen", async () => {
 	await movieAct({ type: "watch" }, "movie-watch-1")
-	await movieAct({ type: "watch", when: { precision: "unknown" } }, "movie-watch-2")
+	await movieAct(
+		{ type: "watch", when: { precision: "unknown" } },
+		"movie-watch-2",
+	)
 	const [all, sent] = await sentBy(() => movieAct({ type: "removeWatches" }))
 	assert.deepEqual(writes(sent), [
 		"DELETE user_watch_log",
@@ -1457,7 +1516,10 @@ test("Movie: Undo restores several watches at once, takes the place of the score
 	db.seed("user_wishlist", [titleRow(movie)])
 	db.seed("user_import", [{ id: "imp-1", user_id: user, source: "letterboxd" }])
 	const back = await restore(
-		restored("movie-watch-1", { watchedAt: 1_700_000_000_000, precision: "moment" }),
+		restored("movie-watch-1", {
+			watchedAt: 1_700_000_000_000,
+			precision: "moment",
+		}),
 		restored("i-0123456789abcdef0123456789abcdef", {
 			origin: "import",
 			importId: "imp-1",
@@ -1498,7 +1560,9 @@ test("Movie: Undo of the deleted watch that carried the score's id makes the sco
 })
 
 test("Movie: a row that could not have been in this movie's log is not restored", async () => {
-	db.seed("user_import", [{ id: "imp-other", user_id: "member-B", source: "trakt" }])
+	db.seed("user_import", [
+		{ id: "imp-other", user_id: "member-B", source: "trakt" },
+	])
 	const refusedRows: [string, RestoredWatch[]][] = [
 		["no row", []],
 		["a show's group watch", [restored("g-0193f6a3-64122")]],
@@ -1513,7 +1577,10 @@ test("Movie: a row that could not have been in this movie's log is not restored"
 			"a group origin",
 			[restored("movie-watch-1", { origin: "seen" as "single" })],
 		],
-		["an import without its id", [restored("movie-watch-1", { origin: "import" })]],
+		[
+			"an import without its id",
+			[restored("movie-watch-1", { origin: "import" })],
+		],
 		[
 			"an import of another member",
 			[
@@ -1527,14 +1594,40 @@ test("Movie: a row that could not have been in this movie's log is not restored"
 			"an import id on a watch marked by hand",
 			[restored("movie-watch-1", { importId: "imp-other" })],
 		],
-		["a day with a time", [restored("movie-watch-1", { watchedAt: Date.UTC(2024, 4, 1, 12) })]],
-		["a date marked unknown", [restored("movie-watch-1", { precision: "unknown" })]],
-		["a moment without a time", [restored("movie-watch-1", { precision: "moment", watchedAt: null })]],
-		["a watch from the future", [restored("movie-watch-1", { watchedAt: midnight(3) })]],
-		["recorded in the future", [restored("movie-watch-1", { createdAt: Date.now() + 3 * DAY })]],
-		["a precision that is none", [restored("movie-watch-1", { precision: "week" as "day" })]],
-		["too many", Array.from({ length: 201 }, (_, i) => restored(`movie-watch-${1000 + i}`))],
-		["the same id twice", [restored("movie-watch-1"), restored("movie-watch-1")]],
+		[
+			"a day with a time",
+			[restored("movie-watch-1", { watchedAt: Date.UTC(2024, 4, 1, 12) })],
+		],
+		[
+			"a date marked unknown",
+			[restored("movie-watch-1", { precision: "unknown" })],
+		],
+		[
+			"a moment without a time",
+			[restored("movie-watch-1", { precision: "moment", watchedAt: null })],
+		],
+		[
+			"a watch from the future",
+			[restored("movie-watch-1", { watchedAt: midnight(3) })],
+		],
+		[
+			"recorded in the future",
+			[restored("movie-watch-1", { createdAt: Date.now() + 3 * DAY })],
+		],
+		[
+			"a precision that is none",
+			[restored("movie-watch-1", { precision: "week" as "day" })],
+		],
+		[
+			"too many",
+			Array.from({ length: 201 }, (_, i) =>
+				restored(`movie-watch-${1000 + i}`),
+			),
+		],
+		[
+			"the same id twice",
+			[restored("movie-watch-1"), restored("movie-watch-1")],
+		],
 	]
 	for (const [why, rows] of refusedRows) {
 		const result = await restore(...rows)
@@ -1543,7 +1636,8 @@ test("Movie: a row that could not have been in this movie's log is not restored"
 	assert.deepEqual([logOf(movie), stateOf(movie)], [[], null])
 	// A show has no watch to restore this way, and one member's rows never land in another's log.
 	assert.equal(
-		(await act({ type: "restoreWatches", rows: [restored("movie-watch-1")] })).status,
+		(await act({ type: "restoreWatches", rows: [restored("movie-watch-1")] }))
+			.status,
 		"refused",
 	)
 	await restore(restored("movie-watch-1"))

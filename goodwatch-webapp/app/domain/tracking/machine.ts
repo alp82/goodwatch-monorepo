@@ -11,7 +11,7 @@
 // The owner's decisions are built in: a running Seen show reads "Caught up"; On hold and Dropped survive having
 // nothing watched; the page offers Not interested before the first watch and Drop after it; Watch again is built and
 // needs a watched regular episode; rating a never-started show asks once whether it was seen; a Seen show with new
-// episodes stays Seen.
+// episodes stays Seen, and can be put on hold or dropped.
 
 // ---------------------------------------------------------------------------------------------------------
 // States
@@ -115,7 +115,8 @@ export type WatchedWhen =
  * What a member does. Episodes are named by season and number, so a re-added episode keeps its name.
  *
  * `watch`, `pressSeen`, `markSeason` and `watchUpTo` make watches and need the action's id (see `step`).
- * `today` is the date on the member's device, which the server reads for a group action (see `serverShow`).
+ * `today` is the date on the member's device, which the server reads for a group action, and for `hold` and `drop`
+ * (see `serverShow`).
  */
 export type TrackingEvent =
 	| { type: "watch"; season: number; number: number; when?: WatchedWhen }
@@ -129,8 +130,9 @@ export type TrackingEvent =
 	| { type: "deleteWatch"; watchId: string }
 	| { type: "pressSeen"; today?: string }
 	| { type: "undoSeen" }
-	| { type: "hold" }
-	| { type: "drop" }
+	/** On a Seen show both need an episode that aired since, so they carry `today` as a group action does. */
+	| { type: "hold"; today?: string }
+	| { type: "drop"; today?: string }
 	| { type: "resume" }
 	/** `byHand` is false for a score that an import or the taste quiz wrote: those never ask the question. */
 	| { type: "rate"; score: number | null; byHand?: boolean }
@@ -308,6 +310,8 @@ export type Guard = keyof typeof GUARDS
 // ---------------------------------------------------------------------------------------------------------
 // THE TRANSITION TABLE. This is the specification. Rows are tried from the top; the first that matches is taken.
 // The ids are the ones the data model and ADR 0009 use. 10b and 27b belonged to options the owner did not choose.
+// 28 and 29 were added after the owner used the show page: a member who has seen the earlier seasons and will not
+// go on had no way to say so without ticking an episode first.
 // ---------------------------------------------------------------------------------------------------------
 
 export interface Row {
@@ -479,12 +483,28 @@ export const TABLE: readonly Row[] = [
 		says: "Set aside, may return.",
 	},
 	{
+		id: "28",
+		from: ["seen"],
+		event: "hold",
+		guard: "newEpisodes",
+		to: "on_hold",
+		says: "Seen, and episodes aired since: set aside before going on. The watches stay and the press ends.",
+	},
+	{
 		id: "19",
 		from: ["not_started", "watching", "on_hold"],
 		event: "drop",
 		guard: null,
 		to: "dropped",
 		says: "Given up on. Clears Want to See; always hidden from recommendations.",
+	},
+	{
+		id: "29",
+		from: ["seen"],
+		event: "drop",
+		guard: "newEpisodes",
+		to: "dropped",
+		says: "Seen, and episodes aired since: not continuing. The watches stay and the press ends.",
 	},
 	{
 		id: "20",
@@ -676,6 +696,11 @@ function effect(
 // Why an event is not possible, in member words
 // ---------------------------------------------------------------------------------------------------------
 
+const hasNewEpisodes = (show: Show, record: TrackingRecord) => {
+	const f = facts(show, record)
+	return f.watched < f.aired
+}
+
 function whyNot(
 	world: World,
 	event: TableMemberEvent,
@@ -714,6 +739,8 @@ function whyNot(
 				: "There is no Seen press to take back."
 		case "hold":
 			if (state === "watching") return null
+			// Seen with episodes aired since: the member is in the middle of it again.
+			if (state === "seen" && hasNewEpisodes(show, record)) return null
 			return {
 				not_started:
 					"Nothing is watched yet, so there is nothing to put on hold.",
@@ -723,7 +750,8 @@ function whyNot(
 			}[state]
 		case "drop":
 			if (state === "dropped") return "It is dropped already."
-			if (state === "seen") return "A show you have seen can't be dropped."
+			if (state === "seen" && !hasNewEpisodes(show, record))
+				return "A show you have seen can't be dropped."
 			return null
 		case "resume":
 			return state === "on_hold" || state === "dropped"
@@ -1172,7 +1200,7 @@ export function derive(world: World): Derived {
 		offers:
 			state === "not_started"
 				? ["notInterested"]
-				: state === "watching" || state === "on_hold"
+				: state === "watching" || state === "on_hold" || newEpisodes > 0
 					? ["drop"]
 					: [],
 		ratePrompt:
@@ -1260,6 +1288,8 @@ export function showAiredBy(
  * The show as the server reads it for one event. Aired goes by the UTC date, with the tolerance that lets a device
  * ahead of UTC act on what it shows: the episode of a `watch` counts as aired when it airs at most one day after
  * the UTC date, and a group action marks by the later of the UTC date and the device's `today`, at most one day on.
+ * `hold` and `drop` go by the same date, so that a Seen show whose new episode the device already shows can be set
+ * aside or dropped.
  */
 export function serverShow(
 	episodes: readonly ListedEpisode[],
@@ -1271,7 +1301,9 @@ export function serverShow(
 	const device =
 		(event.type === "pressSeen" ||
 			event.type === "markSeason" ||
-			event.type === "watchUpTo") &&
+			event.type === "watchUpTo" ||
+			event.type === "hold" ||
+			event.type === "drop") &&
 		isDay(event.today)
 			? event.today
 			: utcToday
