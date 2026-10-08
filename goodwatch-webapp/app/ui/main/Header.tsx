@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import {
 	Menu,
 	MenuButton,
@@ -209,7 +210,7 @@ export default function Header() {
 						<div className="flex items-baseline px-2 lg:px-0">
 							<div className="shrink-0">
 								<Link to="/" prefetch="render">
-									<img className="h-7 w-auto" src={logo} alt="GoodWatch Logo" />
+									<img className="h-7 w-auto" src={assetUrl(logo)} alt="GoodWatch Logo" />
 								</Link>
 							</div>
 							<Link to="/" prefetch="render">

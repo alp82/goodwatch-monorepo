@@ -6,6 +6,7 @@
 // Touch has no pointer to follow: tap the TV or press a key and the Remote turns a quarter of the way toward it
 // (at most 6 degrees), then settles. No beam. Rendering budget (#190): only transform and opacity animate,
 // nothing loops at idle, and nothing blends or blurs over the room photo.
+import { assetUrl } from "~/utils/asset-url"
 import {
 	AnimatePresence,
 	animate,
@@ -285,7 +286,7 @@ export function PhoneLivingRoom({
 								href="/"
 								className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-black/55 py-1.5 pl-2 pr-3 text-[12px] font-semibold text-white/85 ring-1 ring-white/10"
 							>
-								<img src={gwLogo} alt="" className="h-4" />
+								<img src={assetUrl(gwLogo)} alt="" className="h-4" />
 								GoodWatch
 							</a>
 						</>
@@ -307,7 +308,7 @@ function RoomPicture({
 			<source type="image/avif" srcSet={ROOM.avif} sizes={`${width}px`} />
 			<img
 				{...{ fetchpriority: "high" }}
-				src={ROOM.fallback}
+				src={assetUrl(ROOM.fallback)}
 				srcSet={ROOM.webp}
 				sizes={`${width}px`}
 				alt={ROOM.alt}
@@ -319,10 +320,10 @@ function RoomPicture({
 		</picture>
 	) : (
 		<picture>
-			<source type="image/avif" srcSet={PHONE_ROOM.avif} />
+			<source type="image/avif" srcSet={assetUrl(PHONE_ROOM.avif)} />
 			<img
 				{...{ fetchpriority: "high" }}
-				src={PHONE_ROOM.webp}
+				src={assetUrl(PHONE_ROOM.webp)}
 				alt={PHONE_ROOM.alt}
 				width={PHONE_ROOM.w}
 				height={PHONE_ROOM.h}
@@ -359,9 +360,9 @@ function HandRemote({
 			}}
 		>
 			<picture>
-				<source type="image/avif" srcSet={HAND_IMAGE.avif} />
+				<source type="image/avif" srcSet={assetUrl(HAND_IMAGE.avif)} />
 				<img
-					src={HAND_IMAGE.webp}
+					src={assetUrl(HAND_IMAGE.webp)}
 					alt=""
 					aria-hidden
 					draggable={false}

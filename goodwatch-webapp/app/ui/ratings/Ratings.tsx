@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import React, { useState } from "react"
 import logo from "~/img/goodwatch-logo.webp?no-inline"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
@@ -46,7 +47,7 @@ export default function Ratings({
 					<dt
 						className={`${vibeColorIndex == null ? "text-gray-400" : "text-gray-200"} mt-2 flex items-center justify-center gap-2 truncate text-md font-medium`}
 					>
-						<img className="h-4 w-auto" src={logo} alt="GoodWatch Logo" />
+						<img className="h-4 w-auto" src={assetUrl(logo)} alt="GoodWatch Logo" />
 						Score
 					</dt>
 				</dl>
@@ -62,7 +63,7 @@ export default function Ratings({
 					>
 						<img
 							className="h-6 object-contain"
-							src={imdbLogo}
+							src={assetUrl(imdbLogo)}
 							alt="IMDb Logo"
 						/>
 						<dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
@@ -89,7 +90,7 @@ export default function Ratings({
 					>
 						<img
 							className="h-6 object-contain"
-							src={metacriticLogo}
+							src={assetUrl(metacriticLogo)}
 							alt="Metacritic Logo"
 						/>
 						<div className="flex justify-center gap-8">
@@ -132,7 +133,7 @@ export default function Ratings({
 					>
 						<img
 							className="h-6 object-contain"
-							src={rottenLogo}
+							src={assetUrl(rottenLogo)}
 							alt="Rotten Tomatoes Logo"
 						/>
 						<div className="flex justify-center gap-8">

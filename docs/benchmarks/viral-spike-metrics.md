@@ -102,6 +102,7 @@ Read them in Grafana Cloud under **Explore**, with the Prometheus data source th
 | `goodwatch_page_cache_not_modified_total` | Counter | `route` | 304 answers from the store. They also count as `hit` or `stale`. |
 | `goodwatch_page_cache_entries`, `goodwatch_page_cache_bytes` | Gauge | None | Pages held, and their compressed bytes plus 1 KB each. |
 | `goodwatch_page_cache_flights`, `goodwatch_page_cache_waiters`, `goodwatch_page_cache_admission_keys` | Gauge | None | Renders the cache tracks, requests waiting for one, and URLs in the admission counters. |
+| `goodwatch_static_assets_in_use` | Gauge | `mode` (`auto`, `static`, `origin`) | 1 while the instance's new pages name the static hostname for their files, 0 while they name the site's own host. `mode` is the `STATIC_ASSETS` setting. In `auto`, 0 means that the probe of the static hostname failed. See [static-assets.md](../static-assets.md). |
 | `goodwatch_process_resident_memory_bytes`, `goodwatch_process_heap_used_bytes` | Gauge | None | Memory of the server process. |
 | `goodwatch_process_event_loop_delay_seconds` | Gauge | `quantile` (`0.5`, `0.99`, `max`) | How late the event loop ran since the previous scrape. |
 | `goodwatch_process_uptime_seconds`, `goodwatch_build_info` | Gauge | `commit` on the second | A restart or deploy shows as a reset or a new commit. |

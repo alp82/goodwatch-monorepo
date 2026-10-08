@@ -1,5 +1,6 @@
 // The desktop room's geometry: where the TV sits in the photo, where the hand holds the Remote, and how both are
 // placed in a window of any size. Pure; the scene measures the window once per resize and calls `layoutRoom`.
+import { assetUrl } from "~/utils/asset-url"
 import handAvif from "~/img/living-room/hand.avif"
 import handWebp from "~/img/living-room/hand.webp"
 import room1280Avif from "~/img/living-room/room-1280.avif"
@@ -17,8 +18,12 @@ export const ROOM = {
 	h: 941,
 	tv: { x: 531, y: 90, w: 611, h: 330 },
 	alt: "A cozy living room at dusk: a teal wall, a paper lantern, a rust sofa, and a TV on a walnut sideboard",
-	avif: `${room1280Avif} 1280w, ${room1920Avif} 1920w, ${room2560Avif} 2560w`,
-	webp: `${room1280Webp} 1280w, ${room1920Webp} 1920w, ${room2560Webp} 2560w`,
+	get avif() {
+		return `${assetUrl(room1280Avif)} 1280w, ${assetUrl(room1920Avif)} 1920w, ${assetUrl(room2560Avif)} 2560w`
+	},
+	get webp() {
+		return `${assetUrl(room1280Webp)} 1280w, ${assetUrl(room1920Webp)} 1920w, ${assetUrl(room2560Webp)} 2560w`
+	},
 	fallback: room1920Webp,
 } as const
 

@@ -12,3 +12,7 @@
 - use proper meta tags and Open Graph tags
 - use proper hreflang tags
 - use proper canonical tags
+
+# Static files
+- wrap the address of an imported image, font, or style sheet, and of a `public/` image, in `assetUrl` from `~/utils/asset-url`, so that it follows the page to the static hostname (see `docs/static-assets.md`)
+    - call it while rendering (a component, a hook, a `links` function), never at module load and never in a loader, an action, or `meta`

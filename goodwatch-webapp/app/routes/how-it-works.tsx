@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import { CubeIcon } from "@heroicons/react/24/solid"
 import type { MetaFunction } from "@remix-run/node"
 import { Link } from "@remix-run/react"
@@ -61,7 +62,7 @@ export default function About() {
 							<div className="w-[10em] flex items-center justify-center flex-wrap gap-10">
 								<img
 									className="h-28 sm:h-40 inline-block"
-									src={fingerprintIcon}
+									src={assetUrl(fingerprintIcon)}
 									alt="DNA Logo"
 									title="DNA Logo"
 								/>
@@ -116,13 +117,13 @@ export default function About() {
 								<div className="w-[10em] flex items-center justify-center gap-10">
 									<img
 										className="h-5 sm:h-10 mt-8inline-block"
-										src={netflixLogo}
+										src={assetUrl(netflixLogo)}
 										alt="Netflix"
 										title="Netflix"
 									/>
 									<img
 										className="h-6 sm:h-12 inline-block"
-										src={primeLogo}
+										src={assetUrl(primeLogo)}
 										alt="Amazon Prime"
 										title="Amazon Prime"
 									/>
@@ -130,13 +131,13 @@ export default function About() {
 								<div className="w-[10em] flex items-center justify-center gap-10">
 									<img
 										className="h-5 sm:h-10 mt-8 ml-8 inline-block"
-										src={huluLogo}
+										src={assetUrl(huluLogo)}
 										alt="Hulu"
 										title="Hulu"
 									/>
 									<img
 										className="h-12 sm:h-20-mt-6 -ml-2 inline-block"
-										src={disneyLogo}
+										src={assetUrl(disneyLogo)}
 										alt="Disney+"
 										title="Disney+"
 									/>
@@ -158,19 +159,19 @@ export default function About() {
 							<div className="w-[10em] flex items-center justify-center flex-wrap gap-10">
 								<img
 									className="h-12 inline-block"
-									src={imdbLogo}
+									src={assetUrl(imdbLogo)}
 									alt="IMDb"
 									title="IMDb"
 								/>
 								<img
 									className="h-12 inline-block"
-									src={metacriticLogo}
+									src={assetUrl(metacriticLogo)}
 									alt="Metacritic"
 									title="Metacritic"
 								/>
 								<img
 									className="h-12 inline-block"
-									src={rottenLogo}
+									src={assetUrl(rottenLogo)}
 									alt="Rotten Tomatoes"
 									title="Rotten Tomatoes"
 								/>
