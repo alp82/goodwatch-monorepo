@@ -8,6 +8,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 import unittest
 from urllib.request import Request, urlopen
@@ -15,6 +16,7 @@ from urllib.error import HTTPError
 from uuid import uuid4
 
 ROOT = Path(__file__).parents[1] / "windmill/f"
+sys.path.insert(0, str(ROOT.parent))
 spec = importlib.util.spec_from_file_location(
     "queue_under_test", ROOT / "priority/queue.py"
 )

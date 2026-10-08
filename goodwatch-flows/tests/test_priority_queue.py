@@ -9,6 +9,7 @@ from unittest.mock import patch
 from types import ModuleType
 
 PATH = Path(__file__).parents[1] / "windmill/f/priority/queue.py"
+sys.path.insert(0, str(PATH.parents[2]))
 spec = importlib.util.spec_from_file_location("priority_queue", PATH)
 queue = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(queue)

@@ -1,7 +1,11 @@
 """Delete-on-sync: titles flagged tmdb_deleted are removed from the serving stores."""
+import sys
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
+
+sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 
 from f.sync.copy import deleted_titles
 from f.sync.copy.deleted_titles import (
