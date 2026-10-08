@@ -1,4 +1,5 @@
 // Production search journey: accepted inline-filter variant, isolated from taste storage.
+import { assetUrl } from "~/utils/asset-url"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
 import {
 	Suspense,
@@ -782,7 +783,7 @@ function JourneyList() {
 	const posterUrl = (r: Row) =>
 		r.poster
 			? tmdbImageUrl(r.poster, "w342")
-			: placeholder;
+			: assetUrl(placeholder);
 	const meta = (r: Row) => `${r.year} · ${r.type}`;
 	const active = (r: Row) =>
 		j.currentKey === r.key ||

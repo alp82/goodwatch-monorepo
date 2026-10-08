@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import React from "react"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import placeholder from "~/img/poster-placeholder.png"
@@ -61,7 +62,7 @@ export function Poster({
 			<img
 				ref={impressionRef}
 				className={className}
-				src={placeholder}
+				src={assetUrl(placeholder)}
 				alt={alt}
 				draggable="false"
 			/>

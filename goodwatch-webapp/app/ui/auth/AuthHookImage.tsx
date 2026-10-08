@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import hookAvif from "~/img/sign-up-hook.avif"
 import hookWebp from "~/img/sign-up-hook.webp"
 
@@ -6,11 +7,11 @@ import hookWebp from "~/img/sign-up-hook.webp"
 export function AuthHookImage() {
 	return (
 		<picture>
-			<source type="image/avif" srcSet={hookAvif} />
+			<source type="image/avif" srcSet={assetUrl(hookAvif)} />
 			<img
 				loading="lazy"
 				decoding="async"
-				src={hookWebp}
+				src={assetUrl(hookWebp)}
 				alt="Movies and Shows"
 				className="absolute inset-0 w-full h-full object-cover opacity-25"
 			/>

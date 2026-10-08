@@ -57,6 +57,15 @@ import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
 import { getAuthFromRequest } from "./utils/auth"
 
 export const links: LinksFunction = () => [
+	...(assetBase()
+		? [
+				{
+					rel: "preconnect",
+					href: assetBase(),
+					crossOrigin: "anonymous" as const,
+				},
+			]
+		: []),
 	{ rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
 	{
 		rel: "icon",

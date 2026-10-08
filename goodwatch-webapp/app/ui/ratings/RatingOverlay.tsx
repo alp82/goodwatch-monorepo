@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import type { ReactNode } from "react"
 import gwLogo from "~/img/goodwatch-logo.webp?no-inline"
 import {
@@ -36,7 +37,7 @@ export default function RatingOverlay({
 				<div
 					className={`${vibeColorIndex == null ? "bg-gray-700" : `bg-vibe-${vibeColorIndex}`} rounded-t-full flex flex-col items-center text-white px-3 pt-2`}
 				>
-					<img className="h-5 w-auto" src={gwLogo} alt="GoodWatch" />
+					<img className="h-5 w-auto" src={assetUrl(gwLogo)} alt="GoodWatch" />
 					<span className="text-lg font-bold">{score}</span>
 				</div>
 			)}

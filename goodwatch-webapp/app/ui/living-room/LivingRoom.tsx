@@ -4,6 +4,7 @@
 //
 // Rendering budget (#190): only transform and opacity follow the pointer or animate, nothing loops at idle, and
 // nothing blends or blurs over the room photo.
+import { assetUrl } from "~/utils/asset-url"
 import { useLocation, useSearchParams } from "@remix-run/react"
 import { motion, useReducedMotion, useSpring } from "framer-motion"
 import {
@@ -327,19 +328,19 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 							<source
 								media={PHONE_PORTRAIT_QUERY}
 								type="image/avif"
-								srcSet={PHONE_ROOM.avif}
+								srcSet={assetUrl(PHONE_ROOM.avif)}
 							/>
 							<source
 								media={PHONE_PORTRAIT_QUERY}
 								type="image/webp"
-								srcSet={PHONE_ROOM.webp}
+								srcSet={assetUrl(PHONE_ROOM.webp)}
 							/>
 						</>
 					)}
 					<source type="image/avif" srcSet={ROOM.avif} sizes={ROOM_SIZES} />
 					<img
 						{...{ fetchpriority: "high" }}
-						src={ROOM.fallback}
+						src={assetUrl(ROOM.fallback)}
 						srcSet={ROOM.webp}
 						sizes={ROOM_SIZES}
 						alt={ROOM.alt}
@@ -416,7 +417,7 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 			</div>
 
 			<div className="lr-caption pointer-events-none absolute bottom-6 left-8 flex max-w-[30%] items-center gap-3 [text-shadow:0_2px_14px_rgba(0,0,0,0.9)]">
-				<img src={gwLogo} alt="" className="h-6" />
+				<img src={assetUrl(gwLogo)} alt="" className="h-6" />
 				<span className="text-[15px] font-bold uppercase tracking-[0.28em] text-white/90">
 					GoodWatch
 				</span>
@@ -442,9 +443,9 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 				}}
 			>
 				<picture>
-					<source type="image/avif" srcSet={HAND_IMAGE.avif} />
+					<source type="image/avif" srcSet={assetUrl(HAND_IMAGE.avif)} />
 					<img
-						src={HAND_IMAGE.webp}
+						src={assetUrl(HAND_IMAGE.webp)}
 						alt=""
 						aria-hidden
 						className="lr-hand pointer-events-none absolute max-w-none select-none"

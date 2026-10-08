@@ -1,6 +1,7 @@
 // The header while REC_NAVIGATION is on. Desktop: the wordmark, the Browse button (the current page's name away from
 // Home) that opens the Browse panel, the omnibox, Tonight's pick, and the account slot. Phones: the mark, the page's
 // name, and the account slot; everything else lives in the dock.
+import { assetUrl } from "~/utils/asset-url"
 import { ChevronDownIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import { useFeatures } from "~/hooks/useFeature"
@@ -47,7 +48,7 @@ export function SiteHeader() {
 			<GlobalLoading />
 			<div className="flex h-16 items-center gap-2.5 border-b border-white/[0.09] bg-gray-950/90 pr-2.5 pl-3.5 backdrop-blur-md lg:hidden">
 				<Link to="/" prefetch="intent" aria-label="GoodWatch home">
-					<img className="h-[25px] w-auto" src={logo} alt="" />
+					<img className="h-[25px] w-auto" src={assetUrl(logo)} alt="" />
 				</Link>
 				<span className="brand-header truncate text-[19px]">{title}</span>
 				<span className="grow" />
@@ -61,7 +62,7 @@ export function SiteHeader() {
 						className="flex shrink-0 items-baseline"
 						aria-label="GoodWatch home"
 					>
-						<img className="h-7 w-auto" src={logo} alt="" />
+						<img className="h-7 w-auto" src={assetUrl(logo)} alt="" />
 						<span
 							aria-hidden
 							className="brand-header ml-0.5 text-4xl text-gray-100"

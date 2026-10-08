@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import { ExclamationTriangleIcon } from "@heroicons/react/24/solid"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { Link } from "@remix-run/react"
@@ -193,7 +194,7 @@ export default function Streaming({
 						className=""
 						rel="noreferrer"
 					>
-						<img alt="TMDB" className="h-3 w-auto" src={tmdb_logo} />
+						<img alt="TMDB" className="h-3 w-auto" src={assetUrl(tmdb_logo)} />
 					</a>
 					<small>and</small>
 					<a
@@ -206,7 +207,7 @@ export default function Streaming({
 						<img
 							alt="JustWatch"
 							className="h-3 w-16"
-							src={justwatchLogo}
+							src={assetUrl(justwatchLogo)}
 						/>
 					</a>
 				</div>

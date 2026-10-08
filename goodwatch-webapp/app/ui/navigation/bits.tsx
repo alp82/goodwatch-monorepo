@@ -1,5 +1,6 @@
 // Small pieces shared by the dock, the header, and the hub: the GoodWatch mark, Tonight's pick as a tiny poster, and
 // the account slot (Sign up for guests, the avatar and its menu for members).
+import { assetUrl } from "~/utils/asset-url"
 import { BookmarkIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import { useFeatures } from "~/hooks/useFeature"
@@ -16,7 +17,7 @@ export const tmdbImage = (path: string, size: "w92" | "w300" | "w342") =>
 export function GoodWatchMark({ size = 22 }: { size?: number }) {
 	return (
 		<img
-			src={logoWhite}
+			src={assetUrl(logoWhite)}
 			alt=""
 			className="block shrink-0"
 			style={{ width: size, height: size }}

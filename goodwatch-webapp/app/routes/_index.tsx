@@ -1,5 +1,6 @@
 // The start page is the living room (the desktop scene, or the phone scene on phones). The TV's screen and keys live
 // in the search params (`?tv=picks&mood=cozy`); changing only those never reruns the loader.
+import { assetUrl } from "~/utils/asset-url"
 import type { LinksFunction, MetaFunction } from "@remix-run/node"
 import {
 	type ShouldRevalidateFunction,
@@ -41,7 +42,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 		: defaultShouldRevalidate
 
 export const links: LinksFunction = () => [
-	{ rel: "stylesheet", href: livingRoomCss },
+	{ rel: "stylesheet", href: assetUrl(livingRoomCss) },
 	{ rel: "preconnect", href: "https://image.tmdb.org" },
 ]
 

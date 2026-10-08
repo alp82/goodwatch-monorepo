@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import React from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
@@ -45,7 +46,7 @@ export default function RatingBadges({
 				>
 					<img
 						className={`block h-9 p-1.5 rounded-full shadow-xl ${vibeColorIndex == null ? "bg-gray-950" : `bg-vibe-${vibeColorIndex}`}`}
-						src={gwLogo}
+						src={assetUrl(gwLogo)}
 						alt="GoodWatch Logo"
 					/>
 					<dd className="text-base">
@@ -122,7 +123,7 @@ export default function RatingBadges({
 					>
 						<img
 							className="block h-5 object-contain"
-							src={imdbLogo}
+							src={assetUrl(imdbLogo)}
 							alt="IMDb Logo"
 						/>
 						<dd className="text-base font-semibold tracking-tight text-gray-900">
@@ -150,7 +151,7 @@ export default function RatingBadges({
 					>
 						<img
 							className="block h-5 object-contain"
-							src={metacriticLogo}
+							src={assetUrl(metacriticLogo)}
 							alt="Metacritic Logo"
 						/>
 						<dd className="flex gap-1 text-base font-semibold tracking-tight text-gray-100">
@@ -186,7 +187,7 @@ export default function RatingBadges({
 					>
 						<img
 							className="block h-5 object-contain"
-							src={rottenLogo}
+							src={assetUrl(rottenLogo)}
 							alt="Rotten Tomatoes Logo"
 						/>
 						<dd className="flex gap-1 text-base font-semibold tracking-tight text-gray-50">

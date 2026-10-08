@@ -1,5 +1,6 @@
 // The desktop TV screens of the "Ask, then answer" flow (#187), drawn on the fixed 960 x 528 canvas. They render
 // the TV flow's state and send its actions: hovering an item focuses it, clicking chooses it. No data fetching.
+import { assetUrl } from "~/utils/asset-url"
 import { AnimatePresence, motion } from "framer-motion"
 import {
 	type CSSProperties,
@@ -278,7 +279,7 @@ export function Boot() {
 	return (
 		<div className="absolute inset-0 flex flex-col items-center justify-center bg-black">
 			<motion.img
-				src={gwLogo}
+				src={assetUrl(gwLogo)}
 				alt=""
 				className="h-16"
 				initial={{ scale: 0.7, opacity: 0 }}
@@ -383,7 +384,7 @@ export function Score({
 			className={`inline-flex items-center gap-1 rounded-md bg-black/60 font-black tabular-nums text-white ring-1 ring-white/15 ${size === "lg" ? "px-2.5 py-1 text-[20px]" : "px-2 py-0.5 text-[15px]"}`}
 			title="GoodWatch score"
 		>
-			<img src={gwLogo} alt="" className={size === "lg" ? "h-4" : "h-3"} />
+			<img src={assetUrl(gwLogo)} alt="" className={size === "lg" ? "h-4" : "h-3"} />
 			{Math.round(score)}
 		</span>
 	)

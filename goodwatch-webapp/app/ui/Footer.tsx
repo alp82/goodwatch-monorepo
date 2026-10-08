@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import {
 	ArrowRightIcon,
 	ArrowTopRightOnSquareIcon,
@@ -77,7 +78,7 @@ const navigation = {
 			icon: (props: Record<string, string>) => (
 				<img
 					className={`opacity-75 hover:opacity-100 ${props.className}`}
-					src={discordColor}
+					src={assetUrl(discordColor)}
 					alt="Join Discord Server"
 				/>
 			),
@@ -88,7 +89,7 @@ const navigation = {
 			icon: (props: Record<string, string>) => (
 				<img
 					className={`opacity-50 hover:opacity-75 ${props.className}`}
-					src={redditColor}
+					src={assetUrl(redditColor)}
 					alt="Join Subreddit"
 				/>
 			),
@@ -122,7 +123,7 @@ export default function Footer() {
 					<div className="relative rounded-3xl overflow-hidden bg-[#5865F2] p-1">
 						<div
 							className="absolute inset-0 opacity-10"
-							style={{ backgroundImage: `url(${texture})` }}
+							style={{ backgroundImage: `url(${assetUrl(texture)})` }}
 						/>
 
 						<div className="relative bg-indigo-950/90 backdrop-blur-xl rounded-[22px] p-8 md:p-12 overflow-hidden">
@@ -152,7 +153,7 @@ export default function Footer() {
 												decoding="async"
 												width={36}
 												height={36}
-												src={avatarFelix}
+												src={assetUrl(avatarFelix)}
 												alt="User"
 											/>
 										</div>
@@ -162,7 +163,7 @@ export default function Footer() {
 												decoding="async"
 												width={36}
 												height={36}
-												src={avatarAneka}
+												src={assetUrl(avatarAneka)}
 												alt="User"
 											/>
 										</div>
@@ -172,7 +173,7 @@ export default function Footer() {
 												decoding="async"
 												width={36}
 												height={36}
-												src={avatarMark}
+												src={assetUrl(avatarMark)}
 												alt="User"
 											/>
 										</div>
@@ -182,7 +183,7 @@ export default function Footer() {
 												decoding="async"
 												width={36}
 												height={36}
-												src={avatarSarah}
+												src={assetUrl(avatarSarah)}
 												alt="User"
 											/>
 										</div>
@@ -323,7 +324,7 @@ export default function Footer() {
 							className=""
 							rel="noreferrer"
 						>
-							<img alt="TMDB" className="h-3 w-auto" src={tmdbLogo} />
+							<img alt="TMDB" className="h-3 w-auto" src={assetUrl(tmdbLogo)} />
 						</a>
 						<small>and</small>
 						<a
@@ -337,7 +338,7 @@ export default function Footer() {
 								alt="JustWatch"
 								className="h-3 w-16"
 								loading="lazy"
-								src={justwatchLogo}
+								src={assetUrl(justwatchLogo)}
 							/>
 						</a>
 					</div>
@@ -369,7 +370,7 @@ export default function Footer() {
 								width={144}
 								height={40}
 								className="h-10 w-auto"
-								src={shieldazeBanner}
+								src={assetUrl(shieldazeBanner)}
 							/>
 						</a>
 					</div>

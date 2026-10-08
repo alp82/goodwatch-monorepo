@@ -1,6 +1,6 @@
-// Country flags are served from this host (public/flags, from the country-flag-icons package), so a
-// page with flags needs no other origin. The files are 3:2 SVGs of 0.2 to 5 KB.
+// Country flags in public/flags come from country-flag-icons. The files are 3:2 SVGs of 0.2 to 5 KB.
+import { assetUrl } from "./asset-url.ts"
 
 /** The URL of a country's flag. `country` is an ISO 3166-1 alpha-2 code such as "DE". */
 export const countryFlagUrl = (country: string) =>
-	`/flags/${country.toUpperCase()}.svg`
+	assetUrl(`/flags/${country.toUpperCase()}.svg`)

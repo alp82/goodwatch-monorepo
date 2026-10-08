@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import type React from "react"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
@@ -32,7 +33,7 @@ export default function RatingChips({ media }: { media: MovieResult | ShowResult
 				href ? "hover:brightness-110" : "pointer-events-none"
 			}`}
 		>
-			<img src={logo} alt={alt} className={alt === "IMDb" ? "h-3" : "h-3.5"} />
+			<img src={assetUrl(logo)} alt={alt} className={alt === "IMDb" ? "h-3" : "h-3.5"} />
 			{value}
 		</a>
 	)

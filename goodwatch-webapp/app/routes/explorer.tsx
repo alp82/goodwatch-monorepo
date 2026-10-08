@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
@@ -67,7 +68,7 @@ export const meta: MetaFunction = () => {
 }
 
 export const links = () => [
-	{ rel: "stylesheet", href: explorerCss },
+	{ rel: "stylesheet", href: assetUrl(explorerCss) },
 ]
 
 // Without JavaScript the list shows in place of the map, and the controls that need the map step aside.
