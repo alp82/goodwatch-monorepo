@@ -125,7 +125,7 @@ export default function DetailsContent({
 		...Object.fromEntries(
 			Object.keys(PLAY_NAMES).map((name) => [
 				name,
-				{ form: PlaySection, phone: 598, desktop: 566 },
+				{ form: PlaySection, phone: 600, desktop: 553 },
 			]),
 		),
 	}[variant as string]

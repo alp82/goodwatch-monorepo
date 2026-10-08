@@ -688,6 +688,11 @@ export function playEngine(
 	const stateOf = (s: HTMLElement & { __pl?: PlayState }) => {
 		const root = s.getAttribute("data-pl-root") ?? ""
 		if (!s.__pl || s.__pl.root !== root) {
+			// The same element with another title: a navigation inside the app. It starts over, awake if it was.
+			const own = s as HTMLElement & { __awake?: boolean; __own?: boolean }
+			if (s.__pl && own.__awake) win.setTimeout(() => wake(own), 0)
+			own.__awake = false
+			own.__own = false
 			const bar = q(s, "[data-pl-bar]")
 			if (!G.t[root])
 				G.t[root] = {
@@ -758,6 +763,7 @@ export function playEngine(
 		})
 	}
 	let beat = 0
+	let keyboard = false
 	/** Every write first, then whatever has to be read: one layout per step. */
 	const adopt = (s: HTMLElement & { __pl?: PlayState; __own?: boolean }) => {
 		if (s.__own) return
@@ -773,7 +779,10 @@ export function playEngine(
 		const st = stateOf(s)
 		if (!formOf(st.form) || !G.t[st.trail[st.trail.length - 1].k]) return null
 		adopt(s)
-		const had = s.contains(doc.activeElement) && doc.activeElement !== s
+		// Someone walking with the keyboard keeps their place: the section takes the focus that the redrawn stage loses.
+		// A tap with a finger or the mouse has no need for it.
+		const had =
+			keyboard && s.contains(doc.activeElement) && doc.activeElement !== s
 		const t0 = win.performance.now()
 		const p = parts(st)
 		const t1 = win.performance.now()
@@ -825,7 +834,22 @@ export function playEngine(
 			const here = st.trail[st.trail.length - 1].k
 			const stage = q(s, "[data-pl-stage]")
 			const cold = stage?.hasAttribute("data-pl-cold")
-			if (here === key && (cold || stage?.hasAttribute("data-pl-soft"))) {
+			const soft = stage?.hasAttribute("data-pl-soft")
+			if (here === key && soft && stage) {
+				// The stage shows a stand-in. What it shows stays where it is, so that nothing moves under a finger:
+				// those titles go first in the pack, and the pack fills the gaps and everything drawn later.
+				const shown: PlayTitle[] = []
+				const known: Record<string, boolean> = {}
+				const drawn = stage.querySelectorAll("[data-pl-step]")
+				for (let n = 0; n < drawn.length; n++) {
+					const t = G.t[drawn[n].getAttribute("data-pl-step") ?? ""]
+					if (!t?.s || known[t.k] || t.k === key) continue
+					known[t.k] = true
+					shown.push({ ...t, n: 1.01 - shown.length * 0.0001 })
+				}
+				G.packs[key] = shown.concat(G.packs[key].filter((t) => !known[t.k]))
+			}
+			if (here === key && (cold || soft)) {
 				if (!st.axes.length && G.packs[st.root])
 					st.axes = startAxes(G.t[st.root], G.packs[st.root])
 				if (!st.traits.length) st.traits = own(G.t[st.root], 8)
@@ -837,7 +861,7 @@ export function playEngine(
 			else if (q(s, `[data-pl-wants="${key}"]`)) draw(s)
 		}
 	}
-	const wake = (s: HTMLElement & { __awake?: boolean; __pl?: PlayState }) => {
+	function wake(s: HTMLElement & { __awake?: boolean; __pl?: PlayState }) {
 		if (s.__awake) return
 		s.__awake = true
 		const st = stateOf(s)
@@ -934,6 +958,7 @@ export function playEngine(
 			return
 		}
 		mine(event)
+		keyboard = event.detail === 0
 		wake(s)
 		const st = stateOf(s)
 		const form = formOf(st.form)

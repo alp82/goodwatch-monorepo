@@ -5,7 +5,7 @@
 //
 // - A pack is one title's neighborhood, small enough to prefetch: the title, and up to PACK_TITLES titles around it,
 //   each with what a poster needs and its 74 fingerprint levels as one character each.
-// - A pack is built from one plain nearest-neighbors request to Qdrant (250 titles with scores). The six filtered
+// - A pack is built from one plain nearest-neighbors request to Qdrant (180 titles with scores). The six filtered
 //   requests per title of the dive path are gone: the plain neighbors of a title already hold titles that lie
 //   further in most directions, and a direction that has none among them is a direction that ends.
 // - Which titles go into the pack is chosen here with the dive model's own test (`farther`), so that every direction
@@ -47,7 +47,7 @@ export type PlayPack = { c: PackTitle; n: PackTitle[] }
 /** What the cache keeps: a pack, or the note that the title has no fingerprint. */
 type Kept = { c: PackTitle | null; n: PackTitle[] }
 
-const POOL = 250
+const POOL = 180
 const PACK_TITLES = 110
 const NEAREST = 48
 
