@@ -28,6 +28,7 @@ import {
 	type ReservedHeight,
 } from "~/ui/details/section-heights"
 import { titleQuestions } from "~/ui/details/titleQuestions"
+import { TrackedEpisodes, useEpisodeTracking } from "~/ui/tracking/gate"
 
 export interface DetailsContentProps {
 	media: MovieResult | ShowResult
@@ -59,12 +60,27 @@ export default function DetailsContent({
 		...belowFoldProps(skipping, reserved, props?.className),
 	})
 
+	// A member with episode tracking gets the episode list in the grid's place, once they come near it.
+	const tracking = useEpisodeTracking(media)
+	const grid = hasEpisodeGrid(episodeGrid) ? episodeGrid : null
+
 	return (
 		<div className="flex flex-col gap-12">
-			{hasEpisodeGrid(episodeGrid) && (
-				<div {...section(episodeGridHeight(episodeGrid))}>
-					<EpisodeGrid grid={episodeGrid} />
-				</div>
+			{tracking ? (
+				<TrackedEpisodes
+					media={media}
+					wrapper={section(
+						grid ? episodeGridHeight(grid) : { phone: 0, desktop: 0 },
+					)}
+				>
+					{grid && <EpisodeGrid grid={grid} />}
+				</TrackedEpisodes>
+			) : (
+				grid && (
+					<div {...section(episodeGridHeight(grid))}>
+						<EpisodeGrid grid={grid} />
+					</div>
+				)
 			)}
 			{/*<div>*/}
 			{/*	<Streaming*/}

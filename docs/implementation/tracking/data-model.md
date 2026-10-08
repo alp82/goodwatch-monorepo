@@ -1485,3 +1485,117 @@ Undo), `-2-change-date`, `-3-log` (popover and sheet), `-4-another-day`, `-5-del
 a real Crate (the tests' Crate is in memory); the title page, a poster grid, the Explorer and Watch next with real
 data; a card leaving My movies while its toast shows; the refetched member data after each action; a touch device,
 Safari's and Firefox's date fields, a screen reader; `./bench.sh budget`.
+
+### Episode tracking on the show page (#384)
+
+Behind `REC_TRACKING`, the flag of the movie watch log. For a signed-in member with the flag on, the show page's
+hero and its episodes section track episodes as [#369](https://github.com/alp82/goodwatch-monorepo/issues/369)
+(variant D of round 4) and [#368](https://github.com/alp82/goodwatch-monorepo/issues/368) decided. With the flag
+off, for a visitor, and for a show without an episode list, the page is as it was.
+
+| What | Where |
+| --- | --- |
+| IMDb's ratings beside the listed episodes | `domain/tracking/episode-ratings.ts` |
+| The browser's copy of a show, the guess, the answer, and everything the page derives | `domain/tracking/show-page.ts` |
+| The queue: one action after the other, and back to the confirmed copy on a failure | `domain/tracking/show-session.ts` |
+| The show's entry in the member data | `domain/tracking/show-member-data.ts` |
+| The read and the actions on the server | `server/show-tracking.server.ts`, `routes/api.tracking.show.ts` |
+| What the page's first view holds: who gets tracking, the status box's first paint, the two lazy mounts | `ui/tracking/gate.tsx`, used by `ui/details/hero/ListActions.tsx` and `ui/details/DetailsContent.tsx` |
+| The store per show, the actions with their toasts and Undo | `ui/tracking/store.ts`, `ui/tracking/actions.ts`, `ui/tracking/TrackingToast.tsx` |
+| The hero box, the score control with its prompts, the buttons | `ui/tracking/HeroTracking.tsx` |
+| The episode list | `ui/tracking/EpisodeList.tsx` |
+
+**The endpoints.** Both are for members, `Cache-Control: private, no-store`, and answer 404 while the flag hides
+tracking from the viewer and 401 without a session.
+
+- `GET /api/tracking/show?id=<show id>`: the state row, every log row of the show, the episode list (id, season,
+  number, name, air date as a day, runtime, still, rating and how it was matched), `running` (the show's status is
+  neither Ended nor Canceled), the season scores, and a note per season that IMDb numbers differently.
+- `POST /api/tracking/show` with `{ id, event, actionId?, restore? }`: applies one event through
+  `applyTrackingEvent` and answers `{ status, refused, state, rows, deleted, cleared }`. `rows` are the stored log
+  rows the action added or changed, `deleted` the watch ids it removed. `cleared` is what an Undo puts back; the
+  Undo sends it as `restore`, and the server then puts the show back on the Wishlist at its added-at time, or back
+  to Not interested, when the show is Not started afterwards. The events are the machine's, without `rate`,
+  `notInterested` and `wantToSee` off, which other writers own, and the two edits of dates.
+
+**Where the build differs from the text above and from the prototypes, or settles what they left open:**
+
+- **An episode has no description.** The episode catalog's `episode` table stores none, so an opened row shows
+  the still, the air date, the runtime and the rating. The row renders a description when the read sends one;
+  the catalog has to store TMDB's `overview` first.
+- **The show page does not know the show's status.** The details it loads have `in_production` only. The first
+  paint of a Seen show's pill uses that; the read then brings `show.status`, which decides between Seen and Caught
+  up.
+- **Season rows are 40 pixels high on a phone,** and wherever the pointer is a finger, where the prototype had 20.
+  The cells stay a thin strip; the row around them is the press target. With a mouse the rows are 22 pixels. A
+  15-season show's matrix is 640 pixels high on a phone (365 in the prototype) and 382 on a wide screen; a show
+  with eight seasons or fewer is as high as in the prototype, which already gave it 40 pixel rows.
+- **The box stands above the score control,** not below it as in the prototypes. The first paint knows the state
+  from the member data and reserves the box there, above today's action set, so nothing moves when the tracking
+  code takes over.
+- **A show nobody started has no box.** The hero is today's, and the episode list below is where the first tick
+  happens; the hero's "Episode ratings" link leads to it. The box appears with the first state.
+- **Not interested, Drop, Dropped.** The third button is Not interested while the show is Not started, Drop while
+  it is Watching or On hold, and a pressed Dropped (one press resumes) while it is Dropped. Want to See is off for
+  a started show with the machine's reason as its tip. On a Dropped show with nothing watched it sends the
+  machine's `wantToSee`, and the server adds the Wishlist row after the state returned to Not started.
+- **Watch again asks first,** inside the pill's menu, because a pass can't be taken back.
+- **Undo of an untick records the episode again** with a new id, on the day it was watched (as "now" when the
+  watch was made in the last ten minutes). The group it belonged to and a Seen press that the untick ended are not
+  restored.
+- **There is no "Unmark season".** A season is taken back with the Undo of its toast, or row by row.
+- **Specials have no rating and no bulk mark.** IMDb lists them without a season, and the machine's group actions
+  mark regular episodes only.
+- **The rating match is a little wider than "the title matches":** where one side has no title or a placeholder
+  ("Episode 3"), the number counts when both sites list the same number of episodes for the season.
+- **The keys of round 3** (`F`, `N`, arrows, `W`) are not built: single-letter keys on the real page would meet
+  the site's own.
+- **The member data follows the page.** After every change the show's `watchState` entry is set from the copy the
+  page holds, with the same arithmetic as the grouped query, and a started show leaves the Wishlist and Not
+  interested there too. The member data is not read again after a tick.
+- **The toast is tracking's own,** because it carries two actions ("Set a date", Undo); `UndoToast` carries one.
+
+**The budget.** Client chunks of the show route's first view, built from `main` (`d3e78892`) and from this branch
+the same way, compressed sizes as `scripts/precompress.mjs` writes them:
+
+| | Chunks | Raw | gzip | Brotli |
+| --- | --- | --- | --- | --- |
+| `main` | 20 | 820,267 | 271,311 | 234,799 |
+| This branch | 20 | 822,883 | 272,305 | 235,474 |
+| The stylesheet, `main` | | 356,046 | 41,583 | 31,265 |
+| The stylesheet, this branch | | 361,055 | 42,176 | 31,698 |
+
+The 2,616 bytes are `ui/tracking/gate.tsx` in the chunk the title pages share, also with the flag off; no request
+is added. The stylesheet grows by the class names only tracking uses. What loads after the first view, for a member
+with the flag on: 35.5 KB (11.0 KB Brotli) for the machine, the store and the actions with the hero, 11.6 KB
+(3.8 KB) for the hero box, and 26.9 KB (8.3 KB) for the episode list when the member comes near it.
+`./bench.sh budget` was not run: it needs a deployed site.
+
+**How it was checked.** Tests: `node --test 'app/domain/tracking/*.test.ts' app/server/show-tracking.test.ts`,
+the server's against the in-memory Crate. The components were driven in headless Chromium at 390 and 1280 pixels
+wide on `/prototype/episode-tracking-real`, a development route that mounts the real `ListActions` and episodes
+section with a member who does not exist and a server that lives in the tab
+(`ui/prototype-episode-tracking/fake-server.ts`), on the prototypes' fixtures. That server runs the real machine
+and the real mapping to rows, with aired as the server reads it. 137 checks at each width, all passing; the script
+is [`episode-tracking/drive.mjs`](episode-tracking/drive.mjs):
+
+```
+cd goodwatch-webapp
+REC_TRACKING=on node_modules/.bin/remix vite:dev --port 3084 --host 127.0.0.1
+HARNESS=http://127.0.0.1:3084 node drive.mjs      # with playwright-core installed beside it, and system Chromium
+```
+
+Screenshots, in [`episode-tracking/`](episode-tracking/), each `-phone` and `-desktop`: `hero-watching`,
+`hero-status-menu`, `hero-seen-rate-prompt`, `hero-seen-new-episodes`, `hero-seen-question`, `list-matrix`,
+`list-never-tracked`, `list-season-open`, `list-row-open`, `list-airing-season`, `list-specials`,
+`list-limited-series`, `toast-mark-season`.
+
+In the development build the app shell reported "This Suspense boundary received an update before it finished
+hydrating" on a few loads of the harness, as it does on other prototype routes: there the shell's own lazy parts
+load late. The production entry waits for them before it hydrates.
+
+**Not checked,** because each needs a signed-in session, the real tables or a real device: the two endpoints
+against a real Crate and with a real session; the show page itself, where the hero's box sits in the real hero and
+the episodes section among the page's sections; the first paint of the box from the member data on a page the
+server rendered; a show whose episode list the crawl has not reached; real IMDb ratings beside real TMDB episodes;
+two devices acting on one show; a touch screen, Safari and Firefox, a screen reader; `./bench.sh budget`.
