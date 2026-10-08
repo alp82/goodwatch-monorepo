@@ -23,7 +23,7 @@ def row(episode_id, number, season=1, **fields):
     return {
         "show_id": 1396, "tmdb_id": episode_id, "season_tmdb_id": 3572, "season_number": season,
         "episode_number": number, "name": f"Episode {number}", "air_date": 1200787200000, "runtime": 47,
-        "still_path": f"/{episode_id}.jpg", "episode_type": "standard",
+        "still_path": f"/{episode_id}.jpg", "episode_type": "standard", "overview": "Long text",
         "tmdb_user_score_original": 8.5, "tmdb_user_score_rating_count": 100,
     } | fields
 
@@ -111,6 +111,7 @@ class CollectShowSeasonsTests(unittest.TestCase):
         self.assertNotIn("guest_stars", stored_episode)
         self.assertEqual(stored_episode["id"], 101)
         self.assertEqual(stored_episode["name"], "Episode 1")
+        self.assertEqual(stored_episode["overview"], "Long text")
 
     def test_a_listed_season_missing_from_the_response_leaves_the_show_incomplete(self):
         result, _ = self.collect(stored=[1, 2], listed=[1, 2], absent=[2])
@@ -173,11 +174,20 @@ class EpisodeRowTests(unittest.TestCase):
 
     def test_missing_values_are_null(self):
         rows = catalog.episode_rows(1396, [self.season(episodes=[
-            tmdb_episode(7, 3, air_date=None, runtime=None, still_path=None, name="", vote_average=0.0, vote_count=0),
+            tmdb_episode(7, 3, air_date=None, runtime=None, still_path=None, name="", overview="",
+                         vote_average=0.0, vote_count=0),
         ])])
 
-        self.assertEqual(rows, [row(7, 3, air_date=None, runtime=None, still_path=None, name=None,
+        self.assertEqual(rows, [row(7, 3, air_date=None, runtime=None, still_path=None, name=None, overview=None,
                                     tmdb_user_score_original=None, tmdb_user_score_rating_count=None)])
+
+    def test_the_description_is_tmdbs_overview(self):
+        rows = catalog.episode_rows(1396, [self.season(episodes=[
+            tmdb_episode(62085, 1, overview="Walter White is diagnosed with cancer."),
+            tmdb_episode(62086, 2, overview="  \n"),
+        ])])
+
+        self.assertEqual([r["overview"] for r in rows], ["Walter White is diagnosed with cancer.", None])
 
     def test_specials_are_season_zero(self):
         rows = catalog.episode_rows(1396, [self.season(number=0, season_id=3577, episodes=[
@@ -225,6 +235,18 @@ class DiffTests(unittest.TestCase):
             with self.subTest(column=column):
                 diff = catalog.diff_episodes([row(1, 1)], [row(1, 1, **{column: value})], may_remove=True)
                 self.assertEqual(diff.upserts, [row(1, 1)])
+
+    def test_a_changed_description_is_an_update(self):
+        diff = catalog.diff_episodes([row(1, 1, overview="Rewritten")], [row(1, 1)], may_remove=True)
+
+        self.assertEqual(diff.upserts, [row(1, 1, overview="Rewritten")])
+
+    def test_a_row_stored_without_a_description_gets_it(self):
+        # The rows copied before the column existed.
+        stored = row(1, 1, overview=None)
+
+        self.assertEqual(catalog.diff_episodes([row(1, 1)], [stored], may_remove=True).upserts, [row(1, 1)])
+        self.assertEqual(catalog.diff_episodes([row(1, 1, overview=None)], [stored], may_remove=True).upserts, [])
 
     def test_an_episode_tmdb_no_longer_lists_is_removed(self):
         diff = catalog.diff_episodes([row(1, 1)], [row(1, 1), row(3, 3), row(2, 2)], may_remove=True)

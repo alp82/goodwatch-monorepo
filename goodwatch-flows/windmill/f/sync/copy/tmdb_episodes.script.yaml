@@ -17,4 +17,10 @@ schema:
       type: integer
       description: Stop taking new batches after this long
       default: 240
+    recopy_all:
+      type: boolean
+      description: >-
+        After the normal copy, copy every fetched show once more from its stored seasons, continuing
+        where the last such run stopped. Fills a column added later; does nothing once it has finished
+      default: false
   required: []

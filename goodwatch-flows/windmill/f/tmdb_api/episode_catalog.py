@@ -16,7 +16,8 @@ STATE_COLLECTION = "tmdb_episode_catalog_state"
 
 # TMDB answers a 21st appended item with HTTP 400, status_code 27.
 MAX_APPENDED_SEASONS = 20
-# Most of an episode's bytes, and nothing reads them.
+# Most of an episode's bytes, and nothing reads them. Everything else is kept, so the stored
+# episode holds TMDB's overview, which the copy writes as the episode's description.
 DROPPED_EPISODE_FIELDS = ("crew", "guest_stars")
 
 # Every show is fetched again after this long at the latest.
@@ -44,6 +45,7 @@ EPISODE_COLUMNS = (
     "runtime",
     "still_path",
     "episode_type",
+    "overview",
     "tmdb_user_score_original",
     "tmdb_user_score_rating_count",
 )
@@ -200,6 +202,7 @@ def episode_rows(show_id: int, season_documents: Iterable[dict]) -> list[dict]:
                 "runtime": episode.get("runtime"),
                 "still_path": episode.get("still_path") or None,
                 "episode_type": episode.get("episode_type") or None,
+                "overview": (episode.get("overview") or "").strip() or None,
                 "tmdb_user_score_original": episode.get("vote_average") or None,
                 "tmdb_user_score_rating_count": episode.get("vote_count") or None,
             }

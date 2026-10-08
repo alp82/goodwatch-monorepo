@@ -284,6 +284,7 @@ class Episode(BaseModel):
     runtime: Optional[int] = None
     still_path: Optional[str] = None
     episode_type: Optional[str] = None
+    overview: Optional[str] = None
     tmdb_user_score_original: Optional[float] = None
     tmdb_user_score_rating_count: Optional[int] = None
     removed_at: Optional[int] = None

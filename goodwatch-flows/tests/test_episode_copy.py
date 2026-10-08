@@ -80,7 +80,7 @@ class EpisodeTable:
 
 def tmdb_episode(episode_id, number, **fields):
     return {"id": episode_id, "episode_number": number, "name": f"Episode {number}", "air_date": "2008-01-20",
-            "runtime": 47, "still_path": None, "episode_type": "standard", "vote_average": 8.0, "vote_count": 10} | fields
+            "overview": f"What happens in episode {number}.", "runtime": 47, "still_path": None, "episode_type": "standard", "vote_average": 8.0, "vote_count": 10} | fields
 
 
 def fetched_show(db, tmdb_id, seasons, complete=True, fetched_at=FETCHED_AT):
@@ -115,6 +115,27 @@ class EpisodeCopyTests(unittest.TestCase):
         row = self.crate.rows[(7, 51)]
         self.assertEqual((row["season_tmdb_id"], row["name"], row["air_date"]), (701, "Episode 1", 1200787200000))
         self.assertEqual((result["shows_copied"], result["episodes_upserted"]), (1, 3))
+
+    def test_an_episode_row_carries_its_description(self):
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1, overview="Walt cooks."), tmdb_episode(52, 2, overview="")]})
+
+        copy(self.crate, self.db)
+
+        self.assertEqual(self.crate.rows[(7, 51)]["overview"], "Walt cooks.")
+        self.assertIsNone(self.crate.rows[(7, 52)]["overview"])
+
+    def test_a_changed_description_is_written_and_a_dropped_one_cleared(self):
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1, overview="Walt cooks."), tmdb_episode(52, 2),
+                                      tmdb_episode(53, 3)]})
+        copy(self.crate, self.db)
+        fetched_show(self.db, 7, {1: [tmdb_episode(51, 1, overview="Walt cooks again."), tmdb_episode(52, 2),
+                                      tmdb_episode(53, 3, overview=None)]})
+
+        result = copy(self.crate, self.db)
+
+        self.assertEqual(result["episodes_upserted"], 2)
+        self.assertEqual(self.crate.rows[(7, 51)]["overview"], "Walt cooks again.")
+        self.assertIsNone(self.crate.rows[(7, 53)]["overview"])
 
     def test_the_show_is_marked_with_the_time_its_episodes_were_fetched(self):
         fetched_show(self.db, 7, {1: [tmdb_episode(51, 1)]})
@@ -279,6 +300,132 @@ class EpisodeCopyTests(unittest.TestCase):
         # Three episodes per show: a group closes once it holds at least five rows.
         self.assertEqual(self.crate.selected_show_ids, [[1, 2], [3, 4]])
         self.assertEqual(len(self.crate.rows), 12)
+
+
+class RecopyAllTests(unittest.TestCase):
+    """recopy_all: every fetched show is copied once more from its stored season documents.
+
+    It gives the rows copied before a column existed that column, without a TMDB fetch.
+    """
+
+    SHOWS = (1, 2, 3, 4, 5)
+
+    def setUp(self):
+        self.db = mongomock.MongoClient().db
+        self.crate = EpisodeTable()
+        # Five shows fetched and copied hours ago, by a copy that knew no description.
+        for show_id in self.SHOWS:
+            fetched_show(self.db, show_id, {1: [tmdb_episode(show_id * 10, 1)]},
+                         fetched_at=NOW - timedelta(hours=10 - show_id))
+        copy(self.crate, self.db)
+        self.forget_descriptions()
+        self.crate.upserted = 0
+
+    def forget_descriptions(self):
+        for row in self.crate.rows.values():
+            row["overview"] = None
+
+    def described_shows(self):
+        return sorted(row["show_id"] for row in self.crate.rows.values() if row["overview"] is not None)
+
+    def checkpoint(self):
+        return self.db.tmdb_episode_catalog_state.find_one({"_id": "episodes_copy"})
+
+    def test_rows_copied_before_get_their_description(self):
+        result = copy(self.crate, self.db, recopy_all=True)
+
+        self.assertEqual(self.described_shows(), [1, 2, 3, 4, 5])
+        self.assertEqual(self.crate.rows[(3, 30)]["overview"], "What happens in episode 1.")
+        self.assertEqual(result["recopy"], {"shows_copied": 5, "after_tmdb_id": 5, "finished": True})
+
+    def test_it_is_off_unless_asked_for(self):
+        result = copy(self.crate, self.db)
+
+        # The run reads the last show again as its overlap, and no other.
+        self.assertEqual(self.described_shows(), [5])
+        self.assertNotIn("recopy", result)
+
+    def test_a_run_out_of_time_stops_and_the_next_runs_continue_without_skipping_or_repeating(self):
+        # No show is inside the checkpoint's overlap, so the normal copy has nothing to read
+        # and all of a run's (used up) time goes to the recopy.
+        self.db.tmdb_tv_details.update_one({"tmdb_id": 5}, {"$set": {"episodes_updated_at": NOW - timedelta(hours=9)}})
+        described, copied, finished = [], [], []
+        with patch.object(tmdb_episodes, "SHOWS_PER_BATCH", 2):
+            for _ in range(4):
+                self.forget_descriptions()
+                result = copy(self.crate, self.db, recopy_all=True, max_seconds=0)
+                described.append(self.described_shows())
+                copied.append(result["recopy"]["shows_copied"])
+                finished.append(result["recopy"]["finished"])
+
+        self.assertEqual(described, [[1, 2], [3, 4], [5], []])
+        self.assertEqual(copied, [2, 2, 1, 0])
+        self.assertEqual(finished, [False, False, False, True])
+
+    def test_the_normal_checkpoint_is_left_alone(self):
+        before = self.checkpoint()
+
+        copy(self.crate, self.db, recopy_all=True)
+
+        self.assertEqual(self.checkpoint(), before)
+        self.assertEqual(before["copied_until"], NOW - timedelta(hours=5))
+
+    def test_once_finished_further_runs_read_no_show_again(self):
+        copy(self.crate, self.db, recopy_all=True)
+        self.forget_descriptions()
+
+        result = copy(self.crate, self.db, recopy_all=True)
+
+        self.assertEqual(self.described_shows(), [5])
+        self.assertEqual(result["recopy"], {"shows_copied": 0, "after_tmdb_id": 5, "finished": True})
+
+    def test_copying_everything_twice_writes_nothing_the_second_time(self):
+        copy(self.crate, self.db, recopy_all=True)
+        self.assertEqual(self.crate.upserted, 5)
+        self.db.tmdb_episode_catalog_state.delete_one({"_id": "episodes_recopy"})
+
+        result = copy(self.crate, self.db, recopy_all=True)
+
+        self.assertEqual(result["recopy"]["shows_copied"], 5)
+        self.assertEqual(self.crate.upserted, 5)
+
+    def test_a_show_whose_episodes_were_never_fetched_is_passed_by(self):
+        self.db.tmdb_tv_details.insert_one({"tmdb_id": 3, "title": "Not fetched"})
+        self.db.tmdb_tv_details.update_one({"tmdb_id": 3}, {"$unset": {"episodes_updated_at": ""}})
+        self.db.tmdb_tv_details.insert_one({"tmdb_id": 3_000, "title": "Not fetched either"})
+        self.crate.checked_shows.clear()
+
+        result = copy(self.crate, self.db, recopy_all=True)
+
+        self.assertEqual(result["recopy"]["shows_copied"], 4)
+        self.assertEqual(sorted(self.crate.checked_shows), [1, 2, 4, 5])
+
+    def test_shows_fetched_since_come_first_and_the_recopy_waits_while_they_use_up_the_time(self):
+        for show_id in (6, 7, 8):
+            fetched_show(self.db, show_id, {1: [tmdb_episode(show_id * 10, 1)]},
+                         fetched_at=NOW - timedelta(minutes=10 - show_id))
+        with patch.object(tmdb_episodes, "SHOWS_PER_BATCH", 2):
+            first = copy(self.crate, self.db, recopy_all=True, max_seconds=0)
+
+        # One batch of the newly fetched shows (the overlap, show 5, and show 6) took the whole budget.
+        self.assertEqual(self.crate.episodes_of(6), [(1, 1, 60)])
+        self.assertEqual(first["caught_up"], False)
+        self.assertEqual(first["recopy"], {"shows_copied": 0, "after_tmdb_id": 0, "finished": False})
+        self.assertNotIn(1, self.described_shows())
+
+    def test_a_show_copied_again_keeps_its_fetch_time_and_count(self):
+        self.crate.checked_shows.clear()
+
+        copy(self.crate, self.db, recopy_all=True)
+
+        self.assertEqual(self.crate.checked_shows[2], millis(NOW - timedelta(hours=8)))
+        self.assertEqual(self.crate.aired_counts[2], 1)
+
+    def test_named_shows_are_copied_alone_even_when_everything_is_asked_for(self):
+        result = copy(self.crate, self.db, tmdb_ids=[2], recopy_all=True)
+
+        self.assertEqual(self.described_shows(), [2])
+        self.assertNotIn("recopy", result)
 
 
 class AiredEpisodeCountTests(unittest.TestCase):
@@ -475,8 +622,43 @@ class EpisodeSchemaTests(unittest.TestCase):
         columns = set(SCHEMAS["episode"]["columns"])
         self.assertLessEqual(set(Episode.model_fields), columns)
         self.assertLessEqual(set(tmdb_episodes.STORED_COLUMNS), columns)
+        self.assertIn("overview", Episode.model_fields)
         self.assertIn("episodes_updated_at", SCHEMAS["show"]["columns"])
         self.assertEqual(SCHEMAS["show"]["columns"]["aired_episode_count"], "INTEGER")
+
+
+    def test_the_description_is_stored_for_display_only_without_a_length_limit(self):
+        from f.sync.models.crate_schemas import SCHEMAS
+
+        # Neither an index nor the column store: both refuse a value above 32,766 bytes.
+        self.assertEqual(SCHEMAS["episode"]["columns"]["overview"], "TEXT INDEX OFF STORAGE WITH (columnstore = false)")
+
+
+class EpisodeCopyJobTests(unittest.TestCase):
+    def run_job(self, db, **arguments):
+        connector = EpisodeTable()
+        connector.disconnect = MagicMock()
+        with patch.object(tmdb_episodes, "CrateConnector", return_value=connector), \
+                patch.object(tmdb_episodes, "get_db", return_value=db), \
+                patch.object(tmdb_episodes, "init_mongodb"), patch.object(tmdb_episodes, "close_mongodb"):
+            return tmdb_episodes.main(**arguments)
+
+    def test_windmill_leaving_out_the_arguments_runs_the_normal_copy(self):
+        db = mongomock.MongoClient().db
+        fetched_show(db, 7, {1: [tmdb_episode(51, 1)]}, fetched_at=datetime.utcnow() - timedelta(minutes=5))
+
+        result = self.run_job(db, tmdb_ids=None, max_seconds=None, recopy_all=None)
+
+        self.assertEqual((result["shows_copied"], result["caught_up"]), (1, True))
+        self.assertNotIn("recopy", result)
+
+    def test_recopy_all_is_an_argument_of_the_job(self):
+        db = mongomock.MongoClient().db
+        fetched_show(db, 7, {1: [tmdb_episode(51, 1)]}, fetched_at=datetime.utcnow() - timedelta(days=3))
+
+        result = self.run_job(db, recopy_all=True)
+
+        self.assertEqual(result["recopy"], {"shows_copied": 1, "after_tmdb_id": 7, "finished": True})
 
 
 if __name__ == "__main__":
