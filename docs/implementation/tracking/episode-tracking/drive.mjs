@@ -2,7 +2,7 @@
 // HARNESS=http://127.0.0.1:3084 SHOTS=./shots node drive.mjs [phone,desktop]
 // Needs playwright-core installed beside it, system Chromium, and the dev server started with REC_TRACKING=on.
 import { mkdirSync } from "node:fs"
-import { SHOTS, checker, launch, open, settle, stored } from "./lib.mjs"
+import { SHOTS, VIEWPORTS, checker, launch, open, settle, stored } from "./lib.mjs"
 
 mkdirSync(SHOTS, { recursive: true })
 const browser = await launch()
@@ -34,6 +34,22 @@ const posts = (page) => page.evaluate(() => window.__gwHarness.requests.filter((
 const top = (page, sel) => page.locator(sel).first().evaluate((el) => Math.round(el.getBoundingClientRect().top))
 /** Where an element is on the page, whatever the scroll position. */
 const pageTop = (page, sel) => page.locator(sel).first().evaluate((el) => Math.round(el.getBoundingClientRect().top + window.scrollY))
+/** The show's state row and log rows as they are stored, in one string: two that are equal are equal to the column. */
+const exactly = async (page) => {
+	const s = await stored(page)
+	return JSON.stringify([s.state, [...s.log].sort((a, b) => a.watch_id.localeCompare(b.watch_id))])
+}
+/** No element of the episodes section scrolls by itself: its rows are the page's. */
+const innerScrollers = (page) =>
+	page.locator("[data-episode-list]").evaluate((section) => [...section.querySelectorAll("*")].filter((el) => /auto|scroll/.test(getComputedStyle(el).overflowY) && el.scrollHeight > el.clientHeight + 1).map((el) => el.tagName + (el.className ? `.${String(el.className).split(" ")[0]}` : "")))
+/** Whether an element is on the screen with nothing over it: its top and bottom edges are in the viewport and belong to it. */
+const inClearView = (page, sel) =>
+	page.locator(sel).first().evaluate((el) => {
+		const r = el.getBoundingClientRect()
+		const mine = (y) => el.contains(document.elementFromPoint(r.left + r.width / 2, y))
+		return { top: Math.round(r.top), bottom: Math.round(r.bottom), screen: window.innerHeight, clear: r.top >= 0 && r.bottom <= window.innerHeight && mine(r.top + 3) && mine(r.bottom - 3) }
+	})
+const GREEN = /oklch\(0\.7\d+ 0\.1\d+ 16\d|rgb\(52, 211, 153\)|rgb\(0, 21\d, 1[45]\d\)/
 const toastAction = (page, label) => page.locator("[data-tracking-toast] button", { hasText: label }).click()
 const noOverflow = (page) => page.evaluate(() => document.scrollingElement.scrollWidth <= window.innerWidth + 1)
 const overlapping = (page) =>
@@ -155,7 +171,8 @@ for (const size of sizes) {
 		C("menu Seen: taking back names the count and the day, and where the show goes", /Removes the 5 episodes marked on 8 Oct 2026\. The show is then Not started\./.test(await text(page, "[data-status-action='takeBack']")), await text(page, "[data-status-action='takeBack']"))
 		C("menu Seen: Set a date for those 5 watches", /Set a date for those 5 watches/.test(await text(page, "[data-status-action='setDate']")))
 		await page.locator("[data-status-action='watchAgain']").click()
-		await page.locator("[data-confirm-watch-again]").click()
+		C("watch again: the menu asks first, and Cancel has the focus", /Start pass 2\?/.test(await text(page, "[data-confirm='watchAgain']")) && (await page.evaluate(() => document.activeElement?.hasAttribute("data-confirm-cancel"))))
+		await page.locator("[data-confirm='watchAgain'] [data-confirm-yes]").click()
 		await settle(page)
 		s = await stored(page)
 		C("watch again: pass 2, Watching, the log kept", s.state.state === "watching" && s.state.pass === 2 && s.log.length === 5)
@@ -182,10 +199,15 @@ for (const size of sizes) {
 		C("undo of the Seen press: the button shows Want to See again", (await page.locator("[data-hero] button:has-text('Want to See')").getAttribute("aria-pressed")) === "true")
 		await page.locator("[data-seen-button]").click()
 		await settle(page)
+		const pressed = await exactly(page)
 		await page.locator("[data-seen-button]").click()
 		await settle(page)
 		s = await stored(page)
-		C("seen again: back to no row and no watch", s.state === null && s.log.length === 0)
+		C("seen again: back to no row and no watch, without a question", s.state === null && s.log.length === 0 && (await count(page, "[data-confirm]")) === 0)
+		C("seen again: the toast offers Undo", /Seen taken back: 5 watches removed/.test(await toast(page)) && (await count(page, "[data-tracking-toast] button:has-text('Undo')")) === 1, await toast(page))
+		await toastAction(page, "Undo")
+		await settle(page, 700)
+		C("seen again, undone: the press stands as it was stored, to the row", (await exactly(page)) === pressed && (await page.locator("[data-seen-button]").getAttribute("data-seen-button")) === "takeBack")
 		await page.context().close()
 	}
 	{
@@ -262,9 +284,20 @@ for (const size of sizes) {
 		})
 		C("grid toggle: on the heading's line, at the right edge, with a miniature of the grid", head.sameLine && head.atRight && head.leftOfTitle && head.hasMiniature === 12, JSON.stringify(head))
 		if (size === "phone") C("phone: the toggle is a 40 px press target", head.height >= 40, String(head.height))
+		// It looks as a streaming service does in the Discover filters: grey and dim while off, in colour inside a green ring while on.
+		const tile = async () => {
+			await page.mouse.move(2, 2)
+			await settle(page, 350)
+			return page.locator("[data-toggle-tile]").evaluate((el) => { const s = getComputedStyle(el); const r = el.getBoundingClientRect(); return { state: el.dataset.toggleTile, grey: /grayscale\(1\)/.test(s.filter), opacity: Number(s.opacity), ring: s.boxShadow, right: Math.round(r.right), label: getComputedStyle(el.nextElementSibling).display } })
+		}
+		const off = await tile()
+		C("grid toggle, off: the miniature is grey and dim, with no green ring", off.state === "off" && off.grey && off.opacity < 0.6 && !GREEN.test(off.ring), JSON.stringify(off))
+		C(`grid toggle: ${size === "phone" ? "the miniature alone on a phone" : "the word Grid beside the miniature"}`, (off.label === "none") === (size === "phone"), off.label)
 		const titleTop = await pageTop(page, "#episode-list-title")
 		await toggle.click()
 		await settle(page, 300)
+		const on = await tile()
+		C("grid toggle, on: the miniature is in colour, inside a green ring that stays on the screen", on.state === "on" && !on.grey && on.opacity === 1 && GREEN.test(on.ring) && on.right + 4 <= VIEWPORTS[size].width, JSON.stringify(on))
 		C("grid toggle: the grid takes the matrix's place", (await toggle.getAttribute("aria-pressed")) === "true" && (await count(page, "#episode-grid-title")) === 1 && (await count(page, "[id='episode-ratings']")) === 1 && (await count(page, "[data-matrix]")) === 0 && (await page.locator("[data-episode-list]").getAttribute("data-view")) === "grid")
 		C("grid toggle: the heading stays where it was, and there is one visible heading", (await pageTop(page, "#episode-list-title")) === titleTop && (await page.locator("#episode-grid-title").evaluate((el) => el.getBoundingClientRect().width <= 1)))
 		C("grid toggle: no sideways scroll with the grid", await noOverflow(page))
@@ -328,6 +361,20 @@ for (const size of sizes) {
 		await page.locator("[data-jump-next]").click()
 		await settle(page, 400)
 		C("Next: opens season 2 with the next row selected", (await count(page, "[data-season-panel='2']")) === 1 && (await count(page, "[data-episode][data-selected]")) === 1 && /Simon Said/.test(await text(page, "[data-episode][data-selected]")))
+		// The rows are the page's own: a window around the Next episode, the rest folded, and nothing that scrolls by itself.
+		C("rows: nothing in the section scrolls by itself", (await innerScrollers(page)).length === 0, String(await innerScrollers(page)))
+		const shownRows = await count(page, "[data-season-panel='2'] [data-episode]")
+		C(`rows: a window of ${size === "phone" ? 8 : 10} around the Next episode, the rest folded above and below`, shownRows === (size === "phone" ? 8 : 10) && /3 earlier episodes · E1–E3 · all watched/.test(await text(page, "[data-fold='earlier']")) && /more · E/.test(await text(page, "[data-fold='later']")), `${shownRows} ${await text(page, "[data-fold='earlier']")} / ${await text(page, "[data-fold='later']")}`)
+		const nextRow = await inClearView(page, "[data-episode][data-selected]")
+		C("Next: the page scrolled its row into view, clear of the bars that stick to the screen", nextRow.clear, JSON.stringify(nextRow))
+		{
+			// The fold opens into the page: the page gets longer and stays where it is.
+			const at = await page.evaluate(() => [window.scrollY, document.scrollingElement.scrollHeight])
+			await page.locator("[data-fold='later']").evaluate((el) => el.click())
+			await settle(page, 250)
+			const then = await page.evaluate(() => [window.scrollY, document.scrollingElement.scrollHeight])
+			C("rows: more rows make the page longer, and the page stays where it is", (await count(page, "[data-season-panel='2'] [data-episode]")) > shownRows && then[1] > at[1] && then[0] === at[0] && (await innerScrollers(page)).length === 0 && (await noOverflow(page)), `${at} -> ${then}`)
+		}
 		// Further down, so that the page has room to scroll back by the height of the season that closes.
 		await pressSeason(page, 12)
 		await settle(page, 300)
@@ -369,8 +416,16 @@ for (const size of sizes) {
 		await pressSeason(page, 2)
 		await settle(page, 300)
 		const row = page.locator("[data-episode]", { hasText: "Crossroad Blues" })
-		await row.locator("[data-row]").click()
+		await row.evaluate((el) => el.scrollIntoView({ block: "center" }))
+		await settle(page, 300)
+		const where = () => row.evaluate((el) => { const r = el.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.left), Math.round(r.width), window.scrollY, document.scrollingElement.scrollHeight] })
+		const closed = await where()
+		// A press in the page itself, so that Playwright does not scroll first.
+		await row.locator("[data-row]").evaluate((el) => el.click())
 		await settle(page, 250)
+		const opened = await where()
+		C("row open: the row stays where it is, as wide as it was, and the page grows under it", opened[0] === closed[0] && opened[1] === closed[1] && opened[2] === closed[2] && opened[3] === closed[3] && opened[4] > closed[4], `${closed} -> ${opened}`)
+		C("row open: no sideways scroll and nothing that scrolls by itself", (await noOverflow(page)) && (await innerScrollers(page)).length === 0)
 		C("row open, not watched: no still and no description, a cover for each", (await row.locator("[data-detail] img").count()) === 0 && (await row.locator("[data-overview]").count()) === 0 && /Show image/.test(await row.locator("[data-cover='image']").innerText()) && /Show description/.test(await row.locator("[data-cover='text']").innerText()))
 		C("row open, not watched: the description is not readable under its cover", !/crossroads|demon/i.test(await row.locator("[data-detail]").innerText()), await row.locator("[data-detail]").innerText())
 		C("row open: air date, runtime, rating and the date choice", /Nov 16, 2006 · \d+ min · IMDb \d\.\d/.test(await row.locator("[data-detail]").innerText()) && (await row.locator("[data-watch-now]").count()) === 1)
@@ -614,14 +669,93 @@ for (const size of sizes) {
 		C("menu set a date: every watch of the press has the day, and the press stands", s.log.length === 12 && s.log.every((r) => r.watched_at_precision === "day" && new Date(r.watched_at).toISOString().startsWith("2024-10-01")) && s.state.seen_press_group !== null)
 		await toList(page)
 		C("press line: says the date once it is set", (await text(page, "[data-seen-press] span")) === "Marked Seen on 19 Oct 2024 · seasons 1 to 4 (12 episodes), dated 1 Oct 2024", await text(page, "[data-seen-press] span"))
-		// Take back, beside the line.
+		// Take back, beside the line: it asks first, under the line and over the matrix.
+		const dated = "Marked Seen on 19 Oct 2024 · seasons 1 to 4 (12 episodes), dated 1 Oct 2024"
+		const standing = await exactly(page)
+		const matrixTop = await pageTop(page, "[data-matrix]")
+		const sentBefore = await posts(page)
 		await page.locator("[data-take-back]").click()
+		await settle(page, 200)
+		const asked = "[data-seen-press] [data-confirm='takeBack']"
+		C("take back beside the line: it asks first, and nothing is taken or sent yet", (await count(page, asked)) === 1 && (await exactly(page)) === standing && (await posts(page)) === sentBefore && (await count(page, "[data-tracking-toast]")) === 0)
+		C("take back: the question says what goes and where the show is then", (await text(page, asked)).replace(/\s+/g, " ").startsWith("Take back Seen? Removes the 12 episodes marked on 19 Oct 2024. The show is then Not started. Cancel Take back"), (await text(page, asked)).replace(/\s+/g, " "))
+		const box = await page.locator("[data-seen-press] [role=alertdialog]").evaluate((el) => { const r = el.getBoundingClientRect(); return { left: Math.round(r.left), right: Math.round(r.right), width: Math.round(r.width), screen: window.innerWidth, name: el.getAttribute("aria-label") } })
+		C("take back: the question fits the screen, moves nothing, and Cancel has the focus", box.left >= 0 && box.right <= box.screen && box.width >= 240 && box.name === "Take back Seen" && (await pageTop(page, "[data-matrix]")) === matrixTop && (await noOverflow(page)) && (await page.evaluate(() => document.activeElement?.hasAttribute("data-confirm-cancel"))), JSON.stringify(box))
+		C("take back: the buttons are 40 px", (await page.locator(`${asked} button`).evaluateAll((els) => els.every((el) => el.getBoundingClientRect().height >= 40))))
+		await page.locator("[data-episode-list]").screenshot({ path: `${SHOTS}/take-back-confirm-${size}.jpg`, type: "jpeg", quality: 60 })
+		await page.locator(`${asked} [data-confirm-cancel]`).click()
+		await settle(page, 200)
+		C("take back, Cancel: nothing changed, and the focus is back on the link", (await count(page, "[data-confirm]")) === 0 && (await exactly(page)) === standing && (await posts(page)) === sentBefore && (await page.evaluate(() => document.activeElement?.hasAttribute("data-take-back"))))
+		await page.locator("[data-take-back]").click()
+		await page.keyboard.press("Escape")
+		await settle(page, 200)
+		C("take back, Escape: closed, nothing changed", (await count(page, "[data-confirm]")) === 0 && (await exactly(page)) === standing && (await page.evaluate(() => document.activeElement?.hasAttribute("data-take-back"))))
+		await page.locator("[data-take-back]").click()
+		await page.locator("#episode-list-title").click()
+		await settle(page, 200)
+		C("take back, a press elsewhere: closed, nothing changed", (await count(page, "[data-confirm]")) === 0 && (await exactly(page)) === standing)
+		await page.locator("[data-take-back]").click()
+		await page.locator(`${asked} [data-confirm-yes]`).click()
 		await settle(page)
 		s = await stored(page)
-		C("take back beside the line: the press's watches are gone and the show is Not started", s.state === null && s.log.length === 0)
-		C("take back: the toast says what was removed", /Seen taken back: 12 watches removed/.test(await toast(page)), await toast(page))
+		C("take back, confirmed: the press's watches are gone and the show is Not started", s.state === null && s.log.length === 0)
+		C("take back: the toast says what was removed, and offers Undo", /Seen taken back: 12 watches removed/.test(await toast(page)) && (await count(page, "[data-tracking-toast] button:has-text('Undo')")) === 1, await toast(page))
 		C("take back: the line is gone", (await count(page, "[data-seen-press]")) === 0)
+		await page.locator("[data-tracking-toast]").scrollIntoViewIfNeeded()
+		await page.screenshot({ path: `${SHOTS}/take-back-toast-${size}.jpg`, type: "jpeg", quality: 60 })
+		await toastAction(page, "Undo")
+		await settle(page, 700)
+		s = await stored(page)
+		C("take back, undone: the same rows and the same state row, to the column", (await exactly(page)) === standing, `${s.state?.state} ${s.log.length}`)
+		C("take back, undone: Seen since the day of the press, by the rows of that day, with the date set since", s.state?.state === "seen" && s.state.seen_press_from === "not_started" && new Date(s.state.state_changed_at).toISOString().startsWith("2024-10-19") && s.log.length === 12 && s.log.every((r) => r.origin === "seen" && r.group_id === s.state.seen_press_group && new Date(r.created_at).toISOString().startsWith("2024-10-19") && new Date(r.watched_at).toISOString().startsWith("2024-10-01")))
+		C("take back, undone: the line reads as before", (await text(page, "[data-seen-press] span")) === dated, await text(page, "[data-seen-press] span"))
+		C("take back, undone: the toast says so and offers nothing more", /Seen is back, as it was before\./.test(await toast(page)) && (await count(page, "[data-tracking-toast] button:has-text('Undo')")) === 0, await toast(page))
+		C("take back, undone: the hero says Seen again, 12 of 12", (await text(page, "[data-status-pill]")).trim() === "Seen" && /12 of 12/.test(await text(page, "[data-progress]")))
+		C("take back and its Undo: one request each, never two at once", (await posts(page)) === sentBefore + 2 && (await overlapping(page)).overlapping === 0)
 		C("press flows: no page errors", cleanErrors(errors).length === 0, cleanErrors(errors).join(" | "))
+		await page.context().close()
+	}
+	{
+		// Take back Seen in the status menu: the same question in the menu's place, and the same Undo.
+		const { page, errors } = await open(browser, size, `show=slow-horses&scenario=seen_old&${T}`)
+		await page.waitForSelector("[data-tracking-hero]")
+		const standing = await exactly(page)
+		await menuPick(page, "takeBack")
+		const asked = "[data-tracking-box] [data-confirm='takeBack']"
+		C("menu take back: the menu asks first, in its own place", (await count(page, asked)) === 1 && (await count(page, "[data-status-action]")) === 0 && (await exactly(page)) === standing && (await page.locator("[data-tracking-box] [role=alertdialog]").getAttribute("aria-label")) === "Take back Seen")
+		C("menu take back: the question says what goes and where the show is then", (await text(page, asked)).replace(/\s+/g, " ").startsWith("Take back Seen? Removes the 24 episodes marked on 19 Oct 2024. The show is then Not started. Cancel Take back"), (await text(page, asked)).replace(/\s+/g, " "))
+		C("menu take back: the question fits the screen", await page.locator("[data-tracking-box] [role=alertdialog]").evaluate((el) => { const r = el.getBoundingClientRect(); return r.left >= 0 && r.right <= window.innerWidth }))
+		await page.locator("[data-hero]").screenshot({ path: `${SHOTS}/menu-take-back-confirm-${size}.jpg`, type: "jpeg", quality: 60 })
+		await page.locator(`${asked} [data-confirm-cancel]`).click()
+		await settle(page, 200)
+		C("menu take back, Cancel: the menu is closed and nothing changed", (await count(page, "[role=menu]")) === 0 && (await count(page, "[data-confirm]")) === 0 && (await exactly(page)) === standing)
+		await menuPick(page, "takeBack")
+		await page.keyboard.press("Escape")
+		await settle(page, 200)
+		C("menu take back, Escape: closed, nothing changed, the focus on the pill", (await count(page, "[data-confirm]")) === 0 && (await exactly(page)) === standing && (await page.evaluate(() => document.activeElement?.hasAttribute("data-status-pill"))))
+		await menuPick(page, "takeBack")
+		await page.locator(`${asked} [data-confirm-yes]`).click()
+		await settle(page)
+		let s = await stored(page)
+		C("menu take back, confirmed: nothing is left of the show", s.state === null && s.log.length === 0 && (await count(page, "[data-tracking-box]")) === 0)
+		C("menu take back: the toast offers Undo", /Seen taken back: 24 watches removed/.test(await toast(page)) && (await count(page, "[data-tracking-toast] button:has-text('Undo')")) === 1, await toast(page))
+		await toastAction(page, "Undo")
+		await settle(page, 700)
+		s = await stored(page)
+		C("menu take back, undone: the same rows and the same state row, to the column", (await exactly(page)) === standing, `${s.state?.state} ${s.log.length}`)
+		C("menu take back, undone: Caught up with the 10 that aired since still new", (await text(page, "[data-status-pill]")).trim() === "Caught up · 10 new" && (await menuIds(page)) === "markNew,hold,watchAgain,takeBack,setDate,drop")
+		await toList(page)
+		C("menu take back, undone: the line names the day and the seasons as before", (await text(page, "[data-seen-press] span")) === "Marked Seen on 19 Oct 2024 · seasons 1 to 4 (24 episodes), no dates recorded", await text(page, "[data-seen-press] span"))
+		// An Undo that comes too late: one of the press's episodes was ticked since.
+		await page.locator("[data-take-back]").click()
+		await page.locator("[data-seen-press] [data-confirm-yes]").click()
+		await settle(page)
+		await pressSeason(page, 1)
+		await settle(page, 300)
+		await page.locator("[data-season-panel='1'] [data-episode] [data-tick]").first().click()
+		await settle(page)
+		C("a tick after Take back: its toast takes the place of the Undo", /S1 E1 marked as watched/.test(await toast(page)) && (await stored(page)).log.length === 1)
+		C("menu take back flows: no page errors", cleanErrors(errors).length === 0, cleanErrors(errors).join(" | "))
 		await page.context().close()
 	}
 	{

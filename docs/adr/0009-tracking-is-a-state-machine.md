@@ -35,6 +35,15 @@ prototype of those rules produced 27 surprises. The owner asked for a state mach
 - **Pressing Seen can be taken back exactly.** The press's watches form one group, and the state it was pressed from
   is remembered while the show stays Seen. One more press removes that group and returns the state, also to On hold
   or Dropped.
+- **Taking a press back can be undone exactly** (row 30, added 2026-10-08 after the owner asked for an Undo on
+  Take back). The press and its group can't be made again by another press: a new press would mark what has aired
+  by now, under a new group, dated today. So the Undo is an event of its own, `restoreSeen`, which carries the
+  press as it was stored (its group, the state it was pressed from, its watches with their ids, dates and the time
+  they were recorded, and since when the show was Seen) and leads to Seen from any state. The machine takes it only
+  onto what taking the press back left: the state that rows 13 to 17 lead to, the same pass, no press standing, and
+  none of the press's episodes watched since. Anything else is refused, because the press would no longer be what
+  it was. The page asks before it takes a press back, in the status menu and beside the press's line; the Seen
+  button pressed again does not ask. Each ends in the same toast, which offers the Undo.
 - **Watch again needs at least one watched regular episode.** It starts the next pass and makes the show Watching.
   Without the guard, a show marked Seen while it had no episode list would become Watching with nothing watched.
 - **An import never changes On hold, Dropped or Seen set here.** It adds its watches to the log. It sets the state
