@@ -5,15 +5,27 @@ import { BookmarkIcon, CheckIcon, PlayIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
 import { AnimatePresence, motion } from "framer-motion"
 import type React from "react"
+import { createContext, useContext } from "react"
 import { MOOD_BY_KEY } from "~/domain/moods"
-import { misfitWords } from "~/domain/my-movies"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
 import { titleToDashed } from "~/utils/helpers"
-import { heroLabel, movieHeroLabel, runtimeLabel, sortFact } from "./labels"
-import { useMoviesPage } from "./movies-page"
+import {
+	heroLabel,
+	misfitWords,
+	movieHeroLabel,
+	runtimeLabel,
+	sortFact,
+} from "./labels"
 import { type ServiceOffer, offersOf, watchLine } from "./services"
 import { DISPLAY, EASE, WRAP, backdropUrl, logoUrl, posterUrl } from "./style"
+
+/**
+ * My movies (#385) is this page for the Wishlist's movies. Its parts read here whether they are drawn on My
+ * movies, to say "movie" and "My movies" where Watch next says "title" and "Wishlist".
+ */
+export const MoviesPageContext = createContext(false)
+export const useMoviesPage = () => useContext(MoviesPageContext)
 
 export const titleHref = (
 	title: Pick<TitleCard, "media_type" | "tmdb_id" | "title">,

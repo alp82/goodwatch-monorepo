@@ -16,7 +16,7 @@ import {
 	PickedMoods,
 } from "./MoodPicker"
 import { SortMenu } from "./SortMenu"
-import { useMoviesPage } from "./movies-page"
+import { useMoviesPage } from "./WatchNextHero"
 import { EASE, WRAP } from "./style"
 
 export interface StripProps {

@@ -110,7 +110,10 @@ async function readWatchedEpisodes(
 	userId: string,
 	ids: number[],
 ): Promise<Map<number, { season: number; number: number; pass: number }[]>> {
-	const found = new Map<number, { season: number; number: number; pass: number }[]>()
+	const found = new Map<
+		number,
+		{ season: number; number: number; pass: number }[]
+	>()
 	if (!ids.length) return found
 	const rows = await query<{
 		tmdb_id: number

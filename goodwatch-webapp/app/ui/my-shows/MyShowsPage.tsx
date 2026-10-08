@@ -18,14 +18,16 @@ import type {
 	MyShowsStart,
 } from "~/server/my-shows.server"
 import {
+	DISPLAY,
 	Empty,
 	MY_LIBRARY,
 	MY_MOVIES,
 	PageHead,
 	Poster,
+	WRAP,
 	plural,
+	tmdbImage,
 } from "~/ui/my-pages/bits"
-import { DISPLAY, WRAP, backdropUrl } from "~/ui/watch-next/style"
 import { titleToDashed } from "~/utils/helpers"
 
 /** How many shows to start are drawn before "Show more". */
@@ -59,7 +61,10 @@ const TAG = {
 	seenNew: "bg-sky-400 text-black",
 	start: "bg-emerald-400 text-black",
 } as const
-const Tag = ({ kind, children }: { kind: keyof typeof TAG; children: ReactNode }) => (
+const Tag = ({
+	kind,
+	children,
+}: { kind: keyof typeof TAG; children: ReactNode }) => (
 	<span
 		className={`inline-block whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-black uppercase tracking-wide ${TAG[kind]}`}
 	>
@@ -96,9 +101,9 @@ const continueRow = (row: MyShowsRow, now: number): RowWords => ({
 			? plural(row.left, "new episode")
 			: `${plural(row.left, "episode")} to watch`,
 	meta: [
-		airedWords(row.next?.airDate ?? null, now),
-		row.next?.runtime ? `${row.next.runtime} min` : null,
 		progressWords(row),
+		row.next?.runtime ? `${row.next.runtime} min` : null,
+		airedWords(row.next?.airDate ?? null, now),
 	]
 		.filter(Boolean)
 		.join(" · "),
@@ -146,7 +151,7 @@ function Row({ row, n, big }: { row: RowWords; n: number; big: boolean }) {
 				>
 					{row.backdrop_path && (
 						<img
-							src={backdropUrl(row.backdrop_path, "w500")}
+							src={tmdbImage(row.backdrop_path, "w500")}
 							alt=""
 							loading="lazy"
 							className="absolute inset-0 h-full w-full object-cover"
@@ -168,12 +173,6 @@ function Row({ row, n, big }: { row: RowWords; n: number; big: boolean }) {
 								New
 							</span>
 						)}
-						<span
-							className="truncate text-xs font-semibold text-gray-300 md:hidden"
-							data-why
-						>
-							{row.why}
-						</span>
 					</span>
 					<span
 						className={`mt-1 truncate font-bold text-white ${big ? `${DISPLAY} text-3xl md:text-4xl` : "text-lg"}`}
@@ -181,7 +180,13 @@ function Row({ row, n, big }: { row: RowWords; n: number; big: boolean }) {
 						{row.title}
 					</span>
 					<span className="truncate text-sm text-gray-200">{row.line}</span>
-					<span className="truncate text-xs text-gray-400">{row.meta}</span>
+					{/* On a phone the fact that places the row leads its last line; wider, it has a column of its own. */}
+					<span className="truncate text-xs text-gray-400">
+						<b className="font-semibold text-gray-300 md:hidden" data-why>
+							{row.why} ·{" "}
+						</b>
+						{row.meta}
+					</span>
 				</span>
 				<span className="hidden w-40 shrink-0 items-center justify-end text-right text-sm font-semibold text-gray-300 md:flex">
 					{row.why}
@@ -227,7 +232,10 @@ function QuietRow({ row, fact }: { row: MyShowsRow; fact: string }) {
 				prefetch="intent"
 				className="group flex items-center gap-3 rounded-xl bg-white/[0.03] p-2 ring-1 ring-white/5 hover:bg-white/[0.07] hover:ring-white/20"
 			>
-				<Poster path={row.poster_path} className="h-[60px] w-10 shrink-0 rounded" />
+				<Poster
+					path={row.poster_path}
+					className="h-[60px] w-10 shrink-0 rounded"
+				/>
 				<span className="min-w-0 flex-1">
 					<b className="block truncate text-sm text-white">{row.title}</b>
 					<span className="block truncate text-xs text-gray-400">
@@ -338,8 +346,13 @@ export function MyShowsPage({ data, now }: { data: MyShows; now: number }) {
 			/>
 			<div className={`${WRAP} flex flex-col gap-10 pt-2`}>
 				<section data-section="tonight">
-					<h2 className={`${DISPLAY} text-2xl text-white md:text-3xl`}>Tonight</h2>
-					<p className="mb-4 mt-1 max-w-3xl text-sm text-gray-400" data-order-rule>
+					<h2 className={`${DISPLAY} text-2xl text-white md:text-3xl`}>
+						Tonight
+					</h2>
+					<p
+						className="mb-4 mt-1 max-w-3xl text-sm text-gray-400"
+						data-order-rule
+					>
 						{continues.length > 0 && (
 							<>
 								{jump("continue", "Continue")} comes first, the show you watched
@@ -357,9 +370,9 @@ export function MyShowsPage({ data, now }: { data: MyShows; now: number }) {
 					</p>
 					{total === 0 ? (
 						<Empty title="No show for tonight">
-							Want to See on a show puts it here to start, with how long it is and
-							where it streams. Once you mark an episode watched on a show's page,
-							its next episode leads this list.
+							Want to See on a show puts it here to start, with how long it is
+							and where it streams. Once you mark an episode watched on a show's
+							page, its next episode leads this list.
 						</Empty>
 					) : (
 						<ol className="flex flex-col gap-2.5">

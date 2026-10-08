@@ -1,15 +1,25 @@
 // A member's home with REC_TRACKING (#385): three doors in place of the two tiles. Continue opens My shows, Start a
 // show opens it at the Start group, A movie opens My movies. A door with nothing behind it is not drawn, and
 // Something new then takes its place as a tile; with all three doors it is a key in the head line.
-// This file is a chunk of its own: only a member whose home has doors requests it (see MemberHome in TvScreens.tsx
-// and PhoneTvScreens.tsx).
+//
+// This file is a chunk of its own: only a member whose home has doors requests it (home-doors-code.tsx). It
+// imports nothing of the living room: what it needs of the TV, the
+// focusable item and the posters of Something new, comes in as props, so that the home's own chunk stays one file
+// whatever this one imports.
 import type { ReactNode } from "react"
-import { durationWords } from "~/domain/my-movies"
-import { backdropUrl, posterUrl } from "~/ui/watch-next/style"
-import { Item, type TvView, memberTiles } from "./TvScreens"
+import type { Item as TvItem, TvView } from "./TvScreens"
 import type { HomeDoors as Doors } from "./living-room-data"
 
 const plural = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`
+const image = (path: string, size: string) =>
+	`https://image.tmdb.org/t/p/${size}${path}`
+/** "2h 12m", "2h", "45 min". */
+const duration = (minutes: number) =>
+	minutes < 60
+		? `${minutes} min`
+		: minutes % 60
+			? `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+			: `${minutes / 60}h`
 
 function Fan({
 	posters,
@@ -28,7 +38,7 @@ function Fan({
 						style={{ transform: `rotate(${(i - 1) * 6}deg)` }}
 					>
 						<img
-							src={posterUrl(path, phone ? "w92" : "w185")}
+							src={image(path, phone ? "w92" : "w185")}
 							alt=""
 							className="rounded-lg object-cover shadow-2xl ring-1 ring-white/10"
 							style={
@@ -43,6 +53,7 @@ function Fan({
 }
 
 function Door({
+	Item,
 	view,
 	phone,
 	id,
@@ -53,6 +64,7 @@ function Door({
 	line,
 	sub,
 }: {
+	Item: typeof TvItem
 	view: TvView
 	phone: boolean
 	id: string
@@ -72,7 +84,7 @@ function Door({
 		>
 			{backdrop && (
 				<img
-					src={backdropUrl(backdrop, "w780")}
+					src={image(backdrop, "w780")}
 					alt=""
 					className="absolute inset-0 h-full w-full object-cover opacity-60"
 				/>
@@ -111,19 +123,25 @@ function Door({
 
 /** The doors of a member's home, and Something new. `head` draws the screen's title and line in each edition. */
 export default function HomeDoors({
+	Item,
 	view,
 	doors,
+	fresh,
 	phone = false,
 	head,
 }: {
+	/** The TV's focusable item. */
+	Item: typeof TvItem
 	view: TvView
 	doors: Doors
+	/** Posters for Something new, when it is a tile. */
+	fresh: (string | null)[]
 	phone?: boolean
 	head: (line: ReactNode) => ReactNode
 }) {
 	const { continue: next, start, movie } = doors
 	const three = Boolean(next && start)
-	const fresh = memberTiles(view)[1]
+	const door = { Item, view, phone }
 	const somethingNew = (
 		<Item
 			view={view}
@@ -151,11 +169,10 @@ export default function HomeDoors({
 			>
 				{next && (
 					<Door
-						view={view}
-						phone={phone}
+						{...door}
 						id="door:continue"
 						backdrop={next.backdrop_path}
-						eyebrow={next.episode ? `Next episode · ${next.fact}` : next.fact}
+						eyebrow={next.fact}
 						title="Continue"
 						line={
 							next.episode
@@ -174,22 +191,20 @@ export default function HomeDoors({
 				)}
 				{start && (
 					<Door
-						view={view}
-						phone={phone}
+						{...door}
 						id="door:start"
 						posters={start.posters}
-						eyebrow={`${plural(start.count, "show")} you want to see`}
+						eyebrow={`${plural(start.count, "show")} to start`}
 						title={phone ? "New show" : "Start a show"}
 						line={phone ? `${start.count} to start` : start.title}
 						sub="Best taste match first"
 					/>
 				)}
 				<Door
-					view={view}
-					phone={phone}
+					{...door}
 					id="door:movie"
 					posters={[...movie.posters].reverse()}
-					eyebrow={`${plural(movie.count, "movie")} you want to see`}
+					eyebrow={`${plural(movie.count, "movie")} to see`}
 					title="A movie"
 					line={
 						phone
@@ -197,7 +212,7 @@ export default function HomeDoors({
 							: (movie.title ?? "No movies yet")
 					}
 					sub={[
-						movie.runtime ? durationWords(movie.runtime) : null,
+						movie.runtime ? duration(movie.runtime) : null,
 						movie.service ? `on ${movie.service}` : null,
 					]
 						.filter(Boolean)
@@ -205,10 +220,9 @@ export default function HomeDoors({
 				/>
 				{!three && (
 					<Door
-						view={view}
-						phone={phone}
+						{...door}
 						id="something-new"
-						posters={fresh.art.slice(0, 3).map((title) => title.poster_path)}
+						posters={fresh}
 						eyebrow="Not seen yet"
 						title="Something new"
 						line={phone ? "Your taste" : "Closest to your taste"}

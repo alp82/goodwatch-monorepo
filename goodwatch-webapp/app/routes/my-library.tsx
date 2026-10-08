@@ -11,7 +11,7 @@ import { libraryChoiceOf } from "~/domain/my-library"
 import { isEnabled } from "~/server/features.server"
 import { type LibraryPage, getLibraryPage } from "~/server/my-library.server"
 import { MyLibraryPage } from "~/ui/my-library/MyLibraryPage"
-import { GuestPage } from "~/ui/my-pages/GuestPage"
+import { GuestPage } from "~/ui/my-pages/bits"
 import { getUserIdFromRequest } from "~/utils/auth"
 
 export { pageHeaders as headers } from "~/utils/headers"

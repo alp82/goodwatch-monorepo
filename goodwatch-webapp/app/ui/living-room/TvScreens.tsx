@@ -3,9 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion"
 import {
 	type CSSProperties,
+	type ComponentProps,
 	type ReactNode,
-	Suspense,
-	lazy,
 	useEffect,
 } from "react"
 import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
@@ -15,9 +14,9 @@ import type { TasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { runtimeLabel } from "~/ui/watch-next/labels"
 import { offersOf, watchLine } from "~/ui/watch-next/services"
 import { backdropUrl, logoUrl, posterUrl } from "~/ui/watch-next/style"
-import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { APP, ICON, Icon } from "./Remote"
 import { TvQuiz, quizItemLabel } from "./TvQuiz"
+import { HomeDoorsCode, loadHomeDoors } from "./home-doors-code"
 import {
 	type LivingRoomChoices,
 	type LivingRoomData,
@@ -580,9 +579,21 @@ export function memberTiles(view: TvView) {
 	]
 }
 
-// Home's doors (#385) are a chunk only a member whose home has them requests. It is asked for while the TV boots.
-const loadHomeDoors = reloadOnStaleChunk(() => import("./HomeDoors"))
-export const LazyHomeDoors = lazy(loadHomeDoors)
+// Home's doors (#385) are a chunk only a member whose home has them requests (home-doors-code.tsx). A home that
+// gets its doors after the page loaded asks for the code here, while the TV boots.
+export function LazyHomeDoors(
+	props: Omit<ComponentProps<typeof HomeDoorsCode>, "Item" | "fresh">,
+) {
+	return (
+		<HomeDoorsCode
+			{...props}
+			Item={Item}
+			fresh={memberTiles(props.view)[1]
+				.art.slice(0, 3)
+				.map((title) => title.poster_path)}
+		/>
+	)
+}
 export function usePreloadHomeDoors(data: LivingRoomData) {
 	const has = Boolean(data.doors)
 	useEffect(() => {
@@ -597,13 +608,12 @@ function MemberHome({ view }: { view: TvView }) {
 		return (
 			<>
 				<div className="absolute inset-0 bg-[radial-gradient(110%_90%_at_30%_0%,#2b1706_0%,#08070a_62%)]" />
-				<Suspense fallback={<Head title="What are we watching?" />}>
-					<LazyHomeDoors
-						view={view}
-						doors={doors}
-						head={(line) => <Head title="What are we watching?" line={line} />}
-					/>
-				</Suspense>
+				<LazyHomeDoors
+					first={<Head title="What are we watching?" />}
+					view={view}
+					doors={doors}
+					head={(line) => <Head title="What are we watching?" line={line} />}
+				/>
 			</>
 		)
 	return (

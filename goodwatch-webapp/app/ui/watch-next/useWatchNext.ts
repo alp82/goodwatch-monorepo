@@ -10,7 +10,7 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { timeOf } from "~/domain/my-movies"
+import { timeOf } from "./labels"
 import { type WatchNextChoice, watchNextChoiceOf } from "~/domain/watch-next"
 import type { WatchNext, WatchNextTitle } from "~/server/watch-next.server"
 import type { TasteInteraction } from "~/ui/taste/types"

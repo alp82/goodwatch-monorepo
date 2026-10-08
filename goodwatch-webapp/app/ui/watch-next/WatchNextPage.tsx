@@ -1,6 +1,6 @@
 // The Watch next page: the docked strip on the hero (phones: the slab's buttons and drawers at the bottom), the hero
 // with its Then column, the stepped grid, suggestions while the Wishlist is short, and the sign-up prompt for guests.
-import { useCallback, useState } from "react"
+import { type ReactNode, useCallback, useState } from "react"
 import { type MoodKey, toggleMood } from "~/domain/moods"
 import type { WatchNextSort } from "~/domain/watch-next"
 import { useFeature } from "~/hooks/useFeature"
@@ -16,8 +16,7 @@ import { FinishPrompt, FinishToast } from "./FinishPrompt"
 import { type MoodControl, refusalText } from "./MoodPicker"
 import { PhoneControls } from "./PhoneControls"
 import { SteppedGrid, WorthAdding } from "./SteppedGrid"
-import { WatchNextHero } from "./WatchNextHero"
-import { MoviesPageContext, type MoviesPageParts } from "./movies-page"
+import { MoviesPageContext, WatchNextHero } from "./WatchNextHero"
 import { WRAP } from "./style"
 import { useFinish } from "./useFinish"
 import {
@@ -25,6 +24,26 @@ import {
 	useRefreshWatchNext,
 	useWatchNext,
 } from "./useWatchNext"
+
+/** What My movies (#385) adds to this page, from the route that owns it (ui/my-movies/). */
+export interface MoviesPageParts {
+	/** The page's head: its name, how many movies, and the ways to the other pages. */
+	head: (data: WatchNext | null) => ReactNode
+	/** "How long?" in the desktop strip. */
+	timeControl: (
+		time: number | null,
+		setTime: (time: number | null) => void,
+	) => ReactNode
+	/** "How long?" on phones: what its button in the slab shows, and its drawer. */
+	phoneTime: {
+		label: (time: number | null) => string
+		icon: (time: number | null) => ReactNode
+		drawer: (
+			time: number | null,
+			setTime: (time: number | null) => void,
+		) => ReactNode
+	}
+}
 
 export function WatchNextPage({
 	initial,

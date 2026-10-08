@@ -17,9 +17,7 @@ export function timeOf(value: string | null | undefined): TimeChoice | null {
 export function durationWords(minutes: number): string {
 	if (minutes < 60) return `${minutes} min`
 	const rest = minutes % 60
-	return rest
-		? `${Math.floor(minutes / 60)}h ${rest}m`
-		: `${minutes / 60}h`
+	return rest ? `${Math.floor(minutes / 60)}h ${rest}m` : `${minutes / 60}h`
 }
 
 /** "Any length", "Up to 1h 30". */

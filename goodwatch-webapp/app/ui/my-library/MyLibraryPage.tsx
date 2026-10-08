@@ -40,11 +40,13 @@ import {
 	MORE_STATUSES,
 	SORT_LABEL,
 	STATUS_LABEL,
+	addedWords,
 	libraryChoiceOf,
 	libraryParams,
 	sortsFor,
 	watchedWords,
 } from "~/domain/my-library"
+import { useScoreMutation } from "~/hooks/useUserDataMutations"
 import type { LibraryItem, LibraryPage } from "~/server/my-library.server"
 import type { Score } from "~/server/scores.server"
 import {
@@ -53,22 +55,19 @@ import {
 	MY_SHOWS,
 	PageHead,
 	Poster,
+	WRAP,
 } from "~/ui/my-pages/bits"
-import { ageLabel } from "~/ui/watch-next/labels"
-import { WRAP } from "~/ui/watch-next/style"
 import { titleToDashed } from "~/utils/helpers"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 const loadRateBar = reloadOnStaleChunk(() => import("./RateBar"))
 const RateBar = lazy(loadRateBar)
 
-export type LoadLibrary = (
+/** One step of a list from /api/my-library. */
+async function fetchLibrary(
 	choice: LibraryChoice,
 	offset: number,
-) => Promise<LibraryPage>
-
-/** One step of a list from /api/my-library. */
-export const fetchLibrary: LoadLibrary = async (choice, offset) => {
+): Promise<LibraryPage> {
 	const params = libraryParams(choice)
 	if (offset) params.set("offset", String(offset))
 	const response = await fetch(`/api/my-library?${params}`)
@@ -167,7 +166,7 @@ function StatusChoice({
 							aria-selected={on}
 							data-status={key}
 							onClick={() => onPick(key)}
-							className={`flex h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 sm:flex-none sm:px-5 sm:text-base ${on ? "bg-amber-400 text-black" : "text-gray-300 hover:bg-white/10"}`}
+							className={`flex h-11 min-w-0 flex-auto cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-sm font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-400 sm:flex-none sm:px-5 sm:text-base ${on ? "bg-amber-400 text-black" : "text-gray-300 hover:bg-white/10"}`}
 						>
 							<span className="truncate">{STATUS_LABEL[key]}</span>
 							<span
@@ -195,7 +194,7 @@ function StatusChoice({
 						<>
 							{STATUS_LABEL[status]}
 							<span
-								className="rounded-full bg-black/15 px-1.5 py-0.5 text-xs tabular-nums"
+								className="hidden rounded-full bg-black/15 px-1.5 py-0.5 text-xs tabular-nums sm:inline"
 								data-count
 							>
 								{count(counts[status])}
@@ -217,7 +216,7 @@ function StatusChoice({
 						aria-label="More statuses"
 						data-status-menu
 						onKeyDown={onMenuKey}
-						className="absolute right-0 top-full z-30 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-2xl bg-gray-900 p-1.5 shadow-2xl shadow-black/60 ring-1 ring-white/15"
+						className="absolute right-0 top-full z-30 mt-2 flex w-64 max-w-[calc(100vw-2rem)] flex-col rounded-2xl bg-gray-900 p-1.5 shadow-2xl shadow-black/60 ring-1 ring-white/15 sm:left-0 sm:right-auto"
 					>
 						{MORE_STATUSES.map((key) => {
 							const on = status === key
@@ -232,7 +231,12 @@ function StatusChoice({
 										onPick(key)
 										close(true)
 									}}
-									className={`flex min-h-12 w-full cursor-pointer items-center gap-2 rounded-xl px-3 text-left text-sm font-bold outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${key === "unrated" ? "mt-1.5 border-t border-white/10 pt-1.5" : ""} ${on ? "bg-white/10 text-white" : "text-gray-200 hover:bg-white/[0.07]"}`}
+									className={`flex min-h-12 w-full cursor-pointer items-center gap-2 rounded-xl px-3 text-left text-sm font-bold outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+										// Not rated is a view of Seen, not a status of its own: a rule sets it apart.
+										key === "unrated"
+											? "relative mt-3 before:absolute before:inset-x-2 before:-top-1.5 before:h-px before:bg-white/10"
+											: ""
+									} ${on ? "bg-white/10 text-white" : "text-gray-200 hover:bg-white/[0.07]"}`}
 								>
 									<CheckIcon
 										className={`h-4 w-4 shrink-0 text-amber-400 ${on ? "" : "invisible"}`}
@@ -471,14 +475,22 @@ function Row({
 				? `${item.episodesWatched} episodes watched`
 				: `${item.episodesWatched} of ${item.airedEpisodes} episodes`
 	// The fact the list's order goes by.
+	const watchedOn = item.state
+		? // A show's log rows are its episodes: only a movie says how often it was watched.
+			watchedWords(
+				{ watchedAt: item.watchedAt, count: show ? 1 : item.watches },
+				now,
+			)
+		: watchedWords(null, now)
 	const fact =
 		status === "want"
 			? item.addedAt
-				? `Added ${ageLabel(item.addedAt, now)}`
+				? addedWords(item.addedAt, now)
 				: ""
-			: item.state
-				? watchedWords({ watchedAt: item.watchedAt, count: item.watches }, now)
-				: watchedWords(null, now)
+			: // A show in progress says that the day is its last watch's.
+				inProgress && item.watchedAt
+				? `Last watched ${/^(Today|Yesterday)$/.test(watchedOn) ? watchedOn.toLowerCase() : watchedOn}`
+				: watchedOn
 	return (
 		<li
 			className="flex items-center gap-2 border-b border-white/5"
@@ -489,7 +501,10 @@ function Row({
 				prefetch="intent"
 				className="group flex min-w-0 flex-1 items-center gap-3 py-2 hover:bg-white/[0.03]"
 			>
-				<Poster path={item.poster_path} className="h-[60px] w-10 shrink-0 rounded" />
+				<Poster
+					path={item.poster_path}
+					className="h-[60px] w-10 shrink-0 rounded"
+				/>
 				<span className="min-w-0 flex-1">
 					<b className="block truncate text-sm text-white group-hover:text-amber-200 md:text-base">
 						{item.title}
@@ -502,7 +517,10 @@ function Row({
 							<Progress item={item} />
 						</span>
 					)}
-					<span className="block truncate text-xs text-gray-400 sm:hidden" data-fact>
+					<span
+						className="block truncate text-xs text-gray-400 sm:hidden"
+						data-fact
+					>
 						{fact}
 					</span>
 				</span>
@@ -548,7 +566,6 @@ export function MyLibraryPage({
 	initial,
 	now,
 	viewer,
-	load = fetchLibrary,
 }: {
 	/** The first step, computed by the loader for the choice in the URL. */
 	initial: LibraryPage
@@ -556,7 +573,6 @@ export function MyLibraryPage({
 	now: number
 	/** The member's id, for the cache of their lists. */
 	viewer: string
-	load?: LoadLibrary
 }) {
 	const [params, setParams] = useSearchParams()
 	const choice = useMemo(() => libraryChoiceOf(params), [params])
@@ -573,7 +589,7 @@ export function MyLibraryPage({
 
 	const result = useInfiniteQuery({
 		queryKey: [...libraryQueryKey, viewer, query],
-		queryFn: ({ pageParam }) => load(choice, pageParam),
+		queryFn: ({ pageParam }) => fetchLibrary(choice, pageParam),
 		initialPageParam: 0,
 		getNextPageParam: (last) => last.next ?? undefined,
 		initialData:
@@ -598,7 +614,11 @@ export function MyLibraryPage({
 						if (!["want", "seen", "unrated"].includes(next.status))
 							merged.kind = "all"
 					}
-					return libraryParams(merged)
+					// Parameters that are not the library's stay.
+					const kept = new URLSearchParams(current)
+					for (const key of ["status", "sort", "type", "q"]) kept.delete(key)
+					for (const [key, value] of libraryParams(merged)) kept.set(key, value)
+					return kept
 				},
 				{ replace: true, preventScrollReset: true },
 			),
@@ -611,22 +631,36 @@ export function MyLibraryPage({
 	const [given, setGiven] = useState<Record<string, number | null>>({})
 	const scoreOf = (item: LibraryItem) =>
 		item.key in given ? given[item.key] : item.score
+	// The app's score mutation, as from every other page.
+	const { mutate: rate } = useScoreMutation()
 	const onRated = useCallback(
 		(item: LibraryItem, score: Score | null) => {
 			setGiven((current) => ({ ...current, [item.key]: score }))
-			void client.invalidateQueries({ queryKey: libraryQueryKey })
+			rate(
+				{ mediaType: item.mediaType, tmdbId: item.tmdbId, score },
+				{
+					onSettled: () =>
+						client.invalidateQueries({ queryKey: libraryQueryKey }),
+				},
+			)
 		},
-		[client],
+		[client, rate],
 	)
 	const closeBar = useCallback(() => setAsked(null), [])
 
 	const { status } = first
 	const showsOnly =
 		status === "watching" || status === "on_hold" || status === "dropped"
-	const waiting = result.isPlaceholderData || (result.isFetching && !items.length)
+	const waiting =
+		result.isPlaceholderData || (result.isFetching && !items.length)
 	const [emptyTitle, emptyText] = EMPTY[status]
 	return (
-		<div className="overflow-x-clip pb-24" data-my-library data-status={status}>
+		<div
+			className="overflow-x-clip pb-24"
+			data-my-library
+			data-status={status}
+			aria-busy={result.isFetching}
+		>
 			<PageHead
 				name="My library"
 				line="Every title you have marked, by where you stand with it. Picking one for tonight happens in My shows and My movies."

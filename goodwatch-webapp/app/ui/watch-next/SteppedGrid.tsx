@@ -9,7 +9,6 @@ import {
 import { Link } from "@remix-run/react"
 import { useEffect, useRef, useState } from "react"
 import { useIsNotInterested } from "~/hooks/useUserDataAccessors"
-import { misfitWords } from "~/domain/my-movies"
 import { TIER_CAPS, type WatchNextTierSize } from "~/domain/watch-next"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
 import type {
@@ -19,7 +18,7 @@ import type {
 } from "~/server/watch-next.server"
 import { TitlePosterCard } from "~/ui/title-card/TitlePosterCard"
 import type { TitleKey } from "~/utils/title-key"
-import { titleHref } from "./WatchNextHero"
+import { titleHref, useMoviesPage } from "./WatchNextHero"
 import {
 	SORT_WORDS,
 	TIER_LABEL,
@@ -30,7 +29,7 @@ import {
 	tierHeadingClass,
 	titleCount,
 } from "./labels"
-import { useMoviesPage } from "./movies-page"
+import { misfitWords } from "./labels"
 import { offersOf } from "./services"
 import { DISPLAY, posterUrl } from "./style"
 import { type WatchNextState, useTierCards } from "./useWatchNext"

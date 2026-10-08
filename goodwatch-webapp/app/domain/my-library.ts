@@ -98,11 +98,7 @@ export const libraryCounts = (data: LibraryData) =>
 
 // Lower case and without accents, so "elite" finds "Élite".
 const fold = (text: string) =>
-	text
-		.normalize("NFD")
-		.replace(/\p{M}/gu, "")
-		.toLowerCase()
-		.trim()
+	text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim()
 
 /** A title as the Title sort reads it: lower case, without accents, without a leading article. */
 export const sortKey = (title: string) =>
@@ -167,9 +163,7 @@ export function libraryOrder(
 		const scoreOf = (key: MediaKey) => data.scores[key]?.score ?? -1
 		compare = (a, b) => scoreOf(b) - scoreOf(a) || lastWatched(a, b)
 	} else {
-		const names = new Map(
-			keys.map((key) => [key, sortKey(titleOf(key) ?? "")]),
-		)
+		const names = new Map(keys.map((key) => [key, sortKey(titleOf(key) ?? "")]))
 		compare = (a, b) =>
 			(names.get(a) as string).localeCompare(names.get(b) as string, "en")
 	}
@@ -248,4 +242,25 @@ export function watchedWords(
 	if (entry.count > 1)
 		return `Watched ${entry.count} times, ${at === null ? "dates unknown" : `last ${dayWords(at, now)}`}`
 	return at === null ? "Date unknown" : dayWords(at, now)
+}
+
+/** When a title was added to the Wishlist: "Added today", "Added 3 days ago", "Added 5 months ago". */
+export function addedWords(
+	addedAt: Date | string | number,
+	now: number,
+): string {
+	const days = Math.max(
+		0,
+		Math.floor(now / 86_400_000) -
+			Math.floor(new Date(addedAt).getTime() / 86_400_000),
+	)
+	if (days < 1) return "Added today"
+	if (days < 2) return "Added yesterday"
+	if (days < 30) return `Added ${days} days ago`
+	if (days < 365) {
+		const months = Math.max(1, Math.round(days / 30))
+		return `Added ${months === 1 ? "a month" : `${months} months`} ago`
+	}
+	const years = Math.floor(days / 365)
+	return `Added ${years === 1 ? "over a year" : `${years} years`} ago`
 }

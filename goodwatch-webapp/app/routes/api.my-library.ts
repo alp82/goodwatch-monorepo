@@ -20,7 +20,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const params = new URL(request.url).searchParams
 	const offset = Number(params.get("offset") ?? 0)
 	if (!Number.isSafeInteger(offset) || offset < 0 || offset > 1_000_000)
-		return json({ error: "Pass offset as a step's start" }, { status: 400, headers })
+		return json(
+			{ error: "Pass offset as a step's start" },
+			{ status: 400, headers },
+		)
 	return json<LibraryPage>(
 		await getLibraryPage(userId, libraryChoiceOf(params), offset),
 		{ headers },

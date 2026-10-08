@@ -1,8 +1,7 @@
 // The bar a score is given in from a row of My library (#385): one row of ten keys above the dock. It loads with the
-// first press of a score or a Rate key. The score goes through the app's score mutation, as from every other page.
+// first press of a score or a Rate key. The page stores the score: this bar is gone before the answer comes.
 import { XMarkIcon } from "@heroicons/react/20/solid"
 import { useEffect, useRef } from "react"
-import { useScoreMutation } from "~/hooks/useUserDataMutations"
 import type { LibraryItem } from "~/server/my-library.server"
 import type { Score } from "~/server/scores.server"
 import { Poster } from "~/ui/my-pages/bits"
@@ -21,8 +20,7 @@ export default function RateBar({
 	onRated: (item: LibraryItem, score: Score | null) => void
 	onClose: () => void
 }) {
-	const { mutate } = useScoreMutation()
-	const bar = useRef<HTMLDivElement>(null)
+	const bar = useRef<HTMLElement>(null)
 	// Focus moves into the bar, and Escape closes it.
 	useEffect(() => {
 		bar.current
@@ -35,10 +33,7 @@ export default function RateBar({
 		return () => window.removeEventListener("keydown", onKey)
 	}, [onClose])
 	const give = (value: Score | null) => {
-		mutate(
-			{ mediaType: item.mediaType, tmdbId: item.tmdbId, score: value },
-			{ onSuccess: () => onRated(item, value) },
-		)
+		onRated(item, value)
 		onClose()
 	}
 	return (

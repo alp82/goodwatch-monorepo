@@ -6,7 +6,6 @@
 import { AnimatePresence, motion } from "framer-motion"
 import {
 	type ReactNode,
-	Suspense,
 	createContext,
 	useContext,
 	useState,
@@ -365,16 +364,13 @@ function MemberHome({ view }: { view: TvView }) {
 		return (
 			<>
 				{moodBackground()}
-				<Suspense
-					fallback={<Head view={view} title="What are we watching?" />}
-				>
-					<LazyHomeDoors
-						view={view}
-						doors={doors}
-						phone
-						head={() => <Head view={view} title="What are we watching?" />}
-					/>
-				</Suspense>
+				<LazyHomeDoors
+					first={<Head view={view} title="What are we watching?" />}
+					view={view}
+					doors={doors}
+					phone
+					head={() => <Head view={view} title="What are we watching?" />}
+				/>
 			</>
 		)
 	return (

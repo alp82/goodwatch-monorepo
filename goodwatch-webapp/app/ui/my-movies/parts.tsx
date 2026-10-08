@@ -1,9 +1,9 @@
 // What My movies (#385) adds to the Watch next page it is drawn with: the page's head, and "How long?", the fourth
 // choice of the control strip (a select on desktop, a button and a drawer on phones).
 import { ChevronDownIcon, ClockIcon } from "@heroicons/react/20/solid"
-import { TIME_CHOICES, timeLabel } from "~/domain/my-movies"
+import { TIME_CHOICES, timeLabel } from "~/ui/watch-next/labels"
 import { MY_LIBRARY, MY_SHOWS, PageHead, plural } from "~/ui/my-pages/bits"
-import type { MoviesPageParts } from "~/ui/watch-next/movies-page"
+import type { MoviesPageParts } from "~/ui/watch-next/WatchNextPage"
 
 const CHOICES: (number | null)[] = [null, ...TIME_CHOICES]
 
@@ -47,7 +47,11 @@ function TimeDrawer({
 	setTime,
 }: { time: number | null; setTime: (time: number | null) => void }) {
 	return (
-		<div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="How long?">
+		<div
+			className="grid grid-cols-2 gap-2"
+			role="radiogroup"
+			aria-label="How long?"
+		>
 			{CHOICES.map((minutes) => {
 				const on = minutes === time
 				return (

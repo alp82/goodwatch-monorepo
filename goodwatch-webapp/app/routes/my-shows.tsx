@@ -11,7 +11,7 @@ import { isEnabled } from "~/server/features.server"
 import { type MyShows, getMyShows } from "~/server/my-shows.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { getViewerContext } from "~/server/viewer.server"
-import { GuestPage } from "~/ui/my-pages/GuestPage"
+import { GuestPage } from "~/ui/my-pages/bits"
 import { MyShowsPage } from "~/ui/my-shows/MyShowsPage"
 import { getUserIdFromRequest } from "~/utils/auth"
 
@@ -34,7 +34,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const userId = (await getUserIdFromRequest({ request })) ?? null
 	if (!isEnabled("tracking", { userId }))
 		throw new Response("Not found", { status: 404 })
-	if (!userId) return json({ data: null as MyShows | null, now: 0 }, { headers })
+	if (!userId)
+		return json({ data: null as MyShows | null, now: 0 }, { headers })
 	const ctx = await getViewerContext(request, undefined, userId)
 	const now = Date.now()
 	const data = await getMyShows(

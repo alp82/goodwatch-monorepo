@@ -18,6 +18,7 @@ const {
 	sortKey,
 	sortsFor,
 	watchedWords,
+	addedWords,
 } = await import("./my-library.ts")
 
 const at = (day: string) => new Date(`${day}T00:00:00Z`)
@@ -225,4 +226,13 @@ test("a Seen row says when the title was last watched, as exactly as it is known
 	assert.equal(watchedWords({ watchedAt: at("2026-10-07"), count: 1 }, now), "Yesterday")
 	// A rated show without a watch state has no watch to tell of.
 	assert.equal(watchedWords(null, now), "Rated")
+})
+
+test("a Want to see row says when the title was added", () => {
+	const now = Date.parse("2026-10-08T20:00:00Z")
+	assert.equal(addedWords(at("2026-10-08"), now), "Added today")
+	assert.equal(addedWords(at("2026-10-07"), now), "Added yesterday")
+	assert.equal(addedWords(at("2026-09-25"), now), "Added 13 days ago")
+	assert.equal(addedWords(at("2026-05-01"), now), "Added 5 months ago")
+	assert.equal(addedWords(at("2023-01-01"), now), "Added 3 years ago")
 })

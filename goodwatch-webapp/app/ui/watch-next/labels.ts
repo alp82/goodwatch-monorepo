@@ -2,6 +2,14 @@
 // names, and counts. Pure, so the words stay in one place.
 import { MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import { timeLabel } from "~/domain/my-movies"
+
+// My movies' rules, for the page's parts: they read them from here, so that the module stays in this chunk.
+export {
+	TIME_CHOICES,
+	misfitWords,
+	timeLabel,
+	timeOf,
+} from "~/domain/my-movies"
 import type {
 	WatchNextSort,
 	WatchNextTierKey,

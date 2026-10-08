@@ -102,7 +102,9 @@ export function planMyShows(input: {
 		const aired = catalog?.airedEpisodes ?? null
 		// A device ahead of UTC can hold one watched episode more than has aired (C4): lists cap the count.
 		const watched =
-			aired === null ? entry.episodesWatched : Math.min(entry.episodesWatched, aired)
+			aired === null
+				? entry.episodesWatched
+				: Math.min(entry.episodesWatched, aired)
 		const row: ShowRow = {
 			id,
 			state: entry.state,
@@ -159,7 +161,10 @@ export interface ListedShowEpisode {
 	airDate: string | null
 }
 
-const airedRegular = <E extends ListedShowEpisode>(episodes: readonly E[], utcToday: string) =>
+const airedRegular = <E extends ListedShowEpisode>(
+	episodes: readonly E[],
+	utcToday: string,
+) =>
 	episodes
 		.filter((e) => e.season > 0 && e.airDate !== null && e.airDate <= utcToday)
 		.sort((a, b) => a.season - b.season || a.number - b.number)
@@ -185,7 +190,8 @@ export function nextEpisodeAfter<E extends ListedShowEpisode>(
 }
 
 /** The key of an episode in a set of watched episodes: `<season>-<number>`. */
-export const episodeKey = (season: number, number: number) => `${season}-${number}`
+export const episodeKey = (season: number, number: number) =>
+	`${season}-${number}`
 
 /** The earliest aired regular episode the member has not watched in the current pass. */
 export function nextEpisodeInGap<E extends ListedShowEpisode>(
@@ -237,7 +243,8 @@ const plural = (n: number, one: string, many = `${one}s`) =>
 /** The fact that places a row in Continue: "Watched yesterday". */
 export function activityWords(at: number | null, now: number): string {
 	if (at === null) return "No date for your last watch"
-	const days = Math.max(0, Math.floor((now - at) / DAY_MS))
+	// By the calendar (UTC), as a watch's day reads elsewhere: last evening is yesterday, not "today".
+	const days = Math.max(0, Math.floor(now / DAY_MS) - Math.floor(at / DAY_MS))
 	if (days < 1) return "Watched today"
 	if (days < 2) return "Watched yesterday"
 	if (days < 30) return `Watched ${days} days ago`
