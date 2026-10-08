@@ -137,6 +137,13 @@ export function scrubKit(core: PlayCore, X: ScrubExtra) {
 				sd: Math.sqrt(mean(v.map((x) => (x - m) ** 2))),
 			}
 		})
+	/** The spread of the neighborhood you stand in on all 74 attributes, computed once per neighborhood. */
+	let kept: { l: PlayTitle[] | null; k: string; v: ReturnType<typeof spread> } | null = null
+	const spreadOf = (ctx: PlayCtx) => {
+		if (!kept || kept.l !== ctx.list || kept.k !== ctx.c.k)
+			kept = { l: ctx.list, k: ctx.c.k, v: spread(pool(ctx), core.M.keys) }
+		return kept.v
+	}
 	/**
 	 * The traits whose level is a degree of something a title has more or less of. The World family is left out: its
 	 * levels say whether a theme is there (crime, warfare, a future setting), and "less" of a theme is no direction.
@@ -145,18 +152,19 @@ export function scrubKit(core: PlayCore, X: ScrubExtra) {
 		const themes = X.groups[2]?.k ?? []
 		return core.M.keys.filter((key) => T[key].on && themes.indexOf(key) < 0)
 	}
-	/** The degree trait a neighborhood spreads on most, apart from the ones named. */
-	const varied = (titles: PlayTitle[], skip: string[] = []) =>
-		spread(
-			titles,
-			degree().filter((key) => skip.indexOf(key) < 0),
-		)
+	/** The degree traits a neighborhood spreads on most, widest first, apart from the ones named. */
+	const widest = (spreads: ReturnType<typeof spread>, skip: string[] = []) => {
+		const all = degree()
+		return spreads
+			.filter((s) => all.indexOf(s.key) >= 0 && skip.indexOf(s.key) < 0)
 			.sort((a, b) => b.sd - a.sd)
 			.map((s) => s.key)
+	}
+	const varied = (ctx: PlayCtx, skip: string[] = []) => widest(spreadOf(ctx), skip)
 	/** The traits a form offers as chips: the page title's strongest, and the ones its neighborhood spreads on. */
 	const menu = (ctx: PlayCtx, chosen: string[], count = 10) => {
 		const all = degree()
-		const wide = varied(pool(ctx))
+		const wide = varied(ctx)
 		const own = core.own(ctx.root, 12).filter((key) => all.indexOf(key) >= 0)
 		const out: string[] = []
 		const add = (key: string | undefined) => {
@@ -210,6 +218,9 @@ export function scrubKit(core: PlayCore, X: ScrubExtra) {
 			.join("")}</span><span class="sc-rl">defining <b>10</b></span></div>`
 	}
 	/**
+	 * The caps keep a strip at about the 25 to 35 posters of the seventh round's: a step's time to paint grows with
+	 * the posters on the strip, on screen or not.
+	 *
 	 * A strip along a level from 0 to 10: a tick per level, then the titles on it, nearest first. A level without a
 	 * title keeps its tick, so a gap shows. Titles on one level are a tie, and the tick says how many there are.
 	 */
@@ -465,7 +476,7 @@ export function scrubKit(core: PlayCore, X: ScrubExtra) {
 		o: { pick: string; titles?: PlayTitle[]; cap?: number },
 	): ScrubModel => {
 		const f = (t: PlayTitle) => val(t, key)
-		const { cells, counts } = levelCells(ctx, o.titles ?? pool(ctx), f, { cap: o.cap ?? 6 })
+		const { cells, counts } = levelCells(ctx, o.titles ?? pool(ctx), f, { cap: o.cap ?? 4 })
 		const own = f(ctx.c)
 		return {
 			pick: o.pick,
@@ -507,7 +518,9 @@ export function scrubKit(core: PlayCore, X: ScrubExtra) {
 		capped,
 		halves,
 		spread,
+		spreadOf,
 		degree,
+		widest,
 		varied,
 		menu,
 		row,
@@ -578,10 +591,10 @@ const scrub2: ScrubForm = (core, kit) =>
 				return 0
 			}
 			const zones = [
-				{ id: -1, name: `Clearly ${axis.lowWord}`, cap: 20 },
-				{ id: 0, name: "About the same", cap: 12 },
-				{ id: 2, name: "Both at once", cap: 10 },
-				{ id: 1, name: `Clearly ${axis.highWord}`, cap: 20 },
+				{ id: -1, name: `Clearly ${axis.lowWord}`, cap: 8 },
+				{ id: 0, name: "About the same", cap: 8 },
+				{ id: 2, name: "Both at once", cap: 6 },
+				{ id: 1, name: `Clearly ${axis.highWord}`, cap: 8 },
 			].filter((zone) => two || zone.id !== 2)
 			const all = kit.pool(ctx)
 			const cells: ScrubCell[] = []
@@ -764,7 +777,7 @@ const scrub4: ScrubForm = (core, kit) =>
 			const a = (t: PlayTitle) => core.val(t, A)
 			const b = (t: PlayTitle) => core.val(t, B)
 			const { cells, counts } = kit.levelCells(ctx, kit.pool(ctx), a, {
-				cap: 5,
+				cap: 4,
 				v: (t) => `${a(t)},${b(t)}`,
 				band: (t) => (b(t) >= 7 ? 0 : b(t) >= 4 ? 1 : 2),
 			})
@@ -870,7 +883,10 @@ const scrub5: ScrubForm = (core, kit) =>
 const scrub6: ScrubForm = (core, kit) => {
 	const list = (ctx: PlayCtx) => {
 		const mem = ctx.st.mem
-		const spreads = kit.spread(kit.pool(ctx), core.M.keys).sort((p, q) => q.sd - p.sd)
+		const spreads = kit
+			.spreadOf(ctx)
+			.slice()
+			.sort((p, q) => q.sd - p.sd)
 		const q = String(mem.q ?? "")
 			.trim()
 			.toLowerCase()
@@ -913,7 +929,7 @@ const scrub6: ScrubForm = (core, kit) => {
 		model: (ctx) => {
 			const mem = ctx.st.mem
 			if (!mem.a) {
-				mem.a = kit.varied(kit.pool(ctx))[0] ?? "tension"
+				mem.a = kit.varied(ctx)[0] ?? "tension"
 			}
 			return kit.single(ctx, mem.a, {
 				pick: `<div class="sc-row sc-find"><input class="sc-q" type="search" placeholder="Find a trait" aria-label="Find a trait" autocomplete="off" data-pl-input="" data-sc-q="" value="${core.esc(
@@ -954,7 +970,7 @@ const scrub7: ScrubForm = (core, kit) =>
 			const two = mem.two as string[]
 			const f = (t: PlayTitle) => Math.min(...two.map((key) => core.val(t, key)))
 			const { cells, counts } = kit.levelCells(ctx, kit.pool(ctx), f, {
-				cap: 6,
+				cap: 4,
 				v: (t) => two.map((key) => core.val(t, key)).join(","),
 				inner: (t) => `<span class="sc-nb">${two.map((key) => core.val(t, key)).join("·")}</span>`,
 			})
@@ -1008,7 +1024,7 @@ const scrub8: ScrubForm = (core, kit) =>
 				? all.filter((t) => t.k === ctx.c.k || core.val(t, mem.h) >= from(mem.h))
 				: all
 			if (!mem.a) {
-				mem.a = kit.varied(held, [mem.h])[0] ?? "tension"
+				mem.a = kit.widest(kit.spread(held, core.M.keys), [mem.h])[0] ?? "tension"
 			}
 			const keep = kit.row(
 				"h",
@@ -1024,7 +1040,7 @@ const scrub8: ScrubForm = (core, kit) =>
 					.map((key) => ({ a: key, h: kit.nm(key), on: key === mem.a })),
 				`<small>Along${mem.h ? ` · ${held.length} of ${all.length} keep it` : ""}</small>`,
 			)
-			const m = kit.single(ctx, mem.a, { pick: keep + along, titles: held, cap: 8 })
+			const m = kit.single(ctx, mem.a, { pick: keep + along, titles: held, cap: 5 })
 			const lines = m.lines
 			if (mem.h)
 				m.lines = (t) =>
@@ -1057,7 +1073,7 @@ const scrub9: ScrubForm = (core, kit) =>
 			const mem = ctx.st.mem
 			if (!mem.r) {
 				const offer = kit.menu(ctx, [])
-				const wide = kit.varied(kit.pool(ctx), [offer[0]])
+				const wide = kit.varied(ctx, [offer[0]])
 				mem.r = [
 					[offer[0] ?? "tension", 1],
 					[wide[0] ?? "bleakness", -1],
@@ -1067,7 +1083,7 @@ const scrub9: ScrubForm = (core, kit) =>
 			const f = (t: PlayTitle) => r.reduce((sum, entry) => sum + entry[1] * core.val(t, entry[0]), 0)
 			const sign = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : "0")
 			const sorted = kit
-				.capped(ctx, kit.pool(ctx), 40)
+				.capped(ctx, kit.pool(ctx), 26)
 				.map((t, i) => ({ t, i }))
 				.sort((p, q) => f(p.t) - f(q.t) || p.i - q.i)
 			const cells: ScrubCell[] = []
@@ -1137,8 +1153,10 @@ const scrub10: ScrubForm = (core, kit) =>
 			const mem = ctx.st.mem
 			if (name === "lane") {
 				// The next trait of the family, among the four this neighborhood spreads on most.
+				const family = kit.X.groups[Number(arg)]?.k ?? []
 				const keys = kit
-					.spread(kit.pool(ctx), kit.X.groups[Number(arg)]?.k ?? [])
+					.spreadOf(ctx)
+					.filter((entry) => family.indexOf(entry.key) >= 0)
 					.sort((p, q) => q.sd - p.sd)
 					.slice(0, 4)
 					.map((entry) => entry.key)
@@ -1156,12 +1174,14 @@ const scrub10: ScrubForm = (core, kit) =>
 		model: (ctx) => {
 			const mem = ctx.st.mem
 			const all = kit.pool(ctx)
-			const ranked = kit.X.groups.map((group) =>
-				kit
-					.spread(all, group.k)
-					.sort((p, q) => q.sd - p.sd)
-					.slice(0, 4),
-			)
+			const ranked = mem.g
+				? []
+				: kit.X.groups.map((group) =>
+						kit
+							.spread(all, group.k)
+							.sort((p, q) => q.sd - p.sd)
+							.slice(0, 4),
+					)
 			if (!mem.g)
 				mem.g = ranked
 					.map((list, i) => ({ i, sd: list[0]?.sd ?? 0 }))
@@ -1173,9 +1193,13 @@ const scrub10: ScrubForm = (core, kit) =>
 			// A lane's trait is chosen once and kept for the walk, so that a step doesn't change what a lane means.
 			mem.lk ??= {}
 			const g = mem.g as number[]
-			const titles = kit.capped(ctx, all, 26)
+			const titles = kit.capped(ctx, all, 16)
 			const lanes = g.map((index) => {
-				mem.lk[index] ??= ranked[index][0]?.key ?? kit.X.groups[index].k[0]
+				mem.lk[index] ??=
+					(ranked[index] ??
+						kit
+							.spread(all, kit.X.groups[index].k)
+							.sort((p, q) => q.sd - p.sd))[0]?.key ?? kit.X.groups[index].k[0]
 				return { index, key: mem.lk[index] as string, group: kit.X.groups[index] }
 			})
 			const level = (key: string, t: PlayTitle) => `<b>${core.val(t, key)}</b> ${kit.word(core.val(t, key))}`
