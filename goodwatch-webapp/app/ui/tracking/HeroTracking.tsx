@@ -53,8 +53,10 @@ export default function HeroTracking({
 	if (!tracking.ready || !view || !page) return <>{first}</>
 	return (
 		<div data-tracking-hero={view.derived.state}>
-			{view.derived.state !== "not_started" && (
+			{view.derived.state !== "not_started" ? (
 				<StatusBox tracking={tracking} view={view} actions={actions} />
+			) : (
+				<StartBox tracking={tracking} view={view} />
 			)}
 			<div className="@container">
 				<Score
@@ -270,6 +272,57 @@ function StatusPill({
 /** The chip that says where the box's link leads: down to the episode list. */
 const GO =
 	"inline-flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/10 px-3 text-sm font-semibold text-white ring-1 ring-white/15 hover:bg-white/20 group-hover:bg-white/20"
+
+/** A show nobody has started yet: no status and no progress, only the way down to its seasons and episodes. */
+function StartBox({
+	tracking,
+	view,
+}: {
+	tracking: ShowTracking
+	view: ShowView
+}) {
+	const aired = (tracking.page?.episodes ?? []).filter(
+		(episode) =>
+			episode.season > 0 &&
+			episode.airDate !== null &&
+			episode.airDate <= tracking.today,
+	)
+	if (!aired.length) return null
+	const first = aired.reduce((a, b) =>
+		a.season < b.season || (a.season === b.season && a.number <= b.number)
+			? a
+			: b,
+	)
+	const seasons = new Set(aired.map((episode) => episode.season)).size
+	return (
+		<StatusBoxFrame>
+			<a
+				href={`#${EPISODE_GRID_ANCHOR}`}
+				data-start-episodes
+				aria-label={`${plural(seasons, "season")}, ${plural(view.derived.aired, "episode")}. Go to the episode list to mark what you've watched`}
+				onClick={(event) => {
+					event.preventDefault()
+					tracking.store.openEpisode(first.id)
+				}}
+				className={`group flex h-11 min-w-0 items-center gap-3 rounded-lg ${FOCUS}`}
+			>
+				<span className="min-w-0 flex-1">
+					<span className="block text-xs font-semibold uppercase tracking-wide text-gray-400">
+						Already watching?
+					</span>
+					<span className="block truncate text-sm font-semibold text-white">
+						{plural(seasons, "season")} ·{" "}
+						{plural(view.derived.aired, "episode")}
+					</span>
+				</span>
+				<span data-go-episodes className={GO}>
+					Episodes
+					<ArrowDownIcon className="h-3.5 w-3.5" />
+				</span>
+			</a>
+		</StatusBoxFrame>
+	)
+}
 
 function StatusBox({
 	tracking,

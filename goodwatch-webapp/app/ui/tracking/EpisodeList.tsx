@@ -1642,7 +1642,7 @@ function Row({
 					{!special && aired && (
 						<RatingChip episode={episode} missing={missing} />
 					)}
-					<span className="hidden shrink-0 whitespace-nowrap text-right text-xs tabular-nums text-gray-500 sm:block">
+					<span className="hidden w-28 shrink-0 whitespace-nowrap text-right text-xs tabular-nums text-gray-500 sm:block">
 						{episode.airDate
 							? aired
 								? formatDay(episode.airDate)
