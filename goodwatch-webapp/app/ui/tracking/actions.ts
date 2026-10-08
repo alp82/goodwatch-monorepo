@@ -12,6 +12,7 @@ import type {
 	PageAction,
 	PageEpisode,
 } from "~/domain/tracking/show-page"
+import { seenPressRestore } from "~/domain/tracking/storage"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import { type UserData, createMediaKey } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
@@ -227,14 +228,32 @@ export function useTrackingActions(store: ShowStore, title: string) {
 				)
 			},
 
-			/** The Seen button's second press: takes the press back, exactly. */
+			/**
+			 * Takes the standing Seen press back: the Seen button's second press, and Take back after its question.
+			 * Undo puts the press back as it was stored: its watches with their ids and dates, and the day it was made.
+			 */
 			undoSeen() {
-				const before = store.snapshot.copy?.log.length ?? 0
+				const copy = store.snapshot.copy
+				const before = copy?.log.length ?? 0
+				// Read before the press goes: afterwards nothing stored says what it was.
+				const press = copy ? seenPressRestore(copy.state, copy.log) : null
 				if (!store.act({ type: "undoSeen" }).ok) return
 				const kept = store.snapshot.copy?.log.length ?? 0
 				const removed = before - kept
 				store.say(
 					`Seen taken back${removed ? `: ${watches(removed)} removed` : ""}${kept ? `. ${watches(kept)} you marked yourself ${kept === 1 ? "stays" : "stay"}.` : ""}`,
+					press
+						? [
+								{
+									label: "Undo",
+									run: () => {
+										store.dismissToast()
+										if (store.act(press).ok)
+											store.say("Seen is back, as it was before.")
+									},
+								},
+							]
+						: [],
 				)
 			},
 

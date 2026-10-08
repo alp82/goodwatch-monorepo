@@ -58,7 +58,7 @@ export interface MenuEntry {
 	note: string
 	/** It takes something away: shown last or quieter. */
 	quiet: boolean
-	/** Can't be taken back, so the menu asks first. */
+	/** It starts a pass or removes watches, so the page asks first. */
 	confirm: boolean
 	/** The machine's event; null for "Set a date", which edits dates and is no event of the table. */
 	event: TrackingEvent | null
@@ -173,7 +173,7 @@ export function statusMenu(
 							: `The show stays ${then(done)}.`
 				return { label: "Take back Seen", note: `${removes} ${after}` }
 			},
-			{ quiet: true },
+			{ quiet: true, confirm: true },
 		)
 		// Not an event of the table: a date for the press's watches. Offered while the press stands and has rows.
 		if (press.count && entries.some((entry) => entry.id === "takeBack"))

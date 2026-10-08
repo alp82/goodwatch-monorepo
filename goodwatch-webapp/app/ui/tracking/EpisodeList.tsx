@@ -35,7 +35,13 @@ import {
 } from "~/ui/details/episode-grid/scale"
 import { HEADER_HEIGHT } from "~/ui/details/header-height"
 import { tmdbImageUrl } from "~/utils/tmdb-image"
-import { TrackingToastHost } from "./TrackingToast"
+import {
+	ConfirmPanel,
+	POPOVER,
+	TAKE_BACK_LOOK,
+	TrackingToastHost,
+	useDismiss,
+} from "./TrackingToast"
 import { type TrackingActions, useTrackingActions } from "./actions"
 import type { TrackedMedia } from "./gate"
 import {
@@ -98,6 +104,9 @@ export function ScoreTile({
 }
 
 const SITE_BAR_HEIGHT = 64
+/** What stays clear above a place the page scrolls to: the site bar and the title page's sticky header. */
+const UNDER_HEADERS = `calc(${HEADER_HEIGHT} + ${SITE_BAR_HEIGHT + 16}px)`
+const ROW_SCROLL_MARGIN = { scrollMarginTop: UNDER_HEADERS }
 
 /** The view of the episodes section the member chose last in this browser: the list, or the grid. */
 const VIEW_KEY = "gw:episodes-view"
@@ -366,9 +375,7 @@ function List({
 			// The list keeps a pressed season row in place itself; the browser doing the same would move it twice.
 			className="[overflow-anchor:none]"
 			aria-labelledby="episode-list-title"
-			style={{
-				scrollMarginTop: `calc(${HEADER_HEIGHT} + ${SITE_BAR_HEIGHT + 16}px)`,
-			}}
+			style={ROW_SCROLL_MARGIN}
 		>
 			<style>
 				{
@@ -390,22 +397,7 @@ function List({
 				</div>
 			) : (
 				<>
-					{view.press && (
-						<p
-							data-seen-press
-							className="mt-2 flex flex-wrap items-baseline gap-x-2 text-xs leading-5 text-gray-400"
-						>
-							<span>{seenPressLine(view.press, LOCALE_DATES)}</span>
-							<button
-								type="button"
-								data-take-back
-								onClick={actions.undoSeen}
-								className={`-my-2 cursor-pointer py-2 font-semibold text-gray-300 underline decoration-white/30 underline-offset-4 hover:text-white ${FOCUS}`}
-							>
-								Take back
-							</button>
-						</p>
-					)}
+					<PressLine view={view} actions={actions} />
 					<div className="mt-3">
 						{nav.many ? (
 							<Matrix nav={nav} model={model} />
@@ -417,7 +409,6 @@ function List({
 									season={nav.season}
 									nav={nav}
 									model={model}
-									layout="fold"
 									limit={12}
 								/>
 							</div>
@@ -427,6 +418,74 @@ function List({
 			)}
 			<TrackingToastHost tracking={tracking} actions={actions} />
 		</section>
+	)
+}
+
+/**
+ * The Seen press that stands, in one line: when it was made and what it covered, and the way to take it back.
+ * Take back asks first, under the line, in the status menu's words; the toast that follows offers Undo.
+ */
+function PressLine({
+	view,
+	actions,
+}: {
+	view: ShowView
+	actions: TrackingActions
+}) {
+	const [asking, setAsking] = useState(false)
+	const root = useRef<HTMLDivElement>(null)
+	const link = useRef<HTMLButtonElement>(null)
+	useDismiss(asking, root, (byKey) => {
+		setAsking(false)
+		if (byKey) link.current?.focus()
+	})
+	const { press } = view
+	if (!press) return null
+	// What taking it back does is the machine's to say: the menu's entry, which is there while the press stands.
+	const entry = view.menu.find((each) => each.id === "takeBack")
+	return (
+		<div ref={root} data-seen-press className="relative mt-2">
+			<p className="flex flex-wrap items-baseline gap-x-2 text-xs leading-5 text-gray-400">
+				<span>{seenPressLine(press, LOCALE_DATES)}</span>
+				{entry && (
+					<button
+						ref={link}
+						type="button"
+						data-take-back
+						aria-haspopup="dialog"
+						aria-expanded={asking}
+						onClick={() => setAsking(!asking)}
+						className={`-my-2 cursor-pointer py-2 font-semibold text-gray-300 underline decoration-white/30 underline-offset-4 hover:text-white ${FOCUS}`}
+					>
+						Take back
+					</button>
+				)}
+			</p>
+			{asking && entry && (
+				// Over the matrix, so that nothing below moves when it opens.
+				<div
+					role="alertdialog"
+					aria-label={entry.label}
+					className={`absolute left-0 top-full z-30 mt-1 w-80 max-w-full ${POPOVER}`}
+				>
+					<ConfirmPanel
+						name="takeBack"
+						title="Take back Seen?"
+						text={entry.note}
+						action="Take back"
+						look={TAKE_BACK_LOOK}
+						onCancel={() => {
+							setAsking(false)
+							link.current?.focus()
+						}}
+						onConfirm={() => {
+							setAsking(false)
+							actions.undoSeen()
+						}}
+					/>
+				</div>
+			)}
+		</div>
 	)
 }
 
@@ -599,6 +658,16 @@ function Finder({
 /** Twelve cells in the grid's colours: what the toggle leads to, in small. */
 const MINIATURE = [8.2, 8.6, 7.9, 9.1, 7.4, 8.3, 8.8, 6.6, 8.0, 9.3, 8.5, 7.7]
 
+// A picture that is a toggle button looks as a streaming service does in the Discover filters (`OptionLogo` in
+// ui/filter-bar/FilterGroups.tsx): in full colour inside a green ring while on, grey and dim until the pointer is
+// over it while off, with the filters' amber focus ring. The class names are written out here and not shared: a
+// module of them would be added to a chunk that every page loads.
+const TILE_TOGGLE =
+	"group cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+const TILE_ON = "ring-2 ring-emerald-400 ring-offset-2 ring-offset-gray-900"
+const TILE_OFF =
+	"opacity-45 grayscale group-hover:opacity-90 group-hover:grayscale-0"
+
 /** The switch between the list and the ratings grid in IMDb's numbering. It stays in the heading line. */
 function ViewToggle({
 	on,
@@ -619,19 +688,29 @@ function ViewToggle({
 					: "All ratings as one grid, in IMDb's numbering"
 			}
 			onClick={() => choose(!on)}
-			className={`inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg px-2 ring-1 lg:ml-auto lg:h-8 ${on ? "bg-white/20 text-white ring-white/60" : "bg-white/[0.07] text-gray-300 ring-white/10 hover:bg-white/[0.12]"} ${FOCUS}`}
+			className={`inline-flex h-10 shrink-0 items-center gap-2.5 rounded-xl px-1 lg:ml-auto lg:h-8 lg:pr-2 ${TILE_TOGGLE}`}
 		>
-			<span aria-hidden="true" className="grid grid-cols-4 gap-px">
-				{MINIATURE.map((score, index) => (
-					<span
-						// biome-ignore lint/suspicious/noArrayIndexKey: a fixed drawing
-						key={index}
-						className="h-[5px] w-[7px] rounded-[1px]"
-						style={{ background: vibeTileColor(imdbVibe(score)) }}
-					/>
-				))}
+			{/* The miniature is the picture: in colour inside a green ring while the grid is shown, grey and dim otherwise. */}
+			<span
+				data-toggle-tile={on ? "on" : "off"}
+				className={`flex h-7 w-10 items-center justify-center rounded-lg transition ${SURFACE} ${on ? TILE_ON : `ring-1 ring-white/20 ${TILE_OFF}`}`}
+			>
+				<span aria-hidden="true" className="grid grid-cols-4 gap-px">
+					{MINIATURE.map((score, index) => (
+						<span
+							// biome-ignore lint/suspicious/noArrayIndexKey: a fixed drawing
+							key={index}
+							className="h-[5px] w-[7px] rounded-[1px]"
+							style={{ background: vibeTileColor(imdbVibe(score)) }}
+						/>
+					))}
+				</span>
 			</span>
-			<span className="hidden text-xs font-semibold lg:inline">Grid</span>
+			<span
+				className={`hidden text-xs font-semibold transition-colors lg:inline ${on ? "text-white" : "text-gray-400 group-hover:text-gray-200"}`}
+			>
+				Grid
+			</span>
 		</button>
 	)
 }
@@ -1134,8 +1213,8 @@ function SeasonPanel({
 				season={season}
 				nav={nav}
 				model={model}
-				layout={beside ? "scroll" : "fold"}
-				limit={8}
+				// Beside the matrix there is room for a few more rows than under a phone's season row.
+				limit={beside ? 10 : 8}
 			/>
 		</div>
 	)
@@ -1493,7 +1572,9 @@ function Row({
 			data-episode={episode.id}
 			data-selected={selected || undefined}
 			data-watched={watched || undefined}
-			className={`relative scroll-mt-24 border-t border-white/[0.06] ${flash ? "gwt-flash" : ""} ${selected ? "bg-white/[0.09]" : isNext ? "bg-green-500/[0.07]" : ""}`}
+			// Scrolled to in the page: clear of the sticky header above and of a phone's dock below.
+			className={`relative scroll-mb-28 border-t border-white/[0.06] ${flash ? "gwt-flash" : ""} ${selected ? "bg-white/[0.09]" : isNext ? "bg-green-500/[0.07]" : ""}`}
+			style={ROW_SCROLL_MARGIN}
 		>
 			{selected && (
 				<span
@@ -1581,28 +1662,25 @@ function Row({
 const FOLD = `flex h-10 w-full cursor-pointer items-center gap-2 border-t border-white/[0.06] px-3 text-left text-xs text-gray-400 hover:bg-white/[0.05] hover:text-white lg:h-7 ${FOCUS}`
 
 /**
- * A season's rows at a bounded height. "scroll" keeps every row in a box that scrolls inside the page, opened at
- * the asked-for or the Next episode. "fold" shows a window of `limit` rows around it and folds the rest into one
- * line above and one below.
+ * A season's rows: a window of `limit` rows around the asked-for or the Next episode, with the rest folded into one
+ * line above and one below, each of which opens `limit` more. The rows are part of the page and scroll with it;
+ * nothing here scrolls by itself, so a row that opens only pushes down what is under it.
  */
 function Rows({
 	season,
 	nav,
 	model,
-	layout,
 	limit,
 }: {
 	season: Season
 	nav: Nav
 	model: Model
-	layout: "scroll" | "fold"
 	limit: number
 }) {
 	const episodes = season.episodes
 	const special = season.number === 0
 	const target = nav.target
 	const root = useRef<HTMLDivElement>(null)
-	const box = useRef<HTMLDivElement>(null)
 	const indexOf = (id: number | null | undefined) =>
 		id == null ? -1 : episodes.findIndex((episode) => episode.id === id)
 	const around = (i: number): [number, number] => {
@@ -1622,25 +1700,17 @@ function Rows({
 
 	useEffect(() => {
 		const i = indexOf(target?.id)
-		if (target && i < 0) return
-		const id = target
-			? target.id
-			: indexOf(model.nextId) >= 0
-				? model.nextId
-				: null
-		if (layout === "fold" && i >= 0)
-			setRange((now) => (i >= now[0] && i < now[1] ? now : around(i)))
+		if (!target || i < 0) return
+		// The window moves to the row; a season change (quiet) then leaves the page where it is.
+		setRange((now) => (i >= now[0] && i < now[1] ? now : around(i)))
+		const id = target.id
 		const timer = setTimeout(() => {
-			const row =
-				id === null
-					? null
-					: root.current?.querySelector<HTMLElement>(`[data-episode="${id}"]`)
+			const row = root.current?.querySelector<HTMLElement>(
+				`[data-episode="${id}"]`,
+			)
 			if (!row) return
-			const scroller = box.current
-			if (scroller && scroller.scrollHeight > scroller.clientHeight)
-				scroller.scrollTop =
-					row.offsetTop - scroller.clientHeight / 2 + row.offsetHeight / 2
-			if (!target) return
+			// The page scrolls, and only as far as it has to: to the middle for a request from the hero, and
+			// otherwise just into view, clear of the sticky header (the row's scroll margin).
 			if (target.page)
 				row.scrollIntoView({ behavior: "smooth", block: "center" })
 			else if (!target.quiet) row.scrollIntoView({ block: "nearest" })
@@ -1658,7 +1728,7 @@ function Rows({
 		return () => clearTimeout(timer)
 	}, [flash])
 
-	const [from, to] = layout === "fold" ? range : [0, episodes.length]
+	const [from, to] = range
 	const shown = episodes.slice(from, to)
 	const span = (a: number, b: number) =>
 		special
@@ -1693,26 +1763,21 @@ function Rows({
 					</span>
 				</button>
 			)}
-			<div
-				ref={box}
-				className={`relative ${layout === "scroll" ? "max-h-[20.5rem] overflow-y-auto overscroll-contain" : ""}`}
-			>
-				<ul>
-					{shown.map((episode) => (
-						<Row
-							key={episode.id}
-							episode={episode}
-							model={model}
-							open={openId === episode.id}
-							onToggle={() =>
-								setOpenId(openId === episode.id ? null : episode.id)
-							}
-							selected={nav.selected === episode.id}
-							flash={flash === episode.id}
-						/>
-					))}
-				</ul>
-			</div>
+			<ul>
+				{shown.map((episode) => (
+					<Row
+						key={episode.id}
+						episode={episode}
+						model={model}
+						open={openId === episode.id}
+						onToggle={() =>
+							setOpenId(openId === episode.id ? null : episode.id)
+						}
+						selected={nav.selected === episode.id}
+						flash={flash === episode.id}
+					/>
+				))}
+			</ul>
 			{to < episodes.length && (
 				<button
 					type="button"

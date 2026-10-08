@@ -146,7 +146,8 @@ test("Seen with nothing new: Watch again; with a press standing also taking it b
 				"Take back Seen",
 				"Removes the 5 episodes marked on 19 Oct 2024. The show is then Watching.",
 				true,
-				false,
+				// It removes watches, so the page asks first, in these words.
+				true,
 			],
 			[
 				"setDate",

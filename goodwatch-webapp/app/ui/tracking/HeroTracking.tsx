@@ -27,7 +27,13 @@ import {
 } from "~/ui/title-actions/useTitleActions"
 import { useUndoToast, warmUndoToast } from "~/ui/title-actions/useUndoToast"
 import { useScoreAction } from "~/ui/user/actions/ScoreAction"
-import { TrackingToastHost } from "./TrackingToast"
+import {
+	ConfirmPanel,
+	POPOVER,
+	TAKE_BACK_LOOK,
+	TrackingToastHost,
+	useDismiss,
+} from "./TrackingToast"
 import { type TrackingActions, useTrackingActions } from "./actions"
 import { STATUS_LOOK, StatusBoxFrame, type TrackedMedia } from "./gate"
 import { FOCUS, type ShowTracking, plural, useShowTracking } from "./store"
@@ -123,12 +129,13 @@ function StatusPill({
 	actions: TrackingActions
 }) {
 	const [open, setOpen] = useState(false)
-	const [confirming, setConfirming] = useState(false)
+	/** The entry the menu asks about before it goes on. */
+	const [confirming, setConfirming] = useState<MenuEntry | null>(null)
 	const root = useRef<HTMLDivElement>(null)
 	const pillButton = useRef<HTMLButtonElement>(null)
 	const close = () => {
 		setOpen(false)
-		setConfirming(false)
+		setConfirming(null)
 	}
 	const menuBox = useRef<HTMLDivElement>(null)
 	// The menu takes the focus when it opens, so that the arrow keys and a screen reader are in it.
@@ -138,23 +145,10 @@ function StatusPill({
 				?.querySelector<HTMLElement>("[role=menuitem]")
 				?.focus({ preventScroll: true })
 	}, [open, confirming])
-	useEffect(() => {
-		if (!open) return
-		const onPress = (event: PointerEvent) => {
-			if (!root.current?.contains(event.target as Node)) close()
-		}
-		window.addEventListener("pointerdown", onPress)
-		const onKey = (event: KeyboardEvent) => {
-			if (event.key !== "Escape") return
-			close()
-			pillButton.current?.focus()
-		}
-		window.addEventListener("keydown", onKey)
-		return () => {
-			window.removeEventListener("pointerdown", onPress)
-			window.removeEventListener("keydown", onKey)
-		}
-	}, [open])
+	useDismiss(open, root, (byKey) => {
+		close()
+		if (byKey) pillButton.current?.focus()
+	})
 	const { derived, menu, press } = view
 	if (derived.state === "not_started") return null
 	const pill = `inline-flex h-9 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-lg px-2.5 text-xs font-semibold ${STATUS_LOOK[derived.state].pill}`
@@ -164,8 +158,8 @@ function StatusPill({
 				{derived.label}
 			</span>
 		)
-	const run = (entry: MenuEntry) => {
-		if (entry.confirm) return setConfirming(true)
+	const run = (entry: MenuEntry, confirmed = false) => {
+		if (entry.confirm && !confirmed) return setConfirming(entry)
 		close()
 		switch (entry.id) {
 			case "markNew":
@@ -209,41 +203,32 @@ function StatusPill({
 			{open && (
 				<div
 					ref={menuBox}
-					role="menu"
-					aria-label="Change the status"
-					onKeyDown={onMenuKey}
-					className="absolute left-0 top-full z-40 mt-1 w-80 max-w-[calc(100vw-4rem)] rounded-xl border border-white/10 bg-gray-900 p-1 shadow-2xl"
+					role={confirming ? "alertdialog" : "menu"}
+					aria-label={confirming ? confirming.label : "Change the status"}
+					onKeyDown={confirming ? undefined : onMenuKey}
+					className={`absolute left-0 top-full z-40 mt-1 w-80 max-w-[calc(100vw-4rem)] ${POPOVER}`}
 				>
-					{confirming ? (
-						<div className="p-3">
-							<p className="text-sm font-semibold text-white">
-								Start pass {derived.pass + 1}?
-							</p>
-							<p className="mt-1 text-xs text-gray-400">
-								The ticks start empty. The watches of this pass stay in each
-								episode's log. This can't be undone.
-							</p>
-							<div className="mt-3 flex justify-end gap-2">
-								<button
-									type="button"
-									onClick={close}
-									className={`h-10 cursor-pointer rounded-lg bg-white/10 px-3 text-sm font-semibold text-gray-100 hover:bg-white/20 ${FOCUS}`}
-								>
-									Cancel
-								</button>
-								<button
-									type="button"
-									data-confirm-watch-again
-									onClick={() => {
-										close()
-										actions.watchAgain()
-									}}
-									className={`h-10 cursor-pointer rounded-lg bg-sky-500 px-3 text-sm font-semibold text-black hover:bg-sky-400 ${FOCUS}`}
-								>
-									Watch again
-								</button>
-							</div>
-						</div>
+					{confirming?.id === "takeBack" ? (
+						// The words are the menu entry's own: what the press marked, and where the show goes.
+						<ConfirmPanel
+							name="takeBack"
+							title="Take back Seen?"
+							text={confirming.note}
+							action="Take back"
+							look={TAKE_BACK_LOOK}
+							onCancel={close}
+							onConfirm={() => run(confirming, true)}
+						/>
+					) : confirming ? (
+						<ConfirmPanel
+							name="watchAgain"
+							title={`Start pass ${derived.pass + 1}?`}
+							text="The ticks start empty. The watches of this pass stay in each episode's log. This can't be undone."
+							action="Watch again"
+							look="bg-sky-500 text-black hover:bg-sky-400"
+							onCancel={close}
+							onConfirm={() => run(confirming, true)}
+						/>
 					) : (
 						menu.map((entry) => {
 							const look = MENU_LOOK[entry.id]
