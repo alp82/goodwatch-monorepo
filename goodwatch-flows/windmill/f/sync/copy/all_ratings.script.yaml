@@ -26,6 +26,6 @@ schema:
       default: false
     full:
       type: boolean
-      description: Copy every title instead of the ones changed in the last 48 h.
+      description: Copy every title instead of the ones changed since the last successful run.
       default: false
   required: []

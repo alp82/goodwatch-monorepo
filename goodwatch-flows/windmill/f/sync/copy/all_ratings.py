@@ -11,6 +11,7 @@ from f.db.mongodb import (
     close_mongodb,
     build_query_selector_for_object_ids,
 )
+from f.sync.copy import sync_state
 from f.sync.copy.deleted_titles import flagged_among
 from f.sync.copy.tmdb_details import imdb_title
 from f.sync.models.crate_models import (
@@ -21,7 +22,10 @@ from f.sync.models.crate_schemas import SCHEMAS
 
 BATCH_SIZE = 5000
 SUB_BATCH_SIZE = 50000
+# Window of a recent copy restricted by a selector. A scheduled run reads from its last
+# successful run instead (f/sync/copy/sync_state).
 HOURS_TO_FETCH = 24 * 2
+SYNC_JOB = "all_ratings"
 # The rating documents are the whole truth for these columns: the Rotten Tomatoes and
 # Metacritic crawlers remove a URL and its scores when the page is gone or belongs to
 # another title (#152), and the Crate row must lose them too instead of keeping them.
@@ -128,8 +132,17 @@ def upsert_in_batches(connector: CrateConnector, table: str, records: list[BaseM
 
 def copy_media(
     connector: CrateConnector, query_selector: dict = {}, media_type: str = "movie",
-    *, recent_only: bool = True
+    *, recent_only: bool = True, since: Optional[datetime] = None,
 ):
+    """Copy the scores of the titles that match the selector to CrateDB.
+
+    A recent copy takes the titles whose TMDB details or IMDb, Metacritic or Rotten
+    Tomatoes rating changed since `since`, by default in the last HOURS_TO_FETCH hours.
+    With recent_only=False it takes every title.
+
+    A title flagged as deleted on TMDB is left out. Restoring it moves its details'
+    updated_at, which selects it again, so it needs no retry.
+    """
     is_movie = media_type == "movie"
 
     mongo_db = get_db()
@@ -149,7 +162,7 @@ def copy_media(
     MediaClass = Movie if is_movie else Show
 
     updated_at_filter = {
-        "updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
+        "updated_at": {"$gte": since or datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
     }
     if not recent_only:
         updated_at_filter = {}
@@ -162,6 +175,7 @@ def copy_media(
     print(f"Total {media_type} titles to copy: {len(all_tmdb_ids)}", flush=True)
 
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
+    skipped_flagged = 0
 
     for start in range(0, len(all_tmdb_ids), BATCH_SIZE):
         media_documents = []
@@ -190,6 +204,7 @@ def copy_media(
 
         for tmdb_id in tmdb_ids:
             if tmdb_id in flagged_ids:
+                skipped_flagged += 1
                 continue
             tmdb_details = tmdb_details_map.get(tmdb_id, {})
             imdb_rating = imdb_map.get(tmdb_id, {})
@@ -370,46 +385,50 @@ def copy_media(
                 "rows_upserted"
             ]
 
-
+    entity_counts["selected"] = len(all_tmdb_ids)
+    entity_counts["skipped_flagged"] = skipped_flagged
     return entity_counts
 
 
 def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies=False, full: bool = False):
-    """full: copy every title instead of the ones changed in the last 48 h."""
+    """Copy the scores changed since the last successful run, per media type.
+
+    full: copy every title instead. Like a run restricted to ids, it leaves the sync state alone.
+    """
     init_mongodb()
     connector = CrateConnector()
 
     results = {}
+    try:
+        for key, media_type, ids in (("movies", "movie", movie_ids), ("shows", "show", show_ids)):
+            if media_type == "movie" and skip_movies:
+                results[key] = None
+                continue
+            if ids:
+                query_selector = build_query_selector_for_object_ids(ids=ids)
+            else:
+                print(f"\nProcessing all {key}...", flush=True)
+                query_selector = {}
 
-    if skip_movies:
-        results["movies"] = None
-    else:
-        # Process movies
-        if movie_ids is None or len(movie_ids) == 0:
-            print("Processing all movies...")
-            movie_query_selector = {}
-        else:
-            movie_query_selector = build_query_selector_for_object_ids(ids=movie_ids)
-
-        results["movies"] = copy_media(
-            connector=connector, query_selector=movie_query_selector, media_type="movie",
-            recent_only=not full,
-        )
-
-    # Process shows
-    if show_ids is None or len(show_ids) == 0:
-        print("\nProcessing all shows...")
-        show_query_selector = {}
-    else:
-        show_query_selector = build_query_selector_for_object_ids(ids=show_ids)
-
-    results["shows"] = copy_media(
-        connector=connector, query_selector=show_query_selector, media_type="show",
-        recent_only=not full,
-    )
-
-    connector.disconnect()
-    close_mongodb()
+            # A media type restricted to ids doesn't cover every change, so it keeps the
+            # fixed window and leaves the sync state alone. A full copy doesn't move it either.
+            selection = None if ids or full else sync_state.begin(get_db(), SYNC_JOB, media_type)
+            results[key] = copy_media(
+                connector=connector, query_selector=query_selector, media_type=media_type,
+                recent_only=not full, since=selection.since if selection else None,
+            )
+            if selection:
+                # Reached only when the whole media type succeeded: a failure raises above,
+                # and the next run reads the same changes again.
+                sync_state.commit(get_db(), selection, {
+                    "selected": results[key]["selected"],
+                    "skipped_flagged": results[key]["skipped_flagged"],
+                    **results[key].get(key, {"records_received": 0, "rows_upserted": 0}),
+                })
+                results[key]["selection"] = selection.report()
+    finally:
+        connector.disconnect()
+        close_mongodb()
 
     return results
 
