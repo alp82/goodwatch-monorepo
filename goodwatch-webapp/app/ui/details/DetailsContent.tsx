@@ -37,6 +37,8 @@ import { PrototypeSwitcher } from "~/ui/prototype-carousels/PrototypeSwitcher"
 import RelatedExplore from "~/ui/prototype-carousels/RelatedExplore"
 import RelatedList from "~/ui/prototype-carousels/RelatedList"
 import RelatedRowsNative from "~/ui/prototype-carousels/RelatedRowsNative"
+import { PLAY_NAMES } from "~/ui/prototype-carousels/play-names"
+import PlaySection from "~/ui/prototype-carousels/PlaySection"
 import RingSection from "~/ui/prototype-carousels/RingSection"
 import SeaSection from "~/ui/prototype-carousels/SeaSection"
 import WalkSection from "~/ui/prototype-carousels/WalkSection"
@@ -119,6 +121,13 @@ export default function DetailsContent({
 		sea4: { form: SeaSection, phone: 583, desktop: 548 },
 		sea5: { form: SeaSection, phone: 583, desktop: 548 },
 		sea6: { form: SeaSection, phone: 583, desktop: 548 },
+		// The seventh round's forms: one component, one height.
+		...Object.fromEntries(
+			Object.keys(PLAY_NAMES).map((name) => [
+				name,
+				{ form: PlaySection, phone: 600, desktop: 553 },
+			]),
+		),
 	}[variant as string]
 	const relatedReserve = (reserved: ReservedHeight): ReservedHeight =>
 		!reserved.phone

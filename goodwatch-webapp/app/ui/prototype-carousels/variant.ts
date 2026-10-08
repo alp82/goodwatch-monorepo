@@ -56,10 +56,25 @@
 // - sea4: a voyage. Every step adds a leg to a route that stays on the map.
 // - sea5: compass and horizon. The sea tilted away from you, and a compass that turns what lies ahead.
 // - sea6: the minimap as the control. The stage shows one island up close, and the small map moves you.
-// The floating bar shows today, the fifth round's six ways and trait bow for comparison, and these six. The other
-// variants still answer to the URL.
+//
+// Seventh round, after the owner tried the sixth: breadth again, measured against three goals: speed (the stage
+// answers a tap at once, from data the browser already holds), exploration, and interactivity with the fingerprint
+// traits in the form itself (see play-engine.ts for the data path and play-forms.ts for the forms).
+// - play1: six ways, fast. The fifth round's six directions; "more" pans the map into ranks, and a back control leaves.
+// - play2: horizon. All six directions at once as lanes toward the horizon, a bit to much.
+// - play3: honeycomb. A lattice that slides under you one tap at a time, and remembers where you were.
+// - play4: trait mixer. Sliders for four traits rank the neighborhood again while you drag.
+// - play5: fingerprint hub. The title's fingerprint as a glyph, with a title at the end of each spoke that has more.
+// - play6: diff tiles. A mosaic whose tiles say how they differ, with a second page to the right.
+// - play7: trait lens. Trait chips light up the titles that share them; two or three narrow it down.
+// - play8: scrub. A strip along one axis that scrolls sideways, with what is under the marker shown large.
+// - play9: blend. Two titles, what they share, and the titles between them.
+// - play10: pick a path. Three choices with their differences spelled out, and the path they add up to.
+// The floating bar shows today, the fifth round's six ways for comparison, and the play forms. The other variants
+// still answer to the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
+import { PLAY_NAMES } from "~/ui/prototype-carousels/play-names"
 
 export const CAROUSEL_VARIANTS = [
 	"today",
@@ -96,20 +111,24 @@ export const CAROUSEL_VARIANTS = [
 	"sea4",
 	"sea5",
 	"sea6",
+	"play1",
+	"play2",
+	"play3",
+	"play4",
+	"play5",
+	"play6",
+	"play7",
+	"play8",
+	"play9",
+	"play10",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
-/** The variants the floating bar cycles through. */
+/** The variants the floating bar cycles through: today, the fifth round's six ways, and the seventh round's forms. */
 export const CAROUSEL_BAR: CarouselVariant[] = [
 	"today",
 	"ring5",
-	"ring9",
-	"sea1",
-	"sea2",
-	"sea3",
-	"sea4",
-	"sea5",
-	"sea6",
+	...(Object.keys(PLAY_NAMES) as CarouselVariant[]),
 ]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
@@ -147,6 +166,17 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	sea4: "S4 Voyage",
 	sea5: "S5 Compass and horizon",
 	sea6: "S6 Small map steers",
+	play1: "",
+	play2: "",
+	play3: "",
+	play4: "",
+	play5: "",
+	play6: "",
+	play7: "",
+	play8: "",
+	play9: "",
+	play10: "",
+	...PLAY_NAMES,
 }
 
 export const CAROUSEL_PROTOTYPE_COOKIE = "gw_proto_carousels"
@@ -170,6 +200,8 @@ export interface CarouselPrototypeData {
 	ring?: { html: string }
 	/** sea1 to sea6: the section's markup. An inline script drives the taps, a lazy module the rest. */
 	sea?: { html: string }
+	/** play1 to play10: the section's markup, drawn by the play engine. Its inline script draws every later stage. */
+	play?: { html: string }
 }
 
 /** The prototype's data from the title route's loader, or null for today's page. */
