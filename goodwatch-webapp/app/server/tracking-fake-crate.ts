@@ -119,8 +119,8 @@ const TABLES: Record<string, Table> = {
 		key: ["user_id", "key"],
 		columns: ["user_id", "key", "value", "created_at", "updated_at"],
 	},
-	// Only what account deletion needs of the import tables.
-	user_import: { key: ["id"], columns: ["id", "user_id"] },
+	// Only what account deletion and the watch log need of the import tables.
+	user_import: { key: ["id"], columns: ["id", "user_id", "source"] },
 	user_import_item: {
 		key: ["import_id", "row_index"],
 		columns: ["import_id", "row_index", "user_id"],

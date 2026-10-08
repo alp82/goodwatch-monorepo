@@ -8,16 +8,24 @@ const TOAST_MS = 6000
 export interface UndoToastMessage {
 	id: number
 	text: string
+	/** A second button before Undo, such as "Change date" after a watch was recorded for now. */
+	action?: string
 }
+
+const BUTTON =
+	"shrink-0 cursor-pointer rounded-full bg-white/10 px-3 py-1 font-semibold hover:bg-white/20"
 
 export function UndoToast({
 	toast,
 	onUndo,
+	onAction,
 	onDismiss,
 	className = "bottom-28 lg:bottom-6",
 }: {
 	toast: UndoToastMessage | null
 	onUndo: () => void
+	/** The press of the message's `action` button. */
+	onAction?: () => void
 	onDismiss: () => void
 	/** Where it sits above the bottom edge: clear of the phone navigation by default. */
 	className?: string
@@ -40,14 +48,23 @@ export function UndoToast({
 						initial={{ y: 12, opacity: 0 }}
 						animate={{ y: 0, opacity: 1 }}
 						exit={{ y: 12, opacity: 0 }}
-						className="pointer-events-auto flex max-w-full items-center gap-3 rounded-2xl border border-white/10 bg-stone-900/95 py-2 pl-4 pr-2 text-sm text-white shadow-2xl shadow-black/60 backdrop-blur"
+						className={`pointer-events-auto flex max-w-full items-center rounded-2xl border border-white/10 bg-stone-900/95 py-2 pl-4 pr-2 text-sm text-white shadow-2xl shadow-black/60 backdrop-blur ${toast.action ? "gap-2" : "gap-3"}`}
 						data-toast
 					>
 						<span className="min-w-0">{toast.text}</span>
+						{toast.action && (
+							<button
+								type="button"
+								onClick={onAction}
+								className={`${BUTTON} text-white`}
+							>
+								{toast.action}
+							</button>
+						)}
 						<button
 							type="button"
 							onClick={onUndo}
-							className="shrink-0 cursor-pointer rounded-full bg-white/10 px-3 py-1 font-semibold text-amber-300 hover:bg-white/20"
+							className={`${BUTTON} text-amber-300`}
 						>
 							Undo
 						</button>
