@@ -113,7 +113,7 @@ class RatingsCopyTests(CopyTests):
 
     def test_the_first_run_copies_the_48_hour_window_and_records_its_start(self):
         self.rating("movie", 1, updated_at=NOW - HOUR)
-        self.rating("movie", 2, updated_at=NOW - timedelta(hours=49))
+        self.rating("movie", 2, updated_at=NOW - timedelta(hours=50))
         self.rating("show", 3, updated_at=NOW - 47 * HOUR)
 
         movies, shows, results, error = self.run_main()
@@ -129,8 +129,21 @@ class RatingsCopyTests(CopyTests):
         self.assertEqual(state(self.db, "all_ratings", "movie")["last_run"]["counts"],
                          {"selected": 1, "skipped_flagged": 0, "records_received": 1, "rows_upserted": 1})
 
+    def test_a_rating_stamped_long_before_it_was_written_is_still_copied(self):
+        self.run_main()
+
+        # The ingest stamped this rating 100 minutes before the first run and wrote it after that run had read.
+        self.now = NOW + 6 * HOUR
+        self.rating("movie", 7, "imdb", NOW - timedelta(minutes=100))
+        self.rating("movie", 8, "imdb", NOW - timedelta(minutes=130))
+        movies, _, results, _ = self.run_main()
+
+        self.assertEqual(movies, [7])
+        self.assertEqual(results["movies"]["selection"]["since"], OVERLAP_START)
+        self.assertEqual(results["movies"]["read_from"], (NOW - timedelta(minutes=120)).isoformat())
+
     def test_the_next_run_copies_what_any_of_the_four_sources_changed_since(self):
-        self.rating("movie", 1, updated_at=NOW - 2 * HOUR)
+        self.rating("movie", 1, updated_at=NOW - 3 * HOUR)
         self.rating("movie", 2, updated_at=NOW - timedelta(minutes=20))
         self.run_main()
 
@@ -141,7 +154,7 @@ class RatingsCopyTests(CopyTests):
         self.rating("movie", 6, "rotten_tomatoes", NOW + HOUR)
         movies, _, results, _ = self.run_main()
 
-        # 1 is not written again. 2 changed in the 30 minutes before the first run started.
+        # 1 is not written again. 2 changed shortly before the first run started.
         self.assertEqual(movies, [2, 3, 4, 5, 6])
         self.assertEqual(results["movies"]["selection"]["since"], OVERLAP_START)
         self.assertFalse(results["movies"]["selection"]["fallback"])

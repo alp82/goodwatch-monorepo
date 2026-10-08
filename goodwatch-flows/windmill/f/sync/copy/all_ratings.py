@@ -26,6 +26,10 @@ SUB_BATCH_SIZE = 50000
 # successful run instead (f/sync/copy/sync_state).
 HOURS_TO_FETCH = 24 * 2
 SYNC_JOB = "all_ratings"
+# Some writers stamp updated_at well before the document lands: the IMDb dataset ingest
+# at its job start, the critic crawl once per batch within its time budget. A scheduled
+# run reads this much further back than its selection, so a late write isn't missed.
+STAMP_LAG_MARGIN = timedelta(minutes=90)
 # The rating documents are the whole truth for these columns: the Rotten Tomatoes and
 # Metacritic crawlers remove a URL and its scores when the page is gone or belongs to
 # another title (#152), and the Crate row must lose them too instead of keeping them.
@@ -415,7 +419,8 @@ def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies=False,
             selection = None if ids or full else sync_state.begin(get_db(), SYNC_JOB, media_type)
             results[key] = copy_media(
                 connector=connector, query_selector=query_selector, media_type=media_type,
-                recent_only=not full, since=selection.since if selection else None,
+                recent_only=not full,
+                since=selection.since - STAMP_LAG_MARGIN if selection else None,
             )
             if selection:
                 # Reached only when the whole media type succeeded: a failure raises above,
@@ -426,6 +431,7 @@ def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies=False,
                     **results[key].get(key, {"records_received": 0, "rows_upserted": 0}),
                 })
                 results[key]["selection"] = selection.report()
+                results[key]["read_from"] = (selection.since - STAMP_LAG_MARGIN).isoformat()
     finally:
         connector.disconnect()
         close_mongodb()
