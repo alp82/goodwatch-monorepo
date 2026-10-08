@@ -29,6 +29,7 @@ import { ImdbImportError, type ImportMediaType, MAX_ROWS } from "./file.server"
 import {
 	activeRuns,
 	chunks,
+	claimImport,
 	getImportRow,
 	HEARTBEAT_MS,
 	isStalled,
@@ -317,35 +318,31 @@ function startApply(userId: string, importId: string) {
  * A resumed import keeps the conflict choice it was started with, because part of it is already written.
  */
 export async function confirmImport(userId: string, importId: string, choice: ImdbConflictChoice): Promise<ImdbImportSummary> {
-	// The claims below filter on more than the key, so they need the latest state to be searchable.
+	// The look for another running import below filters on more than the key, so it needs the latest state searchable.
 	await refreshImports()
 	const row = await getImportRow(userId, importId)
 	if (row.status === "done") throw new ImdbImportError(409, "This import is already finished.")
 	if (row.status === "undone") throw new ImdbImportError(409, "This import was undone. Upload the file again to import it.")
 	if (row.status === "running" && !isStalled(row)) return summarize(row)
 
-	let claim: { rowcount?: number }
+	// Each claim holds only for the row as it was read above: a preview that is still a preview, or a failed or stalled
+	// import that hasn't reported since. Only one of several simultaneous requests gets it, in either process.
+	let claimed: boolean
 	if (row.status === "preview") {
 		const running = await listImportRows(userId, "running")
 		if (running.some((other) => !isStalled(other)))
 			throw new ImdbImportError(409, "Another import is still running. Wait for it to finish, then try again.")
 		const counts = JSON.parse(row.counts) as ImdbImportCounts
 		const total = counts.new + counts.update + (choice === "imdb" ? counts.conflict : 0)
-		claim = await run(
-			`UPDATE doc.user_import SET status = 'running', conflict_choice = ?, total = ?, confirmed_at = ?, updated_at = CURRENT_TIMESTAMP
-			 WHERE id = ? AND status = 'preview'`,
-			[choice, total, new Date(), importId],
-		)
+		claimed = await claimImport(row, "status = 'running', conflict_choice = ?, total = ?, confirmed_at = ?, updated_at = CURRENT_TIMESTAMP", [
+			choice,
+			total,
+			new Date(),
+		])
 	} else {
-		// Failed or stalled. Only one of several simultaneous requests gets to resume it, in either process, and none
-		// does if the import has reported since it was read.
-		claim = await run(
-			`UPDATE doc.user_import SET status = 'running', error = NULL, updated_at = CURRENT_TIMESTAMP
-			 WHERE id = ? AND status = ? AND updated_at = ?`,
-			[importId, row.status, new Date(row.updated_at)],
-		)
+		claimed = await claimImport(row, "status = 'running', error = NULL, updated_at = CURRENT_TIMESTAMP", [])
 	}
-	if (claim.rowcount === 1) startApply(userId, importId)
+	if (claimed) startApply(userId, importId)
 	await refreshImports()
 	return summarize(await getImportRow(userId, importId))
 }

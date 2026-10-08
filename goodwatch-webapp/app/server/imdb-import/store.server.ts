@@ -65,9 +65,15 @@ export interface ImportRow {
 	finished_at: number | string | Date | null
 	/** Crate's clock when the row was read. */
 	read_at: number | string | Date
+	/**
+	 * Crate's version of the row, which every write to it changes. A write that names both only lands while the row
+	 * is still the one that was read (`claimImport`).
+	 */
+	_seq_no: number
+	_primary_term: number
 }
 const IMPORT_COLUMNS =
-	"id, user_id, status, file_name, conflict_choice, counts, processed, total, added, updated, kept, failed, without_fingerprint, error, created_at, updated_at, confirmed_at, finished_at, CURRENT_TIMESTAMP AS read_at"
+	"id, user_id, status, file_name, conflict_choice, counts, processed, total, added, updated, kept, failed, without_fingerprint, error, created_at, updated_at, confirmed_at, finished_at, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term"
 
 export const toMs = (value: number | string | Date) => new Date(value).getTime()
 
@@ -114,6 +120,25 @@ export function listImportRows(userId: string, status?: ImdbImportStatus): Promi
 		 ORDER BY created_at DESC LIMIT 100`,
 		status ? [userId, status] : [userId],
 	)
+}
+
+/**
+ * Writes `set` to the import only if nothing has written to it since `row` was read, and tells whether it did.
+ * Of several requests that read the same row, in either webapp instance, exactly one gets true.
+ *
+ * Crate compares the version on the live row, which `status = ?` in the filter does not: a filter on anything but
+ * the key is answered from the last refresh, and the write then lands on the row whatever it holds by now. On CrateDB
+ * 5.10.9 two such claims within the refresh interval both reported one row (issue 313). Crate refuses a filter that
+ * names the version together with another column, so whatever the claim depends on is checked on `row` beforehand.
+ */
+export async function claimImport(row: ImportRow, set: string, params: Param[]): Promise<boolean> {
+	const claim = await run(`UPDATE doc.user_import SET ${set} WHERE id = ? AND _seq_no = ? AND _primary_term = ?`, [
+		...params,
+		row.id,
+		Number(row._seq_no),
+		Number(row._primary_term),
+	])
+	return claim.rowcount === 1
 }
 
 export const refreshImports = () => run("REFRESH TABLE doc.user_import")
