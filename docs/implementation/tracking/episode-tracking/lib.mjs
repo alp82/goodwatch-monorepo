@@ -13,7 +13,8 @@ export async function launch() {
 }
 
 export async function open(browser, size, query, { ready = true } = {}) {
-	const context = await browser.newContext({ viewport: VIEWPORTS[size], ...VIEWPORTS[size] })
+	// A fixed locale, so that the dates the page writes in the member's locale can be checked: "19 Oct 2024".
+	const context = await browser.newContext({ viewport: VIEWPORTS[size], ...VIEWPORTS[size], locale: "en-GB" })
 	const page = await context.newPage()
 	const errors = []
 	page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`))

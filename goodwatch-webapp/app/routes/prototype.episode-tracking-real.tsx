@@ -2,7 +2,7 @@
 // with a stand-in member and a stand-in server that lives in this browser tab, so every flow can be driven without
 // a signed-in session, a database or TMDB. Start the dev server with REC_TRACKING=on.
 //   /prototype/episode-tracking-real?show=supernatural|chernobyl|slow-horses|sherlock
-//   optional: &scenario=fresh|watching|on_hold|dropped|all|seen_new|seen_ticked|rated|wanted
+//   optional: &scenario=fresh|watching|on_hold|dropped|all|seen_new|seen_old|seen_ticked|rated|wanted
 //             &today=2026-10-08  &imdb=differs (IMDb numbers the first season differently)
 //             &list=none (the show has no episode list yet)  &overviews=1 (send the fixtures' descriptions)
 //             &latency=150 (milliseconds an answer takes)  &guest=1 (no member: the page as a visitor gets it)

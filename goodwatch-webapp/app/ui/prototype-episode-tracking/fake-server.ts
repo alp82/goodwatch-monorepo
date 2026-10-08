@@ -33,6 +33,7 @@ export const SCENARIOS = {
 	dropped: "Dropped after 3",
 	all: "All aired but the last",
 	seen_new: "Seen, new episodes since",
+	seen_old: "Marked Seen on 19 Oct 2024",
 	seen_ticked: "Seen by ticking every episode",
 	rated: "Rated, never started (the question is open)",
 	wanted: "On the Wishlist, never started",
@@ -78,6 +79,8 @@ export class FakeServer {
 	private wishlistAt: number | null = null
 	private notInterested = false
 	private made = 0
+	/** While seeding: the time of an action that happened long before the harness's day. */
+	private seedAt: number | null = null
 	/** Every request the page sent, for the checks: none of the tracking requests may overlap. */
 	requests: RequestRecord[] = []
 	/** The next request to the tracking endpoint fails with this status. */
@@ -121,7 +124,9 @@ export class FakeServer {
 
 	/** Noon of the harness's day, so that the device's date and the UTC date agree. */
 	now() {
-		return Date.parse(`${this.options.today}T12:00:00Z`) + this.made
+		return (
+			(this.seedAt ?? Date.parse(`${this.options.today}T12:00:00Z`)) + this.made
+		)
 	}
 
 	private id() {
@@ -211,6 +216,13 @@ export class FakeServer {
 			aired.forEach((e) => watch(e, daysAgo(10)))
 			return
 		}
+		if (scenario === "seen_old") {
+			// Marked Seen on 19 Oct 2024, by the list as it is today.
+			this.seedAt = Date.parse("2024-10-19T18:30:00Z")
+			this.apply({ type: "pressSeen", today }, this.id())
+			this.seedAt = null
+			return
+		}
 		if (scenario === "seen_new") {
 			// Seen was pressed before the latest episodes aired.
 			const late =
@@ -225,7 +237,10 @@ export class FakeServer {
 			this.listed = kept.map((e) =>
 				late.some((l) => l.id === e.id) ? { ...e, airDate: "9999-12-31" } : e,
 			)
+			// The press is as old as it says: its rows and the state row carry that day, as a migrated mark does.
+			this.seedAt = Date.parse(`${pressDay}T18:30:00Z`)
 			this.apply({ type: "pressSeen", today: pressDay }, this.id())
+			this.seedAt = null
 			this.listed = kept
 			this.score = { score: 8, updatedAt: new Date(this.now()).toISOString() }
 			return

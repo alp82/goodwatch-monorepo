@@ -688,7 +688,7 @@ columns that change; `updated_at` always does.
 | Unmark a season; Undo of a group mark | One delete for the rows of the season in the current pass, or `WHERE user_id = ? AND group_id = ?` | As if each were unwatched in turn | | The ticks gone, state |
 | Press Seen (rows 11, 12) | Insert one row per aired regular episode not yet watched in the pass: origin `seen`, the press's group id, no date | `state = 'seen'`, `seen_press_group`, `seen_press_from` = the state before | Clears Want to See and Not interested | Every tick, "Seen" or "Caught up", the prompt to rate |
 | Press Seen again (rows 13 to 17) | `DELETE FROM user_watch_log WHERE user_id = ? AND group_id = ?` | `state` by the row taken; press columns NULL | | The group's ticks gone, the state before |
-| Put on hold, drop, resume (rows 18 to 21) | None | `state`, `state_changed_at` | Drop clears Want to See and Not interested | The status pill |
+| Put on hold, drop, resume (rows 18 to 21, 28, 29) | None | `state`, `state_changed_at`; from Seen (rows 28, 29) the press columns NULL | Drop clears Want to See and Not interested | The status pill |
 | Rate a show (row 22) | None | Unchanged. A first score by hand on a show that is Not started sets `seen_question = 'open'` (a new row if there was none) | `user_score`, as today; a score clears Not interested | The score; the question |
 | Want to See (rows 23, 24) | None | Row 24 only: Dropped to Not started | `user_wishlist`; clears Not interested | The button |
 | Not interested (row 25) | None | None | `user_not_interested`; clears Want to See | The button |
@@ -774,6 +774,16 @@ below names only the columns that change. Rows 10b and 27b exist only under opti
 | 25 | Not interested; from Not started | None | None | `user_not_interested` row added or deleted; Want to See deleted |
 | 26 | Watch again; from Seen, a regular episode is watched | None | `pass + 1`, → `watching`, `seen_press_*` → NULL. Progress reads 0 because no row of L is in the new pass | None |
 | 27 | The catalog changes | None | None. No job, no write | None |
+| 28 | Put on hold; from Seen, episodes aired since | None | `seen` → `on_hold`, `seen_press_*` → NULL | None |
+| 29 | Drop; from Seen, episodes aired since | None | `seen` → `dropped`, `seen_press_*` → NULL | Want to See and Not interested deleted (a Seen show has neither) |
+
+Rows 28 and 29 were added after the owner used the show page: a member who has seen the earlier seasons and will
+not continue had no way to say so without ticking an episode first. They need an episode that aired since, so the
+events `hold` and `drop` carry the device's `today` as a group action does, and the server reads "aired" for them
+by the later of the UTC date and that date, at most one day on. A Seen show with nothing new has neither. L is
+untouched; a press that stood can no longer be taken back, and its rows stay. From On hold and Dropped the rows
+above apply unchanged: Resume is row 20 (21 when a press that marked nothing was the only thing there), a tick is
+row 3, or row 2 when it leaves nothing aired unwatched.
 
 The two answers to a prompt are not rows of the table: "Not now" sets `rate_prompt_dismissed_at`; "I'm partway" and
 "Just rating" set `seen_question = 'answered'`. Row 22 is the machine's row for a show; a movie's score is in the
@@ -1497,6 +1507,8 @@ off, for a visitor, and for a show without an episode list, the page is as it wa
 | --- | --- |
 | IMDb's ratings beside the listed episodes | `domain/tracking/episode-ratings.ts` |
 | The browser's copy of a show, the guess, the answer, and everything the page derives | `domain/tracking/show-page.ts` |
+| The status pill's menu: every action the machine allows now, in member words | `domain/tracking/status-menu.ts` |
+| The standing Seen press as a member reads it: when, and what it covered | `domain/tracking/seen-press.ts` |
 | The queue: one action after the other, and back to the confirmed copy on a failure | `domain/tracking/show-session.ts` |
 | The show's entry in the member data | `domain/tracking/show-member-data.ts` |
 | The read and the actions on the server | `server/show-tracking.server.ts`, `routes/api.tracking.show.ts` |
@@ -1516,13 +1528,14 @@ tracking from the viewer and 401 without a session.
   rows the action added or changed, `deleted` the watch ids it removed. `cleared` is what an Undo puts back; the
   Undo sends it as `restore`, and the server then puts the show back on the Wishlist at its added-at time, or back
   to Not interested, when the show is Not started afterwards. The events are the machine's, without `rate`,
-  `notInterested` and `wantToSee` off, which other writers own, and the two edits of dates.
+  `notInterested` and `wantToSee` off, which other writers own, and the two edits of dates. `hold` and `drop`
+  may carry `today`, the date on the device, as the group actions do (rows 28 and 29 need to know what aired).
 
 **Where the build differs from the text above and from the prototypes, or settles what they left open:**
 
 - **An episode's description comes from the catalog (#387).** `episode.overview` holds TMDB's `overview`; the
-  read sends it as `overview` with every episode, and only the opened row renders it, so a description is on
-  screen only for the episode the member opened. An episode without one (TMDB has none, or its row was copied
+  read sends it as `overview` with every episode, and only the opened row renders it, behind a cover for an
+  episode the member has not watched (see below). An episode without one (TMDB has none, or its row was copied
   before the column existed and the catalog's recopy has not reached the show, see
   [episode-catalog.md](../../episode-catalog.md#copying-every-show-again)) opens to the still, the air date, the
   runtime and the rating, as before. While the table has no such column at all, the list is read without it.
@@ -1543,9 +1556,52 @@ tracking from the viewer and 401 without a session.
   a started show with the machine's reason as its tip. On a Dropped show with nothing watched it sends the
   machine's `wantToSee`, and the server adds the Wishlist row after the state returned to Not started.
 - **Watch again asks first,** inside the pill's menu, because a pass can't be taken back.
+- **The box's button is a link, not a mark** (changed after the owner used the page). The line with the Next
+  episode is one link to the Episodes section; its chip names where it leads ("S2 E5 ↓", or "Episodes ↓" when the
+  show has no Next episode). It opens the episode's season with the row highlighted, loading the list's code if
+  the page has not yet, and records nothing. Marking happens in the list. Without script it is the anchor of the
+  section.
+- **The pill's menu holds every action the machine allows in the state,** not only the status changes.
+  `statusMenu` tries each event against the machine (`offer`, `step`, `seenButton`) and words the entry by the row
+  it takes, so a new row for one of these events appears without a change to the menu, and
+  `status-menu.test.ts` fails when the table gains an event that `MENU_PLACE` gives no place. In order:
+
+  | State | Entries |
+  | --- | --- |
+  | Watching | Mark all aired episodes watched · Put on hold · Drop |
+  | On hold | Resume · Mark all aired episodes watched · Drop |
+  | Dropped | Resume · Mark all aired episodes watched; with nothing watched, "Want to see it after all" comes first |
+  | Seen, Caught up | Watch again; while a Seen press stands: Take back Seen · Set a date for those N watches |
+  | Seen with new episodes | Mark N new episodes watched · Put on hold · Watch again · Take back Seen · Set a date for those N watches · Drop |
+  | Not started | No pill, so no menu: Want to See, Seen and Not interested are the buttons |
+
+  Take back Seen and Drop are drawn quieter. "Set a date" is no event of the table: it is `setGroupDate` on the
+  press's group, through the dialog the toast already had. The Seen button, Drop and Dropped stay where they were.
+  Put on hold and Drop from Seen (rows 28, 29) have no Undo in their toast: the press they end can't be put back,
+  and the toast says that Resume brings the show back as Watching.
+- **A standing Seen press is said in one line above the matrix:** "Marked Seen on 19 Oct 2024 · seasons 1 and 2
+  (16 episodes), no dates recorded", with "Take back" beside it (the machine's `undoSeen`). A member whose old
+  Seen mark was migrated sees there why some seasons are watched and later ones are new. The line describes the
+  rows the press has now: a season counts as whole when the press has a row for every episode the catalog lists
+  of it, and is otherwise said as "4 of the 10 episodes of season 3"; after "Set a date" it reads "dated 1 Oct
+  2024"; a press on a Seen show reads "New episodes marked watched on …". The day is the `created_at` of the
+  press's rows, which the writer, the migration and the fill step all set to the time of the press, in the
+  member's locale and zone. `state_changed_at` is not used for it, because a press on a Seen show (row 12) leaves
+  it at the day the show became Seen; it is the fallback only for a press that has no row and left another state.
+- **An opened row covers what the member has not seen.** For an episode with no watch in any pass, the still is
+  not requested and stands behind "Show image", a cover of the still's shape, and the description behind "Show
+  description", a cover over the text's own place, so uncovering moves nothing. The name, the air date, the
+  runtime, the rating and the actions are there at once. A watched episode shows everything.
+- **The tick is a square checkbox** (`role="checkbox"`, `aria-checked`), 44 pixels to press wherever the pointer
+  is a finger.
+- **The grid in IMDb's numbering is a toggle in the heading line,** at its right: a button with a miniature of
+  the grid, pressed while the grid is shown. It swaps the matrix for the grid in place and is remembered in the
+  browser (`localStorage`, `gw:episodes-view`); the matrix is the default. The finder, "Next" and the box's link
+  lead to a row, so they bring the list back.
 - **Undo of an untick records the episode again** with a new id, on the day it was watched (as "now" when the
   watch was made in the last ten minutes). The group it belonged to and a Seen press that the untick ended are not
   restored.
+- **Taking a Seen press back has no Undo.** The press's group and its day can't be made again by another press.
 - **There is no "Unmark season".** A season is taken back with the Undo of its toast, or row by row.
 - **Specials have no rating and no bulk mark.** IMDb lists them without a season, and the machine's group actions
   mark regular episodes only.
@@ -1574,13 +1630,25 @@ with the flag on: 35.5 KB (11.0 KB Brotli) for the machine, the store and the ac
 (3.8 KB) for the hero box, and 26.9 KB (8.3 KB) for the episode list when the member comes near it.
 `./bench.sh budget` was not run: it needs a deployed site.
 
+The refinements after the owner's first use (the menu, the box's link, the press's line, the covers, the square
+ticks, the grid toggle, rows 28 and 29) add no script to the first view: built from `main` (`5c548d79`) and from
+the branch, the show route's 20 chunks are 827,624 bytes raw on both (273,957 against 274,002 gzip, 236,878
+against 236,936 Brotli; only the hashed names inside differ). The stylesheet grows by the new class names, from
+364,982 to 366,303 bytes (42,544 to 42,694 gzip, 31,995 to 32,016 Brotli). What loads afterwards, for a member
+with the flag on, is now 40.9 KB (12.6 KB Brotli) for the machine, the store and the actions, 14.2 KB (4.7 KB) for
+the hero box, and 30.5 KB (9.4 KB) for the episode list. The icons that only tracking draws are written out in
+its two components: imported from the icon package they went into the chunk of every page (1,113 bytes), and as
+a small module of their own into the shell (1,831 bytes), by the build's rule for small shared modules.
+
 **How it was checked.** Tests: `node --test 'app/domain/tracking/*.test.ts' app/server/show-tracking.test.ts`,
 the server's against the in-memory Crate. The components were driven in headless Chromium at 390 and 1280 pixels
 wide on `/prototype/episode-tracking-real`, a development route that mounts the real `ListActions` and episodes
 section with a member who does not exist and a server that lives in the tab
 (`ui/prototype-episode-tracking/fake-server.ts`), on the prototypes' fixtures. That server runs the real machine
-and the real mapping to rows, with aired as the server reads it. 137 checks at each width, all passing; the script
-is [`episode-tracking/drive.mjs`](episode-tracking/drive.mjs):
+and the real mapping to rows, with aired as the server reads it. 211 checks at 390 pixels and 207 at 1280, all
+passing (137 at each width before the refinements); the script is
+[`episode-tracking/drive.mjs`](episode-tracking/drive.mjs). It runs with the locale `en-GB`, so that the dates
+the page writes in the member's locale can be compared:
 
 ```
 cd goodwatch-webapp
@@ -1588,10 +1656,11 @@ REC_TRACKING=on node_modules/.bin/remix vite:dev --port 3084 --host 127.0.0.1
 HARNESS=http://127.0.0.1:3084 node drive.mjs      # with playwright-core installed beside it, and system Chromium
 ```
 
-Screenshots, in [`episode-tracking/`](episode-tracking/), each `-phone` and `-desktop`: `hero-watching`,
-`hero-status-menu`, `hero-seen-rate-prompt`, `hero-seen-new-episodes`, `hero-seen-question`, `list-matrix`,
-`list-never-tracked`, `list-season-open`, `list-row-open`, `list-airing-season`, `list-specials`,
-`list-limited-series`, `toast-mark-season`.
+Screenshots, in [`episode-tracking/`](episode-tracking/), each `-phone` and `-desktop`, made by
+[`shots.mjs`](episode-tracking/shots.mjs): `hero-watching`, `hero-status-menu`, `hero-menu-seen-new-episodes`,
+`hero-menu-dropped`, `hero-seen-rate-prompt`, `hero-seen-new-episodes`, `hero-seen-question`, `list-matrix`,
+`list-never-tracked`, `list-seen-press`, `list-ratings-grid`, `list-season-open`, `list-row-open` (the covers),
+`list-row-uncovered`, `list-airing-season`, `list-specials`, `list-limited-series`, `toast-mark-season`.
 
 In the development build the app shell reported "This Suspense boundary received an update before it finished
 hydrating" on a few loads of the harness, as it does on other prototype routes: there the shell's own lazy parts
@@ -1601,7 +1670,9 @@ load late. The production entry waits for them before it hydrates.
 against a real Crate and with a real session; the show page itself, where the hero's box sits in the real hero and
 the episodes section among the page's sections; the first paint of the box from the member data on a page the
 server rendered; a show whose episode list the crawl has not reached; real IMDb ratings beside real TMDB episodes;
-two devices acting on one show; a touch screen, Safari and Firefox, a screen reader; `./bench.sh budget`.
+two devices acting on one show; a touch screen, Safari and Firefox, a screen reader; `./bench.sh budget`. Of the
+refinements also: the line of a migrated Seen mark on the owner's own shows (the harness makes its presses with
+the writer's rules, not with the migration's rows), and dates in a locale other than `en-GB`.
 
 ### Home doors, My shows, My movies and My library (#385)
 
