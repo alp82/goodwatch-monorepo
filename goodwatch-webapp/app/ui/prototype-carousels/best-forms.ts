@@ -276,7 +276,7 @@ export function bestKit(core: PlayCore, X: BestExtra) {
  * best1, trait strip: the seventh round's strip along one trait with its real levels (the eighth round's honest
  * ruler), and three things changed. The traits are four, chosen for the title, and they are the bars of the card:
  * a tap on a bar lines the strip up along it, and while you scrub the bars show the fingerprint of whatever is
- * under the marker. Posters shrink away from the marker, so about ten are in view on a phone. A small map shows the
+ * under the marker. Posters are small away from the marker, so eight or nine are in view on a phone. A small map shows the
  * whole strip with where you stand, and dragging it scrubs.
  */
 const best1: BestForm = (core, kit) => {
