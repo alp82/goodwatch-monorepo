@@ -19,6 +19,8 @@ const STUBS: Record<string, string> = {
 		"export const resetUserDataCache = async () => {}",
 	"/server/title-snapshot/format.server.ts":
 		"export const getTitleSnapshot = () => null",
+	// Settling the watches of a batch's movies has its own tests; here it would pull in the cache and Redis.
+	"/server/tracking.server.ts": "export const settleMovies = async () => {}",
 }
 
 const PROCESS = /\?process=\w+$/
