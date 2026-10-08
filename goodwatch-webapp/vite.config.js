@@ -69,9 +69,9 @@ function separateEntryFiles() {
 // class names that only they use (about a quarter of its rules).
 const PROTOTYPES = {
 	// Files in app/routes.
-	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.episode-tracking*", "prototype.watching*", "prototype.tracking*"],
+	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.episode-tracking*", "prototype.watching*", "prototype.tracking*", "prototype.my-library*"],
 	// Directories in app/ui that only those routes import.
-	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-episode-list-3", "prototype-episode-list-4", "prototype-episode-tracking", "prototype-watching", "prototype-watching-2", "prototype-watching-3", "prototype-tracking-hub"],
+	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-episode-list-3", "prototype-episode-list-4", "prototype-episode-tracking", "prototype-watching", "prototype-watching-2", "prototype-watching-3", "prototype-tracking-hub", "prototype-my-library"],
 }
 const PROTOTYPE_SOURCES = [
 	...PROTOTYPES.routes.map((name) => `./routes/${name}`),
