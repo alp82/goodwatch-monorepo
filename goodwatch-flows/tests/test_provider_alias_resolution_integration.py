@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'scripts'))
+sys.path.insert(0, str(Path(__file__).parents[1] / 'windmill'))
 from provider_alias_resolution import transfer_demand
 from test_priority_queue_integration import QueueIntegrationTests
 

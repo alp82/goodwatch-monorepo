@@ -5,7 +5,7 @@ import shutil
 import sys
 import tempfile
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -44,8 +44,21 @@ class FakeCrate:
         pass
 
 
+class Clock:
+    """Stands in for `datetime` in the ingest: the files' day, one minute later on every reading,
+    so the freshness check and the stored times do not depend on the day the tests run."""
+
+    def __init__(self, start):
+        self.time = start
+
+    def now(self, tz=None):
+        self.time += timedelta(minutes=1)
+        return self.time.replace(tzinfo=tz)
+
+
 class IngestTest(unittest.TestCase):
     def setUp(self):
+        self.clock = Clock(datetime(2026, 9, 25, 6))
         self.files = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.files)
         self.etags = {}
@@ -76,6 +89,7 @@ class IngestTest(unittest.TestCase):
             patch.object(ingest, "CrateConnector", return_value=self.crate),
             patch.object(ingest, "head", side_effect=self.head),
             patch.object(ingest, "download", side_effect=self.download),
+            patch.object(ingest, "datetime", self.clock),
         ]
         for p in patches:
             p.start()
@@ -229,6 +243,13 @@ class IngestTest(unittest.TestCase):
         with self.assertRaises(ingest.DatasetAlert):
             ingest.main()
         self.assertEqual(self.db.imdb_tv_rating.find_one({"tmdb_id": 1396})["user_score_original"], 9.5)
+
+    def test_a_ratings_file_older_than_two_days_is_reported_after_the_run(self):
+        self.publish_day_one()
+        self.clock.time = datetime(2026, 9, 27, 0, 41)
+        with self.assertRaisesRegex(ingest.DatasetAlert, "last modified 2 days"):
+            ingest.main()
+        self.assertEqual(self.db.imdb_tv_rating.find_one({"tmdb_id": 1396})["user_score_vote_count"], 2680743)
 
 
 if __name__ == "__main__":
