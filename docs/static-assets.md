@@ -31,11 +31,12 @@ gives the rule for each kind of file:
 
 | File | How it gets its address |
 | --- | --- |
-| Entry scripts, route scripts, their preloads, route style sheets | Remix reads them from the build's file list. The server entry gives each render a copy of the list with every address on the chosen host (`manifestForBase`). |
+| Entry scripts, route scripts, their preloads | Remix reads them from the build's file list. The server entry gives each render a copy of the list with every script address on the chosen host (`manifestForBase`). |
 | Route scripts and preloads of a later navigation in the browser | The browser entry rewrites the file list that the page loaded, with the host that its own scripts came from. |
 | Lazy chunks and their preloads | A chunk imports another one with a relative path, so the import follows the script. `experimental.renderBuiltUrl` in `vite.config.js` makes Vite's preload helper resolve against the script too, and not against the page. |
-| Fonts and images named in a style sheet | The style sheet names them with a path, so they follow the style sheet. |
-| The style sheet, the font preload, the web manifest, imported images, `public/` images and flags | `assetUrl(path)` puts the chosen host in front. |
+| The style sheet, route style sheets, the font preload | They keep their paths, so they always come from the site's own host. See [What stays for the first paint](#what-stays-for-the-first-paint). |
+| Fonts and images named in a style sheet | The style sheet names them with a path, so they follow the style sheet: to the site's own host. A style sheet that a lazy chunk loads follows the chunk. |
+| The web manifest, imported images, `public/` images and flags | `assetUrl(path)` puts the chosen host in front. |
 
 `assetUrl` and `assetBase` (`app/utils/asset-url.ts`) work on both sides:
 
@@ -58,10 +59,22 @@ Rules for code:
 
 | Moves to the static hostname | Keeps the site's host |
 | --- | --- |
-| Hashed build files under `/assets/`: scripts, style sheets, fonts, imported images | Documents, loader data, `/api/` |
-| `public/` images (`/images/`) and flags (`/flags/`) | `robots.txt`, the sitemaps |
+| Hashed build files under `/assets/`: scripts and imported images | Documents, loader data, `/api/` |
+| `public/` images (`/images/`) and flags (`/flags/`) | The style sheet, route style sheets, and the fonts |
+| | `robots.txt`, the sitemaps |
 | The web manifest, and with it the icons that it names | The favicon and the touch icon |
 | | OG cards under `/og/`, and the share card fonts under `/fonts/share-card` |
+
+### What stays for the first paint
+
+The style sheet is the one request that blocks a page's first paint. On the static hostname it had to wait for a
+connection to a second host, while the document's connection to the site was already open. So the style sheet, the
+route style sheets, and the brand font that the style sheet names stay on the site's own host in every mode. Scripts
+and images, which are most of a page's bytes, move.
+
+The cost is at the origin: about 67 KB more per movie page view (the style sheet and the font) than with
+everything on the static hostname. The numbers are in
+[the static hostname report](benchmarks/viral-spike-static-hostname.md).
 
 ## The probe
 
@@ -115,11 +128,10 @@ is answered as before, so the origin stays a complete copy.
 - Build files under `/assets/`, font files, and the web manifest answer `Access-Control-Allow-Origin: *`, on the
   site's host too. Module scripts, their preloads, fonts, and the web manifest are fetched with CORS when they come
   from another host.
-- While a page names the static hostname, its first link is `<link rel="preconnect" crossorigin>` for it. Scripts
-  and fonts use that connection. The stylesheet link carries `crossorigin` too while the page names the static
-  hostname: a browser keeps requests with and without credentials on separate connections, and without the attribute
-  the render-blocking stylesheet would wait for a second connection that no hint opened. Images from `public/` still
-  use that second connection.
+- While a page names the static hostname, its first link is `<link rel="preconnect" crossorigin>` for it. The
+  scripts use that connection: a browser fetches module scripts without credentials, and keeps requests with and
+  without credentials on separate connections. Images from `public/` open a second connection to the static
+  hostname.
 
 ## Metrics
 
