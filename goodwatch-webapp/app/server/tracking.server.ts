@@ -882,6 +882,26 @@ export async function settleMovies(
 	return { inserted, deleted }
 }
 
+/**
+ * Whether a movie that is Seen through its score's watch is on the Wishlist as Want to rewatch: it was put there
+ * after that watch was recorded. A place that is older is the Want to See the score fulfils. Both rows are read by
+ * their whole keys, so a rating that is sent again answers as the first one would have.
+ */
+async function wantsRewatch(userId: string, movieId: number): Promise<boolean> {
+	const [[watch], [wish]] = await Promise.all([
+		read<{ created_at: number }>(
+			"SELECT created_at FROM user_watch_log WHERE user_id = ? AND watch_id = ?",
+			[userId, scoreWatchId(movieId)],
+		),
+		read<{ created_at: number | null; updated_at: number }>(
+			"SELECT created_at, updated_at FROM user_wishlist WHERE user_id = ? AND tmdb_id = ? AND media_type = ?",
+			[userId, movieId, "movie"],
+		),
+	])
+	if (!watch || !wish) return false
+	return Number(wish.created_at ?? wish.updated_at) > Number(watch.created_at)
+}
+
 async function applyMovieEvent(
 	userId: string,
 	movieId: number,
@@ -993,7 +1013,19 @@ async function applyMovieEvent(
 	// A score takes the movie off Not interested, and off the Wishlist when the score is what makes the movie
 	// Seen. That is asked of the rows and not of this request, so that a request sent again still clears it.
 	if (event.type === "rate" && event.score !== null)
-		clear = { wantToSee: settled.byScoreAlone, notInterested: true }
+		clear = {
+			wantToSee:
+				settled.byScoreAlone && !(await wantsRewatch(userId, movieId)),
+			notInterested: true,
+		}
+	// Want to rewatch lasts while the movie is Seen: a removed watch that leaves it not Seen takes it off the
+	// Wishlist. A rated movie stays Seen through its score's watch, and stays on it.
+	if (
+		(event.type === "deleteWatch" || event.type === "removeWatches") &&
+		deleted.length > 0 &&
+		settled.state === null
+	)
+		clear = { ...clear, wantToSee: true }
 	const cleared = await clearIntentions(userId, title, clear)
 	await finish(userId)
 	return {

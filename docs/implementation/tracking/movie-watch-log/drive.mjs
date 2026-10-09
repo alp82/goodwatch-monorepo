@@ -45,7 +45,8 @@ const reset = async () => {
 }
 const hero = (id) => page.locator(`[data-hero="${id}"]`)
 const seen = (id) => hero(id).getByRole("button", { name: /Seen/ })
-const want = (id) => hero(id).getByRole("button", { name: "Want to See" })
+// "Want to See", or "Want to rewatch" once the movie is Seen.
+const want = (id) => hero(id).getByRole("button", { name: /^Want to/ })
 const toast = () => page.locator("[data-toast]").last()
 const panel = () => page.locator(phone ? "[data-watch-log-sheet]" : "[data-watch-log-popover]")
 const rows = () => panel().locator("[data-watch]")
@@ -260,7 +261,10 @@ await settle(800)
 s = await state()
 check("scored only: I watched it turns it into the member's own watch", s.logs[PULP].length === 1 && s.logs[PULP][0].origin === "single" && (await rowTexts())[0] === "Date unknown", JSON.stringify(s.logs[PULP]))
 await closePanel()
-await hero(PULP).getByText("Clear score").click()
+// The score is the hero's rectangle; Clear score is in its picker.
+await hero(PULP).locator("[data-own-score]").click()
+await page.locator("[data-score-dialog]").getByText("Clear score").click()
+await page.locator("[data-score-dialog-close]").click()
 await settle(900)
 check("clearing the score at the score control leaves the member's watch: still Seen", (await state()).logs[PULP]?.length === 1 && (await seen(PULP).getAttribute("aria-pressed")) === "true")
 

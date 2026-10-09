@@ -224,7 +224,7 @@ export interface ShowView {
 	menu: MenuEntry[]
 	/** The Seen press that stands for the show, with what it covered; null when none stands. */
 	press: SeenPress | null
-	/** Want to See can be pressed: the show is Not started, or Dropped with nothing watched. */
+	/** Want to See can be pressed: the show is Not started, Dropped with nothing watched, or Seen (Want to rewatch). */
 	wantToSee: { ok: boolean; why: string }
 	/** The prompt to rate, when it is due: the show is Seen ("all"), or three episodes are watched ("partway"). */
 	ratePrompt: "all" | "partway" | null
@@ -245,6 +245,8 @@ export function viewOf(
 		today: string
 		running: boolean
 		score: number | null
+		/** The show is on the Wishlist, as the member data says. The menu of a Seen show reads it (Want to rewatch). */
+		wantToSee?: boolean
 		/** How dates read in the menu. The page gives the member's locale. */
 		words?: DateWords
 	},
@@ -252,7 +254,7 @@ export function viewOf(
 	const show = showAiredBy(episodes, context.today, context.running)
 	const record = recordFromRows(copy.state, copy.log, {
 		score: context.score,
-		wantToSee: false,
+		wantToSee: context.wantToSee === true,
 		notInterested: false,
 	})
 	const world = { show, record }

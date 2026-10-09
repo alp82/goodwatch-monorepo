@@ -619,8 +619,32 @@ The budget's limits, reset from the two 2.7 runs above:
 Run `20261007T193155Z-lighthouse-calibrated` with the default settings (three reports per surface, 19:31 to 19:40 UTC) passes
 90 of 90 lines of the new limits: scores 88, 84, 82, 90, 77, and 88, and TBT 50, 162, 173, 79, 62, and 14 ms.
 
+## The poster on the title page's banner
+
+The title overview of October 9, 2026 ([what it is](../implementation/title-overview.md)) shows the poster on a
+phone, where the old hero showed it from 768 px up only. That is one more image in a phone's first view of a movie
+or a show: 72 CSS pixels wide, for which a phone asks the `w154` file. It measures 13,584 bytes for the budget's
+movie and 13,464 bytes for its show.
+
+The limits of both surfaces are raised by that in the same commit, by arithmetic and not from a run:
+
+| Line | Movie, before | Movie, now | Show, before | Show, now |
+| --- | --- | --- | --- | --- |
+| `image_count` | 12 | 13 | 10 | 11 |
+| `image_bytes` | 88,064 | 102,400 | 155,648 | 169,984 |
+| `total_bytes` | 468,992 | 483,328 | 531,456 | 545,792 |
+
+Nothing else was raised. Measured on the build: the first view's scripts of a movie page grow by 2,976 bytes (640
+bytes Brotli), which is 0.3% and inside the margin of `script_bytes`; the stylesheet by 16 bytes Brotli; the score
+picker and the full-screen poster load on first use and are in no first view. The backdrop stays the largest
+image, and its `src` still names the `w780` file that `lcp_element` looks for.
+
+`./bench.sh budget` measures the deployed site, so it could not be run on this change before it was deployed. Run
+it after the deploy, and set the three lines from the measured values and the usual margins.
+
 ## Not verified
 
+- The limits of the section above, and LCP, TBT, CLS and the score of the title pages with the new overview.
 - A real phone or a host of Lighthouse's reference class for the CPU slowdown: 2.7 comes from Lighthouse's formula
   and the generator's benchmark, whose stated range is 2.0 to 3.5.
 - The CPU slowdown on any host other than worker3.

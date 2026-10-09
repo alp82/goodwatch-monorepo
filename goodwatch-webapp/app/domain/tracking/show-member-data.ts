@@ -21,8 +21,9 @@ const sameEntry = (a: WatchStateEntry | undefined, b: WatchStateEntry) =>
 
 /**
  * A show's tracking changed on its page, where the browser holds the show's rows and so knows the entry exactly:
- * the show's `watchState` entry, or null while the show is Not started. A show in any other state is on neither
- * the Wishlist nor Not interested. The same map comes back when nothing changes.
+ * the show's `watchState` entry, or null while the show is Not started. A show in any other state is not Not
+ * interested, and on the Wishlist only as Want to rewatch: a show that was Seen and still is keeps its place there,
+ * and one that leaves Seen loses it. The same map comes back when nothing changes.
  */
 export function afterShowTracking(
 	data: UserData | undefined,
@@ -31,15 +32,21 @@ export function afterShowTracking(
 ): UserData | undefined {
 	if (!data) return data
 	const key = createMediaKey("show", tmdbId)
+	const wasSeen = data.watchState[key]?.state === "seen"
 	if (entry === null) {
 		if (!(key in data.watchState)) return data
 		const watchState = { ...data.watchState }
 		delete watchState[key]
-		return { ...data, watchState }
+		if (!wasSeen || !(key in data.wishlist)) return { ...data, watchState }
+		// Seen was taken back: Want to rewatch ends with it.
+		const wishlist = { ...data.wishlist }
+		delete wishlist[key]
+		return { ...data, watchState, wishlist }
 	}
+	const rewatch = wasSeen && entry.state === "seen"
 	if (
 		sameEntry(data.watchState[key], entry) &&
-		!(key in data.wishlist) &&
+		(rewatch || !(key in data.wishlist)) &&
 		!(key in data.notInterested)
 	)
 		return data
@@ -49,7 +56,7 @@ export function afterShowTracking(
 		wishlist: { ...data.wishlist },
 		notInterested: { ...data.notInterested },
 	}
-	delete updated.wishlist[key]
+	if (!rewatch) delete updated.wishlist[key]
 	delete updated.notInterested[key]
 	return updated
 }

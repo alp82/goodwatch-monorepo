@@ -1,5 +1,5 @@
 // Episode tracking on the show page (#384), as far as the page's first view knows of it: whether the viewer gets
-// it, the status box a tracked show paints from the member data, and the two places where the rest loads on first
+// it, the status line a tracked show paints from the member data, and the two places where the rest loads on first
 // use. Everything else (the state machine, the show's rows, the hero box, the episode list) is in chunks that only
 // a member with REC_TRACKING requests, after the page is up.
 import {
@@ -48,20 +48,13 @@ export const STATUS_LOOK: Record<Status, { word: string; pill: string }> = {
 	seen: { word: "Seen", pill: "bg-green-500 text-black" },
 }
 
-/** The frame of the hero's status box, at the height the box has once its content is there. */
-export function StatusBoxFrame({ children }: { children: ReactNode }) {
-	return (
-		<div
-			data-tracking-box
-			className="mb-4 flex min-h-[8.375rem] flex-col justify-center rounded-xl bg-white/[0.08] p-3 ring-1 ring-white/10"
-		>
-			{children}
-		</div>
-	)
-}
+/** The hero's "your show" block: the status line, then the actions, a row each. */
+export const HERO_ACTIONS = "flex min-w-0 flex-col gap-2.5"
+/** The status line of that block, at the height it has once its content is there. */
+export const STATUS_LINE = "flex min-h-9 min-w-0 items-center gap-2.5"
 
-/** The status box as the first paint has it: the state from the member data, and room for the rest. */
-function StatusBoxFirstPaint({
+/** The status line as the first paint has it: the state from the member data, and room for the rest. */
+function StatusLineFirstPaint({
 	state,
 	running,
 }: {
@@ -70,21 +63,20 @@ function StatusBoxFirstPaint({
 }) {
 	const look = STATUS_LOOK[state]
 	return (
-		<StatusBoxFrame>
+		<div data-tracking-box className={STATUS_LINE}>
 			<span
 				className={`inline-flex h-9 w-fit items-center rounded-lg px-2.5 text-xs font-semibold ${look.pill}`}
 			>
 				{state === "seen" && running ? "Caught up" : look.word}
 			</span>
-			<span className="mt-3 block h-1.5 rounded-full bg-white/10" />
-			<span className="mt-3 block h-11" />
-		</StatusBoxFrame>
+		</div>
 	)
 }
 
 /**
- * The hero's title actions for a member with tracking. The first paint is today's action set, under the status box
- * when the member data says the show has a state. The tracking code then loads and takes over in place.
+ * The hero's title actions for a member with tracking. The first paint is the action set every visitor gets, under
+ * the status line when the member data says the show has a state. The tracking code then loads and takes over in
+ * place.
  */
 export function TrackedTitleActions({
 	media,
@@ -97,15 +89,15 @@ export function TrackedTitleActions({
 	const entry = useWatchState("show", media.details.tmdb_id)
 	const hydrated = useHydrated()
 	const first = (
-		<>
+		<div className={HERO_ACTIONS}>
 			{entry && (
-				<StatusBoxFirstPaint
+				<StatusLineFirstPaint
 					state={entry.state}
 					running={media.details.in_production === true}
 				/>
 			)}
 			{children}
-		</>
+		</div>
 	)
 	if (!hydrated) return first
 	return (

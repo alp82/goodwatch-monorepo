@@ -484,9 +484,13 @@ function Row({
 		: watchedWords(null, now)
 	const fact =
 		status === "want"
-			? item.addedAt
-				? addedWords(item.addedAt, now)
-				: ""
+			? // A Seen title on the Wishlist is Want to rewatch: the list says so before when it was added.
+				[
+					item.state === "seen" ? "Rewatch" : "",
+					item.addedAt ? addedWords(item.addedAt, now) : "",
+				]
+					.filter(Boolean)
+					.join(" · ")
 			: // A show in progress says that the day is its last watch's.
 				inProgress && item.watchedAt
 				? `Last watched ${/^(Today|Yesterday)$/.test(watchedOn) ? watchedOn.toLowerCase() : watchedOn}`

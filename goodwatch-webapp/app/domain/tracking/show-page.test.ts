@@ -388,14 +388,19 @@ test("a Seen show reads Caught up while it runs and Seen once it has ended, and 
 		],
 		["Seen", 5, 5, "takeBack", null],
 	)
-	assert.deepEqual(menuOf(ended), ["watchAgain", "takeBack", "setDate"])
+	assert.deepEqual(menuOf(ended), [
+		"watchAgain",
+		"rewatch",
+		"takeBack",
+		"setDate",
+	])
 	// The press as the page reads it: made now, five undated watches, the first season whole and two of season 2.
 	assert.deepEqual(
 		[ended.press?.at, ended.press?.count, ended.press?.dated],
 		[NOW, 5, 0],
 	)
 	assert.equal(
-		ended.menu[1].note,
+		ended.menu.find((entry) => entry.id === "takeBack")?.note,
 		"Removes the 5 episodes marked on 8 Oct 2026. The show is then Not started.",
 	)
 	assert.equal(
@@ -483,7 +488,10 @@ test("Watch again is not offered for a show marked Seen with no episode watched"
 		context,
 	).copy
 	const v = viewOf(seen, [], { today: TODAY, running: false, score: null })
-	assert.deepEqual([v.derived.state, menuOf(v)], ["seen", ["takeBack"]])
+	assert.deepEqual(
+		[v.derived.state, menuOf(v)],
+		["seen", ["rewatch", "takeBack"]],
+	)
 })
 
 test("the prompt to rate is due after three episodes or a Seen press, until there is a score or Not now", () => {

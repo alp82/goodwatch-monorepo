@@ -31,7 +31,7 @@ export const MENU_PLACE: Record<TableEvent, "menu" | (string & {})> = {
 	drop: "menu",
 	resume: "menu",
 	watchAgain: "menu",
-	// Row 24 only. Row 23 starts from Not started, which has no pill: the Want to See button.
+	// Rows 24 and 31. Row 23 starts from Not started, which has no pill: the Want to See button.
 	wantToSee: "menu",
 	watch: "The episode list: a tick, a date, Mark season, Watched up to here.",
 	unwatch: "The episode list: a tick, Remove watch.",
@@ -47,6 +47,7 @@ export type MenuEntryId =
 	| "markAll"
 	| "hold"
 	| "watchAgain"
+	| "rewatch"
 	| "takeBack"
 	| "setDate"
 	| "drop"
@@ -153,10 +154,23 @@ export function statusMenu(
 		{ type: "watchAgain" },
 		() => ({
 			label: "Watch again",
-			note: "Start a new pass from the first episode.",
+			note: `Starts pass ${record.pass + 1} now: the ticks start empty and it is Watching again.`,
 		}),
 		{ confirm: true },
 	)
+	// Row 31, beside Watch again: the one starts a pass now, the other only keeps the show on the Wishlist.
+	if (record.state === "seen")
+		add("rewatch", { type: "wantToSee", on: !record.wantToSee }, () =>
+			record.wantToSee
+				? {
+						label: "On your Wishlist to rewatch",
+						note: "Take it off. Nothing else changes.",
+					}
+				: {
+						label: "Want to rewatch",
+						note: "Only bookmarks it on your Wishlist. Your episodes stay ticked.",
+					},
+		)
 	if (press) {
 		add(
 			"takeBack",

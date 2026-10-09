@@ -42,8 +42,22 @@ prototype of those rules produced 27 surprises. The owner asked for a state mach
   they were recorded, and since when the show was Seen) and leads to Seen from any state. The machine takes it only
   onto what taking the press back left: the state that rows 13 to 17 lead to, the same pass, no press standing, and
   none of the press's episodes watched since. Anything else is refused, because the press would no longer be what
-  it was. The page asks before it takes a press back, in the status menu and beside the press's line; the Seen
-  button pressed again does not ask. Each ends in the same toast, which offers the Undo.
+  it was. The page asks before it takes a press back, in the status menu and beside the press's line. (Until
+  the title overview of 2026-10-09 a Seen show also had a Seen button, and a second press of it took the press
+  back without asking. A Seen show now says so in its status pill and has no such button.) Each ends in the same
+  toast, which offers the Undo.
+- **Want to See on a Seen show is Want to rewatch** (row 31, added 2026-10-09 with the new title overview). A
+  member who has seen a show and means to watch it again had no way to say so short of Watch again, which starts
+  the next pass at once and empties the ticks. Want to See is offered on a Seen show, reads "Want to rewatch"
+  there, and only puts the show on the Wishlist: no watch, no state and no pass changes, and the Seen press still
+  stands. The status menu lists it beside Watch again, each with a line that says which is which. It lasts while
+  the show stays Seen: a score, a tick of a new episode and a press that marks the new ones leave it; Watch again,
+  taking Seen back, On hold, Drop and a removed watch that leaves the show another state take it off the Wishlist.
+  A Seen title stays out of the Not seen yet recommendations whether it is on the Wishlist or not. A movie has no
+  machine and the same rule: it can be on the Wishlist while it is Seen, the next watch takes it off (the rewatch
+  has happened), and so does a removed watch that leaves it not Seen. Before, the rule was that a Seen title is on
+  no list of intentions, which the writers already broke for a title that was put on the Wishlist after it was
+  Seen.
 - **Watch again needs at least one watched regular episode.** It starts the next pass and makes the show Watching.
   Without the guard, a show marked Seen while it had no episode list would become Watching with nothing watched.
 - **An import never changes On hold, Dropped or Seen set here.** It adds its watches to the log. It sets the state

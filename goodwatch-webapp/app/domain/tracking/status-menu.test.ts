@@ -127,9 +127,14 @@ test("Dropped: Resume with something watched; with nothing watched, Want to see 
 	assert.deepEqual(ids("ended", [DROP]), ["wantToSee", "resume", "markAll"])
 })
 
-test("Seen with nothing new: Watch again; with a press standing also taking it back and a date for its watches", () => {
-	assert.deepEqual(ids("ended", ALL), ["watchAgain"])
-	assert.deepEqual(ids("weekly", [SEEN]), ["watchAgain", "takeBack", "setDate"])
+test("Seen with nothing new: Watch again and Want to rewatch; with a press standing also taking it back and a date for its watches", () => {
+	assert.deepEqual(ids("ended", ALL), ["watchAgain", "rewatch"])
+	assert.deepEqual(ids("weekly", [SEEN]), [
+		"watchAgain",
+		"rewatch",
+		"takeBack",
+		"setDate",
+	])
 	const entries = menu("ended", [w(1, 1), SEEN])
 	assert.deepEqual(
 		entries.map((e) => [e.id, e.label, e.note, e.quiet, e.confirm]),
@@ -137,9 +142,16 @@ test("Seen with nothing new: Watch again; with a press standing also taking it b
 			[
 				"watchAgain",
 				"Watch again",
-				"Start a new pass from the first episode.",
+				"Starts pass 2 now: the ticks start empty and it is Watching again.",
 				false,
 				true,
+			],
+			[
+				"rewatch",
+				"Want to rewatch",
+				"Only bookmarks it on your Wishlist. Your episodes stay ticked.",
+				false,
+				false,
 			],
 			[
 				"takeBack",
@@ -181,7 +193,7 @@ test("Take back Seen says where the show goes: the state the press was made from
 		"Removes the 1 episode marked on 19 Oct 2024. It is new again, and the show stays Caught up.",
 	)
 	// A show without an episode list: the press marked nothing, and there is nothing to date or to watch again.
-	assert.deepEqual(ids("nolist", [SEEN]), ["takeBack"])
+	assert.deepEqual(ids("nolist", [SEEN]), ["rewatch", "takeBack"])
 	assert.equal(
 		note("nolist", [SEEN]),
 		"It marked no episode. The show is then Not started.",
@@ -194,6 +206,7 @@ test("Seen with new episodes: mark them first, then On hold, Watch again, the pr
 		"markNew",
 		"hold",
 		"watchAgain",
+		"rewatch",
 		"takeBack",
 		"setDate",
 		"drop",
@@ -216,6 +229,7 @@ test("Seen with new episodes: mark them first, then On hold, Watch again, the pr
 		"markNew",
 		"hold",
 		"watchAgain",
+		"rewatch",
 		"drop",
 	])
 	// A press that marked nothing, and episodes listed since: nothing to watch again and nothing to date.
@@ -229,15 +243,45 @@ test("Seen with new episodes: mark them first, then On hold, Watch again, the pr
 	}
 	assert.deepEqual(
 		statusMenu(world, { at: PRESSED, count: 0 }, PLAIN_DATES).map((e) => e.id),
-		["markNew", "hold", "takeBack", "drop"],
+		["markNew", "hold", "rewatch", "takeBack", "drop"],
 	)
+})
+
+test("Want to rewatch stands beside Watch again on a Seen show, and reads as on once the show is on the Wishlist", () => {
+	const seen = play(findShow("ended"), [w(1, 1), SEEN]).world
+	const of = (world: World) => statusMenu(world, null, PLAIN_DATES)
+	const beside = of(seen).map((e) => e.id)
+	assert.equal(beside.indexOf("rewatch"), beside.indexOf("watchAgain") + 1)
+	const on = of({
+		show: seen.show,
+		record: { ...seen.record, wantToSee: true },
+	}).find((e) => e.id === "rewatch")
+	assert.deepEqual(
+		[on?.label, on?.note, on?.event, on?.row, on?.confirm],
+		[
+			"On your Wishlist to rewatch",
+			"Take it off. Nothing else changes.",
+			{ type: "wantToSee", on: false },
+			"31",
+			false,
+		],
+	)
+	// Only a Seen show has it: for a show that is under way, Want to See is not an action.
+	for (const actions of [[w(1, 1)], [w(1, 1), { type: "hold" } as const]])
+		assert.ok(
+			!of(play(findShow("ended"), actions).world).some(
+				(e) => e.id === "rewatch",
+			),
+		)
 })
 
 test("a press whose day nothing stored says is taken back without naming one", () => {
 	const world = play(findShow("ended"), [SEEN]).world
-	const [, back] = statusMenu(world, { at: null, count: 6 }, PLAIN_DATES)
+	const back = statusMenu(world, { at: null, count: 6 }, PLAIN_DATES).find(
+		(e) => e.id === "takeBack",
+	)
 	assert.equal(
-		back.note,
+		back?.note,
 		"Removes the 6 episodes it marked. The show is then Not started.",
 	)
 })
@@ -288,6 +332,7 @@ test("every event of the table has its place: in the menu, or named as living el
 		"markAll",
 		"markNew",
 		"resume",
+		"rewatch",
 		"setDate",
 		"takeBack",
 		"wantToSee",

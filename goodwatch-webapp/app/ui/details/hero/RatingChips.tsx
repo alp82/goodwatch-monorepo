@@ -7,7 +7,8 @@ import type { MovieResult, ShowResult } from "~/server/types/details-types"
 
 // IMDb, Metacritic (critics | audience), and Rotten Tomatoes (critics | audience) as compact
 // brand-colored chips in a wrapping row. A site with no score at all is left out.
-export default function RatingChips({ media }: { media: MovieResult | ShowResult }) {
+// `fill`: the chips share the row's whole width, for a row that has nothing else to end it.
+export default function RatingChips({ media, fill = false }: { media: MovieResult | ShowResult; fill?: boolean }) {
 	const d = media.details
 	const imdb = d.imdb_user_score_original ? d.imdb_user_score_original.toFixed(1) : null
 	const mc = d.metacritic_meta_score_original ? String(Math.floor(d.metacritic_meta_score_original)) : null
@@ -29,7 +30,7 @@ export default function RatingChips({ media }: { media: MovieResult | ShowResult
 			target="_blank"
 			rel="noreferrer"
 			title={title}
-			className={`inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 text-[13px] font-semibold tabular-nums ${brand} ${
+			className={`inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 text-[13px] font-semibold tabular-nums ${fill ? "flex-1 justify-center" : ""} ${brand} ${
 				href ? "hover:brightness-110" : "pointer-events-none"
 			}`}
 		>
@@ -45,5 +46,5 @@ export default function RatingChips({ media }: { media: MovieResult | ShowResult
 			chip("rt", d.rotten_tomatoes_url, rottenLogoIcon, "Rotten Tomatoes", pair(rt, rtUser), "bg-rotten text-white", `Rotten Tomatoes: critics ${rt ?? "–"}, audience ${rtUser ?? "–"}`),
 	].filter(Boolean)
 	if (chips.length === 0) return null
-	return <div className="flex flex-wrap items-center gap-1.5">{chips}</div>
+	return <div className={`flex items-center gap-1.5 ${fill ? "min-w-0 flex-1" : "flex-wrap"}`}>{chips}</div>
 }

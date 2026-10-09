@@ -1,15 +1,14 @@
-import { CheckIcon } from "@heroicons/react/20/solid"
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/solid"
 import { Link } from "@remix-run/react"
-import React, { Suspense, lazy, useEffect, useRef, useState } from "react"
+import React, { Suspense, lazy, useRef, useState } from "react"
 import { useUserStreamingProviders } from "~/routes/api.user-settings.get"
 import type { MovieResult, ShowResult, StreamingType } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
 import { useClickOutside } from "~/ui/details/hero/useClickOutside"
+import { countryFlagUrl } from "~/utils/country-flag"
 import type { Section } from "~/utils/scroll"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { brandName, duplicateProviderMapping, getShorterProviderLabel, getStreamingUrl, ignoredProviders } from "~/utils/streaming-links"
-import { countryFlagUrl } from "~/utils/country-flag"
 
 type Media = MovieResult | ShowResult
 
@@ -51,101 +50,63 @@ export function useStreamingLinks(media: Media, country: string, types: Streamin
 		})
 }
 
-const TILE_H = 48
-const GAP = 8
+/** How many services show before "All N services" opens the rest in place: two rows of two. */
+const SHOWN = 4
 
-// Offer tiles in a fixed number of rows so switching offer type or country
-// never changes the height: one row of logos on phones, two rows of named
-// tiles from md up. When the rows are full, the last tile opens the full list.
-// The country selector sits beside the offer types; the "Your services" legend
-// sits beside the disclaimer under the tiles.
-export default function WhereToWatch({ media, country, navigateToSection }: { media: Media; country: string; navigateToSection: (s: Section) => void }) {
+// The hero's where-to-watch block. A title row carries the settings on its right: the offer type and the country.
+// Under it the services as cards, logo beside name, two to a row and yours first with a green ring. Four show;
+// "All N services" opens the rest in place. A card that would stand alone in its row takes the whole row.
+export default function WhereToWatch({ media, country, navigateToSection, className = "" }: { media: Media; country: string; navigateToSection: (s: Section) => void; className?: string }) {
 	const [type, setType] = useState<"flatrate" | "rent" | "buy">("flatrate")
-	const [popover, setPopover] = useState<"none" | "country" | "all">("none")
+	const [countryOpen, setCountryOpen] = useState(false)
+	const [all, setAll] = useState(false)
 	const ref = useRef<HTMLDivElement>(null)
-	const gridRef = useRef<HTMLDivElement>(null)
-	useClickOutside([ref], () => setPopover("none"))
+	useClickOutside([ref], () => setCountryOpen(false))
 	const links = useStreamingLinks(media, country, type === "flatrate" ? ["flatrate", "flatrate_and_buy", "free", "ads"] : [type])
 	const anyOwned = links.some((l) => l.owned)
-
-	const [capacity, setCapacity] = useState(6)
-	useEffect(() => {
-		const el = gridRef.current
-		if (!el) return
-		const measure = () => {
-			const wide = window.matchMedia("(min-width: 768px)").matches
-			const tileW = wide ? 152 : TILE_H
-			const cols = Math.max(1, Math.floor((el.clientWidth + GAP) / (tileW + GAP)))
-			setCapacity(cols * (wide ? 2 : 1))
-		}
-		measure()
-		const ro = new ResizeObserver(measure)
-		ro.observe(el)
-		return () => ro.disconnect()
-	}, [])
-	const overflow = links.length > capacity
-	const shown = overflow ? links.slice(0, capacity - 1) : links
+	const shown = all ? links : links.slice(0, SHOWN)
 	const flag = country ? countryFlagUrl(country) : null
-
-	const tile = (l: (typeof links)[number]) => (
-		<a
-			key={l.id}
-			href={l.url}
-			target="_blank"
-			rel="noreferrer"
-			title={l.owned ? `${l.name}: one of your services` : `${OFFER_LABEL[l.type] ?? "Watch"} on ${l.name}`}
-			className={`relative flex shrink-0 items-center gap-2 rounded-lg border-2 bg-white/10 hover:brightness-125 md:w-[152px] md:bg-white/8 md:pr-2 ${
-				l.owned ? "border-green-500" : "border-white/15"
-			}`}
-			style={{ height: TILE_H }}
-		>
-			<TmdbImage kind="logo" path={l.logoPath} width={44} ratio={1} alt={l.name} className="aspect-square h-full w-auto rounded-md" />
-			<span className="hidden truncate text-sm font-medium md:inline" aria-hidden="true">
-				{l.name}
-			</span>
-			{l.owned && (
-				<span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-black ring-2 ring-stone-950">
-					<CheckIcon className="h-3 w-3" />
-				</span>
-			)}
-		</a>
-	)
+	const offer = OFFER_LABEL[type]
 
 	return (
-		<div id="streaming" ref={ref} className="relative min-w-0">
-			<div className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
-				<h2 className="whitespace-nowrap text-sm font-semibold text-gray-200 max-[430px]:sr-only">Where to watch</h2>
-				<div role="tablist" aria-label="Offer type" className="flex rounded-full bg-white/8 p-0.5 text-xs">
+		<div id="streaming" ref={ref} data-where-to-watch className={`relative min-w-0 ${className}`}>
+			<div className="flex min-w-0 items-center gap-1.5">
+				<h2 className="mr-auto min-w-0 truncate text-sm font-semibold text-white">Where to watch</h2>
+				<div role="tablist" aria-label="Offer type" className="flex shrink-0 rounded-full bg-white/8 p-0.5 text-[11px] sm:text-xs">
 					{(["flatrate", "rent", "buy"] as const).map((t) => (
 						<button
 							key={t}
 							type="button"
 							role="tab"
 							aria-selected={type === t}
-							onClick={() => setType(t)}
-							className={`rounded-full px-2.5 py-1 cursor-pointer ${type === t ? "bg-white font-semibold text-black" : "text-gray-300 hover:text-white"}`}
+							onClick={() => {
+								setType(t)
+								setAll(false)
+							}}
+							className={`cursor-pointer rounded-full px-2 py-1 ${type === t ? "bg-white font-semibold text-black" : "text-gray-300 hover:text-white"}`}
 						>
 							{OFFER_LABEL[t]}
 						</button>
 					))}
 				</div>
-				<div className="relative -mr-2 ml-auto shrink-0 text-xs">
+				<div className="relative shrink-0 text-xs">
 					<button
 						type="button"
-						onClick={() => setPopover(popover === "country" ? "none" : "country")}
+						data-country
+						onClick={() => setCountryOpen(!countryOpen)}
 						onPointerEnter={preloadCountrySelector}
 						onTouchStart={preloadCountrySelector}
 						onFocus={preloadCountrySelector}
-						aria-expanded={popover === "country"}
+						aria-expanded={countryOpen}
 						aria-label="Change country"
-						className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-gray-300 hover:bg-white/10 cursor-pointer"
+						className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full px-1.5 text-gray-300 hover:bg-white/10"
 					>
 						{flag && <img src={flag} alt="" className="h-2.5 rounded-[1px]" />}
-						{country || "Country"}
+						<span className="max-sm:hidden">{country || "Country"}</span>
 						<AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
 					</button>
-					{popover === "country" && (
-						<div className="absolute right-0 top-full z-40 mt-2 w-72 rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
+					{countryOpen && (
+						<div className="absolute right-0 top-full z-40 mt-2 w-72 max-w-[calc(100vw-3rem)] rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
 							<h3 className="mb-2 text-xs font-semibold text-gray-400">Show services in</h3>
 							{/* The fallback has the height of the closed list, so the popover doesn't grow when it arrives. */}
 							<Suspense fallback={<div className="h-9" aria-busy="true" />}>
@@ -160,59 +121,61 @@ export default function WhereToWatch({ media, country, navigateToSection }: { me
 					)}
 				</div>
 			</div>
-			<div
-				ref={gridRef}
-				className="mt-2.5 flex h-[52px] flex-wrap content-start gap-2 overflow-hidden pr-1 pt-1 md:h-[108px]"
-			>
-				{shown.length === 0 && (
-					<p className="text-sm text-gray-400">
-						No {OFFER_LABEL[type].toLowerCase()} option in {country || "your country"} yet.
-					</p>
-				)}
-				{shown.map(tile)}
-				{overflow && (
-					<button
-						type="button"
-						onClick={() => setPopover(popover === "all" ? "none" : "all")}
-						aria-expanded={popover === "all"}
-						aria-label={`Show all ${links.length} services`}
-						className="flex w-12 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-white/25 text-sm font-semibold text-gray-200 hover:border-white/60 cursor-pointer md:w-[152px]"
-						style={{ height: TILE_H }}
-					>
-						+{links.length - shown.length}
-					</button>
-				)}
-			</div>
-			{popover === "all" && (
-				<div className="absolute bottom-0 left-0 right-0 z-40 max-w-2xl translate-y-[calc(100%+0.5rem)] rounded-xl border border-white/10 bg-stone-900 p-3 shadow-2xl">
-					<div className="flex flex-wrap gap-2 pt-1">{links.map(tile)}</div>
+			{links.length === 0 ? (
+				<p className="mt-2 text-sm text-gray-400">
+					No {offer.toLowerCase()} option in {country || "your country"} yet.
+				</p>
+			) : (
+				<div data-services className="mt-2.5 grid grid-cols-2 gap-2 pt-0.5">
+					{shown.map((l, i) => {
+						// The last card of an odd number takes the whole row, and has room to say what it is.
+						const whole = i === shown.length - 1 && shown.length % 2 === 1
+						return (
+							<a
+								key={l.id}
+								href={l.url}
+								target="_blank"
+								rel="noreferrer"
+								data-provider
+								title={l.owned ? `${l.name}: one of your services` : `${OFFER_LABEL[l.type] ?? "Watch"} on ${l.name}`}
+								className={`relative flex h-12 min-w-0 items-center gap-2.5 rounded-xl bg-white/[0.06] pr-2.5 hover:bg-white/[0.12] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${whole ? "col-span-2" : ""} ${
+									l.owned ? "ring-2 ring-green-500" : "ring-1 ring-white/10"
+								}`}
+							>
+								<TmdbImage kind="logo" path={l.logoPath} width={48} ratio={1} alt="" className="h-12 w-12 shrink-0 rounded-xl" />
+								<span className="min-w-0 truncate text-sm font-medium text-white">{l.name}</span>
+								{whole && (
+									<span className={`ml-auto shrink-0 text-xs ${l.owned ? "font-semibold text-green-300" : "text-gray-400"}`}>{l.owned ? "On your services" : (OFFER_LABEL[l.type] ?? offer)}</span>
+								)}
+								{l.owned && (
+									<span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[10px] font-black text-black ring-2 ring-stone-950" aria-hidden="true">
+										✓
+									</span>
+								)}
+							</a>
+						)
+					})}
 				</div>
 			)}
-			<div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-				<p className="text-[11px] text-gray-400">
-					Links go to licensed services. Data from{" "}
-					<a href="https://www.justwatch.com" target="_blank" rel="noreferrer" className="underline decoration-white/20 hover:text-gray-200">
-						JustWatch
-					</a>{" "}
-					and{" "}
-					<a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="underline decoration-white/20 hover:text-gray-200">
-						TMDB
-					</a>
-					.
-				</p>
-				{anyOwned ? (
-					<span className="ml-auto inline-flex shrink-0 items-center gap-1 text-xs text-green-300">
-						<span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-500 text-black">
-							<CheckIcon className="h-2.5 w-2.5" />
-						</span>
-						Your services
-					</span>
-				) : (
-					<Link to="/settings/streaming" className="ml-auto hidden text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white md:inline">
+			{links.length > SHOWN && (
+				<button
+					type="button"
+					data-all-services
+					aria-expanded={all}
+					onClick={() => setAll(!all)}
+					className="mt-2 h-8 w-full cursor-pointer rounded-lg text-xs font-semibold text-gray-300 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+				>
+					{all ? "Show fewer" : `All ${links.length} services`}
+				</button>
+			)}
+			{/* Which services are yours is a setting. As before, the way to it shows from md up while none of these is. */}
+			{!anyOwned && links.length > 0 && (
+				<p className="mt-2 text-right max-md:hidden">
+					<Link to="/settings/streaming" className="text-xs text-gray-400 underline decoration-white/20 underline-offset-2 hover:text-white">
 						Set your services
 					</Link>
-				)}
-			</div>
+				</p>
+			)}
 		</div>
 	)
 }

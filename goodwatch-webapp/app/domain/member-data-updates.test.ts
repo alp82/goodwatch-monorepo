@@ -346,6 +346,35 @@ test("editing or deleting a watch leaves the Wishlist alone; an empty log is a m
 	assert.equal("movie-603" in (edited?.wishlist ?? {}), true)
 	const empty = afterWatchLog(wished, 603, [])
 	assert.equal(empty?.watchState["movie-603"], undefined)
+	// Not Seen any more, so not Want to rewatch either.
+	assert.deepEqual(empty?.wishlist, {})
+})
+
+test("Want to rewatch: Seen taken back takes an unrated title off the Wishlist; a rated movie stays Seen and on it, also with a new score", () => {
+	const wanted = { wishlist: { "movie-2": wish, "show-3": wish } }
+	const movie = afterSeenPress(
+		data({ ...wanted, watchState: { "movie-2": entry() } }),
+		"movie",
+		2,
+		"remove",
+		NOW,
+	)
+	assert.deepEqual(Object.keys(movie?.wishlist ?? {}), ["show-3"])
+	const show = afterSeenPress(
+		data({ ...wanted, watchState: { "show-3": entry() } }),
+		"show",
+		3,
+		"remove",
+		NOW,
+	)
+	assert.deepEqual(Object.keys(show?.wishlist ?? {}), ["movie-2"])
+	const rated = data({
+		...wanted,
+		scores: { "movie-2": score },
+		watchState: { "movie-2": byScore },
+	})
+	assert.equal("movie-2" in (afterSeenPress(rated, "movie", 2, "remove", NOW)?.wishlist ?? {}), true)
+	assert.equal("movie-2" in (afterScore(rated, "movie", 2, 9, null, NOW)?.wishlist ?? {}), true)
 })
 
 test("Undo of the first watch puts the movie back on the lists it was taken off, with its place", () => {

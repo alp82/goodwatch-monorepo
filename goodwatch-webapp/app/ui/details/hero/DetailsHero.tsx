@@ -1,13 +1,13 @@
-import type React from "react"
-import { useEffect, useRef, useState } from "react"
+import type { EpisodeGrid } from "~/server/episode-grid.server"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import type { SectionIds } from "~/ui/details/sections"
 import EpisodeGridLink from "~/ui/details/hero/EpisodeGridLink"
 import ListActions from "~/ui/details/hero/ListActions"
+import OwnScore from "~/ui/details/hero/OwnScore"
 import RatingChips from "~/ui/details/hero/RatingChips"
 import ScoreRing from "~/ui/details/hero/ScoreRing"
-import { BackdropTrailer, HeroBackdropImage, PosterTrailer } from "~/ui/details/hero/Trailer"
+import { HeroBackdropImage, HeroPoster, TrailerButton } from "~/ui/details/hero/Trailer"
 import WhereToWatch from "~/ui/details/hero/WhereToWatch"
+import type { SectionIds } from "~/ui/details/sections"
 import type { Section, SectionProps } from "~/utils/scroll"
 
 type Media = MovieResult | ShowResult
@@ -15,119 +15,68 @@ type Media = MovieResult | ShowResult
 export interface DetailsHeroProps {
 	media: Media
 	country: string
-	/** Whether the page has an episode grid to link to from the ratings row. */
-	hasEpisodeGrid?: boolean
+	/** The show's episode grid, when it has one: the ratings row draws its miniature from it. */
+	episodeGrid?: EpisodeGrid | null
 	sectionProps: SectionProps<SectionIds>
 	navigateToSection: (section: Section) => void
 }
 
-// The poster on the left plays the trailer (md and up); beside it one box sits on the blurred
-// backdrop: the GoodWatch score beside the site ratings, where to watch, and the title actions (the
-// score control, Want to See, Seen, Not interested), separated by thin lines. Phones get a backdrop banner that plays the trailer on
-// top of the same box instead of the poster.
-export default function DetailsHero({ media, country, hasEpisodeGrid = false, sectionProps, navigateToSection }: DetailsHeroProps) {
+// The title page's overview, one card under the page's header (which has the title).
+//
+// The banner is the backdrop, with the trailer button in its corner. On it: the poster, which opens full screen,
+// and the ratings as one group. The GoodWatch score and the person's own score, then one chip per site and, for a
+// show, the miniature of its episode ratings. Under the banner two blocks: the person's actions with the title
+// (for a tracked show also its status line), and where to watch.
+//
+// Every row runs from its left edge to its right edge: the GoodWatch ring starts the scores and the own score ends
+// them, the site chips start their row and the miniature ends it (a movie's chips share the row instead). On a
+// phone the two scores stand over each other beside the poster, each as wide as the column.
+export default function DetailsHero({ media, country, episodeGrid = null, sectionProps, navigateToSection }: DetailsHeroProps) {
+	const sites = (
+		<div data-hero-sites className="flex min-w-0 items-center justify-between gap-3 empty:hidden">
+			<RatingChips media={media} fill={!episodeGrid} />
+			{episodeGrid && <EpisodeGridLink grid={episodeGrid} />}
+		</div>
+	)
 	return (
 		<div className="relative mx-auto mb-10 mt-4 max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div {...sectionProps.overview}>
-				<PosterMatchedRow media={media}>
-					<div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-5 gap-y-4">
-						<div className="md:hidden">
-							<ScoreRing media={media} size={72} label={false} />
+				{/* z-30 keeps the country popover above the sections below. */}
+				<section data-title-overview className="relative isolate z-30 min-w-0 rounded-2xl border border-white/10 bg-stone-950">
+					<div className="relative">
+						<div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-t-2xl" aria-hidden="true">
+							<HeroBackdropImage media={media} className="h-full w-full object-cover object-[center_22%]" />
+							{/* Darker at the bottom and the left, where the scores are. */}
+							<div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/60 to-stone-950/10" />
+							<div className="absolute inset-0 bg-gradient-to-r from-stone-950/85 via-stone-950/20 to-transparent" />
 						</div>
-						<div className="hidden md:block">
-							<ScoreRing media={media} size={96} label={false} />
-						</div>
-						<div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
-							<RatingChips media={media} />
-							{hasEpisodeGrid && <EpisodeGridLink className="ml-auto" />}
+						<TrailerButton media={media} className="absolute right-3 top-3 md:right-5 md:top-4" />
+						<div className="px-4 pb-4 pt-14 md:px-6 md:pb-5 md:pt-10">
+							<div className="flex items-end gap-3 md:gap-6">
+								<HeroPoster media={media} className="w-[4.5rem] md:w-32" />
+								<div data-hero-ratings className="min-w-0 flex-1 md:max-w-md">
+									<div data-hero-scores className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
+										<div className="md:hidden">
+											<ScoreRing media={media} size={48} />
+										</div>
+										<div className="hidden md:block">
+											<ScoreRing media={media} size={56} />
+										</div>
+										<OwnScore media={media} className="max-md:w-full md:min-w-[10.75rem] md:shrink-0" />
+									</div>
+									<div className="mt-3 max-md:hidden">{sites}</div>
+								</div>
+							</div>
+							<div className="mt-3.5 md:hidden">{sites}</div>
 						</div>
 					</div>
-					<Divider className="my-6 md:my-7" />
-					<WhereToWatch media={media} country={country} navigateToSection={navigateToSection} />
-					<div className="min-h-6 grow" />
-					<Divider className="mb-6 md:mb-7" />
-					<ListActions media={media} />
-				</PosterMatchedRow>
-			</div>
-		</div>
-	)
-}
-
-function Divider({ className }: { className: string }) {
-	return <div aria-hidden="true" className={`h-px bg-white/10 ${className}`} />
-}
-
-// The box's content alone sets the row height (with a floor of POSTER_MIN_W * 1.5). The poster is
-// absolutely positioned in the first column, so it never feeds back into that height: it is
-// min(100%, column width * 1.5) tall at 2:3, so it matches the box unless the column is too
-// narrow, and it never crops or stretches.
-// A ResizeObserver sets the column width to 2/3 of the box height, clamped to
-// [POSTER_MIN_W, min(POSTER_MAX_W, 40% of the row)]. A narrower column means a wider and maybe
-// shorter box, and so on, so it re-measures until it settles, or gives up after MAX_CHANGES.
-// The server renders the upper limit as the default (in CSS: POSTER_MAX_W, or POSTER_MAX_SHARE of the
-// row, which is the screen minus the page padding). The box with the score control is tall enough
-// that the limit is the settled value, so hydration rarely shifts the layout.
-const POSTER_MIN_W = 192
-const POSTER_MAX_W = 400
-const POSTER_MAX_SHARE = 0.4
-// Width changes allowed in one burst before it stops, in case the two sizes keep flipping.
-const MAX_CHANGES = 6
-
-function PosterMatchedRow({ media, children }: { media: Media; children: React.ReactNode }) {
-	const rowRef = useRef<HTMLDivElement>(null)
-	const boxRef = useRef<HTMLDivElement>(null)
-	const [posterW, setPosterW] = useState<number | null>(null)
-	useEffect(() => {
-		const row = rowRef.current
-		const box = boxRef.current
-		if (!row || !box) return
-		let current = -1
-		let changes = 0
-		let settle: ReturnType<typeof setTimeout> | undefined
-		const measure = () => {
-			if (!window.matchMedia("(min-width: 768px)").matches) return
-			const max = Math.min(POSTER_MAX_W, Math.floor(row.clientWidth * POSTER_MAX_SHARE))
-			const next = Math.round(Math.min(max, Math.max(POSTER_MIN_W, (box.offsetHeight * 2) / 3)))
-			if (next === current || changes >= MAX_CHANGES) return
-			current = next
-			changes += 1
-			setPosterW(next)
-			// A quiet second ends the burst, so later changes (a rating, a resize) adjust again.
-			clearTimeout(settle)
-			settle = setTimeout(() => {
-				changes = 0
-			}, 1000)
-		}
-		measure()
-		const observer = new ResizeObserver(measure)
-		observer.observe(row)
-		observer.observe(box)
-		return () => {
-			observer.disconnect()
-			clearTimeout(settle)
-		}
-	}, [])
-	const style = posterW == null ? undefined : ({ "--poster-w": `${posterW}px` } as React.CSSProperties)
-	return (
-		<div
-			ref={rowRef}
-			style={style}
-			className="grid gap-4 md:min-h-[18rem] md:grid-cols-[var(--poster-w)_minmax(0,1fr)] md:[--poster-w:min(25rem,calc((100vw_-_3rem)_*_0.4))] lg:[--poster-w:min(25rem,calc((100vw_-_4rem)_*_0.4))] [&>*]:min-w-0"
-		>
-			<div className="relative hidden md:block">
-				<div className="absolute left-0 top-0 aspect-[2/3] h-[min(100%,var(--poster-w)*1.5)]">
-					<PosterTrailer media={media} className="block h-full w-full" />
-				</div>
-			</div>
-			{/* z-30 keeps the country and all-services popovers above the sections below. */}
-			<div ref={boxRef} className="relative isolate z-30 flex min-w-0 flex-col rounded-2xl border border-white/10 bg-stone-950 md:rounded-xl">
-				<div className="absolute inset-0 -z-10 overflow-hidden rounded-2xl md:rounded-xl" aria-hidden="true">
-					<HeroBackdropImage media={media} className="h-full w-full scale-110 object-cover object-[center_25%]" />
-					<div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
-					<div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70" />
-				</div>
-				<BackdropTrailer media={media} className="h-44 rounded-t-2xl md:hidden" />
-				<div className="flex grow flex-col px-4 pb-5 pt-2 md:p-5 lg:p-7">{children}</div>
+					<div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 p-3 md:p-5 md:pt-4 lg:grid-cols-2">
+						<div className="flex min-w-0 flex-col justify-center rounded-xl bg-white/[0.07] p-3 ring-1 ring-white/10">
+							<ListActions media={media} />
+						</div>
+						<WhereToWatch media={media} country={country} navigateToSection={navigateToSection} className="rounded-xl bg-white/[0.035] p-3 ring-1 ring-white/[0.07]" />
+					</div>
+				</section>
 			</div>
 		</div>
 	)
