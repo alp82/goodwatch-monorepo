@@ -1540,6 +1540,12 @@ hero and its episodes section track episodes as [#369](https://github.com/alp82/
 (variant D of round 4) and [#368](https://github.com/alp82/goodwatch-monorepo/issues/368) decided. With the flag
 off, for a visitor, and for a show without an episode list, the page is as it was.
 
+Since October 9, 2026 the hero is [the title overview](../title-overview.md), and what this section says of the
+hero's box reads differently there: the box is one status line (pill, "16/34" with a bar, the Next episode as a
+chip), the score control is the rectangle in the hero's ratings and its picker opens on demand, the prompt to rate
+is one line that opens that picker, a Seen show has no Seen button, and Want to See on a Seen show is Want to
+rewatch. The machine, the endpoints, the store and the episode list are as described here.
+
 | What | Where |
 | --- | --- |
 | IMDb's ratings beside the listed episodes | `domain/tracking/episode-ratings.ts` |
@@ -1549,9 +1555,9 @@ off, for a visitor, and for a show without an episode list, the page is as it wa
 | The queue: one action after the other, and back to the confirmed copy on a failure | `domain/tracking/show-session.ts` |
 | The show's entry in the member data | `domain/tracking/show-member-data.ts` |
 | The read and the actions on the server | `server/show-tracking.server.ts`, `routes/api.tracking.show.ts` |
-| What the page's first view holds: who gets tracking, the status box's first paint, the two lazy mounts | `ui/tracking/gate.tsx`, used by `ui/details/hero/ListActions.tsx` and `ui/details/DetailsContent.tsx` |
+| What the page's first view holds: who gets tracking, the status line's first paint, the two lazy mounts | `ui/tracking/gate.tsx`, used by `ui/details/hero/ListActions.tsx` and `ui/details/DetailsContent.tsx` |
 | The store per show, the actions with their toasts and Undo | `ui/tracking/store.ts`, `ui/tracking/actions.ts`, `ui/tracking/TrackingToast.tsx` |
-| The hero box, the score control with its prompts, the buttons | `ui/tracking/HeroTracking.tsx` |
+| The hero's status line, the prompts, the buttons | `ui/tracking/HeroTracking.tsx` |
 | The episode list | `ui/tracking/EpisodeList.tsx` |
 
 **The endpoints.** Both are for members, `Cache-Control: private, no-store`, and answer 404 while the flag hides
@@ -1600,7 +1606,8 @@ tracking from the viewer and 401 without a session.
   action, with the focus on Cancel. Escape and a press outside close it. For Take back Seen it reads "Take back
   Seen?" and then the menu entry's own line, which the machine words: "Removes the 16 episodes marked on 19 Oct
   2024. The show is then Not started." The same question opens under the press's line in the episode list, over
-  the matrix, so that nothing moves. The Seen button pressed again does not ask.
+  the matrix, so that nothing moves. (The Seen button pressed again did not ask; a Seen show has had no Seen
+  button since the title overview of October 9, 2026.)
 - **The box's button is a link, not a mark** (changed after the owner used the page). The line with the Next
   episode is one link to the Episodes section; its chip names where it leads ("S2 E5 ↓", or "Episodes ↓" when the
   show has no Next episode). It opens the episode's season with the row highlighted, loading the list's code if

@@ -42,8 +42,10 @@ prototype of those rules produced 27 surprises. The owner asked for a state mach
   they were recorded, and since when the show was Seen) and leads to Seen from any state. The machine takes it only
   onto what taking the press back left: the state that rows 13 to 17 lead to, the same pass, no press standing, and
   none of the press's episodes watched since. Anything else is refused, because the press would no longer be what
-  it was. The page asks before it takes a press back, in the status menu and beside the press's line; the Seen
-  button pressed again does not ask. Each ends in the same toast, which offers the Undo.
+  it was. The page asks before it takes a press back, in the status menu and beside the press's line. (Until
+  the title overview of 2026-10-09 a Seen show also had a Seen button, and a second press of it took the press
+  back without asking. A Seen show now says so in its status pill and has no such button.) Each ends in the same
+  toast, which offers the Undo.
 - **Want to See on a Seen show is Want to rewatch** (row 31, added 2026-10-09 with the new title overview). A
   member who has seen a show and means to watch it again had no way to say so short of Watch again, which starts
   the next pass at once and empties the ticks. Want to See is offered on a Seen show, reads "Want to rewatch"

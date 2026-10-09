@@ -6,6 +6,7 @@
 //             &today=2026-10-08  &imdb=differs (IMDb numbers the first season differently)
 //             &list=none (the show has no episode list yet)  &overviews=1 (send the fixtures' descriptions)
 //             &latency=150 (milliseconds an answer takes)  &guest=1 (no member: the page as a visitor gets it)
+//             &providers=one|many|none (how many services stream it, for the hero's where-to-watch block)
 // The stand-in server (ui/prototype-episode-tracking/fake-server.ts) runs the real state machine and the real
 // mapping to rows. Episodes are the prototypes' TMDB snapshots; TMDB's votes stand in for IMDb's ratings. Nothing is
 // stored and nothing leaves the page. The route is not in a production build.
@@ -17,7 +18,7 @@ import { useFeature } from "~/hooks/useFeature"
 import type { ShowResult } from "~/server/types/details-types"
 import { BelowFoldProvider } from "~/ui/details/below-fold"
 import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
-import ListActions from "~/ui/details/hero/ListActions"
+import DetailsHero from "~/ui/details/hero/DetailsHero"
 import { imdbGrid } from "~/ui/prototype-episode-list-2/shared"
 import chernobyl from "~/ui/prototype-episode-list/fixtures/chernobyl.json"
 import sherlock from "~/ui/prototype-episode-list/fixtures/sherlock.json"
@@ -25,6 +26,7 @@ import slowHorses from "~/ui/prototype-episode-list/fixtures/slow-horses.json"
 import supernatural from "~/ui/prototype-episode-list/fixtures/supernatural.json"
 import type { Show } from "~/ui/prototype-episode-list/model"
 import { FakeServer, SCENARIOS, type Scenario } from "~/ui/prototype-episode-tracking/fake-server"
+import { type HeroProviders, heroParts, withMemberSettings } from "~/ui/prototype-episode-tracking/hero-fixture"
 import { TrackedEpisodes, useEpisodeTracking } from "~/ui/tracking/gate"
 import { deviceClock } from "~/ui/tracking/store"
 import { AuthContext } from "~/utils/auth"
@@ -103,7 +105,7 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 	useEffect(() => {
 		const original = window.fetch
 		const clock = { now: deviceClock.now }
-		window.fetch = server.fetch(original.bind(window))
+		window.fetch = withMemberSettings(server.fetch(original.bind(window)))
 		window.__gwHarness = server
 		// The device's date is the harness's date.
 		deviceClock.now = () => server.now()
@@ -119,14 +121,16 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 
 	// A member of its own per setup, so that nothing cached for an earlier setup is read.
 	const user = useMemo(() => (guest ? null : ({ id: `harness-member-${++members}`, email: "member@example.com" } as User)), [guest])
-	const media = useMemo(
-		() =>
-			({
-				mediaType: "show",
-				details: { tmdb_id: show.id, title: show.name, in_production: !["Ended", "Canceled"].includes(show.status) },
-			}) as unknown as ShowResult,
-		[show],
-	)
+	const asProviders = params.get("providers") ?? ""
+	const providers = (["one", "many", "none"].includes(asProviders) ? asProviders : "one") as HeroProviders
+	const media = useMemo(() => {
+		const parts = heroParts(providers, show)
+		return {
+			mediaType: "show",
+			...parts,
+			details: { ...parts.details, tmdb_id: show.id, title: show.name, in_production: !["Ended", "Canceled"].includes(show.status) },
+		} as unknown as ShowResult
+	}, [show, providers])
 	const link = (change: Record<string, string | null>) => {
 		const p = new URLSearchParams(params)
 		for (const [name, value] of Object.entries(change)) value == null ? p.delete(name) : p.set(name, value)
@@ -190,29 +194,19 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 					</div>
 				</details>
 
-				{/* The hero's box, cut down to what tracking touches: the real title actions of the show page. */}
-				<div className="mt-6 grid gap-4 md:grid-cols-[13rem_minmax(0,1fr)] [&>*]:min-w-0">
-					<img src={show.poster_path ? `${TMDB}/w342${show.poster_path}` : undefined} alt="" className="hidden aspect-[2/3] w-full rounded-xl object-cover md:block" />
-					<div className="relative isolate flex min-w-0 flex-col rounded-2xl border border-white/10 bg-stone-950 md:rounded-xl" data-hero>
-						<div className="absolute inset-0 -z-10 overflow-hidden rounded-2xl md:rounded-xl" aria-hidden="true">
-							{show.backdrop_path && <img src={`${TMDB}/w780${show.backdrop_path}`} alt="" className="h-full w-full scale-110 object-cover object-[center_25%]" />}
-							<div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-						</div>
-						<div className="flex grow flex-col px-4 pb-5 pt-4 md:p-5 lg:p-7">
-							<h1 className="mb-4 min-w-0 truncate text-xl font-bold text-white">
-								{show.name} <span className="font-normal text-gray-400">({show.year})</span>
-							</h1>
-							<ListActions media={media} />
-						</div>
+				{/* The real hero of the title page, and under it the real episodes section. The page's header, with the title, is not here. */}
+				<BelowFoldProvider titleKey={`show-${show.id}`}>
+					<h1 className="mb-1 mt-6 min-w-0 truncate text-xl font-bold text-white">
+						{show.name} <span className="font-normal text-gray-400">({show.year})</span>
+					</h1>
+					<div className="-mx-4 sm:-mx-6 lg:-mx-8" data-hero>
+						<DetailsHero media={media} country="DE" episodeGrid={grid.seasons.length ? grid : null} sectionProps={{ overview: {} } as never} navigateToSection={() => {}} />
 					</div>
-				</div>
-
-				<div className="mt-12 flex flex-col gap-12">
-					<BelowFoldProvider titleKey={`show-${show.id}`}>
+					<div className="mt-12 flex flex-col gap-12">
 						<Episodes media={media} grid={grid.seasons.length ? <EpisodeGrid grid={grid} /> : null} />
-					</BelowFoldProvider>
-					<div className="h-40 rounded-xl border border-dashed border-white/10 p-4 text-sm text-gray-500">The rest of the show page.</div>
-				</div>
+						<div className="h-40 rounded-xl border border-dashed border-white/10 p-4 text-sm text-gray-500">The rest of the show page.</div>
+					</div>
+				</BelowFoldProvider>
 			</div>
 		</AuthContext.Provider>
 	)

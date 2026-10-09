@@ -5,6 +5,8 @@
 // today's toggle.
 //   /prototype/watch-log-real            a member
 //   /prototype/watch-log-real?guest=1    a guest: Seen asks to sign in
+//   &hero=693134|680|157336  also the REAL hero of the title page for that movie (Dune: Part Two, not seen;
+//                            Pulp Fiction, Seen through its score; Interstellar, three watches), &providers=one|many|none
 // A production build leaves the route out (PROTOTYPES in vite.config.js).
 import { type ShouldRevalidateFunction, useSearchParams } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -12,7 +14,11 @@ import { startTransition, useEffect, useMemo, useReducer, useState } from "react
 import { useFeature } from "~/hooks/useFeature"
 import type { MovieResult } from "~/server/types/details-types"
 import type { WatchNextTitle } from "~/server/watch-next.server"
+import { BelowFoldProvider } from "~/ui/details/below-fold"
+import DetailsHero from "~/ui/details/hero/DetailsHero"
 import ListActions from "~/ui/details/hero/ListActions"
+import OwnScore from "~/ui/details/hero/OwnScore"
+import { type HeroProviders, heroParts, withMemberSettings } from "~/ui/prototype-episode-tracking/hero-fixture"
 import { HARNESS_MEMBER, NEXT, SAMPLES, type Sample, createHarnessServer } from "~/ui/prototype-watch-log/harness-server"
 import { TitleActionsFrame } from "~/ui/title-actions/TitleActionsFrame"
 import { WatchLogHost } from "~/ui/watch-log/WatchLogHost"
@@ -31,6 +37,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = () => false
 
 const TMDB = "https://image.tmdb.org/t/p"
 const media = (sample: Sample) => ({ mediaType: sample.mediaType, details: { tmdb_id: sample.tmdbId, title: sample.title } })
+/** The backdrops of the movies the real hero can be shown for. */
+const BACKDROPS: Record<number, string> = { 693134: "/eZ239CUp1d6OryZEBPnO2n87gMG.jpg", 680: "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg", 157336: "/8sNiAPPYU14PUepFNeSNGUTiHW.jpg" }
 
 export default function WatchLogHarness() {
 	const [params] = useSearchParams()
@@ -42,11 +50,17 @@ export default function WatchLogHarness() {
 	const [ready, setReady] = useState(false)
 	useEffect(() => {
 		const remove = server.install(() => startTransition(changed))
+		// The member's settings, over the stand-in server: Germany, and Netflix as their one service.
+		const installed = window.fetch
+		window.fetch = withMemberSettings(installed)
 		// For a script that drives the page: what the stand-in holds, without waiting for the panel to draw it.
 		;(window as unknown as { harnessServer: typeof server }).harnessServer = server
 		// As a transition, so it does not interrupt the shell's hydration.
 		startTransition(() => setReady(true))
-		return remove
+		return () => {
+			window.fetch = installed
+			remove()
+		}
 	}, [server])
 	// What a page such as Watch next listens to, to reload its list after a mark: a mutation that succeeded.
 	const [marks, heard] = useReducer((n: number) => n + 1, 0)
@@ -76,6 +90,7 @@ export default function WatchLogHarness() {
 					Issue #383. The buttons, the log, the toast and the dialog are the app's own. The member and the server are stand-ins that live in this tab; nothing is
 					saved anywhere. <FlagNote /> Marks the page heard of through the mutation cache: <b data-marks>{marks}</b>.
 				</p>
+				<RealHero />
 				<div className="mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
 					<div className="lg:sticky lg:top-24 lg:order-2">
 						<ServerPanel
@@ -96,6 +111,10 @@ export default function WatchLogHarness() {
 									<div key={sample.tmdbId} className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10" data-hero={sample.tmdbId}>
 										<h3 className="font-bold">{sample.title}</h3>
 										<p className="mb-3 text-xs text-gray-400">{sample.starts}</p>
+										{/* The hero's two parts for a movie: the score rectangle of its ratings, and the action row. */}
+										<div className="mb-3 flex">
+											<OwnScore media={media(sample)} />
+										</div>
 										<ListActions media={media(sample) as unknown as MovieResult} />
 									</div>
 								))}
@@ -216,5 +235,26 @@ function ServerPanel({ server, onReset }: { server: ReturnType<typeof createHarn
 				))}
 			</ol>
 		</aside>
+	)
+}
+
+/** The real hero of the title page for one of the sample movies, as `?hero=` asks. */
+function RealHero() {
+	const [params] = useSearchParams()
+	const sample = SAMPLES.find((s) => String(s.tmdbId) === params.get("hero") && s.mediaType === "movie")
+	const asked = params.get("providers") ?? ""
+	const providers = (["one", "many", "none"].includes(asked) ? asked : "one") as HeroProviders
+	const movie = useMemo(() => {
+		if (!sample) return null
+		const parts = heroParts(providers, { poster_path: sample.poster, backdrop_path: BACKDROPS[sample.tmdbId] })
+		return { mediaType: "movie", ...parts, details: { ...parts.details, tmdb_id: sample.tmdbId, title: sample.title } } as unknown as MovieResult
+	}, [sample, providers])
+	if (!movie || !sample) return null
+	return (
+		<BelowFoldProvider titleKey={`movie-${sample.tmdbId}`}>
+			<div className="-mx-4 mt-4 sm:-mx-6 lg:-mx-8" data-real-hero>
+				<DetailsHero media={movie} country="DE" sectionProps={{ overview: {} } as never} navigateToSection={() => {}} />
+			</div>
+		</BelowFoldProvider>
 	)
 }

@@ -122,7 +122,9 @@ for (const size of ["phone", "desktop"]) {
 	await page.context().close()
 
 	page = await open(size, "show=chernobyl&scenario=fresh")
-	await page.locator("[data-hero] fieldset button[aria-label^='Good']").click()
+	// The score rectangle in the hero's ratings opens the picker.
+	await page.locator("[data-hero] [data-own-score]").click()
+	await page.locator("[data-score-dialog] fieldset button[aria-label^='Good']").click()
 	await page.waitForSelector("[data-seen-question]")
 	await settle(page, 300)
 	await save(page, "[data-hero]", `hero-seen-question-${size}`)

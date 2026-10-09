@@ -11,6 +11,21 @@ const T = "today=2026-10-08&latency=60"
 const sizes = (process.argv[2] ?? "phone,desktop").split(",")
 
 const text = (page, sel) => page.locator(sel).first().innerText().catch(() => "")
+/** What an element says in full where it shows a short form: the progress ("26 of 327 episodes"), the Next episode. */
+const tip = (page, sel) => page.locator(sel).first().getAttribute("title").then((t) => t ?? "").catch(() => "")
+/** Scores the show: the score rectangle in the hero's ratings opens the picker, and a level is pressed in it. */
+const rate = async (page, level) => {
+	await page.locator("[data-hero] [data-own-score]").click()
+	await page.locator(`[data-score-dialog] fieldset button[aria-label^='${level}']`).click()
+}
+/** Takes the Seen press back from the status menu, which asks first. A Seen show has no Seen button. */
+const takeBack = async (page) => {
+	await page.locator("[data-status-pill]").click()
+	await page.locator("[data-status-action='takeBack']").click()
+	await page.locator("[data-confirm='takeBack'] [data-confirm-yes]").click()
+	await settle(page)
+}
+const WANT = "[data-title-actions] button:has-text('Want to')"
 const count = (page, sel) => page.locator(sel).count()
 const toList = async (page) => {
 	await page.evaluate(() => document.querySelector("[data-harness] > div.mt-12")?.scrollIntoView())
@@ -71,15 +86,15 @@ for (const size of sizes) {
 		const { page, errors } = await open(browser, size, `show=supernatural&scenario=watching&${T}`)
 		await page.waitForSelector("[data-tracking-hero]")
 		C("hero: status pill says Watching", (await text(page, "[data-status-pill]")).trim() === "Watching")
-		C("hero: progress 26 of 327", /26 of 327/.test(await text(page, "[data-progress]")))
-		C("hero: next episode S2 E5", /S2 E5 · Simon Said/.test(await text(page, "[data-next-episode]")))
-		C("hero: one score control", (await count(page, "[data-hero] fieldset")) === 1)
+		C("hero: progress 26 of 327", /26 of 327/.test(await tip(page, "[data-progress]")))
+		C("hero: next episode S2 E5", /S2 E5 · Simon Said/.test(await tip(page, "[data-next-episode]")) && /S2 E5/.test(await text(page, "[data-next-episode]")))
+		C("hero: one score control, and its picker is closed", (await count(page, "[data-hero] [data-own-score]")) === 1 && (await count(page, "fieldset")) === 0)
 		C("hero: rate prompt, the gentler wording", (await page.locator("[data-rate-prompt]").getAttribute("data-rate-prompt")) === "partway" && /so far\?/.test(await text(page, "[data-rate-prompt]")))
 		C("hero: Drop takes Not interested's place", (await count(page, "[data-drop]")) === 1 && (await count(page, "[data-hero] button:has-text('Not interested')")) === 0)
-		C("hero: Want to See is off for a started show", await page.locator("[data-hero] button:has-text('Want to See')").isDisabled())
+		C("hero: no Want to See for a started show", (await count(page, WANT)) === 0)
 		C("hero: no sideways scroll", await noOverflow(page))
 		const boxHeight = await page.locator("[data-tracking-box]").evaluate((el) => el.getBoundingClientRect().height)
-		C("hero: the box has the height the first paint reserved", Math.abs(boxHeight - 134) <= 1, String(boxHeight))
+		C("hero: the status line has the height the first paint reserved", Math.abs(boxHeight - 36) <= 1, String(boxHeight))
 
 		// The box's button leads to the episode; it records nothing.
 		C("box: no Watched button", (await count(page, "[data-next-watched]")) === 0 && (await count(page, "[data-tracking-box] button:has-text('Watched')")) === 0)
@@ -133,7 +148,7 @@ for (const size of sizes) {
 		await menuPick(page, "markAll")
 		s = await stored(page)
 		C("menu mark all: a Seen press from Watching, 301 undated rows", s.state.state === "seen" && s.state.seen_press_from === "watching" && s.log.filter((r) => r.origin === "seen").length === 301)
-		C("menu Seen with a press: Watch again, take back, set a date", (await menuIds(page)) === "watchAgain,takeBack,setDate", await menuIds(page))
+		C("menu Seen with a press: Watch again, take back, set a date", (await menuIds(page)) === "watchAgain,rewatch,takeBack,setDate", await menuIds(page))
 		await toList(page)
 		C("press line: a part of a season is said as a part", (await text(page, "[data-seen-press] span")) === "Marked Seen on 8 Oct 2026 · seasons 3 to 15, and 18 of the 22 episodes of season 2 (301 episodes), no dates recorded", await text(page, "[data-seen-press] span"))
 		await page.evaluate(() => window.scrollTo(0, 0))
@@ -146,18 +161,19 @@ for (const size of sizes) {
 	{
 		const { page } = await open(browser, size, `show=chernobyl&scenario=wanted&${T}`)
 		await page.waitForSelector("[data-tracking-hero]")
-		C("fresh: no status box, today's three buttons", (await count(page, "[data-tracking-box]")) === 0 && (await count(page, "[data-hero] button:has-text('Not interested')")) === 1)
-		C("fresh: Want to See is on", (await page.locator("[data-hero] button:has-text('Want to See')").getAttribute("aria-pressed")) === "true")
+		C("fresh: no status, the way to the episodes, and the three buttons", (await count(page, "[data-status-pill]")) === 0 && (await count(page, "[data-start-episodes]")) === 1 && (await count(page, "[data-hero] button:has-text('Not interested')")) === 1)
+		C("fresh: Want to See is on", (await page.locator(WANT).getAttribute("aria-pressed")) === "true")
 		await page.locator("[data-seen-button]").click()
 		await settle(page)
 		let s = await stored(page)
 		C("seen: stored Seen with the press standing, 5 undated rows", s.state.state === "seen" && s.state.seen_press_from === "not_started" && s.log.length === 5 && s.log.every((r) => r.origin === "seen" && r.watched_at === null))
-		C("seen: the Wishlist is cleared", s.wantToSee === false && (await page.locator("[data-hero] button:has-text('Want to See')").getAttribute("aria-pressed")) === "false")
+		C("seen: the Wishlist is cleared", s.wantToSee === false && (await page.locator(WANT).getAttribute("aria-pressed")) === "false")
 		C("seen: label Seen for an ended show", (await text(page, "[data-status-pill]")).trim() === "Seen")
-		C("seen: 5 of 5", /5 of 5/.test(await text(page, "[data-progress]")))
-		C("seen: the button takes the press back", (await page.locator("[data-seen-button]").getAttribute("data-seen-button")) === "takeBack")
+		C("seen: 5 of 5", /5 of 5/.test(await tip(page, "[data-progress]")))
+		C("seen: the pill says it, so there is no Seen button; the menu takes the press back", (await count(page, "[data-seen-button]")) === 0 && /takeBack/.test(await menuIds(page)))
+		C("seen: Want to See now reads Want to rewatch", /Want to rewatch/.test(await text(page, WANT)))
 		C("seen: the prompt to rate asks about all of it", /You've watched all of Chernobyl/.test(await text(page, "[data-rate-prompt]")))
-		C("seen: one score control", (await count(page, "[data-hero] fieldset")) === 1)
+		C("seen: one score control", (await count(page, "[data-hero] [data-own-score]")) === 1)
 		C("seen: toast offers Set a date and Undo", /5 episodes marked, date unknown/.test(await toast(page)) && (await count(page, "[data-tracking-toast] button:has-text('Set a date')")) === 1)
 		await toastAction(page, "Set a date")
 		await page.locator("[role=dialog] input[type=date]").fill("2026-10-01")
@@ -166,7 +182,7 @@ for (const size of sizes) {
 		s = await stored(page)
 		C("set a date: every row of the group has the day", s.log.every((r) => r.watched_at_precision === "day" && new Date(r.watched_at).toISOString().startsWith("2026-10-01")))
 		// Watch again
-		C("menu Seen: Watch again, take back, set a date", (await menuIds(page)) === "watchAgain,takeBack,setDate", await menuIds(page))
+		C("menu Seen: Watch again, take back, set a date", (await menuIds(page)) === "watchAgain,rewatch,takeBack,setDate", await menuIds(page))
 		await page.locator("[data-status-pill]").click()
 		C("menu Seen: taking back names the count and the day, and where the show goes", /Removes the 5 episodes marked on 8 Oct 2026\. The show is then Not started\./.test(await text(page, "[data-status-action='takeBack']")), await text(page, "[data-status-action='takeBack']"))
 		C("menu Seen: Set a date for those 5 watches", /Set a date for those 5 watches/.test(await text(page, "[data-status-action='setDate']")))
@@ -176,7 +192,7 @@ for (const size of sizes) {
 		await settle(page)
 		s = await stored(page)
 		C("watch again: pass 2, Watching, the log kept", s.state.state === "watching" && s.state.pass === 2 && s.log.length === 5)
-		C("watch again: progress reads Pass 2 · 0 of 5, next S1 E1", /Pass 2 · 0 of 5/.test((await text(page, "[data-progress]")).replace(/\s+/g, " ")) && /S1 E1/.test(await text(page, "[data-next-episode]")))
+		C("watch again: progress reads Pass 2 · 0 of 5, next S1 E1", /Pass 2 · 0 of 5/.test((await tip(page, "[data-progress]")).replace(/\s+/g, " ")) && /S1 E1/.test(await text(page, "[data-next-episode]")))
 		await toList(page)
 		C("watch again: the list's ticks are empty", (await count(page, "[data-episode][data-watched]")) === 0)
 		await page.locator("[data-episode] [data-tick]").first().click()
@@ -196,18 +212,17 @@ for (const size of sizes) {
 		await settle(page, 700)
 		let s = await stored(page)
 		C("undo of the Seen press: nothing stored, and Want to See is back at its time", s.state === null && s.log.length === 0 && s.wantToSee === true && s.wishlistAt.startsWith("2026-09-08"), JSON.stringify([s.wantToSee, s.wishlistAt]))
-		C("undo of the Seen press: the button shows Want to See again", (await page.locator("[data-hero] button:has-text('Want to See')").getAttribute("aria-pressed")) === "true")
+		C("undo of the Seen press: the button shows Want to See again", (await page.locator(WANT).getAttribute("aria-pressed")) === "true")
 		await page.locator("[data-seen-button]").click()
 		await settle(page)
 		const pressed = await exactly(page)
-		await page.locator("[data-seen-button]").click()
-		await settle(page)
+		await takeBack(page)
 		s = await stored(page)
-		C("seen again: back to no row and no watch, without a question", s.state === null && s.log.length === 0 && (await count(page, "[data-confirm]")) === 0)
+		C("seen again: back to no row and no watch", s.state === null && s.log.length === 0 && (await count(page, "[data-confirm]")) === 0)
 		C("seen again: the toast offers Undo", /Seen taken back: 5 watches removed/.test(await toast(page)) && (await count(page, "[data-tracking-toast] button:has-text('Undo')")) === 1, await toast(page))
 		await toastAction(page, "Undo")
 		await settle(page, 700)
-		C("seen again, undone: the press stands as it was stored, to the row", (await exactly(page)) === pressed && (await page.locator("[data-seen-button]").getAttribute("data-seen-button")) === "takeBack")
+		C("seen again, undone: the press stands as it was stored, to the row", (await exactly(page)) === pressed && /takeBack/.test(await menuIds(page)))
 		await page.context().close()
 	}
 	{
@@ -224,7 +239,7 @@ for (const size of sizes) {
 		await page.waitForSelector("[data-tracking-hero]")
 		C("seen with new: Seen · 20 new episodes", /Seen · 20 new episodes/.test(await text(page, "[data-status-pill]")), await text(page, "[data-status-pill]"))
 		C("seen with new: the button marks them", (await page.locator("[data-seen-button]").getAttribute("data-seen-button")) === "markNew" && /Mark 20 new/.test(await text(page, "[data-seen-button]")))
-		C("seen with new: new since you saw it", /New since you saw it/i.test(await text(page, "[data-next-episode]")) && /S15 E1/.test(await text(page, "[data-next-episode]")))
+		C("seen with new: new since you saw it", /New since you saw it/i.test(await tip(page, "[data-next-episode]")) && /S15 E1/.test(await text(page, "[data-next-episode]")))
 		C("seen with new: scored, so no prompt", (await count(page, "[data-rate-prompt]")) === 0)
 		await page.locator("[data-seen-button]").click()
 		await settle(page)
@@ -236,10 +251,7 @@ for (const size of sizes) {
 	{
 		const { page } = await open(browser, size, `show=chernobyl&scenario=seen_ticked&${T}`)
 		await page.waitForSelector("[data-tracking-hero]")
-		C("seen by ticks: the button is off and says why", (await page.locator("[data-seen-button]").getAttribute("data-seen-button")) === "off" && /Untick one to change that/.test(await text(page, "[data-seen-off]")))
-		await page.locator("[data-seen-button]").click({ force: true })
-		await settle(page)
-		C("seen by ticks: a press changes nothing", (await stored(page)).log.length === 5 && (await stored(page)).state.state === "seen")
+		C("seen by ticks: no Seen button, and no press to take back", (await count(page, "[data-seen-button]")) === 0 && !/takeBack/.test(await menuIds(page)) && (await stored(page)).state.state === "seen")
 		await page.context().close()
 	}
 
@@ -248,7 +260,7 @@ for (const size of sizes) {
 		const { page } = await open(browser, size, `show=chernobyl&scenario=fresh&${T}`)
 		await page.waitForSelector("[data-tracking-hero]")
 		C(`question (${answer}): not asked before a score`, (await count(page, "[data-seen-question]")) === 0)
-		await page.locator("[data-hero] fieldset button[aria-label^='Good']").click()
+		await rate(page, "Good")
 		await page.waitForSelector("[data-seen-question]", { timeout: 5000 }).catch(() => {})
 		C(`question (${answer}): asked after a first score by hand`, (await count(page, "[data-seen-question]")) === 1 && (await stored(page)).state?.seen_question === "open")
 		if (answer === "yes" && size === "phone") await page.locator("[data-hero]").screenshot({ path: `${SHOTS}/question-${size}.jpg`, type: "jpeg", quality: 60 })
@@ -470,12 +482,12 @@ for (const size of sizes) {
 		C("watched up to here: toast offers Set a date", /4 episodes marked, date unknown/.test(await toast(page)))
 
 		// A special
-		const progress = await text(page, "[data-progress]")
+		const progress = await tip(page, "[data-progress]")
 		await pressSeason(page, 0)
 		await settle(page, 300)
 		await page.locator("[data-season-panel='0'] [data-episode]:not([data-watched]) [data-tick]:not([disabled])").first().click()
 		await settle(page)
-		C("a special can be ticked and changes no progress", (await text(page, "[data-progress]")) === progress && /2\/101/.test(await text(page, "[data-season-row='0'] [data-count]")) && /Specials don't count/.test(await toast(page)))
+		C("a special can be ticked and changes no progress", (await tip(page, "[data-progress]")).split(" · ")[0] === progress.split(" · ")[0] && /2\/101/.test(await text(page, "[data-season-row='0'] [data-count]")) && /Specials don't count/.test(await toast(page)))
 
 		// Finder
 		if (size === "phone") await page.locator("[data-finder-open]").click()
@@ -622,13 +634,43 @@ for (const size of sizes) {
 		await page.context().close()
 	}
 
+	// ---- Want to rewatch: on a Seen show, by its button and from the menu beside Watch again -------------
+	{
+		const { page } = await open(browser, size, `show=chernobyl&scenario=seen_ticked&${T}`)
+		await page.waitForSelector("[data-tracking-hero]")
+		C("rewatch: a Seen show's one button is Want to rewatch, off", /Want to rewatch/.test(await text(page, WANT)) && (await page.locator(WANT).getAttribute("aria-pressed")) === "false" && (await count(page, "[data-title-actions] button")) === 1)
+		await page.locator("[data-status-pill]").click()
+		const rows = await page.locator("[data-status-action]").evaluateAll((els) => els.map((el) => [el.dataset.statusAction, el.innerText.replace(/\s+/g, " ").trim()]))
+		C("rewatch: the menu has it right after Watch again, and each says what it does", rows[0][0] === "watchAgain" && /Starts pass 2 now: the ticks start empty/.test(rows[0][1]) && rows[1][0] === "rewatch" && /Want to rewatch Only bookmarks it on your Wishlist\. Your episodes stay ticked\./.test(rows[1][1]), JSON.stringify(rows))
+		await page.locator("[data-status-action='rewatch']").click()
+		await settle(page)
+		let s = await stored(page)
+		C("rewatch from the menu: on the Wishlist, still Seen, no watch touched", s.wantToSee === true && s.state.state === "seen" && s.log.length === 5 && (await page.locator(WANT).getAttribute("aria-pressed")) === "true")
+		await page.locator("[data-status-pill]").click()
+		C("rewatch: the menu then reads On your Wishlist to rewatch", /On your Wishlist to rewatch/.test(await text(page, "[data-status-action='rewatch']")))
+		await page.keyboard.press("Escape")
+		await page.locator(WANT).click()
+		await settle(page)
+		C("rewatch: the button takes it off again", (await stored(page)).wantToSee === false && (await page.locator(WANT).getAttribute("aria-pressed")) === "false")
+		await page.locator(WANT).click()
+		await settle(page)
+		await page.locator("[data-status-pill]").click()
+		await page.locator("[data-status-action='watchAgain']").click()
+		await page.locator("[data-confirm='watchAgain'] [data-confirm-yes]").click()
+		await settle(page)
+		s = await stored(page)
+		C("rewatch: Watch again starts the pass and takes the show off the Wishlist", s.state.state === "watching" && s.state.pass === 2 && s.wantToSee === false && (await count(page, WANT)) === 0, JSON.stringify([s.state.state, s.wantToSee]))
+		C("rewatch: no sideways scroll", await noOverflow(page))
+		await page.context().close()
+	}
+
 	// ---- Dropped with nothing watched: Want to See ---------------------------------------------
 	{
 		const { page } = await open(browser, size, `show=chernobyl&scenario=dropped&${T}`)
 		await page.waitForSelector("[data-tracking-hero]")
 		C("dropped: pill Dropped, the menu offers Resume and mark all", (await text(page, "[data-status-pill]")).trim() === "Dropped" && (await menuIds(page)) === "resume,markAll", await menuIds(page))
 		C("dropped: no next episode, and a link to the episodes", (await count(page, "[data-next-episode]")) === 0 && (await page.locator("a[data-go-episodes]").getAttribute("aria-label")) === "Go to episodes" && (await noOverflow(page)))
-		C("dropped with watches: Want to See is off", await page.locator("[data-hero] button:has-text('Want to See')").isDisabled())
+		C("dropped with watches: no Want to See", (await count(page, WANT)) === 0)
 		await toList(page)
 		for (let i = 0; i < 3; i++) {
 			await page.locator("[data-episode][data-watched] [data-tick]").first().click()
@@ -641,7 +683,7 @@ for (const size of sizes) {
 		await menuPick(page, "wantToSee")
 		await settle(page, 400)
 		s = await stored(page)
-		C("dropped, nothing watched: Want to See makes it Not started and wanted", s.state === null && s.wantToSee === true && (await page.locator("[data-hero] button:has-text('Want to See')").getAttribute("aria-pressed")) === "true")
+		C("dropped, nothing watched: Want to See makes it Not started and wanted", s.state === null && s.wantToSee === true && (await page.locator(WANT).getAttribute("aria-pressed")) === "true")
 		await page.context().close()
 	}
 
@@ -710,7 +752,7 @@ for (const size of sizes) {
 		C("take back, undone: Seen since the day of the press, by the rows of that day, with the date set since", s.state?.state === "seen" && s.state.seen_press_from === "not_started" && new Date(s.state.state_changed_at).toISOString().startsWith("2024-10-19") && s.log.length === 12 && s.log.every((r) => r.origin === "seen" && r.group_id === s.state.seen_press_group && new Date(r.created_at).toISOString().startsWith("2024-10-19") && new Date(r.watched_at).toISOString().startsWith("2024-10-01")))
 		C("take back, undone: the line reads as before", (await text(page, "[data-seen-press] span")) === dated, await text(page, "[data-seen-press] span"))
 		C("take back, undone: the toast says so and offers nothing more", /Seen is back, as it was before\./.test(await toast(page)) && (await count(page, "[data-tracking-toast] button:has-text('Undo')")) === 0, await toast(page))
-		C("take back, undone: the hero says Seen again, 12 of 12", (await text(page, "[data-status-pill]")).trim() === "Seen" && /12 of 12/.test(await text(page, "[data-progress]")))
+		C("take back, undone: the hero says Seen again, 12 of 12", (await text(page, "[data-status-pill]")).trim() === "Seen" && /12 of 12/.test(await tip(page, "[data-progress]")))
 		C("take back and its Undo: one request each, never two at once", (await posts(page)) === sentBefore + 2 && (await overlapping(page)).overlapping === 0)
 		C("press flows: no page errors", cleanErrors(errors).length === 0, cleanErrors(errors).join(" | "))
 		await page.context().close()
@@ -737,13 +779,13 @@ for (const size of sizes) {
 		await page.locator(`${asked} [data-confirm-yes]`).click()
 		await settle(page)
 		let s = await stored(page)
-		C("menu take back, confirmed: nothing is left of the show", s.state === null && s.log.length === 0 && (await count(page, "[data-tracking-box]")) === 0)
+		C("menu take back, confirmed: nothing is left of the show", s.state === null && s.log.length === 0 && (await count(page, "[data-status-pill]")) === 0)
 		C("menu take back: the toast offers Undo", /Seen taken back: 24 watches removed/.test(await toast(page)) && (await count(page, "[data-tracking-toast] button:has-text('Undo')")) === 1, await toast(page))
 		await toastAction(page, "Undo")
 		await settle(page, 700)
 		s = await stored(page)
 		C("menu take back, undone: the same rows and the same state row, to the column", (await exactly(page)) === standing, `${s.state?.state} ${s.log.length}`)
-		C("menu take back, undone: Caught up with the 10 that aired since still new", (await text(page, "[data-status-pill]")).trim() === "Caught up · 10 new" && (await menuIds(page)) === "markNew,hold,watchAgain,takeBack,setDate,drop")
+		C("menu take back, undone: Caught up with the 10 that aired since still new", (await text(page, "[data-status-pill]")).trim() === "Caught up · 10 new" && (await menuIds(page)) === "markNew,hold,watchAgain,rewatch,takeBack,setDate,drop")
 		await toList(page)
 		C("menu take back, undone: the line names the day and the seasons as before", (await text(page, "[data-seen-press] span")) === "Marked Seen on 19 Oct 2024 · seasons 1 to 4 (24 episodes), no dates recorded", await text(page, "[data-seen-press] span"))
 		// An Undo that comes too late: one of the press's episodes was ticked since.
@@ -764,7 +806,7 @@ for (const size of sizes) {
 		await toList(page)
 		C("no press: no line", (await count(page, "[data-seen-press]")) === 0)
 		await page.evaluate(() => window.scrollTo(0, 0))
-		C("menu Seen by ticks: Watch again only", (await menuIds(page)) === "watchAgain", await menuIds(page))
+		C("menu Seen by ticks: Watch again and Want to rewatch, no press to take back", (await menuIds(page)) === "watchAgain,rewatch", await menuIds(page))
 		await page.context().close()
 	}
 
@@ -773,7 +815,7 @@ for (const size of sizes) {
 		const { page, errors } = await open(browser, size, `show=slow-horses&scenario=seen_old&${T}`)
 		await page.waitForSelector("[data-tracking-hero]")
 		C(`seen with new (${pick}): Caught up · 10 new`, (await text(page, "[data-status-pill]")).trim() === "Caught up · 10 new", await text(page, "[data-status-pill]"))
-		C(`seen with new (${pick}): the menu, mark the new ones first and Drop last`, (await menuIds(page)) === "markNew,hold,watchAgain,takeBack,setDate,drop", await menuIds(page))
+		C(`seen with new (${pick}): the menu, mark the new ones first and Drop last`, (await menuIds(page)) === "markNew,hold,watchAgain,rewatch,takeBack,setDate,drop", await menuIds(page))
 		await page.locator("[data-status-pill]").click()
 		C(`seen with new (${pick}): Mark 10 new episodes watched`, /Mark 10 new episodes watched/.test(await text(page, "[data-status-action='markNew']")))
 		C(`seen with new (${pick}): the menu fits the screen`, await page.locator("[role=menu]").evaluate((el) => { const r = el.getBoundingClientRect(); return r.left >= 0 && r.right <= window.innerWidth }))
@@ -790,7 +832,7 @@ for (const size of sizes) {
 		C(`${pick} from Seen: the menu of any ${word} show`, (await menuIds(page)) === (pick === "hold" ? "resume,markAll,drop" : "resume,markAll"), await menuIds(page))
 		await menuPick(page, "resume")
 		s = await stored(page)
-		C(`${pick} from Seen, then Resume: Watching, 24 of 34`, s.state.state === "watching" && /24 of 34/.test(await text(page, "[data-progress]")))
+		C(`${pick} from Seen, then Resume: Watching, 24 of 34`, s.state.state === "watching" && /24 of 34/.test(await tip(page, "[data-progress]")))
 		C(`${pick} from Seen: no page errors`, cleanErrors(errors).length === 0, cleanErrors(errors).join(" | "))
 		await page.context().close()
 	}
@@ -800,7 +842,7 @@ for (const size of sizes) {
 		await menuPick(page, "markNew")
 		const s = await stored(page)
 		C("menu mark new: a group of its own, pressed from Seen, 34 watches", s.state.state === "seen" && s.state.seen_press_from === "seen" && s.log.length === 34)
-		C("menu mark new: nothing new is left, so no On hold and no Drop", (await menuIds(page)) === "watchAgain,takeBack,setDate", await menuIds(page))
+		C("menu mark new: nothing new is left, so no On hold and no Drop", (await menuIds(page)) === "watchAgain,rewatch,takeBack,setDate", await menuIds(page))
 		await toList(page)
 		C("press line: a press on a Seen show says it marked the new episodes", (await text(page, "[data-seen-press] span")) === "New episodes marked watched on 8 Oct 2026 · season 5, and 4 of the 6 episodes of season 6 (10 episodes), no dates recorded", await text(page, "[data-seen-press] span"))
 		await page.context().close()
