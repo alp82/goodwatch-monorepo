@@ -1,5 +1,5 @@
 {
-  "description": "The requests of ./bench.sh smoke. Every entry is a GET. 'guards' says which regression or edge the entry is for. Titles and people are public catalog entries. Never add a user's handle or list: the share list comes from config.env.",
+  "description": "The requests of ./bench.sh smoke. Every entry is a GET, except one POST that the search route rejects before it searches. An entry with 'directRoles' is skipped when the requests go straight to a process in another role (--host): through the public route, the proxy sends it to a search role. 'guards' says which regression or edge the entry is for. Titles and people are public catalog entries. Never add a user's handle or list: the share list comes from config.env.",
   "imageHost": "https://image.tmdb.org/",
   "neverContains": ["Unexpected Server Error", "Application Error"],
   "defaults": { "client": "browser", "cookie": true, "expect": [200] },
@@ -186,8 +186,20 @@
     {
       "id": "api-command-palette",
       "path": "/api/command-palette?q=mat",
+      "directRoles": ["search", "both"],
       "json": { "arrays": ["titles"], "minItems": 1 },
-      "guards": "The header search: it reads the search index and the people index in memory, and sends no model call."
+      "guards": "The header search: it reads the search index and the people index in memory, and sends no model call. With search roles, the proxy sends this path to them."
+    },
+    {
+      "id": "api-combined-search-rejects-short-text",
+      "path": "/api/combined-search",
+      "method": "POST",
+      "requestHeaders": { "Content-Type": "application/json" },
+      "body": "{\"q\":\"x\"}",
+      "directRoles": ["search", "both"],
+      "expect": [400],
+      "contains": ["Enter between 2 and 4096 bytes"],
+      "guards": "The search route answers from a process that runs search. One character of text is rejected after the in-flight limit and before the search starts (routes/api.combined-search.ts), so nothing is read, paid for, or written: a search that runs writes a history row. A 503 here means that the request reached a page role, that no search role is ready, or that four searches were in flight."
     },
     {
       "id": "api-living-room-pool-no-streaming-country",

@@ -1,0 +1,41 @@
+// Draft, loaded nowhere yet. Loaded only on a host that runs search roles (vector1), by the Compose override
+// docker-compose.search-role.yml. The host's Alloy scrapes each search role on the coolify network, by the network
+// alias that the role's Coolify application has. See docs/search-role-deploy.md.
+//
+// A search role is the webapp image with WEBAPP_ROLE=search, so it serves the same metrics on the same port as a
+// page instance. Its series get a job of their own, goodwatch_search: the queries for job="goodwatch_webapp" keep
+// describing the page instances. The instance label is the host's name and the role's letter, such as
+// gw-vector1-search-a, and search_role carries the letter alone.
+//
+// To add a role on this host: add its alias as one more target.
+prometheus.scrape "search_role" {
+	targets = [
+		{"__address__" = "goodwatch-search-a:9464", "search_role" = "a"},
+		{"__address__" = "goodwatch-search-b:9464", "search_role" = "b"},
+	]
+	scrape_interval = "15s"
+	scrape_timeout  = "5s"
+	metrics_path    = "/metrics"
+	forward_to      = [prometheus.relabel.search_role.receiver]
+}
+
+prometheus.relabel "search_role" {
+	forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+
+	rule {
+		target_label = "job"
+		replacement  = "goodwatch_search"
+	}
+
+	rule {
+		source_labels = ["search_role"]
+		regex         = "(.+)"
+		target_label  = "instance"
+		replacement   = env("VPS_INSTANCE_NAME") + "-search-${1}"
+	}
+
+	rule {
+		target_label = "host"
+		replacement  = env("VPS_INSTANCE_NAME")
+	}
+}

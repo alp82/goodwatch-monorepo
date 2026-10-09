@@ -1,19 +1,46 @@
 {
-  "description": "What the smoke check reads in the webapp's log, from the process start. Patterns are extended regular expressions that both grep -E and JavaScript accept. Each entry says what it guards.",
+  "description": "What the smoke check reads in the webapp's log, from the process start. Patterns are extended regular expressions that both grep -E and JavaScript accept. Each entry says what it guards. An entry with 'roles' applies only to a process whose WEBAPP_ROLE is in the list (page, search, or both, the default): a page role loads no search, and a search role becomes ready without the title snapshot.",
   "start": "^\\[remix-serve\\] http://",
   "required": [
     {
+      "id": "role-search",
+      "roles": ["search"],
+      "pattern": "^Process role: search",
+      "guards": "The process says at its start that it runs as a search role (role.server.ts). Without the line, the image is older than the role setting, or WEBAPP_ROLE didn't reach the process."
+    },
+    {
+      "id": "role-page",
+      "roles": ["page"],
+      "pattern": "^Process role: page",
+      "guards": "The process says at its start that it runs as a page role (role.server.ts)."
+    },
+    {
+      "id": "search-models",
+      "roles": ["search"],
+      "pattern": "Search models: [0-9]+ files verified",
+      "guards": "The query models are in the image and match their checksums (search-ranking/query-models.server.ts). A search role without them answers with basic results only."
+    },
+    {
+      "id": "query-models",
+      "roles": ["search"],
+      "pattern": "Search ranking: query models ready in [0-9]+ ms, 2 encoder threads",
+      "guards": "The search role's encoder loaded its query models, with the decided 2 threads. Another thread count means that SEARCH_ENCODER_THREADS overrides the role's default."
+    },
+    {
       "id": "people-index",
+      "roles": ["search", "both"],
       "pattern": "People index ready: [0-9]+ people",
       "guards": "The people index of the search loaded (search-people/people.server.ts)."
     },
     {
       "id": "title-snapshot",
+      "roles": ["page", "both"],
       "pattern": "Title snapshot [^ ]+ loaded: [0-9]+ titles",
       "guards": "The title snapshot loaded from Redis (title-snapshot/index.server.ts). Discover, taste, and the explorer need it."
     },
     {
       "id": "search-index",
+      "roles": ["search", "both"],
       "pattern": "Search index build [^ ]+ loaded in [0-9]+ ms",
       "guards": "The search index loaded (search-ranking/search-index.server.ts)."
     }
@@ -21,9 +48,10 @@
   "lastLine": [
     {
       "id": "query-encoder",
+      "roles": ["search", "both"],
       "pattern": "^Process: ",
       "mustMatch": "query encoder ready with",
-      "guards": "631ae6c4: the query encoder's worker file wasn't found in the split server bundle, and search answered with basic results only. The per-minute Process: line then says 'query encoder not ready'. The first line is written one minute after the start."
+      "guards": "631ae6c4: the query encoder's worker file wasn't found in the split server bundle, and search answered with basic results only. The per-minute Process: line then says 'query encoder not ready'. The first line is written one minute after the start. A page role has no encoder and writes 'query encoder not ready' for good, so the entry doesn't apply to it. A search role writes 'not ready' until its query models have loaded: the check waits for a newer line until --log-wait runs out."
     }
   ],
   "forbidden": [

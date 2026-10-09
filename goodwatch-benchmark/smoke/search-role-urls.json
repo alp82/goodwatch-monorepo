@@ -1,0 +1,30 @@
+{
+  "description": "The requests of ./bench.sh smoke for a search role (a container with WEBAPP_ROLE=search). They go straight to the container through an SSH tunnel. No entry starts a search: a search that runs writes a history row to production, and a text without a stored reading can start a paid call. 'guards' says what each entry is for.",
+  "imageHost": "https://image.tmdb.org/",
+  "neverContains": ["Unexpected Server Error", "Application Error"],
+  "defaults": { "client": "browser", "cookie": true, "expect": [200] },
+  "entries": [
+    {
+      "id": "health-ready",
+      "path": "/health/ready",
+      "guards": "The readiness endpoint that the proxy asks every 2 seconds. A search role is ready once its search index has loaded."
+    },
+    {
+      "id": "api-command-palette",
+      "path": "/api/command-palette?q=mat",
+      "json": { "arrays": ["titles"], "minItems": 1 },
+      "header": { "server-timing": "^titles;dur=" },
+      "guards": "The header search returns titles: it reads the search index and the people index in the role's memory, and sends no model call. It needs REC_NAVIGATION in the role's environment, or the answer is 404."
+    },
+    {
+      "id": "api-combined-search-rejects-short-text",
+      "path": "/api/combined-search",
+      "method": "POST",
+      "requestHeaders": { "Content-Type": "application/json" },
+      "body": "{\"q\":\"x\"}",
+      "expect": [400],
+      "contains": ["Enter between 2 and 4096 bytes"],
+      "guards": "The search route answers in this role. One character of text is rejected after the in-flight limit and before the search starts (routes/api.combined-search.ts), so nothing is read, paid for, or written. A 503 with 'Search is busy' means that four searches were in flight, or that the process isn't a search role."
+    }
+  ]
+}
