@@ -823,7 +823,7 @@ export function playEngine(
 	function more(key: string, suffix: string): boolean {
 		const id = key + suffix
 		if (G.ex[id]) return G.ex[id] === 1
-		if (G.extra >= 60) return false
+		if (G.extra >= 120) return false
 		G.extra++
 		G.ex[id] = 1
 		win

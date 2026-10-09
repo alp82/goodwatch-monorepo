@@ -896,21 +896,22 @@ const roam4: RoamForm = (core, kit) => {
 			const items: ReturnType<RoamKit["item"]>[] = []
 			let bg = kit.spokes(parts.length)
 			let shown = 0
-			let short = false
+			const missing: ReturnType<RoamKit["hole"]>[] = []
 			parts.forEach((side, i) => {
 				const group = seat[i]
 				side.cells.forEach((cell, n) => {
 					const t = group?.members[n]
 					if (t) {
 						shown++
-						items.push(kit.item(ctx, t, cell.x, cell.y, scale, n >= 2, "", `;--oc:${group?.color ?? "#fff"}`))
+						items.push(kit.item(ctx, t, cell.x, cell.y, scale, n >= 2, "", `;--oc:${group?.color ?? "#fff"};--sd:${i}`))
 					} else if (!ctx.list) items.push(kit.hole(`h${i}-${n}`, cell.x, cell.y, scale))
-					else short = true
+					else missing.push(kit.hole(`h${i}-${n}`, cell.x, cell.y, scale))
 				})
 				if (group) bg += kit.caption(side, group.text, group.color)
 			})
-			// A side with places left is filled from further away: more of the neighborhood is asked for.
-			if (short) kit.want(ctx, [], list.length, list.length + 200)
+			// A side with places left is filled from further away: more of the neighborhood is asked for, and the places
+			// are calm empty ones until it is there.
+			if (missing.length && kit.want(ctx, [], list.length, list.length + 200)) for (const entry of missing) items.push(entry)
 			return kit.html(
 				kit.viewOf(ctx, "roam4", {
 					top: `<p class="rm-say"><b>Neighborhoods around ${core.esc(ctx.c.t)}</b><span>nearer = more alike</span></p>`,
@@ -966,7 +967,7 @@ const roam5: RoamForm = (core, kit) => {
 					if (t) {
 						used[t.k] = true
 						shown++
-						items.push(kit.item(ctx, t, cell.x, cell.y, scale, n >= 2, "", `;--oc:${color}`))
+						items.push(kit.item(ctx, t, cell.x, cell.y, scale, n >= 2, "", `;--oc:${color};--sd:${i}`))
 					} else if (!ctx.list) items.push(kit.hole(`h${i}-${n}`, cell.x, cell.y, scale))
 				})
 				bg += kit.caption(side, names.length ? `<i>${kit.emo(key)} ${names[0].endsWith("+") ? "with" : "without"}</i> ${core.esc(kit.low(key))}` : "<i>most</i> alike", color)
