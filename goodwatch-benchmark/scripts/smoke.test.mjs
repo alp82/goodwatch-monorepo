@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import vm from "node:vm";
+import { compareSearchCode, containerNamePattern, gitIn, parseSearchRoles } from "./search-roles.mjs";
 import { buildFilesInHtml, staticOriginFromSetting, staticOriginInHtml } from "./static-host.mjs";
 
 const source = readFileSync(new URL("./smoke.mjs", import.meta.url), "utf8")
@@ -23,6 +24,7 @@ async function run({ named = true, configured = true, status = "", headers = "",
   const context = vm.createContext({
     URL, Buffer, performance, AbortSignal, dirname, resolve, fileURLToPath,
     buildFilesInHtml, staticOriginFromSetting, staticOriginInHtml,
+    compareSearchCode, containerNamePattern, gitIn, parseSearchRoles,
     process: {
       argv: ["node", "smoke.mjs", "--target", "local", "--base-url", "https://example.com", "--log-file", "log", "--metrics-url", "https://example.com/metrics", "--patterns", "patterns", "--urls", "urls", "--skip", "metrics:redis-client-ready"],
       env: { BENCH_STATIC_HOST: configured ? staticOrigin : "" },

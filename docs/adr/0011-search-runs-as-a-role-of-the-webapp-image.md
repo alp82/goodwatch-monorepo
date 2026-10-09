@@ -65,6 +65,8 @@ Rejected:
 - A search role still answers every other route of the image. Only the proxy's rule keeps pages away from it.
 - Members reach the search role directly, so it needs the session settings and the stores that the search route
   reads, like a page instance.
+- The search roles run from a compose file on vector1 and are deployed explicitly, one role at a time, so they can
+  run an older commit than the page instances: [search-role-deploy.md](../search-role-deploy.md).
 - Nothing changes until a deploy sets the roles: [Deploy two search roles on vector1 and route the search paths to
   them](https://github.com/alp82/goodwatch-monorepo/issues/400). The browser's side is
   [Treat a bare gateway error on the search paths as the busy answer](https://github.com/alp82/goodwatch-monorepo/issues/399).

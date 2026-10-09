@@ -2,7 +2,7 @@
 
 One webapp image starts as a page instance, as a search role, or as both. A search role holds the query models and
 the indexes and does the search work, so that a page instance doesn't. This page lists the settings, what each role
-loads, and how to start each role locally. The decision is
+loads, how the roles run in production, and how to start each role locally. The decision is
 [ADR 0011](adr/0011-search-runs-as-a-role-of-the-webapp-image.md). The code is
 `goodwatch-webapp/app/server/role.server.ts`.
 
@@ -50,6 +50,25 @@ All are environment variables of the webapp, read while the process runs. A chan
   missing.
 - **Every role serves metrics from its start.** Before roles, the metrics started with the first page request, which
   a search role never gets.
+
+## How the roles run
+
+In production, two search roles run on vector1 from a compose file,
+[`goodwatch-search/docker-compose.yml`](../goodwatch-search/docker-compose.yml), not as Coolify applications.
+
+- **Names:** the containers `goodwatch-search-a` and `goodwatch-search-b` on the `coolify` network. vector1's proxy
+  balances the two search paths across them and asks `/health/ready` every 2 seconds.
+- **Image:** the one that Coolify builds and pushes for every deploy of the webapp, tagged with the commit. The
+  compose file sets `WEBAPP_ROLE=search`, `SEARCH_MAX_IN_FLIGHT=4`, and `SOURCE_COMMIT`. The rest comes from a
+  `.env` file on the host.
+- **Deploys are explicit.** A push to `main` deploys the page instances only. `./deploy.sh <commit>` in
+  `goodwatch-search/` on vector1 restarts one role at a time and waits for each to be ready.
+- **Behind is normal, and checked.** The roles can run an older commit than the page instances. `./bench.sh smoke`
+  warns when a role is behind in a file that a search role runs.
+
+The steps, the checks, and what Coolify can and can't do to these containers:
+[search-role-deploy.md](search-role-deploy.md). The commands:
+[goodwatch-search/README.md](../goodwatch-search/README.md).
 
 ## Start a role locally
 
