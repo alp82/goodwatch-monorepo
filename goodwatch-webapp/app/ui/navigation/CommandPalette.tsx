@@ -34,6 +34,7 @@ import {
 	getDestinations,
 	searchHref,
 } from "./destinations"
+import { paletteTitlesQuery, shownPaletteTitles } from "./palette-titles"
 import { useTonightsPick } from "./useTonightsPick"
 
 const PLACEHOLDER = "Search or go to…"
@@ -100,31 +101,12 @@ function useDebounced<T>(value: T, ms: number): T {
 	return debounced
 }
 
-async function fetchTitles(
-	prefix: string,
-	signal: AbortSignal,
-): Promise<PaletteTitle[]> {
-	const response = await fetch(
-		`/api/command-palette?q=${encodeURIComponent(prefix)}`,
-		{ signal },
-	)
-	if (!response.ok) throw new Error(`Command palette: ${response.status}`)
-	return ((await response.json()) as { titles: PaletteTitle[] }).titles
-}
-
-/** Matching titles for the typed text, looked up once typing pauses. */
+/** Matching titles for the typed text, looked up once typing pauses. None when the lookup fails. */
 function usePaletteTitles(q: string): PaletteTitle[] {
 	const prefix = useDebounced(normalizePrefix(q), DEBOUNCE_MS)
 	const typed = normalizePrefix(q).length >= MIN_PREFIX_CHARS
-	const query = useQuery({
-		queryKey: ["command-palette", prefix],
-		queryFn: ({ signal }) => fetchTitles(prefix, signal),
-		enabled: prefix.length >= MIN_PREFIX_CHARS,
-		staleTime: 5 * 60 * 1000,
-		// While the next prefix loads, the last titles stay, so the list doesn't jump on every keystroke.
-		placeholderData: (previous) => previous,
-	})
-	return typed ? (query.data ?? []) : []
+	const query = useQuery(paletteTitlesQuery(prefix))
+	return shownPaletteTitles(typed, query.data)
 }
 
 export function CommandPalette({ onDone }: { onDone: () => void }) {
