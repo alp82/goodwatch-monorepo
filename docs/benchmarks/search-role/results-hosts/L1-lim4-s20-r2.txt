@@ -1,0 +1,13 @@
+## L1-lim4-s20-r2 rate=20 roles=1 started 2026-10-09T04:48:39Z 
+wall_s=61.199410557
+probe_worst_s qdrant=0.027 site=0.093 samples=55
+role1 0 metrics
+k6 dropped_iterations                 {"count": 0, "rate": 0}
+k6 http_req_duration{kind:search}     n=1200 p50=   143.1 p95=   702.3 p99=   985.6 max=  1456.9
+k6 http_req_failed{kind:search}       failed=638 of 1200
+k6 http_reqs                          {"count": 1200, "rate": 19.9}
+k6 search_busy                        {"count": 638, "rate": 10.6}
+k6 search_ranked                      {"count": 562, "rate": 9.3}
+k6 search_ranked_in_deadline          {"count": 562, "rate": 9.3}
+k6 search_ranked_ms                   n=562 p50=   349.0 p95=   813.5 p99=  1087.5 max=  1456.9
+k6 search_server_elapsed_ms           n=562 p50=   326.5 p95=   804.0 p99=  1077.4 max=  1442.0

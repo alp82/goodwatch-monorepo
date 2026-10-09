@@ -1,0 +1,15 @@
+## L3-lim8-s20-r1 rate=20 roles=2 started 2026-10-09T05:39:21Z 
+wall_s=61.789126731
+probe_worst_s qdrant=0.030 site=0.101 samples=56
+role1 0 metrics
+role2 0 metrics
+k6 dropped_iterations                 {"count": 0, "rate": 0}
+k6 http_req_duration{kind:search}     n=1201 p50=   397.8 p95=   981.3 p99=  1239.8 max=  1940.4
+k6 http_req_failed{kind:search}       failed=60 of 1201
+k6 http_reqs                          {"rate": 19.7, "count": 1201}
+k6 search_basic                       {"count": 7, "rate": 0.1}
+k6 search_busy                        {"count": 60, "rate": 1.0}
+k6 search_ranked                      {"count": 1134, "rate": 18.6}
+k6 search_ranked_in_deadline          {"count": 1132, "rate": 18.6}
+k6 search_ranked_ms                   n=1134 p50=   413.8 p95=   975.3 p99=  1188.0 max=  1784.3
+k6 search_server_elapsed_ms           n=1141 p50=   382.0 p95=   972.0 p99=  1235.0 max=  1928.0

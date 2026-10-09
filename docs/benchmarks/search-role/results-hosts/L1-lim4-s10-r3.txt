@@ -1,0 +1,13 @@
+## L1-lim4-s10-r3 rate=10 roles=1 started 2026-10-09T04:39:14Z 
+wall_s=60.815778481
+probe_worst_s qdrant=0.023 site=0.149 samples=55
+role1 0 metrics
+k6 dropped_iterations                 {"count": 0, "rate": 0}
+k6 http_req_duration{kind:search}     n=600 p50=   243.9 p95=   736.2 p99=  1093.3 max=  1391.3
+k6 http_req_failed{kind:search}       failed=119 of 600
+k6 http_reqs                          {"count": 600, "rate": 10.0}
+k6 search_busy                        {"count": 119, "rate": 2.0}
+k6 search_ranked                      {"count": 481, "rate": 8.0}
+k6 search_ranked_in_deadline          {"count": 481, "rate": 8.0}
+k6 search_ranked_ms                   n=481 p50=   296.4 p95=   836.7 p99=  1125.7 max=  1391.3
+k6 search_server_elapsed_ms           n=481 p50=   271.0 p95=   824.0 p99=  1113.2 max=  1382.0

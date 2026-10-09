@@ -1,0 +1,16 @@
+## fail-L3-lim8-s10 rate=10 roles=2 started 2026-10-09T06:16:17Z kill=20 worker1
+wall_s=61.581351320
+probe_worst_s qdrant=0.016 site=0.320 samples=55
+role1 0 metrics
+role2 0 metrics
+k6 dropped_iterations                 {"count": 0, "rate": 0}
+k6 http_req_duration{kind:search}     n=601 p50=   361.2 p95=  1160.8 p99=  1530.3 max=  2031.5
+k6 http_req_failed{kind:search}       failed=39 of 601
+k6 http_reqs                          {"count": 601, "rate": 9.9}
+k6 search_basic                       {"rate": 0.1, "count": 6}
+k6 search_busy                        {"count": 30, "rate": 0.5}
+k6 search_error                       {"count": 9, "rate": 0.1}
+k6 search_ranked                      {"count": 556, "rate": 9.1}
+k6 search_ranked_in_deadline          {"count": 550, "rate": 9.0}
+k6 search_ranked_ms                   n=556 p50=   374.7 p95=  1132.7 p99=  1490.0 max=  1614.0
+k6 search_server_elapsed_ms           n=562 p50=   339.5 p95=  1168.8 p99=  1510.1 max=  1996.0

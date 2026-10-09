@@ -128,3 +128,77 @@ Checked and not the cause: swap (the host has none), out-of-memory kills, contai
 - The member path: a session, member taste, and the cookies in variant 2.
 - The paid reading call under load. Readings were recorded.
 - The first full encoder phase was stopped after one run, which is in the results as the first `enc1x2-lim64-v1-s05` run.
+
+## Roles on several hosts
+
+Measured on October 9, 2026 for [Benchmark search roles on vector1 and the worker hosts behind one route](https://github.com/alp82/goodwatch-monorepo/issues/397). The first benchmark above ran on one 4-core host that also ran the load generator. This one puts the roles on the hosts they could run on.
+
+### Setup
+
+- **Roles:** the same image, one encoder with 2 threads each. Two on vector1 (16 cores, capped at 4 CPUs and 4 GB each, next to Qdrant and a live webapp instance), one on worker1, and one on worker2 (4 cores each, next to a Windmill worker).
+- **Route:** a throwaway Traefik on the generator host with a health check on `/health/ready` every 2 seconds. A layout is its server list. The load generator sends searches only, no pages.
+- **No title snapshot and no cache credentials:** the role starts without the snapshot, because the ranking doesn't read it.
+- **Probe:** once per second a health request to Qdrant and to the public site. Three answers in a row slower than 1 second would have stopped the run. It never did.
+- **Runs:** 60 seconds, three per cell. 79 runs in all.
+
+Summaries and the per-host CPU and memory samples are in `search-role/results-hosts/`.
+
+### Capacity
+
+"Ranked" is searches per second that end ranked within the 1,500 ms deadline. "p95" is the p95 of the ranked searches. The rest of the searches sent get the busy answer.
+
+| Roles | Sent per second | Limit 4: ranked | Limit 4: p95 | Limit 8: ranked | Limit 8: p95 |
+| --- | --- | --- | --- | --- | --- |
+| vector1 | 10 | 7.9 | 837 ms | 9.0 | 1,220 ms |
+| vector1 twice | 10 | 9.9 | 624 ms | 10.0 | 682 ms |
+| vector1 and worker1 | 10 | 10.0 | 574 ms | 10.0 | 647 ms |
+| vector1, worker1, worker2 | 10 | 10.0 | 549 ms | 10.0 | 562 ms |
+| vector1 | 20 | 9.1 | 890 ms | 10.2 | 1,313 ms |
+| vector1 twice | 20 | 15.8 | 806 ms | 18.3 | 1,166 ms |
+| vector1 and worker1 | 20 | 16.6 | 780 ms | 19.0 | 975 ms |
+| vector1, worker1, worker2 | 20 | 19.3 | 668 ms | 19.9 | 756 ms |
+| vector1 | 40 | 9.3 | 850 ms | 10.2 | 1,368 ms |
+| vector1 twice | 40 | 16.8 | 922 ms | 18.4 | 1,430 ms |
+| vector1 and worker1 | 40 | 18.6 | 798 ms | 21.6 | 1,298 ms |
+| vector1, worker1, worker2 | 40 | 25.9 | 782 ms | 29.2 | 1,244 ms |
+| vector1, worker1, worker2 | 80 | | | 29.4 | 1,127 ms (all searches) |
+
+- **One role ranks about 9 searches per second with the limit at 4,** and each further role adds 8 to 9. A 4-core worker does as well as a capped role on vector1.
+- **The limit of 8 buys 10% to 15% more ranked searches per role and costs 400 to 500 ms of p95.** An overloaded role then answers close to the deadline, and basic-result fallbacks rise from at most 10 to at most 56 per cell of 7,200 searches.
+- **Overload is graceful at every rate.** At 80 per second on three hosts, 27 to 31 searches per second end ranked, about 60% get the busy answer, and 13 to 41 of 4,800 per run end as basic results. The stall at 40 per second in the first benchmark doesn't appear, so it belonged to that host.
+- **The target of 20 per second:** three roles reach 19.3 (limit 4) or 19.9 (limit 8). Two roles reach 15.8 to 16.6 (limit 4) or 18.3 to 19.0 (limit 8).
+
+### CPU and memory per role
+
+From each role's cgroup, sampled every 5 seconds, median of three runs.
+
+| State | CPU | Peak memory |
+| --- | --- | --- |
+| Shared load, about 3.3 ranked per second per role | 0.9 to 1.0 cores | 2.0 to 2.9 GB |
+| Shared load, about 6.5 per second per role | 1.7 to 1.8 cores | 2.0 to 3.0 GB |
+| Full, limit 4 (about 9 per second) | 2.2 to 2.6 cores | 2.1 to 2.3 GB |
+| Full, limit 8 (about 10 per second) | 2.6 to 3.0 cores | 2.0 to 3.1 GB |
+
+A role never needed its 4 CPU cap. That's about 250 ms of CPU per ranked search, in line with the first benchmark.
+
+### One role killed mid-run
+
+vector1 and worker1 at 10 searches per second, limit 8. The role on worker1 was killed about 25 seconds in.
+
+- 9 of 601 searches failed, all within one second around the kill: seven 502 answers from the balancer and two connection errors.
+- After that the balancer sent every search to vector1. In the rest of the run 271 searches ended ranked, 30 got the busy answer, and 4 ended as basic results.
+- So the browser needs to treat a bare 502 on the search path like the busy answer, and the health check interval bounds how long that lasts.
+
+### vector1 during the runs
+
+- Qdrant's slowest probe answer was 0.75 seconds, once, with three hosts at 40 per second and the limit at 8. Otherwise it stayed under 0.2 seconds.
+- The public site had single slow probe answers of 1.2 to 3.0 seconds, never three in a row. The same single slow answers appeared before any load, as TCP connect time from the generator host, so they aren't caused by the runs. They're worth their own look.
+- `./bench.sh smoke --host vector1` passed after each phase.
+- The roles on vector1 reached Qdrant through one firewall rule that the owner asked for and keeps: Qdrant's HTTP port from the measurement network, with the comment "gw-bench: search role measurement network to local Qdrant HTTP".
+
+### Not verified
+
+- **One row appeared in `search_history` during the runs** (1,262 before, 1,263 after, written at 06:04 UTC with the outcome "cached"). The other two search tables didn't change. The roles logged about 43,000 searches with the write switch on and would have written thousands of rows without it, so this row is most likely one real search in production. That's an inference: production doesn't log searches, so it couldn't be confirmed.
+- More than 4 CPUs per role, and a limit between 4 and 8.
+- A role deployed by Coolify behind the live proxy, the member path, and the paid reading call under load.
+- Page instances weren't part of this benchmark. The first one covers them.

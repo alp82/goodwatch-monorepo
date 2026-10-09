@@ -1,0 +1,16 @@
+## L4-lim8-s80-r2 rate=80 roles=3 started 2026-10-09T06:13:44Z 
+wall_s=62.688664230
+probe_worst_s qdrant=0.066 site=3.002 samples=53
+role1 0 metrics
+role2 0 metrics
+role3 0 metrics
+k6 dropped_iterations                 {"count": 0, "rate": 0}
+k6 http_req_duration{kind:search}     n=4801 p50=   168.8 p95=  1127.0 p99=  1503.2 max=  2276.0
+k6 http_req_failed{kind:search}       failed=2895 of 4801
+k6 http_reqs                          {"rate": 78.7, "count": 4801}
+k6 search_basic                       {"count": 13, "rate": 0.2}
+k6 search_busy                        {"count": 2895, "rate": 47.4}
+k6 search_ranked                      {"rate": 31.0, "count": 1893}
+k6 search_ranked_in_deadline          {"count": 1855, "rate": 30.4}
+k6 search_ranked_ms                   n=1893 p50=   726.3 p95=  1316.4 p99=  1581.4 max=  1813.2
+k6 search_server_elapsed_ms           n=1906 p50=   685.5 p95=  1300.0 p99=  1612.8 max=  2268.0
