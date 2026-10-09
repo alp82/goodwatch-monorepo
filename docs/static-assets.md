@@ -6,6 +6,8 @@ is chosen, what moves, what the settings are, and what the owner has to set. The
 [ADR 0010](adr/0010-static-hostname-with-server-side-fallback.md). The code is
 `goodwatch-webapp/app/server/asset-address.server.ts` and `goodwatch-webapp/app/utils/asset-url.ts`.
 
+Where this sits among the other parts that answer requests: [serving-architecture.md](serving-architecture.md).
+
 With the default settings nothing changes: every page names the site's own host, as before.
 
 ## Settings

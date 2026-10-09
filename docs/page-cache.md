@@ -7,6 +7,8 @@ front of the app must still do. The code is `goodwatch-webapp/app/server/page-ca
 [cache-identity.md](cache-identity.md). The measurements are in
 [viral-spike-page-cache.md](benchmarks/viral-spike-page-cache.md).
 
+Where this sits among the other parts that answer requests: [serving-architecture.md](serving-architecture.md).
+
 ## Why
 
 A page render costs 14 to 63 ms of the process's one main thread, so one process renders about 20 title pages per
