@@ -1,8 +1,8 @@
 // PROTOTYPE - throwaway. What should the title page's overview (the panel beside the poster) look like for a
 // signed-in member? Variants of it on one route, switchable with the floating bar or the arrow keys.
-// Round 3: the owner still prefers round 1's A and D to round 2, where G and H "have potential" and E and F are out.
-// So I, J and K build on G's structure and H's compactness, phone first; G, H, A and D stay for comparison.
-//   /prototype/title-overview?v=I|J|K|G|H|A|D
+// Round 4: the owner chose round 3's I as the baseline and asked for five changes to it. L, M and N all have them
+// and differ in what is still open; I and J (round 3) and A and D (round 1) stay for comparison.
+//   /prototype/title-overview?v=L|M|N|I|J|A|D
 //     &s=show-watching|show-new|show-caught-up|movie-new|movie-seen   the sample member and title
 //     &p=one|many|none                                                how many streaming services have the title
 // The owner's complaints about today's panel: the ratings are not grouped, the member's own score is not shown
@@ -13,8 +13,8 @@ import { json } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useSearchParams } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import { PROVIDERS, type ProviderKey, SCENARIOS, type ScenarioKey, TITLES, useMember } from "~/ui/prototype-title-overview/model"
-import { VariantG, VariantH } from "~/ui/prototype-title-overview/banner"
-import { VariantI, VariantJ, VariantK } from "~/ui/prototype-title-overview/round3"
+import { VariantI, VariantJ } from "~/ui/prototype-title-overview/round3"
+import { VariantL, VariantM, VariantN } from "~/ui/prototype-title-overview/round4"
 import { VariantA, VariantD, type VariantProps } from "~/ui/prototype-title-overview/variants"
 
 export async function loader() {
@@ -26,11 +26,11 @@ export const meta = () => [{ title: "Title overview prototype · GoodWatch" }, {
 export const shouldRevalidate: ShouldRevalidateFunction = () => false
 
 const VARIANTS = {
-	I: { name: "I · Rings on the banner", ownTitle: true, Component: VariantI, note: "The ratings are one group on the banner: A's two rings and under them one chip per site, critics and audience in the same chip. Then two blocks: your show (one tracking line, the actions) and where to watch (a title row with the settings, big logos with their names in a row you can swipe)." },
-	J: { name: "J · Three cards", ownTitle: true, Component: VariantJ, note: "G's structure, tidied: a strip for the poster and the title, then three cards of different weight. Ratings (D's ring and pill, the site chips), your show, and where to watch as a title row with the settings over named tiles." },
-	K: { name: "K · One sheet", ownTitle: true, Component: VariantK, note: "The whole overview is the picture, and one dark sheet on it has three parts divided by hairlines: ratings (D's ring and pill, the site chips), your show, where to watch (logos with their names under them)." },
-	G: { name: "G (round 2) · Strip and three cards", ownTitle: true, Component: VariantG, note: "Round 2, kept for comparison. The banner is a strip for the poster and the title. Under it three cards side by side: ratings, your show, where to watch." },
-	H: { name: "H (round 2) · One control", ownTitle: true, Component: VariantH, note: "Round 2, kept for comparison. A's two rings on the banner, the sites as one chip, and a started show's actions folded into the status control's menu." },
+	L: { name: "L · I with the five changes", ownTitle: true, Component: VariantL, note: "I, changed as asked and nothing else: your score is J's rectangle at the right edge, every row runs edge to edge, the episode ratings are the Grid toggle's miniature at the right of the site chips, and where to watch has J's cards. The ratings stay on the banner; the actions have their own row." },
+	M: { name: "M · Ratings under the banner", ownTitle: true, Component: VariantM, note: "The same five changes, but the banner is only the poster and the title: the ratings are the first of three blocks, and the miniature stands in the tracking line, before the Next episode chip." },
+	N: { name: "N · Tighter, actions on the line", ownTitle: true, Component: VariantN, note: "L made denser, with the wider miniature (a row per season). From 768 px up the actions stand on the tracking line; on a phone they keep their own row." },
+	I: { name: "I (round 3) · Rings on the banner", ownTitle: true, Component: VariantI, note: "Round 3, the baseline, kept for comparison. A's two rings and the site chips on the banner; then your show, and where to watch as a row of logos to swipe." },
+	J: { name: "J (round 3) · Three cards", ownTitle: true, Component: VariantJ, note: "Round 3, kept for comparison: its own-score rectangle and its service cards are what round 4 takes." },
 	A: { name: "A (round 1) · Scoreboard", Component: VariantA, note: "Round 1, kept for reference. Two rings, the title's and yours, beside a table of the sites. Your ring opens the picker as a popover (a sheet on a phone). The poster follows the panel's height." },
 	D: { name: "D (round 1) · Banner", Component: VariantD, note: "Round 1, kept for reference. The backdrop as a banner with a small poster over its edge, and one bar for every rating with your score as a pill in it." },
 } satisfies Record<string, { name: string; note: string; ownTitle?: boolean; Component: (props: VariantProps) => React.ReactNode }>
@@ -39,7 +39,7 @@ const KEYS = Object.keys(VARIANTS) as VariantKey[]
 
 export default function TitleOverviewPrototype() {
 	const [params, setParams] = useSearchParams()
-	const variant = (KEYS.includes(params.get("v") as VariantKey) ? params.get("v") : "I") as VariantKey
+	const variant = (KEYS.includes(params.get("v") as VariantKey) ? params.get("v") : "L") as VariantKey
 	const scenario = ((params.get("s") ?? "") in SCENARIOS ? params.get("s") : "show-watching") as ScenarioKey
 	const providers = ((params.get("p") ?? "") in PROVIDERS ? params.get("p") : "one") as ProviderKey
 	const set = (key: string, value: string) => {

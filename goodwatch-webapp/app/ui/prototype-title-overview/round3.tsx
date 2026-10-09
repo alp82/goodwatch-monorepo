@@ -1,15 +1,10 @@
-// PROTOTYPE - throwaway. Round 3 of /prototype/title-overview: I, J and K. They take G's structure (clear blocks)
-// and H's compactness, and are made for a phone first. What all three share, from the owner's review of round 2:
-// - The sites are always visible and compact: one chip per site, critics and audience in the same chip with a
-//   divider between them, as on the real title page (ui/details/hero/RatingChips.tsx).
-// - Where to watch is a section of its own: a title row that also carries the settings (Stream / Rent / Buy and the
-//   country), then big logos with the services' names.
-// - Not interested and Drop stay buttons. Nothing is folded into a "more" menu.
-// - At most three blocks: ratings, your show or movie, where to watch. Tracking is one line.
+// PROTOTYPE - throwaway. Round 3 of /prototype/title-overview: I (Rings on the banner), which the owner chose as
+// the baseline, and J (Three cards), whose own score and service cards round 4 takes. K was dropped. Both are kept
+// as they were, for comparison. Round 4 (round4.tsx) reuses the site chips and the where-to-watch section from here.
 import { AdjustmentsHorizontalIcon } from "@heroicons/react/20/solid"
 import { useState } from "react"
 import { BannerImage, BannerTrailer, MiniActions, ScoreBar, ScorePair, TitleBlock, TrackLine } from "./banner"
-import { EYEBROW, EpisodeRatingsLink, FOCUS, Poster, SITES, type SiteId, TrailerPill } from "./kit"
+import { EYEBROW, EpisodeRatingsLink, FOCUS, Poster, SITES, type SiteId } from "./kit"
 import { type Offer, PROVIDERS, type Provider, type ProviderKey, type Title, img } from "./model"
 import type { VariantProps } from "./variants"
 
@@ -23,7 +18,8 @@ const SHADOW = "shadow-[0_8px_30px_rgba(0,0,0,.7)]"
 // ---------------------------------------------------------------------------------------------------------
 
 /** IMDb, Metacritic and Rotten Tomatoes: one brand-coloured chip each, "critics | audience" inside. A site with no score is left out. */
-function SiteChips({ title, className = "" }: { title: Title; className?: string }) {
+/** `fill`: the chips share the row's width (round 4, where a row has nothing else to end it). */
+export function SiteChips({ title, fill = false, className = "" }: { title: Title; fill?: boolean; className?: string }) {
 	const pair = (critics: string | null, audience: string | null) => (
 		<>
 			<span>{critics ?? "–"}</span>
@@ -36,9 +32,9 @@ function SiteChips({ title, className = "" }: { title: Title; className?: string
 	if (title.mcCritics || title.mcAudience) chips.push({ id: "mc", value: pair(title.mcCritics, title.mcAudience), says: `Metacritic: critics ${title.mcCritics ?? "none"}, audience ${title.mcAudience ?? "none"}` })
 	if (title.rtCritics || title.rtAudience) chips.push({ id: "rt", value: pair(title.rtCritics, title.rtAudience), says: `Rotten Tomatoes: critics ${title.rtCritics ?? "none"}, audience ${title.rtAudience ?? "none"}` })
 	return (
-		<div data-site-chips className={`flex flex-wrap items-center gap-1.5 ${className}`}>
+		<div data-site-chips className={`flex items-center gap-1.5 ${fill ? "" : "flex-wrap"} ${className}`}>
 			{chips.map((chip) => (
-				<span key={chip.id} title={chip.says} className={`inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 text-[13px] font-semibold tabular-nums ${SITES[chip.id].chip}`}>
+				<span key={chip.id} title={chip.says} className={`inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 text-[13px] font-semibold tabular-nums ${fill ? "flex-1 justify-center" : ""} ${SITES[chip.id].chip}`}>
 					<img src={SITES[chip.id].logo} alt={SITES[chip.id].name} className={chip.id === "imdb" ? "h-3" : "h-3.5"} />
 					{chip.value}
 				</span>
@@ -61,7 +57,14 @@ const FLAG = { background: "linear-gradient(#000 33%, #d00 33% 66%, #fc0 66%)" }
  * - "tiles": logo and name side by side, two to a row; four show, the rest open in place
  * - "wrap": logos with the name under them; one row shows, "+N" opens the rest in place
  */
-function WatchSection({ providers, kind, layout, className = "" }: { providers: ProviderKey; kind: string; layout: "swipe" | "tiles" | "wrap"; className?: string }) {
+export function WatchSection({
+	providers,
+	kind,
+	layout,
+	fill = false,
+	tight = false,
+	className = "",
+}: { providers: ProviderKey; kind: string; layout: "swipe" | "tiles" | "wrap"; /** Tiles: a last one alone in its row takes the whole row. */ fill?: boolean; /** Tiles: lower cards. */ tight?: boolean; className?: string }) {
 	const [offer, setOffer] = useState<Offer>("stream")
 	const [all, setAll] = useState(false)
 	const { offers } = PROVIDERS[providers]
@@ -84,18 +87,28 @@ function WatchSection({ providers, kind, layout, className = "" }: { providers: 
 		</a>
 	)
 	/** Logo beside name. */
-	const tile = (p: Provider) => (
-		<a key={p.name} href="#streaming" data-provider title={says(p)} className={`relative flex h-12 min-w-0 items-center gap-2.5 rounded-xl bg-white/[0.06] pr-2.5 hover:bg-white/[0.12] ${p.owned ? "ring-2 ring-green-500" : "ring-1 ring-white/10"} ${FOCUS}`}>
-			<img src={img("w92", p.logo)} alt="" width={48} height={48} className="h-12 w-12 shrink-0 rounded-xl" />
-			<span className="min-w-0 truncate text-sm font-medium text-white">{p.name}</span>
-			{p.owned && tick}
-		</a>
-	)
+	const tile = (p: Provider, i: number, shown: Provider[]) => {
+		const whole = fill && i === shown.length - 1 && shown.length % 2 === 1
+		return (
+			<a
+				key={p.name}
+				href="#streaming"
+				data-provider
+				title={says(p)}
+				className={`relative flex min-w-0 items-center gap-2.5 rounded-xl bg-white/[0.06] pr-2.5 hover:bg-white/[0.12] ${tight ? "h-11" : "h-12"} ${whole ? "col-span-2" : ""} ${p.owned ? "ring-2 ring-green-500" : "ring-1 ring-white/10"} ${FOCUS}`}
+			>
+				<img src={img("w92", p.logo)} alt="" width={48} height={48} className={`shrink-0 rounded-xl ${tight ? "h-11 w-11" : "h-12 w-12"}`} />
+				<span className="min-w-0 truncate text-sm font-medium text-white">{p.name}</span>
+				{whole && <span className={`ml-auto shrink-0 text-xs ${p.owned ? "font-semibold text-green-300" : "text-gray-400"}`}>{p.owned ? "On your services" : OFFERS[offer]}</span>}
+				{p.owned && tick}
+			</a>
+		)
+	}
 	const WRAP = 4
 	const TILES = 4
 	return (
 		<div data-watch={providers} className={`min-w-0 ${className}`}>
-			<div className="flex min-w-0 items-center gap-1.5">
+			<div data-row="watch" className="flex min-w-0 items-center gap-1.5">
 				<h2 className="mr-auto min-w-0 truncate text-sm font-semibold text-white">Where to watch</h2>
 				{!nothing && (
 					<div role="tablist" aria-label="Offer type" className="flex shrink-0 rounded-full bg-white/8 p-0.5 text-[11px] sm:text-xs">
@@ -133,7 +146,7 @@ function WatchSection({ providers, kind, layout, className = "" }: { providers: 
 				</div>
 			) : layout === "tiles" ? (
 				<>
-					<div className="mt-2.5 grid grid-cols-2 gap-2 pt-0.5">{(all ? list : list.slice(0, TILES)).map(tile)}</div>
+					<div data-row="services" className="mt-2.5 grid grid-cols-2 gap-2 pt-0.5">{(all ? list : list.slice(0, TILES)).map(tile)}</div>
 					{list.length > TILES && (
 						<button type="button" data-all-services aria-expanded={all} onClick={() => setAll(!all)} className={`mt-2 h-8 w-full cursor-pointer rounded-lg text-xs font-semibold text-gray-300 hover:bg-white/10 hover:text-white ${FOCUS}`}>
 							{all ? "Show fewer" : `All ${list.length} services`}
@@ -234,51 +247,6 @@ export function VariantJ({ title, m, api, providers }: VariantProps) {
 					<MiniActions api={api} className="lg:mt-auto" />
 				</div>
 				<WatchSection providers={providers} kind={title.kind} layout="tiles" className={`p-3 ${QUIET}`} />
-			</div>
-		</section>
-	)
-}
-
-// =========================================================================================================
-// K - One sheet
-// The whole overview is the picture, as in round 2's F, but nothing is hidden. The poster, the title and the
-// trailer button are on it, and one dark sheet holds three parts divided by hairlines: ratings (D's ring and pill
-// with the site chips beside them), your show, where to watch. Three rows on a phone, three columns from lg up.
-// =========================================================================================================
-
-export function VariantK({ title, m, api, providers }: VariantProps) {
-	const show = title.kind === "show"
-	return (
-		<section className={PANEL}>
-			<BannerImage title={title} rounded="rounded-2xl" />
-			<div className="relative flex flex-col gap-3 p-3 md:gap-5 md:p-5">
-				<div className="flex items-start gap-3 md:gap-6">
-					<Poster title={title} trailer="none" className={`aspect-[2/3] w-20 shrink-0 md:w-32 ${SHADOW}`} />
-					<div className="min-w-0 flex-1 pt-0.5 md:pt-2">
-						<h1 className="text-2xl font-bold leading-tight tracking-tight text-white [text-shadow:0_2px_14px_rgba(0,0,0,.7)] md:text-4xl">{title.name}</h1>
-						<p className="mt-1 truncate text-xs text-gray-300 [text-shadow:0_1px_8px_rgba(0,0,0,.8)] md:text-sm">{title.facts.join(" · ")}</p>
-						<div className="mt-2.5 md:hidden">
-							<TrailerPill compact />
-						</div>
-					</div>
-					<div className="hidden shrink-0 md:block">
-						<TrailerPill />
-					</div>
-				</div>
-				<div data-sheet className="grid grid-cols-[minmax(0,1fr)] divide-y divide-white/10 rounded-2xl bg-stone-950/85 ring-1 ring-white/10 lg:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)] lg:divide-x lg:divide-y-0">
-					<div className="flex min-w-0 flex-col justify-center gap-2.5 p-3 lg:p-4">
-						<ScoreBar title={title} m={m} api={api} />
-						<div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-							<SiteChips title={title} />
-							{show && <EpisodeRatingsLink />}
-						</div>
-					</div>
-					<div data-your className="flex min-w-0 flex-col justify-center gap-2.5 p-3 lg:p-4">
-						<TrackLine m={m} api={api} />
-						<MiniActions api={api} />
-					</div>
-					<WatchSection providers={providers} kind={title.kind} layout="wrap" className="p-3 lg:p-4" />
-				</div>
 			</div>
 		</section>
 	)

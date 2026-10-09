@@ -353,7 +353,14 @@ const ACTION_LOOK = {
 	hide: { Icon: NoSymbolIcon, on: "bg-pink-500 text-black", tint: "text-pink-300" },
 } as const
 
-export function ActionButton({ action, quiet = false, compact = false, phoneIcon = false, className = "" }: { action: Action; quiet?: boolean; compact?: boolean; /** Below sm, the icon alone. */ phoneIcon?: boolean; className?: string }) {
+export function ActionButton({
+	action,
+	quiet = false,
+	compact = false,
+	phoneIcon = false,
+	iconOnly = false,
+	className = "",
+}: { action: Action; quiet?: boolean; compact?: boolean; /** Below sm, the icon alone. */ phoneIcon?: boolean; /** The icon alone at every width; the name stays for screen readers and as the tooltip. */ iconOnly?: boolean; className?: string }) {
 	const look = ACTION_LOOK[action.id]
 	return (
 		<button
@@ -361,14 +368,14 @@ export function ActionButton({ action, quiet = false, compact = false, phoneIcon
 			data-action={action.id}
 			aria-pressed={action.active}
 			disabled={action.disabled}
-			title={action.hint}
+			title={iconOnly ? `${action.label}. ${action.hint ?? ""}` : action.hint}
 			onClick={action.run}
 			className={`inline-flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${FOCUS} ${
 				action.active ? look.on : quiet ? "text-gray-300 hover:bg-white/10 hover:text-white" : "bg-white/10 text-gray-100 hover:bg-white/20"
 			} ${compact ? "h-9 px-2.5 text-xs" : quiet ? "h-9 px-3 text-xs" : "h-11 px-3 text-sm"} ${className}`}
 		>
 			<look.Icon className={`h-4 w-4 shrink-0 ${action.active ? "" : look.tint}`} />
-			<span className={`truncate ${phoneIcon ? "max-sm:sr-only" : ""}`}>{action.label}</span>
+			<span className={`truncate ${iconOnly ? "sr-only" : phoneIcon ? "max-sm:sr-only" : ""}`}>{action.label}</span>
 		</button>
 	)
 }
