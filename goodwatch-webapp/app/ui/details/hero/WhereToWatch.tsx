@@ -71,7 +71,14 @@ export default function WhereToWatch({ media, country, navigateToSection, classN
 	return (
 		<div id="streaming" ref={ref} data-where-to-watch className={`relative min-w-0 ${className}`}>
 			<div className="flex min-w-0 items-center gap-1.5">
-				<h2 className="mr-auto min-w-0 truncate text-sm font-semibold text-white">Where to watch</h2>
+				<h2
+					aria-label="Where to watch"
+					className="mr-auto min-w-0 truncate text-sm font-semibold text-white"
+				>
+					{/* A phone's row has no room for the three words beside the tabs and the country. */}
+					<span className="sm:hidden">Watch</span>
+					<span className="hidden sm:inline">Where to watch</span>
+				</h2>
 				<div role="tablist" aria-label="Offer type" className="flex shrink-0 rounded-full bg-white/8 p-0.5 text-[11px] sm:text-xs">
 					{(["flatrate", "rent", "buy"] as const).map((t) => (
 						<button
