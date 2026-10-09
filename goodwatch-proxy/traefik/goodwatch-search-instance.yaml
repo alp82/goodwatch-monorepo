@@ -13,10 +13,9 @@
 #   point, for the two search paths, with the header X-Gw-Role: search. Only the router of goodwatch-search.yaml on
 #   abio sets that header, so this file does nothing while that one isn't installed. Its priority is 1100, above
 #   goodwatch-instance.yaml (1000), which keeps sending everything else from abio to the page instance.
-# - Each server is one search role, addressed by its network alias on the coolify network. Each role is its own
-#   Coolify application with its own alias (goodwatch-search-a, goodwatch-search-b). A container's name and address
-#   change with every deploy; the alias doesn't. While a deploy runs two containers of one role, its alias resolves
-#   to both.
+# - Each server is one search role, addressed by its network alias on the coolify network. The roles are the two
+#   services of goodwatch-search/docker-compose.yml, with the aliases goodwatch-search-a and goodwatch-search-b.
+#   A deploy restarts one role at a time, so the other one carries the searches meanwhile.
 # - The health check asks each role's readiness endpoint every 2 seconds, with a timeout of 1 second: the setting of
 #   the search role benchmark. A role that is starting, draining (the first 8 seconds after SIGTERM), or gone gets no
 #   searches, and the other one carries on. With both out, the answer is 503 with the body "no available server".
