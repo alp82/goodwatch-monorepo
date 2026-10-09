@@ -1,0 +1,6 @@
+Process role: search
+[remix-serve] http://localhost:3000 (http://0.0.0.0:3000)
+Search models: 6 files verified in /data/gw-search-models, 0 downloaded now
+People index ready: 61831 people in 1365 ms
+Search index build 20261009T041504Z loaded in 8411 ms
+Process: rss 900 MB, heap 300 of 400 MB, external 100 MB, longest event loop stall 238 ms, query encoder not ready with 0 waiting, up 1 min

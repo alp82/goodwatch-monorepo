@@ -1,0 +1,11 @@
+{
+  "description": "Local test only, for test-smoke-roles.sh: the role-dependent entries of smoke/urls.json and one that every role serves.",
+  "imageHost": "https://image.tmdb.org/",
+  "neverContains": ["Unexpected Server Error"],
+  "defaults": { "client": "browser", "cookie": true, "expect": [200] },
+  "entries": [
+    { "id": "api-search-config", "path": "/api/search-config", "json": { "keys": ["version"] }, "guards": "Every role serves it." },
+    { "id": "api-command-palette", "path": "/api/command-palette?q=mat", "directRoles": ["search", "both"], "json": { "arrays": ["titles"], "minItems": 1 }, "guards": "As in smoke/urls.json." },
+    { "id": "api-combined-search-rejects-short-text", "path": "/api/combined-search", "method": "POST", "requestHeaders": { "Content-Type": "application/json" }, "body": "{\"q\":\"x\"}", "directRoles": ["search", "both"], "expect": [400], "contains": ["Enter between 2 and 4096 bytes"], "guards": "As in smoke/urls.json." }
+  ]
+}

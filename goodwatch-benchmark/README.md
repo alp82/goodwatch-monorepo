@@ -296,14 +296,14 @@ Doctor checks SSH, Docker, images, file limits, free disk, and the generator loc
 ./bench.sh smoke --commit "$(git rev-parse origin/main)"
 ```
 
-It prints one line per check (`PASS`, `FAIL`, `WARN`, or `SKIP`) and exits with 1 when any check fails. A run takes 6 seconds on a container that is older than a minute, and up to about two minutes on a new one, because it waits for the first per-minute `Process:` log line. It sends about 30 GET requests over the public address. It never sends `POST /api/combined-search` or another writing request.
+It prints one line per check (`PASS`, `FAIL`, `WARN`, or `SKIP`) and exits with 1 when any check fails. A run takes 6 seconds on a container that is older than a minute, and up to about two minutes on a new one, because it waits for the first per-minute `Process:` log line. It sends about 30 GET requests over the public address, and one `POST /api/combined-search` with one character of text, which the route rejects with 400 before it searches. It never sends a search that runs, or another writing request: a search that runs writes a history row.
 
 What it does, in order:
 
 1. **Finds the container.** It connects with SSH to the host that the target's name resolves to, and waits until exactly one `gk4owk8-*` container runs, is healthy, and fits the options. `--commit SHA` compares with `SOURCE_COMMIT` in the container's environment. `--newer-than NAME` refuses the container with that name: note the name before a deploy when you don't know the commit. `--deploy-timeout` (default 600 seconds) limits the wait. Then it waits until the home page answers 200, because requests can fail for a moment while the proxy switches containers (see [webapp deploys](../docs/webapp-deploys.md)).
 2. **Reads the metrics** from the private port inside the container (`goodwatch_http_responses_total`, the process uptime, and the build's commit).
 3. **Requests the pages** in [`smoke/urls.json`](smoke/urls.json) and checks the status, markers in the body, headers, and for HTML pages the rendered markers: the title text in `<title>` and `<h1>`, links to titles in the server HTML, an image `src` on the image host, and JSON-LD blocks that parse. No response may contain `Unexpected Server Error`.
-4. **Scans the container's log from its start** with the patterns in [`smoke/log-patterns.json`](smoke/log-patterns.json), after the requests, so that errors from the edge-case pages are in it. The people index, the title snapshot, and the search index must report that they loaded. The latest `Process:` line must say `query encoder ready`. Slow subsystems have until 120 seconds after the process start (`--log-wait`). No line may match a failure pattern, such as `failed to start`, `Cannot find module`, or `TypeError`.
+4. **Scans the container's log from its start** with the patterns in [`smoke/log-patterns.json`](smoke/log-patterns.json), after the requests, so that errors from the edge-case pages are in it. The people index, the title snapshot, and the search index must report that they loaded (see [Roles](#roles) for a process that runs as one role). The latest `Process:` line must say `query encoder ready`. Slow subsystems have until 120 seconds after the process start (`--log-wait`). No line may match a failure pattern, such as `failed to start`, `Cannot find module`, or `TypeError`.
 5. **Reads the metrics again.** The Redis client must be ready, no Redis breaker may be open, and no route's 5xx counter may have risen since step 2. Background traffic counts too: a 5xx that a crawler caused during the run fails the check. 5xx responses from before the run print a warning.
 
 The URL list covers a well-known movie and show, a title without a poster, without a backdrop, without cast, without a trailer, and without streaming data, a show with more than 3,300 cast rows, a person with and without a department, a filtered person URL without the cookie (403), with it (200), and from a crawler (301), home, Discover with and without a filter, the share list and its image, a missing share list and a missing title (404), a title's OG image, `robots.txt`, a script that the home page references, `/metrics` on the public port, and the GET endpoints that pages call. Each entry's `guards` field says which regression or edge it's for, and a failure prints it.
@@ -322,6 +322,49 @@ With more than one webapp instance, the public route reaches either of them, and
 `--host` takes a name from `goodwatch-hq/ansible/hosts.ini` or a private address. The check finds the `gk4owk8-*` container on that host, opens an SSH tunnel from a free local port to the container's port 3000 on its Docker network, and sends every request through it. No proxy, no load balancer, and no public route is involved, so the result describes that process alone, and it works before the instance takes traffic. The log and the metrics come from the same container. SSH jumps through `BENCH_SSH_JUMP`, or through the host that the target's name resolves to when it's unset.
 
 After a deploy to two instances, run the check three times: once per host, and once without `--host` for the public route. Coolify deploys the additional server after the primary one finishes, so start the check for the second host with `--commit` and let it wait.
+
+#### Roles
+
+The check reads `WEBAPP_ROLE` in the container (`page`, `search`, or `both`, the default) and prints the role on the `deploy:container` line. The role decides which checks apply:
+
+| Check | `both` | `page` | `search` |
+| --- | --- | --- | --- |
+| The pages in `smoke/urls.json` | Yes | Yes | No |
+| The command palette lookup and the rejected search, sent straight to the process (`--host`) | Yes | Skipped | Yes |
+| The same two requests over the public route | Yes | Yes: the proxy sends them to a search role | Doesn't apply |
+| Log: the people index, the search index, and `query encoder ready` | Yes | Skipped | Yes |
+| Log: the title snapshot | Yes | Yes | Skipped: a search role is ready without it |
+| Log: `Process role: page` or `Process role: search` | No | Yes | Yes |
+| Log: `Search models: ... files verified`, and `Search ranking: query models ready in ... ms, 2 encoder threads` | No | No | Yes |
+| Metrics: the Redis client, the breakers, and the 5xx counters | Yes | Yes | Yes |
+
+A skipped check prints a `SKIP` line with the reason.
+
+- **A page role has no encoder.** Its per-minute `Process:` line says `query encoder not ready` for good, so that check is skipped for it.
+- **A search role says `query encoder not ready` until its query models have loaded.** The check waits for a newer `Process:` line, until `--log-wait` seconds after the process start, and fails only then.
+- **A container without `WEBAPP_ROLE`,** and a local log without a `Process role:` line, count as `both`.
+
+`scripts/test-smoke-roles.sh` tests these rules on the development machine, with a stub per role and the logs in `scripts/fixtures/smoke-roles/`. Run it after a change to `smoke/log-patterns.json`, `smoke/search-role-urls.json`, or the role handling in `scripts/smoke.mjs`.
+
+#### Check a search role
+
+A search role is a container of its own, from its own Coolify application. Name its container by the application's id, and its host:
+
+```sh
+./bench.sh smoke --host vector1 --container-prefix <application id>- --role search
+```
+
+The check finds the container, fails unless its `WEBAPP_ROLE` is `search`, opens the SSH tunnel to it, and waits for `/health/ready`. Then it sends the three requests in [`smoke/search-role-urls.json`](smoke/search-role-urls.json): the readiness endpoint, a command palette lookup that must return titles, and the `POST /api/combined-search` with one character, which must answer 400. It reads the log and the metrics like for a page instance.
+
+No request starts a search. Every search that runs writes a row to `search_history` after its response, also a basic one (`combinedSearch` in `app/server/combined-search/search.server.ts`), and a text without a stored reading can start a paid call. The one-character text is rejected in the route, after the in-flight limit and before `combinedSearch` is called. So the check proves that the route answers in a process that runs search, not that a search ranks. For that, read the role's log after a real search, or run the load step of [the deploy checklist](../docs/search-role-deploy.md) with the owner's go-ahead.
+
+The default run includes the search roles once `config.env` lists them:
+
+```sh
+SMOKE_SEARCH_ROLES='vector1:<application id>-,vector1:<other application id>-'
+```
+
+`./bench.sh smoke` then runs the check above for each entry after the public checks, with the same `--commit`, and prints one `search-role:` line per entry. While the list is empty, it prints `SKIP  search-roles` and passes. `--skip search-roles` leaves the roles out, for example when they deploy separately from the commit that you wait for.
 
 #### Watch a deploy
 
