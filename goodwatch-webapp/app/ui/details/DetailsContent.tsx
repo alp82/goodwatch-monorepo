@@ -33,7 +33,6 @@ import Explore3Walk from "~/ui/prototype-carousels/Explore3Walk"
 import Explore4Chips from "~/ui/prototype-carousels/Explore4Chips"
 import Explore5Map from "~/ui/prototype-carousels/Explore5Map"
 import { NativeRowAssets } from "~/ui/prototype-carousels/NativeRow"
-import { PrototypeSwitcher } from "~/ui/prototype-carousels/PrototypeSwitcher"
 import RelatedExplore from "~/ui/prototype-carousels/RelatedExplore"
 import RelatedList from "~/ui/prototype-carousels/RelatedList"
 import RelatedRowsNative from "~/ui/prototype-carousels/RelatedRowsNative"
@@ -151,7 +150,6 @@ export default function DetailsContent({
 
 	return (
 		<div className="flex flex-col gap-12">
-			{variant && <PrototypeSwitcher variant={variant} />}
 			{native && <NativeRowAssets />}
 			{hasEpisodeGrid(episodeGrid) && (
 				<div {...section(episodeGridHeight(episodeGrid))}>

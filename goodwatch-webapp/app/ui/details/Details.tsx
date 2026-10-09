@@ -12,6 +12,8 @@ import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 import { BelowFoldProvider, useBelowFold } from "~/ui/details/below-fold"
 import type { Section } from "~/utils/scroll"
+import { PrototypeSwitcher } from "~/ui/prototype-carousels/PrototypeSwitcher"
+import { useCarouselPrototype } from "~/ui/prototype-carousels/variant"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -50,8 +52,12 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 		scrollToSection(section)
 	}
 
+	// PROTOTYPE: the floating bar sits outside the isolated content, or the hero's cards cover it.
+	const prototypeVariant = useCarouselPrototype()?.variant
+
 	const content = (
 		<>
+			{prototypeVariant && <PrototypeSwitcher variant={prototypeVariant} />}
 			{backdrop_path && (
 				<div
 					className="pointer-events-none absolute top-0 z-0 w-full h-full"
