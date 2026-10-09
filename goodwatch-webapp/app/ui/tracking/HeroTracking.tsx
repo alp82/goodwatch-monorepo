@@ -54,7 +54,12 @@ export default function HeroTracking({
 	return (
 		<div data-tracking-hero={view.derived.state}>
 			{view.derived.state !== "not_started" ? (
-				<StatusBox tracking={tracking} view={view} actions={actions} />
+				<StatusBox
+					media={media}
+					tracking={tracking}
+					view={view}
+					actions={actions}
+				/>
 			) : (
 				<StartBox tracking={tracking} view={view} />
 			)}
@@ -118,6 +123,7 @@ const MENU_LOOK: Record<
 	resume: { Icon: PlayIcon, tint: "text-sky-300" },
 	hold: { Icon: PauseIcon, tint: "text-violet-300" },
 	watchAgain: { Icon: ArrowPathIcon, tint: "text-sky-300" },
+	rewatch: { Icon: BookmarkIcon, tint: "text-amber-300" },
 	takeBack: { Icon: ArrowUturnLeftIcon, tint: "text-gray-400" },
 	setDate: { Icon: ClockIcon, tint: "text-gray-300" },
 	drop: { Icon: NoSymbolIcon, tint: "text-pink-300/80" },
@@ -126,9 +132,12 @@ const MENU_LOOK: Record<
 function StatusPill({
 	view,
 	actions,
+	onRewatch,
 }: {
 	view: ShowView
 	actions: TrackingActions
+	/** Want to rewatch, on or off: the Wishlist's own writer, as the Want to See button uses it. */
+	onRewatch: () => void
 }) {
 	const [open, setOpen] = useState(false)
 	/** The entry the menu asks about before it goes on. */
@@ -173,6 +182,8 @@ function StatusPill({
 				return press && actions.askGroupDate(press.group, press.count)
 			case "wantToSee":
 				return void actions.wantToSee()
+			case "rewatch":
+				return onRewatch()
 			default:
 				return actions[entry.id]()
 		}
@@ -325,14 +336,17 @@ function StartBox({
 }
 
 function StatusBox({
+	media,
 	tracking,
 	view,
 	actions,
 }: {
+	media: TrackedMedia
 	tracking: ShowTracking
 	view: ShowView
 	actions: TrackingActions
 }) {
+	const { toggleWant } = useTitleActions(media)
 	const { derived } = view
 	const next =
 		derived.next &&
@@ -354,7 +368,7 @@ function StatusBox({
 	return (
 		<StatusBoxFrame>
 			<div className="flex items-center justify-between gap-3">
-				<StatusPill view={view} actions={actions} />
+				<StatusPill view={view} actions={actions} onRewatch={toggleWant} />
 				<p
 					data-progress
 					title={extras.join(" · ") || undefined}
@@ -591,7 +605,6 @@ function Buttons({
 	const toast = useUndoToast()
 	const { state } = view.derived
 	const { seen } = view
-	const notStarted = state === "not_started"
 	const third = "col-span-2 @lg:col-span-1"
 	return (
 		<div
@@ -603,11 +616,13 @@ function Buttons({
 			<ActionButton
 				kind="want"
 				label="long"
+				rewatch={state === "seen"}
 				active={a.want}
 				disabled={a.wantPending || (!a.want && !view.wantToSee.ok)}
 				title={!a.want && !view.wantToSee.ok ? view.wantToSee.why : undefined}
 				onClick={() =>
-					!notStarted && !a.want ? actions.wantToSee() : a.toggleWant()
+					// Row 24 is the machine's: a Dropped show with nothing watched. Elsewhere the Wishlist's writer.
+					state === "dropped" && !a.want ? actions.wantToSee() : a.toggleWant()
 				}
 			/>
 			<button

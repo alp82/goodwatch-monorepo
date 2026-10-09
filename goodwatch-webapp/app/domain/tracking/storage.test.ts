@@ -242,12 +242,14 @@ function checkInvariants(stored: Stored, where: string) {
 			"seen",
 			`${where}: a press stands on a show that is not Seen`,
 		)
-	// 5. A started show is on no list of intentions.
+	// 5. A started show is never Not interested, and only a Seen one is on the Wishlist (Want to rewatch).
 	if (state !== "not_started")
 		assert.ok(
-			!stored.flags.wantToSee && !stored.flags.notInterested,
-			`${where}: ${state} with Want to See or Not interested`,
+			!stored.flags.notInterested,
+			`${where}: ${state} with Not interested`,
 		)
+	if (state !== "not_started" && state !== "seen")
+		assert.ok(!stored.flags.wantToSee, `${where}: ${state} with Want to See`)
 	// 7. A row exists only when it remembers something.
 	if (row && state === "not_started")
 		assert.ok(

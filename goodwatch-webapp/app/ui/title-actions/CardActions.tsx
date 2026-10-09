@@ -99,6 +99,7 @@ export default function CardActions({
 						kind="want"
 						label="none"
 						size="sm"
+						rewatch={a.seen}
 						active={a.want}
 						disabled={a.wantPending}
 						onClick={a.toggleWant}

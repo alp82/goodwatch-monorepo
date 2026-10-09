@@ -601,6 +601,14 @@ export const TABLE: readonly Row[] = [
 		to: "watching",
 		says: "A new pass starts. Progress and the next episode count only its watches.",
 	},
+	{
+		id: "31",
+		from: ["seen"],
+		event: "wantToSee",
+		guard: null,
+		to: "same",
+		says: "Want to rewatch: on or off the Wishlist while the show stays Seen. Not a state; it ends when the show leaves Seen.",
+	},
 	// The catalog. No code takes this row: the catalog is an argument of every function here, never an event.
 	{
 		id: "27",
@@ -628,6 +636,13 @@ export const groupWatchId = (group: string, episodeId: number) =>
 const answered = (record: TrackingRecord) =>
 	record.seenQuestion === "open" ? "answered" : record.seenQuestion
 
+/**
+ * Want to See on a Seen show is "Want to rewatch" (row 31): a watch or a press that finds the show Seen leaves it
+ * on the Wishlist. From any other state they take it off. `step` takes it off when the show leaves Seen.
+ */
+const rewatch = (record: TrackingRecord) =>
+	record.state === "seen" && record.wantToSee
+
 function effect(
 	show: Show,
 	record: TrackingRecord,
@@ -654,7 +669,7 @@ function effect(
 			return {
 				...record,
 				watches: [...record.watches, watch],
-				wantToSee: false,
+				wantToSee: rewatch(record),
 				notInterested: false,
 				seenQuestion: answered(record),
 			}
@@ -690,7 +705,7 @@ function effect(
 				...record,
 				watches: [...record.watches, ...watches],
 				seenPress: { group: actionId, from: record.state },
-				wantToSee: false,
+				wantToSee: rewatch(record),
 				notInterested: false,
 				seenQuestion: answered(record),
 			}
@@ -720,7 +735,7 @@ function effect(
 				...record,
 				watches: [...record.watches, ...watches],
 				seenPress: { group: event.group, from: event.from },
-				wantToSee: false,
+				wantToSee: rewatch(record),
 				notInterested: false,
 			}
 		}
@@ -845,15 +860,14 @@ function whyNot(
 				? null
 				: "Only a show that is on hold or dropped can be resumed."
 		case "wantToSee":
-			if (state === "not_started") return null
+			// Not started: Want to See. Seen: Want to rewatch.
+			if (state === "not_started" || state === "seen") return null
 			if (!event.on) return "It is not on your Wishlist."
 			if (state === "dropped")
 				return facts(show, record).watchRemains
 					? "You have started it. Resume brings it back to Watching."
 					: null
-			return state === "seen"
-				? "You have seen it."
-				: "You have started it, so it lives under Watching and not in the Wishlist."
+			return "You have started it, so it lives under Watching and not in the Wishlist."
 		case "notInterested":
 			if (state === "not_started") return null
 			if (state === "dropped")
@@ -999,7 +1013,16 @@ export function step(
 		to: from,
 		refused,
 	})
-	const done = (record: TrackingRecord, rows: Row[]): Step => ({
+	const done = (after: TrackingRecord, rows: Row[]): Step => {
+		// Want to rewatch lasts while the show stays Seen: Watch again, taking Seen back, On hold, Drop and a
+		// removed watch that leaves the show another state all take it off the Wishlist.
+		const record =
+			from === "seen" && after.state !== "seen" && after.wantToSee
+				? { ...after, wantToSee: false }
+				: after
+		return finished(record, rows)
+	}
+	const finished = (record: TrackingRecord, rows: Row[]): Step => ({
 		world: { show: world.show, record },
 		event,
 		row: rows.length ? rows[rows.length - 1] : null,
@@ -1177,7 +1200,10 @@ export function step(
 					return done(
 						{
 							...world.record,
-							wantToSee: false,
+							// A press made on a Seen show (its new episodes) left Want to rewatch standing.
+							wantToSee:
+								world.record.seenPress.from === "seen" &&
+								world.record.wantToSee,
 							notInterested: false,
 							seenQuestion: answered(world.record),
 						},
@@ -1189,7 +1215,11 @@ export function step(
 				// The press stands again already: its watches and the state are written. What it clears may not be.
 				if (world.record.seenPress?.group === event.group)
 					return done(
-						{ ...world.record, wantToSee: false, notInterested: false },
+						{
+							...world.record,
+							wantToSee: event.from === "seen" && world.record.wantToSee,
+							notInterested: false,
+						},
 						[],
 					)
 				base = without((w) => w.group === event.group)

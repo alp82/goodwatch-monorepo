@@ -38,7 +38,8 @@ const byScoreAlone = (entry: WatchStateEntry | undefined) =>
  * A watch takes the title off the Wishlist and off Not interested. A movie's press records one watch dated now,
  * which replaces the watch its score owns. A show's press makes it Seen; which episodes that ticks is the server's
  * to say. Taking it back leaves a rated movie Seen through its score, and removes a show's entry: the state the
- * press was made from comes with the refetched data.
+ * press was made from comes with the refetched data. A title that is no longer Seen leaves the Wishlist, where
+ * it was as Want to rewatch.
  */
 export function afterSeenPress(
 	data: UserData | undefined,
@@ -72,14 +73,18 @@ export function afterSeenPress(
 	}
 	if (mediaType === "movie" && key in data.scores)
 		updated.watchState[key] = seenEntry(undefined, { count: 1 })
-	else delete updated.watchState[key]
+	else {
+		delete updated.watchState[key]
+		delete updated.wishlist[key]
+	}
 	return updated
 }
 
 /**
  * A score set, changed or cleared. A score takes the title off Not interested. A rated movie is Seen: one without
  * a watch gets the watch its score owns and leaves the Wishlist, and clearing the score takes that watch away
- * again while a watch the member logged stays. A show's score changes no state.
+ * again while a watch the member logged stays. A movie that was Seen already keeps its place on the Wishlist (Want
+ * to rewatch). A show's score changes no state.
  */
 export function afterScore(
 	data: UserData | undefined,
@@ -115,10 +120,6 @@ export function afterScore(
 			...data.watchState,
 			[key]: seenEntry(undefined, { count: 1 }),
 		}
-		updated.wishlist = { ...data.wishlist }
-		delete updated.wishlist[key]
-	} else if (byScoreAlone(before) && key in data.wishlist) {
-		// The server takes a movie off the Wishlist whenever its score's watch is its only watch.
 		updated.wishlist = { ...data.wishlist }
 		delete updated.wishlist[key]
 	}

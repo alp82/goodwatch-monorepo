@@ -19,7 +19,7 @@ import {
 } from "~/domain/tracking/show-page"
 import { ShowSession } from "~/domain/tracking/show-session"
 import type { LogRow } from "~/domain/tracking/storage"
-import { useUserScore } from "~/hooks/useUserDataAccessors"
+import { useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import type { UserData } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
@@ -298,6 +298,7 @@ export function useShowTracking(showId: number): ShowTracking {
 	const { page, copy } = snapshot
 	const ready = Boolean(page?.episodes.length && copy)
 	const score = useUserScore("show", showId)?.score ?? null
+	const wantToSee = useIsOnWishlist("show", showId)
 	const today = deviceClock.today()
 	const view = useMemo(
 		() =>
@@ -306,10 +307,11 @@ export function useShowTracking(showId: number): ShowTracking {
 						today,
 						running: page.running,
 						score,
+						wantToSee,
 						words: LOCALE_DATES,
 					})
 				: null,
-		[page, copy, today, score],
+		[page, copy, today, score, wantToSee],
 	)
 	const seasons = useMemo(() => {
 		const byNumber = new Map<number, PageEpisode[]>()

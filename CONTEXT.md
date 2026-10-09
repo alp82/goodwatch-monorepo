@@ -41,6 +41,10 @@ A guest's title interactions available across Taste, title details, and Wishlist
 The action expressing an intention to watch a title and placing it in Wishlist.
 _Avoid_: Save
 
+**Want to rewatch**:
+Want to See on a title the person has Seen: it places the title in Wishlist to be watched again and changes nothing else. It lasts while the title stays Seen and ends with the next watch of a movie or Watch again on a show.
+_Avoid_: Rewatch list, Want to See again
+
 **Movie**:
 A feature-length title in the catalog, as opposed to a show.
 _Avoid_: Film
@@ -60,7 +64,7 @@ The page for a member's shows tonight: one list with the Next episode of each sh
 _Avoid_: Shows, Watchlist, Continue watching, Up next
 
 **My movies**:
-The page for choosing a movie: the person's Want to See movies under their chosen sort, moods, On my services and the time they have. A movie leaves it when it is Seen.
+The page for choosing a movie: the person's Want to See movies under their chosen sort, moods, On my services and the time they have. A movie leaves it when it is Seen, and is in it again while the person wants to rewatch it.
 _Avoid_: Movies, My films, Watchlist, Queue
 
 **My library**:

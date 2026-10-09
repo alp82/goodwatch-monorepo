@@ -512,7 +512,7 @@ would cut the raw size by a third if it matters.
 | **Movie page**: watch log | Q4, when the log opens | 1 to a handful | Seen and the count are | Not cached; the browser's copy is replaced by every action on the movie |
 | **Home doors** and **Tonight's pick** | None for the member: the Watching entry with the latest `lastActivityAt` in the last 30 days, then its Next episode from the cached episode list. The other two doors are today's Watch next reads | | Yes | With the member data: the pick's key includes the map's `watchState` entries |
 | **My shows** | None for the member: the entries of the map. Q5 reads their shows from the catalog by key; the cached episode lists of the Continue rows give the Next episode's name. Start is the Wishlist's shows from the map, ordered by taste match as Watch next does today | The member's Watching, On hold and Seen shows: up to a few hundred keys | Yes | Q5 is public data; the list is rebuilt when the member data is |
-| **My movies** | No new query. It is the Wishlist's movies. A movie leaves when it is Seen because a watch, the score's included, deletes its Want to See row | | The Wishlist is | As today |
+| **My movies** | No new query. It is the Wishlist's movies. A movie leaves when it is Seen because a watch, the score's included, deletes its Want to See row. A Seen movie that is put on the Wishlist afterwards (Want to rewatch) is in it again until its next watch | | The Wishlist is | As today |
 | **Library**: counts on the chips and in the drop-down | None. Counted from the map: Want to see from `wishlist`; Watching, On hold and Dropped from `watchState`; Seen is `watchState` entries with state Seen plus scored shows without one; Not rated is Seen entries without a score | | Yes | With the map |
 | **Library**: a status's list, in steps of 60 | The order is made from the map on the server (2,500 keys sort in well under a millisecond), then Q6 loads the cards of one step. Last watched: `watchedAt` newest first, then the titles without a dated watch. My score: from `scores`. Title: the titles of the member's keys are read once by key and kept with the map | 60 per step, also at 1,500 titles | The keys are | The card data is public and cached as today |
 | **Title cards**: the seen flag | None. `watchState[key].state === 'seen'` or a score. On the server: `viewer.seen` | | Yes | With the map |
@@ -674,7 +674,7 @@ only a state that is one step behind its log rows, and only for the events that 
 | Step 4, Seen pressed again | The group's rows are gone and the row still says Seen with the press standing | The retry. Without it the row has the signature the fill job looks for (C5, section 6): the job puts back the group's rows for the episodes that had aired by the day of the press, so the press stands again as the row says |
 | Step 4, a press put back (row 30) | The press's rows are there again and the state is still the one taking it back left: every tick is there, the state is not Seen and no press stands | The retry: step 4 inserts nothing, step 5 writes the state and the press. Without it, as after a stopped Seen press |
 | Step 4, a movie's first watch or the delete of its last | A log row without a state row, or a state row without a log row: the movie's log and the lists disagree on whether it is Seen | The retry, or the check (invariant 3): the row follows the log |
-| Step 5 | The state is right; Want to See or Not interested is still set on a started show | The retry. The check lists it (invariant 5) |
+| Step 5 | The state is right; Want to See or Not interested is still set on a started show | The retry. The check lists it (invariant 5), except a Want to See row on a show that became Seen, which reads as Want to rewatch until the member takes it off |
 | Step 6 | The member data cache holds the old map for at most 5 minutes | Its lifetime |
 
 **Per action.** Statement counts leave out steps 1, 2 and 7, which every action has. "The state row" names the
@@ -682,30 +682,31 @@ columns that change; `updated_at` always does.
 
 | Action | Log rows | The state row | Other tables | The browser shows at once |
 | --- | --- | --- | --- | --- |
-| Watch an episode (rows 1 to 5) | Insert 1: `single`, now, `moment`, current pass | `state` by the row taken; a special changes nothing | A regular episode clears Want to See and Not interested | The tick, the next state and label, the new Next episode. Toast with Undo and "Change date" |
+| Watch an episode (rows 1 to 5) | Insert 1: `single`, now, `moment`, current pass | `state` by the row taken; a special changes nothing | A regular episode clears Want to See and Not interested; on a Seen show that stays Seen, Want to See stays (row 31) | The tick, the next state and label, the new Next episode. Toast with Undo and "Change date" |
 | Unwatch an episode (rows 6 to 10) | Delete the episode's rows of the current pass, by their `watch_id` | `state` by the row taken; leaving Seen sets the press columns NULL | | The tick gone, state and label |
 | Mark a season; Watched up to here | Insert one row per aired regular episode in range not yet watched in the pass: origin `season` or `upto`, one group id, no date | As if each were watched in turn (section 5) | As a watch | Every tick of the range, state. Toast with Undo and "Set a date" |
 | "Set a date" on a group | `UPDATE user_watch_log SET watched_at = ?, watched_at_precision = 'day', updated_at = ? WHERE user_id = ? AND group_id = ?` | None | | The dates |
 | Unmark a season; Undo of a group mark | One delete for the rows of the season in the current pass, or `WHERE user_id = ? AND group_id = ?` | As if each were unwatched in turn | | The ticks gone, state |
-| Press Seen (rows 11, 12) | Insert one row per aired regular episode not yet watched in the pass: origin `seen`, the press's group id, no date | `state = 'seen'`, `seen_press_group`, `seen_press_from` = the state before | Clears Want to See and Not interested | Every tick, "Seen" or "Caught up", the prompt to rate |
-| Press Seen again (rows 13 to 17) | `DELETE FROM user_watch_log WHERE user_id = ? AND group_id = ?` | `state` by the row taken; press columns NULL | | The group's ticks gone, the state before. Toast with Undo |
+| Press Seen (rows 11, 12) | Insert one row per aired regular episode not yet watched in the pass: origin `seen`, the press's group id, no date | `state = 'seen'`, `seen_press_group`, `seen_press_from` = the state before | Clears Want to See and Not interested; pressed on a Seen show (row 12), Want to See stays | Every tick, "Seen" or "Caught up", the prompt to rate |
+| Press Seen again (rows 13 to 17) | `DELETE FROM user_watch_log WHERE user_id = ? AND group_id = ?` | `state` by the row taken; press columns NULL | Clears Want to See unless the show stays Seen (row 13) | The group's ticks gone, the state before. Toast with Undo |
 | Undo of Press Seen again (row 30) | Insert the press's rows as the browser held them: the same `watch_id`, `group_id`, origin `seen`, pass, `watched_at` with its precision, and `created_at` | `state = 'seen'`, `seen_press_group`, `seen_press_from`, and `state_changed_at` as it was before the press was taken back (a new row when taking it back had left none) | Clears Want to See and Not interested | The press's ticks, the state and the press's line as before |
-| Put on hold, drop, resume (rows 18 to 21, 28, 29) | None | `state`, `state_changed_at`; from Seen (rows 28, 29) the press columns NULL | Drop clears Want to See and Not interested | The status pill |
+| Put on hold, drop, resume (rows 18 to 21, 28, 29) | None | `state`, `state_changed_at`; from Seen (rows 28, 29) the press columns NULL | Drop clears Want to See and Not interested; On hold from Seen clears Want to See | The status pill |
 | Rate a show (row 22) | None | Unchanged. A first score by hand on a show that is Not started sets `seen_question = 'open'` (a new row if there was none) | `user_score`, as today; a score clears Not interested | The score; the question |
-| Want to See (rows 23, 24) | None | Row 24 only: Dropped to Not started | `user_wishlist`; clears Not interested | The button |
+| Want to See (rows 23, 24, 31) | None | Row 24 only: Dropped to Not started | `user_wishlist`; clears Not interested | The button. On a Seen show (row 31) it reads "Want to rewatch", and the status menu has it beside Watch again |
 | Not interested (row 25) | None | None | `user_not_interested`; clears Want to See | The button |
 | Watch again (row 26) | None | `pass + 1`, `state = 'watching'`, press columns NULL | | Empty ticks, "Watching", pass 2, Next episode S1 E1 |
 | "Not now" on the prompt to rate | None | `rate_prompt_dismissed_at` | | The prompt gone |
 | Answer "Have you seen all of it?" | "Yes, all of it" is a Seen press | `seen_question = 'answered'` | | The question gone |
 | Edit a watch's date in the log | `UPDATE user_watch_log SET watched_at = ?, watched_at_precision = ?, updated_at = ? WHERE user_id = ? AND watch_id = ?` | None | | The row of the log |
 | Delete a watch in the log | `DELETE FROM user_watch_log WHERE user_id = ? AND watch_id = ?` | If it was the episode's only watch in the current pass, this is an unwatch and takes its row of the table. In any case: when no watch of a regular episode is left in any pass, Watching or Seen becomes Not started, as row 8 | | The row gone. Undo inserts the same row with the same `watch_id` |
-| Movie: Seen (one tap) | Insert 1: `single`, now, `moment`, pass 1. `DELETE ... WHERE user_id = ? AND media_type = 'movie' AND tmdb_id = ? AND origin = 'score'` | Insert if there is none: `seen`, pass 1 | Clears Want to See and Not interested | The eye, the count from two on. Toast with "Change date" and Undo |
+| Movie: Seen (one tap) | Insert 1: `single`, now, `moment`, pass 1. `DELETE ... WHERE user_id = ? AND media_type = 'movie' AND tmdb_id = ? AND origin = 'score'` | Insert if there is none: `seen`, pass 1 | Clears Want to See and Not interested (a watch of a movie that was Seen is the rewatch, so it clears Want to rewatch too) | The eye, the count from two on. Toast with "Change date" and Undo |
 | Movie: add a watch in the log | The same with the chosen day or no date | The same | The same | The row of the log |
 | Movie: rate, the movie has no log row | Insert 1: `score-<movie id>`, origin `score`, no date, pass 1 | Insert: `seen`, pass 1 | `user_score`; clears Not interested and Want to See | The score, the eye |
+| Movie: rate again, the score's watch is its only log row | None | None | `user_score`; clears Not interested. Clears a Want to See row that is older than the score's watch (the rating that was sent again); a newer one is Want to rewatch and stays | The score |
 | Movie: rate, the movie has a log row | None | None | `user_score`; clears Not interested | The score |
 | Movie: clear the score | `DELETE ... AND origin = 'score'` | Deleted if no log row is left | `user_score` | The score gone; not Seen unless a watch the member logged remains |
 | Movie: edit the date of the score's watch | The update above, and `origin = 'single'` when a date is set | None | | The row of the log, now the member's own |
-| Movie: delete a watch in the log | Delete 1. If none is left and the movie has a score: insert the score's watch | Deleted if no log row is left | | The row gone. Not Seen, unless the movie has a score |
+| Movie: delete a watch in the log | Delete 1. If none is left and the movie has a score: insert the score's watch | Deleted if no log row is left | Clears Want to See when no log row is left (not Seen, so no longer Want to rewatch) | The row gone. Not Seen, unless the movie has a score |
 
 A movie needs no episode list and no machine. One rule covers its rows, and every movie action above is that rule
 applied after the action's own write: **the score's watch exists exactly while the movie has a score and no log row
@@ -724,8 +725,10 @@ What follows from the rule, beyond what the owner decided in so many words:
 - An imported watch replaces the score's watch as a watch logged here does, and undoing that import puts it back.
 - A score that an import or the taste quiz writes records the score's watch too. Otherwise new scored movies without
   a watch would appear the day after the migration removed the last of them.
-- Rating a movie that has no watch clears Want to See, because the score's watch is a watch and a Seen movie is not
-  on the Wishlist. Today rating leaves the Wishlist alone.
+- Rating a movie that has no watch clears Want to See, because the score's watch is a watch and the movie is now
+  Seen. Today rating leaves the Wishlist alone. A movie that is put on the Wishlist after it is Seen is Want to
+  rewatch (ADR 0009): a new score leaves that row, the next watch deletes it, and so does a deleted watch that
+  leaves the movie not Seen.
 
 ### The browser
 
@@ -760,7 +763,7 @@ below names only the columns that change. Rows 10b and 27b exist only under opti
 | 9 | Unwatch, a watch remains; from On hold, Dropped | The same | Unchanged | None |
 | 10 | Unwatch, no watch remains; from On hold, Dropped | The same | Unchanged: On hold or Dropped with no log row | None |
 | 11 | Press Seen; from Not started, Watching, On hold, Dropped | +N, origin `seen`, group G, no date (N is 0 for a show without an episode list) | → `seen`, `seen_press_group = G`, `seen_press_from` = the state before. `seen_question` open → answered | Want to See and Not interested deleted |
-| 12 | Press Seen on a Seen show with new episodes | +N, group G2 | Stays `seen`. `seen_press_group = G2`, `seen_press_from = 'seen'`. The earlier group's rows stay and can no longer be taken back together | The same |
+| 12 | Press Seen on a Seen show with new episodes | +N, group G2 | Stays `seen`. `seen_press_group = G2`, `seen_press_from = 'seen'`. The earlier group's rows stay and can no longer be taken back together | Not interested deleted. Want to See stays: it is Want to rewatch |
 | 13 | Press Seen again, the press was made on a Seen show | − group | Stays `seen`, `seen_press_*` → NULL. The episodes read as new again, because they are no longer in L | None |
 | 15 | Press Seen again, the press was made on an On hold show | − group | → `on_hold`, `seen_press_*` → NULL | None |
 | 16 | Press Seen again, the press was made on a Dropped show | − group | → `dropped`, `seen_press_*` → NULL | None |
@@ -774,11 +777,12 @@ below names only the columns that change. Rows 10b and 27b exist only under opti
 | 23 | Want to See; from Not started | None | None | `user_wishlist` row added or deleted; Not interested deleted |
 | 24 | Want to See on a Dropped show with nothing watched | None | `dropped` → `not_started`, then deleted unless a prompt column is set | `user_wishlist` row added |
 | 25 | Not interested; from Not started | None | None | `user_not_interested` row added or deleted; Want to See deleted |
-| 26 | Watch again; from Seen, a regular episode is watched | None | `pass + 1`, → `watching`, `seen_press_*` → NULL. Progress reads 0 because no row of L is in the new pass | None |
+| 26 | Watch again; from Seen, a regular episode is watched | None | `pass + 1`, → `watching`, `seen_press_*` → NULL. Progress reads 0 because no row of L is in the new pass | Want to See deleted: the rewatch has begun |
 | 27 | The catalog changes | None | None. No job, no write | None |
-| 28 | Put on hold; from Seen, episodes aired since | None | `seen` → `on_hold`, `seen_press_*` → NULL | None |
-| 29 | Drop; from Seen, episodes aired since | None | `seen` → `dropped`, `seen_press_*` → NULL | Want to See and Not interested deleted (a Seen show has neither) |
+| 28 | Put on hold; from Seen, episodes aired since | None | `seen` → `on_hold`, `seen_press_*` → NULL | Want to See deleted |
+| 29 | Drop; from Seen, episodes aired since | None | `seen` → `dropped`, `seen_press_*` → NULL | Want to See and Not interested deleted |
 | 30 | Put a Seen press back (the Undo of rows 13 to 17); from the state that row left | + the group, as it was: ids, dates, `created_at` | → `seen`, `seen_press_group` and `seen_press_from` as they were, `state_changed_at` as it was (a new row after row 17) | Want to See and Not interested deleted |
+| 31 | Want to See on a Seen show (Want to rewatch) | None | None | `user_wishlist` row added or deleted; Not interested deleted. The row lasts while the show stays Seen: every row that leaves Seen deletes it (13 to 17 unless the show stays Seen, 26, 28, 29, and a removed watch that takes row 8) |
 
 Rows 28 and 29 were added after the owner used the show page: a member who has seen the earlier seasons and will
 not continue had no way to say so without ticking an episode first. They need an episode that aired since, so the
@@ -937,7 +941,8 @@ to the log rows.
 3. A movie has a row exactly while it has a log row, and the row has `state = 'seen'` and `pass = 1`.
 4. The score's watch: only on a movie, at most one per movie, and exactly while the movie has a score and no log row
    of another origin. So every scored movie has a log row.
-5. Any state but Not started ⇒ no Want to See row and no Not interested row for the title.
+5. Any state but Not started ⇒ no Not interested row for the title. Any state but Not started and Seen ⇒ no Want
+   to See row. A Seen title with a Want to See row is Want to rewatch.
 6. A log row is well formed: `watched_at_precision = 'unknown'` exactly when `watched_at` is NULL; a group origin has
    a `group_id` and an import has an `import_id`; a movie watch has no episode columns and pass 1; the score's watch
    has no date; no watch is in a pass beyond the row's (beyond 1 for a show without a row).
@@ -1001,9 +1006,9 @@ LIMIT 100;
 SELECT s.tmdb_id, s.media_type, s.state
 FROM user_watch_state s
 JOIN user_wishlist x ON x.user_id = s.user_id AND x.tmdb_id = s.tmdb_id AND x.media_type = s.media_type
-WHERE s.user_id = ? AND s.state <> 'not_started'
+WHERE s.user_id = ? AND s.state NOT IN ('not_started', 'seen')
 LIMIT 100;
--- and the same with user_not_interested.
+-- and the same with user_not_interested, there with s.state <> 'not_started'.
 
 -- Invariant 6.
 SELECT watch_id
@@ -1119,7 +1124,8 @@ the score's watch is deleted then, as the rule of section 4 says. A show's episo
 its state row is Seen with the press standing, so a show whose state the new build has changed gets none. What
 step 6 can't see is a mark removed in the old table between steps 3 and 5; those minutes are accepted.
 
-**Want to See on Seen titles.** Invariant 5 says a Seen title has no Want to See row. Today nothing clears the
+**Want to See on Seen titles.** (Settled 2026-10-09: such a row is Want to rewatch, and invariant 5 no longer
+lists it. What follows is the question as it stood.) Invariant 5 said a Seen title has no Want to See row. Today nothing clears the
 Wishlist when a title is rated or marked watched outside "I watched it", so such rows exist; they were not counted.
 The script leaves `user_wishlist` alone and the dry run prints the count. Whether they are deleted then, or My movies
 hides Seen movies until the member's next action clears each, is the owner's call with the number in hand.
@@ -1279,7 +1285,7 @@ nothing that needs a table was tried.
 | The hours in which the device's date and the UTC date differ | A list and the show page can disagree about one episode | Accepted with C4; section 3 says what is seen |
 | Ordering by a nullable timestamp with a continuation (Q7) | The diary's steps | Null ordering was checked with literal values only |
 | `show.aired_episode_count` being a day late | A new episode reads as new up to a day after it airs | Accept, or have the copy visit airing shows twice a day |
-| Want to See rows on titles that become Seen | Invariant 5 lists them from the first day | The dry run counts them; the owner decides |
+| Want to See rows on titles that become Seen | Invariant 5 listed them from the first day | Settled 2026-10-09: they read as Want to rewatch |
 | Array and object columns | None are used, on purpose: an undated watch has no place in a list of times, and a row per watch needs no list | |
 
 **Read from production for the proposal** (all `SELECT`, each aggregated or limited, each answered in under 0.3
@@ -1380,7 +1386,8 @@ Where the build differs from the text above, or settles what it left open:
   and it leaves the Wishlist alone, as it always has. So a movie that an import rated can be Seen and on the
   Wishlist, which invariant 5 lists. Whether an import clears Want to See is open, with the same question for the
   migration (section 6).
-- **Want to See can still be added to a Seen title,** as before ("Want to See Again"). `updateWishList` and the Not
+- **Want to See can still be added to a Seen title,** as before. Since 2026-10-09 that is the rule, Want to
+  rewatch (ADR 0009, row 31), and the page labels it so. `updateWishList` and the Not
   interested writer do not send the machine's events yet. The only row they would take is Want to See on a Dropped
   show (row 24), and nothing drops a show yet.
 - **Not interested is offered only for a title without a state and without a score,** where it was "not Seen and

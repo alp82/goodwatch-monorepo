@@ -65,3 +65,38 @@ test("the show page tells the map where the show stands: its entry, and a starte
 	assert.equal(afterShowTracking(started, 7, { ...watching }), started)
 	assert.equal(afterShowTracking(undefined, 7, watching), undefined)
 })
+
+test("Want to rewatch: a show that stays Seen keeps its place on the Wishlist, and loses it when it leaves Seen", async () => {
+	const seen = entry({ episodesWatched: 6, furthest: [1, 6] })
+	const member = data({
+		wishlist: { "show-7": wish },
+		watchState: { "show-7": seen },
+	})
+	// The page tells the map the same thing again, and a tick of a new episode: still Seen, still wanted.
+	assert.equal(afterShowTracking(member, 7, { ...seen }), member)
+	const ticked = afterShowTracking(member, 7, {
+		...seen,
+		episodesWatched: 7,
+		furthest: [1, 7],
+	})
+	assert.deepEqual(ticked?.wishlist, { "show-7": wish })
+	// Watch again, On hold, Drop: another state. Seen taken back with nothing left: no entry.
+	const again = afterShowTracking(
+		member,
+		7,
+		entry({ state: "watching", pass: 2 }),
+	)
+	assert.deepEqual(
+		[again?.watchState["show-7"].state, again?.wishlist],
+		["watching", {}],
+	)
+	const back = afterShowTracking(member, 7, null)
+	assert.deepEqual([back?.watchState, back?.wishlist], [{}, {}])
+	// A show that becomes Seen was on the Wishlist as Want to See, which Seen fulfils.
+	const first = afterShowTracking(
+		data({ wishlist: { "show-7": wish } }),
+		7,
+		seen,
+	)
+	assert.deepEqual(first?.wishlist, {})
+})

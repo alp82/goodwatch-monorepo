@@ -957,7 +957,7 @@ test("deleting a member's tracking data removes their watch log, states and impo
 })
 
 // Keep the unused helpers honest: Want to See added by its own writer stays possible on a Seen title today.
-test("Want to See can still be added to a Seen title, as before", async () => {
+test("Want to rewatch: a Seen title can be put on the Wishlist, and it stays Seen", async () => {
 	await act(movie, { type: "watch" })
 	await updateWishList({
 		user_id: user,
@@ -966,5 +966,64 @@ test("Want to See can still be added to a Seen title, as before", async () => {
 		action: "add",
 	})
 	assert.equal(onWishlist(movie), true)
-	assert.equal(mediaKey(movie) in (await memberData()).wishlist, true)
+	const data = await memberData()
+	assert.equal(mediaKey(movie) in data.wishlist, true)
+	assert.equal(data.watchState[mediaKey(movie)].state, "seen")
+})
+
+/** On the Wishlist since now, which is after anything the test recorded before. */
+const wantRewatch = (title: TrackedTitle) =>
+	db.seed("user_wishlist", [titleRow(title, { created_at: Date.now() + 60_000 })])
+
+test("Want to rewatch on a movie ends when the movie is no longer Seen, and with the next watch", async () => {
+	await act(movie, { type: "watch" }, "first-watch")
+	wantRewatch(movie)
+	// Seen taken back: not Seen, so not on the Wishlist as a rewatch either.
+	assert.equal(await press(movie, "remove"), "success")
+	assert.equal(stateOf(movie), null)
+	assert.equal(onWishlist(movie), false)
+
+	// Watched again: the rewatch has happened.
+	await act(movie, { type: "watch" }, "first-watch")
+	wantRewatch(movie)
+	await act(movie, { type: "watch" }, "second-watch")
+	assert.equal(onWishlist(movie), false)
+
+	// One watch of two deleted in the log: still Seen, still wanted.
+	wantRewatch(movie)
+	await act(movie, { type: "deleteWatch", watchId: "second-watch" })
+	assert.equal(stateOf(movie)?.state, "seen")
+	assert.equal(onWishlist(movie), true)
+})
+
+test("Want to rewatch on a rated movie outlasts Seen taken back and a changed score", async () => {
+	await rate(movie, 8)
+	wantRewatch(movie)
+	// A new score is no watch: the movie was Seen before it, and stays wanted.
+	await rate(movie, 9)
+	assert.equal(onWishlist(movie), true)
+	// The member's own watch goes, the score's watch comes back, and the movie is Seen all the while.
+	db.rows.set("user_wishlist", [])
+	await act(movie, { type: "watch" }, "own-watch")
+	wantRewatch(movie)
+	assert.equal(await press(movie, "remove"), "success")
+	assert.deepEqual(watches(movie), [["score-603", "score", "unknown"]])
+	assert.equal(onWishlist(movie), true)
+})
+
+test("Want to rewatch on a show lasts while it is Seen: Watch again and Seen taken back take it off the Wishlist", async () => {
+	assert.equal(await press(show, "add", "press-show-0001"), "success")
+	wantRewatch(show)
+	// A score changes no state and leaves it.
+	await rate(show, 9)
+	assert.equal(onWishlist(show), true)
+	assert.equal(await press(show, "remove"), "success")
+	assert.equal(stateOf(show), null)
+	assert.equal(onWishlist(show), false)
+
+	assert.equal(await press(show, "add", "press-show-0002"), "success")
+	wantRewatch(show)
+	const again = await act(show, { type: "watchAgain" })
+	assert.deepEqual([again.status, stateOf(show)?.state, stateOf(show)?.pass], ["applied", "watching", 2])
+	assert.equal(onWishlist(show), false)
 })

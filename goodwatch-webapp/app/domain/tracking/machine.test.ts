@@ -71,7 +71,7 @@ test("the table is well formed", () => {
 	assert.equal(new Set(TABLE.map((row) => row.id)).size, TABLE.length)
 	assert.deepEqual(
 		TABLE.map((row) => Number(row.id)).sort((a, b) => a - b),
-		Array.from({ length: 30 }, (_, index) => index + 1),
+		Array.from({ length: 31 }, (_, index) => index + 1),
 	)
 	for (const row of TABLE) {
 		assert.ok(row.from.length > 0, row.id)
@@ -315,7 +315,7 @@ test("a press is put back only onto what taking it back left", () => {
 	assert.equal(step(resumed, heldRestore).refused, PRESS_NOT_RESTORABLE)
 	// A refused event changes nothing.
 	assert.equal(step(resumed, heldRestore).world, resumed)
-	// Putting a press back takes the show off the lists a Seen show is never on.
+	// Putting a press back onto a show that was not Seen takes it off the Wishlist, as the press did.
 	const wanted: World = {
 		show: taken.show,
 		record: { ...step(pressed, AGAIN).world.record, wantToSee: true },
@@ -525,6 +525,59 @@ test("rating never changes the state, and asks once on a never-started show", ()
 			run("ended", [...actions, { type: "rate", score: 3 }]).view.state,
 			state,
 		)
+})
+
+test("Want to rewatch: a Seen show goes on the Wishlist and stays Seen, until it leaves Seen (row 31)", () => {
+	const REWATCH: Action[] = [SEEN, WANT]
+	const wanted = run("weekly", REWATCH)
+	assert.deepEqual(wanted.rows, ["11", "31"])
+	assert.deepEqual(
+		[wanted.view.state, wanted.world.record.wantToSee],
+		["seen", true],
+	)
+	// It only bookmarks: no watch is added or removed, and the press still stands.
+	assert.equal(
+		wanted.world.record.watches.length,
+		run("weekly", [SEEN]).world.record.watches.length,
+	)
+	assert.ok(wanted.world.record.seenPress)
+	const off = run("weekly", [...REWATCH, { type: "wantToSee", on: false }])
+	assert.deepEqual(
+		[off.rows[2], off.view.state, off.world.record.wantToSee],
+		["31", "seen", false],
+	)
+	// What leaves Seen takes it off the Wishlist: Watch again, taking the press back, a removed watch.
+	const leaves: Action[][] = [[{ type: "watchAgain" }], [AGAIN], [u(1, 1)]]
+	for (const actions of leaves) {
+		const left = run("weekly", [...REWATCH, ...actions])
+		assert.notEqual(left.view.state, "seen", JSON.stringify(actions))
+		assert.equal(left.world.record.wantToSee, false, JSON.stringify(actions))
+	}
+	// What keeps the show Seen keeps it: a score, and the episodes that are new marked by a tick or a press.
+	assert.equal(
+		run("weekly", [...REWATCH, { type: "rate", score: 8 }]).world.record
+			.wantToSee,
+		true,
+	)
+	const newer = play(findShow("weekly"), [
+		...REWATCH,
+		{ type: "episodeAirs" },
+	]).world
+	const next = derive(newer).next
+	assert.ok(next)
+	for (const event of [SEEN, w(next.season, next.number)]) {
+		const marked = step(newer, event as TrackingEvent, "again")
+		assert.deepEqual(
+			[marked.refused, marked.to, marked.world.record.wantToSee],
+			[null, "seen", true],
+			event.type,
+		)
+	}
+	// A show with new episodes can be put on hold or dropped from Seen, and is then on no Wishlist.
+	for (const type of ["hold", "drop"] as const)
+		assert.equal(step(newer, { type }).world.record.wantToSee, false, type)
+	// Want to See stays what it was for a show that is under way.
+	assert.equal(run("weekly", [w(1, 1), WANT]).rows[1], "refused")
 })
 
 test("a rewatch: pass 2 has its own progress and next episode, and pass 1 stays in the log", () => {
@@ -1393,8 +1446,13 @@ test("every event ends in a state the table names, and the record's invariants h
 				assert.equal(record.state, "seen", "a press stands only on a Seen show")
 			if (record.state !== "not_started")
 				assert.ok(
-					!record.wantToSee && !record.notInterested,
-					"a started show is on no list of intentions",
+					!record.notInterested,
+					"a started show is never Not interested",
+				)
+			if (record.state !== "not_started" && record.state !== "seen")
+				assert.ok(
+					!record.wantToSee,
+					"only a show that is Not started or Seen is on the Wishlist",
 				)
 			assert.equal(
 				new Set(record.watches.map((x) => x.id)).size,

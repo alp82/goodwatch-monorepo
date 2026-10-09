@@ -14,6 +14,9 @@ export type ActionKind = keyof typeof ACTIONS
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
 
+/** Want to See on a title that is Seen: it goes on the Wishlist to be watched again. */
+const REWATCH = { short: "Rewatch", long: "Want to rewatch" }
+
 /**
  * Want to See, Seen, or Not interested as a toggle button.
  * `label`: "auto" shows the short word on phones and the long one from sm up; "long" always the long one; "none" the
@@ -27,9 +30,12 @@ export function ActionButton({
 	className = "",
 	count,
 	opensLog = false,
+	rewatch = false,
 	...rest
 }: {
 	kind: ActionKind
+	/** Want to See only: the title is Seen, so the button reads "Want to rewatch". */
+	rewatch?: boolean
 	active: boolean
 	label?: "auto" | "long" | "none"
 	size?: "md" | "sm"
@@ -39,7 +45,9 @@ export function ActionButton({
 	opensLog?: boolean
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
 	const a = ACTIONS[kind]
-	const long = active ? a.on : a.off
+	const again = rewatch && kind === "want"
+	const long = again ? REWATCH.long : active ? a.on : a.off
+	const short = again ? REWATCH.short : active ? a.on : a.short
 	const name = `${long}${count ? `, watched ${count}` : ""}${opensLog ? ". Open your watches" : ""}`
 	const padding =
 		label === "none"
@@ -65,7 +73,7 @@ export function ActionButton({
 			{label === "none" && count && <span className="text-xs tabular-nums">{count}</span>}
 			{label === "auto" && (
 				<>
-					<span className="truncate sm:hidden">{active ? a.on : a.short}</span>
+					<span className="truncate sm:hidden">{short}</span>
 					<span className="hidden truncate sm:inline">{long}</span>
 				</>
 			)}

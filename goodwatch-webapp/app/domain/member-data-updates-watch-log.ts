@@ -31,7 +31,8 @@ const seenEntry = (
 
 /**
  * A movie's watch log after an action in it, as the browser expects it: the entry follows the log. The count, the
- * latest dated watch and the last activity are the log's; an empty log is a movie that is not Seen.
+ * latest dated watch and the last activity are the log's; an empty log is a movie that is not Seen, and not on the
+ * Wishlist, where a Seen movie is as Want to rewatch.
  *
  * `watched`: the action logged a watch, which takes the movie off the Wishlist and off Not interested. `back`: Undo
  * of the first watch puts the movie back where that watch took it from, with its place in the Wishlist.
@@ -53,8 +54,11 @@ export function afterWatchLog(
 		wishlist: { ...data.wishlist },
 		notInterested: { ...data.notInterested },
 	}
-	if (!log.length) delete updated.watchState[key]
-	else {
+	if (!log.length) {
+		delete updated.watchState[key]
+		// Not Seen any more, so no longer Want to rewatch. An Undo of the first watch hands its place back below.
+		delete updated.wishlist[key]
+	} else {
 		// The latest dated watch. Of two at the same instant, the one with a time says how exact it is.
 		let latest: WatchLogEntry | null = null
 		// "Watched lately": the dated watches, and the undated ones that were not imported by when they were recorded.
