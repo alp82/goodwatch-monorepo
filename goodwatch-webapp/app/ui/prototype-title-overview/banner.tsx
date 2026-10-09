@@ -1,13 +1,11 @@
-// PROTOTYPE - throwaway. Round 2 of /prototype/title-overview: four descendants of round 1's D (Banner), each a
-// different way to make it much shorter. The owner liked D's look and its ratings bar (GoodWatch ring, your score as
-// a pill, critics and audience as runs of site chips), so that bar is the baseline here; H tries A's two rings
-// instead, as the one comparison. In all four the title sits on the banner, tracking is one slim line, and where to
-// watch is a row of logos with Stream / Rent / Buy and the country behind one small control.
+// PROTOTYPE - throwaway. Round 2 of /prototype/title-overview: the two descendants of round 1's D (Banner) that the
+// owner said have potential, G (Strip and three cards) and H (One control), kept as they were for comparison. E and
+// F were rejected and are gone. Round 3 (round3.tsx) builds on G's structure and H's compactness and reuses the
+// parts exported here: the banner, D's ratings bar, A's two rings, the tracking line, the compact actions.
 import { ChevronDownIcon, EllipsisHorizontalIcon, PencilIcon } from "@heroicons/react/20/solid"
 import { type ReactNode, useState } from "react"
 import {
 	ActionButton,
-	Divider,
 	EYEBROW,
 	EpisodeRatingsLink,
 	FOCUS,
@@ -38,7 +36,6 @@ import { type Api, type Member, type Offer, PROVIDERS, type Provider, type Provi
 import type { VariantProps } from "./variants"
 
 const PANEL = "relative min-w-0 rounded-2xl border border-white/10 bg-stone-950"
-const FROST = "rounded-2xl bg-stone-950/80 ring-1 ring-white/10"
 const BOX = "rounded-xl bg-white/[0.07] ring-1 ring-white/10"
 const AMBER = "#fbbf24"
 
@@ -47,7 +44,7 @@ const AMBER = "#fbbf24"
 // ---------------------------------------------------------------------------------------------------------
 
 /** The backdrop behind a banner, darkened at the bottom and the left, where the text is. Content sits over it with `relative`. */
-function BannerImage({ title, rounded }: { title: Title; rounded: string }) {
+export function BannerImage({ title, rounded }: { title: Title; rounded: string }) {
 	return (
 		<div className={`pointer-events-none absolute inset-0 overflow-hidden ${rounded}`} aria-hidden="true">
 			<img src={img("w1280", title.backdrop)} alt="" className="h-full w-full object-cover object-[center_22%]" />
@@ -57,7 +54,7 @@ function BannerImage({ title, rounded }: { title: Title; rounded: string }) {
 	)
 }
 
-function TitleBlock({ title, className = "" }: { title: Title; className?: string }) {
+export function TitleBlock({ title, className = "" }: { title: Title; className?: string }) {
 	return (
 		<div className={`min-w-0 ${className}`}>
 			<h1 className="text-2xl font-bold leading-tight tracking-tight text-white [text-shadow:0_2px_14px_rgba(0,0,0,.7)] md:text-4xl">{title.name}</h1>
@@ -67,7 +64,7 @@ function TitleBlock({ title, className = "" }: { title: Title; className?: strin
 }
 
 /** The trailer button in a banner's top right corner: a dot on a phone, the pill from md up. */
-function BannerTrailer() {
+export function BannerTrailer() {
 	return (
 		<>
 			<div className="absolute right-3 top-3 md:hidden">
@@ -153,7 +150,7 @@ function OwnPill({ title, m, api }: { title: Title; m: Member; api: Api }) {
 }
 
 /** D's ratings bar without the chips: the GoodWatch ring, a hairline, your score. */
-function ScoreBar({ title, m, api, ring = { phone: 48, wide: 56 } }: { title: Title; m: Member; api: Api; ring?: { phone: number; wide: number } }) {
+export function ScoreBar({ title, m, api, ring = { phone: 48, wide: 56 } }: { title: Title; m: Member; api: Api; ring?: { phone: number; wide: number } }) {
 	return (
 		<div data-ratings className="flex min-w-0 items-center gap-3">
 			<GoodWatch title={title} {...ring} />
@@ -250,7 +247,7 @@ function SourcesSummary({ title }: { title: Title }) {
 }
 
 /** A's two rings, small: GoodWatch and yours. Your ring opens the picker as a popover (a sheet on a phone). */
-function ScorePair({ title, m, api }: { title: Title; m: Member; api: Api }) {
+export function ScorePair({ title, m, api }: { title: Title; m: Member; api: Api }) {
 	const [picking, setPicking] = useState(false)
 	const s = m.score
 	return (
@@ -413,7 +410,7 @@ function ProviderStrip({ providers, kind, max = 5, label = "Watch on" }: { provi
 // ---------------------------------------------------------------------------------------------------------
 
 /** Status pill with its menu, "16/22" with a small bar, and the Next episode as a chip that leads to the list. */
-function TrackLine({ m, api, className = "" }: { m: Member; api: Api; className?: string }) {
+export function TrackLine({ m, api, className = "" }: { m: Member; api: Api; className?: string }) {
 	const t = api.tracking
 	if (!t) return null
 	const next = m.status === "watching" || m.status === "on_hold"
@@ -434,10 +431,12 @@ function TrackLine({ m, api, className = "" }: { m: Member; api: Api; className?
 			)}
 			<a href="#episodes" data-next-episode className={`group ml-auto flex min-w-0 items-center gap-2 rounded-lg ${FOCUS}`}>
 				{next && (
-					<span className="min-w-0 truncate text-xs text-gray-400">
-						Next<span className="max-lg:hidden"> episode</span>
-						<span className="font-medium text-gray-200 max-xl:hidden"> · {t.line}</span>
-					</span>
+					<>
+						<span className="shrink-0 text-xs text-gray-400">
+							Next<span className="max-xl:hidden"> episode</span>
+						</span>
+						<span className="min-w-0 truncate text-xs font-medium text-gray-200 max-xl:hidden">{t.line}</span>
+					</>
 				)}
 				<GoChip className="!h-9 !text-xs">{t.chip}</GoChip>
 			</a>
@@ -446,96 +445,13 @@ function TrackLine({ m, api, className = "" }: { m: Member; api: Api; className?
 }
 
 /** Want to See, Seen and the third action at 36px. On a phone the third is its icon alone. */
-function MiniActions({ api, className = "" }: { api: Api; className?: string }) {
+export function MiniActions({ api, className = "" }: { api: Api; className?: string }) {
 	return (
 		<div data-actions className={`flex min-w-0 gap-2 ${className}`}>
 			{api.actions.map((action, i) => (
 				<ActionButton key={action.label} action={action} compact phoneIcon={i === 2} className={i === 2 ? "sm:flex-1 lg:flex-none" : "flex-1 lg:flex-none"} />
 			))}
 		</div>
-	)
-}
-
-// =========================================================================================================
-// E - Slim banner
-// D with everything kept visible and nothing tall: the banner is a third lower and carries the poster, the title
-// and (wide screens) the ratings bar. Under it three thin rows: the site chips, tracking with the actions, the
-// service logos.
-// =========================================================================================================
-
-export function VariantE({ title, m, api, providers }: VariantProps) {
-	return (
-		<section className={PANEL}>
-			<div className="relative">
-				<BannerImage title={title} rounded="rounded-t-2xl" />
-				<BannerTrailer />
-				<div className="relative flex items-end gap-3 px-4 pb-4 pt-12 md:gap-5 md:px-6 md:pb-5">
-					<Poster title={title} trailer="none" className="aspect-[2/3] w-[4.5rem] shrink-0 shadow-[0_8px_30px_rgba(0,0,0,.7)] md:w-28" />
-					<TitleBlock title={title} className="flex-1 pb-0.5" />
-					<div className={`hidden shrink-0 p-2.5 lg:block ${FROST}`}>
-						<ScoreBar title={title} m={m} api={api} />
-					</div>
-				</div>
-			</div>
-			<div className="relative space-y-3 p-4 md:px-6">
-				<div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-					<div className="lg:hidden">
-						<ScoreBar title={title} m={m} api={api} />
-					</div>
-					<SourceRuns title={title} className="grow" />
-				</div>
-				<div className="grid grid-cols-[minmax(0,1fr)] items-center gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-					<TrackLine m={m} api={api} className={`p-1.5 ${BOX}`} />
-					<MiniActions api={api} />
-				</div>
-				<Divider />
-				<ProviderStrip providers={providers} kind={title.kind} max={6} />
-			</div>
-		</section>
-	)
-}
-
-// =========================================================================================================
-// F - Dock
-// The whole overview is the banner. The poster, the title and the ratings bar sit on the picture, the three sites
-// are one chip that opens their table, and a dark dock along the bottom edge holds tracking, the service logos and
-// the actions in one row (three thin rows on a phone).
-// =========================================================================================================
-
-export function VariantF({ title, m, api, providers }: VariantProps) {
-	const scores = (
-		<>
-			<div className={`p-2 ${FROST}`}>
-				<ScoreBar title={title} m={m} api={api} />
-			</div>
-			<SourcesSummary title={title} />
-		</>
-	)
-	return (
-		<section className={PANEL}>
-			<BannerImage title={title} rounded="rounded-2xl" />
-			<div className="absolute right-3 top-3 md:hidden">
-				<TrailerPill compact />
-			</div>
-			<div className="relative flex flex-col gap-3.5 p-3 md:gap-5 md:p-5">
-				<div className="flex items-start gap-3 md:gap-6">
-					<Poster title={title} trailer="none" className="aspect-[2/3] w-20 shrink-0 shadow-[0_8px_30px_rgba(0,0,0,.7)] md:w-36" />
-					<div className="min-w-0 flex-1 pt-1 md:pt-2">
-						<TitleBlock title={title} className="max-md:pr-10" />
-						<div className="mt-5 hidden flex-wrap items-center gap-3 md:flex">{scores}</div>
-					</div>
-					<div className="hidden shrink-0 md:block">
-						<TrailerPill />
-					</div>
-				</div>
-				<div className="flex flex-wrap items-center gap-2.5 md:hidden">{scores}</div>
-				<div data-dock className={`grid grid-cols-[minmax(0,1fr)] gap-2.5 p-2.5 xl:grid-cols-[minmax(0,1fr)_auto_auto] xl:items-center xl:gap-5 ${FROST}`}>
-					<TrackLine m={m} api={api} />
-					<ProviderStrip providers={providers} kind={title.kind} max={4} />
-					<MiniActions api={api} />
-				</div>
-			</div>
-		</section>
 	)
 }
 

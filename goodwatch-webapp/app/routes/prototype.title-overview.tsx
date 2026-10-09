@@ -1,8 +1,8 @@
 // PROTOTYPE - throwaway. What should the title page's overview (the panel beside the poster) look like for a
 // signed-in member? Variants of it on one route, switchable with the floating bar or the arrow keys.
-// Round 2: the owner picked round 1's D (Banner), found it too tall, liked its ratings bar and A's two rings, and
-// rejected B and C. So E, F, G and H are four shorter descendants of D; A and D stay as they were, for reference.
-//   /prototype/title-overview?v=E|F|G|H|A|D
+// Round 3: the owner still prefers round 1's A and D to round 2, where G and H "have potential" and E and F are out.
+// So I, J and K build on G's structure and H's compactness, phone first; G, H, A and D stay for comparison.
+//   /prototype/title-overview?v=I|J|K|G|H|A|D
 //     &s=show-watching|show-new|show-caught-up|movie-new|movie-seen   the sample member and title
 //     &p=one|many|none                                                how many streaming services have the title
 // The owner's complaints about today's panel: the ratings are not grouped, the member's own score is not shown
@@ -13,7 +13,8 @@ import { json } from "@remix-run/node"
 import { type ShouldRevalidateFunction, useSearchParams } from "@remix-run/react"
 import { useEffect, useState } from "react"
 import { PROVIDERS, type ProviderKey, SCENARIOS, type ScenarioKey, TITLES, useMember } from "~/ui/prototype-title-overview/model"
-import { VariantE, VariantF, VariantG, VariantH } from "~/ui/prototype-title-overview/banner"
+import { VariantG, VariantH } from "~/ui/prototype-title-overview/banner"
+import { VariantI, VariantJ, VariantK } from "~/ui/prototype-title-overview/round3"
 import { VariantA, VariantD, type VariantProps } from "~/ui/prototype-title-overview/variants"
 
 export async function loader() {
@@ -25,19 +26,20 @@ export const meta = () => [{ title: "Title overview prototype · GoodWatch" }, {
 export const shouldRevalidate: ShouldRevalidateFunction = () => false
 
 const VARIANTS = {
-	E: { name: "E · Slim banner", ownTitle: true, Component: VariantE, note: "D with everything still visible and nothing tall: a lower banner carries the poster, the title and the ratings bar; under it three thin rows (site chips, tracking with the actions, service logos)." },
-	F: { name: "F · Dock", ownTitle: true, Component: VariantF, note: "The whole overview is the banner. The three sites are one chip that opens their table, and a dock along the bottom edge holds tracking, the service logos and the actions." },
-	G: { name: "G · Strip and three cards", ownTitle: true, Component: VariantG, note: "The banner is a strip for the poster and the title. Under it three cards side by side: ratings, your show, where to watch. They stack on a phone." },
-	H: { name: "H · One control", ownTitle: true, Component: VariantH, note: "The most folded, and the comparison for the score display: A's two rings instead of D's bar. A started show has no action buttons: Mark as Seen, Put on hold and Drop are in the status control's menu." },
-	A: { name: "A (round 1) · Scoreboard", Component: VariantA, note: "Round 1, kept for reference with its bugs fixed. Two rings, the title's and yours, beside a table of the sites. Your ring opens the picker as a popover (a sheet on a phone). The poster follows the panel's height." },
-	D: { name: "D (round 1) · Banner", Component: VariantD, note: "Round 1, kept for reference with its bugs fixed. The backdrop as a banner with a small poster over its edge, and one bar for every rating with your score as a pill in it." },
+	I: { name: "I · Rings on the banner", ownTitle: true, Component: VariantI, note: "The ratings are one group on the banner: A's two rings and under them one chip per site, critics and audience in the same chip. Then two blocks: your show (one tracking line, the actions) and where to watch (a title row with the settings, big logos with their names in a row you can swipe)." },
+	J: { name: "J · Three cards", ownTitle: true, Component: VariantJ, note: "G's structure, tidied: a strip for the poster and the title, then three cards of different weight. Ratings (D's ring and pill, the site chips), your show, and where to watch as a title row with the settings over named tiles." },
+	K: { name: "K · One sheet", ownTitle: true, Component: VariantK, note: "The whole overview is the picture, and one dark sheet on it has three parts divided by hairlines: ratings (D's ring and pill, the site chips), your show, where to watch (logos with their names under them)." },
+	G: { name: "G (round 2) · Strip and three cards", ownTitle: true, Component: VariantG, note: "Round 2, kept for comparison. The banner is a strip for the poster and the title. Under it three cards side by side: ratings, your show, where to watch." },
+	H: { name: "H (round 2) · One control", ownTitle: true, Component: VariantH, note: "Round 2, kept for comparison. A's two rings on the banner, the sites as one chip, and a started show's actions folded into the status control's menu." },
+	A: { name: "A (round 1) · Scoreboard", Component: VariantA, note: "Round 1, kept for reference. Two rings, the title's and yours, beside a table of the sites. Your ring opens the picker as a popover (a sheet on a phone). The poster follows the panel's height." },
+	D: { name: "D (round 1) · Banner", Component: VariantD, note: "Round 1, kept for reference. The backdrop as a banner with a small poster over its edge, and one bar for every rating with your score as a pill in it." },
 } satisfies Record<string, { name: string; note: string; ownTitle?: boolean; Component: (props: VariantProps) => React.ReactNode }>
 type VariantKey = keyof typeof VARIANTS
 const KEYS = Object.keys(VARIANTS) as VariantKey[]
 
 export default function TitleOverviewPrototype() {
 	const [params, setParams] = useSearchParams()
-	const variant = (KEYS.includes(params.get("v") as VariantKey) ? params.get("v") : "E") as VariantKey
+	const variant = (KEYS.includes(params.get("v") as VariantKey) ? params.get("v") : "I") as VariantKey
 	const scenario = ((params.get("s") ?? "") in SCENARIOS ? params.get("s") : "show-watching") as ScenarioKey
 	const providers = ((params.get("p") ?? "") in PROVIDERS ? params.get("p") : "one") as ProviderKey
 	const set = (key: string, value: string) => {

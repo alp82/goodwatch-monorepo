@@ -2,7 +2,8 @@
 // marks, the score picker and the surfaces it opens in, the status pill with its menu, the action buttons, the
 // streaming tiles, the poster. Layout is each variant's own (variants.tsx).
 import { ArrowDownIcon, BookmarkIcon, CheckIcon, ChevronDownIcon, EyeIcon, NoSymbolIcon, PlayIcon, StarIcon, TableCellsIcon, XMarkIcon } from "@heroicons/react/20/solid"
-import { type ReactNode, useEffect, useRef, useState } from "react"
+import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
 import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
@@ -475,24 +476,101 @@ export function WhereToWatch({ providers, max, named = true, kind }: { providers
 // Poster, trailer, backdrop
 // ---------------------------------------------------------------------------------------------------------
 
+/** The trailer button. It always says so: "Play trailer", or "Trailer" where there is less room. */
 export function TrailerPill({ compact = false, className = "" }: { compact?: boolean; className?: string }) {
 	return (
-		<button type="button" aria-label="Play trailer" className={`inline-flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-full bg-white font-semibold text-black shadow-xl hover:bg-gray-100 ${compact ? "h-9 w-9 justify-center" : "h-11 pl-2 pr-4 text-sm"} ${FOCUS} ${className}`}>
+		<button
+			type="button"
+			data-trailer
+			aria-label="Play trailer"
+			className={`inline-flex cursor-pointer items-center whitespace-nowrap rounded-full bg-white font-semibold text-black shadow-xl hover:bg-gray-100 ${compact ? "h-9 gap-1.5 pl-1.5 pr-3 text-xs" : "h-11 gap-2 pl-2 pr-4 text-sm"} ${FOCUS} ${className}`}
+		>
 			<span className={`flex items-center justify-center rounded-full bg-red-600 text-white ${compact ? "h-6 w-6" : "h-7 w-7"}`}>
 				<PlayIcon className="h-3.5 w-3.5 translate-x-px" />
 			</span>
-			{!compact && "Play trailer"}
+			{compact ? "Trailer" : "Play trailer"}
 		</button>
 	)
 }
 
+/** The poster. A press opens it full screen (PosterView); the trailer button on it, if any, stays its own press. */
 export function Poster({ title, trailer = "pill", className = "" }: { title: Title; trailer?: "pill" | "dot" | "none"; className?: string }) {
+	const thumb = useRef<HTMLButtonElement>(null)
+	const [open, setOpen] = useState(false)
 	return (
 		<div className={`relative overflow-hidden rounded-xl bg-stone-900 ring-1 ring-white/10 ${className}`}>
-			<img src={img("w500", title.poster)} alt={`${title.name} poster`} className="h-full w-full object-cover" />
+			<button
+				ref={thumb}
+				type="button"
+				data-poster
+				aria-haspopup="dialog"
+				aria-label={`${title.name} poster. Show it full screen`}
+				onClick={() => setOpen(true)}
+				className="block h-full w-full cursor-zoom-in focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white"
+				style={{ opacity: open ? 0 : 1 }}
+			>
+				<img src={img("w500", title.poster)} alt="" className="h-full w-full object-cover" />
+			</button>
 			{trailer === "pill" && <TrailerPill className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />}
 			{trailer === "dot" && <TrailerPill compact className="absolute bottom-2 right-2" />}
+			{open && <PosterView title={title} thumb={thumb} onClose={() => setOpen(false)} />}
 		</div>
+	)
+}
+
+/**
+ * The poster over the whole screen. It grows out of the small poster's place and goes back into it (first-last-
+ * invert-play: the big image is laid out where it ends, then moved from, or to, the small one's box with a
+ * transform). With "reduce motion" it only fades. A press anywhere, Escape or the close button closes it.
+ */
+function PosterView({ title, thumb, onClose }: { title: Title; thumb: RefObject<HTMLButtonElement | null>; onClose: () => void }) {
+	const picture = useRef<HTMLImageElement>(null)
+	const shade = useRef<HTMLDivElement>(null)
+	const leaving = useRef(false)
+	const still = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches
+	/** The transform that puts the big picture exactly over the small one. */
+	const overThumb = () => {
+		const small = thumb.current?.getBoundingClientRect()
+		const big = picture.current?.getBoundingClientRect()
+		if (!small || !big || !big.width) return "none"
+		return `translate(${small.left - big.left}px, ${small.top - big.top}px) scale(${small.width / big.width}, ${small.height / big.height})`
+	}
+	const close = () => {
+		if (leaving.current) return
+		leaving.current = true
+		if (still() || !picture.current) return onClose()
+		shade.current?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: "ease-in", fill: "forwards" })
+		const back = picture.current.animate([{ transform: "none" }, { transform: overThumb() }], { duration: 260, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" })
+		back.onfinish = onClose
+		back.oncancel = onClose
+		// A browser that drops the animation (a hidden tab, a busy page) must not leave the poster up.
+		window.setTimeout(onClose, 400)
+	}
+	useLayoutEffect(() => {
+		const moving = !still()
+		shade.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: moving ? 320 : 150, easing: "ease-out" })
+		if (moving) picture.current?.animate([{ transform: overThumb() }, { transform: "none" }], { duration: 320, easing: "cubic-bezier(.2,.8,.2,1)" })
+		else picture.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150 })
+		const onKey = (e: KeyboardEvent) => e.key === "Escape" && close()
+		window.addEventListener("keydown", onKey)
+		return () => window.removeEventListener("keydown", onKey)
+	}, [])
+	return createPortal(
+		// biome-ignore lint/a11y/useKeyWithClickEvents: Escape closes it, and the close button is the keyboard's way.
+		<div data-poster-view role="dialog" aria-modal="true" aria-label={`${title.name} poster`} onClick={close} className="fixed inset-0 z-[2000] flex cursor-zoom-out items-center justify-center p-4">
+			<div ref={shade} className="absolute inset-0 bg-black/90" />
+			<img
+				ref={picture}
+				src={img("w780", title.poster)}
+				alt={`${title.name} poster`}
+				className="relative aspect-[2/3] w-[min(92vw,calc(92dvh*2/3))] origin-top-left rounded-xl object-cover shadow-2xl"
+				style={{ backgroundImage: `url(${img("w500", title.poster)})`, backgroundSize: "cover" }}
+			/>
+			<button type="button" data-poster-close aria-label="Close" onClick={close} className={`absolute right-3 top-3 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/30 ${FOCUS}`}>
+				<XMarkIcon className="h-6 w-6" />
+			</button>
+		</div>,
+		document.body,
 	)
 }
 
