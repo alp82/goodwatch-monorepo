@@ -9,6 +9,8 @@
 // The container's WEBAPP_ROLE (page, search, or both, the default) decides which checks apply. A search role is its
 // own container: --container-prefix names it, and it gets the requests in smoke/search-role-urls.json. The default
 // run also checks every search role that SMOKE_SEARCH_ROLES lists, and prints one skip line while it lists none.
+// The roles are deployed by hand, so each one's commit is compared with the page instances' commit over the files
+// in smoke/search-role-paths.json: a role that is behind in them gets a warning, not a failure.
 //
 // --target production (default): the container is found over SSH on the host that the target's name resolves to.
 // --host NAME: one instance on a named host. The container is found on that host, and the requests go straight to
@@ -20,6 +22,7 @@ import { readFileSync } from "node:fs"
 import { connect, createServer } from "node:net"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { compareSearchCode, containerNamePattern, gitIn, parseSearchRoles } from "./search-roles.mjs"
 import { buildFilesInHtml, staticOriginFromSetting, staticOriginInHtml } from "./static-host.mjs"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
@@ -31,9 +34,12 @@ const USAGE = `Usage: ./bench.sh smoke [options]
                               goodwatch-hq/ansible/hosts.ini or a private address. Without it, the requests use the
                               public route and the container is the one on the host that the target's name resolves to.
   --container-prefix PREFIX   The start of the container's name: the Coolify application's id and a hyphen.
-                              Default: gk4owk8-, the webapp. A search role has its own.
+                              Default: gk4owk8-, the webapp. A value that doesn't end in a hyphen is the whole name,
+                              such as goodwatch-search-a for a search role.
   --role page|search|both     Fail unless the container runs in this role. Without it, the role is read from the
                               container's WEBAPP_ROLE and only decides which checks apply. Local: the role to assume.
+  --page-commit SHA           A search role: the commit that the page instances run. The check warns when the role
+                              is behind it in a file that a search role runs (smoke/search-role-paths.json).
   --deploy-timeout S          How long to wait for that container and for its health. Default: 600.
   --base-url URL              Default: BENCH_TARGET_URL or https://goodwatch.app. Required for local.
   --log-file FILE             Local: the server's log, from its start.
@@ -175,10 +181,10 @@ const quote = (text) => `'${String(text).replace(/'/g, `'\\''`)}'`
  */
 function findContainer() {
 	const script = `
-prefix=${quote(CONTAINER_PREFIX)}; want=${quote(options.commit ?? "")}; older=${quote(options["newer-than"] ?? "")}
+pattern=${quote(containerNamePattern(CONTAINER_PREFIX))}; want=${quote(options.commit ?? "")}; older=${quote(options["newer-than"] ?? "")}
 deadline=$(( $(date +%s) + ${deployTimeout} )); said=''
 while :; do
-  names=$(docker ps --filter "name=^$prefix" --format '{{.Names}}')
+  names=$(docker ps --filter "name=$pattern" --format '{{.Names}}')
   count=$(printf '%s\\n' "$names" | grep -c . || true)
   name=$(printf '%s\\n' "$names" | head -1)
   state="$count containers"
@@ -433,6 +439,21 @@ await check("metrics:before", async () => {
 	return `process up ${Math.round(uptime)} s${commit ? `, build ${commit.slice(0, 8)}` : ""}`
 })
 
+// A search role is deployed by hand: say whether it is behind the page instances in code that it runs.
+if (options["page-commit"]) {
+	const id = "deploy:search-code"
+	if (skipped.has(id)) report("skip", id, "skipped with --skip")
+	else {
+		const { result, detail } = compareSearchCode({
+			git: gitIn(process.env.SMOKE_REPO_DIR || resolve(ROOT, "..")),
+			roleCommit: container?.commit || metricsBefore?.match(/goodwatch_build_info\{[^}]*commit="([^"]*)"/)?.[1] || "",
+			pageCommit: options["page-commit"],
+			set: JSON.parse(readFileSync(`${ROOT}/smoke/search-role-paths.json`, "utf8")),
+		})
+		report(result, id, detail)
+	}
+}
+
 for (const raw of set.entries) {
 	const entry = { ...set.defaults, ...raw }
 	const variable = entry.path?.match(/^\$\{([A-Z_]+)\}$/)?.[1]
@@ -573,27 +594,37 @@ await checkSearchRoles()
 finish()
 
 /**
- * The default production run also checks each search role in SMOKE_SEARCH_ROLES, a list of host:prefix pairs separated
- * by commas, such as "vector1:abc123-,vector1:def456-". Each one is this script again, for that container alone.
+ * The default production run also checks each search role in SMOKE_SEARCH_ROLES, a list of host:container pairs
+ * separated by commas, such as "vector1:goodwatch-search-a,vector1:goodwatch-search-b". Each one is this script
+ * again, for that container alone. The roles don't get --commit: they are deployed by hand and may run an older
+ * commit. They get the page instances' commit instead, to compare their own with.
  */
 async function checkSearchRoles() {
 	if (local || options.host) return
 	if (skipped.has("search-roles")) return report("skip", "search-roles", "skipped with --skip")
-	const listed = (process.env.SMOKE_SEARCH_ROLES || "").split(",").map((item) => item.trim()).filter(Boolean)
+	const listed = parseSearchRoles(process.env.SMOKE_SEARCH_ROLES)
 	if (!listed.length) return report("skip", "search-roles", "no search role is listed: set SMOKE_SEARCH_ROLES in config.env once the search roles run")
-	for (const item of listed) {
-		const [host, prefix] = item.split(":")
+	for (const { item, host, container: name, valid } of listed) {
 		const id = `search-role:${item}`
-		if (!host || !prefix) {
-			report("fail", id, "SMOKE_SEARCH_ROLES entries are host:prefix, such as vector1:abc123-")
+		if (!valid) {
+			report("fail", id, "SMOKE_SEARCH_ROLES entries are host:container, such as vector1:goodwatch-search-a")
 			continue
 		}
-		const args = [fileURLToPath(import.meta.url), "--host", host, "--container-prefix", prefix, "--role", "search", "--deploy-timeout", options["deploy-timeout"], "--log-wait", options["log-wait"]]
-		if (options.commit) args.push("--commit", options.commit)
+		const args = [fileURLToPath(import.meta.url), "--host", host, "--container-prefix", name, "--role", "search", "--deploy-timeout", options["deploy-timeout"], "--log-wait", options["log-wait"]]
+		if (container?.commit) args.push("--page-commit", container.commit)
 		if (options.skip) args.push("--skip", options.skip)
 		console.log(`\n---- search role ${item} ----`)
-		const code = await new Promise((done) => spawn(process.execPath, args, { stdio: "inherit" }).on("close", done))
+		// The role's lines pass through as they come. They are also read here, for the warning about its commit.
+		let output = ""
+		const child = spawn(process.execPath, args, { stdio: ["inherit", "pipe", "inherit"] })
+		child.stdout.on("data", (chunk) => {
+			output += chunk
+			process.stdout.write(chunk)
+		})
+		const code = await new Promise((done) => child.on("close", done))
 		report(code === 0 ? "pass" : "fail", id, code === 0 ? "every check of this search role passed" : "see the lines above")
+		const behind = output.match(/^WARN  deploy:search-code  (.*)$/m)?.[1]
+		if (behind) report("warn", `${id}:search-code`, behind)
 	}
 }
 

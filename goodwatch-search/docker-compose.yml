@@ -1,0 +1,75 @@
+name: goodwatch-search
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "5"
+
+# The two search roles on vector1 (docs/search-role-deploy.md). A search role is the webapp image started with
+# WEBAPP_ROLE=search: it holds the query models and the indexes and answers the two search paths.
+#
+# - The image is the one that Coolify builds on abio and pushes for every deploy of the webapp, tagged with the
+#   commit. Nothing is built here. SEARCH_COMMIT in .env picks the tag, and deploy.sh changes it: a push to main
+#   doesn't touch the roles.
+# - Both services are the same but for their names. The proxy file goodwatch-search-instance.yaml and the Alloy file
+#   search-role.alloy address them as goodwatch-search-a and goodwatch-search-b on the coolify network, on port 3000
+#   and on the metrics port 9464. No port is published, and no label makes a proxy route to them.
+# - Start, deploy, and stop them with ./deploy.sh, one role at a time. A plain "docker compose up -d" restarts both
+#   at once, and search answers busy until one is ready again.
+x-search-role: &search-role
+  image: ${SEARCH_IMAGE:?Set SEARCH_IMAGE in .env to the registry image name of the webapp}:${SEARCH_COMMIT:?Set SEARCH_COMMIT in .env to a deployed commit, or run ./deploy.sh <commit>}
+  restart: unless-stopped
+  logging: *default-logging
+  # The stores, the keys, and the feature flags, as the page instance on this host has them (.env.example).
+  env_file:
+    - .env
+  # These win over .env.
+  environment:
+    WEBAPP_ROLE: search
+    # Searches that run at once in one role. One more gets the busy answer. It's also the role's default.
+    SEARCH_MAX_IN_FLIGHT: "4"
+    # The build's commit. The image doesn't hold it: Coolify sets it for the page instances, and the metric
+    # goodwatch_build_info and the smoke check read it (docs/webapp-deploys.md).
+    SOURCE_COMMIT: ${SEARCH_COMMIT}
+    # What the proxy file and the Alloy file expect.
+    HOST: 0.0.0.0
+    PORT: "3000"
+    METRICS_PORT: "9464"
+  # The benchmark's caps. A full role used 2.2 to 2.6 cores and peaked at 2.1 to 3.1 GB.
+  cpus: 4
+  mem_limit: 4g
+  # On SIGTERM the app serves for 8 more seconds, drains, and exits by itself within 25 seconds
+  # (lifecycle.server.ts). Coolify gives the page instances the same 30 seconds.
+  stop_grace_period: 30s
+  healthcheck:
+    # The slim image has no curl. Its /usr/local/bin/wget is BusyBox (see the Dockerfile).
+    test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/health/ready"]
+    interval: 5s
+    timeout: 5s
+    retries: 10
+    # A role is ready once its search index has loaded, or after 30 seconds without it. Failures in this time
+    # don't count.
+    start_period: 120s
+
+services:
+  search-a:
+    <<: *search-role
+    container_name: goodwatch-search-a
+    networks:
+      coolify:
+        aliases:
+          - goodwatch-search-a
+
+  search-b:
+    <<: *search-role
+    container_name: goodwatch-search-b
+    networks:
+      coolify:
+        aliases:
+          - goodwatch-search-b
+
+# Coolify's network on this host. The host's proxy and Alloy are attached to it.
+networks:
+  coolify:
+    external: true

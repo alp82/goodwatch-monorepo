@@ -1,0 +1,29 @@
+{
+  "description": "The files that a search role runs, relative to the repository root. The search roles are deployed by hand (goodwatch-search/deploy.sh), so they can run an older commit than the page instances. The smoke check compares the two commits over these paths and warns when a role is behind and one of them differs. A change anywhere else needs no deploy of the roles. The list is the code of the two search paths and its direct neighbors, not everything that the image holds: keep it in step with the imports of routes/api.combined-search.ts and routes/api.command-palette.ts.",
+  "paths": [
+    "goodwatch-webapp/app/server/combined-search",
+    "goodwatch-webapp/app/server/search-ranking",
+    "goodwatch-webapp/app/server/search-people",
+    "goodwatch-webapp/app/server/search-runtime",
+    "goodwatch-webapp/app/server/command-palette.server.ts",
+    "goodwatch-webapp/app/server/search.server.ts",
+    "goodwatch-webapp/app/server/role.server.ts",
+    "goodwatch-webapp/app/server/lifecycle.server.ts",
+    "goodwatch-webapp/app/routes/api.combined-search.ts",
+    "goodwatch-webapp/app/routes/api.command-palette.ts",
+    "goodwatch-webapp/app/ui/search/search-model.tsx",
+    "goodwatch-webapp/app/utils/command-palette.ts",
+    "goodwatch-webapp/scripts/fetch-search-models.mjs",
+    "goodwatch-webapp/vite.config.js",
+    "goodwatch-webapp/Dockerfile",
+    "goodwatch-webapp/package-lock.json"
+  ],
+  "exclude": ["**/*.test.ts", "**/*.test.tsx", "**/*.fixture.ts"],
+  "guards": {
+    "goodwatch-webapp/app/server/search-ranking": "The query encoder, the search index, and the ranking.",
+    "goodwatch-webapp/app/server/search.server.ts": "The TMDB title search that the command palette answers from while the index loads.",
+    "goodwatch-webapp/app/server/lifecycle.server.ts": "Readiness and the drain on SIGTERM, which the proxy's health check and deploy.sh rely on.",
+    "goodwatch-webapp/app/ui/search/search-model.tsx": "The shape of the search response, which the browser's script from a page instance reads.",
+    "goodwatch-webapp/vite.config.js": "It names the worker files of the encoder and the index for the server bundle."
+  }
+}

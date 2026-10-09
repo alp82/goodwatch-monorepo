@@ -358,27 +358,42 @@ A skipped check prints a `SKIP` line with the reason.
 - **A search role says `query encoder not ready` until its query models have loaded.** The check waits for a newer `Process:` line, until `--log-wait` seconds after the process start, and fails only then.
 - **A container without `WEBAPP_ROLE`,** and a local log without a `Process role:` line, count as `both`.
 
-`scripts/test-smoke-roles.sh` tests these rules on the development machine, with a stub per role and the logs in `scripts/fixtures/smoke-roles/`. Run it after a change to `smoke/log-patterns.json`, `smoke/search-role-urls.json`, or the role handling in `scripts/smoke.mjs`.
+`scripts/test-smoke-roles.sh` tests these rules on the development machine, with a stub per role and the logs in `scripts/fixtures/smoke-roles/`. Run it after a change to `smoke/log-patterns.json`, `smoke/search-role-urls.json`, `smoke/search-role-paths.json`, or the role handling in `scripts/smoke.mjs`. `node --test scripts/search-roles.test.mjs` tests the comparison of the commits and the container names.
 
 #### Check a search role
 
-A search role is a container of its own, from its own Coolify application. Name its container by the application's id, and its host:
+A search role is a container of its own, started from [`goodwatch-search/docker-compose.yml`](../goodwatch-search/docker-compose.yml) with a fixed name. Name its container and its host:
 
 ```sh
-./bench.sh smoke --host vector1 --container-prefix <application id>- --role search
+./bench.sh smoke --host vector1 --container-prefix goodwatch-search-a --role search
 ```
+
+`--container-prefix` takes the whole name when the value doesn't end in a hyphen, and the start of a name when it does (a Coolify application's id, such as the default `gk4owk8-`).
 
 The check finds the container, fails unless its `WEBAPP_ROLE` is `search`, opens the SSH tunnel to it, and waits for `/health/ready`. Then it sends the three requests in [`smoke/search-role-urls.json`](smoke/search-role-urls.json): the readiness endpoint, a command palette lookup that must return titles, and the `POST /api/combined-search` with one character, which must answer 400. It reads the log and the metrics like for a page instance.
 
-No request starts a search. Every search that runs writes a row to `search_history` after its response, also a basic one (`combinedSearch` in `app/server/combined-search/search.server.ts`), and a text without a stored reading can start a paid call. The one-character text is rejected in the route, after the in-flight limit and before `combinedSearch` is called. So the check proves that the route answers in a process that runs search, not that a search ranks. For that, read the role's log after a real search, or run the load step of [the deploy checklist](../docs/search-role-deploy.md) with the owner's go-ahead.
+No request starts a search. Every search that runs writes a row to `search_history` after its response, also a basic one (`combinedSearch` in `app/server/combined-search/search.server.ts`), and a text without a stored reading can start a paid call. The one-character text is rejected in the route, after the in-flight limit and before `combinedSearch` is called. So the check proves that the route answers in a process that runs search, not that a search ranks. For that, read the role's log after a real search.
 
 The default run includes the search roles once `config.env` lists them:
 
 ```sh
-SMOKE_SEARCH_ROLES='vector1:<application id>-,vector1:<other application id>-'
+SMOKE_SEARCH_ROLES='vector1:goodwatch-search-a,vector1:goodwatch-search-b'
 ```
 
-`./bench.sh smoke` then runs the check above for each entry after the public checks, with the same `--commit`, and prints one `search-role:` line per entry. While the list is empty, it prints `SKIP  search-roles` and passes. `--skip search-roles` leaves the roles out, for example when they deploy separately from the commit that you wait for.
+`./bench.sh smoke` then runs the check above for each entry after the public checks, and prints one `search-role:` line per entry. While the list is empty, it prints `SKIP  search-roles` and passes. `--skip search-roles` leaves the roles out.
+
+#### A search role that is behind
+
+The search roles are deployed by hand, with `goodwatch-search/deploy.sh`, so a push to `main` moves the page instances and not the roles. The roles therefore don't get `--commit`: the default run waits for the page instance's commit only. Instead, each role's commit is compared with the page instance's commit:
+
+| The role's commit | Line |
+| --- | --- |
+| The same | `PASS  deploy:search-code` |
+| Behind, and no file that a search role runs differs | `PASS  deploy:search-code`, with the number of commits |
+| Behind, and such a file differs | `WARN  deploy:search-code`, with the files and the deploy command, and one more `WARN  search-role:...:search-code` line in the summary of the default run |
+| Not in this checkout, or not named by the role | `WARN  deploy:search-code`: run `git fetch` |
+
+A warning doesn't fail the check. The files that count are in [`smoke/search-role-paths.json`](smoke/search-role-paths.json), the one place for that list: the search directories of the server, the two routes, the command palette, `role.server.ts`, the Dockerfile, the lock file, and a few direct neighbors. Add a path there when the search code starts to import a new module of its own. The comparison reads the local checkout with `git diff --name-only` and contacts nothing. For one role, pass the page instance's commit yourself with `--page-commit <sha>`.
 
 #### Watch a deploy
 
