@@ -24,6 +24,12 @@ import {
 	XMarkIcon,
 } from "@heroicons/react/20/solid";
 import { Highlight, type Row } from "./search-model";
+import {
+	SEARCH_PAGE_UNAVAILABLE,
+	offerRetry,
+	preloadSearchRequest,
+	requestSearch,
+} from "./search-client";
 import type { SearchBatch } from "~/server/combined-search/search.server";
 import type { ReadingChip } from "~/server/combined-search/reading-retrieval.server";
 import { useGenres } from "~/routes/api.genres.all";
@@ -207,6 +213,10 @@ function useController() {
 		const timer = setTimeout(() => setRequested(q), QUERY_DEBOUNCE_MS);
 		return () => clearTimeout(timer);
 	}, [q, active, ready]);
+	// The code for the search request isn't in the app shell. It loads while the search configuration does.
+	useEffect(() => {
+		if (active) preloadSearchRequest();
+	}, [active]);
 
 	// The version only keys search batches, so it loads with the search page. The controller runs on every page,
 	// and without this condition every page load and every tab focus asked for it.
@@ -283,49 +293,18 @@ function useController() {
 		refetchOnWindowFocus: false,
 		refetchOnReconnect: false,
 		queryFn: async ({ signal }): Promise<Batch & { cacheKey: string }> => {
-			const response = await fetch("/api/combined-search", {
-				method: "POST",
-				signal,
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
+			const batch = await requestSearch({
+				body: {
 					q: requested,
 					includeAdult: false,
 					lesserKnown: setting("lesserKnown") === "1",
 					filters,
 					allTitles,
-				}),
+				},
+				signal,
+				onReading: (chips) => setReading({ q: requested, chips }),
+				unavailable: SEARCH_PAGE_UNAVAILABLE,
 			});
-			const unavailable =
-				"Search is unavailable. Your previous results are kept.";
-			if (!response.ok) {
-				const body = await response.json().catch(() => ({}));
-				throw new Error(body.error ?? unavailable);
-			}
-			// The route streams newline-delimited JSON: the reading first, the batch last.
-			const reader = response.body?.getReader();
-			if (!reader) throw new Error(unavailable);
-			const decoder = new TextDecoder();
-			let buffered = "";
-			let batch: SearchBatch | undefined;
-			const handle = (line: string) => {
-				if (!line.trim()) return;
-				const message = JSON.parse(line);
-				if (message.kind === "reading")
-					setReading({ q: requested, chips: message.reading });
-				else if (message.kind === "batch") batch = message.batch;
-				else if (message.kind === "error")
-					throw new Error(message.error ?? unavailable);
-			};
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) break;
-				buffered += decoder.decode(value, { stream: true });
-				const lines = buffered.split("\n");
-				buffered = lines.pop() ?? "";
-				for (const line of lines) handle(line);
-			}
-			handle(buffered + decoder.decode());
-			if (!batch) throw new Error(unavailable);
 			return { ...batch, q: requested, cacheKey: batchKey };
 		},
 	});
@@ -802,10 +781,7 @@ function JourneyList() {
 				)}
 				<span>{j.status}</span>
 				<HiddenResultsLink />
-				{/* "Search is busy" is the server's answer when too many searches run at once. */}
-				{j.batch?.errors.length ||
-				j.status.startsWith("Search is unavailable") ||
-				j.status.startsWith("Search is busy") ? (
+				{j.batch?.errors.length || offerRetry(j.status) ? (
 					<button onClick={j.retry} className="ml-2 underline text-cyan-300">
 						Retry
 					</button>
