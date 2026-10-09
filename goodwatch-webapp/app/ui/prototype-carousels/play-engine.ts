@@ -976,8 +976,13 @@ export function playEngine(
 		else stage.removeAttribute("data-pl-soft")
 		if (kind && !still()) stage.setAttribute("data-pl-in", `${kind}${++beat % 2}`)
 		else stage.removeAttribute("data-pl-in")
-		const bar = q(s, "[data-pl-bar]")
-		if (bar) bar.innerHTML = p.bar
+		const bar = q(s, "[data-pl-bar]") as (HTMLElement & { __h?: string }) | null
+		// Written only when it changed: a picture that is drawn again (more titles arrived) leaves an open list of
+		// steps open.
+		if (bar && bar.__h !== p.bar) {
+			bar.innerHTML = p.bar
+			bar.__h = p.bar
+		}
 		const card = q(s, "[data-pl-card]")
 		if (card) card.innerHTML = p.card
 		const print = q(s, "[data-pl-fp]")

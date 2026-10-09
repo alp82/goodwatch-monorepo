@@ -135,7 +135,6 @@ export function ringTokens(
 	mode: string,
 	level: (key: string) => number,
 	keys: string[],
-	year: number,
 	w: Record<string, [string, string, string, string, number]>,
 ): string[] {
 	const order = Object.keys(w)
@@ -179,7 +178,8 @@ export function ringTokens(
 		}
 		return out
 	}
-	if (mode === "practical") return ["_k=m", "_k=s", `_y<${year - 1}`, `_y>${year + 1}`, "_r>80", "_st=1"]
+	// The facts of the practical form (movie or show, year, score, streaming) are common among the nearest titles:
+	// its pack brings no list for them.
 	return []
 }
 

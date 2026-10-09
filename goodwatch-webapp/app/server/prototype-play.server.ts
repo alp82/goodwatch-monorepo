@@ -724,7 +724,7 @@ async function buildPack5(params: {
 							: params.m === "pad"
 								? bestTraits(level, near, 2, true)
 								: []
-			brought = parse(ringTokens(params.m, level, keys, center.release_year ?? 0, ringsExtra().w).join(","))
+			brought = parse(ringTokens(params.m, level, keys, ringsExtra().w).join(","))
 		}
 		brought = brought.filter((token) => token.key !== "_b" && (token.key !== "_st" || params.cc))
 		const per = brought.length ? Math.max(8, Math.floor(EXTRA5 / brought.length)) : 0

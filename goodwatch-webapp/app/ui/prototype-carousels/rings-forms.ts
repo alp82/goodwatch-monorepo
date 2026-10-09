@@ -31,7 +31,7 @@
 import type { PlayCore, PlayCtx, PlayForm, PlayState, PlayTitle } from "~/ui/prototype-carousels/play-engine"
 import type { RingsExtra } from "~/ui/prototype-carousels/rings-meta"
 
-type Rule = (mode: string, level: (key: string) => number, keys: string[], year: number, w: RingsExtra["w"]) => string[]
+type Rule = (mode: string, level: (key: string) => number, keys: string[], w: RingsExtra["w"]) => string[]
 export type RingsKit = ReturnType<typeof ringsKit>
 type RingsForm = (core: PlayCore, kit: RingsKit) => PlayForm
 /** A place on the lattice, in px from the middle. `b` is its ring, `a` its angle, `id` its column and half row. */
@@ -333,7 +333,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		if (mode === "0") return []
 		if (mode === "chips" || mode === "edges") return (mem.tr as string[] | undefined) ?? null
 		if (!t.s || ((mode === "stops" || mode === "pad") && !mem.ax)) return null
-		return rule(mode, (key) => val(t, key), (mem.ax as string[] | undefined) ?? [], Number(mem.yr) || 0, X.w)
+		return rule(mode, (key) => val(t, key), (mem.ax as string[] | undefined) ?? [], X.w)
 	}
 	core.queryOf((key) => {
 		let out = `&v=5&m=${mode}${country()}`
@@ -867,7 +867,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 				mem: JSON.stringify(ctx.st.mem),
 				geo: geoOf(),
 				top: spec.top(ctx, tokens, list, spots.length),
-				bg: `${guides(scale, Math.min(rings, 3))}<span class="rm-key">nearer = more alike</span>`,
+				bg: `${guides(scale, Math.min(rings, 3))}<span class="rm-key">${few ? "dimmed = not a match" : "nearer = more alike"}</span>`,
 				ctl: `${spec.ctl ? spec.ctl(ctx, tokens) : ""}${zoomCtl(ctx, shown)}`,
 				info: info(
 					ctx,
@@ -977,7 +977,7 @@ const rings1: RingsForm = (core, kit) =>
 		tokens: (ctx) => (ctx.st.mem.w as string[] | undefined) ?? [],
 		top: (ctx, tokens) => {
 			if (!ctx.c.s) return '<p class="rm-say"><span>Its fingerprint is on its way.</span></p>'
-			const own = kit.rule("bars", (key) => core.val(ctx.c, key), [], 0, kit.X.w)
+			const own = kit.rule("bars", (key) => core.val(ctx.c, key), [], kit.X.w)
 			// A turned trait keeps its bar, whatever the title in the middle is strong on.
 			const bars = own.filter((token) => !tokens.some((t) => kit.tok(t)?.key === kit.tok(token)?.key))
 			const all = tokens.concat(bars).slice(0, Math.max(6, tokens.length))
@@ -1103,7 +1103,7 @@ const rings3: RingsForm = (core, kit) => {
 		hint: "Say it in a word. Or roll the dice.",
 		tokens: (ctx) => (ctx.st.mem.w as string[] | undefined) ?? [],
 		top: (ctx, tokens) => {
-			const own = ctx.c.s ? kit.rule("words", (key) => core.val(ctx.c, key), [], 0, kit.X.w) : []
+			const own = ctx.c.s ? kit.rule("words", (key) => core.val(ctx.c, key), [], kit.X.w) : []
 			const rest = own.filter((token) => !tokens.some((t) => kit.tok(t)?.key === kit.tok(token)?.key))
 			const chip = (token: string) => {
 				const k = kit.tok(token)
@@ -1481,7 +1481,7 @@ const rings9: RingsForm = (core, kit) => {
 			const all = drift(ctx)
 			if (!all.length)
 				return `<p class="rm-say"><b>${ctx.c.k === ctx.root.k ? "Heading nowhere yet" : "Still close to where you started"}</b><span>walk, and it shows here</span></p>`
-			return `<div class="rm-sw" role="group" aria-label="Where the walk is heading"><span class="rm-swl">Heading</span>${all
+			return `<div class="rm-sw" role="group" aria-label="Where the walk is heading">${all
 				.map(
 					(e) =>
 						`<button type="button" class="rm-ch" data-pl-act="hd" data-arg="${e.key}" aria-pressed="${!off(ctx)[e.key]}" style="--c:${kit.hue(e.key)}"><i>${kit.emo(e.key)}</i>${e.d > 0 ? "more" : "less"} ${core.esc(kit.low(e.key))}</button>`,
