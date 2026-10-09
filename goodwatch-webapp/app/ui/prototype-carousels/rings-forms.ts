@@ -15,7 +15,7 @@
 //
 // The forms:
 // - roam1: the baseline. Three switches from the page title's fingerprint.
-// - rings1, bars: the fingerprint of the title in the middle as seven bars. A press turns a trait around.
+// - rings1, bars: the fingerprint of the title in the middle as six bars. A press turns a trait around.
 // - rings2, three stops: three traits, each with less, any, and more than the title in the middle.
 // - rings3, words: a visitor's words ("Funnier", "Less violent"), one tap each, and a dice that picks a twist.
 // - rings4, edges: the control is on the map. Each edge is one trait, and a tap pulls the map that way.
@@ -76,6 +76,8 @@ interface View {
 	ck: string
 	wstyle: string
 	rest: string
+	/** The filter the picture shows, by its name: for the checks. */
+	filter: string
 	/** How far a poster may move to its own place after a pan, in px. Further than that, it fades over. */
 	hop: number
 	items: Item[]
@@ -353,6 +355,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			.slice(0, max)
 	/** The one part of the card's second line that changes with the title it is about. */
 	const differs = (ctx: PlayCtx, t: PlayTitle) => {
+		if (t.k === ctx.root.k && ctx.c.k !== ctx.root.k) return "it is the title of this page"
 		if (t.k === ctx.root.k) return '<span class="rg-h">point at a poster to compare it</span><span class="rg-t">hold a poster to compare it</span>'
 		if (!t.s || !ctx.root.s) return "…"
 		const told = gaps(ctx.root, t, 3)
@@ -486,10 +489,13 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	 * takes the free place nearest to that. A title that was not on the map takes what is left, clockwise from the
 	 * top. The title you came from sits on the place opposite the one you tapped, whatever its rank.
 	 */
-	const lay = (ctx: PlayCtx, list: PlayTitle[], spots: Cell[] & { ix?: Record<string, number> }, scale: number, coming: boolean, deco: Deco | null) => {
+	const lay = (ctx: PlayCtx, list: PlayTitle[], spots: Cell[] & { ix?: Record<string, number> }, scale: number, coming: boolean, deco: Deco | null, filter: string) => {
 		const e = ctx.e
 		const ix = spots.ix ?? {}
 		let prefs = e.ui.at as Record<string, string> | undefined
+		// A filter that was shown here before gets its picture back: a switch turned off again is the picture as it was.
+		const kept = (e.ui.af as Record<string, Record<string, string>> | undefined)?.[filter]
+		if (prefs && kept) prefs = { ...prefs, ...kept }
 		if (!prefs && e.ui.base && e.ui.sh) {
 			// After a step: everything is where the pan carries it.
 			const base = e.ui.base as Record<string, string>
@@ -580,6 +586,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		if (ctx.list) {
 			e.ui.at = now
 			e.ui.base = undefined
+			if (!ctx.soft) e.ui.af = { ...(e.ui.af as Record<string, unknown> | undefined), [filter]: now }
 		}
 		return out
 	}
@@ -596,7 +603,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		last = view
 		return `<div class="${view.cls}" style="${view.rstyle}" data-r-form="${view.form}" data-r-geo="${view.geo}" data-r-mem="${esc(view.mem)}"${
 			view.rest ? ` data-pl-rest="${esc(view.rest)}"` : ""
-		} data-r-at="${view.ck}"><div class="rm-top rg-top" data-r-top="">${view.top}</div><div class="rm-map" data-r-map=""><div class="rm-bg" data-r-bg="">${view.bg}</div><div class="rm-w" data-r-w="" data-pl-slop="" style="${view.wstyle}">${view.items
+		} data-r-at="${view.ck}" data-r-f="${esc(view.filter)}"><div class="rm-top rg-top" data-r-top="">${view.top}</div><div class="rm-map" data-r-map=""><div class="rm-bg" data-r-bg="">${view.bg}</div><div class="rm-w" data-r-w="" data-pl-slop="" style="${view.wstyle}">${view.items
 			.map((entry) => entry.html)
 			.join("")}</div><div class="rm-ctl" data-r-ctl="">${view.ctl}</div></div><div class="rm-info rg-info" data-r-info="">${view.info}</div></div>`
 	}
@@ -610,10 +617,12 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		el.removeAttribute("data-r-pk")
 	}
 	const still = () => Boolean(win?.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
-	const PAN = 240 * SLOW
-	const SETTLE = 110 * SLOW
+	// A pan starts at an even pace and comes to rest, so that the eye can pick it up: no leap in the first frame.
+	// A long pan (a wide screen, a far poster) takes a little longer than a short one.
+	let PAN = 240 * SLOW
+	const SETTLE = 100 * SLOW
 	const PLAIN = 200 * SLOW
-	const EASE = "cubic-bezier(.3,.7,.3,1)"
+	const EASE = "cubic-bezier(.3,.3,.2,1)"
 	let busy = 0
 	const num = (text: string | undefined) => Number.parseFloat(text ?? "") || 0
 	/** Where a poster is right now: in the middle of a motion, where the motion has it. */
@@ -736,10 +745,12 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		const pivot = stepped ? have[view.ck] : undefined
 		const shift = pivot?.__c && Math.abs(pivot.__c.x) + Math.abs(pivot.__c.y) > 0.6 ? { x: -pivot.__c.x, y: -pivot.__c.y } : null
 		const by = shift ?? view.drift
+		if (shift) PAN = Math.max(220, Math.min(280, 220 + (Math.hypot(shift.x, shift.y) - 100) * 0.2)) * SLOW
 		root.className = view.cls
 		root.style.cssText = view.rstyle
 		root.setAttribute("data-r-mem", view.mem)
 		root.setAttribute("data-r-geo", view.geo)
+		root.setAttribute("data-r-f", view.filter)
 		part(root, "top", view.top)
 		part(root, "bg", view.bg)
 		part(root, "ctl", view.ctl)
@@ -799,6 +810,18 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			if (kept) Object.assign(st.mem, JSON.parse(kept))
 		} catch {}
 		cur = st
+		// Where the server put every title: the first picture drawn here keeps them there, and comes back to it.
+		const ui = st.trail[0].ui
+		const root = stage.firstElementChild
+		if (st.trail.length === 1 && !ui.at && root) {
+			const at: Record<string, string> = {}
+			const drawn = root.querySelectorAll("[data-r-w] > button[data-r-k]")
+			for (let i = 0; i < drawn.length; i++) at[drawn[i].getAttribute("data-r-k") ?? ""] = drawn[i].getAttribute("data-r-q") ?? ""
+			if (root.getAttribute("data-r-geo") === geoOf()) {
+				ui.at = at
+				ui.af = { [root.getAttribute("data-r-f") ?? ""]: at }
+			}
+		}
 	}
 
 	/** A form: the rings, the zoom, the movement, and the card are the kit's. The control area is the form's. */
@@ -812,12 +835,25 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			const tokens = spec.tokens(ctx)
 			const scale = zooms()[zoomOf(ctx)]
 			const spots = cells(scale)
-			const list = around(ctx, tokens)
+			let list = around(ctx, tokens)
 			const rough = guessed
+			// A walk never ends in an empty map: when hardly any title passes and there are no more, the places left
+			// go to the most alike titles as they come, dimmed, and the card says so.
+			const passing = list.length
+			const few = tokens.length > 0 && !rough && passing < 6 && !open(ctx, tokens) && Boolean(ctx.list) && !ctx.soft
+			if (few) {
+				const has: Record<string, boolean> = {}
+				for (const t of list) has[t.k] = true
+				list = list.concat(around(ctx, []).filter((t) => !has[t.k]))
+			}
+			const own = spec.deco ? spec.deco(ctx, list) : null
+			const deco: Deco | null = few
+				? (t, rank) => (rank >= passing && rank < 99 ? { inner: '<i class="rg-dm" aria-hidden="true"></i>', extra: ";--dm:1" } : own ? own(t, rank) : { inner: "", extra: "" })
+				: own
 			// Enough for this zoom and the next one out.
 			const coming = want(ctx, tokens, list.length, Math.round(spots.length * 2.2))
 			const shown = Math.min(list.length, spots.length)
-			const items = [middle(ctx, scale)].concat(lay(ctx, list, spots, scale, coming || rough, spec.deco ? spec.deco(ctx, list) : null))
+			const items = [middle(ctx, scale)].concat(lay(ctx, list, spots, scale, coming || rough, deco, nameOf(tokens)))
 			const rings = spots.length ? spots[spots.length - 1].b : 0
 			const more = open(ctx, tokens)
 			// What the server did not draw goes along as plain data: enough for a wide screen's first picture.
@@ -833,10 +869,16 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 				top: spec.top(ctx, tokens, list, spots.length),
 				bg: `${guides(scale, Math.min(rings, 3))}<span class="rm-key">nearer = more alike</span>`,
 				ctl: `${spec.ctl ? spec.ctl(ctx, tokens) : ""}${zoomCtl(ctx, shown)}`,
-				info: info(ctx, spec.note(ctx, tokens, list, spots.length, more)),
+				info: info(
+					ctx,
+					few
+						? `Only ${passing} ${passing === 1 ? "title passes" : "titles pass"} that. The dimmed ones are the most alike that do not.`
+						: spec.note(ctx, tokens, list, spots.length, more),
+				),
 				ck: ctx.c.k,
 				wstyle: `--pw:${posterW()}px`,
 				rest,
+				filter: nameOf(tokens),
 				hop: posterW() * scale * 1.107 * 1.75,
 				items,
 				drift,
@@ -920,7 +962,7 @@ const roam1: RingsForm = (core, kit) =>
 	})
 
 /**
- * rings1, bars. The fingerprint of the title in the middle, seven traits of it with their levels: four it is strong
+ * rings1, bars. The fingerprint of the title in the middle, six traits of it with their levels: three it is strong
  * on and three it has little of. A press turns a trait around: a strong one goes ("without"), a weak one comes
  * ("with"). The bars follow the walk, and a turned trait stays turned.
  */
@@ -928,7 +970,7 @@ const rings1: RingsForm = (core, kit) =>
 	kit.make({
 		name: "rings1",
 		mode: "bars",
-		th: 58,
+		th: 56,
 		tall: true,
 		big: true,
 		hint: "Its fingerprint is the control. Press a bar to turn that trait around.",
@@ -938,7 +980,7 @@ const rings1: RingsForm = (core, kit) =>
 			const own = kit.rule("bars", (key) => core.val(ctx.c, key), [], 0, kit.X.w)
 			// A turned trait keeps its bar, whatever the title in the middle is strong on.
 			const bars = own.filter((token) => !tokens.some((t) => kit.tok(t)?.key === kit.tok(token)?.key))
-			const all = tokens.concat(bars).slice(0, Math.max(7, tokens.length))
+			const all = tokens.concat(bars).slice(0, Math.max(6, tokens.length))
 			all.sort((a, b) => core.val(ctx.c, kit.tok(b)?.key ?? "") - core.val(ctx.c, kit.tok(a)?.key ?? ""))
 			return `<div class="rg-bars" role="group" aria-label="The fingerprint of ${core.esc(ctx.c.t)}. A press turns a trait around.">${all
 				.map((token) => {
@@ -986,7 +1028,7 @@ const rings2: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings2",
 		mode: "stops",
-		th: 42,
+		th: 40,
 		hint: "Three traits, three stops each: less, any, more.",
 		tokens: (ctx) => tokensOf(ctx, (ctx.st.mem.sd as Record<string, number> | undefined) ?? {}),
 		top: (ctx) => {
@@ -1056,7 +1098,7 @@ const rings3: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings3",
 		mode: "words",
-		th: 58,
+		th: 56,
 		tall: true,
 		hint: "Say it in a word. Or roll the dice.",
 		tokens: (ctx) => (ctx.st.mem.w as string[] | undefined) ?? [],
@@ -1189,7 +1231,7 @@ const rings5: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings5",
 		mode: "0",
-		th: 58,
+		th: 56,
 		tall: true,
 		hint: "Colors say how a title differs most. The legend is the filter.",
 		tokens: (ctx) => (ctx.st.mem.w as string[] | undefined) ?? [],
@@ -1265,7 +1307,7 @@ const rings6: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings6",
 		mode: "pad",
-		th: 58,
+		th: 56,
 		tall: true,
 		big: true,
 		hint: "Two traits, one pad. Move the dot.",
@@ -1381,7 +1423,7 @@ const rings8: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings8",
 		mode: "practical",
-		th: 58,
+		th: 56,
 		tall: true,
 		hint: "Facts instead of traits: kind, year, score, streaming.",
 		tokens: (ctx) => (ctx.st.mem.w as string[] | undefined) ?? [],

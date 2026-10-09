@@ -1147,6 +1147,13 @@ export function playEngine(
 	const OWN = "[data-pl-step],[data-pl-act],[data-pl-to],[data-pl-back]"
 	const share = /[?&]plshare=1/.test(win.location.search)
 	const mine = (event: Event) => {
+		// A finger that was held on a poster to look at it lifts: that is not a tap (see `hold`).
+		if (event.type === "pointerup") {
+			if ((event as PointerEvent).pointerType === "touch") touched = event.timeStamp
+			unpeek(event)
+			// The end of a drag on a control, which no later listener hears.
+			held = null
+		}
 		if (!share && hit(event, OWN) && sec(event.target as Element))
 			event.stopImmediatePropagation()
 	}
@@ -1260,6 +1267,7 @@ export function playEngine(
 		if (event.type === "pointerdown") {
 			pressed = null
 			panStart(event as PointerEvent)
+			grab(event as PointerEvent)
 		}
 		mine(event)
 		const button = hit(event, "[data-pl-step]")
@@ -1295,6 +1303,7 @@ export function playEngine(
 	}
 	// A finger that stays on a poster is what pointing at it is for a mouse: the form shows that title in its card
 	// for as long as the finger stays, and lifting it is then not a tap. A tap stays a tap: nothing waits for this.
+	let touched = -1e9
 	let peeking: { s: HTMLElement; timer: number; on: boolean; x: number; y: number } | null = null
 	const unpeek = (event: Event | null) => {
 		if (!peeking) return
@@ -1310,6 +1319,7 @@ export function playEngine(
 	function hold(event: PointerEvent, button: Element, s: HTMLElement) {
 		unpeek(null)
 		const st = stateOf(s)
+		if (event.pointerType === "touch") touched = event.timeStamp
 		if (event.pointerType !== "touch" || !formOf(st.form)?.peek) return
 		const own = { s, on: false, x: event.clientX, y: event.clientY, timer: 0 }
 		own.timer = win.setTimeout(() => {
@@ -1342,6 +1352,8 @@ export function playEngine(
 	let held: { el: Element; s: HTMLElement } | null = null
 	const dragged = (event: PointerEvent) => {
 		if (!held) return
+		// A form that draws itself again while it is dragged may have put a new element where the old one was.
+		if (!held.el.isConnected) held.el = q(held.s, "[data-pl-drag]") ?? held.el
 		const st = stateOf(held.s)
 		adopt(held.s)
 		formOf(st.form)?.drag?.(
@@ -1352,20 +1364,17 @@ export function playEngine(
 			event.clientY - held.el.getBoundingClientRect().top,
 		)
 	}
-	win.addEventListener(
-		"pointerdown",
-		(event: PointerEvent) => {
-			const el = hit(event, "[data-pl-drag]")
-			const s = sec(el)
-			if (!el || !s) return
-			held = { el, s }
-			try {
-				el.setPointerCapture(event.pointerId)
-			} catch {}
-			dragged(event)
-		},
-		true,
-	)
+	// Called from the one pointerdown listener, which keeps a press on a control to itself (see `mine`).
+	function grab(event: PointerEvent) {
+		const el = hit(event, "[data-pl-drag]")
+		const s = sec(el)
+		if (!el || !s) return
+		held = { el, s }
+		try {
+			el.setPointerCapture(event.pointerId)
+		} catch {}
+		dragged(event)
+	}
 	win.addEventListener("pointermove", dragged, true)
 	for (const type of ["pointerup", "pointercancel"])
 		win.addEventListener(
@@ -1424,6 +1433,8 @@ export function playEngine(
 		const button = hit(event, "[data-pl-step]")
 		const s = sec(button)
 		if (!s || !button) return
+		// The mouse events a browser makes up after a touch are not a mouse pointing at anything.
+		if (event.type === "mouseover" && event.timeStamp - touched < 1200) return
 		intent(event)
 		const st = stateOf(s)
 		const c = G.t[st.trail[st.trail.length - 1].k]

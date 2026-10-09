@@ -169,7 +169,7 @@ export function ringTokens(
 	const less = (key: string, by: number, cap = 10) => `${key}<${Math.max(0, Math.min(cap, level(key) - by))}`
 	const more = (key: string, by: number, least = 0) => `${key}>${Math.min(10, Math.max(least, level(key) + by))}`
 	if (mode === "chips" || mode === "edges") return keys.map(flip)
-	if (mode === "bars") return picks(4, 3).map(flip)
+	if (mode === "bars") return picks(3, 3).map(flip)
 	if (mode === "words") return picks(2, 3).map((key) => (level(key) >= 6 ? less(key, 2, 5) : more(key, 2, 5)))
 	if (mode === "stops" || mode === "pad") {
 		const out: string[] = []
