@@ -6,10 +6,11 @@ set -euo pipefail
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 docker info >/dev/null 2>&1 || { echo 'Docker is not reachable. No network tests ran.' >&2; exit 1; }
 work=$(mktemp -d)
-server=''; container="gw-bench-local-$$"
+server=''; static_server=''; container="gw-bench-local-$$"
 cleanup() {
   docker stop "$container" >/dev/null 2>&1 || true
   if [[ -n $server ]]; then kill "$server" 2>/dev/null || true; wait "$server" 2>/dev/null || true; fi
+  if [[ -n $static_server ]]; then kill "$static_server" 2>/dev/null || true; wait "$static_server" 2>/dev/null || true; fi
   rm -rf "$work"
 }
 trap cleanup EXIT
@@ -95,3 +96,90 @@ for (const mode of ['new', 'reuse']) {
 }
 console.log(`Page-view tests passed. Results: ${base}`);
 JS
+# A third case uses two loopback origins. Replay the same capture in both file modes.
+for files in page origin; do
+  : > "$work/requests.jsonl"; : > "$work/static-requests.jsonl"
+  rm -f "$work/port" "$work/static-port"
+  node "$ROOT/scripts/stub-tls-server.mjs" "$work/port" "$work/requests.jsonl" "$work/key.pem" "$work/cert.pem" &
+  server=$!
+  node "$ROOT/scripts/stub-tls-server.mjs" "$work/static-port" "$work/static-requests.jsonl" "$work/key.pem" "$work/cert.pem" &
+  static_server=$!
+  for ((i=0;i<100;i++)); do [[ ! -s $work/port || ! -s $work/static-port ]] || break; sleep 0.05; done
+  [[ -s $work/port && -s $work/static-port ]] || { echo 'Stubs did not start' >&2; exit 1; }
+  port=$(cat "$work/port"); static_port=$(cat "$work/static-port")
+  out="$base/static-$files"; mkdir -p "$out"
+  cp "$ROOT/k6/load.js" "$out/load.js"
+  node --input-type=module - "$work/capture.json" "$work/static-capture.json" "$port" "$static_port" <<'JS'
+import { readFileSync, writeFileSync } from 'node:fs';
+const [input, output, port, staticPort] = process.argv.slice(2);
+const capture = JSON.parse(readFileSync(input));
+capture.origin = `https://127.0.0.1:${port}`;
+const page = capture.pages[0];
+page.static_origin = `https://127.0.0.1:${staticPort}`;
+for (const row of page.requests) {
+  if (!row.own) continue;
+  const file = row.path.startsWith('/assets/') || row.type === 'Manifest';
+  row.origin = file ? page.static_origin : capture.origin;
+  row.own = !file;
+  if (file) row.connection = row.type === 'Stylesheet' ? 4 : 3;
+}
+page.requests.push(
+  { own: false, origin: page.static_origin, method: 'GET', type: 'Font', path: '/assets/font.woff2', status: 200, connection: 3, transfer_bytes: 100 },
+  { own: false, origin: page.static_origin, method: 'GET', type: 'Image', path: '/images/a.png', status: 200, connection: 4, transfer_bytes: 100 },
+);
+writeFileSync(output, JSON.stringify(capture));
+JS
+  PAGE_FILES=$files node "$ROOT/scripts/page-view-set.mjs" "$work/set.json" "$work/static-capture.json" > "$out/urls.json"
+  docker run --rm --name "$container" --network host --user 0:0 -v "$out:/work" \
+    -e "TARGET_URL=https://127.0.0.1:$port" -e INSECURE_TLS=1 -e URLS_FILE=/work/urls.json -e OUT_DIR=/work -e SCENARIO=page-view \
+    -e CONNECTIONS=new -e 'CACHE_IDENTITY=anon;US;en' -e COOKIE= -e RATE_START=4 -e RATE_MAX=4 -e PRE_VUS=4 -e MAX_VUS=8 -e STEP_DURATION=10 -e ABORT_DELAY=1s \
+    grafana/k6:1.8.1 run /work/load.js > "$out/k6.log" 2>&1 || { cat "$out/k6.log"; echo 'k6 failed' >&2; exit 1; }
+  kill "$server" "$static_server"; wait "$server" 2>/dev/null || true; wait "$static_server" 2>/dev/null || true
+  server=''; static_server=''
+  cp "$work/requests.jsonl" "$out/requests.jsonl"
+  cp "$work/static-requests.jsonl" "$out/static-requests.jsonl"
+  node --input-type=module - "$out" "$files" <<'JS'
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const [out, files] = process.argv.slice(2);
+const read = (name) => readFileSync(`${out}/${name}`, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse);
+const site = read('requests.jsonl'), staticRows = read('static-requests.jsonl');
+const set = JSON.parse(readFileSync(`${out}/urls.json`));
+const raw = JSON.parse(readFileSync(`${out}/k6-summary.json`));
+const count = (name, host) => raw.metrics[`${name}{phase:main,host:${host}}`]?.values.count || 0;
+const siteRequests = site.filter((r) => r.event === 'request'), staticRequests = staticRows.filter((r) => r.event === 'request');
+assert.equal(raw.metrics['http_req_failed{phase:main}'].values.rate, 0);
+assert(raw.metrics['visits{phase:main}'].values.count >= 30);
+assert([...site, ...staticRows].filter((r) => r.event === 'connection').every((r) => r.alpn === 'h2' && !r.resumed));
+assert([...siteRequests, ...staticRequests].every((r) => !['/api/e', '/x.jpg'].includes(r.path)));
+assert(staticRequests.every((r) => !r.headers.cookie && !r.headers['gw-cache-identity']));
+const assets = ['/assets/a.js', '/assets/b.css', '/assets/font.woff2', '/images/a.png', '/site.webmanifest'];
+if (files === 'page') {
+  assert.deepEqual([...new Set(staticRequests.map((r) => r.path))].sort(), [...assets].sort());
+  assert(siteRequests.every((r) => !assets.includes(r.path)));
+  assert.equal(set.connections_per_visit, 2.5);
+  assert(count('http_reqs', 'static') > 0);
+} else {
+  assert.equal(staticRows.length, 0, 'origin mode opens no connection to the static origin');
+  assert(assets.every((path) => siteRequests.some((r) => r.path === path)));
+  assert.equal(set.connections_per_visit, 1.75);
+  assert.equal(count('http_reqs', 'static'), 0);
+}
+for (const [host, rows] of [['site', site], ['static', staticRows]]) {
+  const connections = rows.filter((r) => r.event === 'connection');
+  if (!connections.length) continue;
+  assert(Math.abs(count('tls_handshakes', host) - (connections.length - 1)) <= 3, `${host}: counted handshakes match new connections after setup`);
+  for (const connection of connections.slice(1)) {
+    const paths = rows.filter((r) => r.event === 'request' && r.connection === connection.id).map((r) => r.path).sort();
+    if (host === 'static') {
+      const expected = paths.includes('/assets/a.js') ? ['/assets/a.js', '/assets/font.woff2', '/site.webmanifest'] : ['/assets/b.css', '/images/a.png'];
+      assert.deepEqual(paths, expected.sort(), 'each static group has its own connection');
+    } else if (paths.includes('/movie/1')) {
+      const expected = ['/movie/1', '/api/living-room/picks?view=pool', ...(files === 'origin' ? assets.filter((p) => p !== '/site.webmanifest') : [])];
+      assert.deepEqual(paths, expected.sort(), 'the visitor sends only the files assigned to the site connection');
+    } else assert(paths.length === 1 && ['/og/movie/1.png', '/site.webmanifest'].includes(paths[0]));
+  }
+}
+console.log(`Static files ${files}: paths, cookies, host metrics, and connections passed.`);
+JS
+done

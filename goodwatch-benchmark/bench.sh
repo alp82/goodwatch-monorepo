@@ -15,7 +15,7 @@ load: --mode smoke|ramp --cache warm|cold --urls hot|surfaces|longtail|file.json
       --label TEXT --rate N --duration S --start N --step N --max N --rates N,N,...
       --routes ROUTE[:CLIENT],...
       --step-duration S --path private|public --raw --yes-ramp-production
-      --scenario requests|page-view --connections new|reuse --identity 'anon;US;en' --page-assets FILE
+      --scenario requests|page-view --connections new|reuse --identity 'anon;US;en' --page-assets FILE --files page|origin
       --allow-above-500   (page-view: rates are visitors per second, each with a new connection and a full page view)
 lighthouse: --urls FILE --runs N --where generator|local --label TEXT --path public|private
 budget: [--runs N] [--where generator|local] [--label TEXT] [--path public|private] [--budget FILE] [--run RUN]
@@ -72,7 +72,8 @@ export KIND=$command MODE=smoke CACHE_MODE=${CACHE_MODE:-warm} LABEL=run WHERE=g
 export PATH_MODE=private LH_RUNS=${LH_RUNS:-3}
 # The CPU slowdown of Lighthouse's simulation, calibrated for the generator (see "Lighthouse" in the README).
 export LH_CPU_SLOWDOWN=${LH_CPU_SLOWDOWN:-2.7}
-urls=hot; raw=0; approved=0; page_assets=''
+urls=hot; raw=0; approved=0; page_assets=''; files_set=0
+export PAGE_FILES=${PAGE_FILES:-page} BENCH_STATIC_HOST=${BENCH_STATIC_HOST:-}
 export SCENARIO=${SCENARIO:-requests} CONNECTIONS=${CONNECTIONS:-} CAPTURE_SETTLE=${CAPTURE_SETTLE:-10}
 [[ $command != lighthouse ]] || { PATH_MODE=public; urls="$ROOT/lighthouse/urls.txt"; }
 # The tap check uses the movie and the show of the render path budget, so that both measure the same titles.
@@ -97,6 +98,7 @@ while (($#)); do
     --rate) RATE_START=$2; RATE_MAX=$2; smoke_rate_set=1 ;; --duration) STEP_DURATION=$2; smoke_rate_set=1 ;;
     --start) RATE_START=$2; ramp_set=1 ;; --step) RATE_STEP=$2; ramp_set=1 ;; --max) RATE_MAX=$2; ramp_set=1 ;; --rates) RATE_LIST=$2; ramp_set=1 ;; --step-duration) STEP_DURATION=$2; ramp_set=1 ;;
     --scenario) SCENARIO=$2 ;; --connections) CONNECTIONS=$2 ;; --identity) export CACHE_IDENTITY=$2 ;; --page-assets) page_assets=$2 ;;
+    --files) PAGE_FILES=$2; files_set=1 ;;
     --routes) ONLY_ROUTES=$2 ;; --path) PATH_MODE=$2 ;; --runs) LH_RUNS=$2; TAP_RUNS=$2 ;; --where) WHERE=$2 ;;
     --base-url|--controls|--modes|--movie|--show|--resolve|--timeout|--settle|--cpu|--network)
       [[ $command == tap ]] || fail "$1 belongs to the tap command"
@@ -113,6 +115,8 @@ done
 [[ $MODE == smoke || $MODE == ramp ]] || fail 'Mode must be smoke or ramp'
 [[ $CACHE_MODE == warm || $CACHE_MODE == cold ]] || fail 'Cache must be warm or cold'
 [[ $SCENARIO == requests || $SCENARIO == page-view ]] || fail 'Scenario must be requests or page-view'
+[[ $PAGE_FILES == page || $PAGE_FILES == origin ]] || fail 'Files must be page or origin'
+((files_set == 0)) || [[ $command == load && $SCENARIO == page-view ]] || fail '--files requires load --scenario page-view'
 # A page view is a new visitor: its own connection, the cache identity that a front cache would send, and no cookie.
 if [[ $SCENARIO == page-view ]]; then
   CONNECTIONS=${CONNECTIONS:-new}; export CACHE_IDENTITY=${CACHE_IDENTITY-'anon;US;en'} COOKIE=${COOKIE-}

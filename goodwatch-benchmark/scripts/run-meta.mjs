@@ -61,6 +61,7 @@ if (process.argv[2] === "finish" || process.argv[2] === "start") {
           mode: e.MODE,
           cache_mode: e.CACHE_MODE,
           scenario: e.KIND === "load" ? e.SCENARIO || "requests" : null,
+          files: e.KIND === "load" && e.SCENARIO === "page-view" ? e.PAGE_FILES || "page" : null,
           connections: e.KIND === "load" ? e.CONNECTIONS || "reuse" : null,
           cache_identity: e.KIND === "load" ? e.CACHE_IDENTITY || "" : null,
           url_set: e.URL_SET_NAME,
