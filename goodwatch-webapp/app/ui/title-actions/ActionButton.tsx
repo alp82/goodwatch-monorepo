@@ -20,7 +20,8 @@ const REWATCH = { short: "Rewatch", long: "Want to rewatch" }
 /**
  * Want to See, Seen, or Not interested as a toggle button.
  * `label`: "auto" shows the short word on phones and the long one from sm up; "long" always the long one; "none" the
- * icon alone, with the long label as its name and tooltip. `size`: "md" is 44px high, "sm" 36px.
+ * icon alone, with the long label as its name and tooltip; "wide" the icon alone on phones and the long label from
+ * sm up. `size`: "md" is 44px high, "sm" 36px.
  */
 export function ActionButton({
 	kind,
@@ -37,7 +38,7 @@ export function ActionButton({
 	/** Want to See only: the title is Seen, so the button reads "Want to rewatch". */
 	rewatch?: boolean
 	active: boolean
-	label?: "auto" | "long" | "none"
+	label?: "auto" | "long" | "none" | "wide"
 	size?: "md" | "sm"
 	/** Seen with the movie watch log: "3×" from two watches on. */
 	count?: string | null
@@ -52,7 +53,9 @@ export function ActionButton({
 	const padding =
 		label === "none"
 			? "px-0"
-			: label === "auto"
+			: label === "wide"
+				? "px-0 text-xs sm:px-2"
+				: label === "auto"
 				? "px-2 text-xs sm:px-4 sm:text-sm"
 				: size === "md"
 					? "px-3 text-sm"
@@ -78,6 +81,7 @@ export function ActionButton({
 				</>
 			)}
 			{label === "long" && <span className="truncate">{long}</span>}
+			{label === "wide" && <span className="truncate max-sm:sr-only">{long}</span>}
 			{label !== "none" && count && <span className="shrink-0 tabular-nums opacity-80">{count}</span>}
 			{/* Drawn here: the icon library's arrow would join the scripts of every page. */}
 			{label !== "none" && opensLog && (

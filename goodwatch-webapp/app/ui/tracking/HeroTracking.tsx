@@ -1,8 +1,8 @@
 import { PauseIcon } from "@heroicons/react/20/solid"
-// The hero's title actions on a show page for a member who tracks episodes (#369, #384): the box with the status
-// pill and its menu, the progress and the Next episode as a link to its row in the episode list; the page's one
-// score control, which carries the prompt to rate and the question after a first score; and Want to See, Seen and
-// Not interested or Drop.
+// The hero's "your show" block on a show page for a member who tracks episodes (#369, #384): one line with the
+// status pill and its menu, the progress, and the Next episode as a chip that leads to its row in the episode
+// list; the prompt to rate and the question after a first score, when they are due; and the actions in one row.
+// The score itself is in the hero's ratings (ui/details/hero/OwnScore.tsx), and the prompt opens its picker.
 // Loaded after the page is up; until its data is there, and for a show without an episode list, it shows what the
 // first paint showed.
 import {
@@ -17,16 +17,11 @@ import { type ReactNode, useEffect, useRef, useState } from "react"
 import { episodeLabel } from "~/domain/tracking/machine"
 import type { ShowView } from "~/domain/tracking/show-page"
 import type { MenuEntry, MenuEntryId } from "~/domain/tracking/status-menu"
-import { useUserScore } from "~/hooks/useUserDataAccessors"
 import { EPISODE_GRID_ANCHOR } from "~/ui/details/episode-grid/scale"
+import { SCORE_SAVED_EVENT, openScorePicker } from "~/ui/details/hero/OwnScore"
 import { ActionButton } from "~/ui/title-actions/ActionButton"
-import { ScoreControl } from "~/ui/title-actions/ScoreControl"
-import {
-	SEEN_SO_NOT_HIDEABLE,
-	useTitleActions,
-} from "~/ui/title-actions/useTitleActions"
+import { useTitleActions } from "~/ui/title-actions/useTitleActions"
 import { useUndoToast, warmUndoToast } from "~/ui/title-actions/useUndoToast"
-import { useScoreAction } from "~/ui/user/actions/ScoreAction"
 import {
 	ConfirmPanel,
 	POPOVER,
@@ -35,7 +30,12 @@ import {
 	useDismiss,
 } from "./TrackingToast"
 import { type TrackingActions, useTrackingActions } from "./actions"
-import { STATUS_LOOK, StatusBoxFrame, type TrackedMedia } from "./gate"
+import {
+	HERO_ACTIONS,
+	STATUS_LINE,
+	STATUS_LOOK,
+	type TrackedMedia,
+} from "./gate"
 import { FOCUS, type ShowTracking, plural, useShowTracking } from "./store"
 
 export default function HeroTracking({
@@ -52,33 +52,31 @@ export default function HeroTracking({
 	// A show without an episode list is tracked as today: Seen for the whole show, and the status.
 	if (!tracking.ready || !view || !page) return <>{first}</>
 	return (
-		<div data-tracking-hero={view.derived.state}>
+		<div data-tracking-hero={view.derived.state} className={HERO_ACTIONS}>
 			{view.derived.state !== "not_started" ? (
-				<StatusBox
+				<StatusLine
 					media={media}
 					tracking={tracking}
 					view={view}
 					actions={actions}
 				/>
 			) : (
-				<StartBox tracking={tracking} view={view} />
+				<StartLine tracking={tracking} view={view} />
 			)}
-			<div className="@container">
-				<Score
-					media={media}
-					tracking={tracking}
-					view={view}
-					actions={actions}
-				/>
-				<Buttons media={media} view={view} actions={actions} />
-			</div>
+			<Prompts
+				media={media}
+				tracking={tracking}
+				view={view}
+				actions={actions}
+			/>
+			<Buttons media={media} view={view} actions={actions} />
 			<TrackingToastHost tracking={tracking} actions={actions} />
 		</div>
 	)
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// The box: status, progress, Next episode
+// The line: status, progress, Next episode
 // ---------------------------------------------------------------------------------------------------------
 
 // The icons only tracking draws (Heroicons 24 solid, MIT), written out here: imported from the icon package, or kept
@@ -280,12 +278,12 @@ function StatusPill({
 	)
 }
 
-/** The chip that says where the box's link leads: down to the episode list. */
+/** The chip that says where the line's link leads: down to the episode list. */
 const GO =
-	"inline-flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/10 px-3 text-sm font-semibold text-white ring-1 ring-white/15 hover:bg-white/20 group-hover:bg-white/20"
+	"inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/10 px-3 text-xs font-semibold text-white ring-1 ring-white/15 hover:bg-white/20 group-hover:bg-white/20"
 
 /** A show nobody has started yet: no status and no progress, only the way down to its seasons and episodes. */
-function StartBox({
+function StartLine({
 	tracking,
 	view,
 }: {
@@ -306,36 +304,32 @@ function StartBox({
 	)
 	const seasons = new Set(aired.map((episode) => episode.season)).size
 	return (
-		<StatusBoxFrame>
-			<a
-				href={`#${EPISODE_GRID_ANCHOR}`}
-				data-start-episodes
-				aria-label={`${plural(seasons, "season")}, ${plural(view.derived.aired, "episode")}. Go to the episode list to mark what you've watched`}
-				onClick={(event) => {
-					event.preventDefault()
-					tracking.store.openEpisode(first.id)
-				}}
-				className={`group flex h-11 min-w-0 items-center gap-3 rounded-lg ${FOCUS}`}
-			>
-				<span className="min-w-0 flex-1">
-					<span className="block text-xs font-semibold uppercase tracking-wide text-gray-400">
-						Already watching?
-					</span>
-					<span className="block truncate text-sm font-semibold text-white">
-						{plural(seasons, "season")} ·{" "}
-						{plural(view.derived.aired, "episode")}
-					</span>
+		<a
+			href={`#${EPISODE_GRID_ANCHOR}`}
+			data-tracking-box
+			data-start-episodes
+			aria-label={`${plural(seasons, "season")}, ${plural(view.derived.aired, "episode")}. Go to the episode list to mark what you've watched`}
+			onClick={(event) => {
+				event.preventDefault()
+				tracking.store.openEpisode(first.id)
+			}}
+			className={`group rounded-lg ${STATUS_LINE} ${FOCUS}`}
+		>
+			<span className="min-w-0 flex-1 truncate text-sm text-gray-300">
+				<span className="font-semibold text-white">Already watching?</span>{" "}
+				<span className="max-sm:hidden">
+					{plural(seasons, "season")} · {plural(view.derived.aired, "episode")}
 				</span>
-				<span data-go-episodes className={GO}>
-					Episodes
-					<ArrowDownIcon className="h-3.5 w-3.5" />
-				</span>
-			</a>
-		</StatusBoxFrame>
+			</span>
+			<span data-go-episodes className={GO}>
+				Episodes
+				<ArrowDownIcon className="h-3.5 w-3.5" />
+			</span>
+		</a>
 	)
 }
 
-function StatusBox({
+function StatusLine({
 	media,
 	tracking,
 	view,
@@ -360,121 +354,120 @@ function StatusBox({
 		)
 		.sort((a, b) => (a.airDate ?? "").localeCompare(b.airDate ?? ""))[0]
 	const extras = [
+		`${derived.pass > 1 ? `Pass ${derived.pass} · ` : ""}${derived.watched} of ${derived.aired} episodes`,
 		view.unaired ? `${view.unaired} not aired yet` : "",
 		view.specialsWatched
 			? `${plural(view.specialsWatched, "special")} watched, not counted`
 			: "",
 	].filter(Boolean)
+	// With new episodes the pill says how many, and a phone has no room for the bar and the word beside it.
+	const narrow = derived.newEpisodes > 0 ? "max-sm:hidden" : ""
+	// What the line says when there is no Next episode.
+	const noNext =
+		derived.state === "dropped"
+			? "You dropped it. Resume brings it back."
+			: derived.aired === 0
+				? "No episode has aired yet."
+				: derived.watched < derived.aired
+					? `${plural(derived.aired - derived.watched, "episode")} left.`
+					: `You've watched every episode.${
+							upcoming?.airDate
+								? ` ${episodeLabel(upcoming)} airs ${upcoming.airDate === tracking.today ? "today" : upcoming.airDate}.`
+								: ""
+						}`
 	return (
-		<StatusBoxFrame>
-			<div className="flex items-center justify-between gap-3">
-				<StatusPill view={view} actions={actions} onRewatch={toggleWant} />
-				<p
-					data-progress
-					title={extras.join(" · ") || undefined}
-					className="min-w-0 truncate text-sm font-semibold text-white"
+		<div data-tracking-box className={STATUS_LINE}>
+			<StatusPill view={view} actions={actions} onRewatch={toggleWant} />
+			<p
+				data-progress
+				title={extras.join(" · ")}
+				aria-label={extras.join(", ")}
+				className="flex shrink-0 items-center gap-2 text-xs font-semibold tabular-nums text-white"
+			>
+				{derived.pass > 1 && (
+					<span className="font-normal text-gray-400 max-sm:hidden">
+						Pass {derived.pass}
+					</span>
+				)}
+				<span>
+					{derived.watched}/{derived.aired}
+				</span>
+				<span
+					className={`block h-1.5 w-10 overflow-hidden rounded-full bg-white/10 sm:w-20 xl:w-28 ${narrow}`}
+					aria-hidden="true"
 				>
-					{derived.pass > 1 && (
-						<span className="font-normal text-gray-400">
-							Pass {derived.pass} ·{" "}
+					<span
+						className="block h-full rounded-full bg-green-500 transition-[width]"
+						style={{
+							width: `${derived.aired ? (derived.watched / derived.aired) * 100 : 0}%`,
+						}}
+					/>
+				</span>
+			</p>
+			{next ? (
+				// Navigation, not an action: the chip leads to the episode's row, where it is marked.
+				<a
+					href={`#${EPISODE_GRID_ANCHOR}`}
+					data-next-episode
+					aria-label={`${derived.newEpisodes ? "New since you saw it" : "Next episode"}: ${episodeLabel(next)}${next.name ? `, ${next.name}` : ""}. Go to it in the episode list`}
+					title={`${derived.newEpisodes ? "New since you saw it" : "Next episode"}: ${episodeLabel(next)}${next.name ? ` · ${next.name}` : ""}`}
+					onClick={(event) => {
+						event.preventDefault()
+						tracking.store.openEpisode(next.id)
+					}}
+					className={`group ml-auto flex min-w-0 items-center gap-2 rounded-lg ${FOCUS}`}
+				>
+					<span className={`shrink-0 text-xs text-gray-400 ${narrow}`}>
+						{derived.newEpisodes ? "New" : "Next"}
+						<span className="max-xl:hidden">
+							{derived.newEpisodes ? " since you saw it" : " episode"}
+						</span>
+					</span>
+					{next.name && (
+						<span className="min-w-0 truncate text-xs font-medium text-gray-200 max-xl:hidden">
+							{next.name}
 						</span>
 					)}
-					{derived.watched} of {derived.aired}
-					<span className="hidden font-normal text-gray-400 sm:inline">
-						{" "}
-						episodes
+					<span data-go-episodes className={GO}>
+						{episodeLabel(next)}
+						<ArrowDownIcon className="h-3.5 w-3.5" />
 					</span>
-				</p>
-			</div>
-			<span
-				className="mt-3 block h-1.5 overflow-hidden rounded-full bg-white/10"
-				aria-hidden="true"
-			>
-				<span
-					className="block h-full rounded-full bg-green-500 transition-[width]"
-					style={{
-						width: `${derived.aired ? (derived.watched / derived.aired) * 100 : 0}%`,
-					}}
-				/>
-			</span>
-			<div className="mt-3 flex h-11 items-center gap-3">
-				{next ? (
-					// Navigation, not an action: the whole line leads to the episode's row, where it is marked.
+				</a>
+			) : (
+				<>
+					<p
+						data-no-next
+						className="ml-auto min-w-0 truncate text-right text-xs text-gray-300 max-sm:sr-only"
+					>
+						{noNext}
+					</p>
 					<a
 						href={`#${EPISODE_GRID_ANCHOR}`}
-						data-next-episode
-						aria-label={`${derived.newEpisodes ? "New since you saw it" : "Next episode"}: ${episodeLabel(next)}${next.name ? `, ${next.name}` : ""}. Go to it in the episode list`}
+						data-go-episodes
+						aria-label="Go to episodes"
+						title={noNext}
 						onClick={(event) => {
 							event.preventDefault()
-							tracking.store.openEpisode(next.id)
+							tracking.store.openEpisode(null)
 						}}
-						className={`group flex min-w-0 flex-1 items-center gap-3 rounded-lg ${FOCUS}`}
+						className={`max-sm:ml-auto ${GO} ${FOCUS}`}
 					>
-						<span className="min-w-0 flex-1">
-							<span className="block text-xs font-semibold uppercase tracking-wide text-gray-400">
-								{derived.newEpisodes ? "New since you saw it" : "Next episode"}
-							</span>
-							<span className="block truncate text-sm font-semibold text-white">
-								{episodeLabel(next)}
-								{next.name ? ` · ${next.name}` : ""}
-							</span>
-						</span>
-						<span data-go-episodes className={GO}>
-							{episodeLabel(next)}
-							<ArrowDownIcon className="h-3.5 w-3.5" />
-						</span>
+						Episodes
+						<ArrowDownIcon className="h-3.5 w-3.5" />
 					</a>
-				) : (
-					<>
-						<p
-							data-no-next
-							className="min-w-0 flex-1 text-xs leading-snug text-gray-300 sm:text-sm"
-						>
-							{derived.state === "dropped" ? (
-								// Short: the line shares its row with the link, and the title is above.
-								"You dropped it. Resume brings it back."
-							) : derived.aired === 0 ? (
-								"No episode has aired yet."
-							) : derived.watched < derived.aired ? (
-								`${plural(derived.aired - derived.watched, "episode")} left.`
-							) : (
-								<>
-									<span className="font-semibold text-white">
-										You've watched every episode.
-									</span>
-									{upcoming?.airDate
-										? ` ${episodeLabel(upcoming)} airs ${upcoming.airDate === tracking.today ? "today" : upcoming.airDate}.`
-										: ""}
-								</>
-							)}
-						</p>
-						<a
-							href={`#${EPISODE_GRID_ANCHOR}`}
-							data-go-episodes
-							aria-label="Go to episodes"
-							onClick={(event) => {
-								event.preventDefault()
-								tracking.store.openEpisode(null)
-							}}
-							className={`${GO} ${FOCUS}`}
-						>
-							Episodes
-							<ArrowDownIcon className="h-3.5 w-3.5" />
-						</a>
-					</>
-				)}
-			</div>
-		</StatusBoxFrame>
+				</>
+			)}
+		</div>
 	)
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// The score control, the prompt to rate, and "Have you seen all of it?"
+// The prompt to rate, and "Have you seen all of it?"
 // ---------------------------------------------------------------------------------------------------------
 
 const LINK = `shrink-0 cursor-pointer text-xs underline underline-offset-2 hover:text-white ${FOCUS}`
 
-function Score({
+function Prompts({
 	media,
 	tracking,
 	view,
@@ -485,66 +478,59 @@ function Score({
 	view: ShowView
 	actions: TrackingActions
 }) {
-	const { rate, isPending } = useScoreAction(media)
-	const score = useUserScore("show", media.details.tmdb_id)?.score ?? null
 	// The server decides after a first score by hand whether to ask if the show was seen: read once it is stored.
-	const wasPending = useRef(false)
 	useEffect(() => {
-		if (wasPending.current && !isPending) tracking.store.refetch()
-		wasPending.current = isPending
-	}, [isPending, tracking.store])
+		const saved = () => tracking.store.refetch()
+		window.addEventListener(SCORE_SAVED_EVENT, saved)
+		return () => window.removeEventListener(SCORE_SAVED_EVENT, saved)
+	}, [tracking.store])
 	const prompt = view.ratePrompt
 	return (
 		<>
-			{prompt ? (
+			{prompt && (
+				// The picker is the score rectangle's, in the hero's ratings: the prompt opens it.
 				<div
 					data-rate-prompt={prompt}
-					className="-mx-2 rounded-xl bg-amber-300/[0.09] p-2 ring-1 ring-amber-300/50"
+					className="flex items-center gap-2 rounded-xl bg-amber-300/[0.09] py-1.5 pl-3 pr-2 ring-1 ring-amber-300/50"
 				>
-					<div className="mb-2 flex min-h-5 items-baseline justify-between gap-3">
-						<p className="text-sm font-semibold text-white">
-							{prompt === "all" ? (
-								<>
-									You've watched all of {media.details.title}.{" "}
-									<span className="text-amber-200">How was it?</span>
-								</>
-							) : (
-								<>
-									{view.derived.watched > 3 ? "A few" : "Three"} episodes in.{" "}
-									<span className="text-amber-200">
-										How is {media.details.title} so far?
-									</span>
-								</>
-							)}
-						</p>
-						<button
-							type="button"
-							data-rate-not-now
-							onClick={actions.dismissRatePrompt}
-							className={`${LINK} text-gray-300 decoration-white/30`}
-						>
-							Not now
-						</button>
-					</div>
-					<ScoreControl
-						value={score}
-						busy={isPending}
-						onRate={(value) => rate(value)}
-					/>
+					<p className="min-w-0 flex-1 text-sm font-semibold text-white">
+						{prompt === "all" ? (
+							<>
+								You've watched all of {media.details.title}.{" "}
+								<span className="text-amber-200">How was it?</span>
+							</>
+						) : (
+							<>
+								{view.derived.watched > 3 ? "A few" : "Three"} episodes in.{" "}
+								<span className="text-amber-200">
+									How is {media.details.title} so far?
+								</span>
+							</>
+						)}
+					</p>
+					<button
+						type="button"
+						data-rate-open
+						aria-haspopup="dialog"
+						onClick={openScorePicker}
+						className={`h-8 shrink-0 cursor-pointer rounded-lg bg-amber-400 px-3 text-xs font-bold text-black hover:bg-amber-300 ${FOCUS}`}
+					>
+						Rate
+					</button>
+					<button
+						type="button"
+						data-rate-not-now
+						onClick={actions.dismissRatePrompt}
+						className={`${LINK} text-gray-300 decoration-white/30`}
+					>
+						Not now
+					</button>
 				</div>
-			) : (
-				// The same control as today, on this component's own request, so that the read above follows the score.
-				<ScoreControl
-					value={score}
-					busy={isPending}
-					onRate={(value) => rate(value)}
-					onClear={() => rate(null)}
-				/>
 			)}
 			{view.derived.seenQuestion && (
 				<div
 					data-seen-question
-					className="mt-3 rounded-xl bg-white/[0.06] p-3 ring-1 ring-white/10"
+					className="rounded-xl bg-white/[0.06] p-3 ring-1 ring-white/10"
 				>
 					<p className="text-sm font-semibold text-white">
 						Have you seen all of it?
@@ -573,7 +559,7 @@ function Score({
 								type="button"
 								data-seen-answer={key}
 								onClick={run}
-								className={`h-10 cursor-pointer rounded-lg bg-white/10 px-3 text-sm font-semibold text-gray-100 hover:bg-white/20 ${FOCUS}`}
+								className={`h-9 cursor-pointer rounded-lg bg-white/10 px-3 text-xs font-semibold text-gray-100 hover:bg-white/20 ${FOCUS}`}
 							>
 								{label}
 							</button>
@@ -589,9 +575,14 @@ function Score({
 // Want to See, Seen, and Not interested or Drop
 // ---------------------------------------------------------------------------------------------------------
 
-const BUTTON = `inline-flex h-11 w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition-colors ${FOCUS}`
+const BUTTON = `inline-flex h-9 min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-2 text-xs font-semibold transition-colors ${FOCUS}`
 const OFF = "bg-white/10 text-gray-100 hover:bg-white/20"
 
+/**
+ * The actions of the state, in one row that they fill. A Seen show says so in its status pill, so it has no Seen
+ * button: taking Seen back is in the pill's menu, and the row has Want to rewatch, and the press that marks
+ * episodes that are new.
+ */
 function Buttons({
 	media,
 	view,
@@ -605,66 +596,56 @@ function Buttons({
 	const toast = useUndoToast()
 	const { state } = view.derived
 	const { seen } = view
-	const third = "col-span-2 @lg:col-span-1"
+	const isSeen = state === "seen"
 	return (
 		<div
-			className="mt-3 grid grid-cols-2 gap-2 @lg:grid-cols-3"
+			data-title-actions
+			className="flex min-w-0 gap-2"
 			onPointerEnter={warmUndoToast}
 			onPointerDown={warmUndoToast}
 			onFocus={warmUndoToast}
 		>
-			<ActionButton
-				kind="want"
-				label="long"
-				rewatch={state === "seen"}
-				active={a.want}
-				disabled={a.wantPending || (!a.want && !view.wantToSee.ok)}
-				title={!a.want && !view.wantToSee.ok ? view.wantToSee.why : undefined}
-				onClick={() =>
-					// Row 24 is the machine's: a Dropped show with nothing watched. Elsewhere the Wishlist's writer.
-					state === "dropped" && !a.want ? actions.wantToSee() : a.toggleWant()
-				}
-			/>
-			<button
-				type="button"
-				data-seen-button={seen.mode}
-				aria-pressed={state === "seen" && seen.mode !== "markNew"}
-				aria-disabled={seen.mode === "off"}
-				title={
-					seen.mode === "off"
-						? "It is Seen because every aired episode is ticked. Untick one to change that."
-						: seen.mode === "takeBack"
-							? "Seen. Press to take it back."
+			{(state === "not_started" || isSeen) && (
+				<ActionButton
+					kind="want"
+					label="long"
+					size="sm"
+					className="flex-1"
+					rewatch={isSeen}
+					active={a.want}
+					disabled={a.wantPending}
+					title={
+						isSeen
+							? a.want
+								? "On your Wishlist to watch again. Press to take it off."
+								: "Puts it on your Wishlist to watch again some day. Your episodes stay ticked; Watch again, in the status menu, starts a new pass now."
 							: undefined
-				}
-				onClick={() => {
-					if (seen.mode === "takeBack") actions.undoSeen()
-					else if (seen.mode !== "off") actions.pressSeen()
-				}}
-				className={`${BUTTON} ${
-					state === "seen" && seen.mode !== "markNew"
-						? `bg-green-500 text-black ${seen.mode === "off" ? "cursor-default opacity-70" : ""}`
-						: OFF
-				}`}
-			>
-				<EyeIcon
-					className={`h-4 w-4 shrink-0 ${state === "seen" && seen.mode !== "markNew" ? "" : "text-green-300"}`}
+					}
+					onClick={a.toggleWant}
 				/>
-				<span className="truncate">
-					{seen.mode === "markNew"
-						? `Mark ${seen.newEpisodes} new`
-						: state === "seen"
-							? "Seen"
+			)}
+			{(!isSeen || seen.mode === "markNew") && (
+				<button
+					type="button"
+					data-seen-button={seen.mode}
+					onClick={actions.pressSeen}
+					className={`${BUTTON} ${OFF}`}
+				>
+					<EyeIcon className="h-4 w-4 shrink-0 text-green-300" />
+					<span className="truncate">
+						{seen.mode === "markNew"
+							? `Mark ${seen.newEpisodes} new`
 							: "Mark as Seen"}
-				</span>
-			</button>
+					</span>
+				</button>
+			)}
 			{state === "watching" || state === "on_hold" ? (
 				<button
 					type="button"
 					data-drop
 					title="Give it up. It is hidden from your recommendations."
 					onClick={actions.drop}
-					className={`${BUTTON} ${OFF} ${third}`}
+					className={`${BUTTON} ${OFF}`}
 				>
 					<NoSymbolIcon className="h-4 w-4 shrink-0 text-pink-300" />
 					<span className="truncate">Drop</span>
@@ -676,39 +657,36 @@ function Buttons({
 					aria-pressed
 					title="Dropped. Press to resume it."
 					onClick={actions.resume}
-					className={`${BUTTON} bg-pink-500 text-black ${third}`}
+					className={`${BUTTON} bg-pink-500 text-black`}
 				>
 					<NoSymbolIcon className="h-4 w-4 shrink-0" />
 					<span className="truncate">Dropped</span>
 				</button>
 			) : (
-				<ActionButton
-					kind="hide"
-					label="long"
-					className={third}
-					active={a.hidden}
-					disabled={!a.canHide || a.hidePending}
-					title={
-						a.hidden
-							? "Hidden from your recommendations. Press to bring it back."
-							: a.canHide
-								? "Hide it from your recommendations"
-								: SEEN_SO_NOT_HIDEABLE
-					}
-					onClick={() => {
-						if (a.hidden) a.unhide()
-						else
-							toast.say(
-								`${media.details.title} is hidden from your recommendations`,
-								a.hide(),
-							)
-					}}
-				/>
-			)}
-			{seen.mode === "off" && (
-				<p data-seen-off className="col-span-full text-xs text-gray-400">
-					Seen because every aired episode is ticked. Untick one to change that.
-				</p>
+				state === "not_started" &&
+				(a.canHide || a.hidden) && (
+					<ActionButton
+						kind="hide"
+						label="wide"
+						size="sm"
+						className="max-sm:w-9 max-sm:flex-none sm:flex-1"
+						active={a.hidden}
+						disabled={a.hidePending}
+						title={
+							a.hidden
+								? "Hidden from your recommendations. Press to bring it back."
+								: "Hide it from your recommendations"
+						}
+						onClick={() => {
+							if (a.hidden) a.unhide()
+							else
+								toast.say(
+									`${media.details.title} is hidden from your recommendations`,
+									a.hide(),
+								)
+						}}
+					/>
+				)
 			)}
 			{toast.node}
 		</div>

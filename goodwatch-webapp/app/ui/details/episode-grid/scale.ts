@@ -17,6 +17,25 @@ import { goodwatchVibeIndex, scoreLabels } from "~/utils/ratings"
  */
 export const hasEpisodeGrid = (grid: EpisodeGrid | null | undefined): grid is EpisodeGrid => !!grid && grid.seasons.length > 0
 
+/** The cells of the grid's miniature, the picture that stands for it in the hero's ratings: four by three. */
+export const MINIATURE_CELLS = 12
+
+/**
+ * The show's rated episodes in order, as twelve scores for the miniature: the run is cut into twelve stretches and
+ * each cell is the mean of one. A show with fewer than twelve rated episodes repeats them, so the picture is
+ * always full.
+ */
+export function miniatureScores(grid: EpisodeGrid): number[] {
+	const scores = grid.seasons.flatMap((season) => season.episodes.map((episode) => episode.score))
+	if (!scores.length) return []
+	return Array.from({ length: MINIATURE_CELLS }, (_, cell) => {
+		const from = Math.floor((cell * scores.length) / MINIATURE_CELLS)
+		const to = Math.max(from + 1, Math.floor(((cell + 1) * scores.length) / MINIATURE_CELLS))
+		const stretch = scores.slice(from, to)
+		return stretch.reduce((sum, score) => sum + score, 0) / stretch.length
+	})
+}
+
 /** The anchor of the episode grid section on a show page. */
 export const EPISODE_GRID_ANCHOR = "episode-ratings"
 
