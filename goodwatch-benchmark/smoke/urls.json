@@ -3,6 +3,12 @@
   "imageHost": "https://image.tmdb.org/",
   "neverContains": ["Unexpected Server Error", "Application Error"],
   "defaults": { "client": "browser", "cookie": true, "expect": [200] },
+  "static": {
+    "entry": "home",
+    "pattern": "^/assets/[A-Za-z0-9._-]+\\.js$",
+    "maxAge": 31536000,
+    "guards": "The static hostname serves the deployed build with CORS and CDN cache headers, and never serves the home page."
+  },
   "entries": [
     {
       "id": "home",

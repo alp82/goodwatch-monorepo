@@ -20,6 +20,7 @@ import { readFileSync } from "node:fs"
 import { connect, createServer } from "node:net"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { buildFilesInHtml, staticOriginFromSetting, staticOriginInHtml } from "./static-host.mjs"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const USAGE = `Usage: ./bench.sh smoke [options]
@@ -70,6 +71,7 @@ if (!local && options.target !== "production") usageError("Target must be produc
 if (local && options.host) usageError("--host is for production instances, not for a local target")
 let baseUrl = (options["base-url"] || (local ? "" : process.env.BENCH_TARGET_URL || "https://goodwatch.app")).replace(/\/$/, "")
 if (!baseUrl) usageError("A local target needs --base-url")
+const siteOrigin = new URL(baseUrl).origin
 const skipped = new Set(options.skip.split(",").filter(Boolean))
 const logWaitSeconds = Number(options["log-wait"])
 const deployTimeout = Number(options["deploy-timeout"])
@@ -97,12 +99,12 @@ function report(result, id, detail = "") {
 	console.log(`${result.toUpperCase().padEnd(4)}  ${id}${detail ? `  ${detail}` : ""}`)
 }
 /** Runs one check unless --skip names it. `run` returns a detail string, or throws with the reason it failed. */
-async function check(id, run) {
+async function check(id, run, failure = "fail") {
 	if (skipped.has(id)) return report("skip", id, "skipped with --skip")
 	try {
 		report("pass", id, (await run()) ?? "")
 	} catch (error) {
-		report("fail", id, error.message)
+		report(failure, id, error.message)
 	}
 }
 const fail = (message) => {
@@ -448,6 +450,48 @@ for (const raw of set.entries) {
 		continue
 	}
 	await check(`url:${entry.id}`, () => checkEntry(entry, set))
+}
+
+// The origin's build file was checked above. Check the static copy separately, without a site cookie.
+if (set.static) {
+	let staticOrigin = null
+	let namedOrigin = null
+	let buildPath = null
+	await check("static:mode", () => {
+		const html = bodies.get(set.static.entry) || ""
+		namedOrigin = staticOriginInHtml(html, siteOrigin)
+		staticOrigin = namedOrigin || staticOriginFromSetting(process.env.BENCH_STATIC_HOST)
+		const files = buildFilesInHtml(html, siteOrigin)
+		const build = files.find((url) => url.origin === (namedOrigin || siteOrigin) && new RegExp(set.static.pattern).test(url.pathname))
+		if (!build) fail("the page references no build file")
+		buildPath = build.pathname + build.search
+		const value = metricsBefore ? gauge(metricsBefore, "goodwatch_static_assets_in_use") : null
+		const mode = metricsBefore?.match(/goodwatch_static_assets_in_use\{[^}]*mode="([^"]*)"/)?.[1]
+		return `pages name ${namedOrigin ? "the static hostname" : "the site's host"}${value === null ? "" : `; goodwatch_static_assets_in_use=${value}${mode ? `, mode=${mode}` : ""}`}${staticOrigin ? "" : "; static hostname was not checked because BENCH_STATIC_HOST is not set"}`
+	})
+	if (staticOrigin && buildPath) {
+		const failure = namedOrigin ? "fail" : "warn"
+		const staticRequest = async (path) => {
+			const response = await fetch(staticOrigin + path, { headers: { "User-Agent": BROWSER_UA }, redirect: "manual", signal: AbortSignal.timeout(15_000) })
+			await response.arrayBuffer()
+			return response
+		}
+		await check("static:build-file", async () => {
+			const response = await staticRequest(buildPath)
+			const explain = (message) => fail(`${message}. Guards: ${set.static.guards}`)
+			if (response.status !== 200) explain(`build file answered ${response.status}, expected 200`)
+			if (!response.headers.get("access-control-allow-origin")) explain("build file lacks Access-Control-Allow-Origin")
+			const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(new URL(staticOrigin).hostname)
+			if (!loopback && !response.headers.get("cf-cache-status")) explain("build file lacks CF-Cache-Status")
+			if (!new RegExp(`(?:^|[,\\s])max-age=${set.static.maxAge}(?:[,\\s]|$)`).test(response.headers.get("cache-control") || "")) explain(`build file lacks max-age=${set.static.maxAge}`)
+			return `200 for a build file on the static hostname, access-control-allow-origin ${response.headers.get("access-control-allow-origin")}, cf-cache-status ${response.headers.get("cf-cache-status") ?? "not required on loopback"}`
+		}, failure)
+		await check("static:root-404", async () => {
+			const response = await staticRequest("/")
+			if (response.status !== 404) fail(`static root answered ${response.status}, expected 404. Guards: ${set.static.guards}`)
+			return "404 for / on the static hostname"
+		}, failure)
+	}
 }
 
 // The log, after the requests, so that errors from the edge-case pages are in it. Slow subsystems get until
