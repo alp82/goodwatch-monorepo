@@ -1,6 +1,7 @@
 // Serving the search ranking: loading it at server start, the checks before a search is ranked, and the deadline.
 // When a search can't be ranked (see servingFallback, or a ranking that fails or misses its deadline), the basic
 // search serves it, and combinedSearch records the reason on the search_history row (ranker_fallback).
+import { runsSearch } from "../role.server.ts"
 import type {
 	Eligibility,
 	ReadingFields,
@@ -26,6 +27,7 @@ let started = false
 
 /** At server start: loads the index and, when readings are possible, the query models in the background. */
 export function startSearchRanking(options: { queryModels?: boolean } = {}): void {
+	if (!runsSearch()) return
 	if (started) return
 	started = true
 	startSearchIndex()

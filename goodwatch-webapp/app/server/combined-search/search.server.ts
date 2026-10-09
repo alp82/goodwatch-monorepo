@@ -56,13 +56,17 @@ import {
 	readPeople,
 	startPeopleIndex,
 } from "../search-people/people.server";
+import { runsSearch } from "../role.server";
 
-// The index loads at server start; query models load only when the storage key allows readings.
-startSearchRanking({ queryModels: readingsConfigured() });
-// The names a search can find inside a phrase load at server start too.
-startPeopleIndex();
-// The connections to TypeSafe stay open between searches.
-keepJevConnectionsWarm();
+// A page instance loads none of it (see role.server.ts).
+if (runsSearch()) {
+	// The index loads at server start; query models load only when the storage key allows readings.
+	startSearchRanking({ queryModels: readingsConfigured() });
+	// The names a search can find inside a phrase load at server start too.
+	startPeopleIndex();
+	// The connections to TypeSafe stay open between searches.
+	keepJevConnectionsWarm();
+}
 
 export interface SearchBatch {
 	q: string;

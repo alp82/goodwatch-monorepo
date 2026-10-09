@@ -12,6 +12,7 @@
 // same build code runs on the main thread.
 //
 // Nothing loads on import. Formats: "Index files" in docs/implementation/search-ranking/README.md.
+import { runsSearch } from "../role.server.ts"
 import { existsSync } from "node:fs"
 import { Worker } from "node:worker_threads"
 import { addReadinessCheck, onShutdown } from "../lifecycle.server.ts"
@@ -224,6 +225,7 @@ function watch() {
 
 /** The loaded search index. The first call loads it; later calls return the current build at once. */
 export async function getSearchIndex(): Promise<SearchIndex> {
+	if (!runsSearch()) throw new Error("The page role has no search index")
 	watch()
 	if (current) return current
 	if (lastFailure && !loading && Date.now() - failedAt < RETRY_AFTER_MS)
@@ -238,6 +240,7 @@ export function loadedSearchIndexBuild(): string | null {
 
 /** Starts loading the index in the background, so the first search doesn't wait for it. */
 export function startSearchIndex(): void {
+	if (!runsSearch()) return
 	// Readiness waits for the first load so the command palette and search have their index for the first requests.
 	addReadinessCheck(
 		"search index",

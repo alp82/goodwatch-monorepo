@@ -4,6 +4,7 @@ import { getAuthFromRequest } from "~/utils/auth";
 import { combinedSearch } from "~/server/combined-search/search.server";
 import { parseSearchFilters } from "~/server/combined-search/search-filters";
 import { getFeatureMode } from "~/server/features.server";
+import { runsSearch } from "~/server/role.server";
 import {
 	searchAdmission,
 	searchBusyResponse,
@@ -31,6 +32,8 @@ export async function action({ request }: ActionFunctionArgs) {
 		request.headers.get("Origin") !== expectedOrigin
 	)
 		return json({ error: "Invalid origin" }, { status: 403, headers });
+	// A page instance does no search work (see role.server.ts): the proxy sends searches to the search roles.
+	if (!runsSearch()) return searchBusyResponse();
 	const release = searchAdmission.enter();
 	if (!release) return searchBusyResponse();
 	let handedOver = false;

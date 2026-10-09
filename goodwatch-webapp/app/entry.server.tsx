@@ -19,18 +19,24 @@ import { HtmlStream } from "~/server/html-stream.server"
 import { startLifecycle } from "~/server/lifecycle.server"
 import { startHotCards } from "~/server/og-image/hot-cards.server"
 import { routeLabelFor } from "~/server/metrics/http.server"
+import { startMetrics } from "~/server/metrics/index.server"
 import {
 	configurePageCache,
 	pageCacheWants,
 	startPageCache,
 } from "~/server/page-cache.server"
+import { logProcessRole } from "~/server/role.server"
 import { startStaticFiles } from "~/server/static-files.server"
 import { startTitleSnapshot } from "~/server/title-snapshot/index.server"
 
 // While the server build loads, before `remix-serve` registers its signal listeners and before the first request:
 // readiness and the shutdown sequence (see lifecycle.server.ts), and the title snapshot's first load, which readiness
 // waits for. The root loader starts the snapshot too, but a health check that asks /health/ready never reaches it.
+// The role line comes first (see role.server.ts). The metrics start here for the same reason as the snapshot: a
+// search role never serves a page, so it never reaches the root loader, and its metrics port stayed closed.
+logProcessRole()
 startLifecycle()
+startMetrics()
 startTitleSnapshot()
 // The page cache answers repeated anonymous pages before Express (see page-cache.server.ts). It starts before the
 // static files, so that the static handler is the outer one and its requests never reach the cache. The first call
@@ -39,7 +45,7 @@ configurePageCache({ routeLabel: routeLabelFor })
 routeLabelFor("/", 200)
 startPageCache()
 // Also before the first request: the files of the client build are answered before Express (see
-// static-files.server.ts). The root loader starts the gate and the metrics, but a static request never reaches it.
+// static-files.server.ts). The root loader starts the gate, but a static request never reaches it.
 startStaticFiles()
 // Hot cards answer before Express and route matching (see og-image/hot-cards.server.ts).
 // The routes keep complete answers here briefly after a successful card request.
