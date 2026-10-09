@@ -44,6 +44,8 @@ w.trail.forEach(function(p,i){var last=i===w.trail.length-1,li=document.createEl
 if(last)b.setAttribute('aria-current','step');else{b.type='button';b.setAttribute('data-dive-to',i);b.setAttribute('aria-label','Back to '+p.title)}
 if(p.poster){var m=document.createElement('img');m.src=p.poster;m.alt='';m.width=32;m.height=48;b.appendChild(m)}
 var t=document.createElement('span');t.textContent=p.title;b.appendChild(t);li.appendChild(b);ol.appendChild(li)});
+// Tenth round: the start, where you stand, and between them one control with a count that opens the steps in between.
+if(!/walk3|dive3/.test(s.className))if(w.trail.length>3){var ls=[].slice.call(ol.children),mid=ls.slice(1,-1),hm=document.createElement('li'),dt=document.createElement('details'),sm=document.createElement('summary'),l2=document.createElement('ol');hm.className='wk-hm';sm.textContent=mid.length;sm.setAttribute('aria-label',mid.length+' steps in between. Open the list.');mid.reverse().forEach(function(x){l2.appendChild(x)});dt.appendChild(sm);dt.appendChild(l2);hm.appendChild(dt);ol.insertBefore(hm,ol.lastChild);ol.className='wk-crumbs wk-hs'}else ol.className='wk-crumbs';
 ol.scrollLeft=ol.scrollWidth}
 function drop(f){for(var i=0;f&&i<f.length;i++)if(f[i].parentNode)f[i].parentNode.removeChild(f[i])}
 function show(s,html,flies,had){var w=state(s),stage=q(s,'[data-dive-stage]');had=had||s.contains(document.activeElement);
@@ -94,6 +96,7 @@ peek(s,null);w.busy=true;s.setAttribute('data-dive-busy','');
 load(url(s,here,next)).then(function(html){if(s.__w!==w)return;show(s,html,null,had)},
 function(){if(s.__w!==w)return;s.removeAttribute('data-dive-busy');w.busy=false;say(s,'That could not be loaded. Try again.')})}
 document.addEventListener('click',function(e){
+var ho=document.querySelector('.wk-hm details[open]');if(ho&&!ho.contains(e.target))ho.removeAttribute('open');
 var el=e.target&&e.target.closest?e.target:null,s=sec(el);if(!s)return;
 var a=el.closest('a[data-dive-nav]');
 if(a){if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button)return;if(W.nav){e.preventDefault();W.nav(a.getAttribute('href'))}return}

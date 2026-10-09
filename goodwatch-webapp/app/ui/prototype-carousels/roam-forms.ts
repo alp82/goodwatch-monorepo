@@ -131,12 +131,12 @@ export function roamKit(core: PlayCore, X: RoamExtra) {
 			if (own) mem.tr = own
 		}
 		const flipped = flips(ctx)
-		core.query(`${base(ctx)}${flipped.length > 1 ? `&f=${flipped.join(",")}` : ""}`)
+		core.query(`${base(ctx)}${flipped.length > 1 ? `&f=${encodeURIComponent(flipped.join(","))}` : ""}`)
 		return (mem.tr as string[] | undefined) ?? []
 	}
 	const base = (ctx: PlayCtx) => {
 		const tr = ctx.st.mem.tr as string[] | undefined
-		return `&v=4${tr ? `&tr=${tr.length ? tr.join(",") : "0"}` : ""}`
+		return `&v=4${tr ? `&tr=${tr.length ? encodeURIComponent(tr.join(",")) : "0"}` : ""}`
 	}
 	/** The switches that are flipped, in a fixed order: the filter's name. */
 	const flips = (ctx: PlayCtx): string[] => ((ctx.st.mem.w as string[] | undefined) ?? []).slice().sort()
@@ -158,23 +158,46 @@ export function roamKit(core: PlayCore, X: RoamExtra) {
 			const floor = core.floor(ctx.c.k, names.join(","))
 			if (floor) out = out.filter((t) => t.n * 1000 >= floor - 0.01)
 		}
-		return out
+		// One title per franchise, the most alike one, and one more of the franchise you stand on.
+		const seen: Record<string, boolean> = {}
+		return out.filter((t) => {
+			const name = stem(t)
+			if (!name) return true
+			if (seen[name]) return false
+			seen[name] = true
+			return true
+		})
+	}
+	/** A title's franchise as far as its name tells: "Toy Story 2" and "Toy Story" are one (best-meta.ts has the rule). */
+	const stem = (t: PlayTitle & { f?: string }) => {
+		if (t.f === undefined)
+			t.f = t.t
+				.toLowerCase()
+				.replace(/^(the|a|an) /, "")
+				.replace(/[’']/g, "")
+				.split(/:| - | – | — /)[0]
+				.replace(/\b(part|chapter|vol\.?|volume|episode|season)\s+[\divxlc]+.*$/, "")
+				.replace(/\s+([ivx]+|\d+)$/, "")
+				.replace(/[^\w ]+/g, " ")
+				.replace(/\s+/g, " ")
+				.trim()
+		return t.f
 	}
 	const page: Record<string, number> = {}
-	/** Makes sure `count` titles are there under a filter, or on their way. Never waited for. */
-	const want = (ctx: PlayCtx, names: string[], have: number, count: number) => {
-		if (!win || ctx.soft || !ctx.list || have >= count) return
+	/** Makes sure `count` titles are there under a filter, or on their way. Never waited for. True: on their way. */
+	const want = (ctx: PlayCtx, names: string[], have: number, count: number): boolean => {
+		if (!win || ctx.soft || !ctx.list || have >= count) return false
 		const filter = names.join(",")
-		if (core.floor(ctx.c.k, filter) === 0) return
+		if (core.floor(ctx.c.k, filter) === 0) return false
 		const id = `${ctx.c.k}|${filter}`
 		// The pack itself is the first page of the plain order. A filter starts at its own first page.
 		let d = page[id] ?? (filter ? 0 : 1)
-		const ask = () => core.more(ctx.c.k, `${base(ctx)}&f=${filter}&d=${d}`)
-		if (!ask() && d < 6) {
-			d++
-			page[id] = d
-			ask()
-		}
+		const ask = () => core.more(ctx.c.k, `${base(ctx)}&f=${encodeURIComponent(filter)}&d=${d}`)
+		if (ask()) return true
+		if (d >= 6) return false
+		d++
+		page[id] = d
+		return ask()
 	}
 	/** After a flip: the filters one more flip away are asked for, so that the next flip is drawn from memory too. */
 	const next = (ctx: PlayCtx, tr: string[], names: string[]) => {
@@ -290,7 +313,7 @@ export function roamKit(core: PlayCore, X: RoamExtra) {
 	/** The stage's markup for a picture. `scroll`: the map pans sideways with the browser's own scrolling. */
 	const html = (view: View, scroll = false) => {
 		last = view
-		const world = `<div class="rm-w" data-r-w="" style="${view.wstyle}">${view.center}${view.items.map((entry) => entry.html).join("")}</div>`
+		const world = `<div class="rm-w" data-r-w="" data-pl-slop="" style="${view.wstyle}">${view.center}${view.items.map((entry) => entry.html).join("")}</div>`
 		return `<div class="rm rm-${view.form}" data-r-form="${view.form}" data-r-geo="${view.geo}" data-r-mem="${esc(view.mem)}"><div class="rm-top" data-r-top="">${view.top}</div><div class="rm-map" data-r-map=""${
 			scroll ? "" : ' data-pl-pan=""'
 		}><div class="rm-bg" data-r-bg="">${view.bg}</div>${
@@ -364,15 +387,16 @@ export function roamKit(core: PlayCore, X: RoamExtra) {
 			if (kept) Object.assign(st.mem, JSON.parse(kept))
 		} catch {}
 		const tr = st.mem.tr as string[] | undefined
-		if (tr) core.query(`&v=4&tr=${tr.length ? tr.join(",") : "0"}`)
+		if (tr) core.query(`&v=4&tr=${tr.length ? encodeURIComponent(tr.join(",")) : "0"}`)
 	}
 	/** Where the lattice's titles go when nothing but the order decides: the i-th most alike at the i-th place. */
-	const inOrder = (ctx: PlayCtx, list: PlayTitle[], spots: Cell[], scale: number, label?: (t: PlayTitle) => string) => {
+	const inOrder = (ctx: PlayCtx, list: PlayTitle[], spots: Cell[], scale: number, coming = false) => {
 		const items: Item[] = []
 		for (let i = 0; i < spots.length; i++) {
 			const t = list[i]
-			if (t) items.push(item(ctx, t, spots[i].x, spots[i].y, scale, i >= 8, label ? label(t) : ""))
-			else if (!ctx.list) items.push(hole(`h${i}`, spots[i].x, spots[i].y, scale))
+			if (t) items.push(item(ctx, t, spots[i].x, spots[i].y, scale, i >= 8))
+			// A place whose title is on its way is a calm empty place until it is there.
+			else if (!ctx.list || coming) items.push(hole(`h${i}`, spots[i].x, spots[i].y, scale))
 		}
 		return items
 	}
@@ -445,9 +469,9 @@ const roam1: RoamForm = (core, kit) => {
 			const spots = kit.cells(scale)
 			const list = kit.around(ctx, names)
 			// Enough for this zoom and the next one out.
-			kit.want(ctx, names, list.length, Math.round(spots.length * 2.2))
+			const coming = kit.want(ctx, names, list.length, Math.round(spots.length * 2.2))
 			kit.next(ctx, tr, names)
-			const items = kit.inOrder(ctx, list, spots, scale)
+			const items = kit.inOrder(ctx, list, spots, scale, coming)
 			const rings = spots.length ? spots[spots.length - 1].b : 0
 			const why = names.length
 				? `Like <b>${core.esc(ctx.c.t)}</b>, ${kit.says(names)}.${list.length < spots.length && !kit.open(ctx, names) ? ` These ${list.length} are all there are.` : ""}`
@@ -496,7 +520,8 @@ const roam2: RoamForm = (core, kit) => {
 		const radius = (a: number) => r0 + (pitch * (a - Math.PI / 2)) / (Math.PI * 2)
 		const point = (a: number) => ({ x: wide * radius(a) * Math.sin(a), y: -radius(a) * Math.cos(a) + lift })
 		const roomy = kit.box.w >= 600
-		const size = (u: number) => Math.max(roomy ? 0.6 : 0.52, 1 - (roomy ? 0.022 : 0.042) * u)
+		// The first places keep the full size: they are the ones a visitor looks at first.
+		const size = (u: number) => Math.max(roomy ? 0.6 : 0.5, 1 - (roomy ? 0.024 : 0.05) * Math.max(0, u - 3))
 		const arm: Spot[] = []
 		let a = Math.PI / 2
 		for (let i = 0; i < 40; i++) {
@@ -574,7 +599,7 @@ const roam2: RoamForm = (core, kit) => {
 			const m = model(ctx)
 			const n = m.arm.length
 			// The arm in view, and what two more windings need.
-			kit.want(ctx, m.names, m.list.length, Math.ceil(m.o) + n * 3)
+			const coming = kit.want(ctx, m.names, m.list.length, Math.ceil(m.o) + n * 3)
 			kit.next(ctx, m.tr, m.names)
 			const at = (u: number) => {
 				// A place along the arm: between two of its places, or on its way into the middle.
@@ -598,7 +623,7 @@ const roam2: RoamForm = (core, kit) => {
 				const p = at(u)
 				items.push(kit.item(ctx, m.list[j], p.x, p.y, p.s, j - from >= 8, "", p.o < 1 ? `;opacity:${Math.round(p.o * 100) / 100}` : ""))
 			}
-			if (!ctx.list) m.arm.forEach((spot, i) => items.push(kit.hole(`h${i}`, spot.x, spot.y, spot.s)))
+			if (!ctx.list || (coming && m.list.length < n)) m.arm.forEach((spot, i) => i >= m.list.length && items.push(kit.hole(`h${i}`, spot.x, spot.y, spot.s)))
 			const first = Math.round(m.o) + 1
 			const lastShown = Math.min(m.list.length, Math.round(m.o) + n)
 			const more = m.o < m.max || kit.open(ctx, m.names)

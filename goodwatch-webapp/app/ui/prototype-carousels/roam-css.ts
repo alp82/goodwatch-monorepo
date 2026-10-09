@@ -25,8 +25,8 @@ export const ROAM_CSS = `
 .rm-sc:not([data-r-on]) .rm-w{width:100%!important}
 .rm-p,.rm-c{position:absolute;left:50%;top:50%;width:var(--pw);margin:calc(var(--pw)*-.75) 0 0 calc(var(--pw)*-.5);translate:var(--x,0) var(--y,0);scale:var(--s,1)}
 .rm img{pointer-events:none;-webkit-user-drag:none}
-@keyframes rm-in{from{opacity:0;scale:calc(var(--s,1)*.6)}}
-.pl-stage[class] .rm .rm-p{animation:rm-in .2s ease-out;transition:translate .24s cubic-bezier(.2,.8,.3,1),scale .24s cubic-bezier(.2,.8,.3,1),opacity .15s}
+@keyframes rm-in{from{opacity:0}}
+.pl-stage[class] .rm .rm-p{animation:rm-in .15s ease-out;transition:translate .16s cubic-bezier(.2,.8,.3,1),scale .16s cubic-bezier(.2,.8,.3,1),opacity .15s}
 .pl-stage[class] .rm[data-r-drag] .rm-p{transition:none;animation:none}
 .rm-p[style*="--oc"]{outline-color:color-mix(in srgb,var(--oc) 62%,transparent)}
 span.rm-p{height:calc(var(--pw)*1.5);aspect-ratio:auto}
@@ -82,9 +82,10 @@ font-size:.75rem;font-weight:700;line-height:1.5rem;color:#fff}
 .rm{display:grid;grid-template-columns:minmax(0,1fr) 280px;grid-template-rows:30px minmax(0,1fr);gap:6px 1.5rem}
 .rm-top{grid-column:1}
 .rm-map{grid-column:1;grid-row:2}
-.rm-info{grid-column:2;grid-row:1/3;height:auto;justify-content:center;gap:.75rem}
+.rm-info{grid-column:2;grid-row:1/3;height:auto;justify-content:flex-start;padding-top:3.5rem;gap:.75rem}
 .rm-nm{flex-wrap:wrap;height:auto;row-gap:.5rem}
-.rm-nm b{font-size:1.5rem;line-height:1.875rem;white-space:normal}
+.rm-nm{align-content:flex-start;height:6.25rem;overflow:hidden}
+.rm-nm b{flex:1 0 100%;font-size:1.5rem;line-height:1.875rem;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 .rm-nm .bs-open,.rm-nm .bs-this{margin-left:0}
 .rm-why{height:auto;font-size:.9375rem;line-height:1.375rem;-webkit-line-clamp:5}
 .rm-ch{font-size:.8125rem;padding:0 .75rem}

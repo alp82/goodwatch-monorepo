@@ -845,7 +845,16 @@ export function playEngine(
 				}
 			})
 			.catch(() => {
+				// A page that failed is asked for again by the next picture, which is drawn in a moment.
 				G.ex[id] = 0
+				win.setTimeout(() => {
+					const all = doc.querySelectorAll("[data-play]")
+					for (let i = 0; i < all.length; i++) {
+						const s = all[i] as HTMLElement & { __pl?: PlayState }
+						const st = stateOf(s)
+						if (st.trail[st.trail.length - 1].k === key && G.packs[key]) draw(s)
+					}
+				}, 1500)
 			})
 		return true
 	}
@@ -1052,6 +1061,7 @@ export function playEngine(
 		else ask(key, true)
 	}
 	let swallow = 0
+	let pressed: { el: Element; at: number } | null = null
 	const hit = (event: Event, selector: string) => {
 		const target = event.target as Element | null
 		return target?.closest ? target.closest(selector) : null
@@ -1134,7 +1144,26 @@ export function playEngine(
 			}
 			return
 		}
-		const button = hit(event, "[data-pl-step]")
+		// A press that began on a poster is a tap on that poster, wherever it ends: posters that glide to a new place
+		// may have moved on by the time the finger lifts.
+		const began = pressed && event.timeStamp - pressed.at < 700 && pressed.el.isConnected && sec(pressed.el) === s ? pressed.el : null
+		pressed = null
+		let button = hit(event, "[data-pl-step]") ?? (event.detail !== 0 ? began : null)
+		// A tap that lands in the gap between posters of a map goes to the poster next to it (tenth round).
+		const gap = button ? null : hit(event, "[data-pl-slop]")
+		if (gap && event.detail !== 0) {
+			let near = 18
+			const all = gap.querySelectorAll("[data-pl-step]")
+			for (let i = 0; i < all.length; i++) {
+				const r = all[i].getBoundingClientRect()
+				const dx = Math.max(r.left - event.clientX, 0, event.clientX - r.right)
+				const dy = Math.max(r.top - event.clientY, 0, event.clientY - r.bottom)
+				if (dx + dy < near) {
+					near = dx + dy
+					button = all[i]
+				}
+			}
+		}
 		if (button) {
 			// For the checks: when the tap happened, by the browser's clock.
 			if (win.__plClicks) win.__plClicks.push(event.timeStamp)
@@ -1151,8 +1180,24 @@ export function playEngine(
 	}
 	doc.addEventListener("input", changed)
 	doc.addEventListener("scroll", changed, true)
+	// A sideways drag on a map (tenth round). It starts once the pointer has moved more sideways than up or down, so
+	// a tap stays a tap and a vertical swipe stays the page's (the stage's `touch-action` is `pan-y`).
+	let panned: { el: Element; s: HTMLElement; x: number; y: number; on: boolean; dx: number } | null = null
+	const panStart = (event: PointerEvent) => {
+		panned = null
+		const el = hit(event, "[data-pl-pan]")
+		const s = sec(el)
+		if (!el || !s || event.button) return
+		if (el.getAttribute("data-pl-pan") === "mouse" && event.pointerType !== "mouse") return
+		if (hit(event, "[data-pl-act]")) return
+		panned = { el, s, x: event.clientX, y: event.clientY, on: false, dx: 0 }
+	}
 	/** A poster being pressed or pointed at: its pack is wanted now. */
 	const intent = (event: Event) => {
+		if (event.type === "pointerdown") {
+			pressed = null
+			panStart(event as PointerEvent)
+		}
 		mine(event)
 		const button = hit(event, "[data-pl-step]")
 		const s = sec(button)
@@ -1162,6 +1207,7 @@ export function playEngine(
 			return
 		}
 		wake(s)
+		if (event.type === "pointerdown") pressed = { el: button, at: event.timeStamp }
 		if (!button.hasAttribute("data-pl-came") && !noAhead())
 			ask(button.getAttribute("data-pl-step") ?? "", true)
 	}
@@ -1202,26 +1248,11 @@ export function playEngine(
 			},
 			true,
 		)
-	// A sideways drag on a map (tenth round). It starts once the pointer has moved more sideways than up or down, so
-	// a tap stays a tap and a vertical swipe stays the page's (the stage's `touch-action` is `pan-y`).
-	let panned: { el: Element; s: HTMLElement; x: number; y: number; on: boolean; dx: number } | null = null
 	const panTo = (phase: number) => {
 		if (!panned) return
 		const st = stateOf(panned.s)
 		formOf(st.form)?.pan?.(ctxOf(st), panned.el, panned.s, panned.dx, phase)
 	}
-	win.addEventListener(
-		"pointerdown",
-		(event: PointerEvent) => {
-			const el = hit(event, "[data-pl-pan]")
-			const s = sec(el)
-			if (!el || !s || event.button) return
-			if (el.getAttribute("data-pl-pan") === "mouse" && event.pointerType !== "mouse") return
-			if (hit(event, "[data-pl-act]")) return
-			panned = { el, s, x: event.clientX, y: event.clientY, on: false, dx: 0 }
-		},
-		true,
-	)
 	win.addEventListener(
 		"pointermove",
 		(event: PointerEvent) => {

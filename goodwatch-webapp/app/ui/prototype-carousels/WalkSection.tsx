@@ -47,6 +47,8 @@ w.trail.forEach(function(p,i){var last=i===w.trail.length-1,li=document.createEl
 if(last)b.setAttribute('aria-current','step');else{b.type='button';b.setAttribute('data-walk-back',i);b.setAttribute('aria-label','Back to '+p.title)}
 if(p.poster){var m=document.createElement('img');m.src=p.poster;m.alt='';m.width=32;m.height=48;b.appendChild(m)}
 var t=document.createElement('span');t.textContent=p.title;b.appendChild(t);li.appendChild(b);ol.appendChild(li)});
+// Tenth round: the start, where you stand, and between them one control with a count that opens the steps in between.
+if(!/walk3|dive3/.test(s.className))if(w.trail.length>3){var ls=[].slice.call(ol.children),mid=ls.slice(1,-1),hm=document.createElement('li'),dt=document.createElement('details'),sm=document.createElement('summary'),l2=document.createElement('ol');hm.className='wk-hm';sm.textContent=mid.length;sm.setAttribute('aria-label',mid.length+' steps in between. Open the list.');mid.reverse().forEach(function(x){l2.appendChild(x)});dt.appendChild(sm);dt.appendChild(l2);hm.appendChild(dt);ol.insertBefore(hm,ol.lastChild);ol.className='wk-crumbs wk-hs'}else ol.className='wk-crumbs';
 ol.scrollLeft=ol.scrollWidth}
 function show(s,html,fly,had){var w=state(s),stage=q(s,'[data-walk-stage]');had=had||s.contains(document.activeElement);
 stage.innerHTML=html;stage.removeAttribute('data-walk-load');crumbs(s);s.removeAttribute('data-walk-busy');w.busy=false;w.at=0;
@@ -92,6 +94,7 @@ stage.innerHTML=here.html;s.removeAttribute('data-walk-busy');w.busy=false;
 var y=q(s,'[data-walk-why]')||q(s,'[data-walk-voice-w]');if(y)y.textContent='That step could not be loaded. Try again.'})}
 function back(s,i){var w=state(s);if(w.busy||i<0||i>=w.trail.length-1)return;var p=w.trail[i];w.trail.length=i+1;show(s,p.html,null)}
 document.addEventListener('click',function(e){
+var ho=document.querySelector('.wk-hm details[open]');if(ho&&!ho.contains(e.target))ho.removeAttribute('open');
 var el=e.target&&e.target.closest?e.target:null,s=sec(el);if(!s)return;
 var a=el.closest('a[data-walk-nav]');
 if(a){if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button)return;if(W.nav){e.preventDefault();W.nav(a.getAttribute('href'))}return}
@@ -143,6 +146,22 @@ background:rgba(255,255,255,.05);padding:1rem;overflow:hidden}
 .wk-crumbs button span{overflow:hidden;text-overflow:ellipsis;text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);text-underline-offset:2px}
 .wk-crumbs button:hover{color:#fff}
 .wk-crumbs img{display:none}
+.wk-trail{position:relative;z-index:6}
+.wk-hs{overflow:visible}
+.wk-hs>li{min-width:0}
+.wk-hs>li:first-child{max-width:38%}
+.wk-hs>li:last-child{flex:1 1 0}
+.wk-hm{flex:none!important}
+.wk-hm summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.25rem;border-radius:9999px;background:rgba(255,255,255,.14);padding:0 .5rem;font-weight:700;line-height:1.375rem;color:#fff}
+.wk-hm summary::-webkit-details-marker{display:none}
+.wk-hm summary::after{content:"▾";font-size:.625rem;color:#d1d5db}
+.wk-hm details>ol{position:absolute;left:0;top:1.75rem;z-index:7;display:flex;flex-direction:column;width:max-content;max-width:min(100%,20rem);max-height:15rem;overflow-y:auto;overscroll-behavior:contain;
+border-radius:.5rem;background:#141925;border:1px solid rgba(255,255,255,.22);box-shadow:0 10px 28px rgba(0,0,0,.7);padding:.25rem}
+.wk-hm details>ol li{display:block;min-width:0}
+.wk-hm details>ol li::before{content:none}
+.wk-hm details>ol button{display:block;width:100%;padding:.3125rem .5rem;border-radius:.375rem;text-align:left;line-height:1.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-hm details>ol button span{text-decoration:none}
+.wk-hm details>ol button:hover{background:rgba(255,255,255,.12)}
 .wk-crumbs [aria-current]{font-weight:700;color:#fff}
 .wk-stage{display:flex;flex-direction:column;gap:.625rem}
 .wk-map{position:relative;width:100%;max-width:346px;height:372px;margin:0 auto;container-type:inline-size}

@@ -33,13 +33,13 @@ background:rgba(255,255,255,.05);padding:1rem;overflow:hidden;contain:layout sty
 .pl-hs li{flex:0 1 auto;min-width:0}
 .pl-hs .pl-h0{max-width:38%}
 .pl-hs li:last-child{flex:1 1 0;flex-shrink:1}
-.pl-hm{position:relative;flex:none!important}
+.pl-hm{flex:none!important}
 .pl-hm summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.25rem;border-radius:9999px;background:rgba(255,255,255,.14);padding:0 .5rem;font-weight:700;line-height:1.375rem;color:#fff;
 font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent}
 .pl-hm summary::-webkit-details-marker{display:none}
 .pl-hm summary::after{content:"▾";font-size:.625rem;color:#d1d5db}
 .pl-hm summary:hover,.pl-hm details[open] summary{background:rgba(255,255,255,.26)}
-.pl-hm details>ol{position:absolute;left:0;top:1.75rem;z-index:7;display:flex;flex-direction:column;width:max-content;max-width:min(15rem,56vw);max-height:15rem;overflow-y:auto;overscroll-behavior:contain;
+.pl-hm details>ol{position:absolute;left:0;top:1.75rem;z-index:7;display:flex;flex-direction:column;width:max-content;max-width:min(100%,20rem);max-height:15rem;overflow-y:auto;overscroll-behavior:contain;
 border-radius:.5rem;background:#141925;border:1px solid rgba(255,255,255,.22);box-shadow:0 10px 28px rgba(0,0,0,.7);padding:.25rem}
 .pl-hm details>ol li{display:block;min-width:0}
 .pl-hm details>ol li::before{content:none!important}

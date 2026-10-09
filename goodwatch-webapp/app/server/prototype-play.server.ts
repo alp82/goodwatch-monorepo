@@ -435,7 +435,8 @@ export async function playPack2(
 // - Per filter the score of the last title Qdrant gave (`fl`): down to it the pack is complete, and the browser
 //   shows no title from below it until the next page is there, so nothing is ever pushed aside by a late arrival.
 //   0 means Qdrant had no more.
-// - At most one more title of the page title's franchise and one per other franchise, as in the ninth round.
+// - No franchise is thinned out here: the browser shows one title per franchise (roam-forms.ts), because pages
+//   that are built apart can't agree on which one that is.
 const NEAR4 = 80
 const FLIP4 = 24
 const FILTER4 = 40
@@ -528,21 +529,13 @@ async function buildPack4(params: {
 			groups.push(hits)
 		})
 	}
-	const centerName = first(center.title) ?? ""
 	const chosen: { payload: QdrantMediaPayload; score: number }[] = []
 	const taken = new Set<string>()
-	const names: string[] = []
-	let ownFranchise = paged ? 1 : 0
 	for (const hits of groups)
 		for (const hit of hits.filter(usable)) {
 			const key = `${hit.payload.media_type}${hit.payload.tmdb_id}`
 			if (taken.has(key)) continue
-			const title = first(hit.payload.title) ?? ""
-			if (sameFranchise(centerName, title)) {
-				if (ownFranchise++ > 0) continue
-			} else if (names.some((name) => sameFranchise(name, title))) continue
 			taken.add(key)
-			names.push(title)
 			chosen.push(hit)
 		}
 	const pack = (payload: QdrantMediaPayload, near: number): PackTitle => [
@@ -575,7 +568,7 @@ export async function playPack4(
 	page = -1,
 ): Promise<PlayPack | null> {
 	const kept = await cached({
-		name: "proto363-roam-pack-v1",
+		name: "proto363-roam-pack-v2",
 		metricName: "proto363-play-pack",
 		target: buildPack4,
 		params: {
