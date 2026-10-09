@@ -92,8 +92,16 @@
 // - best1: trait strip. One trait at a time, the card's bars are the switch, and a small map of the whole strip.
 // - best2: trait compass. Three traits as six directions on a honeycomb, near and far, with the combinations between.
 // - best3: more and less. Four steppers bend the road of similar titles, and the bend stays while you walk.
-// The floating bar shows today, the favourite of every earlier round, and the combined forms. The other variants
-// still answer to the URL.
+//
+// Tenth round, after the owner tried the ninth: away from the strips, toward one title in the middle with the related
+// titles around it, where distance from the middle is similarity (see roam-forms.ts):
+// - roam1: rings. Nearer is more alike. Three switches from the title's fingerprint, and a zoom.
+// - roam2: spiral. One arm that winds outward, and can be wound further.
+// - roam3: open field. A wide map that pans sideways, each poster saying how it differs most.
+// - roam4: neighborhoods. Titles that are alike each other share a side, with a caption.
+// - roam5: with, without. The switches as four sides, all visible at once.
+// The floating bar shows today, the six forms the owner named, and the new ones. The other variants still answer
+// to the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
 import { PLAY_NAMES } from "~/ui/prototype-carousels/play-names"
@@ -156,12 +164,17 @@ export const CAROUSEL_VARIANTS = [
 	"best1",
 	"best2",
 	"best3",
+	"roam1",
+	"roam2",
+	"roam3",
+	"roam4",
+	"roam5",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
 /**
- * The variants the floating bar cycles through. Ninth round: today, the favourite of every round so far, and the
- * combined forms.
+ * The variants the floating bar cycles through. Tenth round: today, the six forms the owner named as going in the
+ * right direction, and the new forms. The scrub forms and the sea are out of the bar and still answer to the URL.
  */
 export const CAROUSEL_BAR: CarouselVariant[] = [
 	"today",
@@ -170,13 +183,12 @@ export const CAROUSEL_BAR: CarouselVariant[] = [
 	"dive1",
 	"ring5",
 	"ring9",
-	"sea2",
-	"play8",
-	"scrub1",
-	"scrub9",
-	"best1",
 	"best2",
-	"best3",
+	"roam1",
+	"roam2",
+	"roam3",
+	"roam4",
+	"roam5",
 ]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
@@ -237,6 +249,11 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	best1: "",
 	best2: "",
 	best3: "",
+	roam1: "",
+	roam2: "",
+	roam3: "",
+	roam4: "",
+	roam5: "",
 	...PLAY_NAMES,
 }
 

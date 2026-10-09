@@ -3,6 +3,7 @@
 // The style of the play forms. The server puts it into the page next to the section; a page opened by a navigation
 // inside the app gets it from the lazy chunk (play-client.ts). Never part of the title route's own script.
 import { BEST_CSS } from "~/ui/prototype-carousels/best-css"
+import { ROAM_CSS } from "~/ui/prototype-carousels/roam-css"
 import { SCRUB_CSS } from "~/ui/prototype-carousels/scrub-css"
 
 export const PLAY_CSS = `
@@ -27,6 +28,24 @@ background:rgba(255,255,255,.05);padding:1rem;overflow:hidden;contain:layout sty
 .pl-crumbs button{text-decoration:underline;text-decoration-color:rgba(255,255,255,.35);text-underline-offset:2px}
 .pl-crumbs button:hover{color:#fff}
 .pl-crumbs [aria-current]{font-weight:700;color:#fff}
+.pl-bar{position:relative;z-index:6}
+.pl-hs{overflow:visible}
+.pl-hs li{flex:0 1 auto;min-width:0}
+.pl-hs .pl-h0{max-width:38%}
+.pl-hs li:last-child{flex:1 1 0;flex-shrink:1}
+.pl-hm{position:relative;flex:none!important}
+.pl-hm summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:.25rem;border-radius:9999px;background:rgba(255,255,255,.14);padding:0 .5rem;font-weight:700;line-height:1.375rem;color:#fff;
+font-variant-numeric:tabular-nums;-webkit-tap-highlight-color:transparent}
+.pl-hm summary::-webkit-details-marker{display:none}
+.pl-hm summary::after{content:"▾";font-size:.625rem;color:#d1d5db}
+.pl-hm summary:hover,.pl-hm details[open] summary{background:rgba(255,255,255,.26)}
+.pl-hm details>ol{position:absolute;left:0;top:1.75rem;z-index:7;display:flex;flex-direction:column;width:max-content;max-width:min(15rem,56vw);max-height:15rem;overflow-y:auto;overscroll-behavior:contain;
+border-radius:.5rem;background:#141925;border:1px solid rgba(255,255,255,.22);box-shadow:0 10px 28px rgba(0,0,0,.7);padding:.25rem}
+.pl-hm details>ol li{display:block;min-width:0}
+.pl-hm details>ol li::before{content:none!important}
+.pl-hm details>ol button{display:flex;gap:.5rem;width:100%;padding:.3125rem .5rem;border-radius:.375rem;text-align:left;text-decoration:none;line-height:1.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-hm details>ol button:hover{background:rgba(255,255,255,.12)}
+.pl-hm details>ol i{flex:none;width:1.25rem;color:#9ca3af;font-variant-numeric:tabular-nums}
 .pl-body{display:flex;flex-direction:column;gap:.5rem;min-width:0}
 .pl-stage{position:relative;height:360px;container-type:inline-size;contain:layout paint style;--u:1cqw;--ux:1cqw;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .pl-side{display:flex;flex-direction:column;gap:.375rem;min-width:0}
@@ -424,5 +443,7 @@ export function playCss(variant: string): string {
 		? rules(PLAY_CSS) + SCRUB_CSS
 		: variant.startsWith("best")
 			? rules(PLAY_CSS) + BEST_CSS
-			: rules(PLAY_CSS)
+			: variant.startsWith("roam")
+				? rules(PLAY_CSS) + ROAM_CSS
+				: rules(PLAY_CSS)
 }
