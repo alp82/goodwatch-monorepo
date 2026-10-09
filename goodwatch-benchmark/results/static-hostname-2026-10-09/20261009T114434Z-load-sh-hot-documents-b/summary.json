@@ -1,0 +1,1622 @@
+{
+  "schema": 1,
+  "run_id": "20261009T114434Z-load-sh-hot-documents-b",
+  "kind": "load",
+  "label": "sh-hot-documents-b",
+  "meta": {
+    "run_id": "20261009T114434Z-load-sh-hot-documents-b",
+    "kind": "load",
+    "label": "sh-hot-documents-b",
+    "smoke": false,
+    "mode": "ramp",
+    "cache_mode": "warm",
+    "scenario": "page-view",
+    "files": "page",
+    "connections": "new",
+    "cache_identity": "anon;US;en",
+    "url_set": "hot-documents",
+    "path": "public",
+    "target_url": "https://goodwatch.app",
+    "resolve_ip": "",
+    "rate_plan": [
+      {
+        "name": "s01",
+        "rate": 50,
+        "start_s": 0,
+        "end_s": 30
+      },
+      {
+        "name": "s02",
+        "rate": 100,
+        "start_s": 30,
+        "end_s": 65
+      },
+      {
+        "name": "s03",
+        "rate": 150,
+        "start_s": 65,
+        "end_s": 100
+      },
+      {
+        "name": "s04",
+        "rate": 200,
+        "start_s": 100,
+        "end_s": 135
+      },
+      {
+        "name": "s05",
+        "rate": 250,
+        "start_s": 135,
+        "end_s": 170
+      }
+    ],
+    "planned_requests": 25500,
+    "effective_k6_inputs": {
+      "URLS_FILE": "/work/urls.json",
+      "TARGET_URL": "https://goodwatch.app",
+      "RESOLVE_IP": "",
+      "INSECURE_TLS": "0",
+      "SHARE_LIST_PATH": "[redacted]",
+      "SHARE_LIST_OG_PATH": "[redacted]",
+      "RATE_START": "50",
+      "RATE_STEP": "5",
+      "RATE_MAX": "250",
+      "RATE_LIST": "50,100,150,200,250",
+      "ONLY_ROUTES": "",
+      "SCENARIO": "page-view",
+      "CONNECTIONS": "new",
+      "CACHE_IDENTITY": "anon;US;en",
+      "ABORT_PAGE_P95_MS": "10000",
+      "SLICE_SECONDS": "0",
+      "STEP_DURATION": "30",
+      "RAMP_SECONDS": "5",
+      "PRE_VUS": "250",
+      "MAX_VUS": "1000",
+      "CACHE_MODE": "warm",
+      "COOKIE": "",
+      "COOKIE_TEMPLATE": "[redacted]",
+      "ACCEPT_LANGUAGE": "en-US,en;q=0.9",
+      "ACCEPT_LANGUAGES": "en-US,en;q=0.9|de-DE,de;q=0.9,en;q=0.8|fr-FR,fr;q=0.9|es-ES,es;q=0.9|pt-BR,pt;q=0.9",
+      "CACHE_BUST_QUERY": "0",
+      "BROWSER_UA": "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+      "BOT_UA": "facebookexternalhit/1.1",
+      "ACCEPT_ENCODING": "br, gzip",
+      "REQUEST_TIMEOUT": "30s",
+      "ABORT_ERROR_RATE": "0.01",
+      "ABORT_P95_MS": "3000",
+      "ABORT_DELAY": "10s",
+      "ABORT_DROPPED": "375",
+      "SEQUENTIAL": "0",
+      "PREWARM_MAX": "200",
+      "OUT_DIR": "/work"
+    },
+    "git_commit": "42c2db2eb9feb9be483b9a3d777504d6c912bb34",
+    "git_dirty": true,
+    "generator_host": "10.0.0.30",
+    "jump": false,
+    "k6_image": "grafana/k6:1.8.1",
+    "metric_hosts": [
+      {
+        "host": "10.0.0.30",
+        "role": "generator",
+        "file": "host-0.jsonl"
+      }
+    ],
+    "started_at": "2026-10-09T11:45:01.573Z",
+    "ended_at": "2026-10-09T11:47:57.002Z",
+    "k6_exit_code": 0,
+    "lighthouse": null,
+    "tap": null
+  },
+  "load": {
+    "aborted": false,
+    "abort_reason": null,
+    "duration_s": 173.068869322,
+    "requests": 25484,
+    "rps": 147.24774073947538,
+    "error_rate": 0,
+    "latency_ms": {
+      "p50": 6.534018,
+      "p95": 33.29961359999999,
+      "p99": 62.72698903999972,
+      "avg": 11.07781261006909,
+      "max": 487.468531
+    },
+    "ttfb_ms": {
+      "p50": 4.5521675,
+      "p95": 28.43586834999999,
+      "p99": 52.33534110999997
+    },
+    "status": {
+      "0": 0,
+      "2xx": 25484,
+      "3xx": 0,
+      "4xx": 0,
+      "5xx": 0
+    },
+    "page_cache_busy": 0,
+    "response_bytes_avg": 0,
+    "dropped_iterations": 0,
+    "routes": {
+      "discover": {
+        "requests": 1830,
+        "rps": 10.573825363099981,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 5.972404,
+          "p95": 32.145161399999985,
+          "p99": 57.27963199000005,
+          "avg": 10.313053258469976,
+          "max": 125.989701
+        },
+        "ttfb_ms": {
+          "p50": 4.6478965,
+          "p95": 29.31926854999998,
+          "p99": 50.935792150000005
+        },
+        "status": {
+          "0": 0,
+          "2xx": 1830,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "home": {
+        "requests": 1288,
+        "rps": 7.442124080695506,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 5.3613715,
+          "p95": 29.89766629999994,
+          "p99": 59.22779351999994,
+          "avg": 9.724247458850941,
+          "max": 125.57628
+        },
+        "ttfb_ms": {
+          "p50": 4.34555,
+          "p95": 28.203217749999975,
+          "p99": 55.708878239999926
+        },
+        "status": {
+          "0": 0,
+          "2xx": 1288,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "og_person": {
+        "requests": 243,
+        "rps": 1.4040653351001615,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 8.503746,
+          "p95": 30.906260299999982,
+          "p99": 55.775742199999925,
+          "avg": 12.400248234567904,
+          "max": 148.399543
+        },
+        "ttfb_ms": {
+          "p50": 4.926669,
+          "p95": 22.20365969999999,
+          "p99": 49.26423053999998
+        },
+        "status": {
+          "0": 0,
+          "2xx": 243,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "og_share_list": {
+        "requests": 246,
+        "rps": 1.4213994750396697,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 9.667481500000001,
+          "p95": 37.12036175,
+          "p99": 68.32916565000001,
+          "avg": 13.619565764227648,
+          "max": 75.26928
+        },
+        "ttfb_ms": {
+          "p50": 5.238919,
+          "p95": 27.642915000000002,
+          "p99": 46.9061570500001
+        },
+        "status": {
+          "0": 0,
+          "2xx": 246,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "og_title": {
+        "requests": 1044,
+        "rps": 6.032280698948842,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 9.229916,
+          "p95": 41.10176174999986,
+          "p99": 81.88404868999994,
+          "avg": 14.329625674329492,
+          "max": 181.835636
+        },
+        "ttfb_ms": {
+          "p50": 4.7817845,
+          "p95": 29.79171164999999,
+          "p99": 51.890481169999816
+        },
+        "status": {
+          "0": 0,
+          "2xx": 1044,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "person": {
+        "requests": 1261,
+        "rps": 7.286116821239933,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 5.871031,
+          "p95": 29.366195,
+          "p99": 57.0951580000001,
+          "avg": 10.135023065820787,
+          "max": 340.351403
+        },
+        "ttfb_ms": {
+          "p50": 4.491577,
+          "p95": 26.299322,
+          "p99": 51.54434560000034
+        },
+        "status": {
+          "0": 0,
+          "2xx": 1261,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "share_list": {
+        "requests": 2352,
+        "rps": 13.589965712574402,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 5.840911500000001,
+          "p95": 31.362767199999983,
+          "p99": 54.989443189999896,
+          "avg": 10.073609640731283,
+          "max": 175.989641
+        },
+        "ttfb_ms": {
+          "p50": 4.5950695,
+          "p95": 28.696830449999975,
+          "p99": 51.84503553999957
+        },
+        "status": {
+          "0": 0,
+          "2xx": 2352,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "title_movie": {
+        "requests": 15936,
+        "rps": 92.07895135866738,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 6.557517499999999,
+          "p95": 33.688301749999994,
+          "p99": 63.890792899999994,
+          "avg": 11.223725493662172,
+          "max": 487.468531
+        },
+        "ttfb_ms": {
+          "p50": 4.516674,
+          "p95": 28.48762025,
+          "p99": 52.12972149999999
+        },
+        "status": {
+          "0": 0,
+          "2xx": 15936,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "title_show": {
+        "requests": 1284,
+        "rps": 7.419011894109495,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 6.988851,
+          "p95": 32.776347399999985,
+          "p99": 61.083919610000095,
+          "avg": 11.09873226947042,
+          "max": 348.338449
+        },
+        "ttfb_ms": {
+          "p50": 4.923491,
+          "p95": 27.989244449999916,
+          "p99": 52.354260570000015
+        },
+        "status": {
+          "0": 0,
+          "2xx": 1284,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      }
+    },
+    "steps": [
+      {
+        "name": "s01",
+        "target_rps": 50,
+        "requests": 1499,
+        "rps": 49.96666666666667,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 5.471903,
+          "p95": 31.30345739999995,
+          "p99": 101.02600895999993,
+          "avg": 12.416303830553696,
+          "max": 487.468531
+        },
+        "ttfb_ms": {
+          "p50": 4.223039,
+          "p95": 29.918931099999995,
+          "p99": 99.21144559999989
+        },
+        "status": {
+          "0": 0,
+          "2xx": 1499,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 1499,
+        "visits_per_s": 49.96666666666667,
+        "page_views": 0,
+        "page_views_per_s": 0,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "tls_handshakes": 1499,
+        "tls_handshakes_per_s": 49.96666666666667,
+        "tls_handshake_ms": {
+          "p50": 12.473517,
+          "p95": 19.6245092,
+          "p99": 22.13016312
+        },
+        "hosts": {
+          "site": {
+            "requests": 1499,
+            "rps": 49.96666666666667,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 5.471903,
+              "p95": 31.30345739999995,
+              "p99": 101.02600895999993,
+              "avg": 12.416303830553696,
+              "max": 487.468531
+            },
+            "ttfb_ms": {
+              "p50": 4.223039,
+              "p95": 29.918931099999995,
+              "p99": 99.21144559999989
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 1499
+          },
+          "static": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "asset": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "single": {
+            "requests": 1499,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 5.471903,
+              "p95": 31.30345739999995,
+              "p99": 101.02600895999993
+            },
+            "ttfb_ms": {
+              "p50": 4.223039,
+              "p95": 29.918931099999995,
+              "p99": 99.21144559999989
+            }
+          }
+        },
+        "resources": {
+          "window_s": 30,
+          "instances": {},
+          "hosts": {
+            "gw-worker1": {
+              "role": "generator",
+              "nproc": 4,
+              "cpu_busy_pct": 25.964,
+              "cpu_busy_max_pct": 31.646,
+              "net_tx_mbps": 1.6078213333333335,
+              "net_rx_mbps": 21.180136266666665,
+              "mem_used_pct": 21.34562425016975
+            }
+          }
+        }
+      },
+      {
+        "name": "s02",
+        "target_rps": 100,
+        "requests": 3375,
+        "rps": 96.42857142857143,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 6.335864,
+          "p95": 26.723161299999987,
+          "p99": 48.059286479999805,
+          "avg": 10.28193138903705,
+          "max": 226.757732
+        },
+        "ttfb_ms": {
+          "p50": 4.610899,
+          "p95": 25.573697799999998,
+          "p99": 47.01740369999981
+        },
+        "status": {
+          "0": 0,
+          "2xx": 3375,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 3375,
+        "visits_per_s": 96.42857142857143,
+        "page_views": 0,
+        "page_views_per_s": 0,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "tls_handshakes": 3375,
+        "tls_handshakes_per_s": 96.42857142857143,
+        "tls_handshake_ms": {
+          "p50": 12.167787,
+          "p95": 20.917251199999995,
+          "p99": 27.092698799999965
+        },
+        "hosts": {
+          "site": {
+            "requests": 3375,
+            "rps": 96.42857142857143,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 6.335864,
+              "p95": 26.723161299999987,
+              "p99": 48.059286479999805,
+              "avg": 10.28193138903705,
+              "max": 226.757732
+            },
+            "ttfb_ms": {
+              "p50": 4.610899,
+              "p95": 25.573697799999998,
+              "p99": 47.01740369999981
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 3375
+          },
+          "static": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "asset": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "single": {
+            "requests": 3375,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 6.335864,
+              "p95": 26.723161299999987,
+              "p99": 48.059286479999805
+            },
+            "ttfb_ms": {
+              "p50": 4.610899,
+              "p95": 25.573697799999998,
+              "p99": 47.01740369999981
+            }
+          }
+        },
+        "resources": {
+          "window_s": 30,
+          "instances": {},
+          "hosts": {
+            "gw-worker1": {
+              "role": "generator",
+              "nproc": 4,
+              "cpu_busy_pct": 44.230399999999996,
+              "cpu_busy_max_pct": 52.018,
+              "net_tx_mbps": 3.03232576,
+              "net_rx_mbps": 41.056313012800004,
+              "mem_used_pct": 21.799653083295283
+            }
+          }
+        }
+      },
+      {
+        "name": "s03",
+        "target_rps": 150,
+        "requests": 5124,
+        "rps": 146.4,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 5.881562000000001,
+          "p95": 31.754672649999954,
+          "p99": 53.247668949999884,
+          "avg": 10.030505267174064,
+          "max": 101.328928
+        },
+        "ttfb_ms": {
+          "p50": 4.3972774999999995,
+          "p95": 29.93766054999997,
+          "p99": 50.85604702999995
+        },
+        "status": {
+          "0": 0,
+          "2xx": 5124,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 5124,
+        "visits_per_s": 146.4,
+        "page_views": 0,
+        "page_views_per_s": 0,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "tls_handshakes": 5124,
+        "tls_handshakes_per_s": 146.4,
+        "tls_handshake_ms": {
+          "p50": 11.929602,
+          "p95": 20.5519229,
+          "p99": 26.695084429999937
+        },
+        "hosts": {
+          "site": {
+            "requests": 5124,
+            "rps": 146.4,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 5.881562000000001,
+              "p95": 31.754672649999954,
+              "p99": 53.247668949999884,
+              "avg": 10.030505267174064,
+              "max": 101.328928
+            },
+            "ttfb_ms": {
+              "p50": 4.3972774999999995,
+              "p95": 29.93766054999997,
+              "p99": 50.85604702999995
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 5124
+          },
+          "static": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "asset": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "single": {
+            "requests": 5124,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 5.881562000000001,
+              "p95": 31.754672649999954,
+              "p99": 53.247668949999884
+            },
+            "ttfb_ms": {
+              "p50": 4.3972774999999995,
+              "p95": 29.93766054999997,
+              "p99": 50.85604702999995
+            }
+          }
+        },
+        "resources": {
+          "window_s": 30,
+          "instances": {},
+          "hosts": {
+            "gw-worker1": {
+              "role": "generator",
+              "nproc": 4,
+              "cpu_busy_pct": 58.01333333333333,
+              "cpu_busy_max_pct": 65.165,
+              "net_tx_mbps": 4.558882666666666,
+              "net_rx_mbps": 62.13132506666667,
+              "mem_used_pct": 21.90439162414199
+            }
+          }
+        }
+      },
+      {
+        "name": "s04",
+        "target_rps": 200,
+        "requests": 6875,
+        "rps": 196.42857142857142,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 6.250444,
+          "p95": 29.366177199999978,
+          "p99": 49.65366304000003,
+          "avg": 9.786352797381806,
+          "max": 150.659167
+        },
+        "ttfb_ms": {
+          "p50": 4.481527,
+          "p95": 26.92460559999999,
+          "p99": 47.781989920000015
+        },
+        "status": {
+          "0": 0,
+          "2xx": 6875,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 6875,
+        "visits_per_s": 196.42857142857142,
+        "page_views": 0,
+        "page_views_per_s": 0,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "tls_handshakes": 6875,
+        "tls_handshakes_per_s": 196.42857142857142,
+        "tls_handshake_ms": {
+          "p50": 11.688806,
+          "p95": 20.66150069999998,
+          "p99": 27.612526620000015
+        },
+        "hosts": {
+          "site": {
+            "requests": 6875,
+            "rps": 196.42857142857142,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 6.250444,
+              "p95": 29.366177199999978,
+              "p99": 49.65366304000003,
+              "avg": 9.786352797381806,
+              "max": 150.659167
+            },
+            "ttfb_ms": {
+              "p50": 4.481527,
+              "p95": 26.92460559999999,
+              "p99": 47.781989920000015
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 6875
+          },
+          "static": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "asset": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "single": {
+            "requests": 6875,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 6.250444,
+              "p95": 29.366177199999978,
+              "p99": 49.65366304000003
+            },
+            "ttfb_ms": {
+              "p50": 4.481527,
+              "p95": 26.92460559999999,
+              "p99": 47.781989920000015
+            }
+          }
+        },
+        "resources": {
+          "window_s": 30,
+          "instances": {},
+          "hosts": {
+            "gw-worker1": {
+              "role": "generator",
+              "nproc": 4,
+              "cpu_busy_pct": 69.68916666666667,
+              "cpu_busy_max_pct": 77.861,
+              "net_tx_mbps": 6.0575605333333336,
+              "net_rx_mbps": 83.1719648,
+              "mem_used_pct": 22.023936110346792
+            }
+          }
+        }
+      },
+      {
+        "name": "s05",
+        "target_rps": 250,
+        "requests": 8611,
+        "rps": 246.02857142857144,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 7.568048,
+          "p95": 41.682034,
+          "p99": 82.41266989999997,
+          "avg": 12.811047985599846,
+          "max": 244.478703
+        },
+        "ttfb_ms": {
+          "p50": 4.882943,
+          "p95": 30.108010999999998,
+          "p99": 56.99548119999983
+        },
+        "status": {
+          "0": 0,
+          "2xx": 8611,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 8611,
+        "visits_per_s": 246.02857142857144,
+        "page_views": 0,
+        "page_views_per_s": 0,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "tls_handshakes": 8611,
+        "tls_handshakes_per_s": 246.02857142857144,
+        "tls_handshake_ms": {
+          "p50": 12.277933,
+          "p95": 32.067620500000004,
+          "p99": 91.62178779999996
+        },
+        "hosts": {
+          "site": {
+            "requests": 8611,
+            "rps": 246.02857142857144,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 7.568048,
+              "p95": 41.682034,
+              "p99": 82.41266989999997,
+              "avg": 12.811047985599846,
+              "max": 244.478703
+            },
+            "ttfb_ms": {
+              "p50": 4.882943,
+              "p95": 30.108010999999998,
+              "p99": 56.99548119999983
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 8611
+          },
+          "static": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "asset": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "single": {
+            "requests": 8611,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 7.568048,
+              "p95": 41.682034,
+              "p99": 82.41266989999997
+            },
+            "ttfb_ms": {
+              "p50": 4.882943,
+              "p95": 30.108010999999998,
+              "p99": 56.99548119999983
+            }
+          }
+        },
+        "resources": {
+          "window_s": 30,
+          "instances": {},
+          "hosts": {
+            "gw-worker1": {
+              "role": "generator",
+              "nproc": 4,
+              "cpu_busy_pct": 81.895,
+              "cpu_busy_max_pct": 88.485,
+              "net_tx_mbps": 7.331706489333334,
+              "net_rx_mbps": 101.48800288933334,
+              "mem_used_pct": 22.424313129450056
+            }
+          }
+        }
+      }
+    ],
+    "page_view": {
+      "files": "page",
+      "page_names": "origin",
+      "static_url": null,
+      "hosts": {
+        "site": {
+          "requests": 25484,
+          "rps": 147.24774073947538,
+          "error_rate": 0,
+          "latency_ms": {
+            "p50": 6.534018,
+            "p95": 33.29961359999999,
+            "p99": 62.72698903999972,
+            "avg": 11.07781261006909,
+            "max": 487.468531
+          },
+          "ttfb_ms": {
+            "p50": 4.5521675,
+            "p95": 28.43586834999999,
+            "p99": 52.33534110999997
+          },
+          "status": {
+            "0": 0,
+            "2xx": 0,
+            "3xx": 0,
+            "4xx": 0,
+            "5xx": 0
+          },
+          "page_cache_busy": 0,
+          "response_bytes_avg": null,
+          "tls_handshakes": 25484,
+          "per_visit": {
+            "requests": 1.0000000000000002,
+            "transfer_bytes": 0,
+            "connections": 1.0000000000000002
+          }
+        },
+        "static": {
+          "requests": 0,
+          "rps": 0,
+          "error_rate": 0,
+          "latency_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "avg": 0,
+            "max": 0
+          },
+          "ttfb_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          },
+          "status": {
+            "0": 0,
+            "2xx": 0,
+            "3xx": 0,
+            "4xx": 0,
+            "5xx": 0
+          },
+          "page_cache_busy": 0,
+          "response_bytes_avg": null,
+          "tls_handshakes": 0,
+          "per_visit": {
+            "requests": 0,
+            "transfer_bytes": 0,
+            "connections": 0
+          }
+        },
+        "other": {
+          "per_visit": {
+            "requests": 0,
+            "transfer_bytes": 0,
+            "connections": 0
+          }
+        }
+      },
+      "origin_share": {
+        "requests": 1,
+        "transfer_bytes": 0
+      },
+      "connections": "new",
+      "cache_identity": [
+        "anon;US;en"
+      ],
+      "side_share": 0,
+      "pages": {
+        "share_list:browser": {
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=10, stale-while-revalidate=10",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0"
+        },
+        "title_movie:bot": {
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256"
+        },
+        "title_movie:browser": {
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding"
+        },
+        "title_show:browser": {
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en"
+        },
+        "discover:browser": {
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding"
+        },
+        "home:browser": {
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en"
+        },
+        "person:browser": {
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200
+        },
+        "share_list:bot": {
+          "cache_control": "public, max-age=0, s-maxage=10, stale-while-revalidate=10",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding"
+        }
+      },
+      "not_warm": [],
+      "visits": 25484,
+      "visits_per_s": 147.24774073947538,
+      "page_views": 0,
+      "page_views_per_s": 0,
+      "page_view_error_rate": 0,
+      "page_view_ms": {
+        "p50": 0,
+        "p95": 0,
+        "p99": 0
+      },
+      "tls_handshakes": 25484,
+      "tls_handshakes_per_s": 147.24774073947538,
+      "tls_handshake_ms": {
+        "p50": null,
+        "p95": null,
+        "p99": null
+      },
+      "slices": [],
+      "routes": {
+        "discover": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "home": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "og_person": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "og_share_list": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "og_title": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "person": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "share_list": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "title_movie": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "title_show": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        }
+      }
+    }
+  },
+  "hosts": {
+    "gw-worker1": {
+      "role": "generator",
+      "nproc": 4,
+      "samples": 34,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 54.5285,
+        "max": 88.485
+      },
+      "iowait_pct": {
+        "avg": 0.011911764705882353,
+        "max": 0.15
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 1.2317647058823529,
+        "max": 2.47
+      },
+      "mem_used_pct": {
+        "avg": 21.859812129966233,
+        "max": 23.069104154634946
+      },
+      "net_rx_mbps": {
+        "avg": 60.173243388235306,
+        "max": 107.511024
+      },
+      "net_tx_mbps": {
+        "avg": 4.387926133411764,
+        "max": 7.611505599999999
+      },
+      "tcp_estab": {
+        "avg": 9.882352941176471,
+        "max": 18
+      }
+    }
+  },
+  "lighthouse": {}
+}

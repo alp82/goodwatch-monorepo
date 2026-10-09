@@ -2,6 +2,8 @@
 
 This page says what a static request costs the webapp's Node process, what the change of October 4, 2026 did to that cost, and what remains. It belongs to the "Serve a viral traffic spike" map and is step one of "Serve static assets without the Node process". The remaining cost is the input for the owner's decision about moving assets to the proxy or a CDN.
 
+Since October 9, 2026, production serves these files through the static hostname: [Page views with the static hostname on production](viral-spike-static-hostname.md) has the runs.
+
 The scripts are in [`viral-spike-static-assets/`](viral-spike-static-assets/). Raw CPU profiles aren't in Git. The production check after the deploy is in the ticket's resolution, not here.
 
 ## Summary

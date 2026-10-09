@@ -1,0 +1,1976 @@
+{
+  "schema": 1,
+  "run_id": "20261009T110824Z-load-sh-capture",
+  "kind": "load",
+  "label": "sh-capture",
+  "meta": {
+    "run_id": "20261009T110824Z-load-sh-capture",
+    "kind": "load",
+    "label": "sh-capture",
+    "smoke": true,
+    "mode": "smoke",
+    "cache_mode": "warm",
+    "scenario": "page-view",
+    "files": "page",
+    "connections": "new",
+    "cache_identity": "anon;US;en",
+    "url_set": "hot",
+    "path": "public",
+    "target_url": "https://goodwatch.app",
+    "resolve_ip": "",
+    "rate_plan": [
+      {
+        "name": "s01",
+        "rate": 1,
+        "start_s": 0,
+        "end_s": 15
+      }
+    ],
+    "planned_requests": 15,
+    "effective_k6_inputs": {
+      "URLS_FILE": "/work/urls.json",
+      "TARGET_URL": "https://goodwatch.app",
+      "RESOLVE_IP": "",
+      "INSECURE_TLS": "0",
+      "SHARE_LIST_PATH": "[redacted]",
+      "SHARE_LIST_OG_PATH": "[redacted]",
+      "RATE_START": "1",
+      "RATE_STEP": "5",
+      "RATE_MAX": "1",
+      "RATE_LIST": "",
+      "ONLY_ROUTES": "",
+      "SCENARIO": "page-view",
+      "CONNECTIONS": "new",
+      "CACHE_IDENTITY": "anon;US;en",
+      "ABORT_PAGE_P95_MS": "10000",
+      "SLICE_SECONDS": "0",
+      "STEP_DURATION": "15",
+      "RAMP_SECONDS": "5",
+      "PRE_VUS": "20",
+      "MAX_VUS": "50",
+      "CACHE_MODE": "warm",
+      "COOKIE": "",
+      "COOKIE_TEMPLATE": "[redacted]",
+      "ACCEPT_LANGUAGE": "en-US,en;q=0.9",
+      "ACCEPT_LANGUAGES": "en-US,en;q=0.9|de-DE,de;q=0.9,en;q=0.8|fr-FR,fr;q=0.9|es-ES,es;q=0.9|pt-BR,pt;q=0.9",
+      "CACHE_BUST_QUERY": "0",
+      "BROWSER_UA": "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+      "BOT_UA": "facebookexternalhit/1.1",
+      "ACCEPT_ENCODING": "br, gzip",
+      "REQUEST_TIMEOUT": "30s",
+      "ABORT_ERROR_RATE": "0.02",
+      "ABORT_P95_MS": "3000",
+      "ABORT_DELAY": "10s",
+      "ABORT_DROPPED": "1",
+      "SEQUENTIAL": "0",
+      "PREWARM_MAX": "200",
+      "OUT_DIR": "/work"
+    },
+    "git_commit": "42c2db2eb9feb9be483b9a3d777504d6c912bb34",
+    "git_dirty": false,
+    "generator_host": "10.0.0.32",
+    "jump": false,
+    "k6_image": "grafana/k6:1.8.1",
+    "metric_hosts": [
+      {
+        "host": "10.0.0.21",
+        "role": "target",
+        "file": "host-0.jsonl"
+      },
+      {
+        "host": "10.0.0.20",
+        "role": "target",
+        "file": "host-1.jsonl"
+      },
+      {
+        "host": "10.0.0.32",
+        "role": "generator",
+        "file": "host-2.jsonl"
+      }
+    ],
+    "started_at": "2026-10-09T11:10:04.339Z",
+    "ended_at": "2026-10-09T11:10:25.974Z",
+    "k6_exit_code": 0,
+    "lighthouse": null,
+    "tap": null
+  },
+  "load": {
+    "aborted": false,
+    "abort_reason": null,
+    "duration_s": 19.844367262,
+    "requests": 464,
+    "rps": 23.38194984369767,
+    "error_rate": 0,
+    "latency_ms": {
+      "p50": 46.8861165,
+      "p95": 89.8084821,
+      "p99": 102.06284734000005,
+      "avg": 45.87029447844826,
+      "max": 152.654208
+    },
+    "ttfb_ms": {
+      "p50": 40.053291,
+      "p95": 87.7032524,
+      "p99": 101.88960829000004
+    },
+    "status": {
+      "0": 0,
+      "2xx": 464,
+      "3xx": 0,
+      "4xx": 0,
+      "5xx": 0
+    },
+    "page_cache_busy": 0,
+    "response_bytes_avg": 0,
+    "dropped_iterations": 0,
+    "routes": {
+      "discover": {
+        "requests": 84,
+        "rps": 4.232939195841819,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 66.5399755,
+          "p95": 90.28571104999999,
+          "p99": 90.44404390999999,
+          "avg": 65.30118602380954,
+          "max": 90.487804
+        },
+        "ttfb_ms": {
+          "p50": 57.204108500000004,
+          "p95": 88.1385209,
+          "p99": 88.4266499
+        },
+        "status": {
+          "0": 0,
+          "2xx": 84,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "home": {
+        "requests": 10,
+        "rps": 0.5039213328383119,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 35.867411000000004,
+          "p95": 46.37638784999999,
+          "p99": 48.73080477,
+          "avg": 34.8788289,
+          "max": 49.319409
+        },
+        "ttfb_ms": {
+          "p50": 32.4870555,
+          "p95": 46.141217399999995,
+          "p99": 48.44420508
+        },
+        "status": {
+          "0": 0,
+          "2xx": 10,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "og_person": {
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "og_share_list": {
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "og_title": {
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "person": {
+        "requests": 2,
+        "rps": 0.10078426656766236,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 32.0808905,
+          "p95": 39.318554150000004,
+          "p99": 39.961902030000005,
+          "avg": 32.0808905,
+          "max": 40.122739
+        },
+        "ttfb_ms": {
+          "p50": 26.1362145,
+          "p95": 33.467380049999996,
+          "p99": 34.11903921
+        },
+        "status": {
+          "0": 0,
+          "2xx": 2,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "share_list": {
+        "requests": 52,
+        "rps": 2.6203909307592217,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 46.317936,
+          "p95": 54.672783599999974,
+          "p99": 67.95159998000004,
+          "avg": 37.63419959615384,
+          "max": 77.718203
+        },
+        "ttfb_ms": {
+          "p50": 30.8271125,
+          "p95": 54.54729889999998,
+          "p99": 67.46947954000004
+        },
+        "status": {
+          "0": 0,
+          "2xx": 52,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "title_movie": {
+        "requests": 311,
+        "rps": 15.671953451271497,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 46.693654,
+          "p95": 69.39471900000001,
+          "p99": 113.06390949999987,
+          "avg": 42.74006331832797,
+          "max": 152.654208
+        },
+        "ttfb_ms": {
+          "p50": 40.16447,
+          "p95": 67.947502,
+          "p99": 112.87046949999987
+        },
+        "status": {
+          "0": 0,
+          "2xx": 311,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      },
+      "title_show": {
+        "requests": 5,
+        "rps": 0.25196066641915593,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 25.816778,
+          "p95": 40.4351276,
+          "p99": 42.37786792,
+          "avg": 27.2857742,
+          "max": 42.863553
+        },
+        "ttfb_ms": {
+          "p50": 25.615302,
+          "p95": 40.1711354,
+          "p99": 42.09048948
+        },
+        "status": {
+          "0": 0,
+          "2xx": 5,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      }
+    },
+    "steps": [
+      {
+        "name": "s01",
+        "target_rps": 1,
+        "requests": 464,
+        "rps": 30.933333333333334,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 46.8861165,
+          "p95": 89.8084821,
+          "p99": 102.06284734000005,
+          "avg": 45.87029447844826,
+          "max": 152.654208
+        },
+        "ttfb_ms": {
+          "p50": 40.053291,
+          "p95": 87.7032524,
+          "p99": 101.88960829000004
+        },
+        "status": {
+          "0": 0,
+          "2xx": 464,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 14,
+        "visits_per_s": 0.9333333333333333,
+        "page_views": 13,
+        "page_views_per_s": 0.8666666666666667,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 103,
+          "p95": 196.6,
+          "p99": 200.92
+        },
+        "tls_handshakes": 50,
+        "tls_handshakes_per_s": 3.3333333333333335,
+        "tls_handshake_ms": {
+          "p50": 16.673192999999998,
+          "p95": 25.755976499999996,
+          "p99": 29.57617692999999
+        },
+        "hosts": {
+          "site": {
+            "requests": 29,
+            "rps": 1.9333333333333333,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 3.378093,
+              "p95": 9.549824000000001,
+              "p99": 10.9004956,
+              "avg": 4.223263827586207,
+              "max": 11.421542
+            },
+            "ttfb_ms": {
+              "p50": 2.436229,
+              "p95": 8.524556199999997,
+              "p99": 10.684326359999998
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 14
+          },
+          "static": {
+            "requests": 435,
+            "rps": 29,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 47.494171,
+              "p95": 89.8457279,
+              "p99": 104.62299111999972,
+              "avg": 48.646763188505744,
+              "max": 152.654208
+            },
+            "ttfb_ms": {
+              "p50": 42.070888,
+              "p95": 87.7918545,
+              "p99": 104.44306321999971
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 36
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 13,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 3.414008,
+              "p95": 7.410405399999995,
+              "p99": 9.130610679999997
+            },
+            "ttfb_ms": {
+              "p50": 2.695488,
+              "p95": 5.795228999999996,
+              "p99": 7.004358599999998
+            }
+          },
+          "asset": {
+            "requests": 347,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 50.083274,
+              "p95": 89.9930123,
+              "p99": 110.88816130000012
+            },
+            "ttfb_ms": {
+              "p50": 42.456323,
+              "p95": 87.90612540000001,
+              "p99": 110.69698930000013
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 103,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 31.152386,
+              "p95": 56.047433799999986,
+              "p99": 72.95060158000001
+            },
+            "ttfb_ms": {
+              "p50": 29.171457,
+              "p95": 55.73156019999999,
+              "p99": 72.1245217
+            }
+          },
+          "single": {
+            "requests": 1,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 4.623951,
+              "p95": 4.623951,
+              "p99": 4.623951
+            },
+            "ttfb_ms": {
+              "p50": 3.726344,
+              "p95": 3.726344,
+              "p99": 3.726344
+            }
+          }
+        },
+        "resources": {
+          "window_s": 15,
+          "instances": {
+            "10.0.0.21": {
+              "main_thread_pct": 27.886556316674834,
+              "proxy_pct": 17.168591611333618,
+              "proxy_accepts_per_s": 24.710863070647807,
+              "in_flight_max": 2,
+              "loop_delay_max_ms": 40.555263
+            },
+            "10.0.0.20": {
+              "main_thread_pct": 31.034276894635283,
+              "proxy_pct": 3.842339044097702,
+              "proxy_accepts_per_s": 0.49260756975611564,
+              "in_flight_max": 3,
+              "loop_delay_max_ms": 52.286207000000005
+            }
+          },
+          "hosts": {
+            "abusive": {
+              "role": "target",
+              "nproc": 8,
+              "cpu_busy_pct": 21.570999999999998,
+              "cpu_busy_max_pct": 25.427,
+              "net_tx_mbps": 10.700495466666666,
+              "net_rx_mbps": 6.599538133333333,
+              "mem_used_pct": 38.84360763112786
+            },
+            "gw-vector1": {
+              "role": "target",
+              "nproc": 16,
+              "cpu_busy_pct": 10.448333333333336,
+              "cpu_busy_max_pct": 11.223,
+              "net_tx_mbps": 0.20098186666666665,
+              "net_rx_mbps": 0.5338144,
+              "mem_used_pct": 50.70553999821746
+            },
+            "gw-worker3": {
+              "role": "generator",
+              "nproc": 4,
+              "cpu_busy_pct": 10.581000000000001,
+              "cpu_busy_max_pct": 12.663,
+              "net_tx_mbps": 0.6954042666666668,
+              "net_rx_mbps": 5.2676656,
+              "mem_used_pct": 16.16386254089105
+            }
+          }
+        }
+      }
+    ],
+    "page_view": {
+      "files": "page",
+      "page_names": "static",
+      "static_url": "https://static.goodwatch.app",
+      "hosts": {
+        "site": {
+          "requests": 29,
+          "rps": 1.4613718652311043,
+          "error_rate": 0,
+          "latency_ms": {
+            "p50": 3.378093,
+            "p95": 9.549824000000001,
+            "p99": 10.9004956,
+            "avg": 4.223263827586207,
+            "max": 11.421542
+          },
+          "ttfb_ms": {
+            "p50": 2.436229,
+            "p95": 8.524556199999997,
+            "p99": 10.684326359999998
+          },
+          "status": {
+            "0": 0,
+            "2xx": 0,
+            "3xx": 0,
+            "4xx": 0,
+            "5xx": 0
+          },
+          "page_cache_busy": 0,
+          "response_bytes_avg": null,
+          "tls_handshakes": 14,
+          "per_visit": {
+            "requests": 2.0299999999999994,
+            "transfer_bytes": 42383.66,
+            "connections": 1.0000000000000002
+          }
+        },
+        "static": {
+          "requests": 435,
+          "rps": 21.920577978466564,
+          "error_rate": 0,
+          "latency_ms": {
+            "p50": 47.494171,
+            "p95": 89.8457279,
+            "p99": 104.62299111999972,
+            "avg": 48.646763188505744,
+            "max": 152.654208
+          },
+          "ttfb_ms": {
+            "p50": 42.070888,
+            "p95": 87.7918545,
+            "p99": 104.44306321999971
+          },
+          "status": {
+            "0": 0,
+            "2xx": 0,
+            "3xx": 0,
+            "4xx": 0,
+            "5xx": 0
+          },
+          "page_cache_busy": 0,
+          "response_bytes_avg": null,
+          "tls_handshakes": 36,
+          "per_visit": {
+            "requests": 30.580000000000002,
+            "transfer_bytes": 478336.01,
+            "connections": 2.5300000000000002
+          }
+        },
+        "other": {
+          "per_visit": {
+            "requests": 14.370000000000001,
+            "transfer_bytes": 357624.74999999994,
+            "connections": 0
+          }
+        }
+      },
+      "origin_share": {
+        "requests": 0.06225084329960133,
+        "transfer_bytes": 0.08139439019079114
+      },
+      "connections": "new",
+      "cache_identity": [
+        "anon;US;en"
+      ],
+      "side_share": 0.9,
+      "pages": {
+        "title_movie:browser": {
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200
+        },
+        "title_show:browser": {
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256"
+        },
+        "discover:browser": {
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400"
+        },
+        "home:browser": {
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0"
+        },
+        "person:browser": {
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400"
+        },
+        "share_list:bot": {
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=10, stale-while-revalidate=10",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit"
+        },
+        "share_list:browser": {
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=10, stale-while-revalidate=10",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3"
+        },
+        "title_movie:bot": {
+          "page_cache": "hit",
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en"
+        }
+      },
+      "not_warm": [],
+      "visits": 14,
+      "visits_per_s": 0.7054898659736365,
+      "page_views": 13,
+      "page_views_per_s": 0.6550977326898054,
+      "page_view_error_rate": 0,
+      "page_view_ms": {
+        "p50": 103,
+        "p95": 196.6,
+        "p99": 200.92
+      },
+      "tls_handshakes": 50,
+      "tls_handshakes_per_s": 2.519606664191559,
+      "tls_handshake_ms": {
+        "p50": null,
+        "p95": null,
+        "p99": null
+      },
+      "slices": [],
+      "routes": {
+        "discover": {
+          "page_views": 2,
+          "page_view_ms": {
+            "p50": 120.5,
+            "p95": 130.85,
+            "p99": 131.77
+          }
+        },
+        "home": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "og_person": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "og_share_list": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "og_title": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "person": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        },
+        "share_list": {
+          "page_views": 2,
+          "page_view_ms": {
+            "p50": 98.5,
+            "p95": 102.55,
+            "p99": 102.91
+          }
+        },
+        "title_movie": {
+          "page_views": 9,
+          "page_view_ms": {
+            "p50": 102,
+            "p95": 198.4,
+            "p99": 201.28
+          }
+        },
+        "title_show": {
+          "page_views": 0,
+          "page_view_ms": {
+            "p50": 0,
+            "p95": 0,
+            "p99": 0
+          }
+        }
+      }
+    }
+  },
+  "hosts": {
+    "abusive": {
+      "role": "target",
+      "nproc": 8,
+      "samples": 4,
+      "containers": {
+        "gk4owk8-20261009T105601": {
+          "cpu_pct": {
+            "avg": 95.41499999999999,
+            "max": 140.73
+          },
+          "mem_mb": {
+            "avg": 2900.4800000190735,
+            "max": 2906.112000465393
+          }
+        },
+        "coolify-proxy": {
+          "cpu_pct": {
+            "avg": 18.715000000000003,
+            "max": 29.6
+          },
+          "mem_mb": {
+            "avg": 212.44999980926514,
+            "max": 213
+          }
+        }
+      },
+      "cpu_busy_pct": {
+        "avg": 19.963749999999997,
+        "max": 25.427
+      },
+      "iowait_pct": {
+        "avg": 0.00625,
+        "max": 0.025
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 0.7725000000000001,
+        "max": 0.87
+      },
+      "mem_used_pct": {
+        "avg": 38.83054180194146,
+        "max": 38.99715457128116
+      },
+      "net_rx_mbps": {
+        "avg": 6.7510192,
+        "max": 8.0141632
+      },
+      "net_tx_mbps": {
+        "avg": 10.4668544,
+        "max": 11.574968
+      },
+      "tcp_estab": {
+        "avg": 9,
+        "max": 9
+      }
+    },
+    "gw-vector1": {
+      "role": "target",
+      "nproc": 16,
+      "samples": 5,
+      "containers": {
+        "gk4owk8-20261009T105807": {
+          "cpu_pct": {
+            "avg": 77.41,
+            "max": 119.61
+          },
+          "mem_mb": {
+            "avg": 2898.943999862671,
+            "max": 2912.2559995651245
+          }
+        },
+        "coolify-proxy": {
+          "cpu_pct": {
+            "avg": 7.5120000000000005,
+            "max": 9.88
+          },
+          "mem_mb": {
+            "avg": 131.39999961853027,
+            "max": 131.39999961853027
+          }
+        }
+      },
+      "cpu_busy_pct": {
+        "avg": 12.5658,
+        "max": 18.851
+      },
+      "iowait_pct": {
+        "avg": 1.0286,
+        "max": 1.507
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 3.4219999999999997,
+        "max": 3.68
+      },
+      "mem_used_pct": {
+        "avg": 50.66106145435938,
+        "max": 50.81371353210022
+      },
+      "net_rx_mbps": {
+        "avg": 0.5578025600000001,
+        "max": 0.8234544
+      },
+      "net_tx_mbps": {
+        "avg": 0.19928512,
+        "max": 0.22224960000000002
+      },
+      "tcp_estab": {
+        "avg": 6,
+        "max": 6
+      }
+    },
+    "gw-worker3": {
+      "role": "generator",
+      "nproc": 4,
+      "samples": 5,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 9.5108,
+        "max": 12.663
+      },
+      "iowait_pct": {
+        "avg": 0.06999999999999999,
+        "max": 0.3
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 0.556,
+        "max": 0.65
+      },
+      "mem_used_pct": {
+        "avg": 16.12481341384381,
+        "max": 16.42215187130418
+      },
+      "net_rx_mbps": {
+        "avg": 10.953,
+        "max": 38.9222384
+      },
+      "net_tx_mbps": {
+        "avg": 0.62571328,
+        "max": 0.97496
+      },
+      "tcp_estab": {
+        "avg": 2,
+        "max": 2
+      }
+    }
+  },
+  "lighthouse": {},
+  "webapp": {
+    "window_s": 25.42698359489441,
+    "commit": "42c2db2e",
+    "restarted": false,
+    "containers": {
+      "before": 1,
+      "after": 1
+    },
+    "total_rps": 20.529371801097735,
+    "benchmark_rps": 73.3079483472149,
+    "background_rps": -52.778576546117165,
+    "crawler_loop_rps": 1.5731319387814355,
+    "server_error_rps": 0,
+    "by_route_status": [
+      {
+        "route": "static",
+        "status_class": "2xx",
+        "rps": 5.781259875021776
+      },
+      {
+        "route": "/person/:personKey",
+        "status_class": "2xx",
+        "rps": 4.955365607161522
+      },
+      {
+        "route": "/movie/:movieKey",
+        "status_class": "2xx",
+        "rps": 3.1069355790933355
+      },
+      {
+        "route": "/og/:first/:second",
+        "status_class": "2xx",
+        "rps": 2.084399818885402
+      },
+      {
+        "route": "/person/:personKey",
+        "status_class": "3xx",
+        "rps": 1.5731319387814355
+      },
+      {
+        "route": "/person/:personKey",
+        "status_class": "4xx",
+        "rps": 1.2191772525556126
+      },
+      {
+        "route": "/show/:showKey",
+        "status_class": "2xx",
+        "rps": 0.4326112831648948
+      },
+      {
+        "route": "/discover/:type?",
+        "status_class": "2xx",
+        "rps": 0.35395468622582305
+      },
+      {
+        "route": "/u/:handle/lists/:id",
+        "status_class": "2xx",
+        "rps": 0.27529808928675126
+      },
+      {
+        "route": "/api/poster-impressions",
+        "status_class": "4xx",
+        "rps": 0.11798489540860767
+      },
+      {
+        "route": "/sign-up",
+        "status_class": "3xx",
+        "rps": 0.11798489540860767
+      },
+      {
+        "route": "/sign-up",
+        "status_class": "2xx",
+        "rps": 0.11798489540860767
+      },
+      {
+        "route": "/discover/:type?",
+        "status_class": "3xx",
+        "rps": 0.11798489540860767
+      },
+      {
+        "route": "/",
+        "status_class": "2xx",
+        "rps": 0.07865659693907179
+      },
+      {
+        "route": "/api/living-room/picks",
+        "status_class": "2xx",
+        "rps": 0.07865659693907179
+      }
+    ],
+    "routes": {
+      "static": {
+        "requests": 147,
+        "rps": 5.781259875021776,
+        "full_ms": {
+          "p50": 25,
+          "p95": 47.50000000000001,
+          "p99": 49.5
+        },
+        "headers_ms": null,
+        "share_under_300_ms": 1
+      },
+      "/person/:personKey": {
+        "requests": 126,
+        "rps": 4.955365607161522,
+        "full_ms": {
+          "p50": 51.08695652173913,
+          "p95": 164.99999999999991,
+          "p99": 192.99999999999997
+        },
+        "headers_ms": {
+          "p50": 37.02830188679245,
+          "p95": 143.92857142857147
+        },
+        "share_under_300_ms": 1
+      },
+      "/movie/:movieKey": {
+        "requests": 79,
+        "rps": 3.1069355790933355,
+        "full_ms": {
+          "p50": 108.13953488372094,
+          "p95": 190.8139534883721,
+          "p99": 198.1627906976744
+        },
+        "headers_ms": {
+          "p50": 103.65853658536587,
+          "p95": 190.3658536585366
+        },
+        "share_under_300_ms": 1
+      },
+      "/og/:first/:second": {
+        "requests": 53,
+        "rps": 2.084399818885402,
+        "full_ms": {
+          "p50": 216.66666666666669,
+          "p95": 668.7499999999993,
+          "p99": 933.7499999999999
+        },
+        "headers_ms": null,
+        "share_under_300_ms": 0.7358490566037735
+      },
+      "/show/:showKey": {
+        "requests": 11,
+        "rps": 0.4326112831648948,
+        "full_ms": {
+          "p50": 81.25,
+          "p95": 186.25,
+          "p99": 197.25000000000003
+        },
+        "headers_ms": {
+          "p50": 68.75,
+          "p95": 181.66666666666663
+        },
+        "share_under_300_ms": 1
+      },
+      "/discover/:type?": {
+        "requests": 9,
+        "rps": 0.35395468622582305,
+        "full_ms": {
+          "p50": 28.125,
+          "p95": 77.49999999999996,
+          "p99": 95.50000000000001
+        },
+        "headers_ms": {
+          "p50": 25,
+          "p95": 47.49999999999999
+        },
+        "share_under_300_ms": 1
+      },
+      "/u/:handle/lists/:id": {
+        "requests": 7,
+        "rps": 0.27529808928675126,
+        "full_ms": {
+          "p50": 29.16666666666667,
+          "p95": 82.49999999999997,
+          "p99": 96.49999999999999
+        },
+        "headers_ms": {
+          "p50": 25,
+          "p95": 47.5
+        },
+        "share_under_300_ms": 1
+      },
+      "/sign-up": {
+        "requests": 3,
+        "rps": 0.11798489540860767,
+        "full_ms": {
+          "p50": 25,
+          "p95": 47.49999999999999,
+          "p99": 49.49999999999999
+        },
+        "headers_ms": {
+          "p50": 25,
+          "p95": 47.49999999999999
+        },
+        "share_under_300_ms": 1
+      },
+      "/": {
+        "requests": 2,
+        "rps": 0.07865659693907179,
+        "full_ms": {
+          "p50": 25,
+          "p95": 47.5,
+          "p99": 49.5
+        },
+        "headers_ms": {
+          "p50": 25,
+          "p95": 47.5
+        },
+        "share_under_300_ms": 1
+      },
+      "/api/living-room/picks": {
+        "requests": 2,
+        "rps": 0.07865659693907179,
+        "full_ms": {
+          "p50": 50,
+          "p95": 95,
+          "p99": 99
+        },
+        "headers_ms": null,
+        "share_under_300_ms": 1
+      },
+      "/og/lists/:id/:file": {
+        "requests": 1,
+        "rps": 0.039328298469535894,
+        "full_ms": {
+          "p50": 25,
+          "p95": 47.5,
+          "p99": 49.5
+        },
+        "headers_ms": null,
+        "share_under_300_ms": 1
+      },
+      "/sign-in": {
+        "requests": 1,
+        "rps": 0.039328298469535894,
+        "full_ms": {
+          "p50": 25,
+          "p95": 47.5,
+          "p99": 49.5
+        },
+        "headers_ms": {
+          "p50": 25,
+          "p95": 47.5
+        },
+        "share_under_300_ms": 1
+      }
+    },
+    "caches": {
+      "person-profile-v2": {
+        "lookups": 142,
+        "lookups_per_s": 5.584618382674097,
+        "hit": 82,
+        "miss": 59,
+        "other": 1,
+        "miss_ratio": 0.4225352112676056,
+        "miss_ms": {
+          "p50": 58.92857142857144,
+          "p95": 157.14285714285714
+        }
+      },
+      "person-fingerprint-baseline": {
+        "lookups": 60,
+        "lookups_per_s": 2.3596979081721536,
+        "hit": 60,
+        "miss": 0,
+        "other": 0,
+        "miss_ratio": 0,
+        "miss_ms": null
+      },
+      "details-movie-v2": {
+        "lookups": 92,
+        "lookups_per_s": 3.618203459197302,
+        "hit": 32,
+        "miss": 46,
+        "other": 14,
+        "miss_ratio": 0.6521739130434783,
+        "miss_ms": {
+          "p50": 141,
+          "p95": 195.9
+        }
+      },
+      "details-missing-v1": {
+        "lookups": 66,
+        "lookups_per_s": 2.5956676989893688,
+        "hit": 0,
+        "miss": 66,
+        "other": 0,
+        "miss_ratio": 1,
+        "miss_ms": null
+      },
+      "details-show-v2": {
+        "lookups": 11,
+        "lookups_per_s": 0.4326112831648948,
+        "hit": 5,
+        "miss": 3,
+        "other": 3,
+        "miss_ratio": 0.5454545454545454,
+        "miss_ms": {
+          "p50": 100,
+          "p95": 190
+        }
+      },
+      "episode-grid": {
+        "lookups": 9,
+        "lookups_per_s": 0.35395468622582305,
+        "hit": 2,
+        "miss": 7,
+        "other": 0,
+        "miss_ratio": 0.7777777777777778,
+        "miss_ms": {
+          "p50": 25,
+          "p95": 47.5
+        }
+      },
+      "related-cards": {
+        "lookups": 22,
+        "lookups_per_s": 0.8652225663297896,
+        "hit": 15,
+        "miss": 7,
+        "other": 0,
+        "miss_ratio": 0.31818181818181823,
+        "miss_ms": {
+          "p50": 70.83333333333333,
+          "p95": 97.08333333333333
+        }
+      },
+      "movie-collection": {
+        "lookups": 5,
+        "lookups_per_s": 0.19664149234767944,
+        "hit": 3,
+        "miss": 2,
+        "other": 0,
+        "miss_ratio": 0.4,
+        "miss_ms": {
+          "p50": 25,
+          "p95": 47.5
+        }
+      },
+      "share-list-view-v1": {
+        "lookups": 3,
+        "lookups_per_s": 0.11798489540860767,
+        "hit": 2,
+        "miss": 1,
+        "other": 0,
+        "miss_ratio": 0.33333333333333337,
+        "miss_ms": {
+          "p50": 25,
+          "p95": 47.5
+        }
+      },
+      "share-list-availability-v1": {
+        "lookups": 2,
+        "lookups_per_s": 0.07865659693907179,
+        "hit": 2,
+        "miss": 0,
+        "other": 0,
+        "miss_ratio": 0,
+        "miss_ms": null
+      },
+      "streaming-providers": {
+        "lookups": 2,
+        "lookups_per_s": 0.07865659693907179,
+        "hit": 2,
+        "miss": 0,
+        "other": 0,
+        "miss_ratio": 0,
+        "miss_ms": null
+      }
+    },
+    "page_cache": {
+      "/person/:personKey": {
+        "hit": 1,
+        "stale": 0,
+        "joined": 0,
+        "miss": 125,
+        "bypass": 0
+      },
+      "/movie/:movieKey": {
+        "hit": 10,
+        "stale": 0,
+        "joined": 0,
+        "miss": 68,
+        "bypass": 0
+      },
+      "/show/:showKey": {
+        "hit": 2,
+        "stale": 0,
+        "joined": 0,
+        "miss": 9,
+        "bypass": 0
+      },
+      "/sign-up": {
+        "hit": 3,
+        "stale": 0,
+        "joined": 0,
+        "miss": 0,
+        "bypass": 0
+      },
+      "/": {
+        "hit": 0,
+        "stale": 0,
+        "joined": 0,
+        "miss": 2,
+        "bypass": 0
+      },
+      "/discover/:type?": {
+        "hit": 4,
+        "stale": 0,
+        "joined": 0,
+        "miss": 8,
+        "bypass": 0
+      },
+      "/u/:handle/lists/:id": {
+        "hit": 5,
+        "stale": 0,
+        "joined": 0,
+        "miss": 2,
+        "bypass": 0
+      },
+      "/sign-in": {
+        "hit": 1,
+        "stale": 0,
+        "joined": 0,
+        "miss": 0,
+        "bypass": 0
+      }
+    },
+    "page_cache_entries": 96,
+    "qdrant": {
+      "grpc /qdrant.Points/UpdateBatch 0": {
+        "calls": 2,
+        "calls_per_s": 0.07865659693907179,
+        "avg_ms": 49.21050000120886
+      },
+      "grpc /qdrant.Points/Get 0": {
+        "calls": 34,
+        "calls_per_s": 1.3371621479642204,
+        "avg_ms": 2.107411764668273
+      },
+      "grpc /qdrant.Points/Recommend 0": {
+        "calls": 34,
+        "calls_per_s": 1.3371621479642204,
+        "avg_ms": 26.573500000214313
+      }
+    },
+    "in_flight": {
+      "avg": 1,
+      "max": 2
+    },
+    "resident_memory_mb": 2396.4765625,
+    "loop_delay_ms": {
+      "p99_max": 26.628863,
+      "max": 40.555263
+    },
+    "thread_cpu_pct": {
+      "main": {
+        "avg": 29.159412005498115,
+        "max": 36.74046677451562
+      },
+      "libuv-worker": {
+        "avg": 4.760424221157984,
+        "max": 6.940953218510231
+      },
+      "V8Worker": {
+        "avg": 2.0332392093410956,
+        "max": 2.780359647801182
+      }
+    },
+    "main_thread_by_time": [
+      {
+        "t_s": 7,
+        "cpu_pct": 36
+      },
+      {
+        "t_s": 12,
+        "cpu_pct": 19
+      },
+      {
+        "t_s": 18,
+        "cpu_pct": 37
+      },
+      {
+        "t_s": 23,
+        "cpu_pct": 25
+      }
+    ],
+    "proxy_cpu_pct": {
+      "avg": 20.330890026316993,
+      "max": 29.746942365043846
+    },
+    "proxy_accepts_per_s": {
+      "avg": 23.95287966391277,
+      "max": 31.57694171431342
+    }
+  },
+  "webapp_instances": {
+    "10.0.0.20": {
+      "window_s": 25.08169436454773,
+      "commit": "42c2db2e",
+      "restarted": false,
+      "containers": {
+        "before": 1,
+        "after": 1
+      },
+      "total_rps": 15.469449326694097,
+      "benchmark_rps": null,
+      "background_rps": null,
+      "crawler_loop_rps": 1.0366125837475426,
+      "server_error_rps": 0,
+      "by_route_status": [
+        {
+          "route": "/person/:personKey",
+          "status_class": "2xx",
+          "rps": 4.824235485902025
+        },
+        {
+          "route": "/movie/:movieKey",
+          "status_class": "2xx",
+          "rps": 3.1895771807616695
+        },
+        {
+          "route": "/person/:personKey",
+          "status_class": "4xx",
+          "rps": 1.475179446102272
+        },
+        {
+          "route": "static",
+          "status_class": "2xx",
+          "rps": 1.3555703018237095
+        },
+        {
+          "route": "/og/:first/:second",
+          "status_class": "2xx",
+          "rps": 1.196091442785626
+        },
+        {
+          "route": "/person/:personKey",
+          "status_class": "3xx",
+          "rps": 1.0366125837475426
+        },
+        {
+          "route": "/api/poster-impressions",
+          "status_class": "4xx",
+          "rps": 0.4385668623547295
+        },
+        {
+          "route": "/show/:showKey",
+          "status_class": "2xx",
+          "rps": 0.3588274328356878
+        },
+        {
+          "route": "/discover/:type?",
+          "status_class": "2xx",
+          "rps": 0.27908800331664607
+        },
+        {
+          "route": "/u/:handle/lists/:id",
+          "status_class": "2xx",
+          "rps": 0.27908800331664607
+        },
+        {
+          "route": "/discover/:type?",
+          "status_class": "3xx",
+          "rps": 0.19934857379760434
+        },
+        {
+          "route": "/api/living-room/picks",
+          "status_class": "2xx",
+          "rps": 0.19934857379760434
+        },
+        {
+          "route": "/",
+          "status_class": "2xx",
+          "rps": 0.19934857379760434
+        },
+        {
+          "route": "/sign-up",
+          "status_class": "3xx",
+          "rps": 0.15947885903808348
+        },
+        {
+          "route": "/sign-up",
+          "status_class": "2xx",
+          "rps": 0.15947885903808348
+        }
+      ],
+      "routes": {
+        "/person/:personKey": {
+          "requests": 121,
+          "rps": 4.824235485902025,
+          "full_ms": {
+            "p50": 57.07547169811321,
+            "p95": 159.6666666666666,
+            "p99": 191.93333333333328
+          },
+          "headers_ms": {
+            "p50": 37.98076923076923,
+            "p95": 120.99999999999996
+          },
+          "share_under_300_ms": 1
+        },
+        "/movie/:movieKey": {
+          "requests": 80,
+          "rps": 3.1895771807616695,
+          "full_ms": {
+            "p50": 130.43478260869568,
+            "p95": 250,
+            "p99": 290.00000000000006
+          },
+          "headers_ms": {
+            "p50": 126,
+            "p95": 198
+          },
+          "share_under_300_ms": 1
+        },
+        "static": {
+          "requests": 34,
+          "rps": 1.3555703018237095,
+          "full_ms": {
+            "p50": 25,
+            "p95": 47.5,
+            "p99": 49.49999999999999
+          },
+          "headers_ms": null,
+          "share_under_300_ms": 1
+        },
+        "/og/:first/:second": {
+          "requests": 30,
+          "rps": 1.196091442785626,
+          "full_ms": {
+            "p50": 300,
+            "p95": 812.5,
+            "p99": 962.4999999999999
+          },
+          "headers_ms": null,
+          "share_under_300_ms": 0.5
+        },
+        "/show/:showKey": {
+          "requests": 9,
+          "rps": 0.3588274328356878,
+          "full_ms": {
+            "p50": 91.66666666666667,
+            "p95": 254.9999999999999,
+            "p99": 291.00000000000006
+          },
+          "headers_ms": {
+            "p50": 91.66666666666667,
+            "p95": 254.9999999999999
+          },
+          "share_under_300_ms": 1
+        },
+        "/discover/:type?": {
+          "requests": 7,
+          "rps": 0.27908800331664607,
+          "full_ms": {
+            "p50": 56.25,
+            "p95": 95.625,
+            "p99": 99.125
+          },
+          "headers_ms": {
+            "p50": 29.16666666666667,
+            "p95": 82.49999999999997
+          },
+          "share_under_300_ms": 1
+        },
+        "/u/:handle/lists/:id": {
+          "requests": 7,
+          "rps": 0.27908800331664607,
+          "full_ms": {
+            "p50": 25,
+            "p95": 47.5,
+            "p99": 49.5
+          },
+          "headers_ms": {
+            "p50": 25,
+            "p95": 47.5
+          },
+          "share_under_300_ms": 1
+        },
+        "/": {
+          "requests": 5,
+          "rps": 0.19934857379760434,
+          "full_ms": {
+            "p50": 25,
+            "p95": 47.5,
+            "p99": 49.5
+          },
+          "headers_ms": {
+            "p50": 25,
+            "p95": 47.5
+          },
+          "share_under_300_ms": 1
+        },
+        "/api/living-room/picks": {
+          "requests": 5,
+          "rps": 0.19934857379760434,
+          "full_ms": {
+            "p50": 25,
+            "p95": 47.5,
+            "p99": 49.5
+          },
+          "headers_ms": null,
+          "share_under_300_ms": 1
+        },
+        "/sign-up": {
+          "requests": 4,
+          "rps": 0.15947885903808348,
+          "full_ms": {
+            "p50": 25,
+            "p95": 47.5,
+            "p99": 49.5
+          },
+          "headers_ms": {
+            "p50": 25,
+            "p95": 47.5
+          },
+          "share_under_300_ms": 1
+        },
+        "/api/e": {
+          "requests": 1,
+          "rps": 0.03986971475952087,
+          "full_ms": {
+            "p50": 150,
+            "p95": 285,
+            "p99": 297
+          },
+          "headers_ms": null,
+          "share_under_300_ms": 1
+        }
+      },
+      "caches": {
+        "person-profile-v2": {
+          "lookups": 129,
+          "lookups_per_s": 5.143193203978192,
+          "hit": 74,
+          "miss": 55,
+          "other": 0,
+          "miss_ratio": 0.4263565891472868,
+          "miss_ms": {
+            "p50": 60.833333333333336,
+            "p95": 131.25
+          }
+        },
+        "person-fingerprint-baseline": {
+          "lookups": 55,
+          "lookups_per_s": 2.1928343117736477,
+          "hit": 55,
+          "miss": 0,
+          "other": 0,
+          "miss_ratio": 0,
+          "miss_ms": null
+        },
+        "details-movie-v2": {
+          "lookups": 82,
+          "lookups_per_s": 3.269316610280711,
+          "hit": 20,
+          "miss": 54,
+          "other": 8,
+          "miss_ratio": 0.7560975609756098,
+          "miss_ms": {
+            "p50": 131.11111111111111,
+            "p95": 193.11111111111111
+          }
+        },
+        "details-missing-v1": {
+          "lookups": 67,
+          "lookups_per_s": 2.671270888887898,
+          "hit": 0,
+          "miss": 67,
+          "other": 0,
+          "miss_ratio": 1,
+          "miss_ms": null
+        },
+        "related-cards": {
+          "lookups": 16,
+          "lookups_per_s": 0.6379154361523339,
+          "hit": 6,
+          "miss": 10,
+          "other": 0,
+          "miss_ratio": 0.625,
+          "miss_ms": {
+            "p50": 64.28571428571429,
+            "p95": 96.42857142857143
+          }
+        },
+        "movie-collection": {
+          "lookups": 5,
+          "lookups_per_s": 0.19934857379760434,
+          "hit": 4,
+          "miss": 1,
+          "other": 0,
+          "miss_ratio": 0.19999999999999996,
+          "miss_ms": {
+            "p50": 25,
+            "p95": 47.5
+          }
+        },
+        "details-show-v2": {
+          "lookups": 9,
+          "lookups_per_s": 0.3588274328356878,
+          "hit": 4,
+          "miss": 5,
+          "other": 0,
+          "miss_ratio": 0.5555555555555556,
+          "miss_ms": {
+            "p50": 116.66666666666667,
+            "p95": 191.66666666666669
+          }
+        },
+        "episode-grid": {
+          "lookups": 8,
+          "lookups_per_s": 0.31895771807616696,
+          "hit": 3,
+          "miss": 5,
+          "other": 0,
+          "miss_ratio": 0.625,
+          "miss_ms": {
+            "p50": 25,
+            "p95": 47.5
+          }
+        },
+        "share-list-availability-v1": {
+          "lookups": 3,
+          "lookups_per_s": 0.1196091442785626,
+          "hit": 3,
+          "miss": 0,
+          "other": 0,
+          "miss_ratio": 0,
+          "miss_ms": null
+        },
+        "share-list-view-v1": {
+          "lookups": 3,
+          "lookups_per_s": 0.1196091442785626,
+          "hit": 2,
+          "miss": 0,
+          "other": 1,
+          "miss_ratio": 0.33333333333333337,
+          "miss_ms": {
+            "p50": 25,
+            "p95": 47.5
+          }
+        },
+        "streaming-providers": {
+          "lookups": 5,
+          "lookups_per_s": 0.19934857379760434,
+          "hit": 5,
+          "miss": 0,
+          "other": 0,
+          "miss_ratio": 0,
+          "miss_ms": null
+        }
+      },
+      "page_cache": {
+        "/person/:personKey": {
+          "hit": 5,
+          "stale": 0,
+          "joined": 0,
+          "miss": 116,
+          "bypass": 0
+        },
+        "/movie/:movieKey": {
+          "hit": 6,
+          "stale": 0,
+          "joined": 0,
+          "miss": 73,
+          "bypass": 0
+        },
+        "/discover/:type?": {
+          "hit": 2,
+          "stale": 0,
+          "joined": 0,
+          "miss": 10,
+          "bypass": 0
+        },
+        "/show/:showKey": {
+          "hit": 1,
+          "stale": 0,
+          "joined": 0,
+          "miss": 8,
+          "bypass": 0
+        },
+        "/sign-up": {
+          "hit": 4,
+          "stale": 0,
+          "joined": 0,
+          "miss": 0,
+          "bypass": 0
+        },
+        "/": {
+          "hit": 3,
+          "stale": 0,
+          "joined": 0,
+          "miss": 2,
+          "bypass": 0
+        },
+        "/u/:handle/lists/:id": {
+          "hit": 4,
+          "stale": 1,
+          "joined": 0,
+          "miss": 2,
+          "bypass": 0
+        }
+      },
+      "page_cache_entries": 118,
+      "qdrant": {
+        "grpc /qdrant.Points/Recommend 0": {
+          "calls": 36,
+          "calls_per_s": 1.4353097313427512,
+          "avg_ms": 26.384277777752786
+        },
+        "grpc /qdrant.Points/Get 0": {
+          "calls": 36,
+          "calls_per_s": 1.4353097313427512,
+          "avg_ms": 2.165111111025908
+        },
+        "grpc /qdrant.Points/UpdateBatch 0": {
+          "calls": 2,
+          "calls_per_s": 0.07973942951904174,
+          "avg_ms": 49.21050000120886
+        }
+      },
+      "in_flight": {
+        "avg": 1.5,
+        "max": 3
+      },
+      "resident_memory_mb": 2411.6796875,
+      "loop_delay_ms": {
+        "p99_max": 43.66822299999999,
+        "max": 52.286207000000005
+      },
+      "thread_cpu_pct": {
+        "main": {
+          "avg": 31.697960688886198,
+          "max": 38.36793545057935
+        },
+        "libuv-worker": {
+          "avg": 4.002821449212944,
+          "max": 4.918966083407609
+        },
+        "V8Worker": {
+          "avg": 1.8381891214465333,
+          "max": 2.1643450766993477
+        }
+      },
+      "main_thread_by_time": [
+        {
+          "t_s": 8,
+          "cpu_pct": 33
+        },
+        {
+          "t_s": 13,
+          "cpu_pct": 24
+        },
+        {
+          "t_s": 18,
+          "cpu_pct": 38
+        }
+      ],
+      "proxy_cpu_pct": {
+        "avg": 4.133976231771062,
+        "max": 5.115724726743913
+      },
+      "proxy_accepts_per_s": {
+        "avg": 0.3936895044702193,
+        "max": 0.7870345733452174
+      }
+    }
+  }
+}

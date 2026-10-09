@@ -132,7 +132,9 @@ With the label, an instance that is set to `origin` doesn't fire it.
 
 ## Known limits
 
-- During a fallback the origin serves every file again: about 140 movie page views per second, not 500.
+- During a fallback the origin serves every file again: 120 movie page views per second on the public path with new
+  connections, not 500 (measured on October 9, 2026, see
+  [the static hostname runs](benchmarks/viral-spike-static-hostname.md)).
 - At worst about 36 seconds of pages without scripts and styles before a switch (three probes). A tab that is open
   keeps its address. It recovers on its next reload, or when a lazy chunk fails to load, which reloads the page
   (`app/utils/stale-chunk.ts`).

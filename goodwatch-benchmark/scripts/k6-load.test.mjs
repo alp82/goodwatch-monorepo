@@ -18,8 +18,8 @@ function harness(changeSet = () => {}) {
     constructor() { this.cookies = []; }
     set(...pair) { this.cookies.push(pair); }
   }
-  const reply = (method, url, body, params) => {
-    calls.push({ method, url, body, params });
+  const reply = (method, url, body, params, via = "request") => {
+    calls.push({ method, url, body, params, via });
     if (url.endsWith("/movie/1")) params.jar.set(url, "gw_instance", "a");
     return { status: 200, headers: { "Gw-Page-Cache": "hit" }, timings: { duration: 1, tls_handshaking: 1 } };
   };
@@ -37,11 +37,23 @@ function harness(changeSet = () => {}) {
     console,
     exec: { scenario: { startTime: Date.now(), iterationInTest: 0 } },
     Counter: Metric, Trend: Metric, Rate: Metric,
-    http: { CookieJar, expectedStatuses: (...statuses) => statuses, request: reply, batch: (batch) => batch.map((r) => reply(r.method, r.url, r.body, r.params)) },
+    http: { CookieJar, expectedStatuses: (...statuses) => statuses, request: reply, batch: (batch) => batch.map((r) => reply(r.method, r.url, r.body, r.params, "batch")) },
   });
   vm.runInContext(source, context);
   return { context, calls, samples, evaluate: (code) => vm.runInContext(code, context) };
 }
+
+test("the first request to a host without a connection goes out alone, and the rest as one batch", () => {
+  const { evaluate, calls } = harness((set) => {
+    set.entries[0].view.requests.push(request("/assets/c.js", "static"), request("/assets/d.js", "static"));
+    set.entries[0].view.side[0].requests.push(request("/assets/e.png", "static"));
+  });
+  evaluate("main(); side();");
+  const via = Object.fromEntries(calls.map((r) => [new URL(r.url).pathname, r.via]));
+  // The document opened the site's connection, so the site's file is batched. The static hostname has none yet.
+  assert.deepEqual(via, { "/movie/1": "request", "/assets/a.js": "request", "/api/search-config": "batch", "/assets/c.js": "batch", "/assets/d.js": "batch", "/assets/b.css": "request", "/assets/e.png": "batch" });
+  assert(calls.findIndex((r) => r.url.endsWith("/assets/a.js")) < calls.findIndex((r) => r.via === "batch"));
+});
 
 test("k6 routes host groups, isolates static cookies, and tags measured requests and handshakes", () => {
   const { evaluate, calls, samples } = harness();

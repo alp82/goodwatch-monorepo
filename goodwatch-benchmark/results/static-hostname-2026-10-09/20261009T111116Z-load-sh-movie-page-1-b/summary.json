@@ -1,0 +1,1618 @@
+{
+  "schema": 1,
+  "run_id": "20261009T111116Z-load-sh-movie-page-1-b",
+  "kind": "load",
+  "label": "sh-movie-page-1-b",
+  "meta": {
+    "run_id": "20261009T111116Z-load-sh-movie-page-1-b",
+    "kind": "load",
+    "label": "sh-movie-page-1-b",
+    "smoke": false,
+    "mode": "ramp",
+    "cache_mode": "warm",
+    "scenario": "page-view",
+    "files": "page",
+    "connections": "new",
+    "cache_identity": "anon;US;en",
+    "url_set": "hot",
+    "path": "public",
+    "target_url": "https://goodwatch.app",
+    "resolve_ip": "",
+    "rate_plan": [
+      {
+        "name": "s01",
+        "rate": 10,
+        "start_s": 0,
+        "end_s": 30
+      },
+      {
+        "name": "s02",
+        "rate": 20,
+        "start_s": 30,
+        "end_s": 65
+      },
+      {
+        "name": "s03",
+        "rate": 30,
+        "start_s": 65,
+        "end_s": 100
+      },
+      {
+        "name": "s04",
+        "rate": 40,
+        "start_s": 100,
+        "end_s": 135
+      },
+      {
+        "name": "s05",
+        "rate": 50,
+        "start_s": 135,
+        "end_s": 170
+      },
+      {
+        "name": "s06",
+        "rate": 60,
+        "start_s": 170,
+        "end_s": 205
+      },
+      {
+        "name": "s07",
+        "rate": 75,
+        "start_s": 205,
+        "end_s": 240
+      }
+    ],
+    "planned_requests": 9762.5,
+    "effective_k6_inputs": {
+      "URLS_FILE": "/work/urls.json",
+      "TARGET_URL": "https://goodwatch.app",
+      "RESOLVE_IP": "",
+      "INSECURE_TLS": "0",
+      "SHARE_LIST_PATH": "[redacted]",
+      "SHARE_LIST_OG_PATH": "[redacted]",
+      "RATE_START": "10",
+      "RATE_STEP": "5",
+      "RATE_MAX": "75",
+      "RATE_LIST": "10,20,30,40,50,60,75",
+      "ONLY_ROUTES": "title_movie:browser",
+      "SCENARIO": "page-view",
+      "CONNECTIONS": "new",
+      "CACHE_IDENTITY": "anon;US;en",
+      "ABORT_PAGE_P95_MS": "10000",
+      "SLICE_SECONDS": "0",
+      "STEP_DURATION": "30",
+      "RAMP_SECONDS": "5",
+      "PRE_VUS": "75",
+      "MAX_VUS": "300",
+      "CACHE_MODE": "warm",
+      "COOKIE": "",
+      "COOKIE_TEMPLATE": "[redacted]",
+      "ACCEPT_LANGUAGE": "en-US,en;q=0.9",
+      "ACCEPT_LANGUAGES": "en-US,en;q=0.9|de-DE,de;q=0.9,en;q=0.8|fr-FR,fr;q=0.9|es-ES,es;q=0.9|pt-BR,pt;q=0.9",
+      "CACHE_BUST_QUERY": "0",
+      "BROWSER_UA": "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+      "BOT_UA": "facebookexternalhit/1.1",
+      "ACCEPT_ENCODING": "br, gzip",
+      "REQUEST_TIMEOUT": "30s",
+      "ABORT_ERROR_RATE": "0.01",
+      "ABORT_P95_MS": "3000",
+      "ABORT_DELAY": "10s",
+      "ABORT_DROPPED": "113",
+      "SEQUENTIAL": "0",
+      "PREWARM_MAX": "200",
+      "OUT_DIR": "/work"
+    },
+    "git_commit": "42c2db2eb9feb9be483b9a3d777504d6c912bb34",
+    "git_dirty": false,
+    "generator_host": "10.0.0.30",
+    "jump": false,
+    "k6_image": "grafana/k6:1.8.1",
+    "metric_hosts": [
+      {
+        "host": "10.0.0.30",
+        "role": "generator",
+        "file": "host-0.jsonl"
+      }
+    ],
+    "started_at": "2026-10-09T11:11:43.517Z",
+    "ended_at": "2026-10-09T11:12:30.656Z",
+    "k6_exit_code": 99,
+    "lighthouse": null,
+    "tap": null
+  },
+  "load": {
+    "aborted": true,
+    "abort_reason": "dropped_iterations: count<113",
+    "duration_s": 44.835732099,
+    "requests": 16350,
+    "rps": 364.6645038358739,
+    "error_rate": 0,
+    "latency_ms": {
+      "p50": 82.127972,
+      "p95": 1613.97502405,
+      "p99": 2966.334375,
+      "avg": 325.3416796001227,
+      "max": 4006.702108
+    },
+    "ttfb_ms": {
+      "p50": 58.9063565,
+      "p95": 1029.7827518,
+      "p99": 2094.9623613500003
+    },
+    "status": {
+      "0": 0,
+      "2xx": 16114,
+      "3xx": 0,
+      "4xx": 0,
+      "5xx": 0
+    },
+    "page_cache_busy": 0,
+    "response_bytes_avg": 0,
+    "dropped_iterations": 207,
+    "routes": {
+      "title_movie": {
+        "requests": 16350,
+        "rps": 364.6645038358739,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 82.127972,
+          "p95": 1613.97502405,
+          "p99": 2966.334375,
+          "avg": 325.3416796001227,
+          "max": 4006.702108
+        },
+        "ttfb_ms": {
+          "p50": 58.9063565,
+          "p95": 1029.7827518,
+          "p99": 2094.9623613500003
+        },
+        "status": {
+          "0": 0,
+          "2xx": 16114,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0
+      }
+    },
+    "steps": [
+      {
+        "name": "s01",
+        "target_rps": 10,
+        "requests": 11063,
+        "rps": 368.76666666666665,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 66.184535,
+          "p95": 204.59920409999998,
+          "p99": 265.95443145999997,
+          "avg": 78.24698385898962,
+          "max": 432.288767
+        },
+        "ttfb_ms": {
+          "p50": 44.65332,
+          "p95": 131.81609729999997,
+          "p99": 191.12794997999984
+        },
+        "status": {
+          "0": 0,
+          "2xx": 11063,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 299,
+        "visits_per_s": 9.966666666666667,
+        "page_views": 299,
+        "page_views_per_s": 9.966666666666667,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 174,
+          "p95": 514.3999999999999,
+          "p99": 644.2599999999998
+        },
+        "tls_handshakes": 1143,
+        "tls_handshakes_per_s": 38.1,
+        "tls_handshake_ms": {
+          "p50": 17.372165,
+          "p95": 62.72258189999995,
+          "p99": 106.63588741999997
+        },
+        "hosts": {
+          "site": {
+            "requests": 598,
+            "rps": 19.933333333333334,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 15.17332,
+              "p95": 81.73221215000001,
+              "p99": 117.68016180999984,
+              "avg": 24.214207481605364,
+              "max": 177.035955
+            },
+            "ttfb_ms": {
+              "p50": 9.1383685,
+              "p95": 61.75119644999993,
+              "p99": 103.89983468999996
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 299
+          },
+          "static": {
+            "requests": 10465,
+            "rps": 348.8333333333333,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 68.604606,
+              "p95": 206.6443674,
+              "p99": 266.04981732,
+              "avg": 81.33457108055444,
+              "max": 432.288767
+            },
+            "ttfb_ms": {
+              "p50": 46.442574,
+              "p95": 135.9931618,
+              "p99": 195.31861831999998
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 844
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 299,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 20.659766,
+              "p95": 81.91621379999995,
+              "p99": 123.56069557999976
+            },
+            "ttfb_ms": {
+              "p50": 13.407885,
+              "p95": 66.97868399999997,
+              "p99": 90.22473411999972
+            }
+          },
+          "asset": {
+            "requests": 7475,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 73.509238,
+              "p95": 223.87408619999994,
+              "p99": 302.2876928000005
+            },
+            "ttfb_ms": {
+              "p50": 49.679559,
+              "p95": 151.18855319999992,
+              "p99": 202.4640986
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 3289,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 43.325681,
+              "p95": 137.64287579999998,
+              "p99": 191.2233926399988
+            },
+            "ttfb_ms": {
+              "p50": 31.729771,
+              "p95": 100.76326879999999,
+              "p99": 141.26300744
+            }
+          },
+          "single": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          }
+        },
+        "resources": {
+          "window_s": 30,
+          "instances": {},
+          "hosts": {
+            "gw-worker1": {
+              "role": "generator",
+              "nproc": 4,
+              "cpu_busy_pct": 88.3165,
+              "cpu_busy_max_pct": 96.88,
+              "net_tx_mbps": 6.9774296,
+              "net_rx_mbps": 58.800171999999996,
+              "mem_used_pct": 19.7258481166011
+            }
+          }
+        }
+      },
+      {
+        "name": "s02",
+        "target_rps": 20,
+        "requests": 5287,
+        "rps": 356.3693361891032,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 565.11982,
+          "p95": 2675.8680344,
+          "p99": 3469.50451068,
+          "avg": 842.3851104652916,
+          "max": 4006.702108
+        },
+        "ttfb_ms": {
+          "p50": 364.171742,
+          "p95": 1787.6206496999991,
+          "p99": 2530.8983961600447
+        },
+        "status": {
+          "0": 0,
+          "2xx": 5051,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 133,
+        "visits_per_s": 8.96484238947432,
+        "page_views": 133,
+        "page_views_per_s": 8.96484238947432,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 2296,
+          "p95": 5806.2,
+          "p99": 6579.24
+        },
+        "tls_handshakes": 554,
+        "tls_handshakes_per_s": 37.342275817810325,
+        "tls_handshake_ms": {
+          "p50": 177.62277849999998,
+          "p95": 982.5560492500005,
+          "p99": 1559.7037937200014
+        },
+        "hosts": {
+          "site": {
+            "requests": 363,
+            "rps": 24.467953288565248,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 205.186944,
+              "p95": 1338.6611293999977,
+              "p99": 1857.13557404,
+              "avg": 368.78889488429724,
+              "max": 2454.217004
+            },
+            "ttfb_ms": {
+              "p50": 139.197911,
+              "p95": 907.4995703,
+              "p99": 1513.44913278
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 185
+          },
+          "static": {
+            "requests": 4924,
+            "rps": 331.90138290053795,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 584.1792415,
+              "p95": 2689.8991351,
+              "p99": 3469.62041446,
+              "avg": 877.2988850907799,
+              "max": 4006.702108
+            },
+            "ttfb_ms": {
+              "p50": 389.6304225,
+              "p95": 1789.4433403,
+              "p99": 2649.31811824
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 369
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 188,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 105.701807,
+              "p95": 1275.045340850002,
+              "p99": 1632.1485797199987
+            },
+            "ttfb_ms": {
+              "p50": 68.5904455,
+              "p95": 1023.06582095,
+              "p99": 1618.4817173899987
+            }
+          },
+          "asset": {
+            "requests": 3515,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 850.062521,
+              "p95": 2942.0133261,
+              "p99": 3488.6298261
+            },
+            "ttfb_ms": {
+              "p50": 514.048579,
+              "p95": 2064.9742754,
+              "p99": 2649.59290842
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 1584,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 336.9320395,
+              "p95": 1341.2446759499999,
+              "p99": 2153.09524246
+            },
+            "ttfb_ms": {
+              "p50": 218.02725850000002,
+              "p95": 976.7502740499999,
+              "p99": 1506.7891248800051
+            }
+          },
+          "single": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          }
+        },
+        "resources": {
+          "window_s": 9.835731983184814,
+          "instances": {},
+          "hosts": {
+            "gw-worker1": {
+              "role": "generator",
+              "nproc": 4,
+              "cpu_busy_pct": 99.901,
+              "cpu_busy_max_pct": 99.901,
+              "net_tx_mbps": 8.7246496,
+              "net_rx_mbps": 67.18018000000001,
+              "mem_used_pct": 21.31033120365583
+            }
+          }
+        }
+      },
+      {
+        "name": "s03",
+        "target_rps": 30,
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 0,
+        "visits_per_s": 0,
+        "page_views": 0,
+        "page_views_per_s": 0,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "tls_handshakes": 0,
+        "tls_handshakes_per_s": 0,
+        "tls_handshake_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "hosts": {
+          "site": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          },
+          "static": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "asset": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "single": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          }
+        },
+        "resources": {
+          "window_s": 0,
+          "instances": {},
+          "hosts": {}
+        }
+      },
+      {
+        "name": "s04",
+        "target_rps": 40,
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 0,
+        "visits_per_s": 0,
+        "page_views": 0,
+        "page_views_per_s": 0,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "tls_handshakes": 0,
+        "tls_handshakes_per_s": 0,
+        "tls_handshake_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "hosts": {
+          "site": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          },
+          "static": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "asset": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "single": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          }
+        },
+        "resources": {
+          "window_s": 0,
+          "instances": {},
+          "hosts": {}
+        }
+      },
+      {
+        "name": "s05",
+        "target_rps": 50,
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 0,
+        "visits_per_s": 0,
+        "page_views": 0,
+        "page_views_per_s": 0,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "tls_handshakes": 0,
+        "tls_handshakes_per_s": 0,
+        "tls_handshake_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "hosts": {
+          "site": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          },
+          "static": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "asset": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "single": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          }
+        },
+        "resources": {
+          "window_s": 0,
+          "instances": {},
+          "hosts": {}
+        }
+      },
+      {
+        "name": "s06",
+        "target_rps": 60,
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 0,
+        "visits_per_s": 0,
+        "page_views": 0,
+        "page_views_per_s": 0,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "tls_handshakes": 0,
+        "tls_handshakes_per_s": 0,
+        "tls_handshake_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "hosts": {
+          "site": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          },
+          "static": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "asset": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "single": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          }
+        },
+        "resources": {
+          "window_s": 0,
+          "instances": {},
+          "hosts": {}
+        }
+      },
+      {
+        "name": "s07",
+        "target_rps": 75,
+        "requests": 0,
+        "rps": 0,
+        "error_rate": 0,
+        "latency_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "avg": 0,
+          "max": 0
+        },
+        "ttfb_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "status": {
+          "0": 0,
+          "2xx": 0,
+          "3xx": 0,
+          "4xx": 0,
+          "5xx": 0
+        },
+        "page_cache_busy": 0,
+        "response_bytes_avg": 0,
+        "visits": 0,
+        "visits_per_s": 0,
+        "page_views": 0,
+        "page_views_per_s": 0,
+        "page_view_error_rate": 0,
+        "page_view_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "tls_handshakes": 0,
+        "tls_handshakes_per_s": 0,
+        "tls_handshake_ms": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0
+        },
+        "hosts": {
+          "site": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          },
+          "static": {
+            "requests": 0,
+            "rps": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0,
+              "avg": 0,
+              "max": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "status": {
+              "0": 0,
+              "2xx": 0,
+              "3xx": 0,
+              "4xx": 0,
+              "5xx": 0
+            },
+            "page_cache_busy": 0,
+            "response_bytes_avg": null,
+            "tls_handshakes": 0
+          }
+        },
+        "kinds": {
+          "document": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "asset": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "api": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "side": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          },
+          "single": {
+            "requests": 0,
+            "error_rate": 0,
+            "latency_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            },
+            "ttfb_ms": {
+              "p50": 0,
+              "p95": 0,
+              "p99": 0
+            }
+          }
+        },
+        "resources": {
+          "window_s": 0,
+          "instances": {},
+          "hosts": {}
+        }
+      }
+    ],
+    "page_view": {
+      "files": "page",
+      "page_names": "static",
+      "static_url": "https://static.goodwatch.app",
+      "hosts": {
+        "site": {
+          "requests": 961,
+          "rps": 21.433797442585618,
+          "error_rate": 0,
+          "latency_ms": {
+            "p50": 26.73233,
+            "p95": 881.547564,
+            "p99": 1557.9488125999999,
+            "avg": 154.3709312351716,
+            "max": 2454.217004
+          },
+          "ttfb_ms": {
+            "p50": 19.675883,
+            "p95": 649.593262,
+            "p99": 1232.4237155999954
+          },
+          "status": {
+            "0": 0,
+            "2xx": 0,
+            "3xx": 0,
+            "4xx": 0,
+            "5xx": 0
+          },
+          "page_cache_busy": 0,
+          "response_bytes_avg": null,
+          "tls_handshakes": 484,
+          "per_visit": {
+            "requests": 2,
+            "transfer_bytes": 52424,
+            "connections": 1
+          }
+        },
+        "static": {
+          "requests": 15389,
+          "rps": 343.2307063932883,
+          "error_rate": 0,
+          "latency_ms": {
+            "p50": 85.122965,
+            "p95": 1673.9484737999999,
+            "p99": 2966.76412284,
+            "avg": 336.01832455292765,
+            "max": 4006.702108
+          },
+          "ttfb_ms": {
+            "p50": 61.017217,
+            "p95": 1060.0315091999998,
+            "p99": 2101.138883879985
+          },
+          "status": {
+            "0": 0,
+            "2xx": 0,
+            "3xx": 0,
+            "4xx": 0,
+            "5xx": 0
+          },
+          "page_cache_busy": 0,
+          "response_bytes_avg": null,
+          "tls_handshakes": 1213,
+          "per_visit": {
+            "requests": 35,
+            "transfer_bytes": 528410,
+            "connections": 3
+          }
+        },
+        "other": {
+          "per_visit": {
+            "requests": 14,
+            "transfer_bytes": 350338,
+            "connections": 0
+          }
+        }
+      },
+      "origin_share": {
+        "requests": 0.05405405405405406,
+        "transfer_bytes": 0.09025642438287015
+      },
+      "connections": "new",
+      "cache_identity": [
+        "anon;US;en"
+      ],
+      "side_share": 1,
+      "pages": {
+        "title_movie:browser": {
+          "protocol": "HTTP/2.0",
+          "status": 200,
+          "tls_cipher_suite": "TLS_AES_128_GCM_SHA256",
+          "tls_version": "tls1.3",
+          "vary": "GW-Cache-Identity, Accept-Encoding",
+          "cache_control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=7200, stale-if-error=86400",
+          "cache_identity": "anon;US;en",
+          "page_cache": "hit"
+        }
+      },
+      "not_warm": [],
+      "visits": 432,
+      "visits_per_s": 9.635172211443274,
+      "page_views": 432,
+      "page_views_per_s": 9.635172211443274,
+      "page_view_error_rate": 0,
+      "page_view_ms": {
+        "p50": 243.5,
+        "p95": 4819.349999999999,
+        "p99": 6065.549999999999
+      },
+      "tls_handshakes": 1697,
+      "tls_handshakes_per_s": 37.84927602504453,
+      "tls_handshake_ms": {
+        "p50": null,
+        "p95": null,
+        "p99": null
+      },
+      "slices": [],
+      "routes": {
+        "title_movie": {
+          "page_views": 432,
+          "page_view_ms": {
+            "p50": 243.5,
+            "p95": 4819.349999999999,
+            "p99": 6065.549999999999
+          }
+        }
+      }
+    }
+  },
+  "hosts": {
+    "gw-worker1": {
+      "role": "generator",
+      "nproc": 4,
+      "samples": 9,
+      "containers": {},
+      "cpu_busy_pct": {
+        "avg": 91.38822222222221,
+        "max": 99.901
+      },
+      "iowait_pct": {
+        "avg": 0.09988888888888889,
+        "max": 0.8
+      },
+      "steal_pct": {
+        "avg": 0,
+        "max": 0
+      },
+      "load1": {
+        "avg": 1.4377777777777778,
+        "max": 2.28
+      },
+      "mem_used_pct": {
+        "avg": 20.09151442725763,
+        "max": 21.794724487461316
+      },
+      "net_rx_mbps": {
+        "avg": 61.78611626666667,
+        "max": 68.91365440000001
+      },
+      "net_tx_mbps": {
+        "avg": 7.503846933333332,
+        "max": 8.94184
+      },
+      "tcp_estab": {
+        "avg": 195.33333333333334,
+        "max": 814
+      }
+    }
+  },
+  "lighthouse": {}
+}

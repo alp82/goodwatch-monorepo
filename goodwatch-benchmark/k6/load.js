@@ -296,6 +296,24 @@ function send(method, path, body, kind, entry, tags, jar, extraHeaders, host = "
     },
   };
 }
+// Go's HTTP client dials one connection for every request that finds none open, so a batch to a host without a
+// connection opens as many connections as it has requests (measured: 36 per movie page view instead of 4). A browser
+// opens one and sends the rest over it. So the first request to each host that has no connection yet goes out alone.
+function batchOnOpenConnections(batch, open) {
+  const responses = new Array(batch.length);
+  const rest = [];
+  for (let i = 0; i < batch.length; i++) {
+    const host = batch[i].params.tags.host;
+    if (open.has(host)) rest.push(i);
+    else {
+      open.add(host);
+      responses[i] = http.request(batch[i].method, batch[i].url, batch[i].body, batch[i].params);
+    }
+  }
+  const answers = rest.length ? http.batch(rest.map((i) => batch[i])) : [];
+  for (let n = 0; n < rest.length; n++) responses[rest[n]] = answers[n];
+  return responses;
+}
 function record(response, tags, kind, expect) {
   const status = response.status >= 200 && response.status < 600 ? `${Math.floor(response.status / 100)}xx` : "0";
   // One sample per request, to keep the generator's own CPU low at thousands of requests per second.
@@ -326,7 +344,7 @@ function visit(entry, phase, step, index) {
   let ok = record(document, tags, kind, entry.expect);
   if (entry.view && ok && entry.view.requests.length) {
     const batch = entry.view.requests.map((r) => send(r.method, r.path, r.body, r.method === "GET" && !r.path.startsWith("/api/") ? "asset" : "api", entry, tags, jar, undefined, r.host));
-    const responses = http.batch(batch);
+    const responses = batchOnOpenConnections(batch, new Set(["site"]));
     for (let i = 0; i < responses.length; i++) if (!record(responses[i], batch[i].params.tags, batch[i].params.tags.kind, [200])) ok = false;
   }
   if (phase !== "main") return { document, ok };
@@ -352,7 +370,7 @@ export function side() {
   const tags = { route: entry.route, client: entry.client, step: currentStep(), phase: "main", name: entry.route };
   const jar = new http.CookieJar();
   const batch = entry.view.side[index].requests.map((r) => send(r.method, r.path, r.body, "side", entry, tags, jar, undefined, r.host));
-  const responses = http.batch(batch);
+  const responses = batchOnOpenConnections(batch, new Set());
   for (let i = 0; i < responses.length; i++) record(responses[i], batch[i].params.tags, "side", [200]);
 }
 export function setup() {
