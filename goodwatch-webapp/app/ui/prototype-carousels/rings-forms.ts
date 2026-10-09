@@ -105,7 +105,7 @@ interface Spec {
 	ctl?: (ctx: PlayCtx, tokens: string[]) => string
 	drag?: (ctx: PlayCtx, x: number, y: number, w: number, h: number) => boolean
 }
-type Moved = HTMLElement & { __m?: Spot; __c?: Spot; __h?: string; __pk?: { nm: string; yr: string; df: string } | null }
+type Moved = HTMLElement & { __m?: Spot; __c?: Spot; __h?: string; __a?: Animation | null; __born?: number; __end?: number; __pk?: { nm: string; yr: string; df: string } | null }
 
 export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	const { esc, val } = core
@@ -622,83 +622,84 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	let PAN = 240 * SLOW
 	const SETTLE = 100 * SLOW
 	const PLAIN = 200 * SLOW
+	const FADE = 190 * SLOW
 	const EASE = "cubic-bezier(.3,.3,.2,1)"
 	let busy = 0
 	const num = (text: string | undefined) => Number.parseFloat(text ?? "") || 0
-	/** Where a poster is right now: in the middle of a motion, where the motion has it. */
-	const read = (node: Moved, live: boolean): Spot => {
-		if (live && node.getAnimations && node.getAnimations().length) {
-			const cs = win.getComputedStyle(node)
-			const tr = cs.translate === "none" ? [] : String(cs.translate).split(" ")
-			return { x: num(tr[0]), y: num(tr[1]), s: cs.scale === "none" ? 1 : num(String(cs.scale).split(" ")[0]) || 1, o: Number(cs.opacity) }
-		}
-		if (node.__m) return node.__m
-		return { x: num(node.style.getPropertyValue("--x")), y: num(node.style.getPropertyValue("--y")), s: num(node.style.getPropertyValue("--s")) || 1, o: 1 }
+	// The movement is one animation of the whole map (the pan), and one more for each poster that then has a short
+	// way to its own place. A poster's place is its own (`--x`, `--y`) plus the map's, and "where it is right now"
+	// reads both, so that a tap in the middle of a pan goes on from there.
+	const offset = (node: Moved, live: boolean): { x: number; y: number } | null => {
+		if (!live || !node.__a || node.__a.playState !== "running") return null
+		const tr = String(win.getComputedStyle(node).translate)
+		if (tr === "none") return { x: 0, y: 0 }
+		const at = tr.split(" ")
+		return { x: num(at[0]), y: num(at[1]) }
 	}
-	const frame = (x: number, y: number, s: number, o: number, extra?: Record<string, unknown>) => ({ translate: `${x}px ${y}px`, scale: String(s), opacity: String(o), ...extra })
+	/** Where a poster is within the map right now. */
+	const read = (node: Moved, live: boolean): Spot => {
+		const moving = offset(node, live)
+		if (moving) return { x: moving.x, y: moving.y, s: 1, o: 1 }
+		if (node.__m) return node.__m
+		return { x: num(node.style.getPropertyValue("--x")), y: num(node.style.getPropertyValue("--y")), s: 1, o: 1 }
+	}
+	const frame = (x: number, y: number, extra?: Record<string, unknown>) => ({ translate: `${x}px ${y}px`, ...extra })
 	const stop = (node: Moved) => {
-		if (!node.getAnimations) return
-		for (const running of node.getAnimations()) running.cancel()
+		if (node.__a) node.__a.cancel()
+		node.__a = null
 	}
 	const play = (node: Moved, frames: Record<string, unknown>[], duration: number, easing: string) => {
 		stop(node)
-		return node.animate ? node.animate(frames as unknown as Keyframe[], { duration, easing }) : null
+		if (node.animate) node.__a = node.animate(frames as unknown as Keyframe[], { duration, easing })
 	}
-	/** A poster that stays: along the pan first, then to its own place if that is another one. */
-	const move = (node: Moved, to: Item, by: { x: number; y: number } | null, calm: boolean) => {
-		const c = node.__c ?? { x: to.x, y: to.y, s: to.s, o: 1 }
+	/**
+	 * A poster that stays. `from` is where it is within the map as the motion starts. After a step the map's pan
+	 * carries it (`pan`), and it only moves itself when its own place is another one: it waits out the pan, then
+	 * takes the short way. Without a step it goes straight there.
+	 */
+	const move = (node: Moved, from: { x: number; y: number }, to: Item, pan: boolean, calm: boolean) => {
 		node.__m = { x: to.x, y: to.y, s: to.s, o: 1 }
-		if (calm) return stop(node)
-		const there = (x: number, y: number) => Math.abs(x - to.x) + Math.abs(y - to.y) < 0.6
-		if (!by) {
-			if (there(c.x, c.y) && Math.abs(c.s - to.s) < 0.004 && c.o > 0.99) return stop(node)
-			play(node, [frame(c.x, c.y, c.s, c.o), frame(to.x, to.y, to.s, 1)], PLAIN, EASE)
-			return
-		}
-		const mx = c.x + by.x
-		const my = c.y + by.y
-		if (there(mx, my)) play(node, [frame(c.x, c.y, c.s, c.o), frame(to.x, to.y, to.s, 1)], PAN, EASE)
-		else
-			play(
-				node,
-				[frame(c.x, c.y, c.s, c.o, { easing: EASE }), frame(mx, my, to.s, 1, { offset: PAN / (PAN + SETTLE), easing: "cubic-bezier(.3,0,.3,1)" }), frame(to.x, to.y, to.s, 1)],
-				PAN + SETTLE,
-				"linear",
-			)
+		if (calm || Math.abs(from.x - to.x) + Math.abs(from.y - to.y) < 0.6) return stop(node)
+		if (!pan) play(node, [frame(from.x, from.y), frame(to.x, to.y)], PLAIN, EASE)
+		else play(node, [frame(from.x, from.y), frame(from.x, from.y, { offset: PAN / (PAN + SETTLE), easing: "cubic-bezier(.3,0,.3,1)" }), frame(to.x, to.y)], PAN + SETTLE, "linear")
 	}
-	/** A poster that leaves: along the pan (or the pull of an edge), fading, and then out of the document. */
-	const leave = (node: Moved, by: { x: number; y: number } | null, calm: boolean) => {
-		const c = node.__c ?? { x: 0, y: 0, s: 1, o: 1 }
-		node.removeAttribute("data-r-k")
-		node.removeAttribute("data-pl-step")
-		node.removeAttribute("data-pl-center")
-		node.removeAttribute("data-r-c")
-		node.setAttribute("data-r-x", "")
-		node.setAttribute("aria-hidden", "true")
-		node.setAttribute("tabindex", "-1")
-		if (calm || c.o < 0.02) {
+	/**
+	 * A poster that leaves: it stays where the map carries it, fading evenly so that the eye has the old picture to
+	 * follow, and is then taken out of the document. `at` is its place within the map; `by` moves it there from
+	 * where it is (the pull of an edge). One that is leaving already keeps its fade.
+	 */
+	const leave = (node: Moved, at: { x: number; y: number }, by: { x: number; y: number } | null, calm: boolean, now: number) => {
+		const again = node.hasAttribute("data-r-x")
+		if (calm) {
 			stop(node)
 			node.remove()
 			return
 		}
-		const x = c.x + (by ? by.x : 0)
-		const y = c.y + (by ? by.y : 0)
-		node.style.cssText = `${place(x, y, c.s)};opacity:0`
-		node.__m = { x, y, s: c.s, o: 0 }
-		// It rides the whole pan and fades evenly, so that the eye has the old picture to follow.
-		stop(node)
-		if (!node.animate) return node.remove()
-		const time = by ? PAN : PLAIN * 0.8
-		node.animate([{ translate: `${c.x}px ${c.y}px`, scale: String(c.s) }, { translate: `${x}px ${y}px`, scale: String(c.s) }] as Keyframe[], { duration: time, easing: EASE })
-		node.animate([{ opacity: String(c.o) }, { opacity: "0" }], { duration: time * 0.8, easing: "linear" }).onfinish = () => node.remove()
+		let from = again ? node.style.getPropertyValue("--o") : ""
+		if (!again) {
+			// Still fading in: it fades out from where it is.
+			if (node.__born && now - node.__born < FADE) from = String(Math.round(Number(win.getComputedStyle(node).opacity) * 100) / 100)
+			node.removeAttribute("data-r-k")
+			node.removeAttribute("data-pl-step")
+			node.removeAttribute("data-pl-center")
+			node.removeAttribute("data-r-c")
+			node.setAttribute("data-r-x", "")
+			node.setAttribute("aria-hidden", "true")
+			node.setAttribute("tabindex", "-1")
+			node.__end = now + FADE
+		}
+		const x = at.x + (by ? by.x : 0)
+		const y = at.y + (by ? by.y : 0)
+		node.style.cssText = `${place(x, y, node.__m?.s ?? (num(node.style.getPropertyValue("--s")) || 1))}${from ? `;--o:${from}` : ""}`
+		node.__m = { x, y, s: node.__m?.s ?? 1, o: 0 }
+		if (by) play(node, [frame(at.x, at.y), frame(x, y)], PAN, EASE)
+		else stop(node)
 	}
-	/** A new poster: it rides in with the pan from the side the map moves toward, or fades in where it is. */
-	const enter = (node: Moved, to: Item, by: { x: number; y: number } | null, calm: boolean) => {
-		node.__m = { x: to.x, y: to.y, s: to.s, o: 1 }
-		if (calm) return
-		if (!node.animate) return
-		if (by) node.animate([{ translate: `${to.x - by.x}px ${to.y - by.y}px` }, { translate: `${to.x}px ${to.y}px` }] as Keyframe[], { duration: PAN, easing: EASE })
-		node.animate([{ opacity: "0" }, { opacity: "1" }], { duration: (by ? PAN : PLAIN) * 0.8, easing: "linear" })
+	/** Takes the posters that have faded out of the document. */
+	const sweep = (world: Element) => {
+		const now = win.performance.now()
+		const gone = world.querySelectorAll("[data-r-x]")
+		for (let i = 0; i < gone.length; i++) if (((gone[i] as Moved).__end ?? 0) <= now + 8) gone[i].remove()
 	}
 	/** A poster that changes what it is (a poster, the middle, the way back) stays the element it was, with its image. */
 	const morph = (node: Moved, markup: string) => {
@@ -724,11 +725,13 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		const view = last
 		const root = stage.firstElementChild as HTMLElement | null
 		if (!view || !root || root.getAttribute("data-r-form") !== view.form) return false
-		const world = root.querySelector("[data-r-w]") as HTMLElement | null
+		const world = root.querySelector("[data-r-w]") as Moved | null
 		if (!world) return false
 		const calm = still()
 		const t0 = win.performance.now()
 		const live = t0 < busy
+		// Where the map is in its pan right now, and every poster within it.
+		const map = offset(world, live) ?? { x: 0, y: 0 }
 		const have: Record<string, Moved> = {}
 		const ghosts: Moved[] = []
 		for (let i = 0; i < world.children.length; i++) {
@@ -738,60 +741,91 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			if (k && !have[k]) have[k] = node
 			else ghosts.push(node)
 		}
-		// The pan: what brings the new middle from where it is to the middle.
-		// A picture of the same middle (more titles arrived, a control, the zoom) leaves a running pan alone.
+		// The pan: what brings the new middle from where it is on the screen to the middle. A picture of the same
+		// middle (more titles arrived, a control, the zoom) leaves a running pan alone.
 		const stepped = root.getAttribute("data-r-at") !== view.ck
-		root.setAttribute("data-r-at", view.ck)
-		const pivot = stepped ? have[view.ck] : undefined
-		const shift = pivot?.__c && Math.abs(pivot.__c.x) + Math.abs(pivot.__c.y) > 0.6 ? { x: -pivot.__c.x, y: -pivot.__c.y } : null
-		const by = shift ?? view.drift
+		if (stepped) root.setAttribute("data-r-at", view.ck)
+		const pivot = stepped ? have[view.ck]?.__c : undefined
+		const shift = pivot && Math.abs(pivot.x + map.x) + Math.abs(pivot.y + map.y) > 0.6 ? { x: -pivot.x - map.x, y: -pivot.y - map.y } : null
+		// After the pan starts the map is `shift` short of its place, so within the map everything is that much on.
+		const on = shift ? { x: map.x + shift.x, y: map.y + shift.y } : { x: 0, y: 0 }
 		if (shift) PAN = Math.max(220, Math.min(280, 220 + (Math.hypot(shift.x, shift.y) - 100) * 0.2)) * SLOW
-		root.className = view.cls
-		root.style.cssText = view.rstyle
+		// Only what changed is written: an attribute written again costs a look at every poster's style.
+		if (root.className !== view.cls) root.className = view.cls
+		if (root.getAttribute("style") !== view.rstyle) root.style.cssText = view.rstyle
 		root.setAttribute("data-r-mem", view.mem)
-		root.setAttribute("data-r-geo", view.geo)
-		root.setAttribute("data-r-f", view.filter)
+		if (root.getAttribute("data-r-geo") !== view.geo) root.setAttribute("data-r-geo", view.geo)
+		if (root.getAttribute("data-r-f") !== view.filter) root.setAttribute("data-r-f", view.filter)
 		part(root, "top", view.top)
 		part(root, "bg", view.bg)
 		part(root, "ctl", view.ctl)
 		part(root, "info", view.info)
-		world.style.cssText = view.wstyle
+		if (world.getAttribute("style") !== view.wstyle) world.style.cssText = view.wstyle
+		if (calm) stop(world)
+		else if (shift) play(world, [frame(-shift.x, -shift.y), frame(0, 0)], PAN, EASE)
 		const wanted: Record<string, boolean> = {}
 		let fresh = ""
 		const born: Item[] = []
 		for (const entry of view.items) {
 			wanted[entry.k] = true
 			let node: Moved | undefined = have[entry.k]
+			const c = node?.__c
+			// Where the pan alone would leave it, within the map.
+			const mx = c ? c.x + on.x : 0
+			const my = c ? c.y + on.y : 0
 			// A title that the pan carries off the map, or far from its new place, does not fly back across the map:
 			// it leaves with the pan like the others, and comes in at its new place like a new one.
-			if (node && shift && entry.k !== view.ck && node.__c) {
-				const mx = node.__c.x + shift.x
-				const my = node.__c.y + shift.y
+			if (node && shift && entry.k !== view.ck) {
 				const hop = Math.abs(mx - entry.x) + Math.abs(my - entry.y)
 				if (hop > 0.6 && (Math.abs(mx) > box.w / 2 || Math.abs(my) > box.h / 2 || Math.hypot(mx - entry.x, my - entry.y) > view.hop)) node = undefined
 			}
-			if (!node || (node.getAttribute("data-r-g") !== entry.sig && !morph(node, entry.html))) {
+			if (!node || !c || (node.getAttribute("data-r-g") !== entry.sig && !morph(node, entry.html))) {
 				if (have[entry.k]) wanted[entry.k] = false
-				fresh += entry.html
+				fresh += calm ? entry.html : entry.html.replace(' rm-p"', ' rm-p rg-new"').replace(' rm-p rg-c"', ' rm-p rg-c rg-new"')
 				born.push(entry)
 				continue
 			}
+			// Still fading in when it became something else (a tap on a poster that had just arrived): it goes on fading.
+			if (node.__born && t0 - node.__born < FADE) node.classList.add("rg-new")
 			node.style.cssText = entry.style
-			node.setAttribute("data-r-q", entry.q)
-			if (entry.far) node.setAttribute("data-pl-far", "")
-			else node.removeAttribute("data-pl-far")
+			if (node.getAttribute("data-r-q") !== entry.q) node.setAttribute("data-r-q", entry.q)
+			if (entry.far !== node.hasAttribute("data-pl-far")) {
+				if (entry.far) node.setAttribute("data-pl-far", "")
+				else node.removeAttribute("data-pl-far")
+			}
 			// On its way to the same place already: it goes on as it is.
 			const going = node.__m
-			if (!stepped && !calm && live && going && Math.abs(going.x - entry.x) + Math.abs(going.y - entry.y) < 0.6 && Math.abs(going.s - entry.s) < 0.004) continue
-			move(node, entry, shift, calm)
+			if (!shift && !calm && live && going && Math.abs(going.x - entry.x) + Math.abs(going.y - entry.y) < 0.6) {
+				going.s = entry.s
+				continue
+			}
+			move(node, { x: mx, y: my }, entry, Boolean(shift), calm)
 		}
-		for (const k in have) if (!wanted[k]) leave(have[k], by, calm)
-		// A poster that is leaving already goes on leaving, unless a new step moves the map under it.
-		for (const node of ghosts) if (stepped || calm || !node.hasAttribute("data-r-x")) leave(node, by, calm)
+		const by = shift ? null : view.drift
+		let left = ghosts.length
+		for (const k in have)
+			if (!wanted[k]) {
+				const c = have[k].__c ?? { x: 0, y: 0 }
+				leave(have[k], { x: c.x + on.x, y: c.y + on.y }, by, calm, t0)
+				left++
+			}
+		// A poster that is leaving already goes on leaving. A new step moves the map under it: it keeps its place on
+		// the screen and rides the new pan.
+		for (const node of ghosts) {
+			const c = node.__c ?? { x: 0, y: 0 }
+			if (shift || calm || !node.hasAttribute("data-r-x")) leave(node, { x: c.x + on.x, y: c.y + on.y }, null, calm, t0)
+		}
+		if (left && !calm) win.setTimeout(() => sweep(world), FADE + 30)
 		if (fresh) {
 			world.insertAdjacentHTML("beforeend", fresh)
 			const count = world.children.length
-			born.forEach((entry, i) => enter(world.children[count - born.length + i] as Moved, entry, by, calm))
+			born.forEach((entry, i) => {
+				const node = world.children[count - born.length + i] as Moved
+				node.__m = { x: entry.x, y: entry.y, s: entry.s, o: 1 }
+				node.__born = t0
+				// With the pull of an edge it comes in from that side. With a pan the map brings it.
+				if (by && !calm) play(node, [frame(entry.x - by.x, entry.y - by.y), frame(entry.x, entry.y)], PAN, EASE)
+			})
 		}
 		busy = Math.max(busy, t0 + (shift ? PAN + SETTLE : PLAIN) + 40)
 		return true
@@ -876,7 +910,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 						: spec.note(ctx, tokens, list, spots.length, more),
 				),
 				ck: ctx.c.k,
-				wstyle: `--pw:${posterW()}px`,
+				wstyle: `--pw:${posterW()}px${SLOW !== 1 ? `;--slow:${SLOW}` : ""}`,
 				rest,
 				filter: nameOf(tokens),
 				hop: posterW() * scale * 1.107 * 1.75,

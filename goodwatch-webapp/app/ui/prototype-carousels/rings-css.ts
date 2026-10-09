@@ -8,7 +8,12 @@ export const RINGS_CSS = `
 .pl[class*="pl-rings"] .pl-side{display:none}
 .pl-stage[class*="pl-rings"]{height:468px}
 .rm.rg .rm-top{height:var(--th,30px)}
-.pl-stage[class] .rm.rg .rm-p{animation:none;transition:none;will-change:translate}
+.pl-stage[class] .rm.rg .rm-p{animation:none;transition:scale calc(.2s*var(--slow,1)) cubic-bezier(.3,.3,.2,1)}
+.rg .rm-w{will-change:translate}
+@keyframes rg-in{from{opacity:0}}
+@keyframes rg-out{from{opacity:var(--o,1)}to{opacity:0}}
+.pl-stage[class] .rm.rg .rm-p.rg-new{animation:rg-in calc(190ms*var(--slow,1)) linear backwards}
+.pl-stage[class] .rm.rg .rm-p[data-r-x]{animation:rg-out calc(190ms*var(--slow,1)) linear both}
 .rg .rm-p[data-pl-came]{z-index:1}
 .rg .rm-p[data-r-x]{pointer-events:none}
 .rg .rm-p[style*="--dm"] img{opacity:.38;filter:saturate(.3)}
@@ -161,6 +166,8 @@ text-align:center;color:#fde68a;pointer-events:none}
 .rg-big .rg-ax{font-size:.6875rem}
 }
 @media (prefers-reduced-motion:reduce){
+.pl-stage[class] .rm.rg .rm-p.rg-new,.pl-stage[class] .rm.rg .rm-p[data-r-x]{animation:none}
+.pl-stage[class] .rm.rg .rm-p{transition:none}
 .rg-dot{transition:none}
 }
 `
