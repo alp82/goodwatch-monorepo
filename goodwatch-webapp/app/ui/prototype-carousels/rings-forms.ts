@@ -76,6 +76,8 @@ interface View {
 	ck: string
 	wstyle: string
 	rest: string
+	/** How far a poster may move to its own place after a pan, in px. Further than that, it fades over. */
+	hop: number
 	items: Item[]
 	drift: { x: number; y: number } | null
 }
@@ -87,6 +89,8 @@ interface Spec {
 	hint: string
 	/** The control area's height on a phone. */
 	th?: number
+	/** The control is taller than one row: on a phone the card gives up its last line for it. */
+	tall?: boolean
 	/** On a wide screen the control sits beside the map, under the card, instead of above the map. */
 	big?: boolean
 	tokens: (ctx: PlayCtx) => string[]
@@ -118,7 +122,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 
 	// --- The stage's size and the lattice ---------------------------------------------------------------------
 	// The server draws for a phone. The browser measures the map before the first paint and draws again if needed.
-	const box = { w: 348, h: 366 }
+	const box = { w: 346, h: 368 }
 	let mode = "0"
 	const roomy = () => box.w >= 600
 	const posterW = () => (roomy() ? 60 : Math.max(44, Math.min(56, Math.floor((box.w - 4) / 5.43))))
@@ -592,7 +596,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		last = view
 		return `<div class="${view.cls}" style="${view.rstyle}" data-r-form="${view.form}" data-r-geo="${view.geo}" data-r-mem="${esc(view.mem)}"${
 			view.rest ? ` data-pl-rest="${esc(view.rest)}"` : ""
-		}><div class="rm-top rg-top" data-r-top="">${view.top}</div><div class="rm-map" data-r-map=""><div class="rm-bg" data-r-bg="">${view.bg}</div><div class="rm-w" data-r-w="" data-pl-slop="" style="${view.wstyle}">${view.items
+		} data-r-at="${view.ck}"><div class="rm-top rg-top" data-r-top="">${view.top}</div><div class="rm-map" data-r-map=""><div class="rm-bg" data-r-bg="">${view.bg}</div><div class="rm-w" data-r-w="" data-pl-slop="" style="${view.wstyle}">${view.items
 			.map((entry) => entry.html)
 			.join("")}</div><div class="rm-ctl" data-r-ctl="">${view.ctl}</div></div><div class="rm-info rg-info" data-r-info="">${view.info}</div></div>`
 	}
@@ -672,16 +676,20 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		const y = c.y + (by ? by.y : 0)
 		node.style.cssText = `${place(x, y, c.s)};opacity:0`
 		node.__m = { x, y, s: c.s, o: 0 }
-		const gone = play(node, [frame(c.x, c.y, c.s, c.o), frame(x, y, c.s, 0)], by ? PAN : PLAIN * 0.8, EASE)
-		if (gone) gone.onfinish = () => node.remove()
-		else node.remove()
+		// It rides the whole pan and fades evenly, so that the eye has the old picture to follow.
+		stop(node)
+		if (!node.animate) return node.remove()
+		const time = by ? PAN : PLAIN * 0.8
+		node.animate([{ translate: `${c.x}px ${c.y}px`, scale: String(c.s) }, { translate: `${x}px ${y}px`, scale: String(c.s) }] as Keyframe[], { duration: time, easing: EASE })
+		node.animate([{ opacity: String(c.o) }, { opacity: "0" }], { duration: time * 0.8, easing: "linear" }).onfinish = () => node.remove()
 	}
 	/** A new poster: it rides in with the pan from the side the map moves toward, or fades in where it is. */
 	const enter = (node: Moved, to: Item, by: { x: number; y: number } | null, calm: boolean) => {
 		node.__m = { x: to.x, y: to.y, s: to.s, o: 1 }
 		if (calm) return
-		if (by) play(node, [frame(to.x - by.x, to.y - by.y, to.s, 0), frame(to.x, to.y, to.s, 1)], PAN, EASE)
-		else play(node, [{ opacity: "0" }, { opacity: "1" }], PLAIN * 0.8, "ease-out")
+		if (!node.animate) return
+		if (by) node.animate([{ translate: `${to.x - by.x}px ${to.y - by.y}px` }, { translate: `${to.x}px ${to.y}px` }] as Keyframe[], { duration: PAN, easing: EASE })
+		node.animate([{ opacity: "0" }, { opacity: "1" }], { duration: (by ? PAN : PLAIN) * 0.8, easing: "linear" })
 	}
 	/** A poster that changes what it is (a poster, the middle, the way back) stays the element it was, with its image. */
 	const morph = (node: Moved, markup: string) => {
@@ -722,7 +730,10 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			else ghosts.push(node)
 		}
 		// The pan: what brings the new middle from where it is to the middle.
-		const pivot = have[view.ck]
+		// A picture of the same middle (more titles arrived, a control, the zoom) leaves a running pan alone.
+		const stepped = root.getAttribute("data-r-at") !== view.ck
+		root.setAttribute("data-r-at", view.ck)
+		const pivot = stepped ? have[view.ck] : undefined
 		const shift = pivot?.__c && Math.abs(pivot.__c.x) + Math.abs(pivot.__c.y) > 0.6 ? { x: -pivot.__c.x, y: -pivot.__c.y } : null
 		const by = shift ?? view.drift
 		root.className = view.cls
@@ -739,9 +750,17 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		const born: Item[] = []
 		for (const entry of view.items) {
 			wanted[entry.k] = true
-			const node = have[entry.k]
+			let node: Moved | undefined = have[entry.k]
+			// A title that the pan carries off the map, or far from its new place, does not fly back across the map:
+			// it leaves with the pan like the others, and comes in at its new place like a new one.
+			if (node && shift && entry.k !== view.ck && node.__c) {
+				const mx = node.__c.x + shift.x
+				const my = node.__c.y + shift.y
+				const hop = Math.abs(mx - entry.x) + Math.abs(my - entry.y)
+				if (hop > 0.6 && (Math.abs(mx) > box.w / 2 || Math.abs(my) > box.h / 2 || Math.hypot(mx - entry.x, my - entry.y) > view.hop)) node = undefined
+			}
 			if (!node || (node.getAttribute("data-r-g") !== entry.sig && !morph(node, entry.html))) {
-				if (node) wanted[entry.k] = false
+				if (have[entry.k]) wanted[entry.k] = false
 				fresh += entry.html
 				born.push(entry)
 				continue
@@ -750,16 +769,20 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			node.setAttribute("data-r-q", entry.q)
 			if (entry.far) node.setAttribute("data-pl-far", "")
 			else node.removeAttribute("data-pl-far")
+			// On its way to the same place already: it goes on as it is.
+			const going = node.__m
+			if (!stepped && !calm && live && going && Math.abs(going.x - entry.x) + Math.abs(going.y - entry.y) < 0.6 && Math.abs(going.s - entry.s) < 0.004) continue
 			move(node, entry, shift, calm)
 		}
 		for (const k in have) if (!wanted[k]) leave(have[k], by, calm)
-		for (const node of ghosts) leave(node, by, calm)
+		// A poster that is leaving already goes on leaving, unless a new step moves the map under it.
+		for (const node of ghosts) if (stepped || calm || !node.hasAttribute("data-r-x")) leave(node, by, calm)
 		if (fresh) {
 			world.insertAdjacentHTML("beforeend", fresh)
 			const count = world.children.length
 			born.forEach((entry, i) => enter(world.children[count - born.length + i] as Moved, entry, by, calm))
 		}
-		busy = t0 + (shift ? PAN + SETTLE : PLAIN) + 40
+		busy = Math.max(busy, t0 + (shift ? PAN + SETTLE : PLAIN) + 40)
 		return true
 	}
 	/** The map's size, measured. True when the picture in the stage was drawn for another size. */
@@ -782,7 +805,8 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	const make = (spec: Spec): PlayForm => {
 		mode = spec.mode
 		const th = spec.th ?? 30
-		box.h = 396 - th
+		// A tall control takes the room of the card's last line on a phone, so that the map keeps its rows.
+		box.h = (spec.tall ? 414 : 398) - th
 		const picture = (ctx: PlayCtx) => {
 			hold(ctx)
 			const tokens = spec.tokens(ctx)
@@ -802,7 +826,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			once = null
 			return html({
 				form: spec.name,
-				cls: `rm rg rg-${spec.name}${spec.big ? " rg-big" : ""}`,
+				cls: `rm rg rg-${spec.name}${spec.big ? " rg-big" : ""}${spec.tall ? " rg-tall" : ""}`,
 				rstyle: `--th:${th}px`,
 				mem: JSON.stringify(ctx.st.mem),
 				geo: geoOf(),
@@ -813,6 +837,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 				ck: ctx.c.k,
 				wstyle: `--pw:${posterW()}px`,
 				rest,
+				hop: posterW() * scale * 1.107 * 1.75,
 				items,
 				drift,
 			})
@@ -903,7 +928,8 @@ const rings1: RingsForm = (core, kit) =>
 	kit.make({
 		name: "rings1",
 		mode: "bars",
-		th: 60,
+		th: 58,
+		tall: true,
 		big: true,
 		hint: "Its fingerprint is the control. Press a bar to turn that trait around.",
 		tokens: (ctx) => (ctx.st.mem.w as string[] | undefined) ?? [],
@@ -960,7 +986,7 @@ const rings2: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings2",
 		mode: "stops",
-		th: 46,
+		th: 42,
 		hint: "Three traits, three stops each: less, any, more.",
 		tokens: (ctx) => tokensOf(ctx, (ctx.st.mem.sd as Record<string, number> | undefined) ?? {}),
 		top: (ctx) => {
@@ -1030,7 +1056,8 @@ const rings3: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings3",
 		mode: "words",
-		th: 62,
+		th: 58,
+		tall: true,
 		hint: "Say it in a word. Or roll the dice.",
 		tokens: (ctx) => (ctx.st.mem.w as string[] | undefined) ?? [],
 		top: (ctx, tokens) => {
@@ -1162,7 +1189,8 @@ const rings5: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings5",
 		mode: "0",
-		th: 60,
+		th: 58,
+		tall: true,
 		hint: "Colors say how a title differs most. The legend is the filter.",
 		tokens: (ctx) => (ctx.st.mem.w as string[] | undefined) ?? [],
 		top: (ctx, tokens) => {
@@ -1237,7 +1265,8 @@ const rings6: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings6",
 		mode: "pad",
-		th: 86,
+		th: 58,
+		tall: true,
 		big: true,
 		hint: "Two traits, one pad. Move the dot.",
 		tokens: (ctx) => tokensOf(ctx, where(ctx)),
@@ -1291,7 +1320,7 @@ const rings7: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings7",
 		mode: "0",
-		th: 34,
+		th: 32,
 		hint: "A tap walks. The plus on a poster keeps that title in the mix.",
 		tokens: (ctx) => {
 			const other = partner(ctx)
@@ -1352,7 +1381,8 @@ const rings8: RingsForm = (core, kit) => {
 	return kit.make({
 		name: "rings8",
 		mode: "practical",
-		th: 62,
+		th: 58,
+		tall: true,
 		hint: "Facts instead of traits: kind, year, score, streaming.",
 		tokens: (ctx) => (ctx.st.mem.w as string[] | undefined) ?? [],
 		top: (ctx, tokens) => {
@@ -1446,6 +1476,7 @@ const rings10: RingsForm = (core, kit) => {
 		name: "rings10",
 		mode: "0",
 		th: 52,
+		tall: true,
 		hint: "Nothing to operate: the words say what is on the map.",
 		tokens: () => [],
 		top: (ctx, _tokens, list, places) => {
