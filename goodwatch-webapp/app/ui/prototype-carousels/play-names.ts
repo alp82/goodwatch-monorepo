@@ -4,6 +4,7 @@
 // without the forms. Eighth round: the scrub forms (scrub-meta.ts) are play forms too, and the floating bar shows
 // the seventh round's scrub strip next to them.
 import { BEST_NAMES } from "~/ui/prototype-carousels/best-meta"
+import { RING_NAMES } from "~/ui/prototype-carousels/rings-meta"
 import { ROAM_NAMES } from "~/ui/prototype-carousels/roam-meta"
 import { SCRUB_NAMES } from "~/ui/prototype-carousels/scrub-meta"
 
@@ -21,4 +22,5 @@ export const PLAY_NAMES: Record<string, string> = {
 	...SCRUB_NAMES,
 	...BEST_NAMES,
 	...ROAM_NAMES,
+	...RING_NAMES,
 }

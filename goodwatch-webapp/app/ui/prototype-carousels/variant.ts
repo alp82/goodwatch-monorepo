@@ -100,7 +100,14 @@
 // - roam3: open field. A wide map that pans sideways, each poster saying how it differs most.
 // - roam4: neighborhoods. Titles that are alike each other share a side, with a caption.
 // - roam5: with, without. The switches as four sides, all visible at once.
-// The floating bar shows today, the six forms the owner named, and the new ones. The other variants still answer
+//
+// Eleventh round, after the owner tried the tenth: the rings are the favourite. Their movement becomes a pan that
+// the eye can follow, pointing at a poster shows it in the card, and ten forms vary only the control area (see
+// rings-forms.ts):
+// - roam1: the baseline with the fixes. roam0 is the tenth round's own, kept for measuring.
+// - rings1: bars. rings2: three stops. rings3: words and a dice. rings4: edges of the map. rings5: legend.
+// - rings6: pad. rings7: blend. rings8: practical facts. rings9: heading. rings10: in words.
+// The floating bar shows today, two earlier favourites, the baseline, and the ten. The other variants still answer
 // to the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
@@ -164,31 +171,44 @@ export const CAROUSEL_VARIANTS = [
 	"best1",
 	"best2",
 	"best3",
+	"roam0",
 	"roam1",
 	"roam2",
 	"roam3",
 	"roam4",
 	"roam5",
+	"rings1",
+	"rings2",
+	"rings3",
+	"rings4",
+	"rings5",
+	"rings6",
+	"rings7",
+	"rings8",
+	"rings9",
+	"rings10",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
 /**
- * The variants the floating bar cycles through. Tenth round: today, the six forms the owner named as going in the
- * right direction, and the new forms. The scrub forms and the sea are out of the bar and still answer to the URL.
+ * The variants the floating bar cycles through. Eleventh round: today, two earlier favourites, the rings with the
+ * fixes, and the ten forms of their control area. Everything else still answers to the URL.
  */
 export const CAROUSEL_BAR: CarouselVariant[] = [
 	"today",
-	"explore1",
-	"walk1",
-	"dive1",
 	"ring5",
-	"ring9",
 	"best2",
 	"roam1",
-	"roam2",
-	"roam3",
-	"roam4",
-	"roam5",
+	"rings1",
+	"rings2",
+	"rings3",
+	"rings4",
+	"rings5",
+	"rings6",
+	"rings7",
+	"rings8",
+	"rings9",
+	"rings10",
 ]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
@@ -249,11 +269,22 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	best1: "",
 	best2: "",
 	best3: "",
+	roam0: "",
 	roam1: "",
 	roam2: "",
 	roam3: "",
 	roam4: "",
 	roam5: "",
+	rings1: "",
+	rings2: "",
+	rings3: "",
+	rings4: "",
+	rings5: "",
+	rings6: "",
+	rings7: "",
+	rings8: "",
+	rings9: "",
+	rings10: "",
 	...PLAY_NAMES,
 }
 

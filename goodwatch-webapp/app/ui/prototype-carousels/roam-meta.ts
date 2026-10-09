@@ -6,6 +6,7 @@
 import { BEST_WORDS, bestTraits } from "~/ui/prototype-carousels/best-meta"
 
 export const ROAM_NAMES: Record<string, string> = {
+	roam0: "N0 Rings, round ten",
 	roam1: "N1 Rings",
 	roam2: "N2 Spiral",
 	roam3: "N3 Open field",
