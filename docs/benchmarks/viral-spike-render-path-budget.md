@@ -664,7 +664,8 @@ What changed in the measurement, not in what a visitor on a fast connection sees
 - **Script bytes grow by about 380 bytes of response headers per file** (744 against 364 bytes, uncompressed).
 
 The limits, set from runs `20261009T183910Z-lighthouse-static-limits-a` and `20261009T184812Z-lighthouse-static-limits-b`
-(three reports per surface each, 18:39 to 18:57 UTC):
+(three reports per surface each, 18:39 to 18:57 UTC). The folders of those two runs weren't kept. A later run with
+the same build that is kept, `20261009T190904Z-lighthouse-static-limits-check`, reads the same levels:
 
 | Line | Home | Movie | Show | Person | Discover | Share list |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -701,3 +702,36 @@ production in `origin` mode for a few minutes.
 - Whether Chromium on a real phone can show the same one-second hold. The measurements here only show it for the
   blank start page under emulation.
 - Safari and Firefox.
+
+### The stylesheet's host makes no difference
+
+The same day, the stylesheet and the brand font went back to the site's own host, to find out whether the second
+connection is what delays the first paint. It isn't. Lighthouse with applied throttling
+(`--throttling-method=devtools`, CPU slowdown 2.7), where the browser really waits and a `preconnect` counts, five
+reports per page, medians:
+
+| Page | First paint, stylesheet on the static hostname | First paint, stylesheet on the site's host | LCP before | LCP after |
+| --- | --- | --- | --- | --- |
+| Home | 3,637 ms | 3,592 ms | 3,851 ms | 3,859 ms |
+| Movie | 3,351 ms | 3,251 ms | 3,351 ms | 3,286 ms |
+| Person | 3,364 ms | 3,347 ms | 3,364 ms | 3,347 ms |
+
+The ranges of the single reports overlap on every page (movie: 3,252 to 3,438 ms before, 3,073 to 3,293 ms after).
+The budget's simulated values didn't leave their level either, in runs `20261009T210902Z-lighthouse-css-on-site-a`
+and `20261009T211751Z-lighthouse-css-on-site-b`:
+
+| Line | Home | Movie | Show | Person | Discover | Share list |
+| --- | --- | --- | --- | --- | --- | --- |
+| LCP medians of the two runs (ms) | 5,207 and 5,093 | 4,834 and 4,934 | 5,558 and 5,240 | 4,005 and 4,000 | 6,066 and 5,983 | 4,334 and 4,243 |
+| Score medians of the two runs | 71 and 72 | 70 and 68 | 65 and 65 | 80 and 80 | 63 and 63 | 78 and 79 |
+
+The limits stay as they are.
+
+What the reports with applied throttling show instead: on the movie page the document is complete after 0.84 s and
+the stylesheet (32 KB) after 2.77 s, on a connection that is already open. In that time the page's preloaded scripts
+(about 247 KB) load at High priority over the same throttled line of 1.6 Mbit/s. The first paint waits for the line,
+not for a connection. That reading comes from one report's request list and isn't tested by taking the scripts out.
+
+Not measured: the same pages with applied throttling and every file on the site's own host. Whether the static
+hostname costs a visitor on a slow connection anything at all is therefore open. The simulated values from before
+the switch (LCP 3.4 to 5.1 s) aren't comparable with the applied ones.
