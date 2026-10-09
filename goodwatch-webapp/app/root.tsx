@@ -80,7 +80,14 @@ export const links: LinksFunction = () => [
 		href: "/favicon-16x16.png",
 	},
 	{ rel: "manifest", href: assetUrl("/site.webmanifest") },
-	{ rel: "stylesheet", href: assetUrl(cssTailwind) },
+	// On the static hostname the stylesheet is fetched without credentials, like the scripts and the font, so that it
+	// uses the connection the preconnect hint opened. Without it the page's only render-blocking request would wait
+	// for a second connection to the same host.
+	{
+		rel: "stylesheet",
+		href: assetUrl(cssTailwind),
+		...(assetBase() ? { crossOrigin: "anonymous" as const } : {}),
+	},
 	// The site header's title is brand text and sits at the top of every page, on phones too. The preload starts
 	// the font's download next to the stylesheet's, so the swap from the fallback font comes early. It's the
 	// only font request of a page: the Latin Extended file loads only when a page shows such a letter.

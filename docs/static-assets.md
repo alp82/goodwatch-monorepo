@@ -116,7 +116,10 @@ is answered as before, so the origin stays a complete copy.
   site's host too. Module scripts, their preloads, fonts, and the web manifest are fetched with CORS when they come
   from another host.
 - While a page names the static hostname, its first link is `<link rel="preconnect" crossorigin>` for it. Scripts
-  and fonts use that connection.
+  and fonts use that connection. The stylesheet link carries `crossorigin` too while the page names the static
+  hostname: a browser keeps requests with and without credentials on separate connections, and without the attribute
+  the render-blocking stylesheet would wait for a second connection that no hint opened. Images from `public/` still
+  use that second connection.
 
 ## Metrics
 
