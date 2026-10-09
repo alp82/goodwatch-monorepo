@@ -644,6 +644,53 @@ image, and its `src` still names the `w780` file that `lcp_element` looks for.
 `./bench.sh budget` measures the deployed site, so it could not be run on this change before it was deployed. Run
 it after the deploy, and set the three lines from the measured values and the usual margins.
 
+## Limits with the static hostname
+
+Since October 9, 2026, pages name the static hostname for their files (see
+[The static hostname and the fallback to the origin](../static-assets.md)). The budget's LCP, score, and script
+byte lines failed after the switch, and the owner decided to keep the static hostname and to set those limits again.
+
+What changed in the measurement, not in what a visitor on a fast connection sees:
+
+- **Observed first paint is unchanged:** 430 to 650 ms on every surface, before and after the switch.
+- **Simulated LCP is 0.5 to 2 s higher, and it has two levels.** The simulation adds each host's measured latency.
+  The generator stands next to the site (1 ms) and measures 0 to 9 ms or 19 to 36 ms to the static hostname. Runs
+  with the low reading are 1.1 to 1.5 s faster than runs with the high one.
+- **Most of the difference stays with that latency taken out.** Three runs of the movie page with every host's
+  extra latency fixed at 0 (`--precomputed-lantern-data-path`) read a first paint of 3.96 s, against 2.59 s before
+  the switch. The scripts are fetched at High priority from a host whose connection starts cold in the simulation.
+  That the simulation ignores the `preconnect` hint and counts those scripts for first paint is a reading of the
+  reports, not verified in Lighthouse's code.
+- **Script bytes grow by about 380 bytes of response headers per file** (744 against 364 bytes, uncompressed).
+
+The limits, set from runs `20261009T183910Z-lighthouse-static-limits-a` and `20261009T184812Z-lighthouse-static-limits-b`
+(three reports per surface each, 18:39 to 18:57 UTC):
+
+| Line | Home | Movie | Show | Person | Discover | Share list |
+| --- | --- | --- | --- | --- | --- | --- |
+| LCP, before (ms) | 3,850 | 3,950 | 4,200 | 3,950 | 5,800 | 3,900 |
+| LCP medians of the two runs (ms) | 5,377 and 5,292 | 5,272 and 5,177 | 5,542 and 5,449 | 4,154 and 4,119 | 6,397 and 5,684 | 4,322 and 4,019 |
+| LCP, now (ms) | 6,050 | 5,900 | 6,250 | 4,700 | 7,200 | 4,900 |
+| Score, before | 81 | 78 | 76 | 83 | 70 | 84 |
+| Score medians of the two runs | 70 and 71 | 68 and 68 | 65 and 67 | 79 and 79 | 63 and 67 | 78 and 82 |
+| Score, now | 63 | 61 | 58 | 72 | 56 | 71 |
+| Script bytes, before (KB) | 241 | 242 | 242 | 181 | 317 | 191 |
+| Script bytes, measured (KB) | 243.8 | 247.5 | 247.7 | 183.8 | 323.3 | 194.5 |
+| Script bytes, now (KB) | 256 | 260 | 261 | 193 | 340 | 205 |
+
+- **LCP:** 12% above the higher median, which is the level with the high latency reading. A regression that is
+  smaller than the gap between the two levels can pass when a run reads the low level.
+- **Score:** 7 points under the lower median.
+- **Script bytes:** 5% above the higher measured value.
+- **Home, total bytes:** raised from 707 to 750 KB. The first run read 725 KB with 364 KB of images, which is
+  inside the image limit of 370 KB. The old total didn't leave room for the image limit.
+
+Both runs pass every line of the new limits.
+
+Not measured: what the second host costs a visitor on a slow connection. An estimate is up to three round trips
+for the stylesheet's connection, less what the `preconnect` hint saves. A comparison with applied throttling needs
+production in `origin` mode for a few minutes.
+
 ## Not verified
 
 - The limits of the section above, and LCP, TBT, CLS and the score of the title pages with the new overview.
