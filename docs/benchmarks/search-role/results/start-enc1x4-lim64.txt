@@ -1,0 +1,6 @@
+    gw-search-role-search ready after 13s at 2026-10-08T19:45:06Z [SEARCH_MAX_IN_FLIGHT=64 SEARCH_ENCODER_WORKERS=1 SEARCH_ENCODER_THREADS=4]
+    Role: search
+    Title snapshot 20261008T153140Z loaded: 241900 titles, 3000 in the reference pool, ratings for 51 countries, in 1407 ms (209 ms reading Redis)
+    Search ranking: query models ready in 6886 ms, 4 encoder threads
+    Search index build 20261008T041503Z loaded in 8962 ms
+    warm: {"searches": 140, "outcomes": {"ranked": 140}, "p50_ms": 219, "p95_ms": 532, "max_ms": 761}

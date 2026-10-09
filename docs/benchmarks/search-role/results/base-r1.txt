@@ -1,0 +1,33 @@
+## base-r1 v1 [MISS_OFFSET=0 PAGE_WARM_RATE=2 PAGE_MISS_RATE=2 DURATION=60] started 2026-10-08T18:23:58Z
+wall_s=62.721856483
+page_memory_mb VmHWM:=453 VmRSS:=439 
+search_memory_mb VmHWM:=2935 VmRSS:=2049 
+page_process_resident_memory_bytes 461058048
+page_process_heap_used_bytes 173079232
+page_process_event_loop_delay_seconds{quantile="0.5"} 0.00021785499999999944
+page_process_event_loop_delay_seconds{quantile="0.99"} 0.036918015
+page_process_event_loop_delay_seconds{quantile="max"} 0.063361791
+page_cpu_s libuv-worker 0.08 (0% of one core)
+page_cpu_s MainThread 11.82 (19% of one core)
+page_cpu_s V8Worker 3.41 (5% of one core)
+search_cpu_s MainThread 0.20 (0% of one core)
+search_cpu_s V8Worker 0.84 (1% of one core)
+valkey_cpu_s 0.47
+windmill_worker_cpu_s 11.03
+host_cpu_busy_pct=16 (4 cores)
+search outcomes (outcome/reason/ranker fallback): {}
+k6 dropped_iterations                     {"rate": 0, "count": 0}
+k6 dropped_iterations{kind:page_miss}     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:page_warm}     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:palette}       {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:search}        {"count": 0, "rate": 0}
+k6 http_req_duration{expected_response:true} n=242 p50=    88.4 p95=   212.0 p99=   249.1 max=   286.5
+k6 http_req_duration{kind:page_miss}      n=121 p50=   161.9 p95=   233.1 p99=   272.7 max=   286.5
+k6 http_req_duration{kind:page_warm}      n=121 p50=    50.9 p95=    64.4 p99=    88.9 max=    97.6
+k6 http_req_duration{kind:palette}        n=0 p50=     0.0 p95=     0.0 p99=     0.0 max=     0.0
+k6 http_req_duration{kind:search}         n=0 p50=     0.0 p95=     0.0 p99=     0.0 max=     0.0
+k6 http_req_failed{kind:page_miss}        failed=0 of 121
+k6 http_req_failed{kind:page_warm}        failed=0 of 121
+k6 http_req_failed{kind:palette}          failed=0 of 0
+k6 http_req_failed{kind:search}           failed=0 of 0
+k6 http_reqs                              {"count": 242, "rate": 4.0}

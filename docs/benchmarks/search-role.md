@@ -1,119 +1,130 @@
 # Search role benchmark
 
-This page belongs to "Benchmark the search role behind the webapp's route and behind the proxy" for the map "Serve a
-viral traffic spike". It feeds "Decide whether search becomes its own service".
+Measured on October 8, 2026 for [Benchmark the search role behind the webapp's route and behind the proxy](https://github.com/alp82/goodwatch-monorepo/issues/390). It feeds [Decide whether search becomes its own service](https://github.com/alp82/goodwatch-monorepo/issues/251).
 
-**Status on October 8, 2026: not measured.** The measurement scripts are written. The build was written by Codex and
-is not reviewed. No container was started, no search was sent, and this page holds no result table. See
-[What stopped the work](#what-stopped-the-work).
+The build under test is branch `bench/search-role`. It isn't meant to merge: it holds measurement switches next to the role setting.
 
-## What the benchmark compares
+## Summary
 
-- **Variant 1, proxy in front:** the load generator sends `/api/combined-search` and `/api/command-palette` straight
-  to the search role.
-- **Variant 2, webapp in front:** the load generator sends them to the page role, which calls the search role's
-  internal endpoints.
-- **Encoder settings in the search role:** one encoder with N threads, K encoders with their own threads, and
-  ONNX Runtime thread spinning on or off.
-- **In-flight limit:** 4 (today) and 64, so that the limit doesn't hide the search role's capacity.
+- **Pages stay protected in both variants.** With search in its own process, the warm page p95 stays between 67 and 92 ms up to 20 searches per second (64 ms without searches).
+- **The two variants serve searches equally well.** The webapp-in-front variant costs the page role about 10 ms of main-thread time per search and 7 to 18 ms of warm page p95.
+- **Today's encoder setting is the worst one on 4 cores.** One encoder with 4 threads holds about 5 ranked searches per second. With 2 threads, or with 4 threads and spinning off, the same process holds 10.
+- **The in-flight limit makes overload graceful.** With the limit at 4, overflow gets a fast busy answer. With the limit at 64, most searches at 20 per second miss the deadline and end as basic results.
+- **When the search role is down,** pages are unaffected. Behind the webapp's route a search gets the busy answer after the 2-second timeout. Behind the proxy the request fails at the connection, and a proxy fallback rule wasn't built.
+- **40 searches per second wasn't measurable on this host.** See [What isn't usable](#what-isnt-usable).
 
-## Planned method
+## Setup
 
-The method follows "Measure the search footprint in the webapp process"
-(`docs/research/viral-spike/search-footprint.md` on the branch `research/search-footprint`), so that the numbers
-compare:
+- **Host:** the generator host, 4 vCPUs (Skylake at 2.0 GHz) and 7.6 GB. The load generator (k6 in Docker) and an idle Windmill worker run on the same host, so every number includes their CPU use.
+- **Containers:** one page role and one search role from the same image, and a throwaway single-node Valkey cluster. Production Crate and Qdrant are read only.
+- **No writes, no paid call:** the search role serves recorded readings for the test queries and skips the search store and the history row (`GW_BENCH_NO_WRITES`). The row counts of `search_history`, `search_interpretations`, and `search_spending` were identical before and after the warm-up.
+- **Queries:** 140 of the search arena's 168 queries, the ones that end ranked. The other 28 have no recorded reading.
+- **Page mix:** 2 warm title pages and 2 title page misses per second, as in the search footprint measurement. The page role runs with `PAGE_CACHE=off`, so a warm page is rendered on every request.
+- **Runs:** 60 seconds, open model. Variant cells are the median of three runs, encoder cells of two.
+- **Variant 1, proxy in front:** the load generator sends searches and palette lookups straight to the search role.
+- **Variant 2, webapp in front:** it sends them to the page role, which verifies the session and calls `POST /internal/search` or `GET /internal/command-palette` on the search role with a shared key.
 
-- **Host:** the generator host, 4 vCPUs, which also runs k6. Every result must state that limit.
-- **Containers:** one page role and one search role of the same image, on their own Docker network, with their own
-  throwaway Valkey (a single-node cluster). The title snapshot keys are copied in. Crate and Qdrant are production,
-  read only.
-- **No paid call and no write:** the search role runs with `GW_BENCH_NO_WRITES=1` and recorded readings. The
-  environment holds no reading key.
-- **Page mix:** 2 warm title pages and 2 title page misses per second, 60 seconds, open model. The page role runs
-  with `PAGE_CACHE=off`, so a warm page is still rendered, as in the footprint measurement.
-- **Search load:** 5, 20, and 40 ranked searches per second with `discover: true`, three runs each. The vector cache
-  is off, so every search runs the encoder. The title lookup cache is warmed by one pass before the load, so the load
-  sends no TMDB request per search.
-- **Per run:** page p95 warm and miss, search p50 and p95, the share of searches that end ranked within 1,500 ms, the
-  busy share, CPU per thread group and resident memory per process, and the event-loop delay of both processes.
-- **Also planned:** 20 command palette lookups per second per variant, searches without pages for the page role's
-  main-thread time per search in variant 2, and one run per variant in which the search role is stopped after 20
-  seconds.
+Scripts are in `search-role/scripts/`, and the per-run summaries in `search-role/results/`. The load generator's per-request logs aren't in the repository.
 
-## Scripts
+## Variants
 
-All in [`search-role/scripts/`](search-role/scripts/). None of them has run against containers yet.
+One encoder with 4 threads. Times in milliseconds. "Ranked in time" is the share of all searches sent that end ranked within the 1,500 ms deadline.
 
-| Script | What it does |
-| --- | --- |
-| `build-inputs.py` | Builds `readings.json` and the query list from the search arena captures of the branch `proto/search-simplify` |
-| `setup.sh` | Creates the Docker network and the throwaway Valkey |
-| `copy-snapshot.mjs` | Copies the title snapshot keys from the production cache cluster (read only) |
-| `titles.mjs` | Writes the movie paths for the title page misses from one `SELECT` on Crate |
-| `start.sh` | Starts the page role or the search role with settings and waits until it's ready |
-| `warm.py` | One search at a time over the query list. Warms the title lookups and selects the texts that end ranked |
-| `mixed.js` | The k6 script: page mix, ranked searches, palette lookups, and the outcome counters |
-| `run.sh` | One run, with CPU per thread group, memory, event-loop delay, stage times, and k6's numbers |
-| `matrix.sh` | The runs in order. Waits while another measurement runs and stays out of the data job windows |
+| Searches per second | In-flight limit | Variant | Warm page p95 | Miss page p95 | Search p50 | Search p95 | Ranked in time | Busy | Page role main thread | Host busy |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0 | | | 64 | 233 | | | | | 18% | 13% |
+| 5 | 4 | 1 | 74 | 211 | 232 | 750 | 97% | 3% | 15% | 66% |
+| 5 | 4 | 2 | 81 | 211 | 248 | 786 | 95% | 4% | 20% | 69% |
+| 20 | 4 | 1 | 74 | 223 | 69 | 890 | 36% | 64% | 14% | 94% |
+| 20 | 4 | 2 | 92 | 235 | 85 | 892 | 35% | 65% | 24% | 95% |
+| 5 | 64 | 1 | 77 | 219 | 235 | 976 | 99% | 0% | 16% | 68% |
+| 5 | 64 | 2 | 81 | 218 | 252 | 990 | 98% | 0% | 19% | 70% |
+| 20 | 64 | 1 | 76 | 230 | 688 | 2,569 | 6% | 0% | 13% | 99% |
+| 20 | 64 | 2 | 91 | 259 | 750 | 2,532 | 4% | 1% | 23% | 100% |
 
-## Settings the build adds
+- At 20 per second with the limit at 4, about 7 searches per second end ranked in time and 13 get the busy answer. The low search p50 is the busy answer.
+- At 20 per second with the limit at 64, about 1,100 of 1,200 searches per run end as basic results, because the encoder queue is full or the ranking misses its deadline.
+- No page request failed in any of these runs.
 
-Requested from Codex. Not reviewed, so the names are the request's, and the behavior isn't confirmed.
+### Cost of the webapp's route in variant 2
 
-| Setting | Values | Effect |
+Searches without pages, 5 per second for 60 seconds, one run each:
+
+| Variant | Page role main thread | Search role main thread |
 | --- | --- | --- |
-| `WEBAPP_ROLE` | `page`, `search`, `both` (default) | The page role loads no models, no search index, and no people index |
-| `SEARCH_ROLE_URL` | A base URL, page role only | Set: variant 2, the page role's routes call the search role. Unset: variant 1, the page role answers busy for a search and from TMDB for the palette |
-| `SEARCH_ROLE_KEY` | A shared secret | The search role's internal endpoints answer 404 without it |
-| `SEARCH_ROLE_TIMEOUT_MS`, `SEARCH_ROLE_BODY_TIMEOUT_MS`, `SEARCH_ROLE_PALETTE_TIMEOUT_MS` | 2000, 15000, 500 | Time until the search role's headers, its whole body, and a palette answer |
-| `SEARCH_ENCODER_WORKERS` | 1 to 16, default 1 | Number of encoders. Each loads both models with `SEARCH_ENCODER_THREADS` threads |
-| `SEARCH_ENCODER_SPINNING` | `0`, `1`, unset | ONNX Runtime's `session.intra_op.allow_spinning` |
-| `GW_BENCH_NO_WRITES` | `1` | No history row, and the reading stage never touches the search store: a recorded reading or a basic search |
-| `GW_BENCH_READINGS` | A file | Recorded readings by reading text |
-| `GW_BENCH_NO_VECTOR_CACHE` | `1` | Every search runs the encoder |
-| `GW_BENCH_TITLE_TTL_MS` | Milliseconds | Lifetime of the in-process title lookup cache |
+| 1 | 0.3 s | 19.7 s |
+| 2 | 3.3 s | 17.7 s |
 
-### Variant 2's internal contract, as requested
+That's about 10 ms of page role main-thread time per search in variant 2: the session check, the call, and passing the response through.
 
-- `POST <SEARCH_ROLE_URL>/internal/search` with `X-Search-Role-Key` and the JSON body
-  `{ q, filters, lesserKnown, allTitles, fullList, accountId, networkIdentity }`. The page role sends it after the
-  session check, so the account id is a value, not a promise. The answer is the browser's newline-delimited JSON
-  stream without taste, or 503 with `Retry-After` when the search role's in-flight limit is reached.
-- The page role passes a guest's body through unchanged and adds taste to a member's `batch` line. No answer within
-  the timeout, a connection error, or another status becomes the existing busy answer.
-- `GET <SEARCH_ROLE_URL>/internal/command-palette?q=` answers `{ titles }`. On any failure the page role answers from
-  TMDB.
+### Command palette
 
-## One finding from reading the code
+20 lookups per second next to the page mix, one run each:
 
-`onnxruntime-node` runs a session's `run` on the JavaScript thread that calls it, so K encoders are K worker threads
-with their own sessions. Each encoder then holds its own copy of both models, about 1.3 GB by the footprint
-measurement. Four single-thread encoders need about 5.3 GB for the models alone, which doesn't fit next to a page
-role and k6 on the generator host's 7.75 GB. The plan was to measure 2 and 3 single-thread encoders and 2 encoders
-with 2 threads. This is read from memory of the library's binding and from the footprint numbers. It wasn't confirmed
-by a run.
+| Variant | Palette p50 | Palette p95 | Warm page p95 | Page role main thread |
+| --- | --- | --- | --- | --- |
+| 1 | 5 | 36 | 66 | 16% |
+| 2 | 13 | 58 | 72 | 28% |
 
-## What stopped the work
+Variant 2 costs the page role about 6 ms of main-thread time per lookup. The load generator's prefixes repeat, so most lookups come from the 6-hour cache.
 
-- The production settings that the containers need (Crate, Qdrant, TMDB, Supabase) were copied from the production
-  container to the generator host, host to host, without printing a value, as the footprint measurement did.
-- Right after that, the session's permission check refused two local commands, with the reasons "Production Reads" and
-  "Credential Materialization": reading Codex's log, and showing the diff of Codex's changes. Both are needed to
-  review the build.
-- The lane didn't work around the refusals. It removed the copied settings files from the generator host again and
-  stopped.
+## Encoder settings
 
-## What wasn't verified
+Variant 1, in-flight limit 64, next to the page mix.
 
-- Nothing was measured.
-- The build wasn't reviewed or started. It's a local commit on the lane's branch and isn't pushed, because the lane
-  couldn't read it. `npm run typecheck` reports no error in a file the build touches, and the tests of
-  `app/server/search-runtime/` and `app/server/role.test.ts` pass (17 of 17). The other test files weren't run.
-- That a ranked search in this setup writes nothing to production Crate. The planned check: row counts of
-  `doc.search_history`, `doc.search_interpretations`, and `doc.search_spending` before and after a warm pass.
-- The scripts. They were written from the footprint measurement's scripts and haven't run.
+| Encoder setting | Searches per second | Ranked in time | Search p50 | Search p95 | Encoder CPU per search | Search role main thread | Peak memory | Host busy |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 encoder, 4 threads (today) | 5 | 98% | 240 | 966 | 377 ms | 28% | 2.8 GB | 69% |
+| 1 encoder, 4 threads (today) | 10 | 21% | 1,741 | 2,600 | 314 ms | 41% | 2.8 GB | 99% |
+| 1 encoder, 4 threads, no spinning | 5 | 100% | 231 | 560 | 196 ms | 30% | 2.9 GB | 48% |
+| 1 encoder, 4 threads, no spinning | 10 | 97% | 536 | 1,298 | 185 ms | 53% | 2.9 GB | 78% |
+| 1 encoder, 2 threads | 5 | 100% | 225 | 609 | 193 ms | 31% | 2.9 GB | 50% |
+| 1 encoder, 2 threads | 10 | 100% | 379 | 1,106 | 170 ms | 51% | 2.8 GB | 72% |
+| 1 encoder, 2 threads, no spinning | 5 | 100% | 236 | 590 | 169 ms | 30% | 2.8 GB | 44% |
+| 1 encoder, 2 threads, no spinning | 10 | 97% | 727 | 1,285 | 164 ms | 52% | 2.8 GB | 72% |
+| 2 encoders, 1 thread each | 5 | 100% | 237 | 715 | 140 ms | 30% | 4.6 GB | 40% |
+| 2 encoders, 1 thread each | 10 | 98% | 371 | 981 | 139 ms | 54% | 4.6 GB | 68% |
+| 2 encoders, 2 threads each | 5 | 100% | 209 | 570 | 221 ms | 30% | 4.6 GB | 50% |
+| 2 encoders, 2 threads each | 10 | 98% | 327 | 1,011 | 214 ms | 47% | 4.6 GB | 80% |
 
-## State of the generator host
+- Each further encoder holds its own copy of both models: 1.7 GB more peak memory for the second one.
+- Two single-thread encoders use the least CPU per search and have the best p95 at 10 per second, for 1.7 GB.
+- One encoder with 2 threads is the cheapest setting that holds 10 per second.
+- At 10 per second the search role's main thread is 47% to 54% busy in every setting that holds the rate. By that number, one process tops out near 18 to 20 searches per second whatever the encoder does (extrapolated, not measured).
+- Warm page p95 is 67 to 83 ms in every cell.
 
-`/opt/gw-search-role/work/` holds `readings.json` and `queries-all.json` (test set texts, no visitor data, no
-credentials). No container, network, image, or settings file of this benchmark exists there.
+## Search role stopped mid-run
+
+5 searches and 5 palette lookups per second next to the page mix, in-flight limit 4. The search role is killed 20 seconds into the run and stays down. One run per variant.
+
+| | Variant 1 | Variant 2 |
+| --- | --- | --- |
+| Warm page p95 | 89 | 91 |
+| Miss page p95 | 220 | 243 |
+| Failed page requests | 0 | 0 |
+| Search after the kill | Connection error | Busy answer (503) after 2,006 ms |
+| Palette after the kill | Connection error | Answered from TMDB, p50 650 ms |
+
+- In variant 1 a proxy would sit where the load generator's connection failed. What a person gets depends on the proxy's rule for a dead backend. No such rule was built or tested.
+- In variant 2 every search waits for `SEARCH_ROLE_TIMEOUT_MS` (2,000 ms) before the busy answer, because a killed container's address doesn't refuse the connection. The palette waits for its 500 ms timeout and then asks TMDB.
+
+## What isn't usable
+
+The runs at 40 searches per second (`*-s40-*` in the results) say nothing about either variant. Pages and searches timed out in both, and a 60-second run took up to 173 seconds. The page role's event loop stalled for 14 to 16 seconds while its main thread used under 20% of a core.
+
+Checked and not the cause: swap (the host has none), out-of-memory kills, container CPU throttling, the connection tracking table, hypervisor steal time, and the throwaway Valkey (no evictions, slowest command 26 ms). The cause is open. The host is too small for that rate with the load generator on it.
+
+## Load on production during the measurement
+
+- The snapshot copy read 75 keys (74.5 MB) from the production cache with `SCAN` and `GET`.
+- Every title page miss and every ranked search read production Crate and Qdrant.
+- A search that ends as basic results sends two full-text statements to Crate. At 20 per second with the limit at 64 that was about 37 statements per second for a minute, six times between 19:05 and 19:25 UTC. Whether production noticed wasn't checked.
+
+## Not verified
+
+- More than 4 cores, a host without the load generator on it, and two search roles behind one route.
+- Any encoder setting above 10 searches per second.
+- A proxy in front of the search role, including its answer when the search role is down.
+- The member path: a session, member taste, and the cookies in variant 2.
+- The paid reading call under load. Readings were recorded.
+- The first full encoder phase was stopped after one run, which is in the results as the first `enc1x2-lim64-v1-s05` run.

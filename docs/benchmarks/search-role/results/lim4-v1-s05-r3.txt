@@ -1,0 +1,50 @@
+## lim4-v1-s05-r3 v1 [MISS_OFFSET=910 PAGE_WARM_RATE=2 PAGE_MISS_RATE=2 DURATION=60 SEARCH_RATE=5] started 2026-10-08T18:32:07Z
+wall_s=64.192414408
+page_memory_mb VmHWM:=500 VmRSS:=498 
+search_memory_mb VmHWM:=2935 VmRSS:=2170 
+page_search_busy_total 21
+page_process_resident_memory_bytes 522559488
+page_process_heap_used_bytes 211595232
+page_process_event_loop_delay_seconds{quantile="0.5"} 0.00016870299999999921
+page_process_event_loop_delay_seconds{quantile="0.99"} 0.03518131099999999
+page_process_event_loop_delay_seconds{quantile="max"} 0.097112831
+page_cpu_s libuv-worker 0.06 (0% of one core)
+page_cpu_s MainThread 9.57 (15% of one core)
+page_cpu_s V8Worker 1.19 (2% of one core)
+search_cpu_s MainThread 17.99 (28% of one core)
+search_cpu_s query-encoder 109.16 (170% of one core)
+search_cpu_s V8Worker 1.40 (2% of one core)
+valkey_cpu_s 0.37
+windmill_worker_cpu_s 4.93
+host_cpu_busy_pct=65 (4 cores)
+search outcomes (outcome/reason/ranker fallback): {'cached/None/None': 293}
+stage total                  n=  293 p50=   209.0 p95=   629.0 max=  1624.0
+stage people                 n=  293 p50=     0.1 p95=     0.3 max=     6.2
+stage reading                n=  293 p50=     0.5 p95=     2.8 max=    13.0
+stage ranking                n=  293 p50=   156.1 p95=   568.8 max=  1490.6
+stage rankingEncodeEarly     n=  273 p50=    46.5 p95=   172.0 max=   905.2
+stage rankingEncode          n=  134 p50=   116.6 p95=   514.9 max=  1027.3
+stage rankingQdrant          n=  293 p50=    85.7 p95=   215.5 max=   338.5
+stage rankingQdrantServer    n=  293 p50=    50.8 p95=   123.0 max=   186.8
+stage display                n=  293 p50=    38.4 p95=    69.8 max=   200.2
+stage titleLookup            n=  293 p50=     0.0 p95=    28.3 max=    59.2
+k6 dropped_iterations                     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:page_miss}     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:page_warm}     {"count": 0, "rate": 0}
+k6 dropped_iterations{kind:palette}       {"rate": 0, "count": 0}
+k6 dropped_iterations{kind:search}        {"count": 0, "rate": 0}
+k6 http_req_duration{expected_response:true} n=533 p50=   165.7 p95=   585.0 p99=  1122.0 max=  1682.2
+k6 http_req_duration{kind:page_miss}      n=120 p50=   151.6 p95=   210.6 p99=   226.3 max=   249.0
+k6 http_req_duration{kind:page_warm}      n=120 p50=    48.1 p95=    67.6 p99=    75.8 max=   132.1
+k6 http_req_duration{kind:palette}        n=0 p50=     0.0 p95=     0.0 p99=     0.0 max=     0.0
+k6 http_req_duration{kind:search}         n=301 p50=   219.0 p95=   697.2 p99=  1339.6 max=  1682.2
+k6 http_req_failed{kind:page_miss}        failed=0 of 120
+k6 http_req_failed{kind:page_warm}        failed=0 of 120
+k6 http_req_failed{kind:palette}          failed=0 of 0
+k6 http_req_failed{kind:search}           failed=8 of 301
+k6 http_reqs                              {"count": 541, "rate": 9.0}
+k6 search_busy                            {"count": 8, "rate": 0.1}
+k6 search_ranked                          {"count": 293, "rate": 4.9}
+k6 search_ranked_in_deadline              {"count": 291, "rate": 4.8}
+k6 search_ranked_ms                       n=293 p50=   222.4 p95=   697.5 p99=  1348.5 max=  1682.2
+k6 search_server_elapsed_ms               n=293 p50=   209.0 p95=   634.2 p99=  1306.8 max=  1624.0
