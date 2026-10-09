@@ -1,3 +1,4 @@
+import { runsSearch } from "./role.server"
 import {
 	type SearchIndex,
 	getSearchIndex,
@@ -30,6 +31,9 @@ const CACHE_MINUTES = 6 * 60
 export async function getPaletteTitles(text: string): Promise<PaletteTitle[]> {
 	const prefix = normalizePrefix(text)
 	if (prefix.length < MIN_PREFIX_CHARS) return []
+	// A page instance has no search index: the proxy sends the palette to the search roles, and this is what answers
+	// when a lookup arrives here anyway.
+	if (!runsSearch()) return tmdbTitles(prefix)
 	if (!loadedSearchIndexBuild()) {
 		startSearchIndex()
 		return tmdbTitles(prefix)

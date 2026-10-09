@@ -15,6 +15,7 @@ const { registerHooks } = nodeModule as unknown as {
 	}): void;
 };
 const redirects: Record<string, string> = {
+	"../role.server": new URL("../role.server.ts", import.meta.url).href,
 	"./store.server": new URL("./runtime-test-store.ts", import.meta.url).href,
 	"../lifecycle.server": new URL("../lifecycle.server.ts", import.meta.url).href,
 };
@@ -85,3 +86,25 @@ for (const scenario of [
 		}
 	});
 }
+
+test("page role starts no connection pings or timers even with a provider key", async (t) => {
+	const originalRole = process.env.WEBAPP_ROLE;
+	const originalKey = process.env.TYPESAFE_API_KEY;
+	process.env.WEBAPP_ROLE = "page";
+	process.env.TYPESAFE_API_KEY = "test-key";
+	t.after(() => {
+		if (originalRole === undefined) delete process.env.WEBAPP_ROLE;
+		else process.env.WEBAPP_ROLE = originalRole;
+		if (originalKey === undefined) delete process.env.TYPESAFE_API_KEY;
+		else process.env.TYPESAFE_API_KEY = originalKey;
+	});
+	const { Agent } = await import("undici");
+	const { keepJevConnectionsWarm } = await import("./runtime.server.ts");
+	const unexpected = () => { throw new Error("Unexpected connection ping"); };
+	const dispatch = t.mock.method(Agent.prototype, "dispatch", unexpected);
+	const interval = t.mock.method(globalThis, "setInterval", unexpected);
+	const timeout = t.mock.method(globalThis, "setTimeout", unexpected);
+	keepJevConnectionsWarm();
+	keepJevConnectionsWarm();
+	for (const mock of [dispatch, interval, timeout]) assert.equal(mock.mock.callCount(), 0);
+});

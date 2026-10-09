@@ -1,3 +1,4 @@
+import { runsSearch } from "../role.server";
 import { Agent, fetch } from "undici";
 import { onShutdown } from "../lifecycle.server";
 import {
@@ -43,6 +44,7 @@ let keepWarm: NodeJS.Timeout | undefined;
 
 /** Starts the pings that keep the TypeSafe connections open. No model calls, nothing billed. Once per process. */
 export function keepJevConnectionsWarm(): void {
+	if (!runsSearch()) return;
 	if (keepWarm || !process.env.TYPESAFE_API_KEY) return;
 	const ping = () =>
 		typesafeFetch(`${TYPESAFE_ORIGIN}/health`, {

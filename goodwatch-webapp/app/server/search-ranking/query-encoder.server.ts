@@ -8,6 +8,7 @@
 // multilingual-e5-small otherwise, as the ranker was tuned. The intent text always goes to multilingual-e5-small, a
 // non-English query's English chips to bge-base. Dozens of phrases through bge-base would cost over 100 ms, so keep
 // the lists short.
+import { runsSearch } from "../role.server.ts"
 import { createHash } from "node:crypto"
 import { Worker } from "node:worker_threads"
 import { encoderThreads } from "../search-runtime/limits.server.ts"
@@ -21,6 +22,7 @@ import {
 
 // More requests than this waiting in the queue means the encoder can't keep up. Reject instead of queueing more.
 const MAX_PENDING = 32
+const PAGE_ROLE_ENCODER_MESSAGE = "The page role has no query encoder"
 // After a failed start (download or load), wait this long before trying again instead of retrying on every search.
 const RETRY_AFTER_MS = 5 * 60_000
 
@@ -218,6 +220,7 @@ export function queryEncoderState(): {
 
 /** Starts loading the models in the background, so the first search doesn't wait for it. */
 export async function startQueryEncoder(): Promise<QueryEncoderStartup> {
+	if (!runsSearch()) throw new Error(PAGE_ROLE_ENCODER_MESSAGE)
 	return (await ensureRunning()).startup
 }
 
@@ -247,6 +250,7 @@ function requestKey(texts: QueryTexts): string {
 export async function encodeQueryTexts(
 	texts: QueryTexts,
 ): Promise<QueryVectors> {
+	if (!runsSearch()) throw new Error(PAGE_ROLE_ENCODER_MESSAGE)
 	const started = performance.now()
 	const key = requestKey(texts)
 	const hit = vectorCache.get(key)
