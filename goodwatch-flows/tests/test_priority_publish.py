@@ -193,7 +193,7 @@ class SelectionTests(unittest.TestCase):
                     functions = [function] + [node for node in tree.body if isinstance(node, ast.FunctionDef)
                                               and node.name in ("changed_tmdb_ids", "fetch_map_by_ids", "scheduled_candidates",
                                                                 "details_collection", "delete_flagged_titles",
-                                                                "window_tmdb_ids", "details_batches", "utc_stamp")]
+                                                                "window_tmdb_ids", "details_batches", "utc_stamp", "copy_changes")]
                     if name == "tmdb_streaming":
                         from test_streaming_publication import load_copy
                         streaming = load_copy(db).__globals__

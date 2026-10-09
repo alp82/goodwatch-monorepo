@@ -11,6 +11,7 @@ from f.db.mongodb import (
     close_mongodb,
     build_query_selector_for_object_ids,
 )
+from f.sync.copy import sync_state
 from f.sync.copy.deleted_titles import flagged_among
 from f.sync.models.crate_models import (
     Movie,
@@ -21,7 +22,11 @@ from f.sync.models.crate_schemas import SCHEMAS
 
 BATCH_SIZE = 5000
 SUB_BATCH_SIZE = 50000
+# Window of a recent copy restricted by a selector. A scheduled run reads from its last
+# successful run instead (f/sync/copy/sync_state), and carries a title it left out as
+# deleted on TMDB for as long as this window would have selected it again.
 HOURS_TO_FETCH = 24*2
+SYNC_JOB = "tvtropes"
 
 
 # ===== Helper Functions =====
@@ -98,6 +103,33 @@ def copy_media(
     media_type: str = "movie",
     *, recent_only: bool = True,
 ):
+    """Copy the tropes that match the selector to CrateDB.
+
+    A recent copy takes the tropes changed in the last HOURS_TO_FETCH hours. With
+    recent_only=False it takes every title. The scheduled run uses copy_changes.
+    """
+    entity_counts, _ = copy_changes(connector, query_selector, media_type, recent_only=recent_only)
+    return entity_counts
+
+
+def copy_changes(
+    connector: CrateConnector,
+    query_selector: dict = {},
+    media_type: str = "movie",
+    *, recent_only: bool = True,
+    since: Optional[datetime] = None,
+    carried_ids=(),
+    retry_flagged_since: Optional[datetime] = None,
+):
+    """Copy the tropes that match the selector and return (counts, ids to carry).
+
+    A recent copy takes the tropes changed since `since`, by default in the last
+    HOURS_TO_FETCH hours, and the `carried_ids` of an earlier run.
+
+    A title flagged as deleted on TMDB is left out. Nothing selects its tropes again when
+    the flag is taken back, so it is returned to be carried while its tropes changed at or
+    after `retry_flagged_since`. A title without a details document fails the copy.
+    """
     is_movie = media_type == "movie"
 
     mongo_db = get_db()
@@ -106,15 +138,24 @@ def copy_media(
     media_table_name = 'movie' if is_movie else 'show'
     MediaClass = Movie if is_movie else Show
 
-    updated_at_filter = {"updated_at": {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}}
+    carried_set = set(carried_ids)
+    carried = sorted(carried_set)
+    updated_at_filter = {"updated_at": {"$gte": since or datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}}
     if not recent_only:
         updated_at_filter = {}
+    elif carried:
+        # The carried titles are read beside the changed ones; the selector applies to both.
+        updated_at_filter = {"$or": [updated_at_filter, {"tmdb_id": {"$in": carried}}]}
     total_entry_count = mongo_tropes.count_documents(query_selector | updated_at_filter)
     print(f"Total {media_type} Tropes: {total_entry_count}")
 
     start = 0
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
-    
+    selected = 0
+    skipped_flagged = 0
+    carried_written = 0
+    carry_ids = set()
+
     while True:
         media_documents = []
         entity_batches = defaultdict(list)
@@ -131,6 +172,7 @@ def copy_media(
         # Insert batch of media
         print(f"\nBatch from {start} to {start + len(tropes_batch)} {media_type} Tropes")
 
+        selected += len(tropes_batch)
         tmdb_ids = [doc["tmdb_id"] for doc in tropes_batch]
         # Do not re-insert derived rows for titles deleted on TMDB.
         flagged_ids = flagged_among(mongo_details, tmdb_ids)
@@ -144,6 +186,10 @@ def copy_media(
             tmdb_details = tmdb_details_by_id[tmdb_id]
 
             if not tmdb_details or tmdb_id in flagged_ids:
+                skipped_flagged += 1
+                changed_at = tropes_entry.get("updated_at")
+                if retry_flagged_since and isinstance(changed_at, datetime) and changed_at >= retry_flagged_since:
+                    carry_ids.add(tmdb_id)
                 continue
      
             tropes = tropes_entry.get("tropes", [])
@@ -175,6 +221,7 @@ def copy_media(
 
             media_documents.append(media)
 
+        carried_written += sum(1 for media in media_documents if media.tmdb_id in carried_set)
         upsert_result = upsert_in_batches(
             connector=connector,
             table=media_table_name,
@@ -197,47 +244,56 @@ def copy_media(
 
         start += BATCH_SIZE
 
-    return entity_counts
+    entity_counts["selected"] = selected
+    entity_counts["skipped_flagged"] = skipped_flagged
+    entity_counts["carried"] = len(carried)
+    entity_counts["carried_written"] = carried_written
+    return entity_counts, sorted(carry_ids)
 
 
 def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies = False):
+    """Copy the tropes changed since the last successful run, per media type."""
     init_mongodb()
     connector = CrateConnector()
 
     results = {}
+    try:
+        for key, media_type, ids in (("movies", "movie", movie_ids), ("shows", "show", show_ids)):
+            if media_type == "movie" and skip_movies:
+                results[key] = None
+                continue
+            if ids:
+                query_selector = build_query_selector_for_object_ids(ids=ids)
+            else:
+                print(f"\nProcessing all {key}...", flush=True)
+                query_selector = {}
 
-    if skip_movies:
-        results["movies"] = None
-    else:
-        # Process movies
-        if movie_ids is None or len(movie_ids) == 0:
-            print("Processing all movies...")
-            movie_query_selector = {}
-        else:
-            movie_query_selector = build_query_selector_for_object_ids(ids=movie_ids)
-        
-        results["movies"] = copy_media(
-            connector=connector, 
-            query_selector={ "tropes": { "$ne": None }} | movie_query_selector,
-            media_type="movie"
-        )
-    
-    # Process shows
-    if show_ids is None or len(show_ids) == 0:
-        print("\nProcessing all shows...")
-        show_query_selector = {}
-    else:
-        show_query_selector = build_query_selector_for_object_ids(ids=show_ids)
-    
-    results["shows"] = copy_media(
-        connector=connector, 
-        query_selector={ "tropes": { "$ne": None }} | show_query_selector,
-        media_type="show"
-    )
+            # A media type restricted to ids doesn't cover every change, so it keeps the
+            # fixed window and leaves the sync state alone.
+            selection = None if ids else sync_state.begin(get_db(), SYNC_JOB, media_type)
+            results[key], carry_ids = copy_changes(
+                connector=connector,
+                query_selector={ "tropes": { "$ne": None }} | query_selector,
+                media_type=media_type,
+                since=selection.since if selection else None,
+                carried_ids=selection.carried_ids if selection else (),
+                retry_flagged_since=(
+                    selection.started_at - timedelta(hours=HOURS_TO_FETCH) if selection else None),
+            )
+            if selection:
+                # Reached only when the whole media type succeeded: a failure raises above,
+                # and the next run reads the same changes again. A carried title that was
+                # written, lost its tropes or changed too long ago is not among carry_ids.
+                sync_state.commit(get_db(), selection, {
+                    **{count: results[key][count]
+                       for count in ("selected", "skipped_flagged", "carried", "carried_written")},
+                    **results[key].get(key, {"records_received": 0, "rows_upserted": 0}),
+                }, carried_ids=carry_ids)
+                results[key]["selection"] = selection.report()
+    finally:
+        connector.disconnect()
+        close_mongodb()
 
-    connector.disconnect()
-    close_mongodb()
-    
     return results
 
 
