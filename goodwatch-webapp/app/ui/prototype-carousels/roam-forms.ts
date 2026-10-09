@@ -199,9 +199,17 @@ export function roamKit(core: PlayCore, X: RoamExtra) {
 		page[id] = d
 		return ask()
 	}
-	/** After a flip: the filters one more flip away are asked for, so that the next flip is drawn from memory too. */
-	const next = (ctx: PlayCtx, tr: string[], names: string[]) => {
-		if (!win || ctx.soft || !ctx.list || !names.length) return
+	/**
+	 * What the next flip needs, asked for ahead so that it is drawn from memory: after a flip, the filters one more
+	 * flip away; before any, enough titles per switch to fill a map of `count` places (the pack holds 24 each, which
+	 * fills a phone's map but not a desktop's).
+	 */
+	const next = (ctx: PlayCtx, tr: string[], names: string[], count = 0) => {
+		if (!win || ctx.soft || !ctx.list) return
+		if (!names.length) {
+			for (const name of tr) want(ctx, [name], around(ctx, [name]).length, count)
+			return
+		}
 		for (const other of tr) {
 			if (names.indexOf(other) >= 0) continue
 			const pair = names.concat([other]).sort()
@@ -470,7 +478,7 @@ const roam1: RoamForm = (core, kit) => {
 			const list = kit.around(ctx, names)
 			// Enough for this zoom and the next one out.
 			const coming = kit.want(ctx, names, list.length, Math.round(spots.length * 2.2))
-			kit.next(ctx, tr, names)
+			kit.next(ctx, tr, names, spots.length)
 			const items = kit.inOrder(ctx, list, spots, scale, coming)
 			const rings = spots.length ? spots[spots.length - 1].b : 0
 			const why = names.length
@@ -600,7 +608,7 @@ const roam2: RoamForm = (core, kit) => {
 			const n = m.arm.length
 			// The arm in view, and what two more windings need.
 			const coming = kit.want(ctx, m.names, m.list.length, Math.ceil(m.o) + n * 3)
-			kit.next(ctx, m.tr, m.names)
+			kit.next(ctx, m.tr, m.names, n)
 			const at = (u: number) => {
 				// A place along the arm: between two of its places, or on its way into the middle.
 				if (u <= 0) {
@@ -707,8 +715,8 @@ const roam3: RoamForm = (core, kit) => {
 			const sc = el as Scroller
 			if (!sc.hasAttribute("data-r-sc") || !sc.__on) return
 			const x = sc.scrollLeft + sc.clientWidth / 2 - world() / 2
-			// A new picture when the view has moved a third of the stage: the posters near it are put in, the far ones out.
-			if (Math.abs(x - view) < kit.box.w / 3) return
+			// A new picture when the view has moved a fifth of the stage: the posters near it are put in, the far ones out.
+			if (Math.abs(x - view) < kit.box.w / 5) return
 			view = x
 			const stage = s.querySelector("[data-pl-stage]")
 			if (!stage) return
@@ -726,8 +734,8 @@ const roam3: RoamForm = (core, kit) => {
 			const wide = world()
 			const spots = kit.cells(1, wide, 1)
 			const list = kit.around(ctx, [])
-			// Only what is near the view is in the document.
-			const reach = kit.box.w * 1.1
+			// Only what is in view, and a third of the stage beyond it on each side, is in the document.
+			const reach = kit.box.w * 0.85
 			let furthest = 0
 			const items: ReturnType<RoamKit["item"]>[] = []
 			for (let i = 0; i < spots.length; i++) {
