@@ -48,6 +48,8 @@ var on=w.trail.length>1;ol.hidden=!on;if(hint)hint.hidden=on;ol.textContent='';i
 w.trail.forEach(function(p,i){var end=i===w.trail.length-1,li=document.createElement('li'),b=document.createElement(end?'span':'button');
 if(end)b.setAttribute('aria-current','step');else{b.type='button';b.setAttribute('data-rg-to',i);b.setAttribute('aria-label','Back to '+p.title)}
 var t=document.createElement('span');t.textContent=p.title;b.appendChild(t);li.appendChild(b);ol.appendChild(li)});
+// Tenth round: the start, where you stand, and between them one control with a count that opens the steps in between.
+if(w.trail.length>3){var ls=[].slice.call(ol.children),mid=ls.slice(1,-1),hm=document.createElement('li'),dt=document.createElement('details'),sm=document.createElement('summary'),l2=document.createElement('ol');hm.className='wk-hm';sm.textContent=mid.length;sm.setAttribute('aria-label',mid.length+' steps in between. Open the list.');mid.reverse().forEach(function(x){l2.appendChild(x)});dt.appendChild(sm);dt.appendChild(l2);hm.appendChild(dt);ol.insertBefore(hm,ol.lastChild);ol.className='wk-crumbs wk-hs'}else ol.className='wk-crumbs';
 ol.scrollLeft=ol.scrollWidth}
 function drop(f){for(var i=0;f&&i<f.length;i++)if(f[i].parentNode)f[i].parentNode.removeChild(f[i])}
 function show(s,html,flies,had){var w=state(s),stage=q(s,'[data-rg-stage]');had=had||s.contains(document.activeElement);
@@ -107,6 +109,7 @@ function(){strip.__m=0})}
 document.addEventListener('scroll',function(e){var t=e.target;if(!t||!t.hasAttribute||!t.hasAttribute('data-rg-more'))return;
 if(t.scrollWidth-t.clientWidth-Math.abs(t.scrollLeft)<90)more(sec(t),t)},true);
 document.addEventListener('click',function(e){
+var ho=document.querySelector('.wk-hm details[open]');if(ho&&!ho.contains(e.target))ho.removeAttribute('open');
 var el=e.target&&e.target.closest?e.target:null,s=sec(el);if(!s)return;
 var a=el.closest('a[data-rg-nav]');
 if(a){if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button)return;if(W.nav){e.preventDefault();W.nav(a.getAttribute('href'))}return}

@@ -20,6 +20,11 @@
 // Ninth round (best-forms.ts): a pack request can carry a suffix (which pack, along which traits), a form can show
 // the title you stand on itself (`plain`), and a small map can be dragged (`drag`).
 //
+// Tenth round (roam-forms.ts): the trail is the start, the title you stand on, and one control with a count between
+// them; a form can keep its posters in the document from one draw to the next (`into`), fit its picture to the
+// stage's size (`fit`), be dragged sideways without losing its taps (`pan`), and ask for more of a title's
+// neighborhood than its pack holds (`more`), which never blocks a tap.
+//
 // The forms are in play-forms.ts. Each gets this engine's `core` and returns how to draw its stage.
 import type { PlayMeta } from "~/ui/prototype-carousels/play-meta"
 
@@ -29,6 +34,8 @@ export interface RawPack {
 	n: RawTitle[]
 	/** Ninth round: the traits the pack was widened along. */
 	tr?: string[]
+	/** Tenth round: per filter, the similarity down to which the titles are all there. 0: there are no more. */
+	fl?: Record<string, number>
 }
 
 /** A title as the engine holds it. `n` is the similarity to the center of the pack it came from. */
@@ -140,6 +147,14 @@ export interface PlayForm {
 	drag?: (ctx: PlayCtx, el: Element, section: Element, x: number) => void
 	/** True when the form shows the title you stand on, its reason, and "Open" itself: the card stays out. */
 	plain?: boolean
+	/** Tenth round. Puts a new picture into the stage itself, keeping what stays. False: the engine replaces it. */
+	into?: (stage: Element, ctx: PlayCtx) => boolean
+	/** The stage's size is known or changed. True when the picture has to be drawn again for it. */
+	fit?: (section: Element, ctx: PlayCtx) => boolean
+	/** A sideways drag on a `data-pl-pan` element: `phase` 0 starts, 1 moves by `dx` from the start, 2 ends. */
+	pan?: (ctx: PlayCtx, el: Element, section: Element, dx: number, phase: number) => void
+	/** True when a stand-in is replaced by the pack as it is: titles move to their true places. */
+	truth?: boolean
 }
 export interface PlayCore {
 	M: PlayMeta
@@ -195,6 +210,13 @@ export interface PlayCore {
 	packTraits: (key: string) => string[] | null
 	query: (suffix: string) => void
 	href: (title: PlayTitle) => string
+	/** Tenth round: more of a title's neighborhood, merged into its pack when it arrives. True while on its way. */
+	more: (key: string, suffix: string) => boolean
+	/** Down to which similarity a title's pack is complete under a filter. Undefined: not known. 0: all there. */
+	floor: (key: string, filter: string) => number | undefined
+	/** The browser's window, or null on the server. */
+	// biome-ignore lint/suspicious/noExplicitAny: the browser's window.
+	win: any
 }
 
 export function playEngine(
@@ -218,7 +240,11 @@ export function playEngine(
 		nav: ((href: string) => void) | null
 		tr: Record<string, string[]>
 		q: string
-	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null, tr: {}, q: "" }
+		fl: Record<string, Record<string, number>>
+		ex: Record<string, number>
+		late: Record<string, RawPack[]>
+		extra: number
+	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null, tr: {}, q: "", fl: {}, ex: {}, late: {}, extra: 0 }
 	const ESC: Record<string, string> = {
 		"&": "&amp;",
 		"<": "&lt;",
@@ -250,11 +276,29 @@ export function playEngine(
 		if (!known?.s) G.t[title.k] = title
 		return title
 	}
+	const floors = (key: string, fl: Record<string, number> | undefined) => {
+		if (!fl) return
+		const mine = G.fl[key] ?? {}
+		G.fl[key] = mine
+		for (const filter in fl)
+			mine[filter] = mine[filter] === undefined ? fl[filter] : Math.min(mine[filter], fl[filter])
+	}
+	/** More of a neighborhood: the titles the pack doesn't hold yet, put in by similarity. */
+	const merge = (key: string, raw: RawPack) => {
+		const have: Record<string, boolean> = {}
+		for (const t of G.packs[key]) have[t.k] = true
+		const fresh = raw.n.filter((entry) => !have[entry[0]] && entry[0] !== key).map(titleOf)
+		if (fresh.length) G.packs[key] = G.packs[key].concat(fresh).sort((a, b) => b.n - a.n)
+		floors(key, raw.fl)
+	}
 	const take = (raw: RawPack) => {
 		const center = titleOf(raw.c)
 		G.t[center.k] = center
 		G.packs[center.k] = raw.n.map(titleOf)
 		if (raw.tr) G.tr[center.k] = raw.tr
+		floors(center.k, raw.fl)
+		for (const late of G.late[center.k] ?? []) merge(center.k, late)
+		delete G.late[center.k]
 	}
 	const val = (title: PlayTitle, key: string) => {
 		const value = title.s ? title.s[IDX[key]] : 0
@@ -558,6 +602,9 @@ export function playEngine(
 			G.q = suffix
 		},
 		href: (title) => hrefOf(title),
+		more: (key, suffix) => (win ? more(key, suffix) : false),
+		floor: (key, filter) => G.fl[key]?.[filter],
+		win,
 	}
 	const built: Record<string, PlayForm> = {}
 	const formOf = (name: string): PlayForm | undefined => {
@@ -598,15 +645,21 @@ export function playEngine(
 		const { st } = ctx
 		if (st.trail.length < 2)
 			return `<p class="pl-hint" data-pl-hint="">${esc(form.hint)}</p>`
-		const crumbs = st.trail
-			.map((entry, i) => {
-				const title = G.t[entry.k]
-				return i === st.trail.length - 1
-					? `<li><span aria-current="step">${esc(title.t)}</span></li>`
-					: `<li><button type="button" data-pl-to="${i}" aria-label="${esc(`Back to ${title.t}`)}">${esc(title.t)}</button></li>`
-			})
-			.join("")
-		return `<button type="button" class="pl-back" data-pl-back=""><span aria-hidden="true">←</span> Back</button><ol class="pl-crumbs" data-pl-crumbs="" aria-label="Where you walked">${crumbs}</ol>`
+		// The start, the title you stand on, and between them one control with a count that opens the steps in
+		// between. One step in between is shown as it is: a list of one would be a pointless tap.
+		const last = st.trail.length - 1
+		const to = (i: number, label = "") => {
+			const title = G.t[st.trail[i].k]
+			return `<button type="button" data-pl-to="${i}" aria-label="${esc(`Back to ${title.t}`)}">${label}${esc(title.t)}</button>`
+		}
+		let between = ""
+		if (last === 2) between = `<li>${to(1)}</li>`
+		else if (last > 2) {
+			let rows = ""
+			for (let i = last - 1; i >= 1; i--) rows += `<li>${to(i, `<i>${i}</i>`)}</li>`
+			between = `<li class="pl-hm"><details data-pl-hist=""><summary aria-label="${last - 1} steps in between. Open the list.">${last - 1}</summary><ol>${rows}</ol></details></li>`
+		}
+		return `<button type="button" class="pl-back" data-pl-back=""><span aria-hidden="true">←</span> Back</button><ol class="pl-crumbs pl-hs" data-pl-crumbs="" aria-label="Where you walked"><li class="pl-h0">${to(0)}</li>${between}<li><span aria-current="step">${esc(G.t[st.trail[last].k].t)}</span></li></ol>`
 	}
 	const whyOf = (ctx: PlayCtx, form: PlayForm) => {
 		const own = form.why?.(ctx)
@@ -767,6 +820,44 @@ export function playEngine(
 		}
 		return G.wait[key]
 	}
+	function more(key: string, suffix: string): boolean {
+		const id = key + suffix
+		if (G.ex[id]) return G.ex[id] === 1
+		if (G.extra >= 120) return false
+		G.extra++
+		G.ex[id] = 1
+		win
+			.fetch(`/api/prototype-play?key=${key}${suffix}`, { priority: "low" })
+			.then((response: Response) => {
+				if (!response.ok) throw new Error(String(response.status))
+				return response.json()
+			})
+			.then((raw: RawPack) => {
+				G.ex[id] = 2
+				if (G.packs[key]) merge(key, raw)
+				else G.late[key] = (G.late[key] ?? []).concat([raw])
+				// Whoever stands on the title gets the new titles into the picture. Nothing waits for this.
+				const all = doc.querySelectorAll("[data-play]")
+				for (let i = 0; i < all.length; i++) {
+					const s = all[i] as HTMLElement & { __pl?: PlayState }
+					const st = stateOf(s)
+					if (st.trail[st.trail.length - 1].k === key && G.packs[key]) draw(s)
+				}
+			})
+			.catch(() => {
+				// A page that failed is asked for again by the next picture, which is drawn in a moment.
+				G.ex[id] = 0
+				win.setTimeout(() => {
+					const all = doc.querySelectorAll("[data-play]")
+					for (let i = 0; i < all.length; i++) {
+						const s = all[i] as HTMLElement & { __pl?: PlayState }
+						const st = stateOf(s)
+						if (st.trail[st.trail.length - 1].k === key && G.packs[key]) draw(s)
+					}
+				}, 1500)
+			})
+		return true
+	}
 	// For measuring and for seeing a cold step: `?plcold=1` switches every prefetch off.
 	const noAhead = () =>
 		Boolean(win.__noAhead) || /[?&]plcold=1/.test(win.location.search)
@@ -815,7 +906,7 @@ export function playEngine(
 		const p = parts(st)
 		const t1 = win.performance.now()
 		const stage = q(s, "[data-pl-stage]") as HTMLElement
-		stage.innerHTML = p.stage
+		if (!(stage.firstChild && p.form.into?.(stage, p.ctx))) stage.innerHTML = p.stage
 		stage.setAttribute("data-pl-at", p.ctx.c.k)
 		if (p.ctx.list) stage.removeAttribute("data-pl-cold")
 		else stage.setAttribute("data-pl-cold", "")
@@ -863,7 +954,7 @@ export function playEngine(
 			const stage = q(s, "[data-pl-stage]")
 			const cold = stage?.hasAttribute("data-pl-cold")
 			const soft = stage?.hasAttribute("data-pl-soft")
-			if (here === key && soft && stage) {
+			if (here === key && soft && stage && !formOf(st.form)?.truth) {
 				// The stage shows a stand-in. What it shows stays where it is, so that nothing moves under a finger:
 				// those titles go first in the pack, and the pack fills the gaps and everything drawn later.
 				const shown: PlayTitle[] = []
@@ -907,9 +998,29 @@ export function playEngine(
 			}
 			if (st.trail.length === 1 && G.t[st.root])
 				formOf(st.form)?.after?.(s, ctxOf(st))
+			fitted(s)
 			ahead(s)
 		})
+		fitted(s)
 	}
+	/** A form that lays its picture out for the stage's size hears the size when the section wakes and when it changes. */
+	function fitted(s: HTMLElement & { __pl?: PlayState }) {
+		const st = stateOf(s)
+		const form = formOf(st.form)
+		if (!form?.fit || !G.t[st.trail[st.trail.length - 1].k]) return
+		adopt(s)
+		// Without the neighborhood there is nothing to lay out again: the server's picture stays until it is there.
+		const ctx = ctxOf(st)
+		if (form.fit(s, ctx) && ctx.list) draw(s)
+	}
+	let sized = 0
+	win.addEventListener("resize", () => {
+		win.clearTimeout(sized)
+		sized = win.setTimeout(() => {
+			const all = doc.querySelectorAll("[data-play]")
+			for (let i = 0; i < all.length; i++) if ((all[i] as { __awake?: boolean }).__awake) fitted(all[i] as HTMLElement)
+		}, 150)
+	})
 	const back = (s: HTMLElement, index: number) => {
 		const st = stateOf(s)
 		if (index < 0 || index >= st.trail.length - 1) return
@@ -949,6 +1060,8 @@ export function playEngine(
 		if (G.packs[key]) ahead(s)
 		else ask(key, true)
 	}
+	let swallow = 0
+	let pressed: { el: Element; at: number } | null = null
 	const hit = (event: Event, selector: string) => {
 		const target = event.target as Element | null
 		return target?.closest ? target.closest(selector) : null
@@ -978,8 +1091,19 @@ export function playEngine(
 	for (const type of ["pointerup", "mousedown", "mouseup", "touchend"])
 		win.addEventListener(type, mine, { capture: true, passive: true })
 	win.addEventListener("click", (event: MouseEvent) => {
+		// The list of steps closes on a tap anywhere else.
+		const lists = doc.querySelectorAll("details[data-pl-hist][open]")
+		for (let i = 0; i < lists.length; i++)
+			if (!lists[i].contains(event.target as Node)) lists[i].removeAttribute("open")
 		const s = sec(event.target as Element)
 		if (!s) return
+		// The end of a sideways drag is not a tap.
+		if (event.timeStamp - swallow < 400 && event.detail !== 0) {
+			swallow = 0
+			event.preventDefault()
+			event.stopImmediatePropagation()
+			return
+		}
 		const link = hit(event, "a[data-pl-nav]")
 		if (link) {
 			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button)
@@ -1020,7 +1144,26 @@ export function playEngine(
 			}
 			return
 		}
-		const button = hit(event, "[data-pl-step]")
+		// A press that began on a poster is a tap on that poster, wherever it ends: posters that glide to a new place
+		// may have moved on by the time the finger lifts.
+		const began = pressed && event.timeStamp - pressed.at < 700 && pressed.el.isConnected && sec(pressed.el) === s ? pressed.el : null
+		pressed = null
+		let button = hit(event, "[data-pl-step]") ?? (event.detail !== 0 ? began : null)
+		// A tap that lands in the gap between posters of a map goes to the poster next to it (tenth round).
+		const gap = button ? null : hit(event, "[data-pl-slop]")
+		if (gap && event.detail !== 0) {
+			let near = 18
+			const all = gap.querySelectorAll("[data-pl-step]")
+			for (let i = 0; i < all.length; i++) {
+				const r = all[i].getBoundingClientRect()
+				const dx = Math.max(r.left - event.clientX, 0, event.clientX - r.right)
+				const dy = Math.max(r.top - event.clientY, 0, event.clientY - r.bottom)
+				if (dx + dy < near) {
+					near = dx + dy
+					button = all[i]
+				}
+			}
+		}
 		if (button) {
 			// For the checks: when the tap happened, by the browser's clock.
 			if (win.__plClicks) win.__plClicks.push(event.timeStamp)
@@ -1037,8 +1180,24 @@ export function playEngine(
 	}
 	doc.addEventListener("input", changed)
 	doc.addEventListener("scroll", changed, true)
+	// A sideways drag on a map (tenth round). It starts once the pointer has moved more sideways than up or down, so
+	// a tap stays a tap and a vertical swipe stays the page's (the stage's `touch-action` is `pan-y`).
+	let panned: { el: Element; s: HTMLElement; x: number; y: number; on: boolean; dx: number } | null = null
+	const panStart = (event: PointerEvent) => {
+		panned = null
+		const el = hit(event, "[data-pl-pan]")
+		const s = sec(el)
+		if (!el || !s || event.button) return
+		if (el.getAttribute("data-pl-pan") === "mouse" && event.pointerType !== "mouse") return
+		if (hit(event, "[data-pl-act]")) return
+		panned = { el, s, x: event.clientX, y: event.clientY, on: false, dx: 0 }
+	}
 	/** A poster being pressed or pointed at: its pack is wanted now. */
 	const intent = (event: Event) => {
+		if (event.type === "pointerdown") {
+			pressed = null
+			panStart(event as PointerEvent)
+		}
 		mine(event)
 		const button = hit(event, "[data-pl-step]")
 		const s = sec(button)
@@ -1048,6 +1207,7 @@ export function playEngine(
 			return
 		}
 		wake(s)
+		if (event.type === "pointerdown") pressed = { el: button, at: event.timeStamp }
 		if (!button.hasAttribute("data-pl-came") && !noAhead())
 			ask(button.getAttribute("data-pl-step") ?? "", true)
 	}
@@ -1085,6 +1245,50 @@ export function playEngine(
 			type,
 			() => {
 				held = null
+			},
+			true,
+		)
+	const panTo = (phase: number) => {
+		if (!panned) return
+		const st = stateOf(panned.s)
+		formOf(st.form)?.pan?.(ctxOf(st), panned.el, panned.s, panned.dx, phase)
+	}
+	win.addEventListener(
+		"pointermove",
+		(event: PointerEvent) => {
+			if (!panned) return
+			// A mouse that moves without its button held is not dragging (its release may have been another listener's).
+			if (event.pointerType === "mouse" && !(event.buttons & 1)) {
+				if (panned.on) panTo(2)
+				panned = null
+				return
+			}
+			const dx = event.clientX - panned.x
+			const dy = event.clientY - panned.y
+			if (!panned.on) {
+				if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy) * 1.2) return
+				panned.on = true
+				adopt(panned.s)
+				try {
+					panned.el.setPointerCapture(event.pointerId)
+				} catch {}
+				panned.dx = 0
+				panTo(0)
+			}
+			panned.dx = dx
+			panTo(1)
+		},
+		true,
+	)
+	for (const type of ["pointerup", "pointercancel"])
+		win.addEventListener(
+			type,
+			(event: PointerEvent) => {
+				if (panned?.on) {
+					panTo(2)
+					if (type === "pointerup") swallow = event.timeStamp
+				}
+				panned = null
 			},
 			true,
 		)

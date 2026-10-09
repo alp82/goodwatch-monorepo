@@ -38,6 +38,15 @@ import {
 	sameFranchise,
 } from "~/ui/prototype-carousels/best-meta"
 import { PLAY_FORMS } from "~/ui/prototype-carousels/play-forms"
+import { ROAM_FORMS, roamKit } from "~/ui/prototype-carousels/roam-forms"
+import {
+	ROAM_WITH,
+	ROAM_WITHOUT,
+	filterName,
+	isSwitch,
+	roamExtra,
+	roamSwitches,
+} from "~/ui/prototype-carousels/roam-meta"
 import {
 	type PlayMeta,
 	type PlayVariant,
@@ -53,9 +62,19 @@ import { titleKey } from "~/utils/title-key"
 /** A title in a pack: key ("m603", "s1396"), title, year, poster path, similarity in thousandths, score string. */
 export type PackTitle = [string, string, string, string, number, string]
 /** `tr`: the four traits a ninth round pack was widened along. */
-export type PlayPack = { c: PackTitle; n: PackTitle[]; tr?: string[] }
+export type PlayPack = {
+	c: PackTitle
+	n: PackTitle[]
+	tr?: string[]
+	fl?: Record<string, number>
+}
 /** What the cache keeps: a pack, or the note that the title has no fingerprint. */
-type Kept = { c: PackTitle | null; n: PackTitle[]; tr?: string[] }
+type Kept = {
+	c: PackTitle | null
+	n: PackTitle[]
+	tr?: string[]
+	fl?: Record<string, number>
+}
 
 const POOL = 180
 const PACK_TITLES = 110
@@ -404,11 +423,177 @@ export async function playPack2(
 	return kept?.c ? { c: kept.c, n: kept.n, tr: kept.tr } : null
 }
 
+// --- Tenth round: a pack whose order is similarity, with what the switches need, and more on request --------------
+//
+// The roam forms put a title on the ring of its similarity, so this pack is the plain nearest titles in Qdrant's
+// own order, with the score as it is (no bonus for known titles). Around them:
+// - The walk's switches (ui/prototype-carousels/roam-meta.ts): per switch, the nearest titles that are "without" the
+//   trait (level 4 or less) or "with" it (6 or more). One filtered request each, so that the first flip of a
+//   switch is drawn from memory.
+// - `f`, a filter of several switches, when the walk carries one: the nearest titles that pass all of it.
+// - `d`, further out: a later page of the same order, plain or filtered, which the browser merges into the pack.
+// - Per filter the score of the last title Qdrant gave (`fl`): down to it the pack is complete, and the browser
+//   shows no title from below it until the next page is there, so nothing is ever pushed aside by a late arrival.
+//   0 means Qdrant had no more.
+// - No franchise is thinned out here: the browser shows one title per franchise (roam-forms.ts), because pages
+//   that are built apart can't agree on which one that is.
+const NEAR4 = 80
+const FLIP4 = 24
+const FILTER4 = 40
+const PAGE4 = 240
+const MAX_PAGE4 = 6
+
+async function buildPack4(params: {
+	type: PxType
+	id: number
+	tr: string
+	f: string
+	d: number
+}): Promise<Kept> {
+	const point = titleKey(params.type, params.id)
+	const around = (extra: unknown[], limit: number, offset = 0) => {
+		const { must, must_not } = buildBaseFilterConditions({
+			mediaType: "all",
+			minVotingCount: 10000,
+			minScore: 60,
+			additionalMust: [
+				{ key: "release_year", range: { lte: new Date().getFullYear() } },
+				...extra,
+			],
+		})
+		return recommend<QdrantMediaPayload>({
+			collectionName: MEDIA_COLLECTION,
+			positive: [point],
+			using: "fingerprint_v1",
+			filter: { must, must_not },
+			limit,
+			offset,
+			withPayload: { include: PAYLOAD },
+			hnswEf: 128,
+			exact: false,
+		})
+	}
+	const condition = (name: string) => ({
+		key: `fingerprint_scores_v1.${name.slice(0, -1)}`,
+		range: name.endsWith("+") ? { gte: ROAM_WITH } : { lte: ROAM_WITHOUT },
+	})
+	const filter = params.f ? params.f.split(",").filter(isSwitch) : []
+	const paged = params.d >= 0
+	// A page: the first of a filter holds 80, every later one 240.
+	const pageOf = (d: number): [number, number] =>
+		d === 0 ? [NEAR4, 0] : [PAGE4, NEAR4 + (d - 1) * PAGE4]
+	const [limit, offset] = pageOf(Math.max(0, params.d))
+	const [own, main] = await Promise.all([
+		scroll<QdrantMediaPayload>({
+			collectionName: MEDIA_COLLECTION,
+			filter: { must: [{ has_id: [point] }] },
+			limit: 1,
+			withPayload: { include: PAYLOAD },
+			withVector: false,
+		}),
+		paged ? around(filter.map(condition), limit, offset) : around([], NEAR4),
+	])
+	const center = own[0]?.payload
+	const centerScores = center?.fingerprint_scores_v1
+	if (!center || !centerScores) return { c: null, n: [] }
+	const usable = (hit: { payload: QdrantMediaPayload }) =>
+		Boolean(hit.payload.fingerprint_scores_v1 && first(hit.payload.poster_path))
+	const switches =
+		params.tr === "0"
+			? []
+			: params.tr
+				? params.tr.split(",").filter(isSwitch).slice(0, 4)
+				: roamSwitches(
+						(key) => centerScores[key] ?? 0,
+						main
+							.filter(usable)
+							.slice(0, 64)
+							.map((hit) => (key: string) => Math.round(hit.payload.fingerprint_scores_v1?.[key] ?? 0)),
+					)
+	const fl: Record<string, number> = {}
+	const lowest = (hits: { score: number }[], asked: number) =>
+		hits.length < asked ? 0 : Math.floor(hits[hits.length - 1].score * 10000) / 10
+	fl[paged ? filterName(filter) : ""] = lowest(main, paged ? limit : NEAR4)
+	const groups = [main]
+	if (!paged) {
+		const single = switches.map((name) => [name])
+		const wanted = filter.length > 1 || (filter.length === 1 && !switches.includes(filter[0])) ? [...single, filter] : single
+		const more = await Promise.all(
+			wanted.map((names) =>
+				around(names.map(condition), names.length > 1 ? FILTER4 : FLIP4).catch(() => null),
+			),
+		)
+		more.forEach((hits, i) => {
+			if (!hits) return
+			fl[filterName(wanted[i])] = lowest(hits, wanted[i].length > 1 ? FILTER4 : FLIP4)
+			groups.push(hits)
+		})
+	}
+	const chosen: { payload: QdrantMediaPayload; score: number }[] = []
+	const taken = new Set<string>()
+	for (const hits of groups)
+		for (const hit of hits.filter(usable)) {
+			const key = `${hit.payload.media_type}${hit.payload.tmdb_id}`
+			if (taken.has(key)) continue
+			taken.add(key)
+			chosen.push(hit)
+		}
+	const pack = (payload: QdrantMediaPayload, near: number): PackTitle => [
+		`${payload.media_type === "movie" ? "m" : "s"}${payload.tmdb_id}`,
+		first(payload.title) ?? "",
+		String(payload.release_year ?? ""),
+		(first(payload.poster_path) ?? "").replace(/^\/+/, ""),
+		near,
+		encode(payload.fingerprint_scores_v1),
+	]
+	return {
+		c: pack(center, 1000),
+		n: chosen
+			.sort((a, b) => b.score - a.score)
+			.map((hit) => pack(hit.payload, Math.round(hit.score * 10000) / 10)),
+		tr: switches,
+		fl,
+	}
+}
+
+/**
+ * The tenth round's pack of a title. `switches`: the walk's, "0" for a form without any, or empty for the title's
+ * own. `filter`: the switches that are flipped. `page`: -1 for the pack itself, 0 and up for more of one filter.
+ */
+export async function playPack4(
+	type: PxType,
+	id: number,
+	switches = "",
+	filter = "",
+	page = -1,
+): Promise<PlayPack | null> {
+	const kept = await cached({
+		name: "proto363-roam-pack-v2",
+		metricName: "proto363-play-pack",
+		target: buildPack4,
+		params: {
+			type,
+			id,
+			tr: switches === "0" ? "0" : switches.split(",").filter(isSwitch).slice(0, 4).join(","),
+			f: filterName(filter.split(",")),
+			d: Math.max(-1, Math.min(MAX_PAGE4, Math.floor(page))),
+		},
+		ttlMinutes: 60 * 24,
+	}).catch((error) => {
+		console.error("Carousel prototype: pack lookup failed", error)
+		return null
+	})
+	return kept?.c ? { c: kept.c, n: kept.n, tr: kept.tr, fl: kept.fl } : null
+}
+
 let meta: PlayMeta | undefined
 export const metaOf = () => {
 	meta ??= playMeta()
 	return meta
 }
+
+/** The roam forms without switches: their pack is the plain neighborhood. */
+const ROAM_PLAIN = ["roam3", "roam4"]
 
 interface PlayHead {
 	css: string
@@ -430,7 +615,9 @@ export function playHead(variant: PlayVariant): Promise<PlayHead> {
 				? `function(c){return(${SCRUB_FORMS[variant].toString()})(c,(${scrubKit.toString()})(c,${JSON.stringify(scrubExtra())}))}`
 				: BEST_FORMS[variant]
 					? `function(c){return(${BEST_FORMS[variant].toString()})(c,(${bestKit.toString()})(c,${JSON.stringify(bestExtra())}))}`
-					: PLAY_FORMS[variant].toString()
+					: ROAM_FORMS[variant]
+						? `function(c){return(${ROAM_FORMS[variant].toString()})(c,(${roamKit.toString()})(c,${JSON.stringify(roamExtra())}))}`
+						: PLAY_FORMS[variant].toString()
 			let script = `(${playEngine.toString()})(${JSON.stringify(metaOf())},window,{${variant}:${form}})`
 			try {
 				const name = "esbuild"
@@ -467,9 +654,11 @@ export async function playSectionHtml(input: {
 }): Promise<string> {
 	// The ninth round's forms get the pack that reaches further. The compass asks for traits with room both ways.
 	const [pack] = await Promise.all([
-		BEST_FORMS[input.variant]
-			? playPack2(input.type, input.id, [], input.variant === "best2" ? "mid" : "")
-			: playPack(input.type, input.id),
+		ROAM_FORMS[input.variant]
+			? playPack4(input.type, input.id, ROAM_PLAIN.includes(input.variant) ? "0" : "")
+			: BEST_FORMS[input.variant]
+				? playPack2(input.type, input.id, [], input.variant === "best2" ? "mid" : "")
+				: playPack(input.type, input.id),
 		playHead(input.variant),
 	])
 	const engine = playEngine(metaOf(), null, PLAY_FORMS)
