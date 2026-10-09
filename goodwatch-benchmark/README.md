@@ -66,6 +66,7 @@ About the first one: It starts a Node HTTP stub bound to loopback, runs the pinn
 | `--raw` | Off | Save compressed k6 JSON time series for deeper analysis. |
 | `--yes-ramp-production` | Off | Required for every ramp. |
 | `--scenario requests\|page-view` | `requests` | `requests`: one iteration sends one request. `page-view`: one iteration is one visitor with a whole page view. |
+| `--files page\|origin` | `page` | Page-view scenario only. Follow the captured static hostname, or send its files to the site. Also set with `PAGE_FILES`. |
 | `--connections new\|reuse` | `reuse`, and `new` for page views | `new`: every iteration opens its own connection with a full TLS handshake. |
 | `--identity VALUE` | None, and `anon;US;en` for page views | The `GW-Cache-Identity` header for page requests. Several values separated by `\|` rotate. |
 | `--page-assets FILE` | None | Reuse the `page-view-capture.json` of an earlier run of the same deploy instead of capturing again. |
@@ -87,14 +88,22 @@ Set `PRE_VUS` and `MAX_VUS` to override the default allocation of `max(20, RATE_
 
 In this scenario the rates are **visitors per second**, and the summary reports page views per second. One iteration is one first-time visitor:
 
-1. **A new connection.** With `--connections new` (the default here), k6 closes the visitor's connection after the iteration (`noVUConnectionReuse`). The next visitor does a full TLS handshake: k6 keeps no TLS session cache, so no session is resumed. All requests of one visitor share the connection over HTTP/2, as in a browser.
+1. **A new connection.** With `--connections new` (the default here), k6 closes the visitor's connection after the iteration (`noVUConnectionReuse`). The next visitor does a full TLS handshake: k6 keeps no TLS session cache, so no session is resumed. Requests on each host share a connection over HTTP/2. Further captured connections use side groups.
 2. **The document,** with `GW-Cache-Identity: anon;US;en` (`--identity`), as a cache in front of the app would send it (see [`docs/cache-identity.md`](../docs/cache-identity.md)). The app then answers with the shared policy. Only page requests get the header: files, images, and API requests don't.
-3. **Everything else the page loads from its own origin,** at once: scripts, styles, fonts, images, and API requests. A new visitor has an empty browser cache, so nothing is skipped.
-4. **Requests on a second connection.** Chrome fetches the web app manifest without credentials, on its own connection with its own handshake. One k6 virtual user has one connection, so a second k6 scenario (`side`) sends those requests at the same rate, each on a new connection.
+3. **Everything else the page loads from the site and static hostname,** at once: scripts, styles, fonts, images, and API requests. A new visitor has an empty browser cache, so nothing is skipped.
+4. **Requests on a second connection.** Chrome fetches the web app manifest without credentials, on its own connection with its own handshake. One k6 virtual user has one connection per host, so another k6 scenario (`side`) sends those requests at the same rate, each on a new connection. Further groups use `side_2`, `side_3`, and so on. Each group runs at the weighted share of visitors that have it.
 
 A `bot` entry and a `browser` entry with `"single": true` send their one request, on their own connection. `urls/handshake.json` is one such entry (`/health/live`): it measures new TLS connections alone.
 
 **Where the list of requests comes from.** File names change with every build, so the list is read at the start of every run. The launcher starts headless Chromium (in the Lighthouse image, on the generator), loads each browser path of the URL set once with an empty profile and a mobile viewport, waits `CAPTURE_SETTLE` seconds (default 10) for the late analytics scripts, and records every request. `scripts/page-view-set.mjs` turns that into the run's URL set and prints one line per surface: requests, connections, bytes, and what it left out. The capture is `page-view-capture.json` in the run directory. It counts as one page view per surface in analytics. Before the measurement, k6 requests every page until the page store answers it and every file once, and stops when a file doesn't answer 200 (a list from another build).
+
+#### Files from the static hostname
+
+`--files page` follows the captured page. The capture records each request's origin and reads the static hostname from module scripts and preloads under `/assets/`. If an older capture has no `static_origin`, `BENCH_STATIC_HOST` identifies it only when the capture has requests to that origin. Set it to a hostname such as `static.example.com`, or a complete local origin such as `http://127.0.0.1:3112`.
+
+Chrome opens two connections to the static hostname: one without credentials for scripts, fonts, and the web manifest, and one for style sheets and images. The main visitor sends the document's connection and the static connection with the most requests. Every further captured connection becomes a side group. `--files origin` sends static files to the site on the document's connection, except the web manifest, which joins the site's side group. This measures the site's fallback load even when pages name the static hostname. Captures without static rows keep the same requests and connections in both modes. `--path private` maps only the site's hostname to `BENCH_RESOLVE_IP`; static requests still use their captured origin.
+
+The run's `urls.json` records `static_url`, `files`, `page_names` (`static` or `origin`), and weighted `per_visit` counts, captured transfer bytes, and connections for `site`, `static`, and `other`. `requests_per_visit` counts everything k6 sends to the site and static hostname. `connections_per_visit` counts the connections for a new visitor. The "By host" table uses the labels Site, Static hostname, and Others. Others shows captured requests and bytes only. Bytes come from the browser capture, including skipped requests; k6 discards bodies and has no per-request byte count.
 
 **What a page view leaves out:**
 
@@ -103,7 +112,7 @@ A `bot` entry and a `browser` entry with `"single": true` send their one request
 - **Other requests with a body,** such as `POST /api/poster-impressions` on Discover, which writes.
 - **One exception:** `POST /api/living-room/picks?view=pool`, the home page's read of its title pool, is replayed with the body that the captured browser sent. It only reads. The list of replayed requests is `REPLAYED_POSTS` in `scripts/page-view-set.mjs`.
 
-**Cookies.** A visitor starts without cookies (`COOKIE` is empty in this scenario unless you set it). The requests of one visitor share a cookie jar, so the balanced route's instance cookie from the document comes back with the page's files, and one visitor's page view stays on one instance.
+**Cookies.** A visitor starts without cookies (`COOKIE` is empty in this scenario unless you set it). The requests of one visitor share a cookie jar, so the balanced route's instance cookie from the document comes back with files on the site. Static requests use an empty cookie jar and never receive the site's cookies.
 
 **The 500 limit.** A plan whose highest step is above 500 requests per second (visitors times requests per visit, printed before the run) needs `--allow-above-500`. Smoke mode allows at most 2 visitors per second.
 
@@ -176,15 +185,19 @@ The lines, all for a first-time mobile visitor who doesn't scroll:
 | Line | Read from the Lighthouse report |
 | --- | --- |
 | `html_bytes` | Transfer size of the document |
-| `host_requests` | Requests to the page's own origin |
+| `host_requests` | Site and static host requests together |
+| `origin_requests` | Requests to the webapp host. Information only unless given a limit. |
+| `static_requests` | Requests to the static hostname. Information only unless given a limit. |
 | `script_count`, `script_bytes` | Script requests and their transfer size |
 | `image_count`, `image_bytes` | Image requests and their transfer size. Lighthouse doesn't scroll, so these are the images before scrolling. |
 | `font_requests` | Font requests |
 | `blocking_requests` | Render-blocking requests (stylesheets and scripts) |
-| `third_party_origins` | Origins other than the page's own |
+| `third_party_origins` | Origins other than the site and static hostname |
 | `total_bytes` | Transfer size of all requests |
 | `lcp_ms`, `tbt_ms`, `cls`, `score` | Lighthouse's simulated LCP and TBT, CLS, and the performance score |
 | `lcp_element` | The LCP element's tag, and a text that its markup must contain. It passes when more than half of the runs match. |
+
+The static origin comes from `BENCH_STATIC_HOST`, or from an origin that serves `/assets/*.js` scripts and has the site's hostname or a subdomain of it. An unrelated third party is never inferred as the static hostname. The combined request limit stays the same in both modes. `origin_requests` and `static_requests` print `info`, never fail a surface, and have `info: true` in the run's `budget.json`. Adding a limit makes either line a budget check.
 
 In the budget file, a line has either `max` or `min`. `targets` holds the values that count as good (LCP 2.5 s, TBT 200 ms, CLS 0.1, score 90): the report shows the gap to them, and they never fail a run. A surface's `path` can name a setting, such as `${SHARE_LIST_PATH}` from `config.env`. The report never prints a URL.
 
@@ -303,8 +316,9 @@ What it does, in order:
 1. **Finds the container.** It connects with SSH to the host that the target's name resolves to, and waits until exactly one `gk4owk8-*` container runs, is healthy, and fits the options. `--commit SHA` compares with `SOURCE_COMMIT` in the container's environment. `--newer-than NAME` refuses the container with that name: note the name before a deploy when you don't know the commit. `--deploy-timeout` (default 600 seconds) limits the wait. Then it waits until the home page answers 200, because requests can fail for a moment while the proxy switches containers (see [webapp deploys](../docs/webapp-deploys.md)).
 2. **Reads the metrics** from the private port inside the container (`goodwatch_http_responses_total`, the process uptime, and the build's commit).
 3. **Requests the pages** in [`smoke/urls.json`](smoke/urls.json) and checks the status, markers in the body, headers, and for HTML pages the rendered markers: the title text in `<title>` and `<h1>`, links to titles in the server HTML, an image `src` on the image host, and JSON-LD blocks that parse. No response may contain `Unexpected Server Error`.
-4. **Scans the container's log from its start** with the patterns in [`smoke/log-patterns.json`](smoke/log-patterns.json), after the requests, so that errors from the edge-case pages are in it. The people index, the title snapshot, and the search index must report that they loaded (see [Roles](#roles) for a process that runs as one role). The latest `Process:` line must say `query encoder ready`. Slow subsystems have until 120 seconds after the process start (`--log-wait`). No line may match a failure pattern, such as `failed to start`, `Cannot find module`, or `TypeError`.
-5. **Reads the metrics again.** The Redis client must be ready, no Redis breaker may be open, and no route's 5xx counter may have risen since step 2. Background traffic counts too: a 5xx that a crawler caused during the run fails the check. 5xx responses from before the run print a warning.
+4. **Checks the static hostname.** `static:mode` says whether pages name the static hostname or the site's host, with `goodwatch_static_assets_in_use` and its `mode` label when available. `static:build-file` requests a build file from that hostname and expects 200, CORS, a one-year cache lifetime, and `CF-Cache-Status` (the CDN header is optional on loopback). `static:root-404` expects 404 for its root. These requests use the browser User-Agent without a cookie. Failures print `FAIL` when pages name the static hostname, or `WARN` when pages name the site and `BENCH_STATIC_HOST` supplies the static hostname. Without either source, the check says that the static hostname was not checked. `url:static-asset` still checks the site's copy in both modes, because the fallback depends on it.
+5. **Scans the container's log from its start** with the patterns in [`smoke/log-patterns.json`](smoke/log-patterns.json), after the requests, so that errors from the edge-case pages are in it. The people index, the title snapshot, and the search index must report that they loaded (see [Roles](#roles) for a process that runs as one role). The latest `Process:` line must say `query encoder ready`. Slow subsystems have until 120 seconds after the process start (`--log-wait`). No line may match a failure pattern, such as `failed to start`, `Cannot find module`, or `TypeError`.
+6. **Reads the metrics again.** The Redis client must be ready, no Redis breaker may be open, and no route's 5xx counter may have risen since step 2. Background traffic counts too: a 5xx that a crawler caused during the run fails the check. 5xx responses from before the run print a warning.
 
 The URL list covers a well-known movie and show, a title without a poster, without a backdrop, without cast, without a trailer, and without streaming data, a show with more than 3,300 cast rows, a person with and without a department, a filtered person URL without the cookie (403), with it (200), and from a crawler (301), home, Discover with and without a filter, the share list and its image, a missing share list and a missing title (404), a title's OG image, `robots.txt`, a script that the home page references, `/metrics` on the public port, and the GET endpoints that pages call. Each entry's `guards` field says which regression or edge it's for, and a failure prints it.
 
@@ -319,7 +333,7 @@ With more than one webapp instance, the public route reaches either of them, and
 ./bench.sh smoke --host abio --commit "$(git rev-parse origin/main)"
 ```
 
-`--host` takes a name from `goodwatch-hq/ansible/hosts.ini` or a private address. The check finds the `gk4owk8-*` container on that host, opens an SSH tunnel from a free local port to the container's port 3000 on its Docker network, and sends every request through it. No proxy, no load balancer, and no public route is involved, so the result describes that process alone, and it works before the instance takes traffic. The log and the metrics come from the same container. SSH jumps through `BENCH_SSH_JUMP`, or through the host that the target's name resolves to when it's unset.
+`--host` takes a name from `goodwatch-hq/ansible/hosts.ini` or a private address. The check finds the `gk4owk8-*` container on that host, opens an SSH tunnel from a free local port to the container's port 3000 on its Docker network, and sends site requests through it. The static checks still request the static hostname. Site checks use no proxy, load balancer, or public route, so they describe that process alone, and it works before the instance takes traffic. The log and the metrics come from the same container. SSH jumps through `BENCH_SSH_JUMP`, or through the host that the target's name resolves to when it's unset.
 
 After a deploy to two instances, run the check three times: once per host, and once without `--host` for the public route. Coolify deploys the additional server after the primary one finishes, so start the check for the second host with `--commit` and let it wait.
 
@@ -474,6 +488,7 @@ Only relevant files exist for a given run. Metadata records the Git commit and d
 - `webapp_instances` exists only with `BENCH_WEBAPP_PROBE_EXTRA`. It is keyed by host, and each entry has the fields of `webapp` without the benchmark's share.
 - `webapp` exists only with the webapp probe. It holds the window length, the deployed commit, a restart flag, request rates (`total_rps`, `benchmark_rps`, `background_rps`, `crawler_loop_rps`), `routes`, `caches`, `qdrant`, `page_cache` (hits, stale answers, joined requests, misses, and bypasses per route pattern), `thread_cpu_pct`, `main_thread_by_time`, `proxy_cpu_pct`, `proxy_accepts_per_s`, `in_flight`, and `loop_delay_ms`.
 - `load.page_view` exists only for the page-view scenario: the connection mode, the cache identity, the response headers of each page before the run (`pages`), totals, `slices` with `SLICE_SECONDS`, and page views per route. Each step then also has `visits`, `page_views`, `page_view_error_rate`, `page_view_ms`, `tls_handshakes`, `tls_handshake_ms`, and `kinds` (document, asset, api, side, single).
+- `load.page_view.hosts` exists when `urls.json` has `per_visit`: `site` and `static` have request count and rate, error fraction, latency, TTFB, TLS handshakes, and captured `per_visit` values; `other` has captured `per_visit` values only. `files`, `page_names`, and `static_url` record the file mode and source. `origin_share` gives the site's fractions of site and static requests and captured bytes. `load.steps[].hosts` has the measured host metrics per step. Older runs without these fields retain their earlier summary and have no "By host" table.
 - `load.steps[].resources` exists when the run knows when its scenario started: per instance the main thread and proxy CPU in percent of one core, accepted connections, and the highest event loop delay, and per host CPU, network rates, and memory. The transition seconds at the start of a step are left out.
 - `lighthouse` is keyed by URL label. Each entry includes the URL, successful run count, per-metric `median`, and `all_runs`. Bytes by resource type come from `resource-summary` or fall back to `network-requests`.
 
@@ -527,7 +542,7 @@ The launcher refuses a generator address equal to the resolve address. Use the p
 
 - Load traffic is GET only, apart from the one replayed read in the page-view scenario. It excludes `POST /api/combined-search`, which can trigger paid model calls or guest quota writes, `POST /api/og-image-warm`, which starts a card render and which only a share list's owner sends, and `POST /api/e`, which the app forwards to the error tracking vendor.
 - In the `requests` scenario, k6 does not fetch browser subresources. The page-view scenario does, from a captured page load. It sends them all at once after the document, where a browser discovers them in several rounds over about five seconds, and it doesn't model third-party hosts or a returning visitor's browser cache.
-- The page-view scenario opens two connections per browser visitor because the captured Chrome does. Browsers that don't fetch the manifest open one.
+- The page-view scenario follows the captured connections for the site and static hostname. A capture with only site rows normally opens the document connection and a side connection for the manifest. Side groups run independently: their failures count in request errors but cannot be attributed to a particular page view, and their time is outside the main visitor's page-view duration. With `--connections reuse`, the connection counts per visit describe the capture plan, not new connections opened on every iteration.
 - Lighthouse is lab data, not field data. Its browser loads page subresources and can execute normal page code. GET-only load guarantees apply to k6, not browser-side application behavior in Lighthouse.
 - Docker stats are coarse and can lag a host sample. Container CPU can exceed 100% across multiple cores.
 - Per-route summary percentiles cover the whole measured run. A per-step route breakdown requires `--raw`. Summary percentiles cannot be averaged into new percentiles.

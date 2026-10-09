@@ -132,6 +132,8 @@ change: one font request of 34 KB per page, and two card font files less on the 
 | CLS | 0.01 (0) | 0.01 (0) | 0.01 (0) | 0.01 (0) | 0.04 (0.028) | 0.02 (0.011) |
 | Performance score, minimum | 76 (83) | 61 (68) | 58 (65) | 75 (82) | 62 (69) | 80 (87) |
 
+The `host_requests` line now means "Site and static host requests": requests to the webapp host and the static hostname together. `origin_requests` ("Requests to the webapp host") and `static_requests` ("Requests to the static hostname") show the split as information without limits. `third_party_origins` excludes the static hostname. The static origin is `BENCH_STATIC_HOST`, or an origin serving `/assets/*.js` scripts whose hostname is the site's hostname or a subdomain of it. The recorded values and limits above are unchanged.
+
 The LCP element per surface, which the budget also checks:
 
 | Surface | LCP element | Source |
