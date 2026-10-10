@@ -1,0 +1,155 @@
+{
+  "audit_at": "2026-10-10T07:24:54.176Z",
+  "window": "rolling 7 days relative to Crate CURRENT_TIMESTAMP",
+  "source": "production doc.search_history via the live search role",
+  "production_classification": "AES-256-GCM authentication with live search role SEARCH_STORAGE_KEY; decrypted content discarded without parsing or output",
+  "total_rows": 94,
+  "production_rows": 92,
+  "foreign_key_rows_excluded": 2,
+  "production_outcomes": {
+    "cached": 27,
+    "ready": 63,
+    "basic": 2
+  },
+  "production_rankers": {
+    "hybrid-v2": 90,
+    "essence-text-v1": 2
+  },
+  "production_reasons": {
+    "null": 92
+  },
+  "production_fallbacks": {
+    "null": 90,
+    "timeout": 2
+  },
+  "elapsed_ms_and_stage_total": {
+    "n": 92,
+    "p50": 724,
+    "p95_nearest_rank": 1902,
+    "max": 8286
+  },
+  "daily_production_counts": {
+    "2026-10-03": 19,
+    "2026-10-04": 17,
+    "2026-10-05": 6,
+    "2026-10-06": 9,
+    "2026-10-07": 22,
+    "2026-10-08": 12,
+    "2026-10-09": 7
+  },
+  "production_slow_rows": [
+    {
+      "at": "2026-10-08T17:57:04.312Z",
+      "elapsed_ms": 8286,
+      "outcome": "ready",
+      "ranker": "hybrid-v2",
+      "stage_ms": {
+        "titleLookup": 7772.8,
+        "reading": 395.8,
+        "ranking": 68,
+        "display": 43.2
+      }
+    },
+    {
+      "at": "2026-10-08T17:57:50.845Z",
+      "elapsed_ms": 5497,
+      "outcome": "ready",
+      "ranker": "hybrid-v2",
+      "stage_ms": {
+        "titleLookup": 4861.2,
+        "reading": 409.1,
+        "ranking": 169.5,
+        "display": 52.3
+      }
+    },
+    {
+      "at": "2026-10-05T07:30:58.587Z",
+      "elapsed_ms": 2268,
+      "outcome": "basic",
+      "ranker": "essence-text-v1",
+      "fallback": "timeout",
+      "stage_ms": {
+        "failedRanking": 1510.3,
+        "reading": 460.9,
+        "ranking": 230.1,
+        "display": 53.7
+      }
+    },
+    {
+      "at": "2026-10-09T18:22:31.953Z",
+      "elapsed_ms": 2227,
+      "outcome": "basic",
+      "ranker": "essence-text-v1",
+      "fallback": "timeout",
+      "stage_ms": {
+        "failedRanking": 1515.1,
+        "reading": 537,
+        "ranking": 119.2,
+        "display": 33.7
+      }
+    },
+    {
+      "at": "2026-10-03T07:35:01.801Z",
+      "elapsed_ms": 1902,
+      "outcome": "cached",
+      "ranker": "hybrid-v2",
+      "stage_ms": {
+        "ranking": 1097.3,
+        "rankingQdrant": 838.8,
+        "reading": 63.1,
+        "titleLookup": 296.1,
+        "display": 422.6
+      }
+    },
+    {
+      "at": "2026-10-04T16:38:45.677Z",
+      "elapsed_ms": 1853,
+      "outcome": "ready",
+      "ranker": "hybrid-v2",
+      "stage_ms": {
+        "ranking": 1313.8,
+        "rankingQdrant": 1269.4,
+        "reading": 454.2,
+        "titleLookup": 0.6,
+        "display": 65.3
+      }
+    },
+    {
+      "at": "2026-10-09T10:35:15.268Z",
+      "elapsed_ms": 1789,
+      "outcome": "ready",
+      "ranker": "hybrid-v2",
+      "stage_ms": {
+        "ranking": 1235.1,
+        "rankingQdrant": 1098.4,
+        "reading": 484.5,
+        "titleLookup": 0.4,
+        "display": 53.6
+      }
+    },
+    {
+      "at": "2026-10-04T15:29:32.130Z",
+      "elapsed_ms": 1580,
+      "outcome": "ready",
+      "ranker": "hybrid-v2",
+      "stage_ms": {
+        "reading": 984.6,
+        "readingClaim": 618.2,
+        "ranking": 534.4,
+        "rankingQdrant": 459,
+        "titleLookup": 0.2,
+        "display": 54.9
+      }
+    }
+  ],
+  "limits": "Same-key local or intentional probes cannot be distinguished by AES authentication alone; no user search text, ciphertext, account identifiers or credentials are included. Nearest-rank p95 used. No runtime changes or production API searches executed.",
+  "window_start": "2026-10-03T07:24:54.176Z",
+  "window_end": "2026-10-10T07:24:54.176Z",
+  "acceptance": {
+    "p95_total_ms_limit": 1500,
+    "p95_total_pass": false,
+    "non_null_error_reasons": 0,
+    "timeout_fallbacks": 2,
+    "seven_day_acceptance_pass": false
+  }
+}
