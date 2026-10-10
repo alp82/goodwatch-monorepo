@@ -135,8 +135,9 @@ export const ABOUT_LINE =
 	"One score from IMDb, Rotten Tomatoes, and Metacritic, how a title feels, and where it streams."
 
 /**
- * Real links to the rest of GoodWatch in the server HTML (#233): crawlable, and reachable by keyboard, where they
- * show up at the top left once focused. The TV and the Remote reach the same pages.
+ * Real links to the rest of GoodWatch in a member's server HTML (#233), reachable by keyboard, where they show up at
+ * the top left once focused. The TV and the Remote reach the same pages. A guest has these links in view, in the
+ * section below the room (#352, BelowRoom.tsx).
  */
 export function LivingRoomLinks() {
 	return (

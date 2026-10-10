@@ -131,12 +131,17 @@ export default function Index() {
 			return response.json()
 		},
 	})
-	// The pool has no doors: a member's doors (#385) come with the loader's data and stay.
+	// The pool has no doors and no start titles: a member's doors (#385) and a guest's titles below the room (#352)
+	// come with the loader's data and stay.
 	const data: LivingRoomData = useMemo(
 		() =>
-			pool.data && initial.doors
-				? { ...pool.data, doors: initial.doors }
-				: (pool.data ?? initial),
+			pool.data
+				? {
+						...pool.data,
+						...(initial.doors && { doors: initial.doors }),
+						...(initial.startTitles && { startTitles: initial.startTitles }),
+					}
+				: initial,
 		[pool.data, initial],
 	)
 

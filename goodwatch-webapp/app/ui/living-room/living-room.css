@@ -158,7 +158,8 @@
 	}
 }
 
-/* The room fills the window: no page scroll behind it. */
+/* The room fills the window: no page scroll behind it. A guest's page has a section below the room and scrolls
+   only while the visitor is there (see "A guest's room" at the end). */
 html:has(.living-room),
 body:has(.living-room) {
 	overflow: hidden;
@@ -263,7 +264,13 @@ body:has(.living-room) {
 		--lr-remote-top: calc(var(--lr-top) + 420 * var(--lr-s) + max(26px, 5cqh));
 		--lr-r: max(
 			0.3px,
-			min(66cqw / 312, (100cqh - var(--lr-remote-top) - 10px) / 700, 1px)
+			min(
+				66cqw /
+				312,
+				(100cqh - var(--lr-remote-top) - 10px - var(--lr-reserve, 0px)) /
+				700,
+				1px
+			)
 		);
 	}
 }
@@ -275,5 +282,442 @@ body:has(.living-room) {
 	}
 	.living-room-first .lr-canvas-phone {
 		display: block;
+	}
+}
+
+/* ---------------------------------------------------------------------------------------------------------
+   A guest's room (#352). It is the first screen of a page: a block one window tall, minus the site header and,
+   below 1024px, the bottom navigation. Right after it comes the section with the start titles and the ways to
+   browse (`.lrb`, BelowRoom.tsx).
+
+   The page does not scroll while the visitor is in the room: the wheel, a swipe, and the keys stay the room's.
+   `<html data-lr="below">` lets it scroll; use-below-room.ts sets it from the URL (`#browse`). Without JavaScript
+   there is no `data-lr`, and `#browse:target` does the same.
+
+   The lock has three parts, because a phone browser may scroll a page that says it can't: `overflow: hidden` on
+   the root, no panning by touch anywhere on the page, and the script takes back any movement it sees. */
+html:has(.lr-guest) {
+	overscroll-behavior: none;
+}
+body:has(.lr-guest) {
+	/* Not a second clip: with the root's `overflow: hidden`, the body's would cut the section off. */
+	overflow: visible;
+	height: auto;
+	min-height: 100vh;
+	touch-action: pinch-zoom;
+}
+html[data-lr="below"],
+html:not([data-lr]):has(#browse:target) {
+	overflow: visible auto;
+	overscroll-behavior: auto;
+}
+html[data-lr="below"] body,
+html:not([data-lr]):has(#browse:target) body {
+	touch-action: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+	html:has(.lr-guest) {
+		scroll-behavior: auto;
+	}
+}
+
+.living-room.lr-guest {
+	position: relative;
+	top: auto;
+	bottom: auto;
+	z-index: 40;
+	/* The small viewport height: a phone's address bar showing or hiding doesn't resize the room. */
+	height: calc(100vh - 4rem - var(--nav-dock-height, 4rem));
+	height: calc(100svh - 4rem - var(--nav-dock-height, 4rem));
+	/* A renderer with a very tall window (a crawler's) still gets the section within reach. */
+	max-height: 1600px;
+	scroll-margin-top: 4rem;
+}
+@media (min-width: 1024px) {
+	.living-room.lr-guest {
+		height: calc(100vh - 4rem);
+		height: calc(100svh - 4rem);
+	}
+}
+/* Phone portrait: the Remote's keys end above the lip (PHONE_LIP in room.ts). */
+@media (max-width: 767px) {
+	.living-room.lr-guest {
+		--lr-reserve: 60px;
+	}
+}
+main:has(.lr-guest) + footer {
+	margin-top: 0;
+}
+
+/* The section below the room. Text first; the posters are small and load lazily. */
+.lrb {
+	--lrb-font: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	position: relative;
+	z-index: 41;
+	scroll-margin-top: 4rem;
+	background: linear-gradient(180deg, #080a10 0, #111827 26rem);
+	color: #a3a3a3;
+}
+.lrb a {
+	text-decoration: none;
+}
+.lrb a:focus-visible {
+	outline: 2px solid #fcd34d;
+	outline-offset: 3px;
+	border-radius: 6px;
+}
+
+/* The lip: the section's top edge, lying over the bottom of the room. The one way down. On a phone it is a bar
+   across the window with a notch for the bottom navigation's round key, which sits in it. */
+.lrb-lip {
+	position: absolute;
+	bottom: 100%;
+	left: 0;
+	right: 0;
+	height: 60px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+	padding: 0 12px 0 18px;
+	background: #080a10;
+	border-top: 1px solid rgba(252, 211, 77, 0.45);
+	border-radius: 20px 20px 0 0;
+	color: #fff;
+	font-family: var(--lrb-font);
+	-webkit-mask: radial-gradient(
+		circle at 50% calc(100% + 6px),
+		transparent 38px,
+		#000 38.5px
+	);
+	mask: radial-gradient(
+		circle at 50% calc(100% + 6px),
+		transparent 38px,
+		#000 38.5px
+	);
+}
+.lrb-lip b {
+	display: block;
+	font-size: 17px;
+	font-weight: 800;
+	line-height: 1.15;
+}
+.lrb-lip small {
+	display: block;
+	font-size: 12.5px;
+	color: rgba(255, 255, 255, 0.6);
+}
+/* The longer line needs the room a tab has. */
+.lrb-lip u {
+	display: none;
+	text-decoration: none;
+}
+.lrb-lip i {
+	display: grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 999px;
+	background: linear-gradient(180deg, #fcd34d, #f59e0b);
+	color: #111;
+	transition: transform 180ms ease-out;
+}
+/* The chevron. */
+.lrb-lip i::before {
+	content: "";
+	width: 10px;
+	height: 10px;
+	border-right: 2.6px solid;
+	border-bottom: 2.6px solid;
+	border-radius: 1px;
+	transform: translateY(-3px) rotate(45deg);
+}
+.lrb-lip:hover i,
+.lrb-lip:focus-visible i {
+	transform: translateY(3px);
+}
+@media (min-width: 768px) {
+	.lrb {
+		border-top: 1px solid rgba(252, 211, 77, 0.3);
+	}
+	/* A tab at the right, clear of the Remote in the middle, the caption at the left, and the round key. */
+	.lrb-lip {
+		left: auto;
+		right: 1.5rem;
+		/* Above the section's top line, so the whole tab is inside the first screen. */
+		bottom: calc(100% + 1px);
+		padding: 0 12px 0 24px;
+		border: 1px solid rgba(252, 211, 77, 0.45);
+		border-bottom: 0;
+		box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.6);
+		-webkit-mask: none;
+		mask: none;
+	}
+	.lrb-lip u {
+		display: inline;
+	}
+}
+
+.lrb-in {
+	max-width: 76rem;
+	margin: 0 auto;
+	padding: 2.25rem 1.25rem 2.5rem;
+}
+.lrb-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 1rem 2rem;
+}
+.lrb-eye {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.22em;
+	text-transform: uppercase;
+	color: rgba(252, 211, 77, 0.85);
+}
+.lrb h2 {
+	font-family: var(--lrb-font);
+	font-weight: 800;
+	letter-spacing: -0.01em;
+	color: #fff;
+	font-size: 1.6rem;
+	line-height: 1.1;
+}
+.lrb-head h2 {
+	margin-top: 0.35rem;
+	font-size: clamp(2rem, 5vw, 3rem);
+}
+.lrb-back {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	height: 44px;
+	padding: 0 1.1rem;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.05);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+	color: rgba(255, 255, 255, 0.9);
+	font-size: 14px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+.lrb-back:hover {
+	background: rgba(255, 255, 255, 0.1);
+	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.6);
+}
+
+/* The titles: a numbered programme that reads down each column. Number, poster, title, and under it the kind and
+   the year. */
+.lrb-titles {
+	margin-top: 1.5rem;
+	columns: 1;
+	column-gap: 3rem;
+	counter-reset: lrb;
+}
+.lrb-titles li {
+	position: relative;
+	display: grid;
+	grid-template-columns: 2.5rem 46px minmax(0, 1fr);
+	column-gap: 0.9rem;
+	align-content: center;
+	min-height: 93px;
+	padding: 0.75rem 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	break-inside: avoid;
+	counter-increment: lrb;
+}
+.lrb-titles li::before {
+	content: counter(lrb, decimal-leading-zero);
+	grid-area: 1 / 1 / 3 / 2;
+	align-self: center;
+	font-family: var(--lrb-font);
+	font-size: 26px;
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+	color: rgba(255, 255, 255, 0.16);
+}
+.lrb-titles img {
+	grid-area: 1 / 2 / 3 / 3;
+	align-self: center;
+	width: 46px;
+	height: 69px;
+	border-radius: 6px;
+	object-fit: cover;
+	background: rgba(255, 255, 255, 0.06);
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.lrb-titles a {
+	grid-area: 1 / 3 / 2 / 4;
+	align-self: end;
+	font-family: var(--lrb-font);
+	font-size: 21px;
+	font-weight: 700;
+	line-height: 1.2;
+	color: #fff;
+}
+/* The whole row is the link's target. */
+.lrb-titles a::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+}
+.lrb-titles li:hover a,
+.lrb-titles a:focus-visible {
+	color: #fcd34d;
+}
+.lrb-titles span {
+	grid-area: 2 / 3 / 3 / 4;
+	align-self: start;
+	margin-top: 0.15rem;
+	font-size: 12.5px;
+	color: #737373;
+}
+
+.lrb-hubs {
+	margin-top: 3.25rem;
+}
+.lrb-cards {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.6rem;
+}
+.lrb-hubs h2 + .lrb-cards {
+	margin-top: 1.1rem;
+}
+.lrb-cards a {
+	display: block;
+	height: 100%;
+	padding: 0.85rem 1rem 0.95rem;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.04);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.lrb-cards a:hover {
+	background: rgba(252, 211, 77, 0.08);
+	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.5);
+}
+.lrb-cards b {
+	display: block;
+	font-family: var(--lrb-font);
+	font-size: 17px;
+	font-weight: 700;
+	color: #fff;
+}
+.lrb-cards span {
+	display: block;
+	margin-top: 0.15rem;
+	font-size: 13px;
+	line-height: 1.35;
+}
+.lrb-by {
+	margin-top: 1.75rem;
+	display: grid;
+	gap: 1.5rem 3rem;
+}
+.lrb-by h3 {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: #737373;
+}
+.lrb-by ul {
+	margin-top: 0.6rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+.lrb-by a {
+	display: inline-flex;
+	align-items: center;
+	height: 40px;
+	padding: 0 0.95rem;
+	border-radius: 999px;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+	color: #f5f5f5;
+	font-size: 14px;
+	font-weight: 600;
+}
+.lrb-by a:hover {
+	color: #fcd34d;
+	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.6);
+}
+.lrb-end {
+	margin-top: 3rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
+	text-align: center;
+}
+@media (min-width: 640px) {
+	.lrb-in {
+		padding: 3.25rem 2rem 3rem;
+	}
+	.lrb-titles {
+		columns: 2;
+	}
+	.lrb-cards {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+	.lrb-by {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+@media (min-width: 1100px) {
+	.lrb-titles {
+		columns: 3;
+	}
+	.lrb-cards {
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+	}
+}
+
+/* Phone landscape keeps the room over the whole window, above the site header. The lip is a tab at the bottom
+   left, and going below slides the room up out of the window (transform only) with the section under it. */
+@media (orientation: landscape) and (max-height: 540px) and (min-width: 768px) {
+	.living-room.lr-guest {
+		position: fixed;
+		inset: 0;
+		height: auto;
+		max-height: none;
+		z-index: 1001;
+		transition: transform 460ms cubic-bezier(0.6, 0, 0.2, 1);
+	}
+	html[data-lr="below"] .lr-guest,
+	html:not([data-lr]):has(#browse:target) .lr-guest {
+		transform: translateY(-101%);
+	}
+	/* No stacking context of its own, so the tab can lie over the room. */
+	.lrb {
+		z-index: auto;
+	}
+	.lrb-lip {
+		position: fixed;
+		z-index: 1002;
+		left: 12px;
+		right: auto;
+		bottom: 0;
+		height: 46px;
+		transition: opacity 200ms;
+	}
+	.lrb-lip i {
+		width: 30px;
+		height: 30px;
+	}
+	.lrb-lip small {
+		display: none;
+	}
+	html[data-lr="below"] .lrb-lip,
+	html:not([data-lr]):has(#browse:target) .lrb-lip {
+		opacity: 0;
+		pointer-events: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.living-room.lr-guest,
+	.lrb-lip,
+	.lrb-lip i {
+		transition: none;
 	}
 }

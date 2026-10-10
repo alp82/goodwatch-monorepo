@@ -31,6 +31,7 @@ import { Icon, Remote, type RemoteProps } from "./Remote"
 import { LivingRoomLinks, type TvView } from "./TvScreens"
 import {
 	HAND_IMAGE,
+	PHONE_LIP,
 	PHONE_ROOM,
 	PHONE_TV_CANVAS,
 	type PhoneOrientation,
@@ -42,6 +43,7 @@ import {
 	phoneRemoteTurnToward,
 } from "./room"
 import { TV_SCREEN_ATTR } from "./tv-transition"
+import { ROOM_ID } from "./use-below-room"
 
 const useIsoLayoutEffect =
 	typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -76,12 +78,18 @@ export type PhoneLivingRoomProps = {
 	orientation: PhoneOrientation
 	view: TvView
 	remote: RemoteProps
+	/** A guest's room is the first screen of a page with a section below it (#352), whose lip lies over its bottom edge. */
+	guest?: boolean
+	/** The visitor is below the room: it takes no input. */
+	away?: boolean
 }
 
 export function PhoneLivingRoom({
 	orientation,
 	view,
 	remote,
+	guest = false,
+	away = false,
 }: PhoneLivingRoomProps) {
 	const landscape = orientation === "landscape"
 	const root = useRef<HTMLDivElement>(null)
@@ -101,8 +109,11 @@ export function PhoneLivingRoom({
 		return () => ro.disconnect()
 	}, [])
 	const L = useMemo(
-		() => (size.w ? layoutPhone(size.w, size.h, orientation) : null),
-		[size, orientation],
+		() =>
+			size.w
+				? layoutPhone(size.w, size.h, orientation, guest ? PHONE_LIP : 0)
+				: null,
+		[size, orientation, guest],
 	)
 
 	// ---- Lifting the Remote (landscape): a drag on the hand or the body, or the Lift button.
@@ -159,9 +170,11 @@ export function PhoneLivingRoom({
 	return (
 		<div
 			ref={root}
-			className={`living-room fixed inset-x-0 overflow-clip bg-[#07080b] text-white ${landscape ? "inset-y-0 z-[1001]" : "bottom-16 top-16 z-40"}`}
+			id={guest ? ROOM_ID : undefined}
+			{...(away && { inert: "" })}
+			className={`living-room overflow-clip bg-[#07080b] text-white ${guest ? "lr-guest" : `fixed inset-x-0 ${landscape ? "inset-y-0 z-[1001]" : "bottom-16 top-16 z-40"}`}`}
 		>
-			<LivingRoomLinks />
+			{!guest && <LivingRoomLinks />}
 			{L && (
 				<>
 					<div
@@ -291,7 +304,7 @@ export function PhoneLivingRoom({
 							</a>
 						</>
 					) : (
-						<RotateHint />
+						<RotateHint raised={guest} />
 					)}
 				</>
 			)}
@@ -383,8 +396,9 @@ function HandRemote({
 const PHONE_ICON =
 	"M9 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM11 18h2"
 
-// Portrait: an invitation to turn the phone, at the bottom left over the hand, gone by itself after 7 s.
-function RotateHint(): ReactNode {
+// Portrait: an invitation to turn the phone, at the bottom left over the hand (above a guest's lip), gone by itself
+// after 7 s.
+function RotateHint({ raised }: { raised: boolean }): ReactNode {
 	const [gone, setGone] = useState(false)
 	useEffect(() => {
 		const id = setTimeout(() => setGone(true), 7000)
@@ -396,7 +410,7 @@ function RotateHint(): ReactNode {
 				<motion.button
 					type="button"
 					onClick={() => setGone(true)}
-					className="absolute bottom-3 left-3 z-20 flex items-center gap-2.5 rounded-2xl bg-black/70 py-2 pl-2.5 pr-3.5 text-left text-[12.5px] font-semibold leading-tight text-white shadow-2xl ring-1 ring-white/15"
+					className={`absolute ${raised ? "bottom-[72px]" : "bottom-3"} left-3 z-20 flex items-center gap-2.5 rounded-2xl bg-black/70 py-2 pl-2.5 pr-3.5 text-left text-[12.5px] font-semibold leading-tight text-white shadow-2xl ring-1 ring-white/15`}
 					initial={{ opacity: 0, y: -6 }}
 					animate={{ opacity: 1, y: 0 }}
 					exit={{ opacity: 0 }}
