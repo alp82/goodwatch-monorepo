@@ -1,7 +1,7 @@
 // PROTOTYPE for "Prototype native-scroll carousels on title pages". Throwaway code: not for production.
 //
 // The switch of the prototype. It is off unless the server runs with PROTO_CAROUSELS=1, so a stray merge ships
-// nothing. With it on, `?proto=today|rows|list|explore|explore1..5|walk1..5|dive1..5|ring1..9|sea1..6|play1..10|scrub1..10|best1..3|roam0..5|rings1..10` on a title page picks a variant and sets a cookie, so the
+// nothing. With it on, `?proto=today|rows|list|explore|explore1..5|walk1..5|dive1..5|ring1..9|sea1..6|play1..10|scrub1..10|best1..3|roam0..5|rings1..10|mix1..6` on a title page picks a variant and sets a cookie, so the
 // choice survives navigation between titles. `?proto=off` clears it. A page rendered with a variant is `no-store`:
 // the page cache never keeps it. The cookie isn't part of the page cache key, so run the prototype with
 // PAGE_CACHE=off (a stored plain page would otherwise answer a visitor who holds the cookie).

@@ -38,6 +38,7 @@ import {
 	sameFranchise,
 } from "~/ui/prototype-carousels/best-meta"
 import { PLAY_FORMS } from "~/ui/prototype-carousels/play-forms"
+import { MIX_FORMS, mixKit } from "~/ui/prototype-carousels/mix-forms"
 import { RINGS_FORMS, ringsKit } from "~/ui/prototype-carousels/rings-forms"
 import {
 	RING_KEYS,
@@ -843,6 +844,8 @@ export function playHead(variant: PlayVariant): Promise<PlayHead> {
 				? `function(c){return(${SCRUB_FORMS[variant].toString()})(c,(${scrubKit.toString()})(c,${JSON.stringify(scrubExtra())}))}`
 				: BEST_FORMS[variant]
 					? `function(c){return(${BEST_FORMS[variant].toString()})(c,(${bestKit.toString()})(c,${JSON.stringify(bestExtra())}))}`
+					: MIX_FORMS[variant]
+						? `function(c){var k=(${ringsKit.toString()})(c,${JSON.stringify(ringsExtra())},${ringTokens.toString()});return(${MIX_FORMS[variant].toString()})(c,k,(${mixKit.toString()})(c,k))}`
 					: RINGS_FORMS[variant]
 						? `function(c){return(${RINGS_FORMS[variant].toString()})(c,(${ringsKit.toString()})(c,${JSON.stringify(ringsExtra())},${ringTokens.toString()}))}`
 						: ROAM_FORMS[variant]

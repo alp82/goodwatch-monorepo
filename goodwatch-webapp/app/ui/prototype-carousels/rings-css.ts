@@ -4,16 +4,23 @@
 // (roam-css.ts): the rings, the map, the zoom, and the card's frame are the same. New here: no poster moves by a
 // style transition (rings-forms.ts moves them itself, so that a step is one pan), the card's three lines with fixed
 // heights, and one block per control area.
+//
+// Twelfth round: how long a fade, a change of size, and the mark of the way back take comes from the script with
+// every redraw (a step, a zoom, and a control each have their own pace), and a control that is looked at dims the
+// posters that would leave.
 export const RINGS_CSS = `
-.pl[class*="pl-rings"] .pl-side{display:none}
-.pl-stage[class*="pl-rings"]{height:468px}
+.pl[class*="pl-rings"] .pl-side,.pl[class*="pl-mix"] .pl-side{display:none}
+.pl-stage[class*="pl-rings"],.pl-stage[class*="pl-mix"]{height:468px}
 .rm.rg .rm-top{height:var(--th,30px)}
-.pl-stage[class] .rm.rg .rm-p{animation:none;transition:scale calc(.2s*var(--slow,1)) cubic-bezier(.3,.3,.2,1)}
+.pl-stage[class] .rm.rg .rm-p{animation:none;transition:scale var(--sc,200ms) cubic-bezier(.3,.3,.2,1),opacity .15s}
 .rg .rm-w{will-change:translate}
 @keyframes rg-in{from{opacity:0}}
 @keyframes rg-out{from{opacity:var(--o,1)}to{opacity:0}}
-.pl-stage[class] .rm.rg .rm-p.rg-new{animation:rg-in calc(190ms*var(--slow,1)) linear backwards}
-.pl-stage[class] .rm.rg .rm-p[data-r-x]{animation:rg-out calc(190ms*var(--slow,1)) linear both}
+.pl-stage[class] .rm.rg .rm-p.rg-new{animation:rg-in var(--fi,190ms) linear var(--fd,0ms) backwards}
+.pl-stage[class] .rm.rg .rm-p[data-r-x]{animation:rg-out var(--fo,190ms) linear both}
+.rg .rm-p img{transition:opacity var(--bk,0ms) ease-out}
+.rg .rm-p .pl-cm{animation:rg-in var(--cmd,0ms) linear var(--cmw,0ms) backwards}
+.rg[data-r-pv] .rm-p:not([data-r-st]){opacity:.26}
 .rg .rm-p[data-pl-came]{z-index:1}
 .rg .rm-p[data-r-x]{pointer-events:none}
 .rg .rm-p[style*="--dm"] img{opacity:.38;filter:saturate(.3)}
@@ -131,7 +138,7 @@ text-align:center;color:#fde68a;pointer-events:none}
 .rg-iw b{font-weight:700;color:color-mix(in srgb,var(--c) 50%,#fff)}
 
 @media (min-width:1024px){
-.pl-stage[class*="pl-rings"]{flex:1;width:auto;height:420px}
+.pl-stage[class*="pl-rings"],.pl-stage[class*="pl-mix"]{flex:1;width:auto;height:420px}
 .rm.rg{grid-template-rows:30px minmax(0,1fr)}
 .rm.rg .rm-top{height:30px}
 .rm.rg .rm-info,.rg-tall .rm-info.rg-info{height:auto;padding-top:2.5rem}
@@ -167,8 +174,8 @@ text-align:center;color:#fde68a;pointer-events:none}
 .rg-big .rg-ax{font-size:.6875rem}
 }
 @media (prefers-reduced-motion:reduce){
-.pl-stage[class] .rm.rg .rm-p.rg-new,.pl-stage[class] .rm.rg .rm-p[data-r-x]{animation:none}
-.pl-stage[class] .rm.rg .rm-p{transition:none}
+.pl-stage[class] .rm.rg .rm-p.rg-new,.pl-stage[class] .rm.rg .rm-p[data-r-x],.rg .rm-p .pl-cm{animation:none}
+.pl-stage[class] .rm.rg .rm-p,.rg .rm-p img{transition:none}
 .rg-dot{transition:none}
 }
 `

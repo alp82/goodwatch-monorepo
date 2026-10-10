@@ -54,6 +54,12 @@ export const PLAY_VARIANTS = [
 	"rings8",
 	"rings9",
 	"rings10",
+	"mix1",
+	"mix2",
+	"mix3",
+	"mix4",
+	"mix5",
+	"mix6",
 ] as const
 export type PlayVariant = (typeof PLAY_VARIANTS)[number]
 export const isPlayVariant = (value: unknown): value is PlayVariant =>
