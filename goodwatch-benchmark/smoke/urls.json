@@ -103,7 +103,7 @@
     {
       "id": "discover",
       "path": "/discover",
-      "html": { "title": "Discover", "minTitleLinks": 1, "image": true, "jsonLd": true },
+      "html": { "title": "Discover", "minTitleLinks": 1, "image": true },
       "guards": "Discover renders its first rows on the server. It needs the title snapshot, so it is empty right after a failed snapshot load."
     },
     {
