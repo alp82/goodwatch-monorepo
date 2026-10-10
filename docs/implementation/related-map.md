@@ -27,24 +27,42 @@ what happens when its data isn't there.
 | The chips | `app/ui/related-map/level-chips.ts` |
 | The trail, the card, and what chips and posters show of each other | `app/ui/related-map/trail.ts` |
 | The traits, the filter grammar, and which chips a title has | `app/ui/related-map/traits.ts` |
-| The style | `app/ui/related-map/styles.ts` |
+| The style | `app/ui/related-map/related-map.css` |
+| The script's entry | `app/ui/related-map/inline.ts` |
 | The setting, the packs, the section's markup | `app/server/related-map.server.ts` |
 | How a pack is shaped | `app/server/related-map-pack.ts` |
 | The endpoint | `app/routes/api.related-map.ts` |
 
-## Three layers
+## What a title page carries
 
 1. **The server's HTML.** The engine draws the first picture on the server, for a phone. The markup also holds 64
    plain `<a href>` links to the most alike titles. They are out of sight and out of the tab order, for crawlers and
-   screen readers.
-2. **An inline script and an inline style**, after the section. Taps work before hydration, and the script lays the
-   picture out for the real width before the first paint. The build bundles `inline.ts` into
-   `build/server/related-map.inline.js` (see `vite.config.js`), and the server reads that file once. The development
-   server has no such file and bundles it at its first title page.
-3. **A lazy chunk** (`client.ts`) for a title page that is opened by a navigation inside the app: such a page has no
-   inline script, so the section loads the engine and the style when it mounts.
+   screen readers. The markup is in the document once: a document's loader data doesn't repeat it, and the browser
+   keeps what the document holds. The data of a navigation inside the app carries it.
+2. **Two files of the build**, with a content hash in their names, `immutable` for a year, and on the same host as
+   the page's other files (`assetUrl`, see [static-assets.md](../static-assets.md)):
+   - **The engine,** `/assets/related-map-<hash>.js`: `inline.ts` bundled into one classic script by the build
+     (`vite.config.js`). The page names it in a `<script async>` after the section, so it neither blocks the paint nor
+     waits for hydration.
+   - **The style,** `/assets/related-map-<hash>.css`: a few lines of inline script after the section add its link
+     while the document is parsed. A link that a script adds doesn't block the paint.
+3. **No flash and no shift.** The section has its height from the app's stylesheet (602 px, and 576 px from 1,024 px
+   up) and hides its content until the map's style is there. The style's first rule shows it.
+4. **A tap before the engine.** The inline script remembers the last tap on a poster or a chip, and the engine does
+   it when it arrives. Until then nothing changes on the page.
+
+A page that is opened by a navigation inside the app asks for both files when the section mounts, once per document.
 
 Nothing in the section depends on the visitor: the HTML is the same for everyone, and the page cache stores it.
+
+**After a deploy.** A stored or open page of the old build names the old files. They keep resolving: every process
+writes its build's hashed files to the shared store, where they stay for a day after its last process has gone
+(see [webapp-deploys.md](../webapp-deploys.md)). If the script fails to load anyway, the section loads the engine as
+a lazy chunk of the app. If the style fails on the static hostname, the section asks the site's own host. Without
+any style the section stays an empty box of its height.
+
+**The development server** has no built script: there the section starts the engine from a lazy chunk after
+hydration.
 
 ## Packs and requests
 
@@ -98,18 +116,23 @@ value, means on. A restart also empties the page cache, so no stored page keeps 
 
 ## Page weight
 
-Measured on October 10, 2026 on `/movie/603-the-matrix`, as the page cache stores it (Brotli, quality 5):
+Measured on October 10, 2026 on a production build, as the page cache stores a page (Brotli, quality 5) and as the
+build compresses a file (Brotli, quality 11):
 
-| | Map off | Map on |
+| | Map off | Map on | Budget (`html_bytes`) |
+| --- | --- | --- | --- |
+| `/movie/603-the-matrix`, HTML compressed | 48,401 bytes | 47,452 bytes | 55,808 |
+| `/show/1396-breaking-bad`, HTML compressed | 51,182 bytes | 49,902 bytes | 58,880 |
+
+| File | Uncompressed | Compressed |
 | --- | --- | --- |
-| HTML, uncompressed | 377,782 bytes | 351,621 bytes |
-| HTML, compressed | 48,401 bytes | 71,279 bytes |
+| The engine | 41,570 bytes | 15,197 bytes |
+| The style | 21,002 bytes | 4,619 bytes |
 
-Of the 22,900 compressed bytes the map adds, the inline script is 15,700, the inline style 5,200, and the section's
-markup 6,200 (it is in the document twice: as markup and in the loader's data). The carousel's markup and panel data,
-about 4,200 bytes, are gone. The render path budget for the title pages (`html_bytes` in
-`goodwatch-benchmark/urls/budget.json`) is 55,808 bytes for the movie page, below the new size. The limit wasn't
-raised with this change, and `./bench.sh budget` wasn't run against it.
+A title page with the map sends two more requests to the site or the static host than one without it: one script and
+one style sheet. In the render path budget (`goodwatch-benchmark/urls/budget.json`) they count against
+`host_requests`, `script_count`, `script_bytes`, and `total_bytes`. `./bench.sh budget` wasn't run against this
+change.
 
 ## Accessibility
 

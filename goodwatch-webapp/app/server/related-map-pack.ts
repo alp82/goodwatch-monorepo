@@ -133,3 +133,15 @@ export const packLinks = (pack: RawPack): { href: string; text: string }[] =>
 		href: `/${key.charAt(0) === "m" ? "movie" : "show"}/${key.slice(1)}-${titleToDashed(title)}`,
 		text: year ? `${title} (${year})` : title,
 	}))
+
+/**
+ * Whether a loader's answer is rendered into a document now, and not sent to a browser as data (a navigation inside
+ * the app). The loader sees the same address for both, so the request's headers decide: a browser says what a
+ * request is for (`Sec-Fetch-Dest`), and a client that doesn't say asks for HTML when it wants a document. In doubt
+ * the answer is "data", which costs bytes and never a missing map.
+ */
+export function isDocumentRequest(request: Request): boolean {
+	const dest = request.headers.get("Sec-Fetch-Dest")
+	if (dest) return dest === "document" || dest === "iframe"
+	return (request.headers.get("Accept") ?? "").includes("text/html")
+}

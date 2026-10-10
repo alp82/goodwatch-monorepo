@@ -9,9 +9,9 @@
 // - The pack the browser asks for adds the filtered list of each of the title's chips, so that the first use of a
 //   chip is drawn from memory: up to six more requests. Crawlers never ask for it.
 // - A page is more of one filter's order: one request.
+// - The engine and the style are files of the client build. The page names them, and holds neither.
 // All three are kept for a day under their own cache names. A changed shape gets a new name.
 import { existsSync, readFileSync } from "node:fs"
-import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { counter } from "~/server/metrics/registry.server"
 import {
@@ -21,6 +21,7 @@ import {
 	type PackSource,
 	chipListLength,
 	floorOf,
+	isDocumentRequest,
 	levelIn,
 	packKey,
 	packLinks,
@@ -36,7 +37,6 @@ import { separateEntryUrl } from "~/server/separate-entry.server"
 import { buildBaseFilterConditions } from "~/server/utils/recommend"
 import type { RawPack, RawTitle } from "~/ui/related-map/engine"
 import { relatedMap } from "~/ui/related-map/map"
-import { RELATED_MAP_CSS } from "~/ui/related-map/styles"
 import {
 	type TraitToken,
 	chipTokens,
@@ -236,57 +236,49 @@ export async function relatedMapPage(
 
 // --- The section --------------------------------------------------------------------------------------------------
 
-interface Head {
-	css: string
-	script: string
-}
-type WithHead = typeof globalThis & { __gwRelatedMapHead?: Head }
-
-let head: Promise<Head> | undefined
+let script: string | null | undefined
 /**
- * The section's style and inline script, read once. The build bundles the script into a file next to the server
- * bundle (vite.config.js). A server without that file (the development server) bundles it now with the build tool's
- * own bundler. The section reads both from a global while the server renders (ui/related-map/RelatedMap.tsx), so
- * neither is part of the title route's own script.
+ * The address of the map's script among the client build's files, or null on a server without it (the development
+ * server, where the section starts the engine from a lazy chunk). The build writes the script with a hashed name and
+ * its address into a file next to the server bundle (vite.config.js).
  */
-function relatedMapHead(): Promise<Head> {
-	head ??= (async () => {
-		let script = ""
-		const file = separateEntryUrl("related-map.inline.js", import.meta.url)
+function relatedMapScript(): string | null {
+	if (script === undefined) {
+		script = null
+		const file = separateEntryUrl("related-map.assets.json", import.meta.url)
 		try {
-			if (existsSync(file)) script = readFileSync(file, "utf8").trim()
-			else {
-				if (process.env.NODE_ENV === "production")
-					console.error(
-						`Missing ${fileURLToPath(file)}; the related map's script is bundled now`,
-					)
-				const name = "esbuild"
-				const esbuild = (await import(/* @vite-ignore */ name)) as {
-					build: (
-						options: Record<string, unknown>,
-					) => Promise<{ outputFiles: { text: string }[] }>
-				}
-				const built = await esbuild.build({
-					entryPoints: [resolve("app/ui/related-map/inline.ts")],
-					tsconfig: resolve("tsconfig.json"),
-					bundle: true,
-					minify: true,
-					format: "iife",
-					platform: "browser",
-					target: "es2019",
-					write: false,
-				})
-				script = built.outputFiles[0].text.trim()
-			}
+			if (existsSync(file))
+				script = (JSON.parse(readFileSync(file, "utf8")) as { script: string })
+					.script
+			else if (process.env.NODE_ENV === "production")
+				console.error(
+					`Missing ${fileURLToPath(file)}; the related map starts after hydration`,
+				)
 		} catch (error) {
-			// Without the inline script the map starts when the page's own script does (the lazy chunk).
-			console.error("Related map: no inline script", error)
+			console.error("Related map: no script address", error)
 		}
-		const ready = { css: RELATED_MAP_CSS, script }
-		;(globalThis as WithHead).__gwRelatedMapHead = ready
-		return ready
-	})()
-	return head
+	}
+	return script
+}
+
+/**
+ * The section's markup of the documents that are being rendered, by title. A document's loader data doesn't carry
+ * the markup (it would be in the document twice): the section reads it from here while the server renders
+ * (ui/related-map/RelatedMap.tsx), and the browser keeps what the document holds.
+ */
+const DOCUMENT_MARKUP_MAX = 256
+type WithMarkup = typeof globalThis & {
+	__gwRelatedMapMarkup?: Map<string, string>
+}
+function keepForDocument(key: string, html: string) {
+	const all = globalThis as WithMarkup
+	all.__gwRelatedMapMarkup ??= new Map()
+	const kept = all.__gwRelatedMapMarkup
+	kept.delete(key)
+	kept.set(key, html)
+	// Maps iterate in insertion order: the oldest goes first.
+	if (kept.size > DOCUMENT_MARKUP_MAX)
+		kept.delete(kept.keys().next().value as string)
 }
 
 const outcomes = counter(
@@ -313,13 +305,12 @@ export async function relatedMapLookup(params: {
 }): Promise<RelatedMapLookup> {
 	if (!relatedMapEnabled()) return "off"
 	let timer: ReturnType<typeof setTimeout> | undefined
-	const pending = Promise.all([
+	const pending = (
 		Number.isSafeInteger(params.id)
 			? nearestOf(params.type, params.id)
-			: Promise.reject(new Error("not a title id")),
-		relatedMapHead(),
-	])
-		.then(([kept]) => asPack(kept) ?? ("none" as const))
+			: Promise.reject(new Error("not a title id"))
+	)
+		.then((kept) => asPack(kept) ?? ("none" as const))
 		.catch((error: unknown) => {
 			console.error("Related map lookup failed", {
 				...params,
@@ -351,24 +342,33 @@ export async function relatedMapLookup(params: {
 
 /** What the title route's loader hands to the section. */
 export interface RelatedMapData {
-	/** The section's inner markup: the picture of the page's title, drawn by the engine, and the plain title links. */
-	html: string
+	/** The address of the map's script, a path among the build's files. Without it the section loads a lazy chunk. */
+	script: string | null
+	/**
+	 * The section's inner markup: the picture of the page's title, drawn by the engine, and the plain title links.
+	 * Only in the data of a navigation inside the app. A document holds the markup itself.
+	 */
+	html?: string
 }
 
-/** The section of a title page from its pack, or undefined when the page shows the related titles carousel. */
+/**
+ * The section of a title page from its pack, or undefined when the page shows the related titles carousel.
+ * `document`: the answer is rendered into a document now, and not sent to a browser as loader data.
+ */
 export function relatedMapData(
 	lookup: RelatedMapLookup,
 	title: string,
+	document: boolean,
 ): RelatedMapData | undefined {
 	if (typeof lookup === "string") return undefined
-	return {
-		html: relatedMap(null).section({
-			root: lookup.c[0],
-			title,
-			pack: lookup,
-			links: packLinks(lookup),
-		}),
-	}
+	const html = relatedMap(null).section({
+		root: lookup.c[0],
+		title,
+		pack: lookup,
+		links: packLinks(lookup),
+	})
+	if (document) keepForDocument(lookup.c[0], html)
+	return { script: relatedMapScript(), ...(!document && { html }) }
 }
 
 // --- The title page's loader --------------------------------------------------------------------------------------
@@ -406,8 +406,13 @@ export async function prefetchRelatedSection(params: {
 export function relatedSectionData(
 	section: Awaited<ReturnType<typeof prefetchRelatedSection>>,
 	title: string,
+	request: Request,
 ) {
-	const relatedMap = relatedMapData(section.lookup, title)
+	const relatedMap = relatedMapData(
+		section.lookup,
+		title,
+		isDocumentRequest(request),
+	)
 	return {
 		relatedMap,
 		panelState: section.panelState,
