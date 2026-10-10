@@ -705,7 +705,7 @@ production in `origin` mode for a few minutes.
 
 ### The stylesheet's host makes no difference
 
-The same day, the stylesheet and the brand font went back to the site's own host, to find out whether the second
+The same day, the stylesheet and the brand font went back to the site's own host for a few hours, to find out whether the second
 connection is what delays the first paint. It isn't. Lighthouse with applied throttling
 (`--throttling-method=devtools`, CPU slowdown 2.7), where the browser really waits and a `preconnect` counts, five
 reports per page, medians:
@@ -725,7 +725,9 @@ and `20261009T211751Z-lighthouse-css-on-site-b`:
 | LCP medians of the two runs (ms) | 5,207 and 5,093 | 4,834 and 4,934 | 5,558 and 5,240 | 4,005 and 4,000 | 6,066 and 5,983 | 4,334 and 4,243 |
 | Score medians of the two runs | 71 and 72 | 70 and 68 | 65 and 65 | 80 and 80 | 63 and 63 | 78 and 79 |
 
-The limits stay as they are.
+The limits stay as they are. The owner had the change reverted on October 10, 2026: it bought nothing that a
+measurement shows, and it cost the site's own host two more requests and 66.5 KB per first page view (stylesheet
+32.2 KB, font 34.3 KB). The stylesheet and the font are on the static hostname again.
 
 What the reports with applied throttling show instead: on the movie page the document is complete after 0.84 s and
 the stylesheet (32 KB) after 2.77 s, on a connection that is already open. In that time the page's preloaded scripts
