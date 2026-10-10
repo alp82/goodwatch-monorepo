@@ -35,7 +35,8 @@ requests and their bytes.
 - **The in-process page cache keys on the address,** so a stored page doesn't outlive a switch.
 - **One setting with three values:** automatic, always the static hostname, always the origin. The default is always
   the origin, which is also how the benchmark keeps measuring the origin alone. The hostname is a setting too.
-- **A gauge per instance** tells which address its pages use. One alert fires after 10 minutes on the origin.
+- **A gauge per instance** tells which address its pages use. The alert for 10 minutes on the origin was planned
+  and then skipped by the owner on October 9, 2026: no alert exists.
 
 Rejected:
 
@@ -52,6 +53,8 @@ Rejected:
 ## Consequences
 
 - During a fallback the origin serves every file again and holds about 140 movie page views per second, not 500.
+  Measured on the public path with new connections on October 9, 2026: 120 hold and 140 fail
+  ([viral-spike-static-hostname.md](../benchmarks/viral-spike-static-hostname.md)).
   The destination holds only while the CDN is up.
 - The probe runs on the hosts. An outage limited to a region far from them isn't detected.
 - At worst about 30 to 36 seconds of pages without scripts and styles before a switch. An open tab recovers on its next
