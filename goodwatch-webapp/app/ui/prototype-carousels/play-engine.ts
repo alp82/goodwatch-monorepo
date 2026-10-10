@@ -879,7 +879,8 @@ export function playEngine(
 					delete G.wait[key]
 					// A pack that failed for the title someone stands on is asked for again, a few times, further apart: a
 					// stand-in is never left for good because one request was lost.
-					const tries = (G.again[key] = (G.again[key] ?? 0) + 1)
+					const tries = (G.again[key] ?? 0) + 1
+					G.again[key] = tries
 					if (tries <= 4)
 						win.setTimeout(() => {
 							const all = doc.querySelectorAll("[data-play]")

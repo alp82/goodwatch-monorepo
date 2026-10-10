@@ -10,7 +10,7 @@ export const MIX_CSS = `
 .ix-4{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
 .ix-hd{display:flex;flex-direction:column;gap:5px;width:100%;height:100%;min-width:0}
 .ix-ln{flex:none;display:flex;align-items:baseline;gap:.5rem;height:18px;min-width:0;font-size:.8125rem;line-height:1.125rem;white-space:nowrap}
-.ix-ln b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;color:#fde68a;font-weight:700}
+.ix-ln b{flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis;color:#fde68a;font-weight:700}
 .ix-ln span{flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;color:#9ca3af;font-size:.75rem}
 .ix-chs{flex:1;display:flex;gap:5px;min-width:0;min-height:0}
 .ix-chs .ix-c{flex:1 1 0}
@@ -92,7 +92,11 @@ color:#e5e7eb;white-space:nowrap;text-align:left;border:1px solid rgba(255,255,2
 .rg-big .ix-c{font-size:.8125rem}
 }
 @media (min-width:1024px) and (max-width:1279px){
+.ix-ln{max-width:46%}
+.ix-ln span{display:none}
 .ix-chs .ix-c:nth-child(n+4){display:none}
+.ix-4 .ix-s{font-size:0}
+.ix-4 .ix-s::before{content:attr(data-s)}
 }
 @media (min-width:1280px){
 .ix-s{font-size:inherit}

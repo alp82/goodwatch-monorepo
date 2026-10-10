@@ -485,8 +485,8 @@ const mix4: MixForm = (core, kit, mx) => {
 			if (pin) {
 				const v = core.val(ctx.c, pin.key)
 				const n = drawn[0]?.n ?? 0
-				line = `<b>Heading: ${dir(pin.up)} ${kit.emo(pin.key)} ${core.esc(kit.low(pin.key))}</b><span>${ctx.c.k !== pin.k ? `${pin.from} → ${v} since ${core.esc(pin.at)}. ` : ""}${
-					n ? `${n} marked ${n === 1 ? "poster leads" : "posters lead"} on` : "no title on this map leads on: − shows more"
+				line = `<b>Heading: ${dir(pin.up)} ${kit.emo(pin.key)} ${core.esc(kit.low(pin.key))}</b><span>${
+					n ? (ctx.c.k !== pin.k ? `${pin.from} → ${v} since ${core.esc(pin.at)}` : `${n} marked ${n === 1 ? "poster leads" : "posters lead"} on`) : "no title on this map leads on: − shows more"
 				}</span>`
 			}
 			const chips = drawn
