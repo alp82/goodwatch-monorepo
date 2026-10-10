@@ -1,0 +1,25 @@
+referrer,channel,sessions,pageviews,identities,interacting_sessions,interacting_identities
+www.google.com,Organic Search,666,846,617,262,248
+www.bing.com,Organic Search,100,141,92,59,57
+yandex.com,Organic Search,64,72,62,18,18
+yandex.ru,Organic Search,52,52,51,2,2
+duckduckgo.com,Organic Search,49,59,48,22,22
+search.brave.com,Organic Search,25,41,24,11,11
+search.yahoo.com,Organic Search,22,29,20,15,14
+yandex.com.tr,Organic Search,16,16,16,2,2
+accounts.google.com,Organic Search,15,24,14,4,4
+chatgpt.com,AI,5,8,4,5,4
+www.ecosia.org,Organic Search,5,15,4,4,4
+yandex.kz,Organic Search,3,3,3,0,0
+yandex.uz,Organic Search,2,4,2,1,1
+ya.ru,Referral,1,1,1,0,0
+us.search.yahoo.com,Organic Search,1,1,1,0,0
+gemini.google.com,AI,1,3,1,0,0
+r.search.yahoo.com,Organic Search,1,1,1,0,0
+coccoc.com,Organic Search,1,1,1,0,0
+tel.yandex.com.tr,Organic Search,1,3,1,0,0
+l.meta.ai,AI,1,1,1,1,1
+yaca.yandex.com,Organic Search,1,1,1,0,0
+yandex.by,Organic Search,1,1,1,0,0
+tv.yandex.com,Organic Search,1,1,1,0,0
+

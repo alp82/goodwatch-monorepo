@@ -113,7 +113,7 @@ Source: Search Console API, property `sc-domain:goodwatch.app`, `searchAnalytics
 - **Query attribution gap:** 19% of clicks and 22% of impressions carry no query.
 - **Discovery intent:** four queries matched the classification rule, and one is genuine: "indori ishq like web series", 1 impression, position 55, 2025-12-09. No mood, genre or Explorer URL has had more than 7 impressions. In December 2025 the title pages drew title lookups and "X cast" queries, with long-tail titles on pages 1 to 3 and well-known titles far down (The Godfather at position 72).
 
-PostHog landing pages and referrers were not obtained: see [Not verified](#not-verified).
+PostHog access was restored on 2026-10-10. The [search landing baseline](discovery-search-posthog-baseline.md) records 1,009 captured sessions from recognized search referrers since March 1, their landing routes, and interaction signals. It cannot attribute individual sessions to search keywords or establish whether visitors wanted a same-name product.
 
 ## Demand and what ranks now
 
@@ -282,7 +282,7 @@ What it could not test is the highest-value check: whether real Googlebot is fet
 | Whether Googlebot crawls title pages, how many a day, and with which responses | Search Console UI, Crawl stats; or proxy access logs filtered to verified Googlebot addresses. The log read was refused for the reviewer. |
 | What Googlebot received during the crawler flood of 2026-10-03/04, when 32% of requests closed without a response (`90aa853c`) | The same two sources |
 | Why sitelink URLs inspect as unknown | URL Inspection in the UI for `/movies` |
-| Landing pages and referrers of search visitors; whether the April to July brand clicks were people who wanted this site | PostHog project 24375. The plugin used in [#54](https://github.com/alp82/goodwatch-monorepo/issues/54#issuecomment-5687054567) is not installed in this session, and I did not look for credentials. |
+| Whether the April to July brand clicks were people who wanted this site | [PostHog baseline](discovery-search-posthog-baseline.md): 120 of 333 April–July USA mobile Google sessions had autocapture, but session-level keywords and wrong-product intent remain unobservable. Landing pages and referrers are now measured. |
 | Who outranks goodwatch.app for its own name in the USA, and when the same-name products launched | A manual US search; the stores' release histories |
 | Host or proxy events from April to September 2026 that left no commit | Uptime monitor history, host logs, Coolify deploy history |
 | Search volumes | Google Keyword Planner (free with an Ads account) |
