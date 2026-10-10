@@ -174,6 +174,8 @@ export interface PlayForm {
 	near?: (ctx: PlayCtx, title: PlayTitle) => void
 	/** Twelfth round. A control is pointed at or held with a finger (`name`), or no longer (null). */
 	preview?: (section: Element, ctx: PlayCtx, name: string | null, arg: string) => void
+	/** Thirteenth round. The form's own navigation, in place of the hint and the history row. */
+	bar?: (ctx: PlayCtx) => string
 }
 export interface PlayCore {
 	M: PlayMeta
@@ -675,6 +677,7 @@ export function playEngine(
 	}
 	const barOf = (ctx: PlayCtx, form: PlayForm) => {
 		const { st } = ctx
+		if (form.bar) return form.bar(ctx)
 		if (st.trail.length < 2)
 			return `<p class="pl-hint" data-pl-hint="">${esc(form.hint)}</p>`
 		// The start, the title you stand on, and between them one control with a count that opens the steps in

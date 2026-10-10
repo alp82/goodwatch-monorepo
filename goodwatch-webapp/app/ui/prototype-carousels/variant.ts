@@ -112,8 +112,13 @@
 // twice), the bars, the legend, the heading, and the words stay, and six remixes of them join (see mix-forms.ts):
 // - mix1: level chips. mix2: legend bars. mix3: one heading. mix4: signposts. mix5: before and after.
 // - mix6: keep what you found.
-// The floating bar shows today, the baseline, the four that stay, and the six. The other variants still answer to
-// the URL.
+//
+// Thirteenth round, after the owner tried the twelfth: the level chips are the one. Three forms on top of them that
+// share the chips, the sweep on a chip that is on, and what chips and posters show of each other, and differ in the
+// navigation and the card (see fin-forms.ts):
+// - fin1: path bar. fin2: poster trail. fin3: one card.
+// The floating bar shows today, the baseline, the remixes the three draw on, and the three. The other variants
+// still answer to the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
 import { PLAY_NAMES } from "~/ui/prototype-carousels/play-names"
@@ -198,27 +203,17 @@ export const CAROUSEL_VARIANTS = [
 	"mix4",
 	"mix5",
 	"mix6",
+	"fin1",
+	"fin2",
+	"fin3",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
 /**
- * The variants the floating bar cycles through. Twelfth round: today, the rings with the fixes, the four forms of
- * their control area that stay, and the six remixes. Everything else still answers to the URL.
+ * The variants the floating bar cycles through. Thirteenth round: today, the rings with the fixes, the remixes the
+ * new forms draw on, and the three new forms. Everything else still answers to the URL.
  */
-export const CAROUSEL_BAR: CarouselVariant[] = [
-	"today",
-	"roam1",
-	"rings1",
-	"rings5",
-	"rings9",
-	"rings10",
-	"mix1",
-	"mix2",
-	"mix3",
-	"mix4",
-	"mix5",
-	"mix6",
-]
+export const CAROUSEL_BAR: CarouselVariant[] = ["today", "roam1", "mix1", "mix3", "mix4", "mix5", "fin1", "fin2", "fin3"]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	today: "Today (Swiper)",
@@ -300,6 +295,9 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	mix4: "",
 	mix5: "",
 	mix6: "",
+	fin1: "",
+	fin2: "",
+	fin3: "",
 	...PLAY_NAMES,
 }
 

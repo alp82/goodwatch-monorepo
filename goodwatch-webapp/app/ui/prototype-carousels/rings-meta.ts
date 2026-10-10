@@ -24,6 +24,9 @@ export const RING_NAMES: Record<string, string> = {
 	mix4: "M4 Signposts",
 	mix5: "M5 Before and after",
 	mix6: "M6 Keep what you found",
+	fin1: "F1 Path bar",
+	fin2: "F2 Poster trail",
+	fin3: "F3 One card",
 }
 
 /** How a form's pack chooses the filtered lists it brings along (see `ringTokens` and the pack builder). */
@@ -46,8 +49,13 @@ export const RING_MODES: Record<string, string> = {
 	mix4: "0",
 	mix5: "bars",
 	mix6: "0",
+	// Thirteenth round (fin-forms.ts). The level chips' lists, so the same packs as mix1.
+	fin1: "bars",
+	fin2: "bars",
+	fin3: "bars",
 }
 export const isMixVariant = (variant: string) => variant.startsWith("mix")
+export const isFinVariant = (variant: string) => variant.startsWith("fin")
 export const isRingsVariant = (variant: string) => variant in RING_MODES
 
 /** Families of traits that tell much the same story (best-meta.ts): a control offers at most one of each. */

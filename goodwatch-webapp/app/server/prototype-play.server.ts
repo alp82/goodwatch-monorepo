@@ -38,6 +38,7 @@ import {
 	sameFranchise,
 } from "~/ui/prototype-carousels/best-meta"
 import { PLAY_FORMS } from "~/ui/prototype-carousels/play-forms"
+import { FIN_FORMS, finKit } from "~/ui/prototype-carousels/fin-forms"
 import { MIX_FORMS, mixKit } from "~/ui/prototype-carousels/mix-forms"
 import { RINGS_FORMS, ringsKit } from "~/ui/prototype-carousels/rings-forms"
 import {
@@ -844,6 +845,8 @@ export function playHead(variant: PlayVariant): Promise<PlayHead> {
 				? `function(c){return(${SCRUB_FORMS[variant].toString()})(c,(${scrubKit.toString()})(c,${JSON.stringify(scrubExtra())}))}`
 				: BEST_FORMS[variant]
 					? `function(c){return(${BEST_FORMS[variant].toString()})(c,(${bestKit.toString()})(c,${JSON.stringify(bestExtra())}))}`
+					: FIN_FORMS[variant]
+						? `function(c){var k=(${ringsKit.toString()})(c,${JSON.stringify(ringsExtra())},${ringTokens.toString()});var m=(${mixKit.toString()})(c,k);return(${FIN_FORMS[variant].toString()})(c,k,m,(${finKit.toString()})(c,k,m))}`
 					: MIX_FORMS[variant]
 						? `function(c){var k=(${ringsKit.toString()})(c,${JSON.stringify(ringsExtra())},${ringTokens.toString()});return(${MIX_FORMS[variant].toString()})(c,k,(${mixKit.toString()})(c,k))}`
 					: RINGS_FORMS[variant]
