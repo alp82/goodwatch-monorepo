@@ -75,7 +75,7 @@ request -> browser gate -> static files -> page cache -> health endpoints -> Exp
 ### Search
 
 - **Route:** the proxy on abio sends `POST /api/combined-search` and `GET /api/command-palette` to vector1's proxy, which balances them across the two search roles and asks each role's `/health/ready` every 2 seconds. The files are [`goodwatch-search.yaml`](../goodwatch-proxy/traefik/goodwatch-search.yaml) and [`goodwatch-search-instance.yaml`](../goodwatch-proxy/traefik/goodwatch-search-instance.yaml).
-- **State on October 9, 2026, from the ticket [Deploy two search roles on vector1 and route the search paths to them](https://github.com/alp82/goodwatch-monorepo/issues/400):** both roles run, both proxy files are installed, and the two paths reach the roles and no page instance. One step is left: the page instances still run with the default role, `both`, so each still loads the query models and the indexes (about 1.76 GB) without getting a search. The owner's switch to `WEBAPP_ROLE=page` ends that.
+- **State on October 9, 2026, from the resolution of [Deploy two search roles on vector1 and route the search paths to them](https://github.com/alp82/goodwatch-monorepo/issues/400):** both roles run, both proxy files are installed, the two paths reach the roles and no page instance, and both page instances run as `WEBAPP_ROLE=page`. A page instance used about 1.1 GB shortly after its start, against 2.4 to 2.6 GB before (single readings).
 - **A search role** holds one query encoder with 2 threads and runs at most 4 searches at once. One more gets the busy answer, 503 with `Retry-After`. See [search-role.md](search-role.md) and [ADR 0011](adr/0011-search-runs-as-a-role-of-the-webapp-image.md).
 - **The browser treats a bare 502, 503, or 504 on the two paths as the busy answer,** so a search that no role can take shows "busy" and not an error.
 - **The search roles are deployed by a command, not by a push:** `./deploy.sh <commit>` on vector1, one role at a time. They can run an older commit than the page instances. See [search-role-deploy.md](search-role-deploy.md).
@@ -165,7 +165,7 @@ Agents don't change Coolify settings, DNS, the proxy's configuration, or firewal
 | --- | --- | --- | --- |
 | `STATIC_ASSETS` | `auto` | Pages name the static hostname, and the probe decides about the fallback. `origin` forces the site's host | [static-assets.md](static-assets.md#settings) |
 | `STATIC_ASSETS_HOST` | The static hostname | Also turns on the file-only rule for requests with that `Host` | The same |
-| `WEBAPP_ROLE` | Not set, which means `both` | `page` takes the search models out of the page instances | [search-role.md](search-role.md#settings) |
+| `WEBAPP_ROLE` | `page` since October 9, 2026 | `page` keeps the search models out of the page instances. Not set means `both` | [search-role.md](search-role.md#settings) |
 | `PAGE_CACHE` | Not set, which means on | `off` and a restart turn the page cache off | [page-cache.md](page-cache.md#how-to-turn-it-off) |
 | `PAGE_CACHE_MAX_BYTES`, `PAGE_CACHE_MAX_ENTRIES`, `PAGE_CACHE_MAX_FRESH_SECONDS` | Defaults: 128 MB, 2,000 pages, no cap | The store's bounds | [page-cache.md](page-cache.md#bounds) |
 | `CARD_RENDERERS`, `OG_CARD_FIRST_SECONDS`, `OG_CARD_KEPT_SECONDS` | Defaults: 2 children, 30 minutes, 7 days | The OG image renderer and its lifetimes | [viral-spike-og-images.md](benchmarks/viral-spike-og-images.md#storage) |
@@ -281,10 +281,9 @@ Each process serves its counters on a private port, and Alloy sends them to Graf
 - **One page instance alone on production** wasn't measured, and neither was the loss of abio or of vector1 as a host.
 - **A cache node failure under load** wasn't run: [Run a one-node Redis failure drill](https://github.com/alp82/goodwatch-monorepo/issues/290). Adding a node was rehearsed on a throwaway cluster and not on production.
 - **The search roles' capacity on production** wasn't measured. The load run at 20 searches per second was removed from the checklist, because it would write history rows to production and could start paid calls. The figures come from a benchmark build.
-- **The page instances as `WEBAPP_ROLE=page`** aren't switched yet, as far as the ticket says. This page doesn't describe a later state.
 - **Whether a search role sees the visitor's address** in production isn't verified. The local proxy test shows it.
 - **The search roles' series in Grafana Cloud** weren't read after Alloy started to scrape them.
-- **Adding a search role on a worker host** has no runbook yet: [Write the runbook for adding a search role on a worker host](https://github.com/alp82/goodwatch-monorepo/issues/401).
+- **Adding a search role on a worker host** has a runbook that isn't rehearsed: [search-role-runbook.md](search-role-runbook.md). The route to a second host isn't written or tested.
 
 ### Deploys and data
 

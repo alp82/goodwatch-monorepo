@@ -1,4 +1,4 @@
-// Draft, loaded nowhere yet. Loaded only on a host that runs search roles (vector1), by the Compose override
+// Loaded on vector1 since October 9, 2026. Loaded only on a host that runs search roles (vector1), by the Compose override
 // docker-compose.search-role.yml. The host's Alloy scrapes each search role on the coolify network, by the network
 // alias that goodwatch-search/docker-compose.yml gives the role. See docs/search-role-deploy.md.
 //

@@ -1,5 +1,5 @@
-# Balances the search requests from abio's proxy across the search roles on vector1. Drafted on October 9, 2026,
-# installed nowhere.
+# Balances the search requests from abio's proxy across the search roles on vector1. Installed on vector1's proxy on
+# October 9, 2026.
 #
 # Where it goes: the proxy on vector1 (Traefik v3.6), as a dynamic configuration. In Coolify: Servers > vector1 >
 # Proxy > Dynamic Configurations > + Add, file name goodwatch-search-instance.yaml. Traefik loads it without a
@@ -28,7 +28,7 @@
 #   setting is already in the proxy's configuration, for the page instance (see goodwatch-instance.yaml).
 #
 # To add a role on this host: add its alias as a third server. A role on another host needs its own route from
-# abio's proxy, in goodwatch-search.yaml.
+# abio's proxy, in goodwatch-search.yaml: see docs/search-role-runbook.md.
 #
 # Test it before installing it: ./test-search-local.sh in this directory.
 http:

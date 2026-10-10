@@ -1,6 +1,6 @@
 # Deploy the search roles
 
-The steps that put search into its own processes in production, for [Deploy two search roles on vector1 and route the search paths to them](https://github.com/alp82/goodwatch-monorepo/issues/400). Prepared on October 9, 2026. Nothing in this document is installed or started yet.
+The steps that put search into its own processes in production, for [Deploy two search roles on vector1 and route the search paths to them](https://github.com/alp82/goodwatch-monorepo/issues/400). Prepared and carried out on October 9, 2026: both search roles run on vector1, both proxy files are installed, the two search paths reach the roles, and the page instances run as `WEBAPP_ROLE=page`. The ticket's resolution has the results. Sections below that describe a state "today" or a step to come were written before the deploy and are kept as the record of it. To add a role on another host, see [search-role-runbook.md](search-role-runbook.md).
 
 The decision is in [Decide whether search becomes its own service](https://github.com/alp82/goodwatch-monorepo/issues/251) and in [ADR 0011](adr/0011-search-runs-as-a-role-of-the-webapp-image.md). The measurements are in the [search role benchmark](https://github.com/alp82/goodwatch-monorepo/blob/bench/search-role/docs/benchmarks/search-role.md) on branch `bench/search-role`.
 
@@ -271,6 +271,8 @@ After this step, the order of undoing matters: a page instance answers a search 
 Left for the owner to decide later: the webapp application's 4 GB memory limit, which a page role no longer needs, and the empty network `gw-search-role-net` on vector1 with its firewall rule, which stay for further measurements.
 
 ## Not verified
+
+This list was written before the deploy. The deploy has since shown, as the ticket's resolution records: a start of both roles from the compose file with a pull of the image, the roles' startup and the time until they're ready (15 to 22 seconds), the smoke check against both real roles, `./deploy.sh` with `start`, `stop`, and `status`, `copy-env` against the real container, that the roles reach the stores from the `coolify` network (they answer lookups, and the owner's searches in a browser worked), and one role stopped behind the live proxy. Still not verified after the deploy: `./deploy.sh <commit>` against real roles, the roles' series in Grafana Cloud, that a role sees the visitor's address in production, search under load on the deployed roles, and the items below about the nightly cleanup, the registry's retention, and Coolify's rewrite of the proxy files.
 
 - Anything with a real search role: a start from the compose file, the pull of the image outside a Coolify deployment (only the manifest was read), the role's startup log lines and how long it takes to become ready, the health check inside a role, and the smoke check against a real role. The health check's command passed inside the page instance's container on vector1. The compose file validates with Docker Compose v2.40.2 on worker3 and v5.5.1 on the development machine, and vector1 has v2.40.1.
 - `deploy.sh` against Docker. `goodwatch-search/test-deploy.sh` runs it against a stand-in for the `docker` command: the order of the roles, each way a role can fail to become ready, the pull that fails, and `copy-env`.

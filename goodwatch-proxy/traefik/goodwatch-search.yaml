@@ -1,4 +1,4 @@
-# Sends the search paths of goodwatch.app to the search roles on vector1. Drafted on October 9, 2026, installed nowhere.
+# Sends the search paths of goodwatch.app to the search roles on vector1. Installed on abio's proxy on October 9, 2026.
 #
 # Where it goes: the proxy on abio (Traefik v2.10), as a dynamic configuration. In Coolify: Servers > abio > Proxy >
 # Dynamic Configurations > + Add, file name goodwatch-search.yaml. Traefik loads it without a restart. Deleting the

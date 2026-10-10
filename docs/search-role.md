@@ -67,7 +67,8 @@ In production, two search roles run on vector1 from a compose file,
   warns when a role is behind in a file that a search role runs.
 
 The steps, the checks, and what Coolify can and can't do to these containers:
-[search-role-deploy.md](search-role-deploy.md). The commands:
+[search-role-deploy.md](search-role-deploy.md). A further role on a worker host:
+[search-role-runbook.md](search-role-runbook.md). The commands:
 [goodwatch-search/README.md](../goodwatch-search/README.md).
 
 ## Start a role locally
