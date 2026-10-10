@@ -25,7 +25,10 @@ const START_LINKS = 16
  * PROTOTYPE (#352): the pool's first titles for a visitor nobody knows anything about, by popularity. No country,
  * no viewer: the same list for everyone. Empty while the snapshot loads.
  */
-async function startLinks(posters: boolean): Promise<StartLink[]> {
+async function startLinks(
+	posters: boolean,
+	years: boolean,
+): Promise<StartLink[]> {
 	try {
 		const snapshot = getTitleSnapshot()
 		if (!snapshot) return []
@@ -46,6 +49,7 @@ async function startLinks(posters: boolean): Promise<StartLink[]> {
 					tmdb_id: d.tmdb_id,
 					title: d.title,
 					...(posters && { poster_path: d.poster_path }),
+					...(years && { release_year: d.release_year }),
 				},
 			]
 		})
@@ -70,8 +74,16 @@ export async function loadLivingRoom(request: Request) {
 	if (!user) {
 		// PROTOTYPE (#352): only with `?links=`, so `/` without it is today's HTML.
 		const variant = new URL(request.url).searchParams.get("links")
-		if (variant === "strip" || variant === "scroll" || variant === "tv")
-			data.startLinks = await startLinks(variant === "tv")
+		if (
+			variant === "strip" ||
+			variant === "scroll" ||
+			variant === "scroll2" ||
+			variant === "tv"
+		)
+			data.startLinks = await startLinks(
+				variant === "tv",
+				variant.startsWith("scroll"),
+			)
 		return { data, headers }
 	}
 	try {

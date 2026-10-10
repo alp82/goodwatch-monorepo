@@ -11,7 +11,7 @@ def fetch(q):
     return best
 base, base_gz = fetch('?bar=0')
 rows = []
-for v in [None, 'strip', 'scroll', 'tv']:
+for v in [None, 'strip', 'scroll', 'scroll2', 'tv']:
     html, gz = (base, base_gz) if v is None else fetch(f'?links={v}&bar=0')
     text = html.decode()
     hrefs = re.findall(r'<a\b[^>]*\bhref="([^"]+)"', text)

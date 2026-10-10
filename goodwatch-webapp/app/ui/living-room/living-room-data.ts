@@ -25,6 +25,8 @@ export type TvPair = {
 export type StartLink = Pick<TitleCard, "media_type" | "tmdb_id" | "title"> & {
 	/** Only for the `tv` variant, which shows posters. */
 	poster_path?: string | null
+	/** Only for the scroll variants, which show it as quiet metadata. */
+	release_year?: number | null
 }
 
 export type LivingRoomData = {

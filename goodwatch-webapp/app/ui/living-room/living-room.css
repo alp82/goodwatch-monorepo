@@ -351,9 +351,14 @@ body:has(.living-room) {
 	}
 }
 
-/* Variant scroll: the room is a block exactly one first screen tall (window minus the site header, and minus the
-   bottom navigation below 1024px), and the page scrolls. */
+/* Variants scroll and scroll2: the room is a block exactly one first screen tall (window minus the site header, and
+   minus the bottom navigation below 1024px). The page does not scroll while the room is where the visitor is: the
+   wheel, the swipe, and the keys stay the room's. `#browse:target` (the URL ends in #browse, the way without JavaScript) or `data-lr-below` lets it scroll. */
 html:has(.living-room-scroll) {
+	overflow: hidden;
+}
+html:has(#browse:target),
+html[data-lr-below] {
 	overflow: visible auto;
 }
 body:has(.living-room-scroll) {
@@ -366,6 +371,9 @@ body:has(.living-room-scroll) {
 	z-index: 40;
 	height: calc(100vh - 8rem);
 	height: calc(100dvh - 8rem);
+	/* A renderer with a very tall window (a crawler's) still gets the section within reach. */
+	max-height: 1600px;
+	scroll-margin-top: 4rem;
 }
 @media (min-width: 1024px) {
 	.living-room-scroll {
@@ -376,7 +384,402 @@ body:has(.living-room-scroll) {
 	top: 0;
 	bottom: auto;
 }
-/* Phone landscape keeps today's full-window room over the header: the section below is not reachable there. */
+/* Phone portrait: the Remote's keys end above the lip (LIP_RESERVE in PhoneLivingRoom.tsx). */
+@media (max-width: 767px) {
+	.living-room-scroll.living-room-first {
+		--lr-r: max(
+			0.3px,
+			min(66cqw / 312, (100cqh - var(--lr-remote-top) - 70px) / 700, 1px)
+		);
+	}
+}
+main:has(.living-room-scroll) + footer {
+	margin-top: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+	html:has(.living-room-scroll) {
+		scroll-behavior: auto;
+	}
+}
+
+/* The section below the room. Text only. */
+.lrb {
+	--lrb-font: "Gabarito", ui-sans-serif, system-ui, sans-serif;
+	position: relative;
+	z-index: 41;
+	scroll-margin-top: 4rem;
+	background: linear-gradient(180deg, #080a10 0, #111827 26rem);
+	color: #a3a3a3;
+}
+.lrb a {
+	text-decoration: none;
+}
+.lrb a:focus-visible {
+	outline: 2px solid #fcd34d;
+	outline-offset: 3px;
+	border-radius: 6px;
+}
+/* The lip: the section's top edge, lying over the bottom of the room. The one way down. */
+.lrb-lip {
+	position: absolute;
+	bottom: 100%;
+	left: 0;
+	right: 0;
+	height: 58px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+	padding: 0 12px 0 18px;
+	background: #080a10;
+	border-top: 1px solid rgba(252, 211, 77, 0.45);
+	border-radius: 20px 20px 0 0;
+	box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.6);
+	color: #fff;
+	font-family: var(--lrb-font);
+}
+.lrb-lip b {
+	display: block;
+	font-size: 17px;
+	font-weight: 800;
+	line-height: 1.15;
+}
+.lrb-lip small {
+	display: block;
+	font-size: 12.5px;
+	color: rgba(255, 255, 255, 0.6);
+}
+/* Below 768px the bottom navigation's round key lies over the lip's middle: the short line ends before it. */
+.lrb-lip u {
+	display: none;
+	text-decoration: none;
+}
+@media (min-width: 768px) {
+	.lrb-lip u {
+		display: inline;
+	}
+}
+.lrb-lip i {
+	display: grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 999px;
+	background: linear-gradient(180deg, #fcd34d, #f59e0b);
+	color: #111;
+	transition: transform 180ms ease-out;
+}
+.lrb-lip svg {
+	width: 22px;
+	height: 22px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2.6;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.lrb-lip:hover i,
+.lrb-lip:focus-visible i {
+	transform: translateY(3px);
+}
+@media (min-width: 768px) {
+	.lrb {
+		border-top: 1px solid rgba(252, 211, 77, 0.3);
+	}
+	/* A tab at the right, clear of the Remote in the middle and the caption at the left. */
+	.lrb-lip {
+		left: auto;
+		right: 6rem;
+		/* Above the section's top line, so the whole tab is inside the first screen. */
+		bottom: calc(100% + 1px);
+		height: 60px;
+		padding: 0 12px 0 24px;
+		border: 1px solid rgba(252, 211, 77, 0.45);
+		border-bottom: 0;
+	}
+}
+
+.lrb-in {
+	max-width: 76rem;
+	margin: 0 auto;
+	padding: 2.25rem 1.25rem 2.5rem;
+}
+.lrb-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 1rem 2rem;
+}
+.lrb-eye {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.22em;
+	text-transform: uppercase;
+	color: rgba(252, 211, 77, 0.85);
+}
+.lrb h2 {
+	font-family: var(--lrb-font);
+	font-weight: 800;
+	letter-spacing: -0.01em;
+	color: #fff;
+	font-size: 1.6rem;
+	line-height: 1.1;
+}
+.lrb-head h2 {
+	margin-top: 0.35rem;
+	font-size: clamp(2rem, 5vw, 3rem);
+}
+.lrb-back {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	height: 44px;
+	padding: 0 1.1rem;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.05);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+	color: rgba(255, 255, 255, 0.9);
+	font-size: 14px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+.lrb-back:hover {
+	background: rgba(255, 255, 255, 0.1);
+	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.6);
+}
+
+/* The titles: a numbered list that reads down each column. */
+.lrb-titles {
+	margin-top: 1.75rem;
+	columns: 1;
+	column-gap: 3rem;
+	counter-reset: lrb;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.lrb-titles li {
+	position: relative;
+	display: grid;
+	grid-template-columns: 2.4rem 1fr;
+	align-items: baseline;
+	padding: 0.72rem 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	break-inside: avoid;
+	counter-increment: lrb;
+}
+.lrb-titles li::before {
+	content: counter(lrb, decimal-leading-zero);
+	grid-row: span 2;
+	font-family: var(--lrb-font);
+	font-size: 13px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: rgba(252, 211, 77, 0.7);
+}
+.lrb-titles a {
+	font-family: var(--lrb-font);
+	font-size: 18px;
+	font-weight: 600;
+	line-height: 1.25;
+	color: #fff;
+}
+/* The whole row is the link's target. */
+.lrb-titles a::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+}
+.lrb-titles li:hover a,
+.lrb-titles a:focus-visible {
+	color: #fcd34d;
+}
+.lrb-titles span {
+	grid-column: 2;
+	font-size: 12.5px;
+	color: #737373;
+}
+
+.lrb-hubs {
+	margin-top: 3.25rem;
+}
+.lrb-cards {
+	margin-top: 1.1rem;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.6rem;
+}
+.lrb-cards a {
+	display: block;
+	height: 100%;
+	padding: 0.85rem 1rem 0.95rem;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.04);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.lrb-cards a:hover {
+	background: rgba(252, 211, 77, 0.08);
+	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.5);
+}
+.lrb-cards b {
+	display: block;
+	font-family: var(--lrb-font);
+	font-size: 17px;
+	font-weight: 700;
+	color: #fff;
+}
+.lrb-cards span {
+	display: block;
+	margin-top: 0.15rem;
+	font-size: 13px;
+	line-height: 1.35;
+}
+.lrb-by {
+	margin-top: 1.75rem;
+	display: grid;
+	gap: 1.5rem 3rem;
+}
+.lrb-by h3 {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: #737373;
+}
+.lrb-by ul {
+	margin-top: 0.6rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+.lrb-by a {
+	display: inline-flex;
+	align-items: center;
+	height: 40px;
+	padding: 0 0.95rem;
+	border-radius: 999px;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+	color: #f5f5f5;
+	font-size: 14px;
+	font-weight: 600;
+}
+.lrb-by a:hover {
+	color: #fcd34d;
+	box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.6);
+}
+.lrb-end {
+	margin-top: 3rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
+	text-align: center;
+}
+@media (min-width: 640px) {
+	.lrb-in {
+		padding: 3.25rem 2rem 3rem;
+	}
+	.lrb-titles {
+		columns: 2;
+	}
+	.lrb-cards {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+	.lrb-by {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+@media (min-width: 1024px) {
+	.lrb-titles {
+		columns: 4;
+	}
+	.lrb-cards {
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+	}
+}
+
+/* scroll2, the second look: a programme page. Large titles at the right, the ways to browse as a plain index at
+   the left, a warm light from the room in the corner. Same markup. */
+.lrb-2 {
+	background: radial-gradient(
+			70rem 34rem at 0 0,
+			rgba(251, 146, 60, 0.13),
+			transparent 62%
+		),
+		linear-gradient(180deg, #0b0a0c 0, #111827 34rem);
+}
+.lrb-2 .lrb-titles {
+	columns: 1;
+	border-top: 0;
+}
+.lrb-2 .lrb-titles li {
+	grid-template-columns: 3.4rem 1fr;
+	padding: 0.85rem 0;
+}
+.lrb-2 .lrb-titles li::before {
+	font-size: 26px;
+	font-weight: 800;
+	color: rgba(255, 255, 255, 0.16);
+}
+.lrb-2 .lrb-titles a {
+	font-size: 22px;
+	font-weight: 700;
+}
+.lrb-2 .lrb-cards {
+	grid-template-columns: 1fr;
+	gap: 0;
+}
+.lrb-2 .lrb-cards a {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0 0.75rem;
+	padding: 0.7rem 0;
+	border-radius: 0;
+	background: none;
+	box-shadow: none;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.lrb-2 .lrb-cards a:hover b {
+	color: #fcd34d;
+}
+.lrb-2 .lrb-cards b::after {
+	content: " →";
+	color: rgba(252, 211, 77, 0.8);
+}
+.lrb-2 .lrb-by {
+	grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+	.lrb-2 .lrb-titles {
+		columns: 2;
+	}
+}
+@media (min-width: 1024px) {
+	.lrb-2 .lrb-in {
+		display: grid;
+		grid-template-columns: 21rem minmax(0, 1fr);
+		grid-template-areas: "head titles" "hubs titles" "end end";
+		grid-template-rows: auto 1fr auto;
+		column-gap: 4.5rem;
+	}
+	.lrb-2 .lrb-head {
+		grid-area: head;
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.lrb-2 .lrb-titles {
+		grid-area: titles;
+		margin-top: 0;
+	}
+	.lrb-2 .lrb-hubs {
+		grid-area: hubs;
+		margin-top: 2.75rem;
+	}
+	.lrb-2 .lrb-end {
+		grid-area: end;
+	}
+}
+
+/* Phone landscape keeps today's full-window room over the site header. The lip is a tab at the bottom left, and
+   going below slides the room up out of the window (transform only) instead of scrolling. */
 @media (orientation: landscape) and (max-height: 540px) and (min-width: 768px) {
 	.living-room-scroll,
 	.living-room-scroll.living-room-first {
@@ -384,8 +787,42 @@ body:has(.living-room-scroll) {
 		inset: 0;
 		height: auto;
 		z-index: 1001;
+		transition: transform 460ms cubic-bezier(0.6, 0, 0.2, 1);
 	}
-	.lr-scroll-cue {
+	html:has(#browse:target) .living-room-scroll,
+	html[data-lr-below] .living-room-scroll {
+		transform: translateY(-101%);
+	}
+	/* No stacking context of its own, so the tab can lie over the room. */
+	.lrb {
+		z-index: auto;
+	}
+	.lrb-lip {
+		position: fixed;
+		z-index: 1002;
+		left: 12px;
+		right: auto;
+		bottom: 0;
+		height: 46px;
+		transition: opacity 200ms;
+	}
+	.lrb-lip i {
+		width: 30px;
+		height: 30px;
+	}
+	.lrb-lip small {
 		display: none;
+	}
+	html:has(#browse:target) .lrb-lip,
+	html[data-lr-below] .lrb-lip {
+		opacity: 0;
+		pointer-events: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.living-room-scroll,
+	.lrb-lip,
+	.lrb-lip i {
+		transition: none;
 	}
 }

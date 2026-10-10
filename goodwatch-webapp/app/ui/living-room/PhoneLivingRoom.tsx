@@ -28,7 +28,7 @@ import {
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import {
 	type LinksVariant,
-	ScrollCue,
+	isScrollVariant,
 	StripLinks,
 } from "~/ui/prototype-start-page-links/StartPageLinks"
 import type { StartLink } from "./living-room-data"
@@ -57,6 +57,8 @@ export const PHONE_PORTRAIT_QUERY = "(max-width: 767px)"
 const PORTRAIT = PHONE_PORTRAIT_QUERY
 /** PROTOTYPE (#352): the strip's two lines plus the part of the bottom navigation's round key that sticks up. */
 const STRIP_RESERVE = 72
+/** PROTOTYPE (#352): the lip of the section below the room, which lies over the room's bottom edge. */
+const LIP_RESERVE = 60
 const LANDSCAPE = "(orientation: landscape) and (max-height: 540px)"
 
 /** Which phone layout the window wants: portrait when narrow, landscape when short and wide, else none. */
@@ -120,7 +122,11 @@ export function PhoneLivingRoom({
 						size.w,
 						size.h,
 						orientation,
-						linksVariant === "strip" ? STRIP_RESERVE : 0,
+						linksVariant === "strip"
+							? STRIP_RESERVE
+							: isScrollVariant(linksVariant)
+								? LIP_RESERVE
+								: 0,
 					)
 				: null,
 		[size, orientation, linksVariant],
@@ -180,11 +186,11 @@ export function PhoneLivingRoom({
 	return (
 		<div
 			ref={root}
-			className={`living-room overflow-clip bg-[#07080b] text-white ${linksVariant === "scroll" ? "living-room-scroll" : `fixed inset-x-0 ${landscape ? "inset-y-0 z-[1001]" : "bottom-16 top-16 z-40"}`}`}
+			id={isScrollVariant(linksVariant) ? "room" : undefined}
+			className={`living-room overflow-clip bg-[#07080b] text-white ${isScrollVariant(linksVariant) ? "living-room-scroll" : `fixed inset-x-0 ${landscape ? "inset-y-0 z-[1001]" : "bottom-16 top-16 z-40"}`}`}
 		>
 			<LivingRoomLinks />
 			{linksVariant === "strip" && <StripLinks links={startLinks} />}
-			{linksVariant === "scroll" && !landscape && <ScrollCue />}
 			{L && (
 				<>
 					<div

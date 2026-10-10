@@ -3,14 +3,16 @@
 Throwaway. This branch (`prototype/start-page-links`) is never merged. It answers one question for the owner:
 where on the start page do plain, visible links to title pages and hubs go?
 
-Three placements, on the real `/`, rendered on the server for a visitor without cookies:
+Round 1 built three placements. The owner picked `scroll`; round 2 rebuilt it with a designed section and one
+behaviour change: the page does not react to scrolling, only to a control in the room.
 
 | Open | Placement |
 | --- | --- |
 | `/` | Today's page, unchanged |
-| `/?links=strip` | Small text links along the bottom edge, inside the fixed room |
-| `/?links=scroll` | The room is the first screen; the page scrolls to a text section and the site footer |
-| `/?links=tv` | The TV home screen's posters are links, plus two slim link rows on the TV |
+| `/?links=scroll` | Round 2. The room is the first screen and keeps the wheel, the swipe, and the keys. A lip at its bottom edge leads to a text section below it |
+| `/?links=scroll2` | Round 2, second look of the same section |
+| `/?links=strip` | Round 1. Small text links along the bottom edge, inside the fixed room |
+| `/?links=tv` | Round 1. The TV home screen's posters are links, plus two slim link rows on the TV |
 
 A switcher pill at the top of the window steps through them (development builds only; `&bar=0` hides it).
 
@@ -31,102 +33,144 @@ render without title links.
 All variants share one list: the first 16 titles of the living room pool for a visitor nobody knows anything about
 (`poolCandidates` and `selectPoolKeys` by popularity, titles from `getDisplayFields`). No country and no viewer go
 into it, so the HTML is the same for every guest. The list is only loaded with `?links=`, so `/` without it is
-today's HTML.
-
-On October 10, 2026 the list was 13 shows and 3 movies, with "Raw", "The Tonight Show Starring Johnny Carson", and
-"Doraemon" in it. The pool is built to seed picks, not to be the titles Google should find first: a real build
-needs its own choice of titles.
+today's HTML. The owner chose to keep the pool's top 16.
 
 The hubs: `/discover`, `/movies`, `/shows`, `/explorer`, `/taste`, `/how-it-works`, `/movies/moods`, `/shows/moods`,
 `/movies/genres`, `/shows/genres`, `/movies/streaming`, `/shows/streaming`.
 
-## Screenshots
+## Round 2: `scroll` and `scroll2`
 
-Desktop is 1440 x 900. Phone is 390 x 844 at two device pixels per pixel, taken 10 seconds after load (after
-hydration and after the "Turn your phone" hint is gone). The TanStack Query devtools button is hidden in them.
+### What it is
 
-| Variant | Desktop | Phone |
+The room is a block exactly one first screen tall. Right after it in the document comes a `<section id="browse">`
+with the 16 titles and the 12 hubs as text. The section's top edge, the lip, lies over the bottom of the room: a
+full-width bar on a phone, a tab at the bottom right from 768 px up, a tab at the bottom left in phone landscape.
+The lip is the control. On a phone the Remote is 60 px shorter so its keys end above the lip.
+
+`scroll` and `scroll2` are the same markup with two looks:
+
+- `scroll`: a numbered list in four columns (two on a tablet, one on a phone), then the six main hubs as cards and
+  the six category hubs as chips.
+- `scroll2`: a programme page. Large titles in two columns at the right, the ways to browse as a plain index at the
+  left, a warm light from the room in the corner. On a phone it is one column with larger titles.
+
+No poster, no icon font, no new script file, no new font: the section uses Gabarito, which the room already loads.
+
+### Interaction rules
+
+| Where the visitor is | Wheel, swipe, arrow keys, Page Down | How to leave |
 | --- | --- | --- |
-| today | [today-desktop.png](today-desktop.png) | [today-phone.png](today-phone.png) |
-| strip | [strip-desktop.png](strip-desktop.png) | [strip-phone.png](strip-phone.png) |
-| scroll | [scroll-desktop.png](scroll-desktop.png), [scrolled](scroll-desktop-scrolled.png) | [scroll-phone.png](scroll-phone.png), [scrolled](scroll-phone-scrolled.png) |
-| tv | [tv-desktop.png](tv-desktop.png) | [tv-phone.png](tv-phone.png) |
+| In the room | The room's and the Remote's, as on today's page. The page does not move | Press the lip: the page moves to the section (smooth scroll; instant with reduced motion) |
+| In the section | Scroll the page like any page: the section, then the site footer | "Back to the living room" at the top and at the end of the section, Escape, or scrolling up to the very top |
 
-## Numbers
+- Scrolling up from the section shows the room coming back. At the very top the page is the room's again.
+- Tab from the lip goes into the section's links. The browser brings the focused link into view, and from then on
+  the visitor counts as being in the section.
+- Phone landscape keeps today's full-window room over the site header. Pressing the lip slides the room up out of
+  the window (transform only) and the section is under it; the same ways lead back.
+- Without JavaScript the lip is a link to `#browse` and the way back a link to `#room`. CSS alone lets the page
+  scroll while the URL ends in `#browse`.
+- With JavaScript the URL does not change. A fragment change goes through the router, which then restores an old
+  scroll position. So browser Back does not lead from the section to the room.
 
-Server HTML from `curl` without cookies against the dev server (`measure.py`). The baseline is `/` on this branch,
-which runs the same code as `origin/main` without the parameter. Bytes are gzip level 6 of a development build: the
-absolute sizes are not production's, the differences are close to it.
+Checked in a browser by `shoot-v2.mjs` at 1440 x 900, 390 x 844, and 844 x 390, for both looks: wheel, Arrow Down,
+and Page Down in the room leave the page at 0; the lip leads to the section; the wheel scrolls there; Escape, the
+back control, and scrolling up to the top each return to 0 with the page locked again; three Tabs from the lip put
+"Resident Evil" in view; without JavaScript the lip and the back link work.
 
-| | today | strip | scroll | tv |
+### How the links are present for a crawler
+
+- The section is server HTML for a visitor without cookies, in normal document flow as the next sibling of the
+  room inside `<main>`. Every title and hub is an `<a href>` with its name as text, 14 to 22 px.
+- Nothing hides it: no `display: none`, `visibility: hidden`, `opacity`, `aria-hidden`, `hidden`, `inert`, clip,
+  off-screen position, or transform on the links or any ancestor. `seo-check.mjs` walks every ancestor of all 28
+  links, with and without JavaScript, and finds none.
+- It is below the first screen, like any content below a hero. The page's `overflow: hidden` stops a person's
+  wheel; it does not remove the section from layout. In a 412 x 732 window the links are at 863 to 2,594 px of a
+  3,966 px document. A renderer that lays out the whole page without clicking or scrolling has them.
+- The room is `100dvh` tall, so a renderer with a very tall window would get a very tall room. The room is capped
+  at 1,600 px for that.
+- Phone landscape is the one case where the room covers the section until the lip is pressed (the room is fixed
+  over the window there). The section is still in flow under it. A phone crawler renders portrait.
+
+### Screenshots, round 2
+
+Desktop is 1440 x 900. Phone is 390 x 844 and phone landscape 844 x 390, both at two device pixels per pixel.
+`take2` is `scroll2`. The TanStack Query devtools button is hidden in them.
+
+| | Room with the lip | Moving | Section | End of the section |
 | --- | --- | --- | --- | --- |
-| Title pages linked in the HTML | 0 | 16 | 16 | 16 |
-| Title link tags | 0 | 16 | 16 | 32 (each twice: desktop and phone edition of the TV) |
-| Hubs linked in the HTML, of 12 | 6 | 12 | 12 | 12 |
-| Added HTML, gzip | | +1,042 bytes | +1,125 bytes | +2,314 bytes |
-| Added HTML, raw | | +5,113 bytes | +7,664 bytes | +16,191 bytes |
-| Poster `<img>` tags in the HTML | 0 | 0 | 0 | 12 (6 files) |
+| scroll, desktop | [room](scroll-v2-desktop-room.png) | [moving](scroll-v2-desktop-moving.png) | [section](scroll-v2-desktop-section.png) | [end](scroll-v2-desktop-section-end.png) |
+| scroll, phone | [room](scroll-v2-phone-room.png) | [moving](scroll-v2-phone-moving.png) | [section](scroll-v2-phone-section.png) | [end](scroll-v2-phone-section-end.png) |
+| scroll, phone landscape | [room](scroll-v2-landscape-room.png) | | [section](scroll-v2-landscape-section.png) | [end](scroll-v2-landscape-section-end.png) |
+| scroll2, desktop | [room](scroll-v2-take2-desktop-room.png) | [moving](scroll-v2-take2-desktop-moving.png) | [section](scroll-v2-take2-desktop-section.png) | [end](scroll-v2-take2-desktop-section-end.png) |
+| scroll2, phone | [room](scroll-v2-take2-phone-room.png) | [moving](scroll-v2-take2-phone-moving.png) | [section](scroll-v2-take2-phone-section.png) | [end](scroll-v2-take2-phone-section-end.png) |
+| scroll2, phone landscape | [room](scroll-v2-take2-landscape-room.png) | | [section](scroll-v2-take2-landscape-section.png) | [end](scroll-v2-take2-landscape-section-end.png) |
 
-What a visitor sees on the first screen, measured in the browser (`shoot.mjs`: a link counts when its middle is
-inside the window and nothing covers it):
+### Numbers, round 2
 
-| | strip | scroll | tv |
+Server HTML from `curl` without cookies against the dev server (`measure.py`), gzip level 6. The baseline is `/` on
+this branch. The absolute sizes are a development build's; the differences are close to production's.
+
+| | today | scroll | scroll2 |
 | --- | --- | --- | --- |
-| Desktop: title links on the first screen | 13 of 16 | 0 (all 16 after scrolling) | 16 |
-| Desktop: text size of the links | 12.5 px | 15 px | 8.6 px (13 px on the TV canvas) |
-| Phone: title links on the first screen | 2 (the line scrolls sideways) | 0 (all 16 after scrolling) | 12: 6 posters 19 to 32 px wide, 6 as text |
-| Phone: hubs linked on the first screen, of 12 (today: 4, in the site's navigation) | 7 (the line scrolls sideways) | 4 (all 12 after scrolling) | 8, the rest cut off |
-| Phone: text size of the links | 12 px | 15 px | 8.3 px |
-| Layout shift in the browser (dev build, desktop / phone) | 0.0002 / 0 | 0 / 0 | 0.0002 / 0 |
-| Image requests on a phone (today: 20 in the dev build) | 20 | 18 | 20 |
+| Title pages linked in the HTML | 0 | 16 | 16 |
+| Hubs linked in the HTML, of 12 | 6 | 12 | 12 |
+| Added HTML, gzip | | +1,189 bytes | +1,193 bytes |
+| Added HTML, raw | | +4,756 bytes | +4,762 bytes |
+| `<img>` tags in the HTML | 14 | 14 | 14 |
+| Layout shift in the browser (desktop / phone / phone landscape) | | 0.0002 / 0 / 0 | 0.0002 / 0 / 0 |
 
-## Against the home budget (`goodwatch-benchmark/urls/budget.json`)
+Against the home budget (`goodwatch-benchmark/urls/budget.json`), estimated; `./bench.sh budget` was not run:
 
-Estimates. `./bench.sh budget` was not run: it needs a deployed build.
+- `html_bytes` (18,944; the budget document's table has 16.4 KB measured): about 18.0 KB, about 0.95 KB left.
+- `image_count`: no new image. `script_count`: no new script file expected; the hook is about 60 lines in the
+  living room's own module. Not verified with a build.
+- `cls`: the lip and the shorter phone Remote are in the first-paint CSS, so nothing moves at hydration.
 
-| Line | Limit | strip | scroll | tv |
-| --- | --- | --- | --- | --- |
-| `html_bytes` | 18,944; the budget document's table has 16.4 KB measured | about 17.8 KB: passes with half the margin left | about 17.9 KB: passes with half the margin left | about 19.1 KB: fails by about 0.2 KB, unless the links stop being sent three times (two TV editions and the loader data) or the limit is raised |
-| `image_count` | 20, 18 today | no change | no change for a visitor who doesn't scroll; the footer's images are lazy but now reachable | no new file for a first-time visitor: the same six posters load today after the pool request. They now start with the first paint and compete with the room photo (the LCP element) |
-| `script_count` | 16, no margin | no new script expected; not verified with a build | same | same |
-| `cls` | 0.01 | 0 measured: the first-paint CSS and the measured layout reserve the same strip | 0 measured: the room has a fixed height | 0 measured: posters have fixed boxes |
+### What a real build still has to solve
 
-## What each variant leaves for a real build
+- Where the visitor is should be one state with one owner. The prototype has two: `#browse:target` without
+  JavaScript and `data-lr-below` on `<html>` with it. A visitor who arrives on a URL ending in `#browse` goes back
+  to the room through a fragment change, which the router answers with its scroll restoration.
+- Browser Back from the section to the room, and Back from a title page to the section at the place it was left.
+- `useLeaveThroughTv` and `useReturnIntoTv` measure the TV in the window. Scrolled halfway up from the section, the
+  TV is partly outside it.
+- Touch on real phones: the lock relies on `overflow: hidden` on `<html>`, as today's page does, but today's page
+  has nothing to scroll to. iOS Safari's rubber band and address bar need a look on a device. The room's height
+  follows `dvh`, so the address bar showing and hiding lays the room out again.
+- Between the room and the section the page can rest halfway (after a Tab, or after scrolling up a little). The
+  keys are the page's there and the Remote is in view but idle. A real build may want to snap.
+- Phone landscape: the room slides away but still takes keyboard focus while it is off screen.
+- The bottom navigation's round key lies over the middle of the phone lip. The lip keeps its text left of it; a
+  real build should make the two one design.
+- The Remote is 60 px shorter on a phone, in `layoutPhone` and in the first-paint CSS. Both have to stay in step.
+- The site header slides away while the page moves down and comes back when it stops (its own behaviour), which
+  shows during the move.
+- The title list: on October 10, 2026 the pool's top 16 was 13 shows and 3 movies. The owner chose to keep it.
 
-**strip**
+## Round 1: `strip` and `tv`
 
-- The first-paint CSS and `layoutPhone` both have to keep the Remote's keys out of the strip. The prototype shrinks
-  the Remote on a phone by 72 px of height for it.
-- The bottom navigation's round key sticks 24 px up into the room, so on a phone the strip needs an empty band
-  under its lines.
-- Phone landscape has no bottom edge to spare: the strip lies over the Remote there. Not solved.
-- On a phone two lines hold 2 titles and 7 hubs. The rest is in the HTML and one sideways swipe away, which is
-  close to the hidden block the issue wants to leave behind.
+Screenshots: [today-desktop.png](today-desktop.png), [today-phone.png](today-phone.png),
+[strip-desktop.png](strip-desktop.png), [strip-phone.png](strip-phone.png), [tv-desktop.png](tv-desktop.png),
+[tv-phone.png](tv-phone.png). Taken 10 seconds after load (`shoot.mjs`).
 
-**scroll**
+| | today | strip | tv |
+| --- | --- | --- | --- |
+| Title pages linked in the HTML | 0 | 16 | 16 (32 tags: desktop and phone edition of the TV) |
+| Hubs linked in the HTML, of 12 | 6 | 12 | 12 |
+| Added HTML, gzip | | +1,042 bytes | +2,314 bytes |
+| Desktop: title links on the first screen | 0 | 13 | 16 |
+| Desktop: text size of the links | | 12.5 px | 8.6 px |
+| Phone: title links on the first screen | 0 | 2 (the line scrolls sideways) | 12: 6 posters 19 to 32 px wide, 6 as text |
+| Phone: text size of the links | | 12 px | 8.3 px |
+| `html_bytes` estimate against 18,944 | 16.4 KB | about 17.8 KB | about 19.1 KB: fails |
 
-- Arrow keys, Backspace, H, and M belong to the Remote (`useRemoteKeys`). The prototype gives them back to the
-  page after 80 px of scroll. Page Down and Space scroll already.
-- A wheel or a swipe that starts on the Remote's D-pad doesn't scroll the page. On a phone the D-pad is in the
-  middle of the screen, where a thumb starts a swipe.
-- `useLeaveThroughTv` and `useReturnIntoTv` measure the TV in the window. Scrolled down, the TV is outside the
-  window and the transition grows from the top edge. Back also has to restore the scroll position before it runs.
-- Phone landscape puts the room over the whole window (`inset-y-0 z-[1001]`). The prototype keeps that, so the
-  section is in the HTML but not reachable in landscape.
-- The room's height is `100dvh` minus the site header (and minus the bottom navigation below 1024 px): the mobile
-  address bar changes `dvh` while scrolling, and every change measures and lays out the room again.
-- Nothing says there is more below. The prototype adds a "Popular right now" pill at the bottom right, which
-  covers a Remote key on a phone.
-- The footer starts 12 rem under the section (`mt-48`) and now shows on the start page, with its Discord banner.
+**strip** leaves for a real build: the first-paint CSS and `layoutPhone` both have to keep the Remote's keys out
+of the strip (72 px on a phone); the bottom navigation's round key needs an empty band under the lines; phone
+landscape is not solved; on a phone two lines hold 2 titles and 7 hubs, the rest is one sideways swipe away.
 
-**tv**
-
-- A link can't sit inside a button, and the home's cards are buttons. The prototype stretches the button under the
-  card and lays the posters on top. Pointing at a poster then doesn't focus its card, and the Remote can't reach a
-  poster or a link row.
-- The posters are fixed to the shared list. Today the fans show the pool's picks, which differ for a guest with
-  progress and for a member. A real build decides whether the home's posters stay the same for everyone.
-- Everything on the TV is drawn on a 960 px canvas scaled to about 0.65, so a 13 px link is under 9 px on screen at
-  both sizes, and a phone's posters are 19 to 32 px wide: below any tap target, and too small for captions.
-- The TV has two editions in the first HTML, so every link is sent twice, and a third time in the loader data.
-- The link rows take 34 px of canvas height from the cards in both editions.
+**tv** leaves for a real build: a link can't sit inside a button, and the home's cards are buttons, so the
+prototype stretches the button under the card and the Remote can't reach a poster or a link row; the posters are
+fixed to the shared list where today they are the viewer's picks; a 13 px link on the TV canvas is under 9 px on
+screen; every link is sent three times (two TV editions and the loader data).

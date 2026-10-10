@@ -2,16 +2,21 @@
 // `/?links=strip|scroll|tv` and rendered on the server. Without the parameter the page is today's page.
 // Never merge: see docs/prototypes/start-page-links/README.md.
 import { useSearchParams } from "@remix-run/react"
+import { useEffect } from "react"
 import { titleHref } from "~/ui/watch-next/WatchNextHero"
 import { posterUrl } from "~/ui/watch-next/style"
 import type { StartLink } from "~/ui/living-room/living-room-data"
 
 export const LINK_VARIANTS = {
 	strip: "Strip in the room",
-	scroll: "Scroll below the room",
+	scroll: "Below the room, by its lip",
+	scroll2: "Below the room, second look",
 	tv: "On the TV",
 } as const
 export type LinksVariant = keyof typeof LINK_VARIANTS
+
+export const isScrollVariant = (variant: LinksVariant | null) =>
+	variant === "scroll" || variant === "scroll2"
 
 export function useLinksVariant(): LinksVariant | null {
 	const [params] = useSearchParams()
@@ -78,54 +83,197 @@ export function StripLinks({ links }: { links: StartLink[] }) {
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// Variant scroll: the room is the first screen; this text-only section follows it, then the site footer.
+// Variants scroll and scroll2: the room is the first screen and keeps the wheel, the swipe, and the keys. The
+// section below it is ordinary page content right after the room; its lip lies over the room's bottom edge and is
+// the one way down. Both variants share this markup; `scroll2` is a second look (living-room.css, `.lrb-2`).
+//
+// Without JavaScript it works by CSS alone: the lip is a link to `#browse`, the way back a link to `#room`, and
+// `#browse:target` lets the page scroll. With JavaScript the same links set `data-lr-below` on <html> and move the
+// page themselves, and the URL stays as it is (a fragment change would go through the router, which then restores
+// an old scroll position). The script also adds: scrolling up to the very top returns to the room, Escape returns,
+// and keyboard focus that lands in the section or the footer counts as being there.
 
-export function ScrollCue() {
-	return (
-		<a
-			href="#popular-now"
-			className="lr-scroll-cue absolute bottom-3 right-3 z-20 rounded-full bg-black/65 px-3 py-1.5 text-[12px] font-semibold text-white/85 ring-1 ring-white/15 md:bottom-5 md:right-6 md:text-[13px]"
-		>
-			Popular right now ↓
-		</a>
-	)
+const MAIN_HUBS = [
+	{ href: "/discover", label: "Discover", line: "Filter by mood, genre, score, and service." },
+	{ href: "/movies", label: "Movies", line: "Films worth your evening." },
+	{ href: "/shows", label: "TV shows", line: "A series to start next." },
+	{ href: "/explorer", label: "Explorer", line: "A map of titles that belong together." },
+	{ href: "/taste", label: "Taste", line: "Rate a few, get picks made for you." },
+	{ href: "/how-it-works", label: "How it works", line: "One score, a fingerprint, where it streams." },
+]
+const BY = [
+	{
+		label: "Movies",
+		links: [
+			{ href: "/movies/moods", label: "Movies by mood" },
+			{ href: "/movies/genres", label: "Movies by genre" },
+			{ href: "/movies/streaming", label: "Movies by streaming service" },
+		],
+	},
+	{
+		label: "TV shows",
+		links: [
+			{ href: "/shows/moods", label: "Shows by mood" },
+			{ href: "/shows/genres", label: "Shows by genre" },
+			{ href: "/shows/streaming", label: "Shows by streaming service" },
+		],
+	},
+]
+
+const BELOW = "data-lr-below"
+
+/** Whether the visitor is in the section below the room: the keys are the page's then. */
+export const isBelowRoom = () =>
+	document.documentElement.hasAttribute(BELOW) ||
+	document.querySelector("#browse:target") !== null
+
+function useBrowseTravel() {
+	useEffect(() => {
+		const html = document.documentElement
+		const behavior = () =>
+			window.matchMedia("(prefers-reduced-motion: reduce)").matches
+				? "instant"
+				: "smooth"
+		const goBelow = () => {
+			html.setAttribute(BELOW, "")
+			document
+				.getElementById("browse")
+				?.scrollIntoView({ behavior: behavior(), block: "start" })
+		}
+		const goRoom = () => {
+			html.removeAttribute(BELOW)
+			// Arrived on a URL that ends in #browse: only a fragment navigation moves `:target` off the section.
+			if (document.querySelector("#browse:target")) location.replace("#room")
+			else window.scrollTo({ top: 0, behavior: behavior() })
+		}
+		const onClick = (e: MouseEvent) => {
+			if (e.defaultPrevented || e.button !== 0) return
+			if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+			const link = (e.target as Element).closest?.(
+				'a[href="#browse"], a[href="#room"]',
+			)
+			if (!link) return
+			e.preventDefault()
+			if (link.getAttribute("href") === "#browse") goBelow()
+			else goRoom()
+		}
+		let last = window.scrollY
+		const onScroll = () => {
+			const y = window.scrollY
+			// Scrolled up to the very top: back in the room.
+			if (isBelowRoom() && y <= 0) goRoom()
+			// Moved down from outside while the room had the page (find in page, a script): the visitor is below.
+			// Moving up is the way back to the room and is left alone.
+			else if (!isBelowRoom() && y > last && y > 8) html.setAttribute(BELOW, "")
+			last = y
+		}
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key !== "Escape" || !isBelowRoom()) return
+			e.preventDefault()
+			goRoom()
+			document
+				.querySelector<HTMLElement>(".lrb-lip")
+				?.focus({ preventScroll: true })
+		}
+		// Keyboard focus that lands in the section or the footer: the browser has brought it into view, so the
+		// visitor is below.
+		const onFocus = (e: FocusEvent) => {
+			const target = e.target as HTMLElement
+			if (!target.closest?.("#browse, footer") || target.closest(".lrb-lip"))
+				return
+			html.setAttribute(BELOW, "")
+		}
+		document.addEventListener("click", onClick)
+		window.addEventListener("scroll", onScroll, { passive: true })
+		window.addEventListener("keydown", onKey)
+		document.addEventListener("focusin", onFocus)
+		return () => {
+			html.removeAttribute(BELOW)
+			document.removeEventListener("click", onClick)
+			window.removeEventListener("scroll", onScroll)
+			window.removeEventListener("keydown", onKey)
+			document.removeEventListener("focusin", onFocus)
+		}
+	}, [])
 }
 
-export function BelowRoom({ links }: { links: StartLink[] }) {
+export function BelowRoom({
+	links,
+	take = 1,
+}: { links: StartLink[]; take?: 1 | 2 }) {
+	useBrowseTravel()
+	const back = (
+		<a href="#room" className="lrb-back">
+			<span aria-hidden>↑</span> Back to the living room
+		</a>
+	)
 	return (
 		<section
-			id="popular-now"
-			className="mx-auto w-full max-w-5xl scroll-mt-20 px-5 pb-4 pt-10 text-neutral-300 sm:px-8"
+			id="browse"
+			aria-labelledby="browse-title"
+			className={take === 2 ? "lrb lrb-2" : "lrb"}
 		>
-			<h2 className="text-2xl font-extrabold text-white">Popular right now</h2>
-			<ol className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-[15px] sm:grid-cols-2 lg:grid-cols-4">
-				{links.map((link) => (
-					<li key={titleHref(link)} className="truncate">
-						<a
-							href={titleHref(link)}
-							className="font-semibold text-neutral-100 underline decoration-white/20 underline-offset-4 hover:decoration-amber-400"
-						>
-							{link.title}
-						</a>{" "}
-						<span className="text-neutral-500">
-							{link.media_type === "movie" ? "Movie" : "Show"}
-						</span>
-					</li>
-				))}
-			</ol>
-			<h2 className="mt-10 text-2xl font-extrabold text-white">Browse</h2>
-			<ul className="mt-4 grid grid-cols-2 gap-2 text-[15px] sm:grid-cols-3 lg:grid-cols-4">
-				{HUBS.map((hub) => (
-					<li key={hub.href}>
-						<a
-							href={hub.href}
-							className="block rounded-lg bg-white/[0.04] px-3 py-2.5 font-semibold text-neutral-100 ring-1 ring-white/10 hover:bg-white/[0.08]"
-						>
-							{hub.label}
-						</a>
-					</li>
-				))}
-			</ul>
+			<a href="#browse" className="lrb-lip">
+				<span>
+					<b>Popular right now</b>
+					<small>
+						{links.length} titles<u> and every way to browse</u>
+					</small>
+				</span>
+				<i aria-hidden>
+					<svg viewBox="0 0 24 24">
+						<path d="M6 9l6 6 6-6" />
+					</svg>
+				</i>
+			</a>
+			<div className="lrb-in">
+				<header className="lrb-head">
+					<div>
+						<p className="lrb-eye">On GoodWatch tonight</p>
+						<h2 id="browse-title">Popular right now</h2>
+					</div>
+					{back}
+				</header>
+				<ol className="lrb-titles">
+					{links.map((link) => (
+						<li key={titleHref(link)}>
+							<a href={titleHref(link)}>{link.title}</a>
+							<span>
+								{link.media_type === "movie" ? "Movie" : "TV show"}
+								{link.release_year ? ` · ${link.release_year}` : ""}
+							</span>
+						</li>
+					))}
+				</ol>
+				<div className="lrb-hubs">
+					<h2>Browse GoodWatch</h2>
+					<ul className="lrb-cards">
+						{MAIN_HUBS.map((hub) => (
+							<li key={hub.href}>
+								<a href={hub.href}>
+									<b>{hub.label}</b>
+									<span>{hub.line}</span>
+								</a>
+							</li>
+						))}
+					</ul>
+					<div className="lrb-by">
+						{BY.map((group) => (
+							<div key={group.label}>
+								<h3>{group.label}</h3>
+								<ul>
+									{group.links.map((link) => (
+										<li key={link.href}>
+											<a href={link.href}>{link.label}</a>
+										</li>
+									))}
+								</ul>
+							</div>
+						))}
+					</div>
+				</div>
+				<p className="lrb-end">{back}</p>
+			</div>
 		</section>
 	)
 }
