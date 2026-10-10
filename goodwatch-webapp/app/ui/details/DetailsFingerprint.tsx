@@ -4,6 +4,7 @@
 // so nothing below moves; on phones it replaces the rows in the page flow.
 // Every view stays in the HTML. The interface avoids the word "pillar".
 
+import { assetUrl } from "~/utils/asset-url"
 import { Link } from "@remix-run/react"
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
 import type React from "react"
@@ -34,7 +35,7 @@ function Head({ t, children }: { t: F.TitleInput; children?: React.ReactNode }) 
 		<div className="flex flex-wrap items-end justify-between gap-4">
 			<div>
 				<h2 className="flex items-center gap-2 text-lg font-semibold text-gray-300">
-					<img src={fingerprintIcon} className="h-6 w-auto p-0.5 bg-amber-950/50 rounded-sm" alt="" />
+					<img src={assetUrl(fingerprintIcon)} className="h-6 w-auto p-0.5 bg-amber-950/50 rounded-sm" alt="" />
 					{t.title} fingerprint
 				</h2>
 				<p className="mt-2 text-3xl font-semibold tracking-tight text-amber-200">{F.pillarLine(t)}.</p>

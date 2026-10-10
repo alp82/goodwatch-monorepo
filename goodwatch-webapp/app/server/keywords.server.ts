@@ -1,3 +1,4 @@
+import { fetchJsonWithBackendTimeout, timeoutSetting, TMDB_TIMEOUT_DEFAULT_MS } from "../utils/backend-timeout.ts";
 import { cached } from "~/utils/cache";
 
 export interface Keyword {
@@ -31,12 +32,13 @@ export const getKeywordSearchResults = async (
 	});
 };
 
-async function _getKeywordSearchResults({
+export async function _getKeywordSearchResults({
 	query,
 }: KeywordSearchParams): Promise<KeywordsResults> {
-	return await fetch(
+	return await fetchJsonWithBackendTimeout(
+		"TMDB", timeoutSetting("TMDB_TIMEOUT_MS", TMDB_TIMEOUT_DEFAULT_MS),
 		`https://api.themoviedb.org/3/search/keyword?api_key=${process.env.TMDB_API_KEY}&query=${query}`,
-	).then((res) => res.json());
+	);
 }
 
 export const getKeywords = async ({

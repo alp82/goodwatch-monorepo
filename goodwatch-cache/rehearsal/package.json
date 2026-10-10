@@ -1,0 +1,8 @@
+{
+  "name": "gw-cache-rehearsal",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "ioredis": "5.4.1"
+  }
+}

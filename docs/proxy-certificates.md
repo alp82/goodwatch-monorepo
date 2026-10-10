@@ -2,6 +2,8 @@
 
 How abio's proxy gets its certificates, why the certificate for `goodwatch.app` has an RSA 4096 key, and how the owner switches it to ECDSA P-256. Researched and tested locally on October 5, 2026, for "Switch the proxy's certificate from RSA 4096 to ECDSA". Nothing on a host was changed.
 
+**State since October 7, 2026:** the owner made the switch. The certificate for `goodwatch.app` has an ECDSA P-256 key, read from production again on October 9, 2026. "What runs today" below describes the state before the switch.
+
 Why it matters: a new TLS connection costs 14 to 16 ms of proxy CPU on abio, almost all of it the RSA 4096 signature ([viral-spike-page-views.md](benchmarks/viral-spike-page-views.md)).
 
 ## What runs today

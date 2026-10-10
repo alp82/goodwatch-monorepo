@@ -1,0 +1,9 @@
+summary: Read the TMDB TV change feed
+description: Make the shows TMDB changed since the last run due for an episode fetch
+lock: '!inline f/tmdb_api/tmdb_fetch_episodes_from_api/changes.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties: {}
+  required: []

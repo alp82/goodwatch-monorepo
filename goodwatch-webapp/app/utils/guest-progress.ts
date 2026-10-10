@@ -160,7 +160,8 @@ export function guestUserData(interactions: TasteInteraction[]): UserData {
 		wishlist: {},
 		skipped: {},
 		notInterested: {},
-		watched: {},
+		// Tracking is for members: a guest has no watch state.
+		watchState: {},
 		favorites: {},
 	}
 	for (const item of interactions) {

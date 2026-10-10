@@ -199,8 +199,8 @@ async function _getSmartTitlesForUser({
 			)
 			AND m.tmdb_id NOT IN (
 				SELECT tmdb_id 
-				FROM user_watch_history
-				WHERE user_id = ? AND media_type = 'movie'
+				FROM user_watch_state
+				WHERE user_id = ? AND media_type = 'movie' AND state <> 'not_started'
 			)
 			${movieExcludeClause}
 		ORDER BY 
@@ -240,8 +240,8 @@ async function _getSmartTitlesForUser({
 			)
 			AND s.tmdb_id NOT IN (
 				SELECT tmdb_id 
-				FROM user_watch_history 
-				WHERE user_id = ? AND media_type = 'show'
+				FROM user_watch_state
+				WHERE user_id = ? AND media_type = 'show' AND state <> 'not_started'
 			)
 			${showExcludeClause}
 		ORDER BY 

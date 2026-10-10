@@ -86,7 +86,7 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 			<DetailsHero
 				media={media}
 				country={country}
-				hasEpisodeGrid={hasEpisodeGrid(episodeGrid)}
+				episodeGrid={hasEpisodeGrid(episodeGrid) ? episodeGrid : null}
 				sectionProps={sectionProps}
 				navigateToSection={navigateToSection}
 			/>

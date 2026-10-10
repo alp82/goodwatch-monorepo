@@ -1,6 +1,7 @@
 // Where the site navigation goes, and which destination the current page belongs to. The hub sheet, the desktop
 // Browse panel, the dock's hub key, and the Browse button all read from here.
 import {
+	BookmarkIcon,
 	FilmIcon,
 	FingerPrintIcon,
 	HomeIcon,
@@ -20,6 +21,10 @@ export type DestinationKey =
 	| "explorer"
 	| "movies"
 	| "shows"
+	// A member's pages with REC_TRACKING (#385). They take Watch next's tile in the hub.
+	| "myShows"
+	| "myMovies"
+	| "myLibrary"
 
 export interface Destination {
 	key: DestinationKey
@@ -111,10 +116,37 @@ export function getDestinations(
 			icon: TvIcon,
 			available: true,
 		},
+		myShows: {
+			key: "myShows",
+			label: "My shows",
+			short: "My shows",
+			href: "/my-shows",
+			icon: TvIcon,
+			available: features.tracking,
+		},
+		myMovies: {
+			key: "myMovies",
+			label: "My movies",
+			short: "My movies",
+			href: "/my-movies",
+			icon: FilmIcon,
+			available: features.tracking,
+		},
+		myLibrary: {
+			key: "myLibrary",
+			label: "My library",
+			short: "Library",
+			href: "/my-library",
+			icon: BookmarkIcon,
+			available: features.tracking,
+		},
 	}
 }
 
 const PREFIXES: [string, DestinationKey][] = [
+	["/my-shows", "myShows"],
+	["/my-movies", "myMovies"],
+	["/my-library", "myLibrary"],
 	["/watch-next", "watchNext"],
 	["/wishlist", "watchNext"],
 	["/discover", "discover"],

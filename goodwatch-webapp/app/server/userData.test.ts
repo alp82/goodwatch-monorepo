@@ -10,6 +10,7 @@ import { readFileSync } from "node:fs"
 import * as nodeModule from "node:module"
 import { afterEach, beforeEach, test } from "node:test"
 import { CacheTestRedis } from "../utils/cache-test-redis.ts"
+import { FakeTrackingCrate } from "./tracking-fake-crate.ts"
 
 // Keep the real settings schema and reset implementations, without loading UI or auth.
 const { registerHooks } = nodeModule as unknown as {
@@ -84,7 +85,9 @@ const { renderMetrics, resetMetricsForTest } = await import(
 )
 
 type Row = Record<string, unknown>
+const TRACKING_TABLES = ["user_watch_log", "user_watch_state", "episode"]
 class FakeCrate {
+	tracking = new FakeTrackingCrate()
 	rows = new Map<string, Row[]>()
 	visible = new Map<string, Row[]>()
 	statements: string[] = []
@@ -97,11 +100,23 @@ class FakeCrate {
 		if (sql.startsWith("REFRESH TABLE")) {
 			if (this.failRefresh) throw new Error("refresh failed")
 			for (const table of sql.slice("REFRESH TABLE ".length).split(", "))
-				this.visible.set(table, structuredClone(this.rows.get(table) ?? []))
+				if (TRACKING_TABLES.includes(table)) this.tracking.refresh(table)
+				else
+					this.visible.set(table, structuredClone(this.rows.get(table) ?? []))
 			return { json: [], rowcount: 1 }
 		}
 		const table = sql.match(/(?:FROM|INTO|UPDATE) (\w+)/)?.[1]
 		assert.ok(table, sql)
+		// The watch log and the watch state live in the fake that knows their statements.
+		if (TRACKING_TABLES.includes(table)) {
+			const result = await this.tracking.execute(raw, params)
+			if (this.pause && sql.startsWith("SELECT")) {
+				const pause = this.pause
+				this.pause = undefined
+				await pause()
+			}
+			return result
+		}
 		const rows = this.rows.get(table) ?? []
 		if (sql.startsWith("SELECT")) {
 			const primary = sql.includes("tmdb_id = ?") || sql.includes("key = ?")
@@ -193,7 +208,7 @@ let db: FakeCrate
 let redis: Redis
 const user = "member-A"
 const params = { user_id: user, tmdb_id: 123, media_type: "movie" as const }
-const key = (id = user) => cacheEntryKey("user-data", { user_id: id })
+const key = (id = user) => cacheEntryKey("user-data-v2",{ user_id: id })
 const tick = () => new Promise<void>((resolve) => setImmediate(resolve))
 beforeEach(() => {
 	events = []
@@ -235,14 +250,20 @@ function ordered(table: string, cacheKey = key()) {
 
 test("warm member reads cost one MGET and no Crate; dates survive JSON", async () => {
 	await updateScores({ ...params, score: 7 })
+	// Before Want to See: a watch takes the title off the Wishlist.
+	await updateWatchHistory({ ...params, action: "add" })
 	await updateWishList({ ...params, action: "add" })
 	await updateFavorites({ ...params, action: "add" })
 	await updateSkipped({ ...params, action: "add" })
-	await updateWatchHistory({ ...params, action: "add" })
 	db.statements.length = 0
 	const first = await getUserData({ user_id: user })
-	assert.equal(db.statements.length, 6)
+	// Scores, Want to See, the states, the grouped query over the watch log, favorites, skipped, Not interested.
+	assert.equal(db.statements.length, 7)
 	assert.ok(db.statements.every((s) => s.startsWith("SELECT")))
+	assert.equal(
+		db.statements.filter((s) => s.includes("user_watch_history")).length,
+		0,
+	)
 	db.statements.length = 0
 	redis.calls.length = 0
 	const second = await getUserData({ user_id: user })
@@ -256,13 +277,14 @@ test("warm member reads cost one MGET and no Crate; dates survive JSON", async (
 		for (const collection of [
 			data.scores,
 			data.wishlist,
-			data.watched,
 			data.favorites,
 			data.skipped,
 		])
 			assert.ok(collection["movie-123"].updatedAt instanceof Date)
 		assert.ok(data.wishlist["movie-123"].createdAt instanceof Date)
 		assert.ok(data.wishlist["movie-123"].updatedAt instanceof Date)
+		assert.ok(data.watchState["movie-123"].watchedAt instanceof Date)
+		assert.ok(data.watchState["movie-123"].lastActivityAt instanceof Date)
 	}
 })
 test("anonymous data and settings bypass Crate, Redis and metrics", async () => {
@@ -270,10 +292,10 @@ test("anonymous data and settings bypass Crate, Redis and metrics", async () => 
 	assert.deepEqual(await getUserData({}), {
 		scores: {},
 		wishlist: {},
-		watched: {},
+		watchState: {},
 		favorites: {},
 		skipped: {},
-	notInterested: {},
+		notInterested: {},
 	})
 	assert.deepEqual(await getUserSettings({}), {})
 	assert.equal(db.statements.length, 0)
@@ -287,9 +309,9 @@ test("two warm members remain isolated even concurrently", async () => {
 	const b = await getUserData({ user_id: "member-B" })
 	assert.notDeepEqual(a, b)
 	assert.notEqual(key(), key("member-B"))
-	assert.ok(redis.values.has(cacheEntryKey("user-data", { user_id: user })))
+	assert.ok(redis.values.has(cacheEntryKey("user-data-v2",{ user_id: user })))
 	assert.ok(
-		redis.values.has(cacheEntryKey("user-data", { user_id: "member-B" })),
+		redis.values.has(cacheEntryKey("user-data-v2",{ user_id: "member-B" })),
 	)
 	assert.deepEqual(
 		await Promise.all([
@@ -314,7 +336,7 @@ for (const [name, table, field, write] of [
 	["wishlist", "user_wishlist", "wishlist", updateWishList],
 	["favorites", "user_favorite", "favorites", updateFavorites],
 	["skipped", "user_skipped", "skipped", updateSkipped],
-	["watchHistory", "user_watch_history", "watched", updateWatchHistory],
+	["watchHistory", "user_watch_log", "watchState", updateWatchHistory],
 ] as const)
 	test(`${name} add and remove refresh before resetting`, async () => {
 		for (const action of ["add", "remove"] as const) {
@@ -331,10 +353,10 @@ test("finishTitle refreshes both writes", async () => {
 	await updateWishList({ ...params, action: "add" })
 	await getUserData({ user_id: user })
 	await finishTitle(user, 1_000_000_000_123)
-	ordered("user_watch_history")
+	ordered("user_watch_log")
 	ordered("user_wishlist")
 	const data = await getUserData({ user_id: user })
-	assert.ok(data.watched["movie-123"])
+	assert.equal(data.watchState["movie-123"].state, "seen")
 	assert.equal(data.wishlist["movie-123"], undefined)
 })
 test("undoFinishTitle refreshes deletion and restores original wishlist date", async () => {
@@ -342,10 +364,10 @@ test("undoFinishTitle refreshes deletion and restores original wishlist date", a
 	const undo = await finishTitle(user, 1_000_000_000_123)
 	await getUserData({ user_id: user })
 	await undoFinishTitle(user, undo)
-	ordered("user_watch_history")
+	ordered("user_watch_log")
 	ordered("user_wishlist")
 	const data = await getUserData({ user_id: user })
-	assert.equal(data.watched["movie-123"], undefined)
+	assert.equal(data.watchState["movie-123"], undefined)
 	assert.equal(data.wishlist["movie-123"].createdAt.toISOString(), undo.addedAt)
 })
 test("settings refresh before reset and return new settings immediately", async () => {
@@ -438,7 +460,7 @@ test("in-flight pre-write data cannot repopulate the cache", async () => {
 		(await getUserData({ user_id: user })).scores["movie-123"].score,
 		8,
 	)
-	assert.equal(db.statements.length, 6)
+	assert.equal(db.statements.length, 7)
 })
 for (const settings of [false, true])
 	test(`failed refresh still resets and repeats after two seconds: settings=${settings}`, async (t) => {

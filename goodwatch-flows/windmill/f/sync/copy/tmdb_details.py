@@ -12,6 +12,7 @@ from f.db.mongodb import (
     close_mongodb,
     build_query_selector_for_object_ids,
 )
+from f.sync.copy import sync_state
 from f.sync.copy.deleted_titles import (
     NOT_DELETED_FILTER,
     delete_flagged_titles_from_crate,
@@ -37,7 +38,10 @@ from f.sync.models.crate_schemas import SCHEMAS
 
 BATCH_SIZE = 15000
 SUB_BATCH_SIZE = 50000
+# Window of a recent copy restricted by a selector. A scheduled run reads from its last
+# successful run instead (f/sync/copy/sync_state).
 HOURS_TO_FETCH = 24*2
+SYNC_JOB = "tmdb_details"
 # The copy window is read as ids through the {updated_at, tmdb_id} index, which covers
 # the query, so no document is read. The documents are then fetched by id in batches
 # through the {tmdb_id} index. Offset paging sorted by tmdb_id read every earlier
@@ -198,6 +202,11 @@ def delete_stale_seasons(connector: CrateConnector, season_ids_by_show: dict[int
     return deleted
 
 
+def utc_stamp() -> str:
+    """The UTC time for a log line. Windmill keeps only the tail of a log, without times."""
+    return f"{datetime.utcnow().isoformat(timespec='seconds')}Z"
+
+
 def details_collection(mongo_db, media_type: str):
     return mongo_db.tmdb_movie_details if media_type == "movie" else mongo_db.tmdb_tv_details
 
@@ -253,7 +262,13 @@ def copy_media(
     media_type: str = "movie",
     *, recent_only: bool = True,
     delete_flagged: bool = True,
+    since: Optional[datetime] = None,
 ):
+    """Copy the details that match the selector to CrateDB.
+
+    A recent copy takes the titles changed since `since`, by default in the last
+    HOURS_TO_FETCH hours. With recent_only=False it takes every title.
+    """
     is_movie = media_type == "movie"
 
     mongo_db = get_db()
@@ -261,12 +276,17 @@ def copy_media(
     media_table_name = 'movie' if is_movie else 'show'
     MediaClass = Movie if is_movie else Show
 
-    since = datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH) if recent_only else None
+    if not recent_only:
+        since = None
+    elif since is None:
+        since = datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)
     # main() deletes before it copies, so a failed copy doesn't stop the deletion.
     deleted_titles = delete_flagged_titles(connector, media_type, query_selector) if delete_flagged else None
 
+    print(f"{utc_stamp()} {media_type} selection starts: "
+          f"{'changes since ' + since.isoformat() if since else 'every title'}", flush=True)
     tmdb_ids = window_tmdb_ids(mongo_collection, query_selector, since)
-    print(f"Total {media_type} entries: {len(tmdb_ids)}", flush=True)
+    print(f"{utc_stamp()} {media_type} selection done. Total {media_type} entries: {len(tmdb_ids)}", flush=True)
 
     entity_counts = defaultdict(lambda: {"records_received": 0, "rows_upserted": 0})
     entity_ids = defaultdict(set)
@@ -287,7 +307,7 @@ def copy_media(
         listed_scopes_by_title = {}
 
         # Insert batch of media
-        print(f"\nBatch from {start} to {start + len(tmdb_details_batch)} of {len(tmdb_ids)} {media_type}s", flush=True)
+        print(f"\n{utc_stamp()} Batch from {start} to {start + len(tmdb_details_batch)} of {len(tmdb_ids)} {media_type}s", flush=True)
 
         media_ids = set()
         for index, tmdb_details in enumerate(tmdb_details_batch):
@@ -707,6 +727,7 @@ def copy_media(
         add_stats(stale_child_rows, delete_stale_child_rows(
             connector, media_type, listed_scopes_by_title, entity_batches))
 
+    print(f"{utc_stamp()} {media_type} copy done", flush=True)
     if deleted_titles is not None:
         entity_counts["deleted_titles"] = deleted_titles
     entity_counts["stale_child_rows"] = stale_child_rows
@@ -728,25 +749,35 @@ def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies = Fals
     deleted = {}
     failures = {}
     try:
+        # A media type restricted to ids doesn't cover every change, so it keeps the fixed
+        # window and leaves the sync state alone.
+        mongo_db = get_db()
+        selections = {
+            media_type: sync_state.begin(mongo_db, SYNC_JOB, media_type)
+            for media_type, selector in selectors.items() if not selector
+        }
         # Deletion runs first and on its own for each media type, so a failing or slow
         # copy never keeps flagged titles in CrateDB (#185).
         for media_type, selector in selectors.items():
-            print(f"\nDeleting flagged {media_type}s...", flush=True)
+            print(f"\n{utc_stamp()} Deleting flagged {media_type}s...", flush=True)
             try:
                 deleted[media_type] = delete_flagged_titles(connector, media_type, selector)
+                print(f"{utc_stamp()} {media_type} deletion done", flush=True)
             except Exception as error:
                 print(f"!!! {media_type} deletion failed: {error!r}", flush=True)
                 failures[f"{media_type} deletion"] = repr(error)
 
         for media_type, selector in selectors.items():
-            print(f"\nProcessing {media_type}s...", flush=True)
+            print(f"\n{utc_stamp()} Processing {media_type}s...", flush=True)
             key = "movies" if media_type == "movie" else "shows"
+            selection = selections.get(media_type)
             try:
                 results[key] = copy_media(
                     connector=connector,
                     query_selector=selector,
                     media_type=media_type,
                     delete_flagged=False,
+                    since=selection.since if selection else None,
                 )
             except Exception as error:
                 print(f"!!! {media_type} copy failed: {error!r}", flush=True)
@@ -754,6 +785,16 @@ def main(movie_ids: list[str] = [], show_ids: list[str] = [], skip_movies = Fals
                 results[key] = {}
             if media_type in deleted:
                 results[key]["deleted_titles"] = deleted[media_type]
+            if selection:
+                results[key]["selection"] = selection.report()
+                # The next run starts from this one only if the media type's deletion and
+                # copy both succeeded. Otherwise it reads the same changes again.
+                if not {f"{media_type} deletion", f"{media_type} copy"} & set(failures):
+                    try:
+                        sync_state.commit(mongo_db, selection, dict(results[key].get(key) or {}))
+                    except Exception as error:
+                        print(f"!!! {media_type} sync state not saved: {error!r}", flush=True)
+                        failures[f"{media_type} sync state"] = repr(error)
     finally:
         connector.disconnect()
         close_mongodb()

@@ -1,10 +1,15 @@
 import { json } from "@remix-run/node"
 import { getLocaleFromRequest } from "~/server/cache-identity.server"
+import { isEnabled } from "~/server/features.server"
+import { getHomeDoors } from "~/server/home-doors.server"
 import { loadMemberTaste } from "~/server/taste/member.server"
 import { getServiceCards } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getUserSettings } from "~/server/user-settings.server"
-import type { ViewerContext } from "~/server/viewer.server"
+import {
+	type ViewerContext,
+	getMemberViewerContext,
+} from "~/server/viewer.server"
 import type { LivingRoomData } from "~/ui/living-room/living-room-data"
 import { livingRoomAuth } from "./living-room/data.server"
 import { livingRoomWishlistCards } from "./living-room/pool.server"
@@ -44,6 +49,7 @@ export async function loadLivingRoom(request: Request) {
 			seen: new Set(),
 			skipped: new Set(),
 			notInterested: new Set(),
+			hidden: new Set(),
 			ratings: new Map(),
 			wishlist: new Map(wishlist.keys.map((key) => [key, new Date(0)])),
 			forYou: settings.for_you !== "no",
@@ -55,6 +61,17 @@ export async function loadLivingRoom(request: Request) {
 		data.wishlist = cards
 		data.catalog = saved
 		data.savedServices = saved.map((service) => service.name)
+		// With REC_TRACKING the member's home has three doors (#385). Without them it is today's two tiles, which is
+		// also what a failed read leaves.
+		if (isEnabled("tracking", { userId: user.id }))
+			try {
+				data.doors = await getHomeDoors(
+					await getMemberViewerContext(user.id, country),
+					taste,
+				)
+			} catch (error) {
+				console.error("Living room: loading the doors failed", error)
+			}
 	} catch (error) {
 		console.error("Living room: loading member data failed", error)
 		throw json(

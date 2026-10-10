@@ -14,10 +14,14 @@ export type ActionKind = keyof typeof ACTIONS
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
 
+/** Want to See on a title that is Seen: it goes on the Wishlist to be watched again. */
+const REWATCH = { short: "Rewatch", long: "Want to rewatch" }
+
 /**
  * Want to See, Seen, or Not interested as a toggle button.
  * `label`: "auto" shows the short word on phones and the long one from sm up; "long" always the long one; "none" the
- * icon alone, with the long label as its name and tooltip. `size`: "md" is 44px high, "sm" 36px.
+ * icon alone, with the long label as its name and tooltip; "wide" the icon alone on phones and the long label from
+ * sm up. `size`: "md" is 44px high, "sm" 36px.
  */
 export function ActionButton({
 	kind,
@@ -25,19 +29,33 @@ export function ActionButton({
 	label = "auto",
 	size = "md",
 	className = "",
+	count,
+	opensLog = false,
+	rewatch = false,
 	...rest
 }: {
 	kind: ActionKind
+	/** Want to See only: the title is Seen, so the button reads "Want to rewatch". */
+	rewatch?: boolean
 	active: boolean
-	label?: "auto" | "long" | "none"
+	label?: "auto" | "long" | "none" | "wide"
 	size?: "md" | "sm"
+	/** Seen with the movie watch log: "3×" from two watches on. */
+	count?: string | null
+	/** Seen with the movie watch log: the press opens the log and takes nothing back. */
+	opensLog?: boolean
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
 	const a = ACTIONS[kind]
-	const long = active ? a.on : a.off
+	const again = rewatch && kind === "want"
+	const long = again ? REWATCH.long : active ? a.on : a.off
+	const short = again ? REWATCH.short : active ? a.on : a.short
+	const name = `${long}${count ? `, watched ${count}` : ""}${opensLog ? ". Open your watches" : ""}`
 	const padding =
 		label === "none"
 			? "px-0"
-			: label === "auto"
+			: label === "wide"
+				? "px-0 text-xs sm:px-2"
+				: label === "auto"
 				? "px-2 text-xs sm:px-4 sm:text-sm"
 				: size === "md"
 					? "px-3 text-sm"
@@ -46,21 +64,31 @@ export function ActionButton({
 		<button
 			type="button"
 			aria-pressed={active}
-			aria-label={label === "none" ? long : undefined}
-			title={label === "none" ? long : undefined}
-			className={`inline-flex ${size === "md" ? "h-11" : "h-9"} w-full min-w-0 items-center justify-center gap-2 rounded-lg ${padding} font-semibold cursor-pointer transition-colors ${FOCUS} disabled:cursor-not-allowed disabled:opacity-40 ${
+			aria-label={label === "none" || opensLog ? name : undefined}
+			aria-haspopup={opensLog ? "dialog" : undefined}
+			title={label === "none" ? name : undefined}
+			className={`inline-flex ${size === "md" ? "h-11" : "h-9"} w-full min-w-0 items-center justify-center ${label === "none" && count ? "gap-1" : "gap-2"} rounded-lg ${padding} font-semibold cursor-pointer transition-colors ${FOCUS} disabled:cursor-not-allowed disabled:opacity-40 ${
 				active ? a.active : "bg-white/10 text-gray-100 hover:bg-white/20"
 			} ${className}`}
 			{...rest}
 		>
 			<a.Icon className={`h-4 w-4 shrink-0 ${active ? "" : a.tint}`} />
+			{label === "none" && count && <span className="text-xs tabular-nums">{count}</span>}
 			{label === "auto" && (
 				<>
-					<span className="truncate sm:hidden">{active ? a.on : a.short}</span>
+					<span className="truncate sm:hidden">{short}</span>
 					<span className="hidden truncate sm:inline">{long}</span>
 				</>
 			)}
 			{label === "long" && <span className="truncate">{long}</span>}
+			{label === "wide" && <span className="truncate max-sm:sr-only">{long}</span>}
+			{label !== "none" && count && <span className="shrink-0 tabular-nums opacity-80">{count}</span>}
+			{/* Drawn here: the icon library's arrow would join the scripts of every page. */}
+			{label !== "none" && opensLog && (
+				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 opacity-70" aria-hidden="true">
+					<path d="m4 6 4 4 4-4" />
+				</svg>
+			)}
 		</button>
 	)
 }

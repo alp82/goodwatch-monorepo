@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { useUserData } from "~/routes/api.user-data"
 import type { MediaType, ScoreData } from "~/types/user-data"
-import { createMediaKey, getUserDataHelpers } from "~/types/user-data"
+import { createMediaKey, isSeen, seenKeys } from "~/types/user-data"
 
 export const useUserScore = (mediaType: MediaType, tmdbId: number) => {
 	const { data } = useUserData()
@@ -23,14 +23,27 @@ export const useIsOnWishlist = (mediaType: MediaType, tmdbId: number) => {
 	}, [data, mediaType, tmdbId])
 }
 
-export const useIsWatched = (mediaType: MediaType, tmdbId: number) => {
+/**
+ * Where the member stands with the title and what their watch log says about it; null while it is Not started.
+ * `state === "seen"` is what the Seen button shows and takes back.
+ */
+export const useWatchState = (mediaType: MediaType, tmdbId: number) => {
 	const { data } = useUserData()
 
 	return useMemo(() => {
-		if (!data) return false
-		const key = createMediaKey(mediaType, tmdbId)
-		return key in data.watched
+		if (!data) return null
+		return data.watchState[createMediaKey(mediaType, tmdbId)] ?? null
 	}, [data, mediaType, tmdbId])
+}
+
+/** Counts as Seen: the state Seen, or a score. A rated show counts through its score alone. */
+export const useIsSeen = (mediaType: MediaType, tmdbId: number) => {
+	const { data } = useUserData()
+
+	return useMemo(
+		() => isSeen(data, createMediaKey(mediaType, tmdbId)),
+		[data, mediaType, tmdbId],
+	)
 }
 
 export const useIsFavorite = (mediaType: MediaType, tmdbId: number) => {
@@ -71,13 +84,11 @@ export const useWishlistCount = () => {
 	}, [data])
 }
 
-export const useWatchedCount = () => {
+/** How many titles count as Seen. */
+export const useSeenCount = () => {
 	const { data } = useUserData()
 
-	return useMemo(() => {
-		if (!data) return 0
-		return Object.keys(data.watched).length
-	}, [data])
+	return useMemo(() => seenKeys(data).length, [data])
 }
 
 export const useFavoritesCount = () => {

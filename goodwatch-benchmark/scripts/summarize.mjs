@@ -41,6 +41,7 @@ export async function summarize(directory) {
   const dir = resolve(directory);
   const meta = await json(`${dir}/meta.json`, {}),
     raw = await json(`${dir}/k6-summary.json`, meta.kind === "load" ? {} : null);
+  const urlSet = await json(`${dir}/urls.json`, {});
   const summary = {
     schema: 1,
     run_id: meta.run_id || basename(dir),
@@ -105,8 +106,26 @@ export async function summarize(directory) {
       tls_handshakes_per_s: (values("tls_handshakes", selector).count ?? 0) / time,
       tls_handshake_ms: latency("tls_handshake_duration", selector),
     });
+    const hostStats = (selector, time) => Object.fromEntries(["site", "static"].map((host) => {
+      const tags = `${selector},host:${host}`;
+      const measured = stats(tags);
+      return [host, { ...measured, rps: measured.requests / time, tls_handshakes: values("tls_handshakes", tags).count ?? 0 }];
+    }));
     if (pageViews) {
       summary.load.page_view = {
+        ...(urlSet.per_visit ? {
+          files: urlSet.files,
+          page_names: urlSet.page_names,
+          static_url: urlSet.static_url,
+          hosts: {
+            ...Object.fromEntries(Object.entries(hostStats("phase:main", Math.max(1, seconds))).map(([host, measured]) => [host, { ...measured, per_visit: urlSet.per_visit[host] }])),
+            other: { per_visit: urlSet.per_visit.other },
+          },
+          origin_share: {
+            requests: urlSet.per_visit.site.requests / (urlSet.per_visit.site.requests + urlSet.per_visit.static.requests || 1),
+            transfer_bytes: urlSet.per_visit.site.transfer_bytes / (urlSet.per_visit.site.transfer_bytes + urlSet.per_visit.static.transfer_bytes || 1),
+          },
+        } : {}),
         connections: raw.plan.config.connections,
         cache_identity: raw.plan.config.cache_identity,
         side_share: raw.plan.config.side_share,
@@ -145,6 +164,7 @@ export async function summarize(directory) {
         ...(pageViews
           ? {
               ...views(`phase:main,step:${step.name}`, ran),
+              ...(urlSet.per_visit ? { hosts: hostStats(`phase:main,step:${step.name}`, ran) } : {}),
               kinds: Object.fromEntries(
                 kinds.map((kind) => {
                   const selector = `phase:main,step:${step.name},kind:${kind}`;
@@ -382,6 +402,18 @@ export async function summarize(directory) {
         return [s.name, s.target_rps, s.visits_per_s, s.page_views_per_s, s.page_view_error_rate == null ? null : s.page_view_error_rate * 100, first.latency_ms.p50, first.latency_ms.p95, s.page_view_ms.p50, s.page_view_ms.p95, s.rps, s.error_rate == null ? null : s.error_rate * 100, s.tls_handshakes_per_s, s.tls_handshake_ms.p50, s.tls_handshake_ms.p95];
       }),
     );
+    if (v.hosts) {
+      md += `\n### By host\n\nFiles: ${fmt(v.files)}. Pages name the ${v.page_names === "static" ? "static hostname" : "site's host"}.${v.static_url ? ` Static hostname: ${fmt(new URL(v.static_url).host)}.` : ""}\n\n`;
+      md += "Bytes per visit come from the captured browser load, including skipped requests. k6 discards bodies and has no per-request byte count. Others are captured only and are never requested by k6. Per-visit values are weighted over all visitors, including single requests; their bytes are unknown when no capture exists.\n\n";
+      md += table(
+        ["Host", "Requests", "Req/s", "Error %", "p50 ms", "p95 ms", "TTFB p50 ms", "TTFB p95 ms", "TLS handshakes", "Requests/visit", "Captured KB/visit", "Connections/visit"],
+        [["site", "Site"], ["static", "Static hostname"], ["other", "Others"]].map(([host, label]) => {
+          const h = v.hosts[host];
+          return [label, h.requests ?? null, h.rps ?? null, h.error_rate == null ? null : h.error_rate * 100, h.latency_ms?.p50 ?? null, h.latency_ms?.p95 ?? null, h.ttfb_ms?.p50 ?? null, h.ttfb_ms?.p95 ?? null, h.tls_handshakes ?? null, h.per_visit.requests, Math.round(h.per_visit.transfer_bytes / 1024), host === "other" ? null : h.per_visit.connections];
+        }),
+      );
+      md += `\nSite share of site and static traffic: ${fmt(v.origin_share.requests * 100)}% of requests and ${fmt(v.origin_share.transfer_bytes * 100)}% of captured bytes.\n`;
+    }
     if (v.pages && Object.keys(v.pages).length)
       md +=
         "\nThe last response of each page before the run:\n\n" +

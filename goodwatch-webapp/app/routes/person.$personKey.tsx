@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
@@ -395,7 +396,7 @@ function GoodWatchScore({
 		<span className="inline-flex items-center gap-2">
 			<img
 				className={`block rounded-full p-1.5 shadow-xl bg-vibe-${v} ${size === "sm" ? "h-7" : "h-9"}`}
-				src={gwLogo}
+				src={assetUrl(gwLogo)}
 				alt="GoodWatch score"
 			/>
 			<span>
@@ -1063,7 +1064,7 @@ function ScoreGroupHeading({
 	return (
 		<div className="flex items-center gap-3">
 			<img
-				src={gwLogo}
+				src={assetUrl(gwLogo)}
 				alt=""
 				className={`h-10 rounded-full p-2 shadow-xl ${rated ? `bg-vibe-${Number(bandKey)}` : "bg-gray-700"}`}
 			/>

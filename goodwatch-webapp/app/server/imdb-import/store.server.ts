@@ -25,14 +25,28 @@ export function chunks<T>(list: T[], size: number): T[][] {
 	return out
 }
 
-/** A running import that hasn't reported progress for this long has stopped, most likely with its process. */
+// Whether a running import is alive is read from its row, because the process that applies it may be the other
+// webapp instance. The apply sets updated_at every HEARTBEAT_MS, also in the middle of a slow batch, and every reader
+// compares it with Crate's clock from the same read, so the clocks of the webapp hosts don't matter.
+
+/** How often a running import reports that it's alive. */
+export const HEARTBEAT_MS = 10_000
+
+/**
+ * A running import that hasn't reported for this long has stopped, most likely with its process, and can be resumed.
+ * Six heartbeats, so a live import survives a few reports in a row that time out against Crate (10 s each).
+ */
 export const STALL_MS = 60_000
 
-/** The imports this process is applying right now. */
+/**
+ * The imports this process is applying right now. It knows these are alive without asking Crate, also while Crate
+ * is too slow to take the heartbeat.
+ */
 export const activeRuns = new Set<string>()
 
 export interface ImportRow {
 	id: string
+	source: string
 	user_id: string
 	status: ImdbImportStatus
 	file_name: string | null
@@ -50,14 +64,22 @@ export interface ImportRow {
 	updated_at: number | string | Date
 	confirmed_at: number | string | Date | null
 	finished_at: number | string | Date | null
+	/** Crate's clock when the row was read. */
+	read_at: number | string | Date
+	/**
+	 * Crate's version of the row, which every write to it changes. A write that names both only lands while the row
+	 * is still the one that was read (`claimImport`).
+	 */
+	_seq_no: number
+	_primary_term: number
 }
 const IMPORT_COLUMNS =
-	"id, user_id, status, file_name, conflict_choice, counts, processed, total, added, updated, kept, failed, without_fingerprint, error, created_at, updated_at, confirmed_at, finished_at"
+	"id, user_id, source, status, file_name, conflict_choice, counts, processed, total, added, updated, kept, failed, without_fingerprint, error, created_at, updated_at, confirmed_at, finished_at, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term"
 
 export const toMs = (value: number | string | Date) => new Date(value).getTime()
 
 export const isStalled = (row: ImportRow) =>
-	row.status === "running" && !activeRuns.has(row.id) && Date.now() - toMs(row.updated_at) > STALL_MS
+	row.status === "running" && !activeRuns.has(row.id) && toMs(row.read_at) - toMs(row.updated_at) > STALL_MS
 
 export function summarize(row: ImportRow): ImdbImportSummary {
 	return {
@@ -87,7 +109,8 @@ export function summarize(row: ImportRow): ImdbImportSummary {
 export async function getImportRow(userId: string, id: string): Promise<ImportRow> {
 	const rows = await select<ImportRow>(`SELECT ${IMPORT_COLUMNS} FROM doc.user_import WHERE id = ?`, [id])
 	const row = rows[0]
-	if (!row || row.user_id !== userId) throw new ImdbImportError(404, "We couldn't find that import. Upload the file again.")
+	if (!row || row.user_id !== userId || (row.source !== undefined && row.source !== "imdb"))
+		throw new ImdbImportError(404, "We couldn't find that import. Upload the file again.")
 	return row
 }
 
@@ -99,6 +122,26 @@ export function listImportRows(userId: string, status?: ImdbImportStatus): Promi
 		 ORDER BY created_at DESC LIMIT 100`,
 		status ? [userId, status] : [userId],
 	)
+}
+
+/**
+ * Writes `set` to the import only if nothing has written to it since `row` was read, and tells whether it did.
+ * Of several requests that read the same row, in either webapp instance, at most one gets true: none does if
+ * something else, like a late heartbeat, wrote in between.
+ *
+ * Crate compares the version on the live row, which `status = ?` in the filter does not: a filter on anything but
+ * the key is answered from the last refresh, and the write then lands on the row whatever it holds by now. On CrateDB
+ * 5.10.9 two such claims within the refresh interval both reported one row (issue 313). Crate refuses a filter that
+ * names the version together with another column, so whatever the claim depends on is checked on `row` beforehand.
+ */
+export async function claimImport(row: ImportRow, set: string, params: Param[]): Promise<boolean> {
+	const claim = await run(`UPDATE doc.user_import SET ${set} WHERE id = ? AND _seq_no = ? AND _primary_term = ?`, [
+		...params,
+		row.id,
+		Number(row._seq_no),
+		Number(row._primary_term),
+	])
+	return claim.rowcount === 1
 }
 
 export const refreshImports = () => run("REFRESH TABLE doc.user_import")

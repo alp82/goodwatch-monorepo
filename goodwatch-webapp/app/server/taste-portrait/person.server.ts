@@ -32,6 +32,7 @@ export interface PortraitInput {
 	chosen: ReadonlySet<TitleKey>
 	wantToSee: ReadonlySet<TitleKey>
 	skipped: ReadonlySet<TitleKey>
+	/** Never suggested: Not interested, or a Dropped show. */
 	notInterested: ReadonlySet<TitleKey>
 	country: string
 	services: number[]

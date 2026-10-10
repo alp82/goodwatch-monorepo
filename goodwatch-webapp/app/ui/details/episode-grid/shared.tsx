@@ -1,5 +1,6 @@
 // Pieces of the episode grid: the floating tip and popover, and the episode tip, season
 // scores, provider marks and legend that live inside them.
+import { assetUrl } from "~/utils/asset-url"
 import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import type { GridEpisode, GridSeason, GridSpecial } from "~/server/episode-grid.server"
@@ -217,7 +218,7 @@ export function ProviderLogo({ provider }: { provider: ProviderKey }) {
 	const logo = SITE_LOGO[PROVIDERS[provider].site]
 	return (
 		<span className={`inline-flex h-4 w-9 shrink-0 items-center justify-center rounded ${logo.bg}`}>
-			<img src={logo.src} alt="" className={logo.className} />
+			<img src={assetUrl(logo.src)} alt="" className={logo.className} />
 		</span>
 	)
 }

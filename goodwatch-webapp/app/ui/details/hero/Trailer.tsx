@@ -1,6 +1,5 @@
 import { PlayIcon } from "@heroicons/react/24/solid"
-import type React from "react"
-import { Suspense, lazy, useState } from "react"
+import { Suspense, lazy, useRef, useState } from "react"
 import { usePosterImpression } from "~/hooks/usePosterImpression"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { TmdbImage } from "~/ui/TmdbImage"
@@ -10,22 +9,24 @@ import type { SizeRule } from "~/utils/tmdb-image"
 
 type Media = MovieResult | ShowResult
 
-// The hero shows the backdrop twice with one request: sharp in the phone banner, and blurred and
-// darkened behind the box. Both images carry the same sources so the browser picks the same file,
-// and that file is the page's largest image. From md up only the blurred one shows, so it
-// declares half the box width there.
+// The backdrop is the hero's banner, as wide as the page's column, and the page's largest image.
 const HERO_BACKDROP_SIZES: SizeRule[] = [
-	["(min-width: 768px)", "390px"],
+	["(min-width: 1280px)", "1216px"],
 	[null, "100vw"],
 ]
 
 export function HeroBackdropImage({ media, className }: { media: Media; className: string }) {
 	if (!media.details.backdrop_path) return null
+	// `maxWidth` stays at 780: it names the file that `src` holds, which the render path budget looks for, and every
+	// larger step is in the srcSet for the wide banner all the same.
 	return <TmdbImage kind="backdrop" path={media.details.backdrop_path} sizes={HERO_BACKDROP_SIZES} maxWidth={780} priority="high" className={className} />
 }
 
-// The poster column is 192 to 352 px wide and shows from md up. Lazy, so a phone never requests it.
-const HERO_POSTER_SIZES: SizeRule[] = [[null, "340px"]]
+// The poster on the banner: 72 px wide on a phone, 128 px from md up.
+const HERO_POSTER_SIZES: SizeRule[] = [
+	["(min-width: 768px)", "128px"],
+	[null, "72px"],
+]
 
 const trailerKey = (media: Media) => media.videos?.trailers?.[0]?.key
 
@@ -37,6 +38,7 @@ const preloadTrailerDialog = () => {
 	void loadTrailerDialog().catch(() => {})
 }
 
+/** The play pill that lies over a still or a clip in the page's media section. */
 export function PlayPill({ label = "Play trailer" }: { label?: string }) {
 	return (
 		<span
@@ -51,27 +53,32 @@ export function PlayPill({ label = "Play trailer" }: { label?: string }) {
 	)
 }
 
-// An image that plays the trailer when clicked. Without a trailer it is a
-// plain image.
-function TrailerImage({ media, image, className }: { media: Media; image: React.ReactNode; className: string }) {
+/**
+ * The hero's trailer button. It always says what it is: "Trailer" on a phone, "Play trailer" from md up. A title
+ * without a trailer has none.
+ */
+export function TrailerButton({ media, className = "" }: { media: Media; className?: string }) {
 	const [open, setOpen] = useState(false)
 	const opened = useOpenedOnce(open)
 	const key = trailerKey(media)
-	if (!key) return <div className={`relative ${className}`}>{image}</div>
+	if (!key) return null
 	return (
 		<>
 			<button
 				type="button"
+				data-trailer
 				onClick={() => setOpen(true)}
 				onPointerEnter={preloadTrailerDialog}
 				onTouchStart={preloadTrailerDialog}
 				onFocus={preloadTrailerDialog}
 				aria-label={`Play trailer for ${media.details.title}`}
-				className={`group relative block cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300 ${className}`}
+				className={`inline-flex h-9 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full bg-white pl-1.5 pr-3 text-xs font-bold text-black shadow-[0_0_0_1px_rgba(0,0,0,.4),0_8px_24px_rgba(0,0,0,.6)] transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 motion-reduce:transition-none md:h-11 md:gap-2 md:pl-2 md:pr-4 md:text-sm ${className}`}
 			>
-				{image}
-				<span aria-hidden="true" className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/30 motion-reduce:transition-none" />
-				<PlayPill />
+				<span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white md:h-7 md:w-7">
+					<PlayIcon className="h-3.5 w-3.5 translate-x-px" />
+				</span>
+				<span className="md:hidden">Trailer</span>
+				<span className="max-md:hidden">Play trailer</span>
 			</button>
 			{opened && (
 				<Suspense fallback={null}>
@@ -82,35 +89,51 @@ function TrailerImage({ media, image, className }: { media: Media; image: React.
 	)
 }
 
-export function PosterTrailer({ media, className = "" }: { media: Media; className?: string }) {
+// The poster over the whole screen. Its code loads when a visitor reaches for the poster, or at the latest with
+// the press.
+const loadPosterFullScreen = () => import("~/ui/details/hero/PosterFullScreen")
+const PosterFullScreen = lazy(reloadOnStaleChunk(loadPosterFullScreen))
+const preloadPosterFullScreen = () => {
+	void loadPosterFullScreen().catch(() => {})
+}
+
+/** The poster on the banner. A press opens it over the whole screen; it grows out of this place and returns to it. */
+export function HeroPoster({ media, className = "" }: { media: Media; className?: string }) {
 	const impressionRef = usePosterImpression(media.mediaType, media.details.tmdb_id)
+	const thumb = useRef<HTMLButtonElement>(null)
+	const [open, setOpen] = useState(false)
+	const opened = useOpenedOnce(open)
+	if (!media.details.poster_path) return null
 	return (
-		<TrailerImage
-			media={media}
-			className={`overflow-hidden rounded-xl shadow-2xl shadow-black/60 ${className}`}
-			image={
+		<>
+			<button
+				ref={thumb}
+				type="button"
+				data-poster
+				aria-haspopup="dialog"
+				aria-label={`Poster for ${media.details.title}. Show it full screen`}
+				onClick={() => setOpen(true)}
+				onPointerEnter={preloadPosterFullScreen}
+				onTouchStart={preloadPosterFullScreen}
+				onFocus={preloadPosterFullScreen}
+				className={`block aspect-[2/3] shrink-0 cursor-zoom-in overflow-hidden rounded-xl bg-white/5 shadow-[0_8px_30px_rgba(0,0,0,.7)] ring-1 ring-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 ${className}`}
+			>
 				<TmdbImage
 					imgRef={impressionRef}
 					kind="poster"
 					path={media.details.poster_path}
 					sizes={HERO_POSTER_SIZES}
-					maxWidth={352}
-					alt={`Poster for ${media.details.title}`}
-					className="h-full w-full bg-white/5 object-cover"
+					maxWidth={128}
+					alt=""
+					className="h-full w-full object-cover"
 					draggable={false}
 				/>
-			}
-		/>
-	)
-}
-
-// The sharp backdrop, fading out at the bottom into whatever is behind it.
-export function BackdropTrailer({ media, className = "" }: { media: Media; className?: string }) {
-	return (
-		<TrailerImage
-			media={media}
-			className={`w-full overflow-hidden [mask-image:linear-gradient(to_bottom,black_65%,transparent)] ${className}`}
-			image={<HeroBackdropImage media={media} className="absolute inset-0 h-full w-full object-cover object-[center_25%]" />}
-		/>
+			</button>
+			{opened && (
+				<Suspense fallback={null}>
+					<PosterFullScreen media={media} open={open} thumb={thumb} onClose={() => setOpen(false)} />
+				</Suspense>
+			)}
+		</>
 	)
 }

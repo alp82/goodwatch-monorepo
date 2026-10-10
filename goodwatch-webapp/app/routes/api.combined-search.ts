@@ -4,6 +4,11 @@ import { getAuthFromRequest } from "~/utils/auth";
 import { combinedSearch } from "~/server/combined-search/search.server";
 import { parseSearchFilters } from "~/server/combined-search/search-filters";
 import { getFeatureMode } from "~/server/features.server";
+import { runsSearch } from "~/server/role.server";
+import {
+	searchAdmission,
+	searchBusyResponse,
+} from "~/server/search-runtime/admission.server";
 import { RESULT_LENGTH } from "~/server/search-ranking/ranking.server";
 import {
 	searchTaste,
@@ -27,6 +32,11 @@ export async function action({ request }: ActionFunctionArgs) {
 		request.headers.get("Origin") !== expectedOrigin
 	)
 		return json({ error: "Invalid origin" }, { status: 403, headers });
+	// A page instance does no search work (see role.server.ts): the proxy sends searches to the search roles.
+	if (!runsSearch()) return searchBusyResponse();
+	const release = searchAdmission.enter();
+	if (!release) return searchBusyResponse();
+	let handedOver = false;
 	try {
 		// Bound the body before JSON parsing; Content-Length is not a trustworthy bound.
 		const reader = request.body?.getReader();
@@ -120,10 +130,12 @@ export async function action({ request }: ActionFunctionArgs) {
 						error: "Search is unavailable. Your previous results are kept.",
 					});
 				} finally {
+					release();
 					controller.close();
 				}
 			},
 		});
+		handedOver = true;
 		// The response carries the session check's cookies, so it waits for the check (not for the search).
 		headers = (await auth).headers;
 		headers.set("Referrer-Policy", "no-referrer");
@@ -135,5 +147,7 @@ export async function action({ request }: ActionFunctionArgs) {
 			{ error: "Search is unavailable. Your previous results are kept." },
 			{ status: 503, headers },
 		);
+	} finally {
+		if (!handedOver) release();
 	}
 }

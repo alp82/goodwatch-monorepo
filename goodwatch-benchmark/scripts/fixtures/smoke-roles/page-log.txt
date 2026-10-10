@@ -1,0 +1,5 @@
+Process role: page
+[remix-serve] http://localhost:3000 (http://0.0.0.0:3000)
+Title snapshot 20261009T073131Z loaded: 242466 titles, 3000 in the reference pool, ratings for 51 countries, in 1234 ms (129 ms reading Redis)
+Process: rss 600 MB, heap 200 of 300 MB, external 50 MB, longest event loop stall 60 ms, query encoder not ready with 0 waiting, up 1 min
+Process: rss 600 MB, heap 200 of 300 MB, external 50 MB, longest event loop stall 20 ms, query encoder not ready with 0 waiting, up 2 min

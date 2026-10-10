@@ -1,4 +1,5 @@
 import { useUserData } from "~/routes/api.user-data"
+import { ACTED_ON } from "~/types/user-data"
 import {
 	TasteTitleLink,
 	readExploration,
@@ -197,7 +198,7 @@ export default function RecommendationSwiper({
 	const [isMobile, setIsMobile] = useState(false)
 	const { data: history } = useUserData()
 	const excluded = new Set(
-		["scores", "skipped", "watched", "wishlist", "notInterested"].flatMap((key) =>
+		ACTED_ON.flatMap((key) =>
 			Object.keys(history?.[key] || {}),
 		),
 	)

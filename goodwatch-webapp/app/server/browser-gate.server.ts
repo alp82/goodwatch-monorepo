@@ -10,6 +10,7 @@
 import { subscribe } from "node:diagnostics_channel"
 import type { IncomingMessage, Server, ServerResponse } from "node:http"
 import { isbot } from "isbot"
+import { isStaticHost } from "./asset-address.server.ts"
 import { BROWSER_COOKIE } from "../utils/browser-cookie.ts"
 
 export type GateAnswer = {
@@ -131,7 +132,7 @@ export function takeGateCounts(): typeof counts {
  * Puts the gate in front of everything else the server does with a request. The listeners that were there get the
  * requests the gate doesn't answer.
  */
-export function putGateFirst(server: Server): void {
+export function putGateFirst(server: Server, staticHost = isStaticHost): void {
 	if (state.gated.has(server)) return
 	state.gated.add(server)
 	const listeners = server.listeners("request")
@@ -139,7 +140,8 @@ export function putGateFirst(server: Server): void {
 	server.on("request", (request: IncomingMessage, response: ServerResponse) => {
 		let answer: GateAnswer | null = null
 		try {
-			answer = gateAnswer(request.method, request.url, request.headers)
+			if (!staticHost(request.headers.host))
+				answer = gateAnswer(request.method, request.url, request.headers)
 		} catch {
 			// The app answers.
 		}

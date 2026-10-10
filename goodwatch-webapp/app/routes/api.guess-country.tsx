@@ -1,11 +1,11 @@
+import { fetchJsonWithBackendTimeout, timeoutSetting } from "../utils/backend-timeout.ts"
 import type { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node"
 import { getClientIPAddress } from "remix-utils/get-client-ip-address"
 
 async function getCountryByIP(ip: string | null) {
 	if (ip) {
-		const response = await fetch(`https://ipapi.co/${ip}/json/`)
 		try {
-			const data = await response.json()
+			const data = await fetchJsonWithBackendTimeout("IP country lookup", timeoutSetting("IP_COUNTRY_TIMEOUT_MS", 3000), `https://ipapi.co/${ip}/json/`)
 			return data.country
 		} catch {
 			return null

@@ -7,12 +7,20 @@
 //   the score the preview saw. A rating the member set since the preview is never overwritten.
 // - Every row the import writes gets the import's confirm time as updated_at. The read-back recognises the import's
 //   own writes by it, also after a restart or a write that timed out and landed later.
-// - The written review, watch history, Want to See, skipped and favorites are never touched. That is why this
-//   doesn't go through updateScores, which replaces the review.
+// - While it runs, the apply sets the import's updated_at every few seconds. The other webapp instance reads from it
+//   that the import is alive, and offers a resume only once it has been silent for STALL_MS.
+// - The written review, Want to See, skipped and favorites are never touched. That is why this doesn't go through
+//   updateScores, which replaces the review and takes a rated movie off the Wishlist.
+// - A rated movie is Seen through the watch its score owns (docs/implementation/tracking/data-model.md, C2). After
+//   each batch of scores, and after an undo took scores back, the batch's movies are settled by the movie rule:
+//   the score's watch is written where a movie now has a score and no watch, and removed where the score went.
+//   A watch the member logged is never touched. Settling again writes nothing, so it runs before the items are
+//   marked and a run that broke off settles them again.
 import type { ImdbConflictChoice, ImdbImportCounts, ImdbImportSummary } from "~/domain/imdb-import"
 import { resetOnboardingMediaCache } from "~/server/onboarding-media.server"
 import { markTasteChanged } from "~/server/taste/index.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
+import { settleMovies } from "~/server/tracking.server"
 import { resetUserDataCache } from "~/server/userData.server"
 import { CrateTimeoutError } from "~/utils/crate"
 import { titleKey } from "~/utils/title-key"
@@ -21,7 +29,9 @@ import { ImdbImportError, type ImportMediaType, MAX_ROWS } from "./file.server"
 import {
 	activeRuns,
 	chunks,
+	claimImport,
 	getImportRow,
+	HEARTBEAT_MS,
 	isStalled,
 	listImportRows,
 	marks,
@@ -49,6 +59,13 @@ export async function ratingsChanged(userId: string) {
 	for (const result of results)
 		if (result.status === "rejected") console.error("IMDb import: clearing a cache failed:", result.reason)
 }
+
+/** The movie rule for the movies among an import's titles, after their scores were written or taken back. */
+export const settleImportedMovies = (userId: string, items: readonly { tmdb_id: number; media_type: ImportMediaType }[]) =>
+	settleMovies(
+		userId,
+		items.filter((item) => item.media_type === "movie").map((item) => Number(item.tmdb_id)),
+	)
 
 /** A row the import still has to write. */
 interface Pending {
@@ -179,9 +196,32 @@ async function countWithoutFingerprint(importId: string): Promise<number | null>
 	return rows.filter((row) => !snapshot.fingerprint(titleKey(row.media_type, Number(row.tmdb_id)))).length
 }
 
+/**
+ * Reports that the import is alive until the returned function is called, which also waits for a report on its way.
+ * The write goes by the primary key alone, so every read of the import by its key sees it at once.
+ */
+function startHeartbeat(importId: string) {
+	let beat: Promise<unknown> | null = null
+	const timer = setInterval(() => {
+		// A report that Crate hasn't answered yet is not sent again.
+		beat ??= run("UPDATE doc.user_import SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", [importId])
+			.catch((error) => console.error(`IMDb import ${importId}: reporting that it's alive failed:`, error))
+			.finally(() => {
+				beat = null
+			})
+	}, HEARTBEAT_MS)
+	// The import doesn't keep a process alive that is shutting down.
+	timer.unref()
+	return async () => {
+		clearInterval(timer)
+		await beat
+	}
+}
+
 /** The background task. Picks up whatever the import hasn't settled yet, so starting and resuming are the same. */
 async function apply(userId: string, importId: string) {
 	let wrote = false
+	const stopHeartbeat = startHeartbeat(importId)
 	try {
 		const row = await getImportRow(userId, importId)
 		if (!row.confirmed_at || !row.conflict_choice) throw new Error("The import was never confirmed")
@@ -209,14 +249,15 @@ async function apply(userId: string, importId: string) {
 		let processed = Math.max(0, total - pending.length)
 		const report = () =>
 			run(
-				"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = ? WHERE id = ?",
-				[processed, tally.added, tally.updated, tally.kept, tally.failed, new Date(), importId],
+				"UPDATE doc.user_import SET processed = ?, added = ?, updated = ?, kept = ?, failed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+				[processed, tally.added, tally.updated, tally.kept, tally.failed, importId],
 			)
 		await report()
 
 		for (const batch of chunks(pending, APPLY_BATCH)) {
 			wrote = true
 			const states = await applyBatch(userId, stamp, batch)
+			await settleImportedMovies(userId, batch)
 			await recordStates(importId, states)
 			for (const state of states.values()) tally[state]++
 			processed += batch.length
@@ -229,6 +270,8 @@ async function apply(userId: string, importId: string) {
 			console.error("IMDb import: counting titles without a fingerprint failed:", error)
 			return null
 		})
+		// From here on updated_at belongs to the result: a late heartbeat would change it under a resume.
+		await stopHeartbeat()
 		const now = new Date()
 		await run(
 			`UPDATE doc.user_import
@@ -252,6 +295,7 @@ async function apply(userId: string, importId: string) {
 		)
 	} catch (error) {
 		console.error(`IMDb import ${importId} stopped:`, error)
+		await stopHeartbeat()
 		await run("UPDATE doc.user_import SET status = 'failed', error = ?, updated_at = ? WHERE id = ?", [
 			"The import stopped before it finished. Nothing is lost: try again to finish it.",
 			new Date(),
@@ -274,35 +318,31 @@ function startApply(userId: string, importId: string) {
  * A resumed import keeps the conflict choice it was started with, because part of it is already written.
  */
 export async function confirmImport(userId: string, importId: string, choice: ImdbConflictChoice): Promise<ImdbImportSummary> {
-	// The claims below filter on more than the key, so they need the latest state to be searchable.
+	// The look for another running import below filters on more than the key, so it needs the latest state searchable.
 	await refreshImports()
 	const row = await getImportRow(userId, importId)
 	if (row.status === "done") throw new ImdbImportError(409, "This import is already finished.")
 	if (row.status === "undone") throw new ImdbImportError(409, "This import was undone. Upload the file again to import it.")
 	if (row.status === "running" && !isStalled(row)) return summarize(row)
 
-	const now = new Date()
-	let claim: { rowcount?: number }
+	// Each claim holds only for the row as it was read above: a preview that is still a preview, or a failed or stalled
+	// import that hasn't reported since. Only one of several simultaneous requests gets it, in either process.
+	let claimed: boolean
 	if (row.status === "preview") {
 		const running = await listImportRows(userId, "running")
 		if (running.some((other) => !isStalled(other)))
 			throw new ImdbImportError(409, "Another import is still running. Wait for it to finish, then try again.")
 		const counts = JSON.parse(row.counts) as ImdbImportCounts
 		const total = counts.new + counts.update + (choice === "imdb" ? counts.conflict : 0)
-		claim = await run(
-			`UPDATE doc.user_import SET status = 'running', conflict_choice = ?, total = ?, confirmed_at = ?, updated_at = ?
-			 WHERE id = ? AND status = 'preview'`,
-			[choice, total, now, now, importId],
-		)
+		claimed = await claimImport(row, "status = 'running', conflict_choice = ?, total = ?, confirmed_at = ?, updated_at = CURRENT_TIMESTAMP", [
+			choice,
+			total,
+			new Date(),
+		])
 	} else {
-		// Failed or stalled. Only one of several simultaneous requests gets to resume it.
-		claim = await run(
-			`UPDATE doc.user_import SET status = 'running', error = NULL, updated_at = ?
-			 WHERE id = ? AND status = ? AND updated_at = ?`,
-			[now, importId, row.status, new Date(row.updated_at)],
-		)
+		claimed = await claimImport(row, "status = 'running', error = NULL, updated_at = CURRENT_TIMESTAMP", [])
 	}
-	if (claim.rowcount === 1) startApply(userId, importId)
+	if (claimed) startApply(userId, importId)
 	await refreshImports()
 	return summarize(await getImportRow(userId, importId))
 }
@@ -345,6 +385,8 @@ export async function undoImport(userId: string, importId: string): Promise<Imdb
 					)
 			}
 		}
+		// A movie whose score went loses the watch that score owned; one that got its earlier score back keeps it.
+		await settleImportedMovies(userId, written)
 		// Every statement above is a no-op the second time, so an undo that broke off here can simply run again.
 		await run("UPDATE doc.user_import_item SET apply_state = 'undone' WHERE import_id = ? AND apply_state IN ('added', 'updated')", [
 			importId,

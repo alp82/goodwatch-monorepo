@@ -1,0 +1,68 @@
+# Sends the search paths of goodwatch.app to the search roles on vector1. Installed on abio's proxy on October 9, 2026.
+#
+# Where it goes: the proxy on abio (Traefik v2.10), as a dynamic configuration. In Coolify: Servers > abio > Proxy >
+# Dynamic Configurations > + Add, file name goodwatch-search.yaml. Traefik loads it without a restart. Deleting the
+# file there sends the two paths back to the page instances at once, because goodwatch-balance.yaml and Coolify's
+# own routers stay in place underneath.
+#
+# Before you paste it: replace VECTOR1_PRIVATE_ADDRESS with vector1's private address. It's the address that the
+# second server of goodwatch-balance.yaml already has. The repository is public, so the address isn't written here.
+#
+# How it works:
+# - The router matches exactly two paths, POST /api/combined-search and GET /api/command-palette, with any query
+#   string. It doesn't match the method: the app answers a wrong method itself. Its priority is 1100, above the
+#   routers of goodwatch-balance.yaml (1000 and 1001) and Coolify's (the length of their rule, 39). Every other
+#   request keeps going to the page instances.
+# - Members aren't special here: a request with the auth cookie on these paths also matches this router, and the
+#   response carries no sticky cookie. The search roles share nothing in memory that a member's next request needs.
+# - The one server is vector1's proxy on the private network, with plain HTTP. goodwatch-search-instance.yaml there
+#   balances across the search roles and checks each one's readiness every 2 seconds. This proxy can't do that
+#   itself: it sees one address for vector1, not the containers behind it.
+# - The middleware adds the request header X-Gw-Role: search. vector1's proxy routes by it, so that installing the
+#   file on vector1 changes nothing until this file is installed too. Without the header, the half of the search
+#   requests that goodwatch-balance.yaml sends to vector1 would already reach the search roles.
+# - The health check asks vector1's proxy for its own ping every 2 seconds. It says whether vector1 answers at all,
+#   not whether a search role is ready. With vector1 away, this proxy answers 503 at once, instead of waiting for a
+#   connection for every search.
+# - No retry: there is one server. No compression: the app compresses its own responses, and the search response
+#   is a stream whose first line must not be held back.
+# - What a client gets when no search role is ready: 503 with the body "no available server", from vector1's proxy
+#   or from this one. The browser treats a bare 502, 503, or 504 on these paths as the busy answer.
+# - The visitor's address: this proxy sets X-Real-Ip and X-Forwarded-For as it does for every request, and vector1's
+#   proxy keeps them because it trusts abio's address (its forwardedHeaders.trustedIPs setting, which the page
+#   instance on vector1 already needs). The search role reads the header named by SEARCH_TRUSTED_IP_HEADER.
+# - No router for plain HTTP: the HTTP router of goodwatch-balance.yaml (or Coolify's) redirects these paths to
+#   HTTPS like every other path.
+#
+# Test it before installing it: ./test-search-local.sh in this directory.
+http:
+  routers:
+    gw-search-https:
+      entryPoints:
+        - https
+      rule: Host(`goodwatch.app`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`))
+      priority: 1100
+      middlewares:
+        - gw-search-mark
+      service: gw-search
+      tls:
+        certResolver: letsencrypt
+
+  middlewares:
+    gw-search-mark:
+      headers:
+        customRequestHeaders:
+          X-Gw-Role: search
+
+  services:
+    gw-search:
+      loadBalancer:
+        passHostHeader: true
+        healthCheck:
+          # The ping of vector1's proxy, not a search role's readiness: vector1's proxy checks the roles.
+          path: /ping
+          interval: 2s
+          timeout: 1s
+        servers:
+          # The search roles on vector1, through vector1's proxy on the private network.
+          - url: http://VECTOR1_PRIVATE_ADDRESS:80

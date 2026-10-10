@@ -9,6 +9,7 @@
 //   doesn't.
 // - On large responses (200 KB to 1 MB), @qdrant/js-client-rest's JSON reviver cost about 70 ms per query and 36 ms
 //   per retrieve at the median on the webapp host (#147).
+import { BackendTimeoutError } from "../../utils/backend-timeout.ts"
 import http from "node:http"
 import https from "node:https"
 
@@ -98,7 +99,7 @@ function post(path: string, body: string, timeoutMs: number) {
 		)
 		request.setTimeout(timeoutMs, () =>
 			request.destroy(
-				new Error(`Qdrant request timed out after ${timeoutMs} ms`),
+				new BackendTimeoutError("Qdrant", timeoutMs, `Qdrant request timed out after ${timeoutMs} ms`),
 			),
 		)
 		request.on("error", reject)

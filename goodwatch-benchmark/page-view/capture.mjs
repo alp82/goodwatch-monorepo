@@ -73,15 +73,23 @@ async function capture(path) {
     const loadMs = Date.now() - started;
     // The page loads analytics and error tracking after it is interactive, and their requests follow.
     await sleep(settle * 1000);
+    const staticOrigin = await page.evaluate((siteOrigin) => {
+      const addresses = [...document.querySelectorAll('link[rel="modulepreload"][href], script[type="module"][src]')];
+      for (const element of addresses) {
+        const url = new URL(element.href || element.src);
+        if (url.pathname.startsWith("/assets/") && url.origin !== siteOrigin) return url.origin;
+      }
+      return null;
+    }, origin);
     const first = Math.min(...[...requests.values()].map((r) => r.t_ms));
     const rows = [...requests.values()]
       .filter((r) => /^https?:/.test(r.url))
       .map((r) => {
         const url = new URL(r.url);
-        return { ...r, url: undefined, host: url.hostname, own: url.origin === origin, path: url.pathname + url.search, t_ms: r.t_ms - first };
+        return { ...r, url: undefined, host: url.hostname, origin: url.origin, own: url.origin === origin, path: url.pathname + url.search, t_ms: r.t_ms - first };
       })
       .sort((a, b) => a.t_ms - b.t_ms);
-    return { path, status: response?.status() ?? null, load_ms: loadMs, settle_s: settle, requests: rows };
+    return { path, static_origin: staticOrigin, status: response?.status() ?? null, load_ms: loadMs, settle_s: settle, requests: rows };
   } finally {
     await browser.close();
   }

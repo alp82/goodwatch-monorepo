@@ -25,6 +25,7 @@ import {
 	Meta,
 	Scripts,
 	ScrollRestoration,
+	isRouteErrorResponse,
 	useLoaderData,
 	useLocation,
 	useRouteError,
@@ -46,6 +47,7 @@ import InfoBox from "~/ui/InfoBox"
 import BottomNav from "~/ui/nav/BottomNav"
 import type { EnabledFeatures } from "~/utils/features"
 import { LocaleContext } from "~/utils/locale"
+import { assetBase, assetUrl } from "~/utils/asset-url"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 
 // One stylesheet for every page: it imports main.css, the brand font's rules, Swiper's, and the toast styles.
@@ -56,6 +58,15 @@ import { SearchJourneyProvider } from "~/ui/search/SearchJourney"
 import { getAuthFromRequest } from "./utils/auth"
 
 export const links: LinksFunction = () => [
+	...(assetBase()
+		? [
+				{
+					rel: "preconnect",
+					href: assetBase(),
+					crossOrigin: "anonymous" as const,
+				},
+			]
+		: []),
 	{ rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
 	{
 		rel: "icon",
@@ -69,8 +80,15 @@ export const links: LinksFunction = () => [
 		sizes: "16x16",
 		href: "/favicon-16x16.png",
 	},
-	{ rel: "manifest", href: "/site.webmanifest" },
-	{ rel: "stylesheet", href: cssTailwind },
+	{ rel: "manifest", href: assetUrl("/site.webmanifest") },
+	// On the static hostname the stylesheet is fetched without credentials, like the scripts and the font, so that it
+	// uses the connection the preconnect hint opened. Without it the page's only render-blocking request would wait
+	// for a second connection to the same host.
+	{
+		rel: "stylesheet",
+		href: assetUrl(cssTailwind),
+		...(assetBase() ? { crossOrigin: "anonymous" as const } : {}),
+	},
 	// The site header's title is brand text and sits at the top of every page, on phones too. The preload starts
 	// the font's download next to the stylesheet's, so the swap from the fallback font comes early. It's the
 	// only font request of a page: the Latin Extended file loads only when a page shows such a letter.
@@ -78,7 +96,7 @@ export const links: LinksFunction = () => [
 		rel: "preload",
 		as: "font",
 		type: "font/woff2",
-		href: gabaritoLatin,
+		href: assetUrl(gabaritoLatin),
 		crossOrigin: "anonymous",
 	},
 	{
@@ -146,8 +164,12 @@ const Header = lazy(reloadOnStaleChunk(() => import("~/ui/main/Header")))
 export function ErrorBoundary() {
 	// TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
 	const error = useRouteError()
-	console.error(error)
-	reportBoundaryError(error)
+	// An address that names no page is an answer, not a failure of the app.
+	const notFound = isRouteErrorResponse(error) && error.status === 404
+	if (!notFound) {
+		console.error(error)
+		reportBoundaryError(error)
+	}
 
 	const [queryClient] = React.useState(
 		() =>
@@ -165,7 +187,7 @@ export function ErrorBoundary() {
 	return (
 		<html lang="en">
 			<head>
-				<title>Oh no!</title>
+				<title>{notFound ? "Page not found | GoodWatch" : "Oh no!"}</title>
 				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, see telemetry/early.ts */}
 				<script dangerouslySetInnerHTML={{ __html: EARLY_TELEMETRY_SCRIPT }} />
 				<meta httpEquiv="Content-Type" content="text/html;charset=utf-8" />
@@ -180,7 +202,13 @@ export function ErrorBoundary() {
 							<Header />
 						</Suspense>
 						<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
-							<InfoBox text="Sorry, but an error occurred" />
+							<InfoBox
+								text={
+									notFound
+										? "This page doesn't exist"
+										: "Sorry, but an error occurred"
+								}
+							/>
 							<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
 								{/* Error message */}
 								<strong className="text-xl text-white">

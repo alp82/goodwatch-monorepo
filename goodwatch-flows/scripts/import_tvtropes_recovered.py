@@ -14,8 +14,8 @@ f/tvtropes_web/tv_tropes_crawl_tags/fetch.py persists for a successful crawl:
 tvtropes_url, tropes[{name,url,html}], updated_at=utcnow, is_selected=False and
 error_message/failed_at removed (mongoengine unsets fields saved as None).
 The scheduled f/sync/copy/tvtropes job copies documents with
-`tropes != null` and `updated_at >= now - 48h`, so a fresh updated_at is what
-makes it pick the rows up.
+`tropes != null` whose `updated_at` moved since its last successful run, so a
+fresh updated_at is what makes it pick the rows up.
 
 Documents are never created: tvtropes_init_tags upserts one document per TMDB
 title, so a missing document means the identity is wrong and it is skipped.

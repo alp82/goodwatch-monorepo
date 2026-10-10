@@ -199,10 +199,11 @@ async function loadSignals(
 		query<R>("SELECT tmdb_id, media_type FROM user_skipped WHERE user_id = ?", [
 			userId,
 		]),
-		...["user_wishlist", "user_watch_history"].map((table) =>
-			query<R>(`SELECT tmdb_id, media_type FROM ${table} WHERE user_id = ?`, [
-				userId,
-			]),
+		...["user_wishlist", "user_watch_state"].map((table) =>
+			query<R>(
+				`SELECT tmdb_id, media_type FROM ${table} WHERE user_id = ?${table === "user_watch_state" ? " AND state <> 'not_started'" : ""}`,
+				[userId],
+			),
 		),
 	])
 	for (const r of scores) sig.scores.set(key(r), r.score)

@@ -1,3 +1,4 @@
+import { fetchJsonWithBackendTimeout } from "../utils/backend-timeout.ts"
 import { cached } from "~/utils/cache"
 
 // TODO move to query-db
@@ -72,10 +73,10 @@ async function _getSearchResults({
 	language,
 	query,
 }: SearchParams): Promise<SearchResults> {
-	const response = await fetch(
+	const response = await fetchJsonWithBackendTimeout(
+		"TMDB", 3000,
 		`https://api.themoviedb.org/3/search/multi?api_key=${process.env.TMDB_API_KEY}&language=${language}&query=${encodeURIComponent(query)}`,
-		{ signal: AbortSignal.timeout(3000) },
-	).then((res) => res.json())
+	)
 
 	return (response.results || [])
 	.map((result: SearchResult) => {

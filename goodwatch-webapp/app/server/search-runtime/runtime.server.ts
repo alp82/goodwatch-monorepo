@@ -1,3 +1,4 @@
+import { runsSearch } from "../role.server";
 import { Agent, fetch } from "undici";
 import { onShutdown } from "../lifecycle.server";
 import {
@@ -43,6 +44,7 @@ let keepWarm: NodeJS.Timeout | undefined;
 
 /** Starts the pings that keep the TypeSafe connections open. No model calls, nothing billed. Once per process. */
 export function keepJevConnectionsWarm(): void {
+	if (!runsSearch()) return;
 	if (keepWarm || !process.env.TYPESAFE_API_KEY) return;
 	const ping = () =>
 		typesafeFetch(`${TYPESAFE_ORIGIN}/health`, {
@@ -129,6 +131,9 @@ export interface JevStageInput {
 	};
 	signal?: AbortSignal;
 	admissionAttemptId?: string;
+	// Called once after a fresh reading is claimed and the abort check passes, just before the paid call starts.
+	// Cached readings and basic outcomes before the claim do not call it.
+	onClaimed?: () => void;
 	// Filled with milliseconds per step, for the history row: lookup (the cache), claim (spending checks and the
 	// attempt), dispatch, call (both Jev requests), finish (settlement and cache write).
 	timings?: Record<string, number>;
@@ -241,6 +246,11 @@ export async function executeJevStage(
 	if (input.signal?.aborted) {
 		await store.finish(id, 0).catch(() => {});
 		return basic("cancelled");
+	}
+	try {
+		input.onClaimed?.();
+	} catch {
+		// Preparing for the reading must not break the stage.
 	}
 	try {
 		await store.dispatch(id);

@@ -1,6 +1,6 @@
 // The Watch next page: the docked strip on the hero (phones: the slab's buttons and drawers at the bottom), the hero
 // with its Then column, the stepped grid, suggestions while the Wishlist is short, and the sign-up prompt for guests.
-import { useCallback, useState } from "react"
+import { type ReactNode, useCallback, useState } from "react"
 import { type MoodKey, toggleMood } from "~/domain/moods"
 import type { WatchNextSort } from "~/domain/watch-next"
 import { useFeature } from "~/hooks/useFeature"
@@ -16,7 +16,7 @@ import { FinishPrompt, FinishToast } from "./FinishPrompt"
 import { type MoodControl, refusalText } from "./MoodPicker"
 import { PhoneControls } from "./PhoneControls"
 import { SteppedGrid, WorthAdding } from "./SteppedGrid"
-import { WatchNextHero } from "./WatchNextHero"
+import { MoviesPageContext, WatchNextHero } from "./WatchNextHero"
 import { WRAP } from "./style"
 import { useFinish } from "./useFinish"
 import {
@@ -25,12 +25,35 @@ import {
 	useWatchNext,
 } from "./useWatchNext"
 
+/** What My movies (#385) adds to this page, from the route that owns it (ui/my-movies/). */
+export interface MoviesPageParts {
+	/** The page's head: its name, how many movies, and the ways to the other pages. */
+	head: (data: WatchNext | null) => ReactNode
+	/** "How long?" in the desktop strip. */
+	timeControl: (
+		time: number | null,
+		setTime: (time: number | null) => void,
+	) => ReactNode
+	/** "How long?" on phones: what its button in the slab shows, and its drawer. */
+	phoneTime: {
+		label: (time: number | null) => string
+		icon: (time: number | null) => ReactNode
+		drawer: (
+			time: number | null,
+			setTime: (time: number | null) => void,
+		) => ReactNode
+	}
+}
+
 export function WatchNextPage({
 	initial,
+	movies,
 }: {
 	initial: { query: string; data: WatchNext | null }
+	/** My movies (#385): this page for the Wishlist's movies, with the pieces of its "How long?" choice. */
+	movies?: MoviesPageParts
 }) {
-	const state = useWatchNext(initial)
+	const state = useWatchNext(initial, Boolean(movies))
 	const { data, choice, setChoice } = state
 	const showMatch = useFeature("tasteMatch")
 	const finishing = useFinish()
@@ -101,7 +124,11 @@ export function WatchNextPage({
 		moods: data.moods,
 		counts: data.moodCounts,
 		pictures: data.moodPictures,
-		countScope: data.onMyServices ? "on your services" : "on your Wishlist",
+		countScope: data.onMyServices
+			? "on your services"
+			: movies
+				? "of your movies"
+				: "on your Wishlist",
 		open: moodsOpen,
 		setOpen: setMoodsOpen,
 		toggle,
@@ -114,6 +141,9 @@ export function WatchNextPage({
 	const setSort = (sort: WatchNextSort) =>
 		setChoice({ sort: sort === data?.defaultSort ? null : sort })
 
+	const setTime = (time: number | null) => setChoice({ time })
+	const time = data?.time ?? choice.time ?? null
+
 	const strip =
 		data && moods ? (
 			<DockedStrip
@@ -121,6 +151,7 @@ export function WatchNextPage({
 				moods={moods}
 				setOnMyServices={setOnMyServices}
 				setSort={setSort}
+				extra={movies?.timeControl(time, setTime)}
 			/>
 		) : (
 			<div
@@ -132,9 +163,13 @@ export function WatchNextPage({
 	const guestStage =
 		data?.bestMatch.prompt === "signUpToKeep" ? "keep" : "learn"
 
-	return (
-		<div className="overflow-x-clip pb-24" data-watch-next>
-			<h1 className="sr-only">Watch next</h1>
+	const page = (
+		<div
+			className="overflow-x-clip pb-24"
+			data-watch-next
+			data-my-movies={movies ? "" : undefined}
+		>
+			{movies ? movies.head(data) : <h1 className="sr-only">Watch next</h1>}
 			<output aria-live="polite" className="sr-only">
 				{announcement}
 			</output>
@@ -149,7 +184,7 @@ export function WatchNextPage({
 			{state.isError && (
 				<div className={`${WRAP} pt-6`} role="alert">
 					<p className="text-gray-300">
-						Watch next couldn't load.{" "}
+						{movies ? "My movies" : "Watch next"} couldn't load.{" "}
 						<button
 							type="button"
 							className="cursor-pointer underline"
@@ -183,6 +218,16 @@ export function WatchNextPage({
 				moods={moods}
 				setOnMyServices={setOnMyServices}
 				setSort={setSort}
+				extra={
+					movies && {
+						key: "time",
+						title: "How long?",
+						label: movies.phoneTime.label(time),
+						icon: movies.phoneTime.icon(time),
+						on: time !== null,
+						body: movies.phoneTime.drawer(time, setTime),
+					}
+				}
 			/>
 			<FinishPrompt
 				finished={finishing.prompt}
@@ -204,5 +249,10 @@ export function WatchNextPage({
 				className="bottom-40 lg:bottom-6"
 			/>
 		</div>
+	)
+	return movies ? (
+		<MoviesPageContext.Provider value>{page}</MoviesPageContext.Provider>
+	) : (
+		page
 	)
 }

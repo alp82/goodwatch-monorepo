@@ -4,7 +4,12 @@
 // its item ids, and its actions are the same as the desktop's; only the drawing changes. Title screens also take
 // a rating: the taste quiz's four levels over a 1 to 10 strip (#220).
 import { AnimatePresence, motion } from "framer-motion"
-import { type ReactNode, createContext, useContext, useState } from "react"
+import {
+	type ReactNode,
+	createContext,
+	useContext,
+	useState,
+} from "react"
 import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import type { Score as RatingScore } from "~/server/scores.server"
 import { RATING_LEVELS, levelOf } from "~/ui/taste-quiz/quiz-flow"
@@ -20,6 +25,7 @@ import {
 	Fan,
 	Item,
 	KEY_ROWS,
+	LazyHomeDoors,
 	Match,
 	MenuItem,
 	Poster,
@@ -28,6 +34,7 @@ import {
 	type TvView,
 	memberTiles,
 	searchHits,
+	usePreloadHomeDoors,
 	whereLine,
 } from "./TvScreens"
 import {
@@ -65,6 +72,7 @@ export function PhoneTvScreens({
 
 function PhoneTvScreen({ view }: { view: TvView }) {
 	const { state } = view
+	usePreloadHomeDoors(view.data)
 	const s = state.screen
 	const key =
 		s.name === "title"
@@ -350,6 +358,21 @@ function MoodItem({
 
 // Two tiles: Watch next (the Wishlist's best) and Something new.
 function MemberHome({ view }: { view: TvView }) {
+	const { doors } = view.data
+	// With REC_TRACKING a member's home has three doors (#385), from a chunk of their own.
+	if (doors)
+		return (
+			<>
+				{moodBackground()}
+				<LazyHomeDoors
+					first={<Head view={view} title="What are we watching?" />}
+					view={view}
+					doors={doors}
+					phone
+					head={() => <Head view={view} title="What are we watching?" />}
+				/>
+			</>
+		)
 	return (
 		<>
 			{moodBackground()}

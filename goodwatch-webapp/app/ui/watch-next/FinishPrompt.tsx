@@ -2,11 +2,19 @@
 // hero, with Undo.
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react"
 import { CheckIcon } from "@heroicons/react/24/solid"
+import { Suspense, lazy, useMemo } from "react"
+import { useFeature } from "~/hooks/useFeature"
 import type { WatchNext } from "~/server/watch-next.server"
 import { TitleScore } from "~/ui/title-actions/TitleScore"
 import { UndoToast } from "~/ui/title-actions/UndoToast"
+import { reloadOnStaleChunk } from "~/utils/stale-chunk"
 import { posterUrl } from "./style"
 import type { Finished } from "./useFinish"
+
+// The date line of the dialog, with the date choice behind its "Change": loaded when the dialog first shows it.
+const WatchedLine = lazy(
+	reloadOnStaleChunk(() => import("~/ui/watch-log/WatchedLine")),
+)
 
 export function FinishPrompt({
 	finished,
@@ -16,6 +24,12 @@ export function FinishPrompt({
 	onClose: (scored: boolean) => void
 }) {
 	const title = finished?.title
+	const tracking = useFeature("tracking")
+	// One promise per "I watched it", so the line doesn't start over when the dialog renders again.
+	const watchId = useMemo(
+		() => finished?.undo?.then((undo) => undo?.watchId ?? null) ?? null,
+		[finished?.undo],
+	)
 	return (
 		<Dialog
 			open={!!finished}
@@ -53,10 +67,14 @@ export function FinishPrompt({
 								}}
 								size="compact"
 								onRated={() => onClose(true)}
-								// "I watched it" already recorded the watch; recording it again would move its time.
-								recordWatch={false}
 							/>
 						</div>
+						{/* The movie watch log: the watch was recorded for now, and one line lets the person say otherwise. */}
+						{tracking && title.media_type === "movie" && watchId && (
+							<Suspense fallback={null}>
+								<WatchedLine movieId={title.tmdb_id} watchId={watchId} />
+							</Suspense>
+						)}
 						<div className="mt-4 flex justify-end">
 							<button
 								type="button"

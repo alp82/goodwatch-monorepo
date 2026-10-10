@@ -15,6 +15,7 @@ from f.db.mongodb import (
 )
 from f.db.qdrant import QdrantConnector
 from f.db.cratedb import CrateConnector
+from f.sync.copy import sync_state
 from f.sync.copy.deleted_titles import delete_titles_from_qdrant, flag_spike, flagged_among, flagged_oldest_first
 from f.sync.copy.tmdb_streaming import SCHEDULED_LEASE_WAIT_SECONDS, publication_lease
 from f.sync.copy.qdrant_retry import (
@@ -30,7 +31,10 @@ from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 # the 4 GB worker limit.
 BATCH_SIZE = 500
 UPSERT_BATCH_SIZE = 1000  # points per Qdrant write request
-HOURS_TO_FETCH = 24 * 2  # time window for "recent" updates
+# Window for "recent" updates of a run restricted to ids. A scheduled run reads from its
+# last successful run instead (f/sync/copy/sync_state).
+HOURS_TO_FETCH = 24 * 2
+SYNC_JOB = "vector_data"
 
 # The 74 raw 0-10 scores in the same dimension order as fingerprint_v1, for Dot
 # distance. Written only when the collection has this named vector.
@@ -70,6 +74,11 @@ def _raw_fingerprint(scores: dict) -> Optional[List[float]]:
     except Exception:
         return None
     return [float(getattr(validated, name)) for name in CoreScores.model_fields]
+
+
+def _utc_stamp() -> str:
+    """The UTC time for a log line. Windmill keeps only the tail of a log, without times."""
+    return f"{datetime.utcnow().isoformat(timespec='seconds')}Z"
 
 
 def _collection_vector_names(client) -> set:
@@ -179,10 +188,19 @@ def _drivers(c_details, c_imdb, c_dna, c_tropes, *, recent_only: bool) -> list:
             (c_tropes, with_fingerprint)]
 
 
-def _driver_batches(drivers: list, base_selector: dict, *, use_compound_hint: bool):
+def _driver_batches(drivers: list, base_selector: dict, *, use_compound_hint: bool, carried_ids=()):
     """Batches of tmdb ids from each (collection, keep) driver in turn. keep, when set, filters
-    each batch. An id comes only once."""
+    each batch. An id comes only once.
+
+    carried_ids, the titles an earlier run selected but could not write, come first. No
+    driver has to select them again.
+    """
     seen: set = set()
+    carried = sorted(set(carried_ids))
+    for start in range(0, len(carried), BATCH_SIZE):
+        ids = carried[start:start + BATCH_SIZE]
+        seen.update(ids)
+        yield ids
     for collection, keep in drivers:
         last_tmdb_id: Optional[int] = None
         while True:
@@ -421,12 +439,13 @@ def _build_payload(
         if fp_scores:
             payload["fingerprint_scores_v1"] = fp_scores
 
-        # vectors
-        v_fp = dna.get("vector_fingerprint")
-        if v_fp:
-            vectors["fingerprint_v1"] = v_fp
+        # vectors: both are built from the scores, so they can't disagree with each other
+        # or with the payload. The stored vector_fingerprint only says the title has one;
+        # it can be older than the scores. Without valid scores no vector is written.
+        if dna.get("vector_fingerprint"):
             raw = _raw_fingerprint(fp_scores) if isinstance(fp_scores, dict) else None
             if raw:
+                vectors["fingerprint_v1"] = raw
                 vectors[FINGERPRINT_RAW_VECTOR] = raw
 
     # --- Tropes (optional tags list for payload filtering)
@@ -463,9 +482,14 @@ def copy_to_qdrant(
     media_type: str,  # "movie" | "show"
     query_selector: dict,
     *, recent_only: bool = True, strict_writes: bool = False,
+    since: Optional[datetime] = None, carried_ids=(),
 ):
     """
     Combined copy into Qdrant.
+    - a recent copy takes the titles whose drivers changed since `since`, by default in
+      the last HOURS_TO_FETCH hours, and the `carried_ids` of an earlier run.
+    - a title with a fingerprint is left out while Crate has no published streaming for
+      it. The result lists those in `unknown_streaming_ids`.
     - only writes points **with vectors**: creates missing points and, for
       existing ones, replaces the fingerprint vectors and the payload. Vectors
       that other writers own stay untouched.
@@ -488,7 +512,7 @@ def copy_to_qdrant(
     c_dna = db.dna_movie if is_movie else db.dna_tv
     c_tropes = db.tv_tropes_movie_tags if is_movie else db.tv_tropes_tv_tags
 
-    updated = {"$gte": datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
+    updated = {"$gte": since or datetime.utcnow() - timedelta(hours=HOURS_TO_FETCH)}
     sel = dict(query_selector or {})
 
     drivers = _drivers(c_details, c_imdb, c_dna, c_tropes, recent_only=recent_only)
@@ -502,6 +526,14 @@ def copy_to_qdrant(
     }
 
     processed = 0
+    # Titles with a fingerprint that Crate has no published streaming for yet. They aren't written.
+    unknown_streaming_ids: set = set()
+    carried = set(carried_ids)
+    carried_written = 0
+    # Titles whose stored vector_fingerprint differs from their scores, and titles with a
+    # stored one but no valid scores to build the vector from. The second kind isn't written.
+    stale_stored_fingerprints = 0
+    invalid_fingerprint_scores = 0
     # Titles deleted on TMDB: collected over the whole run, removed once at the end.
     flagged_ids: set = set()
 
@@ -509,9 +541,13 @@ def copy_to_qdrant(
     base_selector = {"updated_at": updated, **sel} if recent_only else sel
     use_compound_hint = "updated_at" in base_selector
 
-    for ids in _driver_batches(drivers, base_selector, use_compound_hint=use_compound_hint):
+    print(f"{_utc_stamp()} {media_type} copy starts: "
+          f"{'changes since ' + updated['$gte'].isoformat() if recent_only else 'every title'}, "
+          f"{len(carried)} carried ids", flush=True)
+    for ids in _driver_batches(drivers, base_selector, use_compound_hint=use_compound_hint, carried_ids=carried):
         processed += len(ids)
-        print(f"\n{media_type} ids fetched: {processed} (last_tmdb_id={ids[-1]})")
+        print(f"\n{_utc_stamp()} {media_type} ids fetched: "
+              f"{processed} (last_tmdb_id={ids[-1]})", flush=True)
 
         batch_flagged_ids = flagged_among(c_details, ids)
         flagged_ids |= batch_flagged_ids
@@ -551,6 +587,11 @@ def copy_to_qdrant(
             )
 
             have_vectors = bool(vectors["fingerprint_v1"])
+            stored_fingerprint = (dna_map.get(tmdb_id) or {}).get("vector_fingerprint")
+            if stored_fingerprint and not have_vectors:
+                invalid_fingerprint_scores += 1
+            elif stored_fingerprint and list(stored_fingerprint) != vectors["fingerprint_v1"]:
+                stale_stored_fingerprints += 1
             if have_vectors:
                 upsert_buffer.append((tmdb_id, payload, vectors))
             # else: skip this id quietly (no vectors yet)
@@ -573,6 +614,7 @@ def copy_to_qdrant(
                     # NULL/missing aggregates are unknown; only an explicit empty
                     # array is evidence that clearing existing availability is safe.
                     if tmdb_id not in published_streaming:
+                        unknown_streaming_ids.add(tmdb_id)
                         continue
                     payload["streaming_availability"] = published_streaming[tmdb_id]
                     points.append(qm.PointStruct(
@@ -602,7 +644,11 @@ def copy_to_qdrant(
                         error_counts.get(classification, 0) + count
                     )
                 total_upserts += len(points)
+                carried_written += sum(1 for point in points if point.payload["tmdb_id"] in carried)
 
+    print(f"{_utc_stamp()} {media_type} copy done: {processed} selected, "
+          f"{total_upserts} written, {len(unknown_streaming_ids)} without published streaming; "
+          f"deletion starts", flush=True)
     # Every flagged title is checked, not only the ones this run iterated over, oldest flag
     # first within the per-run budget, and nothing while the flags spike.
     spike = flag_spike(c_details, db.tmdb_daily_dump_data, media_type)
@@ -612,7 +658,14 @@ def copy_to_qdrant(
         QdrantMediaPoint.make_point_id, spike=spike,
     )
 
-    return {"upserts": total_upserts, "payload_updates": total_payload_updates,
+    print(f"{_utc_stamp()} {media_type} deletion done", flush=True)
+
+    return {"selected": processed, "upserts": total_upserts, "payload_updates": total_payload_updates,
+            "skipped_unknown_streaming": len(unknown_streaming_ids),
+            "unknown_streaming_ids": sorted(unknown_streaming_ids),
+            "carried": len(carried), "carried_written": carried_written,
+            "stale_stored_fingerprints": stale_stored_fingerprints,
+            "invalid_fingerprint_scores": invalid_fingerprint_scores,
             "publication": publication_stats, "deleted_titles": deleted_titles}
 
 
@@ -623,7 +676,8 @@ def main(
     movie_ids: Optional[List[str]] = None,
     show_ids: Optional[List[str]] = None,
 ):
-    """Publish recent fingerprints, optionally restricting each media type to IDs."""
+    """Publish the fingerprints changed since the last successful run, optionally restricting
+    each media type to IDs."""
     def _id_selector(ids: Optional[List[str]]) -> dict:
         if not ids:
             return {}
@@ -636,10 +690,26 @@ def main(
         stack.callback(close_mongodb)
         qc = QdrantConnector(timeout=REQUEST_TIMEOUT_SECONDS)
         stack.callback(qc.close)
-        result = {
-            "movies": copy_to_qdrant(qc, "movie", _id_selector(movie_ids)),
-            "shows": copy_to_qdrant(qc, "show", _id_selector(show_ids)),
-        }
+        result = {}
+        for key, media_type, ids in (("movies", "movie", movie_ids), ("shows", "show", show_ids)):
+            # A media type restricted to ids doesn't cover every change, so it keeps the
+            # fixed window and leaves the sync state alone.
+            selection = None if ids else sync_state.begin(get_db(), SYNC_JOB, media_type)
+            result[key] = copy_to_qdrant(
+                qc, media_type, _id_selector(ids), since=selection.since if selection else None,
+                carried_ids=selection.carried_ids if selection else ())
+            # The ids stay out of the job result; their number is skipped_unknown_streaming.
+            unknown_streaming_ids = result[key].pop("unknown_streaming_ids")
+            if selection:
+                # Reached only when the whole media type succeeded: a failure raises above.
+                # The titles left out for their streaming are carried to the next run, which
+                # no driver would make select them again. A carried title that was written,
+                # lost its fingerprint or was deleted on TMDB is not among them any more.
+                sync_state.commit(get_db(), selection, {
+                    count: result[key][count]
+                    for count in ("selected", "upserts", "skipped_unknown_streaming", "carried", "carried_written")
+                }, carried_ids=unknown_streaming_ids)
+                result[key]["selection"] = selection.report()
     if not movie_ids and not show_ids:
         result["title_snapshot"] = _start_title_snapshot()
     return result

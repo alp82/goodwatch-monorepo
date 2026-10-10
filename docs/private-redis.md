@@ -140,7 +140,7 @@ Use this after a change to `valkey.conf`, a Compose file, or the image. One node
 
 A change to `valkey.conf` alone needs only `docker restart --timeout=-1 <container>` after the checkout, because the file is read at start. `git checkout` replaces the file, and a running container keeps seeing the old one until it restarts.
 
-Never run `FLUSHALL`, `CLUSTER RESET`, or `CLUSTER FORGET`, and never remove a data volume or `nodes.conf`.
+Never run `FLUSHALL`, `CLUSTER RESET`, or `CLUSTER FORGET`, and never remove a data volume or `nodes.conf`. The one exception is taking an added node out of the cluster again, with the steps in [Add a node to the cache cluster, and remove it again](redis-add-node.md).
 
 ## Roll back to the Bitnami image
 

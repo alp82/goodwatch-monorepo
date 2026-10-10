@@ -1,0 +1,7 @@
+# In use on vector1 since October 9, 2026. Use only on a host that runs search roles (vector1), on top of docker-compose.webapp.yml,
+# which starts Alloy with the whole directory and attaches it to the coolify network. See docs/search-role-deploy.md.
+# docker compose -f docker-compose.yml -f docker-compose.webapp.yml -f docker-compose.search-role.yml up -d grafana-alloy
+services:
+  grafana-alloy:
+    volumes:
+      - ./search-role.alloy:/etc/alloy/search-role.alloy:ro

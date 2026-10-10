@@ -275,7 +275,7 @@ async function loadMember(
 				[userId],
 			),
 			query<R>(
-				"SELECT tmdb_id, media_type FROM user_watch_history WHERE user_id = ?",
+				"SELECT tmdb_id, media_type FROM user_watch_state WHERE user_id = ? AND state <> 'not_started'",
 				[userId],
 			),
 			query<R>(

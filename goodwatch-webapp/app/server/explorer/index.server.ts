@@ -145,7 +145,7 @@ async function seatFor(
 	const visible = new Uint8Array(pool.n)
 	for (let i = 0; i < pool.n; i++) {
 		const key = pool.keys[i]
-		if (ctx.notInterested.has(key)) continue
+		if (ctx.hidden.has(key)) continue
 		if (!passesTitleType(filters.type, pool.facts[i])) continue
 		if (filters.notSeenYet && (ctx.seen.has(key) || ctx.skipped.has(key)))
 			continue

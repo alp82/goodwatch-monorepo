@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
+sys.path.insert(0, str(ROOT / 'windmill'))
 from provider_alias_resolution import retired_validator, transfer_demand
 from f.data_source.title_identity import RETIRED_MOVIE_IDS, canonical_title_id
 

@@ -1,0 +1,11 @@
+landing_shape,sessions,total_pageviews,identities,interacting_sessions,interacting_identities
+/,794,1054,759,368,354
+/show/{id}-{slug},89,92,85,8,8
+/movie/{id}-{slug},77,84,76,15,15
+[other route],24,27,21,3,3
+/discover,16,16,16,0,0
+/movies,4,4,4,1,1
+/shows,3,4,2,0,0
+/{movies-or-shows}/{category}/{slug},1,1,1,0,0
+/{movies-or-shows}/moods/{slug},1,1,1,1,1
+

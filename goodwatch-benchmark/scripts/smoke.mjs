@@ -3,8 +3,14 @@
 //
 // It finds the running webapp container, requests the pages in smoke/urls.json (edge cases included), checks the
 // rendered HTML, scans the container's log from its start with the patterns in smoke/log-patterns.json, and compares
-// the 5xx counters before and after. One line per check, exit code 1 on any failure. It sends only GET requests,
-// fewer than 60, and changes nothing on the serving host.
+// the 5xx counters before and after. One line per check, exit code 1 on any failure. It sends fewer than 60 GET
+// requests and one POST that the search route rejects before it searches, and changes nothing on the serving host.
+//
+// The container's WEBAPP_ROLE (page, search, or both, the default) decides which checks apply. A search role is its
+// own container: --container-prefix names it, and it gets the requests in smoke/search-role-urls.json. The default
+// run also checks every search role that SMOKE_SEARCH_ROLES lists, and prints one skip line while it lists none.
+// The roles are deployed by hand, so each one's commit is compared with the page instances' commit over the files
+// in smoke/search-role-paths.json: a role that is behind in them gets a warning, not a failure.
 //
 // --target production (default): the container is found over SSH on the host that the target's name resolves to.
 // --host NAME: one instance on a named host. The container is found on that host, and the requests go straight to
@@ -16,6 +22,8 @@ import { readFileSync } from "node:fs"
 import { connect, createServer } from "node:net"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { compareSearchCode, containerNamePattern, gitIn, parseSearchRoles } from "./search-roles.mjs"
+import { buildFilesInHtml, staticOriginFromSetting, staticOriginInHtml } from "./static-host.mjs"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const USAGE = `Usage: ./bench.sh smoke [options]
@@ -25,13 +33,20 @@ const USAGE = `Usage: ./bench.sh smoke [options]
   --host NAME                 Check the instance on this host directly, such as vector1 or abio: a name from
                               goodwatch-hq/ansible/hosts.ini or a private address. Without it, the requests use the
                               public route and the container is the one on the host that the target's name resolves to.
+  --container-prefix PREFIX   The start of the container's name: the Coolify application's id and a hyphen.
+                              Default: gk4owk8-, the webapp. A value that doesn't end in a hyphen is the whole name,
+                              such as goodwatch-search-a for a search role.
+  --role page|search|both     Fail unless the container runs in this role. Without it, the role is read from the
+                              container's WEBAPP_ROLE and only decides which checks apply. Local: the role to assume.
+  --page-commit SHA           A search role: the commit that the page instances run. The check warns when the role
+                              is behind it in a file that a search role runs (smoke/search-role-paths.json).
   --deploy-timeout S          How long to wait for that container and for its health. Default: 600.
   --base-url URL              Default: BENCH_TARGET_URL or https://goodwatch.app. Required for local.
   --log-file FILE             Local: the server's log, from its start.
   --container NAME            Local: a Docker container to read the log from.
   --metrics-url URL           Local: the server's metrics endpoint, such as http://127.0.0.1:9464/metrics.
   --log-wait S                How long after the process start slow subsystems may take. Default: 120.
-  --urls FILE                 Default: smoke/urls.json.
+  --urls FILE                 Default: smoke/urls.json, or smoke/search-role-urls.json for a search role.
   --patterns FILE             Default: smoke/log-patterns.json.
   --skip ID,ID                Check ids to skip, such as log:title-snapshot. Each prints a skip line.`
 
@@ -40,7 +55,7 @@ const options = {
 	"deploy-timeout": "600",
 	"log-wait": "120",
 	"base-url": "",
-	urls: `${ROOT}/smoke/urls.json`,
+	urls: "",
 	patterns: `${ROOT}/smoke/log-patterns.json`,
 	skip: "",
 }
@@ -62,6 +77,7 @@ if (!local && options.target !== "production") usageError("Target must be produc
 if (local && options.host) usageError("--host is for production instances, not for a local target")
 let baseUrl = (options["base-url"] || (local ? "" : process.env.BENCH_TARGET_URL || "https://goodwatch.app")).replace(/\/$/, "")
 if (!baseUrl) usageError("A local target needs --base-url")
+const siteOrigin = new URL(baseUrl).origin
 const skipped = new Set(options.skip.split(",").filter(Boolean))
 const logWaitSeconds = Number(options["log-wait"])
 const deployTimeout = Number(options["deploy-timeout"])
@@ -69,7 +85,13 @@ const BROWSER_UA =
 	process.env.BROWSER_UA ||
 	"Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
 const BOT_UA = process.env.BOT_UA || "facebookexternalhit/1.1"
-const CONTAINER_PREFIX = process.env.SMOKE_CONTAINER_PREFIX || "gk4owk8-"
+const CONTAINER_PREFIX = options["container-prefix"] || process.env.SMOKE_CONTAINER_PREFIX || "gk4owk8-"
+const ROLES = ["page", "search", "both"]
+if (options.role && !ROLES.includes(options.role)) usageError("Role must be page, search, or both")
+if (!/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(CONTAINER_PREFIX)) usageError("A container prefix is letters, digits, dots, underscores, and hyphens")
+// The role of the process under test. Production reads it from the container. The app treats every other value as both.
+let role = options.role || "both"
+const asRole = (value) => (value === "page" || value === "search" ? value : "both")
 
 function usageError(message) {
 	console.error(`${message}\n${USAGE}`)
@@ -83,12 +105,12 @@ function report(result, id, detail = "") {
 	console.log(`${result.toUpperCase().padEnd(4)}  ${id}${detail ? `  ${detail}` : ""}`)
 }
 /** Runs one check unless --skip names it. `run` returns a detail string, or throws with the reason it failed. */
-async function check(id, run) {
+async function check(id, run, failure = "fail") {
 	if (skipped.has(id)) return report("skip", id, "skipped with --skip")
 	try {
 		report("pass", id, (await run()) ?? "")
 	} catch (error) {
-		report("fail", id, error.message)
+		report(failure, id, error.message)
 	}
 }
 const fail = (message) => {
@@ -159,10 +181,10 @@ const quote = (text) => `'${String(text).replace(/'/g, `'\\''`)}'`
  */
 function findContainer() {
 	const script = `
-prefix=${quote(CONTAINER_PREFIX)}; want=${quote(options.commit ?? "")}; older=${quote(options["newer-than"] ?? "")}
+pattern=${quote(containerNamePattern(CONTAINER_PREFIX))}; want=${quote(options.commit ?? "")}; older=${quote(options["newer-than"] ?? "")}
 deadline=$(( $(date +%s) + ${deployTimeout} )); said=''
 while :; do
-  names=$(docker ps --filter "name=^$prefix" --format '{{.Names}}')
+  names=$(docker ps --filter "name=$pattern" --format '{{.Names}}')
   count=$(printf '%s\\n' "$names" | grep -c . || true)
   name=$(printf '%s\\n' "$names" | head -1)
   state="$count containers"
@@ -174,7 +196,7 @@ while :; do
     case "$commit" in "$want"*) ;; *) fits=0 ;; esac
     [ -z "$older" ] || [ "$name" != "$older" ] || fits=0
     if [ "$fits" = 1 ] && { [ "$health" = healthy ] || [ "$health" = none ]; }; then
-      printf 'found %s %s %s\\n' "$name" "$commit" "$(docker inspect -f '{{.State.StartedAt}}' "$name")"
+      printf 'found %s %s %s %s\\n' "$name" "$commit" "$(docker inspect -f '{{.State.StartedAt}}' "$name")" "$(docker exec "$name" printenv WEBAPP_ROLE 2>/dev/null | tr -cd 'a-zA-Z' | tr 'A-Z' 'a-z')"
       exit 0
     fi
   fi
@@ -183,19 +205,23 @@ while :; do
   sleep 5
 done`
 	const output = onHost(script, deployTimeout + 60).trim().split("\n").pop()
-	const [status, name, commit, startedAt] = output.split(" ")
+	const [status, name, commit, startedAt, containerRole] = output.split(" ")
 	if (status !== "found") fail(`no container fits after ${deployTimeout} s (${output.replace(/^timeout: /, "")})`)
-	return { name, commit, startedAt: Date.parse(startedAt) }
+	return { name, commit, startedAt: Date.parse(startedAt), role: asRole(containerRole) }
 }
 
 // ---- Log and metrics sources ----
 let container = null
-const patterns = JSON.parse(readFileSync(options.patterns, "utf8"))
+const allPatterns = JSON.parse(readFileSync(options.patterns, "utf8"))
+// A pattern with "roles" applies to processes in those roles only. Set once the role is known.
+let patterns = allPatterns
+const ROLE_LINE = "^Process role: (page|search|both)"
 const logPatterns = [
-	patterns.start,
-	...patterns.required.map((entry) => entry.pattern),
-	...patterns.lastLine.map((entry) => entry.pattern),
-	...patterns.forbidden.map((entry) => entry.pattern),
+	allPatterns.start,
+	ROLE_LINE,
+	...allPatterns.required.map((entry) => entry.pattern),
+	...allPatterns.lastLine.map((entry) => entry.pattern),
+	...allPatterns.forbidden.map((entry) => entry.pattern),
 ]
 
 /** The log lines that match any pattern, from the process start. Filtered on the host, so a long log stays there. */
@@ -208,7 +234,9 @@ function readLogLines() {
 		return text.split("\n").filter((line) => any.test(line))
 	}
 	// 2>&1 inside the host's shell: the app's errors go to the container's stderr.
-	const script = `docker logs ${quote(container.name)} 2>&1 | grep -aE -f <(cat <<'SMOKE_PATTERNS'\n${logPatterns.join("\n")}\nSMOKE_PATTERNS\n) | cut -c1-600 || true`
+	// Since the process started: a restart keeps the container's earlier log, and its lines describe another process.
+	const since = Number.isFinite(container.startedAt) ? `--since ${quote(new Date(container.startedAt).toISOString())} ` : ""
+	const script = `docker logs ${since}${quote(container.name)} 2>&1 | grep -aE -f <(cat <<'SMOKE_PATTERNS'\n${logPatterns.join("\n")}\nSMOKE_PATTERNS\n) | cut -c1-600 || true`
 	return onHost(script, 120).split("\n").filter(Boolean)
 }
 
@@ -245,8 +273,9 @@ async function request(path, entry) {
 		headers["Accept-Language"] = "en-US,en;q=0.9"
 		if (entry.cookie) headers.Cookie = "gw_browser=1"
 	}
+	Object.assign(headers, entry.requestHeaders)
 	const started = performance.now()
-	const response = await fetch(baseUrl + path, { headers, redirect: "manual", signal: AbortSignal.timeout(60_000) })
+	const response = await fetch(baseUrl + path, { method: entry.method ?? "GET", body: entry.body, headers, redirect: "manual", signal: AbortSignal.timeout(60_000) })
 	const bytes = Buffer.from(await response.arrayBuffer())
 	return { response, bytes, text: bytes.toString("utf8"), ms: Math.round(performance.now() - started) }
 }
@@ -328,7 +357,6 @@ async function checkEntry(entry, set) {
 
 // ---- Main ----
 const startedAt = Date.now()
-const set = JSON.parse(readFileSync(options.urls, "utf8"))
 let processStartedAt = null
 
 if (!local) {
@@ -350,9 +378,19 @@ if (!local) {
 		container = findContainer()
 		processStartedAt = container.startedAt
 		if (options.commit && !container.commit.startsWith(options.commit)) fail(`runs ${container.commit}`)
-		return `${container.name}${options.host ? ` on ${options.host}` : ""}, commit ${container.commit.slice(0, 8)}, healthy, up ${Math.round((Date.now() - container.startedAt) / 1000)} s`
+		return `${container.name}${options.host ? ` on ${options.host}` : ""}, commit ${container.commit.slice(0, 8)}, role ${container.role}, healthy, up ${Math.round((Date.now() - container.startedAt) / 1000)} s`
 	})
 	if (!container) finish()
+	role = container.role
+	if (options.role) {
+		await check("deploy:role", () => (role === options.role ? `WEBAPP_ROLE makes it a ${role} process` : fail(`the container runs as ${role}, expected ${options.role}`)))
+		if (role !== options.role) finish()
+	}
+	// A search role answers on its own container only: the public route would reach it for two paths.
+	if (role === "search" && !options.host) {
+		report("fail", "deploy:tunnel", "a search role is checked on its own container: pass --host")
+		finish()
+	}
 	if (options.host) {
 		await check("deploy:tunnel", async () => {
 			baseUrl = await openTunnel()
@@ -362,15 +400,33 @@ if (!local) {
 	}
 }
 
+// A local server has no container to ask: its log names the role at the start. A log without the line is from a
+// build before the role setting, which runs as both.
+if (local && !options.role) {
+	try {
+		role = readLogLines().map((line) => line.match(new RegExp(ROLE_LINE))?.[1]).find(Boolean) ?? "both"
+	} catch {
+		// The log checks report an unreadable log.
+	}
+}
+
+// The checks that apply to this role. `direct` is true when the requests reach this one process and no proxy route.
+const direct = local || Boolean(options.host)
+const inRole = (entry) => !entry.roles || entry.roles.includes(role)
+patterns = { ...allPatterns, required: allPatterns.required.filter(inRole), lastLine: allPatterns.lastLine.filter(inRole), forbidden: allPatterns.forbidden.filter(inRole) }
+const set = JSON.parse(readFileSync(options.urls || `${ROOT}/smoke/${role === "search" ? "search-role-urls" : "urls"}.json`, "utf8"))
+// A search role renders no page that the check may ask for: its readiness endpoint says that it answers.
+const reachablePath = role === "search" ? "/health/ready" : "/"
+
 // A deploy answers 502 while the proxy switches containers. Wait for the home page before counting anything.
 await check("deploy:reachable", async () => {
 	for (let attempt = 1; ; attempt++) {
-		const status = await fetch(`${baseUrl}/`, { headers: { "User-Agent": BROWSER_UA, Cookie: "gw_browser=1" }, redirect: "manual", signal: AbortSignal.timeout(15_000) }).then(
+		const status = await fetch(`${baseUrl}${reachablePath}`, { headers: { "User-Agent": BROWSER_UA, Cookie: "gw_browser=1" }, redirect: "manual", signal: AbortSignal.timeout(15_000) }).then(
 			(response) => response.arrayBuffer().then(() => response.status),
 			(error) => error.message,
 		)
-		if (status === 200) return `${baseUrl} answers 200${attempt > 1 ? ` after ${attempt} tries` : ""}`
-		if (attempt >= 18) fail(`${baseUrl}/ answers ${status} after ${attempt} tries`)
+		if (status === 200) return `${baseUrl}${reachablePath === "/" ? "" : reachablePath} answers 200${attempt > 1 ? ` after ${attempt} tries` : ""}`
+		if (attempt >= 18) fail(`${baseUrl}${reachablePath} answers ${status} after ${attempt} tries`)
 		await sleep(5000)
 	}
 })
@@ -385,6 +441,21 @@ await check("metrics:before", async () => {
 	return `process up ${Math.round(uptime)} s${commit ? `, build ${commit.slice(0, 8)}` : ""}`
 })
 
+// A search role is deployed by hand: say whether it is behind the page instances in code that it runs.
+if (options["page-commit"]) {
+	const id = "deploy:search-code"
+	if (skipped.has(id)) report("skip", id, "skipped with --skip")
+	else {
+		const { result, detail } = compareSearchCode({
+			git: gitIn(process.env.SMOKE_REPO_DIR || resolve(ROOT, "..")),
+			roleCommit: container?.commit || metricsBefore?.match(/goodwatch_build_info\{[^}]*commit="([^"]*)"/)?.[1] || "",
+			pageCommit: options["page-commit"],
+			set: JSON.parse(readFileSync(`${ROOT}/smoke/search-role-paths.json`, "utf8")),
+		})
+		report(result, id, detail)
+	}
+}
+
 for (const raw of set.entries) {
 	const entry = { ...set.defaults, ...raw }
 	const variable = entry.path?.match(/^\$\{([A-Z_]+)\}$/)?.[1]
@@ -396,7 +467,54 @@ for (const raw of set.entries) {
 			continue
 		}
 	}
+	// An entry with "directRoles" needs a process in one of those roles. Through the public route, the proxy finds it.
+	if (direct && entry.directRoles && !entry.directRoles.includes(role)) {
+		report("skip", `url:${entry.id}`, `a ${role} process doesn't serve it: the proxy sends it to a search role`)
+		continue
+	}
 	await check(`url:${entry.id}`, () => checkEntry(entry, set))
+}
+
+// The origin's build file was checked above. Check the static copy separately, without a site cookie.
+if (set.static) {
+	let staticOrigin = null
+	let namedOrigin = null
+	let buildPath = null
+	await check("static:mode", () => {
+		const html = bodies.get(set.static.entry) || ""
+		namedOrigin = staticOriginInHtml(html, siteOrigin)
+		staticOrigin = namedOrigin || staticOriginFromSetting(process.env.BENCH_STATIC_HOST)
+		const files = buildFilesInHtml(html, siteOrigin)
+		const build = files.find((url) => url.origin === (namedOrigin || siteOrigin) && new RegExp(set.static.pattern).test(url.pathname))
+		if (!build) fail("the page references no build file")
+		buildPath = build.pathname + build.search
+		const value = metricsBefore ? gauge(metricsBefore, "goodwatch_static_assets_in_use") : null
+		const mode = metricsBefore?.match(/goodwatch_static_assets_in_use\{[^}]*mode="([^"]*)"/)?.[1]
+		return `pages name ${namedOrigin ? "the static hostname" : "the site's host"}${value === null ? "" : `; goodwatch_static_assets_in_use=${value}${mode ? `, mode=${mode}` : ""}`}${staticOrigin ? "" : "; static hostname was not checked because BENCH_STATIC_HOST is not set"}`
+	})
+	if (staticOrigin && buildPath) {
+		const failure = namedOrigin ? "fail" : "warn"
+		const staticRequest = async (path) => {
+			const response = await fetch(staticOrigin + path, { headers: { "User-Agent": BROWSER_UA }, redirect: "manual", signal: AbortSignal.timeout(15_000) })
+			await response.arrayBuffer()
+			return response
+		}
+		await check("static:build-file", async () => {
+			const response = await staticRequest(buildPath)
+			const explain = (message) => fail(`${message}. Guards: ${set.static.guards}`)
+			if (response.status !== 200) explain(`build file answered ${response.status}, expected 200`)
+			if (!response.headers.get("access-control-allow-origin")) explain("build file lacks Access-Control-Allow-Origin")
+			const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(new URL(staticOrigin).hostname)
+			if (!loopback && !response.headers.get("cf-cache-status")) explain("build file lacks CF-Cache-Status")
+			if (!new RegExp(`(?:^|[,\\s])max-age=${set.static.maxAge}(?:[,\\s]|$)`).test(response.headers.get("cache-control") || "")) explain(`build file lacks max-age=${set.static.maxAge}`)
+			return `200 for a build file on the static hostname, access-control-allow-origin ${response.headers.get("access-control-allow-origin")}, cf-cache-status ${response.headers.get("cf-cache-status") ?? "not required on loopback"}`
+		}, failure)
+		await check("static:root-404", async () => {
+			const response = await staticRequest("/")
+			if (response.status !== 404) fail(`static root answered ${response.status}, expected 404. Guards: ${set.static.guards}`)
+			return "404 for / on the static hostname"
+		}, failure)
+	}
 }
 
 // The log, after the requests, so that errors from the edge-case pages are in it. Slow subsystems get until
@@ -406,10 +524,14 @@ const logReadable = await (async () => {
 	try {
 		for (;;) {
 			lines = readLogLines()
+			// A "last line" entry is complete once its newest line says what it must: a search role writes
+			// "query encoder not ready" every minute until its query models have loaded.
 			const complete =
-				[...patterns.required, ...patterns.lastLine].every(
-					(entry) => skipped.has(`log:${entry.id}`) || lines.some((line) => new RegExp(entry.pattern).test(line)),
-				)
+				patterns.required.every((entry) => skipped.has(`log:${entry.id}`) || lines.some((line) => new RegExp(entry.pattern).test(line))) &&
+				patterns.lastLine.every((entry) => {
+					const last = lines.filter((line) => new RegExp(entry.pattern).test(line)).pop()
+					return skipped.has(`log:${entry.id}`) || (last !== undefined && new RegExp(entry.mustMatch).test(last))
+				})
 			const left = processStartedAt === null ? 0 : processStartedAt + logWaitSeconds * 1000 - Date.now()
 			if (complete || left <= 0) return true
 			console.error(`waiting: slow subsystems have ${Math.ceil(left / 1000)} s left to report`)
@@ -421,6 +543,8 @@ const logReadable = await (async () => {
 	}
 })()
 if (logReadable) {
+	for (const kind of ["required", "lastLine"])
+		for (const entry of allPatterns[kind]) if (!inRole(entry)) report("skip", `log:${entry.id}`, `for the ${entry.roles.join(" and ")} role only, and this process runs as ${role}`)
 	const hasStart = lines.some((line) => new RegExp(patterns.start).test(line))
 	for (const entry of patterns.required) {
 		const id = `log:${entry.id}`
@@ -468,7 +592,43 @@ if (metricsBefore) {
 		})
 	}
 }
+await checkSearchRoles()
 finish()
+
+/**
+ * The default production run also checks each search role in SMOKE_SEARCH_ROLES, a list of host:container pairs
+ * separated by commas, such as "vector1:goodwatch-search-a,vector1:goodwatch-search-b". Each one is this script
+ * again, for that container alone. The roles don't get --commit: they are deployed by hand and may run an older
+ * commit. They get the page instances' commit instead, to compare their own with.
+ */
+async function checkSearchRoles() {
+	if (local || options.host) return
+	if (skipped.has("search-roles")) return report("skip", "search-roles", "skipped with --skip")
+	const listed = parseSearchRoles(process.env.SMOKE_SEARCH_ROLES)
+	if (!listed.length) return report("skip", "search-roles", "no search role is listed: set SMOKE_SEARCH_ROLES in config.env once the search roles run")
+	for (const { item, host, container: name, valid } of listed) {
+		const id = `search-role:${item}`
+		if (!valid) {
+			report("fail", id, "SMOKE_SEARCH_ROLES entries are host:container, such as vector1:goodwatch-search-a")
+			continue
+		}
+		const args = [fileURLToPath(import.meta.url), "--host", host, "--container-prefix", name, "--role", "search", "--deploy-timeout", options["deploy-timeout"], "--log-wait", options["log-wait"]]
+		if (container?.commit) args.push("--page-commit", container.commit)
+		if (options.skip) args.push("--skip", options.skip)
+		console.log(`\n---- search role ${item} ----`)
+		// The role's lines pass through as they come. They are also read here, for the warning about its commit.
+		let output = ""
+		const child = spawn(process.execPath, args, { stdio: ["inherit", "pipe", "inherit"] })
+		child.stdout.on("data", (chunk) => {
+			output += chunk
+			process.stdout.write(chunk)
+		})
+		const code = await new Promise((done) => child.on("close", done))
+		report(code === 0 ? "pass" : "fail", id, code === 0 ? "every check of this search role passed" : "see the lines above")
+		const behind = output.match(/^WARN  deploy:search-code  (.*)$/m)?.[1]
+		if (behind) report("warn", `${id}:search-code`, behind)
+	}
+}
 
 function finish() {
 	tunnel?.kill()

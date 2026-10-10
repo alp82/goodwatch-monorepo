@@ -315,6 +315,14 @@ SCHEMAS = {
             "tvtropes_tags_updated_at": "TIMESTAMP",
             "dna_created_at": "TIMESTAMP",
             "dna_updated_at": "TIMESTAMP",
+            # Last time the show's episodes were fetched from TMDB and copied to `episode`.
+            # Set for a show without episodes too; NULL means not crawled yet.
+            "episodes_updated_at": "TIMESTAMP",
+            # How many regular episodes have aired: season_number > 0, not removed, air_date today
+            # (UTC) or earlier. Written by f/sync/copy/tmdb_episodes whenever it copies the show, so
+            # it is up to a day behind the calendar. NULL means not crawled yet. Member tracking
+            # compares it with a member's watched episodes to find Seen shows with new episodes.
+            "aired_episode_count": "INTEGER",
         },
         "primary_key": ["tmdb_id"],
         "shards": 12,
@@ -343,6 +351,37 @@ SCHEMAS = {
         },
         "primary_key": ["tmdb_id"],
         "shards": 12,
+    },
+    # The episodes of every show in TMDB's numbering (Episode list), one row per TMDB episode
+    # (f/sync/copy/tmdb_episodes, docs/episode-catalog.md). Season 0 holds the specials. One
+    # show's list is one routed read. The key is the episode id, not season and number, because
+    # a watch stores the id: a renumbered episode stays the same row.
+    "episode": {
+        "columns": {
+            "show_id": "INTEGER",
+            "tmdb_id": "INTEGER",  # TMDB episode id
+            "season_tmdb_id": "INTEGER",  # season.tmdb_id
+            "season_number": "INTEGER",  # 0 = special
+            "episode_number": "INTEGER",
+            "name": "TEXT",
+            "air_date": "TIMESTAMP",  # midnight UTC of TMDB's date, NULL when unknown
+            "runtime": "INTEGER",
+            "still_path": "TEXT",
+            "episode_type": "TEXT",  # standard, mid_season, finale
+            # TMDB's description, shown when an episode is opened and never searched or filtered.
+            # No index and no column store: each refuses a value above 32,766 bytes.
+            "overview": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "tmdb_user_score_original": "DOUBLE",
+            "tmdb_user_score_rating_count": "INTEGER",
+            # NULL until an import or backfill resolves them; the copy never writes them.
+            "imdb_id": "TEXT",
+            "tvdb_id": "INTEGER",
+            # Set when TMDB no longer lists the episode. The row is deleted 180 days later.
+            "removed_at": "TIMESTAMP",
+        },
+        "primary_key": ["show_id", "tmdb_id"],
+        "clustered_by": "show_id",
+        "shards": 6,
     },
     # IMDb episode ratings in IMDb's numbering (f/imdb_datasets/ingest), one row per TMDB show
     # and IMDb episode. A special has a NULL season_number. One show's grid is one routed read.
@@ -695,6 +734,65 @@ SCHEMAS = {
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 6,
     },
+    # One row per time a member watched a movie or an episode
+    # (docs/implementation/tracking/data-model.md, ADR 0008). watched_at and watched_at_precision:
+    # 'moment' is the instant; 'day' is 00:00:00 UTC of the calendar day and only its date is
+    # read; 'unknown' is NULL. origin: 'single' is one watch marked on its own, of an episode or
+    # a movie; 'upto', 'season' and 'seen' are group actions (Watched up to here, Mark season, the
+    # Seen button) and carry group_id; 'score' is the undated watch that rating a movie records
+    # while the movie has no other watch; 'import' carries import_id. A movie watch has no
+    # episode columns and pass 1.
+    "user_watch_log": {
+        "columns": {
+            "user_id": "TEXT",
+            "watch_id": "TEXT",
+            "media_type": "TEXT NOT NULL CHECK (media_type IN ('movie','show'))",
+            "tmdb_id": "INTEGER NOT NULL",  # the movie or the show
+            "episode_tmdb_id": "INTEGER",  # episode.tmdb_id at the time of the watch
+            "season_number": "INTEGER",  # 0 = special
+            "episode_number": "INTEGER",
+            "watched_at": "TIMESTAMP WITH TIME ZONE",
+            "watched_at_precision": "TEXT NOT NULL CHECK (watched_at_precision IN ('moment','day','unknown'))",
+            "origin": "TEXT NOT NULL CHECK (origin IN ('single','upto','season','seen','score','import'))",
+            "group_id": "TEXT",
+            "import_id": "TEXT",  # user_import.id
+            "pass": "INTEGER NOT NULL",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "updated_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+        },
+        "primary_key": ["user_id", "watch_id"],
+        "clustered_by": "user_id",
+        "shards": 6,
+        "timestamps": False,
+    },
+    # Where a member stands with a title (docs/implementation/tracking/data-model.md, ADR 0009).
+    # Only what can't be computed from user_watch_log: no counts and no dates of watches. A show's
+    # state is the state machine's. A movie has a row while it has a log row, with state 'seen'
+    # and pass 1. A row with state 'not_started' exists only to remember a prompt, and every
+    # reader filters on state.
+    # seen_press_group and seen_press_from: the Seen press that one more press takes back, and
+    # the state it was pressed from. Both NULL when no press stands. seen_question: NULL (not
+    # asked), 'open', 'answered'.
+    "user_watch_state": {
+        "columns": {
+            "user_id": "TEXT",
+            "tmdb_id": "INTEGER",
+            "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
+            "state": "TEXT NOT NULL CHECK (state IN ('not_started','watching','on_hold','dropped','seen'))",
+            "state_changed_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "pass": "INTEGER NOT NULL",
+            "seen_press_group": "TEXT",
+            "seen_press_from": "TEXT",
+            "rate_prompt_dismissed_at": "TIMESTAMP WITH TIME ZONE",
+            "seen_question": "TEXT",
+            "created_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+            "updated_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
+        },
+        "primary_key": ["user_id", "tmdb_id", "media_type"],
+        "clustered_by": "user_id",
+        "shards": 3,
+        "timestamps": False,
+    },
     # ============================
     # ===== Search embeddings (f/search/embed_titles) =====
     # ============================
@@ -913,9 +1011,10 @@ SCHEMAS = {
     # ============================
     # One row per uploaded file. status: preview (nothing written to user_score yet), running, done, failed, undone.
     # counts is the preview's outcome counts as JSON text. added, updated, kept and failed count what the apply
-    # wrote. updated_at is the apply's heartbeat: a running import whose heartbeat is old has stalled and can be
-    # resumed. confirmed_at is written to user_score.created_at/updated_at by this import, which is how the apply
-    # recognises its own writes after an interruption.
+    # wrote. updated_at is the apply's heartbeat: the webapp instance that applies the import sets it from Crate's
+    # clock every 10 seconds, and a running import whose heartbeat is older than 60 seconds has stalled and can be
+    # resumed by either instance. confirmed_at is written to user_score.created_at/updated_at by this import, which
+    # is how the apply recognises its own writes after an interruption.
     "user_import": {
         "columns": {
             "id": "TEXT",
@@ -937,6 +1036,11 @@ SCHEMAS = {
             "updated_at": "TIMESTAMP WITH TIME ZONE NOT NULL",
             "confirmed_at": "TIMESTAMP WITH TIME ZONE",
             "finished_at": "TIMESTAMP WITH TIME ZONE",
+            # Native Letterboxd/Trakt imports. Nullable so IMDb imports keep their current shape.
+            "options": "TEXT INDEX OFF",
+            "warnings": "TEXT INDEX OFF",
+            "kinds": "TEXT INDEX OFF",
+            "file_hash": "TEXT",
         },
         "primary_key": ["id"],
         "shards": 1,
@@ -971,6 +1075,21 @@ SCHEMAS = {
             "prior_score": "INTEGER",
             "applied_score": "INTEGER",
             "applied_at": "TIMESTAMP WITH TIME ZONE",
+            # Native Letterboxd/Trakt source observation and durable per-row journal.
+            "kind": "TEXT",
+            "source_key": "TEXT",
+            # A show's durable watch plan can exceed Crate's column-store text limit.
+            "payload": "TEXT INDEX OFF STORAGE WITH (columnstore = false)",
+            "season_number": "INTEGER",
+            "episode_number": "INTEGER",
+            "episode_tmdb_id": "BIGINT",
+            "watched_at": "TIMESTAMP WITH TIME ZONE",
+            "watched_at_precision": "TEXT",
+            "pass": "INTEGER",
+            "source_status": "TEXT",
+            "watch_id": "TEXT",
+            "prior_state": "TEXT",
+            "applied_state": "TEXT",
         },
         "primary_key": ["import_id", "row_index"],
         "shards": 1,

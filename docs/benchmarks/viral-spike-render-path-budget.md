@@ -18,6 +18,10 @@ The limits are in [`goodwatch-benchmark/urls/budget.json`](../../goodwatch-bench
   [Skipped sections on title pages](#skipped-sections-on-title-pages), [Posters on Discover](#posters-on-discover),
   and [Scripts on first use](#scripts-on-first-use). The budget table below shows the limits of the calibration
   run: the current limits are in the budget file.
+- **Since October 7, 2026, Lighthouse runs with a CPU slowdown of 2.7 instead of 4,** the value that Lighthouse's
+  calculator gives for the generator's CPU benchmark. TBT falls by 40% to 75% and the score rises by 0 to 5 points.
+  LCP, TBT, and the score of earlier runs aren't comparable with later ones. Every table above
+  [CPU slowdown of the generator](#cpu-slowdown-of-the-generator) on this page is from the old setting.
 - **No surface meets the targets yet.** The largest gaps are the first render's style and layout work, hydration on
   title pages, and the posters that Discover loads before scrolling.
 
@@ -33,8 +37,9 @@ The limits are in [`goodwatch-benchmark/urls/budget.json`](../../goodwatch-bench
 
 Lighthouse's documentation puts a CPU benchmark of 1,000 to 1,500 in the "low-end desktop" class and calibrates the
 4x slowdown for a benchmark of 1,500 to 2,000. On worker3, 4x therefore models a slower phone than Lighthouse
-intends, and the development machine (benchmark 4,700) models a much faster one. The budget keeps 4x on worker3, so
-that numbers stay comparable with earlier runs. Read TBT and the score as pessimistic.
+intends, and the development machine (benchmark 4,700) models a much faster one. Until October 7, 2026, the budget
+kept 4x on worker3: read TBT and the score of those runs as pessimistic. Since then the slowdown is 2.7 (see
+[CPU slowdown of the generator](#cpu-slowdown-of-the-generator)).
 
 ## The late first paint on the generator
 
@@ -127,6 +132,8 @@ change: one font request of 34 KB per page, and two card font files less on the 
 | CLS | 0.01 (0) | 0.01 (0) | 0.01 (0) | 0.01 (0) | 0.04 (0.028) | 0.02 (0.011) |
 | Performance score, minimum | 76 (83) | 61 (68) | 58 (65) | 75 (82) | 62 (69) | 80 (87) |
 
+The `host_requests` line now means "Site and static host requests": requests to the webapp host and the static hostname together. `origin_requests` ("Requests to the webapp host") and `static_requests` ("Requests to the static hostname") show the split as information without limits. `third_party_origins` excludes the static hostname. The static origin is `BENCH_STATIC_HOST`, or an origin serving `/assets/*.js` scripts whose hostname is the site's hostname or a subdomain of it. The recorded values and limits above are unchanged.
+
 The LCP element per surface, which the budget also checks:
 
 | Surface | LCP element | Source |
@@ -135,7 +142,7 @@ The LCP element per surface, which the budget also checks:
 | Movie, show | The hero backdrop | `image.tmdb.org`, `w780`, 30 to 80 KB, `fetchpriority="high"` |
 | Person | The hero backdrop | `image.tmdb.org`, `w780`, 28 KB, `fetchpriority="high"` |
 | Discover | The first poster | `image.tmdb.org`, `w342`, `fetchpriority="high"` |
-| Share list | The card's title | Text in the card font (Anton), in the server HTML |
+| Share list | The card's title | Text in the card font (Anton), in the server HTML. Since the card fonts are WOFF2 slices, the card's first title image: see [Card fonts on the share list](#card-fonts-on-the-share-list) |
 
 ### Margins
 
@@ -174,7 +181,7 @@ What stands between today and the targets, with measured sizes. Times are Lighth
 | The stylesheet | All | 33 KB compressed, 359 KB raw, about 4,300 rules for all routes. Lighthouse estimates 150 to 450 ms of blocking time | Proposed, 5 |
 | Local and oversized images | Home, person, show | Estimated savings: 164 KB on home (a 40 KB provider logo as SVG among them), 136 KB on person, 89 KB on show | Proposed, 6 |
 | Card fonts | Share list | Anton as a 53 KB TTF transfer for the LCP text. 16 card fonts are declared as TTF | Proposed, 7 |
-| CPU calibration of the generator | All | 4x on a host with benchmark 1,100: TBT and the score read worse than on Lighthouse's reference | Proposed, 8 |
+| CPU calibration of the generator | All | 4x on a host with benchmark 1,100: TBT and the score read worse than on Lighthouse's reference | Done: [CPU slowdown of the generator](#cpu-slowdown-of-the-generator) |
 | The trailer | Title pages | Nothing loads before a click, after "Load the trailer player on click" | None needed |
 | Loader data in the HTML | Title pages | 46 to 52 KB of compressed HTML | "Stop the JSON round trip of loader data" |
 
@@ -203,7 +210,7 @@ What stands between today and the targets, with measured sizes. Times are Lighth
 7. **Serve the share card fonts as WOFF2.** The share list page's LCP element is the card title in Anton, which
    arrives as a 53 KB TTF transfer. Done when the browser loads card fonts as WOFF2 subsets, the card looks the same
    in the browser and in the image, and the share list's total bytes are under 560 KB.
-8. **Calibrate Lighthouse's CPU slowdown for the generator.** worker3's CPU benchmark is about 1,100, below the
+8. **Calibrate Lighthouse's CPU slowdown for the generator.** (Done on October 7, 2026.) worker3's CPU benchmark is about 1,100, below the
    1,500 to 2,000 that Lighthouse's 4x is made for. Pick the multiplier from Lighthouse's calibration guidance,
    record how the six surfaces shift, and reset the budget's time lines. Done when the multiplier is a documented
    setting and the budget passes with it.
@@ -473,9 +480,260 @@ Lighthouse's estimates for the person and the show page are mostly TMDB images, 
 The person photo is requested as `h632` (55 KB) for a 120 px slot, because TMDB's profile steps jump from 185 to
 421 px.
 
+## Card fonts on the share list
+
+Ticket "Serve the share list card's fonts to the browser as WOFF2 subsets". These numbers are from production
+builds on the development machine with the benchmark's share list, not from the generator. The time lines of the
+budget are still open.
+
+A page now loads each card font as WOFF2 slices (`latin`, `latin-ext`, and `rest` for everything else the TTF
+file has) and only the slices whose characters the card shows. The image renderer keeps reading the TTF files.
+The share list page declares only its design's fonts and preloads the font of the card's title. Gabarito's Latin
+characters come from the brand font's files. `scripts/subset-share-card-fonts.py` in the webapp builds the files.
+
+| Line | Before | After |
+| --- | --- | --- |
+| Anton, the title's font | 54,647 bytes (TTF with Brotli) | 11,329 bytes (`latin`) |
+| Font bytes of the page | 89,139 | 45,821 |
+| Font requests | 2 | 2 |
+| HTML | 23,197 bytes | 23,662 bytes |
+| Scripts | 423,721 bytes | 425,838 bytes |
+| Total bytes | 762,271 | 721,538 |
+| CLS | 0.0104 | 0 |
+
+The values are medians of 5 Lighthouse runs. The local build requests more scripts than production does, so
+only the differences carry over: 40.7 KB less in total. The page's rules for the fonts and their fallback fonts
+add 0.5 KB to the HTML and 2.1 KB to the script that holds them.
+
+- **The title was the LCP element only in its fallback font.** The designs name one font per element and no
+  fallback, so a title whose font hadn't arrived showed in the browser's default serif font. That text is wider
+  than Anton: 34,968 px² against 28,469 px² on a phone. The card's first title image covers 30,824 px². A run
+  whose first paint came before Anton reported the title, with a shift of 0.010 when Anton arrived. A run whose
+  first paint came after Anton reported the image. This is why the share list's LCP read either 3.6 to 3.8 s or
+  4.2 to 4.4 s. Of 5 local runs before the change, 3 reported the title (2.8 to 3.2 s) and 2 the image (3.7 and
+  5.4 s).
+- **The LCP element is now the image, in every run.** The title shows in Anton from the first paint, or in a
+  local font of Anton's width. Local LCP: 3.0 to 4.2 s, median 3.5 s (before: median 3.2 s). The simulated FCP
+  fell from 2.76 to 2.48 s. The budget's LCP element for the share list is the image now, as on title pages.
+- **The LCP no longer depends on a font.** What is left between the first paint and the LCP is the image from
+  `image.tmdb.org`, which already has `fetchpriority="high"`.
+- **No shift when a font arrives late.** With every font held back for 1.5 s, CLS is 0.001 (before: 0.0105). Each
+  card font has a local stand-in with its width, ascent, and descent.
+
+## CPU slowdown of the generator
+
+Ticket "Calibrate Lighthouse's CPU slowdown for the generator". Since October 7, 2026, `./bench.sh lighthouse` and
+`./bench.sh budget` run with a CPU slowdown of 2.7 (`LH_CPU_SLOWDOWN`), where Lighthouse's own default is 4.
+
+### Method
+
+Lighthouse's simulation multiplies the main-thread times that it observed on the host by the slowdown. Its guidance
+(`docs/throttling.md` in Lighthouse 13.5.0) says to pick the slowdown from the host's CPU benchmark, and names a
+calculator for it. The calculator's formula, read from its source:
+
+| CPU benchmark | Slowdown | Range that the calculator states |
+| --- | --- | --- |
+| 1,300 and above | `3 + (benchmark - 1300) / 233` | At least 0.75 either way |
+| 800 to 1,300 | `2 + (benchmark - 800) / 500` | 0.75 either way |
+| 150 to 800 | `1 + (benchmark - 150) / 650` | 0.25 either way |
+
+By this formula, the default of 4 fits a benchmark of 1,533. The guidance's table says the same more roughly: a
+"low-end desktop" (1,000 to 1,500) needs 2x for a mid-tier phone, within a range of 1x to 5x.
+
+No phone and no host of Lighthouse's reference class was measured. The calibration is the measured CPU benchmark
+of the generator put through Lighthouse's own formula, and runs that show what the result does to each surface.
+
+### The generator's CPU benchmark
+
+| Runs | Reports | Median | Spread |
+| --- | --- | --- | --- |
+| Seven runs of October 6 and 7, 2026 (other tickets) | 158 | 1,176 (run medians 1,113 to 1,205) | 809 to 1,329 |
+| The calibration runs of October 7, 2026, 17:51 to 19:31 UTC | 162 | 1,188 (mean 1,175) | 861 to 1,326, with 80% between 1,083 and 1,251 |
+
+A Windmill worker shares the host, which is where the low readings come from. The formula gives 2.75 for 1,176
+and 2.78 for 1,188. The setting is 2.7: the limits below were measured with it, and the difference to 2.8 is 4% of
+CPU time, far inside the calculator's own range and below the spread between runs.
+
+### How the six surfaces shift
+
+Production at `b038a381` over the public path, on the generator, all on October 7, 2026 between 18:08 and 19:31
+UTC. Each cell holds the medians of two runs of five reports, one of them before and one after the 2.7 runs.
+
+| Surface | Score at 4 | Score at 2.7 | TBT at 4 | TBT at 2.7 | LCP at 4 | LCP at 2.7 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Home | 86, 85 | 88, 88 | 125, 150 ms | 55, 53 ms | 3,464, 3,389 ms | 3,387, 3,396 ms |
+| Movie | 81, 80 | 85, 85 | 282, 319 ms | 165, 162 ms | 3,466, 3,478 ms | 3,479, 3,474 ms |
+| Show | 78, 79 | 83, 83 | 272, 302 ms | 157, 169 ms | 3,832, 3,783 ms | 3,838, 3,839 ms |
+| Person | 87, 87 | 90, 90 | 158, 161 ms | 72, 106 ms | 3,389, 3,394 ms | 3,325, 3,324 ms |
+| Discover | 77, 76 | 77, 77 | 147, 188 ms | 67, 96 ms | 4,567, 4,775 ms | 4,905, 4,903 ms |
+| Share list | 88, 88 | 88, 89 | 74, 65 ms | 19, 17 ms | 3,534, 3,552 ms | 3,540, 3,541 ms |
+
+- **TBT falls by 40% to 75%,** more than the slowdown's 33%, because TBT counts only the part of a task above
+  50 ms. Every surface is now under the 200 ms target.
+- **The score rises by 4 to 5 points on title pages, 2 to 3 on home and person pages, and 0 to 1 on Discover and
+  the share list,** whose scores are held by LCP.
+- **LCP doesn't move** (under 1% on five surfaces, 2% earlier on the person page). It is set by the simulated
+  connection, not by the CPU. Discover's LCP reads either about 4.6 or about 4.9 s at both settings.
+- Bytes, requests, and CLS are the same at both settings.
+
+The ends of the calculator's range, one run of three reports each:
+
+| Surface | Score at 2.0 | Score at 3.5 | TBT at 2.0 | TBT at 3.5 |
+| --- | --- | --- | --- | --- |
+| Home | 88 | 87 | 27 ms | 119 ms |
+| Movie | 87 | 83 | 116 ms | 219 ms |
+| Show | 84 | 79 | 121 ms | 294 ms |
+| Person | 90 | 88 | 33 ms | 145 ms |
+| Discover | 78 | 75 | 52 ms | 119 ms |
+| Share list | 88 | 88 | 4 ms | 55 ms |
+
+So the calculator's uncertainty is worth 4 to 5 score points on title pages, and decides whether their TBT reads
+as under or over the 200 ms target. A measurement on a real mid-tier phone would settle it.
+
+### What it does to the recorded lines
+
+- **Not comparable across October 7, 2026:** LCP, TBT, the score, and every other simulated time (FCP, Speed
+  Index, main-thread time) of a run before that date, against a run after it. That includes every table above
+  this section, the tables in the benchmark README's samples, and the scores quoted in the map's decisions. For a
+  before and after comparison across the date, run once more with `LH_CPU_SLOWDOWN=4`.
+- **Still comparable:** bytes, requests, counts, the LCP element, CLS, and the observed FCP.
+- **A guard in the check:** the budget file names its slowdown (`cpu_slowdown`). `./bench.sh budget` fails the LCP,
+  TBT, and score lines of a run that used another one, and says so, instead of comparing two scales.
+- **The targets** (LCP 2.5 s, TBT 200 ms, CLS 0.1, score 90) are unchanged. The gaps of "Targets and gaps" above
+  are from the old setting: at 2.7, TBT meets its target on every surface, and LCP is the remaining gap.
+- **The tap test keeps a slowdown of 4.** It slows the real CPU and has its own baseline of October 6, 2026.
+
+The budget's limits, reset from the two 2.7 runs above:
+
+| Line | Home | Movie | Show | Person | Discover | Share list |
+| --- | --- | --- | --- | --- | --- | --- |
+| TBT, before (ms) | 300 | 900 | 1,000 | 400 | 300 | 250 |
+| TBT, now (ms) | 150 | 350 | 350 | 250 | 200 | 100 |
+| Score, before | 79 | 66 | 63 | 78 | 68 | 84 |
+| Score, now | 81 | 78 | 76 | 83 | 70 | 84 |
+| LCP, unchanged (ms) | 3,850 | 3,950 | 4,200 | 3,950 | 5,800 | 3,900 |
+
+- **TBT:** twice the higher of the two medians, rounded up to 50 ms, and at least 100 ms. The old limits had also
+  become loose: the title pages' TBT at 4x was about 300 ms on this build against limits of 900 and 1,000 ms.
+- **Score:** 7 points under the median. The share list keeps its 84.
+- **LCP:** unchanged, because it didn't move.
+
+Run `20261007T193155Z-lighthouse-calibrated` with the default settings (three reports per surface, 19:31 to 19:40 UTC) passes
+90 of 90 lines of the new limits: scores 88, 84, 82, 90, 77, and 88, and TBT 50, 162, 173, 79, 62, and 14 ms.
+
+## The poster on the title page's banner
+
+The title overview of October 9, 2026 ([what it is](../implementation/title-overview.md)) shows the poster on a
+phone, where the old hero showed it from 768 px up only. That is one more image in a phone's first view of a movie
+or a show: 72 CSS pixels wide, for which a phone asks the `w154` file. It measures 13,584 bytes for the budget's
+movie and 13,464 bytes for its show.
+
+The limits of both surfaces are raised by that in the same commit, by arithmetic and not from a run:
+
+| Line | Movie, before | Movie, now | Show, before | Show, now |
+| --- | --- | --- | --- | --- |
+| `image_count` | 12 | 13 | 10 | 11 |
+| `image_bytes` | 88,064 | 102,400 | 155,648 | 169,984 |
+| `total_bytes` | 468,992 | 483,328 | 531,456 | 545,792 |
+
+Nothing else was raised. Measured on the build: the first view's scripts of a movie page grow by 2,976 bytes (640
+bytes Brotli), which is 0.3% and inside the margin of `script_bytes`; the stylesheet by 16 bytes Brotli; the score
+picker and the full-screen poster load on first use and are in no first view. The backdrop stays the largest
+image, and its `src` still names the `w780` file that `lcp_element` looks for.
+
+`./bench.sh budget` measures the deployed site, so it could not be run on this change before it was deployed. Run
+it after the deploy, and set the three lines from the measured values and the usual margins.
+
+## Limits with the static hostname
+
+Since October 9, 2026, pages name the static hostname for their files (see
+[The static hostname and the fallback to the origin](../static-assets.md)). The budget's LCP, score, and script
+byte lines failed after the switch, and the owner decided to keep the static hostname and to set those limits again.
+
+What changed in the measurement, not in what a visitor on a fast connection sees:
+
+- **Observed first paint is unchanged:** 430 to 650 ms on every surface, before and after the switch.
+- **Simulated LCP is 0.5 to 2 s higher, and it has two levels.** The simulation adds each host's measured latency.
+  The generator stands next to the site (1 ms) and measures 0 to 9 ms or 19 to 36 ms to the static hostname. Runs
+  with the low reading are 1.1 to 1.5 s faster than runs with the high one.
+- **Most of the difference stays with that latency taken out.** Three runs of the movie page with every host's
+  extra latency fixed at 0 (`--precomputed-lantern-data-path`) read a first paint of 3.96 s, against 2.59 s before
+  the switch. The scripts are fetched at High priority from a host whose connection starts cold in the simulation.
+  That the simulation ignores the `preconnect` hint and counts those scripts for first paint is a reading of the
+  reports, not verified in Lighthouse's code.
+- **Script bytes grow by about 380 bytes of response headers per file** (744 against 364 bytes, uncompressed).
+
+The limits, set from runs `20261009T183910Z-lighthouse-static-limits-a` and `20261009T184812Z-lighthouse-static-limits-b`
+(three reports per surface each, 18:39 to 18:57 UTC). The folders of those two runs weren't kept. A later run with
+the same build that is kept, `20261009T190904Z-lighthouse-static-limits-check`, reads the same levels:
+
+| Line | Home | Movie | Show | Person | Discover | Share list |
+| --- | --- | --- | --- | --- | --- | --- |
+| LCP, before (ms) | 3,850 | 3,950 | 4,200 | 3,950 | 5,800 | 3,900 |
+| LCP medians of the two runs (ms) | 5,377 and 5,292 | 5,272 and 5,177 | 5,542 and 5,449 | 4,154 and 4,119 | 6,397 and 5,684 | 4,322 and 4,019 |
+| LCP, now (ms) | 6,050 | 5,900 | 6,250 | 4,700 | 7,200 | 4,900 |
+| Score, before | 81 | 78 | 76 | 83 | 70 | 84 |
+| Score medians of the two runs | 70 and 71 | 68 and 68 | 65 and 67 | 79 and 79 | 63 and 67 | 78 and 82 |
+| Score, now | 63 | 61 | 58 | 72 | 56 | 71 |
+| Script bytes, before (KB) | 241 | 242 | 242 | 181 | 317 | 191 |
+| Script bytes, measured (KB) | 243.8 | 247.5 | 247.7 | 183.8 | 323.3 | 194.5 |
+| Script bytes, now (KB) | 256 | 260 | 261 | 193 | 340 | 205 |
+
+- **LCP:** 12% above the higher median, which is the level with the high latency reading. A regression that is
+  smaller than the gap between the two levels can pass when a run reads the low level.
+- **Score:** 7 points under the lower median.
+- **Script bytes:** 5% above the higher measured value.
+- **Home, total bytes:** raised from 707 to 750 KB. The first run read 725 KB with 364 KB of images, which is
+  inside the image limit of 370 KB. The old total didn't leave room for the image limit.
+
+Both runs pass every line of the new limits.
+
+Not measured: what the second host costs a visitor on a slow connection. An estimate is up to three round trips
+for the stylesheet's connection, less what the `preconnect` hint saves. A comparison with applied throttling needs
+production in `origin` mode for a few minutes.
+
 ## Not verified
 
+- The limits of the section above, and LCP, TBT, CLS and the score of the title pages with the new overview.
+- A real phone or a host of Lighthouse's reference class for the CPU slowdown: 2.7 comes from Lighthouse's formula
+  and the generator's benchmark, whose stated range is 2.0 to 3.5.
+- The CPU slowdown on any host other than worker3.
 - A real phone. Every number here is Lighthouse's simulation on a server.
 - Whether Chromium on a real phone can show the same one-second hold. The measurements here only show it for the
   blank start page under emulation.
 - Safari and Firefox.
+
+### The stylesheet's host makes no difference
+
+The same day, the stylesheet and the brand font went back to the site's own host for a few hours, to find out whether the second
+connection is what delays the first paint. It isn't. Lighthouse with applied throttling
+(`--throttling-method=devtools`, CPU slowdown 2.7), where the browser really waits and a `preconnect` counts, five
+reports per page, medians:
+
+| Page | First paint, stylesheet on the static hostname | First paint, stylesheet on the site's host | LCP before | LCP after |
+| --- | --- | --- | --- | --- |
+| Home | 3,637 ms | 3,592 ms | 3,851 ms | 3,859 ms |
+| Movie | 3,351 ms | 3,251 ms | 3,351 ms | 3,286 ms |
+| Person | 3,364 ms | 3,347 ms | 3,364 ms | 3,347 ms |
+
+The ranges of the single reports overlap on every page (movie: 3,252 to 3,438 ms before, 3,073 to 3,293 ms after).
+The budget's simulated values didn't leave their level either, in runs `20261009T210902Z-lighthouse-css-on-site-a`
+and `20261009T211751Z-lighthouse-css-on-site-b`:
+
+| Line | Home | Movie | Show | Person | Discover | Share list |
+| --- | --- | --- | --- | --- | --- | --- |
+| LCP medians of the two runs (ms) | 5,207 and 5,093 | 4,834 and 4,934 | 5,558 and 5,240 | 4,005 and 4,000 | 6,066 and 5,983 | 4,334 and 4,243 |
+| Score medians of the two runs | 71 and 72 | 70 and 68 | 65 and 65 | 80 and 80 | 63 and 63 | 78 and 79 |
+
+The limits stay as they are. The owner had the change reverted on October 10, 2026: it bought nothing that a
+measurement shows, and it cost the site's own host two more requests and 66.5 KB per first page view (stylesheet
+32.2 KB, font 34.3 KB). The stylesheet and the font are on the static hostname again.
+
+What the reports with applied throttling show instead: on the movie page the document is complete after 0.84 s and
+the stylesheet (32 KB) after 2.77 s, on a connection that is already open. In that time the page's preloaded scripts
+(about 247 KB) load at High priority over the same throttled line of 1.6 Mbit/s. The first paint waits for the line,
+not for a connection. That reading comes from one report's request list and isn't tested by taking the scripts out.
+
+Not measured: the same pages with applied throttling and every file on the site's own host. Whether the static
+hostname costs a visitor on a slow connection anything at all is therefore open. The simulated values from before
+the switch (LCP 3.4 to 5.1 s) aren't comparable with the applied ones.

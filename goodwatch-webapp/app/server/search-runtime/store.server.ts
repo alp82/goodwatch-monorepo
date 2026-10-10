@@ -6,6 +6,7 @@ import {
 	randomUUID,
 } from "node:crypto"
 import { searchStatement } from "../combined-search/catalog.server"
+import { readingsConfigured } from "./limits.server"
 import { SearchCoordination } from "./coordination.server"
 
 export const DAILY_NANO = 1_000_000_000
@@ -14,6 +15,7 @@ export type BasicReason =
 	| "budget"
 	| "rate"
 	| "busy"
+	| "coordination"
 	| "unknown"
 	| "storage"
 	| "configuration"
@@ -35,14 +37,16 @@ type Interpretation = {
 }
 type Reservation = { cache_key: string; budget_at: number; amount_nano: number }
 
+let lastCoordinationWarning = -Infinity
+
 export function productionStore() {
 	const key = process.env.SEARCH_STORAGE_KEY
-	if (!key || !/^[a-fA-F0-9]{64}$/.test(key))
+	if (!readingsConfigured())
 		throw new Error("Search storage key is not configured")
 	return new SearchStore(
 		searchStatement,
 		new SearchCoordination(),
-		Buffer.from(key, "hex"),
+		Buffer.from(key!, "hex"),
 	)
 }
 
@@ -140,12 +144,24 @@ export class SearchStore {
 		const scopes = await scopesReady
 		if (!scopes.length) return { kind: "basic", reason: "configuration" }
 		const id = randomUUID()
-		const admitted = await this.coordination.claim(
-			id,
-			input.cacheKey,
-			scopes,
-			input.admissionAttemptId,
-		)
+		let admitted
+		try {
+			admitted = await this.coordination.claim(
+				id,
+				input.cacheKey,
+				scopes,
+				input.admissionAttemptId,
+			)
+		} catch {
+			const now = performance.now()
+			if (now - lastCoordinationWarning >= 60_000) {
+				lastCoordinationWarning = now
+				console.warn("Search coordination unavailable; serving basic results", {
+					reason: "coordination",
+				})
+			}
+			return { kind: "basic", reason: "coordination" }
+		}
 		if (admitted !== "ok") return { kind: "basic", reason: admitted }
 		let claimed = false
 		try {

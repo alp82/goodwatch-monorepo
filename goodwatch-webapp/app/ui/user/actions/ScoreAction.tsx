@@ -1,5 +1,5 @@
 import { useCallback } from "react"
-import { useScoreMutation, useWatchedMutation } from "~/hooks/useUserDataMutations"
+import { useScoreMutation } from "~/hooks/useUserDataMutations"
 import type { Score } from "~/server/scores.server"
 import type { MediaType } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
@@ -11,22 +11,17 @@ export interface ScoredMedia {
 	details: { tmdb_id: number; title: string }
 }
 
-export interface ScoreActionOptions {
-	/** Also records (or, when clearing, removes) the watch. Off where the caller has recorded the watch itself. */
-	recordWatch?: boolean
-}
-
 /**
- * Scoring a title, with everything that goes with it: a guest at the rating limit gets the sign-up prompt instead, and
- * a member's score also records the watch (clearing the score removes it). `rate` answers whether the score was sent.
+ * Scoring a title, with everything that goes with it: a guest at the rating limit gets the sign-up prompt instead.
+ * The server records what a score means for Seen with the score itself: a rated movie is Seen through the watch its
+ * score owns, and a show's score records no watch. `rate` answers whether the score was sent.
  */
-export function useScoreAction(media: ScoredMedia, { recordWatch = true }: ScoreActionOptions = {}) {
+export function useScoreAction(media: ScoredMedia) {
 	const { user } = useUser()
 	const { mediaType } = media
 	const tmdbId = media.details.tmdb_id
 
-	const { mutate: updateScore, isPending: isScorePending } = useScoreMutation()
-	const { mutate: updateWatched, isPending: isWatchedPending } = useWatchedMutation()
+	const { mutate: updateScore, isPending } = useScoreMutation()
 
 	const rate = useCallback(
 		(score: Score | null) => {
@@ -35,12 +30,10 @@ export function useScoreAction(media: ScoredMedia, { recordWatch = true }: Score
 				return false
 			}
 			updateScore({ mediaType, tmdbId, score })
-			if (user && recordWatch)
-				updateWatched({ mediaType, tmdbId, action: score === null ? "remove" : "add" })
 			return true
 		},
-		[user, mediaType, tmdbId, recordWatch, updateScore, updateWatched],
+		[user, mediaType, tmdbId, updateScore],
 	)
 
-	return { rate, isPending: isScorePending || isWatchedPending }
+	return { rate, isPending }
 }

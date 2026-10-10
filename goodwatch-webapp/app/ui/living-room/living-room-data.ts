@@ -6,7 +6,7 @@
 // for a night are derived here, so D-pad moves never need the loader.
 import { MOOD_KEYS, type MoodKey } from "~/domain/moods"
 import type { CardService, TitleCard } from "~/server/title-cards.server"
-import type { Night, TvContext } from "./tv-flow"
+import type { DoorKey, Night, TvContext } from "./tv-flow"
 
 export type LivingRoomTitle = TitleCard & { moods: MoodKey[] }
 
@@ -32,7 +32,45 @@ export type LivingRoomData = {
 	/** The member's saved services (display names). Guests start with none. */
 	savedServices: string[]
 	pairs: TvPair[]
+	/** A member's home with REC_TRACKING (#385): three doors in place of the two tiles. Absent otherwise. */
+	doors?: HomeDoors
 }
+
+/**
+ * Home's doors: Continue, Start a show, A movie. A door with nothing behind it is null, and Something new then
+ * takes a tile; A movie is always there.
+ */
+export type HomeDoors = {
+	continue: {
+		title: string
+		backdrop_path: string | null
+		/** The Next episode, "S2 E3"; null when the show has no episode list yet. */
+		episode: string | null
+		episodeName: string | null
+		/** "Watched yesterday", "2 new since you saw it". */
+		fact: string
+		/** Other shows the member can continue. */
+		more: number
+	} | null
+	start: { count: number; title: string; posters: (string | null)[] } | null
+	movie: {
+		count: number
+		/** The first movie of My movies; null without a Want to See movie. */
+		title: string | null
+		runtime: number | null
+		/** The member's service that carries it. */
+		service: string | null
+		posters: (string | null)[]
+	}
+}
+
+/** The doors that have something behind them, in their order on the TV. */
+export const doorKeys = (doors: HomeDoors | undefined): DoorKey[] =>
+	doors
+		? (["continue", "start", "movie"] as const).filter(
+				(key) => key === "movie" || doors[key] !== null,
+			)
+		: []
 
 /** What the person chose on this visit: services (guests) and this-or-that answers. */
 export type LivingRoomChoices = {
@@ -204,6 +242,7 @@ export function tvContextOf(
 		hasServices: myServices(data, choices).length > 0,
 		answered: choices.answers.filter((a) => a !== "skip").length,
 		pairsLeft: Math.max(0, data.pairs.length - choices.answers.length),
+		doors: doorKeys(data.doors),
 		// The taste quiz fills these in the browser (`LivingRoom`), from the person's scores and picks.
 		quizProgress: 0,
 		quizPicks: [],

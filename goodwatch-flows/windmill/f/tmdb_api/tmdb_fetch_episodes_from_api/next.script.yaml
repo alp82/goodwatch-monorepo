@@ -1,0 +1,13 @@
+summary: ''
+description: Reserve the next shows whose episodes are due for a fetch from the TMDB API
+lock: '!inline f/tmdb_api/tmdb_fetch_episodes_from_api/next.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    count:
+      type: integer
+      description: Shows per run
+      default: 500
+  required: []

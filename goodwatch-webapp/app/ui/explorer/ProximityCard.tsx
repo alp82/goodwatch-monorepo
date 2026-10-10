@@ -255,13 +255,16 @@ function Actions({
 						onAction(a.want ? "Removed from Wishlist" : "Added to Wishlist")
 					}}
 				/>
-				<UserAction instructions={<>{SEEN_INSTRUCTIONS}</>}>
+				<UserAction instructions={SEEN_INSTRUCTIONS}>
 					<ActionButton
 						kind="seen"
 						active={seen}
 						disabled={a.seenPending}
-						onClick={() => {
-							a.toggleSeen()
+						{...a.seenLog}
+						onClick={(event) => {
+							// A rated movie stays Seen through its score: the press says so and sends nothing. With the
+							// movie watch log the press goes to the log, which answers with its own toast.
+							if (!a.toggleSeen(event)) return
 							onAction(
 								a.seen ? "Unmarked as seen" : "Marked as seen",
 								!a.seen,

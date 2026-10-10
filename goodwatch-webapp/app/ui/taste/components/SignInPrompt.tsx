@@ -1,3 +1,4 @@
+import { assetUrl } from "~/utils/asset-url"
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowRightIcon, UserPlusIcon } from "@heroicons/react/24/outline"
@@ -87,7 +88,7 @@ export default function SignInPrompt({
 							>
 								<img
 									className="h-10 w-auto"
-									src={logo}
+									src={assetUrl(logo)}
 									alt="GoodWatch Logo"
 								/>
 							</motion.div>

@@ -1,0 +1,7 @@
+Process role: both
+[remix-serve] http://localhost:3000 (http://0.0.0.0:3000)
+Search models: 6 files verified in /data/gw-search-models, 0 downloaded now
+People index ready: 61816 people in 1309 ms
+Title snapshot 20261009T073131Z loaded: 242466 titles, 3000 in the reference pool, ratings for 51 countries, in 1234 ms (129 ms reading Redis)
+Search index build 20261009T041504Z loaded in 8411 ms
+Process: rss 2278 MB, heap 369 of 492 MB, external 158 MB, longest event loop stall 238 ms, query encoder ready with 0 waiting, up 1 min

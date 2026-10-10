@@ -1,0 +1,61 @@
+# Balances the search requests from abio's proxy across the search roles on vector1. Installed on vector1's proxy on
+# October 9, 2026.
+#
+# Where it goes: the proxy on vector1 (Traefik v3.6), as a dynamic configuration. In Coolify: Servers > vector1 >
+# Proxy > Dynamic Configurations > + Add, file name goodwatch-search-instance.yaml. Traefik loads it without a
+# restart. Install it before goodwatch-search.yaml on abio, and delete it after that one.
+#
+# Before you paste it: replace ABIO_PRIVATE_ADDRESS with abio's private address. It's the address in the rule of
+# goodwatch-instance.yaml. The repository is public, so the address isn't written here.
+#
+# How it works:
+# - The router matches requests for goodwatch.app that come from abio's private address on the plain HTTP entry
+#   point, for the two search paths, with the header X-Gw-Role: search. Only the router of goodwatch-search.yaml on
+#   abio sets that header, so this file does nothing while that one isn't installed. Its priority is 1100, above
+#   goodwatch-instance.yaml (1000), which keeps sending everything else from abio to the page instance.
+# - Each server is one search role, addressed by its network alias on the coolify network. The roles are the two
+#   services of goodwatch-search/docker-compose.yml, with the aliases goodwatch-search-a and goodwatch-search-b.
+#   A deploy restarts one role at a time, so the other one carries the searches meanwhile.
+# - The health check asks each role's readiness endpoint every 2 seconds, with a timeout of 1 second: the setting of
+#   the search role benchmark. A role that is starting, draining (the first 8 seconds after SIGTERM), or gone gets no
+#   searches, and the other one carries on. With both out, the answer is 503 with the body "no available server".
+# - The retry sends a request to the other role when the chosen one refuses the connection, for example in the
+#   moment between a crash and the next health check. It can't repeat a request that a role has started to answer.
+# - A role that is full answers 503 with Retry-After by itself (the in-flight limit). That response passes through
+#   unchanged, and it doesn't take the role out: the readiness endpoint still answers 200.
+# - No compression here and none on abio's proxy: the app compresses its own responses.
+# - The visitor's address and scheme arrive because this proxy trusts abio's address for forwarded headers. That
+#   setting is already in the proxy's configuration, for the page instance (see goodwatch-instance.yaml).
+#
+# To add a role on this host: add its alias as a third server. A role on another host needs its own route from
+# abio's proxy, in goodwatch-search.yaml: see docs/search-role-runbook.md.
+#
+# Test it before installing it: ./test-search-local.sh in this directory.
+http:
+  routers:
+    gw-search-from-abio:
+      entryPoints:
+        - http
+      rule: Host(`goodwatch.app`) && ClientIP(`ABIO_PRIVATE_ADDRESS`) && Header(`X-Gw-Role`, `search`) && (Path(`/api/combined-search`) || Path(`/api/command-palette`))
+      priority: 1100
+      middlewares:
+        - gw-search-retry
+      service: gw-search-local
+
+  middlewares:
+    gw-search-retry:
+      retry:
+        attempts: 2
+        initialInterval: 100ms
+
+  services:
+    gw-search-local:
+      loadBalancer:
+        passHostHeader: true
+        healthCheck:
+          path: /health/ready
+          interval: 2s
+          timeout: 1s
+        servers:
+          - url: http://goodwatch-search-a:3000
+          - url: http://goodwatch-search-b:3000

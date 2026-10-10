@@ -1,7 +1,13 @@
 // The desktop TV screens of the "Ask, then answer" flow (#187), drawn on the fixed 960 x 528 canvas. They render
 // the TV flow's state and send its actions: hovering an item focuses it, clicking chooses it. No data fetching.
+import { assetUrl } from "~/utils/asset-url"
 import { AnimatePresence, motion } from "framer-motion"
-import type { CSSProperties, ReactNode } from "react"
+import {
+	type CSSProperties,
+	type ComponentProps,
+	type ReactNode,
+	useEffect,
+} from "react"
 import { MOODS, MOOD_BY_KEY, type MoodKey } from "~/domain/moods"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import type { Score as RatingScore } from "~/server/scores.server"
@@ -11,6 +17,7 @@ import { offersOf, watchLine } from "~/ui/watch-next/services"
 import { backdropUrl, logoUrl, posterUrl } from "~/ui/watch-next/style"
 import { APP, ICON, Icon } from "./Remote"
 import { TvQuiz, quizItemLabel } from "./TvQuiz"
+import { HomeDoorsCode, loadHomeDoors } from "./home-doors-code"
 import {
 	type LivingRoomChoices,
 	type LivingRoomData,
@@ -97,6 +104,12 @@ function itemLabel(
 				(
 					{
 						"watch-next": "Watch next",
+						door:
+							arg === "continue"
+								? "Continue"
+								: arg === "start"
+									? "Start a show"
+									: "A movie",
 						"something-new": "Something new",
 						"just-show-me": "Just show me",
 						continue: "Continue",
@@ -193,6 +206,7 @@ const SITE_LINKS = [
 
 export function TvScreens({ view }: { view: TvView }) {
 	const { state } = view
+	usePreloadHomeDoors(view.data)
 	const s = state.screen
 	const key =
 		s.name === "title"
@@ -265,7 +279,7 @@ export function Boot() {
 	return (
 		<div className="absolute inset-0 flex flex-col items-center justify-center bg-black">
 			<motion.img
-				src={gwLogo}
+				src={assetUrl(gwLogo)}
 				alt=""
 				className="h-16"
 				initial={{ scale: 0.7, opacity: 0 }}
@@ -370,7 +384,7 @@ export function Score({
 			className={`inline-flex items-center gap-1 rounded-md bg-black/60 font-black tabular-nums text-white ring-1 ring-white/15 ${size === "lg" ? "px-2.5 py-1 text-[20px]" : "px-2 py-0.5 text-[15px]"}`}
 			title="GoodWatch score"
 		>
-			<img src={gwLogo} alt="" className={size === "lg" ? "h-4" : "h-3"} />
+			<img src={assetUrl(gwLogo)} alt="" className={size === "lg" ? "h-4" : "h-3"} />
 			{Math.round(score)}
 		</span>
 	)
@@ -566,7 +580,43 @@ export function memberTiles(view: TvView) {
 	]
 }
 
+// Home's doors (#385) are a chunk only a member whose home has them requests (home-doors-code.tsx). A home that
+// gets its doors after the page loaded asks for the code here, while the TV boots.
+export function LazyHomeDoors(
+	props: Omit<ComponentProps<typeof HomeDoorsCode>, "Item" | "fresh">,
+) {
+	return (
+		<HomeDoorsCode
+			{...props}
+			Item={Item}
+			fresh={memberTiles(props.view)[1]
+				.art.slice(0, 3)
+				.map((title) => title.poster_path)}
+		/>
+	)
+}
+export function usePreloadHomeDoors(data: LivingRoomData) {
+	const has = Boolean(data.doors)
+	useEffect(() => {
+		// A failed request here is asked for again when the doors render.
+		if (has) loadHomeDoors().catch(() => {})
+	}, [has])
+}
+
 function MemberHome({ view }: { view: TvView }) {
+	const { doors } = view.data
+	if (doors)
+		return (
+			<>
+				<div className="absolute inset-0 bg-[radial-gradient(110%_90%_at_30%_0%,#2b1706_0%,#08070a_62%)]" />
+				<LazyHomeDoors
+					first={<Head title="What are we watching?" />}
+					view={view}
+					doors={doors}
+					head={(line) => <Head title="What are we watching?" line={line} />}
+				/>
+			</>
+		)
 	return (
 		<>
 			<div className="absolute inset-0 bg-[radial-gradient(110%_90%_at_30%_0%,#2b1706_0%,#08070a_62%)]" />

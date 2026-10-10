@@ -10,6 +10,7 @@ import { canonicalTitleId } from "~/utils/title-identity";
 import { resetGuestImportCaches } from "~/server/guest-import.server";
 import { updateNotInterested } from "~/server/not-interested.server";
 import { readNotInterested, clearNotInterested } from "~/server/not-interested-store.server";
+import { applyTrackingEvent } from "~/server/tracking.server";
 import { getUserData } from "~/server/userData.server";
 
 const changeSchema = z
@@ -223,6 +224,14 @@ async function persistChange(userId: string, c: Change) {
 		(rows) =>
 			!!rows[0] && (c.kind !== "score" || String(rows[0].score) === c.value),
 	);
+	// A transferred score counts as any other: a rated movie is Seen through the watch its score owns, and leaves the
+	// Wishlist. Not by hand, so a show's score asks no question. Sent again on a retry, it writes nothing twice.
+	if (c.kind === "score" && c.media_type)
+		await applyTrackingEvent(
+			userId,
+			{ mediaType: c.media_type, tmdbId: id },
+			{ type: "rate", score: Number(c.value), byHand: false },
+		);
 }
 export async function action({ request }: ActionFunctionArgs) {
 	const { user, headers } = await getAuthFromRequest({ request, fresh: true });

@@ -16,6 +16,13 @@ empty web response does not erase API availability, and pending or failed countr
 do not erase their previously published contribution. Legacy rows without source
 attribution are preserved when their ownership cannot be established safely.
 
+A title TMDB lists in no country has no country records and no API country to
+confirm. Its provider check still publishes the title's streaming arrays, empty
+unless availability was published earlier, while the check's proof covers the
+stored payload, the fetch did not fail and the check is younger than 30 days.
+It removes no availability. Without such a check the arrays stay NULL, which
+means unknown.
+
 Publication attempts provider resolution regardless of scrape age. If a country
 contains an unresolved provider, it releases the publication lease and runs the
 existing country-fetch job once with `refresh_for_mapping: true`. It then reloads

@@ -63,14 +63,15 @@ function separateEntryFiles() {
 	}
 }
 
-// The recommendation, share list and title actions prototypes are kept in the repository for context. They are
+// The recommendation, share list, title actions, watch log, episode list, Watching and tracking prototypes are kept in the repository for context, and so is
+// the harness that mounts the real episode tracking components on the prototypes' fixtures (prototype.episode-tracking-real). They are
 // routes in development only: a production build leaves the routes out, and the stylesheet doesn't get the
 // class names that only they use (about a quarter of its rules).
 const PROTOTYPES = {
 	// Files in app/routes.
-	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*"],
+	routes: ["prototype.rec-*", "prototype.share-list*", "prototype.title-actions*", "prototype.watch-log*", "prototype.episode-list*", "prototype.episode-tracking*", "prototype.watching*", "prototype.tracking*", "prototype.my-library*"],
 	// Directories in app/ui that only those routes import.
-	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions"],
+	ui: ["prototype-rec-*", "prototype-share-list", "prototype-title-actions", "prototype-watch-log", "prototype-episode-list", "prototype-episode-list-2", "prototype-episode-list-3", "prototype-episode-list-4", "prototype-episode-tracking", "prototype-watching", "prototype-watching-2", "prototype-watching-3", "prototype-tracking-hub", "prototype-my-library"],
 }
 const PROTOTYPE_SOURCES = [
 	...PROTOTYPES.routes.map((name) => `./routes/${name}`),
@@ -279,6 +280,15 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
 		leanStylesheet().after,
 		separateEntryFiles(),
 	],
+
+	experimental: {
+		// A lazy chunk's preloads follow the chunk: their addresses are relative to the script that asks for them, not
+		// to the page. A page can get its scripts from the static hostname (see app/utils/asset-url.ts).
+		renderBuiltUrl: (filename, { hostType, ssr }) =>
+			!ssr && hostType === "js" && filename.endsWith(".js")
+				? { relative: true }
+				: undefined,
+	},
 
 	build: {
 		sourcemap: true,

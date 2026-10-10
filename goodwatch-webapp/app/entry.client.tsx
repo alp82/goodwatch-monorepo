@@ -4,8 +4,16 @@ import { RemixBrowser } from "@remix-run/react"
 import { StrictMode, startTransition } from "react"
 import { hydrateRoot } from "react-dom/client"
 import { loadShellCode } from "~/app"
+import { assetBase, manifestAt } from "~/utils/asset-url"
 import { setBrowserCookie } from "~/utils/browser-cookie"
 import { installLoaderRetry } from "~/utils/loader-request-retry"
+
+// The build's file list names paths. On a page whose scripts came from the static hostname, the files of a later
+// navigation (route scripts, their preloads and style sheets) come from there too.
+const files = (
+	window as unknown as { __remixManifest?: Parameters<typeof manifestAt>[0] }
+).__remixManifest
+if (files) Object.assign(files, manifestAt(files, assetBase()))
 
 setBrowserCookie()
 // Before hydration, so the first loader request of the page already goes through it.

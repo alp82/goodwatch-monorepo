@@ -72,6 +72,8 @@ export type WatchNextTierKey =
 	| "elsewhere"
 	| "close"
 	| "notTonight"
+	// My movies (#385): everything that does not fit tonight, in one group.
+	| "notTonightsFit"
 
 export type WatchNextTierSize = "xl" | "lg" | "md" | "sm"
 

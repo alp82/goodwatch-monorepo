@@ -1,0 +1,16 @@
+{
+  "name": "movie-document",
+  "description": "The movie page as its document alone: one request per visitor on its own connection. No files.",
+  "entries": [
+    {
+      "route": "title_movie",
+      "path": "/movie/603-the-matrix",
+      "weight": 1,
+      "client": "browser",
+      "expect": [
+        200
+      ],
+      "single": true
+    }
+  ]
+}

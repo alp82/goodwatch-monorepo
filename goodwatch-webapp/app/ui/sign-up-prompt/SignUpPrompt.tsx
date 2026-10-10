@@ -5,6 +5,7 @@ import { useAuthHref } from "~/utils/auth-href"
 import {
 	SIGN_UP_MESSAGES,
 	type SignUpFeature,
+	type SignUpMessage,
 	type SignUpStage,
 } from "./messages"
 
@@ -17,6 +18,8 @@ interface SignUpPromptProps {
 	/** inline next to a control, a chip in a menu, a card in a sheet. */
 	size?: SignUpPromptSize
 	className?: string
+	/** The words of a page that is not a taste feature, in place of the feature's message. */
+	words?: SignUpMessage
 }
 
 /**
@@ -27,12 +30,13 @@ export function SignUpPrompt({
 	stage = "learn",
 	size = "inline",
 	className = "",
+	words,
 }: SignUpPromptProps) {
 	const { user } = useUser()
 	// Sign-up and sign-in bring the person back to the page they're on. Guest progress transfers as usual.
 	const authHref = useAuthHref()
 	if (user) return null
-	const message = SIGN_UP_MESSAGES[feature][stage]
+	const message = words ?? SIGN_UP_MESSAGES[feature][stage]
 	const signUp = authHref("sign-up")
 
 	if (size === "chip")

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { fetch } from "undici";
+import { withBackendTimeout } from "../../utils/backend-timeout.ts";
 import {
 	blend,
 	titleMatch,
@@ -44,6 +45,7 @@ import {
 	type PreparedSearch,
 	prepareSearch,
 } from "../search-ranking/rank-search.server";
+import { readingsConfigured } from "../search-runtime/limits.server";
 import { HEAD_LENGTH } from "../search-ranking/ranking.server";
 import { ELIGIBLE_VOTES } from "../search-ranking/search-filter.server";
 import {
@@ -55,13 +57,17 @@ import {
 	readPeople,
 	startPeopleIndex,
 } from "../search-people/people.server";
+import { runsSearch } from "../role.server";
 
-// The ranking's index and query models load at server start.
-startSearchRanking();
-// The names a search can find inside a phrase load at server start too.
-startPeopleIndex();
-// The connections to TypeSafe stay open between searches.
-keepJevConnectionsWarm();
+// A page instance loads none of it (see role.server.ts).
+if (runsSearch()) {
+	// The index loads at server start; query models load only when the storage key allows readings.
+	startSearchRanking({ queryModels: readingsConfigured() });
+	// The names a search can find inside a phrase load at server start too.
+	startPeopleIndex();
+	// The connections to TypeSafe stay open between searches.
+	keepJevConnectionsWarm();
+}
 
 export interface SearchBatch {
 	q: string;
@@ -85,6 +91,7 @@ const TITLE_ENTRIES = 200;
 interface TitleLookup {
 	titles: Title[];
 	people: LookupPerson[];
+	complete: boolean;
 }
 const titleCache = new Map<string, { at: number; value: TitleLookup }>();
 const titleFlights = new Map<string, Promise<TitleLookup>>();
@@ -109,7 +116,8 @@ function titles(
 		// The shared lookup ignores caller signals: one caller leaving must not fail
 		// the others. Only successes are kept; failures are retried by the next call.
 		flight = lookupTitles(q, policy).then((value) => {
-			titleCache.set(key, { at: Date.now(), value });
+			// A timed-out optional page must not turn a partial result into a ten-minute cache hit.
+			if (value.complete) titleCache.set(key, { at: Date.now(), value });
 			while (titleCache.size > TITLE_ENTRIES)
 				titleCache.delete(titleCache.keys().next().value as string);
 			return value;
@@ -134,7 +142,7 @@ async function lookupTitles(
 	q: string,
 	policy: Eligibility,
 ): Promise<TitleLookup> {
-	const page = async (n: number) => {
+	const page = async (n: number, signal = AbortSignal.timeout(8000)) => {
 		const params = new URLSearchParams({
 			api_key: process.env.TMDB_API_KEY || "",
 			query: q,
@@ -144,7 +152,7 @@ async function lookupTitles(
 		});
 		const response = await fetch(
 			`https://api.themoviedb.org/3/search/multi?${params}`,
-			{ signal: AbortSignal.timeout(8000) },
+			{ signal },
 		);
 		if (!response.ok) throw new Error("Title lookup unavailable");
 		return response.json() as Promise<{
@@ -181,13 +189,19 @@ async function lookupTitles(
 	const rest = await Promise.all(
 		Array.from(
 			{ length: Math.max(0, Math.min(5, first.total_pages || 1) - 1) },
-			(_, i) => page(i + 2),
+			// Page one contains the best title/name matches. Additional pages may enrich it, but must not
+			// hold those matches behind a slow remote response. Cover body decoding as well as headers.
+			(_, i) => withBackendTimeout(
+				"TMDB", 200,
+				(signal) => page(i + 2, signal),
+			).catch(() => null),
 		),
 	);
 	const results = [first, ...rest]
-		.flatMap((p) => p.results || [])
+		.flatMap((p) => p?.results || [])
 		.filter((r) => policy.includeAdult || r.adult !== true);
 	return {
+		complete: rest.every((p) => p !== null),
 		titles: results
 			.filter((r) => r.media_type === "movie" || r.media_type === "tv")
 			.map((r) => ({
@@ -325,7 +339,7 @@ async function rankedList(
 	readText: string,
 	readings: Parameters<typeof readingFields>[1],
 	policy: Eligibility,
-	// Started before the reading: the title matches with their catalog rows, and the ranking's prepared part.
+	// Title matches start early; the prepared part starts only when a fresh reading is claimed.
 	early: {
 		titles: Promise<TitleMatches>;
 		prepared?: Promise<PreparedSearch>;
@@ -519,23 +533,27 @@ export async function combinedSearch(
 	chargedNano += language.chargedNano;
 	// Jev reads the normalized text, so the reading and its cache entry don't depend on case or spacing.
 	const readText = readingText(language.text);
-	// Work that needs no reading starts now and runs while Jev reads: the title matches' catalog rows, and the
-	// ranking's prepared part (references, the texts known without the reading, the reference's vectors). Skipped
-	// when the ranking can't serve anyway. Failures surface in rankedList, which then falls back as before.
-	const early = {
+	// Title matches load now. Preparation waits until a fresh reading is claimed, so basic searches save encoder CPU.
+	// The fresh reading's call takes about 300 ms at p50, enough for preparation to fit inside it. A cached reading
+	// prepares after the cache lookup instead of alongside it, through rankSearch when prepared is undefined.
+	const early: {
+		titles: ReturnType<typeof titleMatches>;
+		prepared?: Promise<PreparedSearch>;
+	} = {
 		titles: titleMatches(titlePromise, policy),
-		prepared: servingFallback({ hasReading: true })
-			? undefined
-			: prepareSearch({
-					query: q,
-					text: language.text,
-					nonEnglish: language.policy.mode !== "english",
-				}),
 	};
 	early.titles.catch(() => {});
-	early.prepared?.catch(() => {});
 	const readingSteps: Record<string, number> = {};
 	const outcome: JevOutcome = await runJevStage({
+		onClaimed: () => {
+			if (servingFallback({ hasReading: true })) return;
+			early.prepared = prepareSearch({
+				query: q,
+				text: language.text,
+				nonEnglish: language.policy.mode !== "english",
+			});
+			early.prepared.catch(() => {});
+		},
 		timings: readingSteps,
 		requestText: readingText(q),
 		questionVersion: "accepted-d4-corrected-v1",

@@ -7,7 +7,7 @@
 //   counts, leads, or waits. The browser gate's decision is taken again here with the gate's own function, whatever
 //   order the wrappers run in: a request that the gate answers is passed on untouched.
 // - Key: build commit, Host, path and query without tracking parameters, the cache identity (`anon;US;en`), and
-//   whether a front cache named that identity (the two differ in `Cache-Control` and `Vary`).
+//   whether a front cache named that identity (the two differ in `Cache-Control` and `Vary`), and the asset address.
 // - What is stored: a 200 document that `applyCachePolicy` called `keyed` or `shared`, without `Set-Cookie` and without
 //   a render error, on its second request within a minute. The page's own `Cache-Control` decides: a private route
 //   (search, an unlisted share list) and an incomplete page (`no-store`, see incomplete-page.ts) are never stored.
@@ -37,6 +37,7 @@ import { subscribe } from "node:diagnostics_channel"
 import type { IncomingMessage, Server, ServerResponse } from "node:http"
 import { promisify } from "node:util"
 import { constants, brotliCompress, gunzip, gzip } from "node:zlib"
+import { currentAssetBase } from "./asset-address.server.ts"
 import { gateAnswer } from "./browser-gate.server.ts"
 import {
 	type CacheDecision,
@@ -127,6 +128,7 @@ type KeyInput = {
 	identityHeader?: string | null
 	userAgent?: string
 	build?: string
+	assets?: string
 }
 type PageKey = { key: string; path: string }
 export function pageCacheKey(
@@ -160,7 +162,7 @@ export function pageCacheKey(
 	const identity = cacheIdentityOf({ ...input, method })
 	if (!identity.cacheable) return { bypass: "member", path }
 	return {
-		key: `${input.build ?? (process.env.SOURCE_COMMIT || "unknown")}|${(input.host ?? "").toLowerCase()}|${normalizePageUrl(url)}|${identity.key}|${identity.keyFromCache ? "h" : "a"}`,
+		key: `${input.build ?? (process.env.SOURCE_COMMIT || "unknown")}|${(input.host ?? "").toLowerCase()}|${normalizePageUrl(url)}|${identity.key}|${identity.keyFromCache ? "h" : "a"}|${input.assets ?? currentAssetBase()}`,
 		path,
 	}
 }
@@ -227,6 +229,7 @@ type Flight = PageKey & {
 	timer?: ReturnType<typeof setTimeout>
 }
 export type PageCacheOptions = {
+	assets?: () => string
 	now?: () => number
 	compress?: (html: Buffer) => Promise<{ br: Buffer; gzip: Buffer }>
 	render?: (request: Request) => Promise<{ status: number }>
@@ -504,6 +507,7 @@ export function createPageCache(options: PageCacheOptions = {}) {
 		let page: ReturnType<typeof pageCacheKey> = null
 		try {
 			page = pageCacheKey({
+				assets: options.assets?.(),
 				method: request.method,
 				url: request.url ?? "/",
 				host: request.headers.host,
@@ -699,7 +703,10 @@ export function createPageCache(options: PageCacheOptions = {}) {
 			return null
 		let page: ReturnType<typeof pageCacheKey> = null
 		try {
-			page = pageCacheKey(fromRequest(request))
+			page = pageCacheKey({
+				...fromRequest(request),
+				assets: options.assets?.(),
+			})
 		} catch {
 			// Not a URL this cache can key.
 		}

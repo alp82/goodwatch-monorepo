@@ -78,6 +78,8 @@ const browserUA = env(
 // The recognizable token is sufficient for isbot; no external URL is needed.
 const botUA = env("BOT_UA", "facebookexternalhit/1.1");
 const set = JSON.parse(open(env("URLS_FILE", "/work/urls.json")));
+const staticUrl = set.static_url;
+if (staticUrl && !/^https?:\/\/[^/?#@]+$/.test(staticUrl)) throw new Error("static_url must be an HTTP(S) origin");
 let totalWeight = 0;
 const entries = set.entries.flatMap((entry) => {
   let missing = false;
@@ -95,15 +97,22 @@ const entries = set.entries.flatMap((entry) => {
     throw new Error("Invalid URL entry");
   totalWeight += Number(entry.weight);
   const view = pageViews && entry.client === "browser" && entry.view ? entry.view : null;
+  if (view) {
+    for (const r of [...view.requests, ...view.side.flatMap((group) => group.requests)]) {
+      if (!["site", "static"].includes(r.host) || (r.host === "static" && !staticUrl) || !/^\/(?!\/)/.test(r.path) || /[\s\\#]/.test(r.path)) throw new Error(`Invalid page-view request for ${entry.route}`);
+    }
+    for (const group of view.side) if (!group.requests.length || group.requests.some((r) => r.host !== group.host)) throw new Error(`Invalid side group for ${entry.route}`);
+  }
   return [{ ...entry, path, expect: entry.expect || [200], cumulative: totalWeight, view }];
 });
 if (!entries.length) throw new Error("URL set is empty");
-// Requests that a browser sends on a second connection (the web app manifest, which Chrome fetches without
-// credentials). One virtual user has one connection, so a second scenario sends them at the same rate.
-let sideWeight = 0;
-const sideEntries = entries
-  .filter((entry) => entry.view?.side?.length)
-  .map((entry) => ({ ...entry, sideCumulative: (sideWeight += Number(entry.weight)) }));
+// Each captured side connection has a scenario. Only entries with that group contribute to its rate.
+const sideGroups = Array.from({ length: Math.max(...entries.map((entry) => entry.view?.side.length || 0)) }, (_, index) => {
+  let weight = 0;
+  const selected = entries.filter((entry) => entry.view?.side.length > index)
+    .map((entry) => ({ ...entry, sideCumulative: (weight += Number(entry.weight)) }));
+  return { entries: selected, weight, share: weight / totalWeight };
+});
 const routes = [...new Set(entries.map((e) => e.route))].sort();
 const responseBytes = new Trend("response_bytes");
 const statuses = Object.fromEntries(["2xx", "3xx", "4xx", "5xx", "0"].map((s) => [s, new Counter(`status_${s}`)]));
@@ -131,7 +140,16 @@ function metrics(selector) {
   for (const status of Object.keys(statuses)) thresholds[`status_${status}{${selector}}`] = ["count>=0"];
   thresholds[`status_busy{${selector}}`] = ["count>=0"];
 }
+function hostMetrics(selector) {
+  for (const host of ["site", "static"]) {
+    const tags = `${selector},host:${host}`;
+    for (const name of ["http_reqs", "tls_handshakes"]) thresholds[`${name}{${tags}}`] = ["count>=0"];
+    for (const name of ["http_req_duration", "http_req_waiting"]) thresholds[`${name}{${tags}}`] = ["max>=0"];
+    thresholds[`http_req_failed{${tags}}`] = ["rate>=0"];
+  }
+}
 metrics("phase:main");
+if (pageViews) hostMetrics("phase:main");
 for (const route of routes) metrics(`phase:main,route:${route}`);
 const delay = env("ABORT_DELAY", "10s");
 for (const step of steps) {
@@ -144,6 +162,7 @@ for (const step of steps) {
     { threshold: `p(95)<${number("ABORT_P95_MS", 3000)}`, abortOnFail: true, delayAbortEval: delay },
   ];
   if (!pageViews) continue;
+  hostMetrics(selector);
   // A page view fails when any of its requests fails. The whole page view has its own, longer limit.
   thresholds[`page_view_failed{${selector}}`] = [
     { threshold: `rate<${number("ABORT_ERROR_RATE", 0.02)}`, abortOnFail: true, delayAbortEval: delay },
@@ -183,7 +202,7 @@ const preVUs = number("PRE_VUS", Math.max(20, max), 1),
   maxVUs = number("MAX_VUS", Math.max(50, max * 4), 1);
 // The side scenario follows the same stages at the share of visitors that have side requests. Rates are scaled
 // by 100 so that a share such as 0.9 stays exact.
-const sideShare = pageViews && sideEntries.length ? sideWeight / totalWeight : 0;
+const sideShare = sideGroups[0]?.share || 0;
 export const options = {
   scenarios: {
     load: {
@@ -195,20 +214,17 @@ export const options = {
       maxVUs,
       gracefulStop: "0s",
     },
-    ...(sideShare
-      ? {
-          side: {
-            executor: "ramping-arrival-rate",
-            exec: "side",
-            startRate: Math.round(rates[0] * sideShare * 100),
-            timeUnit: "100s",
-            stages: stages.map((stage) => ({ ...stage, target: Math.round(stage.target * sideShare * 100) })),
-            preAllocatedVUs: Math.max(5, Math.ceil(preVUs / 4)),
-            maxVUs,
-            gracefulStop: "0s",
-          },
-        }
-      : {}),
+    ...Object.fromEntries(sideGroups.map((group, index) => [index === 0 ? "side" : `side_${index + 1}`, {
+      executor: "ramping-arrival-rate",
+      exec: "side",
+      env: { SIDE_GROUP: String(index) },
+      startRate: Math.round(rates[0] * group.share * 100),
+      timeUnit: "100s",
+      stages: stages.map((stage) => ({ ...stage, target: Math.round(stage.target * group.share * 100) })),
+      preAllocatedVUs: Math.max(5, Math.ceil(preVUs / 4)),
+      maxVUs,
+      gracefulStop: "0s",
+    }])),
   },
   ...(connections === "new" ? { noVUConnectionReuse: true } : {}),
   // A browser sends a page's requests at once over one HTTP/2 connection. k6's default is 6 at a time per host.
@@ -240,7 +256,7 @@ function request(entry, phase, step, id, index) {
   )
     path += `${path.includes("?") ? "&" : "?"}_cb=${id}`;
   Object.assign(headers, identityHeader(entry.path, index));
-  const tags = { route: entry.route, client: entry.client, step, phase, name: entry.route };
+  const tags = { route: entry.route, client: entry.client, step, phase, name: entry.route, host: "site" };
   // Disable the cookie jar so Set-Cookie cannot affect later browser or bot requests.
   const response = http.get(target + path, {
     headers,
@@ -258,10 +274,10 @@ function request(entry, phase, step, id, index) {
 }
 // One visitor of the page-view scenario. Its requests share one cookie jar, so a cookie that the proxy sets with the
 // document (the balanced route's instance cookie) comes back with the page's files, as in a browser.
-function send(method, path, body, kind, entry, tags, jar, extraHeaders) {
+function send(method, path, body, kind, entry, tags, jar, extraHeaders, host = "site") {
   return {
     method,
-    url: target + path,
+    url: (host === "static" ? staticUrl : target) + path,
     body: body ?? null,
     params: {
       headers: {
@@ -271,13 +287,32 @@ function send(method, path, body, kind, entry, tags, jar, extraHeaders) {
         ...(body ? { "Content-Type": "application/json" } : {}),
         ...extraHeaders,
       },
-      tags: { ...tags, kind },
+      tags: { ...tags, kind, host },
       redirects: 0,
       timeout: env("REQUEST_TIMEOUT", "30s"),
-      jar,
+      // A separate empty jar also prevents cookies crossing between loopback ports or sibling domains.
+      jar: host === "static" ? new http.CookieJar() : jar,
       responseCallback: http.expectedStatuses(...(kind === "document" || kind === "single" ? entry.expect : [200])),
     },
   };
+}
+// Go's HTTP client dials one connection for every request that finds none open, so a batch to a host without a
+// connection opens as many connections as it has requests (measured: 36 per movie page view instead of 4). A browser
+// opens one and sends the rest over it. So the first request to each host that has no connection yet goes out alone.
+function batchOnOpenConnections(batch, open) {
+  const responses = new Array(batch.length);
+  const rest = [];
+  for (let i = 0; i < batch.length; i++) {
+    const host = batch[i].params.tags.host;
+    if (open.has(host)) rest.push(i);
+    else {
+      open.add(host);
+      responses[i] = http.request(batch[i].method, batch[i].url, batch[i].body, batch[i].params);
+    }
+  }
+  const answers = rest.length ? http.batch(rest.map((i) => batch[i])) : [];
+  for (let n = 0; n < rest.length; n++) responses[rest[n]] = answers[n];
+  return responses;
 }
 function record(response, tags, kind, expect) {
   const status = response.status >= 200 && response.status < 600 ? `${Math.floor(response.status / 100)}xx` : "0";
@@ -296,7 +331,7 @@ function identityHeader(path, index) {
   return identities.length && isPage(path) ? { "GW-Cache-Identity": identities[index % identities.length] } : {};
 }
 function visit(entry, phase, step, index) {
-  const tags = { route: entry.route, client: entry.client, step, phase, name: entry.route };
+  const tags = { route: entry.route, client: entry.client, step, phase, name: entry.route, host: "site" };
   const jar = new http.CookieJar();
   if (entry.client === "browser" && cookie) for (const pair of cookie.split(/;\s*/)) {
     const at = pair.indexOf("=");
@@ -308,9 +343,9 @@ function visit(entry, phase, step, index) {
   const document = http.request(first.method, first.url, first.body, first.params);
   let ok = record(document, tags, kind, entry.expect);
   if (entry.view && ok && entry.view.requests.length) {
-    const batch = entry.view.requests.map((r) => send(r.method, r.path, r.body, r.method === "GET" && !r.path.startsWith("/api/") ? "asset" : "api", entry, tags, jar));
-    const responses = http.batch(batch);
-    for (let i = 0; i < responses.length; i++) if (!record(responses[i], tags, batch[i].params.tags.kind, [200])) ok = false;
+    const batch = entry.view.requests.map((r) => send(r.method, r.path, r.body, r.method === "GET" && !r.path.startsWith("/api/") ? "asset" : "api", entry, tags, jar, undefined, r.host));
+    const responses = batchOnOpenConnections(batch, new Set(["site"]));
+    for (let i = 0; i < responses.length; i++) if (!record(responses[i], batch[i].params.tags, batch[i].params.tags.kind, [200])) ok = false;
   }
   if (phase !== "main") return { document, ok };
   const sliced = sliceSeconds ? { ...tags, slice: sliceName((started - exec.scenario.startTime) / 1000) } : tags;
@@ -328,12 +363,15 @@ function currentStep() {
   return (steps.find((s) => seconds < s.end_s) || steps[steps.length - 1]).name;
 }
 export function side() {
-  const pick = Math.random() * sideWeight;
-  const entry = sideEntries.find((e) => pick < e.sideCumulative);
+  const index = Number(env("SIDE_GROUP", "0"));
+  const group = sideGroups[index];
+  const pick = Math.random() * group.weight;
+  const entry = group.entries.find((e) => pick < e.sideCumulative);
   const tags = { route: entry.route, client: entry.client, step: currentStep(), phase: "main", name: entry.route };
   const jar = new http.CookieJar();
-  const batch = entry.view.side.map((r) => send(r.method, r.path, r.body, "side", entry, tags, jar));
-  for (const response of http.batch(batch)) record(response, tags, "side", [200]);
+  const batch = entry.view.side[index].requests.map((r) => send(r.method, r.path, r.body, "side", entry, tags, jar, undefined, r.host));
+  const responses = batchOnOpenConnections(batch, new Set());
+  for (let i = 0; i < responses.length; i++) record(responses[i], batch[i].params.tags, "side", [200]);
 }
 export function setup() {
   if (pageViews) {
@@ -369,10 +407,10 @@ export function setup() {
           };
         if (cache === "warm" && isPage(entry.path) && response.headers["Gw-Page-Cache"] !== "hit") notWarm.push(entry.route);
       }
-      for (const r of entry.view?.side || []) {
-        if (seen.has(`side:${r.path}`)) continue;
-        seen.add(`side:${r.path}`);
-        const q = send(r.method, r.path, r.body, "side", entry, { phase: "prewarm", step: "prewarm", route: entry.route, name: entry.route }, new http.CookieJar());
+      for (const group of entry.view?.side || []) for (const r of group.requests) {
+        if (seen.has(`side:${group.host}:${entry.view.side.indexOf(group)}:${r.path}`)) continue;
+        seen.add(`side:${group.host}:${entry.view.side.indexOf(group)}:${r.path}`);
+        const q = send(r.method, r.path, r.body, "side", entry, { phase: "prewarm", step: "prewarm", route: entry.route, name: entry.route }, new http.CookieJar(), undefined, group.host);
         const response = http.request(q.method, q.url, q.body, q.params);
         if (response.status !== 200) throw new Error(`Prewarm: a file of ${entry.route} answered ${response.status}`);
       }
@@ -405,6 +443,7 @@ export function handleSummary(data) {
     connections,
     cache_identity: identities,
     side_share: sideShare,
+    side_shares: sideGroups.map((group) => group.share),
     slice_seconds: sliceSeconds,
     target_url: target,
     resolve_ip: env("RESOLVE_IP", ""),

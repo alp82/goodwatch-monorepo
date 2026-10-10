@@ -243,7 +243,7 @@ export async function getWatchNext2(request: Request): Promise<LoaderData> {
 		// The most recent 400 scores are plenty for a taste vector.
 		const scored = Object.entries(data.scores).sort((a, b) => new Date(b[1].updatedAt).getTime() - new Date(a[1].updatedAt).getTime())
 		for (const [mk, v] of scored) ratings[k(mk)] = Number(v.score)
-		seen = [...new Set([...Object.keys(data.watched).map(k), ...Object.keys(data.skipped).map(k), ...Object.keys(ratings)])]
+		seen = [...new Set([...Object.keys(data.watchState).map(k), ...Object.keys(data.skipped).map(k), ...Object.keys(ratings)])]
 		const missing = (keys: string[], type: Type) => keys.filter((x) => x.startsWith(`${type}:`) && !byKey.has(x)).map((x) => Number(x.split(":")[1]))
 		const need = [...wishlist.map((w) => w.key), ...scored.slice(0, 400).map(([mk]) => k(mk))]
 		const [m, s] = await Promise.all((["movie", "show"] as const).map((type) => loadByIds(type, missing(need, type))))

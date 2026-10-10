@@ -125,6 +125,7 @@ Why Valkey, and not a request to the other instance or the previous build's file
 - It works in both directions. The old instance serves the new build's files, which an image with the previous build's files can't do.
 - It works for more than two instances, and for the two containers of one host during the switch.
 - If static files move to a file server or a CDN later ([Decide where static assets are served from](https://github.com/alp82/goodwatch-monorepo/issues/310)), the store does no harm: a CDN that fetches from the instances without a cookie needs exactly this, and with a shared directory the lookups just stop happening.
+- The static hostname relies on it ([static-assets.md](static-assets.md)): the CDN asks either instance for a build file, and in automatic mode a new process probes the static hostname for a file of its own build only after it has published.
 
 What it doesn't cover:
 

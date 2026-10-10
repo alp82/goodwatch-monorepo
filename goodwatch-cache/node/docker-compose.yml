@@ -1,0 +1,49 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "10"
+
+# One Valkey cluster node on a host that joins the cluster later (docs/redis-add-node.md).
+# cache1 to cache3 keep main/ and replica/. This file differs from them in two points:
+# - REDIS_MAXMEMORY is required and overrides the 7gb in valkey.conf, because a node's
+#   memory limit isn't propagated by the cluster and an added host can be smaller.
+# - cluster-allow-replica-migration is off. With the default, a master that gives away its
+#   last slot turns itself into a replica of the node that took it and copies that node's
+#   whole data set, whatever its own memory limit is.
+# Nothing here creates or joins a cluster: the node starts blank and the runbook joins it.
+services:
+  redis-node:
+    image: valkey/valkey:8.1.10@sha256:640c5e62cea04b6d6f2084232651d0cc70362d31f4f805e7be94dbed6855e8f2
+    restart: unless-stopped
+    # The same user as on cache1 to cache3, so that data files have one owner everywhere.
+    # A new volume is writable for it: the image's /data has mode 1777.
+    user: "1001:0"
+    # A shutdown writes an RDB file first (about 30 seconds for 5 GB).
+    stop_grace_period: 5m
+    volumes:
+      - redis-data:/data
+      - ../valkey.conf:/etc/valkey/valkey.conf:ro
+    network_mode: host
+    environment:
+      - 'REDIS_PRIVATE_IP=${REDIS_PRIVATE_IP:?Set the node private address (10.0.0.x)}'
+      - 'REDIS_PASSWORD=${REDIS_PASSWORD:?Set the cluster password}'
+      - 'REDIS_MAXMEMORY=${REDIS_MAXMEMORY:?Set the node memory limit, for example 2gb}'
+    logging: *default-logging
+    # The shell reads the values from the container's environment ($$ keeps Compose from
+    # expanding them), so the password isn't in the command. Arguments after the config
+    # file override the file.
+    command:
+      - sh
+      - -c
+      - >-
+        exec valkey-server /etc/valkey/valkey.conf
+        --cluster-announce-ip "$$REDIS_PRIVATE_IP"
+        --requirepass "$$REDIS_PASSWORD"
+        --masterauth "$$REDIS_PASSWORD"
+        --maxmemory "$$REDIS_MAXMEMORY"
+        --cluster-allow-replica-migration no
+
+volumes:
+  redis-data:
+    driver: local

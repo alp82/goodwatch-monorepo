@@ -99,7 +99,7 @@ async function memberPortrait(
 ): Promise<PortraitView> {
 	const readFrom = Date.now()
 	const ctx = await who.context()
-	const hiddenKey = [...ctx.notInterested].sort().join(",")
+	const hiddenKey = [...ctx.hidden].sort().join(",")
 	const cached = await readCachedPortrait(userId, tab, hiddenKey)
 	if (cached) return cached
 	const taste = await loadTaste(who.viewer)
@@ -158,7 +158,7 @@ async function guestPortrait(
 					[...ctx.seen].sort(),
 					[...ctx.wishlist.keys()].sort(),
 					[...ctx.skipped].sort(),
-					[...ctx.notInterested].sort(),
+					[...ctx.hidden].sort(),
 				]),
 			)
 			.digest("base64url")
@@ -169,7 +169,7 @@ async function guestPortrait(
 	}
 	// The sample taste is fixed; its suggestions also respect the guest's hidden titles.
 	return keep(
-		`sample:${snapshot.version}:${tab}:${where.join(":")}:${[...ctx.notInterested].sort().join(",")}`,
+		`sample:${snapshot.version}:${tab}:${where.join(":")}:${[...ctx.hidden].sort().join(",")}`,
 		SAMPLE_KEEP_MS,
 		async () => {
 			const sample = sampleContext(ctx)
@@ -236,7 +236,7 @@ function inputOf(
 		chosen: ctx.seen,
 		wantToSee: new Set(ctx.wishlist.keys()),
 		skipped: ctx.skipped,
-		notInterested: ctx.notInterested,
+		notInterested: ctx.hidden,
 		country: ctx.country,
 		services: ctx.services,
 		taste,

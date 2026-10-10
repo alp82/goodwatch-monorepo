@@ -6,11 +6,12 @@ import { compareRun, compareSurface, extractMetrics, formatReport, lcpElement, l
 const request = (url, resourceType, transferSize) => ({ url, resourceType, transferSize, finished: true, statusCode: 200 });
 
 /** A Lighthouse report with the parts the budget reads. */
-function report({ lcp = 3000, tbt = 300, cls = 0, score = 0.7, extra = [], snippet = '<img fetchpriority="high" src="https://images.example/t/w780/a.jpg">' } = {}) {
+function report({ lcp = 3000, tbt = 300, cls = 0, score = 0.7, slowdown = 2.7, extra = [], snippet = '<img fetchpriority="high" src="https://images.example/t/w780/a.jpg">' } = {}) {
   return {
     finalDisplayedUrl: "https://site.example/movie/1",
     mainDocumentUrl: "https://site.example/movie/1",
     environment: { benchmarkIndex: 1100 },
+    configSettings: { throttling: { cpuSlowdownMultiplier: slowdown } },
     categories: { performance: { score } },
     audits: {
       "largest-contentful-paint": { numericValue: lcp },
@@ -128,6 +129,21 @@ test("a regression fails its line: one more script, a second font, a slower LCP"
   assert.deepEqual(Object.fromEntries(surfaces.movie.lines.map((line) => [line.key, line.pass])), { lcp_ms: false, script_count: false, font_requests: false, lcp_element: true });
 });
 
+test("reports with another CPU slowdown than the budget's fail the time lines only", () => {
+  const surfaces = { movie: { path: "/movie/1", budget: { lcp_ms: { max: 3500 }, tbt_ms: { max: 400 }, score: { min: 60 }, script_count: { max: 2 }, cls: { max: 0.01 } } } };
+  const same = compareRun({ cpu_slowdown: 2.7, surfaces }, { movie: [report(), report()] });
+  assert.equal(same.pass, true);
+  assert.equal(same.surfaces.movie.measured.cpu_slowdown, 2.7);
+  // One report of the old setting among them is enough: the median would mix two scales.
+  const mixed = compareRun({ cpu_slowdown: 2.7, surfaces }, { movie: [report(), report({ slowdown: 4 }), report()] });
+  assert.equal(mixed.pass, false);
+  assert.deepEqual(Object.fromEntries(mixed.surfaces.movie.lines.map((line) => [line.key, line.pass])), { lcp_ms: false, tbt_ms: false, score: false, script_count: true, cls: true });
+  assert.deepEqual(mixed.surfaces.movie.slowdown_mismatch, { expected: 2.7, found: [4] });
+  assert.match(formatReport(mixed), /CPU slowdown 2\.7 and 4 where the budget is calibrated for 2\.7/);
+  // A budget file without the setting compares as before.
+  assert.equal(compareRun({ surfaces }, { movie: [report({ slowdown: 4 })] }).pass, true);
+});
+
 test("the report names each line and never prints a URL", () => {
   const result = compareRun(budget, { movie: [report()], list: [report({ lcp: 9000, snippet: '<img src="https://site.example/u/someone/lists/1.png">' })] });
   for (const markdown of [false, true]) {
@@ -141,4 +157,61 @@ test("the report names each line and never prints a URL", () => {
 test("urlLines fills the share list path from the environment and refuses to run without it", () => {
   assert.deepEqual(urlLines(budget, "https://site.example/", { SHARE_LIST_PATH: "/u/x/lists/1" }), ["movie https://site.example/movie/1", "list https://site.example/u/x/lists/1"]);
   assert.throws(() => urlLines(budget, "https://site.example", {}), /needs SHARE_LIST_PATH/);
+});
+
+test("static files keep the combined request budget and exclude only the static origin from third parties", () => {
+  const lhr = report();
+  const items = lhr.audits["network-requests"].details.items;
+  for (const item of items) if (item.url.includes("/assets/")) item.url = item.url.replace("https://site.example", "https://static.example.com");
+  const original = extractMetrics(report());
+  assert.equal(original.origin_requests, 5);
+  assert.equal(original.static_requests, 0);
+  const without = extractMetrics(lhr);
+  assert.equal(without.host_requests, 1, "an unrelated hostname cannot be inferred");
+  assert.equal(without.third_party_origins, 2);
+  const explicit = extractMetrics(lhr, { staticOrigin: "https://static.example.com" });
+  assert.equal(explicit.host_requests, 5);
+  assert.equal(explicit.origin_requests, 1);
+  assert.equal(explicit.static_requests, 4);
+  assert.equal(explicit.third_party_origins, 1);
+  lhr.finalDisplayedUrl = lhr.mainDocumentUrl = "https://example.com/movie/1";
+  items[0].url = lhr.mainDocumentUrl;
+  assert.deepEqual(extractMetrics(lhr), explicit, "a script under assets on a site subdomain identifies the static origin");
+  items.push(request("https://site.example/assets/third.js", "Script", 1));
+  assert.equal(extractMetrics(lhr).third_party_origins, 2, "a further third party still counts");
+});
+
+test("host information lines print info, never fail, and support explicit limits later", () => {
+  const limits = { surfaces: { movie: { budget: { host_requests: { max: 5 }, third_party_origins: { max: 1 } } } } };
+  const result = compareRun(limits, { movie: [report()] }, { staticOrigin: "https://static.example.com" });
+  assert.equal(result.pass, true);
+  assert.deepEqual(result.surfaces.movie.lines.slice(1, 3), [
+    { key: "origin_requests", value: 5, info: true },
+    { key: "static_requests", value: 0, info: true },
+  ]);
+  for (const markdown of [false, true]) {
+    const text = formatReport(result, { markdown });
+    assert.match(text, /info/i);
+    assert.match(text, /Site and static host requests/);
+    assert.doesNotMatch(text, /FAIL/);
+  }
+  limits.surfaces.movie.budget.origin_requests = { max: 4 };
+  const limited = compareRun(limits, { movie: [report()] });
+  assert.equal(limited.pass, false);
+  assert.equal(limited.surfaces.movie.lines.find((line) => line.key === "origin_requests").info, undefined);
+  assert.equal(limited.surfaces.movie.lines.filter((line) => line.key === "origin_requests").length, 1);
+});
+
+test("compareRun passes the static setting on and keeps the existing combined limit", () => {
+  const limits = { surfaces: { movie: { budget: { host_requests: { max: 5 }, third_party_origins: { max: 1 } } } } };
+  const lhr = report();
+  for (const item of lhr.audits["network-requests"].details.items)
+    if (item.url.includes("/assets/")) item.url = item.url.replace("https://site.example", "https://static.example.com");
+  assert.equal(compareRun(limits, { movie: [lhr] }).pass, false);
+  const result = compareRun(limits, { movie: [lhr] }, { staticOrigin: "https://static.example.com" });
+  assert.equal(result.pass, true);
+  assert.equal(result.surfaces.movie.measured.host_requests, 5);
+  assert.equal(result.surfaces.movie.measured.static_requests, 4);
+  lhr.audits["network-requests"].details.items.push(request("https://static.example.com/assets/extra.js", "Script", 1));
+  assert.equal(compareRun(limits, { movie: [lhr] }, { staticOrigin: "https://static.example.com" }).pass, false);
 });

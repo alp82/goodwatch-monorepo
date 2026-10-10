@@ -10,7 +10,7 @@ import {
 	getStringValue,
 	type QdrantMediaPayload,
 } from "~/server/utils/recommend"
-import type { UserData, MediaKey } from "~/types/user-data"
+import { ACTED_ON, type UserData, type MediaKey } from "~/types/user-data"
 import type { Recommendation } from "~/ui/taste/types"
 
 export type DiscoveryResult = {
@@ -29,7 +29,7 @@ export async function getInterestDiscovery(
 ): Promise<DiscoveryResult> {
 	const excluded = [
 		...new Set(
-			["scores", "skipped", "watched", "wishlist", "notInterested"].flatMap((key) =>
+			ACTED_ON.flatMap((key) =>
 				Object.keys(data?.[key] || {}),
 			),
 		),

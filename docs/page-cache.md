@@ -7,6 +7,8 @@ front of the app must still do. The code is `goodwatch-webapp/app/server/page-ca
 [cache-identity.md](cache-identity.md). The measurements are in
 [viral-spike-page-cache.md](benchmarks/viral-spike-page-cache.md).
 
+Where this sits among the other parts that answer requests: [serving-architecture.md](serving-architecture.md).
+
 ## Why
 
 A page render costs 14 to 63 ms of the process's one main thread, so one process renders about 20 title pages per
@@ -47,7 +49,7 @@ A process that is shutting down answers hits and stale pages in the same way. Se
 
 ## Key
 
-`<build commit> | <Host> | <path and query without tracking parameters> | <identity> | <who named the identity>`
+`<build commit> | <Host> | <path and query without tracking parameters> | <identity> | <who named the identity> | <asset address>`
 
 - **Build commit:** `SOURCE_COMMIT`, which Coolify sets when it starts the container (see "The build's commit" in
   [webapp-deploys.md](webapp-deploys.md)). A deploy starts a new process with an empty cache. The commit is in the
@@ -59,6 +61,9 @@ A process that is shutting down answers hits and stale pages in the same way. Se
 - **Who named it:** a front cache with the `GW-Cache-Identity` header (the page is `shared`), or the app from
   `Accept-Language` (the page is `keyed` and stays `private, max-age=0`). The two are separate entries, because their
   `Cache-Control` and `Vary` differ.
+- **Asset address:** where the page's files are: empty for the site's own host, or the static hostname. An instance
+  that switches between the two doesn't serve a page that names the other one, and a render that was in flight
+  during the switch isn't stored. See [static-assets.md](static-assets.md).
 
 ### Tracking parameters
 

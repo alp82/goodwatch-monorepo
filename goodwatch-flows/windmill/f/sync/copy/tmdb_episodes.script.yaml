@@ -1,0 +1,26 @@
+summary: Copy TMDB episodes to CrateDB
+description: Bring the episode table in line with the seasons fetched since the last run
+lock: '!inline f/sync/copy/tmdb_episodes.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    tmdb_ids:
+      type: array
+      description: Copy only these shows and leave the checkpoint alone
+      default: []
+      items:
+        type: integer
+      originalType: integer[]
+    max_seconds:
+      type: integer
+      description: Stop taking new batches after this long
+      default: 240
+    recopy_all:
+      type: boolean
+      description: >-
+        After the normal copy, copy every fetched show once more from its stored seasons, continuing
+        where the last such run stopped. Fills a column added later; does nothing once it has finished
+      default: false
+  required: []

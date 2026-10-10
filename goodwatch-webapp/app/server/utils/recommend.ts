@@ -140,7 +140,7 @@ export async function searchByTaste<T>({
 
 // Helper function to fetch user's exclude items from CrateDB (only those with vectors in Qdrant)
 export async function getUserExcludeItems(userId: string): Promise<{ tmdb_id: number; media_type: string }[]> {
-	// Fetch all items to exclude: scored, skipped, watched, and wishlist
+	// Fetch all items to exclude: scored, skipped, in any watch state but Not started, and wishlist
 	// Only include items that have essence_tags (which means they have vectors in Qdrant)
 	const [notInterested, scored, skipped, watched, wishlist] = await Promise.all([
 		readNotInterested(userId),
@@ -163,13 +163,13 @@ export async function getUserExcludeItems(userId: string): Promise<{ tmdb_id: nu
 			WHERE us.user_id = ? AND s.essence_tags IS NOT NULL
 		`, [userId, userId]),
 		query<{ tmdb_id: number; media_type: string }>(`
-			SELECT uw.tmdb_id, uw.media_type FROM user_watch_history uw
+			SELECT uw.tmdb_id, uw.media_type FROM user_watch_state uw
 			INNER JOIN movie m ON uw.tmdb_id = m.tmdb_id AND uw.media_type = 'movie'
-			WHERE uw.user_id = ? AND m.essence_tags IS NOT NULL
+			WHERE uw.user_id = ? AND uw.state <> 'not_started' AND m.essence_tags IS NOT NULL
 			UNION ALL
-			SELECT uw.tmdb_id, uw.media_type FROM user_watch_history uw
+			SELECT uw.tmdb_id, uw.media_type FROM user_watch_state uw
 			INNER JOIN show s ON uw.tmdb_id = s.tmdb_id AND uw.media_type = 'show'
-			WHERE uw.user_id = ? AND s.essence_tags IS NOT NULL
+			WHERE uw.user_id = ? AND uw.state <> 'not_started' AND s.essence_tags IS NOT NULL
 		`, [userId, userId]),
 		query<{ tmdb_id: number; media_type: string }>(`
 			SELECT uw.tmdb_id, uw.media_type FROM user_wishlist uw

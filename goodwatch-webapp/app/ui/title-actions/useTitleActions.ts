@@ -2,9 +2,12 @@
 // that shows the title action set.
 import { useCallback } from "react"
 import { toast } from "react-toastify"
-import { useIsNotInterested, useIsOnWishlist, useIsWatched, useUserScore } from "~/hooks/useUserDataAccessors"
-import { useNotInterestedMutation, useWatchedMutation, useWishlistMutation } from "~/hooks/useUserDataMutations"
+import { useFeature } from "~/hooks/useFeature"
+import { useSeenToggle } from "~/hooks/useSeenToggle"
+import { useIsNotInterested, useIsOnWishlist, useUserScore } from "~/hooks/useUserDataAccessors"
+import { useNotInterestedMutation, useWishlistMutation } from "~/hooks/useUserDataMutations"
 import type { ScoredMedia } from "~/ui/user/actions/ScoreAction"
+import { pressSeen, warmWatchLog } from "~/ui/watch-log/WatchLogHost"
 
 export const SEEN_INSTRUCTIONS = "Your history shows every title you ever have watched."
 /** Why Not interested is off for a title the person has seen or scored. */
@@ -17,21 +20,33 @@ export function useTitleActions(media: ScoredMedia) {
 
 	const score = useUserScore(mediaType, tmdbId)?.score ?? null
 	const want = useIsOnWishlist(mediaType, tmdbId)
-	const seen = useIsWatched(mediaType, tmdbId)
+	// The Seen button shows the state Seen, which is what one more press takes back.
+	const { seen, tracked, watches, toggle, isPending: seenPending } = useSeenToggle(mediaType, tmdbId)
 	const hidden = useIsNotInterested(mediaType, tmdbId)
+	// The movie watch log (REC_TRACKING): the press goes to the log's host, which records a watch for now or, once the
+	// movie is Seen, opens the log. A show's button stays the toggle.
+	const logged = useFeature("tracking") && mediaType === "movie"
 
 	const { mutate: updateWishlist, isPending: wantPending } = useWishlistMutation()
-	const { mutate: updateWatched, isPending: seenPending } = useWatchedMutation()
 	const { mutate: updateNotInterested, isPending: hidePending } = useNotInterestedMutation()
 
 	const toggleWant = useCallback(
 		() => updateWishlist({ mediaType, tmdbId, action: want ? "remove" : "add" }),
 		[updateWishlist, mediaType, tmdbId, want],
 	)
-	/** Members only: wrap the button in UserAction so a guest gets the sign-in prompt instead. */
+	/**
+	 * Members only: wrap the button in UserAction so a guest gets the sign-in prompt instead. Answers whether the
+	 * press toggled Seen here. With the movie watch log it did not: the log's host takes the press and says what it
+	 * did. Pass the click, so the log opens beside the button.
+	 */
 	const toggleSeen = useCallback(
-		() => updateWatched({ mediaType, tmdbId, action: seen ? "remove" : "add" }),
-		[updateWatched, mediaType, tmdbId, seen],
+		(event?: { currentTarget: EventTarget | null }): boolean => {
+			if (!logged) return toggle()
+			const anchor = event?.currentTarget instanceof HTMLElement ? event.currentTarget : null
+			pressSeen({ movie: { tmdbId, title }, anchor, seen })
+			return false
+		},
+		[toggle, logged, tmdbId, title, seen],
 	)
 
 	const unhide = useCallback(
@@ -65,8 +80,23 @@ export function useTitleActions(media: ScoredMedia) {
 		want,
 		seen,
 		hidden,
-		/** Not interested means "haven't seen it, don't want to": not offered once the title is seen or scored. */
-		canHide: hidden || (!seen && score == null),
+		/**
+		 * Not interested means "haven't seen it, don't want to": offered only while the title is Not started and has
+		 * no score.
+		 */
+		canHide: hidden || (!tracked && score == null),
+		/**
+		 * What the Seen button gains with the movie watch log, to spread on it: the count from two watches on, that it
+		 * opens the log once the movie is Seen, and the fetch of the log's code when the pointer or the focus arrives.
+		 */
+		seenLog: logged
+			? {
+					count: watches >= 2 ? `${watches}×` : null,
+					opensLog: seen,
+					onPointerEnter: warmWatchLog,
+					onFocus: warmWatchLog,
+				}
+			: null,
 		toggleWant,
 		toggleSeen,
 		hide,

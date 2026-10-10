@@ -66,6 +66,7 @@ About the first one: It starts a Node HTTP stub bound to loopback, runs the pinn
 | `--raw` | Off | Save compressed k6 JSON time series for deeper analysis. |
 | `--yes-ramp-production` | Off | Required for every ramp. |
 | `--scenario requests\|page-view` | `requests` | `requests`: one iteration sends one request. `page-view`: one iteration is one visitor with a whole page view. |
+| `--files page\|origin` | `page` | Page-view scenario only. Follow the captured static hostname, or send its files to the site. Also set with `PAGE_FILES`. |
 | `--connections new\|reuse` | `reuse`, and `new` for page views | `new`: every iteration opens its own connection with a full TLS handshake. |
 | `--identity VALUE` | None, and `anon;US;en` for page views | The `GW-Cache-Identity` header for page requests. Several values separated by `\|` rotate. |
 | `--page-assets FILE` | None | Reuse the `page-view-capture.json` of an earlier run of the same deploy instead of capturing again. |
@@ -87,14 +88,22 @@ Set `PRE_VUS` and `MAX_VUS` to override the default allocation of `max(20, RATE_
 
 In this scenario the rates are **visitors per second**, and the summary reports page views per second. One iteration is one first-time visitor:
 
-1. **A new connection.** With `--connections new` (the default here), k6 closes the visitor's connection after the iteration (`noVUConnectionReuse`). The next visitor does a full TLS handshake: k6 keeps no TLS session cache, so no session is resumed. All requests of one visitor share the connection over HTTP/2, as in a browser.
+1. **A new connection.** With `--connections new` (the default here), k6 closes the visitor's connection after the iteration (`noVUConnectionReuse`). The next visitor does a full TLS handshake: k6 keeps no TLS session cache, so no session is resumed. Requests on each host share a connection over HTTP/2. Further captured connections use side groups.
 2. **The document,** with `GW-Cache-Identity: anon;US;en` (`--identity`), as a cache in front of the app would send it (see [`docs/cache-identity.md`](../docs/cache-identity.md)). The app then answers with the shared policy. Only page requests get the header: files, images, and API requests don't.
-3. **Everything else the page loads from its own origin,** at once: scripts, styles, fonts, images, and API requests. A new visitor has an empty browser cache, so nothing is skipped.
-4. **Requests on a second connection.** Chrome fetches the web app manifest without credentials, on its own connection with its own handshake. One k6 virtual user has one connection, so a second k6 scenario (`side`) sends those requests at the same rate, each on a new connection.
+3. **Everything else the page loads from the site and static hostname,** at once: scripts, styles, fonts, images, and API requests. A new visitor has an empty browser cache, so nothing is skipped. The first request to a host without an open connection goes out alone and the rest follow as one batch: k6 would otherwise open one connection per request of the batch.
+4. **Requests on a second connection.** Chrome fetches the web app manifest without credentials, on its own connection with its own handshake. One k6 virtual user has one connection per host, so another k6 scenario (`side`) sends those requests at the same rate, each on a new connection. Further groups use `side_2`, `side_3`, and so on. Each group runs at the weighted share of visitors that have it.
 
-A `bot` entry and a `browser` entry with `"single": true` send their one request, on their own connection. `urls/handshake.json` is one such entry (`/health/live`): it measures new TLS connections alone.
+A `bot` entry and a `browser` entry with `"single": true` send their one request, on their own connection. `urls/handshake.json` is one such entry (`/health/live`): it measures new TLS connections alone. `urls/movie-document.json` and `urls/hot-documents.json` are the movie page and the `hot` mix with every page as its document alone: what the origin answers itself while the static hostname serves the files.
 
 **Where the list of requests comes from.** File names change with every build, so the list is read at the start of every run. The launcher starts headless Chromium (in the Lighthouse image, on the generator), loads each browser path of the URL set once with an empty profile and a mobile viewport, waits `CAPTURE_SETTLE` seconds (default 10) for the late analytics scripts, and records every request. `scripts/page-view-set.mjs` turns that into the run's URL set and prints one line per surface: requests, connections, bytes, and what it left out. The capture is `page-view-capture.json` in the run directory. It counts as one page view per surface in analytics. Before the measurement, k6 requests every page until the page store answers it and every file once, and stops when a file doesn't answer 200 (a list from another build).
+
+#### Files from the static hostname
+
+`--files page` follows the captured page. The capture records each request's origin and reads the static hostname from module scripts and preloads under `/assets/`. If an older capture has no `static_origin`, `BENCH_STATIC_HOST` identifies it only when the capture has requests to that origin. Set it to a hostname such as `static.example.com`, or a complete local origin such as `http://127.0.0.1:3112`.
+
+Chrome opens two connections to the static hostname: one without credentials for scripts, fonts, and the web manifest, and one for style sheets and images. The main visitor sends the document's connection and the static connection with the most requests. Every further captured connection becomes a side group. `--files origin` sends static files to the site on the document's connection, except the web manifest, which joins the site's side group. This measures the site's fallback load even when pages name the static hostname. Captures without static rows keep the same requests and connections in both modes. `--path private` maps only the site's hostname to `BENCH_RESOLVE_IP`; static requests still use their captured origin.
+
+The run's `urls.json` records `static_url`, `files`, `page_names` (`static` or `origin`), and weighted `per_visit` counts, captured transfer bytes, and connections for `site`, `static`, and `other`. `requests_per_visit` counts everything k6 sends to the site and static hostname. `connections_per_visit` counts the connections for a new visitor. The "By host" table uses the labels Site, Static hostname, and Others. Others shows captured requests and bytes only. Bytes come from the browser capture, including skipped requests; k6 discards bodies and has no per-request byte count.
 
 **What a page view leaves out:**
 
@@ -103,7 +112,7 @@ A `bot` entry and a `browser` entry with `"single": true` send their one request
 - **Other requests with a body,** such as `POST /api/poster-impressions` on Discover, which writes.
 - **One exception:** `POST /api/living-room/picks?view=pool`, the home page's read of its title pool, is replayed with the body that the captured browser sent. It only reads. The list of replayed requests is `REPLAYED_POSTS` in `scripts/page-view-set.mjs`.
 
-**Cookies.** A visitor starts without cookies (`COOKIE` is empty in this scenario unless you set it). The requests of one visitor share a cookie jar, so the balanced route's instance cookie from the document comes back with the page's files, and one visitor's page view stays on one instance.
+**Cookies.** A visitor starts without cookies (`COOKIE` is empty in this scenario unless you set it). The requests of one visitor share a cookie jar, so the balanced route's instance cookie from the document comes back with files on the site. Static requests use an empty cookie jar and never receive the site's cookies.
 
 **The 500 limit.** A plan whose highest step is above 500 requests per second (visitors times requests per visit, printed before the run) needs `--allow-above-500`. Smoke mode allows at most 2 visitors per second.
 
@@ -132,15 +141,25 @@ A `bot` entry and a `browser` entry with `"single": true` send their one request
 | `--label <text>` | `run` | Name the run. |
 | `--path public\|private` | `public` | Use normal DNS or a Chrome resolver rule. |
 
-The image builds on the chosen host if missing. It includes Chromium, fonts, and Lighthouse. Each run uses Lighthouse's default mobile emulation and simulated throttling. No desktop preset is used. The container gets 1 GiB of shared memory. Extra Chrome flags come from `LH_EXTRA_CHROME_FLAGS`. Chromium runs with `--hide-scrollbars`: without it, the first paint is observed about one second late (see [the render path budget](../docs/benchmarks/viral-spike-render-path-budget.md#the-late-first-paint-on-the-generator)). Private mode derives each hostname from its URL and maps it to the resolve address. TLS verification stays enabled.
+The image builds on the chosen host if missing. It includes Chromium, fonts, and Lighthouse. Each run uses Lighthouse's default mobile emulation and simulated throttling, with a CPU slowdown that is calibrated for the generator (see [CPU slowdown](#cpu-slowdown)). No desktop preset is used. The container gets 1 GiB of shared memory. Extra Chrome flags come from `LH_EXTRA_CHROME_FLAGS`. Chromium runs with `--hide-scrollbars`: without it, the first paint is observed about one second late (see [the render path budget](../docs/benchmarks/viral-spike-render-path-budget.md#the-late-first-paint-on-the-generator)). Private mode derives each hostname from its URL and maps it to the resolve address. TLS verification stays enabled.
 
 Lighthouse runs on the generator by default. That host is idle, has a fixed size, and sits in a data center, so two runs days apart see the same CPU and network. A laptop doesn't give that. Never run Lighthouse during a load test: the lock on the generator prevents it.
 
-Lighthouse drives a real browser, so the page's own script runs. After each page view, the page posts to `/api/og-image-warm`, which starts a render on the server. The runner blocks that request with `LH_BLOCKED_URL_PATTERNS` (default `*/api/og-image-warm*`, patterns separated by spaces). Analytics requests are not blocked, because they are part of the page's real cost. Each Lighthouse run therefore shows up as a page view in analytics.
+Lighthouse drives a real browser, so the page's own script runs. No landing page sends a request that changes server state while it loads, so nothing has to be blocked today. `LH_BLOCKED_URL_PATTERNS` (patterns separated by spaces) blocks requests in the browser when a page needs it. Its default, `*/api/og-image-warm*`, is left from the warm request that every page view sent until October 4, 2026. Today only a share list's owner sends that request, after an edit, and the default stays as a guard. Analytics requests are not blocked, because they are part of the page's real cost. Each Lighthouse run therefore shows up as a page view in analytics.
 
 The image tag ends with a hash of `lighthouse/Dockerfile` and `lighthouse/run.sh`. A change to either file builds a new image. Remove old `gw-bench-lighthouse` images on the generator by hand.
 
 Failed individual runs are logged. Other runs continue. The container exits nonzero only when all runs fail. The report uses successful runs and computes a separate median for each metric. Performance scores range from 0 to 100. Fractional median request counts are possible with an even number of runs.
+
+#### CPU slowdown
+
+Lighthouse simulates a mid-tier phone by multiplying the main-thread times that it observed on the host. Its default factor of 4 is made for a host whose CPU benchmark (`benchmarkIndex` in a report, "CPU benchmark" in the budget's output) is about 1,530. The generator's reads 1,170 to 1,190, so a factor of 4 models a slower phone than Lighthouse intends. `LH_CPU_SLOWDOWN` sets the factor (`--throttling.cpuSlowdownMultiplier`), and its default is `2.7`, from Lighthouse's [CPU slowdown calculator](https://lighthouse-cpu-throttling-calculator.vercel.app/): `2 + (benchmark - 800) / 500` for a benchmark between 800 and 1,300, with a stated range of 0.75 either way.
+
+- **The default fits the generator only.** For `--where local`, read the CPU benchmark from a first run and set `LH_CPU_SLOWDOWN` from the calculator. Numbers from another machine stay rough: don't compare them with the budget's time lines.
+- **Numbers are comparable from October 7, 2026.** LCP, TBT, and the score of earlier runs used a factor of 4. Byte and request lines, and CLS, don't depend on the factor. For one more run with the old factor, set `LH_CPU_SLOWDOWN=4`.
+- **Recalibrate when the generator changes** (another host, another machine type, or a new Chromium whose benchmark reads differently): take the median CPU benchmark of an undisturbed run, set the default in `bench.sh` and `lighthouse/run.sh`, set `cpu_slowdown` in `urls/budget.json`, and reset the budget's time lines from new runs in the same commit.
+
+`meta.json` records the factor of a run as `lighthouse.cpu_slowdown`. The method and the numbers are in [the render path budget](../docs/benchmarks/viral-spike-render-path-budget.md#cpu-slowdown-of-the-generator).
 
 ### Render path budget
 
@@ -155,7 +174,7 @@ Failed individual runs are logged. Other runs continue. The container exits nonz
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `--runs N` | `3` | Lighthouse runs per surface. The comparison uses the median. |
-| `--where generator\|local` | `generator` | The Docker host. The time lines of the budget are calibrated for the generator. |
+| `--where generator\|local` | `generator` | The Docker host. The time lines of the budget and the CPU slowdown are calibrated for the generator. |
 | `--path public\|private` | `public` | The network path, as for `lighthouse`. |
 | `--label <text>` | `budget` | Name the run. |
 | `--budget <file>` | `urls/budget.json` | Another budget file. |
@@ -166,19 +185,23 @@ The lines, all for a first-time mobile visitor who doesn't scroll:
 | Line | Read from the Lighthouse report |
 | --- | --- |
 | `html_bytes` | Transfer size of the document |
-| `host_requests` | Requests to the page's own origin |
+| `host_requests` | Site and static host requests together |
+| `origin_requests` | Requests to the webapp host. Information only unless given a limit. |
+| `static_requests` | Requests to the static hostname. Information only unless given a limit. |
 | `script_count`, `script_bytes` | Script requests and their transfer size |
 | `image_count`, `image_bytes` | Image requests and their transfer size. Lighthouse doesn't scroll, so these are the images before scrolling. |
 | `font_requests` | Font requests |
 | `blocking_requests` | Render-blocking requests (stylesheets and scripts) |
-| `third_party_origins` | Origins other than the page's own |
+| `third_party_origins` | Origins other than the site and static hostname |
 | `total_bytes` | Transfer size of all requests |
 | `lcp_ms`, `tbt_ms`, `cls`, `score` | Lighthouse's simulated LCP and TBT, CLS, and the performance score |
 | `lcp_element` | The LCP element's tag, and a text that its markup must contain. It passes when more than half of the runs match. |
 
+The static origin comes from `BENCH_STATIC_HOST`, or from an origin that serves `/assets/*.js` scripts and has the site's hostname or a subdomain of it. An unrelated third party is never inferred as the static hostname. The combined request limit stays the same in both modes. `origin_requests` and `static_requests` print `info`, never fail a surface, and have `info: true` in the run's `budget.json`. Adding a limit makes either line a budget check.
+
 In the budget file, a line has either `max` or `min`. `targets` holds the values that count as good (LCP 2.5 s, TBT 200 ms, CLS 0.1, score 90): the report shows the gap to them, and they never fail a run. A surface's `path` can name a setting, such as `${SHARE_LIST_PATH}` from `config.env`. The report never prints a URL.
 
-Each surface's header line shows the observed FCP and Lighthouse's CPU benchmark of the host. An observed FCP above one second, or a benchmark far from 1,100 on the generator, means the measurement was disturbed: check for other containers on the generator and repeat.
+Each surface's header line shows the observed FCP, Lighthouse's CPU benchmark of the host, and the CPU slowdown of the reports. An observed FCP above one second, or a benchmark under 1,050 on the generator, means the measurement was disturbed: check for other containers on the generator and repeat. The budget file names the slowdown that its time lines are calibrated for (`cpu_slowdown`). When a run used another one, its LCP, TBT, and score lines fail, because they aren't comparable.
 
 The limits come from a measured run plus a margin: about 5% on bytes, one or two requests, and the spread between runs on the time lines. When a change improves a line for good, lower its limit in the same commit. When a change has to raise a line, raise the limit in that commit and say why. The run writes `budget.json` and `budget.md` into its result directory. The comparison logic has tests: `node --test scripts/budget.test.mjs`.
 
@@ -193,7 +216,7 @@ The limits come from a measured run plus a margin: about 5% on bytes, one or two
 
 `tap` answers one question for a title page: does a tap right after the page loads, or right after a fast scroll, always do something? It taps each control that needs script on the movie page and the show page of [`urls/budget.json`](urls/budget.json), and reports per control whether the tap had its effect and how long the effect took. A tap without its effect inside the limit is a lost tap.
 
-Every measurement is its own page load in a new browser: empty cache, no cookies, a signed-out visitor. The browser is the Chromium of the Lighthouse image with a phone viewport (412 by 823), touch input, and the CPU slowed four times, which is Lighthouse's mobile setting. The network isn't throttled unless you ask for it.
+Every measurement is its own page load in a new browser: empty cache, no cookies, a signed-out visitor. The browser is the Chromium of the Lighthouse image with a phone viewport (412 by 823), touch input, and the CPU slowed four times, which is Lighthouse's default for a phone. The tap test slows the real CPU and keeps that factor, so that its runs stay comparable with the baseline of October 6, 2026. It's stricter than the calibrated factor that Lighthouse runs use here (see [CPU slowdown](#cpu-slowdown)). The network isn't throttled unless you ask for it.
 
 | Option | Default | Purpose |
 | --- | --- | --- |
@@ -249,7 +272,7 @@ The "Effect" and "Lost" columns count only taps that reached the control. The re
 
 **The diagnosis columns.** "Script took over at" is when React had attached the control's node, or Swiper had started the row, counted from the start of the navigation. An early tap before that moment is lost unless the browser still holds the click when the script starts. `tap.jsonl` also has, per measurement, `input_delay_ms` and `click_delay_ms` (how long the main thread was busy before the page's script saw the tap and the click), the requests that started after the tap, and the console's error messages.
 
-**Requests.** The page's own script runs, so every measurement counts as a page view in analytics, and a run with the defaults is 150 page views. Requests that write are blocked in the browser: `/api/update-*`, `/api/poster-impressions`, and `/api/og-image-warm` (`TAP_BLOCKED_URL_PATTERNS`, patterns separated by spaces). The report lists every request other than GET that a page sent.
+**Requests.** The page's own script runs, so every measurement counts as a page view in analytics, and a run with the defaults is 150 page views. Requests that write are blocked in the browser: `/api/update-*` and `/api/poster-impressions`, and also `/api/og-image-warm`, which title pages no longer send (`TAP_BLOCKED_URL_PATTERNS`, patterns separated by spaces). The report lists every request other than GET that a page sent.
 
 **Results.** `tap.jsonl` has one line per measurement, written as the run goes, and `tap.log` the progress. `summary.json` and `summary.md` have one row per page, mode, and control: taps with an effect, lost taps, and the median, lowest, and highest time to effect. The console section counts React errors by number, such as 418 or 421. `node scripts/tap-report.mjs <run>` writes the summary again. Its logic has tests: `node --test scripts/tap-report.test.mjs`.
 
@@ -289,17 +312,18 @@ Doctor checks SSH, Docker, images, file limits, free disk, and the generator loc
 ./bench.sh smoke --commit "$(git rev-parse origin/main)"
 ```
 
-It prints one line per check (`PASS`, `FAIL`, `WARN`, or `SKIP`) and exits with 1 when any check fails. A run takes 6 seconds on a container that is older than a minute, and up to about two minutes on a new one, because it waits for the first per-minute `Process:` log line. It sends about 30 GET requests over the public address. It never sends `POST /api/combined-search` or another writing request.
+It prints one line per check (`PASS`, `FAIL`, `WARN`, or `SKIP`) and exits with 1 when any check fails. A run takes 6 seconds on a container that is older than a minute, and up to about two minutes on a new one, because it waits for the first per-minute `Process:` log line. It sends about 30 GET requests over the public address, and one `POST /api/combined-search` with one character of text, which the route rejects with 400 before it searches. It never sends a search that runs, or another writing request: a search that runs writes a history row.
 
 What it does, in order:
 
 1. **Finds the container.** It connects with SSH to the host that the target's name resolves to, and waits until exactly one `gk4owk8-*` container runs, is healthy, and fits the options. `--commit SHA` compares with `SOURCE_COMMIT` in the container's environment. `--newer-than NAME` refuses the container with that name: note the name before a deploy when you don't know the commit. `--deploy-timeout` (default 600 seconds) limits the wait. Then it waits until the home page answers 200, because requests can fail for a moment while the proxy switches containers (see [webapp deploys](../docs/webapp-deploys.md)).
 2. **Reads the metrics** from the private port inside the container (`goodwatch_http_responses_total`, the process uptime, and the build's commit).
 3. **Requests the pages** in [`smoke/urls.json`](smoke/urls.json) and checks the status, markers in the body, headers, and for HTML pages the rendered markers: the title text in `<title>` and `<h1>`, links to titles in the server HTML, an image `src` on the image host, and JSON-LD blocks that parse. No response may contain `Unexpected Server Error`.
-4. **Scans the container's log from its start** with the patterns in [`smoke/log-patterns.json`](smoke/log-patterns.json), after the requests, so that errors from the edge-case pages are in it. The people index, the title snapshot, and the search index must report that they loaded. The latest `Process:` line must say `query encoder ready`. Slow subsystems have until 120 seconds after the process start (`--log-wait`). No line may match a failure pattern, such as `failed to start`, `Cannot find module`, or `TypeError`.
-5. **Reads the metrics again.** The Redis client must be ready, no Redis breaker may be open, and no route's 5xx counter may have risen since step 2. Background traffic counts too: a 5xx that a crawler caused during the run fails the check. 5xx responses from before the run print a warning.
+4. **Checks the static hostname.** `static:mode` says whether pages name the static hostname or the site's host, with `goodwatch_static_assets_in_use` and its `mode` label when available. `static:build-file` requests a build file from that hostname and expects 200, CORS, a one-year cache lifetime, and `CF-Cache-Status` (the CDN header is optional on loopback). `static:root-404` expects 404 for its root. These requests use the browser User-Agent without a cookie. Failures print `FAIL` when pages name the static hostname, or `WARN` when pages name the site and `BENCH_STATIC_HOST` supplies the static hostname. Without either source, the check says that the static hostname was not checked. `url:static-asset` still checks the site's copy in both modes, because the fallback depends on it.
+5. **Scans the container's log from its start** with the patterns in [`smoke/log-patterns.json`](smoke/log-patterns.json), after the requests, so that errors from the edge-case pages are in it. The people index, the title snapshot, and the search index must report that they loaded (see [Roles](#roles) for a process that runs as one role). The latest `Process:` line must say `query encoder ready`. Slow subsystems have until 120 seconds after the process start (`--log-wait`). No line may match a failure pattern, such as `failed to start`, `Cannot find module`, or `TypeError`.
+6. **Reads the metrics again.** The Redis client must be ready, no Redis breaker may be open, and no route's 5xx counter may have risen since step 2. Background traffic counts too: a 5xx that a crawler caused during the run fails the check. 5xx responses from before the run print a warning.
 
-The URL list covers a well-known movie and show, a title without a poster, without a backdrop, without cast, without a trailer, and without streaming data, a show with more than 3,300 cast rows, a person with and without a department, a filtered person URL without the cookie (403), with it (200), and from a crawler (301), home, Discover with and without a filter, the share list and its image, a missing share list and a missing title (404), a title's OG image, `robots.txt`, a script that the home page references, `/metrics` on the public port, and the GET endpoints that pages call. Each entry's `guards` field says which regression or edge it's for, and a failure prints it.
+The URL list covers a well-known movie and show, a title without a poster, without a backdrop, without cast, without a trailer, and without streaming data, a show with more than 3,300 cast rows, a person with and without a department, a filtered person URL without the cookie (403), with it (200), and from a crawler (301), home, Discover with and without a filter, the share list and its image, a missing share list and a missing title (404), a title's OG image, `robots.txt`, the addresses a crawler must not be sent to a hub for (an unknown path, category, and category page answer 404, `/tv-shows` and an old explore address answer 301 to their new address or 404, a removed sitemap file answers 410, and the sitemap index is still served), a hub without an empty JSON-LD block, the canonical address of a category page's second page, a script that the home page references, `/metrics` on the public port, and the GET endpoints that pages call. Each entry's `guards` field says which regression or edge it's for, and a failure prints it.
 
 To add a check after a regression, add an entry to `smoke/urls.json` or a pattern to `smoke/log-patterns.json`. Use public catalog entries only. The share list entries read `SHARE_LIST_PATH` and `SHARE_LIST_OG_PATH` from `config.env`, print a warning when they're unset, and never print the path.
 
@@ -312,9 +336,67 @@ With more than one webapp instance, the public route reaches either of them, and
 ./bench.sh smoke --host abio --commit "$(git rev-parse origin/main)"
 ```
 
-`--host` takes a name from `goodwatch-hq/ansible/hosts.ini` or a private address. The check finds the `gk4owk8-*` container on that host, opens an SSH tunnel from a free local port to the container's port 3000 on its Docker network, and sends every request through it. No proxy, no load balancer, and no public route is involved, so the result describes that process alone, and it works before the instance takes traffic. The log and the metrics come from the same container. SSH jumps through `BENCH_SSH_JUMP`, or through the host that the target's name resolves to when it's unset.
+`--host` takes a name from `goodwatch-hq/ansible/hosts.ini` or a private address. The check finds the `gk4owk8-*` container on that host, opens an SSH tunnel from a free local port to the container's port 3000 on its Docker network, and sends site requests through it. The static checks still request the static hostname. Site checks use no proxy, load balancer, or public route, so they describe that process alone, and it works before the instance takes traffic. The log and the metrics come from the same container. SSH jumps through `BENCH_SSH_JUMP`, or through the host that the target's name resolves to when it's unset.
 
 After a deploy to two instances, run the check three times: once per host, and once without `--host` for the public route. Coolify deploys the additional server after the primary one finishes, so start the check for the second host with `--commit` and let it wait.
+
+#### Roles
+
+The check reads `WEBAPP_ROLE` in the container (`page`, `search`, or `both`, the default) and prints the role on the `deploy:container` line. The role decides which checks apply:
+
+| Check | `both` | `page` | `search` |
+| --- | --- | --- | --- |
+| The pages in `smoke/urls.json` | Yes | Yes | No |
+| The command palette lookup and the rejected search, sent straight to the process (`--host`) | Yes | Skipped | Yes |
+| The same two requests over the public route | Yes | Yes: the proxy sends them to a search role | Doesn't apply |
+| Log: the people index, the search index, and `query encoder ready` | Yes | Skipped | Yes |
+| Log: the title snapshot | Yes | Yes | Skipped: a search role is ready without it |
+| Log: `Process role: page` or `Process role: search` | No | Yes | Yes |
+| Log: `Search models: ... files verified`, and `Search ranking: query models ready in ... ms, 2 encoder threads` | No | No | Yes |
+| Metrics: the Redis client, the breakers, and the 5xx counters | Yes | Yes | Yes |
+
+A skipped check prints a `SKIP` line with the reason.
+
+- **A page role has no encoder.** Its per-minute `Process:` line says `query encoder not ready` for good, so that check is skipped for it.
+- **A search role says `query encoder not ready` until its query models have loaded.** The check waits for a newer `Process:` line, until `--log-wait` seconds after the process start, and fails only then.
+- **A container without `WEBAPP_ROLE`,** and a local log without a `Process role:` line, count as `both`.
+
+`scripts/test-smoke-roles.sh` tests these rules on the development machine, with a stub per role and the logs in `scripts/fixtures/smoke-roles/`. Run it after a change to `smoke/log-patterns.json`, `smoke/search-role-urls.json`, `smoke/search-role-paths.json`, or the role handling in `scripts/smoke.mjs`. `node --test scripts/search-roles.test.mjs` tests the comparison of the commits and the container names.
+
+#### Check a search role
+
+A search role is a container of its own, started from [`goodwatch-search/docker-compose.yml`](../goodwatch-search/docker-compose.yml) with a fixed name. Name its container and its host:
+
+```sh
+./bench.sh smoke --host vector1 --container-prefix goodwatch-search-a --role search
+```
+
+`--container-prefix` takes the whole name when the value doesn't end in a hyphen, and the start of a name when it does (a Coolify application's id, such as the default `gk4owk8-`).
+
+The check finds the container, fails unless its `WEBAPP_ROLE` is `search`, opens the SSH tunnel to it, and waits for `/health/ready`. Then it sends the three requests in [`smoke/search-role-urls.json`](smoke/search-role-urls.json): the readiness endpoint, a command palette lookup that must return titles, and the `POST /api/combined-search` with one character, which must answer 400. It reads the log and the metrics like for a page instance.
+
+No request starts a search. Every search that runs writes a row to `search_history` after its response, also a basic one (`combinedSearch` in `app/server/combined-search/search.server.ts`), and a text without a stored reading can start a paid call. The one-character text is rejected in the route, after the in-flight limit and before `combinedSearch` is called. So the check proves that the route answers in a process that runs search, not that a search ranks. For that, read the role's log after a real search.
+
+The default run includes the search roles once `config.env` lists them:
+
+```sh
+SMOKE_SEARCH_ROLES='vector1:goodwatch-search-a,vector1:goodwatch-search-b'
+```
+
+`./bench.sh smoke` then runs the check above for each entry after the public checks, and prints one `search-role:` line per entry. While the list is empty, it prints `SKIP  search-roles` and passes. `--skip search-roles` leaves the roles out.
+
+#### A search role that is behind
+
+The search roles are deployed by hand, with `goodwatch-search/deploy.sh`, so a push to `main` moves the page instances and not the roles. The roles therefore don't get `--commit`: the default run waits for the page instance's commit only. Instead, each role's commit is compared with the page instance's commit:
+
+| The role's commit | Line |
+| --- | --- |
+| The same | `PASS  deploy:search-code` |
+| Behind, and no file that a search role runs differs | `PASS  deploy:search-code`, with the number of commits |
+| Behind, and such a file differs | `WARN  deploy:search-code`, with the files and the deploy command, and one more `WARN  search-role:...:search-code` line in the summary of the default run |
+| Not in this checkout, or not named by the role | `WARN  deploy:search-code`: run `git fetch` |
+
+A warning doesn't fail the check. The files that count are in [`smoke/search-role-paths.json`](smoke/search-role-paths.json), the one place for that list: the search directories of the server, the two routes, the command palette, `role.server.ts`, the Dockerfile, the lock file, and a few direct neighbors. Add a path there when the search code starts to import a new module of its own. The comparison reads the local checkout with `git diff --name-only` and contacts nothing. For one role, pass the page instance's commit yourself with `--page-commit <sha>`.
 
 #### Watch a deploy
 
@@ -357,7 +439,7 @@ Each entry contains `route`, `path`, `weight`, `client`, and optional `expect` (
 
 `/search?q=heist` expects 301. The script treats an unexpected status or transport error as a failure. It never follows a redirect. Person URLs with a query string require the `gw_browser=1` cookie.
 
-To include your share list, set `SHARE_LIST_PATH` to its page path and `SHARE_LIST_OG_PATH` to the `og:image` path from its HTML. Store these only in `config.env`. Do not commit a user's list URL. Missing placeholders are dropped with a warning. Remaining weights still apply. Share-list pages are private and do not use a shared HTTP cache. Add your list to the ignored copy of a Lighthouse URL file when testing it with Lighthouse.
+To include your share list, set `SHARE_LIST_PATH` to its page path and `SHARE_LIST_OG_PATH` to the `og:image` path from its HTML. Store these only in `config.env`. Do not commit a user's list URL. Missing placeholders are dropped with a warning. Remaining weights still apply. An anonymous request for a public share list is answered from the app's page store for 10 seconds, plus 10 seconds stale, and is `public` with a short `s-maxage` when the request carries the cache identity header (see [`docs/page-cache.md`](../docs/page-cache.md)). Hidden lists and member views stay `private, no-store`. Add your list to the ignored copy of a Lighthouse URL file when testing it with Lighthouse.
 
 ## Cache modes
 
@@ -424,6 +506,7 @@ Only relevant files exist for a given run. Metadata records the Git commit and d
 - `webapp_instances` exists only with `BENCH_WEBAPP_PROBE_EXTRA`. It is keyed by host, and each entry has the fields of `webapp` without the benchmark's share.
 - `webapp` exists only with the webapp probe. It holds the window length, the deployed commit, a restart flag, request rates (`total_rps`, `benchmark_rps`, `background_rps`, `crawler_loop_rps`), `routes`, `caches`, `qdrant`, `page_cache` (hits, stale answers, joined requests, misses, and bypasses per route pattern), `thread_cpu_pct`, `main_thread_by_time`, `proxy_cpu_pct`, `proxy_accepts_per_s`, `in_flight`, and `loop_delay_ms`.
 - `load.page_view` exists only for the page-view scenario: the connection mode, the cache identity, the response headers of each page before the run (`pages`), totals, `slices` with `SLICE_SECONDS`, and page views per route. Each step then also has `visits`, `page_views`, `page_view_error_rate`, `page_view_ms`, `tls_handshakes`, `tls_handshake_ms`, and `kinds` (document, asset, api, side, single).
+- `load.page_view.hosts` exists when `urls.json` has `per_visit`: `site` and `static` have request count and rate, error fraction, latency, TTFB, TLS handshakes, and captured `per_visit` values; `other` has captured `per_visit` values only. `files`, `page_names`, and `static_url` record the file mode and source. `origin_share` gives the site's fractions of site and static requests and captured bytes. `load.steps[].hosts` has the measured host metrics per step. Older runs without these fields retain their earlier summary and have no "By host" table.
 - `load.steps[].resources` exists when the run knows when its scenario started: per instance the main thread and proxy CPU in percent of one core, accepted connections, and the highest event loop delay, and per host CPU, network rates, and memory. The transition seconds at the start of a step are left out.
 - `lighthouse` is keyed by URL label. Each entry includes the URL, successful run count, per-metric `median`, and `all_runs`. Bytes by resource type come from `resource-summary` or fall back to `network-requests`.
 
@@ -475,9 +558,9 @@ The launcher refuses a generator address equal to the resolve address. Use the p
 
 ## Known limitations
 
-- Load traffic is GET only, apart from the one replayed read in the page-view scenario. It excludes `POST /api/combined-search`, which can trigger paid model calls or guest quota writes, `POST /api/og-image-warm`, which triggers rendering, and `POST /api/e`, which the app forwards to the error tracking vendor.
+- Load traffic is GET only, apart from the one replayed read in the page-view scenario. It excludes `POST /api/combined-search`, which can trigger paid model calls or guest quota writes, `POST /api/og-image-warm`, which starts a card render and which only a share list's owner sends, and `POST /api/e`, which the app forwards to the error tracking vendor.
 - In the `requests` scenario, k6 does not fetch browser subresources. The page-view scenario does, from a captured page load. It sends them all at once after the document, where a browser discovers them in several rounds over about five seconds, and it doesn't model third-party hosts or a returning visitor's browser cache.
-- The page-view scenario opens two connections per browser visitor because the captured Chrome does. Browsers that don't fetch the manifest open one.
+- The page-view scenario follows the captured connections for the site and static hostname. A capture with only site rows normally opens the document connection and a side connection for the manifest. Side groups run independently: their failures count in request errors but cannot be attributed to a particular page view, and their time is outside the main visitor's page-view duration. With `--connections reuse`, the connection counts per visit describe the capture plan, not new connections opened on every iteration.
 - Lighthouse is lab data, not field data. Its browser loads page subresources and can execute normal page code. GET-only load guarantees apply to k6, not browser-side application behavior in Lighthouse.
 - Docker stats are coarse and can lag a host sample. Container CPU can exceed 100% across multiple cores.
 - Per-route summary percentiles cover the whole measured run. A per-step route breakdown requires `--raw`. Summary percentiles cannot be averaged into new percentiles.
@@ -495,6 +578,8 @@ Normal cleanup removes each remote run directory and its lock. Docker images and
 `results/checkpoint-2026-10-04/` holds the summaries of the same runs after the page load optimizations, on two instances, and the output of `./bench.sh compare` for each pair in `compare/`. [`docs/benchmarks/viral-spike-checkpoint.md`](../docs/benchmarks/viral-spike-checkpoint.md) explains them.
 
 `results/page-views-2026-10-05/` holds the summaries of the page-view runs, the ramp of new TLS connections, and the repeated OG image ramps from October 5, 2026. [`docs/benchmarks/viral-spike-page-views.md`](../docs/benchmarks/viral-spike-page-views.md) explains them.
+
+`results/static-hostname-2026-10-09/` holds the summaries of the page-view runs with the static hostname from October 9, 2026: the movie page with the files from the static hostname and from the origin, the primary mix, and the documents alone. [`docs/benchmarks/viral-spike-static-hostname.md`](../docs/benchmarks/viral-spike-static-hostname.md) explains them and says which runs aren't valid.
 
 `results/tap-baseline-2026-10-06/` holds the tap test's production baseline from October 6, 2026 (21:08 to 21:39 UTC, on the generator, five runs per control and mode): `summary.md`, `summary.json`, and the measurements in `tap.jsonl`. Compare a later `./bench.sh tap` run on the generator against it.
 

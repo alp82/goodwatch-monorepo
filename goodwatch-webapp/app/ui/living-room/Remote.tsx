@@ -2,6 +2,7 @@
 // with OK, the Back / Home / Search row, a well of four feature tiles, and the four streaming keys low on the
 // body. The feature tiles open the moods on the TV or leave for a place's page. Every
 // control sends a TV flow action; the Remote keeps no state of its own besides the wheel's arrow flash.
+import { assetUrl } from "~/utils/asset-url"
 import { type ReactNode, useEffect, useRef, useState } from "react"
 import disneyMark from "~/img/disneyplus-mark-160.webp"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
@@ -223,7 +224,7 @@ export function Remote({
 						{REMOTE_SERVICES.map(({ key }) => {
 							const name = serviceName(key)
 							const b = BRAND[key]
-							const mask = `url("${b.src}") center / contain no-repeat`
+							const mask = `url("${assetUrl(b.src)}") center / contain no-repeat`
 							return (
 								<button
 									key={key}
@@ -253,7 +254,7 @@ export function Remote({
 					</div>
 				</div>
 				<div className="flex-1" />
-				<img src={gwLogo} alt="" className="mb-2 h-7 opacity-20" />
+				<img src={assetUrl(gwLogo)} alt="" className="mb-2 h-7 opacity-20" />
 			</div>
 		</section>
 	)

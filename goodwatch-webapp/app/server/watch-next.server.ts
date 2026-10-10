@@ -10,7 +10,9 @@ import {
 	type WatchNextTierKey,
 	type WatchNextTierSize,
 } from "~/domain/watch-next"
+import { type Misfit, minutesOver, misfitOf } from "~/domain/my-movies"
 import { isOnServices } from "~/server/availability-index.server"
+import { movieRuntimes } from "~/server/movie-runtimes.server"
 import { type Taste, loadTaste } from "~/server/taste/index.server"
 import {
 	type CardService,
@@ -37,6 +39,10 @@ export interface WatchNextOptions {
 	onMyServices?: boolean
 	/** Titles passed over with Not tonight during this visit: they go to the end of the view. */
 	notTonight?: TitleKey[]
+	/** My movies (#385): only the Wishlist's movies, and one group for what does not fit tonight. */
+	kind?: "movie"
+	/** My movies' "How long?": the minutes the person has. A movie that runs longer does not fit. */
+	time?: number | null
 }
 
 /** A Wishlist title as Watch next shows it. */
@@ -46,8 +52,10 @@ export interface WatchNextTitle extends TitleCard {
 	/** A film's release date or a show's last air date (YYYY-MM-DD). */
 	releaseDate: string | null
 	moods: MoodKey[]
-	/** Passes On my services (when on) and belongs to a picked mood (when any). */
+	/** Passes On my services (when on) and belongs to a picked mood (when any); on My movies, runs no longer than the time too. */
 	fits: boolean
+	/** On My movies: why the movie does not fit tonight. Left out when it fits, and on Watch next. */
+	misfit?: Misfit
 }
 
 export interface WatchNextTier {
@@ -76,7 +84,7 @@ export interface WatchNext {
 	fitting: number
 	hero: WatchNextTitle | null
 	/** Why the hero doesn't fit, when nothing fits: "closestToMoods" or "nothingOnServices". */
-	heroNote: "closestToMoods" | "nothingOnServices" | null
+	heroNote: "closestToMoods" | "nothingOnServices" | "nothingInTime" | null
 	/** The Then column: the next three titles after the hero. */
 	thenColumn: WatchNextTitle[]
 	tiers: WatchNextTier[]
@@ -88,6 +96,8 @@ export interface WatchNext {
 	start: TitleCard | null
 	/** With fewer than SMALL_WISHLIST titles: a "Worth adding" row. */
 	worthAdding: TitleCard[]
+	/** On My movies: the minutes chosen under "How long?", null for any length. Left out on Watch next. */
+	time?: number | null
 }
 
 const THEN = 3
@@ -117,6 +127,8 @@ interface Entry {
 	percentile: number | null
 	value: number | null
 	fit: number
+	/** My movies: minutes the movie runs over the chosen time; 0 when it fits or no time is chosen. */
+	over: number
 }
 
 // What the sorts read, for Wishlist titles the snapshot lacks (no title analysis yet).
@@ -211,7 +223,7 @@ export function bestMatchOf(
 
 function sortValue(
 	sort: WatchNextSort,
-	entry: Omit<Entry, "value" | "fit">,
+	entry: Omit<Entry, "value" | "fit" | "over">,
 	today: number,
 ): number | null {
 	switch (sort) {
@@ -249,7 +261,11 @@ export function planWatchNext(
 	taste: Taste,
 	options: WatchNextOptions,
 	outside: ReadonlyMap<TitleKey, SortFacts | null> = new Map(),
+	/** Minutes per movie, for My movies with a time chosen (see movieRuntimes). */
+	runtimes: ReadonlyMap<TitleKey, number | null> = new Map(),
 ) {
+	const movies = options.kind === "movie"
+	const time = movies ? (options.time ?? null) : null
 	const snapshot = getTitleSnapshot()
 	const bestMatch = bestMatchOf(ctx, taste)
 	const defaultSort: WatchNextSort = bestMatch.available ? "match" : "added"
@@ -264,7 +280,9 @@ export function planWatchNext(
 	const today = Math.floor(Date.now() / DAY_MS)
 
 	const keys = [...ctx.wishlist.keys()].filter(
-		(key) => outside.get(key) !== null,
+		(key) =>
+			outside.get(key) !== null &&
+			(!movies || parseTitleKey(key).mediaType === "movie"),
 	)
 	const percentiles = taste.percentile(keys)
 	let servicesPending = false
@@ -293,6 +311,7 @@ export function planWatchNext(
 			fit:
 				(moods.length && base.moodMask & moodMask ? 1 : 0) +
 				(onMyServices && onServices !== false ? 1 : 0),
+			over: minutesOver(runtimes.get(key) ?? null, time),
 		}
 	})
 	entries.sort(compareEntries)
@@ -303,9 +322,15 @@ export function planWatchNext(
 		...entries.filter((e) => !passed.has(e.key)),
 		...entries.filter((e) => passed.has(e.key)),
 	]
-	// Titles that fit come first, then those one condition short, then the rest; each in the sort's order.
-	const ranked = [...order].sort((a, b) => b.fit - a.fit)
-	const fitting = ranked.filter((e) => e.fit === need)
+	// Titles that fit come first, then those one condition short, then the rest; each in the sort's order. On My
+	// movies a movie that runs over the chosen time comes after every movie that doesn't, the least over first.
+	const ranked = [...order].sort(
+		(a, b) =>
+			Math.sign(a.over) - Math.sign(b.over) ||
+			b.fit - a.fit ||
+			a.over - b.over,
+	)
+	const fitting = ranked.filter((e) => e.fit === need && !e.over)
 	const heroFits = fitting.length > 0 || ranked.length === 0
 	const head = (heroFits ? fitting : ranked).slice(0, 1 + THEN)
 	const inHead = new Set(head.map((e) => e.key))
@@ -321,7 +346,20 @@ export function planWatchNext(
 		size: WatchNextTierSize
 		keys: TitleKey[]
 	}[]
-	if (!need) {
+	if (movies) {
+		// My movies: what fits in three steps, then one group for everything that doesn't, each movie saying why.
+		const fits = rest.filter((e) => e.fit === need && !e.over)
+		tiers = [
+			tier("upNext", "xl", fits.slice(0, 4)),
+			tier("soon", "lg", fits.slice(4, 16)),
+			tier("later", "md", fits.slice(16)),
+			tier(
+				"notTonightsFit",
+				"md",
+				rest.filter((e) => e.fit !== need || e.over),
+			),
+		]
+	} else if (!need) {
 		tiers = [
 			tier("upNext", "xl", rest.slice(0, 4)),
 			tier("soon", "lg", rest.slice(4, 12)),
@@ -383,9 +421,14 @@ export function planWatchNext(
 		heroFits,
 		heroNote: heroFits
 			? null
-			: moods.length
-				? ("closestToMoods" as const)
-				: ("nothingOnServices" as const),
+			: // Only the time keeps every movie out: the hero is the one that runs over the least.
+				ranked.some((e) => e.fit === need)
+				? ("nothingInTime" as const)
+				: moods.length
+					? ("closestToMoods" as const)
+					: ("nothingOnServices" as const),
+		movies,
+		time,
 		head,
 		tiers,
 		entries: new Map(entries.map((e) => [e.key, e])),
@@ -469,7 +512,13 @@ function wishlistDirection(
 export function worthwhileSuggestions(
 	ctx: ViewerContext,
 	taste: Taste,
-	options: { moods: MoodKey[]; onMyServices: boolean; count: number },
+	options: {
+		moods: MoodKey[]
+		onMyServices: boolean
+		count: number
+		/** My movies suggests movies only. */
+		kind?: "movie"
+	},
 ): TitleKey[] {
 	const snapshot = getTitleSnapshot()
 	if (!snapshot || options.count <= 0) return []
@@ -480,7 +529,8 @@ export function worthwhileSuggestions(
 	for (let i = 0; i < keys.length; i++) {
 		const key = keys[i]
 		if (moodMask && !(moodMasks[i] & moodMask)) continue
-		if (ctx.notInterested.has(key) || ctx.wishlist.has(key) || ctx.seen.has(key) || ctx.skipped.has(key))
+		if (options.kind && parseTitleKey(key).mediaType !== options.kind) continue
+		if (ctx.hidden.has(key) || ctx.wishlist.has(key) || ctx.seen.has(key) || ctx.skipped.has(key))
 			continue
 		// While the country's availability loads, services don't narrow.
 		if (onMyServices && isOnServices(ctx.country, ctx.services, key) === false)
@@ -528,13 +578,36 @@ const isoDay = (day: number | null) =>
 // The card of a title on the Wishlist, with what Watch next knows about it.
 function wishlistTitle(plan: Plan, card: TitleCard): WatchNextTitle {
 	const entry = plan.entries.get(card.key) as Entry
-	return {
+	const title: WatchNextTitle = {
 		...card,
 		addedAt: new Date(entry.addedAt).toISOString(),
 		releaseDate: isoDay(entry.releaseDay),
 		moods: MOOD_KEYS.filter((_, bit) => entry.moodMask & (1 << bit)),
-		fits: entry.fit === plan.need,
+		fits: entry.fit === plan.need && !entry.over,
 	}
+	if (!plan.movies) return title
+	const misfit = misfitOf({
+		over: entry.over,
+		inMood:
+			!plan.moods.length ||
+			Boolean(entry.moodMask & maskOfMoods(plan.moods)),
+		onServices: !plan.onMyServices || entry.onServices !== false,
+	})
+	return misfit ? { ...title, misfit } : title
+}
+
+/** The plan for the viewer's options, with the reads it needs: sort facts outside the snapshot, and, once a time is chosen on My movies, the runtimes. */
+async function planFor(
+	ctx: ViewerContext,
+	taste: Taste,
+	options: WatchNextOptions,
+) {
+	const timed = options.kind === "movie" && options.time
+	const [outside, runtimes] = await Promise.all([
+		sortFactsOutsideSnapshot(ctx.wishlist.keys()),
+		timed ? movieRuntimes(ctx.wishlist.keys()) : undefined,
+	])
+	return planWatchNext(ctx, taste, options, outside, runtimes)
 }
 
 /** Watch next for the viewer: the hero, its Then column, the tiers, mood counts and pictures, and suggestions. */
@@ -543,12 +616,9 @@ export async function getWatchNext(
 	options: WatchNextOptions,
 	givenTaste?: Taste,
 ): Promise<WatchNext> {
-	const [taste, outside] = await Promise.all([
-		givenTaste ?? loadTaste(ctx.viewer),
-		sortFactsOutsideSnapshot(ctx.wishlist.keys()),
-	])
+	const taste = givenTaste ?? (await loadTaste(ctx.viewer))
+	const plan = await planFor(ctx, taste, options)
 	const snapshot = getTitleSnapshot()
-	const plan = planWatchNext(ctx, taste, options, outside)
 
 	// Cards for what the page shows first: the hero, Then, and the first two tiers up to their caps.
 	const shown = plan.tiers
@@ -560,6 +630,7 @@ export async function getWatchNext(
 					moods: plan.moods,
 					onMyServices: plan.onMyServices,
 					count: WORTH_ADDING + (plan.total === 0 ? 1 : 0),
+					...(plan.movies ? { kind: "movie" as const } : {}),
 				})
 			: []
 	const pictures = pictureKeys(plan, snapshot)
@@ -618,6 +689,7 @@ export async function getWatchNext(
 		) as WatchNext["moodPictures"],
 		start,
 		worthAdding: suggested.filter((card) => card !== start),
+		...(plan.movies ? { time: plan.time } : {}),
 	}
 }
 
@@ -626,12 +698,10 @@ export async function getWatchNextTitles(
 	ctx: ViewerContext,
 	keys: TitleKey[],
 	options: WatchNextOptions,
+	givenTaste?: Taste,
 ): Promise<WatchNextTitle[]> {
-	const [taste, outside] = await Promise.all([
-		loadTaste(ctx.viewer),
-		sortFactsOutsideSnapshot(ctx.wishlist.keys()),
-	])
-	const plan = planWatchNext(ctx, taste, options, outside)
+	const taste = givenTaste ?? (await loadTaste(ctx.viewer))
+	const plan = await planFor(ctx, taste, options)
 	const wanted = keys.filter((key) => plan.entries.has(key)).slice(0, MAX_KEYS)
 	const cards = await getTitleCards(wanted, ctx, taste)
 	return cards.map((card) => wishlistTitle(plan, card))
