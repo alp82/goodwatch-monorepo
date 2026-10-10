@@ -31,6 +31,9 @@ const BUNDLED_WORKERS = [
 	"app/server/search-ranking/search-index.worker.ts",
 	"app/server/title-snapshot/title-snapshot.worker.ts",
 ]
+// The related map's engine as one minified script for the browser, which the server puts into a title page after the
+// section, so that taps work before hydration (app/server/related-map.server.ts reads the file).
+const INLINE_SCRIPTS = [["app/ui/related-map/inline.ts", "related-map.inline.js"]]
 function separateEntryFiles() {
 	let root
 	let outDir
@@ -59,6 +62,17 @@ function separateEntryFiles() {
 				external: ["node:*"],
 				tsconfig: join(root, "tsconfig.json"),
 			})
+			for (const [file, name] of INLINE_SCRIPTS)
+				await bundleWorker({
+					entryPoints: [join(root, file)],
+					outfile: resolve(root, outDir, name),
+					bundle: true,
+					minify: true,
+					platform: "browser",
+					format: "iife",
+					target: "es2019",
+					tsconfig: join(root, "tsconfig.json"),
+				})
 		},
 	}
 }

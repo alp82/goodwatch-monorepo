@@ -210,7 +210,7 @@ The limits come from a measured run plus a margin: about 5% on bytes, one or two
 ```sh
 ./bench.sh tap
 ./bench.sh tap --runs 7 --label after-carousel
-./bench.sh tap --controls cast_next,related_tab --modes early --runs 3
+./bench.sh tap --controls cast_next,related_step --modes early --runs 3
 ./bench.sh tap --base-url http://127.0.0.1:3304 --label branch
 ```
 
@@ -250,13 +250,13 @@ Every measurement is its own page load in a new browser: empty cache, no cookies
 | `fingerprint_switch` | The first "See all ... traits" button in `#fingerprint` | One of the six detail views is displayed |
 | `episode_cell` | The first displayed episode cell in `#episode-ratings` (show page only) | The episode's tip is in the document |
 | `cast_next` | The next arrow of the cast row in `#actors_and_crew` | The row's active slide is another one than before the tap |
-| `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. |
-| `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap |
+| `related_step` | The first poster of the related map in `#related` | The map is about the tapped title: the stage's `data-pl-at` is the poster's key. The section's inline script does it, before hydration. |
+| `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. Runs only when `--controls` names it. |
+| `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap. Runs only when `--controls` names it. |
 
-| `related_more` | Carousel prototype, list variant: the first "Show more" step in `#related` | Its `<details>` is open. Runs only when `--controls` names it. |
-| `related_explore` | Carousel prototype, explore variant: "Explore from here" in `#related` | The walk through similar titles is in the document with its first neighbors. Runs only when `--controls` names it. |
+`related_tab` and `related_next` belong to the related titles carousel, which serves only while the related map is off (`REC_RELATED_MAP=off`). A default run leaves them out.
 
-The selectors use section ids, roles, and accessible names. The carousel arrows have no name: they are the last `button` that is a direct child of a `.swiper` element. On a page of the carousel prototype (a path with `?proto=rows`, `list`, or `explore` on a server that runs with `PROTO_CAROUSELS=1`; `bench.sh` accepts no query in `--movie` and `--show`, so set `TAP_PAGES` and run `tap/tap.mjs` directly), a row is a `[data-nrow]` element, its arrow is the `button[data-nrow-dir="1"]` in it, and the effect of an arrow is that the row has scrolled. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
+The selectors use section ids, roles, and accessible names. The carousel arrows have no name: they are the last `button` that is a direct child of a `.swiper` element. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
 
 **What a measurement can end as.**
 
@@ -323,7 +323,7 @@ What it does, in order:
 5. **Scans the container's log from its start** with the patterns in [`smoke/log-patterns.json`](smoke/log-patterns.json), after the requests, so that errors from the edge-case pages are in it. The people index, the title snapshot, and the search index must report that they loaded (see [Roles](#roles) for a process that runs as one role). The latest `Process:` line must say `query encoder ready`. Slow subsystems have until 120 seconds after the process start (`--log-wait`). No line may match a failure pattern, such as `failed to start`, `Cannot find module`, or `TypeError`.
 6. **Reads the metrics again.** The Redis client must be ready, no Redis breaker may be open, and no route's 5xx counter may have risen since step 2. Background traffic counts too: a 5xx that a crawler caused during the run fails the check. 5xx responses from before the run print a warning.
 
-The URL list covers a well-known movie and show, a title without a poster, without a backdrop, without cast, without a trailer, and without streaming data, a show with more than 3,300 cast rows, a person with and without a department, a filtered person URL without the cookie (403), with it (200), and from a crawler (301), home, Discover with and without a filter, the share list and its image, a missing share list and a missing title (404), a title's OG image, `robots.txt`, the addresses a crawler must not be sent to a hub for (an unknown path, category, and category page answer 404, `/tv-shows` and an old explore address answer 301 to their new address or 404, a removed sitemap file answers 410, and the sitemap index is still served), a hub without an empty JSON-LD block, the canonical address of a category page's second page, a script that the home page references, `/metrics` on the public port, and the GET endpoints that pages call. Each entry's `guards` field says which regression or edge it's for, and a failure prints it.
+The URL list covers a well-known movie and show, a title without a poster, without a backdrop, without cast, without a trailer, and without streaming data, a show with more than 3,300 cast rows, a person with and without a department, a filtered person URL without the cookie (403), with it (200), and from a crawler (301), home, Discover with and without a filter, the share list and its image, a missing share list and a missing title (404), a title's OG image, `robots.txt`, a script that the home page references, `/metrics` on the public port, and the GET endpoints that pages call. Each entry's `guards` field says which regression or edge it's for, and a failure prints it.
 
 To add a check after a regression, add an entry to `smoke/urls.json` or a pattern to `smoke/log-patterns.json`. Use public catalog entries only. The share list entries read `SHARE_LIST_PATH` and `SHARE_LIST_OG_PATH` from `config.env`, print a warning when they're unset, and never print the path.
 

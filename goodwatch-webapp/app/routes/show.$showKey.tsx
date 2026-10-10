@@ -1,4 +1,3 @@
-import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
@@ -8,26 +7,25 @@ import {
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect, useMemo } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
-import { getDetailsForShow, getDetailsForMovie } from "~/server/details.server"
-import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
-import { isCrawler } from "~/server/crawlers.server"
-import { relatedPrefetchBudgetMs } from "~/server/related-budget"
-import { relatedPanelEmbedded } from "~/server/related-prefetch"
-import { getEpisodeGrid } from "~/server/episode-grid.server"
-import { type EpisodeGridWire, packEpisodeGrid, unpackEpisodeGrid } from "~/utils/episode-grid-wire"
 import { resolveCountry } from "~/server/country.server"
-import { prefetchRelatedTitlesState } from "~/server/related.server"
-import { carouselPrototype } from "~/server/prototype-carousels.server"
-import { prefetchTitleExtrasState } from "~/server/title-extras.server"
+import { isCrawler } from "~/server/crawlers.server"
+import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
+import { getEpisodeGrid } from "~/server/episode-grid.server"
+import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
+import { relatedPrefetchBudgetMs } from "~/server/related-budget"
+import { prefetchRelatedSection, relatedSectionData } from "~/server/related-map.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
-import { mergeDehydratedStates } from "~/utils/title-extras"
+import { prefetchTitleExtrasState } from "~/server/title-extras.server"
+import type { ShowQueryResult } from "~/server/types/details-types"
 import { getUserSettings } from "~/server/user-settings.server"
 import Details from "~/ui/details/Details"
+import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import { getUserIdFromRequest } from "~/utils/auth"
-import { titleToDashed } from "~/utils/helpers"
 import { detailsPageMeta } from "~/utils/detailsMeta"
+import { type EpisodeGridWire, packEpisodeGrid, unpackEpisodeGrid } from "~/utils/episode-grid-wire"
+import { titleToDashed } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
-import type { ShowQueryResult } from "~/server/types/details-types"
+import { mergeDehydratedStates } from "~/utils/title-extras"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -67,7 +65,7 @@ export const loader: LoaderFunction = async ({
 		language,
 	})
 	let episodeGridFailed = false
-	const [media, episodeGrid, relatedState, extrasState] = await Promise.all([
+	const [media, episodeGrid, relatedSection, extrasState] = await Promise.all([
 		details,
 		// A failed grid read hides the grid; it never fails the page.
 		getEpisodeGrid({ showId })
@@ -77,7 +75,7 @@ export const loader: LoaderFunction = async ({
 				console.error("episode grid failed", { showId, error })
 				return null
 			}),
-		prefetchRelatedTitlesState({
+		prefetchRelatedSection({
 			tmdbId: Number(showId),
 			sourceMediaType: "show",
 			budgetMs,
@@ -90,9 +88,9 @@ export const loader: LoaderFunction = async ({
 			() => null,
 		),
 	])
-	const dehydratedState = mergeDehydratedStates(relatedState, extrasState)
-	// PROTOTYPE (native-scroll carousels): null unless the server runs with PROTO_CAROUSELS=1 and the request asks.
-	const prototype = await carouselPrototype(request, media, relatedState)
+	// The related map's section, or with the map off the related titles carousel's first panel.
+	const related = relatedSectionData(relatedSection, media.details.title)
+	const dehydratedState = mergeDehydratedStates(related.panelState, extrasState)
 
 	const data = {
 		media,
@@ -102,14 +100,13 @@ export const loader: LoaderFunction = async ({
 		},
 		countryIsFallback,
 		dehydratedState,
-		...(prototype?.data && { carouselPrototype: prototype.data }),
+		...(related.relatedMap && { relatedMap: related.relatedMap }),
 	}
-	if (prototype) return json(data, { headers: prototype.headers })
-	// A failed grid read or a missing related panel or extra makes the page incomplete.
+	// A failed grid read or missing related titles or a missing extra makes the page incomplete.
 	// No cache may keep it. A grid read that resolves to null is complete.
 	const complete =
 		!episodeGridFailed &&
-		relatedPanelEmbedded(relatedState) &&
+		related.complete &&
 		titleExtrasEmbedded(extrasState, { genres: media.details.genres })
 	return complete
 		? data
