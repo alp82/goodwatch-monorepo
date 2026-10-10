@@ -8,6 +8,7 @@ const {
 	PAGE_TITLES,
 	chipListLength,
 	floorOf,
+	isDocumentRequest,
 	levelIn,
 	levelsOf,
 	nearOf,
@@ -160,4 +161,19 @@ test("the plain links are the most alike titles with the address of each one's p
 	})
 	assert.equal(links[1].href, "/show/3-title-3")
 	assert.equal(links[2].text, "Title 4")
+})
+
+test("a request is for a document when the browser says so, or when a client without that header asks for HTML", () => {
+	const request = (headers: Record<string, string>) =>
+		new Request("https://example.org/movie/603-the-matrix", { headers })
+	assert.equal(isDocumentRequest(request({ "Sec-Fetch-Dest": "document" })), true)
+	// A navigation inside the app fetches the loader's data.
+	assert.equal(
+		isDocumentRequest(request({ "Sec-Fetch-Dest": "empty", Accept: "*/*" })),
+		false,
+	)
+	assert.equal(isDocumentRequest(request({ Accept: "text/html,*/*;q=0.8" })), true)
+	// In doubt the answer carries the markup.
+	assert.equal(isDocumentRequest(request({ Accept: "*/*" })), false)
+	assert.equal(isDocumentRequest(request({})), false)
 })

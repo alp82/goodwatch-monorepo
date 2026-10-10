@@ -89,7 +89,11 @@ export const loader: LoaderFunction = async ({
 		),
 	])
 	// The related map's section, or with the map off the related titles carousel's first panel.
-	const related = relatedSectionData(relatedSection, media.details.title)
+	const related = relatedSectionData(
+		relatedSection,
+		media.details.title,
+		request,
+	)
 	const dehydratedState = mergeDehydratedStates(related.panelState, extrasState)
 
 	const data = {

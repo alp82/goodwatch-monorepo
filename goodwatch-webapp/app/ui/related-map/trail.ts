@@ -5,7 +5,7 @@
 // - Pointing at a poster, or holding it, moves a mark on every chip to that title's level, with the way from the
 //   level of the title in the middle drawn in green (more) or red (less).
 // - A chip that is on keeps a band of light moving over the part it changed, after the flash it comes on with: left
-//   to right over what it added, right to left over what it took away (styles.ts).
+//   to right over what it added, right to left over what it took away (related-map.css).
 // - The line of plain links under the section is out of sight. It stays in the server's HTML.
 import type { MapCore, MapCtx, MapForm, MapTitle } from "./engine"
 import { chipsKit } from "./level-chips"

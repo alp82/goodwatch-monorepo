@@ -1,14 +1,20 @@
-// The style of the related map. The server puts it into the page next to the section. A page opened by a navigation
-// inside the app gets it from the lazy chunk (client.ts). Never part of the title route's own stylesheet.
-//
-// In order: the section's frame and a poster, the map with its rings and zoom, how a poster moves and fades (the
-// script sets the durations with every redraw), the level chips, what chips and posters show of each other, the
-// trail, the card, and the wide layout from 1,024 px.
-//
-// The heights add up to a section of 602 px on a phone and 576 px on a wide screen (section-heights.ts): the padding,
-// the heading, the stage, and the gaps between them. The line of plain links stays in the document for crawlers and
-// screen readers, and takes no room.
-export const RELATED_MAP_CSS = `
+/*
+The style of the related map (RelatedMap.tsx). Its own file, with a hashed name and a year in the cache: a title page
+asks for it without blocking the first paint, and a page opened inside the app asks for it when the section mounts.
+Never part of the app's one stylesheet.
+
+In order: the section's frame and a poster, the map with its rings and zoom, how a poster moves and fades (the script
+sets the durations with every redraw), the level chips, what chips and posters show of each other, the trail, the
+card, and the wide layout from 1,024 px.
+
+The heights add up to a section of 602 px on a phone and 576 px on a wide screen (section-heights.ts): the padding,
+the heading, the stage, and the gaps between them. The line of plain links stays in the document for crawlers and
+screen readers, and takes no room.
+
+The first rule shows the section: until this file is there, the section holds its height and hides its content
+(RelatedMap.tsx).
+*/
+.pl.pl-map>*{visibility:visible}
 .pl{position:relative;display:flex;flex-direction:column;gap:.5rem;border-radius:.75rem;border:1px solid rgba(255,255,255,.1);
 background:rgba(255,255,255,.05);padding:1rem;overflow:hidden;contain:layout style}
 .pl:focus{outline:none}
@@ -295,4 +301,3 @@ white-space:nowrap;box-shadow:0 2px 12px rgba(251,191,36,.28)}
 .fn-row .ix-c[aria-pressed="true"] .ix-z::after{animation:none;translate:0 0;opacity:.5}
 .ix-c>.fn-pz,.ix-c>.fn-pk{transition:none}
 }
-`

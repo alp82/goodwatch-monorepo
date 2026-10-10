@@ -1,4 +1,5 @@
-import { copyFileSync } from "node:fs"
+import { createHash } from "node:crypto"
+import { copyFileSync, mkdirSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { basename, join, resolve } from "node:path"
 import { vitePlugin as remix } from "@remix-run/dev"
@@ -31,9 +32,11 @@ const BUNDLED_WORKERS = [
 	"app/server/search-ranking/search-index.worker.ts",
 	"app/server/title-snapshot/title-snapshot.worker.ts",
 ]
-// The related map's engine as one minified script for the browser, which the server puts into a title page after the
-// section, so that taps work before hydration (app/server/related-map.server.ts reads the file).
-const INLINE_SCRIPTS = [["app/ui/related-map/inline.ts", "related-map.inline.js"]]
+// The related map's engine as one minified classic script among the client build's files, with a content hash in its
+// name like Vite's own files, so that it is served, compressed, cached for a year, and kept for other builds the same
+// way. A title page loads it before hydration. The server reads its address from a small file next to the server
+// bundle (app/server/related-map.server.ts).
+const RELATED_MAP_SCRIPT = { entry: "app/ui/related-map/inline.ts", name: "related-map", list: "related-map.assets.json" }
 function separateEntryFiles() {
 	let root
 	let outDir
@@ -62,17 +65,26 @@ function separateEntryFiles() {
 				external: ["node:*"],
 				tsconfig: join(root, "tsconfig.json"),
 			})
-			for (const [file, name] of INLINE_SCRIPTS)
-				await bundleWorker({
-					entryPoints: [join(root, file)],
-					outfile: resolve(root, outDir, name),
-					bundle: true,
-					minify: true,
-					platform: "browser",
-					format: "iife",
-					target: "es2019",
-					tsconfig: join(root, "tsconfig.json"),
-				})
+			const built = await bundleWorker({
+				entryPoints: [join(root, RELATED_MAP_SCRIPT.entry)],
+				bundle: true,
+				minify: true,
+				write: false,
+				platform: "browser",
+				format: "iife",
+				target: "es2019",
+				tsconfig: join(root, "tsconfig.json"),
+			})
+			const script = built.outputFiles[0].contents
+			const hash = createHash("sha256").update(script).digest("base64url").slice(0, 8)
+			// The client build's files are next to the server's: build/client/assets and build/server.
+			const assets = resolve(root, outDir, "../client/assets")
+			mkdirSync(assets, { recursive: true })
+			writeFileSync(join(assets, `${RELATED_MAP_SCRIPT.name}-${hash}.js`), script)
+			writeFileSync(
+				resolve(root, outDir, RELATED_MAP_SCRIPT.list),
+				JSON.stringify({ script: `/assets/${RELATED_MAP_SCRIPT.name}-${hash}.js` }),
+			)
 		},
 	}
 }

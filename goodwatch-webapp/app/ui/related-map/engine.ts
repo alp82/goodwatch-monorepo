@@ -1,6 +1,5 @@
-// The engine of the related map. It runs in three places from the same source: on the server (the section's first
-// picture), as the page's inline script (taps work before hydration), and from a lazy chunk (a page opened by a
-// navigation inside the app).
+// The engine of the related map. It runs in two places from the same source: on the server (the section's first
+// picture), and in the browser as a script of its own that a title page loads before hydration (inline.ts).
 //
 // A step never waits for the server. The browser holds a pack per title (see server/related-map.server.ts) and draws
 // the new picture from it in the same task as the tap.
@@ -1019,5 +1018,18 @@ export function relatedMapEngine(
 	}
 	win.__gwRelatedMap = Object.assign(G, { boot })
 	boot()
+	// A tap that came before this script was remembered by the document's inline script (RelatedMap.tsx): the last
+	// poster or control that was tapped is tapped now, if it is still there.
+	const early = win.__gwRelatedMapTap as
+		| { el: HTMLElement | null; on: (event: Event) => void }
+		| undefined
+	if (early) {
+		win.removeEventListener("click", early.on, true)
+		win.__gwRelatedMapTap = undefined
+		if (early.el?.isConnected && sec(early.el)) {
+			G.used = true
+			early.el.click()
+		}
+	}
 	return { section }
 }
