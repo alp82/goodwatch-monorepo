@@ -103,7 +103,7 @@
     {
       "id": "discover",
       "path": "/discover",
-      "html": { "title": "Discover", "minTitleLinks": 1, "image": true, "jsonLd": true },
+      "html": { "title": "Discover", "minTitleLinks": 1, "image": true },
       "guards": "Discover renders its first rows on the server. It needs the title snapshot, so it is empty right after a failed snapshot load."
     },
     {
@@ -159,9 +159,93 @@
     {
       "id": "robots",
       "path": "/robots.txt",
-      "contains": ["User-agent:", "Disallow: /api/"],
+      "contains": ["User-agent:", "Disallow: /api/", "Disallow: /discover/*?"],
       "contentType": "^text/plain",
-      "guards": "The public directory is in the image, and crawlers get their rules."
+      "guards": "The public directory is in the image, and crawlers get their rules. Title pages link to filtered Discover URLs, which crawlers must not follow."
+    },
+    {
+      "id": "unknown-path",
+      "path": "/qwertyzzz",
+      "client": "bot",
+      "expect": [404],
+      "guards": "A path that no route names answers 404. A redirect to the start page reads as a soft 404 to a crawler."
+    },
+    {
+      "id": "unknown-category",
+      "path": "/movies/qwertyzzz",
+      "client": "bot",
+      "expect": [404],
+      "guards": "An unknown category under a known type answers 404, not a redirect to the type's hub."
+    },
+    {
+      "id": "unknown-category-page",
+      "path": "/movies/moods/qwertyzzz",
+      "client": "bot",
+      "expect": [404],
+      "guards": "An unknown page of a known category answers 404."
+    },
+    {
+      "id": "type-hub",
+      "path": "/movies",
+      "client": "bot",
+      "html": { "title": "Best Movies" },
+      "contains": ["<link rel=\"canonical\" href=\"https://goodwatch.app/movies\"/>"],
+      "notContains": ["application/ld+json\">{}<"],
+      "guards": "A hub without structured data has no JSON-LD block, not an empty one. It also shows that the 404 for unknown paths didn't take the hubs with it."
+    },
+    {
+      "id": "category-page-second",
+      "path": "/movies/moods/scary?page=2",
+      "client": "bot",
+      "html": { "title": "Scary Movies" },
+      "contains": ["<link rel=\"canonical\" href=\"https://goodwatch.app/movies/moods/scary?page=2\"/>"],
+      "guards": "The second page of a category page lists other titles, so its canonical address names the page and not the first one."
+    },
+    {
+      "id": "tv-shows-hub",
+      "path": "/tv-shows",
+      "client": "bot",
+      "expect": [301],
+      "header": { "location": "^/shows$" },
+      "guards": "The old address of the shows hub moves for good, not to the start page."
+    },
+    {
+      "id": "tv-shows-page",
+      "path": "/tv-shows/moods/scary?page=2",
+      "client": "bot",
+      "expect": [301],
+      "header": { "location": "^/shows/moods/scary\\?page=2$" },
+      "guards": "An old shows address keeps the rest of its path and its query. The fixed-depth routes must win over the category routes."
+    },
+    {
+      "id": "explore-old-page",
+      "path": "/explore/movies/moods/scary",
+      "client": "bot",
+      "expect": [301],
+      "header": { "location": "^/movies/moods/scary$" },
+      "guards": "An old explore address with a category page of the same name moves to that page, not to a hub."
+    },
+    {
+      "id": "explore-old-missing",
+      "path": "/explore/movies/plot/qwertyzzz",
+      "client": "bot",
+      "expect": [404],
+      "guards": "An old explore address without a page that replaces it answers 404."
+    },
+    {
+      "id": "sitemap-index",
+      "path": "/sitemaps/sitemap.xml",
+      "client": "bot",
+      "contains": ["<sitemapindex"],
+      "guards": "The sitemap that robots.txt names is served as a file. The answer for removed sitemap files must not take it."
+    },
+    {
+      "id": "sitemap-removed",
+      "path": "/sitemaps/sitemap_qwertyzzz.xml",
+      "client": "bot",
+      "expect": [410],
+      "contentType": "^text/plain",
+      "guards": "A sitemap file that was removed answers 410, not a redirect to the start page."
     },
     {
       "id": "static-asset",

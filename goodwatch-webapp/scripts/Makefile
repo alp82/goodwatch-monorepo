@@ -1,7 +1,7 @@
 # How and when to run these: docs/sitemap.md.
 SITEMAP_DIR := ../public/sitemaps
 
-.PHONY: sitemaps sitemaps-checked sitemaps-test
+.PHONY: sitemaps sitemaps-checked sitemaps-test index-record
 
 # Writes the sitemap files straight into public/sitemaps, unchecked.
 sitemaps:
@@ -26,3 +26,7 @@ sitemaps-checked:
 
 sitemaps-test:
 	python3 -m unittest test_sitemap_query test_sitemap_lastmod test_check_sitemap_urls
+
+# Weekly, by hand. See docs/research/discovery-search/index-record.md.
+index-record:
+	uv run gsc_sample.py

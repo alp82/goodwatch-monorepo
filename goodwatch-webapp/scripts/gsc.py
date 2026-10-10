@@ -15,6 +15,7 @@ Usage:
 Page indexing, crawl stats, manual actions, removals and messages are not
 available through the API.
 """
+import functools
 import json
 import os
 import sys
@@ -32,6 +33,7 @@ BASE = "https://www.googleapis.com/webmasters/v3"
 INSPECT = "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect"
 
 
+@functools.cache
 def session():
     key_file = os.getenv("GSC_KEY_FILE")
     if not key_file:
@@ -66,4 +68,5 @@ def main():
     print(json.dumps(out, indent=1))
 
 
-main()
+if __name__ == "__main__":
+    main()

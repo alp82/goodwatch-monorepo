@@ -72,6 +72,7 @@ http:
     gw-webapp-redirect-to-https:
       redirectScheme:
         scheme: https
+        permanent: true
     gw-webapp-retry:
       retry:
         attempts: 2
