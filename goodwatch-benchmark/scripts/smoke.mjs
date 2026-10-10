@@ -234,7 +234,9 @@ function readLogLines() {
 		return text.split("\n").filter((line) => any.test(line))
 	}
 	// 2>&1 inside the host's shell: the app's errors go to the container's stderr.
-	const script = `docker logs ${quote(container.name)} 2>&1 | grep -aE -f <(cat <<'SMOKE_PATTERNS'\n${logPatterns.join("\n")}\nSMOKE_PATTERNS\n) | cut -c1-600 || true`
+	// Since the process started: a restart keeps the container's earlier log, and its lines describe another process.
+	const since = Number.isFinite(container.startedAt) ? `--since ${quote(new Date(container.startedAt).toISOString())} ` : ""
+	const script = `docker logs ${since}${quote(container.name)} 2>&1 | grep -aE -f <(cat <<'SMOKE_PATTERNS'\n${logPatterns.join("\n")}\nSMOKE_PATTERNS\n) | cut -c1-600 || true`
 	return onHost(script, 120).split("\n").filter(Boolean)
 }
 
