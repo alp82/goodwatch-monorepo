@@ -20,29 +20,13 @@ import {
 	mediaHeight,
 	questionsHeight,
 	relatedHeight,
+	relatedMapHeight,
 	sequelsHeight,
 } from "~/ui/details/section-heights"
 import type { SectionIds } from "~/ui/details/sections"
 import { titleQuestions } from "~/ui/details/titleQuestions"
-// PROTOTYPE (native-scroll carousels): everything from ui/prototype-carousels is throwaway.
-import ActorsNative from "~/ui/prototype-carousels/ActorsNative"
-import DiveSection from "~/ui/prototype-carousels/DiveSection"
-import Explore1Constellation from "~/ui/prototype-carousels/Explore1Constellation"
-import Explore2Clusters from "~/ui/prototype-carousels/Explore2Clusters"
-import Explore3Walk from "~/ui/prototype-carousels/Explore3Walk"
-import Explore4Chips from "~/ui/prototype-carousels/Explore4Chips"
-import Explore5Map from "~/ui/prototype-carousels/Explore5Map"
-import { NativeRowAssets } from "~/ui/prototype-carousels/NativeRow"
-import PlaySection from "~/ui/prototype-carousels/PlaySection"
-import RelatedExplore from "~/ui/prototype-carousels/RelatedExplore"
-import RelatedList from "~/ui/prototype-carousels/RelatedList"
-import RelatedRowsNative from "~/ui/prototype-carousels/RelatedRowsNative"
-import RingSection from "~/ui/prototype-carousels/RingSection"
-import SeaSection from "~/ui/prototype-carousels/SeaSection"
-import WalkSection from "~/ui/prototype-carousels/WalkSection"
-import { PLAY_NAMES } from "~/ui/prototype-carousels/play-names"
-import { useCarouselPrototype } from "~/ui/prototype-carousels/variant"
 import Ratings from "~/ui/ratings/Ratings"
+import RelatedMap, { useRelatedMap } from "~/ui/related-map/RelatedMap"
 import Streaming from "~/ui/streaming/Streaming"
 import { TrackedEpisodes, useEpisodeTracking } from "~/ui/tracking/gate"
 import { extractRatings } from "~/utils/ratings"
@@ -78,76 +62,9 @@ export default function DetailsContent({
 		...belowFoldProps(skipping, reserved, props?.className),
 	})
 
-	// PROTOTYPE (native-scroll carousels): null on today's page.
-	const variant = useCarouselPrototype()?.variant
-	const native = variant !== undefined && variant !== "today"
-	const CastRow = native ? ActorsNative : Actors
-	// Measured at 412 and 1,350 px wide on The Matrix and Breaking Bad.
-	const castReserve = (reserved: ReservedHeight): ReservedHeight =>
-		native && reserved.phone ? { phone: 212, desktop: 244 } : reserved
-	// The second round's forms and the height each one reserves, measured the same way.
-	const explore = {
-		explore1: { form: Explore1Constellation, phone: 704, desktop: 610 },
-		explore2: { form: Explore2Clusters, phone: 498, desktop: 335 },
-		explore3: { form: Explore3Walk, phone: 522, desktop: 416 },
-		explore4: { form: Explore4Chips, phone: 401, desktop: 366 },
-		explore5: { form: Explore5Map, phone: 668, desktop: 623 },
-		// The third round's forms: one component, and the same height for all five by design.
-		walk1: { form: WalkSection, phone: 590, desktop: 582 },
-		walk2: { form: WalkSection, phone: 590, desktop: 582 },
-		walk3: { form: WalkSection, phone: 590, desktop: 614 },
-		walk4: { form: WalkSection, phone: 590, desktop: 582 },
-		walk5: { form: WalkSection, phone: 590, desktop: 582 },
-		// The fourth round's forms, at the third round's heights.
-		dive1: { form: DiveSection, phone: 590, desktop: 582 },
-		dive2: { form: DiveSection, phone: 590, desktop: 582 },
-		dive3: { form: DiveSection, phone: 590, desktop: 614 },
-		dive4: { form: DiveSection, phone: 590, desktop: 582 },
-		dive5: { form: DiveSection, phone: 590, desktop: 582 },
-		// The fifth round's forms. Each has its own fixed height, measured the same way.
-		ring1: { form: RingSection, phone: 590, desktop: 582 },
-		ring2: { form: RingSection, phone: 590, desktop: 582 },
-		ring3: { form: RingSection, phone: 589, desktop: 586 },
-		ring4: { form: RingSection, phone: 589, desktop: 586 },
-		ring5: { form: RingSection, phone: 590, desktop: 582 },
-		ring6: { form: RingSection, phone: 503, desktop: 465 },
-		ring7: { form: RingSection, phone: 590, desktop: 582 },
-		ring8: { form: RingSection, phone: 510, desktop: 484 },
-		ring9: { form: RingSection, phone: 586, desktop: 577 },
-		// The sixth round's forms: one component, one height.
-		sea1: { form: SeaSection, phone: 583, desktop: 548 },
-		sea2: { form: SeaSection, phone: 583, desktop: 548 },
-		sea3: { form: SeaSection, phone: 583, desktop: 548 },
-		sea4: { form: SeaSection, phone: 583, desktop: 548 },
-		sea5: { form: SeaSection, phone: 583, desktop: 548 },
-		sea6: { form: SeaSection, phone: 583, desktop: 548 },
-		// The seventh round's forms: one component, one height.
-		...Object.fromEntries(
-			Object.keys(PLAY_NAMES).map((name) => [
-				name,
-				{ form: PlaySection, phone: 600, desktop: 553 },
-			]),
-		),
-	}[variant as string]
-	const relatedReserve = (reserved: ReservedHeight): ReservedHeight =>
-		!reserved.phone
-			? reserved
-			: explore
-				? { phone: explore.phone, desktop: explore.desktop }
-				: variant === "list"
-					? { phone: 1470, desktop: 880 }
-					: variant === "explore"
-						? { phone: 736, desktop: 632 }
-						: reserved
-	const Related = explore
-		? explore.form
-		: variant === "rows"
-			? RelatedRowsNative
-			: variant === "list"
-				? RelatedList
-				: variant === "explore"
-					? RelatedExplore
-					: DetailsRelated
+	// The related titles as a map. Without one (the setting is off, or the title's pack was not there in time) the
+	// related titles carousel serves.
+	const relatedMap = Boolean(useRelatedMap())
 
 	// A member with episode tracking gets the episode list in the grid's place, once they come near it.
 	const tracking = useEpisodeTracking(media)
@@ -155,7 +72,6 @@ export default function DetailsContent({
 
 	return (
 		<div className="flex flex-col gap-12">
-			{native && <NativeRowAssets />}
 			{tracking ? (
 				<TrackedEpisodes
 					media={media}
@@ -184,13 +100,8 @@ export default function DetailsContent({
 			<div {...section(aboutHeight(), sectionProps.about)}>
 				<About media={media} navigateToSection={navigateToSection} />
 			</div>
-			<div
-				{...section(
-					castReserve(actorsHeight(media)),
-					sectionProps.actors_and_crew,
-				)}
-			>
-				<CastRow
+			<div {...section(actorsHeight(media), sectionProps.actors_and_crew)}>
+				<Actors
 					cast={cast}
 					total={cast_total}
 					mediaType={media.mediaType}
@@ -201,9 +112,16 @@ export default function DetailsContent({
 				<Crew crew={crew} />
 			</div>
 			<div
-				{...section(relatedReserve(relatedHeight(media)), sectionProps.related)}
+				{...section(
+					relatedMap ? relatedMapHeight() : relatedHeight(media),
+					sectionProps.related,
+				)}
 			>
-				<Related media={media} />
+				{relatedMap ? (
+					<RelatedMap media={media} />
+				) : (
+					<DetailsRelated media={media} />
+				)}
 			</div>
 			<div {...section(sequelsHeight(media))}>
 				<SequelsPrequelsFranchise media={media} />
