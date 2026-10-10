@@ -270,7 +270,8 @@ export function playEngine(
 		qf: ((key: string) => string) | null
 		alt: Record<string, Record<string, PlayTitle[]>>
 		dom: Record<string, PlayTitle[]>
-	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null, tr: {}, q: "", fl: {}, ex: {}, late: {}, extra: 0, qf: null, alt: {}, dom: {} }
+		again: Record<string, number>
+	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null, tr: {}, q: "", fl: {}, ex: {}, late: {}, extra: 0, qf: null, alt: {}, dom: {}, again: {} }
 	const ESC: Record<string, string> = {
 		"&": "&amp;",
 		"<": "&lt;",
@@ -876,6 +877,17 @@ export function playEngine(
 				})
 				.catch(() => {
 					delete G.wait[key]
+					// A pack that failed for the title someone stands on is asked for again, a few times, further apart: a
+					// stand-in is never left for good because one request was lost.
+					const tries = (G.again[key] = (G.again[key] ?? 0) + 1)
+					if (tries <= 4)
+						win.setTimeout(() => {
+							const all = doc.querySelectorAll("[data-play]")
+							for (let i = 0; i < all.length; i++) {
+								const st = stateOf(all[i] as HTMLElement)
+								if (st.trail[st.trail.length - 1].k === key && !G.packs[key]) ask(key, true)
+							}
+						}, 1200 * tries)
 				})
 		}
 		return G.wait[key]

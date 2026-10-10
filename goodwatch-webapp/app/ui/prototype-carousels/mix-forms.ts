@@ -65,7 +65,7 @@ export function mixKit(core: PlayCore, kit: RingsKit) {
 	const SLOTS = ["#fbbf24", "#22d3ee", "#e879f9"]
 	const now = () => (core.win ? (core.win.performance.now() as number) : 0)
 	const active = (ctx: PlayCtx) => (ctx.st.mem.w as string[] | undefined) ?? []
-	const colorOf = (ctx: PlayCtx, token: string) => SLOTS[(((ctx.st.mem.sl as Record<string, number> | undefined) ?? {})[token] ?? 0) % SLOTS.length]
+	const colorOf = (ctx: PlayCtx, token: string) => SLOTS[((ctx.st.mem.sl as Record<string, number> | undefined)?.[token] ?? 0) % SLOTS.length]
 	/** The selection after a tap on a token: it goes when it was on. Otherwise it comes, one per trait and `max` in all. */
 	const after = (ctx: PlayCtx, token: string, max: number) => {
 		const cur = active(ctx)
@@ -362,7 +362,7 @@ const mix3: MixForm = (core, kit, mx) => {
 		top: (ctx, tokens) => {
 			const h = headed(ctx)
 			const all = offers(ctx).filter((o) => !h || o.key !== h.key)
-			let line = '<b>Heading nowhere yet</b><span>the nearest titles, and nothing else</span>'
+			let line = '<b>Heading nowhere yet</b><span>tap a chip to set one</span>'
 			let chips = ""
 			if (h) {
 				const v = core.val(ctx.c, h.key)

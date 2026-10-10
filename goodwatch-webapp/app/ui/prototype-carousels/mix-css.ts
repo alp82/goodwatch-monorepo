@@ -78,18 +78,25 @@ color:#e5e7eb;white-space:nowrap;text-align:left;border:1px solid rgba(255,255,2
 .ix-6{grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:28px;height:28px}
 .ix-4{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:28px;height:28px}
 .ix-hd{flex-direction:row;align-items:center;gap:.75rem;height:30px}
-.ix-ln{flex:0 1 auto;max-width:48%;height:auto}
+.ix-ln{flex:0 1 auto;max-width:42%;height:auto}
 .ix-ln span{flex:0 1 auto}
 .ix-chs{flex:1 1 0;height:28px}
 .ix-chs .ix-c:nth-child(n+4){display:flex}
-.ix-chs .ix-c{max-width:13rem}
+.ix-chs .ix-c{max-width:15rem}
 .ix-c{font-size:.78125rem;padding:0 .5rem;gap:.25rem}
-.ix-s{font-size:inherit}
-.ix-s::before{content:none}
 .ix-x{display:inline}
 .ix-t{font-size:.8125rem}
+.rg-big .ix-s{font-size:inherit}
+.rg-big .ix-s::before{content:none}
 .rg-big .ix-6{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:25px;gap:4px;height:auto}
 .rg-big .ix-c{font-size:.8125rem}
+}
+@media (min-width:1024px) and (max-width:1279px){
+.ix-chs .ix-c:nth-child(n+4){display:none}
+}
+@media (min-width:1280px){
+.ix-s{font-size:inherit}
+.ix-s::before{content:none}
 }
 @media (prefers-reduced-motion:reduce){
 .ix-c[data-fl],.ix-c[data-fl] .ix-z{animation:none}
