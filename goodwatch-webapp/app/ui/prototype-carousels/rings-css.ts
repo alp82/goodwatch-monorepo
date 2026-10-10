@@ -12,13 +12,13 @@ export const RINGS_CSS = `
 .pl[class*="pl-rings"] .pl-side,.pl[class*="pl-mix"] .pl-side{display:none}
 .pl-stage[class*="pl-rings"],.pl-stage[class*="pl-mix"]{height:468px}
 .rm.rg .rm-top{height:var(--th,30px)}
-.pl-stage[class] .rm.rg .rm-p{animation:none;transition:scale var(--sc,200ms) cubic-bezier(.3,.3,.2,1),opacity .15s}
+.pl-stage[class] .rm.rg .rm-p{animation:none;transition:scale var(--sc,200ms) cubic-bezier(.3,.3,.2,1)}
 .rg .rm-w{will-change:translate}
 @keyframes rg-in{from{opacity:0}}
 @keyframes rg-out{from{opacity:var(--o,1)}to{opacity:0}}
 .pl-stage[class] .rm.rg .rm-p.rg-new{animation:rg-in var(--fi,190ms) linear var(--fd,0ms) backwards}
 .pl-stage[class] .rm.rg .rm-p[data-r-x]{animation:rg-out var(--fo,190ms) linear both}
-.rg .rm-p img{transition:opacity var(--bk,0ms) ease-out}
+.rg .rm-p[data-pl-came] img{transition:opacity var(--bk,0ms) ease-out}
 .rg .rm-p .pl-cm{animation:rg-in var(--cmd,0ms) linear var(--cmw,0ms) backwards}
 .rg[data-r-pv] .rm-p:not([data-r-st]){opacity:.26}
 .rg .rm-p[data-pl-came]{z-index:1}
@@ -175,7 +175,7 @@ text-align:center;color:#fde68a;pointer-events:none}
 }
 @media (prefers-reduced-motion:reduce){
 .pl-stage[class] .rm.rg .rm-p.rg-new,.pl-stage[class] .rm.rg .rm-p[data-r-x],.rg .rm-p .pl-cm{animation:none}
-.pl-stage[class] .rm.rg .rm-p,.rg .rm-p img{transition:none}
+.pl-stage[class] .rm.rg .rm-p,.rg .rm-p[data-pl-came] img{transition:none}
 .rg-dot{transition:none}
 }
 `

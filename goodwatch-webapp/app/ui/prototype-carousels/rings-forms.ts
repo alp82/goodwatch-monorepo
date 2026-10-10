@@ -841,13 +841,23 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		if (root.getAttribute("data-r-geo") !== view.geo) root.setAttribute("data-r-geo", view.geo)
 		if (root.getAttribute("data-r-f") !== view.filter) root.setAttribute("data-r-f", view.filter)
 		if (root.getAttribute("data-r-z") !== String(view.z)) root.setAttribute("data-r-z", String(view.z))
-		part(root, "top", view.top)
+		// A step answers in the map and in the card. The control area follows in the frame after the first one: it
+		// is the part of a step that costs most to lay out, and nobody reads it in the first moment of a pan.
+		if (shift && !calm && win.requestAnimationFrame)
+			win.requestAnimationFrame(() =>
+				win.requestAnimationFrame(() => {
+					if (root.isConnected && last && root.getAttribute("data-r-form") === last.form) {
+						part(root, "top", last.top)
+						if (again) again(root)
+					}
+				}),
+			)
+		else part(root, "top", view.top)
 		part(root, "bg", view.bg)
 		part(root, "ctl", view.ctl)
 		part(root, "info", view.info)
-		// A change of size and the dimming of the title you came from take their time from the map, as they start.
-		const wstyle = calm ? view.wstyle : `${view.wstyle};--sc:${Math.round(T.sc)}ms;--bk:${Math.round(T.bk)}ms`
-		if (world.getAttribute("style") !== wstyle) world.style.cssText = wstyle
+		// The map's own style never changes with the kind of redraw: a change there is a new style for every poster.
+		if (world.getAttribute("style") !== view.wstyle) world.style.cssText = view.wstyle
 		if (calm) stop(world)
 		else if (shift) play(world, [frame(-shift.x, -shift.y), frame(0, 0)], PAN, EASE)
 		const wanted: Record<string, boolean> = {}
@@ -1029,7 +1039,8 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 						: spec.note(ctx, tokens, list, spots.length, more),
 				),
 				ck: ctx.c.k,
-				wstyle: `--pw:${posterW()}px`,
+				// How long a change of size and the dimming of the title you came from take: a zoom's time, for all.
+				wstyle: `--pw:${posterW()}px;--sc:${200 * ZOOM}ms;--bk:${200 * ZOOM}ms`,
 				rest,
 				filter: nameOf(tokens),
 				z: zoomOf(ctx),
