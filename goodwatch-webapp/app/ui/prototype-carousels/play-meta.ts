@@ -60,6 +60,9 @@ export const PLAY_VARIANTS = [
 	"mix4",
 	"mix5",
 	"mix6",
+	"fin1",
+	"fin2",
+	"fin3",
 ] as const
 export type PlayVariant = (typeof PLAY_VARIANTS)[number]
 export const isPlayVariant = (value: unknown): value is PlayVariant =>

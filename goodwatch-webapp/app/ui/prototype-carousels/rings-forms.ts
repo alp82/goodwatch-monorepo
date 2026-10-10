@@ -130,6 +130,16 @@ interface Spec {
 	/** A control is pointed at or held (`tokens`), or no longer (null): what the form shows of it beyond the map. */
 	shown?: (section: Element, ctx: PlayCtx, tokens: string[] | null, name: string, arg: string) => void
 	ctl?: (ctx: PlayCtx, tokens: string[]) => string
+	/** Thirteenth round (fin-forms.ts). The section's navigation, in place of the engine's history row. */
+	bar?: (ctx: PlayCtx) => string
+	/** The card's markup, in place of the kit's. It keeps the kit's marks for the name, the year, and the comparison. */
+	card?: (ctx: PlayCtx, note: string) => string
+	/** How a title differs from the page's title, as the card says it. */
+	diff?: (ctx: PlayCtx, title: PlayTitle) => string
+	/** A poster is pointed at or held (`title`), or no longer (null): what the form shows of it beyond the card. */
+	peeked?: (section: Element, ctx: PlayCtx, title: PlayTitle | null) => void
+	/** The map's height on a phone, when the form lays the stage out itself. */
+	mh?: number
 	drag?: (ctx: PlayCtx, x: number, y: number, w: number, h: number) => boolean
 }
 type Moved = HTMLElement & {
@@ -418,7 +428,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			ctx.root.t,
 		)}</b>:</span> <span class="rg-df" data-r-df="">${differs(ctx, c)}</span></p><p class="rg-nt" data-r-nt="">${note}</p>`
 	}
-	const peek = (section: Element, ctx: PlayCtx, t: PlayTitle | null) => {
+	const peek = (section: Element, ctx: PlayCtx, t: PlayTitle | null, diff?: (ctx: PlayCtx, title: PlayTitle) => string) => {
 		const card = section.querySelector("[data-r-info]") as Moved | null
 		const nm = card?.querySelector("[data-r-nm]")
 		const yr = card?.querySelector("[data-r-yr]")
@@ -437,7 +447,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		if (!card.__pk) card.__pk = { nm: nm.textContent ?? "", yr: yr.innerHTML, df: df.innerHTML }
 		nm.textContent = t.t
 		yr.innerHTML = when(t)
-		df.innerHTML = differs(ctx, t)
+		df.innerHTML = (diff ?? differs)(ctx, t)
 		card.setAttribute("data-r-pk", t.k)
 	}
 	const withOrWithout = (tokens: string[]) =>
@@ -987,8 +997,12 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		mode = spec.mode
 		const th = spec.th ?? 30
 		// A tall control takes the room of the card's last line on a phone, so that the map keeps its rows.
-		box.h = (spec.tall ? 414 : 398) - th
+		box.h = spec.mh ?? (spec.tall ? 414 : 398) - th
 		let seen: PlayCtx | null = null
+		const look = (section: Element, ctx: PlayCtx, t: PlayTitle | null) => {
+			peek(section, ctx, t, spec.diff)
+			if (spec.peeked) spec.peeked(section, ctx, t)
+		}
 		const picture = (ctx: PlayCtx) => {
 			hold(ctx)
 			seen = ctx
@@ -1032,7 +1046,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 				top: spec.top(ctx, tokens, list, spots.length),
 				bg: `${guides(scale, Math.min(rings, 3))}<span class="rm-key">${thin ? "dimmed = not a match" : "nearer = more alike"}</span>`,
 				ctl: `${spec.ctl ? spec.ctl(ctx, tokens) : ""}${zoomCtl(ctx, shown)}`,
-				info: info(
+				info: (spec.card ?? info)(
 					ctx,
 					thin
 						? more
@@ -1088,7 +1102,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		rested = (root, key) => {
 			if (!seen || root.getAttribute("data-r-at") !== seen.c.k) return
 			const t = key ? core.title(key) : undefined
-			peek(root, seen, t ?? null)
+			look(root, seen, t ?? null)
 		}
 		const form: PlayForm = {
 			hint: spec.hint,
@@ -1099,7 +1113,8 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			adopt,
 			fit,
 			into,
-			peek,
+			peek: look,
+			bar: spec.bar,
 			stage: picture,
 			act: (ctx, name, arg, _el, section) => {
 				hold(ctx)
@@ -1158,7 +1173,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	const pull = (x: number, y: number) => {
 		once = { x, y }
 	}
-	return { X, WORDS, box, word, emo, low, hue, tok, pass, passes, around, bound, open, gaps, withOrWithout, saying, toggled, make, pull, posterW, rule, hold, nameOf, still }
+	return { X, WORDS, box, word, emo, low, hue, tok, pass, passes, around, bound, open, gaps, withOrWithout, saying, toggled, make, pull, posterW, rule, hold, nameOf, still, when }
 }
 
 /** The switches as chips: lit means the titles around have the trait. */
