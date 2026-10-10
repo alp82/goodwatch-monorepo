@@ -41,10 +41,7 @@ export function assetUrl(path: string): string {
 	return at(assetBase(), path)
 }
 
-/**
- * A copy of Remix's file list (entry, routes and their imports) with every script address on `base`. The style
- * sheets of a route keep their paths: they block the paint, and the site's own connection is already open.
- */
+/** A copy of Remix's file list (entry, routes, their imports and style sheets) with every address on `base`. */
 export function manifestAt<T extends Manifest>(manifest: T, base: string): T {
 	if (!base) return manifest
 	const all = (paths?: string[]) => paths?.map((path) => at(base, path))
@@ -54,6 +51,7 @@ export function manifestAt<T extends Manifest>(manifest: T, base: string): T {
 			...route,
 			module: at(base, route.module),
 			imports: all(route.imports),
+			css: all(route.css),
 		}
 	return {
 		...manifest,

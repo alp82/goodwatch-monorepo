@@ -80,10 +80,14 @@ export const links: LinksFunction = () => [
 		href: "/favicon-16x16.png",
 	},
 	{ rel: "manifest", href: assetUrl("/site.webmanifest") },
-	// The stylesheet stays on the site's own host, whatever host the page's other files are on. It's the one request
-	// that blocks the first paint, and the document's connection is already open: on the static hostname it would
-	// wait for a second connection. The fonts that it names follow it.
-	{ rel: "stylesheet", href: cssTailwind },
+	// On the static hostname the stylesheet is fetched without credentials, like the scripts and the font, so that it
+	// uses the connection the preconnect hint opened. Without it the page's only render-blocking request would wait
+	// for a second connection to the same host.
+	{
+		rel: "stylesheet",
+		href: assetUrl(cssTailwind),
+		...(assetBase() ? { crossOrigin: "anonymous" as const } : {}),
+	},
 	// The site header's title is brand text and sits at the top of every page, on phones too. The preload starts
 	// the font's download next to the stylesheet's, so the swap from the fallback font comes early. It's the
 	// only font request of a page: the Latin Extended file loads only when a page shows such a letter.
@@ -91,8 +95,7 @@ export const links: LinksFunction = () => [
 		rel: "preload",
 		as: "font",
 		type: "font/woff2",
-		// The stylesheet names this file with a path, so the preload names the same host as the stylesheet.
-		href: gabaritoLatin,
+		href: assetUrl(gabaritoLatin),
 		crossOrigin: "anonymous",
 	},
 	{

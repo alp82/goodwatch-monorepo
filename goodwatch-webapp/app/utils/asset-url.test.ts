@@ -3,7 +3,7 @@ import { test } from "node:test"
 import { assetUrl, manifestAt, setServerAssetBase } from "./asset-url.ts"
 
 const base = "https://static.example.com"
-test("manifestAt moves every script address, leaves the style sheets, and does not mutate the build", () => {
+test("manifestAt moves every local address without mutating the build", () => {
 	const manifest = {
 		url: "/assets/manifest.js",
 		entry: { module: "/assets/entry.js", imports: ["/assets/shared.js"] },
@@ -33,7 +33,7 @@ test("manifestAt moves every script address, leaves the style sheets, and does n
 			root: {
 				module: `${base}/assets/root.js`,
 				imports: [`${base}/assets/route.js`],
-				css: ["/assets/root.css"],
+				css: [`${base}/assets/root.css`],
 			},
 			absolute: manifest.routes.absolute,
 			missing: undefined,
