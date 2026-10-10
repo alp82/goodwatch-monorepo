@@ -2,17 +2,18 @@ import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
 	type MetaFunction,
-	redirect,
 } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import React from "react"
-import { type NavType, navLabel, validUrlParams } from "~/ui/explore/config"
+import { exploreAddressExists, notFound } from "~/ui/explore/address"
+import { type NavType, navLabel } from "~/ui/explore/config"
 import { mainNavigation } from "~/ui/explore/main-nav"
 import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
 
 export const meta: MetaFunction = ({ params }) => {
 	const type = params.type || ""
 	const typeLabel = navLabel[type]
+	if (!typeLabel) return [{ title: "Page Not Found | GoodWatch" }]
 
 	const pageMeta: PageMeta = {
 		title: `Best ${typeLabel} and Where to Stream Them | GoodWatch`,
@@ -37,7 +38,7 @@ export const loader: LoaderFunction = async ({
 }: LoaderFunctionArgs) => {
 	const type = params.type || ""
 
-	if (!validUrlParams.type.includes(type)) return redirect("/")
+	if (!exploreAddressExists({ type })) throw notFound()
 
 	return {
 		type,
