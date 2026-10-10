@@ -74,6 +74,11 @@ page load. 40 visitors per second per generator.
 - **Per visit the origin got 2.0 requests and the static hostname 30.6.** The static hostname answered 731,839
   requests from worker3 with no error and a p95 of 58 ms.
 - **abio:** 22% of its 8 cores on average. The main threads were at 30% and 29%.
+- **Cloudflare's own count agrees.** Read from its analytics API afterwards, for 11:46 to 11:58 UTC, real visitors
+  included: 1,475,942 requests to the static hostname, of which 1,431,415 (97.0%) came from its cache, 57 were
+  misses, and 44,443 passed through to the origin as `dynamic`. Those are the web manifest, once per visitor.
+  Every answer was a 200 except 6 with 404 and 21 that the client closed (499). No 429, no 403, no 5xx.
+  It sent 23.5 GB.
 - **Complete page views are fewer than visitors** (21,552 of 23,996 on worker3) because the mix contains clients that
   request an OG image and no page.
 
@@ -85,7 +90,7 @@ page load. 40 visitors per second per generator.
 - **A fallback during a spike.** With the files from the origin, 120 page views per second hold and 140 fail
   ([the static hostname runs](viral-spike-static-hostname.md)). The destination holds only while the CDN is up.
 - **Search, members, and the long tail under load.** The mix is the hot landing pages for anonymous visitors.
-- **Cloudflare's own view.** Nobody looked at its dashboard during the run. What the generators saw is in the tables.
+- **Cloudflare's security events.** The Free plan doesn't give them through the analytics API. Its request counts are in the section above.
 - **Latency at this rate.** Both generators were near or above their limit during the hour.
 
 ## Reproduce
