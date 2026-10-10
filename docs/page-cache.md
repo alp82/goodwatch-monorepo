@@ -113,7 +113,9 @@ A response is stored only when all of these hold:
   (`INCOMPLETE_PAGE_HEADERS` in `app/server/incomplete-page.ts`), which the page headers turn into
   `private, no-store`. The page cache and a cache in front both follow it. A loader that renders a page without one
   of its parts must answer this header. Today these renders do:
-  - **A title page without its related panel or an extra.** It waits 150 ms for its related titles, genre links, and
+  - **A title page without its related titles or an extra.** The related titles are the related map's first
+    picture, or with the map off the related titles carousel's first panel (see
+    [related-map.md](implementation/related-map.md)). It waits 150 ms for its related titles, genre links, and
     collection (1,000 ms for a declared crawler). When a lookup runs out of time or fails, the document goes out
     without that part. The lookup keeps running and fills the data cache, so the next render is complete.
   - **A show page whose episode grid read failed.** The page renders without the grid.

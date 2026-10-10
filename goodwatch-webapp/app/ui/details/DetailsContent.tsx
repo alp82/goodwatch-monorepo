@@ -1,22 +1,18 @@
 import React, { useMemo } from "react"
+import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
+import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import About from "~/ui/details/About"
 import Actors from "~/ui/details/Actors"
 import Crew from "~/ui/details/Crew"
-import Media from "~/ui/details/Media"
-import type { SectionIds } from "~/ui/details/sections"
-import Ratings from "~/ui/ratings/Ratings"
-import Streaming from "~/ui/streaming/Streaming"
-import { extractRatings } from "~/utils/ratings"
-import type { PropsForSection, Section, SectionProps } from "~/utils/scroll"
-import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
 import DetailsQuestions from "~/ui/details/DetailsQuestions"
 import DetailsRelated from "~/ui/details/DetailsRelated"
-import type { MovieResult, ShowResult } from "~/server/types/details-types"
-import type { EpisodeGrid as EpisodeGridData } from "~/server/episode-grid.server"
+import Media from "~/ui/details/Media"
+import SequelsPrequelsFranchise from "~/ui/details/SequelsPrequelsFranchise"
+import { belowFoldProps, useBelowFold } from "~/ui/details/below-fold"
 import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
-import { belowFoldProps, useBelowFold } from "~/ui/details/below-fold"
 import {
+	type ReservedHeight,
 	aboutHeight,
 	actorsHeight,
 	crewHeight,
@@ -24,11 +20,17 @@ import {
 	mediaHeight,
 	questionsHeight,
 	relatedHeight,
+	relatedMapHeight,
 	sequelsHeight,
-	type ReservedHeight,
 } from "~/ui/details/section-heights"
+import type { SectionIds } from "~/ui/details/sections"
 import { titleQuestions } from "~/ui/details/titleQuestions"
+import Ratings from "~/ui/ratings/Ratings"
+import RelatedMap, { useRelatedMap } from "~/ui/related-map/RelatedMap"
+import Streaming from "~/ui/streaming/Streaming"
 import { TrackedEpisodes, useEpisodeTracking } from "~/ui/tracking/gate"
+import { extractRatings } from "~/utils/ratings"
+import type { PropsForSection, Section, SectionProps } from "~/utils/scroll"
 
 export interface DetailsContentProps {
 	media: MovieResult | ShowResult
@@ -59,6 +61,10 @@ export default function DetailsContent({
 		...props,
 		...belowFoldProps(skipping, reserved, props?.className),
 	})
+
+	// The related titles as a map. Without one (the setting is off, or the title's pack was not there in time) the
+	// related titles carousel serves.
+	const relatedMap = Boolean(useRelatedMap())
 
 	// A member with episode tracking gets the episode list in the grid's place, once they come near it.
 	const tracking = useEpisodeTracking(media)
@@ -105,8 +111,17 @@ export default function DetailsContent({
 			<div {...section(crewHeight(media))}>
 				<Crew crew={crew} />
 			</div>
-			<div {...section(relatedHeight(media), sectionProps.related)}>
-				<DetailsRelated media={media} />
+			<div
+				{...section(
+					relatedMap ? relatedMapHeight() : relatedHeight(media),
+					sectionProps.related,
+				)}
+			>
+				{relatedMap ? (
+					<RelatedMap media={media} />
+				) : (
+					<DetailsRelated media={media} />
+				)}
 			</div>
 			<div {...section(sequelsHeight(media))}>
 				<SequelsPrequelsFranchise media={media} />

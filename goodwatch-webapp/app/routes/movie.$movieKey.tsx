@@ -1,6 +1,4 @@
-import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import { json, redirect } from "@remix-run/node"
-import { canonicalTitleId } from "~/utils/title-identity"
 import type {
 	LoaderFunction,
 	LoaderFunctionArgs,
@@ -9,23 +7,24 @@ import type {
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect } from "react"
 import { useUpdateUrlParams } from "~/hooks/updateUrlParams"
+import { resolveCountry } from "~/server/country.server"
+import { isCrawler } from "~/server/crawlers.server"
 import { getDetailsForMovie } from "~/server/details.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
-import { isCrawler } from "~/server/crawlers.server"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
-import { relatedPanelEmbedded } from "~/server/related-prefetch"
-import { prefetchRelatedTitlesState } from "~/server/related.server"
-import { prefetchTitleExtrasState } from "~/server/title-extras.server"
+import { prefetchRelatedSection, relatedSectionData } from "~/server/related-map.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
-import { mergeDehydratedStates } from "~/utils/title-extras"
+import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { MovieQueryResult } from "~/server/types/details-types"
-import { resolveCountry } from "~/server/country.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import Details from "~/ui/details/Details"
+import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import { getUserIdFromRequest } from "~/utils/auth"
-import { titleToDashed } from "~/utils/helpers"
 import { detailsPageMeta } from "~/utils/detailsMeta"
+import { titleToDashed } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
+import { mergeDehydratedStates } from "~/utils/title-extras"
+import { canonicalTitleId } from "~/utils/title-identity"
 
 export { pageHeaders as headers } from "~/utils/headers"
 
@@ -70,9 +69,9 @@ export const loader: LoaderFunction = async ({
 		country,
 		language,
 	})
-	const [media, relatedState, extrasState] = await Promise.all([
+	const [media, relatedSection, extrasState] = await Promise.all([
 		details,
-		prefetchRelatedTitlesState({
+		prefetchRelatedSection({
 			tmdbId: Number(movieId),
 			sourceMediaType: "movie",
 			budgetMs,
@@ -89,7 +88,13 @@ export const loader: LoaderFunction = async ({
 			() => null,
 		),
 	])
-	const dehydratedState = mergeDehydratedStates(relatedState, extrasState)
+	// The related map's section, or with the map off the related titles carousel's first panel.
+	const related = relatedSectionData(
+		relatedSection,
+		media.details.title,
+		request,
+	)
+	const dehydratedState = mergeDehydratedStates(related.panelState, extrasState)
 
 	const data = {
 		media,
@@ -98,11 +103,12 @@ export const loader: LoaderFunction = async ({
 		},
 		countryIsFallback,
 		dehydratedState,
+		...(related.relatedMap && { relatedMap: related.relatedMap }),
 	}
-	// Without the embedded related panel or an extra (a lookup ran out of its budget or failed) the page is incomplete:
+	// Without the related titles or an extra (a lookup ran out of its budget or failed) the page is incomplete:
 	// no cache may keep it. The page cache and a cache in front follow this header.
 	const complete =
-		relatedPanelEmbedded(relatedState) &&
+		related.complete &&
 		titleExtrasEmbedded(extrasState, {
 			genres: media.details.genres,
 			movieSeries: media.movie_series,

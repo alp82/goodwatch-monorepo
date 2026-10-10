@@ -42,6 +42,12 @@ export function crewHeight(media: Media): ReservedHeight {
 export const relatedHeight = (media: Media): ReservedHeight =>
 	media.fingerprint ? { phone: 660, desktop: 764 } : same(0)
 
+// The related titles as a map (ui/related-map). Its height is fixed by its style: the same for every title.
+export const relatedMapHeight = (): ReservedHeight => ({
+	phone: 602,
+	desktop: 576,
+})
+
 // A grid of the collection's posters, two per row on a phone and six on a desktop, or one line of text.
 export function sequelsHeight(media: Media): ReservedHeight {
 	const count =

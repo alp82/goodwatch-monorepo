@@ -68,7 +68,7 @@ request -> browser gate -> static files -> page cache -> health endpoints -> Exp
 ### The API
 
 - **Route:** every path under `/api/` except the two search paths goes to the page instances, like a document. The page cache never looks at `/api/`.
-- **An anonymous page view sends few of them:** the error tracking POST (`/api/e`), on title pages the poster impressions POST, and on the home page its pool request. A related titles panel asks `/api/related` only when a visitor selects it.
+- **An anonymous page view sends few of them:** the error tracking POST (`/api/e`), on title pages the poster impressions POST, and on the home page its pool request. The related map of a title page asks `/api/related-map` for the title's pack when the section comes within 600 px of the viewport, and for the packs of up to eight titles on the map once a person uses the page (a pointer, a key, a touch, the wheel). A crawler sends at most the first of these. See [related-map.md](implementation/related-map.md#requests).
 - **Catalog endpoints** that are the same for everyone answer with a public lifetime and no `Vary`, and read the data cache in Valkey. Member endpoints read member caches that are reset on every write. See [Data endpoints](cache-identity.md#data-endpoints) and [member-data-cache.md](member-data-cache.md).
 - **Every backend call has a time limit** and releases its request when it runs out. A Redis command gives up after 1 second and the request reads the database instead.
 
@@ -167,6 +167,7 @@ Agents don't change Coolify settings, DNS, the proxy's configuration, or firewal
 | `STATIC_ASSETS_HOST` | The static hostname | Also turns on the file-only rule for requests with that `Host` | The same |
 | `WEBAPP_ROLE` | `page` since October 9, 2026 | `page` keeps the search models out of the page instances. Not set means `both` | [search-role.md](search-role.md#settings) |
 | `PAGE_CACHE` | Not set, which means on | `off` and a restart turn the page cache off | [page-cache.md](page-cache.md#how-to-turn-it-off) |
+| `REC_RELATED_MAP` | Not set, which means on | `off` and a restart bring back the related titles carousel on title pages | [related-map.md](implementation/related-map.md#how-to-turn-it-off) |
 | `PAGE_CACHE_MAX_BYTES`, `PAGE_CACHE_MAX_ENTRIES`, `PAGE_CACHE_MAX_FRESH_SECONDS` | Defaults: 128 MB, 2,000 pages, no cap | The store's bounds | [page-cache.md](page-cache.md#bounds) |
 | `CARD_RENDERERS`, `OG_CARD_FIRST_SECONDS`, `OG_CARD_KEPT_SECONDS` | Defaults: 2 children, 30 minutes, 7 days | The OG image renderer and its lifetimes | [viral-spike-og-images.md](benchmarks/viral-spike-og-images.md#storage) |
 | `SHUTDOWN_DELAY_MS`, `SHUTDOWN_DRAIN_MS`, `SHUTDOWN_HARD_MS`, `READY_MAX_WAIT_MS` | Defaults: 8, 5, 25, and 30 seconds | The shutdown sequence and the longest wait for readiness. The proxy's health check interval must stay below the delay | [webapp-deploys.md](webapp-deploys.md#shutdown-on-sigterm) |
