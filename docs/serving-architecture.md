@@ -260,7 +260,7 @@ Each process serves its counters on a private port, and Alloy sends them to Graf
 
 ### The destination
 
-- **The one-hour proof isn't run.** How it's run is open: [Decide how the one-hour load test proves the destination](https://github.com/alp82/goodwatch-monorepo/issues/404). The longest hold so far is 10 minutes at 80 visitors per second, from before the static hostname.
+- **The one-hour proof covers the origin's share.** On October 10, 2026, 500 documents per second ran for one hour with no failed request and no drift, followed by ten minutes of whole page views at 80 visitors per second. Whole page views at 500 per second aren't proven: the generators can't send them. See [One hour at the destination's rate](benchmarks/viral-spike-one-hour.md).
 - **Whole page views above 120 per second aren't measured.** At 500 per second the generators need about 50 cores (estimate), and the files are about 18,000 requests per second to Cloudflare from a few addresses, which may be limited.
 - **The error tracking POST and the poster impressions POST aren't in any load run.** At 500 page views per second they're 500 forwarded requests and up to 500 writes per second.
 - **A visitor's own time isn't measured.** The page view durations in the reports are a generator's, 1 ms from the origin.
