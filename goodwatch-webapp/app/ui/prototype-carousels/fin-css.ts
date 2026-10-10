@@ -5,17 +5,19 @@
 // second mark for a poster that is pointed at, the posters a chip lights), the navigation of each form, the card,
 // and the wide layout.
 //
+// fin2 after the owner chose it: its trail is the head of the card, so that walk and title are one bar under the map
+// (beside it on a wide screen), and only the heading and the chips sit above the map.
+//
 // The heights on a phone add up to a section of 600 px: the padding (32), the heading, the navigation, the stage,
 // and the gaps between them. The line of plain links stays in the document and takes no room.
 export const FIN_CSS = `
 .pl[class*="pl-fin"] .pl-side{display:none}
 .pl[class*="pl-fin"] .pl-more{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);-webkit-mask-image:none;mask-image:none}
 .pl-stage[class*="pl-fin"]{height:484px}
-.pl-stage.pl-fin2{height:480px}
+.pl-stage.pl-fin2{height:532px}
 .pl-stage.pl-fin3{height:532px}
 .pl[class*="pl-fin"] .pl-bar{height:40px}
-.pl.pl-fin2 .pl-bar{height:48px}
-.pl.pl-fin2 .pl-h{font-size:1.0625rem;line-height:1.5rem}
+.pl.pl-fin2 .pl-bar{display:none}
 .pl.pl-fin3 .pl-bar{display:none}
 
 .fn-row .ix-z{overflow:hidden}
@@ -83,24 +85,24 @@ opacity:1;outline:0}
 .fn-cu small{color:#fbbf24}
 .fn-cu b{color:#fff;font-weight:800}
 
-.fn-tr{flex:1 1 0;display:flex;align-items:center;gap:5px;min-width:0;height:48px}
-.fn-n2[data-fn-0] .fn-tr{flex:0 1 auto}
+.fn-tb{position:relative;flex:none;display:flex;align-items:center;gap:8px;height:44px;min-width:0;padding:0 8px 0 6px;border-bottom:1px solid rgba(255,255,255,.1)}
+.fn-tb .fn-bk{height:30px;min-width:30px}
+.fn-tb .fn-tip b{font-weight:700;color:#e5e7eb}
+.fn-tb .fn-pop{top:auto;bottom:calc(100% + 6px);left:6px}
+.fn-tb .fn-pop,.fn-ns .fn-pop{max-width:min(calc(100% - 16px),19rem)}
+.fn-tr{flex:none;display:flex;align-items:center;gap:5px;min-width:0}
 .fn-tr>li{flex:none;display:flex;align-items:center;min-width:0}
-.fn-tr img{display:block;width:30px;height:45px;border-radius:4px;object-fit:cover;background:#1b2130}
+.fn-tr img{display:block;width:24px;height:36px;border-radius:4px;object-fit:cover;background:#1b2130}
 .fn-tr>li>button{position:relative;display:block;border-radius:4px;outline:1.5px solid rgba(255,255,255,.2);opacity:.72;transition:opacity .12s}
 .fn-tr>li>button:hover{opacity:1;outline-color:#fbbf24}
-.fn-ti img{width:24px;height:36px}
+.fn-ti img{width:20px;height:30px}
 .fn-t0 small{position:absolute;left:0;right:0;bottom:0;border-radius:0 0 4px 4px;background:rgba(0,0,0,.8);font-size:.5rem;line-height:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;text-align:center;color:#fff}
 .fn-tm summary{display:inline-flex;align-items:center;justify-content:center;gap:.125rem;height:28px;min-width:30px;padding:0 .4375rem;border-radius:9999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);
 font-size:.75rem;font-weight:700;line-height:1;color:#fff}
 .fn-tm summary::after{content:"";border:3.5px solid transparent;border-top:4.5px solid #d1d5db;border-bottom:0}
 .fn-tm summary:hover,.fn-tm details[open] summary{background:rgba(255,255,255,.24)}
-.fn-tr>li.fn-tc{flex:1 1 0}
-.fn-tc [aria-current]{display:flex;align-items:center;gap:8px;min-width:0}
+.fn-tc [aria-current]{display:block;margin-left:2px}
 .fn-tc img{flex:none;outline:2px solid #fbbf24;outline-offset:1px}
-.fn-tc span span{display:flex;flex-direction:column;min-width:0}
-.fn-tc small{font-size:.5625rem;line-height:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fbbf24;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fn-tc b{font-size:.9375rem;line-height:1.25rem;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .rm.rg[class*="rg-fin"] .rm-info.rg-info{position:relative;z-index:5;height:72px}
 .rm.rg.rg-fin3 .rm-info.rg-info{height:108px;border-radius:.75rem;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05)}
@@ -144,15 +146,13 @@ white-space:nowrap;box-shadow:0 2px 12px rgba(251,191,36,.28)}
 .rg-info[data-r-pk] .fn-card{border-style:dashed;border-color:rgba(251,191,36,.7);background:rgba(251,191,36,.08)}
 .rg-info:not([data-r-pk]) .fn-card[data-fn-root] .fn-vs{visibility:hidden}
 
-.rg-fin2 .fn-card{grid-template-columns:auto minmax(0,1fr) auto;padding:6px 8px 6px 10px;border-width:0 0 0 3px;border-style:solid;border-color:rgba(255,255,255,.3);border-radius:.25rem .75rem .75rem .25rem;
-background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,.02))}
+.rm.rg.rg-fin2 .rm-info.rg-info{height:116px;border-radius:.75rem;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05)}
+.rg-fin2 .fn-card{grid-template-columns:auto minmax(0,1fr) auto;height:70px;padding:5px 8px 7px 10px;border:0;border-radius:0 0 .6875rem .6875rem;background:none}
 .rg-fin2 .fn-kk{grid-column:1}
 .rg-fin2 .fn-vs{grid-column:2}
 .rg-fin2 .fn-nm,.rg-fin2 .fn-df{grid-column:1/3}
 .rg-fin2 .fn-go{grid-column:3}
-.rg-fin2 .fn-nm b{font-size:1.125rem}
-.rg-fin2 .fn-open{border-radius:9999px}
-.rg-fin2 .rg-info[data-r-pk] .fn-card{border-style:solid;border-color:#fbbf24;background:linear-gradient(90deg,rgba(251,191,36,.16),rgba(251,191,36,.03))}
+.rg-fin2 .rg-info[data-r-pk] .fn-card{background:rgba(251,191,36,.1);box-shadow:inset 0 0 0 1px rgba(251,191,36,.6)}
 
 .fn-ns{position:relative;flex:none;display:flex;align-items:center;gap:6px;height:36px;min-width:0;padding:0 6px;border-bottom:1px solid rgba(255,255,255,.1)}
 .fn-ns .fn-bk{height:26px;min-width:0;padding:0 .625rem 0 .3125rem}
@@ -172,19 +172,17 @@ background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,.02))}
 
 @media (min-width:1024px){
 .pl-stage[class*="pl-fin"]{flex:1;width:auto;height:470px}
-.pl-stage.pl-fin3{height:506px}
-.pl.pl-fin1,.pl.pl-fin2{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:1.25rem;row-gap:.75rem}
-.pl.pl-fin1 .pl-h,.pl.pl-fin2 .pl-h{max-width:26rem}
-.pl.pl-fin2 .pl-h{font-size:1.25rem;line-height:1.75rem}
-.pl.pl-fin1 .pl-body,.pl.pl-fin2 .pl-body{grid-column:1/-1}
-.fn-n1 .fn-bk,.fn-n2 .fn-bk{padding:0 .875rem 0 .5rem}
-.fn-n1 .fn-bk span,.fn-n2 .fn-bk span{display:inline}
-.fn-path,.fn-tr{flex:0 1 auto}
+.pl-stage.pl-fin2,.pl-stage.pl-fin3{height:506px}
+.pl.pl-fin1{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:1.25rem;row-gap:.75rem}
+.pl.pl-fin1 .pl-h{max-width:26rem}
+.pl.pl-fin1 .pl-body{grid-column:1/-1}
+.fn-n1 .fn-bk{padding:0 .875rem 0 .5rem}
+.fn-n1 .fn-bk span{display:inline}
+.fn-path{flex:0 1 auto}
+.fn-tb{height:48px;padding:0 10px 0 8px}
+.fn-tb .fn-pop{top:calc(100% + 4px);bottom:auto;left:8px}
 .fn-path>li{flex:0 1 auto;max-width:17rem}
 .fn-path button,.fn-path summary,.fn-path [aria-current]{padding:0 12px}
-.fn-tr{gap:0}
-.fn-tr>li+li::before{content:"";flex:none;width:10px;height:1.5px;margin:0 5px;border-radius:1px;background:rgba(255,255,255,.28)}
-.fn-tr>li.fn-tc{flex:0 1 auto;max-width:24rem}
 .fn-v1{display:none}
 .fn-v2{display:inline}
 .fn-tip{flex:0 1 auto}
@@ -208,11 +206,11 @@ background:linear-gradient(90deg,rgba(255,255,255,.08),rgba(255,255,255,.02))}
 .fn-d{height:22px;font-size:.75rem}
 .fn-nt{grid-area:nt;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;height:32px;margin-top:8px;overflow:hidden;font-size:.75rem;line-height:1rem;color:#9ca3af}
 .fn-nt b{font-weight:600;color:#e5e7eb}
-.rg-fin2 .fn-card{grid-template-columns:minmax(0,1fr);grid-template-areas:"kk" "nm" "go" "vs" "df" "nt";padding:12px 12px 12px 14px}
+.rg-fin2 .fn-card{grid-template-columns:minmax(0,1fr);grid-template-areas:"kk" "nm" "go" "vs" "df" "nt";height:auto;padding:10px 12px 12px}
 .rg-fin2 .fn-kk,.rg-fin2 .fn-vs,.rg-fin2 .fn-nm,.rg-fin2 .fn-df,.rg-fin2 .fn-go{grid-column:1}
 .rg-fin2 .fn-nm{height:62px}
 .rg-fin2 .fn-nm b{font-size:1.375rem;line-height:1.625rem}
-.rm.rg.rg-fin3 .rm-info.rg-info{height:auto}
+.rm.rg.rg-fin2 .rm-info.rg-info,.rm.rg.rg-fin3 .rm-info.rg-info{height:auto}
 .fn-ns{height:42px;padding:0 8px}
 .fn-ns .fn-bk,.fn-wh summary,.fn-so{height:28px}
 .fn-ns .fn-pop{top:calc(100% + 4px);bottom:auto;left:8px}

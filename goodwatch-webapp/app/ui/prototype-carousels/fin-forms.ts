@@ -14,7 +14,8 @@
 // They differ in the navigation (where you started, how many steps, where you are, and back) and in the card of the
 // title in the middle:
 // - fin1, path bar: the walk as one bar of labeled stops. The card has the poster, the name, and a large "Open".
-// - fin2, poster trail: the walk as small posters. The card is a caption under the map, without a poster.
+// - fin2, poster trail: the walk as small posters at the head of the card, one bar with the title's details.
+//   The owner's pick, changed in place: the trail was a row above the map at first.
 // - fin3, one card: the navigation is the head of the card. Nothing but the heading sits above the map.
 //
 // `finKit` and each form are functions with no outside references, because they run as the page's inline script.
@@ -65,15 +66,18 @@ export function finKit(core: PlayCore, kit: RingsKit, mx: MixKit) {
 		stops += `<li class="fn-cu"><span aria-current="step">${cell(n ? `Now, step ${n}` : "You are here", ctx.c.t)}</span></li>`
 		return `<div class="fn-n fn-n1"${n ? "" : ' data-fn-0=""'}>${back(ctx)}<ol class="fn-path" aria-label="Where you walked">${stops}</ol>${n ? "" : `<p class="fn-tip">${TIP}</p>`}</div>`
 	}
-	/** fin2: the walk as small posters. The start, the last two titles in between, and the title you stand on. */
+	/**
+	 * fin2: the walk as small posters, as the head of the card. The start, the last two titles in between, and the
+	 * title you stand on, whose name is the card's.
+	 */
 	const posterTrail = (ctx: PlayCtx) => {
 		const n = last(ctx)
 		let stops = ""
 		if (n >= 1) stops += `<li class="fn-t0">${to(ctx, 0, `${thumb(at(ctx, 0))}<small>Start</small>`)}</li>`
 		if (n - 1 > 2) stops += `<li class="fn-tm">${steps(ctx, 1, `+${n - 3}`, `${n - 1} titles in between. Open the list.`)}</li>`
 		for (let i = Math.max(1, n - 2); i < n; i++) stops += `<li class="fn-ti">${to(ctx, i, thumb(at(ctx, i)))}</li>`
-		stops += `<li class="fn-tc"><span aria-current="step">${thumb(ctx.c)}<span><small>${n ? `Now, step ${n}` : "You are here"}</small><b>${esc(ctx.c.t)}</b></span></span></li>`
-		return `<div class="fn-n fn-n2"${n ? "" : ' data-fn-0=""'}>${back(ctx)}<ol class="fn-tr" aria-label="Where you walked">${stops}</ol>${n ? "" : `<p class="fn-tip">${TIP}</p>`}</div>`
+		stops += `<li class="fn-tc"><span aria-current="step" title="${esc(ctx.c.t)}">${thumb(ctx.c)}<span class="pl-sr">${esc(ctx.c.t)}</span></span></li>`
+		return `<div class="fn-tb">${back(ctx)}<ol class="fn-tr" aria-label="Where you walked">${stops}</ol><p class="fn-tip">${n ? `${stepWord(n)} from <b>${esc(ctx.root.t)}</b>` : TIP}</p></div>`
 	}
 	/** fin3: the walk as the head of the card: back, how far from where, and the way to the start. */
 	const strip = (ctx: PlayCtx) => {
@@ -229,8 +233,11 @@ export function finKit(core: PlayCore, kit: RingsKit, mx: MixKit) {
 /** fin1, path bar. The walk is one bar of labeled stops under the heading, and the card leads with the poster. */
 const fin1: FinForm = (_core, _kit, _mx, fk) => fk.form("fin1", { mh: 344, bar: fk.pathBar, card: (ctx, note) => fk.card(ctx, note, true) })
 
-/** fin2, poster trail. The walk is a row of small posters, so the card under the map needs none. */
-const fin2: FinForm = (_core, _kit, _mx, fk) => fk.form("fin2", { mh: 340, bar: fk.posterTrail, card: (ctx, note) => fk.card(ctx, note, false) })
+/**
+ * fin2, poster trail: the owner's pick. The walk is a row of small posters at the head of the card, so trail and
+ * title are one bar and the card needs no poster of its own. Nothing but the heading sits above the chips.
+ */
+const fin2: FinForm = (_core, _kit, _mx, fk) => fk.form("fin2", { mh: 348, bar: () => "", card: (ctx, note) => fk.card(ctx, note, false, fk.posterTrail(ctx)) })
 
 /** fin3, one card. The navigation is the head of the card: back, how far from where, and the way to the start. */
 const fin3: FinForm = (_core, _kit, _mx, fk) => fk.form("fin3", { mh: 356, bar: () => "", card: (ctx, note) => fk.card(ctx, note, true, fk.strip(ctx)) })
