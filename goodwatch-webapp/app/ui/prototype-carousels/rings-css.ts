@@ -144,6 +144,7 @@ text-align:center;color:#fde68a;pointer-events:none}
 .rg-st>div{flex:1 1 0;min-width:0;max-width:11rem}
 .rg-iw{font-size:.8125rem;line-height:.9375rem;-webkit-line-clamp:2}
 .rg-info .rm-nm b{min-height:3.75rem}
+.rg-info .rm-nm small{min-width:6.5rem}
 .rg-vs,.rg-nt{height:4.125rem;font-size:.9375rem;line-height:1.375rem;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3}
 .rg-ld{max-width:none}
 .rm.rg-big{grid-template-rows:auto minmax(0,1fr)}
