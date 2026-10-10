@@ -1003,14 +1003,16 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			// or none passes yet and more may still come, the places left go to the most alike titles as they come,
 			// dimmed, and the card says so.
 			const thin = tokens.length > 0 && !rough && Boolean(ctx.list) && (more ? passing === 0 : passing < 6)
+			// Which titles pass is kept by title, not by place in the list: the title you came from is taken out of
+			// the list for its own place, and a count would then be one off.
+			const has: Record<string, boolean> = {}
 			if (thin) {
-				const has: Record<string, boolean> = {}
 				for (const t of list) has[t.k] = true
 				list = list.concat(around(ctx, []).filter((t) => !has[t.k]))
 			}
 			const own = spec.deco ? spec.deco(ctx, list, spots.length) : null
 			const deco: Deco | null = thin
-				? (t, rank) => (rank >= passing && rank < 99 ? { inner: '<i class="rg-dm" aria-hidden="true"></i>', extra: ";--dm:1" } : own ? own(t, rank) : { inner: "", extra: "" })
+				? (t, rank) => (!has[t.k] && rank < 99 ? { inner: '<i class="rg-dm" aria-hidden="true"></i>', extra: ";--dm:1" } : own ? own(t, rank) : { inner: "", extra: "" })
 				: own
 			// Enough for this zoom and the next one out.
 			const coming = want(ctx, tokens, passing, Math.round(spots.length * 2.2))
