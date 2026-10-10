@@ -793,7 +793,7 @@ export async function playPack5(
 					.join(",")
 	const mode = Object.values(RING_MODES).includes(options.m ?? "") ? (options.m ?? "0") : "0"
 	const kept = await cached({
-		name: "proto363-rings-pack-v1",
+		name: "proto363-rings-pack-v2",
 		metricName: "proto363-play-pack",
 		target: buildPack5,
 		params: {

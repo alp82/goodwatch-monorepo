@@ -906,7 +906,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 				info: info(
 					ctx,
 					few
-						? `Only ${passing} ${passing === 1 ? "title passes" : "titles pass"} that. The dimmed ones are the most alike that do not.`
+						? `${passing ? `Only ${passing} ${passing === 1 ? "title passes" : "titles pass"} that.` : "No title passes that."} The dimmed ones are the most alike that do not.`
 						: spec.note(ctx, tokens, list, spots.length, more),
 				),
 				ck: ctx.c.k,
