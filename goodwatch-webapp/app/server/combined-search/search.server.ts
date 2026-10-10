@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { fetch } from "undici";
+import { withBackendTimeout } from "../../utils/backend-timeout.ts";
 import {
 	blend,
 	titleMatch,
@@ -90,6 +91,7 @@ const TITLE_ENTRIES = 200;
 interface TitleLookup {
 	titles: Title[];
 	people: LookupPerson[];
+	complete: boolean;
 }
 const titleCache = new Map<string, { at: number; value: TitleLookup }>();
 const titleFlights = new Map<string, Promise<TitleLookup>>();
@@ -114,7 +116,8 @@ function titles(
 		// The shared lookup ignores caller signals: one caller leaving must not fail
 		// the others. Only successes are kept; failures are retried by the next call.
 		flight = lookupTitles(q, policy).then((value) => {
-			titleCache.set(key, { at: Date.now(), value });
+			// A timed-out optional page must not turn a partial result into a ten-minute cache hit.
+			if (value.complete) titleCache.set(key, { at: Date.now(), value });
 			while (titleCache.size > TITLE_ENTRIES)
 				titleCache.delete(titleCache.keys().next().value as string);
 			return value;
@@ -139,7 +142,7 @@ async function lookupTitles(
 	q: string,
 	policy: Eligibility,
 ): Promise<TitleLookup> {
-	const page = async (n: number) => {
+	const page = async (n: number, signal = AbortSignal.timeout(8000)) => {
 		const params = new URLSearchParams({
 			api_key: process.env.TMDB_API_KEY || "",
 			query: q,
@@ -149,7 +152,7 @@ async function lookupTitles(
 		});
 		const response = await fetch(
 			`https://api.themoviedb.org/3/search/multi?${params}`,
-			{ signal: AbortSignal.timeout(8000) },
+			{ signal },
 		);
 		if (!response.ok) throw new Error("Title lookup unavailable");
 		return response.json() as Promise<{
@@ -186,13 +189,19 @@ async function lookupTitles(
 	const rest = await Promise.all(
 		Array.from(
 			{ length: Math.max(0, Math.min(5, first.total_pages || 1) - 1) },
-			(_, i) => page(i + 2),
+			// Page one contains the best title/name matches. Additional pages may enrich it, but must not
+			// hold those matches behind a slow remote response. Cover body decoding as well as headers.
+			(_, i) => withBackendTimeout(
+				"TMDB", 200,
+				(signal) => page(i + 2, signal),
+			).catch(() => null),
 		),
 	);
 	const results = [first, ...rest]
-		.flatMap((p) => p.results || [])
+		.flatMap((p) => p?.results || [])
 		.filter((r) => policy.includeAdult || r.adult !== true);
 	return {
+		complete: rest.every((p) => p !== null),
 		titles: results
 			.filter((r) => r.media_type === "movie" || r.media_type === "tv")
 			.map((r) => ({
