@@ -24,6 +24,7 @@ import {
 	readQuizKey,
 } from "~/ui/taste-quiz/quiz-flow"
 import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
+import { useHasDock } from "~/ui/navigation"
 import { titleToDashed } from "~/utils/helpers"
 import { BelowRoom } from "./BelowRoom"
 import {
@@ -34,7 +35,7 @@ import {
 import { PhoneTvScreens } from "./PhoneTvScreens"
 import { Remote, type RemoteProps } from "./Remote"
 import { pickKey } from "./TvQuiz"
-import { LivingRoomLinks, TvScreens, type TvView, lcdLines } from "./TvScreens"
+import { TvScreens, type TvView, lcdLines } from "./TvScreens"
 import {
 	type LivingRoomChoices,
 	type LivingRoomData,
@@ -106,9 +107,9 @@ function storeChoices(choices: LivingRoomChoices) {
 
 export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 	const phone = usePhoneOrientation()
-	// A guest's room is the first screen of a page with a section below it (#352). A member's room is the whole page.
-	const guest = !data.member
-	const travel = useBelowRoom(guest)
+	// The room is the first screen of the page; the section with the start titles and the hubs follows it (#352).
+	const travel = useBelowRoom()
+	const docked = useHasDock()
 	useReturnIntoTv()
 	const [params] = useSearchParams()
 	const [choices, setChoices] = useState<LivingRoomChoices>(NO_CHOICES)
@@ -212,7 +213,7 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 			state.screen.name === "quiz" && !state.menuOpen
 				? state.screen.quiz
 				: null,
-		away: travel.below,
+		away: travel.away,
 		dispatch,
 		ok,
 		setDraft,
@@ -294,9 +295,10 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 		dispatch,
 		onOk: ok,
 	}
-	const belowRoom = guest && (
+	const belowRoom = (
 		<BelowRoom
 			titles={data.startTitles ?? []}
+			docked={docked}
 			onDown={travel.onDown}
 			onBack={travel.onBack}
 		/>
@@ -308,8 +310,8 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 					orientation={phone}
 					view={view}
 					remote={remote}
-					guest={guest}
-					away={travel.below}
+					docked={docked}
+					away={travel.away}
 				/>
 				{belowRoom}
 			</>
@@ -330,13 +332,11 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 		<>
 			<div
 				ref={root}
-				id={guest ? ROOM_ID : undefined}
-				// Below the room, the room takes no input: the keys and the pointer are the page's.
-				{...(travel.below && { inert: "" })}
-				className={`living-room overflow-clip bg-[#07080b] text-white ${guest ? "lr-guest" : "fixed inset-x-0 bottom-16 top-16 z-40 lg:bottom-0"} ${first ? "living-room-first" : ""}`}
+				id={ROOM_ID}
+				// Scrolled out of the window, the room takes no input: the keys and the pointer are the page's.
+				{...(travel.away && { inert: "" })}
+				className={`living-room lr-page overflow-clip bg-[#07080b] text-white ${docked ? "lr-docked" : ""} ${first ? "living-room-first" : ""}`}
 			>
-				{/* A guest has the same links in view, in the section below the room. */}
-				{!guest && <LivingRoomLinks />}
 				{/* The photo covers the window; the TV and its light sit on it in the photo's own coordinates. */}
 				<div
 					className="lr-photo absolute"
@@ -519,7 +519,7 @@ function useRemoteKeys({
 	searching: boolean
 	/** The taste quiz step on screen: 1-9 and 0 score, S skips, P goes back to the picks. */
 	quiz: QuizState | null
-	/** The visitor is below the room (#352): the keys are the page's. */
+	/** The room is mostly out of the window (#352): the keys are the page's. */
 	away: boolean
 	dispatch: ReturnType<typeof useTvFlow>["dispatch"]
 	ok: () => void

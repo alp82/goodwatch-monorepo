@@ -1,7 +1,11 @@
-// The titles a guest's start page links to below the living room (#352).
+// The titles the start page links to below the living room (#352).
 //
-// They come from the title snapshot and the display fields alone: no viewer and no country. The guest HTML of the
+// They come from the title snapshot and the display fields alone: no viewer and no country. A guest's HTML of the
 // start page therefore stays the same for everyone, which the page cache and a crawler both rely on.
+//
+// A member gets the same list. It is a list of what is popular, not a recommendation, so it isn't filtered by what
+// the member has seen or hidden: that would need the member's whole viewer context on the first paint, and could
+// leave the list short or empty.
 import type { TitleDisplay } from "~/server/title-cards.server"
 import type { TitleSnapshot } from "~/server/title-snapshot/snapshot.server"
 import type { StartTitle } from "~/ui/living-room/living-room-data"

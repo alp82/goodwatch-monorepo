@@ -1,6 +1,6 @@
-// The section below a guest's living room (#352): the start titles and the ways to browse GoodWatch, as plain
+// The section below the living room (#352): the start titles and the ways to browse GoodWatch, as plain
 // links in the server HTML. It is ordinary page content right after the room. Its top edge, the lip, lies over the
-// room's bottom edge and is the one way down; `use-below-room.ts` owns where the visitor is.
+// room's bottom edge and is the way down; `use-below-room.ts` owns how the page moves between the two.
 //
 // Every title and hub is a visible `<a href>` with its name as text: the start page is the page a crawler reads
 // most, and this is where it finds the rest of the site. Styles are in living-room.css (`.lrb`), with short class
@@ -73,18 +73,29 @@ export const CATEGORY_HUBS = [
 export type BelowRoomProps = {
 	/** Most popular first; empty while the title snapshot loads. */
 	titles: StartTitle[]
+	/** The phone has the navigation's dock (REC_NAVIGATION): the lip is the dock's upper row, one sheet with it. */
+	docked?: boolean
 	onDown?: (e: MouseEvent) => void
 	onBack?: (e: MouseEvent) => void
 }
 
-export function BelowRoom({ titles, onDown, onBack }: BelowRoomProps) {
+export function BelowRoom({
+	titles,
+	docked = false,
+	onDown,
+	onBack,
+}: BelowRoomProps) {
 	const back = (
 		<a href={`#${ROOM_ID}`} onClick={onBack} className="lrb-back">
 			<span aria-hidden>↑</span> Back to the living room
 		</a>
 	)
 	return (
-		<section id={BELOW_ID} aria-labelledby="browse-title" className="lrb">
+		<section
+			id={BELOW_ID}
+			aria-labelledby="browse-title"
+			className={docked ? "lrb lrb-docked" : "lrb"}
+		>
 			<a href={`#${BELOW_ID}`} onClick={onDown} className="lrb-lip">
 				<span>
 					<b>{titles.length ? "Popular right now" : "Browse GoodWatch"}</b>

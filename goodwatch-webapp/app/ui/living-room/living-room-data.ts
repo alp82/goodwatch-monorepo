@@ -21,7 +21,7 @@ export type TvPair = {
 	bMoods: MoodKey[]
 }
 
-/** A title the start page links to below the living room (#352). The same list for every guest. */
+/** A title the start page links to below the living room (#352). The same list for everyone. */
 export type StartTitle = Pick<
 	TitleCard,
 	"media_type" | "tmdb_id" | "title" | "release_year" | "poster_path"
@@ -29,10 +29,7 @@ export type StartTitle = Pick<
 
 export type LivingRoomData = {
 	member: boolean
-	/**
-	 * A guest's titles below the living room (#352): empty while the title snapshot loads, absent for a member,
-	 * whose start page has no section below the room.
-	 */
+	/** The titles below the living room (#352), the same for everyone: empty while the title snapshot loads. */
 	startTitles?: StartTitle[]
 	/** Candidates for "Something new" and for guests, best first. */
 	suggestions: LivingRoomTitle[]

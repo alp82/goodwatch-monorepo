@@ -1,4 +1,4 @@
-// The section below a guest's living room (#352) is where a crawler that reads only the start page's server HTML
+// The section below the living room (#352) is where a crawler that reads only the start page's server HTML
 // finds title pages and every hub. These tests hold what that depends on: plain visible links, in the HTML.
 import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
@@ -33,7 +33,7 @@ const rendered = JSON.parse(
 	)
 		.split("__BELOW_ROOM_RENDER__")
 		.at(-1) ?? "",
-) as { full: string; again: string; empty: string }
+) as { full: string; again: string; empty: string; docked: string }
 
 /** Every `<a>` of the HTML: its attributes and its text. */
 const links = (html: string) =>
@@ -148,4 +148,35 @@ test("the lip and the way back are links that work without a script", () => {
 		rendered.full.match(/<a href="#room" class="lrb-back">/g)?.length,
 		2,
 	)
+})
+
+test("over the navigation's dock only the section's class differs", () => {
+	assert.match(
+		rendered.docked,
+		/<section id="browse"[^>]* class="lrb lrb-docked">/,
+	)
+	assert.equal(
+		rendered.docked.replace('class="lrb lrb-docked"', 'class="lrb"'),
+		rendered.full,
+	)
+})
+
+test("the page is held still until it is open, and a script is not needed to open it", () => {
+	const css = readFileSync(
+		"app/ui/living-room/living-room.css",
+		"utf8",
+	).replace(/\/\*[\s\S]*?\*\//g, "")
+	const rule = (selector: string) =>
+		[...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(([, selectors]) =>
+			selectors
+				.split(",")
+				.map((part) => part.trim())
+				.includes(selector),
+		)?.[2] ?? ""
+	// Locked by default, for every page that has the room.
+	assert.match(rule("html:has(.living-room)"), /overflow:\s*hidden/)
+	// Open after the first arrival below (use-below-room.ts), and without a script while the URL ends in #browse.
+	const open = rule('html[data-lr="open"]')
+	assert.match(open, /overflow:\s*visible auto/)
+	assert.equal(rule("html:not([data-lr]):has(#browse:target)"), open)
 })

@@ -145,7 +145,7 @@ export const PHONE_ROOM = {
 export const PHONE_TV_CANVAS = { w: 560, h: 308 } as const
 
 /**
- * The height of the lip of the section below a guest's room on a phone in portrait (#352). It lies over the room's
+ * The height of the lip of the section below the room on a phone in portrait (#352). It lies over the room's
  * bottom edge, so the Remote's keys end above it. living-room.css has the same number (`--lr-reserve`).
  */
 export const PHONE_LIP = 60

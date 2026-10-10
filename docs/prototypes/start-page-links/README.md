@@ -17,12 +17,16 @@ this folder there.
 
 ## What was decided
 
-- The room is the first screen of a guest's start page and keeps the wheel, the swipe, and the keys. The page moves
-  to the section only by a control at the room's bottom edge (the lip), and back by a back control, Escape, browser
-  Back, or scrolling up to the very top.
+- The room is the first screen of the start page, for guests and members alike. A visit starts locked: the room
+  keeps the wheel, the swipe, and the keys, and a control at the room's bottom edge (the lip) is the way down.
+- The first arrival below opens the page for the rest of the tab's session: from then on it scrolls like any page
+  between the room and the section. The back control, Escape, and browser Back still lead to the room.
 - The section is `scroll`'s: the title list, six hub cards, and the mood, genre, and streaming hubs as chips. The
   title list is `scroll2`'s large numbered programme, with a poster for each title.
-- The titles are the first 16 of the living room pool for a visitor nobody knows anything about.
+- The titles are the first 16 of the living room pool for a visitor nobody knows anything about, the same list for
+  everyone.
+- On a phone the lip is one piece with the navigation under it: the dock's upper row, or over the old bottom
+  navigation a bar with a notch for its round key.
 
 The build is in `goodwatch-webapp/app/ui/living-room/` (`BelowRoom.tsx`, `use-below-room.ts`, and the last part of
 `living-room.css`).

@@ -131,7 +131,7 @@ export default function Index() {
 			return response.json()
 		},
 	})
-	// The pool has no doors and no start titles: a member's doors (#385) and a guest's titles below the room (#352)
+	// The pool has no doors and no start titles: a member's doors (#385) and the titles below the room (#352)
 	// come with the loader's data and stay.
 	const data: LivingRoomData = useMemo(
 		() =>

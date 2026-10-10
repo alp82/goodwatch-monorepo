@@ -17,7 +17,7 @@ import { livingRoomWishlistCards } from "./living-room/pool.server"
 import { loadStartTitles } from "./living-room/start-titles.server"
 import { loadLivingRoomWishlist } from "./living-room/wishlist.server"
 
-/** First paint never selects picks. Guests need only the shared empty UI contract and the titles below the room. */
+/** First paint never selects picks. Guests need only the shared empty UI contract. Everyone gets the titles below the room. */
 export async function loadLivingRoom(request: Request) {
 	const { user, headers } = await livingRoomAuth(request)
 	const country = getLocaleFromRequest(request).locale.country
@@ -29,15 +29,19 @@ export async function loadLivingRoom(request: Request) {
 		savedServices: [],
 		pairs: [],
 	}
-	if (!user) {
-		data.startTitles = await loadStartTitles(
-			getTitleSnapshot(),
-			getDisplayFields,
-		)
-		// Without its titles (the snapshot is still loading, or they couldn't be read) the page is incomplete: no
-		// cache keeps it, so the titles are there as soon as they can be.
-		if (!data.startTitles.length)
+	// The titles below the room are the same for everyone and never fail the page: without them (the snapshot is
+	// still loading, or they couldn't be read) the section shows the hubs alone. That page is incomplete, so no cache
+	// keeps it and the titles are there as soon as they can be. A member's page is never stored anyway.
+	const startTitles = loadStartTitles(
+		getTitleSnapshot(),
+		getDisplayFields,
+	).then((titles) => {
+		if (!titles.length)
 			headers.set("Cache-Control", INCOMPLETE_PAGE_HEADERS["Cache-Control"])
+		data.startTitles = titles
+	})
+	if (!user) {
+		await startTitles
 		return { data, headers }
 	}
 	try {
@@ -45,6 +49,7 @@ export async function loadLivingRoom(request: Request) {
 			loadMemberTaste(user.id),
 			loadLivingRoomWishlist(user.id, getTitleSnapshot()),
 			getUserSettings({ userId: user.id }),
+			startTitles,
 		])
 		const savedCountry = settings.country_default?.toUpperCase()
 		const services = (settings.streaming_providers_default ?? "")
