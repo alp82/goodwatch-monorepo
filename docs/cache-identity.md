@@ -50,7 +50,7 @@ the final status.
 | Member | `private, no-store` | none | none |
 | Any status other than 200: errors, not-found pages, error boundaries | `private, no-store` | none | none |
 | A response that sets a cookie, a method other than GET or HEAD, or a route that says `private` or `no-store` (hidden share lists, search, settings) | `private, no-store` | none | none |
-| A title page without its embedded related panel, genre links, or collection (a lookup ran out of its budget or failed) | `private, no-store` | none | none |
+| A title page without its related titles (the related map's picture, or with the map off the carousel's first panel), genre links, or collection (a lookup ran out of its budget or failed) | `private, no-store` | none | none |
 | Anonymous `_data` response of a loader that sets no `Cache-Control` | unchanged (none) | unchanged | none |
 
 A route can shorten the shared policy. Public share lists and profile pages without an identity header use the
@@ -74,7 +74,7 @@ Compression adds `Accept-Encoding` to `Vary`. No response of the app varies on `
 
 - Catalog data that is the same for every visitor, country, and language uses `PUBLIC_DATA_CACHE_CONTROL`
   (`public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400`) with no `Vary`. The URL alone is the key, and
-  a member's request may be stored too. `/api/related` uses it. `/api/title-cast` and the OG images have their own
+  a member's request may be stored too. `/api/related` and `/api/related-map` use it. `/api/title-cast` and the OG images have their own
   public lifetimes.
 - `/api/living-room/services` depends on the country only. With `?country=` it has no `Vary`. Without it, it varies
   on `GW-Cache-Identity` or `Accept-Language`, like a page.
@@ -123,6 +123,8 @@ a request with the auth cookie. `Accept-Encoding` in `Vary` comes from compressi
 | `_data` for a missing title (404) | none | `private, no-store` | `private, no-store` |
 | `/api/related`, everyone | none | `public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400` | same |
 | `/api/related` with bad parameters (400) | none | `no-store` | `no-store` |
+| `/api/related-map`, everyone | none | `public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400` | same |
+| `/api/related-map` with bad parameters (400), for a title without a fingerprint (404), or when the lookup failed (503) | none | `no-store` | `no-store` |
 | `/api/title-cast`, everyone | `public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400` | unchanged | unchanged |
 | `/api/living-room/services`, everyone | `public, max-age=0, s-maxage=1800, stale-while-revalidate=7200`, `Vary: Accept-Language` | Shared policy, `Vary: Accept-Language` | Shared policy, `Vary: GW-Cache-Identity` |
 | `/api/share-lists/titles` | `public, max-age=3600` | unchanged | unchanged |
