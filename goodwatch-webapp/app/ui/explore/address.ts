@@ -58,6 +58,9 @@ export const formerExplorePath = (
 		: null
 }
 
-/** The `/shows` address of a `/tv-shows` one, with its query. */
+/**
+ * The `/shows` address of a `/tv-shows` one, with its query. The first segment is dropped whatever its spelling: the
+ * route also matches `/TV-SHOWS` and `/%74v-shows`.
+ */
 export const formerTvShowsPath = (pathname: string, search: string) =>
-	`/shows${pathname.replace(/^\/tv-shows/, "").replace(/\/+$/, "")}${search}`
+	`/shows${pathname.replace(/^\/[^/]*/, "").replace(/\/+$/, "")}${search}`

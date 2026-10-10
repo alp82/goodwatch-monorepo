@@ -102,6 +102,8 @@ test("a tv-shows address moves to the same path under shows and keeps its query"
 	assert.equal(formerTvShowsPath("/tv-shows", ""), "/shows")
 	assert.equal(formerTvShowsPath("/tv-shows/", ""), "/shows")
 	assert.equal(formerTvShowsPath("/tv-shows/moods", ""), "/shows/moods")
+	assert.equal(formerTvShowsPath("/TV-SHOWS/moods", ""), "/shows/moods")
+	assert.equal(formerTvShowsPath("/%74v-shows/moods", ""), "/shows/moods")
 	assert.equal(
 		formerTvShowsPath("/tv-shows/moods/scary", "?page=2"),
 		"/shows/moods/scary?page=2",
