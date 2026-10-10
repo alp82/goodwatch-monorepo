@@ -107,8 +107,13 @@
 // - roam1: the baseline with the fixes. roam0 is the tenth round's own, kept for measuring.
 // - rings1: bars. rings2: three stops. rings3: words and a dice. rings4: edges of the map. rings5: legend.
 // - rings6: pad. rings7: blend. rings8: practical facts. rings9: heading. rings10: in words.
-// The floating bar shows today, two earlier favourites, the baseline, and the ten. The other variants still answer
-// to the URL.
+//
+// Twelfth round, after the owner tried the eleventh: the slow motion is the motion (a step four times as long, a zoom
+// twice), the bars, the legend, the heading, and the words stay, and six remixes of them join (see mix-forms.ts):
+// - mix1: level chips. mix2: legend bars. mix3: one heading. mix4: signposts. mix5: before and after.
+// - mix6: keep what you found.
+// The floating bar shows today, the baseline, the four that stay, and the six. The other variants still answer to
+// the URL.
 import { useMatches } from "@remix-run/react"
 import type { ExploreModel } from "~/ui/prototype-carousels/explore-model"
 import { PLAY_NAMES } from "~/ui/prototype-carousels/play-names"
@@ -187,28 +192,32 @@ export const CAROUSEL_VARIANTS = [
 	"rings8",
 	"rings9",
 	"rings10",
+	"mix1",
+	"mix2",
+	"mix3",
+	"mix4",
+	"mix5",
+	"mix6",
 ] as const
 export type CarouselVariant = (typeof CAROUSEL_VARIANTS)[number]
 
 /**
- * The variants the floating bar cycles through. Eleventh round: today, two earlier favourites, the rings with the
- * fixes, and the ten forms of their control area. Everything else still answers to the URL.
+ * The variants the floating bar cycles through. Twelfth round: today, the rings with the fixes, the four forms of
+ * their control area that stay, and the six remixes. Everything else still answers to the URL.
  */
 export const CAROUSEL_BAR: CarouselVariant[] = [
 	"today",
-	"ring5",
-	"best2",
 	"roam1",
 	"rings1",
-	"rings2",
-	"rings3",
-	"rings4",
 	"rings5",
-	"rings6",
-	"rings7",
-	"rings8",
 	"rings9",
 	"rings10",
+	"mix1",
+	"mix2",
+	"mix3",
+	"mix4",
+	"mix5",
+	"mix6",
 ]
 
 export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
@@ -285,6 +294,12 @@ export const CAROUSEL_VARIANT_NAMES: Record<CarouselVariant, string> = {
 	rings8: "",
 	rings9: "",
 	rings10: "",
+	mix1: "",
+	mix2: "",
+	mix3: "",
+	mix4: "",
+	mix5: "",
+	mix6: "",
 	...PLAY_NAMES,
 }
 

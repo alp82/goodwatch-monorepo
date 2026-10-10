@@ -18,6 +18,12 @@ export const RING_NAMES: Record<string, string> = {
 	rings8: "G8 Practical",
 	rings9: "G9 Heading",
 	rings10: "G10 In words",
+	mix1: "M1 Level chips",
+	mix2: "M2 Legend bars",
+	mix3: "M3 One heading",
+	mix4: "M4 Signposts",
+	mix5: "M5 Before and after",
+	mix6: "M6 Keep what you found",
 }
 
 /** How a form's pack chooses the filtered lists it brings along (see `ringTokens` and the pack builder). */
@@ -33,7 +39,15 @@ export const RING_MODES: Record<string, string> = {
 	rings8: "practical",
 	rings9: "0",
 	rings10: "0",
+	// Twelfth round (mix-forms.ts). The chips and bars of a fingerprint bring the lists the bars form brings.
+	mix1: "bars",
+	mix2: "0",
+	mix3: "0",
+	mix4: "0",
+	mix5: "bars",
+	mix6: "0",
 }
+export const isMixVariant = (variant: string) => variant.startsWith("mix")
 export const isRingsVariant = (variant: string) => variant in RING_MODES
 
 /** Families of traits that tell much the same story (best-meta.ts): a control offers at most one of each. */

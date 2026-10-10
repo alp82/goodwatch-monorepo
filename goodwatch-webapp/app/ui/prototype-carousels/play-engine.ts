@@ -30,6 +30,10 @@
 // paint and before its pack is there (`fit` with the titles read from the document), a form can show a pointed-at
 // title in its own card (`peek`, also on a held finger), and hears a control being pressed (`intent`).
 //
+// Twelfth round (rings-forms.ts, mix-forms.ts): a step's pan now takes about a second, so a poster that slides under a
+// pointer that has not moved since the tap is not pointed at, and a form can show what a control would do while it
+// is pointed at or held with a finger (`preview`); lifting the finger after that is not a tap on the control.
+//
 // The forms are in play-forms.ts. Each gets this engine's `core` and returns how to draw its stage.
 import type { PlayMeta } from "~/ui/prototype-carousels/play-meta"
 
@@ -166,6 +170,10 @@ export interface PlayForm {
 	peek?: (section: Element, ctx: PlayCtx, title: PlayTitle | null) => void
 	/** A control is being pressed or pointed at: what it would need can be asked for now. */
 	intent?: (ctx: PlayCtx, name: string, arg: string) => void
+	/** Twelfth round. A poster is pressed: what the form will need around that title can be asked for now. */
+	near?: (ctx: PlayCtx, title: PlayTitle) => void
+	/** Twelfth round. A control is pointed at or held with a finger (`name`), or no longer (null). */
+	preview?: (section: Element, ctx: PlayCtx, name: string | null, arg: string) => void
 }
 export interface PlayCore {
 	M: PlayMeta
@@ -262,7 +270,8 @@ export function playEngine(
 		qf: ((key: string) => string) | null
 		alt: Record<string, Record<string, PlayTitle[]>>
 		dom: Record<string, PlayTitle[]>
-	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null, tr: {}, q: "", fl: {}, ex: {}, late: {}, extra: 0, qf: null, alt: {}, dom: {} }
+		again: Record<string, number>
+	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null, tr: {}, q: "", fl: {}, ex: {}, late: {}, extra: 0, qf: null, alt: {}, dom: {}, again: {} }
 	const ESC: Record<string, string> = {
 		"&": "&amp;",
 		"<": "&lt;",
@@ -868,6 +877,18 @@ export function playEngine(
 				})
 				.catch(() => {
 					delete G.wait[key]
+					// A pack that failed for the title someone stands on is asked for again, a few times, further apart: a
+					// stand-in is never left for good because one request was lost.
+					const tries = (G.again[key] ?? 0) + 1
+					G.again[key] = tries
+					if (tries <= 4)
+						win.setTimeout(() => {
+							const all = doc.querySelectorAll("[data-play]")
+							for (let i = 0; i < all.length; i++) {
+								const st = stateOf(all[i] as HTMLElement)
+								if (st.trail[st.trail.length - 1].k === key && !G.packs[key]) ask(key, true)
+							}
+						}, 1200 * tries)
 				})
 		}
 		return G.wait[key]
@@ -1242,6 +1263,8 @@ export function playEngine(
 		if (button) {
 			// For the checks: when the tap happened, by the browser's clock.
 			if (win.__plClicks) win.__plClicks.push(event.timeStamp)
+			// The pan now moves other posters under the pointer: none of them is pointed at until the pointer moves.
+			rest = { x: event.clientX, y: event.clientY }
 			step(s, button)
 		}
 	}, true)
@@ -1281,7 +1304,8 @@ export function playEngine(
 			const any = sec(event.target as Element)
 			if (any) {
 				wake(any)
-				wanted(event, any)
+				const control = wanted(event, any) ? hit(event, "[data-pl-act]") : null
+				if (control && event.type === "pointerdown") holdControl(event as PointerEvent, control, any)
 			}
 			return
 		}
@@ -1290,6 +1314,9 @@ export function playEngine(
 		if (event.type === "pointerdown") {
 			pressed = { el: button, at: event.timeStamp }
 			hold(event as PointerEvent, button, s)
+			const st = stateOf(s)
+			const t = G.t[button.getAttribute("data-pl-step") ?? ""]
+			if (t && !button.hasAttribute("data-pl-came") && !noAhead() && G.t[st.trail[st.trail.length - 1].k]) formOf(st.form)?.near?.(ctxOf(st), t)
 		}
 		if (!button.hasAttribute("data-pl-came") && !noAhead())
 			ask(button.getAttribute("data-pl-step") ?? "", true)
@@ -1309,13 +1336,16 @@ export function playEngine(
 	// A finger that stays on a poster is what pointing at it is for a mouse: the form shows that title in its card
 	// for as long as the finger stays, and lifting it is then not a tap. A tap stays a tap: nothing waits for this.
 	let touched = -1e9
-	let peeking: { s: HTMLElement; timer: number; on: boolean; x: number; y: number } | null = null
+	let peeking: { s: HTMLElement; timer: number; on: boolean; x: number; y: number; ctl: boolean } | null = null
+	/** Where the pointer was when a step began. */
+	let rest: { x: number; y: number } | null = null
 	const unpeek = (event: Event | null) => {
 		if (!peeking) return
 		win.clearTimeout(peeking.timer)
 		if (peeking.on) {
 			const st = stateOf(peeking.s)
-			formOf(st.form)?.peek?.(peeking.s, ctxOf(st), null)
+			if (peeking.ctl) formOf(st.form)?.preview?.(peeking.s, ctxOf(st), null, "")
+			else formOf(st.form)?.peek?.(peeking.s, ctxOf(st), null)
 			if (event?.type === "pointerup") swallow = event.timeStamp
 			pressed = null
 		}
@@ -1326,7 +1356,7 @@ export function playEngine(
 		const st = stateOf(s)
 		if (event.pointerType === "touch") touched = event.timeStamp
 		if (event.pointerType !== "touch" || !formOf(st.form)?.peek) return
-		const own = { s, on: false, x: event.clientX, y: event.clientY, timer: 0 }
+		const own = { s, on: false, x: event.clientX, y: event.clientY, timer: 0, ctl: false }
 		own.timer = win.setTimeout(() => {
 			if (peeking !== own || !button.isConnected) return
 			const t = G.t[button.getAttribute("data-pl-step") ?? ""]
@@ -1336,10 +1366,33 @@ export function playEngine(
 		}, 280)
 		peeking = own
 	}
+	// The same for a control: a finger that stays on it shows what it would do, and lifting it then does not do it.
+	function holdControl(event: PointerEvent, control: Element, s: HTMLElement) {
+		unpeek(null)
+		const st = stateOf(s)
+		if (event.pointerType !== "touch") return
+		touched = event.timeStamp
+		if (!formOf(st.form)?.preview || !G.t[st.trail[st.trail.length - 1].k]) return
+		// The control itself may have been drawn again since the press: what it stands for is what counts.
+		const name = control.getAttribute("data-pl-act") ?? ""
+		const arg = control.getAttribute("data-arg") ?? ""
+		const own = { s, on: false, x: event.clientX, y: event.clientY, timer: 0, ctl: true }
+		own.timer = win.setTimeout(() => {
+			if (peeking !== own) return
+			own.on = true
+			formOf(st.form)?.preview?.(s, ctxOf(st), name, arg)
+		}, 280)
+		peeking = own
+	}
 	win.addEventListener(
 		"pointermove",
 		(event: PointerEvent) => {
 			if (peeking && Math.abs(event.clientX - peeking.x) + Math.abs(event.clientY - peeking.y) > 12) unpeek(null)
+			// The pointer moves again after a step: whatever is under it now is pointed at.
+			if (rest && event.pointerType === "mouse" && Math.abs(event.clientX - rest.x) + Math.abs(event.clientY - rest.y) >= 4) {
+				rest = null
+				over(event)
+			}
 		},
 		true,
 	)
@@ -1440,7 +1493,15 @@ export function playEngine(
 		if (!s || !button) return
 		// The mouse events a browser makes up after a touch are not a mouse pointing at anything.
 		if (event.type === "mouseover" && event.timeStamp - touched < 1200) return
-		intent(event)
+		// Nor is a poster that the pan carries under a pointer that has not moved since the tap.
+		if (rest && event.type === "mouseover") {
+			const at = event as MouseEvent
+			if (Math.abs(at.clientX - rest.x) + Math.abs(at.clientY - rest.y) < 4) return
+			rest = null
+		}
+		if (event.type === "pointermove") {
+			if (!button.hasAttribute("data-pl-came") && !noAhead()) ask(button.getAttribute("data-pl-step") ?? "", true)
+		} else intent(event)
 		const st = stateOf(s)
 		const c = G.t[st.trail[st.trail.length - 1].k]
 		const t = G.t[button.getAttribute("data-pl-step") ?? ""]
@@ -1474,10 +1535,22 @@ export function playEngine(
 		}
 		say(s, null)
 	}
-	doc.addEventListener("mouseover", (event: Event) => {
-		const s = sec(hit(event, "[data-pl-act]"))
-		if (s) wanted(event, s)
-	})
+	const lookOf = (event: Event, on: boolean) => {
+		const control = hit(event, "[data-pl-act]")
+		const s = sec(control)
+		if (!s || !control) return
+		if (on) wanted(event, s)
+		const related = (event as MouseEvent).relatedTarget as Node | null
+		if (event.timeStamp - touched < 1200 || (!on && related && control.contains(related))) return
+		const st = stateOf(s)
+		const form = formOf(st.form)
+		if (!form?.preview || !G.t[st.trail[st.trail.length - 1].k]) return
+		adopt(s)
+		if (on) form.preview(s, ctxOf(st), control.getAttribute("data-pl-act") ?? "", control.getAttribute("data-arg") ?? "")
+		else form.preview(s, ctxOf(st), null, "")
+	}
+	doc.addEventListener("mouseover", (event: Event) => lookOf(event, true))
+	doc.addEventListener("mouseout", (event: Event) => lookOf(event, false))
 	doc.addEventListener("mouseover", over)
 	doc.addEventListener("mouseout", out)
 	doc.addEventListener("focusin", (event: Event) => {

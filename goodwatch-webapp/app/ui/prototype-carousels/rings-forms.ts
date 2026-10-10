@@ -26,6 +26,13 @@
 // - rings9, heading: no control to start with. What the walk moved toward collects itself, and can be let go.
 // - rings10, in words: no control at all. A sentence says what the titles on the map have in common.
 //
+// Twelfth round, after the owner tried the eleventh: the slow motion is the motion. A step runs four times as long as
+// it did (about a second), a zoom and a control twice as long, and everything around the pan is timed for that: the
+// short way a poster takes to its own place begins while the map comes to rest, new titles are solid before the pan
+// is half over, the way back gets its mark once it has left the middle, and a control lets go of what leaves before
+// it brings in what comes. A control can be looked at before it is used (`preview`): the map dims what would leave.
+// A filter that has nothing to show yet never leaves the map empty. The remixes are in mix-forms.ts.
+//
 // Both the kit and each form are functions with no outside references, because they run as the page's inline
 // script (see play-engine.ts).
 import type { PlayCore, PlayCtx, PlayForm, PlayState, PlayTitle } from "~/ui/prototype-carousels/play-engine"
@@ -78,6 +85,8 @@ interface View {
 	rest: string
 	/** The filter the picture shows, by its name: for the checks. */
 	filter: string
+	/** The zoom the picture is drawn at. */
+	z: number
 	/** How far a poster may move to its own place after a pan, in px. Further than that, it fades over. */
 	hop: number
 	items: Item[]
@@ -85,6 +94,17 @@ interface View {
 }
 /** What a title wears on its poster in one form: a mark inside it, and a style of its own. */
 type Deco = (title: PlayTitle, rank: number) => { inner: string; extra: string }
+/** How long the parts of one redraw take, in ms: fades in and out, the move of what stays, the size, the way back's mark. */
+interface Pace {
+	fi: number
+	fd: number
+	fo: number
+	mv: number
+	md: number
+	sc: number
+	bk: number
+	end: number
+}
 interface Spec {
 	name: string
 	mode: string
@@ -101,11 +121,29 @@ interface Spec {
 	act?: (ctx: PlayCtx, name: string, arg: string) => boolean
 	/** The filter a control would lead to, so that it can be asked for while the finger is still down. */
 	will?: (ctx: PlayCtx, name: string, arg: string) => string[] | null
-	deco?: (ctx: PlayCtx, list: PlayTitle[]) => Deco | null
+	/** `places`: how many titles the map holds at this zoom. */
+	deco?: (ctx: PlayCtx, list: PlayTitle[], places: number) => Deco | null
+	/** The filter the map will show around a title once it is stepped onto, when it is not the one it shows now. */
+	next?: (ctx: PlayCtx, title: PlayTitle) => string[]
+	/** The filter a control stands for while it is pointed at or held: the map dims what does not pass it. */
+	look?: (ctx: PlayCtx, name: string, arg: string) => string[] | null
+	/** A control is pointed at or held (`tokens`), or no longer (null): what the form shows of it beyond the map. */
+	shown?: (section: Element, ctx: PlayCtx, tokens: string[] | null, name: string, arg: string) => void
 	ctl?: (ctx: PlayCtx, tokens: string[]) => string
 	drag?: (ctx: PlayCtx, x: number, y: number, w: number, h: number) => boolean
 }
-type Moved = HTMLElement & { __m?: Spot; __c?: Spot; __h?: string; __a?: Animation | null; __born?: number; __end?: number; __pk?: { nm: string; yr: string; df: string } | null }
+type Moved = HTMLElement & {
+	__m?: Spot
+	__c?: Spot
+	__h?: string
+	__a?: Animation | null
+	__born?: number
+	__fi?: number
+	__xv?: string
+	__xu?: number
+	__end?: number
+	__pk?: { nm: string; yr: string; df: string } | null
+}
 
 export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	const { esc, val } = core
@@ -116,11 +154,15 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	const low = (key: string) => word(key).toLowerCase()
 	const hue = (key: string) => core.M.traits[key]?.c ?? "#fbbf24"
 	const enc = encodeURIComponent
-	// For looking at the movement: `?plmove=a|b|c` picks how the titles that stay find their place, `?plslow=8`
-	// stretches every motion.
-	const found = (name: string) => (win ? new RegExp(`[?&]${name}=(\\w+)`).exec(win.location.search)?.[1] : undefined)
+	// For looking at the movement: `?plmove=a|b|c` picks how the titles that stay find their place, `?plslow=2`
+	// stretches every motion on top of its own pace (0.25 is the eleventh round's step).
+	const found = (name: string) => (win ? new RegExp(`[?&]${name}=([\\w.]+)`).exec(win.location.search)?.[1] : undefined)
 	const MOVE = found("plmove") ?? "c"
 	const SLOW = Number(found("plslow")) || 1
+	// Twelfth round: a step runs four times as long as in the eleventh, a zoom and a control twice as long.
+	const STEP = 4 * SLOW
+	const ZOOM = 2 * SLOW
+	const FLIP = 2 * SLOW
 
 	// --- The stage's size and the lattice ---------------------------------------------------------------------
 	// The server draws for a phone. The browser measures the map before the first paint and draws again if needed.
@@ -599,9 +641,23 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	// --- A picture into the stage, and the movement ---------------------------------------------------------------
 	let last: View | null = null
 	let once: { x: number; y: number } | null = null
+	/** After a picture is in the stage: a control that is being looked at keeps its marks on the map. */
+	let again: ((root: Element) => void) | null = null
+	// Where the mouse is. A pan may carry a pointed-at poster away from under a pointer that rests: when the pan is
+	// over, the card shows what is under the pointer then (`rested`).
+	let mouse: { x: number; y: number } | null = null
+	let rested: ((root: Element, key: string) => void) | null = null
+	if (win)
+		win.addEventListener(
+			"pointermove",
+			(event: PointerEvent) => {
+				if (event.pointerType === "mouse") mouse = { x: event.clientX, y: event.clientY }
+			},
+			{ capture: true, passive: true },
+		)
 	const html = (view: View) => {
 		last = view
-		return `<div class="${view.cls}" style="${view.rstyle}" data-r-form="${view.form}" data-r-geo="${view.geo}" data-r-mem="${esc(view.mem)}"${
+		return `<div class="${view.cls}" style="${view.rstyle}" data-r-form="${view.form}" data-r-geo="${view.geo}" data-r-z="${view.z}" data-r-mem="${esc(view.mem)}"${
 			view.rest ? ` data-pl-rest="${esc(view.rest)}"` : ""
 		} data-r-at="${view.ck}" data-r-f="${esc(view.filter)}"><div class="rm-top rg-top" data-r-top="">${view.top}</div><div class="rm-map" data-r-map=""><div class="rm-bg" data-r-bg="">${view.bg}</div><div class="rm-w" data-r-w="" data-pl-slop="" style="${view.wstyle}">${view.items
 			.map((entry) => entry.html)
@@ -619,11 +675,26 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	const still = () => Boolean(win?.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
 	// A pan starts at an even pace and comes to rest, so that the eye can pick it up: no leap in the first frame.
 	// A long pan (a wide screen, a far poster) takes a little longer than a short one.
-	let PAN = 240 * SLOW
-	const SETTLE = 100 * SLOW
-	const PLAIN = 200 * SLOW
-	const FADE = 190 * SLOW
+	let PAN = 240 * STEP
+	/** How long after the pan the last poster is on its own place, and the part of the pan it waits out first. */
+	const TAIL = 20 * STEP
+	const HOLD = 0.72
 	const EASE = "cubic-bezier(.3,.3,.2,1)"
+	/**
+	 * The pace of one redraw. A step: new titles are solid before the pan is half over, the ones that leave are gone
+	 * a little later, and the way back gets its mark once it has left the middle. A zoom: everything moves and
+	 * changes size as one. A control: what leaves fades first, what stays moves, what comes fades in last. More
+	 * titles that arrive by themselves come in quickly.
+	 */
+	const paceOf = (kind: string): Pace =>
+		kind === "step"
+			? { fi: 105 * STEP, fd: 0, fo: 130 * STEP, mv: 0, md: 0, sc: 75 * STEP, bk: 100 * STEP, end: PAN + TAIL }
+			: kind === "zoom"
+				? { fi: 120 * ZOOM, fd: 80 * ZOOM, fo: 120 * ZOOM, mv: 200 * ZOOM, md: 0, sc: 200 * ZOOM, bk: 0, end: 200 * ZOOM }
+				: kind === "flip"
+					? { fi: 130 * FLIP, fd: 110 * FLIP, fo: 120 * FLIP, mv: 190 * FLIP, md: 30 * FLIP, sc: 190 * FLIP, bk: 0, end: 240 * FLIP }
+					: { fi: 190 * SLOW, fd: 0, fo: 190 * SLOW, mv: 200 * SLOW, md: 0, sc: 200 * SLOW, bk: 0, end: 200 * SLOW }
+	let T = paceOf("")
 	let busy = 0
 	const num = (text: string | undefined) => Number.parseFloat(text ?? "") || 0
 	// The movement is one animation of the whole map (the pan), and one more for each poster that then has a short
@@ -648,20 +719,22 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		if (node.__a) node.__a.cancel()
 		node.__a = null
 	}
-	const play = (node: Moved, frames: Record<string, unknown>[], duration: number, easing: string) => {
+	const play = (node: Moved, frames: Record<string, unknown>[], duration: number, easing: string, delay = 0) => {
 		stop(node)
-		if (node.animate) node.__a = node.animate(frames as unknown as Keyframe[], { duration, easing })
+		if (node.animate) node.__a = node.animate(frames as unknown as Keyframe[], delay ? { duration, easing, delay, fill: "backwards" } : { duration, easing })
 	}
+	/** What a poster's style carries beyond its place while a fade of its own runs: how long that fade takes. */
+	const keep = (node: Moved, now: number) => (node.__xu && now < node.__xu ? (node.__xv ?? "") : "")
 	/**
 	 * A poster that stays. `from` is where it is within the map as the motion starts. After a step the map's pan
-	 * carries it (`pan`), and it only moves itself when its own place is another one: it waits out the pan, then
-	 * takes the short way. Without a step it goes straight there.
+	 * carries it (`pan`), and it only moves itself when its own place is another one: it waits out most of the pan,
+	 * and takes the short way while the map comes to rest. Without a step it goes straight there.
 	 */
 	const move = (node: Moved, from: { x: number; y: number }, to: Item, pan: boolean, calm: boolean) => {
 		node.__m = { x: to.x, y: to.y, s: to.s, o: 1 }
 		if (calm || Math.abs(from.x - to.x) + Math.abs(from.y - to.y) < 0.6) return stop(node)
-		if (!pan) play(node, [frame(from.x, from.y), frame(to.x, to.y)], PLAIN, EASE)
-		else play(node, [frame(from.x, from.y), frame(from.x, from.y, { offset: PAN / (PAN + SETTLE), easing: "cubic-bezier(.3,0,.3,1)" }), frame(to.x, to.y)], PAN + SETTLE, "linear")
+		if (!pan) play(node, [frame(from.x, from.y), frame(to.x, to.y)], T.mv, EASE, T.md)
+		else play(node, [frame(from.x, from.y), frame(from.x, from.y, { offset: (HOLD * PAN) / (PAN + TAIL), easing: "cubic-bezier(.3,0,.3,1)" }), frame(to.x, to.y)], PAN + TAIL, "linear")
 	}
 	/**
 	 * A poster that leaves: it stays where the map carries it, fading evenly so that the eye has the old picture to
@@ -676,9 +749,10 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			return
 		}
 		let from = again ? node.style.getPropertyValue("--o") : ""
+		const fade = again ? node.style.getPropertyValue("--fo") : `${T.fo}ms`
 		if (!again) {
 			// Still fading in: it fades out from where it is.
-			if (node.__born && now - node.__born < FADE) from = String(Math.round(Number(win.getComputedStyle(node).opacity) * 100) / 100)
+			if (node.__born && now - node.__born < (node.__fi ?? 0)) from = String(Math.round(Number(win.getComputedStyle(node).opacity) * 100) / 100)
 			node.removeAttribute("data-r-k")
 			node.removeAttribute("data-pl-step")
 			node.removeAttribute("data-pl-center")
@@ -686,11 +760,11 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			node.setAttribute("data-r-x", "")
 			node.setAttribute("aria-hidden", "true")
 			node.setAttribute("tabindex", "-1")
-			node.__end = now + FADE
+			node.__end = now + T.fo
 		}
 		const x = at.x + (by ? by.x : 0)
 		const y = at.y + (by ? by.y : 0)
-		node.style.cssText = `${place(x, y, node.__m?.s ?? (num(node.style.getPropertyValue("--s")) || 1))}${from ? `;--o:${from}` : ""}`
+		node.style.cssText = `${place(x, y, node.__m?.s ?? (num(node.style.getPropertyValue("--s")) || 1))}${from ? `;--o:${from}` : ""};--fo:${fade}`
 		node.__m = { x, y, s: node.__m?.s ?? 1, o: 0 }
 		if (by) play(node, [frame(at.x, at.y), frame(x, y)], PAN, EASE)
 		else stop(node)
@@ -749,23 +823,47 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		const shift = pivot && Math.abs(pivot.x + map.x) + Math.abs(pivot.y + map.y) > 0.6 ? { x: -pivot.x - map.x, y: -pivot.y - map.y } : null
 		// After the pan starts the map is `shift` short of its place, so within the map everything is that much on.
 		const on = shift ? { x: map.x + shift.x, y: map.y + shift.y } : { x: 0, y: 0 }
-		if (shift) PAN = Math.max(220, Math.min(280, 220 + (Math.hypot(shift.x, shift.y) - 100) * 0.2)) * SLOW
+		if (shift) PAN = Math.max(220, Math.min(280, 220 + (Math.hypot(shift.x, shift.y) - 100) * 0.2)) * STEP
+		// What kind of change this is sets its pace. A step onto a title that was not on the map has no pan: it
+		// changes like a control does.
+		const kind = shift
+			? "step"
+			: root.getAttribute("data-r-z") !== String(view.z)
+				? "zoom"
+				: stepped || root.getAttribute("data-r-f") !== view.filter
+					? "flip"
+					: ""
+		T = paceOf(kind)
 		// Only what changed is written: an attribute written again costs a look at every poster's style.
 		if (root.className !== view.cls) root.className = view.cls
 		if (root.getAttribute("style") !== view.rstyle) root.style.cssText = view.rstyle
 		root.setAttribute("data-r-mem", view.mem)
 		if (root.getAttribute("data-r-geo") !== view.geo) root.setAttribute("data-r-geo", view.geo)
 		if (root.getAttribute("data-r-f") !== view.filter) root.setAttribute("data-r-f", view.filter)
-		part(root, "top", view.top)
+		if (root.getAttribute("data-r-z") !== String(view.z)) root.setAttribute("data-r-z", String(view.z))
+		// A step answers in the map and in the card. The control area follows in the frame after the first one: it
+		// is the part of a step that costs most to lay out, and nobody reads it in the first moment of a pan.
+		if (shift && !calm && win.requestAnimationFrame)
+			win.requestAnimationFrame(() =>
+				win.requestAnimationFrame(() => {
+					if (root.isConnected && last && root.getAttribute("data-r-form") === last.form) {
+						part(root, "top", last.top)
+						if (again) again(root)
+					}
+				}),
+			)
+		else part(root, "top", view.top)
 		part(root, "bg", view.bg)
 		part(root, "ctl", view.ctl)
 		part(root, "info", view.info)
+		// The map's own style never changes with the kind of redraw: a change there is a new style for every poster.
 		if (world.getAttribute("style") !== view.wstyle) world.style.cssText = view.wstyle
 		if (calm) stop(world)
 		else if (shift) play(world, [frame(-shift.x, -shift.y), frame(0, 0)], PAN, EASE)
 		const wanted: Record<string, boolean> = {}
 		let fresh = ""
 		const born: Item[] = []
+		const fading = `;--fi:${Math.round(T.fi)}ms;--fd:${Math.round(T.fd)}ms`
 		for (const entry of view.items) {
 			wanted[entry.k] = true
 			let node: Moved | undefined = have[entry.k]
@@ -779,15 +877,26 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 				const hop = Math.abs(mx - entry.x) + Math.abs(my - entry.y)
 				if (hop > 0.6 && (Math.abs(mx) > box.w / 2 || Math.abs(my) > box.h / 2 || Math.hypot(mx - entry.x, my - entry.y) > view.hop)) node = undefined
 			}
-			if (!node || !c || (node.getAttribute("data-r-g") !== entry.sig && !morph(node, entry.html))) {
+			// The same when titles arrive by themselves and one that is shown belongs far from where it is: it fades
+			// over. Only a zoom and a control move posters across the map, because there the visitor asked for it.
+			if (node && !shift && !kind && entry.k !== view.ck && Math.hypot(mx - entry.x, my - entry.y) > view.hop) node = undefined
+			const was = node?.getAttribute("data-r-g")
+			if (!node || !c || (was !== entry.sig && !morph(node, entry.html))) {
 				if (have[entry.k]) wanted[entry.k] = false
-				fresh += calm ? entry.html : entry.html.replace(' rm-p"', ' rm-p rg-new"').replace(' rm-p rg-c"', ' rm-p rg-c rg-new"')
+				fresh += calm
+					? entry.html
+					: entry.html.replace(' rm-p"', ' rm-p rg-new"').replace(' rm-p rg-c"', ' rm-p rg-c rg-new"').replace('style="', `style="${fading.slice(1)};`)
 				born.push(entry)
 				continue
 			}
 			// Still fading in when it became something else (a tap on a poster that had just arrived): it goes on fading.
-			if (node.__born && t0 - node.__born < FADE) node.classList.add("rg-new")
-			node.style.cssText = entry.style
+			if (node.__born && t0 - node.__born < (node.__fi ?? 0)) node.classList.add("rg-new")
+			// The title you came from gets its mark once the pan has taken it out of the middle.
+			if (shift && was !== entry.sig && entry.sig.charAt(0) === "c") {
+				node.__xv = `${keep(node, t0)};--cmw:${Math.round(0.4 * PAN)}ms;--cmd:${Math.round(60 * STEP)}ms`
+				node.__xu = t0 + PAN
+			}
+			node.style.cssText = entry.style + keep(node, t0)
 			if (node.getAttribute("data-r-q") !== entry.q) node.setAttribute("data-r-q", entry.q)
 			if (entry.far !== node.hasAttribute("data-pl-far")) {
 				if (entry.far) node.setAttribute("data-pl-far", "")
@@ -815,7 +924,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			const c = node.__c ?? { x: 0, y: 0 }
 			if (shift || calm || !node.hasAttribute("data-r-x")) leave(node, { x: c.x + on.x, y: c.y + on.y }, null, calm, t0)
 		}
-		if (left && !calm) win.setTimeout(() => sweep(world), FADE + 30)
+		if (left && !calm) win.setTimeout(() => sweep(world), T.fo + 30)
 		if (fresh) {
 			world.insertAdjacentHTML("beforeend", fresh)
 			const count = world.children.length
@@ -823,11 +932,26 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 				const node = world.children[count - born.length + i] as Moved
 				node.__m = { x: entry.x, y: entry.y, s: entry.s, o: 1 }
 				node.__born = t0
+				node.__fi = T.fd + T.fi
+				node.__xv = fading
+				node.__xu = t0 + T.fd + T.fi
 				// With the pull of an edge it comes in from that side. With a pan the map brings it.
 				if (by && !calm) play(node, [frame(entry.x - by.x, entry.y - by.y), frame(entry.x, entry.y)], PAN, EASE)
 			})
 		}
-		busy = Math.max(busy, t0 + (shift ? PAN + SETTLE : PLAIN) + 40)
+		busy = Math.max(busy, t0 + T.end + 40)
+		if (again) again(root)
+		if (shift)
+			win.setTimeout(
+				() => {
+					const shown = root.querySelector("[data-r-info]")?.getAttribute("data-r-pk")
+					if (!shown || !mouse || !rested || win.performance.now() < busy - 60 || !root.isConnected) return
+					const under = win.document.elementFromPoint(mouse.x, mouse.y)?.closest?.("[data-r-w] > [data-r-k]")
+					const key = under && root.contains(under) && !under.hasAttribute("data-r-c") ? (under.getAttribute("data-r-k") ?? "") : ""
+					if (key !== shown) rested(root, key)
+				},
+				T.end + 60,
+			)
 		return true
 	}
 	/** The map's size, measured. True when the picture in the stage was drawn for another size. */
@@ -864,32 +988,37 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		const th = spec.th ?? 30
 		// A tall control takes the room of the card's last line on a phone, so that the map keeps its rows.
 		box.h = (spec.tall ? 414 : 398) - th
+		let seen: PlayCtx | null = null
 		const picture = (ctx: PlayCtx) => {
 			hold(ctx)
+			seen = ctx
 			const tokens = spec.tokens(ctx)
 			const scale = zooms()[zoomOf(ctx)]
 			const spots = cells(scale)
 			let list = around(ctx, tokens)
 			const rough = guessed
-			// A walk never ends in an empty map: when hardly any title passes and there are no more, the places left
-			// go to the most alike titles as they come, dimmed, and the card says so.
 			const passing = list.length
-			const few = tokens.length > 0 && !rough && passing < 6 && !open(ctx, tokens) && Boolean(ctx.list) && !ctx.soft
-			if (few) {
-				const has: Record<string, boolean> = {}
+			const more = open(ctx, tokens)
+			// A map is never empty, and a walk never ends in one. When hardly any title passes and there are no more,
+			// or none passes yet and more may still come, the places left go to the most alike titles as they come,
+			// dimmed, and the card says so.
+			const thin = tokens.length > 0 && !rough && Boolean(ctx.list) && (more ? passing === 0 : passing < 6)
+			// Which titles pass is kept by title, not by place in the list: the title you came from is taken out of
+			// the list for its own place, and a count would then be one off.
+			const has: Record<string, boolean> = {}
+			if (thin) {
 				for (const t of list) has[t.k] = true
 				list = list.concat(around(ctx, []).filter((t) => !has[t.k]))
 			}
-			const own = spec.deco ? spec.deco(ctx, list) : null
-			const deco: Deco | null = few
-				? (t, rank) => (rank >= passing && rank < 99 ? { inner: '<i class="rg-dm" aria-hidden="true"></i>', extra: ";--dm:1" } : own ? own(t, rank) : { inner: "", extra: "" })
+			const own = spec.deco ? spec.deco(ctx, list, spots.length) : null
+			const deco: Deco | null = thin
+				? (t, rank) => (!has[t.k] && rank < 99 ? { inner: '<i class="rg-dm" aria-hidden="true"></i>', extra: ";--dm:1" } : own ? own(t, rank) : { inner: "", extra: "" })
 				: own
 			// Enough for this zoom and the next one out.
-			const coming = want(ctx, tokens, list.length, Math.round(spots.length * 2.2))
+			const coming = want(ctx, tokens, passing, Math.round(spots.length * 2.2))
 			const shown = Math.min(list.length, spots.length)
 			const items = [middle(ctx, scale)].concat(lay(ctx, list, spots, scale, coming || rough, deco, nameOf(tokens)))
 			const rings = spots.length ? spots[spots.length - 1].b : 0
-			const more = open(ctx, tokens)
 			// What the server did not draw goes along as plain data: enough for a wide screen's first picture.
 			const rest = win ? "" : JSON.stringify(list.slice(shown, 64).map((t) => [t.k, t.t, t.y, t.p]))
 			const drift = once
@@ -901,22 +1030,65 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 				mem: JSON.stringify(ctx.st.mem),
 				geo: geoOf(),
 				top: spec.top(ctx, tokens, list, spots.length),
-				bg: `${guides(scale, Math.min(rings, 3))}<span class="rm-key">${few ? "dimmed = not a match" : "nearer = more alike"}</span>`,
+				bg: `${guides(scale, Math.min(rings, 3))}<span class="rm-key">${thin ? "dimmed = not a match" : "nearer = more alike"}</span>`,
 				ctl: `${spec.ctl ? spec.ctl(ctx, tokens) : ""}${zoomCtl(ctx, shown)}`,
 				info: info(
 					ctx,
-					few
-						? `${passing ? `Only ${passing} ${passing === 1 ? "title passes" : "titles pass"} that.` : "No title passes that."} The dimmed ones are the most alike that do not.`
+					thin
+						? more
+							? "Looking further out for titles like that. The dimmed ones are the most alike that are not."
+							: `${passing ? `Only ${passing} ${passing === 1 ? "title passes" : "titles pass"} that.` : "No title passes that."} The dimmed ones are the most alike that do not.`
 						: spec.note(ctx, tokens, list, spots.length, more),
 				),
 				ck: ctx.c.k,
-				wstyle: `--pw:${posterW()}px${SLOW !== 1 ? `;--slow:${SLOW}` : ""}`,
+				// How long a change of size and the dimming of the title you came from take: a zoom's time, for all.
+				wstyle: `--pw:${posterW()}px;--sc:${200 * ZOOM}ms;--bk:${200 * ZOOM}ms`,
 				rest,
 				filter: nameOf(tokens),
+				z: zoomOf(ctx),
 				hop: posterW() * scale * 1.107 * 1.75,
 				items,
 				drift,
 			})
+		}
+		// A control that is pointed at or held: the map dims what would not be there after it, and the form shows the
+		// rest in the control itself. The control that was just used stays quiet until the pointer has left it.
+		let hush = ""
+		let looked: { name: string; arg: string } | null = null
+		const lookAt = (within: Element, ctx: PlayCtx, name: string | null, arg: string) => {
+			const root = within.matches("[data-r-form]") ? within : within.querySelector("[data-r-form]")
+			if (!root) return
+			const tokens = name === null ? null : spec.look ? spec.look(ctx, name, arg) : spec.will ? spec.will(ctx, name, arg) : null
+			if (tokens) {
+				const drawn = root.querySelectorAll("[data-r-w] > button[data-r-k]")
+				for (let i = 0; i < drawn.length; i++) {
+					const b = drawn[i]
+					const t = core.title(b.getAttribute("data-r-k") ?? "")
+					const stays = b.hasAttribute("data-r-c") || b.hasAttribute("data-pl-came") || Boolean(t?.s && passes(t, tokens))
+					if (stays !== b.hasAttribute("data-r-st")) {
+						if (stays) b.setAttribute("data-r-st", "")
+						else b.removeAttribute("data-r-st")
+					}
+				}
+				root.setAttribute("data-r-pv", `${name}|${arg}`)
+			} else root.removeAttribute("data-r-pv")
+			const controls = root.querySelectorAll("[data-r-top] [data-pl-act]")
+			for (let i = 0; i < controls.length; i++) {
+				const on = tokens !== null && controls[i].getAttribute("data-pl-act") === name && controls[i].getAttribute("data-arg") === arg
+				if (on !== controls[i].hasAttribute("data-r-on")) {
+					if (on) controls[i].setAttribute("data-r-on", "")
+					else controls[i].removeAttribute("data-r-on")
+				}
+			}
+			if (spec.shown) spec.shown(root, ctx, tokens, name ?? "", arg)
+		}
+		again = (root) => {
+			if (looked && seen) lookAt(root, seen, looked.name, looked.arg)
+		}
+		rested = (root, key) => {
+			if (!seen || root.getAttribute("data-r-at") !== seen.c.k) return
+			const t = key ? core.title(key) : undefined
+			peek(root, seen, t ?? null)
 		}
 		const form: PlayForm = {
 			hint: spec.hint,
@@ -929,7 +1101,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 			into,
 			peek,
 			stage: picture,
-			act: (ctx, name, arg) => {
+			act: (ctx, name, arg, _el, section) => {
 				hold(ctx)
 				if (name === "z") {
 					const z = zoomOf(ctx)
@@ -937,12 +1109,36 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 					ctx.st.mem.z = next
 					return next !== z
 				}
-				return spec.act ? spec.act(ctx, name, arg) : false
+				const done = spec.act ? spec.act(ctx, name, arg) : false
+				if (done) {
+					hush = `${name}|${arg}`
+					looked = null
+					if (section) lookAt(section, ctx, null, "")
+				}
+				return done
 			},
 			intent: (ctx, name, arg) => {
 				hold(ctx)
 				const tokens = spec.will ? spec.will(ctx, name, arg) : null
 				if (tokens?.length) want(ctx, tokens, around(ctx, tokens).length, Math.round(cells(zooms()[zoomOf(ctx)]).length * 1.2))
+			},
+			// A poster is pressed while a filter is on: the titles that pass it around that title are asked for now.
+			near: (ctx, t) => {
+				hold(ctx)
+				const tokens = spec.next ? spec.next(ctx, t) : spec.tokens(ctx)
+				if (!tokens.length || !t.s || blendOf(tokens) || core.floor(t.k, nameOf(tokens)) !== undefined) return
+				core.more(t.k, `&v=5${country()}&f=${enc(nameOf(tokens))}&d=0`)
+			},
+			preview: (section, ctx, name, arg) => {
+				hold(ctx)
+				if (name === null) {
+					hush = ""
+					looked = null
+					lookAt(section, ctx, null, "")
+				} else if (`${name}|${arg}` !== hush) {
+					looked = { name, arg }
+					lookAt(section, ctx, name, arg)
+				}
 			},
 		}
 		if (spec.drag) {
@@ -962,7 +1158,7 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	const pull = (x: number, y: number) => {
 		once = { x, y }
 	}
-	return { X, WORDS, box, word, emo, low, hue, tok, pass, passes, around, bound, open, gaps, withOrWithout, saying, toggled, make, pull, posterW, rule, hold, nameOf }
+	return { X, WORDS, box, word, emo, low, hue, tok, pass, passes, around, bound, open, gaps, withOrWithout, saying, toggled, make, pull, posterW, rule, hold, nameOf, still }
 }
 
 /** The switches as chips: lit means the titles around have the trait. */
