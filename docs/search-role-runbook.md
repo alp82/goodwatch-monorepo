@@ -32,7 +32,7 @@ Measured on October 9, 2026, with a benchmark build and not with production's ro
 
 What these figures don't cover:
 
-- **Three roles on vector1 plus one on a worker,** which is the layout after this runbook. The benchmark's largest layout was one role on each of three hosts. Four roles weren't measured.
+- **Two roles on vector1 plus one on a worker,** which is the layout after this runbook. The benchmark's largest layout was one role on each of three hosts. Four roles weren't measured.
 - **The route of this runbook.** The benchmark's balancer listed every role directly and gave each the same share. In production a second host gets a share per host, not per role: see [The route to a second host](#the-route-to-a-second-host).
 - **Production's roles under load.** The load run on the deployed roles was dropped, because it would write history rows to production and could start paid reading calls.
 - **The reading call.** The benchmark served recorded readings.

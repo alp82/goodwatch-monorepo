@@ -135,7 +135,7 @@ What the figures say together:
 - **What happens:** the other two nodes keep answering for their slots. Lookups for the failed node's slots fail for the first second and after that in under 1 ms, because the client marks the node as down. The webapp reads the databases instead. See [When a node fails](private-redis.md#when-a-node-fails).
 - **What is lost until the node returns:** its third of the data cache, of the stored OG images, and of the build files in the shared store. The node loads its data again from its append-only file when it restarts.
 - **The title snapshot:** a running process keeps the snapshot that it has in memory. A process that starts during the outage has none until the node is back, and serves Discover without titles in the document.
-- **Measured:** a 59-second restart of one node cost 221 lookup errors and no failed request, and each node's switch to Valkey cost about a minute of lookup errors and no failed request. Both were at normal traffic. See [Set memory limits, eviction, and partial coverage on the Redis cluster](https://github.com/alp82/goodwatch-monorepo/issues/287).
+- **Measured:** in the drill of October 10, 2026, one node was killed and stayed down for five minutes at normal traffic: 3 lookup errors per page instance, no failed request, and the node came back with its data. A webapp that starts in that time serves pages without a title snapshot until the node is back. By the code, a search that needs the reading fails while the node with the search coordination keys is down. See [One cache node down: the drill](benchmarks/viral-spike-redis-failure-drill.md). Earlier, a 59-second restart of one node cost 221 lookup errors and no failed request, and each node's switch to Valkey cost about a minute of lookup errors and no failed request. Both were at normal traffic. See [Set memory limits, eviction, and partial coverage on the Redis cluster](https://github.com/alp82/goodwatch-monorepo/issues/287).
 - **To add or recreate a node:** [redis-add-node.md](redis-add-node.md) and [Recreate a node](private-redis.md#recreate-a-node).
 
 ### A search role
@@ -279,7 +279,7 @@ Each process serves its counters on a private port, and Alloy sends them to Graf
 ### Instances, cache nodes, and search
 
 - **One page instance alone on production** wasn't measured, and neither was the loss of abio or of vector1 as a host.
-- **A cache node failure under load** wasn't run: [Run a one-node Redis failure drill](https://github.com/alp82/goodwatch-monorepo/issues/290). Adding a node was rehearsed on a throwaway cluster and not on production.
+- **A cache node failure under load** wasn't run. The [drill](benchmarks/viral-spike-redis-failure-drill.md) ran at normal traffic and without a client-side latency measurement. Adding a node was rehearsed on a throwaway cluster and not on production.
 - **The search roles' capacity on production** wasn't measured. The load run at 20 searches per second was removed from the checklist, because it would write history rows to production and could start paid calls. The figures come from a benchmark build.
 - **Whether a search role sees the visitor's address** in production isn't verified. The local proxy test shows it.
 - **The search roles' series in Grafana Cloud** weren't read after Alloy started to scrape them.
