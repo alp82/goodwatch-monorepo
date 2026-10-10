@@ -25,6 +25,11 @@
 // stage's size (`fit`), be dragged sideways without losing its taps (`pan`), and ask for more of a title's
 // neighborhood than its pack holds (`more`), which never blocks a tap.
 //
+// Eleventh round (rings-forms.ts): a pack request can differ per title (`queryOf`), a list of titles alike two titles
+// is kept beside the pack (`alt`), the server's picture can be laid out again for the real width before the first
+// paint and before its pack is there (`fit` with the titles read from the document), a form can show a pointed-at
+// title in its own card (`peek`, also on a held finger), and hears a control being pressed (`intent`).
+//
 // The forms are in play-forms.ts. Each gets this engine's `core` and returns how to draw its stage.
 import type { PlayMeta } from "~/ui/prototype-carousels/play-meta"
 
@@ -36,6 +41,8 @@ export interface RawPack {
 	tr?: string[]
 	/** Tenth round: per filter, the similarity down to which the titles are all there. 0: there are no more. */
 	fl?: Record<string, number>
+	/** Eleventh round: the name of the list these titles are, when they are not the title's own neighborhood. */
+	alt?: string
 }
 
 /** A title as the engine holds it. `n` is the similarity to the center of the pack it came from. */
@@ -143,8 +150,8 @@ export interface PlayForm {
 	fly?: boolean
 	/** A range input or a scrolled strip changed. */
 	input?: (ctx: PlayCtx, el: Element, section: Element) => void
-	/** A finger or the mouse is down on a `data-pl-drag` element, at `x` from its left edge. */
-	drag?: (ctx: PlayCtx, el: Element, section: Element, x: number) => void
+	/** A finger or the mouse is down on a `data-pl-drag` element, at `x` from its left edge (and `y` from its top). */
+	drag?: (ctx: PlayCtx, el: Element, section: Element, x: number, y: number) => void
 	/** True when the form shows the title you stand on, its reason, and "Open" itself: the card stays out. */
 	plain?: boolean
 	/** Tenth round. Puts a new picture into the stage itself, keeping what stays. False: the engine replaces it. */
@@ -155,6 +162,10 @@ export interface PlayForm {
 	pan?: (ctx: PlayCtx, el: Element, section: Element, dx: number, phase: number) => void
 	/** True when a stand-in is replaced by the pack as it is: titles move to their true places. */
 	truth?: boolean
+	/** Eleventh round. A poster is pointed at, focused, or held with a finger (`title`), or no longer (null). */
+	peek?: (section: Element, ctx: PlayCtx, title: PlayTitle | null) => void
+	/** A control is being pressed or pointed at: what it would need can be asked for now. */
+	intent?: (ctx: PlayCtx, name: string, arg: string) => void
 }
 export interface PlayCore {
 	M: PlayMeta
@@ -209,6 +220,10 @@ export interface PlayCore {
 	/** Ninth round: the traits a title's pack was widened along, and what every later pack request carries. */
 	packTraits: (key: string) => string[] | null
 	query: (suffix: string) => void
+	/** Eleventh round: what a pack request carries, per title. */
+	queryOf: (suffix: (key: string) => string) => void
+	/** A list kept beside a title's pack under a name (titles alike two titles), or undefined while it is not there. */
+	alt: (key: string, name: string) => PlayTitle[] | undefined
 	href: (title: PlayTitle) => string
 	/** Tenth round: more of a title's neighborhood, merged into its pack when it arrives. True while on its way. */
 	more: (key: string, suffix: string) => boolean
@@ -244,7 +259,10 @@ export function playEngine(
 		ex: Record<string, number>
 		late: Record<string, RawPack[]>
 		extra: number
-	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null, tr: {}, q: "", fl: {}, ex: {}, late: {}, extra: 0 }
+		qf: ((key: string) => string) | null
+		alt: Record<string, Record<string, PlayTitle[]>>
+		dom: Record<string, PlayTitle[]>
+	} = { t: {}, packs: {}, soft: {}, wait: {}, asked: 0, nav: null, tr: {}, q: "", fl: {}, ex: {}, late: {}, extra: 0, qf: null, alt: {}, dom: {} }
 	const ESC: Record<string, string> = {
 		"&": "&amp;",
 		"<": "&lt;",
@@ -601,6 +619,10 @@ export function playEngine(
 		query: (suffix) => {
 			G.q = suffix
 		},
+		queryOf: (suffix) => {
+			G.qf = suffix
+		},
+		alt: (key, name) => G.alt[key]?.[name],
 		href: (title) => hrefOf(title),
 		more: (key, suffix) => (win ? more(key, suffix) : false),
 		floor: (key, filter) => G.fl[key]?.[filter],
@@ -630,7 +652,8 @@ export function playEngine(
 		const e = st.trail[st.trail.length - 1]
 		const before = st.trail[st.trail.length - 2]
 		const real = G.packs[e.k] ?? null
-		const list = real ?? (before ? softOf(e.k, before.k) : null)
+		// Before a title's pack is there: what is known around the title you came from, or what the server drew.
+		const list = real ?? (before ? softOf(e.k, before.k) : null) ?? G.dom[e.k] ?? null
 		return {
 			st,
 			e,
@@ -723,6 +746,7 @@ export function playEngine(
 		title: string
 		pack: RawPack | null
 		links: { href: string; text: string }[]
+		mem?: PlayState["mem"]
 	}) => {
 		if (input.pack) take(input.pack)
 		const rootTitle = G.t[input.root]
@@ -746,7 +770,7 @@ export function playEngine(
 			axes: startAxes(rootTitle, list),
 			traits: own(rootTitle, 8),
 			trail: [{ k: input.root, via: "", ui: {} }],
-			mem: {},
+			mem: input.mem ?? {},
 		}
 		const p = parts(st)
 		return `${head}<div class="pl-bar" data-pl-bar="" data-axes="${st.axes.join(",")}" data-traits="${st.traits.join(
@@ -794,8 +818,36 @@ export function playEngine(
 				trail: [{ k: root, via: "", ui: {} }],
 				mem: {},
 			}
+			if (formOf(s.__pl.form)?.fit && !G.packs[root]) harvest(s, root)
 		}
 		return s.__pl
+	}
+	/** The titles the server drew, in its order: enough to lay the picture out again before the pack is there. */
+	function harvest(s: Element, root: string) {
+		const out: PlayTitle[] = []
+		const seen: Record<string, boolean> = {}
+		const add = (k: string, t: string, y: string, p: string) => {
+			if (!k || seen[k] || k === root) return
+			seen[k] = true
+			const title = { k, t, y, p, n: 1 - out.length * 0.0001, s: null }
+			if (!G.t[k]) G.t[k] = title
+			out.push(G.t[k].s ? { ...G.t[k], n: title.n } : title)
+		}
+		const drawn = s.querySelectorAll("[data-pl-stage] [data-pl-step]")
+		for (let i = 0; i < drawn.length; i++) {
+			const b = drawn[i]
+			add(
+				b.getAttribute("data-pl-step") ?? "",
+				b.getAttribute("data-t") ?? "",
+				b.getAttribute("data-y") ?? "",
+				(q(b, "img")?.getAttribute("src") ?? "").replace(/^.*\/w\d+\//, ""),
+			)
+		}
+		try {
+			const rest = JSON.parse(q(s, "[data-pl-rest]")?.getAttribute("data-pl-rest") ?? "[]") as string[][]
+			for (const entry of rest) add(entry[0], entry[1], entry[2], entry[3])
+		} catch {}
+		if (out.length) G.dom[root] = out
 	}
 	function ask(key: string, urgent: boolean): Promise<unknown> {
 		if (G.packs[key]) return Promise.resolve()
@@ -803,7 +855,7 @@ export function playEngine(
 			if (!urgent && G.asked >= SESSION_CAP) return Promise.resolve()
 			G.asked++
 			G.wait[key] = win
-				.fetch(`/api/prototype-play?key=${key}${G.q}`, {
+				.fetch(`/api/prototype-play?key=${key}${G.qf ? G.qf(key) : G.q}`, {
 					priority: urgent ? "high" : "low",
 				})
 				.then((response: Response) => {
@@ -834,7 +886,17 @@ export function playEngine(
 			})
 			.then((raw: RawPack) => {
 				G.ex[id] = 2
-				if (G.packs[key]) merge(key, raw)
+				if (raw.alt !== undefined) {
+					// A list of its own, in its own order: page after page.
+					const lists = G.alt[key] ?? {}
+					G.alt[key] = lists
+					const have: Record<string, boolean> = {}
+					for (const t of lists[raw.alt] ?? []) have[t.k] = true
+					lists[raw.alt] = (lists[raw.alt] ?? []).concat(
+						raw.n.filter((entry) => !have[entry[0]] && entry[0] !== key).map((entry) => ({ ...titleOf(entry) })),
+					)
+					floors(key, raw.fl)
+				} else if (G.packs[key]) merge(key, raw)
 				else G.late[key] = (G.late[key] ?? []).concat([raw])
 				// Whoever stands on the title gets the new titles into the picture. Nothing waits for this.
 				const all = doc.querySelectorAll("[data-play]")
@@ -914,8 +976,13 @@ export function playEngine(
 		else stage.removeAttribute("data-pl-soft")
 		if (kind && !still()) stage.setAttribute("data-pl-in", `${kind}${++beat % 2}`)
 		else stage.removeAttribute("data-pl-in")
-		const bar = q(s, "[data-pl-bar]")
-		if (bar) bar.innerHTML = p.bar
+		const bar = q(s, "[data-pl-bar]") as (HTMLElement & { __h?: string }) | null
+		// Written only when it changed: a picture that is drawn again (more titles arrived) leaves an open list of
+		// steps open.
+		if (bar && bar.__h !== p.bar) {
+			bar.innerHTML = p.bar
+			bar.__h = p.bar
+		}
 		const card = q(s, "[data-pl-card]")
 		if (card) card.innerHTML = p.card
 		const print = q(s, "[data-pl-fp]")
@@ -1050,13 +1117,13 @@ export function playEngine(
 		const form = formOf(st.form)
 		const here = st.trail[st.trail.length - 1]
 		adopt(s)
-		const from = button.getBoundingClientRect()
+		const from = form?.fly === false ? null : button.getBoundingClientRect()
 		st.trail.push({
 			k: key,
 			via: button.getAttribute("data-via") ?? "",
 			ui: form?.carry ? form.carry(here.ui, button) : {},
 		})
-		draw(s, "step", form?.fly === false ? null : from)
+		draw(s, "step", from)
 		if (G.packs[key]) ahead(s)
 		else ask(key, true)
 	}
@@ -1085,6 +1152,13 @@ export function playEngine(
 	const OWN = "[data-pl-step],[data-pl-act],[data-pl-to],[data-pl-back]"
 	const share = /[?&]plshare=1/.test(win.location.search)
 	const mine = (event: Event) => {
+		// A finger that was held on a poster to look at it lifts: that is not a tap (see `hold`).
+		if (event.type === "pointerup") {
+			if ((event as PointerEvent).pointerType === "touch") touched = event.timeStamp
+			unpeek(event)
+			// The end of a drag on a control, which no later listener hears.
+			held = null
+		}
 		if (!share && hit(event, OWN) && sec(event.target as Element))
 			event.stopImmediatePropagation()
 	}
@@ -1130,6 +1204,7 @@ export function playEngine(
 		}
 		const control = hit(event, "[data-pl-act]")
 		if (control && form?.act) {
+			pressed = null
 			adopt(s)
 			const again = form.act(
 				ctxOf(st),
@@ -1197,25 +1272,93 @@ export function playEngine(
 		if (event.type === "pointerdown") {
 			pressed = null
 			panStart(event as PointerEvent)
+			grab(event as PointerEvent)
 		}
 		mine(event)
 		const button = hit(event, "[data-pl-step]")
 		const s = sec(button)
 		if (!s || !button) {
 			const any = sec(event.target as Element)
-			if (any) wake(any)
+			if (any) {
+				wake(any)
+				wanted(event, any)
+			}
 			return
 		}
 		wake(s)
-		if (event.type === "pointerdown") pressed = { el: button, at: event.timeStamp }
+		if (wanted(event, s)) return
+		if (event.type === "pointerdown") {
+			pressed = { el: button, at: event.timeStamp }
+			hold(event as PointerEvent, button, s)
+		}
 		if (!button.hasAttribute("data-pl-came") && !noAhead())
 			ask(button.getAttribute("data-pl-step") ?? "", true)
 	}
+	/** A control being pressed or pointed at: the form may ask for what it would need. */
+	function wanted(event: Event, s: HTMLElement) {
+		const control = hit(event, "[data-pl-act]")
+		if (!control) return false
+		const st = stateOf(s)
+		const form = formOf(st.form)
+		if (form?.intent && G.t[st.trail[st.trail.length - 1].k]) {
+			adopt(s)
+			form.intent(ctxOf(st), control.getAttribute("data-pl-act") ?? "", control.getAttribute("data-arg") ?? "")
+		}
+		return true
+	}
+	// A finger that stays on a poster is what pointing at it is for a mouse: the form shows that title in its card
+	// for as long as the finger stays, and lifting it is then not a tap. A tap stays a tap: nothing waits for this.
+	let touched = -1e9
+	let peeking: { s: HTMLElement; timer: number; on: boolean; x: number; y: number } | null = null
+	const unpeek = (event: Event | null) => {
+		if (!peeking) return
+		win.clearTimeout(peeking.timer)
+		if (peeking.on) {
+			const st = stateOf(peeking.s)
+			formOf(st.form)?.peek?.(peeking.s, ctxOf(st), null)
+			if (event?.type === "pointerup") swallow = event.timeStamp
+			pressed = null
+		}
+		peeking = null
+	}
+	function hold(event: PointerEvent, button: Element, s: HTMLElement) {
+		unpeek(null)
+		const st = stateOf(s)
+		if (event.pointerType === "touch") touched = event.timeStamp
+		if (event.pointerType !== "touch" || !formOf(st.form)?.peek) return
+		const own = { s, on: false, x: event.clientX, y: event.clientY, timer: 0 }
+		own.timer = win.setTimeout(() => {
+			if (peeking !== own || !button.isConnected) return
+			const t = G.t[button.getAttribute("data-pl-step") ?? ""]
+			if (!t) return
+			own.on = true
+			formOf(st.form)?.peek?.(s, ctxOf(st), t)
+		}, 280)
+		peeking = own
+	}
+	win.addEventListener(
+		"pointermove",
+		(event: PointerEvent) => {
+			if (peeking && Math.abs(event.clientX - peeking.x) + Math.abs(event.clientY - peeking.y) > 12) unpeek(null)
+		},
+		true,
+	)
+	for (const type of ["pointerup", "pointercancel"]) win.addEventListener(type, unpeek, true)
+	win.addEventListener(
+		"contextmenu",
+		(event: Event) => {
+			const s = sec(hit(event, "[data-pl-step]"))
+			if (s && formOf(stateOf(s).form)?.peek) event.preventDefault()
+		},
+		true,
+	)
 	win.addEventListener("pointerdown", intent, true)
 	// A small map that is dragged: the form hears where the finger is, from the press on.
 	let held: { el: Element; s: HTMLElement } | null = null
 	const dragged = (event: PointerEvent) => {
 		if (!held) return
+		// A form that draws itself again while it is dragged may have put a new element where the old one was.
+		if (!held.el.isConnected) held.el = q(held.s, "[data-pl-drag]") ?? held.el
 		const st = stateOf(held.s)
 		adopt(held.s)
 		formOf(st.form)?.drag?.(
@@ -1223,22 +1366,20 @@ export function playEngine(
 			held.el,
 			held.s,
 			event.clientX - held.el.getBoundingClientRect().left,
+			event.clientY - held.el.getBoundingClientRect().top,
 		)
 	}
-	win.addEventListener(
-		"pointerdown",
-		(event: PointerEvent) => {
-			const el = hit(event, "[data-pl-drag]")
-			const s = sec(el)
-			if (!el || !s) return
-			held = { el, s }
-			try {
-				el.setPointerCapture(event.pointerId)
-			} catch {}
-			dragged(event)
-		},
-		true,
-	)
+	// Called from the one pointerdown listener, which keeps a press on a control to itself (see `mine`).
+	function grab(event: PointerEvent) {
+		const el = hit(event, "[data-pl-drag]")
+		const s = sec(el)
+		if (!el || !s) return
+		held = { el, s }
+		try {
+			el.setPointerCapture(event.pointerId)
+		} catch {}
+		dragged(event)
+	}
 	win.addEventListener("pointermove", dragged, true)
 	for (const type of ["pointerup", "pointercancel"])
 		win.addEventListener(
@@ -1297,10 +1438,17 @@ export function playEngine(
 		const button = hit(event, "[data-pl-step]")
 		const s = sec(button)
 		if (!s || !button) return
+		// The mouse events a browser makes up after a touch are not a mouse pointing at anything.
+		if (event.type === "mouseover" && event.timeStamp - touched < 1200) return
 		intent(event)
 		const st = stateOf(s)
 		const c = G.t[st.trail[st.trail.length - 1].k]
 		const t = G.t[button.getAttribute("data-pl-step") ?? ""]
+		const form = formOf(st.form)
+		if (form?.peek) {
+			if (t && c) form.peek(s, ctxOf(st), t)
+			return
+		}
 		const name = `${button.getAttribute("data-t")} (${button.getAttribute("data-y")})`
 		if (button.hasAttribute("data-pl-came")) say(s, `${name}: where you came from.`)
 		else if (t?.s && c?.s) {
@@ -1318,8 +1466,18 @@ export function playEngine(
 		const s = sec(button)
 		const related = (event as MouseEvent).relatedTarget as Node | null
 		if (!s || !button || (related && button.contains(related))) return
+		const st = stateOf(s)
+		const form = formOf(st.form)
+		if (form?.peek) {
+			if (G.t[st.trail[st.trail.length - 1].k]) form.peek(s, ctxOf(st), null)
+			return
+		}
 		say(s, null)
 	}
+	doc.addEventListener("mouseover", (event: Event) => {
+		const s = sec(hit(event, "[data-pl-act]"))
+		if (s) wanted(event, s)
+	})
 	doc.addEventListener("mouseover", over)
 	doc.addEventListener("mouseout", out)
 	doc.addEventListener("focusin", (event: Event) => {
@@ -1335,6 +1493,10 @@ export function playEngine(
 			stateOf(s)
 			if (s.__seen) continue
 			s.__seen = true
+			// A form that lays its picture out for the stage's size hears the size after the first layout and before
+			// the first paint, so the server's picture (drawn for a phone) is never seen at another width.
+			const stage = q(s, "[data-pl-stage]")
+			if (stage && win.ResizeObserver && formOf(stateOf(s).form)?.fit) new win.ResizeObserver(() => fitted(s)).observe(stage)
 			if (win.IntersectionObserver) {
 				const watch = new win.IntersectionObserver(
 					(entries: IntersectionObserverEntry[]) => {

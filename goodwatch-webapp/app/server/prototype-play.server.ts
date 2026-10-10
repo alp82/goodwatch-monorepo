@@ -38,6 +38,18 @@ import {
 	sameFranchise,
 } from "~/ui/prototype-carousels/best-meta"
 import { PLAY_FORMS } from "~/ui/prototype-carousels/play-forms"
+import { RINGS_FORMS, ringsKit } from "~/ui/prototype-carousels/rings-forms"
+import {
+	RING_KEYS,
+	RING_MODES,
+	type RingToken,
+	isRingsVariant,
+	parseToken,
+	ringTokens,
+	ringsExtra,
+	ringsMeta,
+	tokenName,
+} from "~/ui/prototype-carousels/rings-meta"
 import { ROAM_FORMS, roamKit } from "~/ui/prototype-carousels/roam-forms"
 import {
 	ROAM_WITH,
@@ -67,6 +79,7 @@ export type PlayPack = {
 	n: PackTitle[]
 	tr?: string[]
 	fl?: Record<string, number>
+	alt?: string
 }
 /** What the cache keeps: a pack, or the note that the title has no fingerprint. */
 type Kept = {
@@ -74,6 +87,7 @@ type Kept = {
 	n: PackTitle[]
 	tr?: string[]
 	fl?: Record<string, number>
+	alt?: string
 }
 
 const POOL = 180
@@ -586,6 +600,220 @@ export async function playPack4(
 	return kept?.c ? { c: kept.c, n: kept.n, tr: kept.tr, fl: kept.fl } : null
 }
 
+// --- Eleventh round: the rings pack ---------------------------------------------------------------------------------
+//
+// The tenth round's pack with three changes:
+// - A title carries the twenty plain traits the forms use instead of all 74 attributes, and two facts: its score
+//   in steps of five, and (only when a country is named) whether one of the large subscription services has it.
+// - A filter is a list of tokens (ui/prototype-carousels/rings-meta.ts): a level of a trait at least or at most,
+//   the year, movie or show, the score, streaming. Which filtered lists a pack brings along depends on the form's
+//   mode, and on the title's own levels alone, so the browser can name them for every neighbor.
+// - `_b=<title>` in a page's filter makes it the list of titles alike both: Qdrant's own answer for the two
+//   titles together, kept by the browser beside the pack (`alt`).
+// A further page (`d`) is the same for every form, so it is cached once per filter.
+const NEAR5 = 80
+const EXTRA5 = 72
+const PAGE5 = 240
+const MAX_PAGE5 = 6
+/** The large subscription services, by their ids in the streaming data. A stand-in for the visitor's own services. */
+const SERVICES = [8, 9, 119, 337, 350, 2552, 1899, 384, 15, 531, 386, 283, 30, 29]
+const PAYLOAD5 = [
+	"tmdb_id",
+	"media_type",
+	"title",
+	"release_year",
+	"poster_path",
+	"goodwatch_overall_score_normalized_percent",
+	"fingerprint_scores_v1",
+]
+
+async function buildPack5(params: {
+	type: PxType
+	id: number
+	tr: string
+	m: string
+	f: string
+	d: number
+	cc: string
+}): Promise<Kept> {
+	const point = titleKey(params.type, params.id)
+	const services = new Set(SERVICES.map((id) => `${id}_${params.cc}`))
+	const condition = (token: RingToken): unknown => {
+		const n = Number(token.value)
+		if (token.key === "_y") return { key: "release_year", range: token.op === ">" ? { gte: n } : { lte: n } }
+		if (token.key === "_k") return { key: "media_type", match: { value: token.value === "m" ? "movie" : "show" } }
+		if (token.key === "_r") return { key: "goodwatch_overall_score_normalized_percent", range: { gte: n } }
+		if (token.key === "_st")
+			return { should: [...services].map((value) => ({ key: "streaming_availability", match: { value } })) }
+		return { key: `fingerprint_scores_v1.${token.key}`, range: token.op === ">" ? { gte: n } : { lte: n } }
+	}
+	const payload = params.cc ? [...PAYLOAD5, "streaming_availability"] : PAYLOAD5
+	const around = (tokens: RingToken[], limit: number, offset = 0) => {
+		const other = tokens.find((token) => token.key === "_b")
+		const { must, must_not } = buildBaseFilterConditions({
+			mediaType: "all",
+			minVotingCount: 10000,
+			minScore: 60,
+			additionalMust: [
+				{ key: "release_year", range: { lte: new Date().getFullYear() } },
+				...tokens.filter((token) => token.key !== "_b").map(condition),
+			],
+		})
+		return recommend<QdrantMediaPayload>({
+			collectionName: MEDIA_COLLECTION,
+			positive: other
+				? [point, titleKey(other.value.startsWith("m") ? "movie" : "show", Number(other.value.slice(1)))]
+				: [point],
+			using: "fingerprint_v1",
+			filter: { must, must_not },
+			limit,
+			offset,
+			withPayload: { include: payload },
+			hnswEf: 128,
+			exact: false,
+		})
+	}
+	const parse = (text: string) =>
+		text
+			.split(",")
+			.map(parseToken)
+			.filter((token): token is RingToken => token !== null)
+	const filter = parse(params.f).filter((token) => token.key !== "_st" || params.cc)
+	const paged = params.d >= 0
+	// A page: the first of a filter holds 80, every later one 240.
+	const [limit, offset]: [number, number] = params.d <= 0 ? [NEAR5, 0] : [PAGE5, NEAR5 + (params.d - 1) * PAGE5]
+	const [own, main] = await Promise.all([
+		scroll<QdrantMediaPayload>({
+			collectionName: MEDIA_COLLECTION,
+			filter: { must: [{ has_id: [point] }] },
+			limit: 1,
+			withPayload: { include: payload },
+			withVector: false,
+		}),
+		paged ? around(filter, limit, offset) : around([], NEAR5),
+	])
+	const center = own[0]?.payload
+	const centerScores = center?.fingerprint_scores_v1
+	if (!center || !centerScores) return { c: null, n: [] }
+	const usable = (hit: { payload: QdrantMediaPayload }) =>
+		Boolean(hit.payload.fingerprint_scores_v1 && first(hit.payload.poster_path))
+	const level = (key: string) => Math.round(centerScores[key] ?? 0)
+	const lowest = (hits: { score: number }[], asked: number) =>
+		hits.length < asked ? 0 : Math.floor(hits[hits.length - 1].score * 10000) / 10
+	const fl: Record<string, number> = {}
+	const name = (tokens: RingToken[]) => tokenName(tokens.map((token) => `${token.key}${token.op}${token.value}`))
+	fl[paged ? name(filter) : ""] = lowest(main, paged ? limit : NEAR5)
+	const groups = [main]
+	let brought: RingToken[] = []
+	if (!paged) {
+		if (params.tr && params.tr !== "0") brought = parse(params.tr).slice(0, 8)
+		else if (params.tr !== "0") {
+			// The page's own title: the form's mode says which lists, and for the traits a walk holds on to, the ninth
+			// round's rule picks them from the title and its nearest.
+			const near = main
+				.filter(usable)
+				.slice(0, 64)
+				.map((hit) => (key: string) => Math.round(hit.payload.fingerprint_scores_v1?.[key] ?? 0))
+			const keys =
+				params.m === "chips"
+					? bestTraits(level, near, 3)
+					: params.m === "edges"
+						? bestTraits(level, near, 4)
+						: params.m === "stops"
+							? bestTraits(level, near, 3, true)
+							: params.m === "pad"
+								? bestTraits(level, near, 2, true)
+								: []
+			brought = parse(ringTokens(params.m, level, keys, ringsExtra().w).join(","))
+		}
+		brought = brought.filter((token) => token.key !== "_b" && (token.key !== "_st" || params.cc))
+		const per = brought.length ? Math.max(8, Math.floor(EXTRA5 / brought.length)) : 0
+		const more = await Promise.all(brought.map((token) => around([token], per).catch(() => null)))
+		more.forEach((hits, i) => {
+			if (!hits) return
+			fl[name([brought[i]])] = lowest(hits, per)
+			groups.push(hits)
+		})
+	}
+	const chosen: { payload: QdrantMediaPayload; score: number }[] = []
+	const taken = new Set<string>([`${center.media_type}${center.tmdb_id}`])
+	for (const hits of groups)
+		for (const hit of hits.filter(usable)) {
+			const key = `${hit.payload.media_type}${hit.payload.tmdb_id}`
+			if (taken.has(key)) continue
+			taken.add(key)
+			chosen.push(hit)
+		}
+	const facts = (title: QdrantMediaPayload) => {
+		const scores = title.fingerprint_scores_v1
+		const rated = title.goodwatch_overall_score_normalized_percent ?? 0
+		return RING_KEYS.map((key) => {
+			if (key === "_r") return CODE[Math.max(0, Math.min(10, Math.floor((rated - 50) / 5)))]
+			if (key === "_st")
+				return params.cc ? (title.streaming_availability?.some((code) => services.has(code)) ? "1" : "0") : "-"
+			const value = scores?.[key]
+			return value === undefined || value < 0 || value > 10 ? "-" : CODE[Math.round(value)]
+		}).join("")
+	}
+	const pack = (title: QdrantMediaPayload, near: number): PackTitle => [
+		`${title.media_type === "movie" ? "m" : "s"}${title.tmdb_id}`,
+		first(title.title) ?? "",
+		String(title.release_year ?? ""),
+		(first(title.poster_path) ?? "").replace(/^\/+/, ""),
+		near,
+		facts(title),
+	]
+	return {
+		c: pack(center, 1000),
+		n: chosen.sort((a, b) => b.score - a.score).map((hit) => pack(hit.payload, Math.round(hit.score * 10000) / 10)),
+		tr: paged ? undefined : brought.map((token) => `${token.key}${token.op}${token.value}`),
+		fl,
+		alt: paged && filter.some((token) => token.key === "_b") ? name(filter) : undefined,
+	}
+}
+
+/**
+ * The eleventh round's pack of a title. `tr`: the filtered lists it brings along, "0" for none, or empty for what
+ * the form's mode `m` chooses for this title. `f` and `d`: a further page of one filter. `cc`: the visitor's
+ * country, for the forms that filter by streaming.
+ */
+export async function playPack5(
+	type: PxType,
+	id: number,
+	options: { tr?: string; m?: string; f?: string; d?: number; cc?: string } = {},
+): Promise<PlayPack | null> {
+	const d = Math.max(-1, Math.min(MAX_PAGE5, Math.floor(options.d ?? -1)))
+	const tr =
+		options.tr === "0"
+			? "0"
+			: (options.tr ?? "")
+					.split(",")
+					.filter((token) => parseToken(token))
+					.slice(0, 8)
+					.join(",")
+	const mode = Object.values(RING_MODES).includes(options.m ?? "") ? (options.m ?? "0") : "0"
+	const kept = await cached({
+		name: "proto363-rings-pack-v2",
+		metricName: "proto363-play-pack",
+		target: buildPack5,
+		params: {
+			type,
+			id,
+			// A page is the same whatever the form. A pack with its lists named is the same whatever the mode.
+			tr: d >= 0 ? "" : mode === "0" ? "0" : tr,
+			m: d >= 0 || tr || mode === "0" ? "" : mode,
+			f: d >= 0 ? tokenName((options.f ?? "").split(",")) : "",
+			d,
+			cc: /^[A-Z]{2}$/.test(options.cc ?? "") ? (options.cc ?? "") : "",
+		},
+		ttlMinutes: 60 * 24,
+	}).catch((error) => {
+		console.error("Carousel prototype: pack lookup failed", error)
+		return null
+	})
+	return kept?.c ? { c: kept.c, n: kept.n, tr: kept.tr, fl: kept.fl, alt: kept.alt } : null
+}
+
 let meta: PlayMeta | undefined
 export const metaOf = () => {
 	meta ??= playMeta()
@@ -615,10 +843,14 @@ export function playHead(variant: PlayVariant): Promise<PlayHead> {
 				? `function(c){return(${SCRUB_FORMS[variant].toString()})(c,(${scrubKit.toString()})(c,${JSON.stringify(scrubExtra())}))}`
 				: BEST_FORMS[variant]
 					? `function(c){return(${BEST_FORMS[variant].toString()})(c,(${bestKit.toString()})(c,${JSON.stringify(bestExtra())}))}`
-					: ROAM_FORMS[variant]
-						? `function(c){return(${ROAM_FORMS[variant].toString()})(c,(${roamKit.toString()})(c,${JSON.stringify(roamExtra())}))}`
-						: PLAY_FORMS[variant].toString()
-			let script = `(${playEngine.toString()})(${JSON.stringify(metaOf())},window,{${variant}:${form}})`
+					: RINGS_FORMS[variant]
+						? `function(c){return(${RINGS_FORMS[variant].toString()})(c,(${ringsKit.toString()})(c,${JSON.stringify(ringsExtra())},${ringTokens.toString()}))}`
+						: ROAM_FORMS[variant]
+							? `function(c){return(${ROAM_FORMS[variant].toString()})(c,(${roamKit.toString()})(c,${JSON.stringify(roamExtra())}))}`
+							: PLAY_FORMS[variant].toString()
+			// The rings forms' packs carry fewer attributes per title: their engine gets the shorter list.
+			const vocabulary = isRingsVariant(variant) ? ringsMeta(metaOf()) : metaOf()
+			let script = `(${playEngine.toString()})(${JSON.stringify(vocabulary)},window,{${variant}:${form}})`
 			try {
 				const name = "esbuild"
 				const esbuild = (await import(/* @vite-ignore */ name)) as {
@@ -651,18 +883,25 @@ export async function playSectionHtml(input: {
 	title: string
 	links: { type: PxType; id: number; title: string; year: string }[]
 	path: (title: { type: PxType; id: number; title: string }) => string
+	/** The visitor's country, for the form that filters by streaming. */
+	country?: string
 }): Promise<string> {
+	const rings = isRingsVariant(input.variant)
+	const cc = input.variant === "rings8" ? (input.country ?? "") : ""
 	// The ninth round's forms get the pack that reaches further. The compass asks for traits with room both ways.
 	const [pack] = await Promise.all([
-		ROAM_FORMS[input.variant]
+		rings
+			? playPack5(input.type, input.id, { m: RING_MODES[input.variant], cc })
+			: ROAM_FORMS[input.variant]
 			? playPack4(input.type, input.id, ROAM_PLAIN.includes(input.variant) ? "0" : "")
 			: BEST_FORMS[input.variant]
 				? playPack2(input.type, input.id, [], input.variant === "best2" ? "mid" : "")
 				: playPack(input.type, input.id),
 		playHead(input.variant),
 	])
-	const engine = playEngine(metaOf(), null, PLAY_FORMS)
+	const engine = playEngine(rings ? ringsMeta(metaOf()) : metaOf(), null, PLAY_FORMS)
 	return engine.section({
+		mem: cc ? { cc } : undefined,
 		form: input.variant,
 		root: `${input.type === "movie" ? "m" : "s"}${input.id}`,
 		title: input.title,

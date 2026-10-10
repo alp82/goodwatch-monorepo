@@ -485,7 +485,7 @@ const roam1: RoamForm = (core, kit) => {
 				? `Like <b>${core.esc(ctx.c.t)}</b>, ${kit.says(names)}.${list.length < spots.length && !kit.open(ctx, names) ? ` These ${list.length} are all there are.` : ""}`
 				: kit.journey(ctx) || "Turn a switch off or on to change who is around. − shows more."
 			return kit.html(
-				kit.viewOf(ctx, "roam1", {
+				kit.viewOf(ctx, "roam0", {
 					top: kit.chips(ctx, tr),
 					bg: `${kit.guides(scale, Math.min(rings, 3))}<span class="rm-key">nearer = more alike</span>`,
 					ctl: kit.zoomCtl(ctx, Math.min(list.length, spots.length)),
@@ -994,4 +994,6 @@ const roam5: RoamForm = (core, kit) => {
 	}
 }
 
-export const ROAM_FORMS: Record<string, RoamForm> = { roam1, roam2, roam3, roam4, roam5 }
+// Eleventh round: `roam1` is now drawn by rings-forms.ts, with the movement and the card fixed. The tenth round's
+// own is kept as `roam0`, for measuring the new one against it.
+export const ROAM_FORMS: Record<string, RoamForm> = { roam0: roam1, roam2, roam3, roam4, roam5 }

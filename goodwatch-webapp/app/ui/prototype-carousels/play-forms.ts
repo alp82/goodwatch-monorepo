@@ -18,6 +18,8 @@ import { BEST_FORMS, bestKit } from "~/ui/prototype-carousels/best-forms"
 import { bestExtra } from "~/ui/prototype-carousels/best-meta"
 import { ROAM_FORMS, roamKit } from "~/ui/prototype-carousels/roam-forms"
 import { roamExtra } from "~/ui/prototype-carousels/roam-meta"
+import { RINGS_FORMS, ringsKit } from "~/ui/prototype-carousels/rings-forms"
+import { ringTokens, ringsExtra } from "~/ui/prototype-carousels/rings-meta"
 import { SCRUB_FORMS, scrubKit } from "~/ui/prototype-carousels/scrub-forms"
 import { scrubExtra } from "~/ui/prototype-carousels/scrub-meta"
 
@@ -1238,6 +1240,13 @@ export const PLAY_FORMS: Record<string, Form> = {
 		Object.entries(ROAM_FORMS).map(([name, form]): [string, Form] => [
 			name,
 			(core) => form(core, roamKit(core, roamExtra())),
+		]),
+	),
+	// Eleventh round: the rings forms, with their kit and the rule for what a pack brings along.
+	...Object.fromEntries(
+		Object.entries(RINGS_FORMS).map(([name, form]): [string, Form] => [
+			name,
+			(core) => form(core, ringsKit(core, ringsExtra(), ringTokens)),
 		]),
 	),
 	// Ninth round: the combined forms, with their kit.

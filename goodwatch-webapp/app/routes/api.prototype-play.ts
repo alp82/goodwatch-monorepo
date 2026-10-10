@@ -3,7 +3,12 @@
 // One title's pack for the play forms: its neighborhood with fingerprint levels, small enough to prefetch (see
 // server/prototype-play.server.ts). Not found unless the server runs with PROTO_CAROUSELS=1.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
-import { playPack, playPack2, playPack4 } from "~/server/prototype-play.server"
+import {
+	playPack,
+	playPack2,
+	playPack4,
+	playPack5,
+} from "~/server/prototype-play.server"
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	if (process.env.PROTO_CAROUSELS !== "1")
@@ -21,8 +26,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const type = key[1] === "m" ? "movie" : "show"
 	// Tenth round: `v=4` asks for the pack in similarity order, with the walk's switches (`tr`), the flipped ones
 	// (`f`), and further pages of it (`d`).
+	// Eleventh round: `v=5` asks for the rings pack: the lists it brings along (`tr`, or the form's mode `m`), a
+	// further page of one filter (`f`, `d`), and the visitor's country for the streaming filter (`cc`).
 	const pack =
-		params.get("v") === "4"
+		params.get("v") === "5"
+			? await playPack5(type, Number.parseInt(key[2]), {
+					tr: params.get("tr") ?? "",
+					m: params.get("m") ?? "",
+					f: params.get("f") ?? "",
+					d: params.has("d") ? Number.parseInt(params.get("d") ?? "0") || 0 : -1,
+					cc: params.get("cc") ?? "",
+				})
+			: params.get("v") === "4"
 			? await playPack4(
 					type,
 					Number.parseInt(key[2]),

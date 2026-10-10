@@ -38,11 +38,22 @@ export const PLAY_VARIANTS = [
 	"best1",
 	"best2",
 	"best3",
+	"roam0",
 	"roam1",
 	"roam2",
 	"roam3",
 	"roam4",
 	"roam5",
+	"rings1",
+	"rings2",
+	"rings3",
+	"rings4",
+	"rings5",
+	"rings6",
+	"rings7",
+	"rings8",
+	"rings9",
+	"rings10",
 ] as const
 export type PlayVariant = (typeof PLAY_VARIANTS)[number]
 export const isPlayVariant = (value: unknown): value is PlayVariant =>
