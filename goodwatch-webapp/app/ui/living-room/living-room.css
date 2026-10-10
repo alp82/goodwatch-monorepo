@@ -277,3 +277,115 @@ body:has(.living-room) {
 		display: block;
 	}
 }
+
+/* ---------------------------------------------------------------------------------------------------------
+   PROTOTYPE (#352), throwaway: crawlable links on the start page, `/?links=strip|scroll|tv`. */
+
+/* Variant strip. Wide windows: hubs under the caption at the bottom left, titles at the bottom right, the Remote
+   between them. */
+.lr-strip {
+	position: absolute;
+	inset: auto 0 0 0;
+	z-index: 30;
+	font-size: 12.5px;
+	line-height: 1.55;
+	color: rgba(255, 255, 255, 0.78);
+	text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95);
+	pointer-events: none;
+}
+.lr-strip a {
+	pointer-events: auto;
+}
+.lr-strip-hubs,
+.lr-strip-titles {
+	position: absolute;
+	bottom: 14px;
+	width: 31%;
+	max-height: 5.2lh;
+	overflow: hidden;
+}
+.lr-strip-hubs {
+	left: 32px;
+}
+.lr-strip-titles {
+	right: 32px;
+	text-align: right;
+}
+.living-room:has(.lr-strip) .lr-caption {
+	bottom: 78px;
+}
+/* Phones: two lines across the bottom edge, over the Remote's grip. Each line scrolls sideways. */
+@media (max-width: 767px), (orientation: landscape) and (max-height: 540px) {
+	.lr-strip {
+		background: rgba(5, 6, 10, 0.86);
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+		padding: 5px 0 6px;
+		font-size: 12px;
+		line-height: 1.6;
+		pointer-events: auto;
+	}
+	.lr-strip-hubs,
+	.lr-strip-titles {
+		position: static;
+		width: auto;
+		max-height: none;
+		padding: 0 12px;
+		text-align: left;
+		white-space: nowrap;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+}
+
+/* Phone portrait: the bottom navigation's round key sticks 24px up into the room, so the lines sit above it, and
+   the Remote's keys end above the strip (72px, STRIP_RESERVE in PhoneLivingRoom.tsx). */
+@media (max-width: 767px) {
+	.lr-strip {
+		padding-bottom: 26px;
+	}
+	.living-room-first:has(.lr-strip) {
+		--lr-r: max(
+			0.3px,
+			min(66cqw / 312, (100cqh - var(--lr-remote-top) - 82px) / 700, 1px)
+		);
+	}
+}
+
+/* Variant scroll: the room is a block exactly one first screen tall (window minus the site header, and minus the
+   bottom navigation below 1024px), and the page scrolls. */
+html:has(.living-room-scroll) {
+	overflow: visible auto;
+}
+body:has(.living-room-scroll) {
+	overflow: visible;
+	height: auto;
+	min-height: 100vh;
+}
+.living-room-scroll {
+	position: relative;
+	z-index: 40;
+	height: calc(100vh - 8rem);
+	height: calc(100dvh - 8rem);
+}
+@media (min-width: 1024px) {
+	.living-room-scroll {
+		height: calc(100dvh - 4rem);
+	}
+}
+.living-room-scroll.living-room-first {
+	top: 0;
+	bottom: auto;
+}
+/* Phone landscape keeps today's full-window room over the header: the section below is not reachable there. */
+@media (orientation: landscape) and (max-height: 540px) and (min-width: 768px) {
+	.living-room-scroll,
+	.living-room-scroll.living-room-first {
+		position: fixed;
+		inset: 0;
+		height: auto;
+		z-index: 1001;
+	}
+	.lr-scroll-cue {
+		display: none;
+	}
+}

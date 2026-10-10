@@ -16,6 +16,11 @@ import { RATING_LEVELS, levelOf } from "~/ui/taste-quiz/quiz-flow"
 import { runtimeLabel } from "~/ui/watch-next/labels"
 import { logoUrl } from "~/ui/watch-next/style"
 import { getVibeColorValue, scoreLabels } from "~/utils/ratings"
+import {
+	LinkFan,
+	TvLinkRows,
+	useLinksVariant,
+} from "~/ui/prototype-start-page-links/StartPageLinks"
 import { ICON, Icon } from "./Remote"
 import { TvQuiz } from "./TvQuiz"
 import {
@@ -235,7 +240,10 @@ function Head({
 
 // Like the desktop edition, the same HTML for every guest (#233): only where a row leads depends on the guest.
 function Welcome({ view }: { view: TvView }) {
+	const linked =
+		useLinksVariant() === "tv" && (view.data.startLinks?.length ?? 0) > 0
 	const best = view.data.suggestions
+	if (linked) return <WelcomeWithLinks view={view} />
 	const side = (id: string, label: string, line: string, art: ReactNode) => (
 		<PItem
 			view={view}
@@ -298,6 +306,105 @@ function Welcome({ view }: { view: TvView }) {
 					</div>,
 				)}
 			</div>
+		</>
+	)
+}
+
+// PROTOTYPE (#352), variant tv, phone edition: the rows' posters are links (too small for captions: the title is
+// the image's alt text), and one slim block of link rows sits under the rows.
+function WelcomeWithLinks({ view }: { view: TvView }) {
+	const links = view.data.startLinks ?? []
+	const row = (
+		id: string,
+		flex: string,
+		art: ReactNode,
+		label: ReactNode,
+		colors?: { on: string; off: string },
+	) => (
+		<div className={`relative min-h-0 ${flex}`}>
+			<PItem
+				view={view}
+				id={id}
+				className="!absolute inset-0 rounded-2xl"
+				grow=""
+				{...colors}
+			>
+				<span className="sr-only">{id.replace("-", " ")}</span>
+			</PItem>
+			<div className="pointer-events-none relative flex h-full items-center gap-3 overflow-hidden pr-4">
+				{art}
+				<div className="min-w-0">{label}</div>
+			</div>
+		</div>
+	)
+	return (
+		<>
+			<Backdrop title={view.data.suggestions[0]} dim={0.18} />
+			<Head view={view} as="h1" title="Something good tonight?" />
+			<div className="absolute inset-x-5 bottom-[46px] top-[56px] flex flex-col gap-2">
+				{row(
+					"watch-next",
+					"flex-1",
+					<div className="relative h-full w-[120px] shrink-0">
+						<LinkFan links={links.slice(3, 6)} width={30} caption={false} />
+					</div>,
+					<>
+						<div className="text-[20px] font-extrabold leading-tight">
+							Watch next
+						</div>
+						<div className="truncate text-[18px] leading-snug text-white/60">
+							Picks for tonight, on your services.
+						</div>
+					</>,
+				)}
+				{row(
+					"taste-quiz",
+					"flex-[1.7]",
+					<div className="relative h-full w-[150px] shrink-0">
+						<LinkFan links={links.slice(0, 3)} width={50} caption={false} />
+					</div>,
+					<>
+						<div className="text-[26px] font-extrabold leading-tight">
+							Rate what you've seen
+						</div>
+						<div className="truncate text-[18px] leading-snug text-white/70">
+							Rate a few, get picks made for you.
+						</div>
+					</>,
+					{
+						on: "ring-amber-300 bg-amber-400/[0.16]",
+						off: "ring-amber-300/40 bg-amber-400/[0.08]",
+					},
+				)}
+				{row(
+					"moods",
+					"flex-1",
+					<div className="relative h-full w-[120px] shrink-0">
+						<div className="absolute inset-0 flex flex-wrap content-center justify-center gap-1 px-4">
+							{MOODS.slice(0, 6).map((m) => (
+								<span
+									key={m.key}
+									className="h-3 w-7 rounded-full"
+									style={{ background: m.hue }}
+								/>
+							))}
+						</div>
+					</div>,
+					<>
+						<div className="text-[20px] font-extrabold leading-tight">
+							Pick a mood
+						</div>
+						<div className="truncate text-[18px] leading-snug text-white/60">
+							Funny, scary, mind-bending.
+						</div>
+					</>,
+				)}
+			</div>
+			<TvLinkRows
+				links={links.slice(6)}
+				fontSize={13}
+				className="inset-x-5 bottom-[4px]"
+			/>
 		</>
 	)
 }

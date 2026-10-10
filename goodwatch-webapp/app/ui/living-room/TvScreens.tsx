@@ -15,6 +15,11 @@ import type { TasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { runtimeLabel } from "~/ui/watch-next/labels"
 import { offersOf, watchLine } from "~/ui/watch-next/services"
 import { backdropUrl, logoUrl, posterUrl } from "~/ui/watch-next/style"
+import {
+	LinkFan,
+	TvLinkRows,
+	useLinksVariant,
+} from "~/ui/prototype-start-page-links/StartPageLinks"
 import { APP, ICON, Icon } from "./Remote"
 import { TvQuiz, quizItemLabel } from "./TvQuiz"
 import { HomeDoorsCode, loadHomeDoors } from "./home-doors-code"
@@ -443,7 +448,10 @@ export function Poster({
 // The guest home is the same HTML for every guest (#233): its labels and layout never depend on what the guest
 // has done. Their progress only changes where a card leads.
 function Welcome({ view }: { view: TvView }) {
+	const linked =
+		useLinksVariant() === "tv" && (view.data.startLinks?.length ?? 0) > 0
 	const best = view.data.suggestions
+	if (linked) return <WelcomeWithLinks view={view} />
 	const side = (id: string, label: string, line: string, art: ReactNode) => (
 		<Item
 			view={view}
@@ -514,6 +522,110 @@ function Welcome({ view }: { view: TvView }) {
 					</div>,
 				)}
 			</div>
+		</>
+	)
+}
+
+// PROTOTYPE (#352), variant tv: the same home screen with poster links and two slim link rows. A link can't sit
+// inside a button, so each card is a box with its button stretched under the content and the posters on top.
+function WelcomeWithLinks({ view }: { view: TvView }) {
+	const links = view.data.startLinks ?? []
+	const card = (
+		id: string,
+		className: string,
+		children: ReactNode,
+		colors?: { on: string; off: string },
+	) => (
+		<div className={`relative ${className}`}>
+			<Item
+				view={view}
+				id={id}
+				className="!absolute inset-0 rounded-3xl"
+				grow=""
+				{...colors}
+			>
+				<span className="sr-only">{id.replace("-", " ")}</span>
+			</Item>
+			<div className="pointer-events-none relative flex h-full flex-col">
+				{children}
+			</div>
+		</div>
+	)
+	const text = (label: string, line: string) => (
+		<div className="px-6 pt-1">
+			<div className="text-[23px] font-extrabold leading-tight">{label}</div>
+			<div className="mt-1 text-[15px] leading-snug text-white/60">{line}</div>
+		</div>
+	)
+	return (
+		<>
+			<Backdrop title={view.data.suggestions[0]} dim={0.18} />
+			<Head
+				as="h1"
+				title="Let's find something good for tonight."
+				line={ABOUT_LINE}
+			/>
+			<div className="absolute inset-x-12 bottom-[62px] top-[112px] grid grid-cols-[1fr_1.3fr_1fr] items-center gap-5">
+				{card(
+					"watch-next",
+					"h-[300px]",
+					<>
+						<div className="relative h-[190px] w-full shrink-0">
+							<LinkFan links={links.slice(3, 6)} width={96} />
+						</div>
+						{text("Watch next", "Picks for tonight, on your services.")}
+					</>,
+				)}
+				{card(
+					"taste-quiz",
+					"h-full",
+					<>
+						<div className="relative h-[212px] w-full shrink-0">
+							<LinkFan links={links.slice(0, 3)} width={116} />
+						</div>
+						<div className="px-7 pt-1">
+							<div className="text-[28px] font-extrabold leading-tight">
+								Rate what you've seen
+							</div>
+							<div className="mt-1 text-[15px] leading-snug text-white/70">
+								Rate a few titles, get picks made for you.
+							</div>
+							<span className="mt-2 inline-block rounded-full bg-amber-400 px-5 py-1.5 text-[15px] font-bold text-black">
+								Rate titles
+							</span>
+						</div>
+					</>,
+					{
+						on: "ring-amber-300 bg-amber-400/[0.16]",
+						off: "ring-amber-300/40 bg-amber-400/[0.08]",
+					},
+				)}
+				{card(
+					"moods",
+					"h-[300px]",
+					<>
+						<div className="relative h-[190px] w-full shrink-0">
+							<div className="absolute inset-0 flex flex-wrap content-center justify-center gap-1.5 px-6">
+								{MOODS.slice(0, 8).map((m) => (
+									<span
+										key={m.key}
+										className="rounded-full px-2.5 py-0.5 text-[12px] font-bold text-black"
+										style={{ background: m.hue }}
+									>
+										{m.name}
+									</span>
+								))}
+							</div>
+						</div>
+						{text("Pick a mood", "Funny, scary, mind-bending: you choose.")}
+					</>,
+				)}
+			</div>
+			<TvLinkRows
+				links={links.slice(6)}
+				fontSize={13}
+				className="inset-x-12 bottom-[12px]"
+			/>
 		</>
 	)
 }

@@ -21,8 +21,16 @@ export type TvPair = {
 	bMoods: MoodKey[]
 }
 
+/** PROTOTYPE (#352): a title the start page links to in its server HTML. */
+export type StartLink = Pick<TitleCard, "media_type" | "tmdb_id" | "title"> & {
+	/** Only for the `tv` variant, which shows posters. */
+	poster_path?: string | null
+}
+
 export type LivingRoomData = {
 	member: boolean
+	/** PROTOTYPE (#352): the same titles for every guest; absent without `?links=`. */
+	startLinks?: StartLink[]
 	/** Candidates for "Something new" and for guests, best first. */
 	suggestions: LivingRoomTitle[]
 	/** The member's Wishlist, best match first. Empty for guests. */

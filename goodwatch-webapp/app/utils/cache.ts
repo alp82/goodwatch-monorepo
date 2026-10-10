@@ -33,7 +33,9 @@ const clusterNodes: ClusterNode[] = [
 // Only a stalled event loop or Redis reaches this limit. Routine event loop stalls are
 // 100 to 330 ms about once a minute; this is three times the largest routine stall.
 // Startup stalls reach 2.4 s; a lookup cut there falls through to the target.
-export const REDIS_COMMAND_TIMEOUT_MS = 1000
+// PROTOTYPE (#352): the snapshot chunks need longer than a second from a developer machine.
+export const REDIS_COMMAND_TIMEOUT_MS =
+	Number(process.env.REDIS_COMMAND_TIMEOUT_MS) || 1000
 
 // The guard bounds commands across the cluster queue and redirection loop. A node's
 // first failure opens its breaker; later commands bypass it while detached probes

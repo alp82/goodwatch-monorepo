@@ -206,6 +206,8 @@ export function layoutPhone(
 	width: number,
 	height: number,
 	orientation: PhoneOrientation,
+	/** PROTOTYPE (#352), variant strip: pixels at the bottom of a portrait window the Remote's keys stay out of. */
+	reserve = 0,
 ): PhoneLayout {
 	if (orientation === "portrait") {
 		const { photo, tv } = placeRoom(PHONE_ROOM, width, height, {
@@ -219,7 +221,7 @@ export function layoutPhone(
 			0.3,
 			Math.min(
 				(width * 0.66) / REMOTE_W,
-				(height - remoteTop - 10) / REMOTE_KEYS_END,
+				(height - reserve - remoteTop - 10) / REMOTE_KEYS_END,
 				1,
 			),
 		)

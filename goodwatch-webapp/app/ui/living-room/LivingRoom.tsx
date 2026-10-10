@@ -26,6 +26,12 @@ import {
 import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
 import { titleToDashed } from "~/utils/helpers"
 import {
+	BelowRoom,
+	ScrollCue,
+	StripLinks,
+	useLinksVariant,
+} from "~/ui/prototype-start-page-links/StartPageLinks"
+import {
 	PHONE_PORTRAIT_QUERY,
 	PhoneLivingRoom,
 	usePhoneOrientation,
@@ -104,6 +110,9 @@ function storeChoices(choices: LivingRoomChoices) {
 
 export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 	const phone = usePhoneOrientation()
+	// PROTOTYPE (#352)
+	const linksVariant = useLinksVariant()
+	const startLinks = data.startLinks ?? []
 	useReturnIntoTv()
 	const [params] = useSearchParams()
 	const [choices, setChoices] = useState<LivingRoomChoices>(NO_CHOICES)
@@ -289,7 +298,18 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 		onOk: ok,
 	}
 	if (phone)
-		return <PhoneLivingRoom orientation={phone} view={view} remote={remote} />
+		return (
+			<>
+				<PhoneLivingRoom
+					orientation={phone}
+					view={view}
+					remote={remote}
+					linksVariant={linksVariant}
+					startLinks={startLinks}
+				/>
+				{linksVariant === "scroll" && <BelowRoom links={startLinks} />}
+			</>
+		)
 
 	const on = state.power !== "off"
 	const tvCenter = {
@@ -303,11 +323,14 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 	// Before the window is measured, CSS places the photo, the TV, and the Remote (see ROOM_SIZES above).
 	const first = !L
 	return (
+		<>
 		<div
 			ref={root}
-			className={`living-room fixed inset-x-0 bottom-16 top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0 ${first ? "living-room-first" : ""}`}
+			className={`living-room overflow-clip bg-[#07080b] text-white ${linksVariant === "scroll" ? "living-room-scroll" : "fixed inset-x-0 bottom-16 top-16 z-40 lg:bottom-0"} ${first ? "living-room-first" : ""}`}
 		>
 			<LivingRoomLinks />
+			{linksVariant === "strip" && <StripLinks links={startLinks} />}
+			{linksVariant === "scroll" && <ScrollCue />}
 			{/* The photo covers the window; the TV and its light sit on it in the photo's own coordinates. */}
 			<div
 				className="lr-photo absolute"
@@ -470,6 +493,8 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 				</div>
 			</motion.div>
 		</div>
+		{linksVariant === "scroll" && <BelowRoom links={startLinks} />}
+		</>
 	)
 }
 
@@ -498,6 +523,9 @@ function useRemoteKeys({
 			const target = e.target as HTMLElement
 			if (target.closest("input, textarea, select, [contenteditable]")) return
 			if (e.metaKey || e.ctrlKey || e.altKey) return
+			// PROTOTYPE (#352), variant scroll: once the page is scrolled past the top, the keys are the page's.
+			if (document.querySelector(".living-room-scroll") && window.scrollY > 80)
+				return
 			// Buttons have their own Enter and Space.
 			if ((e.key === "Enter" || e.key === " ") && target.closest("button, a"))
 				return

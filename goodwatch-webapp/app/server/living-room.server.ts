@@ -3,17 +3,57 @@ import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { isEnabled } from "~/server/features.server"
 import { getHomeDoors } from "~/server/home-doors.server"
 import { loadMemberTaste } from "~/server/taste/member.server"
-import { getServiceCards } from "~/server/title-cards.server"
+import { getDisplayFields, getServiceCards } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import {
 	type ViewerContext,
 	getMemberViewerContext,
 } from "~/server/viewer.server"
-import type { LivingRoomData } from "~/ui/living-room/living-room-data"
+import type {
+	LivingRoomData,
+	StartLink,
+} from "~/ui/living-room/living-room-data"
+import { poolCandidates, selectPoolKeys } from "./living-room/pool-keys.server"
 import { livingRoomAuth } from "./living-room/data.server"
 import { livingRoomWishlistCards } from "./living-room/pool.server"
 import { loadLivingRoomWishlist } from "./living-room/wishlist.server"
+
+const START_LINKS = 16
+
+/**
+ * PROTOTYPE (#352): the pool's first titles for a visitor nobody knows anything about, by popularity. No country,
+ * no viewer: the same list for everyone. Empty while the snapshot loads.
+ */
+async function startLinks(posters: boolean): Promise<StartLink[]> {
+	try {
+		const snapshot = getTitleSnapshot()
+		if (!snapshot) return []
+		const none = new Set<number>()
+		const { keys } = selectPoolKeys(
+			poolCandidates(snapshot, Math.floor(Date.now() / 86_400_000)),
+			{ seen: none, skipped: none, hidden: none, wishlist: none },
+			null,
+		)
+		const wanted = keys.slice(0, START_LINKS)
+		const displays = await getDisplayFields(wanted)
+		return wanted.flatMap((key) => {
+			const d = displays.get(key)
+			if (!d) return []
+			return [
+				{
+					media_type: d.media_type,
+					tmdb_id: d.tmdb_id,
+					title: d.title,
+					...(posters && { poster_path: d.poster_path }),
+				},
+			]
+		})
+	} catch (error) {
+		console.error("Living room: loading the start links failed", error)
+		return []
+	}
+}
 
 /** First paint never selects picks. Guests need only the shared empty UI contract. */
 export async function loadLivingRoom(request: Request) {
@@ -27,7 +67,13 @@ export async function loadLivingRoom(request: Request) {
 		savedServices: [],
 		pairs: [],
 	}
-	if (!user) return { data, headers }
+	if (!user) {
+		// PROTOTYPE (#352): only with `?links=`, so `/` without it is today's HTML.
+		const variant = new URL(request.url).searchParams.get("links")
+		if (variant === "strip" || variant === "scroll" || variant === "tv")
+			data.startLinks = await startLinks(variant === "tv")
+		return { data, headers }
+	}
 	try {
 		const [taste, wishlist, settings] = await Promise.all([
 			loadMemberTaste(user.id),

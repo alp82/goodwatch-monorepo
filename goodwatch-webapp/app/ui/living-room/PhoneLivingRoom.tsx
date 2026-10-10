@@ -26,6 +26,12 @@ import {
 	useState,
 } from "react"
 import gwLogo from "~/img/goodwatch-logo-white.svg"
+import {
+	type LinksVariant,
+	ScrollCue,
+	StripLinks,
+} from "~/ui/prototype-start-page-links/StartPageLinks"
+import type { StartLink } from "./living-room-data"
 import { PhoneTvScreens } from "./PhoneTvScreens"
 import { Icon, Remote, type RemoteProps } from "./Remote"
 import { LivingRoomLinks, type TvView } from "./TvScreens"
@@ -49,6 +55,8 @@ const useIsoLayoutEffect =
 /** Phone portrait; living-room.css repeats these queries for the first paint. */
 export const PHONE_PORTRAIT_QUERY = "(max-width: 767px)"
 const PORTRAIT = PHONE_PORTRAIT_QUERY
+/** PROTOTYPE (#352): the strip's two lines plus the part of the bottom navigation's round key that sticks up. */
+const STRIP_RESERVE = 72
 const LANDSCAPE = "(orientation: landscape) and (max-height: 540px)"
 
 /** Which phone layout the window wants: portrait when narrow, landscape when short and wide, else none. */
@@ -76,12 +84,17 @@ export type PhoneLivingRoomProps = {
 	orientation: PhoneOrientation
 	view: TvView
 	remote: RemoteProps
+	/** PROTOTYPE (#352) */
+	linksVariant?: LinksVariant | null
+	startLinks?: StartLink[]
 }
 
 export function PhoneLivingRoom({
 	orientation,
 	view,
 	remote,
+	linksVariant = null,
+	startLinks = [],
 }: PhoneLivingRoomProps) {
 	const landscape = orientation === "landscape"
 	const root = useRef<HTMLDivElement>(null)
@@ -101,8 +114,16 @@ export function PhoneLivingRoom({
 		return () => ro.disconnect()
 	}, [])
 	const L = useMemo(
-		() => (size.w ? layoutPhone(size.w, size.h, orientation) : null),
-		[size, orientation],
+		() =>
+			size.w
+				? layoutPhone(
+						size.w,
+						size.h,
+						orientation,
+						linksVariant === "strip" ? STRIP_RESERVE : 0,
+					)
+				: null,
+		[size, orientation, linksVariant],
 	)
 
 	// ---- Lifting the Remote (landscape): a drag on the hand or the body, or the Lift button.
@@ -159,9 +180,11 @@ export function PhoneLivingRoom({
 	return (
 		<div
 			ref={root}
-			className={`living-room fixed inset-x-0 overflow-clip bg-[#07080b] text-white ${landscape ? "inset-y-0 z-[1001]" : "bottom-16 top-16 z-40"}`}
+			className={`living-room overflow-clip bg-[#07080b] text-white ${linksVariant === "scroll" ? "living-room-scroll" : `fixed inset-x-0 ${landscape ? "inset-y-0 z-[1001]" : "bottom-16 top-16 z-40"}`}`}
 		>
 			<LivingRoomLinks />
+			{linksVariant === "strip" && <StripLinks links={startLinks} />}
+			{linksVariant === "scroll" && !landscape && <ScrollCue />}
 			{L && (
 				<>
 					<div
@@ -291,7 +314,7 @@ export function PhoneLivingRoom({
 							</a>
 						</>
 					) : (
-						<RotateHint />
+						<RotateHint raised={linksVariant === "strip"} />
 					)}
 				</>
 			)}
@@ -384,7 +407,7 @@ const PHONE_ICON =
 	"M9 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM11 18h2"
 
 // Portrait: an invitation to turn the phone, at the bottom left over the hand, gone by itself after 7 s.
-function RotateHint(): ReactNode {
+function RotateHint({ raised = false }: { raised?: boolean }): ReactNode {
 	const [gone, setGone] = useState(false)
 	useEffect(() => {
 		const id = setTimeout(() => setGone(true), 7000)
@@ -396,7 +419,7 @@ function RotateHint(): ReactNode {
 				<motion.button
 					type="button"
 					onClick={() => setGone(true)}
-					className="absolute bottom-3 left-3 z-20 flex items-center gap-2.5 rounded-2xl bg-black/70 py-2 pl-2.5 pr-3.5 text-left text-[12.5px] font-semibold leading-tight text-white shadow-2xl ring-1 ring-white/15"
+					className={`absolute ${raised ? "bottom-16" : "bottom-3"} left-3 z-20 flex items-center gap-2.5 rounded-2xl bg-black/70 py-2 pl-2.5 pr-3.5 text-left text-[12.5px] font-semibold leading-tight text-white shadow-2xl ring-1 ring-white/15`}
 					initial={{ opacity: 0, y: -6 }}
 					animate={{ opacity: 1, y: 0 }}
 					exit={{ opacity: 0 }}

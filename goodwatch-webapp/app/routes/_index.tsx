@@ -22,6 +22,7 @@ import { type LivingRoomData, titleOf } from "~/ui/living-room/living-room-data"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import { type TvEffect, isTvOnlyChange } from "~/ui/living-room/tv-flow"
 import { useLeaveThroughTv } from "~/ui/living-room/tv-transition"
+import { LinksSwitcher } from "~/ui/prototype-start-page-links/StartPageLinks"
 import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { titleHref } from "~/ui/watch-next/WatchNextHero"
 import { snapshotGuestProgress } from "~/utils/guest-progress"
@@ -134,9 +135,14 @@ export default function Index() {
 	// The pool has no doors: a member's doors (#385) come with the loader's data and stay.
 	const data: LivingRoomData = useMemo(
 		() =>
-			pool.data && initial.doors
-				? { ...pool.data, doors: initial.doors }
-				: (pool.data ?? initial),
+			pool.data
+				? {
+						...pool.data,
+						...(initial.doors && { doors: initial.doors }),
+						// PROTOTYPE (#352): the pool has no start links either.
+						...(initial.startLinks && { startLinks: initial.startLinks }),
+					}
+				: initial,
 		[pool.data, initial],
 	)
 
@@ -211,6 +217,7 @@ export default function Index() {
 		<>
 			<LivingRoom data={data} onEffect={onEffect} onRate={onRate} />
 			{hideToast.node}
+			<LinksSwitcher />
 		</>
 	)
 }
