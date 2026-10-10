@@ -14,11 +14,11 @@
       "path": "/",
       "lcp_element": { "tag": "img", "contains": "/assets/room-phone-" },
       "budget": {
-        "html_bytes": { "max": 18944 },
+        "html_bytes": { "max": 20480 },
         "host_requests": { "max": 37 },
         "script_count": { "max": 16 },
         "script_bytes": { "max": 262144 },
-        "image_count": { "max": 20 },
+        "image_count": { "max": 32 },
         "image_bytes": { "max": 378880 },
         "font_requests": { "max": 2 },
         "blocking_requests": { "max": 2 },

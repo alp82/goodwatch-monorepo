@@ -121,6 +121,9 @@ A response is stored only when all of these hold:
   - **A show page whose episode grid read failed.** The page renders without the grid.
   - **Discover without the title snapshot.** The first view has no titles, only a spinner, and the browser asks for
     them. Search mode has no titles in the document by design and stays storable.
+  - **The start page without its start titles.** The section below the living room lists 16 titles from the
+    title snapshot. While the snapshot loads, or when the titles can't be read, the section goes out with the hubs
+    only.
 - **When Discover can render without the snapshot:** readiness (`/health/ready`) waits for the snapshot's first check,
   and Docker's health check asks it, so the proxy sends no request to a new container before that. But readiness
   doesn't wait for a snapshot. It answers 200 when the first check found nothing published or refused the manifest,

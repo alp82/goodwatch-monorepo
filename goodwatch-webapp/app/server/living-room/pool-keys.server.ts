@@ -124,6 +124,24 @@ export function selectPoolKeys(
 	return { keys, byMood }
 }
 
+/** How many titles the section below the living room lists. */
+export const START_TITLES = 16
+
+const NOBODY = {
+	seen: new Set<number>(),
+	skipped: new Set<number>(),
+	hidden: new Set<number>(),
+	wishlist: new Set<number>(),
+}
+
+/**
+ * The titles the start page links to in its server HTML (#352): the pool's first keys for a visitor nobody knows
+ * anything about, by popularity. No viewer and no country go in, so the list is the same for everyone.
+ */
+export function startTitleKeys(candidates: PoolCandidates): number[] {
+	return selectPoolKeys(candidates, NOBODY, null).keys.slice(0, START_TITLES)
+}
+
 export function resetPoolCandidatesForTest() {
 	memo = null
 }

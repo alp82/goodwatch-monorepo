@@ -42,10 +42,10 @@ Pages are counted by shape on `https://goodwatch.app`: `start`, `title_movie` (`
 
 | Event | Date |
 | --- | --- |
-| Sitemap resubmitted in Search Console | not yet |
+| Sitemap resubmitted in Search Console | 2026-10-10 |
 | Google downloads the new sitemap (`lastDownloaded` moves past 2026-09-22) | not yet |
 | Redirect change deployed | 2026-10-10 |
-| Start page change deployed | not yet |
+| Start page change deployed | 2026-10-10 |
 
 ## Runs
 

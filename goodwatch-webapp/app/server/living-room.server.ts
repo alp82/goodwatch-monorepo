@@ -2,8 +2,9 @@ import { json } from "@remix-run/node"
 import { getLocaleFromRequest } from "~/server/cache-identity.server"
 import { isEnabled } from "~/server/features.server"
 import { getHomeDoors } from "~/server/home-doors.server"
+import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { loadMemberTaste } from "~/server/taste/member.server"
-import { getServiceCards } from "~/server/title-cards.server"
+import { getDisplayFields, getServiceCards } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
 import { getUserSettings } from "~/server/user-settings.server"
 import {
@@ -13,9 +14,10 @@ import {
 import type { LivingRoomData } from "~/ui/living-room/living-room-data"
 import { livingRoomAuth } from "./living-room/data.server"
 import { livingRoomWishlistCards } from "./living-room/pool.server"
+import { loadStartTitles } from "./living-room/start-titles.server"
 import { loadLivingRoomWishlist } from "./living-room/wishlist.server"
 
-/** First paint never selects picks. Guests need only the shared empty UI contract. */
+/** First paint never selects picks. Guests need only the shared empty UI contract. Everyone gets the titles below the room. */
 export async function loadLivingRoom(request: Request) {
 	const { user, headers } = await livingRoomAuth(request)
 	const country = getLocaleFromRequest(request).locale.country
@@ -27,12 +29,27 @@ export async function loadLivingRoom(request: Request) {
 		savedServices: [],
 		pairs: [],
 	}
-	if (!user) return { data, headers }
+	// The titles below the room are the same for everyone and never fail the page: without them (the snapshot is
+	// still loading, or they couldn't be read) the section shows the hubs alone. That page is incomplete, so no cache
+	// keeps it and the titles are there as soon as they can be. A member's page is never stored anyway.
+	const startTitles = loadStartTitles(
+		getTitleSnapshot(),
+		getDisplayFields,
+	).then((titles) => {
+		if (!titles.length)
+			headers.set("Cache-Control", INCOMPLETE_PAGE_HEADERS["Cache-Control"])
+		data.startTitles = titles
+	})
+	if (!user) {
+		await startTitles
+		return { data, headers }
+	}
 	try {
 		const [taste, wishlist, settings] = await Promise.all([
 			loadMemberTaste(user.id),
 			loadLivingRoomWishlist(user.id, getTitleSnapshot()),
 			getUserSettings({ userId: user.id }),
+			startTitles,
 		])
 		const savedCountry = settings.country_default?.toUpperCase()
 		const services = (settings.streaming_providers_default ?? "")

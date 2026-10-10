@@ -692,6 +692,37 @@ Not measured: what the second host costs a visitor on a slow connection. An esti
 for the stylesheet's connection, less what the `preconnect` hint saves. A comparison with applied throttling needs
 production in `origin` mode for a few minutes.
 
+## The titles below the start page's room
+
+Since October 10, 2026 the start page has a section below the living room: 16 titles with their posters and
+the 12 hubs, as links in the server HTML ([issue 352](https://github.com/alp82/goodwatch-monorepo/issues/352)). The
+page doesn't scroll until the visitor has gone below once, so the budget's visitor never sees the section. It still
+costs that visitor two things:
+
+- **HTML.** The section and its loader data add 1,620 bytes Brotli (1,772 gzip, 8,757 uncompressed). That is the
+  difference between the same dev server response with and without the change. The hidden block of seven hub links
+  that the section replaces is gone from the page and already counted in it.
+- **Posters.** Each poster is an `<img loading="lazy">` 46 CSS pixels wide, in the HTML. The browser decides when a
+  lazy image loads: Chromium starts it when it is within 1,250 px of the window on a fast connection. On
+  Lighthouse's phone (412 x 823) that is 12 of the 16 posters, as the `w92` file, 53,960 bytes together. Measured
+  with headless Chromium at that window size; the same count on today's production page is 18 images and 293,289
+  bytes.
+
+There is no way to hold the posters back that leaves them visible to a renderer that doesn't press the lip: hiding
+them, or the section, until the visitor is below would hide them from a crawler too. So they are counted.
+
+The home limits are raised in the same commit, by arithmetic and not from a run:
+
+| Line | Before | Now | How |
+| --- | --- | --- | --- |
+| `html_bytes` | 18,944 | 20,480 | 16,677 on production today plus 1,620, plus the 10% margin, rounded up to 512 |
+| `image_count` | 20 | 32 | 18 today plus 12 posters, plus the same margin of 2 |
+
+Nothing else was raised. The start page loads the same 16 script files as before (compared by name against the
+production page). `image_bytes` goes to about 347 KB of its 378,880 and `total_bytes` grows by about 56 KB: both
+still pass by this arithmetic, with less margin than their rule gives them. Run `./bench.sh budget` after the
+deploy and set the two byte lines from the measured values if they need it.
+
 ## Not verified
 
 - The limits of the section above, and LCP, TBT, CLS and the score of the title pages with the new overview.

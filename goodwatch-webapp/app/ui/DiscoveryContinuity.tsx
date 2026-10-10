@@ -49,7 +49,11 @@ export function DiscoveryContinuity() {
 			window.location.replace(previous.url)
 			return
 		}
-		const target = stored.positions[url] || 0
+		// The start page keeps its own place: it moves between the living room and the section below it by its own
+		// rules (ui/living-room/use-below-room.ts), and the TV changes the query on every step. A position restored
+		// here would move the page under the Remote, or against the room's lock.
+		const ownPlace = location.pathname === "/"
+		const target = ownPlace ? 0 : stored.positions[url] || 0
 		let restoring = target > 0
 		let frame = 0
 		const started = performance.now()
@@ -67,7 +71,7 @@ export function DiscoveryContinuity() {
 		const save = () => {
 			if (restoring) return
 			const context = read()
-			const visit = { url, y: window.scrollY }
+			const visit = { url, y: ownPlace ? 0 : window.scrollY }
 			context.last = visit
 			context.routes[location.pathname] = visit
 			context.positions[url] = visit.y
