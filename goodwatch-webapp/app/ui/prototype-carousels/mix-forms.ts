@@ -128,7 +128,8 @@ export function mixKit(core: PlayCore, kit: RingsKit) {
 		const fl = ctx.st.mem.fl as { t: string; at: number } | null | undefined
 		const since = fl && fl.t === o.token && o.on ? now() - fl.at : -1
 		const flashing = since >= 0 && since < 1300
-		const to = o.to ?? (o.zone ? `${zone[up ? 0 : 1]} → ${zone[up ? 1 : 0]}` : moved ? `${o.v} → ${level(o.token)}` : level(o.token))
+		// A chip that also says how to let it go has no room for where it started: its fill says that.
+		const to = o.to ?? (o.zone ? `${zone[up ? 0 : 1]}→${zone[up ? 1 : 0]}` : moved && !o.hint ? `${o.v}→${level(o.token)}` : level(o.token))
 		return `<button type="button" class="ix-c" data-pl-act="${o.act}" data-arg="${esc(o.arg)}" data-k="${k.key}" aria-pressed="${o.on}" data-d="${o.tone ?? (up ? "up" : "dn")}"${flashing ? ' data-fl=""' : ""} style="--v:${o.v};--a:${zone[0]};--b:${zone[1]};--n:${k.n}${
 			o.color ? `;--c:${o.color}` : ""
 		}${flashing ? `;--fa:${-Math.round(since)}ms` : ""}${o.around !== undefined ? `;--m:${Math.round(o.around * 10) / 10}` : ""}${o.was !== undefined ? `;--w:${o.was}` : ""}" aria-label="${esc(
@@ -352,6 +353,11 @@ const mix3: MixForm = (core, kit, mx) => {
 		tokens: (ctx) => {
 			const h = headed(ctx)
 			return h && ctx.c.s ? [tokenOf(ctx, h.key, h.up)] : []
+		},
+		// The heading as it will be read against a title that is about to be stepped onto.
+		next: (ctx, t) => {
+			const h = headed(ctx)
+			return h && t.s ? [tokenOf({ ...ctx, c: t }, h.key, h.up)] : []
 		},
 		top: (ctx, tokens) => {
 			const h = headed(ctx)
@@ -680,7 +686,7 @@ const mix6: MixForm = (core, kit, mx) => {
 						more: e.d > 0,
 						v: e.v,
 						on: false,
-						rest: `${e.was} → ${e.v}`,
+						rest: `${e.was}→${e.v}`,
 						was: e.was,
 						zone: [Math.min(e.was, e.v), Math.max(e.was, e.v)],
 						title: `${kit.word(e.key)} went from ${e.was} to ${e.v} since ${ctx.root.t}. Tap to keep it at ${mx.orMore(tokenOf(e))}.`,

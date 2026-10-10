@@ -123,6 +123,8 @@ interface Spec {
 	will?: (ctx: PlayCtx, name: string, arg: string) => string[] | null
 	/** `places`: how many titles the map holds at this zoom. */
 	deco?: (ctx: PlayCtx, list: PlayTitle[], places: number) => Deco | null
+	/** The filter the map will show around a title once it is stepped onto, when it is not the one it shows now. */
+	next?: (ctx: PlayCtx, title: PlayTitle) => string[]
 	/** The filter a control stands for while it is pointed at or held: the map dims what does not pass it. */
 	look?: (ctx: PlayCtx, name: string, arg: string) => string[] | null
 	/** A control is pointed at or held (`tokens`), or no longer (null): what the form shows of it beyond the map. */
@@ -641,6 +643,18 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 	let once: { x: number; y: number } | null = null
 	/** After a picture is in the stage: a control that is being looked at keeps its marks on the map. */
 	let again: ((root: Element) => void) | null = null
+	// Where the mouse is. A pan may carry a pointed-at poster away from under a pointer that rests: when the pan is
+	// over, the card shows what is under the pointer then (`rested`).
+	let mouse: { x: number; y: number } | null = null
+	let rested: ((root: Element, key: string) => void) | null = null
+	if (win)
+		win.addEventListener(
+			"pointermove",
+			(event: PointerEvent) => {
+				if (event.pointerType === "mouse") mouse = { x: event.clientX, y: event.clientY }
+			},
+			{ capture: true, passive: true },
+		)
 	const html = (view: View) => {
 		last = view
 		return `<div class="${view.cls}" style="${view.rstyle}" data-r-form="${view.form}" data-r-geo="${view.geo}" data-r-z="${view.z}" data-r-mem="${esc(view.mem)}"${
@@ -853,6 +867,9 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 				const hop = Math.abs(mx - entry.x) + Math.abs(my - entry.y)
 				if (hop > 0.6 && (Math.abs(mx) > box.w / 2 || Math.abs(my) > box.h / 2 || Math.hypot(mx - entry.x, my - entry.y) > view.hop)) node = undefined
 			}
+			// The same when titles arrive by themselves and one that is shown belongs far from where it is: it fades
+			// over. Only a zoom and a control move posters across the map, because there the visitor asked for it.
+			if (node && !shift && !kind && entry.k !== view.ck && Math.hypot(mx - entry.x, my - entry.y) > view.hop) node = undefined
 			const was = node?.getAttribute("data-r-g")
 			if (!node || !c || (was !== entry.sig && !morph(node, entry.html))) {
 				if (have[entry.k]) wanted[entry.k] = false
@@ -914,6 +931,17 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		}
 		busy = Math.max(busy, t0 + T.end + 40)
 		if (again) again(root)
+		if (shift)
+			win.setTimeout(
+				() => {
+					const shown = root.querySelector("[data-r-info]")?.getAttribute("data-r-pk")
+					if (!shown || !mouse || !rested || win.performance.now() < busy - 60 || !root.isConnected) return
+					const under = win.document.elementFromPoint(mouse.x, mouse.y)?.closest?.("[data-r-w] > [data-r-k]")
+					const key = under && root.contains(under) && !under.hasAttribute("data-r-c") ? (under.getAttribute("data-r-k") ?? "") : ""
+					if (key !== shown) rested(root, key)
+				},
+				T.end + 60,
+			)
 		return true
 	}
 	/** The map's size, measured. True when the picture in the stage was drawn for another size. */
@@ -1044,6 +1072,11 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 		again = (root) => {
 			if (looked && seen) lookAt(root, seen, looked.name, looked.arg)
 		}
+		rested = (root, key) => {
+			if (!seen || root.getAttribute("data-r-at") !== seen.c.k) return
+			const t = key ? core.title(key) : undefined
+			peek(root, seen, t ?? null)
+		}
 		const form: PlayForm = {
 			hint: spec.hint,
 			plain: true,
@@ -1075,6 +1108,13 @@ export function ringsKit(core: PlayCore, X: RingsExtra, rule: Rule) {
 				hold(ctx)
 				const tokens = spec.will ? spec.will(ctx, name, arg) : null
 				if (tokens?.length) want(ctx, tokens, around(ctx, tokens).length, Math.round(cells(zooms()[zoomOf(ctx)]).length * 1.2))
+			},
+			// A poster is pressed while a filter is on: the titles that pass it around that title are asked for now.
+			near: (ctx, t) => {
+				hold(ctx)
+				const tokens = spec.next ? spec.next(ctx, t) : spec.tokens(ctx)
+				if (!tokens.length || !t.s || blendOf(tokens) || core.floor(t.k, nameOf(tokens)) !== undefined) return
+				core.more(t.k, `&v=5${country()}&f=${enc(nameOf(tokens))}&d=0`)
 			},
 			preview: (section, ctx, name, arg) => {
 				hold(ctx)

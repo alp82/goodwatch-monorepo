@@ -170,6 +170,8 @@ export interface PlayForm {
 	peek?: (section: Element, ctx: PlayCtx, title: PlayTitle | null) => void
 	/** A control is being pressed or pointed at: what it would need can be asked for now. */
 	intent?: (ctx: PlayCtx, name: string, arg: string) => void
+	/** Twelfth round. A poster is pressed: what the form will need around that title can be asked for now. */
+	near?: (ctx: PlayCtx, title: PlayTitle) => void
 	/** Twelfth round. A control is pointed at or held with a finger (`name`), or no longer (null). */
 	preview?: (section: Element, ctx: PlayCtx, name: string | null, arg: string) => void
 }
@@ -1299,6 +1301,9 @@ export function playEngine(
 		if (event.type === "pointerdown") {
 			pressed = { el: button, at: event.timeStamp }
 			hold(event as PointerEvent, button, s)
+			const st = stateOf(s)
+			const t = G.t[button.getAttribute("data-pl-step") ?? ""]
+			if (t && !button.hasAttribute("data-pl-came") && !noAhead() && G.t[st.trail[st.trail.length - 1].k]) formOf(st.form)?.near?.(ctxOf(st), t)
 		}
 		if (!button.hasAttribute("data-pl-came") && !noAhead())
 			ask(button.getAttribute("data-pl-step") ?? "", true)
