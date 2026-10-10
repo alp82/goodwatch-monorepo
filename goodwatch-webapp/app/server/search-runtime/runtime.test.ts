@@ -35,6 +35,7 @@ const { executeJevStage } = await import("./runtime.server.ts");
 for (const scenario of [
 	{ name: "cached reading", cached: true, key: false, calls: 0, kind: "cached" },
 	{ name: "missing provider key", key: false, calls: 0, kind: "basic", reason: "configuration" },
+	{ name: "coordination unavailable", key: true, calls: 0, kind: "basic", reason: "coordination" },
 	{ name: "rate limited claim", key: true, calls: 0, kind: "basic", reason: "rate" },
 	{ name: "claimed reading with dispatch failure", key: true, calls: 1, kind: "basic", reason: "storage" },
 	{ name: "throwing callback with dispatch failure", key: true, calls: 1, kind: "basic", reason: "storage", throws: true },
@@ -50,8 +51,8 @@ for (const scenario of [
 			digest: () => "test-digest",
 			lookup: async () => scenario.cached ? { kind: "cached", ciphertext: "test" } : null,
 			unseal: () => readings,
-			claim: async (): Promise<Claim> => scenario.reason === "rate"
-				? { kind: "basic", reason: "rate" }
+			claim: async (): Promise<Claim> => (scenario.reason === "rate" || scenario.reason === "coordination")
+				? { kind: "basic", reason: scenario.reason }
 				: { kind: "claimed", id: "test-claim" },
 			dispatch: async () => {
 				dispatches++;

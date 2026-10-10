@@ -12,7 +12,7 @@ What production does while one of the three cache nodes is down, for
   sent those lookups straight to the database.
 - **A webapp that starts during the outage serves pages,** without a title snapshot until the node is back.
 - **The node came back with its data** 16 seconds after its start, and every process used it again within a minute.
-- **Not exercised: a ranked search during the outage.** By the code, it fails. See [What the drill exposed](#what-the-drill-exposed).
+- **Not exercised: a ranked search during the outage.** By the code and its tests, it gets basic results without the reading. See [What the drill exposed](#what-the-drill-exposed).
 - **Not measured: page latency during the outage.** The benchmark load didn't run. See [What wasn't measured](#what-wasnt-measured).
 
 ## What was done
@@ -49,13 +49,17 @@ that started during the outage included, read the returned node again without a 
 
 ## What the drill exposed
 
-- **A ranked search needs the node that holds its coordination keys.** All of them share one slot
-  (`{goodwatch-search-v2}`, on cache1). `SearchCoordination.claim` runs a script on that node and has no fallback, so
-  by the code a search that isn't answered from a cache fails while that node is down. The drill didn't send one: a
-  ranked search on production writes history rows and can start a paid reading call. Ticket:
-  [Decide what a search does while the cache node with its coordination keys is down](https://github.com/alp82/goodwatch-monorepo/issues/408).
-- **The smoke check keeps failing after the node is back,** until the next deploy, because it fails on a snapshot log
-  line since the process started. This is known and noted on the map.
+- **A search that needs a reading depends on the node that holds its coordination keys.** All of them share one
+  slot (`{goodwatch-search-v2}`, on cache1), and the admission script runs on that node. While it is down, such a
+  search answers with basic results and no paid reading starts. This page first said that it fails: that was a
+  misreading of the code, which already caught the error and recorded it as `storage`. Since
+  [Decide what a search does while the cache node with its coordination keys is down](https://github.com/alp82/goodwatch-monorepo/issues/408)
+  the case has its own reason (`coordination`), one log line per minute, and tests. Searches that are answered from
+  the interpretation cache in Crate keep their readings. The drill didn't send a search: a ranked search on
+  production writes history rows and can start a paid reading call.
+- **The smoke check kept failing after the node was back,** for the page instances until the next deploy and for
+  the search roles even after a restart, because it read the container's whole log. It now reads the log since the
+  process started, so a restart clears it.
 - **The home warm-up** takes a lease on one node (`{...}:warmup`). When that node is down, the warm-up request
   fails and the home page is computed on request, as it is without a warm-up. Read from the code, not exercised:
   no warm-up ran during the outage.
