@@ -12,12 +12,16 @@
 // writers call in here with `rate` after their write (scores.server.ts, the guest transfer) or settle their movies
 // (the IMDb import). wishList.server.ts and not-interested.server.ts do not call in yet: the only row of the table
 // they would take is Want to See on a Dropped show, and nothing in the interface drops a show yet.
+import { createHash } from "node:crypto"
+import type { ImportItem, ImportSource } from "~/domain/imports"
 import {
 	type ListedEpisode,
 	STATES,
 	type TrackingEvent,
 	type WatchedWhen,
 	groupWatchId,
+	facts,
+	showAiredBy,
 	isDay,
 	serverShow,
 	utcDay,
@@ -34,6 +38,8 @@ import {
 	applyShowEvent,
 	movieLogRow,
 	movieStateRow,
+	recordFromRows,
+	stateRowOf,
 	scoreWatchId,
 	settleMovieRows,
 	titleTotals,
@@ -191,7 +197,11 @@ const STATE_COLUMNS = [
 const STATE_KEY = ["user_id", "tmdb_id", "media_type"]
 const DELETE_CHUNK = 500
 
-type StoredState = StateRow & { _seq_no: number; _primary_term: number }
+type StoredState = StateRow & {
+	_seq_no: number
+	_primary_term: number
+	updated_at: number
+}
 
 async function readState(
 	userId: string,
@@ -214,12 +224,13 @@ async function readState(
 		seen_question: (row.seen_question as StateRow["seen_question"]) ?? null,
 		_seq_no: Number(row._seq_no),
 		_primary_term: Number(row._primary_term),
+		updated_at: ms(row.updated_at) ?? 0,
 	}
 }
 
 const stateOnly = (row: StoredState | null): StateRow | null => {
 	if (!row) return null
-	const { _seq_no, _primary_term, ...state } = row
+	const { _seq_no, _primary_term, updated_at, ...state } = row
 	return state
 }
 
@@ -517,7 +528,9 @@ async function readEpisodeList({ showId }: { showId: number }) {
 	} catch (error) {
 		// The webapp can be deployed before the catalog's table has the column (#387).
 		if (isMissingColumn(error, "overview"))
-			return query<EpisodeListRow>(EPISODE_LIST_WITHOUT_OVERVIEW_QUERY, [showId])
+			return query<EpisodeListRow>(EPISODE_LIST_WITHOUT_OVERVIEW_QUERY, [
+				showId,
+			])
 		if (!isMissingTable(error, "episode")) throw error
 		console.error("The episode catalog's table is missing: no show has a list")
 		return []
@@ -610,9 +623,13 @@ function restorablePress(
 	if (!STATES.includes(from)) return false
 	if (!whole(pass) || pass < 1) return false
 	const past = (at: unknown) =>
-		typeof at === "number" && Number.isFinite(at) && at > 0 && at <= now + 60_000
+		typeof at === "number" &&
+		Number.isFinite(at) &&
+		at > 0 &&
+		at <= now + 60_000
 	if (!past(changedAt)) return false
-	if (!Array.isArray(watches) || watches.length > MAX_PRESS_WATCHES) return false
+	if (!Array.isArray(watches) || watches.length > MAX_PRESS_WATCHES)
+		return false
 	const ids = new Set<string>()
 	for (const watch of watches) {
 		if (!watch || typeof watch !== "object") return false
@@ -961,7 +978,11 @@ async function applyMovieEvent(
 			const rows = Array.isArray(event.rows) ? event.rows : []
 			const now = Date.now()
 			const ids = new Set(rows.map((row) => row?.watchId))
-			if (!rows.length || rows.length > MAX_RESTORED || ids.size !== rows.length)
+			if (
+				!rows.length ||
+				rows.length > MAX_RESTORED ||
+				ids.size !== rows.length
+			)
 				return refusal(NOT_RESTORABLE)
 			if (!rows.every((row) => restorable(row, movieId, now)))
 				return refusal(NOT_RESTORABLE)
@@ -1014,8 +1035,7 @@ async function applyMovieEvent(
 	// Seen. That is asked of the rows and not of this request, so that a request sent again still clears it.
 	if (event.type === "rate" && event.score !== null)
 		clear = {
-			wantToSee:
-				settled.byScoreAlone && !(await wantsRewatch(userId, movieId)),
+			wantToSee: settled.byScoreAlone && !(await wantsRewatch(userId, movieId)),
 			notInterested: true,
 		}
 	// Want to rewatch lasts while the movie is Seen: a removed watch that leaves it not Seen takes it off the
@@ -1130,7 +1150,9 @@ const isMissingTable = (error: unknown, table: string) => {
 	const message = String(
 		(error as { message?: unknown } | null)?.message ?? error,
 	)
-	return /RelationUnknown|SchemaUnknown/.test(message) && message.includes(table)
+	return (
+		/RelationUnknown|SchemaUnknown/.test(message) && message.includes(table)
+	)
 }
 
 /**
@@ -1220,4 +1242,412 @@ export async function getMovieTracking(
 		readLog(userId, title),
 	])
 	return { state: stateOnly(state), log }
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Native exports: a durable, per-title plan, journaled by the importer before the first write.
+// ---------------------------------------------------------------------------------------------------------
+
+export const importWatchId = (source: ImportSource, key: string) =>
+	`i-${createHash("sha1").update(`${source}:${key}`).digest("hex").slice(0, 32)}`
+
+export interface ImportTrackingPlan {
+	userId: string
+	importId: string
+	title: TrackedTitle
+	now: number
+	beforeState: StoredState | null
+	afterState: StateRow | null
+	watches: LogRow[]
+	addedKeys: string[]
+	keptKeys: string[]
+	clear: {
+		table: "user_wishlist" | "user_not_interested"
+		seq: number
+		term: number
+	}[]
+}
+
+/** Import matching needs all watches, not the movie log's 200-row display limit. */
+async function readImportLog(
+	userId: string,
+	title: TrackedTitle,
+): Promise<LogRow[]> {
+	const statement = (
+		title.mediaType === "show" ? SHOW_LOG_QUERY : MOVIE_LOG_QUERY
+	).replace(/LIMIT \d+/, "LIMIT 50001")
+	const rows = await read<Record<string, unknown>>(statement, [
+		userId,
+		title.tmdbId,
+	])
+	if (rows.length > 50_000)
+		throw new Error("This title has too many watches to import safely.")
+	return rows.map((row) => ({
+		watch_id: String(row.watch_id),
+		media_type: title.mediaType,
+		tmdb_id: title.tmdbId,
+		episode_tmdb_id:
+			row.episode_tmdb_id == null ? null : Number(row.episode_tmdb_id),
+		season_number: row.season_number == null ? null : Number(row.season_number),
+		episode_number:
+			row.episode_number == null ? null : Number(row.episode_number),
+		watched_at: ms(row.watched_at),
+		watched_at_precision:
+			row.watched_at_precision as LogRow["watched_at_precision"],
+		origin: row.origin as LogRow["origin"],
+		group_id: (row.group_id as string | null) ?? null,
+		import_id: (row.import_id as string | null) ?? null,
+		pass: Number(row.pass ?? 1),
+		created_at: ms(row.created_at) ?? 0,
+	}))
+}
+
+function sameImportedViewing(a: LogRow, b: LogRow): boolean {
+	if (
+		a.pass !== b.pass ||
+		a.media_type !== b.media_type ||
+		a.tmdb_id !== b.tmdb_id
+	)
+		return false
+	if (
+		a.media_type === "show" &&
+		!(a.episode_tmdb_id != null && a.episode_tmdb_id === b.episode_tmdb_id) &&
+		(a.season_number !== b.season_number ||
+			a.episode_number !== b.episode_number)
+	)
+		return false
+	if (b.watched_at_precision === "unknown") return true
+	if (a.watched_at === null || b.watched_at === null) return false
+	const bucket =
+		a.watched_at_precision === "day" || b.watched_at_precision === "day"
+			? 86_400_000
+			: 60_000
+	return Math.floor(a.watched_at / bucket) === Math.floor(b.watched_at / bucket)
+}
+
+export async function prepareImportTrackingPlan(input: {
+	userId: string
+	importId: string
+	source: ImportSource
+	tmdbId: number
+	mediaType: MediaType
+	items: ImportItem[]
+	watchDates: "preserve" | "unknown"
+	now: number
+}): Promise<ImportTrackingPlan> {
+	const title = {
+		mediaType: input.mediaType,
+		tmdbId: canonicalTitleId(input.mediaType, input.tmdbId),
+	}
+	await run("REFRESH TABLE user_watch_log")
+	const [beforeState, existing] = await Promise.all([
+		readState(input.userId, title),
+		readImportLog(input.userId, title),
+	])
+	const plan: ImportTrackingPlan = {
+		userId: input.userId,
+		importId: input.importId,
+		title,
+		now: input.now,
+		beforeState,
+		afterState: stateOnly(beforeState),
+		watches: [],
+		addedKeys: [],
+		keptKeys: [],
+		clear: [],
+	}
+	const candidates = existing.filter((row) => row.origin !== "score")
+	const used = new Set<string>()
+	// Reserve source identities first, so an older play cannot consume a newer play's exact identity.
+	const exact = new Set(
+		input.items.map((item) => importWatchId(input.source, item.key)),
+	)
+	for (const row of candidates)
+		if (exact.has(row.watch_id)) used.add(row.watch_id)
+	for (const item of input.items) {
+		const watchId = importWatchId(input.source, item.key)
+		if (
+			existing.some((row) => row.watch_id === watchId) ||
+			plan.watches.some((row) => row.watch_id === watchId)
+		) {
+			plan.keptKeys.push(item.key)
+			continue
+		}
+		const precision =
+			input.watchDates === "unknown" ? "unknown" : (item.precision ?? "unknown")
+		const watchedAt =
+			precision === "unknown"
+				? null
+				: item.watchedAt
+					? Date.parse(item.watchedAt)
+					: null
+		if (
+			precision !== "unknown" &&
+			(watchedAt === null || !Number.isFinite(watchedAt))
+		)
+			throw new Error("A watch has an invalid date.")
+		const pass =
+			title.mediaType === "movie"
+				? 1
+				: Math.min(item.pass ?? 1, beforeState?.pass ?? item.pass ?? 1)
+		const row: LogRow = {
+			watch_id: watchId,
+			media_type: title.mediaType,
+			tmdb_id: title.tmdbId,
+			episode_tmdb_id: item.episodeTmdbId ?? null,
+			season_number: item.season ?? null,
+			episode_number: item.episode ?? null,
+			watched_at: watchedAt,
+			watched_at_precision: precision,
+			origin: "import",
+			group_id: null,
+			import_id: input.importId,
+			pass,
+			created_at: input.now,
+		}
+		const duplicate = candidates.find(
+			(candidate) =>
+				!used.has(candidate.watch_id) && sameImportedViewing(candidate, row),
+		)
+		if (duplicate) {
+			used.add(duplicate.watch_id)
+			plan.keptKeys.push(item.key)
+			continue
+		}
+		plan.watches.push(row)
+		plan.addedKeys.push(item.key)
+	}
+	if (!plan.watches.length) return plan
+	if (
+		title.mediaType === "show" &&
+		(!beforeState ||
+			beforeState.state === "not_started" ||
+			beforeState.state === "watching")
+	) {
+		const episodes = await getEpisodeList(title.tmdbId)
+		const current = recordFromRows(
+			stateOnly(beforeState),
+			[...existing, ...plan.watches],
+			{ score: null, wantToSee: false, notInterested: false },
+		)
+		if (!beforeState)
+			current.pass = Math.max(1, ...plan.watches.map((row) => row.pass))
+		const progress = facts(
+			showAiredBy(listed(episodes), utcDay(input.now)),
+			current,
+		)
+		if (progress.watchRemains) {
+			current.state = progress.upToDate ? "seen" : "watching"
+			current.seenQuestion = "answered"
+			plan.afterState = stateRowOf(current, stateOnly(beforeState), input.now)
+		}
+	}
+	// Only clear the intentions observed while preparing this plan. A later edit gets a new version.
+	if (
+		title.mediaType === "movie" ||
+		plan.watches.some((row) => (row.season_number ?? 0) > 0)
+	) {
+		for (const table of ["user_wishlist", "user_not_interested"] as const) {
+			try {
+				const [row] = await read<{ _seq_no: number; _primary_term: number }>(
+					`SELECT _seq_no, _primary_term FROM ${table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`,
+					[input.userId, title.tmdbId, title.mediaType],
+				)
+				if (row)
+					plan.clear.push({
+						table,
+						seq: Number(row._seq_no),
+						term: Number(row._primary_term),
+					})
+			} catch (error) {
+				if (
+					table !== "user_not_interested" ||
+					!isMissingNotInterestedTable(error)
+				)
+					throw error
+			}
+		}
+	}
+	return plan
+}
+
+export async function applyImportTrackingPlan(
+	userId: string,
+	plan: ImportTrackingPlan,
+	checkpoint?: (plan: ImportTrackingPlan) => Promise<void>,
+) {
+	if (userId !== plan.userId)
+		throw new Error("This import belongs to another member.")
+	if (!plan.watches.length)
+		return { added: 0, kept: plan.keptKeys.length, watchIds: [] }
+	await insertLog(userId, plan.watches, plan.now)
+	await run("REFRESH TABLE user_watch_log")
+	const log = await readImportLog(userId, plan.title)
+	const plannedIds = new Set(plan.watches.map((watch) => watch.watch_id))
+	const ours = log.filter(
+		(row) => row.import_id === plan.importId && plannedIds.has(row.watch_id),
+	)
+	// A simultaneous upload can have won every insert. It owns the state transition as well as the watches.
+	if (!ours.length)
+		return {
+			added: 0,
+			kept: plan.keptKeys.length + plan.watches.length,
+			watchIds: [],
+		}
+	if (plan.title.mediaType === "movie")
+		await settleMovie(userId, plan.title.tmdbId)
+	else {
+		for (let attempt = 0; attempt < STATE_RETRIES; attempt++) {
+			const current = await readState(userId, plan.title)
+			// A successful earlier attempt, or a status chosen here, must not be replayed as a fresh action.
+			if (
+				current?.updated_at === plan.now &&
+				current.state === plan.afterState?.state
+			)
+				break
+			if (current && ["seen", "on_hold", "dropped"].includes(current.state))
+				break
+			await run("REFRESH TABLE user_watch_log")
+			const combined = await readImportLog(userId, plan.title)
+			const record = recordFromRows(stateOnly(current), combined, {
+				score: null,
+				wantToSee: false,
+				notInterested: false,
+			})
+			if (!current)
+				record.pass = Math.max(1, ...combined.map((row) => row.pass))
+			const progress = facts(
+				showAiredBy(
+					listed(await getEpisodeList(plan.title.tmdbId)),
+					utcDay(Date.now()),
+				),
+				record,
+			)
+			if (!progress.watchRemains) break
+			record.state = progress.upToDate ? "seen" : "watching"
+			record.seenQuestion = "answered"
+			if (
+				current?._seq_no !== plan.beforeState?._seq_no ||
+				current?._primary_term !== plan.beforeState?._primary_term
+			) {
+				plan.beforeState = current
+				plan.now = Math.max(
+					Date.now(),
+					plan.now + 1,
+					(current?.updated_at ?? 0) + 1,
+				)
+			}
+			plan.afterState = stateRowOf(record, stateOnly(current), plan.now)
+			// The importer persists this changed prior state before a CAS retry can touch the state row.
+			await checkpoint?.(plan)
+			if (
+				await writeState(
+					userId,
+					plan.title,
+					current ? "update" : "insert",
+					plan.afterState,
+					current,
+					plan.now,
+				)
+			)
+				break
+			if (attempt === STATE_RETRIES - 1) throw new TrackingConflictError()
+		}
+	}
+	for (const clear of plan.clear)
+		await run(
+			`DELETE FROM ${clear.table} WHERE user_id = ? AND tmdb_id = ? AND media_type = ? AND _seq_no = ? AND _primary_term = ?`,
+			[userId, plan.title.tmdbId, plan.title.mediaType, clear.seq, clear.term],
+		)
+	await finish(userId)
+	if (plan.clear.some((row) => row.table === "user_wishlist"))
+		await markTasteChanged(userId)
+	return {
+		added: ours.length,
+		kept: plan.keptKeys.length + plan.watches.length - ours.length,
+		watchIds: ours.map((row) => row.watch_id),
+	}
+}
+
+export async function undoImportTrackingPlan(
+	userId: string,
+	plan: ImportTrackingPlan,
+): Promise<void> {
+	if (userId !== plan.userId)
+		throw new Error("This import belongs to another member.")
+	if (!plan.watches.length) return
+	await run("REFRESH TABLE user_watch_log")
+	const ownIds = new Set(plan.watches.map((row) => row.watch_id))
+	const log = await readImportLog(userId, plan.title)
+	// Edited imported watch dates remain part of the import, as the undo confirmation explains.
+	await deleteLog(
+		userId,
+		log
+			.filter(
+				(row) => row.import_id === plan.importId && ownIds.has(row.watch_id),
+			)
+			.map((row) => row.watch_id),
+	)
+	if (plan.title.mediaType === "movie")
+		await settleMovie(userId, plan.title.tmdbId)
+	else {
+		const current = await readState(userId, plan.title)
+		if (
+			current &&
+			current.updated_at === plan.now &&
+			current.state === plan.afterState?.state
+		) {
+			await run("REFRESH TABLE user_watch_log")
+			const remaining = await readImportLog(userId, plan.title)
+			const hasRegular = remaining.some((row) => (row.season_number ?? 0) > 0)
+			let restored = stateOnly(plan.beforeState)
+			// Another import may already have been undone, or may have added watches while this show was Seen.
+			// Restore the earlier choice only where it still satisfies the watch/state invariant.
+			if (
+				!hasRegular &&
+				restored &&
+				["watching", "seen"].includes(restored.state)
+			) {
+				restored = {
+					...restored,
+					state: "not_started",
+					state_changed_at: Date.now(),
+					seen_press_group: null,
+					seen_press_from: null,
+				}
+			} else if (hasRegular && !restored) {
+				const record = recordFromRows(null, remaining, {
+					score: null,
+					wantToSee: false,
+					notInterested: false,
+				})
+				record.pass = Math.max(1, ...remaining.map((row) => row.pass))
+				record.state = facts(
+					showAiredBy(
+						listed(await getEpisodeList(plan.title.tmdbId)),
+						utcDay(Date.now()),
+					),
+					record,
+				).upToDate
+					? "seen"
+					: "watching"
+				restored = stateRowOf(record, null, Date.now())
+			}
+			await writeState(
+				userId,
+				plan.title,
+				restored ? "update" : "delete",
+				restored,
+				current,
+				// Preserve the earlier writer's ownership when restoring its exact state. Otherwise an older
+				// import could no longer be undone after this one.
+				plan.beforeState &&
+					JSON.stringify(restored) ===
+						JSON.stringify(stateOnly(plan.beforeState))
+					? plan.beforeState.updated_at
+					: Date.now(),
+			)
+		}
+	}
+	await finish(userId)
 }

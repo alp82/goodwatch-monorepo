@@ -27,7 +27,7 @@ WHERE user_id = ? AND state <> 'not_started'`
 /** Q1. The member's row for one title. Whole key: real-time, no refresh needed. */
 export const STATE_ROW_QUERY = `
 SELECT state, state_changed_at, pass, seen_press_group, seen_press_from, rate_prompt_dismissed_at, seen_question,
-       _seq_no, _primary_term
+       updated_at, _seq_no, _primary_term
 FROM user_watch_state
 WHERE user_id = ? AND tmdb_id = ? AND media_type = ?`
 

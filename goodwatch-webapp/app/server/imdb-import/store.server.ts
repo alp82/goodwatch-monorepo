@@ -46,6 +46,7 @@ export const activeRuns = new Set<string>()
 
 export interface ImportRow {
 	id: string
+	source: string
 	user_id: string
 	status: ImdbImportStatus
 	file_name: string | null
@@ -73,7 +74,7 @@ export interface ImportRow {
 	_primary_term: number
 }
 const IMPORT_COLUMNS =
-	"id, user_id, status, file_name, conflict_choice, counts, processed, total, added, updated, kept, failed, without_fingerprint, error, created_at, updated_at, confirmed_at, finished_at, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term"
+	"id, user_id, source, status, file_name, conflict_choice, counts, processed, total, added, updated, kept, failed, without_fingerprint, error, created_at, updated_at, confirmed_at, finished_at, CURRENT_TIMESTAMP AS read_at, _seq_no, _primary_term"
 
 export const toMs = (value: number | string | Date) => new Date(value).getTime()
 
@@ -108,7 +109,8 @@ export function summarize(row: ImportRow): ImdbImportSummary {
 export async function getImportRow(userId: string, id: string): Promise<ImportRow> {
 	const rows = await select<ImportRow>(`SELECT ${IMPORT_COLUMNS} FROM doc.user_import WHERE id = ?`, [id])
 	const row = rows[0]
-	if (!row || row.user_id !== userId) throw new ImdbImportError(404, "We couldn't find that import. Upload the file again.")
+	if (!row || row.user_id !== userId || (row.source !== undefined && row.source !== "imdb"))
+		throw new ImdbImportError(404, "We couldn't find that import. Upload the file again.")
 	return row
 }
 

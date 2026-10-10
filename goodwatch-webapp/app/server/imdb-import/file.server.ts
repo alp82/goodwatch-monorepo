@@ -3,6 +3,7 @@
 // per row instead of failing the whole file. See docs/research/imdb-ratings-import.md.
 
 export type ImportMediaType = "movie" | "show"
+export { csvLine } from "../import-csv.ts"
 
 /** A rejected request, with the HTTP status to answer and a message written for the member. */
 export class ImdbImportError extends Error {
@@ -185,15 +186,4 @@ export function readRatingsFile(text: string): FileRow[] {
 			problem,
 		}
 	})
-}
-
-/** One CSV line. Cells a spreadsheet would run as a formula are written as text. */
-export function csvLine(cells: (string | number | null)[]): string {
-	return cells
-		.map((cell) => {
-			let value = cell === null ? "" : String(cell)
-			if (/^[=+\-@\t\r]/.test(value) && typeof cell === "string") value = `'${value}`
-			return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
-		})
-		.join(",")
 }

@@ -2727,3 +2727,240 @@ test("the grouped query and the states give the member data entry of every title
 		[true, Date.UTC(2019, 2, 12)],
 	)
 })
+
+// Native export imports use a durable plan so the same request can safely resume after any write.
+test("a dated imported movie watch survives retries and a second upload without duplication", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const item = {
+		key: "history-123",
+		kind: "watch" as const,
+		mediaType: "movie" as const,
+		title: "A movie",
+		year: 2000,
+		tmdbId: MOVIE,
+		imdbId: null,
+		watchedAt: "2020-04-02T12:30:00.000Z",
+		precision: "moment" as const,
+		index: 0,
+		outcome: "new" as const,
+		reason: null,
+	}
+	const input = {
+		userId: user,
+		importId: "import-one",
+		source: "trakt" as const,
+		...movie,
+		items: [item],
+		watchDates: "preserve" as const,
+		now: Date.now(),
+	}
+	const plan = await imports.prepareImportTrackingPlan(input)
+	await imports.applyImportTrackingPlan(user, plan)
+	await imports.applyImportTrackingPlan(user, plan)
+	const again = await imports.prepareImportTrackingPlan({
+		...input,
+		importId: "import-two",
+	})
+	await imports.applyImportTrackingPlan(user, again)
+	const result = await getMovieTracking(user, MOVIE)
+	assert.equal(result.log.length, 1)
+	assert.equal(result.log[0].watched_at, Date.parse(item.watchedAt))
+	assert.equal(result.log[0].origin, "import")
+	assert.equal(result.state?.state, "seen")
+	await imports.undoImportTrackingPlan(user, again)
+	assert.equal((await getMovieTracking(user, MOVIE)).log.length, 1)
+	await imports.undoImportTrackingPlan(user, plan)
+	assert.equal((await getMovieTracking(user, MOVIE)).log.length, 0)
+	assert.equal((await getMovieTracking(user, MOVIE)).state, null)
+})
+
+const nativeWatch = (key: string, number: number) => ({
+	key,
+	kind: "watch" as const,
+	mediaType: "show" as const,
+	title: "A show",
+	year: 2000,
+	tmdbId: SHORT,
+	imdbId: null,
+	episodeTmdbId: 300 + number,
+	season: 1,
+	episode: number,
+	watchedAt: "2020-04-02T12:30:00.000Z",
+	precision: "moment" as const,
+	index: number,
+	outcome: "new" as const,
+	reason: null,
+})
+
+for (const newestFirst of [false, true])
+	test(`undoing two imports ${newestFirst ? "newest" : "oldest"} first never leaves an empty show Watching`, async () => {
+		const imports = await import("./imports/tracking.server.ts")
+		const base = {
+			userId: user,
+			source: "trakt" as const,
+			...short,
+			watchDates: "preserve" as const,
+			now: Date.now() - 1000,
+		}
+		const first = await imports.prepareImportTrackingPlan({
+			...base,
+			importId: "first",
+			items: [nativeWatch("one", 1)],
+		})
+		await imports.applyImportTrackingPlan(user, first)
+		assert.equal((await getShowTracking(user, SHORT)).state?.state, "watching")
+		const second = await imports.prepareImportTrackingPlan({
+			...base,
+			now: base.now + 1,
+			importId: "second",
+			items: [nativeWatch("two", 2)],
+		})
+		await imports.applyImportTrackingPlan(user, second)
+		assert.equal((await getShowTracking(user, SHORT)).state?.state, "seen")
+		await imports.undoImportTrackingPlan(user, newestFirst ? second : first)
+		await imports.undoImportTrackingPlan(user, newestFirst ? first : second)
+		const result = await getShowTracking(user, SHORT)
+		assert.equal(result.log.length, 0)
+		assert.ok(result.state === null || result.state.state === "not_started")
+	})
+
+test("imported episode watches preserve On hold and undo preserves later user actions", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	await tick(1, 1, newId(), short)
+	await act({ type: "hold" }, newId(), short)
+	const plan = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "held-import",
+		source: "trakt",
+		...short,
+		items: [nativeWatch("second-episode", 2)],
+		watchDates: "preserve",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, plan)
+	assert.equal((await getShowTracking(user, SHORT)).state?.state, "on_hold")
+	assert.equal((await getShowTracking(user, SHORT)).log.length, 2)
+	await imports.undoImportTrackingPlan(user, plan)
+	assert.equal((await getShowTracking(user, SHORT)).state?.state, "on_hold")
+	assert.equal((await getShowTracking(user, SHORT)).log.length, 1)
+	const other = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "later-action",
+		source: "trakt",
+		...show,
+		items: [
+			{ ...nativeWatch("first-episode", 1), tmdbId: SHOW, episodeTmdbId: 101 },
+		],
+		watchDates: "preserve",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, other)
+	await act({ type: "drop" })
+	await imports.undoImportTrackingPlan(user, other)
+	assert.equal((await getShowTracking(user, SHOW)).state?.state, "dropped")
+})
+
+test("same-minute source plays stay distinct and an existing viewing consumes only one", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	await act(
+		{ type: "watch", when: { precision: "day", day: "2020-04-02" } },
+		newId(),
+		movie,
+	)
+	const items = ["play-one", "play-two"].map((key, index) => ({
+		...nativeWatch(key, 1),
+		mediaType: "movie" as const,
+		tmdbId: MOVIE,
+		episodeTmdbId: null,
+		season: null,
+		episode: null,
+		index,
+	}))
+	const plan = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "repeats",
+		source: "trakt",
+		...movie,
+		items,
+		watchDates: "preserve",
+		now: Date.now(),
+	})
+	await imports.applyImportTrackingPlan(user, plan)
+	assert.equal((await getMovieTracking(user, MOVIE)).log.length, 2)
+	const again = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "repeats-again",
+		source: "trakt",
+		...movie,
+		items,
+		watchDates: "preserve",
+		now: Date.now(),
+	})
+	await imports.applyImportTrackingPlan(user, again)
+	assert.equal((await getMovieTracking(user, MOVIE)).log.length, 2)
+})
+
+test("a concurrent duplicate import cannot take ownership of a interrupted import's show state", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const base = {
+		userId: user,
+		source: "trakt" as const,
+		...short,
+		items: [nativeWatch("same-play", 1)],
+		watchDates: "preserve" as const,
+		now: Date.now() - 1000,
+	}
+	const first = await imports.prepareImportTrackingPlan({
+		...base,
+		importId: "owner",
+	})
+	const second = await imports.prepareImportTrackingPlan({
+		...base,
+		now: base.now + 1,
+		importId: "duplicate",
+	})
+	db.before = ({ sql }) => {
+		if (/INSERT INTO user_watch_state/.test(sql))
+			throw new Error("process stopped")
+	}
+	await assert.rejects(
+		imports.applyImportTrackingPlan(user, first),
+		/process stopped/,
+	)
+	db.before = undefined
+	assert.equal((await imports.applyImportTrackingPlan(user, second)).added, 0)
+	await imports.applyImportTrackingPlan(user, first)
+	await imports.undoImportTrackingPlan(user, first)
+	const result = await getShowTracking(user, SHORT)
+	assert.equal(result.log.length, 0)
+	assert.equal(result.state, null)
+})
+
+test("concurrent distinct imports settle a show from the combined episode watches", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const base = {
+		userId: user,
+		source: "trakt" as const,
+		...short,
+		watchDates: "preserve" as const,
+		now: Date.now() - 1000,
+	}
+	const first = await imports.prepareImportTrackingPlan({
+		...base,
+		importId: "one",
+		items: [nativeWatch("one", 1)],
+	})
+	const second = await imports.prepareImportTrackingPlan({
+		...base,
+		now: base.now + 1,
+		importId: "two",
+		items: [nativeWatch("two", 2)],
+	})
+	await imports.applyImportTrackingPlan(user, first)
+	await imports.applyImportTrackingPlan(user, second)
+	assert.equal((await getShowTracking(user, SHORT)).state?.state, "seen")
+	await imports.undoImportTrackingPlan(user, second)
+	assert.equal((await getShowTracking(user, SHORT)).state?.state, "watching")
+	await imports.undoImportTrackingPlan(user, first)
+	assert.equal((await getShowTracking(user, SHORT)).state, null)
+})
