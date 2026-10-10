@@ -1,0 +1,45 @@
+referrer,landing_shape,sessions,total_pageviews,identities,interacting_sessions
+chatgpt.com,/,3,3,3,3
+chatgpt.com,[other route],1,1,1,1
+chatgpt.com,/movie/{id}-{slug},1,4,1,1
+coccoc.com,/movie/{id}-{slug},1,1,1,0
+duckduckgo.com,/,49,59,48,22
+gemini.google.com,/movie/{id}-{slug},1,3,1,0
+l.meta.ai,/,1,1,1,1
+r.search.yahoo.com,/,1,1,1,0
+search.brave.com,/,20,36,20,9
+search.brave.com,/movie/{id}-{slug},2,2,2,1
+search.brave.com,[other route],1,1,1,1
+search.brave.com,/movies,1,1,1,0
+search.brave.com,/show/{id}-{slug},1,1,1,0
+search.yahoo.com,/,20,27,18,15
+search.yahoo.com,[other route],2,2,2,0
+us.search.yahoo.com,/,1,1,1,0
+www.bing.com,/,100,141,92,59
+www.ecosia.org,/,4,14,4,4
+www.ecosia.org,/discover,1,1,1,0
+www.google.com,/,596,772,572,259
+www.google.com,[other route],21,24,18,2
+www.google.com,/discover,15,15,15,0
+www.google.com,/show/{id}-{slug},14,14,12,0
+www.google.com,/movie/{id}-{slug},13,13,13,0
+www.google.com,/shows,3,4,2,0
+www.google.com,/movies,2,2,2,0
+www.google.com,/{movies-or-shows}/moods/{slug},1,1,1,1
+www.google.com,/{movies-or-shows}/{category}/{slug},1,1,1,0
+ya.ru,/movie/{id}-{slug},1,1,1,0
+yandex.by,/show/{id}-{slug},1,1,1,0
+yandex.com,/movie/{id}-{slug},35,41,35,10
+yandex.com,/show/{id}-{slug},26,28,25,7
+yandex.com,/,2,2,2,0
+yandex.com,/movies,1,1,1,1
+yandex.com.tr,/movie/{id}-{slug},12,12,12,2
+yandex.com.tr,/show/{id}-{slug},4,4,4,0
+yandex.kz,/movie/{id}-{slug},2,2,2,0
+yandex.kz,/show/{id}-{slug},1,1,1,0
+yandex.ru,/show/{id}-{slug},41,41,40,1
+yandex.ru,/movie/{id}-{slug},10,10,10,1
+yandex.ru,/,1,1,1,0
+yandex.uz,/show/{id}-{slug},1,2,1,0
+yandex.uz,/movie/{id}-{slug},1,2,1,1
+
