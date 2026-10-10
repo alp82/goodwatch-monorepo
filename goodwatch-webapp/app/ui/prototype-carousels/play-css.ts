@@ -51,7 +51,7 @@ border-radius:.5rem;background:#141925;border:1px solid rgba(255,255,255,.22);bo
 .pl-hm details>ol button:hover{background:rgba(255,255,255,.12)}
 .pl-hm details>ol i{flex:none;width:1.25rem;color:#9ca3af;font-variant-numeric:tabular-nums}
 .pl-body{display:flex;flex-direction:column;gap:.5rem;min-width:0}
-.pl-stage{position:relative;height:360px;container-type:inline-size;contain:layout paint style;--u:1cqw;--ux:1cqw;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.pl-stage{position:relative;height:360px;container-type:inline-size;contain:layout paint style;--u:1cqw;--ux:1cqw;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .pl-side{display:flex;flex-direction:column;gap:.375rem;min-width:0}
 .pl-p{position:relative;display:block;padding:0;border-radius:.375rem;background:#1b2130;outline:2px solid rgba(255,255,255,.14);box-shadow:0 4px 14px rgba(0,0,0,.55)}
 .pl-p img,.pl-c img{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:.375rem}

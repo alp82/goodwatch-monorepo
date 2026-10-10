@@ -593,7 +593,7 @@ export function playEngine(
 			options.came ? ' data-pl-came=""' : ""
 		}${options.attrs ?? ""}><img alt="${esc(
 			options.came ? `Back to ${title.t}` : title.t,
-		)}"${lazy} decoding="async" src="${esc(src(title.p, options.big))}">${options.came ? '<span class="pl-cm" aria-hidden="true">← back</span>' : ""}${options.inner ?? ""}</button>`
+		)}"${lazy} decoding="async" draggable="false" src="${esc(src(title.p, options.big))}">${options.came ? '<span class="pl-cm" aria-hidden="true">← back</span>' : ""}${options.inner ?? ""}</button>`
 	}
 	const center: PlayCore["center"] = (ctx, cls = "", style = "", attrs = "") =>
 		`<span class="pl-c ${cls}"${style ? ` style="${style}"` : ""}${attrs} data-pl-center=""><img alt="${esc(
@@ -1016,6 +1016,11 @@ export function playEngine(
 		const crumbs = bar && q(bar, "[data-pl-crumbs]")
 		if (crumbs) crumbs.scrollLeft = crumbs.scrollWidth
 		p.form.after?.(s, p.ctx)
+		// A picture that is drawn again under a finger that holds a poster (more titles arrived) keeps showing it.
+		if (peeking?.on && !peeking.ctl && peeking.s === s) {
+			const t = G.t[peeking.k]
+			if (t && t.k !== p.ctx.c.k) p.form.peek?.(s, p.ctx, t)
+		}
 		// The tapped poster becomes the middle one: it starts where the tap was and settles within 150 ms.
 		const target = from && !still() ? (q(stage, "[data-pl-center]") as HTMLElement | null) : null
 		if (from && target?.animate) {
@@ -1339,11 +1344,17 @@ export function playEngine(
 	// A finger that stays on a poster is what pointing at it is for a mouse: the form shows that title in its card
 	// for as long as the finger stays, and lifting it is then not a tap. A tap stays a tap: nothing waits for this.
 	let touched = -1e9
-	let peeking: { s: HTMLElement; timer: number; on: boolean; x: number; y: number; ctl: boolean } | null = null
+	// Thirteenth round: a finger that rests is never still. Once the hold is on it lasts until that finger lifts: the
+	// finger may roll or drift, the page does not scroll under it (`touchmove` below), other pointers do not end it,
+	// and a picture that is drawn again under it shows the held title again.
+	let peeking: { s: HTMLElement; timer: number; on: boolean; x: number; y: number; ctl: boolean; id: number; k: string } | null = null
 	/** Where the pointer was when a step began. */
 	let rest: { x: number; y: number } | null = null
 	const unpeek = (event: Event | null) => {
 		if (!peeking) return
+		// Only the finger that holds lets go.
+		const id = (event as PointerEvent | null)?.pointerId
+		if (event && id !== undefined && id !== peeking.id) return
 		win.clearTimeout(peeking.timer)
 		if (peeking.on) {
 			const st = stateOf(peeking.s)
@@ -1359,7 +1370,7 @@ export function playEngine(
 		const st = stateOf(s)
 		if (event.pointerType === "touch") touched = event.timeStamp
 		if (event.pointerType !== "touch" || !formOf(st.form)?.peek) return
-		const own = { s, on: false, x: event.clientX, y: event.clientY, timer: 0, ctl: false }
+		const own = { s, on: false, x: event.clientX, y: event.clientY, timer: 0, ctl: false, id: event.pointerId, k: button.getAttribute("data-pl-step") ?? "" }
 		own.timer = win.setTimeout(() => {
 			if (peeking !== own || !button.isConnected) return
 			const t = G.t[button.getAttribute("data-pl-step") ?? ""]
@@ -1379,7 +1390,7 @@ export function playEngine(
 		// The control itself may have been drawn again since the press: what it stands for is what counts.
 		const name = control.getAttribute("data-pl-act") ?? ""
 		const arg = control.getAttribute("data-arg") ?? ""
-		const own = { s, on: false, x: event.clientX, y: event.clientY, timer: 0, ctl: true }
+		const own = { s, on: false, x: event.clientX, y: event.clientY, timer: 0, ctl: true, id: event.pointerId, k: "" }
 		own.timer = win.setTimeout(() => {
 			if (peeking !== own) return
 			own.on = true
@@ -1390,7 +1401,8 @@ export function playEngine(
 	win.addEventListener(
 		"pointermove",
 		(event: PointerEvent) => {
-			if (peeking && Math.abs(event.clientX - peeking.x) + Math.abs(event.clientY - peeking.y) > 12) unpeek(null)
+			// Before the hold is on, a finger that travels is a swipe. Once it is on, only lifting it ends it.
+			if (peeking && !peeking.on && event.pointerId === peeking.id && Math.hypot(event.clientX - peeking.x, event.clientY - peeking.y) > 10) unpeek(null)
 			// The pointer moves again after a step: whatever is under it now is pointed at.
 			if (rest && event.pointerType === "mouse" && Math.abs(event.clientX - rest.x) + Math.abs(event.clientY - rest.y) >= 4) {
 				rest = null
@@ -1400,6 +1412,19 @@ export function playEngine(
 		true,
 	)
 	for (const type of ["pointerup", "pointercancel"]) win.addEventListener(type, unpeek, true)
+	// While a hold is on, the page does not scroll under the finger: a scroll would cancel the pointer, and the hold
+	// with it. Before the hold is on nothing is prevented, so a swipe that starts on a poster scrolls as ever.
+	const steady = (event: Event) => {
+		if (peeking?.on && event.cancelable) event.preventDefault()
+	}
+	// A long press does not lift the poster's image for a drag either.
+	win.addEventListener(
+		"dragstart",
+		(event: Event) => {
+			if (sec(hit(event, "[data-pl-step]"))) event.preventDefault()
+		},
+		true,
+	)
 	win.addEventListener(
 		"contextmenu",
 		(event: Event) => {
@@ -1530,6 +1555,8 @@ export function playEngine(
 		const s = sec(button)
 		const related = (event as MouseEvent).relatedTarget as Node | null
 		if (!s || !button || (related && button.contains(related))) return
+		// A finger holds a poster: no mouse or focus event that the browser makes up for the touch ends that.
+		if (peeking?.on && !peeking.ctl) return
 		const st = stateOf(s)
 		const form = formOf(st.form)
 		if (form?.peek) {
@@ -1569,6 +1596,7 @@ export function playEngine(
 			stateOf(s)
 			if (s.__seen) continue
 			s.__seen = true
+			s.addEventListener("touchmove", steady, { passive: false })
 			// A form that lays its picture out for the stage's size hears the size after the first layout and before
 			// the first paint, so the server's picture (drawn for a phone) is never seen at another width.
 			const stage = q(s, "[data-pl-stage]")

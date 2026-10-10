@@ -67,17 +67,20 @@ export function finKit(core: PlayCore, kit: RingsKit, mx: MixKit) {
 		return `<div class="fn-n fn-n1"${n ? "" : ' data-fn-0=""'}>${back(ctx)}<ol class="fn-path" aria-label="Where you walked">${stops}</ol>${n ? "" : `<p class="fn-tip">${TIP}</p>`}</div>`
 	}
 	/**
-	 * fin2: the walk as small posters, as the head of the card. The start, the last two titles in between, and the
-	 * title you stand on, whose name is the card's.
+	 * fin2: the walk as one row of tiles of one height, as the head of the card. In order: back, the start with its
+	 * word beside the art, how many titles are tucked away, the last one or two, and the title you stand on with the
+	 * count of steps. The name of that title is the card's. A wide screen has the card in a narrow column: there the
+	 * older of the last two is tucked away as well, and the count says so.
 	 */
 	const posterTrail = (ctx: PlayCtx) => {
 		const n = last(ctx)
 		let stops = ""
-		if (n >= 1) stops += `<li class="fn-t0">${to(ctx, 0, `${thumb(at(ctx, 0))}<small>Start</small>`)}</li>`
-		if (n - 1 > 2) stops += `<li class="fn-tm">${steps(ctx, 1, `+${n - 3}`, `${n - 1} titles in between. Open the list.`)}</li>`
-		for (let i = Math.max(1, n - 2); i < n; i++) stops += `<li class="fn-ti">${to(ctx, i, thumb(at(ctx, i)))}</li>`
-		stops += `<li class="fn-tc"><span aria-current="step" title="${esc(ctx.c.t)}">${thumb(ctx.c)}<span class="pl-sr">${esc(ctx.c.t)}</span></span></li>`
-		return `<div class="fn-tb">${back(ctx)}<ol class="fn-tr" aria-label="Where you walked">${stops}</ol><p class="fn-tip">${n ? `${stepWord(n)} from <b>${esc(ctx.root.t)}</b>` : TIP}</p></div>`
+		if (n >= 1) stops += `<li class="fn-t0">${to(ctx, 0, `${thumb(at(ctx, 0))}<span>Start</span>`, "fn-cap")}</li>`
+		if (n >= 4)
+			stops += `<li class="fn-tm">${steps(ctx, 1, `<span class="fn-c1">+${n - 3}</span><span class="fn-c2">+${n - 2}</span>`, `${n - 1} titles in between. Open the list.`)}</li>`
+		for (let i = Math.max(1, n - 2); i < n; i++) stops += `<li class="fn-ti${n >= 4 && i === n - 2 ? " fn-old" : ""}">${to(ctx, i, thumb(at(ctx, i)))}</li>`
+		stops += `<li class="fn-tc"><span class="fn-cap" aria-current="step" title="${esc(ctx.c.t)}">${thumb(ctx.c)}<span>${n ? `Step ${n}` : "You are here"}</span><span class="pl-sr">: ${esc(ctx.c.t)}</span></span></li>`
+		return `<div class="fn-tb">${back(ctx)}<ol class="fn-tr" aria-label="Where you walked">${stops}</ol>${n ? "" : '<p class="fn-tip">Tap a poster to move</p>'}</div>`
 	}
 	/** fin3: the walk as the head of the card: back, how far from where, and the way to the start. */
 	const strip = (ctx: PlayCtx) => {

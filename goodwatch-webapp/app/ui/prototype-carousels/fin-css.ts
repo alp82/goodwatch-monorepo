@@ -85,24 +85,25 @@ opacity:1;outline:0}
 .fn-cu small{color:#fbbf24}
 .fn-cu b{color:#fff;font-weight:800}
 
-.fn-tb{position:relative;flex:none;display:flex;align-items:center;gap:8px;height:44px;min-width:0;padding:0 8px 0 6px;border-bottom:1px solid rgba(255,255,255,.1)}
-.fn-tb .fn-bk{height:30px;min-width:30px}
-.fn-tb .fn-tip b{font-weight:700;color:#e5e7eb}
+.fn-tb{position:relative;flex:none;display:flex;align-items:center;gap:6px;height:44px;min-width:0;padding:0 8px 0 6px;border-bottom:1px solid rgba(255,255,255,.1)}
+.fn-tb .fn-bk{width:32px;min-width:32px;height:32px;border-radius:7px;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.07)}
+.fn-tb .fn-tip{font-size:.75rem}
 .fn-tb .fn-pop{top:auto;bottom:calc(100% + 6px);left:6px}
 .fn-tb .fn-pop,.fn-ns .fn-pop{max-width:min(calc(100% - 16px),19rem)}
-.fn-tr{flex:none;display:flex;align-items:center;gap:5px;min-width:0}
-.fn-tr>li{flex:none;display:flex;align-items:center;min-width:0}
-.fn-tr img{display:block;width:24px;height:36px;border-radius:4px;object-fit:cover;background:#1b2130}
-.fn-tr>li>button{position:relative;display:block;border-radius:4px;outline:1.5px solid rgba(255,255,255,.2);opacity:.72;transition:opacity .12s}
-.fn-tr>li>button:hover{opacity:1;outline-color:#fbbf24}
-.fn-ti img{width:20px;height:30px}
-.fn-t0 small{position:absolute;left:0;right:0;bottom:0;border-radius:0 0 4px 4px;background:rgba(0,0,0,.8);font-size:.5rem;line-height:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;text-align:center;color:#fff}
-.fn-tm summary{display:inline-flex;align-items:center;justify-content:center;gap:.125rem;height:28px;min-width:30px;padding:0 .4375rem;border-radius:9999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);
-font-size:.75rem;font-weight:700;line-height:1;color:#fff}
+.fn-tr{flex:none;display:flex;align-items:center;min-width:0;height:32px}
+.fn-tr>li{flex:none;display:flex;align-items:center;height:32px}
+.fn-tr>li+li::before{content:"";flex:none;width:5px;height:5px;margin:0 5px 0 2px;border:solid rgba(255,255,255,.36);border-width:1.5px 1.5px 0 0;rotate:45deg}
+.fn-tr>li.fn-ti+li.fn-ti{margin-left:4px}
+.fn-tr>li.fn-ti+li.fn-ti::before{display:none}
+.fn-tr>li>button,.fn-tr>li>.fn-cap,.fn-tm summary{display:flex;align-items:center;height:32px;overflow:hidden;border-radius:7px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);
+font-size:.75rem;font-weight:600;line-height:1;color:#e5e7eb;white-space:nowrap}
+.fn-tr>li>button>img,.fn-cap>img{display:block;flex:none;width:21px;height:100%;object-fit:cover;background:#1b2130}
+.fn-cap>span:not(.pl-sr){padding:0 8px 0 6px}
+.fn-tr>li>button:hover,.fn-tm summary:hover,.fn-tm details[open] summary{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.42);color:#fff}
+.fn-tm summary{gap:4px;padding:0 7px 0 8px;font-weight:700;font-variant-numeric:tabular-nums}
 .fn-tm summary::after{content:"";border:3.5px solid transparent;border-top:4.5px solid #d1d5db;border-bottom:0}
-.fn-tm summary:hover,.fn-tm details[open] summary{background:rgba(255,255,255,.24)}
-.fn-tc [aria-current]{display:block;margin-left:2px}
-.fn-tc img{flex:none;outline:2px solid #fbbf24;outline-offset:1px}
+.fn-c2{display:none}
+.fn-tr>li.fn-tc>.fn-cap{border-color:rgba(251,191,36,.75);background:rgba(251,191,36,.13);color:#fde68a;font-weight:700}
 
 .rm.rg[class*="rg-fin"] .rm-info.rg-info{position:relative;z-index:5;height:72px}
 .rm.rg.rg-fin3 .rm-info.rg-info{height:108px;border-radius:.75rem;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05)}
@@ -180,6 +181,13 @@ white-space:nowrap;box-shadow:0 2px 12px rgba(251,191,36,.28)}
 .fn-n1 .fn-bk span{display:inline}
 .fn-path{flex:0 1 auto}
 .fn-tb{height:48px;padding:0 10px 0 8px}
+.fn-tr>li+li::before{margin:0 4px 0 1px}
+.fn-cap>span:not(.pl-sr){padding:0 7px 0 5px}
+.fn-tr>li.fn-old{display:none}
+.fn-tr>li.fn-old+li.fn-ti{margin-left:0}
+.fn-tr>li.fn-old+li.fn-ti::before{display:block}
+.fn-c1{display:none}
+.fn-c2{display:inline}
 .fn-tb .fn-pop{top:calc(100% + 4px);bottom:auto;left:8px}
 .fn-path>li{flex:0 1 auto;max-width:17rem}
 .fn-path button,.fn-path summary,.fn-path [aria-current]{padding:0 12px}
@@ -218,6 +226,6 @@ white-space:nowrap;box-shadow:0 2px 12px rgba(251,191,36,.28)}
 }
 @media (prefers-reduced-motion:reduce){
 .fn-row .ix-c[aria-pressed="true"] .ix-z::after{animation:none;translate:0 0;opacity:.5}
-.ix-c>.fn-pz,.ix-c>.fn-pk,.fn-tr>li>button{transition:none}
+.ix-c>.fn-pz,.ix-c>.fn-pk{transition:none}
 }
 `
