@@ -682,6 +682,9 @@ export function createMapEngine(
 		if (e.pointerType === "mouse") e.preventDefault()
 		canvas.setPointerCapture?.(e.pointerId)
 		const p = local(e)
+		// A finger already resting on the card joins this one in a pinch.
+		for (const [id, q] of held) pts.set(id, q)
+		held.clear()
 		pts.set(e.pointerId, p)
 		flight = null
 		vel = { x: 0, y: 0 }
@@ -698,18 +701,47 @@ export function createMapEngine(
 						hooks.current.onLongPress(d)
 					}
 				}, 380)
-		} else if (pts.size === 2) {
-			if (press) clearTimeout(press)
-			press = null
-			drag = null
-			const [a, b] = [...pts.values()]
-			pinch = {
-				d: Math.hypot(a.x - b.x, a.y - b.y),
-				cx: (a.x + b.x) / 2,
-				cy: (a.y + b.y) / 2,
-			}
-			pinchFrom = cur.s
+		} else if (pts.size === 2) startPinch()
+	}
+	function startPinch() {
+		if (press) clearTimeout(press)
+		press = null
+		drag = null
+		const [a, b] = [...pts.values()]
+		pinch = {
+			d: Math.hypot(a.x - b.x, a.y - b.y),
+			cx: (a.x + b.x) / 2,
+			cy: (a.y + b.y) / 2,
 		}
+		pinchFrom = cur.s
+	}
+	/** Touch fingers down on the card over the map: kept aside until a second finger makes them a pinch. */
+	const held = new Map<number, { x: number; y: number }>()
+	/**
+	 * A touch event from the card over the map. One finger there is the card's; with a second finger (on the card or on
+	 * the map) the two pinch the map. True while the event is the map's.
+	 */
+	function forward(e: PointerEvent) {
+		if (e.pointerType !== "touch") return false
+		if (pts.has(e.pointerId)) {
+			if (e.type === "pointermove") onMove(e)
+			else onUp(e)
+			return true
+		}
+		if (e.type === "pointerdown") {
+			held.set(e.pointerId, local(e))
+			if (held.size + pts.size < 2) return false
+			for (const [id, q] of held) pts.set(id, q)
+			held.clear()
+			flight = null
+			vel = { x: 0, y: 0 }
+			startPinch()
+			return true
+		}
+		if (e.type === "pointermove") {
+			if (held.has(e.pointerId)) held.set(e.pointerId, local(e))
+		} else held.delete(e.pointerId)
+		return false
 	}
 	function onMove(e: PointerEvent) {
 		const p = local(e)
@@ -1385,6 +1417,7 @@ export function createMapEngine(
 	resize()
 
 	return {
+		forward,
 		/** Shows a grouping's islands, laid out in `next`; `key` names the grouping and filters for cached surfaces. */
 		setWorld(next: World, inputs: IslandInput[], key: string) {
 			const first = !world

@@ -37,138 +37,160 @@ export function useTutorial(member: boolean, userLoading: boolean) {
 	return [show, () => setShow(false)] as const
 }
 
-/** Two islands to show combining: the one nearest the middle of the view, and its nearest neighbor. */
-const pickPair = (
-	islands: MapIsland[],
-	w: number,
-	h: number,
-): [MapIsland, MapIsland] | null => {
-	const on = islands.filter(
-		(i) => i.on && !i.bridge && i.sx > 0 && i.sx < w && i.sy > 0 && i.sy < h,
+/** What the tutorial asks for now: light an island, light a second one, zoom into the bridge, and separate. */
+export type TutorialStep = "one" | "two" | "zoom" | "separate"
+
+/** On screen: its middle inside the view. */
+const shown = (i: MapIsland, w: number, h: number) =>
+	i.on && !i.bridge && i.sx > 0 && i.sx < w && i.sy > 0 && i.sy < h
+const dist = (a: MapIsland, x: number, y: number) =>
+	Math.hypot(a.sx - x, a.sy - y)
+const nearest = (list: MapIsland[], x: number, y: number) =>
+	list.reduce<MapIsland | null>(
+		(m, i) => (!m || dist(i, x, y) < dist(m, x, y) ? i : m),
+		null,
 	)
-	if (on.length < 2) return null
-	const dist = (a: { sx: number; sy: number }, x: number, y: number) =>
-		Math.hypot(a.sx - x, a.sy - y)
-	const a = on.reduce((m, i) =>
-		dist(i, w / 2, h / 2) < dist(m, w / 2, h / 2) ? i : m,
-	)
-	const rest = on.filter((i) => i !== a)
-	const b = rest.reduce((m, i) =>
-		dist(i, a.sx, a.sy) < dist(m, a.sx, a.sy) ? i : m,
-	)
-	return [a, b]
-}
 
 /**
- * A looping walkthrough over the map, played on the real islands: a tap (a click on desktop) on one island, then on
- * another, the bridge rising between them, and a pinch (a scroll on desktop) to zoom in. It never takes a pointer; the
- * first touch, click, scroll, or key on the map ends it and does what it does.
+ * The walkthrough over the map, one step at a time on the real islands; each step's gesture loops until the viewer
+ * does it: a tap (a click on desktop) on an island, a tap on a second one, a pinch (a scroll on desktop) into the
+ * bridge that rises between them, then Separate (lit up in the combine bar) to start over. It never takes a pointer
+ * but its Skip button.
  */
 export function Tutorial({
 	engine,
 	touch,
+	step,
+	lit,
+	shares,
+	onSkip,
 }: {
 	engine: MapEngine | null
 	/** A touch screen: a finger and a pinch, instead of a cursor and a wheel. */
 	touch: boolean
+	step: TutorialStep
+	/** The lit island, for the second tap. */
+	lit: string | null
+	/** Whether two islands share any titles, so the second tap raises a bridge (unknown counts as yes). */
+	shares: (a: string, b: string) => boolean
+	onSkip: () => void
 }) {
 	const el = useRef<HTMLDivElement>(null)
-	const [names, setNames] = useState<[string, string] | null>(null)
+	const sharesRef = useRef(shares)
+	sharesRef.current = shares
+	/** The island the gesture is on, so its animation starts over for a new one. */
+	const [target, setTarget] = useState<string | null>(null)
 	useEffect(() => {
-		if (!engine) return
-		let pair: [string, string] | null = null
+		const root = el.current
+		if (!engine || !root || step === "separate") return
+		let picked: string | null = null
 		const update = () => {
-			const root = el.current
-			if (!root) return
 			const { w, h } = engine.size()
-			// The same two islands for as long as they're on screen, so the loop doesn't jump.
-			let a = pair ? engine.island(pair[0]) : null
-			let b = pair ? engine.island(pair[1]) : null
-			if (!a?.on || !b?.on) {
-				const picked = pickPair(engine.islands(), w, h)
-				if (!picked) {
-					root.style.visibility = "hidden"
-					return
-				}
-				;[a, b] = picked
-				pair = [a.id, b.id]
-				setNames([a.name, b.name])
+			const set = (k: string, v: number) =>
+				root.style.setProperty(k, `${Math.round(v)}px`)
+			const hide = () => {
+				root.style.visibility = "hidden"
 			}
-			if (!a || !b) return
-			const mx = (a.sx + b.sx) / 2
-			const my = (a.sy + b.sy) / 2
-			const set = (k: string, v: number, unit = "px") =>
-				root.style.setProperty(k, `${Math.round(v * 10) / 10}${unit}`)
-			set("--ax", a.sx)
-			set("--ay", a.sy)
-			set("--ar", Math.max(40, Math.min(a.sr, 140)))
-			set("--bx", b.sx)
-			set("--by", b.sy)
-			set("--br", Math.max(40, Math.min(b.sr, 140)))
-			set("--mx", mx)
-			set("--my", my)
-			// The finger comes in from below the middle of the view.
-			set("--sx", w / 2)
-			set("--sy", h - 40)
-			set("--len", Math.hypot(b.sx - a.sx, b.sy - a.sy))
-			set("--ang", Math.atan2(b.sy - a.sy, b.sx - a.sx), "rad")
+			if (step === "zoom") {
+				const b = engine.bridge()
+				if (!b?.on) return hide()
+				set("--tx", b.sx)
+				set("--ty", b.sy)
+			} else {
+				// The same island for as long as it's on screen, so the loop doesn't jump.
+				let to = picked ? engine.island(picked) : null
+				const from = lit ? engine.island(lit) : null
+				if (!to || !shown(to, w, h)) {
+					const on = engine.islands().filter((i) => shown(i, w, h))
+					if (step === "one") to = nearest(on, w / 2, h / 2)
+					else if (from) {
+						const others = on.filter((i) => i !== from)
+						const sharing = others.filter((i) =>
+							sharesRef.current(from.id, i.id),
+						)
+						to = nearest(sharing.length ? sharing : others, from.sx, from.sy)
+					}
+					picked = to?.id ?? null
+					setTarget(picked)
+				}
+				if (!to) return hide()
+				set("--tx", to.sx)
+				set("--ty", to.sy)
+				// The pointer comes in from the lit island, or from below and to the side for the first tap.
+				set("--fx", from ? from.sx : to.sx + Math.min(140, w * 0.2))
+				set("--fy", from ? from.sy : to.sy + 150)
+			}
 			root.style.visibility = "visible"
 		}
 		update()
 		return engine.subscribe(update)
-	}, [engine])
+	}, [engine, step, lit])
 
 	const tap = touch ? "Tap" : "Click"
-	const pointer = touch ? <Finger /> : <Cursor />
+	const say =
+		step === "one"
+			? `${tap} an island`
+			: step === "two"
+				? `${tap} another island to combine them`
+				: step === "zoom"
+					? touch
+						? "Pinch to zoom in"
+						: "Scroll to zoom in"
+					: `${tap} Separate to start over`
 	return (
-		<div
-			ref={el}
-			className={`ex-tut ${touch ? "ex-tut-touch" : "ex-tut-mouse"}`}
-			style={{ visibility: "hidden" }}
-			aria-hidden="true"
-		>
-			<div className="ex-tut-lit ex-tut-lit-a" />
-			<div className="ex-tut-lit ex-tut-lit-b" />
-			<div className="ex-tut-ripple ex-tut-ripple-a" />
-			<div className="ex-tut-ripple ex-tut-ripple-b" />
-			<div className="ex-tut-beam" />
-			<div className="ex-tut-burst" />
-			{names && (
-				<div className="ex-tut-pair">
-					{names[0]} + {names[1]}
-				</div>
-			)}
-			<div className="ex-tut-hand">{pointer}</div>
-			<div className="ex-tut-zoom">
-				<div className="ex-tut-rings">
-					<span />
-					<span />
-					<span />
-				</div>
-				{touch ? (
-					<>
-						<div className="ex-tut-pinch ex-tut-pinch-1">
-							<Finger />
+		<>
+			<div
+				ref={el}
+				className="ex-tut"
+				style={{ visibility: step === "separate" ? "visible" : "hidden" }}
+				aria-hidden="true"
+			>
+				{(step === "one" || step === "two") && (
+					<div key={`${step}|${target}`} className="ex-tut-tap">
+						<div className="ex-tut-ripple" />
+						<div className="ex-tut-hand">{touch ? <Finger /> : <Cursor />}</div>
+					</div>
+				)}
+				{step === "zoom" && (
+					<div className="ex-tut-zoom">
+						<div className="ex-tut-rings">
+							<span />
+							<span />
+							<span />
 						</div>
-						<div className="ex-tut-pinch ex-tut-pinch-2">
-							<Finger />
-						</div>
-					</>
-				) : (
-					<Mouse />
+						{touch ? (
+							<>
+								<div className="ex-tut-pinch ex-tut-pinch-1">
+									<Finger />
+								</div>
+								<div className="ex-tut-pinch ex-tut-pinch-2">
+									<Finger />
+								</div>
+							</>
+						) : (
+							<Mouse />
+						)}
+					</div>
 				)}
 			</div>
-			<p className="ex-tut-say">
-				<span className="ex-tut-say-1">{tap} an island</span>
-				<span className="ex-tut-say-2">{tap} another one</span>
-				<span className="ex-tut-say-3">See what they share</span>
-				<span className="ex-tut-say-4">
-					{touch ? "Pinch to zoom in" : "Scroll to zoom in"}
-				</span>
-			</p>
-		</div>
+			<div className="ex-tut-say">
+				<p key={step} aria-live="polite">
+					{say}
+				</p>
+				<button type="button" onClick={onSkip}>
+					Skip
+				</button>
+			</div>
+		</>
 	)
 }
+
+/** Lights up a button the tutorial points at, with a pointer pressing it. */
+export const Press = ({ touch }: { touch: boolean }) => (
+	<span className="ex-tut-press" aria-hidden="true">
+		{touch ? <Finger /> : <Cursor />}
+	</span>
+)
 
 /** A fingertip, its touch point at the element's top left. */
 const Finger = () => (

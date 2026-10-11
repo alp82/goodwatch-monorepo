@@ -42,7 +42,7 @@ import { Minimap } from "./Minimap"
 import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { Caption, ProximityCard } from "./ProximityCard"
 import { TopBar } from "./TopBar"
-import { Tutorial, useTutorial } from "./Tutorial"
+import { Tutorial, type TutorialStep, useTutorial } from "./Tutorial"
 import { ZoomRail } from "./ZoomRail"
 import {
 	type MapQuery,
@@ -332,25 +332,43 @@ export function ExplorerMap({
 		setTouch(window.matchMedia?.("(pointer: coarse)").matches ?? false)
 	}, [])
 	const [tutorial, endTutorial] = useTutorial(member, userLoading)
-	// The tutorial plays until the viewer first touches, clicks, scrolls, or presses a key on the map.
-	useEffect(() => {
-		const el = stage.current
-		if (!tutorial || !el) return
-		const opts = { capture: true, passive: true }
-		el.addEventListener("pointerdown", endTutorial, opts)
-		el.addEventListener("wheel", endTutorial, opts)
-		el.addEventListener("keydown", endTutorial, opts)
-		return () => {
-			el.removeEventListener("pointerdown", endTutorial, opts)
-			el.removeEventListener("wheel", endTutorial, opts)
-			el.removeEventListener("keydown", endTutorial, opts)
-		}
-	}, [tutorial])
 	const cardEl = useRef<HTMLDivElement>(null)
 	const anchorEl = useRef<HTMLDivElement>(null)
 	const goEl = useRef<HTMLDivElement>(null)
 	const previewEl = useRef<HTMLDivElement>(null)
 	const captionEls = useRef(new Map<string, HTMLDivElement>())
+	const layerEl = useRef<HTMLDivElement>(null)
+
+	// Fingers on the card (or a caption) pinch the map too: one of two there, or both.
+	useEffect(() => {
+		const el = layerEl.current
+		if (!el) return
+		let pinchedAt = 0
+		const on = (ev: PointerEvent) => {
+			if (!engineRef.current?.forward(ev)) return
+			pinchedAt = performance.now()
+			ev.stopPropagation()
+		}
+		// The finger lifting off the card after a pinch doesn't press what's under it.
+		const click = (ev: MouseEvent) => {
+			if (performance.now() - pinchedAt < 400) {
+				ev.preventDefault()
+				ev.stopPropagation()
+			}
+		}
+		const kinds = [
+			"pointerdown",
+			"pointermove",
+			"pointerup",
+			"pointercancel",
+		] as const
+		for (const k of kinds) el.addEventListener(k, on, true)
+		el.addEventListener("click", click, true)
+		return () => {
+			for (const k of kinds) el.removeEventListener(k, on, true)
+			el.removeEventListener("click", click, true)
+		}
+	}, [])
 
 	/** The card's data loads once the title has stayed nearest for a moment (at once when pinned). */
 	const [cardKey, setCardKey] = useState<number | null>(null)
@@ -420,6 +438,8 @@ export function ExplorerMap({
 	/** Islands being combined while their bridge loads. */
 	const [forming, setForming] = useState<[string, string] | null>(null)
 	const [hover, setHover] = useState<MapIsland | null>(null)
+	/** The tutorial has asked for Separate: the next time the bridge goes, it's done. */
+	const [toldSeparate, setToldSeparate] = useState(false)
 	/** Combining has been used once: the hint steps aside. */
 	const [combined, setCombined] = useState(false)
 	/** Changes with every grouping, filter, and layout, so answers for an earlier map are dropped. */
@@ -1036,6 +1056,20 @@ export function ExplorerMap({
 		engineRef.current?.setPreview(previewPair)
 	}, [previewPair?.from, previewPair?.to])
 
+	/** The tutorial's step: it follows what the viewer has done, and ends once they've separated a bridge. */
+	let tutStep: TutorialStep | null = null
+	if (tutorial && map && !active?.pinned) {
+		if (bridge || forming) tutStep = focusIsland ? "separate" : "zoom"
+		else if (lit.length === 1) tutStep = "two"
+		else if (!lit.length && atOverview) tutStep = "one"
+	}
+	useEffect(() => {
+		if (tutStep === "separate") setToldSeparate(true)
+	}, [tutStep])
+	useEffect(() => {
+		if (toldSeparate && !bridge && !forming) endTutorial()
+	}, [toldSeparate, bridge, forming])
+
 	// ------------------------------------------------------------ keyboard
 
 	const keys = useRef({ pin, unpin, separate, flyIn, setLit })
@@ -1265,7 +1299,7 @@ export function ExplorerMap({
 				}
 			/>
 			{fallback}
-			<div className="ex-layer">
+			<div ref={layerEl} className="ex-layer">
 				{captions.map((d) => {
 					const id = `${d.island.id}\n${d.title.key}`
 					return (
@@ -1365,6 +1399,7 @@ export function ExplorerMap({
 							const island = b && e?.island(b.id)
 							if (e && island) e.flyToIsland(island)
 						}}
+						nudge={tutStep === "separate" ? { touch } : null}
 					/>
 				</div>
 			)}
@@ -1446,10 +1481,18 @@ export function ExplorerMap({
 					</span>
 				</div>
 			)}
-			{map && !active?.pinned && !bar && atOverview && tutorial ? (
-				<Tutorial engine={engine} touch={touch} />
+			{tutStep ? (
+				<Tutorial
+					engine={engine}
+					touch={touch}
+					step={tutStep}
+					lit={lit.length === 1 ? lit[0] : null}
+					shares={(a, b) => pairs?.get(pairKey(a, b))?.count !== 0}
+					onSkip={endTutorial}
+				/>
 			) : (
 				map &&
+				!tutorial &&
 				!active &&
 				!bar &&
 				!combined &&

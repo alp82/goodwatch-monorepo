@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { BridgeKind } from "~/domain/explorer"
+import { Press } from "./Tutorial"
 
 export interface Side {
 	id: string
@@ -41,11 +42,14 @@ export function CombineBar({
 	state,
 	onUndo,
 	onGo,
+	nudge,
 }: {
 	state: BarState
 	onUndo: () => void
 	/** Frames the bridge (its name is a button). */
 	onGo: () => void
+	/** The tutorial points at the way back: on a touch screen with a finger, else with a cursor. */
+	nudge?: { touch: boolean } | null
 }) {
 	let body: ReactNode
 	let undo: string | null = null
@@ -89,7 +93,11 @@ export function CombineBar({
 		<div className="ex-bar">
 			<div className="ex-bar-body">{body}</div>
 			{undo && (
-				<button type="button" className="ex-bar-x" onClick={onUndo}>
+				<button
+					type="button"
+					className={nudge ? "ex-bar-x ex-tut-glow" : "ex-bar-x"}
+					onClick={onUndo}
+				>
 					<svg viewBox="0 0 12 12" aria-hidden="true">
 						<path
 							d="M2.5 2.5l7 7M9.5 2.5l-7 7"
@@ -99,6 +107,7 @@ export function CombineBar({
 						/>
 					</svg>
 					{undo}
+					{nudge && <Press touch={nudge.touch} />}
 				</button>
 			)}
 		</div>

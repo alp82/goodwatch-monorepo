@@ -798,6 +798,8 @@ body:has(.ex-stage) > main {
 }
 .ex-card-sheet.ex-card-peek {
 	cursor: pointer;
+	/* Nothing to scroll in the peek: two fingers on it pinch the map. */
+	touch-action: none;
 }
 .ex-card-sheet.ex-card-peek .ex-card-hero {
 	height: 84px;
@@ -1281,28 +1283,21 @@ body:has(.ex-stage) > main {
 	}
 }
 
-/* ---- tutorial: a looping walkthrough on the real islands (positions come in as --ax, --bx, --mx… from the map).
-   One 10 s timeline: tap A (to 24%), tap B (to 44%), the bridge (to 66%), zoom (to 94%). */
+/* ---- tutorial: one step at a time on the real islands (the target comes in as --tx/--ty, the start as --fx/--fy).
+   Each step's gesture loops until the viewer does it. */
 .ex-tut {
-	--tut: 10s;
 	position: absolute;
 	inset: 0;
 	z-index: 24;
 	pointer-events: none;
 	overflow: hidden;
 }
-.ex-tut > * {
+.ex-tut-tap,
+.ex-tut-tap > *,
+.ex-tut-zoom {
 	position: absolute;
 	left: 0;
 	top: 0;
-	animation: var(--tut) linear infinite both;
-}
-.ex-tut-hand {
-	z-index: 3;
-	transform-origin: 0 0;
-	animation-name: ex-tut-hand;
-	animation-timing-function: cubic-bezier(0.45, 0, 0.3, 1);
-	filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
 }
 .ex-tut-finger {
 	display: block;
@@ -1314,140 +1309,43 @@ body:has(.ex-stage) > main {
 	width: 58px;
 	height: 72px;
 }
-@keyframes ex-tut-hand {
-	0% { transform: translate(var(--sx), var(--sy)) scale(1); opacity: 0; }
-	5% { transform: translate(var(--sx), var(--sy)) scale(1); opacity: 1; }
-	15% { transform: translate(var(--ax), var(--ay)) scale(1); }
-	18% { transform: translate(var(--ax), var(--ay)) scale(0.78); }
-	22% { transform: translate(var(--ax), var(--ay)) scale(1); }
-	33% { transform: translate(var(--bx), var(--by)) scale(1); }
-	36% { transform: translate(var(--bx), var(--by)) scale(0.78); }
-	40% { transform: translate(var(--bx), var(--by)) scale(1); opacity: 1; }
-	46% { transform: translate(calc(var(--bx) + 40px), calc(var(--by) + 60px)) scale(1); opacity: 0; }
-	100% { transform: translate(calc(var(--bx) + 40px), calc(var(--by) + 60px)) scale(1); opacity: 0; }
+.ex-tut-hand {
+	z-index: 1;
+	transform-origin: 0 0;
+	filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
+	animation: ex-tut-hand 2.6s cubic-bezier(0.45, 0, 0.3, 1) infinite both;
 }
-
-/* The tap: a ripple, then the island stays lit until the bridge has risen. */
-.ex-tut-ripple,
-.ex-tut-lit {
-	border-radius: 50%;
-	opacity: 0;
+@keyframes ex-tut-hand {
+	0% { transform: translate(var(--fx), var(--fy)) scale(1); opacity: 0; }
+	12% { transform: translate(var(--fx), var(--fy)) scale(1); opacity: 1; }
+	48% { transform: translate(var(--tx), var(--ty)) scale(1); }
+	55% { transform: translate(var(--tx), var(--ty)) scale(0.78); }
+	63% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 1; }
+	88%, 100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; }
 }
 .ex-tut-ripple {
-	width: 120px;
-	height: 120px;
-	margin: -60px 0 0 -60px;
-	border: 4px solid #fff;
-	box-shadow: 0 0 24px rgba(255, 255, 255, 0.6);
-}
-.ex-tut-ripple-a {
-	transform: translate(var(--ax), var(--ay));
-	animation-name: ex-tut-ripple-a;
-}
-.ex-tut-ripple-b {
-	transform: translate(var(--bx), var(--by));
-	animation-name: ex-tut-ripple-b;
-}
-@keyframes ex-tut-ripple-a {
-	0%, 17.9% { opacity: 0; transform: translate(var(--ax), var(--ay)) scale(0.2); }
-	18% { opacity: 1; transform: translate(var(--ax), var(--ay)) scale(0.2); }
-	27%, 100% { opacity: 0; transform: translate(var(--ax), var(--ay)) scale(2.2); }
-}
-@keyframes ex-tut-ripple-b {
-	0%, 35.9% { opacity: 0; transform: translate(var(--bx), var(--by)) scale(0.2); }
-	36% { opacity: 1; transform: translate(var(--bx), var(--by)) scale(0.2); }
-	45%, 100% { opacity: 0; transform: translate(var(--bx), var(--by)) scale(2.2); }
-}
-.ex-tut-lit {
-	border: 3px solid rgba(251, 191, 36, 0.95);
-	box-shadow: 0 0 40px rgba(251, 191, 36, 0.55), inset 0 0 40px rgba(251, 191, 36, 0.3);
-}
-.ex-tut-lit-a {
-	width: calc(var(--ar) * 2);
-	height: calc(var(--ar) * 2);
-	transform: translate(calc(var(--ax) - var(--ar)), calc(var(--ay) - var(--ar)));
-	animation-name: ex-tut-lit-a;
-}
-.ex-tut-lit-b {
-	width: calc(var(--br) * 2);
-	height: calc(var(--br) * 2);
-	transform: translate(calc(var(--bx) - var(--br)), calc(var(--by) - var(--br)));
-	animation-name: ex-tut-lit-b;
-}
-@keyframes ex-tut-lit-a {
-	0%, 18% { opacity: 0; }
-	21%, 60% { opacity: 1; }
-	66%, 100% { opacity: 0; }
-}
-@keyframes ex-tut-lit-b {
-	0%, 36% { opacity: 0; }
-	39%, 60% { opacity: 1; }
-	66%, 100% { opacity: 0; }
-}
-
-/* The combine: a beam of light from the first island to the second, a burst where they meet, and their names. */
-.ex-tut-beam {
-	width: var(--len);
-	height: 10px;
-	margin-top: -5px;
-	border-radius: 5px;
-	background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), #fde68a 50%, rgba(251, 191, 36, 0.2));
-	box-shadow: 0 0 28px rgba(251, 191, 36, 0.8);
-	transform-origin: 0 50%;
-	transform: translate(var(--ax), var(--ay)) rotate(var(--ang)) scaleX(0);
-	animation-name: ex-tut-beam;
-}
-@keyframes ex-tut-beam {
-	0%, 42% { opacity: 0; transform: translate(var(--ax), var(--ay)) rotate(var(--ang)) scaleX(0); }
-	43% { opacity: 1; }
-	52% { opacity: 1; transform: translate(var(--ax), var(--ay)) rotate(var(--ang)) scaleX(1); }
-	62% { opacity: 1; transform: translate(var(--ax), var(--ay)) rotate(var(--ang)) scaleX(1); }
-	68%, 100% { opacity: 0; transform: translate(var(--ax), var(--ay)) rotate(var(--ang)) scaleX(1); }
-}
-.ex-tut-burst {
-	width: 160px;
-	height: 160px;
-	margin: -80px 0 0 -80px;
+	width: 130px;
+	height: 130px;
+	margin: -65px 0 0 -65px;
 	border-radius: 50%;
-	background: radial-gradient(circle, #fff7d6 0%, rgba(251, 191, 36, 0.75) 30%, rgba(251, 191, 36, 0) 70%);
+	border: 4px solid #fff;
+	box-shadow: 0 0 24px rgba(255, 255, 255, 0.6), inset 0 0 24px rgba(255, 255, 255, 0.35);
 	opacity: 0;
-	animation-name: ex-tut-burst;
+	animation: ex-tut-ripple 2.6s ease-out infinite both;
 }
-@keyframes ex-tut-burst {
-	0%, 49% { opacity: 0; transform: translate(var(--mx), var(--my)) scale(0.1); }
-	53% { opacity: 1; transform: translate(var(--mx), var(--my)) scale(1.25); }
-	58% { opacity: 0.85; transform: translate(var(--mx), var(--my)) scale(0.9); }
-	66%, 100% { opacity: 0; transform: translate(var(--mx), var(--my)) scale(1.6); }
-}
-.ex-tut-pair {
-	z-index: 2;
-	padding: 10px 18px;
-	border-radius: 14px;
-	background: var(--glass-2);
-	border: 1px solid rgba(251, 191, 36, 0.6);
-	box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
-	font-size: 20px;
-	font-weight: 800;
-	white-space: nowrap;
-	opacity: 0;
-	animation-name: ex-tut-pair;
-}
-@keyframes ex-tut-pair {
-	0%, 52% { opacity: 0; transform: translate(var(--mx), var(--my)) translate(-50%, 30px) scale(0.8); }
-	56%, 63% { opacity: 1; transform: translate(var(--mx), var(--my)) translate(-50%, 46px) scale(1); }
-	67%, 100% { opacity: 0; transform: translate(var(--mx), var(--my)) translate(-50%, 46px) scale(1); }
+@keyframes ex-tut-ripple {
+	0%, 54.9% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.2); }
+	55% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(0.2); }
+	85%, 100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(2.4); }
 }
 
-/* The zoom: a mouse wheel turning (or two fingers spreading) where the islands met, the view widening around it. */
+/* The zoom: a mouse wheel turning (or two fingers spreading) on the bridge, the view widening around it. */
 .ex-tut-zoom {
-	z-index: 3;
-	opacity: 0;
-	animation-name: ex-tut-zoom;
+	transform: translate(var(--tx), var(--ty));
+	animation: ex-tut-fade 0.3s ease-out both;
 }
-@keyframes ex-tut-zoom {
-	0%, 66% { opacity: 0; transform: translate(var(--mx), var(--my)) scale(0.85); }
-	70%, 90% { opacity: 1; transform: translate(var(--mx), var(--my)) scale(1); }
-	95%, 100% { opacity: 0; transform: translate(var(--mx), var(--my)) scale(1); }
+@keyframes ex-tut-fade {
+	from { opacity: 0; }
 }
 .ex-tut-zoom > * {
 	position: absolute;
@@ -1511,64 +1409,89 @@ body:has(.ex-stage) > main {
 	100% { transform: translate(90px, -90px); opacity: 0; }
 }
 
-/* What each step is, big, at the foot of the map. */
+/* Separate, lit up in the combine bar, with a pointer pressing it. */
+.ex-bar-x.ex-tut-glow {
+	position: relative;
+	background: rgba(251, 191, 36, 0.28);
+	animation: ex-tut-glow 1.3s ease-in-out infinite;
+}
+@keyframes ex-tut-glow {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.9), 0 0 18px rgba(251, 191, 36, 0.5); }
+	60% { box-shadow: 0 0 0 12px rgba(251, 191, 36, 0), 0 0 30px rgba(251, 191, 36, 0.8); }
+}
+.ex-tut-press {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	pointer-events: none;
+	transform-origin: 0 0;
+	filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
+	animation: ex-tut-press 1.3s cubic-bezier(0.45, 0, 0.3, 1) infinite;
+}
+.ex-tut-press .ex-tut-finger {
+	width: 72px;
+	height: 72px;
+}
+.ex-tut-press .ex-tut-cursor {
+	width: 44px;
+	height: 55px;
+}
+@keyframes ex-tut-press {
+	0% { transform: translate(26px, 34px) scale(1); opacity: 0; }
+	25% { transform: translate(6px, 8px) scale(1); opacity: 1; }
+	40% { transform: translate(6px, 8px) scale(0.8); }
+	55% { transform: translate(6px, 8px) scale(1); opacity: 1; }
+	85%, 100% { transform: translate(6px, 8px) scale(1); opacity: 0; }
+}
+
+/* What the step asks for, big, at the foot of the map (above the card's sheet on phones), and the way out. */
 .ex-tut-say {
 	position: absolute;
-	inset: auto 0 88px 0;
-	animation: none;
-	height: 52px;
-	display: grid;
-	justify-items: center;
+	left: 12px;
+	right: 12px;
+	bottom: calc(88px + var(--ex-sheet, 0px));
+	z-index: 32;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	pointer-events: none;
 }
-.ex-tut-say span {
-	grid-area: 1 / 1;
+.ex-tut-say p {
 	padding: 12px 24px;
 	border-radius: 999px;
 	background: var(--glass-2);
-	border: 1px solid var(--line-2);
+	border: 1px solid rgba(251, 191, 36, 0.55);
 	backdrop-filter: blur(18px);
 	-webkit-backdrop-filter: blur(18px);
 	box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
 	font-size: 22px;
 	font-weight: 800;
-	white-space: nowrap;
-	opacity: 0;
-	animation: var(--tut) linear infinite both;
+	text-align: center;
+	animation: ex-pop-in 0.3s ease-out both;
 }
-.ex-tut-say .ex-tut-say-1 { animation-name: ex-tut-say-1; }
-.ex-tut-say .ex-tut-say-2 { animation-name: ex-tut-say-2; }
-.ex-tut-say .ex-tut-say-3 { animation-name: ex-tut-say-3; }
-.ex-tut-say .ex-tut-say-4 { animation-name: ex-tut-say-4; }
-@keyframes ex-tut-say-1 {
-	0%, 2% { opacity: 0; }
-	5%, 22% { opacity: 1; }
-	25%, 100% { opacity: 0; }
+.ex-tut-say button {
+	pointer-events: auto;
+	min-height: 44px;
+	padding: 0 16px;
+	border-radius: 999px;
+	background: var(--glass);
+	border: 1px solid var(--line);
+	color: var(--mute);
+	font-size: 15px;
+	font-weight: 600;
 }
-@keyframes ex-tut-say-2 {
-	0%, 24% { opacity: 0; }
-	26%, 41% { opacity: 1; }
-	44%, 100% { opacity: 0; }
-}
-@keyframes ex-tut-say-3 {
-	0%, 43% { opacity: 0; }
-	46%, 63% { opacity: 1; }
-	66%, 100% { opacity: 0; }
-}
-@keyframes ex-tut-say-4 {
-	0%, 65% { opacity: 0; }
-	68%, 92% { opacity: 1; }
-	95%, 100% { opacity: 0; }
+.ex-tut-say button:hover {
+	color: #fff;
 }
 @media (max-width: 1023px) {
 	.ex-tut-say {
-		bottom: 104px;
+		bottom: calc(104px + var(--ex-sheet, 0px));
 	}
-	.ex-tut-say span {
+	.ex-tut-say p {
 		font-size: 19px;
 		padding: 11px 20px;
-	}
-	.ex-tut-pair {
-		font-size: 17px;
 	}
 }
 @media (prefers-reduced-motion: reduce) {
