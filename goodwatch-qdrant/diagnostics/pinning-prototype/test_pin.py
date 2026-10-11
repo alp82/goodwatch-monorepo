@@ -101,6 +101,24 @@ class PinTests(unittest.TestCase):
         manager.release(); self.assertEqual(manager.mappings,{})
         self.assertEqual(locked_bytes(),self.baseline)
 
+    def test_cap_guard_survives_failed_cleanup_with_real_locks_tracked(self):
+        kernel=TrackingKernel();manager=self.manager(kernel)
+        manager.reconcile([self.target()],('fixture',1),self.memory)
+        held=next(iter(manager.mappings.values()));fd=held.target.fd
+        kernel.fail_unmap=1
+        constrained=dict(self.memory);constrained['anonBytes']=constrained['cgroupMaxBytes']
+        with self.assertRaises(RuntimeError) as caught:
+            manager.reconcile([self.target()],('fixture',1),constrained)
+        self.assertEqual(pin.safe_reason(caught.exception),'target_anon_kernel_exceeds_cgroup_cap')
+        self.assertEqual(pin.failure_details(caught.exception),{
+            'cleanupFailureReasons':['guard_or_runtime_failure'],
+            'releaseState':{'released':False,'heldMappingCount':1}})
+        self.assertEqual(held.target.fd,fd);self.assertGreaterEqual(manager.lock_fd,0)
+        self.assertGreater(locked_bytes(),self.baseline)
+        with self.assertRaises(BlockingIOError):pin.PinSet(self.policy,self.root/'pin.lock')
+        manager.release();self.assertEqual(locked_bytes(),self.baseline)
+        self.assertEqual(manager.release_state(),{'released':True,'heldMappingCount':0})
+
     def test_unchanged_reconciliation_does_not_unlock_or_relock_old_pages(self):
         kernel = TrackingKernel(); manager = self.manager(kernel)
         first = manager.reconcile([self.target()],('fixture',1),self.memory); count = len(kernel.operations)

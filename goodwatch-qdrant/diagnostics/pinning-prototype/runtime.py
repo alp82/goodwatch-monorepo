@@ -7,7 +7,7 @@ import resource
 import stat
 import subprocess
 
-from pin import CLASSES, PAGE, Kernel, Mapping, Target, byte_count, classify, page_ranges, selection_digest
+from pin import CLASSES, PAGE, Kernel, Mapping, Target, byte_count, classify, page_ranges, selection_digest, release_preserving_error
 
 
 @dataclass(frozen=True)
@@ -204,8 +204,8 @@ def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check
                       'memoryEventDelta': event_delta, 'cpuLimitDelta': cpu_delta, 'clonePressureMaxAllowed': pressure_max_allowed,
                       'existingPageChargeMayDiffer': True, 'allExistingPageChargesInsideTargetCgroupProven': False})
         return state
-    except Exception:
-        manager.release()
+    except Exception as original:
+        release_preserving_error(manager, original)
         raise
     finally:
         for target in targets:

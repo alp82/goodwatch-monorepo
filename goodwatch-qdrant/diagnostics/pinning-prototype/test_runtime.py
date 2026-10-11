@@ -82,6 +82,26 @@ class RuntimeTests(unittest.TestCase):
             with self.assertRaises(KeyError):runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
         self.assertEqual(manager.mappings,{})
 
+    def test_identity_guard_preserved_when_runtime_cleanup_unmap_fails(self):
+        manager=self.manager();baseline=locked_bytes()
+        with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=self.memory):
+            runtime.reconcile_source(manager,self.spec,source_check=lambda spec:self.source)
+        held={key:(mapping.address,mapping.target.fd) for key,mapping in manager.mappings.items()}
+        manager.kernel.fail_unmap=len(held)
+        changed=runtime.Source(('changed','image',900,200),900,self.source.cgroup,self.source.cgroup_relative,self.spec)
+        # Three source proofs: initial source, inventory before/after, then changed post-lock proof.
+        checks=iter([self.source,self.source,self.source,changed])
+        with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=self.memory):
+            with self.assertRaises(RuntimeError) as caught:
+                runtime.reconcile_source(manager,self.spec,source_check=lambda spec:next(checks))
+        self.assertEqual(pin.safe_reason(caught.exception),'source_or_emergency_headroom_changed_after_locking')
+        details=pin.failure_details(caught.exception)
+        self.assertEqual(details['cleanupFailureReasons'],['guard_or_runtime_failure'])
+        self.assertEqual(details['releaseState'],{'released':False,'heldMappingCount':4})
+        self.assertEqual(held,{key:(mapping.address,mapping.target.fd) for key,mapping in manager.mappings.items()})
+        self.assertGreater(locked_bytes(),baseline)
+        manager.release();self.assertEqual(locked_bytes(),baseline)
+
     def test_measure_is_readonly_matches_pin_cohort_and_leaves_no_locks(self):
         baseline=locked_bytes()
         with patch.object(runtime,'prepare_self') as prepare,patch.object(runtime,'accounting',return_value=self.memory):

@@ -105,6 +105,28 @@ def safe_reason(error):
     return 'guard_or_runtime_failure'
 
 
+def failure_details(error):
+    """Expose fixed cleanup reasons and tracked state without exception text."""
+    details = getattr(error, '_pin_cleanup_details', None)
+    return {} if details is None else {
+        'cleanupFailureReasons': list(details['cleanupFailureReasons']),
+        'releaseState': dict(details['releaseState']),
+    }
+
+
+def release_preserving_error(manager, original):
+    """Attempt cleanup without replacing the causal guard or losing tracking."""
+    reasons = failure_details(original).get('cleanupFailureReasons', [])
+    try:
+        manager.release()
+    except Exception as cleanup:
+        reasons.append(safe_reason(cleanup))
+    original._pin_cleanup_details = {
+        'cleanupFailureReasons': reasons,
+        'releaseState': manager.release_state(),
+    }
+
+
 def classify(path):
     value = path.lower()
     return ('sparse' if any(token in value for token in ('sparse', 'inverted_index', 'bm25')) else
@@ -400,8 +422,9 @@ class PinSet:
                     'classesMeasured': measured, 'mappingBounds': mapping_bounds, 'nonresidentSelectedBytes': nonresident,
                     'projectedCurrentBytes': projected_current, 'capHeadroomRequired': cap_headroom_required, 'capReserveBytes': self.policy.cap_reserve_bytes, 'lockedResidency': residency, 'pageBytes': PAGE, 'newLockBytes': additional, 'selectionHash': selection_hash, 'rangesChanged': ranges_changed,
                     'extentRangesHashed': True, 'contentFixed': False, 'queries': 0, 'storageWrites': 0}
-        except Exception:
-            self.release(); raise
+        except Exception as original:
+            release_preserving_error(self, original)
+            raise
         finally:
             for target in targets:
                 if all(mapping.target is not target for mapping in self.mappings.values()): target.close()
