@@ -3,6 +3,8 @@
 // and the browser. Nothing here is stored but the time of the last visit, which the server reads and writes
 // (docs/implementation/tracking/data-model.md, "New episodes").
 
+import type { NewEpisodes } from "./new-episodes-signal"
+
 const DAY_MS = 86_400_000
 const midnight = (day: string) => Date.parse(`${day}T00:00:00Z`)
 
@@ -183,20 +185,7 @@ export function newShowsOf(
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// What the signal says
-
-/** What the navigation and home's Continue door are told: how many shows are new, and the show when it is one. */
-export interface NewEpisodes {
-	shows: number
-	only: {
-		title: string
-		season: number
-		number: number
-		episodes: number
-	} | null
-}
-
-export const NOTHING_NEW: NewEpisodes = { shows: 0, only: null }
+// What the signal is told, and what My shows says on arrival
 
 export function summaryOf(fresh: readonly NewShow[]): NewEpisodes {
 	const [first] = fresh
@@ -211,37 +200,6 @@ export function summaryOf(fresh: readonly NewShow[]): NewEpisodes {
 						episodes: first.episodes,
 					}
 				: null,
-	}
-}
-
-export interface SignalWords {
-	/** The number on the Browse button, the dock's key and the My shows tile. */
-	badge: string
-	/** The line of the My shows tile, short enough for one line of a phone's tile. */
-	tile: string
-	/** The pill on home's Continue door, and what a screen reader hears for the badge. */
-	door: string
-	/** The pill on a phone's door. */
-	doorShort: string
-}
-
-/** Null when nothing is new. One show is named; several are counted. */
-export function signalWords(fresh: NewEpisodes): SignalWords | null {
-	const { shows, only } = fresh
-	if (shows < 1) return null
-	const badge = shows > 99 ? "99+" : String(shows)
-	if (only) {
-		const named =
-			only.episodes > 1
-				? `New: ${only.title}, ${only.episodes} episodes`
-				: `New: ${only.title} S${only.season} E${only.number}`
-		return { badge, tile: named, door: named, doorShort: "1 show" }
-	}
-	return {
-		badge,
-		tile: `New in ${shows} shows`,
-		door: `${shows} shows have new episodes`,
-		doorShort: `${shows} shows`,
 	}
 }
 

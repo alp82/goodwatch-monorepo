@@ -11,7 +11,7 @@ import {
 import { ArrowRightIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import type React from "react"
-import type { SignalWords } from "~/domain/new-episodes"
+import type { SignalWords } from "~/domain/new-episodes-signal"
 import { useFeatures } from "~/hooks/useFeature"
 import { myListsPath } from "~/ui/share-card/links"
 import { useUser } from "~/utils/auth"

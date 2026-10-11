@@ -9,7 +9,7 @@ import {
 	type NewEpisodes,
 	type SignalWords,
 	signalWords,
-} from "~/domain/new-episodes"
+} from "~/domain/new-episodes-signal"
 import { useFeature } from "~/hooks/useFeature"
 import { useUserData } from "~/routes/api.user-data"
 import { watchStateSignature } from "~/types/user-data"

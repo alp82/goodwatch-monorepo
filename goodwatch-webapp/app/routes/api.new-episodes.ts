@@ -3,7 +3,8 @@ import {
 	type LoaderFunctionArgs,
 	json,
 } from "@remix-run/node"
-import { NOTHING_NEW, type NewEpisodes, summaryOf } from "~/domain/new-episodes"
+import { summaryOf } from "~/domain/new-episodes"
+import { NOTHING_NEW, type NewEpisodes } from "~/domain/new-episodes-signal"
 import { isEnabled } from "~/server/features.server"
 import { getNewShows, recordMyShowsVisit } from "~/server/new-episodes.server"
 import { getUserIdFromRequest } from "~/utils/auth"
