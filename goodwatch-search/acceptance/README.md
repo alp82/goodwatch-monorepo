@@ -60,3 +60,12 @@ SEARCH_ACCEPTANCE_REPLAY_FROM=YYYY-MM-DDTHH:MM:SS.sssZ
 Run `systemctl daemon-reload` and `systemctl enable --now goodwatch-search-acceptance`. The unit runs fixed read-only Docker commands as root, uses the host Node binary, restricts network sockets to AF_UNIX and can write only its evidence directory. The explicit local Docker socket and empty config avoid dependence on hidden `/root/.docker` credentials/contexts. It does not change app containers. Host Node v20.20.0 was verified read-only on vector1. Inspect `systemctl status`, the journal’s first source/heartbeat records, matching SHAs and fresh heartbeat progression before defining `START_UTC`. Confirm free space and preserve the journal through acceptance review. A collector restart is recorded and fails uninterrupted coverage inside an existing acceptance window.
 
 Rollback: `systemctl disable --now goodwatch-search-acceptance`. Keep existing evidence. After review, remove only this unit, its two installed scripts and its dedicated environment file, then reload systemd. Do not delete the evidence directory as part of rollback.
+
+
+### Passive Qdrant HTTP evidence
+
+`search.qdrant-http.v1` records one anonymous event per completed or failed ranking batch, including batches that finish after the ranking deadline. Its UUID identifies the batch, not an account or search-history row. The collector retains these events through a numeric/fixed-value allowlist; they do not count as searches, errors in the acceptance cohort, or history acknowledgements.
+
+`socketMs`, `dnsMs`, `connectMs`, `secureConnectMs`, `headersMs` and `responseEndMs` are offsets from the batch start. `socketMs` includes agent queueing. DNS/connection offsets are null when no corresponding event occurs, including a reused socket or an IP address without a lookup. `parseMs` is response parsing duration, `serverMs` is Qdrant's reported processing duration, and `totalMs` includes serialization, transport and parsing. `reusedSocket` is Node's request flag. Counts include query count and received response bytes. Fixed failure reasons distinguish timeout, transport, HTTP status and invalid response; no error text, endpoint, collection, payload, vector or account data is emitted.
+
+The diagnostics do not cancel background work or modify timeout, socket pool, admission or ranking settings. A late event helps attribute a timeout but cannot alone establish cold-cache state or acceptance p95.

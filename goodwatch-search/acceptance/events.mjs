@@ -7,6 +7,14 @@ const timing = value => value === null || typeof value === 'number' && Number.is
 export function sanitizeEvent(value) {
   if (!value || typeof value !== 'object' || !iso(value.at)) return null;
   const base = { event: value.event, at: value.at };
+  if (value.event === 'search.qdrant-http.v1') {
+    if (!uuid(value.id) || !['search', 'page'].includes(value.role) || !(value.commit === null || commit(value.commit)) || value.kind !== 'query_batch' || !['completed', 'failed'].includes(value.status) || !['none', 'transport', 'timeout', 'http_status', 'invalid_response'].includes(value.reason) || typeof value.reusedSocket !== 'boolean') return null;
+    if (!(value.httpStatus === null || Number.isInteger(value.httpStatus) && value.httpStatus >= 0 && value.httpStatus <= 599) || !Number.isInteger(value.queryCount) || value.queryCount < 0 || !Number.isInteger(value.responseBytes) || value.responseBytes < 0) return null;
+    if ((value.status === 'completed') !== (value.reason === 'none')) return null;
+    const spans = ['socketMs', 'dnsMs', 'connectMs', 'secureConnectMs', 'headersMs', 'responseEndMs', 'parseMs', 'serverMs', 'totalMs'];
+    if (!spans.every(name => timing(value[name])) || value.totalMs === null) return null;
+    return { ...base, id: value.id, role: value.role, commit: value.commit, kind: value.kind, status: value.status, reason: value.reason, httpStatus: value.httpStatus, queryCount: value.queryCount, reusedSocket: value.reusedSocket, ...Object.fromEntries(spans.map(name => [name, value[name]])), responseBytes: value.responseBytes };
+  }
   if (value.event === 'search.lifecycle.v1') {
     if (!uuid(value.id) || value.role !== 'search' || !(value.commit === null || commit(value.commit))) return null;
     Object.assign(base, { id: value.id, role: value.role, commit: value.commit, phase: value.phase });
@@ -24,7 +32,7 @@ export function parseDockerLine(line, source) {
   if (split < 0 || !iso(dockerAt)) return { ignored: true };
   let raw;
   try { raw = JSON.parse(line.slice(split + 1)); } catch { return { ignored: true }; }
-  const known = ['search.lifecycle.v1', 'search.history-write.v1', 'search.rejection.v1'].includes(raw?.event);
+  const known = ['search.lifecycle.v1', 'search.history-write.v1', 'search.rejection.v1', 'search.qdrant-http.v1'].includes(raw?.event);
   const data = sanitizeEvent(raw);
   if (!data) return known ? { malformed: true } : { ignored: true };
   const record = { type: 'telemetry', source: { role: source.role, containerId: source.containerId, dockerAt }, data };
