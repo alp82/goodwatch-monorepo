@@ -39,6 +39,8 @@ what happens when its data isn't there.
    plain `<a href>` links to the most alike titles. They are out of sight and out of the tab order, for crawlers and
    screen readers. The markup is in the document once: a document's loader data doesn't repeat it, and the browser
    keeps what the document holds. The data of a navigation inside the app carries it.
+   The stage also holds the page title's levels on the twenty traits (`data-s`, 20 characters), so the browser draws
+   that title's chips without its pack.
 2. **Two files of the build**, with a content hash in their names, `immutable` for a year, and on the same host as
    the page's other files (`assetUrl`, see [static-assets.md](../static-assets.md)):
    - **The engine,** `/assets/related-map-<hash>.js`: `inline.ts` bundled into one classic script by the build
@@ -96,6 +98,14 @@ memory.
 
 No rate limit of the app applies to these requests. The app has two: 60 poster impression posts per minute and
 address, and the bound on error reports in flight. The map sends neither.
+
+### Crawlers
+
+`robots.txt` disallows `/api/`, so a crawler that renders a title page never gets a pack. It keeps what the server's
+HTML holds: the heading, the chips of the page's title, the eight nearest titles as posters (about 48 on a wide
+screen, from the data that goes along), and the 64 links. A visitor whose request for the pack fails sees the same
+while the request is asked for again. Only a title that is stepped onto before its pack came says "Its traits are on
+their way."
 
 ## When the data isn't there
 
