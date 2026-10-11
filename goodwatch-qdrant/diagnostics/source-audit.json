@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "purpose": "offline diagnostic reporting source audit",
+  "frozenControllerSha256": "edc0c300cde27cb3e78036a8221f352e3569a3e0212548bd497736e32b52e0b0",
+  "parsedProcStatIndices": {
+    "minorFaults": {
+      "indexAfterComm": 7,
+      "procField": 10
+    },
+    "majorFaults": {
+      "indexAfterComm": 9,
+      "procField": 12
+    },
+    "rssPages": {
+      "indexAfterComm": 21,
+      "procField": 24
+    }
+  },
+  "readBytesCounter": "read_bytes",
+  "rssMultiplyByHostPageSize": true,
+  "counterPidPinnedToActualQdrantChild": true,
+  "reclaimCountersReportedIndividually": true,
+  "extentComparisonRequiresSameFileAndExtentCohort": true,
+  "wholeFileSparseHoleResidencyExcludedFromComparison": true,
+  "orderedParitySeparateFromSortedPerIdScoreParity": true,
+  "defaultNumericDiagnosticPolicy": null,
+  "productionAcceptance": false,
+  "fixtureTestsPassed": 9,
+  "runtimeQueries": 0,
+  "runtimeSignals": 0,
+  "runtimeServiceChanges": 0,
+  "reportSha256": "252330a48cf0b6dd44848c1896d8a136c9fff6bb4d7f7bc7af54b229d4c04983",
+  "signalReceiptTimestampRaceHandledByCausalFences": true
+}
