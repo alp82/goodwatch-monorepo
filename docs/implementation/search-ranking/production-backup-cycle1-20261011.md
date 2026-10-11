@@ -18,7 +18,7 @@ Ordered result-ID hashes, ordered ID-and-score hashes, ID-set hashes and sorted 
 
 ## Residency and counter evidence
 
-The table compares filesystem-reported allocated data-extent residency before backup (21:14:27.533 UTC), after backup (21:17:15.513), and after the warm repeat (21:17:51.212). Pages are 4,096 bytes.
+The table compares filesystem-reported data-extent residency before backup (21:14:27.533 UTC), after backup (21:17:15.513), and after the warm repeat (21:17:51.212). Pages are 4,096 bytes.
 
 | Mapped-file class | Data-extent pages before → after | Resident pages before → after → after warm |
 | --- | ---: | ---: |
@@ -44,7 +44,7 @@ Actual Qdrant PID/image continuity was preserved, with no Docker or cgroup memor
 
 ## Next reviewed experiment and completion limits
 
-The actual Claude Code Opus 5.5 review proposes a preventive host helper that maps files read-only and locks allocated data extents for vector, graph, sparse and other classes. Payload remains measurement-only until filter-related fault attribution supports expanding the target. This is a proposed design, not a validated or deployed remedy. Earlier clone prefault success had memory-cap events and excluded payload/other, so it supplies no clean production remedy proof.
+The actual Claude Code Opus 5.5 review proposes a preventive host helper that maps files read-only and locks filesystem-reported data extents for vector, graph, sparse and other classes. Payload remains measurement-only until filter-related fault attribution supports expanding the target. This is a proposed design, not a validated or deployed remedy. Earlier clone prefault success had memory-cap events and excluded payload/other, so it supplies no clean production remedy proof.
 
 Before a production decision, freeze the new rule and code, review memory/headroom and lock-byte bounds, and run a guarded clone negative control followed by pinning under bounded snapshot-sized pressure. Require explicit residency/fault and cap/OOM/throttling outcomes, ordered and sorted per-ID score parity, and held-out coverage for multilingual dense search, must-filters, limit 2,000, multi-term sparse and low-vote cases. Missing coverage must stay explicit. Restart/segment-turnover fixtures must show reconciliation without leaked locks. Capture query batches privately in memory, with no query/vector/credential persistence. Clone resource bounds differ from production and limit causal transfer.
 
