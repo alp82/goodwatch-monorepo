@@ -43,8 +43,8 @@ export async function getTonightParts(
 				services: ctx.services,
 				taste,
 			},
-			// Only the first Continue row's Next episode is shown.
-			{ episodeLists: 1, now },
+			// Only the first Continue row's Next episode is shown, and no waiting show.
+			{ episodeLists: 1, now, upcoming: false },
 		),
 		sortFactsOutsideSnapshot(ctx.wishlist.keys()),
 	])

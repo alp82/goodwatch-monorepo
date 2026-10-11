@@ -527,18 +527,27 @@ function condition(
 		const values = within[2].split(", ").map(() => take())
 		return { column: within[1], pins: true, test: (v) => values.includes(v) }
 	}
-	const compare = text.match(/^(\w+) (=|<>) (\?|'[^']*'|-?\d+)$/)
+	const compare = text.match(/^(\w+) (=|<>|>=|<=|>|<) (\?|'[^']*'|-?\d+)$/)
 	if (compare) {
 		const [, column, operator, right] = compare
 		column_(table, column, sql, true)
 		const value = right === "?" ? take() : literal(right, sql)
-		return operator === "="
-			? { column, pins: true, test: (v) => v === value }
-			: {
-					column,
-					pins: false,
-					test: (v) => v !== null && v !== undefined && v !== value,
-				}
+		if (operator === "=")
+			return { column, pins: true, test: (v) => v === value }
+		// A comparison with NULL is never true.
+		const given = (v: unknown) => v !== null && v !== undefined
+		const order: Record<string, (v: never) => boolean> = {
+			"<>": (v) => v !== value,
+			">": (v) => v > (value as never),
+			">=": (v) => v >= (value as never),
+			"<": (v) => v < (value as never),
+			"<=": (v) => v <= (value as never),
+		}
+		return {
+			column,
+			pins: false,
+			test: (v) => given(v) && order[operator](v as never),
+		}
 	}
 	throw new Error(`Unknown condition "${text}": ${sql}`)
 }

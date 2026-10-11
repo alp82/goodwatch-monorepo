@@ -12,10 +12,16 @@ import {
 	nextEpisodeInGap,
 	planMyShows,
 } from "~/domain/my-shows"
+import {
+	type UpcomingEpisode,
+	firstUpcoming,
+	soonestFirst,
+} from "~/domain/new-episodes"
 import { utcDay } from "~/domain/tracking/machine"
 import { servicesFor } from "~/server/availability-index.server"
 import type { Taste } from "~/server/taste/index.server"
 import { getServiceList } from "~/server/title-cards.server"
+import { upcomingEpisodesQuery } from "~/server/tracking-sql"
 import { type EpisodeListRow, getEpisodeList } from "~/server/tracking.server"
 import { getUserData } from "~/server/userData.server"
 import { type MediaKey, type UserData, parseMediaKey } from "~/types/user-data"
@@ -43,6 +49,8 @@ export interface NextEpisode {
 export interface MyShowsRow extends ShowRow, ShowCard {
 	/** The Next episode, for the rows whose episode list was read; null otherwise. */
 	next: NextEpisode | null
+	/** A waiting show's next episode with a date; null when the catalog has none, and in every other group. */
+	upcoming: UpcomingEpisode | null
 }
 
 /** A Want to See show the member has not started. */
@@ -90,7 +98,9 @@ interface CatalogRow {
 const BATCH = 500
 
 /** Q5. The catalog's side of some shows, by key. Public data. */
-async function readShows(ids: number[]): Promise<Map<number, CatalogRow>> {
+export async function readShows(
+	ids: number[],
+): Promise<Map<number, CatalogRow>> {
 	const rows = new Map<number, CatalogRow>()
 	for (let i = 0; i < ids.length; i += BATCH) {
 		const batch = ids.slice(i, i + BATCH)
@@ -138,6 +148,41 @@ async function readWatchedEpisodes(
 		found.set(Number(row.tmdb_id), list)
 	}
 	return found
+}
+
+/** Q8. When some shows return: of each, the dated episode that airs first after `today`. Public data. */
+async function readUpcoming(
+	ids: number[],
+	today: string,
+): Promise<Map<number, UpcomingEpisode>> {
+	const listed = new Map<number, UpcomingEpisode[]>()
+	if (!ids.length) return new Map()
+	const rows = await query<{
+		show_id: number
+		season_number: number
+		episode_number: number
+		name: string | null
+		air_date: number
+	}>(upcomingEpisodesQuery(ids.length), [
+		...ids,
+		Date.parse(`${today}T00:00:00Z`),
+	])
+	for (const row of rows) {
+		const list = listed.get(Number(row.show_id)) ?? []
+		list.push({
+			season: row.season_number,
+			number: row.episode_number,
+			name: row.name,
+			airDate: utcDay(row.air_date),
+		})
+		listed.set(Number(row.show_id), list)
+	}
+	const first = new Map<number, UpcomingEpisode>()
+	for (const [id, list] of listed) {
+		const episode = firstUpcoming(list)
+		if (episode) first.set(id, episode)
+	}
+	return first
 }
 
 const showIds = (entries: Record<string, unknown>) =>
@@ -195,6 +240,60 @@ async function plan(viewer: MyShowsViewer, userData: UserData, now: number) {
 	return { shows, catalog, matchOf }
 }
 
+/** A show's Next episode, and how many of its regular episodes have aired by the UTC date. */
+export interface NextOfShow {
+	next: NextEpisode | null
+	aired: number
+}
+
+/**
+ * The Next episode of some of a member's shows, each from the show's cached episode list. A Seen show's new
+ * episodes are the ones after the furthest watched, as a Watching show's are. Only a show with a gap (nothing aired
+ * after the furthest episode, and fewer watched than aired) needs its log rows, read for all such shows together.
+ */
+export async function readNextEpisodes(
+	userId: string,
+	userData: UserData,
+	shows: readonly { id: number; furthest: [number, number] | null }[],
+	today: string,
+): Promise<Map<number, NextOfShow>> {
+	const lists = new Map(
+		await Promise.all(
+			shows.map(
+				async (show) =>
+					[show.id, listed(await getEpisodeList(show.id))] as const,
+			),
+		),
+	)
+	const found = new Map<number, NextOfShow>()
+	const gaps: number[] = []
+	for (const show of shows) {
+		const list = lists.get(show.id) ?? []
+		const aired = list.filter(
+			(e) => e.season > 0 && e.airDate !== null && e.airDate <= today,
+		).length
+		const after = nextEpisodeAfter(list, show.furthest, today)
+		found.set(show.id, { next: after, aired })
+		const watched = userData.watchState[`show-${show.id}`]?.episodesWatched ?? 0
+		if (!after && list.length && watched < aired) gaps.push(show.id)
+	}
+	if (gaps.length) {
+		const watched = await readWatchedEpisodes(userId, gaps)
+		for (const id of gaps) {
+			const pass = userData.watchState[`show-${id}`]?.pass ?? 1
+			const keys = new Set(
+				(watched.get(id) ?? [])
+					.filter((watch) => watch.pass === pass)
+					.map((watch) => episodeKey(watch.season, watch.number)),
+			)
+			const inGap = nextEpisodeInGap(lists.get(id) ?? [], keys, today)
+			if (inGap)
+				found.set(id, { next: inGap, aired: found.get(id)?.aired ?? 0 })
+		}
+	}
+	return found
+}
+
 const cardOf = (id: number, row: CatalogRow | undefined) => ({
 	id,
 	title: row?.title ?? "Unknown show",
@@ -205,51 +304,28 @@ const cardOf = (id: number, row: CatalogRow | undefined) => ({
 /**
  * A member's shows for tonight, in the page's groups. `episodeLists` bounds how many Continue rows get their Next
  * episode from the show's cached episode list: the page reads them for every Continue row it draws first, home's
- * Continue door for one.
+ * Continue door for one. `upcoming: false` leaves out when the waiting shows return, which only the page shows.
  */
 export async function getMyShows(
 	viewer: MyShowsViewer,
-	options: { episodeLists?: number; now?: number } = {},
+	options: { episodeLists?: number; now?: number; upcoming?: boolean } = {},
 ): Promise<MyShows> {
 	const now = options.now ?? Date.now()
 	const userData = await getUserData({ user_id: viewer.userId })
 	const { shows, catalog, matchOf } = await plan(viewer, userData, now)
 	const today = utcDay(now)
 
-	// The Next episode of the Continue rows.
+	// The Next episode of the Continue rows, and beside them when the waiting shows return.
 	const named = shows.continue.slice(0, options.episodeLists ?? 30)
-	const lists = new Map(
-		await Promise.all(
-			named.map(
-				async (row) => [row.id, listed(await getEpisodeList(row.id))] as const,
-			),
-		),
-	)
-	const next = new Map<number, NextEpisode>()
-	const gaps: ShowRow[] = []
-	for (const row of named) {
-		const list = lists.get(row.id) ?? []
-		// A Seen show's new episodes are the ones after the furthest watched, as a Watching show's are.
-		const after = nextEpisodeAfter(list, row.furthest, today)
-		if (after) next.set(row.id, after)
-		else if (list.length) gaps.push(row)
-	}
-	if (gaps.length) {
-		const watched = await readWatchedEpisodes(
-			viewer.userId,
-			gaps.map((row) => row.id),
-		)
-		for (const row of gaps) {
-			const pass = userData.watchState[`show-${row.id}`]?.pass ?? 1
-			const keys = new Set(
-				(watched.get(row.id) ?? [])
-					.filter((watch) => watch.pass === pass)
-					.map((watch) => episodeKey(watch.season, watch.number)),
-			)
-			const inGap = nextEpisodeInGap(lists.get(row.id) ?? [], keys, today)
-			if (inGap) next.set(row.id, inGap)
-		}
-	}
+	const [next, upcoming] = await Promise.all([
+		readNextEpisodes(viewer.userId, userData, named, today),
+		options.upcoming === false
+			? new Map<number, UpcomingEpisode>()
+			: readUpcoming(
+					shows.waiting.map((row) => row.id),
+					today,
+				),
+	])
 
 	// The first of the member's services that carries each show to start.
 	const startKeys = shows.start.map((row) => titleKey("show", row.id))
@@ -270,7 +346,8 @@ export async function getMyShows(
 		group.map((row) => ({
 			...row,
 			...cardOf(row.id, catalog.get(row.id)),
-			next: next.get(row.id) ?? null,
+			next: next.get(row.id)?.next ?? null,
+			upcoming: null,
 		}))
 	return {
 		continue: rows(shows.continue),
@@ -287,7 +364,12 @@ export async function getMyShows(
 			}
 		}),
 		older: rows(shows.older),
-		waiting: rows(shows.waiting),
+		waiting: soonestFirst(
+			rows(shows.waiting).map((row) => ({
+				...row,
+				upcoming: upcoming.get(row.id) ?? null,
+			})),
+		),
 		onHold: rows(shows.onHold),
 		dropped: rows(shows.dropped),
 		total: shows.total,
