@@ -1,0 +1,15 @@
+{
+  "event": "backup-rotation-publication",
+  "operation": "deploy",
+  "at": "2026-10-11T20:52:15.917036+00:00",
+  "originalSha256": "5e543044d997a35bdfa325e7df7e03e28f28af5a05208e87b4663815d79bf160",
+  "candidateSha256": "eeedbb37190845856ec63528e8dc86f8fbac376b8bfa2037b5d8b9ced572d705",
+  "resultSha256": "eeedbb37190845856ec63528e8dc86f8fbac376b8bfa2037b5d8b9ced572d705",
+  "originalBackupMode": "0600",
+  "targetMode": "0755",
+  "activeBackupAbsent": true,
+  "onlyBackupScriptChanged": true,
+  "cronChanged": false,
+  "environmentChanged": false,
+  "checkoutOtherFilesChanged": false
+}

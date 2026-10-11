@@ -1,0 +1,8 @@
+{
+  "event": "modified-backup-observer-launched",
+  "pid": 2619537,
+  "deployedBackupSha256": "eeedbb37190845856ec63528e8dc86f8fbac376b8bfa2037b5d8b9ced572d705",
+  "controllerSha256": "edc0c300cde27cb3e78036a8221f352e3569a3e0212548bd497736e32b52e0b0",
+  "cycles": 3,
+  "privateOutput": true
+}
