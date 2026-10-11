@@ -1,5 +1,7 @@
 import UserAction from "~/ui/auth/UserAction"
+import { useRef } from "react"
 import type { ScoredMedia } from "~/ui/user/actions/ScoreAction"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 import { ActionButton } from "./ActionButton"
 import { TitleScore } from "./TitleScore"
 import { SEEN_INSTRUCTIONS, SEEN_SO_NOT_HIDEABLE, useTitleActions } from "./useTitleActions"
@@ -26,6 +28,12 @@ export function TitleActionSet({
 	onOpenLog?: () => void
 }) {
 	const a = useTitleActions(media)
+	// The title page's row is in the server's HTML, so a tap can come before the app's script. The mark carries the
+	// state that the button showed: a button that reads otherwise by now doesn't get the tap.
+	const row = useRef<HTMLDivElement>(null)
+	const own = (el: Element) => Boolean(row.current?.contains(el))
+	useReplayedTap("want", own)
+	useReplayedTap("seen", own)
 	const hideTitle = a.hidden
 		? "Hidden from your recommendations. Press to bring it back."
 		: a.canHide
@@ -37,13 +45,14 @@ export function TitleActionSet({
 	}
 	if (layout === "row")
 		return (
-			<div data-title-actions className="flex min-w-0 gap-2">
-				<ActionButton kind="want" label="long" size="sm" className="flex-1" rewatch={a.seen} active={a.want} disabled={a.wantPending} onClick={a.toggleWant} />
+			<div ref={row} data-title-actions className="flex min-w-0 gap-2">
+				<ActionButton kind="want" label="long" size="sm" className="flex-1" rewatch={a.seen} active={a.want} disabled={a.wantPending} data-replay-tap={`want:${a.want ? "on" : "off"}`} onClick={a.toggleWant} />
 				<UserAction instructions={SEEN_INSTRUCTIONS}>
 					<ActionButton
 						kind="seen"
 						label="long"
 						size="sm"
+						data-replay-tap={`seen:${a.seen ? "on" : "off"}`}
 						className="flex-1"
 						active={a.seen}
 						disabled={a.seenPending}

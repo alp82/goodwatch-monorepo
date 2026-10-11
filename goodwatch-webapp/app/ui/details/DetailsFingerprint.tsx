@@ -14,6 +14,7 @@ import { getFingerprintMeta } from "~/ui/fingerprint/fingerprintMeta"
 import { PILLAR_CONFIG } from "~/ui/fingerprint/Pillars"
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import * as F from "~/ui/fingerprint/fingerprintText"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 
 
 type Pillar = keyof typeof PILLAR_CONFIG
@@ -221,13 +222,16 @@ interface ViewProps {
 
 function Overview({ t, onSelect }: { t: F.TitleInput; onSelect: (p: Pillar) => void }) {
 	const tiers = t.fingerprint.pillars
+	const rows = useRef<HTMLDivElement>(null)
+	useReplayedTap("pillar", (el) => Boolean(rows.current?.contains(el)))
 	return (
-		<div>
+		<div ref={rows}>
 			<div className="divide-y divide-white/8 border-y border-white/8">
 				{PILLARS.map((p) => (
 					// biome-ignore lint/a11y/useKeyWithClickEvents: the "See all" button handles keyboard
 					<div
 						key={p}
+						data-replay-tap={`pillar:${p}`}
 						onClick={() => onSelect(p)}
 						className="group grid cursor-pointer gap-4 rounded-xl px-2 py-6 lg:-mx-2 lg:grid-cols-[12rem_1fr_17rem_2rem] lg:items-center lg:gap-10 hover:bg-white/3"
 					>

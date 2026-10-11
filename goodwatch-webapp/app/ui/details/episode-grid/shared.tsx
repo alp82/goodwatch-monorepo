@@ -1,6 +1,7 @@
 // Pieces of the episode grid: the floating tip and popover, and the episode tip, season
 // scores, provider marks and legend that live inside them.
 import { assetUrl } from "~/utils/asset-url"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import type { GridEpisode, GridSeason, GridSpecial } from "~/server/episode-grid.server"
@@ -73,6 +74,7 @@ export function useFloat() {
 	stateRef.current = state
 
 	const close = useCallback(() => setState(null), [])
+	useReplayedTap("float")
 
 	useEffect(() => {
 		const openId = state?.id
@@ -106,6 +108,7 @@ export function useFloat() {
 				setState({ id, el, anchor: el.getBoundingClientRect(), content: content(), pinned })
 			return {
 				"data-float-id": id,
+				"data-replay-tap": `float:${id}`,
 				onPointerEnter: (event: React.PointerEvent<HTMLElement>) => {
 					if (event.pointerType === "mouse" && !stateRef.current?.pinned) open(event.currentTarget, false)
 				},

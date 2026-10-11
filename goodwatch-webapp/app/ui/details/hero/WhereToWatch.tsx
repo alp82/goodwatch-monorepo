@@ -8,6 +8,7 @@ import { useClickOutside } from "~/ui/details/hero/useClickOutside"
 import { countryFlagUrl } from "~/utils/country-flag"
 import type { Section } from "~/utils/scroll"
 import { reloadOnStaleChunk } from "~/utils/stale-chunk"
+import { useReplayedTap } from "~/utils/useReplayedTap"
 import { brandName, duplicateProviderMapping, getShorterProviderLabel, getStreamingUrl, ignoredProviders } from "~/utils/streaming-links"
 
 type Media = MovieResult | ShowResult
@@ -62,6 +63,7 @@ export default function WhereToWatch({ media, country, navigateToSection, classN
 	const [all, setAll] = useState(false)
 	const ref = useRef<HTMLDivElement>(null)
 	useClickOutside([ref], () => setCountryOpen(false))
+	useReplayedTap("offer", (el) => Boolean(ref.current?.contains(el)))
 	const links = useStreamingLinks(media, country, type === "flatrate" ? ["flatrate", "flatrate_and_buy", "free", "ads"] : [type])
 	const anyOwned = links.some((l) => l.owned)
 	const shown = all ? links : links.slice(0, SHOWN)
@@ -86,6 +88,7 @@ export default function WhereToWatch({ media, country, navigateToSection, classN
 							type="button"
 							role="tab"
 							aria-selected={type === t}
+							data-replay-tap={`offer:${t}`}
 							onClick={() => {
 								setType(t)
 								setAll(false)
