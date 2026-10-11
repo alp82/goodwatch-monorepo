@@ -78,16 +78,55 @@ def inspect_source(spec):
 class Inventory:
     targets: list
     deleted_mappings: int
+    nofile_limits: dict
 
 
 PROC = Path('/proc')
 MAX_MAPPED_FILES = 20000
+NOFILE_RESERVE = 256
+MAX_REQUIRED_NOFILE = 2 * MAX_MAPPED_FILES + 2 * NOFILE_RESERVE
 
 
-def inventory(source, include_payload=False, source_check=None):
+def ensure_inventory_nofile(raise_own_nofile=False):
+    """Bounded own-process soft limit only; inventory may overlap held pin FDs."""
+    if type(raise_own_nofile) is not bool:
+        raise ValueError('invalid_own_nofile_policy')
+    try:
+        current = len(os.listdir('/proc/self/fd'))
+        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    except OSError:
+        raise RuntimeError('own_nofile_state_unavailable') from None
+    if current > MAX_MAPPED_FILES + NOFILE_RESERVE:
+        raise RuntimeError('own_nofile_baseline_bound_exceeded')
+    required = current + MAX_MAPPED_FILES + NOFILE_RESERVE
+    if hard != resource.RLIM_INFINITY and hard < required:
+        raise RuntimeError('own_nofile_hard_limit_insufficient')
+    raised = soft != resource.RLIM_INFINITY and soft < required
+    if raised:
+        if not raise_own_nofile:
+            raise RuntimeError('explicit_own_nofile_raise_required')
+        try:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (required, hard))
+        except (OSError, ValueError):
+            raise RuntimeError('own_nofile_raise_failed') from None
+    try:
+        after, after_hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    except OSError:
+        raise RuntimeError('own_nofile_state_unavailable') from None
+    if after_hard != hard or after != resource.RLIM_INFINITY and after < required:
+        raise RuntimeError('own_nofile_state_changed')
+    finite = lambda value: None if value == resource.RLIM_INFINITY else value
+    return {'openFdCount': current, 'mappedFileBound': MAX_MAPPED_FILES,
+            'reserveFds': NOFILE_RESERVE, 'requiredSoft': required,
+            'softBefore': finite(soft), 'softAfter': finite(after),
+            'hardLimit': finite(hard), 'raised': raised, 'hardChanged': False}
+
+
+def inventory(source, include_payload=False, source_check=None, raise_own_nofile=False):
     check_source = source_check or inspect_source
     if check_source(source.spec).identity != source.identity:
         raise RuntimeError('source_identity_changed')
+    nofile_limits = ensure_inventory_nofile(raise_own_nofile)
     targets, seen, deleted = [], set(), 0
     try:
         for line in (PROC / str(source.pid) / 'maps').read_text().splitlines():
@@ -118,7 +157,7 @@ def inventory(source, include_payload=False, source_check=None):
                 target.close(); target.measured_only = True
         if not targets or check_source(source.spec).identity != source.identity:
             raise RuntimeError('source_changed_during_inventory')
-        return Inventory(targets, deleted)
+        return Inventory(targets, deleted, nofile_limits)
     except Exception:
         for target in targets: target.close()
         raise
@@ -160,7 +199,7 @@ def prepare_self(source, max_locked_bytes, raise_own_limit=False, source_check=N
         raise RuntimeError('helper_accounting_not_joined')
 
 
-def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check=None):
+def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check=None, raise_own_nofile=False):
     """One guarded pass. Any source/inventory failure releases prior locks."""
     targets = []
     try:
@@ -174,7 +213,7 @@ def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check
         if manager.source_identity != source.identity:
             manager.release()
         prepare_self(source, manager.policy.max_locked_bytes, source_check=source_check)
-        sampled = inventory(source, manager.policy.include_payload, source_check=source_check)
+        sampled = inventory(source, manager.policy.include_payload, source_check=source_check, raise_own_nofile=raise_own_nofile)
         targets = sampled.targets
         for kind in ('vector', 'graph', 'sparse', 'other'):
             members = [target for target in targets if target.kind == kind]
@@ -200,7 +239,7 @@ def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check
         if any(cpu_delta.values()):
             raise RuntimeError('initial_pin_cpu_limit_event')
         state.update({'qdrantPid': source.pid, 'accountingBefore': before, 'accountingAfter': after,
-                      'deletedMappingsExcluded': sampled.deleted_mappings, 'sourceStartTicks': source.identity[3],
+                      'nofileLimits': sampled.nofile_limits, 'deletedMappingsExcluded': sampled.deleted_mappings, 'sourceStartTicks': source.identity[3],
                       'memoryEventDelta': event_delta, 'cpuLimitDelta': cpu_delta, 'clonePressureMaxAllowed': pressure_max_allowed,
                       'existingPageChargeMayDiffer': True, 'allExistingPageChargesInsideTargetCgroupProven': False})
         return state
@@ -212,13 +251,13 @@ def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check
             if all(mapping.target is not target for mapping in manager.mappings.values()): target.close()
 
 
-def measure_source(spec, include_payload=False, source_check=None):
-    """Readonly inventory/mincore pass: no locks, cgroup joins, or self-limit writes."""
+def measure_source(spec, include_payload=False, source_check=None, raise_own_nofile=False):
+    """Readonly inventory/mincore pass; explicit own-NOFILE soft raise only."""
     if type(include_payload) is not bool:
         raise ValueError('explicit_measure_selection_required')
     check_source = source_check or inspect_source
     source = check_source(spec)
-    sampled = inventory(source, include_payload=True, source_check=check_source)
+    sampled = inventory(source, include_payload=True, source_check=check_source, raise_own_nofile=raise_own_nofile)
     measured = {kind: {'files': 0, 'dataPages': 0, 'residentDataPages': 0, 'rawExtentCount': 0, 'dataRangeCount': 0} for kind in CLASSES}
     kernel = Kernel()
     selection = []
@@ -246,7 +285,7 @@ def measure_source(spec, include_payload=False, source_check=None):
                 'extentRangesHashed': True, 'contentFixed': False, 'accounting': accounting(source),
                 'helperVmas': len(Path('/proc/self/maps').read_text().splitlines()),
                 'maxMapCount': int(Path('/proc/sys/vm/max_map_count').read_text()),
-                'deletedMappingsExcluded': sampled.deleted_mappings, 'lockedBytes': 0, 'queries': 0, 'storageWrites': 0}
+                'nofileLimits': sampled.nofile_limits, 'deletedMappingsExcluded': sampled.deleted_mappings, 'lockedBytes': 0, 'queries': 0, 'storageWrites': 0}
     finally:
         for target in sampled.targets: target.close()
 

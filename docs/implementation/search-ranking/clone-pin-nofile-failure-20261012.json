@@ -1,0 +1,43 @@
+{
+  "archiveBytesRead": 0,
+  "cacheAdvice": false,
+  "failure": {
+    "errno": 24,
+    "errnoSymbol": "EMFILE",
+    "exceptionType": "OSError",
+    "phase": "measure-source"
+  },
+  "helperLimits": {
+    "fdCountAfter": 4,
+    "fdCountBefore": 4,
+    "helperVmasBefore": 108,
+    "maxMapCount": 1048576,
+    "memlockHard": 1015980032,
+    "memlockSoft": 1015980032,
+    "nofileHard": 1048576,
+    "nofileSoft": 1024
+  },
+  "instrumentation": {
+    "cleanupFailureCount": 0,
+    "completedCalls": {
+      "extent-seek": 1021,
+      "target-close": 1021,
+      "target-open": 1021
+    },
+    "firstFailure": {
+      "errno": 24,
+      "errnoSymbol": "EMFILE",
+      "exceptionType": "OSError",
+      "fileKind": "payload",
+      "phase": "target-open"
+    }
+  },
+  "limitWrites": 0,
+  "lockedBytes": 0,
+  "pinChildrenStarted": 0,
+  "privateErrorOmitted": true,
+  "queries": 0,
+  "seconds": 0.993,
+  "stage": "measure-probe-failed",
+  "storageWrites": 0
+}

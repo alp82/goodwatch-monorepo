@@ -27,8 +27,12 @@ def accounting():
         'memoryEvents': {'oom': 0, 'oom_kill': 0, 'max': 0}, 'cpu': {'nr_throttled': 0, 'throttled_usec': 0}}
 
 
+def nofile_state():
+    return {'openFdCount':4,'mappedFileBound':20000,'reserveFds':256,'requiredSoft':20260,'softBefore':1048576,'softAfter':1048576,'hardLimit':1048576,'raised':False,'hardChanged':False}
+
+
 def pin_state():
-    return {'event': 'mapped-data-pin-state.v1', 'mode': 'clone', 'queries': 0, 'storageWrites': 0, 'lockedBytes': 16384, 'newLockBytes': 16384,
+    return {'nofileLimits':nofile_state(), 'event': 'mapped-data-pin-state.v1', 'mode': 'clone', 'queries': 0, 'storageWrites': 0, 'lockedBytes': 16384, 'newLockBytes': 16384,
         'selectionHash': 'a'*64, 'extentRangesHashed': True, 'qdrantPid': 123, 'sourceStartTicks': 100, 'pageBytes': 4096, 'rangesChanged': True, 'deletedMappingsExcluded':0, 'memoryEventDelta':{'oom':0,'oom_kill':0,'max':0}, 'cpuLimitDelta':{'nr_throttled':0,'throttled_usec':0}, 'clonePressureMaxAllowed':False,
         'classesMeasured': {k: {'files': 1, 'dataLockBytes': 4096,'dataPages':1,'rawExtentCount':1,'dataRangeCount':1} for k in daemon.KINDS},
         'lockedResidency': {k: {'lockedDataPages': 1, 'residentLockedDataPages': 1} for k in ('vector', 'graph', 'sparse', 'other')},
@@ -43,7 +47,7 @@ class DaemonTests(unittest.TestCase):
 
     def test_default_has_no_inspection_or_pinset(self):
         with patch.object(daemon.runtime, 'inspect_source') as inspect, patch.object(daemon.pin, 'PinSet') as manager, contextlib.redirect_stdout(io.StringIO()) as out:
-            self.assertEqual(daemon.main([]), 0)
+            self.assertEqual(daemon.main(['--raise-own-nofile']), 0)
         inspect.assert_not_called(); manager.assert_not_called(); self.assertFalse(json.loads(out.getvalue())['inspection'])
 
     def test_frozen_config_rejects_hash_source_mount_and_unreviewed_payload(self):
@@ -57,13 +61,20 @@ class DaemonTests(unittest.TestCase):
 
     def test_measure_runner_never_prepares_self_or_creates_locks(self):
         _, spec, policy = daemon.load_config(*self.frozen(config()))
-        m = {'event': 'mapped-data-measure-state.v1', 'mode':'clone','extentRangesHashed':True, 'lockedBytes': 0, 'queries': 0, 'storageWrites': 0, 'selectionHash': 'a'*64,
+        m = {'nofileLimits':nofile_state(), 'event': 'mapped-data-measure-state.v1', 'mode':'clone','extentRangesHashed':True, 'lockedBytes': 0, 'queries': 0, 'storageWrites': 0, 'selectionHash': 'a'*64,
              'classesMeasured': {k: {'files': 1, 'dataPages': 1, 'residentDataPages': 1,'rawExtentCount':1,'dataRangeCount':1} for k in daemon.KINDS}, 'accounting': accounting(),
              'qdrantPid': 123, 'sourceStartTicks': 100, 'pageBytes': 4096, 'private': 'secret','helperVmas':64,'maxMapCount':65530}
         emitted = []; clock = Mock(side_effect=[0, 0, 4, 4])
-        with patch.object(daemon.runtime, 'measure_source', return_value=m), patch.object(daemon.runtime, 'prepare_self') as prepare, patch.object(daemon.pin, 'PinSet') as manager:
+        with patch.object(daemon.runtime, 'measure_source', return_value=m) as measure, patch.object(daemon.runtime, 'prepare_self') as prepare, patch.object(daemon.pin, 'PinSet') as manager:
             daemon.run(config(), spec, policy, 'measure', emitted.append, clock=clock, wait=Mock())
+        measure.assert_called_once_with(spec, raise_own_nofile=False)
         prepare.assert_not_called(); manager.assert_not_called(); self.assertNotIn('private', emitted[0]); self.assertEqual(emitted[-1]['reason'], 'lifetime')
+
+    def test_nofile_proof_rejects_inconsistent_counts_or_privacy_fields(self):
+        for change in ({'requiredSoft':40513},{'hardChanged':True},{'raised':True},{'openFdCount':20257},{'hardLimit':32},{'private':'secret'}):
+            value=nofile_state();value.update(change)
+            with self.assertRaises(ValueError):daemon.nofile_limits(value)
+        self.assertEqual(daemon.nofile_limits(nofile_state()),nofile_state())
 
     def test_standalone_pin_refuses_before_inspection_or_setup(self):
         _, spec, policy = daemon.load_config(*self.frozen(config()))

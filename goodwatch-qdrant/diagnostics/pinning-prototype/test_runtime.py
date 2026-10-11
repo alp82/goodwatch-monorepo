@@ -18,6 +18,8 @@ class RuntimeTests(unittest.TestCase):
         self.spec=runtime.Spec('clone','gw-qdrant-cold-406-20261011','sha256:'+'a'*64,self.store,frozenset(),6*pin.GIB,6*pin.GIB,2_000_000_000)
         self.source=runtime.Source(('container','image',900,100),900,self.root/'cgroup','/fixture',self.spec)
         self.addCleanup(patch.stopall);patch.object(runtime,'PROC',self.proc).start();patch.object(runtime,'inspect_source',return_value=self.source).start()
+        self.nofile_patch=patch.object(runtime,'ensure_inventory_nofile',return_value={'openFdCount':4,'mappedFileBound':20000,'reserveFds':256,'requiredSoft':20260,'softBefore':1048576,'softAfter':1048576,'hardLimit':1048576,'raised':False,'hardChanged':False})
+        self.nofile_patch.start()
         self.paths=[]
         for name in ('vector.bin','graph.bin','sparse.bin','id_tracker.bin','payload_index.bin'):
             path=self.store/name;path.write_bytes(b'data'.ljust(pin.PAGE,b'x'));self.paths.append(path)
