@@ -118,7 +118,7 @@ test("a tap on a marked control waits, shows on the control, and is done once", 
 	assert.equal(pending(rent), true)
 	assert.equal(readTapStore(page.win)?.taps.offer.key, "offer:rent")
 
-	stopRecordingTaps(page.win)
+	assert.equal(stopRecordingTaps(page.win), true, "a tap waits")
 	assert.equal(page.listening(), 1, "the listener stays while a tap waits")
 	assert.equal(page.claim("offer"), rent)
 	assert.equal(pending(rent), false)
@@ -225,7 +225,7 @@ test("once React listens, a tap is not recorded and forgets the waiting tap of i
 
 test("the listener goes when React listens and no tap waits, or when the last waiting tap is forgotten", () => {
 	const page = runInlineScript()
-	stopRecordingTaps(page.win)
+	assert.equal(stopRecordingTaps(page.win), false)
 	assert.equal(page.listening(), 0)
 
 	// A control that never mounts: its tap runs out.
@@ -305,7 +305,7 @@ test("the script runs once per document, and a page without it has nothing to do
 
 	assert.equal(readTapStore({}), null)
 	assert.equal(claimTap({}, "offer", { now: 0, path: "/" }), null)
-	stopRecordingTaps({})
+	assert.equal(stopRecordingTaps({}), false)
 })
 
 test("the script is small, names its global, and can't end a script tag", () => {

@@ -4,7 +4,8 @@
 //
 // So a tiny inline script in the document (ui/details/Details.tsx) remembers a tap on a control that is marked with
 // `data-replay-tap`, and the control does it once it is mounted (useReplayedTap.ts): with a click on the same
-// element, so the press goes through the control's own handler like any other.
+// element, so the press goes through the control's own handler like any other. While a tap waits, the browser entry
+// hydrates the page in one go, so the tap is done in the task that starts the app.
 //
 // A mark is `group` or `group:detail`, such as `want:off`, `offer:rent`, or `float:ep-1-1`:
 // - The group names the control. One tap per group waits: a later tap in the group replaces the earlier one.
@@ -96,13 +97,16 @@ export function readTapStore(win: unknown): TapStore | null {
  * Ends the recording. Call it in the task that makes React listen to the document (entry.client.tsx), so that no tap
  * falls between the two. The listener stays until the waiting taps are done or forgotten. In that time it only
  * forgets the tap of a group whose control is tapped again.
+ *
+ * Answers whether a tap waits. A visitor is waiting for the page then, so the caller hydrates it in one go.
  */
-export function stopRecordingTaps(win: unknown): void {
+export function stopRecordingTaps(win: unknown): boolean {
 	const store = readTapStore(win)
-	if (!store) return
+	if (!store) return false
 	store.live = true
 	// No group has this name: the call only lets the listener go when no tap waits.
 	store.drop("")
+	return Object.keys(store.taps).length > 0
 }
 
 export interface ClaimContext {

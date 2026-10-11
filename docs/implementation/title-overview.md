@@ -130,6 +130,9 @@ So a tap from that time is remembered and done when its control is mounted:
 - **The replay:** `useReplayedTap(group)` in the component that owns the handlers. When the component is mounted, the
   waiting tap becomes a click on the tapped element, so it takes the control's own path. A guest's "Mark as Seen"
   shows the sign-in prompt, as for any press.
+- **No further wait:** when a tap waits, the browser entry hydrates the page in one go and not in slices
+  (`entry.client.tsx`), as React does it for a tap that comes during hydration. The tap is then done in the task
+  that starts the app. This costs one long task, and only on a page view with such a tap.
 - **The sign that a tap waits:** the script sets `data-replay-pending` on the control, and the style sheet draws an
   outline and dims it (`main.css`). React never renders this attribute.
 

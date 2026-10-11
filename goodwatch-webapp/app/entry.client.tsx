@@ -37,14 +37,17 @@ const shellCode = rootData
 	: Promise.resolve()
 
 shellCode.then(() => {
-	startTransition(() => {
-		// From here on React handles a tap itself. Taps from before wait for their controls (utils/replay-tap.ts).
-		stopRecordingTaps(window)
+	const hydrate = () => {
 		hydrateRoot(
 			document,
 			<StrictMode>
 				<RemixBrowser />
 			</StrictMode>,
 		)
-	})
+	}
+	// From here on React handles a tap itself. Taps from before wait for their controls (utils/replay-tap.ts).
+	// With such a tap a visitor is waiting, so the page hydrates in one go, as React does it for a tap that comes
+	// during hydration. Without one it hydrates in slices that leave the main thread free in between.
+	if (stopRecordingTaps(window)) hydrate()
+	else startTransition(hydrate)
 })
