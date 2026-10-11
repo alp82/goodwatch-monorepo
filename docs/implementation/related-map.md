@@ -131,8 +131,9 @@ build compresses a file (Brotli, quality 11):
 
 A title page with the map sends two more requests to the site or the static host than one without it: one script and
 one style sheet. In the render path budget (`goodwatch-benchmark/urls/budget.json`) they count against
-`host_requests`, `script_count`, `script_bytes`, and `total_bytes`. `./bench.sh budget` wasn't run against this
-change.
+`host_requests`, `script_count`, `script_bytes`, and `total_bytes`. A run on October 11, 2026 measured 270,556 script bytes on the movie
+page and 270,772 on the show page, up about 16.9 KB, so `script_bytes` is raised to those values plus 5%. Blocking time
+fell to 47 and 56 ms, so `tbt_ms` is lowered from 350 to 200.
 
 ## Accessibility
 

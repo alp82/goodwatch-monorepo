@@ -37,7 +37,7 @@
         "html_bytes": { "max": 55808 },
         "host_requests": { "max": 34 },
         "script_count": { "max": 22 },
-        "script_bytes": { "max": 266240 },
+        "script_bytes": { "max": 283648 },
         "image_count": { "max": 13 },
         "image_bytes": { "max": 102400 },
         "font_requests": { "max": 1 },
@@ -45,7 +45,7 @@
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 483328 },
         "lcp_ms": { "max": 5900 },
-        "tbt_ms": { "max": 350 },
+        "tbt_ms": { "max": 200 },
         "cls": { "max": 0.01 },
         "score": { "min": 61 }
       }
@@ -57,7 +57,7 @@
         "html_bytes": { "max": 58880 },
         "host_requests": { "max": 34 },
         "script_count": { "max": 22 },
-        "script_bytes": { "max": 267264 },
+        "script_bytes": { "max": 284672 },
         "image_count": { "max": 11 },
         "image_bytes": { "max": 169984 },
         "font_requests": { "max": 1 },
@@ -65,7 +65,7 @@
         "third_party_origins": { "max": 1 },
         "total_bytes": { "max": 545792 },
         "lcp_ms": { "max": 6250 },
-        "tbt_ms": { "max": 350 },
+        "tbt_ms": { "max": 200 },
         "cls": { "max": 0.01 },
         "score": { "min": 58 }
       }
