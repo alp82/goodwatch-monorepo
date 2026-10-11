@@ -90,7 +90,8 @@ Watching shows with a Next episode and activity in the last 30 days, most recent
 episodes. Start: Want to See shows not started, best taste match first, with seasons, episodes, hours and whether
 it still runs. The rule is a sentence on the page and each group has a label. A row is one link to the show's page:
 no Watched button, no tick. Under the list: Not watched for 30 days (closed), Waiting for episodes, On hold
-(closed), Dropped (closed).
+(closed), Dropped (closed). Since [#442](../new-episodes/README.md) the waiting shows say when their next episode
+airs, and the page clears the New episodes signal.
 
 **My movies** (`routes/my-movies.tsx`, `ui/my-movies/parts.tsx`, and Watch next's page and server with
 `kind: "movie"`): the Watch next page for the Wishlist's movies. Hero ("Tonight's movie · …"), Then, and the tiers

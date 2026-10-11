@@ -1867,3 +1867,61 @@ Where the build differs from the text above, or settles what it left open:
   columns.
 - **Tonight's pick** is the first row of Continue only while that row is a Watching show; a Seen show with new
   episodes is never the pick.
+
+### New episodes: when waiting shows return, and the signal outside My shows (#442)
+
+Behind `REC_TRACKING`. What was built, the rule, the routes, the measurements and how it was checked:
+[new-episodes/README.md](new-episodes/README.md).
+
+**One fact is stored: when the member last opened My shows.** It is a row of `user_setting`, which exists, with
+`key = 'my_shows_visited_at'` and an ISO time in UTC as its `value`. No table and no column was added, and **no
+statement was run on the production database** for this. `POST /api/new-episodes` writes the row with the same
+`upsert` the settings use; nothing else writes it. Everything else is derived when it is read: which shows are new,
+how many, and when a waiting show returns. Account deletion covers the row when it covers `user_setting` (section 8).
+
+Three reads were added, all by key:
+
+```sql
+-- Q8. When the member's waiting shows return: the regular episodes dated after the UTC date. One statement for all
+-- of them. The last parameter is midnight UTC of today.
+SELECT show_id, season_number, episode_number, name, air_date
+FROM episode
+WHERE show_id IN (?, ?, ...) AND season_number > 0 AND removed_at IS NULL AND air_date > ?
+LIMIT 20000;
+
+-- Q9. Which of the member's Watching and Seen shows had a regular episode air after the day of the visit and by
+-- today: the only shows that can be new. One row per such episode.
+SELECT show_id
+FROM episode
+WHERE show_id IN (?, ?, ...) AND season_number > 0 AND removed_at IS NULL AND air_date > ? AND air_date <= ?
+LIMIT 20000;
+
+-- Q10. The visit. Whole key: real-time, no refresh needed. Crate plans it as a Get.
+SELECT value FROM user_setting WHERE user_id = ? AND key = ?;
+```
+
+| Screen | Query | Rows | In the map | Cache and reset |
+| --- | --- | --- | --- | --- |
+| **My shows**, Waiting for episodes | Q8, beside the Continue rows' episode lists | The dated episodes to come of the waiting shows: 19 for the member with the most (10 shows) | No | Not cached: public data, one statement a page load |
+| **The New episodes signal** (Browse button, dock key, My shows tile, home's Continue door), and My shows' arrival line | Q10, then Q9 over the Watching and Seen shows of the map. The cached episode list of each show Q9 names; the log rows of those with a gap; `show` by key for the names of the shows that are new | Usually none | The states and `furthest` are | Not cached on the server. The browser keeps the answer under a key with the watch state's signature, and a My shows visit replaces it |
+
+Where the build differs from the text above, or settles what it left open:
+
+- **"How N new episodes look"** was listed as not covered (section 9). The signal counts shows, not episodes, and
+  names the show when it is one.
+- **What has aired, for the signal, is read from `episode` by the UTC date,** not from `show.aired_episode_count`.
+  The count is up to a day behind (section 9's risk), and a signal that follows it would miss an episode whenever
+  the member opens My shows on the day it airs: the visit's day would then be the episode's day. My shows' own
+  groups still go by the count.
+- **A show is new when its Next episode's air date is after the UTC date of the visit.** An episode dated the day of
+  the visit had aired by the server's rule when the member looked. The visit's time is stored to the millisecond;
+  only its date is compared, because air dates are dates.
+- **A member without a visit** is shown what aired in the last seven days.
+- **The page's loader does not write the visit.** The hub's links load My shows ahead of a tap. The page sends the
+  POST once it is on screen.
+- **The member's day** decides "today", "tomorrow" and "in 4 days" in the waiting group (C4): the server sends
+  air dates, and the browser words them by the device's date. Which shows wait and which have a Next episode stays
+  the server's, by UTC.
+- **Home's doors and Tonight's pick do not read Q8.** `getMyShows` takes `upcoming: false` from them.
+- **Only dated episodes are read for the waiting group.** Measured on 2026-10-11: of the 58 shows members wait for,
+  18 have a dated episode to come, none has only an undated one, and 40 have none listed.
