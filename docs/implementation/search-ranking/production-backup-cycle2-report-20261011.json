@@ -1,0 +1,469 @@
+{
+  "schemaVersion": 1,
+  "productionAcceptance": false,
+  "observationScope": "one completed cycle from frozen three-cycle diagnostic",
+  "remainingCycle": 3,
+  "selectedPolicy": null,
+  "reportHelperSha256": "59fe995eba6018d447ee4ca231139f9de2446d1322213b723915cc2ee333bd75",
+  "frozenControllerSha256": "edc0c300cde27cb3e78036a8221f352e3569a3e0212548bd497736e32b52e0b0",
+  "deployedBackupSha256": "eeedbb37190845856ec63528e8dc86f8fbac376b8bfa2037b5d8b9ced572d705",
+  "observerRecordCount": 431,
+  "consumerRecordCount": 12,
+  "observerSha256": "9a8c1af1626ad6e03d30a90f13c5a1180da6bf4220ed1b4753e96a989e6c645d",
+  "consumerSha256": "5e0379a7dc83f29217dc1736b342c01866f33509a7cbc833e1998010d2350407",
+  "cycleReport": {
+    "cycle": 2,
+    "diagnosticStatus": "incomparable",
+    "findings": [
+      "extent_cohort_incomparable:vector",
+      "post_direct_qdrant_at_least_1500ms:known-native-title"
+    ],
+    "failures": [],
+    "beforeBaselineToBeforeBackup": {
+      "vector": {
+        "comparable": false,
+        "beforeDataExtentPages": 179426,
+        "afterDataExtentPages": 179435,
+        "beforeDataResidentPages": 173463,
+        "afterDataResidentPages": 173508,
+        "residentDataPagesChange": 45
+      },
+      "graph": {
+        "comparable": true,
+        "beforeDataExtentPages": 104256,
+        "afterDataExtentPages": 104256,
+        "beforeDataResidentPages": 64459,
+        "afterDataResidentPages": 64460,
+        "residentDataPagesChange": 1
+      },
+      "sparse": {
+        "comparable": false,
+        "beforeDataExtentPages": 54844,
+        "afterDataExtentPages": 54850,
+        "beforeDataResidentPages": 34235,
+        "afterDataResidentPages": 34250,
+        "residentDataPagesChange": 15
+      },
+      "payload": {
+        "comparable": false,
+        "beforeDataExtentPages": 576857,
+        "afterDataExtentPages": 576867,
+        "beforeDataResidentPages": 403670,
+        "afterDataResidentPages": 403760,
+        "residentDataPagesChange": 90
+      },
+      "other": {
+        "comparable": false,
+        "beforeDataExtentPages": 105081,
+        "afterDataExtentPages": 105093,
+        "beforeDataResidentPages": 45758,
+        "afterDataResidentPages": 45773,
+        "residentDataPagesChange": 15
+      }
+    },
+    "beforeBackupToPostBackup": {
+      "vector": {
+        "comparable": false,
+        "beforeDataExtentPages": 179435,
+        "afterDataExtentPages": 179437,
+        "beforeDataResidentPages": 173508,
+        "afterDataResidentPages": 131623,
+        "residentDataPagesChange": -41885
+      },
+      "graph": {
+        "comparable": true,
+        "beforeDataExtentPages": 104256,
+        "afterDataExtentPages": 104256,
+        "beforeDataResidentPages": 64460,
+        "afterDataResidentPages": 98586,
+        "residentDataPagesChange": 34126
+      },
+      "sparse": {
+        "comparable": true,
+        "beforeDataExtentPages": 54850,
+        "afterDataExtentPages": 54850,
+        "beforeDataResidentPages": 34250,
+        "afterDataResidentPages": 39765,
+        "residentDataPagesChange": 5515
+      },
+      "payload": {
+        "comparable": false,
+        "beforeDataExtentPages": 576867,
+        "afterDataExtentPages": 576868,
+        "beforeDataResidentPages": 403760,
+        "afterDataResidentPages": 424977,
+        "residentDataPagesChange": 21217
+      },
+      "other": {
+        "comparable": false,
+        "beforeDataExtentPages": 105093,
+        "afterDataExtentPages": 105097,
+        "beforeDataResidentPages": 45773,
+        "afterDataResidentPages": 93742,
+        "residentDataPagesChange": 47969
+      }
+    },
+    "postBackupToPostWarm": {
+      "vector": {
+        "comparable": true,
+        "beforeDataExtentPages": 179437,
+        "afterDataExtentPages": 179437,
+        "beforeDataResidentPages": 131623,
+        "afterDataResidentPages": 174129,
+        "residentDataPagesChange": 42506
+      },
+      "graph": {
+        "comparable": true,
+        "beforeDataExtentPages": 104256,
+        "afterDataExtentPages": 104256,
+        "beforeDataResidentPages": 98586,
+        "afterDataResidentPages": 100790,
+        "residentDataPagesChange": 2204
+      },
+      "sparse": {
+        "comparable": true,
+        "beforeDataExtentPages": 54850,
+        "afterDataExtentPages": 54850,
+        "beforeDataResidentPages": 39765,
+        "afterDataResidentPages": 39765,
+        "residentDataPagesChange": 0
+      },
+      "payload": {
+        "comparable": true,
+        "beforeDataExtentPages": 576868,
+        "afterDataExtentPages": 576868,
+        "beforeDataResidentPages": 424977,
+        "afterDataResidentPages": 431292,
+        "residentDataPagesChange": 6315
+      },
+      "other": {
+        "comparable": true,
+        "beforeDataExtentPages": 105097,
+        "afterDataExtentPages": 105097,
+        "beforeDataResidentPages": 93742,
+        "afterDataResidentPages": 93742,
+        "residentDataPagesChange": 0
+      }
+    },
+    "counterBrackets": {
+      "backupAndPostSampling": {
+        "from": "2026-10-11T22:14:57.905898+00:00",
+        "to": "2026-10-11T22:17:16.464864+00:00",
+        "delta": {
+          "minorFaults": 75845,
+          "majorFaults": 446171,
+          "readBytes": 1397317632,
+          "rssBytesChange": -361193472,
+          "hostReclaim": {
+            "allocstall_device": 0,
+            "allocstall_dma": 0,
+            "allocstall_dma32": 0,
+            "allocstall_movable": 0,
+            "allocstall_normal": 0,
+            "pgscan_anon": 0,
+            "pgscan_direct": 0,
+            "pgscan_direct_throttle": 0,
+            "pgscan_file": 466386,
+            "pgscan_khugepaged": 0,
+            "pgscan_kswapd": 466386,
+            "pgsteal_anon": 0,
+            "pgsteal_direct": 0,
+            "pgsteal_file": 463210,
+            "pgsteal_khugepaged": 0,
+            "pgsteal_kswapd": 463210,
+            "pswpin": 0,
+            "pswpout": 0,
+            "workingset_refault_anon": 0,
+            "workingset_refault_file": 250521
+          }
+        }
+      },
+      "firstPostBatchesAndGrace": {
+        "from": "2026-10-11T22:17:16.464864+00:00",
+        "to": "2026-10-11T22:17:31.803065+00:00",
+        "delta": {
+          "minorFaults": 16124,
+          "majorFaults": 45508,
+          "readBytes": 203182080,
+          "rssBytesChange": 290836480,
+          "hostReclaim": {
+            "allocstall_device": 0,
+            "allocstall_dma": 0,
+            "allocstall_dma32": 0,
+            "allocstall_movable": 0,
+            "allocstall_normal": 0,
+            "pgscan_anon": 0,
+            "pgscan_direct": 0,
+            "pgscan_direct_throttle": 0,
+            "pgscan_file": 0,
+            "pgscan_khugepaged": 0,
+            "pgscan_kswapd": 0,
+            "pgsteal_anon": 0,
+            "pgsteal_direct": 0,
+            "pgsteal_file": 0,
+            "pgsteal_khugepaged": 0,
+            "pgsteal_kswapd": 0,
+            "pswpin": 0,
+            "pswpout": 0,
+            "workingset_refault_anon": 0,
+            "workingset_refault_file": 49782
+          }
+        }
+      },
+      "warmBatchesAndGrace": {
+        "from": "2026-10-11T22:17:31.803065+00:00",
+        "to": "2026-10-11T22:17:43.309061+00:00",
+        "delta": {
+          "minorFaults": 6310,
+          "majorFaults": 512,
+          "readBytes": 2097152,
+          "rssBytesChange": -22417408,
+          "hostReclaim": {
+            "allocstall_device": 0,
+            "allocstall_dma": 0,
+            "allocstall_dma32": 0,
+            "allocstall_movable": 0,
+            "allocstall_normal": 0,
+            "pgscan_anon": 0,
+            "pgscan_direct": 0,
+            "pgscan_direct_throttle": 0,
+            "pgscan_file": 0,
+            "pgscan_khugepaged": 0,
+            "pgscan_kswapd": 0,
+            "pgsteal_anon": 0,
+            "pgsteal_direct": 0,
+            "pgsteal_file": 0,
+            "pgsteal_khugepaged": 0,
+            "pgsteal_kswapd": 0,
+            "pswpin": 0,
+            "pswpout": 0,
+            "workingset_refault_anon": 0,
+            "workingset_refault_file": 512
+          }
+        }
+      }
+    },
+    "cases": {
+      "known-exact-title": {
+        "baselineServerMs": 78.347055,
+        "baselineWallMs": 93.1,
+        "postVsBaseline": {
+          "serverMs": 1059.7373109999999,
+          "wallMs": 1067.8,
+          "serverMsChange": 981.3902559999999,
+          "serverSlowdown": 13.526192031085277,
+          "sameOrderedIds": true,
+          "sameOrderedIdsScores": true,
+          "sameIdSets": true,
+          "sameSortedPerIdScores": true
+        },
+        "warmVsPost": {
+          "serverMs": 26.757883,
+          "wallMs": 35.9,
+          "serverMsChange": -1032.9794279999999,
+          "serverSlowdown": 0.025249543186084918,
+          "sameOrderedIds": true,
+          "sameOrderedIdsScores": true,
+          "sameIdSets": true,
+          "sameSortedPerIdScores": true
+        }
+      },
+      "known-native-title": {
+        "baselineServerMs": 170.37814400000002,
+        "baselineWallMs": 186.2,
+        "postVsBaseline": {
+          "serverMs": 2747.677992,
+          "wallMs": 2771.2,
+          "serverMsChange": 2577.2998479999997,
+          "serverSlowdown": 16.126939333251567,
+          "sameOrderedIds": false,
+          "sameOrderedIdsScores": false,
+          "sameIdSets": true,
+          "sameSortedPerIdScores": true
+        },
+        "warmVsPost": {
+          "serverMs": 91.66112899999999,
+          "wallMs": 106.5,
+          "serverMsChange": -2656.016863,
+          "serverSlowdown": 0.03335948727138911,
+          "sameOrderedIds": true,
+          "sameOrderedIdsScores": true,
+          "sameIdSets": true,
+          "sameSortedPerIdScores": true
+        }
+      },
+      "known-low-vote-title": {
+        "baselineServerMs": 48.939936,
+        "baselineWallMs": 57.3,
+        "postVsBaseline": {
+          "serverMs": 428.78191799999996,
+          "wallMs": 443,
+          "serverMsChange": 379.841982,
+          "serverSlowdown": 8.761391065161996,
+          "sameOrderedIds": true,
+          "sameOrderedIdsScores": true,
+          "sameIdSets": true,
+          "sameSortedPerIdScores": true
+        },
+        "warmVsPost": {
+          "serverMs": 40.292426,
+          "wallMs": 50.2,
+          "serverMsChange": -388.489492,
+          "serverSlowdown": 0.09396950829442394,
+          "sameOrderedIds": true,
+          "sameOrderedIdsScores": true,
+          "sameIdSets": true,
+          "sameSortedPerIdScores": true
+        }
+      }
+    }
+  },
+  "phaseEvents": [
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:15:02.184279+00:00",
+      "collectionClass": "media",
+      "phase": "snapshot",
+      "status": "started",
+      "cycle": 2
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:02.295329+00:00",
+      "collectionClass": "media",
+      "phase": "snapshot",
+      "status": "completed",
+      "cycle": 2,
+      "elapsedMs": 120111.049
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:02.303480+00:00",
+      "collectionClass": "media",
+      "phase": "publish",
+      "status": "started",
+      "cycle": 2
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:02.375348+00:00",
+      "collectionClass": "media",
+      "phase": "cache_advice",
+      "status": "started",
+      "cycle": 2
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:02.381864+00:00",
+      "collectionClass": "media",
+      "phase": "cache_advice",
+      "status": "completed",
+      "cycle": 2,
+      "elapsedMs": 6.506,
+      "adviceAccepted": true
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:02.382113+00:00",
+      "collectionClass": "media",
+      "phase": "publish",
+      "status": "completed",
+      "cycle": 2,
+      "elapsedMs": 78.665
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:02.382196+00:00",
+      "collectionClass": "media",
+      "phase": "retention",
+      "status": "started",
+      "cycle": 2
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:02.659030+00:00",
+      "collectionClass": "media",
+      "phase": "retention",
+      "status": "completed",
+      "cycle": 2,
+      "elapsedMs": 276.819
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:02.659225+00:00",
+      "collectionClass": "reference",
+      "phase": "snapshot",
+      "status": "started",
+      "cycle": 2
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:05.208045+00:00",
+      "collectionClass": "reference",
+      "phase": "snapshot",
+      "status": "completed",
+      "cycle": 2,
+      "elapsedMs": 2548.812
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:05.214041+00:00",
+      "collectionClass": "reference",
+      "phase": "publish",
+      "status": "started",
+      "cycle": 2
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:05.316399+00:00",
+      "collectionClass": "reference",
+      "phase": "cache_advice",
+      "status": "started",
+      "cycle": 2
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:05.325294+00:00",
+      "collectionClass": "reference",
+      "phase": "cache_advice",
+      "status": "completed",
+      "cycle": 2,
+      "elapsedMs": 8.895,
+      "adviceAccepted": true
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:05.325555+00:00",
+      "collectionClass": "reference",
+      "phase": "publish",
+      "status": "completed",
+      "cycle": 2,
+      "elapsedMs": 111.518
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:05.325731+00:00",
+      "collectionClass": "reference",
+      "phase": "retention",
+      "status": "started",
+      "cycle": 2
+    },
+    {
+      "event": "qdrant.backup.phase.v1",
+      "at": "2026-10-11T22:17:05.346526+00:00",
+      "collectionClass": "reference",
+      "phase": "retention",
+      "status": "completed",
+      "cycle": 2,
+      "elapsedMs": 20.776
+    }
+  ],
+  "samplingLimits": [
+    "Record timestamps fence sequential reads, not exact proc-read instants.",
+    "Counters include ten-second grace, sampling overhead, organic traffic and background work.",
+    "Extent file hashes/counts permit only coarse comparisons; ranges/content were not retained.",
+    "No during-backup meminfo was retained; later headroom cannot establish headroom during reclaim.",
+    "Native ordered result hashes differ while sorted per-ID scores and ID sets match.",
+    "Sequential fixed-case queries can warm later cases; no whole-product acceptance claim."
+  ]
+}
