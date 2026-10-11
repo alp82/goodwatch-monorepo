@@ -4,15 +4,15 @@ The owner read the reports that the API doesn't offer and exported them on 2026-
 
 ## Answer
 
-Mostly no route, and a small part assessed and dropped.
+No route. Google has assessed almost none of the site's real pages.
 
 - **No penalty.** Manual actions and Security issues both report nothing.
 - **Google knows about 120 URLs of the site**, not thousands: 1 indexed and 119 not indexed. The sitemap alone lists 1,096.
-- **Of those 119, Google fetched 84 and chose not to index them** ("Crawled - currently not indexed"). The other 35 are pages that point at another address: 28 with a canonical elsewhere, 7 redirects.
+- **Of those 119, Google fetched 84 and didn't index them** ("Crawled - currently not indexed"). Only 2 of the 84 are pages as the site links them today: one person page and one movie page. The other 82 are sitemap files, old addresses, and addresses with parameters or stray characters. The remaining 35 point at another address: 28 with a canonical elsewhere, 7 redirects.
 - **Google fetches about 1.4 pages a day.** With that, it can't get to know the site whatever the pages are worth.
 - **A title page that Google fetches today is fine:** the live test finds it indexable, with the right title, its own canonical, and 64 links to related titles.
 
-So the work already done (sitemap, redirects, links on the start page) addresses the larger part. The 84 pages that were fetched and declined are the part that says quality also counts; which pages they are is not known, because the export has no example URLs.
+So the work already done (sitemap, redirects, links on the start page) addresses the cause that the reports show. They hold no verdict on the quality of the pages: Google has fetched and declined two of them.
 
 ## Page indexing
 
@@ -46,7 +46,25 @@ Files: [daily counts](gsc-page-indexing-daily-2026-10-11.csv), [reasons](gsc-pag
 - **"Soft 404" is 0**, so the redirects of unknown paths to hubs had not produced that verdict by the time they were removed.
 - **Impressions** in the same file fall from about 100 a day at the end of July to about 15 a day from late August.
 
-**Missing:** the example URLs per reason. The export has the counts only. The 84 "Crawled - currently not indexed" URLs would say what kind of page Google declines.
+### The 84 "Crawled - currently not indexed" URLs
+
+File: [counts per shape](gsc-crawled-not-indexed-2026-10-11.csv). Read from the report's own list on 2026-10-11. Google's validation of this reason started on 2026-09-09 and failed on 2026-09-22.
+
+| Shape | URLs | Last crawled | What it answers today |
+|---|---|---|---|
+| Title page with `?country=..&tab=streaming`, under `/show`, `/tv` or `/movie` | 46 | April 2025 to August 2026 | 200 with the canonical of the page without parameters; `/tv` first redirects to `/show` |
+| Title page with three stray characters appended to the slug | 28 | April 2026 | 200 with the canonical of the right address |
+| `/discover/all?withCast=..` | 5 | April 2026 | 301 to the person page |
+| Sitemap files | 3 | September 2026 | Not pages |
+| Person page (`/person/3084-marlon-brando`) | 1 | 2026-09-25 | 200, its own canonical |
+| Title page (`/movie/50272-we-are-what-we-are`) | 1 | 2026-04-21 | 200, its own canonical |
+
+- **The 46 parameter URLs cover 10 titles and 32 countries.** They are the country switch on a title page as it used to be linked.
+- **The stray characters are the same three on all 28**, from Unicode's private use area, the range icon fonts use. Some page or feed once carried links with them appended.
+- **No URL in the list was crawled after 2026-09-28.** Most were last crawled in December 2025 or April 2026.
+- **None of these shapes is linked or listed today,** and each answers with a redirect or a canonical to the right page. One could be tightened: a title page asked for with a wrong slug answers 200 with a canonical where a 301 to the right address would be the clearer signal.
+
+**Missing:** the example URLs of the other two reasons (28 and 7 pages).
 
 ## Crawl stats
 
@@ -102,4 +120,4 @@ The weekly index record samples the four hubs, so it shows whether the requests 
 
 - **The gate still decides.** Nothing here says pages will stay indexed; it says Google has had almost nothing to judge. The weekly record after the sitemap download is the test.
 - **Watch the crawl rate, not only the index state.** At 1.4 pages a day, 1,096 sitemap URLs take two years. If the rate doesn't rise in the weeks after the resubmission, the index record can't fill, and the question becomes why Google spends so little on the host ("Problems in the past", the slow days).
-- **Get the 84 URLs.** In the Page indexing report, open "Crawled - currently not indexed" and export from there; that export has the URLs.
+- **There is no quality verdict yet.** Two real pages fetched and not indexed say nothing about the other thousand. The first verdict comes when Google fetches pages from the new sitemap.
