@@ -12,6 +12,7 @@ import { tmdbImageUrl } from "~/utils/tmdb-image"
 import { hasEpisodeGrid } from "~/ui/details/episode-grid/scale"
 import { BelowFoldProvider, useBelowFold } from "~/ui/details/below-fold"
 import type { Section } from "~/utils/scroll"
+import { REPLAY_TAP_SCRIPT } from "~/utils/replay-tap"
 
 export interface DetailsProps {
 	media: MovieResult | ShowResult
@@ -52,6 +53,9 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 
 	const content = (
 		<>
+			{/* Remembers a tap on a control that comes before the app's script. Before every control it serves. */}
+			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, see utils/replay-tap.ts */}
+			<script dangerouslySetInnerHTML={{ __html: REPLAY_TAP_SCRIPT }} />
 			{backdrop_path && (
 				<div
 					className="pointer-events-none absolute top-0 z-0 w-full h-full"
