@@ -1,0 +1,25 @@
+table,row,value
+host_requests,goodwatch.app (status: Problems in the past),1800
+host_requests,www.goodwatch.app (status: No problems),3
+response_share,OK (200),0.9229
+response_share,Moved temporarily (302),0.0388
+response_share,Not modified (304),0.0205
+response_share,Server error (5XX),0.0122
+response_share,Moved permanently (301),0.0039
+response_share,Not found (404),0.0017
+file_type_share,JavaScript,0.5768
+file_type_share,HTML,0.1847
+file_type_share,Other file type,0.0699
+file_type_share,CSS,0.0627
+file_type_share,Image,0.0505
+file_type_share,JSON,0.0394
+file_type_share,Other XML,0.0022
+file_type_share,Unknown (failed requests),0.0139
+purpose_share,Refresh,0.9224
+purpose_share,Discovery,0.0776
+googlebot_type_share,Page resource load,0.6983
+googlebot_type_share,Image,0.2285
+googlebot_type_share,Smartphone,0.0477
+googlebot_type_share,Desktop,0.0183
+googlebot_type_share,Other agent type,0.005
+googlebot_type_share,AdsBot,0.0022
