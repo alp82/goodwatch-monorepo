@@ -1,5 +1,5 @@
-// The navigation's search entry: the omnibox in the desktop header and the hub sheet's search field both open one
-// dialog (the phone header's search bar opens the hub) holding the command palette, as do ⌘K / Ctrl K and "/" outside text fields.
+// The navigation's search entry: the omnibox in the desktop header, the phone header's search bar, and the hub sheet's
+// search field all open one dialog holding the command palette, as do ⌘K / Ctrl K and "/" outside text fields.
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import { useEffect, useState } from "react"
@@ -19,6 +19,25 @@ function preloadSearch() {
 	void import("./SearchPanel")
 		.then((module) => module.preloadCommandPalette())
 		.catch(() => {})
+}
+
+/**
+ * Brings up the phone keyboard for the search dialog. Phones only show it for a field focused during the tap itself,
+ * and the dialog's field mounts a moment later; a hidden field takes focus during the tap, and the palette's field
+ * takes it over (focus moving between fields keeps the keyboard up). Call it in the tap's handler.
+ */
+export function holdKeyboardForSearch() {
+	const stand = document.createElement("input")
+	stand.setAttribute("aria-hidden", "true")
+	stand.tabIndex = -1
+	// 16px keeps iOS from zooming in on the field.
+	stand.style.cssText =
+		"position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;pointer-events:none"
+	document.body.appendChild(stand)
+	stand.focus({ preventScroll: true })
+	const remove = () => stand.remove()
+	stand.addEventListener("blur", remove, { once: true })
+	setTimeout(remove, 3000)
 }
 
 /** "⌘K" on Apple platforms, "Ctrl K" elsewhere; empty until the browser tells which (the server can't). */
@@ -72,18 +91,19 @@ export function Omnibox() {
 	)
 }
 
-/** The phone header's search bar. Like the dock's "Go to…", it opens the hub, whose search field leads the sheet. */
+/** The phone header's search bar: opens the search dialog with the keyboard up. */
 export function HeaderSearchBar() {
 	const navigation = useNavigation()
 	const q = useCurrentQuery()
-	const open = Boolean(navigation?.hubOpen)
+	const open = Boolean(navigation?.searchOpen)
 	return (
 		<button
 			type="button"
-			onClick={() => navigation?.setHubOpen(!open)}
+			onClick={() => {
+				holdKeyboardForSearch()
+				navigation?.setSearchOpen(true)
+			}}
 			{...preloadOnIntent}
-			aria-expanded={open}
-			aria-controls={open ? "site-hub" : undefined}
 			aria-haspopup="dialog"
 			aria-label={q ? `${SEARCH_LABEL}: ${q}` : SEARCH_LABEL}
 			className={`flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full bg-linear-180 from-white/[0.09] to-white/[0.04] pr-3 pl-3 text-left text-[14px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12),0_6px_18px_-10px_rgba(0,0,0,0.9)] transition-shadow ${

@@ -16,6 +16,7 @@ import { myListsPath } from "~/ui/share-card/links"
 import { useUser } from "~/utils/auth"
 import { useOpenAfterMount } from "~/utils/first-use"
 import { useNavigation } from "./NavigationContext"
+import { holdKeyboardForSearch } from "./Search"
 import { GoodWatchMark, tmdbImage, useSignUpHref } from "./bits"
 import {
 	type Destination,
@@ -205,8 +206,10 @@ function HubContent() {
 	// With REC_TRACKING a member has My shows, My movies and My library in place of Watch next (#385).
 	const tracked = Boolean(user) && d.myShows.available
 	const pickOn = pick?.href ? currentDestination(pick.href.split("#")[0]) : null
+	// Search opens over the hub, which stays open beneath it: closing the hub would hand focus back to the key that
+	// opened it and take the keyboard down. Closing search comes back here; following a result closes both.
 	const openSearch = () => {
-		navigation?.setHubOpen(false)
+		holdKeyboardForSearch()
 		navigation?.setSearchOpen(true)
 	}
 	const watchSubtitle = user
