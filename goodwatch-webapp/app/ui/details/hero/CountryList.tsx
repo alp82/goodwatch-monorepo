@@ -10,6 +10,7 @@ import { LogoStack } from "~/ui/details/hero/LogoStack"
 import {
 	type CountryCount,
 	plural,
+	rankCountries,
 	toServices,
 } from "~/ui/details/hero/countryOffers"
 import { countryFlagUrl } from "~/utils/country-flag"
@@ -58,7 +59,8 @@ function Row({
 
 // The country list of the where-to-watch block: the countries with the title first, most services first, each with
 // the logos of its services. The other countries fold away under one button; the current one always shows. The
-// counts come with the page; the logos load when the list opens, and the counts stand in for them until then.
+// counts come with the page and order the list until every country's services have loaded, which then order it and
+// show the logos. A page whose details were cached before they carried counts has none: the list waits for the load.
 export default function CountryList({
 	mediaType,
 	titleId,
@@ -84,17 +86,33 @@ export default function CountryList({
 		const ids = offers.data?.countries[code]?.[OFFER_TABS.indexOf(tab)]
 		return ids ? toServices(ids, catalog) : []
 	}
+	const loaded = offers.data
+		? rankCountries(
+				Object.fromEntries(
+					Object.entries(offers.data.countries).map(([code, lists]) => [
+						code,
+						lists.map((ids) => ids.length),
+					]),
+				),
+				tab,
+			)
+		: null
+	const withAnyOffer = loaded ?? rows
 	const [query, setQuery] = useState("")
 	const [rest, setRest] = useState(false)
 	const countries = useCountries()
 	const q = query.trim().toLowerCase()
 	const matches = (code: string, name: string) =>
 		!q || name.toLowerCase().includes(q) || code.toLowerCase() === q
-	const withOffers = rows.filter((r) => matches(r.code, r.name))
-	const offered = new Set(rows.map((r) => r.code))
-	const without = (countries.data ?? []).filter(
-		(c) => !offered.has(c.code) && matches(c.code, c.name),
-	)
+	const withOffers = withAnyOffer.filter((r) => matches(r.code, r.name))
+	const offered = new Set(withAnyOffer.map((r) => r.code))
+	// Which countries have nothing is known once some country has something, or every country's services loaded.
+	const known = loaded !== null || rows.length > 0
+	const without = known
+		? (countries.data ?? []).filter(
+				(c) => !offered.has(c.code) && matches(c.code, c.name),
+			)
+		: []
 	// A search shows every match; otherwise the countries without offers wait behind their button, except the current.
 	const shownWithout =
 		q || rest ? without : without.filter((c) => c.code === current)
@@ -134,10 +152,28 @@ export default function CountryList({
 						))}
 					</ul>
 				)}
-				{!q && rows.length === 0 && (
+				{!q && withAnyOffer.length === 0 && loaded && (
 					<p className="px-2 py-2 text-sm text-gray-500">
 						Not {verb} in any country.
 					</p>
+				)}
+				{withAnyOffer.length === 0 && offers.isPending && (
+					<p className="px-2 py-2 text-xs text-gray-500" aria-busy="true">
+						Loading where it is {verb}…
+					</p>
+				)}
+				{offers.isError && (
+					<output className="block px-2 py-2 text-xs text-gray-400">
+						The services of other countries could not be loaded.{" "}
+						<button
+							type="button"
+							className="cursor-pointer underline"
+							disabled={offers.isFetching}
+							onClick={() => offers.refetch()}
+						>
+							Try again
+						</button>
+					</output>
 				)}
 				{shownWithout.length > 0 && (
 					<ul>
@@ -182,6 +218,7 @@ export default function CountryList({
 					</output>
 				)}
 				{q &&
+					known &&
 					withOffers.length === 0 &&
 					without.length === 0 &&
 					!countries.isPending && (

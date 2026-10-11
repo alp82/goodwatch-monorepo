@@ -30,8 +30,16 @@ export function countriesWithOffers(
 	media: Media,
 	tab: OfferTab,
 ): CountryCount[] {
+	return rankCountries(media.streaming_countries?.counts ?? {}, tab)
+}
+
+/** The countries with a count above zero for the tab, most first, then by name. Counts are per tab, in tab order. */
+export function rankCountries(
+	counts: Record<string, readonly number[]>,
+	tab: OfferTab,
+): CountryCount[] {
 	const index = OFFER_TABS.indexOf(tab)
-	return Object.entries(media.streaming_countries?.counts ?? {})
+	return Object.entries(counts)
 		.map(([code, counts]) => ({
 			code,
 			name: regionName(code),

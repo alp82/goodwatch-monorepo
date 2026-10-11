@@ -6,7 +6,7 @@
 //   /prototype/watch-log-real            a member
 //   /prototype/watch-log-real?guest=1    a guest: Seen asks to sign in
 //   &hero=693134|680|157336  also the REAL hero of the title page for that movie (Dune: Part Two, not seen;
-//                            Pulp Fiction, Seen through its score; Interstellar, three watches), &providers=one|many|none|only|nowhere
+//                            Pulp Fiction, Seen through its score; Interstellar, three watches), &providers=one|many|none|only|nowhere|stale
 // A production build leaves the route out (PROTOTYPES in vite.config.js).
 import { type ShouldRevalidateFunction, useSearchParams } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -243,7 +243,7 @@ function RealHero() {
 	const [params] = useSearchParams()
 	const sample = SAMPLES.find((s) => String(s.tmdbId) === params.get("hero") && s.mediaType === "movie")
 	const asked = params.get("providers") ?? ""
-	const providers = (["one", "many", "none", "only", "nowhere"].includes(asked) ? asked : "one") as HeroProviders
+	const providers = (["one", "many", "none", "only", "nowhere", "stale"].includes(asked) ? asked : "one") as HeroProviders
 	const movie = useMemo(() => {
 		if (!sample) return null
 		const parts = heroParts(providers, { poster_path: sample.poster, backdrop_path: BACKDROPS[sample.tmdbId] })

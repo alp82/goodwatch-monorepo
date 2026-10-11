@@ -3,8 +3,9 @@
 // The logos are TMDB's; the numbers are made up. `providers` picks how many services have the title.
 
 // "one", "many" and "none" are what Germany has; other countries have the title too. "only" is "one" with no other
-// country, "nowhere" is no offer in any country.
-export type HeroProviders = "one" | "many" | "none" | "only" | "nowhere"
+// country, "nowhere" is no offer in any country. "stale" is "one" in details cached before they carried the other
+// countries: the country list then learns them from its own request.
+export type HeroProviders = "one" | "many" | "none" | "only" | "nowhere" | "stale"
 
 const SERVICES = [
 	{ tmdb_id: 8, name: "Netflix", logo: "/rK1KljqmbvO9HQa1PBFLILWah72.png" },
@@ -26,6 +27,7 @@ const OFFERS: Record<HeroProviders, Record<"flatrate" | "rent" | "buy", number[]
 	none: { flatrate: [], rent: [], buy: [] },
 	only: { flatrate: [8], rent: [], buy: [] },
 	nowhere: { flatrate: [], rent: [], buy: [] },
+	stale: { flatrate: [8], rent: [], buy: [] },
 }
 
 // The other countries' offers, as the details carry them in short: services per tab (stream, rent, buy) for each
@@ -80,7 +82,7 @@ export function heroParts(providers: HeroProviders, art: { poster_path?: string 
 		},
 		videos: { trailers: [{ key: "49xWJJvpjzI" }] },
 		streaming_services: SERVICES,
-		streaming_countries: shortCountries(providers),
+		streaming_countries: providers === "stale" ? undefined : shortCountries(providers),
 		streaming_availabilities: (Object.keys(offers) as (keyof typeof offers)[]).flatMap((streaming_type) =>
 			offers[streaming_type].map((streaming_service_id) => ({ streaming_service_id, streaming_type, stream_url: "#streaming" })),
 		),
