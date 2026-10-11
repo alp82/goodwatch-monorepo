@@ -42,6 +42,7 @@ import { Minimap } from "./Minimap"
 import { useUndoToast } from "~/ui/title-actions/useUndoToast"
 import { Caption, ProximityCard } from "./ProximityCard"
 import { TopBar } from "./TopBar"
+import { Tutorial, useTutorial } from "./Tutorial"
 import { ZoomRail } from "./ZoomRail"
 import {
 	type MapQuery,
@@ -330,6 +331,21 @@ export function ExplorerMap({
 	useEffect(() => {
 		setTouch(window.matchMedia?.("(pointer: coarse)").matches ?? false)
 	}, [])
+	const [tutorial, endTutorial] = useTutorial(member, userLoading)
+	// The tutorial plays until the viewer first touches, clicks, scrolls, or presses a key on the map.
+	useEffect(() => {
+		const el = stage.current
+		if (!tutorial || !el) return
+		const opts = { capture: true, passive: true }
+		el.addEventListener("pointerdown", endTutorial, opts)
+		el.addEventListener("wheel", endTutorial, opts)
+		el.addEventListener("keydown", endTutorial, opts)
+		return () => {
+			el.removeEventListener("pointerdown", endTutorial, opts)
+			el.removeEventListener("wheel", endTutorial, opts)
+			el.removeEventListener("keydown", endTutorial, opts)
+		}
+	}, [tutorial])
 	const cardEl = useRef<HTMLDivElement>(null)
 	const anchorEl = useRef<HTMLDivElement>(null)
 	const goEl = useRef<HTMLDivElement>(null)
@@ -1430,8 +1446,14 @@ export function ExplorerMap({
 					</span>
 				</div>
 			)}
-			{map && !active && !bar && !combined && atOverview && (
-				<p className="ex-hint">{hint}</p>
+			{map && !active?.pinned && !bar && atOverview && tutorial ? (
+				<Tutorial engine={engine} touch={touch} />
+			) : (
+				map &&
+				!active &&
+				!bar &&
+				!combined &&
+				atOverview && <p className="ex-hint">{hint}</p>
 			)}
 			{toast && <output className="ex-toast">{toast}</output>}
 			{hideToast.node}
