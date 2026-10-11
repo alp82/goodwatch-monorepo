@@ -1,4 +1,5 @@
 // The screenshots of this folder: node shots.mjs <directory>. Same setup as drive.mjs.
+// node shots.mjs <directory> unmark makes only the ones of Unmark season (390 x 844 and 1440 x 900).
 import { mkdirSync } from "node:fs"
 import { BASE, launch, settle } from "./lib.mjs"
 
@@ -6,7 +7,8 @@ const OUT = process.argv[2]
 mkdirSync(OUT, { recursive: true })
 const browser = await launch()
 const T = "today=2026-10-08&latency=40"
-const SIZES = { phone: { width: 390, height: 844, deviceScaleFactor: 1.5, isMobile: true, hasTouch: true }, desktop: { width: 1280, height: 900, deviceScaleFactor: 1 } }
+const ONLY = process.argv[3]
+const SIZES = { phone: { width: 390, height: 844, deviceScaleFactor: 1.5, isMobile: true, hasTouch: true }, desktop: { width: 1280, height: 900, deviceScaleFactor: 1 }, wide: { width: 1440, height: 900, deviceScaleFactor: 1 } }
 
 async function open(size, query) {
 	const { width, height, ...rest } = SIZES[size]
@@ -40,7 +42,7 @@ const list = async (page) => {
 }
 const season = (page, n) => page.locator(`[data-season-press="${n}"]`).click({ position: { x: 12, y: 8 } })
 
-for (const size of ["phone", "desktop"]) {
+for (const size of ONLY ? [] : ["phone", "desktop"]) {
 	let page = await open(size, "show=supernatural&scenario=watching&overviews=1")
 	await save(page, "[data-hero]", `hero-watching-${size}`)
 	await page.locator("[data-status-pill]").click()
@@ -143,6 +145,19 @@ for (const size of ["phone", "desktop"]) {
 	await season(page, 0)
 	await settle(page, 400)
 	await save(page, "[data-episode-list]", `list-specials-${size}`)
+	await page.context().close()
+}
+// Unmark season: the control in an opened season's head, and the toast with its Undo. The wide ones at 1440.
+for (const [size, name] of !ONLY || ONLY === "unmark" ? [["phone", "phone"], ["wide", "desktop"]] : []) {
+	const page = await open(size, "show=supernatural&scenario=watching")
+	await list(page)
+	await season(page, 2)
+	await settle(page, 400)
+	await save(page, "[data-episode-list]", `list-unmark-season-${name}`)
+	await page.locator("[data-unmark-season]").click()
+	await settle(page, 400)
+	await page.locator("[data-tracking-toast]").scrollIntoViewIfNeeded()
+	await view(page, `toast-unmark-season-${name}`)
 	await page.context().close()
 }
 await browser.close()

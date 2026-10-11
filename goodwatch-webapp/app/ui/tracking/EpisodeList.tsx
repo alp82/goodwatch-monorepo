@@ -1086,7 +1086,7 @@ function SeasonHead({
 	const stepper = `flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-gray-300 hover:bg-white/10 disabled:cursor-default disabled:opacity-25 ${FOCUS}`
 	const left = count.aired - count.watched
 	return (
-		<div className="flex min-h-11 items-center gap-1 py-1 pl-3 pr-1">
+		<div className="flex min-h-11 flex-wrap items-center gap-1 py-1 pl-3 pr-1 lg:flex-nowrap">
 			{steppers && (
 				<button
 					type="button"
@@ -1150,6 +1150,19 @@ function SeasonHead({
 					<CheckIcon className="h-3.5 w-3.5" />
 					Mark season
 				</button>
+			)}
+			{!special && count.watched > 0 && (
+				// Beside Mark season where the head has the room; under it on a narrow screen, whose head is full.
+				<div className="order-last flex basis-full justify-end lg:order-none lg:basis-auto">
+					<button
+						type="button"
+						data-unmark-season
+						onClick={() => model.actions.unmarkSeason(season.number)}
+						className={`${CHIP} ml-1.5 shrink-0 text-pink-300 hover:bg-white/10`}
+					>
+						Unmark season
+					</button>
+				</div>
 			)}
 			{!only && (
 				<button

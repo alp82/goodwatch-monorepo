@@ -673,6 +673,7 @@ only a state that is one step behind its log rows, and only for the events that 
 | Step 4, a Seen press | The group's log rows, the state before the press, no standing press: every tick is there and the progress is full, the state is not Seen | The retry. Without it the press can't be taken back with one press; the member presses Seen again, which inserts nothing and stands on an empty group. The earlier group's rows are unticked one by one or stay |
 | Step 4, Seen pressed again | The group's rows are gone and the row still says Seen with the press standing | The retry. Without it the row has the signature the fill job looks for (C5, section 6): the job puts back the group's rows for the episodes that had aired by the day of the press, so the press stands again as the row says |
 | Step 4, a press put back (row 30) | The press's rows are there again and the state is still the one taking it back left: every tick is there, the state is not Seen and no press stands | The retry: step 4 inserts nothing, step 5 writes the state and the press. Without it, as after a stopped Seen press |
+| Step 4, an unmarked season put back (rows 32 to 34) | The season's rows are there again and the state is still the one Unmark season left: every tick is there, and a show that was Seen reads Watching with no press | The retry: step 4 inserts nothing, step 5 writes the state and the press. Without it the member has the watches and a state the machine allows; a tick or a Seen press moves it on |
 | Step 4, a movie's first watch or the delete of its last | A log row without a state row, or a state row without a log row: the movie's log and the lists disagree on whether it is Seen | The retry, or the check (invariant 3): the row follows the log |
 | Step 5 | The state is right; Want to See or Not interested is still set on a started show | The retry. The check lists it (invariant 5), except a Want to See row on a show that became Seen, which reads as Want to rewatch until the member takes it off |
 | Step 6 | The member data cache holds the old map for at most 5 minutes | Its lifetime |
@@ -686,7 +687,8 @@ columns that change; `updated_at` always does.
 | Unwatch an episode (rows 6 to 10) | Delete the episode's rows of the current pass, by their `watch_id` | `state` by the row taken; leaving Seen sets the press columns NULL | | The tick gone, state and label |
 | Mark a season; Watched up to here | Insert one row per aired regular episode in range not yet watched in the pass: origin `season` or `upto`, one group id, no date | As if each were watched in turn (section 5) | As a watch | Every tick of the range, state. Toast with Undo and "Set a date" |
 | "Set a date" on a group | `UPDATE user_watch_log SET watched_at = ?, watched_at_precision = 'day', updated_at = ? WHERE user_id = ? AND group_id = ?` | None | | The dates |
-| Unmark a season; Undo of a group mark | One delete for the rows of the season in the current pass, or `WHERE user_id = ? AND group_id = ?` | As if each were unwatched in turn | | The ticks gone, state |
+| Unmark a season; Undo of a group mark | One delete for the rows of the season in the current pass, or `WHERE user_id = ? AND group_id = ?` | As if each were unwatched in turn | Leaving Seen clears Want to See (it was Want to rewatch) | The ticks gone, state. Unmark season: toast with Undo |
+| Undo of Unmark a season (rows 32 to 34) | Insert the rows the unmark removed as the browser held them: the same `watch_id`, episode, origin, `group_id`, `import_id`, pass, `watched_at` with its precision, and `created_at` | The state the show had: `state`, for a Seen show `seen_press_group` and `seen_press_from`, and `state_changed_at` as it was when the state moves back (a new row when the unmark had left none). On hold and Dropped never moved | Clears Want to See and Not interested | The season's ticks, the state, and the press's line as before |
 | Press Seen (rows 11, 12) | Insert one row per aired regular episode not yet watched in the pass: origin `seen`, the press's group id, no date | `state = 'seen'`, `seen_press_group`, `seen_press_from` = the state before | Clears Want to See and Not interested; pressed on a Seen show (row 12), Want to See stays | Every tick, "Seen" or "Caught up", the prompt to rate |
 | Press Seen again (rows 13 to 17) | `DELETE FROM user_watch_log WHERE user_id = ? AND group_id = ?` | `state` by the row taken; press columns NULL | Clears Want to See unless the show stays Seen (row 13) | The group's ticks gone, the state before. Toast with Undo |
 | Undo of Press Seen again (row 30) | Insert the press's rows as the browser held them: the same `watch_id`, `group_id`, origin `seen`, pass, `watched_at` with its precision, and `created_at` | `state = 'seen'`, `seen_press_group`, `seen_press_from`, and `state_changed_at` as it was before the press was taken back (a new row when taking it back had left none) | Clears Want to See and Not interested | The press's ticks, the state and the press's line as before |
@@ -784,6 +786,10 @@ below names only the columns that change. Rows 10b and 27b exist only under opti
 | 30 | Put a Seen press back (the Undo of rows 13 to 17); from the state that row left | + the group, as it was: ids, dates, `created_at` | → `seen`, `seen_press_group` and `seen_press_from` as they were, `state_changed_at` as it was (a new row after row 17) | Want to See and Not interested deleted |
 | 31 | Want to See on a Seen show (Want to rewatch) | None | None | `user_wishlist` row added or deleted; Not interested deleted. The row lasts while the show stays Seen: every row that leaves Seen deletes it (13 to 17 unless the show stays Seen, 26, 28, 29, and a removed watch that takes row 8) |
 
+| 32 | Put an unmarked season back (the Undo of Unmark season), it was unmarked on a Seen show; from Watching, Not started | + the season's rows, as they were: ids, dates, origins, groups, `created_at` | → `seen`, `seen_press_group` and `seen_press_from` as they were, `state_changed_at` as it was (a new row after row 8) | Want to See and Not interested deleted |
+| 33 | The same, it was unmarked on a Watching show; from Watching, Not started | The same | → `watching`; after row 8 a new row with `state_changed_at` as it was | The same |
+| 34 | The same; from On hold, Dropped | The same | Unchanged | The same |
+
 Rows 28 and 29 were added after the owner used the show page: a member who has seen the earlier seasons and will
 not continue had no way to say so without ticking an episode first. They need an episode that aired since, so the
 events `hold` and `drop` carry the device's `today` as a group action does, and the server reads "aired" for them
@@ -818,6 +824,45 @@ What the Undo does not put back: `updated_at` of the rows, and the state row's o
 press back had deleted the row. Nothing reads either. A press that is taken back before the server answered the
 press itself is put back with the times the browser guessed for it, which differ from the server's by the
 request's travel time.
+
+Rows 32 to 34 were added with "Unmark season" in the episode list (2026-10-11). Unmark season itself needed no
+row: it is `unmarkSeason`, which removes every watch of the season's episodes in the current pass, whoever made
+it, and takes the row an unwatch takes for each episode in turn. That settles what the state becomes:
+
+- **The last watch of a show goes** (row 8): a Watching or Seen show is Not started, and its state row is deleted
+  unless a prompt column or a later pass keeps it. An On hold or Dropped show keeps its status with nothing watched
+  (row 10, the owner's decision M2).
+- **A Seen show loses a season** (row 7): it is Watching. A standing Seen press ends, as with every step that
+  leaves Seen: the press's rows of the other seasons stay in the log with their group id, and can no longer be
+  taken back together. Want to rewatch ends with it (row 31).
+- **An On hold or Dropped show loses a season** (rows 9, 10): nothing but the watches changes.
+- **After Watch again** only the current pass's watches go. The earlier passes' watches stay in each episode's log,
+  and they are why a show that loses its only season of the second pass is Watching (a watch remains, row 7) and
+  not Not started.
+- A special is not a season's: the specials have no "Mark season" and no "Unmark season".
+
+The Undo is an event of its own for the reason row 30 is: nothing else puts the same rows back. Marking the
+season again would write new rows under a new group, without the dates, and would leave a Seen show Watching or
+make an On hold show Watching. So `restoreSeason` carries what the unmark removed and where the show stood: the
+state, the Seen press that stood (for a Seen show), the pass, the time the show had come to that state, and each
+watch with its id, episode, origin, group, import, date and `created_at`. The browser builds it from the rows it
+held before the unmark and the ids that went (`seasonRestore` in `storage.ts`). It is taken only onto what the
+unmark left:
+
+- the state that rows 7 to 10 lead to: Watching or Not started for a season unmarked on a Watching or Seen show,
+  and the same status for one unmarked on an On hold or Dropped show;
+- the same pass, and no press standing;
+- none of its episodes watched in the pass since.
+
+Anything else is refused ("The show has changed since, so the season can't be put back."), and nothing is
+written. Sent again while the rows and the state are back, it only clears the two lists. The writer checks the
+event as a member's input before it reads a row: the state is one a show with watches has; a press is named only
+for a Seen show, under an id the browser can make or this show's `mig-seen-<show id>`; every watch is a regular
+episode's, once, and has the id its origin gives it (the browser's for a tick, `g-<group>-<episode id>` for Mark
+season, Watched up to here and a Seen press, an import's `i-…` with an import of this member's for an imported
+one); a date fits its precision and has come; no time is ahead of the clock; at most 20,000 watches. As with row
+30, `updated_at` and a deleted state row's own `created_at` are not put back, and Want to rewatch is not put back
+on the Wishlist.
 
 The two answers to a prompt are not rows of the table: "Not now" sets `rate_prompt_dismissed_at`; "I'm partway" and
 "Just rating" set `seen_question = 'answered'`. Row 22 is the machine's row for a show; a movie's score is in the
@@ -1574,7 +1619,8 @@ tracking from the viewer and 401 without a session.
   `notInterested` and `wantToSee` off, which other writers own, and the two edits of dates. `hold` and `drop`
   may carry `today`, the date on the device, as the group actions do (rows 28 and 29 need to know what aired).
   `restoreSeen` carries a Seen press as the page held it (row 30); the answer's `rows` are then the press's rows
-  as they are stored again.
+  as they are stored again. `restoreSeason` carries the rows Unmark season removed and the state the show had (rows 32
+  to 34), and is answered the same way.
 
 **Where the build differs from the text above and from the prototypes, or settles what they left open:**
 
@@ -1672,7 +1718,14 @@ tracking from the viewer and 401 without a session.
   was before." The rows have their ids, dates and `created_at` again, the state row its press and the time the
   show became Seen, so the press's line reads as it did, also for a migrated mark of 2024. The Undo is gone with
   the toast, after nine seconds or with the next action's toast; a press can't be put back later.
-- **There is no "Unmark season".** A season is taken back with the Undo of its toast, or row by row.
+- **"Unmark season" stands where "Mark season" does** (added 2026-10-11; until then a season was taken back with
+  the Undo of its toast, or row by row). It is in an opened season's head whenever an episode of the season is
+  watched in the current pass, so a partly watched season has both: beside "Mark season" on a wide screen, and on
+  a line of its own under it below 1024 pixels, where the head's row is full. It is drawn as "Remove watch" is,
+  the quiet pink of what takes something away. It applies at once: `unmarkSeason`, then the toast "Season 2
+  unmarked: 4 watches removed" with Undo. Undo sends `restoreSeason` (rows 32 to 34 in section 5) and the page
+  says "Season 2 is back, as it was before.": the rows have their ids and dates again, and the show its state and
+  its Seen press. The Undo is gone with the toast.
 - **Specials have no rating and no bulk mark.** IMDb lists them without a season, and the machine's group actions
   mark regular episodes only.
 - **The rating match is a little wider than "the title matches":** where one side has no title or a placeholder
@@ -1718,6 +1771,33 @@ stylesheet is 313 bytes smaller, 365,990 bytes (42,659 gzip, 32,053 Brotli). Wha
 with the flag on: 44.3 KB (13.4 KB Brotli) for the machine, the store, the actions and the question, where it was
 40.7 KB (12.6 KB); 13.4 KB (4.6 KB) for the hero box, where it was 14.0 KB (4.7 KB); and 31.0 KB (9.6 KB) for the
 episode list, where it was 30.3 KB (9.4 KB).
+
+**Unmark season (2026-10-11), how it was checked.** At the writer, against the in-memory Crate
+(`tracking.test.ts`): unmark and Undo end in the same rows and state row, to the column, for a Seen show with a
+press, ticks before it and dates set since (rows 7 and 32); for the only watched season of a Watching show (rows 8
+and 33, the Wishlist and Not interested cleared again); for an On hold and a Dropped show, also with nothing left
+watched (rows 9, 10 and 34); and in the second pass, where the first pass's rows stay. The same Undo sent twice
+writes once; 26 kinds of an event that could not be this show's are refused before anything is written, among them
+an import that is not the member's; and a season is not put back onto a show that was put on hold or had one of
+its episodes ticked since. At the page's actions (`show-tracking.test.ts`): the answer hands back the season's
+stored rows, and the read after the Undo equals the read before. In the machine (`machine.test.ts`): ten cases
+over rows 32 to 34 with the record and everything derived from it equal to before, what is refused, and the two
+ways a request sent again finds the show. The 3,000 walks of `storage.test.ts` put back every other season they
+unmark, 408 times, and compare what is stored with what was. In the browser, on the harness: 28 more checks at
+390 pixels and 28 at 1280 (283 and 279 in all, and the 279 again at 1440): where the control is and that nothing
+overflows, that it is absent for a season with nothing watched, the toast, the rows and the state after unmark and
+after Undo for a Watching show, a Seen show with its press's line, an On hold and a Dropped show with one season,
+and the last watch of a Watching show. Screenshots at 390 x 844 and 1440 x 900, made by `node shots.mjs
+<directory> unmark`: `list-unmark-season` and `toast-unmark-season`. Not checked: the endpoint against a real Crate
+with a real session, the control inside the real show page, a touch screen, and a mark the migration wrote on the
+owner's own shows (the writer's test covers `mig-seen-<show id>` as a press's group by its shape only).
+
+Unmark season adds no script to the first view. Built from `main` (`be55a0d2`, from a copy of the tree outside
+the repository) and from the branch, 231 of the 233 client chunks are the same but for the release id the build
+writes into each file inside a repository. The two that grew load after the first view, for a member with the
+flag on: the machine, the store and the actions by 2,856 bytes, to 48.0 KB (14.2 KB Brotli), and the episode list
+by 336 bytes, to 31.3 KB (9.8 KB). The stylesheet grows by five class names, from 369,005 to 369,095 bytes
+(42,823 to 42,847 gzip, 32,073 to 32,116 Brotli). `./bench.sh budget` was not run: it needs a deployed site.
 
 **How it was checked.** Tests: `node --test 'app/domain/tracking/*.test.ts' app/server/show-tracking.test.ts`,
 the server's against the in-memory Crate. The components were driven in headless Chromium at 390 and 1280 pixels

@@ -705,10 +705,11 @@ function restorableSeason(
 			if (!validId(id) || group !== null || importId !== null) return false
 			if (!whole(episodeId)) return false
 		} else if (origin === "season" || origin === "upto" || origin === "seen") {
+			if (typeof group !== "string") return false
 			if (!validId(group) && !(origin === "seen" && group === migrated))
 				return false
 			if (!whole(episodeId) || importId !== null) return false
-			if (id !== groupWatchId(group as string, episodeId)) return false
+			if (id !== groupWatchId(group, episodeId)) return false
 		} else return false
 		if (!past(watch.createdAt)) return false
 		const { watchedAt, precision } = watch

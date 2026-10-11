@@ -1013,7 +1013,8 @@ export interface StepOptions {
 	 *
 	 * With it, watches that carry this action's id are left out before the event is applied, so the event gives the
 	 * same watches and the right state again; a Seen press that already stands under this id, a press that was
-	 * put back and stands, and a Drop of a Dropped show, only clear what they clear; an unwatch of an episode that is no longer watched still takes its
+	 * put back and stands, a season that was put back and is there, and a Drop of a Dropped show, only clear what
+	 * they clear; an unwatch of an episode that is no longer watched still takes its
 	 * row of the table; and a deletion that finds nothing left to delete only makes a Watching show with no watch
 	 * Not started.
 	 */

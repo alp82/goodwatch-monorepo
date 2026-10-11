@@ -1249,7 +1249,11 @@ test("a season is not put back when the show has changed since, or when its rows
 		NOT,
 	)
 	// An imported watch names an import of this member.
-	const fromImport = { id: imported, origin: "import", importId: "imp-1" }
+	const fromImport = {
+		id: imported,
+		origin: "import" as const,
+		importId: "imp-1",
+	}
 	await refusedFor(withWatch({ ...fromImport, importId: "imp-2" }, byHand), NOT)
 	await refusedFor(withWatch({ ...fromImport, id: "tick-0001" }, byHand), NOT)
 	// A movie has no season.
@@ -1268,7 +1272,7 @@ test("a season is not put back when the show has changed since, or when its rows
 	)
 	await act({ type: "unwatch", season: 1, number: 2 })
 
-	// Rows a migration and an import made go back as they were.
+	// A row an import made goes back as it was, beside the member's own.
 	const all = await act(
 		{
 			...restore,

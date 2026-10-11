@@ -12,7 +12,7 @@ import type {
 	PageAction,
 	PageEpisode,
 } from "~/domain/tracking/show-page"
-import { seenPressRestore } from "~/domain/tracking/storage"
+import { seasonRestore, seenPressRestore } from "~/domain/tracking/storage"
 import { getQueryKeyUserData } from "~/routes/api.user-data"
 import { type UserData, createMediaKey } from "~/types/user-data"
 import { useUser } from "~/utils/auth"
@@ -21,6 +21,7 @@ import {
 	type ToastAction,
 	deviceClock,
 	newActionId,
+	seasonTitle,
 } from "./store"
 
 const plural = (count: number, word: string) =>
@@ -204,6 +205,36 @@ export function useTrackingActions(store: ShowStore, title: string) {
 				group(
 					{ type: "markSeason", season, today: today() },
 					(count) => `${plural(count, "episode")} marked, date unknown`,
+				)
+			},
+
+			/**
+			 * Removes the season's watches of the current pass, whoever made them. Undo puts them back as they were
+			 * stored, with their ids and dates, and with them the state the show had and its Seen press.
+			 */
+			unmarkSeason(season: number) {
+				const before = store.snapshot.copy
+				if (!before || !store.act({ type: "unmarkSeason", season }).ok) return
+				const kept = new Set(
+					(store.snapshot.copy?.log ?? []).map((row) => row.watch_id),
+				)
+				const removed = before.log.filter((row) => !kept.has(row.watch_id))
+				const restore = seasonRestore(before.state, removed)
+				const name = seasonTitle(season)
+				store.say(
+					`${name} unmarked: ${watches(removed.length)} removed`,
+					restore
+						? [
+								{
+									label: "Undo",
+									run: () => {
+										store.dismissToast()
+										if (store.act(restore).ok)
+											store.say(`${name} is back, as it was before.`)
+									},
+								},
+							]
+						: [],
 				)
 			},
 

@@ -46,6 +46,13 @@ prototype of those rules produced 27 surprises. The owner asked for a state mach
   the title overview of 2026-10-09 a Seen show also had a Seen button, and a second press of it took the press
   back without asking. A Seen show now says so in its status pill and has no such button.) Each ends in the same
   toast, which offers the Undo.
+- **Unmarking a season can be undone exactly** (rows 32 to 34, added 2026-10-11 with "Unmark season" in the
+  episode list). Unmark season is that many unwatches, so the table already said what it does to the state: the
+  last watch gone makes a Watching or Seen show Not started and leaves On hold and Dropped alone, and a Seen show
+  that loses a season is Watching, its press ended. Its Undo is an event of its own, `restoreSeason`, for the
+  reason `restoreSeen` is: marking the season again would write other rows and would not return a Seen or an On
+  hold show to its state. It carries the rows as they were stored and the state the show had, with its press, and
+  the machine takes it only onto what the unmark left.
 - **Want to See on a Seen show is Want to rewatch** (row 31, added 2026-10-09 with the new title overview). A
   member who has seen a show and means to watch it again had no way to say so short of Watch again, which starts
   the next pass at once and empties the ticks. Want to See is offered on a Seen show, reads "Want to rewatch"

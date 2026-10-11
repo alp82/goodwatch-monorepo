@@ -5,7 +5,8 @@ export const SHOTS = process.env.SHOTS ?? "./shots"
 
 export const VIEWPORTS = {
 	phone: { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
-	desktop: { width: 1280, height: 900, deviceScaleFactor: 1 },
+	// DESKTOP=1440 drives the wide screen at another width.
+	desktop: { width: Number(process.env.DESKTOP ?? 1280), height: 900, deviceScaleFactor: 1 },
 }
 
 export async function launch() {

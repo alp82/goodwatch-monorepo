@@ -424,6 +424,32 @@ for (const size of sizes) {
 		s = await stored(page)
 		C("undo of mark season: the group is gone", s.log.filter((r) => r.season_number === 5).length === 0 && s.state.state === "watching")
 
+		// Unmark season
+		C("unmark season: not offered for a season with nothing watched", (await count(page, "[data-unmark-season]")) === 0 && (await count(page, "[data-mark-season]")) === 1)
+		await pressSeason(page, 2)
+		await settle(page, 300)
+		const chips = await page.evaluate(() => ["[data-mark-season]", "[data-unmark-season]", "[data-close-season]"].map((sel) => { const r = document.querySelector(sel).getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom), left: Math.round(r.left), right: Math.round(r.right), h: Math.round(r.height) } }))
+		C("unmark season: offered beside Mark season once an episode is watched", (await text(page, "[data-unmark-season]")).trim() === "Unmark season" && (await text(page, "[data-season-count]")).trim() === "4/22")
+		if (size === "phone") C("unmark season, phone: under Mark season, 40 px to press, inside the screen", chips[1].top >= chips[0].bottom && chips[1].h >= 40 && chips[1].left >= 0 && chips[1].right <= 390 && chips[2].right <= 390, JSON.stringify(chips))
+		else C("unmark season, wide: in the head's row, between Mark season and the close button", Math.abs(chips[1].top - chips[0].top) <= 1 && chips[1].left >= chips[0].right && chips[1].right <= chips[2].left, JSON.stringify(chips))
+		C("unmark season: no sideways scroll and nothing that scrolls by itself", (await noOverflow(page)) && (await innerScrollers(page)).length === 0)
+		const marked = await exactly(page)
+		const had = (await stored(page)).log.length
+		const sentUnmark = await posts(page)
+		await page.locator("[data-unmark-season]").click()
+		await settle(page)
+		s = await stored(page)
+		C("unmark season: the season's four watches are gone, every other watch stays, still Watching", s.log.filter((r) => r.season_number === 2).length === 0 && s.log.length === had - 4 && s.state.state === "watching" && (await posts(page)) === sentUnmark + 1)
+		C("unmark season: the toast says what went and offers Undo", /Season 2 unmarked: 4 watches removed/.test(await toast(page)) && (await count(page, "[data-tracking-toast] button:has-text('Undo')")) === 1 && (await count(page, "[data-tracking-toast] button:has-text('Set a date')")) === 0, await toast(page))
+		C("unmark season: the season reads 0/22, no tick is left, and the control is gone", (await text(page, "[data-season-count]")).trim() === "0/22" && (await count(page, "[data-season-panel='2'] [data-tick][aria-checked='true']")) === 0 && (await count(page, "[data-unmark-season]")) === 0)
+		C("unmark season: the hero's progress follows", /22 of 327/.test(await tip(page, "[data-progress]")), await tip(page, "[data-progress]"))
+		await toastAction(page, "Undo")
+		await settle(page)
+		C("undo of unmark season: the stored state row and log rows are the ones before, to the column", (await exactly(page)) === marked)
+		C("undo of unmark season: the page says so, and reads as before", /Season 2 is back, as it was before/.test(await toast(page)) && (await text(page, "[data-season-count]")).trim() === "4/22" && /26 of 327/.test(await tip(page, "[data-progress]")), `${await toast(page)} ${await tip(page, "[data-progress]")}`)
+		await pressSeason(page, 5)
+		await settle(page, 300)
+
 		// A row
 		await pressSeason(page, 2)
 		await settle(page, 300)
@@ -845,6 +871,68 @@ for (const size of sizes) {
 		C("menu mark new: nothing new is left, so no On hold and no Drop", (await menuIds(page)) === "watchAgain,rewatch,takeBack,setDate", await menuIds(page))
 		await toList(page)
 		C("press line: a press on a Seen show says it marked the new episodes", (await text(page, "[data-seen-press] span")) === "New episodes marked watched on 8 Oct 2026 · season 5, and 4 of the 6 episodes of season 6 (10 episodes), no dates recorded", await text(page, "[data-seen-press] span"))
+		await page.context().close()
+	}
+	// ---- Unmark season, by the state the show is in ------------------------------------------
+	{
+		// A Seen show with its press: Watching without the season, and Undo puts the press back too.
+		const { page, errors } = await open(browser, size, `show=slow-horses&scenario=seen_old&${T}`)
+		await page.waitForSelector("[data-tracking-hero]")
+		const pill = (await text(page, "[data-status-pill]")).trim()
+		await toList(page)
+		const line = await text(page, "[data-seen-press] span")
+		await pressSeason(page, 1)
+		await settle(page, 300)
+		const before = await exactly(page)
+		await page.locator("[data-unmark-season]").click()
+		await settle(page)
+		let s = await stored(page)
+		C("unmark season on a Seen show: Watching, the press ended, the season's 6 watches gone and 18 kept", s.state.state === "watching" && s.state.seen_press_group === null && s.log.length === 18 && s.log.every((r) => r.season_number !== 1))
+		C("unmark season on a Seen show: the pill, the toast, and the press's line is gone", (await text(page, "[data-status-pill]")).trim() === "Watching" && /Season 1 unmarked: 6 watches removed/.test(await toast(page)) && (await count(page, "[data-seen-press]")) === 0, `${await text(page, "[data-status-pill]")} ${await toast(page)}`)
+		await toastAction(page, "Undo")
+		await settle(page)
+		s = await stored(page)
+		C("undo on a Seen show: the stored rows and the state row are the ones before, with the press", (await exactly(page)) === before && s.state.state === "seen" && s.state.seen_press_group !== null)
+		C("undo on a Seen show: the pill and the press's line read as before", (await text(page, "[data-status-pill]")).trim() === pill && (await text(page, "[data-seen-press] span")) === line && line.length > 20, `${await text(page, "[data-status-pill]")} ${await text(page, "[data-seen-press] span")}`)
+		C("unmark season on a Seen show: no page errors", cleanErrors(errors).length === 0, cleanErrors(errors).join(" | "))
+		await page.context().close()
+	}
+	for (const [scenario, word] of [["on_hold", "On hold"], ["dropped", "Dropped"]]) {
+		// The show's only season: the status was chosen, so it stays with nothing watched.
+		const { page, errors } = await open(browser, size, `show=chernobyl&scenario=${scenario}&${T}`)
+		await page.waitForSelector("[data-tracking-hero]")
+		await toList(page)
+		const before = await exactly(page)
+		const had = (await stored(page)).log.length
+		C(`unmark season, ${word}: offered in the only season's head, no sideways scroll`, (await count(page, "[data-unmark-season]")) === 1 && (await noOverflow(page)))
+		await page.locator("[data-unmark-season]").click()
+		await settle(page)
+		let s = await stored(page)
+		C(`unmark season, ${word}: nothing is watched and the show is still ${word}`, had > 0 && s.log.length === 0 && s.state.state === scenario && (await text(page, "[data-status-pill]")).trim() === word, `${s.state?.state} ${s.log.length}`)
+		await toastAction(page, "Undo")
+		await settle(page)
+		s = await stored(page)
+		C(`undo, ${word}: the stored rows and the state row are the ones before`, (await exactly(page)) === before && s.state.state === scenario)
+		C(`unmark season, ${word}: no page errors`, cleanErrors(errors).length === 0, cleanErrors(errors).join(" | "))
+		await page.context().close()
+	}
+	{
+		// The last watch of a Watching show goes: Not started, and Undo makes it Watching since the time it was.
+		const { page, errors } = await open(browser, size, `show=chernobyl&scenario=watching&${T}`)
+		await page.waitForSelector("[data-tracking-hero]")
+		await toList(page)
+		const before = await exactly(page)
+		await page.locator("[data-unmark-season]").click()
+		await settle(page)
+		let s = await stored(page)
+		C("unmark the only watched season: no watch and no state row, the show is Not started", s.log.length === 0 && s.state === null, JSON.stringify(s.state))
+		C("unmark the only watched season: the status line is gone, and so is the control", (await count(page, "[data-status-pill]")) === 0 && (await count(page, "[data-unmark-season]")) === 0 && (await count(page, "[data-mark-season]")) === 1)
+		await toastAction(page, "Undo")
+		await settle(page)
+		s = await stored(page)
+		C("undo of the only watched season: the stored rows and the state row are the ones before", (await exactly(page)) === before && s.state.state === "watching")
+		C("undo of the only watched season: the pill is back", (await text(page, "[data-status-pill]")).trim() === "Watching")
+		C("unmark the only watched season: no page errors", cleanErrors(errors).length === 0, cleanErrors(errors).join(" | "))
 		await page.context().close()
 	}
 }
