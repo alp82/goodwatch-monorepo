@@ -1,0 +1,28 @@
+{
+  "before": {
+    "event": "qdrant-allocation-metadata",
+    "at": "2026-10-11T22:08:44.021593+00:00",
+    "qdrantPid": 3411704,
+    "imageSha256": "sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b",
+    "dockerMemoryBytes": 0,
+    "dockerNanoCpus": 0,
+    "cgroupMemoryMax": "max",
+    "cgroupMemoryHigh": "max",
+    "cgroupCpuMaxQuota": "max",
+    "cgroupCpuMaxPeriodUsec": 100000,
+    "rawConfigOmitted": true
+  },
+  "after": {
+    "event": "qdrant-allocation-metadata",
+    "at": "2026-10-11T22:18:18.422272+00:00",
+    "qdrantPid": 3411704,
+    "imageSha256": "sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b",
+    "dockerMemoryBytes": 0,
+    "dockerNanoCpus": 0,
+    "cgroupMemoryMax": "max",
+    "cgroupMemoryHigh": "max",
+    "cgroupCpuMaxQuota": "max",
+    "cgroupCpuMaxPeriodUsec": 100000,
+    "rawConfigOmitted": true
+  }
+}
