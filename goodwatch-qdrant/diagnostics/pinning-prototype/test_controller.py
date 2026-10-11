@@ -76,7 +76,7 @@ class ControllerTests(unittest.TestCase):
         source=SimpleNamespace(identity=('fixed',),spec='spec');manager=Mock()
         info=SimpleNamespace(st_mode=0o100600,st_size=3,st_dev=1,st_ino=2,st_mtime_ns=3)
         config={'reconcileIntervalSeconds':10,'pressure':{'bytes':3,'sha256':controller.hashlib.sha256(b'abc').hexdigest(),'rateBytesPerSecond':1,'maxSeconds':10}}
-        times=iter([0,3,3,3,3,3,3,3,3]);clock=lambda:next(times)
+        times=iter([0,10,10,10,10,10,10,10,10]);clock=lambda:next(times)
         with patch.object(controller.os,'open',return_value=123),patch.object(controller.os,'read',side_effect=[b'abc',b'']),patch.object(controller.os,'fstat',return_value=info),patch.object(controller.os,'close') as close,patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller,'host_available',return_value=8*1024**3):
             state=controller.pressure(config,source,manager,clock=clock,sleep=Mock(),floor=1)
         manager.request.assert_called_once_with(pressure=True);close.assert_called_once_with(123);self.assertEqual(state['bytes'],3)
@@ -151,11 +151,77 @@ class ControllerTests(unittest.TestCase):
             with patch.object(controller,'Path',side_effect=lambda x:root if str(x)=='/proc' else real_path(x)),patch.object(controller.runtime,'accounting',side_effect=lambda x:accounting()),patch.object(controller.runtime,'inspect_source',return_value=source) as inspect,patch.object(controller,'self_cgroup',return_value='/session'):
                 result=obj.request()
             self.assertEqual(result['lockedBytes'],16384);self.assertIn(unittest.mock.call({'source':source}),obj.connection.send.call_args_list)
+            (root/'900'/'status').write_text('VmLck: 8 kB\n');obj.connection.recv.side_effect=[{'state':state}]
+            with patch.object(controller,'Path',side_effect=lambda x:root if str(x)=='/proc' else real_path(x)),patch.object(controller.runtime,'accounting',side_effect=lambda x:accounting()),patch.object(controller.runtime,'inspect_source',return_value=source):
+                with self.assertRaisesRegex(RuntimeError,'pin_holder_lock_proof_missing'):obj.request()
+            (root/'900'/'status').write_text('VmLck: 16 kB\n')
             inspect.assert_called();obj.connection.reset_mock()
             changed=accounting();changed['memoryEvents']['max']=1
             with patch.object(controller.runtime,'accounting',return_value=changed),patch.object(controller.runtime,'inspect_source',return_value=source):
                 with self.assertRaises(RuntimeError):obj.request()
             obj.connection.send.assert_not_called()
+
+    def test_phase_cause_survives_cleanup_failure_with_actual_exit_evidence(self):
+        import os
+        from contextlib import ExitStack
+        from test_daemon import pin_state
+        holder=Mock();holder.request.return_value=pin_state();holder.close.side_effect=RuntimeError('pin_child_exit_failed')
+        holder.failure_details={'releaseState':{'released':True,'heldMappingCount':0},'cleanupFailureReasons':[]}
+        holder.process=SimpleNamespace(pid=999999999,exitcode=1,is_alive=lambda:False)
+        source=SimpleNamespace(identity=('fixed',),spec='spec',cgroup_relative='/clone',pid=1)
+        measured={'selectionHash':'a'*64,'classesMeasured':{k:{'dataPages':1,'residentDataPages':1} for k in ('vector','graph','sparse','other')},'pageBytes':4096,'accounting':accounting()}
+        events=[]
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(controller.os,'open',return_value=12));stack.enter_context(patch.object(controller.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)))
+            for owner,name in ((controller.os,'close'),(controller.fcntl,'flock'),(controller,'frozen_helper'),(controller,'guard_shards'),(controller,'verify_archive'),(controller,'owned_total_budget'),(controller,'cold')):stack.enter_context(patch.object(owner,name))
+            stack.enter_context(patch.object(controller,'self_cgroup',return_value='/parent'))
+            stack.enter_context(patch.object(controller.runtime,'inspect_source',return_value=source));stack.enter_context(patch.object(controller.runtime,'measure_source',return_value=measured));stack.enter_context(patch.object(controller.runtime,'accounting',side_effect=lambda source:accounting()))
+            stack.enter_context(patch.object(controller,'process_counters',return_value={'minorFaults':0,'majorFaults':0,'physicalReadBytes':0,'rssBytes':0}))
+            stack.enter_context(patch.object(controller,'PinChild',return_value=holder));stack.enter_context(patch.object(controller,'pressure',side_effect=RuntimeError('pressure_bound_failed')))
+            with self.assertRaisesRegex(RuntimeError,'pressure_bound_failed'):controller.stage({},'spec',SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',events.append)
+        self.assertEqual(events[-2]['reason'],'pressure_bound_failed');self.assertFalse(events[-1]['released'])
+        self.assertTrue(events[-1]['pinChildExited']);self.assertEqual(events[-1]['pinChildExitCode'],1);self.assertEqual(events[-1]['cleanupReason'],'pin_child_exit_failed')
+
+    def test_real_owned_process_close_timeout_proves_child_gone(self):
+        import multiprocessing,time
+        context=multiprocessing.get_context('fork');process=context.Process(target=time.sleep,args=(30,));process.start()
+        obj=controller.PinChild.__new__(controller.PinChild);obj.process=process;obj.connection=Mock();obj.connection.poll.return_value=False
+        try:
+            with self.assertRaisesRegex(RuntimeError,'pin_child_cleanup'):obj.close()
+            self.assertFalse(process.is_alive());self.assertFalse((controller.Path('/proc')/str(process.pid)).exists())
+        finally:
+            if process.is_alive():process.kill();process.join()
+
+    def test_actual_local_proc_identity_validator_detects_pid_reuse_and_cgroup_change(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);proc=root/'123';proc.mkdir();(proc/'comm').write_text('qdrant\n');(proc/'exe').symlink_to('/qdrant/qdrant')
+            fields=['0']*20;fields[19]='456';(proc/'stat').write_text('123 (qdrant) '+' '.join(fields));(proc/'cgroup').write_text('0::/docker-owned.scope\n')
+            source=SimpleNamespace(pid=123,identity=('owned','image',123,456),cgroup_relative='/docker-owned.scope')
+            with patch.object(controller.runtime,'PROC',root):
+                self.assertIs(controller.runtime.validate_source_locally(source),source)
+                fields[19]='457';(proc/'stat').write_text('123 (qdrant) '+' '.join(fields))
+                with self.assertRaisesRegex(RuntimeError,'local_source_identity_changed'):controller.runtime.validate_source_locally(source)
+                fields[19]='456';(proc/'stat').write_text('123 (qdrant) '+' '.join(fields));(proc/'cgroup').write_text('0::/outside\n')
+                with self.assertRaisesRegex(RuntimeError,'local_source_identity_changed'):controller.runtime.validate_source_locally(source)
+
+    def test_static_reason_union_preserves_fixed_codes_and_discards_private_errors(self):
+        for reason in ('pressure_bound_failed','source_rpc_spec_changed','pin_child_exit_failed','host_emergency_floor','projected_headroom_below_reserve'):
+            self.assertEqual(controller.safe_control_reason(RuntimeError(reason)),reason)
+        self.assertEqual(controller.safe_control_reason(RuntimeError('/private/query/provider-key')),'guard_or_runtime_failure')
+
+    def test_actual_docker_response_guards_exact_owner_image_resources_and_mounts(self):
+        import copy
+        from test_daemon import config
+        c=config()['source'];spec=SimpleNamespace(container=c['container'],image=c['image'],memory_bytes=c['memoryBytes'],swap_bytes=c['swapBytes'],cpu_nanos=c['cpuNanos'],mounts=frozenset(tuple(x) for x in c['mounts']))
+        document={'Name':'/'+c['container'],'Image':c['image'],'Config':{'Labels':{'goodwatch.task':'406','goodwatch.owner':'search-100-diagnosis'}},'HostConfig':{'Memory':c['memoryBytes'],'MemorySwap':c['swapBytes'],'NanoCpus':c['cpuNanos'],'PortBindings':{'6333/tcp':[{'HostIp':'127.0.0.1','HostPort':'16333'}]}},'Mounts':[dict(zip(('Source','Destination','Type','RW'),m)) for m in c['mounts']]}
+        with patch.object(controller.runtime,'docker',return_value=json.dumps([document]).encode()):self.assertEqual(controller.inspect_stopped_or_running(spec)['Image'],spec.image)
+        for mutate in (lambda d:d.update(Image='changed'),lambda d:d['Config']['Labels'].update({'goodwatch.owner':'other'}),lambda d:d['HostConfig'].update(Memory=1),lambda d:d['HostConfig']['PortBindings']['6333/tcp'][0].update(HostIp='0.0.0.0'),lambda d:d['Mounts'].append(d['Mounts'][0])):
+            changed=copy.deepcopy(document);mutate(changed)
+            with patch.object(controller.runtime,'docker',return_value=json.dumps([changed]).encode()):
+                with self.assertRaises(RuntimeError):controller.inspect_stopped_or_running(spec)
+
 
 
 if __name__=='__main__':unittest.main()

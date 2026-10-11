@@ -1,8 +1,8 @@
 {
   "schema": "clone-pin-control.v1",
-  "helperConfig": "/root/goodwatch-qdrant-cold-406-20261011/replay/prepared-helper-policy.json",
+  "helperConfig": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v1/helper-config.json",
   "helperPolicySha256": "ddb7f2735ab539cbe1138dfbf23397e41fb4db87c320720a970d068686281ec2",
-  "helperCodeSha256": "5610f290e97e2cda0ce743de8f7a7af806a7cb28a3b88f87b5f6b87a079b5603",
+  "helperCodeSha256": "60f81bd6bf04740d69ade7f00b692599f1dc6a0e6ee27b6e1275bde10397cdff",
   "pressurePlacement": "controller-original-cgroup",
   "mechanismNegativeTags": [
     "control-native-title"

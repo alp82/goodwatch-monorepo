@@ -255,7 +255,7 @@ def pin_child(connection,spec,policy,raise_limit,config):
             if manager is None:
                 source=source_check(spec);guard_shards(source)
                 runtime.prepare_self(source,policy.max_locked_bytes,raise_own_limit=raise_limit,source_check=source_check)
-                manager=pin.PinSet(policy,ROOT/'replay/pin-instance.lock')
+                manager=pin.PinSet(policy,MODULE_DIR/'pin-instance.lock')
             state=runtime.reconcile_source(manager,spec,allow_clone_pressure_max=command=='pressure-pass',source_check=source_check)
             connection.send({'state':daemon.public_state(state)})
         if manager is not None:
@@ -263,12 +263,12 @@ def pin_child(connection,spec,policy,raise_limit,config):
             if manager.release_state()!= {'released':True,'heldMappingCount':0}:raise RuntimeError('pin_release_unproven')
         manager=None;connection.send({'closed':True})
     except BaseException as error:
-        reason=safe_control_reason(error);release={'released':manager is None,'heldMappingCount':0}
+        reason=safe_control_reason(error);release={'released':manager is None,'heldMappingCount':0};cleanup_reasons=pin.failure_details(error).get('cleanupFailureReasons',[])
         if manager is not None:
             try:manager.close()
-            except BaseException:pass
+            except BaseException as cleanup_error:cleanup_reasons=[*cleanup_reasons,safe_control_reason(cleanup_error)]
             release=manager.release_state()
-        try:connection.send({'failed':True,'reason':reason,'releaseState':release,'cleanupFailureReasons':pin.failure_details(error).get('cleanupFailureReasons',[]) if hasattr(pin,'failure_details') else []})
+        try:connection.send({'failed':True,'reason':reason,'releaseState':release,'cleanupFailureReasons':cleanup_reasons})
         except BaseException:pass
         raise SystemExit(1)
     finally:connection.close()

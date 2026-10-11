@@ -36,8 +36,8 @@ def zero_child(connection, source, config):
         connection.send({'stage':'joined','lockedBytes':0})
         if not connection.poll(120) or connection.recv()!='close': raise RuntimeError('zero_child_lease_failed')
         connection.send({'stage':'released','lockedBytes':locked_bytes(os.getpid())})
-    except BaseException:
-        try:connection.send({'stage':'failed','reason':'zero_join_failed'})
+    except BaseException as error:
+        try:connection.send({'stage':'failed','reason':control.safe_control_reason(error)})
         except (BrokenPipeError,EOFError,OSError):pass
         raise SystemExit(1)
     finally: connection.close()
@@ -110,8 +110,21 @@ def stage(config,spec,policy,emit):
         if outcome['exitCode']!=0:raise RuntimeError('zero_child_cleanup_failed')
         if control.self_cgroup()!=parent:raise RuntimeError('parent_cgroup_changed')
         emit({'stage':'complete','at':control.at(),**outcome,'parentUnchanged':True,'cacheControls':0,'archiveBytesRead':0,'storageContentWrites':0})
+    except BaseException as error:
+        emit({'stage':'phase-failed','at':control.at(),'reason':control.safe_control_reason(error)})
+        raise
     finally:
-        if child is not None:child.gone()
+        original_error=sys.exc_info()[1];cleanup_error=None
+        if child is not None:
+            try:outcome=child.gone()
+            except BaseException as error:
+                cleanup_error=error;outcome={'childGone':False,'reason':control.safe_control_reason(error)}
+            emit({'stage':'cleanup-observed','at':control.at(),**outcome})
+        if original_error is not None or cleanup_error is not None:
+            try:running=bool(control.inspect_stopped_or_running(spec)['State']['Running'])
+            except BaseException:running=None
+            emit({'stage':'recovery-required','at':control.at(),'cloneRunning':running,'cloneLeftStopped':running is False,'runningStateVerified':running is not None,'automaticRecoveryAttempted':False,'parentUnchanged':control.self_cgroup()==parent})
+        if cleanup_error is not None and original_error is None:raise cleanup_error
 
 
 def main(argv=None):
@@ -136,8 +149,8 @@ def main(argv=None):
             stage(config,spec,policy,frozen_emit)
         finally:os.close(fd)
         return 0
-    except BaseException:
-        emit({'stage':'failed','reason':'turnover_guard_or_cleanup_failed','queries':0});return 1
+    except BaseException as error:
+        emit({'stage':'failed','reason':control.safe_control_reason(error),'queries':0});return 1
 
 
 if __name__=='__main__':raise SystemExit(main())

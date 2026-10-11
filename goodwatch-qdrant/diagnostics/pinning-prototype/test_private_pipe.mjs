@@ -11,3 +11,5 @@ test('producer image uses immutable local ID with pull disabled',()=>{
  assert.equal(producerArgs.filter(x=>x==='--memory').length,1);
  assert.equal(producerArgs.filter(x=>x==='--cpus').length,1);
 });
+
+test('excluded or missing native mechanism anchor cannot complete heldout experiment',async()=>{const {requireNativeAnchor}=await import('./compare.mjs');assert.throws(()=>requireNativeAnchor([{kind:'private-excluded',tag:'control-native-title'},{kind:'private-batch',tag:'heldout-person'}]));assert.doesNotThrow(()=>requireNativeAnchor([{kind:'private-batch',tag:'control-native-title'}]));});

@@ -11,7 +11,7 @@ class GateTests(unittest.TestCase):
         with patch.object(gate,'stage') as execute,redirect_stdout(io.StringIO()) as output:
             self.assertEqual(gate.main([]),0)
         execute.assert_not_called();self.assertIn('prepared-only',output.getvalue())
-    def run_stage(self,fresh=True,cleanup=True):
+    def run_stage(self,fresh=True,cleanup=True,stop_failure=False):
         source=SimpleNamespace(pid=10,identity=('container','image',10,100),cgroup_relative='/clone')
         new=SimpleNamespace(pid=11 if fresh else 10,identity=('container','image',11,101) if fresh else source.identity,cgroup_relative='/clone')
         first,second=Mock(),Mock()
@@ -19,14 +19,14 @@ class GateTests(unittest.TestCase):
             child.joined.return_value={'joined':True,'lockedBytes':0,'childPidPositive':True}
             child.gone.return_value={'childGone':True,'survivedGracePeriod':False,'exitCode':0,'queries':0,'lockedBytes':0}
         if not cleanup:first.gone.side_effect=RuntimeError('zero_child_exit_unproven')
-        events=[];spec=SimpleNamespace(store=gate.control.ROOT/'store',container='owned')
+        events=[];self.events=events;spec=SimpleNamespace(store=gate.control.ROOT/'store',container='owned')
         with ExitStack() as stack:
             for name in ('owned_store_files','owned_total_budget','host_available','frozen_helper'):
                 stack.enter_context(patch.object(gate.control,name))
             stack.enter_context(patch.object(gate.control.ROOT.__class__,'resolve',lambda path:path))
             stack.enter_context(patch.object(gate.control,'self_cgroup',return_value='/parent'))
             stack.enter_context(patch.object(gate.control,'inspect_stopped_or_running',return_value={'State':{'Running':False}}))
-            calls=stack.enter_context(patch.object(gate.control,'clone_command'))
+            calls=stack.enter_context(patch.object(gate.control,'clone_command',side_effect=RuntimeError('clone_control_command_failed') if stop_failure else None))
             stack.enter_context(patch.object(gate.runtime,'inspect_source',side_effect=[source,source,new]))
             stack.enter_context(patch.object(gate,'ready',return_value=new))
             stack.enter_context(patch.object(gate.runtime,'accounting',side_effect=lambda source:accounting()))
@@ -43,6 +43,12 @@ class GateTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,'turnover_not_fresh'):self.run_stage(fresh=False)
     def test_missing_child_exit_blocks_restart(self):
         with self.assertRaisesRegex(RuntimeError,'zero_child_exit_unproven'):self.run_stage(cleanup=False)
+    def test_stop_failure_keeps_cause_child_outcome_and_recovery_status(self):
+        with self.assertRaisesRegex(RuntimeError,'clone_control_command_failed'):self.run_stage(stop_failure=True)
+        self.assertEqual(self.events[-3]['reason'],'clone_control_command_failed')
+        self.assertEqual(self.events[-2]['stage'],'cleanup-observed');self.assertTrue(self.events[-2]['childGone'])
+        self.assertEqual(self.events[-1]['stage'],'recovery-required');self.assertTrue(self.events[-1]['cloneLeftStopped']);self.assertFalse(self.events[-1]['automaticRecoveryAttempted'])
+
     def test_zero_lock_proof_requires_present_counter(self):
         with patch.object(gate.Path,'read_text',return_value='VmRSS: 10 kB\n'):
             with self.assertRaisesRegex(RuntimeError,'zero_pin_proof_missing'):gate.locked_bytes(10)
