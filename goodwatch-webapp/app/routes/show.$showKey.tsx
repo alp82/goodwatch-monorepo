@@ -3,6 +3,7 @@ import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
 	json,
+	redirect,
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
 import React, { useEffect, useMemo } from "react"
@@ -23,7 +24,7 @@ import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsPageMeta } from "~/utils/detailsMeta"
 import { type EpisodeGridWire, packEpisodeGrid, unpackEpisodeGrid } from "~/utils/episode-grid-wire"
-import { titleToDashed } from "~/utils/helpers"
+import { titleRedirectPath } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
 import { mergeDehydratedStates } from "~/utils/title-extras"
 
@@ -65,7 +66,7 @@ export const loader: LoaderFunction = async ({
 		language,
 	})
 	let episodeGridFailed = false
-	const [media, episodeGrid, relatedSection, extrasState] = await Promise.all([
+	const parts = Promise.all([
 		details,
 		// A failed grid read hides the grid; it never fails the page.
 		getEpisodeGrid({ showId })
@@ -88,6 +89,22 @@ export const loader: LoaderFunction = async ({
 			() => null,
 		),
 	])
+	// The await below throws a failed details read. This keeps the same failure from also counting as unhandled.
+	parts.catch(() => {})
+
+	// One URL per title: a wrong, missing, or decorated slug moves to the canonical path. The title's name comes from
+	// the details read, so the answer doesn't wait for the related titles.
+	const { details: titleDetails } = await details
+	const canonical = titleRedirectPath({
+		pathname: url.pathname,
+		search: url.search,
+		mediaType: "show",
+		tmdbId: titleDetails.tmdb_id,
+		title: titleDetails.title,
+	})
+	if (canonical) return redirect(canonical, 301)
+
+	const [media, episodeGrid, relatedSection, extrasState] = await parts
 	// The related map's section, or with the map off the related titles carousel's first panel.
 	const related = relatedSectionData(
 		relatedSection,
