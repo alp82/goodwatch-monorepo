@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react"
 import { Link } from "@remix-run/react"
 import type { ScoringMedia } from "~/ui/scoring/types"
+import { titlePath } from "~/utils/helpers"
 import WatchControls from "./WatchControls"
 import { useWatchSelection, useWatchability } from "./useWatchability"
 
@@ -80,7 +81,7 @@ export default function WatchableList<T extends ScoringMedia>({
 										<Link
 											className="underline text-sky-200"
 											key={`${title.media_type}-${title.tmdb_id}`}
-											to={`/${title.media_type}/${title.tmdb_id}`}
+											to={titlePath(title.media_type, title.tmdb_id, title.title)}
 										>
 											{title.title}
 										</Link>
