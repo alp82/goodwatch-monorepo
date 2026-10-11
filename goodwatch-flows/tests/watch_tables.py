@@ -10,6 +10,14 @@ sys.path.insert(0, str(Path(__file__).parents[1] / "windmill"))
 from f.sync.models.crate_schemas import SCHEMAS
 
 WRITABLE = ("user_watch_log", "user_watch_state")
+# The retired table the migration read. It was dropped on 2026-10-11 and is no longer in SCHEMAS.
+OLD_COLUMNS = {
+    "user_watch_history": {
+        "user_id", "tmdb_id", "media_type", "watched_at_list", "progress_percent", "progress_seconds",
+        "season_number", "episode_number", "ingest_source", "first_watched_at", "last_watched_at", "watch_count",
+        "created_at", "updated_at",
+    },
+}
 INSERT = re.compile(r"INSERT INTO (\w+) \(([\w\", ]+)\) VALUES \(\?(?:, \?)*\) ON CONFLICT \(([\w, ]+)\) DO NOTHING")
 SELECT = re.compile(r"SELECT (.+?) FROM (\w+)(?: WHERE (.+?))?(?: GROUP BY (.+))?")
 COUNT = "count(*) AS n"
@@ -47,7 +55,7 @@ class WatchTables:
         assert not params, (sql, params)
         columns = columns.split(", ")
         for column in columns:
-            assert column == COUNT or column in SCHEMAS[table]["columns"], (table, column)
+            assert column == COUNT or column in (OLD_COLUMNS.get(table) or SCHEMAS[table]["columns"]), (table, column)
         if group_by:
             keys = group_by.split(", ")
             assert columns == [*keys, COUNT], sql

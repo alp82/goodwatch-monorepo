@@ -711,29 +711,6 @@ SCHEMAS = {
         "primary_key": ["user_id", "tmdb_id", "media_type"],
         "shards": 3,
     },
-    "user_watch_history": {
-        "columns": {
-            "user_id": "TEXT",
-            "tmdb_id": "INTEGER",
-            "media_type": "TEXT CHECK (media_type IN ('movie','show'))",
-            # multi watch
-            "watched_at_list": "ARRAY(TIMESTAMP)",
-            # “current watch” state for this title
-            "progress_percent": "DOUBLE",
-            "progress_seconds": "INTEGER",
-            "season_number": "INTEGER",
-            "episode_number": "INTEGER",
-            "ingest_source": "TEXT",
-            # convenience denorms
-            "first_watched_at": "TIMESTAMP",
-            "last_watched_at": "TIMESTAMP",
-            "watch_count": "INTEGER",
-            "created_at": "TIMESTAMP",
-            "updated_at": "TIMESTAMP",
-        },
-        "primary_key": ["user_id", "tmdb_id", "media_type"],
-        "shards": 6,
-    },
     # One row per time a member watched a movie or an episode
     # (docs/implementation/tracking/data-model.md, ADR 0008). watched_at and watched_at_precision:
     # 'moment' is the instant; 'day' is 00:00:00 UTC of the calendar day and only its date is
