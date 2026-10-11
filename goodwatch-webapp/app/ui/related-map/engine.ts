@@ -180,19 +180,23 @@ export function relatedMapEngine(
 		String(value ?? "").replace(/[&<>"]/g, (ch) => ESC[ch])
 
 	// --- Titles and packs ---------------------------------------------------------------------------------------
-	const titleOf = (raw: RawTitle): MapTitle => {
+	/** A level string as numbers. */
+	const levelsOf = (levels: string) => {
 		const s: number[] = []
-		for (let i = 0; i < raw[5].length; i++) {
-			const code = raw[5].charCodeAt(i)
+		for (let i = 0; i < levels.length; i++) {
+			const code = levels.charCodeAt(i)
 			s.push(code === 45 ? -1 : code === 97 ? 10 : code - 48)
 		}
+		return s
+	}
+	const titleOf = (raw: RawTitle): MapTitle => {
 		const title = {
 			k: raw[0],
 			t: raw[1],
 			y: raw[2],
 			p: raw[3],
 			n: raw[4] / 1000,
-			s,
+			s: levelsOf(raw[5]),
 		}
 		const known = G.t[title.k]
 		if (!known?.s) G.t[title.k] = title
@@ -333,9 +337,11 @@ export function relatedMapEngine(
 					)
 					.join("")}</p>`
 			: ""
+		// The stage carries the levels of the page's title (`data-s`): the browser draws that title's chips again
+		// without its pack, which a crawler may not ask for (robots.txt).
 		return `<h2 class="pl-h">Titles like ${esc(input.title)}</h2><div class="pl-body"><div class="pl-stage pl-map" data-pl-stage="" data-pl-at="${input.root}" data-y="${esc(
 			rootTitle.y,
-		)}" data-p="${esc(rootTitle.p)}">${form.stage(ctxOf(st))}</div></div>${links}`
+		)}" data-p="${esc(rootTitle.p)}" data-s="${esc(input.pack.c[5])}">${form.stage(ctxOf(st))}</div></div>${links}`
 	}
 
 	if (!win) return { section }
@@ -376,6 +382,8 @@ export function relatedMapEngine(
 					n: 1,
 					s: null,
 				}
+			const levels = stage?.getAttribute("data-s")
+			if (levels && !G.t[root].s) G.t[root].s = levelsOf(levels)
 			s.__pl = { root, trail: [{ k: root, ui: {} }], mem: {} }
 			if (!G.packs[root]) harvest(s, root)
 		}

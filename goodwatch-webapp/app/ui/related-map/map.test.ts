@@ -136,3 +136,127 @@ test("a title's name can't break out of the markup", () => {
 	assert.doesNotMatch(html, /<img onerror/)
 	assert.match(html, /Titles like A &quot;&lt;b&gt;&quot; &amp; more/)
 })
+
+// --- Without the pack ---------------------------------------------------------------------------------------------
+// robots.txt keeps crawlers from /api/, so a crawler that renders a title page never has the pack.
+
+const { LINKS, packLinks } = await import("../../server/related-map-pack.ts")
+const WAITING = /on their way/
+
+/** The section as the title page's loader draws it (server/related-map.server.ts). */
+const served = () => {
+	const n = Array.from({ length: 80 }, (_, i) =>
+		title(`m${i + 2}`, `Neighbor${i + 2}th`, 990 - i * 3),
+	)
+	return relatedMap(null).section({
+		root: "m1",
+		title: "The Middle",
+		pack: { ...pack, n },
+		links: packLinks({ ...pack, n }),
+	})
+}
+
+test("the server's HTML has the chips, the plain links, and no waiting line", () => {
+	const html = served()
+	assert.doesNotMatch(html, WAITING)
+	assert.match(html, /aria-label="The traits of The Middle\. /)
+	assert.equal((html.match(/data-pl-act="tk"/g) ?? []).length, 3)
+	const links = [
+		...html.matchAll(
+			/<a data-pl-nav="" tabindex="-1" href="(\/movie\/\d+-[^"]+)">[^<]+<\/a>/g,
+		),
+	]
+	assert.equal(links.length, LINKS)
+	assert.equal(links[0][1], "/movie/2-neighbor2th")
+	// The levels of the page's title go along, for the pictures the browser draws.
+	assert.ok(html.includes(` data-s="${center[5]}">`))
+})
+
+const attr = (tag: string, name: string) =>
+	new RegExp(` ${name}="([^"]*)"`)
+		.exec(tag)?.[1]
+		.replace(/&quot;/g, '"')
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&amp;/g, "&") ?? null
+
+/**
+ * A browser that holds the server's HTML: as much of a document as the engine reads before it draws, with a stage
+ * wider than a phone's, so that the engine draws its own picture. `answer` is what a request for a pack gets.
+ */
+function browser(html: string, answer: () => Promise<unknown>) {
+	const el = (tag: string, more: Record<string, unknown> = {}) => ({
+		getAttribute: (name: string) => attr(tag, name),
+		hasAttribute: (name: string) => attr(tag, name) !== null,
+		querySelector: () => null,
+		...more,
+	})
+	const drawn = [
+		...html.matchAll(/<button type="button" class="pl-p rm-p[^>]*>(<img[^>]*>)/g),
+	]
+		.filter((found) => !found[0].includes('data-pl-center=""'))
+		.map((found) => el(found[0], { querySelector: () => el(found[1]) }))
+	const stage = {
+		...el(/<div class="pl-stage pl-map"[^>]*>/.exec(html)?.[0] ?? ""),
+		innerHTML: "",
+		firstChild: null,
+		setAttribute() {},
+		removeAttribute() {},
+	}
+	const rest = el(/<div class="rm [^>]*>/.exec(html)?.[0] ?? "")
+	const section = {
+		...el('<section data-pl-root="m1" data-pl-title="The Middle">'),
+		querySelector: (selector: string) =>
+			selector === "[data-pl-stage]"
+				? stage
+				: selector === "[data-pl-rest]"
+					? rest
+					: selector === "[data-r-map]"
+						? { clientWidth: 900, clientHeight: 470 }
+						: null,
+		querySelectorAll: (selector: string) =>
+			selector === "[data-pl-stage] [data-pl-step]" ? drawn : [],
+		contains: () => false,
+		addEventListener() {},
+	}
+	const asked: string[] = []
+	relatedMap({
+		document: {
+			querySelectorAll: (selector: string) =>
+				selector === "[data-related-map]" ? [section] : [],
+			addEventListener() {},
+			activeElement: null,
+		},
+		addEventListener() {},
+		removeEventListener() {},
+		setTimeout() {},
+		clearTimeout() {},
+		performance: { now: () => 0 },
+		fetch: (url: string) => {
+			asked.push(url)
+			return answer()
+		},
+	})
+	return { stage, asked }
+}
+const settled = () => new Promise((done) => setTimeout(done, 0))
+
+test("a browser that may not ask for the pack keeps the chips of the page's title", async () => {
+	const page = browser(served(), () => Promise.reject(new TypeError("blocked")))
+	await settled()
+	assert.deepEqual(page.asked, ["/api/related-map?key=m1"])
+	const html = page.stage.innerHTML
+	assert.ok(posters(html).length > 8, "the engine drew its own, wider picture")
+	assert.doesNotMatch(html, WAITING)
+	assert.match(html, /aria-label="The traits of The Middle\. /)
+	assert.match(html, /aria-label="Spectacle: 10 of 10 here. Tap: titles with 4 or less."/)
+	assert.equal((html.match(/data-pl-act="tk"/g) ?? []).length, 3)
+})
+
+test("the same holds while the pack is on its way", async () => {
+	const page = browser(served(), () => new Promise(() => {}))
+	await settled()
+	assert.ok(posters(page.stage.innerHTML).length > 8)
+	assert.doesNotMatch(page.stage.innerHTML, WAITING)
+	assert.match(page.stage.innerHTML, /aria-label="The traits of The Middle\. /)
+})

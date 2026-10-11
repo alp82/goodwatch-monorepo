@@ -154,6 +154,7 @@ export function trailForm(core: MapCore, words: TraitWords): MapForm {
 		mh: 348,
 		tokens: (ctx) => mx.active(ctx),
 		top: (ctx, tokens) => {
+			// Only a title that was stepped onto before its pack came has no levels. The page's own title brings them.
 			if (!ctx.c.s) return '<p class="rm-say"><span>Its traits are on their way.</span></p>'
 			return `<div class="ix-row ix-6 fn-row" role="group" aria-label="The traits of ${esc(ctx.c.t)}. A tap drops a strong one or adds a weak one.">${chips(ctx, tokens)
 				.map((token) => chip(ctx, token, tokens.indexOf(token) >= 0))
