@@ -86,9 +86,11 @@ class PinTests(unittest.TestCase):
         manager.reconcile([self.target()], ('fixture',1),self.memory)
         with self.assertRaises(OSError): manager.close()
         self.assertEqual(len(manager.mappings),1); self.assertGreaterEqual(manager.lock_fd,0)
+        self.assertEqual(manager.release_state(),{'released':False,'heldMappingCount':1})
         self.assertGreater(locked_bytes(),self.baseline)
         with self.assertRaises(BlockingIOError): pin.PinSet(self.policy,self.root/'pin.lock')
         manager.close(); self.assertEqual(locked_bytes(),self.baseline)
+        self.assertEqual(manager.release_state(),{'released':True,'heldMappingCount':0})
 
     def test_retirement_unmap_failure_keeps_mapping_tracked_until_cleanup_retry(self):
         kernel = TrackingKernel(fail_unmap=2); manager = self.manager(kernel)
@@ -138,6 +140,32 @@ class PinTests(unittest.TestCase):
         self.assertEqual(manager.mappings,{})
         self.assertEqual(locked_bytes(),self.baseline)
 
+    def test_two_file_extent_transfer_never_exceeds_global_locked_byte_cap(self):
+        paths=[self.root/'vector_a.bin',self.root/'graph_b.bin']
+        for path in paths:
+            with path.open('wb') as output:output.write(b'x'*pin.PAGE);output.truncate(4*pin.PAGE)
+        with paths[1].open('r+b') as output:output.seek(2*pin.PAGE);output.write(b'y'*pin.PAGE)
+        class PeakKernel(TrackingKernel):
+            peak=0
+            def call(inner,name,address,size):
+                super().call(name,address,size)
+                inner.peak=max(inner.peak,locked_bytes()-self.baseline)
+        kernel=PeakKernel();manager=self.manager(kernel)
+        manager.policy=pin.Policy('fixture',3*pin.PAGE,0,0,0)
+        def targets():return [pin.Target.open(paths[0],'vector'),pin.Target.open(paths[1],'graph')]
+        manager.reconcile(targets(),('fixture',1),self.memory)
+        self.assertEqual(locked_bytes()-self.baseline,3*pin.PAGE)
+        # Keep both sizes unchanged: A grows one data extent while B loses one.
+        with paths[0].open('r+b') as output:output.seek(2*pin.PAGE);output.write(b'z'*pin.PAGE)
+        fd=os.open(paths[1],os.O_RDWR)
+        try:
+            libc=ctypes.CDLL(None,use_errno=True);libc.fallocate.argtypes=[ctypes.c_int,ctypes.c_int,ctypes.c_long,ctypes.c_long]
+            self.assertEqual(libc.fallocate(fd,3,2*pin.PAGE,pin.PAGE),0)
+        finally:os.close(fd)
+        manager.reconcile(targets(),('fixture',1),self.memory)
+        self.assertEqual(kernel.peak,3*pin.PAGE)
+        self.assertEqual(locked_bytes()-self.baseline,3*pin.PAGE)
+
     def test_pid_starttime_change_drops_old_mapping_and_releases_retired_files(self):
         kernel = TrackingKernel();manager=self.manager(kernel)
         manager.reconcile([self.target()],('container',123,100),self.memory)
@@ -146,6 +174,46 @@ class PinTests(unittest.TestCase):
         manager.reconcile([],('container',123,200),self.memory)
         self.assertEqual(manager.mappings,{})
         self.assertEqual(locked_bytes(),self.baseline)
+
+    def test_current_plus_nonresident_or_reserved_cap_fit_rejects_before_mlock(self):
+        for case in ('nonresident-estimate','reserve'):
+            with self.subTest(case=case):
+                kernel=TrackingKernel();manager=self.manager(kernel);memory=dict(self.memory)
+                memory['cgroupMaxBytes']=16*pin.PAGE;memory['currentBytes']=16*pin.PAGE
+                if case=='reserve':manager.policy=pin.Policy('fixture',16*pin.PAGE,0,0,0,cap_reserve_bytes=pin.PAGE)
+                # Controlled mincore boundary represents missing target pages; real file mappings/cleanup remain exercised.
+                context=patch.object(kernel,'resident_pages',return_value=0) if case=='nonresident-estimate' else patch.object(kernel,'resident_pages',wraps=kernel.resident_pages)
+                with context:
+                    with self.assertRaisesRegex(RuntimeError,'initial_cap_headroom_inconclusive'):
+                        manager.reconcile([self.target()],('fixture',1),memory)
+                self.assertEqual(kernel.locks,0);self.assertEqual(locked_bytes(),self.baseline)
+                self.assertEqual(manager.mappings,{})
+                manager.close()
+
+    def test_steady_near_cap_retains_pins_but_addition_requires_reserved_headroom(self):
+        manager=self.manager();manager.policy=pin.Policy('fixture',16*pin.PAGE,0,0,8*pin.PAGE,cap_reserve_bytes=2*pin.PAGE)
+        manager.reconcile([self.target()],('fixture',1),self.memory)
+        prior_addresses={key:mapping.address for key,mapping in manager.mappings.items()}
+        near=dict(self.memory);near['cgroupMaxBytes']=16*pin.PAGE;near['currentBytes']=16*pin.PAGE-1
+        state=manager.reconcile([self.target()],('fixture',1),near)
+        self.assertFalse(state['capHeadroomRequired']);self.assertEqual(state['newLockBytes'],0)
+        self.assertEqual(prior_addresses,{key:mapping.address for key,mapping in manager.mappings.items()})
+        self.assertEqual(locked_bytes()-self.baseline,2*pin.PAGE)
+        extra=self.root/'graph.bin';extra.write_bytes(b'g'*pin.PAGE)
+        with self.assertRaisesRegex(RuntimeError,'initial_cap_headroom_inconclusive'):
+            manager.reconcile([self.target(),pin.Target.open(extra,'graph')],('fixture',1),near)
+        self.assertEqual(manager.mappings,{});self.assertEqual(locked_bytes(),self.baseline)
+
+    def test_fragmented_lock_projection_rejects_kernel_vma_limit_before_mapping(self):
+        kernel=TrackingKernel();manager=self.manager(kernel);original=pin.Path.read_text
+        current=len(Path('/proc/self/maps').read_text().splitlines())
+        def read(path,*args,**kwargs):
+            if str(path)=='/proc/sys/vm/max_map_count':return str(current+4)
+            return original(path,*args,**kwargs)
+        with patch.object(pin.Path,'read_text',read):
+            with self.assertRaisesRegex(RuntimeError,'projected_mapping_limit_exceeded'):
+                manager.reconcile([self.target()],('fixture',1),self.memory)
+        self.assertEqual(kernel.locks,0);self.assertEqual(manager.mappings,{})
 
     def test_hard_cap_rlimit_headroom_and_anon_kernel_fit_fail_before_locking(self):
         cases = ('budget','rlimit','headroom','cap','emergency')

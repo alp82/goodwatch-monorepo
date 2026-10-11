@@ -35,7 +35,7 @@ class RuntimeTests(unittest.TestCase):
         return rows
 
     def manager(self):
-        manager=pin.PinSet(pin.Policy('clone',16*pin.PAGE,0,16*pin.PAGE,8*pin.PAGE),self.root/'pin.lock',TrackingKernel())
+        manager=pin.PinSet(pin.Policy('clone',16*pin.PAGE,0,16*pin.PAGE,8*pin.PAGE,cap_reserve_bytes=16*pin.PAGE,mapping_reserve_count=16),self.root/'pin.lock',TrackingKernel())
         self.addCleanup(manager.close);return manager
 
     def test_inventory_closes_measure_only_payload_fd_and_skips_deleted_mapping(self):
@@ -48,38 +48,38 @@ class RuntimeTests(unittest.TestCase):
     def test_segment_replacement_retires_only_old_inode_without_unpinning_healthy_maps(self):
         manager=self.manager()
         with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=self.memory):
-            first=runtime.reconcile_source(manager,self.spec)
+            first=runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
             old_rows=self.write_maps(self.paths);old_identity=self.paths[0].stat().st_ino;self.paths[0].unlink()
             replacement=self.store/'replacement_vector.bin';replacement.write_bytes(b'replacement'.ljust(pin.PAGE,b'x'))
             self.paths[0]=replacement;self.write_maps(self.paths,old_rows[0])
             old_healthy={key:mapping.address for key,mapping in manager.mappings.items() if key[1]!=old_identity}
-            second=runtime.reconcile_source(manager,self.spec)
+            second=runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
         self.assertEqual(second['deletedMappingsExcluded'],1);self.assertNotEqual(first['selectionHash'],second['selectionHash'])
         for key,address in old_healthy.items():self.assertEqual(manager.mappings[key].address,address)
         self.assertFalse(any(key[1]==old_identity for key in manager.mappings))
 
     def test_source_restart_releases_old_pins_then_rechecks_helper_placement(self):
         manager=self.manager();placements=[]
-        def prepare(source,budget):placements.append((source.identity,locked_bytes()))
+        def prepare(source,budget,source_check=None):placements.append((source.identity,locked_bytes()))
         with patch.object(runtime,'prepare_self',side_effect=prepare),patch.object(runtime,'accounting',return_value=self.memory):
-            runtime.reconcile_source(manager,self.spec)
+            runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
             previous=self.source.identity;self.source=runtime.Source(('new-container','image',900,200),900,self.root/'new-cgroup','/new-fixture',self.spec)
             runtime.inspect_source.return_value=self.source
-            runtime.reconcile_source(manager,self.spec)
+            runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
         self.assertNotEqual(placements[0][0],placements[1][0]);self.assertEqual(placements[0][1],placements[1][1])
         self.assertNotEqual(previous,manager.source_identity)
 
     def test_missing_required_class_does_not_emit_ready_and_releases_prior_pins(self):
         manager=self.manager()
         with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=self.memory):
-            runtime.reconcile_source(manager,self.spec);self.write_maps(self.paths[:1])
-            with self.assertRaises(RuntimeError):runtime.reconcile_source(manager,self.spec)
+            runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source);self.write_maps(self.paths[:1])
+            with self.assertRaises(RuntimeError):runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
         self.assertEqual(manager.mappings,{})
 
     def test_missing_limit_proof_metrics_never_defaults_to_zero_success(self):
         manager=self.manager();missing=dict(self.memory);missing['memoryEvents']={'oom':0,'max':0}
         with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=missing):
-            with self.assertRaises(KeyError):runtime.reconcile_source(manager,self.spec)
+            with self.assertRaises(KeyError):runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
         self.assertEqual(manager.mappings,{})
 
     def test_measure_is_readonly_matches_pin_cohort_and_leaves_no_locks(self):
@@ -93,7 +93,7 @@ class RuntimeTests(unittest.TestCase):
         # Payload remains measured but is not selected by the four-class pin rule.
         manager=self.manager()
         with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=self.memory):
-            measured=runtime.measure_source(self.spec);pinned=runtime.reconcile_source(manager,self.spec)
+            measured=runtime.measure_source(self.spec);pinned=runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
         self.assertEqual(measured['selectionHash'],pinned['selectionHash'])
 
     def test_pressure_max_exception_requires_steady_explicit_clone_window(self):
@@ -101,24 +101,39 @@ class RuntimeTests(unittest.TestCase):
             with self.subTest(phase=phase):
                 manager=self.manager()
                 with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=self.memory):
-                    if phase!='initial':runtime.reconcile_source(manager,self.spec)
+                    if phase!='initial':runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
                 after=dict(self.memory);after['memoryEvents']=dict(self.memory['memoryEvents']);after['memoryEvents']['max']=1
                 after['cpu']=dict(self.memory['cpu'])
                 if phase=='steady-oom':after['memoryEvents']['oom']=1
                 if phase=='steady-throttle':after['cpu']['nr_throttled']=1
                 with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',side_effect=[self.memory,after]):
                     if phase=='steady-explicit':
-                        state=runtime.reconcile_source(manager,self.spec,allow_clone_pressure_max=True)
+                        state=runtime.reconcile_source(manager,self.spec,allow_clone_pressure_max=True,source_check=runtime.inspect_source)
                         self.assertTrue(state['clonePressureMaxAllowed']);self.assertEqual(state['memoryEventDelta']['max'],1)
                     else:
-                        with self.assertRaises(RuntimeError):runtime.reconcile_source(manager,self.spec,allow_clone_pressure_max=phase!='steady-default')
+                        with self.assertRaises(RuntimeError):runtime.reconcile_source(manager,self.spec,allow_clone_pressure_max=phase!='steady-default',source_check=runtime.inspect_source)
                         self.assertEqual(manager.mappings,{})
                 manager.close()
+
+    def test_capped_reconcile_uses_external_source_callback_without_docker(self):
+        manager=self.manager()
+        with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=self.memory),patch.object(runtime,'docker',side_effect=AssertionError('unexpected capped subprocess')) as docker:
+            state=runtime.reconcile_source(manager,self.spec,source_check=lambda spec:self.source)
+        docker.assert_not_called();self.assertEqual(state['lockedBytes'],4*pin.PAGE)
+        self.assertGreater(state['mappingBounds']['projectedAdditionalVmas'],0)
+
+    def test_missing_external_inspector_refuses_before_setup(self):
+        manager=self.manager()
+        with patch.object(runtime,'prepare_self') as setup:
+            with self.assertRaisesRegex(RuntimeError,'outside_source_inspector_required'):
+                runtime.reconcile_source(manager,self.spec)
+        setup.assert_not_called();self.assertEqual(manager.mappings,{})
 
     def test_raw_docker_stderr_is_suppressed_and_error_is_fixed(self):
         with patch.object(runtime.subprocess,'check_output',side_effect=runtime.subprocess.CalledProcessError(1,['docker'],stderr=b'private config')) as call:
             with self.assertRaisesRegex(RuntimeError,'^docker_inspection_failed$'):runtime.docker('inspect','fixture')
         self.assertEqual(call.call_args.kwargs['stderr'],runtime.subprocess.DEVNULL)
+        self.assertEqual(call.call_args.args[0][0],'/usr/bin/docker')
 
 
 if __name__=='__main__':unittest.main()
