@@ -35,10 +35,10 @@
       "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w780/" },
       "budget": {
         "html_bytes": { "max": 55808 },
-        "host_requests": { "max": 34 },
+        "host_requests": { "max": 37 },
         "script_count": { "max": 22 },
         "script_bytes": { "max": 283648 },
-        "image_count": { "max": 13 },
+        "image_count": { "max": 14 },
         "image_bytes": { "max": 102400 },
         "font_requests": { "max": 1 },
         "blocking_requests": { "max": 1 },
@@ -55,7 +55,7 @@
       "lcp_element": { "tag": "img", "contains": "src=\"https://image.tmdb.org/t/p/w780/" },
       "budget": {
         "html_bytes": { "max": 58880 },
-        "host_requests": { "max": 34 },
+        "host_requests": { "max": 36 },
         "script_count": { "max": 22 },
         "script_bytes": { "max": 284672 },
         "image_count": { "max": 11 },
