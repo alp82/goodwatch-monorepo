@@ -28,9 +28,10 @@ import {
 import gwLogo from "~/img/goodwatch-logo-white.svg"
 import { PhoneTvScreens } from "./PhoneTvScreens"
 import { Icon, Remote, type RemoteProps } from "./Remote"
-import { LivingRoomLinks, type TvView } from "./TvScreens"
+import type { TvView } from "./TvScreens"
 import {
 	HAND_IMAGE,
+	PHONE_LIP,
 	PHONE_ROOM,
 	PHONE_TV_CANVAS,
 	type PhoneOrientation,
@@ -42,6 +43,7 @@ import {
 	phoneRemoteTurnToward,
 } from "./room"
 import { TV_SCREEN_ATTR } from "./tv-transition"
+import { ROOM_ID } from "./use-below-room"
 
 const useIsoLayoutEffect =
 	typeof window === "undefined" ? useEffect : useLayoutEffect
@@ -76,12 +78,18 @@ export type PhoneLivingRoomProps = {
 	orientation: PhoneOrientation
 	view: TvView
 	remote: RemoteProps
+	/** The phone has the navigation's dock (REC_NAVIGATION) under the room, not the old bottom navigation. */
+	docked?: boolean
+	/** The room is out of the window: it takes no input. */
+	away?: boolean
 }
 
 export function PhoneLivingRoom({
 	orientation,
 	view,
 	remote,
+	docked = false,
+	away = false,
 }: PhoneLivingRoomProps) {
 	const landscape = orientation === "landscape"
 	const root = useRef<HTMLDivElement>(null)
@@ -101,7 +109,7 @@ export function PhoneLivingRoom({
 		return () => ro.disconnect()
 	}, [])
 	const L = useMemo(
-		() => (size.w ? layoutPhone(size.w, size.h, orientation) : null),
+		() => (size.w ? layoutPhone(size.w, size.h, orientation, PHONE_LIP) : null),
 		[size, orientation],
 	)
 
@@ -159,9 +167,10 @@ export function PhoneLivingRoom({
 	return (
 		<div
 			ref={root}
-			className={`living-room fixed inset-x-0 overflow-clip bg-[#07080b] text-white ${landscape ? "inset-y-0 z-[1001]" : "bottom-16 top-16 z-40"}`}
+			id={ROOM_ID}
+			{...(away && { inert: "" })}
+			className={`living-room lr-page overflow-clip bg-[#07080b] text-white ${docked ? "lr-docked" : ""}`}
 		>
-			<LivingRoomLinks />
 			{L && (
 				<>
 					<div
@@ -383,7 +392,8 @@ function HandRemote({
 const PHONE_ICON =
 	"M9 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM11 18h2"
 
-// Portrait: an invitation to turn the phone, at the bottom left over the hand, gone by itself after 7 s.
+// Portrait: an invitation to turn the phone, at the bottom left over the hand (above the lip of the section below the room), gone by itself
+// after 7 s.
 function RotateHint(): ReactNode {
 	const [gone, setGone] = useState(false)
 	useEffect(() => {
@@ -396,7 +406,7 @@ function RotateHint(): ReactNode {
 				<motion.button
 					type="button"
 					onClick={() => setGone(true)}
-					className="absolute bottom-3 left-3 z-20 flex items-center gap-2.5 rounded-2xl bg-black/70 py-2 pl-2.5 pr-3.5 text-left text-[12.5px] font-semibold leading-tight text-white shadow-2xl ring-1 ring-white/15"
+					className={`absolute bottom-[72px] left-3 z-20 flex items-center gap-2.5 rounded-2xl bg-black/70 py-2 pl-2.5 pr-3.5 text-left text-[12.5px] font-semibold leading-tight text-white shadow-2xl ring-1 ring-white/15`}
 					initial={{ opacity: 0, y: -6 }}
 					animate={{ opacity: 1, y: 0 }}
 					exit={{ opacity: 0 }}

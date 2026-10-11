@@ -20,11 +20,13 @@ import {
 import { allowsTitle, toCrateSql } from "./search-filters";
 import {
 	eligible,
+	exactCatalogTitles,
 	metadataFor,
 	searchQuery,
 	type Metadata,
 } from "./catalog.server";
 import { prepareLanguage } from "./language.server";
+import { RankingProgress } from "../search-ranking/ranking-progress.server";
 import {
 	BASIC_SEARCH_MESSAGE,
 	keepJevConnectionsWarm,
@@ -43,6 +45,7 @@ import {
 } from "../search-ranking/serve.server";
 import {
 	type PreparedSearch,
+	type RankedSearch,
 	prepareSearch,
 } from "../search-ranking/rank-search.server";
 import { readingsConfigured } from "../search-runtime/limits.server";
@@ -79,6 +82,8 @@ export interface SearchBatch {
 	mode: string;
 	elapsedMs: number;
 	chargedNano: number;
+	/** Initial results are usable while the original title/person lookup is still running. */
+	pendingTitleLookup?: boolean;
 	// People the query names, shown above the titles.
 	people: SearchPerson[];
 	creditScope: CreditScope | null;
@@ -191,10 +196,10 @@ async function lookupTitles(
 			{ length: Math.max(0, Math.min(5, first.total_pages || 1) - 1) },
 			// Page one contains the best title/name matches. Additional pages may enrich it, but must not
 			// hold those matches behind a slow remote response. Cover body decoding as well as headers.
-			(_, i) => withBackendTimeout(
-				"TMDB", 200,
-				(signal) => page(i + 2, signal),
-			).catch(() => null),
+			(_, i) =>
+				withBackendTimeout("TMDB", 200, (signal) => page(i + 2, signal)).catch(
+					() => null,
+				),
 		),
 	);
 	const results = [first, ...rest]
@@ -306,13 +311,17 @@ interface TitleMatches {
 async function titleMatches(
 	titlePromise: Promise<{ results: Title[]; error?: boolean }>,
 	policy: Eligibility,
+	knownMeta?: Map<string, Metadata>,
 ): Promise<TitleMatches> {
 	const title = await titlePromise;
 	const titleRows = title.results.filter((t) =>
 		allowsTitle(policy.filters, titleKey(t)),
 	);
-	const titleMeta = await metadataFor([...new Set(titleRows.map(titleKey))]);
-	const meta = new Map(titleMeta.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]));
+	const meta = new Map(knownMeta);
+	const titleMeta = await metadataFor(
+		[...new Set(titleRows.map(titleKey))].filter((key) => !meta.has(key)),
+	);
+	for (const m of titleMeta) meta.set(`${m.media_type}:${m.tmdb_id}`, m);
 	const allowedTitles = titleRows.filter((t) =>
 		eligible(meta.get(titleKey(t)), policy, false),
 	);
@@ -325,6 +334,13 @@ interface ServedList {
 	rankerVersion: string;
 	titleError: boolean;
 	stageMs: Record<string, number>;
+	reblend: (titles: Promise<TitleMatches>) => Promise<ServedList>;
+}
+interface RankedDisplayCache {
+	ranked: RankedSearch;
+	meta: Map<string, Metadata>;
+	display: Map<string, Awaited<ReturnType<typeof describeTitles>>[number]>;
+	describedKeys: Set<string>;
 }
 
 /**
@@ -343,13 +359,23 @@ async function rankedList(
 	early: {
 		titles: Promise<TitleMatches>;
 		prepared?: Promise<PreparedSearch>;
+		progress?: RankingProgress;
 	},
 	signal: AbortSignal,
 	// How many ranked titles to serve: HEAD_LENGTH for the search page, up to RESULT_LENGTH for Discover.
 	length: number,
+	reuse?: RankedDisplayCache,
 ): Promise<ServedList> {
 	const started = performance.now();
 	const { title, meta, allowedTitles } = await early.titles;
+	const responseMetadataKeys = new Set(
+		title.results
+			.filter((t) => allowsTitle(policy.filters, titleKey(t)))
+			.map(titleKey),
+	);
+	if (reuse)
+		for (const [key, value] of reuse.meta)
+			if (!meta.has(key)) meta.set(key, value);
 	const titleDone = performance.now();
 	if (signal.aborted) throw new Error("Search interrupted");
 	const lookup = new Map(allowedTitles.map((t) => [titleKey(t), t]));
@@ -359,17 +385,20 @@ async function rankedList(
 		language.policy.mode === "native-vector-only",
 	);
 	const rankStarted = performance.now();
-	const ranked = await rankForServing(
-		fields,
-		{
-			query: q,
-			text: language.text,
-			nonEnglish: language.policy.mode !== "english",
-			titleLookup: allowedTitles,
-			prepared: early.prepared,
-		},
-		policy,
-	);
+	const ranked = reuse
+		? { ...reuse.ranked, results: reuse.ranked.reblend(allowedTitles) }
+		: await rankForServing(
+				fields,
+				{
+					query: q,
+					text: language.text,
+					nonEnglish: language.policy.mode !== "english",
+					titleLookup: allowedTitles,
+					prepared: early.prepared,
+					progress: early.progress,
+				},
+				policy,
+			);
 	const rankDone = performance.now();
 	if (signal.aborted) throw new Error("Search interrupted");
 	const listed = ranked.results.slice(0, length).map((r) => ({
@@ -378,18 +407,27 @@ async function rankedList(
 		mediaType: r.mediaType,
 		blended: r,
 	}));
+	const display =
+		reuse?.display ??
+		new Map<string, Awaited<ReturnType<typeof describeTitles>>[number]>();
+	const describedKeys = reuse?.describedKeys ?? new Set<string>();
+	const toDescribe = listed
+		.slice(0, HEAD_LENGTH)
+		.filter((row) => !describedKeys.has(row.key));
+	toDescribe.forEach((row) => describedKeys.add(row.key));
 	const [described, rankedMeta] = await Promise.all([
 		// Display fields and reasons for the head only: Discover shows its own cards, and reading 100 titles' payloads
 		// doubled the display stage. Titles past the head come with the ranker's title and year.
-		describeTitles(fields, listed.slice(0, HEAD_LENGTH), {
-			timeoutMs: DISPLAY_TIMEOUT_MS,
-		}),
+		toDescribe.length
+			? describeTitles(fields, toDescribe, {
+					timeoutMs: DISPLAY_TIMEOUT_MS,
+				})
+			: Promise.resolve([]),
 		metadataFor(listed.map((r) => r.key).filter((key) => !meta.has(key))),
 	]);
 	for (const m of rankedMeta) meta.set(`${m.media_type}:${m.tmdb_id}`, m);
-	const display = new Map(
-		described.map((d) => [`${d.media_type}:${d.tmdb_id}`, d]),
-	);
+	for (const row of listed) responseMetadataKeys.add(row.key);
+	for (const d of described) display.set(`${d.media_type}:${d.tmdb_id}`, d);
 	const identities = new Set<string>();
 	const rows: Row[] = [];
 	for (const [at, { key, blended }] of listed.entries()) {
@@ -441,8 +479,22 @@ async function rankedList(
 		if (name !== "total")
 			stageMs[`ranking${name[0].toUpperCase()}${name.slice(1)}`] = round1(ms);
 	return {
+		reblend: (titles) =>
+			rankedList(
+				q,
+				language,
+				readText,
+				readings,
+				policy,
+				{ titles },
+				signal,
+				length,
+				{ ranked, meta, display, describedKeys },
+			),
 		rows,
-		metadata: [...meta.values()],
+		metadata: [...responseMetadataKeys].flatMap((key) =>
+			meta.has(key) ? [meta.get(key)!] : [],
+		),
 		rankerVersion: ranked.rankerVersion,
 		titleError: "error" in title,
 		stageMs,
@@ -459,7 +511,12 @@ export async function combinedSearch(
 	onReading?: (reading: ReadingChip[]) => void,
 	// allTitles: search all titles even when the query names people inside a longer phrase. rows: how many ranked
 	// titles to serve (Discover's search mode asks for up to RESULT_LENGTH); the search page's HEAD_LENGTH by default.
-	options: { allTitles?: boolean; rows?: number } = {},
+	options: {
+		allTitles?: boolean;
+		rows?: number;
+		onProgress?: (batch: SearchBatch) => void | Promise<void>;
+		onComplete?: (batch: SearchBatch) => void | Promise<void>;
+	} = {},
 ): Promise<SearchBatch> {
 	const started = Date.now(),
 		errors: string[] = [];
@@ -489,34 +546,69 @@ export async function combinedSearch(
 				filters: { ...eligibility.filters, onlyTitles: people.scope.titles },
 			}
 		: eligibility;
-	const titlePromise = titles(q, policy, signal).then(
-		(lookup) => ({ results: lookup.titles, people: lookup.people }),
-		() => ({
-			results: [] as Title[],
-			people: [] as LookupPerson[],
-			error: true,
-		}),
-	);
+	let titleSettled = false;
+	const titlePromise = titles(q, policy, signal)
+		.then(
+			(lookup) => ({ results: lookup.titles, people: lookup.people }),
+			() => ({
+				results: [] as Title[],
+				people: [] as LookupPerson[],
+				error: true,
+			}),
+		)
+		.then((value) => {
+			titleSettled = true;
+			return value;
+		});
+	let pendingTitleLookup = false;
+	// Only streaming callers opt in. Keep the shared remote lookup alive for the authoritative final update.
+	const initialTitlePromise = options.onProgress
+		? (async () => {
+				let timer: ReturnType<typeof setTimeout> | undefined;
+				const lookup = await Promise.race([
+					titlePromise,
+					new Promise<null>((resolve) => {
+						timer = setTimeout(() => resolve(null), 200);
+					}),
+				]).finally(() => clearTimeout(timer));
+				if (lookup) return lookup;
+				const catalog = new AbortController();
+				const result = await Promise.race([
+					titlePromise.then((lookup) => ({ lookup, remote: true })),
+					exactCatalogTitles(q, catalog.signal).then((results) => ({
+						lookup: { results, people: [] as LookupPerson[] },
+						remote: false,
+					})),
+				]);
+				pendingTitleLookup = !result.remote;
+				if (result.remote) catalog.abort();
+				return result.lookup;
+			})()
+		: titlePromise;
 	// Runs alongside the search; only the known-for titles of people outside the title lookup need the catalog.
-	const shownPeople = titlePromise.then((title) =>
+	const peopleFor = (title: Awaited<typeof titlePromise>) =>
 		peopleToShow(query, people, title.people).catch((error) => {
 			console.error("People for the search failed", error);
 			return [];
-		}),
-	);
+		});
+	const shownPeople = initialTitlePromise.then(peopleFor);
 	// English/default-off interpretation and native title lookup run in parallel.
 	const languagePromise = !translationEnabled()
 		? prepareLanguage(q, visitor, signal)
-		: titlePromise.then((title) => {
-				const exact = [
-					...title.results.flatMap((r) => [r.title, r.original]),
-					...title.people.map((p) => p.name),
-				].some(
-					(t) =>
-						t?.normalize("NFC").toLocaleLowerCase() ===
-						q.normalize("NFC").toLocaleLowerCase(),
-				);
-				return exact
+		: initialTitlePromise.then(async (initial) => {
+				const exactMatch = (title: Awaited<typeof titlePromise>) =>
+					[
+						...title.results.flatMap((r) => [r.title, r.original]),
+						...title.people.map((p) => p.name),
+					].some(
+						(t) =>
+							t?.normalize("NFC").toLocaleLowerCase() ===
+							q.normalize("NFC").toLocaleLowerCase(),
+					);
+				// Translation is paid and determines the reading. An incomplete miss must not change that decision:
+				// wait for the original lookup when the catalog cannot affirm an exact native title/person.
+				const title = exactMatch(initial) ? initial : await titlePromise;
+				return exactMatch(title)
 					? {
 							text: q,
 							policy: {
@@ -539,8 +631,10 @@ export async function combinedSearch(
 	const early: {
 		titles: ReturnType<typeof titleMatches>;
 		prepared?: Promise<PreparedSearch>;
+		progress?: RankingProgress;
 	} = {
-		titles: titleMatches(titlePromise, policy),
+		titles: titleMatches(initialTitlePromise, policy),
+		progress: new RankingProgress(),
 	};
 	early.titles.catch(() => {});
 	const readingSteps: Record<string, number> = {};
@@ -551,6 +645,7 @@ export async function combinedSearch(
 				query: q,
 				text: language.text,
 				nonEnglish: language.policy.mode !== "english",
+				progress: early.progress,
 			});
 			early.prepared.catch(() => {});
 		},
@@ -600,25 +695,40 @@ export async function combinedSearch(
 		} catch (error) {
 			if (signal.aborted) throw new Error("Search interrupted");
 			fallback = error instanceof RankingDeadlineError ? "timeout" : "error";
-			console.error("Search ranking failed; the basic search serves", error);
+			console.error("Search ranking failed; the basic search serves", {
+				reason: fallback,
+			});
+			const progress =
+				error instanceof RankingDeadlineError
+					? error.timings
+					: early.progress?.snapshot();
+			for (const [name, ms] of Object.entries(progress ?? {}))
+				stageMs[`ranking${name[0].toUpperCase()}${name.slice(1)}`] = ms;
 			stageMs.failedRanking =
 				Math.round((performance.now() - attempt) * 10) / 10;
 		}
 		mark = performance.now();
 	}
-	const { rows, metadata } = served ?? (await basicList());
-	async function basicList() {
+	let basicResults: Promise<Result[]> | undefined;
+	const basicMetadata = new Map<string, Metadata>();
+	let { rows, metadata } = served ?? (await basicList(initialTitlePromise));
+	async function basicList(lookup = initialTitlePromise) {
 		let results: Result[] = [];
-		errors.push(BASIC_SEARCH_MESSAGE);
+		const firstBasicList = basicResults === undefined;
+		if (!errors.includes(BASIC_SEARCH_MESSAGE))
+			errors.push(BASIC_SEARCH_MESSAGE);
 		try {
-			results = await literal(q, policy);
+			basicResults ??= literal(q, policy);
+			results = await basicResults;
 		} catch {
-			errors.push("Description search unavailable");
+			if (!errors.includes("Description search unavailable"))
+				errors.push("Description search unavailable");
 		}
-		lap("ranking");
-		const title = await titlePromise;
-		lap("titleLookup");
-		if ("error" in title) errors.push("Title lookup unavailable");
+		if (firstBasicList) lap("ranking");
+		const title = await lookup;
+		if (firstBasicList) lap("titleLookup");
+		if ("error" in title && !errors.includes("Title lookup unavailable"))
+			errors.push("Title lookup unavailable");
 		if (signal.aborted) throw new Error("Search interrupted");
 		// Catalog metadata is authoritative for eligibility and reliable identity. Fetch before
 		// blend so an ineligible discovery hit cannot boost a title's rank or use a snapshot slot.
@@ -629,7 +739,13 @@ export async function combinedSearch(
 			...titleRows.map(titleKey),
 			...results.map((r) => `${r.media_type}:${r.tmdb_id}`),
 		];
-		const metadata = await metadataFor([...new Set(keys)]);
+		for (const m of await metadataFor(
+			[...new Set(keys)].filter((key) => !basicMetadata.has(key)),
+		))
+			basicMetadata.set(`${m.media_type}:${m.tmdb_id}`, m);
+		const metadata = [...new Set(keys)].flatMap((key) =>
+			basicMetadata.has(key) ? [basicMetadata.get(key)!] : [],
+		);
 		const meta = new Map(
 			metadata.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]),
 		);
@@ -654,45 +770,118 @@ export async function combinedSearch(
 		});
 		if ("error" in title && errors.includes("Description search unavailable"))
 			throw new Error("Search unavailable");
-		lap("display");
+		if (firstBasicList) lap("display");
 		return { rows, metadata };
 	}
 	if (served?.titleError) errors.push("Title lookup unavailable");
-	const shown = await shownPeople;
-	const elapsedMs = Date.now() - started;
-	stageMs.total = elapsedMs;
-	// The history row is written after the response: nothing in the results depends on it. When the session check
-	// failed, the search records nothing.
-	const entry = {
-		text: query,
-		elapsedMs,
-		chargedNano,
-		outcome: errors.includes(BASIC_SEARCH_MESSAGE)
-			? ("basic" as const)
-			: outcome.kind,
-		...(outcome.kind === "basic" ? { reason: outcome.reason } : {}),
-		rankerVersion: served ? served.rankerVersion : BASIC_RANKER_VERSION,
-		...(fallback ? { rankerFallback: fallback } : {}),
-		stageMs,
+	let shown = await shownPeople;
+	let historyQueued = false;
+	const queueHistory = (elapsedMs: number) => {
+		if (historyQueued) return;
+		historyQueued = true;
+		const entry = {
+			text: query,
+			elapsedMs,
+			chargedNano,
+			outcome: errors.includes(BASIC_SEARCH_MESSAGE)
+				? ("basic" as const)
+				: outcome.kind,
+			...(outcome.kind === "basic" ? { reason: outcome.reason } : {}),
+			rankerVersion: served ? served.rankerVersion : BASIC_RANKER_VERSION,
+			...(fallback ? { rankerFallback: fallback } : {}),
+			stageMs: { ...stageMs, total: elapsedMs },
+		};
+		setImmediate(() => {
+			Promise.resolve(visitor.accountId).then(
+				(accountId) => recordSearchHistory({ ...entry, accountId }),
+				() => {},
+			);
+		});
 	};
-	setImmediate(() => {
-		Promise.resolve(visitor.accountId).then(
-			(accountId) => recordSearchHistory({ ...entry, accountId }),
-			() => {},
-		);
-	});
-	return {
-		q: query,
-		rows,
-		reading,
-		metadata,
-		errors,
-		mode: language.policy.mode,
-		elapsedMs,
-		chargedNano,
-		people: shown,
-		creditScope: people.scope
-			? { people: people.scope.people, text: people.scope.text }
-			: null,
-	};
+	try {
+		if (signal.aborted) throw new Error("Search interrupted");
+		if (options.onProgress && pendingTitleLookup) {
+			if (!titleSettled && (rows.length || shown.length)) {
+				const firstResultsBuilt = Date.now() - started;
+				await options.onProgress({
+					q: query,
+					rows,
+					reading,
+					metadata,
+					errors: [...new Set(errors)],
+					mode: language.policy.mode,
+					elapsedMs: firstResultsBuilt,
+					chargedNano,
+					people: shown,
+					creditScope: people.scope
+						? { people: people.scope.people, text: people.scope.text }
+						: null,
+					pendingTitleLookup: true,
+				});
+				if (signal.aborted) throw new Error("Search interrupted");
+				stageMs.firstResults = Date.now() - started;
+			}
+			const completionStarted = performance.now();
+			const finalTitle = await titlePromise;
+			stageMs.titleCompletion = round1(performance.now() - completionStarted);
+			if (signal.aborted) throw new Error("Search interrupted");
+			const finalDisplayStarted = performance.now();
+			if (served) {
+				const knownMeta = new Map(
+					served.metadata.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]),
+				);
+				const refreshed = await served.reblend(
+					titleMatches(Promise.resolve(finalTitle), policy, knownMeta),
+				);
+				rows = refreshed.rows;
+				metadata = refreshed.metadata;
+				served.titleError = refreshed.titleError;
+				if (
+					refreshed.titleError &&
+					!errors.includes("Title lookup unavailable")
+				)
+					errors.push("Title lookup unavailable");
+			} else {
+				({ rows, metadata } = await basicList(Promise.resolve(finalTitle)));
+			}
+			shown = await peopleFor(finalTitle);
+			stageMs.finalDisplay = round1(performance.now() - finalDisplayStarted);
+		}
+		const elapsedMs = Date.now() - started;
+		stageMs.total = elapsedMs;
+		// The history row is written after the response: nothing in the results depends on it. When the session check
+		// failed, the search records nothing.
+		const batch: SearchBatch = {
+			q: query,
+			rows,
+			reading,
+			metadata,
+			errors,
+			mode: language.policy.mode,
+			elapsedMs,
+			chargedNano,
+			...(options.onProgress ? { pendingTitleLookup: false } : {}),
+			people: shown,
+			creditScope: people.scope
+				? { people: people.scope.people, text: people.scope.text }
+				: null,
+		};
+		// Streaming final delivery may await member taste. Measure first usable results after it is actually enqueued,
+		// while elapsedMs/total retain the full search-computation duration independently of the consumer callback.
+		await options.onComplete?.(batch);
+		if (signal.aborted) throw new Error("Search interrupted");
+		stageMs.firstResults ??= options.onComplete
+			? Date.now() - started
+			: elapsedMs;
+		queueHistory(elapsedMs);
+		return batch;
+	} catch (error) {
+		// A usable batch remains a served search if completion fails or the person leaves. Preserve its
+		// delivery and charge once, with a completion flag so acceptance cannot count a late failure as success.
+		if (stageMs.firstResults !== undefined) {
+			stageMs[signal.aborted ? "completionAborted" : "completionFailed"] = 1;
+			queueHistory(stageMs.total ?? Date.now() - started);
+		}
+		throw error;
+	}
 }

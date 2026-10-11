@@ -25,6 +25,7 @@ import {
 	Meta,
 	Scripts,
 	ScrollRestoration,
+	isRouteErrorResponse,
 	useLoaderData,
 	useLocation,
 	useRouteError,
@@ -163,8 +164,12 @@ const Header = lazy(reloadOnStaleChunk(() => import("~/ui/main/Header")))
 export function ErrorBoundary() {
 	// TODO migrate: https://remix.run/docs/en/main/start/v2#catchboundary-and-errorboundary
 	const error = useRouteError()
-	console.error(error)
-	reportBoundaryError(error)
+	// An address that names no page is an answer, not a failure of the app.
+	const notFound = isRouteErrorResponse(error) && error.status === 404
+	if (!notFound) {
+		console.error(error)
+		reportBoundaryError(error)
+	}
 
 	const [queryClient] = React.useState(
 		() =>
@@ -182,7 +187,7 @@ export function ErrorBoundary() {
 	return (
 		<html lang="en">
 			<head>
-				<title>Oh no!</title>
+				<title>{notFound ? "Page not found | GoodWatch" : "Oh no!"}</title>
 				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant script, see telemetry/early.ts */}
 				<script dangerouslySetInnerHTML={{ __html: EARLY_TELEMETRY_SCRIPT }} />
 				<meta httpEquiv="Content-Type" content="text/html;charset=utf-8" />
@@ -197,7 +202,13 @@ export function ErrorBoundary() {
 							<Header />
 						</Suspense>
 						<main className="relative grow mx-auto mt-24 w-full max-w-7xl px-2 sm:px-6 lg:px-8 text-neutral-300">
-							<InfoBox text="Sorry, but an error occurred" />
+							<InfoBox
+								text={
+									notFound
+										? "This page doesn't exist"
+										: "Sorry, but an error occurred"
+								}
+							/>
 							<div className="mt-6 p-6 bg-red-800 rounded-lg shadow-lg flex flex-col gap-4">
 								{/* Error message */}
 								<strong className="text-xl text-white">

@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion"
 import { reasonText } from "../engine"
 import { MatchText, Moved, ServiceLogos, ServicesSwitch, layoutSpring } from "../kit"
-import { type PoolItem, backdropUrl } from "../model"
+import { type PoolItem, backdropUrl, titleHref } from "../model"
 import type { Taste } from "../useTaste"
 
 const DISPLAY = "'Big Shoulders Display', 'Gabarito', sans-serif"
@@ -104,7 +104,7 @@ export default function Mirror({ taste }: { taste: Taste }) {
 							key={pk.item.key}
 							layout
 							transition={layoutSpring}
-							href={`/${pk.item.type}/${pk.item.id}`}
+							href={titleHref(pk.item)}
 							onClick={(e) => e.preventDefault()}
 							className="group block"
 						>

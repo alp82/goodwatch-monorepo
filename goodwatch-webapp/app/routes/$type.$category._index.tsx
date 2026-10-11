@@ -3,7 +3,6 @@ import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
 	type MetaFunction,
-	redirect,
 } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import React from "react"
@@ -13,12 +12,12 @@ import {
 	getDiscoverResults,
 } from "~/server/discover.server"
 import MovieTvList from "~/ui/explore/MovieTvList"
+import { exploreAddressExists, notFound } from "~/ui/explore/address"
 import {
 	type NavType,
 	type PageData,
 	defaultDiscoverParams,
 	navLabel,
-	validUrlParams,
 } from "~/ui/explore/config"
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
@@ -32,6 +31,7 @@ export const meta: MetaFunction = ({ data, params }) => {
 
 	const typeLabel = navLabel?.[type as NavType]
 	const mainData = mainNavigation?.[category as keyof typeof mainNavigation]
+	if (!typeLabel || !mainData) return [{ title: "Page Not Found | GoodWatch" }]
 
 	const pageMeta: PageMeta = {
 		title: `${convertHyphensToWords(category)} | Best ${typeLabel} and Where to Stream Them | GoodWatch`,
@@ -81,8 +81,7 @@ export const loader: LoaderFunction = async ({
 	const category = params.category || ""
 	const path = `/${type}/${category}`
 
-	if (!validUrlParams.type.includes(type as NavType)) return redirect("/")
-	if (!validUrlParams.category.includes(category)) return redirect(`/${type}`)
+	if (!exploreAddressExists({ type, category })) throw notFound()
 
 	// discover call
 	const requestParams = await buildDiscoverParams(request)

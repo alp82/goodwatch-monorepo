@@ -34,7 +34,6 @@ import {
 import {
 	COVERAGE_BM25,
 	COVERAGE_MAX_TOKENS,
-	HEAD_LENGTH,
 	MAIN_DEPTH,
 	NON_ENGLISH_MIX,
 	NON_ENGLISH_UNION_DEPTH,
@@ -43,10 +42,8 @@ import {
 	RANKER_VERSION,
 	RESULT_LENGTH,
 	WEIGHTS,
-	boundOwn,
 	centroid,
 	filled,
-	foldCuts,
 	idf,
 	meanSd,
 	peerScores,
@@ -71,9 +68,10 @@ import {
 	type BlendedTitle,
 	type TitleFacts,
 	type TitleLookupRow,
-	blend,
 } from "./title-blend.server.ts"
+import { createSearchReblend } from "./search-reblend.server.ts"
 import { queryTerms, tokens } from "./text-rules.server.ts"
+import { RankingProgress } from "./ranking-progress.server.ts"
 
 const COLLECTION = "media_fingerprint_v1"
 const PROFILES = "search_reference_profiles"
@@ -121,6 +119,8 @@ export interface RankedSearch {
 	rankerVersion: string
 	buildId: string
 	results: BlendedTitle[]
+	/** Blend a later title lookup into these same scored candidates; no encoding, retrieval or scoring repeats. */
+	reblend: (titles: TitleLookupRow[]) => BlendedTitle[]
 	/** general, non_english or reference. */
 	route: "general" | "non_english" | "reference"
 	reference: {
@@ -226,6 +226,8 @@ function payloadFacts(payload: Record<string, unknown>): TitleFacts {
 
 /** The query, as the ranking reads it before the Jev reading is known. */
 export interface QueryRequest {
+	/** Numeric request-local spans, shared with preparation started before the reading. */
+	progress?: RankingProgress
 	/** What the person typed. */
 	query: string
 	/** The text the Jev reading uses (the query, unless it was translated). */
@@ -277,7 +279,8 @@ export async function prepareSearch(
 		timings[name] = (timings[name] ?? 0) + (now - mark)
 		mark = now
 	}
-	const index = await getSearchIndex()
+	const progress = request.progress ?? new RankingProgress()
+	const index = await progress.measure("index", () => getSearchIndex())
 	lap("index")
 	const t = index.titleTable
 	const { query, text } = request
@@ -316,10 +319,12 @@ export async function prepareSearch(
 		found && !single ? found.seeds.map((row) => t.pointIds[row]) : []
 	const encoded =
 		early.english.length || early.multilingual.length
-			? encodeQueryTexts(early).then((v) => {
-					timings.encodeEarly = v.timings.totalMs
-					return v
-				})
+			? progress
+					.measure("encodeEarly", () => encodeQueryTexts(early))
+					.then((v) => {
+						timings.encodeEarly = v.timings.totalMs
+						return v
+					})
 			: Promise.resolve({
 					english: [] as Float32Array[],
 					multilingual: [] as Float32Array[],
@@ -328,14 +333,16 @@ export async function prepareSearch(
 		const t0 = performance.now()
 		let points: ScoredPoint[] = []
 		if (single) {
-			const r = await queryBatch(PROFILES, [
-				{
-					filter: { must: [{ has_id: [single.id] }] },
-					limit: 1,
-					with_payload: ["terms"],
-					with_vector: [VECTOR.fingerprint],
-				},
-			])
+			const r = await progress.measure("prefetch", () =>
+				queryBatch(PROFILES, [
+					{
+						filter: { must: [{ has_id: [single.id] }] },
+						limit: 1,
+						with_payload: ["terms"],
+						with_vector: [VECTOR.fingerprint],
+					},
+				]),
+			)
 			rounds.push({
 				name: "profile",
 				queries: 1,
@@ -344,14 +351,16 @@ export async function prepareSearch(
 			})
 			points = r.results[0]
 		} else if (seedIds.length) {
-			const r = await queryBatch(COLLECTION, [
-				{
-					filter: { must: [{ has_id: seedIds }] },
-					limit: seedIds.length,
-					with_payload: false,
-					with_vector: [VECTOR.fingerprint, VECTOR.english, VECTOR.terms],
-				},
-			])
+			const r = await progress.measure("prefetch", () =>
+				queryBatch(COLLECTION, [
+					{
+						filter: { must: [{ has_id: seedIds }] },
+						limit: seedIds.length,
+						with_payload: false,
+						with_vector: [VECTOR.fingerprint, VECTOR.english, VECTOR.terms],
+					},
+				]),
+			)
 			rounds.push({
 				name: "seeds",
 				queries: 1,
@@ -410,7 +419,11 @@ export async function rankSearch(
 		mark = now
 	}
 
-	const prepared = await (request.prepared ?? prepareSearch(request))
+	const progress = request.progress ?? new RankingProgress()
+	const prepared = await progress.measure(
+		"preparedWait",
+		() => request.prepared ?? prepareSearch({ ...request, progress }),
+	)
 	lap("prepared")
 	const rounds: RankedSearch["rounds"] = prepared.rounds
 	const {
@@ -484,18 +497,20 @@ export async function rankSearch(
 	}
 	const encoding =
 		late.english.length || late.multilingual.length
-			? encodeQueryTexts(late).then((v) => {
-					timings.encode = v.timings.totalMs
-					return v
-				})
+			? progress
+					.measure("encodeLate", () => encodeQueryTexts(late))
+					.then((v) => {
+						timings.encode = v.timings.totalMs
+						return v
+					})
 			: Promise.resolve({
 					english: [] as Float32Array[],
 					multilingual: [] as Float32Array[],
 				})
 	const [earlyVectors, lateVectors, fetched] = await Promise.all([
-		prepared.encoded,
+		progress.measure("encodeEarly", () => prepared.encoded),
 		encoding,
-		prepared.fetched,
+		progress.measure("prefetch", () => prepared.fetched),
 	])
 	await prepared.done
 	lap("encodeAndPrefetch")
@@ -691,7 +706,9 @@ export async function rankSearch(
 		}
 	}
 	lap("plan")
-	const r1 = await queryBatch(COLLECTION, round1)
+	const r1 = await progress.measure("round1", () =>
+		queryBatch(COLLECTION, round1),
+	)
 	rounds.push({
 		name: "top lists",
 		queries: round1.length,
@@ -707,15 +724,17 @@ export async function rankSearch(
 	let mixStats: [number, number, number, number] | null = null
 	if (dense && chipQuery && "vector" in dense && "vector" in chipQuery) {
 		const union = [...unionIds]
-		const r = await queryBatch(
-			COLLECTION,
-			[dense, chipQuery].map((q) => ({
-				...denseQuery(q),
-				params: { exact: true },
-				filter: { must: [{ has_id: union }] },
-				limit: union.length,
-				with_payload: false,
-			})),
+		const r = await progress.measure("rescore", () =>
+			queryBatch(
+				COLLECTION,
+				[dense, chipQuery].map((q) => ({
+					...denseQuery(q),
+					params: { exact: true },
+					filter: { must: [{ has_id: union }] },
+					limit: union.length,
+					with_payload: false,
+				})),
+			),
 		)
 		if (request.trace)
 			for (const [k, q] of [dense, chipQuery].entries())
@@ -813,7 +832,9 @@ export async function rankSearch(
 		factsAt = round2.length - 1
 	}
 	lap("plan")
-	const r2 = await queryBatch(COLLECTION, round2)
+	const r2 = await progress.measure("round2", () =>
+		queryBatch(COLLECTION, round2),
+	)
 	rounds.push({
 		name: "pool scores",
 		queries: round2.length,
@@ -1006,7 +1027,8 @@ export async function rankSearch(
 		const termOf = new Map<number, string>()
 		if (ref && profileWeights.size)
 			index.termStatistics.ids.forEach((id, i) => {
-				if (profileWeights.has(id)) termOf.set(id, index.termStatistics.terms[i])
+				if (profileWeights.has(id))
+					termOf.set(id, index.termStatistics.terms[i])
 			})
 		trace = {
 			texts,
@@ -1029,30 +1051,19 @@ export async function rankSearch(
 	}
 
 	// Blend with the title lookup, fold alternate cuts, bound the own titles
-	const blended = (list: number[]) =>
-		foldCuts(
-			index,
-			blend(
-				index,
-				query,
-				request.titleLookup,
-				list,
-				concrete,
-				baseFilter.rows,
-				outsideFacts,
-			),
-		)
 	// The top HEAD_LENGTH is blended and bounded from the top HEAD_LENGTH candidates alone, as when the list was that
 	// long, and the longer list only continues after it: candidates further down neither outscore a weak title-lookup
 	// match in the top nor get pulled up into it as own titles.
-	let head = blended(ranked.slice(0, HEAD_LENGTH))
-	if (ref) head = boundOwn(head, ref)
-	head = head.slice(0, HEAD_LENGTH)
-	const inHead = new Set(head.map((r) => r.id))
-	const results = [
-		...head,
-		...blended(ranked).filter((r) => !inHead.has(r.id)),
-	].slice(0, RESULT_LENGTH)
+	const reblend = createSearchReblend(
+		index,
+		query,
+		ranked,
+		concrete,
+		baseFilter.rows,
+		outsideFacts,
+		ref,
+	)
+	const results = reblend(request.titleLookup)
 	lap("blend")
 	// The trace is for checks, not part of the ranking: keep it out of the total
 	timings.total = performance.now() - started - (timings.trace ?? 0)
@@ -1061,6 +1072,7 @@ export async function rankSearch(
 		rankerVersion: RANKER_VERSION,
 		buildId: index.buildId,
 		results,
+		reblend,
 		route: ref ? "reference" : nonEnglish ? "non_english" : "general",
 		reference: ref
 			? {

@@ -1,6 +1,6 @@
 import type { MovieResult, ShowResult } from "~/server/types/details-types"
 import { pillarLine, summary } from "~/ui/fingerprint/fingerprintText"
-import { titleToDashed } from "~/utils/helpers"
+import { titlePath } from "~/utils/helpers"
 import type { PageMeta } from "~/utils/meta"
 
 const clip = (text: string, max: number) => (text.length <= max ? text : `${text.slice(0, text.lastIndexOf(" ", max)).replace(/[,.;:]$/, "")}…`)
@@ -23,7 +23,7 @@ export function detailsPageMeta(media: MovieResult | ShowResult): PageMeta {
 	return {
 		title: `${name}: Where to Stream and Ratings | GoodWatch`,
 		description: `${name}: ${lead} See where to stream it legally and how critics and audiences rate it.`.replace(/\s+/g, " ").trim(),
-		url: `https://goodwatch.app/${mediaType}/${details.tmdb_id}-${titleToDashed(details.title)}`,
+		url: `https://goodwatch.app${titlePath(mediaType, details.tmdb_id, details.title)}`,
 		image: backdrop ? `https://image.tmdb.org/t/p/w1280${backdrop}` : `https://image.tmdb.org/t/p/w780${details.poster_path}`,
 		alt: cardParts.length ? `${name} on GoodWatch: ${cardParts.join(" and ")}` : `${name} on GoodWatch`,
 	}

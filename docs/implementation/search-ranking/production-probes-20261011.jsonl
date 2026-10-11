@@ -1,0 +1,8 @@
+{"event":"probe-start","at":"2026-10-11T05:27:41.961Z","maximumRequests":6}
+{"case":"exact-title","firstUsableMs":2217,"completedMs":2217,"rows":67,"people":0,"warnings":1,"failed":false}
+{"case":"native-title","firstUsableMs":2867,"completedMs":2867,"rows":17,"people":0,"warnings":1,"failed":false}
+{"case":"low-vote-title","firstUsableMs":2497,"completedMs":2497,"rows":100,"people":0,"warnings":1,"failed":false}
+{"case":"person","firstUsableMs":1153,"completedMs":1153,"rows":47,"people":6,"warnings":0,"failed":false}
+{"case":"description","firstUsableMs":880,"completedMs":880,"rows":49,"people":0,"warnings":0,"failed":false}
+{"case":"reference","firstUsableMs":719,"completedMs":719,"rows":49,"people":0,"warnings":0,"failed":false}
+{"event":"probe-end","at":"2026-10-11T05:27:52.301Z"}

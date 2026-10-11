@@ -113,12 +113,17 @@ A response is stored only when all of these hold:
   (`INCOMPLETE_PAGE_HEADERS` in `app/server/incomplete-page.ts`), which the page headers turn into
   `private, no-store`. The page cache and a cache in front both follow it. A loader that renders a page without one
   of its parts must answer this header. Today these renders do:
-  - **A title page without its related panel or an extra.** It waits 150 ms for its related titles, genre links, and
+  - **A title page without its related titles or an extra.** The related titles are the related map's first
+    picture, or with the map off the related titles carousel's first panel (see
+    [related-map.md](implementation/related-map.md)). It waits 150 ms for its related titles, genre links, and
     collection (1,000 ms for a declared crawler). When a lookup runs out of time or fails, the document goes out
     without that part. The lookup keeps running and fills the data cache, so the next render is complete.
   - **A show page whose episode grid read failed.** The page renders without the grid.
   - **Discover without the title snapshot.** The first view has no titles, only a spinner, and the browser asks for
     them. Search mode has no titles in the document by design and stays storable.
+  - **The start page without its start titles.** The section below the living room lists 16 titles from the
+    title snapshot. While the snapshot loads, or when the titles can't be read, the section goes out with the hubs
+    only.
 - **When Discover can render without the snapshot:** readiness (`/health/ready`) waits for the snapshot's first check,
   and Docker's health check asks it, so the proxy sends no request to a new container before that. But readiness
   doesn't wait for a snapshot. It answers 200 when the first check found nothing published or refused the manifest,

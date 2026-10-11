@@ -17,6 +17,7 @@ export interface DiscoverSearchResult {
 	creditScope: SearchBatch["creditScope"]
 	/** Non-empty when the basic search served, or a part of the search failed. */
 	errors: string[]
+	pendingTitleLookup?: boolean
 }
 
 const rankedKeys = (batch: SearchBatch): TitleKey[] => {
@@ -30,6 +31,16 @@ const rankedKeys = (batch: SearchBatch): TitleKey[] => {
 	return [...new Set(keys)]
 }
 
+const resultFor = (q: string, batch: SearchBatch): DiscoverSearchResult => ({
+	q,
+	ranked: rankedKeys(batch),
+	reading: batch.reading ?? [],
+	people: batch.people ?? [],
+	creditScope: batch.creditScope ?? null,
+	errors: batch.errors ?? [],
+	pendingTitleLookup: batch.pendingTitleLookup,
+})
+
 /**
  * Rejects with the message that Discover shows next to Retry: the server's own, or the busy message when the proxy
  * answered instead of a search role (see search-request.ts).
@@ -40,20 +51,15 @@ export async function runDiscoverSearch(
 	allTitles: boolean,
 	signal: AbortSignal,
 	onReading: (chips: ReadingChip[]) => void,
+	onProgress?: (result: DiscoverSearchResult) => void,
 ): Promise<DiscoverSearchResult> {
 	const batch = await requestSearch({
 		// discover: the whole ranked list (up to 100 titles), which the results endpoint filters and counts.
 		body: { q, filters, allTitles, discover: true },
 		signal,
 		onReading,
+		onProgress: (batch) => onProgress?.(resultFor(q, batch)),
 		unavailable: UNAVAILABLE,
 	})
-	return {
-		q,
-		ranked: rankedKeys(batch),
-		reading: batch.reading ?? [],
-		people: batch.people ?? [],
-		creditScope: batch.creditScope ?? null,
-		errors: batch.errors ?? [],
-	}
+	return resultFor(q, batch)
 }

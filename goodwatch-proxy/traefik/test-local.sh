@@ -105,7 +105,7 @@ check 'vector1 proxy redirects a request from abio to HTTPS' "$(from_abio /)" '3
 echo '== 2. Both files installed: the file routers win over the label routers'
 install
 check 'requests alternate' "$(instances 20)" 'abio=10 vector1=10'
-check 'HTTP redirects to HTTPS' "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' --resolve goodwatch.app:38307:127.0.0.1 http://goodwatch.app:38307/x)" '302 https://goodwatch.app/x'
+check 'HTTP redirects to HTTPS' "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' --resolve goodwatch.app:38307:127.0.0.1 http://goodwatch.app:38307/x)" '301 https://goodwatch.app/x'
 check 'the proxy leaves compression to the app' "$(get / -H 'Accept-Encoding: gzip' -o /dev/null -w '%header{content-encoding}')" ''
 check 'vector1 proxy no longer redirects abio' "$(from_abio /)" '200'
 check 'the readiness path reaches the vector1 instance' "$(from_abio /health/ready)" '200'

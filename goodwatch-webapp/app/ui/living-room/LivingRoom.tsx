@@ -24,7 +24,9 @@ import {
 	readQuizKey,
 } from "~/ui/taste-quiz/quiz-flow"
 import { useTasteQuiz } from "~/ui/taste-quiz/use-taste-quiz"
+import { useHasDock } from "~/ui/navigation"
 import { titleToDashed } from "~/utils/helpers"
+import { BelowRoom } from "./BelowRoom"
 import {
 	PHONE_PORTRAIT_QUERY,
 	PhoneLivingRoom,
@@ -33,7 +35,7 @@ import {
 import { PhoneTvScreens } from "./PhoneTvScreens"
 import { Remote, type RemoteProps } from "./Remote"
 import { pickKey } from "./TvQuiz"
-import { LivingRoomLinks, TvScreens, type TvView, lcdLines } from "./TvScreens"
+import { TvScreens, type TvView, lcdLines } from "./TvScreens"
 import {
 	type LivingRoomChoices,
 	type LivingRoomData,
@@ -62,6 +64,7 @@ import {
 	writeTvParams,
 } from "./tv-flow"
 import { TV_SCREEN_ATTR, useReturnIntoTv } from "./tv-transition"
+import { ROOM_ID, useBelowRoom } from "./use-below-room"
 import { useTvFlow } from "./use-tv-flow"
 
 const useIsoLayoutEffect =
@@ -104,6 +107,9 @@ function storeChoices(choices: LivingRoomChoices) {
 
 export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 	const phone = usePhoneOrientation()
+	// The room is the first screen of the page; the section with the start titles and the hubs follows it (#352).
+	const travel = useBelowRoom()
+	const docked = useHasDock()
 	useReturnIntoTv()
 	const [params] = useSearchParams()
 	const [choices, setChoices] = useState<LivingRoomChoices>(NO_CHOICES)
@@ -207,6 +213,7 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 			state.screen.name === "quiz" && !state.menuOpen
 				? state.screen.quiz
 				: null,
+		away: travel.away,
 		dispatch,
 		ok,
 		setDraft,
@@ -288,8 +295,27 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 		dispatch,
 		onOk: ok,
 	}
+	const belowRoom = (
+		<BelowRoom
+			titles={data.startTitles ?? []}
+			docked={docked}
+			onDown={travel.onDown}
+			onBack={travel.onBack}
+		/>
+	)
 	if (phone)
-		return <PhoneLivingRoom orientation={phone} view={view} remote={remote} />
+		return (
+			<>
+				<PhoneLivingRoom
+					orientation={phone}
+					view={view}
+					remote={remote}
+					docked={docked}
+					away={travel.away}
+				/>
+				{belowRoom}
+			</>
+		)
 
 	const on = state.power !== "off"
 	const tvCenter = {
@@ -303,173 +329,178 @@ export function LivingRoom({ data, onEffect, onRate }: LivingRoomProps) {
 	// Before the window is measured, CSS places the photo, the TV, and the Remote (see ROOM_SIZES above).
 	const first = !L
 	return (
-		<div
-			ref={root}
-			className={`living-room fixed inset-x-0 bottom-16 top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0 ${first ? "living-room-first" : ""}`}
-		>
-			<LivingRoomLinks />
-			{/* The photo covers the window; the TV and its light sit on it in the photo's own coordinates. */}
+		<>
 			<div
-				className="lr-photo absolute"
-				style={
-					L
-						? {
-								left: L.photo.left,
-								top: L.photo.top,
-								width: L.photo.width,
-								height: L.photo.height,
-							}
-						: undefined
-				}
+				ref={root}
+				id={ROOM_ID}
+				// Scrolled out of the window, the room takes no input: the keys and the pointer are the page's.
+				{...(travel.away && { inert: "" })}
+				className={`living-room lr-page overflow-clip bg-[#07080b] text-white ${docked ? "lr-docked" : ""} ${first ? "living-room-first" : ""}`}
 			>
-				<picture>
-					{first && (
-						<>
-							<source
-								media={PHONE_PORTRAIT_QUERY}
-								type="image/avif"
-								srcSet={assetUrl(PHONE_ROOM.avif)}
-							/>
-							<source
-								media={PHONE_PORTRAIT_QUERY}
-								type="image/webp"
-								srcSet={assetUrl(PHONE_ROOM.webp)}
-							/>
-						</>
-					)}
-					<source type="image/avif" srcSet={ROOM.avif} sizes={ROOM_SIZES} />
-					<img
-						{...{ fetchpriority: "high" }}
-						src={assetUrl(ROOM.fallback)}
-						srcSet={ROOM.webp}
-						sizes={ROOM_SIZES}
-						alt={ROOM.alt}
-						width={ROOM.w}
-						height={ROOM.h}
-						className="absolute inset-0 h-full w-full select-none"
-						draggable={false}
-					/>
-				</picture>
+				{/* The photo covers the window; the TV and its light sit on it in the photo's own coordinates. */}
 				<div
-					className="absolute inset-0 bg-[#05060a] transition-opacity duration-[1400ms] ease-out"
-					style={{ opacity: on ? 0.12 : 0.6 }}
-				/>
-				{/* The TV's light on the room: a plain translucent gradient, no blend mode. */}
-				<div
-					className="pointer-events-none absolute inset-0 transition-opacity duration-500"
-					style={{
-						opacity: on ? 0.28 : 0,
-						background: `radial-gradient(40% 55% at ${tvCenter.x} ${tvCenter.y}, #fbbf2466 0%, #fbbf2422 45%, #fbbf2400 100%)`,
-					}}
-				/>
-			</div>
-			<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(130%_100%_at_40%_40%,transparent_60%,rgba(0,0,0,0.55)_100%)]" />
-
-			{/* The TV. Its screens are drawn on a fixed canvas, scaled to cover the screen. */}
-			<div
-				{...{ [TV_SCREEN_ATTR]: "" }}
-				className="lr-tv absolute overflow-hidden rounded-[3px] bg-black"
-				style={{
-					...(L && {
-						left: L.tv.left,
-						top: L.tv.top,
-						width: L.tv.width,
-						height: L.tv.height,
-					}),
-					boxShadow: on
-						? "0 0 90px 8px rgba(251,191,36,0.16), 0 0 18px 1px rgba(251,191,36,0.2)"
-						: "none",
-				}}
-				onPointerEnter={() => {
-					pointing.current = true
-				}}
-				onPointerMove={(e) => {
-					if (e.pointerType === "mouse") aimAt(toWindow(e))
-				}}
-				onPointerLeave={() => {
-					pointing.current = false
-					aimAt(null)
-				}}
-			>
-				<div
-					className="lr-canvas absolute left-0 top-0 origin-top-left"
-					style={{
-						width: TV_CANVAS.w,
-						height: TV_CANVAS.h,
-						transform:
-							L && canvasOffset
-								? `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${L.canvasScale})`
-								: undefined,
-					}}
+					className="lr-photo absolute"
+					style={
+						L
+							? {
+									left: L.photo.left,
+									top: L.photo.top,
+									width: L.photo.width,
+									height: L.photo.height,
+								}
+							: undefined
+					}
 				>
-					<TvScreens view={view} />
-				</div>
-				{/* Phones get the phone edition of the first screen before the phone scene takes over. */}
-				{first && (
+					<picture>
+						{first && (
+							<>
+								<source
+									media={PHONE_PORTRAIT_QUERY}
+									type="image/avif"
+									srcSet={assetUrl(PHONE_ROOM.avif)}
+								/>
+								<source
+									media={PHONE_PORTRAIT_QUERY}
+									type="image/webp"
+									srcSet={assetUrl(PHONE_ROOM.webp)}
+								/>
+							</>
+						)}
+						<source type="image/avif" srcSet={ROOM.avif} sizes={ROOM_SIZES} />
+						<img
+							{...{ fetchpriority: "high" }}
+							src={assetUrl(ROOM.fallback)}
+							srcSet={ROOM.webp}
+							sizes={ROOM_SIZES}
+							alt={ROOM.alt}
+							width={ROOM.w}
+							height={ROOM.h}
+							className="absolute inset-0 h-full w-full select-none"
+							draggable={false}
+						/>
+					</picture>
 					<div
-						className="lr-canvas-phone absolute left-0 top-0 origin-top-left"
-						style={{ width: PHONE_TV_CANVAS.w, height: PHONE_TV_CANVAS.h }}
-					>
-						<PhoneTvScreens view={view} duplicate />
-					</div>
-				)}
-				<div className="tv-glass pointer-events-none absolute inset-0 rounded-[3px]" />
-			</div>
-
-			<div className="lr-caption pointer-events-none absolute bottom-6 left-8 flex max-w-[30%] items-center gap-3 [text-shadow:0_2px_14px_rgba(0,0,0,0.9)]">
-				<img src={assetUrl(gwLogo)} alt="" className="h-6" />
-				<span className="text-[15px] font-bold uppercase tracking-[0.28em] text-white/90">
-					GoodWatch
-				</span>
-				<span className="text-[15px] text-white/70">Pull up a seat.</span>
-			</div>
-
-			{/* The hand holds the Remote from behind: in the photo the fingers tuck behind it, so nothing goes in
-			    front. The pair leans back toward the screen and turns from the bottom toward the target. */}
-			<motion.div
-				className="lr-remote absolute will-change-transform"
-				style={{
-					...(L && {
-						left: L.remote.left,
-						top: L.remote.top,
-						width: REMOTE_W * L.remote.scale,
-						height: REMOTE_H * L.remote.scale,
-					}),
-					originX: 0.5,
-					originY: 1,
-					transformPerspective: 1400,
-					rotateX: REMOTE_TILT_DEG,
-					rotate: turn,
-				}}
-			>
-				<picture>
-					<source type="image/avif" srcSet={assetUrl(HAND_IMAGE.avif)} />
-					<img
-						src={assetUrl(HAND_IMAGE.webp)}
-						alt=""
-						aria-hidden
-						className="lr-hand pointer-events-none absolute max-w-none select-none"
-						style={
-							L
-								? {
-										left: L.hand.left,
-										top: L.hand.top,
-										width: L.hand.width,
-										height: L.hand.height,
-									}
-								: undefined
-						}
-						draggable={false}
+						className="absolute inset-0 bg-[#05060a] transition-opacity duration-[1400ms] ease-out"
+						style={{ opacity: on ? 0.12 : 0.6 }}
 					/>
-				</picture>
-				<div
-					className="lr-remote-scale absolute left-0 top-0 origin-top-left"
-					style={L ? { transform: `scale(${L.remote.scale})` } : undefined}
-				>
-					<Remote {...remote} />
+					{/* The TV's light on the room: a plain translucent gradient, no blend mode. */}
+					<div
+						className="pointer-events-none absolute inset-0 transition-opacity duration-500"
+						style={{
+							opacity: on ? 0.28 : 0,
+							background: `radial-gradient(40% 55% at ${tvCenter.x} ${tvCenter.y}, #fbbf2466 0%, #fbbf2422 45%, #fbbf2400 100%)`,
+						}}
+					/>
 				</div>
-			</motion.div>
-		</div>
+				<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(130%_100%_at_40%_40%,transparent_60%,rgba(0,0,0,0.55)_100%)]" />
+
+				{/* The TV. Its screens are drawn on a fixed canvas, scaled to cover the screen. */}
+				<div
+					{...{ [TV_SCREEN_ATTR]: "" }}
+					className="lr-tv absolute overflow-hidden rounded-[3px] bg-black"
+					style={{
+						...(L && {
+							left: L.tv.left,
+							top: L.tv.top,
+							width: L.tv.width,
+							height: L.tv.height,
+						}),
+						boxShadow: on
+							? "0 0 90px 8px rgba(251,191,36,0.16), 0 0 18px 1px rgba(251,191,36,0.2)"
+							: "none",
+					}}
+					onPointerEnter={() => {
+						pointing.current = true
+					}}
+					onPointerMove={(e) => {
+						if (e.pointerType === "mouse") aimAt(toWindow(e))
+					}}
+					onPointerLeave={() => {
+						pointing.current = false
+						aimAt(null)
+					}}
+				>
+					<div
+						className="lr-canvas absolute left-0 top-0 origin-top-left"
+						style={{
+							width: TV_CANVAS.w,
+							height: TV_CANVAS.h,
+							transform:
+								L && canvasOffset
+									? `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${L.canvasScale})`
+									: undefined,
+						}}
+					>
+						<TvScreens view={view} />
+					</div>
+					{/* Phones get the phone edition of the first screen before the phone scene takes over. */}
+					{first && (
+						<div
+							className="lr-canvas-phone absolute left-0 top-0 origin-top-left"
+							style={{ width: PHONE_TV_CANVAS.w, height: PHONE_TV_CANVAS.h }}
+						>
+							<PhoneTvScreens view={view} duplicate />
+						</div>
+					)}
+					<div className="tv-glass pointer-events-none absolute inset-0 rounded-[3px]" />
+				</div>
+
+				<div className="lr-caption pointer-events-none absolute bottom-6 left-8 flex max-w-[30%] items-center gap-3 [text-shadow:0_2px_14px_rgba(0,0,0,0.9)]">
+					<img src={assetUrl(gwLogo)} alt="" className="h-6" />
+					<span className="text-[15px] font-bold uppercase tracking-[0.28em] text-white/90">
+						GoodWatch
+					</span>
+					<span className="text-[15px] text-white/70">Pull up a seat.</span>
+				</div>
+
+				{/* The hand holds the Remote from behind: in the photo the fingers tuck behind it, so nothing goes in
+				    front. The pair leans back toward the screen and turns from the bottom toward the target. */}
+				<motion.div
+					className="lr-remote absolute will-change-transform"
+					style={{
+						...(L && {
+							left: L.remote.left,
+							top: L.remote.top,
+							width: REMOTE_W * L.remote.scale,
+							height: REMOTE_H * L.remote.scale,
+						}),
+						originX: 0.5,
+						originY: 1,
+						transformPerspective: 1400,
+						rotateX: REMOTE_TILT_DEG,
+						rotate: turn,
+					}}
+				>
+					<picture>
+						<source type="image/avif" srcSet={assetUrl(HAND_IMAGE.avif)} />
+						<img
+							src={assetUrl(HAND_IMAGE.webp)}
+							alt=""
+							aria-hidden
+							className="lr-hand pointer-events-none absolute max-w-none select-none"
+							style={
+								L
+									? {
+											left: L.hand.left,
+											top: L.hand.top,
+											width: L.hand.width,
+											height: L.hand.height,
+										}
+									: undefined
+							}
+							draggable={false}
+						/>
+					</picture>
+					<div
+						className="lr-remote-scale absolute left-0 top-0 origin-top-left"
+						style={L ? { transform: `scale(${L.remote.scale})` } : undefined}
+					>
+						<Remote {...remote} />
+					</div>
+				</motion.div>
+			</div>
+			{belowRoom}
+		</>
 	)
 }
 
@@ -479,6 +510,7 @@ function useRemoteKeys({
 	power,
 	searching,
 	quiz,
+	away,
 	dispatch,
 	ok,
 	setDraft,
@@ -487,12 +519,22 @@ function useRemoteKeys({
 	searching: boolean
 	/** The taste quiz step on screen: 1-9 and 0 score, S skips, P goes back to the picks. */
 	quiz: QuizState | null
+	/** The room is mostly out of the window (#352): the keys are the page's. */
+	away: boolean
 	dispatch: ReturnType<typeof useTvFlow>["dispatch"]
 	ok: () => void
 	setDraft: (update: (d: string) => string) => void
 }) {
-	const latest = useRef({ power, searching, quiz, dispatch, ok, setDraft })
-	latest.current = { power, searching, quiz, dispatch, ok, setDraft }
+	const latest = useRef({
+		power,
+		searching,
+		quiz,
+		away,
+		dispatch,
+		ok,
+		setDraft,
+	})
+	latest.current = { power, searching, quiz, away, dispatch, ok, setDraft }
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
 			const target = e.target as HTMLElement
@@ -502,6 +544,7 @@ function useRemoteKeys({
 			if ((e.key === "Enter" || e.key === " ") && target.closest("button, a"))
 				return
 			const k = latest.current
+			if (k.away) return
 			if (k.power === "off") {
 				k.dispatch({ type: "power", on: true })
 				e.preventDefault()

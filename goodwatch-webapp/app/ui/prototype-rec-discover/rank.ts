@@ -5,6 +5,7 @@
 import { useSearchParams } from "@remix-run/react"
 import { useMemo, useState } from "react"
 import { useFilterBar } from "~/ui/prototype-rec-filter-bar/model"
+import { titlePath } from "~/utils/helpers"
 import type { DiscTitle, Payload } from "./types"
 
 export type Surface = "discover" | "search"
@@ -100,5 +101,5 @@ export const matchWord = (m: number | null) => (m == null ? null : m >= 85 ? "Yo
 export const matchTone = (m: number | null) => (m == null ? "text-gray-500" : m >= 85 ? "text-amber-300" : m >= 70 ? "text-amber-200/80" : m >= 58 ? "text-gray-300" : "text-gray-500")
 
 export const posterUrl = (p: string, size = "w342") => `https://image.tmdb.org/t/p/${size}${p}`
-export const titleHref = (t: DiscTitle) => `/${t.media_type}/${t.tmdb_id}-${t.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`
+export const titleHref = (t: DiscTitle) => titlePath(t.media_type, t.tmdb_id, t.title)
 export const listSentence = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}` : (xs[0] ?? ""))

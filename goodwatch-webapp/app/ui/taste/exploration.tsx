@@ -1,6 +1,7 @@
 import { Link, type LinkProps } from "@remix-run/react"
 import { createContext, useContext } from "react"
 import type { ScoringMedia } from "~/ui/scoring/types"
+import { titlePath } from "~/utils/helpers"
 
 export type ExploreFilters = {
 	type: "all" | "movie" | "show"
@@ -55,8 +56,8 @@ export function uniqueTitles(titles: ScoringMedia[]) {
 	)
 }
 export const detailsHref = (
-	media: Pick<ScoringMedia, "media_type" | "tmdb_id">,
-) => `/${media.media_type}/${media.tmdb_id}`
+	media: Pick<ScoringMedia, "media_type" | "tmdb_id" | "title">,
+) => titlePath(media.media_type, media.tmdb_id, media.title)
 export const TasteExplorationContext = createContext<(() => void) | null>(null)
 
 export function TasteTitleLink({

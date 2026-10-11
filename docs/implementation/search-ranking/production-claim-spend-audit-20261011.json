@@ -1,0 +1,183 @@
+{
+  "audit_at": "2026-10-11T05:29:11.342Z",
+  "mode": "read-only; no normal searches, paid calls or production writes",
+  "observed_tail": {
+    "request_stage_spend_ms": 802.7,
+    "server_job_ms": 795,
+    "started_at": "2026-10-11T05:27:44.224Z",
+    "ended_at": "2026-10-11T05:27:45.019Z",
+    "coordinator": "crate-01",
+    "query_category": "UTC monthly aggregate with same-query daily subtotal",
+    "job_failed": false
+  },
+  "repeat_spend_samples": [
+    {
+      "wall_ms": 42.9,
+      "server_ms": 6.013025
+    },
+    {
+      "wall_ms": 11.4,
+      "server_ms": 6.643048
+    },
+    {
+      "wall_ms": 10.8,
+      "server_ms": 6.431372
+    },
+    {
+      "wall_ms": 10.1,
+      "server_ms": 5.19163
+    },
+    {
+      "wall_ms": 9.6,
+      "server_ms": 4.824855
+    },
+    {
+      "wall_ms": 7.8,
+      "server_ms": 3.404934
+    },
+    {
+      "wall_ms": 6.9,
+      "server_ms": 3.070608
+    },
+    {
+      "wall_ms": 7.4,
+      "server_ms": 3.414336
+    },
+    {
+      "wall_ms": 7.7,
+      "server_ms": 3.631034
+    },
+    {
+      "wall_ms": 7.3,
+      "server_ms": 3.406503
+    },
+    {
+      "wall_ms": 10.1,
+      "server_ms": 6.136809
+    },
+    {
+      "wall_ms": 10,
+      "server_ms": 5.741579
+    },
+    {
+      "wall_ms": 9.4,
+      "server_ms": 6.082254
+    },
+    {
+      "wall_ms": 7.4,
+      "server_ms": 4.236051
+    },
+    {
+      "wall_ms": 8.6,
+      "server_ms": 3.727959
+    },
+    {
+      "wall_ms": 6.8,
+      "server_ms": 3.143537
+    },
+    {
+      "wall_ms": 8.3,
+      "server_ms": 4.228245
+    },
+    {
+      "wall_ms": 9.4,
+      "server_ms": 4.425243
+    },
+    {
+      "wall_ms": 9.8,
+      "server_ms": 5.602729
+    },
+    {
+      "wall_ms": 9.1,
+      "server_ms": 5.294393
+    }
+  ],
+  "repeat_summary": {
+    "count": 20,
+    "wall_p50_ms": 9.25,
+    "wall_p95_nearest_rank_ms": 11.4,
+    "wall_max_ms": 42.9,
+    "server_max_ms": 6.643048
+  },
+  "table": {
+    "row_count": 1073,
+    "shard_copies": 2,
+    "total_shard_bytes": 1082301,
+    "primary": "crate-01",
+    "replica": "crate-03"
+  },
+  "plan": "Collect spending rows since current UTC month, hash aggregate two sums, evaluate current clock and coalesce; estimated 353 rows",
+  "current_nodes": [
+    {
+      "node": "crate-01",
+      "load_1m": 2.17,
+      "heap_used_bytes": 7772101112,
+      "heap_max_bytes": 17179869184,
+      "search_pool": {
+        "active": 1,
+        "queue": 0,
+        "rejected": 0,
+        "threads": 25
+      }
+    },
+    {
+      "node": "crate-02",
+      "load_1m": 0.67,
+      "heap_used_bytes": 8390798080,
+      "heap_max_bytes": 17179869184,
+      "search_pool": {
+        "active": 0,
+        "queue": 0,
+        "rejected": 249,
+        "threads": 25
+      }
+    },
+    {
+      "node": "crate-03",
+      "load_1m": 1.39,
+      "heap_used_bytes": 4657541896,
+      "heap_max_bytes": 17179869184,
+      "search_pool": {
+        "active": 0,
+        "queue": 0,
+        "rejected": 30897,
+        "threads": 25
+      }
+    }
+  ],
+  "historical_concurrent_jobs": [
+    {
+      "node": "crate-02",
+      "jobs": 12,
+      "over_100ms": 0,
+      "max_duration": "00:00:00.071"
+    },
+    {
+      "node": "crate-03",
+      "jobs": 12,
+      "over_100ms": 0,
+      "max_duration": "00:00:00.081"
+    },
+    {
+      "node": "crate-01",
+      "jobs": 13,
+      "over_100ms": 1,
+      "max_duration": "00:00:00.795"
+    }
+  ],
+  "logging_at_tail": {
+    "crate-01": {
+      "docker_log_lines": 0
+    },
+    "crate-03": {
+      "docker_log_lines": 0
+    },
+    "operation_log_rows": 0
+  },
+  "conclusion": "Spending outlier was measured inside Crate, not principally HTTP transport. Slow scan, GC, disk and transient contention are not established causes. Twenty repetitions did not reproduce this outlier; no query or spending semantics change is justified by current evidence.",
+  "limits": [
+    "Current load/queues cannot reconstruct historical contention.",
+    "No operation-level timings or GC evidence available at the event.",
+    "One server-side spending outlier remains unattributed."
+  ]
+}

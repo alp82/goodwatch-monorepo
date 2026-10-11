@@ -2,6 +2,7 @@
 // When a search can't be ranked (see servingFallback, or a ranking that fails or misses its deadline), the basic
 // search serves it, and combinedSearch records the reason on the search_history row (ranker_fallback).
 import { runsSearch } from "../role.server.ts"
+import { RankingProgress } from "./ranking-progress.server.ts"
 import type {
 	Eligibility,
 	ReadingFields,
@@ -26,7 +27,9 @@ const SERVE_DEADLINE_MS = 1500
 let started = false
 
 /** At server start: loads the index and, when readings are possible, the query models in the background. */
-export function startSearchRanking(options: { queryModels?: boolean } = {}): void {
+export function startSearchRanking(
+	options: { queryModels?: boolean } = {},
+): void {
 	if (!runsSearch()) return
 	if (started) return
 	started = true
@@ -74,9 +77,15 @@ export function servingFallback(search: {
 }
 
 export class RankingDeadlineError extends Error {
-	constructor(ms: number) {
+	readonly timings: Readonly<Record<string, number>>
+
+	constructor(
+		ms: number,
+		timings: Readonly<Record<string, number>> = Object.freeze({}),
+	) {
 		super(`Search ranking missed its ${ms} ms deadline`)
 		this.name = "RankingDeadlineError"
+		this.timings = timings
 	}
 }
 
@@ -90,19 +99,23 @@ export function rankForServing(
 	eligibility: Eligibility,
 	deadlineMs = servingDeadlineMs(),
 ): Promise<RankedSearch> {
-	const ranking = rankSearch(reading, request, eligibility)
+	const progress = request.progress ?? new RankingProgress()
+	const ranking = rankSearch(reading, { ...request, progress }, eligibility)
 	let timer: NodeJS.Timeout | undefined
 	let missed = false
 	const deadline = new Promise<never>((_, reject) => {
 		timer = setTimeout(() => {
 			missed = true
 			searchAdmission.hold(ranking)
-			reject(new RankingDeadlineError(deadlineMs))
+			reject(new RankingDeadlineError(deadlineMs, progress.snapshot()))
 		}, deadlineMs)
 	})
 	// After a miss nobody waits for the ranking, so its failure is only logged here.
-	ranking.catch((error) => {
-		if (missed) console.error("Search ranking failed after its deadline", error)
+	ranking.catch(() => {
+		if (missed)
+			console.error("Search ranking failed after its deadline", {
+				reason: "ranking",
+			})
 	})
 	return Promise.race([ranking, deadline]).finally(() => clearTimeout(timer))
 }

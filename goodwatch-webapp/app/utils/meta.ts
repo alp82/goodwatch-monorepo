@@ -22,6 +22,15 @@ export const ogImageUrl = (pageUrl: string) => {
 	return `https://goodwatch.app/og${path || "/index"}${OG_IMAGE.extension}`
 }
 
+/**
+ * The address of a page of a paged list: the first page is the list's own address, a later page carries `?page=N`.
+ * Every other query parameter is a view of the same page and stays out of the canonical address.
+ */
+export const pagedUrl = (url: string, search: string) => {
+	const page = Number.parseInt(new URLSearchParams(search).get("page") || "", 10)
+	return page > 1 ? `${url}?page=${page}` : url
+}
+
 export interface MetaOptions {
 	pageMeta: PageMeta
 	item?: MovieResult | ShowResult
@@ -30,14 +39,15 @@ export interface MetaOptions {
 
 export const buildMeta = (params: MetaOptions) => {
 	const image = ogImageUrl(params.pageMeta.url)
-	let jsonLdContent: Record<string, unknown> = {}
+	// Stays null on a page without structured data: an empty block is a block a crawler reads and reports.
+	let jsonLdContent: Record<string, unknown> | null = null
 	if (params.item) {
 		jsonLdContent = buildJsonLdDetail(params.pageMeta, params.item)
 	} else if (params.items && params.items.length > 0) {
 		jsonLdContent = buildJsonLdCollection(params.pageMeta, params.items)
 	}
 
-	const metaTags = [
+	const metaTags: Record<string, unknown>[] = [
 		// Basic meta tags
 		{ title: params.pageMeta.title },
 		{ name: "description", content: params.pageMeta.description },
@@ -79,10 +89,10 @@ export const buildMeta = (params: MetaOptions) => {
 		{ name: "twitter:description", content: params.pageMeta.description },
 		{ name: "twitter:image", content: image },
 		{ name: "twitter:image:alt", content: params.pageMeta.alt },
-
-		// JSON-LD Schema
-		{ "script:ld+json": jsonLdContent },
 	]
+
+	// JSON-LD Schema
+	if (jsonLdContent) metaTags.push({ "script:ld+json": jsonLdContent })
 
 	return metaTags
 }

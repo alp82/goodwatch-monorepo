@@ -144,6 +144,12 @@ export const PHONE_ROOM = {
 /** The phone edition of the TV screens: a smaller canvas, so the type prints at a readable size. */
 export const PHONE_TV_CANVAS = { w: 560, h: 308 } as const
 
+/**
+ * The height of the lip of the section below the room on a phone in portrait (#352). It lies over the room's
+ * bottom edge, so the Remote's keys end above it. living-room.css has the same number (`--lr-reserve`).
+ */
+export const PHONE_LIP = 60
+
 /** How far down the Remote its streaming keys end, in Remote pixels. */
 const REMOTE_KEYS_END = 700
 
@@ -206,6 +212,8 @@ export function layoutPhone(
 	width: number,
 	height: number,
 	orientation: PhoneOrientation,
+	/** Pixels at the bottom of a portrait window that the Remote's keys stay out of (the lip, #352). */
+	reserve = 0,
 ): PhoneLayout {
 	if (orientation === "portrait") {
 		const { photo, tv } = placeRoom(PHONE_ROOM, width, height, {
@@ -219,7 +227,7 @@ export function layoutPhone(
 			0.3,
 			Math.min(
 				(width * 0.66) / REMOTE_W,
-				(height - remoteTop - 10) / REMOTE_KEYS_END,
+				(height - reserve - remoteTop - 10) / REMOTE_KEYS_END,
 				1,
 			),
 		)

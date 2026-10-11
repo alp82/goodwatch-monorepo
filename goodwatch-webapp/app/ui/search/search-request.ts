@@ -43,6 +43,7 @@ export async function requestSearch({
 	body,
 	signal,
 	onReading,
+	onProgress,
 	unavailable,
 }: {
 	/** The JSON body of the search request. */
@@ -50,6 +51,8 @@ export async function requestSearch({
 	signal: AbortSignal
 	/** The reading of the query, which arrives before the results. */
 	onReading: (chips: ReadingChip[]) => void
+	/** Usable results while title matching continues; never the completed answer. */
+	onProgress?: (batch: SearchBatch) => void
 	/** What the page says when the search failed and the server didn't say why. */
 	unavailable: string
 }): Promise<SearchBatch> {
@@ -90,25 +93,34 @@ export async function requestSearch({
 			// Not the stream's JSON: an answer some other server wrote, or a line that was cut off.
 			throw new Error(unavailable)
 		}
-		if (message?.kind === "reading") onReading(message.reading ?? [])
-		else if (message?.kind === "batch") batch = message.batch
+		if (signal.aborted) throw signal.reason ?? new DOMException("Search interrupted", "AbortError")
+		if (message?.kind === "reading" && !batch) onReading(message.reading ?? [])
+		else if (message?.kind === "provisional" && message.batch && !batch)
+			onProgress?.(message.batch)
+		else if (message?.kind === "batch" && !batch) batch = message.batch
 		else if (message?.kind === "error")
 			throw new Error(message.error ?? unavailable)
 	}
-	while (true) {
-		let chunk: Awaited<ReturnType<typeof reader.read>>
-		try {
-			chunk = await reader.read()
-		} catch (error) {
-			throw lost(error)
+	try {
+		while (true) {
+			if (signal.aborted) throw signal.reason ?? new DOMException("Search interrupted", "AbortError")
+			let chunk: Awaited<ReturnType<typeof reader.read>>
+			try {
+				chunk = await reader.read()
+			} catch (error) {
+				throw lost(error)
+			}
+			if (chunk.done) break
+			buffered += decoder.decode(chunk.value, { stream: true })
+			const lines = buffered.split("\n")
+			buffered = lines.pop() ?? ""
+			for (const line of lines) handle(line)
 		}
-		if (chunk.done) break
-		buffered += decoder.decode(chunk.value, { stream: true })
-		const lines = buffered.split("\n")
-		buffered = lines.pop() ?? ""
-		for (const line of lines) handle(line)
+		handle(buffered + decoder.decode())
+		if (!batch) throw new Error(unavailable)
+		return batch
+	} finally {
+		await reader.cancel().catch(() => {})
+		reader.releaseLock()
 	}
-	handle(buffered + decoder.decode())
-	if (!batch) throw new Error(unavailable)
-	return batch
 }

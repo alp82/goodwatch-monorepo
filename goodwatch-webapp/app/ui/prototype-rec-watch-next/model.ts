@@ -1,6 +1,7 @@
 // PROTOTYPE - throwaway. Types and the local Watch next store for /prototype/rec-watch-next (#176).
 // Every variant keeps its own state in localStorage so the models never bleed into each other.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { titlePath } from "~/utils/helpers"
 
 export type Offer = { id: number; name: string; logo: string; owned: boolean; order: number }
 export type Episode = { s: number; e: number; name: string }
@@ -25,7 +26,7 @@ export interface Title {
 export const posterUrl = (t: Title, size = "w342") => (t.poster ? `https://image.tmdb.org/t/p/${size}${t.poster}` : "")
 export const backdropUrl = (t: Title, size = "w1280") => (t.backdrop ? `https://image.tmdb.org/t/p/${size}${t.backdrop}` : "")
 export const ownedOffers = (t: Title) => t.offers.filter((o) => o.owned)
-export const detailsHref = (t: Title) => `/${t.type}/${t.id}-${t.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`
+export const detailsHref = (t: Title) => titlePath(t.type, t.id, t.title)
 
 export interface State {
 	// Watch next in order. For the "top of Wishlist" model this is empty and the order lives in `wishlist`.

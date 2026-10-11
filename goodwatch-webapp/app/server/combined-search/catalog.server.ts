@@ -1,9 +1,15 @@
 import { fetch } from "undici"
 import { ELIGIBLE_VOTES } from "../search-ranking/search-filter.server"
 import type { Eligibility } from "./reading-retrieval.server"
+import type { Title } from "~/ui/search/search-model"
+import { withBackendTimeout } from "../../utils/backend-timeout.ts"
 
 // Search text never passes through the general-purpose SQL logger.
-export async function searchStatement(stmt: string, args: unknown[] = []) {
+export async function searchStatement(
+	stmt: string,
+	args: unknown[] = [],
+	signal = AbortSignal.timeout(8000),
+) {
 	const host = process.env.CRATE_HOSTS?.split(",")[0]
 	if (!host) throw new Error("Catalog unavailable")
 	const response = await fetch(
@@ -15,7 +21,7 @@ export async function searchStatement(stmt: string, args: unknown[] = []) {
 				Authorization: `Basic ${Buffer.from(`${process.env.CRATE_USER || ""}:${process.env.CRATE_PASS || ""}`).toString("base64")}`,
 			},
 			body: JSON.stringify({ stmt, args }),
-			signal: AbortSignal.timeout(8000),
+			signal,
 		},
 	)
 	if (!response.ok) throw new Error("Catalog unavailable")
@@ -28,12 +34,66 @@ export async function searchStatement(stmt: string, args: unknown[] = []) {
 export async function searchQuery<T extends object>(
 	stmt: string,
 	args: unknown[] = [],
+	signal?: AbortSignal,
 ): Promise<T[]> {
-	const data = await searchStatement(stmt, args)
+	const data = await searchStatement(stmt, args, signal)
 	return data.rows.map(
 		(row) =>
 			Object.fromEntries(data.cols.map((name, i) => [name, row[i]])) as T,
 	)
+}
+
+/** Bounded exact-name recovery while TMDB is still in flight. MATCH is indexed; lower() equality scans the catalog. */
+export async function exactCatalogTitles(
+	text: string,
+	signal?: AbortSignal,
+): Promise<Title[]> {
+	const normalized = (name: string) =>
+		name.normalize("NFC").trim().toLocaleLowerCase().replace(/\s+/gu, " ")
+	const wanted = normalized(text)
+	return withBackendTimeout(
+		"Catalog exact titles",
+		200,
+		async (signal) => {
+			const groups = await Promise.all(
+				(["movie", "show"] as const).map(async (type) => {
+					const rows = await searchQuery<{
+						tmdb_id: number
+						title: string
+						original_title: string | null
+						release_year: number | null
+						poster_path: string | null
+						popularity: number | null
+						adult: boolean | null
+					}>(
+						`SELECT tmdb_id,title,original_title,release_year,poster_path,popularity,adult FROM ${type} WHERE MATCH((title,original_title), ?) ORDER BY _score DESC LIMIT 20`,
+						[text],
+						signal,
+					).catch(() => [])
+					return rows
+						.filter(
+							(row) =>
+								row.adult !== true &&
+								[row.title, row.original_title].some(
+									(name) => name && normalized(name) === wanted,
+								),
+						)
+						.map((row) => ({
+							id: row.tmdb_id,
+							title: row.title,
+							original: row.original_title ?? undefined,
+							type: type === "show" ? "tv" : "movie",
+							year: row.release_year ? String(row.release_year) : "",
+							poster: row.poster_path,
+							popularity: row.popularity ?? 0,
+							adult: row.adult ?? undefined,
+						}))
+				}),
+			)
+			return groups.flat()
+		},
+		{ signal },
+	).catch(() => [])
 }
 export interface Metadata {
 	tmdb_id: number

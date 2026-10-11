@@ -45,6 +45,7 @@ import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
 import { useFeature } from "~/hooks/useFeature";
 import { TitleActionsFrame } from "~/ui/title-actions/TitleActionsFrame";
+import { titlePath } from "~/utils/helpers";
 import { reloadOnStaleChunk } from "~/utils/stale-chunk";
 
 // The provider below is on every page, but the filter sections and the people results are only on screen inside an
@@ -120,10 +121,17 @@ function useController() {
 	const editing = useRef<string | null>(null);
 	const navigationType = useNavigationType();
 	const [open, setOpen] = useState(false);
-	const [focused, setFocused] = useState(-1);
+	// The result under the keyboard highlight, by its key: the list reorders when the completed answer replaces a
+	// partial one, and an index would then point at another title.
+	const [focusedKey, setFocusedKey] = useState<string | null>(null);
 	const [ready, setReady] = useState(false);
 	const [batches, setBatches] = useState<Record<string, Batch>>({});
 	const [previous, setPrevious] = useState<Batch | null>(null);
+	// Partial packets are ephemeral: only a completed answer enters batches/storage. Kept by batch key, so the
+	// partial list stays through a retry of the same search.
+	const [provisional, setProvisional] = useState<{ key: string; batch: Batch } | null>(null);
+	const requestGeneration = useRef(0);
+	const liveSearch = useRef("");
 	// The interpretation arrives before the results, so it is kept apart from the batch.
 	const [reading, setReading] = useState<{
 		q: string;
@@ -169,7 +177,7 @@ function useController() {
 	const changeQuery = (value: string) => {
 		editing.current = value;
 		setDraft(value);
-		setFocused(-1);
+		setFocusedKey(null);
 		if (discoverSearch) return;
 		navigate(resultsHref({ q: value, page: null, allTitles: null }), {
 			replace: true,
@@ -206,7 +214,7 @@ function useController() {
 			setDraft(q);
 			editing.current = null;
 		}
-		setFocused(-1);
+		setFocusedKey(null);
 	}, [q, navigationType, location.search]);
 	useEffect(() => {
 		if (!active || !ready) return;
@@ -270,6 +278,8 @@ function useController() {
 	const basePolicyKey = `${config.data?.version ?? "pending"}:false:${setting("lesserKnown") === "1"}${allTitles ? ":allTitles" : ""}`;
 	const policyKey = `${basePolicyKey}${filtersKey ? `:${filtersKey}` : ""}`;
 	const batchKey = `${policyKey}:${q}`;
+	const requestIdentity = `${batchKey}:${revision}`;
+	liveSearch.current = active ? requestIdentity : "";
 	// Filter changes narrow the shown batch at once; the refetch waits until the
 	// filters stop changing, so dragging the year slider sends one request.
 	const [settledFilters, setSettledFilters] = useState(filtersKey);
@@ -293,6 +303,10 @@ function useController() {
 		refetchOnWindowFocus: false,
 		refetchOnReconnect: false,
 		queryFn: async ({ signal }): Promise<Batch & { cacheKey: string }> => {
+			const generation = ++requestGeneration.current;
+			// Another search's partial list goes; this search's own stays until its next packet or its completed answer.
+			setProvisional((old) => (old?.key === batchKey ? old : null));
+			const current = () => !signal.aborted && liveSearch.current === requestIdentity && requestGeneration.current === generation;
 			const batch = await requestSearch({
 				body: {
 					q: requested,
@@ -302,7 +316,15 @@ function useController() {
 					allTitles,
 				},
 				signal,
-				onReading: (chips) => setReading({ q: requested, chips }),
+				onReading: (chips) => {
+					if (current()) setReading({ q: requested, chips });
+				},
+				onProgress: (batch) => {
+					if (current()) setProvisional({
+						key: batchKey,
+						batch: { ...batch, q: requested, cacheKey: batchKey },
+					});
+				},
 				unavailable: SEARCH_PAGE_UNAVAILABLE,
 			});
 			return { ...batch, q: requested, cacheKey: batchKey };
@@ -317,13 +339,22 @@ function useController() {
 				[search.data.cacheKey]: search.data,
 			}));
 			setPrevious(search.data);
+			// The completed answer replaces its partial list for good.
+			setProvisional((old) =>
+				old?.key === search.data.cacheKey ? null : old,
+			);
 		}
 	}, [search.data]);
 	// While a filtered fetch is pending, narrow the unfiltered batch of this query
 	// when it is cached: it holds more matches than another filtered batch.
 	const unfilteredKey = `${basePolicyKey}:${q}`;
+	const partial =
+		provisional?.key === batchKey && !batches[batchKey]
+			? provisional.batch
+			: null;
 	const batch = q
 		? (batches[batchKey] ??
+			partial ??
 			batches[unfilteredKey] ??
 			(previous?.cacheKey.startsWith(`${config.data?.version}:`)
 				? previous
@@ -489,8 +520,16 @@ function useController() {
 		Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1,
 	);
 	const pageRows = rows.slice((page - 1) * 20, page * 20);
+	// Nothing is focused once the title has left the shown page.
+	const focusedRow =
+		(focusedKey !== null &&
+			pageRows.find(
+				(r) =>
+					r.key === focusedKey && (r.type === "movie" || r.type === "show"),
+			)) ||
+		null;
 	const detailHref = (row: Row) =>
-		`/${row.type}/${Number(row.key.split(":")[1])}?${makeParams({
+		`${titlePath(row.type, Number(row.key.split(":")[1]), row.title)}?${makeParams({
 			q: batch?.q ?? q,
 			page: String(
 				Math.floor(
@@ -527,7 +566,14 @@ function useController() {
 			draft !== q ||
 			!ready ||
 			config.isLoading);
-	const status = loading
+	const pendingTitleLookup = Boolean(partial);
+	// The search failed after its partial list arrived, and nothing is on its way.
+	const lateFailure = pendingTitleLookup && !loading && Boolean(search.error);
+	const status = pendingTitleLookup
+		? lateFailure
+			? `Title matches could not finish. Showing the ${rows.length} results found so far.`
+			: `Still checking title matches. ${rows.length} results so far.`
+		: loading
 		? refining && draft === q && batch?.q === q
 			? `Refining results for “${q}”… ${rows.length} matching so far.`
 			: `Searching for “${draft}”…${batch ? ` Showing “${batch.q}” until ready.` : ""}`
@@ -544,8 +590,8 @@ function useController() {
 		setDraft,
 		open,
 		setOpen,
-		focused,
-		setFocused,
+		focusedRow,
+		setFocusedKey,
 		input,
 		ready,
 		batch,
@@ -567,6 +613,7 @@ function useController() {
 		changeQuery,
 		loading,
 		status,
+		lateFailure,
 		chips,
 		watch,
 		mode,
@@ -663,8 +710,8 @@ export function JourneyHeader() {
 			<form
 				onSubmit={(e) => {
 					e.preventDefault();
-					if (j.focused >= 0 && j.sequence[j.focused]) {
-						j.openRow(j.sequence[j.focused]);
+					if (j.focusedRow) {
+						j.openRow(j.focusedRow);
 						return;
 					}
 					j.commit(j.draft);
@@ -702,22 +749,22 @@ export function JourneyHeader() {
 							}
 							if (e.key === "ArrowDown" || e.key === "ArrowUp") {
 								e.preventDefault();
-								const indices = j.pageRows.map((r) =>
-									j.sequence.findIndex((item) => item.key === r.key),
-								);
-								j.setFocused((n) => {
-									if (!indices.length) return -1;
-									const current = indices.indexOf(n);
+								const keys = j.pageRows
+									.filter((r) => r.type === "movie" || r.type === "show")
+									.map((r) => r.key);
+								j.setFocusedKey((key) => {
+									if (!keys.length) return null;
+									const current = key === null ? -1 : keys.indexOf(key);
 									const next =
 										current < 0
 											? e.key === "ArrowDown"
 												? 0
-												: indices.length - 1
+												: keys.length - 1
 											: (current +
 													(e.key === "ArrowDown" ? 1 : -1) +
-													indices.length) %
-												indices.length;
-									return indices[next];
+													keys.length) %
+												keys.length;
+									return keys[next];
 								});
 							}
 						}}
@@ -765,8 +812,7 @@ function JourneyList() {
 			: assetUrl(placeholder);
 	const meta = (r: Row) => `${r.year} · ${r.type}`;
 	const active = (r: Row) =>
-		j.currentKey === r.key ||
-		j.focused === j.sequence.findIndex((item) => item.key === r.key);
+		j.currentKey === r.key || j.focusedRow?.key === r.key;
 	return (
 		<section aria-label="Search results" className="min-w-0">
 			<div
@@ -781,7 +827,9 @@ function JourneyList() {
 				)}
 				<span>{j.status}</span>
 				<HiddenResultsLink />
-				{j.batch?.errors.length || offerRetry(j.status) ? (
+				{/* Not while a search is running: Retry would cancel it and start over. */}
+				{!j.loading &&
+				(j.batch?.errors.length || offerRetry(j.status) || j.lateFailure) ? (
 					<button onClick={j.retry} className="ml-2 underline text-cyan-300">
 						Retry
 					</button>

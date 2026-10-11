@@ -23,7 +23,10 @@ The experience of developing preferences, discovering suggestions, exploring tit
 The search, filters, sorting, results position, and current Taste card that describe where a person is in their exploration.
 
 **Living room**:
-The start page, presented as a cozy room seen from the sofa: a TV on the wall and a remote in the person's hand.
+The start page, presented as a cozy room seen from the sofa: a TV on the wall and a remote in the person's hand. The page continues below the living room with the start titles and links to the hubs; a visit starts with the page held still in the room, and the control at the room's bottom edge is the way down. After the first arrival below, the page scrolls freely for the rest of the tab's session.
+
+**Start titles**:
+The 16 titles the start page links to below the living room: the most popular titles of the living room's pool for a visitor nobody knows anything about. The list is the same for everyone, guest or member, in every country; it is a list of what is popular, not a recommendation, so a member's seen or hidden titles can be in it.
 
 **TV**:
 The screen inside the living room where GoodWatch runs. It shows one TV screen at a time.

@@ -4,10 +4,7 @@ import {
 	ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/20/solid"
 import { Link } from "@remix-run/react"
-import avatarAneka from "~/img/avatars/aneka.svg"
-import avatarFelix from "~/img/avatars/felix.svg"
-import avatarMark from "~/img/avatars/mark.svg"
-import avatarSarah from "~/img/avatars/sarah.svg"
+import avatars from "~/img/avatars/avatars.svg"
 import discordColor from "~/img/discord-mark-blue.svg"
 import justwatchLogo from "~/img/justwatch-logo.svg"
 import redditColor from "~/img/reddit-color.svg"
@@ -16,6 +13,9 @@ import shieldazeBanner from "~/img/secured-by-shieldaze-120.webp"
 import tmdbLogo from "~/img/tmdb-logo.svg"
 
 const DISCORD_GOODWATCH_URL = "https://discord.gg/TVAcrfQzcA"
+
+// The four avatars are one file, side by side: one request where the footer is near the window, not four.
+const AVATAR_POSITIONS = ["0", "33.33%", "66.67%", "100%"]
 
 const navigation = {
 	main: [
@@ -147,46 +147,23 @@ export default function Footer() {
 									</p>
 
 									<div className="flex items-center justify-center md:justify-start mt-6 -space-x-3">
-										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
-											<img
-												loading="lazy"
-												decoding="async"
-												width={36}
-												height={36}
-												src={assetUrl(avatarFelix)}
-												alt="User"
-											/>
-										</div>
-										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
-											<img
-												loading="lazy"
-												decoding="async"
-												width={36}
-												height={36}
-												src={assetUrl(avatarAneka)}
-												alt="User"
-											/>
-										</div>
-										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
-											<img
-												loading="lazy"
-												decoding="async"
-												width={36}
-												height={36}
-												src={assetUrl(avatarMark)}
-												alt="User"
-											/>
-										</div>
-										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden">
-											<img
-												loading="lazy"
-												decoding="async"
-												width={36}
-												height={36}
-												src={assetUrl(avatarSarah)}
-												alt="User"
-											/>
-										</div>
+										{AVATAR_POSITIONS.map((position) => (
+											<div
+												key={position}
+												className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-gray-700 overflow-hidden"
+											>
+												<img
+													loading="lazy"
+													decoding="async"
+													width={36}
+													height={36}
+													className="h-9 w-9 object-cover"
+													style={{ objectPosition: position }}
+													src={assetUrl(avatars)}
+													alt="User"
+												/>
+											</div>
+										))}
 										<div className="w-10 h-10 rounded-full border-2 border-indigo-900 bg-[#5865F2] text-white flex items-center justify-center text-xs font-bold">
 											+100
 										</div>

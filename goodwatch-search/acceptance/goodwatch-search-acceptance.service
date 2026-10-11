@@ -1,0 +1,25 @@
+[Unit]
+Description=GoodWatch sanitized production search acceptance evidence
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+Environment=DOCKER_CONFIG=/opt/goodwatch-search-acceptance/docker-config
+Environment=DOCKER_HOST=unix:///var/run/docker.sock
+EnvironmentFile=/etc/default/goodwatch-search-acceptance
+ExecStart=/usr/bin/node /opt/goodwatch-search-acceptance/collect.mjs /var/lib/goodwatch-search-acceptance ${SEARCH_ACCEPTANCE_REPLAY_FROM}
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/goodwatch-search-acceptance
+RestrictAddressFamilies=AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

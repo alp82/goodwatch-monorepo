@@ -13,6 +13,7 @@ import RatingOverlay from "~/ui/ratings/RatingOverlay"
 import StreamingOverlay from "~/ui/streaming/StreamingOverlay"
 import { TasteMatchPill } from "~/ui/title-card/TasteMatchPill"
 import UserDataOverlay from "~/ui/user/UserDataOverlay"
+import { titlePath } from "~/utils/helpers"
 import { extractRatings, getScoreLabelText } from "~/utils/ratings"
 import { ACTIONS, ActionSet, ScoreChip, TitleAction, TitleScore } from "./controls"
 import { PopupOverlay } from "./popup"
@@ -141,7 +142,7 @@ function PCard({ card, pop, setPop, onPeek }: { card: TitleCard; pop: Pop; setPo
 		>
 			<div className="@container flex w-full flex-col rounded-lg border-4 border-gray-800 bg-gray-900 hover:border-amber-700/50 hover:bg-gray-800">
 				<a
-					href={`/${card.media_type}/${card.tmdb_id}`}
+					href={titlePath(card.media_type, card.tmdb_id, card.title)}
 					draggable="false"
 					className={`relative block ${quick ? "select-none [-webkit-touch-callout:none]" : ""}`}
 					onClick={(e) => {

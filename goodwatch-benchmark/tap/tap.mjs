@@ -32,7 +32,11 @@ const CONTROLS = {
   cast_next: "Cast row: next arrow",
   related_tab: "Related tab (the first one that isn't selected)",
   related_next: "Related row: next arrow (the first row)",
+  related_step: "Related map: the first poster (a step onto that title)",
 };
+// Controls of the related titles carousel, which serves only while the related map is off (REC_RELATED_MAP=off).
+// They run only when TAP_CONTROLS names them.
+const OPT_IN = ["related_tab", "related_next"];
 const MODES = ["early", "scroll"];
 const NETWORKS = {
   none: null,
@@ -114,6 +118,14 @@ function pageLib(plan) {
     // The tab row is a Swiper element too, without arrow buttons.
     related_tab: toggle("#related .swiper:not(:has(> button)) button[aria-pressed]", "aria-pressed"),
     related_next: arrow("#related .swiper"),
+    // The related map: a poster is a button, and a tap steps onto its title in place. The section's inline script
+    // handles it from the first parse on. Effect: the stage is about the tapped title.
+    related_step: {
+      find: () => document.querySelector("#related [data-related-map] [data-pl-stage] button[data-pl-step]"),
+      begin: (el) => ({ key: el.getAttribute("data-pl-step") }),
+      done: (_el, ctx) => document.querySelector("#related [data-pl-stage]")?.getAttribute("data-pl-at") === ctx.key,
+      ready: () => Boolean(window.__gwRelatedMap),
+    },
   };
 
   const T = (window.__tap = { fcp: null, armed: null });
@@ -326,7 +338,12 @@ function settings() {
   return {
     origin,
     pages,
-    controls: list("TAP_CONTROLS", Object.keys(CONTROLS)),
+    controls: list(
+      "TAP_CONTROLS",
+      Object.keys(CONTROLS).filter(
+        (control) => !OPT_IN.includes(control) || (env.TAP_CONTROLS || "").split(",").includes(control),
+      ),
+    ),
     modes: list("TAP_MODES", MODES),
     runs,
     cpu,

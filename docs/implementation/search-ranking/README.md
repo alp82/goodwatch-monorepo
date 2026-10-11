@@ -1132,6 +1132,53 @@ against 9.1. Keep two requests.
 
 ## Known gaps and follow-ups
 
+### Progressive title lookup (October 2026)
+
+Streaming Search and Discover can show provisional results while TMDB's first page is still running. After a
+200 ms wait, an indexed catalog lookup gets another 200 ms to recover exact movie/show names (including original
+names). Its top-20 candidate limit means it cannot guarantee every exact match; partial names and people still
+come from the remote lookup. The final update uses the original lookup and the same reading, candidates and blend
+math, fetching display fields only for newly appearing titles. Optional remote pages remain bounded separately.
+
+The stream sends `provisional` with `pendingTitleLookup: true`, then `batch` with completed results. Clients show
+“Still checking title matches,” keep partial results outside completed caches/session storage, and retain them
+with retry feedback if completion fails. Cancellation aborts remaining work.
+
+For the owner's seven-day acceptance check, `stage_ms.firstResults` measures server time through awaited delivery
+of the first usable batch. Empty provisional batches do not qualify; an empty final answer counts as the completed
+answer. This measures server delivery, not browser paint or network transit. `elapsed_ms` and `stage_ms.total`
+continue to report full search computation time; member taste/delivery waits can make `firstResults` larger than
+`total`. `titleCompletion` and `finalDisplay` explain the remaining completion work. Historical rows without
+`firstResults` cannot demonstrate the new criterion. A delivered provisional answer remains in history when the
+person leaves (`completionAborted: 1`) or completion fails (`completionFailed: 1`). Include its first-delivery
+latency, report these flags separately, and exclude incomplete computation from completed-result percentiles.
+Result-open feedback remains outside this map.
+
+### Attributing remaining latency tails
+
+A ranking deadline now freezes request-local numeric spans for index loading, preparation, early/late encoding,
+profile prefetch, and the two Qdrant rounds plus rescore. History stores `ranking<Name>Elapsed` and, for unfinished
+work at the deadline, `ranking<Name>Pending: 1`. Early preparation keeps its original start during the reading;
+background completion cannot mutate a recorded timeout snapshot. These overlapping spans are not additive, and
+the 1,500 ms ranking deadline and background admission hold are unchanged.
+
+Reading admission exposes independent `readingClaimControl`, `readingClaimSpend`, `readingClaimRedis`,
+`readingClaimInterpretationInsert`, and `readingClaimEstimateInsert` durations. `readingClaimAccount` overlaps the
+SQL work; `readingClaimScopes` measures the residual wait afterwards. Rejected operations retain their duration.
+
+Anonymous JSON logs complement encrypted history: `search.lifecycle.v1` pairs accepted/finished events with a
+random per-request identifier, fixed completion status, delivery/computation timings, dependency failure flags,
+role and build commit. It contains no query, account, network address, SQL argument, credential or raw error.
+`search.history-write.v1` records whether the detached history write succeeded; `search.rejection.v1` records busy
+or wrongly routed requests. Logging failures do not change search responses. The server enqueue timing is not a
+browser-paint measurement.
+
+Seven-day acceptance needs both authenticated history and complete production error evidence, including failures
+before delivery, rejected requests, failed history writes and ingress errors. Verify paired lifecycle coverage,
+role/build identities and log retention for the whole UTC window. The current Docker limit of five 50 MB log files
+is a size bound, not a seven-day retention guarantee. Controlled fixtures and missing error logs cannot prove an
+error-free window.
+
 - **Negation needs catalog labels.** "space opera without aliens" fails for every ranker. The fix is enrichment labels
   for concrete elements (aliens, robots, dragons, gore), not a ranking rule. See the walkthrough's section on this gap.
 - **Non-English negations** couldn't match the English labels. Fixed in #169 for common elements with a word list: see

@@ -210,7 +210,7 @@ The limits come from a measured run plus a margin: about 5% on bytes, one or two
 ```sh
 ./bench.sh tap
 ./bench.sh tap --runs 7 --label after-carousel
-./bench.sh tap --controls cast_next,related_tab --modes early --runs 3
+./bench.sh tap --controls cast_next,related_step --modes early --runs 3
 ./bench.sh tap --base-url http://127.0.0.1:3304 --label branch
 ```
 
@@ -250,8 +250,11 @@ Every measurement is its own page load in a new browser: empty cache, no cookies
 | `fingerprint_switch` | The first "See all ... traits" button in `#fingerprint` | One of the six detail views is displayed |
 | `episode_cell` | The first displayed episode cell in `#episode-ratings` (show page only) | The episode's tip is in the document |
 | `cast_next` | The next arrow of the cast row in `#actors_and_crew` | The row's active slide is another one than before the tap |
-| `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. |
-| `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap |
+| `related_step` | The first poster of the related map in `#related` | The map is about the tapped title: the stage's `data-pl-at` is the poster's key. The section's inline script does it, before hydration. |
+| `related_tab` | The first tab in `#related` that isn't pressed | That tab has `aria-pressed="true"`. The rows of the new panel load after that and aren't part of the time. Runs only when `--controls` names it. |
+| `related_next` | The next arrow of the first row in `#related` | The row's active slide is another one than before the tap. Runs only when `--controls` names it. |
+
+`related_tab` and `related_next` belong to the related titles carousel, which serves only while the related map is off (`REC_RELATED_MAP=off`). A default run leaves them out.
 
 The selectors use section ids, roles, and accessible names. The carousel arrows have no name: they are the last `button` that is a direct child of a `.swiper` element. The controls and their effects are in `pageLib` in [`tap/tap.mjs`](tap/tap.mjs): change them there when the page's markup changes.
 

@@ -2,9 +2,8 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../server/title-filter/test-alias.ts"
 
-const { buildJsonLdDetail, jsonLdPeople, ogImageUrl } = await import(
-	"./meta.ts"
-)
+const { buildJsonLdDetail, buildMeta, jsonLdPeople, ogImageUrl, pagedUrl } =
+	await import("./meta.ts")
 
 const page = {
 	title: "Stranger Things",
@@ -86,5 +85,65 @@ test("a page's Open Graph image is the JPEG under /og/, with index for the home 
 	assert.equal(
 		ogImageUrl("/movies/moods/"),
 		"https://goodwatch.app/og/movies/moods.jpg",
+	)
+})
+
+const jsonLdTags = (tags: Record<string, unknown>[]) =>
+	tags.filter((tag) => "script:ld+json" in tag)
+
+test("a page without structured data has no JSON-LD tag, not an empty one", () => {
+	assert.deepEqual(jsonLdTags(buildMeta({ pageMeta: page })), [])
+	assert.deepEqual(jsonLdTags(buildMeta({ pageMeta: page, items: [] })), [])
+})
+
+test("a page with a title or a list has one JSON-LD tag with content", () => {
+	const [detail, ...moreDetail] = jsonLdTags(
+		buildMeta({ pageMeta: page, item: show([]) }),
+	)
+	assert.equal(moreDetail.length, 0)
+	assert.equal(
+		(detail["script:ld+json"] as { "@type": string })["@type"],
+		"TVSeries",
+	)
+
+	const [list, ...moreList] = jsonLdTags(
+		buildMeta({ pageMeta: page, items: [{ title: "Dark" }] as never }),
+	)
+	assert.equal(moreList.length, 0)
+	assert.equal(
+		(list["script:ld+json"] as { "@type": string })["@type"],
+		"CollectionPage",
+	)
+})
+
+test("the first page of a list has the list's address, with or without a page parameter", () => {
+	const url = "https://goodwatch.app/movies/moods/scary"
+	assert.equal(pagedUrl(url, ""), url)
+	assert.equal(pagedUrl(url, "?page=1"), url)
+	assert.equal(pagedUrl(url, "?page=0"), url)
+	assert.equal(pagedUrl(url, "?page=abc"), url)
+	assert.equal(pagedUrl(url, "?watchedType=didnt-watch"), url)
+})
+
+test("a later page of a list has its page number in the address and no other parameter", () => {
+	const url = "https://goodwatch.app/movies/moods/scary"
+	assert.equal(pagedUrl(url, "?page=2"), `${url}?page=2`)
+	assert.equal(pagedUrl(url, "?utm_source=x&page=12&country=DE"), `${url}?page=12`)
+	assert.equal(pagedUrl(url, "?page=02"), `${url}?page=2`)
+})
+
+test("the canonical address and og:url of a later page name that page", () => {
+	const url = pagedUrl("https://goodwatch.app/movies/moods/scary", "?page=3")
+	const tags = buildMeta({ pageMeta: { ...page, url } }) as {
+		rel?: string
+		href?: string
+		property?: string
+		content?: string
+	}[]
+	assert.equal(tags.find((tag) => tag.rel === "canonical")?.href, url)
+	assert.equal(tags.find((tag) => tag.property === "og:url")?.content, url)
+	assert.equal(
+		tags.find((tag) => tag.property === "og:image")?.content,
+		"https://goodwatch.app/og/movies/moods/scary.jpg",
 	)
 })

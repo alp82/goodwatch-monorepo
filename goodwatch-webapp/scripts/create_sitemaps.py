@@ -1,18 +1,23 @@
-from datetime import date, datetime, timezone
+"""Writes the sitemap files. How and when to run it: docs/sitemap.md.
+  uv run create_sitemaps.py [--output-dir <directory>]"""
+from datetime import date
 from typing import Literal, List, Optional
 from xml.sax.saxutils import escape
+import argparse
 import glob
 import os
 import re
 from crate import client
 from dotenv import load_dotenv
 
+from sitemap_lastmod import title_lastmod
 from sitemap_query import detail_query
 from utils import title_to_dashed
 
 load_dotenv()
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Where the files are written. --output-dir replaces it, so that a run can be checked before it is published.
 SITEMAP_DIR = os.path.join(SCRIPT_DIR, "../public/sitemaps/")
 CATEGORY_DIR = os.path.join(SCRIPT_DIR, "../app/ui/explore/category/")
 BASE_URL = "https://goodwatch.app"
@@ -122,14 +127,6 @@ def create_category_sitemaps():
     }
 
 
-def latest_date(*timestamps) -> Optional[date]:
-    """CrateDB returns timestamps as epoch milliseconds."""
-    values = [t for t in timestamps if t is not None]
-    if not values:
-        return None
-    return datetime.fromtimestamp(max(values) / 1000, tz=timezone.utc).date()
-
-
 def create_detail_sitemaps(crate_cursor, table_name: Literal["movie", "show"]):
     """Create sitemaps for the most popular movie and show detail pages."""
     # Which titles are listed, and why: see sitemap_query.py.
@@ -139,12 +136,11 @@ def create_detail_sitemaps(crate_cursor, table_name: Literal["movie", "show"]):
     entries = []
     lastmods = []
     for tmdb_id, title, original_title, details_updated_at, dna_updated_at in rows:
-        # Same slug as the canonical URL in app/routes/{movie,show}.$key.tsx
+        # Same slug as the canonical URL in app/routes/movie.$movieKey.tsx and show.$showKey.tsx
         slug = title_to_dashed(title or original_title or "")
-        lastmod = latest_date(details_updated_at, dna_updated_at)
+        lastmod = title_lastmod(details_updated_at, dna_updated_at)
         entries.append(url_entry(f"{BASE_URL}/{table_name}/{tmdb_id}-{slug}", lastmod))
-        if lastmod:
-            lastmods.append(lastmod)
+        lastmods.append(lastmod)
 
     # Filenames stay stable because Search Console has them submitted
     sitemap_filename = f"sitemap_{table_name}_detail_0.xml"
@@ -208,6 +204,12 @@ def init_crate():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Write the sitemap files.")
+    parser.add_argument("--output-dir", default=SITEMAP_DIR,
+                        help="directory for the files (default: public/sitemaps); its sitemap*.xml are replaced")
+    SITEMAP_DIR = os.path.abspath(parser.parse_args().output_dir)
+    print(f"Writing sitemaps to {SITEMAP_DIR}")
+
     crate_connection = init_crate()
     crate_cursor = crate_connection.cursor()
 

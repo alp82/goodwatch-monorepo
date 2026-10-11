@@ -1,3 +1,4 @@
+import { recordSearchHistoryWrite } from "./telemetry.server";
 import { runsSearch } from "../role.server";
 import { Agent, fetch } from "undici";
 import { onShutdown } from "../lifecycle.server";
@@ -212,24 +213,36 @@ export async function executeJevStage(
 	const apiKey = process.env.TYPESAFE_API_KEY;
 	if (!apiKey) return basic("configuration");
 	let claim;
+	const accountStarted = performance.now();
+	// This overlaps the spending reads. claimScopes records only the residual await after those reads.
+	const scopes = Promise.resolve(input.visitor.accountId)
+		.then((accountId) => [
+			"global",
+			store.digest(`network:${input.visitor.networkIdentity}`),
+			...(accountId ? [store.digest(`account:${accountId}`)] : []),
+		])
+		.finally(() => {
+			if (input.timings)
+				input.timings.claimAccount = Math.round((performance.now() - accountStarted) * 10) / 10;
+		});
+	// A rejected session may resolve before claim reaches its residual scopes await.
+	scopes.catch(() => {});
 	try {
 		claim = await store.claim({
 			cacheKey,
 			contract,
 			// The account scope waits for the session check; the spending checks don't.
-			scopes: Promise.resolve(input.visitor.accountId).then((accountId) => [
-				"global",
-				store.digest(`network:${input.visitor.networkIdentity}`),
-				...(accountId ? [store.digest(`account:${accountId}`)] : []),
-			]),
+			scopes,
+			timings: input.timings,
 			reserveNano: JEV_RESERVE_NANO,
 			priceVersion: JEV_PRICE_VERSION,
 			admissionAttemptId: input.admissionAttemptId,
 		});
 	} catch {
 		return basic("storage");
+	} finally {
+		step("claim");
 	}
-	step("claim");
 	if (claim.kind === "basic") return basic(claim.reason);
 	if (claim.kind === "cached") {
 		try {
@@ -385,10 +398,17 @@ export async function executeJevStage(
 export async function recordSearchHistory(
 	input: Parameters<SearchStore["history"]>[0],
 ): Promise<{ recorded: boolean; id: string | null }> {
+	let result: { recorded: boolean; id: string | null };
 	try {
 		const id = await getSearchStore().history(input);
-		return { recorded: true, id };
+		result = { recorded: true, id };
 	} catch {
-		return { recorded: false, id: null };
+		result = { recorded: false, id: null };
 	}
+	try {
+		recordSearchHistoryWrite(result.recorded);
+	} catch {
+		// Logging cannot change whether history was stored or reject the detached caller.
+	}
+	return result;
 }

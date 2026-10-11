@@ -1,7 +1,7 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { isIP } from "node:net";
 import { getAuthFromRequest } from "~/utils/auth";
-import { combinedSearch } from "~/server/combined-search/search.server";
+import { combinedSearch, type SearchBatch } from "~/server/combined-search/search.server";
 import { parseSearchFilters } from "~/server/combined-search/search-filters";
 import { getFeatureMode } from "~/server/features.server";
 import { runsSearch } from "~/server/role.server";
@@ -10,6 +10,7 @@ import {
 	searchBusyResponse,
 } from "~/server/search-runtime/admission.server";
 import { RESULT_LENGTH } from "~/server/search-ranking/ranking.server";
+import { beginSearchTelemetry, recordSearchRejection } from "~/server/search-runtime/telemetry.server";
 import {
 	searchTaste,
 	withTaste,
@@ -33,10 +34,12 @@ export async function action({ request }: ActionFunctionArgs) {
 	)
 		return json({ error: "Invalid origin" }, { status: 403, headers });
 	// A page instance does no search work (see role.server.ts): the proxy sends searches to the search roles.
-	if (!runsSearch()) return searchBusyResponse();
+	if (!runsSearch()) { recordSearchRejection("wrong_role"); return searchBusyResponse(); }
 	const release = searchAdmission.enter();
-	if (!release) return searchBusyResponse();
+	if (!release) { recordSearchRejection("busy"); return searchBusyResponse(); }
 	let handedOver = false;
+	let telemetry: ReturnType<typeof beginSearchTelemetry> | undefined;
+	let authFailed = false;
 	try {
 		// Bound the body before JSON parsing; Content-Length is not a trustworthy bound.
 		const reader = request.body?.getReader();
@@ -64,6 +67,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				{ status: 400, headers },
 			);
 		const filters = parseSearchFilters(body.filters);
+		telemetry = beginSearchTelemetry();
 		// Deployment must explicitly configure a header overwritten by its trusted ingress.
 		// Without that contract, all guests share a conservative scope; cookies cannot evade it.
 		const address = process.env.SEARCH_TRUSTED_IP_HEADER
@@ -77,10 +81,12 @@ export async function action({ request }: ActionFunctionArgs) {
 		const searchAbort = new AbortController();
 		const stop = () => searchAbort.abort();
 		request.signal.addEventListener("abort", stop, { once: true });
+		if (request.signal.aborted) stop();
 		const auth = getAuthFromRequest({ request });
 		const accountId = auth.then(
 			({ user }) => user?.id || null,
 			(error) => {
+				authFailed = true;
 				stop();
 				throw error;
 			},
@@ -89,6 +95,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		// With the new filter bar, a member's rows carry their taste match and For you movement (see taste-rows).
 		// The taste loads while the search runs. `forYou` is the switch; the rows keep the ranking's order.
 		const taste = searchTaste(accountId);
+		taste.catch(() => {});
 		const forYou = body.forYou === true;
 		const fullList =
 			body.discover === true && getFeatureMode("filterBar") !== "off";
@@ -96,12 +103,28 @@ export async function action({ request }: ActionFunctionArgs) {
 		// then the "batch" line with the results. "no-transform" keeps the compression
 		// middleware from holding the first line back until the response ends.
 		const encoder = new TextEncoder();
+		let closed = false;
 		const stream = new ReadableStream({
+			cancel() {
+				closed = true;
+				stop();
+			},
 			async start(controller) {
-				const send = (message: object) =>
+				const send = (message: object) => {
+					if (closed || searchAbort.signal.aborted) return false;
 					controller.enqueue(encoder.encode(`${JSON.stringify(message)}\n`));
+					return true;
+				};
+				const sendBatch = async (kind: "provisional" | "batch", batch: SearchBatch) => {
+					const memberTaste = await taste;
+					const sent = send({ kind, batch: memberTaste
+						? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
+						: batch });
+					if (sent) telemetry?.delivered(kind === "batch", Boolean(batch.rows.length || batch.people?.length), batch.elapsedMs, batch.errors ?? []);
+				};
+				let completed = false;
 				try {
-					const batch = await combinedSearch(
+					await combinedSearch(
 						q,
 						{
 							includeAdult: false,
@@ -112,26 +135,27 @@ export async function action({ request }: ActionFunctionArgs) {
 						searchAbort.signal,
 						(reading) => send({ kind: "reading", reading }),
 						{
+							onProgress: (batch) => sendBatch("provisional", batch),
+							onComplete: (batch) => sendBatch("batch", batch),
 							allTitles: body.allTitles === true,
 							// Discover's search mode filters and counts over the whole ranked list.
 							rows: fullList ? RESULT_LENGTH : undefined,
 						},
 					);
-					const memberTaste = await taste;
-					send({
-						kind: "batch",
-						batch: memberTaste
-							? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
-							: batch,
-					});
+					completed = true;
 				} catch {
 					send({
 						kind: "error",
 						error: "Search is unavailable. Your previous results are kept.",
 					});
 				} finally {
+					telemetry?.finish(authFailed ? "failed" : searchAbort.signal.aborted ? "aborted" : completed ? "completed" : "failed");
+					request.signal.removeEventListener("abort", stop);
 					release();
-					controller.close();
+					if (!closed) {
+						closed = true;
+						controller.close();
+					}
 				}
 			},
 		});
@@ -143,6 +167,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		headers.set("Cache-Control", "private, no-store, no-transform");
 		return new Response(stream, { headers });
 	} catch {
+		telemetry?.finish("failed");
 		return json(
 			{ error: "Search is unavailable. Your previous results are kept." },
 			{ status: 503, headers },

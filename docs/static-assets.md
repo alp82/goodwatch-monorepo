@@ -38,6 +38,7 @@ gives the rule for each kind of file:
 | Lazy chunks and their preloads | A chunk imports another one with a relative path, so the import follows the script. `experimental.renderBuiltUrl` in `vite.config.js` makes Vite's preload helper resolve against the script too, and not against the page. |
 | Fonts and images named in a style sheet | The style sheet names them with a path, so they follow the style sheet. |
 | The style sheet, the font preload, the web manifest, imported images, `public/` images and flags | `assetUrl(path)` puts the chosen host in front. |
+| The related map's script and style sheet on a title page | `assetUrl(path)` too. The build writes the script next to Vite's files with a hashed name (see [related-map.md](implementation/related-map.md)). |
 
 `assetUrl` and `assetBase` (`app/utils/asset-url.ts`) work on both sides:
 

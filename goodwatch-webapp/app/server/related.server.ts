@@ -16,6 +16,7 @@ import {
 	getStringValue,
 } from "~/server/utils/recommend"
 import { cached } from "~/utils/cache"
+import { titlePath } from "~/utils/helpers"
 import {
 	MEDIA_COLLECTION,
 	makePointId,
@@ -578,17 +579,6 @@ async function _getRelatedByCategory({
 		return result
 	}
 
-	// Helper function to create title slug
-	const createSlug = (title: string): string => {
-		return title
-			.toLowerCase()
-			.replace(/[^a-z0-9\s-]/g, "")
-			.replace(/\s+/g, "-")
-			.replace(/-+/g, "-")
-			.replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
-			.trim()
-	}
-
 	await Promise.all(
 		categories.map(async (category) => {
 			const fingerprintKey = category === "overall" ? undefined : category
@@ -616,11 +606,10 @@ async function _getRelatedByCategory({
 			result[category] = {
 				movies: movies.slice(0, 10).map((m) => {
 					const title = Array.isArray(m.title) ? m.title[0] : m.title
-					const slug = createSlug(title)
 					return {
 						title,
 						release_year: m.release_year,
-						link: `https://goodwatch.app/movie/${m.tmdb_id}-${slug}`,
+						link: `https://goodwatch.app${titlePath("movie", m.tmdb_id, title)}`,
 						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${m.poster_path}`,
 						backdrop_path: m.backdrop_path
 							? `https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${m.backdrop_path}`
@@ -635,11 +624,10 @@ async function _getRelatedByCategory({
 				}),
 				shows: shows.slice(0, 10).map((s) => {
 					const title = Array.isArray(s.title) ? s.title[0] : s.title
-					const slug = createSlug(title)
 					return {
 						title,
 						release_year: s.release_year,
-						link: `https://goodwatch.app/show/${s.tmdb_id}-${slug}`,
+						link: `https://goodwatch.app${titlePath("show", s.tmdb_id, title)}`,
 						poster_path: `https://image.tmdb.org/t/p/w300_and_h450_bestv2${s.poster_path}`,
 						backdrop_path: s.backdrop_path
 							? `https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${s.backdrop_path}`

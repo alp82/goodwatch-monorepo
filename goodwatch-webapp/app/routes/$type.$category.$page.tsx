@@ -2,7 +2,6 @@ import {
 	type LoaderFunction,
 	type LoaderFunctionArgs,
 	type MetaFunction,
-	redirect,
 } from "@remix-run/node"
 import { Link, useLoaderData } from "@remix-run/react"
 import React from "react"
@@ -13,24 +12,29 @@ import {
 } from "~/server/discover.server"
 import FAQ from "~/ui/explore/FAQ"
 import MovieTvGrid from "~/ui/explore/MovieTvGrid"
+import { exploreAddressExists, notFound } from "~/ui/explore/address"
 import {
 	type NavType,
 	type PageData,
 	defaultDiscoverParams,
 	navLabel,
-	validUrlParams,
 } from "~/ui/explore/config"
 import { mainHierarchy, mainNavigation } from "~/ui/explore/main-nav"
 import { DidntWatchCheckbox } from "~/ui/filter/explore/DidntWatchCheckbox"
 import { MyStreamingCheckbox } from "~/ui/filter/explore/MyStreamingCheckbox"
 import Breadcrumbs from "~/ui/nav/Breadcrumbs"
 import { buildDiscoverParams } from "~/utils/discover"
-import { type PageItem, type PageMeta, buildMeta } from "~/utils/meta"
+import {
+	type PageItem,
+	type PageMeta,
+	buildMeta,
+	pagedUrl,
+} from "~/utils/meta"
 import { useNav } from "~/utils/navigation"
 import { convertHyphensToWords } from "~/utils/string"
 import { jsonToUrlString } from "~/utils/url"
 
-export const meta: MetaFunction = ({ params }) => {
+export const meta: MetaFunction = ({ params, location }) => {
 	const type = params.type || ""
 	const category = params.category || ""
 	const page = params.page || ""
@@ -38,12 +42,16 @@ export const meta: MetaFunction = ({ params }) => {
 	const typeLabel = navLabel?.[type]
 	const mainData = mainNavigation?.[category]
 	const pageData = mainHierarchy?.[category]?.[page]
-	if (!pageData) return [{ title: "Page Not Found | GoodWatch" }]
+	if (!typeLabel || !pageData) return [{ title: "Page Not Found | GoodWatch" }]
 
 	const pageMeta: PageMeta = {
 		title: `${convertHyphensToWords(page)} ${typeLabel}: Where to Stream Them | ${convertHyphensToWords(category)} | GoodWatch`,
 		description: `Discover the best ${pageData.label} ${typeLabel} to watch right now. ${pageData.subtitle}: ${pageData.description}`,
-		url: `https://goodwatch.app/${type}/${category}/${page}`,
+		// A later page lists other titles, so it is its own address and not a copy of the first.
+		url: pagedUrl(
+			`https://goodwatch.app/${type}/${category}/${page}`,
+			location.search,
+		),
 		image: `https://goodwatch.app/images/heroes/hero-${type}.png`,
 		alt: `${convertHyphensToWords(page)} ${typeLabel} on GoodWatch`,
 	}
@@ -71,11 +79,8 @@ export const loader: LoaderFunction = async ({
 	const page = params.page || ""
 	const path = `/${type}/${category}/${page}`
 
-	if (!validUrlParams.type.includes(type)) return redirect("/")
-	if (!validUrlParams.category.includes(category)) return redirect(`/${type}`)
-
-	const pageData = mainHierarchy?.[category]?.[page]
-	if (!pageData) throw new Response("Not Found", { status: 404 })
+	if (!exploreAddressExists({ type, category, page })) throw notFound()
+	const pageData = mainHierarchy[category][page]
 
 	const url = new URL(request.url)
 	const watchedType = url.searchParams.get("watchedType") || ""
