@@ -7,6 +7,7 @@ import { loadShellCode } from "~/app"
 import { assetBase, manifestAt } from "~/utils/asset-url"
 import { setBrowserCookie } from "~/utils/browser-cookie"
 import { installLoaderRetry } from "~/utils/loader-request-retry"
+import { stopRecordingTaps } from "~/utils/replay-tap"
 
 // The build's file list names paths. On a page whose scripts came from the static hostname, the files of a later
 // navigation (route scripts, their preloads and style sheets) come from there too.
@@ -37,6 +38,8 @@ const shellCode = rootData
 
 shellCode.then(() => {
 	startTransition(() => {
+		// From here on React handles a tap itself. Taps from before wait for their controls (utils/replay-tap.ts).
+		stopRecordingTaps(window)
 		hydrateRoot(
 			document,
 			<StrictMode>

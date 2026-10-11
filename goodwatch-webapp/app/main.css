@@ -127,6 +127,15 @@ html[data-tv-transition="in"]::view-transition-old(root) {
 	}
 }
 
+/* A control that was tapped before the app's script was there (utils/replay-tap.ts). The document's inline script
+   sets the attribute at the tap and takes it off when the tap is done or forgotten. */
+[data-replay-pending] {
+	outline: 2px solid rgb(255 255 255 / 0.85);
+	outline-offset: 2px;
+	opacity: 0.7;
+	cursor: progress;
+}
+
 /* A title page section below the first screen (ui/details/below-fold.tsx). The browser skips the section's style
    and layout work until it is near the viewport, and reserves the estimated height until then: --reserve below the
    md breakpoint, --reserve-md from it up. Once a section is laid out, the browser remembers its real height. */
