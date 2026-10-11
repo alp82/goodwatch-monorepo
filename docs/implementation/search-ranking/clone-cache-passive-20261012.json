@@ -1,0 +1,85 @@
+{
+  "cacheControls": 0,
+  "cacheGrowthCauseProven": false,
+  "crossRestartBaselineComparable": false,
+  "fullSourcePreflightRepeated": false,
+  "limitedRepeatedChecks": [
+    "image",
+    "running",
+    "memoryLimit",
+    "uniqueQdrantPid",
+    "actualExecutable",
+    "containerCgroupSuffix"
+  ],
+  "queries": 0,
+  "samples": [
+    {
+      "anonBytes": 2260684800,
+      "at": "2026-10-11T23:18:30.151751+00:00",
+      "cpuLimitEvents": {
+        "nr_throttled": 0,
+        "throttled_usec": 0
+      },
+      "currentBytes": 6346530816,
+      "fileBytes": 4036513792,
+      "fileDirtyBytes": 0,
+      "fileMappedBytes": 3997638656,
+      "fileWritebackBytes": 0,
+      "kernelBytes": 49332224,
+      "majorFaults": 931404,
+      "memoryEvents": {
+        "max": 86,
+        "oom": 0,
+        "oom_kill": 0
+      },
+      "minorFaults": 658183,
+      "pgfault": 1590944,
+      "pgscan": 271049,
+      "pgsteal": 271049,
+      "qdrantPid": 3509840,
+      "readBytes": 3334533120,
+      "rssBytes": 6321856512,
+      "shmemBytes": 0,
+      "sourceStartTicks": 3059108659,
+      "swapBytes": 0,
+      "unevictableBytes": 0,
+      "workingsetRefaultFile": 28939,
+      "writeBytes": 4947968
+    },
+    {
+      "anonBytes": 2260684800,
+      "at": "2026-10-11T23:18:40.153654+00:00",
+      "cpuLimitEvents": {
+        "nr_throttled": 0,
+        "throttled_usec": 0
+      },
+      "currentBytes": 6346530816,
+      "fileBytes": 4036513792,
+      "fileDirtyBytes": 0,
+      "fileMappedBytes": 3997638656,
+      "fileWritebackBytes": 0,
+      "kernelBytes": 49332224,
+      "majorFaults": 931404,
+      "memoryEvents": {
+        "max": 86,
+        "oom": 0,
+        "oom_kill": 0
+      },
+      "minorFaults": 658192,
+      "pgfault": 1590962,
+      "pgscan": 271049,
+      "pgsteal": 271049,
+      "qdrantPid": 3509840,
+      "readBytes": 3334533120,
+      "rssBytes": 6321856512,
+      "shmemBytes": 0,
+      "sourceStartTicks": 3059108659,
+      "swapBytes": 0,
+      "unevictableBytes": 0,
+      "workingsetRefaultFile": 28939,
+      "writeBytes": 4947968
+    }
+  ],
+  "schema": "clone-passive-growth-samples.v1",
+  "storageWritesRequested": 0
+}
