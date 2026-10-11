@@ -1132,6 +1132,28 @@ against 9.1. Keep two requests.
 
 ## Known gaps and follow-ups
 
+### Progressive title lookup (October 2026)
+
+Streaming Search and Discover can show provisional results while TMDB's first page is still running. After a
+200 ms wait, an indexed catalog lookup gets another 200 ms to recover exact movie/show names (including original
+names). Its top-20 candidate limit means it cannot guarantee every exact match; partial names and people still
+come from the remote lookup. The final update uses the original lookup and the same reading, candidates and blend
+math, fetching display fields only for newly appearing titles. Optional remote pages remain bounded separately.
+
+The stream sends `provisional` with `pendingTitleLookup: true`, then `batch` with completed results. Clients show
+“Still checking title matches,” keep partial results outside completed caches/session storage, and retain them
+with retry feedback if completion fails. Cancellation aborts remaining work.
+
+For the owner's seven-day acceptance check, `stage_ms.firstResults` measures server time through awaited delivery
+of the first usable batch. Empty provisional batches do not qualify; an empty final answer counts as the completed
+answer. This measures server delivery, not browser paint or network transit. `elapsed_ms` and `stage_ms.total`
+continue to report full search computation time; member taste/delivery waits can make `firstResults` larger than
+`total`. `titleCompletion` and `finalDisplay` explain the remaining completion work. Historical rows without
+`firstResults` cannot demonstrate the new criterion. A delivered provisional answer remains in history when the
+person leaves (`completionAborted: 1`) or completion fails (`completionFailed: 1`). Include its first-delivery
+latency, report these flags separately, and exclude incomplete computation from completed-result percentiles.
+Result-open feedback remains outside this map.
+
 - **Negation needs catalog labels.** "space opera without aliens" fails for every ranker. The fix is enrichment labels
   for concrete elements (aliens, robots, dragons, gore), not a ranking rule. See the walkthrough's section on this gap.
 - **Non-English negations** couldn't match the English labels. Fixed in #169 for common elements with a word list: see

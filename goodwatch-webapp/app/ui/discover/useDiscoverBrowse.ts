@@ -65,17 +65,19 @@ async function fetchPage(
 	key: string,
 	page: number,
 	guest: GuestBody | null,
+	signal: AbortSignal,
 ): Promise<DiscoverResults> {
 	const url = `/api/discover/results?${key}&page=${page}`
 	const response = await fetch(
 		url,
 		guest
 			? {
+					signal,
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ guest }),
 				}
-			: undefined,
+			: { signal },
 	)
 	if (!response.ok)
 		throw new Error(`Discover results failed: ${response.status}`)
@@ -100,6 +102,7 @@ export function useDiscoverBrowse({
 	guest,
 	initial,
 	ranked,
+	provisional = false,
 }: {
 	query: string
 	forYou: boolean
@@ -112,6 +115,8 @@ export function useDiscoverBrowse({
 	 * browsing.
 	 */
 	ranked?: readonly TitleKey[] | null
+	/** Partial search results get a disposable cache, never the completed list cache. */
+	provisional?: boolean
 }) {
 	const key = browseKey(query, forYou, ranked ?? undefined)
 	const signature = guestSignature(guest)
@@ -126,8 +131,9 @@ export function useDiscoverBrowse({
 		string[],
 		number
 	>({
-		queryKey: ["discover-browse", signature, key],
-		queryFn: ({ pageParam }) => fetchPage(key, pageParam, guest ?? null),
+		queryKey: ["discover-browse", signature, key, ...(provisional ? ["provisional"] : [])],
+		gcTime: provisional ? 0 : undefined,
+		queryFn: ({ pageParam, signal }) => fetchPage(key, pageParam, guest ?? null, signal),
 		initialPageParam: 1,
 		getNextPageParam: (last) =>
 			last.page * last.pageSize < last.total ? last.page + 1 : undefined,

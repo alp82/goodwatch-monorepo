@@ -138,6 +138,7 @@ export function DiscoverPage({
 		guest,
 		initial,
 		ranked: searching ? (search.current?.ranked ?? null) : undefined,
+		provisional: searching && search.pendingTitleLookup,
 	})
 
 	// Entering a search chooses Relevance; clearing it returns to the sort used before.
@@ -371,17 +372,28 @@ export function DiscoverPage({
 						}
 					/>
 				</div>
-				{searching && search.error && (
-					<p className="mt-4 flex flex-wrap items-center gap-3 text-sm text-gray-400">
-						{search.error}
-						<button
-							type="button"
-							onClick={() => search.retry()}
-							className="font-bold text-amber-400 underline-offset-2 hover:text-amber-300 hover:underline cursor-pointer"
-						>
-							Retry
-						</button>
-					</p>
+				{/* Mounted for all of search mode with one line of height: the grid doesn't move when the text comes and
+				    goes, and a screen reader hears each change. */}
+				{searching && (
+					<div
+						role="status"
+						className="mt-4 flex min-h-5 flex-wrap items-center gap-3 text-sm text-gray-400"
+					>
+						{search.error ? (
+							<>
+								<span>{search.error}</span>
+								<button
+									type="button"
+									onClick={() => search.retry()}
+									className="font-bold text-amber-400 underline-offset-2 hover:text-amber-300 hover:underline cursor-pointer"
+								>
+									Retry
+								</button>
+							</>
+						) : search.pendingTitleLookup ? (
+							<span>Still checking title matches.</span>
+						) : null}
+					</div>
 				)}
 				{found && found.people.length > 0 && (
 					<div className="search-private ph-no-capture sentry-mask mt-5">
