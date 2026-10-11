@@ -1,0 +1,144 @@
+{
+  "verified_at": "2026-10-11T19:18:39.237220+00:00",
+  "task": "https://github.com/alp82/goodwatch-monorepo/issues/407",
+  "reviewed_implementation_commit": "cff0feb3cf2ec59eb31796af802944ee6baec755",
+  "owner_authorization": "Owner said continue in response to blockers; root confirmed minimal logging and one restart per host approved.",
+  "hosts": [
+    {
+      "activation": {
+        "host": "abio",
+        "activation_utc": "2026-10-11T19:15:50.543Z",
+        "proxy_started_at": "2026-10-11T19:16:02.062150901Z",
+        "proxy_healthy": true,
+        "live_sha256": "d8b36b6b6e0267aa2b2e00d60a8fb434d1279a2b0bbe710b13f939dbc5eba290",
+        "image_id": "sha256:ee69e8120b64a420b5deca1cf46db0e4188ef76c7807a45c0f26d8a5ac2ab2bd",
+        "private_backup": "/var/lib/goodwatch-search-acceptance/proxy-backup/docker-compose.before.yml",
+        "backup_mode": "0o600"
+      },
+      "validation": {
+        "host": "abio",
+        "ready_heartbeat": {
+          "type": "collector.heartbeat",
+          "at": "2026-10-11T19:16:39.792Z",
+          "host": "abio",
+          "sources": [
+            {
+              "host": "abio",
+              "containerId": "ded9a0f0f1261826a54190b6292518e0600758afe859d00ec442bcb6db0338a5",
+              "startedAt": "2026-10-11T19:16:02.062150901Z",
+              "running": true,
+              "imageId": "sha256:ee69e8120b64a420b5deca1cf46db0e4188ef76c7807a45c0f26d8a5ac2ab2bd",
+              "accessLoggingReady": true,
+              "loggingFingerprint": "e52804ea3c6f414e807163014d0500de2835abd99125c38c4a2832b02e6b8d69"
+            }
+          ]
+        },
+        "raw_whitelist_matches": [
+          {
+            "keys": [
+              "DownstreamStatus",
+              "RequestMethod",
+              "RouterName",
+              "StartUTC",
+              "level",
+              "msg",
+              "time"
+            ],
+            "status": 400
+          }
+        ],
+        "sanitized_invalid_post_count": 1
+      },
+      "coolify_configuration": {
+        "host": "abio",
+        "db_updated": true,
+        "stored_source_sha256": "d5f5da72fd5083d9df0e208d5c2f9bf5ca216630f567d7e6de18e266ab61c95f",
+        "stored_candidate_sha256": "ee16763f3217ccaed2f54db2d5e69a14b2a5aad9156347aa05c7e32d65bddbab",
+        "added_arguments": 9,
+        "all_other_db_settings_preserved": true,
+        "private_backup": "/var/www/html/storage/app/backups/search-ingress-configuration/abio.coolify-proxy.before.json"
+      }
+    },
+    {
+      "activation": {
+        "host": "vector1",
+        "activation_utc": "2026-10-11T19:16:58.477Z",
+        "proxy_started_at": "2026-10-11T19:17:00.023411027Z",
+        "proxy_healthy": true,
+        "live_sha256": "8108b2eee1640f2c5ef0818c1936fd667afc79793bfacdddc5f2c5f79375ffaa",
+        "image_id": "sha256:ee0b3aaa56c3f593da2c7d67ebbdbc600155bf6be2c3cece8f7870db29714a88",
+        "private_backup": "/var/lib/goodwatch-search-acceptance/proxy-backup/docker-compose.before.yml",
+        "backup_mode": "0o600"
+      },
+      "validation": {
+        "host": "vector1",
+        "ready_heartbeat": {
+          "type": "collector.heartbeat",
+          "at": "2026-10-11T19:17:11.077Z",
+          "host": "vector1",
+          "sources": [
+            {
+              "host": "vector1",
+              "containerId": "ea57e25f1da57587d785f086182c10ce3bc07ba50745f1f840b1a6624a9b3026",
+              "startedAt": "2026-10-11T19:17:00.023411027Z",
+              "running": true,
+              "imageId": "sha256:ee0b3aaa56c3f593da2c7d67ebbdbc600155bf6be2c3cece8f7870db29714a88",
+              "accessLoggingReady": true,
+              "loggingFingerprint": "3e43c9b2d4d3be558ccb5b144ff60191f1e0438e46a5ca6f31c3a45720785c98"
+            }
+          ]
+        },
+        "raw_whitelist_matches": [
+          {
+            "keys": [
+              "DownstreamStatus",
+              "RequestMethod",
+              "RouterName",
+              "StartUTC",
+              "level",
+              "msg",
+              "time"
+            ],
+            "status": 400
+          }
+        ],
+        "sanitized_invalid_post_count": 1
+      },
+      "coolify_configuration": {
+        "host": "vector1",
+        "db_updated": true,
+        "stored_source_sha256": "dd518048744946040d4bed456c59ba9decd27274d7b4fa8f0bd0fd9420444a20",
+        "stored_candidate_sha256": "316882265bc76faed38a1208ba591973c10b5358985c3942fe3d22c857ce23c1",
+        "added_arguments": 10,
+        "all_other_db_settings_preserved": true,
+        "private_backup": "/var/www/html/storage/app/backups/search-ingress-configuration/vector1.coolify-proxy.before.json"
+      }
+    }
+  ],
+  "public_validation": {
+    "home_status_after_each_restart": 200,
+    "invalid_short_search_status": 400,
+    "ordinary_searches_generated": 0,
+    "paid_jev_calls_generated": 0,
+    "search_history_writes_generated": 0
+  },
+  "coolify_preservation": {
+    "supported_save_action_was_not_used": "It overwrites host live configuration and prunes managed backups.",
+    "guarded_model_update": "Transaction and row lock; checked original stored hash; changed only normal stored configuration/hash fields; private durable snapshot first.",
+    "preexisting_drift": "Stored labels lack three dashboard labels and have a different traefik.enable value versus live labels. Both original sets were preserved independently.",
+    "remaining_reconciliation_limit": "Future normal Coolify reconciliation may apply the preexisting stored labels as before. Only logging readiness and proxy image compliance are newly monitored."
+  },
+  "protected": {
+    "dynamic_router_files_changed": false,
+    "dirty_local_balancing_file_changed": false,
+    "certificate_storage_changed": false,
+    "proxy_images_changed": false
+  },
+  "rollback": {
+    "live_original_on_each_host": "/var/lib/goodwatch-search-acceptance/proxy-backup/docker-compose.before.yml",
+    "coolify_original_on_control_host": "/data/coolify/backups/search-ingress-configuration/HOST.coolify-proxy.before.json",
+    "guarded_db_helper": "/tmp/gw-proxy-db-rollback.php",
+    "procedure": "Restore two stored fields from the matching private backup under a row lock/current-hash guard; separately restore each live backup preserving owner/mode, validate Compose and recreate only traefik with --pull never. Keep evidence; restarting inside an acceptance window requires a fresh window."
+  },
+  "acceptance": "No seven-day window or acceptance claim is made by these rollout checks."
+}
