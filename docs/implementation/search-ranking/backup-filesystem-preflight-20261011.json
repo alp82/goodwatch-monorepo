@@ -1,0 +1,1 @@
+{"event": "backup-hardlink-preflight", "bytes": 4096, "productionArchivesTouched": false, "fixtureCleaned": true, "renameSucceeded": true, "hardlinksSucceeded": true, "sameInode": false, "linkCount": 1, "checksumParity": true, "device": 45}

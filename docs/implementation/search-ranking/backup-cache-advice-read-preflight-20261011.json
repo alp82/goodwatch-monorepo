@@ -1,0 +1,1 @@
+{"event": "backup-cache-advice-read-preflight", "bytes": 16777216, "filesystem": "fuse.sshfs", "productionArchivesTouched": false, "residentPagesAfterWrite": 0, "residentPagesBeforeAdvice": 4096, "adviceAccepted": true, "residentPagesAfterAdvice": 0, "pages": 4096, "fixtureCleaned": true}

@@ -1,0 +1,1 @@
+{"event": "backup-hardlink-alias-preflight", "filesystem": "fuse.sshfs", "productionArchivesTouched": false, "writeThroughAlias": true, "survivesSourceUnlink": true, "fixtureCleaned": true}

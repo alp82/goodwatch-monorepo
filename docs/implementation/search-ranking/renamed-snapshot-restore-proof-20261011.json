@@ -1,0 +1,38 @@
+{
+  "artifact": "clone renamed snapshot publication and restore proof",
+  "date": "2026-10-11",
+  "publication": {
+    "kind": "renamed-snapshot-proof",
+    "at": "2026-10-11T20:40:25.072939+00:00",
+    "archiveBytes": 4428863488,
+    "snapshotSha256": "614149a3885293985ad912d2ed92bf03fa23f42235bb6ddde78e9991c22c64eb",
+    "datedAndLatestChecksumMatch": true,
+    "sameDeviceAndInode": true,
+    "incomingGone": true,
+    "directoryFsync": true,
+    "restorePerformed": false
+  },
+  "restore": {
+    "kind": "renamed-snapshot-restored",
+    "at": "2026-10-11T20:43:23.126193+00:00",
+    "seconds": 82.1,
+    "status": "green",
+    "optimizerStatus": "ok",
+    "pointCount": 244262,
+    "segmentCount": 12,
+    "shardCount": 6,
+    "snapshotSha256": "614149a3885293985ad912d2ed92bf03fa23f42235bb6ddde78e9991c22c64eb",
+    "restoreFromRenamedArchive": true,
+    "datedAndLatestChecksumMatch": true,
+    "productionPathsTouched": false
+  },
+  "guardSamples": 15,
+  "lowestDiskFreeBytes": 9181704192,
+  "lowestAvailableMemoryKiB": 4686020,
+  "limits": [
+    "Benchmark32 dedicated clone only; production snapshot data and services unchanged.",
+    "Dated/latest aliases preserve archive bytes and restore usability. This does not establish backup-script rollout or production latency improvement.",
+    "Hardlink inode equality is a local-filesystem fixture assertion; separate production SSHFS alias-read and unlink-survival proof covers its different stat behavior.",
+    "Existing clone media store was replaced after guard review; original archive and prior evidence were preserved."
+  ]
+}
