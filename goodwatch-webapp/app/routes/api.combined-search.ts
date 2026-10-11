@@ -1,7 +1,7 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { isIP } from "node:net";
 import { getAuthFromRequest } from "~/utils/auth";
-import { combinedSearch } from "~/server/combined-search/search.server";
+import { combinedSearch, type SearchBatch } from "~/server/combined-search/search.server";
 import { parseSearchFilters } from "~/server/combined-search/search-filters";
 import { getFeatureMode } from "~/server/features.server";
 import { runsSearch } from "~/server/role.server";
@@ -77,6 +77,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		const searchAbort = new AbortController();
 		const stop = () => searchAbort.abort();
 		request.signal.addEventListener("abort", stop, { once: true });
+		if (request.signal.aborted) stop();
 		const auth = getAuthFromRequest({ request });
 		const accountId = auth.then(
 			({ user }) => user?.id || null,
@@ -89,6 +90,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		// With the new filter bar, a member's rows carry their taste match and For you movement (see taste-rows).
 		// The taste loads while the search runs. `forYou` is the switch; the rows keep the ranking's order.
 		const taste = searchTaste(accountId);
+		taste.catch(() => {});
 		const forYou = body.forYou === true;
 		const fullList =
 			body.discover === true && getFeatureMode("filterBar") !== "off";
@@ -96,12 +98,25 @@ export async function action({ request }: ActionFunctionArgs) {
 		// then the "batch" line with the results. "no-transform" keeps the compression
 		// middleware from holding the first line back until the response ends.
 		const encoder = new TextEncoder();
+		let closed = false;
 		const stream = new ReadableStream({
+			cancel() {
+				closed = true;
+				stop();
+			},
 			async start(controller) {
-				const send = (message: object) =>
-					controller.enqueue(encoder.encode(`${JSON.stringify(message)}\n`));
+				const send = (message: object) => {
+					if (!closed && !searchAbort.signal.aborted)
+						controller.enqueue(encoder.encode(`${JSON.stringify(message)}\n`));
+				};
+				const sendBatch = async (kind: "provisional" | "batch", batch: SearchBatch) => {
+					const memberTaste = await taste;
+					send({ kind, batch: memberTaste
+						? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
+						: batch });
+				};
 				try {
-					const batch = await combinedSearch(
+					await combinedSearch(
 						q,
 						{
 							includeAdult: false,
@@ -112,26 +127,26 @@ export async function action({ request }: ActionFunctionArgs) {
 						searchAbort.signal,
 						(reading) => send({ kind: "reading", reading }),
 						{
+							onProgress: (batch) => sendBatch("provisional", batch),
+							onComplete: (batch) => sendBatch("batch", batch),
 							allTitles: body.allTitles === true,
 							// Discover's search mode filters and counts over the whole ranked list.
 							rows: fullList ? RESULT_LENGTH : undefined,
 						},
 					);
-					const memberTaste = await taste;
-					send({
-						kind: "batch",
-						batch: memberTaste
-							? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
-							: batch,
-					});
+
 				} catch {
 					send({
 						kind: "error",
 						error: "Search is unavailable. Your previous results are kept.",
 					});
 				} finally {
+					request.signal.removeEventListener("abort", stop);
 					release();
-					controller.close();
+					if (!closed) {
+						closed = true;
+						controller.close();
+					}
 				}
 			},
 		});

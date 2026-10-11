@@ -164,3 +164,53 @@ test("each answer is one of four kinds", async () => {
 		{ kind: "other", message: "Invalid origin" },
 	)
 })
+
+test("provisional results arrive before full completion and never resolve the request", async (t) => {
+	let writer!: ReadableStreamDefaultController<Uint8Array>
+	stubFetch(t, () => new Response(new ReadableStream({ start(controller) { writer = controller } })))
+	const partial = { q: "fixture", rows: [{ key: "movie:42" }], pendingTitleLookup: true }
+	const final = { q: "fixture", rows: [{ key: "movie:43" }], pendingTitleLookup: false }
+	const progress: unknown[] = []
+	let completed = false
+	const answer = requestSearch({ body: { q: "fixture" }, signal: new AbortController().signal,
+		onReading: () => {}, onProgress: batch => progress.push(batch), unavailable: SEARCH_PAGE_UNAVAILABLE })
+	answer.then(() => { completed = true })
+	await new Promise(resolve => setImmediate(resolve))
+	const send = (packet: unknown) => writer.enqueue(new TextEncoder().encode(`${JSON.stringify(packet)}\n`))
+	send({ kind: "provisional", batch: partial })
+	await new Promise(resolve => setImmediate(resolve))
+	assert.deepEqual(progress, [partial])
+	assert.equal(completed, false)
+	send({ kind: "batch", batch: final })
+	// A delayed malformed producer cannot downgrade a final answer.
+	send({ kind: "provisional", batch: partial })
+	writer.close()
+	assert.deepEqual(await answer, final)
+	assert.deepEqual(progress, [partial])
+})
+
+test("a failure after provisional results rejects without discarding delivered progress", async (t) => {
+	const partial = { q: "fixture", rows: [{ key: "movie:42" }] }
+	stubFetch(t, () => streamAnswer({ kind: "provisional", batch: partial }, { kind: "error", error: "Title check failed" }))
+	const progress: unknown[] = []
+	const answer = requestSearch({ body: {}, signal: new AbortController().signal, onReading: () => {},
+		onProgress: batch => progress.push(batch), unavailable: SEARCH_PAGE_UNAVAILABLE })
+	await assert.rejects(answer, /Title check failed/)
+	assert.deepEqual(progress, [partial])
+})
+
+test("aborted requests do not deliver queued provisional packets and cancel their reader", async (t) => {
+	const stop = new AbortController()
+	let cancelled = 0
+	stubFetch(t, () => new Response(new ReadableStream({
+		start(controller) { controller.enqueue(new TextEncoder().encode('{"kind":"provisional","batch":{"rows":[]}}\n')) },
+		cancel() { cancelled++ },
+	})))
+	const progress: unknown[] = []
+	const answer = requestSearch({ body: {}, signal: stop.signal, onReading: () => {},
+		onProgress: batch => progress.push(batch), unavailable: SEARCH_PAGE_UNAVAILABLE })
+	stop.abort()
+	await assert.rejects(answer, error => (error as Error).name === "AbortError")
+	assert.deepEqual(progress, [])
+	assert.equal(cancelled, 1)
+})

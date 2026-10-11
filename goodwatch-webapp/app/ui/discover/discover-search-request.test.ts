@@ -83,3 +83,15 @@ test("the ranked stream gives the reading and the ranked titles", async (t) => {
 		discover: true,
 	})
 })
+
+test("Discover publishes provisional title keys then resolves only the full list", async (t) => {
+	stubFetch(t, () => streamAnswer(
+		{ kind: "provisional", batch: { rows: [{ key: "movie:42" }, { key: "person:7" }], pendingTitleLookup: true } },
+		{ kind: "batch", batch: { rows: [{ key: "movie:43" }, { key: "show:2" }], pendingTitleLookup: false } },
+	))
+	const progress: unknown[] = []
+	const final = await runDiscoverSearch("fixture", {}, false, new AbortController().signal, () => {}, answer => progress.push(answer))
+	assert.deepEqual(progress, [{ q: "fixture", ranked: [1000000000042], reading: [], people: [], creditScope: null, errors: [], pendingTitleLookup: true }])
+	assert.deepEqual(final.ranked, [1000000000043, 2000000000002])
+	assert.equal(final.pendingTitleLookup, false)
+})

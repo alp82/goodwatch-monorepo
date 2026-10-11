@@ -34,7 +34,6 @@ import {
 import {
 	COVERAGE_BM25,
 	COVERAGE_MAX_TOKENS,
-	HEAD_LENGTH,
 	MAIN_DEPTH,
 	NON_ENGLISH_MIX,
 	NON_ENGLISH_UNION_DEPTH,
@@ -43,10 +42,8 @@ import {
 	RANKER_VERSION,
 	RESULT_LENGTH,
 	WEIGHTS,
-	boundOwn,
 	centroid,
 	filled,
-	foldCuts,
 	idf,
 	meanSd,
 	peerScores,
@@ -71,8 +68,8 @@ import {
 	type BlendedTitle,
 	type TitleFacts,
 	type TitleLookupRow,
-	blend,
 } from "./title-blend.server.ts"
+import { createSearchReblend } from "./search-reblend.server.ts"
 import { queryTerms, tokens } from "./text-rules.server.ts"
 
 const COLLECTION = "media_fingerprint_v1"
@@ -121,6 +118,8 @@ export interface RankedSearch {
 	rankerVersion: string
 	buildId: string
 	results: BlendedTitle[]
+	/** Blend a later title lookup into these same scored candidates; no encoding, retrieval or scoring repeats. */
+	reblend: (titles: TitleLookupRow[]) => BlendedTitle[]
 	/** general, non_english or reference. */
 	route: "general" | "non_english" | "reference"
 	reference: {
@@ -1029,30 +1028,11 @@ export async function rankSearch(
 	}
 
 	// Blend with the title lookup, fold alternate cuts, bound the own titles
-	const blended = (list: number[]) =>
-		foldCuts(
-			index,
-			blend(
-				index,
-				query,
-				request.titleLookup,
-				list,
-				concrete,
-				baseFilter.rows,
-				outsideFacts,
-			),
-		)
 	// The top HEAD_LENGTH is blended and bounded from the top HEAD_LENGTH candidates alone, as when the list was that
 	// long, and the longer list only continues after it: candidates further down neither outscore a weak title-lookup
 	// match in the top nor get pulled up into it as own titles.
-	let head = blended(ranked.slice(0, HEAD_LENGTH))
-	if (ref) head = boundOwn(head, ref)
-	head = head.slice(0, HEAD_LENGTH)
-	const inHead = new Set(head.map((r) => r.id))
-	const results = [
-		...head,
-		...blended(ranked).filter((r) => !inHead.has(r.id)),
-	].slice(0, RESULT_LENGTH)
+	const reblend = createSearchReblend(index, query, ranked, concrete, baseFilter.rows, outsideFacts, ref)
+	const results = reblend(request.titleLookup)
 	lap("blend")
 	// The trace is for checks, not part of the ranking: keep it out of the total
 	timings.total = performance.now() - started - (timings.trace ?? 0)
@@ -1061,6 +1041,7 @@ export async function rankSearch(
 		rankerVersion: RANKER_VERSION,
 		buildId: index.buildId,
 		results,
+		reblend,
 		route: ref ? "reference" : nonEnglish ? "non_english" : "general",
 		reference: ref
 			? {
