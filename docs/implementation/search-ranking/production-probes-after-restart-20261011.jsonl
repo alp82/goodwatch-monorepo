@@ -1,0 +1,14 @@
+{"kind":"start","at":"2026-10-11T19:20:15.445Z","requests":6}
+{"kind":"case-start","at":"2026-10-11T19:20:15.447Z","tag":"exact-title"}
+{"kind":"probe","at":"2026-10-11T19:20:15.908Z","tag":"exact-title","status":200,"firstMs":460,"fullMs":460,"lifetimeMs":461,"rows":49,"people":0,"warnings":0,"provisional":false,"failed":false}
+{"kind":"case-start","at":"2026-10-11T19:20:24.909Z","tag":"native-title"}
+{"kind":"probe","at":"2026-10-11T19:20:25.521Z","tag":"native-title","status":200,"firstMs":612,"fullMs":612,"lifetimeMs":612,"rows":50,"people":0,"warnings":0,"provisional":false,"failed":false}
+{"kind":"case-start","at":"2026-10-11T19:20:34.525Z","tag":"low-vote-title"}
+{"kind":"probe","at":"2026-10-11T19:20:34.969Z","tag":"low-vote-title","status":200,"firstMs":442,"fullMs":442,"lifetimeMs":444,"rows":48,"people":0,"warnings":0,"provisional":false,"failed":false}
+{"kind":"case-start","at":"2026-10-11T19:20:43.973Z","tag":"person"}
+{"kind":"probe","at":"2026-10-11T19:20:44.258Z","tag":"person","status":200,"firstMs":284,"fullMs":284,"lifetimeMs":285,"rows":47,"people":6,"warnings":0,"provisional":false,"failed":false}
+{"kind":"case-start","at":"2026-10-11T19:20:53.263Z","tag":"description"}
+{"kind":"probe","at":"2026-10-11T19:20:53.711Z","tag":"description","status":200,"firstMs":447,"fullMs":447,"lifetimeMs":448,"rows":49,"people":0,"warnings":0,"provisional":false,"failed":false}
+{"kind":"case-start","at":"2026-10-11T19:21:02.716Z","tag":"reference"}
+{"kind":"probe","at":"2026-10-11T19:21:03.065Z","tag":"reference","status":200,"firstMs":348,"fullMs":348,"lifetimeMs":349,"rows":49,"people":0,"warnings":0,"provisional":false,"failed":false}
+{"kind":"end","at":"2026-10-11T19:21:12.066Z"}
