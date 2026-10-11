@@ -16,6 +16,8 @@ const probe = {
 	displays: [] as string[][],
 	metadata: [] as string[][],
 	failMetadataKey: "",
+	// The command palette's matches per query (see the command-palette stub).
+	palette: {} as Record<string, object[]>,
 	history: [] as {
 		elapsedMs: number
 		chargedNano: number
@@ -38,6 +40,7 @@ const stubs: Record<string, string> = {
 	"/search-ranking/search-filter.server.ts": `export const ELIGIBLE_VOTES=2000;`,
 	"/search-people/people.server.ts": `export const readPeople=async()=>({named:[],offered:[],scope:null}); export const peopleToShow=async(_q,_p,people)=>people; export const startPeopleIndex=()=>{};`,
 	"/role.server.ts": `export const runsSearch=()=>false;`,
+	"/command-palette.server.ts": `export const paletteLookupTitles=async q=>globalThis.titleLookupProbe.palette[q]??[];`,
 }
 const { registerHooks } = nodeModule as unknown as {
 	registerHooks(hooks: {
@@ -324,6 +327,44 @@ test("first-page title and people correctness remains unchanged, including a slo
 	)
 	assert.equal(result.rows[0].original, "Özgün başlık")
 	assert.equal(result.people[0].name, "Zendaya")
+})
+
+test("the command palette's titles join TMDB's once each, and the people stay TMDB's", async () => {
+	for (const query of ["ranked lord of", "basic lord of"]) {
+		page(query, 1, {
+			total_pages: 1,
+			results: [
+				{ id: 7, title: "Lord of War", media_type: "movie" },
+				{ id: 3, name: "Some Lord", media_type: "person", known_for: [] },
+			],
+		})
+		const fromIndex = (id: number, title: string, type = "movie") => ({
+			id,
+			title,
+			type,
+			year: "2001",
+			poster: null,
+			popularity: 1,
+		})
+		probe.palette[query] = [
+			fromIndex(7, "Lord of War"),
+			fromIndex(8, "Lord of the Flies"),
+			fromIndex(9, "Lord of the Rings Saga", "tv"),
+		]
+		const result = await combinedSearch(
+			query,
+			policy,
+			visitor,
+			new AbortController().signal,
+		)
+		const keys = result.rows.map((row) => row.key)
+		for (const key of ["movie:7", "movie:8", "show:9"])
+			assert.equal(keys.filter((k) => k === key).length, 1, `${query}: ${key}`)
+		assert.deepEqual(
+			result.people.map((person) => person.name),
+			["Some Lord"],
+		)
+	}
 })
 
 test("slow primary lookup emits provisional results then completes the original search", async () => {

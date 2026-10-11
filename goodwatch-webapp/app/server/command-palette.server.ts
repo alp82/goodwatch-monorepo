@@ -20,6 +20,7 @@ import {
 	normalizePrefix,
 } from "~/utils/command-palette"
 import { titleKey } from "~/utils/title-key"
+import type { Title } from "~/ui/search/search-model"
 
 export const PALETTE_TITLES = 5
 const CACHE_MINUTES = 6 * 60
@@ -51,7 +52,7 @@ export async function getPaletteTitles(text: string): Promise<PaletteTitle[]> {
 
 async function indexTitles(prefix: string): Promise<PaletteTitle[]> {
 	const index = await getSearchIndex()
-	const rows = matchingRows(index, fold(prefix))
+	const rows = matchingRows(index, fold(prefix), CANDIDATES)
 	const keys = rows.map((row) => index.titleTable.pointIds[row])
 	const displays = await getDisplayFields(keys)
 	const titles: PaletteTitle[] = []
@@ -103,7 +104,11 @@ function foldedNames(index: SearchIndex): FoldedNames {
 }
 
 /** The rows whose names match, best first: a name that starts with the prefix, then a word that does; more votes first. */
-function matchingRows(index: SearchIndex, prefix: string): number[] {
+function matchingRows(
+	index: SearchIndex,
+	prefix: string,
+	limit: number,
+): number[] {
 	if (!prefix) return []
 	const { votes } = index.titleTable
 	const wordPrefix = ` ${prefix}`
@@ -121,8 +126,43 @@ function matchingRows(index: SearchIndex, prefix: string): number[] {
 	}
 	return [...tiers]
 		.sort(([a, tierA], [b, tierB]) => tierA - tierB || votes[b] - votes[a])
-		.slice(0, CANDIDATES)
+		.slice(0, limit)
 		.map(([row]) => row)
+}
+
+const SHOW_POINT_IDS = 2_000_000_000_000
+const TMDB_ID_RANGE = 1_000_000_000_000
+
+/**
+ * The palette's matches for the search's title lookup, so the search lists the titles the palette showed for the same
+ * text: up to `limit` titles in the palette's order, in the TMDB lookup's row format. No posters (the search's catalog
+ * metadata has them). None for short text, on a page instance, before the index has loaded, or when it fails.
+ */
+export async function paletteLookupTitles(
+	text: string,
+	limit: number,
+): Promise<Title[]> {
+	const prefix = normalizePrefix(text)
+	if (prefix.length < MIN_PREFIX_CHARS) return []
+	if (!runsSearch() || !loadedSearchIndexBuild()) return []
+	try {
+		const index = await getSearchIndex()
+		const t = index.titleTable
+		return matchingRows(index, fold(prefix), limit).map((row) => {
+			const id = t.pointIds[row]
+			return {
+				id: id % TMDB_ID_RANGE,
+				title: t.titles[row],
+				original: t.originalTitles[row] || undefined,
+				type: id >= SHOW_POINT_IDS ? "tv" : "movie",
+				year: t.years[row] ? String(t.years[row]) : "",
+				poster: null,
+				popularity: t.popularity[row] || 0,
+			}
+		})
+	} catch {
+		return []
+	}
 }
 
 // ---------------------------------------------------------------- the fallback

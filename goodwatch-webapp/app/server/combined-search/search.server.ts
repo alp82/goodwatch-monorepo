@@ -61,6 +61,7 @@ import {
 	startPeopleIndex,
 } from "../search-people/people.server";
 import { runsSearch } from "../role.server";
+import { paletteLookupTitles } from "../command-palette.server";
 
 // A page instance loads none of it (see role.server.ts).
 if (runsSearch()) {
@@ -120,7 +121,14 @@ function titles(
 	if (!flight) {
 		// The shared lookup ignores caller signals: one caller leaving must not fail
 		// the others. Only successes are kept; failures are retried by the next call.
-		flight = lookupTitles(q, policy).then((value) => {
+		flight = Promise.all([
+			lookupTitles(q, policy),
+			paletteLookupTitles(q, PALETTE_LOOKUP_TITLES),
+		]).then(([tmdb, palette]) => {
+			const value = {
+				...tmdb,
+				titles: withPaletteTitles(tmdb.titles, palette),
+			};
 			// A timed-out optional page must not turn a partial result into a ten-minute cache hit.
 			if (value.complete) titleCache.set(key, { at: Date.now(), value });
 			while (titleCache.size > TITLE_ENTRIES)
@@ -143,6 +151,24 @@ function titles(
 			.finally(() => signal.removeEventListener("abort", leave));
 	});
 }
+// How many of the command palette's matches join the title lookup: more than the palette shows (5), so its titles are
+// all there after the search's own filters.
+const PALETTE_LOOKUP_TITLES = 20;
+
+/**
+ * TMDB's titles, then the command palette's that TMDB missed. TMDB ranks "lord of" by its own relevance, people
+ * included, and its later pages may time out, so titles the palette showed could be missing; the palette's prefix
+ * lookup runs over the search index in memory, at no network cost. People stay TMDB's alone.
+ */
+function withPaletteTitles(tmdb: Title[], palette: Title[]): Title[] {
+	const known = new Set(tmdb.map(titleKey));
+	return [...tmdb, ...palette.filter((t) => !known.has(titleKey(t)))];
+}
+
+/** The title with the catalog's poster when the lookup had none (the palette's titles come without one). */
+const withPoster = (t: Title, m: Metadata | undefined): Title =>
+	t.poster || !m?.poster_path ? t : { ...t, poster: m.poster_path };
+
 async function lookupTitles(
 	q: string,
 	policy: Eligibility,
@@ -322,9 +348,9 @@ async function titleMatches(
 		[...new Set(titleRows.map(titleKey))].filter((key) => !meta.has(key)),
 	);
 	for (const m of titleMeta) meta.set(`${m.media_type}:${m.tmdb_id}`, m);
-	const allowedTitles = titleRows.filter((t) =>
-		eligible(meta.get(titleKey(t)), policy, false),
-	);
+	const allowedTitles = titleRows
+		.filter((t) => eligible(meta.get(titleKey(t)), policy, false))
+		.map((t) => withPoster(t, meta.get(titleKey(t))));
 	return { title, meta, allowedTitles };
 }
 
@@ -749,9 +775,9 @@ export async function combinedSearch(
 		const meta = new Map(
 			metadata.map((m) => [`${m.media_type}:${m.tmdb_id}`, m]),
 		);
-		const allowedTitles = titleRows.filter((t) =>
-			eligible(meta.get(titleKey(t)), policy, false),
-		);
+		const allowedTitles = titleRows
+			.filter((t) => eligible(meta.get(titleKey(t)), policy, false))
+			.map((t) => withPoster(t, meta.get(titleKey(t))));
 		const description = results.filter((r) =>
 			eligible(meta.get(`${r.media_type}:${r.tmdb_id}`), policy, true),
 		);
