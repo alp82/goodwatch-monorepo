@@ -1,0 +1,22 @@
+{
+  "schema": "clone-pin-control.v1",
+  "helperConfig": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v1/helper-config.json",
+  "helperPolicySha256": "ddb7f2735ab539cbe1138dfbf23397e41fb4db87c320720a970d068686281ec2",
+  "helperCodeSha256": "60f81bd6bf04740d69ade7f00b692599f1dc6a0e6ee27b6e1275bde10397cdff",
+  "pressurePlacement": "controller-original-cgroup",
+  "mechanismNegativeTags": [
+    "control-native-title"
+  ],
+  "queryLeaseSeconds": 60,
+  "pressure": {
+    "archive": "/root/goodwatch-qdrant-cold-406-20261011/rename-proof/media-20261011T041503Z.snapshot",
+    "bytes": 4428863488,
+    "sha256": "614149a3885293985ad912d2ed92bf03fa23f42235bb6ddde78e9991c22c64eb",
+    "rateBytesPerSecond": 67108864,
+    "maxSeconds": 180
+  },
+  "initialPinRequestSeconds": 180,
+  "steadyPinRequestSeconds": 30,
+  "negativePrequeryMissingBytes": 67108864,
+  "reconcileIntervalSeconds": 10
+}

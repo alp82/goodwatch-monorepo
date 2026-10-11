@@ -1,0 +1,17 @@
+{
+  "schema": "private-comparison-source-freeze.v1",
+  "files": {
+    "compare.mjs": "12bddb46e27c0fc288047d3c0ce4cebc11ff9330ab4475039e3b77933985cd57",
+    "compare-contract.mjs": "0e985dfaf1123ac278d397aaf1c4c188ded5080c3aa9db077e357f6980908e08",
+    "parity.mjs": "738c1e68af814a952ae7b54b101cb3921256142205b0a192b9869181580fc86e",
+    "transport.mjs": "08825a576183065b7c3a85872b84ff5fb870821fb6c76903afa836ad100381be",
+    "private-pipe.mjs": "618f247ccd062e36668131071101c081217c24f2f7f61b73f8eeb84ad92cf865",
+    "producer-guard.mjs": "69277b06cd4a4e1f34b0f796418bf72a1de5b8881963c38a54186e00b01b6ad9",
+    "run-heldout-no-profile.mjs": "ef5e93f62edfdccef27b9833a8ca2bf162c7ebd4d13dfc4b534265084e323663",
+    "build-producer.mjs": "71d6167d25168186acc27a33b0311406d07dde4488cb2e2aa8d22dab53debcc7",
+    "build-rules.mjs": "be2fef4d0f5f4d5fd918db16e580d1ec9df9e3ae4927ce6c5be6bbced27a24f4",
+    "source-freeze.mjs": "93d6c7e43821af4704cfcc4a7993ba96871300936239dd80686dc93224d0f8cd"
+  },
+  "producerRuleSha256": "ef5e93f62edfdccef27b9833a8ca2bf162c7ebd4d13dfc4b534265084e323663",
+  "productionBundleSha256": "299cec51ed8567b6afec00e908b9c36a5e7b5f78b06e8b4065e479f7ac512be0"
+}
