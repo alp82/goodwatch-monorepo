@@ -113,6 +113,55 @@ for the budget's movie at the size a phone asks for. The render path budget's im
 and the show are raised by that much in the same commit (`goodwatch-benchmark/urls/budget.json`, and
 [the budget's document](../benchmarks/viral-spike-render-path-budget.md)).
 
+## A tap before the script is there
+
+This holds for the whole title page, not only the card. The page is on the screen before the app's script is: on a
+slow phone that takes 2 to 5 seconds. A tap on a control in that time reached no handler and was lost. The tap test
+of October 11, 2026 measured it: 1 of 55 early taps had its effect. Every one of them came before React listened to
+the document. A tap after that moment was never lost, because React hydrates what was tapped first.
+
+So a tap from that time is remembered and done when its control is mounted:
+
+- **The script:** `REPLAY_TAP_SCRIPT` in `goodwatch-webapp/app/utils/replay-tap.ts`, inline at the top of the title
+  page (`ui/details/Details.tsx`), 722 bytes and about 380 compressed. It adds no request. It listens for clicks on
+  elements with `data-replay-tap` and never stops an event.
+- **The mark:** `data-replay-tap="group"` or `"group:detail"`. The group names the control, and the whole mark says
+  what the tap meant.
+- **The replay:** `useReplayedTap(group)` in the component that owns the handlers. When the component is mounted, the
+  waiting tap becomes a click on the tapped element, so it takes the control's own path. A guest's "Mark as Seen"
+  shows the sign-in prompt, as for any press.
+- **The sign that a tap waits:** the script sets `data-replay-pending` on the control, and the style sheet draws an
+  outline and dims it (`main.css`). React never renders this attribute.
+
+| Control | Mark | Where |
+| --- | --- | --- |
+| Offer type tabs | `offer:flatrate`, `offer:rent`, `offer:buy` | `ui/details/hero/WhereToWatch.tsx` |
+| Want to See, Seen (the title page's row) | `want:off`, `want:on`, `seen:off`, `seen:on` | `ui/title-actions/TitleActionSet.tsx` |
+| A fingerprint row with its "See all traits" button | `pillar:<area>` | `ui/details/DetailsFingerprint.tsx` |
+| Episode cells, season labels, the grid's key | `float:<id>` | `ui/details/episode-grid/shared.tsx` |
+| The arrows of a carousel row, such as the cast | `row:previous`, `row:next` | `ui/ListSwiper.tsx` |
+
+The rules:
+
+- **One tap per group waits.** A later tap in the group replaces the earlier one: the last tab tapped wins.
+- **A tap waits for 10 seconds.** The slowest start in the tap test is about 5 seconds. After 10 the visitor no
+  longer expects an answer to that tap, and the outline goes.
+- **A second tap on a waiting toggle takes the first one back.** A toggle is a button with `aria-pressed`. The
+  outline goes with it, so what is outlined is what will happen. A second tap on another kind of control, such as a
+  tab or an arrow, still counts as one tap.
+- **Once React listens, nothing is recorded** (`stopRecordingTaps` in `entry.client.tsx`, in the same task as
+  `hydrateRoot`). A tap then goes to React. If a tap of the same group still waits, it is forgotten, so nothing
+  happens twice. The script's listener leaves the window when no tap waits.
+- **A tap is done once, and only if it still means the same.** It is forgotten when the control's mark has changed
+  (Want to See that reads "on" by now), when the control has left the document, when the page is another one, and
+  when the control is more than a screen away from what the visitor looks at.
+
+Nothing in the HTML depends on the visitor: the script is a constant, and a guest's marks are always `off`.
+
+A new control joins with a mark and one `useReplayedTap` call. A link needs neither: it works without script.
+
+Checks: `app/utils/replay-tap.test.ts`, and the early mode of the tap test (`goodwatch-benchmark/README.md`).
+
 ## Where it differs from L
 
 - **The title is not on the banner.** The real page has a header above the card that sticks to the top and holds
