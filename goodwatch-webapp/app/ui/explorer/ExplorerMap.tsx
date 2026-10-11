@@ -356,6 +356,19 @@ export function ExplorerMap({
 				ev.stopPropagation()
 			}
 		}
+		// Off the card to anywhere but the map: the map lets the mouse go.
+		const out = (ev: PointerEvent) => {
+			const to = ev.relatedTarget
+			if (
+				ev.pointerType === "mouse" &&
+				!(
+					to instanceof Node &&
+					(el.contains(to) || to === posterCanvas.current)
+				)
+			)
+				engineRef.current?.leave()
+		}
+		el.addEventListener("pointerout", out)
 		const kinds = [
 			"pointerdown",
 			"pointermove",
@@ -367,6 +380,7 @@ export function ExplorerMap({
 		return () => {
 			for (const k of kinds) el.removeEventListener(k, on, true)
 			el.removeEventListener("click", click, true)
+			el.removeEventListener("pointerout", out)
 		}
 	}, [])
 
@@ -855,6 +869,8 @@ export function ExplorerMap({
 		onFrame: () => compute(),
 		onPointer: () => compute(),
 		onHoverIsland: (island) => setHover(island),
+		holdsPointer: (to) =>
+			to instanceof Node && !!anchorEl.current?.contains(to),
 	}
 
 	/** Loads an island's tree once, for the query of the map it belongs to. */

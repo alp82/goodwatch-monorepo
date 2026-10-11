@@ -83,6 +83,8 @@ export interface EngineHooks {
 	onPointer: () => void
 	/** The mouse is over an island out at the map (or left it). */
 	onHoverIsland: (island: MapIsland | null) => void
+	/** The mouse left the map for something over it that keeps the map's focus where it was (the card under it). */
+	holdsPointer: (to: EventTarget | null) => boolean
 }
 
 interface Flight {
@@ -851,7 +853,9 @@ export function createMapEngine(
 		if (now - lastMove.t > 70) vel = { x: 0, y: 0 }
 		wake()
 	}
-	function onLeave() {
+	function onLeave(e?: PointerEvent) {
+		// Onto the card: the title stays where the mouse left the map, so its card stays open.
+		if (e && hooks.current.holdsPointer(e.relatedTarget)) return
 		pointer = null
 		if (hoverKey != null || hoverIsland) {
 			if (hoverIsland) hooks.current.onHoverIsland(null)
@@ -1418,6 +1422,8 @@ export function createMapEngine(
 
 	return {
 		forward,
+		/** The mouse left what held the map's focus (the card) for somewhere off the map. */
+		leave: () => onLeave(),
 		/** Shows a grouping's islands, laid out in `next`; `key` names the grouping and filters for cached surfaces. */
 		setWorld(next: World, inputs: IslandInput[], key: string) {
 			const first = !world
