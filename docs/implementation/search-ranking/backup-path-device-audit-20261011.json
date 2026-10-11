@@ -1,0 +1,1 @@
+{"event": "backup-path-device-audit", "tempPathDefault": true, "tempConfigSource": "config.yaml", "tempMapsToStorageVolume": true, "tempDevice": 2049, "snapshotDevice": 45, "backupDevice": 45, "tempAndSnapshotSameFilesystem": false, "snapshotAndBackupSameFilesystem": true, "rawPathsOmitted": true}
