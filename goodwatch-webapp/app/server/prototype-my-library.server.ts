@@ -12,6 +12,11 @@ import { utcDay } from "~/domain/tracking/machine"
 import { getHomeDoors } from "~/server/home-doors.server"
 import { getLibraryPage } from "~/server/my-library.server"
 import { getMyShows } from "~/server/my-shows.server"
+import {
+	MY_SHOWS_VISIT_KEY,
+	getNewShows,
+	recordMyShowsVisit,
+} from "~/server/new-episodes.server"
 import { updateScores } from "~/server/scores.server"
 import type { Taste } from "~/server/taste/index.server"
 import { getTonightsPick } from "~/server/tonight.server"
@@ -307,6 +312,172 @@ function build(member: MemberKey, seen: SeenSize, now: number): Fixture {
 		state("show", id, value, daysAgo(last))
 	}
 
+	/**
+	 * A show whose episodes air on the days given: `aired` in days ago, the oldest first, and `coming` in days from
+	 * today. Returns the aired episodes in order.
+	 */
+	const showAt = (
+		id: number,
+		name: string,
+		aired: number[],
+		coming: number[],
+		perSeason = 8,
+	) => {
+		const days = [...aired.map((ago) => -ago), ...coming]
+		const place = (i: number) => ({
+			season: Math.floor(i / perSeason) + 1,
+			number: (i % perSeason) + 1,
+		})
+		days.forEach((offset, i) =>
+			rows.episode.push({
+				show_id: id,
+				tmdb_id: id * 1000 + i,
+				season_number: place(i).season,
+				episode_number: place(i).number,
+				name: EPISODE_NAMES[(id + i) % EPISODE_NAMES.length],
+				air_date: today + offset * DAY,
+				runtime: 42 + (id % 14),
+				still_path: null,
+				episode_type: "standard",
+				removed_at: null,
+			}),
+		)
+		fixture.shows.set(
+			id,
+			title(id, name, 2018 + (id % 8), {
+				status: "Returning Series",
+				aired_episode_count: aired.length,
+				number_of_seasons: Math.ceil(days.length / perSeason),
+				number_of_episodes: days.length,
+				episode_runtime: [42 + (id % 14)],
+				last_air_date: today - (aired.at(-1) ?? 0) * DAY,
+			}),
+		)
+		return aired.map((_, i) => place(i))
+	}
+	/** `count` episodes a week apart, the last one `last` days ago. */
+	const weekly = (count: number, last: number) =>
+		Array.from({ length: count }, (_, i) => last + (count - 1 - i) * 7)
+
+	// The member of #442: the last visit of My shows was five days ago.
+	if (member === "new") {
+		rows.user_setting.push({
+			user_id: HARNESS_MEMBER,
+			key: MY_SHOWS_VISIT_KEY,
+			value: new Date(daysAgo(5)).toISOString(),
+		})
+		const follow = (
+			id: number,
+			name: string,
+			value: string,
+			aired: number[],
+			coming: number[],
+			seenCount: number,
+			last: number,
+			perSeason = 8,
+		) => {
+			watched(id, showAt(id, name, aired, coming, perSeason), seenCount, last)
+			state("show", id, value, daysAgo(last))
+		}
+		// To continue. Tonight's pick, with nothing new.
+		follow(201, "The Bear", "watching", weekly(38, 110), [], 31, 1, 10)
+		// Watching, and its Next episode aired since the visit.
+		follow(
+			202,
+			"Slow Horses",
+			"watching",
+			[...weekly(33, 11), 4],
+			[3, 10],
+			33,
+			3,
+			6,
+		)
+		// Nine behind: one more aired since the visit, and the show is not new.
+		follow(203, "Industry", "watching", weekly(42, 2), [], 33, 21, 10)
+		// Seen, and a new season opened with two episodes.
+		follow(
+			204,
+			SHOW_NAMES[6],
+			"seen",
+			[...weekly(50, 330), 3, 3],
+			[4, 11],
+			50,
+			340,
+			10,
+		)
+		// Seen, and a whole season dropped at once.
+		follow(
+			205,
+			"Wednesday",
+			"seen",
+			[...weekly(16, 400), ...Array(8).fill(2)],
+			[],
+			16,
+			400,
+		)
+		// Seen, and this week's episode airs today.
+		follow(
+			206,
+			SHOW_NAMES[7],
+			"seen",
+			[...weekly(21, 200), 14, 7, 0],
+			[7],
+			23,
+			6,
+			7,
+		)
+		// Waiting: the next episode tomorrow, in three and in four days, further out, and without a date.
+		follow(
+			207,
+			"Shrinking",
+			"seen",
+			[...weekly(24, 300), ...weekly(5, 6)],
+			[1, 8],
+			29,
+			6,
+			12,
+		)
+		// Its episode of four days ago aired since the visit and is watched: not new.
+		follow(
+			208,
+			SHOW_NAMES[20],
+			"seen",
+			[...weekly(93, 200), 11, 4],
+			[3],
+			95,
+			3,
+			22,
+		)
+		follow(
+			209,
+			SHOW_NAMES[10],
+			"seen",
+			[...weekly(37, 250), 3],
+			[4, 11],
+			38,
+			2,
+			10,
+		)
+		follow(210, "Severance", "seen", weekly(20, 200), [40, 47], 20, 190, 10)
+		follow(211, SHOW_NAMES[11], "watching", weekly(22, 150), [53], 22, 140)
+		follow(212, "Fallout", "seen", weekly(16, 240), [95], 16, 230)
+		follow(213, SHOW_NAMES[17], "seen", weekly(26, 80), [], 26, 70, 10)
+		follow(214, SHOW_NAMES[12], "seen", weekly(30, 260), [], 30, 250, 10)
+		follow(215, SHOW_NAMES[14], "watching", weekly(29, 500), [], 21, 100, 10)
+		// On hold, and its new season has begun: never new.
+		follow(
+			216,
+			SHOW_NAMES[16],
+			"on_hold",
+			[...weekly(16, 500), 7, 0],
+			[7],
+			16,
+			500,
+		)
+		follow(217, SHOW_NAMES[18], "on_hold", weekly(40, 300), [], 23, 300, 10)
+		follow(218, SHOW_NAMES[9], "dropped", weekly(5, 600), [], 2, 300, 5)
+	}
+
 	// The shows the member tracks.
 	if (member === "six" || member === "one") {
 		tracked(101, SHOW_NAMES[0], "watching", 6, 3, 1, { perSeason: 6 })
@@ -372,7 +543,7 @@ function build(member: MemberKey, seen: SeenSize, now: number): Fixture {
 	}
 
 	// The Wishlist: shows to start and movies.
-	const starts = { six: 9, one: 3, many: 12, none: 4, empty: 0 }[member]
+	const starts = { six: 9, one: 3, many: 12, none: 4, empty: 0, new: 3 }[member]
 	for (let i = 0; i < starts; i++) {
 		const id = 301 + i
 		show(id, START_NAMES[i], 5 + i * 7, {
@@ -384,7 +555,9 @@ function build(member: MemberKey, seen: SeenSize, now: number): Fixture {
 		rows.episode = rows.episode.filter((episode) => episode.show_id !== id)
 		wish("show", id, 3 + i * 11)
 	}
-	const movies = { six: 17, one: 5, many: 30, none: 6, empty: 0 }[member]
+	const movies = { six: 17, one: 5, many: 30, none: 6, empty: 0, new: 17 }[
+		member
+	]
 	for (let i = 0; i < movies; i++) {
 		const id = 1001 + i
 		const [name, runtime] = MOVIE_NAMES[i]
@@ -678,6 +851,9 @@ export const harness = {
 			{ now },
 		)
 	},
+	/** What is new for the member's shows, and the visit of My shows that clears it. */
+	newShows: (now: number) => getNewShows(HARNESS_MEMBER, { now }),
+	visit: (now: number) => recordMyShowsVisit(HARNESS_MEMBER, now),
 	async movies(options: Parameters<typeof getWatchNext>[1]) {
 		return getWatchNext(
 			await viewer(),

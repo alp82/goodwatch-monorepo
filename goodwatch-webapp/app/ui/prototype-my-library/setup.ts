@@ -4,8 +4,11 @@
 /** The member who does not exist. */
 export const HARNESS_MEMBER = "harness-member"
 
-/** The sample members of round 3 of the prototypes: 6, 1 and 25 Watching shows, none, and nothing marked at all. */
-export const MEMBERS = ["six", "one", "many", "none", "empty"] as const
+/**
+ * The sample members of round 3 of the prototypes: 6, 1 and 25 Watching shows, none, and nothing marked at all. And
+ * `new` (#442): a member who opened My shows five days ago, with shows that returned since and shows waiting.
+ */
+export const MEMBERS = ["six", "one", "many", "none", "empty", "new"] as const
 export type MemberKey = (typeof MEMBERS)[number]
 
 /** The Seen histories: 30 titles, 1,500 (an importer), or none. */
