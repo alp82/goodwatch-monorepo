@@ -1,7 +1,8 @@
 // Production's title blend (app/ui/search/search-model.tsx) over the ranked list, so exact title searches still win.
 // Two changes make it stricter: a partial title match counts only when the title is close to the whole query (or has
 // every concrete word of the query), and a query with a word unknown to the catalog also matches the most similar
-// title ("Incepton"). Titles that share an IMDb id appear once.
+// title ("Incepton"). Titles that share an IMDb id appear once. One change makes it looser: a query of two or more
+// words that a title starts with is the start of that title, as the command palette's preview reads it ("lord of").
 import type { SearchIndex } from "./search-index.server.ts"
 import { normalized, words } from "./text-rules.server.ts"
 
@@ -9,6 +10,8 @@ import { normalized, words } from "./text-rules.server.ts"
 const STRICT = 0.9
 // A failed strict match keeps min(lexical, CONCRETE_CAP) when every concrete query word is in the title.
 const CONCRETE_CAP = 0.65
+// A title that starts with a query of two or more words: level with the ranked list's first title, ahead of the rest.
+const PREFIX = 0.9
 const BLEND_LENGTH = 100
 const SHOW_POINT_IDS = 2_000_000_000_000
 const TMDB_ID_RANGE = 1_000_000_000_000
@@ -70,6 +73,21 @@ export function titleMatch(title: string, query: string): number {
 	)
 		return 0.15
 	return 0
+}
+
+const LEADING_ARTICLE = /^(?:the|a|an) /
+
+/**
+ * Whether a normalized title starts with a normalized query of two or more words, also after a leading article, the
+ * last word possibly cut short: "lord of" starts "lord of war" and "the lord of the rings", "star w" starts "star wars".
+ * One word ("dark") would lift every title it begins, so it doesn't count.
+ */
+export function startsTitle(name: string, query: string): boolean {
+	if (!name || !query.includes(" ")) return false
+	return (
+		name.startsWith(query) ||
+		name.replace(LEADING_ARTICLE, "").startsWith(query)
+	)
 }
 
 /** rapidfuzz's ratio: 1 - Indel distance / total length, from the longest common subsequence. */
@@ -190,7 +208,7 @@ export function blend(
 	const t = index.titleTable
 	const q = normalized(query)
 	const queryWords = new Set(words(query))
-	const lexical = (title: string, original: string | undefined) => {
+	const strictLexical = (title: string, original: string | undefined) => {
 		let lex = titleMatch(title, query)
 		let source = title
 		const originalLex = titleMatch(original ?? "", query)
@@ -212,6 +230,13 @@ export function blend(
 			return 0
 		}
 		return lex
+	}
+	const lexical = (title: string, original: string | undefined) => {
+		const strict = strictLexical(title, original)
+		return startsTitle(normalized(title), q) ||
+			startsTitle(normalized(original ?? ""), q)
+			? Math.max(strict, PREFIX)
+			: strict
 	}
 	const fromTable = (row: number, popularity: number, lex: number): Row => ({
 		id: t.pointIds[row],
