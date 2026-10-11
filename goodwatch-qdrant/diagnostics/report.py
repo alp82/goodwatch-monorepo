@@ -229,7 +229,7 @@ def summarize(observer, consumer, policy=None):
             'limits': ['Direct Qdrant batches do not measure first usable search results or seven-day organic acceptance.',
                        'Counter brackets include grace, sampling overhead, background work and organic traffic; no per-query attribution. Record timestamps are fences, not exact proc-read instants; post-control is emitted after signal receipt.',
                        'Residency uses filesystem-reported data extents and path-inferred classes; whole-file sparse holes are excluded.',
-                       'Changed file/extent cohorts are incomparable; ordered tie changes remain separate from sorted per-ID score changes.',
+                       'Changed file identities or data-extent page counts are incomparable. Matching hashes/counts allow only coarse comparisons; unrecorded extent-range or content changes remain possible. Ordered parity stays separate from sorted per-ID score parity.',
                        'Score-set changes require review for concurrent data updates; they do not independently prove a backup regression.',
                        'Optional explicit diagnostic policy is caller-selected, not a calibrated warm-band or acceptance threshold.']}
 
