@@ -337,7 +337,7 @@
     "Controller event timestamps follow signaling; countersBeforeSignal was read before the first post query but its exact read timestamp was not retained. Event timestamps are fences, not precise proc-read instants.",
     "Aggregate process counter windows include all three queries plus ten-second grace and may include organic/background work; individual call fault attribution is unavailable.",
     "File inode identity and class counts match across snapshots, but exact data-extent range identities were not retained. Small extent-count growth is present in vector/sparse/payload/other; resident-count changes are aggregate measurements, not a proven byte-for-byte fixed-range eviction total.",
-    "SEEK_DATA/HOLE is filesystem-reported allocation semantics; whole-file resident pages include sparse holes.",
+    "SEEK_DATA/HOLE reports filesystem-reported data extents; unwritten allocation may be excluded. Whole-file resident pages include sparse holes.",
     "Post queries run sequentially and may warm later cases; warm pass starts only after all first post cases and the separate counter gate.",
     "Successful fsync/advice phases establish completed syscalls, not complete cache eviction or production latency success.",
     "Exact ordered and sorted per-ID score parity is established for these captured signal batches only, not whole product ranking or unseen-input quality.",
