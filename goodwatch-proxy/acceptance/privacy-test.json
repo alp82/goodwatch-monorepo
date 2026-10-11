@@ -1,0 +1,33 @@
+{
+  "compose_preservation_pass": true,
+  "tests": [
+    {
+      "version": "2.10.7",
+      "keys": [
+        "DownstreamStatus",
+        "RequestMethod",
+        "RouterName",
+        "StartUTC",
+        "level",
+        "msg",
+        "time"
+      ],
+      "status": 502,
+      "privacy_pass": true
+    },
+    {
+      "version": "3.6.25",
+      "keys": [
+        "DownstreamStatus",
+        "RequestMethod",
+        "RouterName",
+        "StartUTC",
+        "level",
+        "msg",
+        "time"
+      ],
+      "status": 502,
+      "privacy_pass": true
+    }
+  ]
+}
