@@ -1,6 +1,6 @@
 // Strict allowlist: never persist raw logs, queries, error messages, accounts or credentials.
 import { createHash } from 'node:crypto';
-export const iso = value => typeof value === 'string' && /^\d{4}-\d\d-\d\dT/.test(value) && Number.isFinite(Date.parse(value));
+export const iso = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/.test(value) && Number.isFinite(Date.parse(value));
 export const commit = value => typeof value === 'string' && /^[a-f0-9]{40}$/.test(value);
 const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
 const timing = value => value === null || typeof value === 'number' && Number.isFinite(value) && value >= 0;

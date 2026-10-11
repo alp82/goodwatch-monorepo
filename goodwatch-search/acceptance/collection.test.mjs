@@ -132,3 +132,34 @@ test('a delivered request without any history acknowledgement cannot pass storag
   const result = verifyLifecycle([...beats, event(base), event(done)], options);
   assert.equal(result.checks.enough_history_acknowledgements_for_delivered_cohort, false);
 });
+
+const lateAccepted = { ...base, at: '2026-10-18T11:59:59.000Z' };
+const lateFinished = { ...done, at: '2026-10-18T12:00:05.000Z' };
+const drainHeartbeat = { ...beats.at(-1), at: '2026-10-18T12:00:06.000Z' };
+const drained = [...beats, event(lateAccepted), event(lateFinished), drainHeartbeat];
+const drainedOptions = { ...options, now: Date.parse(drainHeartbeat.at) };
+test('failed history write after END before cohort finishes blocks acceptance', () => {
+  const result = verifyLifecycle([...drained, event({ event: 'search.history-write.v1', at: '2026-10-18T12:00:02.000Z', recorded: false })], drainedOptions);
+  assert.equal(result.checks.no_failed_history_writes, false);
+  assert.equal(result.history_acknowledgements.failed, 1);
+});
+test('drain needs heartbeat coverage and excludes unrelated acknowledgements after its cutoff', () => {
+  const result = verifyLifecycle([...drained, event({ event: 'search.history-write.v1', at: drainHeartbeat.at, recorded: true })], drainedOptions);
+  assert.equal(result.checks.enough_history_acknowledgements_for_delivered_cohort, false);
+  assert.equal(result.history_acknowledgements.including_after_window_end, 0);
+  assert.equal(verifyLifecycle(drained.filter(r => r !== drainHeartbeat), drainedOptions).checks.heartbeat_fences_complete, false);
+});
+test('collection problems and collector restart during cohort drain block acceptance', () => {
+  const at = '2026-10-18T12:00:02.000Z';
+  assert.equal(verifyLifecycle([...drained, { type: 'collector.problem', at, kind: 'docker_inspect', role: 'a' }], drainedOptions).checks.no_collector_problems, false);
+  assert.equal(verifyLifecycle([...drained, { type: 'collector.started', at, since: start }], drainedOptions).checks.no_collector_restarts_inside_window, false);
+});
+
+test('timestamps cannot carry arbitrary private text; Docker nanoseconds remain accepted', () => {
+  const malicious = { ...base, at: base.at + ' (private query)' };
+  assert.deepEqual(parseDockerLine(`${base.at} ${JSON.stringify(malicious)}`, source), { malformed: true });
+  assert.deepEqual(parseDockerLine(`${base.at} (private query) ${JSON.stringify(base)}`, source), { ignored: true });
+  const nanos = parseDockerLine(`2026-10-11T12:01:00.123456789Z ${JSON.stringify(base)}`, source);
+  assert.ok(nanos.record);
+  assert.equal(JSON.stringify(nanos).includes('private query'), false);
+});

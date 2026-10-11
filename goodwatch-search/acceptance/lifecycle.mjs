@@ -6,6 +6,7 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
   if (!iso(start) || !iso(end) || !commit(expectedCommit)) throw new Error('Explicit UTC window and deployed full SHA required');
   const lo = Date.parse(start), hi = Date.parse(end);
   if (hi <= lo) throw new Error('Invalid window');
+  const acknowledgements = [], collection = [];
   const times = [], full = [], accepted = new Map(), finished = new Map(), duplicates = [], heartbeats = [], problems = [];
   let collectorRestarts = 0, deliveredCohort = 0, acknowledgementsAfterStart = 0;
   let historySucceeded = 0, historyFailed = 0, rejections = 0, failed = 0, aborted = 0, warningRows = 0, missingFirst = 0, wrongCommit = 0;
@@ -13,9 +14,8 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
   for (const record of records) {
     if (record.key) { if (keys.has(record.key)) continue; keys.add(record.key); }
     const at = Date.parse(record.at ?? record.data?.at);
-    if (record.type === 'collector.started' && at > lo && at < hi) collectorRestarts++;
+    if (record.type?.startsWith('collector.')) collection.push(record);
     if (record.type === 'collector.heartbeat') heartbeats.push(record);
-    if (record.type === 'collector.problem' && at >= lo && at < hi) problems.push({ at: record.at, kind: record.kind, role: record.role });
     if (record.type !== 'telemetry') continue;
     const event = record.data;
     if (event.event === 'search.lifecycle.v1') {
@@ -29,16 +29,17 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
         finished.set(event.id, event);
       }
     }
-    if (at >= lo && event.event === 'search.history-write.v1') acknowledgementsAfterStart++;
+    if (event.event === 'search.history-write.v1') acknowledgements.push(event);
     if (at >= lo && at < hi) {
       if (event.event === 'search.rejection.v1') rejections++;
-      if (event.event === 'search.history-write.v1') event.recorded ? historySucceeded++ : historyFailed++;
     }
   }
+  let drainCutoff = hi;
   const unfinished = [];
   for (const [id, begun] of accepted) {
     const done = finished.get(id);
     if (!done || Date.parse(done.at) < Date.parse(begun.at)) { unfinished.push(id); continue; }
+    drainCutoff = Math.max(drainCutoff, Date.parse(done.at));
     if (done.commit !== expectedCommit) wrongCommit++;
     if (done.status === 'failed') failed++;
     if (done.status === 'aborted') aborted++;
@@ -47,10 +48,25 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
     else if (done.status === 'completed') missingFirst++;
     if (done.status === 'completed' && done.computationMs !== null) full.push(done.computationMs);
   }
+  // Acknowledgements have no UUID. Include all of them conservatively through the cohort drain,
+  // but never let arbitrary later traffic inflate the minimum storage-coverage count.
+  for (const event of acknowledgements) {
+    const at = Date.parse(event.at);
+    if (at >= lo && at <= drainCutoff) {
+      acknowledgementsAfterStart++;
+      event.recorded ? historySucceeded++ : historyFailed++;
+    }
+  }
+  for (const record of collection) {
+    const at = Date.parse(record.at);
+    if (at > lo && at <= drainCutoff && record.type === 'collector.started') collectorRestarts++;
+    if (at >= lo && at <= drainCutoff && record.type === 'collector.problem')
+      problems.push({ at: record.at, kind: record.kind, role: record.role });
+  }
   heartbeats.sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
   // A heartbeat before the beginning and after the end fence the whole observation window.
   const before = heartbeats.filter(h => Date.parse(h.at) <= lo).at(-1);
-  const after = heartbeats.find(h => Date.parse(h.at) >= hi);
+  const after = heartbeats.find(h => Date.parse(h.at) >= drainCutoff);
   const fenced = before && after ? heartbeats.filter(h => Date.parse(h.at) >= Date.parse(before.at) && Date.parse(h.at) <= Date.parse(after.at)) : [];
   const gaps = [];
   for (let i = 1; i < fenced.length; i++) {
@@ -61,6 +77,7 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
   const checks = {
     full_seven_day_window: hi - lo >= SEVEN_DAYS,
     window_closed: Number.isFinite(now) && hi <= now,
+    cohort_drain_closed: Number.isFinite(now) && drainCutoff <= now,
     no_collector_restarts_inside_window: collectorRestarts === 0,
     heartbeat_fences_complete: Boolean(before && after),
     no_heartbeat_gaps: gaps.length === 0,
@@ -79,7 +96,7 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
     enough_history_acknowledgements_for_delivered_cohort: acknowledgementsAfterStart >= deliveredCohort,
   };
   return {
-    window_start: start, window_end: end, expected_commit: expectedCommit,
+    window_start: start, window_end: end, cohort_drain_cutoff: new Date(drainCutoff).toISOString(), expected_commit: expectedCommit,
     accepted_requests: accepted.size, finished_requests: accepted.size - unfinished.length,
     failed_requests: failed, aborted_requests: aborted, lookup_warning_requests: warningRows,
     missing_finished_count: unfinished.length, duplicate_phase_count: duplicates.length,
@@ -93,7 +110,7 @@ export function verifyLifecycle(records, { start, end, expectedCommit, maxHeartb
       'Coverage is requests reaching instrumented search roles; upstream proxy/transport errors need independent ingress evidence.',
       'HTTP validation responses before accepted telemetry are outside this search cohort; busy and wrong-role rejections are included.',
       'Heartbeat coverage checks detect known collection gaps but cannot prove a Docker logging sink never dropped output.',
-      'History acknowledgements are unlinked to lifecycle UUIDs; timestamps and counts corroborate storage but cannot establish exact row/request correspondence across window boundaries.',
+      'History acknowledgements are unlinked to lifecycle UUIDs. All acknowledgements from start through max(end, latest cohort finish) are checked conservatively, so an unrelated failure during drain also blocks acceptance. Later acknowledgements cannot inflate counts; asynchronous writes after the drain cutoff require separate review. Counts cannot establish exact row/request correspondence.',
       'Finished events after window_end are used for requests accepted inside the window. An unfinished request blocks acceptance.',
       'Collector problems and role unavailability conservatively block acceptance, even if replay subsequently recovers some events.',
       'Full search computation ends when the final batch is built, before final route enrichment/enqueue; first results includes enrichment/enqueue. Neither measures browser receive or paint. Same-key intentional probes remain indistinguishable.',
