@@ -652,6 +652,93 @@ function restorablePress(
 	return true
 }
 
+const SEASON_NOT_RESTORABLE = "That season can't be put back."
+const UNMARKED_FROM = ["watching", "on_hold", "dropped", "seen"]
+
+/**
+ * Whether these watches could have been removed from this show's log by Unmark season, by what the event says
+ * about itself. The Undo sends the rows as the page held them, so everything in it is checked as a member's input:
+ * the state is one a show with watches has; a press stands only on a Seen show, under an id the browser or this
+ * show's migration made; every watch is a regular episode's and has the id its origin gives it (the browser's for
+ * a tick, the group's for a group action, an import's for an imported one); the dates fit their precision and have
+ * come; and no time lies ahead. Whose import an imported watch names is checked against the table.
+ */
+function restorableSeason(
+	event: Extract<TrackingEvent, { type: "restoreSeason" }>,
+	showId: number,
+	now: number,
+): boolean {
+	const { from, press, pass, changedAt, watches } = event
+	const migrated = `mig-seen-${showId}`
+	if (!UNMARKED_FROM.includes(from)) return false
+	if (press !== null) {
+		if (!press || typeof press !== "object" || from !== "seen") return false
+		if (!validId(press.group) && press.group !== migrated) return false
+		if (!STATES.includes(press.from)) return false
+	}
+	if (!whole(pass) || pass < 1) return false
+	const past = (at: unknown) =>
+		typeof at === "number" &&
+		Number.isFinite(at) &&
+		at > 0 &&
+		at <= now + 60_000
+	if (!past(changedAt)) return false
+	if (
+		!Array.isArray(watches) ||
+		!watches.length ||
+		watches.length > MAX_PRESS_WATCHES
+	)
+		return false
+	const ids = new Set<string>()
+	for (const watch of watches) {
+		if (!watch || typeof watch !== "object") return false
+		const { id, episodeId, season, number, origin, group, importId } = watch
+		if (typeof id !== "string" || ids.has(id)) return false
+		ids.add(id)
+		if (!whole(season) || season < 1 || !whole(number)) return false
+		if (origin === "import") {
+			if (!IMPORT_WATCH_ID.test(id) || group !== null) return false
+			if (typeof importId !== "string" || !importId || importId.length > 80)
+				return false
+			if (episodeId !== null && !whole(episodeId)) return false
+		} else if (origin === "single") {
+			if (!validId(id) || group !== null || importId !== null) return false
+			if (!whole(episodeId)) return false
+		} else if (origin === "season" || origin === "upto" || origin === "seen") {
+			if (!validId(group) && !(origin === "seen" && group === migrated))
+				return false
+			if (!whole(episodeId) || importId !== null) return false
+			if (id !== groupWatchId(group as string, episodeId)) return false
+		} else return false
+		if (!past(watch.createdAt)) return false
+		const { watchedAt, precision } = watch
+		if (precision === "unknown") {
+			if (watchedAt !== null) return false
+			continue
+		}
+		if (typeof watchedAt !== "number" || !Number.isFinite(watchedAt))
+			return false
+		if (watchedAt < 0 || watchedAt >= latestDay(now)) return false
+		if (precision === "day" ? watchedAt % DAY_MS !== 0 : precision !== "moment")
+			return false
+	}
+	return true
+}
+
+/** Every one of these imports is this member's. */
+async function ownsImports(
+	userId: string,
+	importIds: readonly (string | null)[],
+): Promise<boolean> {
+	const imports = [...new Set(importIds.filter((id) => id !== null))]
+	if (!imports.length) return true
+	const owned = await read<{ id: string }>(
+		`SELECT id FROM user_import WHERE user_id = ? AND id IN (${marks(imports.length)})`,
+		[userId, ...imports],
+	)
+	return owned.length === imports.length
+}
+
 function invalid(
 	event: TrackingEvent,
 	showId: number,
@@ -666,6 +753,11 @@ function invalid(
 		!restorablePress(event, showId, Date.now())
 	)
 		return PRESS_NOT_RESTORABLE
+	if (
+		event.type === "restoreSeason" &&
+		!restorableSeason(event, showId, Date.now())
+	)
+		return SEASON_NOT_RESTORABLE
 	return null
 }
 
@@ -677,6 +769,15 @@ async function applyShowEventStored(
 ): Promise<TrackingResult> {
 	const bad = invalid(event, title.tmdbId, actionId)
 	if (bad) return refusal(bad)
+	// An imported watch names its import, and that import is this member's.
+	if (
+		event.type === "restoreSeason" &&
+		!(await ownsImports(
+			userId,
+			event.watches.map((watch) => watch.importId),
+		))
+	)
+		return refusal(SEASON_NOT_RESTORABLE)
 	// Log rows an earlier round of this call inserted. They were worked out from a state that has changed since.
 	let stale: string[] = []
 	for (let round = 0; round <= STATE_RETRIES; round++) {
@@ -987,16 +1088,13 @@ async function applyMovieEvent(
 			if (!rows.every((row) => restorable(row, movieId, now)))
 				return refusal(NOT_RESTORABLE)
 			// An imported watch names its import, and that import is this member's.
-			const imports = [
-				...new Set(rows.flatMap((row) => (row.importId ? [row.importId] : []))),
-			]
-			if (imports.length) {
-				const owned = await read<{ id: string }>(
-					`SELECT id FROM user_import WHERE user_id = ? AND id IN (${marks(imports.length)})`,
-					[userId, ...imports],
-				)
-				if (owned.length !== imports.length) return refusal(NOT_RESTORABLE)
-			}
+			if (
+				!(await ownsImports(
+					userId,
+					rows.map((row) => row.importId),
+				))
+			)
+				return refusal(NOT_RESTORABLE)
 			for (const row of rows) {
 				const log: LogRow = {
 					...movieLogRow(movieId, row.watchId, row.origin, undefined, now),

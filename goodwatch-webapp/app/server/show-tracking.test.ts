@@ -18,7 +18,7 @@ import {
 	seenPressLine,
 	seenPressOf,
 } from "../domain/tracking/seen-press.ts"
-import { seenPressRestore } from "../domain/tracking/storage.ts"
+import { seasonRestore, seenPressRestore } from "../domain/tracking/storage.ts"
 import { CacheTestRedis } from "../utils/cache-test-redis.ts"
 import { FakeTrackingCrate } from "./tracking-fake-crate.ts"
 
@@ -431,6 +431,37 @@ test("Take back and its Undo, as the page sends them: the answer hands back the 
 	assert.equal(said(after), said(before))
 })
 
+test("Unmark season and its Undo, as the page sends them: the answer hands back the season's rows, and the page reads as before", async () => {
+	await tick(1, 1, "watch-000001")
+	await act({
+		event: { type: "pressSeen", today: iso(midnight(0)) },
+		actionId: "press-000001",
+	})
+	await act({
+		event: { type: "setGroupDate", group: "press-000001", day: "2026-10-01" },
+	})
+	const before = await getShowTrackingPage(user, SHOW, grid)
+	const byId = (rows: typeof before.log) =>
+		[...rows].sort((a, b) => a.watch_id.localeCompare(b.watch_id))
+	const season = before.log.filter((row) => row.season_number === 1)
+	assert.equal(season.length, 3)
+	const unmarked = await act({ event: { type: "unmarkSeason", season: 1 } })
+	assert.deepEqual(
+		[unmarked.state?.state, [...unmarked.deleted].sort(), unmarked.rows],
+		["watching", season.map((row) => row.watch_id).sort(), []],
+	)
+	// The page builds the Undo from what it held and what went, and sends it as JSON.
+	const undo = JSON.parse(JSON.stringify(seasonRestore(before.state, season)))
+	const put = await act({ event: undo })
+	assert.deepEqual([put.status, put.deleted], ["applied", []])
+	// The rows the browser takes over are the stored ones: the same as it held before.
+	assert.deepEqual(byId(put.rows), byId(season))
+	assert.deepEqual(put.state, before.state)
+	const after = await getShowTrackingPage(user, SHOW, grid)
+	assert.deepEqual(after.state, before.state)
+	assert.deepEqual(byId(after.log), byId(before.log))
+})
+
 test("a date set on one watch answers with that row", async () => {
 	await tick(1, 1, "watch-000001")
 	const answer = await act({
@@ -593,6 +624,19 @@ test("a request that is not an action of the show page is not read", () => {
 				pass: 1,
 				changedAt: 1_000,
 				watches: [{ id: "g-press-000001-101", episodeId: 101 }],
+			},
+		},
+		// A season to put back names the state it had, its press or none, and whole watches.
+		{ id: SHOW, event: { type: "restoreSeason", from: "watching" } },
+		{
+			id: SHOW,
+			event: {
+				type: "restoreSeason",
+				from: "watching",
+				press: null,
+				pass: 1,
+				changedAt: 1_000,
+				watches: [{ id: "watch-000001", episodeId: 101 }],
 			},
 		},
 		{

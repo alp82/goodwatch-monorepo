@@ -28,6 +28,7 @@ import {
 	movieStateRow,
 	recordFromRows,
 	scoreWatchId,
+	seasonRestore,
 	seenPressRestore,
 	settleMovieRows,
 	titleTotals,
@@ -98,6 +99,7 @@ const stats = {
 	ticksStateUnchanged: 0,
 	resent: 0,
 	pressesPutBack: 0,
+	seasonsPutBack: 0,
 	halfWritten: 0,
 	halfWrittenBehind: 0,
 	rows: new Set<string>(),
@@ -571,6 +573,40 @@ function apply(both: Both, action: Action, where: string): Both {
 				[after.state?.seen_press_group, after.state?.seen_press_from],
 				[action.group, action.from],
 			)
+		} else if (action.type === "restoreSeason") {
+			stats.seasonsPutBack += 1
+			assert.equal(deleteIds.length, 0)
+			// Exactly the season's rows, as the event carries them: ids, dates, origins, groups and imports.
+			assert.deepEqual(
+				insert.map((r) => [
+					r.watch_id,
+					r.episode_tmdb_id,
+					r.season_number,
+					r.episode_number,
+					r.watched_at,
+					r.watched_at_precision,
+					r.created_at,
+					r.origin,
+					r.group_id,
+					r.import_id,
+					r.pass,
+				]),
+				action.watches.map((x) => [
+					x.id,
+					x.episodeId,
+					x.season,
+					x.number,
+					x.watchedAt,
+					x.precision,
+					x.createdAt,
+					x.origin,
+					x.group,
+					x.importId,
+					action.pass,
+				]),
+				`${where}: the season's rows`,
+			)
+			assert.equal(after.state?.state, action.from)
 		} else if (action.type === "unmarkSeason") {
 			assert.equal(insert.length, 0)
 			assert.deepEqual(
@@ -900,17 +936,31 @@ test("3,000 seeded walks of 50 actions: the rows and the machine never part", ()
 					: null
 			const before = both.stored
 			both = apply(both, action, where)
-			if (!press) continue
-			both = apply(both, press, `${where}, put back`)
+			// And every other season that is unmarked (rows 32 to 34), from the rows that went.
+			const kept = new Set(both.stored.log.map((row) => row.watch_id))
+			const season =
+				action.type === "unmarkSeason" && (seed + i) % 2 === 0
+					? seasonRestore(
+							before.state,
+							before.log.filter((row) => !kept.has(row.watch_id)),
+						)
+					: null
+			const back = press ?? season
+			if (!back) continue
+			both = apply(both, back, `${where}, put back`)
 			// What is stored is what was stored before the press was taken back, to the last column.
 			assert.deepEqual(both.stored.state, before.state, `${where}: the state`)
 			assert.deepEqual(byWatchId(both.stored.log), byWatchId(before.log), where)
 		}
 	}
 	// Every row of the table a member's event can take was walked.
-	for (const id of [...Array.from({ length: 26 }, (_, i) => i + 1), 28, 29, 30])
+	for (const id of [
+		...Array.from({ length: 26 }, (_, i) => i + 1),
+		...[28, 29, 30, 32, 33, 34],
+	])
 		assert.ok(stats.rows.has(String(id)), `row ${id} was never walked`)
 	assert.ok(stats.pressesPutBack > 1_000, "presses put back")
+	assert.ok(stats.seasonsPutBack > 100, "seasons put back")
 	// The checks ran on enough of each kind to mean something.
 	assert.ok(stats.catalog > 10_000, "catalog changes")
 	assert.ok(stats.groupMarks > 1_000, "group marks")

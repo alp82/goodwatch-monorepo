@@ -170,6 +170,31 @@ const eventSchema = z.discriminatedUnion("type", [
 			)
 			.max(20_000),
 	}),
+	// The Undo of Unmark season: the season's rows as the page held them. The writer checks every part of it.
+	z.object({
+		type: z.literal("restoreSeason"),
+		from: z.enum(STATES),
+		press: z.object({ group: id, from: z.enum(STATES) }).nullable(),
+		pass: z.number().int().min(1).max(100_000),
+		changedAt: z.number().int().positive(),
+		watches: z
+			.array(
+				z.object({
+					id: z.string().min(3).max(120),
+					episodeId: z.number().int().positive().max(2_000_000_000).nullable(),
+					season: whole,
+					number: whole,
+					watchedAt: z.number().int().nullable(),
+					precision: z.enum(["moment", "day", "unknown"]),
+					createdAt: z.number().int().positive(),
+					origin: z.enum(["single", "upto", "season", "seen", "import"]),
+					group: id.nullable(),
+					importId: z.string().min(1).max(80).nullable(),
+				}),
+			)
+			.min(1)
+			.max(20_000),
+	}),
 	z.object({ type: z.literal("hold"), today }),
 	z.object({ type: z.literal("drop"), today }),
 	z.object({ type: z.literal("resume") }),

@@ -15,7 +15,7 @@ import {
 	seenPressLine,
 	seenPressOf,
 } from "../domain/tracking/seen-press.ts"
-import { seenPressRestore } from "../domain/tracking/storage.ts"
+import { seasonRestore, seenPressRestore } from "../domain/tracking/storage.ts"
 import { CacheTestRedis } from "../utils/cache-test-redis.ts"
 import { FakeTrackingCrate } from "./tracking-fake-crate.ts"
 
@@ -1030,6 +1030,261 @@ test("a press is not put back when the show has changed since, or when it could 
 			"The show has changed since, so the Seen press can't be put back.",
 			["1.1", "1.2"],
 		],
+	)
+})
+
+/**
+ * Unmark season, with the Undo the show page builds for it: from what it read before, and the ids the unmark
+ * removed.
+ */
+const unmark = async (season: number, title: TrackedTitle = show) => {
+	const { state, log } = await getShowTracking(user, title.tmdbId)
+	const result = await act({ type: "unmarkSeason", season }, undefined, title)
+	const gone = new Set(result.deleted)
+	const restore = seasonRestore(
+		state,
+		log.filter((row) => gone.has(row.watch_id)),
+	)
+	assert.ok(restore, "the season had watches")
+	return { result, restore }
+}
+
+test("Unmark season on a Seen show and its Undo (rows 7 and 32): the season's rows go, the show is Watching, and Undo puts the rows, the press and the time back", async () => {
+	// A special, a tick by hand in each season, then the press, and a day set on the press's watches since.
+	await tick(0, 1)
+	await tick(1, 2, "tick-s1e2")
+	await tick(2, 1, "tick-s2e1")
+	await act({ type: "pressSeen" }, "press-0001")
+	await act({ type: "setGroupDate", group: "press-0001", day: "2024-10-01" })
+	const PRESSED = Date.UTC(2024, 9, 19, 18, 30)
+	for (const row of db.table("user_watch_log"))
+		if (row.group_id === "press-0001") row.created_at = PRESSED
+	for (const row of db.table("user_watch_state")) row.state_changed_at = PRESSED
+	db.refresh("user_watch_log")
+	const before = storedExactly()
+	assert.equal(before.log.length, 6)
+
+	const [{ result, restore }, sent] = await sentBy(() => unmark(1))
+	assert.deepEqual(writes(sent), [
+		"DELETE user_watch_log",
+		"UPDATE user_watch_state",
+	])
+	// The season's rows of the pass, whoever made them. The other season's and the special stay.
+	assert.deepEqual(result.deleted.sort(), [
+		"g-press-0001-101",
+		"g-press-0001-103",
+		"tick-s1e2",
+	])
+	assert.deepEqual(
+		[result.row, stateOf()?.state, stateOf()?.seen_press_group, ticks()],
+		["7", "watching", null, ["0.1", "2.1", "2.2"]],
+	)
+
+	const [put, putSent] = await sentBy(() => act(restore, undefined))
+	assert.deepEqual(writes(putSent), [
+		"INSERT user_watch_log",
+		"UPDATE user_watch_state",
+	])
+	assert.deepEqual([put.status, put.row, put.deleted], ["applied", "32", []])
+	assert.deepEqual(put.inserted.sort(), [
+		"g-press-0001-101",
+		"g-press-0001-103",
+		"tick-s1e2",
+	])
+	assert.deepEqual(storedExactly(), before)
+	assert.deepEqual(
+		[
+			stateOf()?.state,
+			stateOf()?.seen_press_group,
+			stateOf()?.seen_press_from,
+			stateOf()?.state_changed_at,
+		],
+		["seen", "press-0001", "watching", PRESSED],
+	)
+	// The same Undo sent again writes nothing.
+	const stood = stored()
+	const again = await act(restore, undefined)
+	assert.deepEqual([again.status, again.inserted], ["applied", []])
+	assert.deepEqual(stored(), stood)
+})
+
+test("Unmark the only watched season (row 8) and its Undo (row 33): Not started with no rows, then Watching since the time it was", async () => {
+	await tick(1, 1, "tick-s1e1")
+	await act({ type: "markSeason", season: 1 }, "group-season-1")
+	const STARTED = Date.UTC(2025, 2, 3, 20)
+	for (const row of db.table("user_watch_state")) row.state_changed_at = STARTED
+	const before = storedExactly()
+	const { result, restore } = await unmark(1)
+	assert.deepEqual([result.row, stateOf(), logOf()], ["8", null, []])
+	// Not started again, the member could have put the show on a list meanwhile: the watches take it off.
+	wantAndNotInterested()
+	const [put, sent] = await sentBy(() => act(restore, undefined))
+	assert.deepEqual(writes(sent), [
+		"INSERT user_watch_log",
+		"INSERT user_watch_state",
+		"DELETE user_wishlist",
+		"DELETE user_not_interested",
+	])
+	assert.deepEqual([put.row, put.inserted.length], ["33", 3])
+	assert.deepEqual(storedExactly(), before)
+	assert.equal(stateOf()?.state_changed_at, STARTED)
+	assert.deepEqual([onWishlist(), notInterested()], [false, false])
+})
+
+test("Unmark season on an On hold and on a Dropped show (rows 9, 10) and its Undo (row 34): the status is never left", async () => {
+	await tick(1, 1, "tick-s1e1")
+	await tick(2, 1, "tick-s2e1")
+	await act({ type: "hold" })
+	const held = storedExactly()
+	const some = await unmark(2)
+	assert.deepEqual(
+		[some.result.row, stateOf()?.state, ticks()],
+		["9", "on_hold", ["1.1"]],
+	)
+	const last = await unmark(1)
+	assert.deepEqual(
+		[last.result.row, stateOf()?.state, ticks()],
+		["10", "on_hold", []],
+	)
+	assert.equal((await act(last.restore, undefined)).row, "34")
+	assert.equal((await act(some.restore, undefined)).row, "34")
+	assert.deepEqual(storedExactly(), held)
+
+	await act({ type: "drop" })
+	const dropped = storedExactly()
+	const { result, restore } = await unmark(1)
+	assert.deepEqual([result.row, stateOf()?.state], ["9", "dropped"])
+	assert.equal((await act(restore, undefined)).row, "34")
+	assert.deepEqual(storedExactly(), dropped)
+})
+
+test("Unmark season after Watch again: only the current pass's watches go, and the earlier pass stays in each episode's log", async () => {
+	await act({ type: "pressSeen" }, "press-0001")
+	await act({ type: "watchAgain" })
+	await tick(1, 1, "again-s1e1")
+	await tick(1, 2, "again-s1e2")
+	const before = storedExactly()
+	const { result, restore } = await unmark(1)
+	assert.deepEqual(result.deleted.sort(), ["again-s1e1", "again-s1e2"])
+	// A watch remains, of the first pass: Watching (row 7), in pass 2 with nothing ticked.
+	assert.deepEqual(
+		[result.row, stateOf()?.state, stateOf()?.pass, logOf().length],
+		["7", "watching", 2, 5],
+	)
+	assert.ok(logOf().every((row) => row.pass === 1))
+	// Sent again, it finds nothing of the season in this pass and removes nothing.
+	assert.deepEqual((await act({ type: "unmarkSeason", season: 1 })).deleted, [])
+	assert.equal(logOf().length, 5)
+	assert.equal((await act(restore, undefined)).row, "33")
+	assert.deepEqual(storedExactly(), before)
+})
+
+test("a season is not put back when the show has changed since, or when its rows could not have been in this show's log", async () => {
+	db.seed("user_import", [{ id: "imp-1", user_id: user, source: "trakt" }])
+	const imported = "i-0123456789abcdef0123456789abcdef"
+	await tick(1, 1, "tick-s1e1")
+	await act({ type: "markSeason", season: 1 }, "group-season-1")
+	await tick(2, 1, "tick-s2e1")
+	const { restore } = await unmark(1)
+	const untouched = stored()
+	const refusedFor = async (event: TrackingAction, why: string) => {
+		const [result, sent] = await sentBy(() => act(event, undefined))
+		assert.deepEqual([result.status, result.refused], ["refused", why])
+		assert.deepEqual(writes(sent), [])
+		assert.deepEqual(stored(), untouched)
+	}
+	const NOT = "That season can't be put back."
+	const [byHand, byGroup] = [
+		restore.watches.find((w) => w.id === "tick-s1e1"),
+		restore.watches.find((w) => w.id === "g-group-season-1-102"),
+	]
+	assert.ok(byHand && byGroup)
+	const withWatch = (
+		watch: object,
+		base: object = byGroup,
+	): TrackingAction => ({
+		...restore,
+		watches: [{ ...base, ...watch } as (typeof restore.watches)[number]],
+	})
+	// What the page sends is a member's input: every part of it is checked before anything is written.
+	await refusedFor({ ...restore, from: "not_started" }, NOT)
+	await refusedFor({ ...restore, from: "caught_up" as never }, NOT)
+	await refusedFor({ ...restore, pass: 0 }, NOT)
+	await refusedFor({ ...restore, changedAt: Date.now() + 3_600_000 }, NOT)
+	await refusedFor({ ...restore, watches: [] }, NOT)
+	await refusedFor({ ...restore, watches: [byHand, byHand] }, NOT)
+	// A press stands only on a Seen show, under an id the browser or this show's migration made.
+	const press = { group: "press-0001", from: "watching" as const }
+	await refusedFor({ ...restore, press }, NOT)
+	await refusedFor(
+		{ ...restore, from: "seen", press: { ...press, group: "g-press" } },
+		NOT,
+	)
+	await refusedFor(
+		{
+			...restore,
+			from: "seen",
+			press: { ...press, group: `mig-seen-${SHORT}` },
+		},
+		NOT,
+	)
+	// A special, another group's id, an id that names a watch made elsewhere, an origin that is not a member's.
+	await refusedFor(withWatch({ season: 0 }), NOT)
+	await refusedFor(withWatch({ id: "g-group-season-2-102" }), NOT)
+	await refusedFor(withWatch({ episodeId: 999 }), NOT)
+	await refusedFor(withWatch({ group: null }), NOT)
+	await refusedFor(withWatch({ importId: "imp-1" }), NOT)
+	await refusedFor(withWatch({ origin: "score" }), NOT)
+	await refusedFor(withWatch({ id: "score-1399" }, byHand), NOT)
+	await refusedFor(withWatch({ group: "group-season-1" }, byHand), NOT)
+	await refusedFor(withWatch({ id: `g-mig-seen-${SHOW}-102` }), NOT)
+	// Dates that fit no precision or have not come.
+	await refusedFor(withWatch({ createdAt: Date.now() + 3_600_000 }), NOT)
+	await refusedFor(withWatch({ createdAt: 0 }), NOT)
+	await refusedFor(withWatch({ watchedAt: 5, precision: "unknown" }), NOT)
+	await refusedFor(withWatch({ watchedAt: null, precision: "day" }), NOT)
+	await refusedFor(withWatch({ watchedAt: 12_345, precision: "day" }), NOT)
+	await refusedFor(
+		withWatch({ watchedAt: Date.now() + 3 * DAY, precision: "moment" }),
+		NOT,
+	)
+	// An imported watch names an import of this member.
+	const fromImport = { id: imported, origin: "import", importId: "imp-1" }
+	await refusedFor(withWatch({ ...fromImport, importId: "imp-2" }, byHand), NOT)
+	await refusedFor(withWatch({ ...fromImport, id: "tick-0001" }, byHand), NOT)
+	// A movie has no season.
+	assert.equal((await act(restore, undefined, movie)).status, "refused")
+
+	// One of its episodes was ticked since, or the show was put on hold: it would no longer be what it was.
+	const CHANGED = "The show has changed since, so the season can't be put back."
+	await act({ type: "hold" })
+	assert.equal((await act(restore, undefined)).refused, CHANGED)
+	await act({ type: "resume" })
+	await tick(1, 2, "tick-s1e2")
+	const changed = await act(restore, undefined)
+	assert.deepEqual(
+		[changed.status, changed.refused, ticks()],
+		["refused", CHANGED, ["1.2", "2.1"]],
+	)
+	await act({ type: "unwatch", season: 1, number: 2 })
+
+	// Rows a migration and an import made go back as they were.
+	const all = await act(
+		{
+			...restore,
+			watches: [
+				...restore.watches,
+				{ ...byHand, ...fromImport, number: 2, episodeId: null },
+			],
+		},
+		undefined,
+	)
+	assert.deepEqual([all.status, all.inserted.length], ["applied", 4])
+	assert.deepEqual(
+		logOf()
+			.filter((row) => row.watch_id === imported)
+			.map((row) => [row.origin, row.import_id, row.episode_tmdb_id]),
+		[["import", "imp-1", null]],
 	)
 })
 

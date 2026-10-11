@@ -142,6 +142,19 @@ export type TrackingEvent =
 			changedAt: number
 			watches: PressWatch[]
 	  }
+	/**
+	 * Undo of `unmarkSeason`: the watches it removed are in the log again, and the show has the state it had.
+	 * `from` is that state, `press` the Seen press that stood then, `pass` the pass the watches are of, and
+	 * `changedAt` the time the show had come to that state, in milliseconds.
+	 */
+	| {
+			type: "restoreSeason"
+			from: State
+			press: { group: string; from: State } | null
+			pass: number
+			changedAt: number
+			watches: SeasonWatch[]
+	  }
 	/** On a Seen show both need an episode that aired since, so they carry `today` as a group action does. */
 	| { type: "hold"; today?: string }
 	| { type: "drop"; today?: string }
@@ -172,6 +185,13 @@ export interface PressWatch {
 	createdAt: number
 }
 
+/** A watch that Unmark season removed, as the log held it: whoever made it, with its group and its import. */
+export interface SeasonWatch extends PressWatch {
+	origin: Origin
+	group: string | null
+	importId: string | null
+}
+
 /** The event column of the table. "catalog" stands for every change of the catalog. */
 export type TableEvent =
 	| "watch"
@@ -179,6 +199,7 @@ export type TableEvent =
 	| "pressSeen"
 	| "undoSeen"
 	| "restoreSeen"
+	| "restoreSeason"
 	| "hold"
 	| "drop"
 	| "resume"
@@ -199,6 +220,7 @@ export const EVENT_LABEL: Record<TableEvent, string> = {
 	pressSeen: "press Seen",
 	undoSeen: "press Seen again",
 	restoreSeen: "put a Seen press back",
+	restoreSeason: "put an unmarked season back",
 	hold: "put on hold",
 	drop: "drop",
 	resume: "resume",
@@ -291,6 +313,8 @@ interface GuardInput {
 	factsBefore: Facts
 	/** The episode of a watch or unwatch. */
 	episode: { season: number } | null
+	/** The state a season was unmarked from, for the event that puts it back. */
+	unmarkedFrom?: State
 }
 
 export const GUARDS = {
@@ -330,6 +354,10 @@ export const GUARDS = {
 		says: "the press was made on a Dropped show",
 		test: (g: GuardInput) => g.before.seenPress?.from === "dropped",
 	},
+	unmarkedWhileSeen: {
+		says: "the season was unmarked on a Seen show",
+		test: (g: GuardInput) => g.unmarkedFrom === "seen",
+	},
 	regularWatched: {
 		says: "a regular episode is watched",
 		test: (g: GuardInput) => g.facts.watchRemains,
@@ -341,7 +369,8 @@ export type Guard = keyof typeof GUARDS
 // THE TRANSITION TABLE. This is the specification. Rows are tried from the top; the first that matches is taken.
 // The ids are the ones the data model and ADR 0009 use. 10b and 27b belonged to options the owner did not choose.
 // 28 and 29 were added after the owner used the show page: a member who has seen the earlier seasons and will not
-// go on had no way to say so without ticking an episode first. 30 came with the Undo of taking a press back.
+// go on had no way to say so without ticking an episode first. 30 came with the Undo of taking a press back, and
+// 32 to 34 with the Undo of Unmark season.
 // ---------------------------------------------------------------------------------------------------------
 
 export interface Row {
@@ -510,6 +539,30 @@ export const TABLE: readonly Row[] = [
 		guard: null,
 		to: "seen",
 		says: "Taking a press back is undone: the press stands again with the watches it had, and the show is Seen.",
+	},
+	{
+		id: "32",
+		from: ["not_started", "watching"],
+		event: "restoreSeason",
+		guard: "unmarkedWhileSeen",
+		to: "seen",
+		says: "Unmarking a season is undone: its watches are back and the show is Seen again, with the press it had.",
+	},
+	{
+		id: "33",
+		from: ["not_started", "watching"],
+		event: "restoreSeason",
+		guard: null,
+		to: "watching",
+		says: "Unmarking a season is undone: its watches are back and the show is Watching, as before.",
+	},
+	{
+		id: "34",
+		from: ["on_hold", "dropped"],
+		event: "restoreSeason",
+		guard: null,
+		to: "same",
+		says: "Unmarking a season is undone: its watches are back. On hold and Dropped were never left.",
 	},
 	// On hold, Dropped, Resume
 	{
@@ -739,6 +792,27 @@ function effect(
 				notInterested: false,
 			}
 		}
+		case "restoreSeason": {
+			const have = new Set(record.watches.map((w) => w.id))
+			const watches: Watch[] = event.watches
+				.filter((w) => !have.has(w.id))
+				.map((w) => ({
+					id: w.id,
+					episodeId: w.episodeId,
+					season: w.season,
+					number: w.number,
+					origin: w.origin,
+					group: w.group,
+					pass: event.pass,
+				}))
+			return {
+				...record,
+				watches: [...record.watches, ...watches],
+				seenPress: event.press,
+				wantToSee: false,
+				notInterested: false,
+			}
+		}
 		case "drop":
 			return { ...record, wantToSee: false, notInterested: false }
 		case "rate":
@@ -772,6 +846,22 @@ function effect(
 
 export const PRESS_NOT_RESTORABLE =
 	"The show has changed since, so the Seen press can't be put back."
+
+export const SEASON_NOT_RESTORABLE =
+	"The show has changed since, so the season can't be put back."
+
+/** One of these watches' episodes has a watch in the record's current pass. */
+const watchedInPass = (
+	record: TrackingRecord,
+	watches: readonly { id: string; season: number; number: number }[],
+) => {
+	const mine = record.watches.filter((w) => w.pass === record.pass)
+	return watches.some((x) =>
+		mine.some(
+			(w) => w.id === x.id || (w.season === x.season && w.number === x.number),
+		),
+	)
+}
 
 const hasNewEpisodes = (show: Show, record: TrackingRecord) => {
 	const f = facts(show, record)
@@ -828,16 +918,29 @@ function whyNot(
 				event.from === "dropped"
 					? state === event.from
 					: state === "watching" || state === "not_started"
-			const mine = record.watches.filter((w) => w.pass === record.pass)
-			const watchedSince = event.watches.some((x) =>
-				mine.some(
-					(w) =>
-						w.id === x.id || (w.season === x.season && w.number === x.number),
-				),
-			)
-			return left && event.pass === record.pass && !watchedSince
+			return left &&
+				event.pass === record.pass &&
+				!watchedInPass(record, event.watches)
 				? null
 				: PRESS_NOT_RESTORABLE
+		}
+		case "restoreSeason": {
+			if (!event.watches.length || !event.watches.every(isRegular))
+				return "A season has regular episodes."
+			// Only onto what Unmark season left: the state rows 7 to 10 lead to, the same pass, no press, and none
+			// of its episodes watched since.
+			const left =
+				event.from === "on_hold" || event.from === "dropped"
+					? state === event.from
+					: (event.from === "watching" || event.from === "seen") &&
+						(state === "watching" || state === "not_started")
+			const press = !event.press || event.from === "seen"
+			return left &&
+				press &&
+				event.pass === record.pass &&
+				!watchedInPass(record, event.watches)
+				? null
+				: SEASON_NOT_RESTORABLE
 		}
 		case "hold":
 			if (state === "watching") return null
@@ -957,6 +1060,7 @@ function single(
 		facts: facts(show, after),
 		factsBefore: facts(show, record),
 		episode,
+		unmarkedFrom: event.type === "restoreSeason" ? event.from : undefined,
 	})
 	if (!taken)
 		return {
@@ -1223,6 +1327,26 @@ export function step(
 						[],
 					)
 				base = without((w) => w.group === event.group)
+			}
+			if (resend && event.type === "restoreSeason") {
+				const ids = new Set(event.watches.map((w) => w.id))
+				const stored = world.record.watches.filter((w) => ids.has(w.id))
+				// The season is back already: its watches and the state are written. What it clears may not be.
+				if (
+					stored.length === ids.size &&
+					from === event.from &&
+					(world.record.seenPress?.group ?? null) ===
+						(event.press?.group ?? null)
+				)
+					return done(
+						{
+							...world.record,
+							wantToSee: from === "seen" && world.record.wantToSee,
+							notInterested: false,
+						},
+						[],
+					)
+				base = without((w) => ids.has(w.id))
 			}
 			const result = single(base, event, actionId, resend)
 			if ("refused" in result) return nothing(result.refused)

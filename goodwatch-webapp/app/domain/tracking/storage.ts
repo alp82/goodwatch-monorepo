@@ -9,6 +9,7 @@
 // Timestamps are epoch milliseconds, as Crate returns them.
 import {
 	type Origin,
+	type PressWatch,
 	type Show,
 	type State,
 	type TrackingEvent,
@@ -161,6 +162,46 @@ export function seenPressRestore(
 	}
 }
 
+/**
+ * The event that puts back what Unmark season removed (rows 32 to 34): the state row as it was before, and the
+ * rows the unmark removed from the log. Null when there is nothing to put back, and for a row that Unmark season
+ * does not remove (a special, another pass), which the event could not write again as it was.
+ */
+export function seasonRestore(
+	state: StateRow | null,
+	removed: readonly LogRow[],
+): Extract<TrackingEvent, { type: "restoreSeason" }> | null {
+	if (!state || state.state === "not_started" || !removed.length) return null
+	if (
+		removed.some(
+			(row) => row.pass !== state.pass || (row.season_number ?? 0) < 1,
+		)
+	)
+		return null
+	return {
+		type: "restoreSeason",
+		from: state.state,
+		press:
+			state.state === "seen" && state.seen_press_group && state.seen_press_from
+				? { group: state.seen_press_group, from: state.seen_press_from }
+				: null,
+		pass: state.pass,
+		changedAt: state.state_changed_at,
+		watches: removed.map((row) => ({
+			id: row.watch_id,
+			episodeId: row.episode_tmdb_id,
+			season: row.season_number ?? 0,
+			number: row.episode_number ?? 0,
+			watchedAt: row.watched_at,
+			precision: row.watched_at_precision,
+			createdAt: row.created_at,
+			origin: row.origin,
+			group: row.group_id,
+			importId: row.import_id,
+		})),
+	}
+}
+
 /** The date columns of a watch made at `now`. A day is stored as 00:00:00 UTC of that day. */
 export function watchedAt(
 	when: WatchedWhen | undefined,
@@ -244,10 +285,12 @@ export function applyShowEvent(input: ShowEventInput): AppliedEvent {
 	const stored = new Set(log.map((r) => r.watch_id))
 	const kept = new Set(after.watches.map((w) => w.id))
 	const when = event.type === "watch" ? event.when : undefined
-	// A press that is put back: its rows as they were, with their dates and the time of the press.
+	// A press or a season that is put back: its rows as they were, with their dates and the time they were made.
 	const back =
-		event.type === "restoreSeen"
-			? new Map(event.watches.map((w) => [w.id, w]))
+		event.type === "restoreSeen" || event.type === "restoreSeason"
+			? new Map<string, PressWatch & { importId?: string | null }>(
+					event.watches.map((w) => [w.id, w]),
+				)
 			: null
 	const insert: LogRow[] = after.watches
 		.filter((w) => !stored.has(w.id))
@@ -268,15 +311,18 @@ export function applyShowEvent(input: ShowEventInput): AppliedEvent {
 							{ watched_at: null, watched_at_precision: "unknown" as const }),
 				origin: w.origin,
 				group_id: w.group,
-				import_id: null,
+				import_id: was?.importId ?? null,
 				pass: w.pass,
 				created_at: was?.createdAt ?? now,
 			}
 		})
 	const row = stateRowOf(after, state, now)
-	// The show is Seen since the time it was before the press was taken back, not since this Undo.
+	// The show is Seen since the time it was before the press was taken back, not since this Undo. And a show whose
+	// season is put back has its state since the time it had it before.
 	const next =
-		row && event.type === "restoreSeen" && state?.state !== "seen"
+		row &&
+		(event.type === "restoreSeen" || event.type === "restoreSeason") &&
+		state?.state !== row.state
 			? { ...row, state_changed_at: event.changedAt }
 			: row
 	return {

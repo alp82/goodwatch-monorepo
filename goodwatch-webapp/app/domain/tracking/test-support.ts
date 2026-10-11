@@ -228,6 +228,40 @@ export function restoreOf(
 	}
 }
 
+/**
+ * The event that puts back what Unmark season removes from a record (rows 32 to 34), as the page builds it from the
+ * stored rows (`seasonRestore`): the watches of `before` that `after` no longer has, with no dates and `at` as
+ * every time.
+ */
+export function seasonRestoreOf(
+	before: TrackingRecord,
+	after: TrackingRecord,
+	at = 1,
+): Extract<TrackingEvent, { type: "restoreSeason" }> {
+	const kept = new Set(after.watches.map((watch) => watch.id))
+	return {
+		type: "restoreSeason",
+		from: before.state,
+		press: before.seenPress,
+		pass: before.pass,
+		changedAt: at,
+		watches: before.watches
+			.filter((watch) => !kept.has(watch.id))
+			.map((watch) => ({
+				id: watch.id,
+				episodeId: watch.episodeId,
+				season: watch.season,
+				number: watch.number,
+				watchedAt: null,
+				precision: "unknown",
+				createdAt: at,
+				origin: watch.origin,
+				group: watch.group,
+				importId: null,
+			})),
+	}
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // Presets
 // ---------------------------------------------------------------------------------------------------------

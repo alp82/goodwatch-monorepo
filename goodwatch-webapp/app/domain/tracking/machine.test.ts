@@ -5,6 +5,7 @@ import { test } from "node:test"
 import {
 	type ListedEpisode,
 	PRESS_NOT_RESTORABLE,
+	SEASON_NOT_RESTORABLE,
 	STATES,
 	type State,
 	TABLE,
@@ -32,6 +33,7 @@ import {
 	mulberry32,
 	play,
 	restoreOf,
+	seasonRestoreOf,
 } from "./test-support.ts"
 
 const w = (season: number, number: number): Action => ({
@@ -71,7 +73,7 @@ test("the table is well formed", () => {
 	assert.equal(new Set(TABLE.map((row) => row.id)).size, TABLE.length)
 	assert.deepEqual(
 		TABLE.map((row) => Number(row.id)).sort((a, b) => a - b),
-		Array.from({ length: 31 }, (_, index) => index + 1),
+		Array.from({ length: 34 }, (_, index) => index + 1),
 	)
 	for (const row of TABLE) {
 		assert.ok(row.from.length > 0, row.id)
@@ -321,6 +323,117 @@ test("a press is put back only onto what taking it back left", () => {
 		record: { ...step(pressed, AGAIN).world.record, wantToSee: true },
 	}
 	assert.equal(step(wanted, restore).world.record.wantToSee, false)
+})
+
+test("an unmarked season that is put back (rows 32 to 34): the same watches, and the state and the press the show had", () => {
+	const byId = (world: World) => ({
+		...world.record,
+		watches: [...world.record.watches].sort((a, b) => a.id.localeCompare(b.id)),
+	})
+	for (const [show, actions, season, went, back] of [
+		// Seen by a press: Watching without it, then Seen again with the press standing.
+		["ended", [w(1, 1), SEEN], 2, "7", "32"],
+		["ended", [SEEN], 1, "7", "32"],
+		// Seen by the ticks, with no press.
+		[
+			"ended",
+			[w(1, 1), w(1, 2), w(1, 3), w(2, 1), w(2, 2), w(2, 3)],
+			1,
+			"7",
+			"32",
+		],
+		// Seen with episodes that aired since: Seen again, and they are new as before.
+		["weekly", [SEEN, { type: "episodeAirs" }], 1, "7", "32"],
+		// Watching: with other watches left, and with none.
+		["ended", [w(1, 1), w(2, 1)], 2, "7", "33"],
+		["ended", [{ type: "markSeason", season: 1 }], 1, "8", "33"],
+		// On hold and Dropped are never left.
+		["ended", [w(1, 1), w(2, 1), { type: "hold" }], 2, "9", "34"],
+		["ended", [w(1, 1), { type: "hold" }], 1, "10", "34"],
+		["ended", [w(1, 1), { type: "drop" }], 1, "10", "34"],
+		// The second pass: the first pass's watches are not the season's to lose.
+		["ended", [SEEN, { type: "watchAgain" }, w(1, 1), w(1, 2)], 1, "7", "33"],
+	] as const) {
+		const said = `${show} season ${season}: ${went} then ${back}`
+		const before = play(findShow(show), [...actions]).world
+		const unmarked = step(before, { type: "unmarkSeason", season })
+		assert.equal(unmarked.row?.id, went, said)
+		const restore = seasonRestoreOf(before.record, unmarked.world.record)
+		assert.ok(restore.watches.length > 0, said)
+		const put = step(unmarked.world, restore)
+		assert.equal(put.refused, null, said)
+		assert.deepEqual([put.row?.id, put.to], [back, before.record.state], said)
+		used.add(back)
+		assert.deepEqual(byId(put.world), byId(before), said)
+		assert.deepEqual(derive(put.world), derive(before), said)
+		// Sent again, when it is back and when only its watches were written: the same record.
+		const resend = { resend: true }
+		assert.deepEqual(
+			step(put.world, restore, "", resend).world.record,
+			put.world.record,
+			said,
+		)
+		const half: World = {
+			show: before.show,
+			record: { ...unmarked.world.record, watches: put.world.record.watches },
+		}
+		assert.deepEqual(
+			byId(step(half, restore, "", resend).world),
+			byId(put.world),
+			said,
+		)
+		// Without the option the machine is strict: a season that is back is not put back twice.
+		assert.equal(step(put.world, restore).refused, SEASON_NOT_RESTORABLE, said)
+	}
+})
+
+test("a season is put back only onto what unmarking it left", () => {
+	const before = play(findShow("ended"), [w(1, 1), w(1, 2), w(2, 1)]).world
+	const unmarked = step(before, { type: "unmarkSeason", season: 1 }).world
+	const restore = seasonRestoreOf(before.record, unmarked.record)
+	const refused = (world: World, event: TrackingEvent = restore) =>
+		assert.equal(step(world, event).refused, SEASON_NOT_RESTORABLE)
+	// One of its episodes was ticked since.
+	refused(step(unmarked, w(1, 2) as TrackingEvent, "tick").world)
+	// The show was set aside, dropped, or marked Seen since.
+	refused(step(unmarked, { type: "hold" }).world)
+	refused(step(unmarked, { type: "drop" }).world)
+	refused(step(unmarked, { type: "pressSeen" }, "press").world)
+	// The show went on to another pass.
+	const again = play(findShow("ended"), [
+		w(2, 1),
+		SEEN,
+		{ type: "watchAgain" },
+		w(2, 2),
+	]).world
+	assert.deepEqual([again.record.state, again.record.pass], ["watching", 2])
+	refused(again)
+	// A season that was unmarked on an On hold show is not put back on one that is Watching again.
+	const held = play(findShow("ended"), [w(1, 1), w(2, 1), { type: "hold" }])
+	const heldLeft = step(held.world, { type: "unmarkSeason", season: 1 }).world
+	const heldRestore = seasonRestoreOf(held.world.record, heldLeft.record)
+	const resumed = step(heldLeft, { type: "resume" }).world
+	refused(resumed, heldRestore)
+	// A refused event changes nothing.
+	assert.equal(step(resumed, heldRestore).world, resumed)
+	// A press stood only on a Seen show, and a show with watches was never Not started.
+	const press = { group: "press", from: "watching" as const }
+	refused(unmarked, { ...restore, press })
+	refused(unmarked, { ...restore, from: "not_started" })
+	// Specials are not a season's to lose, and nothing is not a season.
+	const special = { ...restore.watches[0], season: 0 }
+	for (const watches of [[special], []])
+		assert.equal(
+			step(unmarked, { ...restore, watches }).refused,
+			"A season has regular episodes.",
+		)
+	// Putting a season back takes the show off the lists, as its watches did.
+	const listed: World = {
+		show: unmarked.show,
+		record: { ...unmarked.record, wantToSee: true, notInterested: true },
+	}
+	const put = step(listed, restore).world.record
+	assert.deepEqual([put.wantToSee, put.notInterested], [false, false])
 })
 
 test("On hold and back", () => {
@@ -1424,6 +1537,9 @@ test("every event ends in a state the table names, and the record's invariants h
 			if (action.type === "undoSeen" && world.record.seenPress)
 				back = restoreOf(world.record)
 			const done = step(world, action, `a-${seed}-${i}`)
+			// The same for the last season that was unmarked.
+			if (action.type === "unmarkSeason" && action.season > 0 && !done.refused)
+				back = seasonRestoreOf(world.record, done.world.record)
 			for (const r of done.rows) used.add(r.id)
 			assert.ok(STATES.includes(done.to))
 			if (done.refused)
