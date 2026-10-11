@@ -1,5 +1,5 @@
-// The navigation's search entry: the omnibox in the desktop header, the dock's Search key, and the hub sheet's search
-// field all open one dialog holding the command palette, as do ⌘K / Ctrl K and "/" outside text fields.
+// The navigation's search entry: the omnibox in the desktop header and the hub sheet's search field both open one
+// dialog holding the command palette, as do ⌘K / Ctrl K and "/" outside text fields.
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import { useEffect, useState } from "react"
@@ -69,27 +69,6 @@ export function Omnibox() {
 	)
 }
 
-/** The dock's Search key. */
-export function DockSearchKey() {
-	const navigation = useNavigation()
-	const { pathname, search } = useLocation()
-	const on =
-		pathname === "/search" || Boolean(currentSearchQuery(pathname, search))
-	return (
-		<button
-			type="button"
-			onClick={() => navigation?.setSearchOpen(true)}
-			{...preloadOnIntent}
-			aria-haspopup="dialog"
-			data-search-entry
-			className={`flex h-11 items-center gap-1.5 justify-self-end rounded-full pr-4 pl-3 text-[13.5px] font-bold ${on ? "bg-amber-500/20 text-amber-200" : "bg-white/[0.08] text-gray-100"}`}
-		>
-			<MagnifyingGlassIcon className="h-[22px] w-[22px]" aria-hidden />
-			Search
-		</button>
-	)
-}
-
 /** The keyboard shortcuts that open the search dialog: ⌘K / Ctrl K, and "/" outside text fields. */
 export function useSearchShortcuts() {
 	const navigation = useNavigation()
@@ -105,7 +84,7 @@ export function useSearchShortcuts() {
 			if (command || (event.key === "/" && !typing && !event.metaKey)) {
 				event.preventDefault()
 				// Focus the visible search entry first: the dialog returns focus to what had it, so Escape lands on
-				// the omnibox (or the dock's Search key) rather than wherever focus was.
+				// the omnibox rather than wherever focus was.
 				for (const entry of document.querySelectorAll<HTMLElement>(
 					"[data-search-entry]",
 				))

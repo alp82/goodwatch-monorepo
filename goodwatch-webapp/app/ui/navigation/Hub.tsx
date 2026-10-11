@@ -1,6 +1,7 @@
 // The hub: every destination, laid out like the Living room remote's feature well. On phones it's a sheet above the
 // dock (opened by the hub key); on desktop it's the Browse panel under the header. Both are the same labeled modal
-// dialog, with a focus trap, Escape to close, and focus returned to the key or button that opened it.
+// dialog, with a focus trap, Escape to close, and focus returned to the key or button that opened it. The phone sheet
+// can also be dragged down to close.
 import {
 	Dialog,
 	DialogBackdrop,
@@ -18,12 +19,45 @@ import { useNavigation } from "./NavigationContext"
 import { GoodWatchMark, tmdbImage, useSignUpHref } from "./bits"
 import {
 	type Destination,
+	type DestinationKey,
 	currentDestination,
 	getDestinations,
 } from "./destinations"
+import { useDragToClose } from "./useDragToClose"
 import { useTonightsPick } from "./useTonightsPick"
 
 const HUB_TITLE = "Browse GoodWatch"
+
+/** Each big tile's pale wash and icon color, so the destinations tell apart at a glance. */
+const TILE_TINTS: Partial<
+	Record<DestinationKey, { wash: string; icon: string }>
+> = {
+	watchNext: {
+		wash: "from-amber-200/25 to-amber-200/[0.06]",
+		icon: "text-amber-300",
+	},
+	myShows: {
+		wash: "from-rose-200/25 to-rose-200/[0.06]",
+		icon: "text-rose-300",
+	},
+	myMovies: {
+		wash: "from-amber-200/25 to-amber-200/[0.06]",
+		icon: "text-amber-300",
+	},
+	discover: { wash: "from-sky-200/25 to-sky-200/[0.06]", icon: "text-sky-300" },
+	taste: {
+		wash: "from-violet-200/25 to-violet-200/[0.06]",
+		icon: "text-violet-300",
+	},
+	explorer: {
+		wash: "from-emerald-200/25 to-emerald-200/[0.06]",
+		icon: "text-emerald-300",
+	},
+	myLibrary: {
+		wash: "from-teal-200/25 to-teal-200/[0.06]",
+		icon: "text-teal-300",
+	},
+}
 
 function Tile({
 	destination,
@@ -37,11 +71,15 @@ function Tile({
 	backdrop?: string | null
 }) {
 	const Icon = destination.icon
-	const className = `relative flex min-h-[108px] flex-col items-start justify-end gap-0.5 overflow-hidden rounded-[20px] bg-linear-160 from-gray-800 to-[#0b1120] px-3.5 py-3 text-left ${
+	const tint = TILE_TINTS[destination.key] ?? {
+		wash: "from-gray-800 to-[#0b1120]",
+		icon: "text-amber-400",
+	}
+	const className = `relative flex min-h-[108px] flex-col items-start justify-end gap-0.5 overflow-hidden rounded-[20px] bg-linear-160 px-3.5 py-3 text-left ${tint.wash} ${
 		here
 			? "shadow-[inset_0_0_0_2px_#fbbf24]"
-			: "shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(255,255,255,0.08)]"
-	} ${destination.available ? "hover:from-gray-700" : "opacity-60"}`
+			: "shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_0_1px_rgba(255,255,255,0.08)]"
+	} ${destination.available ? "hover:brightness-125" : "opacity-60"}`
 	const body = (
 		<>
 			{backdrop && (
@@ -55,7 +93,7 @@ function Tile({
 				</>
 			)}
 			<Icon
-				className="absolute top-3 left-3.5 z-10 h-6 w-6 text-amber-400"
+				className={`absolute top-3 left-3.5 z-10 h-6 w-6 ${tint.icon}`}
 				aria-hidden
 			/>
 			<b className="brand-header relative z-10 text-[19px] leading-tight text-gray-100">
@@ -274,8 +312,9 @@ export function HubDialog() {
 	const navigation = useNavigation()
 	// This module loads with the hub's first opening (see LazyDialogs.tsx).
 	const open = useOpenAfterMount(Boolean(navigation?.hubOpen))
-	if (!navigation) return null
-	const { setHubOpen } = navigation
+	const setHubOpen = navigation?.setHubOpen
+	const panel = useDragToClose(() => setHubOpen?.(false))
+	if (!setHubOpen) return null
 	return (
 		<Dialog
 			open={open}
@@ -288,13 +327,14 @@ export function HubDialog() {
 			/>
 			<div className="fixed inset-0 flex flex-col justify-end lg:mx-auto lg:max-w-7xl lg:justify-start lg:px-8 lg:pt-[70px]">
 				<DialogPanel
+					ref={panel}
 					id="site-hub"
 					transition
-					className="relative max-h-[86%] overflow-y-auto rounded-t-3xl bg-[#0b1120] px-4 pt-2.5 pb-[calc(22px+env(safe-area-inset-bottom))] text-gray-100 shadow-[0_-20px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.09)] transition duration-200 ease-out data-closed:translate-y-9 data-closed:opacity-0 motion-reduce:transition-opacity motion-reduce:data-closed:translate-y-0 lg:w-[580px] lg:rounded-[20px] lg:p-4 lg:data-closed:-translate-y-3"
+					className="relative max-h-[86%] overflow-y-auto overscroll-contain rounded-t-3xl bg-[#0b1120] px-4 pt-2.5 pb-[calc(22px+env(safe-area-inset-bottom))] text-gray-100 shadow-[0_-20px_60px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.09)] transition duration-200 ease-out data-closed:translate-y-9 data-closed:opacity-0 motion-reduce:transition-opacity motion-reduce:data-closed:translate-y-0 lg:w-[580px] lg:rounded-[20px] lg:p-4 lg:data-closed:-translate-y-3"
 				>
 					<span
 						aria-hidden
-						className="mx-auto mb-3 block h-[5px] w-10 rounded-full bg-white/20 lg:hidden"
+						className="mx-auto mb-3 block h-[5px] w-10 rounded-full bg-white/25 lg:hidden"
 					/>
 					<DialogTitle className="sr-only">{HUB_TITLE}</DialogTitle>
 					<HubContent />

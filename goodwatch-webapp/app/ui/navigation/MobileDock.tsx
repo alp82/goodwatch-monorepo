@@ -1,22 +1,25 @@
-// The phone dock (below the large breakpoint): Tonight's pick on the left, the raised round hub key in the middle,
-// and Search on the right. A page's filter strip docks above them (the slab) through DockStrip; the hub key then
-// shrinks and drops into the row. The dock's height is published as --nav-dock-height so full-screen pages such as
-// Explorer can keep clear of it.
+// The phone dock (below the large breakpoint): the current page on the left, the raised round G key in the middle,
+// and "Go to…" on the right. The whole bar is one button that opens the hub. A page's filter strip docks above it
+// (the slab) through DockStrip; the G key then shrinks and drops into the row. The dock's height is published as
+// --nav-dock-height so full-screen pages such as Explorer can keep clear of it.
+import { ChevronUpIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import { type ReactNode, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { useFeatures } from "~/hooks/useFeature"
 import { useNavigation } from "./NavigationContext"
-import { DockSearchKey } from "./Search"
-import { GoodWatchMark, TonightsPickThumb } from "./bits"
+import { GoodWatchMark } from "./bits"
 import { currentDestination, getDestinations } from "./destinations"
 
-function HubKey({ docked }: { docked: boolean }) {
+const HUB_LABEL = "Browse GoodWatch"
+
+function DockButton({ docked }: { docked: boolean }) {
 	const navigation = useNavigation()
 	const { pathname } = useLocation()
 	const destinations = getDestinations(useFeatures())
 	const here = currentDestination(pathname)
-	const Icon = here ? destinations[here].icon : null
+	const page = here ? destinations[here] : null
+	const Icon = page?.icon ?? Squares2X2Icon
 	const open = Boolean(navigation?.hubOpen)
 	return (
 		<button
@@ -25,23 +28,39 @@ function HubKey({ docked }: { docked: boolean }) {
 			aria-expanded={open}
 			aria-controls={open ? "site-hub" : undefined}
 			aria-haspopup="dialog"
-			aria-label="Browse GoodWatch"
-			className={`flex flex-col items-center justify-center gap-0.5 rounded-full bg-[radial-gradient(circle_at_35%_30%,#4b5563,#111827_70%)] transition-transform duration-200 motion-reduce:transition-none ${
-				docked ? "h-14 w-14" : "-mt-[26px] h-16 w-16"
-			} ${
-				open
-					? "scale-94 shadow-[0_0_0_2px_#fbbf24,0_0_0_6px_rgba(3,7,18,0.94),0_0_30px_rgba(245,158,11,0.4)]"
-					: "shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_0_0_6px_rgba(3,7,18,0.94),0_12px_30px_-6px_rgba(0,0,0,0.9)]"
-			}`}
+			aria-label={page ? `${HUB_LABEL}, you're on ${page.label}` : HUB_LABEL}
+			className="grid h-[72px] w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 text-left"
 		>
-			<GoodWatchMark size={24} />
-			<small
+			<span
 				aria-hidden
-				className="flex max-w-[58px] items-center gap-0.5 overflow-hidden text-[9px] font-bold whitespace-nowrap text-amber-400"
+				className="flex min-w-0 items-center gap-2 justify-self-start"
 			>
-				{Icon && <Icon className="h-3 w-3 shrink-0" />}
-				{here ? destinations[here].short : "Browse"}
-			</small>
+				<span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.08] text-amber-400">
+					<Icon className="h-5 w-5" />
+				</span>
+				<b className="truncate text-[14px] text-gray-100">
+					{page?.label ?? "Browse"}
+				</b>
+			</span>
+			<span
+				aria-hidden
+				className={`flex items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#4b5563,#111827_70%)] transition-transform duration-200 motion-reduce:transition-none ${
+					docked ? "h-14 w-14" : "-mt-[26px] h-16 w-16"
+				} ${
+					open
+						? "scale-94 shadow-[0_0_0_2px_#fbbf24,0_0_0_6px_rgba(3,7,18,0.94),0_0_30px_rgba(245,158,11,0.4)]"
+						: "shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_0_0_6px_rgba(3,7,18,0.94),0_12px_30px_-6px_rgba(0,0,0,0.9)]"
+				}`}
+			>
+				<GoodWatchMark size={docked ? 26 : 30} />
+			</span>
+			<span
+				aria-hidden
+				className={`flex h-11 items-center gap-1.5 justify-self-end rounded-full pr-3 pl-4 text-[13.5px] font-bold ${open ? "bg-amber-500/20 text-amber-200" : "bg-white/[0.08] text-gray-100"}`}
+			>
+				Go to…
+				<ChevronUpIcon className="h-4 w-4" />
+			</span>
 		</button>
 	)
 }
@@ -88,13 +107,8 @@ export function MobileDock() {
 						docked ? "flex items-end gap-1.5 px-2.5 pt-2.5 pb-2" : "hidden"
 					}
 				/>
-				<nav
-					aria-label="Site"
-					className="grid h-[72px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-3"
-				>
-					<TonightsPickThumb className="justify-self-start" />
-					<HubKey docked={docked} />
-					<DockSearchKey />
+				<nav aria-label="Site">
+					<DockButton docked={docked} />
 				</nav>
 			</div>
 		</>

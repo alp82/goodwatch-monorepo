@@ -1,10 +1,10 @@
 // The command palette: one field that goes anywhere. As soon as anything is typed, its first suggestion is
 // "Search for …" (the search page), then up to five matching titles, then matching destinations ("Go to Taste"), then
-// Sign up for guests. Empty, it shows the destinations and the viewer's recent searches. A combobox over a listbox:
-// Up and Down move the active option, Enter runs it; Escape closes the dialog around it.
+// Sign up for guests. Empty, it shows the destinations. The field sits in the dialog's header and the destinations
+// are compact rows, so the search leads. A combobox over a listbox: Up and Down move the active option, Enter runs
+// it; Escape closes the dialog around it.
 import {
 	ArrowRightEndOnRectangleIcon,
-	ClockIcon,
 	MagnifyingGlassIcon,
 } from "@heroicons/react/24/solid"
 import { Link, useLocation, useNavigate } from "@remix-run/react"
@@ -40,8 +40,6 @@ import { useTonightsPick } from "./useTonightsPick"
 const PLACEHOLDER = "Search or go to…"
 /** Waits this long after the last keystroke before asking for titles. */
 const DEBOUNCE_MS = 150
-const RECENT_KEY = "goodwatch.recent-searches"
-const RECENT_MAX = 5
 
 /** The destinations the palette offers, in this order; ones whose page is off for the viewer are left out. */
 const PALETTE_DESTINATIONS: DestinationKey[] = [
@@ -59,37 +57,10 @@ interface Row {
 	label: string
 	sub?: string
 	href: string
-	/** Set on rows that run a search, so it joins the recent searches. */
-	search?: string
+	/** A destination: a compact row, so the search field and its results lead. */
+	compact?: boolean
 	icon?: ComponentType<SVGProps<SVGSVGElement>>
 	poster?: string | null
-}
-
-// Recent searches live in this browser only (they're the viewer's own text), read and written defensively: storage
-// can be missing or throw in private windows.
-function readRecent(): string[] {
-	try {
-		const stored = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]")
-		return Array.isArray(stored)
-			? stored.filter((q) => typeof q === "string").slice(0, RECENT_MAX)
-			: []
-	} catch {
-		return []
-	}
-}
-
-function rememberSearch(q: string) {
-	try {
-		const recent = [
-			q,
-			...readRecent().filter(
-				(other) => other.toLowerCase() !== q.toLowerCase(),
-			),
-		].slice(0, RECENT_MAX)
-		localStorage.setItem(RECENT_KEY, JSON.stringify(recent))
-	} catch {
-		// Recent searches are a convenience; without storage there are none.
-	}
 }
 
 function useDebounced<T>(value: T, ms: number): T {
@@ -118,8 +89,6 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	const { pick } = useTonightsPick()
 	const [q, setQ] = useState(() => currentSearchQuery(pathname, search))
 	const [active, setActive] = useState(0)
-	const [recent, setRecent] = useState<string[]>([])
-	useEffect(() => setRecent(readRecent()), [])
 	const titles = usePaletteTitles(q)
 	const id = useId()
 	const field = useRef<HTMLInputElement>(null)
@@ -141,7 +110,6 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				key: "search",
 				label: `Search for “${trimmed}”`,
 				href: searchHref(trimmed, features),
-				search: trimmed,
 				icon: MagnifyingGlassIcon,
 			})
 		for (const title of titles)
@@ -169,19 +137,10 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 							? `${pick.title.title} is up next`
 							: undefined,
 				href: destination.href,
+				compact: true,
 				icon: destination.icon,
 			})
 		}
-		if (!trimmed)
-			for (const text of recent)
-				result.push({
-					key: `recent-${text}`,
-					label: text,
-					sub: "Recent search",
-					href: searchHref(text, features),
-					search: text,
-					icon: ClockIcon,
-				})
 		if (!user && (!needle || "sign up".includes(needle)))
 			result.push({
 				key: "sign-up",
@@ -191,7 +150,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				icon: ArrowRightEndOnRectangleIcon,
 			})
 		return result
-	}, [features, pathname, trimmed, needle, titles, pick, recent, user, signUp])
+	}, [features, pathname, trimmed, needle, titles, pick, user, signUp])
 
 	const at = Math.min(active, rows.length - 1)
 	const optionId = (index: number) => `${id}-option-${index}`
@@ -203,61 +162,62 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 	})
 
 	const run = (row: Row) => {
-		if (row.search) rememberSearch(row.search)
 		navigate(row.href)
 		onDone()
 	}
 
 	return (
-		<div className="search-private ph-no-capture sentry-mask flex flex-col gap-2.5">
-			<div className="flex h-[54px] items-center gap-2.5 rounded-[14px] bg-white/[0.07] pr-2 pl-4 shadow-[inset_0_0_0_1.5px_rgba(251,191,36,0.6)]">
-				<MagnifyingGlassIcon
-					className="h-5 w-5 shrink-0 text-gray-300"
-					aria-hidden
-				/>
-				<input
-					ref={field}
-					// The dialog's initial focus (Headless UI): the palette exists to type into this field.
-					data-autofocus
-					type="text"
-					role="combobox"
-					aria-expanded={rows.length > 0}
-					aria-controls={`${id}-list`}
-					aria-autocomplete="list"
-					aria-activedescendant={at >= 0 ? optionId(at) : undefined}
-					aria-label={PLACEHOLDER}
-					placeholder={PLACEHOLDER}
-					autoComplete="off"
-					autoCapitalize="off"
-					spellCheck={false}
-					enterKeyHint="search"
-					value={q}
-					onChange={(event) => {
-						setQ(event.target.value)
-						setActive(0)
-					}}
-					onKeyDown={(event) => {
-						if (event.key === "ArrowDown") {
-							event.preventDefault()
-							setActive(Math.min(at + 1, rows.length - 1))
-						} else if (event.key === "ArrowUp") {
-							event.preventDefault()
-							setActive(Math.max(at - 1, 0))
-						} else if (
-							event.key === "Enter" &&
-							!event.nativeEvent.isComposing
-						) {
-							event.preventDefault()
-							const row = rows[at]
-							if (row) run(row)
-						}
-					}}
-					className="brand-header min-w-0 flex-1 border-0 bg-transparent p-0 text-[22px] text-white outline-none placeholder:text-gray-500 focus:ring-0"
-				/>
-				<kbd className="hidden rounded-md bg-white/10 px-[7px] py-0.5 font-sans text-xs text-gray-300 lg:block">
-					esc
-				</kbd>
-			</div>
+		<div className="search-private ph-no-capture sentry-mask flex min-h-0 flex-1 flex-col">
+			<header className="shrink-0 border-b border-white/[0.08] px-4 pb-3 lg:p-3.5">
+				<div className="flex h-[54px] items-center gap-2.5 rounded-[14px] bg-white/[0.07] pr-2 pl-4 shadow-[inset_0_0_0_1.5px_rgba(251,191,36,0.6)]">
+					<MagnifyingGlassIcon
+						className="h-5 w-5 shrink-0 text-gray-300"
+						aria-hidden
+					/>
+					<input
+						ref={field}
+						// The dialog's initial focus (Headless UI): the palette exists to type into this field.
+						data-autofocus
+						type="text"
+						role="combobox"
+						aria-expanded={rows.length > 0}
+						aria-controls={`${id}-list`}
+						aria-autocomplete="list"
+						aria-activedescendant={at >= 0 ? optionId(at) : undefined}
+						aria-label={PLACEHOLDER}
+						placeholder={PLACEHOLDER}
+						autoComplete="off"
+						autoCapitalize="off"
+						spellCheck={false}
+						enterKeyHint="search"
+						value={q}
+						onChange={(event) => {
+							setQ(event.target.value)
+							setActive(0)
+						}}
+						onKeyDown={(event) => {
+							if (event.key === "ArrowDown") {
+								event.preventDefault()
+								setActive(Math.min(at + 1, rows.length - 1))
+							} else if (event.key === "ArrowUp") {
+								event.preventDefault()
+								setActive(Math.max(at - 1, 0))
+							} else if (
+								event.key === "Enter" &&
+								!event.nativeEvent.isComposing
+							) {
+								event.preventDefault()
+								const row = rows[at]
+								if (row) run(row)
+							}
+						}}
+						className="brand-header min-w-0 flex-1 border-0 bg-transparent p-0 text-[22px] text-white outline-none placeholder:text-gray-500 focus:ring-0"
+					/>
+					<kbd className="hidden rounded-md bg-white/10 px-[7px] py-0.5 font-sans text-xs text-gray-300 lg:block">
+						esc
+					</kbd>
+				</div>
+			</header>
 			{/* The combobox pattern: focus stays in the field, which points at the active option, so the listbox and
 			    its options aren't focusable themselves, and a native <select> couldn't hold posters and links. */}
 			{/* biome-ignore lint/a11y/useFocusableInteractive: see above */}
@@ -266,7 +226,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				// biome-ignore lint/a11y/useSemanticElements: see above
 				role="listbox"
 				aria-label="Suggestions"
-				className="grid grid-cols-1 gap-0.5"
+				className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain px-4 pt-2.5 pb-[calc(22px+env(safe-area-inset-bottom))] lg:px-3.5 lg:pb-3.5"
 			>
 				{rows.map((row, index) => {
 					const Icon = row.icon
@@ -286,7 +246,7 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 								event.preventDefault()
 								run(row)
 							}}
-							className={`flex min-h-[50px] min-w-0 items-center gap-3 rounded-xl px-3 py-1.5 text-left text-gray-100 ${index === at ? "bg-white/[0.08]" : ""}`}
+							className={`flex min-w-0 shrink-0 items-center rounded-xl px-3 text-left ${row.compact ? "min-h-[38px] gap-2.5 py-1 text-gray-300" : "min-h-[50px] gap-3 py-1.5 text-gray-100"} ${index === at ? "bg-white/[0.08]" : ""}`}
 						>
 							{row.poster !== undefined ? (
 								row.poster ? (
@@ -301,15 +261,21 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 							) : (
 								Icon && (
 									<Icon
-										className="h-5 w-5 shrink-0 text-amber-400"
+										className={`shrink-0 text-amber-400 ${row.compact ? "h-4 w-4" : "h-5 w-5"}`}
 										aria-hidden
 									/>
 								)
 							)}
 							<span className="flex min-w-0 flex-col">
-								<b className="truncate text-[15px]">{row.label}</b>
+								<b
+									className={`truncate ${row.compact ? "text-[13.5px] font-semibold" : "text-[15px]"}`}
+								>
+									{row.label}
+								</b>
 								{row.sub && (
-									<small className="truncate text-[12.5px] text-gray-400">
+									<small
+										className={`truncate text-gray-400 ${row.compact ? "text-[11.5px]" : "text-[12.5px]"}`}
+									>
 										{row.sub}
 									</small>
 								)}
