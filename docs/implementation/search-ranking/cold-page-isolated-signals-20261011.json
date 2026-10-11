@@ -1,0 +1,835 @@
+{
+  "schema": "search-qdrant-isolated-replay.v1",
+  "sourceCommit": "5f15698995eb4368baf5ea094b704a3752191e40",
+  "indexBuildId": "20261011T041503Z",
+  "qdrantVersion": "1.19.1",
+  "cloneMemoryLimitBytes": 6442450944,
+  "cloneCpuLimit": 2,
+  "complete": true,
+  "limits": [
+    "Cold control evicts cloned files before restart, but startup prepopulates part of the index; this is remaining working-page coldness, not entirely cold index.",
+    "Mapped class labels use path-token inference and whole-file residency, with sparse holes included in apparent pages. No mapped file contents were read by sampler.",
+    "English text cold call hit memory max24, warm second call max1; its timing and graph eviction are capacity-confounded.",
+    "Only two exact-title signals were isolated; neither held-out query coverage nor six-shard selective prewarm success is established."
+  ],
+  "summary": [
+    {
+      "position": 0,
+      "using": "fingerprint_v1_raw",
+      "coldServerMs": 53.119292,
+      "warmServerMs": [
+        11.012598,
+        19.096517
+      ],
+      "coldMajorFaults": 74,
+      "coldReadBytes": 28798976,
+      "coldMemoryMaxEvents": 0,
+      "coldCpuThrottledUsec": 0,
+      "residentPageDeltaByClass": {
+        "vector": 5826,
+        "graph": 0,
+        "sparse": 0,
+        "payload": 0,
+        "other": 0
+      },
+      "coldWarmOrderedIdScoreParity": true
+    },
+    {
+      "position": 1,
+      "using": "text_en_v1",
+      "coldServerMs": 2053.603653,
+      "warmServerMs": [
+        61.415645,
+        16.457158
+      ],
+      "coldMajorFaults": 13934,
+      "coldReadBytes": 61063168,
+      "coldMemoryMaxEvents": 24,
+      "coldCpuThrottledUsec": 0,
+      "residentPageDeltaByClass": {
+        "vector": 13869,
+        "graph": -5867,
+        "sparse": 0,
+        "payload": 0,
+        "other": 0
+      },
+      "coldWarmOrderedIdScoreParity": true
+    }
+  ],
+  "records": [
+    {
+      "kind": "captured",
+      "tag": "known-exact-title",
+      "indexBuildId": "20261011T041503Z",
+      "queryCount": 3,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "sparse",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        }
+      ],
+      "residency": "individual cold-control only"
+    },
+    {
+      "kind": "isolated_signal",
+      "tag": "known-exact-title",
+      "position": 0,
+      "repeat": 1,
+      "residency": "clone cold-control invoked",
+      "using": "fingerprint_v1_raw",
+      "limit": 500,
+      "exact": true,
+      "queryKind": "dense",
+      "filterMust": 0,
+      "filterMustNot": 1,
+      "filterShould": 0,
+      "processDelta": {
+        "memoryCurrentBefore": 6403538944,
+        "memoryCurrentAfter": 6438756352,
+        "minorFaults": 2638,
+        "majorFaults": 74,
+        "cpuTicks": 10,
+        "readBytes": 28798976,
+        "throttledUsec": 0,
+        "nrThrottled": 0,
+        "cpuUsageUsec": 100174,
+        "memoryMaxEvents": 0,
+        "memoryOom": 0,
+        "memoryOomKill": 0,
+        "cgroupPageFaults": 2712,
+        "cgroupMajorFaults": 74,
+        "cgroupIoReadBytes": 28798976
+      },
+      "wallMs": 98.4,
+      "serverMs": 53.119292,
+      "residencyBefore": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 247638,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 82703,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598091,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58445,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "residencyAfter": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 253464,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 82703,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598091,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58445,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "resultIdHash": "19145c8171007bd1e0454795597ee34a631f02f7125329555d0a040a17d8de64",
+      "resultIdScoreHash": "c748364b9f0df96dbb660dd4d393b47d26da4d995846d04729be7a19a0799716",
+      "repeatIdParity": true,
+      "repeatScoreParity": true,
+      "resultCount": 500
+    },
+    {
+      "kind": "isolated_signal",
+      "tag": "known-exact-title",
+      "position": 0,
+      "repeat": 2,
+      "residency": "warm repeat",
+      "using": "fingerprint_v1_raw",
+      "limit": 500,
+      "exact": true,
+      "queryKind": "dense",
+      "filterMust": 0,
+      "filterMustNot": 1,
+      "filterShould": 0,
+      "processDelta": {
+        "memoryCurrentBefore": 6438391808,
+        "memoryCurrentAfter": 6439567360,
+        "minorFaults": 288,
+        "majorFaults": 0,
+        "cpuTicks": 5,
+        "readBytes": 0,
+        "throttledUsec": 0,
+        "nrThrottled": 0,
+        "cpuUsageUsec": 37396,
+        "memoryMaxEvents": 0,
+        "memoryOom": 0,
+        "memoryOomKill": 0,
+        "cgroupPageFaults": 288,
+        "cgroupMajorFaults": 0,
+        "cgroupIoReadBytes": 0
+      },
+      "wallMs": 15.3,
+      "serverMs": 11.012598,
+      "residencyBefore": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 253464,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 82703,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598091,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58445,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "residencyAfter": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 253464,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 82703,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598091,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58445,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "resultIdHash": "19145c8171007bd1e0454795597ee34a631f02f7125329555d0a040a17d8de64",
+      "resultIdScoreHash": "c748364b9f0df96dbb660dd4d393b47d26da4d995846d04729be7a19a0799716",
+      "repeatIdParity": true,
+      "repeatScoreParity": true,
+      "resultCount": 500
+    },
+    {
+      "kind": "isolated_signal",
+      "tag": "known-exact-title",
+      "position": 0,
+      "repeat": 3,
+      "residency": "warm repeat",
+      "using": "fingerprint_v1_raw",
+      "limit": 500,
+      "exact": true,
+      "queryKind": "dense",
+      "filterMust": 0,
+      "filterMustNot": 1,
+      "filterShould": 0,
+      "processDelta": {
+        "memoryCurrentBefore": 6437441536,
+        "memoryCurrentAfter": 6439088128,
+        "minorFaults": 404,
+        "majorFaults": 0,
+        "cpuTicks": 4,
+        "readBytes": 0,
+        "throttledUsec": 0,
+        "nrThrottled": 0,
+        "cpuUsageUsec": 49506,
+        "memoryMaxEvents": 0,
+        "memoryOom": 0,
+        "memoryOomKill": 0,
+        "cgroupPageFaults": 404,
+        "cgroupMajorFaults": 0,
+        "cgroupIoReadBytes": 0
+      },
+      "wallMs": 23.7,
+      "serverMs": 19.096517,
+      "residencyBefore": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 253464,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 82703,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598091,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58445,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "residencyAfter": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 253464,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 82703,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598091,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58445,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "resultIdHash": "19145c8171007bd1e0454795597ee34a631f02f7125329555d0a040a17d8de64",
+      "resultIdScoreHash": "c748364b9f0df96dbb660dd4d393b47d26da4d995846d04729be7a19a0799716",
+      "repeatIdParity": true,
+      "repeatScoreParity": true,
+      "resultCount": 500
+    },
+    {
+      "kind": "isolated_signal",
+      "tag": "known-exact-title",
+      "position": 1,
+      "repeat": 1,
+      "residency": "clone cold-control invoked",
+      "using": "text_en_v1",
+      "limit": 500,
+      "exact": false,
+      "queryKind": "dense",
+      "filterMust": 0,
+      "filterMustNot": 1,
+      "filterShould": 0,
+      "processDelta": {
+        "memoryCurrentBefore": 6402654208,
+        "memoryCurrentAfter": 6441893888,
+        "minorFaults": 828,
+        "majorFaults": 13934,
+        "cpuTicks": 86,
+        "readBytes": 61063168,
+        "throttledUsec": 0,
+        "nrThrottled": 0,
+        "cpuUsageUsec": 859716,
+        "memoryMaxEvents": 24,
+        "memoryOom": 0,
+        "memoryOomKill": 0,
+        "cgroupPageFaults": 14762,
+        "cgroupMajorFaults": 13934,
+        "cgroupIoReadBytes": 61063168
+      },
+      "wallMs": 2071.3,
+      "serverMs": 2053.603653,
+      "residencyBefore": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 247654,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 82448,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598943,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58938,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "residencyAfter": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 261523,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 76581,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598943,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58938,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "resultIdHash": "6d6fb6ca5da1c22c277773055a4d0b2109b66bb2b32ac4b7175344aa3fc3f521",
+      "resultIdScoreHash": "091321a18f9b5f6948aee07266d5952f57b0d4ce3d252155ce93fe8bc2a25eee",
+      "repeatIdParity": true,
+      "repeatScoreParity": true,
+      "resultCount": 500
+    },
+    {
+      "kind": "isolated_signal",
+      "tag": "known-exact-title",
+      "position": 1,
+      "repeat": 2,
+      "residency": "warm repeat",
+      "using": "text_en_v1",
+      "limit": 500,
+      "exact": false,
+      "queryKind": "dense",
+      "filterMust": 0,
+      "filterMustNot": 1,
+      "filterShould": 0,
+      "processDelta": {
+        "memoryCurrentBefore": 6441541632,
+        "memoryCurrentAfter": 6441967616,
+        "minorFaults": 182,
+        "majorFaults": 181,
+        "cpuTicks": 5,
+        "readBytes": 741376,
+        "throttledUsec": 0,
+        "nrThrottled": 0,
+        "cpuUsageUsec": 60056,
+        "memoryMaxEvents": 1,
+        "memoryOom": 0,
+        "memoryOomKill": 0,
+        "cgroupPageFaults": 363,
+        "cgroupMajorFaults": 181,
+        "cgroupIoReadBytes": 741376
+      },
+      "wallMs": 65.8,
+      "serverMs": 61.415645,
+      "residencyBefore": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 261523,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 76581,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598943,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58938,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "residencyAfter": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 261523,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 76506,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598943,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58938,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "resultIdHash": "6d6fb6ca5da1c22c277773055a4d0b2109b66bb2b32ac4b7175344aa3fc3f521",
+      "resultIdScoreHash": "091321a18f9b5f6948aee07266d5952f57b0d4ce3d252155ce93fe8bc2a25eee",
+      "repeatIdParity": true,
+      "repeatScoreParity": true,
+      "resultCount": 500
+    },
+    {
+      "kind": "isolated_signal",
+      "tag": "known-exact-title",
+      "position": 1,
+      "repeat": 3,
+      "residency": "warm repeat",
+      "using": "text_en_v1",
+      "limit": 500,
+      "exact": false,
+      "queryKind": "dense",
+      "filterMust": 0,
+      "filterMustNot": 1,
+      "filterShould": 0,
+      "processDelta": {
+        "memoryCurrentBefore": 6440873984,
+        "memoryCurrentAfter": 6441631744,
+        "minorFaults": 184,
+        "majorFaults": 1,
+        "cpuTicks": 5,
+        "readBytes": 4096,
+        "throttledUsec": 0,
+        "nrThrottled": 0,
+        "cpuUsageUsec": 57149,
+        "memoryMaxEvents": 0,
+        "memoryOom": 0,
+        "memoryOomKill": 0,
+        "cgroupPageFaults": 185,
+        "cgroupMajorFaults": 1,
+        "cgroupIoReadBytes": 4096
+      },
+      "wallMs": 21.6,
+      "serverMs": 16.457158,
+      "residencyBefore": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 261523,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 76506,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598943,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58938,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "residencyAfter": {
+        "classes": {
+          "vector": {
+            "files": 144,
+            "pages": 375342,
+            "residentPages": 261523,
+            "apparentBytes": 1537057488,
+            "allocatedBytes": 711491584
+          },
+          "graph": {
+            "files": 24,
+            "pages": 103765,
+            "residentPages": 76507,
+            "apparentBytes": 424976451,
+            "allocatedBytes": 425021440
+          },
+          "sparse": {
+            "files": 77,
+            "pages": 145568,
+            "residentPages": 166,
+            "apparentBytes": 596151680,
+            "allocatedBytes": 224518144
+          },
+          "payload": {
+            "files": 13633,
+            "pages": 2403455,
+            "residentPages": 598943,
+            "apparentBytes": 9821099228,
+            "allocatedBytes": 2343739392
+          },
+          "other": {
+            "files": 30,
+            "pages": 147949,
+            "residentPages": 58938,
+            "apparentBytes": 605961872,
+            "allocatedBytes": 364199936
+          }
+        },
+        "pageSizeBytes": 4096,
+        "failedFiles": 0,
+        "excludedFiles": 0
+      },
+      "resultIdHash": "6d6fb6ca5da1c22c277773055a4d0b2109b66bb2b32ac4b7175344aa3fc3f521",
+      "resultIdScoreHash": "091321a18f9b5f6948aee07266d5952f57b0d4ce3d252155ce93fe8bc2a25eee",
+      "repeatIdParity": true,
+      "repeatScoreParity": true,
+      "resultCount": 500
+    },
+    {
+      "kind": "complete",
+      "caseCount": 1,
+      "inputCaseCount": 3,
+      "at": "2026-10-11T20:02:03.341Z"
+    }
+  ]
+}

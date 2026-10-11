@@ -1,0 +1,487 @@
+{
+  "event": "qdrant-clone-infrastructure-audit",
+  "snapshot": {
+    "snapshotDateTag": "20261011_191656",
+    "sizeBytes": 4428863488,
+    "sha256": "614149a3885293985ad912d2ed92bf03fa23f42235bb6ddde78e9991c22c64eb",
+    "checksumVerified": true,
+    "downloadSeconds": 64.3,
+    "imageDigest": "sha256:12364fe851b9f17356fc88189fc06d1b521262e04659ec7345975b00c9246a10",
+    "cpuLimit": 2,
+    "memoryLimitGiB": 5
+  },
+  "restored": {
+    "event": "clone-restored",
+    "at": "2026-10-11T19:43:05.893791+00:00",
+    "status": "green",
+    "optimizerStatus": "ok",
+    "pointCount": 244262,
+    "segmentCount": 12,
+    "shardCount": 6
+  },
+  "parameters": {
+    "task": 406,
+    "date": "2026-10-11",
+    "qdrantVersion": "1.19.1",
+    "hostCpuCores": 4,
+    "productionCpuCores": 16,
+    "hostMemoryKiB": 7937352,
+    "cloneCpuLimit": 2,
+    "initialCloneMemoryGiB": 5,
+    "followupCloneMemoryGiB": 6,
+    "minimumHostAvailableKiB": 786432,
+    "maximumAllocatedOwnedGiB": 11,
+    "minimumDiskFreeGiB": 3,
+    "collectionPoints": 244262,
+    "productionComparisonPoints": 244308,
+    "collectionSegments": 12,
+    "collectionShards": 6,
+    "control": "stop only task clone; fsync and POSIX_FADV_DONTNEED only validated owned regular clone-store inodes; restart clone; wait green",
+    "globalCacheFlush": false,
+    "productionMutation": false,
+    "limits": [
+      "Snapshot older than production comparison",
+      "Different host, CPU cap2 versus production uncapped16 cores",
+      "Initial5GiB run hit memory cap; followup6GiB must be assessed independently",
+      "Restart loads index pages before first query; after-start residency recorded",
+      "Warm and cold score/ID parity applies inside clone; prior production replay retained only ID hashes"
+    ],
+    "currentProducerDockerLoggingDisabled": true,
+    "retainedArtifactPayloadPersistence": false,
+    "earlyProducerLoggingLimitation": "Early disposable producers used default Docker logging, so private stdout may have persisted transiently before removal. Those containers and local logs were removed. Subsequent producers use log-driver none; retained artifacts contain no private payloads."
+  },
+  "preflight": {
+    "hostAvailableMemoryKiB": 6637228,
+    "hostDiskFreeBytes": 18823073792,
+    "existingWorkerApproxMemoryMiB": 325,
+    "existingWorkerApproxCpuPercent": 2,
+    "isolatedDedicatedStoreInodes": true,
+    "hardlinkedProductionInodes": false,
+    "loopbackOnly": true,
+    "publicPort": false,
+    "imageVersionMatched": true
+  },
+  "independentPostRestoreSafetyReview": {
+    "regularStoreFiles": 19236,
+    "symlinks": 0,
+    "hardlinks": 0,
+    "duplicateInodes": 0,
+    "outsidePaths": 0,
+    "allocatedStoreBytes": 4453986304,
+    "apparentStoreBytes": 13359680789,
+    "allSixShardsReady": true,
+    "exactImageOwnerLabelsMountTuplesCapsPortChecked": true
+  },
+  "guards": {
+    "minimumHostAvailableKiB": 786432,
+    "minimumDiskFreeGiB": 3,
+    "maximumAllocatedOwnedGiB": 11,
+    "maximumAllocatedStoreGiB": 7,
+    "coldControlFileApparentLimitGiB": 28,
+    "physicalCapsUnchangedDuringApparentAccountingCorrection": true,
+    "evictionRegularOwnedStoppedCloneFilesOnly": true,
+    "reopenedInodeSizeAndSingleLinkVerified": true,
+    "fixtureReadOnly": true,
+    "globalCacheControls": false,
+    "productionMutation": false,
+    "availableMemoryThresholdScope": "786432 KiB is the restore monitoring threshold. Before restart, the cold control independently requires host MemAvailable strictly above 5242880 KiB after stopping the clone."
+  },
+  "controlEvents": [
+    {
+      "event": "clone-cold-control",
+      "at": "2026-10-11T19:45:36.806595+00:00",
+      "seconds": 70.554,
+      "fileCount": 19236,
+      "fileBytes": 13359680789,
+      "allocatedFileBytes": 4453986304,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 714647,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "afterStartup": {
+        "pages": 3271956,
+        "residentBefore": 734177,
+        "residentAfter": 734177,
+        "changedFilesSkipped": 17
+      },
+      "pointCount": 244262,
+      "segmentCount": 12,
+      "globalCacheFlush": false,
+      "productionPathsTouched": false,
+      "phase": "initial-5g"
+    },
+    {
+      "event": "clone-cold-control",
+      "at": "2026-10-11T19:46:48.304995+00:00",
+      "seconds": 63.599,
+      "fileCount": 19236,
+      "fileBytes": 13359680789,
+      "allocatedFileBytes": 4453986304,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 740763,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "afterStartup": {
+        "pages": 3271956,
+        "residentBefore": 734466,
+        "residentAfter": 734466,
+        "changedFilesSkipped": 17
+      },
+      "pointCount": 244262,
+      "segmentCount": 12,
+      "globalCacheFlush": false,
+      "productionPathsTouched": false,
+      "phase": "initial-5g"
+    },
+    {
+      "event": "clone-cold-control",
+      "at": "2026-10-11T19:51:06.160984+00:00",
+      "seconds": 63.935,
+      "fileCount": 19236,
+      "fileBytes": 13359680789,
+      "allocatedFileBytes": 4453986304,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 734468,
+        "residentAfter": 95,
+        "changedFilesSkipped": 0
+      },
+      "afterStartup": {
+        "pages": 3271956,
+        "residentBefore": 951375,
+        "residentAfter": 951375,
+        "changedFilesSkipped": 17
+      },
+      "pointCount": 244262,
+      "segmentCount": 12,
+      "globalCacheFlush": false,
+      "productionPathsTouched": false,
+      "phase": "full-6g"
+    },
+    {
+      "event": "clone-cold-control",
+      "at": "2026-10-11T19:52:18.462903+00:00",
+      "seconds": 63.454,
+      "fileCount": 19236,
+      "fileBytes": 13359680789,
+      "allocatedFileBytes": 4453986304,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 946789,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "afterStartup": {
+        "pages": 3271956,
+        "residentBefore": 992639,
+        "residentAfter": 992639,
+        "changedFilesSkipped": 17
+      },
+      "pointCount": 244262,
+      "segmentCount": 12,
+      "globalCacheFlush": false,
+      "productionPathsTouched": false,
+      "phase": "full-6g"
+    },
+    {
+      "event": "clone-cold-control",
+      "at": "2026-10-11T19:53:33.638678+00:00",
+      "seconds": 62.984,
+      "fileCount": 19236,
+      "fileBytes": 13359680789,
+      "allocatedFileBytes": 4453986304,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 980835,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "afterStartup": {
+        "pages": 3271956,
+        "residentBefore": 989813,
+        "residentAfter": 989813,
+        "changedFilesSkipped": 17
+      },
+      "pointCount": 244262,
+      "segmentCount": 12,
+      "globalCacheFlush": false,
+      "productionPathsTouched": false,
+      "phase": "full-6g"
+    },
+    {
+      "event": "clone-cold-control",
+      "at": "2026-10-11T19:57:02.952569+00:00",
+      "seconds": 63.585,
+      "fileCount": 19236,
+      "fileBytes": 13359680789,
+      "allocatedFileBytes": 4453986304,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 967340,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "afterStartup": {
+        "pages": 3271956,
+        "residentBefore": 993425,
+        "residentAfter": 993425,
+        "changedFilesSkipped": 17
+      },
+      "pointCount": 244262,
+      "segmentCount": 12,
+      "globalCacheFlush": false,
+      "productionPathsTouched": false,
+      "phase": "selector-nonmeasurement-6g"
+    },
+    {
+      "event": "clone-cold-control",
+      "at": "2026-10-11T19:58:14.514394+00:00",
+      "seconds": 66.096,
+      "fileCount": 19236,
+      "fileBytes": 13359680789,
+      "allocatedFileBytes": 4453986304,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 993431,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "afterStartup": {
+        "pages": 3271956,
+        "residentBefore": 993208,
+        "residentAfter": 993208,
+        "changedFilesSkipped": 17
+      },
+      "pointCount": 244262,
+      "segmentCount": 12,
+      "globalCacheFlush": false,
+      "productionPathsTouched": false,
+      "phase": "selector-nonmeasurement-6g"
+    },
+    {
+      "event": "clone-cold-control",
+      "at": "2026-10-11T20:00:27.043292+00:00",
+      "seconds": 65.325,
+      "fileCount": 19236,
+      "fileBytes": 13359680789,
+      "allocatedFileBytes": 4453986304,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 993214,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "afterStartup": {
+        "pages": 3271956,
+        "residentBefore": 992619,
+        "residentAfter": 992619,
+        "changedFilesSkipped": 17
+      },
+      "pointCount": 244262,
+      "segmentCount": 12,
+      "globalCacheFlush": false,
+      "productionPathsTouched": false,
+      "phase": "isolated-signals-6g",
+      "isolatedSignalPosition": 0
+    },
+    {
+      "event": "clone-cold-control",
+      "at": "2026-10-11T20:01:48.595991+00:00",
+      "seconds": 64.556,
+      "fileCount": 19236,
+      "fileBytes": 13359680789,
+      "allocatedFileBytes": 4453986304,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 998451,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "afterStartup": {
+        "pages": 3271956,
+        "residentBefore": 993725,
+        "residentAfter": 993725,
+        "changedFilesSkipped": 17
+      },
+      "pointCount": 244262,
+      "segmentCount": 12,
+      "globalCacheFlush": false,
+      "productionPathsTouched": false,
+      "phase": "isolated-signals-6g",
+      "isolatedSignalPosition": 1
+    }
+  ],
+  "stageEvents": [
+    {
+      "event": "clone-pages-evicted",
+      "at": "2026-10-11T19:50:09.888180+00:00",
+      "seconds": 7.662,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 734468,
+        "residentAfter": 95,
+        "changedFilesSkipped": 0
+      },
+      "fileCount": 19236,
+      "allocatedFileBytes": 4453986304
+    },
+    {
+      "event": "clone-start-requested",
+      "at": "2026-10-11T19:50:10.189485+00:00",
+      "seconds": 7.963
+    },
+    {
+      "event": "clone-pages-evicted",
+      "at": "2026-10-11T19:51:23.067755+00:00",
+      "seconds": 8.059,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 946789,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "fileCount": 19236,
+      "allocatedFileBytes": 4453986304
+    },
+    {
+      "event": "clone-start-requested",
+      "at": "2026-10-11T19:51:23.432752+00:00",
+      "seconds": 8.424
+    },
+    {
+      "event": "clone-pages-evicted",
+      "at": "2026-10-11T19:52:39.236612+00:00",
+      "seconds": 8.582,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 980835,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "fileCount": 19236,
+      "allocatedFileBytes": 4453986304
+    },
+    {
+      "event": "clone-start-requested",
+      "at": "2026-10-11T19:52:39.578777+00:00",
+      "seconds": 8.924
+    },
+    {
+      "event": "clone-pages-evicted",
+      "at": "2026-10-11T19:56:07.345984+00:00",
+      "seconds": 7.978,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 967340,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "fileCount": 19236,
+      "allocatedFileBytes": 4453986304
+    },
+    {
+      "event": "clone-start-requested",
+      "at": "2026-10-11T19:56:07.691314+00:00",
+      "seconds": 8.323
+    },
+    {
+      "event": "clone-pages-evicted",
+      "at": "2026-10-11T19:57:17.166222+00:00",
+      "seconds": 8.748,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 993431,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "fileCount": 19236,
+      "allocatedFileBytes": 4453986304
+    },
+    {
+      "event": "clone-start-requested",
+      "at": "2026-10-11T19:57:17.512225+00:00",
+      "seconds": 9.094
+    },
+    {
+      "event": "clone-pages-evicted",
+      "at": "2026-10-11T19:59:30.019269+00:00",
+      "seconds": 8.301,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 993214,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "fileCount": 19236,
+      "allocatedFileBytes": 4453986304
+    },
+    {
+      "event": "clone-start-requested",
+      "at": "2026-10-11T19:59:30.393494+00:00",
+      "seconds": 8.675
+    },
+    {
+      "event": "clone-pages-evicted",
+      "at": "2026-10-11T20:00:52.355445+00:00",
+      "seconds": 8.315,
+      "eviction": {
+        "pages": 3271973,
+        "residentBefore": 998451,
+        "residentAfter": 0,
+        "changedFilesSkipped": 0
+      },
+      "fileCount": 19236,
+      "allocatedFileBytes": 4453986304
+    },
+    {
+      "event": "clone-start-requested",
+      "at": "2026-10-11T20:00:52.720462+00:00",
+      "seconds": 8.68
+    }
+  ],
+  "limitations": [
+    "Archive restoration creates sparse preallocated files: apparent size is not physical disk consumption. Initial monitors stopped before guard-accounting correction; only owned stopped clone store was cleared.",
+    "Initial5GiB exact replay hit memory max events; process metrics incorrectly sampled wrapper PID. Retained zero wrapper metrics are not evidence of zero actual faults.",
+    "Initial5GiB native was captured and then query failed. Fixed error classification was not retained; no cause/hook failure is established. The second cold hook completed successfully.",
+    "Corrected6GiB harness uses asynchronous control and actual qdrant child PID plus cgroup counters.",
+    "Two narrowed selector controls performed no queries because of a harness loop bug; retained as nonmeasurement and excluded from latency conclusions.",
+    "Whole-file residency counts include sparse holes. AllocatedBytes and whole-file resident pages cannot establish exact resident data-extents.",
+    "Different host/core count/CPU cap and older snapshot prohibit treating clone absolute latency as production p95.",
+    "Loop artifacts describe Qdrant server call latency, not first-usable-results acceptance. Seven-day acceptance remains outstanding."
+  ],
+  "completedAt": "2026-10-11T20:02:03Z",
+  "narrowedSignalSummary": {
+    "raw": {
+      "coldServerMs": 53.1,
+      "warmServerMs": [
+        11.0,
+        19.1
+      ],
+      "majorFaults": 74,
+      "readBytesApproxMB": 28.8,
+      "vectorResidentPagesDelta": 5826,
+      "memoryMaxEvents": 0,
+      "throttleUsec": 0
+    },
+    "englishText": {
+      "coldServerMs": 2054,
+      "warmServerMs": [
+        61,
+        16
+      ],
+      "majorFaults": 13934,
+      "readBytesApproxMB": 61.1,
+      "vectorResidentPagesDelta": 13869,
+      "graphResidentPagesDelta": -5867,
+      "coldMemoryMaxEvents": 24,
+      "secondWarmMemoryMaxEvents": 1,
+      "limitation": "Resource-cap-confounded individual signal; supports dense working-page candidate, not clean production causal proof."
+    },
+    "internalIdAndScoreParity": true,
+    "nextEvidence": "Production resident data-extents/fault/read before-versus-after comparison; no behavior fix established."
+  }
+}
