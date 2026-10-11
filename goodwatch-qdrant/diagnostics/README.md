@@ -18,3 +18,17 @@ Counter brackets include background work, organic traffic, signal delay and ten-
 [Source audit](source-audit.json) pins the reviewed controller and report hashes. Splitting `/proc/PID/stat` after the final `)` gives state at index 0 (field 3), minor faults at index 7 (field 10), major faults at index 9 (field 12), and RSS pages at index 21 (field 24). RSS is multiplied by host page size. `read_bytes` is storage-layer I/O, not all logical reads. PID changes or counter resets invalidate deltas; RSS changes may be negative.
 
 Ten behavioral fixtures cover golden numeric deltas (including actual `allocstall_dma32` kernel counters), sparse-hole inflation, data-page loss, a 2.123-second tail, sorted score changes, ordered tie changes, changed identities/counts, missing controls, resets, incomplete runs, signal receipt races and privacy/error stripping. They validate reporting, not production remedy efficacy. No raw queries, IDs, vectors, credentials or unknown input fields are emitted.
+
+## Supplementary memory-pressure observation
+
+`observe_memory.py` is a separate, prepared-only collector for a future reviewed trial. It has not been launched by this change and does not alter the existing three-cycle observer. The first modified backup cycle retained reclaim counters, but did not retain host memory availability during the snapshot. Available memory measured afterward cannot establish headroom during that phase.
+
+```sh
+python3 goodwatch-qdrant/diagnostics/observe_memory.py --duration-seconds 600 > memory-observation.jsonl
+```
+
+Run explicitly on the Qdrant host with permission to read proc/cgroup metadata and Docker state. Default cadence is two seconds, duration ten minutes; duration is bounded to 2–3,600 seconds and cadence to 1–10 seconds. There are no queries, cache reads, signals, warming, configuration writes or daemon installation. Normal output goes to stdout, allowing the operator to select a new protected artifact destination. No production destination is built in.
+
+Each sample re-reads fixed meminfo KiB fields, selected kernel reclaim/refault/swap counters, and memory/I/O PSI. Process fault, CPU and storage-read counters bracket the host observation; cgroup limits, counters and anon/file/kernel breakdown are read on either side. Per-read start/finish timestamps describe these sequential reads, which are not an atomic snapshot. Numeric counters remain cumulative; attribution to backup work requires phase timestamps and accounts for concurrent traffic. Linux versions may omit optional vmstat/cgroup counter names; absent values stay absent, rather than becoming zero. Required meminfo, PSI and limit fields fail closed if unavailable.
+
+The collector pins the existing Qdrant 1.19.1 image, container identity, actual `qdrant` child process and process start ticks. It verifies cgroup membership belongs to that container and repeats identity checks around every sample. Restart, PID reuse, wrong container, unreadable metadata or invalid required numbers stops with a fixed failure event. Unbounded limits are represented explicitly, rather than interpreted as numeric zero. No commands, environment, paths, container IDs, raw errors or unknown fields are emitted; subprocess stderr is suppressed. Slow samples do not trigger catch-up bursts, and an in-progress sample can finish after the requested duration. Six fixtures cover fresh file reads, parent/child selection, PID reuse during a read, cgroup mismatch, malformed numeric data, bounded cadence and failure privacy.
