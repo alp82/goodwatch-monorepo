@@ -35,10 +35,10 @@ test("real HTTP phase evidence survives delayed completion and excludes request 
 		} else if (mode === "headers") release = send;
 		else send();
 	});
-	await new Promise<void>((done) => server.listen(0, "127.0.0.1", done));
+	await new Promise<void>((done) => server.listen(0, done));
 	const address = server.address();
 	assert.ok(address && typeof address !== "string");
-	process.env.QDRANT_URL = `http://127.0.0.1:${address.port}`;
+	process.env.QDRANT_URL = `http://localhost:${address.port}`;
 	try {
 		await queryBatch("private-collection", [
 			{ query: "private-vector", account: "private-account" },
@@ -46,9 +46,13 @@ test("real HTTP phase evidence survives delayed completion and excludes request 
 		assert.equal(events.length, 1);
 		assert.equal(events[0].event, "search.qdrant-http.v1");
 		assert.equal(events[0].reusedSocket, false);
-		assert.ok(events[0].connectMs >= 0);
+		assert.equal(typeof events[0].connectMs, "number")
+		assert.equal(typeof events[0].dnsMs, "number")
+		assert.ok(events[0].connectMs >= events[0].socketMs);
 		await queryBatch("private-collection", []);
-		assert.equal(events[1].reusedSocket, true);
+		assert.equal(events[1].reusedSocket, true)
+		assert.equal(events[1].connectMs, null)
+		assert.equal(events[1].dnsMs, null);
 		for (const phase of ["headers", "body"]) {
 			mode = phase;
 			let completed = false;
