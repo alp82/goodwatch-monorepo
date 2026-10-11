@@ -36,9 +36,9 @@
     "emergencyBytes": 1610612736,
     "includePayload": false,
     "capReserveBytes": 268435456,
-    "mappingReserveCount": 256
+    "mappingReserveCount": 1024
   },
-  "intervalSeconds": 2,
+  "intervalSeconds": 10,
   "lifetimeSeconds": 600,
   "actions": [
     "measure",

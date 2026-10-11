@@ -75,7 +75,7 @@ class ControllerTests(unittest.TestCase):
     def test_parent_pressure_loop_uses_explicit_steady_child_pass_only_inside_read_window(self):
         source=SimpleNamespace(identity=('fixed',),spec='spec');manager=Mock()
         info=SimpleNamespace(st_mode=0o100600,st_size=3,st_dev=1,st_ino=2,st_mtime_ns=3)
-        config={'pressure':{'bytes':3,'sha256':controller.hashlib.sha256(b'abc').hexdigest(),'rateBytesPerSecond':1,'maxSeconds':10}}
+        config={'reconcileIntervalSeconds':10,'pressure':{'bytes':3,'sha256':controller.hashlib.sha256(b'abc').hexdigest(),'rateBytesPerSecond':1,'maxSeconds':10}}
         times=iter([0,3,3,3,3,3,3,3,3]);clock=lambda:next(times)
         with patch.object(controller.os,'open',return_value=123),patch.object(controller.os,'read',side_effect=[b'abc',b'']),patch.object(controller.os,'fstat',return_value=info),patch.object(controller.os,'close') as close,patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller,'host_available',return_value=8*1024**3):
             state=controller.pressure(config,source,manager,clock=clock,sleep=Mock(),floor=1)
@@ -125,7 +125,7 @@ class ControllerTests(unittest.TestCase):
     def test_low_host_memory_aborts_pressure_before_next_read(self):
         source=SimpleNamespace(identity=('fixed',),spec='spec');info=SimpleNamespace(st_mode=0o100600,st_size=3)
         with patch.object(controller.os,'open',return_value=123),patch.object(controller.os,'fstat',return_value=info),patch.object(controller.os,'close') as close,patch.object(controller.os,'read') as read,patch.object(controller,'host_available',side_effect=RuntimeError('host_emergency_floor')):
-            with self.assertRaises(RuntimeError):controller.pressure({'pressure':{'bytes':3}},source,floor=1)
+            with self.assertRaises(RuntimeError):controller.pressure({'reconcileIntervalSeconds':10,'pressure':{'bytes':3}},source,floor=1)
         read.assert_not_called();close.assert_called_once_with(123)
 
     def test_whole_owned_budget_counts_archive_and_deduplicates_hardlinks(self):
@@ -145,7 +145,7 @@ class ControllerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);(root/'900').mkdir();(root/'900'/'cgroup').write_text('0::/clone\n');(root/'900'/'status').write_text('VmLck: 16 kB\n')
             source=SimpleNamespace(cgroup_relative='/clone');state=pin_state();state.update(newLockBytes=0,rangesChanged=False)
-            obj=controller.PinChild.__new__(controller.PinChild);obj.spec='fixed';obj.process=SimpleNamespace(pid=900);obj.previous=accounting();obj.pressure_active=False
+            obj=controller.PinChild.__new__(controller.PinChild);obj.spec='fixed';obj.config={'initialPinRequestSeconds':180,'steadyPinRequestSeconds':30};obj.process=SimpleNamespace(pid=900);obj.previous=accounting();obj.pressure_active=False
             obj.connection=Mock();obj.connection.poll.return_value=True;obj.connection.recv.side_effect=[{'request':'inspect-source'},{'state':state}]
             real_path=controller.Path
             with patch.object(controller,'Path',side_effect=lambda x:root if str(x)=='/proc' else real_path(x)),patch.object(controller.runtime,'accounting',side_effect=lambda x:accounting()),patch.object(controller.runtime,'inspect_source',return_value=source) as inspect,patch.object(controller,'self_cgroup',return_value='/session'):

@@ -22,7 +22,7 @@ export function phaseEvidence(frames,exitCode,phase,expected,batch,{requireRed=f
  cleanLimits(finished.queryLimits);
  requireGate(number(batch.serverMs)&&number(batch.wallMs)&&number(finished.queryProcessDelta?.majorFaults),'batch_metrics_missing');
  if(phase==='baseline'&&requireRed){
-  requireGate(pressure.selectedResidentDataPagesLost>0,'negative_no_measured_loss');
+  requireGate(pressure.negativePrequeryMissingBytes===64*1024**2&&pressure.prequeryMissingBytes>=pressure.negativePrequeryMissingBytes,'negative_insufficient_missing_pages');
   requireGate(finished.queryProcessDelta.majorFaults>0,'negative_no_faults');
   requireGate(batch.serverMs>=1500,'negative_not_red');
  }else if(phase==='candidate'){

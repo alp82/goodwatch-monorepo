@@ -44,18 +44,22 @@ def load_control(path, policy_hash, code_hash):
     if len(raw) > 16384 or hashlib.sha256(raw).hexdigest() != policy_hash or digest(__file__) != code_hash:
         raise ValueError('control_freeze_changed')
     c = json.loads(raw)
-    if set(c) != {'schema', 'helperConfig', 'helperPolicySha256', 'helperCodeSha256', 'pressure', 'queryLeaseSeconds', 'pressurePlacement', 'mechanismNegativeTags'} or c['schema'] != 'clone-pin-control.v1':
+    if set(c) != {'schema', 'helperConfig', 'helperPolicySha256', 'helperCodeSha256', 'pressure', 'queryLeaseSeconds', 'pressurePlacement', 'mechanismNegativeTags','initialPinRequestSeconds','steadyPinRequestSeconds','negativePrequeryMissingBytes','reconcileIntervalSeconds'} or c['schema'] != 'clone-pin-control.v1':
         raise ValueError('explicit_control_policy_required')
     if c['pressurePlacement'] != 'controller-original-cgroup': raise ValueError('pressure_placement_required')
     if c['mechanismNegativeTags']!=['control-native-title']:raise ValueError('predeclared_negative_control_required')
     p = c['pressure']
     if set(p) != {'archive', 'bytes', 'sha256', 'rateBytesPerSecond', 'maxSeconds'} or p['archive'] != str(ARCHIVE) or p['bytes'] != ARCHIVE_BYTES or p['sha256'] != ARCHIVE_HASH:
-        raise ValueError('fixed_readonly_archive_required')
+        raise ValueError('helper_timing_policy_changed', 'fixed_readonly_archive_required')
     daemon.integer(p['rateBytesPerSecond'], 1, 64*1024**2); daemon.integer(p['maxSeconds'], 70, 180)
-    daemon.integer(c['queryLeaseSeconds'], 1, 60)
+    daemon.integer(c['queryLeaseSeconds'], 60, 60)
+    daemon.integer(c['initialPinRequestSeconds'],180,180);daemon.integer(c['steadyPinRequestSeconds'],30,30)
+    daemon.integer(c['negativePrequeryMissingBytes'],64*1024**2,64*1024**2)
+    daemon.integer(c['reconcileIntervalSeconds'],10,10)
     if p['bytes']/p['rateBytesPerSecond'] > p['maxSeconds']:
         raise ValueError('pressure_cannot_fit_deadline')
     config, spec, policy = daemon.load_config(c['helperConfig'], c['helperPolicySha256'], c['helperCodeSha256'])
+    if config['intervalSeconds']!=c['reconcileIntervalSeconds'] or config['lifetimeSeconds']!=600:raise ValueError('helper_timing_policy_changed')
     if 'pin' not in config['actions']:
         raise ValueError('pin_capability_missing')
     return c, spec, policy
@@ -259,12 +263,12 @@ def pin_child(connection,spec,policy,raise_limit,config):
             if manager.release_state()!= {'released':True,'heldMappingCount':0}:raise RuntimeError('pin_release_unproven')
         manager=None;connection.send({'closed':True})
     except BaseException as error:
-        reason=pin.safe_reason(error);release={'released':manager is None,'heldMappingCount':0}
+        reason=safe_control_reason(error);release={'released':manager is None,'heldMappingCount':0}
         if manager is not None:
             try:manager.close()
             except BaseException:pass
             release=manager.release_state()
-        try:connection.send({'failed':True,'reason':reason,'releaseState':release})
+        try:connection.send({'failed':True,'reason':reason,'releaseState':release,'cleanupFailureReasons':pin.failure_details(error).get('cleanupFailureReasons',[]) if hasattr(pin,'failure_details') else []})
         except BaseException:pass
         raise SystemExit(1)
     finally:connection.close()
@@ -272,13 +276,14 @@ def pin_child(connection,spec,policy,raise_limit,config):
 
 class PinChild:
     def __init__(self,spec,policy,raise_limit,config):
+        self.config=config;self.failure_details=None
         multiprocessing.set_executable('/usr/bin/python3');context=multiprocessing.get_context('spawn');self.connection,child=context.Pipe()
         self.process=context.Process(target=pin_child,args=(child,spec,policy,raise_limit,config));self.process.start();child.close();self.spec=spec;self.previous=None;self.pressure_active=False
     def request(self,pressure=False):
         before=runtime.accounting(runtime.inspect_source(self.spec))
         if self.previous is not None:limits(self.previous,before,pressure=pressure and self.pressure_active)
         self.connection.send('pressure-pass' if pressure and self.pressure_active else 'strict-pass')
-        deadline=time.monotonic()+30;inspections=0
+        deadline=time.monotonic()+(self.config['initialPinRequestSeconds'] if self.previous is None else self.config['steadyPinRequestSeconds']);inspections=0
         while True:
             remaining=deadline-time.monotonic()
             if remaining<=0 or not self.connection.poll(remaining):raise RuntimeError('pin_child_timeout')
@@ -291,8 +296,9 @@ class PinChild:
                 self.connection.send({'source':source});continue
             break
         if reply.get('failed') is True:
+            self.failure_details={'releaseState':reply.get('releaseState'),'cleanupFailureReasons':[x for x in reply.get('cleanupFailureReasons',[]) if x in CONTROL_REASONS]}
             reason=reply.get('reason')
-            raise RuntimeError(reason if reason in pin.SAFE_REASONS else 'pin_child_failed')
+            raise RuntimeError(reason if reason in CONTROL_REASONS else 'pin_child_failed')
         if set(reply)!={'state'}:raise RuntimeError('pin_child_failed')
         after=runtime.accounting(runtime.inspect_source(self.spec))
         limits(before,after,pressure=pressure and self.pressure_active and reply['state']['newLockBytes']==0 and not reply['state']['rangesChanged'])
@@ -341,7 +347,7 @@ def pressure(config,source,manager=None,clock=time.monotonic,sleep=time.sleep,fl
             read+=len(data); sha.update(data)
             if read>p['bytes'] or clock()-start>p['maxSeconds']: raise RuntimeError('pressure_bound_failed')
             # Explicit pressure window is the actual owned read loop, not a supplied boolean.
-            if manager is not None and clock()-last_pass>=2:
+            if manager is not None and clock()-last_pass>=config['reconcileIntervalSeconds']:
                 pass_start=clock();manager.request(pressure=True);last_pass=clock();passes+=1;pass_seconds+=last_pass-pass_start
                 if last_pass-start>p['maxSeconds']:raise RuntimeError('pressure_bound_failed')
             delay=read/p['rateBytesPerSecond']-(clock()-start)
@@ -352,7 +358,7 @@ def pressure(config,source,manager=None,clock=time.monotonic,sleep=time.sleep,fl
             raise RuntimeError('archive_checksum_or_identity_changed')
         if clock()-start>p['maxSeconds']:raise RuntimeError('pressure_bound_failed')
         if runtime.inspect_source(source.spec).identity!=source.identity: raise RuntimeError('source_changed_during_pressure')
-        return {'startedAt':started,'finishedAt':at(),'bytes':read,'seconds':round(clock()-start,3),'reconcilePassCount':passes,'reconcileSeconds':round(pass_seconds,3),'sha256':sha.hexdigest(),'storageContentWrites':0,'mode':'readonly-existing-archive'}
+        return {'startedAt':started,'finishedAt':at(),'bytes':read,'seconds':round(clock()-start,3),'reconcileIntervalSeconds':config['reconcileIntervalSeconds'],'reconcilePassCount':passes,'reconcileSeconds':round(pass_seconds,3),'sha256':sha.hexdigest(),'storageContentWrites':0,'mode':'readonly-existing-archive'}
     finally:
         try:
             if manager is not None:manager.end_pressure()
@@ -392,19 +398,22 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None):
             if cap is None or nonresident<0 or current['currentBytes']+nonresident+policy.cap_reserve_bytes>cap:raise RuntimeError('initial_cap_fit_inconclusive')
             pin_proc_before=process_counters(source);manager=PinChild(spec,policy,raise_own_memlock,config);pin_state=manager.request();pin_proc_after=process_counters(source)
             if pin_state['selectionHash']!=initial['selectionHash']: raise RuntimeError('initial_cohort_changed')
-        before=runtime.accounting(source);pressure_proc_before=process_counters(source);pressure_state=pressure(config,source,manager,floor=policy.emergency_bytes); after=runtime.accounting(source)
+        before=runtime.accounting(source);limits(initial['accounting'],before) if phase=='baseline' else None;pressure_proc_before=process_counters(source);pressure_state=pressure(config,source,manager,floor=policy.emergency_bytes); after=runtime.accounting(source)
         pressure_proc_after=process_counters(source);owned_total_budget();pressure_limits=limits(before,after,pressure=True)
         if self_cgroup()!=original_group:raise RuntimeError('pressure_writer_placement_changed')
         measured=runtime.measure_source(spec)
+        if runtime.inspect_source(spec).identity!=source.identity:raise RuntimeError('query_source_changed')
+        measured_account=runtime.accounting(source);limits(after,measured_account)
         if initial['selectionHash']!=measured['selectionHash']: raise RuntimeError('pressure_cohort_changed')
         resident_loss=sum(initial['classesMeasured'][k]['residentDataPages']-measured['classesMeasured'][k]['residentDataPages'] for k in ('vector','graph','sparse','other'))
-        emit({'schema':'search.clone-mlock-control.v2','stage':'pressure-complete','phase':phase,'at':at(),'selectionHash':initial['selectionHash'],'selectedResidentDataPagesLost':resident_loss,'pressure':pressure_state,'pressureLimits':pressure_limits,'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],'queries':0,'storageContentWrites':0})
-        if phase=='baseline' and case_tag in config.get('mechanismNegativeTags',[]) and resident_loss<=0:raise RuntimeError('negative_pressure_no_loss_inconclusive')
+        emit({'schema':'search.clone-mlock-control.v2','stage':'pressure-complete','phase':phase,'at':at(),'selectionHash':initial['selectionHash'],'selectedResidentDataPagesLost':resident_loss,'prequeryMissingBytes':sum((measured['classesMeasured'][k]['dataPages']-measured['classesMeasured'][k]['residentDataPages'])*measured['pageBytes'] for k in ('vector','graph','sparse','other')),'negativePrequeryMissingBytes':config.get('negativePrequeryMissingBytes',64*1024**2),'pressure':pressure_state,'pressureLimits':pressure_limits,'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],'queries':0,'storageContentWrites':0})
+        missing_bytes=sum((measured['classesMeasured'][k]['dataPages']-measured['classesMeasured'][k]['residentDataPages'])*measured['pageBytes'] for k in ('vector','graph','sparse','other'))
+        if phase=='baseline' and case_tag in config.get('mechanismNegativeTags',[]) and missing_bytes<config['negativePrequeryMissingBytes']:raise RuntimeError('negative_missing_pages_inconclusive')
         if manager is not None:
             final=manager.request()
             if final['selectionHash']!=initial['selectionHash'] or final['newLockBytes']!=0 or final['rangesChanged']: raise RuntimeError('candidate_cohort_changed')
         else:final=None;pin_state=None
-        frozen_helper(config);guard_shards(source);query_before=runtime.accounting(source);query_proc_before=process_counters(source);query_started=at()
+        frozen_helper(config);guard_shards(source);query_before=runtime.accounting(source);limits(measured_account,query_before);query_proc_before=process_counters(source);query_started=at()
         emit({'schema':'search.clone-mlock-control.v2','stage':'query-ready','phase':phase,'at':at(),'cold':cold_state,'archiveVerified':archive_verified,'pressure':pressure_state,'pressureWriterPlacement':'controller-original-cgroup','pressureLimits':pressure_limits,'pressureProcessDelta':counter_delta(pressure_proc_before,pressure_proc_after),'queryWindowStartedAt':query_started,
               'selectionHash':initial['selectionHash'],'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],
               'initialPinState':pin_state,'initialPinProcessDelta':counter_delta(pin_proc_before,pin_proc_after) if phase=='candidate' else None,'pinState':final,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
@@ -415,11 +424,13 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None):
             held=manager.request()
             if held['selectionHash']!=initial['selectionHash'] or held['newLockBytes']!=0 or held['rangesChanged']:raise RuntimeError('query_pin_cohort_changed')
         post=runtime.measure_source(spec)
+        limits(query_after,runtime.accounting(source))
+        if runtime.inspect_source(spec).identity!=source.identity:raise RuntimeError('query_source_changed')
         if post['selectionHash']!=initial['selectionHash']: raise RuntimeError('query_cohort_changed')
         emit({'schema':'search.clone-mlock-control.v2','stage':'query-finished','phase':phase,'at':at(),'queryWindowStartedAt':query_started,'queryLimits':query_limits,'queryProcessDelta':counter_delta(query_proc_before,query_proc_after),
               'selectionHash':post['selectionHash'],'residencyAfterQuery':post['classesMeasured'],'pinStateAfterQuery':held if manager is not None else None,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
     except BaseException as error:
-        emit({'schema':'search.clone-mlock-control.v2','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'queries':0,'storageContentWrites':0})
+        emit({'schema':'search.clone-mlock-control.v2','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'childFailureDetails':getattr(manager,'failure_details',None),'queries':0,'storageContentWrites':0})
         raise
     finally:
         # Preserve the phase cause; cleanup evidence is a separate observation.
@@ -436,9 +447,10 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None):
     emit({'schema':'search.clone-mlock-control.v2','stage':'unpin-complete','phase':phase,'at':at(),'pinChildExited':True,'queries':0,'storageContentWrites':0})
 
 
+CONTROL_REASONS=frozenset(('archive_checksum_or_identity_changed', 'archive_fd_path_identity', 'archive_identity_failed', 'archive_path_changed_before_advice', 'archive_path_scope', 'archive_scope', 'archive_store_inode_alias', 'archive_verification_bound', 'archive_verification_failed', 'candidate_cohort_changed', 'clone_control_command_failed', 'clone_identity_ambiguous', 'clone_identity_changed', 'clone_mount_changed', 'clone_not_stopped', 'clone_readiness_failed', 'clone_resource_or_port_changed', 'cold_collection_shape_changed', 'cold_eviction_not_complete', 'cold_inode_changed', 'cold_start_headroom', 'control_freeze_changed', 'controller_cgroup_missing', 'controller_interrupted', 'controller_pressure_already_in_clone_cgroup', 'counter_pid_reused', 'counter_reset', 'counter_source_changed', 'explicit_control_arguments_required', 'explicit_control_policy_required', 'explicit_pressure_floor_required', 'helper_timing_policy_changed', 'fixed_readonly_archive_required', 'gate_freeze_changed', 'gate_interrupted', 'guard_or_runtime_failure', 'helper_freeze_changed', 'host_emergency_floor', 'initial_cap_fit_inconclusive', 'initial_cohort_changed', 'invalid_control_lock', 'invalid_pin_command', 'invalid_query_ack', 'join_source_changed', 'mapped_shard_coverage_missing', 'negative_missing_pages_inconclusive', 'owned_inode_alias', 'owned_nonregular', 'owned_root_changed', 'owned_root_nonregular', 'owned_root_symlink', 'owned_size_guard', 'owned_symlink', 'owned_total_disk_budget', 'parent_already_clone_cgroup', 'parent_cgroup_changed', 'parent_inspection_inside_clone_cgroup', 'phase_required', 'phase_resource_failed', 'pin_capability_missing', 'pin_child_cleanup', 'pin_child_exit_failed', 'pin_child_exit_unproven', 'pin_child_failed', 'pin_child_placement', 'pin_child_timeout', 'pin_holder_lock_proof_missing', 'pin_release_unproven', 'predeclared_negative_control_required', 'pressure_bound_failed', 'pressure_cannot_fit_deadline', 'pressure_cohort_changed', 'pressure_ledger_missing', 'pressure_placement_required', 'pressure_writer_placement_changed', 'query_cohort_changed', 'query_lease_eof', 'query_lease_timeout', 'query_pin_cohort_changed', 'query_source_changed', 'source_changed_during_pressure', 'source_rpc_budget', 'source_rpc_failed', 'source_rpc_spec_changed', 'source_rpc_timeout', 'source_spec_changed', 'turnover_not_fresh', 'turnover_readiness_failed', 'turnover_shape_changed', 'zero_child_cleanup_failed', 'zero_child_exit_unproven', 'zero_child_lease_failed', 'zero_child_timeout', 'zero_join_failed', 'zero_join_proof_missing', 'zero_pin_proof_missing')) | pin.SAFE_REASONS
+
 def safe_control_reason(error):
-    safe_reasons={'initial_cap_fit_inconclusive','negative_pressure_no_loss_inconclusive','host_emergency_floor','owned_total_disk_budget','archive_store_inode_alias','archive_checksum_or_identity_changed','pressure_cohort_changed','query_cohort_changed','query_lease_timeout','pin_child_failed','pin_child_timeout','phase_resource_failed','source_rpc_timeout','source_rpc_failed','pin_child_exit_unproven','mapped_shard_coverage_missing'}
-    return error.args[0] if type(error) is RuntimeError and len(error.args)==1 and error.args[0] in safe_reasons else pin.safe_reason(error)
+    return next((x for x in error.args if type(x) is str and x in CONTROL_REASONS),'guard_or_runtime_failure')
 
 
 def main(argv=None):
