@@ -10,6 +10,7 @@ import {
 	searchBusyResponse,
 } from "~/server/search-runtime/admission.server";
 import { RESULT_LENGTH } from "~/server/search-ranking/ranking.server";
+import { beginSearchTelemetry, recordSearchRejection } from "~/server/search-runtime/telemetry.server";
 import {
 	searchTaste,
 	withTaste,
@@ -33,10 +34,12 @@ export async function action({ request }: ActionFunctionArgs) {
 	)
 		return json({ error: "Invalid origin" }, { status: 403, headers });
 	// A page instance does no search work (see role.server.ts): the proxy sends searches to the search roles.
-	if (!runsSearch()) return searchBusyResponse();
+	if (!runsSearch()) { recordSearchRejection("wrong_role"); return searchBusyResponse(); }
 	const release = searchAdmission.enter();
-	if (!release) return searchBusyResponse();
+	if (!release) { recordSearchRejection("busy"); return searchBusyResponse(); }
 	let handedOver = false;
+	let telemetry: ReturnType<typeof beginSearchTelemetry> | undefined;
+	let authFailed = false;
 	try {
 		// Bound the body before JSON parsing; Content-Length is not a trustworthy bound.
 		const reader = request.body?.getReader();
@@ -64,6 +67,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				{ status: 400, headers },
 			);
 		const filters = parseSearchFilters(body.filters);
+		telemetry = beginSearchTelemetry();
 		// Deployment must explicitly configure a header overwritten by its trusted ingress.
 		// Without that contract, all guests share a conservative scope; cookies cannot evade it.
 		const address = process.env.SEARCH_TRUSTED_IP_HEADER
@@ -82,6 +86,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		const accountId = auth.then(
 			({ user }) => user?.id || null,
 			(error) => {
+				authFailed = true;
 				stop();
 				throw error;
 			},
@@ -106,15 +111,18 @@ export async function action({ request }: ActionFunctionArgs) {
 			},
 			async start(controller) {
 				const send = (message: object) => {
-					if (!closed && !searchAbort.signal.aborted)
-						controller.enqueue(encoder.encode(`${JSON.stringify(message)}\n`));
+					if (closed || searchAbort.signal.aborted) return false;
+					controller.enqueue(encoder.encode(`${JSON.stringify(message)}\n`));
+					return true;
 				};
 				const sendBatch = async (kind: "provisional" | "batch", batch: SearchBatch) => {
 					const memberTaste = await taste;
-					send({ kind, batch: memberTaste
+					const sent = send({ kind, batch: memberTaste
 						? { ...batch, rows: withTaste(batch.rows, memberTaste, forYou) }
 						: batch });
+					if (sent) telemetry?.delivered(kind === "batch", Boolean(batch.rows.length || batch.people?.length), batch.elapsedMs, batch.errors ?? []);
 				};
+				let completed = false;
 				try {
 					await combinedSearch(
 						q,
@@ -134,13 +142,14 @@ export async function action({ request }: ActionFunctionArgs) {
 							rows: fullList ? RESULT_LENGTH : undefined,
 						},
 					);
-
+					completed = true;
 				} catch {
 					send({
 						kind: "error",
 						error: "Search is unavailable. Your previous results are kept.",
 					});
 				} finally {
+					telemetry?.finish(authFailed ? "failed" : searchAbort.signal.aborted ? "aborted" : completed ? "completed" : "failed");
 					request.signal.removeEventListener("abort", stop);
 					release();
 					if (!closed) {
@@ -158,6 +167,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		headers.set("Cache-Control", "private, no-store, no-transform");
 		return new Response(stream, { headers });
 	} catch {
+		telemetry?.finish("failed");
 		return json(
 			{ error: "Search is unavailable. Your previous results are kept." },
 			{ status: 503, headers },

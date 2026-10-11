@@ -118,21 +118,32 @@ export class SearchStore {
 		reserveNano: number
 		priceVersion: string
 		admissionAttemptId?: string
+		// Independent overlapping durations, including rejected operations.
+		timings?: Record<string, number>
 	}): Promise<Claim> {
 		if (!Number.isSafeInteger(input.reserveNano) || input.reserveNano <= 0)
 			return { kind: "basic", reason: "configuration" }
 		// Handled at the await below; this only keeps an early rejection from counting as unhandled.
 		const scopesReady = Promise.resolve(input.scopes)
 		scopesReady.catch(() => {})
+		const timed = async <T>(name: string, operation: () => Promise<T>): Promise<T> => {
+			const started = performance.now()
+			try {
+				return await operation()
+			} finally {
+				if (input.timings)
+					input.timings[name] = Math.round((performance.now() - started) * 10) / 10
+			}
+		}
 		// The control row and the spending, in parallel. The spending query reads Crate's clock once, and sums today's
 		// and this month's (UTC) spending by it.
 		const [[control], [spend]] = await Promise.all([
-			this.query<{ halted: boolean }>(
+			timed("claimControl", () => this.query<{ halted: boolean }>(
 				"SELECT halted FROM doc.search_control WHERE id = 'paid'",
-			),
-			this.query<{ now: number; day: number; month: number }>(
+			)),
+			timed("claimSpend", () => this.query<{ now: number; day: number; month: number }>(
 				"SELECT CURRENT_TIMESTAMP AS now, coalesce(sum(CASE WHEN budget_at >= date_trunc('day', CURRENT_TIMESTAMP) THEN amount_nano ELSE 0 END), 0) AS day, coalesce(sum(amount_nano), 0) AS month FROM doc.search_spending WHERE budget_at >= date_trunc('month', CURRENT_TIMESTAMP)",
-			),
+			)),
 		])
 		if (!control || control.halted) return { kind: "basic", reason: "budget" }
 		const now = Number(spend.now)
@@ -141,17 +152,17 @@ export class SearchStore {
 			Number(spend.month) + input.reserveNano > MONTHLY_NANO
 		)
 			return { kind: "basic", reason: "budget" }
-		const scopes = await scopesReady
+		const scopes = await timed("claimScopes", () => scopesReady)
 		if (!scopes.length) return { kind: "basic", reason: "configuration" }
 		const id = randomUUID()
 		let admitted
 		try {
-			admitted = await this.coordination.claim(
+			admitted = await timed("claimRedis", () => this.coordination.claim(
 				id,
 				input.cacheKey,
 				scopes,
 				input.admissionAttemptId,
-			)
+			))
 		} catch {
 			const now = performance.now()
 			if (now - lastCoordinationWarning >= 60_000) {
@@ -171,11 +182,11 @@ export class SearchStore {
 			// - Immutable estimate, followed by a separate immutable adjustment on success. If the response is lost,
 			//   retain the estimate; never infer a refund.
 			const [inserted, estimate] = await Promise.allSettled([
-				this.execute(
+				timed("claimInterpretationInsert", () => this.execute(
 					"INSERT INTO doc.search_interpretations (cache_key, attempt_id, status, contract, created_at) VALUES (?, ?, 'pending', ?, ?) ON CONFLICT DO NOTHING",
 					[input.cacheKey, id, input.contract, now],
-				),
-				this.execute(
+				)),
+				timed("claimEstimateInsert", () => this.execute(
 					"INSERT INTO doc.search_spending (id, attempt_id, cache_key, event, budget_at, created_at, amount_nano, price_version) VALUES (?, ?, ?, 'estimate', ?, ?, ?, ?)",
 					[
 						`${id}:estimate`,
@@ -186,7 +197,7 @@ export class SearchStore {
 						input.reserveNano,
 						input.priceVersion,
 					],
-				),
+				)),
 			])
 			if (inserted.status === "rejected" || inserted.value.rowcount !== 1) {
 				// No paid call happens for this attempt: settle its estimate at zero, as finish(id, 0) does for a search

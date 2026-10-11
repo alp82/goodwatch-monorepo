@@ -19,6 +19,7 @@ const probe = {
 	history: [] as {
 		elapsedMs: number
 		chargedNano: number
+		rankerFallback?: string
 		stageMs: Record<string, number>
 	}[],
 }
@@ -30,7 +31,7 @@ const stubs: Record<string, string> = {
 	"/combined-search/catalog.server.ts": `export const eligible=()=>true; export const metadataFor=async keys=>{if(keys.includes(globalThis.titleLookupProbe.failMetadataKey))throw new Error("Catalog completion failed");if(keys.length)globalThis.titleLookupProbe.metadata.push(keys);return keys.map(key=>({media_type:key.split(':')[0],tmdb_id:Number(key.split(':')[1]),adult:false,imdb_id:null,poster_path:null,genres:null,goodwatch_overall_score_voting_count:0,goodwatch_overall_score_normalized_percent:null}))}; export const searchQuery=async()=>{globalThis.titleLookupProbe.literals++;return []}; export const exactCatalogTitles=async q=>{if(q.includes('race fallback'))await new Promise(resolve=>setTimeout(resolve,180));return q.includes('delayed primary')?[{id:41,title:q,original:'Native name',type:'movie',year:'1980',poster:null,popularity:0}]:[]};`,
 	"/combined-search/language.server.ts": `export const prepareLanguage=async text=>{if(!globalThis.titleLookupProbe.translation)return {text,policy:{mode:'english'},chargedNano:0};globalThis.titleLookupProbe.translations++;return {text:'translated '+text,policy:{mode:'translated'},chargedNano:99}};`,
 	"/search-runtime/runtime.server.ts": `export const BASIC_SEARCH_MESSAGE='Showing basic search results'; export const translationEnabled=()=>globalThis.titleLookupProbe.translation; export const keepJevConnectionsWarm=()=>{}; export const runJevStage=async input=>{globalThis.titleLookupProbe.readings++;return input.requestText.startsWith('ranked ')?{kind:'ready',readings:{},chargedNano:input.requestText.includes('abort after')?123:0}:{kind:'basic',reason:'budget',chargedNano:0}}; export const recordSearchHistory=async entry=>{globalThis.titleLookupProbe.history.push(entry);return {recorded:true,id:'test'}};`,
-	"/search-ranking/serve.server.ts": `export class RankingDeadlineError extends Error{}; const rows=titles=>titles.map(t=>({id:1e12+t.id,mediaType:t.type==='tv'?'show':'movie',title:t.title,year:t.year,score:3})); export const rankForServing=async(_reading,request)=>{globalThis.titleLookupProbe.rankings++;return {results:rows(request.titleLookup),reblend:rows,rounds:[],timings:{},rankerVersion:'fixture'}}; export const servingFallback=search=>search.hasReading?null:'basic search'; export const startSearchRanking=()=>{};`,
+	"/search-ranking/serve.server.ts": `export class RankingDeadlineError extends Error{timings=Object.freeze({round1Elapsed:40,round1Pending:1})}; const rows=titles=>titles.map(t=>({id:1e12+t.id,mediaType:t.type==='tv'?'show':'movie',title:t.title,year:t.year,score:3})); export const rankForServing=async(_reading,request)=>{globalThis.titleLookupProbe.rankings++;if(request.query.includes("diagnostic deadline"))throw new RankingDeadlineError("private fixture failure");return {results:rows(request.titleLookup),reblend:rows,rounds:[],timings:{},rankerVersion:'fixture'}}; export const servingFallback=search=>search.hasReading?null:'basic search'; export const startSearchRanking=()=>{};`,
 	"/search-ranking/rank-search.server.ts": `export const prepareSearch=async()=>({});`,
 	"/search-runtime/limits.server.ts": `export const readingsConfigured=()=>false;`,
 	"/search-ranking/ranking.server.ts": `export const HEAD_LENGTH=50;`,
@@ -837,4 +838,38 @@ test("final metadata excludes provisional-only title identities", async () => {
 	)
 	assert.deepEqual(streamed.metadata, finalOnly.metadata)
 	assert.deepEqual(streamed.rows, finalOnly.rows)
+})
+
+test("ranking deadline diagnostics reach fallback history while exact title results are still served", async (t) => {
+	await new Promise((resolve) => setImmediate(resolve))
+	const query = "ranked diagnostic deadline"
+	page(query, 1, { total_pages: 1, results: [{ ...fixture, title: query }] })
+	const logs = t.mock.method(console, "error", () => {})
+	const before = {
+		history: probe.history.length,
+		readings: probe.readings,
+		rankings: probe.rankings,
+	}
+	const batch = await combinedSearch(
+		query,
+		policy,
+		visitor,
+		new AbortController().signal,
+	)
+	await new Promise((resolve) => setImmediate(resolve))
+	assert.equal(batch.rows[0].key, "movie:42")
+	assert.equal(probe.history.length - before.history, 1)
+	assert.equal(probe.readings - before.readings, 1)
+	assert.equal(probe.rankings - before.rankings, 1)
+	const history = probe.history.at(-1)!
+	assert.equal(history.rankerFallback, "timeout")
+	assert.equal(history.stageMs.rankingRound1Elapsed, 40)
+	assert.equal(history.stageMs.rankingRound1Pending, 1)
+	assert.ok(history.stageMs.failedRanking >= 0)
+	assert.equal(history.elapsedMs, batch.elapsedMs)
+	assert.ok(
+		!JSON.stringify(logs.mock.calls.map((call) => call.arguments)).includes(
+			"private fixture",
+		),
+	)
 })

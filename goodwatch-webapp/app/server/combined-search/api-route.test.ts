@@ -1,11 +1,21 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import * as nodeModule from "node:module"
-import { test } from "node:test"
+import { after, test } from "node:test"
 import ts from "typescript"
 import "../title-filter/test-alias.ts"
 
 const state = { auth: 0, taste: 0, release: 0, run: null as null | ((...args: any[]) => Promise<any>) }
+const events: Record<string, unknown>[] = []
+const info = console.info
+console.info = (line: string) => {
+	try {
+		const event = JSON.parse(line)
+		if (event.event === "search.lifecycle.v1") { events.push(event); return }
+	} catch {}
+	info(line)
+}
+after(() => { console.info = info })
 ;(globalThis as any).__routeSearchTest = state
 const stubs: Record<string, string> = {
 	"@remix-run/node": `export const json=(body,options={})=>Response.json(body,options);`,
@@ -40,7 +50,7 @@ registerHooks({
 	},
 })
 const { action } = await import("../../routes/api.combined-search.ts")
-const reset = () => { state.auth = 0; state.taste = 0; state.release = 0 }
+const reset = () => { state.auth = 0; state.taste = 0; state.release = 0; events.length = 0 }
 const request = () => new Request("http://localhost:3003/api/combined-search", {
 	method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q: "fixture", forYou: true }),
 })
@@ -72,6 +82,8 @@ test("route applies the same member taste to provisional and final packets and h
 	assert.deepEqual(packets.map(packet => packet.kind), ["reading", "provisional", "batch"])
 	assert.equal(packets[2].batch.rows[0].tasteMatch, 87)
 	assert.equal(state.release, 1)
+	assert.deepEqual(events.map(event => event.phase), ["accepted", "finished"])
+	assert.equal(events[1].status, "completed")
 })
 
 test("stream cancellation aborts the search and releases admission only after work settles", async () => {
@@ -95,6 +107,8 @@ test("stream cancellation aborts the search and releases admission only after wo
 	finish.resolve()
 	await new Promise(resolve => setImmediate(resolve))
 	assert.equal(state.release, 1)
+	assert.equal(events[1].status, "aborted")
+	assert.equal(events[1].firstResultsMs, null)
 })
 
 test("a failed late title check emits an error after usable provisional rows", async () => {
@@ -108,7 +122,20 @@ test("a failed late title check emits an error after usable provisional rows", a
 	assert.deepEqual(packets.map(packet => packet.kind), ["provisional", "error"])
 	assert.equal(packets[0].batch.rows[0].key, "movie:42")
 	assert.match(packets[1].error, /Search is unavailable/)
+	assert.equal(events[1].status, "failed")
+	assert.equal(typeof events[1].firstResultsMs, "number")
 	assert.equal(state.auth, 1)
 	assert.equal(state.taste, 1)
+	assert.equal(state.release, 1)
+})
+
+test("accepted failures before any delivery remain visible in anonymous completion evidence", async () => {
+	reset()
+	state.run = async () => { throw new Error("private search/account sentinel") }
+	const response = await action({ request: request() } as any)
+	assert.match(await response.text(), /Search is unavailable/)
+	assert.equal(events[1].status, "failed")
+	assert.equal(events[1].firstResultsMs, null)
+	assert.ok(!JSON.stringify(events).includes("sentinel"))
 	assert.equal(state.release, 1)
 })
