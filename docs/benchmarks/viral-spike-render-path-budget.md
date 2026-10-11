@@ -723,6 +723,30 @@ production page). `image_bytes` goes to about 347 KB of its 378,880 and `total_b
 still pass by this arithmetic, with less margin than their rule gives them. Run `./bench.sh budget` after the
 deploy and set the two byte lines from the measured values if they need it.
 
+### The image count after the deploy
+
+The first budget run with the section counted 32 images, the limit itself. One Lighthouse run against production
+on October 11, 2026, with the flags of `lighthouse/run.sh`, shows which:
+
+| Images | Count |
+| --- | --- |
+| The room: logo, photo, hand, two service marks | 5 |
+| The TV screen: one backdrop, six posters | 7 |
+| The section's posters | 16 |
+| The footer's avatars | 4 |
+
+- **All 16 posters load, not 12.** Lighthouse's browser starts a lazy image 3,000 px ahead of the window (see
+  [Posters on Discover](#posters-on-discover)), and the whole list is within that. The 1,250 px above is the
+  distance on a real 4G connection.
+- **The footer's avatars are within the same distance.** They were four SVG files. They are now one file with the
+  four side by side, and each avatar shows its part of it: one request. The count is 29, three under the limit.
+  The dev server's count went from 34 to 31 (it sends two small images that the build inlines).
+- **The limit stays 32.** No layout keeps a poster further than 3,000 px from a phone's window while the list is
+  right under the room.
+- **Not done:** the six titles on the TV screen are also the list's first six, as `w185` on the TV and `w92` in the
+  list. One file for both would save six requests and tie the list's `srcset` to what the TV shows at each window
+  size.
+
 ## Not verified
 
 - The limits of the section above, and LCP, TBT, CLS and the score of the title pages with the new overview.
