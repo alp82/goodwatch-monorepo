@@ -1,4 +1,3 @@
-import { runsSearch } from "./role.server"
 import {
 	type SearchIndex,
 	getSearchIndex,
@@ -6,6 +5,11 @@ import {
 	startSearchIndex,
 } from "~/server/search-ranking/search-index.server"
 import { fold } from "~/server/search-ranking/text-rules.server"
+import {
+	type Squashed,
+	nameTier,
+	squash,
+} from "~/server/search-ranking/title-prefix.server"
 // The command palette's matching titles: a prefix lookup over the titles of the search index the search ranking keeps
 // in memory (search-ranking/search-index.server.ts), with posters from the title cards' display fields. Each prefix's
 // answer is cached in Redis for six hours. The palette normalizes the text first, so every spelling of a prefix
@@ -13,6 +17,7 @@ import { fold } from "~/server/search-ranking/text-rules.server"
 import { getSearchResults } from "~/server/search.server"
 import { getDisplayFields } from "~/server/title-cards.server"
 import { getTitleSnapshot } from "~/server/title-snapshot/index.server"
+import type { Title } from "~/ui/search/search-model"
 import { cached } from "~/utils/cache"
 import {
 	MIN_PREFIX_CHARS,
@@ -20,7 +25,7 @@ import {
 	normalizePrefix,
 } from "~/utils/command-palette"
 import { titleKey } from "~/utils/title-key"
-import type { Title } from "~/ui/search/search-model"
+import { runsSearch } from "./role.server"
 
 export const PALETTE_TITLES = 5
 const CACHE_MINUTES = 6 * 60
@@ -40,7 +45,7 @@ export async function getPaletteTitles(text: string): Promise<PaletteTitle[]> {
 		return tmdbTitles(prefix)
 	}
 	const { titles } = await cached({
-		name: "command-palette-titles-v2",
+		name: "command-palette-titles-v3",
 		params: { prefix },
 		ttlMinutes: CACHE_MINUTES,
 		target: async () => ({ titles: await indexTitles(prefix) }),
@@ -78,8 +83,8 @@ async function indexTitles(prefix: string): Promise<PaletteTitle[]> {
 
 const CANDIDATES = PALETTE_TITLES + 3
 
-/** Folded titles and original titles (see fold: "Amélie" matches "amel"), with their rows. */
-type FoldedNames = { name: string; row: number }[]
+/** Folded titles and original titles (see fold: "Amélie" matches "amel"), without spaces, with their rows. */
+type FoldedNames = { name: Squashed; row: number }[]
 
 const foldedByIndex = new WeakMap<SearchIndex, FoldedNames>()
 
@@ -94,8 +99,9 @@ function foldedNames(index: SearchIndex): FoldedNames {
 			if (adult >= 0 && (titleTable.flags[row] >> adult) & 1) continue
 			const title = fold(titleTable.titles[row])
 			const original = fold(titleTable.originalTitles[row])
-			if (title) names.push({ name: title, row })
-			if (original && original !== title) names.push({ name: original, row })
+			if (title) names.push({ name: squash(title), row })
+			if (original && original !== title)
+				names.push({ name: squash(original), row })
 		}
 		found = names
 		foldedByIndex.set(index, found)
@@ -103,23 +109,22 @@ function foldedNames(index: SearchIndex): FoldedNames {
 	return found
 }
 
-/** The rows whose names match, best first: a name that starts with the prefix, then a word that does; more votes first. */
+/**
+ * The rows whose names match, best first: a name that starts with the prefix, then a word that does; more votes first.
+ * Spaces don't count, so "spiderman" matches "Spider-Man" (see title-prefix.server.ts).
+ */
 function matchingRows(
 	index: SearchIndex,
 	prefix: string,
 	limit: number,
 ): number[] {
-	if (!prefix) return []
+	const query = squash(prefix).text
+	if (!query) return []
 	const { votes } = index.titleTable
-	const wordPrefix = ` ${prefix}`
 	// The best tier each row reached: 0 starts with the prefix, 1 has a word that does.
 	const tiers = new Map<number, number>()
 	for (const { name, row } of foldedNames(index)) {
-		const tier = name.startsWith(prefix)
-			? 0
-			: name.includes(wordPrefix)
-				? 1
-				: -1
+		const tier = nameTier(name, query)
 		if (tier < 0) continue
 		const best = tiers.get(row)
 		if (best === undefined || tier < best) tiers.set(row, tier)

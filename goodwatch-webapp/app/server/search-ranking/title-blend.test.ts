@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { SearchIndex } from "./search-index.server.ts"
-import { blend, startsTitle } from "./title-blend.server.ts"
+import { blend } from "./title-blend.server.ts"
+import { startsTitle } from "./title-prefix.server.ts"
 
 const movie = (id: number) => 1e12 + id
 // The ranked list's titles, best first; only fields the blend reads are needed.
@@ -79,4 +80,16 @@ test("an exact title still wins over titles the query only starts", () => {
 	]
 	const order = blend(index, "lord of war", titles, ranked, new Set(), all)
 	assert.equal(order[0].id, movie(202))
+})
+
+test("a query is the exact title with or without spaces", () => {
+	const titles = [
+		lookup(301, "Spider-Man: Homecoming", 9),
+		lookup(302, "Spider-Man", 1),
+		lookup(303, "Spiders", 5),
+	]
+	const order = blend(index, "spiderman", titles, ranked, new Set(), all)
+	assert.equal(order[0].id, movie(302))
+	assert.equal(order[0].score, 3)
+	assert.equal(order[1].id, movie(301), "the title it starts comes next")
 })

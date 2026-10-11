@@ -2,9 +2,11 @@
 // Two changes make it stricter: a partial title match counts only when the title is close to the whole query (or has
 // every concrete word of the query), and a query with a word unknown to the catalog also matches the most similar
 // title ("Incepton"). Titles that share an IMDb id appear once. One change makes it looser: a query of two or more
-// words that a title starts with is the start of that title, as the command palette's preview reads it ("lord of").
+// words that a title starts with is the start of that title, as the command palette's preview reads it ("lord of"),
+// and spaces don't count ("spiderman" is the exact title "Spider-Man"; see title-prefix.server.ts).
 import type { SearchIndex } from "./search-index.server.ts"
 import { normalized, words } from "./text-rules.server.ts"
+import { sameName, startsTitle } from "./title-prefix.server.ts"
 
 // A partial title match needs this similarity to the query (also the cutoff of fuzzy titles).
 const STRICT = 0.9
@@ -73,21 +75,6 @@ export function titleMatch(title: string, query: string): number {
 	)
 		return 0.15
 	return 0
-}
-
-const LEADING_ARTICLE = /^(?:the|a|an) /
-
-/**
- * Whether a normalized title starts with a normalized query of two or more words, also after a leading article, the
- * last word possibly cut short: "lord of" starts "lord of war" and "the lord of the rings", "star w" starts "star wars".
- * One word ("dark") would lift every title it begins, so it doesn't count.
- */
-export function startsTitle(name: string, query: string): boolean {
-	if (!name || !query.includes(" ")) return false
-	return (
-		name.startsWith(query) ||
-		name.replace(LEADING_ARTICLE, "").startsWith(query)
-	)
 }
 
 /** rapidfuzz's ratio: 1 - Indel distance / total length, from the longest common subsequence. */
@@ -232,9 +219,10 @@ export function blend(
 		return lex
 	}
 	const lexical = (title: string, original: string | undefined) => {
+		const names = [normalized(title), normalized(original ?? "")]
+		if (names.some((name) => sameName(name, q))) return 2
 		const strict = strictLexical(title, original)
-		return startsTitle(normalized(title), q) ||
-			startsTitle(normalized(original ?? ""), q)
+		return names.some((name) => startsTitle(name, q))
 			? Math.max(strict, PREFIX)
 			: strict
 	}
