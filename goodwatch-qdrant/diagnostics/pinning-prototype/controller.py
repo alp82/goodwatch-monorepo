@@ -50,7 +50,7 @@ def load_control(path, policy_hash, code_hash):
     if c['mechanismNegativeTags']!=['control-native-title']:raise ValueError('predeclared_negative_control_required')
     p = c['pressure']
     if set(p) != {'archive', 'bytes', 'sha256', 'rateBytesPerSecond', 'maxSeconds'} or p['archive'] != str(ARCHIVE) or p['bytes'] != ARCHIVE_BYTES or p['sha256'] != ARCHIVE_HASH:
-        raise ValueError('helper_timing_policy_changed', 'fixed_readonly_archive_required')
+        raise ValueError('fixed_readonly_archive_required')
     daemon.integer(p['rateBytesPerSecond'], 1, 64*1024**2); daemon.integer(p['maxSeconds'], 70, 180)
     daemon.integer(c['queryLeaseSeconds'], 60, 60)
     daemon.integer(c['initialPinRequestSeconds'],180,180);daemon.integer(c['steadyPinRequestSeconds'],30,30)
@@ -342,7 +342,7 @@ def pressure(config,source,manager=None,clock=time.monotonic,sleep=time.sleep,fl
         original=os.fstat(fd)
         if not stat.S_ISREG(original.st_mode) or original.st_size!=p['bytes']: raise RuntimeError('archive_identity_failed')
         while True:
-            host_available(floor);data=os.read(fd,1024**2)
+            chunk_started=clock();host_available(floor);data=os.read(fd,1024**2)
             if not data: break
             read+=len(data); sha.update(data)
             if read>p['bytes'] or clock()-start>p['maxSeconds']: raise RuntimeError('pressure_bound_failed')
@@ -350,7 +350,7 @@ def pressure(config,source,manager=None,clock=time.monotonic,sleep=time.sleep,fl
             if manager is not None and clock()-last_pass>=config['reconcileIntervalSeconds']:
                 pass_start=clock();manager.request(pressure=True);last_pass=clock();passes+=1;pass_seconds+=last_pass-pass_start
                 if last_pass-start>p['maxSeconds']:raise RuntimeError('pressure_bound_failed')
-            delay=read/p['rateBytesPerSecond']-(clock()-start)
+            delay=len(data)/p['rateBytesPerSecond']-(clock()-chunk_started)
             if delay>0:sleep(delay)
             if clock()-start>p['maxSeconds']:raise RuntimeError('pressure_bound_failed')
         end=os.fstat(fd)
@@ -358,7 +358,7 @@ def pressure(config,source,manager=None,clock=time.monotonic,sleep=time.sleep,fl
             raise RuntimeError('archive_checksum_or_identity_changed')
         if clock()-start>p['maxSeconds']:raise RuntimeError('pressure_bound_failed')
         if runtime.inspect_source(source.spec).identity!=source.identity: raise RuntimeError('source_changed_during_pressure')
-        return {'startedAt':started,'finishedAt':at(),'bytes':read,'seconds':round(clock()-start,3),'reconcileIntervalSeconds':config['reconcileIntervalSeconds'],'reconcilePassCount':passes,'reconcileSeconds':round(pass_seconds,3),'sha256':sha.hexdigest(),'storageContentWrites':0,'mode':'readonly-existing-archive'}
+        return {'startedAt':started,'finishedAt':at(),'bytes':read,'seconds':round(clock()-start,3),'reconcileIntervalSeconds':config['reconcileIntervalSeconds'],'reconcilePassCount':passes,'reconcileSeconds':round(pass_seconds,3),'sha256':sha.hexdigest(),'storageContentWrites':0,'mode':'readonly-existing-archive','rateMode':'per-chunk-no-catch-up','chunkBytes':1024**2,'rateBytesPerSecond':p['rateBytesPerSecond']}
     finally:
         try:
             if manager is not None:manager.end_pressure()
