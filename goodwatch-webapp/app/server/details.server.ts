@@ -132,7 +132,12 @@ const _fetchFromDB = async (
 										tmdb_id = tmdb_id,
 										name = name,
 										logo = logo_path,
-										order_default = subscript(order_by_country, (SELECT val FROM params_country_code))
+										-- The services are every country's, and a service has an order only for the countries it is
+										-- in. Asking an object for a key it doesn't have fails the statement, so the key is checked first.
+										order_default = CASE
+												WHEN (SELECT val FROM params_country_code) = ANY(object_keys(order_by_country))
+												THEN subscript(order_by_country, (SELECT val FROM params_country_code))
+										END
 								} AS obj
 								FROM streaming_service
 								WHERE tmdb_id = ANY((SELECT ids FROM streaming_service_ids))

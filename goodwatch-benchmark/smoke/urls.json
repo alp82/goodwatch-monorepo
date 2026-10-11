@@ -23,6 +23,12 @@
       "guards": "A full movie page: the title, related title links in the server HTML, images from the image host, and JSON-LD."
     },
     {
+      "id": "movie-country-without-services",
+      "path": "/movie/603-the-matrix?country=CN",
+      "html": { "title": "The Matrix", "h1": "The Matrix" },
+      "guards": "A title page asked for from a country none of its services is in. It answered 500 on 2026-10-11: the statement asked each service's order object for a key it didn't have."
+    },
+    {
       "id": "show-well-known",
       "path": "/show/1396-breaking-bad",
       "html": { "title": "Breaking Bad", "h1": "Breaking Bad", "minTitleLinks": 1, "image": true, "jsonLd": true },
@@ -46,7 +52,7 @@
     },
     {
       "id": "movie-no-poster",
-      "path": "/movie/1596275-drive-the-pretenders",
+      "path": "/movie/1596275-drive---the-pretenders",
       "html": { "title": "Drive - The Pretenders", "h1": "Drive - The Pretenders", "jsonLd": true },
       "guards": "1e459198: a title without a poster answered 500, because the image helper called replace() on a null path."
     },
@@ -76,7 +82,7 @@
     },
     {
       "id": "show-large-cast",
-      "path": "/show/1416-grey-s-anatomy",
+      "path": "/show/1416-greys-anatomy",
       "contains": ["Anatomy"],
       "html": { "minTitleLinks": 1, "image": true, "jsonLd": true },
       "guards": "Grey's Anatomy has more than 3,300 cast rows: the largest page render, and the first to time out or run out of memory."
