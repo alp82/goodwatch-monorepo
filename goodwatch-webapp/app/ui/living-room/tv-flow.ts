@@ -356,7 +356,7 @@ export function tvItems(screen: TvScreen, ctx: TvContext): string[] {
 	}
 }
 
-/** The rating: the four levels (`level:dislike`, ...), then the exact 1-10 strip (`score:1` ... `score:10`). */
+/** The rating: the four levels (`level:bad`, ...), then the exact 1-10 strip (`score:1` ... `score:10`). */
 export const QUIZ_RATING_ITEMS = [
 	...RATING_LEVELS.map((l) => `level:${l.name.toLowerCase()}`),
 	...Array.from({ length: 10 }, (_, i) => `score:${i + 1}`),

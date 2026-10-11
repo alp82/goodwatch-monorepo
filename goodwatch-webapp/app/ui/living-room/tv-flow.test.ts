@@ -627,8 +627,8 @@ describe("taste quiz", () => {
 	it("walks the four levels, then the 1-10 strip, then the actions", () => {
 		const items = tvItems(at("tv=quiz").screen, guest)
 		assert.deepEqual(items.slice(0, 4), [
-			"level:dislike",
-			"level:okay",
+			"level:bad",
+			"level:mediocre",
 			"level:good",
 			"level:excellent",
 		])
@@ -639,8 +639,8 @@ describe("taste quiz", () => {
 
 	it("stores 3, 5, 7, or 9 for a level and the exact score for the strip", () => {
 		const scores = [
-			"level:dislike",
-			"level:okay",
+			"level:bad",
+			"level:mediocre",
 			"level:good",
 			"level:excellent",
 			"score:6",
