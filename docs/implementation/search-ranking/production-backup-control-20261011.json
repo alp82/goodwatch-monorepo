@@ -1,0 +1,19 @@
+{
+  "wholePostResidencyAt": "2026-10-11T20:18:34.154673+00:00",
+  "extentPostResidencyAt": "2026-10-11T20:18:40.360209+00:00",
+  "event": "backup-comparison-control",
+  "at": "2026-10-11T20:18:52.172084+00:00",
+  "consumerPid": 2437484,
+  "qdrantPid": 3411704,
+  "backupProcessAbsent": true,
+  "consumerStage": "awaiting_post_backup_control",
+  "signal": "USR2",
+  "qdrantBeforeSignal": {
+    "minorFaults": 2915695914,
+    "majorFaults": 1208355628,
+    "readBytes": 1396745764864,
+    "rssBytes": 4376039424
+  },
+  "signalSucceeded": true,
+  "signalReturnedAt": "2026-10-11T20:18:52.242098+00:00"
+}
