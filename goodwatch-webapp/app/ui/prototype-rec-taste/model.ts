@@ -1,5 +1,7 @@
 // PROTOTYPE - throwaway. Types, demo member, and readable attribute phrases for /prototype/rec-taste.
 
+import { titlePath } from "~/utils/helpers"
+
 export type PoolItem = {
 	key: string // "movie-603"
 	type: "movie" | "show"
@@ -174,4 +176,4 @@ export const DIAL_GROUPS: { name: string; keys: string[] }[] = [
 
 export const posterUrl = (item: PoolItem, size: "w185" | "w342" | "w500" | "w780" = "w342") => item.poster.replace("/w342/", `/${size}/`)
 export const backdropUrl = (item: PoolItem, size: "w780" | "w1280" = "w1280") => item.backdrop.replace("/w1280/", `/${size}/`)
-export const titleHref = (item: PoolItem) => `/${item.type}/${item.id}-${item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`
+export const titleHref = (item: PoolItem) => titlePath(item.type, item.id, item.title)

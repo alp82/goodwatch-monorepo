@@ -21,7 +21,7 @@ import Details from "~/ui/details/Details"
 import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsPageMeta } from "~/utils/detailsMeta"
-import { titleToDashed } from "~/utils/helpers"
+import { titleRedirectPath } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
 import { mergeDehydratedStates } from "~/utils/title-extras"
 import { canonicalTitleId } from "~/utils/title-identity"
@@ -69,7 +69,7 @@ export const loader: LoaderFunction = async ({
 		country,
 		language,
 	})
-	const [media, relatedSection, extrasState] = await Promise.all([
+	const parts = Promise.all([
 		details,
 		prefetchRelatedSection({
 			tmdbId: Number(movieId),
@@ -88,6 +88,22 @@ export const loader: LoaderFunction = async ({
 			() => null,
 		),
 	])
+	// The await below throws a failed details read. This keeps the same failure from also counting as unhandled.
+	parts.catch(() => {})
+
+	// One URL per title: a wrong, missing, or decorated slug moves to the canonical path. The title's name comes from
+	// the details read, so the answer doesn't wait for the related titles.
+	const { details: titleDetails } = await details
+	const canonical = titleRedirectPath({
+		pathname: url.pathname,
+		search: url.search,
+		mediaType: "movie",
+		tmdbId: titleDetails.tmdb_id,
+		title: titleDetails.title,
+	})
+	if (canonical) return redirect(canonical, 301)
+
+	const [media, relatedSection, extrasState] = await parts
 	// The related map's section, or with the map off the related titles carousel's first panel.
 	const related = relatedSectionData(
 		relatedSection,

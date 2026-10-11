@@ -29,6 +29,22 @@
       "guards": "A full show page, with seasons and episode scores."
     },
     {
+      "id": "movie-wrong-slug",
+      "path": "/movie/9355-mad-max-beyond-thunderdome%EE%85%8D%EE%A2%9E%EE%A2%B6?country=DE",
+      "client": "bot",
+      "expect": [301],
+      "header": { "location": "^/movie/9355-mad-max-beyond-thunderdome\\?country=DE$" },
+      "guards": "A movie page asked for with stray characters after its slug moves to the canonical address and keeps its query. It answered 200 with a canonical tag before, and Google listed such addresses as crawled and not indexed."
+    },
+    {
+      "id": "show-wrong-slug",
+      "path": "/show/1396-breaking-good",
+      "client": "bot",
+      "expect": [301],
+      "header": { "location": "^/show/1396-breaking-bad$" },
+      "guards": "A show page asked for with another slug moves to the canonical address."
+    },
+    {
       "id": "movie-no-poster",
       "path": "/movie/1596275-drive-the-pretenders",
       "html": { "title": "Drive - The Pretenders", "h1": "Drive - The Pretenders", "jsonLd": true },

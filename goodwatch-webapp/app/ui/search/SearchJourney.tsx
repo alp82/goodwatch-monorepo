@@ -45,6 +45,7 @@ import { discoverFilters } from "~/server/types/discover-types";
 import placeholder from "~/img/placeholder-poster.png";
 import { useFeature } from "~/hooks/useFeature";
 import { TitleActionsFrame } from "~/ui/title-actions/TitleActionsFrame";
+import { titlePath } from "~/utils/helpers";
 import { reloadOnStaleChunk } from "~/utils/stale-chunk";
 
 // The provider below is on every page, but the filter sections and the people results are only on screen inside an
@@ -528,7 +529,7 @@ function useController() {
 			)) ||
 		null;
 	const detailHref = (row: Row) =>
-		`/${row.type}/${Number(row.key.split(":")[1])}?${makeParams({
+		`${titlePath(row.type, Number(row.key.split(":")[1]), row.title)}?${makeParams({
 			q: batch?.q ?? q,
 			page: String(
 				Math.floor(
