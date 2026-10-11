@@ -1,0 +1,118 @@
+{
+  "audit_date": "2026-10-11",
+  "mode": "Read-only Qdrant queries and Crate SELECTs; no combined-search requests, Jev calls or search-history writes",
+  "collection": {
+    "status": "green",
+    "optimizer_status": "ok",
+    "points": 243839,
+    "segments": 12,
+    "shards": 6,
+    "raw_fingerprint_dimensions": 74,
+    "raw_fingerprint_hnsw_m": 0,
+    "cpu_quota": 0
+  },
+  "stored_vector_isolation": [
+    {
+      "case": "fingerprint-all",
+      "wall_ms": 18,
+      "server_ms": 13
+    },
+    {
+      "case": "fingerprint-normal",
+      "wall_ms": 18,
+      "server_ms": 12
+    },
+    {
+      "case": "zero-all",
+      "wall_ms": 13,
+      "server_ms": 8
+    },
+    {
+      "case": "dense-all",
+      "wall_ms": 29,
+      "server_ms": 24
+    },
+    {
+      "case": "sparse-all",
+      "wall_ms": 34,
+      "server_ms": 29
+    },
+    {
+      "case": "combined-all",
+      "wall_ms": 38,
+      "server_ms": 31
+    },
+    {
+      "case": "fingerprint-all-warm",
+      "wall_ms": 16,
+      "server_ms": 12
+    },
+    {
+      "case": "zero-all-warm",
+      "wall_ms": 15,
+      "server_ms": 11
+    }
+  ],
+  "cached_reading_filter_isolation": [
+    {
+      "case": "exact-title",
+      "signal": "fingerprint",
+      "wall_ms": 16,
+      "server_ms": 10
+    },
+    {
+      "case": "exact-title",
+      "signal": "stored-dense",
+      "wall_ms": 19,
+      "server_ms": 14
+    },
+    {
+      "case": "exact-title",
+      "signal": "fingerprint+stored-dense",
+      "wall_ms": 28,
+      "server_ms": 22
+    },
+    {
+      "case": "native-title",
+      "signal": "fingerprint",
+      "wall_ms": 13,
+      "server_ms": 10
+    },
+    {
+      "case": "native-title",
+      "signal": "stored-dense",
+      "wall_ms": 32,
+      "server_ms": 28
+    },
+    {
+      "case": "native-title",
+      "signal": "fingerprint+stored-dense",
+      "wall_ms": 30,
+      "server_ms": 24
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "fingerprint",
+      "wall_ms": 14,
+      "server_ms": 9
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "stored-dense",
+      "wall_ms": 16,
+      "server_ms": 11
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "fingerprint+stored-dense",
+      "wall_ms": 31,
+      "server_ms": 24
+    }
+  ],
+  "limits": [
+    "The first sample of each sequence is not proven to be cold; earlier production and diagnostic queries may have warmed Qdrant caches.",
+    "Fingerprint queries in the second sequence use the real cached approved readings and real filter decoding.",
+    "Dense queries in both sequences use stored public-title embeddings; they do not reproduce the exact query embeddings or complete facet/sparse batch.",
+    "These successful requests do not attribute the historical pending request to Qdrant server execution rather than local transport queueing."
+  ]
+}
