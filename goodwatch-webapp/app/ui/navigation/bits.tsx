@@ -1,7 +1,7 @@
 // Small pieces shared by the dock, the header, and the hub: the GoodWatch mark, Tonight's pick as a tiny poster, and
-// the account slot (Sign up for guests, the avatar and its menu for members).
+// the account slot (Sign in for guests, the avatar and its menu for members).
 import { assetUrl } from "~/utils/asset-url"
-import { BookmarkIcon } from "@heroicons/react/24/solid"
+import { BookmarkIcon, UserCircleIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import { useFeatures } from "~/hooks/useFeature"
 import logoWhite from "~/img/goodwatch-logo-white.svg"
@@ -90,19 +90,23 @@ export function TonightsPickThumb({
 	)
 }
 
-/** The account slot: Sign up for guests, the avatar with the account menu for members. */
+/** The account slot: Sign in for guests, the avatar with the account menu for members. */
 export function AccountSlot({ compact }: { compact?: boolean }) {
 	const { user, loading } = useUser()
-	const signUp = useSignUpHref()
+	const signIn = useAuthHref()("sign-in")
 	if (loading) return null
 	if (user) return <LazyUserMenu user={user} />
 	return (
 		<Link
 			rel="nofollow"
-			to={signUp}
-			className={`flex shrink-0 items-center whitespace-nowrap rounded-full bg-amber-500 font-extrabold text-amber-950 hover:bg-amber-400 ${compact ? "h-8 px-[13px] text-[13px]" : "h-9 px-4 text-sm"}`}
+			to={signIn}
+			className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-linear-180 from-white/[0.1] to-white/[0.04] font-bold text-gray-100 shadow-[inset_0_0_0_1px_rgba(251,191,36,0.45),0_4px_14px_-6px_rgba(245,158,11,0.5)] transition-colors hover:from-amber-400/25 hover:to-amber-400/10 hover:text-white ${compact ? "h-9 pr-3.5 pl-2.5 text-[13px] max-[359px]:pl-3.5" : "h-10 pr-4 pl-3 text-sm"}`}
 		>
-			Sign up
+			<UserCircleIcon
+				className={`text-amber-400 ${compact ? "h-5 w-5 max-[359px]:hidden" : "h-[22px] w-[22px]"}`}
+				aria-hidden
+			/>
+			Sign in
 		</Link>
 	)
 }

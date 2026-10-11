@@ -1,5 +1,5 @@
 // The navigation's search entry: the omnibox in the desktop header and the hub sheet's search field both open one
-// dialog holding the command palette, as do ⌘K / Ctrl K and "/" outside text fields.
+// dialog (the phone header's search bar opens the hub) holding the command palette, as do ⌘K / Ctrl K and "/" outside text fields.
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { useLocation } from "@remix-run/react"
 import { useEffect, useState } from "react"
@@ -54,17 +54,54 @@ export function Omnibox() {
 			aria-haspopup="dialog"
 			aria-keyshortcuts="Meta+K Control+K /"
 			data-search-entry
-			className="flex h-10 w-[320px] items-center gap-2.5 rounded-xl bg-white/[0.06] pr-3 pl-3.5 text-sm whitespace-nowrap text-gray-400 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.13)] hover:shadow-[inset_0_0_0_1px_rgba(251,191,36,0.5)]"
+			className="flex h-10 w-[400px] items-center gap-2.5 rounded-full bg-linear-180 from-white/[0.09] to-white/[0.04] pr-3 pl-4 text-sm whitespace-nowrap text-gray-400 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12),0_6px_18px_-10px_rgba(0,0,0,0.9)] transition-shadow hover:shadow-[inset_0_0_0_1px_rgba(251,191,36,0.5)]"
 		>
-			<MagnifyingGlassIcon className="h-[18px] w-[18px] shrink-0" aria-hidden />
+			<MagnifyingGlassIcon
+				className="h-[18px] w-[18px] shrink-0 text-amber-400"
+				aria-hidden
+			/>
 			<span className={`truncate ${q ? "text-gray-100" : ""}`}>
 				{q || SEARCH_LABEL}
 			</span>
 			{shortcut && (
-				<kbd className="ml-auto rounded-md bg-white/10 px-[7px] py-0.5 font-sans text-xs text-gray-300">
+				<kbd className="ml-auto rounded-full bg-white/10 px-[7px] py-0.5 font-sans text-xs text-gray-300">
 					{shortcut}
 				</kbd>
 			)}
+		</button>
+	)
+}
+
+/** The phone header's search bar. Like the dock's "Go to…", it opens the hub, whose search field leads the sheet. */
+export function HeaderSearchBar() {
+	const navigation = useNavigation()
+	const q = useCurrentQuery()
+	const open = Boolean(navigation?.hubOpen)
+	return (
+		<button
+			type="button"
+			onClick={() => navigation?.setHubOpen(!open)}
+			{...preloadOnIntent}
+			aria-expanded={open}
+			aria-controls={open ? "site-hub" : undefined}
+			aria-haspopup="dialog"
+			aria-label={q ? `${SEARCH_LABEL}: ${q}` : SEARCH_LABEL}
+			className={`flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full bg-linear-180 from-white/[0.09] to-white/[0.04] pr-3 pl-3 text-left text-[14px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12),0_6px_18px_-10px_rgba(0,0,0,0.9)] transition-shadow ${
+				open
+					? "shadow-[inset_0_0_0_1.5px_rgba(251,191,36,0.75),0_0_18px_-4px_rgba(245,158,11,0.45)]"
+					: "hover:shadow-[inset_0_0_0_1px_rgba(251,191,36,0.5)]"
+			}`}
+		>
+			<MagnifyingGlassIcon
+				className="h-[18px] w-[18px] shrink-0 text-amber-400"
+				aria-hidden
+			/>
+			<span
+				aria-hidden
+				className={`truncate ${q ? "text-gray-100" : "text-gray-400"}`}
+			>
+				{q || "Search"}
+			</span>
 		</button>
 	)
 }

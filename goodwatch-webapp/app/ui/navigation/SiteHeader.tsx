@@ -1,14 +1,12 @@
-// The header while REC_NAVIGATION is on. Desktop: the wordmark, the Browse button (the current page's name away from
-// Home) that opens the Browse panel, the omnibox, Tonight's pick, and the account slot. Phones: the mark, the page's
-// name, and the account slot; everything else lives in the dock.
-import { assetUrl } from "~/utils/asset-url"
+// The header while REC_NAVIGATION is on. Desktop: the wordmark and the Browse button (the current page's name away
+// from Home) that opens the Browse panel, the omnibox in the middle, Tonight's pick, and the account slot. Phones: the
+// wordmark, a search bar that opens the hub, and the account slot; everything else lives in the dock.
 import { ChevronDownIcon, Squares2X2Icon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import { useFeatures } from "~/hooks/useFeature"
-import logo from "~/img/goodwatch-logo-white.svg"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useNavigation } from "./NavigationContext"
-import { Omnibox } from "./Search"
+import { HeaderSearchBar, Omnibox } from "./Search"
 import { AccountSlot, TonightsPickThumb } from "./bits"
 import { currentDestination, getDestinations } from "./destinations"
 
@@ -38,43 +36,39 @@ function BrowseButton() {
 	)
 }
 
+function Wordmark({ className }: { className: string }) {
+	return (
+		<Link
+			to="/"
+			prefetch="intent"
+			aria-label="GoodWatch home"
+			className={`brand-header shrink-0 leading-none text-gray-100 ${className}`}
+		>
+			Good<span className="text-amber-400">Watch</span>
+		</Link>
+	)
+}
+
 export function SiteHeader() {
-	const { pathname } = useLocation()
-	const here = currentDestination(pathname)
-	const destinations = getDestinations(useFeatures())
-	const title = here && here !== "home" ? destinations[here].label : "GoodWatch"
 	return (
 		<div className="fixed top-0 z-[1000] w-full text-gray-100">
 			<GlobalLoading />
-			<div className="flex h-16 items-center gap-2.5 border-b border-white/[0.09] bg-gray-950/90 pr-2.5 pl-3.5 backdrop-blur-md lg:hidden">
-				<Link to="/" prefetch="intent" aria-label="GoodWatch home">
-					<img className="h-[25px] w-auto" src={assetUrl(logo)} alt="" />
-				</Link>
-				<span className="brand-header truncate text-[19px]">{title}</span>
-				<span className="grow" />
+			<div className="flex h-16 items-center gap-2.5 border-b border-white/[0.09] bg-gray-950/90 px-3.5 backdrop-blur-md lg:hidden">
+				<Wordmark className="text-[20px]" />
+				<HeaderSearchBar />
 				<AccountSlot compact />
 			</div>
 			<header className="hidden border-b border-white/[0.09] bg-gray-950/90 backdrop-blur-md lg:block">
-				<div className="mx-auto flex h-16 max-w-7xl items-center gap-[18px] px-8">
-					<Link
-						to="/"
-						prefetch="intent"
-						className="flex shrink-0 items-baseline"
-						aria-label="GoodWatch home"
-					>
-						<img className="h-7 w-auto" src={assetUrl(logo)} alt="" />
-						<span
-							aria-hidden
-							className="brand-header ml-0.5 text-4xl text-gray-100"
-						>
-							oodWatch
-						</span>
-					</Link>
-					<BrowseButton />
-					<span className="grow" />
+				<div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-[18px] px-8">
+					<div className="flex items-center gap-[18px]">
+						<Wordmark className="text-[30px]" />
+						<BrowseButton />
+					</div>
 					<Omnibox />
-					<TonightsPickThumb />
-					<AccountSlot />
+					<div className="flex items-center justify-end gap-[18px]">
+						<TonightsPickThumb />
+						<AccountSlot />
+					</div>
 				</div>
 			</header>
 		</div>
