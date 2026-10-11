@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "purpose": "task-owned tiny fixture preflight for backup rotation remedy",
+  "records": [
+    {
+      "event": "backup-hardlink-preflight",
+      "bytes": 4096,
+      "productionArchivesTouched": false,
+      "fixtureCleaned": true,
+      "renameSucceeded": true,
+      "hardlinksSucceeded": true,
+      "sameInode": false,
+      "linkCount": 1,
+      "checksumParity": true,
+      "device": 45
+    },
+    {
+      "event": "backup-hardlink-alias-preflight",
+      "filesystem": "fuse.sshfs",
+      "productionArchivesTouched": false,
+      "writeThroughAlias": true,
+      "survivesSourceUnlink": true,
+      "fixtureCleaned": true
+    },
+    {
+      "event": "backup-cache-advice-preflight",
+      "bytes": 16777216,
+      "filesystem": "fuse.sshfs",
+      "productionArchivesTouched": false,
+      "residentPagesBefore": 0,
+      "adviceAccepted": true,
+      "residentPagesAfter": 0,
+      "pages": 4096,
+      "fixtureCleaned": true
+    },
+    {
+      "event": "backup-cache-advice-read-preflight",
+      "bytes": 16777216,
+      "filesystem": "fuse.sshfs",
+      "productionArchivesTouched": false,
+      "residentPagesAfterWrite": 0,
+      "residentPagesBeforeAdvice": 4096,
+      "adviceAccepted": true,
+      "residentPagesAfterAdvice": 0,
+      "pages": 4096,
+      "fixtureCleaned": true
+    },
+    {
+      "event": "backup-path-device-audit",
+      "tempPathDefault": true,
+      "tempConfigSource": "config.yaml",
+      "tempMapsToStorageVolume": true,
+      "tempDevice": 2049,
+      "snapshotDevice": 45,
+      "backupDevice": 45,
+      "tempAndSnapshotSameFilesystem": false,
+      "snapshotAndBackupSameFilesystem": true,
+      "rawPathsOmitted": true
+    }
+  ],
+  "limitations": [
+    "SSHFS synthesizes stat inode and link-count values; write-through alias and survival after source unlink establish alias semantics for tiny fixture",
+    "Cache-advice effect verified only on task-owned 16 MiB fixture; production snapshot cache effect still requires measurement",
+    "Qdrant temp and final snapshot paths are on different devices; pinned source records move_file fallback to copy, not measured per-stage bytes",
+    "No production snapshots were read, renamed, linked or evicted by these tests"
+  ],
+  "primarySources": {
+    "qdrantVersion": "1.19.1",
+    "defaultTempPath": "https://raw.githubusercontent.com/qdrant/qdrant/v1.19.1/config/config.yaml",
+    "archiveCreation": "https://raw.githubusercontent.com/qdrant/qdrant/v1.19.1/lib/collection/src/collection/snapshots.rs",
+    "checksumAndFinalStore": "https://raw.githubusercontent.com/qdrant/qdrant/v1.19.1/lib/collection/src/common/snapshots_manager.rs",
+    "crossFilesystemFallback": "https://raw.githubusercontent.com/qdrant/qdrant/v1.19.1/lib/collection/src/common/file_utils.rs"
+  },
+  "renamedRestorePreparation": {
+    "event": "renamed-restore-clone-prepared",
+    "oldOwnedFileCount": 19237,
+    "oldOwnedAllocatedBytes": 4453986304,
+    "emptyStoreRecreated": true,
+    "snapshotArchivePreserved": true,
+    "recordsPreserved": true,
+    "memoryLimitGiB": 6,
+    "cpuLimit": 2,
+    "privateLoopbackOnly": true,
+    "productionChanges": false,
+    "hostAvailableKiBBeforeStart": 6669144,
+    "diskFreeBytesAfterReset": 14055112704
+  }
+}

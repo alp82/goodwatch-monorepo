@@ -1,0 +1,21 @@
+{
+  "event": "backup-observation-gate-fixtures",
+  "passed": [
+    "current waiting cycle accepts control gate",
+    "wrong cycle rejects control gate",
+    "nonwaiting stage rejects control gate",
+    "unsupported extent semantics reject sample",
+    "failed sample file rejects control evidence",
+    "changed actual Qdrant PID rejects evidence",
+    "active backup rejects post snapshot",
+    "healthy same-PID whole and extent snapshots pass",
+    "missing reference phase blocks post gate",
+    "failed backup phase blocks post gate",
+    "rejected cache advice blocks post gate",
+    "successful phases pass with private legacy and extra fields excluded"
+  ],
+  "actualFunctionsExecuted": true,
+  "productionChanges": false,
+  "signalsSent": 0,
+  "queryRequests": 0
+}

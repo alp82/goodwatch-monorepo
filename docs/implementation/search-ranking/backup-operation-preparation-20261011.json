@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "purpose": "prepared backup-only publication and measure-only three-cycle observation",
+  "scripts": [
+    {
+      "name": "deploy-backup-rotation.py",
+      "sha256": "1b2d58e87f0f9ed50554fd474dd47b246f390f4856fc956f1385b35d087d5942"
+    },
+    {
+      "name": "deploy-backup-fixture.py",
+      "sha256": "d6ca27e1c1b739bb06e021db5699c9b992f9f7ef5ea79a06188885b920a9e623"
+    },
+    {
+      "name": "observe-backup-cycles.py",
+      "sha256": "edc0c300cde27cb3e78036a8221f352e3569a3e0212548bd497736e32b52e0b0"
+    },
+    {
+      "name": "observe-backup-fixture.py",
+      "sha256": "0cd342f0f594c9333787b550d293b4c24d5cfd23c56dd77fdf1d3a64665f89f4"
+    },
+    {
+      "name": "launch-observation.py",
+      "sha256": "5f8ca5027030ffc06d8129398e17462d958bb8b5fb2f685901de83590c924422"
+    }
+  ],
+  "validation": [
+    {
+      "event": "backup-publication-fixtures",
+      "passed": [
+        "wrong candidate digest blocks publication",
+        "active backup blocks publication",
+        "atomic deploy preserves original and unrelated files",
+        "wrong rollback digest blocks publication",
+        "pinned rollback restores original"
+      ],
+      "fixtureOnly": true,
+      "productionChanges": false,
+      "substitutions": "owned temp paths and local UID only"
+    },
+    {
+      "event": "backup-observation-gate-fixtures",
+      "passed": [
+        "current waiting cycle accepts control gate",
+        "wrong cycle rejects control gate",
+        "nonwaiting stage rejects control gate",
+        "unsupported extent semantics reject sample",
+        "failed sample file rejects control evidence",
+        "changed actual Qdrant PID rejects evidence",
+        "active backup rejects post snapshot",
+        "healthy same-PID whole and extent snapshots pass",
+        "missing reference phase blocks post gate",
+        "failed backup phase blocks post gate",
+        "rejected cache advice blocks post gate",
+        "successful phases pass with private legacy and extra fields excluded"
+      ],
+      "actualFunctionsExecuted": true,
+      "productionChanges": false,
+      "signalsSent": 0,
+      "queryRequests": 0
+    }
+  ],
+  "operationalPreflight": {
+    "schemaVersion": 1,
+    "purpose": "task-owned tiny fixture preflight for backup rotation remedy",
+    "records": [
+      {
+        "event": "backup-hardlink-preflight",
+        "bytes": 4096,
+        "productionArchivesTouched": false,
+        "fixtureCleaned": true,
+        "renameSucceeded": true,
+        "hardlinksSucceeded": true,
+        "sameInode": false,
+        "linkCount": 1,
+        "checksumParity": true,
+        "device": 45
+      },
+      {
+        "event": "backup-hardlink-alias-preflight",
+        "filesystem": "fuse.sshfs",
+        "productionArchivesTouched": false,
+        "writeThroughAlias": true,
+        "survivesSourceUnlink": true,
+        "fixtureCleaned": true
+      },
+      {
+        "event": "backup-cache-advice-preflight",
+        "bytes": 16777216,
+        "filesystem": "fuse.sshfs",
+        "productionArchivesTouched": false,
+        "residentPagesBefore": 0,
+        "adviceAccepted": true,
+        "residentPagesAfter": 0,
+        "pages": 4096,
+        "fixtureCleaned": true
+      },
+      {
+        "event": "backup-cache-advice-read-preflight",
+        "bytes": 16777216,
+        "filesystem": "fuse.sshfs",
+        "productionArchivesTouched": false,
+        "residentPagesAfterWrite": 0,
+        "residentPagesBeforeAdvice": 4096,
+        "adviceAccepted": true,
+        "residentPagesAfterAdvice": 0,
+        "pages": 4096,
+        "fixtureCleaned": true
+      },
+      {
+        "event": "backup-path-device-audit",
+        "tempPathDefault": true,
+        "tempConfigSource": "config.yaml",
+        "tempMapsToStorageVolume": true,
+        "tempDevice": 2049,
+        "snapshotDevice": 45,
+        "backupDevice": 45,
+        "tempAndSnapshotSameFilesystem": false,
+        "snapshotAndBackupSameFilesystem": true,
+        "rawPathsOmitted": true
+      }
+    ],
+    "limitations": [
+      "SSHFS synthesizes stat inode and link-count values; write-through alias and survival after source unlink establish alias semantics for tiny fixture",
+      "Cache-advice effect verified only on task-owned 16 MiB fixture; production snapshot cache effect still requires measurement",
+      "Qdrant temp and final snapshot paths are on different devices; pinned source records move_file fallback to copy, not measured per-stage bytes",
+      "No production snapshots were read, renamed, linked or evicted by these tests"
+    ],
+    "primarySources": {
+      "qdrantVersion": "1.19.1",
+      "defaultTempPath": "https://raw.githubusercontent.com/qdrant/qdrant/v1.19.1/config/config.yaml",
+      "archiveCreation": "https://raw.githubusercontent.com/qdrant/qdrant/v1.19.1/lib/collection/src/collection/snapshots.rs",
+      "checksumAndFinalStore": "https://raw.githubusercontent.com/qdrant/qdrant/v1.19.1/lib/collection/src/common/snapshots_manager.rs",
+      "crossFilesystemFallback": "https://raw.githubusercontent.com/qdrant/qdrant/v1.19.1/lib/collection/src/common/file_utils.rs"
+    },
+    "renamedRestorePreparation": {
+      "event": "renamed-restore-clone-prepared",
+      "oldOwnedFileCount": 19237,
+      "oldOwnedAllocatedBytes": 4453986304,
+      "emptyStoreRecreated": true,
+      "snapshotArchivePreserved": true,
+      "recordsPreserved": true,
+      "memoryLimitGiB": 6,
+      "cpuLimit": 2,
+      "privateLoopbackOnly": true,
+      "productionChanges": false,
+      "hostAvailableKiBBeforeStart": 6669144,
+      "diskFreeBytesAfterReset": 14055112704
+    }
+  },
+  "cloneStopped": {
+    "event": "diagnostic-clone-stopped",
+    "guardedTaskCloneOnly": true,
+    "archiveAndStorePreserved": true,
+    "scriptsAndEvidencePreserved": true,
+    "productionChanges": false
+  },
+  "productionDeploymentExecuted": false,
+  "productionObservationLaunched": false
+}

@@ -1,19 +1,21 @@
-# Reviewed ingress evidence proposal
+# Production ingress evidence and historical rollout procedure
 
-Prepared for [Task 407](https://github.com/alp82/goodwatch-monorepo/issues/407); **not installed**. Enabling this static setting recreates each production proxy and briefly interrupts its connections. Coordinate the restart before the seven-day acceptance window, one host at a time; start that window only after both proxies and durable collectors are healthy. Keep public traffic on the existing routing configuration.
+For [Task 407](https://github.com/alp82/goodwatch-monorepo/issues/407), **installed and activated with owner approval** on October 11, 2026. [Activation evidence](../../docs/implementation/search-ranking/ingress-activation-20261011.json), retained by [PR #433](https://github.com/alp82/goodwatch-monorepo/pull/433), records abio activation at 19:15:50.543 UTC and vector1 at 19:16:58.477 UTC (proxy start 19:17:00.023 UTC). Both proxies were healthy, emitted the tested whitelist and had durable logging-ready collector heartbeats at 19:16:39.792 and 19:17:11.077 UTC respectively. Live and stored Coolify configurations received only the approved logging arguments, preserving unrelated settings independently and their preexisting label drift. The seven-day acceptance window remains outstanding.
 
-Read-only inspection on October 11, 2026 confirmed:
+The preparation digests and installation/restart commands below document the **historical preactivation procedure**. Do not replay them against the active configuration: the original source digests are obsolete and candidate generation intentionally refuses existing access-log arguments. Before verification, check fresh collector heartbeats, image/logging readiness and uninterrupted coverage. Future approved static changes require one-host-at-a-time restart coordination before a fresh acceptance window; preserve existing routing and private rollback backups.
+
+Historical preactivation inspection on October 11, 2026 confirmed:
 
 | Host | Executable version | Configuration | Search router |
 | --- | --- | --- | --- |
 | abio | 2.10.7 | `/data/coolify/proxy/docker-compose.yml`, service `traefik` | `gw-search-https@file` |
 | vector1 | 3.6.25 | same path and service | `gw-search-from-abio@file` |
 
-Both proxies use command arrays, mount `/data/coolify/proxy` at `/traefik`, and currently have no access-log arguments. Their search routers have priority 1100 and match both combined search and command palette. Filtering POST on those router names conservatively includes POST to the palette path. Do not add paths, IPs or URLs to distinguish it. Unmatched-router requests cannot be classified as searches with this whitelist; retained evidence covers correctly routed HTTP requests, not DNS, TLS, connection or routing failures before selection.
+Both proxies use command arrays, mount `/data/coolify/proxy` at `/traefik`, and had no access-log arguments before activation. Their search routers have priority 1100 and match both combined search and command palette. Filtering POST on those router names conservatively includes POST to the palette path. Do not add paths, IPs or URLs to distinguish it. Unmatched-router requests cannot be classified as searches with this whitelist; retained evidence covers correctly routed HTTP requests, not DNS, TLS, connection or routing failures before selection.
 
-## Minimal added arguments
+## Approved active arguments
 
-Append these to the existing `services.traefik.command` list on each host:
+The approved rollout appended these to the existing `services.traefik.command` list on each host:
 
 ```yaml
 - --accesslog=true
@@ -43,7 +45,7 @@ The deployed-version local fixture verifies request paths, query parameters, bod
 
 `prepare-access-log.py` requires the already installed Python/PyYAML on both hosts. It reads the original, verifies its expected SHA-256, refuses existing access-log options, and writes a **separate mode-0600 candidate** with exclusive creation. Only command-list additions are allowed; parsed settings must otherwise match exactly. Existing values and formatting remain intact. The source is never written. A changed digest requires renewed read-only inspection.
 
-Inspected digests:
+Historical preactivation source digests (not current configuration digests):
 
 ```text
 abio:    2e34c0f30ca2eab9b172d76fb1b63345ece5ea8f62c06138daf8c7ba6f3ba08e
@@ -63,11 +65,11 @@ python3 /opt/goodwatch-search-acceptance/prepare-access-log.py VERSION \
 docker compose -f /data/coolify/proxy/search-acceptance.candidate.yml config -q
 ```
 
-The candidate contains existing private settings: review it only on the host, do not print complete Compose output or publish its diff. The documented argument list is the complete intended delta. The generator was run in memory against each live file, confirming that all unrelated settings were preserved; no candidate was written on either production host.
+The candidate contains existing private settings: review it only on the host, do not print complete Compose output or publish its diff. The documented argument list is the complete intended delta. Initial inspection ran the generator in memory. The later approved preparation wrote separate private candidates, followed by the actual activation recorded above; unrelated live and stored configuration settings were preserved independently.
 
 ## Apply and roll back after approval
 
-No commands in this section have been executed. First verify collectors are ready, coordinate the brief proxy interruption, and confirm the candidate digest and unchanged source digest from preparation. Coolify manages these proxies: preserve the same reviewed static change in its Proxy Configuration editor before future proxy reconciliation, or treat an overwrite/restart as a coverage gap. Do not change dynamic router files or the unrelated dirty balancing file.
+This section preserves the historical guarded rollout shape and rollback guidance; activation has already been executed. Recheck current source/candidate/image digests before any future approved change rather than using the historical values. Coolify manages these proxies. Actual activation preserved the logging delta in its stored configuration with a guarded model update, because the normal save action overwrites live configuration and prunes managed backups. Unrelated stored/live label differences were preserved independently; future reconciliation can still apply that preexisting drift. Treat lost readiness or a restart as a coverage gap. Do not change dynamic router files or the unrelated dirty balancing file.
 
 On each host, capture the current proxy image ID and ensure the configured image tag still resolves to that ID. Stop if it differs: `--pull never` must not silently replace the tested proxy version with another cached image. Back up the original and preserve its owner/mode when replacing contents:
 
@@ -94,7 +96,7 @@ docker compose -f /data/coolify/proxy/docker-compose.yml \
 
 Validate the proxy's original health check and current public/page/search-role smoke suite; their short invalid-search check does not call Jev or write history. Verify the exact emitted whitelist with an invalid short POST before the acceptance start (it cannot qualify as seven-day traffic). Confirm router names, versions and uninterrupted durable collection on both hosts. Do not print entire Docker logs. Keep the private configuration backup until the acceptance evidence is reviewed.
 
-Rollback restores the unchanged original contents and recreates only this proxy. Also restore the same original static configuration in Coolify's editor so reconciliation agrees:
+Rollback restores the unchanged original contents and recreates only this proxy. Also restore the matching original stored configuration/hash fields under a row lock and current-hash guard, using the private Coolify backup identified in the activation evidence; avoid the normal editor save action's overwrite/pruning side effects:
 
 ```sh
 set -e
@@ -119,13 +121,13 @@ python3 goodwatch-proxy/acceptance/test-access-log.py \
 
 The fixture starts only loopback processes and makes no production requests. `privacy-test.json` records the successful result; secrets in tests are synthetic fixed strings. This fixture verifies privacy and a generated error record, not production restart availability or seven-day retention.
 
-## Install durable ingress collection after approval
+## Installed durable ingress collection and historical installation commands
 
 The companion files are in `goodwatch-search/acceptance/`: `ingress-collect.mjs`, `ingress-events.mjs`, `ingress-config.mjs`, `ingress-verify.mjs`, `ingress.test.mjs` and `goodwatch-search-ingress.service`. They reuse the reviewed `Journal` from `collect.mjs`, timestamp helper from `events.mjs` and seven-day constant from `history.mjs`; keep those dependencies beside the ingress files. Node is already installed on both hosts; abio was verified at `/usr/bin/node`, version 20.5.1. No registry credentials, network calls or package installation are needed.
 
 The collector follows both stdout/stderr for the fixed container `coolify-proxy`, polls for replacements every ten seconds and drains previous followers. It writes only fixed host/container IDs, tested image digests, approved logging fingerprints/readiness, sanitized search-route POST statuses, timestamps and collection fences/problems. Raw logs and logger metadata are never written. The shared journal fsyncs each record, deduplicates replay across restarts and rejects an incomplete final record. Heartbeat gaps over 45 seconds, collector restarts inside the window, unavailable proxy containers, malformed matched access events and log-stream failures block acceptance. Every heartbeat must also retain the exact approved access-log arguments and tested image digest. The Docker inspect template emits only fixed argument indexes or an unknown-override marker; full command/environment values never leave Docker. Missing/duplicate/unknown access-log options, access-log environment overrides or a config-file override mark logging unready and record a coverage problem. A Coolify replacement that drops access logging cannot pass using old responses. A running container is not proof its routes or TLS are correct; validate health/routing before the window and review application metrics separately.
 
-Run these commands only after approval, on **each** host from a checkout containing the reviewed commit:
+These historical commands describe the approved installation already completed on **both** hosts. Do not reinstall/restart the collectors inside a live acceptance window. Any future authorized reinstall must preserve evidence and shared core-collector files:
 
 ```sh
 set -e

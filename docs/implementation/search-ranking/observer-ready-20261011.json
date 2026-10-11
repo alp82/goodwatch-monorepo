@@ -1,0 +1,11 @@
+{
+  "event": "modified-backup-observer-ready",
+  "pid": 2619537,
+  "recordCount": 2,
+  "startedAt": "2026-10-11T20:54:05.898795+00:00",
+  "lastEvent": "modified-backup-passive-sample",
+  "lastBackupRunning": false,
+  "stderrBytes": 0,
+  "warmingReads": 0,
+  "queryRequests": 0
+}

@@ -1,0 +1,7 @@
+{
+  "event": "diagnostic-clone-stopped",
+  "guardedTaskCloneOnly": true,
+  "archiveAndStorePreserved": true,
+  "scriptsAndEvidencePreserved": true,
+  "productionChanges": false
+}

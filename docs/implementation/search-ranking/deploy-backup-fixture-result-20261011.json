@@ -1,0 +1,13 @@
+{
+  "event": "backup-publication-fixtures",
+  "passed": [
+    "wrong candidate digest blocks publication",
+    "active backup blocks publication",
+    "atomic deploy preserves original and unrelated files",
+    "wrong rollback digest blocks publication",
+    "pinned rollback restores original"
+  ],
+  "fixtureOnly": true,
+  "productionChanges": false,
+  "substitutions": "owned temp paths and local UID only"
+}
