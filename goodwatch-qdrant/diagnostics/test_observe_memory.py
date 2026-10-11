@@ -60,6 +60,7 @@ class ObservationTests(unittest.TestCase):
                 (source.proc / '42/stat').write_text(stat(major=15))
                 second = observation.sample(source, identity)
             self.assertEqual(first['processBefore']['majorFaults'], 12)
+            self.assertEqual(first['qdrantPid'], 42)
             self.assertEqual(first['processAfter']['cpuTicks'], 17)
             self.assertEqual(second['processBefore']['majorFaults'], 15)
             self.assertEqual(first['meminfoKiB']['MemAvailable'], 123)

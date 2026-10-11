@@ -10,7 +10,7 @@ import sys
 import time
 
 IMAGE = 'sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b'
-MEMINFO = ('MemFree', 'MemAvailable', 'Cached', 'Dirty', 'Writeback',
+MEMINFO = ('MemTotal', 'MemFree', 'MemAvailable', 'Cached', 'Dirty', 'Writeback',
            'Active(file)', 'Inactive(file)', 'Mapped', 'Unevictable', 'Mlocked',
            'AnonPages', 'SwapTotal', 'SwapFree', 'SwapCached')
 VM_NAMES = ('pgscan_kswapd', 'pgscan_direct', 'pgscan_khugepaged', 'pgscan_anon',
@@ -166,7 +166,8 @@ def sample(source, expected):
     after = source.counters(expected[2])
     if source.identity() != expected or before['startTicks'] != expected[3] or after['startTicks'] != expected[3]:
         raise ValueError('identity_changed')
-    return {'event': 'qdrant.memory.observation.v1', 'startedAt': started, 'finishedAt': stamp(),
+    return {'event': 'qdrant.memory.observation.v1', 'qdrantPid': expected[2],
+            'startedAt': started, 'finishedAt': stamp(),
             'processBefore': before, 'processAfter': after,
             'cgroupBefore': group_before, 'cgroupAfter': group_after, **host}
 
