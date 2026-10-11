@@ -1,0 +1,42 @@
+{
+  "caveats": [
+    "Installed entrypoint hash is retained; official tagged reference has different line count, so exact script equality is not claimed.",
+    "Qdrant may replay existing WAL/start optimization when starting the store; this is distinct from snapshot restore.",
+    "Entrypoint has a conditional recovery-mode contingency; no environment values were inspected or retained.",
+    "No restart was performed in this read-only audit; observations describe current configured startup source."
+  ],
+  "cmdArgCount": 1,
+  "cmdEntrypointSha256": "79d85d120731c097aeb549e6c5d3fd0f04d00134994d0946a1da3d058658ebe3",
+  "cmdExactlyDefaultEntrypoint": true,
+  "commandInspectionAt": "2026-10-11T22:45:44Z",
+  "containerChanges": 0,
+  "containerNameMatchesFixedClone": true,
+  "earlierRestoreSemantics": "separate owned restore.py explicitly PUTs local-file snapshot recover; this is not the Docker startup command",
+  "entrypointArgCount": 0,
+  "entrypointInspectionAt": "2026-10-11T22:46:10Z",
+  "entrypointIsEmpty": true,
+  "entrypointLineCount": 59,
+  "entrypointScriptSha256": "f773b9c6df212eb34cfcffaa932b27a713e9d477492d2b5b40eb8f8cc5f2475e",
+  "envInspected": false,
+  "evalDirectiveCount": 0,
+  "hostWrites": 0,
+  "imageMatchesPinnedClone": true,
+  "localSourceHashes": {
+    "prepare-renamed-restore.py": "4c4da61790d68739160f1ae20b104783390d47f907328eb1c950a008c5c8955e",
+    "restore.py": "eee2f9571b58689e9d57746d632775dfe78ef778fc28debe95fae95a8b65cd45"
+  },
+  "primaryReference": "https://raw.githubusercontent.com/qdrant/qdrant/v1.19.1/tools/entrypoint.sh",
+  "primaryReferenceExactInstalledBytesProven": false,
+  "qdrantDotInvocationLineCount": 2,
+  "qdrantForwardDollarAt": true,
+  "queries": 0,
+  "rawArgumentsRetained": false,
+  "restoreOrSnapshotCodeLineCount": 0,
+  "schema": "clone-startup-semantics-audit.v1",
+  "shellCommandStringArgCount": 0,
+  "shellSourceDirectiveCount": 0,
+  "snapshotRestoreFlagPresent": false,
+  "startupSemantics": "default entrypoint forwards no extra CLI arguments to Qdrant; existing mounted store starts, fixture bind alone does not request recovery",
+  "startupSnapshotRestoreRequested": false,
+  "unknownLongFlagCount": 0
+}
