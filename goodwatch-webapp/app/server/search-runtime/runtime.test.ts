@@ -15,6 +15,7 @@ const { registerHooks } = nodeModule as unknown as {
 	}): void;
 };
 const redirects: Record<string, string> = {
+	"./telemetry.server": new URL("./telemetry.server.ts", import.meta.url).href,
 	"../role.server": new URL("../role.server.ts", import.meta.url).href,
 	"./store.server": new URL("./runtime-test-store.ts", import.meta.url).href,
 	"../lifecycle.server": new URL("../lifecycle.server.ts", import.meta.url).href,
@@ -108,4 +109,18 @@ test("page role starts no connection pings or timers even with a provider key", 
 	keepJevConnectionsWarm();
 	keepJevConnectionsWarm();
 	for (const mock of [dispatch, interval, timeout]) assert.equal(mock.mock.callCount(), 0);
+});
+
+test("failed history writes emit anonymous evidence without changing the nonthrowing result", async (t) => {
+	const { recordSearchHistory } = await import("./runtime.server.ts");
+	const logged = t.mock.method(console, "info", () => {});
+	const input = { text: "private input", accountId: "private-account", elapsedMs: 20, chargedNano: 0, outcome: "cached" as const, rankerVersion: "test" };
+	assert.deepEqual(await recordSearchHistory(input), { recorded: false, id: null });
+	const event = JSON.parse(logged.mock.calls[0].arguments[0]);
+	assert.deepEqual(Object.keys(event).sort(), ["at", "event", "recorded"]);
+	assert.equal(event.event, "search.history-write.v1");
+	assert.equal(event.recorded, false);
+	logged.mock.restore();
+	t.mock.method(console, "info", () => { throw new Error("logger failure"); });
+	assert.deepEqual(await recordSearchHistory(input), { recorded: false, id: null });
 });

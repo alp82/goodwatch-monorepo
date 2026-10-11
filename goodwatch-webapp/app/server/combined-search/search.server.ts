@@ -26,6 +26,7 @@ import {
 	type Metadata,
 } from "./catalog.server";
 import { prepareLanguage } from "./language.server";
+import { RankingProgress } from "../search-ranking/ranking-progress.server";
 import {
 	BASIC_SEARCH_MESSAGE,
 	keepJevConnectionsWarm,
@@ -358,6 +359,7 @@ async function rankedList(
 	early: {
 		titles: Promise<TitleMatches>;
 		prepared?: Promise<PreparedSearch>;
+		progress?: RankingProgress;
 	},
 	signal: AbortSignal,
 	// How many ranked titles to serve: HEAD_LENGTH for the search page, up to RESULT_LENGTH for Discover.
@@ -393,6 +395,7 @@ async function rankedList(
 					nonEnglish: language.policy.mode !== "english",
 					titleLookup: allowedTitles,
 					prepared: early.prepared,
+					progress: early.progress,
 				},
 				policy,
 			);
@@ -628,8 +631,10 @@ export async function combinedSearch(
 	const early: {
 		titles: ReturnType<typeof titleMatches>;
 		prepared?: Promise<PreparedSearch>;
+		progress?: RankingProgress;
 	} = {
 		titles: titleMatches(initialTitlePromise, policy),
+		progress: new RankingProgress(),
 	};
 	early.titles.catch(() => {});
 	const readingSteps: Record<string, number> = {};
@@ -640,6 +645,7 @@ export async function combinedSearch(
 				query: q,
 				text: language.text,
 				nonEnglish: language.policy.mode !== "english",
+				progress: early.progress,
 			});
 			early.prepared.catch(() => {});
 		},
@@ -689,7 +695,15 @@ export async function combinedSearch(
 		} catch (error) {
 			if (signal.aborted) throw new Error("Search interrupted");
 			fallback = error instanceof RankingDeadlineError ? "timeout" : "error";
-			console.error("Search ranking failed; the basic search serves", error);
+			console.error("Search ranking failed; the basic search serves", {
+				reason: fallback,
+			});
+			const progress =
+				error instanceof RankingDeadlineError
+					? error.timings
+					: early.progress?.snapshot();
+			for (const [name, ms] of Object.entries(progress ?? {}))
+				stageMs[`ranking${name[0].toUpperCase()}${name.slice(1)}`] = ms;
 			stageMs.failedRanking =
 				Math.round((performance.now() - attempt) * 10) / 10;
 		}

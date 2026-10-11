@@ -1154,6 +1154,31 @@ person leaves (`completionAborted: 1`) or completion fails (`completionFailed: 1
 latency, report these flags separately, and exclude incomplete computation from completed-result percentiles.
 Result-open feedback remains outside this map.
 
+### Attributing remaining latency tails
+
+A ranking deadline now freezes request-local numeric spans for index loading, preparation, early/late encoding,
+profile prefetch, and the two Qdrant rounds plus rescore. History stores `ranking<Name>Elapsed` and, for unfinished
+work at the deadline, `ranking<Name>Pending: 1`. Early preparation keeps its original start during the reading;
+background completion cannot mutate a recorded timeout snapshot. These overlapping spans are not additive, and
+the 1,500 ms ranking deadline and background admission hold are unchanged.
+
+Reading admission exposes independent `readingClaimControl`, `readingClaimSpend`, `readingClaimRedis`,
+`readingClaimInterpretationInsert`, and `readingClaimEstimateInsert` durations. `readingClaimAccount` overlaps the
+SQL work; `readingClaimScopes` measures the residual wait afterwards. Rejected operations retain their duration.
+
+Anonymous JSON logs complement encrypted history: `search.lifecycle.v1` pairs accepted/finished events with a
+random per-request identifier, fixed completion status, delivery/computation timings, dependency failure flags,
+role and build commit. It contains no query, account, network address, SQL argument, credential or raw error.
+`search.history-write.v1` records whether the detached history write succeeded; `search.rejection.v1` records busy
+or wrongly routed requests. Logging failures do not change search responses. The server enqueue timing is not a
+browser-paint measurement.
+
+Seven-day acceptance needs both authenticated history and complete production error evidence, including failures
+before delivery, rejected requests, failed history writes and ingress errors. Verify paired lifecycle coverage,
+role/build identities and log retention for the whole UTC window. The current Docker limit of five 50 MB log files
+is a size bound, not a seven-day retention guarantee. Controlled fixtures and missing error logs cannot prove an
+error-free window.
+
 - **Negation needs catalog labels.** "space opera without aliens" fails for every ranker. The fix is enrichment labels
   for concrete elements (aliens, robots, dragons, gore), not a ranking rule. See the walkthrough's section on this gap.
 - **Non-English negations** couldn't match the English labels. Fixed in #169 for common elements with a word list: see

@@ -125,3 +125,89 @@ for (const stage of ["claim", "dispatch"] as const) {
 		assert.equal(inserts.length, stage === "claim" ? 0 : 2)
 	})
 }
+
+function gate() {
+	let release!: () => void
+	const promise = new Promise<void>((resolve) => { release = resolve })
+	return { promise, release }
+}
+
+test("claim measures concurrent SQL and inserts independently and residual scope wait", async (t) => {
+	let now = 0
+	t.mock.method(performance, "now", () => now)
+	const gates = Object.fromEntries(["control", "spend", "redis", "interpretation", "estimate", "scopes"].map(name => [name, gate()]))
+	const started: string[] = [], timings: Record<string, number> = {}
+	const wait = async (name: string) => { started.push(name); await gates[name].promise }
+	const store = new SearchStore(async (stmt) => {
+		if (stmt.startsWith("SELECT halted")) { await wait("control"); return { cols: ["halted"], rows: [[false]], rowcount: 1 } }
+		if (stmt.startsWith("SELECT CURRENT_TIMESTAMP")) { await wait("spend"); return { cols: ["now", "day", "month"], rows: [[1000, 0, 0]], rowcount: 1 } }
+		if (stmt.startsWith("INSERT INTO doc.search_interpretations")) await wait("interpretation")
+		if (stmt.includes("'estimate'")) await wait("estimate")
+		return { cols: [], rows: [], rowcount: 1 }
+	}, new SearchCoordination(() => ({ eval: async () => { await wait("redis"); return "ok" } }) as unknown as SearchRedis), Buffer.alloc(32, 1))
+	const pending = store.claim({ ...claim, scopes: gates.scopes.promise.then(() => ["global"]), timings })
+	const settle = () => new Promise<void>(resolve => setImmediate(resolve))
+	await settle(); assert.deepEqual(started, ["control", "spend"])
+	now = 11; gates.control.release(); await settle(); assert.equal(timings.claimControl, 11)
+	assert.equal(timings.claimSpend, undefined)
+	now = 31; gates.spend.release(); await settle(); assert.deepEqual(started, ["control", "spend"])
+	now = 36; gates.scopes.release(); await settle(); assert.equal(timings.claimScopes, 5)
+	now = 43; gates.redis.release(); await settle(); assert.deepEqual(started.slice(-2), ["interpretation", "estimate"])
+	now = 52; gates.interpretation.release(); await settle(); assert.equal(timings.claimInterpretationInsert, 9)
+	now = 67; gates.estimate.release(); assert.equal((await pending).kind, "claimed")
+	assert.deepEqual(timings, { claimControl: 11, claimSpend: 31, claimScopes: 5, claimRedis: 7, claimInterpretationInsert: 9, claimEstimateInsert: 24 })
+})
+
+for (const failed of ["control", "redis", "interpretation", "estimate"] as const) {
+	test(`claim retains ${failed} duration when its gate rejects`, async (t) => {
+		let now = 0
+		t.mock.method(performance, "now", () => now)
+		const failedGate = gate(), timings: Record<string, number> = {}
+		const rejectGate = async () => { await failedGate.promise; throw new Error("gated failure") }
+		const store = new SearchStore(async (stmt) => {
+			if (stmt.startsWith("SELECT halted")) { if (failed === "control") await rejectGate(); return { cols: ["halted"], rows: [[false]], rowcount: 1 } }
+			if (stmt.startsWith("SELECT CURRENT_TIMESTAMP")) return { cols: ["now", "day", "month"], rows: [[1000, 0, 0]], rowcount: 1 }
+			if (failed === "interpretation" && stmt.startsWith("INSERT INTO doc.search_interpretations")) await rejectGate()
+			if (failed === "estimate" && stmt.includes("'estimate'")) await rejectGate()
+			return { cols: [], rows: [], rowcount: 1 }
+		}, new SearchCoordination(() => ({ eval: async () => { if (failed === "redis") await rejectGate(); return "ok" } }) as unknown as SearchRedis), Buffer.alloc(32, 1))
+		const pending = store.claim({ ...claim, timings }).then(value => value, () => null)
+		await new Promise<void>(resolve => setImmediate(resolve)); now = 19; failedGate.release()
+		const result = await pending
+		assert.equal(result?.kind ?? "rejected", failed === "redis" ? "basic" : "rejected")
+		const timing = { control: "claimControl", redis: "claimRedis", interpretation: "claimInterpretationInsert", estimate: "claimEstimateInsert" }[failed]
+		assert.equal(timings[timing], 19)
+	})
+}
+
+for (const failed of ["control", "account"] as const) {
+	test(`runtime forwards claim timings and retains aggregate duration on ${failed} rejection`, async (t) => {
+		const originalKey = process.env.TYPESAFE_API_KEY
+		process.env.TYPESAFE_API_KEY = "test-key"
+		t.after(() => { if (originalKey === undefined) delete process.env.TYPESAFE_API_KEY; else process.env.TYPESAFE_API_KEY = originalKey })
+		const paid = t.mock.method(TypeSafeClient.prototype, "systemOne", async () => { throw new Error("Unexpected paid call") })
+		let now = 0
+		t.mock.method(performance, "now", () => now)
+		const waiting = gate(), timings: Record<string, number> = {}
+		const store = new SearchStore(async (stmt) => {
+			if (stmt.startsWith("SELECT halted")) {
+				if (failed === "control") { await waiting.promise; throw new Error("control unavailable") }
+				return { cols: ["halted"], rows: [[false]], rowcount: 1 }
+			}
+			if (stmt.startsWith("SELECT CURRENT_TIMESTAMP")) return { cols: ["now", "day", "month"], rows: [[1000, 0, 0]], rowcount: 1 }
+			return { cols: [], rows: [], rowcount: 1 }
+		}, new SearchCoordination(() => ({ get: async () => null, eval: async () => { throw new Error("Unexpected admission") } }) as unknown as SearchRedis), Buffer.alloc(32, 1))
+		const pending = executeJevStage(store, {
+			requestText: "quiet movies", questionVersion: "test", language: { mode: "english", version: "test" },
+			requests: [{ state: {}, questions: {} }, { state: {}, questions: {} }],
+			visitor: { accountId: failed === "account" ? waiting.promise.then(() => { throw new Error("session unavailable") }) : null, networkIdentity: "test" },
+			timings,
+		})
+		await new Promise<void>(resolve => setImmediate(resolve)); now = 21; waiting.release()
+		assert.equal((await pending).kind, "basic")
+		assert.equal(timings.claim, 21)
+		assert.equal(timings[failed === "control" ? "claimControl" : "claimAccount"], 21)
+		if (failed === "account") assert.equal(timings.claimScopes, 21)
+		assert.equal(paid.mock.callCount(), 0)
+	})
+}
