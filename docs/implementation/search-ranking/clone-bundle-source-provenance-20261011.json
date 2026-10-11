@@ -1,0 +1,105 @@
+{
+  "buildTransformationsRemainSeparate": true,
+  "bundleSource": "2eb889b4d7ab998f012cda8aadbc2afc8d9dd8ff",
+  "comparison": "git tracked file mode/blob/tree identity within listed scopes; not compiled artifact parity",
+  "compiledArtifactEqualityProven": false,
+  "externalImageSource": "5f15698995eb4368baf5ea094b704a3752191e40",
+  "modelLayerUnchangedByDiagnosticBuild": true,
+  "productionQueries": 0,
+  "productionRuntimeSource": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "schema": "diagnostic-bundle-source-comparison.v1",
+  "scopes": [
+    {
+      "imageSourceTreeListingSha256": "5a1fe7d8ff64df4a3b7abf7e1777327ee964d835a6872db5d1236a1a655f9ce6",
+      "runtimeTreeListingSha256": "511ed29ba735a089b7057c3e53c5ce2d7628484c0b20353e8c6e6cb81749e252",
+      "scope": "goodwatch-webapp/app/server/search-ranking",
+      "sourceFileCount": 33,
+      "sourceImageEqual": false,
+      "sourceRuntimeEqual": true,
+      "sourceTreeListingSha256": "511ed29ba735a089b7057c3e53c5ce2d7628484c0b20353e8c6e6cb81749e252"
+    },
+    {
+      "imageSourceTreeListingSha256": "1fe31b19918cc70dc1a6c5baf001dd17404798928abf9f70e6fc514491104c6d",
+      "runtimeTreeListingSha256": "ee98866b441c8a2d256ccaa7d7d0cfdbe06058ed7ef65dfdefb1faf9e6defff9",
+      "scope": "goodwatch-webapp/app/server/combined-search",
+      "sourceFileCount": 9,
+      "sourceImageEqual": false,
+      "sourceRuntimeEqual": true,
+      "sourceTreeListingSha256": "ee98866b441c8a2d256ccaa7d7d0cfdbe06058ed7ef65dfdefb1faf9e6defff9"
+    },
+    {
+      "imageSourceTreeListingSha256": "18401da5bd6cd641842495c335721d661bc0868cc753372ca91f58e50bf4fd43",
+      "runtimeTreeListingSha256": "18401da5bd6cd641842495c335721d661bc0868cc753372ca91f58e50bf4fd43",
+      "scope": "goodwatch-webapp/app/server/search-runtime",
+      "sourceFileCount": 12,
+      "sourceImageEqual": true,
+      "sourceRuntimeEqual": true,
+      "sourceTreeListingSha256": "18401da5bd6cd641842495c335721d661bc0868cc753372ca91f58e50bf4fd43"
+    },
+    {
+      "imageSourceTreeListingSha256": "3b41deeca1d86d9795a0f6b9ef3433dfc2e0e699f9b9c2d295895e9c59dbe6ed",
+      "runtimeTreeListingSha256": "3b41deeca1d86d9795a0f6b9ef3433dfc2e0e699f9b9c2d295895e9c59dbe6ed",
+      "scope": "goodwatch-webapp/app/server/role.server.ts",
+      "sourceFileCount": 1,
+      "sourceImageEqual": true,
+      "sourceRuntimeEqual": true,
+      "sourceTreeListingSha256": "3b41deeca1d86d9795a0f6b9ef3433dfc2e0e699f9b9c2d295895e9c59dbe6ed"
+    },
+    {
+      "imageSourceTreeListingSha256": "361b9bd8abb5aa9ff9a939ec2dc8a4e3ffcd83c7e5d28eec6550e1522752b97c",
+      "runtimeTreeListingSha256": "361b9bd8abb5aa9ff9a939ec2dc8a4e3ffcd83c7e5d28eec6550e1522752b97c",
+      "scope": "goodwatch-webapp/app/server/lifecycle.server.ts",
+      "sourceFileCount": 1,
+      "sourceImageEqual": true,
+      "sourceRuntimeEqual": true,
+      "sourceTreeListingSha256": "361b9bd8abb5aa9ff9a939ec2dc8a4e3ffcd83c7e5d28eec6550e1522752b97c"
+    },
+    {
+      "imageSourceTreeListingSha256": "f691adb89e818ca207269e82a2ca27f6cd2374e7b3bfcd23f4685d98896f9d67",
+      "runtimeTreeListingSha256": "f691adb89e818ca207269e82a2ca27f6cd2374e7b3bfcd23f4685d98896f9d67",
+      "scope": "goodwatch-webapp/app/server/separate-entry.server.ts",
+      "sourceFileCount": 1,
+      "sourceImageEqual": true,
+      "sourceRuntimeEqual": true,
+      "sourceTreeListingSha256": "f691adb89e818ca207269e82a2ca27f6cd2374e7b3bfcd23f4685d98896f9d67"
+    },
+    {
+      "imageSourceTreeListingSha256": "7a65ceeb90d23853747be891766319b5457442ee0bfaef10c1e639ff1489acf4",
+      "runtimeTreeListingSha256": "7a65ceeb90d23853747be891766319b5457442ee0bfaef10c1e639ff1489acf4",
+      "scope": "goodwatch-webapp/package.json",
+      "sourceFileCount": 1,
+      "sourceImageEqual": true,
+      "sourceRuntimeEqual": true,
+      "sourceTreeListingSha256": "7a65ceeb90d23853747be891766319b5457442ee0bfaef10c1e639ff1489acf4"
+    },
+    {
+      "imageSourceTreeListingSha256": "31747aeea62805af7bf167ef8fb61793ec52b090b207d9e032a106f43bcf6849",
+      "runtimeTreeListingSha256": "31747aeea62805af7bf167ef8fb61793ec52b090b207d9e032a106f43bcf6849",
+      "scope": "goodwatch-webapp/app/utils/backend-timeout.ts",
+      "sourceFileCount": 1,
+      "sourceImageEqual": true,
+      "sourceRuntimeEqual": true,
+      "sourceTreeListingSha256": "31747aeea62805af7bf167ef8fb61793ec52b090b207d9e032a106f43bcf6849"
+    },
+    {
+      "imageSourceTreeListingSha256": "cf00a5470e9b6e316e96d2df2b70ac6fb1fdb28f0e7dff287caa938ade4af121",
+      "runtimeTreeListingSha256": "cf00a5470e9b6e316e96d2df2b70ac6fb1fdb28f0e7dff287caa938ade4af121",
+      "scope": "goodwatch-webapp/package-lock.json",
+      "sourceFileCount": 1,
+      "sourceImageEqual": true,
+      "sourceRuntimeEqual": true,
+      "sourceTreeListingSha256": "cf00a5470e9b6e316e96d2df2b70ac6fb1fdb28f0e7dff287caa938ade4af121"
+    }
+  ],
+  "sourceFileCount": 60,
+  "sourceImageChangedFiles": [
+    "goodwatch-webapp/app/server/combined-search/search.server.ts",
+    "goodwatch-webapp/app/server/combined-search/title-lookup.test.ts",
+    "goodwatch-webapp/app/server/search-ranking/title-blend.server.ts",
+    "goodwatch-webapp/app/server/search-ranking/title-blend.test.ts",
+    "goodwatch-webapp/app/server/search-ranking/title-prefix.server.ts",
+    "goodwatch-webapp/app/server/search-ranking/title-prefix.test.ts"
+  ],
+  "sourceRuntimeChangedFiles": [],
+  "sourceScopesEqualRuntime": true
+}
