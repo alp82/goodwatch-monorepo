@@ -7,8 +7,9 @@ import { useFeatures } from "~/hooks/useFeature"
 import { GlobalLoading } from "~/ui/nav/GlobalLoading"
 import { useNavigation } from "./NavigationContext"
 import { HeaderSearchBar, Omnibox } from "./Search"
-import { AccountSlot, TonightsPickThumb } from "./bits"
+import { AccountSlot, NewEpisodesMark, TonightsPickThumb } from "./bits"
 import { currentDestination, getDestinations } from "./destinations"
+import { useNewEpisodes } from "./useNewEpisodes"
 
 function BrowseButton() {
 	const navigation = useNavigation()
@@ -16,6 +17,8 @@ function BrowseButton() {
 	const here = currentDestination(pathname)
 	const destinations = getDestinations(useFeatures())
 	const open = Boolean(navigation?.hubOpen)
+	// My shows is a tile inside the hub, so what opens the hub says that something is new there.
+	const fresh = useNewEpisodes()
 	return (
 		<button
 			type="button"
@@ -23,7 +26,7 @@ function BrowseButton() {
 			aria-expanded={open}
 			aria-controls={open ? "site-hub" : undefined}
 			aria-haspopup="dialog"
-			className={`flex h-10 items-center gap-2 rounded-xl px-3.5 font-bold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] ${
+			className={`relative flex h-10 items-center gap-2 rounded-xl px-3.5 font-bold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)] ${
 				open
 					? "bg-amber-500/20 text-amber-200"
 					: "bg-white/[0.07] text-gray-100 hover:bg-white/[0.1]"
@@ -32,6 +35,7 @@ function BrowseButton() {
 			<Squares2X2Icon className="h-[18px] w-[18px]" aria-hidden />
 			{here && here !== "home" ? destinations[here].label : "Browse"}
 			<ChevronDownIcon className="h-4 w-4" aria-hidden />
+			<NewEpisodesMark words={fresh} className="absolute -top-1.5 -right-1.5" />
 		</button>
 	)
 }

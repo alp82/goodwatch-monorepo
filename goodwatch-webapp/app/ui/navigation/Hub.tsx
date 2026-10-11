@@ -11,13 +11,19 @@ import {
 import { ArrowRightIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import type React from "react"
+import type { SignalWords } from "~/domain/new-episodes"
 import { useFeatures } from "~/hooks/useFeature"
 import { myListsPath } from "~/ui/share-card/links"
 import { useUser } from "~/utils/auth"
 import { useOpenAfterMount } from "~/utils/first-use"
 import { useNavigation } from "./NavigationContext"
 import { holdKeyboardForSearch } from "./Search"
-import { GoodWatchMark, tmdbImage, useSignUpHref } from "./bits"
+import {
+	GoodWatchMark,
+	NewEpisodesMark,
+	tmdbImage,
+	useSignUpHref,
+} from "./bits"
 import {
 	type Destination,
 	type DestinationKey,
@@ -25,6 +31,7 @@ import {
 	getDestinations,
 } from "./destinations"
 import { useDragToClose } from "./useDragToClose"
+import { useNewEpisodes } from "./useNewEpisodes"
 import { useTonightsPick } from "./useTonightsPick"
 
 const HUB_TITLE = "Browse GoodWatch"
@@ -65,11 +72,14 @@ function Tile({
 	subtitle,
 	here,
 	backdrop,
+	fresh = null,
 }: {
 	destination: Destination
 	subtitle: string
 	here: boolean
 	backdrop?: string | null
+	/** The My shows tile: what is new for the member's shows. It takes the subtitle's place, on one line. */
+	fresh?: SignalWords | null
 }) {
 	const Icon = destination.icon
 	const tint = TILE_TINTS[destination.key] ?? {
@@ -97,12 +107,22 @@ function Tile({
 				className={`absolute top-3 left-3.5 z-10 h-6 w-6 ${tint.icon}`}
 				aria-hidden
 			/>
+			<NewEpisodesMark words={fresh} className="absolute top-3 right-3 z-10" />
 			<b className="brand-header relative z-10 text-[19px] leading-tight text-gray-100">
 				{destination.label}
 			</b>
-			<small className="relative z-10 text-[12.5px] text-slate-300">
-				{subtitle}
-			</small>
+			{fresh ? (
+				<small
+					className="relative z-10 max-w-full truncate text-[12.5px] font-bold text-sky-200"
+					aria-hidden
+				>
+					{fresh.tile}
+				</small>
+			) : (
+				<small className="relative z-10 text-[12.5px] text-slate-300">
+					{subtitle}
+				</small>
+			)}
 		</>
 	)
 	if (!destination.available)
@@ -203,6 +223,7 @@ function HubContent() {
 	const here = currentDestination(pathname)
 	const d = getDestinations(useFeatures())
 	const { pick, wishlistCount } = useTonightsPick()
+	const fresh = useNewEpisodes()
 	// With REC_TRACKING a member has My shows, My movies and My library in place of Watch next (#385).
 	const tracked = Boolean(user) && d.myShows.available
 	const pickOn = pick?.href ? currentDestination(pick.href.split("#")[0]) : null
@@ -245,6 +266,7 @@ function HubContent() {
 							}
 							here={here === "myShows"}
 							backdrop={pickOn === "myShows" ? pick?.title.backdrop_path : null}
+							fresh={fresh}
 						/>
 						<Tile
 							destination={d.myMovies}

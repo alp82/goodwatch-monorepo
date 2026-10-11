@@ -8,8 +8,9 @@ import { type ReactNode, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { useFeatures } from "~/hooks/useFeature"
 import { useNavigation } from "./NavigationContext"
-import { GoodWatchMark } from "./bits"
+import { GoodWatchMark, NewEpisodesMark } from "./bits"
 import { currentDestination, getDestinations } from "./destinations"
+import { useNewEpisodes } from "./useNewEpisodes"
 
 const HUB_LABEL = "Browse GoodWatch"
 
@@ -21,6 +22,9 @@ function DockButton({ docked }: { docked: boolean }) {
 	const page = here ? destinations[here] : null
 	const Icon = page?.icon ?? Squares2X2Icon
 	const open = Boolean(navigation?.hubOpen)
+	// My shows is a tile inside the hub, so the key that opens the hub says that something is new there.
+	const fresh = useNewEpisodes()
+	const label = page ? `${HUB_LABEL}, you're on ${page.label}` : HUB_LABEL
 	return (
 		<button
 			type="button"
@@ -28,7 +32,7 @@ function DockButton({ docked }: { docked: boolean }) {
 			aria-expanded={open}
 			aria-controls={open ? "site-hub" : undefined}
 			aria-haspopup="dialog"
-			aria-label={page ? `${HUB_LABEL}, you're on ${page.label}` : HUB_LABEL}
+			aria-label={fresh ? `${label}. ${fresh.door}` : label}
 			className="grid h-[72px] w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 text-left"
 		>
 			<span
@@ -44,7 +48,7 @@ function DockButton({ docked }: { docked: boolean }) {
 			</span>
 			<span
 				aria-hidden
-				className={`flex items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#4b5563,#111827_70%)] transition-transform duration-200 motion-reduce:transition-none ${
+				className={`relative flex items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#4b5563,#111827_70%)] transition-transform duration-200 motion-reduce:transition-none ${
 					docked ? "h-14 w-14" : "-mt-[26px] h-16 w-16"
 				} ${
 					open
@@ -53,6 +57,7 @@ function DockButton({ docked }: { docked: boolean }) {
 				}`}
 			>
 				<GoodWatchMark size={docked ? 26 : 30} />
+				<NewEpisodesMark words={fresh} className="absolute top-0 right-0" />
 			</span>
 			<span
 				aria-hidden

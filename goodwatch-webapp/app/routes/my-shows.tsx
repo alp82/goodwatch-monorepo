@@ -7,8 +7,10 @@ import {
 	json,
 } from "@remix-run/node"
 import { useLoaderData } from "@remix-run/react"
+import type { Arrival } from "~/domain/new-episodes"
 import { isEnabled } from "~/server/features.server"
 import { type MyShows, getMyShows } from "~/server/my-shows.server"
+import { getNewShows } from "~/server/new-episodes.server"
 import { loadTaste } from "~/server/taste/index.server"
 import { getViewerContext } from "~/server/viewer.server"
 import { GuestPage } from "~/ui/my-pages/bits"
@@ -35,25 +37,38 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if (!isEnabled("tracking", { userId }))
 		throw new Response("Not found", { status: 404 })
 	if (!userId)
-		return json({ data: null as MyShows | null, now: 0 }, { headers })
+		return json(
+			{ data: null as MyShows | null, now: 0, arrival: null as Arrival | null },
+			{ headers },
+		)
 	const ctx = await getViewerContext(request, undefined, userId)
 	const now = Date.now()
-	const data = await getMyShows(
-		{
-			userId,
-			country: ctx.country,
-			services: ctx.services,
-			taste: await loadTaste(ctx.viewer),
-		},
-		{ now },
-	)
-	return json({ data: data as MyShows | null, now }, { headers })
+	// What was new is read here and never written: a prefetch of this page is not a visit. The page records the
+	// visit once it is on screen (useMyShowsVisit).
+	const [data, fresh] = await Promise.all([
+		getMyShows(
+			{
+				userId,
+				country: ctx.country,
+				services: ctx.services,
+				taste: await loadTaste(ctx.viewer),
+			},
+			{ now },
+		),
+		getNewShows(userId, { now }),
+	])
+	const arrival: Arrival = {
+		since: fresh.since,
+		titles: fresh.shows.map((show) => show.title),
+	}
+	return json({ data: data as MyShows | null, now, arrival }, { headers })
 }
 
 export default function MyShowsRoute() {
-	const { data, now } = useLoaderData<typeof loader>() as {
+	const { data, now, arrival } = useLoaderData<typeof loader>() as {
 		data: MyShows | null
 		now: number
+		arrival: Arrival | null
 	}
 	if (!data)
 		return (
@@ -67,5 +82,5 @@ export default function MyShowsRoute() {
 				}}
 			/>
 		)
-	return <MyShowsPage data={data} now={now} />
+	return <MyShowsPage data={data} now={now} arrival={arrival} />
 }

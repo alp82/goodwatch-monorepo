@@ -3,6 +3,7 @@
 import { assetUrl } from "~/utils/asset-url"
 import { BookmarkIcon, UserCircleIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
+import type { SignalWords } from "~/domain/new-episodes"
 import { useFeatures } from "~/hooks/useFeature"
 import logoWhite from "~/img/goodwatch-logo-white.svg"
 import { LazyUserMenu } from "~/ui/main/LazyUserMenu"
@@ -22,6 +23,27 @@ export function GoodWatchMark({ size = 22 }: { size?: number }) {
 			className="block shrink-0"
 			style={{ width: size, height: size }}
 		/>
+	)
+}
+
+/**
+ * The signal that something new aired for the member's shows (#442): the number of shows, on the Browse button, the
+ * dock's key and the My shows tile. Sky blue, the colour of the "New episodes" tag on My shows; amber stays "you
+ * are here". Draws nothing when nothing is new.
+ */
+export function NewEpisodesMark({
+	words,
+	className = "",
+}: { words: SignalWords | null; className?: string }) {
+	if (!words) return null
+	return (
+		<span
+			data-new-episodes
+			className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-400 px-1.5 text-[11.5px] font-black tabular-nums leading-none text-black ring-2 ring-gray-950 ${className}`}
+		>
+			<span aria-hidden>{words.badge}</span>
+			<span className="sr-only">{words.door}</span>
+		</span>
 	)
 }
 
