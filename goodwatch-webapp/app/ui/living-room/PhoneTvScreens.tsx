@@ -808,7 +808,7 @@ function TitleScreen({ view, titleKey }: { view: TvView; titleKey: string }) {
 
 const SCORES = Array.from({ length: 10 }, (_, i) => (i + 1) as RatingScore)
 
-// The taste quiz's `stack` rating, drawn for the TV: Dislike / Okay / Good / Excellent, each spanning its scores,
+// The taste quiz's `stack` rating, drawn for the TV: Bad / Mediocre / Good / Excellent, each spanning its scores,
 // over a 1 to 10 strip. A level stores its score (3, 5, 7, or 9), a number stores itself. Touch only: the D-pad
 // walks the title's actions.
 function Rating({ onRate }: { onRate: (score: RatingScore) => void }) {

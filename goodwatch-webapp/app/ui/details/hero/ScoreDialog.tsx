@@ -1,4 +1,4 @@
-// The full score picker of the title page: Dislike / Okay / Good / Excellent over the 1-10 strip, with Clear score
+// The full score picker of the title page: Bad / Mediocre / Good / Excellent over the 1-10 strip, with Clear score
 // inside. OwnScore.tsx loads this module when a visitor reaches for the score rectangle.
 //
 // A sheet from the bottom edge on a phone, a dialog in the middle of the screen from md up. It is fixed to the

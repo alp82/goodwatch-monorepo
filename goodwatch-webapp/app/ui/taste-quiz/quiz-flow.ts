@@ -117,15 +117,15 @@ export function picksOnPage<T>(picks: readonly T[], page: number): T[] {
 // strip stores the exact score.
 
 export type RatingLevel = {
-	name: "Dislike" | "Okay" | "Good" | "Excellent"
+	name: "Bad" | "Mediocre" | "Good" | "Excellent"
 	lo: Score
 	hi: Score
 	score: Score
 }
 
 export const RATING_LEVELS: readonly RatingLevel[] = [
-	{ name: "Dislike", lo: 1, hi: 4, score: 3 },
-	{ name: "Okay", lo: 5, hi: 6, score: 5 },
+	{ name: "Bad", lo: 1, hi: 4, score: 3 },
+	{ name: "Mediocre", lo: 5, hi: 6, score: 5 },
 	{ name: "Good", lo: 7, hi: 8, score: 7 },
 	{ name: "Excellent", lo: 9, hi: 10, score: 9 },
 ]

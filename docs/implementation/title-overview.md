@@ -42,8 +42,8 @@ each other beside the poster, each as wide as that column.
 
 ## The score picker
 
-The rectangle is the page's one control for scoring. A press opens the full picker (`ScoreDialog.tsx`): Dislike /
-Okay / Good / Excellent over the 1-10 strip, with "Clear score" inside, which is the existing `ScoreControl`. It
+The rectangle is the page's one control for scoring. A press opens the full picker (`ScoreDialog.tsx`): Bad /
+Mediocre / Good / Excellent over the 1-10 strip, with "Clear score" inside, which is the existing `ScoreControl`. It
 is a sheet from the bottom edge on a phone and a dialog in the middle of the screen from 768 px. It is fixed to
 the screen and rendered into the body, so it is inside the screen wherever the page is scrolled. Escape, the
 close button and a press beside it close it, and the focus returns to the rectangle. A score closes it; clearing

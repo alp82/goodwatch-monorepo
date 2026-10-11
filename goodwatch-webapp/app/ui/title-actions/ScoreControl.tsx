@@ -39,7 +39,7 @@ export interface ScoreControlProps {
 }
 
 /**
- * The score control: Dislike / Okay / Good / Excellent, each spanning its own scores, over a 1-10 strip at a third of
+ * The score control: Bad / Mediocre / Good / Excellent, each spanning its own scores, over a 1-10 strip at a third of
  * their height. A level press gives the level's score (3, 5, 7, or 9); a strip press gives the exact score.
  */
 export function ScoreControl({
