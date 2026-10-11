@@ -7,7 +7,7 @@ import resource
 import stat
 import subprocess
 
-from pin import CLASSES, PAGE, Kernel, Mapping, Target, byte_count, classify, page_ranges, selection_digest
+from pin import CLASSES, PAGE, Kernel, Mapping, Target, byte_count, classify, page_ranges, selection_digest, release_preserving_error
 
 
 @dataclass(frozen=True)
@@ -31,9 +31,12 @@ class Source:
     spec: Spec
 
 
+DOCKER_EXE = '/usr/bin/docker'
+
+
 def docker(*args):
     try:
-        return subprocess.check_output(['docker', *args], timeout=5, stderr=subprocess.DEVNULL)
+        return subprocess.check_output([DOCKER_EXE, *args], timeout=5, stderr=subprocess.DEVNULL)
     except (OSError, subprocess.SubprocessError):
         raise RuntimeError('docker_inspection_failed') from None
 
@@ -81,8 +84,9 @@ PROC = Path('/proc')
 MAX_MAPPED_FILES = 20000
 
 
-def inventory(source, include_payload=False):
-    if inspect_source(source.spec).identity != source.identity:
+def inventory(source, include_payload=False, source_check=None):
+    check_source = source_check or inspect_source
+    if check_source(source.spec).identity != source.identity:
         raise RuntimeError('source_identity_changed')
     targets, seen, deleted = [], set(), 0
     try:
@@ -112,7 +116,7 @@ def inventory(source, include_payload=False):
                 raise RuntimeError('mapped_device_changed')
             if target.kind == 'payload' and not include_payload:
                 target.close(); target.measured_only = True
-        if not targets or inspect_source(source.spec).identity != source.identity:
+        if not targets or check_source(source.spec).identity != source.identity:
             raise RuntimeError('source_changed_during_inventory')
         return Inventory(targets, deleted)
     except Exception:
@@ -135,8 +139,10 @@ def accounting(source):
             'memoryEvents': events, 'cpu': cpu}
 
 
-def prepare_self(source, max_locked_bytes, raise_own_limit=False):
+def prepare_self(source, max_locked_bytes, raise_own_limit=False, source_check=None):
     """Root-only changes to this helper process, never services/ancestors."""
+    if source_check is None:
+        raise RuntimeError('outside_source_inspector_required')
     if os.geteuid() != 0:
         raise PermissionError('root_helper_required')
     Path('/proc/self/oom_score_adj').write_text('1000')
@@ -145,7 +151,7 @@ def prepare_self(source, max_locked_bytes, raise_own_limit=False):
         if not raise_own_limit:
             raise RuntimeError('explicit_own_memlock_raise_required')
         resource.setrlimit(resource.RLIMIT_MEMLOCK, (max_locked_bytes, max_locked_bytes if hard != resource.RLIM_INFINITY and hard < max_locked_bytes else hard))
-    if inspect_source(source.spec).identity != source.identity:
+    if source_check(source.spec).identity != source.identity:
         raise RuntimeError('source_changed_before_helper_accounting')
     if Path('/proc/self/cgroup').read_text().strip().split(':', 2)[2] != source.cgroup_relative:
         with (source.cgroup / 'cgroup.procs').open('w') as output:
@@ -154,7 +160,7 @@ def prepare_self(source, max_locked_bytes, raise_own_limit=False):
         raise RuntimeError('helper_accounting_not_joined')
 
 
-def reconcile_source(manager, spec, allow_clone_pressure_max=False):
+def reconcile_source(manager, spec, allow_clone_pressure_max=False, source_check=None):
     """One guarded pass. Any source/inventory failure releases prior locks."""
     targets = []
     try:
@@ -162,11 +168,13 @@ def reconcile_source(manager, spec, allow_clone_pressure_max=False):
             raise ValueError('clone_pressure_window_required')
         if manager.policy.mode != spec.mode:
             raise ValueError('policy_source_mode_mismatch')
-        source = inspect_source(spec)
+        if source_check is None:
+            raise RuntimeError('outside_source_inspector_required')
+        source = source_check(spec)
         if manager.source_identity != source.identity:
             manager.release()
-        prepare_self(source, manager.policy.max_locked_bytes)
-        sampled = inventory(source, manager.policy.include_payload)
+        prepare_self(source, manager.policy.max_locked_bytes, source_check=source_check)
+        sampled = inventory(source, manager.policy.include_payload, source_check=source_check)
         targets = sampled.targets
         for kind in ('vector', 'graph', 'sparse', 'other'):
             members = [target for target in targets if target.kind == kind]
@@ -176,7 +184,7 @@ def reconcile_source(manager, spec, allow_clone_pressure_max=False):
         state = manager.reconcile(targets, source.identity, before)
         if any(values['residentLockedDataPages'] != values['lockedDataPages'] for values in state['lockedResidency'].values()):
             raise RuntimeError('locked_data_residency_incomplete')
-        after_source = inspect_source(spec)
+        after_source = source_check(spec)
         after = accounting(after_source)
         if after_source.identity != source.identity or after['availableBytes'] < manager.policy.emergency_bytes:
             raise RuntimeError('source_or_emergency_headroom_changed_after_locking')
@@ -196,21 +204,22 @@ def reconcile_source(manager, spec, allow_clone_pressure_max=False):
                       'memoryEventDelta': event_delta, 'cpuLimitDelta': cpu_delta, 'clonePressureMaxAllowed': pressure_max_allowed,
                       'existingPageChargeMayDiffer': True, 'allExistingPageChargesInsideTargetCgroupProven': False})
         return state
-    except Exception:
-        manager.release()
+    except Exception as original:
+        release_preserving_error(manager, original)
         raise
     finally:
         for target in targets:
             if all(mapping.target is not target for mapping in manager.mappings.values()): target.close()
 
 
-def measure_source(spec, include_payload=False):
+def measure_source(spec, include_payload=False, source_check=None):
     """Readonly inventory/mincore pass: no locks, cgroup joins, or self-limit writes."""
     if type(include_payload) is not bool:
         raise ValueError('explicit_measure_selection_required')
-    source = inspect_source(spec)
-    sampled = inventory(source, include_payload=True)
-    measured = {kind: {'files': 0, 'dataPages': 0, 'residentDataPages': 0} for kind in CLASSES}
+    check_source = source_check or inspect_source
+    source = check_source(spec)
+    sampled = inventory(source, include_payload=True, source_check=check_source)
+    measured = {kind: {'files': 0, 'dataPages': 0, 'residentDataPages': 0, 'rawExtentCount': 0, 'dataRangeCount': 0} for kind in CLASSES}
     kernel = Kernel()
     selection = []
     try:
@@ -218,6 +227,7 @@ def measure_source(spec, include_payload=False):
             ranges = page_ranges(target.ranges, target.identity[2])
             values = measured[target.kind]
             values['files'] += 1; values['dataPages'] += byte_count(ranges) // PAGE
+            values['rawExtentCount'] += len(target.ranges); values['dataRangeCount'] += len(ranges)
             mapping = Mapping(target, kernel)
             try:
                 if mapping.address is not None:
@@ -227,13 +237,26 @@ def measure_source(spec, include_payload=False):
                     selection.append((target.kind, target.identity, target.ranges))
             finally:
                 mapping.close()
-        after = inspect_source(spec)
+        after = check_source(spec)
         if after.identity != source.identity:
             raise RuntimeError('source_changed_during_measurement')
         return {'event': 'mapped-data-measure-state.v1', 'mode': spec.mode, 'qdrantPid': source.pid,
                 'sourceStartTicks': source.identity[3], 'classesMeasured': measured, 'pageBytes': PAGE,
                 'selectionHash': selection_digest(selection),
                 'extentRangesHashed': True, 'contentFixed': False, 'accounting': accounting(source),
+                'helperVmas': len(Path('/proc/self/maps').read_text().splitlines()),
+                'maxMapCount': int(Path('/proc/sys/vm/max_map_count').read_text()),
                 'deletedMappingsExcluded': sampled.deleted_mappings, 'lockedBytes': 0, 'queries': 0, 'storageWrites': 0}
     finally:
         for target in sampled.targets: target.close()
+
+
+def validate_source_locally(source):
+    proc = PROC / str(source.pid)
+    raw = (proc / 'stat').read_text(); fields = raw[raw.rfind(')') + 2:].split()
+    group = (proc / 'cgroup').read_text().strip().split(':', 2)[2]
+    if ((proc / 'comm').read_text().strip() != 'qdrant' or (proc / 'exe').readlink().name != 'qdrant'
+            or int(fields[19]) != source.identity[3] or source.pid != source.identity[2]
+            or group != source.cgroup_relative or not group.endswith('/docker-' + source.identity[0] + '.scope')):
+        raise RuntimeError('local_source_identity_changed')
+    return source

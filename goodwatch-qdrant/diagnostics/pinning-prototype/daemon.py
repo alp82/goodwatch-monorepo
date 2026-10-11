@@ -8,6 +8,8 @@ import signal
 import time
 from pathlib import Path
 
+# Isolated interpreter mode omits sibling directory; add only this reviewed directory.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pin
 import runtime
 
@@ -51,7 +53,7 @@ def load_config(path, expected_policy, expected_code):
     if s['memoryBytes'] != 6*pin.GIB or s['cpuNanos'] != 2_000_000_000 or type(s['swapBytes']) is not int or s['swapBytes'] != 6*pin.GIB:
         raise ValueError('fixed_clone_resources_required')
     p = config['policy']
-    if set(p) != {'maxLockedBytes', 'archiveBytes', 'reserveBytes', 'emergencyBytes', 'includePayload'} or p['includePayload'] is not False:
+    if set(p) != {'maxLockedBytes', 'archiveBytes', 'reserveBytes', 'emergencyBytes', 'includePayload', 'capReserveBytes', 'mappingReserveCount'} or p['includePayload'] is not False:
         raise ValueError('four_class_policy_required')
     budget = integer(p['maxLockedBytes'], 1, 2*pin.GIB)
     archive = integer(p['archiveBytes'], 4428863488, 4428863488)
@@ -61,7 +63,7 @@ def load_config(path, expected_policy, expected_code):
     if not isinstance(config['actions'], list) or not config['actions'] or len(config['actions']) != len(set(config['actions'])) or set(config['actions']) - {'measure', 'pin'}:
         raise ValueError('explicit_actions_required')
     spec = runtime.Spec('clone', s['container'], s['image'], ROOT/'store', mounts, s['memoryBytes'], s['swapBytes'], s['cpuNanos'])
-    policy = pin.Policy('clone', budget, archive, reserve, emergency)
+    policy = pin.Policy('clone', budget, archive, reserve, emergency, cap_reserve_bytes=integer(p['capReserveBytes'],1,pin.GIB), mapping_reserve_count=integer(p['mappingReserveCount'],1,16384))
     return config, spec, policy
 
 
@@ -86,7 +88,7 @@ def public_state(value):
            'qdrantPid': integer(value['qdrantPid'], 1), 'sourceStartTicks': integer(value['sourceStartTicks'], 1)}
     if not out['extentRangesHashed']:
         raise ValueError('range_identity_missing')
-    out['classesMeasured'] = {kind: {k: integer(value['classesMeasured'][kind][k]) for k in ('files', 'dataLockBytes')} for kind in KINDS}
+    out['classesMeasured'] = {kind: {k: integer(value['classesMeasured'][kind][k]) for k in ('files', 'dataLockBytes', 'dataPages', 'rawExtentCount', 'dataRangeCount')} for kind in KINDS}
     out['accountingBefore'] = account(value['accountingBefore']); out['accountingAfter'] = account(value['accountingAfter'])
     # Strip all unrecognized keys, paths, exception messages and raw file/process metadata.
     out['lockedResidency'] = {kind: {k: integer(value['lockedResidency'][kind][k]) for k in ('lockedDataPages', 'residentLockedDataPages')} for kind in ('vector', 'graph', 'sparse', 'other')}
@@ -97,6 +99,12 @@ def public_state(value):
     out['memoryEventDelta'] = {k: integer(value['memoryEventDelta'][k]) for k in ('oom', 'oom_kill', 'max')}
     out['cpuLimitDelta'] = {k: integer(value['cpuLimitDelta'][k]) for k in ('nr_throttled', 'throttled_usec')}
     out['clonePressureMaxAllowed'] = value['clonePressureMaxAllowed'] is True
+    out['mappingBounds'] = {k: integer(value['mappingBounds'][k]) for k in ('currentVmas','maxMapCount','projectedAdditionalVmas','reservedVmas','projectedTotalVmas')}
+    out['nonresidentSelectedBytes'] = integer(value['nonresidentSelectedBytes'])
+    out['projectedCurrentBytes'] = integer(value['projectedCurrentBytes'])
+    out['capReserveBytes'] = integer(value['capReserveBytes'])
+    if type(value['capHeadroomRequired']) is not bool: raise ValueError('invalid_runtime_state')
+    out['capHeadroomRequired'] = value['capHeadroomRequired']
     out['pageBytes'] = integer(value['pageBytes'], 1)
     out['rangesChanged'] = value['rangesChanged'] is True
     out['allExistingPageChargesInsideTargetCgroupProven'] = False
@@ -110,9 +118,10 @@ def public_measure(value):
     if not isinstance(digest, str) or len(digest) != 64 or any(c not in '0123456789abcdef' for c in digest):
         raise ValueError('invalid_selection_digest')
     return {'event': value['event'], 'mode': 'clone', 'lockedBytes': 0, 'selectionHash': digest,
-            'classesMeasured': {kind: {k: integer(value['classesMeasured'][kind][k]) for k in ('files', 'dataPages', 'residentDataPages')} for kind in KINDS},
+            'classesMeasured': {kind: {k: integer(value['classesMeasured'][kind][k]) for k in ('files', 'dataPages', 'residentDataPages', 'rawExtentCount', 'dataRangeCount')} for kind in KINDS},
             'accounting': account(value['accounting']), 'qdrantPid': integer(value['qdrantPid'], 1),
             'sourceStartTicks': integer(value['sourceStartTicks'], 1), 'pageBytes': integer(value['pageBytes'], 1),
+            'helperVmas': integer(value['helperVmas']), 'maxMapCount': integer(value['maxMapCount'],1),
             'queries': 0, 'storageWrites': 0}
 
 
@@ -121,7 +130,7 @@ def run(config, spec, policy, action, emit, raise_own_memlock=False, clock=time.
         raise ValueError('measure_cannot_raise_limits')
     if action not in config['actions']:
         raise ValueError('action_not_in_frozen_policy')
-    manager = None; stop = False
+    stop = False
     def stopping(_signal, _frame):
         nonlocal stop
         stop = True
@@ -130,24 +139,16 @@ def run(config, spec, policy, action, emit, raise_own_memlock=False, clock=time.
         for signum in (signal.SIGINT, signal.SIGTERM):
             previous[signum] = signal.signal(signum, stopping)
         if action == 'pin':
-            # Instance lock is distinct from the cold/pressure controller lock.
-            manager = pin.PinSet(policy, ROOT/'replay/pin-instance.lock')
-            if raise_own_memlock:
-                source = runtime.inspect_source(spec)
-                runtime.prepare_self(source, policy.max_locked_bytes, raise_own_limit=True)
+            raise RuntimeError('outside_source_inspector_required')
         deadline = clock() + config['lifetimeSeconds']
         while not stop and clock() < deadline:
-            state = public_measure(runtime.measure_source(spec)) if manager is None else public_state(runtime.reconcile_source(manager, spec))
+            state = public_measure(runtime.measure_source(spec))
             emit({**state, 'at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'action': action})
             remaining = deadline - clock()
             if remaining > 0 and not stop: wait(min(config['intervalSeconds'], remaining))
         emit({'event': 'mapped-data-pin-stopping.v1', 'reason': 'signal' if stop else 'lifetime', 'queries': 0, 'storageWrites': 0})
     finally:
-        # No retry after a failed unmap. Fatal exit is the final kernel cleanup boundary.
-        try:
-            if manager is not None: manager.close()
-        finally:
-            for signum, handler in previous.items(): signal.signal(signum, handler)
+        for signum, handler in previous.items(): signal.signal(signum, handler)
 
 
 class SafeParser(argparse.ArgumentParser):
@@ -171,9 +172,9 @@ def main(argv=None):
         config, spec, policy = load_config(args.config, args.policy_sha256, args.code_sha256)
         run(config, spec, policy, args.action, lambda state: emit({**state, 'codeSha256': args.code_sha256, 'policySha256': args.policy_sha256}), args.raise_own_memlock)
         return 0
-    except BaseException:
+    except BaseException as error:
         # Do not print paths, arguments, source data, provider errors or exception messages.
-        emit({'event': 'mapped-data-pin-failed.v1', 'reason': 'guard_or_runtime_failure', 'queries': 0, 'storageWrites': 0})
+        emit({'event': 'mapped-data-pin-failed.v1', 'reason': pin.safe_reason(error), 'released': True, 'queries': 0, 'storageWrites': 0})
         return 1
 
 
