@@ -1,0 +1,46 @@
+{
+  "observed_at": "2026-10-11T19:50:15Z",
+  "production_process_identity": {
+    "container": "qdrant-main",
+    "pid": 3411704,
+    "container_main_is_qdrant": true,
+    "wrapper_child_mismatch": false
+  },
+  "backup": {
+    "deployed_script_sha256": "5e543044d997a35bdfa325e7df7e03e28f28af5a05208e87b4663815d79bf160",
+    "matches_repository_script": true,
+    "cron_schedule": "15 * * * *",
+    "timezone": "UTC",
+    "flock": false,
+    "nice": false,
+    "ionice": false,
+    "observed_executions": 20,
+    "execution_hour_range": [
+      0,
+      19
+    ],
+    "execution_second_range": [
+      1.052613,
+      1.857391
+    ],
+    "last_cron_execution": "2026-10-11T19:15:01.178236Z",
+    "last_media_hourly_copy_timestamp": "2026-10-11T19:16:56Z",
+    "last_second_collection_hourly_copy_timestamp": "2026-10-11T19:18:16Z",
+    "media_hourly_copy_timestamp_minute_second_range": [
+      "16:55",
+      "17:03"
+    ],
+    "ordinary_second_collection_hourly_copy_timestamp_minute_second_range": [
+      "18:13",
+      "18:22"
+    ],
+    "midnight_second_collection_hourly_copy_timestamp": "2026-10-11T00:21:00Z"
+  },
+  "limitations": [
+    "Copy timestamps are names generated before copy, not precise job-completion timestamps.",
+    "No explicit timestamp accompanies backup trigger messages.",
+    "19:18:05 baseline temporal association does not establish backup causality.",
+    "Mapped residency classifications infer path tokens; whole-file page counts include sparse/preallocated holes.",
+    "Prospective before/after backup evidence is pending."
+  ]
+}

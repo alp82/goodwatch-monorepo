@@ -1,0 +1,47 @@
+{
+  "event": "qdrant-memory-placement-audit",
+  "date": "2026-10-11",
+  "livePersistedCollectionExplicitMemoryOverrides": [],
+  "clonePersistedCollectionExplicitMemoryOverrides": [],
+  "liveEnvironment": {
+    "lowMemoryPopulationEnvFlags": [],
+    "lowMemoryArgPresent": false
+  },
+  "cloneEnvironment": {
+    "lowMemoryPopulationEnvFlags": [],
+    "lowMemoryArgPresent": false
+  },
+  "segments": 12,
+  "denseStoragePerVector": {
+    "fingerprint_v1": {
+      "InRamMmap": 6,
+      "InRamChunkedMmap": 6
+    },
+    "fingerprint_v1_raw": {
+      "InRamMmap": 6,
+      "InRamChunkedMmap": 6
+    },
+    "text_en_v1": {
+      "InRamMmap": 6,
+      "InRamChunkedMmap": 6
+    },
+    "text_multi_v1": {
+      "InRamMmap": 6,
+      "InRamChunkedMmap": 6
+    }
+  },
+  "livePayloadStorage": {
+    "mmap": 12
+  },
+  "liveSparseIndex": {
+    "ImmutableRam": 6,
+    "MutableRam": 6
+  },
+  "interpretation": "Legacy dense in-RAM storage is cached/preloaded but evictable in pinned v1.19.1; explicit dense pinned placement is rejected by API validation. Persisted placement and absent explicit startup flags do not prove runtime population or file residency.",
+  "source": "https://raw.githubusercontent.com/qdrant/qdrant/v1.19.1/lib/segment/src/types.rs",
+  "limits": [
+    "No runtime load-profile instrumentation exists in this audit",
+    "Environment audit only explicitly configured env/Cmd/Entrypoint flag names; script-generated flags or config defaults remain outside its scope",
+    "Clone snapshot is older than live collection"
+  ]
+}
