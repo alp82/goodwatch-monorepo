@@ -121,9 +121,9 @@ The fixture starts only loopback processes and makes no production requests. `pr
 
 ## Install durable ingress collection after approval
 
-The companion files are in `goodwatch-search/acceptance/`: `ingress-collect.mjs`, `ingress-events.mjs`, `ingress-verify.mjs`, `ingress.test.mjs` and `goodwatch-search-ingress.service`. They reuse the reviewed `Journal` from `collect.mjs`, timestamp helper from `events.mjs` and seven-day constant from `history.mjs`; keep those dependencies beside the ingress files. Node is already installed on both hosts; abio was verified at `/usr/bin/node`, version 20.5.1. No registry credentials, network calls or package installation are needed.
+The companion files are in `goodwatch-search/acceptance/`: `ingress-collect.mjs`, `ingress-events.mjs`, `ingress-config.mjs`, `ingress-verify.mjs`, `ingress.test.mjs` and `goodwatch-search-ingress.service`. They reuse the reviewed `Journal` from `collect.mjs`, timestamp helper from `events.mjs` and seven-day constant from `history.mjs`; keep those dependencies beside the ingress files. Node is already installed on both hosts; abio was verified at `/usr/bin/node`, version 20.5.1. No registry credentials, network calls or package installation are needed.
 
-The collector follows both stdout/stderr for the fixed container `coolify-proxy`, polls for replacements every ten seconds and drains previous followers. It writes only fixed host/container IDs, sanitized search-route POST statuses, timestamps and collection fences/problems. Raw logs and logger metadata are never written. The shared journal fsyncs each record, deduplicates replay across restarts and rejects an incomplete final record. Heartbeat gaps over 45 seconds, collector restarts inside the window, unavailable proxy containers, malformed matched access events and log-stream failures block acceptance. A running container is not proof its routes or TLS are correct; validate health/routing before the window and review application metrics separately.
+The collector follows both stdout/stderr for the fixed container `coolify-proxy`, polls for replacements every ten seconds and drains previous followers. It writes only fixed host/container IDs, tested image digests, approved logging fingerprints/readiness, sanitized search-route POST statuses, timestamps and collection fences/problems. Raw logs and logger metadata are never written. The shared journal fsyncs each record, deduplicates replay across restarts and rejects an incomplete final record. Heartbeat gaps over 45 seconds, collector restarts inside the window, unavailable proxy containers, malformed matched access events and log-stream failures block acceptance. Every heartbeat must also retain the exact approved access-log arguments and tested image digest. The Docker inspect template emits only fixed argument indexes or an unknown-override marker; full command/environment values never leave Docker. Missing/duplicate/unknown access-log options, access-log environment overrides or a config-file override mark logging unready and record a coverage problem. A Coolify replacement that drops access logging cannot pass using old responses. A running container is not proof its routes or TLS are correct; validate health/routing before the window and review application metrics separately.
 
 Run these commands only after approval, on **each** host from a checkout containing the reviewed commit:
 
@@ -132,7 +132,7 @@ set -e
 install -d -m 0755 /opt/goodwatch-search-acceptance
 install -d -m 0755 /opt/goodwatch-search-acceptance/docker-config
 install -d -m 0700 /var/lib/goodwatch-search-ingress
-for acceptance_file in collect.mjs events.mjs history.mjs ingress-collect.mjs ingress-events.mjs ingress-verify.mjs; do
+for acceptance_file in collect.mjs events.mjs history.mjs ingress-collect.mjs ingress-events.mjs ingress-config.mjs ingress-verify.mjs; do
   install -m 0644 "goodwatch-search/acceptance/$acceptance_file" /opt/goodwatch-search-acceptance/
 done
 install -m 0644 goodwatch-search/acceptance/goodwatch-search-ingress.service /etc/systemd/system/
@@ -144,24 +144,34 @@ systemctl enable --now goodwatch-search-ingress
 systemctl is-active --quiet goodwatch-search-ingress
 ```
 
-The environment file contains only two nonsecret settings:
+The environment file contains only three nonsecret settings:
 
 ```text
 SEARCH_INGRESS_HOST=abio
 SEARCH_INGRESS_REPLAY_FROM=YYYY-MM-DDTHH:MM:SS.sssZ
+SEARCH_INGRESS_IMAGE_ID=sha256:FULL_64_HEX_TESTED_IMAGE_ID
 ```
 
-Use `vector1` on the second host. The service restricts writes to `/var/lib/goodwatch-search-ingress`, socket families to local Unix sockets, and uses an empty Docker config directory so registry credentials are unnecessary. Inspect sanitized heartbeats in that directory, not complete Docker logs. Start it before the reviewed static proxy rollout, then choose the acceptance start after both proxies emit the validated whitelist and both collectors have healthy heartbeats. Keep collection running through the end and through the application's cohort drain.
+Use `vector1` on the second host. Before installation/start, record `docker exec coolify-proxy traefik version` and `docker inspect --format '{{.Image}}' coolify-proxy`; verify the executable is the tested version, the configured tag resolves to that same local image ID, and set `SEARCH_INGRESS_IMAGE_ID` to that exact digest. Repeat after the reviewed proxy recreation before starting the acceptance window. Stop and repeat the binary privacy fixture if the version or digest changed unexpectedly.
+
+Read-only inspected image IDs (not mutable tags):
+
+```text
+abio 2.10.7: sha256:ee69e8120b64a420b5deca1cf46db0e4188ef76c7807a45c0f26d8a5ac2ab2bd
+vector1 3.6.25: sha256:ee0b3aaa56c3f593da2c7d67ebbdbc600155bf6be2c3cece8f7870db29714a88
+```
+
+The service restricts writes to `/var/lib/goodwatch-search-ingress`, socket families to local Unix sockets, and uses an empty Docker config directory so registry credentials are unnecessary. Inspect sanitized heartbeats in that directory, not complete Docker logs. Start it before the reviewed static proxy rollout, then choose the acceptance start after both proxies emit the validated whitelist and both collectors have healthy heartbeats. Keep collection running through the end and through the application's cohort drain.
 
 Verify each host's closed journal separately after at least seven days:
 
 ```sh
 node /opt/goodwatch-search-acceptance/ingress-verify.mjs \
-  /var/lib/goodwatch-search-ingress/events.ndjson START_UTC END_UTC abio \
+  /var/lib/goodwatch-search-ingress/events.ndjson START_UTC END_UTC abio FULL_TESTED_IMAGE_ID \
   > /var/lib/goodwatch-search-ingress/summary.json
 ```
 
-Use `vector1` on that host. Exit `1` means response/coverage checks failed, `2` means invalid journal/configuration, and `3` means scoped ingress checks passed but joint history/lifecycle review remains required. It intentionally never exits zero or independently marks seven-day acceptance complete. Require successful scoped summaries from both hosts, then combine them with the application history/lifecycle evidence and deployment/readiness evidence.
+Use `vector1` and its tested image ID on that host. Exit `1` means response/coverage checks failed, `2` means invalid journal/configuration, and `3` means scoped ingress checks passed but joint history/lifecycle review remains required. It intentionally never exits zero or independently marks seven-day acceptance complete. Require successful scoped summaries from both hosts, then combine them with the application history/lifecycle evidence and deployment/readiness evidence.
 
 Proxy-generated or origin 5xx statuses and missing HTTP statuses fail; 4xx counts are retained for review and do not independently fail the 5xx check. Requests that have not yet produced an access record remain unprovable here: require the application lifecycle drain check, review boundary timing, and do not assume a before/after heartbeat demonstrates every request finished. Unknown routers/methods, DNS/TLS/connectivity failures before selection and silent logging sink loss remain outside this evidence. Losing the router would remove its records, so complete routing availability cannot be inferred merely from a positive response denominator.
 

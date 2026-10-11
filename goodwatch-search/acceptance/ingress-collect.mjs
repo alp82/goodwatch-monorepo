@@ -6,9 +6,10 @@ import { pathToFileURL } from 'node:url';
 import { iso } from './events.mjs';
 import { parseIngressLine, hosts } from './ingress-events.mjs';
 import { Journal } from './collect.mjs';
+import { approvedLogging, inspectIngressFormat, loggingReady, imageId } from './ingress-config.mjs';
 const exec = promisify(execFile);
-const inspectFormat = '{"containerId":"{{.Id}}","startedAt":"{{.State.StartedAt}}","running":{{.State.Running}}}';
-export async function collectIngress(directory, since, host, { pollMs = 10000 } = {}) {
+export async function collectIngress(directory, since, host, { pollMs = 10000, expectedImageId } = {}) {
+  if (!imageId(expectedImageId)) throw new Error('Expected tested proxy image digest required');
   if (!hosts.includes(host)) throw new Error('Use fixed host abio or vector1');
   if (!iso(since) || !since.endsWith('Z')) throw new Error('Supply an explicit UTC deployment boundary ending Z');
   const journal = new Journal(directory), followers = new Map(), children = new Set();
@@ -44,10 +45,12 @@ export async function collectIngress(directory, since, host, { pollMs = 10000 } 
     const sources = [];
     try {
       try {
-        const { stdout } = await exec('docker', ['inspect', '--format', inspectFormat, 'coolify-proxy'], { timeout: 5000, maxBuffer: 4096 });
+        const { stdout } = await exec('docker', ['inspect', '--format', inspectIngressFormat(host), 'coolify-proxy'], { timeout: 5000, maxBuffer: 4096 });
         const raw = JSON.parse(stdout.trim());
         if (!/^[a-f0-9]{64}$/.test(raw.containerId) || !iso(raw.startedAt) || typeof raw.running !== 'boolean') throw new Error();
-        const source = { host, containerId: raw.containerId, startedAt: raw.startedAt, running: raw.running };
+        const accessLoggingReady = loggingReady(raw, host, expectedImageId);
+        const source = { host, containerId: raw.containerId, startedAt: raw.startedAt, running: raw.running, imageId: imageId(raw.imageId) ? raw.imageId : null, accessLoggingReady, loggingFingerprint: accessLoggingReady ? approvedLogging(host).fingerprint : null };
+        if (!accessLoggingReady) note('collector.problem', { kind: 'logging_configuration', containerId: raw.containerId });
         sources.push(source);
         const prior = followers.get(host);
         if (source.running && prior?.closed && prior.source.containerId === source.containerId)
@@ -81,7 +84,7 @@ export async function collectIngress(directory, since, host, { pollMs = 10000 } 
   });
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const [directory, since, host] = process.argv.slice(2);
-  if (!directory) { process.stderr.write('Usage: node ingress-collect.mjs EVIDENCE_DIRECTORY DEPLOYMENT_UTC HOST\n'); process.exitCode = 2; }
-  else collectIngress(directory, since, host).catch(() => { process.stderr.write('Collector failed; coverage is incomplete. No raw logs emitted.\n'); process.exitCode = 2; });
+  const [directory, since, host, expectedImageId] = process.argv.slice(2);
+  if (!directory) { process.stderr.write('Usage: node ingress-collect.mjs EVIDENCE_DIRECTORY DEPLOYMENT_UTC HOST EXPECTED_IMAGE_ID\n'); process.exitCode = 2; }
+  else collectIngress(directory, since, host, { expectedImageId }).catch(() => { process.stderr.write('Collector failed; coverage is incomplete. No raw logs emitted.\n'); process.exitCode = 2; });
 }

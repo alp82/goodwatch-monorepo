@@ -2,9 +2,10 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { iso } from './events.mjs';
 import { hosts } from './ingress-events.mjs';
+import { approvedLogging, imageId } from './ingress-config.mjs';
 import { SEVEN_DAYS } from './history.mjs';
-export function verifyIngress(records, { start, end, host, now = Date.now(), maxHeartbeatGapMs = 45000 }) {
-  if (!iso(start) || !iso(end) || !hosts.includes(host)) throw new Error('Explicit UTC window and fixed host required');
+export function verifyIngress(records, { start, end, host, expectedImageId, now = Date.now(), maxHeartbeatGapMs = 45000 }) {
+  if (!iso(start) || !iso(end) || !hosts.includes(host) || !imageId(expectedImageId)) throw new Error('Explicit UTC window and fixed host required');
   const lo = Date.parse(start), hi = Date.parse(end);
   if (hi <= lo) throw new Error('Invalid window');
   const keys = new Set(), responses = [], beats = [], collection = [];
@@ -36,7 +37,7 @@ export function verifyIngress(records, { start, end, host, now = Date.now(), max
   let gaps = 0, unavailable = 0;
   for (let i=0; i<fenced.length; i++) {
     if (i && Date.parse(fenced[i].at)-Date.parse(fenced[i-1].at) > maxHeartbeatGapMs) gaps++;
-    if (!fenced[i].sources?.some(s => s.host === host && s.running === true && /^[a-f0-9]{64}$/.test(s.containerId))) unavailable++;
+    if (!fenced[i].sources?.some(s => s.host === host && s.running === true && s.accessLoggingReady === true && s.imageId === expectedImageId && s.loggingFingerprint === approvedLogging(host).fingerprint && /^[a-f0-9]{64}$/.test(s.containerId))) unavailable++;
   }
   const relevant = collection.filter(r => Date.parse(r.at) >= lo && Date.parse(r.at) <= drain);
   const restarts = relevant.filter(r => r.type === 'collector.started' && Date.parse(r.at) > lo).length;
@@ -47,7 +48,7 @@ export function verifyIngress(records, { start, end, host, now = Date.now(), max
     valid_journal_records: invalid === 0,
     heartbeat_fences_complete: Boolean(before && after),
     no_heartbeat_gaps: gaps === 0,
-    proxy_running_through_window: unavailable === 0,
+    proxy_running_with_approved_logging_and_image: unavailable === 0,
     no_collector_restarts: restarts === 0,
     no_collection_problems: problems === 0,
     has_routed_post_responses: responses.length > 0,
@@ -55,7 +56,7 @@ export function verifyIngress(records, { start, end, host, now = Date.now(), max
     all_responses_have_http_status: counts.no_status === 0,
   };
   return {
-    host, window_start: start, window_end: end, observed_drain_cutoff: new Date(drain).toISOString(),
+    host, expected_image_id: expectedImageId, approved_logging_fingerprint: approvedLogging(host).fingerprint, window_start: start, window_end: end, observed_drain_cutoff: new Date(drain).toISOString(),
     routed_post_responses: responses.length, statuses, ...counts,
     heartbeat_gap_count: gaps, unavailable_heartbeat_count: unavailable,
     collector_restart_count: restarts, collection_problem_count: problems, invalid_record_count: invalid,
@@ -71,11 +72,11 @@ export function verifyIngress(records, { start, end, host, now = Date.now(), max
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
-    const [path,start,end,host] = process.argv.slice(2);
+    const [path,start,end,host,expectedImageId] = process.argv.slice(2);
     const text = readFileSync(path,'utf8');
     if (text && !text.endsWith('\n')) throw new Error();
     const records = text.split('\n').filter(Boolean).map(JSON.parse);
-    const result = verifyIngress(records,{start,end,host});
+    const result = verifyIngress(records,{start,end,host,expectedImageId});
     process.stdout.write(JSON.stringify(result,null,2)+'\n');
     process.exitCode = result.ingress_response_checks_pass ? 3 : 1;
   } catch { process.stderr.write('Ingress verification failed: invalid journal/window/host.\n'); process.exitCode=2; }
