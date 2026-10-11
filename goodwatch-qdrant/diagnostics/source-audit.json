@@ -20,7 +20,6 @@
   "rssMultiplyByHostPageSize": true,
   "counterPidPinnedToActualQdrantChild": true,
   "reclaimCountersReportedIndividually": true,
-  "extentComparisonRequiresSameFileAndExtentCohort": true,
   "wholeFileSparseHoleResidencyExcludedFromComparison": true,
   "orderedParitySeparateFromSortedPerIdScoreParity": true,
   "defaultNumericDiagnosticPolicy": null,
@@ -29,6 +28,9 @@
   "runtimeQueries": 0,
   "runtimeSignals": 0,
   "runtimeServiceChanges": 0,
-  "reportSha256": "252330a48cf0b6dd44848c1896d8a136c9fff6bb4d7f7bc7af54b229d4c04983",
-  "signalReceiptTimestampRaceHandledByCausalFences": true
+  "reportSha256": "99f931f14ceeb1054491b4d2cfcbe0e5ec8017c0569fb26a3ec36705c605c43d",
+  "signalReceiptTimestampRaceHandledByCausalFences": true,
+  "coarseComparisonRequiresSameFileIdentityHashAndExtentPageCounts": true,
+  "extentRangesAndContentNotRetained": true,
+  "concurrentExtentRangeOrContentChangesNotExcluded": true
 }
