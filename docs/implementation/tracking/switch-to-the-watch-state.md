@@ -5,7 +5,9 @@ How the webapp that reads and writes `user_watch_log` and `user_watch_state` goe
 way. The model is in [data-model.md](data-model.md); the migration is its section 6
 ([#381](https://github.com/alp82/goodwatch-monorepo/issues/381)).
 
-Nothing here has run against production. The statements were checked against the in-memory Crate of the tests.
+This ran on production: the build went live on 2026-10-07 22:44 UTC, the second run of the migration followed at
+once and verified ([#381](https://github.com/alp82/goodwatch-monorepo/issues/381)), and `user_watch_history` was
+dropped on 2026-10-11. The text below is the plan as it was written before, kept as the record.
 
 ## The constraint
 
@@ -41,10 +43,12 @@ between, members keep using the build before, which writes `user_watch_history`.
 4. **Check** with the statements of data-model.md, section 5 ("Invariants and the check"), for the members the
    second run wrote rows for. Invariant 4 is the one this gap can break.
 5. **30 days later,** without a rollback: drop `user_watch_history` by hand and take out what only the switch needed
-   (below).
+   (below). Done earlier, on 2026-10-11, by the owner's decision: every row was exported first, and the export's
+   count was checked against the table (5,885 rows).
 
 A rollback before step 5 is the build before: it reads `user_watch_history`, which nothing has changed. What members
 did in the new build since the deploy is not in the old table and would be missing until the switch is made again.
+Since the drop there is no such rollback: the build before has no table to read.
 
 ## The gap between the first run and the end of the deploy
 
@@ -90,15 +94,23 @@ While the deploy rolls, one member's requests can reach either build.
 
 ## What only the switch needs
 
-To take out when `user_watch_history` is dropped (step 5):
+The table was dropped on 2026-10-11 (step 5). Taken out with it: `user_watch_history` in the list of user tables
+(`goodwatch-flows/scripts/provider_alias_resolution.py`) and the table's definition
+(`goodwatch-flows/windmill/f/sync/models/crate_schemas.py`). The definition has to be gone from the deployed
+Windmill workspace too: `f/sync/populate_crate` runs `f/sync/init/cratedb` every day, which creates every table
+the definitions list and Crate doesn't have.
+
+Still to take out of the webapp:
 
 | What | Where |
 | --- | --- |
 | `watched` in the answer of `/api/user-data`, and the default for a missing `watchState` | `withLegacyWatched`, `withWatchState` in `goodwatch-webapp/app/types/user-data.ts`, called in `app/routes/api.user-data.tsx` |
 | `watchedAt` accepted in the Undo of "I watched it" | `app/routes/api.watch-next_.watched.ts` |
-| The delete from `user_watch_history` in account deletion | `deleteTrackingData` in `app/server/tracking.server.ts` |
-| `user_watch_history` in the list of user tables | `goodwatch-flows/scripts/provider_alias_resolution.py` |
-| The table's definition | `goodwatch-flows/windmill/f/sync/models/crate_schemas.py` |
+| The delete from `user_watch_history` in account deletion. It treats the missing table as nothing to delete | `deleteTrackingData` in `app/server/tracking.server.ts` |
+
+The migration script `f/sync/tracking/migrate_watch_history` reads the dropped table and can't run any more. It
+and its tests stay as the record of what the migration did; the fill job and the rules it shares with them are
+still in use.
 
 `resetUserDataCache` no longer refreshes `user_watch_history`: nothing reads it, and a refresh of a dropped table
 would fail every reset. The cache name stays `user-data-v2`.

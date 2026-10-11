@@ -669,7 +669,7 @@ and no "leaving soon" or other simulated sort.
 
 **Actions:**
 
-- **I watched it** on the hero records the watch (`user_watch_history`), removes the title from Want to See (owner,
+- **I watched it** on the hero records the watch (`user_watch_log`, through the tracking writer), removes the title from Want to See (owner,
   [#193](https://github.com/alp82/goodwatch-monorepo/issues/193)), and opens the existing score prompt. "Rate later"
   skips the rating. The next title rises into the hero, and a toast says "Watch next: <title>" with Undo. Undo removes
   the watch and restores Want to See with its original `created_at`, so the title keeps its place in Waiting longest.

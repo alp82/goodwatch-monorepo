@@ -80,7 +80,8 @@ Rejected:
   deliver; Watch again is now built with episode tracking.
 - **Adding the state to `user_watch_history`.** Every reader takes a row there to mean Seen, and the old build
   would too during a deploy. The row per title is a new table, and the old one stays untouched as the backup until
-  it is dropped by hand 30 days after the switch.
+  it is dropped by hand 30 days after the switch. (It was dropped on 2026-10-11, earlier than that, by the owner's
+  decision and after an export of every row.)
 - **A summary of the watches in the state row,** recomputed by the writer on every write. It was the first draft of
   the data model. It makes every list a read of one row, and it stores every count twice.
 - **A scored title with no watch and no row,** Seen only where the score is read. A rated movie would then be Seen

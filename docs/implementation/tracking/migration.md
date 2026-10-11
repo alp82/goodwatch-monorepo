@@ -1,7 +1,9 @@
 # Running the watch history migration
 
 Issue [#381](https://github.com/alp82/goodwatch-monorepo/issues/381). The steps to move `user_watch_history` into
-`user_watch_log` and `user_watch_state`. What each old row becomes and why is in
+`user_watch_log` and `user_watch_state`. **The migration is done:** it ran on production on 2026-10-07 and verified
+([what the runs showed](#the-production-runs)), and `user_watch_history` was dropped on 2026-10-11. The migration
+script reads that table, so it can't run again; the steps below are the record. The fill job still runs every day. What each old row becomes and why is in
 [the data model, section 6](data-model.md#6-migration). Paths under `goodwatch-flows/windmill/` are shortened to
 `f/...`.
 
@@ -140,7 +142,10 @@ wmill script run f/sync/tracking/migrate_watch_history -d '{"dry_run": true}'
    Run it with `since`. Without it the run plans every old row again, and a title a member has taken back in the new
    build since the switch would become Seen again, because its old row is still there.
 
-`user_watch_history` is never written. It stays as the backup and is dropped by hand 30 days after the switch.
+`user_watch_history` is never written. It stayed as the backup and was to be dropped by hand 30 days after the
+switch. The owner decided to drop it earlier: on 2026-10-11, after every row (5,885) was exported to a file outside
+the repository, with the table's `CREATE` statement, and the export's count was checked against the table. No row
+had changed since 2026-10-06, before the switch.
 
 ## Undo
 
@@ -178,12 +183,20 @@ python -m unittest tests.test_watch_migration_rules tests.test_fill_seen_groups 
 
 They use an in-memory stand-in for Crate (`tests/watch_tables.py`) and no network.
 
-## Not tried against production
+## The production runs
 
-Nothing here has run against a real Crate. The first dry run settles the first two, the first real run the others:
+All on 2026-10-07 (UTC), as Windmill jobs. Counts and what was decided are in
+[#381](https://github.com/alp82/goodwatch-monorepo/issues/381).
 
-- That the client returns timestamps as milliseconds, which the rules expect.
-- The reads: `= ANY(?)` with a list of ids, and the grouped count of watches per member and group.
-- The inserts through the bulk interface, 500 rows of 15 values each, into a table with `NOT NULL` and `CHECK`
-  columns, and that a row that is there comes back with a row count of 0 and not as an error.
-- How long the run takes. It is about 540 requests for 266,000 rows.
+| When | Run | Took | Result |
+|---|---|---|---|
+| 22:02 | Dry run, twice | 4 to 5 s | The plan matched the expected counts |
+| 22:03 | Real run | 38 s | Written: 8,161 state rows, 4,043 movie watches, 2,276 score-owned watches, 191,581 episode watches |
+| 22:04 | Verify | 11 s | Ok, no problems. 9,401 titles count as Seen before and after |
+| 22:43 | Dry run and real run with `since`, at the switch | 2 s and 6 s | No old row and no score had changed. 21,257 episode watches for 150 shows the crawl had reached since |
+| 22:44 | Verify, then one more run with `since` and one more verify | 8 s, 1 s, 9 s | Ok. The last run wrote nothing |
+
+What the first version of this document listed as not tried held on production: the client returns timestamps as
+milliseconds; the reads with `= ANY(?)` and the grouped count work; the bulk inserts of 500 rows go into the tables
+with `NOT NULL` and `CHECK` columns, and a row that is there is skipped without an error (the last run wrote 0 rows
+and succeeded). The real run took 38 s for about 206,000 rows.

@@ -30,7 +30,7 @@ Paths without a prefix are under `goodwatch-webapp/app/`.
 | --- | --- | --- | --- | --- |
 | `user_watch_log` (new) | One time a member watched one movie or one episode | `user_id, watch_id` | `user_id` | The tracking writer in the webapp; an import; the migration; the fill job (C5) |
 | `user_watch_state` (new) | Where a member stands with one title: the state, when it changed, the pass, the Seen press that can be taken back, the two prompts. Nothing that can be computed from the log | `user_id, tmdb_id, media_type` | `user_id` | The same writer, always after the log rows |
-| `user_watch_history` (today) | Retired. Left untouched as the backup and dropped by hand 30 days after the switch | | | Nobody, after the switch |
+| `user_watch_history` (until 2026-10-11) | Retired and dropped. It stayed untouched as the backup after the switch and was dropped on 2026-10-11, after an export of its 5,885 rows | | | Nobody |
 | `user_import`, `user_import_item` (extended) | One import, and one row of its file. New nullable columns for watches and statuses | unchanged | unchanged | The import |
 | `show.aired_episode_count` (new column) | How many regular episodes of the show have aired, by the UTC date | | | The episode copy in `goodwatch-flows` |
 
@@ -46,7 +46,7 @@ Decided by the owner on October 7, 2026. The label in the first column is the on
 | --- | --- | --- |
 | Names | `user_watch_log` and `user_watch_state`; the column `watched_at_precision`; the member data entry `watchState` | `user_watch`, `user_tracking`, `date_precision`, `tracking`: the two tables did not read as a pair, and "date" did not say which date |
 | O1 | No overlap. `user_watch_state` stores only what can't be computed from the log. Counts and dates are computed from `user_watch_log` when read, by one grouped query per member, cached with the member data | Summary columns in the state row (`watch_count`, `episodes_watched`, the furthest episode, the dates) that the writer recomputes on every write: Crate has no transactions, so every copy is something a crash can leave wrong |
-| C1 | The new state table replaces `user_watch_history`, which stays untouched as the backup for 30 days | Adding columns to the old table, where every reader takes a row to mean Seen; or keeping it for good |
+| C1 | The new state table replaces `user_watch_history`, which stayed untouched as the backup until it was dropped on 2026-10-11 (planned: 30 days after the switch; the owner decided to drop it earlier) | Adding columns to the old table, where every reader takes a row to mean Seen; or keeping it for good |
 | C2 | Rating a movie that has no watch records one: no date, origin `score`. Clearing the score deletes it; a watch the member logs replaces it. Rating a show records nothing and never changes its state | A scored title with no row at all, Seen only where the score is read (the proposal's recommendation); or today's rule, a watch dated "now" for movies and shows alike |
 | C3 | "Watched in the last 30 days" is the latest of the dated watches' dates and, for undated watches not from an import, the time they were recorded | Dated watches only (a "Watched up to here" tonight would not count); or the time anything was recorded (an import of a 2019 history would fill Continue) |
 | C4 | UTC in the database and the API, the member's time zone only in the interface. The browser decides "aired for you" by the date on the device; the server accepts a watch for an episode that airs up to one day after the UTC date | Aired by UTC everywhere (a device ahead of UTC could not tick tonight's episode); or aired by the member's date on the server (a count per time zone can't be stored) |
@@ -1154,8 +1154,9 @@ request. The commands, the expected counts, the undo and what "crawl complete" m
 6. Run the script again, with `since` set to the start of the run of step 3. It picks up what the old build wrote
    to the old table between steps 3 and 5. Without `since` it would plan every old row again and bring back a title
    a member has taken back in the new build, because the old row is still there.
-7. 30 days after the switch, without a rollback: drop `user_watch_history` by hand, remove it from
-   `crate_schemas.py`. Until then the table is the backup and nothing reads or writes it.
+7. Without a rollback: drop `user_watch_history` by hand, remove it from `crate_schemas.py`. Until then the table
+   is the backup and nothing reads or writes it. Planned for 30 days after the switch; done on 2026-10-11 by the
+   owner's decision, after an export of every row. The script of step 3 can't run again: its source is gone.
 
 Steps 5 to 7 in detail, what the second run has to do for movies, and what happens to a watch made while both builds
 answer: [switch-to-the-watch-state.md](switch-to-the-watch-state.md). As built, the webapp of step 5 no longer
@@ -1275,7 +1276,6 @@ to the tracking writer, called from the same place:
 ```sql
 DELETE FROM user_watch_log WHERE user_id = ?;
 DELETE FROM user_watch_state WHERE user_id = ?;
-DELETE FROM user_watch_history WHERE user_id = ?;   -- until the table is dropped
 DELETE FROM user_import_item WHERE user_id = ?;
 DELETE FROM user_import WHERE user_id = ?;
 ```
@@ -1283,8 +1283,8 @@ DELETE FROM user_import WHERE user_id = ?;
 then `resetUserDataCache`. The first two are routed to one shard. These are hard deletes: the rows are private,
 nothing public points at them, and unlike a handle nothing has to stay reserved. The same flow has to cover
 `user_score`, `user_wishlist`, `user_favorite`, `user_skipped`, `user_not_interested` and `user_setting`, which have
-no deletion today either. While `user_watch_history` exists as the backup, a deleted member's rows are deleted there
-too.
+no deletion today either. `user_watch_history` was dropped on 2026-10-11, so nothing is left to delete there; the
+export made before the drop still holds every member's old rows and is outside the reach of this flow.
 
 Two other places list the user tables by name and must learn the new ones:
 
@@ -1390,7 +1390,7 @@ Where the migration differs from section 6, or settles what it left open:
 
 ### The readers of Seen (#382)
 
-Nothing in the webapp reads or writes `user_watch_history` any more. How this goes live, and what a member can lose
+Nothing in the webapp reads or writes `user_watch_history` any more, and the table was dropped on 2026-10-11. How this went live, and what a member can lose
 between the migration and the deploy: [switch-to-the-watch-state.md](switch-to-the-watch-state.md).
 
 | What | Where |
