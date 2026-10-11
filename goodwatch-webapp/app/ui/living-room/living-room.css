@@ -497,6 +497,33 @@ main:has(.lr-page) + footer {
 		display: inline;
 	}
 }
+/* The lip is the way down while the visitor is in the room. Once the page moves, the heading under it takes
+   over: the lip's words and key fade over the first 200px of scrolling, and the tab with them. The phone's bar
+   stays as the section's rounded top. Focus shows it again. A browser without scroll timelines keeps the lip. */
+@keyframes lrb-lip-out {
+	to {
+		opacity: 0;
+		pointer-events: none;
+	}
+}
+@supports (animation-timeline: scroll()) {
+	.lrb-lip > * {
+		animation: lrb-lip-out linear both;
+		animation-timeline: scroll(root);
+		animation-range: 40px 200px;
+	}
+	.lrb-lip:focus-visible,
+	.lrb-lip:focus-visible > * {
+		animation: none;
+	}
+	@media (min-width: 768px) {
+		.lrb-lip {
+			animation: lrb-lip-out linear both;
+			animation-timeline: scroll(root);
+			animation-range: 40px 200px;
+		}
+	}
+}
 
 .lrb-in {
 	max-width: 76rem;
@@ -744,6 +771,11 @@ main:has(.lr-page) + footer {
 		bottom: 0;
 		height: 46px;
 		transition: opacity 200ms;
+	}
+	/* The tab doesn't move with the page here: it leaves with the room. */
+	.lrb-lip,
+	.lrb-lip > * {
+		animation: none;
 	}
 	.lrb-lip i {
 		width: 30px;

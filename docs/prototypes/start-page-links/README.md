@@ -27,6 +27,10 @@ this folder there.
   everyone.
 - On a phone the lip is one piece with the navigation under it: the dock's upper row, or over the old bottom
   navigation a bar with a notch for its round key.
+- The lip invites ("More below"), and the section's heading names the list ("Popular right now"), so the two never
+  say the same thing one above the other. Once the page scrolls, the lip's words and key fade over the first
+  200 px (a CSS scroll timeline, no script) and the heading stands alone; a browser without scroll timelines keeps
+  the lip as it is.
 
 The build is in `goodwatch-webapp/app/ui/living-room/` (`BelowRoom.tsx`, `use-below-room.ts`, and the last part of
 `living-room.css`).

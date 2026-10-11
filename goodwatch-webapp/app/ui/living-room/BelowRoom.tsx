@@ -98,9 +98,12 @@ export function BelowRoom({
 		>
 			<a href={`#${BELOW_ID}`} onClick={onDown} className="lrb-lip">
 				<span>
-					<b>{titles.length ? "Popular right now" : "Browse GoodWatch"}</b>
+					{/* An invitation, not the list's name: the heading under it has that. */}
+					<b>More below</b>
 					<small>
-						{titles.length ? `${titles.length} titles` : "Movies and shows"}
+						{titles.length
+							? `${titles.length} popular titles`
+							: "Movies and shows"}
 						<u> and every way to browse</u>
 					</small>
 				</span>
