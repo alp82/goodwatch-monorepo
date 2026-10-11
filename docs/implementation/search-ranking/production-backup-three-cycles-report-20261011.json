@@ -1,0 +1,941 @@
+{
+  "schemaVersion": 1,
+  "productionAcceptance": false,
+  "diagnosticStatus": "incomparable",
+  "selectedPolicy": null,
+  "journalsComplete": true,
+  "recordedFailure": false,
+  "cycles": [
+    {
+      "cycle": 1,
+      "diagnosticStatus": "incomparable",
+      "findings": [
+        "extent_cohort_incomparable:vector",
+        "resident_data_loss:graph",
+        "post_direct_qdrant_at_least_1500ms:known-native-title"
+      ],
+      "failures": [],
+      "beforeBaselineToBeforeBackup": {
+        "vector": {
+          "comparable": false,
+          "beforeDataExtentPages": 179703,
+          "afterDataExtentPages": 179711,
+          "beforeDataResidentPages": 174884,
+          "afterDataResidentPages": 174918,
+          "residentDataPagesChange": 34
+        },
+        "graph": {
+          "comparable": true,
+          "beforeDataExtentPages": 103765,
+          "afterDataExtentPages": 103765,
+          "beforeDataResidentPages": 98478,
+          "afterDataResidentPages": 98478,
+          "residentDataPagesChange": 0
+        },
+        "sparse": {
+          "comparable": false,
+          "beforeDataExtentPages": 54896,
+          "afterDataExtentPages": 54897,
+          "beforeDataResidentPages": 41864,
+          "afterDataResidentPages": 41865,
+          "residentDataPagesChange": 1
+        },
+        "payload": {
+          "comparable": false,
+          "beforeDataExtentPages": 577503,
+          "afterDataExtentPages": 577505,
+          "beforeDataResidentPages": 463184,
+          "afterDataResidentPages": 463213,
+          "residentDataPagesChange": 29
+        },
+        "other": {
+          "comparable": false,
+          "beforeDataExtentPages": 104462,
+          "afterDataExtentPages": 104471,
+          "beforeDataResidentPages": 95296,
+          "afterDataResidentPages": 95305,
+          "residentDataPagesChange": 9
+        }
+      },
+      "beforeBackupToPostBackup": {
+        "vector": {
+          "comparable": false,
+          "beforeDataExtentPages": 179711,
+          "afterDataExtentPages": 179712,
+          "beforeDataResidentPages": 174918,
+          "afterDataResidentPages": 110392,
+          "residentDataPagesChange": -64526
+        },
+        "graph": {
+          "comparable": true,
+          "beforeDataExtentPages": 103765,
+          "afterDataExtentPages": 103765,
+          "beforeDataResidentPages": 98478,
+          "afterDataResidentPages": 52836,
+          "residentDataPagesChange": -45642
+        },
+        "sparse": {
+          "comparable": false,
+          "beforeDataExtentPages": 54897,
+          "afterDataExtentPages": 54898,
+          "beforeDataResidentPages": 41865,
+          "afterDataResidentPages": 38845,
+          "residentDataPagesChange": -3020
+        },
+        "payload": {
+          "comparable": false,
+          "beforeDataExtentPages": 577505,
+          "afterDataExtentPages": 577508,
+          "beforeDataResidentPages": 463213,
+          "afterDataResidentPages": 431489,
+          "residentDataPagesChange": -31724
+        },
+        "other": {
+          "comparable": false,
+          "beforeDataExtentPages": 104471,
+          "afterDataExtentPages": 104475,
+          "beforeDataResidentPages": 95305,
+          "afterDataResidentPages": 45076,
+          "residentDataPagesChange": -50229
+        }
+      },
+      "postBackupToPostWarm": {
+        "vector": {
+          "comparable": true,
+          "beforeDataExtentPages": 179712,
+          "afterDataExtentPages": 179712,
+          "beforeDataResidentPages": 110392,
+          "afterDataResidentPages": 172271,
+          "residentDataPagesChange": 61879
+        },
+        "graph": {
+          "comparable": true,
+          "beforeDataExtentPages": 103765,
+          "afterDataExtentPages": 103765,
+          "beforeDataResidentPages": 52836,
+          "afterDataResidentPages": 59593,
+          "residentDataPagesChange": 6757
+        },
+        "sparse": {
+          "comparable": true,
+          "beforeDataExtentPages": 54898,
+          "afterDataExtentPages": 54898,
+          "beforeDataResidentPages": 38845,
+          "afterDataResidentPages": 38845,
+          "residentDataPagesChange": 0
+        },
+        "payload": {
+          "comparable": true,
+          "beforeDataExtentPages": 577508,
+          "afterDataExtentPages": 577508,
+          "beforeDataResidentPages": 431489,
+          "afterDataResidentPages": 434730,
+          "residentDataPagesChange": 3241
+        },
+        "other": {
+          "comparable": true,
+          "beforeDataExtentPages": 104475,
+          "afterDataExtentPages": 104475,
+          "beforeDataResidentPages": 45076,
+          "afterDataResidentPages": 45076,
+          "residentDataPagesChange": 0
+        }
+      },
+      "counterBrackets": {
+        "backupAndPostSampling": {
+          "from": "2026-10-11T21:14:58.515339+00:00",
+          "to": "2026-10-11T21:17:15.930984+00:00",
+          "delta": {
+            "minorFaults": 85202,
+            "majorFaults": 448674,
+            "readBytes": 741441536,
+            "rssBytesChange": -613642240,
+            "hostReclaim": {
+              "allocstall_device": 0,
+              "allocstall_dma": 0,
+              "allocstall_dma32": 0,
+              "allocstall_movable": 3,
+              "allocstall_normal": 0,
+              "pgscan_anon": 0,
+              "pgscan_direct": 192,
+              "pgscan_direct_throttle": 0,
+              "pgscan_file": 680358,
+              "pgscan_khugepaged": 0,
+              "pgscan_kswapd": 680166,
+              "pgsteal_anon": 0,
+              "pgsteal_direct": 192,
+              "pgsteal_file": 675040,
+              "pgsteal_khugepaged": 0,
+              "pgsteal_kswapd": 674848,
+              "pswpin": 0,
+              "pswpout": 0,
+              "workingset_refault_anon": 0,
+              "workingset_refault_file": 183399
+            }
+          }
+        },
+        "firstPostBatchesAndGrace": {
+          "from": "2026-10-11T21:17:15.930984+00:00",
+          "to": "2026-10-11T21:17:32.313544+00:00",
+          "delta": {
+            "minorFaults": 15146,
+            "majorFaults": 64442,
+            "readBytes": 288378880,
+            "rssBytesChange": 345821184,
+            "hostReclaim": {
+              "allocstall_device": 0,
+              "allocstall_dma": 0,
+              "allocstall_dma32": 0,
+              "allocstall_movable": 0,
+              "allocstall_normal": 0,
+              "pgscan_anon": 0,
+              "pgscan_direct": 0,
+              "pgscan_direct_throttle": 0,
+              "pgscan_file": 0,
+              "pgscan_khugepaged": 0,
+              "pgscan_kswapd": 0,
+              "pgsteal_anon": 0,
+              "pgsteal_direct": 0,
+              "pgsteal_file": 0,
+              "pgsteal_khugepaged": 0,
+              "pgsteal_kswapd": 0,
+              "pswpin": 0,
+              "pswpout": 0,
+              "workingset_refault_anon": 0,
+              "workingset_refault_file": 70519
+            }
+          }
+        },
+        "warmBatchesAndGrace": {
+          "from": "2026-10-11T21:17:32.313544+00:00",
+          "to": "2026-10-11T21:17:43.810719+00:00",
+          "delta": {
+            "minorFaults": 3251,
+            "majorFaults": 226,
+            "readBytes": 925696,
+            "rssBytesChange": -26103808,
+            "hostReclaim": {
+              "allocstall_device": 0,
+              "allocstall_dma": 0,
+              "allocstall_dma32": 0,
+              "allocstall_movable": 0,
+              "allocstall_normal": 0,
+              "pgscan_anon": 0,
+              "pgscan_direct": 0,
+              "pgscan_direct_throttle": 0,
+              "pgscan_file": 0,
+              "pgscan_khugepaged": 0,
+              "pgscan_kswapd": 0,
+              "pgsteal_anon": 0,
+              "pgsteal_direct": 0,
+              "pgsteal_file": 0,
+              "pgsteal_khugepaged": 0,
+              "pgsteal_kswapd": 0,
+              "pswpin": 0,
+              "pswpout": 0,
+              "workingset_refault_anon": 0,
+              "workingset_refault_file": 598
+            }
+          }
+        }
+      },
+      "cases": {
+        "known-exact-title": {
+          "baselineServerMs": 57.542543,
+          "baselineWallMs": 98.2,
+          "postVsBaseline": {
+            "serverMs": 1347.607749,
+            "wallMs": 1363.2,
+            "serverMsChange": 1290.065206,
+            "serverSlowdown": 23.419329051898174,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          },
+          "warmVsPost": {
+            "serverMs": 18.734233,
+            "wallMs": 28.9,
+            "serverMsChange": -1328.873516,
+            "serverSlowdown": 0.013901844222773165,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          }
+        },
+        "known-native-title": {
+          "baselineServerMs": 242.260275,
+          "baselineWallMs": 271.3,
+          "postVsBaseline": {
+            "serverMs": 3991.685283,
+            "wallMs": 4009.2,
+            "serverMsChange": 3749.4250079999997,
+            "serverSlowdown": 16.476846164729235,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          },
+          "warmVsPost": {
+            "serverMs": 84.192564,
+            "wallMs": 101.7,
+            "serverMsChange": -3907.492719,
+            "serverSlowdown": 0.02109198447046007,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          }
+        },
+        "known-low-vote-title": {
+          "baselineServerMs": 60.840917000000005,
+          "baselineWallMs": 72,
+          "postVsBaseline": {
+            "serverMs": 610.956799,
+            "wallMs": 625,
+            "serverMsChange": 550.115882,
+            "serverSlowdown": 10.041873612785947,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          },
+          "warmVsPost": {
+            "serverMs": 45.005251,
+            "wallMs": 54.4,
+            "serverMsChange": -565.951548,
+            "serverSlowdown": 0.07366355702017484,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          }
+        }
+      }
+    },
+    {
+      "cycle": 2,
+      "diagnosticStatus": "incomparable",
+      "findings": [
+        "extent_cohort_incomparable:vector",
+        "post_direct_qdrant_at_least_1500ms:known-native-title"
+      ],
+      "failures": [],
+      "beforeBaselineToBeforeBackup": {
+        "vector": {
+          "comparable": false,
+          "beforeDataExtentPages": 179426,
+          "afterDataExtentPages": 179435,
+          "beforeDataResidentPages": 173463,
+          "afterDataResidentPages": 173508,
+          "residentDataPagesChange": 45
+        },
+        "graph": {
+          "comparable": true,
+          "beforeDataExtentPages": 104256,
+          "afterDataExtentPages": 104256,
+          "beforeDataResidentPages": 64459,
+          "afterDataResidentPages": 64460,
+          "residentDataPagesChange": 1
+        },
+        "sparse": {
+          "comparable": false,
+          "beforeDataExtentPages": 54844,
+          "afterDataExtentPages": 54850,
+          "beforeDataResidentPages": 34235,
+          "afterDataResidentPages": 34250,
+          "residentDataPagesChange": 15
+        },
+        "payload": {
+          "comparable": false,
+          "beforeDataExtentPages": 576857,
+          "afterDataExtentPages": 576867,
+          "beforeDataResidentPages": 403670,
+          "afterDataResidentPages": 403760,
+          "residentDataPagesChange": 90
+        },
+        "other": {
+          "comparable": false,
+          "beforeDataExtentPages": 105081,
+          "afterDataExtentPages": 105093,
+          "beforeDataResidentPages": 45758,
+          "afterDataResidentPages": 45773,
+          "residentDataPagesChange": 15
+        }
+      },
+      "beforeBackupToPostBackup": {
+        "vector": {
+          "comparable": false,
+          "beforeDataExtentPages": 179435,
+          "afterDataExtentPages": 179437,
+          "beforeDataResidentPages": 173508,
+          "afterDataResidentPages": 131623,
+          "residentDataPagesChange": -41885
+        },
+        "graph": {
+          "comparable": true,
+          "beforeDataExtentPages": 104256,
+          "afterDataExtentPages": 104256,
+          "beforeDataResidentPages": 64460,
+          "afterDataResidentPages": 98586,
+          "residentDataPagesChange": 34126
+        },
+        "sparse": {
+          "comparable": true,
+          "beforeDataExtentPages": 54850,
+          "afterDataExtentPages": 54850,
+          "beforeDataResidentPages": 34250,
+          "afterDataResidentPages": 39765,
+          "residentDataPagesChange": 5515
+        },
+        "payload": {
+          "comparable": false,
+          "beforeDataExtentPages": 576867,
+          "afterDataExtentPages": 576868,
+          "beforeDataResidentPages": 403760,
+          "afterDataResidentPages": 424977,
+          "residentDataPagesChange": 21217
+        },
+        "other": {
+          "comparable": false,
+          "beforeDataExtentPages": 105093,
+          "afterDataExtentPages": 105097,
+          "beforeDataResidentPages": 45773,
+          "afterDataResidentPages": 93742,
+          "residentDataPagesChange": 47969
+        }
+      },
+      "postBackupToPostWarm": {
+        "vector": {
+          "comparable": true,
+          "beforeDataExtentPages": 179437,
+          "afterDataExtentPages": 179437,
+          "beforeDataResidentPages": 131623,
+          "afterDataResidentPages": 174129,
+          "residentDataPagesChange": 42506
+        },
+        "graph": {
+          "comparable": true,
+          "beforeDataExtentPages": 104256,
+          "afterDataExtentPages": 104256,
+          "beforeDataResidentPages": 98586,
+          "afterDataResidentPages": 100790,
+          "residentDataPagesChange": 2204
+        },
+        "sparse": {
+          "comparable": true,
+          "beforeDataExtentPages": 54850,
+          "afterDataExtentPages": 54850,
+          "beforeDataResidentPages": 39765,
+          "afterDataResidentPages": 39765,
+          "residentDataPagesChange": 0
+        },
+        "payload": {
+          "comparable": true,
+          "beforeDataExtentPages": 576868,
+          "afterDataExtentPages": 576868,
+          "beforeDataResidentPages": 424977,
+          "afterDataResidentPages": 431292,
+          "residentDataPagesChange": 6315
+        },
+        "other": {
+          "comparable": true,
+          "beforeDataExtentPages": 105097,
+          "afterDataExtentPages": 105097,
+          "beforeDataResidentPages": 93742,
+          "afterDataResidentPages": 93742,
+          "residentDataPagesChange": 0
+        }
+      },
+      "counterBrackets": {
+        "backupAndPostSampling": {
+          "from": "2026-10-11T22:14:57.905898+00:00",
+          "to": "2026-10-11T22:17:16.464864+00:00",
+          "delta": {
+            "minorFaults": 75845,
+            "majorFaults": 446171,
+            "readBytes": 1397317632,
+            "rssBytesChange": -361193472,
+            "hostReclaim": {
+              "allocstall_device": 0,
+              "allocstall_dma": 0,
+              "allocstall_dma32": 0,
+              "allocstall_movable": 0,
+              "allocstall_normal": 0,
+              "pgscan_anon": 0,
+              "pgscan_direct": 0,
+              "pgscan_direct_throttle": 0,
+              "pgscan_file": 466386,
+              "pgscan_khugepaged": 0,
+              "pgscan_kswapd": 466386,
+              "pgsteal_anon": 0,
+              "pgsteal_direct": 0,
+              "pgsteal_file": 463210,
+              "pgsteal_khugepaged": 0,
+              "pgsteal_kswapd": 463210,
+              "pswpin": 0,
+              "pswpout": 0,
+              "workingset_refault_anon": 0,
+              "workingset_refault_file": 250521
+            }
+          }
+        },
+        "firstPostBatchesAndGrace": {
+          "from": "2026-10-11T22:17:16.464864+00:00",
+          "to": "2026-10-11T22:17:31.803065+00:00",
+          "delta": {
+            "minorFaults": 16124,
+            "majorFaults": 45508,
+            "readBytes": 203182080,
+            "rssBytesChange": 290836480,
+            "hostReclaim": {
+              "allocstall_device": 0,
+              "allocstall_dma": 0,
+              "allocstall_dma32": 0,
+              "allocstall_movable": 0,
+              "allocstall_normal": 0,
+              "pgscan_anon": 0,
+              "pgscan_direct": 0,
+              "pgscan_direct_throttle": 0,
+              "pgscan_file": 0,
+              "pgscan_khugepaged": 0,
+              "pgscan_kswapd": 0,
+              "pgsteal_anon": 0,
+              "pgsteal_direct": 0,
+              "pgsteal_file": 0,
+              "pgsteal_khugepaged": 0,
+              "pgsteal_kswapd": 0,
+              "pswpin": 0,
+              "pswpout": 0,
+              "workingset_refault_anon": 0,
+              "workingset_refault_file": 49782
+            }
+          }
+        },
+        "warmBatchesAndGrace": {
+          "from": "2026-10-11T22:17:31.803065+00:00",
+          "to": "2026-10-11T22:17:43.309061+00:00",
+          "delta": {
+            "minorFaults": 6310,
+            "majorFaults": 512,
+            "readBytes": 2097152,
+            "rssBytesChange": -22417408,
+            "hostReclaim": {
+              "allocstall_device": 0,
+              "allocstall_dma": 0,
+              "allocstall_dma32": 0,
+              "allocstall_movable": 0,
+              "allocstall_normal": 0,
+              "pgscan_anon": 0,
+              "pgscan_direct": 0,
+              "pgscan_direct_throttle": 0,
+              "pgscan_file": 0,
+              "pgscan_khugepaged": 0,
+              "pgscan_kswapd": 0,
+              "pgsteal_anon": 0,
+              "pgsteal_direct": 0,
+              "pgsteal_file": 0,
+              "pgsteal_khugepaged": 0,
+              "pgsteal_kswapd": 0,
+              "pswpin": 0,
+              "pswpout": 0,
+              "workingset_refault_anon": 0,
+              "workingset_refault_file": 512
+            }
+          }
+        }
+      },
+      "cases": {
+        "known-exact-title": {
+          "baselineServerMs": 78.347055,
+          "baselineWallMs": 93.1,
+          "postVsBaseline": {
+            "serverMs": 1059.7373109999999,
+            "wallMs": 1067.8,
+            "serverMsChange": 981.3902559999999,
+            "serverSlowdown": 13.526192031085277,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          },
+          "warmVsPost": {
+            "serverMs": 26.757883,
+            "wallMs": 35.9,
+            "serverMsChange": -1032.9794279999999,
+            "serverSlowdown": 0.025249543186084918,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          }
+        },
+        "known-native-title": {
+          "baselineServerMs": 170.37814400000002,
+          "baselineWallMs": 186.2,
+          "postVsBaseline": {
+            "serverMs": 2747.677992,
+            "wallMs": 2771.2,
+            "serverMsChange": 2577.2998479999997,
+            "serverSlowdown": 16.126939333251567,
+            "sameOrderedIds": false,
+            "sameOrderedIdsScores": false,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          },
+          "warmVsPost": {
+            "serverMs": 91.66112899999999,
+            "wallMs": 106.5,
+            "serverMsChange": -2656.016863,
+            "serverSlowdown": 0.03335948727138911,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          }
+        },
+        "known-low-vote-title": {
+          "baselineServerMs": 48.939936,
+          "baselineWallMs": 57.3,
+          "postVsBaseline": {
+            "serverMs": 428.78191799999996,
+            "wallMs": 443,
+            "serverMsChange": 379.841982,
+            "serverSlowdown": 8.761391065161996,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          },
+          "warmVsPost": {
+            "serverMs": 40.292426,
+            "wallMs": 50.2,
+            "serverMsChange": -388.489492,
+            "serverSlowdown": 0.09396950829442394,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          }
+        }
+      }
+    },
+    {
+      "cycle": 3,
+      "diagnosticStatus": "observed_requires_review",
+      "findings": [
+        "resident_data_loss:vector",
+        "resident_data_loss:graph",
+        "post_direct_qdrant_at_least_1500ms:known-native-title"
+      ],
+      "failures": [],
+      "beforeBaselineToBeforeBackup": {
+        "vector": {
+          "comparable": false,
+          "beforeDataExtentPages": 179498,
+          "afterDataExtentPages": 179505,
+          "beforeDataResidentPages": 174515,
+          "afterDataResidentPages": 174544,
+          "residentDataPagesChange": 29
+        },
+        "graph": {
+          "comparable": true,
+          "beforeDataExtentPages": 104256,
+          "afterDataExtentPages": 104256,
+          "beforeDataResidentPages": 100790,
+          "afterDataResidentPages": 100792,
+          "residentDataPagesChange": 2
+        },
+        "sparse": {
+          "comparable": false,
+          "beforeDataExtentPages": 54861,
+          "afterDataExtentPages": 54863,
+          "beforeDataResidentPages": 39845,
+          "afterDataResidentPages": 39850,
+          "residentDataPagesChange": 5
+        },
+        "payload": {
+          "comparable": false,
+          "beforeDataExtentPages": 576919,
+          "afterDataExtentPages": 576924,
+          "beforeDataResidentPages": 444329,
+          "afterDataResidentPages": 444389,
+          "residentDataPagesChange": 60
+        },
+        "other": {
+          "comparable": false,
+          "beforeDataExtentPages": 105198,
+          "afterDataExtentPages": 105209,
+          "beforeDataResidentPages": 93845,
+          "afterDataResidentPages": 93856,
+          "residentDataPagesChange": 11
+        }
+      },
+      "beforeBackupToPostBackup": {
+        "vector": {
+          "comparable": true,
+          "beforeDataExtentPages": 179505,
+          "afterDataExtentPages": 179505,
+          "beforeDataResidentPages": 174544,
+          "afterDataResidentPages": 149761,
+          "residentDataPagesChange": -24783
+        },
+        "graph": {
+          "comparable": true,
+          "beforeDataExtentPages": 104256,
+          "afterDataExtentPages": 104256,
+          "beforeDataResidentPages": 100792,
+          "afterDataResidentPages": 91785,
+          "residentDataPagesChange": -9007
+        },
+        "sparse": {
+          "comparable": true,
+          "beforeDataExtentPages": 54863,
+          "afterDataExtentPages": 54863,
+          "beforeDataResidentPages": 39850,
+          "afterDataResidentPages": 39749,
+          "residentDataPagesChange": -101
+        },
+        "payload": {
+          "comparable": false,
+          "beforeDataExtentPages": 576924,
+          "afterDataExtentPages": 576927,
+          "beforeDataResidentPages": 444389,
+          "afterDataResidentPages": 420009,
+          "residentDataPagesChange": -24380
+        },
+        "other": {
+          "comparable": false,
+          "beforeDataExtentPages": 105209,
+          "afterDataExtentPages": 105212,
+          "beforeDataResidentPages": 93856,
+          "afterDataResidentPages": 88937,
+          "residentDataPagesChange": -4919
+        }
+      },
+      "postBackupToPostWarm": {
+        "vector": {
+          "comparable": false,
+          "beforeDataExtentPages": 179505,
+          "afterDataExtentPages": 179507,
+          "beforeDataResidentPages": 149761,
+          "afterDataResidentPages": 176939,
+          "residentDataPagesChange": 27178
+        },
+        "graph": {
+          "comparable": true,
+          "beforeDataExtentPages": 104256,
+          "afterDataExtentPages": 104256,
+          "beforeDataResidentPages": 91785,
+          "afterDataResidentPages": 93692,
+          "residentDataPagesChange": 1907
+        },
+        "sparse": {
+          "comparable": false,
+          "beforeDataExtentPages": 54863,
+          "afterDataExtentPages": 54864,
+          "beforeDataResidentPages": 39749,
+          "afterDataResidentPages": 39756,
+          "residentDataPagesChange": 7
+        },
+        "payload": {
+          "comparable": false,
+          "beforeDataExtentPages": 576927,
+          "afterDataExtentPages": 576928,
+          "beforeDataResidentPages": 420009,
+          "afterDataResidentPages": 424960,
+          "residentDataPagesChange": 4951
+        },
+        "other": {
+          "comparable": false,
+          "beforeDataExtentPages": 105212,
+          "afterDataExtentPages": 105214,
+          "beforeDataResidentPages": 88937,
+          "afterDataResidentPages": 88939,
+          "residentDataPagesChange": 2
+        }
+      },
+      "counterBrackets": {
+        "backupAndPostSampling": {
+          "from": "2026-10-11T23:14:58.084178+00:00",
+          "to": "2026-10-11T23:17:16.768452+00:00",
+          "delta": {
+            "minorFaults": 71226,
+            "majorFaults": 442864,
+            "readBytes": 823865344,
+            "rssBytesChange": -320786432,
+            "hostReclaim": {
+              "allocstall_device": 0,
+              "allocstall_dma": 0,
+              "allocstall_dma32": 0,
+              "allocstall_movable": 0,
+              "allocstall_normal": 0,
+              "pgscan_anon": 0,
+              "pgscan_direct": 0,
+              "pgscan_direct_throttle": 0,
+              "pgscan_file": 410019,
+              "pgscan_khugepaged": 0,
+              "pgscan_kswapd": 410019,
+              "pgsteal_anon": 0,
+              "pgsteal_direct": 0,
+              "pgsteal_file": 410019,
+              "pgsteal_khugepaged": 0,
+              "pgsteal_kswapd": 410019,
+              "pswpin": 0,
+              "pswpout": 0,
+              "workingset_refault_anon": 0,
+              "workingset_refault_file": 203427
+            }
+          }
+        },
+        "firstPostBatchesAndGrace": {
+          "from": "2026-10-11T23:17:16.768452+00:00",
+          "to": "2026-10-11T23:17:31.068044+00:00",
+          "delta": {
+            "minorFaults": 9112,
+            "majorFaults": 27609,
+            "readBytes": 128937984,
+            "rssBytesChange": 153743360,
+            "hostReclaim": {
+              "allocstall_device": 0,
+              "allocstall_dma": 0,
+              "allocstall_dma32": 0,
+              "allocstall_movable": 0,
+              "allocstall_normal": 0,
+              "pgscan_anon": 0,
+              "pgscan_direct": 0,
+              "pgscan_direct_throttle": 0,
+              "pgscan_file": 0,
+              "pgscan_khugepaged": 0,
+              "pgscan_kswapd": 0,
+              "pgsteal_anon": 0,
+              "pgsteal_direct": 0,
+              "pgsteal_file": 0,
+              "pgsteal_khugepaged": 0,
+              "pgsteal_kswapd": 0,
+              "pswpin": 0,
+              "pswpout": 0,
+              "workingset_refault_anon": 0,
+              "workingset_refault_file": 31725
+            }
+          }
+        },
+        "warmBatchesAndGrace": {
+          "from": "2026-10-11T23:17:31.068044+00:00",
+          "to": "2026-10-11T23:17:42.539442+00:00",
+          "delta": {
+            "minorFaults": 10278,
+            "majorFaults": 2027,
+            "readBytes": 8302592,
+            "rssBytesChange": 39731200,
+            "hostReclaim": {
+              "allocstall_device": 0,
+              "allocstall_dma": 0,
+              "allocstall_dma32": 0,
+              "allocstall_movable": 0,
+              "allocstall_normal": 0,
+              "pgscan_anon": 0,
+              "pgscan_direct": 0,
+              "pgscan_direct_throttle": 0,
+              "pgscan_file": 0,
+              "pgscan_khugepaged": 0,
+              "pgscan_kswapd": 0,
+              "pgsteal_anon": 0,
+              "pgsteal_direct": 0,
+              "pgsteal_file": 0,
+              "pgsteal_khugepaged": 0,
+              "pgsteal_kswapd": 0,
+              "pswpin": 0,
+              "pswpout": 0,
+              "workingset_refault_anon": 0,
+              "workingset_refault_file": 2040
+            }
+          }
+        }
+      },
+      "cases": {
+        "known-exact-title": {
+          "baselineServerMs": 67.807354,
+          "baselineWallMs": 83.4,
+          "postVsBaseline": {
+            "serverMs": 1093.534748,
+            "wallMs": 1105.1,
+            "serverMsChange": 1025.727394,
+            "serverSlowdown": 16.127081850148585,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          },
+          "warmVsPost": {
+            "serverMs": 33.121660999999996,
+            "wallMs": 44.7,
+            "serverMsChange": -1060.4130870000001,
+            "serverSlowdown": 0.03028862234197609,
+            "sameOrderedIds": false,
+            "sameOrderedIdsScores": false,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          }
+        },
+        "known-native-title": {
+          "baselineServerMs": 180.922462,
+          "baselineWallMs": 196.2,
+          "postVsBaseline": {
+            "serverMs": 2242.754837,
+            "wallMs": 2257.9,
+            "serverMsChange": 2061.832375,
+            "serverSlowdown": 12.396221078397662,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          },
+          "warmVsPost": {
+            "serverMs": 97.30909899999999,
+            "wallMs": 117.4,
+            "serverMsChange": -2145.445738,
+            "serverSlowdown": 0.043388201596820365,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          }
+        },
+        "known-low-vote-title": {
+          "baselineServerMs": 55.955398,
+          "baselineWallMs": 64,
+          "postVsBaseline": {
+            "serverMs": 386.90423699999997,
+            "wallMs": 396.7,
+            "serverMsChange": 330.94883899999996,
+            "serverSlowdown": 6.91451139352096,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          },
+          "warmVsPost": {
+            "serverMs": 43.211616,
+            "wallMs": 52.2,
+            "serverMsChange": -343.692621,
+            "serverSlowdown": 0.11168555902891289,
+            "sameOrderedIds": true,
+            "sameOrderedIdsScores": true,
+            "sameIdSets": true,
+            "sameSortedPerIdScores": true
+          }
+        }
+      }
+    }
+  ],
+  "limits": [
+    "Direct Qdrant batches do not measure first usable search results or seven-day organic acceptance.",
+    "Counter brackets include grace, sampling overhead, background work and organic traffic; no per-query attribution. Record timestamps are fences, not exact proc-read instants; post-control is emitted after signal receipt.",
+    "Residency uses filesystem-reported data extents and path-inferred classes; whole-file sparse holes are excluded.",
+    "Changed file identities or data-extent page counts are incomparable. Matching hashes/counts allow only coarse comparisons; unrecorded extent-range or content changes remain possible. Ordered parity stays separate from sorted per-ID score parity.",
+    "Score-set changes require review for concurrent data updates; they do not independently prove a backup regression.",
+    "Optional explicit diagnostic policy is caller-selected, not a calibrated warm-band or acceptance threshold."
+  ]
+}

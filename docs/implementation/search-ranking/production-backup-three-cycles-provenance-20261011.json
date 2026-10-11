@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "productionAcceptance": false,
+  "observerRecords": 1077,
+  "consumerRecords": 38,
+  "observerSourceSha256": "c917289843bd3eaf0d7ae3fec44349b6c8603018f0e654e5e920fddff8085b6a",
+  "consumerSourceSha256": "7c1a7f9676885a1b7374a933bced3cb5f058edf49b8ba4569a6de7c2d49cdf35",
+  "reportHelperSha256": "59fe995eba6018d447ee4ca231139f9de2446d1322213b723915cc2ee333bd75",
+  "frozenControllerSha256": "edc0c300cde27cb3e78036a8221f352e3569a3e0212548bd497736e32b52e0b0",
+  "deployedBackupSha256": "eeedbb37190845856ec63528e8dc86f8fbac376b8bfa2037b5d8b9ced572d705",
+  "observerCompleteAt": "2026-10-11T23:17:49.250002+00:00",
+  "consumerCompleteAt": "2026-10-11T23:17:31.692Z",
+  "observerStderrBytesAtCompletion": 0,
+  "producerExitedBeforeBaseline": true,
+  "productionHeavyReadHoldEndedOnlyAfterObserverCompletion": true,
+  "allocationObservations": {
+    "1": {
+      "before": {
+        "event": "qdrant-allocation-metadata",
+        "at": "2026-10-11T21:09:48.655284+00:00",
+        "qdrantPid": 3411704,
+        "imageSha256": "sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b",
+        "dockerMemoryBytes": 0,
+        "dockerNanoCpus": 0,
+        "cgroupMemoryMax": "max",
+        "cgroupMemoryHigh": "max",
+        "cgroupCpuMaxQuota": "max",
+        "cgroupCpuMaxPeriodUsec": 100000,
+        "rawConfigOmitted": true
+      },
+      "after": {
+        "event": "qdrant-allocation-metadata",
+        "at": "2026-10-11T21:17:16.653435+00:00",
+        "qdrantPid": 3411704,
+        "imageSha256": "sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b",
+        "dockerMemoryBytes": 0,
+        "dockerNanoCpus": 0,
+        "cgroupMemoryMax": "max",
+        "cgroupMemoryHigh": "max",
+        "cgroupCpuMaxQuota": "max",
+        "cgroupCpuMaxPeriodUsec": 100000,
+        "rawConfigOmitted": true
+      }
+    },
+    "2": {
+      "before": {
+        "event": "qdrant-allocation-metadata",
+        "at": "2026-10-11T22:08:44.021593+00:00",
+        "qdrantPid": 3411704,
+        "imageSha256": "sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b",
+        "dockerMemoryBytes": 0,
+        "dockerNanoCpus": 0,
+        "cgroupMemoryMax": "max",
+        "cgroupMemoryHigh": "max",
+        "cgroupCpuMaxQuota": "max",
+        "cgroupCpuMaxPeriodUsec": 100000,
+        "rawConfigOmitted": true
+      },
+      "after": {
+        "event": "qdrant-allocation-metadata",
+        "at": "2026-10-11T22:18:18.422272+00:00",
+        "qdrantPid": 3411704,
+        "imageSha256": "sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b",
+        "dockerMemoryBytes": 0,
+        "dockerNanoCpus": 0,
+        "cgroupMemoryMax": "max",
+        "cgroupMemoryHigh": "max",
+        "cgroupCpuMaxQuota": "max",
+        "cgroupCpuMaxPeriodUsec": 100000,
+        "rawConfigOmitted": true
+      }
+    },
+    "3": {
+      "before": {
+        "event": "qdrant-allocation-metadata",
+        "at": "2026-10-11T23:08:48.228174+00:00",
+        "qdrantPid": 3411704,
+        "imageSha256": "sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b",
+        "dockerMemoryBytes": 0,
+        "dockerNanoCpus": 0,
+        "cgroupMemoryMax": "max",
+        "cgroupMemoryHigh": "max",
+        "cgroupCpuMaxQuota": "max",
+        "cgroupCpuMaxPeriodUsec": 100000,
+        "rawConfigOmitted": true
+      },
+      "after": {
+        "event": "qdrant-allocation-metadata",
+        "at": "2026-10-11T23:18:22.908221+00:00",
+        "qdrantPid": 3411704,
+        "imageSha256": "sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b",
+        "dockerMemoryBytes": 0,
+        "dockerNanoCpus": 0,
+        "cgroupMemoryMax": "max",
+        "cgroupMemoryHigh": "max",
+        "cgroupCpuMaxQuota": "max",
+        "cgroupCpuMaxPeriodUsec": 100000,
+        "rawConfigOmitted": true
+      }
+    }
+  }
+}
