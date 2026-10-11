@@ -1,7 +1,8 @@
 // Pure validation for the held-child v2 protocol. Performs no capture, queries or control.
 const HASH=/^[a-f0-9]{64}$/;
 const UTC=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|\+00:00)$/;
-function requireGate(ok,reason){if(!ok)throw new Error(reason);}
+export class ContractFailure extends Error{constructor(reason){super(reason);this.reason=reason;this.failureKind='contract';}}
+function requireGate(ok,reason){if(!ok)throw new ContractFailure(reason);}
 const number=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
 function cleanLimits(value){requireGate(value&&['oom','oom_kill','max'].every(k=>value.memoryEventDelta?.[k]===0)&&['nr_throttled','throttled_usec'].every(k=>value.cpuLimitDelta?.[k]===0),'query_resource_failure');}
 const kinds=['vector','graph','sparse','other'];
@@ -18,7 +19,7 @@ export function phaseEvidence(frames,exitCode,phase,expected,batch,{requireRed=f
  requireGate(released.released===true&&released.pinChildExited===true&&cleanup.pinChildExited===true,'pin_cleanup_unproven');
  requireGate(ready.cold?.residentPagesAfterEviction===0&&ready.cold.pointCount===244262&&ready.cold.segmentCount===12&&ready.cold.shardCount===6,'cold_control_incomplete');
  requireGate(ready.pressureWriterPlacement==='controller-original-cgroup'&&ready.pressure?.mode==='readonly-existing-archive'&&ready.pressure.bytes===4428863488,'pressure_protocol_changed');
- try{cleanLimits(pressure.pressureLimits)}catch{throw Error('pressure_cap_confounded')};
+ try{cleanLimits(pressure.pressureLimits)}catch{throw new ContractFailure('pressure_cap_confounded')};
  cleanLimits(finished.queryLimits);
  requireGate(number(batch.serverMs)&&number(batch.wallMs)&&number(finished.queryProcessDelta?.majorFaults),'batch_metrics_missing');
  if(phase==='baseline'&&requireRed){

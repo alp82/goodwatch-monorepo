@@ -5,7 +5,7 @@ import {spawn} from 'node:child_process';
 import {readFileSync,realpathSync} from 'node:fs';
 import crypto from 'node:crypto';
 import {orderedIds,orderedIdsScores,idSets,idScoreSets,signal} from './parity.mjs';
-import {phaseEvidence,pairedEvidence} from './compare-contract.mjs';
+import {phaseEvidence,pairedEvidence,ContractFailure} from './compare-contract.mjs';
 import {hasLookup} from './producer-guard.mjs';
 const ROOT='/root/goodwatch-qdrant-cold-406-20261011';
 const STAGE=ROOT+'/pin-control-20261012-406-v1';
@@ -31,33 +31,48 @@ export async function packetsFrom(input){
 }
 export function requireNativeAnchor(packets){if(!packets.some(p=>p.kind==='private-batch'&&p.tag==='control-native-title'))throw Error('required_native_control_missing');}
 function digest(path){return crypto.createHash('sha256').update(readFileSync(path)).digest('hex');}
-export async function controlledBatch(packet,phase,expected,paths,queryBatch,{spawnControl=spawn}={}){
+const PUBLIC_PROTOCOL_REASONS=new Set(['control_ready_timeout','control_spawn_failed','control_before_ready_failed','control_phase_failed','control_frame_failed','control_cleanup_timeout','controller_freeze_changed']);
+const NETWORK_CODES=new Set(['ETIMEDOUT','EAI_AGAIN','ECONNRESET','ECONNREFUSED','EPIPE','ENETUNREACH','EHOSTUNREACH','ENOTFOUND']);
+export function publicFailure(error,operation,batch){
+ const metrics=Object.fromEntries(['serverMs','wallMs'].map(key=>[key,typeof batch?.[key]==='number'&&Number.isFinite(batch[key])&&batch[key]>=0?batch[key]:null]));
+ if(error instanceof ContractFailure)return{reason:error.reason,failureKind:'contract',...metrics};
+ if(PUBLIC_PROTOCOL_REASONS.has(error?.message))return{reason:error.message,failureKind:error.message==='control_cleanup_timeout'?'cleanup':operation,...metrics};
+ if(operation==='query')return{reason:error?.name==='BackendTimeoutError'||error?.code==='ETIMEDOUT'?'query_timeout':NETWORK_CODES.has(error?.code)?'query_transport_failure':'query_failed',failureKind:'query',transportCode:NETWORK_CODES.has(error?.code)?error.code:null,...metrics};
+ return{reason:'comparison_guard_or_control_failure',failureKind:operation,...metrics};
+}
+function within(promise,milliseconds,fallback){let timer;return Promise.race([promise,new Promise(resolve=>{timer=setTimeout(()=>resolve(fallback),milliseconds)})]).finally(()=>clearTimeout(timer));}
+export async function controlledBatch(packet,phase,expected,paths,queryBatch,{spawnControl=spawn,budgets={ready:600000,cleanup:15000,reaped:5000}}={}){
  if(realpathSync(paths.code)!==paths.code||realpathSync(paths.config)!==paths.config||digest(paths.code)!==expected.controllerCodeSha256||digest(paths.config)!==expected.controllerPolicySha256)throw Error('controller_freeze_changed');
  const child=spawnControl('/usr/bin/python3',['-I','-B',paths.code,'--execute-reviewed','--config',paths.config,'--policy-sha256',expected.controllerPolicySha256,'--code-sha256',expected.controllerCodeSha256,'--phase',phase,'--case-tag',packet.tag,'--raise-own-memlock'],{stdio:['pipe','pipe','pipe']});
- const frames=[];let readyResolve,readyReject,closedResolve,batch;
+ const frames=[];let readyResolve,readyReject,closedResolve,batch,closeObserved=false,terminationSent=false,operation='readiness';
  const ready=new Promise((r,j)=>{readyResolve=r;readyReject=j});const closed=new Promise(r=>{closedResolve=r});
- const timer=setTimeout(()=>{readyReject(Error('control_ready_timeout'));child.kill('SIGTERM')},600000);
+ const cleanupStarted=()=>frames.some(f=>f.stage==='phase-failed'||f.stage==='failed'||f.stage==='released');
+ const terminate=()=>{if(!closeObserved&&!cleanupStarted()&&!terminationSent){terminationSent=true;child.kill('SIGTERM')}};
+ const timer=setTimeout(()=>{readyReject(Error('control_ready_timeout'));terminate()},budgets.ready);
  child.stderr.on('data',()=>{});child.stdin.on('error',()=>{});
  child.on('error',()=>readyReject(Error('control_spawn_failed')));
- child.on('close',code=>{clearTimeout(timer);if(!frames.some(f=>f.stage==='query-ready'))readyReject(Error('control_before_ready_failed'));closedResolve(code)});
- (async()=>{try{for await(const line of readline.createInterface({input:child.stdout,crlfDelay:Infinity})){
+ child.on('close',(code,signal)=>{closeObserved=true;clearTimeout(timer);if(!frames.some(f=>f.stage==='query-ready'))readyReject(Error('control_before_ready_failed'));closedResolve({code,signal})});
+ const reader=(async()=>{try{for await(const line of readline.createInterface({input:child.stdout,crlfDelay:Infinity})){
   if(line.length>131072||frames.length>=10)throw Error();const f=JSON.parse(line);frames.push(f);
   if(f.stage==='failed'||f.stage==='phase-failed'){readyReject(Error('control_phase_failed'));continue;}if(f.stage==='query-ready')readyResolve();
- }}catch{readyReject(Error('control_frame_failed'));child.kill('SIGTERM')}})();
+ }}catch{readyReject(Error('control_frame_failed'));terminate()}})();
  try{
-  await ready;clearTimeout(timer);
+  await ready;clearTimeout(timer);operation='query';
   batch=await queryBatch(packet.collection,packet.queries,{timeoutMs:30000});
-  child.stdin.end('{"stage":"query-finished"}\n');
-  let cleanupTimer;let exit;try{exit=await Promise.race([closed,new Promise((_,reject)=>{cleanupTimer=setTimeout(()=>reject(Error('control_cleanup_timeout')),15000)})])}finally{clearTimeout(cleanupTimer)}
-  const metrics=phaseEvidence(frames,exit,phase,expected,batch,{requireRed:packet.tag==='control-native-title'});
+  child.stdin.end('{"stage":"query-finished"}\n');operation='cleanup';
+  const exit=await within(closed,budgets.cleanup,null);
+  if(exit===null)throw Error('control_cleanup_timeout');
+  await reader;operation='contract';
+  const metrics=phaseEvidence(frames,exit.code,phase,expected,batch,{requireRed:packet.tag==='control-native-title'});
   return {metrics,frames,hashes:{resultIdHash:orderedIds(batch.results),resultIdScoreHash:orderedIdsScores(batch.results),resultSetHash:idSets(batch.results),resultScoreSetHash:idScoreSets(batch.results)},counts:batch.results.map(r=>r.length)};
- }catch{
-  if(child.exitCode===null)child.kill('SIGTERM');
-  let exit,waitTimer;try{exit=await Promise.race([closed,new Promise(resolve=>{waitTimer=setTimeout(()=>resolve(null),15000)})])}finally{clearTimeout(waitTimer)}
-  if(exit===null){child.kill('SIGKILL');let killTimer;try{exit=await Promise.race([closed,new Promise(resolve=>{killTimer=setTimeout(()=>resolve(null),5000)})])}finally{clearTimeout(killTimer)}}
-  const controllerReason=frames.find(f=>(f.stage==='phase-failed'||f.stage==='failed')&&ALLOWED_REASONS.has(f.reason))?.reason||'comparison_guard_or_control_failure';
-  const failure=Error('comparison_guard_or_control_failure');failure.publicEvidence={reason:controllerReason,controllerFrames:frames,controllerExitCode:exit,exitObserved:exit!==null,cleanupObserved:frames.some(f=>f.stage==='released'&&f.released===true&&f.pinChildExited===true),productionAcceptance:false};throw failure;
- }finally{clearTimeout(timer);if(child.exitCode===null)child.kill('SIGTERM');}
+ }catch(error){
+  // Give a controller already reporting failure/release its own bounded cleanup opportunity.
+  terminate();let exit=await within(closed,budgets.cleanup,null);
+  if(exit===null){child.kill('SIGKILL');exit=await within(closed,budgets.reaped,null)}
+  if(closeObserved)await reader;
+  const controllerReason=frames.find(f=>(f.stage==='phase-failed'||f.stage==='failed')&&ALLOWED_REASONS.has(f.reason))?.reason||null;
+  const failure=Error('comparison_guard_or_control_failure');failure.publicEvidence={...publicFailure(error,operation,batch),controllerReason,controllerFrames:frames,controllerExitCode:exit?.code??null,controllerExitSignal:exit?.signal??null,exitObserved:closeObserved,cleanupObserved:frames.some(f=>f.stage==='released'&&f.released===true&&f.pinChildExited===true),productionAcceptance:false};throw failure;
+ }finally{clearTimeout(timer);if(!closeObserved)child.kill('SIGKILL');}
 }
 
 export async function main(){
@@ -78,10 +93,10 @@ export async function main(){
   if(p.tag!=='control-native-title'&&!nativePassed)throw Error('native_control_not_validated');
   const baseline=await controlledBatch(p,'baseline',expected,paths,queryBatch);
   const candidate=await controlledBatch(p,'candidate',expected,paths,queryBatch);
-  const parity=pairedEvidence(baseline.metrics,candidate.metrics,baseline.hashes,candidate.hashes);
+  let parity;try{parity=pairedEvidence(baseline.metrics,candidate.metrics,baseline.hashes,candidate.hashes)}catch(error){error.publicEvidence={...publicFailure(error,'contract'),baseline:baseline.metrics,candidate:candidate.metrics,baselineHashes:baseline.hashes,candidateHashes:candidate.hashes,productionAcceptance:false};throw error;}
   if(p.tag==='control-native-title')nativePassed=true;
   emit({kind:'paired-batch',tag:p.tag,lesserKnown:p.lesserKnown,indexBuildId:p.indexBuildId,queryCount:p.queries.length,signals:p.queries.map(signal),baseline:baseline.metrics,candidate:candidate.metrics,...parity,baselineControlEvidence:baseline.frames,candidateControlEvidence:candidate.frames,baselineHashes:baseline.hashes,candidateHashes:candidate.hashes,resultCounts:baseline.counts,productionAcceptance:false});
  }
  emit({kind:'complete',productionAcceptance:false});
 }
-if(import.meta.url===new URL(process.argv[1],'file:').href)main().catch(error=>{emit({kind:'failed',...(error.publicEvidence||{reason:'comparison guard or control failed; private error omitted'})});process.exitCode=1});
+if(import.meta.url===new URL(process.argv[1],'file:').href)main().catch(error=>{emit({kind:'failed',...(error.publicEvidence||publicFailure(error,'preflight'))});process.exitCode=1});

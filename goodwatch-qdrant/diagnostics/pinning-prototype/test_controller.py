@@ -76,7 +76,7 @@ class ControllerTests(unittest.TestCase):
         source=SimpleNamespace(identity=('fixed',),spec='spec');manager=Mock()
         info=SimpleNamespace(st_mode=0o100600,st_size=3,st_dev=1,st_ino=2,st_mtime_ns=3)
         config={'reconcileIntervalSeconds':10,'pressure':{'bytes':3,'sha256':controller.hashlib.sha256(b'abc').hexdigest(),'rateBytesPerSecond':1,'maxSeconds':10}}
-        times=iter([0,10,10,10,10,10,10,10,10]);clock=lambda:next(times)
+        times=iter([0]+[10]*20);clock=lambda:next(times)
         with patch.object(controller.os,'open',return_value=123),patch.object(controller.os,'read',side_effect=[b'abc',b'']),patch.object(controller.os,'fstat',return_value=info),patch.object(controller.os,'close') as close,patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller,'host_available',return_value=8*1024**3):
             state=controller.pressure(config,source,manager,clock=clock,sleep=Mock(),floor=1)
         manager.request.assert_called_once_with(pressure=True);close.assert_called_once_with(123);self.assertEqual(state['bytes'],3)
@@ -121,6 +121,17 @@ class ControllerTests(unittest.TestCase):
             with patch.object(controller,'ROOT',root),patch.object(controller,'ARCHIVE',archive),patch.object(controller,'ARCHIVE_BYTES',3),patch.object(controller.os,'fsync') as fsync,patch.object(controller.os,'posix_fadvise') as advice:
                 with self.assertRaises(RuntimeError):controller.verify_archive(1)
             fsync.assert_not_called();advice.assert_not_called()
+
+    def test_verified_archive_reads_and_advises_only_the_owned_file(self):
+        import hashlib,tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);(root/'store').mkdir();(root/'rename-proof').mkdir()
+            archive=root/'rename-proof'/'media.snapshot';archive.write_bytes(b'abc')
+            with patch.object(controller,'ROOT',root),patch.object(controller,'ARCHIVE',archive),patch.object(controller,'ARCHIVE_BYTES',3),patch.object(controller,'ARCHIVE_HASH',hashlib.sha256(b'abc').hexdigest()),patch.object(controller,'owned_store_files',return_value=([],0)),patch.object(controller,'owned_total_budget'),patch.object(controller,'host_available',return_value=10),patch.object(controller.os,'fsync') as fsync,patch.object(controller.os,'posix_fadvise') as advice:
+                result=controller.verify_archive(1)
+            self.assertEqual(result['bytes'],3);self.assertTrue(result['ownedArchiveAdviceCompleted'])
+            fsync.assert_called_once();advice.assert_called_once()
 
     def test_low_host_memory_aborts_pressure_before_next_read(self):
         source=SimpleNamespace(identity=('fixed',),spec='spec');info=SimpleNamespace(st_mode=0o100600,st_size=3)
@@ -221,6 +232,35 @@ class ControllerTests(unittest.TestCase):
             changed=copy.deepcopy(document);mutate(changed)
             with patch.object(controller.runtime,'docker',return_value=json.dumps([changed]).encode()):
                 with self.assertRaises(RuntimeError):controller.inspect_stopped_or_running(spec)
+
+
+    def test_reconcile_pause_cannot_create_archive_catchup_burst(self):
+        source=SimpleNamespace(identity=('fixed',),spec='spec');manager=Mock();time={'now':0};sleeps=[]
+        chunks=iter([b'a',b'b',b'c',b'']);reads={'count':0}
+        def read(fd,count):
+            reads['count']+=1
+            if reads['count']==1:time['now']+=10
+            return next(chunks)
+        def pause(seconds):sleeps.append(seconds);time['now']+=seconds
+        def reconcile(**kwargs):time['now']+=20
+        manager.request.side_effect=reconcile
+        info=SimpleNamespace(st_mode=0o100600,st_size=3,st_dev=1,st_ino=2,st_mtime_ns=3)
+        config={'reconcileIntervalSeconds':10,'pressure':{'bytes':3,'sha256':controller.hashlib.sha256(b'abc').hexdigest(),'rateBytesPerSecond':1,'maxSeconds':100}}
+        with patch.object(controller.os,'open',return_value=123),patch.object(controller.os,'read',side_effect=read),patch.object(controller.os,'fstat',return_value=info),patch.object(controller.os,'close'),patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller,'host_available'):
+            result=controller.pressure(config,source,manager,clock=lambda:time['now'],sleep=pause,floor=1)
+        self.assertEqual(sleeps,[1,1]);self.assertEqual(result['bytes'],3);self.assertEqual(result['reconcilePassCount'],1)
+
+
+    def test_archive_policy_mismatch_has_archive_cause_without_helper_inspection(self):
+        import tempfile
+        from pathlib import Path
+        c=json.loads((Path(controller.__file__).parent/'prepared-control-policy.json').read_text());c['pressure']['bytes']+=1
+        raw=json.dumps(c).encode()
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'policy.json';path.write_bytes(raw)
+            with patch.object(controller.daemon,'load_config') as helper:
+                with self.assertRaises(ValueError) as caught:controller.load_control(path,controller.hashlib.sha256(raw).hexdigest(),controller.digest(controller.__file__))
+            self.assertEqual(controller.safe_control_reason(caught.exception),'fixed_readonly_archive_required');helper.assert_not_called()
 
 
 
