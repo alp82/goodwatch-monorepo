@@ -9,7 +9,7 @@ from pathlib import Path
 TAGS = ('known-exact-title', 'known-native-title', 'known-low-vote-title')
 CLASSES = ('vector', 'graph', 'sparse', 'payload', 'other')
 HASH = re.compile(r'[a-f0-9]{64}')
-RECLAIM = re.compile(r'(?:pgscan_[a-z_]+|pgsteal_[a-z_]+|allocstall[a-z_]*|workingset_refault[a-z_]*|pswpin|pswpout)')
+RECLAIM = re.compile(r'(?:pgscan_[a-z_]+|pgsteal_[a-z_]+|allocstall[a-z0-9_]*|workingset_refault[a-z_]*|pswpin|pswpout)')
 
 
 def number(value, integer=False):

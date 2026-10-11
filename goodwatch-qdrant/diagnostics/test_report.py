@@ -107,6 +107,16 @@ class ReportTests(unittest.TestCase):
                 self.assertEqual(report.summarize(obs, con)['cycles'][0]['diagnosticStatus'], 'incomplete_or_invalid')
             target['at'] = prior
 
+    def test_actual_kernel_dma32_reclaim_counter_is_preserved_with_numeric_delta(self):
+        obs, con = fixture()
+        for row in obs:
+            counters = row.get('counters', row.get('countersBeforeSignal'))
+            if counters is not None:
+                counters['hostReclaim']['allocstall_dma32'] = 2 if row.get('event') in ('modified-backup-post-control', 'modified-backup-post-batch-counters', 'modified-backup-warm-batch-counters') else 1
+        result = report.summarize(obs, con)
+        self.assertEqual(result['cycles'][0]['diagnosticStatus'], 'observed')
+        self.assertEqual(result['cycles'][0]['counterBrackets']['backupAndPostSampling']['delta']['hostReclaim']['allocstall_dma32'], 1)
+
     def test_baseline_exact_1500ms_is_flagged_without_application_acceptance_claim(self):
         obs, con = fixture()
         next(r for r in con if r.get('cycle') == 1 and r.get('phase') == 'baseline')['serverMs'] = 1500
