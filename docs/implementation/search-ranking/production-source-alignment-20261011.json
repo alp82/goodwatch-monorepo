@@ -1,0 +1,25 @@
+{
+  "deployed_commit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "prior_commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+  "roles": {
+    "a": {
+      "healthy": true,
+      "query_models_loaded": true,
+      "readiness_after_seconds": 21
+    },
+    "b": {
+      "healthy": true,
+      "query_models_loaded": true,
+      "readiness_after_seconds": 21
+    }
+  },
+  "smoke": {
+    "public_page_checks_passed": 70,
+    "role_a_checks_passed": 31,
+    "role_b_checks_passed": 31,
+    "failures": 0,
+    "warnings": 0
+  },
+  "ordinary_searches_after_twelve_comparison_probes": 0,
+  "scope": "Align role runtime with already merged palette/title-prefix changes; not a Qdrant latency fix or acceptance claim."
+}

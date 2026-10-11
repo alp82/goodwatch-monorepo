@@ -1,0 +1,1166 @@
+{
+  "window_start": "2026-10-11T19:18:05.000Z",
+  "window_end": "2026-10-11T19:21:12.999Z",
+  "source": "durable allowlisted core journal",
+  "association": "Temporal windows only; batch and lifecycle IDs differ. Controlled loopback probes do not traverse proxies.",
+  "events": [
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:05.384Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:07.255Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 1871,
+        "computationMs": 1868,
+        "lifetimeMs": 1871,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:18:07.278Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:07.824Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 3,
+        "reusedSocket": false,
+        "socketMs": 1.340651996433735,
+        "dnsMs": null,
+        "connectMs": 1.588307000696659,
+        "secureConnectMs": null,
+        "headersMs": 1940.9870859980583,
+        "responseEndMs": 1941.403922997415,
+        "parseMs": 1.6044250056147575,
+        "serverMs": 1934.095809,
+        "totalMs": 1943.5351069942117,
+        "responseBytes": 56894
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:07.893Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 3,
+        "reusedSocket": true,
+        "socketMs": 2.176725000143051,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 52.951127998530865,
+        "responseEndMs": 53.792173996567726,
+        "parseMs": 5.991861999034882,
+        "serverMs": 43.784634000000004,
+        "totalMs": 60.470154002308846,
+        "responseBytes": 255734
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:16.271Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:18.116Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 1845,
+        "computationMs": 1844,
+        "lifetimeMs": 1845,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:18:18.131Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:21.376Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 7,
+        "reusedSocket": false,
+        "socketMs": 1.4164850041270256,
+        "dnsMs": null,
+        "connectMs": 1.569871000945568,
+        "secureConnectMs": null,
+        "headersMs": 4660.866602003574,
+        "responseEndMs": 4662.48388300091,
+        "parseMs": 8.511796995997429,
+        "serverMs": 4652.480461,
+        "totalMs": 4672.1459770053625,
+        "responseBytes": 320191
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:21.432Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 2,
+        "reusedSocket": true,
+        "socketMs": 3.2272690013051033,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 40.68417499959469,
+        "responseEndMs": 41.695606999099255,
+        "parseMs": 6.588349997997284,
+        "serverMs": 27.387137,
+        "totalMs": 49.16358099877834,
+        "responseBytes": 438928
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:21.711Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 8,
+        "reusedSocket": true,
+        "socketMs": 5.023391000926495,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 115.45533600449562,
+        "responseEndMs": 118.11487300693989,
+        "parseMs": 24.347768999636173,
+        "serverMs": 84.01512199999999,
+        "totalMs": 144.44995000213385,
+        "responseBytes": 937168
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:27.140Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:28.107Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 7,
+        "reusedSocket": false,
+        "socketMs": 1.9363949969410896,
+        "dnsMs": null,
+        "connectMs": 2.1768139973282814,
+        "secureConnectMs": null,
+        "headersMs": 686.9051449969411,
+        "responseEndMs": 687.5015789940953,
+        "parseMs": 3.0852890014648438,
+        "serverMs": 679.56244,
+        "totalMs": 690.9555699974298,
+        "responseBytes": 138964
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:28.260Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 3.4763350039720535,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 128.82338100671768,
+        "responseEndMs": 130.61146800220013,
+        "parseMs": 16.518619999289513,
+        "serverMs": 104.06219399999999,
+        "totalMs": 148.79785700142384,
+        "responseBytes": 761714
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:28.334Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 1192,
+        "computationMs": 1189,
+        "lifetimeMs": 1194,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:18:28.349Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:37.351Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:37.540Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 1,
+        "reusedSocket": false,
+        "socketMs": 8.29857099801302,
+        "dnsMs": null,
+        "connectMs": 8.940284997224808,
+        "secureConnectMs": null,
+        "headersMs": 14.00025899708271,
+        "responseEndMs": 14.22782800346613,
+        "parseMs": 0.29478999972343445,
+        "serverMs": 1.540431,
+        "totalMs": 14.780752003192902,
+        "responseBytes": 2959
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:38.190Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 0.7723959982395172,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 637.8082990050316,
+        "responseEndMs": 638.3949970006943,
+        "parseMs": 2.010581001639366,
+        "serverMs": 632.964752,
+        "totalMs": 640.710124000907,
+        "responseBytes": 105215
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:38.298Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 6,
+        "reusedSocket": true,
+        "socketMs": 3.4430579990148544,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 89.89127799868584,
+        "responseEndMs": 90.90323899686337,
+        "parseMs": 11.138224996626377,
+        "serverMs": 73.65507000000001,
+        "totalMs": 103.17184799909592,
+        "responseBytes": 593621
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:38.381Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 1030,
+        "computationMs": 1025,
+        "lifetimeMs": 1030,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:18:38.399Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:47.400Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:47.934Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 9,
+        "reusedSocket": false,
+        "socketMs": 4.9737579971551895,
+        "dnsMs": null,
+        "connectMs": 7.353593997657299,
+        "secureConnectMs": null,
+        "headersMs": 238.4197710007429,
+        "responseEndMs": 239.2538020014763,
+        "parseMs": 2.861405000090599,
+        "serverMs": 222.14700200000001,
+        "totalMs": 242.58776599913836,
+        "responseBytes": 172760
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:48.092Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 7,
+        "reusedSocket": true,
+        "socketMs": 6.179787993431091,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 135.35138899832964,
+        "responseEndMs": 137.0350710004568,
+        "parseMs": 15.80469100177288,
+        "serverMs": 109.829711,
+        "totalMs": 153.48403299599886,
+        "responseBytes": 1049768
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:48.176Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 775,
+        "computationMs": 769,
+        "lifetimeMs": 776,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:18:48.191Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:57.190Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:57.387Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 1,
+        "reusedSocket": false,
+        "socketMs": 11.908952996134758,
+        "dnsMs": null,
+        "connectMs": 12.237039998173714,
+        "secureConnectMs": null,
+        "headersMs": 17.97749199718237,
+        "responseEndMs": 18.24507699906826,
+        "parseMs": 0.3624180033802986,
+        "serverMs": 2.492326,
+        "totalMs": 18.85342200100422,
+        "responseBytes": 26587
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:57.591Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 0.8248569965362549,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 153.5747289955616,
+        "responseEndMs": 153.9972189962864,
+        "parseMs": 1.612505003809929,
+        "serverMs": 149.15948400000002,
+        "totalMs": 155.89191799610853,
+        "responseBytes": 119460
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:18:57.685Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 6,
+        "reusedSocket": true,
+        "socketMs": 3.680647000670433,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 74.9381859973073,
+        "responseEndMs": 75.98186099529266,
+        "parseMs": 10.662746995687485,
+        "serverMs": 57.013394000000005,
+        "totalMs": 87.16543699800968,
+        "responseBytes": 561253
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:18:57.741Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 550,
+        "computationMs": 549,
+        "lifetimeMs": 551,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:18:57.756Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:20:15.582Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:15.797Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 3,
+        "reusedSocket": false,
+        "socketMs": 2.8909309999980906,
+        "dnsMs": null,
+        "connectMs": 3.3867129999998724,
+        "secureConnectMs": null,
+        "headersMs": 27.674355999999534,
+        "responseEndMs": 28.282659999997122,
+        "parseMs": 0.8056710000018938,
+        "serverMs": 20.778492999999997,
+        "totalMs": 29.681330999999773,
+        "responseBytes": 56894
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:15.831Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 3,
+        "reusedSocket": true,
+        "socketMs": 1.8274340000025404,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 24.69347800000105,
+        "responseEndMs": 25.211725000001024,
+        "parseMs": 3.8577279999990424,
+        "serverMs": 17.232329,
+        "totalMs": 29.438250999999582,
+        "responseBytes": 255734
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:20:15.900Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 317,
+        "computationMs": 310,
+        "lifetimeMs": 318,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:20:15.926Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:20:24.920Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:25.248Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 7,
+        "reusedSocket": false,
+        "socketMs": 2.1697090000016033,
+        "dnsMs": null,
+        "connectMs": 2.422050000001036,
+        "secureConnectMs": null,
+        "headersMs": 89.52081399999588,
+        "responseEndMs": 90.56067999999505,
+        "parseMs": 5.042628000002878,
+        "serverMs": 81.09447,
+        "totalMs": 96.0015329999951,
+        "responseBytes": 320190
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:25.308Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 2,
+        "reusedSocket": true,
+        "socketMs": 4.405545000001439,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 43.94297599999845,
+        "responseEndMs": 45.005302999998094,
+        "parseMs": 10.193154000000504,
+        "serverMs": 26.975407999999998,
+        "totalMs": 55.829265000000305,
+        "responseBytes": 438928
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:25.452Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 8,
+        "reusedSocket": true,
+        "socketMs": 4.226710999995703,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 53.067267999998876,
+        "responseEndMs": 54.708051999994495,
+        "parseMs": 19.799237999999605,
+        "serverMs": 31.580102,
+        "totalMs": 75.19804899999872,
+        "responseBytes": 937168
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:20:25.516Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 596,
+        "computationMs": 594,
+        "lifetimeMs": 596,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:20:25.532Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:20:34.538Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:34.801Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 7,
+        "reusedSocket": false,
+        "socketMs": 3.6094040000025416,
+        "dnsMs": null,
+        "connectMs": 4.12731299999723,
+        "secureConnectMs": null,
+        "headersMs": 55.67677199999889,
+        "responseEndMs": 56.33504199999879,
+        "parseMs": 2.4607639999958337,
+        "serverMs": 45.51853,
+        "totalMs": 59.264123000000836,
+        "responseBytes": 138964
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:34.897Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 4.901675000000978,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 64.45064399999683,
+        "responseEndMs": 67.10870799999975,
+        "parseMs": 23.77629700000398,
+        "serverMs": 41.035019999999996,
+        "totalMs": 91.86971600000106,
+        "responseBytes": 761713
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:20:34.963Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 425,
+        "computationMs": 422,
+        "lifetimeMs": 425,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:20:34.978Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:20:43.984Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:44.070Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 1,
+        "reusedSocket": false,
+        "socketMs": 8.937334999995073,
+        "dnsMs": null,
+        "connectMs": 9.750050999995437,
+        "secureConnectMs": null,
+        "headersMs": 14.222752999994555,
+        "responseEndMs": 14.393820999997843,
+        "parseMs": 0.23326600000291364,
+        "serverMs": 1.377488,
+        "totalMs": 14.887779999997292,
+        "responseBytes": 2959
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:44.112Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 0.5960210000048392,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 31.93510700000479,
+        "responseEndMs": 32.5873419999989,
+        "parseMs": 1.7038220000031288,
+        "serverMs": 28.523751999999998,
+        "totalMs": 34.7133560000002,
+        "responseBytes": 105215
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:44.178Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 6,
+        "reusedSocket": true,
+        "socketMs": 3.857168000002275,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 49.72225400000025,
+        "responseEndMs": 50.77697400000034,
+        "parseMs": 11.241797000002407,
+        "serverMs": 33.012319999999995,
+        "totalMs": 62.66417200000433,
+        "responseBytes": 593621
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:20:44.251Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 266,
+        "computationMs": 263,
+        "lifetimeMs": 267,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:20:44.269Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:20:53.272Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:53.520Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 9,
+        "reusedSocket": false,
+        "socketMs": 2.9544610000011744,
+        "dnsMs": null,
+        "connectMs": 3.220423999999184,
+        "secureConnectMs": null,
+        "headersMs": 71.5221659999952,
+        "responseEndMs": 72.3323870000022,
+        "parseMs": 4.312017999996897,
+        "serverMs": 62.604358999999995,
+        "totalMs": 77.33468699999503,
+        "responseBytes": 172760
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:20:53.625Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 7,
+        "reusedSocket": true,
+        "socketMs": 7.156068999989657,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 77.04638400000113,
+        "responseEndMs": 78.57007899999735,
+        "parseMs": 18.85597799999232,
+        "serverMs": 48.962627000000005,
+        "totalMs": 98.13796100000036,
+        "responseBytes": 1049768
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:20:53.702Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 429,
+        "computationMs": 425,
+        "lifetimeMs": 430,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:20:53.718Z",
+        "recorded": true
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:21:02.727Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "phase": "accepted"
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:21:02.816Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 1,
+        "reusedSocket": false,
+        "socketMs": 14.072938999990583,
+        "dnsMs": null,
+        "connectMs": 14.416258999990532,
+        "secureConnectMs": null,
+        "headersMs": 18.031575999993947,
+        "responseEndMs": 18.307678999990458,
+        "parseMs": 0.42315400000370573,
+        "serverMs": 1.278145,
+        "totalMs": 19.03732499999751,
+        "responseBytes": 26587
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:21:02.926Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 5,
+        "reusedSocket": true,
+        "socketMs": 1.260307999997167,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 61.769107000000076,
+        "responseEndMs": 62.08193099999335,
+        "parseMs": 1.7998389999993378,
+        "serverMs": 55.669002,
+        "totalMs": 64.18778399999428,
+        "responseBytes": 119460
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.qdrant-http.v1",
+        "at": "2026-10-11T19:21:02.986Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "kind": "query_batch",
+        "status": "completed",
+        "reason": "none",
+        "httpStatus": 200,
+        "queryCount": 6,
+        "reusedSocket": true,
+        "socketMs": 2.768895999994129,
+        "dnsMs": null,
+        "connectMs": null,
+        "secureConnectMs": null,
+        "headersMs": 44.32223299999896,
+        "responseEndMs": 45.33666000000085,
+        "parseMs": 10.771062999992864,
+        "serverMs": 25.61142,
+        "totalMs": 56.528002999999444,
+        "responseBytes": 561252
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.lifecycle.v1",
+        "at": "2026-10-11T19:21:03.061Z",
+        "role": "search",
+        "commit": "5f15698995eb4368baf5ea094b704a3752191e40",
+        "status": "completed",
+        "phase": "finished",
+        "firstResultsMs": 334,
+        "computationMs": 332,
+        "lifetimeMs": 334,
+        "titleLookupFailed": false,
+        "descriptionFailed": false
+      }
+    },
+    {
+      "source_role": "a",
+      "data": {
+        "event": "search.history-write.v1",
+        "at": "2026-10-11T19:21:03.076Z",
+        "recorded": true
+      }
+    }
+  ]
+}
