@@ -1,0 +1,771 @@
+{
+  "date": "2026-10-11",
+  "productionCommit": "94fce25b7a141d376f81185991aa24412065ccc9",
+  "indexBuild": "20261011T041503Z",
+  "method": "Read-only rankSearch round-one request capture using the six approved cases existing ready interpretation cache; actual query encoder and index. Capture intercepted the first Qdrant batch before execution. Exact captured batches then ran against production Qdrant.",
+  "privacy": "Only fixed public case tags, numeric timings, query-plan signal names and result counts. No query text, accounts, vectors, cache identifiers or credentials.",
+  "modelFilesVerified": 6,
+  "modelFilesDownloaded": 0,
+  "historyWrites": 0,
+  "interpretationRequests": 0,
+  "limitations": [
+    "First batch means first batch in this diagnostic process, not a proven cold Qdrant cache. No backend cache flush or container restart occurred.",
+    "Production HTTP replay uses the original queryBatch implementation in an independent process with a fresh agent. It exercises the original transport and DNS but does not recreate the serving process existing socket pool, event-loop load or concurrent admission state.",
+    "Warm replay timings do not establish production p95 or the seven-day completion criteria."
+  ],
+  "customNodeHttpSamples": [
+    {
+      "case": "exact-title",
+      "event": "round-plan",
+      "queries": 3,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        }
+      ]
+    },
+    {
+      "case": "exact-title",
+      "signal": "full-batch",
+      "wallMs": 34,
+      "serverMs": 25,
+      "lists": [
+        500,
+        500,
+        21
+      ]
+    },
+    {
+      "case": "exact-title",
+      "signal": "signal-0",
+      "wallMs": 14,
+      "serverMs": 9,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "exact-title",
+      "signal": "signal-1",
+      "wallMs": 19,
+      "serverMs": 14,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "exact-title",
+      "signal": "signal-2",
+      "wallMs": 4,
+      "serverMs": 1,
+      "lists": [
+        21
+      ]
+    },
+    {
+      "case": "exact-title",
+      "signal": "full-batch-warm",
+      "wallMs": 25,
+      "serverMs": 20,
+      "lists": [
+        500,
+        500,
+        21
+      ]
+    },
+    {
+      "case": "native-title",
+      "event": "round-plan",
+      "queries": 7,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        }
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "full-batch",
+      "wallMs": 102,
+      "serverMs": 89,
+      "lists": [
+        500,
+        500,
+        213,
+        300,
+        300,
+        300,
+        300
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-0",
+      "wallMs": 14,
+      "serverMs": 9,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-1",
+      "wallMs": 17,
+      "serverMs": 12,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-2",
+      "wallMs": 4,
+      "serverMs": 1,
+      "lists": [
+        213
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-3",
+      "wallMs": 15,
+      "serverMs": 11,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-4",
+      "wallMs": 13,
+      "serverMs": 10,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-5",
+      "wallMs": 14,
+      "serverMs": 11,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-6",
+      "wallMs": 14,
+      "serverMs": 10,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "full-batch-warm",
+      "wallMs": 68,
+      "serverMs": 60,
+      "lists": [
+        500,
+        500,
+        213,
+        300,
+        300,
+        300,
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "event": "round-plan",
+      "queries": 7,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        }
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "full-batch",
+      "wallMs": 49,
+      "serverMs": 41,
+      "lists": [
+        500,
+        500,
+        300,
+        300,
+        300,
+        300,
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-0",
+      "wallMs": 15,
+      "serverMs": 11,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-1",
+      "wallMs": 18,
+      "serverMs": 14,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-2",
+      "wallMs": 8,
+      "serverMs": 4,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-3",
+      "wallMs": 20,
+      "serverMs": 14,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-4",
+      "wallMs": 5,
+      "serverMs": 2,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-5",
+      "wallMs": 18,
+      "serverMs": 14,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-6",
+      "wallMs": 5,
+      "serverMs": 2,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "full-batch-warm",
+      "wallMs": 52,
+      "serverMs": 43,
+      "lists": [
+        500,
+        500,
+        300,
+        300,
+        300,
+        300,
+        300
+      ]
+    }
+  ],
+  "productionQueryBatchSamples": [
+    {
+      "case": "exact-title",
+      "event": "round-plan",
+      "queries": 3,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        }
+      ]
+    },
+    {
+      "case": "exact-title",
+      "signal": "full-batch",
+      "wallMs": 34.1,
+      "serverMs": 23,
+      "lists": [
+        500,
+        500,
+        21
+      ]
+    },
+    {
+      "case": "exact-title",
+      "signal": "signal-0",
+      "wallMs": 16.6,
+      "serverMs": 11,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "exact-title",
+      "signal": "signal-1",
+      "wallMs": 21.5,
+      "serverMs": 16,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "exact-title",
+      "signal": "signal-2",
+      "wallMs": 5.3,
+      "serverMs": 1,
+      "lists": [
+        21
+      ]
+    },
+    {
+      "case": "exact-title",
+      "signal": "full-batch-warm",
+      "wallMs": 33.6,
+      "serverMs": 26,
+      "lists": [
+        500,
+        500,
+        21
+      ]
+    },
+    {
+      "case": "native-title",
+      "event": "round-plan",
+      "queries": 7,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 1,
+          "mustNot": 1
+        }
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "full-batch",
+      "wallMs": 77.2,
+      "serverMs": 68,
+      "lists": [
+        500,
+        500,
+        213,
+        300,
+        300,
+        300,
+        300
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-0",
+      "wallMs": 15.5,
+      "serverMs": 11,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-1",
+      "wallMs": 19.0,
+      "serverMs": 14,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-2",
+      "wallMs": 4.4,
+      "serverMs": 1,
+      "lists": [
+        213
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-3",
+      "wallMs": 16.9,
+      "serverMs": 12,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-4",
+      "wallMs": 18.5,
+      "serverMs": 14,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-5",
+      "wallMs": 13.6,
+      "serverMs": 10,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "signal-6",
+      "wallMs": 13.6,
+      "serverMs": 10,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "native-title",
+      "signal": "full-batch-warm",
+      "wallMs": 65.9,
+      "serverMs": 57,
+      "lists": [
+        500,
+        500,
+        213,
+        300,
+        300,
+        300,
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "event": "round-plan",
+      "queries": 7,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "must": 0,
+          "mustNot": 1
+        }
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "full-batch",
+      "wallMs": 49.3,
+      "serverMs": 40,
+      "lists": [
+        500,
+        500,
+        300,
+        300,
+        300,
+        300,
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-0",
+      "wallMs": 12.5,
+      "serverMs": 9,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-1",
+      "wallMs": 15.7,
+      "serverMs": 12,
+      "lists": [
+        500
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-2",
+      "wallMs": 4.8,
+      "serverMs": 2,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-3",
+      "wallMs": 14.4,
+      "serverMs": 10,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-4",
+      "wallMs": 5.9,
+      "serverMs": 1,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-5",
+      "wallMs": 16.4,
+      "serverMs": 10,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "signal-6",
+      "wallMs": 5.5,
+      "serverMs": 2,
+      "lists": [
+        300
+      ]
+    },
+    {
+      "case": "low-vote-title",
+      "signal": "full-batch-warm",
+      "wallMs": 48.2,
+      "serverMs": 39,
+      "lists": [
+        500,
+        500,
+        300,
+        300,
+        300,
+        300,
+        300
+      ]
+    }
+  ],
+  "conclusion": "None of the exact round-one batches reproduced the production timeout. The observed pending production await does not establish whether the historical delay occurred in Qdrant execution or before/after server processing. No query-plan, quality, deadline or admission change is supported by this replay."
+}
