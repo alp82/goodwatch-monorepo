@@ -77,6 +77,25 @@ def account(value):
     return out
 
 
+def nofile_limits(value):
+    fields = {'openFdCount', 'mappedFileBound', 'reserveFds', 'requiredSoft',
+              'softBefore', 'softAfter', 'hardLimit', 'raised', 'hardChanged'}
+    if type(value) is not dict or set(value) != fields:
+        raise ValueError('own_nofile_state_unavailable')
+    out = {key: integer(value[key]) for key in ('openFdCount', 'mappedFileBound', 'reserveFds', 'requiredSoft')}
+    for key in ('softBefore', 'softAfter', 'hardLimit'):
+        out[key] = None if value[key] is None else integer(value[key])
+    if (out['mappedFileBound'] != runtime.MAX_MAPPED_FILES or out['reserveFds'] != runtime.NOFILE_RESERVE
+            or out['openFdCount'] > runtime.MAX_MAPPED_FILES + runtime.NOFILE_RESERVE
+            or out['requiredSoft'] != out['openFdCount'] + runtime.MAX_MAPPED_FILES + runtime.NOFILE_RESERVE
+            or out['requiredSoft'] > runtime.MAX_REQUIRED_NOFILE
+            or any(out[key] is not None and out[key] < out['requiredSoft'] for key in ('softAfter', 'hardLimit'))
+            or type(value['raised']) is not bool or value['hardChanged'] is not False
+            or value['raised'] != (out['softBefore'] is not None and out['softBefore'] < out['requiredSoft'])):
+        raise ValueError('own_nofile_state_changed')
+    return {**out, 'raised': value['raised'], 'hardChanged': False}
+
+
 def public_state(value):
     if value['event'] != 'mapped-data-pin-state.v1' or value['mode'] != 'clone' or value['queries'] != 0 or value['storageWrites'] != 0:
         raise ValueError('invalid_runtime_state')
@@ -89,6 +108,7 @@ def public_state(value):
     if not out['extentRangesHashed']:
         raise ValueError('range_identity_missing')
     out['classesMeasured'] = {kind: {k: integer(value['classesMeasured'][kind][k]) for k in ('files', 'dataLockBytes', 'dataPages', 'rawExtentCount', 'dataRangeCount')} for kind in KINDS}
+    out['nofileLimits'] = nofile_limits(value['nofileLimits'])
     out['accountingBefore'] = account(value['accountingBefore']); out['accountingAfter'] = account(value['accountingAfter'])
     # Strip all unrecognized keys, paths, exception messages and raw file/process metadata.
     out['lockedResidency'] = {kind: {k: integer(value['lockedResidency'][kind][k]) for k in ('lockedDataPages', 'residentLockedDataPages')} for kind in ('vector', 'graph', 'sparse', 'other')}
@@ -119,13 +139,13 @@ def public_measure(value):
         raise ValueError('invalid_selection_digest')
     return {'event': value['event'], 'mode': 'clone', 'lockedBytes': 0, 'selectionHash': digest,
             'classesMeasured': {kind: {k: integer(value['classesMeasured'][kind][k]) for k in ('files', 'dataPages', 'residentDataPages', 'rawExtentCount', 'dataRangeCount')} for kind in KINDS},
-            'accounting': account(value['accounting']), 'qdrantPid': integer(value['qdrantPid'], 1),
+            'nofileLimits': nofile_limits(value['nofileLimits']), 'accounting': account(value['accounting']), 'qdrantPid': integer(value['qdrantPid'], 1),
             'sourceStartTicks': integer(value['sourceStartTicks'], 1), 'pageBytes': integer(value['pageBytes'], 1),
             'helperVmas': integer(value['helperVmas']), 'maxMapCount': integer(value['maxMapCount'],1),
             'queries': 0, 'storageWrites': 0}
 
 
-def run(config, spec, policy, action, emit, raise_own_memlock=False, clock=time.monotonic, wait=time.sleep):
+def run(config, spec, policy, action, emit, raise_own_memlock=False, clock=time.monotonic, wait=time.sleep, raise_own_nofile=False):
     if action == 'measure' and raise_own_memlock:
         raise ValueError('measure_cannot_raise_limits')
     if action not in config['actions']:
@@ -142,7 +162,7 @@ def run(config, spec, policy, action, emit, raise_own_memlock=False, clock=time.
             raise RuntimeError('outside_source_inspector_required')
         deadline = clock() + config['lifetimeSeconds']
         while not stop and clock() < deadline:
-            state = public_measure(runtime.measure_source(spec))
+            state = public_measure(runtime.measure_source(spec, raise_own_nofile=raise_own_nofile))
             emit({**state, 'at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'action': action})
             remaining = deadline - clock()
             if remaining > 0 and not stop: wait(min(config['intervalSeconds'], remaining))
@@ -161,6 +181,7 @@ def main(argv=None):
     parser.add_argument('--config'); parser.add_argument('--policy-sha256'); parser.add_argument('--code-sha256')
     parser.add_argument('--action', choices=('measure', 'pin'), default='measure')
     parser.add_argument('--raise-own-memlock', action='store_true')
+    parser.add_argument('--raise-own-nofile', action='store_true')
     emit = lambda value: print(json.dumps(value, sort_keys=True), flush=True)
     try:
         args = parser.parse_args(argv)
@@ -170,7 +191,7 @@ def main(argv=None):
         emit({'event': 'mapped-data-pin-prepared.v1', 'inspection': False, 'pinning': False, 'queries': 0, 'storageWrites': 0}); return 0
     try:
         config, spec, policy = load_config(args.config, args.policy_sha256, args.code_sha256)
-        run(config, spec, policy, args.action, lambda state: emit({**state, 'codeSha256': args.code_sha256, 'policySha256': args.policy_sha256}), args.raise_own_memlock)
+        run(config, spec, policy, args.action, lambda state: emit({**state, 'codeSha256': args.code_sha256, 'policySha256': args.policy_sha256}), args.raise_own_memlock, raise_own_nofile=args.raise_own_nofile)
         return 0
     except BaseException as error:
         # Do not print paths, arguments, source data, provider errors or exception messages.

@@ -27,11 +27,11 @@ for frame in frames[:2]:emit(frame)
 if sys.stdin.readline()!='{"stage":"query-finished"}\\n':raise SystemExit(1)
 for frame in frames[2:]:emit(frame)
 `;
-async function run(query,phase='baseline',{scriptText=script,tag='heldout-person',changeFrames=frames=>frames,budgets}={}){
+async function run(query,phase='baseline',{scriptText=script,tag='heldout-person',changeFrames=frames=>frames,budgets,raiseOwnNofile=false,observeArgs=()=>{}}={}){
  const directory=mkdtempSync(join(tmpdir(),'gw-compare-protocol-'));const code=join(directory,'control.py'),config=join(directory,'config.json');writeFileSync(code,scriptText);writeFileSync(config,'{}');
  const expected={helperCodeSha256:'b'.repeat(64),helperPolicySha256:'c'.repeat(64),controllerCodeSha256:sha(Buffer.from(scriptText)),controllerPolicySha256:sha(Buffer.from('{}'))};
- const spawnControl=(binary,args,options)=>spawn(binary,args,{...options,env:{...process.env,TEST_FRAMES:JSON.stringify(changeFrames(fixture(phase,expected)))}});
- try{return await controlledBatch({tag,collection:'fixture',queries:[]},phase,expected,{code,config},query,{spawnControl,...(budgets?{budgets}:{})});}
+ const spawnControl=(binary,args,options)=>{observeArgs(args);return spawn(binary,args,{...options,env:{...process.env,TEST_FRAMES:JSON.stringify(changeFrames(fixture(phase,expected)))}})};
+ try{return await controlledBatch({tag,collection:'fixture',queries:[]},phase,expected,{code,config},query,{spawnControl,raiseOwnNofile,...(budgets?{budgets}:{})});}
  finally{rmSync(directory,{recursive:true,force:true});}
 }
 test('actual child readiness/ack/completion frames require exit and release before validation',async()=>{
@@ -102,4 +102,8 @@ while True:time.sleep(.1)
  await assert.rejects(run(async()=>{throw Error('must not query')},'baseline',{scriptText,budgets:{ready:100,cleanup:500,reaped:500}}),error=>{
   assert.equal(error.publicEvidence.reason,'control_ready_timeout');assert.equal(error.publicEvidence.failureKind,'readiness');assert.equal(error.publicEvidence.controllerReason,'controller_interrupted');assert.equal(error.publicEvidence.controllerFrames.filter(f=>f.reason==='controller_interrupted').length,1);assert.equal(error.publicEvidence.exitObserved,true);return true;
  });
+});
+
+test('own nofile raise is a separate explicit flag on actual controller invocation',async()=>{
+ for(const enabled of [false,true]){let args;await run(async()=>({serverMs:10,wallMs:20,results:[[]]}),'baseline',{raiseOwnNofile:enabled,observeArgs:value=>{args=value}});assert.equal(args.includes('--raise-own-nofile'),enabled)}
 });

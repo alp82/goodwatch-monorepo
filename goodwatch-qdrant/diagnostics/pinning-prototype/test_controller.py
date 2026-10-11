@@ -10,6 +10,14 @@ from test_daemon import accounting
 
 
 class ControllerTests(unittest.TestCase):
+    def test_nofile_raise_requires_separate_cli_opt_in(self):
+        for enabled in (False,True):
+            args=['--execute-reviewed','--config','fixture','--policy-sha256','a'*64,'--code-sha256','b'*64,'--phase','candidate','--case-tag','heldout-person']
+            if enabled:args.append('--raise-own-nofile')
+            with patch.object(controller,'load_control',return_value=({},object(),object())),patch.object(controller,'stage') as stage,patch.object(controller.signal,'signal'),contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(controller.main(args),0)
+                self.assertEqual(stage.call_args.args[-1],enabled)
+
     def test_first_command_precedes_source_rpc_and_release_is_proven(self):
         source=SimpleNamespace(spec='spec')
         replies=iter(['strict-pass',{'source':source},'close'])
@@ -17,7 +25,8 @@ class ControllerTests(unittest.TestCase):
         manager=Mock();manager.release_state.return_value={'released':True,'heldMappingCount':0}
         def prepare(source,budget,**kwargs):pass
         with patch.object(controller,'frozen_helper'),patch.object(controller,'guard_shards'),patch.object(controller,'validate_child_source',return_value=source),patch.object(controller.runtime,'prepare_self',side_effect=prepare),patch.object(controller.pin,'PinSet',return_value=manager),patch.object(controller.runtime,'reconcile_source',return_value={'raw':'state'}),patch.object(controller.daemon,'public_state',return_value={'public':'state'}):
-            controller.pin_child(connection,'spec',SimpleNamespace(max_locked_bytes=1),False,{})
+            controller.pin_child(connection,'spec',SimpleNamespace(max_locked_bytes=1),False,{},raise_own_nofile=True)
+            self.assertTrue(controller.runtime.reconcile_source.call_args.kwargs['raise_own_nofile'])
         self.assertEqual(connection.send.call_args_list[0].args[0],{'request':'inspect-source'})
         self.assertEqual(connection.send.call_args_list[-1].args[0],{'closed':True})
         manager.close.assert_called_once();manager.release_state.assert_called_once()
@@ -85,7 +94,7 @@ class ControllerTests(unittest.TestCase):
         from test_daemon import pin_state
         import os
         spec=SimpleNamespace();source=SimpleNamespace(identity=('fixed',),spec=spec,cgroup_relative='/clone',pid=123)
-        measured={'selectionHash':'a'*64,'classesMeasured':{k:{'files':1,'dataPages':1,'residentDataPages':1} for k in ('vector','graph','sparse','other')},'pageBytes':4096,'accounting':accounting()}
+        measured={'selectionHash':'a'*64,'classesMeasured':{k:{'files':1,'dataPages':1,'residentDataPages':1} for k in ('vector','graph','sparse','other')},'pageBytes':4096,'accounting':accounting(),'nofileLimits':{'openFdCount':4,'mappedFileBound':20000,'reserveFds':256,'requiredSoft':20260,'softBefore':1024,'softAfter':20260,'hardLimit':1048576,'raised':True,'hardChanged':False}}
         first=pin_state();steady=pin_state();steady.update(newLockBytes=0,rangesChanged=False)
         for fail in (False,True):
             holder=Mock();holder.request.side_effect=[first,steady,steady]
@@ -95,11 +104,13 @@ class ControllerTests(unittest.TestCase):
                 self.assertEqual(emitted[-1]['stage'],'query-ready')
                 if fail:raise RuntimeError('query_lease_timeout')
             record={'minorFaults':1,'majorFaults':2,'physicalReadBytes':3,'rssBytes':4}
-            with patch.object(controller.os,'open',return_value=12),patch.object(controller.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(controller.os,'close'),patch.object(controller.fcntl,'flock'),patch.object(controller,'frozen_helper'),patch.object(controller,'guard_shards',return_value=6),patch.object(controller,'self_cgroup',return_value='/session'),patch.object(controller,'verify_archive',return_value={'bytes':controller.ARCHIVE_BYTES}),patch.object(controller,'owned_total_budget',return_value=1),patch.object(controller,'cold',return_value={'actualQdrantPid':123}),patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller.runtime,'measure_source',return_value=measured),patch.object(controller.runtime,'accounting',side_effect=lambda source:accounting()),patch.object(controller,'process_counters',return_value=record),patch.object(controller,'pressure',return_value={'bytes':controller.ARCHIVE_BYTES}),patch.object(controller,'PinChild',return_value=holder),patch.object(controller,'query_lease',side_effect=lease),patch.object(controller.runtime,'prepare_self') as parent_join:
+            with patch.object(controller.os,'open',return_value=12),patch.object(controller.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(controller.os,'close'),patch.object(controller.fcntl,'flock'),patch.object(controller,'frozen_helper'),patch.object(controller,'guard_shards',return_value=6),patch.object(controller,'self_cgroup',return_value='/session'),patch.object(controller,'verify_archive',return_value={'bytes':controller.ARCHIVE_BYTES}),patch.object(controller,'owned_total_budget',return_value=1),patch.object(controller,'cold',return_value={'actualQdrantPid':123}),patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller.runtime,'measure_source',return_value=measured) as measure_read,patch.object(controller.runtime,'accounting',side_effect=lambda source:accounting()),patch.object(controller,'process_counters',return_value=record),patch.object(controller,'pressure',return_value={'bytes':controller.ARCHIVE_BYTES}),patch.object(controller,'PinChild',return_value=holder),patch.object(controller,'query_lease',side_effect=lease),patch.object(controller.runtime,'prepare_self') as parent_join:
                 if fail:
-                    with self.assertRaises(RuntimeError):controller.stage({'queryLeaseSeconds':2},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',emitted.append)
-                else:controller.stage({'queryLeaseSeconds':2},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',emitted.append)
+                    with self.assertRaises(RuntimeError):controller.stage({'queryLeaseSeconds':2},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',emitted.append,raise_own_nofile=True)
+                else:controller.stage({'queryLeaseSeconds':2},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',emitted.append,raise_own_nofile=True)
             holder.close.assert_called_once();parent_join.assert_not_called()
+            self.assertTrue(measure_read.call_args_list)
+            self.assertTrue(all(call.kwargs['raise_own_nofile'] is True for call in measure_read.call_args_list))
             if not fail:
                 self.assertEqual(emitted[-1]['stage'],'unpin-complete');self.assertEqual(emitted[-3]['stage'],'query-finished');self.assertEqual(emitted[-3]['pinStateAfterQuery']['lockedBytes'],16384)
 
@@ -107,7 +118,7 @@ class ControllerTests(unittest.TestCase):
         from test_daemon import pin_state
         import os
         source=SimpleNamespace(identity=('fixed',),spec=object(),cgroup_relative='/clone',pid=123);holder=Mock();holder.request.return_value=pin_state()
-        snapshots=[{'selectionHash':'a'*64,'classesMeasured':{k:{'dataPages':1,'residentDataPages':1} for k in ('vector','graph','sparse','other')},'pageBytes':4096,'accounting':accounting()},{'selectionHash':'b'*64,'classesMeasured':{}}]
+        snapshots=[{'selectionHash':'a'*64,'classesMeasured':{k:{'dataPages':1,'residentDataPages':1} for k in ('vector','graph','sparse','other')},'pageBytes':4096,'accounting':accounting(),'nofileLimits':{'openFdCount':4,'mappedFileBound':20000,'reserveFds':256,'requiredSoft':20260,'softBefore':1024,'softAfter':20260,'hardLimit':1048576,'raised':True,'hardChanged':False}},{'selectionHash':'b'*64,'classesMeasured':{}}]
         with patch.object(controller.os,'open',return_value=12),patch.object(controller.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(controller.os,'close'),patch.object(controller.fcntl,'flock'),patch.object(controller,'frozen_helper'),patch.object(controller,'guard_shards',return_value=6),patch.object(controller,'self_cgroup',return_value='/session'),patch.object(controller,'verify_archive',return_value={}),patch.object(controller,'owned_total_budget',return_value=1),patch.object(controller,'cold',return_value={}),patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller.runtime,'measure_source',side_effect=snapshots),patch.object(controller.runtime,'accounting',side_effect=lambda source:accounting()),patch.object(controller,'process_counters',return_value={'minorFaults':0,'majorFaults':0,'physicalReadBytes':0,'rssBytes':0}),patch.object(controller,'pressure',return_value={}),patch.object(controller,'PinChild',return_value=holder),patch.object(controller,'query_lease') as lease:
             with self.assertRaises(RuntimeError):controller.stage({'queryLeaseSeconds':2},source.spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',Mock())
         lease.assert_not_called();holder.close.assert_called_once()
@@ -180,7 +191,7 @@ class ControllerTests(unittest.TestCase):
         holder.failure_details={'releaseState':{'released':True,'heldMappingCount':0},'cleanupFailureReasons':[]}
         holder.process=SimpleNamespace(pid=999999999,exitcode=1,is_alive=lambda:False)
         source=SimpleNamespace(identity=('fixed',),spec='spec',cgroup_relative='/clone',pid=1)
-        measured={'selectionHash':'a'*64,'classesMeasured':{k:{'dataPages':1,'residentDataPages':1} for k in ('vector','graph','sparse','other')},'pageBytes':4096,'accounting':accounting()}
+        measured={'selectionHash':'a'*64,'classesMeasured':{k:{'dataPages':1,'residentDataPages':1} for k in ('vector','graph','sparse','other')},'pageBytes':4096,'accounting':accounting(),'nofileLimits':{'openFdCount':4,'mappedFileBound':20000,'reserveFds':256,'requiredSoft':20260,'softBefore':1024,'softAfter':20260,'hardLimit':1048576,'raised':True,'hardChanged':False}}
         events=[]
         with ExitStack() as stack:
             stack.enter_context(patch.object(controller.os,'open',return_value=12));stack.enter_context(patch.object(controller.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)))

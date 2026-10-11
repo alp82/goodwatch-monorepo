@@ -237,7 +237,7 @@ def validate_child_source(source,spec):
     return runtime.validate_source_locally(source)
 
 
-def pin_child(connection,spec,policy,raise_limit,config):
+def pin_child(connection,spec,policy,raise_limit,config,raise_own_nofile=False):
     manager=None
     try:
         def source_check(requested):
@@ -256,7 +256,7 @@ def pin_child(connection,spec,policy,raise_limit,config):
                 source=source_check(spec);guard_shards(source)
                 runtime.prepare_self(source,policy.max_locked_bytes,raise_own_limit=raise_limit,source_check=source_check)
                 manager=pin.PinSet(policy,MODULE_DIR/'pin-instance.lock')
-            state=runtime.reconcile_source(manager,spec,allow_clone_pressure_max=command=='pressure-pass',source_check=source_check)
+            state=runtime.reconcile_source(manager,spec,allow_clone_pressure_max=command=='pressure-pass',source_check=source_check,raise_own_nofile=raise_own_nofile)
             connection.send({'state':daemon.public_state(state)})
         if manager is not None:
             manager.close()
@@ -275,10 +275,10 @@ def pin_child(connection,spec,policy,raise_limit,config):
 
 
 class PinChild:
-    def __init__(self,spec,policy,raise_limit,config):
+    def __init__(self,spec,policy,raise_limit,config,raise_own_nofile=False):
         self.config=config;self.failure_details=None
         multiprocessing.set_executable('/usr/bin/python3');context=multiprocessing.get_context('spawn');self.connection,child=context.Pipe()
-        self.process=context.Process(target=pin_child,args=(child,spec,policy,raise_limit,config));self.process.start();child.close();self.spec=spec;self.previous=None;self.pressure_active=False
+        self.process=context.Process(target=pin_child,args=(child,spec,policy,raise_limit,config,raise_own_nofile));self.process.start();child.close();self.spec=spec;self.previous=None;self.pressure_active=False
     def request(self,pressure=False):
         before=runtime.accounting(runtime.inspect_source(self.spec))
         if self.previous is not None:limits(self.previous,before,pressure=pressure and self.pressure_active)
@@ -379,7 +379,7 @@ def query_lease(seconds,reader=sys.stdin,clock=time.monotonic):
     if line.count(b'\n')!=1 or not line.endswith(b'\n') or json.loads(line)!={'stage':'query-finished'}:raise RuntimeError('invalid_query_ack')
 
 
-def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None):
+def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,raise_own_nofile=False):
     if phase not in ('baseline','candidate'): raise ValueError('phase_required')
     manager=None; lock_fd=None
     try:
@@ -391,22 +391,22 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None):
         fcntl.flock(lock_fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
         original_group=self_cgroup();archive_verified=verify_archive(policy.emergency_bytes);cold_state=cold(spec);source=runtime.inspect_source(spec)
         if original_group==source.cgroup_relative:raise RuntimeError('controller_pressure_already_in_clone_cgroup')
-        initial=runtime.measure_source(spec)
+        initial=runtime.measure_source(spec,raise_own_nofile=raise_own_nofile)
         if phase=='candidate':
             nonresident=sum((initial['classesMeasured'][k]['dataPages']-initial['classesMeasured'][k]['residentDataPages'])*initial['pageBytes'] for k in ('vector','graph','sparse','other'))
             current=daemon.account(initial['accounting']);cap=current['cgroupMaxBytes']
             if cap is None or nonresident<0 or current['currentBytes']+nonresident+policy.cap_reserve_bytes>cap:raise RuntimeError('initial_cap_fit_inconclusive')
-            pin_proc_before=process_counters(source);manager=PinChild(spec,policy,raise_own_memlock,config);pin_state=manager.request();pin_proc_after=process_counters(source)
+            pin_proc_before=process_counters(source);manager=PinChild(spec,policy,raise_own_memlock,config,raise_own_nofile=raise_own_nofile);pin_state=manager.request();pin_proc_after=process_counters(source)
             if pin_state['selectionHash']!=initial['selectionHash']: raise RuntimeError('initial_cohort_changed')
         before=runtime.accounting(source);limits(initial['accounting'],before) if phase=='baseline' else None;pressure_proc_before=process_counters(source);pressure_state=pressure(config,source,manager,floor=policy.emergency_bytes); after=runtime.accounting(source)
         pressure_proc_after=process_counters(source);owned_total_budget();pressure_limits=limits(before,after,pressure=True)
         if self_cgroup()!=original_group:raise RuntimeError('pressure_writer_placement_changed')
-        measured=runtime.measure_source(spec)
+        measured=runtime.measure_source(spec,raise_own_nofile=raise_own_nofile)
         if runtime.inspect_source(spec).identity!=source.identity:raise RuntimeError('query_source_changed')
         measured_account=runtime.accounting(source);limits(after,measured_account)
         if initial['selectionHash']!=measured['selectionHash']: raise RuntimeError('pressure_cohort_changed')
         resident_loss=sum(initial['classesMeasured'][k]['residentDataPages']-measured['classesMeasured'][k]['residentDataPages'] for k in ('vector','graph','sparse','other'))
-        emit({'schema':'search.clone-mlock-control.v2','stage':'pressure-complete','phase':phase,'at':at(),'selectionHash':initial['selectionHash'],'selectedResidentDataPagesLost':resident_loss,'prequeryMissingBytes':sum((measured['classesMeasured'][k]['dataPages']-measured['classesMeasured'][k]['residentDataPages'])*measured['pageBytes'] for k in ('vector','graph','sparse','other')),'negativePrequeryMissingBytes':config.get('negativePrequeryMissingBytes',64*1024**2),'pressure':pressure_state,'pressureLimits':pressure_limits,'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],'queries':0,'storageContentWrites':0})
+        emit({'schema':'search.clone-mlock-control.v2','stage':'pressure-complete','phase':phase,'at':at(),'selectionHash':initial['selectionHash'],'selectedResidentDataPagesLost':resident_loss,'prequeryMissingBytes':sum((measured['classesMeasured'][k]['dataPages']-measured['classesMeasured'][k]['residentDataPages'])*measured['pageBytes'] for k in ('vector','graph','sparse','other')),'negativePrequeryMissingBytes':config.get('negativePrequeryMissingBytes',64*1024**2),'pressure':pressure_state,'pressureLimits':pressure_limits,'parentInitialNofileLimits':daemon.nofile_limits(initial['nofileLimits']),'parentNofileLimits':daemon.nofile_limits(measured['nofileLimits']),'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],'queries':0,'storageContentWrites':0})
         missing_bytes=sum((measured['classesMeasured'][k]['dataPages']-measured['classesMeasured'][k]['residentDataPages'])*measured['pageBytes'] for k in ('vector','graph','sparse','other'))
         if phase=='baseline' and case_tag in config.get('mechanismNegativeTags',[]) and missing_bytes<config['negativePrequeryMissingBytes']:raise RuntimeError('negative_missing_pages_inconclusive')
         if manager is not None:
@@ -415,7 +415,7 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None):
         else:final=None;pin_state=None
         frozen_helper(config);guard_shards(source);query_before=runtime.accounting(source);limits(measured_account,query_before);query_proc_before=process_counters(source);query_started=at()
         emit({'schema':'search.clone-mlock-control.v2','stage':'query-ready','phase':phase,'at':at(),'cold':cold_state,'archiveVerified':archive_verified,'pressure':pressure_state,'pressureWriterPlacement':'controller-original-cgroup','pressureLimits':pressure_limits,'pressureProcessDelta':counter_delta(pressure_proc_before,pressure_proc_after),'queryWindowStartedAt':query_started,
-              'selectionHash':initial['selectionHash'],'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],
+              'selectionHash':initial['selectionHash'],'parentInitialNofileLimits':daemon.nofile_limits(initial['nofileLimits']),'parentNofileLimits':daemon.nofile_limits(measured['nofileLimits']),'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],
               'initialPinState':pin_state,'initialPinProcessDelta':counter_delta(pin_proc_before,pin_proc_after) if phase=='candidate' else None,'pinState':final,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
         query_lease(config['queryLeaseSeconds'])
         if runtime.inspect_source(spec).identity!=source.identity: raise RuntimeError('query_source_changed')
@@ -423,12 +423,12 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None):
         if manager is not None:
             held=manager.request()
             if held['selectionHash']!=initial['selectionHash'] or held['newLockBytes']!=0 or held['rangesChanged']:raise RuntimeError('query_pin_cohort_changed')
-        post=runtime.measure_source(spec)
+        post=runtime.measure_source(spec,raise_own_nofile=raise_own_nofile)
         limits(query_after,runtime.accounting(source))
         if runtime.inspect_source(spec).identity!=source.identity:raise RuntimeError('query_source_changed')
         if post['selectionHash']!=initial['selectionHash']: raise RuntimeError('query_cohort_changed')
         emit({'schema':'search.clone-mlock-control.v2','stage':'query-finished','phase':phase,'at':at(),'queryWindowStartedAt':query_started,'queryLimits':query_limits,'queryProcessDelta':counter_delta(query_proc_before,query_proc_after),
-              'selectionHash':post['selectionHash'],'residencyAfterQuery':post['classesMeasured'],'pinStateAfterQuery':held if manager is not None else None,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
+              'selectionHash':post['selectionHash'],'parentNofileLimits':daemon.nofile_limits(post['nofileLimits']),'residencyAfterQuery':post['classesMeasured'],'pinStateAfterQuery':held if manager is not None else None,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
     except BaseException as error:
         emit({'schema':'search.clone-mlock-control.v2','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'childFailureDetails':getattr(manager,'failure_details',None),'queries':0,'storageContentWrites':0})
         raise
@@ -455,7 +455,7 @@ def safe_control_reason(error):
 
 def main(argv=None):
     parser=daemon.SafeParser(description=__doc__); parser.add_argument('--config');parser.add_argument('--policy-sha256');parser.add_argument('--code-sha256')
-    parser.add_argument('--phase',choices=('baseline','candidate'));parser.add_argument('--case-tag',choices=('coverage-history-080628','coverage-history-083054','heldout-person','heldout-description','heldout-unseen-native','control-native-title','control-low-vote-title'));parser.add_argument('--execute-reviewed',action='store_true');parser.add_argument('--raise-own-memlock',action='store_true')
+    parser.add_argument('--phase',choices=('baseline','candidate'));parser.add_argument('--case-tag',choices=('coverage-history-080628','coverage-history-083054','heldout-person','heldout-description','heldout-unseen-native','control-native-title','control-low-vote-title'));parser.add_argument('--execute-reviewed',action='store_true');parser.add_argument('--raise-own-memlock',action='store_true');parser.add_argument('--raise-own-nofile',action='store_true')
     emit=lambda x:print(json.dumps(x,sort_keys=True),flush=True)
     try:
         args=parser.parse_args(argv)
@@ -465,7 +465,7 @@ def main(argv=None):
         def interrupted(signum,frame):raise RuntimeError('controller_interrupted')
         signal.signal(signal.SIGTERM,interrupted);signal.signal(signal.SIGINT,interrupted)
         c,spec,policy=load_control(args.config,args.policy_sha256,args.code_sha256)
-        stage(c,spec,policy,args.phase,lambda x:emit({**x,'helperCodeSha256':c['helperCodeSha256'],'helperPolicySha256':c['helperPolicySha256'],'controllerCodeSha256':args.code_sha256,'controllerPolicySha256':args.policy_sha256}),args.raise_own_memlock,args.case_tag)
+        stage(c,spec,policy,args.phase,lambda x:emit({**x,'helperCodeSha256':c['helperCodeSha256'],'helperPolicySha256':c['helperPolicySha256'],'controllerCodeSha256':args.code_sha256,'controllerPolicySha256':args.policy_sha256}),args.raise_own_memlock,args.case_tag,args.raise_own_nofile)
         return 0
     except BaseException as error:
         reason=safe_control_reason(error)

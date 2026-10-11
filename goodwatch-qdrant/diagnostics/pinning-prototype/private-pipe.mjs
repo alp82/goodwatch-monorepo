@@ -24,7 +24,7 @@ export function main(){
  if(Object.values(expected).some(x=>!/^[a-f0-9]{64}$/.test(x||'')))throw Error();
  // Image, existing models, cached-only capture source, env and resource placement need root preflight.
  const sourceCommand=['/usr/bin/docker',...producerArgs.slice(0,producerArgs.indexOf('--entrypoint')),'-e','SOURCE_MANIFEST_SHA256='+sourceHash,...producerArgs.slice(producerArgs.indexOf('--entrypoint'))].map(quote).join(' ');
- const command=['env','QDRANT_URL=http://127.0.0.1:16333/','SOURCE_MANIFEST_SHA256='+sourceHash,...Object.entries(expected).map(([k,v])=>k+'='+v),'/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v1/node','/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v1/compare.mjs','--execute-reviewed'].map(quote).join(' ');
+ const command=['env','QDRANT_URL=http://127.0.0.1:16333/','SOURCE_MANIFEST_SHA256='+sourceHash,...Object.entries(expected).map(([k,v])=>k+'='+v),'/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v1/node','/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v1/compare.mjs','--execute-reviewed',...(process.argv.includes('--raise-own-nofile')?['--raise-own-nofile']:[])].map(quote).join(' ');
  const capture=spawn('/usr/bin/ssh',['root@10.0.0.21',sourceCommand],{stdio:['ignore','pipe','pipe']});
  const compare=spawn('/usr/bin/ssh',['root@10.0.0.32',command],{stdio:['pipe','pipe','pipe']});
  let failed=false;
