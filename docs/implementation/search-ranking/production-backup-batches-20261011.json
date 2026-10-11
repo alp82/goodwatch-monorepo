@@ -1,0 +1,529 @@
+{
+  "schema": "search-production-backup-comparison.v1",
+  "sourceCommit": "5f15698995eb4368baf5ea094b704a3752191e40",
+  "indexBuildId": "20261011T041503Z",
+  "complete": true,
+  "producerEndedBeforeBaseline": true,
+  "payloadHeldOnlyInMemory": true,
+  "ordinaryApiCalls": 0,
+  "interpretationProviderCalls": 0,
+  "historyWrites": 0,
+  "control": "Post triggered by claim agent after observed backup exit20:18:31UTC and wholefile20:18:34/extent20:18:40 residency records with fresh processabsence.",
+  "limits": [
+    "Three known-body controls; native input matched the agreed must-filter/limit2000 multilingual shape. This is directQdrant server latency, not first usable application/browser results.",
+    "All input batches remained unchanged in one lightweight memory-only consumer. Sequential post queries can warm pages for later queries.",
+    "ID sets match across backup for allthree; ordered ID/score hashes differ for native andlowvote. Exactscore-per-ID parity is unknown because only ordered pair hashes were retained.",
+    "This prospectivebefore/after comparison testsone backupwindow; concurrent workload andindex activity require passive infrastructure correlation."
+  ],
+  "summary": [
+    {
+      "tag": "known-exact-title",
+      "baselineAt": "2026-10-11T20:10:00.001Z",
+      "postBackupAt": "2026-10-11T20:18:52.235Z",
+      "baselineServerMs": 60.794881000000004,
+      "postBackupServerMs": 223.040454,
+      "baselineWallMs": 93.8,
+      "postBackupWallMs": 237.7,
+      "serverRatio": 3.67,
+      "idSetParity": true,
+      "orderedIdParity": true,
+      "orderedIdScoreParity": true
+    },
+    {
+      "tag": "known-native-title",
+      "baselineAt": "2026-10-11T20:10:00.103Z",
+      "postBackupAt": "2026-10-11T20:18:52.476Z",
+      "baselineServerMs": 175.197259,
+      "postBackupServerMs": 2122.683892,
+      "baselineWallMs": 191.3,
+      "postBackupWallMs": 2141.9,
+      "serverRatio": 12.12,
+      "idSetParity": true,
+      "orderedIdParity": false,
+      "orderedIdScoreParity": false
+    },
+    {
+      "tag": "known-low-vote-title",
+      "baselineAt": "2026-10-11T20:10:00.313Z",
+      "postBackupAt": "2026-10-11T20:18:54.637Z",
+      "baselineServerMs": 53.746755,
+      "postBackupServerMs": 274.196817,
+      "baselineWallMs": 63.1,
+      "postBackupWallMs": 285.5,
+      "serverRatio": 5.1,
+      "idSetParity": true,
+      "orderedIdParity": false,
+      "orderedIdScoreParity": false
+    }
+  ],
+  "records": [
+    {
+      "kind": "ready",
+      "at": "2026-10-11T19:52:37.022Z",
+      "caseCount": 3,
+      "indexBuildId": "20261011T041503Z",
+      "queryCounts": [
+        3,
+        7,
+        7
+      ],
+      "payloadPersistence": false
+    },
+    {
+      "kind": "batch",
+      "phase": "baseline",
+      "tag": "known-exact-title",
+      "at": "2026-10-11T20:10:00.001Z",
+      "queryCount": 3,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "sparse",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        }
+      ],
+      "wallMs": 93.8,
+      "serverMs": 60.794881000000004,
+      "resultIdHash": "0c0e4c52b1d8937ee0f94247693fe2163ecb7395826a409de50f115883edd8b1",
+      "resultIdScoreHash": "c6d34f02080db99a4eeb23b093217331d9d96953a9e33404231675e7aa577b17",
+      "resultSetHash": "9d88d71307800b0d40b3ecec5e04fe8f671c6ad4419d6713341cbdffd3297a80",
+      "resultCounts": [
+        500,
+        500,
+        21
+      ],
+      "baselineIdParity": true,
+      "baselineScoreParity": true
+    },
+    {
+      "kind": "batch",
+      "phase": "baseline",
+      "tag": "known-native-title",
+      "at": "2026-10-11T20:10:00.103Z",
+      "queryCount": 7,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_multi_v1",
+          "limit": 2000,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 2000,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_multi_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_multi_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_multi_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_multi_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        }
+      ],
+      "wallMs": 191.3,
+      "serverMs": 175.197259,
+      "resultIdHash": "9945028b0e3de7f461c533afbdcfbaa9481a6fcb06e7a3ab836aaacb1b083967",
+      "resultIdScoreHash": "756c1e3794e29d4ba12c022cfd59c6b81f18d9fe41f79bc5ff5fd63aa5ada2c0",
+      "resultSetHash": "3ed418696ec31f0db688281871f835f9888f5005991402081bf876ac4ccbdc7c",
+      "resultCounts": [
+        500,
+        2000,
+        2000,
+        300,
+        300,
+        300,
+        300
+      ],
+      "baselineIdParity": true,
+      "baselineScoreParity": true
+    },
+    {
+      "kind": "batch",
+      "phase": "baseline",
+      "tag": "known-low-vote-title",
+      "at": "2026-10-11T20:10:00.313Z",
+      "queryCount": 7,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "sparse",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "sparse",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "sparse",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        }
+      ],
+      "wallMs": 63.1,
+      "serverMs": 53.746755,
+      "resultIdHash": "a5b64d2e971253f828540bfbe994b7771e8c21ee0d5a1ab255c7a04665d48c4b",
+      "resultIdScoreHash": "9c3251fff376e632ea5c7923c60d72ff71002bf03e59b5ddb8450bafe071dee0",
+      "resultSetHash": "e92158a1eb5179fdf4f30f7bf28b1f0cd9cfda915fc606f8ad31e0d844d949dc",
+      "resultCounts": [
+        500,
+        500,
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "baselineIdParity": true,
+      "baselineScoreParity": true
+    },
+    {
+      "kind": "awaiting_post_backup_control",
+      "at": "2026-10-11T20:10:00.383Z"
+    },
+    {
+      "kind": "batch",
+      "phase": "post_backup",
+      "tag": "known-exact-title",
+      "at": "2026-10-11T20:18:52.235Z",
+      "queryCount": 3,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "sparse",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        }
+      ],
+      "wallMs": 237.7,
+      "serverMs": 223.040454,
+      "resultIdHash": "0c0e4c52b1d8937ee0f94247693fe2163ecb7395826a409de50f115883edd8b1",
+      "resultIdScoreHash": "c6d34f02080db99a4eeb23b093217331d9d96953a9e33404231675e7aa577b17",
+      "resultSetHash": "9d88d71307800b0d40b3ecec5e04fe8f671c6ad4419d6713341cbdffd3297a80",
+      "resultCounts": [
+        500,
+        500,
+        21
+      ],
+      "baselineIdParity": true,
+      "baselineScoreParity": true
+    },
+    {
+      "kind": "batch",
+      "phase": "post_backup",
+      "tag": "known-native-title",
+      "at": "2026-10-11T20:18:52.476Z",
+      "queryCount": 7,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_multi_v1",
+          "limit": 2000,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 2000,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_multi_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_multi_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_multi_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_multi_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 1,
+          "filterMustNot": 1,
+          "filterShould": 0
+        }
+      ],
+      "wallMs": 2141.9,
+      "serverMs": 2122.683892,
+      "resultIdHash": "d9c5ec5bde2b2b134076668a521bbb8864572ef49f4c26a019a69c6bbc4c4cb4",
+      "resultIdScoreHash": "9411c64d247112883b28b4f68ae8f6d992c22286cd86de341ca8c691a27cb5d8",
+      "resultSetHash": "3ed418696ec31f0db688281871f835f9888f5005991402081bf876ac4ccbdc7c",
+      "resultCounts": [
+        500,
+        2000,
+        2000,
+        300,
+        300,
+        300,
+        300
+      ],
+      "baselineIdParity": false,
+      "baselineScoreParity": false
+    },
+    {
+      "kind": "batch",
+      "phase": "post_backup",
+      "tag": "known-low-vote-title",
+      "at": "2026-10-11T20:18:54.637Z",
+      "queryCount": 7,
+      "signals": [
+        {
+          "using": "fingerprint_v1_raw",
+          "limit": 500,
+          "exact": true,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 500,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "sparse",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "sparse",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "text_en_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "dense",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        },
+        {
+          "using": "terms_bm25f_v1",
+          "limit": 300,
+          "exact": false,
+          "queryKind": "sparse",
+          "filterMust": 0,
+          "filterMustNot": 1,
+          "filterShould": 0
+        }
+      ],
+      "wallMs": 285.5,
+      "serverMs": 274.196817,
+      "resultIdHash": "abe4f22843472d866556bb03745ac57a45009549f1412f960e58384f3383d882",
+      "resultIdScoreHash": "79aec13b1496cf55d7704b84a22c6d6fc55eb7dcac2dfab3405510c76e4abbb9",
+      "resultSetHash": "e92158a1eb5179fdf4f30f7bf28b1f0cd9cfda915fc606f8ad31e0d844d949dc",
+      "resultCounts": [
+        500,
+        500,
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "baselineIdParity": false,
+      "baselineScoreParity": false
+    },
+    {
+      "kind": "complete",
+      "at": "2026-10-11T20:18:54.930Z"
+    }
+  ]
+}

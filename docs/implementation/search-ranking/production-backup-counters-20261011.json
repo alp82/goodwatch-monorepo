@@ -1,0 +1,81 @@
+{
+  "backupEra": {
+    "window": [
+      "2026-10-11T20:14:54.160Z",
+      "2026-10-11T20:18:44.167Z"
+    ],
+    "samePid": true,
+    "qdrantDelta": {
+      "minorFaults": 155105,
+      "majorFaults": 451439,
+      "readBytes": 2000027648,
+      "rssBytes": -185081856
+    },
+    "hostBefore": {
+      "MemAvailableKiB": 13948712,
+      "CachedKiB": 11041952,
+      "DirtyKiB": 264
+    },
+    "hostAfter": {
+      "MemAvailableKiB": 14320312,
+      "CachedKiB": 4882856,
+      "DirtyKiB": 2396
+    },
+    "pressureTotalDelta": {
+      "memory.some": 867534,
+      "memory.full": 853449,
+      "io.some": 8252474,
+      "io.full": 7879736
+    },
+    "reclaimDelta": {
+      "pgscan_kswapd": 2500548,
+      "pgscan_direct": 0,
+      "pgsteal_kswapd": 2491455,
+      "pgsteal_direct": 0,
+      "workingset_refault_file": 493939,
+      "pgmajfault": 451792
+    }
+  },
+  "postQueriesBracket": {
+    "window": [
+      "2026-10-11T20:18:44.167Z",
+      "2026-10-11T20:19:04.159Z"
+    ],
+    "samePid": true,
+    "qdrantDelta": {
+      "minorFaults": 15926,
+      "majorFaults": 25217,
+      "readBytes": 109199360,
+      "rssBytes": 136802304
+    },
+    "hostBefore": {
+      "MemAvailableKiB": 14320312,
+      "CachedKiB": 4882856,
+      "DirtyKiB": 2396
+    },
+    "hostAfter": {
+      "MemAvailableKiB": 14307744,
+      "CachedKiB": 4995484,
+      "DirtyKiB": 2144
+    },
+    "pressureTotalDelta": {
+      "memory.some": 88679,
+      "memory.full": 88074,
+      "io.some": 755403,
+      "io.full": 732218
+    },
+    "reclaimDelta": {
+      "pgscan_kswapd": 0,
+      "pgscan_direct": 0,
+      "pgsteal_kswapd": 0,
+      "pgsteal_direct": 0,
+      "workingset_refault_file": 27921,
+      "pgmajfault": 25314
+    }
+  },
+  "samplingIntervalSeconds": 10,
+  "limits": [
+    "Counters describe all Qdrant/background/organic activity in these intervals, not exclusive per-query measurements.",
+    "Post query batch ran20:18:52.235\u201320:18:54.930; intermediate20:18:54 sample is during native call."
+  ]
+}
