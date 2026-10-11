@@ -412,6 +412,22 @@ test("the next air dates of all waiting shows are one read, and no waiting show'
 	assert.deepEqual([...episodes[0].params].sort(), [201, 202, 203, 204, 205, Date.parse("2026-10-08T00:00:00Z")].sort())
 })
 
+test("when the read of the next air dates fails, My shows still answers, without the days", async () => {
+	seedWaiting()
+	db.before = (statement) => {
+		if (statement.sql.includes("FROM episode WHERE show_id IN")) throw new Error("Crate is busy")
+	}
+	const errors = console.error
+	console.error = () => {}
+	try {
+		const page = await getMyShows(viewer, { now: NOW })
+		assert.equal(page.waiting.length, 5)
+		assert.ok(page.waiting.every((row) => row.upcoming === null))
+	} finally {
+		console.error = errors
+	}
+})
+
 test("home's doors do not ask when waiting shows return", async () => {
 	seedWaiting()
 	const page = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })

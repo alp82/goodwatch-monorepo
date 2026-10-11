@@ -55,9 +55,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			},
 			{ now },
 		),
-		getNewShows(userId, { now }),
+		// The line above the list is an addition: without it the page is still the member's shows.
+		getNewShows(userId, { now }).catch((error) => {
+			console.error("My shows: reading what is new failed:", error)
+			return null
+		}),
 	])
-	const arrival: Arrival = {
+	const arrival: Arrival | null = fresh && {
 		since: fresh.since,
 		titles: fresh.shows.map((show) => show.title),
 	}

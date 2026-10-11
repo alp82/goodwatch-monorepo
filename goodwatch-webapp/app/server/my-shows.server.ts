@@ -150,8 +150,26 @@ async function readWatchedEpisodes(
 	return found
 }
 
-/** Q8. When some shows return: of each, the dated episode that airs first after `today`. Public data. */
+/**
+ * Q8. When some shows return: of each, the dated episode that airs first after `today`. Public data. The days are
+ * an addition to the page: when the read fails, the shows still wait, without a day.
+ */
 async function readUpcoming(
+	ids: number[],
+	today: string,
+): Promise<Map<number, UpcomingEpisode>> {
+	try {
+		return await readUpcomingEpisodes(ids, today)
+	} catch (error) {
+		console.error(
+			"My shows: reading when the waiting shows return failed:",
+			error,
+		)
+		return new Map()
+	}
+}
+
+async function readUpcomingEpisodes(
 	ids: number[],
 	today: string,
 ): Promise<Map<number, UpcomingEpisode>> {
