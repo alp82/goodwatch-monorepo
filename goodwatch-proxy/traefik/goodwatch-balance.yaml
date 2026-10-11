@@ -7,7 +7,10 @@
 # How it works:
 # - Coolify generates routers for goodwatch.app from the container's labels (http-0-gk4owk8, https-0-gk4owk8). Their
 #   priority is the length of their rule, 39. The routers here match the same host with priority 1000, so they win
-#   while this file exists. The www routers stay Coolify's: they only redirect.
+#   while this file exists.
+# - www.goodwatch.app answers 301 to the same path and query on https://goodwatch.app, in one hop from HTTP and from
+#   HTTPS. Coolify's own www routers answer 302, and from HTTP they take two hops; the routers here win over them the
+#   same way. The expression has no backslash, for the same reason as the member rule below.
 # - The first server is the instance on abio, addressed by its network alias on the coolify network. The container's
 #   name and address change with every deploy; the alias doesn't. While a deploy runs two containers, the alias
 #   resolves to both.
@@ -67,8 +70,31 @@ http:
       middlewares:
         - gw-webapp-redirect-to-https
       service: gw-webapp
+    gw-webapp-www-https:
+      entryPoints:
+        - https
+      rule: Host(`www.goodwatch.app`)
+      priority: 1000
+      middlewares:
+        - gw-webapp-www-to-apex
+      service: noop@internal
+      tls:
+        certResolver: letsencrypt
+    gw-webapp-www-http:
+      entryPoints:
+        - http
+      rule: Host(`www.goodwatch.app`)
+      priority: 1000
+      middlewares:
+        - gw-webapp-www-to-apex
+      service: noop@internal
 
   middlewares:
+    gw-webapp-www-to-apex:
+      redirectRegex:
+        regex: ^https?://www[.]goodwatch[.]app/?(.*)
+        replacement: https://goodwatch.app/${1}
+        permanent: true
     gw-webapp-redirect-to-https:
       redirectScheme:
         scheme: https
