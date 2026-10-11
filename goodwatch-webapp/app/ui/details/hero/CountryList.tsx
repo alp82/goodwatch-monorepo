@@ -1,0 +1,195 @@
+import {
+	ChevronRightIcon,
+	MagnifyingGlassIcon,
+} from "@heroicons/react/24/solid"
+import type React from "react"
+import { useState } from "react"
+import { useCountries } from "~/routes/api.countries"
+import { useStreamingCountries } from "~/routes/api.streaming-countries"
+import { LogoStack } from "~/ui/details/hero/LogoStack"
+import {
+	type CountryCount,
+	plural,
+	toServices,
+} from "~/ui/details/hero/countryOffers"
+import { countryFlagUrl } from "~/utils/country-flag"
+import { OFFER_TABS, type OfferTab } from "~/utils/streaming-links"
+
+function Row({
+	code,
+	name,
+	current,
+	onChoose,
+	right,
+	dim = false,
+}: {
+	code: string
+	name: string
+	current: string
+	onChoose: (code: string) => void
+	right?: React.ReactNode
+	dim?: boolean
+}) {
+	const selected = code === current
+	return (
+		<li>
+			<button
+				type="button"
+				onClick={() => onChoose(code)}
+				aria-current={selected || undefined}
+				className={`flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-lg px-2 text-left text-sm hover:bg-white/[0.08] focus-visible:outline-2 focus-visible:outline-white ${selected ? "bg-white/[0.1] ring-1 ring-white/20" : ""} ${dim ? "text-gray-500" : "text-white"}`}
+			>
+				<img
+					src={countryFlagUrl(code)}
+					alt=""
+					className={`h-3 rounded-[1px] ${dim ? "opacity-50" : ""}`}
+				/>
+				<span className="min-w-0 flex-1 truncate">{name}</span>
+				{selected && (
+					<span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+						Current
+					</span>
+				)}
+				{right}
+			</button>
+		</li>
+	)
+}
+
+// The country list of the where-to-watch block: the countries with the title first, most services first, each with
+// the logos of its services. The other countries fold away under one button; the current one always shows. The
+// counts come with the page; the logos load when the list opens, and the counts stand in for them until then.
+export default function CountryList({
+	mediaType,
+	titleId,
+	tab,
+	rows,
+	current,
+	verb,
+	onChoose,
+}: {
+	mediaType: "movie" | "show"
+	titleId: number
+	tab: OfferTab
+	rows: CountryCount[]
+	current: string
+	verb: string
+	onChoose: (code: string) => void
+}) {
+	const offers = useStreamingCountries(mediaType, titleId, current)
+	const catalog = new Map(
+		(offers.data?.services ?? []).map((s) => [s.tmdb_id, s]),
+	)
+	const logos = (code: string) => {
+		const ids = offers.data?.countries[code]?.[OFFER_TABS.indexOf(tab)]
+		return ids ? toServices(ids, catalog) : []
+	}
+	const [query, setQuery] = useState("")
+	const [rest, setRest] = useState(false)
+	const countries = useCountries()
+	const q = query.trim().toLowerCase()
+	const matches = (code: string, name: string) =>
+		!q || name.toLowerCase().includes(q) || code.toLowerCase() === q
+	const withOffers = rows.filter((r) => matches(r.code, r.name))
+	const offered = new Set(rows.map((r) => r.code))
+	const without = (countries.data ?? []).filter(
+		(c) => !offered.has(c.code) && matches(c.code, c.name),
+	)
+	// A search shows every match; otherwise the countries without offers wait behind their button, except the current.
+	const shownWithout =
+		q || rest ? without : without.filter((c) => c.code === current)
+
+	return (
+		<div>
+			<label className="flex h-8 items-center gap-2 rounded-lg bg-white/[0.07] px-2 ring-1 ring-white/10 focus-within:ring-white/30">
+				<MagnifyingGlassIcon className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+				<input
+					value={query}
+					onChange={(e) => setQuery(e.target.value)}
+					placeholder="Search countries"
+					aria-label="Search countries"
+					className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-gray-500"
+				/>
+			</label>
+			<div className="mt-2 max-h-80 overflow-y-auto overscroll-contain pr-1">
+				{withOffers.length > 0 && (
+					<ul>
+						{withOffers.map((r) => (
+							<Row
+								key={r.code}
+								code={r.code}
+								name={r.name}
+								current={current}
+								onChoose={onChoose}
+								right={
+									logos(r.code).length ? (
+										<LogoStack services={logos(r.code)} size={20} />
+									) : (
+										<span className="text-xs tabular-nums text-gray-400">
+											{plural(r.count, "service", "services")}
+										</span>
+									)
+								}
+							/>
+						))}
+					</ul>
+				)}
+				{!q && rows.length === 0 && (
+					<p className="px-2 py-2 text-sm text-gray-500">
+						Not {verb} in any country.
+					</p>
+				)}
+				{shownWithout.length > 0 && (
+					<ul>
+						{shownWithout.map((c) => (
+							<Row
+								key={c.code}
+								code={c.code}
+								name={c.name}
+								current={current}
+								onChoose={onChoose}
+								dim
+							/>
+						))}
+					</ul>
+				)}
+				{!q && !rest && without.length > 0 && (
+					<button
+						type="button"
+						onClick={() => setRest(true)}
+						className="mt-1 flex h-8 w-full cursor-pointer items-center gap-1 px-2 text-xs font-semibold text-gray-400 hover:text-white"
+					>
+						Show {plural(without.length, "country", "countries")} without offers
+						<ChevronRightIcon className="h-3 w-3" />
+					</button>
+				)}
+				{countries.isPending && (
+					<p className="px-2 py-2 text-xs text-gray-500" aria-busy="true">
+						Loading countries…
+					</p>
+				)}
+				{countries.isError && (
+					<output className="block px-2 py-2 text-xs text-gray-400">
+						Countries could not be loaded.{" "}
+						<button
+							type="button"
+							className="cursor-pointer underline"
+							disabled={countries.isFetching}
+							onClick={() => countries.refetch()}
+						>
+							Try again
+						</button>
+					</output>
+				)}
+				{q &&
+					withOffers.length === 0 &&
+					without.length === 0 &&
+					!countries.isPending && (
+						<p className="px-2 py-2 text-sm text-gray-500">
+							No country matches.
+						</p>
+					)}
+			</div>
+		</div>
+	)
+}

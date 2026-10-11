@@ -75,6 +75,7 @@ test("trim caches only the permitted shape, keeping array order and null video l
 				"videos",
 				"streaming_availabilities",
 				"streaming_services",
+				"streaming_countries",
 				mediaType === "movie" ? "movie_series" : "seasons",
 			].sort(),
 		)
@@ -118,6 +119,10 @@ test("trim caches only the permitted shape, keeping array order and null video l
 				order_default: id,
 			})),
 		)
+		assert.deepEqual(result.streaming_countries, {
+			counts: {},
+			top: { flatrate: [], rent: [], buy: [] },
+		})
 		assert.deepEqual(result.cast, [])
 		if (result.mediaType === "movie")
 			assert.deepEqual(result.movie_series, { id: 7, movie_ids: [1, 2] })
@@ -126,6 +131,78 @@ test("trim caches only the permitted shape, keeping array order and null video l
 				{ season_number: 2, episode_count: 10 },
 			])
 	}
+})
+test("trim counts every country's services per tab, ranks the top countries, and names only the services shown", () => {
+	const service = (tmdb_id: number, name: string) => ({
+		tmdb_id,
+		name,
+		logo: `/${tmdb_id}`,
+		order_default: tmdb_id,
+	})
+	const raw = {
+		...rawFixture(),
+		streaming_availabilities: [
+			{ streaming_service_id: 8, streaming_type: "flatrate", stream_url: null },
+		],
+		streaming_services: [
+			service(8, "Netflix"),
+			service(9, "Amazon Prime Video"),
+			service(119, "Amazon Prime Video"), // ignored duplicate
+			service(2, "Apple TV"),
+			service(3, "Google Play Movies"),
+			service(4, "MGM Amazon Channel"),
+			service(5, "MGM"), // the same brand as 4
+			service(6, "Unshown"),
+		],
+		streaming_countries: [
+			["DE", "flatrate", 8],
+			["US", "flatrate", 9],
+			["US", "flatrate", 119],
+			["US", "ads", 4],
+			["US", "flatrate", 5],
+			["US", "rent", 2],
+			["GB", "flatrate", 8],
+			["GB", "buy", 3],
+			["FR", "buy", 119], // only an ignored provider: France has nothing
+			["IT", "rent", 99], // a service without a name in the catalog
+			["JP", "flatrate", 6],
+			["CA", "flatrate", 6],
+			["MX", "flatrate", 6],
+			["BR", "flatrate", 6],
+		].map(([country_code, streaming_type, streaming_service_id]) => ({
+			country_code,
+			streaming_type,
+			streaming_service_id,
+		})),
+	}
+	const result = trimTitleDetails(
+		raw as unknown as Parameters<typeof trimTitleDetails>[0],
+		"movie",
+	)
+	assert.deepEqual(result.streaming_countries?.counts, {
+		DE: [1, 0, 0],
+		US: [2, 1, 0],
+		GB: [1, 0, 1],
+		JP: [1, 0, 0],
+		CA: [1, 0, 0],
+		MX: [1, 0, 0],
+		BR: [1, 0, 0],
+	})
+	assert.deepEqual(result.streaming_countries?.top, {
+		flatrate: [
+			{ country_code: "US", ids: [4, 9] },
+			{ country_code: "BR", ids: [6] },
+			{ country_code: "CA", ids: [6] },
+			{ country_code: "DE", ids: [8] },
+		],
+		rent: [{ country_code: "US", ids: [2] }],
+		buy: [{ country_code: "GB", ids: [3] }],
+	})
+	// Netflix is the current country's, the others are the top countries'. The ignored and MGM's second entry go.
+	assert.deepEqual(
+		result.streaming_services.map((s) => s.tmdb_id).sort((a, b) => a - b),
+		[2, 3, 4, 6, 8, 9],
+	)
 })
 test("trim keeps the age ratings of the request's country and the fallback country, and the fingerprint parts that are read", () => {
 	const raw = {

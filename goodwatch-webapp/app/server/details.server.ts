@@ -97,6 +97,24 @@ const _fetchFromDB = async (
 						) AS sub
 				),
 		
+				-- Every country's offers, one row per country, offer type and service: the where-to-watch block
+				-- tells which other countries have the title, and its country list counts the services of each.
+				streaming_countries AS (
+						SELECT array_agg(obj) AS val
+						FROM (
+								SELECT {
+										country_code = country_code,
+										streaming_type = streaming_type,
+										streaming_service_id = streaming_service_id
+								} AS obj
+								FROM streaming_availability
+								WHERE media_tmdb_id = (SELECT val FROM params_media_tmdb_id)
+									AND media_type = (SELECT val FROM params_media_type)
+								GROUP BY 1
+						) AS sub
+				),
+
+				-- The services of every country, so that the other countries can show their logos too.
 				streaming_service_ids AS (
 						SELECT array_agg(streaming_service_id) AS ids
 						FROM (
@@ -104,7 +122,6 @@ const _fetchFromDB = async (
 								FROM streaming_availability
 								WHERE media_tmdb_id = (SELECT val FROM params_media_tmdb_id)
 									AND media_type = (SELECT val FROM params_media_type)
-									AND country_code = (SELECT val FROM params_country_code)
 						) as sub
 				),
 		
@@ -262,6 +279,7 @@ const _fetchFromDB = async (
 				${mediaType === "show" ? "seasons = ARRAY(SELECT val FROM seasons)," : ""}
 				streaming_availabilities = (SELECT val FROM streaming_availabilities),
 				streaming_services = (SELECT val FROM streaming_services),
+				streaming_countries = (SELECT val FROM streaming_countries),
 				cast_total = (SELECT count(*) FROM cast_people),
                 cast_lead_rows = ARRAY(SELECT {id = id, name = name} FROM cast_rows ORDER BY order_default ASC, id ASC LIMIT 5),
                 cast_rows = ${selectedCastRows("top_cast")},

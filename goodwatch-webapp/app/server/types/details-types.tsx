@@ -33,6 +33,17 @@ export interface StreamingAvailability {
 	quality: string | null
 }
 
+/** What the where-to-watch block shows of the other countries. The full lists load when its country list opens. */
+export interface StreamingCountries {
+	/** How many services each country has for the tabs: stream (with the free offers), rent and buy. */
+	counts: Record<string, [number, number, number]>
+	/** For each tab, the four countries with the most services, and the ids of their services, in order. */
+	top: Record<
+		"flatrate" | "rent" | "buy",
+		{ country_code: string; ids: number[] }[]
+	>
+}
+
 export interface StreamingService {
 	tmdb_id: number
 	name: string
@@ -305,6 +316,11 @@ export interface ResultBase {
 		"streaming_service_id" | "streaming_type" | "stream_url"
 	>[]
 	streaming_services: StreamingService[]
+	/**
+	 * The other countries' offers, in short. `streaming_services` names the services of the top countries too.
+	 * A value cached before this field existed has none: the block then says nothing of other countries.
+	 */
+	streaming_countries?: StreamingCountries
 	images: { backdrops: { file_path: string }[] }
 	videos: {
 		clips: { key: string }[] | null

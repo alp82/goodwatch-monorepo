@@ -7,6 +7,8 @@ import type {
 	SeasonResult,
 	ShowDetails,
 	ShowResult,
+	StreamingCountries,
+	StreamingType,
 	TitleFingerprint,
 } from "~/server/types/details-types"
 import {
@@ -15,6 +17,7 @@ import {
 	buildFingerprint,
 } from "~/server/utils/fingerprint"
 import { SOURCE_KEYWORDS, featuredTropes } from "~/ui/details/titleQuestions"
+import { OFFER_TABS, servicesByCountry } from "~/utils/streaming-links"
 import { documentCast } from "~/utils/title-cast"
 import {
 	COMMON_DETAILS_FIELDS,
@@ -42,6 +45,13 @@ export interface RawTitleDetails {
 	seasons?: SeasonResult[] | null
 	streaming_availabilities?: ResultBase["streaming_availabilities"] | null
 	streaming_services?: ResultBase["streaming_services"] | null
+	streaming_countries?:
+		| {
+				country_code: string
+				streaming_type: StreamingType
+				streaming_service_id: number
+		  }[]
+		| null
 	images?: { backdrops?: { file_path: string }[] | null }
 	videos?: ResultBase["videos"]
 	cast_rows?: CastRow[] | null
@@ -49,6 +59,33 @@ export interface RawTitleDetails {
 	cast_lead_rows?: ResultBase["credits"]["actors"] | null
 	crew?: ResultBase["crew"]
 	credits?: Omit<ResultBase["credits"], "actors">
+}
+
+/** How many services each country has per tab, and the four countries with most services per tab. */
+export function summarizeCountries(
+	rows: RawTitleDetails["streaming_countries"],
+	services: ResultBase["streaming_services"],
+): StreamingCountries {
+	const counts: StreamingCountries["counts"] = {}
+	const ranked = OFFER_TABS.map(
+		() => [] as { country_code: string; ids: number[] }[],
+	)
+	const catalog = new Map(services.map((s) => [s.tmdb_id, s]))
+	for (const [country_code, lists] of servicesByCountry(rows ?? [], catalog)) {
+		counts[country_code] = [lists[0].length, lists[1].length, lists[2].length]
+		lists.forEach(
+			(ids, tab) => ids.length && ranked[tab].push({ country_code, ids }),
+		)
+	}
+	const top = (tab: number) =>
+		ranked[tab]
+			.sort(
+				(a, b) =>
+					b.ids.length - a.ids.length ||
+					a.country_code.localeCompare(b.country_code),
+			)
+			.slice(0, 4)
+	return { counts, top: { flatrate: top(0), rent: top(1), buy: top(2) } }
 }
 
 export function toCastMembers(
@@ -144,6 +181,19 @@ export function trimTitleDetails(
 	)
 	const video = (rows: { key: string }[] | null | undefined) =>
 		rows == null ? null : rows.map(({ key }) => ({ key }))
+	const services = (raw.streaming_services ?? []).map(
+		({ tmdb_id, name, logo, order_default }) => ({
+			tmdb_id,
+			name,
+			logo,
+			order_default,
+		}),
+	)
+	const countries = summarizeCountries(raw.streaming_countries, services)
+	const shownServices = new Set([
+		...(raw.streaming_availabilities ?? []).map((a) => a.streaming_service_id),
+		...Object.values(countries.top).flatMap((top) => top.flatMap((c) => c.ids)),
+	])
 	const common: ResultBase = {
 		fingerprint,
 		cast: documentCast(toCastMembers(raw.cast_rows), raw.cast_total ?? 0),
@@ -167,14 +217,9 @@ export function trimTitleDetails(
 				stream_url,
 			}),
 		),
-		streaming_services: (raw.streaming_services ?? []).map(
-			({ tmdb_id, name, logo, order_default }) => ({
-				tmdb_id,
-				name,
-				logo,
-				order_default,
-			}),
-		),
+		// The catalog names every country's services; the page needs the current country's and the top countries'.
+		streaming_services: services.filter((s) => shownServices.has(s.tmdb_id)),
+		streaming_countries: countries,
 		images: {
 			backdrops: (raw.images?.backdrops ?? [])
 				.slice(0, 1)

@@ -86,7 +86,6 @@ function DetailsPage({ media, country, episodeGrid }: DetailsProps) {
 				country={country}
 				episodeGrid={hasEpisodeGrid(episodeGrid) ? episodeGrid : null}
 				sectionProps={sectionProps}
-				navigateToSection={navigateToSection}
 			/>
 
 			<div className="isolate">

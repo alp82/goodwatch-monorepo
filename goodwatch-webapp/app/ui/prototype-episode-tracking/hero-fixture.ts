@@ -2,7 +2,9 @@
 // member's marks, for the two harnesses that mount it: the scores of the sites, a trailer, and who streams it.
 // The logos are TMDB's; the numbers are made up. `providers` picks how many services have the title.
 
-export type HeroProviders = "one" | "many" | "none"
+// "one", "many" and "none" are what Germany has; other countries have the title too. "only" is "one" with no other
+// country, "nowhere" is no offer in any country.
+export type HeroProviders = "one" | "many" | "none" | "only" | "nowhere"
 
 const SERVICES = [
 	{ tmdb_id: 8, name: "Netflix", logo: "/rK1KljqmbvO9HQa1PBFLILWah72.png" },
@@ -22,6 +24,40 @@ const OFFERS: Record<HeroProviders, Record<"flatrate" | "rent" | "buy", number[]
 	one: { flatrate: [8], rent: [], buy: [] },
 	many: { flatrate: [8, 9, 531, 538, 192, 331, 2285], rent: [2, 10, 3, 192, 7, 331], buy: [2, 10, 3] },
 	none: { flatrate: [], rent: [], buy: [] },
+	only: { flatrate: [8], rent: [], buy: [] },
+	nowhere: { flatrate: [], rent: [], buy: [] },
+}
+
+// The other countries' offers, as the details carry them in short: services per tab (stream, rent, buy) for each
+// country, and the four countries with most services per tab. The country list's stand-in server answers the rest.
+const ELSEWHERE: Record<string, [number[], number[], number[]]> = {
+	US: [[8, 9, 531, 538], [2, 3, 192], [2, 3]],
+	GB: [[8, 9, 538], [2, 3], [2]],
+	CA: [[8, 531], [2], []],
+	FR: [[9, 531], [], [2]],
+	AU: [[8, 9], [], []],
+	NL: [[8], [], []],
+	JP: [[9], [2], []],
+	BR: [[531], [], []],
+}
+function countries(providers: HeroProviders) {
+	if (providers === "nowhere") return {}
+	const offers = OFFERS[providers]
+	const here: [number[], number[], number[]] = [offers.flatrate, offers.rent, offers.buy]
+	return { ...(providers === "only" ? {} : ELSEWHERE), ...(here.some((ids) => ids.length) ? { DE: here } : {}) }
+}
+function shortCountries(providers: HeroProviders) {
+	const all = Object.entries(countries(providers))
+	const top = (tab: number) =>
+		all
+			.filter(([, tabs]) => tabs[tab].length)
+			.sort((a, b) => b[1][tab].length - a[1][tab].length || a[0].localeCompare(b[0]))
+			.slice(0, 4)
+			.map(([country_code, tabs]) => ({ country_code, ids: tabs[tab] }))
+	return {
+		counts: Object.fromEntries(all.map(([code, tabs]) => [code, tabs.map((ids) => ids.length)])),
+		top: { flatrate: top(0), rent: top(1), buy: top(2) },
+	}
 }
 
 /** The parts of a `MovieResult` or `ShowResult` the hero reads beyond the id and the title. */
@@ -44,6 +80,7 @@ export function heroParts(providers: HeroProviders, art: { poster_path?: string 
 		},
 		videos: { trailers: [{ key: "49xWJJvpjzI" }] },
 		streaming_services: SERVICES,
+		streaming_countries: shortCountries(providers),
 		streaming_availabilities: (Object.keys(offers) as (keyof typeof offers)[]).flatMap((streaming_type) =>
 			offers[streaming_type].map((streaming_service_id) => ({ streaming_service_id, streaming_type, stream_url: "#streaming" })),
 		),
@@ -59,6 +96,10 @@ export function withMemberSettings(fetch: typeof window.fetch): typeof window.fe
 	return async (input, init) => {
 		const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url, window.location.origin)
 		if (url.origin === window.location.origin && url.pathname === "/api/user-settings/get") return json({ country_default: "DE", streaming_providers_default: "8" })
+		if (url.origin === window.location.origin && url.pathname === "/api/countries")
+			return json(["AT", "AU", "BR", "CA", "CH", "DE", "ES", "FR", "GB", "IT", "JP", "NL", "PL", "SE", "US"].map((code) => ({ code, name: new Intl.DisplayNames("en", { type: "region" }).of(code) })))
+		if (url.origin === window.location.origin && url.pathname === "/api/streaming-countries")
+			return json({ countries: countries((new URLSearchParams(window.location.search).get("providers") ?? "one") as HeroProviders), services: SERVICES })
 		if (url.origin === window.location.origin && url.pathname === "/api/streaming-providers") return json([{ id: 8, name: "Netflix", logo_path: SERVICES[0].logo }])
 		return fetch(input, init)
 	}

@@ -6,7 +6,7 @@
 //   /prototype/watch-log-real            a member
 //   /prototype/watch-log-real?guest=1    a guest: Seen asks to sign in
 //   &hero=693134|680|157336  also the REAL hero of the title page for that movie (Dune: Part Two, not seen;
-//                            Pulp Fiction, Seen through its score; Interstellar, three watches), &providers=one|many|none
+//                            Pulp Fiction, Seen through its score; Interstellar, three watches), &providers=one|many|none|only|nowhere
 // A production build leaves the route out (PROTOTYPES in vite.config.js).
 import { type ShouldRevalidateFunction, useSearchParams } from "@remix-run/react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -243,7 +243,7 @@ function RealHero() {
 	const [params] = useSearchParams()
 	const sample = SAMPLES.find((s) => String(s.tmdbId) === params.get("hero") && s.mediaType === "movie")
 	const asked = params.get("providers") ?? ""
-	const providers = (["one", "many", "none"].includes(asked) ? asked : "one") as HeroProviders
+	const providers = (["one", "many", "none", "only", "nowhere"].includes(asked) ? asked : "one") as HeroProviders
 	const movie = useMemo(() => {
 		if (!sample) return null
 		const parts = heroParts(providers, { poster_path: sample.poster, backdrop_path: BACKDROPS[sample.tmdbId] })
@@ -253,7 +253,7 @@ function RealHero() {
 	return (
 		<BelowFoldProvider titleKey={`movie-${sample.tmdbId}`}>
 			<div className="-mx-4 mt-4 sm:-mx-6 lg:-mx-8" data-real-hero>
-				<DetailsHero media={movie} country="DE" sectionProps={{ overview: {} } as never} navigateToSection={() => {}} />
+				<DetailsHero media={movie} country="DE" sectionProps={{ overview: {} } as never} />
 			</div>
 		</BelowFoldProvider>
 	)

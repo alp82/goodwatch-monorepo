@@ -6,7 +6,7 @@
 //             &today=2026-10-08  &imdb=differs (IMDb numbers the first season differently)
 //             &list=none (the show has no episode list yet)  &overviews=1 (send the fixtures' descriptions)
 //             &latency=150 (milliseconds an answer takes)  &guest=1 (no member: the page as a visitor gets it)
-//             &providers=one|many|none (how many services stream it, for the hero's where-to-watch block)
+//             &providers=one|many|none|only|nowhere (how many services stream it, for the hero's where-to-watch block)
 // The stand-in server (ui/prototype-episode-tracking/fake-server.ts) runs the real state machine and the real
 // mapping to rows. Episodes are the prototypes' TMDB snapshots; TMDB's votes stand in for IMDb's ratings. Nothing is
 // stored and nothing leaves the page. The route is not in a production build.
@@ -122,7 +122,7 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 	// A member of its own per setup, so that nothing cached for an earlier setup is read.
 	const user = useMemo(() => (guest ? null : ({ id: `harness-member-${++members}`, email: "member@example.com" } as User)), [guest])
 	const asProviders = params.get("providers") ?? ""
-	const providers = (["one", "many", "none"].includes(asProviders) ? asProviders : "one") as HeroProviders
+	const providers = (["one", "many", "none", "only", "nowhere"].includes(asProviders) ? asProviders : "one") as HeroProviders
 	const media = useMemo(() => {
 		const parts = heroParts(providers, show)
 		return {
@@ -200,7 +200,7 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 						{show.name} <span className="font-normal text-gray-400">({show.year})</span>
 					</h1>
 					<div className="-mx-4 sm:-mx-6 lg:-mx-8" data-hero>
-						<DetailsHero media={media} country="DE" episodeGrid={grid.seasons.length ? grid : null} sectionProps={{ overview: {} } as never} navigateToSection={() => {}} />
+						<DetailsHero media={media} country="DE" episodeGrid={grid.seasons.length ? grid : null} sectionProps={{ overview: {} } as never} />
 					</div>
 					<div className="mt-12 flex flex-col gap-12">
 						<Episodes media={media} grid={grid.seasons.length ? <EpisodeGrid grid={grid} /> : null} />
