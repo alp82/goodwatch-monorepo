@@ -31,5 +31,14 @@
     "postcold-stage-actual-v1-result.json": "b0992523d6cb4b950c7a5403b5c93ea12addf3b2db94a0c62a30a08cbba4b86b"
   },
   "productionAcceptance": false,
-  "futureProtocolExecuted": false
+  "futureProtocolExecuted": false,
+  "publicOfflineAudit": {
+    "originalSourceSha256": "db5166800681896289131ebaf66014f1017585f196bf83fc4da3f58ca66b22f1",
+    "adaptation": "Only absolute local contract import replaced by adjacent exact frozen332 contract import",
+    "sourceHashes": {
+      "audit_postcold_result_v1.mjs": "91d099ab1365eecfe461a46563f5b1f11aa410e481308a421e2009575501ca61",
+      "test_audit_postcold_result_v1.mjs": "6a963314e2a63a950ac3e0f4619f95faf8fb376f401c63d50f48c57a250a9945",
+      "compare-contract-frozen-332.mjs": "609df6be7bfc8943f46d41cf740ef3afb6bfc4e3a6dbd3491068ec9a46a329a7"
+    }
+  }
 }
