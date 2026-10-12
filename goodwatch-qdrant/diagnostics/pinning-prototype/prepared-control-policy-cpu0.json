@@ -1,0 +1,48 @@
+{
+  "cachePreparation": {
+    "helperPath": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-100-cpu0-v1/prepare_clone_reclaim.py",
+    "helperSha256": "f831f00f75d4b54dce3ba493a4a078b23969222507576505052291ed0147f7c5",
+    "maxSeconds": 60,
+    "mode": "post-cold-owned-cgroup-reclaim",
+    "quiescenceSeconds": 60,
+    "requestedBytes": 3221225472,
+    "writerPolicy": {
+      "censusLimit": 28,
+      "cleanupSeconds": 10,
+      "kernelWriteSeconds": 60,
+      "lifecycleSeconds": 145,
+      "prewriteAcceptanceSeconds": 60,
+      "prewriteSupervisionSeconds": 65,
+      "receiptLimit": 18,
+      "registrationSeconds": 10
+    },
+    "postwriteQuiescenceSeconds": 60
+  },
+  "controlReadySeconds": 1200,
+  "helperCodeSha256": "f1ba4a9bb2e4c1985ede09382a5dbb0b4c90572d5b8b3e7953af0a471b7c0ed5",
+  "helperConfig": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-100-cpu0-v1/helper-config.json",
+  "helperPolicySha256": "88289117a20e93e143f655d734a6690d7c5e37a7bbda130a0419a1660ab39b98",
+  "initialPinRequestSeconds": 180,
+  "mechanismNegativeTags": [
+    "control-native-title"
+  ],
+  "negativePrequeryMissingBytes": 67108864,
+  "pressure": {
+    "archive": "/root/goodwatch-qdrant-cold-406-20261011/rename-proof/media-20261011T041503Z.snapshot",
+    "bytes": 4428863488,
+    "maxSeconds": 180,
+    "rateBytesPerSecond": 67108864,
+    "sha256": "614149a3885293985ad912d2ed92bf03fa23f42235bb6ddde78e9991c22c64eb"
+  },
+  "pressurePlacement": "controller-original-cgroup",
+  "queryLeaseSeconds": 60,
+  "reconcileIntervalSeconds": 10,
+  "schema": "clone-pin-control.cpu0.v1",
+  "steadyPinRequestSeconds": 30,
+  "cpuIsolation": {
+    "periodMicros": 100000,
+    "weight": 100,
+    "cpusetCpus": "",
+    "cpusetMems": ""
+  }
+}

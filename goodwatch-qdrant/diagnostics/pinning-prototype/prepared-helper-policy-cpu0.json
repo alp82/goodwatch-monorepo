@@ -1,0 +1,47 @@
+{
+  "schema": "mapped-data-pin-config.cpu0.v1",
+  "source": {
+    "mode": "clone",
+    "container": "gw-qdrant-cpu0-100-20261012",
+    "image": "sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b",
+    "store": "/root/goodwatch-qdrant-cold-406-20261011/store",
+    "mounts": [
+      [
+        "/root/goodwatch-qdrant-cold-406-20261011/store",
+        "/qdrant/storage",
+        "bind",
+        true
+      ],
+      [
+        "/root/goodwatch-qdrant-cold-406-20261011/runtime-snapshots",
+        "/qdrant/snapshots",
+        "bind",
+        true
+      ],
+      [
+        "/root/goodwatch-qdrant-cold-406-20261011/rename-proof/media-20261011T041503Z.snapshot",
+        "/qdrant/snapshots/fixture.snapshot",
+        "bind",
+        false
+      ]
+    ],
+    "memoryBytes": 6442450944,
+    "swapBytes": 6442450944,
+    "cpuNanos": 0
+  },
+  "policy": {
+    "maxLockedBytes": 2147483648,
+    "archiveBytes": 4428863488,
+    "reserveBytes": 2147483648,
+    "emergencyBytes": 1610612736,
+    "includePayload": false,
+    "capReserveBytes": 268435456,
+    "mappingReserveCount": 1024
+  },
+  "intervalSeconds": 10,
+  "lifetimeSeconds": 600,
+  "actions": [
+    "measure",
+    "pin"
+  ]
+}
