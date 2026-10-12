@@ -3,7 +3,7 @@ import sys
 sys.dont_write_bytecode=True
 import argparse,datetime,errno,fcntl,hashlib,json,os,re,resource,signal,stat,time,urllib.request
 from pathlib import Path
-STAGE=Path('/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v2')
+STAGE=Path('/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v3')
 REQUEST=3*1024**3
 LIMIT_FILES=('memory.min','memory.low','memory.high','memory.max','memory.swap.max','cpu.max','io.max','pids.max')
 SAFE={'source_changed','swap_present','locked_source_pages','dirty_source_pages','source_children_present','source_limits_changed','ancestor_limits_changed','parent_placement_changed','reclaim_fd_changed','reclaim_timeout','reclaim_writer_survived','reclaim_write_failed','reclaim_resource_event','post_cap_fit_inconclusive','metadata_health_changed','source_freeze_changed','invalid_reclaim_lock','prepared_input_changed','writer_start_failed','quiescence_bound_exceeded'}
@@ -311,7 +311,7 @@ def require_held_control_lock(c,fd):
 
 
 def quiescent_snapshot(c,source,seconds=0,clock=time.monotonic,sleep=time.sleep):
- if seconds not in (0,5):raise RuntimeError('prepared_input_changed')
+ if seconds not in (0,60):raise RuntimeError('prepared_input_changed')
  start=clock();attempts=0;last=None
  while True:
   attempts+=1

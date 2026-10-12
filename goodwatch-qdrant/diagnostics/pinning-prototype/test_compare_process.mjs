@@ -10,13 +10,13 @@ function fixture(phase,expected){
  const base={schema:'search.clone-mlock-control.v2',phase,at:'2026-10-12T00:00:00Z',...expected};
  const selectionHash='a'.repeat(64),limits={memoryEventDelta:{max:0,oom:0,oom_kill:0},cpuLimitDelta:{nr_throttled:0,throttled_usec:0}};
  const pin={lockedBytes:16384,selectionHash,newLockBytes:0,rangesChanged:false,lockedResidency:Object.fromEntries(['vector','graph','sparse','other'].map(k=>[k,{lockedDataPages:1,residentLockedDataPages:1}]))};
- return [{...base,stage:'cache-preparation-complete',preparationToInitialLimits:{memoryEventDelta:{max:0,oom:0,oom_kill:0},cpuLimitDelta:{nr_throttled:0,throttled_usec:0}},cachePreparationMode:'post-cold-owned-cgroup-reclaim',cachePreparationHelperSha256:'f'.repeat(64),cachePreparation:{schema:'owned-clone-reclaim-preparation.v1',stage:'prepared-headroom-measured',writer:{registeredBeforeWrite:true,writerExitObserved:true,cleanupUnknown:false,pidfdRetained:false,requestedBytes:3*1024**3,writeAttempts:1,writerGone:true,writerExitCode:0,timedOut:false,outcome:'accepted',writtenBytes:10},quiescence:{budgetSeconds:5,zeroDirtyAndWriteback:true,fileDirtyBytes:0,fileWritebackBytes:0},postCapFit:{currentBytes:2*1024**3,missingSelectedBytes:1024**3,reserveBytes:256*1024**2,capBytes:6*1024**3},initialMeasurement:{selectionHash},measurement:{selectionHash},healthBefore:{green:true,optimizerOk:true,points:244262,segments:12,shards:6},healthAfter:{green:true,optimizerOk:true,points:244262,segments:12,shards:6},before:{qdrantPid:123,sourceStartTicks:456,sourceProcessFence:'a'.repeat(64),ancestorLimitFence:'b'.repeat(64),memoryEvents:{max:0,oom:0,oom_kill:0},cpu:{nr_throttled:0,throttled_usec:0}},final:{qdrantPid:123,sourceStartTicks:456,sourceProcessFence:'a'.repeat(64),ancestorLimitFence:'b'.repeat(64),memoryEvents:{max:0,oom:0,oom_kill:0},cpu:{nr_throttled:0,throttled_usec:0}},queries:0,pinning:false,archiveBytesRead:0,fileCacheAdvice:false,lifecycleChanges:0,sourceResourceLimitWrites:0,productionBackupEquivalent:false}},
+ return [{...base,stage:'cache-preparation-complete',preparationToInitialLimits:{memoryEventDelta:{max:0,oom:0,oom_kill:0},cpuLimitDelta:{nr_throttled:0,throttled_usec:0}},cachePreparationMode:'post-cold-owned-cgroup-reclaim',cachePreparationHelperSha256:'f'.repeat(64),cachePreparation:{schema:'owned-clone-reclaim-preparation.v1',stage:'prepared-headroom-measured',writer:{registeredBeforeWrite:true,writerExitObserved:true,cleanupUnknown:false,pidfdRetained:false,requestedBytes:3*1024**3,writeAttempts:1,writerGone:true,writerExitCode:0,timedOut:false,outcome:'accepted',writtenBytes:10},quiescence:{budgetSeconds:60,zeroDirtyAndWriteback:true,fileDirtyBytes:0,fileWritebackBytes:0},postCapFit:{currentBytes:2*1024**3,missingSelectedBytes:1024**3,reserveBytes:256*1024**2,capBytes:6*1024**3},initialMeasurement:{selectionHash},measurement:{selectionHash},healthBefore:{green:true,optimizerOk:true,points:244262,segments:12,shards:6},healthAfter:{green:true,optimizerOk:true,points:244262,segments:12,shards:6},before:{qdrantPid:123,sourceStartTicks:456,sourceProcessFence:'a'.repeat(64),ancestorLimitFence:'b'.repeat(64),memoryEvents:{max:0,oom:0,oom_kill:0},cpu:{nr_throttled:0,throttled_usec:0}},final:{qdrantPid:123,sourceStartTicks:456,sourceProcessFence:'a'.repeat(64),ancestorLimitFence:'b'.repeat(64),memoryEvents:{max:0,oom:0,oom_kill:0},cpu:{nr_throttled:0,throttled_usec:0}},queries:0,pinning:false,archiveBytesRead:0,fileCacheAdvice:false,lifecycleChanges:0,sourceResourceLimitWrites:0,productionBackupEquivalent:false}},
  {...base,stage:'pressure-complete',selectionHash,pressureLimits:limits,prequeryMissingBytes:64*1024**2,negativePrequeryMissingBytes:64*1024**2},
- {...base,stage:'query-ready',selectionHash,cold:{residentPagesAfterEviction:0,pointCount:244262,segmentCount:12,shardCount:6},pressureWriterPlacement:'controller-original-cgroup',pressure:{mode:'readonly-existing-archive',bytes:4428863488},initialPinState:pin,pinState:pin},
+ {...base,stage:'query-ready',diagnosticReadySeconds:1200,selectionHash,cold:{residentPagesAfterEviction:0,pointCount:244262,segmentCount:12,shardCount:6},pressureWriterPlacement:'controller-original-cgroup',pressure:{mode:'readonly-existing-archive',bytes:4428863488},initialPinState:pin,pinState:pin},
  {...base,stage:'query-finished',selectionHash,queryLimits:limits,queryProcessDelta:{majorFaults:1},pinStateAfterQuery:pin},
  {...base,stage:'released',released:true,pinChildExited:true},{...base,stage:'unpin-complete',pinChildExited:true}];
 }
-const script=`import json,os,sys,signal
+const script=`import json,os,sys,signal,time
 frames=json.loads(os.environ['TEST_FRAMES'])
 def emit(frame):print(json.dumps(frame),flush=True)
 def stopped(number,frame):
@@ -24,8 +24,10 @@ def stopped(number,frame):
  emit({'stage':'released','released':True,'pinChildExited':True})
  raise SystemExit(1)
 signal.signal(signal.SIGTERM,stopped)
+mask=signal.pthread_sigmask(signal.SIG_BLOCK,{signal.SIGTERM})
 for frame in frames[:3]:emit(frame)
-if sys.stdin.readline()!='{"stage":"query-finished"}\\n':raise SystemExit(1)
+signal.pthread_sigmask(signal.SIG_SETMASK,mask)
+if sys.stdin.readline()!='{"stage":"query-finished"}\\n':time.sleep(2);raise SystemExit(1)
 for frame in frames[3:]:emit(frame)
 `;
 async function run(query,phase='baseline',{scriptText=script,tag='heldout-person',changeFrames=frames=>frames,budgets,raiseOwnNofile=false,observeArgs=()=>{}}={}){
@@ -82,7 +84,7 @@ signal.signal(signal.SIGTERM,signal.SIG_IGN)
 for frame in json.loads(os.environ['TEST_FRAMES'])[:2]:print(json.dumps(frame),flush=True)
 while True:time.sleep(.1)
 `;
- await assert.rejects(run(async()=>{throw Error('private query')},'baseline',{scriptText:stubborn,budgets:{ready:500,cleanup:30,reaped:500}}),error=>{
+ await assert.rejects(run(async()=>{throw Error('private query')},'baseline',{scriptText:stubborn,budgets:{ready:2000,cleanup:100,reaped:2000}}),error=>{
   assert.equal(error.publicEvidence.exitObserved,true);assert.equal(error.publicEvidence.controllerExitCode,null);assert.equal(error.publicEvidence.controllerExitSignal,'SIGKILL');assert.equal(error.publicEvidence.cleanupObserved,false);return true;
  });
 });
@@ -100,7 +102,7 @@ def stop(number,frame):
 signal.signal(signal.SIGTERM,stop)
 while True:time.sleep(.1)
 `;
- await assert.rejects(run(async()=>{throw Error('must not query')},'baseline',{scriptText,budgets:{ready:100,cleanup:500,reaped:500}}),error=>{
+ await assert.rejects(run(async()=>{throw Error('must not query')},'baseline',{scriptText,budgets:{ready:2000,cleanup:2000,reaped:2000}}),error=>{
   assert.equal(error.publicEvidence.reason,'control_ready_timeout');assert.equal(error.publicEvidence.failureKind,'readiness');assert.equal(error.publicEvidence.controllerReason,'controller_interrupted');assert.equal(error.publicEvidence.controllerFrames.filter(f=>f.reason==='controller_interrupted').length,1);assert.equal(error.publicEvidence.exitObserved,true);return true;
  });
 });

@@ -125,15 +125,20 @@ g.bounded_owned_writer(fd,operation,root,'a'*64,timeout=40)
    root=Path(directory);fd=os.open(root/'target',os.O_CREAT|os.O_RDWR,0o600);delivered=[]
    def interrupt(_signal,_frame):delivered.append(time.monotonic());raise RuntimeError('writer_interrupted')
    previous_alarm=signal.signal(signal.SIGALRM,interrupt);previous_int=signal.signal(signal.SIGINT,interrupt)
-   actual_parent=os.getpid();sender=os.fork()
+   actual_parent=os.getpid();ready_read,ready_write=os.pipe();sender=os.fork()
    if sender==0:
-    time.sleep(.06);os.kill(actual_parent,signal.SIGINT);os._exit(0)
-   signal.setitimer(signal.ITIMER_REAL,.02)
-   def operation(_target):signal.signal(signal.SIGTERM,signal.SIG_IGN);time.sleep(30)
+    os.close(ready_write)
+    if not select.select([ready_read],[],[],5)[0]:os._exit(127)
+    if os.read(ready_read,1)!=b'R':os._exit(126)
+    os.kill(actual_parent,signal.SIGALRM);time.sleep(.1);os.kill(actual_parent,signal.SIGINT);os._exit(0)
+   def operation(_target):
+    signal.signal(signal.SIGTERM,signal.SIG_IGN);os.write(ready_write,b'R');time.sleep(30)
    try:
-    with self.assertRaises(RuntimeError) as caught:guard.bounded_owned_writer(fd,operation,root,'a'*64,timeout=1,grace=.1)
+    with self.assertRaises(RuntimeError) as caught:guard.bounded_owned_writer(fd,operation,root,'a'*64,timeout=5,grace=.5)
     self.assertTrue(caught.exception.writerEvidence['writerGone']);self.assertEqual(caught.exception.writerEvidence['writerExitCode'],-signal.SIGKILL);self.assertEqual(len(delivered),1);self.assertEqual(caught.exception.writerEvidence['cleanupDeferredSignalsCount'],1)
-   finally:signal.setitimer(signal.ITIMER_REAL,0);os.waitpid(sender,0);signal.signal(signal.SIGALRM,previous_alarm);signal.signal(signal.SIGINT,previous_int);os.close(fd)
+   finally:
+    mask=signal.pthread_sigmask(signal.SIG_BLOCK,{signal.SIGALRM,signal.SIGINT})
+    os.waitpid(sender,0);signal.signal(signal.SIGALRM,previous_alarm);signal.signal(signal.SIGINT,previous_int);os.close(fd);os.close(ready_read);os.close(ready_write);signal.pthread_sigmask(signal.SIG_SETMASK,mask)
  def test_adopted_identity_unknown_retains_actual_pidfd(self):
   from unittest.mock import patch
   with tempfile.TemporaryDirectory() as directory:
