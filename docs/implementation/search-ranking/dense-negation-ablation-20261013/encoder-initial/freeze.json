@@ -1,0 +1,1300 @@
+{
+  "schema": "local-public-query-encoder-evidence.v1",
+  "sourceManifestSha256": "6beb0c156bcc6b15dac3068220bcfeabebc07d6791fbb55cc25595b8a6e48b60",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3432,
+      "sha256": "d742a86182a03b11f3562a4af2efdfe9210a51eea56a5e51a58db991ae67b28a"
+    },
+    {
+      "path": "captures/core-01.json",
+      "bytes": 251190,
+      "sha256": "6dfd0f42c0703aa9396c95cfecaba19519bd5fdb7e566f15fdb3ed9b7ce063cb"
+    },
+    {
+      "path": "captures/core-02.json",
+      "bytes": 269877,
+      "sha256": "3df7159ccaa209d0f903297aa36a550771314060d728cf1eb6af82201324cb01"
+    },
+    {
+      "path": "captures/core-03.json",
+      "bytes": 181944,
+      "sha256": "e21be480042750b819aa86806764bdc626cf90a416b6745387df25d9beb1e7ea"
+    },
+    {
+      "path": "captures/core-04.json",
+      "bytes": 257761,
+      "sha256": "405adaad97235fb379131b29a816422e3244a423d5b24022ebe887b0c14b0969"
+    },
+    {
+      "path": "captures/core-05.json",
+      "bytes": 249693,
+      "sha256": "23bc914933d2b1208805a6398915be149f51776a4d207582a931d1fd4d74f94c"
+    },
+    {
+      "path": "captures/core-06.json",
+      "bytes": 117953,
+      "sha256": "314c07736f8d506f2dede27b486c4912042d0017e33c2f8838de36bba50b7d88"
+    },
+    {
+      "path": "captures/core-07.json",
+      "bytes": 264976,
+      "sha256": "c2a7fcc6f8a50e40890543a2eae8e211ccd383f2e65dfd21709277f53ee6a539"
+    },
+    {
+      "path": "captures/core-08.json",
+      "bytes": 123375,
+      "sha256": "0696b9bcd40a0d180aac66e3fe3ba59bcb28098577ebb0112b1bb5a36d2fb21e"
+    },
+    {
+      "path": "captures/core-09.json",
+      "bytes": 499528,
+      "sha256": "d35574de46006cb605d54cc527e11f3aac83ccd64496bce436136ec1542b5d1d"
+    },
+    {
+      "path": "captures/core-10.json",
+      "bytes": 557145,
+      "sha256": "51b2e1957b7d5646bc91408f129c482fa0e5f56463da9b6426d63e7d7123f432"
+    },
+    {
+      "path": "captures/core-11.json",
+      "bytes": 381723,
+      "sha256": "3c2dc3be697025e1920022828b2a7f75aff4cd1c0de00e89af69062da0fc4150"
+    },
+    {
+      "path": "captures/core-12.json",
+      "bytes": 75426,
+      "sha256": "13199768e1f94f1d6b67d77a96fb089d4ad11b9c4c4cc57b95f34668a58da2c1"
+    },
+    {
+      "path": "captures/core-13.json",
+      "bytes": 175937,
+      "sha256": "18886382155337015825b63ec48e94d26147b7537b34b451ff4a535451c18c02"
+    },
+    {
+      "path": "captures/core-14.json",
+      "bytes": 301713,
+      "sha256": "21596aedaee0fabd79e555af5aba90644ebde65fad635601aee621b2b60d94e5"
+    },
+    {
+      "path": "captures/core-15.json",
+      "bytes": 348791,
+      "sha256": "ec48987b3860ced385d12364d80350e8b1c0b420fb5bd818ad59edb8c1cf5c7e"
+    },
+    {
+      "path": "captures/core-16.json",
+      "bytes": 270730,
+      "sha256": "d2794560505109eff6a3f114fb953fa9a023c6f9e7e21c16a47a89c77ffa50ba"
+    },
+    {
+      "path": "captures/core-17.json",
+      "bytes": 180583,
+      "sha256": "83924a0b1c930aee0c79ee695281a2a48133333f3e9e5dfed22e661eae665b72"
+    },
+    {
+      "path": "captures/core-18.json",
+      "bytes": 295799,
+      "sha256": "471e0d6ec15ca384a21aa27ece330b922501efe4e258826edfd661d22eac6b3f"
+    },
+    {
+      "path": "captures/core-19.json",
+      "bytes": 146857,
+      "sha256": "ef4308a6fffe269254f5926d20d158cd7f72f58ac065c4c8049ca7113497c7ca"
+    },
+    {
+      "path": "captures/core-20.json",
+      "bytes": 104594,
+      "sha256": "0d525b77e6aa46c06b3868b00d1e0ab15185632076260281f4143c0d59fa5dde"
+    },
+    {
+      "path": "captures/core-21.json",
+      "bytes": 76601,
+      "sha256": "a9dc8ccaefa3662fbec9a44c0522f3df66b4ef5074f994a65614a80fe7853863"
+    },
+    {
+      "path": "captures/core-22.json",
+      "bytes": 259715,
+      "sha256": "87e3a9c333e998404334241a4448dc246b5be9c5d99eff8a0200b83b8185b1e3"
+    },
+    {
+      "path": "captures/core-23.json",
+      "bytes": 683902,
+      "sha256": "059a02308c3f12028f34e895f343528acf3f1145491135b5cc98265352f5b114"
+    },
+    {
+      "path": "captures/core-24.json",
+      "bytes": 286624,
+      "sha256": "de19d9a440882b69bbd7f08dcccf225cd86171dab900f8362b53a1e9c670207d"
+    },
+    {
+      "path": "captures/core-25.json",
+      "bytes": 65381,
+      "sha256": "07288235ce78cfb4c587a7b0ab88c51257d10db2cca9b960c4dc99baa7494a2b"
+    },
+    {
+      "path": "captures/core-26.json",
+      "bytes": 178211,
+      "sha256": "bc2375f603b0829056ce2f5232eb6519d47b8656c530e20e37160c1e57d6190f"
+    },
+    {
+      "path": "captures/core-27.json",
+      "bytes": 164287,
+      "sha256": "6902a46b8baf7d41455d8b1203da7c9727944d66bd99c3cc1adf59e93872f986"
+    },
+    {
+      "path": "captures/core-28.json",
+      "bytes": 185692,
+      "sha256": "f42f8a01e3be8f71f9cd99cb039a2b82366d5e3b4ef7e46de29cd03fa7c04159"
+    },
+    {
+      "path": "captures/core-29.json",
+      "bytes": 131644,
+      "sha256": "38edc49e1cae5dcd0be14af1aefd4ee21d7e57a464658aae0e227ec0af2d4f72"
+    },
+    {
+      "path": "captures/core-30.json",
+      "bytes": 134066,
+      "sha256": "8e4cdcccf1c5c1d861c27056b0a3a20c54fc52b86778ab723ded3a8478d8da41"
+    },
+    {
+      "path": "captures/dev5-01.json",
+      "bytes": 173586,
+      "sha256": "f76e44b77dbc852d594ce3465681740cb64cea18248352b149a6b2524c03f24d"
+    },
+    {
+      "path": "captures/dev5-02.json",
+      "bytes": 184416,
+      "sha256": "c7a0586968f9d182954ddce91e83cacefe1dc0ee95c9768e0c9ff97f721138c0"
+    },
+    {
+      "path": "captures/dev5-03.json",
+      "bytes": 304264,
+      "sha256": "cc7b58b4fc806ecefd114fe4b9942413a20d1a47727a83c7a42185a9d41998ef"
+    },
+    {
+      "path": "captures/dev5-04.json",
+      "bytes": 319492,
+      "sha256": "993533285198304b5a6cb17beb888b979a0bdc39a54cc2cf5527d668a043c742"
+    },
+    {
+      "path": "captures/dev5-05.json",
+      "bytes": 330180,
+      "sha256": "75b342046081874dbf3b3235cc04f6c7889749ad310715cc7d7357bd0832755c"
+    },
+    {
+      "path": "captures/dev5-06.json",
+      "bytes": 161041,
+      "sha256": "52bd4563339ee0146b931949154b36e3c62e6ae5885ed06f6fc4553f54fdb1cd"
+    },
+    {
+      "path": "captures/dev6-01.json",
+      "bytes": 206580,
+      "sha256": "5413fee39346505dbbba0fa65aa921cb8d4f633be7c128c4e809723094ff3e08"
+    },
+    {
+      "path": "captures/dev6-02.json",
+      "bytes": 117769,
+      "sha256": "be05630d1d054eb0e20fae7afb4e4506ca20461e2865cfccbd9488854c67559d"
+    },
+    {
+      "path": "captures/dev6-03.json",
+      "bytes": 206910,
+      "sha256": "b94e25b426faed87c30b7dde82d7cf1edf45fd14ec365c79a26d8888537ebcc6"
+    },
+    {
+      "path": "captures/dev6-04.json",
+      "bytes": 153734,
+      "sha256": "e4cd2b8f332f1b51d0061e5a473e829e352b09caf3c20e25aed63548f40d4184"
+    },
+    {
+      "path": "captures/dev6-05.json",
+      "bytes": 97306,
+      "sha256": "6a2b635b51547ec5ce769af9945b7ac77d3de9a0669375cc5959cfc614dd2f7b"
+    },
+    {
+      "path": "captures/h5-01.json",
+      "bytes": 144727,
+      "sha256": "1111bb8f4b7d49bbfa71630f340271ec2bad44fac3e5b7ed5166855463e54026"
+    },
+    {
+      "path": "captures/h5-02.json",
+      "bytes": 180650,
+      "sha256": "c538f54e666c4767ef9e5bc852c14a4592389e5648292d1231edb086417b072f"
+    },
+    {
+      "path": "captures/h5-03.json",
+      "bytes": 463472,
+      "sha256": "ae6666644f81d712b1c910be5f71ca5ea571df3544a6982f973fc999ea457603"
+    },
+    {
+      "path": "captures/h5-04.json",
+      "bytes": 106341,
+      "sha256": "6c1ff6fe34916b6ecabe8211c2361c0ef2d913908d1a1f7be2ddc888f566c78b"
+    },
+    {
+      "path": "captures/h5-05.json",
+      "bytes": 118107,
+      "sha256": "da260e83cacf9552dbdb9cdb51a346f33cdcd5fce1e1b1759cd00b2a4816a783"
+    },
+    {
+      "path": "captures/h5-06.json",
+      "bytes": 431285,
+      "sha256": "131c3fcd15eded090cf43546deddb19f4af46210a87699c82d0dc95c0d96a96d"
+    },
+    {
+      "path": "captures/h5-07.json",
+      "bytes": 141377,
+      "sha256": "bb4ae9736c6c91b755ba344effa41c297957cae178ed7369df9db26c018ad907"
+    },
+    {
+      "path": "captures/h5-08.json",
+      "bytes": 178088,
+      "sha256": "c35a885f41461ba183476013fc6e7bc2e8961313c9569c83705d11ef8313ec81"
+    },
+    {
+      "path": "captures/h5-09.json",
+      "bytes": 250622,
+      "sha256": "2dffa24748203f7000ef1a7f359e49fe56f6b9de692ee54acb17c7a622ae4a74"
+    },
+    {
+      "path": "captures/h5-10.json",
+      "bytes": 395401,
+      "sha256": "3ea947384749e5bab6b345f0f9187059092eaca43c3a0007b3896bafd77662e3"
+    },
+    {
+      "path": "captures/h5-11.json",
+      "bytes": 384784,
+      "sha256": "3749a642f5e46c4dc8df611ef8f194b489a2ac2337789a132343e2767f8d8fea"
+    },
+    {
+      "path": "captures/h5-12.json",
+      "bytes": 387323,
+      "sha256": "fab7417e26df04c1e301c47885bc30086b3f29f82a33a9e778c5f6d1eba8c442"
+    },
+    {
+      "path": "captures/h5-13.json",
+      "bytes": 393514,
+      "sha256": "bb15a5ca59dbb6e6ada44725632473e0a82461f09f7cf14ee2e80796a677a74e"
+    },
+    {
+      "path": "captures/h5-14.json",
+      "bytes": 472577,
+      "sha256": "6e377d7a4521e5dd3c1d893767c5c68f6a9700cfaa8b448996f8dea62bf88d3e"
+    },
+    {
+      "path": "captures/h5-15.json",
+      "bytes": 77132,
+      "sha256": "1d817057f2b366f4ff2661e9cf33dad070e5593242c2d2cfc9d7c29e709ea0e6"
+    },
+    {
+      "path": "captures/h5-16.json",
+      "bytes": 529013,
+      "sha256": "3ea2f88fa113dfd8ed5e76f32d406a81fecaa5dd1ef502c8883b7cd5ab05a211"
+    },
+    {
+      "path": "captures/h5-17.json",
+      "bytes": 79156,
+      "sha256": "f71d9bc7fd652bbc4249e38ddd1d5a4cd468bc85e02af3b1b31526257424b456"
+    },
+    {
+      "path": "captures/h5-18.json",
+      "bytes": 232794,
+      "sha256": "8394961db9ee408ab076c670b15b5664c01f24a37fa3293ef6003f8c281f7f7f"
+    },
+    {
+      "path": "captures/h5-19.json",
+      "bytes": 560880,
+      "sha256": "e7b7b010ecb9118525d606fdad81bbc0473d0ed60e6c2e1d5aeb67915b95c720"
+    },
+    {
+      "path": "captures/h5-20.json",
+      "bytes": 222391,
+      "sha256": "30e2ac2913e5170d799ba7722b5864b2367f5acca0d26fcf364d4b12d09193ad"
+    },
+    {
+      "path": "captures/h5-21.json",
+      "bytes": 304623,
+      "sha256": "844d828bda6540abef8aec5014feb511e56c2ab7fabf02db12acea94618417c8"
+    },
+    {
+      "path": "captures/h5-22.json",
+      "bytes": 213030,
+      "sha256": "dd49d8db476dd20df83e51b979ab25392e54c65a15faff8e3829a4e7b521ad49"
+    },
+    {
+      "path": "captures/h5-23.json",
+      "bytes": 334383,
+      "sha256": "85f62da0de70d894fad9fac2bdd692248a5ba70503b61d58540618b7f5d86ec8"
+    },
+    {
+      "path": "captures/h5-24.json",
+      "bytes": 257980,
+      "sha256": "34351db673b620c93a5ff545c58aa8b2ca23bfae81dbbb927ff2204ad09d1e18"
+    },
+    {
+      "path": "captures/h5-25.json",
+      "bytes": 374190,
+      "sha256": "cd60f18639120d863b11f8bd01ad3c9043d87ad5def5dcfb9ab06440ae02ef40"
+    },
+    {
+      "path": "captures/h5-26.json",
+      "bytes": 225985,
+      "sha256": "99e2558e231eecc3a59d1efa6dd95f3a0eeee8663a9c1f6b2353d18c34aac82a"
+    },
+    {
+      "path": "captures/h5-27.json",
+      "bytes": 114243,
+      "sha256": "f89be1ce3f1acbf36b5f8bc318cd49ab5c6dc3402e745d482254b1e0e0e119ad"
+    },
+    {
+      "path": "captures/h5-28.json",
+      "bytes": 143571,
+      "sha256": "223dd36367e44d38961c9c1af0b6dd3bafd6d694e8d5c26f04d28cb283204a0a"
+    },
+    {
+      "path": "captures/h5-29.json",
+      "bytes": 253542,
+      "sha256": "c0bb0489515816eef3a67c1fd6411f94f79fbbb3c04cdf9e4eb3b80b4b789662"
+    },
+    {
+      "path": "captures/h5-30.json",
+      "bytes": 409569,
+      "sha256": "a43ef08644e903b9dd7c346fa910f61edb85b585e2ee8740175f84974da3bdd4"
+    },
+    {
+      "path": "captures/ho2-01.json",
+      "bytes": 528967,
+      "sha256": "6ea14a39ec1ffbc6d4aacb1a1ee23b6e961444138c7d648914ce6e508d4f3f06"
+    },
+    {
+      "path": "captures/ho2-02.json",
+      "bytes": 359702,
+      "sha256": "f954b372681e09d7461f9c50939384b36049cffecf5772d65e9b56ed4978ee9b"
+    },
+    {
+      "path": "captures/ho2-03.json",
+      "bytes": 151686,
+      "sha256": "ddc1e73ae1f0ce4dbdcd46ed09eadf9f0e1a1ce7d0549a5a0551c6763da49282"
+    },
+    {
+      "path": "captures/ho2-04.json",
+      "bytes": 232782,
+      "sha256": "ac9496c4e2f6d921702e58a5ff9b4360386e8030990a415d62915477f78ec211"
+    },
+    {
+      "path": "captures/ho2-05.json",
+      "bytes": 409718,
+      "sha256": "ebcada3327606fc8aad5848c1f3579bd0e1ab827ae6fb6206ac692ab2ce6a875"
+    },
+    {
+      "path": "captures/ho2-06.json",
+      "bytes": 300680,
+      "sha256": "0466d5132517f2f26a68b578ec14da7623d1b5ff9cd1034d64d996c1b56ae6e6"
+    },
+    {
+      "path": "captures/ho2-07.json",
+      "bytes": 271934,
+      "sha256": "45271420f8bda958e102eac595755260e8dca2b7176ff98b903fd96e5fb1dbb7"
+    },
+    {
+      "path": "captures/ho2-08.json",
+      "bytes": 276998,
+      "sha256": "431bddb3dba987a79e16e1ba363a894f7b1d43ecb11695d037c300100289595a"
+    },
+    {
+      "path": "captures/ho2-09.json",
+      "bytes": 331462,
+      "sha256": "a332bf9ee34e6cd70605fa97bce7cdf7d8a1498dece812f7ab78614f3ce2cff3"
+    },
+    {
+      "path": "captures/ho2-10.json",
+      "bytes": 210540,
+      "sha256": "ddd7b21c2caa690e4ce4a38c61fee7e538dda34c4de98e1db9f6afccda0fd8ef"
+    },
+    {
+      "path": "captures/ho2-11.json",
+      "bytes": 353849,
+      "sha256": "d8862a7c908f0f505aa2c90fc196c039e59f6006215297a3f1134a48e1a1eee2"
+    },
+    {
+      "path": "captures/ho2-12.json",
+      "bytes": 235125,
+      "sha256": "9abcaea68d2fc43b7045858c680ed1737089ac3b985407994a2f32ef03169c66"
+    },
+    {
+      "path": "captures/ho2-13.json",
+      "bytes": 579970,
+      "sha256": "8a83d568dbd7f5baa1aa26cb480d8b3efbfc926359d4ea9c54a156b040afbfbe"
+    },
+    {
+      "path": "captures/ho2-14.json",
+      "bytes": 379624,
+      "sha256": "00f1facb77f872706742640bc5948894c30f2b65cdb72f9f8bc5ea72fc61714e"
+    },
+    {
+      "path": "captures/ho2-15.json",
+      "bytes": 346748,
+      "sha256": "265e4c473a6f124af0b21a1009e4f0b52b22cf35f8317e106a74a44fed90ab81"
+    },
+    {
+      "path": "captures/ho2-16.json",
+      "bytes": 183197,
+      "sha256": "2ed544943590e144692681322547ff9768e2ebc1fe86ab1ce5e5a2cd2c9dea73"
+    },
+    {
+      "path": "captures/ho2-17.json",
+      "bytes": 356374,
+      "sha256": "3e04b8b2a7313ad9444409eee87144b9970bb4eeb01017d3e966b56ddfb32abd"
+    },
+    {
+      "path": "captures/ho2-18.json",
+      "bytes": 517556,
+      "sha256": "83a54bc0796cfb86cc6bd31ab83a9367eeddcf658828ea119ebb38ddd292b5a5"
+    },
+    {
+      "path": "captures/ho2-19.json",
+      "bytes": 173266,
+      "sha256": "4134c818e2475605275dbc7f23fe775ef75eb6806908672205b1ab7765c7e329"
+    },
+    {
+      "path": "captures/ho2-20.json",
+      "bytes": 83632,
+      "sha256": "56bfdb2904117810161ac02c8678cb93a73d7502e80154a8a1bad2571c8d9940"
+    },
+    {
+      "path": "captures/ho2-21.json",
+      "bytes": 498219,
+      "sha256": "bd4fcf1dd3dc930808a21d12836528a25bd3aa6d06b4082c2c57a63e6d43c1aa"
+    },
+    {
+      "path": "captures/ho2-22.json",
+      "bytes": 191200,
+      "sha256": "2847cd4b45d2eacdeb683ef7d344734f2f726148448729a85ab76bda31fe56aa"
+    },
+    {
+      "path": "captures/lab-00.json",
+      "bytes": 316113,
+      "sha256": "dfa03cfef5119f49455570b31badb203df7259df5697f3ef11b70f2d1eb7d726"
+    },
+    {
+      "path": "captures/lab-01.json",
+      "bytes": 226776,
+      "sha256": "400e675f335a497d4eed5a06572eece976ed4b0d61d8b3c6fb8fa603e232013d"
+    },
+    {
+      "path": "captures/lab-02.json",
+      "bytes": 413899,
+      "sha256": "3b43c73f5f5e50693f4eaa37d3d6eb34a645d2936f62384e70018c44153c9c77"
+    },
+    {
+      "path": "captures/lab-03.json",
+      "bytes": 850081,
+      "sha256": "3458e06d77b19a93b2c4dbcd8ab63be31ca67f0617cc3f3555041b5deb878eb1"
+    },
+    {
+      "path": "captures/lab-04.json",
+      "bytes": 278094,
+      "sha256": "93db85512652263c0a1837d40b20938eb34f047ca3f37ac024bd0d70cca6fed8"
+    },
+    {
+      "path": "captures/lab-05.json",
+      "bytes": 396595,
+      "sha256": "4075c5d517433b277bac27940c26750650c738daa555331fceef3c01989e685d"
+    },
+    {
+      "path": "captures/lab-06.json",
+      "bytes": 83674,
+      "sha256": "69a84f6318e4bf8d55c652b15aa382b6e09a20e4e8f2788592850f780d8aadd7"
+    },
+    {
+      "path": "captures/lab-07.json",
+      "bytes": 103798,
+      "sha256": "9032ad04284817fa4d3a992cd60e34a51589edf50489d2a1f07b9f841f9953d3"
+    },
+    {
+      "path": "captures/lab-08.json",
+      "bytes": 541381,
+      "sha256": "ea891144dc0caaf7e03b8a70a49c62c2d4dd45590a150f23f4c029ba1d2ec7b7"
+    },
+    {
+      "path": "captures/lab-09.json",
+      "bytes": 245745,
+      "sha256": "0bf814d332283d0d9ff0937c194c7cf3302f1750790ff5f06372596abee72a69"
+    },
+    {
+      "path": "captures/lab-10.json",
+      "bytes": 396324,
+      "sha256": "c53a84e7c3facc2ef15cd4a2ce022df6baf31d0a69236abcd0ca40ad5c7177c7"
+    },
+    {
+      "path": "captures/lab-11.json",
+      "bytes": 227182,
+      "sha256": "a8a63249be88dfdd39025633084c15a9a9372e3367fb4d061c6bf2c500faf74a"
+    },
+    {
+      "path": "captures/lab-12.json",
+      "bytes": 276540,
+      "sha256": "d23f99586362d59579b07a3d46bd93d3977ca4f0b523d25f168e89dcb23e637c"
+    },
+    {
+      "path": "captures/lab-13.json",
+      "bytes": 324977,
+      "sha256": "6df59093cd06c070823dfbce1d7e8e94b9cc155c1e0966f8b1c938f9c8946eb9"
+    },
+    {
+      "path": "captures/new-01.json",
+      "bytes": 298501,
+      "sha256": "779d8773adab6fbba76f57a8f230089b564f3f9e4a693c92a4c42329d012b5c1"
+    },
+    {
+      "path": "captures/new-02.json",
+      "bytes": 284850,
+      "sha256": "a2ac72bdb9beeb9404e5c1c30ca8f533a12e0258755c55f04af196faf453af9d"
+    },
+    {
+      "path": "captures/new-03.json",
+      "bytes": 482359,
+      "sha256": "e62d3f457eb9e4694e67fd36edff02004bbf5892d92939f04eba74126c915726"
+    },
+    {
+      "path": "captures/new-04.json",
+      "bytes": 306313,
+      "sha256": "5ce9d5aaf8423195ac6956c976871679c94ab7cdf02b03854b3379f5bc24d23b"
+    },
+    {
+      "path": "captures/new-05.json",
+      "bytes": 239108,
+      "sha256": "60b775ae363843989cdaf7319bc1c27e3d5b22b2b8a8a40b0bea0c86d0bec259"
+    },
+    {
+      "path": "captures/new-06.json",
+      "bytes": 208603,
+      "sha256": "9eac1be43cbd9e961a48223732e500ca6b75a9d5163757a6883987ec410566b6"
+    },
+    {
+      "path": "captures/new-07.json",
+      "bytes": 270627,
+      "sha256": "625844d9f7c6710b80e4c80c7e8edaef23391c82be26c4d1e9566c2acbbe2959"
+    },
+    {
+      "path": "captures/new-08.json",
+      "bytes": 368325,
+      "sha256": "37e7a80a7713f021d697a65ad2c2c6ba4a0b41d6395e21512adb48d7f7cf94d6"
+    },
+    {
+      "path": "captures/new-09.json",
+      "bytes": 426333,
+      "sha256": "60491ab3be6eb1c94323f369c1508389da116568926639896b4963b2d9334a8a"
+    },
+    {
+      "path": "captures/new-10.json",
+      "bytes": 259441,
+      "sha256": "03f561dcedd2ab86dfbd173dc8881ac45ba07389b58d0a9135451a6747e665c5"
+    },
+    {
+      "path": "captures/new-11.json",
+      "bytes": 64607,
+      "sha256": "4256532b166f9457e0c957129bd6a27312f9404cda1e0be892c9521529f79fba"
+    },
+    {
+      "path": "captures/new-12.json",
+      "bytes": 163030,
+      "sha256": "cd2f94575aea4c6196dcaae9dff1ecfbfd2c24af71755b29f1a9d8a7afb53733"
+    },
+    {
+      "path": "captures/new-13.json",
+      "bytes": 479607,
+      "sha256": "3c5e2719891e8e17074f229c3b73da0ab903b8eb6f9766982743cf2294fc3cac"
+    },
+    {
+      "path": "captures/new-14.json",
+      "bytes": 201869,
+      "sha256": "80eabd8c35fb391bd5efe128d4c6ca01cbaa7be2112c2885008fe08afb5f7255"
+    },
+    {
+      "path": "captures/new-15.json",
+      "bytes": 151147,
+      "sha256": "fdffaeec21d8bb524d2ef8182f0f1d754187d4a08562a50d3a70d4911684ed2f"
+    },
+    {
+      "path": "captures/new-16.json",
+      "bytes": 175314,
+      "sha256": "13beb0b6a7907e099d57b8833488eb32f21a6214c34c3c05f00cc9c7a14795e9"
+    },
+    {
+      "path": "captures/new-17.json",
+      "bytes": 191405,
+      "sha256": "88971d18842d4b835ca8fd8a0813fe2bd7c7b54d4b1e99c9b2d60848bf1316a5"
+    },
+    {
+      "path": "captures/new-18.json",
+      "bytes": 208638,
+      "sha256": "25b6659c14577161cb1fcce47d0ab876971866f3b9f1c27d6f43850d0cf7c98b"
+    },
+    {
+      "path": "captures/new-19.json",
+      "bytes": 476093,
+      "sha256": "6618724505ffeca45ea50e61e133281c9a255ce93909322911a601812e2243f8"
+    },
+    {
+      "path": "captures/new-20.json",
+      "bytes": 389196,
+      "sha256": "1bf723cba3c3441833afe8729a89d4fb02a30f92f51fad0de688a0cff1adf1ae"
+    },
+    {
+      "path": "captures/new-21.json",
+      "bytes": 105786,
+      "sha256": "c9a93f123f0a5899e44e03b29afcf35a146d22d14b78733a74d932e57381f6e3"
+    },
+    {
+      "path": "captures/new-22.json",
+      "bytes": 133471,
+      "sha256": "0d6e721659a7df14c55c6fc9f96afccba3e992e9cfecc177296cca2e9c4b99e0"
+    },
+    {
+      "path": "captures/new-23.json",
+      "bytes": 552136,
+      "sha256": "eb57dcf23ecb88fccf6ac4ff096aec66ff2fdff8c0c401a2976bf1607642affa"
+    },
+    {
+      "path": "captures/new-24.json",
+      "bytes": 219889,
+      "sha256": "762d46a3a07c5c5eb338f41b10b1c6860cbb5a8c7f9f360f5ccdd37021ba67e7"
+    },
+    {
+      "path": "captures/new-25.json",
+      "bytes": 188051,
+      "sha256": "21627ad7c2e96437581bb8b444e34b76e25d7038b98cd70798d80cea05c15e11"
+    },
+    {
+      "path": "captures/ppl-01.json",
+      "bytes": 247054,
+      "sha256": "62890a9e3dc55e9ff42b45565526d357115f576a151790094cf6dc0d003e77cf"
+    },
+    {
+      "path": "captures/ppl-02.json",
+      "bytes": 401987,
+      "sha256": "cc880318e60767e0b12aa543b1533ba0203c816fa033c480010f186093484b8b"
+    },
+    {
+      "path": "captures/ppl-03.json",
+      "bytes": 179654,
+      "sha256": "ca6303b627c267e009b8779d223811522e3dd7c52cf40af4339d37129bda03cf"
+    },
+    {
+      "path": "captures/ppl-04.json",
+      "bytes": 271312,
+      "sha256": "20b5340ad338adcdc339ff08afd5ca86bc39d3e6ecec70d3907271388684e75c"
+    },
+    {
+      "path": "captures/ppl-05.json",
+      "bytes": 164242,
+      "sha256": "23e1d81a0debc348dc16173697fcd4eebb0d370a3bab6033df2dd78d12d72d79"
+    },
+    {
+      "path": "captures/ppl-06.json",
+      "bytes": 477825,
+      "sha256": "6f7c8f904cdf6d013cec14b6c0d408416c66e72bdb0e6c5a28fb6e6078ba791e"
+    },
+    {
+      "path": "captures/ppl-07.json",
+      "bytes": 350853,
+      "sha256": "23c68b7dfcf82d0a84628dff846de9146f8e1d50591529981c4c30fa2fb71e59"
+    },
+    {
+      "path": "captures/ppl-08.json",
+      "bytes": 164571,
+      "sha256": "32cc40d7c144184cf3136a140a32eb6fae3644b969e6de3608f47b9abcca4d7c"
+    },
+    {
+      "path": "captures/ppl-09.json",
+      "bytes": 375606,
+      "sha256": "ba0cfb91128d6d1d8711746c47c3d0330a232088695ab4bd310e52e6ebd8d810"
+    },
+    {
+      "path": "captures/ppl-10.json",
+      "bytes": 319672,
+      "sha256": "31f3db070e02a7c480b0690cf829edcc6d1cf91d4e1d507aa08fda4c45e86d4b"
+    },
+    {
+      "path": "captures/ppl-11.json",
+      "bytes": 311237,
+      "sha256": "b1ef0eacd509683dda134edfc136a14686eff0cfe3d47a4bef854818366c4894"
+    },
+    {
+      "path": "captures/ppl-12.json",
+      "bytes": 282128,
+      "sha256": "8cf0c399f54157f64a6012af0b7149424c5ead11b629d37f47bf4d666ba948d7"
+    },
+    {
+      "path": "captures/ppl-13.json",
+      "bytes": 663334,
+      "sha256": "9cc2947cf6a9f1aefcf07dd894f7174d53913154f2978e8f98a419c19004ee10"
+    },
+    {
+      "path": "captures/ppl-14.json",
+      "bytes": 380777,
+      "sha256": "35e62eddfc7b8533bac997765b2be493f2ebc05eb674792e13b39b567f5f778e"
+    },
+    {
+      "path": "captures/ppl-15.json",
+      "bytes": 279730,
+      "sha256": "c154594cb55b6980ec80cd90ef39be9e66e980c55bee0dc9e9135d7eb8336ba6"
+    },
+    {
+      "path": "captures/ppl-16.json",
+      "bytes": 360428,
+      "sha256": "f9e14e225ef051c607a7724f1ce509a521ead5e51e744fe004529f0560fda5d3"
+    },
+    {
+      "path": "captures/ppl-17.json",
+      "bytes": 258780,
+      "sha256": "f9e92c80f39b5f2c573878179741b295e0b85c5a9e5985fb5acbd1c33546e15d"
+    },
+    {
+      "path": "captures/ppl-18.json",
+      "bytes": 331920,
+      "sha256": "d8c620109def93f143291726f38781048c79642382075bd4a4c5a8fe3af4228c"
+    },
+    {
+      "path": "captures/ppl-19.json",
+      "bytes": 198749,
+      "sha256": "29f22f7f46e74e944f9995703176259502cc4b7a50cc3c4bebdcc84d3d36c7f3"
+    },
+    {
+      "path": "captures/ppl-20.json",
+      "bytes": 329336,
+      "sha256": "94a12b6de6ec87304fe7093da979a0469b52f85fb78168163db82d0b3c28bd63"
+    },
+    {
+      "path": "captures/ppl-21.json",
+      "bytes": 239212,
+      "sha256": "a94f24e406c98e0eb49156bf8aefd57e290e85be3656dccdee7073d43c17e1be"
+    },
+    {
+      "path": "captures/ppl-22.json",
+      "bytes": 527707,
+      "sha256": "f740610b569d9750d68c86e180fec4ebe003b4ba0d29167348fe833d0975cdf8"
+    },
+    {
+      "path": "captures/ppl-23.json",
+      "bytes": 187602,
+      "sha256": "228e4a26cc27f4dd786a8b7a33ef6fd7ad672648ab17fb085baef8cfb97ba2ab"
+    },
+    {
+      "path": "captures/ppl-24.json",
+      "bytes": 262755,
+      "sha256": "f79764dd0bda25da37c4ac0d77cc257f000c12e140b01a8fc9db8f91b97c495f"
+    },
+    {
+      "path": "captures/sty-01.json",
+      "bytes": 376743,
+      "sha256": "1b335afd7ce277a0af706fdfdaf8f7a707463e75df09c6f7d11f9c0174577673"
+    },
+    {
+      "path": "captures/sty-02.json",
+      "bytes": 539480,
+      "sha256": "6bd81107e0fad377e797e0e16dc9db69089996ca67db29033a8486045f5d29c1"
+    },
+    {
+      "path": "captures/sty-03.json",
+      "bytes": 521149,
+      "sha256": "2c46618b94d412c0e494d37187a8e26f41180cff0ba98b08f966f8f73bff1200"
+    },
+    {
+      "path": "captures/sty-04.json",
+      "bytes": 266160,
+      "sha256": "24b2fba35913706de109fbfb1819c94c8d9bc9f08e4332923df8e43d561373e6"
+    },
+    {
+      "path": "captures/sty-05.json",
+      "bytes": 129114,
+      "sha256": "c616f889918ad7f9a03db2776447cfdb54db822b6a2338f1d150f49e669d800c"
+    },
+    {
+      "path": "captures/sty-06.json",
+      "bytes": 270558,
+      "sha256": "d5504fd28248e9f822bf28c7785d4cd22a406c6ed7aee0ffea05139cfa99b16f"
+    },
+    {
+      "path": "captures/sty-07.json",
+      "bytes": 296717,
+      "sha256": "d11bd7352f124f01303f34affde0a06c790a8ae8d423e85dc570f0431caec2d7"
+    },
+    {
+      "path": "captures/sty-08.json",
+      "bytes": 445857,
+      "sha256": "856ce0431961796ba92ae0d6b6ee4b1a7d15f2415cd3316dd9004a83e0f509b6"
+    },
+    {
+      "path": "captures/sty-09.json",
+      "bytes": 382451,
+      "sha256": "e3c294db828b18a3cd5a2ba07954c8a876c395000c0d583822192f1f2c1b5a75"
+    },
+    {
+      "path": "captures/sty-10.json",
+      "bytes": 446749,
+      "sha256": "84c7864dde7b7608dae04ce2c254e056ff7ab81f1084804db944d00ac650bd53"
+    },
+    {
+      "path": "captures/sty-11.json",
+      "bytes": 226253,
+      "sha256": "dbc437956e0a87ddbccc5aabdf2a85925ebedc3de25f3e622c1a92d6a7535bd3"
+    },
+    {
+      "path": "captures/sty-12.json",
+      "bytes": 506253,
+      "sha256": "f428f3247be9bc59fd48794acfb5de2e57f87d58b436d66161b5cd28df54635f"
+    },
+    {
+      "path": "encoding-results.json",
+      "bytes": 90985,
+      "sha256": "824ebd50e334f4ee247298c3d18e23fc26236134cfa45e8cf0d0354ac5fdf510"
+    },
+    {
+      "path": "invocation.json",
+      "bytes": 993,
+      "sha256": "dc6067e399ee9fca5a8047dedf82104328b06996a5035c50b9a4fff40e873f86"
+    },
+    {
+      "path": "model-preflight.json",
+      "bytes": 2723,
+      "sha256": "7141b66f43acd2522b01e277f48a528f6c623732eb6e5ab3c2ef07d354ce3f5f"
+    },
+    {
+      "path": "query-vectors.json",
+      "bytes": 4465703,
+      "sha256": "b88e062f32ba9f45b6b192676808cfe8dda910ac4af6971579326d0650747893"
+    },
+    {
+      "path": "run.mjs",
+      "bytes": 6728,
+      "sha256": "310933aecf864452e0177e1202cdbf7b1f46b422e6b369a1be4258daef4374b8"
+    },
+    {
+      "path": "source/negation-words.json",
+      "bytes": 10161,
+      "sha256": "a1494345f939b0e84eba87c1842d9a972aade69d02339ddd6066b95f2daa54f5"
+    },
+    {
+      "path": "source/query-encoder.worker.js",
+      "bytes": 5877,
+      "sha256": "af3fddbeac11833e6f6c2432a83f0a560fe678e94be52e42ea114e231bb104a6"
+    },
+    {
+      "path": "source/query-models.server.mjs",
+      "bytes": 8565,
+      "sha256": "d8d8590fa1b9e88ce1904d8b3811cea43247456f5f16b28e49ab71c4a1d34df1"
+    },
+    {
+      "path": "source/query-models.server.ts",
+      "bytes": 8688,
+      "sha256": "7137a06d37ac8756e2b52ad447cdaf85f9675e9b720699b240de1d84163403d4"
+    },
+    {
+      "path": "source/query-parsing.server.mjs",
+      "bytes": 31844,
+      "sha256": "01c0c627f427064e06c7fa3116ae1ad2b174d927931a088735d31ef7bdedece4"
+    },
+    {
+      "path": "source/query-parsing.server.ts",
+      "bytes": 18393,
+      "sha256": "d8e3a14d799b72bad35fdfe4367a52ce530003f519aa0c31a5b628a23640b25e"
+    },
+    {
+      "path": "source/rank-search.server.ts",
+      "bytes": 34479,
+      "sha256": "a299fd540ca2336e5f3970627b69c6d126d356ba87ca4a671810f3702ba1f890"
+    },
+    {
+      "path": "source/text-rules.server.mjs",
+      "bytes": 4498,
+      "sha256": "fdd994a9a8e2c33de69fa4f916b7e9e140479b07129d1a783a7a51f312efeeb1"
+    },
+    {
+      "path": "source/text-rules.server.ts",
+      "bytes": 4468,
+      "sha256": "d93d570ce750fd4a5b3312d97255c5589217ffbbf11fb22650d589eb4c508f6c"
+    },
+    {
+      "path": "source-manifest.json",
+      "bytes": 37316,
+      "sha256": "6beb0c156bcc6b15dac3068220bcfeabebc07d6791fbb55cc25595b8a6e48b60"
+    },
+    {
+      "path": "startup.json",
+      "bytes": 289,
+      "sha256": "8d98975acc6b7a6956c0ddef5fd4e9b9b9d4bdbcec6f58e390c320c6a190d838"
+    },
+    {
+      "path": "validation.json",
+      "bytes": 1899,
+      "sha256": "d29a8b6f780d9d1b6307494ed6836fa4098bc8f08f5399a30ff660183425e6f2"
+    }
+  ],
+  "dependencyFiles": [
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/@huggingface/tokenizers/dist/tokenizers.min.mjs",
+      "bytes": 36601,
+      "sha256": "258e46332101335ce8d95aed7745b19ac3b46d37f3e159a89cf894c2ea9b1d3a"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/@huggingface/tokenizers/dist/tokenizers.mjs",
+      "bytes": 98937,
+      "sha256": "1c4a848f86156201c033d6cd08c4cf81ae1088552acec3367f31ef086edf5af0"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/@huggingface/tokenizers/package.json",
+      "bytes": 1965,
+      "sha256": "f6b9849b58de625c4fd79583242dd4506914b92082f9af17719d39416658ef24"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/backend-impl.js",
+      "bytes": 5608,
+      "sha256": "3d25321895995f7e9480570b9a88f121049adf152e1829d0ecb11218da02d487"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/backend.js",
+      "bytes": 433,
+      "sha256": "325aaee7a2649ea27629666f3ca01c0d80b9751e704ce502e43a8352390749b4"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/env-impl.js",
+      "bytes": 969,
+      "sha256": "35cd8cac33973538eab471b68622c86c35a6896f4307d1a74c9ca0eda7abbac6"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/env.js",
+      "bytes": 366,
+      "sha256": "22c7647f8ca1c1b83b437a92b95fee1457fcb72866fa029616b8f146dc609be8"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/index.js",
+      "bytes": 1955,
+      "sha256": "d7dd6cc9790e87299099fcd1b0ccb4969c01591d7eec0383a1c64dbea133dd1a"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/inference-session-impl.js",
+      "bytes": 8996,
+      "sha256": "88d90723a169297855ad3b564b134c6b685b2661316c81f71fc80da1e203bae0"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/inference-session.js",
+      "bytes": 467,
+      "sha256": "458be26f316c5068d32a56ddbc30ca0aa687c636e079b3d161a69f0f14a683f1"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/onnx-model.js",
+      "bytes": 211,
+      "sha256": "667f5fdac4b6df25e17f8a864d4dc619507f541f9fa0aafb6d3572fcca1e25e5"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/onnx-value.js",
+      "bytes": 211,
+      "sha256": "8446854766f4955ce438a7338216f49223767ecc508bb502b73a3dc1a1f1998e"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/package.json",
+      "bytes": 20,
+      "sha256": "091a04fa67c7907b98e106fcff8b964e13129754fce72d24f3025b97c4887fa3"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/tensor-conversion-impl.js",
+      "bytes": 8067,
+      "sha256": "9815e72c0bb91896035de93b3113a2256a1a998bc53c7b5e6bf5fb4e93714766"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/tensor-conversion.js",
+      "bytes": 218,
+      "sha256": "28cc462d4a9ea556ecc86c0e6d16a51d61b58d5bc5b4b7b48976b14bc8035bdc"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/tensor-factory-impl.js",
+      "bytes": 11656,
+      "sha256": "a3204838a2c14416e4e61c968dc17c663ab3c9b8b2c4a8b7f2a1c5b06e3e5173"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/tensor-factory.js",
+      "bytes": 215,
+      "sha256": "13b8d735350b828a49bda8aeec50b1dac888cf42268006efc4312f50a88b6906"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/tensor-impl-type-mapping.js",
+      "bytes": 2995,
+      "sha256": "333110edbbffdb7575ea340cb341bcaf691862d6594a649db28097f7d8cb19b7"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/tensor-impl.js",
+      "bytes": 16458,
+      "sha256": "11645352ba5d08971344717d3339f86aac560f84f29229b2ebe07f1ec8aa8905"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/tensor-utils-impl.js",
+      "bytes": 2213,
+      "sha256": "e7b1db989d33d54bdd1807b080a0989ff0b10d5f7dd8c93b92bbf293103aa4d5"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/tensor-utils.js",
+      "bytes": 213,
+      "sha256": "d3f577e90dc2257c72ac728e5e6355c34af0342d971158d9f22b69d22aa97b8d"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/tensor.js",
+      "bytes": 393,
+      "sha256": "9097114de356750f36f28776fa6ccd08d13694f0f9aac9e7669c30b6c43153f7"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/trace.js",
+      "bytes": 2496,
+      "sha256": "faecd0df94998d786e2085d56aa6003449f1ac3b35c350e0d2762498604e5d72"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/type-helper.js",
+      "bytes": 212,
+      "sha256": "7f786da8d2a611ad751c70a74edf4d9acfccd26be8e5c6b1cb730f982892bf32"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/cjs/version.js",
+      "bytes": 361,
+      "sha256": "0a1a7f532f4455ead0678966815c3114730150aa4368ebb5ebd9727425e9003b"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/backend-impl.js",
+      "bytes": 5339,
+      "sha256": "97dd81b055a06f61120f09468fe59f046a9262b7b87bf5d05bceb085bf4f5558"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/backend.js",
+      "bytes": 184,
+      "sha256": "017ce2ec9dc2021ebc1ef2c4f04e1bc74276c65921b0297e7ed8cc16e640495b"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/env-impl.js",
+      "bytes": 848,
+      "sha256": "0da4c562a49fe147e19320a64cbb456184eb0e6242b1fe69c65c8368c55f3d97"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/env.js",
+      "bytes": 262,
+      "sha256": "b2bbd3d3b00a95765713c57cd0f5ef73718ae5b8322e07cb47a43e2accb21f15"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/index.js",
+      "bytes": 1036,
+      "sha256": "ad23f6d6ce2c99c449031f24a5181f259516c64a9a67428c98a8539b857729bd"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/inference-session-impl.js",
+      "bytes": 8703,
+      "sha256": "0446814a392c147b5c38ba242d9911ee54002b5d01a8e19fb4895fb8f8a0cdd3"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/inference-session.js",
+      "bytes": 348,
+      "sha256": "3ad4271a88edb3d242dc1e0e7bbf66510f9a56eff874c433b3b37f900ac007b1"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/onnx-model.js",
+      "bytes": 145,
+      "sha256": "9e9dc8678be0ea04575a542894508db355a4f9f2155ac7f4c17a697c5f843382"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/onnx-value.js",
+      "bytes": 145,
+      "sha256": "33dc232498753fc9026dfa44c99440cb1a6d29f3e53e1ad2fb8b696705158f06"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/package.json",
+      "bytes": 18,
+      "sha256": "e3d5a4a2d8551aa52c5a01d2a0efb2e06a2d9711b4f5c5f1d20de6e21807e2cd"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/tensor-conversion-impl.js",
+      "bytes": 7852,
+      "sha256": "df6fa3cd1813c2d3e588cc07973cfe5ea2ab8647c957168200caa58e51440161"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/tensor-conversion.js",
+      "bytes": 152,
+      "sha256": "8c43ec1d061ab71032a1b28f45d85ef95f8d7bd2d4cd71d059e96d83e3a8f422"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/tensor-factory-impl.js",
+      "bytes": 11002,
+      "sha256": "cf5606fe23461e01bff59c2d72ac47d74e652548718f1e5fab07a22b441379b4"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/tensor-factory.js",
+      "bytes": 149,
+      "sha256": "68b9f4f4573f25012ce8a4f73c9a2cee3a28db91de8bbb0a20ddb08bcba33c4b"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/tensor-impl-type-mapping.js",
+      "bytes": 2706,
+      "sha256": "20bd5ddb858954cf071bace6c7a6628c8e311433798ec172f4c778bebd81d407"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/tensor-impl.js",
+      "bytes": 16091,
+      "sha256": "6a749be63055f9d21069566b1515412484a3a03448ca20427c8f8d29328a2843"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/tensor-utils-impl.js",
+      "bytes": 1920,
+      "sha256": "87d3e07c153616138c2f57846545eea9c47957c714d50c0264696bdc293e6732"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/tensor-utils.js",
+      "bytes": 147,
+      "sha256": "7acfdb2f8403ae84b7ae62d55d6eeb01519108be8874337b317b911ed60190cd"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/tensor.js",
+      "bytes": 286,
+      "sha256": "721d24a538de5333057bfc423bc00c3453a1c483f4495c857d0a6f9b8f2d330e"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/trace.js",
+      "bytes": 1891,
+      "sha256": "9b87e6309a1c502b03558aa94b0a65c8ea1e8eb59cb46090f54f6eacd191b841"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/type-helper.js",
+      "bytes": 146,
+      "sha256": "3e2588c6a5ee7b9755e199eef10c6aa2e777d0366ea47d27953657a5638deeae"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/dist/esm/version.js",
+      "bytes": 263,
+      "sha256": "71c36bdc106472438d3f6c865c0e7ffd0f957524dceb0750738c451098c5ef13"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-common/package.json",
+      "bytes": 977,
+      "sha256": "4266741a80346e25820ccc494fbffb95e2f652b6dfb5585025be44df3b0d6722"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/bin/napi-v6/darwin/arm64/onnxruntime_binding.node",
+      "bytes": 266840,
+      "sha256": "a3f993357759b06ae2411f70af60f5e041d04521ea7f0d12cb7546e411a527dd"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64/onnxruntime_binding.node",
+      "bytes": 394648,
+      "sha256": "afec78dc11d38dc81605b068cefe1fc73ffe77ca240c15468aa40786150beac8"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/onnxruntime_binding.node",
+      "bytes": 389488,
+      "sha256": "ccdc60b981d93a490cf9513d3f583547252b6e285b72988a96a494f2f006c7b8"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/bin/napi-v6/win32/arm64/onnxruntime_binding.node",
+      "bytes": 422200,
+      "sha256": "d8179924f15c2d3c1c8a75c50adf1671ec28c7f1cb0da9fc28b17daa02c5ecf5"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/bin/napi-v6/win32/x64/onnxruntime_binding.node",
+      "bytes": 298848,
+      "sha256": "ddd428464069b84414d34ec1796c7c2a69c33a976e4b0390692629e394f92fa1"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/dist/backend.js",
+      "bytes": 6289,
+      "sha256": "a79e8019e7276a282987023f9d38d41063a99e563e5e1a6f38a73a7d39ea83ab"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/dist/binding.js",
+      "bytes": 1590,
+      "sha256": "2a85ac5de943c7222aae5ca2897f52d73891f528d4295b701fab077470c668c0"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/dist/index.js",
+      "bytes": 1602,
+      "sha256": "019eb02133b94b1f7fdf2d89eb93b590ce1288d271f7b280647fb3978e6391fa"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/dist/version.js",
+      "bytes": 361,
+      "sha256": "0a1a7f532f4455ead0678966815c3114730150aa4368ebb5ebd9727425e9003b"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/package.json",
+      "bytes": 1593,
+      "sha256": "0871cd56ac2b9c9dfc834c7eabba819e5d4f966f005388515abb3402b14e0874"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/script/build.js",
+      "bytes": 5804,
+      "sha256": "4a47ab592ed226f36be187a3210667f38950d4408f181f8eaa487c42c9c28842"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/script/install-metadata-versions.js",
+      "bytes": 265,
+      "sha256": "51b6f12f514b6181daf3f3097bb09d960573465670b4d3cd41d6cbfc53789519"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/script/install-metadata.js",
+      "bytes": 1788,
+      "sha256": "2cfbb2fcf1f170d5da564c0be3222821050bcbd282c9e0493e9433649ac2f130"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/script/install-utils.js",
+      "bytes": 9726,
+      "sha256": "b8890f3eb40b50b5e4ca61d6b6b328d017660319ee326ca3db00709de1218579"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/script/install.js",
+      "bytes": 5283,
+      "sha256": "241c40edfafd2cac6abdcc6138207ffb41bd2d0f661c3bb3d422e5f8cb24fe88"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/onnxruntime-node/script/prepack.js",
+      "bytes": 2356,
+      "sha256": "890bf2498519fdc7ffd6f6fe2c44c16925ec9091d4b1419bf54a5fd9478e2d5b"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/typescript/lib/cancellationToken.js",
+      "bytes": 3714,
+      "sha256": "3cf8d7b756b2652d6ace35cbfaada0ca67493f6fe7d0f31dd15de912d6e9c8e9"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/typescript/lib/tsc.js",
+      "bytes": 6076160,
+      "sha256": "08e6b5db2bd9ee78fc577ec6dd6bfeca3bc42eaee5c7b582fafc289883f7613d"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/typescript/lib/tsserver.js",
+      "bytes": 26561,
+      "sha256": "1f692493ce382b84195593b143447062524eee8488081d245d8c7ef871e9bec6"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/typescript/lib/tsserverlibrary.js",
+      "bytes": 1012,
+      "sha256": "7ca9b464de80a5382d9ccfed2b224323bc0274c8de61bf0464e89ee824677c76"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/typescript/lib/typescript.js",
+      "bytes": 8927529,
+      "sha256": "f316520790d4db220a10d890c5f85310e26a1bd3c104b8d3b5eb62ba0491651b"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/typescript/lib/typingsInstaller.js",
+      "bytes": 10892,
+      "sha256": "733b73e58fff94cfda4f8f412938f80067b5b83c8fb924b93445bdab15404b35"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/typescript/lib/watchGuard.js",
+      "bytes": 2313,
+      "sha256": "471200d4bc555ef8d8429358bdca2a68ea7c9bfff6c853b5b048d2512fe4092a"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/goodwatch-webapp/node_modules/typescript/package.json",
+      "bytes": 3638,
+      "sha256": "16af7ea27880259b39ff8f123566aaec815cdca1c3ab8d28330c8b652055ccf0"
+    }
+  ],
+  "preparedSearchParity": false,
+  "productionAcceptance": false
+}

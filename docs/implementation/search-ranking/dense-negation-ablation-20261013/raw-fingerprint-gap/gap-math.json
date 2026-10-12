@@ -1,0 +1,794 @@
+{
+  "schema": "search.raw-fingerprint-output-gap.v1",
+  "productionAcceptance": false,
+  "currentFinalOverlap": null,
+  "rawVectorsAvailableToThisMemo": false,
+  "rows": [
+    {
+      "id": "core-04",
+      "gradedGoodPairs": 3,
+      "inCurrentIndex": 3,
+      "passMask": 3,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-06",
+      "gradedGoodPairs": 42,
+      "inCurrentIndex": 37,
+      "passMask": 37,
+      "absentDenseTop100": 33,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-07",
+      "gradedGoodPairs": 36,
+      "inCurrentIndex": 33,
+      "passMask": 33,
+      "absentDenseTop100": 7,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-08",
+      "gradedGoodPairs": 12,
+      "inCurrentIndex": 5,
+      "passMask": 5,
+      "absentDenseTop100": 4,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-09",
+      "gradedGoodPairs": 16,
+      "inCurrentIndex": 14,
+      "passMask": 14,
+      "absentDenseTop100": 7,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-10",
+      "gradedGoodPairs": 13,
+      "inCurrentIndex": 13,
+      "passMask": 13,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-11",
+      "gradedGoodPairs": 52,
+      "inCurrentIndex": 45,
+      "passMask": 45,
+      "absentDenseTop100": 20,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-12",
+      "gradedGoodPairs": 21,
+      "inCurrentIndex": 19,
+      "passMask": 18,
+      "absentDenseTop100": 12,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-13",
+      "gradedGoodPairs": 43,
+      "inCurrentIndex": 41,
+      "passMask": 41,
+      "absentDenseTop100": 36,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-14",
+      "gradedGoodPairs": 10,
+      "inCurrentIndex": 8,
+      "passMask": 8,
+      "absentDenseTop100": 4,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-15",
+      "gradedGoodPairs": 43,
+      "inCurrentIndex": 33,
+      "passMask": 33,
+      "absentDenseTop100": 15,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-16",
+      "gradedGoodPairs": 12,
+      "inCurrentIndex": 11,
+      "passMask": 11,
+      "absentDenseTop100": 6,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-17",
+      "gradedGoodPairs": 28,
+      "inCurrentIndex": 26,
+      "passMask": 26,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-18",
+      "gradedGoodPairs": 32,
+      "inCurrentIndex": 32,
+      "passMask": 32,
+      "absentDenseTop100": 26,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-19",
+      "gradedGoodPairs": 28,
+      "inCurrentIndex": 20,
+      "passMask": 20,
+      "absentDenseTop100": 11,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-20",
+      "gradedGoodPairs": 12,
+      "inCurrentIndex": 12,
+      "passMask": 12,
+      "absentDenseTop100": 7,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-21",
+      "gradedGoodPairs": 22,
+      "inCurrentIndex": 17,
+      "passMask": 17,
+      "absentDenseTop100": 15,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-22",
+      "gradedGoodPairs": 19,
+      "inCurrentIndex": 10,
+      "passMask": 10,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-23",
+      "gradedGoodPairs": 48,
+      "inCurrentIndex": 45,
+      "passMask": 45,
+      "absentDenseTop100": 26,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-24",
+      "gradedGoodPairs": 27,
+      "inCurrentIndex": 24,
+      "passMask": 24,
+      "absentDenseTop100": 10,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "core-25",
+      "gradedGoodPairs": 56,
+      "inCurrentIndex": 35,
+      "passMask": 35,
+      "absentDenseTop100": 24,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "dev6-01",
+      "gradedGoodPairs": 10,
+      "inCurrentIndex": 10,
+      "passMask": 10,
+      "absentDenseTop100": 4,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "dev6-02",
+      "gradedGoodPairs": 5,
+      "inCurrentIndex": 5,
+      "passMask": 5,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "dev6-03",
+      "gradedGoodPairs": 2,
+      "inCurrentIndex": 2,
+      "passMask": 2,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "dev6-04",
+      "gradedGoodPairs": 7,
+      "inCurrentIndex": 7,
+      "passMask": 7,
+      "absentDenseTop100": 4,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "dev6-05",
+      "gradedGoodPairs": 0,
+      "inCurrentIndex": 0,
+      "passMask": 0,
+      "absentDenseTop100": 0,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-01",
+      "gradedGoodPairs": 13,
+      "inCurrentIndex": 12,
+      "passMask": 12,
+      "absentDenseTop100": 7,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-02",
+      "gradedGoodPairs": 2,
+      "inCurrentIndex": 1,
+      "passMask": 1,
+      "absentDenseTop100": 0,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-03",
+      "gradedGoodPairs": 13,
+      "inCurrentIndex": 9,
+      "passMask": 9,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-04",
+      "gradedGoodPairs": 9,
+      "inCurrentIndex": 8,
+      "passMask": 8,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-05",
+      "gradedGoodPairs": 11,
+      "inCurrentIndex": 10,
+      "passMask": 10,
+      "absentDenseTop100": 6,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-06",
+      "gradedGoodPairs": 14,
+      "inCurrentIndex": 13,
+      "passMask": 13,
+      "absentDenseTop100": 6,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-07",
+      "gradedGoodPairs": 18,
+      "inCurrentIndex": 13,
+      "passMask": 13,
+      "absentDenseTop100": 2,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-08",
+      "gradedGoodPairs": 6,
+      "inCurrentIndex": 6,
+      "passMask": 6,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-09",
+      "gradedGoodPairs": 18,
+      "inCurrentIndex": 14,
+      "passMask": 14,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-10",
+      "gradedGoodPairs": 8,
+      "inCurrentIndex": 7,
+      "passMask": 7,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-11",
+      "gradedGoodPairs": 12,
+      "inCurrentIndex": 9,
+      "passMask": 9,
+      "absentDenseTop100": 2,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-12",
+      "gradedGoodPairs": 18,
+      "inCurrentIndex": 15,
+      "passMask": 15,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-13",
+      "gradedGoodPairs": 16,
+      "inCurrentIndex": 14,
+      "passMask": 14,
+      "absentDenseTop100": 4,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-14",
+      "gradedGoodPairs": 7,
+      "inCurrentIndex": 7,
+      "passMask": 7,
+      "absentDenseTop100": 0,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-15",
+      "gradedGoodPairs": 18,
+      "inCurrentIndex": 18,
+      "passMask": 18,
+      "absentDenseTop100": 14,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-16",
+      "gradedGoodPairs": 19,
+      "inCurrentIndex": 18,
+      "passMask": 18,
+      "absentDenseTop100": 17,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-17",
+      "gradedGoodPairs": 11,
+      "inCurrentIndex": 11,
+      "passMask": 11,
+      "absentDenseTop100": 7,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-18",
+      "gradedGoodPairs": 8,
+      "inCurrentIndex": 8,
+      "passMask": 8,
+      "absentDenseTop100": 4,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-19",
+      "gradedGoodPairs": 0,
+      "inCurrentIndex": 0,
+      "passMask": 0,
+      "absentDenseTop100": 0,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-28",
+      "gradedGoodPairs": 15,
+      "inCurrentIndex": 13,
+      "passMask": 13,
+      "absentDenseTop100": 12,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-29",
+      "gradedGoodPairs": 16,
+      "inCurrentIndex": 15,
+      "passMask": 15,
+      "absentDenseTop100": 2,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "h5-30",
+      "gradedGoodPairs": 14,
+      "inCurrentIndex": 13,
+      "passMask": 13,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-01",
+      "gradedGoodPairs": 9,
+      "inCurrentIndex": 7,
+      "passMask": 7,
+      "absentDenseTop100": 0,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-02",
+      "gradedGoodPairs": 10,
+      "inCurrentIndex": 9,
+      "passMask": 9,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-03",
+      "gradedGoodPairs": 18,
+      "inCurrentIndex": 13,
+      "passMask": 13,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-04",
+      "gradedGoodPairs": 4,
+      "inCurrentIndex": 4,
+      "passMask": 4,
+      "absentDenseTop100": 0,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-05",
+      "gradedGoodPairs": 12,
+      "inCurrentIndex": 10,
+      "passMask": 10,
+      "absentDenseTop100": 0,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-09",
+      "gradedGoodPairs": 1,
+      "inCurrentIndex": 0,
+      "passMask": 0,
+      "absentDenseTop100": 0,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-10",
+      "gradedGoodPairs": 11,
+      "inCurrentIndex": 10,
+      "passMask": 10,
+      "absentDenseTop100": 9,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-11",
+      "gradedGoodPairs": 10,
+      "inCurrentIndex": 8,
+      "passMask": 8,
+      "absentDenseTop100": 2,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-12",
+      "gradedGoodPairs": 13,
+      "inCurrentIndex": 11,
+      "passMask": 11,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-13",
+      "gradedGoodPairs": 13,
+      "inCurrentIndex": 10,
+      "passMask": 10,
+      "absentDenseTop100": 2,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-14",
+      "gradedGoodPairs": 6,
+      "inCurrentIndex": 6,
+      "passMask": 5,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-17",
+      "gradedGoodPairs": 11,
+      "inCurrentIndex": 9,
+      "passMask": 9,
+      "absentDenseTop100": 2,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-18",
+      "gradedGoodPairs": 11,
+      "inCurrentIndex": 10,
+      "passMask": 10,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-20",
+      "gradedGoodPairs": 10,
+      "inCurrentIndex": 8,
+      "passMask": 8,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "ho2-21",
+      "gradedGoodPairs": 4,
+      "inCurrentIndex": 4,
+      "passMask": 4,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-00",
+      "gradedGoodPairs": 36,
+      "inCurrentIndex": 27,
+      "passMask": 27,
+      "absentDenseTop100": 17,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-02",
+      "gradedGoodPairs": 27,
+      "inCurrentIndex": 16,
+      "passMask": 16,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-03",
+      "gradedGoodPairs": 11,
+      "inCurrentIndex": 10,
+      "passMask": 10,
+      "absentDenseTop100": 5,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-04",
+      "gradedGoodPairs": 45,
+      "inCurrentIndex": 38,
+      "passMask": 38,
+      "absentDenseTop100": 21,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-05",
+      "gradedGoodPairs": 15,
+      "inCurrentIndex": 13,
+      "passMask": 13,
+      "absentDenseTop100": 4,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-06",
+      "gradedGoodPairs": 21,
+      "inCurrentIndex": 18,
+      "passMask": 18,
+      "absentDenseTop100": 14,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-07",
+      "gradedGoodPairs": 48,
+      "inCurrentIndex": 36,
+      "passMask": 36,
+      "absentDenseTop100": 26,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-08",
+      "gradedGoodPairs": 5,
+      "inCurrentIndex": 4,
+      "passMask": 4,
+      "absentDenseTop100": 0,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-09",
+      "gradedGoodPairs": 15,
+      "inCurrentIndex": 13,
+      "passMask": 13,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-10",
+      "gradedGoodPairs": 6,
+      "inCurrentIndex": 4,
+      "passMask": 4,
+      "absentDenseTop100": 2,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-11",
+      "gradedGoodPairs": 39,
+      "inCurrentIndex": 30,
+      "passMask": 30,
+      "absentDenseTop100": 8,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "lab-13",
+      "gradedGoodPairs": 36,
+      "inCurrentIndex": 35,
+      "passMask": 35,
+      "absentDenseTop100": 8,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-01",
+      "gradedGoodPairs": 10,
+      "inCurrentIndex": 8,
+      "passMask": 8,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-02",
+      "gradedGoodPairs": 26,
+      "inCurrentIndex": 24,
+      "passMask": 24,
+      "absentDenseTop100": 14,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-03",
+      "gradedGoodPairs": 25,
+      "inCurrentIndex": 19,
+      "passMask": 19,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-04",
+      "gradedGoodPairs": 25,
+      "inCurrentIndex": 23,
+      "passMask": 23,
+      "absentDenseTop100": 5,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-05",
+      "gradedGoodPairs": 22,
+      "inCurrentIndex": 19,
+      "passMask": 19,
+      "absentDenseTop100": 2,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-06",
+      "gradedGoodPairs": 20,
+      "inCurrentIndex": 18,
+      "passMask": 18,
+      "absentDenseTop100": 1,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-09",
+      "gradedGoodPairs": 32,
+      "inCurrentIndex": 27,
+      "passMask": 27,
+      "absentDenseTop100": 11,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-10",
+      "gradedGoodPairs": 13,
+      "inCurrentIndex": 13,
+      "passMask": 13,
+      "absentDenseTop100": 2,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-11",
+      "gradedGoodPairs": 50,
+      "inCurrentIndex": 32,
+      "passMask": 32,
+      "absentDenseTop100": 23,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-12",
+      "gradedGoodPairs": 12,
+      "inCurrentIndex": 12,
+      "passMask": 12,
+      "absentDenseTop100": 6,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-13",
+      "gradedGoodPairs": 39,
+      "inCurrentIndex": 37,
+      "passMask": 37,
+      "absentDenseTop100": 15,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-14",
+      "gradedGoodPairs": 9,
+      "inCurrentIndex": 9,
+      "passMask": 9,
+      "absentDenseTop100": 8,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-15",
+      "gradedGoodPairs": 43,
+      "inCurrentIndex": 42,
+      "passMask": 42,
+      "absentDenseTop100": 32,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-16",
+      "gradedGoodPairs": 10,
+      "inCurrentIndex": 10,
+      "passMask": 10,
+      "absentDenseTop100": 6,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-17",
+      "gradedGoodPairs": 52,
+      "inCurrentIndex": 46,
+      "passMask": 46,
+      "absentDenseTop100": 32,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-18",
+      "gradedGoodPairs": 20,
+      "inCurrentIndex": 14,
+      "passMask": 14,
+      "absentDenseTop100": 7,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-19",
+      "gradedGoodPairs": 11,
+      "inCurrentIndex": 10,
+      "passMask": 10,
+      "absentDenseTop100": 4,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-20",
+      "gradedGoodPairs": 5,
+      "inCurrentIndex": 5,
+      "passMask": 5,
+      "absentDenseTop100": 3,
+      "denseTop500Gap": null
+    },
+    {
+      "id": "new-23",
+      "gradedGoodPairs": 27,
+      "inCurrentIndex": 26,
+      "passMask": 26,
+      "absentDenseTop100": 19,
+      "denseTop500Gap": null
+    }
+  ],
+  "totals": {
+    "gradedGoodPairs": 1763,
+    "inCurrentIndex": 1498,
+    "passMask": 1496,
+    "absentDenseTop100": 710
+  },
+  "gradedQueries": 94,
+  "inputs": [
+    {
+      "path": "/home/alper/projects/search-100-evidence/local-dense-negation-ablation-20261013/rankings-v2.json",
+      "bytes": 3725750,
+      "sha256": "a6b7b924faae84c07e65fc3861915515ecf4ae98446234eef6b9dbff19459063"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/results/grades.json",
+      "bytes": 114147,
+      "sha256": "ef96e0704632e27b60f645b25257748f1706dae73c621f0ab1b5dfa049c9a274"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/verified-index/title_table.json.gz",
+      "bytes": 1530102,
+      "sha256": "1dd9f4b57031632d99e86d34416d82af5c1c6ffb1f09de1eb2f62ab15ab62ed7"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/filter-masks.bin",
+      "bytes": 7212912,
+      "sha256": "e8ca72684fb94957de87dbdc15ef1ac89609cbb7186ae912a2116ce1a64a526e"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/filter-mask-manifest.json",
+      "bytes": 149116,
+      "sha256": "d490395fb9e62fe3d8926344fb959b3175bd8548ab023a5b0987e4e4e9d2e4aa"
+    }
+  ]
+}

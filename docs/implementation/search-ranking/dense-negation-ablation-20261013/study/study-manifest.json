@@ -1,0 +1,184 @@
+{
+  "schema": "search.local-dense-negation-study-manifest.v1",
+  "preparedOnly": false,
+  "offlineStudyCompleted": true,
+  "productionAcceptance": false,
+  "applicationSourceChanged": false,
+  "hostsContacted": 0,
+  "modelsInvoked": 0,
+  "networkCalls": 0,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 8191,
+      "sha256": "e374e4c9915860d66dcc4a7050dcb923cfd40d24c3ad26286f7c69301571d190"
+    },
+    {
+      "path": "check-primitives.mjs",
+      "bytes": 1369,
+      "sha256": "68b361bad91d40ab02c13997f6253802ea1b627e216f435ccadfe5ceaaa7b3b9"
+    },
+    {
+      "path": "evaluate-v2.py",
+      "bytes": 6045,
+      "sha256": "ff6f27ebce16096a8d918d1e33d1f5f867573471c6eb3eb34811b6a18fce2a84"
+    },
+    {
+      "path": "evaluate.py",
+      "bytes": 6036,
+      "sha256": "f96467b74f5c446e1de585b0789a1b0dbd9771902d7ad037190c7f348aa04994"
+    },
+    {
+      "path": "extract.ts",
+      "bytes": 1560,
+      "sha256": "20cde1b220272a809f4e3f6c172ee3aab0e77c5a9d33094a39de98dd2263c9b7"
+    },
+    {
+      "path": "grade-source-provenance.json",
+      "bytes": 1284,
+      "sha256": "f84b42fba105f421ea2edf7b31834eea1a2feadc3266900336911e05d53c22de"
+    },
+    {
+      "path": "metrics-v2.json",
+      "bytes": 167925,
+      "sha256": "667856fb7a96e64199c3851ea508f83e4e4cec8d8e76f3f6f85a34424e815dd0"
+    },
+    {
+      "path": "metrics.json",
+      "bytes": 158313,
+      "sha256": "6e6ed38924f071003b7cfcb0ef7ba94b265ecfafd254b71eca8d1c243fb3c216"
+    },
+    {
+      "path": "primitive-provenance.json",
+      "bytes": 591,
+      "sha256": "b1a4c79d7abf5ed8e52a8485cccb4cc23728078471b654ddc3e053b217e3987f"
+    },
+    {
+      "path": "primitives.mjs",
+      "bytes": 1591,
+      "sha256": "254ef8bca0c8ba8046cf95892a8a3c3c2bb9f37c5fa8c2303c1214bd471d2ae9"
+    },
+    {
+      "path": "rankings-v2.json",
+      "bytes": 3725750,
+      "sha256": "a6b7b924faae84c07e65fc3861915515ecf4ae98446234eef6b9dbff19459063"
+    },
+    {
+      "path": "rankings.json",
+      "bytes": 3468426,
+      "sha256": "6b9eb48b6058e19aefcabe8e0b83f4675a57e9da56ddd2ea962e4df6899d87d4"
+    },
+    {
+      "path": "run-v2.mjs",
+      "bytes": 6185,
+      "sha256": "34a5df088cddec89d55cc29be37349f15a810d9578aaec120c252d9550f2aebd"
+    },
+    {
+      "path": "run.mjs",
+      "bytes": 6110,
+      "sha256": "e6541020fcbc496c7c7cfc0272aab6f587a5274d3c00f7a31caf77784bd22b3d"
+    },
+    {
+      "path": "summarize.py",
+      "bytes": 3624,
+      "sha256": "6643392f45175b9804188e648f3383c04fe6dae97fd53cb8dd74b7253eb2f395"
+    },
+    {
+      "path": "summary-v2.json",
+      "bytes": 19085,
+      "sha256": "51af96f3f95c927fb3d05c3936da8c5a008a13e012a94320f2656f203b9481f3"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-index-v2-validation.json",
+      "bytes": 3843,
+      "sha256": "ee84f7e1777d7b1a9bfb6d0b9aa8933c3190cfe0838e1186e9fa737d22a8b14a"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/actual-manifest-v2.json",
+      "bytes": 1536,
+      "sha256": "b37e2a87af286b9f21388dd70c34ab31f3d1ee54ee0b36c50d0002c8c91771cc"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/prepared-with-filters.json",
+      "bytes": 1485349,
+      "sha256": "914d36f952a65927ace2c6c042097f0d53fe5d1633385550c32cff7098221c44"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/filter-mask-manifest.json",
+      "bytes": 149116,
+      "sha256": "d490395fb9e62fe3d8926344fb959b3175bd8548ab023a5b0987e4e4e9d2e4aa"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/filter-masks.bin",
+      "bytes": 7212912,
+      "sha256": "e8ca72684fb94957de87dbdc15ef1ac89609cbb7186ae912a2116ce1a64a526e"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/source-manifest.json",
+      "bytes": 37316,
+      "sha256": "6beb0c156bcc6b15dac3068220bcfeabebc07d6791fbb55cc25595b8a6e48b60"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/query-vectors.json",
+      "bytes": 4465703,
+      "sha256": "b88e062f32ba9f45b6b192676808cfe8dda910ac4af6971579326d0650747893"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/query-vectors-merged.json",
+      "bytes": 5219383,
+      "sha256": "35a2716af5e5b9a45b1678185b558cca736c7d81250f1c085ef59d62eb98a854"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/coverage.json",
+      "bytes": 36196,
+      "sha256": "a8a45c8c649f77e6acbb70ccc4d4601b9a8e0a452c8dc701161bb9c798e2e3ef"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/source/query-parsing.server.mjs",
+      "bytes": 31844,
+      "sha256": "01c0c627f427064e06c7fa3116ae1ad2b174d927931a088735d31ef7bdedece4"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/source/query-parsing.server.ts",
+      "bytes": 18393,
+      "sha256": "d8e3a14d799b72bad35fdfe4367a52ce530003f519aa0c31a5b628a23640b25e"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/source/text-rules.server.mjs",
+      "bytes": 4498,
+      "sha256": "fdd994a9a8e2c33de69fa4f916b7e9e140479b07129d1a783a7a51f312efeeb1"
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/source/text-rules.server.ts",
+      "bytes": 4468,
+      "sha256": "d93d570ce750fd4a5b3312d97255c5589217ffbbf11fb22650d589eb4c508f6c"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/results/grades.json",
+      "bytes": 114147,
+      "sha256": "ef96e0704632e27b60f645b25257748f1706dae73c621f0ab1b5dfa049c9a274"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/queries.json",
+      "bytes": 156843,
+      "sha256": "48bb90f7365dd7eb86741f0733f594f1efd5015a78048c1fcd12d5a5bede482d"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/harness/metrics.py",
+      "bytes": 16353,
+      "sha256": "02c32d0ef9cbdad9abbc901bb5da87ffad82a88bb343d6e2715886ad75a57f35"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/results/simplify/holdout5/lists/combo-safe-v3.json",
+      "bytes": 161331,
+      "sha256": "69a2239b67babbcc6cac42a139fade5d29fdb18d90eec269d74ecc77551ee50b"
+    },
+    {
+      "path": "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/results/round6/holdout4/lists/r6.json",
+      "bytes": 64560,
+      "sha256": "d90bdf36656f42bc758212a5977e619e79057705212429f3df869a1db3b66451"
+    }
+  ]
+}

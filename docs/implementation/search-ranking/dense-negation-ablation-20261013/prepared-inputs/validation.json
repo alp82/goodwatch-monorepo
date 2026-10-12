@@ -1,0 +1,13 @@
+{
+  "indexBuildId": "20261012T041504Z",
+  "titleCount": 42934,
+  "rows": 168,
+  "masks": 168,
+  "allMaskOffsetsCountsHashesValid": true,
+  "decodedReadings": 168,
+  "readingRefusals": 0,
+  "englishNonreferenceEarlyCacheCompleteMasked": 94,
+  "uniqueMissingEarlyTexts": 52,
+  "additionalEncoderBatchesHere": 0,
+  "fullRankParity": false
+}
