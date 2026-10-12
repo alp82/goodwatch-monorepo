@@ -17,6 +17,9 @@ ROW_BYTES = 8192
 MAX_GAP_SECONDS = 3
 ROWS = 1500
 OUTPUT_BYTES = 16 * 1024**2
+LEDGER_MEMBERS = 16
+LEDGER_SECONDS = 0.25
+COMM_CLASSES = {'qdrant','shell','python','other','unavailable'}
 MEM = ('MemTotal','MemFree','MemAvailable','Buffers','Cached','Active(file)',
        'Inactive(file)','Dirty','Writeback','WritebackTmp','Mlocked','Unevictable',
        'AnonPages','Shmem','SReclaimable','SUnreclaim','KernelStack','PageTables',
@@ -122,6 +125,65 @@ def proc_identity(root):
     return {'startTicks':natural(parts[19]),'parentPid':natural(parts[1]),
             'minorFaults':natural(parts[7]),'majorFaults':natural(parts[9]),
             'rssBytes':natural(parts[21])*os.sysconf('SC_PAGE_SIZE')}
+
+
+def membership_ledger(proc, pids, clock=time.monotonic):
+    """Diagnostic only: bracket fixed comm classes with process birth reads."""
+    begun=clock();selected=sorted(pids)[:LEDGER_MEMBERS];members=[]
+    for pid in selected:
+        row={'pid':pid,'startTicks':None,'commClass':'unavailable','birthVerified':False}
+        try:
+            if clock()-begun>LEDGER_SECONDS:
+                raise ValueError('census_bound')
+            root=proc/str(pid);before=proc_identity(root)['startTicks']
+            comm=read(root/'comm',128).strip();after=proc_identity(root)['startTicks']
+            if before!=after or not before or clock()-begun>LEDGER_SECONDS:
+                raise ValueError('source_changed')
+            kind='qdrant'if comm=='qdrant'else'shell'if comm in('sh','bash','dash')else'python'if comm in('python','python3','uv')else'other'
+            row.update(startTicks=before,commClass=kind,birthVerified=True)
+        except Exception:
+            pass
+        members.append(row)
+    truncated=len(pids)>LEDGER_MEMBERS
+    return {'members':members,'truncated':truncated,
+            'complete':not truncated and all(row['birthVerified']for row in members)}
+
+
+def ledger_evidence(ledger):
+    """Validate optional diagnostic data without allowing raw process text."""
+    if not isinstance(ledger,dict)or set(ledger)!={'members','complete','truncated'}:
+        raise ValueError('invalid_numeric')
+    if type(ledger['complete'])is not bool or type(ledger['truncated'])is not bool or not isinstance(ledger['members'],list)or len(ledger['members'])>LEDGER_MEMBERS:
+        raise ValueError('invalid_numeric')
+    for row in ledger['members']:
+        if not isinstance(row,dict)or set(row)!={'pid','startTicks','commClass','birthVerified'}:
+            raise ValueError('invalid_numeric')
+        if type(row['pid'])is not int or not 0<row['pid']<2**64 or type(row['birthVerified'])is not bool or row['commClass']not in COMM_CLASSES:
+            raise ValueError('invalid_numeric')
+        if row['birthVerified']:
+            if type(row['startTicks'])is not int or not 0<row['startTicks']<2**64 or row['commClass']=='unavailable':
+                raise ValueError('invalid_numeric')
+        elif row['startTicks']is not None or row['commClass']!='unavailable':
+            raise ValueError('invalid_numeric')
+    if ledger['complete']and(ledger['truncated']or not all(row['birthVerified']for row in ledger['members'])):
+        raise ValueError('invalid_numeric')
+    return ledger
+
+
+def membership_failure(trigger,phase,before,after,before_ledger,after_ledger):
+    # Construct the original rejection first; diagnostics can never replace it.
+    error=GuardFailure('source_changed',trigger,phase,
+                       beforeCount=before['processCount'],afterCount=after['processCount'],
+                       beforeMembershipHash=before['processMembershipHash'],afterMembershipHash=after['processMembershipHash'])
+    for prefix,ledger,group in(('before',before_ledger,before),('after',after_ledger,after)):
+        try:
+            value=ledger_evidence(ledger)
+            if len(value['members'])!=min(group['processCount'],LEDGER_MEMBERS)or value['truncated']!=(group['processCount']>LEDGER_MEMBERS):
+                raise ValueError('invalid_numeric')
+        except Exception:
+            value={'members':[],'complete':False,'truncated':group['processCount']>LEDGER_MEMBERS}
+        error.diagnostic.update({prefix+'Members':value['members'],prefix+'LedgerComplete':value['complete'],prefix+'LedgerTruncated':value['truncated']})
+    return error
 
 
 def group_path(proc, pid, cgroot, allow_root=False):
@@ -348,7 +410,7 @@ class Source:
         if len(pids)>64 or len(set(pids))!=len(pids) or self.expected['pid'] not in pids:
             raise ValueError('census_bound')
         locked=sum(fields(read(self.proc/str(pid)/'status'),('VmLck',),True)['VmLck']for pid in pids)
-        return {'currentBytes':natural(read(self.group/'memory.current',128).strip()),
+        result={'currentBytes':natural(read(self.group/'memory.current',128).strip()),
                 'memory':fields(read(self.group/'memory.stat'),STAT),
                 'events':fields(read(self.group/'memory.events.local'),EVENTS),
                 'cpu':fields(read(self.group/'cpu.stat'),CPU),
@@ -356,9 +418,12 @@ class Source:
                 'memoryPsi':psi(read(self.group/'memory.pressure')),
                 'ioPsi':psi(read(self.group/'io.pressure')),
                 'processCount':len(pids),'processVmLckBytes':locked,'processMembershipHash':digest(sorted(pids))}
+        try:self._membership_ledger=membership_ledger(self.proc,pids)
+        except Exception:self._membership_ledger=None
+        return result
     def sample(self):
         begun=time.monotonic();started=stamp();self.fence('before_sample')
-        reader_before=self.reader_proof();group_before=self.group_read();pid=self.expected['pid'];root=self.proc/str(pid)
+        reader_before=self.reader_proof();group_before=self.group_read();ledger_before=getattr(self,'_membership_ledger',None);pid=self.expected['pid'];root=self.proc/str(pid)
         process={**proc_identity(root),'readBytes':fields(read(root/'io').replace(':',''),('read_bytes',))['read_bytes'],'VmLck':fields(read(root/'status'),('VmLck',),True)['VmLck']}
         host=fields(read(self.proc/'meminfo'),MEM,True)
         if host['SwapTotal']!=0:
@@ -371,11 +436,9 @@ class Source:
         try: other=siblings(self.group)
         except Exception as error:
             other={'complete':False,'reason':str(error)if str(error)in SAFE else 'sample_failed'}
-        group_after=self.group_read();reader_after=self.reader_proof();self.fence('after_sample')
+        group_after=self.group_read();ledger_after=getattr(self,'_membership_ledger',None);reader_after=self.reader_proof();self.fence('after_sample')
         if group_before['processMembershipHash']!=group_after['processMembershipHash']:
-            raise GuardFailure('source_changed','sample_membership','after_sample',
-                               beforeCount=group_before['processCount'],afterCount=group_after['processCount'],
-                               beforeMembershipHash=group_before['processMembershipHash'],afterMembershipHash=group_after['processMembershipHash'])
+            raise membership_failure('sample_membership','after_sample',group_before,group_after,ledger_before,ledger_after)
         if group_before['processVmLckBytes'] or group_after['processVmLckBytes'] or process['VmLck']:
             raise ValueError('source_locked')
         return {'startedAt':started,'finishedAt':stamp(),'durationSeconds':time.monotonic()-begun,
@@ -387,12 +450,10 @@ class Source:
                 'ancestorLimitHash':self.ancestor_hash,'sourceGroupHash':digest(str(self.group)),
                 'metadataOnly':True,'archiveResidentBytesMeasured':False}
     def finish(self):
-        self.fence('final');before=self.group_read();reader=self.reader_proof()
-        after=self.group_read();self.fence('final')
+        self.fence('final');before=self.group_read();ledger_before=getattr(self,'_membership_ledger',None);reader=self.reader_proof()
+        after=self.group_read();ledger_after=getattr(self,'_membership_ledger',None);self.fence('final')
         if before['processMembershipHash']!=after['processMembershipHash']:
-            raise GuardFailure('source_changed','final_membership','final',
-                               beforeCount=before['processCount'],afterCount=after['processCount'],
-                               beforeMembershipHash=before['processMembershipHash'],afterMembershipHash=after['processMembershipHash'])
+            raise membership_failure('final_membership','final',before,after,ledger_before,ledger_after)
         if before['processVmLckBytes'] or after['processVmLckBytes']:
             raise ValueError('source_locked')
         return {'reader':reader,'sourceMembershipHash':after['processMembershipHash'],
