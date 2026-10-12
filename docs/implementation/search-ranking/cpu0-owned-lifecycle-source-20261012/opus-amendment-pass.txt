@@ -1,0 +1,51 @@
+# Verdict: PASS (source level, amendment scope only)
+
+No remaining safety blocker found on reading. Both prior blockers and the four root-requested items are closed. Nothing was executed, and consumer/stager and benchmark readiness are not covered.
+
+**Provenance:** I am `claude-opus-5-5`; I cannot observe my effort setting, so I can't attest "medium". No tools were used, so no SHA256 (freeze, policy, f831, core4) was recomputed and no test was run. `test_daemon.py` (imported by the controller tests) was not pasted.
+
+## Prior blockers
+
+- **B1 closed.** `cold` attaches the receipt to any post-stop error; `stage` falls back to `cold_state['cleanStop']` for errors after `cold` returns; the turnover gate attaches `stopped`; pidfd-close failure raises `lifecycle_pidfd_close_failed` carrying the receipt. Each path has a fixture.
+- **B2 closed.** `require_interpreter` runs at module import and again in `graceful_stop` before any attest. It enforces 3.11+, where `fromisoformat` truncates fractions beyond six digits, and matches the `/proc/self/exe` inode to `/usr/bin/python3`. The nine-digit positive fixture is present.
+
+## Root-requested items
+
+- **Own-final placement:** `attest` re-reads the reader's process row after the last Docker inspect and refuses on any difference.
+- **Expected binding:** both callers pass `initial_admission['target']`, and a mismatch refuses before `pidfd_open`. Every field of the `attest` result is stable for one birth, so equality is achievable.
+- **Constructor cleanup:** both `ZeroChild` constructions are inside the `try`, and the child is assigned before scope exit can raise.
+- **Shared 20 s deadline:** `started` is taken before the first attest; every action inspect checks the remaining budget at entry, in the read loop and in `wait`. Cleanup TERM/KILL targets only the unreaped `Popen` child, runs only on the refusal path, and cannot produce a receipt.
+
+## Caveats (non-blocking, all fail closed)
+
+**Can spend the one-shot real stop with a false refusal:**
+- The post-signal Docker inspect is still a single sample. If dockerd has not yet taken the container lock for the exit event, the row says `running: true` and the stop is recorded as unclean. I can't quantify this; a re-inspect loop inside the remaining budget would close it.
+- A stop that finishes near 20 s leaves no budget for that inspect and is recorded as a timeout.
+- `birth_gone` still catches only `FileNotFoundError`; a reap between open and read of `/proc/PID/stat` escapes as `lifecycle_guard_or_runtime_failure`.
+
+**Evidence edges:**
+- If `require_lock` fails after `clean_state` passes, no receipt is issued. The failure evidence does retain before/after and timing, with `clean: False`.
+- `lifecycleCleanupFailure` is a single slot: a pidfd-close or lock-scope failure overwrites `lifecycle_docker_cleanup_failed`. `lifecycleDockerCleanupEvidence` survives separately.
+- The inspector's cleanup `except BaseException` can absorb a `controller_interrupted` raised during cleanup into an annotation.
+- The receipt exists only in emitted rows. An emit failure, or an interrupt between `graceful_stop` returning and the assignment to `stopped`, loses it.
+
+**Conditions on the separately reviewed consumer:**
+- There is still no durable marker after a `signalSent: true` failure. If Qdrant survives the TERM, the next `read_handoff` passes, so the stager must treat such a row as terminal.
+- `cpu0_preflight` does not authenticate `controller_cpu0.py` itself; it relies on the external closed-list check.
+- `query-finished` still precedes the handoff commit.
+
+**Environment:**
+- The inspect client inherits the environment (`DOCKER_HOST`, `DOCKER_CONTEXT`) and stdin, as `runtime.docker` does.
+- The module-level interpreter gate means the lifecycle tests import only under an interpreter whose binary is the `/usr/bin/python3` inode.
+- The btrfs fdinfo mismatch and the `tcp6` requirement are unchanged.
+
+**Tests and docs:**
+- The documented verification pattern `test_cpu0*.py` does not match `test_lifecycle_cpu0.py`, so that command skips every lifecycle fixture.
+- `action_inspector` has no slow-client fixture exercising the TERM/KILL branch, and `graceful_stop` is still tested only with mocks.
+- Local wrapper fixtures do not prove real Qdrant exit status or durability.
+
+## Assumptions checked against the full core
+
+- **`runtime.docker`:** fixed `/usr/bin/docker`, 5 s timeout, stderr suppressed. This resolves the earlier unknown.
+- **Targets:** `daemon.load_config` forces clone mode and the NEW container name, and `lifecycle.container` whitelists OLD/NEW. No pasted call path signals a production process, the wrapper or a process group. `clone_command` allows only `start` of NEW and is unreachable after a refused stop.
+- **Lock and forks:** the lock fd is non-inheritable. `Popen` and multiprocessing-spawn children close it at exec. The at-fork callback applies only to the f831 plain `os.fork`, whose child-side `prewrite` never touches the lock. The f831 recorded-writer cleanup functions are not called from the controller path.
