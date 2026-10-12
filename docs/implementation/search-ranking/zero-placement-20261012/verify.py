@@ -23,14 +23,19 @@ def main():
     assert rows[-1]['unknownEarlyChildrenPossible']is True
     assert json.loads((HERE/'v1-actual-receipt.json').read_text())['overall']=='failed'
     # Exact retained tests are unchanged. The private-packet test deliberately
-    # needs the excluded original contract; all other tests are available.
+    # needs the excluded original contract. The historical 100ms composed
+    # fixture raced process teardown under load; preserve it but replace its
+    # public execution with the actual production 5s cleanup regression.
     sys.path.insert(0,str(core));sys.path.insert(0,str(HERE/'launcher-v2'))
     os.chdir(HERE/'launcher-v2')
     import test_launcher
+    sys.path.insert(0,str(HERE))
+    import test_public_schema
     names=unittest.defaultTestLoader.getTestCaseNames(test_launcher.Tests)
-    omitted='test_packet_hash_and_whitelist_fail_closed_without_echo'
-    suite=unittest.TestSuite(test_launcher.Tests(name)for name in names if name!=omitted)
+    omitted={'test_packet_hash_and_whitelist_fail_closed_without_echo','test_actual_zero_run_holder_close_shapes_pass_public_schema'}
+    suite=unittest.TestSuite(test_launcher.Tests(name)for name in names if name not in omitted)
+    suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(test_public_schema.PublicSchemaTests))
     result=unittest.TextTestRunner(verbosity=1).run(suite)
-    print(json.dumps({'publicOfflineTests':result.testsRun,'passed':result.wasSuccessful(),'privatePacketFixtureOmitted':True,'retainedActualFrames':len(rows),'codeSha256':digest.hexdigest()}))
+    print(json.dumps({'publicOfflineTests':result.testsRun,'passed':result.wasSuccessful(),'privatePacketFixtureOmitted':True,'historical100msFixtureOmitted':True,'publicCleanupSeconds':5,'retainedActualFrames':len(rows),'codeSha256':digest.hexdigest()}))
     return 0 if result.wasSuccessful()else 1
 if __name__=='__main__':raise SystemExit(main())

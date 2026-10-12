@@ -36,6 +36,10 @@
       "bytes": 407,
       "sha256": "95eea377c920cff3d3d394656ac4e94b69ba35afe6bd003c96e0d555abefda87"
     },
+    "test_public_schema.py": {
+      "bytes": 2558,
+      "sha256": "a641663ab8e6e79aba0081cb7e36b72426ade3acd102225ddb55a6f1f0545d5a"
+    },
     "v1-actual-receipt.json": {
       "bytes": 1224,
       "sha256": "92206457a887a0a8f8b7358d0714c95ade495d1b8bc0b5a5c01e6ef7aaee1fa1"
@@ -49,12 +53,20 @@
       "sha256": "e65d4d41dfd98d9af841ebc6f827982ef797329666f3c2b3549972e63e4e1b07"
     },
     "verify.py": {
-      "bytes": 2309,
-      "sha256": "de6bb6c7002eddb41affa255d2b2c3e98ffd8ff0fd474a820fc24e9ec13c545e"
+      "bytes": 2760,
+      "sha256": "979c555d3c39653505e2840b8bba96484e6831db7e0e3119d78d29d623eebec4"
     }
   },
   "preparationBaseCommit": "48cb85eb",
   "privateBirthJournalsIncluded": false,
   "privateContractIncluded": false,
+  "publicReproduction": {
+    "actualProductionReceiptsChanged": false,
+    "historical100msFixture": "preserved but excluded after graceful teardown raced and returned -15 under load",
+    "newStableTestsExecuted": 1,
+    "privatePacketFixture": "excluded; private contract outside Git",
+    "retainedTestsExecuted": 7,
+    "stableCleanupSeconds": 5
+  },
   "schema": "qdrant.zero-placement-evidence.v1"
 }

@@ -23,7 +23,7 @@ Before stage writes, the stager checked the pinned actual source PID/startticks,
 
 The private source contract and both private birth journals remain **outside Git**. No query, account, credential, model, vector, payload or interpretation is retained here. Neither execution read the mapped-data inventory, models or archives, issued queries, locked memory, changed source caps, or restarted Qdrant. It changed only dedicated task files and the owned children’s membership/OOM preference.
 
-Nine full v2 fixture tests passed locally and independently in root review before execution. One exact retained fixture requires the excluded private packet. Eight other real-process/schema/staging tests can run from the public checkout on Linux with Python >= 3.9 and PIDfd/prctl support:
+Nine full historical v2 fixture tests passed locally and independently in root review before execution. A later public reproduction failed: the historical composed-frame fixture used a 100 ms cleanup bound, and under load its graceful child was terminated with exit −15 while process teardown was still finishing. The actual production v2 graceful exit 0 and its retained evidence remain unchanged. The historical fixture and its hashes are preserved, but the public verifier excludes it alongside the private-packet fixture. A separate [public schema regression](zero-placement-20261012/test_public_schema.py) uses the actual production five-second cleanup default, real spawned holders and strict boolean checks. Seven other retained tests plus this new regression can run from the public checkout on Linux with Python >= 3.9 and PIDfd/prctl support:
 
 ```bash
 python3 -B docs/implementation/search-ranking/zero-placement-20261012/verify.py
