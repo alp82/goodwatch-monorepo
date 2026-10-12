@@ -1185,9 +1185,10 @@ test("a press that is taken back and put back: the same rows and the same state 
 		event: { type: "undoSeen" },
 		now: 9_000_000_000_000,
 	})
+	// Taking the press back is no move to Watching of the member's own: Watching since the last remaining watch.
 	assert.deepEqual(
 		[left.row, left.changes.state?.state, left.changes.state?.state_changed_at],
-		["14", "watching", 9_000_000_000_000],
+		["14", "watching", PRESSED - 1_000],
 	)
 	const again = applyShowEvent({
 		...base,

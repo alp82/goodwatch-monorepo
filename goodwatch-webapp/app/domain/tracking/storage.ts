@@ -97,7 +97,8 @@ export function recordFromRows(
 
 /**
  * The state row of a record. No row when there is nothing to remember: Not started, pass 1, no prompt.
- * `state_changed_at` moves only when the state does.
+ * `state_changed_at` moves only when the state does. `applyShowEvent` dates a move to Watching that only takes
+ * watches away by the last remaining watch.
  */
 export function stateRowOf(
 	record: TrackingRecord,
@@ -319,12 +320,32 @@ export function applyShowEvent(input: ShowEventInput): AppliedEvent {
 	const row = stateRowOf(after, state, now)
 	// The show is Seen since the time it was before the press was taken back, not since this Undo. And a show whose
 	// season is put back has its state since the time it had it before.
-	const next =
+	const restored =
 		row &&
 		(event.type === "restoreSeen" || event.type === "restoreSeason") &&
 		state?.state !== row.state
 			? { ...row, state_changed_at: event.changedAt }
 			: row
+	// C3: taking watches or a Seen press away is no move to Watching of the member's own. The show is Watching since
+	// its last remaining watch, so it goes by that watch. Resume and Watch again are such a move; an event that adds
+	// a watch is activity through the watch.
+	const remaining = log.filter((r) => kept.has(r.watch_id))
+	const next =
+		restored &&
+		restored === row &&
+		row?.state === "watching" &&
+		state?.state !== "watching" &&
+		event.type !== "resume" &&
+		event.type !== "watchAgain" &&
+		!insert.length &&
+		remaining.length
+			? {
+					...restored,
+					state_changed_at: Math.max(
+						...remaining.map((r) => r.watched_at ?? r.created_at),
+					),
+				}
+			: restored
 	return {
 		refused: null,
 		row: done.row?.id ?? null,

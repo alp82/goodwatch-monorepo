@@ -48,7 +48,7 @@ Decided by the owner on October 7, 2026. The label in the first column is the on
 | O1 | No overlap. `user_watch_state` stores only what can't be computed from the log. Counts and dates are computed from `user_watch_log` when read, by one grouped query per member, cached with the member data | Summary columns in the state row (`watch_count`, `episodes_watched`, the furthest episode, the dates) that the writer recomputes on every write: Crate has no transactions, so every copy is something a crash can leave wrong |
 | C1 | The new state table replaces `user_watch_history`, which stayed untouched as the backup until it was dropped on 2026-10-11 (planned: 30 days after the switch; the owner decided to drop it earlier) | Adding columns to the old table, where every reader takes a row to mean Seen; or keeping it for good |
 | C2 | Rating a movie that has no watch records one: no date, origin `score`. Clearing the score deletes it; a watch the member logs replaces it. Rating a show records nothing and never changes its state | A scored title with no row at all, Seen only where the score is read (the proposal's recommendation); or today's rule, a watch dated "now" for movies and shows alike |
-| C3 | "Active in the last 90 days" is the later of two times. The last watch: the latest of the dated watches' dates and, for undated watches not from an import, the time they were recorded. And the member's own move of the show to Watching: the time the state changed to Watching, unless an import made it so. An import and the migration never count. (30 days and watches only until 2026-10-12, when the owner decided both; section 10, "Activity") | Dated watches only (a "Watched up to here" tonight would not count); or the time anything was recorded (an import of a 2019 history would fill Continue); or watches only (a show whose last season was unmarked today went to the shows not watched for 30 days) |
+| C3 | "Active in the last 90 days" is the later of two times. The last watch: the latest of the dated watches' dates and, for undated watches not from an import, the time they were recorded. And the member's own move of the show to Watching, by Resume or Watch again: the time the state changed to Watching. An import and the migration never count, and neither does taking watches or a Seen press away. (30 days and watches only until 2026-10-12, when the owner decided both; section 10, "Activity") | Dated watches only (a "Watched up to here" tonight would not count); or the time anything was recorded (an import of a 2019 history would fill Continue); or watches only (a show whose last season was unmarked today went to the shows not watched for 30 days) |
 | C4 | UTC in the database and the API, the member's time zone only in the interface. The browser decides "aired for you" by the date on the device; the server accepts a watch for an episode that airs up to one day after the UTC date | Aired by UTC everywhere (a device ahead of UTC could not tick tonight's episode); or aired by the member's date on the server (a count per time zone can't be stored) |
 | C5 | A show marked Seen while it had no episode list gets the press's group filled once the list exists: undated watches for the regular episodes that had aired by the day of the press | Leaving it Seen with every episode reading as new, as the machine alone would |
 | C6 | An import inserts log rows. It sets the state only for a show that had no row before the import, or whose state is Not started or Watching. On hold, Dropped and Seen set here are never changed by an import | Replaying the file as if the member acted now, so that an old watch resumes an On hold or Dropped show |
@@ -1993,10 +1993,19 @@ Behind `REC_TRACKING`. Decided by the owner on 2026-10-12, after a show whose la
 morning (Seen to Watching) was listed under "Not watched for 30 days": its watches were the migration's, without
 dates, recorded in May 2024.
 
-- **A member's own move of a show to Watching counts as activity** (C3). Unmark season on a Seen show, taking back a
-  Seen press, Resume from On hold or Dropped, Watch again, and the first tick of a show all set
-  `state_changed_at` through `stateRowOf`, and only when the state changes. The member data entry carries it as
-  `watchingSince`, for the state Watching only.
+- **A member's own move of a show to Watching counts as activity** (C3): Resume from On hold or Dropped, and Watch
+  again. They set `state_changed_at` through `stateRowOf`, and only when the state changes. The member data entry
+  carries it as `watchingSince`, for the state Watching only. The first tick of a show sets it too and counts through
+  its watch.
+- **Taking watches or a Seen press away is no such move** (the owner, later on 2026-10-12: six shows whose last
+  season they had unmarked that morning led Continue as "Watching since today", above the shows they were watching).
+  Unmark season, an unticked episode, a deleted watch or an undone group on a Seen show, and taking back a Seen
+  press, make the show Watching with `state_changed_at` = the latest remaining watch's date or, without one, the
+  time it was recorded (`applyShowEvent`). `watchingSince` is then no later than the last watch, so the show goes by
+  its watches: into Pick up when they are older than 90 days. The seven state rows written this way
+  between the two decisions, all the owner's, were set to that time on the production database on 2026-10-12, one
+  `UPDATE` of `state_changed_at` each. Two other Watching rows were left: one with watches ticked after the state
+  changed, and one whose state changed 73 seconds after its last season mark, where the data does not say how.
 - **An import never counts, and neither did the migration.** No column says who wrote a state row, and none was
   added: **no statement was run on the production database.** An import inserts its watches with `created_at` = the
   import's time and then writes the state with the same time or, after a conflict, a later one. So
