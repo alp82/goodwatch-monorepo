@@ -64,6 +64,18 @@ test("the show page tells the map where the show stands: its entry, and a starte
 	assert.equal(afterShowTracking(member, 9, null), member)
 	assert.equal(afterShowTracking(started, 7, { ...watching }), started)
 	assert.equal(afterShowTracking(undefined, 7, watching), undefined)
+
+	// Since when the show is Watching is part of the entry: My shows places the show by it. An entry cached by the
+	// build before does not have it, which is the same as none.
+	const moved = { ...watching, watchingSince: new Date("2026-10-12T06:46Z") }
+	assert.equal(
+		afterShowTracking(started, 7, moved)?.watchState["show-7"],
+		moved,
+	)
+	assert.equal(
+		afterShowTracking(started, 7, { ...watching, watchingSince: null }),
+		started,
+	)
 })
 
 test("Want to rewatch: a show that stays Seen keeps its place on the Wishlist, and loses it when it leaves Seen", async () => {

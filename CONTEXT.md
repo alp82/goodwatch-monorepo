@@ -60,14 +60,18 @@ The top of My movies, or of the shows to start in My shows, under the person's c
 _Avoid_: Queue, Up next, Priority queue
 
 **Tonight's pick**:
-The single title or episode GoodWatch puts forward for tonight. For a member, the Next episode of the Watching show they watched most recently in the last 30 days; without one, the first movie of My movies; without one, the first show to start.
+The single title or episode GoodWatch puts forward for tonight. For a member, the Next episode of the Watching show they were last active on in the last 90 days, by a watch or by their own move of the show to Watching; without one, the first movie of My movies; without one, the first show to start.
 
 **My shows**:
-The page for a member's shows tonight: one list with the Next episode of each show to continue, then the Want to See shows to start. Under it are the shows Waiting for episodes and the On hold shows.
+The page for a member's shows tonight: one list with the Next episode of each show to continue, then the shows to Pick up, then the Want to See shows to start. Between Continue and Pick up one row says which shows are Waiting for episodes. Under the list are the On hold and Dropped shows.
 _Avoid_: Shows, Watchlist, Continue watching, Up next
 
+**Pick up**:
+The group of My shows for the Watching shows that have a Next episode and that the member was not active on in the last 90 days. Activity is a watch or the member's own move of the show to Watching: unmarking a season of a Seen show, taking back a Seen press, resuming from On hold or Dropped, or Watch again. An import is never activity. A show active in the 90 days is in Continue instead.
+_Avoid_: Not watched for 30 days, Older, Stale, Abandoned
+
 **Waiting for episodes**:
-The group of My shows for the shows with nothing to watch right now: a Seen show that is still running and has nothing new, or a Watching show with every aired episode watched. Each says the day its next episode airs, by the member's day, soonest first; a show without a dated episode to come says "No date yet".
+The shows of My shows with nothing to watch right now: a Seen show that is still running and has nothing new, or a Watching show with every aired episode watched. They are one row between Continue and Pick up, which names the show that returns first and counts the others, and opens to all of them. Each says the day its next episode airs, by the member's day, soonest first; a show without a dated episode to come says "No date yet".
 _Avoid_: Upcoming, Schedule, Release calendar
 
 **My shows visit**:

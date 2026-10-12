@@ -17,7 +17,8 @@ const sameEntry = (a: WatchStateEntry | undefined, b: WatchStateEntry) =>
 	String(a.furthest) === String(b.furthest) &&
 	(a.watchedAt?.valueOf() ?? null) === (b.watchedAt?.valueOf() ?? null) &&
 	(a.lastActivityAt?.valueOf() ?? null) ===
-		(b.lastActivityAt?.valueOf() ?? null)
+		(b.lastActivityAt?.valueOf() ?? null) &&
+	(a.watchingSince?.valueOf() ?? null) === (b.watchingSince?.valueOf() ?? null)
 
 /**
  * A show's tracking changed on its page, where the browser holds the show's rows and so knows the entry exactly:

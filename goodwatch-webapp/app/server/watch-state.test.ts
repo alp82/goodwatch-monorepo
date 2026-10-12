@@ -252,7 +252,7 @@ test("the member data map holds one watchState entry per title with a state, bui
 	assert.equal(read.length, 7)
 	assert.ok(
 		read.includes(
-			"SELECT tmdb_id, media_type, state, pass FROM user_watch_state WHERE user_id = ? AND state <> 'not_started'",
+			"SELECT tmdb_id, media_type, state, pass, state_changed_at FROM user_watch_state WHERE user_id = ? AND state <> 'not_started'",
 		),
 	)
 	assert.equal(
@@ -282,11 +282,14 @@ test("the member data map holds one watchState entry per title with a state, bui
 			episodesWatched: 0,
 			furthest: null,
 			lastActivityAt: null,
+			watchingSince: null,
 		},
 	)
 	const watching = data.watchState["show-1399"]
+	// The first tick was the member's own move to Watching.
+	assert.ok(watching.watchingSince instanceof Date)
 	assert.deepEqual(
-		{ ...watching, watchedAt: null, lastActivityAt: null },
+		{ ...watching, watchedAt: null, lastActivityAt: null, watchingSince: null },
 		{
 			state: "watching",
 			watchedAt: null,
@@ -296,6 +299,7 @@ test("the member data map holds one watchState entry per title with a state, bui
 			episodesWatched: 2,
 			furthest: [1, 2],
 			lastActivityAt: null,
+			watchingSince: null,
 		},
 	)
 
@@ -320,6 +324,7 @@ test("a Seen press on a show gives one entry with the progress, never a row per 
 		episodesWatched: 3,
 		furthest: [2, 1],
 		lastActivityAt: entry.lastActivityAt,
+		watchingSince: null,
 	})
 	assert.ok(entry.lastActivityAt instanceof Date)
 })

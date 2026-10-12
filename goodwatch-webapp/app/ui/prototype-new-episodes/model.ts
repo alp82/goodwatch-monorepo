@@ -637,7 +637,7 @@ export function planOf(shows: readonly Show[], today: string): Planned {
 		})
 	return {
 		continue: fill(plan.continue),
-		older: fill(plan.older),
+		older: fill(plan.pickUp),
 		waiting: sortWaiting(fill(plan.waiting)),
 		onHold: fill(plan.onHold),
 		dropped: fill(plan.dropped),

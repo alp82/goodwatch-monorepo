@@ -10,6 +10,7 @@ const {
 	upcomingWords,
 	firstUpcoming,
 	soonestFirst,
+	waitingWords,
 	sinceOf,
 	newShowsOf,
 	summaryOf,
@@ -104,6 +105,56 @@ test("a waiting row says the day in a column of its own, and under it the date o
 	assert.deepEqual(upcomingWords(null, today), {
 		when: null,
 		detail: "No date yet",
+	})
+})
+
+test("the row for the waiting shows names the one that returns first and counts the others", () => {
+	const today = "2026-10-11"
+	const waiting = (title: string, season: number, number: number, airDate: string | null) => ({
+		title,
+		upcoming: airDate ? ep(season, number, airDate) : null,
+	})
+	// No waiting show, no row.
+	assert.equal(waitingWords([], today), null)
+	assert.deepEqual(waitingWords([waiting("Slow Horses", 5, 4, "2026-10-12")], today), {
+		title: "Slow Horses",
+		says: "S5 E4 airs tomorrow",
+		more: null,
+	})
+	// The rows come soonest first, the ones without a date last.
+	assert.deepEqual(
+		waitingWords(
+			[
+				waiting("Slow Horses", 5, 4, "2026-10-14"),
+				waiting("Hacks", 4, 1, "2026-11-20"),
+				waiting("Silo", 0, 0, null),
+			],
+			today,
+		),
+		{ title: "Slow Horses", says: "S5 E4 airs in 3 days", more: "2 more shows waiting" },
+	)
+	// From a week out the date is said, and the year when it is another one.
+	assert.deepEqual(
+		waitingWords([waiting("The Diplomat", 3, 1, "2026-11-20"), waiting("Silo", 0, 0, null)], today),
+		{ title: "The Diplomat", says: "S3 E1 airs on 20 Nov", more: "1 more show waiting" },
+	)
+	assert.equal(waitingWords([waiting("Fallout", 2, 1, "2027-01-14")], today)?.says, "S2 E1 airs on 14 Jan 2027")
+	// A member ahead of UTC waits for today's episode.
+	assert.equal(waitingWords([waiting("Shrinking", 1, 4, "2026-10-11")], today)?.says, "S1 E4 airs today")
+})
+
+test("without a date, the row for the waiting shows says so: one show by its name, several by their number", () => {
+	const today = "2026-10-11"
+	const undated = (title: string) => ({ title, upcoming: null })
+	assert.deepEqual(waitingWords([undated("Silo")], today), {
+		title: "Silo",
+		says: "is waiting for episodes",
+		more: "No date yet",
+	})
+	assert.deepEqual(waitingWords([undated("Silo"), undated("Fallout"), undated("Dark")], today), {
+		title: null,
+		says: "3 shows are waiting for episodes",
+		more: "No dates yet",
 	})
 })
 

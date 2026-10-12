@@ -455,14 +455,17 @@ export interface GroupRow {
 	last_watched_at: number | null
 	last_moment_at: number | null
 	last_activity_at: number | null
+	/** When the latest imported watch of the group was recorded; null without one. */
+	last_import_at: number | null
 }
 
-/** The key and the two columns of a state row that pick the current pass. */
+/** The key of a state row, the two columns that pick the current pass, and when the state last changed. */
 export interface TitleState {
 	tmdb_id: number
 	media_type: MediaType
 	state: State
 	pass: number
+	state_changed_at: number
 }
 
 /** What the log and the state say about one title. */
@@ -484,6 +487,30 @@ export interface TitleTotals {
 	precision: Precision
 	/** The latest dated watch or, for undated watches not from an import, the time they were recorded. */
 	lastActivityAt: number | null
+	/**
+	 * Since when the member has had the show in Watching by their own action; null in any other state, and when an
+	 * import made it Watching (C3).
+	 */
+	watchingSince: number | null
+}
+
+// The driver hands a timestamp over as a Date, and a NULL one as the Date of 0; the tests as milliseconds.
+const moment = (value: number | Date | null | undefined) =>
+	value === null || value === undefined ? null : new Date(value).getTime()
+
+/**
+ * C3: a member's own move to Watching counts as activity, an import's does not. The state row does not say who
+ * wrote it, so an import is told by its watches: it records them no later than it changes the state.
+ */
+function watchingSinceOf(
+	state: TitleState | undefined,
+	groups: readonly GroupRow[],
+): number | null {
+	if (state?.state !== "watching") return null
+	const changed = moment(state.state_changed_at)
+	if (changed === null) return null
+	const imported = largest(groups.map((g) => moment(g.last_import_at)))
+	return imported !== null && changed <= imported ? null : changed
 }
 
 const largest = (values: (number | null)[]) =>
@@ -547,6 +574,7 @@ export function titleTotals(
 						? "moment"
 						: "day",
 			lastActivityAt: largest(all.map((g) => g.last_activity_at)),
+			watchingSince: watchingSinceOf(row, all),
 		})
 	}
 	return totals
@@ -567,6 +595,11 @@ export interface WatchStateEntry {
 	/** The furthest of them, as [season, episode]. */
 	furthest: [number, number] | null
 	lastActivityAt: Date | null
+	/**
+	 * Since when the member has had the show in Watching by their own action. Null in any other state, when an
+	 * import made it Watching, and for a movie. Not there on an entry cached by the build before.
+	 */
+	watchingSince?: Date | null
 }
 
 /**
@@ -590,6 +623,8 @@ export function watchStateOf(
 			furthest: totals.furthest,
 			lastActivityAt:
 				totals.lastActivityAt === null ? null : new Date(totals.lastActivityAt),
+			watchingSince:
+				totals.watchingSince === null ? null : new Date(totals.watchingSince),
 		}
 	}
 	return entries

@@ -113,6 +113,7 @@ function listView(stored: Stored, show: Show) {
 					media_type: "show" as const,
 					state: stored.state.state,
 					pass: stored.state.pass,
+					state_changed_at: stored.state.state_changed_at,
 				},
 			]
 		: []
@@ -1301,14 +1302,40 @@ test("the member data entry: one per title with a state, built from the state ro
 		last_watched_at: null,
 		last_moment_at: null,
 		last_activity_at: null,
+		last_import_at: null,
 		...rest,
 	})
 	const entries = watchStateOf(
 		[
-			{ tmdb_id: 157336, media_type: "movie", state: "seen", pass: 1 },
-			{ tmdb_id: 680, media_type: "movie", state: "seen", pass: 1 },
-			{ tmdb_id: 1622, media_type: "show", state: "watching", pass: 2 },
-			{ tmdb_id: 1399, media_type: "show", state: "dropped", pass: 1 },
+			{
+				tmdb_id: 157336,
+				media_type: "movie",
+				state: "seen",
+				pass: 1,
+				state_changed_at: day,
+			},
+			{
+				tmdb_id: 680,
+				media_type: "movie",
+				state: "seen",
+				pass: 1,
+				state_changed_at: 5_000,
+			},
+			// Watch again, pressed on that day.
+			{
+				tmdb_id: 1622,
+				media_type: "show",
+				state: "watching",
+				pass: 2,
+				state_changed_at: day,
+			},
+			{
+				tmdb_id: 1399,
+				media_type: "show",
+				state: "dropped",
+				pass: 1,
+				state_changed_at: at,
+			},
 		],
 		[
 			group(157336, "movie", 1, {
@@ -1349,6 +1376,7 @@ test("the member data entry: one per title with a state, built from the state ro
 			episodesWatched: 0,
 			furthest: null,
 			lastActivityAt: new Date(at),
+			watchingSince: null,
 		},
 		"movie-680": {
 			state: "seen",
@@ -1359,6 +1387,7 @@ test("the member data entry: one per title with a state, built from the state ro
 			episodesWatched: 0,
 			furthest: null,
 			lastActivityAt: new Date(5_000),
+			watchingSince: null,
 		},
 		"show-1622": {
 			state: "watching",
@@ -1369,6 +1398,7 @@ test("the member data entry: one per title with a state, built from the state ro
 			episodesWatched: 3,
 			furthest: [1, 12],
 			lastActivityAt: new Date(at),
+			watchingSince: new Date(day),
 		},
 		// Dropped with nothing watched: a state and no group.
 		"show-1399": {
@@ -1380,11 +1410,113 @@ test("the member data entry: one per title with a state, built from the state ro
 			episodesWatched: 0,
 			furthest: null,
 			lastActivityAt: null,
+			watchingSince: null,
 		},
 	})
 	// The totals keep the title without a state, for whoever asks about one title.
 	const totals = titleTotals([], [group(66732, "show", 1, {})])
 	assert.equal(totals.get("show-66732")?.state, "not_started")
+})
+
+test("a Watching show says since when the member has had it there, and not when an import made it Watching", () => {
+	const moved = Date.UTC(2026, 9, 12, 6, 46)
+	const imported = Date.UTC(2026, 9, 10, 9, 0)
+	const old = Date.UTC(2024, 4, 31, 20, 11)
+	const state = (tmdb_id: number, state: State, state_changed_at: number) => ({
+		tmdb_id,
+		media_type: "show" as const,
+		state,
+		pass: 1,
+		state_changed_at,
+	})
+	const group = (
+		tmdb_id: number,
+		rest: Partial<ReturnType<typeof groupedQuery>[number]>,
+	) => ({
+		tmdb_id,
+		media_type: "show" as const,
+		pass: 1,
+		watch_count: 18,
+		episodes_watched: 18,
+		furthest: 2 * 100000 + 10,
+		first_watched_at: null,
+		last_watched_at: null,
+		last_moment_at: null,
+		last_activity_at: null,
+		last_import_at: null,
+		...rest,
+	})
+	const entries = watchStateOf(
+		[
+			// A season unmarked on a show seen long ago: the watches are old, the move to Watching is not.
+			state(85949, "watching", moved),
+			// An import made it Watching: the state changed when the import recorded the show's watches.
+			state(1402, "watching", imported),
+			// Resumed after an import of the show's history.
+			state(2288, "watching", moved),
+			// The member's move, and then an import recorded watches of the show: the import is the later word.
+			state(62560, "watching", imported - 1),
+			// Any other state says nothing about Watching.
+			state(70796, "seen", moved),
+			state(1399, "on_hold", moved),
+			state(1622, "dropped", moved),
+		],
+		[
+			group(85949, { last_activity_at: old }),
+			group(1402, { last_import_at: imported }),
+			group(2288, { last_import_at: imported }),
+			group(62560, { last_import_at: imported }),
+			group(70796, { last_activity_at: old }),
+		],
+	)
+	assert.deepEqual(
+		Object.fromEntries(
+			Object.entries(entries).map(([key, entry]) => [key, entry.watchingSince]),
+		),
+		{
+			"show-85949": new Date(moved),
+			"show-1402": null,
+			"show-2288": new Date(moved),
+			"show-62560": null,
+			"show-70796": null,
+			"show-1399": null,
+			"show-1622": null,
+		},
+	)
+	// The move is no watch: what C3 says about the show's watches stays as it was.
+	assert.deepEqual(entries["show-85949"].lastActivityAt, new Date(old))
+})
+
+test("the times of a state row and a group may arrive as dates, with 1 January 1970 for none", () => {
+	// The database driver hands a timestamp over as a Date, and a NULL one as the Date of 0.
+	const moved = Date.UTC(2026, 9, 12, 6, 46)
+	const entries = watchStateOf(
+		[
+			{
+				tmdb_id: 85949,
+				media_type: "show",
+				state: "watching",
+				pass: 1,
+				state_changed_at: new Date(moved) as unknown as number,
+			},
+		],
+		[
+			{
+				tmdb_id: 85949,
+				media_type: "show",
+				pass: 1,
+				watch_count: 18,
+				episodes_watched: 18,
+				furthest: 2 * 100000 + 10,
+				first_watched_at: null,
+				last_watched_at: null,
+				last_moment_at: null,
+				last_activity_at: null,
+				last_import_at: new Date(0) as unknown as number,
+			},
+		],
+	)
+	assert.deepEqual(entries["show-85949"].watchingSince, new Date(moved))
 })
 
 // ---------------------------------------------------------------------------------------------------------
@@ -1576,6 +1708,7 @@ test("movies: the score's watch exists exactly while the movie has a score and n
 								media_type: "movie",
 								state: s.state.state,
 								pass: 1,
+								state_changed_at: s.state.state_changed_at,
 							},
 						]
 					: [],

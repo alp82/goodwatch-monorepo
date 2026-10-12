@@ -2919,6 +2919,8 @@ test("the grouped query and the states give the member data entry of every title
 			episodesWatched: 2,
 			furthest: [1, 3],
 			lastActivityAt: new Date(second),
+			// Watch again was the member's move.
+			watchingSince: new Date(stateOf()?.state_changed_at as number),
 		},
 		[`movie-${MOVIE}`]: {
 			state: "seen",
@@ -2935,6 +2937,7 @@ test("the grouped query and the states give the member data entry of every title
 				logOf(movie).find((r) => r.watch_id === "movie-watch-2")
 					?.watched_at as number,
 			),
+			watchingSince: null,
 		},
 		"movie-680": {
 			state: "seen",
@@ -2945,6 +2948,7 @@ test("the grouped query and the states give the member data entry of every title
 			episodesWatched: 0,
 			furthest: null,
 			lastActivityAt: new Date(scoreAt),
+			watchingSince: null,
 		},
 		"show-40000": {
 			state: "dropped",
@@ -2955,6 +2959,7 @@ test("the grouped query and the states give the member data entry of every title
 			episodesWatched: 0,
 			furthest: null,
 			lastActivityAt: null,
+			watchingSince: null,
 		},
 	})
 	// The totals also know the show of which only a special was watched, and what the entry leaves out.
@@ -2977,6 +2982,7 @@ test("the grouped query and the states give the member data entry of every title
 		watchedAt: logOf(short)[0].watched_at,
 		precision: "moment",
 		lastActivityAt: logOf(short)[0].watched_at,
+		watchingSince: null,
 	})
 	assert.deepEqual(
 		[
@@ -3222,4 +3228,114 @@ test("concurrent distinct imports settle a show from the combined episode watche
 	assert.equal((await getShowTracking(user, SHORT)).state?.state, "watching")
 	await imports.undoImportTrackingPlan(user, first)
 	assert.equal((await getShowTracking(user, SHORT)).state, null)
+})
+
+// ---------------------------------------------------------------------------------------------------------
+// C3: since when the member has had a show in Watching by their own action
+// ---------------------------------------------------------------------------------------------------------
+
+const entryOf = async (title: TrackedTitle = show) =>
+	(await getWatchState(user))[`show-${title.tmdbId}`]
+/** Everything stored so far happened long ago. */
+function longAgo() {
+	for (const row of db.table("user_watch_state"))
+		row.state_changed_at = LONG_AGO
+	for (const row of db.table("user_watch_log")) row.created_at = LONG_AGO
+}
+
+test("unmarking a season of a show seen long ago makes it Watching since now; its watches stay as old as they are", async () => {
+	await act({ type: "pressSeen" })
+	longAgo()
+	assert.equal((await entryOf())?.watchingSince, null, "Seen is not Watching")
+	const before = Date.now()
+	await act({ type: "unmarkSeason", season: 2 })
+	const entry = await entryOf()
+	assert.equal(entry?.state, "watching")
+	assert.ok((entry?.watchingSince?.getTime() ?? 0) >= before)
+	// The press's watches have no date: they count by when they were recorded.
+	assert.equal(entry?.lastActivityAt?.getTime(), LONG_AGO)
+})
+
+test("resuming a show, taking a Seen press back and watching it again each make it Watching since then", async () => {
+	await tick(1, 1)
+	longAgo()
+	await act({ type: "hold" })
+	assert.equal((await entryOf())?.watchingSince, null, "On hold")
+	let before = Date.now()
+	await act({ type: "resume" })
+	assert.ok(((await entryOf())?.watchingSince?.getTime() ?? 0) >= before)
+
+	longAgo()
+	await act({ type: "pressSeen" })
+	assert.equal((await entryOf())?.watchingSince, null, "Seen")
+	before = Date.now()
+	await act({ type: "undoSeen" })
+	assert.equal((await entryOf())?.state, "watching")
+	assert.ok(((await entryOf())?.watchingSince?.getTime() ?? 0) >= before)
+
+	await act({ type: "pressSeen" })
+	longAgo()
+	before = Date.now()
+	await act({ type: "watchAgain" })
+	assert.deepEqual(
+		[(await entryOf())?.state, (await entryOf())?.pass],
+		["watching", 2],
+	)
+	assert.ok(((await entryOf())?.watchingSince?.getTime() ?? 0) >= before)
+})
+
+test("an import that makes a show Watching is not the member's move, and resuming the show afterwards is", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const plan = await imports.prepareImportTrackingPlan({
+		userId: user,
+		importId: "undated",
+		source: "trakt",
+		...short,
+		items: [nativeWatch("first-episode", 1)],
+		watchDates: "unknown",
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, plan)
+	const imported = await entryOf(short)
+	assert.equal(imported?.state, "watching")
+	// Neither the import's time nor its undated watch says the member was active.
+	assert.deepEqual(
+		[imported?.watchingSince, imported?.lastActivityAt],
+		[null, null],
+	)
+	await act({ type: "hold" }, newId(), short)
+	const before = Date.now()
+	await act({ type: "resume" }, newId(), short)
+	assert.ok(
+		((await entryOf(short))?.watchingSince?.getTime() ?? 0) >= before,
+	)
+})
+
+test("undoing the import that made a show Seen leaves it Watching by the import that remains, not by the member", async () => {
+	const imports = await import("./imports/tracking.server.ts")
+	const base = { userId: user, source: "trakt" as const, ...short }
+	const all = await imports.prepareImportTrackingPlan({
+		...base,
+		watchDates: "unknown",
+		importId: "all",
+		items: [nativeWatch("one", 1), nativeWatch("two", 2)],
+		now: Date.now() - 2000,
+	})
+	await imports.applyImportTrackingPlan(user, all)
+	assert.equal((await entryOf(short))?.state, "seen")
+	// Another play of the first episode, with its date from 2020: recorded while the show was Seen, so it
+	// changed no state.
+	const again = await imports.prepareImportTrackingPlan({
+		...base,
+		watchDates: "preserve",
+		importId: "again",
+		items: [nativeWatch("one-again", 1)],
+		now: Date.now() - 1000,
+	})
+	await imports.applyImportTrackingPlan(user, again)
+	assert.equal(logOf(short).length, 3)
+	await imports.undoImportTrackingPlan(user, all)
+	const entry = await entryOf(short)
+	assert.deepEqual([entry?.state, entry?.count], ["watching", 1])
+	assert.equal(entry?.watchingSince, null)
 })

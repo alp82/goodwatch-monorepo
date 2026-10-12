@@ -22,7 +22,7 @@ export type TonightReason =
 	| "notOnServices" // nothing on the Wishlist is on the person's services; the closest title
 	| "suggestion" // the Wishlist is empty; a worthwhile suggestion
 	// With REC_TRACKING (#385):
-	| "nextEpisode" // the Next episode of the Watching show the member was last active on in the last 30 days
+	| "nextEpisode" // the Next episode of the Watching show the member was last active on in the last 90 days
 	| "startShow" // no such show and no movie: the first show to start
 
 export interface TonightsPick {
@@ -36,7 +36,7 @@ export interface TonightsPick {
 
 /**
  * Tonight's pick for a member with REC_TRACKING: the Next episode of the Watching show they were last active on in
- * the last 30 days; without one, the first movie of My movies; without one, the first show to start. Null when the
+ * the last 90 days; without one, the first movie of My movies; without one, the first show to start. Null when the
  * member has none of them, and the pick is then what it is without tracking.
  */
 async function trackedPick(

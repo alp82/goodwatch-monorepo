@@ -30,7 +30,13 @@ crate.connect(
 		)
 		.join(" "),
 )
-const rows = async (sql, args = []) => (await crate.execute(sql, args)).json
+// Not the driver's `json`: that turns a NULL timestamp into 1 January 1970. Timestamps stay milliseconds here.
+const rows = async (sql, args = []) => {
+	const result = await crate.execute(sql, args)
+	return result.rows.map((row) =>
+		Object.fromEntries(result.cols.map((col, i) => [col, row[i]])),
+	)
+}
 
 const median = (values) => {
 	const sorted = [...values].sort((a, b) => a - b)

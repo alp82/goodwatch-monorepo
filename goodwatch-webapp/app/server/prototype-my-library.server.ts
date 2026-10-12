@@ -522,6 +522,40 @@ function build(
 		)
 		follow(217, SHOW_NAMES[18], "on_hold", weekly(40, 300), [], 23, 300, 10)
 		follow(218, SHOW_NAMES[9], "dropped", weekly(5, 600), [], 2, 300, 5)
+		// Seen long ago by a press without dates, and a season unmarked two days ago: the member's own move to
+		// Watching puts it in Continue.
+		showAt(219, "Star Trek: Picard", weekly(30, 400), [], 10)
+			.slice(0, 20)
+			.forEach((episode, i) =>
+				watch("show", 219, null, {
+					episode_tmdb_id: 219_000 + i,
+					season_number: episode.season,
+					episode_number: episode.number,
+					origin: "seen",
+					group_id: "mig-seen-219",
+					created_at: daysAgo(500),
+					updated_at: daysAgo(500),
+				}),
+			)
+		state("show", 219, "watching", daysAgo(2))
+		// To pick up: not watched for 90 days.
+		follow(220, "Lost", "watching", weekly(24, 300), [], 9, 200, 8)
+		follow(221, "Mad Men", "watching", weekly(36, 500), [], 30, 400, 12)
+		// An import made it Watching two days ago, by watches without a date: the import is no activity.
+		showAt(222, "The Leftovers", weekly(20, 700), [], 10)
+			.slice(0, 12)
+			.forEach((episode, i) =>
+				watch("show", 222, null, {
+					episode_tmdb_id: 222_000 + i,
+					season_number: episode.season,
+					episode_number: episode.number,
+					origin: "import",
+					import_id: "harness-import",
+					created_at: daysAgo(2),
+					updated_at: daysAgo(2),
+				}),
+			)
+		state("show", 222, "watching", daysAgo(2))
 	}
 
 	// The shows the member tracks.
@@ -540,11 +574,12 @@ function build(
 				perSeason: 10,
 				lastAir: 200,
 			})
-			tracked(105, SHOW_NAMES[4], "watching", 24, 5, 47, {
+			// Not watched for 90 days: to pick up.
+			tracked(105, SHOW_NAMES[4], "watching", 24, 5, 120, {
 				perSeason: 12,
 				lastAir: 150,
 			})
-			tracked(106, SHOW_NAMES[5], "watching", 8, 2, 80, { lastAir: 300 })
+			tracked(106, SHOW_NAMES[5], "watching", 8, 2, 200, { lastAir: 300 })
 			tracked(107, SHOW_NAMES[6], "seen", 42, 40, 60, {
 				perSeason: 10,
 				lastAir: 5,
@@ -566,7 +601,7 @@ function build(
 		}
 	}
 	if (member === "many") {
-		// 25 Watching: 8 watched in the last 30 days, 17 not. One Seen show has new episodes.
+		// 25 Watching: 8 watched in the last 90 days, 17 not. One Seen show has new episodes.
 		for (let i = 0; i < 25; i++)
 			tracked(
 				101 + i,
@@ -574,7 +609,7 @@ function build(
 				"watching",
 				16 + (i % 5) * 4,
 				2 + (i % 9),
-				i < 8 ? 1 + i * 4 : 31 + (i - 8) * 23,
+				i < 8 ? 1 + i * 10 : 91 + (i - 8) * 23,
 				{ perSeason: 8 + (i % 3), lastAir: 2 + i * 3 },
 			)
 		tracked(130, SHOW_NAMES[6], "seen", 42, 40, 60, {

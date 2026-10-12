@@ -37,6 +37,7 @@ const entry = (parts: Partial<WatchStateEntry> = {}): WatchStateEntry => ({
 	episodesWatched: 0,
 	furthest: null,
 	lastActivityAt: EARLIER,
+	watchingSince: null,
 	...parts,
 })
 /** A movie that is Seen only through its score: one undated watch. */
@@ -130,6 +131,7 @@ test("Seen pressed on a movie: Seen with a watch dated now, off the Wishlist and
 		episodesWatched: 0,
 		furthest: null,
 		lastActivityAt: NOW,
+		watchingSince: null,
 	})
 	assert.deepEqual(after?.wishlist, {})
 	assert.deepEqual(after?.notInterested, {})
@@ -176,16 +178,19 @@ test("Seen pressed on a show makes it Seen and keeps what the map knew; taking i
 		count: 3,
 		episodesWatched: 3,
 		furthest: [1, 3],
+		watchingSince: EARLIER,
 	})
 	const before = data({
 		watchState: { "show-3": watching },
 		wishlist: { "show-3": wish },
 	})
 	const after = afterSeenPress(before, "show", 3, "add", NOW)
+	// A Seen show is not Watching since anything.
 	assert.deepEqual(after?.watchState["show-3"], {
 		...watching,
 		state: "seen",
 		lastActivityAt: NOW,
+		watchingSince: null,
 	})
 	assert.deepEqual(after?.wishlist, {})
 	const fresh = afterSeenPress(data(), "show", 4, "add", NOW)
@@ -300,6 +305,7 @@ test("a first watch in the log makes the movie Seen with its date and count, and
 		episodesWatched: 0,
 		furthest: null,
 		lastActivityAt: NOW,
+		watchingSince: null,
 	})
 	assert.deepEqual([after?.wishlist, after?.notInterested], [{}, {}])
 	assert.equal("movie-603" in before.wishlist, true, "the map before is left")

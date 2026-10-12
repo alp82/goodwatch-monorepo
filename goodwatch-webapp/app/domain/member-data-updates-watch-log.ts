@@ -27,6 +27,7 @@ const seenEntry = (
 	...before,
 	...change,
 	state: "seen",
+	watchingSince: null,
 })
 
 /**

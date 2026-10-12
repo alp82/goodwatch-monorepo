@@ -569,6 +569,7 @@ test("the entry for the member data map is what the grouped query gives for the 
 							media_type: "show",
 							state: copy.state.state,
 							pass: copy.state.pass,
+							state_changed_at: copy.state.state_changed_at,
 						},
 					]
 				: [],
@@ -593,5 +594,6 @@ test("the entry for the member data map is what the grouped query gives for the 
 		episodesWatched: 2,
 		furthest: [1, 3],
 		lastActivityAt: new Date(NOW),
+		watchingSince: new Date(NOW),
 	})
 })

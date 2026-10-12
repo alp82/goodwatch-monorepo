@@ -1,6 +1,7 @@
 // Drives /prototype/my-library-real with the member `new` (issue #442) in headless Chromium and checks the real
 // pages at two sizes: the signal on home's Continue door, on what opens the hub and on the My shows tile; that
-// opening My shows clears it and says what was new; and the waiting group with its days.
+// opening My shows clears it and says what was new; the row for the waiting shows, closed and opened to its list
+// with the days; and the shows to pick up, between that row and Start.
 //   cd goodwatch-webapp
 //   REC_TRACKING=on REC_WATCH_NEXT=on REC_NAVIGATION=on REC_TASTE_MATCH=on \
 //     node_modules/.bin/remix vite:dev --port 3107 --strictPort --host 127.0.0.1      # without .env
@@ -116,10 +117,48 @@ for (const [size, options] of Object.entries(SIZES)) {
 	ok("shows: the page says once what was new, the latest to air first", (await text("[data-arrival]")) === `New since ${since}: The White Lotus, Wednesday, Only Murders in the Building and 1 more`, await text("[data-arrival]"))
 	ok("shows: opening the page is recorded as the visit", requests.some((r) => r.startsWith("POST") && r.includes("what=new-episodes")), requests.filter((r) => r.startsWith("POST")).join(" | "))
 	ok("shows: the signal is gone from what opens the hub", (await count(MARK)) === 0)
-	const continues = await texts("[data-row][data-tag=next], [data-row][data-tag=seenNew]")
-	ok("shows: a Watching show with a new Next episode stands beside the Seen shows with new episodes", /Slow Horses/.test(continues[1]) && /NEW/.test(continues[1]) && continues.slice(3).every((row) => /NEW EPISODES/.test(row)), continues.map((row) => row.split("\n").slice(0, 3).join("/")).join(" | "))
+	// The rows of Continue: the ones before the row for the waiting shows.
+	const continues = await page.evaluate(() => {
+		const items = [...document.querySelectorAll("[data-section=tonight] ol > li")]
+		return items.slice(0, items.findIndex((li) => li.dataset.waiting !== undefined)).filter((li) => li.dataset.row).map((li) => li.innerText)
+	})
+	ok("shows: a Watching show with a new Next episode stands beside the Seen shows with new episodes", /Slow Horses/.test(continues[2]) && /NEW/.test(continues[2]) && continues.length === 7 && continues.slice(4).every((row) => /NEW EPISODES/.test(row)), continues.map((row) => row.split("\n").slice(0, 3).join("/")).join(" | "))
 	await shot("shows")
 	await noSideScroll("shows")
+
+	// ------------------------------------------------------------------- The order of the page, and the shows to pick up
+	const order = await page.evaluate(() =>
+		[...document.querySelectorAll("[data-section=tonight] ol > li")].map((li) => li.dataset.groupLabel ?? (li.dataset.waiting !== undefined ? "waiting" : li.dataset.tag)).filter(Boolean).filter((name, i, all) => name !== all[i - 1]),
+	)
+	ok("shows: Continue, the waiting row, Pick up, Start", order.join() === "continue,next,seenNew,waiting,pick-up,next,start", order.join())
+	ok("shows: the rule on the page names Pick up", /Then Pick up: shows you started and have not watched for 90 days\. Then Start:/.test((await text("[data-order-rule]")).replace(/\s+/g, " ")), await text("[data-order-rule]"))
+	ok("shows: Pick up has a label with its count", /PICK UP\s*4\s*not watched for 90 days/i.test(await text("[data-group-label='pick-up']")), await text("[data-group-label='pick-up']"))
+	const facts = Object.fromEntries(await page.locator("[data-row]").evaluateAll((items) => items.map((li) => [li.dataset.row, [...li.querySelectorAll("a > span")].at(-2)?.textContent ?? ""])))
+	ok("shows: a show the member moved to Watching two days ago is in Continue and says since when", continues.findIndex((row) => /Star Trek: Picard/.test(row)) === 1 && (phone ? /Watching for 2 days/.test(continues[1]) : facts[219] === "Watching for 2 days"), `${continues[1].split("\n").join("/")} | ${facts[219]}`)
+	const pickUps = await page.evaluate(() => {
+		const items = [...document.querySelectorAll("[data-section=tonight] ol > li")]
+		const from = items.findIndex((li) => li.dataset.groupLabel === "pick-up")
+		const to = items.findIndex((li) => li.dataset.groupLabel === "start")
+		return items.slice(from + 1, to).map((li) => li.innerText.replace(/\s+/g, " "))
+	})
+	ok("shows: the shows to pick up are rows as in Continue, the one watched last first", pickUps.length === 4 && /Yellowjackets/.test(pickUps[0]) && /Lost/.test(pickUps[1]) && /Mad Men/.test(pickUps[2]) && pickUps.every((row) => /NEXT EPISODE/i.test(row) && /S\d+ E\d+ · /.test(row)), pickUps.join(" | "))
+	ok("shows: a show an import made Watching two days ago is one to pick up", /The Leftovers/.test(pickUps[3]) && /No date for your last watch/.test(pickUps[3]), pickUps[3])
+	ok("shows: nothing is collapsed but the shows set aside", (await count("[data-section=tonight] details")) === 1 && (await count("[data-quiet] details")) === 2 && (await count("[data-group=older]")) === 0)
+
+	// ------------------------------------------------------------------------------------------- The waiting row
+	ok("waiting: one row, closed, between Continue and Pick up", (await count("[data-waiting]")) === 1 && (await count("details[data-group=waiting]:not([open])")) === 1)
+	ok("waiting: it names the show that returns first, and counts the others", (await text("[data-waiting-says]")) === "Shrinking S3 E6 airs tomorrow" && /7 more shows waiting/.test(await text("[data-waiting-more]")), `${await text("[data-waiting-says]")} | ${await text("[data-waiting-more]")}`)
+	ok("waiting: closed, it is one row and no taller than a list row", await page.locator("[data-waiting]").evaluate((li) => li.getBoundingClientRect().height <= 64), String(await page.locator("[data-waiting]").evaluate((li) => li.getBoundingClientRect().height)))
+	ok("waiting: closed, no show's row is drawn", (await count("[data-waiting-row] >> visible=true")) === 0)
+	await page.evaluate(() => {
+		const row = document.querySelector("[data-waiting]")
+		window.scrollTo({ top: row.getBoundingClientRect().top + window.scrollY - (innerHeight - 320), behavior: "instant" })
+	})
+	await page.waitForTimeout(500)
+	await shot("waiting-closed")
+	await page.locator("[data-waiting-summary]").click()
+	await page.waitForTimeout(300)
+	ok("waiting: the row opens to every waiting show", (await count("[data-waiting-row] >> visible=true")) === 8)
 
 	const rows = await page.locator("[data-waiting-row]").evaluateAll((items) =>
 		items.map((li) => ({
@@ -144,6 +183,14 @@ for (const [size, options] of Object.entries(SIZES)) {
 	})
 	await page.waitForTimeout(600)
 	await shot("waiting")
+	await noSideScroll("waiting, opened")
+	await page.locator("[data-waiting-summary]").click()
+	await page.evaluate(() => {
+		const row = document.querySelector("[data-waiting]")
+		window.scrollTo({ top: row.getBoundingClientRect().top + window.scrollY - 150, behavior: "instant" })
+	})
+	await page.waitForTimeout(500)
+	await shot("pick-up")
 
 	// ------------------------------------------------------------------------------------------------ After the visit
 	await open("page=shows&member=new&seen=30")
@@ -153,6 +200,16 @@ for (const [size, options] of Object.entries(SIZES)) {
 	await settle()
 	ok("home, after the visit: no pill on the door and no signal", (await count("[data-door-signal]")) === 0 && (await count(MARK)) === 0)
 	await shot("home-cleared")
+
+	// ------------------------------------------------------------------- One waiting show without a date, and none
+	await open("page=shows&member=six&seen=30&reset=1")
+	ok("waiting, one show without a date: the row names it and says so", (await text("[data-waiting-says]")) === "The White Lotus is waiting for episodes" && /No date yet$/.test(await text("[data-waiting-more]")), `${await text("[data-waiting-says]")} | ${await text("[data-waiting-more]")}`)
+	await open("page=shows&member=many&seen=30&reset=1")
+	ok("waiting, no waiting show: no row", (await count("[data-waiting]")) === 0)
+	ok("pick up, 17 shows: five are drawn, and a button draws more", /PICK UP\s*17/i.test(await text("[data-group-label='pick-up']")) && /Show 12 more/.test(await text("[data-more-pick-up]")), await text("[data-more-pick-up]"))
+	await page.locator("[data-more-pick-up]").click()
+	await page.waitForTimeout(300)
+	ok("pick up: the button draws the rest", (await count("[data-more-pick-up]")) === 0 && (await count("[data-row][data-tag=next]")) === 25, String(await count("[data-row][data-tag=next]")))
 
 	// ------------------------------------------------------------------------------- A member with nothing to follow
 	await open("page=home&member=empty&seen=0")
@@ -169,8 +226,9 @@ for (const [size, options] of Object.entries(SIZES)) {
 	const page = await context.newPage()
 	await paint(page)
 	await page.goto(`${base}/prototype/my-library-real?chrome=off&page=shows&member=new&seen=30&reset=1`, { waitUntil: "load" })
-	await page.waitForSelector("[data-waiting-row='207']", { timeout: 20000 })
+	await page.waitForSelector("[data-waiting-summary]", { timeout: 20000 })
 	await page.waitForTimeout(800)
+	await page.locator("[data-waiting-summary]").click()
 	const theirs = new Intl.DateTimeFormat("en-CA", { timeZone: zone }).format(new Date())
 	const utcTomorrow = new Date(Date.now() + DAY).toISOString().slice(0, 10)
 	const expected = theirs === utcTomorrow ? "Today" : "Tomorrow"

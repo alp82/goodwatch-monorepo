@@ -69,7 +69,8 @@ export interface MyShowsStart extends ShowCard {
 export interface MyShows {
 	continue: MyShowsRow[]
 	start: MyShowsStart[]
-	older: MyShowsRow[]
+	/** Watching with a Next episode and no activity in the last 90 days. */
+	pickUp: MyShowsRow[]
 	waiting: MyShowsRow[]
 	onHold: MyShowsRow[]
 	dropped: MyShowsRow[]
@@ -320,9 +321,10 @@ const cardOf = (id: number, row: CatalogRow | undefined) => ({
 })
 
 /**
- * A member's shows for tonight, in the page's groups. `episodeLists` bounds how many Continue rows get their Next
- * episode from the show's cached episode list: the page reads them for every Continue row it draws first, home's
- * Continue door for one. `upcoming: false` leaves out when the waiting shows return, which only the page shows.
+ * A member's shows for tonight, in the page's groups. `episodeLists` bounds how many rows get their Next episode
+ * from the show's cached episode list, Continue first and then Pick up: the page reads them for the rows it draws
+ * first, home's Continue door for one. `upcoming: false` leaves out when the waiting shows return, which only the
+ * page shows.
  */
 export async function getMyShows(
 	viewer: MyShowsViewer,
@@ -333,8 +335,11 @@ export async function getMyShows(
 	const { shows, catalog, matchOf } = await plan(viewer, userData, now)
 	const today = utcDay(now)
 
-	// The Next episode of the Continue rows, and beside them when the waiting shows return.
-	const named = shows.continue.slice(0, options.episodeLists ?? 30)
+	// The Next episode of the Continue and Pick up rows, and beside them when the waiting shows return.
+	const named = [...shows.continue, ...shows.pickUp].slice(
+		0,
+		options.episodeLists ?? 30,
+	)
 	const [next, upcoming] = await Promise.all([
 		readNextEpisodes(viewer.userId, userData, named, today),
 		options.upcoming === false
@@ -381,7 +386,7 @@ export async function getMyShows(
 				service: serviceOf(carried[i]),
 			}
 		}),
-		older: rows(shows.older),
+		pickUp: rows(shows.pickUp),
 		waiting: soonestFirst(
 			rows(shows.waiting).map((row) => ({
 				...row,

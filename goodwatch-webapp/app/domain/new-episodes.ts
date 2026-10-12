@@ -71,6 +71,51 @@ export function upcomingWords(
 	}
 }
 
+/** What My shows says about the waiting shows in one row, between Continue and Pick up. */
+export interface WaitingWords {
+	/** The show the row names: the one that returns first, or the only one waiting. Null: several, none with a date. */
+	title: string | null
+	/** After the title, "S5 E4 airs tomorrow" or "is waiting for episodes"; without one, the whole statement. */
+	says: string
+	/** What else there is to say: "2 more shows waiting", "No date yet". */
+	more: string | null
+}
+
+/**
+ * The one row for the waiting shows, which come soonest first: the show that returns first with its episode and
+ * day, and how many more wait. Without a dated episode the row says that plainly. Null without a waiting show.
+ */
+export function waitingWords(
+	rows: readonly { title: string; upcoming: UpcomingEpisode | null }[],
+	today: string,
+): WaitingWords | null {
+	const [first] = rows
+	if (!first) return null
+	const others = rows.length - 1
+	if (!first.upcoming)
+		return others
+			? {
+					title: null,
+					says: `${rows.length} shows are waiting for episodes`,
+					more: "No dates yet",
+				}
+			: {
+					title: first.title,
+					says: "is waiting for episodes",
+					more: "No date yet",
+				}
+	const { season, number, airDate } = first.upcoming
+	const when = whenWords(airDate, today)
+	return {
+		title: first.title,
+		// A date reads "on 20 Nov"; a day in words stands alone.
+		says: `S${season} E${number} airs ${/^\d/.test(when) ? "on " : ""}${when}`,
+		more: others
+			? `${others} more ${others === 1 ? "show" : "shows"} waiting`
+			: null,
+	}
+}
+
 /** The device's calendar date, "YYYY-MM-DD": the member's day, by which the page says "tomorrow". */
 export function deviceDay(now = new Date()): string {
 	const two = (value: number) => String(value).padStart(2, "0")
