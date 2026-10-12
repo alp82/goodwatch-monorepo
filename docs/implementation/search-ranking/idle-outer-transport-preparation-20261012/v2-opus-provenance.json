@@ -1,0 +1,17 @@
+{
+  "manifestSha256": "faf08896a99cb97649d4d5c13b60fb8f1ba1a7183c60a2f1eb56fe8c897fdb45",
+  "reportSha256": "4adf685f3bec39eb0644ad09abdd706e9deae7a64ccc9418ef360e910cd68aec",
+  "modelUsage": [
+    "claude-opus-5-5"
+  ],
+  "durationMs": 236796,
+  "cliExitCode": 0,
+  "toolsDisabled": true,
+  "privateInputsIncluded": false,
+  "validation": {
+    "tests": 70,
+    "seconds": 77.13,
+    "outcome": "PASS",
+    "sha256": "a525c40cef8fd66abc1657de0a70a208a1e8c7a16f862ba5eff3feba2349dcc0"
+  }
+}

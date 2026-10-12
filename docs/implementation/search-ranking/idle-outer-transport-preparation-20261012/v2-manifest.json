@@ -1,0 +1,70 @@
+{
+  "IDLE-TRANSPORT.md": {
+    "bytes": 5080,
+    "sha256": "056edcbc6a9eec085ed1255b5cc535663518bd42004c727638c2472c2db179fe"
+  },
+  "idle_entry.py": {
+    "bytes": 7521,
+    "sha256": "c542d7cf3be8c26ea3a76cfe546d5969bf616824eae8d7a7ad830da70b428cd0"
+  },
+  "idle_journal.py": {
+    "bytes": 14947,
+    "sha256": "96575cbe80508614ce6e9def01083197168ab1626da2401a14ab08dcd9850cf1"
+  },
+  "idle_launcher.py": {
+    "bytes": 11451,
+    "sha256": "921ee686ef0de40e4fe476ee78fa46ef8eebb77788b603cd0aeeaaf5893ddb0d"
+  },
+  "idle_lease.py": {
+    "bytes": 9751,
+    "sha256": "29a04660f0c14c6d39e5a1e29cdd1a9d31bcd3a4d567f65ce4449d9acc958579"
+  },
+  "idle_transport.py": {
+    "bytes": 31773,
+    "sha256": "f2bdaefe229e5e0aa1817c522f7e07abdefdb853bca3224d86d5074a5fed9a6f"
+  },
+  "idle_trial.py": {
+    "bytes": 28952,
+    "sha256": "d35f6ec06001ce65a7734ea6e76d72430467e0f46ef63e08f3dff4b92d280340"
+  },
+  "pin.py": {
+    "bytes": 22552,
+    "sha256": "d6117f9b2d17806b8571fdfa39d11adebe2e87c1d66c1a2cdd8a5a92d1c630ec"
+  },
+  "production.py": {
+    "bytes": 30448,
+    "sha256": "9ad60d1b347600add5907c92125288aec3a2914caece63655a4df4ad59203005"
+  },
+  "production_journal.py": {
+    "bytes": 8191,
+    "sha256": "20fd12fe1a2e5aa24ad5366bc584c0f410d12f6396ff84c0e2719d4fa3ebb389"
+  },
+  "runtime.py": {
+    "bytes": 16721,
+    "sha256": "98abb36aed962bc9d3491dde93684355665a62238542dec908634bb4a3a657f5"
+  },
+  "test_idle_journal.py": {
+    "bytes": 6300,
+    "sha256": "1248128f3ddd446c51861082ce2d84bc473ebb5409641553479fe106d7a8f5df"
+  },
+  "test_idle_launcher.py": {
+    "bytes": 20764,
+    "sha256": "6891ddcb5eb2abe7b11944840278bc4611e3b9162f0b14b4088afc9b07b1de56"
+  },
+  "test_idle_lease.py": {
+    "bytes": 10094,
+    "sha256": "a05f4a45c5473c69a6a38af6b717a45c6344cf71ce274872ed226d04082e861d"
+  },
+  "test_idle_transport.py": {
+    "bytes": 46018,
+    "sha256": "e3adc324e21edbcdea130e7e7a5830948ec392c4aa7d68db60f77dbd9d571302"
+  },
+  "test_idle_trial.py": {
+    "bytes": 42329,
+    "sha256": "3751804a187318daa2d696341b67c5aed718332e7b9d14d84c7e0e7e6a5429a2"
+  },
+  "zero_placement.py": {
+    "bytes": 12415,
+    "sha256": "5e1cbc8b6288b4751f88b0f8c253e4569487aded8f9c028dea707680d549708d"
+  }
+}

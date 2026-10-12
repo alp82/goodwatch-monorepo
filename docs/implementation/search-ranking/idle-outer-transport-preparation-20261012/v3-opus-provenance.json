@@ -1,0 +1,79 @@
+{
+  "cliExitCode": 0,
+  "durationMs": 145144,
+  "effort": "medium",
+  "execution": false,
+  "mainCommit": "1a8da52bedb24dd39ed055715d6a9210b3ca98a4",
+  "manifestSha256": "014145917b88b4b4a476428c8a1a85e066ccb9a818fb394ac2f1346e307fcc4e",
+  "modelUsage": [
+    "claude-opus-5-5"
+  ],
+  "nineMergedModules": {
+    "idle_journal.py": {
+      "equalsMain": true,
+      "equalsV2": true,
+      "sha256": "96575cbe80508614ce6e9def01083197168ab1626da2401a14ab08dcd9850cf1"
+    },
+    "idle_launcher.py": {
+      "equalsMain": true,
+      "equalsV2": true,
+      "sha256": "921ee686ef0de40e4fe476ee78fa46ef8eebb77788b603cd0aeeaaf5893ddb0d"
+    },
+    "idle_lease.py": {
+      "equalsMain": true,
+      "equalsV2": true,
+      "sha256": "29a04660f0c14c6d39e5a1e29cdd1a9d31bcd3a4d567f65ce4449d9acc958579"
+    },
+    "idle_trial.py": {
+      "equalsMain": true,
+      "equalsV2": true,
+      "sha256": "d35f6ec06001ce65a7734ea6e76d72430467e0f46ef63e08f3dff4b92d280340"
+    },
+    "pin.py": {
+      "equalsMain": true,
+      "equalsV2": true,
+      "sha256": "d6117f9b2d17806b8571fdfa39d11adebe2e87c1d66c1a2cdd8a5a92d1c630ec"
+    },
+    "production.py": {
+      "equalsMain": true,
+      "equalsV2": true,
+      "sha256": "9ad60d1b347600add5907c92125288aec3a2914caece63655a4df4ad59203005"
+    },
+    "production_journal.py": {
+      "equalsMain": true,
+      "equalsV2": true,
+      "sha256": "20fd12fe1a2e5aa24ad5366bc584c0f410d12f6396ff84c0e2719d4fa3ebb389"
+    },
+    "runtime.py": {
+      "equalsMain": true,
+      "equalsV2": true,
+      "sha256": "98abb36aed962bc9d3491dde93684355665a62238542dec908634bb4a3a657f5"
+    },
+    "zero_placement.py": {
+      "equalsMain": true,
+      "equalsV2": true,
+      "sha256": "5e1cbc8b6288b4751f88b0f8c253e4569487aded8f9c028dea707680d549708d"
+    }
+  },
+  "preFreezeQualification": {
+    "cause": "mutation assertions expected previous entry exception exit4; updated to distinct exit5",
+    "correctedMeaning": "all other38 methods passed; six failed subcases belonged to one method",
+    "failedMethods": 1,
+    "failedMutationSubcases": 6,
+    "incorrectReviewPromptPhrase": "all other33",
+    "passedMethods": 38,
+    "supersededByFrozen76Pass": true,
+    "targetedFinalTests": 2,
+    "targetedOutcome": "PASS",
+    "testMethods": 39
+  },
+  "privateInputsIncluded": false,
+  "reportSha256": "42f486371d9981350d9e3ca62761d999855e094edfb7ca5019d45846f1bb1bf9",
+  "toolsDisabled": true,
+  "validation": {
+    "outcome": "PASS",
+    "seconds": 78.805,
+    "sha256": "ed719a0aecc8ceb210a1c18ac63f5bd3f3d0ef8c8fc21a466bc0ec97598d1462",
+    "tests": 76
+  }
+}

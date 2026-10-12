@@ -1,0 +1,55 @@
+test_actual_owned_writer_receipt_is_verified_and_extended_tail_rejected (test_idle_transport.TransportTests.test_actual_owned_writer_receipt_is_verified_and_extended_tail_rejected) ... ok
+test_entry_uses_os_exit_despite_unreaped_owned_fixture_child (test_idle_transport.TransportTests.test_entry_uses_os_exit_despite_unreaped_owned_fixture_child) ... ok
+test_ignored_sigchld_is_refused_before_owned_fork (test_idle_transport.TransportTests.test_ignored_sigchld_is_refused_before_owned_fork) ... ok
+test_inactive_root_api_refuses_real_unprivileged_caller_before_source_reads (test_idle_transport.TransportTests.test_inactive_root_api_refuses_real_unprivileged_caller_before_source_reads) ... ok
+test_metadata_kernel_fence_rejects_capped_ancestor_and_identity_turnover (test_idle_transport.TransportTests.test_metadata_kernel_fence_rejects_capped_ancestor_and_identity_turnover) ... ok
+test_outer_death_midrun_kills_only_its_owned_cli_by_parent_death (test_idle_transport.TransportTests.test_outer_death_midrun_kills_only_its_owned_cli_by_parent_death) ... ok
+test_outer_does_not_wait_for_descendant_stdout_eof (test_idle_transport.TransportTests.test_outer_does_not_wait_for_descendant_stdout_eof) ... ok
+test_production_rejects_unprivileged_fixture_without_spawning (test_idle_transport.TransportTests.test_production_rejects_unprivileged_fixture_without_spawning) ... ok
+test_ready_entry_eof_and_wrong_manifest_go_never_invoke_api (test_idle_transport.TransportTests.test_ready_entry_eof_and_wrong_manifest_go_never_invoke_api) ... ok
+test_real_journaled_refusal_through_manifest_rejected_standin (test_idle_transport.TransportTests.test_real_journaled_refusal_through_manifest_rejected_standin) ... ok
+test_real_unprivileged_entry_returns_durable_refusal_without_source_inspection (test_idle_transport.TransportTests.test_real_unprivileged_entry_returns_durable_refusal_without_source_inspection) ... ok
+test_rebound_core_mutation_is_rejected_before_cli_birth (test_idle_transport.TransportTests.test_rebound_core_mutation_is_rejected_before_cli_birth) ... ok
+test_rebound_standin_entry_is_rejected_before_cli_birth (test_idle_transport.TransportTests.test_rebound_standin_entry_is_rejected_before_cli_birth) ... ok
+test_standing_receipt_not_live_inspection_selects_source_identity (test_idle_transport.TransportTests.test_standing_receipt_not_live_inspection_selects_source_identity) ... ok
+test_idle_journal (unittest.loader._FailedTest.test_idle_journal) ... ERROR
+test_active_backup_process_refuses_despite_last_completed_phase_log (test_idle_lease.LeaseTests.test_active_backup_process_refuses_despite_last_completed_phase_log) ... ok
+test_cache_advice_requires_exact_true_not_missing_false_or_other_type (test_idle_lease.LeaseTests.test_cache_advice_requires_exact_true_not_missing_false_or_other_type) ... ok
+test_changed_schedule_active_job_unknown_phase_and_clock_jump_refuse (test_idle_lease.LeaseTests.test_changed_schedule_active_job_unknown_phase_and_clock_jump_refuse) ... ok
+test_known_phase_log_requires_complete_both_collections_and_refuses_failure (test_idle_lease.LeaseTests.test_known_phase_log_requires_complete_both_collections_and_refuses_failure) ... ok
+test_real_file_cron_parser_does_not_assume_minute15_or_accept_duplicates (test_idle_lease.LeaseTests.test_real_file_cron_parser_does_not_assume_minute15_or_accept_duplicates) ... ok
+test_real_filesystem_pinned_daemon_cron_source_and_phase_fences (test_idle_lease.LeaseTests.test_real_filesystem_pinned_daemon_cron_source_and_phase_fences) ... ok
+test_reviewed_job_with_shadow_forms_refuses (test_idle_lease.LeaseTests.test_reviewed_job_with_shadow_forms_refuses) ... ok
+test_utc_config_namespace_environment_and_second_daemon_refuse (test_idle_lease.LeaseTests.test_utc_config_namespace_environment_and_second_daemon_refuse) ... ok
+test_vanished_census_process_is_unknown_not_idle (test_idle_lease.LeaseTests.test_vanished_census_process_is_unknown_not_idle) ... ok
+test_verified_cron_minute_drives_stable_monotonic_boundary (test_idle_lease.LeaseTests.test_verified_cron_minute_drives_stable_monotonic_boundary) ... ok
+test_idle_launcher (unittest.loader._FailedTest.test_idle_launcher) ... ERROR
+
+======================================================================
+ERROR: test_idle_journal (unittest.loader._FailedTest.test_idle_journal)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_idle_journal
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/unittest/loader.py", line 141, in loadTestsFromName
+    module = __import__(module_name)
+  File "/home/alper/projects/search-100-evidence/idle-outer-transport-review-v1-20261012/test_idle_journal.py", line 12, in <module>
+    from test_idle_trial import healthy
+ModuleNotFoundError: No module named 'test_idle_trial'
+
+
+======================================================================
+ERROR: test_idle_launcher (unittest.loader._FailedTest.test_idle_launcher)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_idle_launcher
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/unittest/loader.py", line 141, in loadTestsFromName
+    module = __import__(module_name)
+  File "/home/alper/projects/search-100-evidence/idle-outer-transport-review-v1-20261012/test_idle_launcher.py", line 18, in <module>
+    from test_idle_trial import pressure_files,lease
+ModuleNotFoundError: No module named 'test_idle_trial'
+
+
+----------------------------------------------------------------------
+Ran 26 tests in 3.059s
+
+FAILED (errors=2)

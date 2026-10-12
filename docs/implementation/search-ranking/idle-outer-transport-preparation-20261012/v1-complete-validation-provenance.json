@@ -1,0 +1,20 @@
+{
+  "schema": "local-validation-provenance.v1",
+  "originalManifestSha256": "e0b558753bb6eaba2256100f70475b93989441f6ebb057cdfa9e2a11228b41d6",
+  "originalRun": {
+    "entries": 26,
+    "passed": 24,
+    "importErrors": 2,
+    "missingPublicFixture": "test_idle_trial.py"
+  },
+  "completeManifestSha256": "36252ffbad80beadb5602e9e5a42b9f40cf5e278e657eebd9df9a9c7c969a0cd",
+  "completeRun": {
+    "tests": 51,
+    "passed": 51,
+    "seconds": 65.936
+  },
+  "implementationBytesUnchanged": true,
+  "hostExecution": false,
+  "privateInputsIncluded": false,
+  "validationSha256": "722739eb96f5997b1a7a11a9273e9e30a4c9a824dcf133d247248d839c0c4cd6"
+}
