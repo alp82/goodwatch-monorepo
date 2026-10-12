@@ -1,0 +1,30 @@
+{
+  "actualProducerFailureCauseEstablished": false,
+  "coverage": [
+    "explicit original Content-Length",
+    "split writes",
+    "object/function and URL/options/callback overloads",
+    "exact rewritten body and header",
+    "raw manifest SHA mismatch yields zero delivered bytes",
+    "unrelated SELECT header preserved",
+    "unrelated blob GET header preserved",
+    "INSERT body forbidden before fake server"
+  ],
+  "fixedGuardSha256": "19e45f2ae9cf6ebadbbbe4c0ec435fc3e1fee2f6d7e61ef05d33d4e4d9629c90",
+  "green": {
+    "failingTests": 0,
+    "nodeTestsExitCode": 0,
+    "passingTests": 3
+  },
+  "originalGuardSha256": "14ccaf5d6db489c2df8eae852deed6cf5ff5835e3013204532f766772b538930",
+  "productionExecution": false,
+  "red": {
+    "failingTests": 1,
+    "fixedFailureReason": "historical_manifest_response_shape",
+    "nodeTestsExitCode": 1,
+    "passingTests": 2,
+    "responseBytesDelivered": 0
+  },
+  "schema": "historical-index-content-length-fixture.v1",
+  "scope": "local fake Crate HTTP server only"
+}

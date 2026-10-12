@@ -1,0 +1,57 @@
+{
+  "acceptanceWindowStarted": false,
+  "artifacts": {
+    "active-search-model-metadata-20261012.json": {
+      "bytes": 3819,
+      "sha256": "5a2d65ff44cd0592fdc67d0e940ee793411105f5752687bca1e23634e94ff432"
+    },
+    "diagnostic-active-search-source-parity-20261012.json": {
+      "bytes": 1760,
+      "sha256": "253b0c9745b49cca2c8f4ee3c9461bb1908d3e9cf80950464daa05d2cc7d66a9"
+    },
+    "diagnostic-page-source-parity-20261012.json": {
+      "bytes": 1960,
+      "sha256": "66a9c3d58aebc71ad5b16b082344ba7c07844611417ff0c710443290d993d530"
+    },
+    "historical-index-content-length-fixture-20261012.json": {
+      "bytes": 1021,
+      "sha256": "ae32cbc86c6da1ac2e40fb07041c171d57d7db6942e836756236bed671e49825"
+    },
+    "model-byte-parity-20261012.json": {
+      "bytes": 4479,
+      "sha256": "aa798c8861fcf58895a08b725a2da0ec6c63c977c00d414e215268ae7f5bb38c"
+    },
+    "private-producer-historical-v2-failure-20261012.json": {
+      "bytes": 977,
+      "sha256": "35a08542d9f77a697a496f2e871dd7ec1a72a8f3a5b5817898cc5eed7d2a035a"
+    },
+    "private-producer-index-history-probe-20261012.json": {
+      "bytes": 1299,
+      "sha256": "e6535cb73204860a58618eda53b2f443264f4947858579065b62f6ac6a5a9abd"
+    },
+    "private-producer-nested-bind-refusal-20261012.json": {
+      "bytes": 402,
+      "sha256": "c1ab372caa0b76213ff48c8bef2f8da0f7662ed5784f7b79c78c9b9b2b1c1648"
+    },
+    "private-producer-node-start-20261012.json": {
+      "bytes": 1026,
+      "sha256": "a5f68d47bde2b08c38bd6f4b6e8b36ef645b73cb33dc538ea77bad2738ee7479"
+    },
+    "private-producer-original-failure-20261012.json": {
+      "bytes": 850,
+      "sha256": "a80f32385fc0c1363847c4265ab7d94fb6c33a6f08a640596c8a301918ae6c07"
+    },
+    "private-producer-retained-manifest-20261012.json": {
+      "bytes": 1504,
+      "sha256": "47c574de9bd8eec5e1d1b9621186b6fb1fa2e5f0f9b253094793b140db0aed54"
+    },
+    "private-producer-staging-20261012.json": {
+      "bytes": 1488,
+      "sha256": "e2cc5cdeaafbe1138f6256c968163aacabcc78575b01a05a2af3f8a7fb46d182"
+    }
+  },
+  "compiledArtifactEqualityProven": false,
+  "historicalComparisonV3": "pending",
+  "productionAcceptance": false,
+  "schema": "model-producer-diagnostic-evidence-audit.v1"
+}
