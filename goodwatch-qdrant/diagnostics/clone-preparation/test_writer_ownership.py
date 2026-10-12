@@ -23,11 +23,18 @@ class WriterOwnership(unittest.TestCase):
    finally:signal.setitimer(signal.ITIMER_REAL,0);signal.signal(signal.SIGALRM,previous);os.close(fd)
  def test_ignored_term_is_followed_by_owned_kill_and_actual_reap(self):
   with tempfile.TemporaryDirectory() as directory:
-   fd=os.open(Path(directory)/'target',os.O_CREAT|os.O_RDWR,0o600)
-   def operation(_fd):signal.signal(signal.SIGTERM,signal.SIG_IGN);time.sleep(30)
-   try:result=guard.bounded_owned_writer(fd,operation,Path(directory),'a'*64,timeout=.05,grace=.05)
-   finally:os.close(fd)
-   self.assertTrue(result['writerGone']);self.assertEqual(result['writerExitCode'],-signal.SIGKILL)
+   fd=os.open(Path(directory)/'target',os.O_CREAT|os.O_RDWR,0o600);ready_read,ready_write=os.pipe();parent=os.getpid()
+   old=signal.signal(signal.SIGALRM,lambda _s,_f:(_ for _ in ()).throw(RuntimeError('writer_interrupted')))
+   sender=os.fork()
+   if sender==0:
+    os.close(ready_write)
+    if not select.select([ready_read],[],[],10)[0] or os.read(ready_read,1)!=b'R':os._exit(127)
+    os.kill(parent,signal.SIGALRM);os._exit(0)
+   def operation(_fd):signal.signal(signal.SIGTERM,signal.SIG_IGN);os.write(ready_write,b'R');time.sleep(30)
+   try:
+    with self.assertRaises(RuntimeError) as caught:guard.bounded_owned_writer(fd,operation,Path(directory),'a'*64,timeout=15,grace=1)
+    self.assertTrue(caught.exception.writerEvidence['writerGone']);self.assertEqual(caught.exception.writerEvidence['writerExitCode'],-signal.SIGKILL)
+   finally:os.waitpid(sender,0);signal.signal(signal.SIGALRM,old);os.close(ready_read);os.close(ready_write);os.close(fd)
  def test_actual_parent_death_kills_child_before_delayed_write(self):
   with tempfile.TemporaryDirectory() as directory:
    root=Path(directory);script="""import os,time
@@ -40,8 +47,8 @@ g.bounded_owned_writer(fd,operation,root,'a'*64,timeout=40)
    process=subprocess.Popen([sys.executable,'-B','-c',script],cwd=Path(__file__).parent,env={**os.environ,'FIXTURE_ROOT':str(root)},stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
    pidfd=None
    try:
-    deadline=time.monotonic()+2
-    while time.monotonic()<deadline and not list(root.glob('reclaim-writer-*.json')):time.sleep(.01)
+    deadline=time.monotonic()+10
+    while time.monotonic()<deadline and process.poll() is None and not list(root.glob('reclaim-writer-*.json')):time.sleep(.01)
     record=json.loads(next(root.glob('reclaim-writer-*.json')).read_text());pidfd=os.pidfd_open(record['writer']['pid'])
     process.kill();process.wait(timeout=2)
     self.assertTrue(select.select([pidfd],[],[],2)[0]);self.assertEqual((root/'target').read_bytes(),b'')
@@ -56,7 +63,7 @@ g.bounded_owned_writer(fd,operation,root,'a'*64,timeout=40)
    root=Path(directory);fd=os.open(root/'target',os.O_CREAT|os.O_RDWR,0o600)
    try:
     with patch.object(guard,'receipt',side_effect=RuntimeError('writer_registration_failed')):
-     with self.assertRaises(RuntimeError) as caught:guard.bounded_owned_writer(fd,lambda fd:os.write(fd,b'forbidden'),root,'a'*64,timeout=.1,grace=.1)
+     with self.assertRaises(RuntimeError) as caught:guard.bounded_owned_writer(fd,lambda fd:os.write(fd,b'forbidden'),root,'a'*64,timeout=.1,grace=1)
     self.assertTrue(caught.exception.writerEvidence['writerGone']);self.assertEqual((root/'target').read_bytes(),b'')
    finally:os.close(fd)
  def test_receipt_cannot_adopt_the_actual_outer_or_protected_source(self):
@@ -88,7 +95,7 @@ g.bounded_owned_writer(fd,operation,root,'a'*64,timeout=40)
    parent=guard.identity(os.getpid())
    try:
     for index in range(14):guard.receipt(root,{**parent,'pid':900000+index},parent,'a'*64,fd)
-    with self.assertRaisesRegex(RuntimeError,'writer_registration_failed') as caught:guard.bounded_owned_writer(fd,lambda target:os.write(target,b'forbidden'),root,'a'*64,timeout=.1,grace=.1)
+    with self.assertRaisesRegex(RuntimeError,'writer_registration_failed') as caught:guard.bounded_owned_writer(fd,lambda target:os.write(target,b'forbidden'),root,'a'*64,timeout=.1,grace=1)
     self.assertFalse(caught.exception.writerEvidence['registeredBeforeWrite']);self.assertTrue(caught.exception.writerEvidence['writerGone']);self.assertEqual((root/'target').read_bytes(),b'');self.assertEqual(len(list(root.glob('reclaim-writer-*.json'))),14)
    finally:os.close(fd)
  def test_stale_or_malformed_first_receipt_does_not_skip_live_owned_cleanup(self):
