@@ -10,6 +10,26 @@ from test_daemon import accounting
 
 
 class ControllerTests(unittest.TestCase):
+    def test_cache_preparation_loads_only_the_exact_owned_immutable_bytes(self):
+        import tempfile,os,hashlib
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'prepare_clone_reclaim.py';raw=b'REQUEST=3221225472\n'
+            path.write_bytes(raw);path.chmod(0o600)
+            config={'cachePreparation':{'helperPath':str(path),'helperSha256':hashlib.sha256(raw).hexdigest(),'requestedBytes':3*1024**3}}
+            with patch.object(controller,'MODULE_DIR',Path(directory)):
+                self.assertEqual(controller.load_cache_preparation(config).REQUEST,3*1024**3)
+                path.write_bytes(b'REQUEST=0\n')
+                with self.assertRaisesRegex(RuntimeError,'cache_preparation_freeze_changed'):controller.load_cache_preparation(config)
+                path.write_bytes(raw);path.chmod(0o644)
+                with self.assertRaisesRegex(RuntimeError,'cache_preparation_freeze_changed'):controller.load_cache_preparation(config)
+
+    def test_preparation_to_initial_and_initial_to_pin_counters_are_strict(self):
+        clean=accounting();changed=accounting();changed['memoryEvents']['max']=1
+        with self.assertRaisesRegex(RuntimeError,'phase_resource_failed'):controller.limits(clean,changed)
+        changed=accounting();changed['cpu']['nr_throttled']=1
+        with self.assertRaisesRegex(RuntimeError,'phase_resource_failed'):controller.limits(clean,changed)
+
     def test_nofile_raise_requires_separate_cli_opt_in(self):
         for enabled in (False,True):
             args=['--execute-reviewed','--config','fixture','--policy-sha256','a'*64,'--code-sha256','b'*64,'--phase','candidate','--case-tag','heldout-person']
@@ -104,11 +124,12 @@ class ControllerTests(unittest.TestCase):
                 self.assertEqual(emitted[-1]['stage'],'query-ready')
                 if fail:raise RuntimeError('query_lease_timeout')
             record={'minorFaults':1,'majorFaults':2,'physicalReadBytes':3,'rssBytes':4}
-            with patch.object(controller.os,'open',return_value=12),patch.object(controller.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(controller.os,'close'),patch.object(controller.fcntl,'flock'),patch.object(controller,'frozen_helper'),patch.object(controller,'guard_shards',return_value=6),patch.object(controller,'self_cgroup',return_value='/session'),patch.object(controller,'verify_archive',return_value={'bytes':controller.ARCHIVE_BYTES}),patch.object(controller,'owned_total_budget',return_value=1),patch.object(controller,'cold',return_value={'actualQdrantPid':123}),patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller.runtime,'measure_source',return_value=measured) as measure_read,patch.object(controller.runtime,'accounting',side_effect=lambda source:accounting()),patch.object(controller,'process_counters',return_value=record),patch.object(controller,'pressure',return_value={'bytes':controller.ARCHIVE_BYTES}),patch.object(controller,'PinChild',return_value=holder),patch.object(controller,'query_lease',side_effect=lease),patch.object(controller.runtime,'prepare_self') as parent_join:
+            with patch.object(controller.os,'open',return_value=12),patch.object(controller.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(controller.os,'close'),patch.object(controller.fcntl,'flock'),patch.object(controller,'frozen_helper'),patch.multiple(controller,load_cache_preparation=Mock(),prepare_cache=Mock(return_value={'final':{'accounting':accounting()}})),patch.object(controller,'guard_shards',return_value=6),patch.object(controller,'self_cgroup',return_value='/session'),patch.object(controller,'verify_archive',return_value={'bytes':controller.ARCHIVE_BYTES}),patch.object(controller,'owned_total_budget',return_value=1),patch.object(controller,'cold',return_value={'actualQdrantPid':123}),patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller.runtime,'measure_source',return_value=measured) as measure_read,patch.object(controller.runtime,'accounting',side_effect=lambda source:accounting()),patch.object(controller,'process_counters',return_value=record),patch.object(controller,'pressure',return_value={'bytes':controller.ARCHIVE_BYTES}),patch.object(controller,'PinChild',return_value=holder),patch.object(controller,'query_lease',side_effect=lease),patch.object(controller.runtime,'prepare_self') as parent_join:
                 if fail:
-                    with self.assertRaises(RuntimeError):controller.stage({'queryLeaseSeconds':2},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',emitted.append,raise_own_nofile=True)
-                else:controller.stage({'queryLeaseSeconds':2},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',emitted.append,raise_own_nofile=True)
+                    with self.assertRaises(RuntimeError):controller.stage({'queryLeaseSeconds':2,'cachePreparation':{'helperSha256':'f'*64}},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',emitted.append,raise_own_nofile=True)
+                else:controller.stage({'queryLeaseSeconds':2,'cachePreparation':{'helperSha256':'f'*64}},spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',emitted.append,raise_own_nofile=True)
             holder.close.assert_called_once();parent_join.assert_not_called()
+            self.assertEqual(emitted[0]['stage'],'cache-preparation-complete')
             self.assertTrue(measure_read.call_args_list)
             self.assertTrue(all(call.kwargs['raise_own_nofile'] is True for call in measure_read.call_args_list))
             if not fail:
@@ -119,8 +140,8 @@ class ControllerTests(unittest.TestCase):
         import os
         source=SimpleNamespace(identity=('fixed',),spec=object(),cgroup_relative='/clone',pid=123);holder=Mock();holder.request.return_value=pin_state()
         snapshots=[{'selectionHash':'a'*64,'classesMeasured':{k:{'dataPages':1,'residentDataPages':1} for k in ('vector','graph','sparse','other')},'pageBytes':4096,'accounting':accounting(),'nofileLimits':{'openFdCount':4,'mappedFileBound':20000,'reserveFds':256,'requiredSoft':20260,'softBefore':1024,'softAfter':20260,'hardLimit':1048576,'raised':True,'hardChanged':False}},{'selectionHash':'b'*64,'classesMeasured':{}}]
-        with patch.object(controller.os,'open',return_value=12),patch.object(controller.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(controller.os,'close'),patch.object(controller.fcntl,'flock'),patch.object(controller,'frozen_helper'),patch.object(controller,'guard_shards',return_value=6),patch.object(controller,'self_cgroup',return_value='/session'),patch.object(controller,'verify_archive',return_value={}),patch.object(controller,'owned_total_budget',return_value=1),patch.object(controller,'cold',return_value={}),patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller.runtime,'measure_source',side_effect=snapshots),patch.object(controller.runtime,'accounting',side_effect=lambda source:accounting()),patch.object(controller,'process_counters',return_value={'minorFaults':0,'majorFaults':0,'physicalReadBytes':0,'rssBytes':0}),patch.object(controller,'pressure',return_value={}),patch.object(controller,'PinChild',return_value=holder),patch.object(controller,'query_lease') as lease:
-            with self.assertRaises(RuntimeError):controller.stage({'queryLeaseSeconds':2},source.spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',Mock())
+        with patch.object(controller.os,'open',return_value=12),patch.object(controller.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(controller.os,'close'),patch.object(controller.fcntl,'flock'),patch.object(controller,'frozen_helper'),patch.multiple(controller,load_cache_preparation=Mock(),prepare_cache=Mock(return_value={'final':{'accounting':accounting()}})),patch.object(controller,'guard_shards',return_value=6),patch.object(controller,'self_cgroup',return_value='/session'),patch.object(controller,'verify_archive',return_value={}),patch.object(controller,'owned_total_budget',return_value=1),patch.object(controller,'cold',return_value={}),patch.object(controller.runtime,'inspect_source',return_value=source),patch.object(controller.runtime,'measure_source',side_effect=snapshots),patch.object(controller.runtime,'accounting',side_effect=lambda source:accounting()),patch.object(controller,'process_counters',return_value={'minorFaults':0,'majorFaults':0,'physicalReadBytes':0,'rssBytes':0}),patch.object(controller,'pressure',return_value={}),patch.object(controller,'PinChild',return_value=holder),patch.object(controller,'query_lease') as lease:
+            with self.assertRaises(RuntimeError):controller.stage({'queryLeaseSeconds':2,'cachePreparation':{'helperSha256':'f'*64}},source.spec,SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',Mock())
         lease.assert_not_called();holder.close.assert_called_once()
 
     def test_archive_store_alias_fails_before_advice(self):
@@ -195,12 +216,13 @@ class ControllerTests(unittest.TestCase):
         events=[]
         with ExitStack() as stack:
             stack.enter_context(patch.object(controller.os,'open',return_value=12));stack.enter_context(patch.object(controller.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)))
-            for owner,name in ((controller.os,'close'),(controller.fcntl,'flock'),(controller,'frozen_helper'),(controller,'guard_shards'),(controller,'verify_archive'),(controller,'owned_total_budget'),(controller,'cold')):stack.enter_context(patch.object(owner,name))
+            for owner,name in ((controller.os,'close'),(controller.fcntl,'flock'),(controller,'frozen_helper'),(controller,'guard_shards'),(controller,'verify_archive'),(controller,'owned_total_budget'),(controller,'cold'),(controller,'load_cache_preparation'),(controller,'prepare_cache')):stack.enter_context(patch.object(owner,name))
+            stack.enter_context(patch.object(controller,'prepare_cache',return_value={'final':{'accounting':accounting()}}))
             stack.enter_context(patch.object(controller,'self_cgroup',return_value='/parent'))
             stack.enter_context(patch.object(controller.runtime,'inspect_source',return_value=source));stack.enter_context(patch.object(controller.runtime,'measure_source',return_value=measured));stack.enter_context(patch.object(controller.runtime,'accounting',side_effect=lambda source:accounting()))
             stack.enter_context(patch.object(controller,'process_counters',return_value={'minorFaults':0,'majorFaults':0,'physicalReadBytes':0,'rssBytes':0}))
             stack.enter_context(patch.object(controller,'PinChild',return_value=holder));stack.enter_context(patch.object(controller,'pressure',side_effect=RuntimeError('pressure_bound_failed')))
-            with self.assertRaisesRegex(RuntimeError,'pressure_bound_failed'):controller.stage({},'spec',SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',events.append)
+            with self.assertRaisesRegex(RuntimeError,'pressure_bound_failed'):controller.stage({'cachePreparation':{'helperSha256':'f'*64}},'spec',SimpleNamespace(emergency_bytes=1,cap_reserve_bytes=1),'candidate',events.append)
         self.assertEqual(events[-2]['reason'],'pressure_bound_failed');self.assertFalse(events[-1]['released'])
         self.assertTrue(events[-1]['pinChildExited']);self.assertEqual(events[-1]['pinChildExitCode'],1);self.assertEqual(events[-1]['cleanupReason'],'pin_child_exit_failed')
 

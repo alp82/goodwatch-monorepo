@@ -10,11 +10,25 @@ export function phaseEvidence(frames,exitCode,phase,expected,batch,{requireRed=f
  requireGate(exitCode===0&&Array.isArray(frames),'control_exit_failure');
  requireGate(Object.keys(expected).sort().join(',')===['helperCodeSha256','helperPolicySha256','controllerCodeSha256','controllerPolicySha256'].sort().join(','),'freeze_missing');
  requireGate(Object.values(expected).every(x=>typeof x==='string'&&HASH.test(x)),'freeze_missing');
- const stages=['pressure-complete','query-ready','query-finished','released','unpin-complete'];
- requireGate(frames.length===5&&frames.every((f,i)=>f.schema==='search.clone-mlock-control.v2'&&f.stage===stages[i]&&f.phase===phase),'control_frames_missing');
+ const stages=['cache-preparation-complete','pressure-complete','query-ready','query-finished','released','unpin-complete'];
+ requireGate(frames.length===6&&frames.every((f,i)=>f.schema==='search.clone-mlock-control.v2'&&f.stage===stages[i]&&f.phase===phase),'control_frames_missing');
  for(const f of frames){requireGate(typeof f.at==='string'&&UTC.test(f.at)&&Number.isFinite(Date.parse(f.at)),'timestamp_invalid');for(const [k,v]of Object.entries(expected))requireGate(f[k]===v,'freeze_changed');}
  requireGate(frames.every((f,i)=>!i||Date.parse(f.at)>=Date.parse(frames[i-1].at)),'phase_order_invalid');
- const [pressure,ready,finished,released,cleanup]=frames;
+ const [preparation,pressure,ready,finished,released,cleanup]=frames;
+ cleanLimits(preparation.preparationToInitialLimits);
+ const prep=preparation.cachePreparation;
+ requireGate(preparation.cachePreparationMode==='post-cold-owned-cgroup-reclaim'&&HASH.test(preparation.cachePreparationHelperSha256||'')&&prep?.schema==='owned-clone-reclaim-preparation.v1'&&prep.stage==='prepared-headroom-measured','cache_preparation_missing');
+ requireGate(prep.writer?.requestedBytes===3*1024**3&&prep.writer.registeredBeforeWrite===true&&prep.writer.writerExitObserved===true&&prep.writer.cleanupUnknown===false&&prep.writer.pidfdRetained===false&&prep.writer.writeAttempts===1&&prep.writer.writerGone===true&&prep.writer.writerExitCode===0&&prep.writer.timedOut===false&&((prep.writer.outcome==='accepted'&&prep.writer.writtenBytes===10)||(prep.writer.outcome==='under-reclaimed'&&prep.writer.errno===11)),'cache_preparation_writer_failed');
+ requireGate(prep.quiescence?.budgetSeconds===5&&prep.quiescence.zeroDirtyAndWriteback===true&&prep.quiescence.fileDirtyBytes===0&&prep.quiescence.fileWritebackBytes===0,'cache_preparation_dirty');
+ const fit=prep.postCapFit;
+ requireGate(fit&&[fit.currentBytes,fit.missingSelectedBytes].every(number)&&fit.reserveBytes===256*1024**2&&fit.capBytes===6*1024**3&&fit.currentBytes+fit.missingSelectedBytes+fit.reserveBytes<=fit.capBytes,'cache_preparation_cap_fit');
+ requireGate(prep.initialMeasurement?.selectionHash===prep.measurement?.selectionHash&&prep.measurement?.selectionHash===ready.selectionHash,'cache_preparation_cohort_changed');
+ for(const [field,keys] of [['memoryEvents',['max','oom','oom_kill']],['cpu',['nr_throttled','throttled_usec']]]){
+  requireGate(keys.every(k=>number(prep.before?.[field]?.[k])&&prep.before[field][k]===prep.final?.[field]?.[k]),'cache_preparation_resource_failure');
+ }
+ for(const health of [prep.healthBefore,prep.healthAfter])requireGate(health?.green===true&&health.optimizerOk===true&&health.points===244262&&health.segments===12&&health.shards===6,'cache_preparation_health_failure');
+ requireGate(prep.before?.qdrantPid>0&&prep.before.qdrantPid===prep.final?.qdrantPid&&prep.before.sourceStartTicks>0&&prep.before.sourceStartTicks===prep.final?.sourceStartTicks&&HASH.test(prep.before.sourceProcessFence||'')&&prep.before.sourceProcessFence===prep.final?.sourceProcessFence&&HASH.test(prep.before.ancestorLimitFence||'')&&prep.before.ancestorLimitFence===prep.final?.ancestorLimitFence,'cache_preparation_source_failure');
+ requireGate(prep.queries===0&&prep.pinning===false&&prep.archiveBytesRead===0&&prep.fileCacheAdvice===false&&prep.lifecycleChanges===0&&prep.sourceResourceLimitWrites===0&&prep.productionBackupEquivalent===false,'cache_preparation_scope_changed');
  requireGate(pressure.selectionHash===ready.selectionHash&&ready.selectionHash===finished.selectionHash&&HASH.test(ready.selectionHash),'range_cohort_changed');
  requireGate(released.released===true&&released.pinChildExited===true&&cleanup.pinChildExited===true,'pin_cleanup_unproven');
  requireGate(ready.cold?.residentPagesAfterEviction===0&&ready.cold.pointCount===244262&&ready.cold.segmentCount===12&&ready.cold.shardCount===6,'cold_control_incomplete');

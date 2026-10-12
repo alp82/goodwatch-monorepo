@@ -1,11 +1,11 @@
 {
   "schema": "private-comparison-source-freeze.v1",
   "files": {
-    "compare.mjs": "cc3bdfb58053ba66f8ab926a5447331e7ca681a538fb207bc242e77005defaf4",
-    "compare-contract.mjs": "90269d5c33b59fdb8a61d500b1ac6429d2e02a92c2937abd1535d4c274240ea4",
+    "compare.mjs": "fa5963fdc9bb317da26b451dd2313e8240100f60b6b1d0d11b69fee79f3e7e0d",
+    "compare-contract.mjs": "609df6be7bfc8943f46d41cf740ef3afb6bfc4e3a6dbd3491068ec9a46a329a7",
     "parity.mjs": "738c1e68af814a952ae7b54b101cb3921256142205b0a192b9869181580fc86e",
     "transport.mjs": "08825a576183065b7c3a85872b84ff5fb870821fb6c76903afa836ad100381be",
-    "private-pipe.mjs": "532eba443483c1f108a689711ebcb253ef9996a057016b06f5a166e316b8b729",
+    "private-pipe.mjs": "acf962a4b91b26f876b7cef6ca7ea18029d917e0c558bc3feceb1f1dd362b73c",
     "producer-guard.mjs": "69277b06cd4a4e1f34b0f796418bf72a1de5b8881963c38a54186e00b01b6ad9",
     "run-heldout-no-profile.mjs": "ef5e93f62edfdccef27b9833a8ca2bf162c7ebd4d13dfc4b534265084e323663",
     "build-producer.mjs": "71d6167d25168186acc27a33b0311406d07dde4488cb2e2aa8d22dab53debcc7",

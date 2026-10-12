@@ -9,6 +9,7 @@ import ctypes
 from datetime import datetime, timezone
 import fcntl
 import hashlib
+import importlib.util,types
 import json
 import multiprocessing
 import os
@@ -44,7 +45,7 @@ def load_control(path, policy_hash, code_hash):
     if len(raw) > 16384 or hashlib.sha256(raw).hexdigest() != policy_hash or digest(__file__) != code_hash:
         raise ValueError('control_freeze_changed')
     c = json.loads(raw)
-    if set(c) != {'schema', 'helperConfig', 'helperPolicySha256', 'helperCodeSha256', 'pressure', 'queryLeaseSeconds', 'pressurePlacement', 'mechanismNegativeTags','initialPinRequestSeconds','steadyPinRequestSeconds','negativePrequeryMissingBytes','reconcileIntervalSeconds'} or c['schema'] != 'clone-pin-control.v1':
+    if set(c) != {'schema', 'helperConfig', 'helperPolicySha256', 'helperCodeSha256', 'pressure', 'queryLeaseSeconds', 'pressurePlacement', 'mechanismNegativeTags','initialPinRequestSeconds','steadyPinRequestSeconds','negativePrequeryMissingBytes','reconcileIntervalSeconds','cachePreparation'} or c['schema'] != 'clone-pin-control.v2':
         raise ValueError('explicit_control_policy_required')
     if c['pressurePlacement'] != 'controller-original-cgroup': raise ValueError('pressure_placement_required')
     if c['mechanismNegativeTags']!=['control-native-title']:raise ValueError('predeclared_negative_control_required')
@@ -58,11 +59,35 @@ def load_control(path, policy_hash, code_hash):
     daemon.integer(c['reconcileIntervalSeconds'],10,10)
     if p['bytes']/p['rateBytesPerSecond'] > p['maxSeconds']:
         raise ValueError('pressure_cannot_fit_deadline')
+    prep=c['cachePreparation']
+    if set(prep)!={'mode','requestedBytes','maxSeconds','quiescenceSeconds','helperPath','helperSha256'} or prep['mode']!='post-cold-owned-cgroup-reclaim' or prep['requestedBytes']!=3*pin.GIB or prep['maxSeconds']!=60 or prep['quiescenceSeconds']!=5 or prep['helperPath']!=str(MODULE_DIR/'prepare_clone_reclaim.py') or not re.fullmatch('[a-f0-9]{64}',prep['helperSha256']):raise ValueError('explicit_cache_preparation_required')
     config, spec, policy = daemon.load_config(c['helperConfig'], c['helperPolicySha256'], c['helperCodeSha256'])
     if config['intervalSeconds']!=c['reconcileIntervalSeconds'] or config['lifetimeSeconds']!=600:raise ValueError('helper_timing_policy_changed')
     if 'pin' not in config['actions']:
         raise ValueError('pin_capability_missing')
     return c, spec, policy
+
+
+def load_cache_preparation(config):
+    prep=config['cachePreparation'];path=MODULE_DIR/'prepare_clone_reclaim.py'
+    if prep['helperPath']!=str(path) or path.resolve()!=path:raise RuntimeError('cache_preparation_freeze_changed')
+    before=path.lstat()
+    if not stat.S_ISREG(before.st_mode) or before.st_uid!=os.geteuid() or before.st_nlink!=1 or stat.S_IMODE(before.st_mode)!=0o600:raise RuntimeError('cache_preparation_freeze_changed')
+    fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
+    try:
+        opened=os.fstat(fd);raw=os.read(fd,131073);after=os.fstat(fd);current=path.lstat()
+        signature=lambda i:(i.st_dev,i.st_ino,i.st_size,i.st_mtime_ns,i.st_mode,i.st_uid,i.st_nlink)
+        if len(raw)>131072 or signature(before)!=signature(opened) or signature(opened)!=signature(after) or signature(after)!=signature(current) or hashlib.sha256(raw).hexdigest()!=prep['helperSha256']:raise RuntimeError('cache_preparation_freeze_changed')
+    finally:os.close(fd)
+    module=types.ModuleType('reviewed_owned_clone_reclaim');module.__file__=str(path)
+    exec(compile(raw,str(path),'exec'),module.__dict__)
+    if module.REQUEST!=prep['requestedBytes']:raise RuntimeError('cache_preparation_policy_changed')
+    return module
+
+
+def prepare_cache(config,spec,policy,lock_fd,raise_own_nofile=False):
+    helper=load_cache_preparation(config)
+    return helper.under_control_lock(sys.modules[__name__],config,spec,policy,lock_fd,quiescence_seconds=config['cachePreparation']['quiescenceSeconds'],raise_own_nofile=raise_own_nofile)
 
 
 def frozen_helper(config):
@@ -383,7 +408,7 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
     if phase not in ('baseline','candidate'): raise ValueError('phase_required')
     manager=None; lock_fd=None
     try:
-        frozen_helper(config)
+        frozen_helper(config);load_cache_preparation(config)
         if ROOT.resolve()!=ROOT:raise RuntimeError('owned_root_changed')
         lock_fd=os.open(ROOT/'control.lock',os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o600)
         s=os.fstat(lock_fd)
@@ -391,12 +416,17 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
         fcntl.flock(lock_fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
         original_group=self_cgroup();archive_verified=verify_archive(policy.emergency_bytes);cold_state=cold(spec);source=runtime.inspect_source(spec)
         if original_group==source.cgroup_relative:raise RuntimeError('controller_pressure_already_in_clone_cgroup')
+        preparation=prepare_cache(config,spec,policy,lock_fd,raise_own_nofile=raise_own_nofile)
+        if runtime.inspect_source(spec).identity!=source.identity:raise RuntimeError('source_changed_after_cache_preparation')
         initial=runtime.measure_source(spec,raise_own_nofile=raise_own_nofile)
+        continuity=limits(preparation['final']['accounting'],initial['accounting'])
+        emit({'schema':'search.clone-mlock-control.v2','stage':'cache-preparation-complete','phase':phase,'at':at(),'cachePreparation':preparation,'cachePreparationMode':'post-cold-owned-cgroup-reclaim','cachePreparationHelperSha256':config['cachePreparation']['helperSha256'],'preparationToInitialLimits':continuity,'queries':0,'storageContentWrites':0})
         if phase=='candidate':
             nonresident=sum((initial['classesMeasured'][k]['dataPages']-initial['classesMeasured'][k]['residentDataPages'])*initial['pageBytes'] for k in ('vector','graph','sparse','other'))
             current=daemon.account(initial['accounting']);cap=current['cgroupMaxBytes']
             if cap is None or nonresident<0 or current['currentBytes']+nonresident+policy.cap_reserve_bytes>cap:raise RuntimeError('initial_cap_fit_inconclusive')
             pin_proc_before=process_counters(source);manager=PinChild(spec,policy,raise_own_memlock,config,raise_own_nofile=raise_own_nofile);pin_state=manager.request();pin_proc_after=process_counters(source)
+            limits(initial['accounting'],pin_state['accountingBefore'])
             if pin_state['selectionHash']!=initial['selectionHash']: raise RuntimeError('initial_cohort_changed')
         before=runtime.accounting(source);limits(initial['accounting'],before) if phase=='baseline' else None;pressure_proc_before=process_counters(source);pressure_state=pressure(config,source,manager,floor=policy.emergency_bytes); after=runtime.accounting(source)
         pressure_proc_after=process_counters(source);owned_total_budget();pressure_limits=limits(before,after,pressure=True)
@@ -430,7 +460,7 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
         emit({'schema':'search.clone-mlock-control.v2','stage':'query-finished','phase':phase,'at':at(),'queryWindowStartedAt':query_started,'queryLimits':query_limits,'queryProcessDelta':counter_delta(query_proc_before,query_proc_after),
               'selectionHash':post['selectionHash'],'parentNofileLimits':daemon.nofile_limits(post['nofileLimits']),'residencyAfterQuery':post['classesMeasured'],'pinStateAfterQuery':held if manager is not None else None,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
     except BaseException as error:
-        emit({'schema':'search.clone-mlock-control.v2','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'childFailureDetails':getattr(manager,'failure_details',None),'queries':0,'storageContentWrites':0})
+        emit({'schema':'search.clone-mlock-control.v2','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'childFailureDetails':getattr(manager,'failure_details',None),'cachePreparationFailure':getattr(error,'reclaimEvidence',None),'queries':0,'storageContentWrites':0})
         raise
     finally:
         # Preserve the phase cause; cleanup evidence is a separate observation.
@@ -448,6 +478,8 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
 
 
 CONTROL_REASONS=frozenset(('archive_checksum_or_identity_changed', 'archive_fd_path_identity', 'archive_identity_failed', 'archive_path_changed_before_advice', 'archive_path_scope', 'archive_scope', 'archive_store_inode_alias', 'archive_verification_bound', 'archive_verification_failed', 'candidate_cohort_changed', 'clone_control_command_failed', 'clone_identity_ambiguous', 'clone_identity_changed', 'clone_mount_changed', 'clone_not_stopped', 'clone_readiness_failed', 'clone_resource_or_port_changed', 'cold_collection_shape_changed', 'cold_eviction_not_complete', 'cold_inode_changed', 'cold_start_headroom', 'control_freeze_changed', 'controller_cgroup_missing', 'controller_interrupted', 'controller_pressure_already_in_clone_cgroup', 'counter_pid_reused', 'counter_reset', 'counter_source_changed', 'explicit_control_arguments_required', 'explicit_control_policy_required', 'explicit_pressure_floor_required', 'helper_timing_policy_changed', 'fixed_readonly_archive_required', 'gate_freeze_changed', 'gate_interrupted', 'guard_or_runtime_failure', 'helper_freeze_changed', 'host_emergency_floor', 'initial_cap_fit_inconclusive', 'initial_cohort_changed', 'invalid_control_lock', 'invalid_pin_command', 'invalid_query_ack', 'join_source_changed', 'mapped_shard_coverage_missing', 'negative_missing_pages_inconclusive', 'owned_inode_alias', 'owned_nonregular', 'owned_root_changed', 'owned_root_nonregular', 'owned_root_symlink', 'owned_size_guard', 'owned_symlink', 'owned_total_disk_budget', 'parent_already_clone_cgroup', 'parent_cgroup_changed', 'parent_inspection_inside_clone_cgroup', 'phase_required', 'phase_resource_failed', 'pin_capability_missing', 'pin_child_cleanup', 'pin_child_exit_failed', 'pin_child_exit_unproven', 'pin_child_failed', 'pin_child_placement', 'pin_child_timeout', 'pin_holder_lock_proof_missing', 'pin_release_unproven', 'predeclared_negative_control_required', 'pressure_bound_failed', 'pressure_cannot_fit_deadline', 'pressure_cohort_changed', 'pressure_ledger_missing', 'pressure_placement_required', 'pressure_writer_placement_changed', 'query_cohort_changed', 'query_lease_eof', 'query_lease_timeout', 'query_pin_cohort_changed', 'query_source_changed', 'source_changed_during_pressure', 'source_rpc_budget', 'source_rpc_failed', 'source_rpc_spec_changed', 'source_rpc_timeout', 'source_spec_changed', 'turnover_not_fresh', 'turnover_readiness_failed', 'turnover_shape_changed', 'zero_child_cleanup_failed', 'zero_child_exit_unproven', 'zero_child_lease_failed', 'zero_child_timeout', 'zero_join_failed', 'zero_join_proof_missing', 'zero_pin_proof_missing')) | pin.SAFE_REASONS
+
+CONTROL_REASONS |= frozenset(('explicit_cache_preparation_required','cache_preparation_freeze_changed','cache_preparation_policy_changed','source_changed_after_cache_preparation','source_changed','swap_present','locked_source_pages','dirty_source_pages','source_children_present','source_limits_changed','ancestor_limits_changed','parent_placement_changed','reclaim_fd_changed','reclaim_timeout','reclaim_writer_survived','reclaim_write_failed','reclaim_resource_event','post_cap_fit_inconclusive','metadata_health_changed','source_freeze_changed','invalid_reclaim_lock','prepared_input_changed','writer_start_failed','quiescence_bound_exceeded','writer_birth_unavailable','writer_birth_changed','writer_registration_failed','writer_parent_changed','writer_interrupted','writer_cleanup_unproven'))
 
 def safe_control_reason(error):
     return next((x for x in error.args if type(x) is str and x in CONTROL_REASONS),'guard_or_runtime_failure')
