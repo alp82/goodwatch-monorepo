@@ -1,0 +1,137 @@
+{
+  "schema": "paired-backup-metadata-audit.v1",
+  "scheduledStart": "2026-10-12T07:09:00+00:00",
+  "scheduledEnd": "2026-10-12T07:29:00+00:00",
+  "scheduledIntervalSeconds": 2,
+  "metadata": {
+    "coverage": {
+      "samples": 352,
+      "firstAt": "2026-10-12T07:17:17.497361+00:00",
+      "lastAt": "2026-10-12T07:28:59.181187+00:00",
+      "observedSpanSeconds": 701.683826,
+      "maximumInterSampleSeconds": 2.435324,
+      "medianInterSampleSeconds": 1.993599,
+      "intervalsExceedingScheduled2Seconds": 168,
+      "secondsFromWindowStartToFirstSample": 497.497361,
+      "secondsFromLastSampleToWindowEnd": 0.818813,
+      "outsideScheduledWindowSamples": 0
+    },
+    "startRecords": 1,
+    "summaryRecords": 1,
+    "failureRecords": 0,
+    "incompleteSamples": 352,
+    "sourceTempIncompleteSamples": 0,
+    "targetMetadataIncompleteSamples": 0,
+    "existingSegmentIncompleteSamples": 352,
+    "incomparableExistingRawDeltaRanges": {
+      "apparentByteDelta": {
+        "minimum": 2892743614,
+        "maximum": 7587498020
+      },
+      "allocatedStatByteDelta": {
+        "minimum": 705478656,
+        "maximum": 2077437952
+      }
+    },
+    "observedConcurrentArchiveCopyPeakBytes": 0,
+    "observedConcurrentArchiveCopyPeakAt": null,
+    "summaryMetadataIncomplete": true,
+    "intrinsicMetadataRecordsComplete": false,
+    "existingSegmentBaselineDirectories": 19,
+    "existingSegmentCohortCoverageValid": false,
+    "sourceIdentityHashCount": 1,
+    "qdrantProcessGenerationCount": 1,
+    "lowestSampledAvailableBytes": 13334654976,
+    "observedPeaksBytes": {
+      "sourceArchiveBytes": 0,
+      "sourceShardStagingBytes": 0,
+      "sourceTempOtherBytes": 0,
+      "targetCopyBytes": 0,
+      "newSegmentCandidateBytes": 0,
+      "existingSegmentApparentGrowthBytes": null,
+      "existingSegmentAllocatedStatGrowthBytes": null
+    },
+    "firstBackupPresentSampleAt": null,
+    "lastBackupPresentSampleAt": null,
+    "backupPresentSamples": 0,
+    "peakMeasurementsIncomplete": true,
+    "snapshotProxyAttributionProven": false,
+    "futureCeilingEstablished": false
+  },
+  "supplemental": {
+    "coverage": {
+      "samples": 600,
+      "firstAt": "2026-10-12T07:09:00.136403+00:00",
+      "lastAt": "2026-10-12T07:28:58.136439+00:00",
+      "observedSpanSeconds": 1198.000036,
+      "maximumInterSampleSeconds": 2.003136,
+      "medianInterSampleSeconds": 2.000002,
+      "intervalsExceedingScheduled2Seconds": 305,
+      "secondsFromWindowStartToFirstSample": 0.136403,
+      "secondsFromLastSampleToWindowEnd": 1.863561,
+      "outsideScheduledWindowSamples": 0
+    },
+    "completeRecords": 1,
+    "failureRecords": 0,
+    "processGenerationConsistent": true,
+    "qdrantProcessGenerationCount": 1,
+    "aggregateProcessCounterDeltas": {
+      "minorFaults": 621691,
+      "majorFaults": 488291,
+      "readBytes": 8800452608,
+      "cpuTicks": 20298
+    },
+    "hostVmstatIntervalDeltas": {
+      "allocstall_device": 0,
+      "allocstall_dma": 0,
+      "allocstall_dma32": 0,
+      "allocstall_movable": 0,
+      "allocstall_normal": 0,
+      "pgscan_anon": 0,
+      "pgscan_direct": 0,
+      "pgscan_file": 3267661,
+      "pgscan_khugepaged": 0,
+      "pgscan_kswapd": 3267661,
+      "pgsteal_anon": 0,
+      "pgsteal_direct": 0,
+      "pgsteal_file": 3267661,
+      "pgsteal_khugepaged": 0,
+      "pgsteal_kswapd": 3267661,
+      "pswpin": 0,
+      "pswpout": 0,
+      "workingset_refault_anon": 0,
+      "workingset_refault_file": 2153506
+    },
+    "lowestSampledAvailableBytes": 13311578112,
+    "counterAttribution": "interval-aggregate-including-background-and-observer-footprint"
+  },
+  "metadataReader": {
+    "readerExitProven": true,
+    "remoteStateUnknown": false,
+    "readerExitCode": 0
+  },
+  "supplementalReader": {
+    "readerExitProven": true,
+    "remoteStateUnknown": false,
+    "readerExitCode": 0
+  },
+  "pairedObservedOverlapSeconds": 700.639078,
+  "diagnosticWindowFinished": true,
+  "bothReadersExitedCleanly": true,
+  "stagingAllowanceEstablished": false,
+  "futureWorkloadCeilingEstablished": false,
+  "latencyMeasured": false,
+  "productionAcceptance": false,
+  "artifacts": {
+    "metadata": {
+      "sha256": "d7e04a8989fc51df2615348fcb0661b6c4c3e7c2e2f74ce66d24af80990d2365",
+      "bytes": 1258190,
+      "trailingPartialLine": false
+    },
+    "supplemental": {
+      "sha256": "b48807b50eade45c795a8e0b5dc65d9121d07869bb9e0e1c5fc6022370fe2bf1",
+      "bytes": 2248646,
+      "trailingPartialLine": false
+    }
+  }
+}
