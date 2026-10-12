@@ -48,8 +48,9 @@ the hour, and a failed run costs the titles added in that hour one more hour. A 
 **The queue** takes the titles with `due_at` in the past, longest due first, at most 10 per run, and sets each due
 again 24 hours (`CYCLE`) after the time it was due. A title therefore keeps its time of day. A recheck more than
 24 hours late counts from the time it ran. The titles are reserved like every title of the batch (`selected_at`,
-`is_selected`), so the 30-day queue doesn't fetch them a second time, and after a run that dies the regular queue
-fetches them 10 minutes later.
+`is_selected`). The 30-day cycle leaves out a title fetched within the last day
+([details-refetch-cycle.md](details-refetch-cycle.md)), so it doesn't fetch them a second time, and after a run that
+dies the regular queue fetches them 10 minutes later.
 
 - A title that TMDB deleted, or that has no details document, is left out.
 - A title on a list that was not stored for 3 days is left alone, so a list job that stays off or broken stops
@@ -82,12 +83,12 @@ The list job's two statements took 34 ms and 10 ms, about a second a day for 24 
 | Added by a 2-day cycle | 554 |
 | Saved, because the 30-day queue no longer fetches these titles | 37 |
 | Details flow today (the catalog was fetched between 2026-09-25 and 2026-10-01, so only new titles are due) | about 2,000, estimated from 144 sampled runs |
-| Details flow in steady state, from 2026-10-21 (1.3 million titles every 30 days) | about 43,000 |
+| Details flow in steady state (1.49 million titles every 30 days, [details-refetch-cycle.md](details-refetch-cycle.md)) | about 50,000 |
 | Episode flow | about 13,000 |
 | What the details flow can carry (50 titles every 15 s) | 288,000 |
 | TMDB's documented limit, about 40 requests per second | about 3.4 million |
 
-A 1-day cycle adds 2.6% to the details flow's steady state and uses 0.03% of TMDB's limit. The peak rate doesn't
+A 1-day cycle adds 2.2% to the details flow's steady state and uses 0.03% of TMDB's limit. The peak rate doesn't
 change, because awaited titles take slots of the batch and the batch stays at 50. The whole list takes 111 runs,
 about 28 minutes.
 

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Union, Literal
+from typing import Callable, Union, Literal
 
 from mongoengine import Document, Q, QuerySet
 from pydantic import BaseModel
@@ -22,6 +22,7 @@ def retrieve_next_entry_ids(
     movie_model: Document,
     tv_model: Document,
     stale_after_days: int = None,
+    refetch: Callable[[int], list[Document]] = None,
 ) -> IdsParameter:
     next_entries = prepare_next_entries(
         movie_model=movie_model,
@@ -29,6 +30,7 @@ def retrieve_next_entry_ids(
         count=count,
         buffer_minutes=buffer_minutes,
         stale_after_days=stale_after_days,
+        refetch=refetch,
     )
     ids = get_ids_for_documents(
         next_entries=next_entries,
@@ -247,6 +249,7 @@ def completeness_queue(
     count: int,
     buffer_minutes: int,
     stale_after_days: int = None,
+    refetch: Callable[[int], list[Document]] = None,
 ) -> list[Document]:
     if stale_after_days is None:
         stale_after_days = STALE_AFTER_DAYS
@@ -259,13 +262,23 @@ def completeness_queue(
         no_fetch_entries_for(movie_model, count, buffer_time_for_selected_entries)
         + no_fetch_entries_for(tv_model, count, buffer_time_for_selected_entries)
     )[:count]
-    # The most popular titles not fetched for stale_after_days
-    stale_entries = by_popularity(
-        stale_entries_for(movie_model, count, stale_before)
-        + stale_entries_for(tv_model, count, stale_before)
-    )[:count]
-
-    next_entries = mix_batch(no_fetch_entries, stale_entries, count)
+    if refetch is None:
+        # The most popular titles not fetched for stale_after_days
+        stale_entries = by_popularity(
+            stale_entries_for(movie_model, count, stale_before)
+            + stale_entries_for(tv_model, count, stale_before)
+        )[:count]
+        next_entries = mix_batch(no_fetch_entries, stale_entries, count)
+    else:
+        # The source decides itself which titles are fetched again (TMDB details:
+        # f/tmdb_api/refetch_cycle). It is told the room mix_batch would leave to stale
+        # titles, and everything it returns is fetched: it has already moved on.
+        again = refetch(count - min(len(no_fetch_entries), (count + 1) // 2))
+        queued = {(type(entry), entry.id) for entry in again}
+        first_time = [
+            entry for entry in no_fetch_entries if (type(entry), entry.id) not in queued
+        ]
+        next_entries = first_time[: max(0, count - len(again))] + again
     update_selected_for_next_entries(movie_model, tv_model, next_entries)
     return next_entries
 
@@ -322,9 +335,10 @@ def prepare_next_entries(
     count: int,
     buffer_minutes: int,
     stale_after_days: int = None,
+    refetch: Callable[[int], list[Document]] = None,
 ) -> list[Document]:
     return completeness_queue(
-        movie_model, tv_model, count, buffer_minutes, stale_after_days
+        movie_model, tv_model, count, buffer_minutes, stale_after_days, refetch
     )
 
 

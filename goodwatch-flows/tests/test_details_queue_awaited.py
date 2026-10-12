@@ -13,7 +13,9 @@ from f.tmdb_api.awaited_titles import store_list
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
 from f.tmdb_api.tmdb_fetch_details_from_api import next as details_next
 
-NOW = datetime.utcnow()
+# A fixed time: none of these titles has its second of the refetch cycle in the minute after it
+# (tests/test_details_queue_cycle.py covers the cycle).
+NOW = datetime(2026, 10, 14, 6, 0)
 YESTERDAY = NOW - timedelta(days=1)
 
 

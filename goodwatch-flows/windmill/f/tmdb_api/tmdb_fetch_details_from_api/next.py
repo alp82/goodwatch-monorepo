@@ -12,6 +12,7 @@ from f.data_source.common import (
 from f.db.mongodb import init_mongodb, close_mongodb
 from f.tmdb_api.awaited_titles import reserve_due
 from f.tmdb_api.models import TmdbMovieDetails, TmdbTvDetails
+from f.tmdb_api.refetch_cycle import titles_due
 
 
 BATCH_SIZE = 50
@@ -50,6 +51,8 @@ def next_ids(db, now: datetime) -> dict:
         buffer_minutes=BUFFER_SELECTED_AT_MINUTES,
         movie_model=TmdbMovieDetails,
         tv_model=TmdbTvDetails,
+        # Fetched titles come back at their place in the 30-day cycle (docs/details-refetch-cycle.md).
+        refetch=lambda room: titles_due(db, [TmdbMovieDetails, TmdbTvDetails], room, now),
     )
     return {
         "movie_ids": awaited.movie_ids + ids.movie_ids,

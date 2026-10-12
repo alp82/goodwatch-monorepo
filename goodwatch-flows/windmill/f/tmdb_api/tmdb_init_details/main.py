@@ -42,7 +42,7 @@ def initialize_documents():
             int(tmdb_dump["tmdb_id"])
         )
         if deleted_at and tmdb_dump.get("updated_at") and tmdb_dump["updated_at"] > deleted_at:
-            # Listed in a newer dump again: unflag, the fetch queue picks it up by its old selected_at.
+            # Listed in a newer dump again: unflag, the fetch queue picks it up at its place in the refetch cycle.
             update_fields["tmdb_deleted"] = False
             update_fields["tmdb_deleted_at"] = None
             restored_ids[tmdb_dump.get("type")].append(int(tmdb_dump["tmdb_id"]))
