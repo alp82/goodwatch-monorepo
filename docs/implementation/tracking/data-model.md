@@ -1925,3 +1925,57 @@ Where the build differs from the text above, or settles what it left open:
 - **Home's doors and Tonight's pick do not read Q8.** `getMyShows` takes `upcoming: false` from them.
 - **Only dated episodes are read for the waiting group.** Measured on 2026-10-11: of the 58 shows members wait for,
   18 have a dated episode to come, none has only an undated one, and 40 have none listed.
+
+### Newly available: titles that landed on a member's services (#456)
+
+Behind `REC_TRACKING`. What was built, the rule, the routes, the measurements and how it was checked:
+[newly-available/README.md](newly-available/README.md).
+
+**One more fact is stored: when the member last opened My movies.** It is a row of `user_setting`, with
+`key = 'my_movies_visited_at'` and an ISO time in UTC as its `value`, beside the row of the My shows visit (#442),
+which the shows share. No table and no column was added, and **no statement was run on the production database**
+for this. `POST /api/newly-available` writes the row; nothing else does. Account deletion covers it when it covers
+`user_setting` (section 8).
+
+**When a title landed is derived, from `streaming_availability.created_at`,** the time a row first appeared. No
+request reads it: the availability index, which already holds what is on which service per country in memory, reads
+the times with each of its loads (every 6 hours for a country in use), and only for offers that first appeared since
+the launch, at most 90 days back.
+
+```sql
+-- The titles of a country with a subscription offer that first appeared since. The last parameter is the launch,
+-- or 90 days ago once that is later.
+SELECT DISTINCT media_type, media_tmdb_id
+FROM streaming_availability
+WHERE country_code = ? AND streaming_type IN ('flatrate', 'free', 'ads') AND created_at > ?
+LIMIT 20001;
+
+-- Every subscription offer of those titles, with the time each service first carried the title. A thousand titles
+-- a statement, a kind at a time. All of them, not only the recent rows: a service is new for a title only when no
+-- duplicate id of it and no other kind of offer on it was there before.
+SELECT media_tmdb_id, streaming_service_id, min(created_at)
+FROM streaming_availability
+WHERE country_code = ? AND streaming_type IN ('flatrate', 'free', 'ads') AND media_type = ?
+  AND media_tmdb_id IN (?, ?, ...)
+GROUP BY media_tmdb_id, streaming_service_id
+LIMIT 1000000;
+```
+
+| Screen | Query | Rows | In the map | Cache and reset |
+| --- | --- | --- | --- | --- |
+| **The signal for titles that landed** (Browse button, dock key, the My movies and My shows tiles, home's doors), with the answer of `/api/tonight` | None while nothing landed: the Wishlist and the states of the map, the settings, and the index in memory. When a title landed after the launch: Q10 for the My movies visit and for the My shows visit, then the display fields of up to three titles a kind | Usually none | The Wishlist with its times, and the states | The answer is kept in the browser with Tonight's pick; a visit clears its part there |
+| **My movies** and **My shows**, the line on arrival | The same, in the page's loader | Usually none | The same | Not cached |
+| **The availability index's load** | The two statements above, after the index's own | United States, the last 7 days, on 2026-10-12: 545 titles, then 4,186 rows of their offers | No | In memory until the next load |
+
+What the build settles:
+
+- **A title landed when none of the member's services carried it and one does now.** The time is the earliest
+  `created_at` among its current rows on the member's services. A service counts once with its duplicate ids, by
+  its earliest row.
+- **It is news after the member's last visit of its page, after the launch (2026-10-12 00:00 UTC), and after the
+  member added it to Want to See.** The visit's time is compared to the millisecond: both are times, unlike air
+  dates.
+- **A Watching or On hold show has no time it was added** in the member data, so it counts from the launch on.
+- **The page's loader does not write the visit,** as for My shows: the page sends the POST once it is on screen.
+- **A member without a saved country or a saved service is told nothing.** The country guessed from the request is
+  used to show availability, and is not taken as theirs here.

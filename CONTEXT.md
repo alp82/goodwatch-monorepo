@@ -77,6 +77,13 @@ A member opening My shows. The time of the last one is stored per member, and it
 The number outside My shows that says how many of a member's shows are new: on the Browse button, the phone dock's key, the My shows tile and home's Continue door. A show is new when its Next episode aired after the day of the last My shows visit, and for a member without a visit yet, in the last seven days. An On hold show, a Dropped show and a show the member was already behind on are never new. A My shows visit clears it, and a show leaves it when its new episode is watched. One new show is named; several are counted.
 _Avoid_: Notification, Unread count, Alert, Badge
 
+**Newly available**:
+A member's Want to See title, or a show they are Watching or have On hold, that was on none of their saved services in their saved country and is now on one, by a subscription or a free offer. A further service for a title that was already watchable is not newly available. It is news when the title landed after the member last opened the page it lives on, My movies for a movie and My shows for a show, and it joins the New episodes signal: the same number on the Browse button and the phone dock's key, on the tile and on home's door, and one line on the page. A member without a saved country or a saved service has none. One title is named with its service; several are counted.
+_Avoid_: Arrival (the member arriving on a page), Notification, Alert, Release
+
+**My movies visit**:
+A member opening My movies. The time of the last one is stored per member, and it clears the movies that are Newly available. Loading the page ahead of a tap is not a visit.
+
 **My movies**:
 The page for choosing a movie: the person's Want to See movies under their chosen sort, moods, On my services and the time they have. A movie leaves it when it is Seen, and is in it again while the person wants to rewatch it.
 _Avoid_: Movies, My films, Watchlist, Queue

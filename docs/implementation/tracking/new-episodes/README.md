@@ -7,6 +7,10 @@ episodes, My shows visit, New episodes signal). Reads: [data-model.md](../data-m
 stays at `/prototype/new-episodes` ([notes](../../../prototypes/new-episodes/README.md)). Paths without a prefix are
 under `goodwatch-webapp/app/`.
 
+The signal has a second source since [#456](https://github.com/alp82/goodwatch-monorepo/issues/456): titles that
+landed on one of the member's services. What opens the hub then shows the sum, and the My shows tile counts a show
+once. See [newly-available/README.md](../newly-available/README.md).
+
 ## What a member sees
 
 **Waiting for episodes, on My shows.** One column, one show a line. Each line ends in a column with the day the
