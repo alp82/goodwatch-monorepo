@@ -63,6 +63,10 @@ Crate does not provide an
 atomic transaction across child records and aggregate fields: interrupted writes
 remain recoverable by replay, and the title is acknowledged only after completion.
 
+Titles members wait for have their API result refreshed once a day instead of every 30 days, through the
+details queue; scheduled publication picks them up like any refreshed title. See
+[daily offer rechecks](awaited-title-rechecks.md).
+
 ## Verification and recovery
 
 Use `f/priority/crawl_all` for a normal targeted refresh. Its final result includes
