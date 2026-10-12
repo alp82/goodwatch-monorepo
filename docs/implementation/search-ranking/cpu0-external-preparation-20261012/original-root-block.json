@@ -1,0 +1,31 @@
+{
+  "actualOpus": {
+    "cliExitCodeReported": 0,
+    "coverage": "all external non-test files; partial backend dependencies/tests explicitly disclosed; not full closure",
+    "durationMsUnavailable": true,
+    "effort": "medium",
+    "model": "claude-opus-5-5",
+    "promptSha256": "b77f724d406e4adc54a56d42f18800201416b0733b2cb540b2e5d1f30d27dffa",
+    "reportSha256": "0f1eff811e1fe3fa98fe50e180107f52d8318d29dfc134c49a1ccf22c7fb740d",
+    "rootFullReportRead": true,
+    "verdict": "BLOCK"
+  },
+  "confirmedBlockers": [
+    "turnover actual stage complete differs from outer handoff-complete",
+    "reparented consumer cleanup parent equality refusal and skipped census",
+    "producer refusal control/evidence/reason projection dropped",
+    "producer actual argv/exe/cgroup unobserved",
+    "global deadline audit and remote producer budget gaps"
+  ],
+  "head": "5a5a1200ae7021c2ac7b9d30eda0ca8e91c9e08f",
+  "historyWrites": 0,
+  "hostOperations": 0,
+  "independentAuditSupersededAsReadiness": true,
+  "manifestSha256": "2e7e850cab6f652372448488e9ed5220ce749963389ef254c503d7feb21e74e8",
+  "observedAtUtc": "2026-10-12 17:44:08 UTC",
+  "ordinarySearches": 0,
+  "priorRootFinding": "producerCleanupEvidence and producerClientCleanupFailure omitted",
+  "productionAcceptance": false,
+  "rootDecision": "BLOCK pending focused successor and review",
+  "schema": "root-cpu0-external-opus-block.v6"
+}

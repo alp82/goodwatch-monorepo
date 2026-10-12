@@ -1,0 +1,54 @@
+Status: reading is finished (all five changed files, the diff, both manifests, the prior report and the root block notice); here is the report.
+
+# Verdict: PASS for the narrow amendment, by static reading only
+
+No blocker found. This is not full closure: I ran nothing, fetched no Docker sources, and the host CLI version is unattested. The root operational block is root's to lift.
+
+## Obligations
+
+- **Supported command — verified.** `producer.py:295` runs exactly `['/usr/bin/docker','start','--attach',ident]`. No `sig-proxy` remains in any source file in the external directory; the only mention is the README sentence saying the option does not exist. `test_producer.py:212-213` asserts exact argv equality and that `--attach` is the only flag.
+- **Wait-before-start ordering — unchanged.** `producer.py:275-294` and `:296-302` are identical to the prior frozen copy apart from the argv. The ordering fixtures at `test_producer.py:81-97` and `:99-132` are untouched.
+- **Completion gate — unchanged.** `producer.py:193` still requires integer CLI exit 0, integer Engine container exit 0, `exitObserved` and `birthGone` together. `close_client` returns nothing and feeds no proof field.
+- **Exit-143 fixture — meaningful for the gate.** `test_producer.py:215-233` gets CLI 143, container 143 and `birthGone: True` from the real `DockerBackend.wait()`, then confirms `execute` refuses with `producer_exit_unproven`. It also shows TERM is sent first and KILL is not. It is synthetic: the 143 values are hand-loaded, so it does not demonstrate forwarding.
+- **Docs and evidence — truthful.** `README.md:70` says TERM of the client may reach the owned container, that cleanup is not local-only, that nonzero exit refuses, and that the sources are not attestation of the abio CLI. The comment at `producer.py:325-327` agrees. No cleanup path sets `exitZeroProven` to anything but `False`.
+- **`controlClose` reason — verified.** `executor.py:158` now emits `setup_lock_close_failed`, which is in `reason_codes.py:351`; the old `lock_close_failed` was not in the list. The fixture at `test_refusal.py:31-43` drives the real `cleanup_phase` through a successful commit into a failing `os.close` and asserts the reason, its membership in `REASONS`, and `observed: False`.
+- **Prior five fixes retained — consistent, not independently proven.** `supported.diff` touches only the five files. The 20 other manifest hashes are identical between the successor and supported manifests. The prior frozen `producer.py:295` and `executor.py:158` hold exactly the two old lines the diff replaces.
+
+## Not verified
+
+- **Hashes.** I computed none. The manifest and closure agree with each other on `producer.py` and `executor.py`, but that is author evidence against author evidence.
+- **Diff completeness.** I could not confirm `supported.diff` equals the actual git delta `dc4d5ec2..131cec29`.
+- **Tests.** A grep finds 76 `def test_` across the eight test files, matching `localFixtures: 76`. That 76 pass is unverified.
+- **Docker sources.** The README's claims match my recollection of the start reference and of `start.go` at v27.0.3: the flags are attach, interactive, detach-keys, checkpoint and checkpoint-dir; signals are forwarded when non-TTY; attach and the exit waiter precede start. I did not fetch either page here.
+
+## Residuals (nonblocking, all fail closed)
+
+1. **Forwarded TERM bypasses the birth fence.** When `cleanup_registered` refuses (for example `producer_birth_changed`), `close_client` still runs (`producer.py:218-219`), and the CLI may forward TERM to the container by ID.
+   - The README sentence "Container cleanup still requires its independently verified registered birth" holds only for the Engine stop.
+   - `test_changed_birth_never_signaled...` (`test_producer.py:42-46`) uses a fake backend with no `close_client`, so its "never signaled" does not cover this path.
+   - The evidence written just before (`producer.py:216`: `containerGone: False`, `cleanupAttempted: False`) records nothing about the TERM and can go stale.
+2. **Forwarding is not limited to TERM from `close_client`.** The CLI is spawned without a new session (`producer.py:295`), so any forwardable signal delivered to the executor's process group also reaches the container. The README names only the direct TERM.
+3. **CLI behaviour on TERM is unproven on abio.** If node as container PID 1 ignores the forwarded TERM, the CLI may wait out the 10 seconds and be KILLed, leaving the container running. I did not verify the v27 CLI's own TERM handling.
+4. **Stale handoff hash on close failure.** When the lock close fails after a successful commit, `cleanupObservedHandoff` still reports the pre-commit hash (`executor.py:162`). The top-level reason is `executor_guard_or_runtime_failure`, with the closed reason only inside `controlClose`. The new fixture exercises this path but does not assert it.
+5. **Both new producer tests sit after the `__main__` guard.** `test_producer.py:157` runs `unittest.main()` before `ProcessAndLeaseTests` is defined at `:159`. The README's `discover` command collects them; running the file directly would not.
+6. **README wording at line 62.** "Direct local transport-client cleanup" is unchanged and reads as local for the producer attach client; line 70 corrects it.
+7. **The argv fixture does not assert the Popen keyword arguments** (stdin, env, `close_fds`).
+
+Prior residuals A–D and the smaller points from the successor report are untouched by this delta and still stand as disclosed.
+
+## Read coverage
+
+- **Read in full:**
+  - Worktree: `producer.py`, `executor.py`, `test_producer.py`, `test_refusal.py`, `README.md`, `reason_codes.py`, `AGENTS.md`.
+  - Supported review folder: `supported.diff`, `manifest.json`, `local-execution-closure.json`, `prompt.txt`.
+  - Successor review folder: `opus-report.txt`, `manifest.json`, `root-operational-block-notice.json`.
+- **Grep only:**
+  - `sig-proxy`, `lock_close_failed` and `local-only` across the worktree.
+  - `close_client`, `terminate` and session flags in `private_pipe.py`, `rpc.py`, `bootstrap.py`, `outer_local.py`.
+  - `setup.py:403-404`.
+  - The two old lines in the prior frozen `producer.py` and `executor.py`.
+- **Not read:**
+  - All other external-directory source and tests.
+  - Both `execution-packet.json` files.
+  - `successor.diff`, backend and consumer sources, `independent-successor-review-block-20261012.json`.
+- The `opus-report.txt` in the supported review folder is empty.

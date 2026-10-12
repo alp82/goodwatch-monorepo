@@ -1,0 +1,39 @@
+{
+  "acceptedConsumerDependencyFilesHashVerifiedAndCopied": 32,
+  "actualOpusPending": true,
+  "blocker": "docker start --attach --sig-proxy=false uses unsupported start flag",
+  "head": "dc4d5ec2bef6d43399ba91aa4ec2904e4e1c8ca2",
+  "historyWrites": 0,
+  "hostOperations": 0,
+  "manifestSha256": "2e2c51affd2cf9cfc582ad5add882eec43103b39eb7c087605aade54f393fd97",
+  "minorCorrection": "cleanupIndependentEvidence controlClose reason lock_close_failed not yet in shared REASONS",
+  "observedAtUtc": "2026-10-12 18:03:36 UTC",
+  "ordinarySearches": 0,
+  "packet": {
+    "backendSourceFreezeSha256": "00e523226e42ce10bca605f403c4e314f2e49fc55273b683a08e926c4a445108",
+    "bytes": 947556,
+    "derivativePolicySha256": "c581c9d75c70b655409304d69d661aae8a064d6852338b198d23cd6d054120e6",
+    "fullManifestSha256": "c3c6d4782b793a7d646c4c3a590ab9b65635eef4de8a923916b4f96938ca06d1",
+    "localClosureSha256": "4287f502d475061a1aca65369974a143b990a209e41e1a2a4ce799d520c20e31",
+    "priorCanonicalSha256": "e5a3094474ec6a057d635b29caf34327cd2eb539dce0ce6d46aac0f66f47aae7",
+    "remoteClosureSha256": "e1803dcfc88bde4d622ef5dfaa7a343f188f0f5c48f7dc5600b368a8deaafa32",
+    "rootExactIndependentReconstruction": true,
+    "sha256": "00b5925666ec18902fb1223e50a401cada484b65416012ccc565ae977fef3eec"
+  },
+  "primarySources": [
+    "https://docs.docker.com/reference/cli/docker/container/start/",
+    "https://docs.docker.com/reference/cli/docker/container/attach/"
+  ],
+  "productionAcceptance": false,
+  "rootRead": "all changed source/test/doc delta against full-read original source; unchanged bytes verified",
+  "rootTests": {
+    "passed": 74,
+    "seconds": 11.543,
+    "snapshot": "immutable root-frozen-code with exact accepted sibling dependencies",
+    "testPassDoesNotProveCliOptionCompatibility": true
+  },
+  "schema": "root-cpu0-external-successor-review.v6",
+  "sourceCorrectionAuthorized": "restore supported legacy docker start --attach with truthful owned-producer signal proxy scope; retain independent container exit and birth proof",
+  "sourceFilesHashVerifiedAndCopied": 25,
+  "verdict": "BLOCK"
+}
