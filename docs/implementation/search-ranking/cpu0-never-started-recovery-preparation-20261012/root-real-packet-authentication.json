@@ -1,0 +1,10 @@
+{
+  "schema": "root-real-packet-authentication.v1",
+  "localExecutionFilesAuthenticated": 16,
+  "remoteClosureFilesAuthenticated": 10,
+  "fixedOperation": "setup-recover-never-started",
+  "retainedOriginalProofsValidated": true,
+  "source14Full24PriorUnchanged": true,
+  "hostOperations": 0,
+  "packetSha256": "baef942d1cf0b1ffb4c71db15306877a6d6baa47cf8e7e2be08afe208e5c3e3e"
+}

@@ -1,0 +1,1276 @@
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/RECOVERY.md b/goodwatch-qdrant/diagnostics/cpu0-external-v6/RECOVERY.md
+new file mode 100644
+index 00000000..218e90b4
+--- /dev/null
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/RECOVERY.md
+@@ -0,0 +1,99 @@
++# Exact created-clone recovery, prepared source
++
++The original setup stopped the owned CPU2 clone cleanly, created the CPU0 clone,
++then refused its HostConfig parity before start. Docker 28.5.1 had normalized
++the present `OomKillDisable` value from JSON null to false. The original failed
++run and its durable clean-stop receipt remain authoritative evidence. This
++successor starts that exact existing object once; it does not rerun creation or
++reuse failed benchmark results.
++
++The accepted design v2 has SHA256
++`36231574f3b8fe54ed46a3aecf5e430c116244eadce0c42bc0a0e3fae2f229a0`.
++Its original actual Opus 5.5 medium design review was **BLOCK**. The v2 text
++incorporates those five findings and root accepted it separately; v2 is not a
++model PASS. The immutable design packet is retained locally at
++`/home/alper/projects/search-100-evidence/cpu0-never-started-recovery-design-v1-20261012`.
++Final exact source still receives focused model and root review before any
++root-owned execution. This document reports preparation, not runtime success.
++
++Only the exact original public failure and created-config proof bytes are
++accepted (SHA256 `ad0b490d3d39d2259d86290d4883038a33461e85fe00f1842761fb214d39a84c`
++and `27b99d3853e0048c38ce84cda33fabd7ca4e270c23e21b84f1cc8279c4df1edd`).
++They bind both actual container ID hashes, original stopped state/configuration
++hashes and the durable OLD clean receipt. Each proof is bounded to 64 KiB.
++Raw container IDs, Config, HostConfig and Env remain private in memory.
++
++The closed SSH and local import orders add `recovery` after `setup`. All fourteen
++backend source bytes, consumer modules, original reclaim helper, producer and
++model guards remain unchanged. The fixed operation
++`setup-recover-never-started` targets the existing diagnostic host only. Both
++the authenticated packet and CLI must explicitly choose
++`recover-created-never-started.v1`; setup remains the default and no fallback
++or automatic retry exists. The receipt binds bootstrap's actual authenticated
++external closure marker, not a caller-provided hash alone.
++
++Recovery authenticates the exact 17 existing admission files and prior writer
++and control census under the original inode-fenced control lock. It requires
++OLD's original stopped state and clean receipt, NEW's original created state,
++PID 0, year-one start/finish times, restart count 0 and OOM false. No live source
++PID or historical cgroup placement is claimed before start. Own birth/VmLck 0
++and target-subtree exclusion are measured; existing exact-ID cgroup subtrees
++must be empty. Missing groups do not prove historical placement.
++
++Full Config and normalized non-CPU HostConfig use canonical JSON bytes, so
++false and integer 0 cannot compare equal. Only **present OLD null to present
++NEW literal false** is accepted before start. All other keys remain exact,
++including the existing CPU, mounts, restart and cpuset checks. After start only
++that same present field may be false or null; every other key remains exact.
++Receipts distinguish raw hashes from semantic parity and never claim a new
++creation or writable-layer parity.
++
++These are narrow rules supported by tagged Moby sources:
++[nil defaults to false and resource verification can discard the field](https://github.com/moby/moby/blob/v28.5.1/daemon/daemon_unix.go#L351-L354),
++[start verifies resource settings](https://github.com/moby/moby/blob/v28.5.1/daemon/start.go#L57-L60),
++and [the start endpoint accepts an empty body and returns 204](https://github.com/moby/moby/blob/v28.5.1/api/server/router/container/container_routes.go#L188-L211).
++Fresh GET `/version` must still report daemon 28.5.1/API 1.51; this is version
++metadata, not a binary attestation.
++
++Full host admission stays strictly above 5 GiB before start. CPU/load/PSI,
++swap, allocated/free disk and immutable source fences remain intact. A bounded
++loopback refusal is only a point-in-time port-conflict check. After admission,
++an O_EXCL root-0600/fsynced attempt receipt spends the one attempt. Source and
++configuration are inspected again after publication. The only mutation is an
++empty-body POST to the fresh authenticated raw NEW ID. Every socket operation
++uses the remaining shared 15-second deadline; no per-I/O 15-second renewal.
++HTTP 204 acknowledges the request, and is neither CLI exit 0 nor running proof.
++Disconnects retain POST-issued uncertainty; earlier version GETs never count
++as a start. Unsupported or malformed HTTP framing refuses rather than guesses.
++
++Standard bounded metadata readiness and actual fresh source/birth admission
++follow. Prior/control census and admission file identities renew with the live
++wrapper, Qdrant and parent identities protected. The first fresh handoff retains
++owner `setup` and previous hash null for the unchanged consumer contract.
++Runtime resource admission retains its existing `>= 5 GiB` boundary; setup's
++prestart host function remains strict `> 5 GiB`. Neither is a capacity prediction.
++
++Nonzero/unknown start or any later refusal retains the attempt and observed
++endpoints with continuation false. Success-path lock-close failure retains the
++completed receipt separately and remains a failure. No automatic stop, remove,
++restart or resume follows. A later admission refusal can leave NEW running;
++this successor does not authorize another recovery from that state.
++
++Local preparation example (placeholder paths, no host action):
++
++```bash
++/usr/bin/python3 -I -B build_packet.py --prepare-reviewed-public-packet \
++  --source-dir /ABS/FROZEN/BACKEND --consumer-dir /ABS/FROZEN/CONSUMER \
++  --reclaim-helper /ABS/FROZEN/prepare_clone_reclaim.py \
++  --external-dir /ABS/FROZEN/EXTERNAL --prior-policy /ABS/RETAINED/prior-policy.json \
++  --recovery-output /ABS/RETAINED/original-public-failure.ndjson \
++  --recovery-config-proof /ABS/RETAINED/created-config-proof.json \
++  --output /ABS/NEW/execution-packet.json \
++  --local-execution-closure /ABS/NEW/local-execution-closure.json
++```
++
++Root alone uses the reviewed local entry with the exact closure, packet, outer,
++contract and validator hashes and `--initial-mode recover-created-never-started.v1`.
++The unchanged 7,200-second outer budget and explicit bounded cleanup remain;
++recovery adds no model, query, ordinary search/history write, snapshot-cache
++operation, or latency/7-day acceptance claim.
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/bootstrap.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/bootstrap.py
+index 140049c8..712f91ec 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/bootstrap.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/bootstrap.py
+@@ -14,7 +14,7 @@ import types
+ 
+ sys.dont_write_bytecode=True
+ MAX_INPUT=8*1024**2
+-MODULES=('packet','reason_codes','admission','census','setup','stager','registration','producer','executor')
++MODULES=('packet','reason_codes','admission','census','setup','recovery','stager','registration','producer','executor')
+ NAMES=frozenset(name+'.py' for name in MODULES)
+ 
+ 
+@@ -35,7 +35,7 @@ def decode(raw,expected_sha):
+         content=base64.b64decode(encoded,validate=True);total+=len(content)
+         if len(content)>262144 or digest(content)!=value['manifest']['files'][name]:raise RuntimeError('bootstrap_file_changed')
+         files[name]=content
+-    if total>2*1024**2 or value['operation'] not in ('setup','preflight','stage','turnover','outer-admit','register-consumer','cleanup','producer-stream','producer-confirm','producer-cleanup') or not isinstance(value['arguments'],dict):raise RuntimeError('bootstrap_operation_invalid')
++    if total>2*1024**2 or value['operation'] not in ('setup','setup-recover-never-started','preflight','stage','turnover','outer-admit','register-consumer','cleanup','producer-stream','producer-confirm','producer-cleanup') or not isinstance(value['arguments'],dict):raise RuntimeError('bootstrap_operation_invalid')
+     return value,files
+ 
+ 
+@@ -50,6 +50,7 @@ def execute(raw,expected_sha):
+         module.__package__='';sys.modules[name]=module
+         exec(compile(files[name+'.py'],module.__file__,'exec'),module.__dict__)
+         module._AUTHENTICATED_EXTERNAL_SHA256=digest(files[name+'.py'])
++        module._AUTHENTICATED_EXTERNAL_CLOSURE_SHA256=expected_sha
+     return sys.modules['executor'].dispatch(value['operation'],value['arguments'])
+ 
+ 
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/build_packet.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/build_packet.py
+index e6207d70..294e8650 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/build_packet.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/build_packet.py
+@@ -13,6 +13,7 @@ from packet import SOURCE_NAMES,canonical,sha,verify_source
+ from setup import derivative_admission_policy
+ from stager import FULL_NAMES,verify_full
+ from census import validate_prior_policy
++import recovery
+ 
+ SOURCE_SHA='00e523226e42ce10bca605f403c4e314f2e49fc55273b683a08e926c4a445108'
+ CONSUMER_FREEZE_SHA='4f44eab300c70c871d8629d73af8c2d56ca8e2af102d8ed4c390024943b00ee4'
+@@ -32,7 +33,7 @@ def consumer_files(folder):
+     return files
+ 
+ 
+-def build(source,consumer,reclaim,external,prior):
++def build(source,consumer,reclaim,external,prior,*,recovery_output=None,recovery_config=None):
+     source=Path(source).resolve(strict=True);consumer=Path(consumer).resolve(strict=True);external=Path(external).resolve(strict=True)
+     backend={name:(source/name).read_bytes() for name in SOURCE_NAMES}
+     raw_source=(source/'cpu0-source-freeze.json').read_bytes();verify_source(raw_source,SOURCE_SHA,backend)
+@@ -58,6 +59,12 @@ def build(source,consumer,reclaim,external,prior):
+             'closureFiles':{name:encode(raw) for name,raw in closure.items()},'closureSha256':sha(closure_raw),
+             'admissionValidatorSha256':sha((external/'validate_admission.mjs').read_bytes()),
+             'localExecutionClosureSha256':sha(local_raw)}
++    if (recovery_output is None)!=(recovery_config is None):raise RuntimeError('recovery_proof_invalid')
++    if recovery_output is not None:
++        recovery.proofs(recovery_output,recovery_config)
++        packet['initialMode']=recovery.MODE
++        packet['recoveryProof']={'mode':recovery.MODE,'originalOutput':encode(recovery_output),
++            'configProof':encode(recovery_config),'originalOutputSha256':recovery.OUTPUT_SHA,'configProofSha256':recovery.CONFIG_SHA}
+     raw=canonical(packet)+b'\n'
+     if len(raw)>8*1024**2:raise RuntimeError('packet_input_bound')
+     return raw,local_raw
+@@ -71,10 +78,11 @@ def absent(path,raw):
+ def main():
+     parser=argparse.ArgumentParser();parser.add_argument('--prepare-reviewed-public-packet',action='store_true')
+     for name in ('source-dir','consumer-dir','reclaim-helper','external-dir','prior-policy','output','local-execution-closure'):parser.add_argument('--'+name)
++    parser.add_argument('--recovery-output');parser.add_argument('--recovery-config-proof')
+     args=parser.parse_args()
+     if not args.prepare_reviewed_public_packet:
+         print('{"schema":"cpu0-execution-packet.v6","status":"prepared-only","hostOperations":0}');return
+-    raw,local_raw=build(args.source_dir,args.consumer_dir,args.reclaim_helper,args.external_dir,json.loads(Path(args.prior_policy).read_bytes()))
++    raw,local_raw=build(args.source_dir,args.consumer_dir,args.reclaim_helper,args.external_dir,json.loads(Path(args.prior_policy).read_bytes()),recovery_output=recovery.read_public_proof(args.recovery_output) if args.recovery_output else None,recovery_config=recovery.read_public_proof(args.recovery_config_proof) if args.recovery_config_proof else None)
+     absent(Path(args.output),raw);absent(Path(args.local_execution_closure),local_raw)
+     print(json.dumps({'schema':'cpu0-execution-packet.v6','packetSha256':sha(raw),
+                       'localExecutionClosureSha256':sha(local_raw),'publicLocalFilesCreated':2,'hostOperations':0}))
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/executor.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/executor.py
+index 287e5b1b..90030dde 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/executor.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/executor.py
+@@ -13,13 +13,14 @@ from pathlib import Path
+ sys.dont_write_bytecode=True
+ from packet import SOURCE_NAMES,canonical,hash_value,read_owned,sha,verify_source,load_staged_modules,load_first_lifecycle
+ import setup
++import recovery
+ import census
+ import stager
+ import registration
+ import producer
+ from reason_codes import REASONS
+ 
+-OPERATIONS=frozenset(('setup','preflight','stage','turnover','outer-admit','register-consumer','cleanup','producer-stream','producer-confirm','producer-cleanup'))
++OPERATIONS=frozenset(('setup','setup-recover-never-started','preflight','stage','turnover','outer-admit','register-consumer','cleanup','producer-stream','producer-confirm','producer-cleanup'))
+ 
+ 
+ def backend_packet(arguments):
+@@ -174,6 +175,18 @@ def dispatch(operation,arguments):
+         if operation=='setup':
+             raw,source_sha,files=backend_packet(arguments)
+             return setup.run_setup(raw,source_sha,files,arguments['derivativePolicySha256'],arguments['priorPolicy'],arguments['priorPolicySha256'])
++        if operation=='setup-recover-never-started':
++            raw,source_sha,files=backend_packet(arguments)
++            proof=arguments['recoveryProof']
++            if not isinstance(proof,dict) or set(proof)!={'mode','originalOutput','configProof','originalOutputSha256','configProofSha256'} or proof['mode']!=recovery.MODE or proof['originalOutputSha256']!=recovery.OUTPUT_SHA or proof['configProofSha256']!=recovery.CONFIG_SHA:
++                raise RuntimeError('recovery_proof_invalid')
++            decoded=[]
++            for key in ('originalOutput','configProof'):
++                value=proof[key]
++                if not isinstance(value,str) or len(value)>90000:raise RuntimeError('recovery_proof_invalid')
++                decoded.append(base64.b64decode(value,validate=True))
++            return recovery.run_recovery(raw,source_sha,files,arguments['derivativePolicySha256'],
++                arguments['priorPolicy'],arguments['priorPolicySha256'],*decoded,arguments['externalClosureSha256'])
+         if operation=='stage':return stage(arguments)
+         if operation=='outer-admit':return outer_admit(arguments)
+         if operation=='producer-stream':
+@@ -231,7 +244,7 @@ def dispatch(operation,arguments):
+         raise
+ 
+ 
+-FAILURE_FIELDS=('setupCompletedStopReceipt','setupDurableStopEvidence','setupEndpointEvidence',
++FAILURE_FIELDS=('recoveryFailureEvidence','recoveryCompletedReceipt','recoveryCleanupFailure','setupCompletedStopReceipt','setupDurableStopEvidence','setupEndpointEvidence',
+                 'setupFailureEvidence','receiptFailureEvidence','setupDockerCleanupEvidence',
+                 'setupCleanupFailure','lifecycleCompletedStopReceipt','lifecycleFailureEvidence',
+                 'lifecycleCleanupFailure','lifecycleDockerCleanupEvidence','fullStageFailureEvidence',
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/local_entry.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/local_entry.py
+index 23e8e5d9..875ea833 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/local_entry.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/local_entry.py
+@@ -8,7 +8,7 @@ import stat
+ import sys
+ import types
+ 
+-MODULES=('packet','reason_codes','admission','census','setup','stager','registration','producer','executor','bootstrap','rpc','private_pipe','outer_local')
++MODULES=('packet','reason_codes','admission','census','setup','recovery','stager','registration','producer','executor','bootstrap','rpc','private_pipe','outer_local')
+ NAMES=frozenset(name+'.py' for name in MODULES)|{'local_entry.py','validate_admission.mjs'}
+ 
+ 
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/outer_local.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/outer_local.py
+index 8d5226c8..7026b580 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/outer_local.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/outer_local.py
+@@ -20,6 +20,7 @@ from packet import canonical,hash_value,sha
+ from rpc import Rpc
+ from private_pipe import stream,fixed_consumer_command
+ from reason_codes import REASONS
++from recovery import MODE as RECOVERY_MODE
+ 
+ SCHEMA='cpu0-execution-packet.v6'
+ 
+@@ -96,14 +97,20 @@ def audit_consumer(frames,previous,packet,*,absolute_deadline):
+         return value
+ 
+ 
+-def run(packet,rpc,emit,*,contract_dir,validator_path,raise_own_nofile):
++def run(packet,rpc,emit,*,contract_dir,validator_path,raise_own_nofile,initial_mode='setup'):
+     """No source mutation beyond reviewed setup/lifecycle/staging/handoff writes.
+ 
+     No resumption after refusal; final cleanup observes the actual current
+     handoff rather than assuming the last reported one is still current.
+     """
+     if packet.get('schema')!=SCHEMA or type(raise_own_nofile) is not bool:raise RuntimeError('outer_packet_invalid')
+-    arguments=source_arguments(packet);ledger=[];frames=[];primary=None
++    mode=packet.get('initialMode','setup')
++    if mode not in ('setup',RECOVERY_MODE) or mode!=initial_mode or (mode=='setup' and 'recoveryProof' in packet) or (mode==RECOVERY_MODE and 'recoveryProof' not in packet):
++        raise RuntimeError('recovery_mode_mismatch')
++    arguments=source_arguments(packet)
++    if mode==RECOVERY_MODE:
++        arguments={**arguments,'recoveryProof':packet['recoveryProof'],'externalClosureSha256':packet['closureSha256']}
++    ledger=[];frames=[];primary=None
+     registered_consumer=None;registered_producer=None;previous=None;transport=None;consumer_audit=None
+     started=time.monotonic();absolute_deadline=started+7200
+     def call(operation,values):
+@@ -112,7 +119,8 @@ def run(packet,rpc,emit,*,contract_dir,validator_path,raise_own_nofile):
+         ledger.append(reply);emit({'kind':'external-operation','operation':operation,'receipt':reply})
+         return reply['result']
+     try:
+-        setup=call('setup',arguments);previous=handoff(setup['handoff'])
++        setup=call('setup-recover-never-started' if mode==RECOVERY_MODE else 'setup',arguments);previous=handoff(setup['handoff'])
++        arguments=source_arguments(packet)
+         preflight=call('preflight',{**arguments,'predecessorSha256':previous['sha256']})
+         previous=handoff(preflight['handoff'])
+         staged=call('stage',{**arguments,'predecessorSha256':previous['sha256'],
+@@ -206,7 +214,7 @@ def remaining_budget(deadline):
+ 
+ 
+ def main():
+-    parser=argparse.ArgumentParser();parser.add_argument('--execute-reviewed',action='store_true')
++    parser=argparse.ArgumentParser();parser.add_argument('--execute-reviewed',action='store_true');parser.add_argument('--initial-mode',choices=('setup',RECOVERY_MODE),default='setup')
+     for name in ('packet','packet-sha256','contract-dir','validator','outer-sha256'):parser.add_argument('--'+name)
+     parser.add_argument('--raise-own-nofile',action='store_true');args=parser.parse_args()
+     if not args.execute_reviewed:
+@@ -220,7 +228,7 @@ def main():
+     bootstrap=base64.b64decode(packet['bootstrap'],validate=True)
+     closure={name:base64.b64decode(value,validate=True) for name,value in packet['closureFiles'].items()}
+     rpc=Rpc(bootstrap,packet['bootstrapSha256'],closure,packet['closureSha256'])
+-    result=run(packet,rpc,lambda value:print(json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False),flush=True),contract_dir=Path(args.contract_dir).resolve(strict=True),validator_path=Path(args.validator).resolve(strict=True),raise_own_nofile=args.raise_own_nofile)
++    result=run(packet,rpc,lambda value:print(json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False),flush=True),contract_dir=Path(args.contract_dir).resolve(strict=True),validator_path=Path(args.validator).resolve(strict=True),raise_own_nofile=args.raise_own_nofile,initial_mode=args.initial_mode)
+     return 0 if result['status']=='completed' else 1
+ 
+ 
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/reason_codes.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/reason_codes.py
+index 65cc2be8..34b76a43 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/reason_codes.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/reason_codes.py
+@@ -3,6 +3,29 @@
+ Literal allowlist only: no error message, path, query or Env interpolation.
+ """
+ REASONS=frozenset((
++    'recovery_closure_unproven',
++    'recovery_proof_invalid',
++    'recovery_original_failure_changed',
++    'recovery_config_proof_changed',
++    'recovery_target_changed',
++    'recovery_state_changed',
++    'recovery_old_receipt_changed',
++    'recovery_scope_changed',
++    'recovery_stage_changed',
++    'recovery_normalization_refused',
++    'recovery_parity_changed',
++    'recovery_placement_unknown',
++    'recovery_port_present',
++    'recovery_attempt_exists',
++    'recovery_attempt_publish_failed',
++    'recovery_start_refused',
++    'recovery_start_unknown',
++    'recovery_shape_unknown',
++    'recovery_birth_changed',
++    'recovery_lock_close_failed',
++    'recovery_guard_or_runtime_failure',
++    'recovery_mode_mismatch',
++
+     'actual_qdrant_comm_changed',
+     'actual_qdrant_pid_ambiguous',
+     'admission_derivative_changed',
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/recovery.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/recovery.py
+new file mode 100644
+index 00000000..6fca85aa
+--- /dev/null
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/recovery.py
+@@ -0,0 +1,525 @@
++"""One-shot start of the exact previously created, never-started owned clone.
++
++No default execution, create/remove/stop, or generic retry exists. Complete
++external bytes and backend source authenticate before this module executes.
++Private Docker configuration and raw container IDs never enter public evidence.
++"""
++import copy
++import http.client
++import json
++import os
++from pathlib import Path
++import re
++import socket
++import stat
++import time
++import types
++
++from packet import canonical, directory, read_owned, sha, verify_source
++import setup
++import admission
++import census
++from reason_codes import REASONS
++
++MODE = 'recover-created-never-started.v1'
++OUTPUT_SHA = 'ad0b490d3d39d2259d86290d4883038a33461e85fe00f1842761fb214d39a84c'
++CONFIG_SHA = '27b99d3853e0048c38ce84cda33fabd7ca4e270c23e21b84f1cc8279c4df1edd'
++OLD_ID_SHA = '30aca59a60c971e246894f614f767930190046ce3138c89e6c9ce5d64e069ff7'
++NEW_ID_SHA = 'c67d813c0e32872228fdc13a515e49c45b3ae68166f19531ee83bcfdf69548ea'
++OLD_RECEIPT_SHA = 'ca4366c7673afae5f7a1680e25183ffd378f9f7888c92f5d79b855b5b4a69cc3'
++OLD_HOST_SHA = 'd538f05de305362096286b0fbd6611d3e9171d305f4db59b291fa9754567798d'
++NEW_HOST_SHA = 'a05ad0714e9c0227ac80097a86376ddcc192983499cf66c0d7098ad0aa0ee9c5'
++RULE = 'oom-kill-disable-null-to-false.moby28.v1'
++YEAR_ONE = '0001-01-01T00:00:00Z'
++ATTEMPT_NAME = 'cpu0-never-started-recovery-attempt-v1.json'
++SUCCESS_NAME = 'cpu0-never-started-recovery-success-v1.json'
++STAGE_NAME = 'pin-control-20261012-100-cpu0-v1'
++MAX_PROOF = 65536
++
++
++def fail(reason):
++    raise RuntimeError(reason)
++
++
++def proofs(output_raw, config_raw):
++    """Only the two immutable actual public observations are accepted."""
++    for raw, expected, reason in ((output_raw, OUTPUT_SHA, 'recovery_original_failure_changed'),
++                                  (config_raw, CONFIG_SHA, 'recovery_config_proof_changed')):
++        if not isinstance(raw, bytes) or len(raw) > MAX_PROOF or sha(raw) != expected:
++            fail(reason)
++    try:
++        output = json.loads(output_raw)
++        config = json.loads(config_raw)
++        receipt = output['receipt']
++        failure = receipt['remoteFailureEvidence']
++        endpoints = failure['setupEndpointEvidence']
++        if (output['kind'] != 'external-completion' or receipt['schema'] != 'cpu0-external-completion.v6'
++                or failure['operation'] != 'setup' or failure['reason'] != 'setup_hostconfig_drift'
++                or failure['continuationAllowed'] is not False or receipt['frames'] != []
++                or receipt['transport'] is not None
++                or failure['setupFailureEvidence'] != {'newCreated': True, 'createdContainerIdHash': NEW_ID_SHA,
++                                                       'automaticRemoval': False, 'automaticRecovery': False}
++                or failure['setupDurableStopEvidence'] != {'receiptObservedDurable': True,
++                                                          'receiptSha256': OLD_RECEIPT_SHA,
++                                                          'continuationAllowed': False}
++                or endpoints['old']['observed'] is not True or endpoints['new']['observed'] is not True
++                or endpoints['old']['state']['containerIdHash'] != OLD_ID_SHA
++                or endpoints['new']['state']['containerIdHash'] != NEW_ID_SHA
++                or config['schema'] != 'cpu0-readonly-created-config-difference.v1'
++                or config['oldNonCpuHostConfigHash'] != OLD_HOST_SHA
++                or config['newNonCpuHostConfigHash'] != NEW_HOST_SHA):
++            fail('recovery_proof_invalid')
++        return endpoints
++    except (KeyError, TypeError, ValueError, UnicodeError):
++        fail('recovery_proof_invalid')
++
++
++def raw_id(value, expected):
++    identity = value.get('Id')
++    if not isinstance(identity, str) or re.fullmatch('[0-9a-f]{64}', identity) is None or sha(identity.encode()) != expected:
++        fail('recovery_target_changed')
++    return identity
++
++
++def stopped_pair(lifecycle, docker, endpoints):
++    old = lifecycle.container(setup.OLD, docker)
++    new = lifecycle.container(setup.NEW, docker)
++    raw_id(old, OLD_ID_SHA); raw_id(new, NEW_ID_SHA)
++    for tag, value in (('old', old), ('new', new)):
++        state = value['State']
++        if (state['Running'] is not False or type(state['Pid']) is not int or state['Pid'] != 0
++                or state['OOMKilled'] is not False or type(state['ExitCode']) is not int
++                or state['ExitCode'] != 0 or type(value['RestartCount']) is not int or value['RestartCount'] != 0
++                or any(state.get(key) is not False for key in ('Dead', 'Paused', 'Restarting'))
++                or canonical(lifecycle.state_snapshot(value)) != canonical(endpoints[tag]['state'])):
++            fail('recovery_state_changed')
++    if (new['State']['Status'] != 'created' or new['State']['StartedAt'] != YEAR_ONE
++            or new['State']['FinishedAt'] != YEAR_ONE):
++        fail('recovery_state_changed')
++    raw, identity = read_owned(setup.ROOT/'cpu0-old-clean-receipt-v1.json')
++    if sha(raw) != OLD_RECEIPT_SHA:
++        fail('recovery_old_receipt_changed')
++    lifecycle.require_clean_receipt(lifecycle.state_snapshot(old), json.loads(raw))
++    return old, new, identity
++
++
++def non_cpu(value):
++    return {key: item for key, item in value['HostConfig'].items() if key not in setup.CPU_FIELDS}
++
++
++def configuration(old, new, *, poststart=False, prestart=None):
++    """Byte-exact JSON types; only the observed OomKillDisable rule differs."""
++    before = non_cpu(old); after = non_cpu(new)
++    if ('OomKillDisable' not in before or before['OomKillDisable'] is not None
++            or 'OomKillDisable' not in after
++            or (after['OomKillDisable'] is not False and not (poststart and after['OomKillDisable'] is None))):
++        fail('recovery_normalization_refused')
++    normalized = copy.deepcopy(before)
++    normalized['OomKillDisable'] = after['OomKillDisable']
++    if canonical(old['Config']) != canonical(new['Config']) or canonical(normalized) != canonical(after):
++        fail('recovery_parity_changed')
++    if not poststart and (sha(canonical(before)) != OLD_HOST_SHA or sha(canonical(after)) != NEW_HOST_SHA):
++        fail('recovery_config_proof_changed')
++    if poststart:
++        if prestart is None or canonical(prestart['Config']) != canonical(new['Config']):
++            fail('recovery_parity_changed')
++        prior = non_cpu(prestart); prior['OomKillDisable'] = after['OomKillDisable']
++        if canonical(prior) != canonical(after):
++            fail('recovery_parity_changed')
++    # Reuse ALL configured CPU/mount/restart checks after strict byte parity.
++    left = copy.deepcopy(old); left['HostConfig']['OomKillDisable'] = after['OomKillDisable']
++    setup.configured_pair(left, new)
++    return {'schema': 'cpu0-recovery-semantic-parity.v1', 'rule': RULE,
++            'configEqual': True, 'normalizedNonCpuHostConfigEqual': True,
++            'rawNonCpuHostConfigEqual': canonical(before) == canonical(after),
++            'oldRawNonCpuHostConfigSha256': sha(canonical(before)),
++            'newRawNonCpuHostConfigSha256': sha(canonical(after)),
++            'normalizedNonCpuHostConfigSha256': sha(canonical(normalized)),
++            'newValue': 'null' if after['OomKillDisable'] is None else 'false',
++            'poststart': poststart, 'creationPerformed': False, 'writableLayerParity': False}
++
++
++def admitted_files(raw_source, source_files, derivative):
++    expected = {**source_files, 'cpu0-source-freeze.json': raw_source,
++                'helper-config.json': source_files['prepared-helper-policy-cpu0.json'],
++                'controller-config.json': derivative}
++    directory(setup.ADMISSION)
++    before = setup.ADMISSION.lstat()
++    if set(path.name for path in setup.ADMISSION.iterdir()) != set(expected):
++        fail('recovery_stage_changed')
++    identities = {}
++    for name, content in expected.items():
++        observed, identity = read_owned(setup.ADMISSION/name)
++        if observed != content:
++            fail('recovery_stage_changed')
++        identities[name] = identity
++    after = setup.ADMISSION.lstat()
++    if (before.st_dev, before.st_ino) != (after.st_dev, after.st_ino) or len(expected) != 17:
++        fail('recovery_stage_changed')
++    return identities
++
++
++def own_stopped_placement(lifecycle, old, new, *, cgroups=Path('/sys/fs/cgroup')):
++    """No invented live source. Exact-ID existing groups must be empty."""
++    own = lifecycle.process(os.getpid())
++    ids = (raw_id(old, OLD_ID_SHA), raw_id(new, NEW_ID_SHA))
++    parts = own['group'].split('/')
++    if any(part == identity or part == 'docker-'+identity+'.scope' for identity in ids for part in parts):
++        fail('recovery_placement_unknown')
++    found = []; target_roots=[]; checked = 0; started = time.monotonic()
++    # Metadata only, no symlink following; bounded entire hierarchy traversal.
++    for folder, dirs, _ in os.walk(cgroups, followlinks=False,onerror=lambda error:fail('recovery_placement_unknown')):
++        checked += 1
++        if checked > 4096 or time.monotonic()-started > 2:
++            fail('recovery_placement_unknown')
++        dirs[:] = [name for name in dirs if not (Path(folder)/name).is_symlink()]
++        path=Path(folder)
++        if path.name in ids or path.name in tuple('docker-'+i+'.scope' for i in ids):
++            target_roots.append(path)
++        if not any(path==root or root in path.parents for root in target_roots):continue
++        raw = lifecycle.bounded(Path(folder)/'cgroup.procs', 512)
++        if raw.strip():
++            fail('recovery_placement_unknown')
++        found.append({'groupHash': sha(str(Path(folder).relative_to(cgroups)).encode()), 'members': 0})
++    if lifecycle.process(os.getpid()) != own:
++        fail('recovery_placement_unknown')
++    return {'preStartSourceProcessProof': False, 'ownProcess': lifecycle.public_process(own),
++            'ownTargetSubtreeExcluded': True, 'existingExactIdGroups': sorted(found,key=lambda item:item['groupHash']),
++            'missingGroupsDoNotProveHistoricalPlacement': True}
++
++
++def require_unused_scope():
++    for path in (setup.ROOT/'cpu0-lifecycle-handoff-v1.json', setup.ROOT/STAGE_NAME,
++                 setup.ROOT/'cpu0-consumer-registration-v1.json', setup.ROOT/ATTEMPT_NAME, setup.ROOT/SUCCESS_NAME):
++        if os.path.lexists(path):
++            fail('recovery_attempt_exists' if path.name in (ATTEMPT_NAME, SUCCESS_NAME) else 'recovery_scope_changed')
++
++
++def prior_census(prior_policy, prior_sha, protected_pids=None):
++    if sha(canonical(prior_policy)) != prior_sha:
++        fail('prior_stage_policy_changed')
++    census.immutable_prior_files(prior_policy)
++    raw, _ = read_owned(setup.ROOT/census.PRIOR_STAGES[-1]/'prepare_clone_reclaim.py')
++    if sha(raw) != 'f831f00f75d4b54dce3ba493a4a078b23969222507576505052291ed0147f7c5':
++        fail('prior_receipt_helper_changed')
++    helper = types.ModuleType('authenticated_cpu0_recovery_prior_helper')
++    helper.__file__ = str(setup.ROOT/census.PRIOR_STAGES[-1]/'prepare_clone_reclaim.py')
++    exec(compile(raw, helper.__file__, 'exec'), helper.__dict__)
++    return {'writers': census.prior_writers(prior_policy, helper, protected_pids or {os.getpid(), os.getppid()}),
++            'controls': census.proc_controls()}
++
++
++def port_closed(connection=socket.create_connection):
++    try:
++        client = connection(('127.0.0.1', 16333), timeout=1)
++    except ConnectionRefusedError:
++        return {'pointInTimeConnectionRefused': True, 'sharedStoreAbsenceProven': False}
++    except OSError:
++        fail('recovery_port_present')
++    else:
++        client.close()
++        fail('recovery_port_present')
++
++
++def publish(name, value):
++    """New fixed receipt scope; never expands legacy lifecycle allowlists."""
++    if name not in (ATTEMPT_NAME, SUCCESS_NAME):
++        fail('recovery_scope_changed')
++    directory(setup.ROOT)
++    raw = canonical(value)+b'\n'
++    if len(raw) > MAX_PROOF:
++        fail('recovery_attempt_publish_failed')
++    fd = None
++    try:
++        fd = os.open(setup.ROOT/name, os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW|os.O_CLOEXEC, 0o600)
++        with os.fdopen(fd, 'wb') as stream:
++            fd = None; stream.write(raw); stream.flush(); os.fsync(stream.fileno())
++        dfd = os.open(setup.ROOT, os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
++        try: os.fsync(dfd)
++        finally: os.close(dfd)
++        observed, _ = read_owned(setup.ROOT/name)
++        if observed != raw:
++            fail('recovery_attempt_publish_failed')
++        return sha(raw)
++    except FileExistsError:
++        fail('recovery_attempt_exists')
++    except OSError:
++        # Existing partial bytes remain evidence; never delete them or retry.
++        fail('recovery_attempt_publish_failed')
++    finally:
++        if fd is not None: os.close(fd)
++
++
++class StartEngine:
++    """One exact-ID start; HTTP acknowledgment is never CLI or birth proof."""
++    def __init__(self, socket_factory=None):
++        self.postIssued = False
++        self.socket_factory = socket_factory or socket.socket
++
++    def request(self, method, path, *, timeout=15):
++        # No per-I/O timeout accumulation: each operation receives the current
++        # absolute deadline remainder. No chunked/close-delimited body accepted.
++        allowed = method=='GET' and path=='/version'
++        if method=='POST':
++            match=re.fullmatch(r'/v1\.51/containers/([0-9a-f]{64})/start',path)
++            allowed=match is not None and sha(match[1].encode())==NEW_ID_SHA
++        if not allowed or not isinstance(timeout,(int,float)) or isinstance(timeout,bool) or not 0<timeout<=15:
++            fail('recovery_scope_changed')
++        deadline = time.monotonic()+timeout
++        client = self.socket_factory(socket.AF_UNIX, socket.SOCK_STREAM)
++        def remaining():
++            value = deadline-time.monotonic()
++            if value <= 0: fail('recovery_start_unknown')
++            client.settimeout(value)
++        def receive():
++            remaining()
++            part = client.recv(4096)
++            if not part: fail('recovery_start_unknown')
++            return part
++        try:
++            remaining(); client.connect('/var/run/docker.sock')
++            request = (method+' '+path+' HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nContent-Length: 0\r\n\r\n').encode('ascii')
++            remaining()
++            if method=='POST':self.postIssued=True
++            client.sendall(request)
++            data = bytearray()
++            while b'\r\n\r\n' not in data:
++                data.extend(receive())
++                if len(data)>16384: fail('recovery_start_unknown')
++            head, body = bytes(data).split(b'\r\n\r\n',1)
++            lines = head.split(b'\r\n')
++            match = re.fullmatch(rb'HTTP/1\.[01] ([0-9]{3})(?: [^\r\n]*)?',lines[0])
++            if match is None: fail('recovery_start_unknown')
++            status = int(match[1]); headers = {}
++            for row in lines[1:]:
++                if b':' not in row: fail('recovery_start_unknown')
++                key,value=row.split(b':',1);key=key.strip().lower();value=value.strip()
++                if key in headers: fail('recovery_start_unknown')
++                headers[key]=value
++            if b'transfer-encoding' in headers: fail('recovery_start_unknown')
++            raw_length=headers.get(b'content-length',b'0' if status==204 else b'')
++            if not re.fullmatch(rb'[0-9]+',raw_length): fail('recovery_start_unknown')
++            length=int(raw_length)
++            if length>MAX_PROOF or len(body)>length: fail('recovery_start_unknown')
++            while len(body)<length:
++                body+=receive()
++                if len(body)>length: fail('recovery_start_unknown')
++            remaining()
++            return status,body
++        except OSError:
++            fail('recovery_start_unknown')
++        finally:
++            client.close()
++
++    def version(self):
++        status, raw = self.request('GET', '/version')
++        try: value = json.loads(raw)
++        except (ValueError, UnicodeError): fail('recovery_normalization_refused')
++        if status != 200 or not isinstance(value,dict) or value.get('Version') != '28.5.1' or value.get('ApiVersion') != '1.51':
++            fail('recovery_normalization_refused')
++        return {'daemonVersion': '28.5.1', 'apiVersion': '1.51', 'binaryAttestation': False}
++
++    def start(self, identity):
++        self.postIssued=False
++        if not isinstance(identity, str) or re.fullmatch('[0-9a-f]{64}', identity) is None or sha(identity.encode()) != NEW_ID_SHA:
++            fail('recovery_target_changed')
++        status, raw = self.request('POST', '/v1.51/containers/'+identity+'/start')
++        if status != 204 or raw != b'':
++            error = RuntimeError('recovery_start_refused')
++            error.recoveryHttpStatus = status
++            raise error
++        return {'httpStatus': 204, 'httpAcknowledged': True, 'cliExitCode': None, 'runningProven': False}
++
++
++def read_public_proof(path):
++    """Local builder input: bounded before reading, exact bytes checked later."""
++    raw, _ = read_owned(Path(path).absolute(), limit=MAX_PROOF, uid=os.geteuid())
++    return raw
++
++
++def close_control(fd):
++    os.close(fd)
++
++
++def new_failure_evidence():
++    return {'schema': 'cpu0-never-started-recovery-failure.v1', 'originalOutputSha256': OUTPUT_SHA,
++            'configProofSha256': CONFIG_SHA, 'oldCleanReceiptSha256': OLD_RECEIPT_SHA,
++            'oldContainerIdHash': OLD_ID_SHA, 'newContainerIdHash': NEW_ID_SHA,
++            'attemptObserved': None, 'attemptObservationKnown': False, 'attemptSha256': None,
++            'actionState': 'not-issued', 'httpStatus': None, 'cliExitCode': None,
++            'continuationAllowed': False}
++
++
++def record_failure(error, evidence, lifecycle=None, docker=None):
++    reason=error.args[0] if type(error) is RuntimeError and len(error.args)==1 else None
++    evidence['primaryReason']=reason if isinstance(reason,str) and reason in REASONS else 'recovery_guard_or_runtime_failure'
++    if lifecycle is not None:
++        try:
++            evidence['attemptObserved']=os.path.lexists(setup.ROOT/ATTEMPT_NAME)
++            evidence['attemptObservationKnown']=True
++        except BaseException:
++            evidence['attemptObserved']=None;evidence['attemptObservationKnown']=False
++    observed={}
++    for name,tag in ((setup.OLD,'old'),(setup.NEW,'new')):
++        try:
++            if lifecycle is None:raise RuntimeError('recovery_guard_or_runtime_failure')
++            observed[tag]={'observed':True,'state':lifecycle.state_snapshot(lifecycle.container(name,docker))}
++        except BaseException:observed[tag]={'observed':False,'state':None,'absenceProven':False}
++    evidence['endpoints']=observed
++    error.recoveryFailureEvidence=copy.deepcopy(evidence)
++
++
++def run_recovery(raw_source, source_sha, source_files, derivative_sha, prior_policy,
++                 prior_sha, output_raw, config_raw, external_closure_sha):
++    evidence=new_failure_evidence()
++    try:
++        # Only the authenticated remote bootstrap installs this marker after
++        # verifying the complete ordered external closure. A caller hash alone
++        # never attests executing module bytes; local imports cannot authorize it.
++        if globals().get('_AUTHENTICATED_EXTERNAL_CLOSURE_SHA256')!=external_closure_sha or re.fullmatch('[0-9a-f]{64}',external_closure_sha or '') is None:
++            fail('recovery_closure_unproven')
++        return _run_recovery(raw_source,source_sha,source_files,derivative_sha,prior_policy,
++                             prior_sha,output_raw,config_raw,external_closure_sha,evidence)
++    except BaseException as error:
++        if not hasattr(error,'recoveryFailureEvidence'):record_failure(error,evidence)
++        raise
++
++
++def _run_recovery(raw_source, source_sha, source_files, derivative_sha, prior_policy,
++                  prior_sha, output_raw, config_raw, external_closure_sha, evidence):
++    endpoints = proofs(output_raw, config_raw)
++    manifest = verify_source(raw_source, source_sha, source_files)
++    derivative = setup.derivative_admission_policy(source_files['prepared-control-policy-cpu0.json'],
++                                                  manifest['files']['prepared-control-policy-cpu0.json'])
++    if sha(derivative) != derivative_sha:
++        fail('admission_derivative_changed')
++    if re.fullmatch('[0-9a-f]{64}', external_closure_sha or '') is None:
++        fail('recovery_proof_invalid')
++    os.environ.clear(); os.environ.update({'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8',
++                                          'DOCKER_HOST': 'unix:///var/run/docker.sock'})
++    lifecycle = setup.load_first_lifecycle(raw_source, source_sha, source_files)
++    guards = setup.load_first_guards(raw_source, source_sha, source_files)
++    lifecycle.require_interpreter()
++    fd = setup.acquire_control(lifecycle); primary = None; docker = setup.Docker()
++    result = None
++
++    try:
++        require_unused_scope()
++        identities = admitted_files(raw_source, source_files, derivative)
++        old, new, old_receipt_identity = stopped_pair(lifecycle, docker, endpoints)
++        parity = configuration(old, new)
++        own = own_stopped_placement(lifecycle, old, new)
++        prior = prior_census(prior_policy, prior_sha)
++        port = port_closed()
++        engine = StartEngine(); version = engine.version()
++        host = admission.host(guards)
++        # Renewal after all potentially slow inspectors and before the attempt.
++        require_unused_scope()
++        if admitted_files(raw_source, source_files, derivative) != identities:
++            fail('recovery_stage_changed')
++        old_again, new_again, receipt_again = stopped_pair(lifecycle, docker, endpoints)
++        configuration(old_again, new_again)
++        if receipt_again != old_receipt_identity or own_stopped_placement(lifecycle, old_again, new_again) != own:
++            fail('recovery_placement_unknown')
++        prior = prior_census(prior_policy, prior_sha)
++        port_closed(); engine.version(); host = admission.host(guards)
++        old_again,new_again,final_receipt_identity=stopped_pair(lifecycle,docker,endpoints)
++        configuration(old_again,new_again)
++        if final_receipt_identity!=old_receipt_identity or admitted_files(raw_source,source_files,derivative)!=identities:
++            fail('recovery_stage_changed')
++        if own_stopped_placement(lifecycle,old_again,new_again)!=own:
++            fail('recovery_placement_unknown')
++        lifecycle.require_lock(fd)
++        attempt = {'schema': 'cpu0-never-started-recovery-attempt.v1', 'mode': MODE,
++                   'sourceFreezeSha256': source_sha, 'externalClosureSha256': external_closure_sha,
++                   'originalOutputSha256': OUTPUT_SHA, 'configProofSha256': CONFIG_SHA,
++                   'oldCleanReceiptSha256': OLD_RECEIPT_SHA, 'old': lifecycle.state_snapshot(old_again),
++                   'new': lifecycle.state_snapshot(new_again), 'startIssued': False,
++                   'automaticRecoveryAllowed': False}
++        attempt_sha = publish(ATTEMPT_NAME, attempt)
++        evidence.update(attemptObserved=True, attemptObservationKnown=True, attemptSha256=attempt_sha)
++        # Publication itself can take time. Never start from the earlier inspect.
++        final_old,final_new,final_receipt=stopped_pair(lifecycle,docker,endpoints)
++        configuration(final_old,final_new)
++        if final_receipt!=old_receipt_identity or admitted_files(raw_source,source_files,derivative)!=identities:
++            fail('recovery_stage_changed')
++        lifecycle.require_lock(fd)
++        identity=raw_id(final_new,NEW_ID_SHA)
++        try:
++            acknowledgment = engine.start(identity)
++        except BaseException:
++            evidence['actionState'] = 'issued-unknown' if engine.postIssued else 'not-issued'
++            raise
++        evidence.update(actionState='issued-acknowledged', httpStatus=204)
++        shape_started = time.monotonic()
++        while True:
++            if time.monotonic()-shape_started>=90:fail('recovery_shape_unknown')
++            current = lifecycle.container(setup.NEW, docker)
++            raw_id(current, NEW_ID_SHA)
++            configuration(old_again, current, poststart=True, prestart=new_again)
++            if lifecycle.state_snapshot(lifecycle.container(setup.OLD, docker)) != endpoints['old']['state']:
++                fail('recovery_state_changed')
++            try:
++                shape = admission.collection_shape()
++                if time.monotonic()-shape_started>=90:fail('recovery_shape_unknown')
++                break
++            except RuntimeError as error:
++                if str(error) not in ('setup_shape_unavailable', 'setup_shape_changed') or time.monotonic()-shape_started >= 90:
++                    raise
++                time.sleep(.2)
++        if admitted_files(raw_source, source_files, derivative) != identities:
++            fail('recovery_stage_changed')
++        modules = setup.load_staged_modules(setup.ADMISSION, raw_source, source_sha, source_files)
++        actual = modules['lifecycle_cpu0']; control = modules['controller_cpu0']; daemon = modules['daemon_cpu0']
++        config = json.loads(derivative)
++        _, spec, policy = daemon.load_config(str(setup.ADMISSION/'helper-config.json'),
++                                            config['helperPolicySha256'], config['helperCodeSha256'])
++        control.CPU_POLICY = config['cpuIsolation']
++        birth = control.birth_admission(config, spec, policy)
++        actual.require_lock(fd)
++        current = actual.container(setup.NEW, docker); raw_id(current, NEW_ID_SHA)
++        post_parity = configuration(old_again, current, poststart=True, prestart=new_again)
++        receipt_raw, identity = read_owned(setup.ROOT/'cpu0-old-clean-receipt-v1.json')
++        if sha(receipt_raw) != OLD_RECEIPT_SHA or identity != old_receipt_identity:
++            fail('recovery_old_receipt_changed')
++        actual.require_clean_receipt(actual.state_snapshot(actual.container(setup.OLD, docker)), json.loads(receipt_raw))
++        live=actual.attest(setup.NEW,docker)
++        protected={os.getpid(),os.getppid(),live['wrapper']['pid'],live['wrapper']['parentPid'],live['qdrant']['pid'],live['qdrant']['parentPid']}
++        prior=prior_census(prior_policy,prior_sha,protected)
++        if admitted_files(raw_source,source_files,derivative)!=identities or actual.attest(setup.NEW,docker)!=live:
++            fail('recovery_birth_changed')
++        # The final pair proves OLD receipt and actual current live NEW/own
++        # placement after census and byte renewal, before the first handoff.
++        actual.require_lock(fd)
++        handoff_raw = setup.first_handoff(actual, docker)
++        handoff_sha = setup.write_root_absent(setup.ROOT/'cpu0-lifecycle-handoff-v1.json', handoff_raw)
++        actual.read_handoff(docker, handoff_sha)
++        result = {'schema': 'cpu0-never-started-recovery.v1', 'mode': MODE,
++                  'sourceFreezeSha256': source_sha, 'externalClosureSha256': external_closure_sha,
++                  'derivativePolicySha256': derivative_sha, 'originalOutputSha256': OUTPUT_SHA,
++                  'configProofSha256': CONFIG_SHA, 'oldCleanReceiptSha256': OLD_RECEIPT_SHA,
++                  'attemptSha256': attempt_sha, 'startedExistingCreatedClone': True,
++                  'creationPerformed': False, 'preStartPlacement': own, 'normalizationBefore': parity,
++                  'normalizationAfter': post_parity, 'daemon': version, 'startAcknowledgment': acknowledgment,
++                  'hostBeforeStart': host, 'portBeforeStart': port, 'initialAdmission': birth,
++                  'collectionShape': shape, 'handoff': {**json.loads(handoff_raw), 'sha256': handoff_sha},
++                  'priorEvidence': prior, 'admissionFilesCreated': 0, 'createCalls': 0, 'removeCalls': 0,
++                  'stopCalls': 0, 'queries': 0, 'modelsRead': 0, 'normalStartupStorageWritesPossible': True}
++        result['recoveryReceiptSha256'] = publish(SUCCESS_NAME, result)
++        return result
++    except BaseException as error:
++        primary = error
++        if type(error) is RuntimeError and error.args==('recovery_start_refused',) and evidence['attemptObserved']:
++            evidence.update(actionState='issued-nonzero',httpStatus=getattr(error,'recoveryHttpStatus',None))
++        record_failure(error,evidence,lifecycle,docker)
++        raise
++    finally:
++        try: close_control(fd)
++        except BaseException:
++            if primary is None:
++                error=RuntimeError('recovery_lock_close_failed')
++                record_failure(error,evidence,lifecycle,docker)
++                error.recoveryCleanupFailure='recovery_lock_close_failed'
++                if result is not None:error.recoveryCompletedReceipt=result
++                raise error from None
++            primary.recoveryCleanupFailure = 'recovery_lock_close_failed'
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/rpc.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/rpc.py
+index a9b77e90..7b9a40a9 100644
+--- a/goodwatch-qdrant/diagnostics/cpu0-external-v6/rpc.py
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/rpc.py
+@@ -13,7 +13,7 @@ from packet import canonical,hash_value,sha
+ from bootstrap import MODULES
+ 
+ ROOT='/root/goodwatch-qdrant-cold-406-20261011'
+-HOSTS={'setup':'root@10.0.0.32','preflight':'root@10.0.0.32','stage':'root@10.0.0.32',
++HOSTS={'setup-recover-never-started':'root@10.0.0.32','setup':'root@10.0.0.32','preflight':'root@10.0.0.32','stage':'root@10.0.0.32',
+        'turnover':'root@10.0.0.32','outer-admit':'root@10.0.0.32',
+        'register-consumer':'root@10.0.0.32','cleanup':'root@10.0.0.32',
+        'producer-stream':'root@10.0.0.21','producer-cleanup':'root@10.0.0.21',
+diff --git a/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_recovery.py b/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_recovery.py
+new file mode 100644
+index 00000000..af173cb7
+--- /dev/null
++++ b/goodwatch-qdrant/diagnostics/cpu0-external-v6/test_recovery.py
+@@ -0,0 +1,386 @@
++"""Local recovery refusals and composed dispatch; no host/container operations."""
++import base64
++import copy
++from contextlib import ExitStack
++import json
++import os
++import fcntl
++from pathlib import Path
++import socket
++import tempfile
++import threading
++import time
++import unittest
++from unittest import mock
++
++import bootstrap
++import executor
++import local_entry
++import outer_local
++import packet
++import recovery
++import setup
++from reason_codes import REASONS
++
++
++class RecoveryTests(unittest.TestCase):
++    def objects(self):
++        old = {'Id': 'a'*64, 'Name': '/'+setup.OLD, 'Image': setup.IMAGE,
++               'Config': {'Image': setup.IMAGE, 'Env': [], 'WorkingDir': '/qdrant'},
++               'HostConfig': {'NanoCpus': 2_000_000_000, 'CpuQuota': 200000, 'CpuPeriod': 100000,
++                              'OomKillDisable': None, 'RestartPolicy': {'Name': 'no', 'MaximumRetryCount': 0},
++                              'CpusetCpus': '', 'CpusetMems': '', 'CapDrop': []},
++               'Mounts': [{'Source': '/owned/'+str(i), 'Destination': '/fixture/'+str(i),
++                           'Type': 'bind', 'RW': i != 2} for i in range(3)],
++               'RestartCount': 0,
++               'State': {'Running': False, 'Pid': 0, 'OOMKilled': False, 'ExitCode': 0,
++                         'Dead': False, 'Paused': False, 'Restarting': False, 'Status': 'exited',
++                         'StartedAt': '2026-10-12T13:49:22Z', 'FinishedAt': '2026-10-12T18:36:19Z'}}
++        new = copy.deepcopy(old);new.update(Id='b'*64, Name='/'+setup.NEW)
++        new['HostConfig'].update(NanoCpus=0, CpuQuota=0, CpuPeriod=0, OomKillDisable=False)
++        new['State'].update(Status='created', StartedAt=recovery.YEAR_ONE, FinishedAt=recovery.YEAR_ONE)
++        return old,new
++
++    def typed_fixture(self):
++        scope=ExitStack();self.addCleanup(scope.close)
++        old,new=self.objects()
++        for name,value in (('OLD_ID_SHA',packet.sha(old['Id'].encode())),('NEW_ID_SHA',packet.sha(new['Id'].encode())),
++                           ('OLD_HOST_SHA',packet.sha(packet.canonical(recovery.non_cpu(old)))),
++                           ('NEW_HOST_SHA',packet.sha(packet.canonical(recovery.non_cpu(new))))):
++            scope.enter_context(mock.patch.object(recovery,name,value))
++        return scope,old,new
++
++    def test_normalization_is_exact_json_and_only_one_field(self):
++        _,old,new=self.typed_fixture()
++        proof=recovery.configuration(old,new)
++        self.assertTrue(proof['normalizedNonCpuHostConfigEqual'])
++        self.assertFalse(proof['rawNonCpuHostConfigEqual'])
++        self.assertFalse(proof['creationPerformed'])
++        for mutation in ('missing',None,True,0,'false'):
++            with self.subTest(mutation=mutation):
++                changed=copy.deepcopy(new)
++                if mutation=='missing':changed['HostConfig'].pop('OomKillDisable')
++                else:changed['HostConfig']['OomKillDisable']=mutation
++                with self.assertRaisesRegex(RuntimeError,'recovery_normalization_refused'):
++                    recovery.configuration(old,changed)
++        changed=copy.deepcopy(new);changed['HostConfig']['CapDrop']=['NET_ADMIN']
++        with self.assertRaisesRegex(RuntimeError,'recovery_parity_changed'):recovery.configuration(old,changed)
++        # Python equality would accept bool/int drift in an unrelated key.
++        old['Config']['Tty']=False;new['Config']['Tty']=0
++        with self.assertRaisesRegex(RuntimeError,'recovery_parity_changed'):recovery.configuration(old,new)
++
++    def test_poststart_nil_is_recorded_but_no_other_field_can_change(self):
++        _,old,new=self.typed_fixture();running=copy.deepcopy(new)
++        running['HostConfig']['OomKillDisable']=None
++        proof=recovery.configuration(old,running,poststart=True,prestart=new)
++        self.assertEqual(proof['newValue'],'null');self.assertTrue(proof['rawNonCpuHostConfigEqual'])
++        for value in (True,0,'false'):
++            running['HostConfig']['OomKillDisable']=value
++            with self.assertRaisesRegex(RuntimeError,'recovery_normalization_refused'):
++                recovery.configuration(old,running,poststart=True,prestart=new)
++        running=copy.deepcopy(new);running['Config']['Env']=['CHANGED=1']
++        with self.assertRaisesRegex(RuntimeError,'recovery_parity_changed'):
++            recovery.configuration(old,running,poststart=True,prestart=new)
++
++    def lifecycle(self):
++        source=Path(__file__).resolve().parent.parent/'pinning-prototype'
++        raw=(source/'cpu0-source-freeze.json').read_bytes()
++        files={name:(source/name).read_bytes() for name in json.loads(raw)['files']}
++        actual=setup.load_first_lifecycle(raw,packet.sha(raw),files)
++        return actual,raw,files
++
++    def test_stopped_pair_requires_original_state_and_durable_semantics(self):
++        scope,old,new=self.typed_fixture();actual,_,_=self.lifecycle()
++        endpoints={tag:{'observed':True,'state':actual.state_snapshot(value)} for tag,value in (('old',old),('new',new))}
++        receipt=b'{"fixed":"trusted-clean"}\n'
++        scope.enter_context(mock.patch.object(recovery,'OLD_RECEIPT_SHA',packet.sha(receipt)))
++        scope.enter_context(mock.patch.object(recovery,'read_owned',return_value=(receipt,(1,2))))
++        actual.container=lambda name,docker:copy.deepcopy(old if name==setup.OLD else new)
++        semantic=scope.enter_context(mock.patch.object(actual,'require_clean_receipt'))
++        recovery.stopped_pair(actual,None,endpoints);semantic.assert_called_once()
++        for change in ({'StartedAt':'2026-10-12T00:00:00Z'},{'Pid':99},{'OOMKilled':True},{'ExitCode':137},{'Status':'exited'}):
++            changed=copy.deepcopy(new);changed['State'].update(change)
++            actual.container=lambda name,docker:old if name==setup.OLD else changed
++            with self.assertRaisesRegex(RuntimeError,'recovery_state_changed'):recovery.stopped_pair(actual,None,endpoints)
++        actual.container=lambda name,docker:old if name==setup.OLD else new
++        semantic.side_effect=RuntimeError('lifecycle_clean_receipt_missing')
++        with self.assertRaisesRegex(RuntimeError,'lifecycle_clean_receipt_missing'):recovery.stopped_pair(actual,None,endpoints)
++
++    def test_closed_admission_inventory_and_inode_fence(self):
++        _,raw,files=self.lifecycle()
++        with tempfile.TemporaryDirectory() as folder, mock.patch.object(setup,'ADMISSION',Path(folder)),mock.patch.object(recovery,'directory',side_effect=lambda p:packet.directory(p,uid=os.geteuid())),mock.patch.object(recovery,'read_owned',side_effect=lambda p:packet.read_owned(p,uid=os.geteuid())):
++            os.chmod(folder,0o700)
++            derivative=b'{"fixed":"policy"}\n'
++            expected={**files,'cpu0-source-freeze.json':raw,'helper-config.json':files['prepared-helper-policy-cpu0.json'],'controller-config.json':derivative}
++            for name,content in expected.items():
++                p=Path(folder)/name;p.write_bytes(content);p.chmod(0o600)
++            self.assertEqual(len(recovery.admitted_files(raw,files,derivative)),17)
++            (Path(folder)/'extra').write_bytes(b'')
++            with self.assertRaisesRegex(RuntimeError,'recovery_stage_changed'):recovery.admitted_files(raw,files,derivative)
++            (Path(folder)/'extra').unlink();(Path(folder)/'pin_cpu0.py').unlink()
++            with self.assertRaisesRegex(RuntimeError,'recovery_stage_changed'):recovery.admitted_files(raw,files,derivative)
++
++    def test_receipt_oexcl_keeps_first_attempt_bytes(self):
++        with tempfile.TemporaryDirectory() as folder,mock.patch.object(setup,'ROOT',Path(folder)),mock.patch.object(recovery,'directory',side_effect=lambda p:packet.directory(p,uid=os.geteuid())),mock.patch.object(recovery,'read_owned',side_effect=lambda p:packet.read_owned(p,uid=os.geteuid())):
++            os.chmod(folder,0o700)
++            digest=recovery.publish(recovery.ATTEMPT_NAME,{'fixed':'one'})
++            path=Path(folder)/recovery.ATTEMPT_NAME;before=path.read_bytes()
++            self.assertEqual(packet.sha(before),digest)
++            with self.assertRaisesRegex(RuntimeError,'recovery_attempt_exists'):recovery.publish(recovery.ATTEMPT_NAME,{'fixed':'two'})
++            self.assertEqual(path.read_bytes(),before)
++            with self.assertRaisesRegex(RuntimeError,'recovery_scope_changed'):recovery.publish('arbitrary.json',{})
++
++    def test_actual_own_process_placement_and_existing_nonempty_target_refuse(self):
++        _,old,new=self.typed_fixture();actual,_,_=self.lifecycle()
++        with tempfile.TemporaryDirectory() as folder:
++            root=Path(folder)
++            proof=recovery.own_stopped_placement(actual,old,new,cgroups=root)
++            self.assertFalse(proof['preStartSourceProcessProof'])
++            self.assertEqual(proof['ownProcess']['pid'],os.getpid());self.assertEqual(proof['ownProcess']['VmLckBytes'],0)
++            target=root/('docker-'+new['Id']+'.scope');target.mkdir();(target/'cgroup.procs').write_text('999\n')
++            with self.assertRaisesRegex(RuntimeError,'recovery_placement_unknown'):
++                recovery.own_stopped_placement(actual,old,new,cgroups=root)
++
++    def test_explicit_mode_fails_before_rpc_and_default_has_no_recovery(self):
++        rpc=mock.Mock()
++        packet_value={'schema':outer_local.SCHEMA,'initialMode':recovery.MODE,'recoveryProof':{}}
++        with self.assertRaisesRegex(RuntimeError,'recovery_mode_mismatch'):
++            outer_local.run(packet_value,rpc,lambda row:None,contract_dir=None,validator_path=None,raise_own_nofile=False)
++        rpc.call.assert_not_called()
++        self.assertIn('recovery',bootstrap.MODULES);self.assertIn('recovery',local_entry.MODULES)
++        for modules in (bootstrap.MODULES,local_entry.MODULES):
++            self.assertGreater(modules.index('recovery'),modules.index('setup'))
++            self.assertLess(modules.index('recovery'),modules.index('executor'))
++
++    def test_executor_projects_actual_recovery_failure_without_live_context(self):
++        error=RuntimeError('recovery_start_unknown')
++        error.recoveryFailureEvidence={'schema':'cpu0-never-started-recovery-failure.v1',
++                                      'actionState':'issued-unknown','continuationAllowed':False}
++        actual,raw,files=self.lifecycle()
++        args={'sourceFreezeSha256':packet.sha(raw),'sourceFreeze':base64.b64encode(raw).decode(),
++              'sourceFiles':{n:base64.b64encode(v).decode() for n,v in files.items()},
++              'derivativePolicySha256':'1'*64,'priorPolicy':[],'priorPolicySha256':'2'*64,'externalClosureSha256':'3'*64,
++              'recoveryProof':{'mode':recovery.MODE,'originalOutputSha256':recovery.OUTPUT_SHA,'configProofSha256':recovery.CONFIG_SHA,
++                               'originalOutput':'e30=','configProof':'e30='}}
++        with mock.patch.object(recovery,'run_recovery',side_effect=error),mock.patch.object(executor,'context') as context,mock.patch.object(executor,'load_first_lifecycle',side_effect=RuntimeError('fixed-refusal')):
++            with self.assertRaisesRegex(RuntimeError,'recovery_start_unknown') as caught:executor.dispatch('setup-recover-never-started',args)
++        context.assert_not_called()
++        public=caught.exception.publicFailure
++        self.assertEqual(public['reason'],'recovery_start_unknown')
++        self.assertEqual(public['recoveryFailureEvidence'],error.recoveryFailureEvidence)
++        self.assertFalse(public['continuationAllowed'])
++
++    def close_owned(self,fd,identity):
++        try:
++            info=os.fstat(fd)
++            if (info.st_dev,info.st_ino)==identity:os.close(fd)
++        except OSError:pass
++
++    def composed_fixture(self):
++        scope,old,new=self.typed_fixture();actual,raw,files=self.lifecycle()
++        scope.enter_context(mock.patch.object(recovery,'_AUTHENTICATED_EXTERNAL_CLOSURE_SHA256','9'*64,create=True))
++        folder=Path(scope.enter_context(tempfile.TemporaryDirectory()));folder.chmod(0o700)
++        admitted=folder/'admission';admitted.mkdir(mode=0o700)
++        scope.enter_context(mock.patch.object(setup,'ROOT',folder))
++        scope.enter_context(mock.patch.object(setup,'ADMISSION',admitted))
++        actual.ROOT=folder
++        reader=lambda path:packet.read_owned(path,uid=os.geteuid())
++        validator=lambda path:packet.directory(path,uid=os.geteuid())
++        scope.enter_context(mock.patch.object(recovery,'read_owned',side_effect=reader))
++        scope.enter_context(mock.patch.object(recovery,'directory',side_effect=validator))
++        scope.enter_context(mock.patch.object(setup,'directory',side_effect=validator))
++        derivative=packet.canonical({'helperPolicySha256':'1'*64,'helperCodeSha256':'2'*64,'cpuIsolation':{}})+b'\n'
++        scope.enter_context(mock.patch.object(setup,'derivative_admission_policy',return_value=derivative))
++        expected={**files,'cpu0-source-freeze.json':raw,'helper-config.json':files['prepared-helper-policy-cpu0.json'],'controller-config.json':derivative}
++        for name,content in expected.items():
++            p=admitted/name;p.write_bytes(content);p.chmod(0o600)
++        receipt=b'{"trusted":"fixture"}\n';receipt_path=folder/'cpu0-old-clean-receipt-v1.json'
++        receipt_path.write_bytes(receipt);receipt_path.chmod(0o600)
++        scope.enter_context(mock.patch.object(recovery,'OLD_RECEIPT_SHA',packet.sha(receipt)))
++        endpoints={tag:{'observed':True,'state':actual.state_snapshot(value)} for tag,value in (('old',old),('new',new))}
++        scope.enter_context(mock.patch.object(recovery,'proofs',return_value=endpoints))
++        actual.container=lambda name,docker:copy.deepcopy(old if name==setup.OLD else new)
++        actual.require_clean_receipt=mock.Mock()
++        actual.pair_snapshot=lambda docker:{'schema':'fixture-pair','old':actual.state_snapshot(old),'new':actual.state_snapshot(new)}
++        actual.read_handoff=lambda docker,digest:None
++        actual.attest=lambda name,docker:{'wrapper':{'pid':111,'parentPid':110},'qdrant':{'pid':123,'parentPid':111},'state':actual.state_snapshot(new)}
++        scope.enter_context(mock.patch.object(setup,'load_first_lifecycle',return_value=actual))
++        guards=mock.Mock();scope.enter_context(mock.patch.object(setup,'load_first_guards',return_value=guards))
++        def control(value):
++            p=folder/'control.lock';fd=os.open(p,os.O_RDWR|os.O_CREAT,0o600)
++            fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB);actual.require_lock(fd)
++            identity=(os.fstat(fd).st_dev,os.fstat(fd).st_ino)
++            self.addCleanup(lambda:self.close_owned(fd,identity))
++            return fd
++        scope.enter_context(mock.patch.object(setup,'acquire_control',side_effect=control))
++        prior=scope.enter_context(mock.patch.object(recovery,'prior_census',return_value={'recordedWritersGone':True}))
++        scope.enter_context(mock.patch.object(recovery,'port_closed',return_value={'pointInTimeConnectionRefused':True}))
++        scope.enter_context(mock.patch.object(recovery,'own_stopped_placement',side_effect=lambda *args:{'preStartSourceProcessProof':False,'ownProcess':actual.public_process(actual.process(os.getpid()))}))
++        host=scope.enter_context(mock.patch.object(recovery.admission,'host',return_value={'MemAvailable':6*1024**3,'availableFloorBytes':5*1024**3}))
++        scope.enter_context(mock.patch.object(recovery.admission,'collection_shape',return_value={'points':244262,'segments':12,'shards':6}))
++        engine=mock.Mock();engine.postIssued=False;engine.version.return_value={'daemonVersion':'28.5.1','apiVersion':'1.51','binaryAttestation':False}
++        def start(identity):
++            self.assertEqual(identity,new['Id']);engine.postIssued=True
++            new['State'].update(Running=True,Pid=123,Status='running',StartedAt='2026-10-12T20:00:00Z')
++            new['HostConfig']['OomKillDisable']=None
++            return {'httpStatus':204,'httpAcknowledged':True,'cliExitCode':None,'runningProven':False}
++        engine.start.side_effect=start;scope.enter_context(mock.patch.object(recovery,'StartEngine',return_value=engine))
++        daemon=mock.Mock();daemon.load_config.return_value=({},object(),object())
++        control_module=mock.Mock();control_module.birth_admission.return_value={'actualSourceProof':'fixture-boundary'}
++        scope.enter_context(mock.patch.object(setup,'load_staged_modules',return_value={'lifecycle_cpu0':actual,'controller_cpu0':control_module,'daemon_cpu0':daemon}))
++        args=(raw,packet.sha(raw),files,packet.sha(derivative),[],packet.sha(packet.canonical([])),b'output',b'config','9'*64)
++        return scope,args,folder,engine,host,new,control_module
++
++    def test_composed_recovery_creates_no_container_and_commits_setup_handoff(self):
++        _,args,folder,engine,host,_,control=self.composed_fixture()
++        result=recovery.run_recovery(*args)
++        self.assertEqual(engine.start.call_count,1);self.assertEqual(host.call_count,2)
++        self.assertEqual(control.birth_admission.call_count,1)
++        self.assertEqual(result['handoff']['owner'],'setup');self.assertIsNone(result['handoff']['previousSha256'])
++        outer_local.handoff(result['handoff'])
++        self.assertFalse(result['creationPerformed']);self.assertEqual(result['createCalls'],0)
++        self.assertEqual(result['stopCalls'],0);self.assertEqual(result['removeCalls'],0)
++        self.assertEqual(result['normalizationAfter']['newValue'],'null')
++        attempt=json.loads((folder/recovery.ATTEMPT_NAME).read_bytes())
++        self.assertFalse(attempt['startIssued']);self.assertTrue((folder/recovery.SUCCESS_NAME).exists())
++        with self.assertRaisesRegex(RuntimeError,'recovery_scope_changed'):recovery.run_recovery(*args)
++        self.assertEqual(engine.start.call_count,1)
++
++    def test_composed_full_admission_refusal_cannot_spend_attempt_or_start(self):
++        _,args,folder,engine,host,_,_=self.composed_fixture()
++        host.side_effect=RuntimeError('setup_host_admission_failed')
++        with self.assertRaisesRegex(RuntimeError,'setup_host_admission_failed') as caught:recovery.run_recovery(*args)
++        engine.start.assert_not_called();self.assertFalse((folder/recovery.ATTEMPT_NAME).exists())
++        self.assertEqual(caught.exception.recoveryFailureEvidence['actionState'],'not-issued')
++        self.assertFalse(caught.exception.recoveryFailureEvidence['continuationAllowed'])
++
++    def test_composed_issued_uncertainty_retains_attempt_and_no_continuation(self):
++        _,args,folder,engine,_,_,control=self.composed_fixture()
++        def uncertain(identity):
++            engine.postIssued=True;raise RuntimeError('recovery_start_unknown')
++        engine.start.side_effect=uncertain
++        with self.assertRaisesRegex(RuntimeError,'recovery_start_unknown') as caught:recovery.run_recovery(*args)
++        proof=caught.exception.recoveryFailureEvidence
++        self.assertTrue(proof['attemptObserved']);self.assertEqual(proof['actionState'],'issued-unknown')
++        self.assertIsNone(proof['cliExitCode']);self.assertIsNone(proof['httpStatus'])
++        self.assertEqual(proof['primaryReason'],'recovery_start_unknown')
++        control.birth_admission.assert_not_called()
++        self.assertFalse((folder/recovery.SUCCESS_NAME).exists());self.assertFalse((folder/'cpu0-lifecycle-handoff-v1.json').exists())
++
++    def test_target_drift_after_attempt_and_prior_version_never_becomes_post_issued(self):
++        _,args,folder,engine,_,new,_=self.composed_fixture()
++        publish=recovery.publish
++        def mutate(name,value):
++            result=publish(name,value)
++            if name==recovery.ATTEMPT_NAME:new['Id']='c'*64
++            return result
++        with mock.patch.object(recovery,'publish',side_effect=mutate):
++            with self.assertRaisesRegex(RuntimeError,'recovery_target_changed') as caught:recovery.run_recovery(*args)
++        self.assertGreater(engine.version.call_count,0);engine.start.assert_not_called()
++        self.assertTrue((folder/recovery.ATTEMPT_NAME).exists())
++        self.assertEqual(caught.exception.recoveryFailureEvidence['actionState'],'not-issued')
++
++    def test_final_live_census_protects_actual_source_identities(self):
++        _,args,_,_,_,_,_=self.composed_fixture()
++        original=recovery.prior_census
++        with mock.patch.object(recovery,'prior_census',wraps=original) as census_call:
++            recovery.run_recovery(*args)
++        protected=census_call.call_args_list[-1].args[2]
++        self.assertTrue({os.getpid(),os.getppid(),110,111,123}.issubset(protected))
++
++    def test_successful_receipt_lock_close_failure_retains_action_and_complete_result(self):
++        _,args,folder,engine,_,_,_=self.composed_fixture()
++        with mock.patch.object(recovery,'close_control',side_effect=OSError('private cleanup detail')):
++            with self.assertRaisesRegex(RuntimeError,'recovery_lock_close_failed') as caught:recovery.run_recovery(*args)
++        error=caught.exception
++        self.assertEqual(error.recoveryFailureEvidence['actionState'],'issued-acknowledged')
++        self.assertTrue(error.recoveryFailureEvidence['attemptObserved'])
++        self.assertEqual(error.recoveryCleanupFailure,'recovery_lock_close_failed')
++        self.assertEqual(error.recoveryCompletedReceipt['handoff']['owner'],'setup')
++        self.assertTrue((folder/recovery.SUCCESS_NAME).exists());self.assertEqual(engine.start.call_count,1)
++
++    def test_no_authenticated_remote_closure_cannot_even_inspect(self):
++        with mock.patch.dict(recovery.__dict__,{'_AUTHENTICATED_EXTERNAL_CLOSURE_SHA256':None}),mock.patch.object(setup,'Docker') as docker:
++            with self.assertRaisesRegex(RuntimeError,'recovery_closure_unproven') as caught:
++                recovery.run_recovery(b'', '1'*64, {}, '2'*64, [],'3'*64,b'',b'','4'*64)
++        docker.assert_not_called();proof=caught.exception.recoveryFailureEvidence
++        self.assertEqual(proof['actionState'],'not-issued');self.assertIsNone(proof['attemptObserved'])
++        self.assertFalse(proof['attemptObservationKnown'])
++
++    def test_actual_recovery_to_outer_framing_is_one_fixed_operation_then_fresh_preflight(self):
++        _,args,_,_,_,_,_=self.composed_fixture()
++        result=recovery.run_recovery(*args);seen=[]
++        packet_value={'schema':outer_local.SCHEMA,'initialMode':recovery.MODE,'recoveryProof':{},'closureSha256':'9'*64,
++                      **{key:'fixture' for key in ('sourceFreezeSha256','sourceFreeze','sourceFiles','externalManifestSha256','derivativePolicySha256','priorPolicy','priorPolicySha256')}}
++        rpc=mock.Mock()
++        def call(operation,values,**kwargs):
++            seen.append((operation,values))
++            if operation=='setup-recover-never-started':return {'result':result}
++            if operation=='preflight':raise RuntimeError('setup_host_admission_failed')
++            return {'result':{'ownedCleanup':True}}
++        rpc.call.side_effect=call
++        receipt=outer_local.run(packet_value,rpc,lambda row:None,contract_dir=None,validator_path=None,raise_own_nofile=False,initial_mode=recovery.MODE)
++        self.assertEqual([value[0] for value in seen[:2]],['setup-recover-never-started','preflight'])
++        self.assertNotIn('setup',[value[0] for value in seen])
++        self.assertNotIn('recoveryProof',seen[1][1]);self.assertEqual(receipt['status'],'failed-or-cleanup-unknown')
++
++
++class EngineTests(unittest.TestCase):
++    def server(self,responses,delays=()):
++        folder=tempfile.TemporaryDirectory();self.addCleanup(folder.cleanup)
++        path=str(Path(folder.name)/'engine.sock');original=socket.socket
++        listener=original(socket.AF_UNIX,socket.SOCK_STREAM);listener.bind(path);listener.listen(4);listener.settimeout(2)
++        requests=[];errors=[]
++        def serve():
++            try:
++                for i,response in enumerate(responses):
++                    client,_=listener.accept()
++                    with client:
++                        data=b''
++                        while b'\r\n\r\n' not in data:data+=client.recv(4096)
++                        requests.append(data)
++                        if i<len(delays):time.sleep(delays[i])
++                        try:client.sendall(response)
++                        except BrokenPipeError:pass
++            except BaseException as error:errors.append(error)
++            finally:listener.close()
++        thread=threading.Thread(target=serve,daemon=True);thread.start()
++        class Wrapped:
++            def __init__(self,*args):self.client=original(*args)
++            def connect(self,target):
++                if target!='/var/run/docker.sock':raise AssertionError('unfixed socket')
++                self.client.connect(path)
++            def __getattr__(self,name):return getattr(self.client,name)
++        return requests,thread,errors,Wrapped
++
++    def test_real_unix_http_version_then_exact_id_empty_post(self):
++        version=b'{"Version":"28.5.1","ApiVersion":"1.51"}'
++        requests,thread,errors,scope=self.server([b'HTTP/1.1 200 OK\r\nContent-Length: '+str(len(version)).encode()+b'\r\n\r\n'+version,b'HTTP/1.1 204 No Content\r\n\r\n'])
++        identity='b'*64
++        with mock.patch.object(recovery,'NEW_ID_SHA',packet.sha(identity.encode())):
++            engine=recovery.StartEngine(socket_factory=scope);self.assertFalse(engine.version()['binaryAttestation'])
++            ack=engine.start(identity)
++        thread.join(2);self.assertFalse(thread.is_alive());self.assertEqual(errors,[])
++        self.assertEqual(ack,{'httpStatus':204,'httpAcknowledged':True,'cliExitCode':None,'runningProven':False})
++        self.assertIn(b'POST /v1.51/containers/'+identity.encode()+b'/start HTTP/1.1',requests[1])
++        self.assertTrue(requests[1].endswith(b'Content-Length: 0\r\n\r\n'))
++
++    def test_actual_total_deadline_and_issued_disconnect_evidence(self):
++        requests,thread,errors,scope=self.server([b'HTTP/1.1 204 No Content\r\n\r\n'],delays=[.1])
++        identity='b'*64
++        with mock.patch.object(recovery,'NEW_ID_SHA',packet.sha(identity.encode())):
++            engine=recovery.StartEngine(socket_factory=scope);started=time.monotonic()
++            with self.assertRaisesRegex(RuntimeError,'recovery_start_unknown'):
++                engine.request('POST','/v1.51/containers/'+identity+'/start',timeout=.03)
++            self.assertLess(time.monotonic()-started,.08);self.assertTrue(engine.postIssued)
++        thread.join(2)
++
++    def test_http_nonzero_is_not_exit_or_birth_proof(self):
++        _,thread,_,scope=self.server([b'HTTP/1.1 500 Error\r\nContent-Length: 0\r\n\r\n'])
++        identity='b'*64
++        with mock.patch.object(recovery,'NEW_ID_SHA',packet.sha(identity.encode())):
++            with self.assertRaisesRegex(RuntimeError,'recovery_start_refused') as caught:recovery.StartEngine(socket_factory=scope).start(identity)
++        thread.join(2);self.assertEqual(caught.exception.recoveryHttpStatus,500)
++
++
++if __name__=='__main__':unittest.main()
