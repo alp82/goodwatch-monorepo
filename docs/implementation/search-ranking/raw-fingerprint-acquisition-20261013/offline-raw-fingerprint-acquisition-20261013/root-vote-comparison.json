@@ -1,0 +1,190 @@
+{
+  "schema": "root-current-index-vote-comparison.v1",
+  "indexedTitleGzipSha256": "1dd9f4b57031632d99e86d34416d82af5c1c6ffb1f09de1eb2f62ab15ab62ed7",
+  "currentStreamSha256": "e8c11ff1d2532301853a19e8c0a2d87b8216d23d66e45a4ccfe7bf8fa2237c4a",
+  "comparedReturnedRows": 42933,
+  "counts": {
+    "indexedVsCurrentVoteDifferences": 2772,
+    "currentBelow2000": 29,
+    "below2000DifferentFromIndex": 29
+  },
+  "rowsNowBelow2000": [
+    {
+      "indexRow": 14186,
+      "pointId": 1000000042939,
+      "indexedVotes": 23225,
+      "currentVotes": 1249
+    },
+    {
+      "indexRow": 16702,
+      "pointId": 1000000058959,
+      "indexedVotes": 3870,
+      "currentVotes": 1300
+    },
+    {
+      "indexRow": 17639,
+      "pointId": 1000000071107,
+      "indexedVotes": 3295,
+      "currentVotes": 287
+    },
+    {
+      "indexRow": 19815,
+      "pointId": 1000000129441,
+      "indexedVotes": 5611,
+      "currentVotes": 1175
+    },
+    {
+      "indexRow": 19915,
+      "pointId": 1000000136681,
+      "indexedVotes": 2203,
+      "currentVotes": 665
+    },
+    {
+      "indexRow": 20385,
+      "pointId": 1000000166804,
+      "indexedVotes": 3532,
+      "currentVotes": 0
+    },
+    {
+      "indexRow": 21187,
+      "pointId": 1000000228406,
+      "indexedVotes": 3141,
+      "currentVotes": 1276
+    },
+    {
+      "indexRow": 21345,
+      "pointId": 1000000242523,
+      "indexedVotes": 14643,
+      "currentVotes": 337
+    },
+    {
+      "indexRow": 22068,
+      "pointId": 1000000281396,
+      "indexedVotes": 3604,
+      "currentVotes": 0
+    },
+    {
+      "indexRow": 22922,
+      "pointId": 1000000327497,
+      "indexedVotes": 16667,
+      "currentVotes": 67
+    },
+    {
+      "indexRow": 23295,
+      "pointId": 1000000341713,
+      "indexedVotes": 6470,
+      "currentVotes": 19
+    },
+    {
+      "indexRow": 23436,
+      "pointId": 1000000348655,
+      "indexedVotes": 16201,
+      "currentVotes": 566
+    },
+    {
+      "indexRow": 23747,
+      "pointId": 1000000364400,
+      "indexedVotes": 3478,
+      "currentVotes": 137
+    },
+    {
+      "indexRow": 23799,
+      "pointId": 1000000367584,
+      "indexedVotes": 3935,
+      "currentVotes": 1453
+    },
+    {
+      "indexRow": 23846,
+      "pointId": 1000000369949,
+      "indexedVotes": 2000,
+      "currentVotes": 1999
+    },
+    {
+      "indexRow": 23916,
+      "pointId": 1000000374023,
+      "indexedVotes": 5305,
+      "currentVotes": 207
+    },
+    {
+      "indexRow": 24704,
+      "pointId": 1000000412074,
+      "indexedVotes": 16786,
+      "currentVotes": 1
+    },
+    {
+      "indexRow": 25959,
+      "pointId": 1000000468556,
+      "indexedVotes": 3444,
+      "currentVotes": 229
+    },
+    {
+      "indexRow": 27179,
+      "pointId": 1000000534206,
+      "indexedVotes": 6200,
+      "currentVotes": 501
+    },
+    {
+      "indexRow": 28551,
+      "pointId": 1000000622109,
+      "indexedVotes": 3537,
+      "currentVotes": 237
+    },
+    {
+      "indexRow": 28638,
+      "pointId": 1000000629219,
+      "indexedVotes": 12743,
+      "currentVotes": 43
+    },
+    {
+      "indexRow": 30441,
+      "pointId": 1000000821246,
+      "indexedVotes": 22016,
+      "currentVotes": 0
+    },
+    {
+      "indexRow": 30963,
+      "pointId": 1000000883294,
+      "indexedVotes": 4022,
+      "currentVotes": 14
+    },
+    {
+      "indexRow": 31504,
+      "pointId": 1000000958589,
+      "indexedVotes": 7022,
+      "currentVotes": 37
+    },
+    {
+      "indexRow": 32957,
+      "pointId": 1000001184543,
+      "indexedVotes": 45450,
+      "currentVotes": 8
+    },
+    {
+      "indexRow": 32984,
+      "pointId": 1000001189670,
+      "indexedVotes": 4373,
+      "currentVotes": 0
+    },
+    {
+      "indexRow": 33322,
+      "pointId": 1000001246821,
+      "indexedVotes": 13359,
+      "currentVotes": 0
+    },
+    {
+      "indexRow": 33445,
+      "pointId": 1000001274345,
+      "indexedVotes": 2403,
+      "currentVotes": 0
+    },
+    {
+      "indexRow": 34021,
+      "pointId": 1000001473628,
+      "indexedVotes": 17321,
+      "currentVotes": 538
+    }
+  ],
+  "historicalVoteChangeTimingProven": false,
+  "catalogTransactionSnapshot": false,
+  "productionRankingParity": false
+}

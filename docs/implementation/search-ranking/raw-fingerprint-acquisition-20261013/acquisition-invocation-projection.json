@@ -1,0 +1,20 @@
+{
+  "schema": "root-readonly-catalog-acquisition.v1",
+  "sourceSha256": "34a7ab907fd69e89dda9d53f9656779ddd15a244259209a64a4ee0c916456d6d",
+  "executedSourceSha256": "978d2092f82c73581332dfc422556e1047ffd4c356385d752f26ad0ceea0ea19",
+  "planSha256": "9442eb86a853abb71dccf456337356d15cc5eacbed9541e8289767f634711234",
+  "planBytes": 5087410,
+  "nodeLifetimeMs": 320000,
+  "remoteTimeoutSeconds": 340,
+  "transportTimeoutSeconds": 350,
+  "retries": 0,
+  "started": "2026-10-12T23:20:49.872156+00:00",
+  "finished": "2026-10-12T23:20:59.285244+00:00",
+  "sshDockerNodeExitCode": 0,
+  "transportTimeout": false,
+  "outputBytes": 15164608,
+  "outputSha256": "e8c11ff1d2532301853a19e8c0a2d87b8216d23d66e45a4ccfe7bf8fa2237c4a",
+  "privateStderrBytes": 0,
+  "privateStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "originalInvocationSha256": "7e95e7bb657acceb7143774b3e8c936cba920be47a0e3d4f060fb6b134d0d8c5"
+}

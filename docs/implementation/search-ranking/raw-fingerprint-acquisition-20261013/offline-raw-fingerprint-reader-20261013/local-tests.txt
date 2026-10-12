@@ -1,0 +1,21 @@
+✔ exact complete87 sequential SELECTs, all42934 identities and public output (2055.720545ms)
+✔ plan drift refuses before any endpoint/request (15.829434ms)
+✔ shuffled batch preserves alignment; null/partial/bool/range/all-zero omissions and truezero valid (2468.630939ms)
+✔ missing rows are accounted, not validzero rows; currenteligibility drift retained (1935.314402ms)
+✔ duplicate and unrequested row refusal is terminal, no retry (298.684464ms)
+✔ wrong columns and rowcount refuse (290.87992ms)
+✔ HTTP redirect/error never follows or retries (323.172918ms)
+✔ oversize response refuses without rawerror (114.655688ms)
+✔ global deadline checked after response and before next request (163.729849ms)
+✔ first invalid endpoint never falls back (113.121515ms)
+✔ mapping validates same numeric ID with distinct movie/show namespaces (129.704067ms)
+✔ deadline after public header cannot silently continue to SQL (125.006098ms)
+✔ malformed JSON and metadata cannot become valid publicrow (286.863733ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8522.763982

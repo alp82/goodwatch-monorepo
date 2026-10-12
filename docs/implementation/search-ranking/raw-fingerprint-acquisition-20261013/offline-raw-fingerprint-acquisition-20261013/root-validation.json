@@ -1,0 +1,28 @@
+{
+  "schema": "independent-root-readonly-fingerprint-validation.v1",
+  "outputSha256": "e8c11ff1d2532301853a19e8c0a2d87b8216d23d66e45a4ccfe7bf8fa2237c4a",
+  "outputBytes": 15164608,
+  "frames": 42936,
+  "uniqueAlignedIndexRows": 42934,
+  "counts": {
+    "returned": 42933,
+    "valid": 42933,
+    "missing": 1
+  },
+  "omissionCounts": {},
+  "currentEligibility": {
+    "adultTrue": 0,
+    "adultNull": 0,
+    "votesBelow2000": 29,
+    "votesNull": 0
+  },
+  "dnaUpdatedAtMin": 1749766741572,
+  "dnaUpdatedAtMax": 1791832239030,
+  "readerElapsedMs": 6750.723553000001,
+  "responseBytes": 8068892,
+  "sqlCalls": 87,
+  "sqlWrites": 0,
+  "retries": 0,
+  "historicalIndexFingerprintSnapshot": false,
+  "qdrantEqualityAttested": false
+}

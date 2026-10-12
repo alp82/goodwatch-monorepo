@@ -1,0 +1,53 @@
+{
+  "schema": "read-only-fingerprint-plan-bindings.v1",
+  "files": [
+    {
+      "path": "PLAN.md",
+      "bytes": 6650,
+      "sha256": "e67347acaf8caf37b4e5139d7c8542003228fa2ce6c1ff1943906583770af0dc"
+    },
+    {
+      "path": "retrieval-plan.json",
+      "bytes": 5087410,
+      "sha256": "9442eb86a853abb71dccf456337356d15cc5eacbed9541e8289767f634711234"
+    },
+    {
+      "path": "source/crate_schemas.py",
+      "bytes": 46099,
+      "sha256": "ee7fddac1c072729441cf13a20c9c543303e88b898841f8e2db5761fd42f62c5"
+    },
+    {
+      "path": "source/dna_data.py",
+      "bytes": 15191,
+      "sha256": "2601cae7b13d9f08d4d89ee1884e569a44652efdd404105a609b33c44507c2e0"
+    },
+    {
+      "path": "source/fingerprint.ts",
+      "bytes": 11309,
+      "sha256": "bc42b46bbfc565f3b507202fcfa59cc587a71c36a6b339161e6d3dc86695bcb7"
+    },
+    {
+      "path": "source/models.py",
+      "bytes": 12360,
+      "sha256": "581e8941e36ff8ca5fa29100292ad9a58d5e216449d94c28a897594a11050d68"
+    },
+    {
+      "path": "source/search-filters.ts",
+      "bytes": 7546,
+      "sha256": "062c0508df842f8ab7efdadc935ae636014f04de35f74da09c60db6a6a31e47d"
+    },
+    {
+      "path": "source/title_snapshot.py",
+      "bytes": 28763,
+      "sha256": "9f95edad8275ec6f0d0092749606b01f19ff22545529229ffd54ae5176729208"
+    },
+    {
+      "path": "source/vector_data.py",
+      "bytes": 30550,
+      "sha256": "769186dd277b5ec9903e27fa4557e91f19c7e0ac1d7dfe8f6a2538a2227f0e8e"
+    }
+  ],
+  "requestsExecuted": 0,
+  "hostOperations": 0,
+  "publication": false
+}
