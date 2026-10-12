@@ -1,7 +1,7 @@
 """The titles members wait for, and when each is due for an offer recheck.
 
 docs/awaited-title-rechecks.md. One document per title in a small Mongo collection,
-written once a day from the member tables (tmdb_fetch_details_from_api/awaited) and
+written every hour from the member tables (tmdb_fetch_details_from_api/awaited) and
 read by the details queue (tmdb_fetch_details_from_api/next). The queue never reads
 Crate: it works from the last list that was stored.
 """
@@ -19,7 +19,7 @@ Title = tuple[str, int]  # ("movie" | "show", tmdb_id), as the member tables nam
 
 
 def store_list(db, titles: Iterable[Title], now: datetime) -> dict:
-    """Store the titles members wait for today. A new title is due at once.
+    """Store the titles members wait for now. A new title is due at once.
 
     A title that is no longer listed stays for LIST_GRACE, so one short read of the
     member tables costs no title its place. An empty list removes nothing.

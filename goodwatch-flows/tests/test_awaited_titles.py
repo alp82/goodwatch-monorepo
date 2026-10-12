@@ -82,6 +82,29 @@ class AwaitedTitlesTests(unittest.TestCase):
         self.assertEqual(reserve_due(self.db, 10, late + timedelta(hours=23)), [])
         self.assertEqual(reserve_due(self.db, 10, late + timedelta(hours=24)), [MATRIX])
 
+    def test_a_title_first_listed_by_a_later_run_keeps_that_runs_time_of_day(self):
+        # The list is stored every hour; the hours in between must not move either title.
+        store_list(self.db, [MATRIX], NOW)
+        reserve_due(self.db, 10, NOW)
+        for hour in range(1, 34):
+            listed = [MATRIX] if hour < 9 else [MATRIX, SEVERANCE]
+            store_list(self.db, listed, NOW + timedelta(hours=hour))
+
+        self.assertEqual(reserve_due(self.db, 10, NOW + timedelta(hours=9)), [SEVERANCE])
+        self.assertEqual(reserve_due(self.db, 10, NOW + timedelta(hours=23)), [])
+        self.assertEqual(reserve_due(self.db, 10, NOW + timedelta(hours=24)), [MATRIX])
+        self.assertEqual(reserve_due(self.db, 10, NOW + timedelta(hours=32)), [])
+        self.assertEqual(reserve_due(self.db, 10, NOW + timedelta(hours=33)), [SEVERANCE])
+
+    def test_hourly_lists_remove_an_unlisted_title_once_three_days_after_its_last_list(self):
+        store_list(self.db, [MATRIX, SEVERANCE], NOW)
+        removed_at = [
+            hour for hour in range(1, 80)
+            if store_list(self.db, [SEVERANCE], NOW + timedelta(hours=hour))["removed"]
+        ]
+
+        self.assertEqual(removed_at, [73])
+
     def test_a_list_not_stored_for_three_days_is_no_longer_rechecked(self):
         # Disabling the daily job turns the short cycle off; a broken job stops costing requests.
         store_list(self.db, [MATRIX], NOW)

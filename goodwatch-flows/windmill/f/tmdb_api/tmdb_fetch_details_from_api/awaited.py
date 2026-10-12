@@ -2,7 +2,7 @@
 
 docs/awaited-title-rechecks.md. A title is awaited when a member who has a country and
 at least one saved streaming service has it as Want to See, or has the show as Watching
-or On hold. Run once a day. It reads Crate and writes only the Mongo list; when the read
+or On hold. Run every hour. It reads Crate and writes only the Mongo list; when the read
 fails the list stays as it was and the queue keeps working from it.
 """
 from datetime import datetime

@@ -14,7 +14,7 @@ is in Crate about a day after TMDB lists it. Paths under `goodwatch-flows/windmi
 | Part | Path | What it does |
 |---|---|---|
 | List rules | `f/tmdb_api/awaited_titles.py` | Stores the list, says which titles are due, and when each is due again. Mongo only. |
-| List job | `f/tmdb_api/tmdb_fetch_details_from_api/awaited` | Once a day: reads the awaited titles from Crate and stores them. The only part that reads Crate. |
+| List job | `f/tmdb_api/tmdb_fetch_details_from_api/awaited` | Every hour: reads the awaited titles from Crate and stores them. The only part that reads Crate. |
 | Queue | `f/tmdb_api/tmdb_fetch_details_from_api/next` | Each run of the details flow (every 15 s) puts up to 10 due awaited titles into its batch of 50. |
 | Fetch | `f/tmdb_api/tmdb_fetch_details_from_api/fetch` | Unchanged. One TMDB request per title, which includes `watch/providers` for every country. |
 | Publication | `f/sync/copy/tmdb_streaming` | Unchanged. Publishes every title whose details were fetched since its last run. |
@@ -29,13 +29,21 @@ and `selected_at` (the last time the queue took it). It has no index and needs n
 
 **The list job** reads each awaited title once, with one statement per member table, and stores the result:
 
-- A new title is due at once.
+- A new title is due at once, and from then on at that time every day.
 - A title that is still listed keeps its due time.
-- A title that is no longer listed is removed 3 days after the last list that named it.
+- A title that is no longer listed is removed by the first run more than 3 days after the last list that named
+  it. Until then it is rechecked like a listed title.
 - A read that returns no title removes nothing.
-- A read that fails changes nothing. The queue keeps working from the stored list.
+- A read that fails changes nothing. The queue keeps working from the stored list, and the next hour's run
+  stores the list again.
 - More than 10,000 titles (`MAX_TITLES`) fail the job and leave the stored list. Each title is one request a day,
   so a list that long is a budget decision for the owner.
+
+**Why every hour.** How often a title is rechecked does not depend on the list job: that stays once a day.
+The list job decides how soon a title a member just added is first rechecked, and how long a failed run goes
+unrepaired. With one run a day both were up to a day. With one run an hour a new title is rechecked within
+the hour, and a failed run costs the titles added in that hour one more hour. A run takes about 2 seconds, so
+24 runs a day cost about a second of Crate time (see the numbers below) and no TMDB request.
 
 **The queue** takes the titles with `due_at` in the past, longest due first, at most 10 per run, and sets each due
 again 24 hours (`CYCLE`) after the time it was due. A title therefore keeps its time of day. A recheck more than
@@ -64,7 +72,7 @@ Measured on 2026-10-12 with read-only queries on production Crate and GETs on th
 | Title and country pairs, in 24 countries | 1,386 |
 | Titles on none of the services of at least one waiting member | 635 (57%) |
 
-The list job's two statements took 34 ms and 10 ms.
+The list job's two statements took 34 ms and 10 ms, about a second a day for 24 runs.
 
 **Requests per day**
 
@@ -108,14 +116,21 @@ the scrape's 43,200 pages a day, but it would have to bypass the 7-day freshness
 details were fetched since one hour before its last completed run started. None of the 66 runs since 2026-09-28
 failed (2 were skipped); they took a median of 8 minutes and at most 27.
 
-With the list job at 07:00, titles are rechecked between 07:00 and about 07:30 and published by the 08:00 run. An
-offer that TMDB lists is in Crate at the latest about 25.5 hours later: up to 24 hours until the title's recheck,
-up to an hour until the publication, and the run. `streaming_availability.created_at` is then the time of that
-publication. A failed publication run costs 6 hours, since the next run reads from the same point.
+A title's time of day is the time of the list job run that first named it, and it keeps that time.
 
-That is enough for news within days, so the recheck does not publish on its own. A title's time of day is the
-time of the list job that first named it. A title first listed by a manual run at 15:00 is rechecked at 15:00 every
-day and published at 20:00, 5 hours later instead of 1.
+- **The titles in the first list** are all due at the time of the run that filled the empty list. Filled at
+  07:00, they are rechecked between 07:00 and about 07:30 and published by the 08:00 run. An offer that TMDB
+  lists is then in Crate at the latest about 25.5 hours later: up to 24 hours until the title's recheck, up to
+  an hour until the publication, and the run.
+- **A title a member adds later** is first rechecked by the next hourly run, the same day, and every day at
+  that hour from then on. A title due in the hour before a publication run (01:00, 07:00, 13:00, 19:00) is
+  published within the hour. Any other waits for the next publication run, at most 6 hours: a title first seen
+  at 15:00 is rechecked at 15:00 every day and published at 20:00. For such a title an offer that TMDB lists
+  is in Crate at the latest about 30.5 hours later.
+
+`streaming_availability.created_at` is the time of the publication. A failed publication run costs 6 hours,
+since the next run reads from the same point. That is enough for news within days, so the recheck does not
+publish on its own.
 
 ## Putting it live
 
@@ -124,34 +139,46 @@ day and published at 20:00, 5 hours later instead of 1.
    `f/tmdb_api/awaited_titles` is pushed with it; should `next` arrive first, its runs fail until the module is
    there, seconds later.
 2. **Check the details flow** in Windmill: the runs after the push succeed as before.
-3. **Create the schedule** (schedules are not in the repository). `no_flow_overlap` as on the other daily jobs.
+3. **Create the schedule** (schedules are not in the repository), once an hour on the hour. `no_flow_overlap`
+   as on the other scheduled jobs; a run can't reach the next one anyway, since the script's timeout is 2 minutes.
    ```sh
    curl -sS -X POST "$WMILL_URL/api/w/goodwatch/schedules/create" \
      -H "Authorization: Bearer $WMILL_TOKEN" -H "Content-Type: application/json" \
      -d '{"path": "f/tmdb_api/tmdb_fetch_details_from_api/awaited",
           "script_path": "f/tmdb_api/tmdb_fetch_details_from_api/awaited",
-          "is_flow": false, "schedule": "0 0 7 * * *", "timezone": "Europe/Berlin",
+          "is_flow": false, "schedule": "0 0 * * * *", "timezone": "Europe/Berlin",
           "args": {}, "enabled": true, "no_flow_overlap": true}'
    ```
-   In the Windmill UI: Schedules, New schedule, the script above, cron `0 0 7 * * *`, timezone Europe/Berlin, no
+   In the Windmill UI: Schedules, New schedule, the script above, cron `0 0 * * * *`, timezone Europe/Berlin, no
    arguments. `$WMILL_URL` is `http://10.0.0.10:9000` on the private network.
-4. **Let the schedule make the first run**, or start the script by hand within the hour before a publication run
-   (see [When a recheck reaches Crate](#when-a-recheck-reaches-crate)).
+4. **Choose the hour of the first list.** The run that fills an empty list makes every title in it due at that
+   hour for good (see [When a recheck reaches Crate](#when-a-recheck-reaches-crate)). To get 07:00, create the
+   schedule with the cron `0 0 7 * * *` instead, wait for its first run, and then make it hourly. The update
+   replaces the schedule's settings, so it names all of them:
+   ```sh
+   curl -sS -X POST "$WMILL_URL/api/w/goodwatch/schedules/update/f/tmdb_api/tmdb_fetch_details_from_api/awaited" \
+     -H "Authorization: Bearer $WMILL_TOKEN" -H "Content-Type: application/json" \
+     -d '{"schedule": "0 0 * * * *", "timezone": "Europe/Berlin", "args": {}, "no_flow_overlap": true,
+          "cron_version": "v2"}'
+   ```
+   Production was set up this way: the schedule was created on 2026-10-12 with the 07:00 cron.
 
 No Mongo index, no Crate change and no new Windmill variable are needed. `f/monitoring/check` observes the new
 schedule like every enabled schedule and reports it after three failed runs.
 
 ## How to see that it works
 
-- **The list job's result** is `{"listed": …, "added": …, "removed": …}`; the first run lists and adds about 1,100.
+- **The list job's result** is `{"listed": …, "added": …, "removed": …}`. The run that fills the empty list
+  lists and adds about 1,100. Every later run lists about as many and adds the titles first seen in that hour,
+  mostly none.
 - **The list**:
   ```js
   db.tmdb_awaited_titles.countDocuments({})                           // about 1,100
-  db.tmdb_awaited_titles.countDocuments({due_at: {$lte: new Date()}}) // 0 about half an hour after the list job
+  db.tmdb_awaited_titles.countDocuments({due_at: {$lte: new Date()}}) // 0, except in the half hour after the first list's hour
   db.tmdb_awaited_titles.find().sort({selected_at: 1}).limit(1)       // the oldest recheck: less than a day ago
   ```
-- **The details flow**: in the half hour after the list job, step `a` returns 10 ids per run. While the catalog is
-  fresh (until 2026-10-21) it returns none at most other times of the day.
+- **The details flow**: in the half hour after the first list's hour, step `a` returns 10 ids per run. While the
+  catalog is fresh (until 2026-10-21) it returns none at most other times of the day.
 - **Crate**, after `f/sync/copy/tmdb_details` ran (04:00 and 16:00): the age of the awaited movies' details. The
   median was 16.7 days on 2026-10-12 and must be under 2 days from the second day on.
   ```sql
@@ -171,14 +198,14 @@ schedule like every enabled schedule and reports it after three failed runs.
     -H "Authorization: Bearer $WMILL_TOKEN" -H "Content-Type: application/json" -d '{"enabled": false}'
   ```
 - **At once:** also empty the list, `db.tmdb_awaited_titles.deleteMany({})`. The next list job fills it again and
-  every title is due at that time.
+  every title is due at that hour, so turn it on again as in step 4 of [Putting it live](#putting-it-live).
 - **For good:** revert the commit. `next` then no longer reads the list, and the collection can be dropped.
 
 ## Tests
 
 ```sh
 cd goodwatch-flows
-python -m unittest tests.test_awaited_titles tests.test_details_queue_awaited
+python -m unittest tests.test_awaited_titles tests.test_details_queue_awaited tests.test_monitor_check
 ```
 
 They need the flow dependencies plus `mongomock`, and use no network, Mongo or Crate. The member tables are SQLite
@@ -193,3 +220,5 @@ returned the 1,107 titles above.
 - Publication right after the recheck.
 - A retry of a failed fetch before the next day.
 - The list narrowed to titles that are on none of their owner's services.
+- One hour of the day for every title: a title added later is rechecked within the hour and keeps that hour,
+  which can be up to 6 hours before a publication run.
