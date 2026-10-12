@@ -7,7 +7,7 @@ import { type Dest, ISLANDS, SIDES } from "~/ui/prototype-tv-flow/data"
 import { useTv } from "~/ui/prototype-tv-flow/engine"
 import { F } from "~/ui/prototype-tv-flow/kit"
 import { posterOf } from "./art"
-import { Actions, BarTitle, Img, type Skin, titleSize, useFocusedTitle } from "./base"
+import { Actions, BarTitle, Corner, Img, type Skin, titleSize, useExpandAt, useFocusedTitle } from "./base"
 
 const CSS = `
 .tvd-marquee { color: #fff; background: #0c0c10; }
@@ -42,10 +42,19 @@ function Field({ hue }: { hue: number }) {
 	)
 }
 
+const X = { phone: "m-x gap-3 h-[54px] px-3.5 text-[20px]", desk: "m-x gap-4 h-[72px] px-6 text-[26px]" }
+const MOTIF = { phone: { w: 42, h: 32, stroke: 4 }, desk: { w: 60, h: 44, stroke: 5 } }
+
 /** The actions as this direction draws them: dark blocks in capitals, and the expand key as the one amber block. */
 function Bar({ dest, className }: { dest?: Dest; className?: string }) {
 	const P = useTv().phone
-	return <Actions dest={dest} className={className} cls={P ? "m-act h-[54px] w-[54px]" : "m-act h-[72px] gap-2.5 px-5 text-[22px]"} xcls={`m-x gap-4 ${P ? "h-[54px] px-4 text-[21px]" : "h-[72px] px-6 text-[26px]"}`} motif={P ? { w: 46, h: 34, stroke: 4 } : { w: 60, h: 44, stroke: 5 }} />
+	return <Actions dest={dest} className={className} cls={P ? "m-act h-[54px] w-[54px]" : "m-act h-[72px] gap-2.5 px-5 text-[22px]"} xcls={P ? X.phone : X.desk} motif={P ? MOTIF.phone : MOTIF.desk} />
+}
+
+/** The expand key in the picture's bottom right corner: on the phone always, on the desktop as the third place. */
+function Out({ dest }: { dest: Dest }) {
+	const P = useTv().phone
+	return <Corner dest={dest} className={P ? X.phone : X.desk} motif={P ? MOTIF.phone : MOTIF.desk} at={P ? "bottom-5 right-5" : "bottom-10 right-14"} />
 }
 
 function Frame({ name, crumb, dest, hue, children }: { name: string; crumb?: string; dest: Dest; hue: number; children: ReactNode }) {
@@ -53,13 +62,19 @@ function Frame({ name, crumb, dest, hue, children }: { name: string; crumb?: str
 	return (
 		<>
 			<Field hue={hue} />
-			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[86px] items-center justify-between px-6" : "h-[116px] items-center justify-between px-14"}`}>
-				<BarTitle name={name} crumb={crumb} nameClass="font-black uppercase tracking-tight" style={{ fontSize: P ? 20 : 50 }} crumbClass={`font-bold text-white/75 ${P ? "text-[21px]" : "text-[24px]"}`} />
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[78px] items-center justify-between px-5" : "h-[116px] items-center justify-between px-14"}`}>
+				<BarTitle name={name} crumb={crumb} nameClass="font-black uppercase tracking-tight" style={{ fontSize: P ? 20 : 50 }} crumbClass={`font-bold text-white/75 ${P ? "text-[20px]" : "text-[24px]"}`} />
 				<Bar dest={dest} />
 			</div>
-			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[86px] overflow-hidden px-6 pb-6" : "top-[116px] px-14 pb-10"}`}>{children}</div>
+			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[78px] overflow-hidden px-5 pb-5" : "top-[116px] px-14 pb-10"}`}>{children}</div>
+			<Out dest={dest} />
 		</>
 	)
+}
+
+/** The phone's last row: what a screen puts beside the expand key, which has the right end of it. */
+function Foot({ children }: { children?: ReactNode }) {
+	return <div className="mt-2.5 flex h-[54px] shrink-0 items-center gap-2 pr-[158px]">{children}</div>
 }
 
 /** Each app's sign: one large flat shape, drawn in the tile's ink. */
@@ -111,18 +126,19 @@ const Home: Skin["Home"] = ({ apps, greeting, open }) => {
 	return (
 		<>
 			<Field hue={shown.hue} />
-			<Bar className={`absolute z-10 ${P ? "right-6 top-4" : "right-14 top-[22px]"}`} />
-			<div className={`absolute ${P ? "left-6 top-8" : "left-14 top-10"}`}>
+			<Bar className={`absolute z-10 ${P ? "right-5 top-3" : "right-14 top-[22px]"}`} />
+			<div className={`absolute ${P ? "left-5 top-[18px]" : "left-14 top-10"}`}>
 				<div className={`font-black uppercase tracking-[0.2em] text-white/75 ${P ? "text-[20px]" : "text-[22px]"}`}>GoodWatch</div>
-				<div className="mt-1 font-black uppercase leading-none tracking-tight" style={{ fontSize: P ? 40 : 66 }}>
+				<div className="mt-1 font-black uppercase leading-none tracking-tight" style={{ fontSize: P ? 30 : 66 }}>
 					{greeting}.
 				</div>
 			</div>
-			<div className={`absolute inset-x-0 flex overflow-hidden ${P ? "top-[130px] gap-4 px-6 py-3" : "top-[150px] gap-6 px-14 py-4"}`} style={{ scrollPadding: 30 }}>
+			{/* The phone: the tiles take the height that is left under the greeting. */}
+			<div className={`absolute inset-x-0 flex overflow-hidden ${P ? "bottom-0 top-[86px] gap-3.5 px-5 pb-5 pt-3" : "top-[150px] gap-6 px-14 py-4"}`} style={{ scrollPadding: 30 }}>
 				{apps.map((a, n) => (
-					<F key={a.key} id={`app-${a.key}`} first={n === 0} onOk={() => open(a.key)} className="m-tile flex shrink-0 flex-col justify-between p-5" style={{ width: P ? 190 : 198, height: P ? 250 : 286, background: hsl(a.hue, 68, 46) }}>
-						<Glyph app={a.key} className={P ? "h-[120px] w-[120px]" : "h-[150px] w-[150px]"} />
-						<span className="font-black uppercase leading-none tracking-tight" style={{ fontSize: 32 }}>
+					<F key={a.key} id={`app-${a.key}`} first={n === 0} onOk={() => open(a.key)} className={`m-tile flex shrink-0 flex-col justify-between ${P ? "p-4" : "p-5"}`} style={{ width: P ? 172 : 198, height: P ? "100%" : 286, background: hsl(a.hue, 68, 46) }}>
+						<Glyph app={a.key} className={P ? "h-[104px] w-[104px] [.tvd-short_&]:h-[84px] [.tvd-short_&]:w-[84px]" : "h-[150px] w-[150px]"} />
+						<span className="font-black uppercase leading-none tracking-tight" style={{ fontSize: P ? 27 : 32 }}>
 							{a.name}
 						</span>
 					</F>
@@ -147,19 +163,29 @@ const Home: Skin["Home"] = ({ apps, greeting, open }) => {
 const Moods: Skin["Moods"] = ({ moods, pick, dest }) => {
 	const tv = useTv()
 	const P = tv.phone
+	const B = useExpandAt() === "bottom"
 	const shown = moods.find((m) => `mood-${m.key}` === tv.focus) ?? moods[0]
+	const tiles = moods.map((m, n) => (
+		<F key={m.key} id={`mood-${m.key}`} first={n === 0} onOk={() => pick(m.key)} className={`m-tile flex flex-col justify-end ${P ? "p-3" : "p-5"}`} style={{ height: P ? undefined : B ? 190 : 216, background: hsl(m.hue, 66, 44) }}>
+			<span className="font-black uppercase leading-[0.92] tracking-tight" style={{ fontSize: P ? 21 : titleSize(m.name, 56, 40) }}>
+				{m.name}
+			</span>
+			{!P && <span className="mt-2 text-[24px] font-bold leading-tight">{m.line}</span>}
+		</F>
+	))
 	return (
 		<Frame name="Discover" crumb="What kind of night?" dest={dest} hue={shown.hue}>
-			<div className={`grid ${P ? "grid-cols-2 gap-4" : "grid-cols-3 gap-6 pt-2"}`}>
-				{moods.map((m, n) => (
-					<F key={m.key} id={`mood-${m.key}`} first={n === 0} onOk={() => pick(m.key)} className="m-tile flex flex-col justify-end p-5" style={{ height: P ? 150 : 216, background: hsl(m.hue, 66, 44) }}>
-						<span className="font-black uppercase leading-[0.92] tracking-tight" style={{ fontSize: P ? 28 : titleSize(m.name, 56, 40) }}>
-							{m.name}
-						</span>
-						<span className={`mt-2 font-bold leading-tight ${P ? "text-[20px]" : "text-[24px]"}`}>{m.line}</span>
-					</F>
-				))}
-			</div>
+			{P ? (
+				// The phone: six moods three by three, and the focused one's line beside the expand key.
+				<div className="flex h-full flex-col">
+					<div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-3 pt-1">{tiles}</div>
+					<Foot>
+						<span className="text-[20px] font-bold leading-tight">{shown.line}</span>
+					</Foot>
+				</div>
+			) : (
+				<div className="grid grid-cols-3 gap-6 pt-2">{tiles}</div>
+			)}
 		</Frame>
 	)
 }
@@ -168,26 +194,55 @@ const List: Skin["List"] = ({ name, crumb, dest, items, actions, actionsLabel, e
 	const tv = useTv()
 	const P = tv.phone
 	const x = useFocusedTitle(items)
+	const under = (i: (typeof items)[number]) => i.sub ?? (tv.taste ? `${i.title.match}% match` : `${i.title.score} score`)
+	// The phone: the posters as tall as is left, their captions under them, the actions beside the expand key.
+	if (P)
+		return (
+			<Frame name={name} crumb={crumb} dest={dest} hue={x?.hue ?? 220}>
+				<div className="flex h-full flex-col">
+					<div className="-mx-5 flex min-h-0 flex-1 gap-3 overflow-hidden px-5 py-2.5" style={{ scrollPadding: 24 }}>
+						{items.map((i, n) => (
+							<F key={i.id} id={i.id} first={n === 0} onOk={i.onOk} className="m-tile flex h-full w-[118px] shrink-0 flex-col bg-[#17171c]">
+								<Img src={posterOf(i.title)} className="min-h-0 w-full flex-1" />
+								{/* A tile this narrow holds the name on two lines, or on one over the episode. */}
+								<span className="flex h-[56px] shrink-0 flex-col justify-center px-2">
+									<span className={`text-[20px] font-black uppercase leading-[1.05] ${i.sub ? "truncate" : "line-clamp-2"}`}>{i.title.title}</span>
+									{i.sub && <span className="truncate text-[20px] font-bold leading-tight text-white/70">{i.sub.split(" · ")[0]}</span>}
+								</span>
+							</F>
+						))}
+						{!items.length && <div className="text-[30px] font-black uppercase">{empty}</div>}
+					</div>
+					<Foot>
+						{actions.slice(0, 2).map((a, n) => (
+							<F key={a.id} id={a.id} first={!items.length && n === 0} onOk={a.onOk} className="m-btn flex h-[54px] min-w-0 items-center px-4 text-[20px] leading-tight">
+								<span className="truncate">{a.label}</span>
+							</F>
+						))}
+					</Foot>
+				</div>
+			</Frame>
+		)
 	return (
 		<Frame name={name} crumb={crumb} dest={dest} hue={x?.hue ?? 220}>
-			<div className={`flex h-full ${P ? "flex-col gap-3" : "items-start gap-8"}`}>
+			<div className="flex h-full items-start gap-8">
 				<div className="-mx-5 flex min-w-0 flex-1 gap-5 overflow-hidden px-5 py-4" style={{ scrollPadding: 30 }}>
 					{items.map((i, n) => (
-						<F key={i.id} id={i.id} first={n === 0} onOk={i.onOk} className="m-tile flex shrink-0 flex-col bg-[#17171c]" style={{ width: P ? 170 : 188 }}>
-							<Img src={posterOf(i.title)} className="w-full" style={{ height: P ? 255 : 282 }} />
-							<span className={`flex flex-col justify-center px-3 ${P ? "h-[88px]" : "h-[104px]"}`}>
-								<span className={`line-clamp-2 font-black uppercase leading-[1.02] ${P ? "text-[20px]" : "text-[23px]"}`}>{i.title.title}</span>
-								<span className="mt-1 truncate text-[20px] font-bold text-white/70">{i.sub ?? (tv.taste ? `${i.title.match}% match` : `${i.title.score} score`)}</span>
+						<F key={i.id} id={i.id} first={n === 0} onOk={i.onOk} className="m-tile flex shrink-0 flex-col bg-[#17171c]" style={{ width: 188 }}>
+							<Img src={posterOf(i.title)} className="w-full" style={{ height: 282 }} />
+							<span className="flex h-[104px] flex-col justify-center px-3">
+								<span className="line-clamp-2 text-[23px] font-black uppercase leading-[1.02]">{i.title.title}</span>
+								<span className="mt-1 truncate text-[20px] font-bold text-white/70">{under(i)}</span>
 							</span>
 						</F>
 					))}
-					{!items.length && <div className="font-black uppercase" style={{ fontSize: P ? 34 : 60 }}>{empty}</div>}
+					{!items.length && <div className="font-black uppercase" style={{ fontSize: 60 }}>{empty}</div>}
 				</div>
 				{actions.length > 0 && (
-					<div className={`flex shrink-0 gap-3 ${P ? "items-center" : "w-[230px] flex-col pt-4"}`}>
+					<div className="flex w-[230px] shrink-0 flex-col gap-3 pt-4">
 						{actionsLabel && <span className="text-[24px] font-black uppercase text-white/70">{actionsLabel}</span>}
 						{actions.map((a, n) => (
-							<F key={a.id} id={a.id} first={!items.length && n === 0} onOk={a.onOk} className={`m-btn flex items-center justify-center text-center leading-tight ${P ? "h-[60px] px-5 text-[21px]" : "h-[84px] px-4 text-[26px]"}`}>
+							<F key={a.id} id={a.id} first={!items.length && n === 0} onOk={a.onOk} className="m-btn flex h-[84px] items-center justify-center px-4 text-center text-[26px] leading-tight">
 								{a.label}
 							</F>
 						))}
@@ -217,8 +272,8 @@ const IslandMap: Skin["Map"] = ({ open, dest }) => {
 	const W = 244
 	const H = 120
 	const island = (i: (typeof ISLANDS)[number], n: number, style?: object) => (
-		<F key={i.key} id={`island-${i.key}`} first={n === 0} onOk={() => open(i.key)} className={`m-tile flex items-center justify-center text-center ${P ? "" : "absolute"}`} style={{ borderRadius: 999, background: hsl(i.hue, 66, 46), height: P ? 96 : H, ...style }}>
-			<span className="font-black uppercase leading-none tracking-tight" style={{ fontSize: P ? 22 : 28 }}>
+		<F key={i.key} id={`island-${i.key}`} first={n === 0} onOk={() => open(i.key)} className={`m-tile flex items-center justify-center text-center ${P ? "" : "absolute"}`} style={{ borderRadius: 999, background: hsl(i.hue, 66, 46), height: P ? 76 : H, ...style }}>
+			<span className="font-black uppercase leading-none tracking-tight" style={{ fontSize: P ? 20 : 28 }}>
 				{i.name}
 			</span>
 		</F>
@@ -226,7 +281,8 @@ const IslandMap: Skin["Map"] = ({ open, dest }) => {
 	return (
 		<Frame name="Explorer" crumb="Six islands" dest={dest} hue={shown.hue}>
 			{P ? (
-				<div className="grid grid-cols-2 gap-4">{ISLANDS.map((i, n) => island(i, n))}</div>
+				// The phone: the six islands three by three; the corner under them is the expand key's.
+				<div className="grid grid-cols-3 gap-3 pt-2">{ISLANDS.map((i, n) => island(i, n))}</div>
 			) : (
 				<div className="relative h-full">
 					<svg className="absolute inset-0 h-full w-full" aria-hidden="true">
@@ -244,28 +300,32 @@ const IslandMap: Skin["Map"] = ({ open, dest }) => {
 const TitleView: Skin["TitleView"] = ({ name, crumb, title, kicker, actions, dest }) => {
 	const tv = useTv()
 	const P = tv.phone
+	const B = useExpandAt() === "bottom"
 	return (
 		<>
 			<div className="absolute inset-0" style={{ background: hsl(title.hue, 58, 24) }} />
-			{!P && <Img src={posterOf(title, "w500")} className="absolute inset-y-0 right-0 h-full w-[34%]" />}
-			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[86px] items-center justify-between px-6" : "h-[116px] items-center justify-between px-14"}`}>
-				<BarTitle name={name} crumb={crumb} nameClass={`font-black uppercase tracking-[0.14em] text-white/80 ${P ? "text-[22px]" : "text-[28px]"}`} crumbClass={`font-bold text-white/75 ${P ? "text-[21px]" : "text-[24px]"}`} />
+			{/* With the expand key in the bottom right corner the poster ends above it. */}
+			{!P && <Img src={posterOf(title, "w500")} className={`absolute right-0 top-0 w-[34%] ${B ? "bottom-[136px]" : "bottom-0"}`} />}
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[78px] items-center justify-between px-5" : "h-[116px] items-center justify-between px-14"}`}>
+				<BarTitle name={name} crumb={crumb} nameClass={`font-black uppercase tracking-[0.14em] text-white/80 ${P ? "text-[22px]" : "text-[28px]"}`} crumbClass={`font-bold text-white/75 ${P ? "text-[20px]" : "text-[24px]"}`} />
 				<Bar dest={dest} />
 			</div>
-			<div className={`absolute bottom-0 flex flex-col justify-end ${P ? "inset-x-0 top-[86px] px-6 pb-6" : "left-0 top-[116px] w-[66%] pb-10 pl-14 pr-8"}`}>
+			<Out dest={dest} />
+			<div className={`absolute bottom-0 flex flex-col justify-end ${P ? "inset-x-0 top-[78px] px-5 pb-5" : "left-0 top-[116px] w-[66%] pb-10 pl-14 pr-8"}`}>
 				{!P && <div className="text-[24px] font-black uppercase tracking-[0.1em] text-white/80">{kicker}</div>}
-				<div className="mt-2 font-black uppercase leading-[0.88] tracking-tight" style={{ fontSize: P ? titleSize(title.title, 50, 36) : titleSize(title.title, 104, 62) }}>
+				<div className="mt-2 font-black uppercase leading-[0.88] tracking-tight" style={{ fontSize: P ? titleSize(title.title, 44, 32) : titleSize(title.title, 104, 62) }}>
 					{title.title}
 				</div>
-				<div className={`mt-4 flex flex-wrap gap-x-6 font-black uppercase ${P ? "text-[21px]" : "text-[30px]"}`}>
+				<div className={`flex flex-wrap font-black uppercase ${P ? "mt-2.5 gap-x-4 text-[20px]" : "mt-4 gap-x-6 text-[30px]"}`}>
 					<span>{title.score} score</span>
 					{tv.taste && <span>{title.match}% match</span>}
 					<span className="text-white/80">On {title.service}</span>
 				</div>
 				{!P && <div className={`mt-2 font-semibold leading-snug text-white/90 ${P ? "text-[20px]" : "text-[26px]"}`}>{title.line}</div>}
-				<div className={`flex ${P ? "mt-4 flex-col gap-2" : "mt-7 flex-wrap gap-4"}`}>
+				{/* The phone: the actions in a column on the left; the corner beside the last one is the expand key's. */}
+				<div className={`flex ${P ? "mt-3.5 w-[292px] flex-col gap-2" : "mt-7 flex-wrap gap-4"}`}>
 					{actions.map((a, n) => (
-						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`m-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[58px] shrink-0 text-[21px]" : "h-[80px] px-6 text-[25px]"}`}>
+						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`m-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[52px] shrink-0 text-[20px] [.tvd-short_&]:h-[46px]" : "h-[80px] px-6 text-[25px]"}`}>
 							{a.label}
 						</F>
 					))}
@@ -280,12 +340,12 @@ const Taste: Skin["Taste"] = ({ rated, start, dest }) => {
 	return (
 		<Frame name="Taste" dest={dest} hue={265}>
 			<div className="flex min-h-full flex-col justify-center">
-				<div className="font-black uppercase leading-[0.92] tracking-tight" style={{ fontSize: P ? 44 : 88 }}>
+				<div className="font-black uppercase leading-[0.92] tracking-tight" style={{ fontSize: P ? 38 : 88 }}>
 					Rate 5 titles you've seen.
 				</div>
-				<div className={`mt-4 font-bold text-white/85 ${P ? "text-[22px]" : "text-[30px]"}`}>{rated} of 5 rated. Then GoodWatch knows your taste.</div>
-				<div className="mt-8 flex">
-					<F id={start.id} first onOk={start.onOk} className={`m-btn flex items-center px-10 uppercase ${P ? "h-[62px] text-[24px]" : "h-[84px] text-[30px]"}`}>
+				<div className={`font-bold text-white/85 ${P ? "mt-2 text-[20px]" : "mt-4 text-[30px]"}`}>{rated} of 5 rated. Then GoodWatch knows your taste.</div>
+				<div className={`flex ${P ? "mt-5" : "mt-8"}`}>
+					<F id={start.id} first onOk={start.onOk} className={`m-btn flex items-center uppercase ${P ? "h-[54px] px-6 text-[21px]" : "h-[84px] px-10 text-[30px]"}`}>
 						{start.label}
 					</F>
 				</div>
@@ -298,23 +358,34 @@ const Sides: Skin["Sides"] = ({ open, more, dest }) => {
 	const tv = useTv()
 	const P = tv.phone
 	const shown = SIDES.find((s) => `side-${s.key}` === tv.focus) ?? SIDES[0]
+	const tiles = SIDES.map((s, n) => (
+		<F key={s.key} id={`side-${s.key}`} first={n === 0} onOk={() => open(s.key)} className={`m-tile flex flex-col justify-end ${P ? "p-3" : "p-5"}`} style={{ height: P ? undefined : 290, background: hsl(s.hue, 62, 44) }}>
+			<span className="font-black uppercase leading-[0.92] tracking-tight" style={{ fontSize: P ? 22 : 50 }}>
+				{s.name}
+			</span>
+			{!P && <span className="mt-2 text-[24px] font-bold leading-tight">{s.line}</span>}
+		</F>
+	))
+	const again = (
+		<F id={more.id} onOk={more.onOk} className={`m-btn flex items-center uppercase ${P ? "h-[54px] px-5 text-[20px]" : "h-[80px] px-9 text-[28px]"}`}>
+			{more.label}
+		</F>
+	)
 	return (
 		<Frame name="Taste" crumb="Three sides of you" dest={dest} hue={shown.hue}>
-			<div className={`grid ${P ? "grid-cols-1 gap-4" : "grid-cols-3 gap-6 pt-2"}`}>
-				{SIDES.map((s, n) => (
-					<F key={s.key} id={`side-${s.key}`} first={n === 0} onOk={() => open(s.key)} className="m-tile flex flex-col justify-end p-5" style={{ height: P ? 120 : 290, background: hsl(s.hue, 62, 44) }}>
-						<span className="font-black uppercase leading-[0.92] tracking-tight" style={{ fontSize: P ? 30 : 50 }}>
-							{s.name}
-						</span>
-						<span className={`mt-2 font-bold leading-tight ${P ? "text-[20px]" : "text-[24px]"}`}>{s.line}</span>
-					</F>
-				))}
-			</div>
-			<div className="mt-7 flex">
-				<F id={more.id} onOk={more.onOk} className={`m-btn flex items-center px-9 uppercase ${P ? "h-[60px] text-[22px]" : "h-[80px] text-[28px]"}`}>
-					{more.label}
-				</F>
-			</div>
+			{P ? (
+				// The phone: the three sides side by side, the focused one's line over them, the action beside the expand key.
+				<div className="flex h-full flex-col">
+					<div className="shrink-0 truncate text-[20px] font-bold leading-tight">{shown.line}</div>
+					<div className="mt-2.5 grid min-h-0 flex-1 grid-cols-3 gap-3">{tiles}</div>
+					<Foot>{again}</Foot>
+				</div>
+			) : (
+				<>
+					<div className="grid grid-cols-3 gap-6 pt-2">{tiles}</div>
+					<div className="mt-7 flex">{again}</div>
+				</>
+			)}
 		</Frame>
 	)
 }
@@ -324,16 +395,16 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 	return (
 		<>
 			<Field hue={title?.hue ?? 265} />
-			<Bar className={`absolute z-10 ${P ? "right-6 top-4" : "right-14 top-[22px]"}`} />
-			<div className={`absolute inset-0 flex flex-col justify-center ${P ? "px-6 pt-16" : "px-14 pt-16"}`}>
+			<Bar className={`absolute z-10 ${P ? "right-5 top-3" : "right-14 top-[22px]"}`} />
+			<div className={`absolute inset-0 flex flex-col justify-center ${P ? "px-5 pb-3 pt-[70px]" : "px-14 pt-16"}`}>
 				<div className={`font-black uppercase tracking-[0.14em] text-white/80 ${P ? "text-[20px]" : "text-[24px]"}`}>{kicker}</div>
-				<div className="mt-2 font-black uppercase leading-[0.92] tracking-tight" style={{ fontSize: P ? 40 : titleSize(question, 96, 64) }}>
+				<div className={`font-black uppercase leading-[0.92] tracking-tight ${P ? "mt-1" : "mt-2"}`} style={{ fontSize: P ? 32 : titleSize(question, 96, 64) }}>
 					{question}
 				</div>
-				{line && <div className={`mt-3 font-bold text-white/85 ${P ? "text-[21px]" : "text-[30px]"}`}>{line}</div>}
-				<div className={`grid ${P ? "mt-7 gap-3" : "mt-10 gap-5"}`} style={{ gridTemplateColumns: `repeat(${P ? 2 : answers.length}, minmax(0, 1fr))` }}>
+				{line && <div className={`font-bold text-white/85 ${P ? "mt-2 text-[20px] leading-tight" : "mt-3 text-[30px]"}`}>{line}</div>}
+				<div className={`grid ${P ? "mt-4 gap-2.5" : "mt-10 gap-5"}`} style={{ gridTemplateColumns: `repeat(${P ? 2 : answers.length}, minmax(0, 1fr))` }}>
 					{answers.map((a, n) => (
-						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`m-btn flex items-center justify-center px-4 text-center uppercase leading-tight ${P ? "h-[64px] text-[22px]" : "h-[124px] text-[30px]"}`}>
+						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`m-btn flex items-center justify-center px-4 text-center uppercase leading-tight ${P ? "h-[52px] text-[20px] [.tvd-short_&]:h-[46px]" : "h-[124px] text-[30px]"}`}>
 							{a.label}
 						</F>
 					))}
@@ -346,10 +417,10 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 const Menu: Skin["Menu"] = ({ items }) => {
 	const P = useTv().phone
 	return (
-		<div className={`absolute inset-y-0 right-0 flex flex-col justify-center gap-2 bg-white text-black ${P ? "w-[80%] px-5" : "w-[470px] px-8"}`}>
-			<div className="mb-3 px-5 text-[22px] font-black uppercase tracking-[0.2em] text-black/55">Menu</div>
+		<div className={`absolute inset-y-0 right-0 flex flex-col justify-center gap-2 bg-white text-black ${P ? "w-[78%] px-4" : "w-[470px] px-8"}`}>
+			<div className={`px-5 font-black uppercase tracking-[0.2em] text-black/55 ${P ? "text-[20px]" : "mb-3 text-[22px]"}`}>Menu</div>
 			{items.map((item, n) => (
-				<F key={item.id} id={item.id} first={n === 0} onOk={item.onOk} className={`m-menu flex items-center px-5 leading-none ${P ? "h-[56px] shrink-0 text-[23px]" : "h-[84px] text-[32px]"}`}>
+				<F key={item.id} id={item.id} first={n === 0} onOk={item.onOk} className={`m-menu flex items-center px-5 leading-none ${P ? "h-[48px] shrink-0 text-[21px]" : "h-[84px] text-[32px]"}`}>
 					{item.label}
 				</F>
 			))}

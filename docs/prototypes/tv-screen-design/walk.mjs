@@ -20,7 +20,19 @@ const expect = async (label, want) => {
 	say(fits(got), label, got, want)
 }
 const check = (label, got, want) => say(got === want, label, got, want)
-const open = async (q) => { await page.goto(`${base}?${q}`, { waitUntil: "load", timeout: 120000 }); await page.waitForSelector("[data-tv-item][aria-current]", { timeout: 60000 }); await page.waitForTimeout(700) }
+// A machine short of memory fails a load now and then: the page is loaded again, twice at most.
+const open = async (q, tries = 3) => {
+	try {
+		await page.goto(`${base}?${q}`, { waitUntil: "load", timeout: 120000 })
+		await page.waitForSelector("[data-tv-item][aria-current]", { timeout: 40000 })
+	} catch (error) {
+		if (tries <= 1) throw error
+		console.log("     loading again:", String(error.message).split("\n")[0])
+		await page.waitForTimeout(4000)
+		return open(q, tries - 1)
+	}
+	await page.waitForTimeout(700)
+}
 const keys = async (...ks) => { for (const k of ks) { await page.keyboard.press(k); await page.waitForTimeout(260) } }
 const current = async () => (await page.locator("button[data-design][aria-pressed=true]").allInnerTexts()).join("|").replace(/\s+/g, " ")
 /** The top bar's actions on the screen (not the menu over it), in the order they are drawn. */
@@ -41,6 +53,55 @@ const corners = async () => {
 }
 const toast = (text) => page.waitForFunction((t) => document.querySelector(".tvd-toast")?.textContent === t, text, { timeout: 8000 }).then(() => "shown", () => "missing")
 const marked = (key) => page.waitForSelector(`button[data-design=${key}][aria-pressed=true]`, { timeout: 8000 }).then(() => page.waitForTimeout(400), () => {})
+const SCREENS = [["home"], ["tonight"], ["discover"], ["discover-cozy"], ["explorer"], ["island-heists"], ["taste"], ["quiz"], ["title-knives-out"], ["rate-knives-out"], ["search"], ["search-heist"], ["discover", "menu"], ["about"], ["shows"], ["side-dark-crime"]]
+const show = async ([root, push]) => { await page.evaluate(([r, p]) => { window.__tvDesign.root(r); if (p) setTimeout(() => window.__tvDesign.push(p), 60) }, [root, push ?? null]); await page.waitForTimeout(650) }
+/**
+ * What of the TV's type and focus targets lies under the element `selector` names (the Remote's body, the expand
+ * key): ids and the first words. Only what is on the picture counts: a row that pages in is cut by its list.
+ */
+const under = (selector) => page.evaluate((sel) => {
+	const over = document.querySelector(sel)
+	if (!over) return []
+	const box = over.getBoundingClientRect()
+	const tv = document.querySelector("[data-tv-screen]")
+	const shown = (from, r) => {
+		const b = { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
+		for (let el = from; el && el !== tv.parentElement; el = el.parentElement) {
+			if (getComputedStyle(el).overflow === "visible") continue
+			const q = el.getBoundingClientRect()
+			b.left = Math.max(b.left, q.left); b.top = Math.max(b.top, q.top); b.right = Math.min(b.right, q.right); b.bottom = Math.min(b.bottom, q.bottom)
+		}
+		return b
+	}
+	const hit = (from, rect) => { const r = shown(from, rect); return r.right - r.left > 0 && r.bottom - r.top > 0 && r.left < box.right - 1 && r.right > box.left + 1 && r.bottom > box.top + 1 && r.top < box.bottom - 1 }
+	// The expand key belongs to its screen: the menu that opens over that screen covers it like the rest of it.
+	const within = over.closest(".tvd-screen") ?? tv
+	const out = [...within.querySelectorAll("[data-tv-item]")].filter((el) => !over.contains(el) && !el.contains(over) && hit(el.parentElement, el.getBoundingClientRect())).map((el) => el.dataset.tvItem)
+	const walker = document.createTreeWalker(within, NodeFilter.SHOW_TEXT)
+	for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+		if (!node.textContent.trim() || over.contains(node)) continue
+		const range = document.createRange(); range.selectNodeContents(node)
+		if ([...range.getClientRects()].some((r) => hit(node.parentElement, r))) out.push(`"${node.textContent.trim().slice(0, 24)}"`)
+	}
+	return out
+}, selector)
+/** On every screen: what lies under `selector`. "nothing" is the answer wanted. */
+const underOnAll = async (selector) => {
+	const found = []
+	for (const screen of SCREENS) { await show(screen); const hits = await under(selector); if (hits.length) found.push(`${screen[1] ?? screen[0]}: ${hits.join(", ")}`) }
+	return found.join(" | ") || "nothing"
+}
+const EXPAND = ".tvd-screen [data-tv-item=expand]"
+/** The focus targets in the top bar's line: those that begin above the middle of the Menu action. */
+const inBar = () => page.evaluate(() => { const menu = document.querySelector(".tvd-screen [data-tv-item=bar-menu]").getBoundingClientRect(); return [...document.querySelectorAll(".tvd-screen [data-tv-item]")].filter((el) => el.getBoundingClientRect().top < menu.top + menu.height / 2).map((el) => el.dataset.tvItem).join(" ") })
+/** Where the expand key is in the picture. */
+const corner = () => page.evaluate((sel) => {
+	const x = document.querySelector(sel)?.getBoundingClientRect()
+	const tv = document.querySelector("[data-tv-screen]").getBoundingClientRect()
+	if (!x) return "missing"
+	const snug = tv.right - x.right < tv.width * 0.08 && tv.bottom - x.bottom < tv.height * 0.12 && x.right <= tv.right && x.bottom <= tv.bottom
+	return `${x.top > tv.top + tv.height / 2 ? "bottom" : "top"} ${x.left > tv.left + tv.width / 2 ? "right" : "left"}${snug ? "" : ", not in the corner"}`
+}, EXPAND)
 
 for (const design of ["cinema", "marquee", "glow"]) {
 	const t = (label) => `${design}: ${label}`
@@ -74,6 +135,14 @@ for (const design of ["cinema", "marquee", "glow"]) {
 	await expect(t("down from the bar returns to the apps"), /^home · focus app-/)
 	await keys("h", "ArrowRight", "Enter"); check(t("an app has Back, Search, Menu, then Expand"), await bar(), "bar-back bar-search bar-menu expand")
 	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=first]", { timeout: 8000 }); check(t("the alternative puts Expand first"), await bar(), "expand bar-back bar-search bar-menu")
+	// The third place: out of the bar, in the picture's bottom right corner.
+	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=bottom]", { timeout: 8000 })
+	check(t("the third place has Expand at the picture's bottom right"), await corner(), "bottom right")
+	check(t("and the bar keeps Back, Search, Menu"), await inBar(), "bar-back bar-search bar-menu")
+	await page.evaluate(() => window.__tvDesign.focus("mood-any")); await page.waitForTimeout(260)
+	await keys("ArrowDown"); await expect(t("Down from the last mood reaches it there"), "home › discover · focus expand")
+	await keys("Enter"); await expect(t("and OK grows the picture into the page from there"), /focus expand · on \/discover/)
+	await keys("Escape"); await expect(t("Back comes back to it"), "home › discover · focus expand")
 	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=last]", { timeout: 8000 })
 	await keys("h")
 	// The map.
@@ -131,43 +200,20 @@ await keys("3"); await marked("glow"); check("the key 3 chooses Glow and keeps t
 await keys("1"); await marked("cinema"); check("the key 1 chooses Cinema", await current(), "1 Cinema")
 // Under the TV the Remote's top reaches a little over the picture's bottom margin. On no screen may it cover type or
 // a focus target there, in any direction, at the two window sizes where it is under the TV by itself.
-const SCREENS = [["home"], ["tonight"], ["discover"], ["discover-cozy"], ["explorer"], ["island-heists"], ["taste"], ["quiz"], ["title-knives-out"], ["rate-knives-out"], ["search"], ["search-heist"], ["discover", "menu"], ["about"], ["shows"], ["side-dark-crime"]]
 for (const [width, height] of [[1920, 1080], [1920, 940]]) {
 	await page.setViewportSize({ width, height })
 	for (const design of ["cinema", "marquee", "glow"]) {
 		await page.mouse.move(0, 0)
 		await open(`design=${design}&as=member`)
-		const covered = []
-		for (const [root, push] of SCREENS) {
-			await page.evaluate(([r, p]) => { window.__tvDesign.root(r); if (p) setTimeout(() => window.__tvDesign.push(p), 60) }, [root, push ?? null])
-			await page.waitForTimeout(650)
-			const hits = await page.evaluate(() => {
-				const remote = document.querySelector("[data-remote] .remote-body").getBoundingClientRect()
-				const tv = document.querySelector("[data-tv-screen]")
-				// What of a box is on the picture: a row that pages in is cut by the list that holds it.
-				const shown = (from, r) => {
-					const b = { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
-					for (let el = from; el && el !== tv.parentElement; el = el.parentElement) {
-						if (getComputedStyle(el).overflow === "visible") continue
-						const q = el.getBoundingClientRect()
-						b.left = Math.max(b.left, q.left); b.top = Math.max(b.top, q.top); b.right = Math.min(b.right, q.right); b.bottom = Math.min(b.bottom, q.bottom)
-					}
-					return b
-				}
-				const hit = (from, rect) => { const r = shown(from, rect); return r.right - r.left > 0 && r.bottom - r.top > 0 && r.left < remote.right && r.right > remote.left && r.bottom > remote.top + 1 && r.top < remote.bottom }
-				const out = [...tv.querySelectorAll("[data-tv-item]")].filter((el) => hit(el.parentElement, el.getBoundingClientRect())).map((el) => el.dataset.tvItem)
-				const walker = document.createTreeWalker(tv, NodeFilter.SHOW_TEXT)
-				for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-					if (!node.textContent.trim()) continue
-					const range = document.createRange(); range.selectNodeContents(node)
-					if ([...range.getClientRects()].some((r) => hit(node.parentElement, r))) out.push(`"${node.textContent.trim().slice(0, 24)}"`)
-				}
-				return out
-			})
-			if (hits.length) covered.push(`${push ?? root}: ${hits.join(", ")}`)
-		}
-		check(`${design} at ${width}x${height}: the Remote covers no type and no focus target on any of ${SCREENS.length} screens`, covered.join(" | ") || "nothing", "nothing")
+		check(`${design} at ${width}x${height}: the Remote covers no type and no focus target on any of ${SCREENS.length} screens`, await underOnAll("[data-remote] .remote-body"), "nothing")
 	}
+}
+// The expand key in the bottom right corner (the desktop's third place): it covers nothing either.
+await page.setViewportSize({ width: 1920, height: 1080 })
+for (const design of ["cinema", "marquee", "glow"]) {
+	await page.mouse.move(0, 0)
+	await open(`design=${design}&as=member&bar=bottom`)
+	check(`${design}, Expand at the bottom right: it covers no type and no focus target on any of ${SCREENS.length} screens`, await underOnAll(EXPAND), "nothing")
 }
 await page.setViewportSize({ width: 1920, height: 1080 })
 
@@ -222,8 +268,9 @@ await keys("c"); await page.waitForSelector("[data-tv-pointer][data-shape=cross]
 await keys("c"); await page.waitForSelector("[data-tv-pointer][data-shape=dot]", { state: "attached", timeout: 8000 }); check("and the one after it", await pointer("shape"), "dot")
 await page.setViewportSize({ width: 390, height: 844 }); await open("design=cinema")
 check("at phone width there is no pointer", String(await page.locator("[data-tv-pointer]").count()), "0")
-// The phone: the TV and the phone's own Remote on one screen. Nothing scrolls, every key of the Remote is in the
-// window, at least 44 px in both directions, not under the site's dock, and does what it says.
+// The phone: the room, the TV and the phone's own Remote on one screen. Nothing scrolls; the TV has its body and
+// wall beside it; every key of the Remote is in the window, at least 44 px in both directions, not under the site's
+// dock, and does what it says; the expand key is at the picture's bottom right, covers nothing and grows the picture.
 const phoneState = () => page.evaluate(() => window.__tvDesign.state())
 const until = async (label, want) => {
 	const fits = (got) => (typeof want === "string" ? got === want : want.test(got))
@@ -232,59 +279,95 @@ const until = async (label, want) => {
 	say(fits(got), label, got, want)
 }
 const key = (name) => page.locator("[data-remote]").getByRole("button", { name, exact: true })
-const phone = async (width, height, keys) => {
-	const t = (label) => `phone ${width}x${height}${keys === "few" ? ", few keys" : ""}: ${label}`
+const phone = async (width, height, form, design = "cinema") => {
+	const t = (label) => `phone ${width}x${height}, ${form === "table" ? "on the table" : "in the hand"}${design === "cinema" ? "" : `, ${design}`}: ${label}`
 	// A phone of its own: touch, no scrollbar. A page that crashes while loading on a loaded machine is loaded again.
 	const desktop = page
 	const mobile = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true })
 	page = await mobile.newPage()
-	await open(`design=cinema${keys === "few" ? "&keys=few" : ""}`).catch(() => open(`design=cinema${keys === "few" ? "&keys=few" : ""}`))
+	const q = `design=${design}&as=member${form === "table" ? "&form=table" : ""}`
+	await open(q)
 	const m = await page.evaluate(() => {
 		const scene = document.querySelector("[data-remote-place]")
-		const all = [...document.querySelectorAll("[data-remote] button")].map((b) => { const r = b.getBoundingClientRect(); return { name: b.getAttribute("aria-label") ?? b.textContent.trim(), w: r.width, h: r.height, inside: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight, free: b.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)) } })
+		const all = [...document.querySelectorAll("[data-remote] button")].map((b) => { const r = b.getBoundingClientRect(); return { name: b.getAttribute("aria-label") ?? b.textContent.trim(), w: r.width, h: r.height, inside: r.left >= 0 && r.top >= 0 && r.right <= window.innerWidth && r.bottom <= window.innerHeight, seen: b.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)) } })
 		const tv = document.querySelector("[data-tv-screen]").getBoundingClientRect()
+		const body = document.querySelector("[data-tv-body]").getBoundingClientRect()
+		const remote = document.querySelector("[data-remote] .remote-body").getBoundingClientRect()
 		const canvas = document.querySelector("[data-tv-canvas]")
-		return { place: scene.dataset.remotePlace, names: all.map((k) => k.name).sort().join(", "), small: all.filter((k) => k.w < 44 || k.h < 44).map((k) => k.name).join(", "), outside: all.filter((k) => !k.inside).map((k) => k.name).join(", "), covered: all.filter((k) => !k.free).map((k) => k.name).join(", "), smallest: Math.round(Math.min(...all.map((k) => Math.min(k.w, k.h)))), tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, k: canvas.getBoundingClientRect().width / canvas.offsetWidth }
+		return {
+			place: scene.dataset.remotePlace, bar: scene.dataset.bar, form: document.querySelector("[data-remote]").dataset.phoneRemote,
+			names: all.map((k) => k.name).sort().join(", "), small: all.filter((k) => k.w < 44 || k.h < 44).map((k) => k.name).join(", "), outside: all.filter((k) => !k.inside).map((k) => k.name).join(", "), covered: all.filter((k) => !k.seen).map((k) => k.name).join(", "),
+			smallest: Math.round(Math.min(...all.map((k) => Math.min(k.w, k.h)))), tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, k: tv.width / canvas.offsetWidth,
+			// The TV's body shows on every side of the picture, the wall beside the body, and the Remote starts under it.
+			framed: body.left < tv.left && body.top < tv.top && body.right > tv.right && body.bottom > tv.bottom && body.left > 4 && body.right < window.innerWidth - 4, wide: tv.width > tv.height, under: remote.top >= body.bottom, remote: `${Math.round(remote.width)} wide`,
+		}
 	})
-	check(t("the Remote has its keys"), m.names, keys === "few" ? "Back, Down, Home, Next, OK, Only Netflix, Only Prime Video, Previous, Up" : "Back, Down, Home, Menu, Next, OK, Only Netflix, Only Prime Video, Previous, Search, Up")
+	check(t("the layout is the phone's, with the Remote in this form"), `${m.place} ${m.form}`, `phone ${form}`)
+	check(t("the TV has a body around the picture and wall beside it, and is wider than tall"), `${m.framed} ${m.wide}`, "true true")
+	check(t("the Remote starts under the TV"), String(m.under), "true")
+	check(t("the Remote has its keys"), m.names, "Back, Down, Home, Menu, Next, OK, Only Netflix, Only Prime Video, Previous, Search, Up")
 	check(t("every key is 44 px or more"), m.small || "all", "all")
 	check(t("every key is inside the window"), m.outside || "all", "all")
-	check(t("no key is under the site's dock"), m.covered || "none", "none")
-	await key("Next").tap(); await until(t("Next moves the focus"), "home · focus app-discover")
-	await key("Previous").tap(); await until(t("Previous moves it back"), "home · focus app-tonight")
-	await key("Up").tap(); await until(t("Up reaches the top bar"), "home · focus bar-search")
-	await key("Down").tap(); await until(t("Down returns to the apps"), /^home · focus app-/)
-	await key("OK").tap(); await until(t("OK opens the app"), /^home › \w+ · focus /)
-	await key("Back").tap(); await until(t("Back returns"), /^home · focus app-/)
-	if (keys !== "few") {
+	check(t("no key is under the site's dock or anything else"), m.covered || "none", "none")
+	if (design === "cinema") {
+		await key("Next").tap(); await until(t("Next moves the focus"), "home · focus app-discover")
+		await key("Previous").tap(); await until(t("Previous moves it back"), "home · focus app-tonight")
+		await key("Up").tap(); await until(t("Up reaches the top bar"), "home · focus bar-search")
+		await key("Down").tap(); await until(t("Down returns to the apps"), /^home · focus app-/)
+		await key("OK").tap(); await until(t("OK opens the app"), /^home › \w+ · focus /)
+		await key("Back").tap(); await until(t("Back returns"), /^home · focus app-/)
 		await key("Search").tap(); await until(t("Search opens search"), "home › search · focus idea-cozy")
 		await key("Home").tap(); await until(t("Home goes home"), /^home · focus /)
 		await key("Menu").tap(); await until(t("Menu opens the menu"), "home › menu · focus menu-home")
 		await key("Back").tap(); await until(t("Back closes the menu"), /^home · focus /)
-	} else {
-		await key("OK").tap(); await until(t("OK opens an app again"), /^home › \w+ · focus /)
-		await key("Home").tap(); await until(t("Home goes home"), /^home · focus /)
+		await key("Only Netflix").tap(); check(t("the Netflix key works"), await toast("Only Netflix"), "shown")
+		await key("Only Prime Video").tap(); check(t("the Prime Video key works"), await toast("Only Prime Video"), "shown")
+		await key("Only Prime Video").tap(); await page.waitForTimeout(300)
 	}
-	await key("Only Netflix").tap(); check(t("the Netflix key works"), await toast("Only Netflix"), "shown")
-	await key("Only Prime Video").tap(); check(t("the Prime Video key works"), await toast("Only Prime Video"), "shown")
-	console.log(`     ${t("")}TV ${m.tv}, smallest key ${m.smallest} px, type of 20 canvas px prints at ${(20 * m.k).toFixed(1)} px`)
+	// The expand key: out of the bar, at the picture's bottom right, over nothing, and it grows the picture.
+	check(t("the expand key's place is the bottom"), m.bar, "bottom")
+	check(t("Expand covers no type and no focus target on any screen"), await underOnAll(EXPAND), "nothing")
+	await show(["discover"])
+	check(t("Expand is at the picture's bottom right"), await corner(), "bottom right")
+	check(t("the top bar keeps Back, Search, Menu"), await inBar(), "bar-back bar-search bar-menu")
+	// No focus target is cut off at the bottom of the picture, on any screen (a list that pages may cut its own rows).
+	const cut = []
+	for (const screen of SCREENS) {
+		await show(screen)
+		const ids = await page.evaluate(() => { const tv = document.querySelector("[data-tv-screen]").getBoundingClientRect(); return [...document.querySelectorAll("[data-tv-screen] [data-tv-item]")].filter((el) => { const r = el.getBoundingClientRect(); return r.top < tv.bottom && r.bottom > tv.bottom + 1 }).map((el) => el.dataset.tvItem) })
+		if (ids.length) cut.push(`${screen[1] ?? screen[0]}: ${ids.join(", ")}`)
+	}
+	check(t("no focus target runs off the picture's bottom edge"), cut.join(" | ") || "none", "none")
+	await show(["discover"])
+	await page.locator(EXPAND).tap(); await page.getByText("The real page (a stand-in)").waitFor({ timeout: 8000 }).catch(() => {})
+	check(t("a tap on Expand grows the picture into the page"), String(await page.getByText("goodwatch.app/discover").count() > 0), "true")
+	await page.getByRole("button", { name: "← Back to the TV" }).tap(); await until(t("and Back returns to the TV"), "discover · focus expand")
 	// A finger drags up on the TV and on the Remote, then the page is told to scroll: nothing may have moved.
 	const cdp = await mobile.newCDPSession(page)
 	for (const y of [height * 0.3, height - 150]) await cdp.send("Input.synthesizeScrollGesture", { x: width / 2, y, yDistance: -300, gestureSourceType: "touch", speed: 1600 }).catch(() => {})
 	await page.evaluate(() => { window.scrollTo(0, 400); document.querySelector("[data-remote-place]").scrollTop = 400 }); await page.waitForTimeout(300)
 	const s = await page.evaluate(() => {
 		const scene = document.querySelector("[data-remote-place]")
-		return { scrolled: window.scrollY + document.documentElement.scrollTop + document.body.scrollTop + scene.scrollTop, taller: Math.max(scene.scrollHeight - scene.clientHeight, document.documentElement.scrollHeight - window.innerHeight) }
+		// The scene clips what runs under its edge (the Remote's grip and the hand), and cannot be scrolled to it.
+		return { scrolled: window.scrollY + document.documentElement.scrollTop + document.body.scrollTop + scene.scrollTop, taller: document.documentElement.scrollHeight - window.innerHeight }
 	})
 	check(t("nothing scrolls: not by a drag on the TV or on the Remote, and the page is no taller than the window"), `${s.scrolled} ${s.taller <= 0}`, "0 true")
+	console.log(`     ${t("")}TV ${m.tv}, Remote ${m.remote}, smallest key ${m.smallest} px, type of 20 canvas px prints at ${(20 * m.k).toFixed(1)} px`)
 	await mobile.close()
 	page = desktop
 }
-for (const [width, height] of [[390, 844], [360, 740], [375, 667], [430, 932], [390, 700]]) await phone(width, height, "all")
-await phone(375, 667, "few")
+const PHONES = [[390, 844], [360, 740], [375, 667], [430, 932], [390, 700]]
+for (const [width, height] of PHONES) await phone(width, height, "hand")
+for (const [width, height] of PHONES) await phone(width, height, "table")
+// The other two directions, on the shortest phone and the largest.
+for (const design of ["marquee", "glow"]) for (const [width, height] of [[375, 667], [430, 932]]) await phone(width, height, "hand", design)
+// The prototype's own controls are folded behind one key on the phone.
 await page.setViewportSize({ width: 390, height: 844 }); await open("design=cinema")
-await page.locator("button[data-design=glow]").click(); await marked("glow")
-check("at phone width the buttons are there and choose", await current(), "3 Glow")
+check("at phone width the controls are folded away", String(await page.locator("button[data-design=glow]").isVisible()), "false")
+await page.locator("[data-controls]").click(); await page.locator("button[data-design=glow]").click(); await marked("glow")
+check("and one key unfolds them: the buttons choose", await current(), "3 Glow")
+await page.locator("button[data-form]").click(); await page.waitForSelector("[data-phone-remote=table]", { timeout: 8000 }).catch(() => {})
+check("and the Remote's other form", await page.locator("[data-remote]").getAttribute("data-phone-remote"), "table")
 console.log(fails ? `${fails} FAILED, ${passed} ok` : `all ${passed} ok`)
 await browser.close()
 process.exitCode = fails ? 1 : 0

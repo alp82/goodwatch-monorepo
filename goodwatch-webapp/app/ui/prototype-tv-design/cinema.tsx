@@ -7,7 +7,7 @@ import { type Dest, ISLANDS, SIDES, islandTitles } from "~/ui/prototype-tv-flow/
 import { useTv } from "~/ui/prototype-tv-flow/engine"
 import { F, metaOf } from "~/ui/prototype-tv-flow/kit"
 import { backdropOf, posterOf } from "./art"
-import { Actions, Ambient, AppArt, BarTitle, Cross, Img, type Skin, titleSize, useFocusedTitle } from "./base"
+import { Actions, Ambient, AppArt, BarTitle, Corner, Cross, Img, type Skin, titleSize, useExpandAt, useFocusedTitle } from "./base"
 
 const CSS = `
 .tvd-cinema { color: #fff; background: #05060a; }
@@ -31,25 +31,40 @@ function Shade({ dim }: { dim: number }) {
 	return <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, rgba(5,6,10,.94) 0%, rgba(5,6,10,${dim}) 55%, rgba(5,6,10,${dim * 0.45}) 100%), linear-gradient(0deg, rgba(5,6,10,.92) 0%, rgba(5,6,10,0) 50%)` }} />
 }
 
+const X = { phone: "c-x h-[54px] gap-2.5 px-3.5 text-[20px]", desk: "c-x h-[64px] gap-4 px-6 text-[26px]" }
+const MOTIF = { w: 44, h: 32, stroke: 3 }
+
 /** The actions as this direction draws them: quiet dark pills, and the expand key in amber. */
 function Bar({ dest, className }: { dest?: Dest; className?: string }) {
 	const P = useTv().phone
-	return <Actions dest={dest} className={className} cls={P ? "c-act h-[54px] w-[54px]" : "c-act h-[64px] gap-2.5 px-5 text-[24px]"} xcls={`c-x ${P ? "h-[54px] gap-2.5 px-3 text-[20px]" : "h-[64px] gap-4 px-6 text-[26px]"}`} motif={{ w: 44, h: 32, stroke: 3 }} />
+	return <Actions dest={dest} className={className} cls={P ? "c-act h-[54px] w-[54px]" : "c-act h-[64px] gap-2.5 px-5 text-[24px]"} xcls={P ? X.phone : X.desk} motif={MOTIF} />
 }
 
-function Frame({ name, crumb, dest, art, dim = 0.6, children }: { name: string; crumb?: string; dest: Dest; art?: string; dim?: number; children: ReactNode }) {
+/**
+ * A screen with the top bar. With the expand key at the bottom right, the key sits in the picture's corner;
+ * `reserve` keeps the whole band under the content free for it on the desktop, where a screen fills its width.
+ * On the phone every screen leaves the corner free itself.
+ */
+function Frame({ name, crumb, dest, art, dim = 0.6, reserve, children }: { name: string; crumb?: string; dest: Dest; art?: string; dim?: number; reserve?: boolean; children: ReactNode }) {
 	const P = useTv().phone
+	const B = useExpandAt() === "bottom"
 	return (
 		<>
 			{art && <Ambient src={art} />}
 			<Shade dim={dim} />
-			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[86px] items-center justify-between px-6" : "h-[108px] items-center justify-between px-14"}`}>
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[78px] items-center justify-between px-5" : "h-[108px] items-center justify-between px-14"}`}>
 				<BarTitle name={name} crumb={crumb} nameClass={`font-bold ${P ? "text-[24px]" : "text-[36px]"}`} crumbClass={`text-white/70 ${P ? "text-[20px]" : "text-[24px]"}`} />
 				<Bar dest={dest} />
 			</div>
-			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[86px] overflow-hidden px-6 pb-6" : "top-[108px] px-14 pb-10"}`}>{children}</div>
+			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[78px] overflow-hidden px-5 pb-5" : `top-[108px] px-14 ${B && reserve ? "pb-[120px]" : "pb-10"}`}`}>{children}</div>
+			<Corner dest={dest} className={P ? X.phone : X.desk} motif={MOTIF} at={P ? "bottom-5 right-5" : "bottom-10 right-14"} />
 		</>
 	)
+}
+
+/** The phone's last row: what a screen puts beside the expand key, which has the right end of it. */
+function Foot({ children }: { children?: ReactNode }) {
+	return <div className="mt-2.5 flex h-[54px] shrink-0 items-center gap-2 pr-[158px]">{children}</div>
 }
 
 const Home: Skin["Home"] = ({ apps, greeting, open }) => {
@@ -62,23 +77,23 @@ const Home: Skin["Home"] = ({ apps, greeting, open }) => {
 				<AppArt app={shown} size="w1280" className="h-full w-full" />
 			</Cross>
 			<Shade dim={0.5} />
-			<div className={`absolute font-bold uppercase tracking-[0.22em] text-white/80 ${P ? "left-6 top-8 text-[20px]" : "left-14 top-11 text-[22px]"}`}>GoodWatch</div>
-			<Bar className={`absolute z-10 ${P ? "right-6 top-4" : "right-14 top-[22px]"}`} />
-			<div className={`absolute ${P ? "inset-x-6 top-[96px]" : "left-14 top-[136px] w-[780px]"}`}>
-				<div className={`text-white/75 ${P ? "text-[22px]" : "text-[28px]"}`}>{greeting}.</div>
+			<div className={`absolute font-bold uppercase tracking-[0.22em] text-white/80 ${P ? "left-5 top-[28px] text-[20px]" : "left-14 top-11 text-[22px]"}`}>GoodWatch</div>
+			<Bar className={`absolute z-10 ${P ? "right-5 top-3" : "right-14 top-[22px]"}`} />
+			<div className={`absolute ${P ? "inset-x-5 top-[82px]" : "left-14 top-[136px] w-[780px]"}`}>
+				<div className={`text-white/75 ${P ? "text-[20px]" : "text-[28px]"}`}>{greeting}.</div>
 				<div key={shown.key} className="tvd-fade">
-					<div className="font-bold leading-[0.95] tracking-tight" style={{ fontSize: P ? 64 : 108 }}>
+					<div className="font-bold leading-[0.95] tracking-tight" style={{ fontSize: P ? 56 : 108 }}>
 						{shown.name}
 					</div>
-					<div className={`mt-4 leading-snug text-white/85 ${P ? "text-[24px]" : "text-[32px]"}`}>{shown.line}</div>
+					<div className={`leading-snug text-white/85 ${P ? "mt-2 text-[21px]" : "mt-4 text-[32px]"}`}>{shown.line}</div>
 				</div>
 			</div>
-			<div className={`absolute inset-x-0 bottom-0 flex overflow-hidden pt-6 ${P ? "gap-4 px-6 pb-8" : "gap-[22px] px-14 pb-12"}`} style={{ scrollPadding: 30 }}>
+			<div className={`absolute inset-x-0 bottom-0 flex overflow-hidden ${P ? "gap-3.5 px-5 pb-5 pt-4" : "gap-[22px] px-14 pb-12 pt-6"}`} style={{ scrollPadding: 30 }}>
 				{apps.map((a, n) => (
-					<F key={a.key} id={`app-${a.key}`} first={n === 0} onOk={() => open(a.key)} className="c-tile shrink-0" style={{ width: 200, height: 128 }}>
+					<F key={a.key} id={`app-${a.key}`} first={n === 0} onOk={() => open(a.key)} className="c-tile shrink-0" style={P ? { width: 172, height: 110 } : { width: 200, height: 128 }}>
 						<AppArt app={a} className="absolute inset-0 h-full w-full" />
 						<span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-						<span className="absolute bottom-3 left-4 text-[26px] font-bold leading-none">{a.name}</span>
+						<span className={`absolute bottom-3 left-4 font-bold leading-none ${P ? "text-[23px]" : "text-[26px]"}`}>{a.name}</span>
 					</F>
 				))}
 			</div>
@@ -89,22 +104,36 @@ const Home: Skin["Home"] = ({ apps, greeting, open }) => {
 const Moods: Skin["Moods"] = ({ moods, pick, dest }) => {
 	const tv = useTv()
 	const P = tv.phone
+	const B = useExpandAt() === "bottom"
 	const shown = moods.find((m) => `mood-${m.key}` === tv.focus) ?? moods[0]
-	return (
-		<Frame name="Discover" dest={dest} art={backdropOf(shown.title, "w1280")} dim={0.86}>
-			<div className={`font-bold leading-none ${P ? "mb-5 text-[32px]" : "mb-6 text-[46px]"}`}>What kind of night?</div>
-			<div className={`grid ${P ? "grid-cols-2 gap-4" : "grid-cols-3 gap-6"}`}>
-				{moods.map((m, n) => (
-					<F key={m.key} id={`mood-${m.key}`} first={n === 0} onOk={() => pick(m.key)} className="c-tile" style={{ height: P ? 140 : 190 }}>
-						<Img src={backdropOf(m.title)} className="absolute inset-0 h-full w-full" />
-						<span className="absolute inset-0" style={{ background: `linear-gradient(0deg, hsl(${m.hue} 60% 10% / .95) 0%, hsl(${m.hue} 70% 30% / .3) 100%)` }} />
-						<span className="absolute inset-x-5 bottom-4">
-							<span className={`block font-bold leading-none ${P ? "text-[28px]" : "text-[38px]"}`}>{m.name}</span>
-							<span className={`mt-1.5 block leading-tight text-white/85 ${P ? "text-[20px]" : "text-[22px]"}`}>{m.line}</span>
+	const tile = (m: (typeof moods)[number], n: number) => (
+		<F key={m.key} id={`mood-${m.key}`} first={n === 0} onOk={() => pick(m.key)} className="c-tile" style={P ? undefined : { height: B ? 158 : 190 }}>
+			<Img src={backdropOf(m.title)} className="absolute inset-0 h-full w-full" />
+			<span className="absolute inset-0" style={{ background: `linear-gradient(0deg, hsl(${m.hue} 60% 10% / .95) 0%, hsl(${m.hue} 70% 30% / .3) 100%)` }} />
+			<span className={`absolute ${P ? "inset-x-3 bottom-2.5" : "inset-x-5 bottom-4"}`}>
+				<span className={`block font-bold leading-none ${P ? "text-[22px]" : "text-[38px]"}`}>{m.name}</span>
+				{!P && <span className="mt-1.5 block text-[22px] leading-tight text-white/85">{m.line}</span>}
+			</span>
+		</F>
+	)
+	// The phone: six moods three by three, and the focused one's line beside the expand key.
+	if (P)
+		return (
+			<Frame name="Discover" crumb="What kind of night?" dest={dest} art={backdropOf(shown.title, "w1280")} dim={0.86}>
+				<div className="flex h-full flex-col">
+					<div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-3 pt-1">{moods.map(tile)}</div>
+					<Foot>
+						<span key={shown.key} className="tvd-fade text-[20px] leading-tight text-white/85">
+							{shown.line}
 						</span>
-					</F>
-				))}
-			</div>
+					</Foot>
+				</div>
+			</Frame>
+		)
+	return (
+		<Frame name="Discover" dest={dest} art={backdropOf(shown.title, "w1280")} dim={0.86} reserve>
+			<div className="mb-6 text-[46px] font-bold leading-none">What kind of night?</div>
+			<div className="grid grid-cols-3 gap-6">{moods.map(tile)}</div>
 		</Frame>
 	)
 }
@@ -112,38 +141,70 @@ const Moods: Skin["Moods"] = ({ moods, pick, dest }) => {
 const List: Skin["List"] = ({ name, crumb, dest, items, actions, actionsLabel, empty }) => {
 	const tv = useTv()
 	const P = tv.phone
+	const B = useExpandAt() === "bottom"
 	const x = useFocusedTitle(items)
+	const facts = x && `${metaOf(x)} · ${x.score} score${tv.taste ? ` · ${x.match}% match` : ""} · On ${x.service}`
+	// The phone: one line of name, one of facts, the posters as tall as is left, and the actions beside the expand key.
+	if (P) {
+		const sub = items.find((i) => i.title === x)?.sub
+		return (
+			<Frame name={name} crumb={crumb} dest={dest} art={x ? backdropOf(x, "w1280") : undefined}>
+				<div className="flex h-full flex-col">
+					{x && (
+						<div key={x.key} className="tvd-fade shrink-0">
+							<div className="truncate text-[30px] font-bold leading-none tracking-tight">{x.title}</div>
+							<div className="mt-2 truncate text-[20px] leading-tight text-white/75">{sub ? `${sub} · ${x.score} score · On ${x.service}` : facts}</div>
+						</div>
+					)}
+					{!items.length && <div className="text-[26px] text-white/70">{empty}</div>}
+					<div className="-mx-5 flex min-h-0 flex-1 gap-3.5 overflow-hidden px-5 py-3.5" style={{ scrollPadding: 24 }}>
+						{items.map((i, n) => (
+							<F key={i.id} id={i.id} first={n === 0} onOk={i.onOk} label={i.title.title} className="c-tile aspect-[2/3] h-full shrink-0">
+								<Img src={posterOf(i.title)} className="absolute inset-0 h-full w-full" />
+							</F>
+						))}
+					</div>
+					<Foot>
+						{actions.slice(0, 2).map((a, n) => (
+							<F key={a.id} id={a.id} first={!items.length && n === 0} onOk={a.onOk} className="c-btn flex h-[54px] min-w-0 items-center px-5 text-[21px]">
+								<span className="truncate">{a.label}</span>
+							</F>
+						))}
+					</Foot>
+				</div>
+			</Frame>
+		)
+	}
 	return (
-		<Frame name={name} crumb={crumb} dest={dest} art={x ? backdropOf(x, "w1280") : undefined}>
+		<Frame name={name} crumb={crumb} dest={dest} art={x ? backdropOf(x, "w1280") : undefined} reserve>
 			<div className="flex min-h-full flex-col justify-between">
-				<div className={P ? "" : "w-[820px]"}>
+				<div className="w-[820px]">
 					{x && (
 						<div key={x.key} className="tvd-fade">
-							<div className="font-bold leading-none tracking-tight" style={{ fontSize: P ? 34 : titleSize(x.title, 62, 46) }}>
+							<div className="font-bold leading-none tracking-tight" style={{ fontSize: titleSize(x.title, 62, 46) }}>
 								{x.title}
 							</div>
-							<div className={`mt-3 text-white/75 ${P ? "text-[20px]" : "text-[26px]"}`}>
-								{metaOf(x)} · {x.score} score{tv.taste ? ` · ${x.match}% match` : ""} · On {x.service}
-							</div>
-							{!P && <div className="mt-2 text-[28px] leading-snug text-white/90">{x.line}</div>}
+							<div className="mt-3 text-[26px] text-white/75">{facts}</div>
+							{/* With the expand key under the posters there is no room for the line. */}
+							{!B && <div className="mt-2 text-[28px] leading-snug text-white/90">{x.line}</div>}
 						</div>
 					)}
 					{!items.length && <div className="text-[32px] text-white/70">{empty}</div>}
 				</div>
-				<div className={`flex ${P ? "flex-col gap-2" : "items-end gap-8"}`}>
+				<div className="flex items-end gap-8">
 					<div className="-mx-6 flex min-w-0 flex-1 gap-6 overflow-hidden px-6 py-7" style={{ scrollPadding: 32 }}>
 						{items.map((i, n) => (
-							<F key={i.id} id={i.id} first={n === 0} onOk={i.onOk} label={i.title.title} className="c-tile shrink-0" style={P ? { width: 150, height: 225 } : { width: 172, height: 258 }}>
+							<F key={i.id} id={i.id} first={n === 0} onOk={i.onOk} label={i.title.title} className="c-tile shrink-0" style={{ width: 172, height: 258 }}>
 								<Img src={posterOf(i.title)} className="absolute inset-0 h-full w-full" />
 								{i.sub && <span className="absolute inset-x-0 bottom-0 bg-black/80 px-3 py-2 text-[21px] font-bold leading-tight">{i.sub}</span>}
 							</F>
 						))}
 					</div>
 					{actions.length > 0 && (
-						<div className={`flex shrink-0 ${P ? "items-center gap-3" : "flex-col gap-3 pb-7"}`}>
+						<div className="flex shrink-0 flex-col gap-3 pb-7">
 							{actionsLabel && <span className="text-[24px] text-white/70">{actionsLabel}</span>}
 							{actions.map((a, n) => (
-								<F key={a.id} id={a.id} first={!items.length && n === 0} onOk={a.onOk} className={`c-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[60px] px-6 text-[22px]" : "h-[68px] px-8 text-[26px]"}`}>
+								<F key={a.id} id={a.id} first={!items.length && n === 0} onOk={a.onOk} className="c-btn flex h-[68px] items-center justify-center whitespace-nowrap px-8 text-[26px]">
 									{a.label}
 								</F>
 							))}
@@ -175,13 +236,14 @@ const IslandMap: Skin["Map"] = ({ open, dest }) => {
 	return (
 		<Frame name="Explorer" crumb="Six islands" dest={dest} art={backdropOf(islandTitles(shown.key)[0], "w1280")} dim={0.88}>
 			{P ? (
-				<div className="grid grid-cols-2 gap-x-4 gap-y-3">
+				// The phone: the six islands three by three; the corner under them is the expand key's.
+				<div className="grid grid-cols-3 gap-x-2 gap-y-1 pt-1">
 					{ISLANDS.map((i, n) => (
-						<div key={i.key} className="flex flex-col items-center gap-2">
-							<F id={`island-${i.key}`} first={n === 0} onOk={() => open(i.key)} label={i.name} className="c-tile" style={{ width: 118, height: 118, borderRadius: "50%" }}>
+						<div key={i.key} className="flex flex-col items-center gap-1">
+							<F id={`island-${i.key}`} first={n === 0} onOk={() => open(i.key)} label={i.name} className="c-tile h-[84px] w-[84px] [.tvd-short_&]:h-[72px] [.tvd-short_&]:w-[72px]" style={{ borderRadius: "50%" }}>
 								<Img src={backdropOf(islandTitles(i.key)[0])} className="absolute inset-0 h-full w-full" />
 							</F>
-							<span className="text-[22px] font-bold">{i.name}</span>
+							<span className="whitespace-nowrap text-[20px] font-bold leading-tight">{i.name}</span>
 						</div>
 					))}
 				</div>
@@ -215,10 +277,10 @@ const TitleView: Skin["TitleView"] = ({ name, crumb, title, kicker, actions, des
 		<Frame name={name} crumb={crumb} dest={dest} art={backdropOf(title, "w1280")} dim={0.45}>
 			<div className="flex min-h-full flex-col justify-end">
 				{!P && <div className={`font-bold uppercase tracking-[0.16em] text-white/75 ${P ? "text-[20px]" : "text-[24px]"}`}>{kicker}</div>}
-				<div className="mt-2 font-bold leading-[0.95] tracking-tight" style={{ fontSize: P ? titleSize(title.title, 52, 38) : titleSize(title.title, 96, 66) }}>
+				<div className="mt-2 font-bold leading-[0.95] tracking-tight" style={{ fontSize: P ? titleSize(title.title, 44, 32) : titleSize(title.title, 96, 66) }}>
 					{title.title}
 				</div>
-				<div className={`mt-5 flex flex-wrap items-center gap-x-7 ${P ? "text-[22px]" : "text-[30px]"}`}>
+				<div className={`flex flex-wrap items-center ${P ? "mt-2.5 gap-x-5 text-[21px]" : "mt-5 gap-x-7 text-[30px]"}`}>
 					<span>
 						<b>{title.score}</b> <span className="text-white/65">score</span>
 					</span>
@@ -230,9 +292,10 @@ const TitleView: Skin["TitleView"] = ({ name, crumb, title, kicker, actions, des
 					<span className="text-white/80">On {title.service}</span>
 				</div>
 				{!P && <div className={`mt-3 max-w-[760px] leading-snug text-white/90 ${P ? "text-[21px]" : "text-[28px]"}`}>{title.line}</div>}
-				<div className={`flex ${P ? "mt-4 flex-col gap-2" : "mt-8 gap-4"}`}>
+				{/* The phone: the actions in a column on the left; the corner beside the last one is the expand key's. */}
+				<div className={`flex ${P ? "mt-3.5 w-[292px] flex-col gap-2" : "mt-8 gap-4"}`}>
 					{actions.map((a, n) => (
-						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`c-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[58px] shrink-0 text-[22px]" : "h-[74px] px-9 text-[28px]"}`}>
+						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`c-btn flex items-center justify-center whitespace-nowrap ${P ? "h-[52px] shrink-0 text-[21px] [.tvd-short_&]:h-[46px]" : "h-[74px] px-9 text-[28px]"}`}>
 							{a.label}
 						</F>
 					))}
@@ -247,12 +310,12 @@ const Taste: Skin["Taste"] = ({ rated, start, dest }) => {
 	return (
 		<Frame name="Taste" dest={dest} art={backdropOf("arrival", "w1280")} dim={0.8}>
 			<div className="flex min-h-full flex-col justify-center">
-				<div className="font-bold leading-[1.02] tracking-tight" style={{ fontSize: P ? 40 : 72 }}>
+				<div className="font-bold leading-[1.02] tracking-tight" style={{ fontSize: P ? 36 : 72 }}>
 					Rate 5 titles you've seen.
 				</div>
-				<div className={`mt-3 text-white/80 ${P ? "text-[22px]" : "text-[30px]"}`}>{rated} of 5 rated. Then GoodWatch knows your taste.</div>
-				<div className="mt-9 flex">
-					<F id={start.id} first onOk={start.onOk} className={`c-btn flex items-center px-10 ${P ? "h-[62px] text-[24px]" : "h-[76px] text-[30px]"}`}>
+				<div className={`text-white/80 ${P ? "mt-2 text-[21px]" : "mt-3 text-[30px]"}`}>{rated} of 5 rated. Then GoodWatch knows your taste.</div>
+				<div className={`flex ${P ? "mt-6" : "mt-9"}`}>
+					<F id={start.id} first onOk={start.onOk} className={`c-btn flex items-center ${P ? "h-[54px] px-7 text-[22px]" : "h-[76px] px-10 text-[30px]"}`}>
 						{start.label}
 					</F>
 				</div>
@@ -265,25 +328,38 @@ const Sides: Skin["Sides"] = ({ open, more, dest }) => {
 	const tv = useTv()
 	const P = tv.phone
 	const shown = SIDES.find((s) => `side-${s.key}` === tv.focus) ?? SIDES[0]
+	const tile = (s: (typeof SIDES)[number], n: number) => (
+		<F key={s.key} id={`side-${s.key}`} first={n === 0} onOk={() => open(s.key)} className="c-tile" style={P ? undefined : { height: 270 }}>
+			<Img src={backdropOf(s.titles[0])} className="absolute inset-0 h-full w-full" />
+			<span className="absolute inset-0" style={{ background: `linear-gradient(0deg, hsl(${s.hue} 60% 10% / .95) 0%, hsl(${s.hue} 70% 30% / .25) 100%)` }} />
+			<span className={`absolute ${P ? "inset-x-3 bottom-3" : "inset-x-5 bottom-5"}`}>
+				<span className={`block font-bold leading-none ${P ? "text-[22px]" : "text-[38px]"}`}>{s.name}</span>
+				{!P && <span className="mt-2 block text-[23px] leading-tight text-white/85">{s.line}</span>}
+			</span>
+		</F>
+	)
+	const again = (
+		<F id={more.id} onOk={more.onOk} className={`c-btn flex items-center ${P ? "h-[54px] px-6 text-[21px]" : "h-[70px] px-9 text-[27px]"}`}>
+			{more.label}
+		</F>
+	)
+	// The phone: the three sides side by side, the focused one's line over them, the action beside the expand key.
+	if (P)
+		return (
+			<Frame name="Taste" crumb="Three sides of you" dest={dest} art={backdropOf(shown.titles[0], "w1280")} dim={0.86}>
+				<div className="flex h-full flex-col">
+					<div key={shown.key} className="tvd-fade shrink-0 truncate text-[20px] leading-tight text-white/85">
+						{shown.line}
+					</div>
+					<div className="mt-2.5 grid min-h-0 flex-1 grid-cols-3 gap-3">{SIDES.map(tile)}</div>
+					<Foot>{again}</Foot>
+				</div>
+			</Frame>
+		)
 	return (
 		<Frame name="Taste" crumb="Three sides of you" dest={dest} art={backdropOf(shown.titles[0], "w1280")} dim={0.86}>
-			<div className={`grid ${P ? "grid-cols-1 gap-4" : "grid-cols-3 gap-6 pt-2"}`}>
-				{SIDES.map((s, n) => (
-					<F key={s.key} id={`side-${s.key}`} first={n === 0} onOk={() => open(s.key)} className="c-tile" style={{ height: P ? 120 : 270 }}>
-						<Img src={backdropOf(s.titles[0])} className="absolute inset-0 h-full w-full" />
-						<span className="absolute inset-0" style={{ background: `linear-gradient(0deg, hsl(${s.hue} 60% 10% / .95) 0%, hsl(${s.hue} 70% 30% / .25) 100%)` }} />
-						<span className="absolute inset-x-5 bottom-5">
-							<span className={`block font-bold leading-none ${P ? "text-[28px]" : "text-[38px]"}`}>{s.name}</span>
-							<span className={`mt-2 block leading-tight text-white/85 ${P ? "text-[20px]" : "text-[23px]"}`}>{s.line}</span>
-						</span>
-					</F>
-				))}
-			</div>
-			<div className="mt-8 flex">
-				<F id={more.id} onOk={more.onOk} className={`c-btn flex items-center px-9 ${P ? "h-[60px] text-[22px]" : "h-[70px] text-[27px]"}`}>
-					{more.label}
-				</F>
-			</div>
+			<div className="grid grid-cols-3 gap-6 pt-2">{SIDES.map(tile)}</div>
+			<div className="mt-8 flex">{again}</div>
 		</Frame>
 	)
 }
@@ -294,16 +370,16 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 		<>
 			{title && <Ambient src={backdropOf(title, "w1280")} />}
 			<Shade dim={0.82} />
-			<Bar className={`absolute z-10 ${P ? "right-6 top-4" : "right-14 top-[22px]"}`} />
-			<div className={`absolute inset-0 flex flex-col justify-center ${P ? "px-6 pt-16" : "px-14 pt-16"}`}>
+			<Bar className={`absolute z-10 ${P ? "right-5 top-3" : "right-14 top-[22px]"}`} />
+			<div className={`absolute inset-0 flex flex-col justify-center ${P ? "px-5 pb-3 pt-[70px]" : "px-14 pt-16"}`}>
 				<div className={`font-bold uppercase tracking-[0.16em] text-white/75 ${P ? "text-[20px]" : "text-[24px]"}`}>{kicker}</div>
-				<div className="mt-2 font-bold leading-[1.02] tracking-tight" style={{ fontSize: P ? 38 : titleSize(question, 80, 60) }}>
+				<div className={`font-bold leading-[1.02] tracking-tight ${P ? "mt-1" : "mt-2"}`} style={{ fontSize: P ? 32 : titleSize(question, 80, 60) }}>
 					{question}
 				</div>
-				{line && <div className={`mt-3 text-white/80 ${P ? "text-[21px]" : "text-[30px]"}`}>{line}</div>}
-				<div className={`grid ${P ? "mt-7 gap-3" : "mt-10 gap-5"}`} style={{ gridTemplateColumns: `repeat(${P ? 2 : answers.length}, minmax(0, 1fr))` }}>
+				{line && <div className={`text-white/80 ${P ? "mt-2 text-[20px] leading-tight" : "mt-3 text-[30px]"}`}>{line}</div>}
+				<div className={`grid ${P ? "mt-4 gap-2.5" : "mt-10 gap-5"}`} style={{ gridTemplateColumns: `repeat(${P ? 2 : answers.length}, minmax(0, 1fr))` }}>
 					{answers.map((a, n) => (
-						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`c-btn flex items-center justify-center px-4 text-center leading-tight ${P ? "h-[64px] text-[24px]" : "h-[116px] text-[32px]"}`} style={P ? undefined : { borderRadius: 26 }}>
+						<F key={a.id} id={a.id} first={n === 0} onOk={a.onOk} className={`c-btn flex items-center justify-center px-4 text-center leading-tight ${P ? "h-[52px] text-[22px] [.tvd-short_&]:h-[46px]" : "h-[116px] text-[32px]"}`} style={P ? undefined : { borderRadius: 26 }}>
 							{a.label}
 						</F>
 					))}
@@ -316,10 +392,10 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 const Menu: Skin["Menu"] = ({ items }) => {
 	const P = useTv().phone
 	return (
-		<div className={`absolute inset-y-0 right-0 flex flex-col justify-center gap-4 bg-[#0b0c11]/95 ${P ? "w-[80%] !gap-2.5 px-6" : "w-[440px] px-10"}`}>
-			<div className="mb-2 text-[22px] font-bold uppercase tracking-[0.2em] text-white/60">Menu</div>
+		<div className={`absolute inset-y-0 right-0 flex flex-col justify-center gap-4 bg-[#0b0c11]/95 ${P ? "w-[78%] !gap-2 px-5" : "w-[440px] px-10"}`}>
+			<div className={`font-bold uppercase tracking-[0.2em] text-white/60 ${P ? "text-[20px]" : "mb-2 text-[22px]"}`}>Menu</div>
 			{items.map((item, n) => (
-				<F key={item.id} id={item.id} first={n === 0} onOk={item.onOk} className={`c-btn flex shrink-0 items-center px-9 ${P ? "h-[56px] text-[23px]" : "h-[76px] text-[30px]"}`}>
+				<F key={item.id} id={item.id} first={n === 0} onOk={item.onOk} className={`c-btn flex shrink-0 items-center px-9 ${P ? "h-[48px] !px-6 text-[21px]" : "h-[76px] text-[30px]"}`}>
 					{item.label}
 				</F>
 			))}

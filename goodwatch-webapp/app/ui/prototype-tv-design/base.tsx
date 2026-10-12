@@ -3,7 +3,7 @@
 // focused item. How anything looks is the direction's business (a `Skin`): cinema.tsx, marquee.tsx, glow.tsx.
 import { type CSSProperties, type FC, type ReactNode, createContext, createElement, useContext, useEffect, useRef, useState } from "react"
 import { ICON, Icon } from "~/ui/living-room/Remote"
-import { DEST, type Dest, LEVELS, MOODS, NEXT_EPISODES, POPULAR, QUIZ, QUIZ_GOAL, SEARCH_IDEAS, SIDES, TO_START, type Title, WISHLIST_MOVIES, discover, islandOf, islandTitles, moodName, search, sideOf, titleOf } from "~/ui/prototype-tv-flow/data"
+import { DEST, type Dest, LEVELS, MOODS, NEXT_EPISODES, POPULAR, QUIZ, QUIZ_GOAL, SEARCH_IDEAS, SIDES, TO_START, type Title, discover, islandOf, islandTitles, moodName, search, sideOf, titleOf } from "~/ui/prototype-tv-flow/data"
 import { parseId, useTv } from "~/ui/prototype-tv-flow/engine"
 import { Corners, F, Layer, metaOf, useTitleActions } from "~/ui/prototype-tv-flow/kit"
 import { backdropOf, posterOf } from "./art"
@@ -17,8 +17,8 @@ export const DIRECTIONS: Record<DirectionKey, { name: string; bet: string }> = {
 
 /** The TV picture is drawn at this size; in the room on a 1920x1080 window it is shown at 1:1, so a canvas pixel is a screen pixel. */
 export const CANVAS = { w: 1200, h: 648 }
-/** The phone edition's canvas: narrower and taller, shown at 0.75 on a 390 px phone. */
-export const PHONE_CANVAS = { w: 520, h: 640 }
+/** The phone edition's canvas: this wide (shown at about 0.74 on a 390 px phone), and as tall as the phone's TV is: 375 to 417. */
+export const PHONE_CANVAS = { w: 500, h: 417 }
 
 export type Action = { id: string; label: string; onOk: () => void }
 export type Item = { title: Title; id: string; sub?: string; onOk: () => void }
@@ -44,9 +44,23 @@ export type Skin = {
 	Menu: (p: { items: Action[] }) => ReactNode
 }
 
-/** The screen a piece is drawn on (under the menu, that is not the top of the stack), and where the expand key sits in the top bar. */
+/**
+ * Where the expand key sits: `last` in the top bar (the corner, the desktop's choice), `first` in it, or `bottom`:
+ * out of the bar, in the bottom right corner of the picture. The phone always has it at the bottom.
+ */
+export type ExpandAt = "last" | "first" | "bottom"
+export const EXPAND_AT: Record<ExpandAt, string> = { last: "Expand in the corner", first: "Expand first", bottom: "Expand at the bottom" }
+
+/** The screen a piece is drawn on (under the menu, that is not the top of the stack), and where the expand key sits. */
 const ScreenCtx = createContext("home")
-export const BarCtx = createContext<{ expandFirst: boolean }>({ expandFirst: false })
+export const BarCtx = createContext<{ expand: ExpandAt }>({ expand: "last" })
+export const useExpandAt = (): ExpandAt => {
+	const { expand } = useContext(BarCtx)
+	return useTv().phone ? "bottom" : expand
+}
+
+/** The sample member's Tonight: from the Wishlist, the liveliest picture first. */
+const TONIGHT_MEMBER = [titleOf("spirited-away"), titleOf("knives-out"), titleOf("palm-springs")]
 
 /** A skin's screen as an element: skins use hooks, so they are rendered, never called. */
 const h = <P extends object>(component: (p: P) => ReactNode, props: P) => createElement(component as FC<P>, props)
@@ -85,7 +99,8 @@ export function DesignTv({ skin }: { skin: Skin }) {
 			</Layer>
 			{overlay && <Layer className="tvd-menu">{h(skin.Menu, { items })}</Layer>}
 			{tv.toastText && (
-				<div className="pointer-events-none absolute inset-x-0 bottom-8 z-30 flex justify-center">
+				// On the phone it stands over the last row, clear of the expand key in the corner.
+				<div className={`pointer-events-none absolute inset-x-0 z-30 flex justify-center ${tv.phone ? "bottom-[88px]" : "bottom-8"}`}>
 					<div className="tvd-toast">{tv.toastText}</div>
 				</div>
 			)}
@@ -99,7 +114,7 @@ function Screen({ id, skin }: { id: string; skin: Skin }) {
 	const item = (title: Title, sub?: string, prefix = "t"): Item => ({ title, id: `${prefix}-${title.key}`, sub, onOk: () => tv.push(`title-${title.key}`) })
 	switch (kind) {
 		case "tonight": {
-			const picks = (tv.member ? WISHLIST_MOVIES : POPULAR).slice(0, 3)
+			const picks = (tv.member ? TONIGHT_MEMBER : POPULAR).slice(0, 3)
 			const at = (Number(arg) || 0) % picks.length
 			const x = picks[at]
 			return h(skin.TitleView, {
@@ -218,7 +233,7 @@ function Screen({ id, skin }: { id: string; skin: Skin }) {
 			})
 		default: {
 			const apps: AppInfo[] = [
-				{ key: "tonight", name: "Tonight", hue: 28, line: tv.member ? "One pick at a time, from your Wishlist." : "One pick at a time, best rated right now.", title: (tv.member ? WISHLIST_MOVIES : POPULAR)[0], preview: (tv.member ? WISHLIST_MOVIES : POPULAR).slice(0, 3) },
+				{ key: "tonight", name: "Tonight", hue: 28, line: tv.member ? "One pick at a time, from your Wishlist." : "One pick at a time, best rated right now.", title: (tv.member ? TONIGHT_MEMBER : POPULAR)[0], preview: (tv.member ? TONIGHT_MEMBER : POPULAR).slice(0, 3) },
 				{ key: "discover", name: "Discover", hue: 350, line: "Pick a mood, get four titles.", title: titleOf("the-good-place"), preview: discover("funny", null, null).slice(0, 3) },
 				{ key: "explorer", name: "Explorer", hue: 200, line: "Sail a small map of islands.", title: titleOf("interstellar"), preview: islandTitles("space").slice(0, 3) },
 				{ key: "taste", name: "Taste", hue: 265, line: tv.taste ? "Three sides of you." : `Rate ${QUIZ_GOAL} titles, get picks made for you.`, title: titleOf("arrival"), preview: SIDES[1].titles.slice(0, 3) },
@@ -245,22 +260,22 @@ const MENU_ICON = "M4 7h16M4 12h16M4 17h16"
  * Remote's keys do. An action that has nothing to do is not there: no Back on home, no Search on the search
  * screens, no Menu while the menu is open. The expand key stays apart from the three by a wider gap, last in the
  * row (the corner) or first, and it alone is amber. The direction dresses them (`cls`, `xcls`, the motif).
- * On the phone the three show their icons only.
+ * On the phone the three show their icons only, and the expand key is not in the bar at all (`Corner`).
  */
 export function Actions({ dest, cls, xcls, motif, className = "" }: { dest?: Dest; cls: string; xcls: string; motif: { w: number; h: number; stroke: number }; className?: string }) {
 	const tv = useTv()
 	const screen = useContext(ScreenCtx)
-	const { expandFirst } = useContext(BarCtx)
+	const at = useExpandAt()
 	const P = tv.phone
 	const actions = [
 		screen !== "home" && { id: "bar-back", label: "Back", d: ICON.back, onOk: tv.back },
 		parseId(screen)[0] !== "search" && { id: "bar-search", label: "Search", d: ICON.search, onOk: tv.openSearch },
 		tv.top !== "menu" && { id: "bar-menu", label: "Menu", d: MENU_ICON, onOk: tv.toggleMenu },
 	].filter((a) => a !== false)
-	const expand = dest && <Expand key="expand" dest={dest} className={xcls} motif={motif} />
+	const expand = dest && at !== "bottom" && <Expand key="expand" dest={dest} className={xcls} motif={motif} />
 	return (
 		<div className={`flex shrink-0 items-center ${P ? "gap-4" : "gap-7"} ${className}`}>
-			{expandFirst && expand}
+			{at === "first" && expand}
 			<div className={`flex items-center ${P ? "gap-2" : "gap-2.5"}`}>
 				{actions.map((a) => (
 					// `tvx`: like the expand key, an action is never where a screen's focus starts.
@@ -270,7 +285,7 @@ export function Actions({ dest, cls, xcls, motif, className = "" }: { dest?: Des
 					</F>
 				))}
 			</div>
-			{!expandFirst && expand}
+			{at === "last" && expand}
 		</div>
 	)
 }
@@ -334,7 +349,7 @@ export function Motif({ w, h, stroke }: { w: number; h: number; stroke: number }
 }
 
 /**
- * The expand key, the one way out of the TV: always `expand`, always top right. Focusing it frames the whole
+ * The expand key, the one way out of the TV: always `expand`, top right or (the phone) bottom right. Focusing it frames the whole
  * picture; OK grows the picture into the page. The direction dresses it (`className`, the motif's weight).
  */
 export function Expand({ dest, className, motif }: { dest: Dest; className: string; motif: { w: number; h: number; stroke: number } }) {
@@ -344,6 +359,20 @@ export function Expand({ dest, className, motif }: { dest: Dest; className: stri
 			<Motif {...motif} />
 			{tv.label}
 		</F>
+	)
+}
+
+/**
+ * The expand key out of the bar, in the bottom right corner of the picture: on the phone always, on the desktop as
+ * the third place to compare. The screen keeps that corner free (`useExpandAt`). Nothing where the screen has no
+ * page to grow into.
+ */
+export function Corner({ dest, className, motif, at }: { dest?: Dest; className: string; motif: { w: number; h: number; stroke: number }; at: string }) {
+	if (useExpandAt() !== "bottom" || !dest) return null
+	return (
+		<div className={`absolute z-10 ${at}`}>
+			<Expand dest={dest} className={className} motif={motif} />
+		</div>
 	)
 }
 
@@ -400,7 +429,8 @@ export function AppArt({ app, size = "w780", className = "" }: { app: AppInfo; s
 /**
  * Sits in the picture and follows the focused item. `pad` grows it past the item; `size` makes it a square of
  * that size centred on the item instead. It eases toward the item on every frame for a short while after the
- * focus moved, so it also follows a row that is still paging. With reduced motion it jumps.
+ * focus moved, and on until the item stands still, so it also follows a row that is still paging and a screen
+ * that is still arriving, however slow the device. With reduced motion it jumps.
  */
 export function Follower({ className, pad = 0, size }: { className: string; pad?: number; size?: number }) {
 	const tv = useTv()
@@ -415,6 +445,8 @@ export function Follower({ className, pad = 0, size }: { className: string; pad?
 		const jump = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 		const until = performance.now() + 700
 		let raf = 0
+		let seen: number[] | null = null
+		let still = 0
 		const tick = () => {
 			const target = host.querySelector<HTMLElement>("[data-tv-item][aria-current]")
 			if (!target) {
@@ -428,6 +460,9 @@ export function Follower({ className, pad = 0, size }: { className: string; pad?
 				const cx = (b.left + b.width / 2 - h.left) / k
 				const cy = (b.top + b.height / 2 - h.top) / k
 				const want = size ? [cx - size / 2, cy - size / 2, size, size, size / 2] : [(b.left - h.left) / k - pad, (b.top - h.top) / k - pad, b.width / k + 2 * pad, b.height / k + 2 * pad, radius + pad]
+				const last = seen
+				still = last && want.every((v, i) => Math.abs(v - last[i]) < 0.5) ? still + 1 : 0
+				seen = want
 				const from = at.current
 				const now = !from || jump ? want : want.map((v, i) => from[i] + (v - from[i]) * 0.38)
 				at.current = now
@@ -437,7 +472,7 @@ export function Follower({ className, pad = 0, size }: { className: string; pad?
 				el.style.height = `${now[3]}px`
 				el.style.borderRadius = `${now[4]}px`
 			}
-			if (performance.now() < until) raf = requestAnimationFrame(tick)
+			if (performance.now() < until || (target && still < 12)) raf = requestAnimationFrame(tick)
 		}
 		tick()
 		return () => cancelAnimationFrame(raf)

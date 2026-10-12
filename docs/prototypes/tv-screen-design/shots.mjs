@@ -54,7 +54,8 @@ const ffmpeg = (...args) => execFileSync("ffmpeg", ["-loglevel", "error", "-y", 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? "/usr/bin/chromium" })
 // A machine short of memory crashes a page now and then while it loads: try again, twice.
 const open = async (viewport, query, tries = 3) => {
-	const ctx = await browser.newContext({ viewport, deviceScaleFactor: 1 })
+	// A phone is a phone: touch, and no scrollbar that takes width.
+	const ctx = await browser.newContext({ viewport, deviceScaleFactor: 1, ...(viewport.width < 768 ? { isMobile: true, hasTouch: true } : {}) })
 	const page = await ctx.newPage()
 	try {
 		await page.goto(`${base}?${query}`, { waitUntil: "load", timeout: 120000 })
@@ -118,7 +119,8 @@ if (!only || only === "screens") {
 				["guest", GUEST],
 				["member", MEMBER],
 			]) {
-				const { ctx, page } = await open(viewport, `design=${design}&as=${as}`)
+				// The phone's pictures are without the prototype's own key, so they show the real proportions.
+				const { ctx, page } = await open(viewport, `design=${design}&as=${as}${size === "phone" ? "&chrome=off" : ""}`)
 				for (const screen of screens) {
 					await go(page, screen)
 					await page.screenshot({ path: join(dir, `${screen[0]}-${size}.jpg`), type: "jpeg", quality: size === "desktop" ? 58 : 78 })
@@ -176,29 +178,53 @@ if (!only || only === "viewports") {
 	const cell = (i, [w, h]) => `[${i}]scale=${Math.round(w / 3)}:${Math.round(h / 3)},pad=860:440:0:0:color=0x15171c,drawtext=text='${w} x ${h}':fontcolor=white:fontsize=22:x=12:y=h-34:box=1:boxcolor=black@0.7:boxborderw=6[c${i}]`
 	ffmpeg(...VIEWPORTS.flatMap(([w, h]) => ["-i", join(tmp, `${w}x${h}.png`)]), "-filter_complex", `${VIEWPORTS.map((v, i) => cell(i, v)).join(";")};${VIEWPORTS.map((_, i) => `[c${i}]`).join("")}xstack=inputs=7:layout=0_0|860_0|1720_0|2580_0|0_440|860_440|1720_440`, "-q:v", "3", join(dir, "contact-sheet.jpg"))
 
-	// The phones: the TV and the phone's own Remote on one screen. Five sizes with all keys, two with few keys.
+	// The phones: the room, the TV and the phone's own Remote on one screen, at five sizes. The sheet has Cinema's
+	// home, a mini Discover and a title per size with the Remote in the hand; a second sheet has the home with the
+	// Remote on the table. The numbers are for both forms.
 	sizes.phones = {}
-	const PHONES = [[390, 844, "all"], [360, 740, "all"], [375, 667, "all"], [430, 932, "all"], [390, 700, "all"], [390, 844, "few"], [375, 667, "few"]]
-	for (const [width, height, keys] of PHONES) {
-		const name = `${width}x${height}${keys === "few" ? "-few" : ""}`
-		const { ctx, page } = await open({ width, height }, `design=cinema&as=member${keys === "few" ? "&keys=few" : ""}`)
-		await go(page, ["", "shows"])
-		const m = await measure(page)
-		const tv = await tvBox(page)
-		const remote = await page.evaluate(() => {
-			const panel = document.querySelector("[data-remote]").getBoundingClientRect()
-			const all = [...document.querySelectorAll("[data-remote] button")].map((b) => b.getBoundingClientRect())
-			return { height: Math.round(panel.height), keys: all.length, smallestKey: Math.round(Math.min(...all.map((r) => Math.min(r.width, r.height)))), endsAt: Math.round(Math.max(...all.map((r) => r.bottom))) }
-		})
-		sizes.phones[name] = { tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, smallestText: m.text.px, remote }
-		await go(page, ["", "home"])
-		await page.screenshot({ path: join(tmp, `p-${name}.png`) })
-		await ctx.close()
-		console.log("phone", name, JSON.stringify(sizes.phones[name]))
+	const PHONES = [[390, 844], [360, 740], [375, 667], [430, 932], [390, 700]]
+	const SHEET = [["home", "home"], ["discover", "discover-cozy"], ["title", "title-knives-out"]]
+	for (const [width, height] of PHONES) {
+		const name = `${width}x${height}`
+		sizes.phones[name] = {}
+		for (const form of ["hand", "table"]) {
+			const { ctx, page } = await open({ width, height }, `design=cinema&chrome=off${form === "table" ? "&form=table" : ""}`)
+			let text = null
+			for (const [file, screen] of SHEET) {
+				await go(page, ["", screen])
+				const m = await measure(page)
+				if (m.text && (!text || m.text.px < text)) text = m.text.px
+				if (form === "hand" || file === "home") await page.screenshot({ path: join(tmp, `p-${name}-${form}-${file}.png`) })
+			}
+			const tv = await tvBox(page)
+			const room = await page.evaluate(() => {
+				const body = document.querySelector("[data-remote] .remote-body").getBoundingClientRect()
+				const all = [...document.querySelectorAll("[data-remote] button")].map((b) => b.getBoundingClientRect())
+				const canvas = document.querySelector("[data-tv-canvas]")
+				const frame = document.querySelector("[data-tv-body]").getBoundingClientRect()
+				return {
+					canvas: `${canvas.offsetWidth} x ${Math.round(canvas.offsetHeight)}`, shownAt: Math.round((canvas.getBoundingClientRect().width / canvas.offsetWidth) * 100) / 100, tvBody: `${Math.round(frame.width)} x ${Math.round(frame.height)}`,
+					remote: { width: Math.round(body.width), keys: all.length, smallestKey: Math.round(Math.min(...all.map((r) => Math.min(r.width, r.height)))), startsAt: Math.round(body.top), keysEndAt: Math.round(Math.max(...all.map((r) => r.bottom))) },
+				}
+			})
+			sizes.phones[name][form] = { tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, tvBody: room.tvBody, canvas: room.canvas, shownAt: room.shownAt, smallestText: text, remote: room.remote }
+			await ctx.close()
+			console.log("phone", name, form, JSON.stringify(sizes.phones[name][form]))
+		}
 	}
 	writeFileSync(join(here, "sizes.json"), `${JSON.stringify(sizes, null, "\t")}\n`)
-	const phoneCell = (i, [w, h, keys]) => `[${i}]pad=450:960:0:0:color=0x15171c,drawtext=text='${w} x ${h}${keys === "few" ? ", few keys" : ""}':fontcolor=white:fontsize=22:x=8:y=h-30:box=1:boxcolor=black@0.7:boxborderw=5[p${i}]`
-	ffmpeg(...PHONES.flatMap(([w, h, keys]) => ["-i", join(tmp, `p-${w}x${h}${keys === "few" ? "-few" : ""}.png`)]), "-filter_complex", `${PHONES.map((v, i) => phoneCell(i, v)).join(";")};${PHONES.map((_, i) => `[p${i}]`).join("")}hstack=inputs=${PHONES.length}`, "-q:v", "3", join(dir, "phones.jpg"))
+	const label = (text) => `drawtext=text='${text}':fontcolor=white:fontsize=22:x=8:y=h-30:box=1:boxcolor=black@0.7:boxborderw=5`
+	const grid = (cells, columns, out) => {
+		const filters = cells.map(([, text], i) => `[${i}]pad=446:968:0:0:color=0x15171c,${label(text)}[p${i}]`).join(";")
+		const layout = cells.map((_, i) => `${(i % columns) * 446}_${Math.floor(i / columns) * 968}`).join("|")
+		ffmpeg(...cells.flatMap(([file]) => ["-i", file]), "-filter_complex", `${filters};${cells.map((_, i) => `[p${i}]`).join("")}xstack=inputs=${cells.length}:layout=${layout}:fill=0x15171c`, "-q:v", "4", out)
+	}
+	grid(SHEET.flatMap(([file]) => PHONES.map(([w, h]) => [join(tmp, `p-${w}x${h}-hand-${file}.png`), `${w} x ${h}`])), PHONES.length, join(dir, "phones.jpg"))
+	grid(PHONES.map(([w, h]) => [join(tmp, `p-${w}x${h}-table-home.png`), `${w} x ${h}, on the table`]), PHONES.length, join(dir, "phones-table.jpg"))
+	// Before and after at 390 x 844: the pictures of the last round (commit 58ad60e3) over this round's.
+	const BEFORE = [["home", "01-home"], ["discover", "04-discover-results"], ["title", "10-title"]]
+	for (const [file, old] of BEFORE) writeFileSync(join(tmp, `before-${file}.jpg`), execFileSync("git", ["show", `58ad60e3:docs/prototypes/tv-screen-design/screens/cinema/${old}-phone.jpg`], { cwd: here, maxBuffer: 1 << 26 }))
+	grid([...BEFORE.map(([file]) => [join(tmp, `before-${file}.jpg`), "before"]), ...BEFORE.map(([file]) => [join(tmp, `p-390x844-hand-${file}.png`), "after"])], 3, join(dir, "phone-before-after.jpg"))
 	rmSync(tmp, { recursive: true, force: true })
 }
 
@@ -241,6 +267,18 @@ if (!only || only === "bar") {
 	}
 	const label = (i, text) => `[${i}]drawtext=text='${text}':fontcolor=white:fontsize=24:x=w-tw-24:y=h-40:box=1:boxcolor=black@0.7:boxborderw=8[l${i}]`
 	ffmpeg(...strips.flatMap(([file]) => ["-i", file]), "-filter_complex", `${strips.map(([, text], i) => label(i, text)).join(";")};${strips.map((_, i) => `[l${i}]`).join("")}vstack=inputs=${strips.length}`, "-q:v", "3", join(dir, "top-bar.jpg"))
+	// The third place: the expand key out of the bar, in the picture's bottom right corner. The whole TV per direction.
+	const whole = []
+	for (const design of ["cinema", "marquee", "glow"]) {
+		const { ctx, page } = await open(DESKTOP, `design=${design}&chrome=off&bar=bottom`)
+		await go(page, ["", "discover-cozy"])
+		const b = await tvBox(page)
+		const file = join(tmp, `${design}-bottom.png`)
+		await page.screenshot({ path: file, clip: { x: b.x, y: b.y, width: Math.floor(b.width / 2) * 2, height: Math.floor(b.height / 2) * 2 } })
+		whole.push([file, `${NAMES[design]}, Expand at the bottom right`])
+		await ctx.close()
+	}
+	ffmpeg(...whole.flatMap(([file]) => ["-i", file]), "-filter_complex", `${whole.map(([, text], i) => label(i, text).replace("x=w-tw-24:y=h-40", "x=24:y=h-40")).join(";")};${whole.map((_, i) => `[l${i}]`).join("")}vstack=inputs=${whole.length}`, "-q:v", "3", join(dir, "expand-bottom.jpg"))
 	rmSync(tmp, { recursive: true, force: true })
 	console.log("bar")
 }
