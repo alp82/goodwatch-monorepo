@@ -332,7 +332,13 @@ const ARROW_LABEL: Record<Dir, string> = {
 export function Wheel({
 	dispatch,
 	onOk,
-}: { dispatch: (action: TvAction) => void; onOk: () => void }) {
+	onDirection,
+}: {
+	dispatch: (action: TvAction) => void
+	onOk: () => void
+	/** PROTOTYPE (ui/prototype-tv-flow): an arrow key reports its direction here in place of a step. */
+	onDirection?: (dir: "up" | "down" | "left" | "right") => void
+}) {
 	const ref = useRef<HTMLDivElement>(null)
 	const drag = useRef<{ angle: number; acc: number } | null>(null)
 	const [flash, setFlash] = useState<{ dir: Dir; n: number } | null>(null)
@@ -428,7 +434,12 @@ export function Wheel({
 				<ArrowKey
 					key={dir}
 					dir={dir}
-					onClick={() => turn(dir === "top" || dir === "left" ? -1 : 1, dir)}
+					onClick={() => {
+						if (!onDirection)
+							return turn(dir === "top" || dir === "left" ? -1 : 1, dir)
+						setFlash((f) => ({ dir, n: (f?.n ?? 0) + 1 }))
+						onDirection(dir === "top" ? "up" : dir === "bottom" ? "down" : dir)
+					}}
 				/>
 			))}
 			<button

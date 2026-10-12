@@ -66,6 +66,8 @@ export type PrototypeRemoteProps = RemoteProps & {
 	/** What the TV offers right now, in wheel order, with the name each one has on the Remote's screen. */
 	items?: RemoteItem[]
 	focused?: string | null
+	/** PROTOTYPE (ui/prototype-tv-flow): the wheel's arrow keys move the focus in four directions. */
+	onDirection?: (dir: "up" | "down" | "left" | "right") => void
 }
 
 export function PrototypeRemote(props: PrototypeRemoteProps) {
@@ -1147,14 +1149,18 @@ function ColourRemote(p: PrototypeRemoteProps) {
 // Round 4: more of slim.
 
 /** The shipped wheel, `k` times its size. */
-function BigWheel({ p, k }: { p: RemoteProps; k: number }) {
+function BigWheel({ p, k }: { p: PrototypeRemoteProps; k: number }) {
 	return (
 		<div
 			className="flex shrink-0 items-center justify-center"
 			style={{ width: 196 * k, height: 196 * k }}
 		>
 			<div style={{ transform: `scale(${k})` }}>
-				<Wheel dispatch={p.dispatch} onOk={p.onOk} />
+				<Wheel
+					dispatch={p.dispatch}
+					onOk={p.onOk}
+					onDirection={p.onDirection}
+				/>
 			</div>
 		</div>
 	)
@@ -1291,7 +1297,7 @@ function ServiceLogo({
 	)
 }
 
-function HugRemote({
+export function HugRemote({
 	streaming,
 	...p
 }: PrototypeRemoteProps & { streaming: string }) {
