@@ -1,0 +1,31 @@
+{
+  "schema": "goodwatch.membership-ledger.prepared-review.v1",
+  "status": "prepared_only_not_executed",
+  "association": "#100",
+  "reviewedSourceCommit": "ff419d4d",
+  "sourceSha256": "17e692e8c44c751a2ddbc4b1f98bd6d651323c12cf2bff42369c7d98ac8093b8",
+  "reviewedFilesSha256": {
+    "goodwatch-qdrant/diagnostics/resource_window.py": "17e692e8c44c751a2ddbc4b1f98bd6d651323c12cf2bff42369c7d98ac8093b8",
+    "goodwatch-qdrant/diagnostics/test_membership_ledger.py": "ce4db9806d1f5cfbc7e41cc47e0f6569ac595a211e4ff14e4cf5447ce31f991f",
+    "goodwatch-qdrant/diagnostics/RESOURCE-WINDOW.md": "e4a6fa825b80c90fbebd0b77e921e032d24a2eaf4c3fe4611c9a566ec74fb803"
+  },
+  "modelRequested": "claude-opus-5-5",
+  "modelObserved": [
+    "claude-opus-5-5"
+  ],
+  "effortCliArgument": "medium",
+  "reviewToolsDisabled": true,
+  "reviewMcpServers": 0,
+  "rawReviewOutputSha256": "72cf3b4d5b91dff2885672312f54a6953283b44c99116bf235415e4bbd66144f",
+  "publicReviewSha256": "7fdec973ca7ce44496574fa515c30033751046c1520f90369b8c66addd3bb579",
+  "reviewVerdict": "PASS no concrete blockers with limitations",
+  "reviewerExecutedTests": false,
+  "authorExistingAndNewFixturesPassed": 43,
+  "newFixtures": 8,
+  "originalSourceRedProof": "added member between real temporary proc/cgroup sample fences fails original with missing beforeMembers",
+  "authorHostOperations": 0,
+  "queries": 0,
+  "fullWindowRetry": false,
+  "historicalWindowCoverage": "UNKNOWN",
+  "productionAcceptance": false
+}
