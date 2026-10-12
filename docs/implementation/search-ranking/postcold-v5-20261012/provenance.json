@@ -1,0 +1,30 @@
+{
+  "schema": "search.postcold-v5-evidence-provenance.v1",
+  "sourceCommit": "8343e942708f3742d449c3e39fdfcdf9d864eda2",
+  "preparedProtocolPR": 490,
+  "files": {
+    "audit-postcold-v5.mjs": "80e7b74501b5ab25e7f5033f9a611c6bcdcce844121b2a5f11023a10a6326a85",
+    "postcold-stage-actual-v5-result.json": "ba60725b384991994fa84d0f822b70974b2d925e6a732e5f950487e8249cea60",
+    "clone-posthoc-resource-source-v2.py": "371e64a31a20fd670c4b384e78591a990d25e1c978c571f66c3858f8df28ed70",
+    "test_audit_postcold_v5.mjs": "9c70cccf9330844fecd61eae80698916fc2524228f11e93021c6efba68ac0ed2",
+    "execution-freeze.json": "cdd4e5c6961f59f2722b656eb51c08d5827602ff8109d8ec3ed72eea23c16ad9",
+    "compare-contract-frozen-v5.mjs": "41c0e1fdf9f28a7d26032b8d95540b39bd441d6aafe5236bb89c82cfc4ef5b48",
+    "offline-audit-v5.json": "b7a5e2e9943104e77915cd7013bf8b213172d920c5ed2e6d562bc22119a39f41",
+    "clone-posthoc-resource-actual-20261012-v2.jsonl": "479fd3689e6d963c3435c3981a3c66884756574c4e657d54fe02aad7e42b49e1",
+    "comparison-postcold-453-v5-result.json": "4d441a51734dcf47b7535bfaf7e6f2066a641001c1dbb9527a84a3fb767b8972",
+    "clone-posthoc-resource-source-v1.py": "f8081b5278327d0f0ef452c69d165cb73801c3af05af60a777764aa952b0e886",
+    "summary.json": "1e9f5c5fc12ac3c64c69872058e8f35f0ecb0a67a2286a2bab43520fc0cd3d58",
+    "clone-posthoc-resource-actual-20261012-v1.jsonl": "603efe133af5b80d006056c2a3b2e79a8f057cd1bf9fd49a99f2ca9fae7181a9"
+  },
+  "auditorOriginalSha256": "aaa8e7657c5113ac1fd7f5b931c10a927aeaec6dcb729875e64d8132d665e4f4",
+  "auditorAdaptation": "Only relative contract import changed to copied frozen V5 sibling.",
+  "actualBytesUnchanged": true,
+  "readerFileWriteScope": "Root prepared one local public source file per reader attempt. Both readers were executed via inline source and created no remote file; successful reader execution reported hostWrites0.",
+  "privatePayloadIncluded": false,
+  "successfulReaderExecutionHostWrites": 0,
+  "localReaderSourceFilesCreated": {
+    "v1": 1,
+    "v2": 1
+  },
+  "remoteReaderFilesCreated": 0
+}
