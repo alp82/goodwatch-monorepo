@@ -7,6 +7,9 @@
 //   /prototype/my-library-real?page=library|shows|movies|home&member=six|one|many|none|empty&seen=30|1500|0
 // `reset=1` starts the sample member over, `chrome=off` hides the harness's own controls. The library's own
 // parameters (`status`, `sort`, `type`, `q`) work as on /my-library.
+// The member `new` (#442) opened My shows five days ago: shows have returned since and others are waiting. The site's
+// header, dock and hub are mounted a second time for the member, over the ones a guest sees, so that the signal on
+// them can be looked at; `hub=open` starts with the hub open.
 // A production build leaves the route out (PROTOTYPES in vite.config.js).
 import {
 	type LinksFunction,
@@ -20,8 +23,15 @@ import {
 	useNavigate,
 	useSearchParams,
 } from "@remix-run/react"
-import { startTransition, useEffect, useMemo, useState } from "react"
+import {
+	startTransition,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react"
 import { libraryChoiceOf } from "~/domain/my-library"
+import type { Arrival } from "~/domain/new-episodes"
 import type { LibraryPage } from "~/server/my-library.server"
 import type { MyShows } from "~/server/my-shows.server"
 import {
@@ -36,6 +46,13 @@ import type { TvEffect } from "~/ui/living-room/tv-flow"
 import { MyLibraryPage } from "~/ui/my-library/MyLibraryPage"
 import { MOVIES_PAGE } from "~/ui/my-movies/parts"
 import { MyShowsPage } from "~/ui/my-shows/MyShowsPage"
+import {
+	HubDialog,
+	MobileDock,
+	NavigationProvider,
+	SiteHeader,
+} from "~/ui/navigation"
+import { useNavigation } from "~/ui/navigation/NavigationContext"
 import { TonightsPickThumb } from "~/ui/navigation/bits"
 import {
 	HARNESS_MEMBER,
@@ -64,7 +81,7 @@ const API = "/prototype/my-library-real/api"
 
 type Loaded =
 	| { page: "library"; now: number; library: LibraryPage }
-	| { page: "shows"; now: number; shows: MyShows }
+	| { page: "shows"; now: number; shows: MyShows; arrival: Arrival }
 	| { page: "movies"; now: number; movies: { query: string; data: WatchNext } }
 	| { page: "home"; now: number; room: LivingRoomData }
 
@@ -82,8 +99,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			now,
 			library: await harness.library(libraryChoiceOf(params)),
 		})
-	if (page === "shows")
-		return json<Loaded>({ page, now, shows: await harness.shows(now) })
+	if (page === "shows") {
+		const [shows, fresh] = await Promise.all([
+			harness.shows(now),
+			harness.newShows(now),
+		])
+		return json<Loaded>({
+			page,
+			now,
+			shows,
+			arrival: {
+				since: fresh.since,
+				titles: fresh.shows.map((show) => show.title),
+			},
+		})
+	}
 	if (page === "movies") {
 		const choice = pageChoiceOf(params, true)
 		return json<Loaded>({
@@ -139,6 +169,7 @@ function installFetch(setup: string) {
 			"/api/watch-next/cards": "cards",
 			"/api/user-data": "user-data",
 			"/api/tonight": "tonight",
+			"/api/new-episodes": "new-episodes",
 			"/api/update-scores": "rate",
 		}
 		const what =
@@ -199,6 +230,32 @@ function Chrome({ page }: { page: PageKey }) {
 	)
 }
 
+/** Opens the member's hub once, for a screenshot of it. */
+function OpenHub() {
+	const navigation = useNavigation()
+	const open = navigation?.setHubOpen
+	useEffect(() => open?.(true), [open])
+	return null
+}
+
+/**
+ * The site's header, dock and hub as the member sees them, over the ones the page's own shell draws for a guest.
+ * They have a navigation state of their own, so the member's hub opens from the member's keys only.
+ */
+function MemberNavigation({ hub }: { hub: boolean }) {
+	return (
+		<NavigationProvider>
+			{/* Above the shell's own header and dock, below the hub's dialog. */}
+			<div data-harness-navigation className="relative z-[1001]">
+				<SiteHeader />
+				<MobileDock />
+				<HubDialog />
+				{hub && <OpenHub />}
+			</div>
+		</NavigationProvider>
+	)
+}
+
 export default function MyLibraryHarness() {
 	const loaded = useLoaderData<typeof loader>() as unknown as Loaded
 	const [params] = useSearchParams()
@@ -231,18 +288,31 @@ export default function MyLibraryHarness() {
 		navigate(`?${next}${hash ? `#${hash}` : ""}`)
 	}
 	const chrome = params.get("chrome") !== "off" && <Chrome page={loaded.page} />
-	// Home asks for nothing of the member's, so it is rendered on the server too, as the real home is.
+	const guest = useContext(AuthContext)
+	const navigation = ready === setup && (
+		<MemberNavigation hub={params.get("hub") === "open"} />
+	)
+	// Home's doors come with the loader, so it is rendered on the server too, as the real home is. The member is
+	// there once their requests go to the harness: the Continue door then asks what is new.
 	if (loaded.page === "home")
 		return (
-			<div data-harness="home">
-				{chrome}
-				<LivingRoom data={loaded.room} onEffect={onEffect} onRate={() => {}} />
-			</div>
+			<AuthContext.Provider value={ready === setup ? auth : guest}>
+				<div data-harness="home">
+					{chrome}
+					<LivingRoom
+						data={loaded.room}
+						onEffect={onEffect}
+						onRate={() => {}}
+					/>
+				</div>
+				{navigation}
+			</AuthContext.Provider>
 		)
 	if (ready !== setup)
 		return <p className="p-8 text-gray-400">Starting the harness.</p>
 	return (
 		<AuthContext.Provider value={auth}>
+			{navigation}
 			<div data-harness={loaded.page}>
 				{chrome}
 				{loaded.page === "library" ? (
@@ -253,7 +323,12 @@ export default function MyLibraryHarness() {
 						viewer={`${HARNESS_MEMBER}-${setup}`}
 					/>
 				) : loaded.page === "shows" ? (
-					<MyShowsPage data={loaded.shows} now={loaded.now} />
+					<MyShowsPage
+						key={setup}
+						data={loaded.shows}
+						now={loaded.now}
+						arrival={loaded.arrival}
+					/>
 				) : (
 					<WatchNextPage
 						key={setup}

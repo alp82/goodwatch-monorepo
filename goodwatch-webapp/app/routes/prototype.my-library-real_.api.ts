@@ -6,6 +6,8 @@ import {
 	json,
 } from "@remix-run/node"
 import { libraryChoiceOf } from "~/domain/my-library"
+import { summaryOf } from "~/domain/new-episodes"
+import { NOTHING_NEW } from "~/domain/new-episodes-signal"
 import {
 	harness,
 	installHarnessMember,
@@ -21,15 +23,15 @@ const headers = { "Cache-Control": "private, no-store" }
 
 function install(request: Request) {
 	const params = new URL(request.url).searchParams
-	installHarnessMember(
+	const now = installHarnessMember(
 		memberOf(params.get("member")),
 		seenOf(params.get("seen")),
 	)
-	return params
+	return { params, now }
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const params = install(request)
+	const { params, now } = install(request)
 	const url = new URL(request.url)
 	const what = params.get("what")
 	if (what === "library")
@@ -56,11 +58,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return json(withLegacyWatched(await harness.userData()), { headers })
 	if (what === "tonight")
 		return json({ pick: await harness.tonight() }, { headers })
+	if (what === "new-episodes")
+		return json(summaryOf((await harness.newShows(now)).shows), { headers })
 	return json({ error: "Unknown" }, { status: 400, headers })
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	const params = install(request)
+	const { params, now } = install(request)
+	// My shows is open: the visit, as POST /api/new-episodes records it.
+	if (params.get("what") === "new-episodes") {
+		await harness.visit(now)
+		return json(NOTHING_NEW, { headers })
+	}
 	if (params.get("what") !== "rate")
 		return json({ error: "Unknown" }, { status: 400, headers })
 	const body = (await request.json()) as {

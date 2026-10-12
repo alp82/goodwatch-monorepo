@@ -2,11 +2,15 @@
 // show opens it at the Start group, A movie opens My movies. A door with nothing behind it is not drawn, and
 // Something new then takes its place as a tile; with all three doors it is a key in the head line.
 //
+// The Continue door also says when something new aired for the member's shows (#442): a pill in its corner. The
+// door itself stays Tonight's pick.
+//
 // This file is a chunk of its own: only a member whose home has doors requests it (home-doors-code.tsx). It
 // imports nothing of the living room: what it needs of the TV, the
 // focusable item and the posters of Something new, comes in as props, so that the home's own chunk stays one file
 // whatever this one imports.
 import type { ReactNode } from "react"
+import { useNewEpisodes } from "~/ui/navigation/useNewEpisodes"
 import type { Item as TvItem, TvView } from "./TvScreens"
 import type { HomeDoors as Doors } from "./living-room-data"
 
@@ -63,6 +67,7 @@ function Door({
 	title,
 	line,
 	sub,
+	signal,
 }: {
 	Item: typeof TvItem
 	view: TvView
@@ -74,6 +79,8 @@ function Door({
 	title: string
 	line: string
 	sub?: string | null
+	/** A pill in the door's corner: what is new behind it. */
+	signal?: string | null
 }) {
 	return (
 		<Item
@@ -93,6 +100,14 @@ function Door({
 			<span
 				className={`absolute inset-0 ${backdrop ? "bg-gradient-to-t from-[#0b0c10] via-[#0b0c10]/70 to-transparent" : "bg-gradient-to-tr from-[#0b0c10] via-[#0b0c10]/85 to-transparent"}`}
 			/>
+			{signal && (
+				<span
+					data-door-signal
+					className={`absolute whitespace-nowrap rounded-full bg-sky-400 font-black text-black shadow-lg ${phone ? "left-2 top-2 px-2.5 py-0.5 text-[17px]" : "left-4 top-4 px-3 py-1 text-[13.5px]"}`}
+				>
+					{signal}
+				</span>
+			)}
 			<span
 				className={`absolute inset-0 flex flex-col justify-end ${phone ? "p-3" : "p-6"}`}
 			>
@@ -140,6 +155,7 @@ export default function HomeDoors({
 	head: (line: ReactNode) => ReactNode
 }) {
 	const { continue: next, start, movie } = doors
+	const signal = useNewEpisodes()
 	const three = Boolean(next && start)
 	const door = { Item, view, phone }
 	const somethingNew = (
@@ -187,6 +203,7 @@ export default function HomeDoors({
 						]
 							.filter(Boolean)
 							.join(" · ")}
+						signal={signal && (phone ? signal.doorShort : signal.door)}
 					/>
 				)}
 				{start && (

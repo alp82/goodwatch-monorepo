@@ -63,8 +63,19 @@ _Avoid_: Queue, Up next, Priority queue
 The single title or episode GoodWatch puts forward for tonight. For a member, the Next episode of the Watching show they watched most recently in the last 30 days; without one, the first movie of My movies; without one, the first show to start.
 
 **My shows**:
-The page for a member's shows tonight: one list with the Next episode of each show to continue, then the Want to See shows to start. Under it are the shows waiting for episodes and the On hold shows.
+The page for a member's shows tonight: one list with the Next episode of each show to continue, then the Want to See shows to start. Under it are the shows Waiting for episodes and the On hold shows.
 _Avoid_: Shows, Watchlist, Continue watching, Up next
+
+**Waiting for episodes**:
+The group of My shows for the shows with nothing to watch right now: a Seen show that is still running and has nothing new, or a Watching show with every aired episode watched. Each says the day its next episode airs, by the member's day, soonest first; a show without a dated episode to come says "No date yet".
+_Avoid_: Upcoming, Schedule, Release calendar
+
+**My shows visit**:
+A member opening My shows. The time of the last one is stored per member, and it is the only thing the New episodes signal stores. Loading the page ahead of a tap is not a visit.
+
+**New episodes signal**:
+The number outside My shows that says how many of a member's shows are new: on the Browse button, the phone dock's key, the My shows tile and home's Continue door. A show is new when its Next episode aired after the day of the last My shows visit, and for a member without a visit yet, in the last seven days. An On hold show, a Dropped show and a show the member was already behind on are never new. A My shows visit clears it, and a show leaves it when its new episode is watched. One new show is named; several are counted.
+_Avoid_: Notification, Unread count, Alert, Badge
 
 **My movies**:
 The page for choosing a movie: the person's Want to See movies under their chosen sort, moods, On my services and the time they have. A movie leaves it when it is Seen, and is in it again while the person wants to rewatch it.

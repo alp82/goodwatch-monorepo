@@ -72,6 +72,9 @@ const { getMyShows } = await import("./my-shows.server.ts")
 const { getLibraryPage, forgetTitlesForTest } = await import(
 	"./my-library.server.ts"
 )
+const { getNewShows, recordMyShowsVisit } = await import(
+	"./new-episodes.server.ts"
+)
 
 class Redis extends CacheTestRedis {
 	async set(key: string, value: string) {
@@ -331,18 +334,105 @@ test("My shows reads the catalog by key and the log only for the shows with a ga
 	assert.deepEqual(log[1].params, [user, 108])
 	// Episode lists only for the Continue rows.
 	assert.deepEqual(
-		selects("episode").map((s) => s.params[0]),
+		selects("episode")
+			.filter((s) => s.sql.includes("WHERE show_id = ?"))
+			.map((s) => s.params[0]),
 		[101, 108, 103],
 	)
 })
 
 test("home's Continue door reads one episode list", async () => {
 	seedShows()
-	const page = await getMyShows(viewer, { now: NOW, episodeLists: 1 })
+	const page = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
 	assert.deepEqual(selects("episode").map((s) => s.params[0]), [101])
 	assert.equal(page.continue[0].next?.number, 4)
 	assert.equal(page.continue[1].next, null)
 	assert.equal(selects("user_watch_log").length, 1)
+})
+
+/**
+ * Four waiting shows. 201 Seen, its next episode in 5 days. 202 Seen, a season to come from tomorrow on. 203 Seen
+ * and running, nothing listed. 204 Watching with every aired episode watched, the next one in 20 days. And 205 Seen
+ * whose episode airs today: by the calendar it has aired, so it is not what the show waits for.
+ */
+function seedWaiting() {
+	const at = (days: number) => Date.parse("2026-10-08T00:00:00Z") + days * DAY
+	db.seed("show", [
+		show(201, "Severance", 3),
+		show(202, "The Diplomat", 3),
+		show(203, "Silo", 3),
+		show(204, "Fallout", 3),
+		show(205, "Shrinking", 3),
+	])
+	db.seed("episode", [
+		...[201, 202, 203, 204, 205].flatMap((id) => [1, 2, 3].map((n) => episode(id, 1, n, at(-30 + n)))),
+		episode(201, 1, 4, at(5)),
+		episode(201, 1, 5, at(12)),
+		// A season dropped on one day, and a special before it, which is not a regular episode.
+		episode(202, 0, 9, at(0.5)),
+		episode(202, 2, 2, at(1)),
+		episode(202, 2, 1, at(1)),
+		// Listed without a date: no day to say.
+		episode(203, 2, 1, null),
+		episode(204, 1, 4, at(20)),
+		episode(205, 1, 4, at(0)),
+	])
+	db.seed(
+		"user_watch_state",
+		[201, 202, 203, 205].map((id) => stateRow("show", id, "seen")).concat(stateRow("show", 204, "watching")),
+	)
+	db.seed(
+		"user_watch_log",
+		[201, 202, 203, 204, 205].flatMap((id, i) => [1, 2, 3].map((n) => watch(id, 1, n, daysAgo(10 + i)))),
+	)
+}
+
+test("a waiting show says which episode airs next and when, and the group comes soonest first", async () => {
+	seedWaiting()
+	const page = await getMyShows(viewer, { now: NOW })
+	assert.deepEqual(
+		page.waiting.map((row) => [row.title, row.upcoming]),
+		[
+			["The Diplomat", { season: 2, number: 1, name: "Episode 2.1", airDate: "2026-10-09" }],
+			["Severance", { season: 1, number: 4, name: "Episode 1.4", airDate: "2026-10-13" }],
+			["Fallout", { season: 1, number: 4, name: "Episode 1.4", airDate: "2026-10-28" }],
+			// Without a date, in the order they had: the show watched last first.
+			["Silo", null],
+			["Shrinking", null],
+		],
+	)
+})
+
+test("the next air dates of all waiting shows are one read, and no waiting show's episode list is read", async () => {
+	seedWaiting()
+	await getMyShows(viewer, { now: NOW })
+	const episodes = selects("episode")
+	assert.equal(episodes.length, 1)
+	assert.match(episodes[0].sql, /WHERE show_id IN \(\?, \?, \?, \?, \?\) AND season_number > 0 AND removed_at IS NULL AND air_date > \?/)
+	assert.deepEqual([...episodes[0].params].sort(), [201, 202, 203, 204, 205, Date.parse("2026-10-08T00:00:00Z")].sort())
+})
+
+test("when the read of the next air dates fails, My shows still answers, without the days", async () => {
+	seedWaiting()
+	db.before = (statement) => {
+		if (statement.sql.includes("FROM episode WHERE show_id IN")) throw new Error("Crate is busy")
+	}
+	const errors = console.error
+	console.error = () => {}
+	try {
+		const page = await getMyShows(viewer, { now: NOW })
+		assert.equal(page.waiting.length, 5)
+		assert.ok(page.waiting.every((row) => row.upcoming === null))
+	} finally {
+		console.error = errors
+	}
+})
+
+test("home's doors do not ask when waiting shows return", async () => {
+	seedWaiting()
+	const page = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
+	assert.equal(selects("episode").length, 0)
+	assert.deepEqual(page.waiting.map((row) => row.upcoming), [null, null, null, null, null])
 })
 
 test("a member who tracks nothing has an empty page, and the catalog is not read", async () => {
@@ -356,6 +446,122 @@ test("a member who tracks nothing has an empty page, and the catalog is not read
 		total: 0,
 	})
 	assert.equal(selects("show").length, 0)
+})
+
+// ---------------------------------------------------------------------------------------------------------
+// New since the last visit of My shows
+// ---------------------------------------------------------------------------------------------------------
+
+const day = (text: string) => Date.parse(`${text}T00:00:00Z`)
+const VISIT = Date.parse("2026-10-04T12:00:00Z")
+
+/**
+ * NOW is 8 October. 401 Watching, its Next episode aired on the 6th. 402 Seen, a season of eight dropped on the 7th.
+ * 403 Watching and nine behind, one more aired on the 7th. 404 Seen, the episode of the 6th watched. 405 On hold, a
+ * new season since the 7th. 406 Seen, nothing aired, the next one to come.
+ */
+function seedNew() {
+	db.seed("show", [
+		show(401, "Slow Horses", 4),
+		show(402, "Wednesday", 11),
+		show(403, "Industry", 10),
+		show(404, "Abbott Elementary", 4),
+		show(405, "The Last of Us", 4),
+		show(406, "Severance", 3),
+	])
+	const old = (id: number, count: number) =>
+		Array.from({ length: count }, (_, i) => episode(id, 1, i + 1, day("2026-07-01") + i * 7 * DAY))
+	db.seed("episode", [
+		...old(401, 3),
+		episode(401, 1, 4, day("2026-10-06")),
+		episode(401, 1, 5, day("2026-10-13")),
+		...old(402, 3),
+		...Array.from({ length: 8 }, (_, i) => episode(402, 2, i + 1, day("2026-10-07"))),
+		...old(403, 9),
+		episode(403, 1, 10, day("2026-10-07")),
+		...old(404, 3),
+		episode(404, 1, 4, day("2026-10-06")),
+		...old(405, 3),
+		episode(405, 2, 1, day("2026-10-07")),
+		...old(406, 3),
+		episode(406, 2, 1, day("2026-11-20")),
+	])
+	db.seed("user_watch_state", [
+		stateRow("show", 401, "watching"),
+		stateRow("show", 402, "seen"),
+		stateRow("show", 403, "watching"),
+		stateRow("show", 404, "seen"),
+		stateRow("show", 405, "on_hold"),
+		stateRow("show", 406, "seen"),
+	])
+	db.seed("user_watch_log", [
+		...[1, 2, 3].map((n) => watch(401, 1, n, daysAgo(10))),
+		...[1, 2, 3].map((n) => watch(402, 1, n, daysAgo(300))),
+		watch(403, 1, 1, daysAgo(20)),
+		...[1, 2, 3, 4].map((n) => watch(404, 1, n, daysAgo(1))),
+		...[1, 2, 3].map((n) => watch(405, 1, n, daysAgo(200))),
+		...[1, 2, 3].map((n) => watch(406, 1, n, daysAgo(200))),
+	])
+}
+const visited = (at: number) =>
+	db.seed("user_setting", [
+		{ user_id: user, key: "my_shows_visited_at", value: new Date(at).toISOString(), created_at: at, updated_at: at },
+	])
+
+test("the shows whose Next episode aired after the member last opened My shows are new", async () => {
+	seedNew()
+	visited(VISIT)
+	assert.deepEqual(await getNewShows(user, { now: NOW }), {
+		since: { day: "2026-10-04", visited: true },
+		shows: [
+			{ id: 402, title: "Wednesday", season: 2, number: 1, airDate: "2026-10-07", episodes: 8 },
+			{ id: 401, title: "Slow Horses", season: 1, number: 4, airDate: "2026-10-06", episodes: 1 },
+		],
+	})
+})
+
+test("what is new is found with one read of the episodes aired since, and a list only for the shows it names", async () => {
+	seedNew()
+	visited(VISIT)
+	await getNewShows(user, { now: NOW })
+	const [since, ...lists] = selects("episode")
+	// The Watching and Seen shows; the On hold show is not asked for.
+	assert.match(since.sql, /^SELECT show_id FROM episode WHERE show_id IN \(\?, \?, \?, \?, \?\) AND season_number > 0 AND removed_at IS NULL AND air_date > \? AND air_date <= \?/)
+	assert.deepEqual([...since.params].sort(), [401, 402, 403, 404, 406, day("2026-10-04"), day("2026-10-08")].sort())
+	assert.deepEqual(lists.map((s) => s.params[0]).sort(), [401, 402, 403, 404])
+	// The catalog is asked for the names of the new shows only, and the log for nothing but the member data.
+	assert.deepEqual(selects("show").map((s) => [...s.params].sort()), [[401, 402]])
+	assert.equal(selects("user_watch_log").length, 1)
+})
+
+test("opening My shows clears what is new, and the visit is the member's own row", async () => {
+	seedNew()
+	visited(VISIT)
+	await recordMyShowsVisit(user, NOW)
+	assert.deepEqual(await getNewShows(user, { now: NOW }), {
+		since: { day: "2026-10-08", visited: true },
+		shows: [],
+	})
+	assert.deepEqual(
+		db.table("user_setting").map((row) => [row.user_id, row.key, row.value]),
+		[[user, "my_shows_visited_at", "2026-10-08T20:00:00.000Z"]],
+	)
+})
+
+test("a member who never opened My shows is shown what aired in the last seven days", async () => {
+	seedNew()
+	const fresh = await getNewShows(user, { now: NOW })
+	assert.deepEqual(fresh.since, { day: "2026-10-01", visited: false })
+	assert.deepEqual(fresh.shows.map((s) => s.title), ["Wednesday", "Slow Horses"])
+})
+
+test("a member without a Watching or Seen show has nothing new, and nothing is read for them", async () => {
+	db.seed("show", [show(405, "The Last of Us", 4)])
+	db.seed("user_watch_state", [stateRow("show", 405, "on_hold")])
+	db.seed("user_watch_log", [watch(405, 1, 1, daysAgo(200))])
+	assert.deepEqual((await getNewShows(user, { now: NOW })).shows, [])
+	assert.equal(selects("episode").length, 0)
+	assert.equal(selects("user_setting").length, 0)
 })
 
 // ---------------------------------------------------------------------------------------------------------

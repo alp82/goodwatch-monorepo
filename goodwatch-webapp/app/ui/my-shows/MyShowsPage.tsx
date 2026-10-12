@@ -2,6 +2,8 @@
 // new episodes after it; then Start, the Want to See shows not started, best taste match first. The page states that
 // rule, each group has a label, and each row shows the one fact that places it. The whole row opens the show's page:
 // there is no Watched button and no tick in the list. Under the list are the shows with nothing for tonight.
+// The waiting shows say when their next episode airs, soonest first, by the member's day (#442). Opening the page is
+// the visit that clears the signal outside it, and the page says once what was new.
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link, useLocation } from "@remix-run/react"
 import { type ReactNode, useEffect, useState } from "react"
@@ -12,6 +14,12 @@ import {
 	episodeCode,
 	progressWords,
 } from "~/domain/my-shows"
+import {
+	type Arrival,
+	arrivalWords,
+	deviceDay,
+	upcomingWords,
+} from "~/domain/new-episodes"
 import type {
 	MyShows,
 	MyShowsRow,
@@ -28,6 +36,7 @@ import {
 	plural,
 	tmdbImage,
 } from "~/ui/my-pages/bits"
+import { useMyShowsVisit } from "~/ui/navigation/useNewEpisodes"
 import { titleToDashed } from "~/utils/helpers"
 
 /** How many shows to start are drawn before "Show more". */
@@ -304,7 +313,100 @@ function QuietGroup({
 	)
 }
 
-export function MyShowsPage({ data, now }: { data: MyShows; now: number }) {
+/**
+ * The shows waiting for episodes: one column, one show a line, and the day its next episode airs in a column of its
+ * own at the end. On a phone the episode's name is left out, so that "Caught up" is never cut off.
+ */
+function WaitingGroup({ rows, today }: { rows: MyShowsRow[]; today: string }) {
+	if (!rows.length) return null
+	return (
+		<div data-group="waiting">
+			<h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-300">
+				Waiting for episodes
+				<span className="rounded-full bg-white/10 px-2 py-0.5 text-xs tabular-nums">
+					{rows.length}
+				</span>
+				<span className="text-xs font-medium text-gray-500">soonest first</span>
+			</h3>
+			<ul className="overflow-hidden rounded-2xl bg-white/[0.03] ring-1 ring-white/5">
+				{rows.map((row) => {
+					const { when, detail } = upcomingWords(row.upcoming, today)
+					return (
+						<li
+							key={row.id}
+							data-waiting-row={row.id}
+							className="border-t border-white/5 first:border-t-0"
+						>
+							<Link
+								to={showHref(row)}
+								prefetch="intent"
+								className="group flex items-center gap-3 px-2 py-2 hover:bg-white/[0.05] md:px-4"
+							>
+								<Poster
+									path={row.poster_path}
+									className="h-[54px] w-9 shrink-0 rounded"
+								/>
+								<span className="min-w-0 flex-1">
+									<b className="block truncate text-sm text-white">
+										{row.title}
+									</b>
+									<span className="block truncate text-xs text-gray-400">
+										{row.upcoming && (
+											<>
+												{episodeCode(row.upcoming)}
+												{row.upcoming.name && (
+													<span className="hidden sm:inline">
+														{" "}
+														· {row.upcoming.name}
+													</span>
+												)}
+												{" · "}
+											</>
+										)}
+										<span className="text-gray-500" data-waiting-label>
+											{row.state === "seen" ? "Caught up" : "Up to date"}
+										</span>
+									</span>
+								</span>
+								<span
+									className="w-[92px] shrink-0 text-right md:w-36"
+									data-waiting-day
+								>
+									{when && <b className="block text-sm text-white">{when}</b>}
+									<span className="block text-xs text-gray-500">{detail}</span>
+								</span>
+								<ChevronRightIcon
+									className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300"
+									aria-hidden
+								/>
+							</Link>
+						</li>
+					)
+				})}
+			</ul>
+		</div>
+	)
+}
+
+export function MyShowsPage({
+	data,
+	now,
+	arrival = null,
+}: {
+	data: MyShows
+	now: number
+	/** What was new when the member arrived; null where nothing recorded it. */
+	arrival?: Arrival | null
+}) {
+	useMyShowsVisit()
+	// The server's day first, so that the page hydrates as it was sent; then the member's.
+	const [today, setToday] = useState(() =>
+		new Date(now).toISOString().slice(0, 10),
+	)
+	useEffect(() => setToday(deviceDay()), [])
+	// The line stays for the visit, also when the page's data is read again.
+	const [arrived] = useState(arrival)
+	const fresh = arrived && arrivalWords(arrived.since, arrived.titles, today)
 	const { hash } = useLocation()
 	// Home's Start door lands on the Start group.
 	useEffect(() => {
@@ -349,6 +451,20 @@ export function MyShowsPage({ data, now }: { data: MyShows; now: number }) {
 					<h2 className={`${DISPLAY} text-2xl text-white md:text-3xl`}>
 						Tonight
 					</h2>
+					{fresh && (
+						<p
+							className="mt-2 flex max-w-3xl items-baseline gap-2 text-sm text-sky-200"
+							data-arrival
+						>
+							<span
+								className="h-2 w-2 shrink-0 -translate-y-px rounded-full bg-sky-400"
+								aria-hidden
+							/>
+							<span>
+								<b className="font-bold">{fresh.lead}</b> {fresh.names}
+							</span>
+						</p>
+					)}
 					<p
 						className="mb-4 mt-1 max-w-3xl text-sm text-gray-400"
 						data-order-rule
@@ -432,14 +548,7 @@ export function MyShowsPage({ data, now }: { data: MyShows; now: number }) {
 							fact={lastWatch}
 							closed
 						/>
-						<QuietGroup
-							id="waiting"
-							title="Waiting for episodes"
-							rows={data.waiting}
-							fact={(row) =>
-								row.state === "seen" ? "Caught up" : "Up to date"
-							}
-						/>
+						<WaitingGroup rows={data.waiting} today={today} />
 						<QuietGroup
 							id="on-hold"
 							title="On hold"

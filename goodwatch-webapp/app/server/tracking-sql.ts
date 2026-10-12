@@ -52,6 +52,35 @@ export const EPISODE_LIST_QUERY = episodeListQuery(", overview")
 /** Q3 for an `episode` table that has no `overview` column yet (#387): the list without descriptions. */
 export const EPISODE_LIST_WITHOUT_OVERVIEW_QUERY = episodeListQuery("")
 
+/**
+ * Q8. The regular episodes of some shows that air after the UTC date: when the member's waiting shows return. One
+ * statement for all of them; the last parameter is midnight UTC of today. Public data.
+ */
+export const upcomingEpisodesQuery = (shows: number) => `
+SELECT show_id, season_number, episode_number, name, air_date
+FROM episode
+WHERE show_id IN (${Array.from({ length: shows }, () => "?").join(", ")})
+  AND season_number > 0 AND removed_at IS NULL AND air_date > ?
+LIMIT 20000`
+
+/**
+ * Q9. Which of some shows had a regular episode air after one UTC date and by another: the shows that can be new
+ * since the member last opened My shows. The last two parameters are midnight UTC of the day of the visit and of
+ * today. One row per such episode. Public data.
+ */
+export const airedSinceQuery = (shows: number) => `
+SELECT show_id
+FROM episode
+WHERE show_id IN (${Array.from({ length: shows }, () => "?").join(", ")})
+  AND season_number > 0 AND removed_at IS NULL AND air_date > ? AND air_date <= ?
+LIMIT 20000`
+
+/** Q10. When the member last opened My shows: their row of `user_setting`, by the whole key. */
+export const MY_SHOWS_VISIT_QUERY = `
+SELECT value
+FROM user_setting
+WHERE user_id = ? AND key = ?`
+
 /** Q4. A movie's watch log. */
 export const MOVIE_LOG_QUERY = `
 SELECT watch_id, watched_at, watched_at_precision, origin, import_id, created_at
