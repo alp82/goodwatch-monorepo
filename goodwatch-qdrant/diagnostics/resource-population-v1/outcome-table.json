@@ -105,7 +105,8 @@
     "main_absent_from_complete_unique_list",
     "multiple_qdrant_comm_docker_top",
     "transport_or_output_bound",
-    "unclassified_optional_census_error"
+    "unclassified_optional_census_error",
+    "required_reader_enumeration_or_exclusion_unavailable"
   ],
   "dimensionPartial": [
     "membership_duplicate_or_truncated",
@@ -115,11 +116,12 @@
     "optional_census_identity_race",
     "optional_census_disappeared",
     "optional_census_bound",
-    "sample_duration_or_cadence_or_clock_outcome"
+    "sample_duration_or_cadence_or_clock_outcome",
+    "optional_census_entry_unreadable"
   ],
   "dimensionUnavailable": [
     "membership_unreadable",
-    "optional_census_unreadable"
+    "sibling_census_root_unreadable"
   ],
   "optionalDowngradeAllowlist": [
     "census_bound",
@@ -150,5 +152,12 @@
     "sampleSeconds": 2,
     "clockDriftSeconds": 1,
     "memberLedgerPerEndpoint": 16
+  },
+  "countSemantics": {
+    "observedCount": "decoded bounded PID-prefix entries, including duplicates",
+    "duplicateCount": "observedCount minus unique decoded PIDs",
+    "truncatedCount": "known omitted unique decoded PIDs plus one unknown-suffix sentinel only when byteListTruncated is true",
+    "byteListTruncated": "literal boolean; not a numeric estimate of unknown suffix population",
+    "mainIdentity": "endpoint-verified main entry binds PID and startTicks to required main identity"
   }
 }

@@ -3,20 +3,20 @@
   "preparedOnly": true,
   "files": {
     "reader.py": {
-      "sha256": "61f51eabed5100ad42a9166fc03d94a09389db685201cfc382f533f6b8381af5",
-      "bytes": 43313
+      "sha256": "1e4ea25055978f1847c64612d70ed82ca5be86c79e6d67b1fc36e214cdd08333",
+      "bytes": 45173
     },
     "auditor.py": {
-      "sha256": "b88bedde81205a2003649b9fe2ad0c829f7bc2ee0ce0030325357ca3de3c3104",
-      "bytes": 12402
+      "sha256": "1846e0293c3d87140fe03a9cd48c8e8bd250fab89865dbc87f54f3e5b96c4761",
+      "bytes": 18296
     },
     "outcome-table.json": {
-      "sha256": "e7d1b39427834b18723e9a1e2b91d0afe620e359e919f7a9b390dfba1151c426",
-      "bytes": 3438
+      "sha256": "06ac005db11c28ca353d30ab6ddfa0d2f733b0eb9321c49d064449b7325bd813",
+      "bytes": 4042
     },
     "test_population.py": {
-      "sha256": "0f0b262253ffd3421a25e90f4ddf110c49ecf63b997e809dbf192349c398e947",
-      "bytes": 21862
+      "sha256": "5514459d5aa7ae81941b42ee5fd03362dbe1248b16f032e923a689f35dcf66f4",
+      "bytes": 28849
     },
     "strict-reader-v3.py": {
       "sha256": "17e692e8c44c751a2ddbc4b1f98bd6d651323c12cf2bff42369c7d98ac8093b8",
@@ -27,16 +27,28 @@
       "bytes": 7841
     },
     "README.md": {
-      "sha256": "b5b77b065d3711b3832a5aff0f80d9d9365041245b6d978b28d14e3b7f625b68",
-      "bytes": 5346
+      "sha256": "e1c1cf022157932f6f4f63ba53d1eb357ef41880d31e1dbb3122385a07a5ad94",
+      "bytes": 6968
     },
     "OUTCOMES.md": {
       "sha256": "40479c3f8b199ac995148bbead14d07b1d11889a465f395846402ea0f50834e4",
       "bytes": 605
     },
     "provenance.json": {
-      "sha256": "e2e1ef26893a509554a3e1ab3ea7362533a80fdd863a1d8834aea8c0c125c85f",
-      "bytes": 2022
+      "sha256": "7a576590f2ec7967248561c42beeabb67f4852814ad9067d6043b5ca90a5e2da",
+      "bytes": 2161
+    },
+    "strict-test-membership-audit-v3.py": {
+      "sha256": "237b689a5936068daaaae08209d19bec195e79a3442243750b2c9add3ba66aa0",
+      "bytes": 3945
+    },
+    "strict-test-membership-transport-v3.py": {
+      "sha256": "62988c043d9af7439a592572a626468a1a37bdf4f38a25ca9f2f79dfb9814c6d",
+      "bytes": 3089
+    },
+    "review-736e04d1-block.txt": {
+      "sha256": "e884572c60a86275f2560320eae80918240ab75942078e5ae0c3f6ee22dc00af",
+      "bytes": 9429
     }
   }
 }

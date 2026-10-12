@@ -76,7 +76,7 @@ class GuardTests(unittest.TestCase):
     def test_table_preserves_exact_old_metric_names(self):
         old=old_module();table=json.loads(reader.OUTCOME_TABLE_BYTES)
         for source,key in [('MEM','hostMeminfo'),('VM','hostVmstat'),('STAT','sourceMemoryStat'),('EVENTS','sourceMemoryEventsLocal'),('CPU','sourceCpuStat')]:
-            self.assertEqual(table['requiredMetrics'][key],list(getattr(old,source)))
+            self.assertEqual(table['requiredMetrics'][key],list(getattr(old,source)));self.assertEqual(table['requiredMetrics'][key],list(getattr(reader,source)))
         self.assertEqual(hashlib.sha256(reader.OUTCOME_TABLE_BYTES).hexdigest(),reader.OUTCOME_TABLE_SHA256)
     def test_old_reference_hashes_unchanged(self):
         self.assertEqual(hashlib.sha256((HERE/'strict-reader-v3.py').read_bytes()).hexdigest(),'17e692e8c44c751a2ddbc4b1f98bd6d651323c12cf2bff42369c7d98ac8093b8')
@@ -98,10 +98,13 @@ def fixture():
     group={'currentBytes':0,'swapBytes':0,'memory':zero(reader.STAT),'events':zero(reader.EVENTS),'cpu':zero(reader.CPU),'memoryPsi':psi,'ioPsi':psi,'population':population}
     proof={'outsideSourceCgroup':True,'placementUnchanged':True,'VmLckBytes':0,'groupHash':'b'*64}
     row={'event':'resource-population.sample.v1','sample':0,'startedAt':'2026-10-12T00:00:00+00:00','finishedAt':'2026-10-12T00:00:00.100000+00:00','startedMonotonicSeconds':10,'finishedMonotonicSeconds':10.1,'durationSeconds':.1,'host':zero(reader.MEM),'hostReclaim':zero(reader.VM),'hostPsi':{'memory':psi,'io':psi},'process':zero(('startTicks','parentPid','minorFaults','majorFaults','rssBytes','readBytes','VmLck')),'sourceBefore':copy.deepcopy(group),'sourceAfter':copy.deepcopy(group),'readerBefore':proof,'readerAfter':proof,'sourcePid':1,'sourceStartTicks':100,'sourceIdentityHash':'a'*64,'ancestorLimitHash':'a'*64,'sourceGroupHash':'a'*64,'sourceDirectoryIdentityHash':'a'*64,'dimensions':{'primaryIdentity':'observed-bracket','requiredMetrics':'observed-bracket','auxiliaryPopulation':'endpoint-verified','auxiliaryLocks':'endpoint-zero-verified','sshCensus':'observed-census','backupCensus':'observed-census','siblingCensus':'observed-census'}}
+    row['sshUserspace']={'complete':True,'ownedReaderExcludedCount':1,'enumeratedCount':1,'unresolvedCount':0,'reasons':[],'identityHash':'a'*64,'classes':{name:{'processCount':0,'observedBytes':zero(reader.RSS)}for name in ('sshfs','sshfs-child-ssh','other-ssh')},'backup':{'complete':True,'observedCount':0,'identityHash':'a'*64,'occurrenceStatus':'none-observed-in-bounded-census'},'rssAccountingExact':False,'observedSumsAreTotal':False}
+    row['otherCgroups']={'complete':True,'observedChildCount':0,'observedCurrentBytes':0,'observedMemory':zero(reader.STAT),'unresolvedCount':0,'reasons':[],'identityHash':'a'*64,'scope':'direct-source-parent-siblings-hierarchical-no-descendant-double-sum','otherHostBranchesMeasured':False,'observedSumsAreTotal':False}
+    row['metadataOnly']=True;row['archiveResidentBytesMeasured']=False
     row['process']['startTicks']=100
     start={'event':'resource-population.started.v1','at':'2026-10-12T00:00:00+00:00','scheduledStart':'2026-10-12T00:00:00+00:00','scheduledEnd':'2026-10-12T00:00:02+00:00','intervalSeconds':2,'maximumGapSeconds':3,'startedMonotonicSeconds':10}
     final={'reader':proof,'sourceIdentityHash':'a'*64,'sourceDirectoryIdentityHash':'a'*64,'sourceBefore':copy.deepcopy(group),'sourceAfter':copy.deepcopy(group),'sourceLockStatus':'endpoint-zero-verified'}
-    end={'event':'resource-population.complete.v1','at':'2026-10-12T00:00:02+00:00','samplingStatus':'scheduled-samples-observed','fullScheduledWindowObserved':True,'elapsedMonotonicSeconds':2,'wallClockDriftSeconds':0,'samples':1,'finishedMonotonicSeconds':12,'finalResourceFence':final}
+    end={'event':'resource-population.complete.v1','at':'2026-10-12T00:00:02+00:00','samplingEndedAt':'2026-10-12T00:00:02+00:00','samplingStatus':'scheduled-samples-observed','fullScheduledWindowObserved':True,'elapsedMonotonicSeconds':2,'wallClockDriftSeconds':0,'samples':1,'finishedMonotonicSeconds':12,'finalResourceFence':final}
     rows=[{**v,**reader.PERMISSIONS,'schema':'resource-population.measurement.v1','outcomeTableSha256':reader.OUTCOME_TABLE_SHA256}for v in (start,row,end)]
     receipt={'event':'resource-population.reader-exit.v1','sourceSha256':'c'*64,'exitCode':0,'readerGoneProven':True,'clean':True,'termSent':False,'killSent':False,'readerPid':9,'readerStartTicks':123}
     return rows,receipt
@@ -147,13 +150,17 @@ class AuditTests(unittest.TestCase):
             elif isinstance(value,list):
                 for v in value:inflate(v)
         inflate(row)
+        row['sshUserspace']['ownedReaderExcludedCount']=1
+        row['sshUserspace']['complete']=False;row['sshUserspace']['reasons']=['census_bound'];row['sshUserspace']['unresolvedCount']=4096
+        for index,item in enumerate(row['sshUserspace']['classes'].values()):item['processCount']=64 if index==0 else 0
+        row['otherCgroups']['observedChildCount']=256;row['otherCgroups']['unresolvedCount']=256;row['otherCgroups']['complete']=False;row['otherCgroups']['reasons']=['census_bound']
         for key in ('sourceBefore','sourceAfter'):
-            row[key]['population'].update(members=[[2147483647-i,2**64-1,'unavailable',None,'unknown']for i in range(16)],observedCount=16,duplicateCount=0,truncatedCount=0,unresolvedCount=16,unknownLocks=16,verifiedZeroLocks=0,positiveLocks=0)
+            row[key]['population'].update(members=[[2147483647-i,None,'unavailable',None,'unknown']for i in range(16)],observedCount=16,duplicateCount=0,truncatedCount=0,unresolvedCount=16,unknownLocks=16,verifiedZeroLocks=0,positiveLocks=0)
         output=io.StringIO();reader.Output(output).emit(row);encoded=output.getvalue().encode();self.assertLessEqual(len(encoded),8192)
         result=json.loads(encoded)
         for key in ('sourceBefore','sourceAfter'):
             population=result[key]['population'];self.assertEqual(len(population['members'])+population['truncatedCount'],16)
-        self.assertEqual(result['host'],row['host']);self.assertEqual(result['sourceBefore']['memory'],row['sourceBefore']['memory'])
+        self.assertTrue(any(result[key]['population']['truncatedCount']>0 for key in ('sourceBefore','sourceAfter')));self.assertEqual(result['host'],row['host']);self.assertEqual(result['sourceBefore']['memory'],row['sourceBefore']['memory'])
     def test_total_output_bound_no_extra_write(self):
         output=io.StringIO();sink=reader.Output(output);sink.total=reader.OUTPUT_BYTES
         with self.assertRaisesRegex(ValueError,'output_bound'):sink.emit({'event':'resource-population.prepared-only.v1'})
@@ -212,7 +219,7 @@ class FenceTests(PopulationTests):
         (self.proc/str(own)/'stat').write_text(stat(own));(self.proc/str(own)/'status').write_text(status(1))
         with self.assertRaisesRegex(ValueError,'source_locked'):source.reader_proof()
         (self.proc/str(own)/'status').write_text(status());(self.proc/str(own)/'cgroup').write_text('0::/source')
-        with self.assertRaisesRegex(ValueError,'source_locked'):source.reader_proof()
+        with self.assertRaisesRegex(ValueError,'reader_identity_changed'):source.reader_proof()
     def test_positive_lock_does_not_attempt_later_vanished_birth(self):
         self.add(2,locked=1);self.list([1,2]);original=reader.proc_identity;calls=[]
         def identity(root):
@@ -263,5 +270,61 @@ class SchedulerTests(unittest.TestCase):
     def test_new_failed_journal_is_not_applicable(self):
         rows,receipt=fixture();rows.append({**rows[0],'event':'resource-population.failed.v1'})
         self.assertEqual(auditor.audit(rows,receipt,'c'*64)['status'],'not-applicable')
+
+
+
+class SuccessorRegressionTests(unittest.TestCase):
+    def test_optional_false_claims_cannot_promote_and_missing_refuses(self):
+        rows,receipt=fixture();ssh=rows[1]['sshUserspace'];ssh.update(complete=False,reasons=['process_disappeared'],unresolvedCount=1);ssh['backup']['complete']=False
+        result=auditor.audit(rows,receipt,'c'*64);self.assertEqual(result['dimensions']['sshCensus'],'partial');self.assertEqual(result['dimensions']['backupCensus'],'partial');self.assertEqual(result['censusEvidence'][0]['sshCensus']['unresolvedCount'],1)
+        rows[1]['otherCgroups']={'complete':False,'reason':'optional_unreadable'}
+        result=auditor.audit(rows,receipt,'c'*64);self.assertEqual(result['dimensions']['siblingCensus'],'unavailable')
+        for key in ('sshUserspace','otherCgroups'):
+            missing=copy.deepcopy(rows);del missing[1][key];self.assertEqual(auditor.audit(missing,receipt,'c'*64)['status'],'observation-incomplete-or-refused')
+        ssh['ownedReaderExcludedCount']=0
+        self.assertEqual(auditor.audit(rows,receipt,'c'*64)['dimensions']['requiredMetrics'],'not-established')
+    def test_refused_dimensions_never_claim_observed(self):
+        rows,receipt=fixture();rows[2]['wallClockDriftSeconds']=2
+        result=auditor.audit(rows,receipt,'c'*64);self.assertTrue(all(value=='not-established'for value in result['dimensions'].values()))
+    def test_final_second_population_validated_after_first_partial(self):
+        rows,receipt=fixture();pop=rows[2]['finalResourceFence']['sourceBefore']['population'];pop.update(status='partial',observedCount=2,duplicateCount=1);rows[2]['finalResourceFence']['sourceLockStatus']='unknown'
+        rows[2]['finalResourceFence']['sourceAfter']['population']['positiveLocks']=1
+        self.assertEqual(auditor.audit(rows,receipt,'c'*64)['status'],'observation-incomplete-or-refused')
+    def test_final_metadata_latency_not_clock_drift(self):
+        rows,receipt=fixture();rows[2]['at']='2026-10-12T00:00:02.900000+00:00'
+        self.assertEqual(auditor.audit(rows,receipt,'c'*64)['reasons'],[])
+    def test_bad_input_typed_not_traceback(self):
+        for rows,receipt in (([None],{}),([{'event':123}],{}),([],None)):
+            self.assertEqual(auditor.audit(rows,receipt,'c'*64)['status'],'observation-incomplete-or-refused')
+    def test_bound_reader_exclusion_proved_before_early_census_stop(self):
+        with tempfile.TemporaryDirectory()as temporary:
+            root=Path(temporary);own=root/str(os.getpid());own.mkdir();(own/'stat').write_text(stat(os.getpid()));other=root/'1';other.mkdir()
+            with patch.object(Path,'glob',return_value=[other,own]),patch.object(reader,'read',wraps=reader.read):
+                values=iter([0,2]);row=reader.process_census(root,'a'*64,clock=lambda:next(values),own_reader_birth=100)
+            self.assertEqual(row['ownedReaderExcludedCount'],1);self.assertFalse(row['complete']);self.assertEqual(row['reasons'],['census_bound'])
+    def test_byte_truncated_list_partial_main_proven_separately(self):
+        with tempfile.TemporaryDirectory()as temporary:
+            root=Path(temporary);group=root/'source';group.mkdir();(group/'cgroup.procs').write_text('2\n'*5000)
+            source=reader.Source.__new__(reader.Source);source.group=group;source.proc=root;source.cgroot=root;source.expected={'pid':1}
+            result=source.population();self.assertEqual(result['status'],'partial');self.assertGreater(result['truncatedCount'],0)
+    def test_hashes_freeze_originals_and_consumer_modules(self):
+        provenance=json.loads((HERE/'provenance.json').read_text());freeze=json.loads((HERE/'source-freeze.json').read_text())
+        for name,value in freeze['files'].items():self.assertEqual(hashlib.sha256((HERE/name).read_bytes()).hexdigest(),value['sha256'])
+        for name,key in [('strict-reader-v3.py','oldReaderSha256'),('strict-auditor-v3.py','oldAuditorSha256')]:self.assertEqual(hashlib.sha256((HERE/name).read_bytes()).hexdigest(),provenance[key])
+        self.assertEqual(hashlib.sha256((HERE.parent/'resource_window.py').read_bytes()).hexdigest(),provenance['oldReaderSha256'])
+        for name,value in provenance['unchangedOriginalTests'].items():self.assertEqual(hashlib.sha256((HERE.parent/name).read_bytes()).hexdigest(),value['sha256'])
+        for name,value in provenance['unchangedOriginalAuditTests'].items():self.assertEqual(hashlib.sha256((HERE/('strict-'+name.replace('_','-'))).read_bytes()).hexdigest(),value['sha256'])
+        for name,value in provenance['unchangedIdleConsumerFiles'].items():self.assertEqual(hashlib.sha256((HERE.parent/'pinning-prototype'/name).read_bytes()).hexdigest(),value['sha256'])
+
+
+
+class LedgerAccountingTests(unittest.TestCase):
+    def test_main_birth_mismatch_refuses_even_present(self):
+        rows,receipt=fixture();rows[1]['sourceBefore']['population']['members'][0][1]=101
+        self.assertEqual(auditor.audit(rows,receipt,'c'*64)['status'],'observation-incomplete-or-refused')
+    def test_partial_observed_count_bound_and_accounting(self):
+        for value in (None,'secret',-1,4097,2):
+            rows,receipt=fixture();pop=rows[1]['sourceBefore']['population'];pop.update(status='partial',observedCount=value)
+            result=auditor.audit(rows,receipt,'c'*64);self.assertEqual(result['status'],'observation-incomplete-or-refused');self.assertNotIn('secret',json.dumps(result))
 
 if __name__=='__main__':unittest.main()

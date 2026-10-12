@@ -82,3 +82,26 @@ bounded local journal/receipt files and an explicit frozen source SHA; the recei
 requires the disjoint reader-exit event, positive readerPid/readerStartTicks,
 exit 0, clean/gone proof and no TERM/KILL. An offline hash argument is provenance
 binding, not automatic trust or authorization.
+
+Successor corrections preserve the original blocked source and report. The auditor
+independently validates nested SSH/backup/sibling evidence and exactly-one reader
+exclusion, rather than trusting dimension labels. Partial/unavailable states retain
+per-sample counts/reasons; a refused combined proof never labels its dimensions as
+established. Reader exclusion is proven before the bounded optional scan so stopping
+early has one typed census-bound outcome. Typed bytes/hash evidence accompanies
+main/reader locks, reader movement, SwapTotal and source limit changes.
+
+Sampling end is timestamped before final metadata fences. Final metadata latency
+is not wall-clock drift; both final populations are validated without short-circuit.
+The real full row, including optional censuses, is inflated in the output fixture;
+its ledger removal must be nonzero and counted while required metrics stay intact.
+Freeze verification runs outside its generation (the manifest does not hash itself)
+and checks old reader/auditor/original test/idle module bytes. Foreign/malformed
+input fails with a typed result. No pycache or unlisted file belongs in a transport.
+
+The successor table distinguishes per-entry unreadability (partial known census)
+from whole sibling-root unreadability (unavailable), and missing mandatory reader
+enumeration/exclusion (fatal). Decoded PID-prefix counts are bounded to 4,096;
+known omitted tuples remain counted. A byte-truncated unknown suffix contributes
+one explicitly marked sentinel, not an invented population count. Endpoint main
+ledger birth must equal the separately required main startticks.

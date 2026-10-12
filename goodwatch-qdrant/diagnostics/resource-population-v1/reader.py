@@ -13,8 +13,8 @@ import stat
 import threading
 import time
 
-OUTCOME_TABLE_BYTES=b'{\n  "schema": "resource-population-outcomes.v1",\n  "measurementOnly": true,\n  "requiredMetrics": {\n    "hostMeminfo": [\n      "MemTotal",\n      "MemFree",\n      "MemAvailable",\n      "Buffers",\n      "Cached",\n      "Active(file)",\n      "Inactive(file)",\n      "Dirty",\n      "Writeback",\n      "WritebackTmp",\n      "Mlocked",\n      "Unevictable",\n      "AnonPages",\n      "Shmem",\n      "SReclaimable",\n      "SUnreclaim",\n      "KernelStack",\n      "PageTables",\n      "SwapTotal",\n      "SwapFree"\n    ],\n    "hostPsi": [\n      "memory.some",\n      "memory.full",\n      "io.some",\n      "io.full"\n    ],\n    "hostVmstat": [\n      "allocstall_dma",\n      "allocstall_dma32",\n      "allocstall_normal",\n      "allocstall_movable",\n      "allocstall_device",\n      "pgscan_direct",\n      "pgsteal_direct",\n      "pgscan_file",\n      "pgsteal_file",\n      "workingset_refault_file",\n      "pswpin",\n      "pswpout"\n    ],\n    "sourceMemoryCurrent": true,\n    "sourceMemoryStat": [\n      "anon",\n      "file",\n      "kernel",\n      "shmem",\n      "file_dirty",\n      "file_writeback",\n      "unevictable",\n      "pagetables",\n      "sock",\n      "active_file",\n      "inactive_file"\n    ],\n    "sourceMemoryEventsLocal": [\n      "max",\n      "high",\n      "oom",\n      "oom_kill"\n    ],\n    "sourceCpuStat": [\n      "nr_throttled",\n      "throttled_usec",\n      "usage_usec"\n    ],\n    "sourceSwapCurrent": true,\n    "sourcePsi": [\n      "memory.some",\n      "memory.full",\n      "io.some",\n      "io.full"\n    ],\n    "mainProcess": [\n      "startTicks",\n      "parentPid",\n      "minorFaults",\n      "majorFaults",\n      "rssBytes",\n      "read_bytes",\n      "VmLck"\n    ],\n    "readerProcess": [\n      "startTicks",\n      "VmLck",\n      "cgroup"\n    ],\n    "requiredSwapTotal": 0\n  },\n  "fatalTerminate": [\n    "primary_birth_executable_or_placement_changed",\n    "container_config_changed",\n    "source_or_ancestor_limits_changed",\n    "cgroup_directory_identity_changed",\n    "reader_identity_or_placement_changed",\n    "reader_exclusion_invalid",\n    "required_metric_missing_or_invalid",\n    "host_swap_present",\n    "observed_positive_main_reader_or_aux_lock",\n    "main_absent_from_complete_unique_list",\n    "multiple_qdrant_comm_docker_top",\n    "transport_or_output_bound",\n    "unclassified_optional_census_error"\n  ],\n  "dimensionPartial": [\n    "membership_duplicate_or_truncated",\n    "member_birth_reuse",\n    "member_disappeared",\n    "member_lock_unknown",\n    "optional_census_identity_race",\n    "optional_census_disappeared",\n    "optional_census_bound",\n    "sample_duration_or_cadence_or_clock_outcome"\n  ],\n  "dimensionUnavailable": [\n    "membership_unreadable",\n    "optional_census_unreadable"\n  ],\n  "optionalDowngradeAllowlist": [\n    "census_bound",\n    "eligible_identity_race",\n    "process_disappeared",\n    "optional_unreadable"\n  ],\n  "permissions": {\n    "capacityPermission": false,\n    "idleAdmission": false,\n    "productionAcceptance": false,\n    "futureCeilingEstablished": false\n  },\n  "auxiliaryZeroProof": [\n    "bounded-list",\n    "birth-before",\n    "status-VmLck",\n    "birth-after",\n    "proc-cgroup-match"\n  ],\n  "positiveLockRefusesBeforeLaterBirthValidation": true,\n  "bounds": {\n    "rowBytes": 8192,\n    "rows": 1500,\n    "outputBytes": 16777216,\n    "cadenceSeconds": 2,\n    "gapSeconds": 3,\n    "sampleSeconds": 2,\n    "clockDriftSeconds": 1,\n    "memberLedgerPerEndpoint": 16\n  }\n}\n'
-OUTCOME_TABLE_SHA256='e7d1b39427834b18723e9a1e2b91d0afe620e359e919f7a9b390dfba1151c426'
+OUTCOME_TABLE_BYTES=b'{\n  "schema": "resource-population-outcomes.v1",\n  "measurementOnly": true,\n  "requiredMetrics": {\n    "hostMeminfo": [\n      "MemTotal",\n      "MemFree",\n      "MemAvailable",\n      "Buffers",\n      "Cached",\n      "Active(file)",\n      "Inactive(file)",\n      "Dirty",\n      "Writeback",\n      "WritebackTmp",\n      "Mlocked",\n      "Unevictable",\n      "AnonPages",\n      "Shmem",\n      "SReclaimable",\n      "SUnreclaim",\n      "KernelStack",\n      "PageTables",\n      "SwapTotal",\n      "SwapFree"\n    ],\n    "hostPsi": [\n      "memory.some",\n      "memory.full",\n      "io.some",\n      "io.full"\n    ],\n    "hostVmstat": [\n      "allocstall_dma",\n      "allocstall_dma32",\n      "allocstall_normal",\n      "allocstall_movable",\n      "allocstall_device",\n      "pgscan_direct",\n      "pgsteal_direct",\n      "pgscan_file",\n      "pgsteal_file",\n      "workingset_refault_file",\n      "pswpin",\n      "pswpout"\n    ],\n    "sourceMemoryCurrent": true,\n    "sourceMemoryStat": [\n      "anon",\n      "file",\n      "kernel",\n      "shmem",\n      "file_dirty",\n      "file_writeback",\n      "unevictable",\n      "pagetables",\n      "sock",\n      "active_file",\n      "inactive_file"\n    ],\n    "sourceMemoryEventsLocal": [\n      "max",\n      "high",\n      "oom",\n      "oom_kill"\n    ],\n    "sourceCpuStat": [\n      "nr_throttled",\n      "throttled_usec",\n      "usage_usec"\n    ],\n    "sourceSwapCurrent": true,\n    "sourcePsi": [\n      "memory.some",\n      "memory.full",\n      "io.some",\n      "io.full"\n    ],\n    "mainProcess": [\n      "startTicks",\n      "parentPid",\n      "minorFaults",\n      "majorFaults",\n      "rssBytes",\n      "read_bytes",\n      "VmLck"\n    ],\n    "readerProcess": [\n      "startTicks",\n      "VmLck",\n      "cgroup"\n    ],\n    "requiredSwapTotal": 0\n  },\n  "fatalTerminate": [\n    "primary_birth_executable_or_placement_changed",\n    "container_config_changed",\n    "source_or_ancestor_limits_changed",\n    "cgroup_directory_identity_changed",\n    "reader_identity_or_placement_changed",\n    "reader_exclusion_invalid",\n    "required_metric_missing_or_invalid",\n    "host_swap_present",\n    "observed_positive_main_reader_or_aux_lock",\n    "main_absent_from_complete_unique_list",\n    "multiple_qdrant_comm_docker_top",\n    "transport_or_output_bound",\n    "unclassified_optional_census_error",\n    "required_reader_enumeration_or_exclusion_unavailable"\n  ],\n  "dimensionPartial": [\n    "membership_duplicate_or_truncated",\n    "member_birth_reuse",\n    "member_disappeared",\n    "member_lock_unknown",\n    "optional_census_identity_race",\n    "optional_census_disappeared",\n    "optional_census_bound",\n    "sample_duration_or_cadence_or_clock_outcome",\n    "optional_census_entry_unreadable"\n  ],\n  "dimensionUnavailable": [\n    "membership_unreadable",\n    "sibling_census_root_unreadable"\n  ],\n  "optionalDowngradeAllowlist": [\n    "census_bound",\n    "eligible_identity_race",\n    "process_disappeared",\n    "optional_unreadable"\n  ],\n  "permissions": {\n    "capacityPermission": false,\n    "idleAdmission": false,\n    "productionAcceptance": false,\n    "futureCeilingEstablished": false\n  },\n  "auxiliaryZeroProof": [\n    "bounded-list",\n    "birth-before",\n    "status-VmLck",\n    "birth-after",\n    "proc-cgroup-match"\n  ],\n  "positiveLockRefusesBeforeLaterBirthValidation": true,\n  "bounds": {\n    "rowBytes": 8192,\n    "rows": 1500,\n    "outputBytes": 16777216,\n    "cadenceSeconds": 2,\n    "gapSeconds": 3,\n    "sampleSeconds": 2,\n    "clockDriftSeconds": 1,\n    "memberLedgerPerEndpoint": 16\n  },\n  "countSemantics": {\n    "observedCount": "decoded bounded PID-prefix entries, including duplicates",\n    "duplicateCount": "observedCount minus unique decoded PIDs",\n    "truncatedCount": "known omitted unique decoded PIDs plus one unknown-suffix sentinel only when byteListTruncated is true",\n    "byteListTruncated": "literal boolean; not a numeric estimate of unknown suffix population",\n    "mainIdentity": "endpoint-verified main entry binds PID and startTicks to required main identity"\n  }\n}\n'
+OUTCOME_TABLE_SHA256='06ac005db11c28ca353d30ab6ddfa0d2f733b0eb9321c49d064449b7325bd813'
 if hashlib.sha256(OUTCOME_TABLE_BYTES).hexdigest()!=OUTCOME_TABLE_SHA256:raise ValueError('outcome_table_changed')
 PERMISSIONS={'capacityPermission':False,'idleAdmission':False,'productionAcceptance':False,'futureCeilingEstablished':False}
 
@@ -50,7 +50,7 @@ TRIGGERS = {'source_comm','source_executable','source_birth','source_cgroup',
             'argv_limit','eligible_identity_race','ssh_limit'}
 PHASES = {'before_sample','after_sample','final','source_fence','process_census'}
 EVIDENCE_KEYS = {'expectedStartTicks','observedStartTicks','beforeCount','afterCount',
-                 'expectedGroupHash','observedGroupHash','beforeMembershipHash','afterMembershipHash','lockedBytes','memberPid'}
+                 'expectedGroupHash','observedGroupHash','beforeMembershipHash','afterMembershipHash','lockedBytes','memberPid','expectedLimitHash','observedLimitHash','expectedAncestorHash','observedAncestorHash','observedSwapTotalBytes','expectedSwapTotalBytes'}
 
 
 class GuardFailure(ValueError):
@@ -283,11 +283,15 @@ def process_census(proc, backup_hash, clock=time.monotonic, own_reader_birth=Non
         try:birth=proc_identity(proc/str(own_pid))['startTicks']
         except (OSError,ValueError):raise ValueError('reader_identity_changed') from None
         if birth!=own_reader_birth:raise ValueError('reader_identity_changed')
-    own_fence();processes={};jobs=[];unknown=0;reasons=[];enumerated=len(nodes)
+    own_fence()
+    own_nodes=[node for node in nodes if node.name==str(own_pid)]
+    if len(own_nodes)!=1:raise ValueError('reader_identity_changed')
+    own_fence();excluded=1;nodes=[node for node in nodes if node.name!=str(own_pid)]
+    processes={};jobs=[];unknown=0;reasons=[];enumerated=len(nodes)+1
     if enumerated>4096:reasons.append('census_bound');nodes=nodes[:4096]
     for node in nodes:
         if clock()-begun>1:reasons.append('census_bound');break
-        if node.name==str(own_pid):own_fence();excluded+=1;continue
+        if node.name==str(own_pid):raise ValueError('reader_identity_changed')
         try:
             comm=read(node/'comm',128).strip();args=[]
             if comm in ('python','python3','uv'):args=read(node/'cmdline',8192).split('\0')
@@ -376,8 +380,8 @@ class Source:
         if observed_directory!=self.group_identity:
             raise GuardFailure('group_identity_changed','source_cgroup',phase,expectedGroupHash=digest(self.group_identity),observedGroupHash=digest(observed_directory))
         self.check.verify();pid=self.expected['pid'];root=self.proc/str(pid)
-        if fields(read(root/'status'),('VmLck',),True)['VmLck']:
-            raise GuardFailure('source_locked','process_limit',phase)
+        locked=fields(read(root/'status'),('VmLck',),True)['VmLck']
+        if locked:raise GuardFailure('source_locked','process_limit',phase,lockedBytes=locked,memberPid=pid)
         if read(root/'comm',128).strip()!='qdrant':
             raise GuardFailure('source_changed','source_comm',phase)
         if Path(os.readlink(root/'exe')).name!='qdrant':
@@ -390,18 +394,20 @@ class Source:
         if group!=self.group:
             raise GuardFailure('source_changed','source_cgroup',phase,
                                expectedGroupHash=digest(str(self.group)),observedGroupHash=digest(str(group)))
-        if limits(self.group)!=self.expected_limits or ancestors(self.group,self.cgroot)!=self.ancestor_hash:
-            raise ValueError('source_limits_changed')
+        observed_limits=limits(self.group);observed_ancestors=ancestors(self.group,self.cgroot)
+        if observed_limits!=self.expected_limits or observed_ancestors!=self.ancestor_hash:
+            raise GuardFailure('source_limits_changed','process_limit',phase,expectedLimitHash=digest(self.expected_limits),observedLimitHash=digest(observed_limits),expectedAncestorHash=self.ancestor_hash,observedAncestorHash=observed_ancestors)
     def reader_proof(self):
         try: birth=proc_identity(self.proc/str(self.reader_pid))['startTicks']
         except FileNotFoundError: raise ValueError('reader_identity_changed') from None
         if os.getpid()!=self.reader_pid or birth!=self.reader_birth:
-            raise ValueError('reader_identity_changed')
+            raise GuardFailure('reader_identity_changed','source_birth','source_fence',expectedStartTicks=self.reader_birth,observedStartTicks=birth)
         group=group_path(self.proc,self.reader_pid,self.cgroot,allow_root=True)
         locked=fields(read(self.proc/str(self.reader_pid)/'status'),('VmLck',),True)['VmLck']
         outside=group!=self.group and not group.is_relative_to(self.group)
-        if group!=self.reader_group or not outside or locked:
-            raise ValueError('source_locked')
+        if locked:raise GuardFailure('source_locked','process_limit','source_fence',lockedBytes=locked,memberPid=self.reader_pid)
+        if group!=self.reader_group or not outside:
+            raise GuardFailure('reader_identity_changed','source_cgroup','source_fence',expectedGroupHash=digest(str(self.reader_group)),observedGroupHash=digest(str(group)))
         return {'outsideSourceCgroup':True,'VmLckBytes':0,'placementUnchanged':True,
                 'groupHash':digest(str(group))}
     def population(self):
@@ -410,7 +416,7 @@ class Source:
             with (self.group/'cgroup.procs').open('rb') as stream:raw=stream.read(8193)
         except OSError:
             result.update(status='unavailable',reason='optional_unreadable');return result
-        over=len(raw)>8192;raw=raw[:8192]
+        over=len(raw)>8192;result['byteListTruncated']=over;raw=raw[:8192]
         if over:raw=raw.rsplit(b'\n',1)[0]
         try:pids=[natural(v) for v in raw.decode().split()]
         except (ValueError,UnicodeError):result.update(status='unavailable',reason='invalid_numeric');return result
@@ -460,23 +466,17 @@ class Source:
         process={**proc_identity(root),'readBytes':fields(read(root/'io').replace(':',''),('read_bytes',))['read_bytes'],'VmLck':fields(read(root/'status'),('VmLck',),True)['VmLck']}
         host=fields(read(self.proc/'meminfo'),MEM,True)
         if host['SwapTotal']!=0:
-            raise ValueError('source_limits_changed')
+            raise GuardFailure('source_limits_changed','process_limit','before_sample',observedSwapTotalBytes=host['SwapTotal'],expectedSwapTotalBytes=0)
         pressure={'memory':psi(read(self.proc/'pressure/memory')),'io':psi(read(self.proc/'pressure/io'))}
         reclaim=fields(read(self.proc/'vmstat'),VM)
-        try: userspace=process_census(self.proc,self.backup_hash,own_reader_birth=self.reader_birth)
-        except (FileNotFoundError,PermissionError) as error:
-            userspace={'complete':False,'reason':'optional_unreadable'}
-        except ValueError as error:
-            if str(error) not in ('census_bound',):raise
-            userspace={'complete':False,'reason':'census_bound',**diagnostic(error)}
+        userspace=process_census(self.proc,self.backup_hash,own_reader_birth=self.reader_birth)
         try: other=siblings(self.group)
         except (FileNotFoundError,PermissionError):other={'complete':False,'reason':'optional_unreadable'}
         except ValueError as error:
             if str(error)!='census_bound':raise
             other={'complete':False,'reason':'census_bound'}
         group_after=self.group_read();ledger_after=getattr(self,'_membership_ledger',None);reader_after=self.reader_proof();self.fence('after_sample')
-        if process['VmLck']:
-            raise ValueError('source_locked')
+        if process['VmLck']:raise GuardFailure('source_locked','process_limit','after_sample',lockedBytes=process['VmLck'],memberPid=pid)
         return {'startedAt':started,'finishedAt':stamp(),'durationSeconds':time.monotonic()-begun,
                 'readerBefore':reader_before,'readerAfter':reader_after,
                 'host':host,'hostPsi':pressure,'hostReclaim':reclaim,'process':process,
@@ -580,11 +580,11 @@ def preflight(proc=Path('/proc')):
 def sample_dimensions(before,after,userspace,other):
     pop=[before['population'],after['population']]
     return {'primaryIdentity':'observed-bracket','requiredMetrics':'observed-bracket',
-        'auxiliaryPopulation':'endpoint-verified' if all(v['status']=='endpoint-verified' for v in pop) else 'partial-or-unavailable',
+        'auxiliaryPopulation':'endpoint-verified' if all(v['status']=='endpoint-verified' for v in pop) else ('unavailable' if any(v['status']=='unavailable' for v in pop) else 'partial'),
         'auxiliaryLocks':'endpoint-zero-verified' if all(v['status']=='endpoint-verified' for v in pop) else 'unknown',
-        'sshCensus':'observed-census' if userspace.get('complete') is True else 'partial-or-unavailable',
-        'backupCensus':'observed-census' if userspace.get('backup',{}).get('complete') is True else 'partial-or-unavailable',
-        'siblingCensus':'observed-census' if other.get('complete') is True else 'partial-or-unavailable'}
+        'sshCensus':'observed-census' if userspace.get('complete') is True else ('unavailable' if userspace.get('reason')=='optional_unreadable' else 'partial'),
+        'backupCensus':'observed-census' if userspace.get('backup',{}).get('complete') is True else ('unavailable' if userspace.get('reason')=='optional_unreadable' else 'partial'),
+        'siblingCensus':'observed-census' if other.get('complete') is True else ('unavailable' if other.get('reason')=='optional_unreadable' else 'partial')}
 
 
 def bound_ledgers(record):
@@ -643,13 +643,13 @@ def run(source,output,start,end,wall=time.time,clock=time.monotonic,sleep=time.s
         if row['durationSeconds']>2:
             continuous=False
         output.emit(row);count+=1;due=max(due+2,clock())
-    ended=clock();ended_wall=wall()
+    ended=clock();ended_wall=wall();sampling_ended_at=dt.datetime.fromtimestamp(ended_wall,dt.timezone.utc).isoformat()
     full_window=ended>=deadline and ended_wall>=finish
     wall_drift=(ended_wall-actual_wall)-(ended-actual)
     source.fence()
     source.check.verify()
     final_proof=source.finish()
-    output.emit({'event':'resource-population.complete.v1','at':stamp(),'samples':count,
+    output.emit({'event':'resource-population.complete.v1','at':stamp(),'samplingEndedAt':sampling_ended_at,'samples':count,
                  'samplingStatus':'scheduled-samples-observed' if continuous and count>0 and full_window and abs(wall_drift)<=1 else 'sampling-incomplete',
                  'fullScheduledWindowObserved':full_window,'elapsedMonotonicSeconds':ended-actual,
                  'finishedMonotonicSeconds':ended,'wallClockDriftSeconds':wall_drift,
