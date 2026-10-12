@@ -1,0 +1,24 @@
+{
+  "artifacts": {
+    "clone-initial-pin-453-20261012.json": "7fdb220f95fedb8c0e781275eded3ce6371791494b40c18298ba402fd6cb6c1c",
+    "clone-node-stage-receipt-20261012.json": "db019f01b0b25d9d85062d65fecbe5d79a35c9bc7add1d972301b2cbb95973ef",
+    "clone-source-cas-453-20261012.json": "9616035a3ac974d37c227f81ad95f494e59ee3b3cff92824f9b4e31ead2f5551",
+    "clone-zero-pin-453-20261012.jsonl": "4646b00bb03335834de0d414195dbc9c26f045bf9cf2e5ed3a1e8c995b7eb2e8"
+  },
+  "casUpdaterSha256": "8311e861a4faa1ae16e4bb2dce0cae2c96c4724172c5967d3f2bae929fb3b5e4",
+  "controllerCodeSha256": "964cc0a2c15543acc2844530a5191855fe2ac275b0b5b7c437189d9e45e5aa3c",
+  "controllerPolicySha256": "bee3f2111722adb1c3a667c2f179fb74efcde3f86ca93c5917fce500adfbb13f",
+  "helperCodeSha256": "b61022a43ce6d3b3357290a718d4cebb4d3a6cd8c4547e839c501a3c0c4c8a55",
+  "initialLauncherSha256": "c5fe76a7d5e46855a8cc4ecc00a740dd8d5b75c4a32aa38a50a33801c6663d73",
+  "initialWrapperSha256": "de2b64fff2cedbe7d439f8a292cca9525e3f9a6bcf848918c50cd8e325f4ae22",
+  "mergedCommit": "a8fade1c5fff87b3db45b2fd45e7864ff8941510",
+  "nodeCloneFilesCreated": 2,
+  "nodeReceiptHostWritesScope": "source-host-only",
+  "nodeSourceHostWrites": 0,
+  "nodeVersionStandaloneArtifactRetained": false,
+  "productionAcceptance": false,
+  "reclaimExecuted": false,
+  "schema": "clone-pin-proof-source-audit.v1",
+  "sourceCommit": "15d1cfe8e65636fbe2f51b96d614a5cb387f5649",
+  "sourceManifestSha256": "7aea9823b080b8c00234c30cef5c54510193f203b59048b7a38f371f33fe2230"
+}
