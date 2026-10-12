@@ -1,0 +1,17 @@
+{
+  "actualModelUsage": [
+    "claude-opus-5-5"
+  ],
+  "requestedEffort": "medium",
+  "toolsDisabled": true,
+  "mcpServersConfigured": 0,
+  "cliExitCode": 0,
+  "isError": false,
+  "fullOriginalOutputSha256": "76fa2605fd5a1d7c912262dd96cc7be56d17090976a0aac0187cee47354bc870",
+  "verdict": "PASS; no actionable blockers",
+  "limits": [
+    "Read-through of pasted public source only; reviewer ran no tests and did not verify claimed hashes.",
+    "Actual effort is pinned by CLI invocation, not introspected from modelUsage.",
+    "Material census fork/exit races remain; this review does not prove full future coverage."
+  ]
+}

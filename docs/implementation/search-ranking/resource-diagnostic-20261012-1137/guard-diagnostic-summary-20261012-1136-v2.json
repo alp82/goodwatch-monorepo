@@ -1,0 +1,152 @@
+{
+  "schema": "goodwatch.resource-window.short-diagnostic.summary.v2",
+  "journalSha256": "1f7ca514ffe14d6da86e04f479c774d12bfaffaa1fd1070bfc3aa15b21e16491",
+  "sourceSha256": "572ad7ca417ea4e5336b1415a4d015b7095d78f21cb0b5552f360f73914394d2",
+  "scheduledStart": "2026-10-12T11:37:06.092606+00:00",
+  "scheduledEnd": "2026-10-12T11:37:36.092606+00:00",
+  "actualStart": "2026-10-12T11:37:06.092799+00:00",
+  "completedAt": "2026-10-12T11:37:36.103933+00:00",
+  "samples": 15,
+  "sourceIdentityHash": "921098a80d6ed1259c9473bcbde4d30736ca544560bdfcb1d380d9db72dbc37f",
+  "sourcePid": 3411704,
+  "sourceStartTicks": 2673362807,
+  "guardFailures": [],
+  "originalSourceChangedTriggerResolved": false,
+  "coverageScope": "30-second diagnostic only",
+  "readerCoverageComplete": true,
+  "ownedReaderExcludedCounts": [
+    1
+  ],
+  "userspaceCompleteSamples": 15,
+  "otherCgroupCompleteSamples": 15,
+  "backupRunningSamples": 0,
+  "sshfsProcessCountsObserved": [
+    0
+  ],
+  "sampleDurationSeconds": {
+    "min": 0.040108006447553635,
+    "max": 0.08035624772310257
+  },
+  "hostMemoryBytes": {
+    "MemAvailable": {
+      "min": 12211699712,
+      "max": 12279201792
+    },
+    "MemFree": {
+      "min": 838631424,
+      "max": 906547200
+    },
+    "Dirty": {
+      "min": 122880,
+      "max": 4321280
+    },
+    "Writeback": {
+      "min": 0,
+      "max": 8192
+    },
+    "WritebackTmp": {
+      "min": 0,
+      "max": 0
+    },
+    "AnonPages": {
+      "min": 19166785536,
+      "max": 19261255680
+    },
+    "Shmem": {
+      "min": 6545408,
+      "max": 6545408
+    },
+    "Mlocked": {
+      "min": 27979776,
+      "max": 27979776
+    },
+    "Unevictable": {
+      "min": 32075776,
+      "max": 32075776
+    }
+  },
+  "sourceMemoryCurrentBytes": {
+    "min": 8363732992,
+    "max": 8416419840
+  },
+  "sourceMemoryBytes": {
+    "anon": {
+      "min": 3941548032,
+      "max": 4014325760
+    },
+    "file": {
+      "min": 4091854848,
+      "max": 4120162304
+    },
+    "kernel": {
+      "min": 301109248,
+      "max": 301240320
+    },
+    "shmem": {
+      "min": 0,
+      "max": 0
+    },
+    "file_dirty": {
+      "min": 0,
+      "max": 3981312
+    },
+    "file_writeback": {
+      "min": 0,
+      "max": 49152
+    },
+    "unevictable": {
+      "min": 0,
+      "max": 0
+    }
+  },
+  "sourceEventDeltas": {
+    "max": 0,
+    "high": 0,
+    "oom": 0,
+    "oom_kill": 0
+  },
+  "sourceCpuCounterDeltas": {
+    "nr_throttled": 0,
+    "throttled_usec": 0
+  },
+  "retainedSampleProcessCounterDeltas": {
+    "majorFaults": 6910,
+    "minorFaults": 35335,
+    "readBytes": 28295168
+  },
+  "retainedSampleHostReclaimDeltas": {
+    "allocstall_dma": 0,
+    "allocstall_dma32": 0,
+    "allocstall_normal": 0,
+    "allocstall_movable": 0,
+    "allocstall_device": 0,
+    "pgscan_direct": 0,
+    "pgsteal_direct": 0,
+    "pgscan_file": 0,
+    "pgsteal_file": 0,
+    "workingset_refault_file": 6906
+  },
+  "actualReaderReceipt": {
+    "event": "resource-window.reader-exit.v1",
+    "sourceSha256": "572ad7ca417ea4e5336b1415a4d015b7095d78f21cb0b5552f360f73914394d2",
+    "pid": 870303,
+    "startTicks": 2825734558,
+    "exitCode": 0,
+    "readerGoneProven": true,
+    "termSent": false,
+    "killSent": false,
+    "clean": true,
+    "reason": null,
+    "hostFilesCreated": 0
+  },
+  "futureCeilingEstablished": false,
+  "productionAcceptance": false,
+  "limits": [
+    "Short idle diagnostic, no scheduled backup observed.",
+    "Original failed-window source_changed trigger did not recur and remains unattributed.",
+    "Numeric resources/counters are aggregate background plus diagnostic observations, not query or backup attribution.",
+    "SSHFS class count zero is eligible census observation, not proof that all FUSE/remote memory is zero.",
+    "Discrete peaks are sampled observations, not future bounds.",
+    "Future process churn can still invalidate census/coverage."
+  ]
+}
