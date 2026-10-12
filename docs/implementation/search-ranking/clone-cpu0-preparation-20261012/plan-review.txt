@@ -1,0 +1,44 @@
+Source checks are done; writing up the verdict now.
+
+# Verdict: PASS for plan review only, with binding conditions
+
+No design blocker. The plan does not authorize implementation, host execution or a retry, and it does not upgrade V5.
+
+## Why it is a meaningful bounded follow-up
+
+- **It discriminates either way.** Completing under quota 0 removes the quota confound. Failing `phase_resource_failed` again leaves only memory `max`/OOM or counter regression (`controller.py:206`), and the ledger says which.
+- **The four post-ready sites are correctly identified** for the candidate: `controller.py:454`, `:311` and `:331` (both via `:456`), and `:459`.
+- **The CPU-first hypothesis is plausible but unlocated.** The pin child joins the clone cgroup (`runtime.py:200-202`), so the post-query pass spends CPU inside the capped cgroup. The plan correctly says this does not locate the V5 event.
+- **No false attribution or retroactive PASS.** Lines 3, 9, 29 and 47 keep V5 failed, and a non-red baseline yields no mechanism claim.
+- **The 12 ledger scopes map one-to-one** onto the 12 `limits()` sites in `controller.py`: 311, 331, 341, 346, 424, 431, 433, 434, 438, 448, 454, 459.
+- **The old453 break is real and disclosed.** `daemon.py:53` hard-requires `2_000_000_000`, and `code_hash()` (`daemon.py:21-26`) covers `daemon.py`, so the combined digest must change.
+- **Thresholds match source:** deadlines 180/30/60/1200 and the 64 MiB floor (`controller.py:55-60`), writer policy 145 s/18/28 (`:65`), 5 GiB start floor (`:167`), and the 1.5 GiB emergency minimum (`daemon.py:61`).
+
+## Binding implementation conditions
+
+1. **The source CPU ledger is no longer evidence of no CPU contention.** With `cpu.max` at `max`, the clone's own `nr_throttled`/`throttled_usec` cannot grow from its own quota, and ancestor throttling is counted on the ancestor. Reports must say so. Line 47's "if CPU counters grow despite quota0" branch is close to unreachable.
+2. **Retain ancestor throttle deltas per phase.** Record each ancestor's `cpu.max` and `cpu.stat` throttle counters numerically before and after each phase. A finite ancestor quota must be a refusal or an explicit root-signed confound, not a pre-run note. The existing fence is an equality digest that accepts absent files as `None` (`prepare_clone_reclaim.py:19-25`), so this is new code.
+3. **Gate on metric presence before stage creation or packet selection.** `runtime.accounting` (bytes preserved) raises `required_limit_metrics_missing` if the throttle keys are absent (`runtime.py:177-179`). The reclaim helper would also fail with a bare key error at `prepare_clone_reclaim.py:43`. Absence must stop the run, never become zero, and never be fixed by editing `runtime.py`.
+4. **Make the CPU0 guard exact and exclusive.** Require `type(cpuNanos) is int and cpuNanos == 0`, since `False` and `0.0` equal 0; `zero_placement.py:49` is the precedent. Use a new config schema version and never accept "0 or 2e9".
+5. **Prove the actual quota, not only NanoCpus.** Existing checks compare only `NanoCpus` (`runtime.py:53`, `controller.py:116`). Also require Docker `CpuQuota`/`CpuPeriod` unset and actual `cpu.max` equal to an exact `max <period>` string, with cpuset and weight recorded as unchanged from V5.
+6. **Decide the seam's file placement explicitly.** `daemon.py` is hashed by `production.py`, `idle_trial.py`, `zero_placement.py` and `production_service.py`. An in-place edit changes their digests too, so either use a separately staged copy or declare those digests broken and unusable without separate review. Add new files rather than overwriting `prepared-helper-policy.json` or the CPU2 fixtures.
+7. **Name the setup mechanism before root executes.** As far as I recall, Docker treats a zero CPU value in `docker update` as "unchanged", so removing `--cpus` may require recreating the container. Recreation changes the container ID and cgroup scope that receipts bind to, so it needs its own explicit root approval. No hand-editing of Docker state files.
+8. **Keep the ledger observation-only.** Reuse the before/after samples already taken, with no extra reads, sleeps or retries on the pass path. Keep the reason exactly `phase_resource_failed` and attach evidence the way `reclaimEvidence` is attached (`controller.py:465`).
+9. **Mark scopes as overlapping and non-additive.** The `:459` window contains the `:311` and `:331` windows, and `:311` spans the query window. Record the effective pressure flag actually passed at `:331`.
+10. **Cover the callers outside the 12 scopes.** `turnover_gate.py:95` and `:108` call `control.limits()` and sit on the lifecycle renewal path. Keep the signature compatible and either add join scopes or declare them out of ledger. Also state that the child-side checks (`runtime.py:239-248`) and the reclaim fence keep their own reasons and are not instrumented.
+11. **Predeclare a numeric host CPU/load refusal.** Removing the cap removes the clone's CPU isolation from other workloads on the host across up to 18 cold restarts. This must be a refusal threshold, not a wait, and root must acknowledge it explicitly.
+12. **No cross-version pairing.** The V5 CPU2 baseline must never be paired with a CPU0 candidate.
+
+## Optional improvements
+
+- On a child-side resource failure, retain the parent's own before-sample and one failure-path after-sample as numeric context.
+- Bump the emitted event schema version when the ledger field is added, so strict consumers fail closed.
+
+## What this review cannot verify
+
+- The plan's SHA256 and the worktree commit, since I could not run commands.
+- All V5 measurements, the delayed-reader counters, and the Issue #100 comments.
+- Host facts: cgroup layout, controller delegation, ancestor quotas, CPU count, load, and whether the clone shares a host with production.
+- Docker's actual update behaviour on that version.
+- The staged policy values, the 1,500 ms threshold, the 30 s application query and 7,200 s outer bounds, and the Node consumer and auditor code, none of which are in the three files reviewed.
+- Whether this review was run at the "medium" effort the plan names.

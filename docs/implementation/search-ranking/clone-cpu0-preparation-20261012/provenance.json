@@ -1,0 +1,61 @@
+{
+  "schema": "search.clone-cpu0-preparation-provenance.v1",
+  "preparedOnly": true,
+  "sourceReviewHead": "fd401aac5fdcdf84a2829195f89bd68130c46e79",
+  "originalBlockedHead": "e811b83575709e70a61ca580d88e66cc53c8a89f",
+  "importCorrectionHead": "03c78cbd393f6a314b2ccdecf6d2d44c2ea4e982",
+  "helperCodeSha256": "4e50f80dbc80cd6b4a197070e01867dbed2d0b9aeb88bda0f97cba1f4f8596c5",
+  "sourceFreezeSha256": "5067d0eade1348554f32a6578d753264e1e634c64d4cd1a80a3fd6ad8d575b68",
+  "sourceFiles": {
+    "pin_cpu0.py": "e2ccfba845f7ad8295630b94a83ca18f11b7d97fcd4414352d36b5b91b3eae80",
+    "runtime_cpu0.py": "a270f55e5c85f097329cec66c090a9fa796258bcf857886f6c84c7c3c80af5a3",
+    "daemon_cpu0.py": "a1fc2f17782f5000fb4552567f01a49c5d0459b0337ecfd4d964c6147467286e",
+    "controller_cpu0.py": "42e21d216e7fca3bf52a5d6fec954645453b999585975bb31bbbd3c309e74ec8",
+    "cpu0_guards.py": "4b3b6b13790a83b414914f546e5a0ee136504bcb29a08f3fb5dcf58af402a565",
+    "cpu0_preflight.py": "68056d9dd2c079cb3d2ad5da3431c7f080535bbc60edfb2a1f556f08be2d2219",
+    "turnover_gate_cpu0.py": "ca5d3a40987801f39bad4d40d52739ca9a2e67077f241ab0f8809313a413b46d",
+    "prepared-helper-policy-cpu0.json": "88289117a20e93e143f655d734a6690d7c5e37a7bbda130a0419a1660ab39b98",
+    "prepared-control-policy-cpu0.json": "bada24aa27efb668ab72dc59994307fb17e37fa4ce0fe221b2784aa2fd705af9",
+    "test_cpu0_guards.py": "efeac799c6a618874e89f2b3472b5fbbd98db392b38da96c3e875b67397a77d8",
+    "test_cpu0_controller.py": "c2c0a44285bd1092bbb0287c453cbe7836e4bc8dacc8d458673b6bf5580f1ea3",
+    "CPU0.md": "3209f4b46708372b16db4195d1e74c71521862fda99f443f056c2099ae0b6946"
+  },
+  "reports": {
+    "plan-review.txt": "83032905c5b27d1802f34b1811321bc7c24fe76a282c9fa12e5ebe0628c18ecd",
+    "original-source-review-block.txt": "fc0b22c4a207cd59c603f6a7da5bfe07380b19327dd7ad4ac9e2e37f223cb85c",
+    "successor-source-review-pass.txt": "20e007f107c74850c2f00d7d1ca4a6dc94956a4ffc42d14e18e701a33fdf0056"
+  },
+  "exact453PinSha256": "e2ccfba845f7ad8295630b94a83ca18f11b7d97fcd4414352d36b5b91b3eae80",
+  "runtimeProvenance": {
+    "sourceCommit": "15d1cfe8e65636fbe2f51b96d614a5cb387f5649",
+    "changes": [
+      "explicit new owned clone name",
+      "versioned pin import"
+    ],
+    "exactTransformationVerified": true
+  },
+  "unchangedOriginalFilesComparedToBase": {
+    "base": "1a8da52b",
+    "sha256": {
+      "pin.py": "d6117f9b2d17806b8571fdfa39d11adebe2e87c1d66c1a2cdd8a5a92d1c630ec",
+      "runtime.py": "98abb36aed962bc9d3491dde93684355665a62238542dec908634bb4a3a657f5",
+      "daemon.py": "0e2c89075957758d8e61f6f4f14c5de8f7819f8be34cff401416fcf2ab5101f7",
+      "controller.py": "4cfe85cfeb5a254e227c89fd3b23f221a185090507e4f96033a81e6ecf497a3e",
+      "turnover_gate.py": "80ce7b4b0150034a3284e0e51c4a13391fbdb9087b909f17c0ae466346f72178"
+    }
+  },
+  "localValidation": {
+    "fixturesPassed": 20,
+    "command": "python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'",
+    "physicalBenchmark": false
+  },
+  "actualCpu0SetupPerformed": false,
+  "hostOperationsPerformed": false,
+  "benchmarkPacketReady": false,
+  "productionAcceptanceWindowStarted": false,
+  "privacy": {
+    "privatePacketsIncluded": false,
+    "credentialsIncluded": false,
+    "queriesOrAccountsIncluded": false
+  }
+}
