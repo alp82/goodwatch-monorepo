@@ -105,3 +105,15 @@ enumeration/exclusion (fatal). Decoded PID-prefix counts are bounded to 4,096;
 known omitted tuples remain counted. A byte-truncated unknown suffix contributes
 one explicitly marked sentinel, not an invented population count. Endpoint main
 ledger birth must equal the separately required main startticks.
+
+The second blocked revision and report remain preserved. Successor fixtures verify
+actual tracked old auditor/test originals as well as their exact retained copies.
+An unavailable membership hash must be absent/null or a validated SHA; malformed
+strings never enter audit evidence, including refused reports. Optional entry
+ProcessLookupError is typed as disappeared with known sums retained; mandatory
+reader/source failures stay fatal. Terminal UTC time must follow sampling end;
+every verified main tuple matches required birth even inside partial ledgers.
+Main VmLck refuses immediately, before later host/optional reads. Both final
+endpoints retain typed counts/reasons, and final unavailable remains unavailable.
+The full-row test includes literal byte truncation/time-budget flags and all four
+possible census reasons; it requires actual counted removals.

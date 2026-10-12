@@ -305,7 +305,7 @@ def process_census(proc, backup_hash, clock=time.monotonic, own_reader_birth=Non
             if memory is not None:
                 if len(processes)>=64:reasons.append('census_bound');break
                 processes[int(node.name)]={'comm':comm,'identity':identity,'memory':memory}
-        except FileNotFoundError:unknown+=1;reasons.append('process_disappeared')
+        except (FileNotFoundError,ProcessLookupError):unknown+=1;reasons.append('process_disappeared')
         except PermissionError:unknown+=1;reasons.append('optional_unreadable')
         except ValueError as error:
             if str(error)not in ('eligible_identity_race','census_bound','missing_required','invalid_numeric'):raise
@@ -345,7 +345,7 @@ def siblings(group,clock=time.monotonic):
             current+=value
             for key,number in row.items():values[key]+=number
             cohort.append((before.st_dev,before.st_ino))
-        except FileNotFoundError:unknown+=1;reasons.append('process_disappeared')
+        except (FileNotFoundError,ProcessLookupError):unknown+=1;reasons.append('process_disappeared')
         except PermissionError:unknown+=1;reasons.append('optional_unreadable')
         except ValueError as error:
             if str(error)not in ('eligible_identity_race','missing_required','invalid_numeric','census_bound'):raise
@@ -464,6 +464,7 @@ class Source:
         begun=time.monotonic();started=stamp();self.fence('before_sample')
         reader_before=self.reader_proof();group_before=self.group_read();ledger_before=getattr(self,'_membership_ledger',None);pid=self.expected['pid'];root=self.proc/str(pid)
         process={**proc_identity(root),'readBytes':fields(read(root/'io').replace(':',''),('read_bytes',))['read_bytes'],'VmLck':fields(read(root/'status'),('VmLck',),True)['VmLck']}
+        if process['VmLck']:raise GuardFailure('source_locked','process_limit','before_sample',lockedBytes=process['VmLck'],memberPid=pid)
         host=fields(read(self.proc/'meminfo'),MEM,True)
         if host['SwapTotal']!=0:
             raise GuardFailure('source_limits_changed','process_limit','before_sample',observedSwapTotalBytes=host['SwapTotal'],expectedSwapTotalBytes=0)
@@ -476,7 +477,6 @@ class Source:
             if str(error)!='census_bound':raise
             other={'complete':False,'reason':'census_bound'}
         group_after=self.group_read();ledger_after=getattr(self,'_membership_ledger',None);reader_after=self.reader_proof();self.fence('after_sample')
-        if process['VmLck']:raise GuardFailure('source_locked','process_limit','after_sample',lockedBytes=process['VmLck'],memberPid=pid)
         return {'startedAt':started,'finishedAt':stamp(),'durationSeconds':time.monotonic()-begun,
                 'readerBefore':reader_before,'readerAfter':reader_after,
                 'host':host,'hostPsi':pressure,'hostReclaim':reclaim,'process':process,

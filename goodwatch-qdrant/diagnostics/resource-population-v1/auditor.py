@@ -47,6 +47,7 @@ def population_proof(population,main_pid=None,main_birth=None):
     for key in ('duplicateCount','unresolvedCount','truncatedCount','unknownLocks','verifiedZeroLocks','positiveLocks'):
         if not natural(population[key]):raise ValueError('population-count')
     if population['status']!='unavailable'and not hash64(population.get('membershipHash')):raise ValueError('membership-hash')
+    if population['status']=='unavailable'and population.get('membershipHash')is not None and not hash64(population['membershipHash']):raise ValueError('membership-hash')
     if population['status']=='unavailable':
         if population['observedCount']is not None or population.get('reason')not in ('optional_unreadable','invalid_numeric'):raise ValueError('unavailable-population')
     elif not natural(population['observedCount'])or population['observedCount']>4096:raise ValueError('population-count')
@@ -56,6 +57,7 @@ def population_proof(population,main_pid=None,main_birth=None):
     for member in members:
         if not isinstance(member,list)or len(member)!=5 or type(member[0])is not int or member[0]<=0 or member[0]in seen:raise ValueError('member-schema')
         seen.add(member[0])
+        if main_pid is not None and member[0]==main_pid and member[4]=='verified'and main_birth is not None and member[1]!=main_birth:raise ValueError('main-ledger-birth')
         if member[4]=='verified':
             if type(member[1])is not int or member[1]<=0 or type(member[3])is not int or member[3]!=0 or member[2]not in ('qdrant','shell','python','other'):raise ValueError('member-zero-proof')
             known+=1
@@ -75,6 +77,11 @@ def population_proof(population,main_pid=None,main_birth=None):
         if main_birth is not None and next(member[1]for member in members if member[0]==main_pid)!=main_birth:raise ValueError('main-ledger-birth')
     if complete and (population['duplicateCount']or population['unresolvedCount']or population['truncatedCount']or population['unknownLocks']or population['observedCount']!=len(members)):raise ValueError('false-endpoint-proof')
     return complete
+
+
+def population_evidence(population,main_pid,main_birth):
+    population_proof(population,main_pid,main_birth)
+    return {**{name:population.get(name)for name in ('status','observedCount','duplicateCount','unresolvedCount','truncatedCount','unknownLocks','verifiedZeroLocks','positiveLocks','membershipHash')},'reasons':[reason for field,reason in (('duplicateCount','membership-duplicate'),('truncatedCount','membership-truncated'),('unresolvedCount','member-unresolved'))if population[field]]+(['membership-unavailable']if population['status']=='unavailable'else[])}
 
 
 def optional_proof(row):
@@ -139,11 +146,12 @@ def audit(rows,receipt,source_sha):
     require(receipt.get('event')==NAMESPACE+'reader-exit.v1'and receipt.get('exitCode')==0 and type(receipt.get('exitCode'))is int and receipt.get('readerGoneProven')is True and receipt.get('clean')is True and receipt.get('termSent')is False and receipt.get('killSent')is False,'reader-clean-exit')
     require(type(receipt.get('readerPid'))is int and receipt['readerPid']>0 and type(receipt.get('readerStartTicks'))is int and receipt['readerStartTicks']>0,'reader-exit-birth')
     dimensions={name:'not-observed'for name in ('sampling','primaryIdentity','requiredMetrics','auxiliaryPopulation','auxiliaryLocks','sshCensus','backupCensus','siblingCensus')}
-    census_partial=set();census_unavailable=set();census_evidence=[];identities=set();reader_groups=set();previous=None
+    census_partial=set();census_unavailable=set();census_evidence=[];final_evidence=None;identities=set();reader_groups=set();previous=None
     try:
         start,end=starts[0],ends[0];low,high=utc(start['scheduledStart']),utc(start['scheduledEnd'])
         require(2<=high-low<=2700 and start['intervalSeconds']==2 and start['maximumGapSeconds']==3,'window-contract')
         require(low<=utc(start['at'])<low+2 and utc(end['samplingEndedAt'])>=high,'window-edges')
+        require(utc(end['at'])>=utc(end['samplingEndedAt']),'terminal-time-order')
         require(end['samplingStatus']=='scheduled-samples-observed' and end['fullScheduledWindowObserved']is True,'sampling-status')
         require(number(end['elapsedMonotonicSeconds'])and end['elapsedMonotonicSeconds']>=high-low-2,'elapsed-window')
         require(type(end['wallClockDriftSeconds'])in(int,float)and math.isfinite(end['wallClockDriftSeconds'])and abs(end['wallClockDriftSeconds'])<=1,'clock-drift')
@@ -174,7 +182,7 @@ def audit(rows,receipt,source_sha):
                 population=row[group]['population']
                 if population['status']=='unavailable':census_unavailable.update(('auxiliaryPopulation','auxiliaryLocks'))
                 if not population_proof(population,row['sourcePid'],row['sourceStartTicks']):census_partial.update(('auxiliaryPopulation','auxiliaryLocks'))
-            census_evidence.append({'sample':index,**optional,'auxiliaryEndpoints':{key:{**{name:row[key]['population'].get(name)for name in ('status','observedCount','duplicateCount','unresolvedCount','truncatedCount','unknownLocks','verifiedZeroLocks','positiveLocks','membershipHash')},'reasons':[reason for field,reason in (('duplicateCount','membership-duplicate'),('truncatedCount','membership-truncated'),('unresolvedCount','member-unresolved'))if row[key]['population'][field]]+(['membership-unavailable']if row[key]['population']['status']=='unavailable'else[])}for key in ('sourceBefore','sourceAfter')}})
+            census_evidence.append({'sample':index,**optional,'auxiliaryEndpoints':{key:population_evidence(row[key]['population'],row['sourcePid'],row['sourceStartTicks'])for key in ('sourceBefore','sourceAfter')}})
         require(len(identities)==1 and len(reader_groups)==1,'source-or-reader-turnover')
         require(0<=samples[0]['startedMonotonicSeconds']-start['startedMonotonicSeconds']<=3 and 0<=end['finishedMonotonicSeconds']-samples[-1]['finishedMonotonicSeconds']<=3,'edge-gap')
         require(abs(end['finishedMonotonicSeconds']-start['startedMonotonicSeconds']-end['elapsedMonotonicSeconds'])<.000001,'elapsed-ledger')
@@ -184,6 +192,8 @@ def audit(rows,receipt,source_sha):
         require(final['reader']['outsideSourceCgroup']is True and final['reader']['VmLckBytes']==0 and final['reader']['groupHash']in reader_groups,'final-reader')
         final_results=[population_proof(final[key]['population'],samples[-1]['sourcePid'],samples[-1]['sourceStartTicks'])for key in ('sourceBefore','sourceAfter')]
         final_complete=all(final_results)
+        final_evidence={key:population_evidence(final[key]['population'],samples[-1]['sourcePid'],samples[-1]['sourceStartTicks'])for key in ('sourceBefore','sourceAfter')}
+        if any(final[key]['population']['status']=='unavailable'for key in ('sourceBefore','sourceAfter')):census_unavailable.update(('auxiliaryPopulation','auxiliaryLocks'))
         require(final['sourceLockStatus']!='endpoint-zero-verified'or final_complete,'false-final-zero-proof')
         if final['sourceLockStatus']!='endpoint-zero-verified':census_partial.update(('auxiliaryPopulation','auxiliaryLocks'))
         dimensions.update(sampling='scheduled-samples-observed',primaryIdentity='observed-brackets',requiredMetrics='observed-brackets')
@@ -192,7 +202,7 @@ def audit(rows,receipt,source_sha):
     if reasons:
         for name in dimensions:dimensions[name]='not-established'
     status='observation-incomplete-or-refused'if reasons else'required-resource-samples-observed-with-census-unknowns'if census_partial else'required-resource-samples-and-census-endpoints-observed'
-    return {'schema':'resource-population.audit.v1','status':status,'dimensions':dimensions,'reasons':reasons,'samples':len(samples),'censusEvidence':census_evidence,'endpointObservationsOnly':True,'rssAccountingExact':False,**PERMISSIONS}
+    return {'schema':'resource-population.audit.v1','status':status,'dimensions':dimensions,'reasons':reasons,'samples':len(samples),'censusEvidence':census_evidence,'finalAuxiliaryEndpoints':final_evidence,'endpointObservationsOnly':True,'rssAccountingExact':False,**PERMISSIONS}
 
 
 def audit_file(journal,receipt_path,source_sha):

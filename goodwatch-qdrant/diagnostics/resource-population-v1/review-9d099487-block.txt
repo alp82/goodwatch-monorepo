@@ -1,0 +1,93 @@
+# Verdict: BLOCK (source-only, commit 9d099487)
+
+Five of the six original blockers are fixed in source, but blocker 6 is only partly fixed and I found two further defects. Nothing was executed or hashed, so every sha256 and every "tests pass" claim is unverified by me. This is not observation authorization; the transport remains unprepared and unauthorized.
+
+## Blocking defects
+
+1. **Original auditor and two original tests are still not hash-bound** — `test_population.py:313, 316`
+   - Line 313 hashes only the `strict-auditor-v3.py` copy; nothing hashes `resource-window-membership-v3/audit_membership_v3.py`.
+   - Line 316 hashes only the `strict-test-membership-*-v3.py` copies; the originals `test_membership_audit_v3.py` and `test_membership_transport_v3.py` are never opened.
+   - `provenance.json:24-33` labels these `unchangedOriginalAuditTests`, and `README.md:98-99` says the freeze check covers the old auditor and original test bytes. A copy matching its recorded hash does not show the original is unchanged (requirement 13).
+   - The original reader, `test_membership_ledger.py`, `test_resource_window.py` and the four idle files are correctly bound to the originals (`:314, 315, 317`).
+
+2. **Auditor echoes an unvalidated journal string** — `auditor.py:49, 177`
+   - `membershipHash` is validated only when status is not `unavailable`, but line 177 copies it into `censusEvidence` for every endpoint.
+   - A row with an `unavailable` population carrying any string there audits as `required-resource-samples-observed-with-census-unknowns` and prints that string.
+   - Because `censusEvidence` is returned even on refusal (`:195`), the echo also happens when the audit is refused.
+   - This contradicts `README.md:99-100`. The fixture at `test_population.py:325-328` covers only `observedCount`.
+
+3. **A process that exits mid-read is fatal and mislabelled, while the table says partial** — `reader.py:308-312, 348-352`
+   - `process_census` downgrades only `FileNotFoundError` and `PermissionError`. A `/proc/<pid>/comm`, `stat` or `status` read on a process that exits between open and read raises `ProcessLookupError`, which propagates as `sample_failed`.
+   - `outcome-table.json:117` maps `optional_census_disappeared` to dimension-partial, so one condition has two outcomes depending on timing (requirement 1).
+   - `population()` already handles this correctly with `OSError` (`reader.py:445`).
+   - `siblings` has the same gap for a cgroup removed between open and read.
+   - It fails closed, but with no retry it can burn the observation on a wrong reason. The scan touches every host process each sample, and the plan itself records periodic short-lived helpers.
+   - This was an optional note in the first report. I am raising it because it is the same defect class as original blocker 3.
+
+## The six original blockers
+
+| # | Original blocker | Status in 9d099487 |
+|---|---|---|
+| 1 | Dimensions "observed" on refusal | Fixed. Any reason sets every dimension to `not-established` (`auditor.py:192-193`); partial and unavailable are split with per-sample counts and reasons (`:177, 190`). |
+| 2 | Auditor ignores nested census and reader exclusion | Fixed. `optional_proof` derives status from the nested objects and requires integer `ownedReaderExcludedCount == 1` (`auditor.py:80-116`); missing objects refuse. Reader dimension labels are not trusted for census. |
+| 3 | Census bound becomes false `reader_identity_changed` | Fixed. Own-node exclusion with birth fences runs before the 4096 cut, deadline and 64-process break (`reader.py:286-289`). |
+| 4 | Worst-case fixture misses the real row | Fixed in substance. The fixture now carries both optional censuses and asserts positive counted removal with host and memory fields intact (`test_population.py:143-163`). See the note on residual gaps. |
+| 5 | No typed evidence on main/reader refusals | Fixed. Main lock (`reader.py:384, 479`), reader lock (`:408`), reader movement (`:410`), limits and ancestors (`:399`) and SwapTotal (`:469`) carry bytes or hashes. |
+| 6 | Byte-unchanged not proven by hash | Partly fixed; see blocking defect 1. |
+
+## Other corrections you asked about
+
+- **Schema and crash:** fixed. Schema, table hash and permission fields are checked on every row (`auditor.py:128-130`). Non-dict rows, non-string events and a non-dict receipt return a typed refusal (`:121-122`); the CLI catches the rest (`:213`).
+- **Main ledger:** an endpoint-verified ledger must contain the main PID with birth equal to `sourceStartTicks` (`auditor.py:73-75`), and `process.startTicks` must match too (`:164`).
+- **Both final populations:** validated through a list, with no short-circuit (`auditor.py:185-186`). A final label of zero-verified without complete proof refuses (`:187`).
+- **Clock:** `samplingEndedAt` is taken from the wall reading before the final fences (`reader.py:646`). The auditor anchors the window edge and the ledger on it with the same 0.1 s tolerance (`auditor.py:146, 150`). Cadence, gap, sample ceiling and drift are identical to the old `run()`.
+- **Byte truncation:** the literal `byteListTruncated` flag plus a one-entry sentinel (`reader.py:419-420, 428`) is matched by the auditor accounting (`auditor.py:66-67`). `observedCount` is bounded to 4096 (`:52`).
+- **Foreign and failed rows:** `not-applicable` (`auditor.py:125-126`). The old auditor returns UNKNOWN on the new namespace via `unknown_event`.
+- **Permissions:** forced false after the record merge (`reader.py:608`) and in every audit result. There is no `coverage` key and no PASS.
+- **Idle admission:** a repository search finds `resource-population` only inside this directory. I did not reopen the idle modules.
+
+## The 13 plan bindings
+
+Bindings 2 to 12 hold by reading:
+
+- **2, required set:** the `MEM`, `VM`, `STAT`, `EVENTS`, `CPU` and `RSS` tuples are identical to `strict-reader-v3.py:23-34` and to the table; `SwapTotal != 0` stays fatal.
+- **3, lock asymmetry:** the order is list, birth, status, birth, proc-cgroup (`reader.py:434-443`). A positive read raises immediately, and zombie or vanished members are unknown.
+- **4, degraded list:** main absent from a complete unique list is fatal (`reader.py:426`).
+- **5, no laundering:** nothing wraps `process_census` in `sample()`, so reader identity and exclusion failures stay fatal.
+- **6, Docker top:** the exactly-one-qdrant refusal is unchanged (`reader.py:245-248`).
+- **7 and 8, namespace and permissions:** as described above.
+- **9, bounds:** constants and cadence are unchanged.
+- **10, directory inode:** `lstat` with a symlink refusal, fenced before and after each sample and around the final.
+- **11, self-interference:** Docker children are plain subprocess children of the reader.
+- **12, comm class:** a tuple label only.
+
+Binding 1 fails on blocking defect 3 and binding 13 on blocking defect 1.
+
+## Optional notes
+
+- **Fixture is not literally the full row:** it omits `byteListTruncated` (always emitted, `reader.py:419`), `ledgerTimeBoundReached` and multi-reason lists, and sets population counts after inflation. By hand count the zero-member floor is about 7.7 KB for the fixture and about 8.0 KB with the omissions, so it should still fit, but that margin is my estimate.
+- **Terminal `at` is never read:** the auditor no longer parses the complete row's `at`, so final-fence latency is unbounded and its timestamp can be missing (`auditor.py:146-150`). Requiring UTC `at >= samplingEndedAt` would close it.
+- **Main birth in a partial ledger:** the birth match applies only to endpoint-verified ledgers (`auditor.py:73`); a partial ledger with a verified main tuple at a different birth is accepted.
+- **Main absent has no typed evidence:** `reader.py:426` raises a bare `source_changed` with no trigger, count or hash.
+- **Deferred main lock check:** the positive read at `reader.py:466` is raised only at `:479`, so an intervening fatal loses the `lockedBytes` evidence. The fences and the ledger do catch it immediately.
+- **Final endpoints missing from evidence:** `censusEvidence` has no counts or reasons for the final populations, and a final `unavailable` is reported as `partial` (`auditor.py:188`).
+- **Source hash is operator-supplied:** the auditor compares the receipt to a command-line value and never hashes `reader.py`, which it imports (`auditor.py:11, 138`). The old auditor pinned a constant.
+- **Label residue:** `reader.py:599` still writes `partial-or-unavailable`.
+- **Unreachable inconsistent path:** `reader.py:476-477` can never run, but would emit a row the auditor refuses at `auditor.py:114`.
+- **Mislabelled reason:** an over-long `cmdline` is recorded as `optional_unreadable`, not `census_bound` (`reader.py:311-312`).
+- **Table category:** `sample_duration_or_cadence_or_clock_outcome` is listed as dimension-partial, but the auditor refuses the whole observation.
+- **Remaining crash path:** a deeply nested row raises `RecursionError`, which `auditor.py:213` does not catch.
+- **Carried over from the first report:**
+  - birth `0` is accepted by the reader and rejected by the auditor;
+  - nested `complete` booleans and the `complete.v1` event name remain;
+  - the table is still not the source of the reader's constants;
+  - dead `membership_ledger`, `ledger_evidence` and `membership_failure` remain;
+  - the old auditor's between-sample UNKNOWN is reproduced only in the original test directory, and the copies here cannot run under their `strict-` names.
+- **Stray bytecode:** `__pycache__/reader.cpython-314.pyc` is still on disk. It is gitignored and outside the freeze list.
+
+## Not verified
+
+- Any sha256 in `provenance.json` or `source-freeze.json`, including the plan and review hashes.
+- Byte equality of the embedded outcome table and `outcome-table.json`; they read identically.
+- Whether the fixtures pass.
+- The idle modules and the four original test files, which I did not open in full.

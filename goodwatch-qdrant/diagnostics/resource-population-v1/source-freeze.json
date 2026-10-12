@@ -3,20 +3,20 @@
   "preparedOnly": true,
   "files": {
     "reader.py": {
-      "sha256": "1e4ea25055978f1847c64612d70ed82ca5be86c79e6d67b1fc36e214cdd08333",
-      "bytes": 45173
+      "sha256": "47251f6e7e108c0d85bed3a58cbf0acfe05141e642ed1b445020ebd27a9ccbf4",
+      "bytes": 45216
     },
     "auditor.py": {
-      "sha256": "1846e0293c3d87140fe03a9cd48c8e8bd250fab89865dbc87f54f3e5b96c4761",
-      "bytes": 18296
+      "sha256": "31baf0004e225071b2bd71c67d2161eb4687859653bcd9d2197353ed1e39dd8f",
+      "bytes": 19303
     },
     "outcome-table.json": {
       "sha256": "06ac005db11c28ca353d30ab6ddfa0d2f733b0eb9321c49d064449b7325bd813",
       "bytes": 4042
     },
     "test_population.py": {
-      "sha256": "5514459d5aa7ae81941b42ee5fd03362dbe1248b16f032e923a689f35dcf66f4",
-      "bytes": 28849
+      "sha256": "080f05d1072cdbf68f9ab8c5f7e0030936d8a5b5ed1804de990560f44657fb89",
+      "bytes": 33574
     },
     "strict-reader-v3.py": {
       "sha256": "17e692e8c44c751a2ddbc4b1f98bd6d651323c12cf2bff42369c7d98ac8093b8",
@@ -27,16 +27,16 @@
       "bytes": 7841
     },
     "README.md": {
-      "sha256": "e1c1cf022157932f6f4f63ba53d1eb357ef41880d31e1dbb3122385a07a5ad94",
-      "bytes": 6968
+      "sha256": "a1f6e2b4e8fed10d10022ab61b21c6b1a9f37565efa4539977d2304c113b062a",
+      "bytes": 7832
     },
     "OUTCOMES.md": {
       "sha256": "40479c3f8b199ac995148bbead14d07b1d11889a465f395846402ea0f50834e4",
       "bytes": 605
     },
     "provenance.json": {
-      "sha256": "7a576590f2ec7967248561c42beeabb67f4852814ad9067d6043b5ca90a5e2da",
-      "bytes": 2161
+      "sha256": "c2c4a85e01c7404a80b3e54f2964e52903b38b75fd055e095b923116a084c828",
+      "bytes": 2302
     },
     "strict-test-membership-audit-v3.py": {
       "sha256": "237b689a5936068daaaae08209d19bec195e79a3442243750b2c9add3ba66aa0",
@@ -49,6 +49,10 @@
     "review-736e04d1-block.txt": {
       "sha256": "e884572c60a86275f2560320eae80918240ab75942078e5ae0c3f6ee22dc00af",
       "bytes": 9429
+    },
+    "review-9d099487-block.txt": {
+      "sha256": "695e00220a932aaaf02b9facb04e19267bcc341c853ee6492895895a6ea51a79",
+      "bytes": 9921
     }
   }
 }

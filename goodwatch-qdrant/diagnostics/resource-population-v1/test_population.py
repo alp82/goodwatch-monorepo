@@ -155,7 +155,8 @@ class AuditTests(unittest.TestCase):
         for index,item in enumerate(row['sshUserspace']['classes'].values()):item['processCount']=64 if index==0 else 0
         row['otherCgroups']['observedChildCount']=256;row['otherCgroups']['unresolvedCount']=256;row['otherCgroups']['complete']=False;row['otherCgroups']['reasons']=['census_bound']
         for key in ('sourceBefore','sourceAfter'):
-            row[key]['population'].update(members=[[2147483647-i,None,'unavailable',None,'unknown']for i in range(16)],observedCount=16,duplicateCount=0,truncatedCount=0,unresolvedCount=16,unknownLocks=16,verifiedZeroLocks=0,positiveLocks=0)
+            row[key]['population'].update(members=[[2147483647-i,None,'unavailable',None,'unknown']for i in range(16)],observedCount=16,duplicateCount=0,truncatedCount=0,unresolvedCount=16,unknownLocks=16,verifiedZeroLocks=0,positiveLocks=0,byteListTruncated=False,ledgerTimeBoundReached=True)
+        row['sshUserspace']['reasons']=['census_bound','eligible_identity_race','process_disappeared','optional_unreadable'];row['otherCgroups']['reasons']=row['sshUserspace']['reasons'][:]
         output=io.StringIO();reader.Output(output).emit(row);encoded=output.getvalue().encode();self.assertLessEqual(len(encoded),8192)
         result=json.loads(encoded)
         for key in ('sourceBefore','sourceAfter'):
@@ -313,6 +314,9 @@ class SuccessorRegressionTests(unittest.TestCase):
         for name,key in [('strict-reader-v3.py','oldReaderSha256'),('strict-auditor-v3.py','oldAuditorSha256')]:self.assertEqual(hashlib.sha256((HERE/name).read_bytes()).hexdigest(),provenance[key])
         self.assertEqual(hashlib.sha256((HERE.parent/'resource_window.py').read_bytes()).hexdigest(),provenance['oldReaderSha256'])
         for name,value in provenance['unchangedOriginalTests'].items():self.assertEqual(hashlib.sha256((HERE.parent/name).read_bytes()).hexdigest(),value['sha256'])
+        self.assertEqual(hashlib.sha256((HERE.parent/'resource-window-membership-v3'/'audit_membership_v3.py').read_bytes()).hexdigest(),provenance['oldAuditorSha256'])
+        for name,value in provenance['unchangedOriginalAuditTests'].items():
+            self.assertEqual(hashlib.sha256((HERE.parent/'resource-window-membership-v3'/name).read_bytes()).hexdigest(),value['sha256'])
         for name,value in provenance['unchangedOriginalAuditTests'].items():self.assertEqual(hashlib.sha256((HERE/('strict-'+name.replace('_','-'))).read_bytes()).hexdigest(),value['sha256'])
         for name,value in provenance['unchangedIdleConsumerFiles'].items():self.assertEqual(hashlib.sha256((HERE.parent/'pinning-prototype'/name).read_bytes()).hexdigest(),value['sha256'])
 
@@ -326,5 +330,50 @@ class LedgerAccountingTests(unittest.TestCase):
         for value in (None,'secret',-1,4097,2):
             rows,receipt=fixture();pop=rows[1]['sourceBefore']['population'];pop.update(status='partial',observedCount=value)
             result=auditor.audit(rows,receipt,'c'*64);self.assertEqual(result['status'],'observation-incomplete-or-refused');self.assertNotIn('secret',json.dumps(result))
+
+
+
+class RemainingBlockerTests(unittest.TestCase):
+    def test_unavailable_membership_hash_cannot_echo_private_string(self):
+        for value in ('private-marker',[],{'private':'marker'}):
+            rows,receipt=fixture();pop=rows[1]['sourceBefore']['population'];pop.update(status='unavailable',observedCount=None,members=[],verifiedZeroLocks=0,reason='optional_unreadable',membershipHash=value)
+            result=auditor.audit(rows,receipt,'c'*64);self.assertEqual(result['status'],'observation-incomplete-or-refused');self.assertNotIn('private',json.dumps(result))
+    def test_optional_process_lookup_race_partial_known_sums_retained(self):
+        with tempfile.TemporaryDirectory()as temporary:
+            root=Path(temporary);own=root/str(os.getpid());own.mkdir();(own/'stat').write_text(stat(os.getpid()));good=root/'1';good.mkdir();(good/'comm').write_text('ssh');(good/'stat').write_text(stat(1));(good/'status').write_text(''.join(k+': 4 kB\n'for k in reader.RSS));gone=root/'2';gone.mkdir();original=reader.read
+            def read(path,*args):
+                if Path(path).parent==gone:raise ProcessLookupError()
+                return original(path,*args)
+            with patch.object(reader,'read',side_effect=read):row=reader.process_census(root,'a'*64,own_reader_birth=100)
+            self.assertEqual(row['reasons'],['process_disappeared']);self.assertEqual(row['classes']['other-ssh']['observedBytes']['VmRSS'],4096);self.assertEqual(row['ownedReaderExcludedCount'],1)
+    def test_optional_sibling_process_lookup_race_partial(self):
+        with tempfile.TemporaryDirectory()as temporary:
+            root=Path(temporary);source=root/'source';source.mkdir();gone=root/'gone';gone.mkdir()
+            with patch.object(reader,'read',side_effect=ProcessLookupError()):row=reader.siblings(source)
+            self.assertEqual(row['reasons'],['process_disappeared']);self.assertEqual(row['unresolvedCount'],1)
+
+
+
+class FinalCorrectionsTests(unittest.TestCase):
+    def test_terminal_timestamp_missing_before_end_or_not_utc_refused(self):
+        for value in (None,'2026-10-12T00:00:01+00:00','2026-10-12T00:00:02+01:00'):
+            rows,receipt=fixture();rows[2]['at']=value
+            self.assertEqual(auditor.audit(rows,receipt,'c'*64)['status'],'observation-incomplete-or-refused')
+    def test_partial_verified_main_birth_mismatch_refused(self):
+        rows,receipt=fixture();pop=rows[1]['sourceBefore']['population'];pop.update(status='partial',observedCount=2,duplicateCount=1);pop['members'][0][1]=101
+        self.assertEqual(auditor.audit(rows,receipt,'c'*64)['status'],'observation-incomplete-or-refused')
+    def test_final_unavailable_counts_and_status_preserved(self):
+        rows,receipt=fixture();pop=rows[2]['finalResourceFence']['sourceAfter']['population'];pop.update(status='unavailable',reason='optional_unreadable',observedCount=None,members=[],verifiedZeroLocks=0,membershipHash=None);rows[2]['finalResourceFence']['sourceLockStatus']='unknown'
+        result=auditor.audit(rows,receipt,'c'*64);self.assertEqual(result['dimensions']['auxiliaryPopulation'],'unavailable');self.assertIsNone(result['finalAuxiliaryEndpoints']['sourceAfter']['observedCount']);self.assertEqual(result['finalAuxiliaryEndpoints']['sourceAfter']['reasons'],['membership-unavailable'])
+    def test_main_lock_refuses_before_optional_or_host_read_failure(self):
+        source=reader.Source.__new__(reader.Source);source.expected={'pid':1};source.proc=Path('/fake');source.fence=lambda *args:None;source.reader_proof=lambda:{};source.group_read=lambda:{}
+        original=reader.read
+        def read(path,*args):
+            if path.name=='io':return 'read_bytes: 0'
+            if path.name=='status':return 'VmLck: 4 kB'
+            raise AssertionError('later read must not occur')
+        with patch.object(reader,'read',side_effect=read),patch.object(reader,'proc_identity',return_value={'startTicks':100}):
+            with self.assertRaises(reader.GuardFailure)as failure:source.sample()
+        self.assertEqual(failure.exception.diagnostic['lockedBytes'],4096)
 
 if __name__=='__main__':unittest.main()
