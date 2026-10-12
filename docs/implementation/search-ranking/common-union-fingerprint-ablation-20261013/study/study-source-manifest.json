@@ -1,0 +1,51 @@
+{
+  "schema": "offline-common-union-study-preparation.v1",
+  "preparedOnly": true,
+  "actualStudyExecuted": false,
+  "productionAcceptance": false,
+  "files": {
+    "engine.mjs": {
+      "sha256": "3068f370c4a614b4ec8b437a40ed5efc3cba1f611c89f8ee5ef88c86611b6ed5",
+      "bytes": 1826
+    },
+    "primitives.mjs": {
+      "sha256": "254ef8bca0c8ba8046cf95892a8a3c3c2bb9f37c5fa8c2303c1214bd471d2ae9",
+      "bytes": 1591
+    },
+    "run.mjs": {
+      "sha256": "98ec02c2a289e50df743a7979ec3276f0db3d4d46ba3e4f4ef914a1f72a3f552",
+      "bytes": 8870
+    },
+    "evaluate.py": {
+      "sha256": "e4149c72aa957fadf480654dd3512398d2d39efa2daf24909b685472d94096d5",
+      "bytes": 8891
+    },
+    "test-engine.mjs": {
+      "sha256": "c7f6fd38966327aa7943540ecfa27fea31a4f9d4507f5e4f037f8a9059adc34d",
+      "bytes": 2515
+    },
+    "input-bindings.json": {
+      "sha256": "390d5724c6717b76383860b02989df63ae7945dad915add3b96c14856423bb7a",
+      "bytes": 5200
+    },
+    "catalog-drift.json": {
+      "sha256": "7b0a4c1416447ad011518903ed64baf265f8c5c827f36e8837d53853adde7ef5",
+      "bytes": 345841
+    },
+    "README.md": {
+      "sha256": "e74bb3b5eb5ce77b5a584ceda61e4b2bcc46f72b55f257f9f291e79fbc853196",
+      "bytes": 3664
+    },
+    "test-evaluate.py": {
+      "sha256": "6612a0c05c4bf6265a8a3b76003d4de39e69c584b3fc8f2a1df9ba335e307d31",
+      "bytes": 1139
+    }
+  },
+  "checks": {
+    "syntheticScoringFixtures": 6,
+    "metricKnownCalculationChecks": 3,
+    "nodeSyntaxCheck": true,
+    "evaluatorFixtures": 2
+  },
+  "rootReviewRequiredBeforeActualStudy": true
+}

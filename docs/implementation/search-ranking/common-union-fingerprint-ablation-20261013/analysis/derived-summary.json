@@ -1,0 +1,825 @@
+{
+  "schema": "offline-common-union-derived-analysis.v1",
+  "productionAcceptance": false,
+  "studyBindingsSha256": "3a177a800aed5eeb34dd2ad1db6cd51d09b4479a3e4b737bd1cd3b75b3fd25e9",
+  "aggregate": {
+    "dense-pool-control": {
+      "queries": 94,
+      "meanNdcg10": 0.371591355891037,
+      "meanGood10": 3.297872340425532,
+      "bad5": 19,
+      "unjudgedTop10": 552,
+      "judgedTop10": 388,
+      "top10Slots": 940,
+      "meanCondensedNdcg10": 0.6840480517644315,
+      "avoid5": 0
+    },
+    "common-union-control": {
+      "queries": 94,
+      "meanNdcg10": 0.38940909052268535,
+      "meanGood10": 3.4148936170212765,
+      "bad5": 25,
+      "unjudgedTop10": 544,
+      "judgedTop10": 396,
+      "top10Slots": 940,
+      "meanCondensedNdcg10": 0.7136392085965899,
+      "avoid5": 1
+    },
+    "common-union-fingerprint": {
+      "queries": 94,
+      "meanNdcg10": 0.4592336358407837,
+      "meanGood10": 4.308510638297872,
+      "bad5": 33,
+      "unjudgedTop10": 412,
+      "judgedTop10": 528,
+      "top10Slots": 940,
+      "meanCondensedNdcg10": 0.732456657850547,
+      "avoid5": 2
+    }
+  },
+  "samePoolFingerprintDelta": {
+    "queries": 94,
+    "ndcg10Delta": 0.06982454531809834,
+    "bad5Delta": 8,
+    "unjudgedTop10Delta": -132,
+    "meanGood10Delta": 0.8936170212765959
+  },
+  "candidatePoolAndNormalizationDelta": {
+    "queries": 94,
+    "ndcg10Delta": 0.017817734631648374,
+    "bad5Delta": 6,
+    "unjudgedTop10Delta": -8,
+    "meanGood10Delta": 0.11702127659574435
+  },
+  "byClassFingerprintDelta": {
+    "audience": {
+      "queries": 7,
+      "ndcg10Delta": 0.06908390422941241,
+      "bad5Delta": -1,
+      "unjudgedTop10Delta": -7,
+      "meanGood10Delta": 1.0
+    },
+    "era_genre": {
+      "queries": 6,
+      "ndcg10Delta": 0.1135749168224115,
+      "bad5Delta": 1,
+      "unjudgedTop10Delta": -7,
+      "meanGood10Delta": 1.333333333333334
+    },
+    "like_x_but_y": {
+      "queries": 1,
+      "ndcg10Delta": 0.0,
+      "bad5Delta": -4,
+      "unjudgedTop10Delta": 1,
+      "meanGood10Delta": 0.0
+    },
+    "long_descriptive": {
+      "queries": 10,
+      "ndcg10Delta": 0.03983981326233943,
+      "bad5Delta": -1,
+      "unjudgedTop10Delta": -12,
+      "meanGood10Delta": 0.6000000000000001
+    },
+    "negation": {
+      "queries": 15,
+      "ndcg10Delta": 0.15554789770846233,
+      "bad5Delta": 3,
+      "unjudgedTop10Delta": -34,
+      "meanGood10Delta": 1.5999999999999996
+    },
+    "non_english": {
+      "queries": 1,
+      "ndcg10Delta": 0.20260182669793467,
+      "bad5Delta": 0,
+      "unjudgedTop10Delta": -4,
+      "meanGood10Delta": 3.0
+    },
+    "setting_mood": {
+      "queries": 9,
+      "ndcg10Delta": -0.047459504517085194,
+      "bad5Delta": 3,
+      "unjudgedTop10Delta": -5,
+      "meanGood10Delta": -0.6666666666666661
+    },
+    "short_vague": {
+      "queries": 12,
+      "ndcg10Delta": 0.20827311256541062,
+      "bad5Delta": -1,
+      "unjudgedTop10Delta": -29,
+      "meanGood10Delta": 2.5
+    },
+    "structural": {
+      "queries": 6,
+      "ndcg10Delta": 0.21017778709317175,
+      "bad5Delta": 0,
+      "unjudgedTop10Delta": -14,
+      "meanGood10Delta": 1.5
+    },
+    "subject_object": {
+      "queries": 23,
+      "ndcg10Delta": -0.06288697032637636,
+      "bad5Delta": 6,
+      "unjudgedTop10Delta": -8,
+      "meanGood10Delta": -0.08695652173913082
+    },
+    "typo": {
+      "queries": 4,
+      "ndcg10Delta": 0.14436094730727356,
+      "bad5Delta": 2,
+      "unjudgedTop10Delta": -13,
+      "meanGood10Delta": 1.25
+    }
+  },
+  "bySplitFingerprintDelta": {
+    "dev": {
+      "queries": 35,
+      "ndcg10Delta": 0.11871086029610328,
+      "bad5Delta": 5,
+      "unjudgedTop10Delta": -50,
+      "meanGood10Delta": 1.2571428571428576
+    },
+    "holdout": {
+      "queries": 22,
+      "ndcg10Delta": 0.1256549714721969,
+      "bad5Delta": 0,
+      "unjudgedTop10Delta": -43,
+      "meanGood10Delta": 1.227272727272727
+    },
+    "holdout2": {
+      "queries": 15,
+      "ndcg10Delta": -0.09137367972937771,
+      "bad5Delta": 7,
+      "unjudgedTop10Delta": -5,
+      "meanGood10Delta": -0.9333333333333331
+    },
+    "holdout5": {
+      "queries": 22,
+      "ndcg10Delta": 0.04612831695863495,
+      "bad5Delta": -4,
+      "unjudgedTop10Delta": -34,
+      "meanGood10Delta": 1.227272727272727
+    }
+  },
+  "queriesImproved": 56,
+  "queriesWorsened": 36,
+  "queriesUnchanged": 2,
+  "newKnownBadQueries": [
+    {
+      "id": "dev6-02",
+      "publicQuery": "zombie movie without gore",
+      "type": "negation",
+      "split": "dev",
+      "bad5Before": 1,
+      "bad5After": 2,
+      "ndcg10Delta": -0.13531942366533772,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 1000000523777,
+          "newRank": 4,
+          "previousRankTop100": 41
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "dev6-03",
+      "publicQuery": "detective show with no murders",
+      "type": "negation",
+      "split": "dev",
+      "bad5Before": 0,
+      "bad5After": 1,
+      "ndcg10Delta": -0.052749422231656906,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 2000000076463,
+          "newRank": 5,
+          "previousRankTop100": 84
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "dev6-05",
+      "publicQuery": "Krimi ohne Mord",
+      "type": "negation",
+      "split": "dev",
+      "bad5Before": 1,
+      "bad5After": 2,
+      "ndcg10Delta": 0.18457569677956817,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 1000000001422,
+          "newRank": 1,
+          "previousRankTop100": 9
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "h5-17",
+      "publicQuery": "miniseries i can finish in a weekend",
+      "type": "structural",
+      "split": "holdout5",
+      "bad5Before": 1,
+      "bad5After": 2,
+      "ndcg10Delta": 0.10395240696942773,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 2000000001973,
+          "newRank": 1,
+          "previousRankTop100": 59
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "ho2-01",
+      "publicQuery": "horror on a submarine",
+      "type": "subject_object",
+      "split": "holdout2",
+      "bad5Before": 0,
+      "bad5After": 3,
+      "ndcg10Delta": -0.3386910674114503,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 1000000008329,
+          "newRank": 1,
+          "previousRankTop100": 35
+        },
+        {
+          "pointId": 1000000000348,
+          "newRank": 2,
+          "previousRankTop100": 23
+        },
+        {
+          "pointId": 1000000009392,
+          "newRank": 4,
+          "previousRankTop100": 45
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "ho2-10",
+      "publicQuery": "animated movie that is not for kids",
+      "type": "negation",
+      "split": "holdout2",
+      "bad5Before": 0,
+      "bad5After": 1,
+      "ndcg10Delta": 0.3528025056652493,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 1000000001361,
+          "newRank": 4,
+          "previousRankTop100": 53
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "ho2-11",
+      "publicQuery": "claustrophobic thriller in the Arctic",
+      "type": "setting_mood",
+      "split": "holdout2",
+      "bad5Before": 2,
+      "bad5After": 3,
+      "ndcg10Delta": -0.058971925450460316,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 1000000008329,
+          "newRank": 4,
+          "previousRankTop100": null
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "ho2-14",
+      "publicQuery": "2000s British gangster comedies",
+      "type": "era_genre",
+      "split": "holdout2",
+      "bad5Before": 0,
+      "bad5After": 1,
+      "ndcg10Delta": -0.07616015608188231,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 1000000005236,
+          "newRank": 5,
+          "previousRankTop100": 14
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "ho2-21",
+      "publicQuery": "dystopain deth game series",
+      "type": "typo",
+      "split": "holdout2",
+      "bad5Before": 1,
+      "bad5After": 3,
+      "ndcg10Delta": -0.0811301709394921,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 2000000106379,
+          "newRank": 3,
+          "previousRankTop100": 38
+        },
+        {
+          "pointId": 2000000127372,
+          "newRank": 4,
+          "previousRankTop100": 16
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "lab-03",
+      "publicQuery": "slow burn space horror",
+      "type": "setting_mood",
+      "split": "dev",
+      "bad5Before": 0,
+      "bad5After": 1,
+      "ndcg10Delta": 0.0035758420570903837,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 1000000000985,
+          "newRank": 5,
+          "previousRankTop100": 36
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "lab-08",
+      "publicQuery": "melancholy lighthouse keeper mystery",
+      "type": "setting_mood",
+      "split": "holdout",
+      "bad5Before": 0,
+      "bad5After": 1,
+      "ndcg10Delta": -0.3994146511650582,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 2000000064684,
+          "newRank": 2,
+          "previousRankTop100": 20
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "lab-10",
+      "publicQuery": "sunglasses at night",
+      "type": "subject_object",
+      "split": "dev",
+      "bad5Before": 0,
+      "bad5After": 2,
+      "ndcg10Delta": -0.03489420068224605,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 1000000000793,
+          "newRank": 1,
+          "previousRankTop100": 8
+        },
+        {
+          "pointId": 1000000000638,
+          "newRank": 4,
+          "previousRankTop100": null
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "lab-11",
+      "publicQuery": "fantasy with dragons",
+      "type": "subject_object",
+      "split": "dev",
+      "bad5Before": 0,
+      "bad5After": 2,
+      "ndcg10Delta": -0.09710318759771175,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 1000000000122,
+          "newRank": 4,
+          "previousRankTop100": 43
+        },
+        {
+          "pointId": 1000000000121,
+          "newRank": 5,
+          "previousRankTop100": 27
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    },
+    {
+      "id": "new-01",
+      "publicQuery": "heist on a train",
+      "type": "subject_object",
+      "split": "holdout",
+      "bad5Before": 1,
+      "bad5After": 2,
+      "ndcg10Delta": -0.43581773515202055,
+      "newGradeZeroTop5": [
+        {
+          "pointId": 2000000071446,
+          "newRank": 1,
+          "previousRankTop100": 8
+        }
+      ],
+      "qualification": "bad5 can also count a second alternate cut; explicit entries above are grade-zero titles only"
+    }
+  ],
+  "historicalPairedComparisons": {
+    "dense-pool-control": {
+      "combo-safe-v3-holdout5": {
+        "matchedQueries": 22,
+        "meanNdcg10Delta": -0.4772294626720651,
+        "bad5Delta": -8,
+        "meanTop20Shared": 6.409090909090909,
+        "currentBuildOrFullRankParity": false
+      }
+    },
+    "common-union-control": {
+      "combo-safe-v3-holdout5": {
+        "matchedQueries": 22,
+        "meanNdcg10Delta": -0.45078627429170265,
+        "bad5Delta": -7,
+        "meanTop20Shared": 6.636363636363637,
+        "currentBuildOrFullRankParity": false
+      }
+    },
+    "common-union-fingerprint": {
+      "combo-safe-v3-holdout5": {
+        "matchedQueries": 22,
+        "meanNdcg10Delta": -0.40465795733306775,
+        "bad5Delta": -11,
+        "meanTop20Shared": 8.409090909090908,
+        "currentBuildOrFullRankParity": false
+      }
+    }
+  },
+  "candidateCoverage": {
+    "judgedRelevantCatalogPairs": 1763,
+    "judgedRelevantInDense500": 1122,
+    "judgedRelevantInRaw500": 926,
+    "judgedRelevantInUnion": 1358,
+    "judgedRelevantAddedByRawRetrieval": 236
+  },
+  "coverageQualification": "denominator is all existing grade>=2 catalog pairs; includes titles outside current filtered/common-valid universe, so this is catalog judged-pair coverage, not eligible recall; added raw retrieval pairs are directly retained pool membership, not inferred from top100",
+  "titleGuards": {
+    "dense-pool-control": {
+      "queries": 7,
+      "expectedAtRank1": 3,
+      "expectedInTop20": 6,
+      "rows": [
+        {
+          "id": "core-01",
+          "mode": "dense-pool-control",
+          "expectedPointIds": [
+            1000000027205
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 2,
+          "expectedAtRank1": false,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "core-02",
+          "mode": "dense-pool-control",
+          "expectedPointIds": [
+            2000000001396
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "core-03",
+          "mode": "dense-pool-control",
+          "expectedPointIds": [
+            1000000000603
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 6,
+          "expectedAtRank1": false,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "core-05",
+          "mode": "dense-pool-control",
+          "expectedPointIds": [
+            1000000000129
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "ho2-22",
+          "mode": "dense-pool-control",
+          "expectedPointIds": [
+            2000000063639
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 6,
+          "expectedAtRank1": false,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "new-24",
+          "mode": "dense-pool-control",
+          "expectedPointIds": [
+            2000000046298
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "new-25",
+          "mode": "dense-pool-control",
+          "expectedPointIds": [
+            2000000031724
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": null,
+          "expectedAtRank1": false,
+          "expectedInTop20": false,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        }
+      ]
+    },
+    "common-union-control": {
+      "queries": 7,
+      "expectedAtRank1": 4,
+      "expectedInTop20": 6,
+      "rows": [
+        {
+          "id": "core-01",
+          "mode": "common-union-control",
+          "expectedPointIds": [
+            1000000027205
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "core-02",
+          "mode": "common-union-control",
+          "expectedPointIds": [
+            2000000001396
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "core-03",
+          "mode": "common-union-control",
+          "expectedPointIds": [
+            1000000000603
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 5,
+          "expectedAtRank1": false,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "core-05",
+          "mode": "common-union-control",
+          "expectedPointIds": [
+            1000000000129
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "ho2-22",
+          "mode": "common-union-control",
+          "expectedPointIds": [
+            2000000063639
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 4,
+          "expectedAtRank1": false,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "new-24",
+          "mode": "common-union-control",
+          "expectedPointIds": [
+            2000000046298
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "new-25",
+          "mode": "common-union-control",
+          "expectedPointIds": [
+            2000000031724
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": null,
+          "expectedAtRank1": false,
+          "expectedInTop20": false,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        }
+      ]
+    },
+    "common-union-fingerprint": {
+      "queries": 7,
+      "expectedAtRank1": 5,
+      "expectedInTop20": 6,
+      "rows": [
+        {
+          "id": "core-01",
+          "mode": "common-union-fingerprint",
+          "expectedPointIds": [
+            1000000027205
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "core-02",
+          "mode": "common-union-fingerprint",
+          "expectedPointIds": [
+            2000000001396
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "core-03",
+          "mode": "common-union-fingerprint",
+          "expectedPointIds": [
+            1000000000603
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 3,
+          "expectedAtRank1": false,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "core-05",
+          "mode": "common-union-fingerprint",
+          "expectedPointIds": [
+            1000000000129
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "ho2-22",
+          "mode": "common-union-fingerprint",
+          "expectedPointIds": [
+            2000000063639
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "new-24",
+          "mode": "common-union-fingerprint",
+          "expectedPointIds": [
+            2000000046298
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 1,
+          "expectedAtRank1": true,
+          "expectedInTop20": true,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        },
+        {
+          "id": "new-25",
+          "mode": "common-union-fingerprint",
+          "expectedPointIds": [
+            2000000031724
+          ],
+          "expectedIdentitySource": "queries.json anchors.must media_type/tmdb_id",
+          "expectedRankInRetainedTop100": 37,
+          "expectedAtRank1": false,
+          "expectedInTop20": false,
+          "relevanceMetricExcluded": true,
+          "qualification": "signal ablation omits production title-blending; a missing expected title is not a full production title-lookup verdict"
+        }
+      ]
+    }
+  },
+  "cohortNotes": {
+    "included": 101,
+    "graded": 94,
+    "titleGuards": 7,
+    "nonEnglishRequestExclusion": true,
+    "nonEnglishLabelWithinEnglishEncodedCohort": [
+      "h5-28"
+    ],
+    "splitsAbsent": [
+      "holdout3",
+      "holdout4"
+    ],
+    "organicTrafficShare": null
+  },
+  "localCompute": {
+    "queryComputeSumMs": 17217.630415,
+    "queryComputeMedianMs": 189.16478899999856,
+    "queryComputeP95Ms": 302.19724700000006,
+    "queryComputeMaxMs": 342.9956119999997,
+    "runInvocation": {
+      "sourceManifestSha256": "a58c7bf56217c1d6a59b367a97b36349f717bc0a9dedba416811b6a8e5be0fea",
+      "started": "2026-10-12T23:33:39.053866+00:00",
+      "finished": "2026-10-12T23:34:00.258767+00:00",
+      "exitCode": 0,
+      "rootSyntheticEngineFixturesPassed": 6,
+      "rootEvaluatorTestsPassed": 2,
+      "hostOperations": 0,
+      "embeddings": 0,
+      "productionSearches": 0,
+      "root-run.stdout": {
+        "bytes": 142,
+        "sha256": "95c320491d8701ddb4f3d3f16dd99a2d300e86dba21029d9fdcdb14f76dac9f7"
+      },
+      "root-run.stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "evaluationInvocation": {
+      "sourceManifestSha256": "a58c7bf56217c1d6a59b367a97b36349f717bc0a9dedba416811b6a8e5be0fea",
+      "started": "2026-10-12T23:34:13.816617+00:00",
+      "finished": "2026-10-12T23:34:14.139159+00:00",
+      "exitCode": 0,
+      "root-evaluate.stdout": {
+        "bytes": 1011,
+        "sha256": "514f3941087efcc501b7a05676f50728672b117b89fb9d1efa7fc0ee1027617c"
+      },
+      "root-evaluate.stderr": {
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "productionLatencyInference": false
+  },
+  "limitations": [
+    "current catalog raw FP is not historical snapshot",
+    "2772 vote changes and29 current below-floor; original index mask preserved",
+    "missing hybrid signals prevent full-ranking causal attribution",
+    "unjudged slots are not relevance negatives",
+    "no automatic quality threshold or acceptance"
+  ]
+}

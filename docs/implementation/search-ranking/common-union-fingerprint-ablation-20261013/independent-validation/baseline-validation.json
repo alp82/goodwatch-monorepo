@@ -1,0 +1,14 @@
+{
+  "schema": "independent-common-union-baseline-validation.v1",
+  "queries": 101,
+  "identicalTop100IdsEveryQuery": true,
+  "scoresByteExact": false,
+  "maxScoreDifference": 8.881784197001252e-16,
+  "scoreDifferenceQualification": "floating point arithmetic grouping differs between frozen prior and engine expressions; no ID/rank difference observed",
+  "gradedQueries": 94,
+  "meanNdcg10": 0.371591355891037,
+  "allCandidatePoolMaskAndTop100SubsetChecks": true,
+  "commonUnionFingerprintBad5": 33,
+  "commonUnionControlBad5": 25,
+  "productionAcceptance": false
+}

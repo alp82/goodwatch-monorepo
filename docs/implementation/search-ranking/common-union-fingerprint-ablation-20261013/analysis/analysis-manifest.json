@@ -1,0 +1,39 @@
+{
+  "schema": "offline-common-union-derived-evidence.v1",
+  "files": {
+    "actual-study-bindings.json": {
+      "sha256": "3a177a800aed5eeb34dd2ad1db6cd51d09b4479a3e4b737bd1cd3b75b3fd25e9",
+      "bytes": 4189
+    },
+    "analyze.py": {
+      "sha256": "6c7cc39e3f690405d9360db4538f01dbfa55988b732610d76ef914ef52190015",
+      "bytes": 5102
+    },
+    "derived-summary.json": {
+      "sha256": "6ca388d7d515105365b686abf8389e8d632a23cb897d9ddc582cf7ede389bf9d",
+      "bytes": 27513
+    },
+    "signal-input-availability.mjs": {
+      "sha256": "8c34e6026ca3f1c75b787e6edc11b4c913f23caf56f7cf7ef38a7495d2d8078d",
+      "bytes": 4228
+    },
+    "signal-input-availability.json": {
+      "sha256": "94da10c637d493676c056fa06fb9589b1d8987989dcdf9243e71ace00dac0c64",
+      "bytes": 40793
+    },
+    "ranking.server.ts": {
+      "sha256": "0812d15f3b45f075c34e7eef76ffd789082fa5b416054515723b9547e49352d7",
+      "bytes": 11065
+    },
+    "INTERPRETATION.md": {
+      "sha256": "944e9d6491955cac97b7ea06f39646cc967310d7455aee5369a1a843a8ce7c14",
+      "bytes": 5945
+    }
+  },
+  "newStudyRuns": 0,
+  "newEmbeddings": 0,
+  "hostOperations": 0,
+  "productionAcceptance": false,
+  "studySourceManifestSha256": "a58c7bf56217c1d6a59b367a97b36349f717bc0a9dedba416811b6a8e5be0fea",
+  "sourceCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+}

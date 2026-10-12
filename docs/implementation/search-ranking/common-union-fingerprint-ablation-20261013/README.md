@@ -1,0 +1,27 @@
+# Common-union raw fingerprint ablation evidence
+
+This completed local study informs #100 and #407, which remain open; issue #406 remains closed. Adding the original raw-fingerprint weight improves aggregate graded relevance but also promotes more known bad results. It establishes no quality threshold, usable-result PASS, production latency, current-final ranking parity or remedy rollout.
+
+The study contains 101 English-routed nonreference cases: 94 graded relevance queries and seven separately evaluated title guards. The original pinned-index masks are intersected with the required raw-fingerprint validity bitmap. Both union variants use the exact same dense500 ∪ rawDot500 candidates and normalization population; the fingerprint variant adds only the original `0.48 * z(rawDot)` term. The raw 74-dimensional title scores and signed reading weights are unnormalized. Stable ties use index row order. The normalized fingerprint sidecar is not a scoring input.
+
+| Variant | Mean NDCG@10 (94 queries) | Mean good@10 | Bad@5 total | Unjudged top-ten slots |
+|---|---:|---:|---:|---:|
+| Dense-pool control | 0.37159 | 3.29787 | 19 | 552 / 940 |
+| Shared-union control | 0.38941 | 3.41489 | 25 | 544 / 940 |
+| Same union + original fingerprint weight | 0.45923 | 4.30851 | 33 | 412 / 940 |
+
+Dense-pool versus union-control changes retrieval and population z statistics. Union-control versus fingerprint isolates the additional weight over identical candidates. Unjudged slots are not evidence of irrelevance; greater judgment coverage contributes to the apparent metric gain. Root independently confirmed all three actual bad@5 totals are explicitly grade-zero results; additional duplicate-cut bad counts are zero in these outputs.
+
+The union captures 1,358 of 1,763 existing grade≥2 catalog query/title pairs, versus 1,122 in dense500. This denominator includes titles outside the common eligible universe and is not eligible recall. Subject/object, setting/mood and holdout2 cohorts regress despite the aggregate gain. Fourteen queries increase bad@5. Expected-title rank1 is 3/7, 4/7 and 5/7 respectively; top20 remains 6/7. All seven guards and their expected identities/ranks are retained separately from graded NDCG. Production title blending is absent.
+
+[INTERPRETATION.md](analysis/INTERPRETATION.md) and [derived-summary.json](analysis/derived-summary.json) describe the cohort regressions, historical comparison coverage, title guards and next missing-signal questions. Historical combo-safe-v3 comparisons cover 22 cases; no r6 holdout4 cases align. Historical lists are not current-final output. The source-derived availability analysis identifies missing facet/unit encoder inputs, but no extra encodes or new study are authorized or performed by that analysis. Local int8 dense columns approximate Qdrant stored-vector scores; preserving a facet or coverage aggregation formula would not establish stored-vector score parity.
+
+Current catalog raw scores are a different snapshot from the index. The retained drift ledger records 2,772 vote differences, 29 current votes below the original floor and one missing fingerprint. The masks do not silently switch to a new current-vote policy. No historical fingerprint equality, globally atomic acquisition or Qdrant equality is attested. BM25, facets, coverage, reference/profile signals, taste and final title blending remain uncomputed in the completed ranking study.
+
+Root ran the frozen source and evaluator once, both exiting zero. The runner elapsed 21.205 seconds locally; evaluation elapsed 0.323 seconds. These are offline execution observations, not production end-to-end latency. The exact invocation/stdout/stderr receipts are included. The original `study/README.md` and source manifest still say prepared-only/not-executed because they describe the pre-execution freeze; those bytes are preserved. Later execution is bound by `analysis/actual-study-bindings.json` and root invocation receipts. No completed study was rerun for publication.
+
+Local fixtures passed six scoring cases and two evaluator tests, including the three known metric calculations. Independent validation reconstructed every rawDot top500, original reading vector/weights and all three retained top100 rankings from candidate components across all 101 queries. Retained reconstructed scores matched exactly; the fingerprint-addition subtraction had only floating-point error up to `4.44e-16`. It checked all pools, masks, validity and rank subsets. It did not rescan the full dense retrieval population or execute a model, application or host operation.
+
+The dense-control top100 IDs match the previous frozen 101-query dense/negation study for every query, and all nine prior aggregate fields match exactly. Scores differ by at most `8.88e-16` because the expressions group floating-point additions/subtractions differently; score bytes are not asserted equal. Independent source and reports are retained under `independent-validation/`.
+
+`evidence-bindings.json` binds all 28 exact copied artifacts. Large rankings, matrices, embedding caches, captures, prepared records and mask binaries remain hash-referenced outside Git. Source reproduction needs those retained inputs and sibling paths, with fresh absent output files; the published package is evidence rather than a self-contained dataset. No application code, frontend behavior, host configuration or production search changed.

@@ -1,0 +1,19 @@
+{
+  "sourceManifestSha256": "a58c7bf56217c1d6a59b367a97b36349f717bc0a9dedba416811b6a8e5be0fea",
+  "started": "2026-10-12T23:33:39.053866+00:00",
+  "finished": "2026-10-12T23:34:00.258767+00:00",
+  "exitCode": 0,
+  "rootSyntheticEngineFixturesPassed": 6,
+  "rootEvaluatorTestsPassed": 2,
+  "hostOperations": 0,
+  "embeddings": 0,
+  "productionSearches": 0,
+  "root-run.stdout": {
+    "bytes": 142,
+    "sha256": "95c320491d8701ddb4f3d3f16dd99a2d300e86dba21029d9fdcdb14f76dac9f7"
+  },
+  "root-run.stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "sourceManifestSha256": "a58c7bf56217c1d6a59b367a97b36349f717bc0a9dedba416811b6a8e5be0fea",
+  "started": "2026-10-12T23:34:13.816617+00:00",
+  "finished": "2026-10-12T23:34:14.139159+00:00",
+  "exitCode": 0,
+  "root-evaluate.stdout": {
+    "bytes": 1011,
+    "sha256": "514f3941087efcc501b7a05676f50728672b117b89fb9d1efa7fc0ee1027617c"
+  },
+  "root-evaluate.stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

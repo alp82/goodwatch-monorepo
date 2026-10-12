@@ -1,0 +1,79 @@
+{
+  "schema": "offline-common-union-completed-study-bindings.v1",
+  "files": {
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/engine.mjs": {
+      "sha256": "3068f370c4a614b4ec8b437a40ed5efc3cba1f611c89f8ee5ef88c86611b6ed5",
+      "bytes": 1826
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/primitives.mjs": {
+      "sha256": "254ef8bca0c8ba8046cf95892a8a3c3c2bb9f37c5fa8c2303c1214bd471d2ae9",
+      "bytes": 1591
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/run.mjs": {
+      "sha256": "98ec02c2a289e50df743a7979ec3276f0db3d4d46ba3e4f4ef914a1f72a3f552",
+      "bytes": 8870
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/evaluate.py": {
+      "sha256": "e4149c72aa957fadf480654dd3512398d2d39efa2daf24909b685472d94096d5",
+      "bytes": 8891
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/test-engine.mjs": {
+      "sha256": "c7f6fd38966327aa7943540ecfa27fea31a4f9d4507f5e4f037f8a9059adc34d",
+      "bytes": 2515
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/input-bindings.json": {
+      "sha256": "390d5724c6717b76383860b02989df63ae7945dad915add3b96c14856423bb7a",
+      "bytes": 5200
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/catalog-drift.json": {
+      "sha256": "7b0a4c1416447ad011518903ed64baf265f8c5c827f36e8837d53853adde7ef5",
+      "bytes": 345841
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/README.md": {
+      "sha256": "e74bb3b5eb5ce77b5a584ceda61e4b2bcc46f72b55f257f9f291e79fbc853196",
+      "bytes": 3664
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/test-evaluate.py": {
+      "sha256": "6612a0c05c4bf6265a8a3b76003d4de39e69c584b3fc8f2a1df9ba335e307d31",
+      "bytes": 1139
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/study-source-manifest.json": {
+      "sha256": "a58c7bf56217c1d6a59b367a97b36349f717bc0a9dedba416811b6a8e5be0fea",
+      "bytes": 1572
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/rankings.json": {
+      "sha256": "24388dbc06e8fef0782fe97a2d841e7e41d0334ea5085a6aa76014681a9fe051",
+      "bytes": 8355875
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/metrics.json": {
+      "sha256": "fd089b4c71b4a7892e1ae854446fd962548f50d24c3e740b271edd8d86b145d4",
+      "bytes": 215387
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-run-invocation.json": {
+      "sha256": "08ea5d72c80aa94ced417036e3f23d63f9ec0c1efa328fee911fa2a67794ab14",
+      "bytes": 608
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-evaluate-invocation.json": {
+      "sha256": "20721999ae73a32add6ba5b21812a0db7f056ebddf8db469a2c3291b45cdc38e",
+      "bytes": 475
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-run.stdout": {
+      "sha256": "95c320491d8701ddb4f3d3f16dd99a2d300e86dba21029d9fdcdb14f76dac9f7",
+      "bytes": 142
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-run.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-evaluate.stdout": {
+      "sha256": "514f3941087efcc501b7a05676f50728672b117b89fb9d1efa7fc0ee1027617c",
+      "bytes": 1011
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/root-evaluate.stderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  },
+  "productionAcceptance": false,
+  "derivedInterpretationOnly": true
+}
