@@ -1,0 +1,9 @@
+# Publication qualifications
+
+The copied study source and report are immutable evidence of the completed local run. The reproduction paragraph in `study/README.md` overstates fresh-directory portability: `run-v2.mjs` hardcodes the original absolute output directory and creates its ranking file with `O_EXCL`. Copying it to a fresh directory does not redirect that output. Reproduction requires the retained original inputs and paths, plus an explicitly derived output-path adapter for a new run. None is supplied or executed here. The evaluator and summarizer also overwrite their derived local reports; the completed original bytes must remain preserved.
+
+Large index matrices, cached vectors, masks, prepared records, full captures and ranking lists are hash-referenced, not distributed. The source is published for inspection rather than as a self-contained runnable benchmark. No completed study was rerun for publication.
+
+The stored-reading preparation called `readingFields(..., false)`. `nativeOnly` affects summarized chips, not fingerprint weights, flags or these masks. Thirteen missing avoided-English texts concern a diagnostic non-English interpretation and are not established requirements of the current native route. The 101 English-routed nonreference study remains unaffected; this does not establish full preparation parity for excluded routes.
+
+The current index and historical grades/reference lists represent different epochs. The alternate-cut adapter uses the frozen current index pairs for both sides of the historical comparison. Quantized local dense scores are not exact stored Qdrant-vector or ANN parity. Index masks cannot establish catalog fields absent from the index. Unjudged coverage is reported separately and cannot be converted automatically into a negative judgment. Current-final overlap and end-to-end production latency remain unmeasured.

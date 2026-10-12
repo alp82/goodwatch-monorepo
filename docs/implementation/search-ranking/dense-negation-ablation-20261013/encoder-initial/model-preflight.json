@@ -1,0 +1,74 @@
+{
+  "sourceCommit": "927d38b2cca815f02a0b1636ec06f63c24603396",
+  "files": [
+    {
+      "model": "english",
+      "kind": "model",
+      "path": "/tmp/goodwatch-search-models/Xenova/bge-base-en-v1.5/4d6cd88e18e51a5e020c2c305726d76ada9c03cf/onnx/model.onnx",
+      "sha256": "9bc579acdba21c253c62a9bf866891355a63ffa3442b52c8a37d75b2ccb91848",
+      "bytes": 435811539,
+      "dev": "42",
+      "inode": "9279",
+      "mtimeNs": "1791746907197994317",
+      "ctimeNs": "1791746907197994317"
+    },
+    {
+      "model": "english",
+      "kind": "tokenizer",
+      "path": "/tmp/goodwatch-search-models/Xenova/bge-base-en-v1.5/4d6cd88e18e51a5e020c2c305726d76ada9c03cf/tokenizer.json",
+      "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+      "bytes": 711396,
+      "dev": "42",
+      "inode": "9280",
+      "mtimeNs": "1791746862098698327",
+      "ctimeNs": "1791746862098698327"
+    },
+    {
+      "model": "english",
+      "kind": "tokenizerConfig",
+      "path": "/tmp/goodwatch-search-models/Xenova/bge-base-en-v1.5/4d6cd88e18e51a5e020c2c305726d76ada9c03cf/tokenizer_config.json",
+      "sha256": "9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3",
+      "bytes": 366,
+      "dev": "42",
+      "inode": "9276",
+      "mtimeNs": "1791746861612039458",
+      "ctimeNs": "1791746861682038336"
+    },
+    {
+      "model": "multilingual",
+      "kind": "model",
+      "path": "/tmp/goodwatch-search-models/Xenova/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78/onnx/model.onnx",
+      "sha256": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff",
+      "bytes": 470268533,
+      "dev": "42",
+      "inode": "9275",
+      "mtimeNs": "1791746909237963283",
+      "ctimeNs": "1791746909241296566"
+    },
+    {
+      "model": "multilingual",
+      "kind": "tokenizer",
+      "path": "/tmp/goodwatch-search-models/Xenova/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78/tokenizer.json",
+      "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+      "bytes": 17082730,
+      "dev": "42",
+      "inode": "9277",
+      "mtimeNs": "1791746864378661865",
+      "ctimeNs": "1791746864378661865"
+    },
+    {
+      "model": "multilingual",
+      "kind": "tokenizerConfig",
+      "path": "/tmp/goodwatch-search-models/Xenova/multilingual-e5-small/761b726dd34fb83930e26aab4e9ac3899aa1fa78/tokenizer_config.json",
+      "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+      "bytes": 443,
+      "dev": "42",
+      "inode": "9281",
+      "mtimeNs": "1791746861695371456",
+      "ctimeNs": "1791746861945367450"
+    }
+  ],
+  "totalBytes": 923875007,
+  "network": false,
+  "downloads": false
+}

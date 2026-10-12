@@ -1,0 +1,2973 @@
+{
+  "queries": 168,
+  "corpusBatches": 168,
+  "rows": [
+    {
+      "id": "core-01",
+      "captureSha256": "6dfd0f42c0703aa9396c95cfecaba19519bd5fdb7e566f15fdb3ed9b7ce063cb",
+      "model": "english",
+      "rawText": "Inception",
+      "positive": "Inception",
+      "negated": [],
+      "texts": [
+        "Inception"
+      ],
+      "queuedMs": 0.28317799999967974,
+      "encodeMs": {
+        "english": 71.96543900000142
+      },
+      "observedWallMs": 73.60610300000008,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-02",
+      "captureSha256": "3df7159ccaa209d0f903297aa36a550771314060d728cf1eb6af82201324cb01",
+      "model": "english",
+      "rawText": "Breaking Bad",
+      "positive": "Breaking Bad",
+      "negated": [],
+      "texts": [
+        "Breaking Bad"
+      ],
+      "queuedMs": 0.008762999999817112,
+      "encodeMs": {
+        "english": 84.1014469999991
+      },
+      "observedWallMs": 85.16671399999905,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-03",
+      "captureSha256": "e21be480042750b819aa86806764bdc626cf90a416b6745387df25d9beb1e7ea",
+      "model": "english",
+      "rawText": "The Matrix",
+      "positive": "The Matrix",
+      "negated": [],
+      "texts": [
+        "The Matrix"
+      ],
+      "queuedMs": 0.011534000001120148,
+      "encodeMs": {
+        "english": 37.65438499999982
+      },
+      "observedWallMs": 38.54608199999893,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-04",
+      "captureSha256": "405adaad97235fb379131b29a816422e3244a423d5b24022ebe887b0c14b0969",
+      "model": "english",
+      "rawText": "Incepton",
+      "positive": "Incepton",
+      "negated": [],
+      "texts": [
+        "Incepton"
+      ],
+      "queuedMs": 0.011375000000043656,
+      "encodeMs": {
+        "english": 46.62706299999991
+      },
+      "observedWallMs": 48.909904999998616,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-05",
+      "captureSha256": "23bc914933d2b1208805a6398915be149f51776a4d207582a931d1fd4d74f94c",
+      "model": "english",
+      "rawText": "Spirited Away",
+      "positive": "Spirited Away",
+      "negated": [],
+      "texts": [
+        "Spirited Away"
+      ],
+      "queuedMs": 0.025374000000738306,
+      "encodeMs": {
+        "english": 52.22450799999933
+      },
+      "observedWallMs": 59.026873000000705,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-06",
+      "captureSha256": "314c07736f8d506f2dede27b486c4912042d0017e33c2f8838de36bba50b7d88",
+      "model": "english",
+      "rawText": "tense but not bleak",
+      "positive": "tense",
+      "negated": [
+        "bleak"
+      ],
+      "texts": [
+        "tense but not bleak",
+        "tense",
+        "bleak"
+      ],
+      "queuedMs": 0.010447000000567641,
+      "encodeMs": {
+        "english": 182.41775299999972
+      },
+      "observedWallMs": 184.6951480000007,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-07",
+      "captureSha256": "c2a7fcc6f8a50e40890543a2eae8e211ccd383f2e65dfd21709277f53ee6a539",
+      "model": "english",
+      "rawText": "car chases",
+      "positive": "car chases",
+      "negated": [],
+      "texts": [
+        "car chases"
+      ],
+      "queuedMs": 0.008979999998700805,
+      "encodeMs": {
+        "english": 55.90742300000056
+      },
+      "observedWallMs": 56.7517399999997,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-08",
+      "captureSha256": "0696b9bcd40a0d180aac66e3fe3ba59bcb28098577ebb0112b1bb5a36d2fb21e",
+      "model": "english",
+      "rawText": "sunglasses",
+      "positive": "sunglasses",
+      "negated": [],
+      "texts": [
+        "sunglasses"
+      ],
+      "queuedMs": 0.009358999999676598,
+      "encodeMs": {
+        "english": 52.3189599999987
+      },
+      "observedWallMs": 56.80268199999955,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-09",
+      "captureSha256": "d35574de46006cb605d54cc527e11f3aac83ccd64496bce436136ec1542b5d1d",
+      "model": "english",
+      "rawText": "unreliable narrator",
+      "positive": "unreliable narrator",
+      "negated": [],
+      "texts": [
+        "unreliable narrator"
+      ],
+      "queuedMs": 0.012475999999878695,
+      "encodeMs": {
+        "english": 82.39377400000012
+      },
+      "observedWallMs": 90.7231580000007,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-10",
+      "captureSha256": "51b2e1957b7d5646bc91408f129c482fa0e5f56463da9b6426d63e7d7123f432",
+      "model": "english",
+      "rawText": "dark comedy about rich people",
+      "positive": "dark comedy about rich people",
+      "negated": [],
+      "texts": [
+        "dark comedy about rich people"
+      ],
+      "queuedMs": 0.017213999999512453,
+      "encodeMs": {
+        "english": 91.662158000001
+      },
+      "observedWallMs": 92.40707800000018,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-11",
+      "captureSha256": "3c2dc3be697025e1920022828b2a7f75aff4cd1c0de00e89af69062da0fc4150",
+      "model": "english",
+      "rawText": "no anime, gritty crime show",
+      "positive": "gritty crime show",
+      "negated": [
+        "anime"
+      ],
+      "texts": [
+        "no anime, gritty crime show",
+        "gritty crime show",
+        "anime"
+      ],
+      "queuedMs": 0.011479000000690576,
+      "encodeMs": {
+        "english": 198.682057
+      },
+      "observedWallMs": 199.6293679999999,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-12",
+      "captureSha256": "13199768e1f94f1d6b67d77a96fb089d4ad11b9c4c4cc57b95f34668a58da2c1",
+      "model": "english",
+      "rawText": "with my parents",
+      "positive": "with my parents",
+      "negated": [],
+      "texts": [
+        "with my parents"
+      ],
+      "queuedMs": 0.012837000000217813,
+      "encodeMs": {
+        "english": 170.36386800000037
+      },
+      "observedWallMs": 171.080602,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-13",
+      "captureSha256": "18886382155337015825b63ec48e94d26147b7537b34b451ff4a535451c18c02",
+      "model": "english",
+      "rawText": "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+      "positive": "I want something tense that keeps me guessing, but I",
+      "negated": [
+        "want to finish it feeling miserable"
+      ],
+      "texts": [
+        "I want something tense that keeps me guessing, but I don’t want to finish it feeling miserable.",
+        "I want something tense that keeps me guessing, but I",
+        "want to finish it feeling miserable"
+      ],
+      "queuedMs": 0.00825299999996787,
+      "encodeMs": {
+        "english": 386.5954709999987
+      },
+      "observedWallMs": 392.41033300000163,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-14",
+      "captureSha256": "21596aedaee0fabd79e555af5aba90644ebde65fad635601aee621b2b60d94e5",
+      "model": "english",
+      "rawText": "Rich people being absolutely awful to each other, preferably funny.",
+      "positive": "Rich people being absolutely awful to each other, preferably funny.",
+      "negated": [],
+      "texts": [
+        "Rich people being absolutely awful to each other, preferably funny."
+      ],
+      "queuedMs": 0.009384000000864035,
+      "encodeMs": {
+        "english": 157.4375250000012
+      },
+      "observedWallMs": 158.1383539999988,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-15",
+      "captureSha256": "ec48987b3860ced385d12364d80350e8b1c0b420fb5bd818ad59edb8c1cf5c7e",
+      "model": "english",
+      "rawText": "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+      "positive": "A crime show that feels grubby and real.",
+      "negated": [
+        "animation",
+        "where the detective has magic powers"
+      ],
+      "texts": [
+        "A crime show that feels grubby and real. No animation, and nothing where the detective has magic powers.",
+        "A crime show that feels grubby and real.",
+        "animation",
+        "where the detective has magic powers"
+      ],
+      "queuedMs": 0.008067999999184394,
+      "encodeMs": {
+        "english": 471.82222399999955
+      },
+      "observedWallMs": 472.9375970000001,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-16",
+      "captureSha256": "d2794560505109eff6a3f114fb953fa9a023c6f9e7e21c16a47a89c77ffa50ba",
+      "model": "english",
+      "rawText": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "positive": "Something where halfway through you realise the person telling the story has been feeding you nonsense.",
+      "negated": [],
+      "texts": [
+        "Something where halfway through you realise the person telling the story has been feeding you nonsense."
+      ],
+      "queuedMs": 0.01848700000118697,
+      "encodeMs": {
+        "english": 182.56405799999993
+      },
+      "observedWallMs": 188.23822100000325,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-17",
+      "captureSha256": "83924a0b1c930aee0c79ee695281a2a48133333f3e9e5dfed22e661eae665b72",
+      "model": "english",
+      "rawText": "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+      "positive": "Give me car chases, but make it more getaway driver",
+      "negated": [
+        "superheroes destroying a city"
+      ],
+      "texts": [
+        "Give me car chases, but make it more getaway driver than superheroes destroying a city.",
+        "Give me car chases, but make it more getaway driver",
+        "superheroes destroying a city"
+      ],
+      "queuedMs": 0.008633000001282198,
+      "encodeMs": {
+        "english": 245.67619299999933
+      },
+      "observedWallMs": 246.49945500000103,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-18",
+      "captureSha256": "471e0d6ec15ca384a21aa27ece330b922501efe4e258826edfd661d22eac6b3f",
+      "model": "english",
+      "rawText": "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+      "positive": "Brain's fried. Something warm and funny,",
+      "negated": [
+        "painfully cheesy"
+      ],
+      "texts": [
+        "Brain’s fried. Something warm and funny, but not painfully cheesy.",
+        "Brain's fried. Something warm and funny,",
+        "painfully cheesy"
+      ],
+      "queuedMs": 0.008478000003378838,
+      "encodeMs": {
+        "english": 303.90994299999875
+      },
+      "observedWallMs": 304.7129730000015,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-19",
+      "captureSha256": "ef4308a6fffe269254f5926d20d158cd7f72f58ac065c4c8049ca7113497c7ca",
+      "model": "english",
+      "rawText": "cozy",
+      "positive": "cozy",
+      "negated": [],
+      "texts": [
+        "cozy"
+      ],
+      "queuedMs": 0.009427999997569714,
+      "encodeMs": {
+        "english": 69.71610900000087
+      },
+      "observedWallMs": 74.35515700000178,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-20",
+      "captureSha256": "0d525b77e6aa46c06b3868b00d1e0ab15185632076260281f4143c0d59fa5dde",
+      "model": "english",
+      "rawText": "bleak",
+      "positive": "bleak",
+      "negated": [],
+      "texts": [
+        "bleak"
+      ],
+      "queuedMs": 0.014547999999194872,
+      "encodeMs": {
+        "english": 52.094828000001144
+      },
+      "observedWallMs": 52.73142000000007,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-21",
+      "captureSha256": "a9dc8ccaefa3662fbec9a44c0522f3df66b4ef5074f994a65614a80fe7853863",
+      "model": "english",
+      "rawText": "funny",
+      "positive": "funny",
+      "negated": [],
+      "texts": [
+        "funny"
+      ],
+      "queuedMs": 0.009517000002233544,
+      "encodeMs": {
+        "english": 69.79178899999897
+      },
+      "observedWallMs": 70.35397500000181,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-22",
+      "captureSha256": "87e3a9c333e998404334241a4448dc246b5be9c5d99eff8a0200b83b8185b1e3",
+      "model": "english",
+      "rawText": "time loop",
+      "positive": "time loop",
+      "negated": [],
+      "texts": [
+        "time loop"
+      ],
+      "queuedMs": 0.007815999997546896,
+      "encodeMs": {
+        "english": 32.18039299999873
+      },
+      "observedWallMs": 32.76673599999776,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-23",
+      "captureSha256": "059a02308c3f12028f34e895f343528acf3f1145491135b5cc98265352f5b114",
+      "model": "english",
+      "rawText": "slow atmospheric science fiction",
+      "positive": "slow atmospheric science fiction",
+      "negated": [],
+      "texts": [
+        "slow atmospheric science fiction"
+      ],
+      "queuedMs": 0.009318000000348547,
+      "encodeMs": {
+        "english": 48.34753300000011
+      },
+      "observedWallMs": 49.01653200000146,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-24",
+      "captureSha256": "de19d9a440882b69bbd7f08dcccf225cd86171dab900f8362b53a1e9c670207d",
+      "model": "english",
+      "rawText": "a hopeful space adventure without horror",
+      "positive": "a hopeful space adventure",
+      "negated": [
+        "horror"
+      ],
+      "texts": [
+        "a hopeful space adventure without horror",
+        "a hopeful space adventure",
+        "horror"
+      ],
+      "queuedMs": 0.008453999998891959,
+      "encodeMs": {
+        "english": 120.50111200000174
+      },
+      "observedWallMs": 121.27002499999799,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-25",
+      "captureSha256": "07288235ce78cfb4c587a7b0ab88c51257d10db2cca9b960c4dc99baa7494a2b",
+      "model": "english",
+      "rawText": "something short to watch after work",
+      "positive": "something short to watch after work",
+      "negated": [],
+      "texts": [
+        "something short to watch after work"
+      ],
+      "queuedMs": 0.009785999998712214,
+      "encodeMs": {
+        "english": 44.67357699999775
+      },
+      "observedWallMs": 47.47812999999951,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-26",
+      "captureSha256": "bc2375f603b0829056ce2f5232eb6519d47b8656c530e20e37160c1e57d6190f",
+      "model": "multilingual",
+      "rawText": "Ich suche etwas Spannendes, das mich rätseln lässt, aber am Ende nicht völlig deprimiert.",
+      "positive": "Ich suche etwas Spannendes, das mich rätseln lässt, aber am Ende",
+      "negated": [
+        "völlig deprimiert"
+      ],
+      "texts": [
+        "Ich suche etwas Spannendes, das mich rätseln lässt, aber am Ende nicht völlig deprimiert.",
+        "Ich suche etwas Spannendes, das mich rätseln lässt, aber am Ende",
+        "völlig deprimiert"
+      ],
+      "queuedMs": 0.011742999999114545,
+      "encodeMs": {
+        "multilingual": 111.47734800000035
+      },
+      "observedWallMs": 112.18136500000037,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-27",
+      "captureSha256": "6902a46b8baf7d41455d8b1203da7c9727944d66bd99c3cc1adf59e93872f986",
+      "model": "multilingual",
+      "rawText": "Quiero una serie policial realista y cruda, sin animación ni detectives con poderes mágicos.",
+      "positive": "Quiero una serie policial realista y cruda,",
+      "negated": [
+        "animación",
+        "detectives con poderes mágicos"
+      ],
+      "texts": [
+        "Quiero una serie policial realista y cruda, sin animación ni detectives con poderes mágicos.",
+        "Quiero una serie policial realista y cruda,",
+        "animación",
+        "detectives con poderes mágicos"
+      ],
+      "queuedMs": 0.01368699999875389,
+      "encodeMs": {
+        "multilingual": 136.22185900000113
+      },
+      "observedWallMs": 141.54016499999852,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-28",
+      "captureSha256": "f42f8a01e3be8f71f9cd99cb039a2b82366d5e3b4ef7e46de29cd03fa7c04159",
+      "model": "multilingual",
+      "rawText": "Des gens riches qui se comportent horriblement entre eux, de préférence quelque chose de drôle.",
+      "positive": "Des gens riches qui se comportent horriblement entre eux, de préférence quelque chose de drôle.",
+      "negated": [],
+      "texts": [
+        "Des gens riches qui se comportent horriblement entre eux, de préférence quelque chose de drôle."
+      ],
+      "queuedMs": 0.00902700000006007,
+      "encodeMs": {
+        "multilingual": 24.404042999998637
+      },
+      "observedWallMs": 64.38173900000038,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-29",
+      "captureSha256": "38edc49e1cae5dcd0be14af1aefd4ee21d7e57a464658aae0e227ec0af2d4f72",
+      "model": "multilingual",
+      "rawText": "Kafam çok yorgun. Sıcak ve komik ama aşırı duygusal olmayan bir şey izlemek istiyorum.",
+      "positive": "Kafam çok yorgun. Sıcak ve komik ama aşırı duygusal olmayan bir şey izlemek istiyorum.",
+      "negated": [],
+      "texts": [
+        "Kafam çok yorgun. Sıcak ve komik ama aşırı duygusal olmayan bir şey izlemek istiyorum."
+      ],
+      "queuedMs": 0.00908999999955995,
+      "encodeMs": {
+        "multilingual": 45.18333900000289
+      },
+      "observedWallMs": 45.62989999999991,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "core-30",
+      "captureSha256": "8e4cdcccf1c5c1d861c27056b0a3a20c54fc52b86778ab723ded3a8478d8da41",
+      "model": "multilingual",
+      "rawText": "spannend aber nicht düster",
+      "positive": "spannend",
+      "negated": [
+        "düster"
+      ],
+      "texts": [
+        "spannend aber nicht düster",
+        "spannend",
+        "düster"
+      ],
+      "queuedMs": 0.007992999999260064,
+      "encodeMs": {
+        "multilingual": 48.40658099999928
+      },
+      "observedWallMs": 49.34753599999749,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev5-01",
+      "captureSha256": "f76e44b77dbc852d594ce3465681740cb64cea18248352b149a6b2524c03f24d",
+      "model": "english",
+      "rawText": "funny brad pitt shows",
+      "positive": "funny brad pitt shows",
+      "negated": [],
+      "texts": [
+        "funny brad pitt shows"
+      ],
+      "queuedMs": 0.007475999998860061,
+      "encodeMs": {
+        "english": 81.0996129999985
+      },
+      "observedWallMs": 81.65357000000222,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev5-02",
+      "captureSha256": "c7a0586968f9d182954ddce91e83cacefe1dc0ee95c9768e0c9ff97f721138c0",
+      "model": "english",
+      "rawText": "funny will ferrell shows",
+      "positive": "funny will ferrell shows",
+      "negated": [],
+      "texts": [
+        "funny will ferrell shows"
+      ],
+      "queuedMs": 0.007188999999925727,
+      "encodeMs": {
+        "english": 52.248913999999786
+      },
+      "observedWallMs": 54.14767099999881,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev5-03",
+      "captureSha256": "cc7b58b4fc806ecefd114fe4b9942413a20d1a47727a83c7a42185a9d41998ef",
+      "model": "english",
+      "rawText": "lighthearted ridley scott series",
+      "positive": "lighthearted ridley scott series",
+      "negated": [],
+      "texts": [
+        "lighthearted ridley scott series"
+      ],
+      "queuedMs": 0.007927000002382556,
+      "encodeMs": {
+        "english": 71.7540310000004
+      },
+      "observedWallMs": 72.36580200000026,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev5-04",
+      "captureSha256": "993533285198304b5a6cb17beb888b979a0bdc39a54cc2cf5527d668a043c742",
+      "model": "english",
+      "rawText": "feel-good reese witherspoon shows",
+      "positive": "feel-good reese witherspoon shows",
+      "negated": [],
+      "texts": [
+        "feel-good reese witherspoon shows"
+      ],
+      "queuedMs": 0.013143000000127358,
+      "encodeMs": {
+        "english": 60.67786200000046
+      },
+      "observedWallMs": 67.5549319999991,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev5-05",
+      "captureSha256": "75b342046081874dbf3b3235cc04f6c7889749ad310715cc7d7357bd0832755c",
+      "model": "english",
+      "rawText": "seth rogen comedy series",
+      "positive": "seth rogen comedy series",
+      "negated": [],
+      "texts": [
+        "seth rogen comedy series"
+      ],
+      "queuedMs": 0.009683999996923376,
+      "encodeMs": {
+        "english": 107.71195300000181
+      },
+      "observedWallMs": 108.22680899999978,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev5-06",
+      "captureSha256": "52bd4563339ee0146b931949154b36e3c62e6ae5885ed06f6fc4553f54fdb1cd",
+      "model": "english",
+      "rawText": "funny ricky gervais shows",
+      "positive": "funny ricky gervais shows",
+      "negated": [],
+      "texts": [
+        "funny ricky gervais shows"
+      ],
+      "queuedMs": 0.011615000003075693,
+      "encodeMs": {
+        "english": 47.5029149999973
+      },
+      "observedWallMs": 48.0634570000002,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev6-01",
+      "captureSha256": "5413fee39346505dbbba0fa65aa921cb8d4f633be7c128c4e809723094ff3e08",
+      "model": "english",
+      "rawText": "fantasy series without dragons",
+      "positive": "fantasy series",
+      "negated": [
+        "dragons"
+      ],
+      "texts": [
+        "fantasy series without dragons",
+        "fantasy series",
+        "dragons"
+      ],
+      "queuedMs": 0.011250999999901978,
+      "encodeMs": {
+        "english": 143.36457099999825
+      },
+      "observedWallMs": 144.1860979999983,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev6-02",
+      "captureSha256": "be05630d1d054eb0e20fae7afb4e4506ca20461e2865cfccbd9488854c67559d",
+      "model": "english",
+      "rawText": "zombie movie without gore",
+      "positive": "zombie movie",
+      "negated": [
+        "gore"
+      ],
+      "texts": [
+        "zombie movie without gore",
+        "zombie movie",
+        "gore"
+      ],
+      "queuedMs": 0.007370999999693595,
+      "encodeMs": {
+        "english": 113.18898400000035
+      },
+      "observedWallMs": 116.46354699999938,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev6-03",
+      "captureSha256": "b94e25b426faed87c30b7dde82d7cf1edf45fd14ec365c79a26d8888537ebcc6",
+      "model": "english",
+      "rawText": "detective show with no murders",
+      "positive": "detective show with",
+      "negated": [
+        "murders"
+      ],
+      "texts": [
+        "detective show with no murders",
+        "detective show with",
+        "murders"
+      ],
+      "queuedMs": 0.010816000001796056,
+      "encodeMs": {
+        "english": 107.99399600000106
+      },
+      "observedWallMs": 108.61736200000087,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev6-04",
+      "captureSha256": "e4cd2b8f332f1b51d0061e5a473e829e352b09caf3c20e25aed63548f40d4184",
+      "model": "english",
+      "rawText": "sci-fi movie without robots",
+      "positive": "sci-fi movie",
+      "negated": [
+        "robots"
+      ],
+      "texts": [
+        "sci-fi movie without robots",
+        "sci-fi movie",
+        "robots"
+      ],
+      "queuedMs": 0.013464999999996508,
+      "encodeMs": {
+        "english": 123.27493999999933
+      },
+      "observedWallMs": 129.23023099999773,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "dev6-05",
+      "captureSha256": "6a2b635b51547ec5ce769af9945b7ac77d3de9a0669375cc5959cfc614dd2f7b",
+      "model": "english",
+      "rawText": "Krimi ohne Mord",
+      "positive": "Krimi",
+      "negated": [
+        "mord"
+      ],
+      "texts": [
+        "Krimi ohne Mord",
+        "Krimi",
+        "mord"
+      ],
+      "queuedMs": 0.01369899999917834,
+      "encodeMs": {
+        "english": 225.57984299999953
+      },
+      "observedWallMs": 228.49024799999825,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-01",
+      "captureSha256": "1111bb8f4b7d49bbfa71630f340271ec2bad44fac3e5b7ed5166855463e54026",
+      "model": "english",
+      "rawText": "somthing to cheer me up",
+      "positive": "somthing to cheer me up",
+      "negated": [],
+      "texts": [
+        "somthing to cheer me up"
+      ],
+      "queuedMs": 0.00810799999817391,
+      "encodeMs": {
+        "english": 57.45865400000184
+      },
+      "observedWallMs": 58.0914929999999,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-02",
+      "captureSha256": "c538f54e666c4767ef9e5bc852c14a4592389e5648292d1231edb086417b072f",
+      "model": "english",
+      "rawText": "date night",
+      "positive": "date night",
+      "negated": [],
+      "texts": [
+        "date night"
+      ],
+      "queuedMs": 0.008055000002059387,
+      "encodeMs": {
+        "english": 75.55638099999851
+      },
+      "observedWallMs": 76.13876700000037,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-03",
+      "captureSha256": "ae6666644f81d712b1c910be5f71ca5ea571df3544a6982f973fc999ea457603",
+      "model": "english",
+      "rawText": "something to fall asleep to",
+      "positive": "something to fall asleep to",
+      "negated": [],
+      "texts": [
+        "something to fall asleep to"
+      ],
+      "queuedMs": 0.013472000002366258,
+      "encodeMs": {
+        "english": 61.94599200000084
+      },
+      "observedWallMs": 62.726808000003075,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-04",
+      "captureSha256": "6c1ff6fe34916b6ecabe8211c2361c0ef2d913908d1a1f7be2ddc888f566c78b",
+      "model": "english",
+      "rawText": "rainy sunday afternoon",
+      "positive": "rainy sunday afternoon",
+      "negated": [],
+      "texts": [
+        "rainy sunday afternoon"
+      ],
+      "queuedMs": 0.008244000000559026,
+      "encodeMs": {
+        "english": 55.463762999999744
+      },
+      "observedWallMs": 56.030743999999686,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-05",
+      "captureSha256": "da260e83cacf9552dbdb9cdb51a346f33cdcd5fce1e1b1759cd00b2a4816a783",
+      "model": "english",
+      "rawText": "i need a good cry",
+      "positive": "i need a good cry",
+      "negated": [],
+      "texts": [
+        "i need a good cry"
+      ],
+      "queuedMs": 0.008484000001772074,
+      "encodeMs": {
+        "english": 81.06847400000333
+      },
+      "observedWallMs": 81.6267340000013,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-06",
+      "captureSha256": "131c3fcd15eded090cf43546deddb19f4af46210a87699c82d0dc95c0d96a96d",
+      "model": "english",
+      "rawText": "adrenaline rush",
+      "positive": "adrenaline rush",
+      "negated": [],
+      "texts": [
+        "adrenaline rush"
+      ],
+      "queuedMs": 0.007877000000007683,
+      "encodeMs": {
+        "english": 72.0425499999983
+      },
+      "observedWallMs": 72.5251210000024,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-07",
+      "captureSha256": "bb4ae9736c6c91b755ba344effa41c297957cae178ed7369df9db26c018ad907",
+      "model": "english",
+      "rawText": "background show while cooking",
+      "positive": "background show while cooking",
+      "negated": [],
+      "texts": [
+        "background show while cooking"
+      ],
+      "queuedMs": 0.014406999998755055,
+      "encodeMs": {
+        "english": 69.21455799999967
+      },
+      "observedWallMs": 70.33412899999894,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-08",
+      "captureSha256": "c35a885f41461ba183476013fc6e7bc2e8961313c9569c83705d11ef8313ec81",
+      "model": "english",
+      "rawText": "halloween night with friends",
+      "positive": "halloween night with friends",
+      "negated": [],
+      "texts": [
+        "halloween night with friends"
+      ],
+      "queuedMs": 0.008720000001630979,
+      "encodeMs": {
+        "english": 60.730336999997235
+      },
+      "observedWallMs": 68.7114900000015,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-09",
+      "captureSha256": "2dffa24748203f7000ef1a7f359e49fe56f6b9de692ee54acb17c7a622ae4a74",
+      "model": "english",
+      "rawText": "con artists pulling off elaborate scams",
+      "positive": "con artists pulling off elaborate scams",
+      "negated": [],
+      "texts": [
+        "con artists pulling off elaborate scams"
+      ],
+      "queuedMs": 0.009139000001596287,
+      "encodeMs": {
+        "english": 110.00988000000143
+      },
+      "observedWallMs": 110.53201099999933,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-10",
+      "captureSha256": "3ea947384749e5bab6b345f0f9187059092eaca43c3a0007b3896bafd77662e3",
+      "model": "english",
+      "rawText": "robot who wants to be human",
+      "positive": "robot who wants to be human",
+      "negated": [],
+      "texts": [
+        "robot who wants to be human"
+      ],
+      "queuedMs": 0.00781999999890104,
+      "encodeMs": {
+        "english": 106.34663
+      },
+      "observedWallMs": 119.16470099999788,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-11",
+      "captureSha256": "3749a642f5e46c4dc8df611ef8f194b489a2ac2337789a132343e2767f8d8fea",
+      "model": "english",
+      "rawText": "survivors after a plane crash",
+      "positive": "survivors after a plane crash",
+      "negated": [],
+      "texts": [
+        "survivors after a plane crash"
+      ],
+      "queuedMs": 0.008867000000464031,
+      "encodeMs": {
+        "english": 59.32074300000022
+      },
+      "observedWallMs": 59.83844699999827,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-12",
+      "captureSha256": "fab7417e26df04c1e301c47885bc30086b3f29f82a33a9e778c5f6d1eba8c442",
+      "model": "english",
+      "rawText": "complicated mother daughter relationship",
+      "positive": "complicated mother daughter relationship",
+      "negated": [],
+      "texts": [
+        "complicated mother daughter relationship"
+      ],
+      "queuedMs": 0.007538000001659384,
+      "encodeMs": {
+        "english": 49.767768999998225
+      },
+      "observedWallMs": 50.22868199999721,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-13",
+      "captureSha256": "bb15a5ca59dbb6e6ada44725632473e0a82461f09f7cf14ee2e80796a677a74e",
+      "model": "english",
+      "rawText": "journalists uncovering a cover up",
+      "positive": "journalists uncovering a cover up",
+      "negated": [],
+      "texts": [
+        "journalists uncovering a cover up"
+      ],
+      "queuedMs": 0.011312999999063322,
+      "encodeMs": {
+        "english": 200.66673399999854
+      },
+      "observedWallMs": 201.20581800000218,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-14",
+      "captureSha256": "6e377d7a4521e5dd3c1d893767c5c68f6a9700cfaa8b448996f8dea62bf88d3e",
+      "model": "english",
+      "rawText": "revenge planned for years",
+      "positive": "revenge planned for years",
+      "negated": [],
+      "texts": [
+        "revenge planned for years"
+      ],
+      "queuedMs": 0.011522000000695698,
+      "encodeMs": {
+        "english": 134.47868400000152
+      },
+      "observedWallMs": 135.43027399999846,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-15",
+      "captureSha256": "1d817057f2b366f4ff2661e9cf33dad070e5593242c2d2cfc9d7c29e709ea0e6",
+      "model": "english",
+      "rawText": "anime without robots",
+      "positive": "anime",
+      "negated": [
+        "robots"
+      ],
+      "texts": [
+        "anime without robots",
+        "anime",
+        "robots"
+      ],
+      "queuedMs": 0.008011999998416286,
+      "encodeMs": {
+        "english": 119.74156899999798
+      },
+      "observedWallMs": 120.9269349999995,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-16",
+      "captureSha256": "3ea2f88fa113dfd8ed5e76f32d406a81fecaa5dd1ef502c8883b7cd5ab05a211",
+      "model": "english",
+      "rawText": "horror without jump scares",
+      "positive": "horror",
+      "negated": [
+        "jump scares"
+      ],
+      "texts": [
+        "horror without jump scares",
+        "horror",
+        "jump scares"
+      ],
+      "queuedMs": 0.011714000000210945,
+      "encodeMs": {
+        "english": 114.78564499999993
+      },
+      "observedWallMs": 115.59758499999953,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-17",
+      "captureSha256": "f71d9bc7fd652bbc4249e38ddd1d5a4cd468bc85e02af3b1b31526257424b456",
+      "model": "english",
+      "rawText": "miniseries i can finish in a weekend",
+      "positive": "miniseries i can finish in a weekend",
+      "negated": [],
+      "texts": [
+        "miniseries i can finish in a weekend"
+      ],
+      "queuedMs": 0.016451999999844702,
+      "encodeMs": {
+        "english": 91.59988700000031
+      },
+      "observedWallMs": 92.20614900000146,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-18",
+      "captureSha256": "8394961db9ee408ab076c670b15b5664c01f24a37fa3293ef6003f8c281f7f7f",
+      "model": "english",
+      "rawText": "funny movie under 90 minutes",
+      "positive": "funny movie under 90 minutes",
+      "negated": [],
+      "texts": [
+        "funny movie under 90 minutes"
+      ],
+      "queuedMs": 0.010189999997237464,
+      "encodeMs": {
+        "english": 49.26701099999991
+      },
+      "observedWallMs": 49.84559399999853,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-19",
+      "captureSha256": "e7b7b010ecb9118525d606fdad81bbc0473d0ed60e6c2e1d5aeb67915b95c720",
+      "model": "english",
+      "rawText": "harry potter but for adults",
+      "positive": "harry potter but for adults",
+      "negated": [],
+      "texts": [
+        "harry potter but for adults"
+      ],
+      "queuedMs": 0.009324999999080319,
+      "encodeMs": {
+        "english": 88.83145399999921
+      },
+      "observedWallMs": 89.48279700000057,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-20",
+      "captureSha256": "30e2ac2913e5170d799ba7722b5864b2367f5acca0d26fcf364d4b12d09193ad",
+      "model": "english",
+      "rawText": "like interstellar",
+      "positive": "like interstellar",
+      "negated": [],
+      "texts": [
+        "like interstellar"
+      ],
+      "queuedMs": 0.013975999998365296,
+      "encodeMs": {
+        "english": 85.80924899999809
+      },
+      "observedWallMs": 88.49584600000162,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-21",
+      "captureSha256": "844d828bda6540abef8aec5014feb511e56c2ab7fabf02db12acea94618417c8",
+      "model": "english",
+      "rawText": "like john wick but a tv show",
+      "positive": "like john wick but a tv show",
+      "negated": [],
+      "texts": [
+        "like john wick but a tv show"
+      ],
+      "queuedMs": 0.007741999997961102,
+      "encodeMs": {
+        "english": 264.9639270000007
+      },
+      "observedWallMs": 265.4605829999964,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-22",
+      "captureSha256": "dd49d8db476dd20df83e51b979ab25392e54c65a15faff8e3829a4e7b521ad49",
+      "model": "english",
+      "rawText": "meryl streep movies",
+      "positive": "meryl streep movies",
+      "negated": [],
+      "texts": [
+        "meryl streep movies"
+      ],
+      "queuedMs": 0.007569999997940613,
+      "encodeMs": {
+        "english": 135.2373860000007
+      },
+      "observedWallMs": 136.2544510000007,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-23",
+      "captureSha256": "85f62da0de70d894fad9fac2bdd692248a5ba70503b61d58540618b7f5d86ec8",
+      "model": "english",
+      "rawText": "sofia copola vibes",
+      "positive": "sofia copola vibes",
+      "negated": [],
+      "texts": [
+        "sofia copola vibes"
+      ],
+      "queuedMs": 0.012629000000742963,
+      "encodeMs": {
+        "english": 84.16875399999844
+      },
+      "observedWallMs": 84.96733200000017,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-24",
+      "captureSha256": "34351db673b620c93a5ff545c58aa8b2ca23bfae81dbbb927ff2204ad09d1e18",
+      "model": "english",
+      "rawText": "ridley scott",
+      "positive": "ridley scott",
+      "negated": [],
+      "texts": [
+        "ridley scott"
+      ],
+      "queuedMs": 0.007180000000516884,
+      "encodeMs": {
+        "english": 58.44049400000222
+      },
+      "observedWallMs": 58.9312600000012,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-25",
+      "captureSha256": "cd60f18639120d863b11f8bd01ad3c9043d87ad5def5dcfb9ab06440ae02ef40",
+      "model": "english",
+      "rawText": "dreamworks animation",
+      "positive": "dreamworks animation",
+      "negated": [],
+      "texts": [
+        "dreamworks animation"
+      ],
+      "queuedMs": 0.007692999999562744,
+      "encodeMs": {
+        "english": 191.6533210000016
+      },
+      "observedWallMs": 192.20921899999666,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-26",
+      "captureSha256": "99e2558e231eecc3a59d1efa6dd95f3a0eeee8663a9c1f6b2353d18c34aac82a",
+      "model": "multilingual",
+      "rawText": "düstere serie über ein geheimnis in einer kleinstadt",
+      "positive": "düstere serie über ein geheimnis in einer kleinstadt",
+      "negated": [],
+      "texts": [
+        "düstere serie über ein geheimnis in einer kleinstadt"
+      ],
+      "queuedMs": 0.008234999997512205,
+      "encodeMs": {
+        "multilingual": 21.9634670000014
+      },
+      "observedWallMs": 22.36855999999898,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-27",
+      "captureSha256": "f89be1ce3f1acbf36b5f8bc318cd49ab5c6dc3402e745d482254b1e0e0e119ad",
+      "model": "multilingual",
+      "rawText": "una peli romántica que no sea cursi",
+      "positive": "una peli romántica que",
+      "negated": [
+        "sea cursi"
+      ],
+      "texts": [
+        "una peli romántica que no sea cursi",
+        "una peli romántica que",
+        "sea cursi"
+      ],
+      "queuedMs": 0.006810000002587913,
+      "encodeMs": {
+        "multilingual": 60.59969599999749
+      },
+      "observedWallMs": 71.91340599999967,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-28",
+      "captureSha256": "223dd36367e44d38961c9c1af0b6dd3bafd6d694e8d5c26f04d28cb283204a0a",
+      "model": "english",
+      "rawText": "ailecek izlenecek komik film",
+      "positive": "ailecek izlenecek komik film",
+      "negated": [],
+      "texts": [
+        "ailecek izlenecek komik film"
+      ],
+      "queuedMs": 0.008234000000811648,
+      "encodeMs": {
+        "english": 139.50809300000037
+      },
+      "observedWallMs": 148.5148169999993,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-29",
+      "captureSha256": "c0bb0489515816eef3a67c1fd6411f94f79fbbb3c04cdf9e4eb3b80b4b789662",
+      "model": "english",
+      "rawText": "80s teen moives",
+      "positive": "80s teen moives",
+      "negated": [],
+      "texts": [
+        "80s teen moives"
+      ],
+      "queuedMs": 0.008619000000180677,
+      "encodeMs": {
+        "english": 51.72963400000299
+      },
+      "observedWallMs": 54.96978300000046,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "h5-30",
+      "captureSha256": "a43ef08644e903b9dd7c346fa910f61edb85b585e2ee8740175f84974da3bdd4",
+      "model": "english",
+      "rawText": "film noir from the 40s",
+      "positive": "film noir from the 40s",
+      "negated": [],
+      "texts": [
+        "film noir from the 40s"
+      ],
+      "queuedMs": 0.012256000001798384,
+      "encodeMs": {
+        "english": 106.48419900000226
+      },
+      "observedWallMs": 107.05797799999709,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-01",
+      "captureSha256": "6ea14a39ec1ffbc6d4aacb1a1ee23b6e961444138c7d648914ce6e508d4f3f06",
+      "model": "english",
+      "rawText": "horror on a submarine",
+      "positive": "horror on a submarine",
+      "negated": [],
+      "texts": [
+        "horror on a submarine"
+      ],
+      "queuedMs": 0.015761999999085674,
+      "encodeMs": {
+        "english": 142.31138600000122
+      },
+      "observedWallMs": 142.9686819999988,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-02",
+      "captureSha256": "f954b372681e09d7461f9c50939384b36049cffecf5772d65e9b56ed4978ee9b",
+      "model": "english",
+      "rawText": "comedy set in a prison",
+      "positive": "comedy set in a prison",
+      "negated": [],
+      "texts": [
+        "comedy set in a prison"
+      ],
+      "queuedMs": 0.007542999999714084,
+      "encodeMs": {
+        "english": 102.44759899999917
+      },
+      "observedWallMs": 107.53267200000118,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-03",
+      "captureSha256": "ddc1e73ae1f0ce4dbdcd46ed09eadf9f0e1a1ce7d0549a5a0551c6763da49282",
+      "model": "english",
+      "rawText": "anime about pirates",
+      "positive": "anime about pirates",
+      "negated": [],
+      "texts": [
+        "anime about pirates"
+      ],
+      "queuedMs": 0.0071339999994961545,
+      "encodeMs": {
+        "english": 105.72951000000103
+      },
+      "observedWallMs": 106.37419600000067,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-04",
+      "captureSha256": "ac9496c4e2f6d921702e58a5ff9b4360386e8030990a415d62915477f78ec211",
+      "model": "english",
+      "rawText": "western with samurai",
+      "positive": "western with samurai",
+      "negated": [],
+      "texts": [
+        "western with samurai"
+      ],
+      "queuedMs": 0.007506000001740176,
+      "encodeMs": {
+        "english": 163.22034500000154
+      },
+      "observedWallMs": 163.81369599999744,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-05",
+      "captureSha256": "ebcada3327606fc8aad5848c1f3579bd0e1ab827ae6fb6206ac692ab2ce6a875",
+      "model": "english",
+      "rawText": "war film about snipers",
+      "positive": "war film about snipers",
+      "negated": [],
+      "texts": [
+        "war film about snipers"
+      ],
+      "queuedMs": 0.013845000001310837,
+      "encodeMs": {
+        "english": 118.07738000000245
+      },
+      "observedWallMs": 121.68647300000157,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-06",
+      "captureSha256": "0466d5132517f2f26a68b578ec14da7623d1b5ff9cd1034d64d996c1b56ae6e6",
+      "model": "english",
+      "rawText": "like Band of Brothers but about Vietnam",
+      "positive": "like Band of Brothers but about Vietnam",
+      "negated": [],
+      "texts": [
+        "like Band of Brothers but about Vietnam"
+      ],
+      "queuedMs": 0.006776000001991633,
+      "encodeMs": {
+        "english": 64.00775100000101
+      },
+      "observedWallMs": 65.22421600000234,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-07",
+      "captureSha256": "45271420f8bda958e102eac595755260e8dca2b7176ff98b903fd96e5fb1dbb7",
+      "model": "english",
+      "rawText": "like The Sopranos but in Italy",
+      "positive": "like The Sopranos but in Italy",
+      "negated": [],
+      "texts": [
+        "like The Sopranos but in Italy"
+      ],
+      "queuedMs": 0.007809999999153661,
+      "encodeMs": {
+        "english": 110.2691870000017
+      },
+      "observedWallMs": 111.85316600000078,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-08",
+      "captureSha256": "431bddb3dba987a79e16e1ba363a894f7b1d43ecb11695d037c300100289595a",
+      "model": "english",
+      "rawText": "like Amélie",
+      "positive": "like Amélie",
+      "negated": [],
+      "texts": [
+        "like Amélie"
+      ],
+      "queuedMs": 0.00742299999910756,
+      "encodeMs": {
+        "english": 86.2521510000006
+      },
+      "observedWallMs": 86.62873899999977,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-09",
+      "captureSha256": "a332bf9ee34e6cd70605fa97bce7cdf7d8a1498dece812f7ab78614f3ce2cff3",
+      "model": "english",
+      "rawText": "space opera without aliens",
+      "positive": "space opera",
+      "negated": [
+        "aliens"
+      ],
+      "texts": [
+        "space opera without aliens",
+        "space opera",
+        "aliens"
+      ],
+      "queuedMs": 0.009679000002506655,
+      "encodeMs": {
+        "english": 143.54857699999775
+      },
+      "observedWallMs": 144.28774899999917,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-10",
+      "captureSha256": "ddd7b21c2caa690e4ce4a38c61fee7e538dda34c4de98e1db9f6afccda0fd8ef",
+      "model": "english",
+      "rawText": "animated movie that is not for kids",
+      "positive": "animated movie that is",
+      "negated": [
+        "for kids"
+      ],
+      "texts": [
+        "animated movie that is not for kids",
+        "animated movie that is",
+        "for kids"
+      ],
+      "queuedMs": 0.014913999999407679,
+      "encodeMs": {
+        "english": 153.65374200000224
+      },
+      "observedWallMs": 154.55787399999826,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-11",
+      "captureSha256": "d8862a7c908f0f505aa2c90fc196c039e59f6006215297a3f1134a48e1a1eee2",
+      "model": "english",
+      "rawText": "claustrophobic thriller in the Arctic",
+      "positive": "claustrophobic thriller in the Arctic",
+      "negated": [],
+      "texts": [
+        "claustrophobic thriller in the Arctic"
+      ],
+      "queuedMs": 0.008066999998845858,
+      "encodeMs": {
+        "english": 76.52207999999882
+      },
+      "observedWallMs": 77.070039000002,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-12",
+      "captureSha256": "9abcaea68d2fc43b7045858c680ed1737089ac3b985407994a2f32ef03169c66",
+      "model": "english",
+      "rawText": "lazy sunny summer on the Italian coast",
+      "positive": "lazy sunny summer on the Italian coast",
+      "negated": [],
+      "texts": [
+        "lazy sunny summer on the Italian coast"
+      ],
+      "queuedMs": 0.013134000000718515,
+      "encodeMs": {
+        "english": 68.07254099999773
+      },
+      "observedWallMs": 68.90010000000257,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-13",
+      "captureSha256": "8a83d568dbd7f5baa1aa26cb480d8b3efbfc926359d4ea9c54a156b040afbfbe",
+      "model": "english",
+      "rawText": "70s paranoid conspiracy thrillers",
+      "positive": "70s paranoid conspiracy thrillers",
+      "negated": [],
+      "texts": [
+        "70s paranoid conspiracy thrillers"
+      ],
+      "queuedMs": 0.006898999999975786,
+      "encodeMs": {
+        "english": 92.62218999999823
+      },
+      "observedWallMs": 98.784975999999,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-14",
+      "captureSha256": "00f1facb77f872706742640bc5948894c30f2b65cdb72f9f8bc5ea72fc61714e",
+      "model": "english",
+      "rawText": "2000s British gangster comedies",
+      "positive": "2000s British gangster comedies",
+      "negated": [],
+      "texts": [
+        "2000s British gangster comedies"
+      ],
+      "queuedMs": 0.01304099999833852,
+      "encodeMs": {
+        "english": 83.88464399999793
+      },
+      "observedWallMs": 94.50714000000153,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-15",
+      "captureSha256": "265e4c473a6f124af0b21a1009e4f0b52b22cf35f8317e106a74a44fed90ab81",
+      "model": "english",
+      "rawText": "terry gilliam",
+      "positive": "terry gilliam",
+      "negated": [],
+      "texts": [
+        "terry gilliam"
+      ],
+      "queuedMs": 0.008433999999397201,
+      "encodeMs": {
+        "english": 46.3920849999995
+      },
+      "observedWallMs": 48.09004400000049,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-16",
+      "captureSha256": "2ed544943590e144692681322547ff9768e2ebc1fe86ab1ce5e5a2cd2c9dea73",
+      "model": "english",
+      "rawText": "jackie chan movies",
+      "positive": "jackie chan movies",
+      "negated": [],
+      "texts": [
+        "jackie chan movies"
+      ],
+      "queuedMs": 0.010387999998783926,
+      "encodeMs": {
+        "english": 58.70889999999781
+      },
+      "observedWallMs": 62.24196700000175,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-17",
+      "captureSha256": "3e04b8b2a7313ad9444409eee87144b9970bb4eeb01017d3e966b56ddfb32abd",
+      "model": "english",
+      "rawText": "A small-town cop who is way out of their depth investigates a murder, told with dry dark humour and lots of quirky locals.",
+      "positive": "A small-town cop who is way out of their depth investigates a murder, told with dry dark humour and lots of quirky locals.",
+      "negated": [],
+      "texts": [
+        "A small-town cop who is way out of their depth investigates a murder, told with dry dark humour and lots of quirky locals."
+      ],
+      "queuedMs": 0.008729000001039822,
+      "encodeMs": {
+        "english": 133.580793000001
+      },
+      "observedWallMs": 134.90392700000302,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-18",
+      "captureSha256": "83a54bc0796cfb86cc6bd31ab83a9367eeddcf658828ea119ebb38ddd292b5a5",
+      "model": "english",
+      "rawText": "A soldier comes home from war and can't fit back into ordinary life. I want it honest and quiet, not an action movie.",
+      "positive": "A soldier comes home from war and can't fit back into ordinary life. I want it honest and quiet,",
+      "negated": [
+        "an action movie"
+      ],
+      "texts": [
+        "A soldier comes home from war and can't fit back into ordinary life. I want it honest and quiet, not an action movie.",
+        "A soldier comes home from war and can't fit back into ordinary life. I want it honest and quiet,",
+        "an action movie"
+      ],
+      "queuedMs": 0.007551999999122927,
+      "encodeMs": {
+        "english": 297.78942800000004
+      },
+      "observedWallMs": 298.49582999999984,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-19",
+      "captureSha256": "4134c818e2475605275dbc7f23fe775ef75eb6806908672205b1ab7765c7e329",
+      "model": "multilingual",
+      "rawText": "Una comedia absurda sobre la vida en la oficina, con personajes ridículos.",
+      "positive": "Una comedia absurda sobre la vida en la oficina, con personajes ridículos.",
+      "negated": [],
+      "texts": [
+        "Una comedia absurda sobre la vida en la oficina, con personajes ridículos."
+      ],
+      "queuedMs": 0.008637999999336898,
+      "encodeMs": {
+        "multilingual": 25.593400999998266
+      },
+      "observedWallMs": 29.611535000000003,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-20",
+      "captureSha256": "56bfdb2904117810161ac02c8678cb93a73d7502e80154a8a1bad2571c8d9940",
+      "model": "english",
+      "rawText": "epic",
+      "positive": "epic",
+      "negated": [],
+      "texts": [
+        "epic"
+      ],
+      "queuedMs": 0.010304999999789288,
+      "encodeMs": {
+        "english": 36.38549299999795
+      },
+      "observedWallMs": 36.886813999997685,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-21",
+      "captureSha256": "bd4fcf1dd3dc930808a21d12836528a25bd3aa6d06b4082c2c57a63e6d43c1aa",
+      "model": "english",
+      "rawText": "dystopain deth game series",
+      "positive": "dystopain deth game series",
+      "negated": [],
+      "texts": [
+        "dystopain deth game series"
+      ],
+      "queuedMs": 0.006499999999505235,
+      "encodeMs": {
+        "english": 61.47807300000204
+      },
+      "observedWallMs": 62.0627659999991,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ho2-22",
+      "captureSha256": "2847cd4b45d2eacdeb683ef7d344734f2f726148448729a85ab76bda31fe56aa",
+      "model": "english",
+      "rawText": "the expanse",
+      "positive": "the expanse",
+      "negated": [],
+      "texts": [
+        "the expanse"
+      ],
+      "queuedMs": 0.007030000000668224,
+      "encodeMs": {
+        "english": 57.06482700000197
+      },
+      "observedWallMs": 57.613688999997976,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-00",
+      "captureSha256": "dfa03cfef5119f49455570b31badb203df7259df5697f3ef11b70f2d1eb7d726",
+      "model": "english",
+      "rawText": "complete nonsense",
+      "positive": "complete nonsense",
+      "negated": [],
+      "texts": [
+        "complete nonsense"
+      ],
+      "queuedMs": 0.008205999998608604,
+      "encodeMs": {
+        "english": 51.155909000000975
+      },
+      "observedWallMs": 53.160014000000956,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-01",
+      "captureSha256": "400e675f335a497d4eed5a06572eece976ed4b0d61d8b3c6fb8fa603e232013d",
+      "model": "english",
+      "rawText": "tarkovsky",
+      "positive": "tarkovsky",
+      "negated": [],
+      "texts": [
+        "tarkovsky"
+      ],
+      "queuedMs": 0.012542000000394182,
+      "encodeMs": {
+        "english": 136.41803699999946
+      },
+      "observedWallMs": 137.27289299999757,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-02",
+      "captureSha256": "3b43c73f5f5e50693f4eaa37d3d6eb34a645d2936f62384e70018c44153c9c77",
+      "model": "english",
+      "rawText": "feel good cooking show",
+      "positive": "feel good cooking show",
+      "negated": [],
+      "texts": [
+        "feel good cooking show"
+      ],
+      "queuedMs": 0.008658999999170192,
+      "encodeMs": {
+        "english": 114.51674999999886
+      },
+      "observedWallMs": 127.30350799999724,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-03",
+      "captureSha256": "3458e06d77b19a93b2c4dbcd8ab63be31ca67f0617cc3f3555041b5deb878eb1",
+      "model": "english",
+      "rawText": "slow burn space horror",
+      "positive": "slow burn space horror",
+      "negated": [],
+      "texts": [
+        "slow burn space horror"
+      ],
+      "queuedMs": 0.009072999997442821,
+      "encodeMs": {
+        "english": 84.87641299999814
+      },
+      "observedWallMs": 86.05139000000054,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-04",
+      "captureSha256": "93db85512652263c0a1837d40b20938eb34f047ca3f37ac024bd0d70cca6fed8",
+      "model": "english",
+      "rawText": "tense heist thriller, not bleak",
+      "positive": "tense heist thriller,",
+      "negated": [
+        "bleak"
+      ],
+      "texts": [
+        "tense heist thriller, not bleak",
+        "tense heist thriller,",
+        "bleak"
+      ],
+      "queuedMs": 0.00842700000066543,
+      "encodeMs": {
+        "english": 210.68010299999878
+      },
+      "observedWallMs": 212.3205139999991,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-05",
+      "captureSha256": "4075c5d517433b277bac27940c26750650c738daa555331fceef3c01989e685d",
+      "model": "english",
+      "rawText": "grief after losing a child",
+      "positive": "grief after losing a child",
+      "negated": [],
+      "texts": [
+        "grief after losing a child"
+      ],
+      "queuedMs": 0.007298000000446336,
+      "encodeMs": {
+        "english": 75.48772400000234
+      },
+      "observedWallMs": 76.52664200000072,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-06",
+      "captureSha256": "69a84f6318e4bf8d55c652b15aa382b6e09a20e4e8f2788592850f780d8aadd7",
+      "model": "english",
+      "rawText": "furious",
+      "positive": "furious",
+      "negated": [],
+      "texts": [
+        "furious"
+      ],
+      "queuedMs": 0.007852999999158783,
+      "encodeMs": {
+        "english": 141.90458099999887
+      },
+      "observedWallMs": 143.25844499999948,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-07",
+      "captureSha256": "9032ad04284817fa4d3a992cd60e34a51589edf50489d2a1f07b9f841f9953d3",
+      "model": "english",
+      "rawText": "craty",
+      "positive": "craty",
+      "negated": [],
+      "texts": [
+        "craty"
+      ],
+      "queuedMs": 0.019306999998661922,
+      "encodeMs": {
+        "english": 105.35508699999991
+      },
+      "observedWallMs": 108.75860399999874,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-08",
+      "captureSha256": "ea891144dc0caaf7e03b8a70a49c62c2d4dd45590a150f23f4c029ba1d2ec7b7",
+      "model": "english",
+      "rawText": "melancholy lighthouse keeper mystery",
+      "positive": "melancholy lighthouse keeper mystery",
+      "negated": [],
+      "texts": [
+        "melancholy lighthouse keeper mystery"
+      ],
+      "queuedMs": 0.0062890000008337665,
+      "encodeMs": {
+        "english": 57.63194900000235
+      },
+      "observedWallMs": 58.05391900000177,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-09",
+      "captureSha256": "0bf814d332283d0d9ff0937c194c7cf3302f1750790ff5f06372596abee72a69",
+      "model": "english",
+      "rawText": "scifi with cars",
+      "positive": "scifi with cars",
+      "negated": [],
+      "texts": [
+        "scifi with cars"
+      ],
+      "queuedMs": 0.007296999996469822,
+      "encodeMs": {
+        "english": 48.44906499999706
+      },
+      "observedWallMs": 48.90197899999839,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-10",
+      "captureSha256": "c53a84e7c3facc2ef15cd4a2ce022df6baf31d0a69236abcd0ca40ad5c7177c7",
+      "model": "english",
+      "rawText": "sunglasses at night",
+      "positive": "sunglasses at night",
+      "negated": [],
+      "texts": [
+        "sunglasses at night"
+      ],
+      "queuedMs": 0.00823600000148872,
+      "encodeMs": {
+        "english": 56.690065000002505
+      },
+      "observedWallMs": 57.17359600000054,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-11",
+      "captureSha256": "a8a63249be88dfdd39025633084c15a9a9372e3367fb4d061c6bf2c500faf74a",
+      "model": "english",
+      "rawText": "fantasy with dragons",
+      "positive": "fantasy with dragons",
+      "negated": [],
+      "texts": [
+        "fantasy with dragons"
+      ],
+      "queuedMs": 0.007322999997995794,
+      "encodeMs": {
+        "english": 84.73884399999952
+      },
+      "observedWallMs": 85.16830700000355,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-12",
+      "captureSha256": "d23f99586362d59579b07a3d46bd93d3977ca4f0b523d25f168e89dcb23e637c",
+      "model": "english",
+      "rawText": "like groundhog day",
+      "positive": "like groundhog day",
+      "negated": [],
+      "texts": [
+        "like groundhog day"
+      ],
+      "queuedMs": 0.009108999998716172,
+      "encodeMs": {
+        "english": 61.40306899999996
+      },
+      "observedWallMs": 61.91000200000053,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "lab-13",
+      "captureSha256": "6df59093cd06c070823dfbce1d7e8e94b9cc155c1e0966f8b1c938f9c8946eb9",
+      "model": "english",
+      "rawText": "time travel complex",
+      "positive": "time travel complex",
+      "negated": [],
+      "texts": [
+        "time travel complex"
+      ],
+      "queuedMs": 0.008514999997714767,
+      "encodeMs": {
+        "english": 49.75460000000021
+      },
+      "observedWallMs": 50.4923979999985,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-01",
+      "captureSha256": "779d8773adab6fbba76f57a8f230089b564f3f9e4a693c92a4c42329d012b5c1",
+      "model": "english",
+      "rawText": "heist on a train",
+      "positive": "heist on a train",
+      "negated": [],
+      "texts": [
+        "heist on a train"
+      ],
+      "queuedMs": 0.007334999998420244,
+      "encodeMs": {
+        "english": 64.65379700000267
+      },
+      "observedWallMs": 65.7934090000017,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-02",
+      "captureSha256": "a2ac72bdb9beeb9404e5c1c30ca8f533a12e0258755c55f04af196faf453af9d",
+      "model": "english",
+      "rawText": "two geniuses in a battle of wits",
+      "positive": "two geniuses in a battle of wits",
+      "negated": [],
+      "texts": [
+        "two geniuses in a battle of wits"
+      ],
+      "queuedMs": 0.010523000000830507,
+      "encodeMs": {
+        "english": 52.80136599999969
+      },
+      "observedWallMs": 53.80009399999835,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-03",
+      "captureSha256": "e62d3f457eb9e4694e67fd36edff02004bbf5892d92939f04eba74126c915726",
+      "model": "english",
+      "rawText": "satire about politics or big corporations",
+      "positive": "satire about politics or big corporations",
+      "negated": [],
+      "texts": [
+        "satire about politics or big corporations"
+      ],
+      "queuedMs": 0.0075899999974353705,
+      "encodeMs": {
+        "english": 43.40204199999789
+      },
+      "observedWallMs": 43.95678499999849,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-04",
+      "captureSha256": "5ce9d5aaf8423195ac6956c976871679c94ab7cdf02b03854b3379f5bc24d23b",
+      "model": "english",
+      "rawText": "quiet and lonely in deep space",
+      "positive": "quiet and lonely in deep space",
+      "negated": [],
+      "texts": [
+        "quiet and lonely in deep space"
+      ],
+      "queuedMs": 0.007687000001169508,
+      "encodeMs": {
+        "english": 42.817338999997446
+      },
+      "observedWallMs": 43.49497299999712,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-05",
+      "captureSha256": "60b775ae363843989cdaf7319bc1c27e3d5b22b2b8a8a40b0bea0c86d0bec259",
+      "model": "english",
+      "rawText": "rainy neon cyberpunk city",
+      "positive": "rainy neon cyberpunk city",
+      "negated": [],
+      "texts": [
+        "rainy neon cyberpunk city"
+      ],
+      "queuedMs": 0.008485999998811167,
+      "encodeMs": {
+        "english": 58.83334900000045
+      },
+      "observedWallMs": 61.731104999998934,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-06",
+      "captureSha256": "9eac1be43cbd9e961a48223732e500ca6b75a9d5163757a6883987ec410566b6",
+      "model": "english",
+      "rawText": "kung fu comedy",
+      "positive": "kung fu comedy",
+      "negated": [],
+      "texts": [
+        "kung fu comedy"
+      ],
+      "queuedMs": 0.007141000001865905,
+      "encodeMs": {
+        "english": 48.34781600000133
+      },
+      "observedWallMs": 49.933970999998564,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-07",
+      "captureSha256": "625844d9f7c6710b80e4c80c7e8edaef23391c82be26c4d1e9566c2acbbe2959",
+      "model": "english",
+      "rawText": "like The Matrix but anime",
+      "positive": "like The Matrix but anime",
+      "negated": [],
+      "texts": [
+        "like The Matrix but anime"
+      ],
+      "queuedMs": 0.006659999999101274,
+      "encodeMs": {
+        "english": 62.09365699999762
+      },
+      "observedWallMs": 62.57836600000155,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-08",
+      "captureSha256": "37e7a80a7713f021d697a65ad2c2c6ba4a0b41d6395e21512adb48d7f7cf94d6",
+      "model": "english",
+      "rawText": "like Breaking Bad but a comedy",
+      "positive": "like Breaking Bad but a comedy",
+      "negated": [],
+      "texts": [
+        "like Breaking Bad but a comedy"
+      ],
+      "queuedMs": 0.007439000000886153,
+      "encodeMs": {
+        "english": 50.863688000001275
+      },
+      "observedWallMs": 51.919418000001315,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-09",
+      "captureSha256": "60491ab3be6eb1c94323f369c1508389da116568926639896b4963b2d9334a8a",
+      "model": "english",
+      "rawText": "80s sci-fi action",
+      "positive": "80s sci-fi action",
+      "negated": [],
+      "texts": [
+        "80s sci-fi action"
+      ],
+      "queuedMs": 0.006852999998955056,
+      "encodeMs": {
+        "english": 120.16262300000017
+      },
+      "observedWallMs": 121.21010400000159,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-10",
+      "captureSha256": "03f561dcedd2ab86dfbd173dc8881ac45ba07389b58d0a9135451a6747e665c5",
+      "model": "english",
+      "rawText": "90s crime movies with great dialogue",
+      "positive": "90s crime movies with great dialogue",
+      "negated": [],
+      "texts": [
+        "90s crime movies with great dialogue"
+      ],
+      "queuedMs": 0.007068999999319203,
+      "encodeMs": {
+        "english": 87.63068199999907
+      },
+      "observedWallMs": 88.08994200000234,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-11",
+      "captureSha256": "4256532b166f9457e0c957129bd6a27312f9404cda1e0be892c9521529f79fba",
+      "model": "english",
+      "rawText": "comedy without romance",
+      "positive": "comedy",
+      "negated": [
+        "romance"
+      ],
+      "texts": [
+        "comedy without romance",
+        "comedy",
+        "romance"
+      ],
+      "queuedMs": 0.0077529999980470166,
+      "encodeMs": {
+        "english": 153.42769500000213
+      },
+      "observedWallMs": 154.00102400000105,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-12",
+      "captureSha256": "cd2f94575aea4c6196dcaae9dff1ecfbfd2c24af71755b29f1a9d8a7afb53733",
+      "model": "english",
+      "rawText": "war movie that isn't about World War II",
+      "positive": "war movie that",
+      "negated": [
+        "about world war ii"
+      ],
+      "texts": [
+        "war movie that isn't about World War II",
+        "war movie that",
+        "about world war ii"
+      ],
+      "queuedMs": 0.00805900000341353,
+      "encodeMs": {
+        "english": 150.88864900000044
+      },
+      "observedWallMs": 151.57189300000027,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-13",
+      "captureSha256": "3c5e2719891e8e17074f229c3b73da0ab903b8eb6f9766982743cf2294fc3cac",
+      "model": "english",
+      "rawText": "smart sci-fi for adults",
+      "positive": "smart sci-fi for adults",
+      "negated": [],
+      "texts": [
+        "smart sci-fi for adults"
+      ],
+      "queuedMs": 0.007212000000436092,
+      "encodeMs": {
+        "english": 44.51399500000116
+      },
+      "observedWallMs": 45.16664799999853,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-14",
+      "captureSha256": "80eabd8c35fb391bd5efe128d4c6ca01cbaa7be2112c2885008fe08afb5f7255",
+      "model": "english",
+      "rawText": "good first anime for someone who never watched anime",
+      "positive": "good first anime for someone who never watched anime",
+      "negated": [],
+      "texts": [
+        "good first anime for someone who never watched anime"
+      ],
+      "queuedMs": 0.008463999998639338,
+      "encodeMs": {
+        "english": 147.18827999999849
+      },
+      "observedWallMs": 149.83484500000122,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-15",
+      "captureSha256": "fdffaeec21d8bb524d2ef8182f0f1d754187d4a08562a50d3a70d4911684ed2f",
+      "model": "english",
+      "rawText": "nonlinear storytelling",
+      "positive": "nonlinear storytelling",
+      "negated": [],
+      "texts": [
+        "nonlinear storytelling"
+      ],
+      "queuedMs": 0.01171500000054948,
+      "encodeMs": {
+        "english": 61.162655000000086
+      },
+      "observedWallMs": 62.63172599999962,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-16",
+      "captureSha256": "13beb0b6a7907e099d57b8833488eb32f21a6214c34c3c05f00cc9c7a14795e9",
+      "model": "english",
+      "rawText": "whole movie takes place in one room",
+      "positive": "whole movie takes place in one room",
+      "negated": [],
+      "texts": [
+        "whole movie takes place in one room"
+      ],
+      "queuedMs": 0.0075099999994563404,
+      "encodeMs": {
+        "english": 72.25283900000068
+      },
+      "observedWallMs": 72.72847300000285,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-17",
+      "captureSha256": "88971d18842d4b835ca8fd8a0813fe2bd7c7b54d4b1e99c9b2d60848bf1316a5",
+      "model": "english",
+      "rawText": "mindbending",
+      "positive": "mindbending",
+      "negated": [],
+      "texts": [
+        "mindbending"
+      ],
+      "queuedMs": 0.006663000000116881,
+      "encodeMs": {
+        "english": 98.20879099999729
+      },
+      "observedWallMs": 98.67996900000071,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-18",
+      "captureSha256": "25b6659c14577161cb1fcce47d0ab876971866f3b9f1c27d6f43850d0cf7c98b",
+      "model": "english",
+      "rawText": "wholesome",
+      "positive": "wholesome",
+      "negated": [],
+      "texts": [
+        "wholesome"
+      ],
+      "queuedMs": 0.015887000001384877,
+      "encodeMs": {
+        "english": 43.386757000000216
+      },
+      "observedWallMs": 44.00105600000097,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-19",
+      "captureSha256": "6618724505ffeca45ea50e61e133281c9a255ce93909322911a601812e2243f8",
+      "model": "english",
+      "rawText": "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun than grim.",
+      "positive": "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun",
+      "negated": [
+        "grim"
+      ],
+      "texts": [
+        "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun than grim.",
+        "A crew of misfits on a beat-up spaceship taking odd jobs on the edge of the law, lots of banter and found family, more fun",
+        "grim"
+      ],
+      "queuedMs": 0.013956999999209074,
+      "encodeMs": {
+        "english": 593.5642519999965
+      },
+      "observedWallMs": 594.4864600000001,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-20",
+      "captureSha256": "1bf723cba3c3441833afe8729a89d4fb02a30f92f51fad0de688a0cff1adf1ae",
+      "model": "english",
+      "rawText": "An ordinary guy slowly realises his whole life is staged or fake and has to decide whether to break out of it.",
+      "positive": "An ordinary guy slowly realises his whole life is staged or fake and has to decide whether to break out of it.",
+      "negated": [],
+      "texts": [
+        "An ordinary guy slowly realises his whole life is staged or fake and has to decide whether to break out of it."
+      ],
+      "queuedMs": 0.00856000000203494,
+      "encodeMs": {
+        "english": 216.04919099999825
+      },
+      "observedWallMs": 231.32057500000155,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-21",
+      "captureSha256": "c9a93f123f0a5899e44e03b29afcf35a146d22d14b78733a74d932e57381f6e3",
+      "model": "multilingual",
+      "rawText": "un dessin animé drôle pour toute la famille",
+      "positive": "un dessin animé drôle pour toute la famille",
+      "negated": [],
+      "texts": [
+        "un dessin animé drôle pour toute la famille"
+      ],
+      "queuedMs": 0.012831000000005588,
+      "encodeMs": {
+        "multilingual": 25.62580700000035
+      },
+      "observedWallMs": 27.771751000000222,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-22",
+      "captureSha256": "0d6e721659a7df14c55c6fc9f96afccba3e992e9cfecc177296cca2e9c4b99e0",
+      "model": "multilingual",
+      "rawText": "Antikriegsfilm, der zeigt, wie sinnlos Krieg ist",
+      "positive": "Antikriegsfilm, der zeigt, wie sinnlos Krieg ist",
+      "negated": [],
+      "texts": [
+        "Antikriegsfilm, der zeigt, wie sinnlos Krieg ist"
+      ],
+      "queuedMs": 0.00746400000207359,
+      "encodeMs": {
+        "multilingual": 28.992245000001276
+      },
+      "observedWallMs": 39.378200999999535,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-23",
+      "captureSha256": "eb57dcf23ecb88fccf6ac4ff096aec66ff2fdff8c0c401a2976bf1607642affa",
+      "model": "english",
+      "rawText": "psycological thriler with a big twist",
+      "positive": "psycological thriler with a big twist",
+      "negated": [],
+      "texts": [
+        "psycological thriler with a big twist"
+      ],
+      "queuedMs": 0.007911000000603963,
+      "encodeMs": {
+        "english": 203.76689700000134
+      },
+      "observedWallMs": 208.33690500000012,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-24",
+      "captureSha256": "762d46a3a07c5c5eb338f41b10b1c6860cbb5a8c7f9f360f5ccdd37021ba67e7",
+      "model": "english",
+      "rawText": "hunter x hunter",
+      "positive": "hunter x hunter",
+      "negated": [],
+      "texts": [
+        "hunter x hunter"
+      ],
+      "queuedMs": 0.007077999998728046,
+      "encodeMs": {
+        "english": 107.49341699999786
+      },
+      "observedWallMs": 107.8764599999995,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "new-25",
+      "captureSha256": "21627ad7c2e96437581bb8b444e34b76e25d7038b98cd70798d80cea05c15e11",
+      "model": "english",
+      "rawText": "code geass",
+      "positive": "code geass",
+      "negated": [],
+      "texts": [
+        "code geass"
+      ],
+      "queuedMs": 0.006583999998838408,
+      "encodeMs": {
+        "english": 52.91285699999935
+      },
+      "observedWallMs": 53.79497000000265,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-01",
+      "captureSha256": "62890a9e3dc55e9ff42b45565526d357115f576a151790094cf6dc0d003e77cf",
+      "model": "english",
+      "rawText": "funny brad pitt movies",
+      "positive": "funny brad pitt movies",
+      "negated": [],
+      "texts": [
+        "funny brad pitt movies"
+      ],
+      "queuedMs": 0.007420999998430489,
+      "encodeMs": {
+        "english": 102.37473099999988
+      },
+      "observedWallMs": 102.8358339999977,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-02",
+      "captureSha256": "cc880318e60767e0b12aa543b1533ba0203c816fa033c480010f186093484b8b",
+      "model": "english",
+      "rawText": "keanu reeves action",
+      "positive": "keanu reeves action",
+      "negated": [],
+      "texts": [
+        "keanu reeves action"
+      ],
+      "queuedMs": 0.007158000000345055,
+      "encodeMs": {
+        "english": 98.43176200000016
+      },
+      "observedWallMs": 112.94416799999817,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-03",
+      "captureSha256": "ca6303b627c267e009b8779d223811522e3dd7c52cf40af4339d37129bda03cf",
+      "model": "english",
+      "rawText": "bill murray deadpan comedies",
+      "positive": "bill murray deadpan comedies",
+      "negated": [],
+      "texts": [
+        "bill murray deadpan comedies"
+      ],
+      "queuedMs": 0.011613999999099178,
+      "encodeMs": {
+        "english": 156.30655899999692
+      },
+      "observedWallMs": 156.81536499999856,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-04",
+      "captureSha256": "20b5340ad338adcdc339ff08afd5ca86bc39d3e6ecec70d3907271388684e75c",
+      "model": "english",
+      "rawText": "tom hanks war movies",
+      "positive": "tom hanks war movies",
+      "negated": [],
+      "texts": [
+        "tom hanks war movies"
+      ],
+      "queuedMs": 0.007666999998036772,
+      "encodeMs": {
+        "english": 58.52014099999724
+      },
+      "observedWallMs": 60.817377999999735,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-05",
+      "captureSha256": "23e1d81a0debc348dc16173697fcd4eebb0d370a3bab6033df2dd78d12d72d79",
+      "model": "english",
+      "rawText": "early spielberg",
+      "positive": "early spielberg",
+      "negated": [],
+      "texts": [
+        "early spielberg"
+      ],
+      "queuedMs": 0.0072709999985818285,
+      "encodeMs": {
+        "english": 88.61563299999762
+      },
+      "observedWallMs": 89.09732000000076,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-06",
+      "captureSha256": "6f7c8f904cdf6d013cec14b6c0d408416c66e72bdb0e6c5a28fb6e6078ba791e",
+      "model": "english",
+      "rawText": "leonardo dicapro thrillers",
+      "positive": "leonardo dicapro thrillers",
+      "negated": [],
+      "texts": [
+        "leonardo dicapro thrillers"
+      ],
+      "queuedMs": 0.007093000000168104,
+      "encodeMs": {
+        "english": 123.76824199999828
+      },
+      "observedWallMs": 124.12718299999688,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-07",
+      "captureSha256": "23c68b7dfcf82d0a84628dff846de9146f8e1d50591529981c4c30fa2fb71e59",
+      "model": "english",
+      "rawText": "stephen chow's kung fu comedies",
+      "positive": "stephen chow's kung fu comedies",
+      "negated": [],
+      "texts": [
+        "stephen chow's kung fu comedies"
+      ],
+      "queuedMs": 0.00617200000124285,
+      "encodeMs": {
+        "english": 66.21568399999887
+      },
+      "observedWallMs": 66.61854200000016,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-08",
+      "captureSha256": "32cc40d7c144184cf3136a140a32eb6fae3644b969e6de3608f47b9abcca4d7c",
+      "model": "multilingual",
+      "rawText": "lustige Filme mit Bud Spencer und Terence Hill",
+      "positive": "lustige Filme mit Bud Spencer und Terence Hill",
+      "negated": [],
+      "texts": [
+        "lustige Filme mit Bud Spencer und Terence Hill"
+      ],
+      "queuedMs": 0.0063330000011774246,
+      "encodeMs": {
+        "multilingual": 24.286613000000216
+      },
+      "observedWallMs": 24.687534000000596,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-09",
+      "captureSha256": "ba0cfb91128d6d1d8711746c47c3d0330a232088695ab4bd310e52e6ebd8d810",
+      "model": "english",
+      "rawText": "tarantino vibes",
+      "positive": "tarantino vibes",
+      "negated": [],
+      "texts": [
+        "tarantino vibes"
+      ],
+      "queuedMs": 0.006213000000570901,
+      "encodeMs": {
+        "english": 114.69772899999953
+      },
+      "observedWallMs": 115.13686899999811,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-10",
+      "captureSha256": "31f3db070e02a7c480b0690cf829edcc6d1cf91d4e1d507aa08fda4c45e86d4b",
+      "model": "english",
+      "rawText": "wes anderson style",
+      "positive": "wes anderson style",
+      "negated": [],
+      "texts": [
+        "wes anderson style"
+      ],
+      "queuedMs": 0.02843099999881815,
+      "encodeMs": {
+        "english": 108.84576899999956
+      },
+      "observedWallMs": 109.40449799999988,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-11",
+      "captureSha256": "b1ef0eacd509683dda134edfc136a14686eff0cfe3d47a4bef854818366c4894",
+      "model": "english",
+      "rawText": "like david lynch but less weird",
+      "positive": "like david lynch",
+      "negated": [
+        "weird"
+      ],
+      "texts": [
+        "like david lynch but less weird",
+        "like david lynch",
+        "weird"
+      ],
+      "queuedMs": 0.008566000000428176,
+      "encodeMs": {
+        "english": 249.15212299999985
+      },
+      "observedWallMs": 249.91036000000167,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-12",
+      "captureSha256": "8cf0c399f54157f64a6012af0b7149424c5ead11b629d37f47bf4d666ba948d7",
+      "model": "english",
+      "rawText": "something in the style of guy ritchie",
+      "positive": "something in the style of guy ritchie",
+      "negated": [],
+      "texts": [
+        "something in the style of guy ritchie"
+      ],
+      "queuedMs": 0.008404000000155065,
+      "encodeMs": {
+        "english": 121.35145700000066
+      },
+      "observedWallMs": 133.74470099999962,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-13",
+      "captureSha256": "9cc2947cf6a9f1aefcf07dd894f7174d53913154f2978e8f98a419c19004ee10",
+      "model": "english",
+      "rawText": "denis villeneuve atmosphere",
+      "positive": "denis villeneuve atmosphere",
+      "negated": [],
+      "texts": [
+        "denis villeneuve atmosphere"
+      ],
+      "queuedMs": 0.013187000000471016,
+      "encodeMs": {
+        "english": 52.55951600000117
+      },
+      "observedWallMs": 53.167661000003136,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-14",
+      "captureSha256": "35e62eddfc7b8533bac997765b2be493f2ebc05eb674792e13b39b567f5f778e",
+      "model": "english",
+      "rawText": "coen brothers humor",
+      "positive": "coen brothers humor",
+      "negated": [],
+      "texts": [
+        "coen brothers humor"
+      ],
+      "queuedMs": 0.008525999997800682,
+      "encodeMs": {
+        "english": 41.26575100000264
+      },
+      "observedWallMs": 43.7528379999967,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-15",
+      "captureSha256": "c154594cb55b6980ec80cd90ef39be9e66e980c55bee0dc9e9135d7eb8336ba6",
+      "model": "english",
+      "rawText": "miyazaki-like",
+      "positive": "miyazaki-like",
+      "negated": [],
+      "texts": [
+        "miyazaki-like"
+      ],
+      "queuedMs": 0.008072000000538537,
+      "encodeMs": {
+        "english": 41.76463299999887
+      },
+      "observedWallMs": 42.242442999999184,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-16",
+      "captureSha256": "f9e14e225ef051c607a7724f1ce509a521ead5e51e744fe004529f0560fda5d3",
+      "model": "english",
+      "rawText": "kubrick-esque",
+      "positive": "kubrick-esque",
+      "negated": [],
+      "texts": [
+        "kubrick-esque"
+      ],
+      "queuedMs": 0.008297000000311527,
+      "encodeMs": {
+        "english": 47.04718199999843
+      },
+      "observedWallMs": 47.52644099999816,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-17",
+      "captureSha256": "f9e92c80f39b5f2c573878179741b295e0b85c5a9e5985fb5acbd1c33546e15d",
+      "model": "english",
+      "rawText": "vince gilligan",
+      "positive": "vince gilligan",
+      "negated": [],
+      "texts": [
+        "vince gilligan"
+      ],
+      "queuedMs": 0.010643999998137588,
+      "encodeMs": {
+        "english": 45.11307699999816
+      },
+      "observedWallMs": 45.71076700000049,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-18",
+      "captureSha256": "d8c620109def93f143291726f38781048c79642382075bd4a4c5a8fe3af4228c",
+      "model": "english",
+      "rawText": "christopher nolan",
+      "positive": "christopher nolan",
+      "negated": [],
+      "texts": [
+        "christopher nolan"
+      ],
+      "queuedMs": 0.00889400000232854,
+      "encodeMs": {
+        "english": 40.27437199999986
+      },
+      "observedWallMs": 40.738736999999674,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-19",
+      "captureSha256": "29f22f7f46e74e944f9995703176259502cc4b7a50cc3c4bebdcc84d3d36c7f3",
+      "model": "english",
+      "rawText": "jim carrey",
+      "positive": "jim carrey",
+      "negated": [],
+      "texts": [
+        "jim carrey"
+      ],
+      "queuedMs": 0.011614000002737157,
+      "encodeMs": {
+        "english": 48.15177300000141
+      },
+      "observedWallMs": 48.65115499999956,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-20",
+      "captureSha256": "94a12b6de6ec87304fe7093da979a0469b52f85fb78168163db82d0b3c28bd63",
+      "model": "english",
+      "rawText": "edgar wright",
+      "positive": "edgar wright",
+      "negated": [],
+      "texts": [
+        "edgar wright"
+      ],
+      "queuedMs": 0.007145000003220048,
+      "encodeMs": {
+        "english": 41.42285799999809
+      },
+      "observedWallMs": 41.85456999999951,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-21",
+      "captureSha256": "a94f24e406c98e0eb49156bf8aefd57e290e85be3656dccdee7073d43c17e1be",
+      "model": "english",
+      "rawText": "studio ghibli",
+      "positive": "studio ghibli",
+      "negated": [],
+      "texts": [
+        "studio ghibli"
+      ],
+      "queuedMs": 0.00829899999735062,
+      "encodeMs": {
+        "english": 50.95875299999898
+      },
+      "observedWallMs": 51.52620200000092,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-22",
+      "captureSha256": "f740610b569d9750d68c86e180fec4ebe003b4ba0d29167348fe833d0975cdf8",
+      "model": "english",
+      "rawText": "a24 horror",
+      "positive": "a24 horror",
+      "negated": [],
+      "texts": [
+        "a24 horror"
+      ],
+      "queuedMs": 0.009229999999661231,
+      "encodeMs": {
+        "english": 88.9824609999996
+      },
+      "observedWallMs": 89.47235,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-23",
+      "captureSha256": "228e4a26cc27f4dd786a8b7a33ef6fd7ad672648ab17fb085baef8cfb97ba2ab",
+      "model": "english",
+      "rawText": "pixar",
+      "positive": "pixar",
+      "negated": [],
+      "texts": [
+        "pixar"
+      ],
+      "queuedMs": 0.007670000002690358,
+      "encodeMs": {
+        "english": 43.46817799999917
+      },
+      "observedWallMs": 44.10929000000033,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "ppl-24",
+      "captureSha256": "f79764dd0bda25da37c4ac0d77cc257f000c12e140b01a8fc9db8f91b97c495f",
+      "model": "english",
+      "rawText": "hbo prestige drama",
+      "positive": "hbo prestige drama",
+      "negated": [],
+      "texts": [
+        "hbo prestige drama"
+      ],
+      "queuedMs": 0.009350000000267755,
+      "encodeMs": {
+        "english": 101.4531059999972
+      },
+      "observedWallMs": 101.98086899999907,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-01",
+      "captureSha256": "1b335afd7ce277a0af706fdfdaf8f7a707463e75df09c6f7d11f9c0174577673",
+      "model": "english",
+      "rawText": "feels like a terry gilliam film",
+      "positive": "feels like a terry gilliam film",
+      "negated": [],
+      "texts": [
+        "feels like a terry gilliam film"
+      ],
+      "queuedMs": 0.014592999999877065,
+      "encodeMs": {
+        "english": 123.58569200000056
+      },
+      "observedWallMs": 124.59339800000453,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-02",
+      "captureSha256": "6bd81107e0fad377e797e0e16dc9db69089996ca67db29033a8486045f5d29c1",
+      "model": "english",
+      "rawText": "charlie kaufman-esque",
+      "positive": "charlie kaufman-esque",
+      "negated": [],
+      "texts": [
+        "charlie kaufman-esque"
+      ],
+      "queuedMs": 0.00819999999657739,
+      "encodeMs": {
+        "english": 42.49981199999456
+      },
+      "observedWallMs": 42.9477509999997,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-03",
+      "captureSha256": "2c46618b94d412c0e494d37187a8e26f41180cff0ba98b08f966f8f73bff1200",
+      "model": "english",
+      "rawText": "nicolas cage energy",
+      "positive": "nicolas cage energy",
+      "negated": [],
+      "texts": [
+        "nicolas cage energy"
+      ],
+      "queuedMs": 0.014971000004152302,
+      "encodeMs": {
+        "english": 52.4841379999998
+      },
+      "observedWallMs": 57.65531500000361,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-04",
+      "captureSha256": "24b2fba35913706de109fbfb1819c94c8d9bc9f08e4332923df8e43d561373e6",
+      "model": "english",
+      "rawText": "in the vein of mel brooks",
+      "positive": "in the vein of mel brooks",
+      "negated": [],
+      "texts": [
+        "in the vein of mel brooks"
+      ],
+      "queuedMs": 0.007688000005146023,
+      "encodeMs": {
+        "english": 50.457164999999804
+      },
+      "observedWallMs": 52.85981299999548,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-05",
+      "captureSha256": "c616f889918ad7f9a03db2776447cfdb54db822b6a2338f1d150f49e669d800c",
+      "model": "english",
+      "rawText": "aardman humor",
+      "positive": "aardman humor",
+      "negated": [],
+      "texts": [
+        "aardman humor"
+      ],
+      "queuedMs": 0.00810500000079628,
+      "encodeMs": {
+        "english": 47.93439500000386
+      },
+      "observedWallMs": 48.99224200000026,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-06",
+      "captureSha256": "d5504fd28248e9f822bf28c7785d4cd22a406c6ed7aee0ffea05139cfa99b16f",
+      "model": "english",
+      "rawText": "fincher vibes but a series",
+      "positive": "fincher vibes but a series",
+      "negated": [],
+      "texts": [
+        "fincher vibes but a series"
+      ],
+      "queuedMs": 0.008752000001550186,
+      "encodeMs": {
+        "english": 82.33058499999606
+      },
+      "observedWallMs": 85.3608200000017,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-07",
+      "captureSha256": "d11bd7352f124f01303f34affde0a06c790a8ae8d423e85dc570f0431caec2d7",
+      "model": "english",
+      "rawText": "cartoons with matt groening humor",
+      "positive": "cartoons with matt groening humor",
+      "negated": [],
+      "texts": [
+        "cartoons with matt groening humor"
+      ],
+      "queuedMs": 0.007273000002896879,
+      "encodeMs": {
+        "english": 59.91199800000322
+      },
+      "observedWallMs": 62.614066999994975,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-08",
+      "captureSha256": "856ce0431961796ba92ae0d6b6ee4b1a7d15f2415cd3316dd9004a83e0f509b6",
+      "model": "multilingual",
+      "rawText": "un film à la jean-pierre jeunet",
+      "positive": "un film à la jean-pierre jeunet",
+      "negated": [],
+      "texts": [
+        "un film à la jean-pierre jeunet"
+      ],
+      "queuedMs": 0.00918900000397116,
+      "encodeMs": {
+        "multilingual": 30.309743000005255
+      },
+      "observedWallMs": 30.86163099999976,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-09",
+      "captureSha256": "e3c294db828b18a3cd5a2ba07954c8a876c395000c0d583822192f1f2c1b5a75",
+      "model": "english",
+      "rawText": "something darren aronofsky would direct",
+      "positive": "something darren aronofsky would direct",
+      "negated": [],
+      "texts": [
+        "something darren aronofsky would direct"
+      ],
+      "queuedMs": 0.00795300000027055,
+      "encodeMs": {
+        "english": 61.18452499999694
+      },
+      "observedWallMs": 61.96683699999994,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-10",
+      "captureSha256": "84c7864dde7b7608dae04ce2c254e056ff7ab81f1084804db944d00ac650bd53",
+      "model": "english",
+      "rawText": "danny boyle movies and stuff like them",
+      "positive": "danny boyle movies and stuff like them",
+      "negated": [],
+      "texts": [
+        "danny boyle movies and stuff like them"
+      ],
+      "queuedMs": 0.014238000003388152,
+      "encodeMs": {
+        "english": 61.46053199999733
+      },
+      "observedWallMs": 62.06987800000206,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-11",
+      "captureSha256": "dbc437956e0a87ddbccc5aabdf2a85925ebedc3de25f3e622c1a92d6a7535bd3",
+      "model": "english",
+      "rawText": "jackie chan style stunts and slapstick",
+      "positive": "jackie chan style stunts and slapstick",
+      "negated": [],
+      "texts": [
+        "jackie chan style stunts and slapstick"
+      ],
+      "queuedMs": 0.016405999995185994,
+      "encodeMs": {
+        "english": 90.68552500000078
+      },
+      "observedWallMs": 91.68460499999492,
+      "preparedSearchParity": false
+    },
+    {
+      "id": "sty-12",
+      "captureSha256": "f428f3247be9bc59fd48794acfb5de2e57f87d58b436d66161b5cd28df54635f",
+      "model": "english",
+      "rawText": "blumhouse-type horror",
+      "positive": "blumhouse-type horror",
+      "negated": [],
+      "texts": [
+        "blumhouse-type horror"
+      ],
+      "queuedMs": 0.008060000000114087,
+      "encodeMs": {
+        "english": 59.70308700000169
+      },
+      "observedWallMs": 60.36200799999642,
+      "preparedSearchParity": false
+    }
+  ],
+  "network": false,
+  "preparedSearchParity": false,
+  "productionTiming": false
+}

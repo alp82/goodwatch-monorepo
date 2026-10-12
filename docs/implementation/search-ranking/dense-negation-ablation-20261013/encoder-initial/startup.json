@@ -1,0 +1,13 @@
+{
+  "type": "ready",
+  "loadMs": {
+    "english": 2803.5752919999995,
+    "multilingual": 4528.550593
+  },
+  "warmMs": 709.367991000001,
+  "totalMs": 8041.721218000001,
+  "observedWallMs": 8282.738357,
+  "builtInWarmupBatches": 6,
+  "builtInWarmupTexts": 12,
+  "productionTiming": false
+}

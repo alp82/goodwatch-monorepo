@@ -1,0 +1,65 @@
+{
+  "status": "local-cache-complete-input-resolution-incomplete",
+  "queries": 168,
+  "corpusBatches": 168,
+  "modelsByQuery": {
+    "english": 156,
+    "multilingual": 12
+  },
+  "distinctVectors": {
+    "english": 196,
+    "multilingual": 21
+  },
+  "localCorpusWallMs": 16905.501370999984,
+  "localBatchMedianMs": 76.33270450000055,
+  "localBatchP95Ms": 231.32057500000155,
+  "localBatchMaxMs": 594.4864600000001,
+  "startupObservedWallMs": 8282.738357,
+  "vectorShapeFiniteAndUnitNorm": true,
+  "modelPostflight": [
+    {
+      "model": "english",
+      "kind": "model",
+      "sha256": "9bc579acdba21c253c62a9bf866891355a63ffa3442b52c8a37d75b2ccb91848",
+      "bytes": 435811539,
+      "preflightIdentityUnchanged": true
+    },
+    {
+      "model": "english",
+      "kind": "tokenizer",
+      "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+      "bytes": 711396,
+      "preflightIdentityUnchanged": true
+    },
+    {
+      "model": "english",
+      "kind": "tokenizerConfig",
+      "sha256": "9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3",
+      "bytes": 366,
+      "preflightIdentityUnchanged": true
+    },
+    {
+      "model": "multilingual",
+      "kind": "model",
+      "sha256": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff",
+      "bytes": 470268533,
+      "preflightIdentityUnchanged": true
+    },
+    {
+      "model": "multilingual",
+      "kind": "tokenizer",
+      "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+      "bytes": 17082730,
+      "preflightIdentityUnchanged": true
+    },
+    {
+      "model": "multilingual",
+      "kind": "tokenizerConfig",
+      "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+      "bytes": 443,
+      "preflightIdentityUnchanged": true
+    }
+  ],
+  "preparedSearchParity": false,
+  "productionLatencyEvidence": false
+}

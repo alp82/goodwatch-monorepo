@@ -1,0 +1,57 @@
+{
+  "schema": "local-public-query-encoder-additions.v1",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1933,
+      "sha256": "f9286f0c8cfeb0656c4fdc2dc477f078461e87dba14240f92068d19ca84646e0"
+    },
+    {
+      "path": "add.mjs",
+      "bytes": 6044,
+      "sha256": "f34c6295a9047995db31719cd9fbda1a1bac95fbb45d39a0c9d88718cf44d538"
+    },
+    {
+      "path": "coverage.json",
+      "bytes": 36196,
+      "sha256": "a8a45c8c649f77e6acbb70ccc4d4601b9a8e0a452c8dc701161bb9c798e2e3ef"
+    },
+    {
+      "path": "encoding-results.json",
+      "bytes": 11740,
+      "sha256": "35d5a52f43dccfd4d0b269e01aca9d5b70d59794a4d5707e69bb053539edf9b1"
+    },
+    {
+      "path": "invocation.json",
+      "bytes": 683,
+      "sha256": "9ae3a61aa4ff18b34a3e851f07089e45640fc205ccad1aa23842f5f05d213c31"
+    },
+    {
+      "path": "model-preflight.json",
+      "bytes": 1832,
+      "sha256": "17ff65025b181381ebfca24d1e2c5950d42355f76c62e0bc45c9e7177f8716e5"
+    },
+    {
+      "path": "query-vector-additions.json",
+      "bytes": 753726,
+      "sha256": "9c57a7c53315dfdb33e994311cc1fb5ef080339452922cc3870da849d9b72042"
+    },
+    {
+      "path": "query-vectors-merged.json",
+      "bytes": 5219383,
+      "sha256": "35a2716af5e5b9a45b1678185b558cca736c7d81250f1c085ef59d62eb98a854"
+    },
+    {
+      "path": "source/query-encoder.worker.js",
+      "bytes": 5877,
+      "sha256": "af3fddbeac11833e6f6c2432a83f0a560fe678e94be52e42ea114e231bb104a6"
+    },
+    {
+      "path": "startup.json",
+      "bytes": 268,
+      "sha256": "7372baae5de3e13770b3a0f671c743eda04c0d5ceca26fbeb6e631c17683c020"
+    }
+  ],
+  "fullPreparedSearchParity": false,
+  "productionAcceptance": false
+}

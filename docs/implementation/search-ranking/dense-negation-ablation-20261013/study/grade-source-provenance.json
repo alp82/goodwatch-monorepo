@@ -1,0 +1,33 @@
+{
+  "corpusCommit": "965bfb99c795e8eb602746d69fd53e97ca36cd3b",
+  "files": [
+    {
+      "path": "docs/prototypes/search-arena/queries.json",
+      "sha256": "48bb90f7365dd7eb86741f0733f594f1efd5015a78048c1fcd12d5a5bede482d",
+      "byteEqualCorpusCommit965": true
+    },
+    {
+      "path": "docs/prototypes/search-arena/results/grades.json",
+      "sha256": "ef96e0704632e27b60f645b25257748f1706dae73c621f0ab1b5dfa049c9a274",
+      "byteEqualCorpusCommit965": false
+    },
+    {
+      "path": "docs/prototypes/search-arena/harness/metrics.py",
+      "sha256": "02c32d0ef9cbdad9abbc901bb5da87ffad82a88bb343d6e2715886ad75a57f35",
+      "byteEqualCorpusCommit965": true
+    },
+    {
+      "path": "docs/prototypes/search-arena/results/simplify/holdout5/lists/combo-safe-v3.json",
+      "sha256": "69a2239b67babbcc6cac42a139fade5d29fdb18d90eec269d74ecc77551ee50b",
+      "byteEqualCorpusCommit965": true
+    },
+    {
+      "path": "docs/prototypes/search-arena/results/round6/holdout4/lists/r6.json",
+      "sha256": "d90bdf36656f42bc758212a5977e619e79057705212429f3df869a1db3b66451",
+      "byteEqualCorpusCommit965": true
+    }
+  ],
+  "encoderOriginalSourceHashesVerified": true,
+  "gradeRevision": "ddb11d2974ff2569851752996ac2d78effb6d623",
+  "gradeBytesMatchCommittedHead": true
+}

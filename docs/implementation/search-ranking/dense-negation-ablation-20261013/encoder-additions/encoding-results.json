@@ -1,0 +1,528 @@
+{
+  "batches": 8,
+  "uniqueModelTexts": 52,
+  "rows": [
+    {
+      "id": 1,
+      "model": "english",
+      "items": [
+        {
+          "model": "english",
+          "text": "Something where halfway through you realism the person telling the story has been feeding you nonsense.",
+          "queryIds": [
+            "core-16"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "lighthearted",
+          "queryIds": [
+            "dev5-03"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "something to cheer me up",
+          "queryIds": [
+            "h5-01"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "80s teen motives",
+          "queryIds": [
+            "h5-29"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "dystopian depth game series",
+          "queryIds": [
+            "ho2-21"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "crazy",
+          "queryIds": [
+            "lab-07"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "psychological thriller with a big twist",
+          "queryIds": [
+            "new-23"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "code glass",
+          "queryIds": [
+            "new-25"
+          ]
+        }
+      ],
+      "queuedMs": 0.31416499999613734,
+      "encodeMs": {
+        "english": 727.6901409999991
+      },
+      "observedWallMs": 730.7893150000018
+    },
+    {
+      "id": 2,
+      "model": "english",
+      "items": [
+        {
+          "model": "english",
+          "text": "action",
+          "queryIds": [
+            "ppl-02"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "deadpan comedies",
+          "queryIds": [
+            "ppl-03"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "war",
+          "queryIds": [
+            "ppl-04"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "thrillers",
+          "queryIds": [
+            "ppl-06"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "kung fu comedies",
+          "queryIds": [
+            "ppl-07"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "prestige drama",
+          "queryIds": [
+            "ppl-24"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "cartoons",
+          "queryIds": [
+            "sty-07"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "would direct",
+          "queryIds": [
+            "sty-09"
+          ]
+        }
+      ],
+      "queuedMs": 0.01011300000391202,
+      "encodeMs": {
+        "english": 274.8123479999995
+      },
+      "observedWallMs": 277.4135920000044
+    },
+    {
+      "id": 3,
+      "model": "english",
+      "items": [
+        {
+          "model": "english",
+          "text": "stuff them",
+          "queryIds": [
+            "sty-10"
+          ]
+        },
+        {
+          "model": "english",
+          "text": "stunts slapstick",
+          "queryIds": [
+            "sty-11"
+          ]
+        }
+      ],
+      "queuedMs": 0.008313999998790678,
+      "encodeMs": {
+        "english": 87.05972099999781
+      },
+      "observedWallMs": 88.40285600000061
+    },
+    {
+      "id": 4,
+      "model": "multilingual",
+      "items": [
+        {
+          "model": "multilingual",
+          "text": "funny X shows",
+          "queryIds": [
+            "dev5-01",
+            "dev5-02",
+            "dev5-06"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "lighthearted X series",
+          "queryIds": [
+            "dev5-03"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "feel good X shows",
+          "queryIds": [
+            "dev5-04"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X comedy series",
+          "queryIds": [
+            "dev5-05"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X movies",
+          "queryIds": [
+            "h5-22",
+            "ho2-16"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X vibes",
+          "queryIds": [
+            "h5-23",
+            "ppl-09"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "funny X movies",
+          "queryIds": [
+            "ppl-01"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X action",
+          "queryIds": [
+            "ppl-02"
+          ]
+        }
+      ],
+      "queuedMs": 0.010603000002447516,
+      "encodeMs": {
+        "multilingual": 89.45557199999894
+      },
+      "observedWallMs": 91.20382799999788
+    },
+    {
+      "id": 5,
+      "model": "multilingual",
+      "items": [
+        {
+          "model": "multilingual",
+          "text": "X deadpan comedies",
+          "queryIds": [
+            "ppl-03"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X war movies",
+          "queryIds": [
+            "ppl-04"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "early X",
+          "queryIds": [
+            "ppl-05"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X thrillers",
+          "queryIds": [
+            "ppl-06"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X kung fu comedies",
+          "queryIds": [
+            "ppl-07"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "lustige filme mit X und X",
+          "queryIds": [
+            "ppl-08"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X style",
+          "queryIds": [
+            "ppl-10"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "like X but less weird",
+          "queryIds": [
+            "ppl-11"
+          ]
+        }
+      ],
+      "queuedMs": 0.019956999996793456,
+      "encodeMs": {
+        "multilingual": 71.5736670000042
+      },
+      "observedWallMs": 73.26685400000133
+    },
+    {
+      "id": 6,
+      "model": "multilingual",
+      "items": [
+        {
+          "model": "multilingual",
+          "text": "something in the style of X",
+          "queryIds": [
+            "ppl-12"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X atmosphere",
+          "queryIds": [
+            "ppl-13"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X brothers humor",
+          "queryIds": [
+            "ppl-14"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X like",
+          "queryIds": [
+            "ppl-15"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X esque",
+          "queryIds": [
+            "ppl-16",
+            "sty-02"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X horror",
+          "queryIds": [
+            "ppl-22"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X prestige drama",
+          "queryIds": [
+            "ppl-24"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "feels like a X film",
+          "queryIds": [
+            "sty-01"
+          ]
+        }
+      ],
+      "queuedMs": 0.009737000000313856,
+      "encodeMs": {
+        "multilingual": 63.35590399999637
+      },
+      "observedWallMs": 65.0821649999998
+    },
+    {
+      "id": 7,
+      "model": "multilingual",
+      "items": [
+        {
+          "model": "multilingual",
+          "text": "X energy",
+          "queryIds": [
+            "sty-03"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "in the vein of X",
+          "queryIds": [
+            "sty-04"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X humor",
+          "queryIds": [
+            "sty-05"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X vibes but a series",
+          "queryIds": [
+            "sty-06"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "cartoons with X humor",
+          "queryIds": [
+            "sty-07"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "un film a la X",
+          "queryIds": [
+            "sty-08"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "something X would direct",
+          "queryIds": [
+            "sty-09"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X movies and stuff like them",
+          "queryIds": [
+            "sty-10"
+          ]
+        }
+      ],
+      "queuedMs": 0.0071959999986574985,
+      "encodeMs": {
+        "multilingual": 83.05983099999867
+      },
+      "observedWallMs": 83.76561299999594
+    },
+    {
+      "id": 8,
+      "model": "multilingual",
+      "items": [
+        {
+          "model": "multilingual",
+          "text": "X style stunts and slapstick",
+          "queryIds": [
+            "sty-11"
+          ]
+        },
+        {
+          "model": "multilingual",
+          "text": "X type horror",
+          "queryIds": [
+            "sty-12"
+          ]
+        }
+      ],
+      "queuedMs": 0.005711999998311512,
+      "encodeMs": {
+        "multilingual": 26.801063999999315
+      },
+      "observedWallMs": 27.28613100000075
+    }
+  ],
+  "modelPostflight": [
+    {
+      "model": "english",
+      "kind": "model",
+      "sha256": "9bc579acdba21c253c62a9bf866891355a63ffa3442b52c8a37d75b2ccb91848",
+      "bytes": 435811539,
+      "dev": "42",
+      "inode": "9279",
+      "mtimeNs": "1791746907197994317",
+      "ctimeNs": "1791746907197994317"
+    },
+    {
+      "model": "english",
+      "kind": "tokenizer",
+      "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+      "bytes": 711396,
+      "dev": "42",
+      "inode": "9280",
+      "mtimeNs": "1791746862098698327",
+      "ctimeNs": "1791746862098698327"
+    },
+    {
+      "model": "english",
+      "kind": "tokenizerConfig",
+      "sha256": "9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3",
+      "bytes": 366,
+      "dev": "42",
+      "inode": "9276",
+      "mtimeNs": "1791746861612039458",
+      "ctimeNs": "1791746861682038336"
+    },
+    {
+      "model": "multilingual",
+      "kind": "model",
+      "sha256": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff",
+      "bytes": 470268533,
+      "dev": "42",
+      "inode": "9275",
+      "mtimeNs": "1791746909237963283",
+      "ctimeNs": "1791746909241296566"
+    },
+    {
+      "model": "multilingual",
+      "kind": "tokenizer",
+      "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+      "bytes": 17082730,
+      "dev": "42",
+      "inode": "9277",
+      "mtimeNs": "1791746864378661865",
+      "ctimeNs": "1791746864378661865"
+    },
+    {
+      "model": "multilingual",
+      "kind": "tokenizerConfig",
+      "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+      "bytes": 443,
+      "dev": "42",
+      "inode": "9281",
+      "mtimeNs": "1791746861695371456",
+      "ctimeNs": "1791746861945367450"
+    }
+  ],
+  "originalVectorsBitExact": true,
+  "fullPreparedSearchParity": false,
+  "productionTiming": false
+}

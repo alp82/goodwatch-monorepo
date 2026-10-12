@@ -1,0 +1,1233 @@
+{
+  "queries": 168,
+  "exactEarlyTextCacheComplete": 168,
+  "newUniqueVectors": 52,
+  "originalVectorsReusedBitExact": 217,
+  "eligibleEnglishNonreferenceMasked": 101,
+  "missingLateAvoidedEnglishUnique": 13,
+  "rows": [
+    {
+      "id": "core-01",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-02",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-03",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-04",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-05",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-06",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-07",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-08",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-09",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-10",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-11",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-12",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-13",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-14",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-15",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-16",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-17",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-18",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-19",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-20",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-21",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-22",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-23",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-24",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-25",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "core-26",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "bleakness"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "core-27",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "movie",
+        "animated",
+        "fantasy",
+        "camp & irony",
+        "surrealism"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "core-28",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "bleakness"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "core-29",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "pathos",
+        "bleakness",
+        "melancholy",
+        "catharsis"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "core-30",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "bleakness"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "dev5-01",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "dev5-02",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "dev5-03",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "dev5-04",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "dev5-05",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "dev5-06",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "dev6-01",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "dev6-02",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "dev6-03",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "dev6-04",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "dev6-05",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-01",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-02",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-03",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-04",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-05",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-06",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-07",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-08",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-09",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-10",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-11",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-12",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-13",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-14",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-15",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-16",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-17",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-18",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-19",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-20",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "h5-21",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "h5-22",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "h5-23",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "h5-24",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "h5-25",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "h5-26",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "movie",
+        "hopefulness"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "h5-27",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "tv show"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "h5-28",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-29",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "h5-30",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-01",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-02",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-03",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-04",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-05",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-06",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ho2-07",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ho2-08",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ho2-09",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-10",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-11",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-12",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-13",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-14",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-15",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ho2-16",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ho2-17",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-18",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-19",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "bleakness",
+        "character depth"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ho2-20",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-21",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ho2-22",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-00",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-01",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "lab-02",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-03",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-04",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-05",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-06",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-07",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-08",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-09",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-10",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-11",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "lab-12",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "lab-13",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-01",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-02",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-03",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-04",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-05",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-06",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-07",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "new-08",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "new-09",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-10",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-11",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-12",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-13",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-14",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-15",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-16",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-17",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-18",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-19",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-20",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-21",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "live action",
+        "bleakness",
+        "melancholy"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "new-22",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "tv show"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "new-23",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-24",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "new-25",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": true
+    },
+    {
+      "id": "ppl-01",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-02",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-03",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-04",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-05",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-06",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-07",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-08",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "tv show",
+        "bleakness",
+        "melancholy"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-09",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-10",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-11",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-12",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-13",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-14",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-15",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-16",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-17",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-18",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-19",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-20",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-21",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-22",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-23",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "ppl-24",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-01",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-02",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-03",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-04",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-05",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-06",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-07",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-08",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": false,
+      "missingLateAvoidedEnglish": [
+        "tv show"
+      ],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-09",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-10",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-11",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    },
+    {
+      "id": "sty-12",
+      "exactEarlyCacheComplete": true,
+      "lateAvoidedCacheComplete": true,
+      "missingLateAvoidedEnglish": [],
+      "eligibleEnglishNonreferenceAblation": false
+    }
+  ],
+  "fullPreparedSearchParity": false,
+  "scope": "all synchronous EARLY texts cached; late texts/profile fetching/fullranking still separate",
+  "bindings": {
+    "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/freeze.json": "814c785ab60c2decff063e42d44db96eff28f72ed18ff60bc14d28c4cbbc365c",
+    "/home/alper/projects/search-100-evidence/offline-public-encoder-20261013/query-vectors.json": "b88e062f32ba9f45b6b192676808cfe8dda910ac4af6971579326d0650747893",
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/freeze.json": "7fde954da469c69a2aa53edb4b916934edd5c0934a38f44cb9c20d39e3eeee6d",
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/prepared-with-filters.json": "914d36f952a65927ace2c6c042097f0d53fe5d1633385550c32cff7098221c44",
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/missing-early-texts.json": "000bdf314e8f93ed3a36be4c2104076388912a4a2f17a512eae6aece5693daa2",
+    "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/query-vectors-merged.json": "35a2716af5e5b9a45b1678185b558cca736c7d81250f1c085ef59d62eb98a854"
+  }
+}

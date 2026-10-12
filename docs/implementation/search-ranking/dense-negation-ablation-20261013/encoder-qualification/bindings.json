@@ -1,0 +1,22 @@
+{
+  "schema": "local-native-chip-qualification.v1",
+  "files": [
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-public-encoder-qualifications-20261013/README.md",
+      "sha256": "3f2d76e339fde21dd164872f323e849c2cb596de8a3f73ba84af8c3ecf6968dd",
+      "bytes": 1070
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/freeze.json",
+      "sha256": "7fde954da469c69a2aa53edb4b916934edd5c0934a38f44cb9c20d39e3eeee6d",
+      "bytes": 5895
+    },
+    {
+      "path": "/home/alper/projects/search-100-evidence/offline-public-encoder-additions-20261013/freeze.json",
+      "sha256": "b0535782d4d1dbe93c0771a4d4e4328c7d8e53c875da7706d5f96ee2830ac7c6",
+      "bytes": 1679
+    }
+  ],
+  "rerun": false,
+  "extraEncodes": 0
+}

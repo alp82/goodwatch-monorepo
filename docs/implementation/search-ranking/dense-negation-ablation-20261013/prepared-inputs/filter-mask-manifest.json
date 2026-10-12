@@ -1,0 +1,5874 @@
+{
+  "indexBuildId": "20261012T041504Z",
+  "rows": 42934,
+  "masks": [
+    {
+      "id": "core-01",
+      "offset": 0,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-02",
+      "offset": 42934,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-03",
+      "offset": 85868,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-04",
+      "offset": 128802,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-05",
+      "offset": 171736,
+      "bytes": 42934,
+      "sha256": "0bc6b803744e447fc04831e437830ad71b372cd79f8af01bb27b8d3e8ac32ea4",
+      "passingRows": 551,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-06",
+      "offset": 214670,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-07",
+      "offset": 257604,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-08",
+      "offset": 300538,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-09",
+      "offset": 343472,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-10",
+      "offset": 386406,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-11",
+      "offset": 429340,
+      "bytes": 42934,
+      "sha256": "556336eee335696c7c61c42ad9c0d1bca8a5047bb8e8a74ede5a432edd4b4236",
+      "passingRows": 7229,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-12",
+      "offset": 472274,
+      "bytes": 42934,
+      "sha256": "858a2e491b8fdb6d9974237ddabb3f5d6e19f57b7895f3cb4e1a0ebf7b21b692",
+      "passingRows": 12539,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_family",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "suitability_intergenerational",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-13",
+      "offset": 515208,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-14",
+      "offset": 558142,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-15",
+      "offset": 601076,
+      "bytes": 42934,
+      "sha256": "e8702c8b6eb76386acd66693565f2052eaf291c0c5a6e066df56fb50eded8563",
+      "passingRows": 7254,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-16",
+      "offset": 644010,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-17",
+      "offset": 686944,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-18",
+      "offset": 729878,
+      "bytes": 42934,
+      "sha256": "501a27986c43a9605abd6b4d395740eac98f7ce70f795ebbeab88d6dea0beafd",
+      "passingRows": 15890,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "context_is_comfort_watch",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-19",
+      "offset": 772812,
+      "bytes": 42934,
+      "sha256": "501a27986c43a9605abd6b4d395740eac98f7ce70f795ebbeab88d6dea0beafd",
+      "passingRows": 15890,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "context_is_comfort_watch",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-20",
+      "offset": 815746,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-21",
+      "offset": 858680,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-22",
+      "offset": 901614,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-23",
+      "offset": 944548,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-24",
+      "offset": 987482,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-25",
+      "offset": 1030416,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-26",
+      "offset": 1073350,
+      "bytes": 42934,
+      "sha256": "6a75d81db9ddb826ea149321c3e5b105d68d49d7bc9c7e92b8c70659aa214378",
+      "passingRows": 26900,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "context_is_thought_provoking",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-27",
+      "offset": 1116284,
+      "bytes": 42934,
+      "sha256": "e8702c8b6eb76386acd66693565f2052eaf291c0c5a6e066df56fb50eded8563",
+      "passingRows": 7254,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-28",
+      "offset": 1159218,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-29",
+      "offset": 1202152,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "core-30",
+      "offset": 1245086,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev5-01",
+      "offset": 1288020,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev5-02",
+      "offset": 1330954,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev5-03",
+      "offset": 1373888,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev5-04",
+      "offset": 1416822,
+      "bytes": 42934,
+      "sha256": "8da3d416ce84e3cb2868504abfc60f78430768a7aa1dbbb1a8799ee2a8a3d872",
+      "passingRows": 4005,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "context_is_comfort_watch",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev5-05",
+      "offset": 1459756,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev5-06",
+      "offset": 1502690,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev6-01",
+      "offset": 1545624,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev6-02",
+      "offset": 1588558,
+      "bytes": 42934,
+      "sha256": "a0a76fb40e583c3502a04e0e946fca04360519cd7e7aeabe8f5a78e1153df387",
+      "passingRows": 22276,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          },
+          {
+            "key": "suitability_public_viewing_safe",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev6-03",
+      "offset": 1631492,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev6-04",
+      "offset": 1674426,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "dev6-05",
+      "offset": 1717360,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-01",
+      "offset": 1760294,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-02",
+      "offset": 1803228,
+      "bytes": 42934,
+      "sha256": "1070d09282d0a84f411910756daa3200e24c44a9fb62c783ae46dcde43cf6d05",
+      "passingRows": 20825,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_date_night",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "suitability_partner",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-03",
+      "offset": 1846162,
+      "bytes": 42934,
+      "sha256": "2b28ffde532d67a196e63e8713f66e4584aa29864253f7506679a8e7118e2b2a",
+      "passingRows": 10667,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "context_is_background_friendly",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "context_is_comfort_watch",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-04",
+      "offset": 1889096,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-05",
+      "offset": 1932030,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-06",
+      "offset": 1974964,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-07",
+      "offset": 2017898,
+      "bytes": 42934,
+      "sha256": "c45e65a9172360569d27bac1b535caaecfc61f0d4f7fd45c701f8bc69e86c75c",
+      "passingRows": 2979,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "context_is_background_friendly",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-08",
+      "offset": 2060832,
+      "bytes": 42934,
+      "sha256": "5fd3e6928fa0d5084c7c9431b02d44997daf1c2d9751099d9d2a6cc4ce634ab5",
+      "passingRows": 15222,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_friends",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "suitability_group_party",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-09",
+      "offset": 2103766,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-10",
+      "offset": 2146700,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-11",
+      "offset": 2189634,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-12",
+      "offset": 2232568,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-13",
+      "offset": 2275502,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-14",
+      "offset": 2318436,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-15",
+      "offset": 2361370,
+      "bytes": 42934,
+      "sha256": "10a84b9f44b5396289507d81f0597674b2c604dd76b8aff1d9650bb6e4a7c1ed",
+      "passingRows": 1293,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-16",
+      "offset": 2404304,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-17",
+      "offset": 2447238,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-18",
+      "offset": 2490172,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-19",
+      "offset": 2533106,
+      "bytes": 42934,
+      "sha256": "1166e22f5d69df79f594a0aea13fa9a6440eac11b7e418c4f25d2fab2a72c5da",
+      "passingRows": 42746,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-20",
+      "offset": 2576040,
+      "bytes": 42934,
+      "sha256": "5c5ca852f56b4d2de5258c3ca28e9f90bb5ef515fcd5488898a8d883229d95e3",
+      "passingRows": 21425,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "context_is_thought_provoking",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-21",
+      "offset": 2618974,
+      "bytes": 42934,
+      "sha256": "ad3aa9071618804c9edd0cbc3bbd04581133e899c6e70d549f48bbf0ac2c33fd",
+      "passingRows": 8666,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-22",
+      "offset": 2661908,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-23",
+      "offset": 2704842,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-24",
+      "offset": 2747776,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-25",
+      "offset": 2790710,
+      "bytes": 42934,
+      "sha256": "d720b93e8e61e73490e88742a7e87d5a1b67600717917ecb48884422d7c4b174",
+      "passingRows": 2050,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          },
+          {
+            "key": "suitability_kids",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-26",
+      "offset": 2833644,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-27",
+      "offset": 2876578,
+      "bytes": 42934,
+      "sha256": "cbe963cf079a9faf9f3cc248111fae68664bcd8aa007ea915dc50bcb26b3b6d3",
+      "passingRows": 17237,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          },
+          {
+            "key": "suitability_date_night",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-28",
+      "offset": 2919512,
+      "bytes": 42934,
+      "sha256": "53edb72e191cae82201f901ecf6634bcdfdc867f38fb0c9aae12c369d3ae7dc4",
+      "passingRows": 9460,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          },
+          {
+            "key": "suitability_family",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "suitability_intergenerational",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-29",
+      "offset": 2962446,
+      "bytes": 42934,
+      "sha256": "d48b3fc0836f7594b570156454a4821028da8842993d6d315970c3af82482a13",
+      "passingRows": 1598,
+      "era": {
+        "from": 1980,
+        "to": 1989
+      },
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          },
+          {
+            "key": "suitability_teens",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "release_year",
+            "range": {
+              "gte": 1980,
+              "lte": 1989
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "h5-30",
+      "offset": 3005380,
+      "bytes": 42934,
+      "sha256": "0493b00f3fe5ec10f8ede145f69bce76f3866cb68c6d9a9a67ae220c7f1c12b5",
+      "passingRows": 655,
+      "era": {
+        "from": 1940,
+        "to": 1949
+      },
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          },
+          {
+            "key": "release_year",
+            "range": {
+              "gte": 1940,
+              "lte": 1949
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-01",
+      "offset": 3048314,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-02",
+      "offset": 3091248,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-03",
+      "offset": 3134182,
+      "bytes": 42934,
+      "sha256": "10a84b9f44b5396289507d81f0597674b2c604dd76b8aff1d9650bb6e4a7c1ed",
+      "passingRows": 1293,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-04",
+      "offset": 3177116,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-05",
+      "offset": 3220050,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-06",
+      "offset": 3262984,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-07",
+      "offset": 3305918,
+      "bytes": 42934,
+      "sha256": "ad3aa9071618804c9edd0cbc3bbd04581133e899c6e70d549f48bbf0ac2c33fd",
+      "passingRows": 8666,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-08",
+      "offset": 3348852,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-09",
+      "offset": 3391786,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-10",
+      "offset": 3434720,
+      "bytes": 42934,
+      "sha256": "ca5ce7bd8e591a85aac277a77f8c2c548261b3fb845d42e901ef3392eda62fc4",
+      "passingRows": 1826,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-11",
+      "offset": 3477654,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-12",
+      "offset": 3520588,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-13",
+      "offset": 3563522,
+      "bytes": 42934,
+      "sha256": "9118aa5deb548432cb9b864773d45be70de81856cac48e8e3f5a71c0d8918076",
+      "passingRows": 1818,
+      "era": {
+        "from": 1970,
+        "to": 1979
+      },
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "release_year",
+            "range": {
+              "gte": 1970,
+              "lte": 1979
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-14",
+      "offset": 3606456,
+      "bytes": 42934,
+      "sha256": "67307ea448194f7b071b797f4ca79b6981a5e4ae0bb11051633d8277d85c59e4",
+      "passingRows": 7698,
+      "era": {
+        "from": 2000,
+        "to": 2009
+      },
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "release_year",
+            "range": {
+              "gte": 2000,
+              "lte": 2009
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-15",
+      "offset": 3649390,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-16",
+      "offset": 3692324,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-17",
+      "offset": 3735258,
+      "bytes": 42934,
+      "sha256": "1166e22f5d69df79f594a0aea13fa9a6440eac11b7e418c4f25d2fab2a72c5da",
+      "passingRows": 42746,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-18",
+      "offset": 3778192,
+      "bytes": 42934,
+      "sha256": "1166e22f5d69df79f594a0aea13fa9a6440eac11b7e418c4f25d2fab2a72c5da",
+      "passingRows": 42746,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-19",
+      "offset": 3821126,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-20",
+      "offset": 3864060,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-21",
+      "offset": 3906994,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ho2-22",
+      "offset": 3949928,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-00",
+      "offset": 3992862,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-01",
+      "offset": 4035796,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-02",
+      "offset": 4078730,
+      "bytes": 42934,
+      "sha256": "8da3d416ce84e3cb2868504abfc60f78430768a7aa1dbbb1a8799ee2a8a3d872",
+      "passingRows": 4005,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "context_is_comfort_watch",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-03",
+      "offset": 4121664,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-04",
+      "offset": 4164598,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-05",
+      "offset": 4207532,
+      "bytes": 42934,
+      "sha256": "1166e22f5d69df79f594a0aea13fa9a6440eac11b7e418c4f25d2fab2a72c5da",
+      "passingRows": 42746,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-06",
+      "offset": 4250466,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-07",
+      "offset": 4293400,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-08",
+      "offset": 4336334,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-09",
+      "offset": 4379268,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-10",
+      "offset": 4422202,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-11",
+      "offset": 4465136,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-12",
+      "offset": 4508070,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "lab-13",
+      "offset": 4551004,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-01",
+      "offset": 4593938,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-02",
+      "offset": 4636872,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-03",
+      "offset": 4679806,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-04",
+      "offset": 4722740,
+      "bytes": 42934,
+      "sha256": "a92e780fd275d165a5b292634264a85468e8ad77ef858136f03e0be13175f6a7",
+      "passingRows": 42928,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_solo_watch",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-05",
+      "offset": 4765674,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-06",
+      "offset": 4808608,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-07",
+      "offset": 4851542,
+      "bytes": 42934,
+      "sha256": "10a84b9f44b5396289507d81f0597674b2c604dd76b8aff1d9650bb6e4a7c1ed",
+      "passingRows": 1293,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-08",
+      "offset": 4894476,
+      "bytes": 42934,
+      "sha256": "3930b52dec3bb9d34643440d31e8e2f0b6c28708193583ddeb283c79eb91e56c",
+      "passingRows": 8768,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-09",
+      "offset": 4937410,
+      "bytes": 42934,
+      "sha256": "3dbff5e1f05e4ae8be727bf280d685c1f6a26f029d68876ce7dc0c27cdaf4f3b",
+      "passingRows": 2721,
+      "era": {
+        "from": 1980,
+        "to": 1989
+      },
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "release_year",
+            "range": {
+              "gte": 1980,
+              "lte": 1989
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-10",
+      "offset": 4980344,
+      "bytes": 42934,
+      "sha256": "61b21e6bb0f27a9a63a6c0971f7d270b4c3999d9556aac4c22817313968e5d67",
+      "passingRows": 3474,
+      "era": {
+        "from": 1990,
+        "to": 1999
+      },
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          },
+          {
+            "key": "release_year",
+            "range": {
+              "gte": 1990,
+              "lte": 1999
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-11",
+      "offset": 5023278,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-12",
+      "offset": 5066212,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-13",
+      "offset": 5109146,
+      "bytes": 42934,
+      "sha256": "f92268b4fbce8836d17a88c39b951c3fe015d40d48871220b2ee1be102aea0ab",
+      "passingRows": 26896,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "context_is_thought_provoking",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-14",
+      "offset": 5152080,
+      "bytes": 42934,
+      "sha256": "3d788ea753875189cfa765bf74a2ed7a98425d36540a8839b821a1d85e2b4a66",
+      "passingRows": 742,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-15",
+      "offset": 5195014,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-16",
+      "offset": 5237948,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-17",
+      "offset": 5280882,
+      "bytes": 42934,
+      "sha256": "6a75d81db9ddb826ea149321c3e5b105d68d49d7bc9c7e92b8c70659aa214378",
+      "passingRows": 26900,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "context_is_thought_provoking",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-18",
+      "offset": 5323816,
+      "bytes": 42934,
+      "sha256": "5ee194dfd23c4cef032d18bd159163f8dc05ba51f19975b2750e4050504bd256",
+      "passingRows": 11088,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_family",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "suitability_public_viewing_safe",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "context_is_comfort_watch",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-19",
+      "offset": 5366750,
+      "bytes": 42934,
+      "sha256": "7d24b738de3e423cb5180f591c7481dfeb0e7b9555790df4d6577ff69a97c956",
+      "passingRows": 15230,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_group_party",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-20",
+      "offset": 5409684,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-21",
+      "offset": 5452618,
+      "bytes": 42934,
+      "sha256": "c469af0b5bf30bffbfb584b6a016c45246713bef0a5ce732fbf242b39733166c",
+      "passingRows": 2145,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          },
+          {
+            "key": "suitability_family",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "suitability_intergenerational",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "suitability_public_viewing_safe",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-22",
+      "offset": 5495552,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-23",
+      "offset": 5538486,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-24",
+      "offset": 5581420,
+      "bytes": 42934,
+      "sha256": "10a84b9f44b5396289507d81f0597674b2c604dd76b8aff1d9650bb6e4a7c1ed",
+      "passingRows": 1293,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "new-25",
+      "offset": 5624354,
+      "bytes": 42934,
+      "sha256": "10a84b9f44b5396289507d81f0597674b2c604dd76b8aff1d9650bb6e4a7c1ed",
+      "passingRows": 1293,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-01",
+      "offset": 5667288,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-02",
+      "offset": 5710222,
+      "bytes": 42934,
+      "sha256": "b5a4d567f5b032b93481babb204dcad2c26542e3c373e8cb2bec092348542f88",
+      "passingRows": 39341,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-03",
+      "offset": 5753156,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-04",
+      "offset": 5796090,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-05",
+      "offset": 5839024,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-06",
+      "offset": 5881958,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-07",
+      "offset": 5924892,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-08",
+      "offset": 5967826,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-09",
+      "offset": 6010760,
+      "bytes": 42934,
+      "sha256": "1166e22f5d69df79f594a0aea13fa9a6440eac11b7e418c4f25d2fab2a72c5da",
+      "passingRows": 42746,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-10",
+      "offset": 6053694,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-11",
+      "offset": 6096628,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-12",
+      "offset": 6139562,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-13",
+      "offset": 6182496,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-14",
+      "offset": 6225430,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-15",
+      "offset": 6268364,
+      "bytes": 42934,
+      "sha256": "10a84b9f44b5396289507d81f0597674b2c604dd76b8aff1d9650bb6e4a7c1ed",
+      "passingRows": 1293,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-16",
+      "offset": 6311298,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-17",
+      "offset": 6354232,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-18",
+      "offset": 6397166,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-19",
+      "offset": 6440100,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-20",
+      "offset": 6483034,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-21",
+      "offset": 6525968,
+      "bytes": 42934,
+      "sha256": "10a84b9f44b5396289507d81f0597674b2c604dd76b8aff1d9650bb6e4a7c1ed",
+      "passingRows": 1293,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "is_anime",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-22",
+      "offset": 6568902,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-23",
+      "offset": 6611836,
+      "bytes": 42934,
+      "sha256": "325988193a2fbf30765a0a5551ab2eb6cd7396d5f8c3c617cd690d13bb4c5567",
+      "passingRows": 3278,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "ppl-24",
+      "offset": 6654770,
+      "bytes": 42934,
+      "sha256": "ad3aa9071618804c9edd0cbc3bbd04581133e899c6e70d549f48bbf0ac2c33fd",
+      "passingRows": 8666,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "suitability_adults",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-01",
+      "offset": 6697704,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-02",
+      "offset": 6740638,
+      "bytes": 42934,
+      "sha256": "6a75d81db9ddb826ea149321c3e5b105d68d49d7bc9c7e92b8c70659aa214378",
+      "passingRows": 26900,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "context_is_thought_provoking",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-03",
+      "offset": 6783572,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-04",
+      "offset": 6826506,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-05",
+      "offset": 6869440,
+      "bytes": 42934,
+      "sha256": "325988193a2fbf30765a0a5551ab2eb6cd7396d5f8c3c617cd690d13bb4c5567",
+      "passingRows": 3278,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-06",
+      "offset": 6912374,
+      "bytes": 42934,
+      "sha256": "7b5acfb874f91c1e2368c88842b59277eecca1717ee3fd96dfa20a85ab4cf318",
+      "passingRows": 8454,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          },
+          {
+            "key": "context_is_binge_friendly",
+            "match": {
+              "value": true
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-07",
+      "offset": 6955308,
+      "bytes": 42934,
+      "sha256": "de9eaabc94cfb1bf0cf55e8ad410ec04aa54c90bdc10804dff424b694ac62267",
+      "passingRows": 1400,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Animation"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-08",
+      "offset": 6998242,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-09",
+      "offset": 7041176,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-10",
+      "offset": 7084110,
+      "bytes": 42934,
+      "sha256": "88e2aa80beb25b77654cfe6e6cfd0c12baf68ebae12d28b3dab188039675ab1d",
+      "passingRows": 34166,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "movie"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          },
+          {
+            "key": "media_type",
+            "match": {
+              "value": "show"
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-11",
+      "offset": 7127044,
+      "bytes": 42934,
+      "sha256": "b5a4d567f5b032b93481babb204dcad2c26542e3c373e8cb2bec092348542f88",
+      "passingRows": 39341,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          },
+          {
+            "key": "production_method",
+            "match": {
+              "value": "Live-Action"
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    },
+    {
+      "id": "sty-12",
+      "offset": 7169978,
+      "bytes": 42934,
+      "sha256": "b2434a1dacd82da0abf5978c12eb8fdd802d962795e9e9e894b0f4ecf46ea9fe",
+      "passingRows": 42934,
+      "era": null,
+      "qdrant": {
+        "must": [
+          {
+            "key": "goodwatch_overall_score_voting_count",
+            "range": {
+              "gte": 2000
+            }
+          }
+        ],
+        "must_not": [
+          {
+            "key": "adult",
+            "match": {
+              "value": true
+            }
+          }
+        ]
+      },
+      "scope": "actual title-table representable flags/era only; corpus lesserKnown=false and no external chip filters",
+      "pointOrder": "actual index title_table order"
+    }
+  ]
+}
