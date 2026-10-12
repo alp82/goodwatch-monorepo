@@ -19,7 +19,7 @@
     "postwriteQuiescenceSeconds": 60
   },
   "controlReadySeconds": 1200,
-  "helperCodeSha256": "f1ba4a9bb2e4c1985ede09382a5dbb0b4c90572d5b8b3e7953af0a471b7c0ed5",
+  "helperCodeSha256": "74f28502ca7efed3ec0cffb9e8cea376f042b01d7f752951f671c13f625a9e9c",
   "helperConfig": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-100-cpu0-v1/helper-config.json",
   "helperPolicySha256": "88289117a20e93e143f655d734a6690d7c5e37a7bbda130a0419a1660ab39b98",
   "initialPinRequestSeconds": 180,

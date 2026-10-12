@@ -59,6 +59,26 @@ class CallerTests(unittest.TestCase):
             self.assertEqual(events[-1]['cleanupReason'],'pin_child_cleanup')
             self.assertFalse(any(e['stage']=='query-finished' for e in events))
 
+class BindingTests(unittest.TestCase):
+    def test_runtime_symbols_are_the_frozen_variant(self):
+        import runtime_cpu0, pin_cpu0
+        for name in ('CLASSES','PAGE','Kernel','Mapping','Target','byte_count','classify','page_ranges','selection_digest','release_preserving_error'):
+            self.assertIs(getattr(runtime_cpu0,name),getattr(pin_cpu0,name))
+
+    def test_isolated_import_without_unversioned_pin(self):
+        import subprocess,sys
+        source=Path(control.__file__).parent
+        with tempfile.TemporaryDirectory() as directory:
+            folder=Path(directory)
+            for name in ('pin_cpu0.py','runtime_cpu0.py','daemon_cpu0.py','controller_cpu0.py','cpu0_guards.py','cpu0_preflight.py','turnover_gate_cpu0.py'):
+                (folder/name).write_bytes((source/name).read_bytes())
+            script=folder/'probe.py'
+            script.write_text("import sys\nsys.path.insert(0,"+repr(str(folder))+")\nimport pin_cpu0 as pin, runtime_cpu0 as runtime, daemon_cpu0, controller_cpu0, cpu0_preflight, turnover_gate_cpu0\nassert runtime.Kernel is pin.Kernel\nassert runtime.Mapping is pin.Mapping\nassert runtime.Target is pin.Target\nassert runtime.selection_digest is pin.selection_digest\nassert 'pin' not in sys.modules\n")
+            result=subprocess.run([sys.executable,'-I','-B',str(script)],capture_output=True,timeout=10)
+            self.assertEqual(result.returncode,0,result.stderr.decode())
+            self.assertFalse((folder/'__pycache__').exists())
+
+
 class ConfigTests(unittest.TestCase):
     def test_new_schema_integer_zero_and_combined_guard_hash(self):
         import hashlib

@@ -7,7 +7,7 @@ import resource
 import stat
 import subprocess
 
-from pin import CLASSES, PAGE, Kernel, Mapping, Target, byte_count, classify, page_ranges, selection_digest, release_preserving_error
+from pin_cpu0 import CLASSES, PAGE, Kernel, Mapping, Target, byte_count, classify, page_ranges, selection_digest, release_preserving_error
 
 
 @dataclass(frozen=True)
