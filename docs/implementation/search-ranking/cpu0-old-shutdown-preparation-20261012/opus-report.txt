@@ -1,0 +1,56 @@
+## Verdict: PASS for the focused amendment
+
+No blocking findings. The 2 GiB margin cannot reach NEW creation, NEW start or any runtime check, the unchanged gates are intact, and failure and stop evidence stay truthful. This is a source-reading verdict only: I ran no tests and checked no hashes.
+
+### What the code does
+
+**The OLD margin has exactly one route.**
+- `old_shutdown_host()` (`admission.py:66-82`) takes only `guards`. Its floor is the literal `2*GIB` at lines 78 and 80, with no threshold parameter, default, environment value or module constant a caller could change.
+- Its only call site is `old_admission()` at `admission.py:144`. The only non-test caller of `old_admission()` is the `stop_admission` lambda at `setup.py:348`, which `clean_old()` invokes only inside the `Running is True` branch (`setup.py:74-80`).
+- A grep of `goodwatch-qdrant` finds no other import of `admission` beyond `setup.py:25` and the new test. There is no dynamic dispatch onto it in the external directory.
+
+**NEW creation and start still use the full 5 GiB check.**
+- `setup.py:359-360` pass `setup_admission.host(guards)` as both `before_create` and `before_start`.
+- `before_create()` at `setup.py:424` runs before `engine.request` at 426; `before_start()` at 439 runs before `docker('start', NEW)` at 440.
+- `host()` (`admission.py:52-63`) is unchanged: strict `<=5*GIB` refusal, schema `cpu0-setup-host-admission.v6`.
+- The shutdown evidence is never forwarded. `clean_old()` uses only `admission['source']` (`setup.py:83`) and returns `(current, receipt_sha)`, so no later gate can consume it.
+
+**Runtime floors are self-contained in the frozen backend.**
+- `controller_cpu0.py:182-186`, `:219`, `:277-279` and `turnover_gate_cpu0.py:110` read `/proc/meminfo` themselves with their own 5 GiB floors.
+- Nothing in `pinning-prototype` references the external `admission` module.
+
+**Unchanged gates on the OLD path are preserved.**
+- Swap zero, disk above 3 GiB, allocation below 11 GiB and `guards.host_cpu()` are term-for-term identical to `host()` (`admission.py:72-80`).
+- `old_admission()` (`admission.py:142-150`) differs by one line only; the before/after attest, `old_hierarchy` and `collection_shape` are untouched.
+- `clean_old()` changes only a comment. The receipt-exists refusal, schema check, re-attest and `graceful_stop(OLD, …, protected_pids, expected)` are as before.
+- In `run_setup`, the control lock, the NEW-absent check, the prior census and the protected-PID set with its single Qdrant-child exception all still precede the stop (`setup.py:323-346`).
+
+**Failure evidence stays truthful.**
+- Both functions raise `setup_host_admission_failed`, but the attached `setupHostEvidence` carries a distinct schema, `target`, `availableFloorBytes` and `diagnosticComparisonAdmission: False`.
+- `executor.py:208-210,240` projects that evidence verbatim, so a 2 GiB shutdown refusal cannot be read as a 5 GiB one.
+- `setupDurableStopEvidence` with `continuationAllowed: False` and the endpoint census are unchanged (`setup.py:385-400`).
+- An unclean stop raises before `stage_absent` at `setup.py:352`.
+
+### Non-blocking findings
+
+1. **Missing composition test for the state this amendment makes likelier.** No fixture covers: OLD stops cleanly below 5 GiB, then `host()` refuses at `before_create` with `engine.request` never called. `test_external.py:239-258` always passes `mock.Mock()` for `before_create`. The ordering is correct by reading `setup.py:424-426`, but it is untested.
+2. **That state is terminal for a rerun, by design.** `stage_absent` (`setup.py:352`) runs before the full host check, so the admission directory already exists when `host()` refuses. A rerun then stops at `setup_fresh_public_scope_required` (`setup.py:325-326`). This matches "failures remain terminal" but is not spelled out in `SHUTDOWN-ADMISSION.md`.
+3. **A successful shutdown admission leaves no public trace.** The `cpu0-old-shutdown-host-admission.v1` evidence is discarded on success and is absent from `cpu0-external-setup-result.v6`. The same was true of the old 5 GiB evidence, but a successful result now does not disclose that the stop was admitted under 2 GiB.
+4. **One vacuous assertion.** `lifecycle.graceful_stop.assert_not_called()` at `test_shutdown_admission.py:53` cannot fail, because `old_admission()` never calls `graceful_stop`. The real proof is the fifth test's `call_count == 1` through `run_setup`.
+5. **Slight wording overreach in the README.** `README.md:54` says every CPU0 runtime admission requires "more than 5 GiB". The frozen `host_available` refuses on `available<floor` (`controller_cpu0.py:279`), so some runtime checks admit exactly 5 GiB. The code is unchanged; only the sentence is imprecise.
+6. **Test name.** `test_real_setup_shutdown_refusal_never_stages_creates_or_starts` exercises an unclean stop, not an admission refusal, and "starts" is covered only because `create_owned_clone` is mocked.
+
+### Read coverage
+
+- **Evidence directory, in full:** `manifest.json`, `amendment.diff`, `original-v6-plan.md`, and `code/` copies of `admission.py`, `setup.py`, `test_shutdown_admission.py`, `README.md`, `SHUTDOWN-ADMISSION.md`.
+- **Worktree, partial:** `admission.py:50-84`, `setup.py:71-104`, `executor.py:150-242`, `test_external.py:200-264`, `controller_cpu0.py:176-195`, and `AGENTS.md`.
+- **Worktree, grep only:** caller, import and threshold patterns across the repo, `goodwatch-qdrant`, `cpu0-external-v6` and `pinning-prototype`.
+- **Not read:** `opus-report.json`, `prompt.txt`, `execution-packet.json`, `local-execution-closure.json`, and the bodies of the other external and backend files, including `lifecycle_cpu0.py` and `cpu0_guards.py`. No credentials or private data were read.
+
+### Residual limits
+
+- **No hashes or git diff.** I could not confirm the manifest SHA256 values, HEAD, or that only five files changed. Worktree and evidence copies agree on every line I grepped or read, nothing more.
+- **No test execution.** The five focused tests and the 81 fixtures remain author-run; I traced the fifth test by hand and it does reach `graceful_stop` once at 4,549,484,544 B.
+- **Mocked boundaries.** The focused tests fake `old_hierarchy`, `collection_shape`, lifecycle, guards, Docker, Engine and census, so those fences rest on unchanged source and earlier reviews.
+- **No runtime proof.** Nothing here shows that 2 GiB is enough on the host, that Qdrant exits cleanly on SIGTERM within 20 seconds, or that memory exceeds 5 GiB after the stop. The root snapshot figures are context only.
+- **Time gap.** `MemAvailable` is sampled once before the stop and can change before the signal.
