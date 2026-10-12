@@ -1,65 +1,65 @@
 {
 	"cinema": {
-		"tv": "1351 x 729",
+		"tv": "1271 x 686",
 		"smallestText": {
-			"px": 23.6,
+			"px": 22.2,
 			"words": "S2 E4 · 50 min",
 			"screen": "19-my-shows"
 		},
 		"smallestTarget": {
-			"w": 169,
-			"h": 72,
-			"item": "bar-search",
+			"w": 146,
+			"h": 68,
+			"item": "bar-menu",
 			"screen": "01-home"
 		}
 	},
 	"marquee": {
-		"tv": "1351 x 729",
+		"tv": "1271 x 686",
 		"smallestText": {
-			"px": 22.5,
-			"words": "87 score",
+			"px": 21.2,
+			"words": "92 score",
 			"screen": "04-discover-results"
 		},
 		"smallestTarget": {
-			"w": 179,
-			"h": 81,
+			"w": 168,
+			"h": 76,
 			"item": "bar-search",
 			"screen": "01-home"
 		}
 	},
 	"glow": {
-		"tv": "1351 x 729",
+		"tv": "1271 x 686",
 		"smallestText": {
-			"px": 23.6,
+			"px": 22.2,
 			"words": "2016 · Show · 4 seasons",
 			"screen": "04-discover-results"
 		},
 		"smallestTarget": {
-			"w": 169,
-			"h": 72,
-			"item": "bar-search",
+			"w": 146,
+			"h": 68,
+			"item": "bar-menu",
 			"screen": "01-home"
 		}
 	},
 	"viewports": {
 		"1920x1080": {
-			"tv": "1351 x 729",
-			"smallestText": 23.6,
+			"tv": "1271 x 686",
+			"smallestText": 22.2,
 			"remote": {
-				"width": 294,
-				"endsAt": 1074,
-				"streamingRowEndsAt": 758,
-				"place": "beside"
+				"width": 181,
+				"endsAt": 1261,
+				"streamingRowEndsAt": 1066,
+				"place": "below"
 			}
 		},
 		"1920x940": {
-			"tv": "1351 x 729",
-			"smallestText": 23.6,
+			"tv": "1080 x 583",
+			"smallestText": 18.9,
 			"remote": {
-				"width": 294,
-				"endsAt": 934,
-				"streamingRowEndsAt": 618,
-				"place": "beside"
+				"width": 160,
+				"endsAt": 1099,
+				"streamingRowEndsAt": 927,
+				"place": "below"
 			}
 		},
 		"1536x730": {
@@ -103,13 +103,13 @@
 			}
 		},
 		"2560x1300": {
-			"tv": "1874 x 1012",
-			"smallestText": 32.8,
+			"tv": "1556 x 841",
+			"smallestText": 27.2,
 			"remote": {
-				"width": 361,
-				"endsAt": 1297,
-				"streamingRowEndsAt": 909,
-				"place": "beside"
+				"width": 219,
+				"endsAt": 1519,
+				"streamingRowEndsAt": 1283,
+				"place": "below"
 			}
 		},
 		"390x844": {

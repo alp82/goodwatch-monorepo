@@ -73,8 +73,8 @@ for (const design of ["cinema", "marquee", "glow"]) {
 	await keys("Escape", "ArrowDown")
 	await expect(t("down from the bar returns to the apps"), /^home · focus app-/)
 	await keys("h", "ArrowRight", "Enter"); check(t("an app has Back, Search, Menu, then Expand"), await bar(), "bar-back bar-search bar-menu expand")
-	await keys("b"); await page.waitForSelector("button[data-bar=first]", { timeout: 8000 }); check(t("the alternative puts Expand first"), await bar(), "expand bar-back bar-search bar-menu")
-	await keys("b"); await page.waitForSelector("button[data-bar=last]", { timeout: 8000 })
+	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=first]", { timeout: 8000 }); check(t("the alternative puts Expand first"), await bar(), "expand bar-back bar-search bar-menu")
+	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=last]", { timeout: 8000 })
 	await keys("h")
 	// The map.
 	await keys("ArrowRight", "ArrowRight", "Enter"); await expect(t("Explorer opens on the first island"), "home › explorer · focus island-heists")
@@ -103,11 +103,11 @@ for (const design of ["cinema", "marquee", "glow"]) {
 	await keys("ArrowRight"); check(t("the pointer hides when a key is used"), await pointer("shown"), "false")
 	await page.mouse.move(cx + 40, cy + 10, { steps: 3 }); await page.waitForTimeout(200); check(t("the pointer comes back on movement"), await pointer("shown"), "true")
 	await page.waitForTimeout(3600); check(t("the pointer fades after a few seconds without movement"), await pointer("shown"), "false")
-	// Beside the TV the Remote only nods toward the cursor (13 degrees at most), so it never swings over the picture.
+	// Under the TV the Remote swings all the way toward the cursor: 42 degrees reaches the corners.
 	const [tl, tr, bl, br] = await corners()
-	check(t("the Remote turns left for the left corners and right for the right ones"), [tl[0] < -8, tr[0] > 1, bl[0] < -8, br[0] > 8].join(" "), "true true true true")
-	check(t("the Remote never turns further than its nod"), String(Math.max(...[tl, tr, bl, br].map((c) => Math.abs(c[0]))) <= 13.01), "true")
-	check(t("the Remote leans back further for a far corner than for a near one"), String(tr[1] > br[1] + 1), "true")
+	check(t("the Remote swings far toward each corner"), [tl[0] < -30, tr[0] > 30, bl[0] < -30, br[0] > 30].join(" "), "true true true true")
+	check(t("the Remote leans back further for the top corners than for the bottom ones"), [tl[1] > bl[1] + 1, tr[1] > br[1] + 1].join(" "), "true true")
+	check(t("the streaming row stays in the window while the Remote is turned"), String((await page.evaluate(() => Math.max(...[...document.querySelectorAll("[data-remote] .remote-service")].map((el) => el.getBoundingClientRect().bottom)))) <= 1080), "true")
 	await page.mouse.move(okX, okY, { steps: 6 }); await page.waitForTimeout(1100)
 	check(t("over the Remote itself the Remote settles at rest"), (await aim()).map((n) => Math.round(n)).join(" "), "0 12")
 	await page.mouse.move(1900, 3, { steps: 5 }); await page.waitForTimeout(500)
@@ -129,43 +129,55 @@ await page.locator("button[data-design=marquee]").click(); await marked("marquee
 check("a click on a direction's button chooses it and keeps the screen", `${await current()} · ${await state()}`, "2 Marquee · home › discover › discover-cozy · focus t-the-good-place")
 await keys("3"); await marked("glow"); check("the key 3 chooses Glow and keeps the screen", `${await current()} · ${await state()}`, "3 Glow · home › discover › discover-cozy · focus t-the-good-place")
 await keys("1"); await marked("cinema"); check("the key 1 chooses Cinema", await current(), "1 Cinema")
-// With the Remote under the TV there is room to swing: it turns all the way toward the corners.
-await open("design=cinema&remote=below")
+// Beside the TV (the layout of small windows, forced here on a large one) the Remote only nods toward the cursor,
+// so it never swings over the picture.
+await open("design=cinema&remote=beside")
 {
 	const [tl, tr, bl, br] = await corners()
-	check("below: the Remote turns far toward each corner", [tl[0] < -30, tr[0] > 30, bl[0] < -30, br[0] > 30].join(" "), "true true true true")
-	check("below: the Remote leans back further for the top corners", [tl[1] > bl[1] + 1, tr[1] > br[1] + 1].join(" "), "true true")
+	check("beside: the Remote nods left for the left corners and right for the right ones", [tl[0] < -8, tr[0] > 1, bl[0] < -8, br[0] > 8].join(" "), "true true true true")
+	check("beside: the Remote never turns further than its nod", String(Math.max(...[tl, tr, bl, br].map((c) => Math.abs(c[0]))) <= 13.01), "true")
 	await page.evaluate(() => document.documentElement.dispatchEvent(new MouseEvent("mouseleave"))); await page.waitForTimeout(1100)
-	check("below: the Remote is at rest after the cursor left the window", (await aim()).map((n) => Math.round(n)).join(" "), "0 12")
+	check("beside: the Remote is at rest after the cursor left the window", (await aim()).map((n) => Math.round(n)).join(" "), "0 12")
+	await keys("r"); await page.waitForSelector("[data-remote-place=below]", { timeout: 8000 }); check("the key R returns to the window's own choice", new URL(page.url()).searchParams.get("remote") ?? "none", "none")
+	await keys("r"); await page.waitForSelector("[data-remote-place=beside]", { timeout: 8000 }); check("the key R forces the other place", new URL(page.url()).searchParams.get("remote") ?? "none", "beside")
 }
 
-// Every window size: the whole Remote, down to its streaming keys and its end, is in the window at rest, and both
-// streaming keys take a click.
-const remoteFits = async (label, width, height, query, whole = true) => {
+// Every window size: which place the Remote takes, that its streaming row is in the window at rest and both of its
+// keys take a click, and how small the TV's type gets. Type of 20 canvas pixels is the smallest any direction has.
+const remoteFits = async (label, width, height, query, place, readable = true) => {
 	await page.setViewportSize({ width, height })
 	await page.mouse.move(0, 0)
 	await open(query)
 	const m = await page.evaluate(() => {
 		const box = (s) => document.querySelector(s).getBoundingClientRect()
 		const canvas = document.querySelector("[data-tv-canvas]")
-		return { row: Math.max(box("[data-remote] button[aria-label='Only Netflix']").bottom, box("[data-remote] button[aria-label='Only Prime Video']").bottom), body: box("[data-remote] .remote-body").bottom, right: box("[data-remote] .remote-body").right, tv: box("[data-tv-screen]"), k: canvas.getBoundingClientRect().width / canvas.offsetWidth }
+		return { place: document.querySelector("[data-remote-place]").dataset.remotePlace, row: Math.max(box("[data-remote] button[aria-label='Only Netflix']").bottom, box("[data-remote] button[aria-label='Only Prime Video']").bottom), body: box("[data-remote] .remote-body").bottom, right: box("[data-remote] .remote-body").right, tv: box("[data-tv-screen]"), k: canvas.getBoundingClientRect().width / canvas.offsetWidth }
 	})
+	const type = Math.round(20 * m.k * 10) / 10
+	check(`${label}: the Remote is ${place === "below" ? "under" : "beside"} the TV`, m.place, place)
 	check(`${label}: the streaming row ends inside the window`, String(m.row <= height), "true")
-	if (whole) check(`${label}: the whole Remote is inside the window`, String(m.body <= height + 1 && m.right <= width), "true")
+	if (place === "beside") check(`${label}: the whole Remote is inside the window`, String(m.body <= height + 1 && m.right <= width), "true")
 	await page.locator("[data-remote]").getByRole("button", { name: "Only Netflix" }).click(); check(`${label}: the Netflix key takes a click`, await toast("Only Netflix"), "shown")
 	await page.locator("[data-remote]").getByRole("button", { name: "Only Prime Video" }).click(); check(`${label}: the Prime Video key takes a click`, await toast("Only Prime Video"), "shown")
-	console.log(`     ${label}: TV ${Math.round(m.tv.width)} x ${Math.round(m.tv.height)}, type of 20 canvas px prints at ${(20 * m.k).toFixed(1)} px`)
+	check(`${label}: the smallest type is ${readable ? "18 px or more" : "under 18 px, as the README says"}`, String(type >= 18), String(readable))
+	console.log(`     ${label}: TV ${Math.round(m.tv.width)} x ${Math.round(m.tv.height)}, type of 20 canvas px prints at ${type} px`)
 }
-for (const [width, height] of [[1920, 1080], [1920, 940], [1536, 730], [1440, 800], [1366, 650], [1280, 720], [2560, 1300]]) await remoteFits(`${width}x${height}`, width, height, "design=cinema")
-await remoteFits("marquee at 1536x730", 1536, 730, "design=marquee")
-await remoteFits("glow at 1536x730", 1536, 730, "design=glow")
-// Under the TV there is room for the Remote down to its streaming keys only; its end runs off the window.
-await remoteFits("below at 1920x1080", 1920, 1080, "design=cinema&remote=below", false)
+await remoteFits("1920x1080", 1920, 1080, "design=cinema", "below")
+await remoteFits("1920x940", 1920, 940, "design=cinema", "below")
+await remoteFits("2560x1300", 2560, 1300, "design=cinema", "below")
+await remoteFits("1536x730", 1536, 730, "design=cinema", "beside")
+await remoteFits("1440x800", 1440, 800, "design=cinema", "beside")
+await remoteFits("1366x650", 1366, 650, "design=cinema", "beside", false)
+await remoteFits("1280x720", 1280, 720, "design=cinema", "beside", false)
+await remoteFits("marquee at 1920x940", 1920, 940, "design=marquee", "below")
+await remoteFits("glow at 1920x940", 1920, 940, "design=glow", "below")
+await remoteFits("glow at 1536x730", 1536, 730, "design=glow", "beside")
 await page.setViewportSize({ width: 1920, height: 1080 }); await open("design=cinema&at=home.discover.discover-cozy")
 
 // The pointer shapes.
-await keys("c"); await page.waitForSelector("button[data-pointer=cross]", { timeout: 8000 }); check("the key C chooses the next pointer shape", await pointer("shape"), "cross")
-await page.locator("button[data-pointer]").click(); await page.waitForSelector("button[data-pointer=dot]", { timeout: 8000 }); check("the pointer button chooses the next one", await pointer("shape"), "dot")
+check("the pointer is the ring", await pointer("shape"), "ring")
+await keys("c"); await page.waitForSelector("[data-tv-pointer][data-shape=cross]", { state: "attached", timeout: 8000 }); check("the key C still shows the next shape", await pointer("shape"), "cross")
+await keys("c"); await page.waitForSelector("[data-tv-pointer][data-shape=dot]", { state: "attached", timeout: 8000 }); check("and the one after it", await pointer("shape"), "dot")
 await page.setViewportSize({ width: 390, height: 844 }); await open("design=cinema")
 check("at phone width there is no pointer", String(await page.locator("[data-tv-pointer]").count()), "0")
 // The phone: the Remote is taller than what is left under the TV, so its lower keys are reached by scrolling.

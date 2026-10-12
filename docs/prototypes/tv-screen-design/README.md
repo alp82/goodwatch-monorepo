@@ -31,9 +31,9 @@ needs the internet but nothing needs a key).
 | `Guest` / `Member`, or `P` | The person (`&as=member`) |
 | `In the room` / `TV only`, or `V` | The room with the Remote, or the TV alone (`&view=tv`) |
 | `“Expand”`, or `L` | Cycle the expand key's label |
-| `Pointer: Ring`, or `C` | Cycle the shape of the TV's own pointer: ring, crosshair, dot (`&pointer=cross`) |
-| `Expand last`, or `B` | The expand key last in the top bar, or first (`&bar=first`) |
-| `Remote beside`, or `R` | The Remote beside the TV (the default), or under it as before (`&remote=below`) |
+| `Remote under`, or `R` | The other place for the Remote than the one the window's size chose: under the TV or beside it (`&remote=below\|beside`) |
+| `C` | The two pointer shapes that were not chosen, crosshair and dot; the ring is the pointer (`&pointer=cross`) |
+| `B` | The alternative top bar, with the expand key first (`&bar=first`) |
 | Arrow keys, Enter, Escape or Backspace | Directions, OK, Back |
 | `H`, `M`, `S` | Home, Menu, Search (typing on the search screen goes to the TV) |
 | The Remote, mouse and touch on the TV | As in the flow prototype |
@@ -46,6 +46,9 @@ Every key is a plain key on a German keyboard: none needs Shift or AltGr. `&chro
   (member) My shows as apps on the TV; a title screen; search; the menu; the four-answer quiz.
 - One way out: the expand key at the top right of every app. Focusing it frames the whole picture, OK grows the
   picture into the page. Label "Expand" by default.
+- Decided on this prototype: the direction is **Cinema**; the Remote sits **under the TV** and moves beside it
+  only in very small windows; the pointer is the **ring**; the expand key is **last, in the corner**; the room
+  photo stays.
 
 ## The top bar
 
@@ -63,7 +66,7 @@ pointer, and by touch.
 | Search results | yes | no | yes | yes |
 | While the menu is open | the menu itself has no bar; the screen under it shows no Menu action | | | |
 
-**The arrangement:** Back, Search, Menu, a wider gap, then Expand, last, in the corner. The three are quiet (dark
+**The arrangement (chosen):** Back, Search, Menu, a wider gap, then Expand, last, in the corner. The three are quiet (dark
 pills or blocks); Expand alone is amber and carries the motif, so it is not one of them. The corner is where
 round one put it, and Right along the bar always ends on it. **The alternative** (`B`): Expand first, then the
 gap, then the three; it reads first, but it moves away from the corner and sits beside the screen's name.
@@ -76,21 +79,23 @@ their words and the bar takes two lines (the actions, then the name).
   the Remote in the hand aims at it: it turns about the wrist, leans further back for a far point and less for a
   near one, rolls toward the cursor's side, and moves a little toward it. It eases with a short lag (about a tenth
   of a second) and returns to rest when the cursor leaves the window.
-  - Beside the TV (the default) it **nods**: it turns 13 degrees at most and rolls more instead (26 degrees), so
-    it never swings over the picture it points at, and its keys stay where a click finds them.
-  - Under the TV (`R`) it has room to **swing**: up to 42 degrees to either side, which reaches the top corners;
-    the hand lifts it as it turns, so its keys stay in the window.
+  - Under the TV (the default) it **swings**: up to 42 degrees to either side, which reaches the top corners.
+    It turns about the wrist, which is just under the streaming keys, so they hardly move; the hand lifts it a
+    little as it turns, and the streaming row stays in the window.
+  - Beside the TV (small windows) it **nods**: it turns 13 degrees at most and rolls more instead (26 degrees),
+    so it never swings over the picture it points at.
 - **Its keys stay hittable.** Over the Remote's own place it settles at rest, so the keys are where they were.
 - **The TV's own pointer.** Over the TV picture the system cursor is hidden and the TV draws a pointer that
   follows with a slightly shorter lag. Over an item the item takes the focus and the pointer changes shape and
   leans a little toward the item's middle; over the expand key it turns amber; a click is OK. It fades after
   3.2 seconds without movement and at once when a key of the keyboard or of the Remote is used, and comes back
   on movement.
-- **Three shapes** (`C`), one look for all three directions (white with a dark edge, so it reads on any art):
+- **The ring is the pointer** (the owner's choice). The other two shapes stay behind `C` for comparison. One look
+  for all three directions (white with a dark edge, so it reads on any art):
 
   | Shape | Free | Over an item | |
   | --- | --- | --- | --- |
-  | **Ring** (recommended) | a circle with a centre dot | the circle closes around the dot | Reads at once as "where the Remote points", shows the exact spot, covers the least |
+  | **Ring** (chosen) | a circle with a centre dot | the circle closes around the dot | Reads at once as "where the Remote points", shows the exact spot, covers the least |
   | Crosshair | four ticks around a gap | the ticks close in and turn into an X | The most "aiming", but the thinnest on busy posters, and an X over an item can read as "close" |
   | Dot | a lit puck | opens into a ring | The friendliest and the easiest to find, but it hides what is under it |
 
@@ -129,7 +134,7 @@ All motion stops with `prefers-reduced-motion`: screens cut, the ring and the li
 
 ### Side by side, the TV alone
 
-One image per screen, the three directions under each other at the TV's real size on a 1920 x 1080 window (1351 x 729):
+One image per screen, the three directions under each other at the TV's real size on a 1920 x 1080 window (1271 x 686):
 
 - Home: [compare/home.jpg](compare/home.jpg)
 - Mini Discover, the moods: [compare/discover-moods.jpg](compare/discover-moods.jpg)
@@ -159,42 +164,44 @@ GoodWatch?, and for a member 16 home, 17 the three sides, 18 a side, 19 My shows
 
 ## The room: the TV and the Remote
 
-The owner's finding on the round before: the Remote's Netflix and Prime Video keys were cut off under the TV. A
-browser window is wide and short (tabs and the address bar take height), so the Remote does not fit under a large
-TV, and the smaller the window, the less.
+**Under the TV, as the owner chose**, wherever the window has room for it; beside the TV only in a very small
+window. `R` shows the other one for comparison.
 
-**Chosen: the Remote sits beside the TV**, whole, in the hand, on the right; its end rests on the window's bottom
-edge. The TV takes the left and the height, as large as the window allows (up to 92% of the height).
+- **Under** (`below`): the TV is centred at the top, the Remote in the hand under it, free to swing toward the
+  cursor. The TV is as tall as the window leaves once the Remote shows down to its streaming keys: the Remote's
+  top sits 8 px under the picture, over the TV's lower edge and the sideboard, and its end and most of the hand
+  run off the bottom, as allowed. That makes the TV **1271 x 686 on 1920 x 1080** (it was 1137 x 614 in this
+  layout before, 12% narrower) and **1080 x 583 on 1920 x 940**.
+- In a shorter window the Remote gives way first, from 0.56 of its size at 1080p down to 0.46, so that the TV keeps
+  the width that holds its type at 18 px. On 1920 x 940 the Remote is at half its size (156 px wide, its wheel
+  about 118 px) and the TV is exactly at that width.
+- **The threshold: under needs a window at least about 918 px tall and 1110 px wide.** Below that it cannot show
+  the streaming row and keep type of 20 canvas pixels at 18 px, so the Remote moves **beside** the TV: the TV on
+  the left as large as the window allows, the whole Remote to its right with its end on the bottom edge, and the
+  Remote only nods toward the cursor there. 1920 x 910 is already beside.
+- **The photo** is the same one, stretched to about 1.35 times its largest file at 1080p. What I did about the
+  softness, cheaply: a slight blur on the photo (1.8 px) that removes the stretch's grain and reads as depth of
+  field, and a soft darkening toward the corners around the TV. Both are set once and never animate. The start
+  page's rendering budget (#190) rules out a blur over the photo, so the real build should bake the blur into the
+  image file instead.
 
-- The Remote is as large as the height shows all of it, 0.9 of its size on a 1080p screen. When the window is too
-  narrow for both, the Remote gives way first (down to half its size) so that the TV stays at the width that keeps
-  its type at 18 px; only below that does the TV shrink.
-- At rest nothing of the Remote is cut: its keys, its end with the logo, the fingers on its left and the palm on
-  its right are in the window. The arm leaves through the bottom edge, as an arm does.
-- The room comes closer: the photo is scaled so its TV sits where ours is (2.2 times its base size on 1080p), and
-  the lights are lower. The photo's largest file is stretched by about 1.45 there and is soft: the real build
-  needs a larger or tighter render, or a photo made for this view.
-
-| Window | TV | Canvas shown at | Smallest type on the TV (Cinema) | Remote's width | Its streaming row ends at | The Remote ends at |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1920 x 1080 | 1351 x 729 | 1.13 | 23.6 px | 294 px | 758 of 1080 | 1074 of 1080 |
-| 1920 x 940 | 1351 x 729 | 1.13 | 23.6 px | 294 px | 618 of 940 | 934 of 940 |
-| 1536 x 730 | 1080 x 583 | 0.90 | 18.9 px | 231 px | 474 of 730 | 723 of 730 |
-| 1440 x 800 | 1080 x 583 | 0.90 | 18.9 px | 174 px | 606 of 800 | 793 of 800 |
-| 1366 x 650 | 998 x 539 | 0.83 | 17.5 px | 160 px | 471 of 650 | 643 of 650 |
-| 1280 x 720 | 949 x 513 | 0.79 | 16.6 px | 160 px | 541 of 720 | 713 of 720 |
-| 2560 x 1300 | 1874 x 1012 | 1.56 | 32.8 px | 361 px | 909 of 1300 | 1297 of 1300 |
+| Window | Remote | TV | Canvas shown at | Smallest type on the TV (Cinema) | Remote's width | Its streaming row ends at | The Remote ends at |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1920 x 1080 | under | 1271 x 686 | 1.06 | 22.2 px | 181 px | 1066 of 1080 | runs off |
+| 1920 x 940 | under | 1080 x 583 | 0.90 | 18.9 px | 160 px | 927 of 940 | runs off |
+| 2560 x 1300 | under | 1556 x 841 | 1.30 | 27.2 px | 219 px | 1283 of 1300 | runs off |
+| 1536 x 730 | beside | 1080 x 583 | 0.90 | 18.9 px | 231 px | 474 of 730 | 723 of 730 |
+| 1440 x 800 | beside | 1080 x 583 | 0.90 | 18.9 px | 174 px | 606 of 800 | 793 of 800 |
+| 1366 x 650 | beside | 998 x 539 | 0.83 | 17.5 px | 160 px | 471 of 650 | 643 of 650 |
+| 1280 x 720 | beside | 949 x 513 | 0.79 | 16.6 px | 160 px | 541 of 720 | 713 of 720 |
 
 [viewports/contact-sheet.jpg](viewports/contact-sheet.jpg) shows Cinema's home at each size, all at the same scale.
 
-- **18 px holds at 1440 x 800, 1536 x 730 and everything larger.** At 1366 x 650 the TV is limited by the height (the site's header takes
-  64 px of 650) and its smallest type is 17.5 px; at 1280 x 720 it is limited by the width and is 16.6 px. Nothing
-  is cut at either; the type is smaller. Marquee's smallest type is 20 canvas pixels (Cinema's and Glow's 21), so it
-  is 5% smaller than the column says.
-- **The alternative, `R`: the Remote under the TV**, the picture of the round before. It only has room for the
-  Remote down to its streaming keys and the fingers under them (the end runs off the window), and it costs the TV
-  its size: 1137 x 614 on 1920 x 1080 (smallest type 19.9 px), and less in every shorter window (about 17 px at
-  1920 x 940). It is kept for comparison.
+- **18 px holds at 1440 x 800, 1536 x 730, 1920 x 940 and everything larger.** At 1366 x 650 the TV is limited by
+  the height (the site's header takes 64 px of 650) and its smallest type is 17.5 px; at 1280 x 720 it is limited
+  by the width and is 16.6 px. Nothing is cut at either; the type is smaller. Marquee's smallest type is 20 canvas
+  pixels (Cinema's and Glow's 21), so it is 5% smaller than the column says, and exactly 18 px where the TV is
+  1080 wide.
 - **The phone** (390 x 844): the TV is on top (375 x 462, smallest type 14.4 px) and the Remote
   under it at a size a thumb can hit (225 px wide, its round keys 45 px). That is taller than the window, so
   **the scene scrolls**: the wheel shows under the TV, and Back, Search, Home and the streaming keys are a short
@@ -207,14 +214,14 @@ focused item); `sizes.json` has the output.
 
 | | Smallest text | Where | Smallest focus target | Where |
 | --- | --- | --- | --- | --- |
-| Cinema | 23.6 px | the "Start" strip on a poster in My shows | 72 px tall (169 x 72) | Search in the top bar |
-| Marquee | 22.5 px | "92 score" under a poster | 81 px tall (179 x 81) | Search in the top bar |
-| Glow | 23.6 px | the facts line on a still | 72 px tall (169 x 72) | Search in the top bar |
+| Cinema | 22.2 px | the "Start" strip on a poster in My shows | 68 px tall (146 x 68) | Menu in the top bar |
+| Marquee | 21.2 px | "92 score" under a poster | 76 px tall (168 x 76) | Search in the top bar |
+| Glow | 22.2 px | the facts line on a still | 68 px tall (146 x 68) | Menu in the top bar |
 
 The script reports the target with the smallest shorter side; all actions of the top bar share that height, and
 Back, with the shortest word, is the narrowest of them.
 
-The TV shows its canvas at 1.13 there, so the sizes in the code print 13% larger. In canvas pixels the primary
+The TV shows its canvas at 1.06 there, so the sizes in the code print 6% larger. In canvas pixels the primary
 labels are: app names 26 to 108 px, screen titles 36 to 62 px, a title's name 46 to 104 px, buttons 25 to 32 px
 in keys 64 to 124 px tall. At most five targets in a row (My shows has six in Cinema and Marquee; the sixth pages
 in), at most two rows of tiles on screen at once (Glow's My shows has a third that pages in).
@@ -259,16 +266,16 @@ landscape, the room photo.
 ## Questions for the owner
 
 1. Which direction, or which mix (for example Cinema with Marquee's map, or Cinema's art with Marquee's ring)?
-2. The Remote beside the TV: is this the room, or should the Remote stay under the TV (`R`) at the price of a
-   smaller TV and a Remote that shows only down to its streaming keys?
-3. Beside the TV the Remote nods toward the cursor (13 degrees) instead of swinging to it (42). Enough of a
-   pointing hand, or should the TV give up width so the Remote can swing?
+2. On 1920 x 940 the Remote under the TV is at half its size (156 px wide) so that the TV keeps 18 px type. Is
+   that Remote large enough, or should the TV give a little more there?
+3. The threshold for beside is a window under about 918 px tall. A 1080p screen with a browser that leaves less
+   than that (for example 1920 x 910) therefore shows the Remote beside the TV. Right, or should under hold
+   further down at the price of type under 18 px?
 4. On the smallest windows (1366 x 650, 1280 x 720) the TV's smallest type is 16.6 to 17.5 px. Acceptable, or
    should the TV's content itself change there (fewer, larger things) rather than scale?
 5. On the phone the Remote's lower keys are reached by scrolling. Right, or should the phone's Remote be a
    different, shorter one?
-6. The room behind the larger TV is closer and darker, and the photo is soft at this size: should a new photo be
-   made for this view?
+6. The photo is softened by a blur and a vignette. Good enough for now?
 7. Cinema shows no name on a poster in a list (the name stands above for the focused one). Enough, or should
    every poster carry its name?
 8. Should amber stay reserved for the way out (Cinema, Marquee), or may the focus use it too (Glow)?
@@ -297,16 +304,18 @@ are imported as they are, and the flow prototype works as before.
 ## Proof
 
 - `npx remix vite:build` passes; `npx biome lint` on the added files is clean; `tsc` reports nothing in them.
-- `walk.mjs`: 211 checks pass. 52 per direction: the apps, a mood, titles, Want to See, rating, the way along the
+- `walk.mjs`: 230 checks pass. 52 per direction: the apps, a mood, titles, Want to See, rating, the way along the
   top bar to the expand key and back, the menu, the map in four directions, the Remote's keys, search, the quiz,
   a member's My shows; the top bar (which actions each kind of screen has, reaching them with Up, what Back,
   Search and Menu do, the alternative order); and pointing (the pointer appears over the TV and the system cursor
-  is hidden, the item under it takes the focus, a click is OK, it hides on a key and after 3.2 s, the Remote nods
-  toward each of the four corners and never further than its nod, settles over its own keys and is at rest after
-  the cursor left). Then 39 for the window sizes: at 1920 x 1080, 1920 x 940, 1536 x 730, 1440 x 800, 1366 x 650,
-  1280 x 720 and 2560 x 1300 the streaming row ends inside the window, the whole Remote is inside it, and the
-  Netflix and Prime Video keys each take a click (also in Marquee and Glow at 1536 x 730, and with the Remote
-  under the TV). And 16 more: the full swing with the Remote under the TV, the direction buttons and the keys
-  1, 2, 3, the pointer shapes, and the phone (no pointer; a scroll brings the streaming row into the window; both
-  keys take a tap).
+  is hidden, the item under it takes the focus, a click is OK, it hides on a key and after 3.2 s, the Remote
+  swings far toward each of the four corners, the streaming row stays in the window while it is turned, it
+  settles over its own keys and is at rest after the cursor left). Then 55 for the window sizes: at 1920 x 1080,
+  1920 x 940 and 2560 x 1300 the Remote is under the TV, at 1536 x 730, 1440 x 800, 1366 x 650 and 1280 x 720
+  beside it; at each the streaming row ends inside the window, both streaming keys take a click, beside the TV
+  the whole Remote is inside the window, and the smallest type is 18 px or more (under 18 px at the two smallest,
+  as stated above); the same for Marquee and Glow at 1920 x 940 and Glow at 1536 x 730. And 19 more: the nod and
+  the `R` key with the Remote forced beside the TV, the direction buttons and the keys 1, 2, 3, the ring and the
+  two shapes behind `C`, and the phone (no pointer; a scroll brings the streaming row into the window; both keys
+  take a tap).
 - `shots.mjs` made every picture, clip and number here.

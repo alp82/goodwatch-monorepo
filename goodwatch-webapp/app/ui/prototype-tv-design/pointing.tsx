@@ -71,8 +71,8 @@ const REST: Aim = { rz: 0, rx: REMOTE_TILT_DEG, ry: 0, tx: 0, ty: 0 }
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
 /**
- * Where the Remote turns: the wrist, a little under the window's bottom edge, 62% down the Remote's box. A pivot
- * further down would swing the keys out of the window at the angles the corners need.
+ * Where the Remote turns: the wrist, 62% down the Remote's box. That is just under the streaming keys, which
+ * therefore hardly move when the Remote swings: they stay in the window and where a click expects them.
  */
 export const WRIST = 0.62
 /** The Remote's transform for an aim, about the wrist. */
@@ -127,8 +127,7 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 		const target = (g: Pointing): Aim => {
 			const box = remoteBox(g)
 			if (still || !g.live || !g.remote || !box || !cursor.here || (!cursor.tap && inside(box, 12))) return REST
-			const arm = REMOTE_H * g.remote.scale * WRIST
-			const pivot = { x: box.left + box.width / 2, y: g.remote.top + arm }
+			const pivot = { x: box.left + box.width / 2, y: g.remote.top + REMOTE_H * g.remote.scale * WRIST }
 			const dx = cursor.x - pivot.x
 			const up = Math.max(40, pivot.y - cursor.y)
 			// -1 at the window's far edge on the left of the wrist, 1 at the far edge on its right.
@@ -146,8 +145,9 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 				rx: REMOTE_TILT_DEG + clamp((reach - 0.75) * 40, -14, 14) * part,
 				ry: side * (nod ? 26 : 16) * part,
 				tx: side * (nod ? 10 : 44) * part,
-				// A turned Remote sinks; the hand lifts it by about as much, so its keys stay in the window.
-				ty: (0.75 - reach) * 22 * part - (1 - Math.cos((rz * Math.PI) / 180)) * arm * 0.9,
+				// Turned, the streaming key on the far side dips by about a third of the Remote's width: the hand lifts
+				// the Remote by that much, so the row stays in the window under the TV.
+				ty: Math.min(0, (0.75 - reach) * 22 * part) - Math.abs(Math.sin((rz * Math.PI) / 180)) * REMOTE_W * 0.34 * g.remote.scale,
 			}
 		}
 
