@@ -9,6 +9,11 @@
 // fixture below. Titles are made up or borrowed by name only: nothing is read from TMDB, and posters are paths that
 // lead nowhere.
 import { utcDay } from "~/domain/tracking/machine"
+import {
+	availabilityLoaded,
+	forgetAvailabilityForTest,
+	servicesFor,
+} from "~/server/availability-index.server"
 import { getHomeDoors } from "~/server/home-doors.server"
 import { getLibraryPage } from "~/server/my-library.server"
 import { getMyShows } from "~/server/my-shows.server"
@@ -17,6 +22,10 @@ import {
 	getNewShows,
 	recordMyShowsVisit,
 } from "~/server/new-episodes.server"
+import {
+	getNewlyAvailable,
+	recordMyMoviesVisit,
+} from "~/server/newly-available.server"
 import { updateScores } from "~/server/scores.server"
 import type { Taste } from "~/server/taste/index.server"
 import { getTonightsPick } from "~/server/tonight.server"
@@ -26,6 +35,7 @@ import { getMemberViewerContext } from "~/server/viewer.server"
 import { getWatchNext, getWatchNextTitles } from "~/server/watch-next.server"
 import {
 	HARNESS_MEMBER,
+	type LandedKey,
 	type MemberKey,
 	type SeenSize,
 } from "~/ui/prototype-my-library/setup"
@@ -151,10 +161,34 @@ const SERVICES = [
 ]
 const serviceOf = (id: number) => SERVICES[id % 4]?.id ?? null
 
+/** An offer that first appeared lately (#456): the title was on Max or nowhere, and is now on a service of the member's. */
+interface LandedOffer {
+	type: "movie" | "show"
+	id: number
+	service: number
+	at: number
+}
+const LANDED_OFFERS: Record<LandedKey, [type: "movie" | "show", id: number, service: number][]> = {
+	none: [],
+	// Dune: Part Two.
+	movie: [["movie", 1002, 8]],
+	// Station Eleven.
+	show: [["show", 303, 337]],
+	several: [
+		["movie", 1002, 8],
+		["movie", 1003, 8],
+		["movie", 1006, 337],
+		["movie", 1007, 8],
+		["show", 303, 337],
+		["show", 302, 8],
+	],
+}
+
 interface Fixture {
 	rows: Record<string, Row[]>
 	movies: Map<number, Row>
 	shows: Map<number, Row>
+	landed: LandedOffer[]
 }
 
 const title = (id: number, name: string, year: number, rest: Row): Row => ({
@@ -170,10 +204,22 @@ const title = (id: number, name: string, year: number, rest: Row): Row => ({
 	...rest,
 })
 
-function build(member: MemberKey, seen: SeenSize, now: number): Fixture {
+function build(
+	member: MemberKey,
+	seen: SeenSize,
+	landed: LandedKey,
+	now: number,
+): Fixture {
 	const today = Math.floor(now / DAY) * DAY
 	const daysAgo = (days: number) => today - days * DAY + 20 * 3_600_000
 	const fixture: Fixture = {
+		// The latest in the list landed first, an hour apart, all about a day ago.
+		landed: LANDED_OFFERS[landed].map(([type, id, service], i) => ({
+			type,
+			id,
+			service,
+			at: now - DAY - i * 3_600_000,
+		})),
 		rows: {
 			user_watch_state: [],
 			user_watch_log: [],
@@ -750,13 +796,35 @@ class HarnessCrate {
 		if (table === "streaming_availability") {
 			const ids = (from: number, count: number) =>
 				Array.from({ length: count }, (_, i) => from + i)
-			const rows = [
+			const { landed } = this.fixture
+			const lately = (type: string, id: number) =>
+				landed.filter((offer) => offer.type === type && offer.id === id)
+			const titles = [
 				...ids(301, START_NAMES.length).map((id) => ["show", id] as const),
 				...ids(1001, MOVIE_NAMES.length).map((id) => ["movie", id] as const),
-			].flatMap(([type, id]) => {
-				const service = serviceOf(id)
-				return service === null ? [] : [[type, id, [service]]]
-			})
+			]
+			// When the offers that landed first appeared (#456): the titles with one, then every service of those.
+			let rows: unknown[][]
+			if (sql.startsWith("SELECT DISTINCT"))
+				rows = landed.map(({ type, id }) => [type, id])
+			else if (sql.includes("min(created_at)")) {
+				const [type, ...wanted] = params.slice(4) as [string, ...number[]]
+				rows = wanted.flatMap((id) => {
+					const service = serviceOf(id)
+					return [
+						...(service === null ? [] : [[id, service, 0]]),
+						...lately(type, id).map((offer) => [id, offer.service, offer.at]),
+					]
+				})
+			} else
+				rows = titles.flatMap(([type, id]) => {
+					const service = serviceOf(id)
+					const services = [
+						...(service === null ? [] : [service]),
+						...lately(type, id).map((offer) => offer.service),
+					]
+					return services.length ? [[type, id, services]] : []
+				})
 			return answer([], { rows, rowcount: rows.length })
 		}
 		// A read of the catalog by key: the columns it names, from the fixture.
@@ -798,6 +866,7 @@ let installed: { key: string; crate: HarnessCrate; now: number } | null = null
 export function installHarnessMember(
 	member: MemberKey,
 	seen: SeenSize,
+	landed: LandedKey = "none",
 	reset = false,
 ): number {
 	if (process.env.NODE_ENV === "production")
@@ -807,11 +876,19 @@ export function installHarnessMember(
 			"This harness replaces the Crate client. Start the dev server without CRATE_HOSTS (without .env).",
 			{ status: 503 },
 		)
-	const key = `${member}-${seen}`
+	const key = `${member}-${seen}-${landed}`
 	if (!installed || installed.key !== key || reset) {
 		const now = Date.now()
-		installed = { key, crate: new HarnessCrate(build(member, seen, now)), now }
+		installed = {
+			key,
+			crate: new HarnessCrate(build(member, seen, landed, now)),
+			now,
+		}
 		setCrateClientForTest(installed.crate)
+		// The offers that landed appeared a day ago, which the launch of "newly available" must not be after. And the
+		// availability index is kept for hours: it is read again from this fixture.
+		process.env.NEWLY_AVAILABLE_SINCE = new Date(now - 30 * DAY).toISOString()
+		forgetAvailabilityForTest()
 	}
 	return installed.now
 }
@@ -837,6 +914,11 @@ const viewer = () => getMemberViewerContext(HARNESS_MEMBER, "US")
 // What the harness asks for, each through the app's own server function
 
 export const harness = {
+	/** The availability of the member's country is loaded: what is on their services, and what landed there. */
+	async ready() {
+		servicesFor("US", [])
+		await availabilityLoaded("US", 5000)
+	},
 	userData: () => getUserData({ user_id: HARNESS_MEMBER }),
 	library: getLibraryPage.bind(null, HARNESS_MEMBER),
 	async shows(now: number) {
@@ -854,6 +936,9 @@ export const harness = {
 	/** What is new for the member's shows, and the visit of My shows that clears it. */
 	newShows: (now: number) => getNewShows(HARNESS_MEMBER, { now }),
 	visit: (now: number) => recordMyShowsVisit(HARNESS_MEMBER, now),
+	/** What landed on the member's services (#456), and the visit of My movies that clears its movies. */
+	landed: async () => getNewlyAvailable(await viewer()),
+	visitMovies: () => recordMyMoviesVisit(HARNESS_MEMBER),
 	async movies(options: Parameters<typeof getWatchNext>[1]) {
 		return getWatchNext(
 			await viewer(),

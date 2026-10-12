@@ -8,6 +8,7 @@ import {
 import { libraryChoiceOf } from "~/domain/my-library"
 import { summaryOf } from "~/domain/new-episodes"
 import { NOTHING_NEW } from "~/domain/new-episodes-signal"
+import { signalOf } from "~/domain/newly-available"
 import {
 	harness,
 	installHarnessMember,
@@ -17,21 +18,27 @@ import {
 	parseWatchNextOptions,
 } from "~/server/watch-next-request.server"
 import { withLegacyWatched } from "~/types/user-data"
-import { memberOf, seenOf } from "~/ui/prototype-my-library/setup"
+import {
+	landedOf,
+	memberOf,
+	seenOf,
+} from "~/ui/prototype-my-library/setup"
 
 const headers = { "Cache-Control": "private, no-store" }
 
-function install(request: Request) {
+async function install(request: Request) {
 	const params = new URL(request.url).searchParams
 	const now = installHarnessMember(
 		memberOf(params.get("member")),
 		seenOf(params.get("seen")),
+		landedOf(params.get("landed")),
 	)
+	await harness.ready()
 	return { params, now }
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const { params, now } = install(request)
+	const { params, now } = await install(request)
 	const url = new URL(request.url)
 	const what = params.get("what")
 	if (what === "library")
@@ -56,15 +63,26 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	}
 	if (what === "user-data")
 		return json(withLegacyWatched(await harness.userData()), { headers })
-	if (what === "tonight")
-		return json({ pick: await harness.tonight() }, { headers })
+	// As /api/tonight answers a member: the pick, and what landed on their services when something did.
+	if (what === "tonight") {
+		const [pick, landed] = await Promise.all([
+			harness.tonight(),
+			harness.landed().then(signalOf),
+		])
+		return json({ pick, ...(landed ? { landed } : {}) }, { headers })
+	}
 	if (what === "new-episodes")
 		return json(summaryOf((await harness.newShows(now)).shows), { headers })
 	return json({ error: "Unknown" }, { status: 400, headers })
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	const { params, now } = install(request)
+	const { params, now } = await install(request)
+	// My movies is open: the visit, as POST /api/newly-available records it.
+	if (params.get("what") === "newly-available") {
+		await harness.visitMovies()
+		return json({ ok: true }, { headers })
+	}
 	// My shows is open: the visit, as POST /api/new-episodes records it.
 	if (params.get("what") === "new-episodes") {
 		await harness.visit(now)

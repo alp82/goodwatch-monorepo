@@ -15,6 +15,18 @@ export type MemberKey = (typeof MEMBERS)[number]
 export const SEEN_SIZES = ["30", "1500", "0"] as const
 export type SeenSize = (typeof SEEN_SIZES)[number]
 
+/**
+ * What landed on the member's services (#456), for any sample member: nothing, one movie, one show, or four movies
+ * and two shows. The offers appeared a day ago, after the member's last visit of either page.
+ */
+export const LANDED = ["none", "movie", "show", "several"] as const
+export type LandedKey = (typeof LANDED)[number]
+
+export const landedOf = (value: string | null): LandedKey =>
+	(LANDED as readonly string[]).includes(value ?? "")
+		? (value as LandedKey)
+		: "none"
+
 export const memberOf = (value: string | null): MemberKey =>
 	(MEMBERS as readonly string[]).includes(value ?? "")
 		? (value as MemberKey)

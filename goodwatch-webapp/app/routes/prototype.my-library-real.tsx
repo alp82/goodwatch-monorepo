@@ -10,6 +10,8 @@
 // The member `new` (#442) opened My shows five days ago: shows have returned since and others are waiting. The site's
 // header, dock and hub are mounted a second time for the member, over the ones a guest sees, so that the signal on
 // them can be looked at; `hub=open` starts with the hub open.
+// `landed=movie|show|several` (#456) puts titles of the member's Wishlist on their services a day ago, for any member:
+// the signal then counts them too, and My movies and My shows say so on arrival.
 // A production build leaves the route out (PROTOTYPES in vite.config.js).
 import {
 	type LinksFunction,
@@ -32,6 +34,8 @@ import {
 } from "react"
 import { libraryChoiceOf } from "~/domain/my-library"
 import type { Arrival } from "~/domain/new-episodes"
+import { lineOf } from "~/domain/newly-available"
+import type { LandedLine } from "~/domain/newly-available-signal"
 import type { LibraryPage } from "~/server/my-library.server"
 import type { MyShows } from "~/server/my-shows.server"
 import {
@@ -44,7 +48,7 @@ import type { LivingRoomData } from "~/ui/living-room/living-room-data"
 import livingRoomCss from "~/ui/living-room/living-room.css?url"
 import type { TvEffect } from "~/ui/living-room/tv-flow"
 import { MyLibraryPage } from "~/ui/my-library/MyLibraryPage"
-import { MOVIES_PAGE } from "~/ui/my-movies/parts"
+import { MyMoviesPage } from "~/ui/my-movies/MyMoviesPage"
 import { MyShowsPage } from "~/ui/my-shows/MyShowsPage"
 import {
 	HubDialog,
@@ -56,12 +60,13 @@ import { useNavigation } from "~/ui/navigation/NavigationContext"
 import { TonightsPickThumb } from "~/ui/navigation/bits"
 import {
 	HARNESS_MEMBER,
+	LANDED,
 	MEMBERS,
 	SEEN_SIZES,
+	landedOf,
 	memberOf,
 	seenOf,
 } from "~/ui/prototype-my-library/setup"
-import { WatchNextPage } from "~/ui/watch-next/WatchNextPage"
 import { apiQuery, pageChoiceOf } from "~/ui/watch-next/useWatchNext"
 import { AuthContext } from "~/utils/auth"
 
@@ -81,8 +86,19 @@ const API = "/prototype/my-library-real/api"
 
 type Loaded =
 	| { page: "library"; now: number; library: LibraryPage }
-	| { page: "shows"; now: number; shows: MyShows; arrival: Arrival }
-	| { page: "movies"; now: number; movies: { query: string; data: WatchNext } }
+	| {
+			page: "shows"
+			now: number
+			shows: MyShows
+			arrival: Arrival
+			landed: LandedLine | null
+	  }
+	| {
+			page: "movies"
+			now: number
+			movies: { query: string; data: WatchNext }
+			landed: LandedLine | null
+	  }
 	| { page: "home"; now: number; room: LivingRoomData }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -90,8 +106,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const now = installHarnessMember(
 		memberOf(params.get("member")),
 		seenOf(params.get("seen")),
+		landedOf(params.get("landed")),
 		params.get("reset") === "1",
 	)
+	await harness.ready()
 	const page = pageOf(params.get("page"))
 	if (page === "library")
 		return json<Loaded>({
@@ -100,9 +118,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			library: await harness.library(libraryChoiceOf(params)),
 		})
 	if (page === "shows") {
-		const [shows, fresh] = await Promise.all([
+		const [shows, fresh, landed] = await Promise.all([
 			harness.shows(now),
 			harness.newShows(now),
+			harness.landed(),
 		])
 		return json<Loaded>({
 			page,
@@ -112,6 +131,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				since: fresh.since,
 				titles: fresh.shows.map((show) => show.title),
 			},
+			landed: lineOf(landed.shows),
 		})
 	}
 	if (page === "movies") {
@@ -120,6 +140,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			page,
 			now,
 			movies: { query: apiQuery(choice), data: await harness.movies(choice) },
+			landed: lineOf((await harness.landed()).movies),
 		})
 	}
 	return json<Loaded>({
@@ -149,7 +170,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 	currentUrl,
 	nextUrl,
 }) =>
-	["page", "member", "seen", "reset"].some(
+	["page", "member", "seen", "landed", "reset"].some(
 		(key) => currentUrl.searchParams.get(key) !== nextUrl.searchParams.get(key),
 	)
 
@@ -170,6 +191,7 @@ function installFetch(setup: string) {
 			"/api/user-data": "user-data",
 			"/api/tonight": "tonight",
 			"/api/new-episodes": "new-episodes",
+			"/api/newly-available": "newly-available",
 			"/api/update-scores": "rate",
 		}
 		const what =
@@ -213,6 +235,8 @@ function Chrome({ page }: { page: PageKey }) {
 			{MEMBERS.map((key) => link("member", key, key))}
 			<span className="mx-1">Seen</span>
 			{SEEN_SIZES.map((key) => link("seen", key, key))}
+			<span className="mx-1">landed</span>
+			{LANDED.map((key) => link("landed", key, key))}
 			<span className="basis-full">
 				The pages are the app's own; the member and the catalog are made up and
 				live in the dev server. Showing {PAGE_NAME[page]}.
@@ -260,7 +284,7 @@ export default function MyLibraryHarness() {
 	const loaded = useLoaderData<typeof loader>() as unknown as Loaded
 	const [params] = useSearchParams()
 	const navigate = useNavigate()
-	const setup = `member=${memberOf(params.get("member"))}&seen=${seenOf(params.get("seen"))}`
+	const setup = `member=${memberOf(params.get("member"))}&seen=${seenOf(params.get("seen"))}&landed=${landedOf(params.get("landed"))}`
 	// The member's requests go to the harness before any page below asks for anything.
 	const [ready, setReady] = useState("")
 	useEffect(() => {
@@ -328,12 +352,13 @@ export default function MyLibraryHarness() {
 						data={loaded.shows}
 						now={loaded.now}
 						arrival={loaded.arrival}
+						landed={loaded.landed}
 					/>
 				) : (
-					<WatchNextPage
+					<MyMoviesPage
 						key={setup}
 						initial={loaded.movies}
-						movies={MOVIES_PAGE}
+						landed={loaded.landed}
 					/>
 				)}
 			</div>
