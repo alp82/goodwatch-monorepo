@@ -1,0 +1,32 @@
+{
+  "schema": "goodwatch.resource-window.root-execution-plan.v4",
+  "launchedAt": "2026-10-12T14:06:41.036735+00:00",
+  "planSha256": "ffb3bdf818a24a49637c765d0f1da915254cd49d7202bfff45ab4404f0389d2d",
+  "sourceIdentityHash": "921098a80d6ed1259c9473bcbde4d30736ca544560bdfcb1d380d9db72dbc37f",
+  "backupPathHash": "3a5f18b515069b168b9004e1a3fac4b83c6e4448af3ae9418758a0e4b5b9488c",
+  "fenceSha256": {
+    "fresh-source-fence-20261012-1405-v4.jsonl": "4313096edae95713807aec29791b0c50f720b0e3c4aeebdaa27a1c6d2ce08eeb",
+    "fresh-schedule-fence-20261012-1405-v4.jsonl": "0535642a2ec64915e2e1e285e5d410b722cc11d2a729b37ec786f1beaafcec10",
+    "fresh-executable-fence-20261012-1405-v4.jsonl": "a111daa67715223fc0962a4dd164fd79f1b2f568ae9d9b95eb4e0f759e970940"
+  },
+  "argv": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "/home/alper/projects/search-resource-window-guard-diagnostic-100/record_guard_diagnostic_v2.py",
+    "--execute-window",
+    "--journal",
+    "/home/alper/projects/search-resource-window-guard-diagnostic-100/resource-window-actual-20261012-1410-v4.jsonl",
+    "--start-utc",
+    "2026-10-12T14:10:00+00:00",
+    "--end-utc",
+    "2026-10-12T14:40:00+00:00",
+    "--expected-source-sha256",
+    "921098a80d6ed1259c9473bcbde4d30736ca544560bdfcb1d380d9db72dbc37f",
+    "--backup-path-sha256",
+    "3a5f18b515069b168b9004e1a3fac4b83c6e4448af3ae9418758a0e4b5b9488c"
+  ],
+  "ordinarySearches": 0,
+  "sourceCapsChanged": false,
+  "productionAcceptance": false
+}
