@@ -1,0 +1,23 @@
+{
+  "files": {
+    "CPU0.md": "61399f9ddad6ae026ad463a91439569f70a3da9c8c68d08602588c4d144b0a42",
+    "controller_cpu0.py": "2752cabc7737e2ee16f00334e902a3c77802b97976848b855b8533bc531da79e",
+    "cpu0-source-freeze.json": "99fc40d94cb2315bcd5e5856254317f2cd2e8fe60b040017b867901d0cab62f4",
+    "cpu0_guards.py": "4b3b6b13790a83b414914f546e5a0ee136504bcb29a08f3fb5dcf58af402a565",
+    "cpu0_preflight.py": "691a996f890b30c342c83d68b82408f92efbeeb780c1d2132979b82b5f42cfee",
+    "daemon_cpu0.py": "a1fc2f17782f5000fb4552567f01a49c5d0459b0337ecfd4d964c6147467286e",
+    "lifecycle_cpu0.py": "b0e52f5b51dc52db307424e3d904df2903aedc7e95d63678b46b6362b3274273",
+    "pin_cpu0.py": "e2ccfba845f7ad8295630b94a83ca18f11b7d97fcd4414352d36b5b91b3eae80",
+    "prepared-control-policy-cpu0.json": "3c99f666d1c6728682e9cf349c9a837ada1f1f3635b8f59b9bd7b1a5403cf1a4",
+    "prepared-helper-policy-cpu0.json": "88289117a20e93e143f655d734a6690d7c5e37a7bbda130a0419a1660ab39b98",
+    "runtime_cpu0.py": "a270f55e5c85f097329cec66c090a9fa796258bcf857886f6c84c7c3c80af5a3",
+    "test_cpu0_controller.py": "26dd871d93ddd1e51307517ec402f37a8667eb00181581703f98f8cdc148436d",
+    "test_cpu0_guards.py": "efeac799c6a618874e89f2b3472b5fbbd98db392b38da96c3e875b67397a77d8",
+    "test_lifecycle_cpu0.py": "20181fa6b5014e4a8074f7b837234122fe115150a517123fa67ae64efc513acc",
+    "turnover_gate_cpu0.py": "17f4495253d3db84cb2218079d14cc614127068549f166f46184bdcb9a5278fc"
+  },
+  "head": "9902791d140d870fce68d6799d823daf002d2795",
+  "hostExecution": false,
+  "productionAcceptance": false,
+  "schema": "cpu0-backend-source-review.v2"
+}

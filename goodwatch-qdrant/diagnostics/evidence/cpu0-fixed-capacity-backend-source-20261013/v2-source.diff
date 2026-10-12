@@ -1,0 +1,509 @@
+diff --git a/goodwatch-qdrant/diagnostics/pinning-prototype/CPU0.md b/goodwatch-qdrant/diagnostics/pinning-prototype/CPU0.md
+index 3b757dd6..b529174d 100644
+--- a/goodwatch-qdrant/diagnostics/pinning-prototype/CPU0.md
++++ b/goodwatch-qdrant/diagnostics/pinning-prototype/CPU0.md
+@@ -155,8 +155,7 @@ ledgers overlap and remain non-additive, including pin-parent and query checks.
+ Child runtime and reclaim reason paths remain explicitly outside this attachment.
+ A failed hierarchy sample is retained as unavailable; it cannot make clean proof.
+ 
+-Local verification: `python3 -B -m unittest discover -s
+-goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'`. The caller fixtures exercise held-pin ledger scopes directly and query/postinventory
++Local verification from the repository root: `/usr/bin/python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'` and `/usr/bin/python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_lifecycle_cpu0.py'`. The caller fixtures exercise held-pin ledger scopes directly and query/postinventory
+ failures through stage(), preserving their original numeric failures when cleanup
+ also fails. They separately assert failed CPU snapshot status; fixture execution
+ is not a physical lifecycle proof. These fixtures perform no
+@@ -202,12 +201,7 @@ full admission before doing work. External mutations are unauthorized. The old
+ writable store is preserved but normal startup can change it; rollback is not a
+ pristine historical baseline.
+ 
+-The lock is CLOEXEC for pin and zero multiprocessing-spawn children. A narrowly
+-scoped registered at-fork callback closes it in exact f831 plain-fork reclaim
+-children (and any unrelated fork inside that scope). Real local plain-fork,
+-multiprocessing-spawn and actual helper-writer fixtures prove the parent still prevents
+-contention while the child cannot retain ownership. The injected helper receives
+-the same parent FD; f831 bytes and its standalone CLI remain unchanged. Reviewed
++The lock is CLOEXEC across exec. PinChild's separately guarded fork and the exact f831 plain-fork reclaim helper use the scoped registered at-fork child close callback; ZeroChild keeps its spawn path. The parent remains the lock owner. This source14 set's real fork and zero-spawn fixtures prove the parent still prevents a contender and pin/zero children hold no control-lock inode. The f831 writer fixture belongs to the separately authenticated unchanged helper closure, not this self-contained source14 set. Injected helper calls retain the same parent FD; f831 bytes and its standalone CLI remain unchanged. Reviewed
+ wrappers must never generate the standalone helper CLI.
+ 
+ Local wrapper fixtures execute the exact public script with a fake child: child
+@@ -232,3 +226,11 @@ owned direct inspect client may receive cleanup TERM/KILL (up to two extra secon
+ this never targets the Qdrant child or wrapper and cannot produce clean proof.
+ Successful stop receipts survive subsequent failures and even pidfd-close failure
+ as lifecycleCompletedStopReceipt, without authorizing continuation or recovery.
++
++
++The authenticated Node receipt matches actual binary identity and nanosecond metadata; the root stager and consumer verify binary content. The preliminary reader's metadata attestation alone is not a full binary-content verification. Independent external receipt binding remains part of the integrated closure review. A just-completed metadata HTTP request may still be visible during the strict client-socket fence; that causes a terminal refusal, with no teardown wait or retry. Consumer preflight also records one enrolment write; RPC admission records zero enrolment writes. A collision is not authority for the existing fixed receipt. Source memory.high must be max under the fixed recipe. Passing admission samples preceding an identity refusal are retained separately from failed memory admission.
++
++Source14 tests are self-contained. Pure accounting fixture data is inline. The separate unchanged f831 reclaim module and external authenticated loaders are supplied in the integrated full closure; source14 does not claim to review or execute them. Real fork scope/owned child fixtures in this set verify only local inherited-FD and lock semantics.
++
++
++PinChild uses an explicit fork context, avoiding a multiprocessing spawn resource tracker. The controller must have exactly one actual thread, only stdio/control-lock/two pipe descriptors, and no mappings under the owned root at the fork point. Its actual sampled RssAnon plus VmPTE must be at most 64 MiB, a conservative quarter of the unchanged 256 MiB cap reserve. This is an engineering admission margin, not a verified copy-on-write/page-table formula or capacity proof. The child-entry wrapper closes the parent's pipe end, resets TERM/INT handlers, and the existing at-fork hook closes the control lock only in the child. Parent signal masking covers Process.start so constructor cleanup retains ownership. The child inherits shared Python mappings; post-join anonymous growth remains charged by actual source accounting, while helper RSS is report-only and pre-join attribution remains unknown. Physical helper authority uses PID/birth/parent/executable/source-cgroup identity, never its inherited controller argv. ZeroChild retains its independent spawn path. Real isolated fixtures show no extra tracker, actual EOF exit, default TERM, and extra-FD/thread/owned-mapping/large-parent refusal. Stand-in child targets do not prove real clone placement.
+diff --git a/goodwatch-qdrant/diagnostics/pinning-prototype/controller_cpu0.py b/goodwatch-qdrant/diagnostics/pinning-prototype/controller_cpu0.py
+index 704bb849..e79559ee 100644
+--- a/goodwatch-qdrant/diagnostics/pinning-prototype/controller_cpu0.py
++++ b/goodwatch-qdrant/diagnostics/pinning-prototype/controller_cpu0.py
+@@ -7,6 +7,7 @@ sys.dont_write_bytecode = True
+ import argparse
+ from contextlib import contextmanager
+ import ctypes
++import errno
+ from datetime import datetime, timezone
+ import fcntl
+ import hashlib
+@@ -122,7 +123,7 @@ def load_control(path, policy_hash, code_hash):
+     prep=c['cachePreparation']
+     if set(prep)!={'mode','requestedBytes','maxSeconds','quiescenceSeconds','postwriteQuiescenceSeconds','helperPath','helperSha256','writerPolicy'} or prep['mode']!='post-cold-owned-cgroup-reclaim' or prep['requestedBytes']!=3*pin.GIB or prep['maxSeconds']!=60 or prep['quiescenceSeconds']!=60 or prep['postwriteQuiescenceSeconds']!=60 or prep['helperPath']!=str(MODULE_DIR/'prepare_clone_reclaim.py') or not re.fullmatch('[a-f0-9]{64}',prep['helperSha256']):raise ValueError('explicit_cache_preparation_required')
+     if prep['writerPolicy']!={'registrationSeconds': 10, 'prewriteAcceptanceSeconds': 60, 'prewriteSupervisionSeconds': 65, 'kernelWriteSeconds': 60, 'cleanupSeconds': 10, 'lifecycleSeconds': 145, 'receiptLimit': 18, 'censusLimit': 28}:raise ValueError('explicit_cache_preparation_required')
+-    cpu0_guards.validate_policy(c['cpuIsolation'])
++    _fixed_cpu_policy(c)
+     config, spec, policy = daemon.load_config(c['helperConfig'], c['helperPolicySha256'], c['helperCodeSha256'])
+     if config['intervalSeconds']!=c['reconcileIntervalSeconds'] or config['lifetimeSeconds']!=600:raise ValueError('helper_timing_policy_changed')
+     if 'pin' not in config['actions']:
+@@ -329,7 +330,7 @@ def working_set_admission(policy,inventory):
+ 
+ 
+ def admission_failure(error):
+-    return {key:getattr(error,key) for key in ('admissionFailureEvidence','queryMemoryFailureEvidence','workingSetFailureEvidence','pressureMemoryFailureEvidence','overheadFailureEvidence') if getattr(error,key,None)is not None}
++    return {key:getattr(error,key) for key in ('admissionFailureEvidence','admissionPassedSampleBeforeRefence','sourceLimitFailureEvidence','queryMemoryFailureEvidence','workingSetFailureEvidence','pressureMemoryFailureEvidence','overheadFailureEvidence') if getattr(error,key,None)is not None}
+ 
+ 
+ def birth_admission(config,spec,policy,*,_entry_baseline=False):
+@@ -358,7 +359,7 @@ def birth_admission(config,spec,policy,*,_entry_baseline=False):
+             after=lifecycle.entry_resource_context(source)
+             if any(outside[role]['identity']!=after[role]['identity'] for role in outside):raise RuntimeError('overhead_identity_changed')
+     except BaseException as error:
+-        error.admissionFailureEvidence=headroom
++        error.admissionPassedSampleBeforeRefence=headroom
+         raise
+     proof={'schema':'clone-birth-admission.cpu0-fixed.v2','variant':'cpu0-fixed-capacity.v2','at':at(),'sourceIdentity':list(source.identity),'target':target,'hostCpu':host_cpu,
+             **{key:value for key,value in headroom.items() if key!='schema'},
+@@ -375,7 +376,8 @@ def _source_cgroup_limits(source,spec,lifecycle):
+         if text=='max' and leaf=='memory.high':limits[key]=None
+         elif text.isdigit() and int(text)<=2**53-1:limits[key]=int(text)
+         else:raise RuntimeError('source_limits_changed')
+-    if spec.memory_bytes!=6*pin.GIB or spec.swap_bytes!=6*pin.GIB or limits['memoryMaxBytes']!=spec.memory_bytes or limits['memorySwapMaxBytes']!=0:raise RuntimeError('source_limits_changed')
++    if spec.memory_bytes!=6*pin.GIB or spec.swap_bytes!=6*pin.GIB or limits['memoryMaxBytes']!=spec.memory_bytes or limits['memorySwapMaxBytes']!=0 or limits['memoryHighBytes'] is not None:
++        error=RuntimeError('source_limits_changed');error.sourceLimitFailureEvidence=limits;raise error
+     return limits
+ 
+ 
+@@ -534,8 +536,8 @@ def self_cgroup():
+ 
+ def host_available(floor,*,scope='archive-operation'):
+     memory=host_memory()
+-    if memory['MemAvailable']<floor:
+-        error=RuntimeError('host_emergency_floor')
++    if memory['SwapTotal']!=0 or memory['MemAvailable']<floor:
++        error=RuntimeError('swap_present' if memory['SwapTotal']!=0 else 'host_emergency_floor')
+         error.pressureMemoryFailureEvidence={'schema':'clone-pressure-memory.cpu0.v2','scope':scope,'sampledAt':at(),'sampleMonotonicSeconds':time.monotonic(),
+             'hostMemTotalBytes':memory['MemTotal'],'hostMemAvailableBytes':memory['MemAvailable'],'hostMemAvailableFloorBytes':floor,
+             'hostDirtyBytes':memory['Dirty'],'hostWritebackBytes':memory['Writeback'],'hostSwapBytes':memory['SwapTotal']}
+@@ -623,11 +625,75 @@ def pin_child(connection,spec,policy,raise_limit,config,raise_own_nofile=False):
+     finally:connection.close()
+ 
+ 
++
++def _fork_scope_guard(config,parent_connection,child_connection):
++    lifecycle=load_lifecycle(config)
++    try:
++        tasks=os.listdir('/proc/self/task')
++        if len(tasks)!=1 or tasks!=[str(os.getpid())]:raise RuntimeError('overhead_helper_unproven')
++        lock_fd=lifecycle._FORK_FD
++        if type(lock_fd)is not int:raise RuntimeError('overhead_helper_unproven')
++        lifecycle.require_lock(lock_fd)
++        expected={0,1,2,lock_fd,parent_connection.fileno(),child_connection.fileno()}
++        actual=set()
++        names=os.listdir('/proc/self/fd')
++        if len(names)>64:raise RuntimeError('overhead_helper_unproven')
++        for name in names:
++            if not name.isdigit():raise RuntimeError('overhead_helper_unproven')
++            fd=int(name)
++            try:os.fstat(fd)
++            except OSError as error:
++                if error.errno!=errno.EBADF:raise
++                continue  # listdir's already-closed directory descriptor
++            actual.add(fd)
++        if len(expected)!=6 or actual!=expected:raise RuntimeError('overhead_helper_unproven')
++        maps=lifecycle.bounded(Path('/proc/self/maps'),8*1024**2)
++        prefix=os.fsencode(ROOT)+b'/'
++        if any(len(parts:=row.split(None,5))==6 and (parts[5]==os.fsencode(ROOT) or parts[5].startswith(prefix)) for row in maps.splitlines()):raise RuntimeError('overhead_helper_unproven')
++        metrics={}
++        for row in lifecycle.bounded(Path('/proc/self/status'),65536).splitlines():
++            fields=row.split()
++            if fields and fields[0]in (b'RssAnon:',b'VmPTE:'):
++                if len(fields)!=3 or not fields[1].isdigit() or fields[2]!=b'kB':raise RuntimeError('overhead_helper_unproven')
++                metrics[fields[0].decode().rstrip(':')]=int(fields[1])*1024
++        if set(metrics)!={'RssAnon','VmPTE'} or sum(metrics.values())>64*1024**2:raise RuntimeError('overhead_helper_unproven')
++        return metrics
++    except (OSError,ValueError,KeyError):raise RuntimeError('overhead_helper_unproven') from None
++
++
++def _fork_pin_entry(parent_connection,connection,spec,policy,raise_limit,config,raise_own_nofile):
++    parent_connection.close()
++    signal.signal(signal.SIGTERM,signal.SIG_DFL)
++    signal.signal(signal.SIGINT,signal.default_int_handler)
++    signal.pthread_sigmask(signal.SIG_UNBLOCK,{signal.SIGTERM,signal.SIGINT})
++    pin_child(connection,spec,policy,raise_limit,config,raise_own_nofile)
++
++
+ class PinChild:
+     def __init__(self,spec,policy,raise_limit,config,raise_own_nofile=False):
+         self.config=config;self.failure_details=None
+-        multiprocessing.set_executable('/usr/bin/python3');context=multiprocessing.get_context('spawn');self.connection,child=context.Pipe()
+-        self.process=context.Process(target=pin_child,args=(child,spec,policy,raise_limit,config,raise_own_nofile));self.process.start();child.close();self.spec=spec;self.previous=None;self.pressure_active=False
++        context=multiprocessing.get_context('fork');self.connection,child=context.Pipe()
++        self.process=context.Process(target=_fork_pin_entry,args=(self.connection,child,spec,policy,raise_limit,config,raise_own_nofile))
++        self.spec=spec;self.previous=None;self.pressure_active=False
++        try:
++            self.fork_scope_metrics=_fork_scope_guard(config,self.connection,child)
++            # Preserve constructor ownership if a controller signal arrives during start.
++            previous_mask=signal.pthread_sigmask(signal.SIG_BLOCK,{signal.SIGTERM,signal.SIGINT})
++            try:self.process.start()
++            finally:signal.pthread_sigmask(signal.SIG_SETMASK,previous_mask)
++            child.close()
++        except BaseException as error:
++            for endpoint in (self.connection,child):
++                try:endpoint.close()
++                except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
++            if self.process.pid is not None:
++                try:
++                    self.process.join(1)
++                    if self.process.is_alive():self.process.terminate();self.process.join(5)
++                    if self.process.is_alive():self.process.kill();self.process.join(5)
++                    error.childFailureDetails={'constructorChildGone':not self.process.is_alive(),'constructorChildExitCode':self.process.exitcode}
++                except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
++            raise
+     def request(self,pressure=False):
+         before=runtime.accounting(inspect_source(self.spec))
+         if self.previous is not None:limits(self.previous,before,pressure=pressure and self.pressure_active,scope='held-pin-prior-to-pass')
+@@ -817,7 +883,7 @@ def _stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,r
+         if source is not None:
+             try:cpu_after=cpu0_guards.inspect_cpu_source(source,CPU_POLICY,runtime.docker)
+             except BaseException as snapshot_error:cpu_snapshot_failure=safe_control_reason(snapshot_error)
+-        emit({'schema':'search.clone-mlock-control.v3','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'lifecycleCompletedStopReceipt':getattr(error,'lifecycleCompletedStopReceipt',None) or (cold_state.get('cleanStop') if cold_state is not None else None),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'lifecycleDockerCleanupEvidence':getattr(error,'lifecycleDockerCleanupEvidence',None),'childFailureDetails':getattr(manager,'failure_details',None),'cachePreparationFailure':getattr(error,'reclaimEvidence',None),'resourceLimitEvidence':getattr(error,'resourceLimitEvidence',None),'cpuHierarchyEvidence':getattr(error,'cpuHierarchyEvidence',None),'hostCpuEvidence':getattr(error,'hostCpuEvidence',None),'cpuHierarchyBefore':cpu_before,'cpuHierarchyAfter':cpu_after,'cpuHierarchySnapshotFailure':cpu_snapshot_failure,'cpuHierarchyBeforeStatus':'observed' if cpu_before is not None else 'not-observed','pressureFinalizationFailure':getattr(error,'pressureFinalizationFailure',None),'queries':0,'storageContentWrites':0,**admission_failure(error)})
++        emit({'schema':'search.clone-mlock-control.v3','stage':'phase-failed','phase':phase,'at':at(),'reason':safe_control_reason(error),'lifecycleCompletedStopReceipt':getattr(error,'lifecycleCompletedStopReceipt',None) or (cold_state.get('cleanStop') if cold_state is not None else None),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'lifecycleDockerCleanupEvidence':getattr(error,'lifecycleDockerCleanupEvidence',None),'childFailureDetails':getattr(manager,'failure_details',None) or getattr(error,'childFailureDetails',None),'cachePreparationFailure':getattr(error,'reclaimEvidence',None),'resourceLimitEvidence':getattr(error,'resourceLimitEvidence',None),'cpuHierarchyEvidence':getattr(error,'cpuHierarchyEvidence',None),'hostCpuEvidence':getattr(error,'hostCpuEvidence',None),'cpuHierarchyBefore':cpu_before,'cpuHierarchyAfter':cpu_after,'cpuHierarchySnapshotFailure':cpu_snapshot_failure,'cpuHierarchyBeforeStatus':'observed' if cpu_before is not None else 'not-observed','pressureFinalizationFailure':getattr(error,'pressureFinalizationFailure',None),'queries':0,'storageContentWrites':0,**admission_failure(error)})
+         raise
+     finally:
+         # Preserve the phase cause; cleanup evidence is a separate observation.
+diff --git a/goodwatch-qdrant/diagnostics/pinning-prototype/cpu0-source-freeze.json b/goodwatch-qdrant/diagnostics/pinning-prototype/cpu0-source-freeze.json
+index d6b5f6b8..96275f31 100644
+--- a/goodwatch-qdrant/diagnostics/pinning-prototype/cpu0-source-freeze.json
++++ b/goodwatch-qdrant/diagnostics/pinning-prototype/cpu0-source-freeze.json
+@@ -1,18 +1,18 @@
+ {
+   "files": {
+-    "CPU0.md": "f09a8b873411b88e8fbf6f84fd1e24cf1efa29865b6cfd5688241dd744bf1f84",
+-    "controller_cpu0.py": "2c1071bd8c8b5bd0b92757b24952dd5de12fe0fe2dc866977b7bcf73b933a2c3",
++    "CPU0.md": "61399f9ddad6ae026ad463a91439569f70a3da9c8c68d08602588c4d144b0a42",
++    "controller_cpu0.py": "2752cabc7737e2ee16f00334e902a3c77802b97976848b855b8533bc531da79e",
+     "cpu0_guards.py": "4b3b6b13790a83b414914f546e5a0ee136504bcb29a08f3fb5dcf58af402a565",
+-    "cpu0_preflight.py": "07d988040a573faf5e3efa1cd9ce2788c03fb1ef2ba3ba0111548110c0a07c16",
++    "cpu0_preflight.py": "691a996f890b30c342c83d68b82408f92efbeeb780c1d2132979b82b5f42cfee",
+     "daemon_cpu0.py": "a1fc2f17782f5000fb4552567f01a49c5d0459b0337ecfd4d964c6147467286e",
+     "lifecycle_cpu0.py": "b0e52f5b51dc52db307424e3d904df2903aedc7e95d63678b46b6362b3274273",
+     "pin_cpu0.py": "e2ccfba845f7ad8295630b94a83ca18f11b7d97fcd4414352d36b5b91b3eae80",
+     "prepared-control-policy-cpu0.json": "3c99f666d1c6728682e9cf349c9a837ada1f1f3635b8f59b9bd7b1a5403cf1a4",
+     "prepared-helper-policy-cpu0.json": "88289117a20e93e143f655d734a6690d7c5e37a7bbda130a0419a1660ab39b98",
+     "runtime_cpu0.py": "a270f55e5c85f097329cec66c090a9fa796258bcf857886f6c84c7c3c80af5a3",
+-    "test_cpu0_controller.py": "8ef0e14b6fd896e240df07cd0c7a6957e65c1b3bf3854bcab1ca23d1a238656e",
++    "test_cpu0_controller.py": "26dd871d93ddd1e51307517ec402f37a8667eb00181581703f98f8cdc148436d",
+     "test_cpu0_guards.py": "efeac799c6a618874e89f2b3472b5fbbd98db392b38da96c3e875b67397a77d8",
+-    "test_lifecycle_cpu0.py": "d6771dca05d5673246f6586c67532a9748a775dbc54d7f0cdbafa155dff0a7a5",
++    "test_lifecycle_cpu0.py": "20181fa6b5014e4a8074f7b837234122fe115150a517123fa67ae64efc513acc",
+     "turnover_gate_cpu0.py": "17f4495253d3db84cb2218079d14cc614127068549f166f46184bdcb9a5278fc"
+   },
+   "preparedOnly": true,
+diff --git a/goodwatch-qdrant/diagnostics/pinning-prototype/cpu0_preflight.py b/goodwatch-qdrant/diagnostics/pinning-prototype/cpu0_preflight.py
+index 52458835..ebec8c4e 100644
+--- a/goodwatch-qdrant/diagnostics/pinning-prototype/cpu0_preflight.py
++++ b/goodwatch-qdrant/diagnostics/pinning-prototype/cpu0_preflight.py
+@@ -179,7 +179,7 @@ def _enrol_consumer(context,lifecycle,spec,args,predecessor,lock_fd):
+             if count<=0:raise RuntimeError('consumer_enrolment_write_failed')
+             view=view[count:]
+         os.fsync(fd)
+-        os.close(fd);fd=None
++        closing=fd;fd=None;os.close(closing)
+         directory=os.open(ROOT,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+         try:os.fsync(directory)
+         finally:os.close(directory)
+@@ -187,7 +187,7 @@ def _enrol_consumer(context,lifecycle,spec,args,predecessor,lock_fd):
+         if actual!=raw:raise RuntimeError('consumer_enrolment_write_failed')
+     except BaseException as error:
+         primary=error
+-        error.consumerEnrolmentFailureEvidence={'schema':'cpu0-consumer-enrolment-failure.v2','publicationState':'issued-unknown' if issued else 'not-issued','expectedReceiptSha256':hashlib.sha256(raw).hexdigest(),'consumerEnrolment':record,'cleanupAddressableByFixedReceipt':True,'continuationAllowed':False}
++        error.consumerEnrolmentFailureEvidence={'schema':'cpu0-consumer-enrolment-failure.v2','publicationState':'issued-unknown' if issued else 'not-issued','expectedReceiptSha256':hashlib.sha256(raw).hexdigest(),'consumerEnrolment':record,'cleanupAddressableByFixedReceipt':issued,'continuationAllowed':False}
+         raise
+     finally:
+         if fd is not None:
+@@ -236,12 +236,12 @@ def _preflight(helper_path, helper_policy_sha, helper_code_sha, control_path, co
+             if node!=enrolment[0]['nodeIdentity'] or node_sha!=enrolment[0]['nodeProvenanceSha256']:raise RuntimeError('consumer_executable_changed')
+         handoff=lifecycle.commit_handoff(control.runtime.docker,handoff_sha,'preflight')
+         result={'schema':'search.clone-cpu0-preflight.v2','variant':'cpu0-fixed-capacity.v2','birthAdmission':admission,'handoff':handoff,
+-                'sourceIdentity':admission['sourceIdentity'],'queries':0,'resourceWrites':0,'handoffWrites':1,'modelsRead':0}
++                'sourceIdentity':admission['sourceIdentity'],'queries':0,'resourceWrites':0,'handoffWrites':1,'enrolmentWrites':1 if enrolment is not None else 0,'modelsRead':0}
+         if enrolment is not None:result.update(consumerEnrolment=enrolment[0],consumerEnrolmentSha256=enrolment[1])
+         return result
+     except BaseException as error:
+         primary=error
+-        if enrolment is not None:error.consumerEnrolmentFailureEvidence={'schema':'cpu0-consumer-enrolment-failure.v2','publicationState':'published-verified','expectedReceiptSha256':enrolment[1],'consumerEnrolment':enrolment[0],'cleanupAddressableByFixedReceipt':True,'continuationAllowed':False}
++        if enrolment is not None:error.consumerEnrolmentFailureEvidence={'schema':'cpu0-consumer-enrolment-failure.v2','publicationState':'published-verified','expectedReceiptSha256':enrolment[1],'consumerEnrolment':enrolment[0],'cleanupAddressableByFixedReceipt':issued,'continuationAllowed':False}
+         raise
+     finally:
+         if lock_fd is not None:
+diff --git a/goodwatch-qdrant/diagnostics/pinning-prototype/test_cpu0_controller.py b/goodwatch-qdrant/diagnostics/pinning-prototype/test_cpu0_controller.py
+index 137396f7..d4b36889 100644
+--- a/goodwatch-qdrant/diagnostics/pinning-prototype/test_cpu0_controller.py
++++ b/goodwatch-qdrant/diagnostics/pinning-prototype/test_cpu0_controller.py
+@@ -10,7 +10,23 @@ import unittest
+ from unittest.mock import Mock,MagicMock,patch
+ import controller_cpu0 as control
+ import daemon_cpu0 as daemon
+-from test_daemon import accounting,pin_state
++import pin_cpu0 as pin
++def accounting():
++    return {'availableBytes': 8*pin.GIB, 'cgroupMaxBytes': 6*pin.GIB, 'anonBytes': 1, 'fileBytes': 1, 'kernelBytes': 1, 'unevictableBytes': 0, 'currentBytes': 3,
++        'memoryEvents': {'oom': 0, 'oom_kill': 0, 'max': 0}, 'cpu': {'nr_throttled': 0, 'throttled_usec': 0}}
++
++
++def nofile_state():
++    return {'openFdCount':4,'mappedFileBound':20000,'reserveFds':256,'requiredSoft':20260,'softBefore':1048576,'softAfter':1048576,'hardLimit':1048576,'raised':False,'hardChanged':False}
++
++
++def pin_state():
++    return {'nofileLimits':nofile_state(), 'event': 'mapped-data-pin-state.v1', 'mode': 'clone', 'queries': 0, 'storageWrites': 0, 'lockedBytes': 16384, 'newLockBytes': 16384,
++        'selectionHash': 'a'*64, 'extentRangesHashed': True, 'qdrantPid': 123, 'sourceStartTicks': 100, 'pageBytes': 4096, 'rangesChanged': True, 'deletedMappingsExcluded':0, 'memoryEventDelta':{'oom':0,'oom_kill':0,'max':0}, 'cpuLimitDelta':{'nr_throttled':0,'throttled_usec':0}, 'clonePressureMaxAllowed':False,
++        'classesMeasured': {k: {'files': 1, 'dataLockBytes': 4096,'dataPages':1,'rawExtentCount':1,'dataRangeCount':1} for k in daemon.KINDS},
++        'lockedResidency': {k: {'lockedDataPages': 1, 'residentLockedDataPages': 1} for k in ('vector', 'graph', 'sparse', 'other')},
++        'mappingBounds':{'currentVmas':64,'maxMapCount':65530,'projectedAdditionalVmas':12,'reservedVmas':256,'projectedTotalVmas':332},'nonresidentSelectedBytes':16384,'projectedCurrentBytes':16387,'capReserveBytes':0,'capHeadroomRequired':True, 'accountingBefore': accounting(), 'accountingAfter': accounting(), 'private': 'private-source-path'}
++
+ 
+ class CallerTests(unittest.TestCase):
+     def test_parent_before_pass_refusal_preserves_scope_before_sending_command(self):
+@@ -180,7 +196,6 @@ class ConfigTests(unittest.TestCase):
+                 old=daemon.code_hash(folder);(folder/'cpu0_guards.py').write_text('# drift')
+                 self.assertNotEqual(old,daemon.code_hash(folder))
+ 
+-if __name__=='__main__':unittest.main()
+ 
+ class FixedCapacityAdmissionTests(unittest.TestCase):
+     def policy(self):
+@@ -376,7 +391,7 @@ class PreflightAuthenticationTests(unittest.TestCase):
+                 with self.assertRaisesRegex(RuntimeError,'preflight_source_unproven'):p._authenticate(args,'consumer')
+     def test_actual_child_stdin_devnull_accepts_pipe_refuses(self):
+         import subprocess
+-        source='import cpu0_preflight as p;p._require_null_stdin()'
++        source='import sys;sys.path.insert(0,'+repr(str(Path(__file__).absolute().parent))+');import cpu0_preflight as p;p._require_null_stdin()'
+         self.assertEqual(subprocess.run(['/usr/bin/python3','-B','-c',source],stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=3).returncode,0)
+         self.assertNotEqual(subprocess.run(['/usr/bin/python3','-B','-c',source],input=b'',stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=3).returncode,0)
+ 
+@@ -454,6 +469,7 @@ class EnrolmentPublicationTests(unittest.TestCase):
+                 self.assertEqual((root/'cpu0-consumer-enrolment-v2.json').stat().st_mode&0o777,0o600)
+                 with self.assertRaises(FileExistsError)as caught:p._enrol_consumer(context,life,SimpleNamespace(container='fixture-only'),args,{'adoptionIntentSha256':'2'*64},lock.fileno())
+                 self.assertEqual(caught.exception.consumerEnrolmentFailureEvidence['publicationState'],'not-issued')
++                self.assertIs(caught.exception.consumerEnrolmentFailureEvidence['cleanupAddressableByFixedReceipt'],False)
+                 self.assertEqual((root/'cpu0-consumer-enrolment-v2.json').read_bytes(),raw)
+     def test_write_failure_retains_fixed_cleanup_authority_and_primary_cause(self):
+         import cpu0_preflight as p
+@@ -511,13 +527,129 @@ class CleanupRenewalTests(unittest.TestCase):
+             (fixture.proc/'10/net/tcp').write_text('header\n0: 0100007F:18BD 0100007F:AAAA 01\n')
+             spec=SimpleNamespace(container=life.NEW,memory_bytes=6*control.pin.GIB,swap_bytes=6*control.pin.GIB)
+             source=SimpleNamespace(pid=11,identity=('a'*64,life.IMAGE,11,101),cgroup=cg,cgroup_relative='/clone',spec=spec)
+-            config=json.loads(Path('prepared-control-policy-cpu0.json').read_text())
++            config=json.loads((Path(__file__).parent/'prepared-control-policy-cpu0.json').read_text())
+             hierarchy={'rows':[{'depth':0,'groupIdentitySha256':'f'*64,'quotaMicros':None,'periodMicros':100000,'nrThrottled':2,'throttledMicros':3}],'weight':100,'cpusetCpus':'','cpusetMems':''}
+             original=life.cleanup_attest
+             def renew(name,history,docker):return original(name,history,docker,fixture.proc,fixture.cg)
+-            with patch.object(control,'load_lifecycle',return_value=life),patch.object(control,'CPU_POLICY',config['cpuIsolation']),patch.object(control.runtime,'inspect_source',return_value=source),patch.object(control.runtime,'docker',return_value=json.dumps([fixture.x])),patch.object(control.cpu0_guards,'inspect_cpu_source',return_value=hierarchy),patch.object(life,'ROOT',fixture.root),patch.object(life,'MOUNTS',fixture.mounts),patch.object(life,'cleanup_attest',side_effect=renew),patch.object(control,'host_memory',side_effect=AssertionError('cleanup cannot demand capacity')),patch.object(control.runtime,'accounting',side_effect=AssertionError('cleanup cannot demand admission metrics')):
++            with patch.object(control,'load_lifecycle',return_value=life),patch.object(control,'CPU_POLICY',config['cpuIsolation'],create=True),patch.object(control.runtime,'inspect_source',return_value=source),patch.object(control.runtime,'docker',return_value=json.dumps([fixture.x])),patch.object(control.cpu0_guards,'inspect_cpu_source',return_value=hierarchy),patch.object(life,'ROOT',fixture.root),patch.object(life,'MOUNTS',fixture.mounts),patch.object(life,'cleanup_attest',side_effect=renew),patch.object(control,'host_memory',side_effect=AssertionError('cleanup cannot demand capacity')),patch.object(control.runtime,'accounting',side_effect=AssertionError('cleanup cannot demand admission metrics')):
+                 result=control.renew_cleanup(config,spec,object(),historical)
+                 self.assertEqual(result['sourceEvents'],{'max':11,'oom':2,'oom_kill':1});self.assertEqual(result['currentSource']['activeServiceConnections'],1)
+                 self.assertIs(result['cleanupOnly'],True);self.assertIs(result['admission'],False);self.assertEqual(result['historicalSource'],historical)
+                 (cg/'memory.swap.max').write_text('1\n')
+                 with self.assertRaisesRegex(RuntimeError,'source_limits_changed'):control.renew_cleanup(config,spec,object(),historical)
++
++class PressureSwapTests(unittest.TestCase):
++    def test_swap_above_floor_still_refuses_with_same_read(self):
++        sample={'MemTotal':8*control.pin.GIB,'MemAvailable':5*control.pin.GIB,'Dirty':123,'Writeback':456,'SwapTotal':4096}
++        with patch.object(control,'host_memory',return_value=sample)as reader:
++            with self.assertRaisesRegex(RuntimeError,'swap_present')as failure:control.host_available(3*control.pin.GIB//2,scope='archive-pressure')
++        reader.assert_called_once_with();proof=failure.exception.pressureMemoryFailureEvidence
++        self.assertEqual(proof['hostMemAvailableBytes'],sample['MemAvailable']);self.assertEqual(proof['hostSwapBytes'],4096);self.assertEqual(proof['hostDirtyBytes'],123)
++    def test_zero_swap_exact_emergency_floor_unchanged(self):
++        floor=3*control.pin.GIB//2;sample={'MemTotal':8*control.pin.GIB,'MemAvailable':floor,'Dirty':0,'Writeback':0,'SwapTotal':0}
++        with patch.object(control,'host_memory',return_value=sample):self.assertEqual(control.host_available(floor),floor)
++
++class FixedSourceHighTests(unittest.TestCase):
++    def test_numeric_high_is_not_max_and_original_numeric_limits_survive(self):
++        import lifecycle_cpu0 as life
++        with tempfile.TemporaryDirectory()as temp:
++            root=Path(temp)
++            for leaf,value in (('memory.max',6*control.pin.GIB),('memory.high',6*control.pin.GIB),('memory.swap.max',0)):(root/leaf).write_text(str(value)+'\n')
++            source=SimpleNamespace(cgroup=root);spec=SimpleNamespace(memory_bytes=6*control.pin.GIB,swap_bytes=6*control.pin.GIB)
++            with self.assertRaisesRegex(RuntimeError,'source_limits_changed')as failure:control._source_cgroup_limits(source,spec,life)
++            self.assertEqual(failure.exception.sourceLimitFailureEvidence,{'memoryMaxBytes':6*control.pin.GIB,'memoryHighBytes':6*control.pin.GIB,'memorySwapMaxBytes':0})
++            self.assertEqual(control.admission_failure(failure.exception)['sourceLimitFailureEvidence'],failure.exception.sourceLimitFailureEvidence)
++            (root/'memory.high').write_text('max\n');self.assertIsNone(control._source_cgroup_limits(source,spec,life)['memoryHighBytes'])
++
++class RealForkScopeTests(unittest.TestCase):
++    SCRIPT=r"""import os,sys,json,time,signal,fcntl,tempfile,threading,ctypes
++from pathlib import Path
++from unittest.mock import patch
++sys.path.insert(0,sys.argv[1])
++import controller_cpu0 as c,lifecycle_cpu0 as life
++mode=sys.argv[2]
++with tempfile.TemporaryDirectory()as directory:
++ root=Path(directory);life.ROOT=root;c.ROOT=root
++ fd=os.open(root/'control.lock',os.O_CREAT|os.O_RDWR,0o600);fcntl.flock(fd,fcntl.LOCK_EX);lock_identity=os.fstat(fd)
++ extra=None;thread=None;event=threading.Event();address=None;libc=None;held_bytes=None
++ if mode=='large-parent':held_bytes=bytearray(64*1024**2)
++ def target(connection,*args):
++  try:
++   current=os.fstat(fd);inherited=(current.st_dev,current.st_ino)==(lock_identity.st_dev,lock_identity.st_ino)
++  except OSError:inherited=False
++  connection.send({'pid':os.getpid(),'startTicks':life.birth(os.getpid()),'parentPid':os.getppid(),'controlInherited':inherited})
++  try:connection.recv()
++  except EOFError:pass
++  connection.close()
++ c.pin_child=target;c.load_lifecycle=lambda _:life
++ signal.signal(signal.SIGTERM,lambda *_:(_ for _ in()).throw(RuntimeError('parent interrupted')))
++ if mode=='extra-fd':extra=os.open('/dev/null',os.O_RDONLY)
++ if mode=='thread':thread=threading.Thread(target=lambda:event.wait(10));thread.start()
++ if mode=='mapping':
++  file=os.open(root/'owned-mapping',os.O_CREAT|os.O_RDWR,0o600);os.ftruncate(file,4096)
++  libc=ctypes.CDLL(None,use_errno=True);libc.mmap.restype=ctypes.c_void_p
++  address=libc.mmap(None,4096,1,1,file,0);os.close(file)
++  if address==ctypes.c_void_p(-1).value:raise RuntimeError('fixture mmap')
++ if mode=='constructor-interrupt':
++  original_mask=signal.pthread_sigmask;parent_pid=os.getpid()
++  def interrupted_mask(how,mask):
++   result=original_mask(how,mask)
++   if how==signal.SIG_SETMASK and os.getpid()==parent_pid:raise RuntimeError('constructor interruption')
++   return result
++  signal.pthread_sigmask=interrupted_mask
++ holder=None
++ try:
++  with life.helper_fork_scope(fd):holder=c.PinChild(None,None,False,{})
++  assert holder.process._start_method=='fork'
++  assert holder.connection.poll(3);row=holder.connection.recv()
++  children=Path('/proc/self/task/'+str(os.getpid())+'/children').read_text().split()
++  assert children==[str(holder.process.pid)]
++  life.require_lock(fd)
++  contender=os.open(root/'control.lock',os.O_RDWR)
++  try:
++   try:fcntl.flock(contender,fcntl.LOCK_EX|fcntl.LOCK_NB);raise RuntimeError('parent lock lost')
++   except BlockingIOError:pass
++  finally:os.close(contender)
++  if mode=='term':holder.process.terminate()
++  elif mode=='eof':holder.connection.close()
++  else:holder.connection.send('close')
++  holder.process.join(3)
++  assert not holder.process.is_alive()
++  print(json.dumps({'refused':False,'childCount':len(children),'controlInherited':row['controlInherited'],'birthVerified':row['startTicks']>0 and row['parentPid']==os.getpid(),'exitCode':holder.process.exitcode,'parentLockHeld':True}))
++ except RuntimeError as error:
++  if mode=='constructor-interrupt':
++   assert str(error)=='constructor interruption'
++   assert error.childFailureDetails['constructorChildGone']is True
++   life.require_lock(fd)
++   print(json.dumps({'constructorChildGone':True,'originalReasonPreserved':True}))
++  elif mode not in ('extra-fd','thread','mapping','large-parent'):raise
++  else:
++   assert str(error)=='overhead_helper_unproven'
++   assert not Path('/proc/self/task/'+str(os.getpid())+'/children').read_text().split()
++   print(json.dumps({'refused':True,'childrenStarted':0}))
++ finally:
++  if holder is not None:
++   if holder.process.is_alive():holder.process.kill();holder.process.join(3)
++   holder.connection.close()
++  if extra is not None:os.close(extra)
++  if thread is not None:event.set();thread.join(3)
++  if address is not None:libc.munmap(ctypes.c_void_p(address),4096)
++  os.close(fd)
++"""
++    def invoke(self,mode):
++        import subprocess
++        with tempfile.TemporaryDirectory()as directory:
++            path=Path(directory)/'owned_fixture.py';path.write_text(self.SCRIPT)
++            result=subprocess.run(['/usr/bin/python3','-I','-B',str(path),str(Path(__file__).absolute().parent),mode],capture_output=True,text=True,timeout=15)
++            self.assertEqual(result.returncode,0,result.stderr);return json.loads(result.stdout)
++    def test_real_fork_census_birth_lock_and_clean_exit(self):
++        proof=self.invoke('normal');self.assertEqual(proof,{'refused':False,'childCount':1,'controlInherited':False,'birthVerified':True,'exitCode':0,'parentLockHeld':True})
++    def test_real_parent_pipe_eof_releases_child(self):self.assertEqual(self.invoke('eof')['exitCode'],0)
++    def test_real_parent_raising_term_handler_not_inherited(self):self.assertEqual(self.invoke('term')['exitCode'],-15)
++    def test_real_extra_fd_refuses_before_start(self):self.assertTrue(self.invoke('extra-fd')['refused'])
++    def test_real_thread_refuses_before_start(self):self.assertTrue(self.invoke('thread')['refused'])
++    def test_real_owned_mapping_refuses_before_start(self):self.assertTrue(self.invoke('mapping')['refused'])
++    def test_real_parent_anonymous_memory_above_quarter_reserve_refuses(self):self.assertTrue(self.invoke('large-parent')['refused'])
++    def test_real_interruption_after_start_keeps_child_owned_and_reaps(self):self.assertEqual(self.invoke('constructor-interrupt'),{'constructorChildGone':True,'originalReasonPreserved':True})
++
++if __name__=='__main__':unittest.main()
+diff --git a/goodwatch-qdrant/diagnostics/pinning-prototype/test_lifecycle_cpu0.py b/goodwatch-qdrant/diagnostics/pinning-prototype/test_lifecycle_cpu0.py
+index 362caf3e..ebed3893 100644
+--- a/goodwatch-qdrant/diagnostics/pinning-prototype/test_lifecycle_cpu0.py
++++ b/goodwatch-qdrant/diagnostics/pinning-prototype/test_lifecycle_cpu0.py
+@@ -20,7 +20,7 @@ class WrapperFixture:
+  def __enter__(self):
+   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
+   (self.root/'entrypoint.sh').write_bytes(SCRIPT)
+-  child=self.root/'qdrant';child.write_text('#!/usr/bin/python3\nimport os,signal,sys,time\nsignal.signal(signal.SIGTERM,lambda *_:sys.exit(0))\nopen("ready","w").write(str(os.getpid()))\nwhile True:time.sleep(.05)\n');child.chmod(0o700)
++  child=self.root/'qdrant';child.write_text('#!/usr/bin/python3\nimport os,signal,sys,time\nsignal.signal(signal.SIGTERM,lambda *_:sys.exit(0))\nopen("ready.tmp","w").write(str(os.getpid()))\nos.rename("ready.tmp","ready")\nwhile True:time.sleep(.05)\n');child.chmod(0o700)
+   self.wrapper=subprocess.Popen(['/bin/bash','./entrypoint.sh'],cwd=self.root,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin:/bin','QDRANT_ALLOW_RECOVERY_MODE':'false'})
+   end=time.monotonic()+3
+   while not(self.root/'ready').exists():
+@@ -118,25 +118,6 @@ class Tests(unittest.TestCase):
+    with self.assertRaises(RuntimeError)as failure:
+     with life.helper_fork_scope(10):raise original
+   self.assertIs(failure.exception,original);self.assertEqual(original.lifecycleCleanupFailure,'lifecycle_lock_unproven')
+- def test_exact_f831_registered_writer_closes_parent_lock_fd(self):
+-  path=Path(__file__).parent.parent/'clone-preparation/prepare_clone_reclaim.py'
+-  raw=path.read_bytes();expected='f831f00f75d4b54dce3ba493a4a078b23969222507576505052291ed0147f7c5'
+-  self.assertEqual(hashlib.sha256(raw).hexdigest(),expected)
+-  spec=importlib.util.spec_from_file_location('exact_f831_fixture',path);helper=importlib.util.module_from_spec(spec);spec.loader.exec_module(helper)
+-  with tempfile.TemporaryDirectory()as directory,patch.object(life,'ROOT',Path(directory)):
+-   root=Path(directory);root.chmod(0o700);fd=os.open(root/'control.lock',os.O_CREAT|os.O_RDWR,0o600);fcntl.flock(fd,fcntl.LOCK_EX)
+-   target=os.open(root/'numeric-fixture',os.O_CREAT|os.O_WRONLY,0o600)
+-   def operation(output):
+-    try:os.fstat(fd)
+-    except OSError as e:
+-     if e.errno==errno.EBADF:os.write(output,b'closed');return
+-    raise RuntimeError('unexpected inherited control fd')
+-   try:
+-    with life.helper_fork_scope(fd):
+-     result=helper.bounded_owned_writer(target,operation,root,expected,timeout=2,grace=1)
+-    self.assertTrue(result['writerGone']);self.assertEqual(result['writerExitCode'],0)
+-    self.assertEqual((root/'numeric-fixture').read_bytes(),b'closed');life.require_lock(fd)
+-   finally:os.close(target);os.close(fd)
+  def test_protected_target_never_signalled(self):
+   fake={'qdrant':{'pid':123,'startTicks':1},'wrapper':{'pid':124,'startTicks':2}}
+   with patch.object(life,'require_lock'),patch.object(life,'attest',return_value=fake),patch.object(life.os,'pidfd_open')as open_pidfd:
+@@ -226,14 +207,14 @@ class AttestationTests(unittest.TestCase):
+   with ProcFixture()as f:
+    (f.proc/str(os.getpid())/'cgroup').write_text('0::/clone/child\n')
+    with self.assertRaisesRegex(RuntimeError,'lifecycle_reader_placement'):f.attest()
+-class SpawnOwnershipTests(unittest.TestCase):
+- def test_real_pin_and_zero_startup_do_not_inherit_control_owner(self):
++class ZeroSpawnOwnershipTests(unittest.TestCase):
++ def test_real_zero_startup_does_not_inherit_control_owner(self):
+   import controller_cpu0 as controller,turnover_gate_cpu0 as gate
+   with tempfile.TemporaryDirectory()as directory,patch.object(life,'ROOT',Path(directory)):
+    path=Path(directory)/'control.lock';fd=os.open(path,os.O_CREAT|os.O_RDWR,0o600);fcntl.flock(fd,fcntl.LOCK_EX)
+    info=os.fstat(fd);config={'lockIdentity':[info.st_dev,info.st_ino]}
+    try:
+-    for module,attribute,target,factory in ((controller,'pin_child',fake_pin_child,lambda:controller.PinChild(None,None,False,config)),(gate,'zero_child',fake_zero_child,lambda:gate.ZeroChild(None,config))):
++    for module,attribute,target,factory in ((gate,'zero_child',fake_zero_child,lambda:gate.ZeroChild(None,config)),):
+      with patch.object(module,attribute,target),life.helper_fork_scope(fd):holder=factory()
+      try:
+       self.assertTrue(holder.connection.poll(3));self.assertEqual(holder.connection.recv(),{'controlLockInherited':False})
+@@ -284,7 +265,6 @@ class HandoffTests(unittest.TestCase):
+     self.assertEqual(failed.exception.lifecycleCleanupFailure,'lifecycle_handoff_cleanup_failed')
+    self.assertEqual(path.read_bytes(),raw)
+ 
+-if __name__=='__main__':unittest.main()
+ 
+ class HandoffV2Tests(unittest.TestCase):
+  def test_only_adoption_intent_can_start_v2_chain(self):
+@@ -389,3 +369,5 @@ class AccountingCleanupTests(unittest.TestCase):
+     self.assertEqual(len(opened),1);os.fstat(opened[0])
+   finally:
+    for fd in opened:original_close(fd)
++
++if __name__=='__main__':unittest.main()

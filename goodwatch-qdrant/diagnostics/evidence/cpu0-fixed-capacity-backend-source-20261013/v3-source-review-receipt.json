@@ -1,0 +1,16 @@
+{
+  "cliExitCode": 0,
+  "durationMs": 257219,
+  "effort": "medium",
+  "externalIntegratedReviewRequired": true,
+  "fixtureCount": 341,
+  "historicalBlockPreserved": true,
+  "model": "claude-opus-5-5",
+  "productionAcceptance": false,
+  "reportSha256": "128cd8f6e9bbf2f9cef78504fb4d630708580877c243d2b8f64cb14177dc9e80",
+  "runtimePlacementProven": false,
+  "schema": "cpu0-backend-source-review-result.v1",
+  "sourceFreezeSha256": "f13494c945e5a4fe719f848fbe9bc5fe724508f0f699491fea55b69dba8a3cad",
+  "sourceHead": "1aae3c10531cd9aebaa5ed03b510dc8d1fe68c66",
+  "verdict": "no-concrete-blocker-static-only"
+}
