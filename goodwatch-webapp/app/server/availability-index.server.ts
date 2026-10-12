@@ -1,5 +1,15 @@
+import {
+	type FirstSeen,
+	type Landing,
+	baseService,
+	landingOn,
+} from "~/domain/newly-available"
+import {
+	keptSince,
+	readFirstSeen,
+} from "~/server/availability-first-seen.server"
+import { getFeatureMode } from "~/server/features.server"
 import { execute, query } from "~/utils/crate"
-import { duplicateProviderMapping } from "~/utils/streaming-links"
 import { type TitleKey, titleKey } from "~/utils/title-key"
 
 // Which subscription services carry each title, per country, in webapp memory. On my services needs this for
@@ -39,14 +49,10 @@ export interface AvailabilityIndexStats {
 	loadedAt: Date
 }
 
-// Duplicate provider ids map to the service they belong to (Amazon Video and Prime Video to Amazon Prime Video).
-const baseServiceOf = new Map<number, number>()
-for (const [base, duplicates] of Object.entries(duplicateProviderMapping)) {
-	for (const duplicate of duplicates) baseServiceOf.set(duplicate, Number(base))
-}
-const baseService = (id: number) => baseServiceOf.get(id) ?? id
-
 const indexes = new Map<string, CountryIndex>()
+// Per country, when the services that started lately first carried each title (#456). Read beside the index with
+// each load; a country whose read failed keeps the times of the load before.
+const firstSeen = new Map<string, Map<TitleKey, FirstSeen>>()
 const stats = new Map<string, AvailabilityIndexStats>()
 const queued = new Set<string>()
 const failedAt = new Map<string, number>()
@@ -89,6 +95,34 @@ export function isOnServices(
 		}
 	}
 	return false
+}
+
+/**
+ * When each title landed on the services in the country: the time the first of them started to carry it, for a
+ * title none of them carried before (domain/newly-available.ts). Null for every other title, and for every title
+ * while the country loads. From memory, like the rest of the index: a landing is known with the load that first
+ * holds its offer, so a title is announced when On my services has it.
+ */
+export function landingsOnServices(
+	country: string,
+	services: readonly number[],
+	keys: readonly TitleKey[],
+): (Landing | null)[] {
+	const index = loadedIndex(country)
+	const times = firstSeen.get(country.toUpperCase())
+	if (!index || !times) return keys.map(() => null)
+	const mine = new Set(services.map(baseService))
+	return keys.map((key) => {
+		// Most titles have no service that started lately.
+		const fresh = times.get(key)
+		if (!fresh) return null
+		const row = findRow(index, key)
+		if (row < 0) return null
+		const carried: number[] = []
+		for (let i = index.offsets[row]; i < index.offsets[row + 1]; i++)
+			carried.push(index.services[index.entries[i]])
+		return landingOn(carried, fresh, mine)
+	})
 }
 
 /**
@@ -244,6 +278,35 @@ async function loadCountry(country: string) {
 		`Availability index: ${country} loaded ${index.keys.length} titles from ${rows.length} rows ` +
 			`(query ${Math.round(queryMs)} ms, build ${Math.round(buildMs)} ms, ${(bytes / 1024 / 1024).toFixed(1)} MB)`,
 	)
+	await loadFirstSeen(country)
+}
+
+// Newly available is behind REC_TRACKING: while that is off, nothing more is read than before.
+async function loadFirstSeen(country: string) {
+	if (getFeatureMode("tracking") === "off") return
+	try {
+		firstSeen.set(
+			country,
+			await readFirstSeen(
+				{ country, types: SUBSCRIPTION_TYPES, since: keptSince() },
+				execute,
+			),
+		)
+	} catch (error) {
+		// The index is whole without the times: nothing new is announced until a load reads them.
+		console.error(
+			`Availability index: reading when ${country}'s offers first appeared failed`,
+			error,
+		)
+	}
+}
+
+/** For tests: forgets every loaded country. */
+export function forgetAvailabilityForTest(): void {
+	indexes.clear()
+	stats.clear()
+	firstSeen.clear()
+	failedAt.clear()
 }
 
 async function buildIndex(

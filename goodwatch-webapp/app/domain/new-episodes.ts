@@ -191,6 +191,7 @@ export function summaryOf(fresh: readonly NewShow[]): NewEpisodes {
 	const [first] = fresh
 	return {
 		shows: fresh.length,
+		ids: fresh.map((show) => show.id),
 		only:
 			fresh.length === 1
 				? {
