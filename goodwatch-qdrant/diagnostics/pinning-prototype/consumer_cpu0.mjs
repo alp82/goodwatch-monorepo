@@ -206,6 +206,10 @@ export function consumerBirth(target,{procRoot='/proc',pid=process.pid}={}){
 export function fixedCapacityEnrolledInvocationV2(receipt,args){if(typeof args?.raiseOwnNofile!=='boolean'||receipt?.consumerEnrolment?.raiseOwnNofile!==args.raiseOwnNofile)throw new ContractFailure('cpu0_fixed_nofile_enrolment_changed');}
 export function fixedCapacityPacketInputsV2(packets){requireNineActualPacketSet(packets);if(packets.some(packet=>packet.indexBuildId!=='20261011T041503Z'))throw new ContractFailure('cpu0_fixed_private_packet_scope_invalid');}
 
+export function completeEntryAdmissionV2({receipt,preflightExit},prior,context,args,{readBirth=consumerBirth}={}){
+ try{const frame={kind:'consumer-admission',...receipt,consumerBirth:readBirth(receipt.birthAdmission.target),preflightExit,sourceFreezeSha256:context.sourceFreezeSha256,externalManifestSha256:context.externalManifestSha256,productionAcceptance:false};fixedCapacityEnrolledInvocationV2(receipt,args);validateAdmissionFrameV2(frame,prior,context);return frame;}catch(error){const refused=new ContractFailure(error instanceof ContractFailure?error.reason:'cpu0_fixed_consumer_admission_invalid');refused.publicEvidence={...publicFailure(refused,'preflight'),variant:FIXED_CAPACITY_VARIANT,preflightExit,preflightReceipt:receipt,handoffAccepted:false};throw refused;}
+}
+
 export async function mainV2(){
  const emit=value=>process.stdout.write(JSON.stringify(value)+'\n');
  const args=fixedCapacityArguments(process.argv.slice(2));
@@ -215,10 +219,9 @@ export async function mainV2(){
  let prior={...JSON.parse(raw),sha256:digest(raw)};
  const context={...closure.expected,sourceFreezeSha256:args.values['--cpu0-source-freeze-sha256'],externalManifestSha256:args.values['--external-manifest-sha256'],adoptionIntentSha256:prior.adoptionIntentSha256,nodeProvenanceSha256:digest(privateRead(FIXED_CAPACITY_STAGE+'/node-provenance.json',65536,0o600))};
  recordedHandoffV2(prior,args.values['--handoff-sha256'],{adoptionIntentSha256:context.adoptionIntentSha256,previousSha256:prior.previousSha256});
- const {receipt,preflightExit}=await runEntryPreflightV2(context,prior);
- const admissionFrame={kind:'consumer-admission',...receipt,consumerBirth:consumerBirth(receipt.birthAdmission.target),preflightExit,sourceFreezeSha256:args.values['--cpu0-source-freeze-sha256'],externalManifestSha256:args.values['--external-manifest-sha256'],productionAcceptance:false};
- fixedCapacityEnrolledInvocationV2(receipt,args);
- validateAdmissionFrameV2(admissionFrame,prior,context);context.consumerEnrolment=receipt.consumerEnrolment;context.consumerEnrolmentSha256=receipt.consumerEnrolmentSha256;prior=receipt.handoff;emit(admissionFrame);
+ const entry=await runEntryPreflightV2(context,prior),receipt=entry.receipt;
+ const admissionFrame=completeEntryAdmissionV2(entry,prior,context,args);
+ context.consumerEnrolment=receipt.consumerEnrolment;context.consumerEnrolmentSha256=receipt.consumerEnrolmentSha256;prior=receipt.handoff;emit(admissionFrame);
  const packets=await packetsFrom(process.stdin);fixedCapacityPacketInputsV2(packets);packets.sort((a,b)=>(a.tag==='control-native-title'?0:1)-(b.tag==='control-native-title'?0:1));
  const paths={code:FIXED_CAPACITY_STAGE+'/controller_cpu0.py',config:FIXED_CAPACITY_STAGE+'/controller-config.json'};let nativePassed=false,pairs=0;
  for(const packet of packets){

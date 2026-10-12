@@ -93,9 +93,10 @@ export function main(argv=process.argv.slice(2)){
  selectedAuditMode=null;
  if(argv.length!==5)throw Error('cpu0_audit_arguments_invalid');
  const [outputPath,contextPath,manifestPath,manifestSha,stage]=argv;
+ const manifestRaw=readFileSync(manifestPath);gate(manifestRaw.length<=32768,'cpu0_audit_manifest_bound');const schema=JSON.parse(manifestRaw).schema;selectedAuditMode=schema==='cpu0-full-public-packet.v7'?'v2':schema==='cpu0-full-public-packet.v6'?'v1':null;
  const raw=readFileSync(outputPath);gate(raw.length<=32*1024**2,'cpu0_audit_output_bound');
  const rows=raw.toString().trim().split('\n').map(line=>{gate(Buffer.byteLength(line)<=2*1024**2,'cpu0_audit_frame_bound');return JSON.parse(line)});
- const context=JSON.parse(readFileSync(contextPath));const manifestRaw=readFileSync(manifestPath);gate(manifestRaw.length<=32768,'cpu0_audit_manifest_bound');const schema=JSON.parse(manifestRaw).schema;selectedAuditMode=schema==='cpu0-full-public-packet.v7'?'v2':schema==='cpu0-full-public-packet.v6'?'v1':null;const fixed=selectedAuditMode==='v2';const closure=(fixed?verifyExternalPacketV2:verifyExternalPacket)(manifestRaw,manifestSha,name=>readFileSync(stage+'/'+name));
+ const context=JSON.parse(readFileSync(contextPath));const fixed=selectedAuditMode==='v2';const closure=(fixed?verifyExternalPacketV2:verifyExternalPacket)(manifestRaw,manifestSha,name=>readFileSync(stage+'/'+name));
  gate(context.externalManifestSha256===manifestSha&&context.sourceFreezeSha256===closure.externalManifest.sourceFreezeSha256,'cpu0_audit_context_changed');
  return (fixed?auditConsumerV2:auditConsumer)(rows,{...context,expected:closure.expected});
 }
