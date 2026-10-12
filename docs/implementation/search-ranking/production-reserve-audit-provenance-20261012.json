@@ -1,0 +1,21 @@
+{
+  "methods": [
+    "explicit-whitelist-extraction",
+    "59-retained-sample-rows",
+    "before-after-ordered-pressure-reads",
+    "sample-covariance-n-minus-one",
+    "pearson-descriptive-not-causal",
+    "no-private-path-fields"
+  ],
+  "privateDatasetPublished": false,
+  "privateJournalSha256": "39614490ac0ed7ca1392bd2e7370b6d3ca3e932c022223e3160bf63065935ac8",
+  "productionAcceptance": false,
+  "runtimeChanges": false,
+  "schema": "reserve-audit-source-provenance.v1",
+  "sources": {
+    "production-memavailable-reserve-audit-20261012.md": "bb119f59a867c5c745be604e556f08d44617d9627f90f0a334bd21db8351e780",
+    "production-reserve-opus-review-20261012.txt": "c79008c1802a2dc8b66700e8363cccdc03fd2801f244ab7761159b7f6cde66c1",
+    "production-retained-transient-memory-20261012.json": "112702bf5d59ecd4f79b2293edc5a34234a6f08e1136a85755a14ee6a48c9725",
+    "production-retained-transient-memory-20261012.md": "c8f04007d0199af4819c7bd0fb9c891c01c4e5c0d0b6c3af32901441aaf3c281"
+  }
+}
