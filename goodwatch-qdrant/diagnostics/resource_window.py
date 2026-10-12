@@ -14,6 +14,7 @@ import time
 
 IMAGE = 'sha256:dd57172b0bbebb29b0a96a37c1f378a317449730c36cdfe68feabe36e740a92b'
 ROW_BYTES = 8192
+MAX_GAP_SECONDS = 3
 ROWS = 1500
 OUTPUT_BYTES = 16 * 1024**2
 MEM = ('MemTotal','MemFree','MemAvailable','Buffers','Cached','Active(file)',
@@ -96,12 +97,12 @@ def proc_identity(root):
             'rssBytes':natural(parts[21])*os.sysconf('SC_PAGE_SIZE')}
 
 
-def group_path(proc, pid, cgroot):
+def group_path(proc, pid, cgroot, allow_root=False):
     values=[v[3:]for v in read(proc/str(pid)/'cgroup',8192).splitlines()if v.startswith('0::/')]
     if len(values)!=1 or '..'in Path(values[0]).parts:
         raise ValueError('source_cgroup_scope_invalid')
     path=cgroot/values[0].lstrip('/')
-    if not path.resolve().is_relative_to(cgroot.resolve()) or path==cgroot:
+    if not path.resolve().is_relative_to(cgroot.resolve()) or (path==cgroot and not allow_root):
         raise ValueError('source_cgroup_scope_invalid')
     return path
 
@@ -191,7 +192,7 @@ def process_census(proc, backup_hash, clock=time.monotonic):
         try:
             comm=read(node/'comm',128).strip()
             # Only fixed executable/path-shape hashes are retained; args never leave memory.
-            args=read(node/'cmdline',8192).split('\0')
+            args=read(node/'cmdline',8192).split('\0') if comm in ('python','python3','uv') else []
             isbackup=any(v.startswith('/')and v.endswith('/backup.py')and hashlib.sha256(v.encode()).hexdigest()==backup_hash for v in args)
             if comm not in ('sshfs','ssh')and not isbackup:
                 continue
@@ -261,6 +262,8 @@ class Source:
         self.expected_limits=limits(self.group);self.ancestor_hash=ancestors(self.group,cgroot)
         if self.expected_limits['memory.max']!='max'or self.expected_limits['memory.high']!='max'or self.expected_limits['cpu.max']!='max 100000'or self.expected_limits['memory.oom.group']!='0':
             raise ValueError('source_limits_changed')
+        self.reader_pid=os.getpid()
+        self.reader_group=group_path(proc,self.reader_pid,cgroot,allow_root=True)
         self.check=ConfigCheck(self.expected,lambda:docker_frame(proc))
     def fence(self):
         self.check.verify();pid=self.expected['pid'];root=self.proc/str(pid)
@@ -268,9 +271,17 @@ class Source:
             raise ValueError('source_changed')
         if limits(self.group)!=self.expected_limits or ancestors(self.group,self.cgroot)!=self.ancestor_hash:
             raise ValueError('source_limits_changed')
+    def reader_proof(self):
+        group=group_path(self.proc,self.reader_pid,self.cgroot,allow_root=True)
+        locked=fields(read(self.proc/str(self.reader_pid)/'status'),('VmLck',),True)['VmLck']
+        outside=group!=self.group and not group.is_relative_to(self.group)
+        if group!=self.reader_group or not outside or locked:
+            raise ValueError('source_locked')
+        return {'outsideSourceCgroup':True,'VmLckBytes':0,'placementUnchanged':True,
+                'groupHash':digest(str(group))}
     def group_read(self):
         pids=[natural(v)for v in read(self.group/'cgroup.procs',8192).split()]
-        if len(pids)>64:
+        if len(pids)>64 or len(set(pids))!=len(pids) or self.expected['pid'] not in pids:
             raise ValueError('census_bound')
         locked=sum(fields(read(self.proc/str(pid)/'status'),('VmLck',),True)['VmLck']for pid in pids)
         return {'currentBytes':natural(read(self.group/'memory.current',128).strip()),
@@ -280,10 +291,10 @@ class Source:
                 'swapBytes':natural(read(self.group/'memory.swap.current',128).strip()),
                 'memoryPsi':psi(read(self.group/'memory.pressure')),
                 'ioPsi':psi(read(self.group/'io.pressure')),
-                'processCount':len(pids),'processVmLckBytes':locked}
+                'processCount':len(pids),'processVmLckBytes':locked,'processMembershipHash':digest(sorted(pids))}
     def sample(self):
         begun=time.monotonic();started=stamp();self.fence()
-        group_before=self.group_read();pid=self.expected['pid'];root=self.proc/str(pid)
+        reader_before=self.reader_proof();group_before=self.group_read();pid=self.expected['pid'];root=self.proc/str(pid)
         process={**proc_identity(root),'readBytes':fields(read(root/'io').replace(':',''),('read_bytes',))['read_bytes'],'VmLck':fields(read(root/'status'),('VmLck',),True)['VmLck']}
         host=fields(read(self.proc/'meminfo'),MEM,True)
         if host['SwapTotal']!=0:
@@ -296,16 +307,28 @@ class Source:
         try: other=siblings(self.group)
         except Exception as error:
             other={'complete':False,'reason':str(error)if str(error)in SAFE else 'sample_failed'}
-        group_after=self.group_read();self.fence()
+        group_after=self.group_read();reader_after=self.reader_proof();self.fence()
+        if group_before['processMembershipHash']!=group_after['processMembershipHash']:
+            raise ValueError('source_changed')
         if group_before['processVmLckBytes'] or group_after['processVmLckBytes'] or process['VmLck']:
             raise ValueError('source_locked')
         return {'startedAt':started,'finishedAt':stamp(),'durationSeconds':time.monotonic()-begun,
+                'readerBefore':reader_before,'readerAfter':reader_after,
                 'host':host,'hostPsi':pressure,'hostReclaim':reclaim,'process':process,
                 'sourceBefore':group_before,'sourceAfter':group_after,
                 'sshUserspace':userspace,'otherCgroups':other,'sourcePid':pid,
                 'sourceStartTicks':self.expected['startTicks'],'sourceIdentityHash':digest(self.expected),
                 'ancestorLimitHash':self.ancestor_hash,'sourceGroupHash':digest(str(self.group)),
                 'metadataOnly':True,'archiveResidentBytesMeasured':False}
+    def finish(self):
+        self.fence();before=self.group_read();reader=self.reader_proof()
+        after=self.group_read();self.fence()
+        if before['processMembershipHash']!=after['processMembershipHash']:
+            raise ValueError('source_changed')
+        if before['processVmLckBytes'] or after['processVmLckBytes']:
+            raise ValueError('source_locked')
+        return {'reader':reader,'sourceMembershipHash':after['processMembershipHash'],
+                'sourceProcessVmLckBytes':0,'sourceIdentityHash':digest(self.expected)}
     def close(self):
         self.check.close()
 
@@ -411,9 +434,9 @@ def run(source,output,start,end,wall=time.time,clock=time.monotonic,sleep=time.s
         raise ValueError('window_invalid')
     while wall()<begin:
         sleep(min(1,begin-wall()))
-    actual=clock();deadline=actual+max(0,finish-wall());due=actual;count=0;continuous=wall()-begin<2;previous=None
+    actual=clock();actual_wall=wall();deadline=actual+max(0,finish-actual_wall);due=actual;count=0;continuous=wall()-begin<2;previous=None
     output.emit({'event':'resource-window.started.v1','at':stamp(),'scheduledStart':start,
-                 'scheduledEnd':end,'intervalSeconds':2,'maximumRows':ROWS,'maximumRowBytes':ROW_BYTES,
+                 'scheduledEnd':end,'intervalSeconds':2,'maximumGapSeconds':MAX_GAP_SECONDS,'startedMonotonicSeconds':actual,'maximumRows':ROWS,'maximumRowBytes':ROW_BYTES,
                  'maximumOutputBytes':OUTPUT_BYTES,'noContentsRead':True,'queries':0,'cacheControls':0})
     while clock()<deadline and wall()<finish:
         if count>=ROWS:
@@ -422,17 +445,25 @@ def run(source,output,start,end,wall=time.time,clock=time.monotonic,sleep=time.s
         if clock()>=deadline or wall()>=finish:
             break
         sample_start=clock()
-        if previous is not None and sample_start-previous>2:
+        if previous is not None and sample_start-previous>MAX_GAP_SECONDS:
             continuous=False
         previous=sample_start
-        row=source.sample();row.update(event='resource-window.sample.v1',sample=count)
+        row=source.sample();row.update(event='resource-window.sample.v1',sample=count,
+                                    startedMonotonicSeconds=sample_start,finishedMonotonicSeconds=clock())
         if row['durationSeconds']>2 or not row['sshUserspace']['complete'] or not row['otherCgroups']['complete']:
             continuous=False
         output.emit(row);count+=1;due=max(due+2,clock())
+    ended=clock();ended_wall=wall()
+    full_window=ended>=deadline and ended_wall>=finish
+    wall_drift=(ended_wall-actual_wall)-(ended-actual)
     source.fence()
     source.check.verify()
+    final_proof=source.finish()
     output.emit({'event':'resource-window.complete.v1','at':stamp(),'samples':count,
-                 'continuousCoverage':continuous and count>0,'futureCeilingEstablished':False,'productionAcceptance':False})
+                 'continuousCoverage':continuous and count>0 and full_window and abs(wall_drift)<=1,
+                 'fullScheduledWindowObserved':full_window,'elapsedMonotonicSeconds':ended-actual,
+                 'finishedMonotonicSeconds':ended,'wallClockDriftSeconds':wall_drift,
+                 'maximumWallDriftSeconds':1,'finalResourceFence':final_proof,'futureCeilingEstablished':False,'productionAcceptance':False})
 
 
 def main():

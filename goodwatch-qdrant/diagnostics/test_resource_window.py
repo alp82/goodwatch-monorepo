@@ -23,6 +23,7 @@ class Reader:
         return {'durationSeconds':self.delay,'sshUserspace':{'complete':True},'otherCgroups':{'complete':True}}
     def fence(self):pass
     def verify(self):pass
+    def finish(self):return {}
 
 def utc(seconds):return m.dt.datetime.fromtimestamp(seconds,m.dt.timezone.utc).isoformat()
 
@@ -106,8 +107,43 @@ class ResourceTests(unittest.TestCase):
         biggest=2**64-1;memory={k:biggest for k in m.STAT};pressure={kind:{'avg10':100.0,'total':biggest}for kind in ('some','full')}
         group={'currentBytes':biggest,'memory':memory,'events':{k:biggest for k in m.EVENTS},'cpu':{k:biggest for k in m.CPU},'swapBytes':biggest,'memoryPsi':pressure,'ioPsi':pressure,'processCount':64,'processVmLckBytes':biggest}
         row={'event':'resource-window.sample.v1','startedAt':'2026-10-12T00:00:00.123456+00:00','finishedAt':'2026-10-12T00:00:00.123456+00:00','durationSeconds':2.0,'host':{k:biggest for k in m.MEM},'hostPsi':{'memory':pressure,'io':pressure},'hostReclaim':{k:biggest for k in m.VM},'process':{k:biggest for k in ('startTicks','parentPid','minorFaults','majorFaults','rssBytes','readBytes','VmLck')},'sourceBefore':group,'sourceAfter':group,'sshUserspace':{'classes':{k:{'processCount':64,'bytes':{k:biggest for k in m.RSS}}for k in ('sshfs','sshfs-child-ssh','other-ssh')},'identityHash':'a'*64,'complete':True,'disappearedDuringCensus':0,'backup':{'count':64,'running':True,'identityHash':'a'*64,'complete':True},'rssAccountingExact':False},'otherCgroups':{'childCount':256,'currentBytes':biggest,'memory':memory,'identityHash':'a'*64,'complete':True,'scope':'direct-source-parent-siblings-hierarchical-no-descendant-double-sum','otherHostBranchesMeasured':False},'sourcePid':biggest,'sourceStartTicks':biggest,'sourceIdentityHash':'a'*64,'ancestorLimitHash':'a'*64,'sourceGroupHash':'a'*64,'metadataOnly':True,'archiveResidentBytesMeasured':False,'sample':1499}
+        row.update(readerBefore={'outsideSourceCgroup':True,'VmLckBytes':0,'placementUnchanged':True,'groupHash':'a'*64},readerAfter={'outsideSourceCgroup':True,'VmLckBytes':0,'placementUnchanged':True,'groupHash':'a'*64},startedMonotonicSeconds=123456.123456,finishedMonotonicSeconds=123458.123456)
+        group['processMembershipHash']='a'*64
         stream=io.StringIO();m.Output(stream).emit(row)
         self.assertLessEqual(len(stream.getvalue().encode()),m.ROW_BYTES)
+    def test_sleep_jitter_inside_explicit_gap_budget_passes(self):
+        c=FakeClock();reader=Reader(c);out=io.StringIO()
+        def sleep(seconds):c.sleep(seconds+0.001 if seconds else 0)
+        m.run(reader,m.Output(out),utc(1000),utc(1006),c.wall,c.clock,sleep)
+        rows=[json.loads(v)for v in out.getvalue().splitlines()]
+        self.assertTrue(rows[-1]['continuousCoverage']);self.assertEqual(rows[0]['maximumGapSeconds'],3)
+        self.assertTrue(all('startedMonotonicSeconds'in row for row in rows[1:-1]))
+    def test_gap_over_three_seconds_fails_coverage(self):
+        c=FakeClock();reader=Reader(c);out=io.StringIO()
+        def sleep(seconds):c.sleep(seconds+1.01 if seconds else 0)
+        m.run(reader,m.Output(out),utc(1000),utc(1010),c.wall,c.clock,sleep)
+        self.assertFalse(json.loads(out.getvalue().splitlines()[-1])['continuousCoverage'])
+    def test_forward_wall_jump_cannot_claim_full_window(self):
+        c=FakeClock();reader=Reader(c);out=io.StringIO()
+        wall=lambda:c.wall()+(100 if reader.calls else 0)
+        m.run(reader,m.Output(out),utc(1000),utc(1010),wall,c.clock,c.sleep)
+        last=json.loads(out.getvalue().splitlines()[-1])
+        self.assertFalse(last['continuousCoverage']);self.assertFalse(last['fullScheduledWindowObserved']);self.assertEqual(last['wallClockDriftSeconds'],100)
+    def test_unrelated_huge_cmdline_is_never_read(self):
+        with tempfile.TemporaryDirectory()as name:
+            root=Path(name);node=root/'42';node.mkdir();(node/'comm').write_text('unrelated');(node/'cmdline').write_text('private'*20000)
+            result=m.process_census(root,'a'*64)
+            self.assertTrue(result['complete']);self.assertEqual(result['backup']['count'],0)
+    def test_reader_outside_source_and_unlocked_proof(self):
+        source=m.Source.__new__(m.Source);source.proc=Path('/proc');source.cgroot=Path('/cg');source.group=Path('/cg/source');source.reader_group=Path('/cg');source.reader_pid=1
+        with patch.object(m,'group_path',return_value=Path('/cg')),patch.object(m,'read',return_value='VmLck: 0 kB'):
+            self.assertTrue(source.reader_proof()['outsideSourceCgroup'])
+        with patch.object(m,'group_path',return_value=Path('/cg')),patch.object(m,'read',return_value='VmLck: 1 kB'):
+            with self.assertRaisesRegex(ValueError,'source_locked'):source.reader_proof()
+    def test_cgroup_membership_missing_actual_source_fails(self):
+        source=m.Source.__new__(m.Source);source.group=Path('/cg');source.expected={'pid':99}
+        with patch.object(m,'read',return_value='1 2'):
+            with self.assertRaisesRegex(ValueError,'census_bound'):source.group_read()
     def test_output_budget_and_total_worst_case(self):
         self.assertLess((m.ROWS+2)*m.ROW_BYTES,m.OUTPUT_BYTES)
         with self.assertRaisesRegex(ValueError,'output_bound'):m.Output(io.StringIO()).emit({'x':'z'*m.ROW_BYTES})
