@@ -1,0 +1,13 @@
+# Prepared production zero-pin permission gate
+
+This separate gate is unexecuted and performs no inspection by default. It tests only foreign-cgroup placement and owned-child lifecycle with zero locked bytes. It cannot establish an archive/headroom budget, working-set coverage, search quality, latency or a seven-day acceptance window.
+
+Reviewed execution requires the exact private source-contract SHA and the combined pin/runtime/production/journal/probe source SHA. The source contract contains identity/mount/allocation metadata only. It is not a pin policy and has no archive bound. The real source checker validates image, canonical mounts, actual source PID/start ticks, uncapped Docker/cgroup allocations and memory.oom.group zero. The parent stays outside the source cgroup.
+
+Three children run sequentially: graceful close, owned SIGTERM and owned SIGKILL. Each is registered with actual PID/start ticks and pidfd ownership to a dedicated private fsynced journal before the join command. A child arms kernel parent-death SIGTERM and a bounded command lease before accepting placement. Only that child joins the actual Qdrant cgroup through the existing own-process preparation seam. Parent and child read own/child cgroup and VmLck metadata, require VmLck zero, and perform fresh source/limit checks before and after exit. The parent owns all pidfd signalling and reaping. No Qdrant restart, inventory, mapped-data, model, archive or query work occurs.
+
+This probe journal includes probe-specific records. It is deliberately not a production-helper coverage/rollback journal and must not be supplied to the production publisher. The source-contract SHA occupies the journal's fixed policy-hash slot solely for source provenance, not as evidence of a residency policy.
+
+Local tests use real spawned processes, actual proc VmLck/cgroup reads, pidfds, fsynced registration, close/TERM/KILL exits, lease expiry and actual parent loss. The local source-inspection/join boundary is simulated; these tests cannot prove foreign production cgroup permissions. Registration refusal and source/counter changes abort and reap the child. Output uses fixed phase/reason names, numeric evidence and hashes; no private paths, source body, environment, accounts, queries or credentials are retained.
+
+The execution CLI is prepared for review only. A future root-controlled run must stage only the frozen code and small private source contract into a dedicated owned directory, use a new canonical private journal directory, and retain the numeric output plus terminal result. No service, publisher, systemd unit or production pin budget is required or activated by this gate.
