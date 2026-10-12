@@ -1,0 +1,60 @@
+{
+  "artifacts": {
+    "launcher-v1/launch.py": {
+      "bytes": 1998,
+      "sha256": "35b459499852abd7143fd0a6ed1c7b38017eab2a051feb073f5b8d7f969e83f7"
+    },
+    "launcher-v1/manifest.json": {
+      "bytes": 839,
+      "sha256": "82ecfcbaefafbdcc7b7d1fc41e512ebdd22b7a1f683e4e57781cc7b91eedfc4b"
+    },
+    "launcher-v1/stage_and_run.py": {
+      "bytes": 14883,
+      "sha256": "d911a9ac3237b593418db540538f85369d46a2841a3125f76f2707d9dd67adaa"
+    },
+    "launcher-v1/test_launcher.py": {
+      "bytes": 7268,
+      "sha256": "f316f9a3d31db3b141a6a5a59f4c2ff48013af2314bf97c7e76e465376865fe8"
+    },
+    "launcher-v2/launch.py": {
+      "bytes": 1998,
+      "sha256": "35b459499852abd7143fd0a6ed1c7b38017eab2a051feb073f5b8d7f969e83f7"
+    },
+    "launcher-v2/manifest.json": {
+      "bytes": 1020,
+      "sha256": "036feccf33853365cf004da467a6f42856f61ee6f86d8c991d094f5474ae4b22"
+    },
+    "launcher-v2/stage_and_run.py": {
+      "bytes": 14999,
+      "sha256": "7c29eee540930d85c55f0c93738f0eca3905e53846b6ff9667ee0e7330c9eef4"
+    },
+    "launcher-v2/test_launcher.py": {
+      "bytes": 9333,
+      "sha256": "c04272b5949adc75487da05c47efa40ab0d3b1cb5cde33ba192301799723a82b"
+    },
+    "schema-red-regression.json": {
+      "bytes": 407,
+      "sha256": "95eea377c920cff3d3d394656ac4e94b69ba35afe6bd003c96e0d555abefda87"
+    },
+    "v1-actual-receipt.json": {
+      "bytes": 1224,
+      "sha256": "92206457a887a0a8f8b7358d0714c95ade495d1b8bc0b5a5c01e6ef7aaee1fa1"
+    },
+    "v2-actual-frames.jsonl": {
+      "bytes": 4237,
+      "sha256": "2fa2a393e8c214c5f22b33cad37781e3a40e0417949c537c660ee4bfcd280603"
+    },
+    "v2-actual-receipt.json": {
+      "bytes": 1445,
+      "sha256": "e65d4d41dfd98d9af841ebc6f827982ef797329666f3c2b3549972e63e4e1b07"
+    },
+    "verify.py": {
+      "bytes": 2309,
+      "sha256": "de6bb6c7002eddb41affa255d2b2c3e98ffd8ff0fd474a820fc24e9ec13c545e"
+    }
+  },
+  "preparationBaseCommit": "48cb85eb",
+  "privateBirthJournalsIncluded": false,
+  "privateContractIncluded": false,
+  "schema": "qdrant.zero-placement-evidence.v1"
+}
