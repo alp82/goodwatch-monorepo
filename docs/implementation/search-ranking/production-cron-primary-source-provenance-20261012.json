@@ -1,0 +1,19 @@
+{
+  "event": "cron-primary-source-provenance.v1",
+  "package": "cron",
+  "version": "3.0pl1-184ubuntu2",
+  "officialArchiveBase": "https://archive.ubuntu.com/ubuntu/pool/main/c/cron/",
+  "sourceDescriptorSha256": "d7f600d21c4015c80d61645c870f9af27826b0403b0518ae3657e982bbf850c1",
+  "upstreamArchiveSha256": "d931e0688005dfa85cfdb60e19bf0a3848ebfa3ee3415bf2a6ea3ea9e5bcfd21",
+  "ubuntuPatchArchiveSha256": "22ec5b009e7aebd61c156895366c504d53f1201c763861ce948bae988ccbc329",
+  "descriptorArchiveHashesVerified": 2,
+  "patchesAppliedInDeclaredOrder": 83,
+  "patchedCronSourceSha256": "43aacd42fb86748645cf40575027133879f71ad2dba4321c1e8e405f97a39265",
+  "patchedManualSha256": "c7d050fb22c8a67246780877ae1619dec8330a10a67ed769b23be515c0cc646d",
+  "manualMatchesObservedHost": true,
+  "amd64PackageSha256": "5a257b6b3b05d290964f68868db8127cca7eeef64c30dc9586f46cd4f68f1b90",
+  "officialBinarySha256": "6bd8593640af2413bce259fa0affc18dbf149892756ebe805bf316624f8b590f",
+  "officialBinaryBytes": 60080,
+  "publisherSignatureLocallyVerified": false,
+  "hostOperationsForSourceResearch": 0
+}
