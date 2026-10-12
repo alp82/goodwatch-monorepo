@@ -241,7 +241,7 @@ def _preflight(helper_path, helper_policy_sha, helper_code_sha, control_path, co
         return result
     except BaseException as error:
         primary=error
-        if enrolment is not None:error.consumerEnrolmentFailureEvidence={'schema':'cpu0-consumer-enrolment-failure.v2','publicationState':'published-verified','expectedReceiptSha256':enrolment[1],'consumerEnrolment':enrolment[0],'cleanupAddressableByFixedReceipt':issued,'continuationAllowed':False}
+        if enrolment is not None:error.consumerEnrolmentFailureEvidence={'schema':'cpu0-consumer-enrolment-failure.v2','publicationState':'published-verified','expectedReceiptSha256':enrolment[1],'consumerEnrolment':enrolment[0],'cleanupAddressableByFixedReceipt':True,'continuationAllowed':False}
         raise
     finally:
         if lock_fd is not None:
