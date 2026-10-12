@@ -165,7 +165,9 @@ publish on its own.
 
 No Mongo index, no Crate change and no new Windmill variable are needed. `f/monitoring/check` observes the
 schedule like every enabled schedule. It reports a run that did not start 30 minutes after it was due, and a run
-that is still running after 15 minutes (`RUNTIME_HOURS`; the script's timeout is 2 minutes).
+that is still running after 15 minutes (`RUNTIME_HOURS`; the script's timeout is 2 minutes). One failed run is not
+reported, since the next hour's run repairs it; three failed runs in a row are. For that the check counts a
+stored list (`listed` in the job's result) as work done.
 
 ## How to see that it works
 

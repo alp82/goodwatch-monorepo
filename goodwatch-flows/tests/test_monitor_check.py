@@ -509,6 +509,37 @@ class HourlyAwaitedListJobTests(unittest.TestCase):
             "result": {"listed": 1110, "added": 0, "removed": 0},
         }
 
+    def failed(self) -> dict:
+        return {
+            "success": False,
+            "duration_ms": 2000,
+            "result": {"error": {"name": "TimeoutError"}},
+        }
+
+    def test_hourly_runs_that_store_the_list_are_healthy(self) -> None:
+        report = self.report({hour: self.stored() for hour in range(11)})
+
+        self.assertEqual(report["status"], "healthy")
+        self.assertEqual(report["outcomes"], {"useful": 11})
+
+    def test_one_failed_run_is_left_to_the_next_hour(self) -> None:
+        runs = {hour: self.stored() for hour in range(10)}
+        runs[10] = self.failed()
+
+        report = self.report(runs)
+
+        self.assertEqual(report["status"], "healthy")
+        self.assertEqual(report["causes"], [])
+
+    def test_three_failed_runs_in_a_row_are_reported(self) -> None:
+        runs = {hour: self.stored() for hour in range(8)}
+        runs.update({hour: self.failed() for hour in (8, 9, 10)})
+
+        report = self.report(runs)
+
+        self.assertEqual(report["status"], "unhealthy")
+        self.assertIn("consecutive_failures", report["causes"])
+
     def test_a_run_that_hangs_is_reported_before_the_next_hour(self) -> None:
         # The script's own timeout is 2 minutes.
         runs = {hour: self.stored() for hour in range(10)}

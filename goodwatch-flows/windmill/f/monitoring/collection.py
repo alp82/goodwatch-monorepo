@@ -9,7 +9,7 @@ Api = Callable[[str], Any]
 WORK_COUNTERS = {
     "acknowledged", "upserts", "inserted", "updated", "deleted",
     "count_new_tv", "count_new_movies", "rows_upserted", "records_updated",
-    "processed", "copied", "published", "item_count",
+    "processed", "copied", "published", "item_count", "listed",
 }
 ERROR_COUNTERS = {"failed", "failures", "error_count", "identity_error_count"}
 USEFUL_OUTCOMES = {"fetched", "verified", "published", "refreshed"}
