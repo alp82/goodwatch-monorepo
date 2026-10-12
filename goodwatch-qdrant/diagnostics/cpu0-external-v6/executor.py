@@ -155,7 +155,7 @@ def cleanup_phase(arguments,lifecycle,docker,source_sha):
             if fd is not None:
                 try:os.close(fd)
                 except BaseException as error:
-                    evidence['controlClose']={'observed':False,'reason':'lock_close_failed'}
+                    evidence['controlClose']={'observed':False,'reason':'setup_lock_close_failed'}
                     if primary is None:primary=error
     if primary is not None:
         primary.cleanupIndependentEvidence=evidence

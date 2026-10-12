@@ -194,7 +194,7 @@ class ProcessAndLeaseTests(unittest.TestCase):
    engine.assert_not_called()
   for invalid in (None,False,0,-1,7201,float('nan'),float('inf')):
    with self.assertRaisesRegex(RuntimeError,'producer_global_deadline_invalid'):p.DockerBackend(remaining_seconds=invalid)
- def test_attach_signal_proxy_explicitly_disabled(self):
+ def test_supported_start_attach_argv_without_attach_only_flags(self):
   events=[]
   class Response:
    status=200
@@ -209,4 +209,25 @@ class ProcessAndLeaseTests(unittest.TestCase):
    def poll(self):return None
   with patch.object(p,'UnixConnection',Connection),patch.object(p.subprocess,'Popen',lambda argv,**k:(events.append(argv) or Child())):
    backend=p.DockerBackend(remaining_seconds=10);backend.inspect=lambda i:info(True);backend.start_attach('a'*64)
-  self.assertIn('--sig-proxy=false',events[0])
+  self.assertEqual(events[0],['/usr/bin/docker','start','--attach','a'*64])
+  self.assertEqual(set(arg for arg in events[0] if arg.startswith('--')),{'--attach'})
+
+ def test_direct_client_term_cleanup_does_not_upgrade_container_or_cli_exit(self):
+  events=[]
+  class Child:
+   code=None
+   def poll(self):return self.code
+   def terminate(self):events.append('term');self.code=143
+   def wait(self,timeout):events.append(('wait',timeout));return self.code
+   def kill(self):events.append('kill');self.code=-9
+  backend=p.DockerBackend(remaining_seconds=30);backend.child=Child();backend.registered={}
+  backend.birth_gone=lambda receipt:True
+  backend.wait_queue.put({'StatusCode':143})
+  self.assertIsNone(backend.close_client())
+  proof=backend.wait()
+  self.assertEqual(events[0],'term');self.assertNotIn('kill',events)
+  self.assertEqual(proof['cliExitCode'],143);self.assertEqual(proof['containerExitCode'],143)
+  self.assertTrue(proof['birthGone'])
+  fake=Backend();fake.proof=proof
+  with self.assertRaisesRegex(RuntimeError,'producer_exit_unproven'):
+   p.execute(fake,lambda raw:None,lambda value:None,remaining_seconds=30,authenticate_fn=lambda sink=None:{})

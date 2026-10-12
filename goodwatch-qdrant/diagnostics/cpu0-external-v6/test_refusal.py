@@ -28,6 +28,20 @@ class RefusalTests(unittest.TestCase):
         self.assertEqual(original.cleanupObservedHandoff['observedCommittedHandoffSha256'],'h'*64)
         self.assertTrue(original.cleanupIndependentEvidence['prior']['observed'])
 
+    def test_control_close_failure_uses_closed_reason_and_preserves_evidence(self):
+        life=types.SimpleNamespace(
+            secure_json=lambda path:({},'a'*64,None),
+            pair_snapshot=lambda docker:{'observed':'fixture'},
+            read_handoff=lambda *args:None,
+            commit_handoff=lambda *args:{'sha256':'b'*64})
+        with mock.patch.object(executor.os.path,'lexists',return_value=False),mock.patch.object(executor,'prior',return_value={}),mock.patch.object(executor.setup,'acquire_control',return_value=42),mock.patch.object(executor.os,'close',side_effect=OSError(5,'fixture')):
+            with self.assertRaises(OSError) as caught:
+                executor.cleanup_phase({},life,None,'c'*64)
+        reason=caught.exception.cleanupIndependentEvidence['controlClose']['reason']
+        self.assertEqual(reason,'setup_lock_close_failed')
+        self.assertIn(reason,executor.REASONS)
+        self.assertFalse(caught.exception.cleanupIndependentEvidence['controlClose']['observed'])
+
     def test_unified_outer_fixed_reason_keeps_pipe_audit_and_bootstrap_literals(self):
         for reason in ('pipe_deadline','outer_consumer_audit_refused','bootstrap_guard_or_runtime_failure','control_freeze_changed','writer_birth_changed'):
             self.assertEqual(outer_local.fixed_reason(RuntimeError(reason)),reason)

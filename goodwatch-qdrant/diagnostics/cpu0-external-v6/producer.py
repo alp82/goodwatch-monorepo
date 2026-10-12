@@ -292,7 +292,7 @@ class DockerBackend:
             finally:connection.close()
         threading.Thread(target=waiter,daemon=True).start()
         if not ready.wait(self.remaining(15)) or not self.wait_ready:fail('producer_wait_refused')
-        self.child=subprocess.Popen(['/usr/bin/docker','start','--attach','--sig-proxy=false',ident],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin:/bin','DOCKER_HOST':'unix:///var/run/docker.sock'},close_fds=True)
+        self.child=subprocess.Popen(['/usr/bin/docker','start','--attach',ident],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env={'PATH':'/usr/bin:/bin','DOCKER_HOST':'unix:///var/run/docker.sock'},close_fds=True)
         until=time.monotonic()+self.remaining(15)
         while time.monotonic()<until:
             observed=self.inspect(ident)
@@ -322,6 +322,9 @@ class DockerBackend:
     def remove_stopped(self,ident):engine('DELETE','/containers/'+ident,timeout=self.remaining(15))
     def stop(self,ident,grace,timeout):engine('POST','/containers/'+ident+'/stop?t='+str(grace),timeout=self.remaining(timeout))
     def close_client(self):
+        # Supported start --attach forwards signals for this non-TTY producer.
+        # TERM of this exact direct client may therefore stop its owned container;
+        # client cleanup is never container exit-zero or birth-gone evidence.
         self.credentials=None
         if self.wait_connection is not None:self.wait_connection.close()
         if self.child and self.child.poll() is None:
