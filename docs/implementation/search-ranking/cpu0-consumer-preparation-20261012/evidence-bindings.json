@@ -1,0 +1,23 @@
+{
+  "execution": false,
+  "files": {
+    "README.md": "a56d1339fbb3cf4014673cf2a532fe80a768c4b5e31a9dda8d1030538825b83d",
+    "root-cpu0-consumer-v2-acceptance-20261012.json": "d84da38e882a26502fcf0a3e2221e677fab57e6ff5077234b9b33089a253070a",
+    "root-cpu0-consumer-v2-review-20261012.json": "f15da4fdea0c46db45bf47292e6036e7481dc209a68eace61d9e924350288e5e",
+    "v1-manifest.json": "4c95f57fc20e02492862b2e5f33f5025553bfecca11888667f1ad9c9d1f5a7c2",
+    "v1-opus-provenance.json": "33da5b3b2cd269eda7fdb5677adbff4e6c2e191d32bccafaa00dfc9a9c0dd746",
+    "v1-opus-review.json": "33cb51de47a16da328ac0b72109c35ec457b4febc11bd274706df8f384c48748",
+    "v1-opus-review.txt": "97308ab12590a1346001f53915f87c17bac5c02495aaa8cee9cd02603b5c668a",
+    "v1-to-v2.diff": "c7e0e5b8e09cc52498b1426de6e3e6012e9bc17afb422d22758ff791cc931826",
+    "v1-validation-provenance.json": "2e5c45d5eb8f08dcc66993de3269578878d1b6318c9d7c5e3c5390b32c76f9a1",
+    "v1-validation.txt": "9d6bd89dad5ca2f059045c228d6b0e89ac633070835bb7c02364fceb1e410bc7",
+    "v2-manifest.json": "4f44eab300c70c871d8629d73af8c2d56ca8e2af102d8ed4c390024943b00ee4",
+    "v2-opus-provenance.json": "032dbc6212ffbac544f58a19c0774efe0a9ed7e1f0329216669a940a6d817595",
+    "v2-opus-review.json": "543b46a3f14cb037914deadce6c5e43698d7540a12a652a2d60f8697789753ec",
+    "v2-opus-review.txt": "3c8d5a6063b4d5258c5e0e7dc645d2214e4b32b2ecb587d267cb313575e0c610",
+    "v2-validation-provenance.json": "ea166253f148279c1a11bed090ee448db05b777dc3f448d939f2d864078d5684",
+    "v2-validation.txt": "4311bc5d1990670b0cfaee3862c35e5b74d7c54253f334960b16d76e45851fe1",
+    "verify.py": "00880bc9beafa6abde8d0cd9d7e54fef5867ed7472e2ce648cf1a1d347be9909"
+  },
+  "schema": "cpu0-consumer-publication-evidence.v2"
+}

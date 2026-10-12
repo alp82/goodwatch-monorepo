@@ -1,0 +1,34 @@
+{
+  "command": "claude --print --model claude-opus-5-5 --effort medium --tools '' --strict-mcp-config --mcp-config '{\"mcpServers\":{}}' --disable-slash-commands --no-session-persistence --output-format json < review-prompt.txt > opus-review.json 2> opus-stderr.txt",
+  "conditionsIndependentlyClosedByRoot": true,
+  "configuredEffort": "medium",
+  "configuredModel": "claude-opus-5-5",
+  "durationMs": 242973,
+  "exitCode": 0,
+  "hostExecution": false,
+  "isError": false,
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "cacheCreationInputTokens": 221904,
+      "cacheReadInputTokens": 3088,
+      "canonicalModel": "claude-opus-5-5",
+      "contextWindow": 1000000,
+      "costBasis": "list",
+      "costUSD": 2.2001976,
+      "inputTokens": 2,
+      "maxOutputTokens": 128000,
+      "outputTokens": 21217,
+      "provider": "firstParty",
+      "thinkingTokens": 18149,
+      "webSearchRequests": 0
+    }
+  },
+  "privateInputsIncluded": false,
+  "promptSha256": "f161154c9bea968ad89025de4a7df446f2c7edae411a46411fa3f6429a04fc45",
+  "reportTextSha256": "3c8d5a6063b4d5258c5e0e7dc645d2214e4b32b2ecb587d267cb313575e0c610",
+  "resultSha256": "543b46a3f14cb037914deadce6c5e43698d7540a12a652a2d60f8697789753ec",
+  "schema": "cpu0-consumer-opus-review.v2",
+  "sourceManifestSha256": "4f44eab300c70c871d8629d73af8c2d56ca8e2af102d8ed4c390024943b00ee4",
+  "toolsDisabled": true,
+  "verdict": "ACCEPT inactive prepared-only source"
+}

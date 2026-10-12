@@ -1,0 +1,25 @@
+{
+  "schema": "root.cpu0-consumer-source-review.v2",
+  "reviewedAt": "2026-10-12T16:50:00Z",
+  "manifestSha256": "4f44eab300c70c871d8629d73af8c2d56ca8e2af102d8ed4c390024943b00ee4",
+  "backendSourceFreezeSha256": "00e523226e42ce10bca605f403c4e314f2e49fc55273b683a08e926c4a445108",
+  "v1ToV2DiffSha256": "c7e0e5b8e09cc52498b1426de6e3e6012e9bc17afb422d22758ff791cc931826",
+  "filesHashAndLengthVerified": 32,
+  "backendFilesVerified": 14,
+  "worktreeByteMatches": true,
+  "sourceReview": "V1 complete source reviewed previously; all eleven changed or added V2 files reviewed, including shared emit builders, failure endpoint/cause projection, actual consumer birth, pure complete admission validator, real socket facts and point validation. Original backend and f831 helper byte unchanged.",
+  "independentTests": {
+    "tests": 11,
+    "pass": 11,
+    "fail": 0,
+    "durationMs": 406.388891,
+    "scope": "Targeted new or changed V2 regression tests run from frozen code packet: producer enum ABI, composed emitted-row audit, birth and complete admission, prequery reason preservation, preflight failure, lifecycle/resource/host failure endpoints, malformed points and valid empty results."
+  },
+  "sourceDisposition": "No additional source blocker found; await actual Opus V2 review and author full fixture result before source publication/merge.",
+  "executionPacketReady": false,
+  "externalClosureReviewPending": true,
+  "experimentPass": false,
+  "productionAcceptance": false,
+  "hostOperations": 0,
+  "queries": 0
+}
