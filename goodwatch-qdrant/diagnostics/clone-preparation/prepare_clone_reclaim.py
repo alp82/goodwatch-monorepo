@@ -4,10 +4,10 @@ sys.dont_write_bytecode=True
 import itertools
 import argparse,datetime,errno,fcntl,hashlib,json,math,os,re,resource,signal,stat,time,urllib.request
 from pathlib import Path
-STAGE=Path('/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v4')
+STAGE=Path('/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v5')
 REQUEST=3*1024**3
 LIMIT_FILES=('memory.min','memory.low','memory.high','memory.max','memory.swap.max','cpu.max','io.max','pids.max')
-SAFE={'source_changed','swap_present','locked_source_pages','dirty_source_pages','source_children_present','source_limits_changed','ancestor_limits_changed','parent_placement_changed','reclaim_fd_changed','reclaim_timeout','reclaim_writer_survived','reclaim_write_failed','reclaim_resource_event','post_cap_fit_inconclusive','metadata_health_changed','source_freeze_changed','invalid_reclaim_lock','prepared_input_changed','writer_start_failed','quiescence_bound_exceeded','host_emergency_floor'}
+SAFE={'postwrite_zero_timeout','postwrite_sample_bound_exceeded','source_changed','swap_present','locked_source_pages','dirty_source_pages','source_children_present','source_limits_changed','ancestor_limits_changed','parent_placement_changed','reclaim_fd_changed','reclaim_timeout','reclaim_writer_survived','reclaim_write_failed','reclaim_resource_event','post_cap_fit_inconclusive','metadata_health_changed','source_freeze_changed','invalid_reclaim_lock','prepared_input_changed','writer_start_failed','quiescence_bound_exceeded','host_emergency_floor'}
 
 def digest(data):return hashlib.sha256(data).hexdigest()
 def at():return datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -304,7 +304,7 @@ def census_recorded_writers(directory,helper_sha256,protected_pids,cleanup=False
  return {'receiptCount':len(paths),'receiptCountIsLowerBound':len(paths)==29,'receiptScanLimit':28,'recordedWritersGone':not bound_failed and all(r['writerGone'] for r in results),'recordedWriterResults':results,'unknownUnregisteredChildrenProvenGone':False}
 
 
-def inspect_prior_receipts(directory,helper_sha256,protected_pids):
+def inspect_prior_receipts(directory,helper_sha256,protected_pids,max_records=14):
  """Read-only prior-stage proof. Receipts survive; unknown blocks but scan continues."""
  if directory.resolve()!=directory:raise RuntimeError('writer_birth_changed')
  info=directory.lstat()
@@ -317,7 +317,7 @@ def inspect_prior_receipts(directory,helper_sha256,protected_pids):
   fields=lambda v:(v.st_dev,v.st_ino,v.st_size,v.st_mtime_ns)
   if fields(before)!=fields(opened) or fields(after)!=fields(opened) or fields(current)!=fields(opened) or len(raw)!=opened.st_size or hashlib.sha256(raw).hexdigest()!=helper_sha256:raise RuntimeError('writer_birth_changed')
  finally:os.close(fd)
- return census_recorded_writers(directory,helper_sha256,protected_pids,cleanup=False,max_records=14)
+ return census_recorded_writers(directory,helper_sha256,protected_pids,cleanup=False,max_records=max_records)
 
 class WriterProtocol:
  """Fixed numeric phase frames, never private inputs. Parent cutoff is authoritative."""
@@ -479,7 +479,30 @@ def quiescent_snapshot(c,source,seconds=0,clock=time.monotonic,sleep=time.sleep)
    sleep(min(.25,seconds-elapsed))
 
 
-def under_control_lock(c,config,spec,policy,lock_fd,quiescence_seconds=0,raise_own_nofile=False):
+def postwrite_zero_observer(sample,reference,evidence,start,seconds=60,clock=time.monotonic,sleep=time.sleep):
+ """Observe only: every completed full sample is fenced before classifying dirtiness."""
+ if seconds!=60:raise RuntimeError('prepared_input_changed')
+ evidence.update({'budgetSeconds':60,'sampleLimit':256,'samples':0,'dirtySamples':0,'maxFileDirtyBytes':0,'maxFileWritebackBytes':0,'zeroDirtyAndWriteback':False})
+ while True:
+  evidence['seconds']=round(clock()-start,6)
+  if clock()-start>=seconds:raise RuntimeError('postwrite_zero_timeout')
+  if evidence['samples']>=256:raise RuntimeError('postwrite_sample_bound_exceeded')
+  state=sample();evidence['samples']+=1
+  evidence.setdefault('initial',state);evidence['terminal']=state
+  evidence['seconds']=round(clock()-start,6)
+  fence(reference,state)
+  dirty=state['memory']['file_dirty'];writeback=state['memory']['file_writeback']
+  evidence.update({'fileDirtyBytes':dirty,'fileWritebackBytes':writeback,'maxFileDirtyBytes':max(evidence['maxFileDirtyBytes'],dirty),'maxFileWritebackBytes':max(evidence['maxFileWritebackBytes'],writeback)})
+  if dirty or writeback:evidence['dirtySamples']+=1
+  if clock()-start>seconds:raise RuntimeError('postwrite_zero_timeout')
+  if not dirty and not writeback:
+   evidence['zeroDirtyAndWriteback']=True;return state
+  remaining=seconds-(clock()-start)
+  if remaining<=0:raise RuntimeError('postwrite_zero_timeout')
+  sleep(min(.25,remaining))
+
+
+def under_control_lock(c,config,spec,policy,lock_fd,quiescence_seconds=0,raise_own_nofile=False,postwrite_seconds=60):
  """One clone request under an already-held verified control lock; never reacquires it."""
  directory=None;target=None;output={'schema':'owned-clone-reclaim-preparation.v1','queries':0,'pinning':False,'archiveBytesRead':0,'fileCacheAdvice':False,'lifecycleChanges':0,'sourceResourceLimitWrites':0,'productionBackupEquivalent':False,'writerPolicy':{'registrationSeconds': 10, 'prewriteAcceptanceSeconds': 60, 'prewriteSupervisionSeconds': 65, 'kernelWriteSeconds': 60, 'cleanupSeconds': 10, 'lifecycleSeconds': 145, 'receiptLimit': 18, 'censusLimit': 28}}
  try:
@@ -512,10 +535,22 @@ def under_control_lock(c,config,spec,policy,lock_fd,quiescence_seconds=0,raise_o
   if output['writer']['timedOut']:raise RuntimeError('reclaim_timeout')
   if output['writer']['outcome']=='guard-failed':raise RuntimeError(output['writer']['reason'])
   if output['writer']['outcome'] not in ('accepted','under-reclaimed'):raise RuntimeError('reclaim_write_failed')
-  output['after']=snapshot(c,source);fence(output['before'],output['after'])
+  postwrite_start=time.monotonic()
+  output['postwriteQuiescence']={}
+  def postwrite_sample():
+   c.runtime.validate_source_locally(source)
+   current=os.stat('memory.reclaim',dir_fd=directory,follow_symlinks=False)
+   if (current.st_dev,current.st_ino)!=(identity.st_dev,identity.st_ino):raise RuntimeError('reclaim_fd_changed')
+   state=snapshot(c,source,require_clean=False)
+   c.host_available(max(policy.emergency_bytes,policy.reserve_bytes+policy.cap_reserve_bytes))
+   if c.self_cgroup()!=parent_group:raise RuntimeError('parent_placement_changed')
+   require_held_control_lock(c,lock_fd);c.frozen_helper(config)
+   if (source.cgroup.stat().st_dev,source.cgroup.stat().st_ino)!=(directory_identity.st_dev,directory_identity.st_ino):raise RuntimeError('reclaim_fd_changed')
+   return state
+  output['after']=postwrite_zero_observer(postwrite_sample,output['before'],output['postwriteQuiescence'],postwrite_start,seconds=postwrite_seconds)
   measured=c.runtime.measure_source(spec,raise_own_nofile=raise_own_nofile);output['measurement']=c.daemon.public_measure(measured)
   if measured['selectionHash']!=initial['selectionHash']:raise RuntimeError('source_changed')
-  output['final']=snapshot(c,source);fence(output['before'],output['final']);output['healthAfter']=health(c,source)
+  output['final']=snapshot(c,source,require_clean=False);fence(output['before'],output['final']);require_zero(output['final']);output['healthAfter']=health(c,source)
   current=output['final']['accounting'];output['postCapFit']=cap_fit(measured,current,policy.cap_reserve_bytes)
   c.host_available(max(policy.emergency_bytes,policy.reserve_bytes+policy.cap_reserve_bytes));c.frozen_helper(config)
   if c.self_cgroup()!=parent_group:raise RuntimeError('parent_placement_changed')

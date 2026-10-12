@@ -1,7 +1,7 @@
 {
   "schema": "post-cold-clone-stage-prepared.v1",
   "execution": false,
-  "stage": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v4",
+  "stage": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v5",
   "stageMustBeAbsent": true,
   "coreCommit": "15d1cfe8e65636fbe2f51b96d614a5cb387f5649",
   "coreFiles": {
@@ -10,11 +10,11 @@
     "daemon.py": "0e2c89075957758d8e61f6f4f14c5de8f7819f8be34cff401416fcf2ab5101f7"
   },
   "coreCombinedSha256": "b61022a43ce6d3b3357290a718d4cebb4d3a6cd8c4547e839c501a3c0c4c8a55",
-  "controllerSha256": "b44a42b57a81c418b6858070c2e3a70a943e9fea255cea2948317317e8420045",
-  "cachePreparationHelperSha256": "76da971744310cdb6b21183725466a14cf8084a51eb3680ffb31c2dfe9d1439c",
+  "controllerSha256": "4cfe85cfeb5a254e227c89fd3b23f221a185090507e4f96033a81e6ecf497a3e",
+  "cachePreparationHelperSha256": "7a81e94926c7f7d56d366a821a5e8457cd0e4b0e189775341e9355a352beea3b",
   "helperPolicySha256": "ddb7f2735ab539cbe1138dfbf23397e41fb4db87c320720a970d068686281ec2",
-  "controllerPolicySha256": "a7d7e6be2089ce80700e1a27676fe112f169e6f46e4da7083a6a627b7963449c",
-  "consumerSourceManifestSha256": "c7cd97dd377865421f9bb9252ca4b28cbad6d7f3b7155e26eec3a0969b23c439",
+  "controllerPolicySha256": "44cec00e752a6b7d474cf27bb8074f202761cafab28a3494c60af92a9026f92c",
+  "consumerSourceManifestSha256": "162a27d2da157a005eb5cfaf456916a2eb32c9bc2de324ea17cb6abb10b23725",
   "producerSourceManifestSha256": "7aea9823b080b8c00234c30cef5c54510193f203b59048b7a38f371f33fe2230",
   "originalStageUnchanged": true,
   "productionAcceptance": false,
@@ -29,7 +29,8 @@
   "previousStagesUnchanged": [
     "pin-control-20261012-406-v1",
     "pin-control-20261012-406-v2",
-    "pin-control-20261012-406-v3"
+    "pin-control-20261012-406-v3",
+    "pin-control-20261012-406-v4"
   ],
   "writerPolicy": {
     "censusLimit": 28,
@@ -56,6 +57,14 @@
       "stage": "pin-control-20261012-406-v3",
       "maxReceipts": 14,
       "helperSha256": "7ac8f17ac5159dced04995e723af56393fc30848449830dc9ef35c08291bf04d"
+    },
+    {
+      "stage": "pin-control-20261012-406-v4",
+      "maxReceipts": 18,
+      "helperSha256": "76da971744310cdb6b21183725466a14cf8084a51eb3680ffb31c2dfe9d1439c"
     }
-  ]
+  ],
+  "postwriteQuiescenceSeconds": 60,
+  "knownPreparedSubtotalSeconds": 785,
+  "offlineAuditorSha256": "6c803f29603805bda7bd5a2447629105cba641bbd0a114f091bb1ef03f1166a8"
 }

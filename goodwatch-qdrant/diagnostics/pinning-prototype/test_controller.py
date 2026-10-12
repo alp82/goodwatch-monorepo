@@ -321,4 +321,18 @@ class ControllerTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError,'explicit_cache_preparation_required'):controller.load_control(path,controller.hashlib.sha256(raw).hexdigest(),controller.digest(controller.__file__))
                     helper.assert_not_called()
 
+class PostwritePolicy(unittest.TestCase):
+    def test_postwrite_wait_is_explicit_exact_sixty(self):
+        import json,tempfile,hashlib
+        from pathlib import Path
+        for value in (None,0,59,61):
+            config=json.loads((Path(controller.__file__).parent/'prepared-control-policy.json').read_text())
+            if value is None:del config['cachePreparation']['postwriteQuiescenceSeconds']
+            else:config['cachePreparation']['postwriteQuiescenceSeconds']=value
+            with self.assertRaises(ValueError):
+                # Exact loader validation occurs before any source inspection.
+                with tempfile.TemporaryDirectory() as directory:
+                    path=Path(directory)/'control.json';raw=json.dumps(config).encode();path.write_bytes(raw)
+                    controller.load_control(path,hashlib.sha256(raw).hexdigest(),hashlib.sha256(Path(controller.__file__).read_bytes()).hexdigest())
+
 if __name__=='__main__':unittest.main()
