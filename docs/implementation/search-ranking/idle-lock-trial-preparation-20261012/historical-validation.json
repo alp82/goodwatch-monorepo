@@ -1,0 +1,52 @@
+{
+  "v3": {
+    "tests": 154,
+    "failures": [
+      "test_actual_parent_checks_real_vmlock_happy_proof_and_retires_old_holder_on_turnover",
+      "test_actual_parent_pipe_validates_ordered_retry_claims_without_calling_them_release_proof",
+      "test_emergency_floor_interrupts_real_blocked_holder_before_pass_deadline",
+      "test_holder_failure_reason_reaches_actual_parent_without_private_error",
+      "test_unproven_exit_retains_real_pidfd_for_later_owned_kill",
+      "test_valid_parent_command_gap_outlives_old_scaled_idle_lease_then_eof_is_prompt",
+      "test_watchdog_killed_pipe_eof_reports_emergency_in_actual_supervisor",
+      "test_watchdog_pressure_during_clean_lifetime_close_is_fast_and_reported_as_failure",
+      "test_crash_before_first_lock_birth_record_blocks_until_actual_spawned_child_exit"
+    ],
+    "errors": [
+      "test_clean_sigterm_midpass_releases_actual_holder_without_timeout_failure"
+    ],
+    "elapsedSeconds": 390.243,
+    "idlePinRuntimeFailures": 0,
+    "baselineRateOrCauseAttributionProven": false
+  },
+  "v4": {
+    "fullDiscovery": {
+      "command": "python -B -m unittest discover -p 'test_*.py' -q",
+      "tests": 156,
+      "passed": true,
+      "elapsedSeconds": 43.331,
+      "qualification": "Passed before final emergency-trigger timing and EOF-test-name refinements."
+    },
+    "targetedFinalRefinements": {
+      "tests": 2,
+      "passed": true,
+      "elapsedSeconds": 0.816
+    },
+    "focusedIdleBeforeFixtureEdits": {
+      "tests": 36,
+      "passed": true,
+      "elapsedSeconds": 14.163
+    },
+    "historicalV3": {
+      "tests": 154,
+      "passed": false,
+      "failures": 9,
+      "errors": 1,
+      "elapsedSeconds": 390.243,
+      "idlePinRuntimeFailures": 0,
+      "causeAttributionNotProven": true
+    },
+    "gitDiffCheckPassed": true,
+    "hostExecution": false
+  }
+}

@@ -1,0 +1,32 @@
+--- v6/test_idle_trial.py
++++ v7/test_idle_trial.py
+@@ -175,6 +175,19 @@
+         try:
+             worker.connection.send('reconcile');self.assertTrue(worker.connection.poll(30));self.assertEqual(worker.connection.recv(),{'request':'source'})
+             worker.process.join(30);self.assertEqual(worker.process.exitcode,-signal.SIGALRM);self.assertTrue(worker.close()['released'])
++        finally:worker.close(emergency=True)
++
++    def test_actual_idle_holder_eof_after_state_exits_before_lease_or_timer(self):
++        worker=production.Holder(fixture_holder,(60,))
++        try:
++            worker.connection.send('reconcile');self.assertTrue(worker.connection.poll(30));self.assertEqual(worker.connection.recv(),{'request':'source'})
++            worker.connection.send({'source':SimpleNamespace(spec=SimpleNamespace())})
++            self.assertTrue(worker.connection.poll(30));self.assertEqual(worker.connection.recv(),{'state':{}})
++            # idle.holder's real poll lease and kernel timer are both60s;
++            # neither can impersonate EOF inside this5s gate.
++            worker.connection.close();worker.process.join(5)
++            self.assertFalse(worker.alive_owned());self.assertEqual(worker.process.exitcode,1)
++            self.assertTrue(worker.close()['released'])
+         finally:worker.close(emergency=True)
+ 
+     def test_exactly_one_reconcile_real_pipe(self):
+--- v6/IDLE-TRIAL.md
++++ v7/IDLE-TRIAL.md
+@@ -33,4 +33,6 @@
+ 
+ Frozen v3 full discovery ran 154 tests: nine failures and one error in existing production/publication lifecycle fixtures, with none in idle, pin or runtime. Readiness polls expired in several fixtures; short cleanup/lifetime/join assertions also failed. This does not establish baseline-equivalent failure rates. V4 fixtures add explicit startup acknowledgements, use production 5-second cleanup when graceful release is the goal, separate emergency-trigger-to-release timing from startup, and check bounded EOF failure exit 1. Production timeout and supervisor code are unchanged. Historical frozen packets remain intact. V4 full discovery passed 156 tests before the final emergency-timing/name refinement; the refined fixture is validated separately.
+ 
+-V5 separates EOF proof from the scaled lease experiment: the actual holder uses a 60-second lease for a 5-second EOF gate, and a real child deliberately ignoring EOF stays alive and is rejected. Independent actual-PIDfd tests cover Guard.trip urgency without parent finally and registration refusal before guard attachment; no lock-ready claim is emitted. Holder pipe replies cannot claim scientific pressure or normal completion. Full discovery is run against the final frozen V5 bytes and its result is bound to their manifest hashes.
++V5 separates EOF proof from the scaled lease experiment: the legacy production.holder uses a 60-second lease for a 5-second EOF gate, and a real child deliberately ignoring EOF stays alive and is rejected. Independent actual-PIDfd tests cover Guard.trip urgency without parent finally and registration refusal before guard attachment; no lock-ready claim is emitted. Holder pipe replies cannot claim scientific pressure or normal completion. The complete V6 packet, with Python sources identical to V5 plus the required public controller JSON fixture, passed all160 discovery tests from frozen bytes. Its result is bound to every manifest hash. V5 itself had159passes and one missing-fixture packaging error, retained without relabelling.
++
++A separate actual idle_trial.holder EOF-after-state fixture now uses a 60-second poll lease and kernel lifetime, and proves exit1 with owned release inside five seconds. Source/placement/PinSet interfaces are explicitly faked in that lifecycle fixture. This tests the idle holder code path; it does not establish actual production placement, pin release under load, or idle-holder parent-death behavior. The earlier production.holder EOF test remains separate.

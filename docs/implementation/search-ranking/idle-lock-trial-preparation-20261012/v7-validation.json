@@ -1,0 +1,127 @@
+{
+  "command": "python -B -m unittest discover -p 'test_*.py' -q",
+  "executedFromFrozenSource": true,
+  "manifestSha256": "df458da002ff01ed092add6c50954d9e727cccb016cdefbc887137bf33fccb8e",
+  "sourceHashes": {
+    "controller.py": {
+      "bytes": 35302,
+      "sha256": "964cc0a2c15543acc2844530a5191855fe2ac275b0b5b7c437189d9e45e5aa3c"
+    },
+    "daemon.py": {
+      "bytes": 12894,
+      "sha256": "0e2c89075957758d8e61f6f4f14c5de8f7819f8be34cff401416fcf2ab5101f7"
+    },
+    "idle_trial.py": {
+      "bytes": 28952,
+      "sha256": "d35f6ec06001ce65a7734ea6e76d72430467e0f46ef63e08f3dff4b92d280340"
+    },
+    "pin.py": {
+      "bytes": 22552,
+      "sha256": "d6117f9b2d17806b8571fdfa39d11adebe2e87c1d66c1a2cdd8a5a92d1c630ec"
+    },
+    "production.py": {
+      "bytes": 30448,
+      "sha256": "9ad60d1b347600add5907c92125288aec3a2914caece63655a4df4ad59203005"
+    },
+    "production_coverage.py": {
+      "bytes": 7033,
+      "sha256": "ce3bdc890f2fbfadf111951c2959ab2be9c3d1fe4663d01225c72941470e08ed"
+    },
+    "production_journal.py": {
+      "bytes": 8191,
+      "sha256": "20fd12fe1a2e5aa24ad5366bc584c0f410d12f6396ff84c0e2719d4fa3ebb389"
+    },
+    "production_service.py": {
+      "bytes": 2631,
+      "sha256": "8275442aa4d4401ebd8a42f311ac32596c875000f8fc2f329420b51fd7d5d9bd"
+    },
+    "publication_guard.py": {
+      "bytes": 7536,
+      "sha256": "a466215ad2a0f34b8a4a30f92e7267ffe0e4f51f39e3d5f68a43816fa7c63e66"
+    },
+    "publish_production.py": {
+      "bytes": 8381,
+      "sha256": "78b5dfe25d7abc5c4dbb408e934e311208f75c34ba738f21961bd7afb8ae4522"
+    },
+    "runtime.py": {
+      "bytes": 16721,
+      "sha256": "98abb36aed962bc9d3491dde93684355665a62238542dec908634bb4a3a657f5"
+    },
+    "test_controller.py": {
+      "bytes": 27148,
+      "sha256": "ce610f94310f21b8e830667630d8105fc7ce2217f0a335893a4b270458e3644d"
+    },
+    "test_daemon.py": {
+      "bytes": 8067,
+      "sha256": "070a433dec30c5a12d19621019126166a8010a2af629d24b3bac5c3a50d3b6de"
+    },
+    "test_idle_trial.py": {
+      "bytes": 42329,
+      "sha256": "3751804a187318daa2d696341b67c5aed718332e7b9d14d84c7e0e7e6a5429a2"
+    },
+    "test_nofile.py": {
+      "bytes": 5564,
+      "sha256": "e5b0b9a54d9d9cc26af0bcd62524131997d94f496842c164d8383d88b465d0a8"
+    },
+    "test_pin.py": {
+      "bytes": 20521,
+      "sha256": "aa603358ceb8205b4c9ad4c0725e2b26bbd1fea5425f1a0685f94f8073529f0a"
+    },
+    "test_production.py": {
+      "bytes": 34578,
+      "sha256": "8418e02d3d0b5e6adb87f224340f6ef79ccbf41edb9479c7e83749ce26a9c70f"
+    },
+    "test_production_operations.py": {
+      "bytes": 7453,
+      "sha256": "69f29daf2c44a1e13d4c36f2319fb86a180e3166685f27e3c2fb3f032a7f17cf"
+    },
+    "test_publication_guard.py": {
+      "bytes": 9814,
+      "sha256": "1c246d494cb187fadd324cf43b5372c871b20edb350cff8e0cead3c331b2e780"
+    },
+    "test_runtime.py": {
+      "bytes": 15690,
+      "sha256": "5fd7f34feda5cc170fc2a3f537d365957228495735a55a9d2398c6cee798bcf7"
+    },
+    "test_turnover_gate.py": {
+      "bytes": 4394,
+      "sha256": "1df6fb1cef11c7f662b58f3230bc1ece50a85f434dd2a4ab2db1ee7d0f1ed09e"
+    },
+    "test_zero_placement.py": {
+      "bytes": 7666,
+      "sha256": "e076480fca8a484709c3e5b90d79d54abd8a64163ae6b9c95428e65cd0874226"
+    },
+    "turnover_gate.py": {
+      "bytes": 9652,
+      "sha256": "80ce7b4b0150034a3284e0e51c4a13391fbdb9087b909f17c0ae466346f72178"
+    },
+    "zero_placement.py": {
+      "bytes": 12415,
+      "sha256": "5e1cbc8b6288b4751f88b0f8c253e4569487aded8f9c028dea707680d549708d"
+    },
+    "IDLE-TRIAL.md": {
+      "bytes": 9437,
+      "sha256": "fde427f1da0e6fd74f752705afa2163dba5f8e00c9d4a03c87b7c7b795d518f2"
+    },
+    "prepared-control-policy.json": {
+      "bytes": 907,
+      "sha256": "bee3f2111722adb1c3a667c2f179fb74efcde3f86ca93c5917fce500adfbb13f"
+    }
+  },
+  "allHashesUnchangedAfterRun": true,
+  "exitCode": 0,
+  "passed": true,
+  "elapsedSeconds": 54.681,
+  "failures": [],
+  "errors": [],
+  "summary": [
+    "----------------------------------------------------------------------",
+    "Ran 161 tests in 54.127s",
+    "",
+    "OK"
+  ],
+  "pythonVersion": "3.14.7 (main, Aug 10 2026, 07:46:56) [GCC 16.1.1 20260728]",
+  "euid": 1000,
+  "kernelRelease": "6.1.187-2-MANJARO",
+  "hostExecution": false
+}
