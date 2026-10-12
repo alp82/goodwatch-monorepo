@@ -1,3 +1,69 @@
+# Fixed-capacity ABI v2 successor (local preparation)
+
+This source supersedes the historical poststart 5 GiB rule explicitly; it does not
+reinterpret the failed v1 trial or consume its recovery again. The owner keeps the
+VM size unchanged. Execution remains pending exact source, fixture, external
+registration and actual Opus 5.5 medium review. The initial design was conditionally
+accepted; that verdict is not a capacity or latency result.
+
+Actual running/unheld admission derives its strict floor from the frozen maximum
+new lock budget plus reserve: 2 GiB + 2 GiB. Exactly 4 GiB refuses. Actual Docker,
+wrapper/Qdrant birth, exactly two source members, VmLck/unevictable zero and real
+zero max/OOM events establish scope; no caller-supplied running phase or lower
+floor is accepted. Same-read memory refusals retain availability, MemTotal, floor
+and observed phase. Stopped-to-start remains strictly above 5 GiB. The pressure
+and query emergency floor remains 1.5 GiB; a held source is never reinterpreted as
+an unheld entry to demand 4 GiB during pressure.
+
+Fresh prepared inventory in both phases debits ALL selected lock bytes, including
+resident pages, and requires projected availability at least 2 GiB. Candidate
+pinning additionally retains current + missing + 256 MiB <= 6 GiB and every
+unchanged core/RLIMIT/mapping/cap guard. No source file/RSS credit is added to host
+MemAvailable. The observed near-cap state still refuses pinning; bounded preparation
+must actually create eligible headroom, not predict it.
+
+New paths use cpu0-lifecycle-handoff-v2.json and the fresh cpu0-v2 stage/admission.
+The first handoff must be separately authored by the running-object adoption
+protocol with owner adoption, null predecessor and its intent SHA. Every later
+controlled handoff retains that same intent. No adoption module is implemented by
+this backend step. A historical setup handoff cannot start the new chain.
+
+Query-ready/query-finished carry actual before/after memory endpoints, each at
+least the unchanged 1.5 GiB emergency floor. A failed endpoint cannot be filled from
+a later read or invented zeros. Endpoint samples do not establish continuous safety.
+The C6 ledger records actual per-birth source anon/kernel growth and positive
+outside-process RssAnon/VmPTE growth. Enrolled Node and transport baselines are
+retained; a newly spawned controller is charged in full. Source page tables are
+already included in kernel bytes; a joined holder is reported without a second
+outside debit. Growth above 512 MiB refuses without offsetting shrinking classes.
+Endpoint direct-child fences and parent inspector call counts do not prove a
+continuous process census or a sampled peak. Final registry and consumer integration
+and exact source review remain pending; this is not a frozen executable packet.
+
+The consumer preflight authenticates the whole source and full manifest before
+sibling imports, requires its actual isolated interpreter argv and `/dev/null`
+stdin, and derives the actual Node and transport parent. It publishes one exclusive
+canonical preliminary receipt before its entry sample; even a partial write remains
+addressable for independent cleanup. The preliminary receipt records immutable
+birth/exe/cgroup identities separately from mutable metrics. This metadata
+admission writes the preliminary receipt and one handoff, with no data or cap writes.
+Cleanup-only source renewal is separate from trial admission. It records current
+wrapper/Qdrant births, service connections and absolute limit counters, preserves
+static container/configuration/script/mount lineage, and renews source cgroup
+limits and CPU ancestors. Connections and nonzero counters do not veto owned Node
+cleanup. Extra source members or a stopped/uncertain source remain UNKNOWN. It
+does not prove unconstrained memory ancestors or capacity, and it performs no
+source lifecycle action.
+
+The four core modules, CPU guards, helper policy and reclaim helper remain byte exact.
+Nine actual pairs, zero exclusions, eighteen single writers, 100% selected locked
+residency, and candidate server AND wall time below 1500 ms remain required.
+
+The following material records the historical CPU0 protocol. Its statement that
+all memory floors were unchanged applies to that v1 source, not this successor.
+
+---
+
 # Prepared CPU0 clone variant
 
 This local implementation is uninstalled and unexecuted. Its complete staging and

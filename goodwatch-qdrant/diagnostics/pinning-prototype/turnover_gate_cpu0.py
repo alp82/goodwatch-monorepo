@@ -37,7 +37,7 @@ def zero_child(connection, source, config):
         if not connection.poll(120) or connection.recv()!='close': raise RuntimeError('zero_child_lease_failed')
         connection.send({'stage':'released','lockedBytes':locked_bytes(os.getpid())})
     except BaseException as error:
-        try:connection.send({'stage':'failed','reason':control.safe_control_reason(error),**control.cpu0_guards.failure_evidence(error)})
+        try:connection.send({'stage':'failed','reason':control.safe_control_reason(error),**control.admission_failure(error),**control.cpu0_guards.failure_evidence(error)})
         except (BrokenPipeError,EOFError,OSError):pass
         raise SystemExit(1)
     finally: connection.close()
@@ -86,7 +86,7 @@ def ready(spec):
 def stage(config,spec,policy,emit,lock_fd,handoff_sha):
     # Metadata and self placement only: no cache advice, archive read, mapping or lock.
     if control.ROOT.resolve()!=control.ROOT:raise RuntimeError('owned_root_changed')
-    control.owned_store_files(spec.store);control.owned_total_budget();control.host_available(max(policy.emergency_bytes,policy.reserve_bytes+policy.cap_reserve_bytes))
+    control.owned_store_files(spec.store);control.owned_total_budget()
     control.cpu0_guards.host_cpu()
     parent=control.self_cgroup();control.inspect_stopped_or_running(spec);source=control.inspect_source(spec)
     lifecycle=control.load_lifecycle(config);lifecycle.require_lock(lock_fd);lifecycle.read_handoff(runtime.docker,handoff_sha)
@@ -107,9 +107,10 @@ def stage(config,spec,policy,emit,lock_fd,handoff_sha):
         stopped=lifecycle.graceful_stop(spec.container,runtime.docker,lock_fd,protected_pids=(os.getpid(),os.getppid()),expected=initial_admission['target'])
         if control.inspect_stopped_or_running(spec)['State']['Running']:raise RuntimeError('clone_not_stopped')
         if control.self_cgroup()!=parent:raise RuntimeError('parent_cgroup_changed')
-        control.owned_total_budget();control.host_available(max(policy.emergency_bytes,5*1024**3));control.frozen_helper(config)
+        control.owned_total_budget();control.frozen_helper(config)
         control.cpu0_guards.host_cpu()
-        lifecycle.require_clean_receipt(lifecycle.state_snapshot(control.inspect_stopped_or_running(spec)),stopped)
+        stopped_state=lifecycle.state_snapshot(control.inspect_stopped_or_running(spec));lifecycle.require_clean_receipt(stopped_state,stopped)
+        stopped_admission=control.stopped_host_admission(stopped_state)
         control.clone_command('start',spec.container)
         fresh=ready(spec)
         fresh_admission=control.birth_admission(config,spec,policy)
@@ -123,17 +124,17 @@ def stage(config,spec,policy,emit,lock_fd,handoff_sha):
         if outcome['exitCode']!=0:raise RuntimeError('zero_child_cleanup_failed')
         if control.self_cgroup()!=parent:raise RuntimeError('parent_cgroup_changed')
         handoff=lifecycle.commit_handoff(runtime.docker,handoff_sha,'turnover')
-        emit({'stage':'complete','at':control.at(),**outcome,'parentUnchanged':True,'cacheControls':0,'archiveBytesRead':0,'storageContentWrites':0,'initialAdmission':initial_admission,'cleanStop':stopped,'birthAdmission':fresh_admission,'handoff':handoff})
+        emit({'stage':'complete','at':control.at(),**outcome,'parentUnchanged':True,'cacheControls':0,'archiveBytesRead':0,'storageContentWrites':0,'initialAdmission':initial_admission,'cleanStop':stopped,'stoppedAdmission':stopped_admission,'birthAdmission':fresh_admission,'handoff':handoff})
     except BaseException as error:
         if stopped is not None:error.lifecycleCompletedStopReceipt=stopped
-        emit({'stage':'phase-failed','at':control.at(),'reason':control.safe_control_reason(error),'lifecycleCompletedStopReceipt':getattr(error,'lifecycleCompletedStopReceipt',None),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'lifecycleDockerCleanupEvidence':getattr(error,'lifecycleDockerCleanupEvidence',None),**control.cpu0_guards.failure_evidence(error)})
+        emit({'stage':'phase-failed','at':control.at(),'reason':control.safe_control_reason(error),'lifecycleCompletedStopReceipt':getattr(error,'lifecycleCompletedStopReceipt',None),'lifecycleFailureEvidence':getattr(error,'lifecycleFailureEvidence',None),'lifecycleCleanupFailure':getattr(error,'lifecycleCleanupFailure',None),'lifecycleDockerCleanupEvidence':getattr(error,'lifecycleDockerCleanupEvidence',None),**control.admission_failure(error),**control.cpu0_guards.failure_evidence(error)})
         raise
     finally:
         original_error=sys.exc_info()[1];cleanup_error=None
         if child is not None:
             try:outcome=child.gone()
             except BaseException as error:
-                cleanup_error=error;outcome={'childGone':False,'reason':control.safe_control_reason(error),**control.cpu0_guards.failure_evidence(error)}
+                cleanup_error=error;outcome={'childGone':False,'reason':control.safe_control_reason(error),**control.admission_failure(error),**control.cpu0_guards.failure_evidence(error)}
             emit({'stage':'cleanup-observed','at':control.at(),**outcome})
         if original_error is not None or cleanup_error is not None:
             try:running=bool(control.inspect_stopped_or_running(spec)['State']['Running'])
@@ -146,7 +147,7 @@ def main(argv=None):
     parser=daemon.SafeParser(description=__doc__)
     for name in ('config','policy-sha256','controller-code-sha256','gate-code-sha256','handoff-sha256'):parser.add_argument('--'+name)
     parser.add_argument('--execute-reviewed',action='store_true')
-    emit=lambda event:print(json.dumps({'schema':'search.clone-zero-pin-turnover.v1','variant':'cpu0-owned-lifecycle.v1',**event},sort_keys=True),flush=True)
+    emit=lambda event:print(json.dumps({'schema':'search.clone-zero-pin-turnover.v1','variant':'cpu0-fixed-capacity.v2',**event},sort_keys=True),flush=True)
     try:
         args=parser.parse_args(argv)
         if not args.execute_reviewed:emit({'stage':'prepared-only','execution':False,'queries':0,'lockedBytes':0});return 0
@@ -166,7 +167,7 @@ def main(argv=None):
         finally:os.close(fd)
         return 0
     except BaseException as error:
-        emit({'stage':'failed','reason':control.safe_control_reason(error),**control.cpu0_guards.failure_evidence(error),'queries':0});return 1
+        emit({'stage':'failed','reason':control.safe_control_reason(error),**control.admission_failure(error),**control.cpu0_guards.failure_evidence(error),'queries':0});return 1
 
 
 if __name__=='__main__':raise SystemExit(main())
