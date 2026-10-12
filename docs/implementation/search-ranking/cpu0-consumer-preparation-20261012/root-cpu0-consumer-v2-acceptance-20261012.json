@@ -1,0 +1,32 @@
+{
+  "schema": "root.cpu0-consumer-source-acceptance.v2",
+  "reviewedAt": "2026-10-12T16:54:00Z",
+  "sourceManifestSha256": "4f44eab300c70c871d8629d73af8c2d56ca8e2af102d8ed4c390024943b00ee4",
+  "rootReviewSha256": "f15da4fdea0c46db45bf47292e6036e7481dc209a68eace61d9e924350288e5e",
+  "actualOpusResultSha256": "543b46a3f14cb037914deadce6c5e43698d7540a12a652a2d60f8697789753ec",
+  "actualOpusVerdict": "ACCEPT for inactive prepared-only source",
+  "actualOpusModel": "claude-opus-5-5",
+  "actualOpusDurationMs": 242973,
+  "fullFixtureResultSha256": "4311bc5d1990670b0cfaee3862c35e5b74d7c54253f334960b16d76e45851fe1",
+  "fullFixtureTests": 34,
+  "fullFixturePassed": 34,
+  "fullFixtureDurationMs": 30225.132863,
+  "rootTargetedTestsPassed": 11,
+  "reviewConditionsClosed": [
+    "Final 34-fixture result independently read",
+    "Producer static reason enum equality independently passed"
+  ],
+  "sourcePublicationAuthorized": true,
+  "executionPacketReady": false,
+  "externalReviewPending": true,
+  "experimentPass": false,
+  "productionAcceptance": false,
+  "hostOperations": 0,
+  "nonblockingCaveats": [
+    "After any refusal external must re-read actual committed handoff, which may have advanced without a consumer acknowledgement",
+    "Some cleanup uncertainty details are omitted by consumer projection; external cleanup audit remains mandatory",
+    "Consumer executable numeric metadata exceeding JS safe integer range can fail closed",
+    "Malformed controller objects can lose projected failure exit facts",
+    "Unchanged 15/5-second cleanup budgets and frame bound are unproven for CPU0"
+  ]
+}

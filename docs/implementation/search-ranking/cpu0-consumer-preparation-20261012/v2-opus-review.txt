@@ -1,0 +1,65 @@
+# Verdict: ACCEPT
+
+V2 is acceptable for publication as inactive, prepared-only source. I found no code blocker: the V1 blocker is closed and every V1 respin item is addressed in the real code paths.
+
+This is a read-only review as Opus 5.5 (I can't confirm the effort level from here); nothing was executed and no hashes were recomputed. The files are single-line-dense, so findings cite function and statement rather than line numbers.
+
+Acceptance depends on two things I could not check by reading:
+- **Fixture result:** root's inspection of the final 34-fixture run.
+- **Enum equality:** the `test_abi_cpu0.mjs` test comparing the ~260-entry static `CONTROL_REASONS` to the producer. I spot-checked about 25 entries across the controller, pin, guards, lifecycle and reclaim groups, and confirmed the reclaim-only reasons are absent on both sides. The AST evaluator covers every expression form the producer uses and imports nothing.
+
+## V1 blocker: closed
+
+- **Shared builders:** `pairedRow()` spreads `baselineRow()`, so the paired row carries `baselineControllerExit` and `baselineTransport`. `main()` emits only through these two builders.
+- **Auditor:** `auditConsumer` compares both fields between the pending baseline row and the paired row.
+- **Fixture:** `test_audit_cpu0.mjs` `fixture()` now builds rows with the same builders from `controlledBatch`-shaped results. It includes negative cases for a deleted `baselineControllerExit` and for `candidateTransport.socketClosed=false`.
+- **End-to-end trace:** I followed a `main()`-emitted baseline and paired row through `metrics()`, the baseline-equality gate, the parity loop and the completion gate, and found no shape mismatch. This covers exit key order, the transport key, the `productionAcceptance` override in the parity spread and the 20-row maximum.
+
+## Requested points: confirmed against the code
+
+| Point | Finding |
+|---|---|
+| Failed stop | `failureEvidence` retains the whole key-closed record. `before` goes through strict `target()`; `after` goes through `observedState()`, which admits a non-zero exit code and `OOMKilled:true`. Status strings are tied to nullness and `clean===false` is required. Matches `lifecycle_cpu0.graceful_stop`. |
+| Resource endpoints | The ten-key failed shape matches `cpu0_guards.resource_limits`. `normalizedAccount` matches `daemon.account`. The signed delta check is `delta === after − before` per key. The four-key `measurementsAvailable:false` shape is accepted without setting `evidenceRejected`. |
+| `ContractFailure` | The reader's catch in `controlledBatch` preserves the instance, so the outer catch reports the real reason with `failureKind:'contract'`. |
+| Preflight refusal | `runEntryPreflight` now parses before checking the exit and projects `failureEvidence([value])` plus exit facts. The seven evidence keys emitted by `cpu0_preflight.main` are all handled. |
+| Host and finalization | `hostCpuFailure` matches the `host_cpu` evidence. The five-key `pressureFinalizationFailure` matches `finalize_pressure`, with recursion capped at depth 1. |
+| Point validation | `transport_cpu0.mjs` requires a non-negative safe-integer or UUID id and a finite numeric score before returning, so before any parity hash. Empty point arrays pass. |
+| Socket close | `socketClosed:true` is returned only after `await closed` on the real `close` event. It is carried as `queryTransport` into both row kinds and gated by key-exact checks in the auditor's `metrics()`. |
+| 33 rows | `source_cpu` yields at most 32 non-root rows plus the root. `hierarchyEvidence` and the partial branch of `cpuFailureEvidence` both accept 33, with `depth===index` and root typing intact. |
+| Consumer birth | `consumerBirth` runs after preflight and before `packetsFrom(process.stdin)`. Stat field indices, cgroup path rules, `VmLck`, the group hash and the exe hash bytes match `lifecycle_cpu0.process`. Before/after fences cover own and source. |
+| `validateAdmissionFrame` | Pure, with a 14-key closure. It strips to the nine-key receipt for `preflightEvidence` and returns `{receipt, consumerBirth}`. `main()` self-validates before emitting, and the auditor uses the same export. |
+| Closure | The 14 hashes in `cpu0-source-freeze.json` equal the V2 manifest entries. The policy's lifecycle, helper and f831 bindings agree. V2 adds no module import outside `FULL_NAMES`, and the stage inventory check remains exact. |
+
+## Fix in a later respin (none blocking; all fail closed)
+
+1. **A committed preflight handoff can go unreported.** If `consumerBirth`, `validateAdmissionFrame` or `preflightEvidence` throws after preflight exits 0, the on-disk handoff has advanced. The `failed` row carries neither the new SHA nor a written flag. The `cpu0_control_cleanup_timeout` path is similar: it reports `handoffAccepted:false` even if a `handoff-complete` frame was already read. This is not false success, but the uncertainty is implicit. Project something like `handoffWriteObserved` and the SHA.
+
+2. **Some cleanup-uncertainty facts are still dropped.** `failureEvidence` does not project these, so `cleanupObserved:false` is the only signal:
+   - `cleanupReason` and `pinChildExitCode` from the `released` frame;
+   - `childFailureDetails` (`releaseState.heldMappingCount`);
+   - `cachePreparationFailure.writerFailure` (`cleanupUnknown`, `pidfdRetained`);
+   - `cpuHierarchySnapshotFailure`.
+   
+   After a readiness `ContractFailure` the reader loop has ended, so a later `released` frame is never collected and `cleanupObserved` is always false there. The CPU0-CONSUMER.md phrase "cleanup/finalization evidence" overstates this slightly.
+
+3. **Several refusal reasons collapse to `cpu0_comparison_refused`.** The `publicFailure` allowlist lacks `cpu0_preflight_refused`, `cpu0_preflight_invalid` and `cpu0_consumer_birth_invalid`. Preflight cases are distinguishable only by `failureEvidence` versus `evidenceUnavailable`. Raw `/proc` errors from `consumerBirth` are also generic.
+
+4. **`exeHash` uses double-precision stat fields.** An inode above 2^53 would break equality with Python's exact integers and refuse every run, after the handoff write. Same-filesystem overlay2 on ext4 or xfs is unlikely to hit this; `statSync(path,{bigint:true})` removes the risk.
+
+5. **Minor:**
+   - `audit_cpu0.mjs` still compares `process.argv[1]` without `realpathSync`, so a symlinked invocation exits 0 with no output.
+   - A non-object controller frame (for example `null`) makes `failureEvidence` throw inside the catch in `controlledBatch`, losing the exit facts.
+   - `evidenceRejected` from a nested `pressureFinalization` is not raised to the top level.
+   - The oversize-response path in the transport has no fixture.
+   - `socketClosed` is a literal after the await rather than derived from `socket.destroyed`.
+
+## External integration prerequisites
+
+- **Birth registration:** the outer pipe must run `validateAdmissionFrame` and independently confirm the birth. `outsideSourceCgroup` and the group-hash inequality are self-reported and do not prove non-descendance.
+- **After any refusal or timeout:** the outer must re-read the on-disk handoff rather than trust its last known SHA (see item 1).
+- **Cleanup audit:** writer and holder disappearance stays with the external audit. The auditor's `consumerPass` only, `experimentPass:false` and `externalCleanupRequired:true` are intact.
+- **Audit context:** `initialHandoff` must arrive with `sha256` attached. The on-disk handoff must be exactly `canonical(record)+"\n"`.
+- **Stage:** it must be fresh for each run. The controller creates `pin-instance.lock` and writer receipts there, and the inventory is checked once at entry.
+- **Budgets and frame bound:** the 15 s and 5 s post-ack budgets and the 131072-byte frame bound are unchanged and unproven for CPU0, as you stated. A timeout sends SIGTERM that can land during `commit_handoff`; the commit is atomic, but its outcome is then unknown to the consumer.
+- **Outer pins:** Node binary and provenance, the real producer exit and stage permissions remain outer responsibilities.
