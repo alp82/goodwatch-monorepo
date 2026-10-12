@@ -1,4 +1,5 @@
 // Pure validation for the held-child v2 protocol. Performs no capture, queries or control.
+export const CONTROL_READY_SECONDS=1200;
 const HASH=/^[a-f0-9]{64}$/;
 const UTC=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|\+00:00)$/;
 export class ContractFailure extends Error{constructor(reason){super(reason);this.reason=reason;this.failureKind='contract';}}
@@ -15,11 +16,12 @@ export function phaseEvidence(frames,exitCode,phase,expected,batch,{requireRed=f
  for(const f of frames){requireGate(typeof f.at==='string'&&UTC.test(f.at)&&Number.isFinite(Date.parse(f.at)),'timestamp_invalid');for(const [k,v]of Object.entries(expected))requireGate(f[k]===v,'freeze_changed');}
  requireGate(frames.every((f,i)=>!i||Date.parse(f.at)>=Date.parse(frames[i-1].at)),'phase_order_invalid');
  const [preparation,pressure,ready,finished,released,cleanup]=frames;
+ requireGate(ready.diagnosticReadySeconds===CONTROL_READY_SECONDS,'diagnostic_ready_budget_changed');
  cleanLimits(preparation.preparationToInitialLimits);
  const prep=preparation.cachePreparation;
  requireGate(preparation.cachePreparationMode==='post-cold-owned-cgroup-reclaim'&&HASH.test(preparation.cachePreparationHelperSha256||'')&&prep?.schema==='owned-clone-reclaim-preparation.v1'&&prep.stage==='prepared-headroom-measured','cache_preparation_missing');
  requireGate(prep.writer?.requestedBytes===3*1024**3&&prep.writer.registeredBeforeWrite===true&&prep.writer.writerExitObserved===true&&prep.writer.cleanupUnknown===false&&prep.writer.pidfdRetained===false&&prep.writer.writeAttempts===1&&prep.writer.writerGone===true&&prep.writer.writerExitCode===0&&prep.writer.timedOut===false&&((prep.writer.outcome==='accepted'&&prep.writer.writtenBytes===10)||(prep.writer.outcome==='under-reclaimed'&&prep.writer.errno===11)),'cache_preparation_writer_failed');
- requireGate(prep.quiescence?.budgetSeconds===5&&prep.quiescence.zeroDirtyAndWriteback===true&&prep.quiescence.fileDirtyBytes===0&&prep.quiescence.fileWritebackBytes===0,'cache_preparation_dirty');
+ requireGate(prep.quiescence?.budgetSeconds===60&&prep.quiescence.zeroDirtyAndWriteback===true&&prep.quiescence.fileDirtyBytes===0&&prep.quiescence.fileWritebackBytes===0,'cache_preparation_dirty');
  const fit=prep.postCapFit;
  requireGate(fit&&[fit.currentBytes,fit.missingSelectedBytes].every(number)&&fit.reserveBytes===256*1024**2&&fit.capBytes===6*1024**3&&fit.currentBytes+fit.missingSelectedBytes+fit.reserveBytes<=fit.capBytes,'cache_preparation_cap_fit');
  requireGate(prep.initialMeasurement?.selectionHash===prep.measurement?.selectionHash&&prep.measurement?.selectionHash===ready.selectionHash,'cache_preparation_cohort_changed');

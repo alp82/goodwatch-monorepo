@@ -1,6 +1,6 @@
 {
   "schema": "clone-pin-control.v2",
-  "helperConfig": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v2/helper-config.json",
+  "helperConfig": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v3/helper-config.json",
   "helperPolicySha256": "ddb7f2735ab539cbe1138dfbf23397e41fb4db87c320720a970d068686281ec2",
   "helperCodeSha256": "b61022a43ce6d3b3357290a718d4cebb4d3a6cd8c4547e839c501a3c0c4c8a55",
   "pressurePlacement": "controller-original-cgroup",
@@ -23,8 +23,9 @@
     "mode": "post-cold-owned-cgroup-reclaim",
     "requestedBytes": 3221225472,
     "maxSeconds": 60,
-    "quiescenceSeconds": 5,
-    "helperPath": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v2/prepare_clone_reclaim.py",
-    "helperSha256": "df5992308bc74a859a68cdb0061b702432be6c09304e24f13db4c4459e5f186e"
-  }
+    "quiescenceSeconds": 60,
+    "helperPath": "/root/goodwatch-qdrant-cold-406-20261011/pin-control-20261012-406-v3/prepare_clone_reclaim.py",
+    "helperSha256": "7ac8f17ac5159dced04995e723af56393fc30848449830dc9ef35c08291bf04d"
+  },
+  "controlReadySeconds": 1200
 }

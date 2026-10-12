@@ -72,12 +72,31 @@ class HeldLockPreparationTests(unittest.TestCase):
   def dirty(*_):
    e=RuntimeError('dirty_source_pages');e.dirtyEvidence={'fileDirtyBytes':4096,'fileWritebackBytes':8192};raise e
   with patch.object(p,'snapshot',side_effect=dirty),patch.object(p.os,'write',side_effect=AssertionError('reclaim before clean')):
-   with self.assertRaises(RuntimeError)as context:p.quiescent_snapshot(None,None,5,clock=lambda:clock[0],sleep=sleep)
-  self.assertEqual(clock[0],5);self.assertEqual(context.exception.quiescenceEvidence['fileWritebackBytes'],8192);self.assertFalse(context.exception.quiescenceEvidence['zeroDirtyAndWriteback'])
+   with self.assertRaises(RuntimeError)as context:p.quiescent_snapshot(None,None,60,clock=lambda:clock[0],sleep=sleep)
+  self.assertEqual(clock[0],60);self.assertEqual(context.exception.quiescenceEvidence['fileWritebackBytes'],8192);self.assertFalse(context.exception.quiescenceEvidence['zeroDirtyAndWriteback'])
  def test_fresh_clean_snapshot_after_dirty_keeps_exact_zero_guard(self):
   e=RuntimeError('dirty_source_pages');e.dirtyEvidence={'fileDirtyBytes':4096,'fileWritebackBytes':0};clock=[0];sleep=lambda n:clock.__setitem__(0,clock[0]+n)
   with patch.object(p,'snapshot',side_effect=[e,{'fresh':True}]):
-   snapshot,evidence=p.quiescent_snapshot(None,None,5,clock=lambda:clock[0],sleep=sleep)
+   snapshot,evidence=p.quiescent_snapshot(None,None,60,clock=lambda:clock[0],sleep=sleep)
   self.assertEqual(snapshot,{'fresh':True});self.assertTrue(evidence['zeroDirtyAndWriteback']);self.assertEqual(evidence['samples'],2);self.assertEqual(clock[0],.25)
+
+ def test_late_clean_snapshot_and_source_failure_never_pass_extended_wait(self):
+  clock=[0]
+  def late(*_):clock[0]=60.001;return {'clean':True}
+  with patch.object(p,'snapshot',side_effect=late):
+   with self.assertRaisesRegex(RuntimeError,'quiescence_bound_exceeded'):p.quiescent_snapshot(None,None,60,clock=lambda:clock[0],sleep=lambda _:None)
+  with patch.object(p,'snapshot',side_effect=RuntimeError('source_changed')),patch.object(p.time,'sleep')as sleep:
+   with self.assertRaisesRegex(RuntimeError,'source_changed'):p.quiescent_snapshot(None,None,60)
+   sleep.assert_not_called()
+ def test_clean_near_boundary_and_old_five_second_policy_refused(self):
+  clock=[0];calls=[0]
+  def state(*_):
+   calls[0]+=1
+   if calls[0]==1:clock[0]=59.75;raise RuntimeError('dirty_source_pages')
+   return {'clean':True}
+  with patch.object(p,'snapshot',side_effect=state):
+   _,e=p.quiescent_snapshot(None,None,60,clock=lambda:clock[0],sleep=lambda n:clock.__setitem__(0,clock[0]+n))
+  self.assertEqual(e['seconds'],60);self.assertTrue(e['zeroDirtyAndWriteback'])
+  with self.assertRaisesRegex(RuntimeError,'prepared_input_changed'):p.quiescent_snapshot(None,None,5)
 
 if __name__=='__main__':unittest.main()

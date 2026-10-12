@@ -45,7 +45,7 @@ def load_control(path, policy_hash, code_hash):
     if len(raw) > 16384 or hashlib.sha256(raw).hexdigest() != policy_hash or digest(__file__) != code_hash:
         raise ValueError('control_freeze_changed')
     c = json.loads(raw)
-    if set(c) != {'schema', 'helperConfig', 'helperPolicySha256', 'helperCodeSha256', 'pressure', 'queryLeaseSeconds', 'pressurePlacement', 'mechanismNegativeTags','initialPinRequestSeconds','steadyPinRequestSeconds','negativePrequeryMissingBytes','reconcileIntervalSeconds','cachePreparation'} or c['schema'] != 'clone-pin-control.v2':
+    if set(c) != {'schema', 'helperConfig', 'helperPolicySha256', 'helperCodeSha256', 'pressure', 'queryLeaseSeconds','controlReadySeconds', 'pressurePlacement', 'mechanismNegativeTags','initialPinRequestSeconds','steadyPinRequestSeconds','negativePrequeryMissingBytes','reconcileIntervalSeconds','cachePreparation'} or c['schema'] != 'clone-pin-control.v2':
         raise ValueError('explicit_control_policy_required')
     if c['pressurePlacement'] != 'controller-original-cgroup': raise ValueError('pressure_placement_required')
     if c['mechanismNegativeTags']!=['control-native-title']:raise ValueError('predeclared_negative_control_required')
@@ -54,13 +54,14 @@ def load_control(path, policy_hash, code_hash):
         raise ValueError('fixed_readonly_archive_required')
     daemon.integer(p['rateBytesPerSecond'], 1, 64*1024**2); daemon.integer(p['maxSeconds'], 70, 180)
     daemon.integer(c['queryLeaseSeconds'], 60, 60)
+    daemon.integer(c['controlReadySeconds'],1200,1200)
     daemon.integer(c['initialPinRequestSeconds'],180,180);daemon.integer(c['steadyPinRequestSeconds'],30,30)
     daemon.integer(c['negativePrequeryMissingBytes'],64*1024**2,64*1024**2)
     daemon.integer(c['reconcileIntervalSeconds'],10,10)
     if p['bytes']/p['rateBytesPerSecond'] > p['maxSeconds']:
         raise ValueError('pressure_cannot_fit_deadline')
     prep=c['cachePreparation']
-    if set(prep)!={'mode','requestedBytes','maxSeconds','quiescenceSeconds','helperPath','helperSha256'} or prep['mode']!='post-cold-owned-cgroup-reclaim' or prep['requestedBytes']!=3*pin.GIB or prep['maxSeconds']!=60 or prep['quiescenceSeconds']!=5 or prep['helperPath']!=str(MODULE_DIR/'prepare_clone_reclaim.py') or not re.fullmatch('[a-f0-9]{64}',prep['helperSha256']):raise ValueError('explicit_cache_preparation_required')
+    if set(prep)!={'mode','requestedBytes','maxSeconds','quiescenceSeconds','helperPath','helperSha256'} or prep['mode']!='post-cold-owned-cgroup-reclaim' or prep['requestedBytes']!=3*pin.GIB or prep['maxSeconds']!=60 or prep['quiescenceSeconds']!=60 or prep['helperPath']!=str(MODULE_DIR/'prepare_clone_reclaim.py') or not re.fullmatch('[a-f0-9]{64}',prep['helperSha256']):raise ValueError('explicit_cache_preparation_required')
     config, spec, policy = daemon.load_config(c['helperConfig'], c['helperPolicySha256'], c['helperCodeSha256'])
     if config['intervalSeconds']!=c['reconcileIntervalSeconds'] or config['lifetimeSeconds']!=600:raise ValueError('helper_timing_policy_changed')
     if 'pin' not in config['actions']:
@@ -444,7 +445,7 @@ def stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,ra
             if final['selectionHash']!=initial['selectionHash'] or final['newLockBytes']!=0 or final['rangesChanged']: raise RuntimeError('candidate_cohort_changed')
         else:final=None;pin_state=None
         frozen_helper(config);guard_shards(source);query_before=runtime.accounting(source);limits(measured_account,query_before);query_proc_before=process_counters(source);query_started=at()
-        emit({'schema':'search.clone-mlock-control.v2','stage':'query-ready','phase':phase,'at':at(),'cold':cold_state,'archiveVerified':archive_verified,'pressure':pressure_state,'pressureWriterPlacement':'controller-original-cgroup','pressureLimits':pressure_limits,'pressureProcessDelta':counter_delta(pressure_proc_before,pressure_proc_after),'queryWindowStartedAt':query_started,
+        emit({'schema':'search.clone-mlock-control.v2','stage':'query-ready','phase':phase,'at':at(),'diagnosticReadySeconds':config['controlReadySeconds'],'cold':cold_state,'archiveVerified':archive_verified,'pressure':pressure_state,'pressureWriterPlacement':'controller-original-cgroup','pressureLimits':pressure_limits,'pressureProcessDelta':counter_delta(pressure_proc_before,pressure_proc_after),'queryWindowStartedAt':query_started,
               'selectionHash':initial['selectionHash'],'parentInitialNofileLimits':daemon.nofile_limits(initial['nofileLimits']),'parentNofileLimits':daemon.nofile_limits(measured['nofileLimits']),'residencyBeforePressure':initial['classesMeasured'],'residencyAfterPressure':measured['classesMeasured'],
               'initialPinState':pin_state,'initialPinProcessDelta':counter_delta(pin_proc_before,pin_proc_after) if phase=='candidate' else None,'pinState':final,'contentStillMutable':True,'queries':0,'storageContentWrites':0})
         query_lease(config['queryLeaseSeconds'])
