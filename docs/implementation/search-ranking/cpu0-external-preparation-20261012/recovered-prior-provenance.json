@@ -1,0 +1,65 @@
+{
+  "hashesPerStageExcludingNode": 19,
+  "hostOperations": 0,
+  "liveHostValidationPerformed": false,
+  "mismatches": [
+    "V4 prepared packet_v4/helperd67 and packet_v4_final_292ee87a/helper348 are not the deployed final packet ce792/helper76da"
+  ],
+  "priorPolicySha256": "fdf58db09e21198ec387fa4a8c5fd60896d97ae5faa22cf137d6c33ac610267a",
+  "productionAcceptance": false,
+  "schema": "cpu0-recovered-prior-inventory.v1",
+  "source": "retained emitted packets and actual staging/CAS records; no moving-source regeneration",
+  "sources": [
+    {
+      "encodedFilesVerified": false,
+      "inventoryRecordedByActualCAS": true,
+      "inventorySha256": "9616035a3ac974d37c227f81ad95f494e59ee3b3cff92824f9b4e31ead2f5551",
+      "inventorySource": "/home/alper/projects/search-clone-cas-453/cas-453-execution-result.json",
+      "nodeReceiptSha256": "db019f01b0b25d9d85062d65fecbe5d79a35c9bc7add1d972301b2cbb95973ef",
+      "nodeReceiptSource": "/home/alper/projects/search-clone-initial-453/node-stage-receipt.json",
+      "stage": "pin-control-20261012-406-v1"
+    },
+    {
+      "actualStageResultBindsFileCount": 20,
+      "actualStageResultSha256": "b0992523d6cb4b950c7a5403b5c93ea12addf3b2db94a0c62a30a08cbba4b86b",
+      "actualStageResultSource": "/home/alper/projects/search-pin-abio-stage-406/postcold-stage-actual-v1-result.json",
+      "encodedFilesVerified": true,
+      "nodeReceiptSha256": "1f9f139c38da295746550a3becb5bee08c661fac51ab247da0e78c0704570f4f",
+      "packetSha256": "4932cb7582be7f9d907ebfc1467e86a4b0d2b8e63292d72573f67a974187bb47",
+      "packetSource": "/home/alper/projects/search-pin-abio-stage-406/postcold_stage_public_packet_v1.json",
+      "stage": "pin-control-20261012-406-v2"
+    },
+    {
+      "actualStageResultBindsFileCount": 20,
+      "actualStageResultSha256": "946f7b532ee44314e74b3b51f55258ed87d9fb212ad461e5b2c725f6f391dcda",
+      "actualStageResultSource": "/home/alper/projects/search-pin-abio-stage-406/postcold-stage-actual-v3-result.json",
+      "encodedFilesVerified": true,
+      "nodeReceiptSha256": "40e3f526735ec559890ca9e64447b20116eb0ca962998fecd6eb0d8b2a20853b",
+      "packetSha256": "4e0e25328be81d2c6da92763f1fd1455e55acf006802eacfe08c8356126eb1a4",
+      "packetSource": "/home/alper/projects/search-pin-abio-stage-406/postcold_stage_public_packet_v3.json",
+      "stage": "pin-control-20261012-406-v3"
+    },
+    {
+      "actualStageResultBindsFileCount": 20,
+      "actualStageResultSha256": "cb37b0e9d7361065dbf0b43e637d3ac3a44c8faa20de499b5239a4ebfc9e10f6",
+      "actualStageResultSource": "/home/alper/projects/search-pin-abio-stage-406/postcold-stage-actual-v4-result.json",
+      "encodedFilesVerified": true,
+      "nodeReceiptSha256": "d13ba986b3ac698882a007c3343f864bc4d81994ff06f4095ed1c77aedc6df72",
+      "packetSha256": "ce792a8045bea70fb49fea6cf32e960812918d802c26801485ad4258b83d99e2",
+      "packetSource": "/home/alper/projects/search-pin-abio-stage-406/postcold_stage_public_packet_v4_final.json",
+      "stage": "pin-control-20261012-406-v4"
+    },
+    {
+      "actualStageResultBindsFileCount": 20,
+      "actualStageResultSha256": "ba60725b384991994fa84d0f822b70974b2d925e6a732e5f950487e8249cea60",
+      "actualStageResultSource": "/home/alper/projects/search-pin-abio-stage-406/postcold-stage-actual-v5-result.json",
+      "encodedFilesVerified": true,
+      "nodeReceiptSha256": "a3861abbae537961356dc9420f14c0bbcd2a3e40d05f85406e9569d0d0e0ee72",
+      "packetSha256": "9eaf423e8dbf21604b0de7a4d8e5feab6f566df6d7cf5acbf1385a8331735d55",
+      "packetSource": "/home/alper/projects/search-pin-abio-stage-406/postcold_stage_public_packet_v5.json",
+      "stage": "pin-control-20261012-406-v5"
+    }
+  ],
+  "stageCount": 5,
+  "v1ReceiptRule": "helper null requires zero writer receipts; maxReceipts14 is only scan envelope"
+}

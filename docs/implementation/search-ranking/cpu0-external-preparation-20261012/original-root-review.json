@@ -1,0 +1,34 @@
+{
+  "acceptedConsumerDependenciesHashVerifiedAndCopied": 32,
+  "actualOpusReviewPending": true,
+  "all24FilesFullyRead": true,
+  "blockers": [
+    "executor refusal projection drops producerCleanupEvidence and producerClientCleanupFailure"
+  ],
+  "consumerManifestSha256": "4f44eab300c70c871d8629d73af8c2d56ca8e2af102d8ed4c390024943b00ee4",
+  "exactFilesHashVerifiedAndCopied": 24,
+  "head": "5a5a1200ae7021c2ac7b9d30eda0ca8e91c9e08f",
+  "historyWrites": 0,
+  "hostOperations": 0,
+  "manifestSha256": "2e7e850cab6f652372448488e9ed5220ce749963389ef254c503d7feb21e74e8",
+  "observedAtUtc": "2026-10-12 17:33:58 UTC",
+  "ordinarySearches": 0,
+  "productionAcceptance": false,
+  "recoveredPriorInputReview": {
+    "actualStageResultDirectoryBinding": "generic public-stage-created label only; provenance references identify runs",
+    "allNodeReceiptBindingsVerified": true,
+    "encodedEntriesVerified": 72,
+    "liveHostValidation": false,
+    "originalReferenceHashesVerified": true,
+    "v1CASInventoryExact": true
+  },
+  "recoveredPriorPolicySha256": "fdf58db09e21198ec387fa4a8c5fd60896d97ae5faa22cf137d6c33ac610267a",
+  "rootLocalTests": {
+    "initialAttempt": "57 passed; two fixture paths missing sibling dependencies; copied exact verified accepted dependencies; all59 passed",
+    "isolation": "python3 -I -B unittest discover from immutable root snapshot",
+    "passed": 59,
+    "seconds": 0.196
+  },
+  "schema": "root-cpu0-external-source-review.v6",
+  "verdict": "pending-focused-successor"
+}
