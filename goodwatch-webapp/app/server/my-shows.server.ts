@@ -17,6 +17,7 @@ import {
 	firstUpcoming,
 	soonestFirst,
 } from "~/domain/new-episodes"
+import { getEpisodePresentation } from "~/server/episode-presentation.server"
 import { utcDay } from "~/domain/tracking/machine"
 import { servicesFor } from "~/server/availability-index.server"
 import type { Taste } from "~/server/taste/index.server"
@@ -37,6 +38,8 @@ export interface ShowCard {
 }
 
 export interface NextEpisode {
+	displaySeason?: number
+	displayNumber?: number
 	season: number
 	number: number
 	name: string | null
@@ -113,6 +116,19 @@ export async function readShows(
 		)
 		for (const row of found) rows.set(Number(row.tmdb_id), row)
 	}
+	const presentations = await Promise.all(
+		[...rows.keys()].map(
+			async (id) => [id, await getEpisodePresentation(id)] as const,
+		),
+	)
+	for (const [id, presentation] of presentations)
+		if (presentation) {
+			const row = rows.get(id)
+			if (row)
+				row.number_of_seasons = presentation.seasons.filter(
+					(s) => s.number > 0,
+				).length
+		}
 	return rows
 }
 
@@ -199,7 +215,23 @@ async function readUpcomingEpisodes(
 	const first = new Map<number, UpcomingEpisode>()
 	for (const [id, list] of listed) {
 		const episode = firstUpcoming(list)
-		if (episode) first.set(id, episode)
+		if (episode) {
+			const presentation = await getEpisodePresentation(id)
+			const shown = presentation?.episodes.find(
+				(e) => e.season === episode.season && e.number === episode.number,
+			)
+			first.set(id, {
+				...episode,
+				...(shown
+					? {
+							displaySeason: shown.displaySeason,
+							displayNumber: shown.displayNumber,
+						}
+					: presentation?.active
+						? { displaySeason: -1, displayNumber: episode.number }
+						: {}),
+			})
+		}
 	}
 	return first
 }
@@ -210,8 +242,25 @@ const showIds = (entries: Record<string, unknown>) =>
 		.filter((key) => key.mediaType === "show")
 		.map((key) => key.tmdbId)
 
-const listed = (rows: readonly EpisodeListRow[]) =>
+const listed = (
+	rows: readonly Pick<
+		EpisodeListRow,
+		| "tmdb_id"
+		| "season_number"
+		| "episode_number"
+		| "name"
+		| "air_date"
+		| "runtime"
+	>[],
+	presentation: Awaited<ReturnType<typeof getEpisodePresentation>>,
+) =>
 	rows.map((row) => ({
+		...(() => {
+			const e = presentation?.episodes.find((e) => e.id === row.tmdb_id)
+			return e
+				? { displaySeason: e.displaySeason, displayNumber: e.displayNumber }
+				: {}
+		})(),
 		season: row.season_number,
 		number: row.episode_number,
 		name: row.name,
@@ -278,10 +327,20 @@ export async function readNextEpisodes(
 ): Promise<Map<number, NextOfShow>> {
 	const lists = new Map(
 		await Promise.all(
-			shows.map(
-				async (show) =>
-					[show.id, listed(await getEpisodeList(show.id))] as const,
-			),
+			shows.map(async (show) => {
+				const presentation = await getEpisodePresentation(show.id)
+				const episodes = presentation
+					? presentation.episodes.map((e) => ({
+							tmdb_id: e.id,
+							season_number: e.season,
+							episode_number: e.number,
+							name: e.name,
+							air_date: e.airDate ?? null,
+							runtime: e.runtime ?? null,
+						}))
+					: await getEpisodeList(show.id)
+				return [show.id, listed(episodes, presentation)] as const
+			}),
 		),
 	)
 	const found = new Map<number, NextOfShow>()

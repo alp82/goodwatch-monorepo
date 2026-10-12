@@ -202,6 +202,29 @@ export function useTrackingActions(store: ShowStore, title: string) {
 			},
 
 			markSeason(season: number) {
+				const page = store.snapshot.page
+				if (page?.presentation) {
+					const episodeIds = page.episodes
+						.filter(
+							(e) =>
+								(e.displaySeason ?? e.season) === season &&
+								e.season > 0 &&
+								e.airDate !== null &&
+								e.airDate <= today(),
+						)
+						.map((e) => e.id)
+					group(
+						{
+							type: "markEpisodes",
+							episodeIds,
+							displaySeason: season,
+							presentationVersion: page.presentation.version,
+							today: today(),
+						},
+						(count) => `${plural(count, "episode")} marked, date unknown`,
+					)
+					return
+				}
 				group(
 					{ type: "markSeason", season, today: today() },
 					(count) => `${plural(count, "episode")} marked, date unknown`,
@@ -214,7 +237,22 @@ export function useTrackingActions(store: ShowStore, title: string) {
 			 */
 			unmarkSeason(season: number) {
 				const before = store.snapshot.copy
-				if (!before || !store.act({ type: "unmarkSeason", season }).ok) return
+				if (!before) return
+				const page = store.snapshot.page
+				const event: PageAction = page?.presentation
+					? {
+							type: "unmarkEpisodes",
+							episodeIds: page.episodes
+								.filter(
+									(e) =>
+										(e.displaySeason ?? e.season) === season && e.season > 0,
+								)
+								.map((e) => e.id),
+							displaySeason: season,
+							presentationVersion: page.presentation.version,
+						}
+					: { type: "unmarkSeason", season }
+				if (!store.act(event).ok) return
 				const kept = new Set(
 					(store.snapshot.copy?.log ?? []).map((row) => row.watch_id),
 				)

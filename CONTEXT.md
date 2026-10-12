@@ -250,10 +250,13 @@ _Avoid_: Signature, Display name, Username
 The page listing a person's public share lists under their handle. For its owner, it is also where they manage all their share lists.
 
 **Episode grid**:
-A show's episode ratings laid out with one row per season and one cell per episode, in IMDb's season and episode numbering.
+A show's episode ratings laid out with one row per season and one cell per episode. Its numbering follows IMDb except where a reviewed episode presentation gives it the same seasons as the episode list.
 
 **Episode list**:
-A show's episodes by season in TMDB's numbering, where a person marks the episodes they have watched. It is distinct from the episode grid, which shows ratings in IMDb's numbering.
+A show's episodes by season, where a person marks the episodes they have watched. Numbering follows TMDB except for shows with a reviewed episode presentation shared with the episode grid; watched history always refers to the same catalog episodes.
+
+**Episode presentation**:
+The reviewed assignment of a show's catalog episodes to the seasons and numbers a person sees. Additional episodes are later catalog episodes whose presentation has not yet been reviewed; they retain explicitly labelled catalog numbers.
 
 **Aired**:
 An episode whose air date has come. GoodWatch counts aired episodes by the UTC date, the same for everyone; which episodes a person can mark goes by the date on their device, so the two can differ by one episode for a few hours.
@@ -262,7 +265,7 @@ An episode whose air date has come. GoodWatch counts aired episodes by the UTC d
 An episode that belongs to a numbered season. Only aired regular episodes count toward a show being watched through.
 
 **Special**:
-An episode outside the numbered seasons. In the episode grid it is an episode IMDb lists without a season number; it gets its own row there and counts toward no season score. A special can be watched, but never counts toward a show being watched through.
+An episode outside the numbered seasons. For shows with a reviewed episode presentation, TMDB catalog specials get the same row in both episode views. The legacy grid uses episodes IMDb lists without a season number. Specials count toward no season score. A special can be watched, but never counts toward a show being watched through.
 _Avoid_: Season 0
 
 **Season score**:

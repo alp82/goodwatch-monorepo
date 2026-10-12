@@ -197,3 +197,37 @@ test("what the press holds is counted for the menu: its rows, and how many of th
 		["press-1", "not_started", 8, PRESSED],
 	)
 })
+
+test("Seen coverage uses display seasons and the same recreated-ID fallback as progress", () => {
+	const catalog = EPISODES.filter((e) => e.season === 1).map((e) => ({
+		...e,
+		displaySeason: e.number <= 4 ? 1 : 2,
+		displayNumber: ((e.number - 1) % 4) + 1,
+	}))
+	const all = seenPressOf({ state: state(), log: rows(1, 8) }, catalog)!
+	assert.deepEqual(all.seasons, [
+		{ season: 1, marked: 4, listed: 4 },
+		{ season: 2, marked: 4, listed: 4 },
+	])
+	assert.match(
+		seenPressLine(all, PLAIN_DATES),
+		/seasons 1 and 2 \(8 episodes\)/,
+	)
+	const recreated = seenPressOf(
+		{
+			state: state(),
+			log: [
+				row(1, 5, "press-1", { episode_tmdb_id: 999999 }),
+				row(1, 5, "press-1", { watch_id: "second-watch" }),
+			],
+		},
+		catalog,
+	)!
+	assert.deepEqual(recreated.seasons, [{ season: 2, marked: 1, listed: 4 }])
+	const additional = seenPressOf(
+		{ state: state(), log: [row(1, 8)] },
+		catalog.map((e) => (e.number === 8 ? { ...e, displaySeason: -1 } : e)),
+	)!
+	assert.match(seenPressLine(additional, PLAIN_DATES), /additional episodes/)
+	assert.doesNotMatch(seenPressLine(additional, PLAIN_DATES), /season -1/)
+})

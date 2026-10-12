@@ -62,12 +62,27 @@ export function seenPressOf(
 	const group = state.seen_press_group
 	const own = log.filter((row) => row.group_id === group)
 	const made = own.map((row) => row.created_at).filter((at) => at > 0)
-	const marked = new Map<number, Set<number>>()
+	const marked = new Map<number, Set<string>>()
 	for (const row of own) {
-		const season = row.season_number ?? 0
-		if (season <= 0) continue
-		const numbers = marked.get(season) ?? new Set<number>()
-		numbers.add(row.episode_number ?? 0)
+		const byId =
+			row.episode_tmdb_id === null
+				? undefined
+				: episodes.find((e) => e.id === row.episode_tmdb_id)
+		const atPosition = episodes.filter(
+			(e) => e.season === row.season_number && e.number === row.episode_number,
+		)
+		const episode =
+			byId ?? (atPosition.length === 1 ? atPosition[0] : undefined)
+		const season = episode
+			? (episode.displaySeason ?? episode.season)
+			: (row.season_number ?? 0)
+		if (season === 0) continue
+		const numbers = marked.get(season) ?? new Set<string>()
+		numbers.add(
+			episode
+				? `episode:${episode.id}`
+				: `position:${row.season_number}:${row.episode_number}`,
+		)
 		marked.set(season, numbers)
 	}
 	const days = new Set(
@@ -92,7 +107,8 @@ export function seenPressOf(
 			.map(([season, numbers]) => ({
 				season,
 				marked: numbers.size,
-				listed: episodes.filter((e) => e.season === season).length,
+				listed: episodes.filter((e) => (e.displaySeason ?? e.season) === season)
+					.length,
 			})),
 		dated: own.filter((row) => row.watched_at !== null).length,
 		day: days.size === 1 && only ? only : null,
@@ -110,14 +126,25 @@ function seasonWords(numbers: number[]): string {
 		while (end + 1 < numbers.length && numbers[end + 1] === numbers[end] + 1)
 			end++
 		if (end - i >= 2) runs.push(`${numbers[i]} to ${numbers[end]}`)
-		else for (let k = i; k <= end; k++) runs.push(String(numbers[k]))
+		else
+			for (let k = i; k <= end; k++)
+				runs.push(numbers[k] < 0 ? "additional episodes" : String(numbers[k]))
 		i = end + 1
 	}
 	const list =
 		runs.length > 1
 			? `${runs.slice(0, -1).join(", ")} and ${runs[runs.length - 1]}`
 			: runs[0]
-	return `${numbers.length === 1 ? "season" : "seasons"} ${list}`
+	return numbers.some((n) => n < 0)
+		? [
+				numbers.filter((n) => n > 0).length
+					? seasonWords(numbers.filter((n) => n > 0))
+					: "",
+				"additional episodes",
+			]
+				.filter(Boolean)
+				.join(" and ")
+		: `${numbers.length === 1 ? "season" : "seasons"} ${list}`
 }
 
 /** What the press's rows cover: whole seasons by number, a part of a season as "4 of the 10 episodes of season 3". */
@@ -127,7 +154,10 @@ export function seenPressCovers(press: SeenPress): string {
 	const whole = press.seasons.filter((s) => s.marked >= s.listed)
 	const parts = press.seasons
 		.filter((s) => s.marked < s.listed)
-		.map((s) => `${s.marked} of the ${s.listed} episodes of season ${s.season}`)
+		.map(
+			(s) =>
+				`${s.marked} of the ${s.listed} ${s.season < 0 ? "additional episodes" : `episodes of season ${s.season}`}`,
+		)
 	const partly = parts.join(" and ")
 	const covers = whole.length
 		? `${seasonWords(whole.map((s) => s.season))}${partly ? `, and ${partly}` : ""}`

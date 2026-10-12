@@ -1,0 +1,79 @@
+[
+  {
+    "show_id": 71446,
+    "title": "Money Heist",
+    "regular_episodes": 41,
+    "all_have_imdb_ids": true,
+    "unique_imdb_ids": true,
+    "all_found_in_current_show": true,
+    "preserves_canonical_order": true,
+    "imdb_positions_unique": true,
+    "existing_matcher_matches": 0
+  },
+  {
+    "show_id": 73021,
+    "title": "Disenchantment",
+    "regular_episodes": 50,
+    "all_have_imdb_ids": true,
+    "unique_imdb_ids": true,
+    "all_found_in_current_show": true,
+    "preserves_canonical_order": true,
+    "imdb_positions_unique": true,
+    "existing_matcher_matches": 10
+  },
+  {
+    "show_id": 79242,
+    "title": "Chilling Adventures of Sabrina",
+    "regular_episodes": 36,
+    "all_have_imdb_ids": true,
+    "unique_imdb_ids": true,
+    "all_found_in_current_show": true,
+    "preserves_canonical_order": true,
+    "imdb_positions_unique": true,
+    "existing_matcher_matches": 11
+  },
+  {
+    "show_id": 85937,
+    "title": "Demon Slayer: Kimetsu no Yaiba",
+    "regular_episodes": 63,
+    "all_have_imdb_ids": true,
+    "unique_imdb_ids": true,
+    "all_found_in_current_show": true,
+    "preserves_canonical_order": true,
+    "imdb_positions_unique": true,
+    "existing_matcher_matches": 33
+  },
+  {
+    "show_id": 95479,
+    "title": "JUJUTSU KAISEN",
+    "regular_episodes": 59,
+    "all_have_imdb_ids": true,
+    "unique_imdb_ids": true,
+    "all_found_in_current_show": true,
+    "preserves_canonical_order": true,
+    "imdb_positions_unique": true,
+    "existing_matcher_matches": 23
+  },
+  {
+    "show_id": 127532,
+    "title": "Solo Leveling",
+    "regular_episodes": 25,
+    "all_have_imdb_ids": true,
+    "unique_imdb_ids": true,
+    "all_found_in_current_show": true,
+    "preserves_canonical_order": true,
+    "imdb_positions_unique": true,
+    "existing_matcher_matches": 12
+  },
+  {
+    "show_id": 154526,
+    "title": "MF GHOST",
+    "regular_episodes": 37,
+    "all_have_imdb_ids": true,
+    "unique_imdb_ids": true,
+    "all_found_in_current_show": true,
+    "preserves_canonical_order": true,
+    "imdb_positions_unique": true,
+    "existing_matcher_matches": 12
+  }
+]

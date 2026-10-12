@@ -40,7 +40,9 @@ export const SCENARIOS = {
 } as const
 export type Scenario = keyof typeof SCENARIOS
 
+import type { EpisodePresentation } from "~/domain/tracking/episode-presentation"
 export interface HarnessOptions {
+	presentation?: EpisodePresentation | null
 	show: Show
 	grid: EpisodeGrid
 	/** The harness's date, "YYYY-MM-DD": the device's and the server's. */
@@ -105,6 +107,9 @@ export class FakeServer {
 			? []
 			: all.map(({ season, episode }) => {
 					const rated = this.ratings.byEpisode.get(episode.id)
+					const aligned = options.presentation?.episodes.find(
+						(e) => e.id === episode.id,
+					)
 					return {
 						id: episode.id,
 						season: season.number,
@@ -114,8 +119,18 @@ export class FakeServer {
 						runtime: episode.runtime,
 						still: episode.still_path,
 						overview: options.overviews ? episode.overview : null,
-						rating: rated?.score ?? null,
-						ratedBy: rated?.how ?? null,
+						...(aligned
+							? {
+									displaySeason: aligned.displaySeason,
+									displayNumber: aligned.displayNumber,
+								}
+							: {}),
+						rating: aligned ? aligned.rating : (rated?.score ?? null),
+						ratedBy: aligned
+							? aligned.rating === null
+								? null
+								: ("id" as const)
+							: (rated?.how ?? null),
 					}
 				})
 		this.listed = this.episodes
@@ -139,6 +154,15 @@ export class FakeServer {
 		const applied = applyShowEvent({
 			showId: this.options.show.id,
 			show: serverShow(this.listed, event, utcDay(now)),
+			...(this.options.presentation
+				? {
+						presentation: {
+							version: this.options.presentation.version,
+							active: this.options.presentation.active,
+							note: this.options.presentation.note,
+						},
+					}
+				: {}),
 			state: this.copy.state,
 			log: this.copy.log,
 			flags: {
@@ -267,6 +291,15 @@ export class FakeServer {
 	private page(): ShowTrackingPage {
 		const { show, grid } = this.options
 		return {
+			...(this.options.presentation
+				? {
+						presentation: {
+							version: this.options.presentation.version,
+							active: this.options.presentation.active,
+							note: this.options.presentation.note,
+						},
+					}
+				: {}),
 			state: this.copy.state,
 			log: this.copy.log,
 			episodes: this.episodes,
@@ -280,14 +313,16 @@ export class FakeServer {
 						),
 					)
 				: {},
-			notes: this.episodes.length
-				? Object.fromEntries(
-						[...this.ratings.notes].map(([season, note]) => [
-							String(season),
-							note,
-						]),
-					)
-				: {},
+			notes: this.options.presentation
+				? {}
+				: this.episodes.length
+					? Object.fromEntries(
+							[...this.ratings.notes].map(([season, note]) => [
+								String(season),
+								note,
+							]),
+						)
+					: {},
 		}
 	}
 
@@ -492,6 +527,15 @@ export class FakeServer {
 	/** What is stored, for the checks and for the panel. */
 	stored() {
 		return {
+			...(this.options.presentation
+				? {
+						presentation: {
+							version: this.options.presentation.version,
+							active: this.options.presentation.active,
+							note: this.options.presentation.note,
+						},
+					}
+				: {}),
 			state: this.copy.state,
 			log: this.copy.log,
 			score: this.score?.score ?? null,

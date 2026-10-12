@@ -4,7 +4,13 @@
 // what an Undo puts back.
 import { z } from "zod"
 import { matchEpisodeRatings } from "~/domain/tracking/episode-ratings"
-import { STATES, isDay, utcDay } from "~/domain/tracking/machine"
+import {
+	STATES,
+	isDay,
+	utcDay,
+	showAiredBy,
+	groupWatchId,
+} from "~/domain/tracking/machine"
 import type {
 	ActionAnswer,
 	PageAction,
@@ -13,6 +19,7 @@ import type {
 } from "~/domain/tracking/show-page"
 import type { EpisodeGrid } from "~/server/episode-grid.server"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
+import { getEpisodePresentation } from "~/server/episode-presentation.server"
 import { updateNotInterested } from "~/server/not-interested.server"
 import {
 	type TrackedTitle,
@@ -57,14 +64,33 @@ export async function getShowTrackingPage(
 	grid: GridLoader = loadGrid,
 ): Promise<ShowTrackingPage> {
 	const id = canonicalTitleId("show", showId)
-	const [tracking, list, ratings, running] = await Promise.all([
+	const [tracking, presentation, running] = await Promise.all([
 		getShowTracking(userId, id),
-		getEpisodeList(id),
-		grid(id).catch((error) => {
-			console.error("episode ratings failed", { showId: id, error })
-			return null
-		}),
+		getEpisodePresentation(id),
 		isRunning(id),
+	])
+	// A selected presentation carries its entire catalog snapshot, including the page's descriptions.
+	const [list, ratings] = await Promise.all([
+		presentation
+			? Promise.resolve(
+					presentation.episodes.map((e) => ({
+						tmdb_id: e.id,
+						season_number: e.season,
+						episode_number: e.number,
+						name: e.name,
+						air_date: e.airDate ?? null,
+						runtime: e.runtime ?? null,
+						still_path: e.still ?? null,
+						overview: e.overview ?? null,
+					})),
+				)
+			: getEpisodeList(id),
+		presentation
+			? Promise.resolve(null)
+			: grid(id).catch((error) => {
+					console.error("episode ratings failed", { showId: id, error })
+					return null
+				}),
 	])
 	const seasons = ratings?.seasons ?? []
 	const matched = matchEpisodeRatings(
@@ -76,11 +102,22 @@ export async function getShowTrackingPage(
 		})),
 		seasons,
 	)
+	const presented = new Map(presentation?.episodes.map((e) => [e.id, e]) ?? [])
 	return {
+		...(presentation
+			? {
+					presentation: {
+						version: presentation.version,
+						active: presentation.active,
+						note: presentation.note,
+					},
+				}
+			: {}),
 		state: tracking.state,
 		log: tracking.log,
 		episodes: list.map((row) => {
 			const rated = matched.byEpisode.get(row.tmdb_id)
+			const aligned = presented.get(row.tmdb_id)
 			return {
 				id: row.tmdb_id,
 				season: row.season_number,
@@ -90,23 +127,99 @@ export async function getShowTrackingPage(
 				runtime: row.runtime,
 				still: row.still_path,
 				overview: row.overview || null,
-				rating: rated?.score ?? null,
-				ratedBy: rated?.how ?? null,
+				...(aligned
+					? {
+							displaySeason: aligned.displaySeason,
+							displayNumber: aligned.displayNumber,
+						}
+					: {}),
+				rating: aligned ? aligned.rating : (rated?.score ?? null),
+				ratedBy: aligned
+					? aligned.rating === null
+						? null
+						: ("id" as const)
+					: (rated?.how ?? null),
 			}
 		}),
 		running,
-		seasonScores: list.length
+		...(list.length
+			? {
+					ratingCoverage: presentation
+						? Object.fromEntries(
+								presentation.seasons.map((s) => [
+									String(s.number),
+									{ rated: s.rated, total: s.total },
+								]),
+							)
+						: Object.fromEntries(
+								[
+									...new Set(
+										list
+											.filter((e) => e.season_number > 0)
+											.map((e) => e.season_number),
+									),
+								].map((number) => {
+									const own = list.filter((e) => e.season_number === number)
+									return [
+										String(number),
+										{
+											rated: own.filter((e) => matched.byEpisode.has(e.tmdb_id))
+												.length,
+											total: own.length,
+										},
+									]
+								}),
+							),
+				}
+			: {}),
+		seasonScores: presentation
 			? Object.fromEntries(
-					seasons.flatMap((season) =>
-						season.scores.imdb
-							? [[String(season.number), season.scores.imdb.score]]
-							: [],
+					presentation.seasons.flatMap((s) =>
+						s.score === null ? [] : [[String(s.number), s.score]],
 					),
 				)
-			: {},
-		notes: Object.fromEntries(
-			[...matched.notes].map(([season, note]) => [String(season), note]),
-		),
+			: Object.fromEntries(
+					[
+						...new Set(
+							list
+								.filter((e) => e.season_number > 0)
+								.map((e) => e.season_number),
+						),
+					].flatMap((number) => {
+						const own = list.filter((e) => e.season_number === number)
+						const scored = own.map((e) => matched.byEpisode.get(e.tmdb_id))
+						if (
+							own.some(
+								(e) =>
+									e.air_date !== null &&
+									utcDay(e.air_date) <= utcDay(Date.now()) &&
+									!matched.byEpisode.has(e.tmdb_id),
+							)
+						)
+							return []
+						const votes = scored.reduce((n, e) => n + (e?.votes ?? 0), 0)
+						return votes > 0
+							? [
+									[
+										String(number),
+										Math.round(
+											(scored.reduce(
+												(n, e) => n + (e?.score ?? 0) * (e?.votes ?? 0),
+												0,
+											) /
+												votes) *
+												100,
+										) / 100,
+									],
+								]
+							: []
+					}),
+				),
+		notes: presentation
+			? {}
+			: Object.fromEntries(
+					[...matched.notes].map(([season, note]) => [String(season), note]),
+				),
 	}
 }
 
@@ -138,6 +251,19 @@ const eventSchema = z.discriminatedUnion("type", [
 	}),
 	z.object({ type: z.literal("unwatch"), season: whole, number: whole }),
 	z.object({ type: z.literal("markSeason"), season: whole, today }),
+	z.object({
+		type: z.literal("markEpisodes"),
+		episodeIds: z.array(z.number().int().positive()).min(1).max(20000),
+		displaySeason: z.number().int().min(-1).max(100000),
+		presentationVersion: z.string().min(1).max(160),
+		today,
+	}),
+	z.object({
+		type: z.literal("unmarkEpisodes"),
+		episodeIds: z.array(z.number().int().positive()).min(1).max(20000),
+		displaySeason: z.number().int().min(-1).max(100000),
+		presentationVersion: z.string().min(1).max(160),
+	}),
 	z.object({
 		type: z.literal("watchUpTo"),
 		season: whole,
@@ -214,7 +340,7 @@ const eventSchema = z.discriminatedUnion("type", [
 ])
 
 /** The actions that make watches: the browser names them, so that a request sent twice records once. */
-const NAMED = ["watch", "pressSeen", "markSeason", "watchUpTo"]
+const NAMED = ["watch", "pressSeen", "markSeason", "markEpisodes", "watchUpTo"]
 
 const actionSchema = z
 	.object({
@@ -263,6 +389,78 @@ export async function applyShowTrackingAction(
 		tmdbId: canonicalTitleId("show", action.id),
 	}
 	const { event } = action
+	if (event.type === "markEpisodes" || event.type === "unmarkEpisodes") {
+		const presentation = await getEpisodePresentation(title.tmdbId).catch(
+			() => null,
+		)
+		const utcToday = utcDay(Date.now())
+		const limit = utcDay(Date.now() + 86400000)
+		const through =
+			event.type === "markEpisodes" && isDay(event.today)
+				? event.today
+				: utcToday
+		const members =
+			presentation?.episodes.filter(
+				(e) => e.season > 0 && e.displaySeason === event.displaySeason,
+			) ?? []
+		const eligible =
+			event.type === "markEpisodes"
+				? showAiredBy(
+						members.map((e) => ({
+							...e,
+							airDate: e.airDate == null ? null : utcDay(e.airDate),
+						})),
+						through,
+					)
+						.episodes.filter((e) => e.aired)
+						.map((e) => e.id)
+				: members.map((e) => e.id)
+		if (
+			!presentation ||
+			presentation.version !== event.presentationVersion ||
+			through > limit ||
+			!eligible.length ||
+			new Set(event.episodeIds).size !== event.episodeIds.length ||
+			eligible.length !== event.episodeIds.length ||
+			eligible.some((id) => !event.episodeIds.includes(id))
+		) {
+			const stored = await getShowTracking(userId, title.tmdbId)
+			const existing = action.actionId
+				? stored.log.filter((row) => row.group_id === action.actionId)
+				: []
+			if (
+				event.type === "markEpisodes" &&
+				existing.length &&
+				existing.every(
+					(row) =>
+						row.origin === "season" &&
+						row.episode_tmdb_id !== null &&
+						event.episodeIds.includes(row.episode_tmdb_id),
+				)
+			) {
+				const have = new Set(existing.map((row) => row.episode_tmdb_id))
+				return {
+					status: "applied",
+					refused: null,
+					state: stored.state,
+					rows: existing,
+					deleted: event.episodeIds
+						.filter((id) => !have.has(id))
+						.map((id) => groupWatchId(action.actionId!, id)),
+					cleared: { wantToSeeAddedAt: null, notInterested: false },
+				}
+			}
+			return {
+				status: "refused",
+				reload: true,
+				refused: "The episode list changed. Reloading it; please try again.",
+				state: stored.state,
+				rows: [],
+				deleted: [],
+				cleared: { wantToSeeAddedAt: null, notInterested: false },
+			}
+		}
+	}
 	const result = await applyTrackingEvent(userId, title, event, action.actionId)
 	// The rows as they are stored now. An edit of a date answers without the show's state row, so it is read here.
 	const stored = await getShowTracking(userId, title.tmdbId)

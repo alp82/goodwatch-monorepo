@@ -1,0 +1,18 @@
+{
+  "matched_consistently_with_probed_id": 192,
+  "unmatched_by_current_matcher": 308,
+  "identity_conflicts_requiring_review": [
+    {
+      "show_id": 60572,
+      "title": "Pok\u00e9mon",
+      "tmdb_id": 1031674,
+      "tmdb_position": [
+        9,
+        27
+      ],
+      "tmdb_name": "All That Glitters Is Not Golden!",
+      "external_imdb_id": "tt1355104",
+      "matcher_imdb_id": "tt1357924"
+    }
+  ]
+}

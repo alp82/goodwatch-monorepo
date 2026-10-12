@@ -1,0 +1,19 @@
+{
+  "started_at": "2026-10-12T09:40:31.080710+00:00",
+  "completed_at": "2026-10-12T09:40:52.185924+00:00",
+  "shows_in_serving_table": 234228,
+  "shows_with_regular_tmdb_catalog": 213539,
+  "shows_with_regular_imdb_episodes": 41164,
+  "overlap_shows": 40216,
+  "tmdb_regular_episodes": 6660755,
+  "imdb_regular_episodes": 835243,
+  "classification_counts": {
+    "equal_season_counts": 21065,
+    "different_seasons_different_total": 6398,
+    "same_seasons_different_total": 12348,
+    "different_seasons_equal_total": 302,
+    "same_seasons_redistributed_counts": 103
+  },
+  "shape_mismatch_shows": 19151,
+  "warning": "Season row counts are a screening signal, not proof of wrong identity or ordering; future entries and source coverage can differ."
+}

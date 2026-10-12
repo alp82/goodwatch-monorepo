@@ -1,3 +1,4 @@
+import { episodeCode } from "./episode-label.ts"
 // The signal that something new aired for a member's shows (#442): what the Browse button, the dock's key, the My
 // shows tile and home's Continue door are told, and what they say. A module of its own because the navigation is
 // on every page: the rules of what is new, and My shows' own words, are in domain/new-episodes.ts and load with
@@ -10,6 +11,8 @@ export interface NewEpisodes {
 	ids?: number[]
 	only: {
 		title: string
+		displaySeason?: number
+		displayNumber?: number
 		season: number
 		number: number
 		episodes: number
@@ -38,7 +41,7 @@ export function signalWords(fresh: NewEpisodes): SignalWords | null {
 		const named =
 			only.episodes > 1
 				? `New: ${only.title}, ${only.episodes} episodes`
-				: `New: ${only.title} S${only.season} E${only.number}`
+				: `New: ${only.title} ${episodeCode(only)}`
 		return { badge, tile: named, door: named, doorShort: "1 show" }
 	}
 	return {

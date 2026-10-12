@@ -159,6 +159,7 @@ export class ShowSession {
 				item.settle(answer)
 				continue
 			}
+			if (answer?.reload) this.missed = true
 			if (answer) {
 				// A refusal still says where the show stands on the server.
 				this.base = { ...this.base, state: answer.state }

@@ -1,0 +1,4026 @@
+[
+  {
+    "show_id": 1668,
+    "title": "Friends",
+    "votes": 1208841,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 24,
+      "2": 24,
+      "3": 25,
+      "4": 23,
+      "5": 23,
+      "6": 23,
+      "7": 23,
+      "8": 23,
+      "9": 23,
+      "10": 17
+    },
+    "imdb": {
+      "1": 24,
+      "2": 24,
+      "3": 25,
+      "4": 24,
+      "5": 24,
+      "6": 25,
+      "7": 24,
+      "8": 24,
+      "9": 23,
+      "10": 17
+    },
+    "tmdb_total": 228,
+    "imdb_total": 234,
+    "tmdb_episodes_updated_at": 1791778833702,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 19885,
+    "title": "Sherlock",
+    "votes": 1100886,
+    "genres": [
+      "Crime",
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "4": 3,
+      "1": 3,
+      "3": 3,
+      "2": 3
+    },
+    "imdb": {
+      "4": 4,
+      "1": 4,
+      "3": 4,
+      "2": 3
+    },
+    "tmdb_total": 12,
+    "imdb_total": 15,
+    "tmdb_episodes_updated_at": 1791606050081,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 2316,
+    "title": "The Office",
+    "votes": 851536,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "2": 22,
+      "1": 6,
+      "4": 14,
+      "3": 23,
+      "6": 24,
+      "5": 26,
+      "8": 24,
+      "7": 24,
+      "9": 23
+    },
+    "imdb": {
+      "2": 22,
+      "1": 6,
+      "4": 14,
+      "3": 23,
+      "6": 26,
+      "5": 26,
+      "8": 24,
+      "7": 27,
+      "9": 23
+    },
+    "tmdb_total": 186,
+    "imdb_total": 191,
+    "tmdb_episodes_updated_at": 1791778835732,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1429,
+    "title": "Attack on Titan",
+    "votes": 748930,
+    "genres": [
+      "Animation",
+      "Sci-Fi & Fantasy",
+      "Action & Adventure"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 25,
+      "2": 12,
+      "3": 22,
+      "4": 28
+    },
+    "imdb": {
+      "1": 25,
+      "2": 12,
+      "3": 22,
+      "4": 30
+    },
+    "tmdb_total": 87,
+    "imdb_total": 89,
+    "tmdb_episodes_updated_at": 1791778832570,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 4607,
+    "title": "Lost",
+    "votes": 682638,
+    "genres": [
+      "Mystery",
+      "Action & Adventure",
+      "Drama"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 24,
+      "4": 13,
+      "5": 17,
+      "2": 24,
+      "3": 23,
+      "6": 17
+    },
+    "imdb": {
+      "1": 25,
+      "4": 14,
+      "5": 17,
+      "2": 24,
+      "3": 23,
+      "6": 18
+    },
+    "tmdb_total": 118,
+    "imdb_total": 121,
+    "tmdb_episodes_updated_at": 1791778839735,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 2288,
+    "title": "Prison Break",
+    "votes": 681060,
+    "genres": [
+      "Action & Adventure",
+      "Crime",
+      "Drama"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "2": 22,
+      "1": 22,
+      "4": 22,
+      "3": 13,
+      "5": 9
+    },
+    "imdb": {
+      "2": 22,
+      "1": 22,
+      "4": 24,
+      "3": 13,
+      "5": 9
+    },
+    "tmdb_total": 88,
+    "imdb_total": 90,
+    "tmdb_episodes_updated_at": 1791778835570,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 71446,
+    "title": "Money Heist",
+    "votes": 619982,
+    "genres": [
+      "Crime",
+      "Drama"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "2": 16,
+      "1": 15,
+      "3": 10
+    },
+    "imdb": {
+      "2": 6,
+      "1": 9,
+      "4": 8,
+      "3": 8,
+      "5": 10
+    },
+    "tmdb_total": 41,
+    "imdb_total": 41,
+    "tmdb_episodes_updated_at": 1791778904456,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1408,
+    "title": "House",
+    "votes": 601273,
+    "genres": [
+      "Drama"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 22,
+      "2": 24,
+      "3": 24,
+      "4": 16,
+      "5": 24,
+      "6": 21,
+      "7": 23,
+      "8": 22
+    },
+    "imdb": {
+      "1": 22,
+      "2": 24,
+      "3": 24,
+      "4": 16,
+      "5": 24,
+      "6": 21,
+      "7": 23,
+      "8": 23
+    },
+    "tmdb_total": 176,
+    "imdb_total": 177,
+    "tmdb_episodes_updated_at": 1791692431362,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 456,
+    "title": "The Simpsons",
+    "votes": 473305,
+    "genres": [
+      "Animation",
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 13,
+      "2": 22,
+      "3": 24,
+      "4": 22,
+      "5": 22,
+      "6": 25,
+      "7": 25,
+      "8": 25,
+      "9": 25,
+      "10": 23,
+      "11": 22,
+      "12": 21,
+      "13": 22,
+      "14": 22,
+      "15": 22,
+      "16": 21,
+      "17": 22,
+      "18": 22,
+      "19": 20,
+      "20": 21,
+      "21": 23,
+      "22": 22,
+      "23": 22,
+      "24": 22,
+      "25": 22,
+      "26": 22,
+      "27": 22,
+      "28": 22,
+      "29": 21,
+      "30": 23,
+      "31": 22,
+      "32": 22,
+      "33": 22,
+      "34": 22,
+      "35": 18,
+      "36": 18,
+      "37": 15,
+      "38": 5
+    },
+    "imdb": {
+      "1": 13,
+      "2": 22,
+      "3": 24,
+      "4": 22,
+      "5": 22,
+      "6": 25,
+      "7": 25,
+      "8": 25,
+      "9": 25,
+      "10": 23,
+      "11": 22,
+      "12": 21,
+      "13": 22,
+      "14": 22,
+      "15": 22,
+      "16": 21,
+      "17": 22,
+      "18": 22,
+      "19": 20,
+      "20": 21,
+      "21": 23,
+      "22": 22,
+      "23": 22,
+      "24": 22,
+      "25": 22,
+      "26": 22,
+      "27": 22,
+      "28": 22,
+      "29": 21,
+      "30": 23,
+      "31": 22,
+      "32": 22,
+      "33": 22,
+      "34": 22,
+      "35": 18,
+      "36": 21,
+      "37": 18,
+      "38": 2
+    },
+    "tmdb_total": 806,
+    "imdb_total": 809,
+    "tmdb_episodes_updated_at": 1791778829239,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 2190,
+    "title": "South Park",
+    "votes": 448976,
+    "genres": [
+      "Comedy",
+      "Animation"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "2": 18,
+      "1": 13,
+      "4": 17,
+      "3": 17,
+      "6": 17,
+      "5": 14,
+      "8": 14,
+      "7": 15,
+      "10": 14,
+      "9": 14,
+      "12": 14,
+      "11": 14,
+      "14": 14,
+      "13": 14,
+      "16": 14,
+      "15": 14,
+      "18": 10,
+      "17": 10,
+      "20": 10,
+      "19": 10,
+      "22": 10,
+      "21": 10,
+      "24": 2,
+      "23": 10,
+      "26": 6,
+      "25": 6,
+      "28": 5,
+      "27": 5,
+      "29": 6
+    },
+    "imdb": {
+      "2": 18,
+      "1": 14,
+      "4": 17,
+      "3": 17,
+      "6": 17,
+      "5": 14,
+      "8": 14,
+      "7": 15,
+      "10": 14,
+      "9": 14,
+      "12": 14,
+      "11": 14,
+      "14": 14,
+      "13": 14,
+      "16": 14,
+      "15": 14,
+      "18": 10,
+      "17": 10,
+      "20": 10,
+      "19": 10,
+      "22": 10,
+      "21": 10,
+      "24": 2,
+      "23": 10,
+      "26": 6,
+      "25": 6,
+      "28": 5,
+      "27": 5,
+      "29": 2
+    },
+    "tmdb_total": 337,
+    "imdb_total": 334,
+    "tmdb_episodes_updated_at": 1791779187899,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 84773,
+    "title": "The Lord of the Rings: The Rings of Power",
+    "votes": 445042,
+    "genres": [
+      "Action & Adventure",
+      "Drama",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "1": 8,
+      "2": 8,
+      "3": 8
+    },
+    "imdb": {
+      "1": 8,
+      "2": 8
+    },
+    "tmdb_total": 24,
+    "imdb_total": 16,
+    "tmdb_episodes_updated_at": 1791606159799,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 48891,
+    "title": "Brooklyn Nine-Nine",
+    "votes": 424384,
+    "genres": [
+      "Comedy",
+      "Crime"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 22,
+      "8": 9,
+      "7": 13,
+      "6": 18,
+      "5": 22,
+      "4": 22,
+      "3": 23,
+      "2": 23
+    },
+    "imdb": {
+      "1": 22,
+      "8": 10,
+      "7": 13,
+      "6": 18,
+      "5": 22,
+      "4": 22,
+      "3": 23,
+      "2": 23
+    },
+    "tmdb_total": 152,
+    "imdb_total": 153,
+    "tmdb_episodes_updated_at": 1791778889706,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1434,
+    "title": "Family Guy",
+    "votes": 392448,
+    "genres": [
+      "Animation",
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 7,
+      "2": 21,
+      "3": 22,
+      "4": 30,
+      "5": 18,
+      "6": 12,
+      "7": 16,
+      "8": 20,
+      "9": 18,
+      "10": 23,
+      "11": 22,
+      "12": 21,
+      "13": 18,
+      "14": 20,
+      "15": 20,
+      "16": 20,
+      "17": 20,
+      "18": 20,
+      "19": 20,
+      "20": 20,
+      "21": 20,
+      "22": 15,
+      "23": 18,
+      "24": 15
+    },
+    "imdb": {
+      "1": 7,
+      "2": 21,
+      "3": 22,
+      "4": 30,
+      "5": 18,
+      "6": 12,
+      "7": 16,
+      "8": 21,
+      "9": 18,
+      "10": 23,
+      "11": 22,
+      "12": 21,
+      "13": 18,
+      "14": 20,
+      "15": 20,
+      "16": 20,
+      "17": 20,
+      "18": 20,
+      "19": 20,
+      "20": 20,
+      "21": 20,
+      "22": 17,
+      "23": 20,
+      "24": 16
+    },
+    "tmdb_total": 456,
+    "imdb_total": 462,
+    "tmdb_episodes_updated_at": 1791778833007,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1400,
+    "title": "Seinfeld",
+    "votes": 388968,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 5,
+      "2": 12,
+      "3": 23,
+      "4": 24,
+      "5": 22,
+      "6": 24,
+      "7": 24,
+      "8": 22,
+      "9": 24
+    },
+    "imdb": {
+      "1": 5,
+      "2": 12,
+      "3": 22,
+      "4": 23,
+      "5": 21,
+      "6": 23,
+      "7": 22,
+      "8": 22,
+      "9": 22
+    },
+    "tmdb_total": 180,
+    "imdb_total": 172,
+    "tmdb_episodes_updated_at": 1791778831849,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1416,
+    "title": "Grey's Anatomy",
+    "votes": 378117,
+    "genres": [
+      "Drama"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "1": 9,
+      "2": 27,
+      "3": 24,
+      "4": 16,
+      "5": 24,
+      "6": 22,
+      "7": 22,
+      "8": 23,
+      "9": 24,
+      "10": 24,
+      "11": 24,
+      "12": 24,
+      "13": 24,
+      "14": 24,
+      "15": 25,
+      "16": 21,
+      "17": 17,
+      "18": 20,
+      "19": 20,
+      "20": 10,
+      "21": 18,
+      "22": 18,
+      "23": 6
+    },
+    "imdb": {
+      "1": 9,
+      "2": 27,
+      "3": 25,
+      "4": 17,
+      "5": 24,
+      "6": 24,
+      "7": 22,
+      "8": 24,
+      "9": 24,
+      "10": 24,
+      "11": 25,
+      "12": 24,
+      "13": 24,
+      "14": 24,
+      "15": 25,
+      "16": 21,
+      "17": 17,
+      "18": 20,
+      "19": 20,
+      "20": 10,
+      "21": 18,
+      "22": 18
+    },
+    "tmdb_total": 466,
+    "imdb_total": 466,
+    "tmdb_episodes_updated_at": 1791778832827,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 37854,
+    "title": "One Piece",
+    "votes": 367896,
+    "genres": [
+      "Action & Adventure",
+      "Comedy",
+      "Animation"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "14": 58,
+      "13": 101,
+      "16": 50,
+      "15": 62,
+      "18": 55,
+      "17": 56,
+      "20": 14,
+      "19": 74,
+      "22": 67,
+      "21": 197,
+      "23": 25,
+      "2": 16,
+      "1": 61,
+      "4": 39,
+      "3": 14,
+      "6": 52,
+      "5": 13,
+      "8": 35,
+      "7": 33,
+      "10": 45,
+      "9": 73,
+      "12": 14,
+      "11": 26
+    },
+    "imdb": {
+      "1": 1180
+    },
+    "tmdb_total": 1180,
+    "imdb_total": 1180,
+    "tmdb_episodes_updated_at": 1791778854313,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1413,
+    "title": "American Horror Story",
+    "votes": 365290,
+    "genres": [
+      "Drama",
+      "Mystery",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 12,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 12,
+      "6": 10,
+      "7": 11,
+      "8": 10,
+      "9": 9,
+      "10": 10,
+      "11": 10,
+      "12": 9,
+      "13": 13
+    },
+    "imdb": {
+      "1": 12,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 12,
+      "6": 10,
+      "7": 11,
+      "8": 10,
+      "9": 9,
+      "10": 10,
+      "11": 10,
+      "12": 9,
+      "13": 8
+    },
+    "tmdb_total": 145,
+    "imdb_total": 140,
+    "tmdb_episodes_updated_at": 1791778832318,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 8592,
+    "title": "Parks and Recreation",
+    "votes": 319608,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "3": 16,
+      "4": 22,
+      "5": 22,
+      "6": 20,
+      "1": 6,
+      "2": 24,
+      "7": 12
+    },
+    "imdb": {
+      "3": 16,
+      "4": 22,
+      "5": 22,
+      "6": 22,
+      "1": 6,
+      "2": 24,
+      "7": 12
+    },
+    "tmdb_total": 122,
+    "imdb_total": 124,
+    "tmdb_episodes_updated_at": 1791778841794,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1437,
+    "title": "Firefly",
+    "votes": 304396,
+    "genres": [
+      "Drama",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 11
+    },
+    "imdb": {
+      "1": 14
+    },
+    "tmdb_total": 11,
+    "imdb_total": 14,
+    "tmdb_episodes_updated_at": 1791407440237,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 2691,
+    "title": "Two and a Half Men",
+    "votes": 301078,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_redistributed_counts",
+    "tmdb": {
+      "1": 24,
+      "3": 24,
+      "2": 24,
+      "5": 19,
+      "4": 24,
+      "7": 22,
+      "6": 24,
+      "9": 24,
+      "8": 16,
+      "11": 22,
+      "10": 23,
+      "12": 16
+    },
+    "imdb": {
+      "1": 25,
+      "3": 24,
+      "2": 24,
+      "5": 19,
+      "4": 24,
+      "7": 22,
+      "6": 24,
+      "9": 24,
+      "8": 16,
+      "11": 22,
+      "10": 23,
+      "12": 15
+    },
+    "tmdb_total": 262,
+    "imdb_total": 262,
+    "tmdb_episodes_updated_at": 1791692436879,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 4556,
+    "title": "Scrubs",
+    "votes": 287871,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 24,
+      "2": 22,
+      "5": 24,
+      "6": 22,
+      "3": 22,
+      "4": 25,
+      "9": 13,
+      "7": 11,
+      "8": 18
+    },
+    "imdb": {
+      "1": 24,
+      "2": 22,
+      "5": 24,
+      "6": 22,
+      "3": 22,
+      "4": 25,
+      "9": 13,
+      "7": 11,
+      "8": 19
+    },
+    "tmdb_total": 181,
+    "imdb_total": 182,
+    "tmdb_episodes_updated_at": 1791519644979,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 2710,
+    "title": "It's Always Sunny in Philadelphia",
+    "votes": 285465,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "2": 10,
+      "1": 7,
+      "4": 13,
+      "3": 15,
+      "6": 13,
+      "5": 12,
+      "8": 10,
+      "7": 13,
+      "10": 10,
+      "9": 10,
+      "12": 10,
+      "11": 10,
+      "14": 10,
+      "13": 10,
+      "16": 8,
+      "15": 8,
+      "18": 10,
+      "17": 8
+    },
+    "imdb": {
+      "2": 10,
+      "1": 7,
+      "4": 13,
+      "3": 15,
+      "6": 13,
+      "5": 12,
+      "8": 10,
+      "7": 13,
+      "10": 10,
+      "9": 10,
+      "12": 10,
+      "11": 10,
+      "14": 10,
+      "13": 10,
+      "16": 8,
+      "15": 8,
+      "18": 9,
+      "17": 8
+    },
+    "tmdb_total": 187,
+    "imdb_total": 186,
+    "tmdb_episodes_updated_at": 1791778836399,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 615,
+    "title": "Futurama",
+    "votes": 280645,
+    "genres": [
+      "Animation",
+      "Comedy",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "1": 9,
+      "2": 20,
+      "3": 15,
+      "4": 12,
+      "5": 16,
+      "6": 26,
+      "7": 26,
+      "8": 10,
+      "9": 10,
+      "10": 10,
+      "11": 10
+    },
+    "imdb": {
+      "1": 9,
+      "2": 20,
+      "3": 15,
+      "4": 12,
+      "5": 16,
+      "6": 16,
+      "7": 13,
+      "8": 13,
+      "9": 13,
+      "10": 13,
+      "11": 10,
+      "12": 10,
+      "13": 10,
+      "14": 10
+    },
+    "tmdb_total": 164,
+    "imdb_total": 180,
+    "tmdb_episodes_updated_at": 1791778829167,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 10545,
+    "title": "True Blood",
+    "votes": 273148,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "5": 12,
+      "4": 12,
+      "7": 10,
+      "6": 10,
+      "1": 12,
+      "3": 12,
+      "2": 12
+    },
+    "imdb": {
+      "5": 12,
+      "4": 12,
+      "7": 10,
+      "6": 10,
+      "1": 13,
+      "3": 12,
+      "2": 12
+    },
+    "tmdb_total": 80,
+    "imdb_total": 81,
+    "tmdb_episodes_updated_at": 1791408459282,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1639,
+    "title": "Heroes",
+    "votes": 266221,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Drama"
+    ],
+    "kind": "same_seasons_redistributed_counts",
+    "tmdb": {
+      "1": 23,
+      "2": 11,
+      "3": 25,
+      "4": 19
+    },
+    "imdb": {
+      "1": 24,
+      "2": 11,
+      "3": 25,
+      "4": 18
+    },
+    "tmdb_total": 78,
+    "imdb_total": 78,
+    "tmdb_episodes_updated_at": 1791407488700,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 57243,
+    "title": "Doctor Who",
+    "votes": 264184,
+    "genres": [
+      "Action & Adventure",
+      "Drama",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "13": 6,
+      "12": 10,
+      "11": 10,
+      "10": 12,
+      "5": 13,
+      "4": 13,
+      "3": 13,
+      "2": 13,
+      "9": 12,
+      "8": 12,
+      "7": 13,
+      "6": 13,
+      "1": 13
+    },
+    "imdb": {
+      "13": 6,
+      "12": 10,
+      "11": 11,
+      "10": 13,
+      "5": 13,
+      "4": 14,
+      "3": 14,
+      "2": 14,
+      "9": 13,
+      "8": 13,
+      "7": 15,
+      "6": 14,
+      "1": 13
+    },
+    "tmdb_total": 153,
+    "imdb_total": 163,
+    "tmdb_episodes_updated_at": 1791692492226,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1920,
+    "title": "Twin Peaks",
+    "votes": 251074,
+    "genres": [
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "1": 8,
+      "2": 22,
+      "3": 18
+    },
+    "imdb": {
+      "1": 8,
+      "2": 22
+    },
+    "tmdb_total": 48,
+    "imdb_total": 30,
+    "tmdb_episodes_updated_at": 1791606035225,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 33907,
+    "title": "Downton Abbey",
+    "votes": 249229,
+    "genres": [
+      "Drama"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "2": 8,
+      "3": 8,
+      "4": 8,
+      "5": 8,
+      "6": 8,
+      "1": 7
+    },
+    "imdb": {
+      "2": 9,
+      "3": 9,
+      "4": 9,
+      "5": 9,
+      "6": 9,
+      "1": 7
+    },
+    "tmdb_total": 47,
+    "imdb_total": 52,
+    "tmdb_episodes_updated_at": 1791778851896,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 125988,
+    "title": "Silo",
+    "votes": 248698,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Drama"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "4": 1,
+      "3": 10,
+      "2": 10,
+      "1": 10
+    },
+    "imdb": {
+      "3": 10,
+      "2": 10,
+      "1": 10
+    },
+    "tmdb_total": 31,
+    "imdb_total": 30,
+    "tmdb_episodes_updated_at": 1791779010326,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 85937,
+    "title": "Demon Slayer: Kimetsu no Yaiba",
+    "votes": 237709,
+    "genres": [
+      "Animation",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "1": 26,
+      "2": 7,
+      "3": 11,
+      "4": 11,
+      "5": 8
+    },
+    "imdb": {
+      "1": 26,
+      "2": 18,
+      "3": 11,
+      "4": 8
+    },
+    "tmdb_total": 63,
+    "imdb_total": 63,
+    "tmdb_episodes_updated_at": 1791778956815,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 31910,
+    "title": "Naruto Shippūden",
+    "votes": 231699,
+    "genres": [
+      "Animation",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "4": 17,
+      "3": 18,
+      "2": 21,
+      "1": 32,
+      "20": 87,
+      "19": 20,
+      "18": 21,
+      "17": 11,
+      "16": 13,
+      "15": 28,
+      "14": 25,
+      "13": 20,
+      "12": 33,
+      "11": 21,
+      "10": 25,
+      "9": 21,
+      "8": 24,
+      "7": 8,
+      "6": 31,
+      "5": 24
+    },
+    "imdb": {
+      "1": 500
+    },
+    "tmdb_total": 500,
+    "imdb_total": 500,
+    "tmdb_episodes_updated_at": 1791606055795,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 95479,
+    "title": "JUJUTSU KAISEN",
+    "votes": 222182,
+    "genres": [
+      "Animation",
+      "Sci-Fi & Fantasy",
+      "Action & Adventure"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "1": 59
+    },
+    "imdb": {
+      "3": 12,
+      "2": 23,
+      "1": 24
+    },
+    "tmdb_total": 59,
+    "imdb_total": 59,
+    "tmdb_episodes_updated_at": 1791778963383,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 111110,
+    "title": "ONE PIECE",
+    "votes": 211219,
+    "genres": [
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "1": 8,
+      "2": 8,
+      "3": 1
+    },
+    "imdb": {
+      "1": 8,
+      "2": 8
+    },
+    "tmdb_total": 17,
+    "imdb_total": 16,
+    "tmdb_episodes_updated_at": 1791778966380,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1973,
+    "title": "24",
+    "votes": 208332,
+    "genres": [
+      "Action & Adventure",
+      "Drama",
+      "Crime"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "1": 24,
+      "2": 24,
+      "3": 24,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 12
+    },
+    "imdb": {
+      "1": 24,
+      "2": 24,
+      "3": 24,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24
+    },
+    "tmdb_total": 204,
+    "imdb_total": 192,
+    "tmdb_episodes_updated_at": 1791407502880,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 107113,
+    "title": "Only Murders in the Building",
+    "votes": 207333,
+    "genres": [
+      "Comedy",
+      "Mystery",
+      "Crime"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "2": 10,
+      "3": 10,
+      "1": 10,
+      "6": 1,
+      "4": 10,
+      "5": 10
+    },
+    "imdb": {
+      "2": 10,
+      "3": 10,
+      "1": 10,
+      "4": 10,
+      "5": 10
+    },
+    "tmdb_total": 51,
+    "imdb_total": 50,
+    "tmdb_episodes_updated_at": 1791519765228,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 46298,
+    "title": "Hunter x Hunter",
+    "votes": 205633,
+    "genres": [
+      "Animation",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "2": 74,
+      "1": 62,
+      "3": 12
+    },
+    "imdb": {
+      "1": 148
+    },
+    "tmdb_total": 148,
+    "imdb_total": 148,
+    "tmdb_episodes_updated_at": 1791412358874,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1911,
+    "title": "Bones",
+    "votes": 192974,
+    "genres": [
+      "Crime",
+      "Drama"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 22,
+      "2": 21,
+      "3": 15,
+      "4": 26,
+      "5": 22,
+      "6": 23,
+      "7": 13,
+      "8": 24,
+      "9": 24,
+      "10": 22,
+      "11": 22,
+      "12": 12
+    },
+    "imdb": {
+      "1": 22,
+      "2": 21,
+      "3": 15,
+      "4": 25,
+      "5": 22,
+      "6": 23,
+      "7": 13,
+      "8": 24,
+      "9": 24,
+      "10": 22,
+      "11": 22,
+      "12": 12
+    },
+    "tmdb_total": 246,
+    "imdb_total": 245,
+    "tmdb_episodes_updated_at": 1791606034719,
+    "position_anomaly": true,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 31917,
+    "title": "Pretty Little Liars",
+    "votes": 190374,
+    "genres": [
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "7": 20,
+      "6": 20,
+      "5": 26,
+      "4": 24,
+      "3": 24,
+      "2": 25,
+      "1": 22
+    },
+    "imdb": {
+      "7": 20,
+      "6": 20,
+      "5": 25,
+      "4": 24,
+      "3": 24,
+      "2": 25,
+      "1": 22
+    },
+    "tmdb_total": 161,
+    "imdb_total": 160,
+    "tmdb_episodes_updated_at": 1791778851391,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 1972,
+    "title": "Battlestar Galactica",
+    "votes": 188632,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Action & Adventure",
+      "Drama"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 13,
+      "2": 20,
+      "3": 20,
+      "4": 20
+    },
+    "imdb": {
+      "1": 13,
+      "2": 20,
+      "3": 20,
+      "4": 21
+    },
+    "tmdb_total": 73,
+    "imdb_total": 74,
+    "tmdb_episodes_updated_at": 1791407502343,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 40075,
+    "title": "Gravity Falls",
+    "votes": 185341,
+    "genres": [
+      "Action & Adventure",
+      "Animation",
+      "Comedy",
+      "Family",
+      "Mystery",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 20,
+      "2": 20
+    },
+    "imdb": {
+      "1": 20,
+      "2": 21
+    },
+    "tmdb_total": 40,
+    "imdb_total": 41,
+    "tmdb_episodes_updated_at": 1791778854696,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_shape_mismatches"
+  },
+  {
+    "show_id": 46260,
+    "title": "Naruto",
+    "votes": 174802,
+    "genres": [
+      "Animation",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "4": 62,
+      "3": 54,
+      "2": 52,
+      "1": 52
+    },
+    "imdb": {
+      "1": 220
+    },
+    "tmdb_total": 220,
+    "imdb_total": 220,
+    "tmdb_episodes_updated_at": 1791606093827,
+    "position_anomaly": true,
+    "selection_reason": "varied_shape:different_seasons_equal_total"
+  },
+  {
+    "show_id": 1433,
+    "title": "American Dad!",
+    "votes": 145765,
+    "genres": [
+      "Animation",
+      "Comedy"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "1": 7,
+      "2": 16,
+      "3": 19,
+      "4": 16,
+      "5": 20,
+      "6": 18,
+      "7": 19,
+      "8": 18,
+      "9": 19,
+      "10": 20,
+      "11": 3,
+      "12": 15,
+      "13": 22,
+      "14": 22,
+      "15": 22,
+      "16": 20,
+      "17": 24,
+      "18": 22,
+      "19": 22,
+      "20": 22,
+      "21": 22,
+      "22": 13
+    },
+    "imdb": {
+      "1": 23,
+      "2": 19,
+      "3": 16,
+      "4": 20,
+      "5": 18,
+      "6": 19,
+      "7": 18,
+      "8": 19,
+      "9": 23,
+      "10": 15,
+      "11": 22,
+      "12": 22,
+      "13": 22,
+      "14": 20,
+      "15": 24,
+      "16": 22,
+      "17": 22,
+      "18": 22,
+      "19": 22,
+      "20": 13
+    },
+    "tmdb_total": 401,
+    "imdb_total": 401,
+    "tmdb_episodes_updated_at": 1791519634312,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_equal_total"
+  },
+  {
+    "show_id": 127532,
+    "title": "Solo Leveling",
+    "votes": 121876,
+    "genres": [
+      "Animation",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "1": 25
+    },
+    "imdb": {
+      "1": 12,
+      "2": 13
+    },
+    "tmdb_total": 25,
+    "imdb_total": 25,
+    "tmdb_episodes_updated_at": 1791606216582,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_equal_total"
+  },
+  {
+    "show_id": 79242,
+    "title": "Chilling Adventures of Sabrina",
+    "votes": 120536,
+    "genres": [
+      "Mystery",
+      "Sci-Fi & Fantasy",
+      "Drama"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "2": 16,
+      "1": 20
+    },
+    "imdb": {
+      "2": 9,
+      "1": 11,
+      "4": 8,
+      "3": 8
+    },
+    "tmdb_total": 36,
+    "imdb_total": 36,
+    "tmdb_episodes_updated_at": 1791415587204,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_equal_total"
+  },
+  {
+    "show_id": 12971,
+    "title": "Dragon Ball Z",
+    "votes": 105460,
+    "genres": [
+      "Animation",
+      "Sci-Fi & Fantasy",
+      "Action & Adventure"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "1": 39,
+      "8": 34,
+      "9": 38,
+      "6": 29,
+      "7": 25,
+      "4": 32,
+      "5": 26,
+      "2": 35,
+      "3": 33
+    },
+    "imdb": {
+      "1": 291
+    },
+    "tmdb_total": 291,
+    "imdb_total": 291,
+    "tmdb_episodes_updated_at": 1791778843955,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_equal_total"
+  },
+  {
+    "show_id": 65942,
+    "title": "Re:ZERO -Starting Life in Another World-",
+    "votes": 98053,
+    "genres": [
+      "Animation",
+      "Mystery",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "1": 85
+    },
+    "imdb": {
+      "4": 19,
+      "3": 16,
+      "2": 25,
+      "1": 25
+    },
+    "tmdb_total": 85,
+    "imdb_total": 85,
+    "tmdb_episodes_updated_at": 1791778896631,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_equal_total"
+  },
+  {
+    "show_id": 209867,
+    "title": "Frieren: Beyond Journey's End",
+    "votes": 85874,
+    "genres": [
+      "Animation",
+      "Action & Adventure",
+      "Drama",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "1": 38
+    },
+    "imdb": {
+      "1": 28,
+      "2": 10
+    },
+    "tmdb_total": 38,
+    "imdb_total": 38,
+    "tmdb_episodes_updated_at": 1791423337226,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_equal_total"
+  },
+  {
+    "show_id": 73021,
+    "title": "Disenchantment",
+    "votes": 81314,
+    "genres": [
+      "Animation",
+      "Comedy",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "2": 20,
+      "3": 10,
+      "1": 20
+    },
+    "imdb": {
+      "2": 10,
+      "3": 10,
+      "1": 10,
+      "4": 10,
+      "5": 10
+    },
+    "tmdb_total": 50,
+    "imdb_total": 50,
+    "tmdb_episodes_updated_at": 1791778906264,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_equal_total"
+  },
+  {
+    "show_id": 15260,
+    "title": "Adventure Time",
+    "votes": 136602,
+    "genres": [
+      "Animation",
+      "Comedy",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_redistributed_counts",
+    "tmdb": {
+      "2": 26,
+      "1": 26,
+      "10": 13,
+      "9": 14,
+      "8": 27,
+      "7": 26,
+      "6": 43,
+      "5": 52,
+      "4": 26,
+      "3": 26
+    },
+    "imdb": {
+      "2": 26,
+      "1": 27,
+      "10": 13,
+      "9": 14,
+      "8": 27,
+      "7": 26,
+      "6": 43,
+      "5": 52,
+      "4": 26,
+      "3": 25
+    },
+    "tmdb_total": 279,
+    "imdb_total": 279,
+    "tmdb_episodes_updated_at": 1791778845335,
+    "position_anomaly": true,
+    "selection_reason": "varied_shape:same_seasons_redistributed_counts"
+  },
+  {
+    "show_id": 2140,
+    "title": "Everybody Loves Raymond",
+    "votes": 84046,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_redistributed_counts",
+    "tmdb": {
+      "2": 25,
+      "1": 22,
+      "4": 24,
+      "3": 26,
+      "6": 24,
+      "5": 25,
+      "8": 23,
+      "7": 25,
+      "9": 16
+    },
+    "imdb": {
+      "2": 25,
+      "1": 22,
+      "4": 24,
+      "3": 26,
+      "6": 25,
+      "5": 25,
+      "8": 23,
+      "7": 24,
+      "9": 16
+    },
+    "tmdb_total": 210,
+    "imdb_total": 210,
+    "tmdb_episodes_updated_at": 1791407548913,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_redistributed_counts"
+  },
+  {
+    "show_id": 60572,
+    "title": "Pokémon",
+    "votes": 57344,
+    "genres": [
+      "Animation",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_redistributed_counts",
+    "tmdb": {
+      "23": 48,
+      "24": 42,
+      "25": 57,
+      "19": 49,
+      "20": 43,
+      "21": 49,
+      "22": 54,
+      "15": 49,
+      "16": 45,
+      "17": 48,
+      "18": 45,
+      "11": 52,
+      "12": 53,
+      "13": 34,
+      "14": 48,
+      "7": 52,
+      "8": 53,
+      "9": 46,
+      "10": 52,
+      "3": 41,
+      "4": 52,
+      "5": 65,
+      "6": 40,
+      "1": 82,
+      "2": 36
+    },
+    "imdb": {
+      "23": 48,
+      "24": 42,
+      "25": 58,
+      "19": 48,
+      "20": 43,
+      "21": 49,
+      "22": 54,
+      "15": 49,
+      "16": 45,
+      "17": 49,
+      "18": 44,
+      "11": 51,
+      "12": 53,
+      "13": 34,
+      "14": 48,
+      "7": 52,
+      "8": 53,
+      "9": 47,
+      "10": 52,
+      "3": 41,
+      "4": 52,
+      "5": 65,
+      "6": 40,
+      "1": 82,
+      "2": 36
+    },
+    "tmdb_total": 1235,
+    "imdb_total": 1235,
+    "tmdb_episodes_updated_at": 1791778892528,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_redistributed_counts"
+  },
+  {
+    "show_id": 764,
+    "title": "Midsomer Murders",
+    "votes": 45000,
+    "genres": [
+      "Crime",
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "same_seasons_redistributed_counts",
+    "tmdb": {
+      "1": 5,
+      "2": 4,
+      "3": 4,
+      "4": 6,
+      "5": 4,
+      "6": 5,
+      "7": 6,
+      "8": 9,
+      "9": 8,
+      "10": 8,
+      "11": 7,
+      "12": 7,
+      "13": 8,
+      "14": 8,
+      "15": 6,
+      "16": 5,
+      "17": 4,
+      "18": 6,
+      "19": 6,
+      "20": 6,
+      "21": 4,
+      "22": 6,
+      "23": 4,
+      "24": 4,
+      "25": 4
+    },
+    "imdb": {
+      "1": 5,
+      "2": 4,
+      "3": 4,
+      "4": 6,
+      "5": 4,
+      "6": 5,
+      "7": 7,
+      "8": 8,
+      "9": 8,
+      "10": 8,
+      "11": 7,
+      "12": 7,
+      "13": 8,
+      "14": 8,
+      "15": 6,
+      "16": 5,
+      "17": 4,
+      "18": 6,
+      "19": 6,
+      "20": 6,
+      "21": 4,
+      "22": 6,
+      "23": 4,
+      "24": 4,
+      "25": 4
+    },
+    "tmdb_total": 144,
+    "imdb_total": 144,
+    "tmdb_episodes_updated_at": 1791407376219,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_redistributed_counts"
+  },
+  {
+    "show_id": 160,
+    "title": "Teenage Mutant Ninja Turtles",
+    "votes": 41214,
+    "genres": [
+      "Action & Adventure",
+      "Animation",
+      "Comedy",
+      "Kids"
+    ],
+    "kind": "same_seasons_redistributed_counts",
+    "tmdb": {
+      "1": 5,
+      "2": 13,
+      "3": 47,
+      "4": 39,
+      "5": 22,
+      "6": 16,
+      "7": 27,
+      "8": 8,
+      "9": 8,
+      "10": 8
+    },
+    "imdb": {
+      "1": 5,
+      "2": 13,
+      "3": 47,
+      "4": 54,
+      "5": 20,
+      "6": 16,
+      "7": 14,
+      "8": 8,
+      "9": 8,
+      "10": 8
+    },
+    "tmdb_total": 193,
+    "imdb_total": 193,
+    "tmdb_episodes_updated_at": 1791778827774,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_redistributed_counts"
+  },
+  {
+    "show_id": 4386,
+    "title": "Baywatch",
+    "votes": 33323,
+    "genres": [
+      "Action & Adventure",
+      "Drama",
+      "Crime"
+    ],
+    "kind": "same_seasons_redistributed_counts",
+    "tmdb": {
+      "3": 22,
+      "4": 22,
+      "1": 22,
+      "2": 22,
+      "7": 22,
+      "8": 22,
+      "5": 22,
+      "6": 22,
+      "11": 22,
+      "9": 22,
+      "10": 22
+    },
+    "imdb": {
+      "3": 23,
+      "4": 22,
+      "1": 21,
+      "2": 22,
+      "7": 22,
+      "8": 22,
+      "5": 22,
+      "6": 22,
+      "11": 22,
+      "9": 22,
+      "10": 22
+    },
+    "tmdb_total": 242,
+    "imdb_total": 242,
+    "tmdb_episodes_updated_at": 1791407794018,
+    "position_anomaly": true,
+    "selection_reason": "varied_shape:same_seasons_redistributed_counts"
+  },
+  {
+    "show_id": 251,
+    "title": "Aqua Teen Hunger Force",
+    "votes": 28677,
+    "genres": [
+      "Animation",
+      "Comedy"
+    ],
+    "kind": "same_seasons_redistributed_counts",
+    "tmdb": {
+      "1": 18,
+      "2": 24,
+      "3": 13,
+      "4": 14,
+      "5": 9,
+      "6": 10,
+      "7": 12,
+      "8": 10,
+      "9": 10,
+      "10": 10,
+      "11": 9,
+      "12": 5
+    },
+    "imdb": {
+      "1": 18,
+      "2": 24,
+      "3": 13,
+      "4": 13,
+      "5": 10,
+      "6": 10,
+      "7": 12,
+      "8": 10,
+      "9": 10,
+      "10": 10,
+      "11": 9,
+      "12": 5
+    },
+    "tmdb_total": 144,
+    "imdb_total": 144,
+    "tmdb_episodes_updated_at": 1791778828098,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_redistributed_counts"
+  },
+  {
+    "show_id": 4459,
+    "title": "The Muppet Show",
+    "votes": 28027,
+    "genres": [
+      "Comedy",
+      "Family"
+    ],
+    "kind": "same_seasons_redistributed_counts",
+    "tmdb": {
+      "1": 24,
+      "4": 24,
+      "5": 24,
+      "2": 30,
+      "3": 18
+    },
+    "imdb": {
+      "1": 24,
+      "4": 24,
+      "5": 24,
+      "2": 24,
+      "3": 24
+    },
+    "tmdb_total": 120,
+    "imdb_total": 120,
+    "tmdb_episodes_updated_at": 1791778839195,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_redistributed_counts"
+  },
+  {
+    "show_id": 2490,
+    "title": "The IT Crowd",
+    "votes": 177975,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "2": 6,
+      "1": 6,
+      "4": 6,
+      "3": 6
+    },
+    "imdb": {
+      "2": 6,
+      "1": 6,
+      "4": 6,
+      "3": 6,
+      "5": 1
+    },
+    "tmdb_total": 24,
+    "imdb_total": 25,
+    "tmdb_episodes_updated_at": 1791407563231,
+    "position_anomaly": true,
+    "selection_reason": "varied_shape:different_seasons_different_total"
+  },
+  {
+    "show_id": 27745,
+    "title": "The Heroes",
+    "votes": 171468,
+    "genres": [],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "5": 11,
+      "4": 13,
+      "6": 7,
+      "1": 13,
+      "3": 13,
+      "2": 13
+    },
+    "imdb": {
+      "4": 1,
+      "7": 2,
+      "1": 14,
+      "3": 1,
+      "2": 13
+    },
+    "tmdb_total": 70,
+    "imdb_total": 31,
+    "tmdb_episodes_updated_at": 1791410374634,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_different_total"
+  },
+  {
+    "show_id": 259909,
+    "title": "Dexter: Resurrection",
+    "votes": 158504,
+    "genres": [
+      "Crime",
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "2": 10,
+      "1": 10
+    },
+    "imdb": {
+      "1": 10
+    },
+    "tmdb_total": 20,
+    "imdb_total": 10,
+    "tmdb_episodes_updated_at": 1791779073524,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_different_total"
+  },
+  {
+    "show_id": 114461,
+    "title": "Ahsoka",
+    "votes": 145083,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Action & Adventure"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "2": 8,
+      "1": 8
+    },
+    "imdb": {
+      "1": 8
+    },
+    "tmdb_total": 16,
+    "imdb_total": 8,
+    "tmdb_episodes_updated_at": 1791778967889,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_different_total"
+  },
+  {
+    "show_id": 82596,
+    "title": "Emily in Paris",
+    "votes": 144950,
+    "genres": [
+      "Drama",
+      "Comedy"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "6": 10,
+      "5": 10,
+      "4": 10,
+      "3": 10,
+      "2": 10,
+      "1": 10
+    },
+    "imdb": {
+      "5": 10,
+      "4": 10,
+      "3": 10,
+      "2": 10,
+      "1": 10
+    },
+    "tmdb_total": 60,
+    "imdb_total": 50,
+    "tmdb_episodes_updated_at": 1791415890803,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_different_total"
+  },
+  {
+    "show_id": 58474,
+    "title": "Cosmos",
+    "votes": 141131,
+    "genres": [
+      "Documentary"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "2": 13,
+      "1": 13
+    },
+    "imdb": {
+      "1": 13
+    },
+    "tmdb_total": 26,
+    "imdb_total": 13,
+    "tmdb_episodes_updated_at": 1791413614707,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_different_total"
+  },
+  {
+    "show_id": 79744,
+    "title": "The Rookie",
+    "votes": 137561,
+    "genres": [
+      "Crime",
+      "Drama",
+      "Comedy"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "4": 22,
+      "3": 14,
+      "6": 10,
+      "5": 22,
+      "2": 20,
+      "1": 20,
+      "8": 18,
+      "7": 18,
+      "9": 1
+    },
+    "imdb": {
+      "4": 22,
+      "3": 14,
+      "6": 10,
+      "5": 22,
+      "2": 20,
+      "1": 20,
+      "8": 18,
+      "7": 18
+    },
+    "tmdb_total": 145,
+    "imdb_total": 144,
+    "tmdb_episodes_updated_at": 1791778951325,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_different_total"
+  },
+  {
+    "show_id": 105248,
+    "title": "Cyberpunk: Edgerunners",
+    "votes": 135363,
+    "genres": [
+      "Animation",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy",
+      "Crime"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "2": 10,
+      "1": 10
+    },
+    "imdb": {
+      "1": 10
+    },
+    "tmdb_total": 20,
+    "imdb_total": 10,
+    "tmdb_episodes_updated_at": 1791418002633,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:different_seasons_different_total"
+  },
+  {
+    "show_id": 4614,
+    "title": "NCIS",
+    "votes": 178161,
+    "genres": [
+      "Crime",
+      "Drama",
+      "Action & Adventure"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "3": 24,
+      "4": 24,
+      "1": 23,
+      "2": 23,
+      "7": 24,
+      "8": 24,
+      "5": 19,
+      "6": 25,
+      "11": 24,
+      "12": 24,
+      "9": 24,
+      "10": 24,
+      "15": 24,
+      "16": 24,
+      "13": 24,
+      "14": 24,
+      "19": 21,
+      "20": 22,
+      "17": 20,
+      "18": 16,
+      "23": 20,
+      "24": 6,
+      "21": 10,
+      "22": 20
+    },
+    "imdb": {
+      "3": 24,
+      "4": 24,
+      "1": 23,
+      "2": 23,
+      "7": 24,
+      "8": 24,
+      "5": 19,
+      "6": 25,
+      "11": 24,
+      "12": 24,
+      "9": 24,
+      "10": 24,
+      "15": 24,
+      "16": 24,
+      "13": 24,
+      "14": 24,
+      "19": 21,
+      "20": 22,
+      "17": 20,
+      "18": 16,
+      "23": 20,
+      "24": 1,
+      "21": 10,
+      "22": 20
+    },
+    "tmdb_total": 513,
+    "imdb_total": 508,
+    "tmdb_episodes_updated_at": 1791778841025,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_different_total"
+  },
+  {
+    "show_id": 61662,
+    "title": "Schitt's Creek",
+    "votes": 177272,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "6": 14,
+      "5": 14,
+      "2": 13,
+      "1": 13,
+      "4": 12,
+      "3": 13
+    },
+    "imdb": {
+      "6": 14,
+      "5": 14,
+      "2": 13,
+      "1": 13,
+      "4": 13,
+      "3": 13
+    },
+    "tmdb_total": 79,
+    "imdb_total": 80,
+    "tmdb_episodes_updated_at": 1791413970986,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_different_total"
+  },
+  {
+    "show_id": 10283,
+    "title": "Archer",
+    "votes": 176946,
+    "genres": [
+      "Comedy",
+      "Action & Adventure",
+      "Animation"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 10,
+      "6": 13,
+      "7": 10,
+      "8": 8,
+      "9": 8,
+      "2": 13,
+      "3": 10,
+      "4": 13,
+      "5": 13,
+      "14": 9,
+      "10": 9,
+      "11": 8,
+      "12": 8,
+      "13": 8
+    },
+    "imdb": {
+      "1": 10,
+      "6": 13,
+      "7": 10,
+      "8": 8,
+      "9": 8,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 13,
+      "14": 9,
+      "10": 9,
+      "11": 8,
+      "12": 8,
+      "13": 8
+    },
+    "tmdb_total": 140,
+    "imdb_total": 143,
+    "tmdb_episodes_updated_at": 1791408450187,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_different_total"
+  },
+  {
+    "show_id": 67136,
+    "title": "This Is Us",
+    "votes": 176790,
+    "genres": [
+      "Drama"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "6": 18,
+      "5": 15,
+      "4": 18,
+      "3": 18,
+      "2": 18,
+      "1": 18
+    },
+    "imdb": {
+      "6": 18,
+      "5": 16,
+      "4": 18,
+      "3": 18,
+      "2": 18,
+      "1": 18
+    },
+    "tmdb_total": 105,
+    "imdb_total": 106,
+    "tmdb_episodes_updated_at": 1791414458509,
+    "position_anomaly": true,
+    "selection_reason": "varied_shape:same_seasons_different_total"
+  },
+  {
+    "show_id": 96677,
+    "title": "Lupin",
+    "votes": 161916,
+    "genres": [
+      "Crime",
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 10,
+      "3": 8,
+      "2": 7
+    },
+    "imdb": {
+      "1": 5,
+      "3": 7,
+      "2": 5
+    },
+    "tmdb_total": 25,
+    "imdb_total": 17,
+    "tmdb_episodes_updated_at": 1791606166306,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_different_total"
+  },
+  {
+    "show_id": 95480,
+    "title": "Slow Horses",
+    "votes": 161841,
+    "genres": [
+      "Crime",
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "4": 6,
+      "3": 6,
+      "6": 6,
+      "5": 6,
+      "2": 6,
+      "1": 6
+    },
+    "imdb": {
+      "4": 6,
+      "3": 6,
+      "6": 4,
+      "5": 6,
+      "2": 6,
+      "1": 6
+    },
+    "tmdb_total": 36,
+    "imdb_total": 34,
+    "tmdb_episodes_updated_at": 1791778962736,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_different_total"
+  },
+  {
+    "show_id": 4604,
+    "title": "Smallville",
+    "votes": 157045,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Action & Adventure",
+      "Drama"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 21,
+      "2": 23,
+      "5": 22,
+      "6": 22,
+      "3": 22,
+      "4": 22,
+      "9": 21,
+      "10": 21,
+      "7": 20,
+      "8": 22
+    },
+    "imdb": {
+      "1": 22,
+      "2": 23,
+      "5": 22,
+      "6": 22,
+      "3": 22,
+      "4": 22,
+      "9": 21,
+      "10": 21,
+      "7": 20,
+      "8": 22
+    },
+    "tmdb_total": 216,
+    "imdb_total": 217,
+    "tmdb_episodes_updated_at": 1791778839613,
+    "position_anomaly": true,
+    "selection_reason": "varied_shape:same_seasons_different_total"
+  },
+  {
+    "show_id": 693,
+    "title": "Desperate Housewives",
+    "votes": 156475,
+    "genres": [
+      "Mystery",
+      "Drama",
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 23,
+      "2": 23,
+      "3": 23,
+      "4": 17,
+      "5": 24,
+      "6": 23,
+      "7": 22,
+      "8": 22
+    },
+    "imdb": {
+      "1": 23,
+      "2": 24,
+      "3": 23,
+      "4": 17,
+      "5": 24,
+      "6": 23,
+      "7": 23,
+      "8": 23
+    },
+    "tmdb_total": 177,
+    "imdb_total": 180,
+    "tmdb_episodes_updated_at": 1791778829582,
+    "position_anomaly": false,
+    "selection_reason": "varied_shape:same_seasons_different_total"
+  },
+  {
+    "show_id": 387,
+    "title": "SpongeBob SquarePants",
+    "votes": 128260,
+    "genres": [
+      "Animation",
+      "Comedy",
+      "Family"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "1": 41,
+      "2": 36,
+      "3": 40,
+      "4": 40,
+      "5": 36,
+      "6": 47,
+      "7": 52,
+      "8": 52,
+      "9": 47,
+      "10": 20,
+      "11": 51,
+      "12": 35,
+      "13": 64,
+      "14": 23,
+      "15": 24,
+      "16": 22,
+      "17": 26,
+      "18": 23,
+      "19": 10
+    },
+    "imdb": {
+      "1": 20,
+      "2": 20,
+      "3": 20,
+      "4": 20,
+      "5": 20,
+      "6": 25,
+      "7": 26,
+      "8": 26,
+      "9": 26,
+      "10": 11,
+      "11": 26,
+      "12": 25,
+      "13": 26,
+      "14": 12,
+      "15": 13,
+      "16": 12,
+      "17": 10
+    },
+    "tmdb_total": 689,
+    "imdb_total": 338,
+    "tmdb_episodes_updated_at": 1791778828841,
+    "position_anomaly": true,
+    "selection_reason": "animation_mismatches"
+  },
+  {
+    "show_id": 65930,
+    "title": "My Hero Academia",
+    "votes": 127430,
+    "genres": [
+      "Action & Adventure",
+      "Animation",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "8": 11,
+      "7": 21,
+      "6": 25,
+      "5": 25,
+      "4": 25,
+      "3": 25,
+      "2": 25,
+      "1": 13
+    },
+    "imdb": {
+      "8": 12,
+      "7": 21,
+      "6": 25,
+      "5": 25,
+      "4": 25,
+      "3": 25,
+      "2": 26,
+      "1": 13
+    },
+    "tmdb_total": 170,
+    "imdb_total": 172,
+    "tmdb_episodes_updated_at": 1791778896530,
+    "position_anomaly": true,
+    "selection_reason": "animation_mismatches"
+  },
+  {
+    "show_id": 32726,
+    "title": "Bob's Burgers",
+    "votes": 103824,
+    "genres": [
+      "Animation",
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "4": 22,
+      "3": 23,
+      "2": 9,
+      "1": 13,
+      "16": 15,
+      "15": 22,
+      "14": 16,
+      "13": 22,
+      "12": 22,
+      "11": 22,
+      "10": 22,
+      "9": 22,
+      "8": 21,
+      "7": 22,
+      "6": 19,
+      "5": 21
+    },
+    "imdb": {
+      "4": 22,
+      "3": 23,
+      "2": 9,
+      "1": 13,
+      "16": 15,
+      "15": 22,
+      "14": 16,
+      "13": 22,
+      "12": 22,
+      "11": 22,
+      "10": 22,
+      "9": 22,
+      "8": 20,
+      "7": 22,
+      "6": 19,
+      "5": 21
+    },
+    "tmdb_total": 313,
+    "imdb_total": 312,
+    "tmdb_episodes_updated_at": 1791778851928,
+    "position_anomaly": false,
+    "selection_reason": "animation_mismatches"
+  },
+  {
+    "show_id": 30984,
+    "title": "Bleach",
+    "votes": 99656,
+    "genres": [
+      "Action & Adventure",
+      "Animation",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "1": 366,
+      "2": 50
+    },
+    "imdb": {
+      "5": 18,
+      "6": 22,
+      "3": 22,
+      "4": 28,
+      "1": 20,
+      "2": 21,
+      "15": 26,
+      "16": 24,
+      "13": 36,
+      "14": 51,
+      "11": 7,
+      "12": 17,
+      "9": 22,
+      "10": 16,
+      "7": 20,
+      "8": 16
+    },
+    "tmdb_total": 416,
+    "imdb_total": 366,
+    "tmdb_episodes_updated_at": 1791778850415,
+    "position_anomaly": false,
+    "selection_reason": "animation_mismatches"
+  },
+  {
+    "show_id": 61374,
+    "title": "Tokyo Ghoul",
+    "votes": 85727,
+    "genres": [
+      "Animation",
+      "Drama",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "2": 12,
+      "1": 12,
+      "4": 12,
+      "3": 12
+    },
+    "imdb": {
+      "1": 12
+    },
+    "tmdb_total": 48,
+    "imdb_total": 12,
+    "tmdb_episodes_updated_at": 1791413922427,
+    "position_anomaly": false,
+    "selection_reason": "animation_mismatches"
+  },
+  {
+    "show_id": 31132,
+    "title": "Regular Show",
+    "votes": 76871,
+    "genres": [
+      "Animation",
+      "Comedy",
+      "Action & Adventure",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "7": 36,
+      "8": 28,
+      "5": 37,
+      "6": 28,
+      "3": 39,
+      "4": 37,
+      "1": 12,
+      "2": 28
+    },
+    "imdb": {
+      "7": 36,
+      "8": 27,
+      "5": 37,
+      "6": 28,
+      "3": 39,
+      "4": 37,
+      "1": 12,
+      "2": 28
+    },
+    "tmdb_total": 245,
+    "imdb_total": 244,
+    "tmdb_episodes_updated_at": 1791778850582,
+    "position_anomaly": true,
+    "selection_reason": "animation_mismatches"
+  },
+  {
+    "show_id": 60554,
+    "title": "Star Wars Rebels",
+    "votes": 71742,
+    "genres": [
+      "Action & Adventure",
+      "Animation",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 13,
+      "2": 19,
+      "3": 21,
+      "4": 16
+    },
+    "imdb": {
+      "1": 14,
+      "2": 22,
+      "3": 22,
+      "4": 15
+    },
+    "tmdb_total": 69,
+    "imdb_total": 73,
+    "tmdb_episodes_updated_at": 1791778892150,
+    "position_anomaly": false,
+    "selection_reason": "animation_mismatches"
+  },
+  {
+    "show_id": 1877,
+    "title": "Phineas and Ferb",
+    "votes": 69568,
+    "genres": [
+      "Animation",
+      "Comedy",
+      "Family",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 47,
+      "2": 66,
+      "3": 62,
+      "4": 48,
+      "5": 38,
+      "6": 2
+    },
+    "imdb": {
+      "1": 26,
+      "2": 38,
+      "3": 35,
+      "4": 31,
+      "5": 20,
+      "6": 1
+    },
+    "tmdb_total": 263,
+    "imdb_total": 151,
+    "tmdb_episodes_updated_at": 1791778834786,
+    "position_anomaly": false,
+    "selection_reason": "animation_mismatches"
+  },
+  {
+    "show_id": 2723,
+    "title": "Samurai Jack",
+    "votes": 67729,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Action & Adventure",
+      "Animation"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 13,
+      "3": 11,
+      "2": 13,
+      "5": 10,
+      "4": 13
+    },
+    "imdb": {
+      "1": 13,
+      "3": 13,
+      "2": 13,
+      "5": 10,
+      "4": 13
+    },
+    "tmdb_total": 60,
+    "imdb_total": 62,
+    "tmdb_episodes_updated_at": 1791407610155,
+    "position_anomaly": false,
+    "selection_reason": "animation_mismatches"
+  },
+  {
+    "show_id": 2122,
+    "title": "King of the Hill",
+    "votes": 66937,
+    "genres": [
+      "Animation",
+      "Comedy",
+      "Family"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "2": 23,
+      "1": 12,
+      "4": 24,
+      "3": 25,
+      "6": 22,
+      "5": 20,
+      "8": 22,
+      "7": 23,
+      "10": 15,
+      "9": 15,
+      "12": 22,
+      "11": 12,
+      "14": 10,
+      "13": 20,
+      "15": 10
+    },
+    "imdb": {
+      "2": 23,
+      "1": 12,
+      "4": 24,
+      "3": 25,
+      "6": 21,
+      "5": 20,
+      "8": 22,
+      "7": 23,
+      "10": 15,
+      "9": 15,
+      "12": 22,
+      "11": 12,
+      "14": 10,
+      "13": 24,
+      "15": 10
+    },
+    "tmdb_total": 275,
+    "imdb_total": 278,
+    "tmdb_episodes_updated_at": 1791778835548,
+    "position_anomaly": false,
+    "selection_reason": "animation_mismatches"
+  },
+  {
+    "show_id": 4327,
+    "title": "Mr. Bean",
+    "votes": 154137,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 14
+    },
+    "imdb": {
+      "1": 15
+    },
+    "tmdb_total": 14,
+    "imdb_total": 15,
+    "tmdb_episodes_updated_at": 1791606040073,
+    "position_anomaly": false,
+    "selection_reason": "other_genre_mismatches"
+  },
+  {
+    "show_id": 2734,
+    "title": "Law & Order: Special Victims Unit",
+    "votes": 147544,
+    "genres": [
+      "Crime",
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "2": 21,
+      "1": 22,
+      "4": 25,
+      "3": 23,
+      "6": 23,
+      "5": 25,
+      "8": 22,
+      "7": 22,
+      "10": 22,
+      "9": 19,
+      "12": 24,
+      "11": 24,
+      "14": 24,
+      "13": 23,
+      "16": 23,
+      "15": 24,
+      "18": 21,
+      "17": 23,
+      "20": 24,
+      "19": 24,
+      "22": 16,
+      "21": 20,
+      "24": 22,
+      "23": 22,
+      "26": 22,
+      "25": 13,
+      "28": 4,
+      "27": 21
+    },
+    "imdb": {
+      "2": 21,
+      "1": 22,
+      "4": 25,
+      "3": 23,
+      "6": 23,
+      "5": 25,
+      "8": 22,
+      "7": 22,
+      "10": 22,
+      "9": 19,
+      "12": 24,
+      "11": 24,
+      "14": 24,
+      "13": 23,
+      "16": 23,
+      "15": 24,
+      "18": 21,
+      "17": 23,
+      "20": 24,
+      "19": 24,
+      "22": 16,
+      "21": 20,
+      "24": 22,
+      "23": 22,
+      "26": 22,
+      "25": 13,
+      "28": 1,
+      "27": 21
+    },
+    "tmdb_total": 598,
+    "imdb_total": 595,
+    "tmdb_episodes_updated_at": 1791778837467,
+    "position_anomaly": false,
+    "selection_reason": "other_genre_mismatches"
+  },
+  {
+    "show_id": 39351,
+    "title": "Grimm",
+    "votes": 142447,
+    "genres": [
+      "Drama",
+      "Mystery",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "6": 13,
+      "1": 22,
+      "4": 22,
+      "5": 21,
+      "2": 22,
+      "3": 22
+    },
+    "imdb": {
+      "6": 13,
+      "1": 22,
+      "4": 22,
+      "5": 22,
+      "2": 22,
+      "3": 22
+    },
+    "tmdb_total": 122,
+    "imdb_total": 123,
+    "tmdb_episodes_updated_at": 1791411638318,
+    "position_anomaly": false,
+    "selection_reason": "other_genre_mismatches"
+  },
+  {
+    "show_id": 4608,
+    "title": "30 Rock",
+    "votes": 140112,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 21,
+      "2": 15,
+      "5": 23,
+      "6": 22,
+      "3": 22,
+      "4": 22,
+      "7": 13
+    },
+    "imdb": {
+      "1": 22,
+      "2": 15,
+      "5": 23,
+      "6": 22,
+      "3": 22,
+      "4": 22,
+      "7": 13
+    },
+    "tmdb_total": 138,
+    "imdb_total": 139,
+    "tmdb_episodes_updated_at": 1791407803464,
+    "position_anomaly": true,
+    "selection_reason": "other_genre_mismatches"
+  },
+  {
+    "show_id": 45,
+    "title": "Top Gear",
+    "votes": 138298,
+    "genres": [
+      "Reality",
+      "Talk"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "1": 10,
+      "2": 10,
+      "3": 9,
+      "4": 10,
+      "5": 9,
+      "6": 11,
+      "7": 7,
+      "8": 8,
+      "9": 6,
+      "10": 10,
+      "11": 6,
+      "12": 8,
+      "13": 7,
+      "14": 7,
+      "15": 6,
+      "16": 6,
+      "17": 6,
+      "18": 7,
+      "19": 7,
+      "20": 6,
+      "21": 7,
+      "22": 8,
+      "23": 6,
+      "24": 7,
+      "25": 6,
+      "26": 5,
+      "27": 5,
+      "28": 6,
+      "29": 5,
+      "30": 4,
+      "31": 5,
+      "32": 5,
+      "33": 5
+    },
+    "imdb": {
+      "1": 10,
+      "2": 10,
+      "3": 9,
+      "4": 10,
+      "5": 9,
+      "6": 11,
+      "7": 7,
+      "8": 8,
+      "9": 8,
+      "10": 11,
+      "11": 6,
+      "12": 8,
+      "13": 7,
+      "14": 7,
+      "15": 9,
+      "16": 9,
+      "17": 6,
+      "18": 8,
+      "19": 9,
+      "20": 6,
+      "21": 9,
+      "22": 9,
+      "23": 6,
+      "24": 7,
+      "25": 6,
+      "26": 5,
+      "27": 5,
+      "28": 7,
+      "29": 5,
+      "30": 4,
+      "31": 6,
+      "32": 5,
+      "33": 5
+    },
+    "tmdb_total": 230,
+    "imdb_total": 247,
+    "tmdb_episodes_updated_at": 1791778828074,
+    "position_anomaly": true,
+    "selection_reason": "other_genre_mismatches"
+  },
+  {
+    "show_id": 2996,
+    "title": "The Office",
+    "votes": 134028,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "2": 6,
+      "1": 6
+    },
+    "imdb": {
+      "2": 6,
+      "1": 6,
+      "3": 2
+    },
+    "tmdb_total": 12,
+    "imdb_total": 14,
+    "tmdb_episodes_updated_at": 1791407619831,
+    "position_anomaly": false,
+    "selection_reason": "other_genre_mismatches"
+  },
+  {
+    "show_id": 247718,
+    "title": "MobLand",
+    "votes": 131463,
+    "genres": [
+      "Crime",
+      "Drama"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "2": 10,
+      "1": 10
+    },
+    "imdb": {
+      "2": 4,
+      "1": 10
+    },
+    "tmdb_total": 20,
+    "imdb_total": 14,
+    "tmdb_episodes_updated_at": 1791779069757,
+    "position_anomaly": false,
+    "selection_reason": "other_genre_mismatches"
+  },
+  {
+    "show_id": 120911,
+    "title": "The Terminal List",
+    "votes": 130499,
+    "genres": [
+      "Action & Adventure",
+      "Drama"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "1": 8,
+      "2": 8
+    },
+    "imdb": {
+      "1": 8
+    },
+    "tmdb_total": 16,
+    "imdb_total": 8,
+    "tmdb_episodes_updated_at": 1791606214155,
+    "position_anomaly": false,
+    "selection_reason": "other_genre_mismatches"
+  },
+  {
+    "show_id": 39358,
+    "title": "Revenge",
+    "votes": 130320,
+    "genres": [
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "same_seasons_different_total",
+    "tmdb": {
+      "3": 22,
+      "4": 23,
+      "1": 22,
+      "2": 22
+    },
+    "imdb": {
+      "3": 22,
+      "4": 23,
+      "1": 22,
+      "2": 23
+    },
+    "tmdb_total": 89,
+    "imdb_total": 90,
+    "tmdb_episodes_updated_at": 1791411638394,
+    "position_anomaly": true,
+    "selection_reason": "other_genre_mismatches"
+  },
+  {
+    "show_id": 153312,
+    "title": "Tulsa King",
+    "votes": 121124,
+    "genres": [
+      "Crime",
+      "Drama"
+    ],
+    "kind": "different_seasons_different_total",
+    "tmdb": {
+      "1": 9,
+      "2": 10,
+      "3": 10,
+      "4": 10
+    },
+    "imdb": {
+      "1": 9,
+      "2": 10,
+      "3": 10
+    },
+    "tmdb_total": 39,
+    "imdb_total": 29,
+    "tmdb_episodes_updated_at": 1791779372807,
+    "position_anomaly": false,
+    "selection_reason": "other_genre_mismatches"
+  },
+  {
+    "show_id": 1396,
+    "title": "Breaking Bad",
+    "votes": 2680743,
+    "genres": [
+      "Drama",
+      "Crime"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "1": 7,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 16
+    },
+    "imdb": {
+      "1": 7,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 16
+    },
+    "tmdb_total": 62,
+    "imdb_total": 62,
+    "tmdb_episodes_updated_at": 1791778831143,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 1399,
+    "title": "Game of Thrones",
+    "votes": 2665289,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Drama",
+      "Action & Adventure"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "1": 10,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 7,
+      "8": 6
+    },
+    "imdb": {
+      "1": 10,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 7,
+      "8": 6
+    },
+    "tmdb_total": 73,
+    "imdb_total": 73,
+    "tmdb_episodes_updated_at": 1791778831946,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 66732,
+    "title": "Stranger Things",
+    "votes": 1741195,
+    "genres": [
+      "Action & Adventure",
+      "Mystery",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "5": 8,
+      "4": 9,
+      "3": 8,
+      "2": 9,
+      "1": 8
+    },
+    "imdb": {
+      "5": 8,
+      "4": 9,
+      "3": 8,
+      "2": 9,
+      "1": 8
+    },
+    "tmdb_total": 42,
+    "imdb_total": 42,
+    "tmdb_episodes_updated_at": 1791778897921,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 1402,
+    "title": "The Walking Dead",
+    "votes": 1215286,
+    "genres": [
+      "Action & Adventure",
+      "Drama",
+      "Sci-Fi & Fantasy"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "1": 6,
+      "2": 13,
+      "3": 16,
+      "4": 16,
+      "5": 16,
+      "6": 16,
+      "7": 16,
+      "8": 16,
+      "9": 16,
+      "10": 22,
+      "11": 24
+    },
+    "imdb": {
+      "1": 6,
+      "2": 13,
+      "3": 16,
+      "4": 16,
+      "5": 16,
+      "6": 16,
+      "7": 16,
+      "8": 16,
+      "9": 16,
+      "10": 22,
+      "11": 24
+    },
+    "tmdb_total": 177,
+    "imdb_total": 177,
+    "tmdb_episodes_updated_at": 1791606031478,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 87108,
+    "title": "Chernobyl",
+    "votes": 1066563,
+    "genres": [
+      "Drama"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "1": 5
+    },
+    "imdb": {
+      "1": 5
+    },
+    "tmdb_total": 5,
+    "imdb_total": 5,
+    "tmdb_episodes_updated_at": 1791692559750,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 76479,
+    "title": "The Boys",
+    "votes": 1027679,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Action & Adventure"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "2": 8,
+      "3": 8,
+      "4": 8,
+      "5": 8,
+      "1": 8
+    },
+    "imdb": {
+      "2": 8,
+      "3": 8,
+      "4": 8,
+      "5": 8,
+      "1": 8
+    },
+    "tmdb_total": 40,
+    "imdb_total": 40,
+    "tmdb_episodes_updated_at": 1791606155019,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 1405,
+    "title": "Dexter",
+    "votes": 956465,
+    "genres": [
+      "Crime",
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "1": 12,
+      "2": 12,
+      "3": 12,
+      "4": 12,
+      "5": 12,
+      "6": 12,
+      "7": 12,
+      "8": 12
+    },
+    "imdb": {
+      "1": 12,
+      "2": 12,
+      "3": 12,
+      "4": 12,
+      "5": 12,
+      "6": 12,
+      "7": 12,
+      "8": 12
+    },
+    "tmdb_total": 96,
+    "imdb_total": 96,
+    "tmdb_episodes_updated_at": 1791778831842,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 1418,
+    "title": "The Big Bang Theory",
+    "votes": 947044,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "1": 17,
+      "2": 23,
+      "3": 23,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 24,
+      "10": 24,
+      "11": 24,
+      "12": 24
+    },
+    "imdb": {
+      "1": 17,
+      "2": 23,
+      "3": 23,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 24,
+      "10": 24,
+      "11": 24,
+      "12": 24
+    },
+    "tmdb_total": 279,
+    "imdb_total": 279,
+    "tmdb_episodes_updated_at": 1791778832633,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 60059,
+    "title": "Better Call Saul",
+    "votes": 865721,
+    "genres": [
+      "Crime",
+      "Drama"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "6": 13,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "1": 10
+    },
+    "imdb": {
+      "6": 13,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "1": 10
+    },
+    "tmdb_total": 63,
+    "imdb_total": 63,
+    "tmdb_episodes_updated_at": 1791606099604,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 60574,
+    "title": "Peaky Blinders",
+    "votes": 793925,
+    "genres": [
+      "Drama",
+      "Crime"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "5": 6,
+      "6": 6,
+      "1": 6,
+      "2": 6,
+      "3": 6,
+      "4": 6
+    },
+    "imdb": {
+      "5": 6,
+      "6": 6,
+      "1": 6,
+      "2": 6,
+      "3": 6,
+      "4": 6
+    },
+    "tmdb_total": 36,
+    "imdb_total": 36,
+    "tmdb_episodes_updated_at": 1791413850864,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 1100,
+    "title": "How I Met Your Mother",
+    "votes": 790048,
+    "genres": [
+      "Comedy"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "1": 22,
+      "2": 22,
+      "3": 20,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 24
+    },
+    "imdb": {
+      "1": 22,
+      "2": 22,
+      "3": 20,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 24
+    },
+    "tmdb_total": 208,
+    "imdb_total": 208,
+    "tmdb_episodes_updated_at": 1791692430117,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 93405,
+    "title": "Squid Game",
+    "votes": 777822,
+    "genres": [
+      "Action & Adventure",
+      "Mystery",
+      "Drama"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "1": 9,
+      "2": 7,
+      "3": 6
+    },
+    "imdb": {
+      "1": 9,
+      "2": 7,
+      "3": 6
+    },
+    "tmdb_total": 22,
+    "imdb_total": 22,
+    "tmdb_episodes_updated_at": 1791519759094,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 46648,
+    "title": "True Detective",
+    "votes": 771749,
+    "genres": [
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "3": 8,
+      "4": 6,
+      "1": 8,
+      "2": 8
+    },
+    "imdb": {
+      "3": 8,
+      "4": 6,
+      "1": 8,
+      "2": 8
+    },
+    "tmdb_total": 30,
+    "imdb_total": 30,
+    "tmdb_episodes_updated_at": 1791778888761,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 100088,
+    "title": "The Last of Us",
+    "votes": 751132,
+    "genres": [
+      "Drama"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "2": 7,
+      "1": 9
+    },
+    "imdb": {
+      "2": 7,
+      "1": 9
+    },
+    "tmdb_total": 16,
+    "imdb_total": 16,
+    "tmdb_episodes_updated_at": 1791606167674,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 42009,
+    "title": "Black Mirror",
+    "votes": 749723,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Drama",
+      "Mystery"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "3": 6,
+      "2": 4,
+      "1": 3,
+      "7": 6,
+      "6": 5,
+      "5": 3,
+      "4": 6
+    },
+    "imdb": {
+      "3": 6,
+      "2": 4,
+      "1": 3,
+      "7": 6,
+      "6": 5,
+      "5": 3,
+      "4": 6
+    },
+    "tmdb_total": 33,
+    "imdb_total": 33,
+    "tmdb_episodes_updated_at": 1791778855328,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 60625,
+    "title": "Rick and Morty",
+    "votes": 713519,
+    "genres": [
+      "Animation",
+      "Comedy",
+      "Sci-Fi & Fantasy",
+      "Action & Adventure"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "8": 10,
+      "9": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 10,
+      "1": 11,
+      "2": 10,
+      "3": 10
+    },
+    "imdb": {
+      "8": 10,
+      "9": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 10,
+      "1": 11,
+      "2": 10,
+      "3": 10
+    },
+    "tmdb_total": 91,
+    "imdb_total": 91,
+    "tmdb_episodes_updated_at": 1791778892599,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 87739,
+    "title": "The Queen's Gambit",
+    "votes": 679376,
+    "genres": [
+      "Drama"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "1": 7
+    },
+    "imdb": {
+      "1": 7
+    },
+    "tmdb_total": 7,
+    "imdb_total": 7,
+    "tmdb_episodes_updated_at": 1791778957515,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 82856,
+    "title": "The Mandalorian",
+    "votes": 666753,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Action & Adventure"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "3": 8,
+      "2": 8,
+      "1": 8
+    },
+    "imdb": {
+      "3": 8,
+      "2": 8,
+      "1": 8
+    },
+    "tmdb_total": 24,
+    "imdb_total": 24,
+    "tmdb_episodes_updated_at": 1791778953948,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 44217,
+    "title": "Vikings",
+    "votes": 650616,
+    "genres": [
+      "Action & Adventure",
+      "Drama",
+      "War & Politics"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "4": 20,
+      "5": 20,
+      "6": 20,
+      "1": 9,
+      "2": 10,
+      "3": 10
+    },
+    "imdb": {
+      "4": 20,
+      "5": 20,
+      "6": 20,
+      "1": 9,
+      "2": 10,
+      "3": 10
+    },
+    "tmdb_total": 89,
+    "imdb_total": 89,
+    "tmdb_episodes_updated_at": 1791606092947,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 71912,
+    "title": "The Witcher",
+    "votes": 625596,
+    "genres": [
+      "Sci-Fi & Fantasy",
+      "Drama",
+      "Action & Adventure"
+    ],
+    "kind": "equal_season_counts",
+    "tmdb": {
+      "1": 8,
+      "2": 8,
+      "3": 8,
+      "4": 8
+    },
+    "imdb": {
+      "1": 8,
+      "2": 8,
+      "3": 8,
+      "4": 8
+    },
+    "tmdb_total": 32,
+    "imdb_total": 32,
+    "tmdb_episodes_updated_at": 1791606151349,
+    "position_anomaly": false,
+    "selection_reason": "most_voted_equal_count_controls"
+  },
+  {
+    "show_id": 154526,
+    "title": "MF GHOST",
+    "votes": 1002,
+    "genres": [
+      "Animation",
+      "Action & Adventure"
+    ],
+    "kind": "different_seasons_equal_total",
+    "tmdb": {
+      "1": 37
+    },
+    "imdb": {
+      "2": 12,
+      "1": 12,
+      "3": 13
+    },
+    "tmdb_total": 37,
+    "imdb_total": 37,
+    "tmdb_episodes_updated_at": 1791421587299,
+    "position_anomaly": false,
+    "selection_reason": "reported_case"
+  }
+]

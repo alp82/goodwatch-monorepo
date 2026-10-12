@@ -607,7 +607,13 @@ export async function applyTrackingEvent(
 	)
 }
 
-const NEEDS_ID = ["watch", "pressSeen", "markSeason", "watchUpTo"]
+const NEEDS_ID = [
+	"watch",
+	"pressSeen",
+	"markSeason",
+	"markEpisodes",
+	"watchUpTo",
+]
 
 /** How many watches a Seen press that is put back can have: more than any show lists episodes. */
 const MAX_PRESS_WATCHES = 20_000

@@ -16,7 +16,12 @@
 // Titles and votes open the same way on an episode, and the key sits behind the info button.
 import { InformationCircleIcon } from "@heroicons/react/24/outline"
 import { HEADER_HEIGHT, stickyHeadersBottom } from "~/ui/details/header-height"
-import type { EpisodeGrid as EpisodeGridData, GridEpisode, GridSeason, GridSpecial } from "~/server/episode-grid.server"
+import type {
+	EpisodeGrid as EpisodeGridData,
+	GridEpisode,
+	GridSeason,
+	GridSpecial,
+} from "~/server/episode-grid.server"
 import {
 	EPISODE_GRID_ANCHOR,
 	formatScore,
@@ -47,7 +52,8 @@ const ROWS_CELL_REM = 2.5
 const CELL_SPACING_REM = 3 / 16
 
 /** The width the rows table needs to show `columns` episode columns without scrolling. */
-const rowsWidthRem = (columns: number) => ROWS_LABEL_REM + columns * ROWS_CELL_REM + (columns + 2) * CELL_SPACING_REM
+const rowsWidthRem = (columns: number) =>
+	ROWS_LABEL_REM + columns * ROWS_CELL_REM + (columns + 2) * CELL_SPACING_REM
 
 /**
  * Shows the rows table only when its box is wide enough for every episode column, and the
@@ -68,10 +74,18 @@ const CELL_SIZE: Record<Orientation, string> = {
  * The paint of an episode tile. Well-voted episodes are solid vibe tiles; episodes with few
  * votes are a faint wash of their vibe with a dashed vibe border. The number is white on both.
  */
-const tilePaint = (episode: Pick<Episode, "score" | "votes">) => {
+const tilePaint = (episode: Pick<Episode, "score" | "votes" | "unrated">) => {
+	if (episode.unrated)
+		return { className: "", style: { background: "rgba(255,255,255,0.06)" } }
 	const vibe = imdbVibe(episode.score)
 	return isLowVotes(episode.votes)
-		? { className: "border border-dashed", style: { borderColor: `var(--color-vibe-${vibe})`, background: vibeWash(vibe) } }
+		? {
+				className: "border border-dashed",
+				style: {
+					borderColor: `var(--color-vibe-${vibe})`,
+					background: vibeWash(vibe),
+				},
+			}
 		: { className: "", style: { background: vibeTileColor(vibe) } }
 }
 
@@ -89,20 +103,27 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 
 	// ---- cells ---------------------------------------------------------------------------
 
-	const cell = (season: number | null, episode: Episode, o: Orientation, id: string) => {
+	const cell = (
+		season: number | null,
+		episode: Episode,
+		o: Orientation,
+		id: string,
+	) => {
 		const { className, style } = tilePaint(episode)
 		return (
 			<button
 				key={id}
 				type="button"
 				aria-label={episodeLabel(season, episode)}
-				{...float.trigger(`ep-${id}`, () => <EpisodeTip season={season} episode={episode} />)}
+				{...float.trigger(`ep-${id}`, () => (
+					<EpisodeTip season={season} episode={episode} />
+				))}
 				className={`relative block shrink-0 rounded-[4px] font-semibold tabular-nums text-white outline-offset-1 transition-[filter] hover:brightness-125 focus-visible:outline-2 focus-visible:outline-white ${CELL_SIZE[o]} ${className} ${
 					float.isOpen(`ep-${id}`) ? "outline-2 outline-white" : ""
 				}`}
 				style={style}
 			>
-				{formatScore(episode.score)}
+				{episode.unrated ? "—" : formatScore(episode.score)}
 			</button>
 		)
 	}
@@ -119,14 +140,20 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 		<button
 			type="button"
 			aria-label={seasonLabel(season, grid.providers)}
-			{...float.trigger(`season-${season.number}`, () => <SeasonTip season={season} providers={grid.providers} />)}
+			{...float.trigger(`season-${season.number}`, () => (
+				<SeasonTip season={season} providers={grid.providers} />
+			))}
 			className={`flex ${o === "wide" ? "flex-row items-baseline gap-1.5" : "flex-col items-center gap-0.5"} rounded px-1 py-0.5 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white ${
 				float.isOpen(`season-${season.number}`) ? "bg-white/10" : ""
 			}`}
 		>
-			<span className="text-sm font-semibold text-white">S{season.number}</span>
+			<span className="text-sm font-semibold text-white">
+				{season.number < 0 ? "More" : `S${season.number}`}
+			</span>
 			{season.scores.imdb ? (
-				<span className="text-xs font-semibold tabular-nums text-white">{formatScore(season.scores.imdb.score)}</span>
+				<span className="text-xs font-semibold tabular-nums text-white">
+					{formatScore(season.scores.imdb.score)}
+				</span>
 			) : null}
 		</button>
 	)
@@ -141,10 +168,15 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 
 	const wide = (
 		<table className="border-separate border-spacing-[3px]">
-			<caption className="sr-only">IMDb rating of every episode, one row per season</caption>
+			<caption className="sr-only">
+				IMDb rating of every episode, one row per season
+			</caption>
 			<thead>
 				<tr className="text-[11px] text-gray-500">
-					<th scope="col" className={`sticky left-0 z-10 ${SURFACE} min-w-[4.25rem] text-left font-normal`}>
+					<th
+						scope="col"
+						className={`sticky left-0 z-10 ${SURFACE} min-w-[4.25rem] text-left font-normal`}
+					>
 						<span className="sr-only">Season</span>
 					</th>
 					{episodeNumbers.map((number) => (
@@ -157,15 +189,31 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 			</thead>
 			<tbody>
 				{grid.seasons.map((season) => {
-					const slots = episodeSlots(season.episodes, first, season.maxEpisodeNumber)
+					const slots = episodeSlots(
+						season.episodes,
+						first,
+						season.maxEpisodeNumber,
+					)
 					return (
 						<tr key={season.number}>
-							<th scope="row" className={`sticky left-0 z-10 ${SURFACE} pr-1 text-left font-normal`}>
+							<th
+								scope="row"
+								className={`sticky left-0 z-10 ${SURFACE} pr-1 text-left font-normal`}
+							>
 								{seasonHeader(season, "wide")}
 							</th>
 							{slots.map(({ number, episode }) => (
 								<td key={number} className="p-0">
-									{episode ? cell(season.number, episode, "wide", `${season.number}-${number}`) : number >= 1 ? gap(number, "wide") : null}
+									{episode
+										? cell(
+												season.number,
+												episode,
+												"wide",
+												`${season.number}-${number}`,
+											)
+										: number >= 1
+											? gap(number, "wide")
+											: null}
 								</td>
 							))}
 							{episodeNumbers.slice(slots.length).map((number) => (
@@ -176,11 +224,18 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 				})}
 				{hasSpecials && (
 					<tr>
-						<th scope="row" className={`sticky left-0 z-10 ${SURFACE} pt-2 pr-1 text-left align-top text-sm font-semibold text-gray-400`}>
+						<th
+							scope="row"
+							className={`sticky left-0 z-10 ${SURFACE} pt-2 pr-1 text-left align-top text-sm font-semibold text-gray-400`}
+						>
 							{specialsLabel("Specials")}
 						</th>
 						<td colSpan={columns} className="pt-2">
-							<div className="flex flex-wrap gap-[3px]">{grid.specials.map((special, i) => cell(null, special, "wide", `sp-${i}`))}</div>
+							<div className="flex flex-wrap gap-[3px]">
+								{grid.specials.map((special, i) =>
+									cell(null, special, "wide", `sp-${i}`),
+								)}
+							</div>
 						</td>
 					</tr>
 				)}
@@ -191,10 +246,14 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 	// ---- narrow: seasons as columns ------------------------------------------------------
 
 	const rows = Math.max(columns, grid.specials.length)
-	const byNumber = grid.seasons.map((s) => new Map(s.episodes.map((e) => [e.number, e])))
+	const byNumber = grid.seasons.map(
+		(s) => new Map(s.episodes.map((e) => [e.number, e])),
+	)
 	const narrow = (
 		<table className="w-full border-separate border-spacing-[3px]">
-			<caption className="sr-only">IMDb rating of every episode, one column per season</caption>
+			<caption className="sr-only">
+				IMDb rating of every episode, one column per season
+			</caption>
 			<thead>
 				<tr>
 					<th scope="col" className={`sticky left-0 z-10 ${SURFACE} w-7`}>
@@ -202,11 +261,16 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 					</th>
 					{grid.seasons.map((season) => (
 						<th key={season.number} scope="col" className="pb-1 font-normal">
-							<span className="flex justify-center">{seasonHeader(season, "narrow")}</span>
+							<span className="flex justify-center">
+								{seasonHeader(season, "narrow")}
+							</span>
 						</th>
 					))}
 					{hasSpecials && (
-						<th scope="col" className="pb-1 align-top text-sm font-semibold text-gray-400">
+						<th
+							scope="col"
+							className="pb-1 align-top text-sm font-semibold text-gray-400"
+						>
 							{specialsLabel("Sp")}
 						</th>
 					)}
@@ -217,7 +281,10 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 					const number = first + i
 					return (
 						<tr key={number}>
-							<th scope="row" className={`sticky left-0 z-10 ${SURFACE} pr-1 text-right text-[11px] font-normal tabular-nums text-gray-500`}>
+							<th
+								scope="row"
+								className={`sticky left-0 z-10 ${SURFACE} pr-1 text-right text-[11px] font-normal tabular-nums text-gray-500`}
+							>
 								{number <= grid.maxEpisodeNumber ? (
 									<>
 										<span className="sr-only">Episode </span>
@@ -230,14 +297,24 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 								return (
 									<td key={season.number} className="p-0">
 										{episode
-											? cell(season.number, episode, "narrow", `${season.number}-${number}`)
+											? cell(
+													season.number,
+													episode,
+													"narrow",
+													`${season.number}-${number}`,
+												)
 											: number >= 1 && number <= season.maxEpisodeNumber
 												? gap(number, "narrow")
 												: null}
 									</td>
 								)
 							})}
-							{hasSpecials && <td className="p-0">{grid.specials[i] && cell(null, grid.specials[i], "narrow", `sp-${i}`)}</td>}
+							{hasSpecials && (
+								<td className="p-0">
+									{grid.specials[i] &&
+										cell(null, grid.specials[i], "narrow", `sp-${i}`)}
+								</td>
+							)}
 						</tr>
 					)
 				})}
@@ -263,10 +340,16 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 			aria-labelledby="episode-grid-title"
 			// Scroll clear of the site bar and the sticky title header, which grows on phones and
 			// with the discovery bar.
-			style={{ scrollMarginTop: `calc(${HEADER_HEIGHT} + ${SITE_BAR_HEIGHT + 16}px)` }}
+			style={{
+				scrollMarginTop: `calc(${HEADER_HEIGHT} + ${SITE_BAR_HEIGHT + 16}px)`,
+			}}
 		>
 			<div className="flex items-center justify-between gap-4">
-				<h2 id="episode-grid-title" tabIndex={-1} className="text-2xl font-bold focus:outline-none">
+				<h2
+					id="episode-grid-title"
+					tabIndex={-1}
+					className="text-2xl font-bold focus:outline-none"
+				>
 					Episode ratings
 				</h2>
 				<button
@@ -274,8 +357,15 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 					aria-label="How to read the episode grid"
 					{...float.trigger("legend", () => (
 						<LegendContent lowVoteSample={lowVoteSample}>
-							{hasSpecials && <p className="text-gray-400">Specials count toward no season.</p>}
-							<p className="text-gray-400">Season scores: IMDb episodes, vote-weighted. Open a season for every site.</p>
+							{hasSpecials && (
+								<p className="text-gray-400">
+									Specials count toward no season.
+								</p>
+							)}
+							<p className="text-gray-400">
+								Season scores: IMDb episodes, vote-weighted. Open a season for
+								every site.
+							</p>
 						</LegendContent>
 					))}
 					className="rounded-full p-1 text-gray-400 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
@@ -283,13 +373,22 @@ export default function EpisodeGrid({ grid }: { grid: EpisodeGridData }) {
 					<InformationCircleIcon className="h-5 w-5" />
 				</button>
 			</div>
+			{grid.note && <p className="mt-2 text-sm text-gray-400">{grid.note}</p>}
 			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed rule built from a number */}
 			<style dangerouslySetInnerHTML={{ __html: layoutRule(columns) }} />
-			<div className={`@container/episode-grid mt-4 rounded-2xl border border-white/[0.06] ${SURFACE} p-2 sm:p-3`}>
-				<div data-grid-layout="rows" className="overflow-x-auto overscroll-x-contain">
+			<div
+				className={`@container/episode-grid mt-4 rounded-2xl border border-white/[0.06] ${SURFACE} p-2 sm:p-3`}
+			>
+				<div
+					data-grid-layout="rows"
+					className="overflow-x-auto overscroll-x-contain"
+				>
 					{wide}
 				</div>
-				<div data-grid-layout="columns" className="overflow-x-auto overscroll-x-contain">
+				<div
+					data-grid-layout="columns"
+					className="overflow-x-auto overscroll-x-contain"
+				>
 					{narrow}
 				</div>
 			</div>

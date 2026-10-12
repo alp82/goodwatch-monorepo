@@ -1,0 +1,7244 @@
+[
+  {
+    "show_id": 1668,
+    "title": "Friends",
+    "live_seasons": {
+      "1": 24,
+      "2": 24,
+      "3": 25,
+      "4": 23,
+      "5": 23,
+      "6": 23,
+      "7": 23,
+      "8": 23,
+      "9": 23,
+      "10": 17
+    },
+    "catalog_seasons": {
+      "1": 24,
+      "2": 24,
+      "3": 25,
+      "4": 23,
+      "5": 23,
+      "6": 23,
+      "7": 23,
+      "8": 23,
+      "9": 23,
+      "10": 17
+    },
+    "imdb_seasons": {
+      "1": 24,
+      "2": 24,
+      "3": 25,
+      "4": 24,
+      "5": 24,
+      "6": 25,
+      "7": 24,
+      "8": 24,
+      "9": 23,
+      "10": 17
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0108778",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 0,
+        "group_count": 1,
+        "id": "6a7deac306167fa66fc7a7d2",
+        "name": "Aired Order",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 236,
+        "group_count": 10,
+        "id": "5ad432a6c3a3685c5400e4cb",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 234,
+        "group_count": 10,
+        "id": "6896e24eb77a6ff4935d07e8",
+        "name": "Original",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 19885,
+    "title": "Sherlock",
+    "live_seasons": {
+      "1": 3,
+      "2": 3,
+      "3": 3,
+      "4": 3
+    },
+    "catalog_seasons": {
+      "4": 3,
+      "1": 3,
+      "3": 3,
+      "2": 3
+    },
+    "imdb_seasons": {
+      "4": 4,
+      "1": 4,
+      "3": 4,
+      "2": 3
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1475582",
+    "groups": [
+      {
+        "description": "Air date order of all episodes, including the special which aired between S3 and S4",
+        "episode_count": 13,
+        "group_count": 4,
+        "id": "698a51fb33e57671bccb0c2d",
+        "name": "All episodes",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 13,
+        "group_count": 4,
+        "id": "66068520021cee016347752e",
+        "name": "Hulu",
+        "network": null,
+        "type": 4
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2316,
+    "title": "The Office",
+    "live_seasons": {
+      "1": 6,
+      "2": 22,
+      "3": 23,
+      "4": 14,
+      "5": 26,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 23
+    },
+    "catalog_seasons": {
+      "2": 22,
+      "1": 6,
+      "4": 14,
+      "3": 23,
+      "6": 24,
+      "5": 26,
+      "8": 24,
+      "7": 24,
+      "9": 23
+    },
+    "imdb_seasons": {
+      "2": 22,
+      "1": 6,
+      "4": 14,
+      "3": 23,
+      "6": 26,
+      "5": 26,
+      "8": 24,
+      "7": 27,
+      "9": 23
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0386676",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 243,
+        "group_count": 10,
+        "id": "682e1fa2f5ca8ac4a62f16e2",
+        "name": "Alternate Order",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 186,
+        "group_count": 9,
+        "id": "6803a73a4315ae6d9aad05b3",
+        "name": "Italian DVD",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 201,
+        "group_count": 9,
+        "id": "6814d0b82dc731ed49089811",
+        "name": "iTunes France",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 281,
+        "group_count": 10,
+        "id": "6054b076fab3fa003d4f10d7",
+        "name": "Blu-ray Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 280,
+        "group_count": 10,
+        "id": "69302590be6d1ca733788f58",
+        "name": "BluRay",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "What is a Superfan Episode, you ask? Why, it’s only the latest and greatest way to watch your favorite comedy! Imagine a world where a beloved episode is transformed by the addition of extended scenes and never-before-seen material.",
+        "episode_count": 186,
+        "group_count": 9,
+        "id": "66bd170e3990ba12fee9990d",
+        "name": "Superfan Order",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Esta adaptação americana se passa em uma empresa de papel em Scranton, Pensilvânia e tem um estilo de documentário semelhante ao original britânico estrelado por Ricky Gervais. Mostra a equipe da Dunder-Mifflin, que inclui personagens baseados no original britânico (e, provavelmente, em pessoas com quem você trabalha em seu escritório). Temos Jim, o simpático empregado que tem um pouco de todo homem. Jim sente uma atração pela recepcionista promovida a representante de vendas Pam (pois romances de escritório são sempre uma boa ideia). Temos também Dwight, o colega de trabalho bem-sucedido que carece de habilidades sociais e bom senso. E há ainda Ryan, ex-estagiário que trabalha temporariamente na matriz em Nova York antes de retornar a Scranton.",
+        "episode_count": 53,
+        "group_count": 9,
+        "id": "66f4a7b34a16c0f2a7db3c82",
+        "name": "Amazon Order",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Standard non-Superfan edition on Peacock, including all extra episodes. Double-length episodes are split into two parts, except for \"Finale\".",
+        "episode_count": 242,
+        "group_count": 10,
+        "id": "694f4f2c9eb1c78ff3fb1098",
+        "name": "Peacock",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "ave you binged The Office dozens of times? Do you wish that your next rewatch had a little more oomph? Some secret sauce? A bit of never-before-seen footage? If so, ask your doctor if The Office Superfan Episodes could be right for you.",
+        "episode_count": 0,
+        "group_count": 1,
+        "id": "6a7a71782541b7ba5f49dabe",
+        "name": "Superfan Episodes",
+        "network": null,
+        "type": 4
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1429,
+    "title": "Attack on Titan",
+    "live_seasons": {
+      "1": 25,
+      "2": 12,
+      "3": 22,
+      "4": 28
+    },
+    "catalog_seasons": {
+      "1": 25,
+      "2": 12,
+      "3": 22,
+      "4": 28
+    },
+    "imdb_seasons": {
+      "1": 25,
+      "2": 12,
+      "3": 22,
+      "4": 30
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2560140",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 89,
+        "group_count": 1,
+        "id": "5fd0acbc798c940040c180b0",
+        "name": "All Episodes",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 97,
+        "group_count": 1,
+        "id": "5fd0ad18691cd5003d1ca648",
+        "name": "All Episodes + OVAs",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 97,
+        "group_count": 1,
+        "id": "635d204e0c3ec80090b46bb6",
+        "name": "All episodes + OVAs in logical order",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 97,
+        "group_count": 9,
+        "id": "69cf79f6453a8d0f020b9000",
+        "name": "All Seasons + OVA",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "DVD / Bluray Veröffentlichung durch Crunchyroll (vormals Kazé)",
+        "episode_count": 87,
+        "group_count": 14,
+        "id": "61dc75fc12197e0041bbe70b",
+        "name": "German DVD / Bluray Crunchyroll (vormals Kazé)",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "Order for mediaserver",
+        "episode_count": 115,
+        "group_count": 5,
+        "id": "679e20df02a74dc73f952672",
+        "name": "Order for mediaserver",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "All episodes sorted into their smaller story arcs.",
+        "episode_count": 89,
+        "group_count": 11,
+        "id": "63469b5dd34eb3007e7bce8a",
+        "name": "Story Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "All episodes + OVA's placed where they were intended to be watched. Grouped by story arc to best accommodate OVA specials.",
+        "episode_count": 97,
+        "group_count": 13,
+        "id": "685382dd5c6142bc005d88fa",
+        "name": "All Episodes + OVAs Intended Anime Order",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 136,
+        "group_count": 8,
+        "id": "61dc7c554da3d400192ee3ff",
+        "name": "Original Production + OVAs",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 124,
+        "group_count": 5,
+        "id": "645589ac5b4fed0185ce7d2b",
+        "name": "Original Production by Seasons",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "The final chapter specials as part of Season 4",
+        "episode_count": 97,
+        "group_count": 5,
+        "id": "650d9fa693db92011bb85cd2",
+        "name": "Seasons + OVAs",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 115,
+        "group_count": 5,
+        "id": "66cd15ff5b846d32524101ec",
+        "name": "Seasons+OAD+OVA+SP",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 4607,
+    "title": "Lost",
+    "live_seasons": {
+      "1": 24,
+      "2": 24,
+      "3": 23,
+      "4": 13,
+      "5": 17,
+      "6": 17
+    },
+    "catalog_seasons": {
+      "1": 24,
+      "4": 13,
+      "5": 17,
+      "2": 24,
+      "3": 23,
+      "6": 17
+    },
+    "imdb_seasons": {
+      "1": 25,
+      "4": 14,
+      "5": 17,
+      "2": 24,
+      "3": 23,
+      "6": 18
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0411008",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 0,
+        "group_count": 1,
+        "id": "698a05bd60473bd283c1d02a",
+        "name": "DVD",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "Syndication/Parts One and Two production order",
+        "episode_count": 121,
+        "group_count": 6,
+        "id": "6a4665d7817e8142716ff5da",
+        "name": "Syndication",
+        "network": null,
+        "type": 3
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2288,
+    "title": "Prison Break",
+    "live_seasons": {
+      "1": 22,
+      "2": 22,
+      "3": 13,
+      "4": 22,
+      "5": 9
+    },
+    "catalog_seasons": {
+      "2": 22,
+      "1": 22,
+      "4": 22,
+      "3": 13,
+      "5": 9
+    },
+    "imdb_seasons": {
+      "2": 22,
+      "1": 22,
+      "4": 24,
+      "3": 13,
+      "5": 9
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0455275",
+    "groups": [
+      {
+        "description": "In this group, \"The Old Ball and Chain\" and \"Free\" are listed as the final two episodes of season 4.",
+        "episode_count": 90,
+        "group_count": 5,
+        "id": "64ad2f15e24b9300aee3d127",
+        "name": "Digital Order",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "A \"best of\" collection of episodes available on Hulu and curated by executive producer Dawn Olmstead in celebration of the series' 20th anniversary.",
+        "episode_count": 10,
+        "group_count": 1,
+        "id": "68b55345a988d733b154ec03",
+        "name": "Great Escapes",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "A \"best of\" collection of episodes available on Hulu and curated by executive producer Dawn Olmstead in celebration of the series' 20th anniversary.",
+        "episode_count": 10,
+        "group_count": 1,
+        "id": "68b553bd196fde9d0f157f67",
+        "name": "The Company",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "A \"best of\" collection of episodes available on Hulu and curated by executive producer Dawn Olmstead in celebration of the series' 20th anniversary.",
+        "episode_count": 10,
+        "group_count": 1,
+        "id": "68b55433b0cccec6011580ae",
+        "name": "Michael and Lincoln",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Same order as the \"Original Series\" group except the pilot episode is listed as its own season.",
+        "episode_count": 81,
+        "group_count": 5,
+        "id": "5ad41efdc3a3685c3700bf53",
+        "name": "Original Series + Pilot",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "In this group, the revival/continuation (Prison Break: Resurrection) is ignored and \"The Old Ball and Chain\" and \"Free\" are listed as the final two episodes of season 4.",
+        "episode_count": 81,
+        "group_count": 4,
+        "id": "5ad02bd4c3a368259f000ae3",
+        "name": "Original Series",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "In this group, all episodes of the original series and the revival/continuation (Prison Break: Resurrection) are organized into five seasons, and \"The Old Ball and Chain\" and \"Free\" are listed as the final two episodes of season 4.",
+        "episode_count": 90,
+        "group_count": 5,
+        "id": "5ad42043c3a3685c5400cd87",
+        "name": "Complete Series",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "Same order as the \"Complete Series\" group except the pilot episode is listed as its own season.",
+        "episode_count": 90,
+        "group_count": 6,
+        "id": "5ad420e8c3a3685c3100d7dd",
+        "name": "Complete Series + Pilot",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "Episode group for just the revival/continuation.",
+        "episode_count": 9,
+        "group_count": 1,
+        "id": "5ad41ea0c3a3685c4200b8fd",
+        "name": "Prison Break: Resurrection",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 71446,
+    "title": "Money Heist",
+    "live_seasons": {
+      "1": 15,
+      "2": 16,
+      "3": 10
+    },
+    "catalog_seasons": {
+      "2": 16,
+      "1": 15,
+      "3": 10
+    },
+    "imdb_seasons": {
+      "2": 6,
+      "1": 9,
+      "4": 8,
+      "3": 8,
+      "5": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt6468322",
+    "groups": [
+      {
+        "description": "验证单集成员接口",
+        "episode_count": 0,
+        "group_count": 1,
+        "id": "6a9ad85477172e3bf51f95e0",
+        "name": "TMDB助手E2E-可删除",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "These are the five original parts released in Spain. Antena 3 released the first season in two parts of 9 and 6 episodes, respectively. For seasons 2 and 3, Netflix acquired the global streaming rights and released them in 3 parts, while the third part included 2 volumes. Note: This order does not include the edited episodes of season 1 that were released internationally by Netflix - look at the other episode groups for this release.",
+        "episode_count": 41,
+        "group_count": 5,
+        "id": "5ae0275b0e0a26156c00de9f",
+        "name": "Original Parts",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "These are the five parts that Netflix released internationally (outside of Spain).",
+        "episode_count": 48,
+        "group_count": 5,
+        "id": "5eb730dfca7ec6001f7beb51",
+        "name": "Parts (edited version)",
+        "network": {
+          "id": 213,
+          "logo_path": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
+          "name": "Netflix",
+          "origin_country": ""
+        },
+        "type": 4
+      },
+      {
+        "description": "These are the three seasons that Netflix released internationally (outside of Spain).",
+        "episode_count": 48,
+        "group_count": 3,
+        "id": "5eb7353b0cb3350020ce402e",
+        "name": "Seasons (edited version)",
+        "network": {
+          "id": 213,
+          "logo_path": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
+          "name": "Netflix",
+          "origin_country": ""
+        },
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 48,
+        "group_count": 5,
+        "id": "69bd6362156643fd018c216c",
+        "name": "Italian Parts",
+        "network": null,
+        "type": 4
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1408,
+    "title": "House",
+    "live_seasons": {
+      "1": 22,
+      "2": 24,
+      "3": 24,
+      "4": 16,
+      "5": 24,
+      "6": 21,
+      "7": 23,
+      "8": 22
+    },
+    "catalog_seasons": {
+      "1": 22,
+      "2": 24,
+      "3": 24,
+      "4": 16,
+      "5": 24,
+      "6": 21,
+      "7": 23,
+      "8": 22
+    },
+    "imdb_seasons": {
+      "1": 22,
+      "2": 24,
+      "3": 24,
+      "4": 16,
+      "5": 24,
+      "6": 21,
+      "7": 23,
+      "8": 23
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0412142",
+    "groups": [
+      {
+        "description": "Swan Song to odcinek ósmego sezonu serialu House , który po raz pierwszy wyemitowano tuż przed finałem Everybody Dies , 21 maja 2012 roku. Był to godzinny retrospektywny przegląd całego serialu.",
+        "episode_count": 0,
+        "group_count": 0,
+        "id": "6a2304e5c7367681d9373269",
+        "name": "Special Swan Song",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 456,
+    "title": "The Simpsons",
+    "live_seasons": {
+      "1": 13,
+      "2": 22,
+      "3": 24,
+      "4": 22,
+      "5": 22,
+      "6": 25,
+      "7": 25,
+      "8": 25,
+      "9": 25,
+      "10": 23,
+      "11": 22,
+      "12": 21,
+      "13": 22,
+      "14": 22,
+      "15": 22,
+      "16": 21,
+      "17": 22,
+      "18": 22,
+      "19": 20,
+      "20": 21,
+      "21": 23,
+      "22": 22,
+      "23": 22,
+      "24": 22,
+      "25": 22,
+      "26": 22,
+      "27": 22,
+      "28": 22,
+      "29": 21,
+      "30": 23,
+      "31": 22,
+      "32": 22,
+      "33": 22,
+      "34": 22,
+      "35": 18,
+      "36": 18,
+      "37": 15,
+      "38": 5
+    },
+    "catalog_seasons": {
+      "1": 13,
+      "2": 22,
+      "3": 24,
+      "4": 22,
+      "5": 22,
+      "6": 25,
+      "7": 25,
+      "8": 25,
+      "9": 25,
+      "10": 23,
+      "11": 22,
+      "12": 21,
+      "13": 22,
+      "14": 22,
+      "15": 22,
+      "16": 21,
+      "17": 22,
+      "18": 22,
+      "19": 20,
+      "20": 21,
+      "21": 23,
+      "22": 22,
+      "23": 22,
+      "24": 22,
+      "25": 22,
+      "26": 22,
+      "27": 22,
+      "28": 22,
+      "29": 21,
+      "30": 23,
+      "31": 22,
+      "32": 22,
+      "33": 22,
+      "34": 22,
+      "35": 18,
+      "36": 18,
+      "37": 15,
+      "38": 5
+    },
+    "imdb_seasons": {
+      "1": 13,
+      "2": 22,
+      "3": 24,
+      "4": 22,
+      "5": 22,
+      "6": 25,
+      "7": 25,
+      "8": 25,
+      "9": 25,
+      "10": 23,
+      "11": 22,
+      "12": 21,
+      "13": 22,
+      "14": 22,
+      "15": 22,
+      "16": 21,
+      "17": 22,
+      "18": 22,
+      "19": 20,
+      "20": 21,
+      "21": 23,
+      "22": 22,
+      "23": 22,
+      "24": 22,
+      "25": 22,
+      "26": 22,
+      "27": 22,
+      "28": 22,
+      "29": 21,
+      "30": 23,
+      "31": 22,
+      "32": 22,
+      "33": 22,
+      "34": 22,
+      "35": 18,
+      "36": 21,
+      "37": 18,
+      "38": 2
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0096697",
+    "groups": [
+      {
+        "description": "Disney+ largely shares the same order as the original release, though it has a few exclusive specials. \"Stark Raving Dad\" from season 3 is not available on the platform.  The Disney+ exclusive episodes \"O C'mon All Ye Faithful,\" \"Extreme Makeover: Homer Edition,\" and \"Simpsley\" are listed as movies in TMDB.",
+        "episode_count": 802,
+        "group_count": 38,
+        "id": "657098ca79a1c300fe780f0a",
+        "name": "Disney+ Order",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Season 35 is missing two episodes due to episodes 21 and 22 being the two-part \"O C'mon All Ye Faithful\" special, which was originally released as a standalone special on Disney+. It is listed as a movie on the database. Season 36 is missing three episodes due to episode 19 being the \"Simpsley\" special, and episodes 20 and 21 being the two-part episode \"Extreme Makeover: Homer Edition\" special, which were originally released as a standalone specials on Disney+. They are listed as movies on the database.",
+        "episode_count": 883,
+        "group_count": 38,
+        "id": "639bb07d93db920084762b51",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2190,
+    "title": "South Park",
+    "live_seasons": {
+      "1": 13,
+      "2": 18,
+      "3": 17,
+      "4": 17,
+      "5": 14,
+      "6": 17,
+      "7": 15,
+      "8": 14,
+      "9": 14,
+      "10": 14,
+      "11": 14,
+      "12": 14,
+      "13": 14,
+      "14": 14,
+      "15": 14,
+      "16": 14,
+      "17": 10,
+      "18": 10,
+      "19": 10,
+      "20": 10,
+      "21": 10,
+      "22": 10,
+      "23": 10,
+      "24": 2,
+      "25": 6,
+      "26": 6,
+      "27": 5,
+      "28": 5,
+      "29": 6
+    },
+    "catalog_seasons": {
+      "2": 18,
+      "1": 13,
+      "4": 17,
+      "3": 17,
+      "6": 17,
+      "5": 14,
+      "8": 14,
+      "7": 15,
+      "10": 14,
+      "9": 14,
+      "12": 14,
+      "11": 14,
+      "14": 14,
+      "13": 14,
+      "16": 14,
+      "15": 14,
+      "18": 10,
+      "17": 10,
+      "20": 10,
+      "19": 10,
+      "22": 10,
+      "21": 10,
+      "24": 2,
+      "23": 10,
+      "26": 6,
+      "25": 6,
+      "28": 5,
+      "27": 5,
+      "29": 6
+    },
+    "imdb_seasons": {
+      "2": 18,
+      "1": 14,
+      "4": 17,
+      "3": 17,
+      "6": 17,
+      "5": 14,
+      "8": 14,
+      "7": 15,
+      "10": 14,
+      "9": 14,
+      "12": 14,
+      "11": 14,
+      "14": 14,
+      "13": 14,
+      "16": 14,
+      "15": 14,
+      "18": 10,
+      "17": 10,
+      "20": 10,
+      "19": 10,
+      "22": 10,
+      "21": 10,
+      "24": 2,
+      "23": 10,
+      "26": 6,
+      "25": 6,
+      "28": 5,
+      "27": 5,
+      "29": 2
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0121955",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 364,
+        "group_count": 29,
+        "id": "689196bfa3a4424a8ab7f843",
+        "name": "DVD & Blu-ray",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 364,
+        "group_count": 29,
+        "id": "65616152a6c10400e164ed71",
+        "name": "Seasons",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 84773,
+    "title": "The Lord of the Rings: The Rings of Power",
+    "live_seasons": {
+      "1": 8,
+      "2": 8,
+      "3": 8
+    },
+    "catalog_seasons": {
+      "1": 8,
+      "2": 8,
+      "3": 8
+    },
+    "imdb_seasons": {
+      "1": 8,
+      "2": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt7631058",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 48891,
+    "title": "Brooklyn Nine-Nine",
+    "live_seasons": {
+      "1": 22,
+      "2": 23,
+      "3": 23,
+      "4": 22,
+      "5": 22,
+      "6": 18,
+      "7": 13,
+      "8": 9
+    },
+    "catalog_seasons": {
+      "1": 22,
+      "8": 9,
+      "7": 13,
+      "6": 18,
+      "5": 22,
+      "4": 22,
+      "3": 23,
+      "2": 23
+    },
+    "imdb_seasons": {
+      "1": 22,
+      "8": 10,
+      "7": 13,
+      "6": 18,
+      "5": 22,
+      "4": 22,
+      "3": 23,
+      "2": 23
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2467372",
+    "groups": [
+      {
+        "description": "Slightly modified order for streaming, with episodes longer than normal split into multiple parts.  Currently incomplete due to TMDB technical limitations.",
+        "episode_count": 152,
+        "group_count": 8,
+        "id": "61b9830ea6fdaa004046dc69",
+        "name": "Streaming Release",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 152,
+        "group_count": 8,
+        "id": "5ad3d5af925141296c00759e",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1434,
+    "title": "Family Guy",
+    "live_seasons": {
+      "1": 7,
+      "2": 21,
+      "3": 22,
+      "4": 30,
+      "5": 18,
+      "6": 12,
+      "7": 16,
+      "8": 20,
+      "9": 18,
+      "10": 23,
+      "11": 22,
+      "12": 21,
+      "13": 18,
+      "14": 20,
+      "15": 20,
+      "16": 20,
+      "17": 20,
+      "18": 20,
+      "19": 20,
+      "20": 20,
+      "21": 20,
+      "22": 15,
+      "23": 18,
+      "24": 15
+    },
+    "catalog_seasons": {
+      "1": 7,
+      "2": 21,
+      "3": 22,
+      "4": 30,
+      "5": 18,
+      "6": 12,
+      "7": 16,
+      "8": 20,
+      "9": 18,
+      "10": 23,
+      "11": 22,
+      "12": 21,
+      "13": 18,
+      "14": 20,
+      "15": 20,
+      "16": 20,
+      "17": 20,
+      "18": 20,
+      "19": 20,
+      "20": 20,
+      "21": 20,
+      "22": 15,
+      "23": 18,
+      "24": 15
+    },
+    "imdb_seasons": {
+      "1": 7,
+      "2": 21,
+      "3": 22,
+      "4": 30,
+      "5": 18,
+      "6": 12,
+      "7": 16,
+      "8": 21,
+      "9": 18,
+      "10": 23,
+      "11": 22,
+      "12": 21,
+      "13": 18,
+      "14": 20,
+      "15": 20,
+      "16": 20,
+      "17": 20,
+      "18": 20,
+      "19": 20,
+      "20": 20,
+      "21": 20,
+      "22": 17,
+      "23": 20,
+      "24": 16
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0182576",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 328,
+        "group_count": 19,
+        "id": "5ae2b9ea0e0a26322d01310c",
+        "name": "DVD (US)",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 328,
+        "group_count": 20,
+        "id": "6025708f6a34480040138645",
+        "name": "DVD (International)",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "In the order used by Amazon, a few episodes are listed in their own series, titled \"Family Guy Specials\". However, this order includes the specials \"Family Guy 100th Episode Special\" in the sixth season and \"200 Episodes Later\"  in the eleventh season. Another significant difference is the last two episodes of Season 15 are switched.",
+        "episode_count": 457,
+        "group_count": 25,
+        "id": "5ae2ad44c3a368768302d893",
+        "name": "Amazon",
+        "network": {
+          "id": 1024,
+          "logo_path": "/w7HfLNm9CWwRmAMU58udl2L7We7.png",
+          "name": "Prime Video",
+          "origin_country": ""
+        },
+        "type": 4
+      },
+      {
+        "description": "This episode group is for the way the episodes are organized on Hulu in the United States, and Disney+ internationally. It mostly follows the broadcast order up until Season 22, when the Hulu-exclusive specials are listed in their own season titled \"Exclusives.\" The specials \"The Family Guy 100th Episode Special\" and \"200 Episodes Later\" are included in Seasons 6 and 11, respectively. Note, due to grouping limitations, episode numbering for Season 6 will not align with Hulu/Disney+ in all countries. \"Blue Harvest\" Part 1 & Part 2 are often combined as Episode 1, thus all follow-on episodes may appear displaced by one. The 2026 Hulu -exclusive special, \"Happy Hell-o-ween,\" was released as a one-off standalone special rather than a Family Guy special and is listed on the database as a movie.",
+        "episode_count": 462,
+        "group_count": 25,
+        "id": "670d5d2f0b800537d75c8c9f",
+        "name": "Hulu & Disney+",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "The 2026 Hulu -exclusive special, \"Happy Hell-o-ween,\" was released as a one-off standalone special rather than a Family Guy special and is listed on the database as a movie.",
+        "episode_count": 463,
+        "group_count": 23,
+        "id": "5ae2a373c3a36876a7026187",
+        "name": "Production",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "This episode group includes the episode \"Partial Terms of Endearment\" in series 8.",
+        "episode_count": 255,
+        "group_count": 14,
+        "id": "6a74fb2aabfa085b623519a4",
+        "name": "BBC Three (UK)",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1400,
+    "title": "Seinfeld",
+    "live_seasons": {
+      "1": 5,
+      "2": 12,
+      "3": 23,
+      "4": 24,
+      "5": 22,
+      "6": 24,
+      "7": 24,
+      "8": 22,
+      "9": 24
+    },
+    "catalog_seasons": {
+      "1": 5,
+      "2": 12,
+      "3": 23,
+      "4": 24,
+      "5": 22,
+      "6": 24,
+      "7": 24,
+      "8": 22,
+      "9": 24
+    },
+    "imdb_seasons": {
+      "1": 5,
+      "2": 12,
+      "3": 22,
+      "4": 23,
+      "5": 21,
+      "6": 23,
+      "7": 22,
+      "8": 22,
+      "9": 22
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0098904",
+    "groups": [
+      {
+        "description": "DVD release episode order",
+        "episode_count": 456,
+        "group_count": 10,
+        "id": "5fdcb08b9f51af003d5ae2e8",
+        "name": "DVD Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "DVD order with double episodes in single files. Episode list ordering matches 4K UHD released in 2024.",
+        "episode_count": 469,
+        "group_count": 10,
+        "id": "66c71ffb9672c8fc38918d59",
+        "name": "DVD order with double episodes in single files.",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "UHD Bluray",
+        "episode_count": 180,
+        "group_count": 9,
+        "id": "6a68fb9ad1134d53c1a53363",
+        "name": "UHD Bluray",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 171,
+        "group_count": 9,
+        "id": "67fd1650c1e0a708cbad1e3c",
+        "name": "Netflix",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 469,
+        "group_count": 10,
+        "id": "5ad27f53c3a3683eed018672",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1416,
+    "title": "Grey's Anatomy",
+    "live_seasons": {
+      "1": 9,
+      "2": 27,
+      "3": 24,
+      "4": 16,
+      "5": 24,
+      "6": 22,
+      "7": 22,
+      "8": 23,
+      "9": 24,
+      "10": 24,
+      "11": 24,
+      "12": 24,
+      "13": 24,
+      "14": 24,
+      "15": 25,
+      "16": 21,
+      "17": 17,
+      "18": 20,
+      "19": 20,
+      "20": 10,
+      "21": 18,
+      "22": 18,
+      "23": 6
+    },
+    "catalog_seasons": {
+      "1": 9,
+      "2": 27,
+      "3": 24,
+      "4": 16,
+      "5": 24,
+      "6": 22,
+      "7": 22,
+      "8": 23,
+      "9": 24,
+      "10": 24,
+      "11": 24,
+      "12": 24,
+      "13": 24,
+      "14": 24,
+      "15": 25,
+      "16": 21,
+      "17": 17,
+      "18": 20,
+      "19": 20,
+      "20": 10,
+      "21": 18,
+      "22": 18,
+      "23": 6
+    },
+    "imdb_seasons": {
+      "1": 9,
+      "2": 27,
+      "3": 25,
+      "4": 17,
+      "5": 24,
+      "6": 24,
+      "7": 22,
+      "8": 24,
+      "9": 24,
+      "10": 24,
+      "11": 25,
+      "12": 24,
+      "13": 24,
+      "14": 24,
+      "15": 25,
+      "16": 21,
+      "17": 17,
+      "18": 20,
+      "19": 20,
+      "20": 10,
+      "21": 18,
+      "22": 18
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0413573",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 426,
+        "group_count": 20,
+        "id": "64512017435011014135f6a8",
+        "name": "DVD Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 386,
+        "group_count": 18,
+        "id": "5d4d01f01283e9001586be16",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 37854,
+    "title": "One Piece",
+    "live_seasons": {
+      "1": 61,
+      "2": 16,
+      "3": 14,
+      "4": 39,
+      "5": 13,
+      "6": 52,
+      "7": 33,
+      "8": 35,
+      "9": 73,
+      "10": 45,
+      "11": 26,
+      "12": 14,
+      "13": 101,
+      "14": 58,
+      "15": 62,
+      "16": 50,
+      "17": 56,
+      "18": 55,
+      "19": 74,
+      "20": 14,
+      "21": 197,
+      "22": 67,
+      "23": 25
+    },
+    "catalog_seasons": {
+      "14": 58,
+      "13": 101,
+      "16": 50,
+      "15": 62,
+      "18": 55,
+      "17": 56,
+      "20": 14,
+      "19": 74,
+      "22": 67,
+      "21": 197,
+      "23": 25,
+      "2": 16,
+      "1": 61,
+      "4": 39,
+      "3": 14,
+      "6": 52,
+      "5": 13,
+      "8": 35,
+      "7": 33,
+      "10": 45,
+      "9": 73,
+      "12": 14,
+      "11": 26
+    },
+    "imdb_seasons": {
+      "1": 1180
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0388629",
+    "groups": [
+      {
+        "description": "Order of episodes according to TVDB.",
+        "episode_count": 1218,
+        "group_count": 24,
+        "id": "62f98314175051007c594bdf",
+        "name": "TVDB Order",
+        "network": {
+          "id": 1,
+          "logo_path": "/4x4GsmRmSLLL0RVNKsoqAVH43tz.png",
+          "name": "Fuji TV",
+          "origin_country": "JP"
+        },
+        "type": 1
+      },
+      {
+        "description": "As Defined by Wikipedia's Lists of One Piece Episodes.",
+        "episode_count": 1204,
+        "group_count": 23,
+        "id": "6510dd9d344a8e096e6d7987",
+        "name": "Wikipedia Seasons",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "One Piece episodes organized by which opening they use (with the exception of episode 1000)",
+        "episode_count": 1168,
+        "group_count": 33,
+        "id": "66dc7c1de3fd0a602ae4127e",
+        "name": "Openings Order",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "All episodes (excluding specials) in absolute order.",
+        "episode_count": 1181,
+        "group_count": 1,
+        "id": "5ad0f096c3a36825a300e78b",
+        "name": "Absolute (No Specials)",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "Absolute ordering places all episodes in a single ordered season. This is generally used for anime.",
+        "episode_count": 1220,
+        "group_count": 2,
+        "id": "5f1573a33852020036d50619",
+        "name": "Absolute (With Specials)",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "German Kaze/Crunchyroll DVD/Bluray Release Order",
+        "episode_count": 1047,
+        "group_count": 36,
+        "id": "5cf6582b9251416aebbbbc38",
+        "name": "German DVD Release",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "Episodes grouped by Seasons on Netflix. Special are listed separately from the anime on the Netflix website but they have been added to a Specials season in this group.",
+        "episode_count": 974,
+        "group_count": 38,
+        "id": "60671140ebb99d002ad9e426",
+        "name": "Netflix Seasons",
+        "network": {
+          "id": 213,
+          "logo_path": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
+          "name": "Netflix",
+          "origin_country": ""
+        },
+        "type": 4
+      },
+      {
+        "description": "Group based on the Funimation english dubbed release of One Piece.",
+        "episode_count": 767,
+        "group_count": 12,
+        "id": "608f58fe38469a0059bddbdf",
+        "name": "Funimation Release",
+        "network": {
+          "id": 728,
+          "logo_path": "/5nMMYuNuqsCc2exMh9xyufKbmbG.png",
+          "name": "Funimation",
+          "origin_country": "US"
+        },
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 1159,
+        "group_count": 16,
+        "id": "656d41730859b400ff7609b7",
+        "name": "Crunchyroll on Prime Video (US)",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 1196,
+        "group_count": 19,
+        "id": "656d4f0e88055100e3704732",
+        "name": "Crunchyroll",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Hulu lists \"History's Strongest Collaboration vs. Glutton of the Sea\" as both a special and part of season 10. As episodes can't be listed twice in the same episode group, the episode is listed in this group as part of season 10 instead of as a special.",
+        "episode_count": 891,
+        "group_count": 11,
+        "id": "6717069a7dc7c6f27d51109d",
+        "name": "Hulu",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 1088,
+        "group_count": 10,
+        "id": "684de5c5d1d0dbe543b0de56",
+        "name": "BBC iPlayer",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 1170,
+        "group_count": 21,
+        "id": "69c8f0ec2105099db6528f2e",
+        "name": "Crunchyroll (Apple TV Channel)",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "All episodes sorted into the smaller story arcs (including anime exclusive ones). Not to be confused with the Saga order.",
+        "episode_count": 1202,
+        "group_count": 55,
+        "id": "5ad0df1cc3a36825ac00c087",
+        "name": "Story Arc",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "All episodes sorted into their sagas. Not to be confused with the detailed story arcs.",
+        "episode_count": 1202,
+        "group_count": 12,
+        "id": "5ae1bc83c3a36876a700ce68",
+        "name": "Sagas",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "Season, Arc & Saga Combos",
+        "episode_count": 1194,
+        "group_count": 13,
+        "id": "64eab6c2c613ce00c9f2756f",
+        "name": "Season, Arc & Saga Combos",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "The arcs and the episodes that belong to them according to the official website as of 2026-05-18.",
+        "episode_count": 1116,
+        "group_count": 21,
+        "id": "6a0ba6db72b02f968033a9d1",
+        "name": "Arcs (Official)",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "Aired order",
+        "episode_count": 1202,
+        "group_count": 25,
+        "id": "5f1573c81c6aa700377f841f",
+        "name": "Seasons",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1413,
+    "title": "American Horror Story",
+    "live_seasons": {
+      "1": 12,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 12,
+      "6": 10,
+      "7": 11,
+      "8": 10,
+      "9": 9,
+      "10": 10,
+      "11": 10,
+      "12": 9,
+      "13": 13
+    },
+    "catalog_seasons": {
+      "1": 12,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 12,
+      "6": 10,
+      "7": 11,
+      "8": 10,
+      "9": 9,
+      "10": 10,
+      "11": 10,
+      "12": 9,
+      "13": 13
+    },
+    "imdb_seasons": {
+      "1": 12,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 12,
+      "6": 10,
+      "7": 11,
+      "8": 10,
+      "9": 9,
+      "10": 10,
+      "11": 10,
+      "12": 9,
+      "13": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1844624",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 8592,
+    "title": "Parks and Recreation",
+    "live_seasons": {
+      "1": 6,
+      "2": 24,
+      "3": 16,
+      "4": 22,
+      "5": 22,
+      "6": 20,
+      "7": 12
+    },
+    "catalog_seasons": {
+      "3": 16,
+      "4": 22,
+      "5": 22,
+      "6": 20,
+      "1": 6,
+      "2": 24,
+      "7": 12
+    },
+    "imdb_seasons": {
+      "3": 16,
+      "4": 22,
+      "5": 22,
+      "6": 22,
+      "1": 6,
+      "2": 24,
+      "7": 12
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1266020",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1437,
+    "title": "Firefly",
+    "live_seasons": {
+      "1": 11
+    },
+    "catalog_seasons": {
+      "1": 11
+    },
+    "imdb_seasons": {
+      "1": 14
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0303461",
+    "groups": [
+      {
+        "description": "The proper and intended order of Firefly episodes.",
+        "episode_count": 14,
+        "group_count": 2,
+        "id": "5acfb484c3a368738a004068",
+        "name": "Intended Order",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 23,
+        "group_count": 2,
+        "id": "6463b4890f3655011907aac2",
+        "name": "DVD Order",
+        "network": null,
+        "type": 3
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2691,
+    "title": "Two and a Half Men",
+    "live_seasons": {
+      "1": 24,
+      "2": 24,
+      "3": 24,
+      "4": 24,
+      "5": 19,
+      "6": 24,
+      "7": 22,
+      "8": 16,
+      "9": 24,
+      "10": 23,
+      "11": 22,
+      "12": 16
+    },
+    "catalog_seasons": {
+      "1": 24,
+      "3": 24,
+      "2": 24,
+      "5": 19,
+      "4": 24,
+      "7": 22,
+      "6": 24,
+      "9": 24,
+      "8": 16,
+      "11": 22,
+      "10": 23,
+      "12": 16
+    },
+    "imdb_seasons": {
+      "1": 25,
+      "3": 24,
+      "2": 24,
+      "5": 19,
+      "4": 24,
+      "7": 22,
+      "6": 24,
+      "9": 24,
+      "8": 16,
+      "11": 22,
+      "10": 23,
+      "12": 15
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0369179",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 0,
+        "group_count": 1,
+        "id": "685574a59e3078f9be29e720",
+        "name": "DVD Release",
+        "network": null,
+        "type": 3
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 4556,
+    "title": "Scrubs",
+    "live_seasons": {
+      "1": 24,
+      "2": 22,
+      "3": 22,
+      "4": 25,
+      "5": 24,
+      "6": 22,
+      "7": 11,
+      "8": 18,
+      "9": 13
+    },
+    "catalog_seasons": {
+      "1": 24,
+      "2": 22,
+      "5": 24,
+      "6": 22,
+      "3": 22,
+      "4": 25,
+      "9": 13,
+      "7": 11,
+      "8": 18
+    },
+    "imdb_seasons": {
+      "1": 24,
+      "2": 22,
+      "5": 24,
+      "6": 22,
+      "3": 22,
+      "4": 25,
+      "9": 13,
+      "7": 11,
+      "8": 19
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0285403",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2710,
+    "title": "It's Always Sunny in Philadelphia",
+    "live_seasons": {
+      "1": 7,
+      "2": 10,
+      "3": 15,
+      "4": 13,
+      "5": 12,
+      "6": 13,
+      "7": 13,
+      "8": 10,
+      "9": 10,
+      "10": 10,
+      "11": 10,
+      "12": 10,
+      "13": 10,
+      "14": 10,
+      "15": 8,
+      "16": 8,
+      "17": 8,
+      "18": 10
+    },
+    "catalog_seasons": {
+      "2": 10,
+      "1": 7,
+      "4": 13,
+      "3": 15,
+      "6": 13,
+      "5": 12,
+      "8": 10,
+      "7": 13,
+      "10": 10,
+      "9": 10,
+      "12": 10,
+      "11": 10,
+      "14": 10,
+      "13": 10,
+      "16": 8,
+      "15": 8,
+      "18": 10,
+      "17": 8
+    },
+    "imdb_seasons": {
+      "2": 10,
+      "1": 7,
+      "4": 13,
+      "3": 15,
+      "6": 13,
+      "5": 12,
+      "8": 10,
+      "7": 13,
+      "10": 10,
+      "9": 10,
+      "12": 10,
+      "11": 10,
+      "14": 10,
+      "13": 10,
+      "16": 8,
+      "15": 8,
+      "18": 9,
+      "17": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0472954",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 234,
+        "group_count": 18,
+        "id": "61d9fb327352050042392b2d",
+        "name": "DVD Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "In this episode group, the episodes are organized based on their production code.",
+        "episode_count": 184,
+        "group_count": 18,
+        "id": "689531c98d753eeba007c840",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 615,
+    "title": "Futurama",
+    "live_seasons": {
+      "1": 9,
+      "2": 20,
+      "3": 15,
+      "4": 12,
+      "5": 16,
+      "6": 26,
+      "7": 26,
+      "8": 10,
+      "9": 10,
+      "10": 10,
+      "11": 10
+    },
+    "catalog_seasons": {
+      "1": 9,
+      "2": 20,
+      "3": 15,
+      "4": 12,
+      "5": 16,
+      "6": 26,
+      "7": 26,
+      "8": 10,
+      "9": 10,
+      "10": 10,
+      "11": 10
+    },
+    "imdb_seasons": {
+      "1": 9,
+      "2": 20,
+      "3": 15,
+      "4": 12,
+      "5": 16,
+      "6": 16,
+      "7": 13,
+      "8": 13,
+      "9": 13,
+      "10": 13,
+      "11": 10,
+      "12": 10,
+      "13": 10,
+      "14": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0149460",
+    "groups": [
+      {
+        "description": "This group is for the show's original DVD releases and the streaming-only Hulu revival.",
+        "episode_count": 170,
+        "group_count": 13,
+        "id": "5ad2557a0e0a266c25015a52",
+        "name": "DVD Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "This group is for the season split used on digital storefronts, Hulu and Hulu on Disney+ in the US, and Disney+ outside the US.",
+        "episode_count": 168,
+        "group_count": 14,
+        "id": "5ad25f9b0e0a266c3101674b",
+        "name": "Digital Order",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "This group is for the show's production order.",
+        "episode_count": 170,
+        "group_count": 12,
+        "id": "5ad24bf4c3a3683eed0145a8",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 10545,
+    "title": "True Blood",
+    "live_seasons": {
+      "1": 12,
+      "2": 12,
+      "3": 12,
+      "4": 12,
+      "5": 12,
+      "6": 10,
+      "7": 10
+    },
+    "catalog_seasons": {
+      "5": 12,
+      "4": 12,
+      "7": 10,
+      "6": 10,
+      "1": 12,
+      "3": 12,
+      "2": 12
+    },
+    "imdb_seasons": {
+      "5": 12,
+      "4": 12,
+      "7": 10,
+      "6": 10,
+      "1": 13,
+      "3": 12,
+      "2": 12
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0844441",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1639,
+    "title": "Heroes",
+    "live_seasons": {
+      "1": 23,
+      "2": 11,
+      "3": 25,
+      "4": 19
+    },
+    "catalog_seasons": {
+      "1": 23,
+      "2": 11,
+      "3": 25,
+      "4": 19
+    },
+    "imdb_seasons": {
+      "1": 24,
+      "2": 11,
+      "3": 25,
+      "4": 18
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0813715",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 77,
+        "group_count": 4,
+        "id": "68fec28029df108daabbf43d",
+        "name": "Prime",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 78,
+        "group_count": 5,
+        "id": "5ad53383c3a3680c0f0097ad",
+        "name": "Volumes",
+        "network": null,
+        "type": 5
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 57243,
+    "title": "Doctor Who",
+    "live_seasons": {
+      "1": 13,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 13,
+      "6": 13,
+      "7": 13,
+      "8": 12,
+      "9": 12,
+      "10": 12,
+      "11": 10,
+      "12": 10,
+      "13": 6
+    },
+    "catalog_seasons": {
+      "13": 6,
+      "12": 10,
+      "11": 10,
+      "10": 12,
+      "5": 13,
+      "4": 13,
+      "3": 13,
+      "2": 13,
+      "9": 12,
+      "8": 12,
+      "7": 13,
+      "6": 13,
+      "1": 13
+    },
+    "imdb_seasons": {
+      "13": 6,
+      "12": 10,
+      "11": 11,
+      "10": 13,
+      "5": 13,
+      "4": 14,
+      "3": 14,
+      "2": 14,
+      "9": 13,
+      "8": 13,
+      "7": 15,
+      "6": 14,
+      "1": 13
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0436992",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 175,
+        "group_count": 13,
+        "id": "65622094244182012dab7ac1",
+        "name": "Blu-ray",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "(Christmas episodes within the seasons)",
+        "episode_count": 352,
+        "group_count": 14,
+        "id": "6988c64e7dbf83f1178e6e7b",
+        "name": "German Blu-Ray",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 175,
+        "group_count": 13,
+        "id": "6070a023c74eba00599b684e",
+        "name": "BBC iPlayer",
+        "network": {
+          "id": 1155,
+          "logo_path": "/an0NpVNUK445AWDQTaLIFuL3isE.png",
+          "name": "BBC iPlayer",
+          "origin_country": "GB"
+        },
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 363,
+        "group_count": 6,
+        "id": "6210e786e267de0044e947c7",
+        "name": "The Doctor Order",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "This episode group organizes the episodes following the official Stories order on DoctorWho.tv.",
+        "episode_count": 176,
+        "group_count": 28,
+        "id": "67b8f1ea3e986ba890f3d034",
+        "name": "Official Stories Order",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 264,
+        "group_count": 14,
+        "id": "5e753a13cabfe400181eee29",
+        "name": "Chronological",
+        "network": {
+          "id": 4,
+          "logo_path": "/uJjcCg3O4DMEjM0xtno9OWFciRP.png",
+          "name": "BBC One",
+          "origin_country": "GB"
+        },
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1920,
+    "title": "Twin Peaks",
+    "live_seasons": {
+      "1": 8,
+      "2": 22,
+      "3": 18
+    },
+    "catalog_seasons": {
+      "1": 8,
+      "2": 22,
+      "3": 18
+    },
+    "imdb_seasons": {
+      "1": 8,
+      "2": 22
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0098936",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 33907,
+    "title": "Downton Abbey",
+    "live_seasons": {
+      "1": 7,
+      "2": 8,
+      "3": 8,
+      "4": 8,
+      "5": 8,
+      "6": 8
+    },
+    "catalog_seasons": {
+      "2": 8,
+      "3": 8,
+      "4": 8,
+      "5": 8,
+      "6": 8,
+      "1": 7
+    },
+    "imdb_seasons": {
+      "2": 9,
+      "3": 9,
+      "4": 9,
+      "5": 9,
+      "6": 9,
+      "1": 7
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1606375",
+    "groups": [
+      {
+        "description": "All the episodes as they aired chronologically, including in season all the special episodes from ITV and PBS Masterpiece.",
+        "episode_count": 59,
+        "group_count": 6,
+        "id": "5ceea9159251413ad1b95b43",
+        "name": "Chronological",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "The order most VOD services list the episodes, which includes the Christmas specials within the season.",
+        "episode_count": 53,
+        "group_count": 6,
+        "id": "5b1df95492514167970045f8",
+        "name": "VOD",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Order broadcast by CzechTV.",
+        "episode_count": 57,
+        "group_count": 6,
+        "id": "6232566cda10f000468fdbd1",
+        "name": "Czech TV",
+        "network": {
+          "id": 632,
+          "logo_path": "/4fuYKKu4XvCIgFh7Sg2j8Uzgjmv.png",
+          "name": "ČT1",
+          "origin_country": "CZ"
+        },
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 125988,
+    "title": "Silo",
+    "live_seasons": {
+      "1": 10,
+      "2": 10,
+      "3": 10,
+      "4": 1
+    },
+    "catalog_seasons": {
+      "4": 1,
+      "3": 10,
+      "2": 10,
+      "1": 10
+    },
+    "imdb_seasons": {
+      "3": 10,
+      "2": 10,
+      "1": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt14688458",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 85937,
+    "title": "Demon Slayer: Kimetsu no Yaiba",
+    "live_seasons": {
+      "1": 26,
+      "2": 7,
+      "3": 11,
+      "4": 11,
+      "5": 8
+    },
+    "catalog_seasons": {
+      "1": 26,
+      "2": 7,
+      "3": 11,
+      "4": 11,
+      "5": 8
+    },
+    "imdb_seasons": {
+      "1": 26,
+      "2": 18,
+      "3": 11,
+      "4": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt9335498",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 63,
+        "group_count": 1,
+        "id": "652f328fa8023600c316174e",
+        "name": "Single season format",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 48,
+        "group_count": 3,
+        "id": "66168434242f94017dc4cdfb",
+        "name": "Crunchyroll without Mugen Train Arc",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 55,
+        "group_count": 9,
+        "id": "63469edcf621b20079f9ba41",
+        "name": "Story Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "Crunchyroll style episode grouping",
+        "episode_count": 0,
+        "group_count": 0,
+        "id": "6a41d1a35b1d3784b9905dc2",
+        "name": "Crunchyroll",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "This is how most news sites talk about the seasons, how they are grouped on many download sites and how they are published.",
+        "episode_count": 63,
+        "group_count": 4,
+        "id": "66c6dcd6cd3639e51ad7ec9f",
+        "name": "Wikpedia / News",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 31910,
+    "title": "Naruto Shippūden",
+    "live_seasons": {
+      "1": 32,
+      "2": 21,
+      "3": 18,
+      "4": 17,
+      "5": 24,
+      "6": 31,
+      "7": 8,
+      "8": 24,
+      "9": 21,
+      "10": 25,
+      "11": 21,
+      "12": 33,
+      "13": 20,
+      "14": 25,
+      "15": 28,
+      "16": 13,
+      "17": 11,
+      "18": 21,
+      "19": 20,
+      "20": 87
+    },
+    "catalog_seasons": {
+      "4": 17,
+      "3": 18,
+      "2": 21,
+      "1": 32,
+      "20": 87,
+      "19": 20,
+      "18": 21,
+      "17": 11,
+      "16": 13,
+      "15": 28,
+      "14": 25,
+      "13": 20,
+      "12": 33,
+      "11": 21,
+      "10": 25,
+      "9": 21,
+      "8": 24,
+      "7": 8,
+      "6": 31,
+      "5": 24
+    },
+    "imdb_seasons": {
+      "1": 500
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0988824",
+    "groups": [
+      {
+        "description": "All Episodes of Naruto Shippuden in release order. This group uses the 21st season for the last 20 episodes, unlike the main episode order which puts those in season 20.",
+        "episode_count": 505,
+        "group_count": 23,
+        "id": "5b42c9aa9251414f570161a1",
+        "name": "Released Order Episodes",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "Todos os episódio em uma unica temporada para evitar o bugs do Dooplay em outros templates!",
+        "episode_count": 500,
+        "group_count": 1,
+        "id": "5f24d57d168ea30037b63c96",
+        "name": "Correct order",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 504,
+        "group_count": 32,
+        "id": "6323758c13a320007a5e3c94",
+        "name": "Chronological, organized by arc.",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 503,
+        "group_count": 2,
+        "id": "65e3b7bddb72c0017cf634ca",
+        "name": "Absolute Order",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 500,
+        "group_count": 28,
+        "id": "668e184377fb6dba5759d7c2",
+        "name": "火影忍者疾風傳動畫集數列表",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "Suddivisione saghe secondo la wiki italiana di Fandom.",
+        "episode_count": 500,
+        "group_count": 29,
+        "id": "67e7f104b5655aac426387d1",
+        "name": "Italian Sagas",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "The order as used on Wikipedia. Season names from the main order and Wikipedia where needed. Note that according to Wikipedia:  The seasons that comprise the following list correspond to the Shippuden anime's twenty-nine story arcs. While the story arcs are official, several season divisions are not as some arcs with tiny episode counts or others that tie-in to the main story have been merged into a single season based on a general consensus.",
+        "episode_count": 500,
+        "group_count": 22,
+        "id": "67ffb34883c6e567c7d94218",
+        "name": "Wikipedia Order",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "This ordering uses the official Story Arcs from naruto-official.com",
+        "episode_count": 500,
+        "group_count": 29,
+        "id": "67ffbe38de5e4dec62aec1ce",
+        "name": "Official Story Arcs",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 500,
+        "group_count": 20,
+        "id": "683c75d74e889cf076689940",
+        "name": "故事线",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 503,
+        "group_count": 27,
+        "id": "6a1cc8800d8e22caec880107",
+        "name": "Bluray (Pal)",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 304,
+        "group_count": 14,
+        "id": "6346b703b3e62700828222e9",
+        "name": "Story Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "This is the ordering used on TVDB to easy transition for those users.",
+        "episode_count": 500,
+        "group_count": 23,
+        "id": "67ffa96dde5e4dec62aeb18a",
+        "name": "TVDB Order",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 95479,
+    "title": "JUJUTSU KAISEN",
+    "live_seasons": {
+      "1": 59
+    },
+    "catalog_seasons": {
+      "1": 59
+    },
+    "imdb_seasons": {
+      "3": 12,
+      "2": 23,
+      "1": 24
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt12343534",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 59,
+        "group_count": 3,
+        "id": "69be1c7638042a2e610e2852",
+        "name": "Italian Parts",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 48,
+        "group_count": 7,
+        "id": "6346a813f3b49a007c95a105",
+        "name": "Story Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 69,
+        "group_count": 4,
+        "id": "69be0e38375d5b92060e2827",
+        "name": "Saga Española",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 64,
+        "group_count": 4,
+        "id": "64a3fc4fe9da6900ae2fa807",
+        "name": "Seasons",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 59,
+        "group_count": 3,
+        "id": "6961c83d72e76980b8bd3780",
+        "name": "季",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 69,
+        "group_count": 4,
+        "id": "6a6495cf8020f8fcaabac062",
+        "name": "Seasons",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 111110,
+    "title": "ONE PIECE",
+    "live_seasons": {
+      "1": 8,
+      "2": 8,
+      "3": 1
+    },
+    "catalog_seasons": {
+      "1": 8,
+      "2": 8,
+      "3": 1
+    },
+    "imdb_seasons": {
+      "1": 8,
+      "2": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt11737520",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1973,
+    "title": "24",
+    "live_seasons": {
+      "1": 24,
+      "2": 24,
+      "3": 24,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 12
+    },
+    "catalog_seasons": {
+      "1": 24,
+      "2": 24,
+      "3": 24,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 12
+    },
+    "imdb_seasons": {
+      "1": 24,
+      "2": 24,
+      "3": 24,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0285331",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 107113,
+    "title": "Only Murders in the Building",
+    "live_seasons": {
+      "1": 10,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "6": 1
+    },
+    "catalog_seasons": {
+      "2": 10,
+      "3": 10,
+      "1": 10,
+      "6": 1,
+      "4": 10,
+      "5": 10
+    },
+    "imdb_seasons": {
+      "2": 10,
+      "3": 10,
+      "1": 10,
+      "4": 10,
+      "5": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt11691774",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 46298,
+    "title": "Hunter x Hunter",
+    "live_seasons": {
+      "1": 62,
+      "2": 74,
+      "3": 12
+    },
+    "catalog_seasons": {
+      "2": 74,
+      "1": 62,
+      "3": 12
+    },
+    "imdb_seasons": {
+      "1": 148
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2098220",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 148,
+        "group_count": 1,
+        "id": "606604a59f5dfb00415ea841",
+        "name": "Absolute",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 148,
+        "group_count": 13,
+        "id": "607045d112b10e0070722bc6",
+        "name": "German DVD/Bluray",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 148,
+        "group_count": 6,
+        "id": "5da90742b2681f00148e8713",
+        "name": "Netflix Order",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 148,
+        "group_count": 7,
+        "id": "5d632e2dbc8abc176c25c686",
+        "name": "French Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "Sorted by Story Arc (In English)",
+        "episode_count": 148,
+        "group_count": 6,
+        "id": "5f3d826d2da8460031c7c7c0",
+        "name": "Story Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 148,
+        "group_count": 3,
+        "id": "63282186b18f320083df522f",
+        "name": "Production",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 148,
+        "group_count": 9,
+        "id": "64528f7cd48cee0136d8bfd4",
+        "name": "ストーリー順",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 148,
+        "group_count": 8,
+        "id": "683354c7b8500c9085eb2f71",
+        "name": "故事线",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 148,
+        "group_count": 3,
+        "id": "69c2d7408c085b4631a4e74d",
+        "name": "Spanish Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 148,
+        "group_count": 1,
+        "id": "679ff359a893591415957036",
+        "name": "Production",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1911,
+    "title": "Bones",
+    "live_seasons": {
+      "1": 22,
+      "2": 21,
+      "3": 15,
+      "4": 26,
+      "5": 22,
+      "6": 23,
+      "7": 13,
+      "8": 24,
+      "9": 24,
+      "10": 22,
+      "11": 22,
+      "12": 12
+    },
+    "catalog_seasons": {
+      "1": 22,
+      "2": 21,
+      "3": 15,
+      "4": 26,
+      "5": 22,
+      "6": 23,
+      "7": 13,
+      "8": 24,
+      "9": 24,
+      "10": 22,
+      "11": 22,
+      "12": 12
+    },
+    "imdb_seasons": {
+      "1": 22,
+      "2": 21,
+      "3": 15,
+      "4": 25,
+      "5": 22,
+      "6": 23,
+      "7": 13,
+      "8": 24,
+      "9": 24,
+      "10": 22,
+      "11": 22,
+      "12": 12
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0460627",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 31917,
+    "title": "Pretty Little Liars",
+    "live_seasons": {
+      "1": 22,
+      "2": 25,
+      "3": 24,
+      "4": 24,
+      "5": 26,
+      "6": 20,
+      "7": 20
+    },
+    "catalog_seasons": {
+      "7": 20,
+      "6": 20,
+      "5": 26,
+      "4": 24,
+      "3": 24,
+      "2": 25,
+      "1": 22
+    },
+    "imdb_seasons": {
+      "7": 20,
+      "6": 20,
+      "5": 25,
+      "4": 24,
+      "3": 24,
+      "2": 25,
+      "1": 22
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1578873",
+    "groups": [
+      {
+        "description": "This order only includes the regular episodes. The Halloween-themed special episode \"We Love You to DeAth\" is excluded from the fifth season.",
+        "episode_count": 160,
+        "group_count": 7,
+        "id": "5ad53ec49251415dbd009176",
+        "name": "DVD Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "The order used by digital services such as Amazon's Prime Video and the iTunes Store. In this order, the fourth season begins with the special recap episode \"A LiArs Guide to Rosewood.\" However, the Halloween-themed special episode \"We Love You to DeAth\" is not part of the fifth season.",
+        "episode_count": 161,
+        "group_count": 7,
+        "id": "5ad537c20e0a2660bc009c21",
+        "name": "VOD Order",
+        "network": null,
+        "type": 4
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1972,
+    "title": "Battlestar Galactica",
+    "live_seasons": {
+      "1": 13,
+      "2": 20,
+      "3": 20,
+      "4": 20
+    },
+    "catalog_seasons": {
+      "1": 13,
+      "2": 20,
+      "3": 20,
+      "4": 20
+    },
+    "imdb_seasons": {
+      "1": 13,
+      "2": 20,
+      "3": 20,
+      "4": 21
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0407362",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 40075,
+    "title": "Gravity Falls",
+    "live_seasons": {
+      "1": 20,
+      "2": 20
+    },
+    "catalog_seasons": {
+      "1": 20,
+      "2": 20
+    },
+    "imdb_seasons": {
+      "1": 20,
+      "2": 21
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1865718",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 58,
+        "group_count": 3,
+        "id": "68eefc1204af38389640caf5",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 46260,
+    "title": "Naruto",
+    "live_seasons": {
+      "1": 52,
+      "2": 52,
+      "3": 54,
+      "4": 62
+    },
+    "catalog_seasons": {
+      "4": 62,
+      "3": 54,
+      "2": 52,
+      "1": 52
+    },
+    "imdb_seasons": {
+      "1": 220
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0409591",
+    "groups": [
+      {
+        "description": "This group is for the season split used by Wikipedia.",
+        "episode_count": 220,
+        "group_count": 5,
+        "id": "673b3c91e831f8aa49e34c21",
+        "name": "Wikipedia Seasons",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 222,
+        "group_count": 2,
+        "id": "66ea8ac3b2917eb1800b5f0d",
+        "name": "Absolute Order",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 220,
+        "group_count": 8,
+        "id": "63c9a25468afd60086f98800",
+        "name": "USA Blu-ray",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 222,
+        "group_count": 10,
+        "id": "6970d938f6484e0176a90bef",
+        "name": "German Blu-ray",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "This group is for the season split used on Crunchyroll.",
+        "episode_count": 220,
+        "group_count": 9,
+        "id": "673b3b345859f981eedff271",
+        "name": "Crunchyroll",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Alternative episode order matching Rebuild of Naruto, that restructures the anime into feature-length films. Because each Rebuild film may combine and rearrange material from multiple original episodes, each entry uses the existing TMDB episode whose title and story best represent the corresponding film.",
+        "episode_count": 22,
+        "group_count": 8,
+        "id": "6a89d7cf0b1008981ebc5a93",
+        "name": "Rebuild Of Naruto",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "This episode group follows the manga story arcs and excludes all anime-only filler arcs.",
+        "episode_count": 129,
+        "group_count": 5,
+        "id": "6346b1a9b3e627007dd23fea",
+        "name": "Manga Story Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "This episode group follows the manga story arcs and includes all anime-only filler arcs.",
+        "episode_count": 222,
+        "group_count": 24,
+        "id": "6346b26bf3b49a009054c666",
+        "name": "Story Arcs with Filler",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "This episode group follows the story arc order from the official English Naruto website.",
+        "episode_count": 220,
+        "group_count": 9,
+        "id": "667d66b6032655aba179454a",
+        "name": "Official Story Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "Suddivisione saghe secondo la wiki italiana di Fandom.",
+        "episode_count": 220,
+        "group_count": 5,
+        "id": "67efa441b3e035286cd94460",
+        "name": "Italian Sagas",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 220,
+        "group_count": 4,
+        "id": "684c2b3a8d1f28663e3fdfe3",
+        "name": "Seasons",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "Order of episodes according to TVDB.",
+        "episode_count": 222,
+        "group_count": 6,
+        "id": "5f24dcdc869e75003658360e",
+        "name": "TVDB Order",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1433,
+    "title": "American Dad!",
+    "live_seasons": {
+      "1": 7,
+      "2": 16,
+      "3": 19,
+      "4": 16,
+      "5": 20,
+      "6": 18,
+      "7": 19,
+      "8": 18,
+      "9": 19,
+      "10": 20,
+      "11": 3,
+      "12": 15,
+      "13": 22,
+      "14": 22,
+      "15": 22,
+      "16": 20,
+      "17": 24,
+      "18": 22,
+      "19": 22,
+      "20": 22,
+      "21": 22,
+      "22": 13
+    },
+    "catalog_seasons": {
+      "1": 7,
+      "2": 16,
+      "3": 19,
+      "4": 16,
+      "5": 20,
+      "6": 18,
+      "7": 19,
+      "8": 18,
+      "9": 19,
+      "10": 20,
+      "11": 3,
+      "12": 15,
+      "13": 22,
+      "14": 22,
+      "15": 22,
+      "16": 20,
+      "17": 24,
+      "18": 22,
+      "19": 22,
+      "20": 22,
+      "21": 22,
+      "22": 13
+    },
+    "imdb_seasons": {
+      "1": 23,
+      "2": 19,
+      "3": 16,
+      "4": 20,
+      "5": 18,
+      "6": 19,
+      "7": 18,
+      "8": 19,
+      "9": 23,
+      "10": 15,
+      "11": 22,
+      "12": 22,
+      "13": 22,
+      "14": 20,
+      "15": 24,
+      "16": 22,
+      "17": 22,
+      "18": 22,
+      "19": 22,
+      "20": 13
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0397306",
+    "groups": [
+      {
+        "description": "All episodes in the TVMaze order. See the full list here: https://www.tvmaze.com/shows/215/american-dad/episodes",
+        "episode_count": 366,
+        "group_count": 20,
+        "id": "6046e9d3c8a5ac006ffcf1fa",
+        "name": "TVMaze",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "All episodes in Wikipedia order.",
+        "episode_count": 397,
+        "group_count": 22,
+        "id": "6267bcbe4ccc50009cb1ba89",
+        "name": "Wikipedia Order",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "The full list of episodes for the Wikia order can be viewed here: https://americandad.fandom.com/wiki/Episode_Guide_List",
+        "episode_count": 344,
+        "group_count": 17,
+        "id": "6267bf9b4ccc50009cb1bf72",
+        "name": "Wikia Order",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "A list of the TVDB order.",
+        "episode_count": 399,
+        "group_count": 22,
+        "id": "6268161a7cffda006544e4cf",
+        "name": "TVDB Order",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 256,
+        "group_count": 14,
+        "id": "5ad23bc2c3a3683ef50133b0",
+        "name": "DVD (US)",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 234,
+        "group_count": 13,
+        "id": "651863caea84c7012d672f2c",
+        "name": "DVD (UK)",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "Episode order on international Disney+.",
+        "episode_count": 401,
+        "group_count": 22,
+        "id": "628409a2dcf875334e500e8c",
+        "name": "Disney+ (International)",
+        "network": {
+          "id": 2739,
+          "logo_path": "/1edZOYAfoyZyZ3rklNSiUpXX30Q.png",
+          "name": "Disney+",
+          "origin_country": ""
+        },
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 401,
+        "group_count": 20,
+        "id": "68e816d327cf71972473dc9f",
+        "name": "Hulu (US)",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 395,
+        "group_count": 19,
+        "id": "5ad22ef3c3a3683eef010c3d",
+        "name": "Production",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 390,
+        "group_count": 19,
+        "id": "5ad240319251417367012053",
+        "name": "TBS",
+        "network": {
+          "id": 68,
+          "logo_path": "/65r0kR6MfOBYF0gEQsJGM6v5fEG.png",
+          "name": "TBS",
+          "origin_country": "US"
+        },
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 127532,
+    "title": "Solo Leveling",
+    "live_seasons": {
+      "1": 25
+    },
+    "catalog_seasons": {
+      "1": 25
+    },
+    "imdb_seasons": {
+      "1": 12,
+      "2": 13
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt21209876",
+    "groups": [
+      {
+        "description": "This episode group adds the 7.5 recap episode to the first season.",
+        "episode_count": 26,
+        "group_count": 2,
+        "id": "65d3916b51c01f017cc1a724",
+        "name": "Air Date",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 25,
+        "group_count": 2,
+        "id": "67786ddbc11ee61dd874bc97",
+        "name": "Seasons",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 79242,
+    "title": "Chilling Adventures of Sabrina",
+    "live_seasons": {
+      "1": 20,
+      "2": 16
+    },
+    "catalog_seasons": {
+      "2": 16,
+      "1": 20
+    },
+    "imdb_seasons": {
+      "2": 9,
+      "1": 11,
+      "4": 8,
+      "3": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt7569592",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 36,
+        "group_count": 4,
+        "id": "5ca7dd6f0e0a264c8bf0a62e",
+        "name": "Parts",
+        "network": {
+          "id": 213,
+          "logo_path": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
+          "name": "Netflix",
+          "origin_country": ""
+        },
+        "type": 1
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 12971,
+    "title": "Dragon Ball Z",
+    "live_seasons": {
+      "1": 39,
+      "2": 35,
+      "3": 33,
+      "4": 32,
+      "5": 26,
+      "6": 29,
+      "7": 25,
+      "8": 34,
+      "9": 38
+    },
+    "catalog_seasons": {
+      "1": 39,
+      "8": 34,
+      "9": 38,
+      "6": 29,
+      "7": 25,
+      "4": 32,
+      "5": 26,
+      "2": 35,
+      "3": 33
+    },
+    "imdb_seasons": {
+      "1": 291
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0121220",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 291,
+        "group_count": 1,
+        "id": "6057a4fae16e5a005414becb",
+        "name": "Fuji TV",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 301,
+        "group_count": 10,
+        "id": "5dd00992b76cbb001678f294",
+        "name": "Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 291,
+        "group_count": 9,
+        "id": "62ef7c7c813cb600806d28f0",
+        "name": "Saga",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "Suddivisione saghe secondo la wiki italiana di Fandom.",
+        "episode_count": 291,
+        "group_count": 6,
+        "id": "67e47121a6dd9b08080015d0",
+        "name": "Italian Sagas",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 7,
+        "group_count": 1,
+        "id": "698ca8eb492183a1828860f1",
+        "name": "American Sagas",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "Spanish episode order.",
+        "episode_count": 300,
+        "group_count": 8,
+        "id": "5e74ff51cabfe400131fabb5",
+        "name": "Spain",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 65942,
+    "title": "Re:ZERO -Starting Life in Another World-",
+    "live_seasons": {
+      "1": 85
+    },
+    "catalog_seasons": {
+      "1": 85
+    },
+    "imdb_seasons": {
+      "4": 19,
+      "3": 16,
+      "2": 25,
+      "1": 25
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt5607616",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 0,
+        "group_count": 0,
+        "id": "6aa1740952257dcc2b23bf6c",
+        "name": "season4",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "Re:Zero - Starting Life in Another World anime adapts the light novel series, covering Arcs 1–3 in Season 1, Arc 4 in Season 2, and Arc 5 in Season 3, with future seasons expected to cover Arcs 6-8",
+        "episode_count": 66,
+        "group_count": 5,
+        "id": "69ec40bc75c2e8fbcd17cb5f",
+        "name": "Story Arc",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "There are 4 seasons of the show. First season comprises of 25 episodes. Second one is also 25 episodes. Third season has 16 episodes. Fourth season has 19 episodes",
+        "episode_count": 166,
+        "group_count": 5,
+        "id": "641eb9d6b234b9007ac67063",
+        "name": "Seasons",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 0,
+        "group_count": 1,
+        "id": "6a9add8948d8b9797da30a8a",
+        "name": "Director's Cut Seasons",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 209867,
+    "title": "Frieren: Beyond Journey's End",
+    "live_seasons": {
+      "1": 38
+    },
+    "catalog_seasons": {
+      "1": 38
+    },
+    "imdb_seasons": {
+      "1": 28,
+      "2": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt22248376",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 63,
+        "group_count": 3,
+        "id": "69b0121aa45e0d35504ebcd0",
+        "name": "Absolute Order",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 38,
+        "group_count": 7,
+        "id": "696a7b974aca138d0ad7e833",
+        "name": "Story Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 64,
+        "group_count": 3,
+        "id": "679231eba8ce3489ceb57efc",
+        "name": "Seasons",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 38,
+        "group_count": 3,
+        "id": "64f988c1ffc9de00c4a24917",
+        "name": "Cours",
+        "network": null,
+        "type": 7
+      },
+      {
+        "description": "",
+        "episode_count": 64,
+        "group_count": 3,
+        "id": "696d1cdafd292183b8dcb22d",
+        "name": "剧集",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 73021,
+    "title": "Disenchantment",
+    "live_seasons": {
+      "1": 20,
+      "2": 20,
+      "3": 10
+    },
+    "catalog_seasons": {
+      "2": 20,
+      "3": 10,
+      "1": 20
+    },
+    "imdb_seasons": {
+      "2": 10,
+      "3": 10,
+      "1": 10,
+      "4": 10,
+      "5": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt5363918",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 50,
+        "group_count": 5,
+        "id": "5d881805b76cbb0017e2c76a",
+        "name": "Parts",
+        "network": {
+          "id": 213,
+          "logo_path": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
+          "name": "Netflix",
+          "origin_country": ""
+        },
+        "type": 1
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 15260,
+    "title": "Adventure Time",
+    "live_seasons": {
+      "1": 26,
+      "2": 26,
+      "3": 26,
+      "4": 26,
+      "5": 52,
+      "6": 43,
+      "7": 26,
+      "8": 27,
+      "9": 14,
+      "10": 13
+    },
+    "catalog_seasons": {
+      "2": 26,
+      "1": 26,
+      "10": 13,
+      "9": 14,
+      "8": 27,
+      "7": 26,
+      "6": 43,
+      "5": 52,
+      "4": 26,
+      "3": 26
+    },
+    "imdb_seasons": {
+      "2": 26,
+      "1": 27,
+      "10": 13,
+      "9": 14,
+      "8": 27,
+      "7": 26,
+      "6": 43,
+      "5": 52,
+      "4": 26,
+      "3": 25
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1305826",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 16,
+        "group_count": 2,
+        "id": "613511edda9ef20090bea101",
+        "name": "My Two Favorite People",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "Order of episodes as listed on the Australian Madman Blu-Ray release.",
+        "episode_count": 52,
+        "group_count": 10,
+        "id": "6515634a1db65d00e31c2feb",
+        "name": "Blu-Ray Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "Order used on digital platforms",
+        "episode_count": 80,
+        "group_count": 3,
+        "id": "6766ad2e774ac5a28574c091",
+        "name": "Digital",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 104,
+        "group_count": 4,
+        "id": "6824199a99cf7587a7333e24",
+        "name": "Netflix Mexico",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Told in eight parts, Islands tells the story of Finn, Jake, BMO and Susan Strong leaving Ooo and traveling across the ocean to solve the mystery of Finn's past. During their trip, they unlock secrets, encounter various creatures, make new friends, and explore a variety of mysterious islands.",
+        "episode_count": 8,
+        "group_count": 1,
+        "id": "613510f33fe160004224a30c",
+        "name": "Islands",
+        "network": {
+          "id": 56,
+          "logo_path": "/c5OC6oVCg6QP4eqzW6XIq17CQjI.png",
+          "name": "Cartoon Network",
+          "origin_country": "US"
+        },
+        "type": 5
+      },
+      {
+        "description": "In this eight-part series, Finn and Jake face a new threat to Ooo after Bonnibel's science project unleashes ghosts from Marceline's past.",
+        "episode_count": 8,
+        "group_count": 1,
+        "id": "6135108bcede69002a16af91",
+        "name": "Stakes",
+        "network": {
+          "id": 56,
+          "logo_path": "/c5OC6oVCg6QP4eqzW6XIq17CQjI.png",
+          "name": "Cartoon Network",
+          "origin_country": "US"
+        },
+        "type": 5
+      },
+      {
+        "description": "Finn and Jake return from their island adventure to find Ooo has gone BAZONKERS! The kingdoms are overrun by the four basic elements of life: Candy, Ice, Fire and Slime. The people are mindless creatures. The Princesses are all wackadoodle monsters. And our hero bros have to team up with Ice King and LSP to fix it all! It’s a madhouse!",
+        "episode_count": 8,
+        "group_count": 1,
+        "id": "613511456e0d7200435b18f1",
+        "name": "Elements",
+        "network": {
+          "id": 56,
+          "logo_path": "/c5OC6oVCg6QP4eqzW6XIq17CQjI.png",
+          "name": "Cartoon Network",
+          "origin_country": "US"
+        },
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 156,
+        "group_count": 5,
+        "id": "5b234a88c3a36831fa0022df",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "Adventure Time is frequently shown as a single episode of 20 minutes with 2 episodes.",
+        "episode_count": 0,
+        "group_count": 1,
+        "id": "65b4470f12425c018347adfd",
+        "name": "Double Episode Order",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2140,
+    "title": "Everybody Loves Raymond",
+    "live_seasons": {
+      "1": 22,
+      "2": 25,
+      "3": 26,
+      "4": 24,
+      "5": 25,
+      "6": 24,
+      "7": 25,
+      "8": 23,
+      "9": 16
+    },
+    "catalog_seasons": {
+      "2": 25,
+      "1": 22,
+      "4": 24,
+      "3": 26,
+      "6": 24,
+      "5": 25,
+      "8": 23,
+      "7": 25,
+      "9": 16
+    },
+    "imdb_seasons": {
+      "2": 25,
+      "1": 22,
+      "4": 24,
+      "3": 26,
+      "6": 25,
+      "5": 25,
+      "8": 23,
+      "7": 24,
+      "9": 16
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0115167",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 60572,
+    "title": "Pokémon",
+    "live_seasons": {
+      "1": 82,
+      "2": 36,
+      "3": 41,
+      "4": 52,
+      "5": 65,
+      "6": 40,
+      "7": 52,
+      "8": 53,
+      "9": 46,
+      "10": 52,
+      "11": 52,
+      "12": 53,
+      "13": 34,
+      "14": 48,
+      "15": 49,
+      "16": 45,
+      "17": 48,
+      "18": 45,
+      "19": 49,
+      "20": 43,
+      "21": 49,
+      "22": 54,
+      "23": 48,
+      "24": 42,
+      "25": 57
+    },
+    "catalog_seasons": {
+      "23": 48,
+      "24": 42,
+      "25": 57,
+      "19": 49,
+      "20": 43,
+      "21": 49,
+      "22": 54,
+      "15": 49,
+      "16": 45,
+      "17": 48,
+      "18": 45,
+      "11": 52,
+      "12": 53,
+      "13": 34,
+      "14": 48,
+      "7": 52,
+      "8": 53,
+      "9": 46,
+      "10": 52,
+      "3": 41,
+      "4": 52,
+      "5": 65,
+      "6": 40,
+      "1": 82,
+      "2": 36
+    },
+    "imdb_seasons": {
+      "23": 48,
+      "24": 42,
+      "25": 58,
+      "19": 48,
+      "20": 43,
+      "21": 49,
+      "22": 54,
+      "15": 49,
+      "16": 45,
+      "17": 49,
+      "18": 44,
+      "11": 51,
+      "12": 53,
+      "13": 34,
+      "14": 48,
+      "7": 52,
+      "8": 53,
+      "9": 47,
+      "10": 52,
+      "3": 41,
+      "4": 52,
+      "5": 65,
+      "6": 40,
+      "1": 82,
+      "2": 36
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0168366",
+    "groups": [
+      {
+        "description": "This episode group is for the order on TheTVDB. TVDB lists the movies as specials so they cannot be included here. The following is also wrong on TVDB: \"The Arceus Chronicles\" is listed as special episodes instead of its own TV show; \"Pokémon: To Be a Pokémon Master\" is listed as a separate TV show instead of episodes of Season 19; \"Pokémon Horizons\" is listed as Season 20 instead of its own TV show; \"Lights! Camera! Pika!\" is listed twice as both S00E57 and S16E78.",
+        "episode_count": 1259,
+        "group_count": 20,
+        "id": "659b9819b4a54300ee29cc1a",
+        "name": "TheTVDB",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "Every episode in order without the division of seasons.",
+        "episode_count": 1240,
+        "group_count": 1,
+        "id": "6275588367e0f70066d36e9f",
+        "name": "Absolute Order",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "This is the now-retired US home media episode order for seasons 1-6 that was used until 2014.",
+        "episode_count": 1224,
+        "group_count": 25,
+        "id": "676ccde22c9097b2666131a2",
+        "name": "Original US Home Media Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "In this order, the episodes are organized based on the current listing on the official Pokémon Episode Encyclopedia website.  It does not include episodes that have been dubbed and aired but have been removed from rotation (\"Beauty and the Beach\", \"Holiday Hi-Jynx\", \"Stage Fight\", \"The Mandarin Island Miss Match\").  The official count is one episode short due to the \"Pokémon Ranger - Deoxys' Crisis\" being listed on the official Japanese website as a single, double-length episode instead of the two-part episode that appears on the Pokémon Episode Encyclopedia.",
+        "episode_count": 1220,
+        "group_count": 25,
+        "id": "60abfc778c44b90041295a54",
+        "name": "Pokémon TV (US)",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "This listing is built around the Japanese series division, episodes in chronological order of events, and the inclusion of major specials that aired in the show’s regular time slots (the end-of-series specials focusing on Ash’s friends and the Mega Evolution Specials aired during the XY series). Basically, it has everything that's included in the official counting announced by TV Tokyo, but with the correction of the chronology of the episodes that were aired out-of-order. Doesn't include episodes that were never aired. Also, even though the \"Pokémon Ranger - Deoxys' Crisis!\" episode is a two-parter, it's listed as a single episode here on TMDB, so if for some reason you notice there's an episode missing in the AG series, that's why.",
+        "episode_count": 1245,
+        "group_count": 8,
+        "id": "5e8d599d629b2c001801523b",
+        "name": "Chronological Order of Official Counting",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 523,
+        "group_count": 11,
+        "id": "69cd43994da0e31d2d6c3094",
+        "name": "Saga Española",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "Order of the episodes from the original Japanese production and arcs.",
+        "episode_count": 1239,
+        "group_count": 12,
+        "id": "65f306a606f984018546fd74",
+        "name": "Japanese Production + Arcs",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 764,
+    "title": "Midsomer Murders",
+    "live_seasons": {
+      "1": 5,
+      "2": 4,
+      "3": 4,
+      "4": 6,
+      "5": 4,
+      "6": 5,
+      "7": 6,
+      "8": 9,
+      "9": 8,
+      "10": 8,
+      "11": 7,
+      "12": 7,
+      "13": 8,
+      "14": 8,
+      "15": 6,
+      "16": 5,
+      "17": 4,
+      "18": 6,
+      "19": 6,
+      "20": 6,
+      "21": 4,
+      "22": 6,
+      "23": 4,
+      "24": 4,
+      "25": 4
+    },
+    "catalog_seasons": {
+      "1": 5,
+      "2": 4,
+      "3": 4,
+      "4": 6,
+      "5": 4,
+      "6": 5,
+      "7": 6,
+      "8": 9,
+      "9": 8,
+      "10": 8,
+      "11": 7,
+      "12": 7,
+      "13": 8,
+      "14": 8,
+      "15": 6,
+      "16": 5,
+      "17": 4,
+      "18": 6,
+      "19": 6,
+      "20": 6,
+      "21": 4,
+      "22": 6,
+      "23": 4,
+      "24": 4,
+      "25": 4
+    },
+    "imdb_seasons": {
+      "1": 5,
+      "2": 4,
+      "3": 4,
+      "4": 6,
+      "5": 4,
+      "6": 5,
+      "7": 7,
+      "8": 8,
+      "9": 8,
+      "10": 8,
+      "11": 7,
+      "12": 7,
+      "13": 8,
+      "14": 8,
+      "15": 6,
+      "16": 5,
+      "17": 4,
+      "18": 6,
+      "19": 6,
+      "20": 6,
+      "21": 4,
+      "22": 6,
+      "23": 4,
+      "24": 4,
+      "25": 4
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0118401",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 132,
+        "group_count": 25,
+        "id": "613e8da7f96a390060084352",
+        "name": "SVT Order",
+        "network": {
+          "id": 356,
+          "logo_path": "/zFb3TsNzVC8STlkSzbnF1FTHXTA.png",
+          "name": "SVT1",
+          "origin_country": "SE"
+        },
+        "type": 7
+      },
+      {
+        "description": "",
+        "episode_count": 136,
+        "group_count": 23,
+        "id": "63cd3d6f9a643500ce155c62",
+        "name": "ZDF Reihenfolge",
+        "network": {
+          "id": 31,
+          "logo_path": "/2OHAgbf6QUj4cWjmFkFKu4jIsq1.png",
+          "name": "ZDF",
+          "origin_country": "DE"
+        },
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 160,
+    "title": "Teenage Mutant Ninja Turtles",
+    "live_seasons": {
+      "1": 5,
+      "2": 13,
+      "3": 47,
+      "4": 39,
+      "5": 22,
+      "6": 16,
+      "7": 27,
+      "8": 8,
+      "9": 8,
+      "10": 8
+    },
+    "catalog_seasons": {
+      "1": 5,
+      "2": 13,
+      "3": 47,
+      "4": 39,
+      "5": 22,
+      "6": 16,
+      "7": 27,
+      "8": 8,
+      "9": 8,
+      "10": 8
+    },
+    "imdb_seasons": {
+      "1": 5,
+      "2": 13,
+      "3": 47,
+      "4": 54,
+      "5": 20,
+      "6": 16,
+      "7": 14,
+      "8": 8,
+      "9": 8,
+      "10": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0131613",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 66,
+        "group_count": 6,
+        "id": "5c309fb20e0a2666043a03d3",
+        "name": "DVD",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "Storyline Chronological Order.\n\nBased on research provided at:\n\nhttp://tmntentity.blogspot.com/2016/01/teenage-mutant-ninja-turtles-1987.html",
+        "episode_count": 210,
+        "group_count": 11,
+        "id": "62f80aaa724de1007a0133c2",
+        "name": "Storyline Order",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 193,
+        "group_count": 10,
+        "id": "5ef84c7827d9cc0037b163c4",
+        "name": "Alternative list",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 4386,
+    "title": "Baywatch",
+    "live_seasons": {
+      "1": 22,
+      "2": 22,
+      "3": 22,
+      "4": 22,
+      "5": 22,
+      "6": 22,
+      "7": 22,
+      "8": 22,
+      "9": 22,
+      "10": 22,
+      "11": 22
+    },
+    "catalog_seasons": {
+      "3": 22,
+      "4": 22,
+      "1": 22,
+      "2": 22,
+      "7": 22,
+      "8": 22,
+      "5": 22,
+      "6": 22,
+      "11": 22,
+      "9": 22,
+      "10": 22
+    },
+    "imdb_seasons": {
+      "3": 23,
+      "4": 22,
+      "1": 21,
+      "2": 22,
+      "7": 22,
+      "8": 22,
+      "5": 22,
+      "6": 22,
+      "11": 22,
+      "9": 22,
+      "10": 22
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0096542",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 251,
+    "title": "Aqua Teen Hunger Force",
+    "live_seasons": {
+      "1": 18,
+      "2": 24,
+      "3": 13,
+      "4": 14,
+      "5": 9,
+      "6": 10,
+      "7": 12,
+      "8": 10,
+      "9": 10,
+      "10": 10,
+      "11": 9,
+      "12": 5
+    },
+    "catalog_seasons": {
+      "1": 18,
+      "2": 24,
+      "3": 13,
+      "4": 14,
+      "5": 9,
+      "6": 10,
+      "7": 12,
+      "8": 10,
+      "9": 10,
+      "10": 10,
+      "11": 9,
+      "12": 5
+    },
+    "imdb_seasons": {
+      "1": 18,
+      "2": 24,
+      "3": 13,
+      "4": 13,
+      "5": 10,
+      "6": 10,
+      "7": 12,
+      "8": 10,
+      "9": 10,
+      "10": 10,
+      "11": 9,
+      "12": 5
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0297494",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 166,
+        "group_count": 11,
+        "id": "6930c0ab4a6974dbb4f244a9",
+        "name": "DVD",
+        "network": null,
+        "type": 3
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 4459,
+    "title": "The Muppet Show",
+    "live_seasons": {
+      "1": 24,
+      "2": 30,
+      "3": 18,
+      "4": 24,
+      "5": 24
+    },
+    "catalog_seasons": {
+      "1": 24,
+      "4": 24,
+      "5": 24,
+      "2": 30,
+      "3": 18
+    },
+    "imdb_seasons": {
+      "1": 24,
+      "4": 24,
+      "5": 24,
+      "2": 24,
+      "3": 24
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0074028",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 120,
+        "group_count": 5,
+        "id": "5b91ca709251416f67001a2b",
+        "name": "US Broadcast",
+        "network": {
+          "id": 16,
+          "logo_path": "/wju8KhOUsR5y4bH9p3Jc50hhaLO.png",
+          "name": "CBS",
+          "origin_country": "US"
+        },
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 154,
+        "group_count": 6,
+        "id": "6907c272782a47ddaf472ac3",
+        "name": "DVD Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 118,
+        "group_count": 5,
+        "id": "60443640a410c8006e86457e",
+        "name": "Disney Plus",
+        "network": {
+          "id": 2739,
+          "logo_path": "/1edZOYAfoyZyZ3rklNSiUpXX30Q.png",
+          "name": "Disney+",
+          "origin_country": ""
+        },
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 120,
+        "group_count": 5,
+        "id": "5b91ca199251416f6b001ad4",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 120,
+        "group_count": 5,
+        "id": "66b3e291615315bff76f0bd0",
+        "name": "Deutsche Fernsehausstrahlung",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2490,
+    "title": "The IT Crowd",
+    "live_seasons": {
+      "1": 6,
+      "2": 6,
+      "3": 6,
+      "4": 6
+    },
+    "catalog_seasons": {
+      "2": 6,
+      "1": 6,
+      "4": 6,
+      "3": 6
+    },
+    "imdb_seasons": {
+      "2": 6,
+      "1": 6,
+      "4": 6,
+      "3": 6,
+      "5": 1
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0487831",
+    "groups": [
+      {
+        "description": "The comedic misadventures of Roy, Moss, and their grifting supervisor Jen, a 'motley crew' of IT support workers at a large corporation headed by a hotheaded yuppie.",
+        "episode_count": 25,
+        "group_count": 5,
+        "id": "694967b6eb0466f518fb17e9",
+        "name": "DVD Order",
+        "network": null,
+        "type": 3
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 27745,
+    "title": "The Heroes",
+    "live_seasons": {
+      "1": 13,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 11,
+      "6": 7
+    },
+    "catalog_seasons": {
+      "5": 11,
+      "4": 13,
+      "6": 7,
+      "1": 13,
+      "3": 13,
+      "2": 13
+    },
+    "imdb_seasons": {
+      "4": 1,
+      "7": 2,
+      "1": 14,
+      "3": 1,
+      "2": 13
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt7657124",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 259909,
+    "title": "Dexter: Resurrection",
+    "live_seasons": {
+      "1": 10,
+      "2": 10
+    },
+    "catalog_seasons": {
+      "2": 10,
+      "1": 10
+    },
+    "imdb_seasons": {
+      "1": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt33043892",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 114461,
+    "title": "Ahsoka",
+    "live_seasons": {
+      "1": 8,
+      "2": 8
+    },
+    "catalog_seasons": {
+      "2": 8,
+      "1": 8
+    },
+    "imdb_seasons": {
+      "1": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt13622776",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 82596,
+    "title": "Emily in Paris",
+    "live_seasons": {
+      "1": 10,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10
+    },
+    "catalog_seasons": {
+      "6": 10,
+      "5": 10,
+      "4": 10,
+      "3": 10,
+      "2": 10,
+      "1": 10
+    },
+    "imdb_seasons": {
+      "5": 10,
+      "4": 10,
+      "3": 10,
+      "2": 10,
+      "1": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt8962124",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 58474,
+    "title": "Cosmos",
+    "live_seasons": {
+      "1": 13,
+      "2": 13
+    },
+    "catalog_seasons": {
+      "2": 13,
+      "1": 13
+    },
+    "imdb_seasons": {
+      "1": 13
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2395695",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 79744,
+    "title": "The Rookie",
+    "live_seasons": {
+      "1": 20,
+      "2": 20,
+      "3": 14,
+      "4": 22,
+      "5": 22,
+      "6": 10,
+      "7": 18,
+      "8": 18,
+      "9": 1
+    },
+    "catalog_seasons": {
+      "4": 22,
+      "3": 14,
+      "6": 10,
+      "5": 22,
+      "2": 20,
+      "1": 20,
+      "8": 18,
+      "7": 18,
+      "9": 1
+    },
+    "imdb_seasons": {
+      "4": 22,
+      "3": 14,
+      "6": 10,
+      "5": 22,
+      "2": 20,
+      "1": 20,
+      "8": 18,
+      "7": 18
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt7587890",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 124,
+        "group_count": 7,
+        "id": "5c3576f4c3a36828e766b6d5",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 105248,
+    "title": "Cyberpunk: Edgerunners",
+    "live_seasons": {
+      "1": 10,
+      "2": 10
+    },
+    "catalog_seasons": {
+      "2": 10,
+      "1": 10
+    },
+    "imdb_seasons": {
+      "1": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt12590266",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 4614,
+    "title": "NCIS",
+    "live_seasons": {
+      "1": 23,
+      "2": 23,
+      "3": 24,
+      "4": 24,
+      "5": 19,
+      "6": 25,
+      "7": 24,
+      "8": 24,
+      "9": 24,
+      "10": 24,
+      "11": 24,
+      "12": 24,
+      "13": 24,
+      "14": 24,
+      "15": 24,
+      "16": 24,
+      "17": 20,
+      "18": 16,
+      "19": 21,
+      "20": 22,
+      "21": 10,
+      "22": 20,
+      "23": 20,
+      "24": 6
+    },
+    "catalog_seasons": {
+      "3": 24,
+      "4": 24,
+      "1": 23,
+      "2": 23,
+      "7": 24,
+      "8": 24,
+      "5": 19,
+      "6": 25,
+      "11": 24,
+      "12": 24,
+      "9": 24,
+      "10": 24,
+      "15": 24,
+      "16": 24,
+      "13": 24,
+      "14": 24,
+      "19": 21,
+      "20": 22,
+      "17": 20,
+      "18": 16,
+      "23": 20,
+      "24": 6,
+      "21": 10,
+      "22": 20
+    },
+    "imdb_seasons": {
+      "3": 24,
+      "4": 24,
+      "1": 23,
+      "2": 23,
+      "7": 24,
+      "8": 24,
+      "5": 19,
+      "6": 25,
+      "11": 24,
+      "12": 24,
+      "9": 24,
+      "10": 24,
+      "15": 24,
+      "16": 24,
+      "13": 24,
+      "14": 24,
+      "19": 21,
+      "20": 22,
+      "17": 20,
+      "18": 16,
+      "23": 20,
+      "24": 1,
+      "21": 10,
+      "22": 20
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0364845",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 61662,
+    "title": "Schitt's Creek",
+    "live_seasons": {
+      "1": 13,
+      "2": 13,
+      "3": 13,
+      "4": 12,
+      "5": 14,
+      "6": 14
+    },
+    "catalog_seasons": {
+      "6": 14,
+      "5": 14,
+      "2": 13,
+      "1": 13,
+      "4": 12,
+      "3": 13
+    },
+    "imdb_seasons": {
+      "6": 14,
+      "5": 14,
+      "2": 13,
+      "1": 13,
+      "4": 13,
+      "3": 13
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt3526078",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 10283,
+    "title": "Archer",
+    "live_seasons": {
+      "1": 10,
+      "2": 13,
+      "3": 10,
+      "4": 13,
+      "5": 13,
+      "6": 13,
+      "7": 10,
+      "8": 8,
+      "9": 8,
+      "10": 9,
+      "11": 8,
+      "12": 8,
+      "13": 8,
+      "14": 9
+    },
+    "catalog_seasons": {
+      "1": 10,
+      "6": 13,
+      "7": 10,
+      "8": 8,
+      "9": 8,
+      "2": 13,
+      "3": 10,
+      "4": 13,
+      "5": 13,
+      "14": 9,
+      "10": 9,
+      "11": 8,
+      "12": 8,
+      "13": 8
+    },
+    "imdb_seasons": {
+      "1": 10,
+      "6": 13,
+      "7": 10,
+      "8": 8,
+      "9": 8,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 13,
+      "14": 9,
+      "10": 9,
+      "11": 8,
+      "12": 8,
+      "13": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1486217",
+    "groups": [
+      {
+        "description": "Order of all episodes, including the later revisions regarding season 3.",
+        "episode_count": 143,
+        "group_count": 14,
+        "id": "5d3c708321621b0011eed975",
+        "name": "Revised Airing (Season 3)",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 67136,
+    "title": "This Is Us",
+    "live_seasons": {
+      "1": 18,
+      "2": 18,
+      "3": 18,
+      "4": 18,
+      "5": 15,
+      "6": 18
+    },
+    "catalog_seasons": {
+      "6": 18,
+      "5": 15,
+      "4": 18,
+      "3": 18,
+      "2": 18,
+      "1": 18
+    },
+    "imdb_seasons": {
+      "6": 18,
+      "5": 16,
+      "4": 18,
+      "3": 18,
+      "2": 18,
+      "1": 18
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt5555260",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 72,
+        "group_count": 4,
+        "id": "6757ddbdabc1edadc0c53990",
+        "name": "DSNP",
+        "network": null,
+        "type": 4
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 96677,
+    "title": "Lupin",
+    "live_seasons": {
+      "1": 10,
+      "2": 7,
+      "3": 8
+    },
+    "catalog_seasons": {
+      "1": 10,
+      "3": 8,
+      "2": 7
+    },
+    "imdb_seasons": {
+      "1": 5,
+      "3": 7,
+      "2": 5
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2531336",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 25,
+        "group_count": 4,
+        "id": "6074e65418864b00439afa4f",
+        "name": "Parts",
+        "network": {
+          "id": 213,
+          "logo_path": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
+          "name": "Netflix",
+          "origin_country": ""
+        },
+        "type": 4
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 95480,
+    "title": "Slow Horses",
+    "live_seasons": {
+      "1": 6,
+      "2": 6,
+      "3": 6,
+      "4": 6,
+      "5": 6,
+      "6": 6
+    },
+    "catalog_seasons": {
+      "4": 6,
+      "3": 6,
+      "6": 6,
+      "5": 6,
+      "2": 6,
+      "1": 6
+    },
+    "imdb_seasons": {
+      "4": 6,
+      "3": 6,
+      "6": 4,
+      "5": 6,
+      "2": 6,
+      "1": 6
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt5875444",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 4604,
+    "title": "Smallville",
+    "live_seasons": {
+      "1": 21,
+      "2": 23,
+      "3": 22,
+      "4": 22,
+      "5": 22,
+      "6": 22,
+      "7": 20,
+      "8": 22,
+      "9": 21,
+      "10": 21
+    },
+    "catalog_seasons": {
+      "1": 21,
+      "2": 23,
+      "5": 22,
+      "6": 22,
+      "3": 22,
+      "4": 22,
+      "9": 21,
+      "10": 21,
+      "7": 20,
+      "8": 22
+    },
+    "imdb_seasons": {
+      "1": 22,
+      "2": 23,
+      "5": 22,
+      "6": 22,
+      "3": 22,
+      "4": 22,
+      "9": 21,
+      "10": 21,
+      "7": 20,
+      "8": 22
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0279600",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 693,
+    "title": "Desperate Housewives",
+    "live_seasons": {
+      "1": 23,
+      "2": 23,
+      "3": 23,
+      "4": 17,
+      "5": 24,
+      "6": 23,
+      "7": 22,
+      "8": 22
+    },
+    "catalog_seasons": {
+      "1": 23,
+      "2": 23,
+      "3": 23,
+      "4": 17,
+      "5": 24,
+      "6": 23,
+      "7": 22,
+      "8": 22
+    },
+    "imdb_seasons": {
+      "1": 23,
+      "2": 24,
+      "3": 23,
+      "4": 17,
+      "5": 24,
+      "6": 23,
+      "7": 23,
+      "8": 23
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0410975",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 387,
+    "title": "SpongeBob SquarePants",
+    "live_seasons": {
+      "1": 41,
+      "2": 36,
+      "3": 40,
+      "4": 40,
+      "5": 36,
+      "6": 47,
+      "7": 52,
+      "8": 52,
+      "9": 47,
+      "10": 20,
+      "11": 51,
+      "12": 35,
+      "13": 64,
+      "14": 23,
+      "15": 24,
+      "16": 22,
+      "17": 26,
+      "18": 23,
+      "19": 10
+    },
+    "catalog_seasons": {
+      "1": 41,
+      "2": 36,
+      "3": 40,
+      "4": 40,
+      "5": 36,
+      "6": 47,
+      "7": 52,
+      "8": 52,
+      "9": 47,
+      "10": 20,
+      "11": 51,
+      "12": 35,
+      "13": 64,
+      "14": 23,
+      "15": 24,
+      "16": 22,
+      "17": 26,
+      "18": 23,
+      "19": 10
+    },
+    "imdb_seasons": {
+      "1": 20,
+      "2": 20,
+      "3": 20,
+      "4": 20,
+      "5": 20,
+      "6": 25,
+      "7": 26,
+      "8": 26,
+      "9": 26,
+      "10": 11,
+      "11": 26,
+      "12": 25,
+      "13": 26,
+      "14": 12,
+      "15": 13,
+      "16": 12,
+      "17": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0206512",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 0,
+        "group_count": 14,
+        "id": "6a182a2ef5e16af3ca1be803",
+        "name": "Production Order",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 517,
+        "group_count": 13,
+        "id": "62b8d1fc3d43e0008bd32c9f",
+        "name": "DVD (Germany)",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 655,
+        "group_count": 15,
+        "id": "687af86c90c737dad71697f8",
+        "name": "DVD (US)",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "Order as seen on the First 100 Episodes DVD set. Separated by Seasons for better organisation.",
+        "episode_count": 199,
+        "group_count": 6,
+        "id": "6a87ca7f7d242182e3da9b2c",
+        "name": "The First 100 Episodes",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 273,
+        "group_count": 6,
+        "id": "5db9272fd2c0c1001b19fcd3",
+        "name": "Netflix",
+        "network": {
+          "id": 213,
+          "logo_path": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
+          "name": "Netflix",
+          "origin_country": ""
+        },
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 257,
+        "group_count": 6,
+        "id": "5dd0a2ef79a1c300134cc8a4",
+        "name": "Stan",
+        "network": {
+          "id": 1255,
+          "logo_path": "/1akCJMjyZsiS4v3NTJD5Y0LFZ4R.png",
+          "name": "Stan",
+          "origin_country": "AU"
+        },
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 153,
+        "group_count": 4,
+        "id": "6689c7a2a363cb68e4615f8b",
+        "name": "Skyshowtime",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 600,
+        "group_count": 25,
+        "id": "6928f2e8c9c5d096c024646e",
+        "name": "Google Play",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 613,
+        "group_count": 15,
+        "id": "696024e6d30ab818b7d14158",
+        "name": "Paramount+",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "How the series is organized on Prime Video in the United States. Seasons 1-7 are available with a basic Prime subscription, Seasons 1-15 are available with the Paramount+ add-on, and all seasons (1-16) are available for PVOD.",
+        "episode_count": 657,
+        "group_count": 17,
+        "id": "69f1105ddaa7d1012881abc9",
+        "name": "Prime Video",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Production order according to Encyclopedia SpongeBobia.",
+        "episode_count": 683,
+        "group_count": 19,
+        "id": "5e04e352d1a893001994b027",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 641,
+        "group_count": 18,
+        "id": "5df84ff2d1a89300127d4308",
+        "name": "Nickelodeon (AU)",
+        "network": {
+          "id": 416,
+          "logo_path": "/ikZXxg6GnwpzqiZbRPhJGaZapqB.png",
+          "name": "Nickelodeon",
+          "origin_country": "AU"
+        },
+        "type": 7
+      },
+      {
+        "description": "Represents seasons with joined episodes. Due to limitations, only the first episode name of the joined episodes is included.",
+        "episode_count": 338,
+        "group_count": 17,
+        "id": "6843e8db66a4f8201f3fbe74",
+        "name": "Joined Order",
+        "network": null,
+        "type": 7
+      },
+      {
+        "description": "",
+        "episode_count": 617,
+        "group_count": 16,
+        "id": "692512c71dd378966bd9c289",
+        "name": "YTV (CA)",
+        "network": null,
+        "type": 7
+      },
+      {
+        "description": "Order the episodes are packaged in on all major releases, most notably TV listings, streaming releases and official documentation.",
+        "episode_count": 659,
+        "group_count": 18,
+        "id": "6a4c32c23f2079d720dedb0f",
+        "name": "Packaging Order",
+        "network": null,
+        "type": 7
+      },
+      {
+        "description": "Order of the episodes as aired on TeenNick and formerly Nick GaS",
+        "episode_count": 551,
+        "group_count": 15,
+        "id": "6a68c732832d711688812511",
+        "name": "TeenNick (US)",
+        "network": null,
+        "type": 7
+      },
+      {
+        "description": "Order of the episodes as aired on Nicktoons (The air dates for the episodes Le Big Switch, Penny Foolish, Giant Squidward, Porous Pockets, The Card, Dear Vikings, Chum Caverns, Greasy Buffons, Model Sponge, A Day Without Tears, Summer Job, Rodeo Daze, The Abrasive Side, Earworm, Shellback Shenanigans, The Masterpiece, Whelk Attack, Tunnel of Glove, Perfect Chemistry, Accidents Will Happen, The Hot Shot, Sentimental Sponge, Sweet and Sour Squid, Walking the Plankton, Plankton's Good Eye, Bubble Troubles, Are You Happy Now?, Squiditis, Squirrel Record, Gary's New Toy and Eek, an Urchin! are unknown so they will be placed at the end of their respective seasons)",
+        "episode_count": 648,
+        "group_count": 17,
+        "id": "6a68d6c85153b7992a4cda6e",
+        "name": "Nicktoons (US)",
+        "network": null,
+        "type": 7
+      },
+      {
+        "description": "Order of the episodes as aired on MTV",
+        "episode_count": 72,
+        "group_count": 6,
+        "id": "6a6e2a19694cbab67a966e2a",
+        "name": "MTV (US)",
+        "network": null,
+        "type": 7
+      },
+      {
+        "description": "Order of the episodes as aired on MTV2",
+        "episode_count": 30,
+        "group_count": 5,
+        "id": "6a6e2cd937d9928b0466b867",
+        "name": "MTV2 (US)",
+        "network": null,
+        "type": 7
+      },
+      {
+        "description": "Order of the episodes as aired on VH1",
+        "episode_count": 8,
+        "group_count": 2,
+        "id": "6a6e2e0bfe76e92dfa22115e",
+        "name": "VH1 (US)",
+        "network": null,
+        "type": 7
+      },
+      {
+        "description": "Represents seasons with joined episodes in packaging order. Due to limitations, only the first episode name of the joined episodes is included.",
+        "episode_count": 343,
+        "group_count": 18,
+        "id": "6a779c62710e503af51c5dee",
+        "name": "Joined Packaging Order",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 65930,
+    "title": "My Hero Academia",
+    "live_seasons": {
+      "1": 13,
+      "2": 25,
+      "3": 25,
+      "4": 25,
+      "5": 25,
+      "6": 25,
+      "7": 21,
+      "8": 11
+    },
+    "catalog_seasons": {
+      "8": 11,
+      "7": 21,
+      "6": 25,
+      "5": 25,
+      "4": 25,
+      "3": 25,
+      "2": 25,
+      "1": 13
+    },
+    "imdb_seasons": {
+      "8": 12,
+      "7": 21,
+      "6": 25,
+      "5": 25,
+      "4": 25,
+      "3": 25,
+      "2": 26,
+      "1": 13
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt5626028",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 170,
+        "group_count": 1,
+        "id": "5ae5c6489251410130003717",
+        "name": "Absolute",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 88,
+        "group_count": 16,
+        "id": "61dc852e04863800687319e2",
+        "name": "German  DVD/Blu-ray Kazé",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 113,
+        "group_count": 31,
+        "id": "61dc8f531b157d00425492cf",
+        "name": "Japanese DVD/Blu-ray",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 180,
+        "group_count": 9,
+        "id": "661a69557ecd28017c4b5c53",
+        "name": "Seasons (Crunchyroll)",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 117,
+        "group_count": 18,
+        "id": "6346ab546a300b007a257537",
+        "name": "Story Arcs",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "Production Cycle of My Hero Academia",
+        "episode_count": 189,
+        "group_count": 10,
+        "id": "61dc846bcb6db50040e24d46",
+        "name": "Production",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 80,
+        "group_count": 4,
+        "id": "69136cf74a8e4fa046aa2102",
+        "name": "Pulsar",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 32726,
+    "title": "Bob's Burgers",
+    "live_seasons": {
+      "1": 13,
+      "2": 9,
+      "3": 23,
+      "4": 22,
+      "5": 21,
+      "6": 19,
+      "7": 22,
+      "8": 21,
+      "9": 22,
+      "10": 22,
+      "11": 22,
+      "12": 22,
+      "13": 22,
+      "14": 16,
+      "15": 22,
+      "16": 15
+    },
+    "catalog_seasons": {
+      "4": 22,
+      "3": 23,
+      "2": 9,
+      "1": 13,
+      "16": 15,
+      "15": 22,
+      "14": 16,
+      "13": 22,
+      "12": 22,
+      "11": 22,
+      "10": 22,
+      "9": 22,
+      "8": 21,
+      "7": 22,
+      "6": 19,
+      "5": 21
+    },
+    "imdb_seasons": {
+      "4": 22,
+      "3": 23,
+      "2": 9,
+      "1": 13,
+      "16": 15,
+      "15": 22,
+      "14": 16,
+      "13": 22,
+      "12": 22,
+      "11": 22,
+      "10": 22,
+      "9": 22,
+      "8": 20,
+      "7": 22,
+      "6": 19,
+      "5": 21
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1561755",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 312,
+        "group_count": 15,
+        "id": "5b05a615c3a3684c930011be",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 30984,
+    "title": "Bleach",
+    "live_seasons": {
+      "1": 366,
+      "2": 50
+    },
+    "catalog_seasons": {
+      "1": 366,
+      "2": 50
+    },
+    "imdb_seasons": {
+      "5": 18,
+      "6": 22,
+      "3": 22,
+      "4": 28,
+      "1": 20,
+      "2": 21,
+      "15": 26,
+      "16": 24,
+      "13": 36,
+      "14": 51,
+      "11": 7,
+      "12": 17,
+      "9": 22,
+      "10": 16,
+      "7": 20,
+      "8": 16
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0434665",
+    "groups": [
+      {
+        "description": "Order of episodes according to TVDB.",
+        "episode_count": 420,
+        "group_count": 18,
+        "id": "663fb548c10d4be3e80b2f6d",
+        "name": "TVDB Order",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 4,
+        "group_count": 1,
+        "id": "69521763c0e3129520c37ac1",
+        "name": "Specials",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 416,
+        "group_count": 20,
+        "id": "6a17510710b7abf992649609",
+        "name": "Season Split",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 416,
+        "group_count": 2,
+        "id": "672bf844de546585d04dab84",
+        "name": "Absolute (No Specials)",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 63,
+        "group_count": 6,
+        "id": "63c99eb5a097dc0086e74a3d",
+        "name": "Japanese Blu-ray Box",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 392,
+        "group_count": 16,
+        "id": "5b54a34dc3a3680b6803c43d",
+        "name": "Crunchyroll Season Split",
+        "network": {
+          "id": 1112,
+          "logo_path": "/qqyXcZlJQKlRmAD1TCKV7mGLQlt.png",
+          "name": "Crunchyroll",
+          "origin_country": ""
+        },
+        "type": 4
+      },
+      {
+        "description": "Kaï: Re-montage de l’anime d’un manga au format de long-métrage avec la suppression de toute action filler à l’œuvre papier. Dans une recherche constante de la plus grande fidélité possible, nos monteurs s’assurent que l’expérience reçue en regardant l’anime kaïé soit au plus proche de celle reçue par les lecteurs du manga.",
+        "episode_count": 210,
+        "group_count": 28,
+        "id": "62fbec9035818f007af92479",
+        "name": "Kaï",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "This episode group is for how \"Bleach\" is listed on Hulu in the US and Disney+ internationally. On both streaming services, \"Bleach\" is listed as a separate TV show from its sequel series \"Bleach: Thousand-Year Blood War.\"",
+        "episode_count": 366,
+        "group_count": 26,
+        "id": "6479149ecaef2d00fce48bf4",
+        "name": "Hulu Season Split (Bleach)",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Netflix Simplified Chinese Version",
+        "episode_count": 131,
+        "group_count": 6,
+        "id": "67069c4d003c9214a0b3ceb1",
+        "name": "Netflix",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "This episode group is for how \"Bleach: Thousand-Year Blood War\" is listed on Hulu in the US and Disney+ internationally. On both streaming services, \"Bleach: Thousand-Year Blood War\" is listed as a separate TV show from the original \"Bleach.\"",
+        "episode_count": 50,
+        "group_count": 4,
+        "id": "6712f2a698f6a758cd54eedc",
+        "name": "Hulu Season Split (Thousand-Year Blood War)",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 420,
+        "group_count": 21,
+        "id": "5b850a9ac3a368656004dd1b",
+        "name": "Arcs",
+        "network": {
+          "id": 98,
+          "logo_path": "/jnuO8pZNEBLEq5YaOP1f5OkmG91.png",
+          "name": "TV Tokyo",
+          "origin_country": "JP"
+        },
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 251,
+        "group_count": 12,
+        "id": "63aabe5a09dda4007cb99ccf",
+        "name": "Arcs (No Filler)",
+        "network": null,
+        "type": 5
+      },
+      {
+        "description": "",
+        "episode_count": 366,
+        "group_count": 25,
+        "id": "6a548e2cbd28857418347e9a",
+        "name": "Story Arc",
+        "network": null,
+        "type": 5
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 61374,
+    "title": "Tokyo Ghoul",
+    "live_seasons": {
+      "1": 12,
+      "2": 12,
+      "3": 12,
+      "4": 12
+    },
+    "catalog_seasons": {
+      "2": 12,
+      "1": 12,
+      "4": 12,
+      "3": 12
+    },
+    "imdb_seasons": {
+      "1": 12
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt3741634",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 50,
+        "group_count": 4,
+        "id": "5b0e30e092514153bc000c06",
+        "name": "Chronological Order",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 50,
+        "group_count": 4,
+        "id": "6abbae0088b62a2207bf7b4b",
+        "name": "按季分组命名",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "",
+        "episode_count": 24,
+        "group_count": 2,
+        "id": "64704eeb13a32000a6c9ccea",
+        "name": "巴哈姆特動畫瘋",
+        "network": null,
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 31132,
+    "title": "Regular Show",
+    "live_seasons": {
+      "1": 12,
+      "2": 28,
+      "3": 39,
+      "4": 37,
+      "5": 37,
+      "6": 28,
+      "7": 36,
+      "8": 28
+    },
+    "catalog_seasons": {
+      "7": 36,
+      "8": 28,
+      "5": 37,
+      "6": 28,
+      "3": 39,
+      "4": 37,
+      "1": 12,
+      "2": 28
+    },
+    "imdb_seasons": {
+      "7": 36,
+      "8": 27,
+      "5": 37,
+      "6": 28,
+      "3": 39,
+      "4": 37,
+      "1": 12,
+      "2": 28
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1710308",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 259,
+        "group_count": 8,
+        "id": "67f32f0e854b0538cfd92344",
+        "name": "Production Code",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 259,
+        "group_count": 8,
+        "id": "6808de52b2b722aedf8a083d",
+        "name": "Production Sheet",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 60554,
+    "title": "Star Wars Rebels",
+    "live_seasons": {
+      "1": 13,
+      "2": 19,
+      "3": 21,
+      "4": 16
+    },
+    "catalog_seasons": {
+      "1": 13,
+      "2": 19,
+      "3": 21,
+      "4": 16
+    },
+    "imdb_seasons": {
+      "1": 14,
+      "2": 22,
+      "3": 22,
+      "4": 15
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2930604",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 7,
+        "group_count": 1,
+        "id": "5ff25f9cfab3fa003a75a89c",
+        "name": "Alternate order",
+        "network": null,
+        "type": 2
+      },
+      {
+        "description": "List of episodes on Blu-ray and DVD",
+        "episode_count": 70,
+        "group_count": 4,
+        "id": "5b57d247c3a3685c85041004",
+        "name": "Blu-ray Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "https://www.tvmaze.com/alternatelists/457/star-wars-rebels-dvd-release",
+        "episode_count": 0,
+        "group_count": 4,
+        "id": "6887503d5acf69a81f52b42a",
+        "name": "DVD Release",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "DVD Release",
+        "episode_count": 0,
+        "group_count": 1,
+        "id": "69fba997dc1e08bd5bc47e80",
+        "name": "DVD",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 71,
+        "group_count": 4,
+        "id": "62fe123974d6c0009ec28d49",
+        "name": "Disney+",
+        "network": {
+          "id": 2739,
+          "logo_path": "/1edZOYAfoyZyZ3rklNSiUpXX30Q.png",
+          "name": "Disney+",
+          "origin_country": ""
+        },
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 0,
+        "group_count": 4,
+        "id": "675758059bc20eaa4968145b",
+        "name": "Disney+ (2024)",
+        "network": null,
+        "type": 4
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1877,
+    "title": "Phineas and Ferb",
+    "live_seasons": {
+      "1": 47,
+      "2": 66,
+      "3": 62,
+      "4": 48,
+      "5": 38,
+      "6": 2
+    },
+    "catalog_seasons": {
+      "1": 47,
+      "2": 66,
+      "3": 62,
+      "4": 48,
+      "5": 38,
+      "6": 2
+    },
+    "imdb_seasons": {
+      "1": 26,
+      "2": 38,
+      "3": 35,
+      "4": 31,
+      "5": 20,
+      "6": 1
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0852863",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 224,
+        "group_count": 4,
+        "id": "60b40c787d550400584259c6",
+        "name": "Aired Order",
+        "network": {
+          "id": 54,
+          "logo_path": "/9AxUB1RdRnm0r5ki8Thb69Jo9Ma.png",
+          "name": "Disney Channel",
+          "origin_country": "US"
+        },
+        "type": 1
+      },
+      {
+        "description": "Phineas and Ferb organized by the Disney+ episode order. The Disney+ episode order differs from how the episodes were originally aired on Disney Channel.  On Disney+, the episode \"S'Winter\" is listed twice. In this order, the second listing of the episode is omitted (which would appear in season three). Moreover, Disney+ lists the episode \"Phineas and Ferb The Summer Belongs to You!\" as a two-part episode, whereas this is listed as one episode one TMDB.",
+        "episode_count": 262,
+        "group_count": 5,
+        "id": "5fd62964c8a5ac0041f9c417",
+        "name": "Disney+",
+        "network": {
+          "id": 2739,
+          "logo_path": "/1edZOYAfoyZyZ3rklNSiUpXX30Q.png",
+          "name": "Disney+",
+          "origin_country": ""
+        },
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 47,
+        "group_count": 1,
+        "id": "6781b1d138817437e2bb37d3",
+        "name": "Disney+ BR",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Source: uNoGS (https://unogs.com/series/70177007/phineas-and-ferb)  The episode \"Phineas and Ferb's Musical Cliptastic Countdown Hosted by Kelly Osbourne\" was never released on the platform.",
+        "episode_count": 223,
+        "group_count": 4,
+        "id": "6923885679126194e1b748ee",
+        "name": "Netflix Order",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "Aired on the Disney Channel - mostly double episodes.",
+        "episode_count": 51,
+        "group_count": 4,
+        "id": "694d2e3aa72dd476db072806",
+        "name": "Disney Channel (Double)",
+        "network": null,
+        "type": 4
+      },
+      {
+        "description": "",
+        "episode_count": 224,
+        "group_count": 4,
+        "id": "5f30d9417739410035ea03dc",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "Disney+ (Norway) order for double episodes.",
+        "episode_count": 151,
+        "group_count": 5,
+        "id": "62613b5b322b2b00666fb977",
+        "name": "Double episodes",
+        "network": {
+          "id": 2739,
+          "logo_path": "/1edZOYAfoyZyZ3rklNSiUpXX30Q.png",
+          "name": "Disney+",
+          "origin_country": ""
+        },
+        "type": 7
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2723,
+    "title": "Samurai Jack",
+    "live_seasons": {
+      "1": 13,
+      "2": 13,
+      "3": 11,
+      "4": 13,
+      "5": 10
+    },
+    "catalog_seasons": {
+      "1": 13,
+      "3": 11,
+      "2": 13,
+      "5": 10,
+      "4": 13
+    },
+    "imdb_seasons": {
+      "1": 13,
+      "3": 13,
+      "2": 13,
+      "5": 10,
+      "4": 13
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0278238",
+    "groups": [
+      {
+        "description": "Samurai Jack: The Complete Series is presented on Blu-ray courtesy of Warner Brothers with an AVC encoded 1080p transfer in 1.33:1 (for the first four seasons) and 1.78:1 (for the fifth and final season).",
+        "episode_count": 36,
+        "group_count": 5,
+        "id": "66dd22cb54af0e170e38bcda",
+        "name": "Blu-ray Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 60,
+        "group_count": 5,
+        "id": "62e393ec62f335005fc0a23c",
+        "name": "Intended Order",
+        "network": null,
+        "type": 6
+      },
+      {
+        "description": "",
+        "episode_count": 0,
+        "group_count": 1,
+        "id": "6aa6fb91d77977ac5e15a316",
+        "name": "Chronological",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2122,
+    "title": "King of the Hill",
+    "live_seasons": {
+      "1": 12,
+      "2": 23,
+      "3": 25,
+      "4": 24,
+      "5": 20,
+      "6": 22,
+      "7": 23,
+      "8": 22,
+      "9": 15,
+      "10": 15,
+      "11": 12,
+      "12": 22,
+      "13": 20,
+      "14": 10,
+      "15": 10
+    },
+    "catalog_seasons": {
+      "2": 23,
+      "1": 12,
+      "4": 24,
+      "3": 25,
+      "6": 22,
+      "5": 20,
+      "8": 22,
+      "7": 23,
+      "10": 15,
+      "9": 15,
+      "12": 22,
+      "11": 12,
+      "14": 10,
+      "13": 20,
+      "15": 10
+    },
+    "imdb_seasons": {
+      "2": 23,
+      "1": 12,
+      "4": 24,
+      "3": 25,
+      "6": 21,
+      "5": 20,
+      "8": 22,
+      "7": 23,
+      "10": 15,
+      "9": 15,
+      "12": 22,
+      "11": 12,
+      "14": 10,
+      "13": 24,
+      "15": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0118375",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 259,
+        "group_count": 13,
+        "id": "683ad2cc52c1bb57cf7f3720",
+        "name": "DVD Order",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "",
+        "episode_count": 279,
+        "group_count": 15,
+        "id": "63b9d955875d1a00838f005c",
+        "name": "Production Order",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 4327,
+    "title": "Mr. Bean",
+    "live_seasons": {
+      "1": 14
+    },
+    "catalog_seasons": {
+      "1": 14
+    },
+    "imdb_seasons": {
+      "1": 15
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0096657",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 14,
+        "group_count": 4,
+        "id": "5b611dc4925141406000aeb4",
+        "name": "Digitally Remastered Edition",
+        "network": null,
+        "type": 3
+      },
+      {
+        "description": "The Hulu order includes a shorter fifteenth episode in two acts \"Library and Bus Stop.\"",
+        "episode_count": 16,
+        "group_count": 1,
+        "id": "5adad92d9251410ac3005b9c",
+        "name": "Hulu",
+        "network": {
+          "id": 453,
+          "logo_path": "/pqUTCleNUiTLAVlelGxUgWn1ELh.png",
+          "name": "Hulu",
+          "origin_country": "US"
+        },
+        "type": 4
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2734,
+    "title": "Law & Order: Special Victims Unit",
+    "live_seasons": {
+      "1": 22,
+      "2": 21,
+      "3": 23,
+      "4": 25,
+      "5": 25,
+      "6": 23,
+      "7": 22,
+      "8": 22,
+      "9": 19,
+      "10": 22,
+      "11": 24,
+      "12": 24,
+      "13": 23,
+      "14": 24,
+      "15": 24,
+      "16": 23,
+      "17": 23,
+      "18": 21,
+      "19": 24,
+      "20": 24,
+      "21": 20,
+      "22": 16,
+      "23": 22,
+      "24": 22,
+      "25": 13,
+      "26": 22,
+      "27": 21,
+      "28": 4
+    },
+    "catalog_seasons": {
+      "2": 21,
+      "1": 22,
+      "4": 25,
+      "3": 23,
+      "6": 23,
+      "5": 25,
+      "8": 22,
+      "7": 22,
+      "10": 22,
+      "9": 19,
+      "12": 24,
+      "11": 24,
+      "14": 24,
+      "13": 23,
+      "16": 23,
+      "15": 24,
+      "18": 21,
+      "17": 23,
+      "20": 24,
+      "19": 24,
+      "22": 16,
+      "21": 20,
+      "24": 22,
+      "23": 22,
+      "26": 22,
+      "25": 13,
+      "28": 4,
+      "27": 21
+    },
+    "imdb_seasons": {
+      "2": 21,
+      "1": 22,
+      "4": 25,
+      "3": 23,
+      "6": 23,
+      "5": 25,
+      "8": 22,
+      "7": 22,
+      "10": 22,
+      "9": 19,
+      "12": 24,
+      "11": 24,
+      "14": 24,
+      "13": 23,
+      "16": 23,
+      "15": 24,
+      "18": 21,
+      "17": 23,
+      "20": 24,
+      "19": 24,
+      "22": 16,
+      "21": 20,
+      "24": 22,
+      "23": 22,
+      "26": 22,
+      "25": 13,
+      "28": 1,
+      "27": 21
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0203259",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 39351,
+    "title": "Grimm",
+    "live_seasons": {
+      "1": 22,
+      "2": 22,
+      "3": 22,
+      "4": 22,
+      "5": 21,
+      "6": 13
+    },
+    "catalog_seasons": {
+      "6": 13,
+      "1": 22,
+      "4": 22,
+      "5": 21,
+      "2": 22,
+      "3": 22
+    },
+    "imdb_seasons": {
+      "6": 13,
+      "1": 22,
+      "4": 22,
+      "5": 22,
+      "2": 22,
+      "3": 22
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1830617",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 4608,
+    "title": "30 Rock",
+    "live_seasons": {
+      "1": 21,
+      "2": 15,
+      "3": 22,
+      "4": 22,
+      "5": 23,
+      "6": 22,
+      "7": 13
+    },
+    "catalog_seasons": {
+      "1": 21,
+      "2": 15,
+      "5": 23,
+      "6": 22,
+      "3": 22,
+      "4": 22,
+      "7": 13
+    },
+    "imdb_seasons": {
+      "1": 22,
+      "2": 15,
+      "5": 23,
+      "6": 22,
+      "3": 22,
+      "4": 22,
+      "7": 13
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0496424",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 45,
+    "title": "Top Gear",
+    "live_seasons": {
+      "1": 10,
+      "2": 10,
+      "3": 9,
+      "4": 10,
+      "5": 9,
+      "6": 11,
+      "7": 7,
+      "8": 8,
+      "9": 6,
+      "10": 10,
+      "11": 6,
+      "12": 8,
+      "13": 7,
+      "14": 7,
+      "15": 6,
+      "16": 6,
+      "17": 6,
+      "18": 7,
+      "19": 7,
+      "20": 6,
+      "21": 7,
+      "22": 8,
+      "23": 6,
+      "24": 7,
+      "25": 6,
+      "26": 5,
+      "27": 5,
+      "28": 6,
+      "29": 5,
+      "30": 4,
+      "31": 5,
+      "32": 5,
+      "33": 5
+    },
+    "catalog_seasons": {
+      "1": 10,
+      "2": 10,
+      "3": 9,
+      "4": 10,
+      "5": 9,
+      "6": 11,
+      "7": 7,
+      "8": 8,
+      "9": 6,
+      "10": 10,
+      "11": 6,
+      "12": 8,
+      "13": 7,
+      "14": 7,
+      "15": 6,
+      "16": 6,
+      "17": 6,
+      "18": 7,
+      "19": 7,
+      "20": 6,
+      "21": 7,
+      "22": 8,
+      "23": 6,
+      "24": 7,
+      "25": 6,
+      "26": 5,
+      "27": 5,
+      "28": 6,
+      "29": 5,
+      "30": 4,
+      "31": 5,
+      "32": 5,
+      "33": 5
+    },
+    "imdb_seasons": {
+      "1": 10,
+      "2": 10,
+      "3": 9,
+      "4": 10,
+      "5": 9,
+      "6": 11,
+      "7": 7,
+      "8": 8,
+      "9": 8,
+      "10": 11,
+      "11": 6,
+      "12": 8,
+      "13": 7,
+      "14": 7,
+      "15": 9,
+      "16": 9,
+      "17": 6,
+      "18": 8,
+      "19": 9,
+      "20": 6,
+      "21": 9,
+      "22": 9,
+      "23": 6,
+      "24": 7,
+      "25": 6,
+      "26": 5,
+      "27": 5,
+      "28": 7,
+      "29": 5,
+      "30": 4,
+      "31": 6,
+      "32": 5,
+      "33": 5
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1628033",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 191,
+        "group_count": 27,
+        "id": "61e8753f41eee1010d5705d2",
+        "name": "BBC iPlayer",
+        "network": {
+          "id": 1155,
+          "logo_path": "/an0NpVNUK445AWDQTaLIFuL3isE.png",
+          "name": "BBC iPlayer",
+          "origin_country": "GB"
+        },
+        "type": 4
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 2996,
+    "title": "The Office",
+    "live_seasons": {
+      "1": 6,
+      "2": 6
+    },
+    "catalog_seasons": {
+      "2": 6,
+      "1": 6
+    },
+    "imdb_seasons": {
+      "2": 6,
+      "1": 6,
+      "3": 2
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0290978",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 247718,
+    "title": "MobLand",
+    "live_seasons": {
+      "1": 10,
+      "2": 10
+    },
+    "catalog_seasons": {
+      "2": 10,
+      "1": 10
+    },
+    "imdb_seasons": {
+      "2": 4,
+      "1": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt31510819",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 120911,
+    "title": "The Terminal List",
+    "live_seasons": {
+      "1": 8,
+      "2": 8
+    },
+    "catalog_seasons": {
+      "1": 8,
+      "2": 8
+    },
+    "imdb_seasons": {
+      "1": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt11743610",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 39358,
+    "title": "Revenge",
+    "live_seasons": {
+      "1": 22,
+      "2": 22,
+      "3": 22,
+      "4": 23
+    },
+    "catalog_seasons": {
+      "3": 22,
+      "4": 23,
+      "1": 22,
+      "2": 22
+    },
+    "imdb_seasons": {
+      "3": 22,
+      "4": 23,
+      "1": 22,
+      "2": 23
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1837642",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 153312,
+    "title": "Tulsa King",
+    "live_seasons": {
+      "1": 9,
+      "2": 10,
+      "3": 10,
+      "4": 10
+    },
+    "catalog_seasons": {
+      "1": 9,
+      "2": 10,
+      "3": 10,
+      "4": 10
+    },
+    "imdb_seasons": {
+      "1": 9,
+      "2": 10,
+      "3": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt16358384",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1396,
+    "title": "Breaking Bad",
+    "live_seasons": {
+      "1": 7,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 16
+    },
+    "catalog_seasons": {
+      "1": 7,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 16
+    },
+    "imdb_seasons": {
+      "1": 7,
+      "2": 13,
+      "3": 13,
+      "4": 13,
+      "5": 16
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0903747",
+    "groups": [
+      {
+        "description": "Seasons grouped as they appear on DVD, as well as paid video-on-demand services, such as Prime Video and YouTube.",
+        "episode_count": 62,
+        "group_count": 6,
+        "id": "69f50757054263b7bc87e32a",
+        "name": "DVD / PVOD",
+        "network": null,
+        "type": 3
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1399,
+    "title": "Game of Thrones",
+    "live_seasons": {
+      "1": 10,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 7,
+      "8": 6
+    },
+    "catalog_seasons": {
+      "1": 10,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 7,
+      "8": 6
+    },
+    "imdb_seasons": {
+      "1": 10,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 7,
+      "8": 6
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0944947",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 102,
+        "group_count": 9,
+        "id": "5e9077d2e640d600151f32bd",
+        "name": "Aired Order",
+        "network": {
+          "id": 49,
+          "logo_path": "/tuomPhY2UtuPTqqFnKMVHvSb724.png",
+          "name": "HBO",
+          "origin_country": "US"
+        },
+        "type": 1
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 66732,
+    "title": "Stranger Things",
+    "live_seasons": {
+      "1": 8,
+      "2": 9,
+      "3": 8,
+      "4": 9,
+      "5": 8
+    },
+    "catalog_seasons": {
+      "5": 8,
+      "4": 9,
+      "3": 8,
+      "2": 9,
+      "1": 8
+    },
+    "imdb_seasons": {
+      "5": 8,
+      "4": 9,
+      "3": 8,
+      "2": 9,
+      "1": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt4574334",
+    "groups": [
+      {
+        "description": "This episode group is for the release volumes used by Stranger Things 4 and Stranger Things 5.",
+        "episode_count": 42,
+        "group_count": 8,
+        "id": "6927abf75b39bb2ce1248ec4",
+        "name": "Release Volumes",
+        "network": null,
+        "type": 1
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1402,
+    "title": "The Walking Dead",
+    "live_seasons": {
+      "1": 6,
+      "2": 13,
+      "3": 16,
+      "4": 16,
+      "5": 16,
+      "6": 16,
+      "7": 16,
+      "8": 16,
+      "9": 16,
+      "10": 22,
+      "11": 24
+    },
+    "catalog_seasons": {
+      "1": 6,
+      "2": 13,
+      "3": 16,
+      "4": 16,
+      "5": 16,
+      "6": 16,
+      "7": 16,
+      "8": 16,
+      "9": 16,
+      "10": 22,
+      "11": 24
+    },
+    "imdb_seasons": {
+      "1": 6,
+      "2": 13,
+      "3": 16,
+      "4": 16,
+      "5": 16,
+      "6": 16,
+      "7": 16,
+      "8": 16,
+      "9": 16,
+      "10": 22,
+      "11": 24
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1520211",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 87108,
+    "title": "Chernobyl",
+    "live_seasons": {
+      "1": 5
+    },
+    "catalog_seasons": {
+      "1": 5
+    },
+    "imdb_seasons": {
+      "1": 5
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt7366338",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 76479,
+    "title": "The Boys",
+    "live_seasons": {
+      "1": 8,
+      "2": 8,
+      "3": 8,
+      "4": 8,
+      "5": 8
+    },
+    "catalog_seasons": {
+      "2": 8,
+      "3": 8,
+      "4": 8,
+      "5": 8,
+      "1": 8
+    },
+    "imdb_seasons": {
+      "2": 8,
+      "3": 8,
+      "4": 8,
+      "5": 8,
+      "1": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt1190634",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1405,
+    "title": "Dexter",
+    "live_seasons": {
+      "1": 12,
+      "2": 12,
+      "3": 12,
+      "4": 12,
+      "5": 12,
+      "6": 12,
+      "7": 12,
+      "8": 12
+    },
+    "catalog_seasons": {
+      "1": 12,
+      "2": 12,
+      "3": 12,
+      "4": 12,
+      "5": 12,
+      "6": 12,
+      "7": 12,
+      "8": 12
+    },
+    "imdb_seasons": {
+      "1": 12,
+      "2": 12,
+      "3": 12,
+      "4": 12,
+      "5": 12,
+      "6": 12,
+      "7": 12,
+      "8": 12
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0773262",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1418,
+    "title": "The Big Bang Theory",
+    "live_seasons": {
+      "1": 17,
+      "2": 23,
+      "3": 23,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 24,
+      "10": 24,
+      "11": 24,
+      "12": 24
+    },
+    "catalog_seasons": {
+      "1": 17,
+      "2": 23,
+      "3": 23,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 24,
+      "10": 24,
+      "11": 24,
+      "12": 24
+    },
+    "imdb_seasons": {
+      "1": 17,
+      "2": 23,
+      "3": 23,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 24,
+      "10": 24,
+      "11": 24,
+      "12": 24
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0898266",
+    "groups": [
+      {
+        "description": "DVD order for the show.",
+        "episode_count": 278,
+        "group_count": 12,
+        "id": "68744614f42b429bf0c09adb",
+        "name": "DVD Order",
+        "network": null,
+        "type": 3
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 60059,
+    "title": "Better Call Saul",
+    "live_seasons": {
+      "1": 10,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "6": 13
+    },
+    "catalog_seasons": {
+      "6": 13,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "1": 10
+    },
+    "imdb_seasons": {
+      "6": 13,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "1": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt3032476",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 60574,
+    "title": "Peaky Blinders",
+    "live_seasons": {
+      "1": 6,
+      "2": 6,
+      "3": 6,
+      "4": 6,
+      "5": 6,
+      "6": 6
+    },
+    "catalog_seasons": {
+      "5": 6,
+      "6": 6,
+      "1": 6,
+      "2": 6,
+      "3": 6,
+      "4": 6
+    },
+    "imdb_seasons": {
+      "5": 6,
+      "6": 6,
+      "1": 6,
+      "2": 6,
+      "3": 6,
+      "4": 6
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2442560",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 1100,
+    "title": "How I Met Your Mother",
+    "live_seasons": {
+      "1": 22,
+      "2": 22,
+      "3": 20,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 24
+    },
+    "catalog_seasons": {
+      "1": 22,
+      "2": 22,
+      "3": 20,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 24
+    },
+    "imdb_seasons": {
+      "1": 22,
+      "2": 22,
+      "3": 20,
+      "4": 24,
+      "5": 24,
+      "6": 24,
+      "7": 24,
+      "8": 24,
+      "9": 24
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt0460649",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 93405,
+    "title": "Squid Game",
+    "live_seasons": {
+      "1": 9,
+      "2": 7,
+      "3": 6
+    },
+    "catalog_seasons": {
+      "1": 9,
+      "2": 7,
+      "3": 6
+    },
+    "imdb_seasons": {
+      "1": 9,
+      "2": 7,
+      "3": 6
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt10919420",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 46648,
+    "title": "True Detective",
+    "live_seasons": {
+      "1": 8,
+      "2": 8,
+      "3": 8,
+      "4": 6
+    },
+    "catalog_seasons": {
+      "3": 8,
+      "4": 6,
+      "1": 8,
+      "2": 8
+    },
+    "imdb_seasons": {
+      "3": 8,
+      "4": 6,
+      "1": 8,
+      "2": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2356777",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 100088,
+    "title": "The Last of Us",
+    "live_seasons": {
+      "1": 9,
+      "2": 7
+    },
+    "catalog_seasons": {
+      "2": 7,
+      "1": 9
+    },
+    "imdb_seasons": {
+      "2": 7,
+      "1": 9
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt3581920",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 42009,
+    "title": "Black Mirror",
+    "live_seasons": {
+      "1": 3,
+      "2": 4,
+      "3": 6,
+      "4": 6,
+      "5": 3,
+      "6": 5,
+      "7": 6
+    },
+    "catalog_seasons": {
+      "3": 6,
+      "2": 4,
+      "1": 3,
+      "7": 6,
+      "6": 5,
+      "5": 3,
+      "4": 6
+    },
+    "imdb_seasons": {
+      "3": 6,
+      "2": 4,
+      "1": 3,
+      "7": 6,
+      "6": 5,
+      "5": 3,
+      "4": 6
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2085059",
+    "groups": [
+      {
+        "description": "This episode group combines both the original Channel 4 and Netflix seasons.",
+        "episode_count": 33,
+        "group_count": 8,
+        "id": "69addbea22b34f99c4fcbd26",
+        "name": "Channel 4 + Netflix",
+        "network": null,
+        "type": 1
+      },
+      {
+        "description": "",
+        "episode_count": 0,
+        "group_count": 7,
+        "id": "69b33b3839b8271c2fcbd80a",
+        "name": "Netflix Order",
+        "network": null,
+        "type": 4
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 60625,
+    "title": "Rick and Morty",
+    "live_seasons": {
+      "1": 11,
+      "2": 10,
+      "3": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 10,
+      "8": 10,
+      "9": 10
+    },
+    "catalog_seasons": {
+      "8": 10,
+      "9": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 10,
+      "1": 11,
+      "2": 10,
+      "3": 10
+    },
+    "imdb_seasons": {
+      "8": 10,
+      "9": 10,
+      "4": 10,
+      "5": 10,
+      "6": 10,
+      "7": 10,
+      "1": 11,
+      "2": 10,
+      "3": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2861424",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 87739,
+    "title": "The Queen's Gambit",
+    "live_seasons": {
+      "1": 7
+    },
+    "catalog_seasons": {
+      "1": 7
+    },
+    "imdb_seasons": {
+      "1": 7
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt10048342",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 82856,
+    "title": "The Mandalorian",
+    "live_seasons": {
+      "1": 8,
+      "2": 8,
+      "3": 8
+    },
+    "catalog_seasons": {
+      "3": 8,
+      "2": 8,
+      "1": 8
+    },
+    "imdb_seasons": {
+      "3": 8,
+      "2": 8,
+      "1": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt8111088",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 44217,
+    "title": "Vikings",
+    "live_seasons": {
+      "1": 9,
+      "2": 10,
+      "3": 10,
+      "4": 20,
+      "5": 20,
+      "6": 20
+    },
+    "catalog_seasons": {
+      "4": 20,
+      "5": 20,
+      "6": 20,
+      "1": 9,
+      "2": 10,
+      "3": 10
+    },
+    "imdb_seasons": {
+      "4": 20,
+      "5": 20,
+      "6": 20,
+      "1": 9,
+      "2": 10,
+      "3": 10
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt2306299",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 71912,
+    "title": "The Witcher",
+    "live_seasons": {
+      "1": 8,
+      "2": 8,
+      "3": 8,
+      "4": 8
+    },
+    "catalog_seasons": {
+      "1": 8,
+      "2": 8,
+      "3": 8,
+      "4": 8
+    },
+    "imdb_seasons": {
+      "1": 8,
+      "2": 8,
+      "3": 8,
+      "4": 8
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt5180504",
+    "groups": [],
+    "detail_error": null,
+    "groups_error": null
+  },
+  {
+    "show_id": 154526,
+    "title": "MF GHOST",
+    "live_seasons": {
+      "1": 37
+    },
+    "catalog_seasons": {
+      "1": 37
+    },
+    "imdb_seasons": {
+      "2": 12,
+      "1": 12,
+      "3": 13
+    },
+    "live_catalog_counts_agree": true,
+    "live_imdb_show_id": "tt28299608",
+    "groups": [
+      {
+        "description": "",
+        "episode_count": 37,
+        "group_count": 4,
+        "id": "6700dcb6c9a10d46ea7cfcdd",
+        "name": "Seasons",
+        "network": null,
+        "type": 6
+      }
+    ],
+    "detail_error": null,
+    "groups_error": null
+  }
+]

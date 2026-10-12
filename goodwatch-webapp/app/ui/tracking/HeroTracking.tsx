@@ -302,7 +302,9 @@ function StartLine({
 			? a
 			: b,
 	)
-	const seasons = new Set(aired.map((episode) => episode.season)).size
+	const seasons = new Set(
+		aired.map((episode) => episode.displaySeason ?? episode.season),
+	).size
 	return (
 		<a
 			href={`#${EPISODE_GRID_ANCHOR}`}

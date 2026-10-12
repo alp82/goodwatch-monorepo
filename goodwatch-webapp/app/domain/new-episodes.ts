@@ -1,3 +1,4 @@
+import { episodeCode } from "./episode-label.ts"
 // New episodes for the shows a member tracks (#442): when a waiting show's next episode airs, which shows are new
 // since the member last opened My shows, and what the signal outside My shows says. Pure and shared by the server
 // and the browser. Nothing here is stored but the time of the last visit, which the server reads and writes
@@ -37,6 +38,8 @@ export function whenWords(airDate: string, today: string): string {
 
 /** An episode that has not aired, with the date it will. */
 export interface UpcomingEpisode {
+	displaySeason?: number
+	displayNumber?: number
 	season: number
 	number: number
 	name: string | null
@@ -104,12 +107,12 @@ export function waitingWords(
 					says: "is waiting for episodes",
 					more: "No date yet",
 				}
-	const { season, number, airDate } = first.upcoming
+	const { airDate } = first.upcoming
 	const when = whenWords(airDate, today)
 	return {
 		title: first.title,
 		// A date reads "on 20 Nov"; a day in words stands alone.
-		says: `S${season} E${number} airs ${/^\d/.test(when) ? "on " : ""}${when}`,
+		says: `${episodeCode(first.upcoming)} airs ${/^\d/.test(when) ? "on " : ""}${when}`,
 		more: others
 			? `${others} more ${others === 1 ? "show" : "shows"} waiting`
 			: null,
@@ -182,13 +185,21 @@ export interface NewCandidate {
 	title: string
 	state: string
 	/** Null when the show has no episode list, or nothing aired that is not watched. */
-	next: { season: number; number: number; airDate: string | null } | null
+	next: {
+		season: number
+		number: number
+		displaySeason?: number
+		displayNumber?: number
+		airDate: string | null
+	} | null
 	/** Aired episodes from the Next episode on. */
 	unwatched: number
 }
 
 /** A show whose Next episode aired after the last visit. */
 export interface NewShow {
+	displaySeason?: number
+	displayNumber?: number
 	id: number
 	title: string
 	/** The Next episode. */
@@ -216,6 +227,12 @@ export function newShowsOf(
 			id,
 			title,
 			season: next.season,
+			...(next.displaySeason === undefined
+				? {}
+				: {
+						displaySeason: next.displaySeason,
+						displayNumber: next.displayNumber,
+					}),
 			number: next.number,
 			airDate: next.airDate,
 			episodes: unwatched,
@@ -242,6 +259,12 @@ export function summaryOf(fresh: readonly NewShow[]): NewEpisodes {
 				? {
 						title: first.title,
 						season: first.season,
+						...(first.displaySeason === undefined
+							? {}
+							: {
+									displaySeason: first.displaySeason,
+									displayNumber: first.displayNumber,
+								}),
 						number: first.number,
 						episodes: first.episodes,
 					}

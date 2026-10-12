@@ -1,3 +1,4 @@
+import { displaySeason, displayNumber } from "~/domain/tracking/machine"
 // One show's tracking on its page, for a member (#384). The hero box and the episode list are separate chunks that
 // load at different times, so what they share lives here, outside React: the show's session (the browser's copy
 // and the actions on their way), the toast, the dialog that sets a group's date, and the request to open an
@@ -316,17 +317,20 @@ export function useShowTracking(showId: number): ShowTracking {
 	const seasons = useMemo(() => {
 		const byNumber = new Map<number, PageEpisode[]>()
 		for (const episode of page?.episodes ?? []) {
-			const list = byNumber.get(episode.season)
+			const list = byNumber.get(displaySeason(episode))
 			if (list) list.push(episode)
-			else byNumber.set(episode.season, [episode])
+			else byNumber.set(displaySeason(episode), [episode])
 		}
 		const order = [...byNumber.keys()].sort(
-			(a, b) => Number(a === 0) - Number(b === 0) || a - b,
+			(a, b) =>
+				Number(a === 0) - Number(b === 0) ||
+				Number(a < 0) - Number(b < 0) ||
+				a - b,
 		)
 		return order.map((number) => ({
 			number,
 			episodes: (byNumber.get(number) ?? []).sort(
-				(a, b) => a.number - b.number,
+				(a, b) => displayNumber(a) - displayNumber(b),
 			),
 		}))
 	}, [page])
@@ -365,9 +369,13 @@ export const plural = (count: number, word: string) =>
 	`${count} ${word}${count === 1 ? "" : "s"}`
 
 export const seasonTitle = (season: number) =>
-	season === 0 ? "Specials" : `Season ${season}`
+	season === 0
+		? "Specials"
+		: season < 0
+			? "Additional episodes"
+			: `Season ${season}`
 export const seasonShort = (season: number) =>
-	season === 0 ? "Sp" : `S${season}`
+	season === 0 ? "Sp" : season < 0 ? "More" : `S${season}`
 
 const MONTHS = [
 	"Jan",

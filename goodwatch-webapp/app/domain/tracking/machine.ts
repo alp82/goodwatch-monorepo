@@ -44,6 +44,8 @@ export interface Episode {
 	id: number
 	season: number
 	number: number
+	displaySeason?: number
+	displayNumber?: number
 	aired: boolean
 }
 
@@ -122,6 +124,19 @@ export type TrackingEvent =
 	| { type: "watch"; season: number; number: number; when?: WatchedWhen }
 	| { type: "unwatch"; season: number; number: number }
 	| { type: "markSeason"; season: number; today?: string }
+	| {
+			type: "markEpisodes"
+			episodeIds: number[]
+			displaySeason: number
+			presentationVersion: string
+			today?: string
+	  }
+	| {
+			type: "unmarkEpisodes"
+			episodeIds: number[]
+			displaySeason: number
+			presentationVersion: string
+	  }
 	| { type: "watchUpTo"; season: number; number: number; today?: string }
 	| { type: "unmarkSeason"; season: number }
 	/** Undo of Mark season or Watched up to here: removes the watches of that group. */
@@ -236,10 +251,25 @@ export const EVENT_LABEL: Record<TableEvent, string> = {
 // ---------------------------------------------------------------------------------------------------------
 
 export const isSpecial = (episode: { season: number }) => episode.season === 0
-export const episodeLabel = (episode: { season: number; number: number }) =>
+export const displaySeason = (episode: {
+	season: number
+	displaySeason?: number
+}) => episode.displaySeason ?? episode.season
+export const displayNumber = (episode: {
+	number: number
+	displayNumber?: number
+}) => episode.displayNumber ?? episode.number
+export const episodeLabel = (episode: {
+	season: number
+	number: number
+	displaySeason?: number
+	displayNumber?: number
+}) =>
 	isSpecial(episode)
 		? `Special ${episode.number}`
-		: `S${episode.season} E${episode.number}`
+		: displaySeason(episode) < 0
+			? `TMDB S${episode.season} E${episode.number}`
+			: `S${displaySeason(episode)} E${displayNumber(episode)}`
 const inOrder = (
 	a: { season: number; number: number },
 	b: { season: number; number: number },
@@ -1118,6 +1148,14 @@ export function step(
 		to: from,
 		refused,
 	})
+	if (
+		(event.type === "markEpisodes" || event.type === "unmarkEpisodes") &&
+		(new Set(event.episodeIds).size !== event.episodeIds.length ||
+			event.episodeIds.some(
+				(id) => !world.show.episodes.some((e) => e.id === id && e.season > 0),
+			))
+	)
+		return nothing("Those episodes are not in this show.")
 	const done = (after: TrackingRecord, rows: Row[]): Step => {
 		// Want to rewatch lasts while the show stays Seen: Watch again, taking Seen back, On hold, Drop and a
 		// removed watch that leaves the show another state all take it off the Wishlist.
@@ -1215,6 +1253,7 @@ export function step(
 		case "answerSeenQuestion":
 			return done({ ...world.record, seenQuestion: "answered" }, [])
 		case "markSeason":
+		case "markEpisodes":
 		case "watchUpTo": {
 			if (!actionId) return nothing("A group action needs an id.")
 			const base = resend ? without((w) => w.group === actionId) : world
@@ -1222,15 +1261,17 @@ export function step(
 			const targets = airedRegular(show).filter(
 				(e) =>
 					!have.has(e.id) &&
-					(event.type === "markSeason"
-						? e.season === event.season
-						: e.season < event.season ||
-							(e.season === event.season && e.number <= event.number)),
+					(event.type === "markEpisodes"
+						? event.episodeIds.includes(e.id)
+						: event.type === "markSeason"
+							? e.season === event.season
+							: e.season < event.season ||
+								(e.season === event.season && e.number <= event.number)),
 			)
 			if (!targets.length)
 				return nothing("Every aired episode of it is watched in this pass.")
 			const made = {
-				origin: event.type === "markSeason" ? "season" : "upto",
+				origin: event.type === "watchUpTo" ? "upto" : "season",
 				group: actionId,
 			} as const
 			const watched = inTurn(base, targets, (at, e) =>
@@ -1245,10 +1286,16 @@ export function step(
 			if ("refused" in watched) return nothing(watched.refused)
 			return done(watched.world.record, watched.rows)
 		}
-		case "unmarkSeason": {
+		case "unmarkSeason":
+		case "unmarkEpisodes": {
 			const have = watchedIds(show, world.record)
 			const targets = show.episodes
-				.filter((e) => e.season === event.season && have.has(e.id))
+				.filter(
+					(e) =>
+						(event.type === "unmarkEpisodes"
+							? event.episodeIds.includes(e.id)
+							: e.season === event.season) && have.has(e.id),
+				)
 				.sort(inOrder)
 			if (!targets.length) {
 				if (!resend) return nothing("Nothing of it is watched in this pass.")
@@ -1257,7 +1304,13 @@ export function step(
 					before: world.record,
 					facts: facts(show, world.record),
 					factsBefore: facts(show, world.record),
-					episode: { season: event.season },
+					episode: {
+						season:
+							event.type === "unmarkEpisodes"
+								? (show.episodes.find((e) => event.episodeIds.includes(e.id))
+										?.season ?? 1)
+								: event.season,
+					},
 				})
 				if (!taken) return nothing("Nothing of it is watched in this pass.")
 				const to = taken.to === "same" ? from : taken.to
@@ -1499,6 +1552,8 @@ export function seenButton(world: World): {
 
 /** An episode as the catalog lists it. `airDate` is TMDB's calendar date, "YYYY-MM-DD", or null when unknown. */
 export interface ListedEpisode {
+	displaySeason?: number
+	displayNumber?: number
 	id: number
 	season: number
 	number: number
@@ -1530,6 +1585,9 @@ export function showAiredBy(
 			id: e.id,
 			season: e.season,
 			number: e.number,
+			...(e.displaySeason === undefined
+				? {}
+				: { displaySeason: e.displaySeason, displayNumber: e.displayNumber }),
 			aired: e.airDate !== null && e.airDate <= day,
 		})),
 	}
@@ -1552,6 +1610,7 @@ export function serverShow(
 	const device =
 		(event.type === "pressSeen" ||
 			event.type === "markSeason" ||
+			event.type === "markEpisodes" ||
 			event.type === "watchUpTo" ||
 			event.type === "hold" ||
 			event.type === "drop") &&

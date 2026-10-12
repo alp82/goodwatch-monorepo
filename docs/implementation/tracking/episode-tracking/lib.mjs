@@ -13,7 +13,7 @@ export async function launch() {
 	return chromium.launch({ executablePath: "/usr/bin/chromium", headless: true })
 }
 
-export async function open(browser, size, query, { ready = true } = {}) {
+export async function open(browser, size, query, { ready = true, navigationTimeout = 30000 } = {}) {
 	// A fixed locale, so that the dates the page writes in the member's locale can be checked: "19 Oct 2024".
 	const context = await browser.newContext({ viewport: VIEWPORTS[size], ...VIEWPORTS[size], locale: "en-GB" })
 	const page = await context.newPage()
@@ -27,7 +27,7 @@ export async function open(browser, size, query, { ready = true } = {}) {
 		const u = new URL(r.url())
 		if (u.pathname.startsWith("/api/") && !u.pathname.startsWith("/api/tracking") && r.method() !== "GET") external.push(`${r.method()} ${u.pathname}`)
 	})
-	await page.goto(`${BASE}?${query}`, { waitUntil: "domcontentloaded" })
+	await page.goto(`${BASE}?${query}`, { waitUntil: "domcontentloaded", timeout: navigationTimeout })
 	await page.waitForSelector("[data-harness]", { timeout: 60000 })
 	if (ready) await page.waitForTimeout(900)
 	return { page, context, errors, external }

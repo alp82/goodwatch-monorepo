@@ -2036,3 +2036,7 @@ are in Continue only through the member's move; none was made Watching by an imp
 shows made Watching in one minute, which is what an import or a migration would leave. The watch log holds no
 imported watch at all yet. The grouped query for the member with the most watches (31,239 watches, 82 groups) took
 198 ms as it was and 193 ms with `last_import_at`, median of 25 runs each: no measurable difference.
+
+## Reviewed episode presentation
+
+Selected shows share display seasons with the ratings grid ([ADR 0012](../../adr/0012-episode-presentation-preserves-watch-identity.md)). Stored episode IDs, canonical numbers, passes and import semantics stay the same. `markEpisodes` and `unmarkEpisodes` validate the display row's exact eligible membership and presentation version; a stale request is refused and refetched. Existing canonical `markSeason`, `unmarkSeason`, `watchUpTo`, Seen and restore events retain their semantics. See the [implementation plan](episode-season-alignment-plan.md) and [catalog audit](../../research/season-episode-scores/episode-alignment-audit.md).

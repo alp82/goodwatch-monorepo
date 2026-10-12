@@ -15,12 +15,19 @@ export interface ListedName {
 /** A season as IMDb numbers it, with its rated episodes. */
 export interface RatedSeason {
 	number: number
-	episodes: readonly { number: number; name: string; score: number }[]
+	episodes: readonly {
+		number: number
+		name: string
+		score: number
+		votes?: number
+		unrated?: boolean
+	}[]
 }
 
 export interface EpisodeRating {
 	/** IMDb's rating, 0 to 10. */
 	score: number
+	votes?: number
 	/** Found at the same season and number, or elsewhere in the season under the same title. */
 	how: "number" | "title"
 }
@@ -65,7 +72,10 @@ export function matchEpisodeRatings(
 		else listed.set(episode.season, [episode])
 	}
 	for (const [season, own] of listed) {
-		const imdb = seasons.find((s) => s.number === season)
+		const source = seasons.find((s) => s.number === season)
+		const imdb = source
+			? { ...source, episodes: source.episodes.filter((e) => !e.unrated) }
+			: undefined
 		if (!imdb?.episodes.length) continue
 		const atNumber = new Map(imdb.episodes.map((e) => [e.number, e]))
 		const titled = new Map<string, RatedSeason["episodes"][number] | null>()
@@ -83,7 +93,11 @@ export function matchEpisodeRatings(
 		for (const episode of own) {
 			const at = atNumber.get(episode.number)
 			if (at && norm(at.name) === norm(episode.name) && !generic(at.name)) {
-				byEpisode.set(episode.id, { score: at.score, how: "number" })
+				byEpisode.set(episode.id, {
+					score: at.score,
+					how: "number",
+					...(at.votes === undefined ? {} : { votes: at.votes }),
+				})
 				taken.add(at.number)
 			} else left.push(episode)
 		}
@@ -94,7 +108,11 @@ export function matchEpisodeRatings(
 				? null
 				: titled.get(norm(episode.name))
 			if (named && !taken.has(named.number)) {
-				byEpisode.set(episode.id, { score: named.score, how: "title" })
+				byEpisode.set(episode.id, {
+					score: named.score,
+					how: "title",
+					...(named.votes === undefined ? {} : { votes: named.votes }),
+				})
 				taken.add(named.number)
 				byTitle += 1
 			} else unnamed.push(episode)
@@ -108,7 +126,11 @@ export function matchEpisodeRatings(
 				!taken.has(at.number) &&
 				(generic(episode.name) || generic(at.name))
 			) {
-				byEpisode.set(episode.id, { score: at.score, how: "number" })
+				byEpisode.set(episode.id, {
+					score: at.score,
+					how: "number",
+					...(at.votes === undefined ? {} : { votes: at.votes }),
+				})
 				taken.add(at.number)
 			} else missing += 1
 		}

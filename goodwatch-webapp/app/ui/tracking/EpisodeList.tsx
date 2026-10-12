@@ -22,7 +22,11 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { episodeLabel } from "~/domain/tracking/machine"
+import {
+	episodeLabel,
+	displaySeason,
+	displayNumber,
+} from "~/domain/tracking/machine"
 import { seenPressLine } from "~/domain/tracking/seen-press"
 import type { PageEpisode, ShowView } from "~/domain/tracking/show-page"
 import type { LogRow } from "~/domain/tracking/storage"
@@ -215,7 +219,8 @@ function useNav(model: Model): Nav {
 						.find((episode) => episode.id === nextId) ?? null),
 		[seasons, nextId],
 	)
-	const picked = open ?? next?.season ?? seasons[0]?.number ?? 0
+	const picked =
+		open ?? (next ? displaySeason(next) : undefined) ?? seasons[0]?.number ?? 0
 	const index = Math.max(
 		0,
 		seasons.findIndex((season) => season.number === picked),
@@ -242,7 +247,7 @@ function useNav(model: Model): Nav {
 	}, [opened])
 
 	const anchor = (of: Season) =>
-		next && next.season === of.number ? next : of.episodes[0]
+		next && displaySeason(next) === of.number ? next : of.episodes[0]
 	const goSeason: Nav["goSeason"] = (to, focus = false, pressed = false) => {
 		const episode = to && anchor(to)
 		if (!to || !episode) return
@@ -257,8 +262,9 @@ function useNav(model: Model): Nav {
 		setSelected(null)
 	}
 	const goEpisode: Nav["goEpisode"] = (episode, how = {}, pressed = false) => {
-		if (pressed && opened !== episode.season) keep(episode.season)
-		setOpened(episode.season)
+		if (pressed && opened !== displaySeason(episode))
+			keep(displaySeason(episode))
+		setOpened(displaySeason(episode))
 		setSelected(episode.id)
 		setTarget({ id: episode.id, at: Date.now(), ...how })
 	}
@@ -328,7 +334,7 @@ function List({
 					total: season.episodes.length,
 					aired: out.length,
 					watched,
-					done: season.number > 0 && out.length > 0 && watched === out.length,
+					done: season.number !== 0 && out.length > 0 && watched === out.length,
 				}
 			},
 		}
@@ -387,6 +393,9 @@ function List({
 				model={model}
 				grid={children ? { on: gridOpen, choose: chooseGrid } : null}
 			/>
+			{page?.presentation?.note && !gridOpen && (
+				<p className="mt-2 text-sm text-gray-400">{page.presentation.note}</p>
+			)}
 			{gridOpen ? (
 				// The grid brings its own heading; this section's stands for both.
 				<div
@@ -399,6 +408,16 @@ function List({
 				<>
 					<PressLine view={view} actions={actions} />
 					<div className="mt-3">
+						{page?.episodes.length && (
+							<p className="mb-2 text-xs text-gray-400">
+								{
+									page.episodes.filter((e) => e.season > 0 && e.rating !== null)
+										.length
+								}
+								/{page.episodes.filter((e) => e.season > 0).length} episodes
+								rated on IMDb
+							</p>
+						)}
 						{nav.many ? (
 							<Matrix nav={nav} model={model} />
 						) : (
@@ -507,7 +526,9 @@ export function findEpisodes(
 	const has = (episode: PageEpisode) =>
 		out.some((found) => "episode" in found && found.episode === episode)
 	const add = (season: Season | undefined, number: number) => {
-		const episode = season?.episodes.find((each) => each.number === number)
+		const episode = season?.episodes.find(
+			(each) => displayNumber(each) === number,
+		)
 		if (episode && !has(episode)) out.push({ episode })
 	}
 	const regular = (number: number) =>
@@ -681,11 +702,9 @@ function ViewToggle({
 			type="button"
 			data-view-toggle
 			aria-pressed={on}
-			aria-label="All ratings as one grid, in IMDb's numbering"
+			aria-label="All episode ratings as one grid"
 			title={
-				on
-					? "Back to the episode list"
-					: "All ratings as one grid, in IMDb's numbering"
+				on ? "Back to the episode list" : "All episode ratings as one grid"
 			}
 			onClick={() => choose(!on)}
 			className={`inline-flex h-10 shrink-0 items-center gap-2.5 rounded-xl px-1 lg:ml-auto lg:h-8 lg:pr-2 ${TILE_TOGGLE}`}
@@ -986,7 +1005,7 @@ function Matrix({ nav, model }: { nav: Nav; model: Model }) {
 	const most = Math.max(
 		1,
 		...nav.seasons
-			.filter((season) => season.number > 0)
+			.filter((season) => season.number !== 0)
 			.map((season) => season.episodes.length),
 	)
 	const openSeason = nav.open === null ? null : nav.season
@@ -1370,7 +1389,7 @@ function RowDetail({
 		special || watched || !aired
 			? 0
 			: model.seasons
-					.filter((season) => season.number > 0)
+					.filter((season) => season.number !== 0)
 					.flatMap((season) => season.episodes)
 					.filter(
 						(each) =>
@@ -1639,7 +1658,9 @@ function Row({
 					className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-2 rounded text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white"
 				>
 					<span className="w-5 shrink-0 text-right text-xs tabular-nums text-gray-500">
-						{episode.number}
+						{displaySeason(episode) < 0
+							? episodeLabel(episode)
+							: displayNumber(episode)}
 					</span>
 					<span
 						className={`min-w-0 truncate text-sm ${watched ? "text-gray-400" : "font-medium text-white"}`}
@@ -1747,8 +1768,12 @@ function Rows({
 		special
 			? ""
 			: a === b
-				? `E${episodes[a].number}`
-				: `E${episodes[a].number}–E${episodes[b].number}`
+				? displaySeason(episodes[a]) < 0
+					? episodeLabel(episodes[a])
+					: `E${displayNumber(episodes[a])}`
+				: displaySeason(episodes[a]) < 0
+					? `${episodeLabel(episodes[a])}–${episodeLabel(episodes[b])}`
+					: `E${displayNumber(episodes[a])}–E${displayNumber(episodes[b])}`
 	const watchedIn = (a: number, b: number) =>
 		episodes.slice(a, b).filter((episode) => model.view.watched.has(episode.id))
 			.length

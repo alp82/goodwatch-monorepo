@@ -250,8 +250,7 @@ export function tonightsPickOf(
 // Words
 
 /** "S2 E3". */
-export const episodeCode = (episode: { season: number; number: number }) =>
-	`S${episode.season} E${episode.number}`
+export { episodeCode } from "./episode-label.ts"
 
 const plural = (n: number, one: string, many = `${one}s`) =>
 	`${n} ${n === 1 ? one : many}`
@@ -288,7 +287,10 @@ export function placedWords(
 	now: number,
 ): string {
 	const since = row.watchingSince
-	if (since === null || (row.lastActivityAt ?? Number.NEGATIVE_INFINITY) >= since)
+	if (
+		since === null ||
+		(row.lastActivityAt ?? Number.NEGATIVE_INFINITY) >= since
+	)
 		return activityWords(row.lastActivityAt, now)
 	const days = daysSince(since, now)
 	if (days < 1) return "Watching since today"

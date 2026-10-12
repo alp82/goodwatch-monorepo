@@ -1,0 +1,106 @@
+[
+  {
+    "show_id": 233735,
+    "imdb_episode_id": "tt4309146",
+    "imdb_show_id": "tt6811662",
+    "season_number": 1,
+    "episode_number": 1,
+    "name": "Chibi Theatre: Fly, Cadets, Fly! - Day 1/Day 2"
+  },
+  {
+    "show_id": 233735,
+    "imdb_episode_id": "tt4309152",
+    "imdb_show_id": "tt6811662",
+    "season_number": 1,
+    "episode_number": 2,
+    "name": "Chibi Theatre: Fly, Cadets, Fly! - Day 3/Day 4"
+  },
+  {
+    "show_id": 278523,
+    "imdb_episode_id": "tt28478476",
+    "imdb_show_id": "tt14986406",
+    "season_number": null,
+    "episode_number": null,
+    "name": "The Blood Warfare, Separation (Interlude)"
+  },
+  {
+    "show_id": 286516,
+    "imdb_episode_id": "tt8514450",
+    "imdb_show_id": "tt8213522",
+    "season_number": 1,
+    "episode_number": 11,
+    "name": "WritE: The Absent One"
+  },
+  {
+    "show_id": 337563,
+    "imdb_episode_id": "tt2392713",
+    "imdb_show_id": "tt2387761",
+    "season_number": 1,
+    "episode_number": 1,
+    "name": "Good Cop, Bad Cop"
+  },
+  {
+    "show_id": 337563,
+    "imdb_episode_id": "tt2392721",
+    "imdb_show_id": "tt2387761",
+    "season_number": 1,
+    "episode_number": 2,
+    "name": "Wedding Day"
+  },
+  {
+    "show_id": 337563,
+    "imdb_episode_id": "tt2392719",
+    "imdb_show_id": "tt2387761",
+    "season_number": 1,
+    "episode_number": 3,
+    "name": "TwaüghtHammër"
+  },
+  {
+    "show_id": 337563,
+    "imdb_episode_id": "tt2392715",
+    "imdb_show_id": "tt2387761",
+    "season_number": 1,
+    "episode_number": 4,
+    "name": "Marie's Confession"
+  },
+  {
+    "show_id": 337563,
+    "imdb_episode_id": "tt2392717",
+    "imdb_show_id": "tt2387761",
+    "season_number": 1,
+    "episode_number": 5,
+    "name": "The Break In"
+  },
+  {
+    "show_id": 258720,
+    "imdb_episode_id": "tt28478476",
+    "imdb_show_id": "tt14986406",
+    "season_number": null,
+    "episode_number": null,
+    "name": "The Blood Warfare, Separation (Interlude)"
+  },
+  {
+    "show_id": 13230,
+    "imdb_episode_id": "tt3452320",
+    "imdb_show_id": "tt1294022",
+    "season_number": null,
+    "episode_number": null,
+    "name": "Pokémon: Pikachu's Winter Vacation"
+  },
+  {
+    "show_id": 285968,
+    "imdb_episode_id": "tt28478476",
+    "imdb_show_id": "tt14986406",
+    "season_number": null,
+    "episode_number": null,
+    "name": "The Blood Warfare, Separation (Interlude)"
+  },
+  {
+    "show_id": 335660,
+    "imdb_episode_id": "tt28478476",
+    "imdb_show_id": "tt14986406",
+    "season_number": null,
+    "episode_number": null,
+    "name": "The Blood Warfare, Separation (Interlude)"
+  }
+]

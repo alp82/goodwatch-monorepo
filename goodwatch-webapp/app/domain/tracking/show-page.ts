@@ -49,12 +49,13 @@ export interface PageEpisode extends ListedEpisode {
 	overview: string | null
 	/** IMDb's rating, where IMDb and TMDB mean the same episode (see episode-ratings.ts). */
 	rating: number | null
-	ratedBy: EpisodeRating["how"] | null
+	ratedBy: EpisodeRating["how"] | "id" | null
 }
 
 /** A show's tracking for one member: what the show page reads. */
 export interface ShowTrackingPage {
 	/** The member's state row; null when there is none. */
+	presentation?: { version: string; active: boolean; note: string | null }
 	state: StateRow | null
 	/** Every watch of the member for the show, in every pass. */
 	log: LogRow[]
@@ -64,6 +65,7 @@ export interface ShowTrackingPage {
 	running: boolean
 	/** The season score per season number, in IMDb's numbering. */
 	seasonScores: Record<string, number>
+	ratingCoverage?: Record<string, { rated: number; total: number }>
 	/** Seasons that IMDb numbers differently, and what their ratings lose by it. */
 	notes: Record<string, { byTitle: number; missing: number }>
 }
@@ -91,6 +93,7 @@ export interface Restore {
 /** The server's answer to an action. */
 export interface ActionAnswer {
 	status: "applied" | "refused"
+	reload?: boolean
 	/** Why nothing was written, in member words. */
 	refused: string | null
 	/** The show's state row after the action; null when it has none. */

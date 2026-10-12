@@ -243,7 +243,7 @@ test("the read gives the state row, the log rows, and the episode list with air 
 		["/still-101.jpg", 45, null],
 	)
 	assert.equal(page.running, true)
-	assert.deepEqual(page.seasonScores, { "1": 8.4 })
+	assert.deepEqual(page.seasonScores, { "1": 8.3 })
 	assert.deepEqual(page.notes, { "1": { byTitle: 2, missing: 0 } })
 })
 
@@ -822,4 +822,278 @@ test("the action endpoint applies a member's action privately, and refuses what 
 		],
 		[200, "applied", 200, "refused"],
 	)
+})
+
+const audited = JSON.parse(
+	readFileSync(
+		new URL(
+			"../domain/tracking/fixtures/episode-alignment.json",
+			import.meta.url,
+		),
+		"utf8",
+	),
+) as {
+	catalog: { id: number; season: number; number: number; name: string }[]
+	imdb: {
+		id: string
+		parentId: string
+		season: number
+		number: number
+		name: string
+		score: number
+		votes: number
+	}[]
+	mapping: { showId: number }
+}[]
+function seedAligned() {
+	const f = audited.find((f) => f.mapping.showId === 154526)!
+	db.seed("show", [{ tmdb_id: 154526, status: "Returning Series" }])
+	db.seed(
+		"episode",
+		f.catalog.map((e) => ({
+			...episode(e.id, e.season, e.number, e.name, LONG_AGO),
+			show_id: 154526,
+		})),
+	)
+	db.seed(
+		"imdb_episode",
+		f.imdb.map((e) => ({
+			show_id: 154526,
+			imdb_episode_id: e.id,
+			imdb_show_id: e.parentId,
+			season_number: e.season,
+			episode_number: e.number,
+			name: e.name,
+			imdb_user_score_original: e.score,
+			imdb_user_score_rating_count: e.votes,
+		})),
+	)
+}
+test("selected show's guest grid and tracking use the same three memberships and specials", async () => {
+	seedAligned()
+	const { getEpisodeGrid } = await import("./episode-grid.server.ts")
+	const { packEpisodeGrid, unpackEpisodeGrid } = await import(
+		"../utils/episode-grid-wire.ts"
+	)
+	const page = await getShowTrackingPage(user, 154526)
+	const grid = await getEpisodeGrid({ showId: "154526" })
+	assert.ok(grid)
+	assert.deepEqual(
+		grid.seasons.map((s) => s.episodes.length),
+		[12, 12, 13],
+	)
+	assert.equal(grid.specials.length, 2)
+	assert.equal(grid.presentationVersion, page.presentation?.version)
+	assert.deepEqual(unpackEpisodeGrid(packEpisodeGrid(grid)), grid)
+	assert.equal(page.episodes.filter((e) => e.rating !== null).length, 37)
+	assert.deepEqual(page.notes, {})
+	assert.equal(page.episodes.find((e) => e.id === 5648819)?.displaySeason, 2)
+	assert.equal(page.episodes.find((e) => e.id === 5648819)?.number, 13)
+	assert.equal(page.episodes.find((e) => e.id === 5648819)?.rating, 8.4)
+	assert.deepEqual(Object.keys(page.seasonScores), ["1", "2", "3"])
+	for (const s of grid.seasons)
+		assert.equal(page.seasonScores[String(s.number)], s.scores.imdb?.score)
+})
+test("displayed season actions preserve canonical history, replay once, undo and restore correctly", async () => {
+	seedAligned()
+	const page = await getShowTrackingPage(user, 154526)
+	const episodeIds = page.episodes
+		.filter((e) => e.displaySeason === 2)
+		.map((e) => e.id)
+	const event = {
+		type: "markEpisodes" as const,
+		episodeIds,
+		displaySeason: 2,
+		presentationVersion: page.presentation!.version,
+		today: iso(midnight(0)),
+	}
+	const send = async (event: unknown, actionId?: string) => {
+		const action = parseShowAction({ id: 154526, event, actionId })
+		assert.ok(action)
+		return applyShowTrackingAction(user, action)
+	}
+	await send({ type: "watch", season: 1, number: 1 }, "initial-watch")
+	const marked = await send(event, "aligned-group")
+	assert.equal(marked.status, "applied")
+	assert.equal(marked.rows.length, 12)
+	assert.equal(
+		marked.rows.every(
+			(r) =>
+				r.season_number === 1 &&
+				r.episode_number! >= 13 &&
+				r.episode_number! <= 24 &&
+				r.origin === "season",
+		),
+		true,
+	)
+	assert.equal((await send(event, "aligned-group")).status, "applied")
+	assert.equal((await getShowTrackingPage(user, 154526)).log.length, 13)
+	await send({ type: "undoGroup", group: "aligned-group" })
+	assert.equal((await getShowTrackingPage(user, 154526)).log.length, 1)
+	await send(event, "aligned-group-2")
+	const before = await getShowTrackingPage(user, 154526)
+	const unmarked = await send({ ...event, type: "unmarkEpisodes" })
+	assert.equal(unmarked.status, "applied")
+	assert.equal(unmarked.deleted.length, 12)
+	assert.equal((await getShowTrackingPage(user, 154526)).log.length, 1)
+	assert.equal(
+		(await send({ ...event, type: "unmarkEpisodes" })).status,
+		"applied",
+	)
+	const removed = before.log.filter((r) =>
+		unmarked.deleted.includes(r.watch_id),
+	)
+	const restore = seasonRestore(before.state, removed)
+	assert.ok(restore)
+	assert.equal((await send(restore)).status, "applied")
+	assert.equal((await getShowTrackingPage(user, 154526)).log.length, 13)
+})
+test("stale versions, foreign IDs, duplicate IDs, partial membership and future date refuse without writes", async () => {
+	seedAligned()
+	const page = await getShowTrackingPage(user, 154526)
+	const episodeIds = page.episodes
+		.filter((e) => e.displaySeason === 2)
+		.map((e) => e.id)
+	const base = {
+		type: "markEpisodes",
+		episodeIds,
+		displaySeason: 2,
+		presentationVersion: page.presentation!.version,
+		today: iso(midnight(0)),
+	}
+	for (const event of [
+		{ ...base, presentationVersion: "old-version" },
+		{ ...base, episodeIds: [...episodeIds, 101] },
+		{ ...base, episodeIds: [episodeIds[0], episodeIds[0]] },
+		{ ...base, episodeIds: episodeIds.slice(1) },
+		{ ...base, today: iso(midnight(2)) },
+	]) {
+		const parsed = parseShowAction({
+			id: 154526,
+			event,
+			actionId: "invalid-group",
+		})
+		assert.ok(parsed)
+		const answer = await applyShowTrackingAction(user, parsed)
+		assert.equal(answer.status, "refused")
+		assert.equal(answer.reload, true)
+		assert.equal((await getShowTrackingPage(user, 154526)).log.length, 0)
+	}
+	assert.equal(parseShowAction({ id: 154526, event: base }), null)
+})
+
+test("an unaired unmatched episode does not suppress the legacy season's matched average", async () => {
+	db.seed("episode", [episode(104, 1, 4, "Future", midnight(3))])
+	const page = await getShowTrackingPage(user, SHOW, grid)
+	assert.equal(page.seasonScores["1"], 8.3)
+	assert.deepEqual(page.ratingCoverage?.["1"], { rated: 3, total: 4 })
+})
+test("the presentation and catalog caches may expire separately without mixing the displayed snapshot", async () => {
+	const redis = new Redis()
+	setRedisClusterForTest(redis)
+	seedAligned()
+	const before = await getShowTrackingPage(user, 154526)
+	db.seed("episode", [
+		{ ...episode(999999, 1, 38, "New episode", LONG_AGO), show_id: 154526 },
+	])
+	for (const key of redis.values.keys())
+		if (key.includes("episode-list")) redis.values.delete(key)
+	const after = await getShowTrackingPage(user, 154526)
+	assert.deepEqual(after.episodes, before.episodes)
+	assert.equal(after.presentation?.version, before.presentation?.version)
+	for (const key of redis.values.keys())
+		if (key.includes("episode-presentation")) redis.values.delete(key)
+	const fresh = await getShowTrackingPage(user, 154526)
+	assert.equal(fresh.episodes.find((e) => e.id === 999999)?.displaySeason, -1)
+	assert.notEqual(fresh.presentation?.version, before.presentation?.version)
+})
+test("an IMDb read failure preserves grouping, labels and bulk tracking, then retries ratings", async () => {
+	seedAligned()
+	db.before = async ({ sql }) => {
+		if (sql.includes("FROM imdb_episode")) throw new Error("Ratings offline")
+	}
+	const page = await getShowTrackingPage(user, 154526)
+	assert.equal(page.episodes.length, 39)
+	assert.equal(page.episodes.find((e) => e.id === 5648819)?.displaySeason, 2)
+	assert.equal(
+		page.episodes.every((e) => e.rating === null),
+		true,
+	)
+	assert.match(page.presentation?.note ?? "", /temporarily unavailable/)
+	const parsed = parseShowAction({
+		id: 154526,
+		event: {
+			type: "markEpisodes",
+			episodeIds: page.episodes
+				.filter((e) => e.displaySeason === 2)
+				.map((e) => e.id),
+			displaySeason: 2,
+			presentationVersion: page.presentation!.version,
+			today: iso(midnight(0)),
+		},
+		actionId: "offline-group",
+	})
+	assert.ok(parsed)
+	assert.equal((await applyShowTrackingAction(user, parsed)).status, "applied")
+	db.before = undefined
+	const recovered = await getShowTrackingPage(user, 154526)
+	assert.equal(recovered.episodes.filter((e) => e.rating !== null).length, 37)
+	assert.equal(recovered.presentation?.version, page.presentation?.version)
+})
+test("a completed bulk action is confirmed without new writes when its snapshot later changes", async () => {
+	const redis = new Redis()
+	setRedisClusterForTest(redis)
+	seedAligned()
+	const page = await getShowTrackingPage(user, 154526)
+	const parsed = parseShowAction({
+		id: 154526,
+		event: {
+			type: "markEpisodes",
+			episodeIds: page.episodes
+				.filter((e) => e.displaySeason === 2)
+				.map((e) => e.id),
+			displaySeason: 2,
+			presentationVersion: page.presentation!.version,
+			today: iso(midnight(0)),
+		},
+		actionId: "replay-group",
+	})
+	assert.ok(parsed)
+	assert.equal((await applyShowTrackingAction(user, parsed)).status, "applied")
+	db.seed("episode", [
+		{ ...episode(999999, 1, 38, "New episode", LONG_AGO), show_id: 154526 },
+	])
+	for (const key of redis.values.keys())
+		if (key.includes("episode-list") || key.includes("episode-presentation"))
+			redis.values.delete(key)
+	const again = await applyShowTrackingAction(user, parsed)
+	assert.equal(again.status, "applied")
+	assert.equal(again.rows.length, 12)
+	assert.equal((await getShowTrackingPage(user, 154526)).log.length, 12)
+})
+
+test("catalog failure refuses a displayed-season action with reload and leaves history untouched", async () => {
+	seedAligned()
+	const page = await getShowTrackingPage(user, 154526)
+	const parsed = parseShowAction({
+		id: 154526,
+		event: {
+			type: "markEpisodes",
+			episodeIds: page.episodes
+				.filter((e) => e.displaySeason === 2)
+				.map((e) => e.id),
+			displaySeason: 2,
+			presentationVersion: page.presentation!.version,
+		},
+		actionId: "catalog-failure",
+	})
+	assert.ok(parsed)
+	setRedisClusterForTest(new Redis())
+	db.before = async ({ sql }) => {
+		if (sql.includes("FROM episode")) throw new Error("Catalog offline")
+	}
+	const answer = await applyShowTrackingAction(user, parsed)
+	assert.equal(answer.status, "refused")
+	assert.equal(answer.reload, true)
+	assert.equal(db.log(user).length, 0)
 })

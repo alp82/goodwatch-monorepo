@@ -1,0 +1,48 @@
+// HARNESS=http://127.0.0.1:3089 node drive-alignment.mjs
+// Real tracking UI; all watches stay in the harness's in-memory server.
+import assert from "node:assert/strict"
+import { launch, open, settle, stored } from "./lib.mjs"
+const browser=await launch()
+try {
+ for(const size of ["phone","desktop"]) {
+  const {page,context,errors}=await open(browser,size,"show=mf-ghost&scenario=fresh&today=2026-10-12&latency=60", {navigationTimeout:90000})
+  await page.evaluate(()=>document.querySelector("[data-harness] > div.mt-12")?.scrollIntoView())
+  await page.waitForSelector("[data-episode-list]",{timeout:60000})
+  assert.equal(await page.locator("[data-season-row]").count(),4)
+  assert.deepEqual(await page.locator("[data-season-row]").evaluateAll(rows=>rows.map(e=>e.getAttribute("data-season-row"))),["1","2","3","0"])
+  if(size==="phone") await page.locator("[data-finder-open]").click()
+  const finder=page.getByRole("combobox",{name:"Find an episode"}).filter({visible:true})
+  await finder.fill("s2e1")
+  await page.keyboard.press("Enter")
+  await page.waitForSelector('[data-episode="5648819"][data-selected]')
+  assert.match(await page.locator('[data-episode="5648819"] [data-tick]').getAttribute("aria-label"),/S2 E1/)
+  await page.locator('[data-season-panel="2"] [data-mark-season]').click()
+  await settle(page,500)
+  let copy=await stored(page)
+  assert.equal(copy.log.length,12)
+  assert.ok(copy.log.every(e=>e.season_number===1 && e.episode_number>=13 && e.episode_number<=24))
+  await page.getByRole("button",{name:"Undo",exact:true}).click()
+  await settle(page,500)
+  assert.equal((await stored(page)).log.length,0)
+  await page.locator('[data-season-panel="2"] [data-mark-season]').click()
+  await settle(page,500)
+  await page.locator('[data-season-panel="2"] [data-unmark-season]').click()
+  await settle(page,500)
+  assert.equal((await stored(page)).log.length,0)
+  await page.locator('[data-view-toggle]').click()
+  await page.waitForSelector('[data-imdb-grid]')
+  assert.equal(await page.locator('[data-imdb-grid] [data-grid-layout="rows"] tbody tr').count(),4)
+  assert.deepEqual(errors,[])
+  await context.close()
+  const guest=await open(browser,size,"show=mf-ghost&guest=1&today=2026-10-12", {navigationTimeout:90000})
+  await guest.page.evaluate(()=>document.querySelector("[data-harness] > div.mt-12")?.scrollIntoView())
+  await guest.page.waitForSelector('[data-grid-layout="rows"]', {state:"attached"})
+  await guest.page.waitForSelector('[data-grid-layout]:visible')
+  assert.equal(await guest.page.locator('[data-grid-layout="rows"] tbody tr').count(),4)
+  assert.equal((await stored(guest.page)).log.length,0)
+  assert.deepEqual(guest.errors,[])
+  await guest.page.locator("#episode-ratings").screenshot({path:`/tmp/gw-align-${size}-guest-grid.png`})
+  await guest.context.close()
+  console.log(`${size}: display seasons, search, explicit mark, undo, unmark and guest grid passed`)
+ }
+} finally {await browser.close()}

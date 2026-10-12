@@ -1,0 +1,82 @@
+[
+  {
+    "show_id": 71446,
+    "title": "Money Heist",
+    "group_id": "5ae0275b0e0a26156c00de9f",
+    "group_name": "Original Parts",
+    "all_episode_id_positions_match_imdb": true,
+    "conflicts": []
+  },
+  {
+    "show_id": 73021,
+    "title": "Disenchantment",
+    "group_id": "5d881805b76cbb0017e2c76a",
+    "group_name": "Parts",
+    "all_episode_id_positions_match_imdb": true,
+    "conflicts": []
+  },
+  {
+    "show_id": 79242,
+    "title": "Chilling Adventures of Sabrina",
+    "group_id": "5ca7dd6f0e0a264c8bf0a62e",
+    "group_name": "Parts",
+    "all_episode_id_positions_match_imdb": true,
+    "conflicts": []
+  },
+  {
+    "show_id": 85937,
+    "title": "Demon Slayer: Kimetsu no Yaiba",
+    "group_id": "66c6dcd6cd3639e51ad7ec9f",
+    "group_name": "Wikpedia / News",
+    "all_episode_id_positions_match_imdb": true,
+    "conflicts": []
+  },
+  {
+    "show_id": 95479,
+    "title": "JUJUTSU KAISEN",
+    "group_id": "69be1c7638042a2e610e2852",
+    "group_name": "Italian Parts",
+    "all_episode_id_positions_match_imdb": true,
+    "conflicts": []
+  },
+  {
+    "show_id": 95479,
+    "title": "JUJUTSU KAISEN",
+    "group_id": "6961c83d72e76980b8bd3780",
+    "group_name": "\u5b63",
+    "all_episode_id_positions_match_imdb": true,
+    "conflicts": []
+  },
+  {
+    "show_id": 95479,
+    "title": "JUJUTSU KAISEN",
+    "group_id": "64a3fc4fe9da6900ae2fa807",
+    "group_name": "Seasons",
+    "all_episode_id_positions_match_imdb": true,
+    "conflicts": []
+  },
+  {
+    "show_id": 127532,
+    "title": "Solo Leveling",
+    "group_id": "67786ddbc11ee61dd874bc97",
+    "group_name": "Seasons",
+    "all_episode_id_positions_match_imdb": true,
+    "conflicts": []
+  },
+  {
+    "show_id": 127532,
+    "title": "Solo Leveling",
+    "group_id": "65d3916b51c01f017cc1a724",
+    "group_name": "Air Date",
+    "all_episode_id_positions_match_imdb": true,
+    "conflicts": []
+  },
+  {
+    "show_id": 154526,
+    "title": "MF GHOST",
+    "group_id": "6700dcb6c9a10d46ea7cfcdd",
+    "group_name": "Seasons",
+    "all_episode_id_positions_match_imdb": true,
+    "conflicts": []
+  }
+]

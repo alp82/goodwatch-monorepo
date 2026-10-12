@@ -11,10 +11,29 @@
 // mapping to rows. Episodes are the prototypes' TMDB snapshots; TMDB's votes stand in for IMDb's ratings. Nothing is
 // stored and nothing leaves the page. The route is not in a production build.
 import { type LoaderFunctionArgs, json } from "@remix-run/node"
-import { Link, type ShouldRevalidateFunction, useLoaderData, useSearchParams } from "@remix-run/react"
+import {
+	Link,
+	type ShouldRevalidateFunction,
+	useLoaderData,
+	useSearchParams,
+} from "@remix-run/react"
 import type { User } from "@supabase/supabase-js"
-import { startTransition, useContext, useEffect, useMemo, useState } from "react"
+import {
+	startTransition,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react"
 import { useFeature } from "~/hooks/useFeature"
+import { buildEpisodePresentation } from "~/domain/tracking/episode-presentation"
+import { presentationGrid } from "~/domain/tracking/episode-presentation-grid"
+import audited from "~/domain/tracking/fixtures/episode-alignment.json"
+import mfGhost from "~/ui/prototype-episode-list/fixtures/mf-ghost.json"
+import type {
+	EpisodeMapping,
+	EpisodePresentation,
+} from "~/domain/tracking/episode-presentation"
 import type { ShowResult } from "~/server/types/details-types"
 import { BelowFoldProvider } from "~/ui/details/below-fold"
 import EpisodeGrid from "~/ui/details/episode-grid/EpisodeGrid"
@@ -25,14 +44,29 @@ import sherlock from "~/ui/prototype-episode-list/fixtures/sherlock.json"
 import slowHorses from "~/ui/prototype-episode-list/fixtures/slow-horses.json"
 import supernatural from "~/ui/prototype-episode-list/fixtures/supernatural.json"
 import type { Show } from "~/ui/prototype-episode-list/model"
-import { FakeServer, SCENARIOS, type Scenario } from "~/ui/prototype-episode-tracking/fake-server"
-import { type HeroProviders, heroParts, withMemberSettings } from "~/ui/prototype-episode-tracking/hero-fixture"
+import {
+	FakeServer,
+	SCENARIOS,
+	type Scenario,
+} from "~/ui/prototype-episode-tracking/fake-server"
+import {
+	type HeroProviders,
+	heroParts,
+	withMemberSettings,
+} from "~/ui/prototype-episode-tracking/hero-fixture"
 import { TrackedEpisodes, useEpisodeTracking } from "~/ui/tracking/gate"
 import { deviceClock } from "~/ui/tracking/store"
 import { AuthContext } from "~/utils/auth"
 
-const FIXTURES: Record<string, unknown> = { supernatural, chernobyl, "slow-horses": slowHorses, sherlock }
+const FIXTURES: Record<string, unknown> = {
+	supernatural,
+	chernobyl,
+	"slow-horses": slowHorses,
+	sherlock,
+	"mf-ghost": mfGhost,
+}
 const SHOWS = {
+	"mf-ghost": "MF GHOST: one canonical season, three display seasons",
 	supernatural: "Supernatural: 15 seasons, ended",
 	chernobyl: "Chernobyl: limited series",
 	"slow-horses": "Slow Horses: a season airing weekly",
@@ -41,17 +75,44 @@ const SHOWS = {
 const TMDB = "https://image.tmdb.org/t/p"
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	if (process.env.NODE_ENV === "production") throw new Response("Not found", { status: 404 })
+	if (process.env.NODE_ENV === "production")
+		throw new Response("Not found", { status: 404 })
 	const params = new URL(request.url).searchParams
 	const key = params.get("show") ?? ""
 	const showKey = key in FIXTURES ? key : "supernatural"
 	const asked = params.get("today") ?? ""
-	const today = /^\d{4}-\d{2}-\d{2}$/.test(asked) ? asked : new Date().toISOString().slice(0, 10)
-	return json({ showKey, show: FIXTURES[showKey] as Show, today })
+	const today = /^\d{4}-\d{2}-\d{2}$/.test(asked)
+		? asked
+		: new Date().toISOString().slice(0, 10)
+	const f = audited.find((f) => f.mapping.showId === 154526)!
+	const presentation =
+		showKey === "mf-ghost"
+			? buildEpisodePresentation(f.catalog, f.imdb, {
+					...f.mapping,
+					entries: f.mapping.entries.map((e) => ({
+						...e,
+						canonical: [e.canonical[0], e.canonical[1]] as const,
+						display: [e.display[0], e.display[1]] as const,
+						reviewedNames: [e.reviewedNames[0], e.reviewedNames[1]] as const,
+					})),
+				})
+			: null
+	return json({
+		showKey,
+		show: FIXTURES[showKey] as Show,
+		today,
+		presentation,
+	})
 }
 
-export const meta = () => [{ title: "Episode tracking, the real components · GoodWatch" }, { name: "robots", content: "noindex, nofollow" }]
-export const shouldRevalidate: ShouldRevalidateFunction = ({ currentUrl, nextUrl }) => currentUrl.search !== nextUrl.search
+export const meta = () => [
+	{ title: "Episode tracking, the real components · GoodWatch" },
+	{ name: "robots", content: "noindex, nofollow" },
+]
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+	currentUrl,
+	nextUrl,
+}) => currentUrl.search !== nextUrl.search
 
 declare global {
 	interface Window {
@@ -64,18 +125,44 @@ const PILL = "rounded-full px-2.5 py-1 font-semibold"
 let members = 0
 
 export default function EpisodeTrackingHarness() {
-	const { showKey, show, today } = useLoaderData<typeof loader>() as unknown as { showKey: keyof typeof SHOWS; show: Show; today: string }
+	const { showKey, show, today, presentation } = useLoaderData<
+		typeof loader
+	>() as unknown as {
+		showKey: keyof typeof SHOWS
+		show: Show
+		today: string
+		presentation: EpisodePresentation | null
+	}
 	const [params] = useSearchParams()
 	const key = params.toString()
 	// The stand-in server replaces `fetch`, so the page renders in the browser only, and anew for every setup.
 	const [mounted, setMounted] = useState("")
 	// A transition, because the page around it may still be hydrating.
 	useEffect(() => startTransition(() => setMounted(key)), [key])
-	if (mounted !== key) return <p className="p-8 text-gray-400">Loading the harness…</p>
-	return <Harness key={key} showKey={showKey} show={show} today={today} />
+	if (mounted !== key)
+		return <p className="p-8 text-gray-400">Loading the harness…</p>
+	return (
+		<Harness
+			key={key}
+			showKey={showKey}
+			show={show}
+			today={today}
+			presentation={presentation}
+		/>
+	)
 }
 
-function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: Show; today: string }) {
+function Harness({
+	showKey,
+	show,
+	today,
+	presentation,
+}: {
+	showKey: keyof typeof SHOWS
+	show: Show
+	today: string
+	presentation: EpisodePresentation | null
+}) {
 	const [params] = useSearchParams()
 	const outer = useContext(AuthContext)
 	const flag = useFeature("tracking")
@@ -84,7 +171,13 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 	const guest = params.get("guest") === "1"
 	const differs = params.get("imdb") === "differs"
 	const noList = params.get("list") === "none"
-	const grid = useMemo(() => imdbGrid(show, differs), [show, differs])
+	const grid = useMemo(
+		() =>
+			presentation
+				? presentationGrid(show.id, presentation)
+				: imdbGrid(show, differs),
+		[show, differs, presentation],
+	)
 	const [ready, setReady] = useState(false)
 	const [, refresh] = useState(0)
 
@@ -92,6 +185,7 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 		() =>
 			new FakeServer({
 				show,
+				presentation,
 				grid,
 				today,
 				scenario,
@@ -120,20 +214,39 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 	}, [server])
 
 	// A member of its own per setup, so that nothing cached for an earlier setup is read.
-	const user = useMemo(() => (guest ? null : ({ id: `harness-member-${++members}`, email: "member@example.com" } as User)), [guest])
+	const user = useMemo(
+		() =>
+			guest
+				? null
+				: ({
+						id: `harness-member-${++members}`,
+						email: "member@example.com",
+					} as User),
+		[guest],
+	)
 	const asProviders = params.get("providers") ?? ""
-	const providers = (["one", "many", "none", "only", "nowhere", "stale"].includes(asProviders) ? asProviders : "one") as HeroProviders
+	const providers = (
+		["one", "many", "none", "only", "nowhere", "stale"].includes(asProviders)
+			? asProviders
+			: "one"
+	) as HeroProviders
 	const media = useMemo(() => {
 		const parts = heroParts(providers, show)
 		return {
 			mediaType: "show",
 			...parts,
-			details: { ...parts.details, tmdb_id: show.id, title: show.name, in_production: !["Ended", "Canceled"].includes(show.status) },
+			details: {
+				...parts.details,
+				tmdb_id: show.id,
+				title: show.name,
+				in_production: !["Ended", "Canceled"].includes(show.status),
+			},
 		} as unknown as ShowResult
 	}, [show, providers])
 	const link = (change: Record<string, string | null>) => {
 		const p = new URLSearchParams(params)
-		for (const [name, value] of Object.entries(change)) value == null ? p.delete(name) : p.set(name, value)
+		for (const [name, value] of Object.entries(change))
+			value == null ? p.delete(name) : p.set(name, value)
 		return `?${p}`
 	}
 	const stored = server.stored()
@@ -141,13 +254,32 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 	if (!ready) return <p className="p-8 text-gray-400">Loading the harness…</p>
 	return (
 		<AuthContext.Provider value={{ ...outer, user, loading: false }}>
-			<div className="mx-auto max-w-7xl overflow-x-clip px-4 pb-40 pt-6 text-white sm:px-6 lg:px-8" data-harness>
-				<details className="rounded-xl bg-white p-3 text-xs text-black ring-2 ring-fuchsia-500" data-harness-panel>
-					<summary className="cursor-pointer text-sm font-bold">Harness: the real components, a stand-in member and server (not part of the page)</summary>
-					{!flag && <p className="mt-2 rounded bg-red-100 p-2 font-bold text-red-700">REC_TRACKING is off: start the dev server with REC_TRACKING=on. The page below is what a member gets with the flag off.</p>}
+			<div
+				className="mx-auto max-w-7xl overflow-x-clip px-4 pb-40 pt-6 text-white sm:px-6 lg:px-8"
+				data-harness
+			>
+				<details
+					className="rounded-xl bg-white p-3 text-xs text-black ring-2 ring-fuchsia-500"
+					data-harness-panel
+				>
+					<summary className="cursor-pointer text-sm font-bold">
+						Harness: the real components, a stand-in member and server (not part
+						of the page)
+					</summary>
+					{!flag && (
+						<p className="mt-2 rounded bg-red-100 p-2 font-bold text-red-700">
+							REC_TRACKING is off: start the dev server with REC_TRACKING=on.
+							The page below is what a member gets with the flag off.
+						</p>
+					)}
 					<div className="mt-2 flex flex-wrap gap-1.5">
 						{Object.entries(SHOWS).map(([name, label]) => (
-							<Link key={name} to={link({ show: name })} title={label} className={`${PILL} ${name === showKey ? "bg-black text-white" : "bg-neutral-200 hover:bg-neutral-300"}`}>
+							<Link
+								key={name}
+								to={link({ show: name })}
+								title={label}
+								className={`${PILL} ${name === showKey ? "bg-black text-white" : "bg-neutral-200 hover:bg-neutral-300"}`}
+							>
 								{label.split(":")[0]}
 							</Link>
 						))}
@@ -155,19 +287,32 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 					<div className="mt-2 flex flex-wrap items-center gap-1.5">
 						<span className="font-semibold">Start from:</span>
 						{(Object.keys(SCENARIOS) as Scenario[]).map((name) => (
-							<Link key={name} to={link({ scenario: name })} className={`${PILL} ${name === scenario ? "bg-black text-white" : "bg-neutral-200 hover:bg-neutral-300"}`}>
+							<Link
+								key={name}
+								to={link({ scenario: name })}
+								className={`${PILL} ${name === scenario ? "bg-black text-white" : "bg-neutral-200 hover:bg-neutral-300"}`}
+							>
 								{SCENARIOS[name]}
 							</Link>
 						))}
 					</div>
 					<div className="mt-2 flex flex-wrap items-center gap-1.5">
-						<Link to={link({ list: noList ? null : "none" })} className={`${PILL} ${noList ? "bg-black text-white" : "bg-neutral-200"}`}>
+						<Link
+							to={link({ list: noList ? null : "none" })}
+							className={`${PILL} ${noList ? "bg-black text-white" : "bg-neutral-200"}`}
+						>
 							Episode list: {noList ? "none yet" : "there"}
 						</Link>
-						<Link to={link({ imdb: differs ? null : "differs" })} className={`${PILL} ${differs ? "bg-amber-300" : "bg-neutral-200"}`}>
+						<Link
+							to={link({ imdb: differs ? null : "differs" })}
+							className={`${PILL} ${differs ? "bg-amber-300" : "bg-neutral-200"}`}
+						>
 							IMDb numbers season 1 differently: {differs ? "on" : "off"}
 						</Link>
-						<Link to={link({ guest: guest ? null : "1" })} className={`${PILL} ${guest ? "bg-black text-white" : "bg-neutral-200"}`}>
+						<Link
+							to={link({ guest: guest ? null : "1" })}
+							className={`${PILL} ${guest ? "bg-black text-white" : "bg-neutral-200"}`}
+						>
 							Viewer: {guest ? "a visitor" : "a member"}
 						</Link>
 						<button
@@ -182,13 +327,28 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 						</button>
 						<span>today is {today}</span>
 					</div>
-					<div className="mt-2 rounded-lg bg-neutral-100 p-2 font-mono leading-relaxed" data-stored>
+					<div
+						className="mt-2 rounded-lg bg-neutral-100 p-2 font-mono leading-relaxed"
+						data-stored
+					>
 						<p>
-							state: <b>{stored.state?.state ?? "no row"}</b> · pass: <b>{stored.state?.pass ?? 1}</b> · press: <b>{stored.state?.seen_press_group ? `from ${stored.state.seen_press_from}` : "none"}</b> · question:{" "}
-							<b>{stored.state?.seen_question ?? "not asked"}</b> · rate prompt dismissed: <b>{String(stored.state?.rate_prompt_dismissed_at != null)}</b>
+							state: <b>{stored.state?.state ?? "no row"}</b> · pass:{" "}
+							<b>{stored.state?.pass ?? 1}</b> · press:{" "}
+							<b>
+								{stored.state?.seen_press_group
+									? `from ${stored.state.seen_press_from}`
+									: "none"}
+							</b>{" "}
+							· question: <b>{stored.state?.seen_question ?? "not asked"}</b> ·
+							rate prompt dismissed:{" "}
+							<b>{String(stored.state?.rate_prompt_dismissed_at != null)}</b>
 						</p>
 						<p>
-							log rows: <b>{stored.log.length}</b> · score: <b>{stored.score ?? "none"}</b> · want to see: <b>{String(stored.wantToSee)}</b> · not interested: <b>{String(stored.notInterested)}</b> · requests: <b>{server.requests.length}</b> · overlapping tracking requests:{" "}
+							log rows: <b>{stored.log.length}</b> · score:{" "}
+							<b>{stored.score ?? "none"}</b> · want to see:{" "}
+							<b>{String(stored.wantToSee)}</b> · not interested:{" "}
+							<b>{String(stored.notInterested)}</b> · requests:{" "}
+							<b>{server.requests.length}</b> · overlapping tracking requests:{" "}
 							<b>{overlapping}</b>
 						</p>
 					</div>
@@ -197,14 +357,25 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 				{/* The real hero of the title page, and under it the real episodes section. The page's header, with the title, is not here. */}
 				<BelowFoldProvider titleKey={`show-${show.id}`}>
 					<h1 className="mb-1 mt-6 min-w-0 truncate text-xl font-bold text-white">
-						{show.name} <span className="font-normal text-gray-400">({show.year})</span>
+						{show.name}{" "}
+						<span className="font-normal text-gray-400">({show.year})</span>
 					</h1>
 					<div className="-mx-4 sm:-mx-6 lg:-mx-8" data-hero>
-						<DetailsHero media={media} country="DE" episodeGrid={grid.seasons.length ? grid : null} sectionProps={{ overview: {} } as never} />
+						<DetailsHero
+							media={media}
+							country="DE"
+							episodeGrid={grid.seasons.length ? grid : null}
+							sectionProps={{ overview: {} } as never}
+						/>
 					</div>
 					<div className="mt-12 flex flex-col gap-12">
-						<Episodes media={media} grid={grid.seasons.length ? <EpisodeGrid grid={grid} /> : null} />
-						<div className="h-40 rounded-xl border border-dashed border-white/10 p-4 text-sm text-gray-500">The rest of the show page.</div>
+						<Episodes
+							media={media}
+							grid={grid.seasons.length ? <EpisodeGrid grid={grid} /> : null}
+						/>
+						<div className="h-40 rounded-xl border border-dashed border-white/10 p-4 text-sm text-gray-500">
+							The rest of the show page.
+						</div>
 					</div>
 				</BelowFoldProvider>
 			</div>
@@ -213,7 +384,10 @@ function Harness({ showKey, show, today }: { showKey: keyof typeof SHOWS; show: 
 }
 
 /** The episodes section as ui/details/DetailsContent.tsx renders it. */
-function Episodes({ media, grid }: { media: ShowResult; grid: React.ReactNode }) {
+function Episodes({
+	media,
+	grid,
+}: { media: ShowResult; grid: React.ReactNode }) {
 	const tracking = useEpisodeTracking(media)
 	if (!tracking) return grid ? <div>{grid}</div> : null
 	return (
@@ -225,11 +399,14 @@ function Episodes({ media, grid }: { media: ShowResult; grid: React.ReactNode })
 
 /** How many requests to the tracking endpoint started while another POST to it was still unanswered. */
 function overlaps(server: FakeServer): number {
-	const posts = server.requests.filter((r) => r.path === "/api/tracking/show" && r.method === "POST")
+	const posts = server.requests.filter(
+		(r) => r.path === "/api/tracking/show" && r.method === "POST",
+	)
 	let count = 0
 	for (let i = 1; i < posts.length; i++) {
 		const before = posts[i - 1]
-		if (before.endedAt === null || posts[i].startedAt < before.endedAt) count += 1
+		if (before.endedAt === null || posts[i].startedAt < before.endedAt)
+			count += 1
 	}
 	return count
 }

@@ -122,6 +122,7 @@ const TABLES: Record<string, Table> = {
 		columns: [
 			"show_id",
 			"imdb_episode_id",
+			"imdb_show_id",
 			"season_number",
 			"episode_number",
 			"name",

@@ -1,0 +1,26 @@
+{
+  "started_at": "2026-10-12T09:44:14.814077+00:00",
+  "completed_at": "2026-10-12T09:46:54.752865+00:00",
+  "requests_made": 1046,
+  "max_requests": 1200,
+  "statuses": {
+    "200": 1046
+  },
+  "live_shows": 113,
+  "shows_with_groups": 65,
+  "group_probes": 137,
+  "external_id_probes": 683,
+  "full_catalog_id_probe_shows": [
+    71446,
+    73021,
+    79242,
+    85937,
+    95479,
+    127532,
+    154526
+  ],
+  "external_ids_present": 545,
+  "external_ids_found_in_same_show": 501,
+  "external_ids_not_in_same_show": 44,
+  "catalog_live_counts_disagree": 0
+}

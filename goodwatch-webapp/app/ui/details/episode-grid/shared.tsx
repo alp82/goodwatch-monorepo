@@ -2,9 +2,20 @@
 // scores, provider marks and legend that live inside them.
 import { assetUrl } from "~/utils/asset-url"
 import { useReplayedTap } from "~/utils/useReplayedTap"
-import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
+import {
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react"
 import { createPortal } from "react-dom"
-import type { GridEpisode, GridSeason, GridSpecial } from "~/server/episode-grid.server"
+import type {
+	GridEpisode,
+	GridSeason,
+	GridSpecial,
+} from "~/server/episode-grid.server"
 import imdbLogo from "~/img/imdb-logo-250.webp?no-inline"
 import metacriticLogoIcon from "~/img/metacritic-logo-icon-64.webp?no-inline"
 import rottenLogoIcon from "~/img/rotten-logo-icon-64.webp"
@@ -24,21 +35,38 @@ import {
 } from "~/ui/details/episode-grid/scale"
 
 /** One slot per number from `first` to `last`; `episode` is null for an unrated number. */
-export const episodeSlots = (episodes: GridEpisode[], first: number, last: number) => {
+export const episodeSlots = (
+	episodes: GridEpisode[],
+	first: number,
+	last: number,
+) => {
 	const byNumber = new Map(episodes.map((e) => [e.number, e]))
 	const slots: { number: number; episode: GridEpisode | null }[] = []
-	for (let n = first; n <= last; n++) slots.push({ number: n, episode: byNumber.get(n) ?? null })
+	for (let n = first; n <= last; n++)
+		slots.push({ number: n, episode: byNumber.get(n) ?? null })
 	return slots
 }
 
 /** Where an episode sits, in words. `season` is null for a special. */
-export const episodeWhere = (season: number | null, episode: GridEpisode | GridSpecial) =>
-	season === null ? "Special" : `Season ${season}, episode ${(episode as GridEpisode).number}`
+export const episodeWhere = (
+	season: number | null,
+	episode: GridEpisode | GridSpecial,
+) =>
+	season === null
+		? "Special"
+		: season < 0
+			? (episode.canonicalLabel ?? "Additional episode")
+			: `Season ${season}, episode ${(episode as GridEpisode).number}`
 
 /** The accessible name of an episode cell: everything the tip shows. */
-export const episodeLabel = (season: number | null, episode: GridEpisode | GridSpecial) => {
+export const episodeLabel = (
+	season: number | null,
+	episode: GridEpisode | GridSpecial,
+) => {
+	if (episode.unrated)
+		return `${episodeWhere(season, episode)}: ${episode.name || "Untitled"}. No IMDb rating.`
 	const votes = `${formatCount(episode.votes)} IMDb vote${episode.votes === 1 ? "" : "s"}`
-	return `${episodeWhere(season, episode)}: ${episode.name || "Untitled"}. Rated ${formatScore(episode.score)}, ${votes}${isLowVotes(episode.votes) ? ", few votes" : ""}.`
+	return `${episodeWhere(season, episode)}: ${episode.name || "Untitled"}. Rated ${episode.unrated ? "—" : formatScore(episode.score)}, ${votes}${isLowVotes(episode.votes) ? ", few votes" : ""}.`
 }
 
 /** The accessible name of a season trigger: every site's season score. */
@@ -47,11 +75,12 @@ export const seasonLabel = (season: GridSeason, providers: ProviderKey[]) => {
 		const value = season.scores[p]
 		return value ? [describeProviderScore(p, value)] : []
 	})
-	return `Season ${season.number}. ${scores.length ? scores.join("; ") : "No season scores"}.`
+	return `${season.number < 0 ? "Additional episodes" : `Season ${season.number}`}. ${scores.length ? scores.join("; ") : "No season scores"}.`
 }
 
 // useLayoutEffect warns during server rendering; the float never renders there anyway.
-const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
+const useIsoLayoutEffect =
+	typeof window === "undefined" ? useEffect : useLayoutEffect
 
 // ---------------------------------------------------------------------------------------
 // Floating tip and popover
@@ -88,7 +117,8 @@ export function useFloat() {
 			close()
 		}
 		// Follow the anchor when the page or the grid box scrolls, e.g. while tabbing through.
-		const follow = () => setState((s) => (s ? { ...s, anchor: s.el.getBoundingClientRect() } : s))
+		const follow = () =>
+			setState((s) => (s ? { ...s, anchor: s.el.getBoundingClientRect() } : s))
 		window.addEventListener("keydown", onKey)
 		window.addEventListener("pointerdown", onDown, true)
 		window.addEventListener("scroll", follow, true)
@@ -105,16 +135,28 @@ export function useFloat() {
 	const trigger = useCallback(
 		(id: string, content: () => ReactNode) => {
 			const open = (el: HTMLElement, pinned: boolean) =>
-				setState({ id, el, anchor: el.getBoundingClientRect(), content: content(), pinned })
+				setState({
+					id,
+					el,
+					anchor: el.getBoundingClientRect(),
+					content: content(),
+					pinned,
+				})
 			return {
 				"data-float-id": id,
 				"data-replay-tap": `float:${id}`,
 				onPointerEnter: (event: React.PointerEvent<HTMLElement>) => {
-					if (event.pointerType === "mouse" && !stateRef.current?.pinned) open(event.currentTarget, false)
+					if (event.pointerType === "mouse" && !stateRef.current?.pinned)
+						open(event.currentTarget, false)
 				},
 				onPointerLeave: (event: React.PointerEvent<HTMLElement>) => {
 					const current = stateRef.current
-					if (event.pointerType === "mouse" && current?.id === id && !current.pinned) close()
+					if (
+						event.pointerType === "mouse" &&
+						current?.id === id &&
+						!current.pinned
+					)
+						close()
 				},
 				onFocus: (event: React.FocusEvent<HTMLElement>) => {
 					if (!stateRef.current?.pinned) open(event.currentTarget, false)
@@ -143,9 +185,15 @@ export function useFloat() {
  * The float goes into a portal on the body: the grid sits in an `isolate` stacking context,
  * where no z-index can lift the float over the sticky title header.
  */
-export function FloatLayer({ state, topInset: headersBottom }: { state: FloatState | null; topInset: () => number }) {
+export function FloatLayer({
+	state,
+	topInset: headersBottom,
+}: { state: FloatState | null; topInset: () => number }) {
 	const ref = useRef<HTMLDivElement>(null)
-	const [position, setPosition] = useState<{ left: number; top: number } | null>(null)
+	const [position, setPosition] = useState<{
+		left: number
+		top: number
+	} | null>(null)
 
 	useIsoLayoutEffect(() => {
 		const el = ref.current
@@ -155,7 +203,10 @@ export function FloatLayer({ state, topInset: headersBottom }: { state: FloatSta
 		const topInset = headersBottom()
 		const gap = 6
 		const margin = 8
-		const left = Math.min(Math.max(margin, anchor.left + anchor.width / 2 - width / 2), window.innerWidth - width - margin)
+		const left = Math.min(
+			Math.max(margin, anchor.left + anchor.width / 2 - width / 2),
+			window.innerWidth - width - margin,
+		)
 		const above = anchor.top - height - gap
 		const below = anchor.bottom + gap
 		const fitsAbove = above >= topInset + margin
@@ -176,7 +227,11 @@ export function FloatLayer({ state, topInset: headersBottom }: { state: FloatSta
 			aria-hidden="true"
 			data-float-id={state.id}
 			className="pointer-events-none fixed z-[80] max-w-[min(18rem,calc(100vw-16px))] rounded-lg border border-white/10 bg-gray-950/95 px-3 py-2 text-sm text-gray-200 shadow-[0_10px_30px_rgba(0,0,0,0.55)] backdrop-blur"
-			style={position ? { left: position.left, top: position.top } : { left: 0, top: 0, visibility: "hidden" }}
+			style={
+				position
+					? { left: position.left, top: position.top }
+					: { left: 0, top: 0, visibility: "hidden" }
+			}
 		>
 			{state.content}
 		</div>,
@@ -187,7 +242,10 @@ export function FloatLayer({ state, topInset: headersBottom }: { state: FloatSta
 // ---------------------------------------------------------------------------------------
 // What goes inside the float
 
-export function EpisodeTip({ season, episode }: { season: number | null; episode: GridEpisode | GridSpecial }) {
+export function EpisodeTip({
+	season,
+	episode,
+}: { season: number | null; episode: GridEpisode | GridSpecial }) {
 	const vibe = imdbVibe(episode.score)
 	const low = isLowVotes(episode.votes)
 	return (
@@ -196,14 +254,24 @@ export function EpisodeTip({ season, episode }: { season: number | null; episode
 				className="mt-0.5 inline-flex h-7 min-w-9 items-center justify-center rounded-md px-1.5 text-sm font-bold tabular-nums text-white"
 				style={{ background: vibeTileColor(vibe) }}
 			>
-				{formatScore(episode.score)}
+				{episode.unrated ? "—" : formatScore(episode.score)}
 			</span>
 			<span className="min-w-0">
-				<span className="block font-semibold leading-snug text-gray-50">{episode.name || "Untitled"}</span>
-				<span className="block text-xs text-gray-400">
-					{season === null ? "Special" : `S${season} E${(episode as GridEpisode).number}`} · {formatCount(episode.votes)} votes
+				<span className="block font-semibold leading-snug text-gray-50">
+					{episode.name || "Untitled"}
 				</span>
-				{low && <span className="mt-1 block text-xs text-amber-200/90">Few votes (under {LOW_VOTE_THRESHOLD}), so this score can still move.</span>}
+				<span className="block text-xs text-gray-400">
+					{episodeWhere(season, episode)} ·{" "}
+					{episode.unrated
+						? "No IMDb rating"
+						: `${formatCount(episode.votes)} votes`}
+				</span>
+				{low && !episode.unrated && (
+					<span className="mt-1 block text-xs text-amber-200/90">
+						Few votes (under {LOW_VOTE_THRESHOLD}), so this score can still
+						move.
+					</span>
+				)}
 			</span>
 		</div>
 	)
@@ -213,39 +281,63 @@ const SITE_LOGO = {
 	imdb: { src: imdbLogo, className: "h-2.5", bg: "bg-imdb" },
 	tmdb: { src: tmdbLogo, className: "h-2", bg: "bg-[#0d253f]" },
 	rotten: { src: rottenLogoIcon, className: "h-3", bg: "bg-rotten" },
-	metacritic: { src: metacriticLogoIcon, className: "h-3", bg: "bg-metacritic" },
+	metacritic: {
+		src: metacriticLogoIcon,
+		className: "h-3",
+		bg: "bg-metacritic",
+	},
 } as const
 
 /** A provider's small logo on its brand colour. */
 export function ProviderLogo({ provider }: { provider: ProviderKey }) {
 	const logo = SITE_LOGO[PROVIDERS[provider].site]
 	return (
-		<span className={`inline-flex h-4 w-9 shrink-0 items-center justify-center rounded ${logo.bg}`}>
+		<span
+			className={`inline-flex h-4 w-9 shrink-0 items-center justify-center rounded ${logo.bg}`}
+		>
 			<img src={assetUrl(logo.src)} alt="" className={logo.className} />
 		</span>
 	)
 }
 
 /** Every site's score for one season, one line each. Missing providers are left out. */
-export function SeasonScoreList({ season, providers }: { season: GridSeason; providers: ProviderKey[] }) {
+export function SeasonScoreList({
+	season,
+	providers,
+}: { season: GridSeason; providers: ProviderKey[] }) {
 	const rows = providers.flatMap((p) => {
 		const value = season.scores[p]
 		return value ? [{ p, value }] : []
 	})
-	if (!rows.length) return <p className="text-xs text-gray-400">No site has a score for this season.</p>
+	if (!rows.length)
+		return (
+			<p className="text-xs text-gray-400">
+				No site has a score for this season.
+			</p>
+		)
 	return (
 		<ul className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-1">
 			{rows.map(({ p, value }) => {
 				const meta = PROVIDERS[p]
-				const suffix = meta.site === "rotten" || meta.site === "metacritic" ? meta.short : null
+				const suffix =
+					meta.site === "rotten" || meta.site === "metacritic"
+						? meta.short
+						: null
 				return (
 					<li key={p} className="contents">
 						<ProviderLogo provider={p} />
 						<span className="text-xs text-gray-400">
 							{suffix ?? (p === "imdb" ? "Episode avg" : "Season avg")}
-							{value.count && meta.countNoun ? <span className="text-gray-500"> · {formatCount(value.count)}</span> : null}
+							{value.count && meta.countNoun ? (
+								<span className="text-gray-500">
+									{" "}
+									· {formatCount(value.count)}
+								</span>
+							) : null}
 						</span>
-						<span className="text-right text-sm font-semibold tabular-nums text-white">{meta.format(value.score)}</span>
+						<span className="text-right text-sm font-semibold tabular-nums text-white">
+							{meta.format(value.score)}
+						</span>
 					</li>
 				)
 			})}
@@ -253,17 +345,31 @@ export function SeasonScoreList({ season, providers }: { season: GridSeason; pro
 	)
 }
 
-export function SeasonTip({ season, providers }: { season: GridSeason; providers: ProviderKey[] }) {
+export function SeasonTip({
+	season,
+	providers,
+}: { season: GridSeason; providers: ProviderKey[] }) {
 	return (
 		<div className="min-w-52">
-			<p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">Season {season.number} by site</p>
+			<p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
+				{season.number < 0 ? "Additional episodes" : `Season ${season.number}`}{" "}
+				by site
+			</p>
+			{season.coverage && (
+				<p className="mb-1 text-xs text-gray-400">
+					{season.coverage.rated}/{season.coverage.total} episodes rated
+				</p>
+			)}
 			<SeasonScoreList season={season} providers={providers} />
 		</div>
 	)
 }
 
 /** The key to the grid: the vibe steps episodes actually use, the few-votes mark and gaps. */
-export function LegendContent({ lowVoteSample, children }: { lowVoteSample: ReactNode; children?: ReactNode }) {
+export function LegendContent({
+	lowVoteSample,
+	children,
+}: { lowVoteSample: ReactNode; children?: ReactNode }) {
 	const steps = [
 		{ vibe: 90, range: "9+" },
 		{ vibe: 80, range: "8" },
@@ -274,14 +380,22 @@ export function LegendContent({ lowVoteSample, children }: { lowVoteSample: Reac
 	]
 	return (
 		<div className="w-64 space-y-2 text-xs text-gray-300">
-			<p className="text-gray-400">IMDb episode ratings, coloured like every GoodWatch score.</p>
+			<p className="text-gray-400">
+				IMDb episode ratings, coloured like every GoodWatch score.
+			</p>
 			<ul className="flex gap-0.5">
 				{steps.map(({ vibe, range }) => (
 					<li key={vibe} className="flex-1 text-center">
-						<span className="block rounded-sm py-0.5 text-[11px] font-semibold text-white" style={{ background: vibeTileColor(vibe) }}>
+						<span
+							className="block rounded-sm py-0.5 text-[11px] font-semibold text-white"
+							style={{ background: vibeTileColor(vibe) }}
+						>
 							{range}
 						</span>
-						<span className="mt-0.5 block text-[10px] leading-tight" style={{ color: vibeTextColor(vibe) }}>
+						<span
+							className="mt-0.5 block text-[10px] leading-tight"
+							style={{ color: vibeTextColor(vibe) }}
+						>
 							{vibeLabel(vibe)}
 						</span>
 					</li>

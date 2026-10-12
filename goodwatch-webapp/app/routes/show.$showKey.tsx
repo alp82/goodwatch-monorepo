@@ -14,7 +14,10 @@ import { getDetailsForMovie, getDetailsForShow } from "~/server/details.server"
 import { getEpisodeGrid } from "~/server/episode-grid.server"
 import { INCOMPLETE_PAGE_HEADERS } from "~/server/incomplete-page"
 import { relatedPrefetchBudgetMs } from "~/server/related-budget"
-import { prefetchRelatedSection, relatedSectionData } from "~/server/related-map.server"
+import {
+	prefetchRelatedSection,
+	relatedSectionData,
+} from "~/server/related-map.server"
 import { titleExtrasEmbedded } from "~/server/title-extras-prefetch"
 import { prefetchTitleExtrasState } from "~/server/title-extras.server"
 import type { ShowQueryResult } from "~/server/types/details-types"
@@ -23,7 +26,11 @@ import Details from "~/ui/details/Details"
 import { searchDetailShouldRevalidate } from "~/ui/search/search-navigation"
 import { getUserIdFromRequest } from "~/utils/auth"
 import { detailsPageMeta } from "~/utils/detailsMeta"
-import { type EpisodeGridWire, packEpisodeGrid, unpackEpisodeGrid } from "~/utils/episode-grid-wire"
+import {
+	type EpisodeGridWire,
+	packEpisodeGrid,
+	unpackEpisodeGrid,
+} from "~/utils/episode-grid-wire"
 import { titleRedirectPath } from "~/utils/helpers"
 import { buildMeta } from "~/utils/meta"
 import { mergeDehydratedStates } from "~/utils/title-extras"
@@ -104,7 +111,19 @@ export const loader: LoaderFunction = async ({
 	})
 	if (canonical) return redirect(canonical, 301)
 
-	const [media, episodeGrid, relatedSection, extrasState] = await parts
+	const [catalogMedia, episodeGrid, relatedSection, extrasState] = await parts
+	const media = episodeGrid?.presentationVersion
+		? {
+				...catalogMedia,
+				seasons: episodeGrid.seasons
+					.filter((s) => s[0] > 0)
+					.map((s) => ({ season_number: s[0], episode_count: s[2].length })),
+				details: {
+					...catalogMedia.details,
+					number_of_seasons: episodeGrid.seasons.filter((s) => s[0] > 0).length,
+				},
+			}
+		: catalogMedia
 	// The related map's section, or with the map off the related titles carousel's first panel.
 	const related = relatedSectionData(
 		relatedSection,
@@ -129,15 +148,21 @@ export const loader: LoaderFunction = async ({
 		!episodeGridFailed &&
 		related.complete &&
 		titleExtrasEmbedded(extrasState, { genres: media.details.genres })
-	return complete
-		? data
-		: json(data, { headers: INCOMPLETE_PAGE_HEADERS })
+	return complete ? data : json(data, { headers: INCOMPLETE_PAGE_HEADERS })
 }
 
 export default function DetailsTV() {
-	const { media, episodeGrid: episodeGridWire, params, countryIsFallback } = useLoaderData<LoaderData>()
+	const {
+		media,
+		episodeGrid: episodeGridWire,
+		params,
+		countryIsFallback,
+	} = useLoaderData<LoaderData>()
 	const { country } = params
-	const episodeGrid = useMemo(() => episodeGridWire && unpackEpisodeGrid(episodeGridWire), [episodeGridWire])
+	const episodeGrid = useMemo(
+		() => episodeGridWire && unpackEpisodeGrid(episodeGridWire),
+		[episodeGridWire],
+	)
 
 	// console.log(media)
 
