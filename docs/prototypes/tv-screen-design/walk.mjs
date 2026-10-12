@@ -29,6 +29,17 @@ const pointer = (name) => page.evaluate((n) => document.querySelector("[data-tv-
 const middle = async (selector) => { const b = await page.locator(selector).first().boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2] }
 /** The Remote's turn about the wrist and its lean, in degrees, from the transform the pointing loop wrote. */
 const aim = () => page.evaluate(() => { const t = document.querySelector("[data-remote]").style.transform; return [Number(/rotateZ\(([-\d.]+)deg\)/.exec(t)?.[1] ?? 0), Number(/rotateX\(([-\d.]+)deg\)/.exec(t)?.[1] ?? 0)] })
+/** Moves the cursor into each corner of the window and returns the Remote's turn and lean there. */
+const corners = async () => {
+	const { width, height } = page.viewportSize()
+	const out = []
+	for (const [x, y] of [[3, 3], [width - 20, 3], [3, height - 4], [width - 20, height - 4]]) {
+		await page.mouse.move(x, y, { steps: 5 }); await page.waitForTimeout(900)
+		out.push(await aim())
+	}
+	return out
+}
+const toast = (text) => page.waitForFunction((t) => document.querySelector(".tvd-toast")?.textContent === t, text, { timeout: 8000 }).then(() => "shown", () => "missing")
 const marked = (key) => page.waitForSelector(`button[data-design=${key}][aria-pressed=true]`, { timeout: 8000 }).then(() => page.waitForTimeout(400), () => {})
 
 for (const design of ["cinema", "marquee", "glow"]) {
@@ -80,6 +91,7 @@ for (const design of ["cinema", "marquee", "glow"]) {
 	check(t("search results have Back and Menu, and Expand"), await bar(), "bar-back bar-menu expand")
 	// Pointing: the TV's own pointer, and the Remote aiming at the cursor.
 	await keys("h")
+	const [okX, okY] = await middle("[data-remote] .remote-ok") // the Remote is at rest: the cursor is on its keys
 	const [dx, dy] = await middle("[data-tv-item=app-discover]")
 	const [cx, cy] = await middle("[data-tv-screen]")
 	await page.mouse.move(cx, cy, { steps: 4 }); await page.waitForTimeout(350)
@@ -91,16 +103,12 @@ for (const design of ["cinema", "marquee", "glow"]) {
 	await keys("ArrowRight"); check(t("the pointer hides when a key is used"), await pointer("shown"), "false")
 	await page.mouse.move(cx + 40, cy + 10, { steps: 3 }); await page.waitForTimeout(200); check(t("the pointer comes back on movement"), await pointer("shown"), "true")
 	await page.waitForTimeout(3600); check(t("the pointer fades after a few seconds without movement"), await pointer("shown"), "false")
-	const corners = {}
-	for (const [name, x, y] of [["top left", 3, 3], ["top right", 1900, 3], ["bottom left", 3, 1076], ["bottom right", 1900, 1076]]) {
-		await page.mouse.move(x, y, { steps: 5 }); await page.waitForTimeout(900)
-		corners[name] = await aim()
-	}
-	const [tl, tr, bl, br] = Object.values(corners)
-	check(t("the Remote turns left for the left corners and right for the right ones"), [tl[0] < -30, tr[0] > 30, bl[0] < -30, br[0] > 30].join(" "), "true true true true")
-	check(t("the Remote leans back further for the top corners than for the bottom ones"), [tl[1] > bl[1] + 1, tr[1] > br[1] + 1].join(" "), "true true")
-	// The Remote's keys: the wheel is in the middle of the window, under the TV.
-	await page.mouse.move(cx, 950, { steps: 6 }); await page.waitForTimeout(1100)
+	// Beside the TV the Remote only nods toward the cursor (13 degrees at most), so it never swings over the picture.
+	const [tl, tr, bl, br] = await corners()
+	check(t("the Remote turns left for the left corners and right for the right ones"), [tl[0] < -8, tr[0] > 1, bl[0] < -8, br[0] > 8].join(" "), "true true true true")
+	check(t("the Remote never turns further than its nod"), String(Math.max(...[tl, tr, bl, br].map((c) => Math.abs(c[0]))) <= 13.01), "true")
+	check(t("the Remote leans back further for a far corner than for a near one"), String(tr[1] > br[1] + 1), "true")
+	await page.mouse.move(okX, okY, { steps: 6 }); await page.waitForTimeout(1100)
 	check(t("over the Remote itself the Remote settles at rest"), (await aim()).map((n) => Math.round(n)).join(" "), "0 12")
 	await page.mouse.move(1900, 3, { steps: 5 }); await page.waitForTimeout(500)
 	await page.evaluate(() => document.documentElement.dispatchEvent(new MouseEvent("mouseleave"))); await page.waitForTimeout(1100)
@@ -121,11 +129,52 @@ await page.locator("button[data-design=marquee]").click(); await marked("marquee
 check("a click on a direction's button chooses it and keeps the screen", `${await current()} · ${await state()}`, "2 Marquee · home › discover › discover-cozy · focus t-the-good-place")
 await keys("3"); await marked("glow"); check("the key 3 chooses Glow and keeps the screen", `${await current()} · ${await state()}`, "3 Glow · home › discover › discover-cozy · focus t-the-good-place")
 await keys("1"); await marked("cinema"); check("the key 1 chooses Cinema", await current(), "1 Cinema")
+// With the Remote under the TV there is room to swing: it turns all the way toward the corners.
+await open("design=cinema&remote=below")
+{
+	const [tl, tr, bl, br] = await corners()
+	check("below: the Remote turns far toward each corner", [tl[0] < -30, tr[0] > 30, bl[0] < -30, br[0] > 30].join(" "), "true true true true")
+	check("below: the Remote leans back further for the top corners", [tl[1] > bl[1] + 1, tr[1] > br[1] + 1].join(" "), "true true")
+	await page.evaluate(() => document.documentElement.dispatchEvent(new MouseEvent("mouseleave"))); await page.waitForTimeout(1100)
+	check("below: the Remote is at rest after the cursor left the window", (await aim()).map((n) => Math.round(n)).join(" "), "0 12")
+}
+
+// Every window size: the whole Remote, down to its streaming keys and its end, is in the window at rest, and both
+// streaming keys take a click.
+const remoteFits = async (label, width, height, query, whole = true) => {
+	await page.setViewportSize({ width, height })
+	await page.mouse.move(0, 0)
+	await open(query)
+	const m = await page.evaluate(() => {
+		const box = (s) => document.querySelector(s).getBoundingClientRect()
+		const canvas = document.querySelector("[data-tv-canvas]")
+		return { row: Math.max(box("[data-remote] button[aria-label='Only Netflix']").bottom, box("[data-remote] button[aria-label='Only Prime Video']").bottom), body: box("[data-remote] .remote-body").bottom, right: box("[data-remote] .remote-body").right, tv: box("[data-tv-screen]"), k: canvas.getBoundingClientRect().width / canvas.offsetWidth }
+	})
+	check(`${label}: the streaming row ends inside the window`, String(m.row <= height), "true")
+	if (whole) check(`${label}: the whole Remote is inside the window`, String(m.body <= height + 1 && m.right <= width), "true")
+	await page.locator("[data-remote]").getByRole("button", { name: "Only Netflix" }).click(); check(`${label}: the Netflix key takes a click`, await toast("Only Netflix"), "shown")
+	await page.locator("[data-remote]").getByRole("button", { name: "Only Prime Video" }).click(); check(`${label}: the Prime Video key takes a click`, await toast("Only Prime Video"), "shown")
+	console.log(`     ${label}: TV ${Math.round(m.tv.width)} x ${Math.round(m.tv.height)}, type of 20 canvas px prints at ${(20 * m.k).toFixed(1)} px`)
+}
+for (const [width, height] of [[1920, 1080], [1920, 940], [1536, 730], [1440, 800], [1366, 650], [1280, 720], [2560, 1300]]) await remoteFits(`${width}x${height}`, width, height, "design=cinema")
+await remoteFits("marquee at 1536x730", 1536, 730, "design=marquee")
+await remoteFits("glow at 1536x730", 1536, 730, "design=glow")
+// Under the TV there is room for the Remote down to its streaming keys only; its end runs off the window.
+await remoteFits("below at 1920x1080", 1920, 1080, "design=cinema&remote=below", false)
+await page.setViewportSize({ width: 1920, height: 1080 }); await open("design=cinema&at=home.discover.discover-cozy")
+
 // The pointer shapes.
 await keys("c"); await page.waitForSelector("button[data-pointer=cross]", { timeout: 8000 }); check("the key C chooses the next pointer shape", await pointer("shape"), "cross")
 await page.locator("button[data-pointer]").click(); await page.waitForSelector("button[data-pointer=dot]", { timeout: 8000 }); check("the pointer button chooses the next one", await pointer("shape"), "dot")
 await page.setViewportSize({ width: 390, height: 844 }); await open("design=cinema")
 check("at phone width there is no pointer", String(await page.locator("[data-tv-pointer]").count()), "0")
+// The phone: the Remote is taller than what is left under the TV, so its lower keys are reached by scrolling.
+const netflix = page.locator("[data-remote]").getByRole("button", { name: "Only Netflix" })
+check("phone: at rest the streaming row is below the window", String((await netflix.boundingBox()).y > 844 - 64), "true")
+await netflix.scrollIntoViewIfNeeded(); await page.waitForTimeout(400)
+check("phone: a scroll brings the streaming row into the window", String((await netflix.boundingBox()).y + (await netflix.boundingBox()).height <= 844), "true")
+await netflix.click(); check("phone: the Netflix key takes a tap", await toast("Only Netflix"), "shown")
+await page.locator("[data-remote]").getByRole("button", { name: "Only Prime Video" }).click(); check("phone: the Prime Video key takes a tap", await toast("Only Prime Video"), "shown")
 await page.locator("button[data-design=glow]").click(); await marked("glow")
 check("at phone width the buttons are there and choose", await current(), "3 Glow")
 console.log(fails ? `${fails} FAILED, ${passed} ok` : `all ${passed} ok`)

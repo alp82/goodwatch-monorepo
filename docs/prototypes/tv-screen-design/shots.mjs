@@ -1,11 +1,11 @@
 // Everything pictured in this folder: every TV screen of the design prototype per direction (1920x1080 in the room,
 // and 390 px), the side-by-side comparisons of the TV alone, a clip (mp4) and a strip of the focus moving, a clip and a
 // strip of the expand run, and the size numbers (sizes.json).
-//   PLAYWRIGHT=/scratch/node_modules/playwright-core/index.mjs BASE=http://localhost:3147 node shots.mjs [screens|compare|bar|focus|expand|pointing] [cinema]
+//   PLAYWRIGHT=/scratch/node_modules/playwright-core/index.mjs BASE=http://localhost:3147 node shots.mjs [screens|viewports|compare|bar|focus|expand|pointing] [cinema]
 // The repo has no browser driver: install playwright-core outside it. Needs the dev server (see README.md) and ffmpeg.
 // A page is loaded once per direction and person; window.__tvDesign then jumps from screen to screen.
 import { execFileSync } from "node:child_process"
-import { mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -137,8 +137,46 @@ if (!only || only === "screens") {
 		await ctx.close()
 		sizes[design] = { tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, smallestText: worst.text, smallestTarget: worst.target }
 	}
-	if (DESIGNS.length === 3) writeFileSync(join(here, "sizes.json"), `${JSON.stringify(sizes, null, "\t")}\n`)
+	if (DESIGNS.length === 3) {
+		const before = JSON.parse(readFileSync(join(here, "sizes.json"), "utf8"))
+		writeFileSync(join(here, "sizes.json"), `${JSON.stringify({ ...sizes, viewports: before.viewports }, null, "\t")}\n`)
+	}
 	console.log(JSON.stringify(sizes, null, 1))
+}
+
+if (!only || only === "viewports") {
+	// One window size after the other: Cinema's home in the room for the contact sheet, and the TV's size and its
+	// smallest type there (measured on My shows, which has Cinema's smallest type).
+	const dir = join(here, "viewports")
+	const tmp = join(dir, "tmp")
+	mkdirSync(tmp, { recursive: true })
+	const sizes = JSON.parse(readFileSync(join(here, "sizes.json"), "utf8"))
+	sizes.viewports = {}
+	const VIEWPORTS = [[1920, 1080], [1920, 940], [1536, 730], [1440, 800], [1366, 650], [1280, 720], [2560, 1300], [390, 844]]
+	for (const [width, height] of VIEWPORTS) {
+		const name = `${width}x${height}`
+		const { ctx, page } = await open({ width, height }, "design=cinema&as=member&chrome=off")
+		await go(page, ["", "shows"])
+		const m = await measure(page)
+		const tv = await tvBox(page)
+		const remote = await page.evaluate(() => {
+			const body = document.querySelector("[data-remote] .remote-body").getBoundingClientRect()
+			const row = document.querySelector("[data-remote] button[aria-label='Only Netflix']").getBoundingClientRect()
+			return { width: Math.round(body.width), endsAt: Math.round(body.bottom), streamingRowEndsAt: Math.round(row.bottom), place: document.querySelector("[data-remote-place]").dataset.remotePlace }
+		})
+		sizes.viewports[name] = { tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, smallestText: m.text.px, remote }
+		await ctx.close()
+		const home = await open({ width, height }, "design=cinema&chrome=off")
+		await go(home.page, ["", "home"])
+		await home.page.screenshot({ path: join(tmp, `${name}.png`) })
+		await home.ctx.close()
+		console.log("viewport", name, JSON.stringify(sizes.viewports[name]))
+	}
+	writeFileSync(join(here, "sizes.json"), `${JSON.stringify(sizes, null, "\t")}\n`)
+	// The sheet: every window at the same scale (a third), so their sizes can be compared too.
+	const cell = (i, [w, h]) => `[${i}]scale=${Math.round(w / 3)}:${Math.round(h / 3)},pad=860:440:0:0:color=0x15171c,drawtext=text='${w} x ${h}':fontcolor=white:fontsize=22:x=12:y=h-34:box=1:boxcolor=black@0.7:boxborderw=6[c${i}]`
+	ffmpeg(...VIEWPORTS.flatMap(([w, h]) => ["-i", join(tmp, `${w}x${h}.png`)]), "-filter_complex", `${VIEWPORTS.map((v, i) => cell(i, v)).join(";")};${VIEWPORTS.map((_, i) => `[c${i}]`).join("")}xstack=inputs=8:layout=0_0|860_0|1720_0|2580_0|0_440|860_440|1720_440|2580_440`, "-q:v", "3", join(dir, "contact-sheet.jpg"))
+	rmSync(tmp, { recursive: true, force: true })
 }
 
 if (!only || only === "compare") {

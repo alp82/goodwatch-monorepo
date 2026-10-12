@@ -89,6 +89,8 @@ export type Pointing = {
 	phone: boolean
 	/** False while the picture is growing into a page or the set is off: no pointer, the Remote at rest. */
 	live: boolean
+	/** How far the Remote may turn about the wrist, in degrees: 42 reaches the corners, less keeps it off the TV beside it. */
+	swing: number
 }
 
 /**
@@ -129,17 +131,21 @@ export function usePointing(scene: RefObject<HTMLElement | null>, remote: RefObj
 			const pivot = { x: box.left + box.width / 2, y: g.remote.top + arm }
 			const dx = cursor.x - pivot.x
 			const up = Math.max(40, pivot.y - cursor.y)
-			const side = clamp(dx / (g.width / 2), -1, 1)
+			// -1 at the window's far edge on the left of the wrist, 1 at the far edge on its right.
+			const side = clamp(dx / Math.max(pivot.x, g.width - pivot.x), -1, 1)
 			const reach = clamp(Math.hypot(dx, up) / (g.height * 1.05), 0, 1)
 			// A phone's Remote, and a tap, only hint at the direction.
 			const part = g.phone ? 0.15 : cursor.tap ? 0.4 : 1
-			// 42 degrees reaches the top corners of a 16:9 window; further, the Remote would lie on its side.
-			const rz = clamp((Math.atan2(dx, up) * 180) / Math.PI, -42, 42) * part
+			// With room to swing, the Remote turns by the angle to the cursor (42 degrees reaches the top corners of a
+			// 16:9 window; further, it would lie on its side). Held to a nod, it turns by a part of that angle and
+			// rolls more instead.
+			const nod = g.swing < 30
+			const rz = clamp(((Math.atan2(dx, up) * 180) / Math.PI) * (nod ? 0.3 : 1), -g.swing, g.swing) * part
 			return {
 				rz,
 				rx: REMOTE_TILT_DEG + clamp((reach - 0.75) * 40, -14, 14) * part,
-				ry: side * 16 * part,
-				tx: side * 44 * part,
+				ry: side * (nod ? 26 : 16) * part,
+				tx: side * (nod ? 10 : 44) * part,
 				// A turned Remote sinks; the hand lifts it by about as much, so its keys stay in the window.
 				ty: (0.75 - reach) * 22 * part - (1 - Math.cos((rz * Math.PI) / 180)) * arm * 0.9,
 			}

@@ -1,44 +1,126 @@
 {
 	"cinema": {
-		"tv": "1204 x 650",
+		"tv": "1351 x 729",
 		"smallestText": {
-			"px": 21.1,
-			"words": "Start",
+			"px": 23.6,
+			"words": "S2 E4 · 50 min",
 			"screen": "19-my-shows"
 		},
 		"smallestTarget": {
-			"w": 151,
-			"h": 64,
-			"item": "bar-search",
-			"screen": "01-home"
-		}
-	},
-	"marquee": {
-		"tv": "1204 x 650",
-		"smallestText": {
-			"px": 20.1,
-			"words": "92 score",
-			"screen": "04-discover-results"
-		},
-		"smallestTarget": {
-			"w": 160,
+			"w": 169,
 			"h": 72,
 			"item": "bar-search",
 			"screen": "01-home"
 		}
 	},
-	"glow": {
-		"tv": "1204 x 650",
+	"marquee": {
+		"tv": "1351 x 729",
 		"smallestText": {
-			"px": 21.1,
-			"words": "2001 · Movie · 2h 5m",
+			"px": 22.5,
+			"words": "87 score",
 			"screen": "04-discover-results"
 		},
 		"smallestTarget": {
-			"w": 151,
-			"h": 64,
+			"w": 179,
+			"h": 81,
 			"item": "bar-search",
 			"screen": "01-home"
+		}
+	},
+	"glow": {
+		"tv": "1351 x 729",
+		"smallestText": {
+			"px": 23.6,
+			"words": "2016 · Show · 4 seasons",
+			"screen": "04-discover-results"
+		},
+		"smallestTarget": {
+			"w": 169,
+			"h": 72,
+			"item": "bar-search",
+			"screen": "01-home"
+		}
+	},
+	"viewports": {
+		"1920x1080": {
+			"tv": "1351 x 729",
+			"smallestText": 23.6,
+			"remote": {
+				"width": 294,
+				"endsAt": 1074,
+				"streamingRowEndsAt": 758,
+				"place": "beside"
+			}
+		},
+		"1920x940": {
+			"tv": "1351 x 729",
+			"smallestText": 23.6,
+			"remote": {
+				"width": 294,
+				"endsAt": 934,
+				"streamingRowEndsAt": 618,
+				"place": "beside"
+			}
+		},
+		"1536x730": {
+			"tv": "1080 x 583",
+			"smallestText": 18.9,
+			"remote": {
+				"width": 231,
+				"endsAt": 723,
+				"streamingRowEndsAt": 474,
+				"place": "beside"
+			}
+		},
+		"1440x800": {
+			"tv": "1080 x 583",
+			"smallestText": 18.9,
+			"remote": {
+				"width": 174,
+				"endsAt": 793,
+				"streamingRowEndsAt": 606,
+				"place": "beside"
+			}
+		},
+		"1366x650": {
+			"tv": "998 x 539",
+			"smallestText": 17.5,
+			"remote": {
+				"width": 160,
+				"endsAt": 643,
+				"streamingRowEndsAt": 471,
+				"place": "beside"
+			}
+		},
+		"1280x720": {
+			"tv": "949 x 513",
+			"smallestText": 16.6,
+			"remote": {
+				"width": 160,
+				"endsAt": 713,
+				"streamingRowEndsAt": 541,
+				"place": "beside"
+			}
+		},
+		"2560x1300": {
+			"tv": "1874 x 1012",
+			"smallestText": 32.8,
+			"remote": {
+				"width": 361,
+				"endsAt": 1297,
+				"streamingRowEndsAt": 909,
+				"place": "beside"
+			}
+		},
+		"390x844": {
+			"tv": "375 x 462",
+			"smallestText": 14.4,
+			"remote": {
+				"width": 225,
+				"endsAt": 1161,
+				"streamingRowEndsAt": 913,
+				"place": "phone"
+			}
 		}
 	}
 }
