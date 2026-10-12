@@ -1,0 +1,69 @@
+# Verdict: BLOCK (source-only preparation)
+
+M1–M6 are closed in the code paths the original report named, but two narrow evidence-retention and labelling defects remain in the JS. Both fail closed; neither lets a bad run reach `consumerPass`.
+
+**Scope.** Tools were disabled, so this is a reading of the inline bytes only.
+- I did not recompute the manifest SHA256 or any per-file hash or byte count.
+- I did not rerun tests; the 68 passes are the author's worktree result.
+- Line numbers are derived from the `source.diff` hunk offsets.
+- No host, network or trial activity took place, and no nine-pair benchmark or seven-day production acceptance occurred or is claimed.
+
+## Mandatory findings
+
+### N1. Refusals between a successful preflight and the admission row drop the validated enrolment and exit facts
+- **Where:** `source/consumer_cpu0.mjs:219-221`.
+- **Trigger:** run with `--raise-own-nofile` while the preflight enrols `raiseOwnNofile:false` (the new M3 gate).
+- **Same window:** `consumerBirth()` throwing at `:219`, or `validateAdmissionFrameV2` refusing at `:221`.
+- **Effect:** the preflight has already written its handoff and enrolment (`handoffWrites:1`, `enrolmentWrites:1`) and exited cleanly. The only public output is `{kind:'failed',variant,reason,failureKind}`: no `preflightExit`, no receipt or enrolment hash, no successor handoff hash.
+- **Fix:** wrap `:219-221` in a try/catch that attaches the same `publicEvidence` shape `runEntryPreflightV2:190` uses: `variant`, `preflightExit`, `preflightReceipt:receipt`, `handoffAccepted:false`.
+- **Same class, recommended:** `:226` (`cpu0_client_retained`) and `:228` (`pairedEvidence` refusal) discard a completed phase whose handoff has already advanced. Attaching `previousHandoffSha256` and `controllerExit` there would close it. Leave the identical v1 behaviour alone.
+
+### N2. Audit mode is selected after the output is parsed, so some refusals are unlabelled and the v1 refusal shape changed
+- **Where:** `source/audit_cpu0.mjs:96-98`, `:102`.
+- **Trigger A (v2):** a valid v7 manifest with an empty or truncated output file. `JSON.parse` throws at `:97` before `selectedAuditMode` is set at `:98`, so the refusal has no `schema` or `variant`. This partly reopens M6.
+- **Trigger B (legacy):** the same with a valid v6 manifest. The old source printed `schema:'cpu0-consumer-audit.v1'` and `variant`; this one prints neither. That is a change to legacy v1 output.
+- **Fix:** read the manifest, apply the size bound and set `selectedAuditMode` before reading or parsing the output and context files. Unknown or unparseable manifests stay unlabelled, as the existing test intends.
+
+## Status of M1–M6
+
+| Item | Result |
+|---|---|
+| M1 null frame | Closed. Shape guard precedes the push at `consumer_cpu0.mjs:125`; the close handler and failure projection can no longer see a non-object. |
+| M2 stale samples | Closed. Lower bounds at `compare-contract-cpu0.mjs:397` and `:399`, plus the monotonic order between working-set and before-query samples. |
+| M3 nofile flag | Closed for detection at `consumer_cpu0.mjs:220`, before the admission row is emitted. It exposes N1. |
+| M4 controller birth | Closed. Birth is read from the child's own `/proc` on spawn (`:114`) and bound to both inspector endpoints and the controller row of the entry, cache, ready and finished ledgers (`compare-contract-cpu0.mjs:385`, `:392`, `:436`). The audit requires the closed four-key exit and recomputes the bindings. |
+| M5 contradictory samples | Closed. All four kinds go through `fixedCapacityRefusalEvidenceV2` at `:263`. |
+| M6 audit label | Mislabelling is closed; unlabelled refusals remain (N2). |
+
+- **Earlier tightenings:** the per-class and pre-query full-T lock check (`:400`, `:404-406`, `:437`) and the up-front index check (`consumer_cpu0.mjs:207`, `:222`) are adopted correctly.
+- **Backend amendments:** `enrolmentWrites` 0 versus 1, the not-issued cleanup flag, the pressure swap cause, `admissionPassedSampleBeforeRefence` and `sourceLimitFailureEvidence` match the stated interface. They reach only the failure projection, never an admission path.
+- **Legacy:** v1 `main`, `controlledBatch`, `exit()` and `auditConsumer` are untouched in the diff. The only legacy-visible change is N2.
+
+## Non-blocking tightenings
+
+- **Late birth refusal.** An unreadable controller birth is refused only at `query-ready`, after the cold stop and pressure. Refuse on spawn instead.
+- **Distinct births.** The audit accepts the same `{pid,startTicks}` for all 18 phases. Require 18 distinct births, none equal to the enrolled preflight identity.
+- **Monotonic order across ledgers.** Nothing orders the entry ledger's monotonic time against the cache baseline, or the cache baseline against the working-set sample. The distinct-time fixture itself has entry at 25 and cache baseline at 10 and passes.
+- **Failure-path binding.** `overheadFailureEvidence` is not checked against `controllerBirth`; the birth is only carried alongside it.
+- **Node provenance in the audit.** The audit CLI takes `nodeProvenanceSha256` from the context file rather than hashing the staged `node-provenance.json`.
+
+## Test coverage versus protocol assumptions
+
+- **Composed audit.** The nine-pair fixture reuses one controller birth (303/99/301) and one instant for every phase, so chain-wide ordering and birth uniqueness are untested.
+- **Pipe tests.** They now cover candidate, wrong birth, null before and after ready, and backend failure, but with a Node stand-in, a fake `queryBatch` and only the `control-native-title` tag.
+- **`mainV2`.** It is never run end to end; only the two extracted helpers are tested, which is why N1 was not caught.
+- **Registration digest.** `consumerRegistrationSha256` is still accepted from the first entry ledger and then pinned.
+
+## Unresolved backend and external integration (not JS defects)
+
+- **Backend mode selection.** The v2 consumer still launches the preflight and controller with v1-identical argv; ABI2 selection on the backend must be confirmed at combined closure.
+- **Entry baseline inspector.** The JS now requires the entry-ledger baseline inspector to be this phase's controller; the backend must emit it that way.
+- **Lock arithmetic.** `lockedBytes` must equal the sum of `dataPages × pageBytes` over the four classes, and each class must have at least one page.
+- **Opaque values.** The `consumerArgvHash` recipe, the registration digest definition and `sharedControlIdentity` are shape-checked only.
+- **Byte-for-byte recipes.** The handoff file, exe hash and cgroup hash encodings must match Python exactly.
+- **Stopped headroom.** The schema has no timestamp or source binding.
+- **Still outstanding.** Backend source14 freeze, the external full packet, the final reason-enum comparison and independent review of the combined source.
+
+## Runtime and host readiness (retained separately)
+
+`hostExecutionReady:false`, `runtimePass:false` and `productionAcceptance:false` stand. An ACCEPT after N1 and N2 are fixed would cover source-only preparation of these four files and nothing more.

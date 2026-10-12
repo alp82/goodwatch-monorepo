@@ -1,0 +1,106 @@
+# Verdict: BLOCK (source-only preparation)
+
+Six narrow, mandatory findings in the four JS files. Everything fails closed, so none of them lets a bad run pass as `consumerPass`, but they break evidence retention and binding requirements you listed.
+
+**Scope of this review.** Tools were disabled, so I reviewed only the inline bytes.
+- I did not recompute the manifest SHA256 or any per-file SHA256 or byte count; hash binding of this packet is unverified by me.
+- I did not rerun tests; the recorded 38 passes are the author's worktree result.
+- `source.diff` is consistent with the four `source/*` files by reading, and the line numbers below are derived from its hunk offsets.
+- No host, network or trial activity took place. No nine-pair benchmark or seven-day production acceptance occurred or is claimed.
+
+## Mandatory findings
+
+### M1. A `null` controller frame crashes the consumer or drops failure evidence
+- **Where:** `source/consumer_cpu0.mjs:124` (push before shape check), `:120` (close handler), `:143` (failure projection); `source/compare-contract-cpu0.mjs:246`.
+- **Trigger A:** the controller writes the line `null` before `query-ready`.
+  - `frames.push(null)` runs, then `frame.stage` throws and the reader sends SIGTERM.
+  - On child close, `frames.some(frame=>frame.stage==='query-ready')` throws inside the `'close'` listener.
+  - That is an uncaught exception: the process dies with no `kind:'failed'` row and no exit or cleanup facts.
+- **Trigger B:** `null` arrives after `query-ready`.
+  - The catch block throws a `TypeError` at `frames.some(frame=>frame.stage==='released'…)`, or in `failureEvidenceV2` at `frames.map(({reason,...frame})=>frame)`.
+  - `publicEvidence` is never attached, so the top level emits a generic `cpu0_comparison_refused` with `failureKind:'preflight'`, losing `controllerExitCode`, `exitObserved`, `cleanupObserved` and `previousHandoffSha256`.
+- **Fix:** in `controlledBatchV2`, before the push, add `if(!frame||typeof frame!=='object'||Array.isArray(frame))throw Error('cpu0_control_frame_failed');`. `runEntryPreflightV2:189` already guards this way.
+- **Legacy:** v1 has the same defect at `:83/:87/:106`. Leave it and record it as known, since v1 must stay unchanged.
+
+### M2. Stale before-query and working-set samples are accepted
+- **Where:** `source/compare-contract-cpu0.mjs:398`, `:400`, `:97`.
+- **Trigger:** set `frames[2].queryMemoryBefore.sampledAt`, or `frames[0].workingSetAdmission.sampledAt`, to any earlier time, for example a previous phase or before the cold birth and the 4.4 GB archive pressure. Both have only upper bounds, so `readinessEvidenceV2` and `phaseEvidenceV2` pass.
+- **Effect:** the "actual" `A - T >= 2 GiB` and before-query `A >= 1.5 GiB` values are not tied to this phase's source birth or pressure window.
+- **Fix:**
+  - Gate `Date.parse(selected.sampledAt) >= Date.parse(current.target.state.startedAt)`.
+  - Gate `Date.parse(ready.queryMemoryBefore.sampledAt) >= Date.parse(frames[1].at)`.
+  - Gate `queryMemoryBefore.sampleMonotonicSeconds >= workingSetAdmission.sampleMonotonicSeconds`.
+  - Confirm these bounds against the backend's emission order at combined closure.
+
+### M3. Enrolled `raiseOwnNofile` is never compared with the actual CLI flag
+- **Where:** `source/consumer_cpu0.mjs:214-216`; `source/compare-contract-cpu0.mjs:217`.
+- **Trigger:** run with `--raise-own-nofile` while the preflight emits `consumerEnrolment.raiseOwnNofile:false`, or the reverse. Admission passes and all 18 controllers are launched with a flag that contradicts the enrolled record.
+- **Fix:** in `mainV2`, gate `receipt.consumerEnrolment.raiseOwnNofile===args.raiseOwnNofile` before `emit(admissionFrame)`.
+- **Related:** `consumerArgvHash` is only shape-checked. Recomputing it needs the backend recipe, so that part is an integration item.
+
+### M4. The C6 controller and inspector identity is not bound to the actual spawned controller
+- **Where:** `source/compare-contract-cpu0.mjs:193`, `:389-393`; `source/consumer_cpu0.mjs:113`.
+- **Trigger:** the composed fixture uses the same controller identity (pid 303, startTicks 99) in all 18 phases, and the pipe test's real child has a different pid. Both pass.
+- **Detail:** the validator checks the controller's `parentPid` against the consumer and `ownerPid` against the ledger's own controller row, but never `child.pid`. The entry ledger's inspector is also not tied to the per-phase ledger's inspector.
+- **Fix:**
+  - In `controlledBatchV2`, capture the birth on `'spawn'` exactly as `runEntryPreflightV2:170` does.
+  - Require `outside.controller.identity.{pid,startTicks}` to equal that birth for the entry, cache, ready and finished ledgers.
+  - In `readinessEvidenceV2`, require the entry inspector owner to equal the cache baseline inspector owner.
+- **Recommended, not mandatory:** record the birth in the row so the audit can check it. This needs the closed `exit()` key set at `audit_cpu0.mjs:24` widened or a new field.
+
+### M5. The failure projection keeps measured samples that contradict the stated reason
+- **Where:** `source/compare-contract-cpu0.mjs:261-265`.
+- **Trigger:** a failed frame with `reason:'host_emergency_floor'` and an `admissionFailureEvidence` sample at `hostMemAvailableBytes: 4 GiB + 4096`, which is passing. It lands in `measuredFailures` with `evidenceRejected:false`.
+- **Detail:** only the pressure kind goes through `fixedCapacityRefusalEvidenceV2`. Admission, query and working-set kinds get shape checks only. The "low same-read value" test exercises the strict function directly, not this composed path.
+- **Fix:** route all four kinds through `fixedCapacityRefusalEvidenceV2({reason:frame.reason,[kind]:value})`. If retaining a contradictory sample is intended, record it with `reason:null` and set `evidenceRejected`.
+
+### M6. A v2 audit refusal is labelled as v1
+- **Where:** `source/audit_cpu0.mjs:99`.
+- **Trigger:** any refusal of a v7 packet prints `schema:'cpu0-consumer-audit.v1', variant:'cpu0-owned-lifecycle.v1'`.
+- **Fix:** carry the selected mode out of `main` and emit `cpu0-consumer-audit.v2` with `FIXED_CAPACITY_VARIANT` for v7. If the manifest is unparseable, emit neither variant.
+- **Same class:** `consumer_cpu0.mjs:246` emits `kind:'failed'` with no `variant` for `mainV2` errors that lack `publicEvidence`, such as `cpu0_fixed_nine_batches_required`.
+
+## Non-blocking tightenings
+
+- **Per-class lock check** (`compare-contract-cpu0.mjs:435`): only the total of locked pages is compared with T. Add `lockedDataPages===classesMeasured[kind].dataPages` per class.
+- **Full-lock check timing:** `lockedBytes===selected` is enforced only after the query. The pre-query readiness check is the legacy `lockedBytes>0`. Consider moving it into `readinessEvidenceV2`.
+- **Failure-path source identity** (`compare-contract-cpu0.mjs:255`): the overhead failure proof is validated against its own `baseline.sourceIdentity`. This is acceptable for a refusal, but say so in a comment.
+- **Late packet check** (`consumer_cpu0.mjs:220`): `indexBuildId` is checked per packet inside the loop, so a bad ninth packet is refused only after eight pairs have run. Validate all nine up front.
+- **Audit mode selection** (`audit_cpu0.mjs:95`): the manifest is parsed to pick the mode before the size and hash checks. There is no reinterpretation, because each verifier pins its own schema, but a size bound should come first.
+
+## Test coverage versus protocol assumptions
+
+- **Ordering gates are barely exercised.** The fixtures put every frame and sample at one instant, so every `<=` and `>=` gate is tested only at equality, and only one ordering mutation exists (a late finished-overhead sample). Inverted comparisons at lines 393, 398 and 400 would still pass.
+- **The controller pipe is thinly covered.** It is exercised once, baseline only, with a Node stand-in and a fake `queryBatch`. There is no candidate pipe run and no pipe-level failure-projection test, which is why M1 was not caught.
+- **The registration digest is trust-on-first-use.** `consumerRegistrationSha256` is accepted from the first entry ledger and then pinned. Nothing in JS derives it.
+- **Two tests depend on the mutable backend.** The Python `public_measure`/`public_state` test and the full-stage closure test read backend files from the author's worktree. They are not deployment proof.
+
+## Behaviours confirmed by reading
+
+| Area | Result |
+|---|---|
+| CLI selection | The v1 `main` body is unchanged; v2 needs the exact selector, fixed digest order and optional trailing nofile flag |
+| Memory guards | Running `> 4 GiB`, stopped `> 5 GiB`, working set `A - T >= 2 GiB`, query `>= 1.5 GiB`; equality rejected for the strict guards; v2 values never reach the v1 validator |
+| Handoff chain | Adoption with null predecessor, then exact predecessor and same intent at every step, reconstructed by the audit from initial to final |
+| Preflight | Runs before stdin is read; child birth, close and same-birth disappearance are observed independently of the receipt |
+| Enrolment | Exactly 20 keys; canonical hash with one newline; ns fields as decimal strings; node provenance hashed from raw bytes; consumer birth equals enrolled identity |
+| C6 arithmetic | Controller debited fully, no shrink credit per class, page tables inside kernel, helper not debited, 512 MiB inclusive, unsampled peak null |
+| Phase intervals | Entry and per-phase ledgers are bound to different source births; cache, ready and finished share one baseline and registration digest |
+| Closure | Stage v7 and freeze v2 are closed schemas; core4 hash and helper policy hash pinned; the v1 verifier rejects v7 and the reverse |
+| Budgets | 1200 s, 30 s, 15 s, 5 s, no retries; all seven stages, released and unpin, exit 0 and socket closed required |
+| Pairs | Native baseline must be red; nine pairs, zero exclusions; candidate server and wall `< 1500 ms`; parity recomputed by the audit |
+| Audit result | Always `experimentPass:false`, `productionAcceptance:false`, `externalCleanupRequired:true` |
+| Numerics | Safe-integer gates precede every recomputed canonical hash; `Date.parse` ordering is at millisecond granularity |
+
+## Unresolved backend and external integration (not JS defects)
+
+- **Backend mode selection.** The v2 consumer launches `cpu0_preflight.py` and `controller_cpu0.py` with argv identical to v1 (`--execute-reviewed`). Selection of ABI2 on the backend must therefore be explicit elsewhere and needs confirming in the combined closure.
+- **Opaque interface values.** The JS only shape-checks these: the `consumerArgvHash` recipe, the `consumerRegistrationSha256` definition, `sharedControlIdentity`, and the binding of `nodeIdentity` ns fields to `node-provenance.json`.
+- **Hash recipes.** The exe hash is `sha256(JSON.stringify([dev,ino,size]))` with no spaces, and the group hash is over raw `/proc/<pid>/cgroup` bytes. Python must match byte for byte.
+- **Stopped headroom schema.** `clone-stopped-headroom.cpu0.v2` has no timestamp or source binding, so the JS cannot place that sample in this phase's stopped window.
+- **Fixed-capacity constants in policy.** `verifyCpu0FreezeV2` binds the control policy by hash and schema only; the 2 GiB, 1.5 GiB and 512 MiB values are hard-coded in JS and not cross-checked against policy bytes.
+- **Still outstanding.** Backend source14 freeze, the external full packet, the final 273-reason enum comparison against a frozen backend, and independent review of the combined source.
+
+## Runtime and host readiness (retained separately)
+
+`hostExecutionReady:false`, `runtimePass:false` and `productionAcceptance:false` stand. An ACCEPT after M1–M6 are fixed would cover source-only preparation of these four files and nothing more.

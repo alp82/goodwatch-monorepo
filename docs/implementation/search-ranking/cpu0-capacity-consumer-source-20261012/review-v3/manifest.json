@@ -1,0 +1,60 @@
+{
+  "backendSourceFreezeCreated": false,
+  "baseCommit": "56e13c8a531a4d03a7c328eb38f4c67b6b1cb8b9",
+  "contextFiles": {
+    "compare-contract.mjs": {
+      "bytes": 10201,
+      "sha256": "41c0e1fdf9f28a7d26032b8d95540b39bd441d6aafe5236bb89c82cfc4ef5b48"
+    },
+    "cpu0_consumer_fixture.mjs": {
+      "bytes": 5163,
+      "sha256": "ca5adcc6e455f24768112394a6930b5659bbc8df8e046d89992742a51bf1cfbd"
+    },
+    "cpu0_contract_fixture.mjs": {
+      "bytes": 4207,
+      "sha256": "2760535d7a063717f8f531624153a0f5cdd9e4a081e79736ac2b18c9a3e44cfb"
+    },
+    "parity.mjs": {
+      "bytes": 1136,
+      "sha256": "738c1e68af814a952ae7b54b101cb3921256142205b0a192b9869181580fc86e"
+    },
+    "test_audit_cpu0.mjs": {
+      "bytes": 4368,
+      "sha256": "4b241c48a2f3532c88d4982f464b1fec181a4bb5878f6d99154266539b21569e"
+    },
+    "test_consumer_cpu0.mjs": {
+      "bytes": 9463,
+      "sha256": "1e5e853ab74c89e1349262efba4cb3c9aa38147c294ecc7e610e7d505775ae6a"
+    },
+    "transport_cpu0.mjs": {
+      "bytes": 3028,
+      "sha256": "4e0d19d3f0cd1c1e9f837a5c1558e93081084ddd302d5f727a004393098ba5b5"
+    }
+  },
+  "files": {
+    "audit_cpu0.mjs": {
+      "bytes": 13217,
+      "sha256": "dcd9c48b41653422af9bdcc32c0144d8fae9d8a5882af7b2db6e5bd8fac54fc1"
+    },
+    "compare-contract-cpu0.mjs": {
+      "bytes": 92638,
+      "sha256": "d818c289025a517fd2cf816b355aeb4ff24c4d741b11dc09565647adc8192794"
+    },
+    "consumer_cpu0.mjs": {
+      "bytes": 33986,
+      "sha256": "a4a5a297a4ec0e9f1bf8a4ff65fb06b0e46754b98c973c49d707d72a4049b001"
+    },
+    "test_capacity_cpu0.mjs": {
+      "bytes": 62762,
+      "sha256": "d15607e6934924200d156ec16414211203bcc8e555b52b441c503704f215b4d5"
+    }
+  },
+  "hostExecutionReady": false,
+  "previousReportSha256": "dcca96aee53b7e0cf09c5680762244060d08a42b2af4dc4eff3ea7c6ecb1b014",
+  "previousReviewVerdict": "BLOCK",
+  "previousSourceCommit": "105db1f5b16e765e82070e26feee15ff0fad5f10",
+  "productionAcceptance": false,
+  "schema": "cpu0-fixed-capacity-consumer-source-review.v3",
+  "sourceCommit": "1c758daaf5cd9b7524bd7ed06d165409570fde92",
+  "sourceOnly": true
+}

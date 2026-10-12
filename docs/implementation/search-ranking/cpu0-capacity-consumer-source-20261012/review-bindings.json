@@ -1,0 +1,277 @@
+{
+  "files": {
+    "README.md": {
+      "bytes": 4040,
+      "sha256": "f2763bf4f718b7d282ed1a8d558ff946bc06a448b835e7a3b34669daa66ca94f"
+    },
+    "review-v1/context/compare-contract.mjs": {
+      "bytes": 10201,
+      "sha256": "41c0e1fdf9f28a7d26032b8d95540b39bd441d6aafe5236bb89c82cfc4ef5b48"
+    },
+    "review-v1/context/cpu0_consumer_fixture.mjs": {
+      "bytes": 5163,
+      "sha256": "ca5adcc6e455f24768112394a6930b5659bbc8df8e046d89992742a51bf1cfbd"
+    },
+    "review-v1/context/cpu0_contract_fixture.mjs": {
+      "bytes": 4207,
+      "sha256": "2760535d7a063717f8f531624153a0f5cdd9e4a081e79736ac2b18c9a3e44cfb"
+    },
+    "review-v1/context/parity.mjs": {
+      "bytes": 1136,
+      "sha256": "738c1e68af814a952ae7b54b101cb3921256142205b0a192b9869181580fc86e"
+    },
+    "review-v1/context/test_audit_cpu0.mjs": {
+      "bytes": 4368,
+      "sha256": "4b241c48a2f3532c88d4982f464b1fec181a4bb5878f6d99154266539b21569e"
+    },
+    "review-v1/context/test_consumer_cpu0.mjs": {
+      "bytes": 9463,
+      "sha256": "1e5e853ab74c89e1349262efba4cb3c9aa38147c294ecc7e610e7d505775ae6a"
+    },
+    "review-v1/context/transport_cpu0.mjs": {
+      "bytes": 3028,
+      "sha256": "4e0d19d3f0cd1c1e9f837a5c1558e93081084ddd302d5f727a004393098ba5b5"
+    },
+    "review-v1/manifest.json": {
+      "bytes": 1905,
+      "sha256": "b3bc0a83bb915c698c192b9aace72ec705a7b4fcde9e9ec51cc6d5318552ef35"
+    },
+    "review-v1/opus-invocation.json": {
+      "bytes": 842,
+      "sha256": "8206af9142e2dc48a89641a436a00993bbc806dc22e2cf8be5e78a540e7c5f76"
+    },
+    "review-v1/opus-prompt.txt": {
+      "bytes": 5485,
+      "sha256": "6323d8c92c77b98137545598574da2e5044882cc075b996ef1cc6bf4e93d4e76"
+    },
+    "review-v1/opus-provenance.json": {
+      "bytes": 1885,
+      "sha256": "b0826c65f8515a285200ac50e84f1a992ed277c6f88fd5e10d73227d698fa47c"
+    },
+    "review-v1/opus-report.txt": {
+      "bytes": 11737,
+      "sha256": "4c70a04c1fcac783c14a1c72ac2f26b1b19152cb882fff3e8a8d66e980b136cd"
+    },
+    "review-v1/opus-review.json": {
+      "bytes": 13673,
+      "sha256": "7f1a02efdd88fe15ff8b7b20ed639d5ca74c2e19b64765d0648f4ff5c3483484"
+    },
+    "review-v1/source.diff": {
+      "bytes": 135310,
+      "sha256": "595f06874a9e896e89293d8040d88582681dfd13dd7e080dd6f148f8a1fe4a4a"
+    },
+    "review-v1/source/audit_cpu0.mjs": {
+      "bytes": 12627,
+      "sha256": "1e4b697638762639a19401ead62084c91afa9ce4a9bdd2ca0b9939d7b9061b68"
+    },
+    "review-v1/source/compare-contract-cpu0.mjs": {
+      "bytes": 90386,
+      "sha256": "e6c20ec57cabd69fb9247472d28ea5937a21564ac778bd6ab4c251629f5ca814"
+    },
+    "review-v1/source/consumer_cpu0.mjs": {
+      "bytes": 32479,
+      "sha256": "d405753751a47edfabeaabf96de7ff6b0fe244558c4deff65f88c59209eead9e"
+    },
+    "review-v1/source/test_capacity_cpu0.mjs": {
+      "bytes": 48756,
+      "sha256": "f8ea5c8bdaba26a3a334782df678897ef2f74579503aff069aa5c2a2dcf530e0"
+    },
+    "review-v1/successor-red-pipe.txt": {
+      "bytes": 1558,
+      "sha256": "4dd569cd995ba0aef37fcbb7fc462f072f5ec558365d1ab9453da19c71157093"
+    },
+    "review-v1/successor-red-pure.txt": {
+      "bytes": 3167,
+      "sha256": "5e647bdc3f7dfbb8b9ba8956602b6b4e0e58903e98ec7f0e38f013bb98654cdb"
+    },
+    "review-v1/validation.json": {
+      "bytes": 1450,
+      "sha256": "bf808bfc9c5669419e51cd8dd3e574dbaebd8cc33cc705ac8f4e89b257628443"
+    },
+    "review-v2/context/compare-contract.mjs": {
+      "bytes": 10201,
+      "sha256": "41c0e1fdf9f28a7d26032b8d95540b39bd441d6aafe5236bb89c82cfc4ef5b48"
+    },
+    "review-v2/context/cpu0_consumer_fixture.mjs": {
+      "bytes": 5163,
+      "sha256": "ca5adcc6e455f24768112394a6930b5659bbc8df8e046d89992742a51bf1cfbd"
+    },
+    "review-v2/context/cpu0_contract_fixture.mjs": {
+      "bytes": 4207,
+      "sha256": "2760535d7a063717f8f531624153a0f5cdd9e4a081e79736ac2b18c9a3e44cfb"
+    },
+    "review-v2/context/parity.mjs": {
+      "bytes": 1136,
+      "sha256": "738c1e68af814a952ae7b54b101cb3921256142205b0a192b9869181580fc86e"
+    },
+    "review-v2/context/test_audit_cpu0.mjs": {
+      "bytes": 4368,
+      "sha256": "4b241c48a2f3532c88d4982f464b1fec181a4bb5878f6d99154266539b21569e"
+    },
+    "review-v2/context/test_consumer_cpu0.mjs": {
+      "bytes": 9463,
+      "sha256": "1e5e853ab74c89e1349262efba4cb3c9aa38147c294ecc7e610e7d505775ae6a"
+    },
+    "review-v2/context/transport_cpu0.mjs": {
+      "bytes": 3028,
+      "sha256": "4e0d19d3f0cd1c1e9f837a5c1558e93081084ddd302d5f727a004393098ba5b5"
+    },
+    "review-v2/final-full-js-tests.txt": {
+      "bytes": 7143,
+      "sha256": "28ab88789e568e9906c8bef9d76160069a2fe214b6f220d148cfffd0b828b0d0"
+    },
+    "review-v2/full-js-tests.txt": {
+      "bytes": 7027,
+      "sha256": "f8363ee4aee103c556175f71124f55486fa92661f43e4c3ea8747745128aaa40"
+    },
+    "review-v2/manifest.json": {
+      "bytes": 2105,
+      "sha256": "b810c5fc03a56b731efab96d74c8d557c56b209e740bbf885a76d1ead968a6e4"
+    },
+    "review-v2/opus-invocation.json": {
+      "bytes": 883,
+      "sha256": "9f4728ee8de8a85503ba46fb1ecbe7bee957fbeef63cfd0708c7122c05b4be9a"
+    },
+    "review-v2/opus-prompt.txt": {
+      "bytes": 6865,
+      "sha256": "3fafbd2e3b8310a33ccc4a4ab87abeb7bdf29c30e85a85c093b03aa062428a3b"
+    },
+    "review-v2/opus-provenance.json": {
+      "bytes": 1837,
+      "sha256": "9ccc759751bc10da814c8fb679ba88e61e5973274f4cf7e28f4d25749a79894d"
+    },
+    "review-v2/opus-report.txt": {
+      "bytes": 7095,
+      "sha256": "dcca96aee53b7e0cf09c5680762244060d08a42b2af4dc4eff3ea7c6ecb1b014"
+    },
+    "review-v2/opus-review.json": {
+      "bytes": 8990,
+      "sha256": "5736f57c583e9afb68b726dee6dcceecdfce82116c16aa3dae6decf15867d60c"
+    },
+    "review-v2/source.diff": {
+      "bytes": 64611,
+      "sha256": "c836c3aba16a742ced8c3d328316ecd7028c5741026e81556a86b8c7a637edf4"
+    },
+    "review-v2/source/audit_cpu0.mjs": {
+      "bytes": 13215,
+      "sha256": "9d48b7aacbbec9ae57e829d91d36e7c3c163da554be00f8f242a181f1f0f63bd"
+    },
+    "review-v2/source/compare-contract-cpu0.mjs": {
+      "bytes": 92638,
+      "sha256": "d818c289025a517fd2cf816b355aeb4ff24c4d741b11dc09565647adc8192794"
+    },
+    "review-v2/source/consumer_cpu0.mjs": {
+      "bytes": 33519,
+      "sha256": "7db2c59e3a4312aa3121c0554521227b915de195e42d5026c6bcb215077e758f"
+    },
+    "review-v2/source/test_capacity_cpu0.mjs": {
+      "bytes": 60647,
+      "sha256": "1bc75e092e0064988aa5a38dd12f61f38d361ad92d00b450c11ccf051e7ae511"
+    },
+    "review-v2/successor-red-pipe.txt": {
+      "bytes": 1558,
+      "sha256": "4dd569cd995ba0aef37fcbb7fc462f072f5ec558365d1ab9453da19c71157093"
+    },
+    "review-v2/successor-red-pure.txt": {
+      "bytes": 3167,
+      "sha256": "5e647bdc3f7dfbb8b9ba8956602b6b4e0e58903e98ec7f0e38f013bb98654cdb"
+    },
+    "review-v2/validation.json": {
+      "bytes": 1550,
+      "sha256": "7280bfb2d445ca81848ef3508c8a0f657dfa5accf71972a21f74937ef97773c5"
+    },
+    "review-v3/backend-enum-integration.json": {
+      "bytes": 365,
+      "sha256": "e029d719b014744c1020e2c3ef086b26ccc39fd3cf4d405e0bd0f74ee2030030"
+    },
+    "review-v3/context/compare-contract.mjs": {
+      "bytes": 10201,
+      "sha256": "41c0e1fdf9f28a7d26032b8d95540b39bd441d6aafe5236bb89c82cfc4ef5b48"
+    },
+    "review-v3/context/cpu0_consumer_fixture.mjs": {
+      "bytes": 5163,
+      "sha256": "ca5adcc6e455f24768112394a6930b5659bbc8df8e046d89992742a51bf1cfbd"
+    },
+    "review-v3/context/cpu0_contract_fixture.mjs": {
+      "bytes": 4207,
+      "sha256": "2760535d7a063717f8f531624153a0f5cdd9e4a081e79736ac2b18c9a3e44cfb"
+    },
+    "review-v3/context/parity.mjs": {
+      "bytes": 1136,
+      "sha256": "738c1e68af814a952ae7b54b101cb3921256142205b0a192b9869181580fc86e"
+    },
+    "review-v3/context/test_audit_cpu0.mjs": {
+      "bytes": 4368,
+      "sha256": "4b241c48a2f3532c88d4982f464b1fec181a4bb5878f6d99154266539b21569e"
+    },
+    "review-v3/context/test_consumer_cpu0.mjs": {
+      "bytes": 9463,
+      "sha256": "1e5e853ab74c89e1349262efba4cb3c9aa38147c294ecc7e610e7d505775ae6a"
+    },
+    "review-v3/context/transport_cpu0.mjs": {
+      "bytes": 3028,
+      "sha256": "4e0d19d3f0cd1c1e9f837a5c1558e93081084ddd302d5f727a004393098ba5b5"
+    },
+    "review-v3/final-full-js-tests.txt": {
+      "bytes": 7271,
+      "sha256": "bcd8b231b9aaa7e3ca62cc14a5b5220e48c427cd7f24be2bd9d21d567c546185"
+    },
+    "review-v3/js-backend-control-reasons.json": {
+      "bytes": 9128,
+      "sha256": "1c9bd7cfad3a88b5994154e542f1701434c145a0b8a313d31907db8c84b53f41"
+    },
+    "review-v3/manifest.json": {
+      "bytes": 2105,
+      "sha256": "cb690049d8d98c367e77438a1fb3b6b30bf850a642ed536ddfbfc3b6b3e29ce5"
+    },
+    "review-v3/opus-invocation.json": {
+      "bytes": 883,
+      "sha256": "484fefc9efdb2227c03a8f963618b9d94130cf3e7cb78593d3f2c97462830a09"
+    },
+    "review-v3/opus-prompt.txt": {
+      "bytes": 7852,
+      "sha256": "ec01c0df750fdeaaddbb620a69c724cde3a164f8774be3e7755277aad5bd6b07"
+    },
+    "review-v3/opus-provenance.json": {
+      "bytes": 1767,
+      "sha256": "e12fbfbcff9aa04bc21293906020933d050013268d2174d2c5d17ad6fefc0d75"
+    },
+    "review-v3/opus-report.txt": {
+      "bytes": 6257,
+      "sha256": "de0a7e45308492d862dacb160c1da95ab825a0ab9eca301fa6bb3c36652586d6"
+    },
+    "review-v3/opus-review.json": {
+      "bytes": 8162,
+      "sha256": "5c6f7a3d34c211eec2f667589a1c8bffa4a137c27c5965547c981f343d487b25"
+    },
+    "review-v3/source.diff": {
+      "bytes": 10861,
+      "sha256": "9bc2b67a73093dd7989b644553fc91a8e031aacb169b50ce025add0351cde090"
+    },
+    "review-v3/source/audit_cpu0.mjs": {
+      "bytes": 13217,
+      "sha256": "dcd9c48b41653422af9bdcc32c0144d8fae9d8a5882af7b2db6e5bd8fac54fc1"
+    },
+    "review-v3/source/compare-contract-cpu0.mjs": {
+      "bytes": 92638,
+      "sha256": "d818c289025a517fd2cf816b355aeb4ff24c4d741b11dc09565647adc8192794"
+    },
+    "review-v3/source/consumer_cpu0.mjs": {
+      "bytes": 33986,
+      "sha256": "a4a5a297a4ec0e9f1bf8a4ff65fb06b0e46754b98c973c49d707d72a4049b001"
+    },
+    "review-v3/source/test_capacity_cpu0.mjs": {
+      "bytes": 62762,
+      "sha256": "d15607e6934924200d156ec16414211203bcc8e555b52b441c503704f215b4d5"
+    },
+    "review-v3/validation.json": {
+      "bytes": 1761,
+      "sha256": "68eca0bd0d3ea9716d349b488536a61a1d01b9dc7b9fc5e486fd3b237344d9ae"
+    },
+    "verify.py": {
+      "bytes": 1226,
+      "sha256": "733fe096cbd493f7022d0aaa97c4314ea355126d1fbda467da9ee70c9f1dacc9"
+    }
+  },
+  "schema": "cpu0-capacity-consumer-publication-bindings.v1"
+}
