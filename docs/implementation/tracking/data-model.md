@@ -1933,10 +1933,14 @@ Where the build differs from the text above, or settles what it left open:
   2026-10-11, 18 and none, counted an episode without a date as dated: the script read the driver's `json`, which
   turns a NULL timestamp into 1 January 1970. It reads the raw rows now.)
 
-### Newly available: titles that landed on a member's services (#456)
+### Newly available: titles that landed on a member's services (#456, #489)
 
 Behind `REC_TRACKING`. What was built, the rule, the routes, the measurements and how it was checked:
 [newly-available/README.md](newly-available/README.md).
+
+**The 14 days a landing counts for (#489) store nothing.** The row on My movies and My shows, the logo on a title
+and the first title of a home door are derived on each request from the time the title landed and the time of the
+request. Nothing is kept per member and title, and no table, column or row was added for it.
 
 **One more fact is stored: when the member last opened My movies.** It is a row of `user_setting`, with
 `key = 'my_movies_visited_at'` and an ISO time in UTC as its `value`, beside the row of the My shows visit (#442),
@@ -1970,8 +1974,10 @@ LIMIT 1000000;
 
 | Screen | Query | Rows | In the map | Cache and reset |
 | --- | --- | --- | --- | --- |
-| **The signal for titles that landed** (Browse button, dock key, the My movies and My shows tiles, home's doors), with the answer of `/api/tonight` | None while nothing landed: the Wishlist and the states of the map, the settings, and the index in memory. When a title landed after the launch: Q10 for the My movies visit and for the My shows visit, then the display fields of up to three titles a kind | Usually none | The Wishlist with its times, and the states | The answer is kept in the browser with Tonight's pick; a visit clears its part there |
-| **My movies** and **My shows**, the line on arrival | The same, in the page's loader | Usually none | The same | Not cached |
+| **The signal for titles that landed** (Browse button, dock key, the My movies and My shows tiles, the pills on home's doors), with the answer of `/api/tonight` | None while nothing landed: the Wishlist and the states of the map, the settings, and the index in memory. When a title landed after the launch: Q10 for the My movies visit and for the My shows visit, then the display fields of the title when it is the only one of its kind | Usually none | The Wishlist with its times, and the states | The answer is kept in the browser with Tonight's pick; a visit clears its part there |
+| **My movies** and **My shows**, the row of what landed in the last 14 days and the logos on those titles | None while nothing landed. Otherwise the display fields of the listed titles, by key (Q6, cached). Q10 for a page's visit only when one of the member's landings is older than 14 days: such a landing is listed while it is still news | Usually none | The same | Not cached |
+| **Want to See** in My library, the service a title is new on | None: the index in memory, and the names of the services, which are kept in memory | None | The same | Not cached |
+| **Home's doors** and **Tonight's pick**, the title that leads a door because it landed | None for what landed. The cards of the door's first movies are read as before (Q6), for the landed movie in place of the third | None more | The same | As before |
 | **The availability index's load** | The two statements above, after the index's own | United States, the last 7 days, on 2026-10-12: 545 titles, then 4,186 rows of their offers | No | In memory until the next load |
 
 What the build settles:
@@ -1984,6 +1990,9 @@ What the build settles:
   dates.
 - **A Watching or On hold show has no time it was added** in the member data, so it counts from the launch on.
 - **The page's loader does not write the visit,** as for My shows: the page sends the POST once it is on screen.
+- **A landing counts for 14 days, the day it landed included, by the calendar in UTC** (#489): the row, the logo and
+  the door's first title. A visit does not end it. The signal is as it was: it counts a landing until the page is
+  opened, also after the 14 days, and the page's row lists such a landing until then.
 - **A member without a saved country or a saved service is told nothing.** The country guessed from the request is
   used to show availability, and is not taken as theirs here.
 

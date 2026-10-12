@@ -82,11 +82,15 @@ The number outside My shows that says how many of a member's shows are new: on t
 _Avoid_: Notification, Unread count, Alert, Badge
 
 **Newly available**:
-A member's Want to See title, or a show they are Watching or have On hold, that was on none of their saved services in their saved country and is now on one, by a subscription or a free offer. A further service for a title that was already watchable is not newly available. It is news when the title landed after the member last opened the page it lives on, My movies for a movie and My shows for a show, and it joins the New episodes signal: the same number on the Browse button and the phone dock's key, on the tile and on home's door, and one line on the page. A member without a saved country or a saved service has none. One title is named with its service; several are counted.
+A member's Want to See title, or a show they are Watching or have On hold, that was on none of their saved services in their saved country and is now on one, by a subscription or a free offer. A further service for a title that was already watchable is not newly available. It is news when the title landed after the member last opened the page it lives on, My movies for a movie and My shows for a show, and it joins the New episodes signal: the same number on the Browse button and the phone dock's key, on the tile and on home's door. A member without a saved country or a saved service has none. One title is named with its service; several are counted.
 _Avoid_: Arrival (the member arriving on a page), Notification, Alert, Release
 
+**Recently landed**:
+A Newly available title in the 14 days from the day it landed, the day itself included, whether the member has opened its page since or not. For those days My movies and My shows list it in one row that names the latest title with its service and day and opens to all of them, the title carries the service's logo with "New", and it is the first title of its own home door, A movie or Start a show, which says "New on" and the service. Nothing is stored for it. A show the member is in the middle of is listed and marked and keeps its place.
+_Avoid_: Fresh, Just arrived, Arrival, New release
+
 **My movies visit**:
-A member opening My movies. The time of the last one is stored per member, and it clears the movies that are Newly available. Loading the page ahead of a tap is not a visit.
+A member opening My movies. The time of the last one is stored per member, and it clears the movies that are Newly available from the signal. It does not end the 14 days a movie is Recently landed. Loading the page ahead of a tap is not a visit.
 
 **My movies**:
 The page for choosing a movie: the person's Want to See movies under their chosen sort, moods, On my services and the time they have. A movie leaves it when it is Seen, and is in it again while the person wants to rewatch it.
