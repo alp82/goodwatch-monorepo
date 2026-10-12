@@ -1,7 +1,7 @@
 # One GoodWatch wordmark
 
-Throwaway code. A UI prototype that compares five logo systems. **Verdict: pending user selection.** Nothing here
-is a validated decision.
+Throwaway code. A UI prototype that compares five logo systems. **Verdict: D selected by the owner on 2026-10-12.**
+The approved wordmark uses the white G as the first letter, white "ood", and yellow "Watch".
 
 ## The question
 
@@ -140,5 +140,6 @@ these two variants.
 | E · Initial G badge | [Screenshot](E-desktop.jpg) | [Screenshot](E-phone.jpg) |
 
 Claude Code Opus 5.5 authored the design and prototype. Codex verified it in the browser and adjusted the preview's
-responsive containers after the phone check. The verdict remains pending user selection; implementation and an
-implementation-issue pointer come after that selection.
+responsive containers after the phone check. The owner selected D and requested implementation across all
+placements and a push to main. The implementation retains only the approved wordmark; this branch preserves
+the comparison and its captures as the primary source.
