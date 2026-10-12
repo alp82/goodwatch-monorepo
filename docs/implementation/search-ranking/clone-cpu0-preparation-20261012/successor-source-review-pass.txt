@@ -1,0 +1,59 @@
+Review finished; writing up the verdict.
+
+# Verdict: PASS for these prepared sources
+
+The original blocker and defects 1–5 are fixed in source, and every retained condition I could check by reading still holds. I ran nothing and verified no hashes. Five small non-blocking defects remain, listed separately from the future packet gates.
+
+## Original blocker and defects 1–5
+
+- **Blocker (unversioned pin):** fixed. `runtime_cpu0.py:10` imports only from `pin_cpu0`, and all ten names exist there. `daemon_cpu0`, `controller_cpu0` and the turnover gate bind only versioned siblings.
+- **Isolated fixture:** `test_cpu0_controller.py:94-105` copies seven modules without `pin.py`, runs `-I -B`, and asserts identity, `'pin' not in sys.modules` and no `__pycache__`.
+- **Reclaim helper:** `under_control_lock` reaches runtime and daemon only through the passed control module, so it adds no unversioned import.
+- **Defect 1 (turnover evidence):** fixed. `turnover_gate_cpu0.py:116`, `:123` and `:155` emit `failure_evidence`.
+- **Defect 2 (preflight evidence):** fixed at `cpu0_preflight.py:37`, with a fixture asserting numeric output and no private text.
+- **Defect 3 (pressure end):** fixed. `finalize_pressure` (`cpu0_guards.py:180-185`) keeps the original exception and attaches the secondary failure as `pressureFinalizationFailure`, which `stage()` emits. With no original error, the end failure still raises.
+- **Defect 4 (typed missing):** fixed. `controller_cpu0.py:474-478` emits `cpu_phase_source_unavailable`, `cpuHierarchyBeforeStatus` and a typed after-snapshot failure. `cpu0_guards.py:92-95` keeps partial rows for a missing or invalid ancestor.
+- **Defect 5 (fixture claim):** fixed. `CPU0.md:91-94` now says the held-pin scopes are exercised directly and only query/post-inventory go through `stage()`. The stage fixture asserts the retained before snapshot and the typed `cpu_metric_missing` after failure.
+- **New host admission:** present at `turnover_gate_cpu0.py:89` (before the first join) and `:104` (before restart). The 90/15/120/5 s bounds match `turnover_gate.py`.
+
+## Retained conditions
+
+- **Strict CPU0:** `daemon_cpu0.py:53` and `cpu0_guards.py:33` require `type is int` and `== 0`; both schemas are new.
+- **Hierarchy:** finite quota refuses at any non-root level and metrics must exist. Null bandwidth applies only when `directory == root`, with usage metrics required and `cpu.max` refused there.
+- **Reads:** 16,384-byte bound, duplicate-key refusal, and an identity hash compared in `cpu_delta`.
+- **Host admission:** inclusive 0.5 × online CPUs and PSI 10, with no waits.
+- **Ledger:** `resource_limits` has the same predicate and return shape as `controller.py:202-208` and adds no accounting reads. All call sites pass real booleans, and thirteen scopes are named.
+- **Thresholds:** every deadline, floor and writer-policy value in `controller_cpu0.py` and the control policy matches `controller.py`.
+- **Isolation of originals:** no original file references a CPU0 module, and the helper digest covers the four stated files.
+- **Freeze coherence:** the freeze, the control policy and the helper policy digest strings agree with each other.
+
+## Remaining source defects (non-blocking, all fail closed)
+
+1. **Post-walk refusals carry no numbers.** `cpu0_guards.py:103-109` raises `cpu_isolation_changed` or `cpu_metric_missing` for weight, period or cpuset with no evidence, though the full rows were read. `docker_cpu` (`:33-36`) is the same. These template values are unproven on the host, so this is the likeliest first refusal and it will be reason-only.
+2. **The zero child's failure message is discarded.** `turnover_gate_cpu0.py:53` raises `zero_join_failed` without reading the child's reason, so the evidence added at `:40` never reaches output. The reason loss is inherited from `turnover_gate.py`.
+3. **Finalization reasons collapse.** `cpu0_guards.py:185` reports any secondary failure other than `phase_resource_failed` as `pressure_finalization_failed`. Its evidence is kept.
+4. **The frozen fixtures are not self-contained.** `test_cpu0_controller.py:12` imports `test_daemon`, which is outside the twelve files and loads the unversioned `daemon` and `pin`. The binding assertions remain valid.
+5. **Fixture coverage gaps.** No fixture drives `pressureFinalizationFailure` through `stage()`. The `held-pin-pass` fixture is still the initial pass (`previous=None`).
+
+Fixing 1–3 changes `cpu0_guards.py` or the gate, and with them the helper digest, policy hashes and freeze. If you want them fixed, do it before the staging packet.
+
+## Future packet gates (acknowledged, not source defects)
+
+- Nothing consumes `cpu0-source-freeze.json`. The preflight checks only the helper digest and control policy hash.
+- The reclaim helper is bound only by its policy hash, the same string as V5, and sits outside the twelve files.
+- The event schema is still `search.clone-mlock-control.v2`. No-cross-version pairing is not enforced until the consumer/auditor packet.
+- With no quota set, the host may not enable the CPU controller on the new scope. `cpu.max` and the throttle keys would then be absent and admission would refuse. This belongs with the unproven cpuset, weight, period and ancestor-layout facts.
+- Self-induced admission refusals are possible after the 4.4 GiB archive verification, since no waits are allowed.
+- The wrapped inspector adds Docker calls against unchanged deadlines.
+- The preflight needs the new container already running.
+
+No CPU0 setup, gate or run has occurred. V5 remains one red baseline with no passing pair.
+
+## Not verified
+
+- Any SHA-256, including the freeze entries and the previous report's digest.
+- `pin_cpu0.py` against commit `15d1cfe8`.
+- `runtime_cpu0.py` against its exact453 parent. It differs from the current `runtime.py` in more than the two declared changes, which fits an older parent but is unconfirmed.
+- `daemon_cpu0.py` line by line against `daemon.py`; I spot-checked the hash list, schema and CPU check only.
+- That the twenty fixtures pass; I traced them by reading.
+- That original file digests are unchanged.

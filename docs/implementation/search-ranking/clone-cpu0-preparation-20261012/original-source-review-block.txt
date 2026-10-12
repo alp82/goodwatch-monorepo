@@ -1,0 +1,58 @@
+I've finished reading the source and am writing up the verdict now.
+
+# Verdict: BLOCK for this prepared source step
+
+One concrete source defect breaks the trust chain the step claims to establish. Four smaller source defects and one fixture overstatement should be fixed in the same revision. Everything else I checked matches the stated conditions. Nothing here was executed; hashes were not verified.
+
+## Blocking defect
+
+**`runtime_cpu0.py:10` imports the unversioned `pin`, not `pin_cpu0`.** The line reads `from pin import CLASSES, PAGE, Kernel, Mapping, Target, ...`. `CPU0.md` and `pinProvenance.runtimeChanges` in the freeze both claim a "versioned pin import".
+
+- **Unhashed code executes.** `daemon_cpu0.code_hash()` (`daemon_cpu0.py:24`) covers `pin_cpu0.py`, `runtime_cpu0.py`, `daemon_cpu0.py` and `cpu0_guards.py`. `pin.py` is outside the helper digest and outside the twelve-file freeze, yet it supplies `Kernel`, `Mapping`, `Target`, `page_ranges`, `selection_digest` and `release_preserving_error` to the pin and measure paths.
+- **The two pin files differ.** The current `pin.py` has `IdlePolicy` and `close_unheld_targets` and different line offsets; `pin_cpu0.py` has neither. The CPU0 runtime therefore mixes current `pin.py` targets and mappings with the `pin_cpu0.PinSet` held by the controller.
+- **Fresh staging fails or binds an unreviewed file.** A stage with only the versioned siblings raises `ModuleNotFoundError`. A stage with a "canonical copy" of `pin.py` silently binds whatever bytes are there.
+- **Local fixtures cannot see it.** `pin.py` sits in the same directory, and `test_cpu0_controller.py:12` imports `test_daemon`, which loads it anyway.
+
+The fix is a single import line, but it changes the `runtime_cpu0.py` hash, `helperCodeSha256`, the control policy hash and the freeze.
+
+## Other source defects
+
+1. **The turnover ledger is computed and then dropped.** `turnover_gate_cpu0.py:114` and `:153` emit only `reason`. The `turnover-join` `resourceLimitEvidence`, `cpuHierarchyEvidence` and `hostCpuEvidence` attached to the exception never reach output.
+2. **The preflight drops its numeric refusal evidence.** `cpu0_preflight.py:36` prints only the reason. A `host_cpu_busy` or `ancestor_cpu_quota_present` refusal loses the load/PSI values and the partial hierarchy rows.
+3. **The original failure can be replaced inside the pressure window.** `controller_cpu0.py:395-398` calls `end_pressure()` in a `finally`. `self.previous` is not advanced on a failed pass, so `end_pressure` re-detects the same delta and raises a new `phase_resource_failed` scoped `pressure-end-continuity`. That replaces the original `held-pin-pass` evidence, or a child's own reason. The structure is inherited, but it now contradicts the retention claim. This is pre-ready; the four post-ready sites are unaffected.
+4. **Missing snapshots are not always typed.** In `controller_cpu0.py:473-478`, a failure before `source` is set (archive verify, cold, host admission) emits before/after/failure all null. A failure between `:425` and `:427` leaves `cpuHierarchyBefore` null with no reason. A `cpu_metric_missing` at an ancestor also discards the rows already read; only the finite-quota path keeps partial rows (`cpu0_guards.py:91`).
+5. **The fixture claim is overstated.** Only `query-interval` and `post-query-inventory` run through `stage()` with a failing cleanup. The two held-pin scopes are tested on `PinChild.request` alone, and the `held-pin-pass` fixture uses `previous=None`, which is the initial pass, not post-ready. The stage fixtures patch `inspect_cpu_source` and `cpu_delta`, so no fixture asserts snapshot retention or `cpuHierarchySnapshotFailure`.
+
+## What checks out
+
+- **Ledger sites:** twelve named scopes at `controller_cpu0.py:317, 337, 347, 352, 431, 438, 440, 441, 445, 455, 461, 466`, plus the `turnover-join` default at `:207`. `SCOPES` holds exactly those thirteen. The reclaim helper does not call `limits()`.
+- **Pass-path equivalence:** `resource_limits` (`cpu0_guards.py:146-165`) uses the same `daemon.account` inputs, deltas, failure predicate and return shape as `controller.py:202-208`. It adds no reads, sleeps or retries, and the reason stays `phase_resource_failed`.
+- **New refusals on that path:** `resource_scope_invalid` and `resource_metrics_unavailable`. All call sites pass real booleans.
+- **Overlap and pressure flag:** `overlappingNonAdditive` and the effective flag are recorded, and the fixture at `test_cpu0_controller.py:31` asserts the effective value, not the requested one.
+- **Cleanup separation:** `controller_cpu0.py:480-491` keeps the phase cause and reports `cleanupReason` on the separate `released` event.
+- **Strict CPU0:** `daemon_cpu0.py:53` and `cpu0_guards.py:33` require `type is int` and `== 0` for NanoCpus, CpuQuota and CpuPeriod. The schema is new; there is no "0 or 2e9" path.
+- **Hierarchy:** every non-root level needs `cpu.max` and both throttle counters; finite quota refuses. Root needs usage/user/system, carries explicit nulls, and refuses if `cpu.max` exists there. Source period, weight and cpuset are compared to policy.
+- **Bounded reads:** 16,384-byte cap, duplicate-key rejection, and a per-group path/device/inode hash compared in `cpu_delta`.
+- **Host admission:** `host_cpu` uses inclusive ceilings of 0.5 × online CPUs and PSI 10, refuses on missing or nonfinite values without waiting, and is the first statement in `cold()` (`:154`).
+- **Thresholds unchanged:** 180/30/60/1200, 64 MiB, reconcile 10, 3 GiB reclaim with 60/60/60, writer policy 145/18/28, 6 GiB memory and swap, 5 GiB start floor, 1.5 GiB emergency minimum.
+- **No resource writes added:** the only cgroup write remains the existing `cgroup.procs` self-join in `runtime_cpu0.py:196`.
+
+## Not source defects: future execution and staging gates
+
+- **Nothing consumes `cpu0-source-freeze.json`.** The preflight verifies the helper digest and control policy hash, but not `controller_cpu0.py`, `cpu0_preflight.py` or `turnover_gate_cpu0.py`. `prepare_clone_reclaim.py` is bound only by a policy hash and sits outside the twelve files.
+- **Event schema is still `search.clone-mlock-control.v2`** despite the new fields. No-cross-version pairing rests only on distinct digests and container name until the consumer/auditor packet enforces it.
+- **Self-induced admission refusals are possible.** `verify_archive` hashes 4.4 GiB immediately before the `cold()` admission, and each later phase follows a pressure and query phase. This fails closed, but with no waits allowed root should expect it.
+- **Tighter margin against unchanged deadlines.** The wrapped `inspect_source` (`:211-214`) adds one `docker inspect` plus a hierarchy walk per call, including each child RPC, which has a 10 s reply window against up to three 5 s Docker calls. This also fails closed.
+- **The turnover gate restarts the clone with no host admission.** Root should decide whether that restart counts as a cold phase.
+- **Host facts are unattested:** `cpuset.cpus`/`cpuset.mems` present on the scope, weight 100, period 100000, ancestor layout, and Docker's behaviour on recreation.
+- **The preflight needs the new container already running**, so container creation precedes it.
+- **`__pycache__` files for the CPU0 modules exist** in the worktree. They are gitignored but must not be staged.
+
+No CPU0 gate, setup or run has occurred, `benchmarkPacketReady` is false, and V5 remains one red baseline with no passing pair.
+
+## What this review did not verify
+
+- Any SHA256, including the prior report's, the freeze entries and the exact453 byte claims.
+- `pin_cpu0.py` against commit `15d1cfe8`, and `runtime_cpu0.py` against its exact453 parent. I compared structure only.
+- A full line-by-line comparison of `controller_cpu0.py` with `controller.py` outside lines 95-214, and of `turnover_gate_cpu0.py` outside `stage()`.
+- Whether production and idle file digests are unchanged, beyond confirming no original file references a CPU0 module.
