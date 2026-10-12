@@ -1,0 +1,20 @@
+{
+  "schema": "goodwatch.resource-window.own-argv-reproduction.v1",
+  "launcherSha256": "fc52ee8b85c1dae616726bc5b6c6be2ef8c1ea43c61ec5888685b17da9e21490",
+  "readerSha256": "c01c7030a24daa0e4e8ca865d926f195cd94e9a87e269331550dfd7be38c36c5",
+  "readerSourceBytes": 25549,
+  "childCodeBytes": 27644,
+  "argvBytesWithFixtureParentPid": 27678,
+  "parentPidDecimalDigits": 6,
+  "eligibleComm": "python3",
+  "censusArgvBound": 8192,
+  "exceedsArgvBound": true,
+  "method": "Exact reviewed launcher AST child-code expression and fixed run arguments in temporary proc-shaped fixture; parent PID is illustrative.",
+  "actualFailingSnapshotRetained": false,
+  "sourceChangedTriggerProven": false,
+  "limits": [
+    "Changing parent PID decimal length cannot reduce this argv below the bound.",
+    "This reproduces census rejection from the launched reader shape; it does not identify which process was encountered first in the production census.",
+    "No actual production argv or plaintext was retained or emitted."
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schema": "goodwatch.resource-window.failure-audit.v1",
+  "scheduledStart": "2026-10-12T11:10:00Z",
+  "scheduledEnd": "2026-10-12T11:40:00Z",
+  "terminalFailureAt": "2026-10-12T11:10:10.045729+00:00",
+  "coverage": "UNKNOWN",
+  "cleanReaderExit": false,
+  "readerGoneProven": true,
+  "actualReaderExitReceipt": {
+    "event": "resource-window.reader-exit.v1",
+    "sourceSha256": "c01c7030a24daa0e4e8ca865d926f195cd94e9a87e269331550dfd7be38c36c5",
+    "pid": 784908,
+    "startTicks": 2825547653,
+    "exitCode": 1,
+    "readerGoneProven": true,
+    "termSent": false,
+    "killSent": false,
+    "clean": false,
+    "reason": null,
+    "hostFilesCreated": 0
+  },
+  "observedSamples": 5,
+  "sampleStart": "2026-10-12T11:10:00.006256+00:00",
+  "lastSampleFinishedAt": "2026-10-12T11:10:08.044391+00:00",
+  "observedSourcePid": 3411704,
+  "observedSourceStartTicks": 2673362807,
+  "observedSourceIdentityHash": "921098a80d6ed1259c9473bcbde4d30736ca544560bdfcb1d380d9db72dbc37f",
+  "sourceIdentityStableInRetainedSamples": true,
+  "sourceMembershipStableInRetainedSamples": true,
+  "sourceProcessCountsObserved": [
+    1
+  ],
+  "sourceVmLckBytesObserved": [
+    0
+  ],
+  "userspaceCensusIncompleteSamples": 5,
+  "userspaceCensusReasons": [
+    "census_bound"
+  ],
+  "firstToLastProcessCounterDeltas": {
+    "majorFaults": 13,
+    "minorFaults": 10862,
+    "readBytes": 53248
+  },
+  "failingSampleRetained": false,
+  "failureTriggerProven": false,
+  "backupWindowObserved": false,
+  "futureCeilingEstablished": false,
+  "productionAcceptance": false,
+  "retainedOriginals": {
+    "resource-window-actual-20261012-1110-v1.jsonl": {
+      "sha256": "ab1c5aeebfc07335f30d69543677e34bf510e81e2d76d190bc4e799cf2830e65",
+      "bytes": 21051
+    },
+    "window-fence-preflight-20261012-1110-v1.jsonl": {
+      "sha256": "af2dfa4b766360270d98ac04349c0eaa57a267cd90920b37fbe467ced5ac4d40",
+      "bytes": 1478
+    },
+    "window-fence-schedule-20261012-1110-v1.jsonl": {
+      "sha256": "1d33750a7da733f565f2870150440a368164b68ccd788895b7f2d1652ced0775",
+      "bytes": 2176
+    },
+    "window-fence-executable-20261012-1110-v1.jsonl": {
+      "sha256": "66d38e1eb99cedd6e5c06a5eab3218e09fd1e3da5178d6e13f59e27914be247d",
+      "bytes": 969
+    }
+  },
+  "executedReaderSha256": "c01c7030a24daa0e4e8ca865d926f195cd94e9a87e269331550dfd7be38c36c5",
+  "limits": [
+    "Failure source_changed does not identify source comm/executable/birth/group or membership trigger.",
+    "Retained successful samples do not establish identity or membership at the failing sample.",
+    "Counter deltas cover retained samples only and include background/observer work.",
+    "All retained userspace censuses are incomplete independently of terminal failure."
+  ]
+}

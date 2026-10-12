@@ -1,0 +1,50 @@
+{
+  "schema": "goodwatch.resource-window.failure-provenance.v1",
+  "actualWindowReaderSha256": "c01c7030a24daa0e4e8ca865d926f195cd94e9a87e269331550dfd7be38c36c5",
+  "actualWindowLauncherSha256": "fc52ee8b85c1dae616726bc5b6c6be2ef8c1ea43c61ec5888685b17da9e21490",
+  "files": {
+    "window-fence-preflight-20261012-1110-v1.jsonl": {
+      "sha256": "af2dfa4b766360270d98ac04349c0eaa57a267cd90920b37fbe467ced5ac4d40",
+      "bytes": 1478
+    },
+    "window-fence-schedule-20261012-1110-v1.jsonl": {
+      "sha256": "1d33750a7da733f565f2870150440a368164b68ccd788895b7f2d1652ced0775",
+      "bytes": 2176
+    },
+    "executed-reader-v1.py": {
+      "sha256": "c01c7030a24daa0e4e8ca865d926f195cd94e9a87e269331550dfd7be38c36c5",
+      "bytes": 25549
+    },
+    "window-fence-executable-20261012-1110-v1.jsonl": {
+      "sha256": "66d38e1eb99cedd6e5c06a5eab3218e09fd1e3da5178d6e13f59e27914be247d",
+      "bytes": 969
+    },
+    "resource-window-actual-20261012-1110-v1.jsonl": {
+      "sha256": "ab1c5aeebfc07335f30d69543677e34bf510e81e2d76d190bc4e799cf2830e65",
+      "bytes": 21051
+    },
+    "own-argv-reproduction.json": {
+      "sha256": "c36a6ce4b696c1836658bd5a90852709df110d8949512df9ca7e69a70b2d9e23",
+      "bytes": 1016
+    },
+    "postfailure-preflight-20261012-1110-v1.jsonl": {
+      "sha256": "2d29ea6d39ec0bb0a6696713603fb64402113cf06b9a2c041fed8c5f53894dd1",
+      "bytes": 1478
+    },
+    "failure-audit.json": {
+      "sha256": "44dcac5edc17e122e2474d8fb7128da2095e3a1d926afe89051f36fc34154735",
+      "bytes": 2737
+    }
+  },
+  "actualWindowFailure": true,
+  "readerExitCode": 1,
+  "readerGoneProven": true,
+  "cleanReaderExit": false,
+  "newDiagnosticReaderExecuted": false,
+  "ownReaderExemptionImplemented": false,
+  "sourceChangedAttributionProven": false,
+  "postFailureSourceHashUnchanged": true,
+  "productionAcceptance": false,
+  "futureCeilingEstablished": false,
+  "preparedDiagnosticReaderSha256": "85dba2e5545c039405ab87fa09e4240523ca1ca9be8bef558f33651961bf6324"
+}

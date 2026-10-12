@@ -1,3 +1,4 @@
+import ast
 import contextlib
 import importlib.util
 import io
@@ -147,5 +148,61 @@ class ResourceTests(unittest.TestCase):
     def test_output_budget_and_total_worst_case(self):
         self.assertLess((m.ROWS+2)*m.ROW_BYTES,m.OUTPUT_BYTES)
         with self.assertRaisesRegex(ValueError,'output_bound'):m.Output(io.StringIO()).emit({'x':'z'*m.ROW_BYTES})
+
+    def test_source_birth_guard_retains_fixed_numeric_trigger(self):
+        source=m.Source.__new__(m.Source);source.check=Reader(FakeClock());source.proc=Path('/private');source.expected={'pid':9,'startTicks':100}
+        with patch.object(m,'read',return_value='qdrant'),patch.object(m.os,'readlink',return_value='/private/qdrant'),patch.object(m,'proc_identity',return_value={'startTicks':101}):
+            with self.assertRaises(m.GuardFailure)as caught:source.fence('after_sample')
+        self.assertEqual(str(caught.exception),'source_changed')
+        self.assertEqual(caught.exception.diagnostic,{'trigger':'source_birth','phase':'after_sample','expectedStartTicks':100,'observedStartTicks':101})
+        self.assertNotIn('/private',json.dumps(m.diagnostic(caught.exception)))
+
+    def test_added_group_process_still_rejects_sample_with_trigger(self):
+        source=m.Source.__new__(m.Source);source.proc=Path('/private');source.expected={'pid':9,'startTicks':100}
+        before={'processMembershipHash':m.digest([9]),'processCount':1,'processVmLckBytes':0}
+        after={'processMembershipHash':m.digest([9,10]),'processCount':2,'processVmLckBytes':0}
+        def read(path,size=65536):
+            if path.name=='io' and path.parent.name!='pressure':return 'read_bytes: 0'
+            if path.name=='status':return 'VmLck: 0 kB'
+            if path.name=='meminfo':return '\n'.join(k+': 0 kB'for k in m.MEM)
+            if path.name=='vmstat':return '\n'.join(k+' 0'for k in m.VM)
+            return 'some avg10=0 total=0\nfull avg10=0 total=0'
+        with patch.object(source,'fence'),patch.object(source,'reader_proof',return_value={}),patch.object(source,'group_read',side_effect=[before,after]),patch.object(m,'proc_identity',return_value={'startTicks':100}),patch.object(m,'read',side_effect=read),patch.object(m,'process_census',return_value={'complete':True}),patch.object(m,'siblings',return_value={'complete':True}):
+            with self.assertRaises(m.GuardFailure)as caught:source.sample()
+        proof=caught.exception.diagnostic
+        self.assertEqual(str(caught.exception),'source_changed');self.assertEqual(proof['trigger'],'sample_membership')
+        self.assertEqual((proof['beforeCount'],proof['afterCount']),(1,2));self.assertNotEqual(proof['beforeMembershipHash'],proof['afterMembershipHash'])
+
+    def test_reviewed_embedded_reader_argv_reproduces_census_failure(self):
+        repo=Path(__file__).resolve().parents[2]
+        fixture=repo/'docs/implementation/search-ranking/resource-window-failure-20261012-1110/executed-reader-v1.py'
+        original=fixture.read_bytes();self.assertEqual(m.hashlib.sha256(original).hexdigest(),'c01c7030a24daa0e4e8ca865d926f195cd94e9a87e269331550dfd7be38c36c5')
+        launcher=Path(__file__).with_name('resource-window-prepared-transport-v1')/'launch_window_v1.py'
+        tree=ast.parse(launcher.read_text());text=next(ast.literal_eval(n.value)for n in tree.body if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='SUPERVISOR'for t in n.targets))
+        expression=next(n.value for n in ast.walk(ast.parse(text))if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='code'for t in n.targets))
+        args=['resource_window.py','--execute','--start-utc','2026-10-12T11:10:00+00:00','--end-utc','2026-10-12T11:40:00+00:00','--expected-source-sha256','921098a80d6ed1259c9473bcbde4d30736ca544560bdfcb1d380d9db72dbc37f','--backup-path-sha256','3a5f18b515069b168b9004e1a3fac4b83c6e4448af3ae9418758a0e4b5b9488c']
+        code=eval(compile(ast.Expression(expression),'reviewed-child-expression','eval'),{'READER_ARGS':args,'source':original})
+        raw=b'\0'.join(x.encode()for x in ['/usr/bin/python3','-I','-B','-c',code,'784907'])+b'\0'
+        self.assertEqual(len(raw),27678)
+        old={};exec(compile(original,'historical-reader','exec'),old)
+        with tempfile.TemporaryDirectory()as name:
+            root=Path(name);node=root/'42';node.mkdir();(node/'comm').write_text('python3');(node/'cmdline').write_bytes(raw)
+            with self.assertRaisesRegex(ValueError,'census_bound'):old['process_census'](root,'a'*64)
+            with self.assertRaises(m.GuardFailure)as caught:m.process_census(root,'a'*64)
+        self.assertEqual(caught.exception.diagnostic,{'trigger':'argv_limit','phase':'process_census'})
+        self.assertNotIn('prctl',json.dumps(m.diagnostic(caught.exception)))
+
+    def test_failure_frame_keeps_guard_diagnostic_and_no_unsafe_errors(self):
+        source=type('FakeSource',(),{'close':lambda self:None})()
+        args=['resource_window.py','--execute','--expected-source-sha256','a'*64,'--backup-path-sha256','b'*64]
+        for error,reason,trigger in [(m.GuardFailure('source_changed','source_birth','before_sample',expectedStartTicks=3,observedStartTicks=4),'source_changed','source_birth'),(OSError('/secret VALUE'),'sample_failed',None)]:
+            out=io.StringIO()
+            with patch('sys.argv',args),patch.object(m,'Source',return_value=source),patch.object(m,'run',side_effect=error),contextlib.redirect_stdout(out):self.assertEqual(m.main(),1)
+            row=json.loads(out.getvalue());self.assertEqual(row['reason'],reason);self.assertFalse(row['continuousCoverage'])
+            self.assertEqual(row.get('diagnostic',{}).get('trigger'),trigger);self.assertNotIn('/secret',out.getvalue());self.assertNotIn('VALUE',out.getvalue())
+
+    def test_diagnostic_rejects_private_or_malformed_fields(self):
+        for evidence in [{'path':'/secret'},{'expectedStartTicks':True},{'expectedGroupHash':'private'}]:
+            with self.assertRaisesRegex(ValueError,'invalid_numeric'):m.GuardFailure('source_changed','source_birth','before_sample',**evidence)
 
 if __name__=='__main__':unittest.main()
