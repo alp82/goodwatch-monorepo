@@ -19,20 +19,27 @@ import packet
 import stager
 import test_packet_v2
 
-JS=Path('/home/alper/projects/goodwatch-cpu0-capacity-consumer-100/goodwatch-qdrant/diagnostics/pinning-prototype')
+FROZEN_JS=Path('/home/alper/projects/search-100-evidence/cpu0-capacity-consumer-review-v3-20261012')
+JS_HASHES={'audit_cpu0.mjs': 'dcd9c48b41653422af9bdcc32c0144d8fae9d8a5882af7b2db6e5bd8fac54fc1', 'compare-contract-cpu0.mjs': 'd818c289025a517fd2cf816b355aeb4ff24c4d741b11dc09565647adc8192794', 'compare-contract.mjs': '41c0e1fdf9f28a7d26032b8d95540b39bd441d6aafe5236bb89c82cfc4ef5b48', 'consumer_cpu0.mjs': 'a4a5a297a4ec0e9f1bf8a4ff65fb06b0e46754b98c973c49d707d72a4049b001', 'parity.mjs': '738c1e68af814a952ae7b54b101cb3921256142205b0a192b9869181580fc86e', 'transport_cpu0.mjs': '4e0d19d3f0cd1c1e9f837a5c1558e93081084ddd302d5f727a004393098ba5b5', 'test_capacity_cpu0.mjs': 'd15607e6934924200d156ec16414211203bcc8e555b52b441c503704f215b4d5', 'cpu0_consumer_fixture.mjs': 'ca5adcc6e455f24768112394a6930b5659bbc8df8e046d89992742a51bf1cfbd', 'cpu0_contract_fixture.mjs': '2760535d7a063717f8f531624153a0f5cdd9e4a081e79736ac2b18c9a3e44cfb'}
 
 
 class PureAdmissionCompositionTests(unittest.TestCase):
     def setUp(self):
-        if not (JS/'test_capacity_cpu0.mjs').exists():
-            self.fail('Required separately reviewed public JS fixture dependency is missing')
         self.folder=Path(self.enterContext(tempfile.TemporaryDirectory()))
+        js={}
+        for name,expected in JS_HASHES.items():
+            source=FROZEN_JS/'source'/name
+            if not source.exists():source=FROZEN_JS/'context'/name
+            raw=source.read_bytes()
+            self.assertEqual(packet.sha(raw),expected,'Frozen public JS dependency changed: '+name)
+            js[name]=raw
+            (self.folder/name).write_bytes(raw)
         full,_,_=test_packet_v2.SuccessorPacketTests().full()
         full['prepared-helper-policy-cpu0.json']=full['helper-config.json']=b'{"publicFixture":true}\n'
         config={'helperCodeSha256':'1'*64,'helperPolicySha256':packet.sha(full['helper-config.json'])}
         full['prepared-control-policy-cpu0.json']=full['controller-config.json']=packet.canonical(config)+b'\n'
         for name in ('compare-contract-cpu0.mjs','compare-contract.mjs','parity.mjs'):
-            full[name]=(JS/name).read_bytes()
+            full[name]=js[name]
         source={'schema':'search.clone-cpu0-fixed-source-freeze.v2','variant':'cpu0-fixed-capacity.v2',
                 'preparedOnly':True,'files':{name:packet.sha(full[name]) for name in packet.SOURCE_NAMES}}
         full['cpu0-source-freeze.json']=packet.canonical(source)+b'\n'
@@ -50,7 +57,7 @@ class PureAdmissionCompositionTests(unittest.TestCase):
             (self.folder/name).write_bytes(full[name])
         # Reuse exact public constructors from the JS author's tests; no tests
         # or executable consumer are imported or launched by this fixture.
-        helpers=(JS/'test_capacity_cpu0.mjs').read_text().split('const GiB=',1)[1].split("test('ABI2",1)[0]
+        helpers=js['test_capacity_cpu0.mjs'].decode().split('const GiB=',1)[1].split("test('ABI2",1)[0]
         helpers='const GiB='+helpers
         helpers='\n'.join(line for line in helpers.splitlines() if not line.startswith('const allPackets='))
         expected={'sourceFreezeSha256':source_sha,'externalManifestSha256':self.packet['externalManifestSha256'],
@@ -58,7 +65,7 @@ class PureAdmissionCompositionTests(unittest.TestCase):
                   'helperPolicySha256':config['helperPolicySha256'],
                   'controllerPolicySha256':packet.sha(full['controller-config.json']),
                   'nodeProvenanceSha256':'6'*64}
-        code=f"import crypto from 'node:crypto';import * as contract from {json.dumps((self.folder/'compare-contract-cpu0.mjs').as_uri())};import {{admission,prior}} from {json.dumps((JS/'cpu0_consumer_fixture.mjs').as_uri())};\n"+helpers+"\n"+f"const context={json.dumps(expected)};"+"""
+        code=f"import crypto from 'node:crypto';import * as contract from {json.dumps((self.folder/'compare-contract-cpu0.mjs').as_uri())};import {{admission,prior}} from {json.dumps((self.folder/'cpu0_consumer_fixture.mjs').as_uri())};\n"+helpers+"\n"+f"const context={json.dumps(expected)};"+"""
 const previous=v2Handoff(),sample=v2Admission();sample.target=previous.snapshot.newRunning;
 sample.sourceIdentity[2]=sample.target.qdrant.pid;sample.sourceIdentity[3]=sample.target.qdrant.startTicks;
 const enrolled=enrolmentFixture({...context,consumerPredecessorSha256:previous.sha256},sample.target);

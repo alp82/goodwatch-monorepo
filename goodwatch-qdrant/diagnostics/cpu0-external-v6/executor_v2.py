@@ -99,8 +99,9 @@ def context(arguments,path):
     _,spec,policy=daemon.load_config(str(path/'helper-config.json'),
                                    config['helperPolicySha256'],config['helperCodeSha256'])
     control.CPU_POLICY=config['cpuIsolation']
-    # Keep derivative bytes exact: canonicalisation is a check, never a rewrite.
-    if canonical(config)+b'\n'!=control_raw:
+    # Only the admission derivative has a canonical byte recipe. Full-stage
+    # bytes are already bound exactly, including the frozen source formatting.
+    if path==adoption.ADMISSION and canonical(config)+b'\n'!=control_raw:
         raise RuntimeError('executor_policy_changed')
     return modules,config,spec,policy,raw,source_sha,files
 
