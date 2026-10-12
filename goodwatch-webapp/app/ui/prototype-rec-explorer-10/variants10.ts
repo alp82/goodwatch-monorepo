@@ -10,6 +10,8 @@ export interface Variant10 extends Mode10 {
 	frame: "region" | "pair"
 	/** Raising a combination flies the camera to the middle. */
 	fly: boolean
+	/** After a pick the camera goes back out to the whole world, for the next island from any group. */
+	back: boolean
 }
 
 export const VARIANTS10: Record<string, Variant10> = {
@@ -22,6 +24,7 @@ export const VARIANTS10: Record<string, Variant10> = {
 		dockFrom: 2,
 		frame: "region",
 		fly: true,
+		back: false,
 	},
 	// From far out each grouping is one land that breaks into its islands as you come closer. Picked islands sail to
 	// the middle and sit against the combination (today's bridge, moved to the middle); an outline stays at home.
@@ -32,9 +35,11 @@ export const VARIANTS10: Record<string, Variant10> = {
 		dockFrom: 2,
 		frame: "region",
 		fly: true,
+		back: false,
 	},
 	// The middle is always in view: the grouping control frames a region and the middle side by side, and an island
-	// sails over as soon as it's picked, so the combination builds up next to where you pick. No camera flights.
+	// sails over as soon as it's picked. After a pick the camera goes back out to the whole world, so the next island
+	// can come from any group.
 	harbor: {
 		name: "Harbor",
 		meta: "isles",
@@ -42,5 +47,6 @@ export const VARIANTS10: Record<string, Variant10> = {
 		dockFrom: 1,
 		frame: "pair",
 		fly: false,
+		back: true,
 	},
 }

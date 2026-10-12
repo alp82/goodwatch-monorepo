@@ -11,6 +11,22 @@ of the map is kept free for the combination, which joins up to three islands.
 
 What should that look like, and how do picked islands get to the middle?
 
+## Verdict so far (owner, 2026-10-12)
+
+`harbor` is the one to build on: islands sail to the middle from the first pick. It is now the default variant, and
+the second round changed it:
+
+- **After a pick the camera goes back out to the whole world**, so the next island can come from any group. With every
+  place taken it goes to the combination instead.
+- **Up to five islands combine** (was three). Four or five sit evenly around the combination, below its name, in the
+  order of where they came from. The combination is then named by its first two islands "+ 3 more"; the bar lists all.
+- **Islands that would leave the combination empty go grey and dark**, in the sea and from far out, and lose their name.
+  The others keep their count ("9 in all 5").
+- **One switch in the bar, "Combined" and "Show all"**, goes between the combination and the whole world. It is there
+  from the first pick. The C key does the same on the map.
+
+Screenshots of this round: `harbor2-*.png`. `causeways` and `gather` are unchanged apart from the limit of five.
+
 ## Run it
 
 ```sh
@@ -33,11 +49,12 @@ Then open `http://localhost:3110/prototype/rec-explorer-10`. The bar at the bott
   the middle. The world's shape follows the window's.
 - Two levels. Out at the world a click on a region flies to it. In among a region's islands a click picks an island.
 - The grouping control flies to a region and marks the region in the middle of the view. "All" shows the world.
-- Up to three islands are picked, from any regions. The bar under the controls lists them as chips (each lets its island
-  go), shows how many more can join, says what the combination holds, and "Show" brings the middle into view.
-- With one or two islands picked, every other island says what the combination would hold with it added, and the islands
+- Up to five islands are picked, from any regions. The bar under the controls lists them as chips (each lets its island
+  go), shows how many more can join, says what the combination holds, and switches between the combination and the
+  whole world.
+- With one to four islands picked, every other island says what the combination would hold with it added, and the islands
   that would leave it empty go grey.
-- Two or three picked islands raise the combination in the middle. It behaves like today's bridge: zoom in for its tree.
+- Two to five picked islands raise the combination in the middle. It behaves like today's bridge: zoom in for its tree.
 - Nothing else moves: the middle is free, so no island has to make room.
 
 ## The variants
@@ -47,7 +64,7 @@ Then open `http://localhost:3110/prototype/rec-explorer-10`. The bar at the bott
 | A grouping from far out | its islands, small | one land that breaks into its islands as you come closer | its islands, small |
 | Picked islands | stay home and light up; a band of light runs from each to the middle | sail to the middle and sit against the combination; an outline stays at home | sail to the middle from the first pick |
 | The grouping control frames | the region | the region | the region and the middle side by side |
-| Camera on a new combination | flies to the middle | flies to the middle | stays, when the middle is in view |
+| Camera after a pick | flies to the middle, from two islands | flies to the middle, from two islands | goes back out to the whole world |
 
 Screenshots: `causeways-*.png`, `gather-*.png`, `harbor-*.png` (1440 by 900, and one phone view).
 
@@ -56,11 +73,12 @@ Screenshots: `causeways-*.png`, `gather-*.png`, `harbor-*.png` (1440 by 900, and
 - Two islands of one grouping: today's bridge, unchanged (titles on both, or the titles between the two).
 - Islands of different groupings: the titles on all of them.
 - Two islands of a grouping where a title sits on one island only (Decade, Country, Your taste), with a third from
-  elsewhere: either of the two. 1980s + 1990s + Dark is Dark from both decades (269 titles).
+  elsewhere: either of the two. The same holds with four or five islands. 1980s + 1990s + Dark is Dark from both decades (269 titles).
 - Titles are ordered by where they stand on each island together, as today's bridge orders them.
 
 Examples from production data on 2026-10-12, with no filters: Dark + 1980s + Japan holds 3 titles (Ran, Akira, Tetsuo);
-Funny + Crime + 1990s holds 39 (Pulp Fiction, Reservoir Dogs first); Scary + Animated holds 51.
+Funny + Crime + 1990s holds 39 (Pulp Fiction, Reservoir Dogs first); Scary + Animated holds 51. Funny + Crime + 1990s +
+United States holds 30, and with Talky as the fifth 15.
 
 ## Found on the way
 
@@ -85,6 +103,9 @@ Funny + Crime + 1990s holds 39 (Pulp Fiction, Reservoir Dogs first); Scary + Ani
    means all three.
 5. Does a combination of one island mean anything? `harbor` moves the first island to the middle and waits.
 6. Your taste as a region: Near you + Dark + 1980s works by the same rule. Not looked at with a member's taste yet.
+7. Five islands often leave few titles (15 in the example above). Is a small combination fine, or should the map say
+   earlier that little is left?
+8. Out at the world the islands are too small for their counts, so only the grey shows which ones are dead ends. Enough?
 
 ## Not built
 

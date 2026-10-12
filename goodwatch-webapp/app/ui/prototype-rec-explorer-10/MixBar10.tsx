@@ -15,24 +15,28 @@ export interface MixBarState {
 	status: string
 	/** The combination is up (or rising). */
 	up: boolean
-	/** Three islands are picked: nothing more can join. */
+	/** Every place is taken: nothing more can join. */
 	full: boolean
+	/** How many islands combine at most. */
+	max: number
+	/** Where the view is: on the middle ("hub"), out at the whole world ("all"), or elsewhere (""). */
+	at: "hub" | "all" | ""
 }
 
 const titles = (count: number) =>
 	`${count.toLocaleString("en")} ${count === 1 ? "title" : "titles"}`
 
-/** "130 titles in both", "130 titles between them", or "42 titles on all three". */
-export const sharedLine10 = (count: number, kind: MixKind) =>
+/** "130 titles in both", "130 titles between them", or "42 titles on all 3". */
+export const sharedLine10 = (count: number, kind: MixKind, of: number) =>
 	kind === "all"
-		? `${titles(count)} on all three`
+		? `${titles(count)} on all ${of}`
 		: kind === "both"
 			? `${titles(count)} in both`
 			: `${titles(count)} between them`
 
 /** What an island would add to the picked ones, under its name. */
-export const sharedNote10 = (count: number, kind: MixKind) =>
-	`${count.toLocaleString("en")} in ${kind === "all" ? "all three" : kind === "both" ? "both" : "between"}`
+export const sharedNote10 = (count: number, kind: MixKind, of: number) =>
+	`${count.toLocaleString("en")} in ${kind === "all" ? `all ${of}` : kind === "both" ? "both" : "between"}`
 
 const Cross = () => (
 	<svg viewBox="0 0 12 12" aria-hidden="true">
@@ -50,14 +54,17 @@ export function MixBar({
 	onDrop,
 	onClear,
 	onGo,
+	onAll,
 }: {
 	state: MixBarState
 	onDrop: (id: string) => void
 	onClear: () => void
-	/** Brings the middle into view. */
+	/** Goes to the middle, where the combination is. */
 	onGo: () => void
+	/** Goes back out to the whole world. */
+	onAll: () => void
 }) {
-	const free = Math.max(0, 3 - state.list.length)
+	const free = Math.max(0, state.max - state.list.length)
 	return (
 		<div className="ex-bar">
 			<div className="ex-bar-body">
@@ -86,8 +93,14 @@ export function MixBar({
 				<span className={state.up ? "ex-bar-count" : "ex-bar-mute"}>
 					{state.status}
 				</span>
-				{state.up && (
-					<button type="button" className="ex10-go" onClick={onGo}>
+				{/* One switch between the two views: the combination in the middle, and the whole world. */}
+				<span className="ex10-view" role="group" aria-label="View">
+					<button
+						type="button"
+						aria-pressed={state.at === "hub"}
+						className={state.at === "hub" ? "ex10-view-on" : ""}
+						onClick={onGo}
+					>
 						<svg viewBox="0 0 14 14" aria-hidden="true">
 							<path
 								d="M8.5 2H12v3.5M12 2L8 6M5.5 12H2V8.5M2 12l4-4"
@@ -98,9 +111,17 @@ export function MixBar({
 								strokeLinejoin="round"
 							/>
 						</svg>
-						Show
+						Combined
 					</button>
-				)}
+					<button
+						type="button"
+						aria-pressed={state.at === "all"}
+						className={state.at === "all" ? "ex10-view-on" : ""}
+						onClick={onAll}
+					>
+						Show all
+					</button>
+				</span>
 			</div>
 			<button type="button" className="ex-bar-x" onClick={onClear}>
 				<Cross />

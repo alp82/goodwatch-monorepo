@@ -30,8 +30,8 @@ export const shouldRevalidate = () => false
 
 export default function RecExplorer10Prototype() {
 	const [params] = useSearchParams()
-	const key = params.get("variant") ?? "causeways"
-	const variant = VARIANTS10[key] ?? VARIANTS10.causeways
+	const key = params.get("variant") ?? "harbor"
+	const variant = VARIANTS10[key] ?? VARIANTS10.harbor
 	return (
 		<>
 			<Explorer10 key={key} variant={variant} />

@@ -28,7 +28,7 @@ import type { ViewerContext } from "~/server/viewer.server"
 const { seatFor, layoutFor, treeOf, offered } = prototypeParts
 type Seat = Awaited<ReturnType<typeof seatFor>>
 
-export const MAX_PICKS = 3
+export const MAX_PICKS = 5
 
 export interface Ref10 {
 	grouping: Grouping

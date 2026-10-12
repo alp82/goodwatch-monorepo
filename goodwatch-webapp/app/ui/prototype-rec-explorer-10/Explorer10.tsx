@@ -49,7 +49,7 @@ import {
 import type { Variant10 } from "./variants10"
 import { groupingOf, layWorld10, localId, worldId } from "./world10"
 
-const MAX_PICKS = 3
+const MAX_PICKS = 5
 
 /** The map's filters as the URL holds them (null is the default). */
 type Filters = Omit<MapQuery, "grouping">
@@ -473,8 +473,10 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 			setMix(null)
 			setForming(false)
 			// Sailing to the middle from the first pick (Harbor): the middle comes into view next to the region.
-			if (move && next.length > was.length && variant.dockFrom === 1)
-				showHub(next)
+			if (move && next.length > was.length) {
+				if (variant.back) e.overview()
+				else if (variant.dockFrom === 1) showHub(next)
+			}
 			return
 		}
 		const known =
@@ -484,7 +486,11 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 		setMix(null)
 		if (!e.raiseMix(next, null, known ?? null)) return
 		setForming(true)
-		if (move) showHub(next)
+		// Back out to the world while more can join; with every place taken, to the combination.
+		if (move && variant.back && was.length < next.length) {
+			if (next.length < MAX_PICKS) e.overview()
+			else e.flyToHub()
+		} else if (move) showHub(next)
 		const tree = await queryClient
 			.fetchQuery({
 				queryKey: ["explorer10", "mix", viewer, filterKey(q), next.join(",")],
@@ -527,7 +533,7 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 		if (cur.includes(island.id))
 			return void applyPicks(cur.filter((id) => id !== island.id))
 		if (cur.length >= MAX_PICKS)
-			return say("Three islands at most. Let one go to pick another.")
+			return say(`${MAX_PICKS} islands at most. Let one go to pick another.`)
 		if (cur.length && sharesRef.current?.get(island.id)?.count === 0)
 			return say(
 				`${namesOf([...cur, island.id])} share no titles with these filters`,
@@ -894,8 +900,9 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 		const dim = new Map<string, number>()
 		if (picks.length && picks.length < MAX_PICKS && shares)
 			for (const [id, s] of shares) {
-				notes.set(id, sharedNote10(s.count, s.kind))
-				if (!s.count) dim.set(id, 0.9)
+				// An island that would leave the combination empty goes grey and loses its name.
+				if (!s.count) dim.set(id, 1)
+				else notes.set(id, sharedNote10(s.count, s.kind, picks.length + 1))
 			}
 		e.setNotes(notes)
 		e.setDim(dim)
@@ -903,7 +910,7 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 		e.setHubNote(
 			first
 				? { title: `${first.name} +`, sub: "Pick another island, from any group" }
-				: { title: "Combine", sub: "Pick up to 3 islands, from any group" },
+				: { title: "Combine", sub: `Pick up to ${MAX_PICKS} islands, from any group` },
 		)
 	}, [picks, shares, engine, world])
 
@@ -956,6 +963,10 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 			} else if (ev.key === "-" || ev.key === "_") {
 				ev.preventDefault()
 				e.stepZoom(-1)
+			} else if (ev.key === "c" || ev.key === "C") {
+				// One key between the two views: the combination, and the whole world.
+				ev.preventDefault()
+				goRef.current(e.regionNear() === "hub" ? "all" : "hub")
 			} else if (ev.key === "0") {
 				ev.preventDefault()
 				k.unpin()
@@ -1037,12 +1048,14 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 				status: forming
 					? "finding what they share…"
 					: mix
-						? sharedLine10(mix.count, mix.kind)
+						? sharedLine10(mix.count, mix.kind, mix.of.length)
 						: touch
 							? "tap another island, in any group"
 							: "click another island, in any group",
 				up: !!mix || forming,
 				full: picked.length >= MAX_PICKS,
+				max: MAX_PICKS,
+				at: at === "hub" ? "hub" : atOverview ? "all" : "",
 			}
 		: null
 	const spoken = !bar
@@ -1054,8 +1067,8 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 			? "Tap a group to go to its islands."
 			: "Click a group to go to its islands."
 		: touch
-			? "Tap an island to pick it. Up to three, from any groups, combine in the middle."
-			: "Click an island to pick it. Up to three, from any groups, combine in the middle."
+			? "Tap an island to pick it. Up to five, from any groups, combine in the middle."
+			: "Click an island to pick it. Up to five, from any groups, combine in the middle."
 	return (
 		<div ref={stage} className="ex-stage" data-bar={bar ? "" : undefined}>
 			<Styles10 />
@@ -1154,7 +1167,8 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 						state={bar}
 						onDrop={(id) => void applyPicks(picks.filter((x) => x !== id))}
 						onClear={() => void applyPicks([])}
-						onGo={() => engineRef.current?.flyToHub()}
+						onGo={() => goRegion("hub")}
+						onAll={() => goRegion("all")}
 					/>
 				</div>
 			)}
@@ -1245,9 +1259,12 @@ function Styles10() {
 .ex10-chip button:hover{background:rgba(255,255,255,.16);color:#fff}
 .ex10-chip svg{width:9px;height:9px}
 .ex10-slot{flex:none;display:inline-block;width:22px;height:22px;border-radius:999px;border:1.5px dashed rgba(255,255,255,.3)}
-.ex10-go{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:700;color:#fff;background:rgba(255,255,255,.1);white-space:nowrap}
-.ex10-go:hover{background:rgba(255,255,255,.2)}
-.ex10-go svg{width:12px;height:12px}
+.ex10-view{flex:none;display:inline-flex;padding:2px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+.ex10-view button{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-weight:700;color:rgba(255,255,255,.72);white-space:nowrap}
+.ex10-view button:hover{color:#fff}
+.ex10-view .ex10-view-on{background:rgba(255,255,255,.2);color:#fff}
+.ex10-view svg{width:12px;height:12px}
+.ex10-slot{width:18px;height:18px}
 `}</style>
 	)
 }

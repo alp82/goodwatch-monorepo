@@ -313,7 +313,8 @@ export function createMapEngine(
 		const angles = picked.map((i) =>
 			Math.atan2(i.shape.cy - hub.y, i.shape.cx - hub.x),
 		)
-		const apart = 1.25
+		// Five fit around the combination below its name; fewer keep more room between them.
+		const apart = Math.min(1.25, (Math.PI * 2 - 2.1) / Math.max(1, picked.length - 1) - 0.02)
 		// The combination wears its name above it: nothing sits there.
 		const clearTop = () => {
 			for (let a = 0; a < angles.length; a++) {
@@ -335,6 +336,19 @@ export function createMapEngine(
 				}
 		}
 		clearTop()
+		// Four or five: evenly around, below the name, in the order of where they came from.
+		if (angles.length > 3) {
+			const from = -Math.PI / 2 + 1.05
+			const span = Math.PI * 2 - 2.1
+			const turn = (a: number) => {
+				const d = a - from
+				return d - Math.floor(d / (Math.PI * 2)) * Math.PI * 2
+			}
+			const order = angles.map((a, k) => ({ k, t: turn(a) })).sort((x, y) => x.t - y.t)
+			order.forEach((o, n) => {
+				angles[o.k] = from + (span * n) / (order.length - 1)
+			})
+		}
 		for (const island of live()) {
 			if (island === mix) {
 				island.target = { ...NEUTRAL_LOOK, vivid: 1 }
@@ -346,7 +360,8 @@ export function createMapEngine(
 				island.target = { ...NEUTRAL_LOOK, mute: dim.get(island.id) ?? 0 }
 				island.role = picked.length ? "other" : "none"
 			} else if (docks) {
-				const r = clamp(island.shape.r, hub.rMix * 0.4, hub.rMix * 0.56)
+				const big = picked.length > 3 ? 0.5 : 0.56
+				const r = clamp(island.shape.r, hub.rMix * 0.4, hub.rMix * big)
 				const d = hub.rMix + r + 46
 				island.target = {
 					dx: hub.x + Math.cos(angles[at]) * d - island.shape.cx,
@@ -1139,7 +1154,7 @@ export function createMapEngine(
 		const vivid = island.look.vivid
 		const t = island.tint
 		const l = 0.3 * t[0] + 0.59 * t[1] + 0.11 * t[2]
-		const k = (1 - 0.5 * m) * (1 + 0.08 * vivid)
+		const k = (1 - 0.68 * m) * (1 + 0.08 * vivid)
 		return {
 			x: cX(island),
 			y: cY(island),
@@ -1508,15 +1523,15 @@ export function createMapEngine(
 			const m = island.look.mute
 			const t = island.tint
 			const grey = 0.3 * t[0] + 0.59 * t[1] + 0.11 * t[2]
-			const col = t.map((ch) => (ch + (grey - ch) * 0.8 * m) * (1 - 0.4 * m)) as Rgb
+			const col = t.map((ch) => (ch + (grey - ch) * 0.92 * m) * (1 - 0.55 * m)) as Rgb
 			g.save()
-			g.globalAlpha = a
+			g.globalAlpha = a * (1 - 0.45 * m)
 			shorePath(c.x, c.y, r, island.shape.seed, r < 14 ? 20 : 40)
 			const fill = g.createRadialGradient(c.x, c.y - r * 0.3, r * 0.1, c.x, c.y, r * 1.1)
 			fill.addColorStop(0, rgbCss(mixRgb(col, [1, 1, 1], 0.12), 0.95))
 			fill.addColorStop(0.7, rgbCss(mixRgb(col, [0.02, 0.04, 0.09], 0.45), 0.95))
 			fill.addColorStop(1, rgbCss(mixRgb(col, [0.02, 0.04, 0.09], 0.7), 0.95))
-			g.shadowColor = rgbCss(col, 0.55)
+			g.shadowColor = rgbCss(col, 0.55 * (1 - m))
 			g.shadowBlur = clamp(r * 0.5, 3, 16)
 			g.fillStyle = fill
 			g.fill()
@@ -1814,7 +1829,11 @@ export function createMapEngine(
 		const island = makeIsland(
 			{
 				id,
-				name: joined.map((j) => j.name).join(" + "),
+				// Four or five names don't fit over an island: the first two, and how many more.
+				name:
+					joined.length > 3
+						? `${joined[0].name} + ${joined[1].name} + ${joined.length - 2} more`
+						: joined.map((j) => j.name).join(" + "),
 				color: rgbHex(mean(joined.map((j) => j.base))),
 				count: tree.count,
 				medianMatch: matches.length

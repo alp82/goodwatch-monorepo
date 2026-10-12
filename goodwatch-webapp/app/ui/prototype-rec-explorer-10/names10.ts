@@ -33,7 +33,7 @@ const subLineOf = (island: MapIsland, phone: boolean) => {
 	if (island.bridge) {
 		const kind = island.bridge.kind as string
 		return kind === "all"
-			? `${n} on all three${taste}`
+			? `${n} on all ${island.bridge.of.length}${taste}`
 			: kind === "both"
 				? `${n} in both${taste}`
 				: `${n} between the two${taste}`
@@ -74,8 +74,11 @@ export function paintNames10(
 		const st1 = f.islandScale(island)
 		let a = 1 - smooth(Math.max(f.fit * 1.3, st1 * 0.42), st1 * 0.8, f.scale)
 		const mm = island.look.mute * f.mapLevel
-		a *= (1 - 0.28 * mm) * risen(island, 0.55) * f.fade(island)
+		a *= (1 - 0.6 * mm) * risen(island, 0.55) * f.fade(island)
 		if (a <= 0.01) continue
+		// Small islands sitting against the combination leave the room to its name; the bar names them.
+		if (island.role === "joined" && island.sr < 40 && islands.some((o) => o.bridge))
+			continue
 		const z = smooth(f.fit * 1.25, f.fit * 2.2, f.scale)
 		const sr = island.sr
 		const bridge = !!island.bridge
