@@ -1,0 +1,60 @@
+{
+  "schema": "resource-population-source-provenance.v1",
+  "preparedOnly": true,
+  "hostOperations": 0,
+  "queries": 0,
+  "cacheControls": 0,
+  "capacityPermission": false,
+  "idleAdmission": false,
+  "productionAcceptance": false,
+  "futureCeilingEstablished": false,
+  "outcomeTableSha256": "06ac005db11c28ca353d30ab6ddfa0d2f733b0eb9321c49d064449b7325bd813",
+  "oldReaderSha256": "17e692e8c44c751a2ddbc4b1f98bd6d651323c12cf2bff42369c7d98ac8093b8",
+  "oldAuditorSha256": "62e366ea2417c4fe67694ef1a02cd70dd31872e276fa25c962883f1fbc2fbafb",
+  "unchangedOriginalTests": {
+    "test_membership_ledger.py": {
+      "sha256": "ce4db9806d1f5cfbc7e41cc47e0f6569ac595a211e4ff14e4cf5447ce31f991f",
+      "bytes": 8722
+    },
+    "test_resource_window.py": {
+      "sha256": "538106dd3f4af6a06bc6305b3e2f3b1b768f903a97724cd4b3dfbe5c75efddcd",
+      "bytes": 23413
+    }
+  },
+  "unchangedOriginalAuditTests": {
+    "test_membership_audit_v3.py": {
+      "sha256": "237b689a5936068daaaae08209d19bec195e79a3442243750b2c9add3ba66aa0",
+      "bytes": 3945
+    },
+    "test_membership_transport_v3.py": {
+      "sha256": "62988c043d9af7439a592572a626468a1a37bdf4f38a25ca9f2f79dfb9814c6d",
+      "bytes": 3089
+    }
+  },
+  "unchangedIdleConsumerFiles": {
+    "idle_trial.py": {
+      "sha256": "d35f6ec06001ce65a7734ea6e76d72430467e0f46ef63e08f3dff4b92d280340",
+      "bytes": 28952
+    },
+    "idle_lease.py": {
+      "sha256": "29a04660f0c14c6d39e5a1e29cdd1a9d31bcd3a4d567f65ce4449d9acc958579",
+      "bytes": 9751
+    },
+    "idle_launcher.py": {
+      "sha256": "921ee686ef0de40e4fe476ee78fa46ef8eebb77788b603cd0aeeaaf5893ddb0d",
+      "bytes": 11451
+    },
+    "idle_journal.py": {
+      "sha256": "96575cbe80508614ce6e9def01083197168ab1626da2401a14ab08dcd9850cf1",
+      "bytes": 14947
+    }
+  },
+  "planSha256": "1a6d0f926a0ee85f6b01bef576fe1cb6c06021ca38a0ec2de6ef8682ad403bbf",
+  "planReviewSha256": "a0749d95afbd2feb2c0d26d7cb242858d9c8d8552a820fb8183395b7fc9e42bb",
+  "transportPrepared": false,
+  "actualObservation": false,
+  "firstBlockedSourceCommit": "736e04d1",
+  "firstSourceReviewSha256": "e884572c60a86275f2560320eae80918240ab75942078e5ae0c3f6ee22dc00af",
+  "secondBlockedSourceCommit": "9d099487",
+  "secondSourceReviewSha256": "695e00220a932aaaf02b9facb04e19267bcc341c853ee6492895895a6ea51a79"
+}
