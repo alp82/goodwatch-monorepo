@@ -463,7 +463,9 @@ class RegistrationV2Tests(unittest.TestCase):
     def test_loaded_module_marker_drift_refuses_before_loader(self):
         value=fixture();names=('lifecycle_cpu0.py','controller_cpu0.py','pin_cpu0.py',
                               'runtime_cpu0.py','daemon_cpu0.py','cpu0_guards.py')
-        source={'files':{name:'a'*64 for name in names}}
+        source={'schema':'search.clone-cpu0-fixed-source-freeze.v2','variant':r.VARIANT,
+                'preparedOnly':True,'files':{name:'a'*64 for name in r.SOURCE_NAMES}}
+        value['sourceFreezeSha256']=r.sha(r.canonical(source))
         modules={name:types.SimpleNamespace(_AUTHENTICATED_SOURCE_SHA256='a'*64) for name in names}
         controller=modules['controller_cpu0.py']
         for name,attribute in [('pin_cpu0.py','pin'),('runtime_cpu0.py','runtime'),
@@ -506,6 +508,62 @@ class RegistrationV2Tests(unittest.TestCase):
         self.assertTrue(original.consumerCleanupEvidence['unknownRetained'])
         self.assertFalse(original.consumerCleanupEvidence['finalRegistrationObserved'])
         self.assertFalse(original.consumerCleanupEvidence['unknownUnregisteredChildrenAbsentProven'])
+
+    def test_changed_second_freeze_read_cannot_authorize_drifted_module_markers(self):
+        # Real installed() consumes the authenticated physical full/source recipe.
+        # Only the second freeze read is replaced: the exact review reproduction.
+        real_lstat=Path.lstat;real_fstat=os.fstat;real_read=r.read_public
+        def root_stat(value):
+            names=('st_dev','st_ino','st_size','st_mtime_ns','st_ctime_ns','st_mode','st_nlink')
+            return types.SimpleNamespace(**{key:getattr(value,key) for key in names},st_uid=0)
+        with tempfile.TemporaryDirectory() as temp, mock.patch.object(r,'STAGE',Path(temp)), \
+             mock.patch.object(r,'directory'),mock.patch.object(r.Path,'lstat',lambda p:root_stat(real_lstat(p))), \
+             mock.patch.object(r.os,'fstat',lambda fd:root_stat(real_fstat(fd))):
+            folder=Path(temp);value=self.stage_fixture(folder)
+            source=r.decoded((folder/'cpu0-source-freeze.json').read_bytes())
+            changed=copy.deepcopy(source)
+            for name in ('controller_cpu0.py','pin_cpu0.py','runtime_cpu0.py','daemon_cpu0.py','cpu0_guards.py'):
+                changed['files'][name]='b'*64
+            modules={name:types.SimpleNamespace(_AUTHENTICATED_SOURCE_SHA256=changed['files'][name])
+                     for name in changed['files']}
+            control=modules['controller_cpu0.py']
+            for name,attribute in [('pin_cpu0.py','pin'),('runtime_cpu0.py','runtime'),
+                                   ('daemon_cpu0.py','daemon'),('cpu0_guards.py','cpu0_guards')]:
+                setattr(control,attribute,modules[name])
+            control.daemon.load_config=mock.Mock(return_value=({},None,None))
+            reads=[]
+            def read(path,*args):
+                if path==folder/'cpu0-source-freeze.json':
+                    reads.append(path)
+                    if len(reads)==2:return r.canonical(changed),None
+                return real_read(path,*args)
+            with mock.patch.object(r,'current_node',return_value=value['nodeIdentity']), \
+                 mock.patch.object(r,'read_public',side_effect=read):
+                with self.assertRaisesRegex(RuntimeError,'source_freeze_changed'):
+                    r.cleanup_context(modules['lifecycle_cpu0.py'],control,value)
+            self.assertEqual(len(reads),2);control.daemon.load_config.assert_not_called()
+
+    def test_birth_read_disappearance_retains_actual_gone_without_source(self):
+        life=types.SimpleNamespace(birth=mock.Mock(side_effect=ProcessLookupError()),birth_gone=lambda *a:True)
+        with mock.patch.object(r.os,'pidfd_open',return_value=55),mock.patch.object(r.os,'close'), \
+             mock.patch.object(r.select,'select',return_value=([],[],[])), \
+             mock.patch.object(r,'cleanup_context') as context,mock.patch.object(r.signal,'pidfd_send_signal') as send:
+            value=r.cleanup_birth(life,None,fixture(),scope='disappeared')
+            self.assertTrue(value['birthGone']);self.assertFalse(value['unknownRetained'])
+            context.assert_not_called();send.assert_not_called()
+
+    def test_late_refusal_does_not_label_completed_running_renewal(self):
+        value,error,sends,_=self.renewal_run(second_change=lambda v:v['cpuHierarchy']['rows'][0].update(groupIdentitySha256='8'*64))
+        self.assertIsInstance(error,RuntimeError);self.assertEqual(sends,0)
+        self.assertEqual(value['sourceBranch'],'uncertain')
+        self.assertIsNotNone(value['sourceRenewalBefore']);self.assertIsNotNone(value['sourceRenewalAfter'])
+
+    def test_malformed_second_freeze_read_is_closed_typed_refusal(self):
+        value=fixture();raw=r.canonical({'files':None});value['sourceFreezeSha256']=r.sha(raw)
+        with mock.patch.object(r,'installed',return_value='a'*64), \
+             mock.patch.object(r,'read_public',return_value=(raw,None)):
+            with self.assertRaisesRegex(RuntimeError,'source_freeze_changed'):
+                r.cleanup_context(object(),object(),value)
 
     def test_nonfinite_json_refused_before_schema(self):
         for raw in (b'{"x":NaN}',b'{"x":Infinity}',b'{"x":-Infinity}'):
