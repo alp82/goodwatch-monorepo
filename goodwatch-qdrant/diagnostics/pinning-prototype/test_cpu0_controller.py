@@ -49,7 +49,7 @@ class CallerTests(unittest.TestCase):
         self.assertEqual(evidence['cpuLimitDelta']['throttled_usec'],7)
 
     def test_post_query_and_inventory_failure_survive_cleanup_failure(self):
-        for target in ('query-interval','post-query-inventory'):
+        for target in ('query-interval','post-query-inventory','constructor-unknown','constructor-live'):
             spec=SimpleNamespace();source=SimpleNamespace(identity=('fixed',),spec=spec,cgroup_relative='/clone',pid=123)
             state=pin_state();steady=pin_state();steady.update(newLockBytes=0,rangesChanged=False)
             holder=Mock();holder.request.side_effect=[state,steady,steady];holder.close.side_effect=RuntimeError('pin_child_cleanup')
@@ -64,13 +64,17 @@ class CallerTests(unittest.TestCase):
                 value=accounting()
                 if progress['ack'] and (target=='query-interval' or progress['inventory']):value['cpu']['nr_throttled']=1
                 return value
+            constructor_failure=RuntimeError('overhead_helper_unproven');constructor_failure.childFailureDetails={'constructorChildGone':None if target=='constructor-unknown' else False,'constructorChildExitCode':None};constructor_failure.childConstructorCleanupFailure='pin_child_cleanup'
             events=[];phase_life=MagicMock();phase_life.overhead_growth.return_value={}
             with ExitStack() as stack:
-                contexts=[patch.object(control.os,'open',return_value=12),patch.object(control.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(control.os,'close'),patch.object(control.os,'set_inheritable'),patch.object(control,'load_lifecycle',return_value=phase_life),patch.object(control,'phase_overhead',return_value={}),patch.object(control.fcntl,'flock'),patch.object(control,'frozen_helper'),patch.object(control,'load_cache_preparation'),patch.object(control,'prepare_cache',return_value={'final':{'accounting':accounting()}}),patch.object(control,'guard_shards'),patch.object(control,'self_cgroup',return_value='/parent'),patch.object(control,'verify_archive'),patch.object(control,'owned_total_budget'),patch.object(control,'birth_admission',return_value={}),patch.object(control,'cold',return_value={'birthAdmission':{},'cleanStop':{'schema':'clone-child-term.clean.v1','clean':True}}),patch.object(control,'inspect_source',return_value=source),patch.object(control.cpu0_guards,'inspect_cpu_source',side_effect=[{'observed':True},RuntimeError('cpu_metric_missing')]),patch.object(control.cpu0_guards,'cpu_delta',return_value=[]),patch.object(control,'CPU_POLICY',{},create=True),patch.object(control.runtime,'measure_source',side_effect=measure),patch.object(control.runtime,'accounting',side_effect=account),patch.object(control,'process_counters',return_value={'minorFaults':0,'majorFaults':1,'physicalReadBytes':1,'rssBytes':1}),patch.object(control,'pressure',return_value={}),patch.object(control,'PinChild',return_value=holder),patch.object(control,'host_memory',return_value={'MemTotal':8*control.pin.GIB,'MemAvailable':4*control.pin.GIB,'Dirty':0,'Writeback':0,'SwapTotal':0}),patch.object(control,'query_lease',side_effect=lambda _:progress.update(ack=True))]
+                contexts=[patch.object(control.os,'open',return_value=12),patch.object(control.os,'fstat',return_value=SimpleNamespace(st_mode=0o100600,st_uid=os.geteuid(),st_nlink=1)),patch.object(control.os,'close'),patch.object(control.os,'set_inheritable'),patch.object(control,'load_lifecycle',return_value=phase_life),patch.object(control,'phase_overhead',return_value={}),patch.object(control.fcntl,'flock'),patch.object(control,'frozen_helper'),patch.object(control,'load_cache_preparation'),patch.object(control,'prepare_cache',return_value={'final':{'accounting':accounting()}}),patch.object(control,'guard_shards'),patch.object(control,'self_cgroup',return_value='/parent'),patch.object(control,'verify_archive'),patch.object(control,'owned_total_budget'),patch.object(control,'birth_admission',return_value={}),patch.object(control,'cold',return_value={'birthAdmission':{},'cleanStop':{'schema':'clone-child-term.clean.v1','clean':True}}),patch.object(control,'inspect_source',return_value=source),patch.object(control.cpu0_guards,'inspect_cpu_source',side_effect=[{'observed':True},RuntimeError('cpu_metric_missing')]),patch.object(control.cpu0_guards,'cpu_delta',return_value=[]),patch.object(control,'CPU_POLICY',{},create=True),patch.object(control.runtime,'measure_source',side_effect=measure),patch.object(control.runtime,'accounting',side_effect=account),patch.object(control,'process_counters',return_value={'minorFaults':0,'majorFaults':1,'physicalReadBytes':1,'rssBytes':1}),patch.object(control,'pressure',return_value={}),patch.object(control,'PinChild',return_value=holder,side_effect=constructor_failure if target.startswith('constructor-') else None),patch.object(control,'host_memory',return_value={'MemTotal':8*control.pin.GIB,'MemAvailable':4*control.pin.GIB,'Dirty':0,'Writeback':0,'SwapTotal':0}),patch.object(control,'query_lease',side_effect=lambda _:progress.update(ack=True))]
                 for context in contexts:stack.enter_context(context)
-                with self.assertRaisesRegex(RuntimeError,'phase_resource_failed'):
+                with self.assertRaisesRegex(RuntimeError,'overhead_helper_unproven' if target.startswith('constructor-') else 'phase_resource_failed'):
                     control.stage({'queryLeaseSeconds':60,'controlReadySeconds':1200,'cachePreparation':{'helperSha256':'a'*64}},spec,SimpleNamespace(emergency_bytes=3*control.pin.GIB//2,cap_reserve_bytes=1,max_locked_bytes=2*control.pin.GIB,reserve_bytes=2*control.pin.GIB),'candidate',events.append)
             failure=next(e for e in events if e['stage']=='phase-failed')
+            if target.startswith('constructor-'):
+                self.assertEqual(failure['reason'],'overhead_helper_unproven');self.assertEqual(failure['childFailureDetails'],constructor_failure.childFailureDetails)
+                self.assertIs(events[-1]['released'],False);self.assertIs(events[-1]['pinChildExited'],False);self.assertIsNone(events[-1]['pinChildExitCode']);self.assertEqual(events[-1]['cleanupReason'],'pin_child_cleanup');continue
             self.assertEqual(failure['resourceLimitEvidence']['scope'],target)
             self.assertEqual(failure['lifecycleCompletedStopReceipt'],{'schema':'clone-child-term.clean.v1','clean':True})
             self.assertEqual(failure['reason'],'phase_resource_failed')
@@ -471,6 +475,23 @@ class EnrolmentPublicationTests(unittest.TestCase):
                 self.assertEqual(caught.exception.consumerEnrolmentFailureEvidence['publicationState'],'not-issued')
                 self.assertIs(caught.exception.consumerEnrolmentFailureEvidence['cleanupAddressableByFixedReceipt'],False)
                 self.assertEqual((root/'cpu0-consumer-enrolment-v2.json').read_bytes(),raw)
+    def test_real_enrolment_then_admission_failure_preserves_primary_and_published_authority(self):
+        import cpu0_preflight as p
+        with tempfile.TemporaryDirectory()as temp:
+            root=Path(temp);root.chmod(0o700);(root/'control.lock').write_bytes(b'');(root/'control.lock').chmod(0o600)
+            life=MagicMock();source,context,args,node=self.fixture(p,life)
+            life.read_handoff.return_value={'adoptionIntentSha256':'2'*64}
+            config={'schema':'clone-pin-control.cpu0-fixed.v2','helperCodeSha256':args[2],'helperPolicySha256':args[1],'cpuIsolation':{'periodMicros':100000,'weight':100,'cpusetCpus':'','cpusetMems':''}}
+            path=root/'control-policy.json';path.write_text(json.dumps(config));args[3]=str(path);args[4]=hashlib.sha256(path.read_bytes()).hexdigest()
+            primary=RuntimeError('host_emergency_floor');primary.admissionFailureEvidence={'retainedActualSample':123}
+            with ExitStack()as stack:
+                for item in (patch.object(p,'ROOT',root),patch.object(p,'ROOT_UID',os.geteuid()),patch.object(p,'control',control),patch.object(p,'daemon',daemon),patch.object(p,'cpu0_guards',control.cpu0_guards),patch.object(control,'ROOT',root),patch.object(control,'load_lifecycle',return_value=life),patch.object(control,'inspect_source',return_value=source),patch.object(p,'_node',return_value=(node,'1'*64)),patch.object(daemon,'load_config',return_value=({},SimpleNamespace(container='fixture-only'),object())),patch.object(control,'birth_admission',side_effect=primary)):
+                    stack.enter_context(item)
+                with self.assertRaisesRegex(RuntimeError,'host_emergency_floor')as caught:p._preflight(*args,consumer_context=context)
+            self.assertIs(caught.exception,primary);self.assertEqual(primary.admissionFailureEvidence,{'retainedActualSample':123})
+            proof=primary.consumerEnrolmentFailureEvidence;raw=(root/'cpu0-consumer-enrolment-v2.json').read_bytes()
+            self.assertEqual(proof['publicationState'],'published-verified');self.assertIs(proof['cleanupAddressableByFixedReceipt'],True)
+            self.assertEqual(proof['expectedReceiptSha256'],hashlib.sha256(raw).hexdigest());self.assertEqual(json.loads(raw),proof['consumerEnrolment']);life.commit_handoff.assert_not_called()
     def test_write_failure_retains_fixed_cleanup_authority_and_primary_cause(self):
         import cpu0_preflight as p
         with tempfile.TemporaryDirectory()as temp:
@@ -585,6 +606,9 @@ with tempfile.TemporaryDirectory()as directory:
  signal.signal(signal.SIGTERM,lambda *_:(_ for _ in()).throw(RuntimeError('parent interrupted')))
  if mode=='extra-fd':extra=os.open('/dev/null',os.O_RDONLY)
  if mode=='thread':thread=threading.Thread(target=lambda:event.wait(10));thread.start()
+ if mode=='magic-mapping':
+  original_bounded=life.bounded
+  life.bounded=lambda path,limit: b'1000-2000 r--s 00000000 00:00 1 /qdrant/storage/segment/vector.dat\n' if str(path)=='/proc/self/maps' else original_bounded(path,limit)
  if mode=='mapping':
   file=os.open(root/'owned-mapping',os.O_CREAT|os.O_RDWR,0o600);os.ftruncate(file,4096)
   libc=ctypes.CDLL(None,use_errno=True);libc.mmap.restype=ctypes.c_void_p
@@ -622,7 +646,7 @@ with tempfile.TemporaryDirectory()as directory:
    assert error.childFailureDetails['constructorChildGone']is True
    life.require_lock(fd)
    print(json.dumps({'constructorChildGone':True,'originalReasonPreserved':True}))
-  elif mode not in ('extra-fd','thread','mapping','large-parent'):raise
+  elif mode not in ('extra-fd','thread','mapping','large-parent','magic-mapping'):raise
   else:
    assert str(error)=='overhead_helper_unproven'
    assert not Path('/proc/self/task/'+str(os.getpid())+'/children').read_text().split()
@@ -649,6 +673,7 @@ with tempfile.TemporaryDirectory()as directory:
     def test_real_extra_fd_refuses_before_start(self):self.assertTrue(self.invoke('extra-fd')['refused'])
     def test_real_thread_refuses_before_start(self):self.assertTrue(self.invoke('thread')['refused'])
     def test_real_owned_mapping_refuses_before_start(self):self.assertTrue(self.invoke('mapping')['refused'])
+    def test_container_view_mapping_sample_refuses_before_real_start(self):self.assertTrue(self.invoke('magic-mapping')['refused'])
     def test_real_parent_anonymous_memory_above_quarter_reserve_refuses(self):self.assertTrue(self.invoke('large-parent')['refused'])
     def test_real_interruption_after_start_keeps_child_owned_and_reaps(self):self.assertEqual(self.invoke('constructor-interrupt'),{'constructorChildGone':True,'originalReasonPreserved':True})
 

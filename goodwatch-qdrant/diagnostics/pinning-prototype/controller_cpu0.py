@@ -648,8 +648,9 @@ def _fork_scope_guard(config,parent_connection,child_connection):
             actual.add(fd)
         if len(expected)!=6 or actual!=expected:raise RuntimeError('overhead_helper_unproven')
         maps=lifecycle.bounded(Path('/proc/self/maps'),8*1024**2)
-        prefix=os.fsencode(ROOT)+b'/'
-        if any(len(parts:=row.split(None,5))==6 and (parts[5]==os.fsencode(ROOT) or parts[5].startswith(prefix)) for row in maps.splitlines()):raise RuntimeError('overhead_helper_unproven')
+        prefixes=(os.fsencode(ROOT)+b'/',b'/qdrant/storage/',b'/qdrant/snapshots/')
+        exact=(os.fsencode(ROOT),b'/qdrant/storage',b'/qdrant/snapshots')
+        if any(len(parts:=row.split(None,5))==6 and (parts[5]in exact or parts[5].startswith(prefixes)) for row in maps.splitlines()):raise RuntimeError('overhead_helper_unproven')
         metrics={}
         for row in lifecycle.bounded(Path('/proc/self/status'),65536).splitlines():
             fields=row.split()
@@ -674,25 +675,37 @@ class PinChild:
         self.config=config;self.failure_details=None
         context=multiprocessing.get_context('fork');self.connection,child=context.Pipe()
         self.process=context.Process(target=_fork_pin_entry,args=(self.connection,child,spec,policy,raise_limit,config,raise_own_nofile))
-        self.spec=spec;self.previous=None;self.pressure_active=False
+        self.spec=spec;self.previous=None;self.pressure_active=False;start_attempted=False
         try:
             self.fork_scope_metrics=_fork_scope_guard(config,self.connection,child)
             # Preserve constructor ownership if a controller signal arrives during start.
             previous_mask=signal.pthread_sigmask(signal.SIG_BLOCK,{signal.SIGTERM,signal.SIGINT})
-            try:self.process.start()
+            try:
+                start_attempted=True;self.process.start()
             finally:signal.pthread_sigmask(signal.SIG_SETMASK,previous_mask)
             child.close()
         except BaseException as error:
-            for endpoint in (self.connection,child):
-                try:endpoint.close()
-                except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
-            if self.process.pid is not None:
-                try:
-                    self.process.join(1)
-                    if self.process.is_alive():self.process.terminate();self.process.join(5)
-                    if self.process.is_alive():self.process.kill();self.process.join(5)
-                    error.childFailureDetails={'constructorChildGone':not self.process.is_alive(),'constructorChildExitCode':self.process.exitcode}
-                except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
+            error.childFailureDetails={'constructorChildGone':True if not start_attempted else None,'constructorChildExitCode':None}
+            cleanup_mask=None
+            try:
+                cleanup_mask=signal.pthread_sigmask(signal.SIG_BLOCK,{signal.SIGTERM,signal.SIGINT})
+                for endpoint in (self.connection,child):
+                    try:endpoint.close()
+                    except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
+                if self.process.pid is not None:
+                    try:
+                        self.process.join(1)
+                        if self.process.is_alive():self.process.terminate();self.process.join(5)
+                        if self.process.is_alive():self.process.kill();self.process.join(5)
+                        gone=not self.process.is_alive()
+                        error.childFailureDetails={'constructorChildGone':gone,'constructorChildExitCode':self.process.exitcode}
+                        if not gone:error.childConstructorCleanupFailure='pin_child_cleanup'
+                    except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
+            except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
+            finally:
+                if cleanup_mask is not None:
+                    try:signal.pthread_sigmask(signal.SIG_SETMASK,cleanup_mask)
+                    except BaseException:error.childConstructorCleanupFailure='pin_child_cleanup'
             raise
     def request(self,pressure=False):
         before=runtime.accounting(inspect_source(self.spec))
@@ -890,7 +903,9 @@ def _stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,r
         original_error=sys.exc_info()[1];released=False;cleanup_error=None
         try:
             if manager is not None:manager.close()
-            released=True
+            constructor=getattr(original_error,'childFailureDetails',None) if manager is None else None
+            released=constructor is None or constructor.get('constructorChildGone')is True
+            if getattr(original_error,'childConstructorCleanupFailure',None):cleanup_error=RuntimeError(original_error.childConstructorCleanupFailure)
             if original_error is None:
                 lifecycle.require_lock(lock_fd)
                 handoff=lifecycle.commit_handoff(runtime.docker,handoff_sha,'controller')
@@ -902,8 +917,9 @@ def _stage(config,spec,policy,phase,emit,raise_own_memlock=False,case_tag=None,r
                 except BaseException:
                     if cleanup_error is None:cleanup_error=RuntimeError('lifecycle_lock_close_failed')
                     if original_error is not None:original_error.lifecycleCleanupFailure='lifecycle_lock_close_failed'
-            gone=manager is None or (not manager.process.is_alive() and not (Path('/proc')/str(manager.process.pid)).exists())
-            emit({'schema':'search.clone-mlock-control.v3','stage':'released','phase':phase,'at':at(),'released':released,'pinChildExited':gone,'pinChildExitCode':manager.process.exitcode if manager is not None else None,'cleanupReason':safe_control_reason(cleanup_error) if cleanup_error else None,'queries':0,'storageContentWrites':0})
+            constructor=getattr(original_error,'childFailureDetails',None) if manager is None else None
+            gone=(constructor is None or constructor.get('constructorChildGone')is True) if manager is None else (not manager.process.is_alive() and not (Path('/proc')/str(manager.process.pid)).exists())
+            emit({'schema':'search.clone-mlock-control.v3','stage':'released','phase':phase,'at':at(),'released':released,'pinChildExited':gone,'pinChildExitCode':manager.process.exitcode if manager is not None else constructor.get('constructorChildExitCode') if constructor is not None else None,'cleanupReason':safe_control_reason(cleanup_error) if cleanup_error else None,'queries':0,'storageContentWrites':0})
         if cleanup_error is not None and original_error is None:raise cleanup_error
     emit({'schema':'search.clone-mlock-control.v3','stage':'unpin-complete','phase':phase,'at':at(),'pinChildExited':True,'queries':0,'storageContentWrites':0})
 
