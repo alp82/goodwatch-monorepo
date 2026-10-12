@@ -11,8 +11,8 @@ The [first actual Opus 5.5 review](opus-original-block.txt) blocked lost stop re
 The frozen CPU0.md's `test_cpu0*.py` command omits lifecycle fixtures. To verify both relevant patterns from the repository root:
 
 ```sh
-python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'
-python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_lifecycle_cpu0.py'
+/usr/bin/python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_cpu0*.py'
+/usr/bin/python3 -B -m unittest discover -s goodwatch-qdrant/diagnostics/pinning-prototype -p 'test_lifecycle_cpu0.py'
 ```
 
 Full-suite verification uses the same directory with `-p 'test_*.py'`. These fixtures are local only. Fake-child wrapper exits and clone source safety do not prove real Qdrant durability, production latency, sufficient headroom, nine passing comparison pairs or seven-day acceptance. Single post-stop Docker sampling and process disappearance races can refuse safely. Interrupted receipt emission can lose proof; the external packet must stop. Every failed signal action is terminal, and query-finished alone is not phase completion: authenticated handoff, release and final completion remain mandatory. External closure and the direct consumer/socket teardown still require their own exact-source review before root execution.
