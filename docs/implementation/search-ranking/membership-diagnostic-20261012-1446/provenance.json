@@ -1,0 +1,54 @@
+{
+  "agentHostOperations": 0,
+  "association": "#100",
+  "executionOwner": "root-agent",
+  "files": {
+    "SHORT-DIAGNOSTIC-PLAN-v3.json": {
+      "bytes": 2137,
+      "sha256": "5636500856eb3656a04bd1e913715d4466ca81a93aac7d49f10b7299e8eb8fac"
+    },
+    "failure-summary.json": {
+      "bytes": 1963,
+      "sha256": "82355f5e23d7602765075b33470cae18172c4be04bbad7a9fa3ffac05c61e6de"
+    },
+    "fresh-source-fence-20261012-v3.jsonl": {
+      "bytes": 1480,
+      "sha256": "dec814b5c769d8ac1b51c7ec3bff6b7e423858a3a27888b01162ec33847e1840"
+    },
+    "membership-diagnostic-actual-20261012-v3.jsonl": {
+      "bytes": 70921,
+      "sha256": "40566c81bc79370b3c2bd223e2dddcab1e7e50b64b9ae4b927c00cc1488980a5"
+    },
+    "membership-diagnostic-recorder-actual-20261012-v3.jsonl": {
+      "bytes": 154,
+      "sha256": "fbf53a434ed10883847bf48e356387b5967af74c7d9b929111f4cbcd92b159d7"
+    },
+    "root-execution-actual-20261012-v3.json": {
+      "bytes": 1156,
+      "sha256": "1c6d9cfe97993bd6fca8a9b9695d9cd5257de8d74ef728fdcda5a74bc00f4a7f"
+    },
+    "strict-combined-audit.json": {
+      "bytes": 481,
+      "sha256": "59ba440e44e053874c1d2d87072651940a309aeed6b82d8601fad32e03b39f40"
+    },
+    "strict-numeric-audit.json": {
+      "bytes": 394,
+      "sha256": "2e4ac851ea066a9494708634a5337e30a7110045569262574b71a46b96abb6ca"
+    }
+  },
+  "futureCeilingEstablished": false,
+  "privateInputsPublished": false,
+  "productionAcceptance": false,
+  "repositoryBase": "7744f84f01978e27e3381402bed02eb98483e400",
+  "runtimeGuardRelaxed": false,
+  "schema": "goodwatch.membership-diagnostic.provenance.v3",
+  "sourceSha256": "17e692e8c44c751a2ddbc4b1f98bd6d651323c12cf2bff42369c7d98ac8093b8",
+  "transportAndAuditorSha256": {
+    "audit_membership_v3.py": "62e366ea2417c4fe67694ef1a02cd70dd31872e276fa25c962883f1fbc2fbafb",
+    "audit_transport_membership_v3.py": "3cfe728c974c06bcfb9fab9d11e475d2c6b3163652a6fd54b92493fea19bf224",
+    "launch_membership_diagnostic_v3.py": "fff109dcaaf9e997f00e3f04f1d03802c84ce67f938572163dad3aad66ddbcb0",
+    "record_membership_diagnostic_v3.py": "97520c1707362ee4efd63420894c60a8edda2e2a5dcfbcb9c00be52d5c2b7dba",
+    "test_membership_audit_v3.py": "237b689a5936068daaaae08209d19bec195e79a3442243750b2c9add3ba66aa0",
+    "test_membership_transport_v3.py": "62988c043d9af7439a592572a626468a1a37bdf4f38a25ca9f2f79dfb9814c6d"
+  }
+}

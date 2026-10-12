@@ -1,0 +1,17 @@
+{
+  "cleanReaderExitProven": false,
+  "coverage": "UNKNOWN",
+  "event": "resource-window.audit.v1",
+  "futureCeilingEstablished": false,
+  "problems": [
+    "terminal_or_start_missing",
+    "failure_record",
+    "event_order",
+    "unknown_event",
+    "clean_reader_exit_missing",
+    "required_proof_missing"
+  ],
+  "productionAcceptance": false,
+  "readerGoneProven": true,
+  "samples": 15
+}
