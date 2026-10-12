@@ -1,0 +1,41 @@
+**Verdict: PASS, with five binding clarifications to freeze in the v4 code/fixture packet.** I found no contradiction that defeats the design, and none of the clarifications needs sync, a nonzero exception, a reclaim retry, or a cap, deadline or quality change.
+
+I read the 18-line plan once with Read. I could not verify the SHA256 (no hashing tool in this session), so the review is tied to the path and the content as read, not to the hash.
+
+## What checks out
+
+- **Lifetime arithmetic:** 10 registration + 65 zero supervision (60 acceptance + one 5 s transport) + 60 write from the write-start frame + 5 TERM + 5 KILL = 145.
+- **Readiness arithmetic:** 650 − 70 + 145 = 725, and 1,200 − 725 = 475. The plan correctly calls this an enclosing bound with variable archive, inspection and inventory work on top, not a per-stage promise.
+- **Fences on dirty samples:** the plan names the existing defect (the snapshot raises on dirty before finishing its other fences) and requires collection and validation to be separated from the zero condition. Only `dirty_source_pages` permits another sample.
+- **Zero-only single write:** one literal `os.write` by the same child that waited, the parent never writes `memory.reclaim`, and no catch-up polling.
+- **Receipt-before-ACK and unknown outcomes:** fsync and birth/target verification precede ACK. A write-start with no result proof gives null attempts, never 0.
+- **Prior receipt census:** absent birth or a reused PID with different start ticks means gone; same-birth drift, malformed receipt, helper drift or unreadable proof means unknown and blocks. The scan continues past unknown entries, the preflight only inspects, and protected PIDs are never signaled.
+- **Unchanged criteria:** query 30 s, lease 60 s, pressure 180 s, initial pin 180 s, 1,500 ms threshold, the 1,200 s readiness and the 7,200 s cap are untouched. The only budget that changes is the internal writer allowance, 70 to 145, which is a preparation budget and not an acceptance criterion.
+
+## Clarifications to freeze
+
+1. **The 65 s figure only follows if a whole sample is bounded by 5 s.** The plan bounds "each" inspection at 5 s, but a sample has several fences (source, reclaim FD, parent placement, ancestor limits, counters). If these are separate transport calls, a sample started at 59.9 s can overrun 65 s. The parent clock still caps the lifetime, so this is safe, but the spec should say either one aggregate 5 s deadline per sample or that the parent's 65 s cutoff is the authority.
+
+2. **Accepting sample and "final fresh prewrite sample" must be the same sample.** The plan can be read as a clean accepting sample followed by a further fresh sample. That second sample would add up to 5 s outside the 65 s and leaves a dirty result on it undefined. Freeze these points:
+   - the accepting sample is the final one, with nothing but the write-start frame between it and the write;
+   - acceptance is judged at sample completion on a monotonic clock;
+   - the origin of each clock (child at ACK receipt, parent at ACK send).
+
+3. **A 0-attempt classification at prewrite timeout needs exit proof.** At the 65 s cutoff the child may have just emitted write-start. The parent may report 0 attempts only after proven exit and a drain to EOF showing no write-start frame; otherwise the outcome is unknown. The plan implies this but does not state it, and no fixture covers the race.
+
+4. **"A new receipt for each invocation/phase" against the 14-receipt bound.** If "phase" means protocol phase (registration, zero, write-start, outcome), the receipts multiply per invocation across baseline and candidate. With prior receipts never deleted, the pre-ACK bound could then refuse registration by construction. Freeze the maximum receipts per v4 run, what the 14 counts (per stage directory or global, with or without v1–v3), and show the maximum fits. This becomes a blocker at code review if left open.
+
+5. **Whether 145 s includes cleanup.** The plan's "overall 145-second writer lifecycle allowance" can be read as inclusive (cleanup starts by 135 s) or as a trigger (cleanup runs to 155 s). The 725 subtotal assumes inclusive. Also state that an unknown outcome with a retained pidfd is outside both the 145 and the 725, and that it ends the stage instead of consuming margin.
+
+## Smaller fixture gaps
+
+- No fixture for a counter-fence violation on a dirty sample; the listed one covers source, cap, parent and FD only.
+- No fixture for an inspection timeout or unreadable result during the wait, which should refuse immediately and not be treated as dirty.
+- No fixture for a sample that is dirty and also violates a fence, which should report the fence reason.
+- The census should open the pidfd first and then re-read start ticks; the plan lists both but not the order.
+
+## Limits
+
+- This is a plan review only. It does not validate code, latency or acceptance.
+- The 650 baseline composition, v3 behaviour, the existing 5 s transport timeout and the 14-receipt contract are taken as the plan states them; I did not check them against source.
+- A clean sample followed by a write still leaves an inherent window in which pages can become dirty. The plan narrows it and does not claim to close it.
