@@ -9,8 +9,14 @@ flow, with the same screens and the same items, is dressed three ways.
 ```
 cd goodwatch-webapp
 npm ci
-npx remix vite:dev --port 3147
+REC_TASTE_MATCH=on REC_FILTER_BAR=on REC_WATCH_NEXT=on REC_TASTE_PAGE=on REC_EXPLORER=on \
+REC_NAVIGATION=on REC_AGE_FILTER=on REC_TRACKING=on npx remix vite:dev --port 3147
 ```
+
+**Every `REC_*` flag must be on**, as in the command: without them the site around the room is the old design.
+With them the room sits under the new header (the wordmark, Browse, the search field, the Wishlist key, Sign up)
+and, on a phone, above the new dock. Nothing fails without Crate or Valkey: no request of either prototype route
+answers with an error.
 
 `http://localhost:3147/prototype/tv-screen-design`
 
@@ -24,6 +30,8 @@ needs the internet but nothing needs a key).
 | `Guest` / `Member`, or `P` | The person (`&as=member`) |
 | `In the room` / `TV only`, or `V` | The room with the Remote, or the TV alone (`&view=tv`) |
 | `“Expand”`, or `L` | Cycle the expand key's label |
+| `Pointer: Ring`, or `C` | Cycle the shape of the TV's own pointer: ring, crosshair, dot (`&pointer=cross`) |
+| `Expand last`, or `B` | The expand key last in the top bar, or first (`&bar=first`) |
 | Arrow keys, Enter, Escape or Backspace | Directions, OK, Back |
 | `H`, `M`, `S` | Home, Menu, Search (typing on the search screen goes to the TV) |
 | The Remote, mouse and touch on the TV | As in the flow prototype |
@@ -36,6 +44,63 @@ Every key is a plain key on a German keyboard: none needs Shift or AltGr. `&chro
   (member) My shows as apps on the TV; a title screen; search; the menu; the four-answer quiz.
 - One way out: the expand key at the top right of every app. Focusing it frames the whole picture, OK grows the
   picture into the page. Label "Expand" by default.
+
+## The top bar
+
+Every screen has the same bar: its name on the left (with one short line under it, such as the mood), and at the
+top right the same actions in the same place, as large as everything else (64 px tall, 72 in Marquee; an icon and
+one word). They do what the Remote's keys do, and are reached with Up from the top row of a screen, with the
+pointer, and by touch.
+
+| Screen | Back | Search | Menu | Expand |
+| --- | --- | --- | --- | --- |
+| Home | no: nothing to go back to | yes | yes | no: home has no page of its own |
+| Tonight, the moods, the titles, the map, an island, Taste, a side, My shows, a title | yes | yes | yes | yes |
+| The quiz, rating a title, What is GoodWatch? | yes | yes | yes | no: no page to grow into |
+| Search (typing) | yes | no: you are there | yes | no |
+| Search results | yes | no | yes | yes |
+| While the menu is open | the menu itself has no bar; the screen under it shows no Menu action | | | |
+
+**The arrangement:** Back, Search, Menu, a wider gap, then Expand, last, in the corner. The three are quiet (dark
+pills or blocks); Expand alone is amber and carries the motif, so it is not one of them. The corner is where
+round one put it, and Right along the bar always ends on it. **The alternative** (`B`): Expand first, then the
+gap, then the three; it reads first, but it moves away from the corner and sits beside the screen's name.
+[compare/top-bar.jpg](compare/top-bar.jpg) shows both in each direction. On a phone the three are icons without
+their words and the bar takes two lines (the actions, then the name).
+
+## Pointing the Remote at the screen
+
+- **The Remote follows the cursor.** Wherever the mouse is in the window (over the site's header and dock too),
+  the Remote in the hand aims at it: it turns about the wrist up to 42 degrees to either side (which reaches the
+  top corners), leans further back for a far point and less for a near one, rolls a little, and moves up to 44 px
+  toward the side. A turned Remote would sink out of the window; the hand lifts it by as much, so its keys stay
+  in view. It eases with a short lag (about a tenth of a second) and returns to rest when the cursor leaves the
+  window.
+- **Its keys stay hittable.** Over the Remote's own place it settles at rest, so the keys are where they were.
+- **The TV's own pointer.** Over the TV picture the system cursor is hidden and the TV draws a pointer that
+  follows with a slightly shorter lag. Over an item the item takes the focus and the pointer changes shape and
+  leans a little toward the item's middle; over the expand key it turns amber; a click is OK. It fades after
+  3.2 seconds without movement and at once when a key of the keyboard or of the Remote is used, and comes back
+  on movement.
+- **Three shapes** (`C`), one look for all three directions (white with a dark edge, so it reads on any art):
+
+  | Shape | Free | Over an item | |
+  | --- | --- | --- | --- |
+  | **Ring** (recommended) | a circle with a centre dot | the circle closes around the dot | Reads at once as "where the Remote points", shows the exact spot, covers the least |
+  | Crosshair | four ticks around a gap | the ticks close in and turn into an X | The most "aiming", but the thinnest on busy posters, and an X over an item can read as "close" |
+  | Dot | a lit puck | opens into a ring | The friendliest and the easiest to find, but it hides what is under it |
+
+  A clip and a strip per shape, the Remote following the cursor into the four corners and across the TV:
+  [ring](pointing/ring.mp4) ![ring](pointing/ring-strip.jpg) [crosshair](pointing/cross.mp4)
+  ![crosshair](pointing/cross-strip.jpg) [dot](pointing/dot.mp4) ![dot](pointing/dot-strip.jpg)
+- **Touch and the phone:** there is no cursor, so no pointer is drawn. A tap chooses directly; the Remote turns a
+  little toward the tap (40% of the way on a touch screen, 15% on the phone layout) and comes back after 0.65 s.
+- **Reduced motion:** the Remote stays still; the pointer is drawn without lag.
+- **How it is built** (`pointing.tsx`): one `pointermove` listener on the window writes the cursor into a ref; one
+  `requestAnimationFrame` loop eases two transforms (the Remote's `translate3d perspective rotateZ rotateX
+  rotateY` about the wrist, the pointer's `translate3d`) and stops when both have arrived. No React state is set
+  on a mouse move; the pointer's states are attributes written when they change, and its shape changes are CSS
+  transitions of `transform` and `opacity`. The real Remote component is untouched.
 
 ## The three directions
 
@@ -84,7 +149,7 @@ speed (0.85 s).
 ### Every screen
 
 `screens/<direction>/<nn-name>-desktop.jpg` (1920x1080, in the room) and `-phone.jpg` (390x844): 19 screens per
-direction. 01 home, 02 Tonight, 03 the moods, 04 the titles, 05 the expand key focused, 06 the map, 07 an island,
+direction, taken with every `REC_*` flag on and with the top bar. 01 home, 02 Tonight, 03 the moods, 04 the titles, 05 the expand key focused, 06 the map, 07 an island,
 08 Taste before a taste, 09 the quiz, 10 a title, 11 rating, 12 search, 13 search results, 14 the menu, 15 What is
 GoodWatch?, and for a member 16 home, 17 the three sides, 18 a side, 19 My shows.
 
@@ -112,9 +177,12 @@ focused item); `sizes.json` has the output.
 
 | | Smallest text | Where | Smallest focus target | Where |
 | --- | --- | --- | --- | --- |
-| Cinema | 21 px | the "Start" strip on a poster in My shows | 201 x 64 px | the expand key |
-| Marquee | 20 px | "92 score" under a poster | 239 x 72 px | the expand key |
-| Glow | 21 px | the facts line on a still | 201 x 64 px | the expand key |
+| Cinema | 21 px | the "Start" strip on a poster in My shows | 64 px tall (151 x 64) | Search in the top bar |
+| Marquee | 20 px | "92 score" under a poster | 72 px tall (160 x 72) | Search in the top bar |
+| Glow | 21 px | the facts line on a still | 64 px tall (151 x 64) | Search in the top bar |
+
+The script reports the target with the smallest shorter side; all actions of the top bar share that height, and
+Back, with the shortest word, is the narrowest of them.
 
 Primary labels: app names 26 to 108 px, screen titles 36 to 62 px, a title's name 46 to 104 px, buttons 25 to 32 px
 in keys 64 to 124 px tall. At most five targets in a row (My shows has six in Cinema and Marquee; the sixth pages
@@ -178,16 +246,22 @@ Added:
 - `.../base.tsx`: the apps flow (which screen shows what; item ids as in round one), the app pictures, the follower that glides to the focus
 - `.../cinema.tsx`, `.../marquee.tsx`, `.../glow.tsx`: the three directions
 - `.../art.ts`: TMDB poster and backdrop paths of the 25 sample titles
-- `docs/prototypes/tv-screen-design/`: this file, `shots.mjs`, `walk.mjs`, `sizes.json`, `screens/`, `compare/`, `focus/`, `expand/`
+- `.../pointing.tsx`: the Remote aiming at the cursor and the TV's own pointer
+- `docs/prototypes/tv-screen-design/`: this file, `shots.mjs`, `walk.mjs`, `sizes.json`, `screens/`, `compare/`, `focus/`, `expand/`, `pointing/`
 
-Changed: `goodwatch-webapp/vite.config.js` (`PROTOTYPES` lists the route and the folder). Nothing in
-`prototype-tv-flow` changed: the engine, the data, the focusable item and the title actions are imported as they
-are, and the flow prototype works as before.
+Changed: `goodwatch-webapp/vite.config.js` (`PROTOTYPES` lists the route and the folder), and in
+`prototype-tv-flow` only `data.ts`: the addresses of the pages the TV expands into are those of the flag-on pages
+(`moods=` for Discover, a title's TMDB id in its address). The engine, the focusable item and the title actions
+are imported as they are, and the flow prototype works as before.
 
 ## Proof
 
 - `npx remix vite:build` passes; `npx biome lint` on the added files is clean; `tsc` reports nothing in them.
-- `walk.mjs`: 84 checks pass. 26 per direction (the apps, a mood, titles, Want to See, rating, the expand key and
-  the way back, the menu, the map in four directions, the Remote's keys, search, the quiz, a member's My shows),
-  and 6 for the direction buttons and the keys 1, 2, 3, including that the screen stays when the direction changes.
+- `walk.mjs`: 162 checks pass. 51 per direction: the apps, a mood, titles, Want to See, rating, the way along the
+  top bar to the expand key and back, the menu, the map in four directions, the Remote's keys, search, the quiz,
+  a member's My shows; the top bar (which actions each kind of screen has, reaching them with Up, what Back,
+  Search and Menu do, the alternative order); and pointing (the pointer appears over the TV and the system cursor
+  is hidden, the item under it takes the focus, a click is OK, it hides on a key and after 3.2 s, the Remote
+  turns toward each of the four corners, settles over its own keys and is at rest after the cursor left). And 9
+  for the direction buttons, the keys 1, 2, 3, the pointer shapes and the phone.
 - `shots.mjs` made every picture, clip and number here.

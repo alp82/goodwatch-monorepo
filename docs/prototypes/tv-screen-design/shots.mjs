@@ -1,7 +1,7 @@
 // Everything pictured in this folder: every TV screen of the design prototype per direction (1920x1080 in the room,
 // and 390 px), the side-by-side comparisons of the TV alone, a clip (mp4) and a strip of the focus moving, a clip and a
 // strip of the expand run, and the size numbers (sizes.json).
-//   PLAYWRIGHT=/scratch/node_modules/playwright-core/index.mjs BASE=http://localhost:3147 node shots.mjs [screens|compare|focus|expand] [cinema]
+//   PLAYWRIGHT=/scratch/node_modules/playwright-core/index.mjs BASE=http://localhost:3147 node shots.mjs [screens|compare|bar|focus|expand|pointing] [cinema]
 // The repo has no browser driver: install playwright-core outside it. Needs the dev server (see README.md) and ffmpeg.
 // A page is loaded once per direction and person; window.__tvDesign then jumps from screen to screen.
 import { execFileSync } from "node:child_process"
@@ -52,12 +52,23 @@ const COMPARE = [
 
 const ffmpeg = (...args) => execFileSync("ffmpeg", ["-loglevel", "error", "-y", ...args])
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? "/usr/bin/chromium" })
-const open = async (viewport, query) => {
+// A machine short of memory crashes a page now and then while it loads: try again, twice.
+const open = async (viewport, query, tries = 3) => {
 	const ctx = await browser.newContext({ viewport, deviceScaleFactor: 1 })
 	const page = await ctx.newPage()
-	await page.goto(`${base}?${query}`, { waitUntil: "load", timeout: 120000 })
-	await page.waitForSelector("[data-tv-item][aria-current]", { timeout: 60000 })
+	try {
+		await page.goto(`${base}?${query}`, { waitUntil: "load", timeout: 120000 })
+		await page.waitForSelector("[data-tv-item][aria-current]", { timeout: 60000 })
+	} catch (error) {
+		await ctx.close().catch(() => {})
+		if (tries <= 1) throw error
+		console.log("loading again:", String(error.message).split("\n")[0])
+		await new Promise((done) => setTimeout(done, 4000))
+		return open(viewport, query, tries - 1)
+	}
 	await page.waitForTimeout(600)
+	// A dev server that was just restarted answers its first requests with an error, which Vite lays over the page.
+	if (await page.evaluate(() => Boolean(document.querySelector("vite-error-overlay")?.remove()) || Boolean(document.querySelector("vite-error-overlay")))) console.log("removed a Vite error overlay on", query)
 	return { ctx, page }
 }
 /** Jumps to a screen and waits until its art is there and its motion is over. */
@@ -150,6 +161,29 @@ if (!only || only === "compare") {
 	rmSync(tmp, { recursive: true, force: true })
 }
 
+if (!only || only === "bar") {
+	// The top bar as built (the expand key last) and the alternative (first), cut from the titles of Discover.
+	const dir = join(here, "compare")
+	const tmp = join(dir, "tmp")
+	mkdirSync(tmp, { recursive: true })
+	const strips = []
+	for (const design of ["cinema", "marquee", "glow"]) {
+		for (const order of ["last", "first"]) {
+			const { ctx, page } = await open(DESKTOP, `design=${design}&chrome=off${order === "first" ? "&bar=first" : ""}`)
+			await go(page, ["", "discover-cozy"])
+			const b = await tvBox(page)
+			const file = join(tmp, `${design}-${order}.png`)
+			await page.screenshot({ path: file, clip: { x: b.x, y: b.y, width: b.width, height: 124 } })
+			strips.push([file, `${NAMES[design]}, Expand ${order}`])
+			await ctx.close()
+		}
+	}
+	const label = (i, text) => `[${i}]drawtext=text='${text}':fontcolor=white:fontsize=24:x=w-tw-24:y=h-40:box=1:boxcolor=black@0.7:boxborderw=8[l${i}]`
+	ffmpeg(...strips.flatMap(([file]) => ["-i", file]), "-filter_complex", `${strips.map(([, text], i) => label(i, text)).join(";")};${strips.map((_, i) => `[l${i}]`).join("")}vstack=inputs=${strips.length}`, "-q:v", "3", join(dir, "top-bar.jpg"))
+	rmSync(tmp, { recursive: true, force: true })
+	console.log("bar")
+}
+
 /** Records the TV while `act` runs, through the browser's own screencast, and returns the frames with their times. */
 async function record(page, dir, act) {
 	const cdp = await page.context().newCDPSession(page)
@@ -185,12 +219,12 @@ if (!only || only === "focus") {
 				await page.waitForTimeout(520)
 			}
 		}
-		// Along the apps and back, into Discover, around the moods, into the results, along the titles, up to the expand key.
+		// Along the apps and back, into Discover, around the moods, into the results, along the titles, up to the bar and along it to the expand key.
 		let firstMove = 0
 		const frames = await record(page, tmp, async () => {
 			await page.waitForTimeout(400)
 			firstMove = Date.now() / 1000
-			await press("ArrowRight", "ArrowRight", "ArrowRight", "ArrowLeft", "ArrowLeft", "Enter", "ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Enter", "ArrowRight", "ArrowRight", "ArrowUp")
+			await press("ArrowRight", "ArrowRight", "ArrowRight", "ArrowLeft", "ArrowLeft", "Enter", "ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Enter", "ArrowRight", "ArrowRight", "ArrowUp", "ArrowRight", "ArrowRight", "ArrowRight")
 			await page.waitForTimeout(700)
 		})
 		ffmpeg("-f", "concat", "-safe", "0", "-i", join(tmp, "list.txt"), "-vf", `${crop},fps=30,scale=1200:-2`, "-pix_fmt", "yuv420p", "-movflags", "+faststart", join(dir, `${design}.mp4`))
@@ -200,6 +234,44 @@ if (!only || only === "focus") {
 		ffmpeg(...picked.flatMap((i) => ["-i", join(tmp, `f${String(i).padStart(4, "0")}.jpg`)]), "-filter_complex", `${picked.map((_, i) => `[${i}]${crop},crop=iw*0.62:ih*0.52:0:ih*0.48[c${i}]`).join(";")};${picked.map((_, i) => `[c${i}]`).join("")}hstack=inputs=3:shortest=0[x]`.replace("hstack=inputs=3:shortest=0[x]", "xstack=inputs=6:layout=0_0|w0_0|w0+w1_0|0_h0|w0_h0|w0+w1_h0[x]"), "-map", "[x]", "-q:v", "4", join(dir, `${design}-strip.jpg`))
 		await ctx.close()
 		console.log("focus", design, frames.length, "frames")
+	}
+	rmSync(tmp, { recursive: true, force: true })
+}
+
+if (!only || only === "pointing") {
+	// The Remote following the cursor into the four corners and across the TV, once per pointer shape.
+	const dir = join(here, "pointing")
+	const tmp = join(dir, "tmp")
+	mkdirSync(dir, { recursive: true })
+	for (const shape of ["ring", "cross", "dot"]) {
+		const { ctx, page } = await open(DESKTOP, `design=cinema&chrome=off&pointer=${shape}`)
+		await go(page, ["", "discover-cozy"])
+		const tv = await tvBox(page)
+		const item = await page.locator("[data-tv-item=t-paddington-2]").boundingBox()
+		const stops = [
+			["the middle of the TV", tv.x + tv.width * 0.62, tv.y + tv.height * 0.3],
+			["top left", 24, 90],
+			["top right", 1880, 90],
+			["bottom right", 1880, 1050],
+			["bottom left", 24, 1050],
+			["an item", item.x + item.width / 2, item.y + item.height / 2],
+		]
+		await record(page, tmp, async () => {
+			for (const [, x, y] of [...stops, ["", tv.x + 40, tv.y + tv.height * 0.6], ["", tv.x + tv.width - 60, tv.y + tv.height * 0.6], stops[5]]) {
+				await page.mouse.move(x, y, { steps: 26 })
+				await page.waitForTimeout(650)
+			}
+		})
+		ffmpeg("-f", "concat", "-safe", "0", "-i", join(tmp, "list.txt"), "-vf", "fps=30,scale=1280:-2", "-pix_fmt", "yuv420p", "-movflags", "+faststart", join(dir, `${shape}.mp4`))
+		// The strip: the same stops, each once it has settled.
+		for (const [i, [, x, y]] of stops.entries()) {
+			await page.mouse.move(x, y, { steps: 10 })
+			await page.waitForTimeout(900)
+			await page.screenshot({ path: join(tmp, `s${i}.jpg`), type: "jpeg", quality: 85 })
+		}
+		ffmpeg(...stops.flatMap((_, i) => ["-i", join(tmp, `s${i}.jpg`)]), "-filter_complex", "[0][1][2]hstack=inputs=3[a];[3][4][5]hstack=inputs=3[b];[a][b]vstack,scale=2880:-2", "-q:v", "4", join(dir, `${shape}-strip.jpg`))
+		await ctx.close()
+		console.log("pointing", shape)
 	}
 	rmSync(tmp, { recursive: true, force: true })
 }

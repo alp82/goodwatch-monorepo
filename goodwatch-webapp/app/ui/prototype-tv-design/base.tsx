@@ -1,7 +1,8 @@
 // PROTOTYPE - throwaway. What the three visual directions share: the apps flow itself (which screen shows what,
 // with the same item ids as the flow prototype), the art of the five apps, and the follower that glides to the
 // focused item. How anything looks is the direction's business (a `Skin`): cinema.tsx, marquee.tsx, glow.tsx.
-import { type CSSProperties, type FC, type ReactNode, createElement, useEffect, useRef, useState } from "react"
+import { type CSSProperties, type FC, type ReactNode, createContext, createElement, useContext, useEffect, useRef, useState } from "react"
+import { ICON, Icon } from "~/ui/living-room/Remote"
 import { DEST, type Dest, LEVELS, MOODS, NEXT_EPISODES, POPULAR, QUIZ, QUIZ_GOAL, SEARCH_IDEAS, SIDES, TO_START, type Title, WISHLIST_MOVIES, discover, islandOf, islandTitles, moodName, search, sideOf, titleOf } from "~/ui/prototype-tv-flow/data"
 import { parseId, useTv } from "~/ui/prototype-tv-flow/engine"
 import { Corners, F, Layer, metaOf, useTitleActions } from "~/ui/prototype-tv-flow/kit"
@@ -43,6 +44,10 @@ export type Skin = {
 	Menu: (p: { items: Action[] }) => ReactNode
 }
 
+/** The screen a piece is drawn on (under the menu, that is not the top of the stack), and where the expand key sits in the top bar. */
+const ScreenCtx = createContext("home")
+export const BarCtx = createContext<{ expandFirst: boolean }>({ expandFirst: false })
+
 /** A skin's screen as an element: skins use hooks, so they are rendered, never called. */
 const h = <P extends object>(component: (p: P) => ReactNode, props: P) => createElement(component as FC<P>, props)
 
@@ -74,7 +79,9 @@ export function DesignTv({ skin }: { skin: Skin }) {
 	return (
 		<>
 			<Layer key={id} className="tvd-screen" style={{ "--nav": last.current.nav === "fwd" ? 1 : -1 } as CSSProperties}>
-				<Screen id={id} skin={skin} />
+				<ScreenCtx.Provider value={id}>
+					<Screen id={id} skin={skin} />
+				</ScreenCtx.Provider>
 			</Layer>
 			{overlay && <Layer className="tvd-menu">{h(skin.Menu, { items })}</Layer>}
 			{tv.toastText && (
@@ -226,6 +233,58 @@ function TitleScreen({ skin, titleKey }: { skin: Skin; titleKey: string }) {
 	const x = titleOf(titleKey)
 	const actions = useTitleActions(x)
 	return h(skin.TitleView, { name: x.kind === "movie" ? "Movie" : "Show", title: x, kicker: metaOf(x), actions, dest: DEST.title(x) })
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The top bar's actions: the same group, in the same place, on every screen.
+
+const MENU_ICON = "M4 7h16M4 12h16M4 17h16"
+
+/**
+ * Back, Search and Menu, and with them the expand key where a screen has a page to grow into. They do what the
+ * Remote's keys do. An action that has nothing to do is not there: no Back on home, no Search on the search
+ * screens, no Menu while the menu is open. The expand key stays apart from the three by a wider gap, last in the
+ * row (the corner) or first, and it alone is amber. The direction dresses them (`cls`, `xcls`, the motif).
+ * On the phone the three show their icons only.
+ */
+export function Actions({ dest, cls, xcls, motif, className = "" }: { dest?: Dest; cls: string; xcls: string; motif: { w: number; h: number; stroke: number }; className?: string }) {
+	const tv = useTv()
+	const screen = useContext(ScreenCtx)
+	const { expandFirst } = useContext(BarCtx)
+	const P = tv.phone
+	const actions = [
+		screen !== "home" && { id: "bar-back", label: "Back", d: ICON.back, onOk: tv.back },
+		parseId(screen)[0] !== "search" && { id: "bar-search", label: "Search", d: ICON.search, onOk: tv.openSearch },
+		tv.top !== "menu" && { id: "bar-menu", label: "Menu", d: MENU_ICON, onOk: tv.toggleMenu },
+	].filter((a) => a !== false)
+	const expand = dest && <Expand key="expand" dest={dest} className={xcls} motif={motif} />
+	return (
+		<div className={`flex shrink-0 items-center ${P ? "gap-4" : "gap-7"} ${className}`}>
+			{expandFirst && expand}
+			<div className={`flex items-center ${P ? "gap-2" : "gap-2.5"}`}>
+				{actions.map((a) => (
+					// `tvx`: like the expand key, an action is never where a screen's focus starts.
+					<F key={a.id} id={a.id} onOk={a.onOk} label={a.label} className={`tvx flex shrink-0 items-center justify-center whitespace-nowrap ${cls}`}>
+						<Icon d={a.d} className={P ? "h-[26px] w-[26px]" : "h-[28px] w-[28px]"} />
+						{!P && a.label}
+					</F>
+				))}
+			</div>
+			{!expandFirst && expand}
+		</div>
+	)
+}
+
+/** A screen's name with its crumb under it: all the top bar holds besides the actions. */
+export function BarTitle({ name, crumb, nameClass, crumbClass, style }: { name: string; crumb?: string; nameClass: string; crumbClass: string; style?: CSSProperties }) {
+	return (
+		<div className="min-w-0 flex-1">
+			<div className={`truncate leading-none ${nameClass}`} style={style}>
+				{name}
+			</div>
+			{crumb && <div className={`mt-1.5 truncate leading-tight ${crumbClass}`}>{crumb}</div>}
+		</div>
+	)
 }
 
 // ---------------------------------------------------------------------------------------------------------

@@ -54,7 +54,7 @@ await page.getByRole("button", { name: "Only Netflix" }).click(); await page.wai
 console.log("     toast after the Netflix key:", await page.locator(".rounded-full.bg-white.text-black.shadow-2xl").first().innerText().catch(() => "none"))
 // Leaving: rows, one press.
 await open("variant=rows&at=discover-cozy&f=expand")
-await keys("Enter"); await page.waitForTimeout(1700); await expect("rows: one OK lands on the page", /focus expand · on \/discover\?mood=cozy$/)
+await keys("Enter"); await page.waitForTimeout(1700); await expect("rows: one OK lands on the page", /focus expand · on \/discover\?moods=cozy$/)
 await keys("Escape"); await page.waitForTimeout(900); await expect("Back comes back into the same TV screen", "discover-cozy · focus expand")
 // Apps: the corner key.
 await open("variant=apps&at=home.explorer.island-heists")
@@ -65,7 +65,7 @@ await page.getByRole("button", { name: "← Back to the TV" }).click(); await pa
 await open("variant=guided")
 await keys("Enter", "ArrowRight", "Enter", "Enter"); await expect("guided: three answers reach a pick", /^home › mood › kind-cozy › pick-cozy-movie-0 · focus more$/)
 await keys("ArrowRight", "ArrowRight"); await expect("the expand control is the last one", /focus expand$/)
-await keys("Enter"); await page.waitForTimeout(900); await expect("guided: after 0.9 s still on the TV, brackets creeping", /expanding to \/discover\?mood=cozy&type=movie$/)
+await keys("Enter"); await page.waitForTimeout(900); await expect("guided: after 0.9 s still on the TV, brackets creeping", /expanding to \/discover\?moods=cozy&type=movie$/)
 await keys("Escape"); await page.waitForTimeout(700); await expect("Back cancels the slow run", /pick-cozy-movie-0 · focus expand$/)
 await keys("Enter"); await page.waitForTimeout(300); await keys("Enter"); await page.waitForTimeout(1300); await expect("a second OK skips the wait", /· on \/discover/)
 await keys("Enter"); await page.waitForTimeout(900); await expect("OK on the page comes back", /pick-cozy-movie-0 · focus expand$/)

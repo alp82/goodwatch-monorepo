@@ -7,7 +7,7 @@ import { type Dest, ISLANDS, SIDES } from "~/ui/prototype-tv-flow/data"
 import { useTv } from "~/ui/prototype-tv-flow/engine"
 import { F } from "~/ui/prototype-tv-flow/kit"
 import { posterOf } from "./art"
-import { Expand, Img, type Skin, titleSize, useFocusedTitle } from "./base"
+import { Actions, BarTitle, Img, type Skin, titleSize, useFocusedTitle } from "./base"
 
 const CSS = `
 .tvd-marquee { color: #fff; background: #0c0c10; }
@@ -16,6 +16,8 @@ const CSS = `
 .tvd-marquee .m-tile.tvf-on { filter: none; }
 .tvd-marquee .m-btn { background: #26262e; font-weight: 800; }
 .tvd-marquee .m-btn.tvf-on { background: #fff; color: #000; }
+.tvd-marquee .m-act { background: #26262e; font-weight: 900; text-transform: uppercase; }
+.tvd-marquee .m-act.tvf-on { background: #fff; color: #000; }
 .tvd-marquee .m-x { background: #fbbf24; color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: .02em; }
 .tvd-marquee .m-x.tvf-on { background: #fff; }
 .tvd-marquee .m-menu { font-weight: 900; text-transform: uppercase; color: #000; }
@@ -40,21 +42,22 @@ function Field({ hue }: { hue: number }) {
 	)
 }
 
+/** The actions as this direction draws them: dark blocks in capitals, and the expand key as the one amber block. */
+function Bar({ dest, className }: { dest?: Dest; className?: string }) {
+	const P = useTv().phone
+	return <Actions dest={dest} className={className} cls={P ? "m-act h-[54px] w-[54px]" : "m-act h-[72px] gap-2.5 px-5 text-[22px]"} xcls={`m-x gap-4 ${P ? "h-[54px] px-4 text-[21px]" : "h-[72px] px-6 text-[26px]"}`} motif={P ? { w: 46, h: 34, stroke: 4 } : { w: 60, h: 44, stroke: 5 }} />
+}
+
 function Frame({ name, crumb, dest, hue, children }: { name: string; crumb?: string; dest: Dest; hue: number; children: ReactNode }) {
 	const P = useTv().phone
 	return (
 		<>
 			<Field hue={hue} />
-			<div className={`absolute inset-x-0 top-0 flex items-center justify-between gap-4 ${P ? "h-[92px] px-6" : "h-[116px] px-14"}`}>
-				<div className="flex min-w-0 items-baseline gap-5">
-					<span className="shrink-0 font-black uppercase leading-none tracking-tight" style={{ fontSize: P ? 36 : 62 }}>
-						{name}
-					</span>
-					{crumb && <span className={`truncate font-bold text-white/75 ${P ? "text-[22px]" : "text-[30px]"}`}>{crumb}</span>}
-				</div>
-				<Expand dest={dest} className={`m-x gap-4 ${P ? "h-[58px] px-5 text-[22px]" : "h-[72px] px-7 text-[28px]"}`} motif={{ w: 60, h: 44, stroke: 5 }} />
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[158px] flex-col-reverse justify-end px-6 pt-4" : "h-[116px] items-center justify-between px-14"}`}>
+				<BarTitle name={name} crumb={crumb} nameClass="font-black uppercase tracking-tight" style={{ fontSize: P ? 34 : 50 }} crumbClass={`font-bold text-white/75 ${P ? "text-[21px]" : "text-[24px]"}`} />
+				<Bar dest={dest} className={P ? "justify-end" : ""} />
 			</div>
-			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[92px] overflow-hidden px-6 pb-6" : "top-[116px] px-14 pb-10"}`}>{children}</div>
+			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[158px] overflow-hidden px-6 pb-6" : "top-[116px] px-14 pb-10"}`}>{children}</div>
 		</>
 	)
 }
@@ -108,7 +111,8 @@ const Home: Skin["Home"] = ({ apps, greeting, open }) => {
 	return (
 		<>
 			<Field hue={shown.hue} />
-			<div className={`absolute ${P ? "left-6 top-7" : "left-14 top-10"}`}>
+			<Bar className={`absolute z-10 ${P ? "right-6 top-4" : "right-14 top-[22px]"}`} />
+			<div className={`absolute ${P ? "left-6 top-8" : "left-14 top-10"}`}>
 				<div className={`font-black uppercase tracking-[0.2em] text-white/75 ${P ? "text-[20px]" : "text-[22px]"}`}>GoodWatch</div>
 				<div className="mt-1 font-black uppercase leading-none tracking-tight" style={{ fontSize: P ? 40 : 66 }}>
 					{greeting}.
@@ -244,11 +248,11 @@ const TitleView: Skin["TitleView"] = ({ name, crumb, title, kicker, actions, des
 		<>
 			<div className="absolute inset-0" style={{ background: hsl(title.hue, 58, 24) }} />
 			{!P && <Img src={posterOf(title, "w500")} className="absolute inset-y-0 right-0 h-full w-[34%]" />}
-			<div className={`absolute top-0 flex items-center justify-between gap-4 ${P ? "inset-x-0 h-[92px] px-6" : "inset-x-0 h-[116px] px-14"}`}>
-				<span className={`min-w-0 truncate font-black uppercase tracking-[0.14em] text-white/80 ${P ? "text-[22px]" : "text-[28px]"}`}>{[name, crumb].filter(Boolean).join(" · ")}</span>
-				<Expand dest={dest} className={`m-x gap-4 ${P ? "h-[58px] px-5 text-[22px]" : "h-[72px] px-7 text-[28px]"}`} motif={{ w: 60, h: 44, stroke: 5 }} />
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[158px] flex-col-reverse justify-end px-6 pt-4" : "h-[116px] items-center justify-between px-14"}`}>
+				<BarTitle name={name} crumb={crumb} nameClass={`font-black uppercase tracking-[0.14em] text-white/80 ${P ? "text-[22px]" : "text-[28px]"}`} crumbClass={`font-bold text-white/75 ${P ? "text-[21px]" : "text-[24px]"}`} />
+				<Bar dest={dest} className={P ? "justify-end" : ""} />
 			</div>
-			<div className={`absolute bottom-0 flex flex-col justify-end ${P ? "inset-x-0 top-[92px] px-6 pb-6" : "left-0 top-[116px] w-[66%] pb-10 pl-14 pr-8"}`}>
+			<div className={`absolute bottom-0 flex flex-col justify-end ${P ? "inset-x-0 top-[158px] px-6 pb-6" : "left-0 top-[116px] w-[66%] pb-10 pl-14 pr-8"}`}>
 				<div className={`font-black uppercase tracking-[0.1em] text-white/80 ${P ? "text-[20px]" : "text-[24px]"}`}>{kicker}</div>
 				<div className="mt-2 font-black uppercase leading-[0.88] tracking-tight" style={{ fontSize: P ? titleSize(title.title, 50, 36) : titleSize(title.title, 104, 62) }}>
 					{title.title}
@@ -320,7 +324,8 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 	return (
 		<>
 			<Field hue={title?.hue ?? 265} />
-			<div className={`absolute inset-0 flex flex-col justify-center ${P ? "px-6" : "px-14"}`}>
+			<Bar className={`absolute z-10 ${P ? "right-6 top-4" : "right-14 top-[22px]"}`} />
+			<div className={`absolute inset-0 flex flex-col justify-center ${P ? "px-6 pt-16" : "px-14 pt-16"}`}>
 				<div className={`font-black uppercase tracking-[0.14em] text-white/80 ${P ? "text-[20px]" : "text-[24px]"}`}>{kicker}</div>
 				<div className="mt-2 font-black uppercase leading-[0.92] tracking-tight" style={{ fontSize: P ? 40 : titleSize(question, 96, 64) }}>
 					{question}

@@ -10,15 +10,23 @@ are already TV-true.
 ```
 cd goodwatch-webapp
 npm ci
-npx remix vite:dev --port 3147        # 3003 is usually taken
+REC_TASTE_MATCH=on REC_FILTER_BAR=on REC_WATCH_NEXT=on REC_TASTE_PAGE=on REC_EXPLORER=on \
+REC_NAVIGATION=on REC_AGE_FILTER=on REC_TRACKING=on npx remix vite:dev --port 3147
 ```
+
+**Every `REC_*` flag must be on**, as in the command: without them the site around the room (the header, the
+navigation) is the old design. Port 3003 is usually taken.
 
 `http://localhost:3147/prototype/tv-screen-flow`
 
 It needs no Crate, no Valkey and no session: every title, score and island is sample data in
 `app/ui/prototype-tv-flow/data.ts`, and Want to See, ratings and the quiz live in memory until you reload. On a
 machine whose `.env` points at production, start it with the keys blanked (an empty value wins over `.env`), as
-the screenshots here were made.
+the screenshots here were made. With the flags on and no Crate or Valkey, both prototype routes load without a
+failing request: the new header, the Browse button and the phone's dock render around the room.
+
+The pages the TV expands into carry the addresses of the flag-on pages: `/discover?moods=cozy&type=movie`,
+`/explorer?island=heists`, `/taste`, `/my-shows`, `/my-movies`, `/movie/546554-knives-out`, `/discover?q=heist`.
 
 | Control | What it does |
 | --- | --- |
@@ -213,6 +221,9 @@ phone edition would have to decide:
 10. The TV on the wall is about 770 px wide on a 1080p screen. Should the room make the TV larger for round two?
 
 ## Relabel "Living room"
+
+Since this list was written, `main` has renamed the destination to "Home"; this branch is older and still says
+"Living room" in `destinations.ts`. The list stays as the record of where the words were.
 
 Not changed in this task. Every place where the words reach a person:
 

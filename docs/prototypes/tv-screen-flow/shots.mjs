@@ -79,12 +79,22 @@ const RUNS = {
 }
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? "/usr/bin/chromium" })
-const open = async (viewport, query) => {
+// A machine short of memory crashes a page now and then while it loads: try again, twice.
+const open = async (viewport, query, tries = 3) => {
 	const ctx = await browser.newContext({ viewport, deviceScaleFactor: 1 })
 	const page = await ctx.newPage()
-	await page.goto(`${base}?${query}`, { waitUntil: "load", timeout: 120000 })
-	await page.waitForSelector("[data-tv-item][aria-current]", { timeout: 30000 })
+	try {
+		await page.goto(`${base}?${query}`, { waitUntil: "load", timeout: 120000 })
+		await page.waitForSelector("[data-tv-item][aria-current]", { timeout: 30000 })
+	} catch (error) {
+		await ctx.close().catch(() => {})
+		if (tries <= 1) throw error
+		await new Promise((done) => setTimeout(done, 4000))
+		return open(viewport, query, tries - 1)
+	}
 	await page.waitForTimeout(700)
+	// A dev server that was just restarted answers its first requests with an error, which Vite lays over the page.
+	await page.evaluate(() => document.querySelector("vite-error-overlay")?.remove())
 	return { ctx, page }
 }
 

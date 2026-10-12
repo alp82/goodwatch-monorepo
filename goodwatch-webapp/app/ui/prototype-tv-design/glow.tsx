@@ -7,7 +7,7 @@ import { type Dest, ISLANDS, SIDES } from "~/ui/prototype-tv-flow/data"
 import { useTv } from "~/ui/prototype-tv-flow/engine"
 import { F, metaOf } from "~/ui/prototype-tv-flow/kit"
 import { backdropOf } from "./art"
-import { Ambient, AppArt, Expand, Img, type Skin, titleSize } from "./base"
+import { Actions, Ambient, AppArt, BarTitle, Img, type Skin, titleSize } from "./base"
 
 const CSS = `
 .tvd-glow { color: #fff4e6; background: radial-gradient(120% 95% at 50% 0%, #2b1a10 0%, #130c09 55%, #0a0706 100%); }
@@ -16,6 +16,8 @@ const CSS = `
 .tvd-glow .g-tile.tvf-on { filter: none; transform: translateY(-8px) scale(1.04); box-shadow: 0 0 0 3px rgba(253,186,116,.95), 0 0 46px 6px rgba(251,146,60,.55), 0 20px 40px rgba(0,0,0,.6); z-index: 2; }
 .tvd-glow .g-btn { background: rgba(255,237,213,.09); border-radius: 999px; font-weight: 600; box-shadow: inset 0 0 0 1.5px rgba(255,237,213,.2); }
 .tvd-glow .g-btn.tvf-on { background: #fde6c8; color: #2a1608; transform: translateY(-4px); box-shadow: 0 0 64px 10px rgba(251,146,60,.55); }
+.tvd-glow .g-act { color: #fff4e6; border-radius: 999px; font-weight: 600; background: rgba(255,237,213,.07); box-shadow: inset 0 0 0 1.5px rgba(255,237,213,.2); }
+.tvd-glow .g-act.tvf-on { background: #fde6c8; color: #2a1608; transform: translateY(-3px); box-shadow: 0 0 54px 8px rgba(251,146,60,.55); }
 .tvd-glow .g-x { color: #fbbf24; border-radius: 999px; font-weight: 600; box-shadow: inset 0 0 0 2.5px #fbbf24; }
 .tvd-glow .g-x.tvf-on { background: #fbbf24; color: #2a1608; box-shadow: 0 0 70px 12px rgba(251,191,36,.6); }
 .tvd-glow .g-spot { background: radial-gradient(closest-side, rgba(251,146,60,.28), rgba(251,146,60,0)); }
@@ -27,19 +29,22 @@ const CSS = `
 
 const SOFT = "text-[#fff4e6]/65"
 
+/** The actions as this direction draws them: soft outlined pills, and the expand key outlined in amber. */
+function Bar({ dest, className }: { dest?: Dest; className?: string }) {
+	const P = useTv().phone
+	return <Actions dest={dest} className={className} cls={P ? "g-act h-[54px] w-[54px]" : "g-act h-[64px] gap-2.5 px-5 text-[24px]"} xcls={`g-x gap-4 ${P ? "h-[54px] px-4 text-[21px]" : "h-[64px] px-6 text-[26px]"}`} motif={{ w: 44, h: 32, stroke: 4 }} />
+}
+
 function Frame({ name, crumb, dest, art, children }: { name: string; crumb?: string; dest: Dest; art?: string; children: ReactNode }) {
 	const P = useTv().phone
 	return (
 		<>
 			{art && <Ambient src={art} className="opacity-[0.16]" />}
-			<div className={`absolute inset-x-0 top-0 flex items-center justify-between gap-4 ${P ? "h-[88px] px-6" : "h-[108px] px-14"}`}>
-				<div className="flex min-w-0 items-baseline gap-4">
-					<span className={`shrink-0 font-semibold ${P ? "text-[30px]" : "text-[40px]"}`}>{name}</span>
-					{crumb && <span className={`truncate ${SOFT} ${P ? "text-[22px]" : "text-[27px]"}`}>{crumb}</span>}
-				</div>
-				<Expand dest={dest} className={`g-x gap-4 ${P ? "h-[58px] px-5 text-[22px]" : "h-[64px] px-7 text-[26px]"}`} motif={{ w: 44, h: 32, stroke: 4 }} />
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[152px] flex-col-reverse justify-end px-6 pt-4" : "h-[108px] items-center justify-between px-14"}`}>
+				<BarTitle name={name} crumb={crumb} nameClass={`font-semibold ${P ? "text-[30px]" : "text-[38px]"}`} crumbClass={`${SOFT} ${P ? "text-[21px]" : "text-[24px]"}`} />
+				<Bar dest={dest} className={P ? "justify-end" : ""} />
 			</div>
-			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[84px] overflow-hidden px-6 pb-6 pt-3" : "top-[108px] px-14 pb-10"}`}>{children}</div>
+			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[150px] overflow-hidden px-6 pb-6 pt-3" : "top-[108px] px-14 pb-10"}`}>{children}</div>
 		</>
 	)
 }
@@ -65,7 +70,8 @@ const Home: Skin["Home"] = ({ apps, greeting, open }) => {
 	const D = P ? 150 : 172
 	return (
 		<>
-			<div className={`absolute inset-x-0 text-center ${SOFT} ${P ? "top-7 text-[22px]" : "top-9 text-[28px]"}`}>{greeting}.</div>
+			<Bar className={`absolute z-10 ${P ? "right-6 top-4" : "right-14 top-[22px]"}`} />
+			<div className={`pointer-events-none absolute ${SOFT} ${P ? "left-6 top-8 text-[22px]" : "inset-x-0 top-9 text-center text-[28px]"}`}>{greeting}.</div>
 			<div className={`absolute inset-x-0 flex overflow-hidden ${P ? "top-[78px] gap-6 px-6 py-6" : "top-[86px] justify-center gap-11 py-6"}`} style={{ scrollPadding: 30 }}>
 				{apps.map((a, n) => (
 					<div key={a.key} className="flex shrink-0 flex-col items-center gap-3">
@@ -155,7 +161,7 @@ const IslandMap: Skin["Map"] = ({ open, dest }) => {
 	const D = P ? 112 : 152
 	const orb = (hue: number) => `radial-gradient(circle at 35% 30%, hsl(${hue} 80% 70%), hsl(${hue} 65% 42%) 55%, hsl(${hue} 60% 22%))`
 	return (
-		<Frame name="Explorer" crumb="Six islands of titles that belong together" dest={dest}>
+		<Frame name="Explorer" crumb="Six islands" dest={dest}>
 			{P ? (
 				<div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-3">
 					{ISLANDS.map((i, n) => (
@@ -277,7 +283,8 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 	return (
 		<>
 			{title && <Ambient src={backdropOf(title, "w1280")} className="opacity-[0.16]" />}
-			<div className={`absolute inset-0 flex flex-col items-center justify-center text-center ${P ? "px-6" : "px-14"}`}>
+			<Bar className={`absolute z-10 ${P ? "right-6 top-4" : "right-14 top-[22px]"}`} />
+			<div className={`absolute inset-0 flex flex-col items-center justify-center text-center ${P ? "px-6 pt-16" : "px-14 pt-16"}`}>
 				<div className={`font-semibold uppercase tracking-[0.16em] ${SOFT} ${P ? "text-[20px]" : "text-[22px]"}`}>{kicker}</div>
 				<div className="mt-3 font-semibold leading-[1.05] tracking-tight" style={{ fontSize: P ? 36 : titleSize(question, 72, 54) }}>
 					{question}

@@ -7,7 +7,7 @@ import { type Dest, ISLANDS, SIDES, islandTitles } from "~/ui/prototype-tv-flow/
 import { useTv } from "~/ui/prototype-tv-flow/engine"
 import { F, metaOf } from "~/ui/prototype-tv-flow/kit"
 import { backdropOf, posterOf } from "./art"
-import { Ambient, AppArt, Cross, Expand, Img, type Skin, titleSize, useFocusedTitle } from "./base"
+import { Actions, Ambient, AppArt, BarTitle, Cross, Img, type Skin, titleSize, useFocusedTitle } from "./base"
 
 const CSS = `
 .tvd-cinema { color: #fff; background: #05060a; }
@@ -16,6 +16,8 @@ const CSS = `
 .tvd-cinema .c-tile.tvf-on { filter: none; transform: scale(1.09); box-shadow: 0 0 0 4px #fff, 0 26px 60px rgba(0,0,0,.75); z-index: 2; }
 .tvd-cinema .c-btn { background: rgba(255,255,255,.16); border-radius: 999px; font-weight: 700; }
 .tvd-cinema .c-btn.tvf-on { background: #fff; color: #000; transform: scale(1.06); box-shadow: 0 16px 40px rgba(0,0,0,.55); }
+.tvd-cinema .c-act { background: rgba(0,0,0,.4); color: rgba(255,255,255,.88); border-radius: 999px; font-weight: 700; }
+.tvd-cinema .c-act.tvf-on { background: #fff; color: #000; transform: scale(1.06); box-shadow: 0 16px 40px rgba(0,0,0,.55); }
 .tvd-cinema .c-x { background: rgba(0,0,0,.5); color: #fbbf24; border-radius: 999px; box-shadow: inset 0 0 0 2px rgba(251,191,36,.6); font-weight: 700; }
 .tvd-cinema .c-x.tvf-on { background: #fbbf24; color: #000; transform: scale(1.06); box-shadow: 0 16px 40px rgba(0,0,0,.55); }
 .tvd-cinema .tvd-screen { animation: c-in .3s cubic-bezier(.2,.8,.2,1) both; }
@@ -29,20 +31,23 @@ function Shade({ dim }: { dim: number }) {
 	return <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, rgba(5,6,10,.94) 0%, rgba(5,6,10,${dim}) 55%, rgba(5,6,10,${dim * 0.45}) 100%), linear-gradient(0deg, rgba(5,6,10,.92) 0%, rgba(5,6,10,0) 50%)` }} />
 }
 
+/** The actions as this direction draws them: quiet dark pills, and the expand key in amber. */
+function Bar({ dest, className }: { dest?: Dest; className?: string }) {
+	const P = useTv().phone
+	return <Actions dest={dest} className={className} cls={P ? "c-act h-[54px] w-[54px]" : "c-act h-[64px] gap-2.5 px-5 text-[24px]"} xcls={`c-x gap-4 ${P ? "h-[54px] px-4 text-[21px]" : "h-[64px] px-6 text-[26px]"}`} motif={{ w: 44, h: 32, stroke: 3 }} />
+}
+
 function Frame({ name, crumb, dest, art, dim = 0.6, children }: { name: string; crumb?: string; dest: Dest; art?: string; dim?: number; children: ReactNode }) {
 	const P = useTv().phone
 	return (
 		<>
 			{art && <Ambient src={art} />}
 			<Shade dim={dim} />
-			<div className={`absolute inset-x-0 top-0 flex items-center justify-between gap-4 ${P ? "h-[88px] px-6" : "h-[108px] px-14"}`}>
-				<div className="flex min-w-0 items-baseline gap-4">
-					<span className={`shrink-0 font-bold ${P ? "text-[30px]" : "text-[36px]"}`}>{name}</span>
-					{crumb && <span className={`truncate text-white/70 ${P ? "text-[22px]" : "text-[26px]"}`}>{crumb}</span>}
-				</div>
-				<Expand dest={dest} className={`c-x gap-4 ${P ? "h-[58px] px-5 text-[22px]" : "h-[64px] px-7 text-[26px]"}`} motif={{ w: 44, h: 32, stroke: 3 }} />
+			<div className={`absolute inset-x-0 top-0 flex gap-4 ${P ? "h-[152px] flex-col-reverse justify-end px-6 pt-4" : "h-[108px] items-center justify-between px-14"}`}>
+				<BarTitle name={name} crumb={crumb} nameClass={`font-bold ${P ? "text-[30px]" : "text-[36px]"}`} crumbClass={`text-white/70 ${P ? "text-[21px]" : "text-[24px]"}`} />
+				<Bar dest={dest} className={P ? "justify-end" : ""} />
 			</div>
-			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[88px] overflow-hidden px-6 pb-6" : "top-[108px] px-14 pb-10"}`}>{children}</div>
+			<div className={`absolute inset-x-0 bottom-0 ${P ? "top-[152px] overflow-hidden px-6 pb-6" : "top-[108px] px-14 pb-10"}`}>{children}</div>
 		</>
 	)
 }
@@ -57,7 +62,8 @@ const Home: Skin["Home"] = ({ apps, greeting, open }) => {
 				<AppArt app={shown} size="w1280" className="h-full w-full" />
 			</Cross>
 			<Shade dim={0.5} />
-			<div className={`absolute font-bold uppercase tracking-[0.22em] text-white/80 ${P ? "left-6 top-7 text-[20px]" : "left-14 top-11 text-[22px]"}`}>GoodWatch</div>
+			<div className={`absolute font-bold uppercase tracking-[0.22em] text-white/80 ${P ? "left-6 top-8 text-[20px]" : "left-14 top-11 text-[22px]"}`}>GoodWatch</div>
+			<Bar className={`absolute z-10 ${P ? "right-6 top-4" : "right-14 top-[22px]"}`} />
 			<div className={`absolute ${P ? "inset-x-6 top-[96px]" : "left-14 top-[136px] w-[780px]"}`}>
 				<div className={`text-white/75 ${P ? "text-[22px]" : "text-[28px]"}`}>{greeting}.</div>
 				<div key={shown.key} className="tvd-fade">
@@ -167,7 +173,7 @@ const IslandMap: Skin["Map"] = ({ open, dest }) => {
 	const shown = ISLANDS.find((i) => `island-${i.key}` === tv.focus) ?? ISLANDS[0]
 	const D = 164
 	return (
-		<Frame name="Explorer" crumb="Six islands of titles that belong together" dest={dest} art={backdropOf(islandTitles(shown.key)[0], "w1280")} dim={0.88}>
+		<Frame name="Explorer" crumb="Six islands" dest={dest} art={backdropOf(islandTitles(shown.key)[0], "w1280")} dim={0.88}>
 			{P ? (
 				<div className="grid grid-cols-2 gap-x-4 gap-y-3">
 					{ISLANDS.map((i, n) => (
@@ -288,7 +294,8 @@ const Ask: Skin["Ask"] = ({ kicker, question, line, answers, title }) => {
 		<>
 			{title && <Ambient src={backdropOf(title, "w1280")} />}
 			<Shade dim={0.82} />
-			<div className={`absolute inset-0 flex flex-col justify-center ${P ? "px-6" : "px-14"}`}>
+			<Bar className={`absolute z-10 ${P ? "right-6 top-4" : "right-14 top-[22px]"}`} />
+			<div className={`absolute inset-0 flex flex-col justify-center ${P ? "px-6 pt-16" : "px-14 pt-16"}`}>
 				<div className={`font-bold uppercase tracking-[0.16em] text-white/75 ${P ? "text-[20px]" : "text-[24px]"}`}>{kicker}</div>
 				<div className="mt-2 font-bold leading-[1.02] tracking-tight" style={{ fontSize: P ? 38 : titleSize(question, 80, 60) }}>
 					{question}

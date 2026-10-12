@@ -123,12 +123,15 @@ export function search(query: string): Title[] {
 }
 export const SEARCH_IDEAS = ["cozy", "heist", "space", "funny"]
 
-/** A real page the TV expands into. `carries` is what the page keeps from the TV. */
+/** TMDB ids of the sample titles, for the address of a title page (`/movie/546554-knives-out`). */
+const TMDB_ID: Record<string, number> = { "severance": 95396, "knives-out": 546554, "arrival": 329865, "paddington-2": 346648, "the-bear": 136315, "oceans-eleven": 161, "ted-lasso": 97546, "palm-springs": 587792, "russian-doll": 84977, "only-murders": 107113, "interstellar": 157336, "logan-lucky": 399170, "slow-horses": 95480, "the-martian": 286217, "broadchurch": 1427, "edge-of-tomorrow": 137113, "spirited-away": 129, "baby-driver": 339403, "andor": 83867, "groundhog-day": 137, "gilmore-girls": 4586, "the-office": 2316, "the-good-place": 66573, "inside-man": 388, "glass-onion": 661374 }
+
+/** A real page the TV expands into. The addresses are those of the pages with every REC_* flag on. `carries` is what the page keeps from the TV. */
 export type Dest = { name: string; href: string; carries?: string }
 export const DEST = {
 	discover: (mood?: string | null, kind?: string | null): Dest => {
 		const q = new URLSearchParams()
-		if (mood) q.set("mood", mood)
+		if (mood) q.set("moods", mood)
 		if (kind) q.set("type", kind)
 		const carries = [mood && moodName(mood), kind === "movie" ? "Movies" : kind === "show" ? "Shows" : null].filter(Boolean).join(", ")
 		return { name: "Discover", href: `/discover${q.size ? `?${q}` : ""}`, carries: carries || undefined }
@@ -137,6 +140,6 @@ export const DEST = {
 	taste: (): Dest => ({ name: "Taste", href: "/taste" }),
 	shows: (): Dest => ({ name: "My shows", href: "/my-shows" }),
 	movies: (): Dest => ({ name: "My movies", href: "/my-movies" }),
-	title: (x: Title): Dest => ({ name: x.title, href: `/${x.kind}/${x.key}` }),
+	title: (x: Title): Dest => ({ name: x.title, href: `/${x.kind}/${TMDB_ID[x.key]}-${x.key}` }),
 	search: (q: string): Dest => ({ name: "Search", href: `/discover?q=${encodeURIComponent(q)}`, carries: `the search "${q}"` }),
 }

@@ -11,21 +11,24 @@
 //   &label=expand|...    the expand key's label (L)
 //   &at=home.discover.discover-cozy   the stack of TV screens; it stays when the direction changes
 //   &f=<item>            the focused item on arrival
+//   &pointer=ring|cross|dot   the shape of the TV's own pointer (C)
+//   &bar=first           the expand key first in the top bar instead of last (B)
 //   &hold                freezes the expand run for screenshots: window.__tvLeave(0..1)
 //   &chrome=off          hides the prototype's own controls, for screenshots of the TV alone
 // Sample data and TMDB art only: nothing is read or written. Notes: docs/prototypes/tv-screen-design/README.md.
 import { useSearchParams } from "@remix-run/react"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { HAND, HAND_IMAGE, REMOTE_H, REMOTE_TILT_DEG, REMOTE_W, ROOM } from "~/ui/living-room/room"
+import { HAND, HAND_IMAGE, REMOTE_H, REMOTE_W, ROOM } from "~/ui/living-room/room"
 import type { TvAction } from "~/ui/living-room/tv-flow"
 import { LABELS, type Rect, TvCtx, parseId, useTvEngine } from "~/ui/prototype-tv-flow/engine"
 import { Corners } from "~/ui/prototype-tv-flow/kit"
 import { HugRemote } from "~/ui/prototype-remote/RemoteVariants"
 import { assetUrl } from "~/utils/asset-url"
-import { CANVAS, DIRECTIONS, DesignTv, type DirectionKey, Follower, PHONE_CANVAS, type Skin } from "./base"
+import { BarCtx, CANVAS, DIRECTIONS, DesignTv, type DirectionKey, Follower, PHONE_CANVAS, type Skin } from "./base"
 import { cinema } from "./cinema"
 import { glow } from "./glow"
 import { marquee } from "./marquee"
+import { POINTERS, POINTER_CSS, type PointerKey, REST_TRANSFORM, TvPointer, WRIST, usePointing } from "./pointing"
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
@@ -93,6 +96,8 @@ export function TvDesignScene() {
 	const member = params.get("as") === "member"
 	const tvOnly = params.get("view") === "tv"
 	const labelKey = (params.get("label") ?? "") in LABELS ? (params.get("label") as string) : "expand"
+	const shape = ((params.get("pointer") ?? "") in POINTERS ? params.get("pointer") : "ring") as PointerKey
+	const expandFirst = params.get("bar") === "first"
 	const skin = SKINS[design]
 	const look = EXPAND[design]
 
@@ -125,6 +130,12 @@ export function TvDesignScene() {
 			const next = keys[(keys.indexOf(labelKey) + 1) % keys.length]
 			set({ label: next === "expand" ? "" : next })
 		},
+		pointer: () => {
+			const keys = Object.keys(POINTERS)
+			const next = keys[(keys.indexOf(shape) + 1) % keys.length]
+			set({ pointer: next === "ring" ? "" : next })
+		},
+		bar: () => set({ bar: expandFirst ? "" : "first" }),
 	}
 	const latest = useRef({ controls, tv, typing: tv.top === "search" })
 	latest.current = { controls, tv, typing: tv.top === "search" }
@@ -146,6 +157,8 @@ export function TvDesignScene() {
 			if (key === "p") latest.current.controls.person()
 			if (key === "v") latest.current.controls.view()
 			if (key === "l") latest.current.controls.label()
+			if (key === "c") latest.current.controls.pointer()
+			if (key === "b") latest.current.controls.bar()
 		}
 		window.addEventListener("keydown", onKey)
 		return () => window.removeEventListener("keydown", onKey)
@@ -181,6 +194,12 @@ export function TvDesignScene() {
 	const brackets = !L || !tvRect ? null : run ? (grow > 0 ? inset(tvRect, look.inset) : lerpRect(run.from, inset(L.tv, look.inset), easeOut(arm))) : framed ? inset(L.tv, look.inset) : null
 	const bracketsLen = brackets ? Math.max(14, Math.min(120, Math.min(brackets.width, brackets.height) * look.arm)) : 0
 
+	// ---- Pointing: the Remote aims at the cursor, and over the TV the TV draws its own pointer (pointing.tsx).
+	const remoteEl = useRef<HTMLDivElement>(null)
+	const pointerEl = useRef<HTMLDivElement>(null)
+	const live = !run && tv.store.power === "on"
+	usePointing(root, remoteEl, pointerEl, L && size ? { tv: L.tv, remote: L.remote, width: size.w, height: size.h, phone, live } : null)
+
 	const dispatch = (action: TvAction) => {
 		switch (action.type) {
 			case "step":
@@ -200,7 +219,7 @@ export function TvDesignScene() {
 		}
 	}
 	const remote = L?.remote && (
-		<div className="absolute" style={{ left: L.remote.left, top: L.remote.top, width: REMOTE_W * L.remote.scale, height: REMOTE_H * L.remote.scale, transformOrigin: "50% 100%", transform: phone ? undefined : `perspective(1400px) rotateX(${REMOTE_TILT_DEG}deg)` }}>
+		<div ref={remoteEl} data-remote className="absolute will-change-transform" style={{ left: L.remote.left, top: L.remote.top, width: REMOTE_W * L.remote.scale, height: REMOTE_H * L.remote.scale, transformOrigin: `50% ${WRIST * 100}%`, transform: phone ? "none" : REST_TRANSFORM }}>
 			{L.hand && (
 				<picture>
 					<source type="image/avif" srcSet={assetUrl(HAND_IMAGE.avif)} />
@@ -224,11 +243,14 @@ export function TvDesignScene() {
 		</div>
 	)
 
+	const bar = useMemo(() => ({ expandFirst }), [expandFirst])
 	const s = tvRect ? Math.max(tvRect.width / canvas.w, tvRect.height / canvas.h) : 1
 	const pill = "rounded-full bg-white px-3 py-1.5 shadow-xl ring-2 ring-fuchsia-500"
 	return (
 		<div ref={root} className="living-room fixed inset-x-0 bottom-16 top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0">
-			<style>{`@layer components {${BASE_CSS}${skin.css}}`}</style>
+			{/* As raw text: React would escape the quotes in the selectors, and a style element does not unescape them. */}
+			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: our own constant CSS */}
+			<style dangerouslySetInnerHTML={{ __html: `@layer components {${BASE_CSS}${POINTER_CSS}${skin.css}}` }} />
 			{L?.photo && (
 				<div className="absolute" style={L.photo}>
 					<img src={assetUrl(ROOM.fallback)} srcSet={ROOM.webp} sizes="200vw" alt={ROOM.alt} width={ROOM.w} height={ROOM.h} className="absolute inset-0 h-full w-full select-none" draggable={false} />
@@ -237,8 +259,9 @@ export function TvDesignScene() {
 				</div>
 			)}
 			{L && tvRect && (
-				<div data-tv-screen className="absolute overflow-hidden rounded-[4px] bg-black" style={{ ...tvRect, zIndex: run ? 30 : undefined, boxShadow: L.photo && tv.store.power === "on" ? "0 0 120px 10px rgba(251,191,36,0.14), 0 0 22px 1px rgba(251,191,36,0.18)" : "none" }}>
+				<div data-tv-screen className={`absolute overflow-hidden rounded-[4px] bg-black ${live && !phone ? "tv-nocursor" : ""}`} style={{ ...tvRect, zIndex: run ? 30 : undefined, boxShadow: L.photo && tv.store.power === "on" ? "0 0 120px 10px rgba(251,191,36,0.14), 0 0 22px 1px rgba(251,191,36,0.18)" : "none" }}>
 					<div data-tv-canvas className="absolute left-0 top-0 origin-top-left" style={{ width: canvas.w, height: canvas.h, transform: `translate(${(tvRect.width - canvas.w * s) / 2}px, ${(tvRect.height - canvas.h * s) / 2}px) scale(${s})` }}>
+						<BarCtx.Provider value={bar}>
 						<TvCtx.Provider value={tv}>
 							{tv.store.power === "off" ? (
 								<div className="absolute inset-0 bg-black" aria-hidden />
@@ -250,6 +273,7 @@ export function TvDesignScene() {
 								</div>
 							)}
 						</TvCtx.Provider>
+						</BarCtx.Provider>
 					</div>
 				</div>
 			)}
@@ -278,6 +302,7 @@ export function TvDesignScene() {
 					</div>
 				</div>
 			)}
+			{!phone && <TvPointer key={shape} shape={shape} pointer={pointerEl} />}
 			{brackets && (
 				<div className="pointer-events-none absolute z-[36]" style={{ ...brackets, filter: look.glow, opacity: run ? 1 - clamp((grow - 0.7) / 0.25) : 1 }}>
 					<Corners len={bracketsLen} stroke={look.stroke} color={AMBER} />
@@ -285,7 +310,7 @@ export function TvDesignScene() {
 			)}
 
 			{/* Prototype controls, not part of the design. */}
-			<div hidden={params.get("chrome") === "off"} className={`absolute z-50 flex gap-1.5 text-[13px] font-semibold text-black ${phone ? "bottom-3 left-2 flex-col" : "left-3 top-3 items-center"}`}>
+			<div hidden={params.get("chrome") === "off"} className={`absolute z-50 flex gap-1.5 text-[13px] font-semibold text-black ${phone ? "bottom-6 left-2 flex-col" : "left-3 top-3 items-center"}`}>
 				<div className={`flex overflow-hidden rounded-2xl bg-white shadow-xl ring-2 ring-fuchsia-500 ${phone ? "flex-col" : ""}`}>
 					{(Object.keys(DIRECTIONS) as DirectionKey[]).map((key, i) => (
 						<button key={key} type="button" data-design={key} aria-pressed={key === design} title={`${DIRECTIONS[key].bet} (${i + 1})`} onClick={() => controls.design(key)} className={`px-3 py-1.5 ${key === design ? "bg-fuchsia-600 text-white" : "hover:bg-fuchsia-100"}`}>
@@ -304,6 +329,16 @@ export function TvDesignScene() {
 				<button type="button" onClick={controls.label} className={pill} title="L">
 					“{LABELS[labelKey]}”
 				</button>
+				{!phone && (
+					<button type="button" data-pointer={shape} onClick={controls.pointer} className={pill} title="C">
+						Pointer: {POINTERS[shape]}
+					</button>
+				)}
+				{!phone && (
+					<button type="button" data-bar={expandFirst ? "first" : "last"} onClick={controls.bar} className={pill} title="B">
+						Expand {expandFirst ? "first" : "last"}
+					</button>
+				)}
 				{!phone && (
 					<span className="rounded-full bg-black/80 px-3 py-1.5 font-mono text-[12px] font-normal text-white/90">
 						{tv.stack.join(" › ")} · focus {tv.focus ?? "none"}

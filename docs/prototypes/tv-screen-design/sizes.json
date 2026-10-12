@@ -7,10 +7,10 @@
 			"screen": "19-my-shows"
 		},
 		"smallestTarget": {
-			"w": 201,
+			"w": 151,
 			"h": 64,
-			"item": "expand",
-			"screen": "02-tonight"
+			"item": "bar-search",
+			"screen": "01-home"
 		}
 	},
 	"marquee": {
@@ -21,10 +21,10 @@
 			"screen": "04-discover-results"
 		},
 		"smallestTarget": {
-			"w": 239,
+			"w": 160,
 			"h": 72,
-			"item": "expand",
-			"screen": "02-tonight"
+			"item": "bar-search",
+			"screen": "01-home"
 		}
 	},
 	"glow": {
@@ -35,10 +35,10 @@
 			"screen": "04-discover-results"
 		},
 		"smallestTarget": {
-			"w": 201,
+			"w": 151,
 			"h": 64,
-			"item": "expand",
-			"screen": "02-tonight"
+			"item": "bar-search",
+			"screen": "01-home"
 		}
 	}
 }
