@@ -1,0 +1,117 @@
+{
+  "schema": "public-fingerprint-acquisition-evidence.v1",
+  "preparedForReview": true,
+  "productionAcceptance": false,
+  "copiedFiles": [
+    {
+      "path": "offline-raw-fingerprint-reader-20261013/reader.mjs",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-reader-20261013/reader.mjs",
+      "bytes": 9330,
+      "sha256": "34a7ab907fd69e89dda9d53f9656779ddd15a244259209a64a4ee0c916456d6d"
+    },
+    {
+      "path": "offline-raw-fingerprint-reader-20261013/test-reader.mjs",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-reader-20261013/test-reader.mjs",
+      "bytes": 6438,
+      "sha256": "dbd99cc41f19c66106995df376b321ccb611ddbd107c6da1eac08477662142ff"
+    },
+    {
+      "path": "offline-raw-fingerprint-reader-20261013/README.md",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-reader-20261013/README.md",
+      "bytes": 4516,
+      "sha256": "497f298616e4221304b83f98257eb06e1f262d46317ea01268e09e59512f6f32"
+    },
+    {
+      "path": "offline-raw-fingerprint-reader-20261013/bindings.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-reader-20261013/bindings.json",
+      "bytes": 1280,
+      "sha256": "e06c6cea20c10fb0747cb8e65d73e1db88ebb53a8dec3841f08d6a767d056245"
+    },
+    {
+      "path": "offline-raw-fingerprint-reader-20261013/local-tests.txt",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-reader-20261013/local-tests.txt",
+      "bytes": 1142,
+      "sha256": "b1a3eda8baef054a7c16427fe12023f412bff4a30b273b8505e01248bc1009fd"
+    },
+    {
+      "path": "offline-raw-fingerprint-matrix-builder-20261013/build.py",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-matrix-builder-20261013/build.py",
+      "bytes": 11300,
+      "sha256": "f60a74ed8f3ea23aac098a8b4c0945ff0de5a96a180e5609d978d54a67fd6195"
+    },
+    {
+      "path": "offline-raw-fingerprint-matrix-builder-20261013/test_build.py",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-matrix-builder-20261013/test_build.py",
+      "bytes": 5954,
+      "sha256": "65c0da6ea8d794ae009dfa9233618f24daa825981595f0414b39cdd434038c95"
+    },
+    {
+      "path": "offline-raw-fingerprint-matrix-builder-20261013/README.md",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-matrix-builder-20261013/README.md",
+      "bytes": 3567,
+      "sha256": "b47929e99fec9c2634121d8c6d0ff3abc0a85cc2123d9059a8fd37a2ed6b718f"
+    },
+    {
+      "path": "offline-raw-fingerprint-matrix-builder-20261013/bindings.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-matrix-builder-20261013/bindings.json",
+      "bytes": 1085,
+      "sha256": "387599ecba446a020d88cb2ff57ed0ccf1401c1551032d3f5867136ee8d3aef0"
+    },
+    {
+      "path": "offline-raw-fingerprint-matrix-builder-20261013/local-tests.txt",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-matrix-builder-20261013/local-tests.txt",
+      "bytes": 99,
+      "sha256": "3e700eedd69924dd0a22450f53331b8798afedf4228336103896e2c426394dbb"
+    },
+    {
+      "path": "offline-raw-fingerprint-retrieval-plan-20261013/PLAN.md",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-retrieval-plan-20261013/PLAN.md",
+      "bytes": 6650,
+      "sha256": "e67347acaf8caf37b4e5139d7c8542003228fa2ce6c1ff1943906583770af0dc"
+    },
+    {
+      "path": "offline-raw-fingerprint-retrieval-plan-20261013/bindings.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-retrieval-plan-20261013/bindings.json",
+      "bytes": 1543,
+      "sha256": "6e3895f75e60b02887d1c0d4e622734a5df102d81bb91494e0e07513be89a8bd"
+    },
+    {
+      "path": "offline-raw-fingerprint-acquisition-20261013/root-validation.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-acquisition-20261013/root-validation.json",
+      "bytes": 729,
+      "sha256": "b512d157e4930122e109f15efda1bb4ef2bf8bb28fda6fde1a7b9ec74606a1b7"
+    },
+    {
+      "path": "offline-raw-fingerprint-acquisition-20261013/root-matrix-validation.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-acquisition-20261013/root-matrix-validation.json",
+      "bytes": 994,
+      "sha256": "f1abc8d0099da3ad0d8bfea8e27726f2070dcb5a89b9fb4f01c23643d3969f3b"
+    },
+    {
+      "path": "offline-raw-fingerprint-acquisition-20261013/root-matrix-invocation.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-acquisition-20261013/root-matrix-invocation.json",
+      "bytes": 1453,
+      "sha256": "46d9265c0a9d2435e4c605947bed3effd1bf93c094275b2d9b81b7a15033aedd"
+    },
+    {
+      "path": "offline-raw-fingerprint-acquisition-20261013/root-vote-comparison.json",
+      "original": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-acquisition-20261013/root-vote-comparison.json",
+      "bytes": 4146,
+      "sha256": "ebeec4079f273e1cea363db4c61bb15e4e830df111c5aea18e3012a3e46d10c2"
+    }
+  ],
+  "derivedFiles": [
+    {
+      "path": "acquisition-invocation-projection.json",
+      "bytes": 941,
+      "sha256": "dd5899f5a10712458aeae641a47eaf7e504f83e47f01ef99697e07e81ebf9af5",
+      "derivation": "fixed selected keys from exact original receipt; omitted host/container targets"
+    },
+    {
+      "path": "matrix-manifest-projection.json",
+      "bytes": 2923,
+      "sha256": "26fb1ee008816a1f449d2195e57d821c7d35f92f67384a7b9dabc0952a205bf7",
+      "derivation": "exact original manifest minus pointOrder/keyOrder; keyOrder restored, original full hash/bytes and canonical pointOrder hash appended"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "standalone-readonly-fingerprint-reader-source.v1",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "497f298616e4221304b83f98257eb06e1f262d46317ea01268e09e59512f6f32",
+      "bytes": 4516
+    },
+    {
+      "path": "invocation-template.json",
+      "sha256": "38dcdc0fc8ada0db5bf0f709be418c6a53eecf837bee8568307b529806556da9",
+      "bytes": 892
+    },
+    {
+      "path": "local-tests.txt",
+      "sha256": "b1a3eda8baef054a7c16427fe12023f412bff4a30b273b8505e01248bc1009fd",
+      "bytes": 1142
+    },
+    {
+      "path": "reader.mjs",
+      "sha256": "34a7ab907fd69e89dda9d53f9656779ddd15a244259209a64a4ee0c916456d6d",
+      "bytes": 9330
+    },
+    {
+      "path": "source-main-comparison.json",
+      "sha256": "61897f0a368ce365bc17d6b298a7d68ff8d989679cb42dbec6864c545359b31a",
+      "bytes": 2309
+    },
+    {
+      "path": "test-reader.mjs",
+      "sha256": "dbd99cc41f19c66106995df376b321ccb611ddbd107c6da1eac08477662142ff",
+      "bytes": 6438
+    }
+  ],
+  "planPath": "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-retrieval-plan-20261013/retrieval-plan.json",
+  "planSha256": "9442eb86a853abb71dccf456337356d15cc5eacbed9541e8289767f634711234",
+  "localTests": 13,
+  "remoteExecution": false,
+  "requestsToProduction": 0
+}

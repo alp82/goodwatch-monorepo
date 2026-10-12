@@ -1,0 +1,32 @@
+{
+  "schema": "independent-root-matrix-value-validation.v1",
+  "manifestSha256": "3cd08f7a560304b983ae3ce626d983c50d6707c1be9294548125a422dfa6d818",
+  "rawAndNormalizedRowsByteExactAgainstPublicStream": 42933,
+  "missingNaNRows": [
+    {
+      "indexRow": 31585,
+      "pointId": 1000000970689,
+      "mediaType": "movie",
+      "tmdbId": 970689
+    }
+  ],
+  "bitmapValidRows": 42933,
+  "allOutputFilesHashVerified": true,
+  "rawDotMustUseUnnormalizedMatrix": true,
+  "historicalSnapshotEquality": false,
+  "qdrantEqualityAttested": false,
+  "files": {
+    "raw-fingerprint.f32": {
+      "sha256": "715af4ba263818b355330969b407218167947c1ba67b7da2a2d30895b082fff3",
+      "bytes": 12708464
+    },
+    "normalized-fingerprint.f32": {
+      "sha256": "5c37aa482d63539e99dad4e35cd0c6f1d46078eac6176b035c1035c81bc1a7b0",
+      "bytes": 12708464
+    },
+    "valid-fingerprint.u8": {
+      "sha256": "a4d3f1b22acbf1c0ce41fd2ec4b6e2d634d1b2bcedd19e2f266ce42763bf6725",
+      "bytes": 42934
+    }
+  }
+}

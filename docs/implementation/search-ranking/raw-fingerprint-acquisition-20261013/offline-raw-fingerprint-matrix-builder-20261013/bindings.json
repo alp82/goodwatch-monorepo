@@ -1,0 +1,39 @@
+{
+  "schema": "offline-fingerprint-matrix-builder-source.v1",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3567,
+      "sha256": "b47929e99fec9c2634121d8c6d0ff3abc0a85cc2123d9059a8fd37a2ed6b718f"
+    },
+    {
+      "path": "build.py",
+      "bytes": 11300,
+      "sha256": "f60a74ed8f3ea23aac098a8b4c0945ff0de5a96a180e5609d978d54a67fd6195"
+    },
+    {
+      "path": "invocation-template.json",
+      "bytes": 952,
+      "sha256": "50ab432229195b461f7dc9ab98742ff05fb6a9480d4b8fcc7ab7192b4623f837"
+    },
+    {
+      "path": "local-tests-initial-9.txt",
+      "bytes": 98,
+      "sha256": "6b4961dc0c3806dfa59d97629a6846f771b585205acdf178e778aa775055b9b3"
+    },
+    {
+      "path": "local-tests.txt",
+      "bytes": 99,
+      "sha256": "3e700eedd69924dd0a22450f53331b8798afedf4228336103896e2c426394dbb"
+    },
+    {
+      "path": "test_build.py",
+      "bytes": 5954,
+      "sha256": "65c0da6ea8d794ae009dfa9233618f24daa825981595f0414b39cdd434038c95"
+    }
+  ],
+  "tests": 10,
+  "actualStreamProcessed": false,
+  "hostOperations": 0,
+  "productionAcceptance": false
+}
