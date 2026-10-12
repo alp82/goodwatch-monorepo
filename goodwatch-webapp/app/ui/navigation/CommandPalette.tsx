@@ -1,6 +1,6 @@
 // The command palette: one field that goes anywhere. As soon as anything is typed, its first suggestion is
-// "Search for …" (the search page), then up to eight matching titles in a box of their own that scrolls, ending in
-// "Show 120 more" (the search page again) when more match, then matching destinations ("Go to Taste"), then Sign up
+// "Search for …" (the search page), then up to eight matching titles ending in "Show 120 more" (the search page
+// again) when more match, then matching destinations ("Go to Taste"), then Sign up
 // for guests. Empty, it shows the destinations. The field sits in the dialog's header and the destinations
 // are compact rows, so the search leads. A combobox over a listbox: Up and Down move the active option, Enter runs
 // it; Escape closes the dialog around it.
@@ -39,6 +39,12 @@ import { paletteTitlesQuery, shownPaletteTitles } from "./palette-titles"
 import { useTonightsPick } from "./useTonightsPick"
 
 const PLACEHOLDER = "Search or go to…"
+/**
+ * On wider screens, when destinations follow the titles, the titles scroll in a box of their own so the destinations
+ * stay in view. On phones the panel fills the screen, so the titles take the room they need and the list scrolls whole.
+ */
+const TITLES_BOX =
+	"lg:max-h-[min(300px,40dvh)] lg:overflow-y-auto lg:overscroll-contain"
 /** Waits this long after the last keystroke before asking for titles. */
 const DEBOUNCE_MS = 150
 
@@ -62,7 +68,7 @@ interface Row {
 	compact?: boolean
 	icon?: ComponentType<SVGProps<SVGSVGElement>>
 	poster?: string | null
-	/** A matching title or the "Show … more" after them: these scroll in a box of their own. */
+	/** A matching title or the "Show … more" after them: grouped, so they can scroll in a box of their own. */
 	title?: boolean
 }
 
@@ -297,15 +303,14 @@ export function CommandPalette({ onDone }: { onDone: () => void }) {
 				aria-label="Suggestions"
 				className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain px-4 pt-2.5 pb-[calc(22px+env(safe-area-inset-bottom))] lg:px-3.5 lg:pb-3.5"
 			>
-				{groupTitles(rows).map((group) =>
+				{groupTitles(rows).map((group, i, groups) =>
 					Array.isArray(group) ? (
-						// The titles scroll on their own, so the destinations below them stay in view.
 						<div
 							key="titles"
 							// biome-ignore lint/a11y/useSemanticElements: a group of options inside the listbox
 							role="group"
 							aria-label="Titles"
-							className="flex max-h-[min(300px,40dvh)] shrink-0 flex-col gap-0.5 overflow-y-auto overscroll-contain"
+							className={`flex shrink-0 flex-col gap-0.5 ${i < groups.length - 1 ? TITLES_BOX : ""}`}
 						>
 							{group.map(option)}
 						</div>
