@@ -66,6 +66,8 @@ export function useMyShowsVisit(): void {
 		const queryKey = keyOf(userId)
 		fetch(ENDPOINT, { method: "POST" })
 			.then(async (response) => {
+				// The answer says nothing new: let go of it, or the request stays open.
+				void response.body?.cancel()
 				if (!response.ok) return
 				// A read that left before the visit was stored would bring the old answer back.
 				await queryClient.cancelQueries({ queryKey })
