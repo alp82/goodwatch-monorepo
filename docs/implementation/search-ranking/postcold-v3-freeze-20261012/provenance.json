@@ -1,0 +1,45 @@
+{
+  "schema": "search.postcold-v3-freeze-evidence.v1",
+  "runtimeReviewedCommit": "ab8e2a4c79360c5f3248576ddc28ad23c575bb13",
+  "preparedPublicationCommit": "2641cdf0a651de6d43cd03b7cb63f3c92e9a7c95",
+  "mergedCommit": "fdbd077e23ff473985c98a73fca1e3bdc50eb01d",
+  "opusReview": {
+    "model": "Claude Code Opus5.5",
+    "effort": "medium",
+    "verdict": "PASS",
+    "reportSha256": "efe16df5421c410b100c4dcc8a53e7c39efd1d307262d31d56c03b9f51fcff0c"
+  },
+  "artifactSha256": {
+    "audit_postcold_result_v3.mjs": "83c80b6d52f00d7c695259f7f1258951ca1de349793b0d264f034551b6ea789b",
+    "compare-contract-frozen-v3.mjs": "b963355c9e4bd8e42c37e4302fcf690bf1f958baf462f13e3f2a4aa80ab1d0cb",
+    "comparison-postcold-453-v3-result.json": "5f094d1c4e1cc08352c63853cffc8ba28639c729b56385abf743ad37c37c5b79",
+    "offline-audit-v3.json": "e570248ace50b3a70281328bbcc8f2511a576e551eb2fa8861e44824ea5b58d6",
+    "postcold-stage-actual-v3-result.json": "946f7b532ee44314e74b3b51f55258ed87d9fb212ad461e5b2c725f6f391dcda",
+    "private_pipe_postcold_453_v3.mjs": "fd73349a4f0091eb492d5abba2e374bb93652605e211ffea47dfb6f20cacde2c",
+    "private_pipe_postcold_453_v3_retry1.mjs": "56a95f969ff693865a963d22494a7fa37a99ea1a97918e4cb900258a662d3a24",
+    "test_audit_postcold_result_v3.mjs": "36188490f593f76e27b6662b7ccb386cc6e4edbab07ae81bdd76ca7ff0880884",
+    "test_private_pipe_postcold_453_v3_retry1.mjs": "d364134542ed8b08a5e3b33b2090274b2077382cf1443e663eff03bd7932792f",
+    "transport-freeze-diagnosis.json": "46126e9114e43da9cf84832efb2c0b4e48ef1b313162a15b41ecfd680f09d340"
+  },
+  "localOriginalSourceSha256": {
+    "postcold_stage_public_packet_v3.json": "4e0e25328be81d2c6da92763f1fd1455e55acf006802eacfe08c8356126eb1a4",
+    "prepare_postcold_stage_v3.py": "0f61654629eed69f6940909eb72e0908e04a01a3f9bd5f15049787a1b03595f7",
+    "private_pipe_postcold_453_v3.mjs": "fd73349a4f0091eb492d5abba2e374bb93652605e211ffea47dfb6f20cacde2c",
+    "private_pipe_postcold_453_v3_retry1.mjs": "56a95f969ff693865a963d22494a7fa37a99ea1a97918e4cb900258a662d3a24",
+    "prepare_comparison_postcold_453_v3.py": "0cb95c8447fc732a4e6aa9aa8fae2a18dfe5258ddbe125751307aaa18d257dd1",
+    "prepare_comparison_postcold_453_v3_retry1.py": "597f8495afd3e2a230faccb19d7e7556c603d94ca79e3ce7cfd0374215016043",
+    "audit_postcold_result_v3.mjs": "23f107d68ae25dc7f5114d66bde265731296e352da01356fa9a20e53a672abb7"
+  },
+  "auditorAdaptation": "Only absolute local import replaced by adjacent exact frozen v3 contract; original actual result/receipt unchanged",
+  "diagnosticFixtureCounts": {
+    "helperOwnership": 26,
+    "controllerExact453": 26,
+    "node": 26,
+    "externalStageOuter": 10,
+    "retryEntryMainMockSpawn": 1,
+    "retryOuter": 5,
+    "offlineAuditV3": 8
+  },
+  "productionAcceptance": false,
+  "retryResultIncluded": false
+}
