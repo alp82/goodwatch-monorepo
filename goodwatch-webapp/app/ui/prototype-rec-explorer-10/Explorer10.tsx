@@ -479,6 +479,8 @@ export function Explorer10({ variant }: { variant: Variant10 }) {
 				if (variant.back) e.overview()
 				else if (variant.dockFrom === 1) showHub(next)
 			}
+			// Everything let go: the middle is empty again, so back out to the whole world.
+			if (!next.length && was.length) e.overview()
 			return
 		}
 		const known =
