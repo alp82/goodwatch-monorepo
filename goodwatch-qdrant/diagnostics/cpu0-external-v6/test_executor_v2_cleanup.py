@@ -29,6 +29,50 @@ class EarlyCleanupTests(unittest.TestCase):
         self.registration.cleanup_from_receipts=mock.Mock()
         self.enterContext(mock.patch.dict(sys.modules,{'registration_v2':self.registration}))
 
+    def late_cleanup(self):
+        adoption.HANDOFF.write_bytes(b'authenticated handoff stand-in')
+        self.life.secure_json.return_value=({'fixture':True},'a'*64,None)
+        committed={'sha256':'b'*64,'fixture':'new committed handoff'}
+        self.life.commit_handoff.return_value=committed
+        fd=os.open(self.path.parent/'owned-control',os.O_RDWR|os.O_CREAT,0o600)
+        self.acquire.return_value=fd
+        original_close=os.close
+        def failed_close(value):
+            if value!=fd:return original_close(value)
+            original_close(value)
+            raise OSError('fixture close observation failure')
+        return committed,failed_close
+
+    def test_cleanup_completed_handoff_survives_failed_close(self):
+        committed,close=self.late_cleanup()
+        with mock.patch.object(executor.os,'close',side_effect=close):
+            with self.assertRaisesRegex(RuntimeError,'^setup_lock_close_failed$') as caught:
+                executor.cleanup(self.arguments)
+        failure=caught.exception
+        self.assertEqual(failure.executorCompletedOperationReceipt['operation'],'cleanup')
+        self.assertEqual(failure.executorCompletedOperationReceipt['receipt'],committed)
+        self.assertIs(failure.executorCompletedOperationReceipt['continuationAllowed'],False)
+        self.assertEqual(failure.cleanupObservedHandoff['observedCommittedHandoffSha256'],'b'*64)
+        self.assertIs(failure.executorControlCleanupFailure['descriptorCloseObserved'],False)
+        self.prior.assert_called_once();self.controls.assert_called_once()
+        self.life.pair_snapshot.assert_called_once()
+
+    def test_cleanup_primary_numeric_refusal_survives_failed_close(self):
+        _,close=self.late_cleanup()
+        primary=RuntimeError('host_memory_unproven')
+        primary.admissionFailureEvidence={'hostMemAvailableBytes':123,'requiredBytes':456}
+        self.life.read_handoff.side_effect=primary
+        with mock.patch.object(executor.os,'close',side_effect=close):
+            with self.assertRaises(RuntimeError) as caught:executor.cleanup(self.arguments)
+        self.assertIs(caught.exception,primary)
+        self.assertEqual(primary.admissionFailureEvidence,{'hostMemAvailableBytes':123,'requiredBytes':456})
+        self.assertIs(primary.executorControlCleanupFailure['descriptorCloseObserved'],False)
+        self.assertFalse(hasattr(primary,'executorCompletedOperationReceipt'))
+        self.assertEqual(primary.cleanupObservedHandoff['observedCommittedHandoffSha256'],'a'*64)
+        self.life.commit_handoff.assert_not_called()
+        self.prior.assert_called_once();self.controls.assert_called_once()
+        self.life.pair_snapshot.assert_called_once()
+
     def test_no_full_stage_or_handoff_still_reaches_metadata_cleanup(self):
         result=executor.cleanup(self.arguments)
         self.assertEqual(result['schema'],'cpu0-external-cleanup.v7')

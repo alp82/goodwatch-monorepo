@@ -247,28 +247,30 @@ def cleanup(arguments):
         except BaseException as error:
             evidence[name]={'observed':False,'reason':fixed_cause(error),'stateUnknown':True}
             if primary is None:primary=error
-    fd=None
+    control_closed=False
     if primary is None and actual_sha is not None:
-        try:
-            fd=setup.acquire_control(lifecycle)
+        def commit_cleanup(fd):
+            nonlocal handoff
             lifecycle.read_handoff(docker,actual_sha)
             handoff=lifecycle.commit_handoff(docker,actual_sha,'outer')
-        except BaseException as error:primary=error
-        finally:
-            if fd is not None:
-                try:os.close(fd)
-                except BaseException as error:
-                    evidence['controlClose']={'observed':False,'reason':'setup_lock_close_failed'}
-                    if primary is None:primary=error
+            return handoff
+        try:
+            control_operation(lifecycle,'cleanup',commit_cleanup)
+            control_closed=True
+        except BaseException as error:
+            primary=error
+            close_failure=getattr(error,'executorControlCleanupFailure',None)
+            if close_failure is not None:evidence['controlClose']={'observed':False,**close_failure}
     if primary is not None:
         primary.cleanupIndependentEvidence=evidence
-        primary.cleanupObservedHandoff={'observedCommittedHandoffSha256':actual_sha,'continuationAllowed':False}
+        primary.cleanupObservedHandoff={'observedCommittedHandoffSha256':handoff['sha256'] if handoff is not None else actual_sha,
+            'observedPredecessorSha256':actual_sha,'continuationAllowed':False}
         primary.cleanupPairSnapshot=snapshot if snapshot is not None else {'observed':False}
         raise primary
     return {'schema':'cpu0-external-cleanup.v7','variant':'cpu0-fixed-capacity.v2',
             'consumer':consumer,'priorEvidence':observed,'pairSnapshot':snapshot,
             'handoff':handoff,'observedCommittedHandoffSha256':actual_sha,
-            'independentEvidence':evidence,'rootLockAvailable':fd is not None,
+            'independentEvidence':evidence,'rootLockAvailable':control_closed,
             'unknownUnregisteredChildrenAbsentProven':False}
 
 
