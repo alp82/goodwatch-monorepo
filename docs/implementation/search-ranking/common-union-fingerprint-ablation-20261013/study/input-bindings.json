@@ -1,0 +1,102 @@
+{
+  "files": {
+    "offline-prepared-inputs-20261013/prepared-with-filters.json": {
+      "sha256": "914d36f952a65927ace2c6c042097f0d53fe5d1633385550c32cff7098221c44",
+      "bytes": 1485349
+    },
+    "offline-prepared-inputs-20261013/filter-mask-manifest.json": {
+      "sha256": "d490395fb9e62fe3d8926344fb959b3175bd8548ab023a5b0987e4e4e9d2e4aa",
+      "bytes": 149116
+    },
+    "offline-prepared-inputs-20261013/filter-masks.bin": {
+      "sha256": "e8ca72684fb94957de87dbdc15ef1ac89609cbb7186ae912a2116ce1a64a526e",
+      "bytes": 7212912
+    },
+    "offline-public-encoder-additions-20261013/query-vectors-merged.json": {
+      "sha256": "35a2716af5e5b9a45b1678185b558cca736c7d81250f1c085ef59d62eb98a854",
+      "bytes": 5219383
+    },
+    "offline-public-encoder-20261013/source-manifest.json": {
+      "sha256": "6beb0c156bcc6b15dac3068220bcfeabebc07d6791fbb55cc25595b8a6e48b60",
+      "bytes": 37316
+    },
+    "index-readonly-acquisition-20261013/actual-index-v2-validation.json": {
+      "sha256": "ee84f7e1777d7b1a9bfb6d0b9aa8933c3190cfe0838e1186e9fa737d22a8b14a",
+      "bytes": 3843
+    },
+    "offline-prepared-inputs-20261013/freeze.json": {
+      "sha256": "7fde954da469c69a2aa53edb4b916934edd5c0934a38f44cb9c20d39e3eeee6d",
+      "bytes": 5895
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/backend-timeout.mjs": {
+      "sha256": "4dc66a117c8ac357358009964997da1a55cd7ca187385d93b1533c33384f5945",
+      "bytes": 2503
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/fingerprint.mjs": {
+      "sha256": "57b01debda329c543f648facb6b29be69abd67a4372757757537598dc5be2c50",
+      "bytes": 7889
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/fingerprintMeta.mjs": {
+      "sha256": "c3ed907905eb4dab69a49225415172ce046de1105a0f53d608c17662494d3a48",
+      "bytes": 9943
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/prepare-early.mjs": {
+      "sha256": "bfda0c933785a452be71758b68c4abf566dfb094ab14a72cd4844d71cda7295a",
+      "bytes": 1551
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/query-parsing.server.mjs": {
+      "sha256": "01c0c627f427064e06c7fa3116ae1ad2b174d927931a088735d31ef7bdedece4",
+      "bytes": 31844
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/reading-retrieval.server.mjs": {
+      "sha256": "bc8099ac30be34e06654a189a3892bfc78fa72d12d9e024f833d5627b3876d4e",
+      "bytes": 25618
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/references.server.mjs": {
+      "sha256": "a19559538ad8e69af3901027ab682082a8f8952531ce0b42b9ab8aeae622c26f",
+      "bytes": 12863
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/search-filter.server.mjs": {
+      "sha256": "d6d0a2b01fd5ba06e179835012c3ceeba5bafb5e87bd962f801ca3fc74b93a5f",
+      "bytes": 3999
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/search-filters.mjs": {
+      "sha256": "0d79d88c68fd4e16aa033c7f0ef5d10f5ae9a49901406955d24b9c2d55d35551",
+      "bytes": 6824
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/search-index-build.server.mjs": {
+      "sha256": "30f1382c4e12db888b157ad6cce6d32966bd7e42007eb07b35c946c1ec8c9e40",
+      "bytes": 11354
+    },
+    "/home/alper/projects/search-100-evidence/offline-prepared-inputs-20261013/source/text-rules.server.mjs": {
+      "sha256": "fdd994a9a8e2c33de69fa4f916b7e9e140479b07129d1a783a7a51f312efeeb1",
+      "bytes": 4498
+    },
+    "/home/alper/projects/search-100-evidence/local-fingerprint-common-union-study-20261013/catalog-drift.json": {
+      "sha256": "7b0a4c1416447ad011518903ed64baf265f8c5c827f36e8837d53853adde7ef5",
+      "bytes": 345841
+    },
+    "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/harness/metrics.py": {
+      "sha256": "02c32d0ef9cbdad9abbc901bb5da87ffad82a88bb343d6e2715886ad75a57f35",
+      "bytes": 16353
+    },
+    "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/results/grades.json": {
+      "sha256": "ef96e0704632e27b60f645b25257748f1706dae73c621f0ab1b5dfa049c9a274",
+      "bytes": 114147
+    },
+    "/home/alper/projects/goodwatch-monorepo/docs/prototypes/search-arena/queries.json": {
+      "sha256": "48bb90f7365dd7eb86741f0733f594f1efd5015a78048c1fcd12d5a5bede482d",
+      "bytes": 156843
+    },
+    "/home/alper/projects/search-100-evidence/offline-raw-fingerprint-acquisition-20261013/root-validation.json": {
+      "sha256": "b512d157e4930122e109f15efda1bb4ef2bf8bb28fda6fde1a7b9ec74606a1b7",
+      "bytes": 729
+    },
+    "/home/alper/projects/search-100-evidence/index-readonly-acquisition-20261013/verified-index/alternate_cuts.json.gz": {
+      "sha256": "5944928ead5eb25ba882139511b6e227bc41607aff2789748c5b2ea8a8aa8d3d",
+      "bytes": 886
+    }
+  },
+  "primitivesSha256": "254ef8bca0c8ba8046cf95892a8a3c3c2bb9f37c5fa8c2303c1214bd471d2ae9",
+  "sourceCommit": "927d38b2cca815f02a0b1636ec06f63c24603396"
+}
