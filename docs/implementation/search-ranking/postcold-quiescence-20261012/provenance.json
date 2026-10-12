@@ -1,0 +1,44 @@
+{
+  "schema": "search.postcold-quiescence-evidence.v1",
+  "sourceCommit": "3326114a6b51a7b40d6a225eca784b76d6af0bc7",
+  "mergedCommit": "9698269f",
+  "publicHelperReview": {
+    "model": "Claude Code Opus5.5",
+    "effort": "medium",
+    "verdict": "PASS",
+    "reportSha256": "a124a0ddf2089e14207b70a74bfe4e597699a5cf0005dddd42153653fc381555"
+  },
+  "localFixtureCounts": {
+    "helperOwnership": 24,
+    "controllerExact453": 25,
+    "node": 25,
+    "offlineAudit": 7,
+    "stageOuter": 7
+  },
+  "publicLauncherSourceHashes": {
+    "postcold_stage_public_packet_v1.json": "4932cb7582be7f9d907ebfc1467e86a4b0d2b8e63292d72573f67a974187bb47",
+    "prepare_postcold_stage_v1.py": "b3cfa9d1f6064dc3003653d052e38e0188f27f1a42c43f41f6e48147df4492df",
+    "prepare_comparison_postcold_453_v1.py": "bac72e2b79fce27996aaaa33b6d5fc1307a476dd2266e85e0d7b4fe53024073b",
+    "private_pipe_postcold_453_v1.mjs": "08f0aa038ad0d0f934b364946849629ca123e8935d7e9b0e1304401ed3c979dd",
+    "audit_postcold_result_v1.mjs": "db5166800681896289131ebaf66014f1017585f196bf83fc4da3f58ca66b22f1",
+    "test_audit_postcold_result_v1.mjs": "6a963314e2a63a950ac3e0f4619f95faf8fb376f401c63d50f48c57a250a9945"
+  },
+  "artifacts": {
+    "comparison-postcold-453-v1-result.json": "720bb236ffed5c70df77c4310413de64f89cd654f1ac5cf40b7e32e9cd677dac",
+    "offline-audit.json": "9abbeef281230b7cb31919bd51fec159e701d322c2ef5b0f68b95ad2af42f967",
+    "postcold-dirty-policy-readonly-v1-result.json": "48f8e9d00d9784d86768c2b343d1070c83793197114601fd43a4d85846953a8f",
+    "postcold-dirty-readonly-census-v1-result.json": "aeda771ad557f0b10718883b310b6cd390e1e60dfd7ea02a73e4a89684f2c080",
+    "postcold-stage-actual-v1-result.json": "b0992523d6cb4b950c7a5403b5c93ea12addf3b2db94a0c62a30a08cbba4b86b"
+  },
+  "productionAcceptance": false,
+  "futureProtocolExecuted": false,
+  "publicOfflineAudit": {
+    "originalSourceSha256": "db5166800681896289131ebaf66014f1017585f196bf83fc4da3f58ca66b22f1",
+    "adaptation": "Only absolute local contract import replaced by adjacent exact frozen332 contract import",
+    "sourceHashes": {
+      "audit_postcold_result_v1.mjs": "91d099ab1365eecfe461a46563f5b1f11aa410e481308a421e2009575501ca61",
+      "test_audit_postcold_result_v1.mjs": "6a963314e2a63a950ac3e0f4619f95faf8fb376f401c63d50f48c57a250a9945",
+      "compare-contract-frozen-332.mjs": "609df6be7bfc8943f46d41cf740ef3afb6bfc4e3a6dbd3491068ec9a46a329a7"
+    }
+  }
+}
