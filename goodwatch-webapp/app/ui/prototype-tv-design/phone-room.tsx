@@ -28,19 +28,25 @@ export type PhoneLayout = ReturnType<typeof layoutPhoneRoom>
 
 /**
  * Seats the TV and the Remote on a phone of `w` x `h` (the scene, without the site's header and dock).
+ * - The Remote is held in the hand wherever that leaves the TV its full height. Held, it is 46 px taller than
+ *   lying; in a window too short for that it lies on the table instead, as the desktop's Remote moves beside the
+ *   TV in a small window. That is a scene shorter than 279 + (w - 28) / 1.2 px: a window under about 697 px tall
+ *   at 375 wide, 709 at 390 (the site's header and dock take 128). `want` forces a form.
  * - The TV takes the width but for a little wall, and is as tall as a TV may be (`TV_ASPECT`) or as the Remote
  *   leaves, whichever is less. Its canvas keeps its width, so a shorter TV shows less, not smaller.
  * - The Remote is as small as its keys allow (44 px) on a short phone and grows with the phone.
  * - What is left shows the room: the sideboard between the TV and the Remote, and more of the hand under the
  *   Remote's keys.
  */
-export function layoutPhoneRoom(w: number, h: number, form: PhoneRemoteKey) {
-	const R = PHONE_REMOTE[form]
+export function layoutPhoneRoom(w: number, h: number, want: PhoneRemoteKey | "auto") {
 	const outerW = w - 2 * WALL
 	const pw = outerW - 2 * BEZEL
 	const k = pw / PHONE_CANVAS.w
 	const left = h - DOCK - 6 - TOP - 2 * BEZEL
 	const strip = STAND + 4
+	const auto: PhoneRemoteKey = left - strip - PHONE_REMOTE.hand.keys >= pw / TV_ASPECT ? "hand" : "table"
+	const form = want === "auto" ? auto : want
+	const R = PHONE_REMOTE[form]
 	const ph = Math.min(pw / TV_ASPECT, left - strip - R.keys)
 	// The Remote: by the width it may take, and never so tall that the TV or the strip gives way.
 	const u = Math.max(1, Math.min(R.grow, (w * R.share) / R.w, (left - ph - strip) / R.keys))
@@ -57,9 +63,16 @@ export function layoutPhoneRoom(w: number, h: number, form: PhoneRemoteKey) {
 	const s = (outerW / PHONE_ROOM.tv.w) * 0.985
 	const photoLeft = w / 2 - (PHONE_ROOM.tv.x + PHONE_ROOM.tv.w / 2) * s
 	const kh = remoteW / HAND.pw
+	const keysEnd = remoteTop + R.keys * u
+	// How the Remote aims at a finger on the picture (pointing.tsx). Held, it turns about the hand's grip under its
+	// keys, a few degrees, and leans back. Lying, it can only turn a little on the table, about its middle.
+	const pivot = form === "hand" ? keysEnd + 30 * u : remoteTop + (R.keys * u) / 2
+	const rig = { x: w / 2, y: pivot, arm: pivot - remoteTop, half: remoteW / 2, clear: Math.max(0, above - 3), ...(form === "hand" ? { swing: 11, lean: 11, slide: 8, turn: 0.65 } : { swing: 3.5, lean: 0, slide: 6, turn: 0.2 }) }
 	return {
 		place: "phone" as const,
 		form,
+		auto,
+		rig,
 		w,
 		h,
 		tv,
@@ -67,7 +80,7 @@ export function layoutPhoneRoom(w: number, h: number, form: PhoneRemoteKey) {
 		seam,
 		canvas: { w: PHONE_CANVAS.w, h: ph / k },
 		k,
-		remote: { left: remoteLeft, top: remoteTop, u, width: remoteW, keysEnd: remoteTop + R.keys * u },
+		remote: { left: remoteLeft, top: remoteTop, u, width: remoteW, keysEnd },
 		// The wall is the photo above the soundbar, stretched to our TV's height; the furniture follows unstretched.
 		wall: { left: photoLeft, top: -SKY * (seam / (CUT - SKY)), width: PHONE_ROOM.w * s, height: PHONE_ROOM.h * (seam / (CUT - SKY)) },
 		floor: { left: photoLeft, top: -CUT * s, width: PHONE_ROOM.w * s, height: PHONE_ROOM.h * s },

@@ -32,10 +32,10 @@ needs the internet but nothing needs a key).
 | `In the room` / `TV only`, or `V` | The room with the Remote, or the TV alone (`&view=tv`) |
 | `“Expand”`, or `L` | Cycle the expand key's label |
 | `Remote under`, or `R` | The other place for the Remote than the one the window's size chose: under the TV or beside it (`&remote=below\|beside`) |
-| `Remote: in the hand` / `on the table` on a phone, or `K` | The phone Remote's two forms (`&form=table`) |
+| `Remote: in the hand` / `on the table` on a phone, or `K` | The other form of the phone's Remote than the one the phone's height chose (`&form=hand\|table`) |
 | `⋯` on a phone | Unfolds these controls: on a phone they are behind one small key under the TV's left corner, so the picture shows the real proportions |
 | `C` | The two pointer shapes that were not chosen, crosshair and dot; the ring is the pointer (`&pointer=cross`) |
-| `Expand in the corner`, or `B` | The expand key's place: last in the top bar (the corner), first in it, or out of the bar at the picture's bottom right (`&bar=first\|bottom`) |
+| `Expand at the bottom`, or `B` | The expand key's place: at the picture's bottom right (where it is), or for comparison in the top bar, last or first (`&bar=last\|first`) |
 | Arrow keys, Enter, Escape or Backspace | Directions, OK, Back |
 | `H`, `M`, `S` | Home, Menu, Search (typing on the search screen goes to the TV) |
 | The Remote, mouse and touch on the TV | As in the flow prototype |
@@ -49,8 +49,9 @@ Every key is a plain key on a German keyboard: none needs Shift or AltGr. `&chro
 - One way out: the expand key at the top right of every app. Focusing it frames the whole picture, OK grows the
   picture into the page. Label "Expand" by default.
 - Decided on this prototype: the direction is **Cinema**; the Remote sits **under the TV** and moves beside it
-  only in very small windows; the pointer is the **ring**; the expand key is **last, in the corner**; the room
-  photo stays.
+  only in very small windows; the pointer is the **ring**, for the mouse and for a finger; the expand key is
+  **at the picture's bottom right**, on the desktop as on the phone; the phone's Remote is **in the hand**, and
+  lies on the table only in the shortest windows; the room photo stays.
 
 ## The top bar
 
@@ -68,23 +69,26 @@ pointer, and by touch.
 | Search results | yes | no | yes | yes |
 | While the menu is open | the menu itself has no bar; the screen under it shows no Menu action | | | |
 
-**The arrangement (chosen):** Back, Search, Menu, a wider gap, then Expand, last, in the corner. The three are quiet (dark
-pills or blocks); Expand alone is amber and carries the motif, so it is not one of them. The corner is where
-round one put it, and Right along the bar always ends on it. **The alternative** (`B`): Expand first, then the
-gap, then the three; it reads first, but it moves away from the corner and sits beside the screen's name.
-[compare/top-bar.jpg](compare/top-bar.jpg) shows both in each direction.
+**The bar holds Back, Search and Menu, and nothing else.** The three are quiet (dark pills or blocks).
 
-**A third place, to compare** (`B` again): Expand **out of the bar, in the picture's bottom right corner**, the
-bar keeping Back, Search and Menu. It is where the phone has it (below), and on the desktop it is one more press
-of `B`; the corner at the top right stays the desktop's default. [compare/expand-bottom.jpg](compare/expand-bottom.jpg)
-shows it in each direction. Every screen keeps that corner free: the moods are a little lower (Cinema's 158
-instead of 190, the others 190), Cinema's list drops the line under the focused title, Glow's list of stills ends
-above the key, Marquee's poster on a title ends above it; the other screens had the corner free already. Down or
-Right from the last item reaches it, and the brackets grow from there. `walk.mjs` checks on all 16 screens per
-direction that it covers no type and no focus target.
+**The expand key is out of the bar, in the picture's bottom right corner**, on the desktop as on the phone (the
+owner's decision; until this round the desktop had it last in the bar). It alone is amber and carries the motif.
+[compare/expand-bottom.jpg](compare/expand-bottom.jpg) shows it in each direction.
+
+- Every screen keeps that corner free: the moods are a little lower than they were (Cinema's 158 canvas pixels
+  instead of 190, Marquee's 190 instead of 216, Glow's 190 instead of 206), Cinema's list has no line under the
+  focused title any more, Glow's list of stills ends above the key, Marquee's poster on a title ends above it; the
+  other screens had the corner free already.
+- Down or Right from the last item of a screen reaches it: Right along a title's actions ends on it in Cinema
+  and Marquee, where it stands in their row, and Down from them in Glow, whose actions stand higher. The brackets
+  grow into the page from there.
+- `walk.mjs` checks on all 16 screens per direction that the key covers no type and no focus target, and that the
+  top bar holds only Back, Search and Menu.
+- **For comparison** (`B`): the two places it had in the bar, last (the top right corner) and first.
+  [compare/top-bar.jpg](compare/top-bar.jpg) shows both in each direction.
 
 On a phone the bar's three are icons without their words and the bar is one line: the name on the left, the
-actions on the right. The expand key is not in the bar there (see [The phone](#the-phone)).
+actions on the right.
 
 ## Pointing the Remote at the screen
 
@@ -115,15 +119,43 @@ actions on the right. The expand key is not in the bar there (see [The phone](#t
   A clip and a strip per shape, the Remote following the cursor into the four corners and across the TV:
   [ring](pointing/ring.mp4) ![ring](pointing/ring-strip.jpg) [crosshair](pointing/cross.mp4)
   ![crosshair](pointing/cross-strip.jpg) [dot](pointing/dot.mp4) ![dot](pointing/dot-strip.jpg)
-- **Touch and the phone:** there is no cursor, so no pointer is drawn. A tap chooses directly; on a touch screen
-  with the room the Remote turns a little toward the tap (40% of the way) and comes back after 0.65 s. The phone
-  has its own Remote, which does not turn.
-- **Reduced motion:** the Remote stays still; the pointer is drawn without lag.
+- **A finger points too** (the owner: "make long press and tap use the ring Cursor and move/tilt the remote"), on
+  the phone and on any touch screen:
+  - **A tap** on the picture shows the ring where the finger landed, and the Remote aims there with the same eased
+    motion as for the mouse. The item under the ring takes the focus and OK at once, as before. About 0.6 s later
+    the ring fades and the Remote goes back to rest. A tap on nothing shows the ring and aims the Remote, and
+    opens nothing.
+  - **A long press** (held half a second, or moved more than 10 px, which makes it one at once) brings the ring out
+    **46 px above the finger**, so the finger does not hide it. While the finger is down the ring follows it,
+    the Remote follows the ring, and every item the ring passes takes the focus. **Letting go is OK on the item
+    the ring is over**; over none, nothing happens and the ring fades. The ring cannot leave the picture, and a
+    finger that leaves it by more than 24 px points at nothing.
+  - **The ring is the truth**: what opens is what the ring is on, not what is under the finger. A press held
+    still for half a second therefore moves the pointer 46 px up, onto what is above the finger.
+  - **How far the phone's Remote moves.** Held in the hand it turns about the grip under its streaming keys by
+    65% of the angle to the target, 11 degrees at most, leans back toward the picture by up to 11 degrees
+    (further for a point higher up) and slides up to 8 px toward the target's side. Turned, its leading corner
+    rises; where that would touch the TV the hand lowers it by as much, so it never covers the TV and never
+    leaves its place. Its keys are not pointed at: a tap on a key does what the key does and the Remote stays
+    still, so the keys are hit where they are drawn.
+  - **Lying on the table** it can only do what a lying remote can: it turns on the table about its middle,
+    3.5 degrees at most, and slides up to 6 px toward the target. It does not lean.
+  - **In the room on a touch screen** the Remote in the hand swings as it does for the mouse.
+  - **What a finger must not set off:** the picture takes no text selection, no context menu, no long-press
+    callout and no browser panning (`touch-action: none`), and the page cannot scroll. The browser's own click
+    after a touch on the picture is dropped, so nothing opens twice.
+  - A clip and a strip of each at 390 x 844 (the grey disc is the finger, drawn by the script):
+    [tap](touch/tap.mp4) ![tap](touch/tap-strip.jpg) [long press](touch/hold.mp4) ![long press](touch/hold-strip.jpg)
+- **Reduced motion:** the Remote stays still, for the mouse and for a finger; the pointer is drawn without lag
+  and appears and goes without a fade. A tap and a long press work the same.
 - **How it is built** (`pointing.tsx`): one `pointermove` listener on the window writes the cursor into a ref; one
   `requestAnimationFrame` loop eases two transforms (the Remote's `translate3d perspective rotateZ rotateX
   rotateY` about the wrist, the pointer's `translate3d`) and stops when both have arrived. No React state is set
   on a mouse move; the pointer's states are attributes written when they change, and its shape changes are CSS
-  transitions of `transform` and `opacity`. The real Remote component is untouched.
+  transitions of `transform` and `opacity`. The real Remote component is untouched. A finger's `pointerdown`,
+  `pointermove` and `pointerup` on the picture feed the same loop; the focus moves through the engine, and OK is
+  the item's own click. The lag is counted in time, not in frames, so a device that draws few frames a second
+  arrives as soon as a fast one.
 
 ## The three directions
 
@@ -165,7 +197,7 @@ One image per screen, the three directions under each other at the TV's real siz
 | Glow | [clip](focus/glow.mp4) ![strip](focus/glow-strip.jpg) | [clip](expand/glow.mp4) ![strip](expand/glow-strip.jpg) |
 
 The focus clips are the browser's own frames (a screencast, real time) of one walk: along the apps and back, into
-Discover, around the moods, into the titles, up to the expand key. The focus strips are six of those frames from
+Discover, around the moods, into the titles, on to the expand key at the bottom right. The focus strips are six of those frames from
 the first move. The expand clips are composed from frames frozen at fixed points of the run, played at its real
 speed (0.85 s).
 
@@ -289,27 +321,39 @@ way at the top right". What the phone shows now, from the top (the site's header
   Video. The power key stays dropped: "Turn off" is in the TV's menu, and a dark TV turns on with any key.
 - **The prototype's controls** are folded behind one small key (`⋯`) under the TV's left corner and open over the
   room, so they take no height: what is on the screen is the real proportions.
-- **No pointer** is drawn, and a tap chooses directly.
+- **A finger points.** A tap or a long press on the picture shows the ring and the Remote aims at it (see
+  [Pointing the Remote at the screen](#pointing-the-remote-at-the-screen)).
 
-### Two forms of the Remote (`K`, `&form=table`, or the controls)
+### The Remote: in the hand, and on the table where the window is too short
 
-| | **In the hand** (shown first, recommended) | **On the table** |
+**In the hand is the default** (the owner's choice). In the two shortest windows the Remote lies on the table by
+itself, as the desktop's Remote moves beside the TV in a small window. `K` (or the controls) forces the other
+form, and again gives the choice back; `&form=hand|table` does the same.
+
+| | **In the hand** | **On the table** |
 | --- | --- | --- |
 | What it is | The Remote upright, held in the same hand as on the desktop, rising from the bottom edge: its grip and the hand run off the screen | A wide, short Remote lying in front of the TV |
 | Keys | The wheel, with a round key in each corner of its square (Search and Menu above, Back and Home below, their words beside them), and the two streaming keys under it | The wheel in the middle; Back, Search and Netflix on its left, Home, Menu and Prime Video on its right |
 | Size at its smallest | 236 px wide, 222 px down to the end of its keys | 336 px wide, 176 px tall |
-| Reads as | A remote in a hand, at once: it is the desktop's picture, cut at the streaming keys | A remote, but one of its own kind; nothing holds it, and it covers the sideboard on a short phone |
-| What it costs | 46 px more than the other on the shortest phones: at 375 x 667 the TV is 260 px tall instead of 289 | Nothing: the TV is at its full height at every size |
+| Pointing | Turns, leans back and slides toward the finger's target | Turns a little on the table and slides |
 
-**I recommend In the hand.** It is the one that looks like the desktop's Remote and like the same room: the hand,
-the thumb beside the streaming keys, the body running off the screen. Its price is real only on the two shortest
-windows (375 x 667 and 390 x 700), where the TV loses about a tenth of its height; from 360 x 740 up the TV is the
-same in both forms. On the table is the fallback if that tenth matters more.
+**The threshold.** Held in the hand the Remote is 46 px taller than lying. The phone takes the hand wherever
+that still leaves the TV its full height (its width divided by 1.2), and the table where it would not. In
+numbers: the scene must be at least **279 + (width − 28) / 1.2 px** tall, and the site's header and dock take
+128 px of the window, so the window must be at least about
+
+| Window width | 360 | 375 | 390 | 430 |
+| --- | --- | --- | --- | --- |
+| In the hand from a window height of | 684 | 697 | 709 | 742 |
+
+So 390 x 844, 360 x 740 and 430 x 932 hold the Remote in the hand, and **375 x 667 and 390 x 700 have it on the
+table**. There the TV keeps its 289 and 302 px of height instead of 260 and 293. The switch is at the exact
+height where the hand would start to cost the TV anything, so no window gives up TV height for the hand.
 
 ### The expand key at the bottom right
 
-On the phone the expand key is **out of the top bar, in the bottom right corner of the picture**, amber as before;
-the bar keeps Back, Search and Menu. The brackets that grow into the page start from there. Every screen keeps the
+On the phone, as now on the desktop, the expand key is **out of the top bar, in the bottom right corner of the
+picture**, amber as before; the bar keeps Back, Search and Menu. The brackets that grow into the page start from there. Every screen keeps the
 corner free for it, and uses the row beside it: the focused mood's line, a list's "Change mood" or its two "Sail
 to" islands, Taste's "Rate more"; on a title the three actions stand in a column on the left and the key beside
 the last of them. `walk.mjs` checks on all 16 screens, at every size and in both forms, that the key covers no type
@@ -332,24 +376,26 @@ above that row, clear of the key.
 
 | Phone | Remote | TV picture | TV with its bezel | Canvas | Shown at | Smallest type | Remote's width | Smallest key | Remote starts at | Its keys end at |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 390 x 844 | in the hand | 362 x 302 | 372 x 312 | 500 x 417 | 0.72 | 14.5 px | 265 px | 49 px | 451 | 696 of 844 |
-| 390 x 844 | on the table | 362 x 302 | 372 x 312 | 500 x 417 | 0.72 | 14.5 px | 365 px | 48 px | 526 | 705 of 844 |
-| 360 x 740 | in the hand | 332 x 277 | 342 x 287 | 500 x 417 | 0.66 | 13.3 px | 245 px | 46 px | 396 | 622 of 740 |
-| 360 x 740 | on the table | 332 x 277 | 342 x 287 | 500 x 417 | 0.66 | 13.3 px | 337 px | 44 px | 451 | 617 of 740 |
-| 375 x 667 | in the hand | 347 x 260 | 357 x 270 | 500 x 375 | 0.69 | 13.9 px | 236 px | 44 px | 355 | 573 of 667 |
-| 375 x 667 | on the table | 347 x 289 | 357 x 299 | 500 x 417 | 0.69 | 13.9 px | 351 px | 46 px | 391 | 563 of 667 |
-| 430 x 932 | in the hand | 402 x 335 | 412 x 345 | 500 x 417 | 0.8 | 16.1 px | 292 px | 55 px | 498 | 769 of 932 |
-| 430 x 932 | on the table | 402 x 335 | 412 x 345 | 500 x 417 | 0.8 | 16.1 px | 402 px | 53 px | 580 | 777 of 932 |
-| 390 x 700 (a browser with its bars) | in the hand | 362 x 293 | 372 x 303 | 500 x 405 | 0.72 | 14.5 px | 236 px | 44 px | 388 | 606 of 700 |
-| 390 x 700 | on the table | 362 x 302 | 372 x 312 | 500 x 417 | 0.72 | 14.5 px | 365 px | 48 px | 414 | 593 of 700 |
+| 390 x 844 | **in the hand** | 362 x 302 | 372 x 312 | 500 x 417 | 0.72 | 14.5 px | 265 px | 49 px | 451 | 696 of 844 |
+| 390 x 844 | on the table (forced) | 362 x 302 | 372 x 312 | 500 x 417 | 0.72 | 14.5 px | 365 px | 48 px | 526 | 705 of 844 |
+| 360 x 740 | **in the hand** | 332 x 277 | 342 x 287 | 500 x 417 | 0.66 | 13.3 px | 245 px | 46 px | 396 | 622 of 740 |
+| 360 x 740 | on the table (forced) | 332 x 277 | 342 x 287 | 500 x 417 | 0.66 | 13.3 px | 337 px | 44 px | 451 | 617 of 740 |
+| 375 x 667 | **on the table** | 347 x 289 | 357 x 299 | 500 x 417 | 0.69 | 13.9 px | 351 px | 46 px | 391 | 563 of 667 |
+| 375 x 667 | in the hand (forced) | 347 x 260 | 357 x 270 | 500 x 375 | 0.69 | 13.9 px | 236 px | 44 px | 355 | 573 of 667 |
+| 430 x 932 | **in the hand** | 402 x 335 | 412 x 345 | 500 x 417 | 0.8 | 16.1 px | 292 px | 55 px | 498 | 769 of 932 |
+| 430 x 932 | on the table (forced) | 402 x 335 | 412 x 345 | 500 x 417 | 0.8 | 16.1 px | 402 px | 53 px | 580 | 777 of 932 |
+| 390 x 700 | **on the table** | 362 x 302 | 372 x 312 | 500 x 417 | 0.72 | 14.5 px | 365 px | 48 px | 414 | 593 of 700 |
+| 390 x 700 | in the hand (forced) | 362 x 293 | 372 x 303 | 500 x 405 | 0.72 | 14.5 px | 236 px | 44 px | 388 | 606 of 700 |
+
+The form in bold is the one the phone takes by itself; the other is what `K` forces.
 
 Every key is 44 px or more in both directions at every size; both forms have 11 keys. The positions are from the
 window's top; the site's dock begins 64 px above the window's bottom.
 
 [viewports/phones.jpg](viewports/phones.jpg): home, a mini Discover and a title at each of the five sizes, the
-Remote in the hand. [viewports/phones-table.jpg](viewports/phones-table.jpg): the home at each size with the
-Remote on the table. [viewports/phone-before-after.jpg](viewports/phone-before-after.jpg): the three screens at
-390 x 844 before this round and after.
+Remote as the phone has it by itself. [viewports/phones-forms.jpg](viewports/phones-forms.jpg): the home at each
+size in both forms. [viewports/phone-before-after.jpg](viewports/phone-before-after.jpg): the three screens at
+390 x 844 before the room came to the phone and now.
 
 - **Nothing scrolls, for real**, as before: the site's page behind the scene is held at the window's size while
   the phone layout is on. `walk.mjs` drags a finger up on the TV and on the Remote in a touch browser and checks
@@ -375,17 +421,18 @@ Remote on the table. [viewports/phone-before-after.jpg](viewports/phone-before-a
 
 ## Questions for the owner
 
-1. The phone's Remote: **in the hand** or **on the table**? I recommend in the hand.
-2. With the Remote in the hand, the two shortest windows (375 x 667, and 390 x 700 with the browser's bars) have
-   a TV of 260 and 293 px height instead of 289 and 302. Fine, or should those windows switch to the Remote on
-   the table by themselves, as the desktop switches to "beside" in a small window?
-3. The TV on a phone is at most 1.2 times wider than tall, so that it reads as a TV. A tall phone therefore shows
-   more room, not more TV. Right, or should the TV take more of a tall phone (taller, and less like a TV)?
-4. The expand key on the desktop: stay in the top right corner, or move to the bottom right as on the phone
-   (`B` shows it)? At the bottom it is nearer the Remote and out of the bar, but four kinds of screen give up a
-   little for it (see The top bar).
-5. The stand under the phone's TV is a hint (a short neck and a foot on the soundbar). Enough, or should the TV
-   hang on the wall as in the photo, with no stand?
+1. A long press brings the ring out 46 px above the finger, and what opens is what the ring is on. A press held
+   still for half a second therefore points at what is above the finger, not under it. Right, or should a press that
+   has not moved keep pointing under the finger, and the ring only step out once the finger drags?
+2. The phone's Remote turns 11 degrees at most and leans back as much. That is what fits under the TV without
+   touching it. Enough to read as aiming, or should it move more and be allowed over the sideboard and the TV's
+   lower edge while it does?
+3. On the table the Remote only turns 3.5 degrees and slides. Enough for the two short windows, or should those
+   windows show no aiming at all?
+4. The TV on a phone is at most 1.2 times wider than tall, so that it reads as a TV. A tall phone therefore shows
+   more room, not more TV. Right, or should the TV take more of a tall phone?
+5. With the expand key at the bottom right on the desktop, four kinds of screen gave up a little for it (see The
+   top bar). Fine as they are, or should any of them be laid out again around the key?
 6. Is the Remote under the desktop's TV high enough now (18 px over the picture's bottom edge, a tenth larger)?
    There is room for about 20 px more in Cinema before it comes close to a title's buttons.
 7. On the smallest desktop windows (1366 x 650, 1280 x 720) the TV's smallest type is 16.6 to 17.5 px.
@@ -404,10 +451,10 @@ Added:
 - `.../base.tsx`: the apps flow (which screen shows what; item ids as in round one), the app pictures, the follower that glides to the focus
 - `.../cinema.tsx`, `.../marquee.tsx`, `.../glow.tsx`: the three directions
 - `.../art.ts`: TMDB poster and backdrop paths of the 25 sample titles
-- `.../pointing.tsx`: the Remote aiming at the cursor and the TV's own pointer
+- `.../pointing.tsx`: the Remote aiming at the cursor or at a finger on the picture, and the TV's own pointer
 - `.../phone-room.tsx`: the phone's room (the wall, the TV's body and stand, the sideboard) and where the TV and the Remote sit in it
 - `.../phone-remote.tsx`: the phone's Remote, in its two forms
-- `docs/prototypes/tv-screen-design/`: this file, `shots.mjs`, `walk.mjs`, `sizes.json`, `screens/`, `compare/`, `focus/`, `expand/`, `pointing/`, `viewports/`
+- `docs/prototypes/tv-screen-design/`: this file, `shots.mjs`, `walk.mjs`, `sizes.json`, `screens/`, `compare/`, `focus/`, `expand/`, `pointing/`, `touch/`, `viewports/`
 
 Changed: `goodwatch-webapp/vite.config.js` (`PROTOTYPES` lists the route and the folder), and in
 `prototype-tv-flow` only `data.ts`: the addresses of the pages the TV expands into are those of the flag-on pages
@@ -417,33 +464,48 @@ are imported as they are, and the flow prototype works as before.
 ## Proof
 
 - `npx remix vite:build` passes; `npx biome lint` on the added files is clean; `tsc` reports nothing in them.
-- `walk.mjs`: 582 checks pass. 57 per direction: the apps, a mood, titles, Want to See, rating, the way along the
-  top bar to the expand key and back, the menu, the map in four directions, the Remote's keys, search, the quiz,
-  a member's My shows; the top bar (which actions each kind of screen has, reaching them with Up, what Back,
-  Search and Menu do, the expand key first, and its third place: at the picture's bottom right, the bar keeping
-  the three, Down from the last mood reaching it, OK growing the picture from there, Back coming back to it); and
-  pointing (the pointer appears over the TV and the system cursor is hidden, the item under it takes the focus, a
-  click is OK, it hides on a key and after 3.2 s, the Remote swings far toward each of the four corners, the
-  streaming row stays in the window while it is turned, it settles over its own keys and is at rest after the
-  cursor left). 9 for what may cover the picture, each on 16 screens: the raised Remote in each direction at
-  1920 x 1080 and 1920 x 940, and the expand key at the bottom right in each direction, cover no type and no focus
-  target (what a list cuts off does not count, nor the menu that opens over a screen). 55 for the window sizes:
-  at 1920 x 1080, 1920 x 940 and 2560 x 1300 the Remote is under the TV, at 1536 x 730, 1440 x 800, 1366 x 650
-  and 1280 x 720 beside it; at each the streaming row ends inside the window, both streaming keys take a click,
-  beside the TV the whole Remote is inside the window, and the smallest type is 18 px or more (under 18 px at the
-  two smallest, as stated above); the same for Marquee and Glow at 1920 x 940 and Glow at 1536 x 730.
-- Of those, **330 are the phone's**, in a touch browser. Cinema at 390 x 844, 360 x 740, 375 x 667, 430 x 932 and
-  390 x 700, with the Remote in the hand and on the table (27 each): the layout is the phone's and the Remote has
-  the form asked for; the TV has its body on every side of the picture and wall beside it, and is wider than
-  tall; the Remote starts under the TV; it has its 11 keys, each 44 px or more, inside the window and under
-  nothing (the site's dock included); a tap on each does what it says (the four directions, OK, Back, Search,
-  Home, Menu, both streaming keys); the expand key is at the picture's bottom right and not in the bar, covers
-  no type and no focus target on any of 16 screens, and a tap on it grows the picture into the page and Back
-  returns; no focus target runs off the picture's bottom edge on any screen; and at the end a finger drags up on
-  the TV and on the Remote, the page is told to scroll, and nothing has moved and the page is no taller than the
-  window. Marquee and Glow at 375 x 667 and 430 x 932 (15 each): the same without the keys' effects.
-- And 17 more: the nod and the `R` key with the Remote forced beside the TV, the direction buttons and the keys
-  1, 2, 3, the ring and the two shapes behind `C`, no pointer at phone width, the phone's controls folded away
-  and unfolding (a direction, the Remote's other form).
-- `shots.mjs` made every picture, clip and number here (the clips of the focus, the expand run and pointing are
-  from the round before: nothing they show has changed).
+- `walk.mjs`: 799 checks pass. 63 per direction: the apps, a mood, titles, Want to See, rating, the top bar
+  (Back, Search and Menu and nothing else, reached with Up), the expand key (at the picture's bottom right,
+  reached with Right along a title's actions or Down from them and with Down from the last mood, OK growing the
+  picture from there, Back coming back to it; and behind `B` its two places in the bar), the menu, the map in four
+  directions, the Remote's keys, search, the quiz, a member's My shows; and pointing with the mouse (the pointer
+  appears over the TV and the system cursor is hidden, the item under it takes the focus, a click is OK, it hides
+  on a key and after 3.2 s, the Remote swings far toward each of the four corners, the streaming row stays in the
+  window while it is turned, it settles over its own keys and is at rest after the cursor left).
+- 12 for what may cover the picture, each on 16 screens: the raised Remote in each direction at 1920 x 1080 and
+  1920 x 940, and the expand key at the bottom right in each direction, cover no type and no focus target (what
+  a list cuts off does not count, nor the menu that opens over a screen); and in each direction the top bar holds
+  Back, Search and Menu only.
+- 55 for the window sizes: at 1920 x 1080, 1920 x 940 and 2560 x 1300 the Remote is under the TV, at 1536 x 730,
+  1440 x 800, 1366 x 650 and 1280 x 720 beside it; at each the streaming row ends inside the window, both
+  streaming keys take a click, beside the TV the whole Remote is inside the window, and the smallest type is
+  18 px or more (under 18 px at the two smallest, as stated above); the same for Marquee and Glow at 1920 x 940
+  and Glow at 1536 x 730.
+- **510 are the phone's**, in a touch browser. Cinema at 390 x 844, 360 x 740, 375 x 667, 430 x 932 and
+  390 x 700, with the Remote in the hand and on the table (45 each):
+  - the layout is the phone's and the Remote has the form asked for; the TV has its body on every side of the
+    picture and wall beside it, and is wider than tall; the Remote starts under the TV;
+  - it has its 11 keys, each 44 px or more, inside the window and under nothing (the site's dock included), and a
+    tap on each does what it says;
+  - the expand key is at the picture's bottom right and not in the bar, covers no type and no focus target on any
+    of 16 screens, and a tap on it grows the picture into the page and Back returns; no focus target runs off the
+    picture's bottom edge;
+  - **a tap**: the ring shows where the finger landed, the Remote's transform changes, the tapped app opens, then
+    the ring is gone and the Remote has no transform again;
+  - **a long press, dragged**: the ring comes out above the finger, the item under it has the focus, the focus
+    goes where the ring goes, the ring and the Remote follow the finger (held, the Remote leans back; lying, it
+    turns and does not lean), the turned Remote stays under the TV, nothing scrolls and nothing is selected, a
+    held finger opens no menu, letting go opens the mood under the ring, both return to rest, and a long press let
+    go over nothing opens nothing;
+  - a key of the Remote works as before and neither aims the Remote nor shows the ring;
+  - at the end a finger drags up on the TV and on the Remote, the page is told to scroll, and nothing has moved
+    and the page is no taller than the window.
+  Marquee and Glow at 375 x 667 and 430 x 932 (15 each): the same without the keys' effects and the pointing.
+- 15 for the Remote's form by itself: in the hand at 390 x 844, 360 x 740 and 430 x 932, on the table at
+  375 x 667 and 390 x 700; `K` forces the other and `K` again gives the choice back.
+- And 18 more: the nod and the `R` key with the Remote forced beside the TV, the direction buttons and the keys
+  1, 2, 3, the ring and the two shapes behind `C`, the pointer waiting hidden at phone width, the phone's controls
+  folded away and unfolding (a direction, the Remote's other form), a tap with reduced motion (the ring shows, the
+  Remote stays still, the app opens), and a finger on the picture in the room on a touch screen (the ring shows,
+  the Remote in the hand turns toward it, the app opens).
+- `shots.mjs` made every picture, clip and number here, all of them again in this round.

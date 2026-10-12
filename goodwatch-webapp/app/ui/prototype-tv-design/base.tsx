@@ -45,15 +45,16 @@ export type Skin = {
 }
 
 /**
- * Where the expand key sits: `last` in the top bar (the corner, the desktop's choice), `first` in it, or `bottom`:
- * out of the bar, in the bottom right corner of the picture. The phone always has it at the bottom.
+ * Where the expand key sits: `bottom`, out of the bar in the bottom right corner of the picture (the owner's
+ * choice, on the desktop as on the phone), or in the top bar for comparison: `last` in it (the top right corner)
+ * or `first`. The phone always has it at the bottom.
  */
-export type ExpandAt = "last" | "first" | "bottom"
-export const EXPAND_AT: Record<ExpandAt, string> = { last: "Expand in the corner", first: "Expand first", bottom: "Expand at the bottom" }
+export type ExpandAt = "bottom" | "last" | "first"
+export const EXPAND_AT: Record<ExpandAt, string> = { bottom: "Expand at the bottom", last: "Expand in the bar", first: "Expand first in the bar" }
 
 /** The screen a piece is drawn on (under the menu, that is not the top of the stack), and where the expand key sits. */
 const ScreenCtx = createContext("home")
-export const BarCtx = createContext<{ expand: ExpandAt }>({ expand: "last" })
+export const BarCtx = createContext<{ expand: ExpandAt }>({ expand: "bottom" })
 export const useExpandAt = (): ExpandAt => {
 	const { expand } = useContext(BarCtx)
 	return useTv().phone ? "bottom" : expand
@@ -363,9 +364,8 @@ export function Expand({ dest, className, motif }: { dest: Dest; className: stri
 }
 
 /**
- * The expand key out of the bar, in the bottom right corner of the picture: on the phone always, on the desktop as
- * the third place to compare. The screen keeps that corner free (`useExpandAt`). Nothing where the screen has no
- * page to grow into.
+ * The expand key out of the bar, in the bottom right corner of the picture: its place on the phone and on the
+ * desktop. The screen keeps that corner free (`useExpandAt`). Nothing where the screen has no page to grow into.
  */
 export function Corner({ dest, className, motif, at }: { dest?: Dest; className: string; motif: { w: number; h: number; stroke: number }; at: string }) {
 	if (useExpandAt() !== "bottom" || !dest) return null

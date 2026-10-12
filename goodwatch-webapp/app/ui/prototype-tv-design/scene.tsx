@@ -12,9 +12,9 @@
 //   &at=home.discover.discover-cozy   the stack of TV screens; it stays when the direction changes
 //   &f=<item>            the focused item on arrival
 //   &pointer=ring|cross|dot   the shape of the TV's own pointer (C)
-//   &bar=first|bottom    the expand key first in the top bar, or out of it at the bottom right, instead of last (B)
+//   &bar=last|first      the expand key in the top bar, last or first, instead of at the picture's bottom right (B)
 //   &remote=below|beside the Remote under the TV or beside it, whatever the window's size would choose (R)
-//   &form=table          the phone's Remote lying in front of the TV instead of held in the hand (K, or the phone's controls)
+//   &form=hand|table     the phone's Remote held in the hand or lying in front of the TV, whatever the phone's height would choose (K, or the phone's controls)
 //   &pointer=cross|dot   the two pointer shapes the owner did not choose; the ring is the pointer (C)
 //   &hold                freezes the expand run for screenshots: window.__tvLeave(0..1)
 //   &chrome=off          hides the prototype's own controls, for screenshots of the TV alone
@@ -153,8 +153,9 @@ export function TvDesignScene() {
 	const tvOnly = params.get("view") === "tv"
 	const labelKey = (params.get("label") ?? "") in LABELS ? (params.get("label") as string) : "expand"
 	const shape = ((params.get("pointer") ?? "") in POINTERS ? params.get("pointer") : "ring") as PointerKey
-	const expandAt = ((params.get("bar") ?? "") in EXPAND_AT ? params.get("bar") : "last") as ExpandAt
-	const form: PhoneRemoteKey = params.get("form") === "table" ? "table" : "hand"
+	const expandAt = ((params.get("bar") ?? "") in EXPAND_AT ? params.get("bar") : "bottom") as ExpandAt
+	const formWanted = params.get("form")
+	const wantForm: PhoneRemoteKey | "auto" = formWanted === "hand" || formWanted === "table" ? formWanted : "auto"
 	// The phone's own controls are folded away, so the picture shows the real proportions.
 	const [panel, setPanel] = useState(false)
 	const wanted = params.get("remote")
@@ -213,10 +214,16 @@ export function TvDesignScene() {
 			set({ pointer: next === "ring" ? "" : next })
 		},
 		bar: () => {
-			const next = ({ last: "first", first: "bottom", bottom: "" } as const)[expandAt]
+			const next = ({ bottom: "last", last: "first", first: "" } as const)[expandAt]
 			set({ bar: next })
 		},
-		form: () => set({ form: form === "table" ? "" : "table" }),
+		// The other form than the one showing; back to the phone's own choice when that is the one asked for.
+		form: () => {
+			if (!size) return
+			const now = layoutPhoneRoom(size.w, size.h, wantForm)
+			const other: PhoneRemoteKey = now.form === "hand" ? "table" : "hand"
+			set({ form: now.auto === other ? "" : other })
+		},
 		// The other place than the one showing; back to the window's own choice when that is the one asked for.
 		place: () => {
 			if (!size) return
@@ -255,7 +262,8 @@ export function TvDesignScene() {
 	}, [])
 
 	// The phone has a room of its own (phone-room.tsx): everything on one screen, nothing to scroll.
-	const PL = useMemo(() => (size && phone ? layoutPhoneRoom(size.w, size.h, form) : null), [size, phone, form])
+	const PL = useMemo(() => (size && phone ? layoutPhoneRoom(size.w, size.h, wantForm) : null), [size, phone, wantForm])
+	const form = PL?.form ?? "hand"
 	const L = useMemo(() => {
 		if (!size) return null
 		const { w, h } = size
@@ -287,7 +295,8 @@ export function TvDesignScene() {
 	const pointerEl = useRef<HTMLDivElement>(null)
 	const live = !run && tv.store.power === "on"
 	// Beside the TV the Remote may only nod toward the cursor: a full turn would swing it over the picture.
-	usePointing(root, remoteEl, pointerEl, L && size ? { tv: L.tv, remote: L.remote, width: size.w, height: size.h, phone, live, swing: place === "below" ? 42 : 13 } : null)
+	// A finger on the picture points too, and the phone's Remote aims at it in its own way (`rig`).
+	usePointing(root, remoteEl, pointerEl, L && size ? { tv: L.tv, remote: L.remote, width: size.w, height: size.h, phone, live, swing: place === "below" ? 42 : 13, rig: PL?.rig, focus: tv.setFocus } : null)
 
 	const dispatch = (action: TvAction) => {
 		switch (action.type) {
@@ -336,7 +345,7 @@ export function TvDesignScene() {
 	const s = tvRect ? Math.max(tvRect.width / canvas.w, tvRect.height / canvas.h) : 1
 	const pill = "rounded-full bg-white px-3 py-1.5 shadow-xl ring-2 ring-fuchsia-500"
 	return (
-		<div ref={root} data-remote-place={L?.place ?? "none"} data-bar={phone ? "bottom" : expandAt} className="living-room fixed inset-x-0 bottom-16 top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0">
+		<div ref={root} data-remote-place={L?.place ?? "none"} data-bar={phone ? "bottom" : expandAt} className={`living-room ${phone ? "select-none [-webkit-touch-callout:none]" : ""} fixed inset-x-0 bottom-16 top-16 z-40 overflow-clip bg-[#07080b] text-white lg:bottom-0`}>
 			{/* As raw text: React would escape the quotes in the selectors, and a style element does not unescape them. */}
 			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: our own constant CSS */}
 			<style dangerouslySetInnerHTML={{ __html: `@layer components {${BASE_CSS}${POINTER_CSS}${skin.css}}` }} />
@@ -353,7 +362,7 @@ export function TvDesignScene() {
 			)}
 			{PL && <PhoneRoom L={PL} on={tv.store.power === "on"} />}
 			{L && tvRect && (
-				<div data-tv-screen className={`absolute overflow-hidden bg-black ${phone ? "rounded-[3px]" : "rounded-[4px]"} ${live && !phone ? "tv-nocursor" : ""}`} style={{ ...tvRect, zIndex: run ? 30 : undefined, boxShadow: L.photo && tv.store.power === "on" ? "0 0 120px 10px rgba(251,191,36,0.14), 0 0 22px 1px rgba(251,191,36,0.18)" : "none" }}>
+				<div data-tv-screen className={`absolute touch-none select-none overflow-hidden bg-black [-webkit-touch-callout:none] ${phone ? "rounded-[3px]" : "rounded-[4px]"} ${live ? "tv-nocursor" : ""}`} style={{ ...tvRect, zIndex: run ? 30 : undefined, boxShadow: L.photo && tv.store.power === "on" ? "0 0 120px 10px rgba(251,191,36,0.14), 0 0 22px 1px rgba(251,191,36,0.18)" : "none" }}>
 					<div data-tv-canvas className="absolute left-0 top-0 origin-top-left" style={{ width: canvas.w, height: canvas.h, transform: `translate(${(tvRect.width - canvas.w * s) / 2}px, ${(tvRect.height - canvas.h * s) / 2}px) scale(${s})` }}>
 						<BarCtx.Provider value={bar}>
 						<TvCtx.Provider value={tv}>
@@ -372,13 +381,18 @@ export function TvDesignScene() {
 				</div>
 			)}
 			{remote}
-			{PL?.hand && (
-				<picture>
-					<source type="image/avif" srcSet={assetUrl(HAND_IMAGE.avif)} />
-					<img src={assetUrl(HAND_IMAGE.webp)} alt="" aria-hidden className="pointer-events-none absolute max-w-none select-none" style={PL.hand} draggable={false} />
-				</picture>
+			{/* The phone's Remote and the hand that holds it move as one when the Remote aims (pointing.tsx). */}
+			{PL && (
+				<div ref={remoteEl} data-remote-rig className="absolute left-0 top-0 will-change-transform" style={{ transformOrigin: `${PL.rig.x}px ${PL.rig.y}px` }}>
+					{PL.hand && (
+						<picture>
+							<source type="image/avif" srcSet={assetUrl(HAND_IMAGE.avif)} />
+							<img src={assetUrl(HAND_IMAGE.webp)} alt="" aria-hidden className="pointer-events-none absolute max-w-none select-none" style={PL.hand} draggable={false} />
+						</picture>
+					)}
+					<PhoneRemote tv={tv} form={form} at={PL.remote} bottom={PL.h} />
+				</div>
 			)}
-			{PL && <PhoneRemote tv={tv} form={form} at={PL.remote} bottom={PL.h} />}
 
 			{/* The real page, standing in: it fades in while the picture is still growing. */}
 			{run && grow > 0.7 && (
@@ -403,7 +417,7 @@ export function TvDesignScene() {
 					</div>
 				</div>
 			)}
-			{!phone && <TvPointer key={shape} shape={shape} pointer={pointerEl} />}
+			<TvPointer key={shape} shape={shape} pointer={pointerEl} small={phone} />
 			{brackets && (
 				<div className="pointer-events-none absolute z-[36]" style={{ ...brackets, filter: look.glow, opacity: run ? 1 - clamp((grow - 0.7) / 0.25) : 1 }}>
 					<Corners len={bracketsLen} stroke={look.stroke} color={AMBER} />
@@ -444,6 +458,7 @@ export function TvDesignScene() {
 				{phone && (
 					<button type="button" data-form={form} onClick={controls.form} className={pill} title="K">
 						Remote: {PHONE_REMOTES[form].toLowerCase()}
+						{wantForm === "auto" ? "" : " (forced)"}
 					</button>
 				)}
 				{!phone && (

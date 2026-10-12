@@ -1,7 +1,7 @@
 // Everything pictured in this folder: every TV screen of the design prototype per direction (1920x1080 in the room,
 // and 390 px), the side-by-side comparisons of the TV alone, a clip (mp4) and a strip of the focus moving, a clip and a
 // strip of the expand run, and the size numbers (sizes.json).
-//   PLAYWRIGHT=/scratch/node_modules/playwright-core/index.mjs BASE=http://localhost:3147 node shots.mjs [screens|viewports|compare|bar|focus|expand|pointing] [cinema]
+//   PLAYWRIGHT=/scratch/node_modules/playwright-core/index.mjs BASE=http://localhost:3147 node shots.mjs [screens|viewports|compare|bar|focus|expand|pointing|touch] [cinema]
 // The repo has no browser driver: install playwright-core outside it. Needs the dev server (see README.md) and ffmpeg.
 // A page is loaded once per direction and person; window.__tvDesign then jumps from screen to screen.
 import { execFileSync } from "node:child_process"
@@ -179,22 +179,26 @@ if (!only || only === "viewports") {
 	ffmpeg(...VIEWPORTS.flatMap(([w, h]) => ["-i", join(tmp, `${w}x${h}.png`)]), "-filter_complex", `${VIEWPORTS.map((v, i) => cell(i, v)).join(";")};${VIEWPORTS.map((_, i) => `[c${i}]`).join("")}xstack=inputs=7:layout=0_0|860_0|1720_0|2580_0|0_440|860_440|1720_440`, "-q:v", "3", join(dir, "contact-sheet.jpg"))
 
 	// The phones: the room, the TV and the phone's own Remote on one screen, at five sizes. The sheet has Cinema's
-	// home, a mini Discover and a title per size with the Remote in the hand; a second sheet has the home with the
-	// Remote on the table. The numbers are for both forms.
+	// home, a mini Discover and a title per size with the Remote as the phone has it by itself; a second sheet has
+	// the home in both forms. The numbers are for both forms.
 	sizes.phones = {}
 	const PHONES = [[390, 844], [360, 740], [375, 667], [430, 932], [390, 700]]
 	const SHEET = [["home", "home"], ["discover", "discover-cozy"], ["title", "title-knives-out"]]
 	for (const [width, height] of PHONES) {
 		const name = `${width}x${height}`
-		sizes.phones[name] = {}
+		// Which form the phone takes by itself: held in the hand, or on the table where the window is too short.
+		const own = await open({ width, height }, "design=cinema&chrome=off")
+		const auto = await own.page.locator("[data-remote]").getAttribute("data-phone-remote")
+		await own.ctx.close()
+		sizes.phones[name] = { byItself: auto }
 		for (const form of ["hand", "table"]) {
-			const { ctx, page } = await open({ width, height }, `design=cinema&chrome=off${form === "table" ? "&form=table" : ""}`)
+			const { ctx, page } = await open({ width, height }, `design=cinema&chrome=off&form=${form}`)
 			let text = null
 			for (const [file, screen] of SHEET) {
 				await go(page, ["", screen])
 				const m = await measure(page)
 				if (m.text && (!text || m.text.px < text)) text = m.text.px
-				if (form === "hand" || file === "home") await page.screenshot({ path: join(tmp, `p-${name}-${form}-${file}.png`) })
+				await page.screenshot({ path: join(tmp, `p-${name}-${form}-${file}.png`) })
 			}
 			const tv = await tvBox(page)
 			const room = await page.evaluate(() => {
@@ -209,7 +213,7 @@ if (!only || only === "viewports") {
 			})
 			sizes.phones[name][form] = { tv: `${Math.round(tv.width)} x ${Math.round(tv.height)}`, tvBody: room.tvBody, canvas: room.canvas, shownAt: room.shownAt, smallestText: text, remote: room.remote }
 			await ctx.close()
-			console.log("phone", name, form, JSON.stringify(sizes.phones[name][form]))
+			console.log("phone", name, form, form === auto ? "(by itself)" : "", JSON.stringify(sizes.phones[name][form]))
 		}
 	}
 	writeFileSync(join(here, "sizes.json"), `${JSON.stringify(sizes, null, "\t")}\n`)
@@ -219,8 +223,10 @@ if (!only || only === "viewports") {
 		const layout = cells.map((_, i) => `${(i % columns) * 446}_${Math.floor(i / columns) * 968}`).join("|")
 		ffmpeg(...cells.flatMap(([file]) => ["-i", file]), "-filter_complex", `${filters};${cells.map((_, i) => `[p${i}]`).join("")}xstack=inputs=${cells.length}:layout=${layout}:fill=0x15171c`, "-q:v", "4", out)
 	}
-	grid(SHEET.flatMap(([file]) => PHONES.map(([w, h]) => [join(tmp, `p-${w}x${h}-hand-${file}.png`), `${w} x ${h}`])), PHONES.length, join(dir, "phones.jpg"))
-	grid(PHONES.map(([w, h]) => [join(tmp, `p-${w}x${h}-table-home.png`), `${w} x ${h}, on the table`]), PHONES.length, join(dir, "phones-table.jpg"))
+	// The first sheet is each phone as it is by itself; the second has the home in both forms at every size.
+	const own = (w, h) => sizes.phones[`${w}x${h}`].byItself
+	grid(SHEET.flatMap(([file]) => PHONES.map(([w, h]) => [join(tmp, `p-${w}x${h}-${own(w, h)}-${file}.png`), `${w} x ${h}${own(w, h) === "table" ? ", on the table" : ""}`])), PHONES.length, join(dir, "phones.jpg"))
+	grid(["hand", "table"].flatMap((form) => PHONES.map(([w, h]) => [join(tmp, `p-${w}x${h}-${form}-home.png`), `${w} x ${h}, ${form === "table" ? "on the table" : "in the hand"}${own(w, h) === form ? " (by itself)" : ""}`])), PHONES.length, join(dir, "phones-forms.jpg"))
 	// Before and after at 390 x 844: the pictures of the last round (commit 58ad60e3) over this round's.
 	const BEFORE = [["home", "01-home"], ["discover", "04-discover-results"], ["title", "10-title"]]
 	for (const [file, old] of BEFORE) writeFileSync(join(tmp, `before-${file}.jpg`), execFileSync("git", ["show", `58ad60e3:docs/prototypes/tv-screen-design/screens/cinema/${old}-phone.jpg`], { cwd: here, maxBuffer: 1 << 26 }))
@@ -249,25 +255,26 @@ if (!only || only === "compare") {
 }
 
 if (!only || only === "bar") {
-	// The top bar as built (the expand key last) and the alternative (first), cut from the titles of Discover.
+	// The two places the expand key had in the top bar, kept behind B for comparison (last and first), cut from the
+	// titles of Discover.
 	const dir = join(here, "compare")
 	const tmp = join(dir, "tmp")
 	mkdirSync(tmp, { recursive: true })
 	const strips = []
 	for (const design of ["cinema", "marquee", "glow"]) {
 		for (const order of ["last", "first"]) {
-			const { ctx, page } = await open(DESKTOP, `design=${design}&chrome=off${order === "first" ? "&bar=first" : ""}`)
+			const { ctx, page } = await open(DESKTOP, `design=${design}&chrome=off&bar=${order}`)
 			await go(page, ["", "discover-cozy"])
 			const b = await tvBox(page)
 			const file = join(tmp, `${design}-${order}.png`)
 			await page.screenshot({ path: file, clip: { x: b.x, y: b.y, width: b.width, height: 124 } })
-			strips.push([file, `${NAMES[design]}, Expand ${order}`])
+			strips.push([file, `${NAMES[design]}, Expand ${order} in the bar`])
 			await ctx.close()
 		}
 	}
 	const label = (i, text) => `[${i}]drawtext=text='${text}':fontcolor=white:fontsize=24:x=w-tw-24:y=h-40:box=1:boxcolor=black@0.7:boxborderw=8[l${i}]`
 	ffmpeg(...strips.flatMap(([file]) => ["-i", file]), "-filter_complex", `${strips.map(([, text], i) => label(i, text)).join(";")};${strips.map((_, i) => `[l${i}]`).join("")}vstack=inputs=${strips.length}`, "-q:v", "3", join(dir, "top-bar.jpg"))
-	// The third place: the expand key out of the bar, in the picture's bottom right corner. The whole TV per direction.
+	// Where the expand key is: out of the bar, in the picture's bottom right corner. The whole TV per direction.
 	const whole = []
 	for (const design of ["cinema", "marquee", "glow"]) {
 		const { ctx, page } = await open(DESKTOP, `design=${design}&chrome=off&bar=bottom`)
@@ -318,12 +325,15 @@ if (!only || only === "focus") {
 				await page.waitForTimeout(520)
 			}
 		}
-		// Along the apps and back, into Discover, around the moods, into the results, along the titles, up to the bar and along it to the expand key.
+		// Along the apps and back, into Discover, around the moods, into the results, along the titles and on to the expand key.
 		let firstMove = 0
 		const frames = await record(page, tmp, async () => {
 			await page.waitForTimeout(400)
 			firstMove = Date.now() / 1000
-			await press("ArrowRight", "ArrowRight", "ArrowRight", "ArrowLeft", "ArrowLeft", "Enter", "ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Enter", "ArrowRight", "ArrowRight", "ArrowUp", "ArrowRight", "ArrowRight", "ArrowRight")
+			await press("ArrowRight", "ArrowRight", "ArrowRight", "ArrowLeft", "ArrowLeft", "Enter", "ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Enter", "ArrowRight", "ArrowRight")
+			// On to the expand key in the bottom right corner: right as far as it goes, then down.
+			const onExpand = () => page.evaluate(() => window.__tvDesign.state().endsWith("focus expand"))
+			for (const key of ["ArrowRight", "ArrowRight", "ArrowDown", "ArrowDown", "ArrowRight", "ArrowDown"]) if (!(await onExpand())) await press(key)
 			await page.waitForTimeout(700)
 		})
 		ffmpeg("-f", "concat", "-safe", "0", "-i", join(tmp, "list.txt"), "-vf", `${crop},fps=30,scale=1200:-2`, "-pix_fmt", "yuv420p", "-movflags", "+faststart", join(dir, `${design}.mp4`))
@@ -426,4 +436,93 @@ if (!only || only === "expand") {
 	}
 	rmSync(tmp, { recursive: true, force: true })
 }
+if (!only || only === "touch") {
+	// A finger pointing at the picture on a phone (390 x 844): a tap, and a long press that is dragged. The grey
+	// disc is the finger; this script draws it, the prototype does not.
+	const dir = join(here, "touch")
+	const tmp = join(dir, "tmp")
+	mkdirSync(dir, { recursive: true })
+	const { ctx, page } = await open(PHONE, "design=cinema&chrome=off")
+	const cdp = await ctx.newCDPSession(page)
+	await page.evaluate(() => {
+		const f = document.createElement("div")
+		f.id = "finger"
+		f.style.cssText = "position:fixed;left:0;top:0;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(200,205,215,.38);box-shadow:0 0 0 2px rgba(255,255,255,.55);z-index:9999;pointer-events:none;opacity:0;transition:opacity .12s"
+		document.body.append(f)
+	})
+	const finger = (x, y, on) => page.evaluate(([x, y, on]) => { const f = document.getElementById("finger"); f.style.transform = `translate(${x}px, ${y}px)`; f.style.opacity = on ? "1" : "0" }, [x, y, on])
+	const touch = async (type, x, y) => { await finger(x, y, type !== "touchEnd"); await cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y, id: 1 }] }) }
+	const mid = async (id) => { const b = await page.locator(`[data-tv-screen] [data-tv-item="${id}"]`).boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2] }
+	const strip = (files, out) => ffmpeg(...files.flatMap((f) => ["-i", f]), "-filter_complex", `hstack=inputs=${files.length}`, "-q:v", "4", out)
+	const snap = async (file) => { await page.screenshot({ path: join(tmp, file), type: "jpeg", quality: 88 }); return join(tmp, file) }
+	const clip = (out) => ffmpeg("-f", "concat", "-safe", "0", "-i", join(tmp, "list.txt"), "-vf", "fps=30,scale=390:-2", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out)
+
+	// The tap, as a clip: the finger lands on Discover, lifts, Discover opens, the ring fades and the Remote settles.
+	await go(page, ["", "home"])
+	let [x, y] = await mid("app-discover")
+	await record(page, tmp, async () => {
+		await page.waitForTimeout(500)
+		await touch("touchStart", x, y)
+		await page.waitForTimeout(140)
+		await touch("touchEnd", x, y)
+		await page.waitForTimeout(1500)
+	})
+	clip(join(dir, "tap.mp4"))
+	// The tap, as a strip: before; a fifth of a second after the finger landed (the ring where it landed, the Remote
+	// on its way, the app opening; the finger is up again by then, its disc is left in for the picture); half a second
+	// later; and at rest again.
+	await go(page, ["", "home"])
+	const tap = [await snap("t0.jpg")]
+	await touch("touchStart", x, y)
+	await page.waitForTimeout(90)
+	await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] })
+	await page.waitForTimeout(110)
+	tap.push(await snap("t1.jpg"))
+	await finger(x, y, false)
+	await page.waitForTimeout(300)
+	tap.push(await snap("t2.jpg"))
+	await page.waitForTimeout(1400)
+	tap.push(await snap("t3.jpg"))
+	strip(tap, join(dir, "tap-strip.jpg"))
+
+	// The long press: down under Funny, held until the ring comes out above the finger, dragged across the moods
+	// to Dark, let go there.
+	await go(page, ["", "discover"])
+	;[x, y] = await mid("mood-funny")
+	const [x2, y2] = await mid("mood-dark")
+	const [x3, y3] = await mid("mood-thrilling")
+	const drag = async (ax, ay, bx, by, steps = 14) => { for (let i = 1; i <= steps; i++) { await touch("touchMove", ax + ((bx - ax) * i) / steps, ay + ((by - ay) * i) / steps); await page.waitForTimeout(34) } }
+	const LIFT = 46
+	await record(page, tmp, async () => {
+		await page.waitForTimeout(400)
+		await touch("touchStart", x, y + LIFT)
+		await page.waitForTimeout(800)
+		await drag(x, y + LIFT, x3, y3 + LIFT)
+		await page.waitForTimeout(500)
+		await drag(x3, y3 + LIFT, x2, y2 + LIFT)
+		await page.waitForTimeout(600)
+		await touch("touchEnd", x2, y2 + LIFT)
+		await page.waitForTimeout(1500)
+	})
+	clip(join(dir, "hold.mp4"))
+	// The strip: held, dragged to Thrilling, on to Dark, let go.
+	await go(page, ["", "discover"])
+	await touch("touchStart", x, y + LIFT)
+	await page.waitForTimeout(800)
+	const hold = [await snap("h0.jpg")]
+	await drag(x, y + LIFT, x3, y3 + LIFT)
+	await page.waitForTimeout(500)
+	hold.push(await snap("h1.jpg"))
+	await drag(x3, y3 + LIFT, x2, y2 + LIFT)
+	await page.waitForTimeout(500)
+	hold.push(await snap("h2.jpg"))
+	await touch("touchEnd", x2, y2 + LIFT)
+	await page.waitForTimeout(450)
+	hold.push(await snap("h3.jpg"))
+	strip(hold, join(dir, "hold-strip.jpg"))
+	await ctx.close()
+	rmSync(tmp, { recursive: true, force: true })
+	console.log("touch")
+}
+
 await browser.close()

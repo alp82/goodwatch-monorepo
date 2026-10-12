@@ -41,6 +41,12 @@ const pointer = (name) => page.evaluate((n) => document.querySelector("[data-tv-
 const middle = async (selector) => { const b = await page.locator(selector).first().boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2] }
 /** The Remote's turn about the wrist and its lean, in degrees, from the transform the pointing loop wrote. */
 const aim = () => page.evaluate(() => { const t = document.querySelector("[data-remote]").style.transform; return [Number(/rotateZ\(([-\d.]+)deg\)/.exec(t)?.[1] ?? 0), Number(/rotateX\(([-\d.]+)deg\)/.exec(t)?.[1] ?? 0)] })
+/** The Remote's turn and lean once it has stopped easing: a loaded machine draws fewer frames, so this waits for it. */
+const atRest = async () => {
+	let now = ""
+	for (let i = 0; i < 40; i++) { await page.waitForTimeout(150); now = (await aim()).map((n) => Math.round(n)).join(" "); if (now === "0 12") break }
+	return now
+}
 /** Moves the cursor into each corner of the window and returns the Remote's turn and lean there. */
 const corners = async () => {
 	const { width, height } = page.viewportSize()
@@ -99,8 +105,9 @@ const corner = () => page.evaluate((sel) => {
 	const x = document.querySelector(sel)?.getBoundingClientRect()
 	const tv = document.querySelector("[data-tv-screen]").getBoundingClientRect()
 	if (!x) return "missing"
-	const snug = tv.right - x.right < tv.width * 0.08 && tv.bottom - x.bottom < tv.height * 0.12 && x.right <= tv.right && x.bottom <= tv.bottom
-	return `${x.top > tv.top + tv.height / 2 ? "bottom" : "top"} ${x.left > tv.left + tv.width / 2 ? "right" : "left"}${snug ? "" : ", not in the corner"}`
+	const low = x.top > tv.top + tv.height / 2
+	const snug = !low || (tv.right - x.right < tv.width * 0.08 && tv.bottom - x.bottom < tv.height * 0.12 && x.right <= tv.right && x.bottom <= tv.bottom)
+	return `${low ? "bottom" : "top"} ${x.left > tv.left + tv.width / 2 ? "right" : "left"}${snug ? "" : ", not in the corner"}`
 }, EXPAND)
 
 for (const design of ["cinema", "marquee", "glow"]) {
@@ -115,8 +122,14 @@ for (const design of ["cinema", "marquee", "glow"]) {
 	await keys("ArrowRight", "Enter"); await page.waitForTimeout(300); await expect(t("Want to See stays on the title"), /title-only-murders · focus want$/)
 	await keys("ArrowRight", "Enter"); await expect(t("Seen it asks how it was"), /› rate-only-murders · focus level-Loved it$/)
 	await keys("Enter"); await expect(t("a rating returns to the title, focus on Seen it"), /title-only-murders · focus seen$/)
-	await keys("ArrowUp"); await expect(t("up reaches the top bar"), /title-only-murders · focus (bar-\w+|expand)$/)
-	await keys("ArrowRight", "ArrowRight", "ArrowRight"); await expect(t("right along the bar ends on the expand key"), /title-only-murders · focus expand$/)
+	await keys("ArrowUp"); await expect(t("up reaches the top bar"), /title-only-murders · focus bar-\w+$/)
+	check(t("the top bar is Back, Search, Menu and nothing else"), await inBar(), "bar-back bar-search bar-menu")
+	check(t("the expand key is at the picture's bottom right"), await corner(), "bottom right")
+	await keys("ArrowDown"); await expect(t("down returns to the title's actions"), /title-only-murders · focus (watch|want|seen)$/)
+	// Right along the actions ends on the key where it stands in their row (Cinema, Marquee); where the actions
+	// stand higher (Glow), Down from them does.
+	await keys("ArrowRight", "ArrowRight", "ArrowRight"); if (!/focus expand$/.test(await state())) await keys("ArrowDown")
+	await expect(t("right along the actions, or down from them, ends on the expand key"), /title-only-murders · focus expand$/)
 	await keys("Enter"); await expect(t("OK grows the picture into the title page"), /focus expand · on \/show\/107113-only-murders$/)
 	await keys("Escape"); await expect(t("Back comes back into the same screen and focus"), /title-only-murders · focus expand$/)
 	await keys("Escape"); await expect(t("Back returns to the list with the focus where it was"), "home › discover › discover-cozy · focus t-only-murders")
@@ -133,17 +146,20 @@ for (const design of ["cinema", "marquee", "glow"]) {
 	check(t("the screen under the open menu has no Menu action"), await bar(), "bar-search")
 	await keys("Escape", "ArrowDown")
 	await expect(t("down from the bar returns to the apps"), /^home · focus app-/)
-	await keys("h", "ArrowRight", "Enter"); check(t("an app has Back, Search, Menu, then Expand"), await bar(), "bar-back bar-search bar-menu expand")
-	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=first]", { timeout: 8000 }); check(t("the alternative puts Expand first"), await bar(), "expand bar-back bar-search bar-menu")
-	// The third place: out of the bar, in the picture's bottom right corner.
-	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=bottom]", { timeout: 8000 })
-	check(t("the third place has Expand at the picture's bottom right"), await corner(), "bottom right")
-	check(t("and the bar keeps Back, Search, Menu"), await inBar(), "bar-back bar-search bar-menu")
+	await keys("h", "ArrowRight", "Enter"); check(t("an app has Back, Search, Menu and the expand key"), await bar(), "bar-back bar-search bar-menu expand")
+	// The expand key is out of the bar, in the picture's bottom right corner.
+	check(t("the bar has Back, Search, Menu only"), await inBar(), "bar-back bar-search bar-menu")
+	check(t("Expand is at the picture's bottom right"), await corner(), "bottom right")
 	await page.evaluate(() => window.__tvDesign.focus("mood-any")); await page.waitForTimeout(260)
-	await keys("ArrowDown"); await expect(t("Down from the last mood reaches it there"), "home › discover · focus expand")
+	await keys("ArrowDown"); await expect(t("Down from the last mood reaches it"), "home › discover · focus expand")
 	await keys("Enter"); await expect(t("and OK grows the picture into the page from there"), /focus expand · on \/discover/)
 	await keys("Escape"); await expect(t("Back comes back to it"), "home › discover · focus expand")
-	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=last]", { timeout: 8000 })
+	// The two other places stay behind B for comparison: in the bar, last and first.
+	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=last]", { timeout: 8000 }); check(t("B puts Expand in the bar, last"), `${await inBar()} · ${await corner()}`, "bar-back bar-search bar-menu expand · top right")
+	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=first]", { timeout: 8000 }); check(t("B again puts it first"), await inBar(), "expand bar-back bar-search bar-menu")
+	// Measured with the focus elsewhere: while the key has it, the picture stands back in its frame, and the key with it.
+	await keys("b"); await page.waitForSelector("[data-remote-place][data-bar=bottom]", { timeout: 8000 }); await page.evaluate(() => window.__tvDesign.focus("mood-funny")); await page.waitForTimeout(400)
+	check(t("and B again returns it to the bottom right"), await corner(), "bottom right")
 	await keys("h")
 	// The map.
 	await keys("ArrowRight", "ArrowRight", "Enter"); await expect(t("Explorer opens on the first island"), "home › explorer · focus island-heists")
@@ -177,11 +193,11 @@ for (const design of ["cinema", "marquee", "glow"]) {
 	check(t("the Remote swings far toward each corner"), [tl[0] < -30, tr[0] > 30, bl[0] < -30, br[0] > 30].join(" "), "true true true true")
 	check(t("the Remote leans back further for the top corners than for the bottom ones"), [tl[1] > bl[1] + 1, tr[1] > br[1] + 1].join(" "), "true true")
 	check(t("the streaming row stays in the window while the Remote is turned"), String((await page.evaluate(() => Math.max(...[...document.querySelectorAll("[data-remote] .remote-service")].map((el) => el.getBoundingClientRect().bottom)))) <= 1080), "true")
-	await page.mouse.move(okX, okY, { steps: 6 }); await page.waitForTimeout(1100)
-	check(t("over the Remote itself the Remote settles at rest"), (await aim()).map((n) => Math.round(n)).join(" "), "0 12")
+	await page.mouse.move(okX, okY, { steps: 6 })
+	check(t("over the Remote itself the Remote settles at rest"), await atRest(), "0 12")
 	await page.mouse.move(1900, 3, { steps: 5 }); await page.waitForTimeout(500)
 	await page.evaluate(() => document.documentElement.dispatchEvent(new MouseEvent("mouseleave"))); await page.waitForTimeout(1100)
-	check(t("the Remote is at rest after the cursor left the window"), (await aim()).map((n) => Math.round(n)).join(" "), "0 12")
+	check(t("the Remote is at rest after the cursor left the window"), await atRest(), "0 12")
 	// The quiz gives a guest a taste.
 	await open(`design=${design}&at=home.taste.quiz`)
 	await keys("Enter", "Enter", "Enter", "Enter", "Enter"); await expect(t("five ratings end on the three sides"), "home › taste · focus side-dark-crime")
@@ -208,12 +224,16 @@ for (const [width, height] of [[1920, 1080], [1920, 940]]) {
 		check(`${design} at ${width}x${height}: the Remote covers no type and no focus target on any of ${SCREENS.length} screens`, await underOnAll("[data-remote] .remote-body"), "nothing")
 	}
 }
-// The expand key in the bottom right corner (the desktop's third place): it covers nothing either.
+// The expand key in the picture's bottom right corner, where it is now: it covers nothing either, and on no screen
+// is anything in the top bar but Back, Search and Menu.
 await page.setViewportSize({ width: 1920, height: 1080 })
 for (const design of ["cinema", "marquee", "glow"]) {
 	await page.mouse.move(0, 0)
-	await open(`design=${design}&as=member&bar=bottom`)
+	await open(`design=${design}&as=member`)
 	check(`${design}, Expand at the bottom right: it covers no type and no focus target on any of ${SCREENS.length} screens`, await underOnAll(EXPAND), "nothing")
+	const bars = []
+	for (const screen of SCREENS) { await show(screen); const ids = await page.evaluate(() => { const tv = document.querySelector("[data-tv-screen]").getBoundingClientRect(); return [...document.querySelectorAll(".tvd-screen [data-tv-item]")].filter((el) => { const r = el.getBoundingClientRect(); return r.bottom < tv.top + tv.height * 0.17 }).map((el) => el.dataset.tvItem.replace("bar-", "")).join(" ") }); if (/[^a-z ]|expand/.test(ids) || ids.split(" ").some((id) => !["back", "search", "menu"].includes(id))) bars.push(`${screen[1] ?? screen[0]}: ${ids}`) }
+	check(`${design}: the top bar holds Back, Search and Menu only, on every screen`, bars.join(" | ") || "only those", "only those")
 }
 await page.setViewportSize({ width: 1920, height: 1080 })
 
@@ -225,7 +245,7 @@ await open("design=cinema&remote=beside")
 	check("beside: the Remote nods left for the left corners and right for the right ones", [tl[0] < -8, tr[0] > 1, bl[0] < -8, br[0] > 8].join(" "), "true true true true")
 	check("beside: the Remote never turns further than its nod", String(Math.max(...[tl, tr, bl, br].map((c) => Math.abs(c[0]))) <= 13.01), "true")
 	await page.evaluate(() => document.documentElement.dispatchEvent(new MouseEvent("mouseleave"))); await page.waitForTimeout(1100)
-	check("beside: the Remote is at rest after the cursor left the window", (await aim()).map((n) => Math.round(n)).join(" "), "0 12")
+	check("beside: the Remote is at rest after the cursor left the window", await atRest(), "0 12")
 	await keys("r"); await page.waitForSelector("[data-remote-place=below]", { timeout: 8000 }); check("the key R returns to the window's own choice", new URL(page.url()).searchParams.get("remote") ?? "none", "none")
 	await keys("r"); await page.waitForSelector("[data-remote-place=beside]", { timeout: 8000 }); check("the key R forces the other place", new URL(page.url()).searchParams.get("remote") ?? "none", "beside")
 }
@@ -267,7 +287,7 @@ check("the pointer is the ring", await pointer("shape"), "ring")
 await keys("c"); await page.waitForSelector("[data-tv-pointer][data-shape=cross]", { state: "attached", timeout: 8000 }); check("the key C still shows the next shape", await pointer("shape"), "cross")
 await keys("c"); await page.waitForSelector("[data-tv-pointer][data-shape=dot]", { state: "attached", timeout: 8000 }); check("and the one after it", await pointer("shape"), "dot")
 await page.setViewportSize({ width: 390, height: 844 }); await open("design=cinema")
-check("at phone width there is no pointer", String(await page.locator("[data-tv-pointer]").count()), "0")
+check("at phone width the pointer waits, hidden, for a finger", await pointer("shown"), "false")
 // The phone: the room, the TV and the phone's own Remote on one screen. Nothing scrolls; the TV has its body and
 // wall beside it; every key of the Remote is in the window, at least 44 px in both directions, not under the site's
 // dock, and does what it says; the expand key is at the picture's bottom right, covers nothing and grows the picture.
@@ -285,7 +305,7 @@ const phone = async (width, height, form, design = "cinema") => {
 	const desktop = page
 	const mobile = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true })
 	page = await mobile.newPage()
-	const q = `design=${design}&as=member${form === "table" ? "&form=table" : ""}`
+	const q = `design=${design}&as=member&form=${form}`
 	await open(q)
 	const m = await page.evaluate(() => {
 		const scene = document.querySelector("[data-remote-place]")
@@ -342,8 +362,9 @@ const phone = async (width, height, form, design = "cinema") => {
 	await page.locator(EXPAND).tap(); await page.getByText("The real page (a stand-in)").waitFor({ timeout: 8000 }).catch(() => {})
 	check(t("a tap on Expand grows the picture into the page"), String(await page.getByText("goodwatch.app/discover").count() > 0), "true")
 	await page.getByRole("button", { name: "← Back to the TV" }).tap(); await until(t("and Back returns to the TV"), "discover · focus expand")
-	// A finger drags up on the TV and on the Remote, then the page is told to scroll: nothing may have moved.
 	const cdp = await mobile.newCDPSession(page)
+	if (design === "cinema") await touching(t, cdp, form)
+	// A finger drags up on the TV and on the Remote, then the page is told to scroll: nothing may have moved.
 	for (const y of [height * 0.3, height - 150]) await cdp.send("Input.synthesizeScrollGesture", { x: width / 2, y, yDistance: -300, gestureSourceType: "touch", speed: 1600 }).catch(() => {})
 	await page.evaluate(() => { window.scrollTo(0, 400); document.querySelector("[data-remote-place]").scrollTop = 400 }); await page.waitForTimeout(300)
 	const s = await page.evaluate(() => {
@@ -356,11 +377,103 @@ const phone = async (width, height, form, design = "cinema") => {
 	await mobile.close()
 	page = desktop
 }
+/**
+ * A finger on the picture points. A tap: the ring where it landed, the Remote aimed, the item opened, both back at
+ * rest. A long press, dragged: the ring above the finger and following it, the items it passes focused, the one
+ * it is over opened on release, and nothing on a release over none. No scroll, no selection, no menu.
+ */
+const touching = async (t, cdp, form) => {
+	const touch = (type, x, y) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y, id: 1 }] })
+	const mid = async (id) => { const b = await page.locator(`[data-tv-screen] [data-tv-item="${id}"]`).boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2] }
+	const look = () => page.evaluate(() => {
+		const p = document.querySelector("[data-tv-pointer]")
+		const s = document.querySelector("[data-remote-place]").getBoundingClientRect()
+		const m = /translate3d\(([-\d.]+)px, ([-\d.]+)px/.exec(p.style.transform)
+		const rig = document.querySelector("[data-remote-rig]").style.transform
+		return { shown: p.dataset.shown, hold: p.dataset.hold ?? "false", x: m ? Number(m[1]) + s.left : -1, y: m ? Number(m[2]) + s.top : -1, rig, turn: Number(/rotateZ\(([-\d.]+)deg\)/.exec(rig)?.[1] ?? 0), lean: Number(/rotateX\(([-\d.]+)deg\)/.exec(rig)?.[1] ?? 0), body: document.querySelector("[data-remote] .remote-body").getBoundingClientRect().top, tv: document.querySelector("[data-tv-body]").getBoundingClientRect().bottom, selected: String(getSelection()), scrolled: window.scrollY + document.documentElement.scrollTop }
+	})
+	/** Waits until the pointer and the Remote are as wanted, for six seconds at most. */
+	const settle = async (fits) => { let v = await look(); for (let i = 0; i < 60 && !fits(v); i++) { await page.waitForTimeout(100); v = await look() } return v }
+	await show(["home"])
+	// A tap.
+	let [x, y] = await mid("app-discover")
+	// A tap is short: the finger is up again before a long press begins. The ring and the Remote stay out a moment longer.
+	// (Down and up are sent in one go: sent one by one, a loaded machine can stretch them into a long press.)
+	await page.touchscreen.tap(x, y)
+	let v = await settle((v) => v.shown === "true" && v.rig !== "none" && v.rig !== "")
+	check(t("a tap shows the ring where the finger landed"), `${v.shown} ${Math.abs(v.x - x) < 14 && Math.abs(v.y - y) < 14}`, "true true")
+	check(t("and the Remote aims at it"), String(v.rig !== "none" && v.rig !== ""), "true")
+	await until(t("the tapped app opens"), "home › discover · focus mood-funny")
+	v = await settle((v) => v.shown === "false" && v.rig === "none")
+	check(t("then the ring is gone and the Remote back at rest"), `${v.shown} ${v.rig}`, "false none")
+	// A long press, dragged from one mood to another. The ring stands above the finger.
+	if (!(await phoneState()).startsWith("home › discover")) await page.evaluate(() => window.__tvDesign.push("discover"))
+	;[x, y] = await mid("mood-funny")
+	const [x2, y2] = await mid("mood-dark")
+	await touch("touchStart", x, y + 46)
+	v = await settle((v) => v.hold === "true" && Math.abs(v.y - y) < 8)
+	check(t("a long press brings the ring out above the finger"), `${v.shown} ${v.hold} ${Math.abs(v.x - x) < 14 && Math.abs(v.y - y) < 14}`, "true true true")
+	await until(t("the item under the ring has the focus"), "home › discover · focus mood-funny")
+	const turned = v.turn
+	for (let i = 1; i <= 8; i++) { await touch("touchMove", x + ((x2 - x) * i) / 8, y + 46 + ((y2 - y) * i) / 8); await page.waitForTimeout(40) }
+	await until(t("dragged, the focus goes where the ring goes"), "home › discover · focus mood-dark")
+	v = await settle((v) => Math.abs(v.x - x2) < 16 && Math.abs(v.y - y2) < 16 && Math.abs(v.turn - turned) > 0.4)
+	check(t("the ring follows the finger"), String(Math.abs(v.x - x2) < 16 && Math.abs(v.y - y2) < 16), "true")
+	check(t("and the Remote follows it"), String(Math.abs(v.turn - turned) > 0.4), "true")
+	check(t(form === "table" ? "lying, the Remote turns on the table and does not lean" : "held, the Remote leans back toward the picture"), String(form === "table" ? v.lean === 0 : v.lean > 3), "true")
+	check(t("turned, the Remote stays under the TV"), String(v.body >= v.tv - 1), "true")
+	check(t("the drag scrolls nothing and selects nothing"), `${v.scrolled} "${v.selected}"`, '0 ""')
+	check(t("a held finger opens no menu"), String(await page.evaluate(() => { const e = new MouseEvent("contextmenu", { bubbles: true, cancelable: true }); document.querySelector("[data-tv-screen] [data-tv-item]").dispatchEvent(e); return e.defaultPrevented })), "true")
+	await touch("touchEnd"); await until(t("letting go opens the mood under the ring"), /^home › discover › discover-dark · focus /)
+	v = await settle((v) => v.shown === "false" && v.rig === "none")
+	check(t("and both return to rest"), `${v.shown} ${v.rig}`, "false none")
+	// A long press let go over nothing.
+	const tv = await page.locator("[data-tv-screen]").boundingBox()
+	await touch("touchStart", tv.x + tv.width * 0.5, tv.y + tv.height * 0.3 + 46); await page.waitForTimeout(700)
+	await touch("touchMove", tv.x + tv.width * 0.3, tv.y + 30 + 46); await page.waitForTimeout(400)
+	v = await look()
+	await touch("touchEnd"); await page.waitForTimeout(500)
+	check(t("let go over nothing, nothing opens"), `${v.shown} ${await phoneState()}`.replace(/focus .*$/, "focus"), "true home › discover › discover-dark · focus")
+	// The Remote's own keys are not pointed at.
+	await key("Back").tap(); await until(t("a key of the Remote works as before"), /^home › discover · focus /)
+	v = await look()
+	check(t("and does not aim the Remote or show the ring"), `${v.shown} ${v.rig}`, "false none")
+}
 const PHONES = [[390, 844], [360, 740], [375, 667], [430, 932], [390, 700]]
 for (const [width, height] of PHONES) await phone(width, height, "hand")
 for (const [width, height] of PHONES) await phone(width, height, "table")
 // The other two directions, on the shortest phone and the largest.
 for (const design of ["marquee", "glow"]) for (const [width, height] of [[375, 667], [430, 932]]) await phone(width, height, "hand", design)
+// By itself the Remote is held in the hand, and lies on the table in the two windows too short for that; K forces
+// the other form, and K again gives the choice back.
+for (const [width, height, wanted] of [[390, 844, "hand"], [360, 740, "hand"], [375, 667, "table"], [430, 932, "hand"], [390, 700, "table"]]) {
+	const mobile = await browser.newContext({ viewport: { width, height }, isMobile: true, hasTouch: true })
+	const desktop = page
+	page = await mobile.newPage()
+	await open("design=cinema")
+	const form = () => page.locator("[data-remote]").getAttribute("data-phone-remote")
+	check(`phone ${width}x${height}: by itself the Remote is ${wanted === "hand" ? "in the hand" : "on the table"}`, await form(), wanted)
+	const other = wanted === "hand" ? "table" : "hand"
+	await keys("k"); await page.waitForSelector(`[data-phone-remote=${other}]`, { timeout: 8000 }).catch(() => {})
+	check(`phone ${width}x${height}: K forces the other form`, `${await form()} ${new URL(page.url()).searchParams.get("form")}`, `${other} ${other}`)
+	await keys("k"); await page.waitForSelector(`[data-phone-remote=${wanted}]`, { timeout: 8000 }).catch(() => {})
+	check(`phone ${width}x${height}: K again returns to the phone's own choice`, `${await form()} ${new URL(page.url()).searchParams.get("form")}`, `${wanted} null`)
+	await mobile.close()
+	page = desktop
+}
+// With reduced motion a tap still points and opens, and the Remote stays still.
+{
+	const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: "reduce" })
+	const desktop = page
+	page = await mobile.newPage()
+	await open("design=cinema")
+	const b = await page.locator("[data-tv-screen] [data-tv-item=app-discover]").boundingBox()
+	await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2); await page.waitForTimeout(150)
+	check("reduced motion: a tap shows the ring and the Remote stays still", await page.evaluate(() => `${document.querySelector("[data-tv-pointer]").dataset.shown} ${document.querySelector("[data-remote-rig]").style.transform || "none"}`), "true none")
+	await until("reduced motion: and the tapped app opens", "home › discover · focus mood-funny")
+	await mobile.close()
+	page = desktop
+}
 // The prototype's own controls are folded behind one key on the phone.
 await page.setViewportSize({ width: 390, height: 844 }); await open("design=cinema")
 check("at phone width the controls are folded away", String(await page.locator("button[data-design=glow]").isVisible()), "false")
@@ -368,6 +481,21 @@ await page.locator("[data-controls]").click(); await page.locator("button[data-d
 check("and one key unfolds them: the buttons choose", await current(), "3 Glow")
 await page.locator("button[data-form]").click(); await page.waitForSelector("[data-phone-remote=table]", { timeout: 8000 }).catch(() => {})
 check("and the Remote's other form", await page.locator("[data-remote]").getAttribute("data-phone-remote"), "table")
+// The room with a touch screen: a finger on the picture points there too, with the Remote in the hand.
+{
+	const touchScreen = await browser.newContext({ viewport: { width: 1920, height: 1080 }, hasTouch: true })
+	const desktop = page
+	page = await touchScreen.newPage()
+	await open("design=cinema")
+	const b = await page.locator("[data-tv-screen] [data-tv-item=app-tonight]").boundingBox()
+	await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2)
+	let turn = 0
+	for (let i = 0; i < 20 && turn > -3; i++) { await page.waitForTimeout(40); turn = Math.min(turn, (await aim())[0]) }
+	check("in the room, a finger on the picture shows the ring and turns the Remote toward it", `${await pointer("shown")} ${turn < -3}`, "true true")
+	await expect("and the tapped app opens", /^home › tonight · focus /)
+	await touchScreen.close()
+	page = desktop
+}
 console.log(fails ? `${fails} FAILED, ${passed} ok` : `all ${passed} ok`)
 await browser.close()
 process.exitCode = fails ? 1 : 0

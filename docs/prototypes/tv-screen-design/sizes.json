@@ -122,6 +122,7 @@
 	},
 	"phones": {
 		"390x844": {
+			"byItself": "hand",
 			"hand": {
 				"tv": "362 x 302",
 				"tvBody": "372 x 312",
@@ -152,6 +153,7 @@
 			}
 		},
 		"360x740": {
+			"byItself": "hand",
 			"hand": {
 				"tv": "332 x 277",
 				"tvBody": "342 x 287",
@@ -182,6 +184,7 @@
 			}
 		},
 		"375x667": {
+			"byItself": "table",
 			"hand": {
 				"tv": "347 x 260",
 				"tvBody": "357 x 270",
@@ -212,6 +215,7 @@
 			}
 		},
 		"430x932": {
+			"byItself": "hand",
 			"hand": {
 				"tv": "402 x 335",
 				"tvBody": "412 x 345",
@@ -242,6 +246,7 @@
 			}
 		},
 		"390x700": {
+			"byItself": "table",
 			"hand": {
 				"tv": "362 x 293",
 				"tvBody": "372 x 303",
