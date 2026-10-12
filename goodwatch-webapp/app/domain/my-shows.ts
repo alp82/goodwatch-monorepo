@@ -4,8 +4,11 @@
 // (docs/implementation/tracking/data-model.md, "Stored versus derived" and "Reads").
 import type { WatchStateEntry } from "./tracking/storage"
 
-/** "Watched in the last 30 days" (C3) goes by the entry's `lastActivityAt`. */
-export const ACTIVE_DAYS = 30
+/**
+ * How long a Watching show stays in Continue without activity (C3). Activity is the later of the entry's
+ * `lastActivityAt` and `watchingSince`: the member's last watch, or their own move of the show to Watching.
+ */
+export const ACTIVE_DAYS = 90
 const DAY_MS = 86_400_000
 
 /** What the catalog says about a show: `show.aired_episode_count`, and whether `show.status` is neither Ended nor Canceled. */
@@ -50,6 +53,10 @@ export interface ShowRow {
 	furthest: [number, number] | null
 	/** C3, in milliseconds; null when the member's watches of the show say nothing about when. */
 	lastActivityAt: number | null
+	/** Since when the member has had the show in Watching by their own action, in milliseconds; null otherwise. */
+	watchingSince: number | null
+	/** The later of the two: what places a Watching show in Continue or in Pick up, and orders every group. */
+	activeAt: number | null
 }
 
 export interface StartRow {
@@ -58,12 +65,12 @@ export interface StartRow {
 }
 
 export interface MyShowsPlan {
-	/** Watching with a Next episode and activity in the last 30 days, most recent first; then Seen with new episodes. */
+	/** Watching with a Next episode and activity in the last 90 days, most recent first; then Seen with new episodes. */
 	continue: ShowRow[]
 	/** Want to See shows not started, best taste match first. */
 	start: StartRow[]
-	/** Watching with a Next episode, not watched for 30 days. */
-	older: ShowRow[]
+	/** Pick up: Watching with a Next episode and no activity in the last 90 days, most recent first. */
+	pickUp: ShowRow[]
 	/** Nothing to watch right now: Seen and still running, or Watching with every aired episode watched. */
 	waiting: ShowRow[]
 	onHold: ShowRow[]
@@ -72,13 +79,14 @@ export interface MyShowsPlan {
 	total: number
 }
 
-const time = (value: Date | string | number | null) =>
-	value === null ? null : new Date(value).getTime()
+// An entry cached by the build before has no `watchingSince`.
+const time = (value: Date | string | number | null | undefined) =>
+	value === null || value === undefined ? null : new Date(value).getTime()
 
 // Most recent first; shows without an activity date last, then by id so the order never flickers.
 const byActivity = (a: ShowRow, b: ShowRow) =>
-	(b.lastActivityAt ?? Number.NEGATIVE_INFINITY) -
-		(a.lastActivityAt ?? Number.NEGATIVE_INFINITY) || a.id - b.id
+	(b.activeAt ?? Number.NEGATIVE_INFINITY) -
+		(a.activeAt ?? Number.NEGATIVE_INFINITY) || a.id - b.id
 
 export function planMyShows(input: {
 	shows: readonly TrackedShow[]
@@ -88,7 +96,7 @@ export function planMyShows(input: {
 	const plan: MyShowsPlan = {
 		continue: [],
 		start: [],
-		older: [],
+		pickUp: [],
 		waiting: [],
 		onHold: [],
 		dropped: [],
@@ -105,6 +113,9 @@ export function planMyShows(input: {
 			aired === null
 				? entry.episodesWatched
 				: Math.min(entry.episodesWatched, aired)
+		const lastActivityAt = time(entry.lastActivityAt)
+		const watchingSince =
+			entry.state === "watching" ? time(entry.watchingSince) : null
 		const row: ShowRow = {
 			id,
 			state: entry.state,
@@ -114,7 +125,12 @@ export function planMyShows(input: {
 			left: aired === null ? 0 : aired - watched,
 			running: catalog?.running ?? false,
 			furthest: entry.furthest,
-			lastActivityAt: time(entry.lastActivityAt),
+			lastActivityAt,
+			watchingSince,
+			activeAt:
+				lastActivityAt === null || watchingSince === null
+					? (lastActivityAt ?? watchingSince)
+					: Math.max(lastActivityAt, watchingSince),
 		}
 		if (entry.state === "on_hold") plan.onHold.push(row)
 		else if (entry.state === "dropped") plan.dropped.push(row)
@@ -123,13 +139,13 @@ export function planMyShows(input: {
 			else if (row.running) plan.waiting.push(row)
 			// Seen, ended and nothing new: not on this page. It is in My library.
 		} else if (aired !== null && row.left === 0) plan.waiting.push(row)
-		else if (row.lastActivityAt !== null && row.lastActivityAt >= since)
+		else if (row.activeAt !== null && row.activeAt >= since)
 			plan.continue.push({ ...row, kind: "next" })
-		else plan.older.push({ ...row, kind: "next" })
+		else plan.pickUp.push({ ...row, kind: "next" })
 	}
 	plan.continue.sort(byActivity)
 	plan.continue.push(...seenNew.sort(byActivity))
-	for (const group of [plan.older, plan.waiting, plan.onHold, plan.dropped])
+	for (const group of [plan.pickUp, plan.waiting, plan.onHold, plan.dropped])
 		group.sort(byActivity)
 	plan.start = input.starts
 		.filter((show) => !tracked.has(show.id))
@@ -143,7 +159,7 @@ export function planMyShows(input: {
 	plan.total =
 		plan.continue.length +
 		plan.start.length +
-		plan.older.length +
+		plan.pickUp.length +
 		plan.waiting.length +
 		plan.onHold.length +
 		plan.dropped.length
@@ -215,7 +231,7 @@ export type TonightChoice =
 	| { kind: "start"; showId: number }
 
 /**
- * Tonight's pick: the Next episode of the Watching show the member was last active on in the last 30 days; without
+ * Tonight's pick: the Next episode of the Watching show the member was last active on in the last 90 days; without
  * one, the first movie of My movies; without one, the first show to start. A Seen show with new episodes is in
  * Continue and is never the pick.
  */
@@ -240,17 +256,44 @@ export const episodeCode = (episode: { season: number; number: number }) =>
 const plural = (n: number, one: string, many = `${one}s`) =>
 	`${n} ${n === 1 ? one : many}`
 
-/** The fact that places a row in Continue: "Watched yesterday". */
+// By the calendar (UTC), as a watch's day reads elsewhere: last evening is yesterday, not "today".
+const daysSince = (at: number, now: number) =>
+	Math.max(0, Math.floor(now / DAY_MS) - Math.floor(at / DAY_MS))
+
+/** "12 days", "6 weeks", "7 months", "2 years"; from two days on. */
+const span = (days: number) =>
+	days < 30
+		? `${days} days`
+		: days < 90
+			? plural(Math.floor(days / 7), "week")
+			: days < 365
+				? plural(Math.round(days / 30), "month")
+				: plural(Math.floor(days / 365), "year")
+
+/** When the member last watched a show: "Watched yesterday". */
 export function activityWords(at: number | null, now: number): string {
 	if (at === null) return "No date for your last watch"
-	// By the calendar (UTC), as a watch's day reads elsewhere: last evening is yesterday, not "today".
-	const days = Math.max(0, Math.floor(now / DAY_MS) - Math.floor(at / DAY_MS))
+	const days = daysSince(at, now)
 	if (days < 1) return "Watched today"
 	if (days < 2) return "Watched yesterday"
-	if (days < 30) return `Watched ${days} days ago`
-	if (days < 90) return `Watched ${plural(Math.floor(days / 7), "week")} ago`
-	if (days < 365) return `Watched ${plural(Math.round(days / 30), "month")} ago`
-	return `Watched ${plural(Math.floor(days / 365), "year")} ago`
+	return `Watched ${span(days)} ago`
+}
+
+/**
+ * The fact that places a Watching row, in Continue or in Pick up. The member's own move to Watching when that is
+ * later than their last watch: "Watching since yesterday", "Watching for 12 days". Otherwise the last watch.
+ */
+export function placedWords(
+	row: Pick<ShowRow, "lastActivityAt" | "watchingSince">,
+	now: number,
+): string {
+	const since = row.watchingSince
+	if (since === null || (row.lastActivityAt ?? Number.NEGATIVE_INFINITY) >= since)
+		return activityWords(row.lastActivityAt, now)
+	const days = daysSince(since, now)
+	if (days < 1) return "Watching since today"
+	if (days < 2) return "Watching since yesterday"
+	return `Watching for ${span(days)}`
 }
 
 /** "12 of 40 episodes"; "12 episodes watched" while the catalog has no count. */

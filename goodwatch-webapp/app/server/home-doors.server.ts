@@ -2,7 +2,7 @@
 // is built from, since the pick is the first thing behind one of the doors. No query of its own for the member: the
 // shows come from the member data and the catalog by key (my-shows.server.ts), the movies from Watch next's plan
 // over the Wishlist's movies (docs/implementation/tracking/data-model.md, "Reads": Home doors and Tonight's pick).
-import { activityWords, episodeCode } from "~/domain/my-shows"
+import { episodeCode, placedWords } from "~/domain/my-shows"
 import { type MyShows, getMyShows } from "~/server/my-shows.server"
 import type { Taste } from "~/server/taste/index.server"
 import { type TitleCard, getTitleCards } from "~/server/title-cards.server"
@@ -75,8 +75,8 @@ export function homeDoorsOf(
 	now: number,
 ): HomeDoors {
 	const { shows, movies } = parts
-	const first = shows.continue[0] ?? shows.older[0] ?? null
-	const started = shows.continue.length + shows.older.length
+	const first = shows.continue[0] ?? shows.pickUp[0] ?? null
+	const started = shows.continue.length + shows.pickUp.length
 	const movie = movies[0] ?? null
 	const own = new Set(services)
 	return {
@@ -88,7 +88,7 @@ export function homeDoorsOf(
 			fact:
 				first.kind === "seenNew"
 					? `${first.left} new since you saw it`
-					: activityWords(first.lastActivityAt, now),
+					: placedWords(first, now),
 			more: started - 1,
 		},
 		start: shows.start.length

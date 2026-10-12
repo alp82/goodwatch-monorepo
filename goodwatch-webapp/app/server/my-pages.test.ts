@@ -69,6 +69,7 @@ const { setRedisClusterForTest, resetPendingResetsForTest } = await import(
 	"../utils/cache.ts"
 )
 const { getMyShows } = await import("./my-shows.server.ts")
+const { homeDoorsOf } = await import("./home-doors.server.ts")
 const { getLibraryPage, forgetTitlesForTest } = await import(
 	"./my-library.server.ts"
 )
@@ -139,12 +140,13 @@ const movieWatch = (movieId: number, at: number | null, rest: Row = {}): Row =>
 		episode_number: null,
 		...rest,
 	})
-const stateRow = (mediaType: string, id: number, state: string): Row => ({
+// The state changed long ago unless a test says when: a recent move to Watching is activity (C3).
+const stateRow = (mediaType: string, id: number, state: string, changedAt = daysAgo(400)): Row => ({
 	user_id: user,
 	tmdb_id: id,
 	media_type: mediaType,
 	state,
-	state_changed_at: daysAgo(1),
+	state_changed_at: changedAt,
 	pass: 1,
 	seen_press_group: null,
 	seen_press_from: null,
@@ -209,7 +211,7 @@ afterEach(() => {
 // ---------------------------------------------------------------------------------------------------------
 
 /**
- * 101 Watching, watched yesterday, 3 of 6. 102 Watching, watched 40 days ago. 103 Seen, 6 of 7 aired. 104 Seen and
+ * 101 Watching, watched yesterday, 3 of 6. 102 Watching, watched 120 days ago. 103 Seen, 6 of 7 aired. 104 Seen and
  * running, nothing new. 105 Seen and ended. 106 On hold. 107 Dropped. 301 and 302 on the Wishlist, not started.
  * 108 Watching with a gap: episodes 1 and 3 of 3 watched.
  */
@@ -229,6 +231,7 @@ function seedShows() {
 	db.seed("episode", [
 		episode(101, 0, 1, daysAgo(500)),
 		...season(101, 6, 2),
+		...season(102, 10),
 		...season(103, 7),
 		...season(108, 3),
 	])
@@ -246,7 +249,7 @@ function seedShows() {
 		watch(101, 1, 1, daysAgo(9)),
 		watch(101, 1, 2, daysAgo(5)),
 		watch(101, 1, 3, daysAgo(1)),
-		...[1, 2, 3, 4].map((n) => watch(102, 1, n, daysAgo(40))),
+		...[1, 2, 3, 4].map((n) => watch(102, 1, n, daysAgo(120))),
 		...[1, 2, 3, 4, 5, 6].map((n) => watch(103, 1, n, daysAgo(60))),
 		...[1, 2, 3, 4, 5, 6].map((n) => watch(104, 1, n, daysAgo(20))),
 		...[1, 2, 3, 4, 5].map((n) => watch(105, 1, n, daysAgo(300))),
@@ -262,13 +265,14 @@ function seedShows() {
 	])
 }
 
-test("My shows answers in the page's groups: Continue, Start, older, waiting, On hold and Dropped", async () => {
+test("My shows answers in the page's groups: Continue, Pick up, Start, waiting, On hold and Dropped", async () => {
 	seedShows()
 	const page = await getMyShows(viewer, { now: NOW })
 	const names = (rows: { title: string }[]) => rows.map((row) => row.title)
 	// Watched yesterday, then two days ago; the Seen show with a new episode follows the Watching shows.
 	assert.deepEqual(names(page.continue), ["Slow Horses", "Severance", "Only Murders in the Building"])
-	assert.deepEqual(names(page.older), ["Shōgun"])
+	// Not watched for 90 days.
+	assert.deepEqual(names(page.pickUp), ["Shōgun"])
 	assert.deepEqual(names(page.waiting), ["The White Lotus"])
 	assert.deepEqual(names(page.onHold), ["Dark"])
 	assert.deepEqual(names(page.dropped), ["The Idol"])
@@ -332,13 +336,117 @@ test("My shows reads the catalog by key and the log only for the shows with a ga
 	assert.match(log[0].sql, /GROUP BY tmdb_id, media_type, pass$/)
 	assert.match(log[1].sql, /tmdb_id IN \(\?\)/)
 	assert.deepEqual(log[1].params, [user, 108])
-	// Episode lists only for the Continue rows.
+	// Episode lists only for the rows that say their Next episode: Continue, then Pick up.
 	assert.deepEqual(
 		selects("episode")
 			.filter((s) => s.sql.includes("WHERE show_id = ?"))
 			.map((s) => s.params[0]),
-		[101, 108, 103],
+		[101, 108, 103, 102],
 	)
+})
+
+test("a Pick up row carries its Next episode as a Continue row does", async () => {
+	seedShows()
+	const page = await getMyShows(viewer, { now: NOW })
+	const [shogun] = page.pickUp
+	assert.deepEqual(
+		[shogun.kind, shogun.watched, shogun.aired, shogun.left, shogun.next?.number],
+		["next", 4, 10, 6, 5],
+	)
+	assert.equal(shogun.lastActivityAt, daysAgo(120))
+})
+
+/**
+ * As seedShows, and two more Watching shows. 109 was Seen in 2024, by watches without a date, and the member
+ * unmarked a season two hours ago. 110 an import made Watching two days ago, by watches without a date.
+ */
+function seedMoved() {
+	seedShows()
+	db.seed("show", [show(109, "Star Trek: Picard", 30), show(110, "Lost", 100)])
+	db.seed("episode", [...season(109, 30)])
+	db.seed("user_watch_state", [
+		stateRow("show", 109, "watching", NOW - 2 * 3_600_000),
+		stateRow("show", 110, "watching", daysAgo(2)),
+	])
+	db.seed("user_watch_log", [
+		...Array.from({ length: 18 }, (_, i) =>
+			watch(109, 1, i + 1, null, { origin: "seen", created_at: daysAgo(500) }),
+		),
+		...Array.from({ length: 40 }, (_, i) =>
+			watch(110, 1, i + 1, null, { origin: "import", import_id: "imdb-1", created_at: daysAgo(2) }),
+		),
+	])
+}
+
+test("a show the member moved to Watching this morning leads Continue, with watches that are old and have no date", async () => {
+	seedMoved()
+	const page = await getMyShows(viewer, { now: NOW })
+	assert.deepEqual(
+		page.continue.map((row) => row.title),
+		["Star Trek: Picard", "Slow Horses", "Severance", "Only Murders in the Building"],
+	)
+	const [picard] = page.continue
+	assert.deepEqual(
+		[picard.kind, picard.watched, picard.left, picard.next?.number],
+		["next", 18, 12, 19],
+	)
+	assert.deepEqual(
+		[picard.watchingSince, picard.lastActivityAt, picard.activeAt],
+		[NOW - 2 * 3_600_000, daysAgo(500), NOW - 2 * 3_600_000],
+	)
+})
+
+test("a show an import made Watching is one to pick up: the import's time is no activity", async () => {
+	seedMoved()
+	const page = await getMyShows(viewer, { now: NOW })
+	assert.deepEqual(
+		page.pickUp.map((row) => [row.title, row.watchingSince, row.lastActivityAt]),
+		[
+			// The member started it 400 days ago and watched it last 120 days ago.
+			["Shōgun", daysAgo(400), daysAgo(120)],
+			["Lost", null, null],
+		],
+	)
+})
+
+test("home's Continue door is the show the member moved to Watching last, and says since when", async () => {
+	seedMoved()
+	const shows = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
+	const doors = homeDoorsOf(
+		{ shows, movieCount: 0, movies: [], movieFits: true, movieByMatch: true },
+		[],
+		NOW,
+	)
+	assert.deepEqual(doors.continue, {
+		title: "Star Trek: Picard",
+		backdrop_path: "/b109.jpg",
+		episode: "S1 E19",
+		episodeName: "Episode 1.19",
+		fact: "Watching since today",
+		// Three more in Continue, two to pick up.
+		more: 5,
+	})
+})
+
+test("without a show in Continue, home's door is the first show to pick up, with its Next episode", async () => {
+	db.seed("show", [show(102, "Shōgun", 10)])
+	db.seed("episode", [...season(102, 10)])
+	db.seed("user_watch_state", [stateRow("show", 102, "watching")])
+	db.seed("user_watch_log", [...[1, 2, 3, 4].map((n) => watch(102, 1, n, daysAgo(120)))])
+	const shows = await getMyShows(viewer, { now: NOW, episodeLists: 1, upcoming: false })
+	const doors = homeDoorsOf(
+		{ shows, movieCount: 0, movies: [], movieFits: true, movieByMatch: true },
+		[],
+		NOW,
+	)
+	assert.deepEqual(doors.continue, {
+		title: "Shōgun",
+		backdrop_path: "/b102.jpg",
+		episode: "S1 E5",
+		episodeName: "Episode 1.5",
+		fact: "Watched 4 months ago",
+		more: 0,
+	})
 })
 
 test("home's Continue door reads one episode list", async () => {
@@ -439,7 +547,7 @@ test("a member who tracks nothing has an empty page, and the catalog is not read
 	assert.deepEqual(await getMyShows(viewer, { now: NOW }), {
 		continue: [],
 		start: [],
-		older: [],
+		pickUp: [],
 		waiting: [],
 		onHold: [],
 		dropped: [],

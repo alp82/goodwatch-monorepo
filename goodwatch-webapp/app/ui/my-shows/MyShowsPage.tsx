@@ -1,9 +1,11 @@
-// My shows (#385): one list for tonight. Continue comes first, the show watched last on top and the Seen shows with
-// new episodes after it; then Start, the Want to See shows not started, best taste match first. The page states that
-// rule, each group has a label, and each row shows the one fact that places it. The whole row opens the show's page:
-// there is no Watched button and no tick in the list. Under the list are the shows with nothing for tonight.
-// The waiting shows say when their next episode airs, soonest first, by the member's day (#442). Opening the page is
-// the visit that clears the signal outside it, and the page says once what was new.
+// My shows (#385): one list for tonight. Continue comes first, the show the member was last active on on top and the
+// Seen shows with new episodes after it; then Pick up, the Watching shows without activity for 90 days; then Start,
+// the Want to See shows not started, best taste match first. The page states that rule, each group has a label, and
+// each row shows the one fact that places it. The whole row opens the show's page: there is no Watched button and no
+// tick in the list. Under the list are the shows the member set aside: On hold and Dropped.
+// The waiting shows are one row between Continue and Pick up, which names the show that returns first and opens to
+// all of them with the day each returns, soonest first, by the member's day (#442). Opening the page is the visit
+// that clears the signal outside it, and the page says once what was new.
 import { ChevronRightIcon } from "@heroicons/react/20/solid"
 import { Link, useLocation } from "@remix-run/react"
 import { type ReactNode, useEffect, useState } from "react"
@@ -12,6 +14,7 @@ import {
 	activityWords,
 	costWords,
 	episodeCode,
+	placedWords,
 	progressWords,
 } from "~/domain/my-shows"
 import {
@@ -19,6 +22,7 @@ import {
 	arrivalWords,
 	deviceDay,
 	upcomingWords,
+	waitingWords,
 } from "~/domain/new-episodes"
 import type { LandedLine } from "~/domain/newly-available-signal"
 import type {
@@ -43,6 +47,8 @@ import { titleToDashed } from "~/utils/helpers"
 
 /** How many shows to start are drawn before "Show more". */
 const START_STEP = 30
+/** How many shows to pick up are drawn before "Show more", so that Start stays within reach. */
+const PICK_UP_STEP = 5
 const DAY_MS = 86_400_000
 
 const showHref = (show: { id: number; title: string }) =>
@@ -121,7 +127,7 @@ const continueRow = (row: MyShowsRow, now: number): RowWords => ({
 	why:
 		row.kind === "seenNew"
 			? `${row.left} new since you saw it`
-			: activityWords(row.lastActivityAt, now),
+			: placedWords(row, now),
 })
 
 const startRow = (row: MyShowsStart): RowWords => ({
@@ -315,78 +321,129 @@ function QuietGroup({
 	)
 }
 
+// Drawn here and not taken from the icon set: an icon nothing else uses would join the scripts of every page.
+const CalendarIcon = () => (
+	<svg
+		viewBox="0 0 20 20"
+		fill="currentColor"
+		className="h-5 w-5 shrink-0 text-sky-300"
+		aria-hidden="true"
+	>
+		<path
+			fillRule="evenodd"
+			clipRule="evenodd"
+			d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z"
+		/>
+	</svg>
+)
+
 /**
- * The shows waiting for episodes: one column, one show a line, and the day its next episode airs in a column of its
- * own at the end. On a phone the episode's name is left out, so that "Caught up" is never cut off.
+ * The shows waiting for episodes, as one row between Continue and Pick up: it names the show that returns first and
+ * counts the others, and opens to all of them. Opened: one show a line, and the day its next episode airs in a
+ * column of its own at the end. On a phone the episode's name is left out, so that "Caught up" is never cut off.
  */
-function WaitingGroup({ rows, today }: { rows: MyShowsRow[]; today: string }) {
-	if (!rows.length) return null
+function WaitingRow({ rows, today }: { rows: MyShowsRow[]; today: string }) {
+	const words = waitingWords(rows, today)
+	if (!words) return null
 	return (
-		<div data-group="waiting">
-			<h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-gray-300">
-				Waiting for episodes
-				<span className="rounded-full bg-white/10 px-2 py-0.5 text-xs tabular-nums">
-					{rows.length}
-				</span>
-				<span className="text-xs font-medium text-gray-500">soonest first</span>
-			</h3>
-			<ul className="overflow-hidden rounded-2xl bg-white/[0.03] ring-1 ring-white/5">
-				{rows.map((row) => {
-					const { when, detail } = upcomingWords(row.upcoming, today)
-					return (
-						<li
-							key={row.id}
-							data-waiting-row={row.id}
-							className="border-t border-white/5 first:border-t-0"
-						>
-							<Link
-								to={showHref(row)}
-								prefetch="intent"
-								className="group flex items-center gap-3 px-2 py-2 hover:bg-white/[0.05] md:px-4"
+		<li data-waiting>
+			<details
+				className="group/waiting overflow-hidden rounded-2xl bg-sky-400/[0.07] ring-1 ring-sky-300/20 open:bg-white/[0.03] open:ring-white/10"
+				data-group="waiting"
+			>
+				<summary
+					className="flex min-h-12 cursor-pointer list-none items-center gap-3 px-3 py-2.5 hover:bg-white/[0.04] focus-visible:outline-2 focus-visible:outline-amber-300 md:gap-4 md:px-5 [&::-webkit-details-marker]:hidden"
+					data-waiting-summary
+				>
+					<CalendarIcon />
+					<span className="min-w-0 flex-1 text-sm md:flex md:items-baseline md:gap-2">
+						<span className="block truncate text-sky-100" data-waiting-says>
+							{words.title && (
+								<b className="font-bold text-white">{words.title} </b>
+							)}
+							{words.says}
+						</span>
+						{words.more && (
+							<span
+								className="block truncate text-xs text-gray-400 md:text-sm"
+								data-waiting-more
 							>
-								<Poster
-									path={row.poster_path}
-									className="h-[54px] w-9 shrink-0 rounded"
-								/>
-								<span className="min-w-0 flex-1">
-									<b className="block truncate text-sm text-white">
-										{row.title}
-									</b>
-									<span className="block truncate text-xs text-gray-400">
-										{row.upcoming && (
-											<>
-												{episodeCode(row.upcoming)}
-												{row.upcoming.name && (
-													<span className="hidden sm:inline">
-														{" "}
-														· {row.upcoming.name}
-													</span>
-												)}
-												{" · "}
-											</>
-										)}
-										<span className="text-gray-500" data-waiting-label>
-											{row.state === "seen" ? "Caught up" : "Up to date"}
+								<span className="hidden md:inline" aria-hidden>
+									·{" "}
+								</span>
+								{words.more}
+							</span>
+						)}
+					</span>
+					<span className="hidden shrink-0 text-xs font-black uppercase tracking-[0.18em] text-sky-300/80 lg:inline">
+						Waiting for episodes
+					</span>
+					<span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs font-bold tabular-nums text-gray-300">
+						{rows.length}
+					</span>
+					<ChevronRightIcon
+						className="h-5 w-5 shrink-0 text-gray-400 transition-transform group-open/waiting:rotate-90"
+						aria-hidden
+					/>
+				</summary>
+				<ul className="border-t border-white/10">
+					{rows.map((row) => {
+						const { when, detail } = upcomingWords(row.upcoming, today)
+						return (
+							<li
+								key={row.id}
+								data-waiting-row={row.id}
+								className="border-t border-white/5 first:border-t-0"
+							>
+								<Link
+									to={showHref(row)}
+									prefetch="intent"
+									className="group flex items-center gap-3 px-3 py-2 hover:bg-white/[0.05] md:px-5"
+								>
+									<Poster
+										path={row.poster_path}
+										className="h-[54px] w-9 shrink-0 rounded"
+									/>
+									<span className="min-w-0 flex-1">
+										<b className="block truncate text-sm text-white">
+											{row.title}
+										</b>
+										<span className="block truncate text-xs text-gray-400">
+											{row.upcoming && (
+												<>
+													{episodeCode(row.upcoming)}
+													{row.upcoming.name && (
+														<span className="hidden sm:inline">
+															{" "}
+															· {row.upcoming.name}
+														</span>
+													)}
+													{" · "}
+												</>
+											)}
+											<span className="text-gray-500" data-waiting-label>
+												{row.state === "seen" ? "Caught up" : "Up to date"}
+											</span>
 										</span>
 									</span>
-								</span>
-								<span
-									className="w-[92px] shrink-0 text-right md:w-36"
-									data-waiting-day
-								>
-									{when && <b className="block text-sm text-white">{when}</b>}
-									<span className="block text-xs text-gray-500">{detail}</span>
-								</span>
-								<ChevronRightIcon
-									className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300"
-									aria-hidden
-								/>
-							</Link>
-						</li>
-					)
-				})}
-			</ul>
-		</div>
+									<span
+										className="w-[92px] shrink-0 text-right md:w-36"
+										data-waiting-day
+									>
+										{when && <b className="block text-sm text-white">{when}</b>}
+										<span className="block text-xs text-gray-500">{detail}</span>
+									</span>
+									<ChevronRightIcon
+										className="h-4 w-4 shrink-0 text-gray-600 group-hover:text-amber-300"
+										aria-hidden
+									/>
+								</Link>
+							</li>
+						)
+					})}
+				</ul>
+			</details>
+		</li>
 	)
 }
 
@@ -415,13 +472,18 @@ export function MyShowsPage({
 	const { hash } = useLocation()
 	// Home's Start door lands on the Start group.
 	useEffect(() => {
-		if (hash === "#start" || hash === "#continue")
+		if (hash === "#start" || hash === "#continue" || hash === "#pick-up")
 			document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" })
 	}, [hash])
 	const [shown, setShown] = useState(START_STEP)
+	const [pickUpShown, setPickUpShown] = useState(PICK_UP_STEP)
 	const continues = data.continue.map((row) => continueRow(row, now))
+	const pickUps = data.pickUp
+		.slice(0, pickUpShown)
+		.map((row) => continueRow(row, now))
 	const starts = data.start.slice(0, shown).map(startRow)
-	const total = data.continue.length + data.start.length
+	const total = data.continue.length + data.pickUp.length + data.start.length
+	const pickUpLeft = data.pickUp.length - pickUps.length
 	const jump = (id: string, label: string) => (
 		<a
 			href={`#${id}`}
@@ -431,11 +493,7 @@ export function MyShowsPage({
 		</a>
 	)
 	const lastWatch = (row: MyShowsRow) => activityWords(row.lastActivityAt, now)
-	const quiet =
-		data.older.length +
-		data.waiting.length +
-		data.onHold.length +
-		data.dropped.length
+	const quiet = data.onHold.length + data.dropped.length
 	return (
 		<div className="overflow-x-clip pb-24" data-my-shows>
 			<PageHead
@@ -443,9 +501,14 @@ export function MyShowsPage({
 				line={[
 					data.continue.length
 						? `${data.continue.length} to continue`
-						: "Nothing in progress",
+						: data.pickUp.length
+							? null
+							: "Nothing in progress",
+					data.pickUp.length ? `${data.pickUp.length} to pick up` : null,
 					`${data.start.length} to start`,
-				].join(" · ")}
+				]
+					.filter(Boolean)
+					.join(" · ")}
 				links={[
 					{ label: "My movies", to: MY_MOVIES },
 					{ label: "My library", to: MY_LIBRARY },
@@ -481,23 +544,36 @@ export function MyShowsPage({
 								last on top.{" "}
 							</>
 						)}
-						{data.start.length > 0 && (
+						{pickUps.length > 0 && (
 							<>
 								{continues.length ? "Then " : "Shows to "}
-								{jump("start", continues.length ? "Start" : "start")}: the shows
-								you want to see, best taste match first.{" "}
+								{jump("pick-up", continues.length ? "Pick up" : "pick up")}:
+								shows you started and have not watched for {ACTIVE_DAYS} days.{" "}
+							</>
+						)}
+						{data.start.length > 0 && (
+							<>
+								{continues.length || pickUps.length ? "Then " : "Shows to "}
+								{jump(
+									"start",
+									continues.length || pickUps.length ? "Start" : "start",
+								)}
+								: the shows you want to see, best taste match first.{" "}
 							</>
 						)}
 						{total > 0 && "A row opens the show."}
 					</p>
-					{total === 0 ? (
+					{total === 0 && (
 						<Empty title="No show for tonight">
 							Want to See on a show puts it here to start, with how long it is
 							and where it streams. Once you mark an episode watched on a show's
 							page, its next episode leads this list.
 						</Empty>
-					) : (
-						<ol className="flex flex-col gap-2.5">
+					)}
+					{total + data.waiting.length > 0 && (
+						<ol
+							className={`flex flex-col gap-2.5 ${total === 0 ? "mt-4" : ""}`}
+						>
 							{continues.length > 0 && (
 								<GroupLabel
 									id="continue"
@@ -509,6 +585,38 @@ export function MyShowsPage({
 							{continues.map((row, i) => (
 								<Row key={row.id} row={row} n={i + 1} big={i === 0} />
 							))}
+							<WaitingRow rows={data.waiting} today={today} />
+							{pickUps.length > 0 && (
+								<GroupLabel
+									id="pick-up"
+									name="Pick up"
+									rule={`not watched for ${ACTIVE_DAYS} days`}
+									count={data.pickUp.length}
+								/>
+							)}
+							{pickUps.map((row, i) => (
+								<Row
+									key={row.id}
+									row={row}
+									n={continues.length + i + 1}
+									big={!continues.length && i === 0}
+								/>
+							))}
+							{pickUpLeft > 0 && (
+								<li>
+									<button
+										type="button"
+										data-more-pick-up
+										onClick={() => setPickUpShown(pickUpShown + START_STEP)}
+										className="h-11 cursor-pointer rounded-lg bg-white/5 px-4 text-sm font-bold text-gray-300 hover:bg-white/10"
+									>
+										Show {Math.min(pickUpLeft, START_STEP)} more{" "}
+										<span className="font-medium text-gray-500">
+											· {pickUpLeft} left
+										</span>
+									</button>
+								</li>
+							)}
 							{data.start.length > 0 && (
 								<GroupLabel
 									id="start"
@@ -521,8 +629,8 @@ export function MyShowsPage({
 								<Row
 									key={row.id}
 									row={row}
-									n={continues.length + i + 1}
-									big={!continues.length && i === 0}
+									n={continues.length + pickUps.length + i + 1}
+									big={!continues.length && !pickUps.length && i === 0}
 								/>
 							))}
 						</ol>
@@ -544,17 +652,9 @@ export function MyShowsPage({
 				{quiet > 0 && (
 					<section
 						className="flex flex-col gap-4 border-t border-white/5 pt-6"
-						aria-label="Shows with nothing for tonight"
+						aria-label="Shows you set aside"
 						data-quiet
 					>
-						<QuietGroup
-							id="older"
-							title={`Not watched for ${ACTIVE_DAYS} days`}
-							rows={data.older}
-							fact={lastWatch}
-							closed
-						/>
-						<WaitingGroup rows={data.waiting} today={today} />
 						<QuietGroup
 							id="on-hold"
 							title="On hold"

@@ -5,7 +5,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import "../server/title-filter/test-alias.ts"
 
-const { planMyShows, nextEpisodeAfter, nextEpisodeInGap, tonightsPickOf, activityWords } =
+const { planMyShows, nextEpisodeAfter, nextEpisodeInGap, tonightsPickOf, activityWords, placedWords } =
 	await import("./my-shows.ts")
 
 const NOW = Date.parse("2026-10-08T20:00:00Z")
@@ -18,6 +18,7 @@ const entry = (
 	episodesWatched: number,
 	lastActivity: Date | null,
 	furthest: [number, number] | null = episodesWatched ? [1, episodesWatched] : null,
+	watchingSince: Date | null = null,
 ) => ({
 	state,
 	watchedAt: lastActivity,
@@ -27,6 +28,7 @@ const entry = (
 	episodesWatched,
 	furthest,
 	lastActivityAt: lastActivity,
+	watchingSince,
 })
 const show = (
 	id: number,
@@ -36,14 +38,20 @@ const show = (
 	lastActivity: Date | null,
 	running = true,
 ) => ({ id, entry: entry(state, watched, lastActivity), catalog: { airedEpisodes: aired, running } })
+/** A Watching show the member moved there themselves: a season unmarked, a Seen press taken back, resumed, watched again. */
+const moved = (id: number, watched: number, aired: number, lastActivity: Date | null, since: Date | null) => ({
+	id,
+	entry: entry("watching", watched, lastActivity, watched ? [1, watched] : null, since),
+	catalog: { airedEpisodes: aired, running: true },
+})
 const ids = (rows: { id: number }[]) => rows.map((row) => row.id)
 
-test("Continue holds the Watching shows with a Next episode and activity in the last 30 days, most recent first", () => {
+test("Continue holds the Watching shows with a Next episode and activity in the last 90 days, most recent first", () => {
 	const plan = planMyShows({
 		shows: [
 			show(1, "watching", 3, 10, daysAgo(12)),
 			show(2, "watching", 5, 10, daysAgo(1)),
-			show(3, "watching", 2, 10, daysAgo(29)),
+			show(3, "watching", 2, 10, daysAgo(89)),
 		],
 		starts: [],
 		now: NOW,
@@ -53,14 +61,14 @@ test("Continue holds the Watching shows with a Next episode and activity in the 
 		plan.continue.map((row) => row.kind),
 		["next", "next", "next"],
 	)
-	assert.deepEqual(plan.older, [])
+	assert.deepEqual(plan.pickUp, [])
 })
 
-test("a Watching show not watched for 30 days is in its own group, and one without any activity date too", () => {
+test("a Watching show not watched for 90 days is one to pick up, and one without any activity date too", () => {
 	const plan = planMyShows({
 		shows: [
-			show(1, "watching", 3, 10, daysAgo(31)),
-			show(2, "watching", 3, 10, daysAgo(30)),
+			show(1, "watching", 3, 10, daysAgo(91)),
+			show(2, "watching", 3, 10, daysAgo(90)),
 			show(3, "watching", 3, 10, null),
 			show(4, "watching", 3, 10, daysAgo(400)),
 		],
@@ -69,7 +77,59 @@ test("a Watching show not watched for 30 days is in its own group, and one witho
 	})
 	assert.deepEqual(ids(plan.continue), [2])
 	// Most recent first; the show whose watches have no date goes last.
-	assert.deepEqual(ids(plan.older), [1, 4, 3])
+	assert.deepEqual(ids(plan.pickUp), [1, 4, 3])
+	assert.equal(plan.total, 4)
+})
+
+test("a show the member moved to Watching in the last 90 days is in Continue, whatever its watches say", () => {
+	const plan = planMyShows({
+		shows: [
+			// Seen two years ago, a season unmarked this morning: the watches are old, and undated.
+			moved(1, 18, 30, daysAgo(500), daysAgo(0)),
+			// Resumed a month ago, with watches no import dated.
+			moved(2, 4, 10, null, daysAgo(30)),
+			// Moved 91 days ago, last watched 200 days ago: neither is in the last 90 days.
+			moved(3, 4, 10, daysAgo(200), daysAgo(91)),
+			// An import made it Watching: the entry has no time for that.
+			moved(4, 4, 10, daysAgo(500), null),
+			show(5, "watching", 3, 10, daysAgo(12)),
+		],
+		starts: [],
+		now: NOW,
+	})
+	// Ordered by the later of the two: the last watch, or the move to Watching.
+	assert.deepEqual(ids(plan.continue), [1, 5, 2])
+	assert.deepEqual(ids(plan.pickUp), [3, 4])
+	assert.deepEqual(
+		plan.continue.map((row) => row.activeAt),
+		[daysAgo(0).getTime(), daysAgo(12).getTime(), daysAgo(30).getTime()],
+	)
+	// What the show's watches say stays on the row.
+	assert.equal(plan.continue[0].lastActivityAt, daysAgo(500).getTime())
+	assert.equal(plan.pickUp[0].activeAt, daysAgo(91).getTime())
+})
+
+test("since when a show is Watching counts for a Watching show only", () => {
+	// An entry the browser changed before the server answered may still carry the time of an earlier state.
+	const stale = (id: number, state: State) => ({
+		id,
+		entry: entry(state, 3, daysAgo(200), [1, 3], daysAgo(1)),
+		catalog: { airedEpisodes: 10, running: true },
+	})
+	const plan = planMyShows({
+		shows: [stale(1, "on_hold"), stale(2, "dropped"), stale(3, "seen"), show(4, "watching", 3, 10, daysAgo(200))],
+		starts: [],
+		now: NOW,
+	})
+	assert.deepEqual(
+		[...plan.onHold, ...plan.dropped, ...plan.continue, ...plan.pickUp].map((row) => [row.id, row.watchingSince]),
+		[
+			[1, null],
+			[2, null],
+			[3, null],
+			[4, null],
+		],
+	)
 })
 
 test("Seen shows with new episodes follow the Watching shows in Continue and say how many are new", () => {
@@ -166,7 +226,7 @@ test("a show the catalog has no aired count for stays where its state and activi
 	const plan = planMyShows({
 		shows: [
 			show(1, "watching", 3, null, daysAgo(2)),
-			{ id: 2, entry: entry("watching", 3, daysAgo(40)), catalog: null },
+			{ id: 2, entry: entry("watching", 3, daysAgo(100)), catalog: null },
 			show(3, "seen", 3, null, daysAgo(2)),
 			{ id: 4, entry: entry("seen", 3, daysAgo(2)), catalog: null },
 		],
@@ -175,7 +235,7 @@ test("a show the catalog has no aired count for stays where its state and activi
 	})
 	assert.deepEqual(ids(plan.continue), [1])
 	assert.equal(plan.continue[0].aired, null)
-	assert.deepEqual(ids(plan.older), [2])
+	assert.deepEqual(ids(plan.pickUp), [2])
 	// A Seen show that still runs waits for episodes. One the catalog has no row for is not on the page: nothing
 	// says it has new episodes or still runs.
 	assert.deepEqual(ids(plan.waiting), [3])
@@ -245,10 +305,19 @@ test("Tonight's pick is the Next episode of the Watching show the member was las
 	assert.deepEqual(tonightsPickOf(plan, 555), { kind: "episode", showId: 2 })
 })
 
-test("without a Watching show active in the last 30 days, Tonight's pick is the first movie of My movies", () => {
+test("Tonight's pick is the show the member moved to Watching last, when that is later than any watch", () => {
+	const plan = planMyShows({
+		shows: [show(1, "watching", 3, 10, daysAgo(2)), moved(2, 18, 30, daysAgo(500), daysAgo(1))],
+		starts: [],
+		now: NOW,
+	})
+	assert.deepEqual(tonightsPickOf(plan, 555), { kind: "episode", showId: 2 })
+})
+
+test("without a Watching show active in the last 90 days, Tonight's pick is the first movie of My movies", () => {
 	const plan = planMyShows({
 		shows: [
-			show(1, "watching", 3, 10, daysAgo(45)),
+			show(1, "watching", 3, 10, daysAgo(100)),
 			// A Seen show with new episodes leads Continue here, and is still not the pick.
 			show(2, "seen", 9, 10, daysAgo(1)),
 		],
@@ -282,4 +351,22 @@ test("the fact that places a Continue row says when the member last watched", ()
 	assert.equal(activityWords(daysAgo(200).getTime(), NOW), "Watched 7 months ago")
 	assert.equal(activityWords(daysAgo(800).getTime(), NOW), "Watched 2 years ago")
 	assert.equal(activityWords(null, NOW), "No date for your last watch")
+})
+
+test("a row placed by the member's move to Watching says since when, and one placed by a watch says the watch", () => {
+	const row = (lastActivityAt: Date | null, watchingSince: Date | null) => ({
+		lastActivityAt: lastActivityAt?.getTime() ?? null,
+		watchingSince: watchingSince?.getTime() ?? null,
+	})
+	assert.equal(placedWords(row(daysAgo(500), new Date(NOW - 2 * 3_600_000)), NOW), "Watching since today")
+	assert.equal(placedWords(row(null, daysAgo(1)), NOW), "Watching since yesterday")
+	assert.equal(placedWords(row(daysAgo(500), daysAgo(12)), NOW), "Watching for 12 days")
+	assert.equal(placedWords(row(daysAgo(500), daysAgo(45)), NOW), "Watching for 6 weeks")
+	assert.equal(placedWords(row(daysAgo(900), daysAgo(200)), NOW), "Watching for 7 months")
+	assert.equal(placedWords(row(null, daysAgo(800)), NOW), "Watching for 2 years")
+	// A watch since the move is the later fact, and one at the same moment (a first tick) is the plainer one.
+	assert.equal(placedWords(row(daysAgo(3), daysAgo(12)), NOW), "Watched 3 days ago")
+	assert.equal(placedWords(row(daysAgo(3), daysAgo(3)), NOW), "Watched 3 days ago")
+	assert.equal(placedWords(row(daysAgo(3), null), NOW), "Watched 3 days ago")
+	assert.equal(placedWords(row(null, null), NOW), "No date for your last watch")
 })
