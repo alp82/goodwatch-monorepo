@@ -19,6 +19,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parent))
 from packet import canonical,hash_value,sha
 from rpc import Rpc
 from private_pipe import stream,fixed_consumer_command
+from reason_codes import REASONS
 
 SCHEMA='cpu0-execution-packet.v6'
 
@@ -63,12 +64,14 @@ def validated_admission(frame,previous,packet,contract_dir,validator_path):
     return result
 
 
-def audit_consumer(frames,previous,packet):
+def audit_consumer(frames,previous,packet,*,absolute_deadline):
     """Offline reviewed consumer audit on public artifacts in a local temp dir.
 
     All imported code comes from the authenticated full packet; no executable
     consumer or Python backend runs here. The audit itself cannot prove cleanup.
     """
+    remaining=absolute_deadline-time.monotonic()
+    if remaining<=0:raise RuntimeError('outer_deadline')
     manifest_raw=base64.b64decode(packet['fullManifest'],validate=True)
     from stager import verify_full
     files={name:base64.b64decode(value,validate=True) for name,value in packet['fullFiles'].items()}
@@ -84,7 +87,8 @@ def audit_consumer(frames,previous,packet):
         context=root/'audit-context.json';context.write_bytes(canonical({'initialHandoff':previous,
             'sourceFreezeSha256':packet['sourceFreezeSha256'],'externalManifestSha256':packet['externalManifestSha256']}));context.chmod(0o600)
         child=subprocess.run(['/usr/bin/node',str(root/'audit_cpu0.mjs'),str(rows),str(context),str(manifest),packet['externalManifestSha256'],str(root)],
-            stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=10,env={'PATH':'/usr/bin:/bin','LANG':'C.UTF-8'},check=False)
+            stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=min(10,remaining_budget(absolute_deadline)),env={'PATH':'/usr/bin:/bin','LANG':'C.UTF-8'},check=False)
+        if time.monotonic()>=absolute_deadline:raise RuntimeError('outer_deadline')
         if len(child.stdout)>262144:raise RuntimeError('outer_consumer_audit_bound')
         value=json.loads(child.stdout)
         if child.returncode!=0 or not isinstance(value,dict) or value.get('consumerPass') is not True:
@@ -115,7 +119,7 @@ def run(packet,rpc,emit,*,contract_dir,validator_path,raise_own_nofile):
                              'fullFiles':packet['fullFiles'],'fullManifest':packet['fullManifest']})
         previous=handoff(staged['handoff'])
         turn=call('turnover',{**arguments,'predecessorSha256':previous['sha256']})
-        terminal=[frame for frame in turn['frames'] if frame.get('stage')=='handoff-complete']
+        terminal=[frame for frame in turn['frames'] if frame.get('stage')=='complete']
         if len(terminal)!=1:raise RuntimeError('outer_turnover_handoff_missing')
         previous=handoff(terminal[0]['handoff'])
         admitted=call('outer-admit',{**arguments,'predecessorSha256':previous['sha256'],
@@ -146,8 +150,10 @@ def run(packet,rpc,emit,*,contract_dir,validator_path,raise_own_nofile):
         consumer=fixed_consumer_command(packet['sourceFreezeSha256'],packet['externalManifestSha256'],entry_previous['sha256'],raise_own_nofile=raise_own_nofile)
         transport=stream(consumer,rpc.command('producer-stream'),packet['sourceFreezeSha256'],packet['externalManifestSha256'],entry_previous['sha256'],public,
                          validate_admission=validate,register_consumer=register_consumer,register_producer=register_producer,
-                         validate_producer_exit=producer_exit,producer_input=rpc.envelope('producer-stream',{}),absolute_deadline=absolute_deadline)
-        consumer_audit=audit_consumer(frames,entry_previous,packet)
+                         validate_producer_exit=producer_exit,producer_input=lambda:rpc.envelope('producer-stream',{'remainingSeconds':remaining_budget(absolute_deadline)}),absolute_deadline=absolute_deadline)
+        remaining_budget(absolute_deadline)
+        consumer_audit=audit_consumer(frames,entry_previous,packet,absolute_deadline=absolute_deadline)
+        remaining_budget(absolute_deadline)
     except BaseException as error:
         primary=error
     finally:
@@ -169,6 +175,7 @@ def run(packet,rpc,emit,*,contract_dir,validator_path,raise_own_nofile):
         writers=((prior.get('writers') or {}).get('recordedWritersGone') is True and
                  (prior.get('currentWriters') or {}).get('recordedWritersGone') is True)
         all_registered_gone=bool(cleanup['producer-cleanup']['observed'] and cleanup['cleanup']['observed'] and producer_cleanup.get('containerGone') is True and producer_cleanup.get('birthGone') is True and (registered_consumer is None or consumer_cleanup.get('birthGone') is True) and writers and bench_cleanup.get('rootLockAvailable') is True)
+        if primary is None and time.monotonic()>=absolute_deadline:primary=RuntimeError('outer_deadline')
         result={'schema':'cpu0-external-completion.v6','variant':'cpu0-owned-lifecycle.v1',
                 'sourceFreezeSha256':packet['sourceFreezeSha256'],'externalManifestSha256':packet['externalManifestSha256'],
                 'status':'completed' if primary is None and all_registered_gone else 'failed-or-cleanup-unknown',
@@ -189,12 +196,13 @@ def run(packet,rpc,emit,*,contract_dir,validator_path,raise_own_nofile):
 def fixed_reason(error):
     if error is None:return None
     value=error.args[0] if type(error) is RuntimeError and len(error.args)==1 else None
-    return value if value in REASONS else 'outer_guard_or_runtime_failure'
+    return value if isinstance(value,str) and value in REASONS else 'outer_guard_or_runtime_failure'
 
-REASONS=frozenset(('outer_handoff_invalid','outer_full_manifest_changed','outer_local_contract_changed',
- 'outer_admission_validator_changed','outer_consumer_admission_refused','outer_packet_invalid','outer_deadline',
- 'outer_turnover_handoff_missing','outer_producer_control_invalid','outer_producer_exit_refused',
- 'rpc_remote_refused','rpc_deadline','pipe_consumer_exit_failed','pipe_producer_exit_failed'))
+def remaining_budget(deadline):
+    remaining=deadline-time.monotonic()
+    if remaining<=0:raise RuntimeError('outer_deadline')
+    return min(7200,remaining)
+
 
 
 def main():

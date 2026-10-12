@@ -112,6 +112,62 @@ def outer_admit(arguments):
     finally:os.close(fd)
 
 
+def fixed_cause(error):
+    value=error.args[0] if type(error) is RuntimeError and len(error.args)==1 else None
+    return value if isinstance(value,str) and value in REASONS else 'executor_guard_or_runtime_failure'
+
+
+def cleanup_phase(arguments,lifecycle,docker,source_sha):
+    """A consumer refusal cannot suppress independent census/handoff evidence."""
+    primary=None;consumer=None;actual_sha=None;snapshot=None;observed=None;handoff=None
+    evidence={}
+    try:
+        if os.path.lexists(registration.RECORD):
+            registration_raw,_=read_owned(registration.RECORD);record=json.loads(registration_raw)
+            if record.get('sourceFreezeSha256')!=source_sha or record.get('externalManifestSha256')!=arguments['externalManifestSha256']:raise RuntimeError('consumer_registration_changed')
+            recorded_sha=sha(registration_raw);supplied=arguments.get('consumerRegistrationSha256')
+            if supplied is not None and supplied!=recorded_sha:raise RuntimeError('consumer_registration_changed')
+            consumer=registration.cleanup(lifecycle,docker,recorded_sha)
+    except BaseException as error:
+        primary=error;evidence['consumer']={'observed':False,'reason':fixed_cause(error),'stateUnknown':True}
+    # Every independent read is attempted even if another one refuses. Neither
+    # SSH exit nor a failed consumer signal is evidence of writer/source absence.
+    for name,action in (
+        ('handoff',lambda:lifecycle.secure_json(setup.ROOT/'cpu0-lifecycle-handoff-v1.json')),
+        ('prior',lambda:prior(arguments,lifecycle,docker)),
+        ('pair',lambda:lifecycle.pair_snapshot(docker))):
+        try:
+            value=action()
+            if name=='handoff':_,actual_sha,_=value;evidence[name]={'observed':True,'sha256':actual_sha}
+            elif name=='prior':observed=value;evidence[name]={'observed':True,'scope':value}
+            else:snapshot=value;evidence[name]={'observed':True,'snapshot':value}
+        except BaseException as error:
+            evidence[name]={'observed':False,'reason':fixed_cause(error),'stateUnknown':True}
+            if primary is None:primary=error
+    fd=None
+    if primary is None:
+        try:
+            fd=setup.acquire_control(lifecycle)
+            lifecycle.read_handoff(docker,actual_sha)
+            handoff=lifecycle.commit_handoff(docker,actual_sha,'outer')
+        except BaseException as error:primary=error
+        finally:
+            if fd is not None:
+                try:os.close(fd)
+                except BaseException as error:
+                    evidence['controlClose']={'observed':False,'reason':'lock_close_failed'}
+                    if primary is None:primary=error
+    if primary is not None:
+        primary.cleanupIndependentEvidence=evidence
+        primary.cleanupObservedHandoff={'observedCommittedHandoffSha256':actual_sha,'continuationAllowed':False}
+        primary.cleanupPairSnapshot=snapshot if snapshot is not None else {'observed':False}
+        raise primary
+    return {'schema':'cpu0-external-cleanup.v6','variant':'cpu0-owned-lifecycle.v1',
+            'consumer':consumer,'priorEvidence':observed,'pairSnapshot':snapshot,
+            'handoff':handoff,'observedCommittedHandoffSha256':actual_sha,'rootLockAvailable':True,
+            'unknownUnregisteredChildrenAbsentProven':False}
+
+
 def dispatch(operation,arguments):
     if operation not in OPERATIONS or not isinstance(arguments,dict):raise RuntimeError('executor_operation_invalid')
     try:
@@ -123,8 +179,8 @@ def dispatch(operation,arguments):
         if operation=='producer-stream':
             def private_bytes(raw):
                 sys.stdout.buffer.write(raw);sys.stdout.buffer.flush()
-            result=producer.execute(producer.DockerBackend(),private_bytes,
-                                    lambda value:print(json.dumps(value,sort_keys=True,separators=(',',':')),flush=True))
+            result=producer.execute(producer.DockerBackend(remaining_seconds=arguments['remainingSeconds']),private_bytes,
+                                    lambda value:print(json.dumps(value,sort_keys=True,separators=(',',':')),flush=True),remaining_seconds=arguments['remainingSeconds'])
             return {**result,'producerPrivateStreamCompleted':True}
         if operation=='producer-cleanup':return producer.cleanup_from_receipts()
         if operation=='producer-confirm':
@@ -142,41 +198,7 @@ def dispatch(operation,arguments):
             try:modules['turnover_gate_cpu0'].stage(config,spec,policy,frames.append,fd,arguments['predecessorSha256'])
             finally:os.close(fd)
             return {'schema':'cpu0-turnover-result.v6','frames':frames}
-        if operation=='cleanup':
-            consumer=None
-            # Durable registration can exist even if its SSH reply was lost.
-            # Re-discover the fixed owned receipt independently on every refusal.
-            if os.path.lexists(registration.RECORD):
-                registration_raw,_=read_owned(registration.RECORD)
-                record=json.loads(registration_raw)
-                if record.get('sourceFreezeSha256')!=source_sha or record.get('externalManifestSha256')!=arguments['externalManifestSha256']:
-                    raise RuntimeError('consumer_registration_changed')
-                recorded_sha=sha(registration_raw)
-                supplied=arguments.get('consumerRegistrationSha256')
-                if supplied is not None and supplied!=recorded_sha:raise RuntimeError('consumer_registration_changed')
-                consumer=registration.cleanup(lifecycle,docker,recorded_sha)
-            # Cleanup refuses known active/unknown controls; it never invents
-            # their exit from a transport process exit. No source stop is done.
-            # Actual persisted handoff may have advanced before a refused CLI
-            # could report it. Observe it independently; never resume a phase.
-            actual,actual_sha,_=lifecycle.secure_json(setup.ROOT/'cpu0-lifecycle-handoff-v1.json')
-            fd=setup.acquire_control(lifecycle)
-            try:
-                observed=prior(arguments,lifecycle,docker)
-                snapshot=lifecycle.pair_snapshot(docker)
-                lifecycle.read_handoff(docker,actual_sha)
-                handoff=lifecycle.commit_handoff(docker,actual_sha,'outer')
-            except BaseException as error:
-                error.cleanupObservedHandoff={'observedCommittedHandoffSha256':actual_sha,
-                                              'continuationAllowed':False}
-                try:error.cleanupPairSnapshot=lifecycle.pair_snapshot(docker)
-                except BaseException:error.cleanupPairSnapshot={'observed':False}
-                raise
-            finally:os.close(fd)
-            return {'schema':'cpu0-external-cleanup.v6','variant':'cpu0-owned-lifecycle.v1',
-                    'consumer':consumer,'priorEvidence':observed,'pairSnapshot':snapshot,
-                    'handoff':handoff,'observedCommittedHandoffSha256':actual_sha,'rootLockAvailable':True,
-                    'unknownUnregisteredChildrenAbsentProven':False}
+        if operation=='cleanup':return cleanup_phase(arguments,lifecycle,docker,source_sha)
         raise RuntimeError('executor_operation_invalid')
     except BaseException as error:
         # The original cause survives; the fixed projection never includes raw
@@ -213,6 +235,7 @@ FAILURE_FIELDS=('setupCompletedStopReceipt','setupDurableStopEvidence','setupEnd
                 'setupFailureEvidence','receiptFailureEvidence','setupDockerCleanupEvidence',
                 'setupCleanupFailure','lifecycleCompletedStopReceipt','lifecycleFailureEvidence',
                 'lifecycleCleanupFailure','lifecycleDockerCleanupEvidence','fullStageFailureEvidence',
+                'producerCleanupEvidence','producerClientCleanupFailure','producerPidfdCleanupFailure','cleanupIndependentEvidence',
                 'stageCleanupEvidence','nodeCleanupEvidence','registrationCleanupFailure','cleanupObservedHandoff','cleanupPairSnapshot',
                 'setupHostEvidence','setupOldCpuEvidence','metadataClientCleanupFailure','priorWriterEvidence','currentWriterEvidence',
                 'resourceLimitEvidence','cpuHierarchyEvidence','hostCpuEvidence','pressureFinalizationFailure')

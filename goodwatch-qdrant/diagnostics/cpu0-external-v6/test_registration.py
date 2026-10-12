@@ -33,6 +33,15 @@ class RegistrationTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'consumer_argv_changed'):
                 registration.confirm_birth(life,birth,source,['node','consumer'])
 
+    def test_cleanup_allows_reparent_only_with_same_birth_exe_group_argv(self):
+        life,birth,source=self.fixture();life.process(991,None)['parentPid']=1
+        node=types.SimpleNamespace(st_mode=0o100700,st_uid=0,st_nlink=1,st_size=registration.NODE_BYTES,st_dev=1,st_ino=2)
+        with mock.patch.object(registration.Path,'lstat',return_value=node),mock.patch.object(registration.Path,'stat',return_value=node):
+            with self.assertRaisesRegex(RuntimeError,'consumer_birth_changed'):
+                registration.confirm_birth(life,birth,source,['node','consumer'])
+            observed=registration.confirm_birth(life,birth,source,['node','consumer'],allow_reparent=True)
+        self.assertEqual(observed['parentPid'],1);self.assertEqual(observed['startTicks'],birth['startTicks'])
+
     def test_readable_pidfd_does_not_claim_zombie_birth_absent(self):
         life=types.SimpleNamespace(birth=lambda pid:123,birth_gone=lambda pid,ticks:False)
         record={'schema':'cpu0-consumer-registration.v6','consumerBirth':{'pid':991,'startTicks':123}}

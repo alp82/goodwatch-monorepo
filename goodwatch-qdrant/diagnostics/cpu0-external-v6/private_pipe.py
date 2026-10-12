@@ -16,6 +16,7 @@ import shlex
 sys.dont_write_bytecode=True
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from packet import canonical,hash_value,sha
+from reason_codes import REASONS
 
 PRIVATE_BUFFER=2*1024**2
 PUBLIC_LINE=262144
@@ -73,6 +74,25 @@ def close_client(child):
     return exit_evidence(child,True)
 
 
+def producer_failure(value):
+    allowed={'schema','operation','reason','continuationAllowed','producerCleanupEvidence','producerClientCleanupFailure','producerPidfdCleanupFailure'}
+    if not isinstance(value,dict) or not set(value)<=allowed or not {'schema','operation','reason','continuationAllowed'}<=set(value) or value.get('schema')!='cpu0-external-failure.v6' or value.get('operation') not in ('producer-stream',None) or not isinstance(value.get('reason'),str) or value.get('reason') not in REASONS or value.get('continuationAllowed') is not False:
+        raise RuntimeError('pipe_producer_failure_invalid')
+    for key in ('producerClientCleanupFailure','producerPidfdCleanupFailure'):
+        if key in value and type(value[key]) is not bool:raise RuntimeError('pipe_producer_failure_invalid')
+    if 'producerCleanupEvidence' in value:
+        evidence=value['producerCleanupEvidence']
+        keys={'containerGone','birthGone','exitCode','exitZeroProven','cleanupAttempted','creationAttempted','createdIdentityUnknown','cleanupFailure'}
+        if not isinstance(evidence,dict) or not set(evidence)<=keys:raise RuntimeError('pipe_producer_failure_invalid')
+        for key,observed in evidence.items():
+            if key=='cleanupFailure':
+                if observed not in ('producer_identity_changed','producer_birth_changed','producer_registration_refused','producer_shape_refused','producer_cleanup_failed'):raise RuntimeError('pipe_producer_failure_invalid')
+            elif key=='exitCode':
+                if observed is not None and type(observed) is not int:raise RuntimeError('pipe_producer_failure_invalid')
+            elif observed is not None and type(observed) is not bool:raise RuntimeError('pipe_producer_failure_invalid')
+    return value
+
+
 def stream(consumer_argv,producer_argv,source_sha,external_sha,predecessor,
            emit,*,validate_admission,register_consumer,register_producer,
            validate_producer_exit,producer_input=b'',timeout=7200,ready_timeout=1200,
@@ -88,8 +108,8 @@ def stream(consumer_argv,producer_argv,source_sha,external_sha,predecessor,
     consumer=None;producer=None;selector=selectors.DefaultSelector();pending=bytearray()
     public=bytearray();public_count=0;admitted=False;producer_eof=False;sent_complete=False
     producer_lines=bytearray();producer_registered=False;producer_exit_proof=None
-    if not isinstance(producer_input,bytes) or len(producer_input)>8*1024**2:raise RuntimeError('pipe_public_input_bound')
-    producer_control=bytearray(producer_input)
+    if not callable(producer_input) and (not isinstance(producer_input,bytes) or len(producer_input)>8*1024**2):raise RuntimeError('pipe_public_input_bound')
+    producer_control=bytearray()
     consumer_stdout_eof=False;phase='consumer-start';started=time.monotonic();primary=None
     environment={'PATH':'/usr/bin:/bin','LANG':'C.UTF-8'}
     exits={}
@@ -105,6 +125,7 @@ def stream(consumer_argv,producer_argv,source_sha,external_sha,predecessor,
                 consumer.wait();exits['consumer']=exit_evidence(consumer,True)
                 if consumer.returncode!=0:raise RuntimeError('pipe_consumer_exit_failed')
                 if not admitted or not sent_complete:raise RuntimeError('pipe_completion_missing')
+                if absolute_deadline is not None and time.monotonic()>=absolute_deadline:raise RuntimeError('pipe_deadline')
                 break
             if producer is not None and producer_eof and not sent_complete:
                 status=producer.poll()
@@ -149,6 +170,10 @@ def stream(consumer_argv,producer_argv,source_sha,external_sha,predecessor,
                             if not line or len(line)>PRIVATE_BUFFER:raise RuntimeError('pipe_private_buffer_bound')
                             value=json.loads(line)
                             if not isinstance(value,dict):raise RuntimeError('pipe_producer_frame_invalid')
+                            if value.get('schema')=='cpu0-external-failure.v6':
+                                remote=producer_failure(value)
+                                error=RuntimeError('pipe_remote_producer_refused');error.remoteFailureEvidence=remote
+                                raise error
                             if not producer_registered:
                                 if value.get('kind')!='private-producer-registration':raise RuntimeError('pipe_producer_registration_missing')
                                 proof=register_producer(value)
@@ -189,10 +214,14 @@ def stream(consumer_argv,producer_argv,source_sha,external_sha,predecessor,
                             if not isinstance(registered,dict) or registered.get('registeredBeforeCapture') is not True:
                                 raise RuntimeError('pipe_consumer_registration_refused')
                             admitted=True;emit(value);phase='producer-stream'
-                            producer=spawn(producer_argv,stdin=subprocess.PIPE if producer_input else subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,close_fds=True,env=environment)
+                            if absolute_deadline is not None and time.monotonic()>=absolute_deadline:raise RuntimeError('pipe_deadline')
+                            raw_input=producer_input() if callable(producer_input) else producer_input
+                            if not isinstance(raw_input,bytes) or len(raw_input)>8*1024**2:raise RuntimeError('pipe_public_input_bound')
+                            producer_control.extend(raw_input)
+                            producer=spawn(producer_argv,stdin=subprocess.PIPE if producer_control else subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,close_fds=True,env=environment)
                             os.set_blocking(producer.stdout.fileno(),False)
                             selector.register(producer.stdout,selectors.EVENT_READ,'private-read')
-                            if producer_input:
+                            if producer_control:
                                 os.set_blocking(producer.stdin.fileno(),False)
                                 selector.register(producer.stdin,selectors.EVENT_WRITE,'producer-control')
                         else:emit(value)

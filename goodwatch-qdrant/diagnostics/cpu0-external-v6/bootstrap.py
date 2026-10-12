@@ -53,6 +53,13 @@ def execute(raw,expected_sha):
     return sys.modules['executor'].dispatch(value['operation'],value['arguments'])
 
 
+BOOTSTRAP_REASONS=frozenset(('authenticated_namespace_not_absent', 'bootstrap_closure_changed', 'bootstrap_closure_invalid', 'bootstrap_explicit_hash_required', 'bootstrap_file_bound', 'bootstrap_file_changed', 'bootstrap_input_invalid', 'bootstrap_operation_invalid'))
+
+def bootstrap_reason(error):
+    value=error.args[0] if type(error) is RuntimeError and len(error.args)==1 else None
+    return value if isinstance(value,str) and value in BOOTSTRAP_REASONS else 'bootstrap_guard_or_runtime_failure'
+
+
 def main():
     try:
         if len(sys.argv)!=2:raise RuntimeError('bootstrap_explicit_hash_required')
@@ -69,7 +76,7 @@ def main():
         # Executor supplies a closed allowlisted public projection. No arbitrary
         # exception strings/argv/tracebacks or private Docker configuration.
         result=getattr(error,'publicFailure',None)
-        if not isinstance(result,dict):result={'schema':'cpu0-external-failure.v6','reason':'bootstrap_guard_or_runtime_failure','continuationAllowed':False}
+        if not isinstance(result,dict):result={'schema':'cpu0-external-failure.v6','operation':None,'reason':bootstrap_reason(error),'continuationAllowed':False}
         print(json.dumps(result,sort_keys=True,separators=(',',':'),allow_nan=False),flush=True)
         return 1
 

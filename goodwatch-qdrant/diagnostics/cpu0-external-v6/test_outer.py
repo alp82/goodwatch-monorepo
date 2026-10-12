@@ -3,6 +3,11 @@
 This proves ordering and refusal composition, not production admission/cleanup.
 """
 import copy
+import base64
+import importlib.util
+from contextlib import ExitStack, nullcontext
+from pathlib import Path
+from types import SimpleNamespace
 import json
 import subprocess
 import sys
@@ -18,6 +23,51 @@ def chained(owner, previous=None):
     return {**value,'sha256':packet.sha(packet.canonical(value)+b'\n')}
 
 
+def actual_turnover_frames(previous, successor):
+    """Run the real immutable backend emitter with explicit local OS seams.
+
+    Shape comes from turnover_gate_cpu0.stage, not a rewritten fake frame. The
+    source/Qdrant/child boundaries are fake; no actual lifecycle action occurs.
+    """
+    source_dir=Path(__file__).resolve().parent.parent/'pinning-prototype'
+    old_path=list(sys.path)
+    try:
+        sys.path.insert(0,str(source_dir))
+        spec=importlib.util.spec_from_file_location('outer_fixture_real_turnover',source_dir/'turnover_gate_cpu0.py')
+        gate=importlib.util.module_from_spec(spec);spec.loader.exec_module(gate)
+    finally:
+        sys.path[:]=old_path
+    control=gate.control
+    old=SimpleNamespace(pid=101,identity=('id','image',101,99),cgroup_relative='/clone')
+    fresh=SimpleNamespace(pid=102,identity=('id','image',102,100),cgroup_relative='/clone')
+    child=mock.Mock()
+    child.joined.return_value={'joined':True,'lockedBytes':0,'childPidPositive':True}
+    child.gone.return_value={'childGone':True,'survivedGracePeriod':False,'exitCode':0,'queries':0,'lockedBytes':0}
+    life=mock.Mock()
+    life.helper_fork_scope.side_effect=lambda *args:nullcontext()
+    life.graceful_stop.return_value={'clean':True,'fixture':True}
+    life.commit_handoff.return_value=successor
+    frames=[]
+    with ExitStack() as stack:
+        patches=(mock.patch.object(control,'owned_store_files'),mock.patch.object(control,'owned_total_budget'),
+          mock.patch.object(control,'host_available'),mock.patch.object(control.cpu0_guards,'host_cpu'),
+          mock.patch.object(control,'self_cgroup',return_value='/reader'),
+          mock.patch.object(control,'inspect_stopped_or_running',side_effect=[{'State':{'Running':True}},{'State':{'Running':False}},{'State':{'Running':False}}]),
+          mock.patch.object(control,'inspect_source',side_effect=[old,old,fresh]),
+          mock.patch.object(control,'load_lifecycle',return_value=life),
+          mock.patch.object(control,'birth_admission',return_value={'target':{'fixture':True}}),
+          mock.patch.object(control,'frozen_helper'),mock.patch.object(control,'limits',return_value={}),
+          mock.patch.object(control,'at',return_value='2026-10-12T00:00:00Z'),
+          mock.patch.object(control.runtime,'accounting',return_value={}),
+          mock.patch.object(control,'clone_command'),mock.patch.object(gate,'ZeroChild',return_value=child),
+          mock.patch.object(gate,'ready',return_value=fresh))
+        for patch in patches:stack.enter_context(patch)
+        gate.stage({},SimpleNamespace(store=None,container='fixed-fixture'),
+          SimpleNamespace(emergency_bytes=1,reserve_bytes=1,cap_reserve_bytes=1),frames.append,12,previous)
+    life.commit_handoff.assert_called_once_with(control.runtime.docker,previous,'turnover')
+    return frames
+
+
 class Harness:
     def __init__(self):
         self.events=[];self.frames=[];self.calls=[];self.previous=None;self.admission=None;self.registration=None;self.fail=None;self.current_writers=True;self.audit_fail=False
@@ -31,7 +81,7 @@ class Harness:
             if operation!='setup':assert arguments['predecessorSha256']==self.previous['sha256']
             self.previous=chained({'stage':'stager','outer-admit':'outer'}.get(operation,operation),self.previous['sha256'] if self.previous else None);result={'handoff':self.previous}
             if operation=='stage':result['nodeReceiptSha256']='9'*64
-            if operation=='turnover':result={'frames':[{'stage':'handoff-complete','handoff':self.previous}]}
+            if operation=='turnover':result={'frames':actual_turnover_frames(arguments['predecessorSha256'],self.previous)}
         elif operation=='register-consumer':
             assert arguments['predecessorSha256']==self.admission['handoff']['sha256'];assert arguments['consumerPredecessorSha256']==self.previous['sha256'];assert arguments['consumerBirth']==self.admission['consumerBirth']
             self.registration={'registrationSha256':'8'*64,'registeredBeforeCapture':True};result=self.registration
@@ -48,8 +98,10 @@ class Harness:
     def validate(self,value,previous,*unused):
         self.events.append('pure-validate');assert previous==self.previous;assert value==self.admission
         return {'receipt':{'handoff':value['handoff']},'consumerBirth':value['consumerBirth']}
-    def audit(self,frames,previous,given_packet):
-        self.events.append('offline-audit');assert given_packet is self.packet;assert frames[0]==self.admission
+    def audit(self,frames,previous,given_packet,*,absolute_deadline=None):
+        self.events.append('offline-audit')
+        if absolute_deadline is not None:assert absolute_deadline==self.calls[0][2]['absolute_deadline']
+        assert given_packet is self.packet;assert frames[0]==self.admission
         if self.audit_fail:
             error=RuntimeError('outer_consumer_audit_refused');error.consumerAuditEvidence={'consumerPass':False,'experimentPass':False};raise error
         return {'consumerPass':True,'experimentPass':False,'externalCleanupRequired':True,'productionAcceptance':False}
@@ -66,6 +118,61 @@ class Harness:
 
 
 class OuterTests(unittest.TestCase):
+
+    def test_real_backend_turnover_complete_frame_is_consumed_by_outer(self):
+        h=Harness();result=h.run()
+        self.assertEqual(result['status'],'completed')
+        turnover=next(x['result'] for x in result['operationLedger'] if x['operation']=='turnover')
+        self.assertEqual([x['stage'] for x in turnover['frames']],['first-join','old-child-gone','second-join','complete'])
+        self.assertIn('handoff',turnover['frames'][-1])
+        self.assertIn('outer-admit',h.events)
+
+    def test_deadline_before_audit_refuses_without_audit_or_resume(self):
+        h=Harness();now=[100.0];original=h.stream
+        def expired(*args,**kwargs):
+            result=original(*args,**kwargs);now[0]=7300.0;return result
+        with mock.patch.object(outer_local.time,'monotonic',side_effect=lambda:now[0]):
+            result=h.run(expired)
+        self.assertEqual(result['status'],'failed-or-cleanup-unknown')
+        self.assertEqual(result['failureReason'],'outer_deadline')
+        self.assertNotIn('offline-audit',h.events)
+        self.assertEqual(h.events[-2:],['producer-cleanup','cleanup'])
+
+    def test_deadline_crossed_during_audit_vetoes_completion(self):
+        h=Harness();now=[100.0];original=h.audit
+        def expired(*args,**kwargs):
+            result=original(*args,**kwargs);now[0]=7300.0;return result
+        h.audit=expired
+        with mock.patch.object(outer_local.time,'monotonic',side_effect=lambda:now[0]):result=h.run()
+        self.assertIn('offline-audit',h.events)
+        self.assertEqual(result['status'],'failed-or-cleanup-unknown')
+        self.assertEqual(result['failureReason'],'outer_deadline')
+        self.assertEqual(h.events[-2:],['producer-cleanup','cleanup'])
+
+    def test_successful_cleanup_crossing_original_deadline_cannot_complete(self):
+        h=Harness();now=[100.0];original=h.call
+        def delayed_cleanup(operation,arguments,**limits):
+            result=original(operation,arguments,**limits)
+            if operation=='cleanup':now[0]=7300.0
+            return result
+        h.call=delayed_cleanup
+        with mock.patch.object(outer_local.time,'monotonic',side_effect=lambda:now[0]):
+            result=h.run()
+        self.assertEqual(h.events[-2:],['producer-cleanup','cleanup'])
+        self.assertTrue(result['allRegisteredLifecycleExitsProven'])
+        self.assertEqual(result['status'],'failed-or-cleanup-unknown')
+        self.assertEqual(result['failureReason'],'outer_deadline')
+        self.assertEqual([x[2] for x in h.calls[-2:]],[{'timeout':60},{'timeout':60}])
+
+    def test_audit_subprocess_timeout_is_capped_to_global_remainder(self):
+        fake_packet={'fullManifest':base64.b64encode(b'{}').decode(),'fullFiles':{},
+          'externalManifestSha256':'a'*64,'sourceFreezeSha256':'b'*64}
+        child=SimpleNamespace(returncode=0,stdout=b'{"consumerPass":true}')
+        with mock.patch('stager.verify_full'),mock.patch.object(outer_local.time,'monotonic',return_value=100.0),mock.patch.object(outer_local.subprocess,'run',return_value=child) as run:
+            outer_local.audit_consumer([],{},fake_packet,absolute_deadline=105.0)
+        self.assertGreater(run.call_args.kwargs['timeout'],0)
+        self.assertLessEqual(run.call_args.kwargs['timeout'],5.0)
+
     def test_registration_before_capture_audit_before_cleanup(self):
         h=Harness();result=h.run();self.assertEqual(result['status'],'completed');self.assertEqual(h.events[:5],['setup','preflight','stage','turnover','outer-admit'])
         self.assertLess(h.events.index('pure-validate'),h.events.index('register-consumer'));self.assertLess(h.events.index('register-consumer'),h.events.index('producer-capture'));self.assertLess(h.events.index('offline-audit'),h.events.index('producer-cleanup'));self.assertEqual(h.events[-2:],['producer-cleanup','cleanup'])

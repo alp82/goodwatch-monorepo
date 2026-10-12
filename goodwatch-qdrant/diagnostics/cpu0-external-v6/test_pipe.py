@@ -63,5 +63,29 @@ class PipeTests(unittest.TestCase):
         self.assertTrue(evidence['consumer']['observed'])
         self.assertIsNone(evidence['consumer']['remoteBirthGone'])
 
+    def test_actual_remote_refusal_frame_retained_without_private_forwarding(self):
+        failure={'schema':'cpu0-external-failure.v6','operation':'producer-stream','reason':'producer_image_changed','continuationAllowed':False,'producerCleanupEvidence':{'containerGone':True,'birthGone':None,'cleanupAttempted':False},'producerClientCleanupFailure':True}
+        consumer="import sys;print("+repr(json.dumps(admitted()))+",flush=True);raw=sys.stdin.buffer.read();assert not raw"
+        with self.assertRaisesRegex(RuntimeError,'pipe_remote_producer_refused') as caught:
+            self.run_pipe(consumer,"import json;print("+repr(json.dumps(failure))+",flush=True)")
+        self.assertEqual(caught.exception.remoteFailureEvidence,failure)
+        self.assertTrue(caught.exception.pipeExitEvidence['producer']['observed'])
+
+    def test_remote_failure_arbitrary_error_text_is_not_retained(self):
+        value={'schema':'cpu0-external-failure.v6','operation':'producer-stream','reason':'private arbitrary error','continuationAllowed':False}
+        with self.assertRaisesRegex(RuntimeError,'pipe_producer_failure_invalid'):private_pipe.producer_failure(value)
+
+    def test_producer_control_lease_is_constructed_after_consumer_registration(self):
+        events=[];consumer="import sys;print("+repr(json.dumps(admitted()))+",flush=True);sys.stdin.buffer.read();print('{\"kind\":\"complete\"}',flush=True)"
+        producer="import sys,json;assert sys.stdin.buffer.read()==b'public-reviewed-input';print(json.dumps({'kind':'private-producer-registration'}),flush=True);print(json.dumps({'kind':'private-producer-exit-proof','proof':{}}),flush=True)"
+        producer_argv=[sys.executable,'-u','-c',producer]
+        def spawn(argv,**kwargs):
+            if argv==producer_argv:events.append('producer-spawn')
+            return subprocess.Popen(argv,**kwargs)
+        def register(value,proof):events.append('consumer-registered');return {'registeredBeforeCapture':True}
+        def control():events.append('lease-input-built');return b'public-reviewed-input'
+        result=private_pipe.stream([sys.executable,'-u','-c',consumer],producer_argv,'a'*64,'b'*64,'c'*64,lambda value:None,validate_admission=lambda value:value,register_consumer=register,register_producer=lambda value:{'registeredBeforeForwarding':True},validate_producer_exit=lambda value:None,producer_input=control,spawn=spawn)
+        self.assertEqual(events,['consumer-registered','lease-input-built','producer-spawn']);self.assertTrue(result['producerExitZeroBeforeCompletionMarker'])
+
 
 if __name__=='__main__':unittest.main()

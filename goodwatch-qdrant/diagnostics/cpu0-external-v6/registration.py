@@ -38,7 +38,7 @@ def expected_argv(source_sha,external_sha,consumer_predecessor,raise_own_nofile)
     return argv
 
 
-def confirm_birth(lifecycle,birth,source,argv,*,proc=Path('/proc')):
+def confirm_birth(lifecycle,birth,source,argv,*,proc=Path('/proc'),allow_reparent=False):
     if not isinstance(birth,dict) or set(birth)!=BIRTH_KEYS or birth['outsideSourceCgroup'] is not True or type(birth['pid']) is not int or birth['pid']<=0:
         raise RuntimeError('consumer_birth_invalid')
     observed=lifecycle.process(birth['pid'],proc)
@@ -48,7 +48,14 @@ def confirm_birth(lifecycle,birth,source,argv,*,proc=Path('/proc')):
     group=source_process['group'];own_group=observed['group']
     if own_group==group or own_group.startswith(group.rstrip('/')+'/'):
         raise RuntimeError('consumer_inside_source_subtree')
-    if lifecycle.public_process(observed)!={k:v for k,v in birth.items() if k!='outsideSourceCgroup'} or observed['exeBasename']!='node' or observed['comm']!='node' or observed['groupHash']==source['qdrant']['groupHash'] or observed['groupHash']==source['wrapper']['groupHash']:
+    actual=lifecycle.public_process(observed);expected={k:v for k,v in birth.items() if k!='outsideSourceCgroup'}
+    if type(allow_reparent) is not bool:raise RuntimeError('consumer_birth_invalid')
+    if allow_reparent:
+        # Cleanup binds the same retained birth/exe/group/argv; an SSH parent's
+        # disappearance may legitimately reparent it. No other identity moves.
+        actual={k:v for k,v in actual.items() if k!='parentPid'}
+        expected={k:v for k,v in expected.items() if k!='parentPid'}
+    if actual!=expected or observed['exeBasename']!='node' or observed['comm']!='node' or observed['groupHash']==source['qdrant']['groupHash'] or observed['groupHash']==source['wrapper']['groupHash']:
         raise RuntimeError('consumer_birth_changed')
     node=(STAGE/'node').lstat();exe=(proc/str(birth['pid'])/'exe').stat()
     if not stat.S_ISREG(node.st_mode) or node.st_uid!=0 or stat.S_IMODE(node.st_mode)!=0o700 or node.st_nlink!=1 or node.st_size!=NODE_BYTES or (node.st_dev,node.st_ino,node.st_size)!=(exe.st_dev,exe.st_ino,exe.st_size):
@@ -119,7 +126,7 @@ def cleanup(lifecycle,docker,registration_sha):
     try:
         try:fd=os.pidfd_open(birth['pid'],0)
         except ProcessLookupError:
-            return {'schema':'cpu0-consumer-cleanup.v6','birthGone':lifecycle.birth_gone(birth['pid'],birth['startTicks']),'exitObserved':True,'signalSent':False,'signal':None,'killFallback':False}
+            return {'schema':'cpu0-consumer-cleanup.v6','birthGone':lifecycle.birth_gone(birth['pid'],birth['startTicks']),'exitObserved':None,'pidfdOpenESRCH':True,'signalSent':False,'signal':None,'killFallback':False}
         try:now=lifecycle.birth(birth['pid'])
         except FileNotFoundError:now=None
         if now!=birth['startTicks'] or select.select([fd],[],[],0)[0]:
@@ -127,7 +134,7 @@ def cleanup(lifecycle,docker,registration_sha):
         argv=expected_argv(value['sourceFreezeSha256'],value['externalManifestSha256'],
                            value['consumerPredecessorSha256'],value['raiseOwnNofile'])
         if value['consumerArgvHash']!=sha(canonical(argv)):raise RuntimeError('consumer_registration_changed')
-        confirm_birth(lifecycle,birth,before,argv)
+        observed=confirm_birth(lifecycle,birth,before,argv,allow_reparent=True)
         # No cleanup lock: consumer/controller might still own it. Signals only
         # the explicitly registered, independently proved consumer birth.
         signal.pidfd_send_signal(fd,signal.SIGTERM,None,0);sent=True
@@ -135,7 +142,8 @@ def cleanup(lifecycle,docker,registration_sha):
         gone=lifecycle.birth_gone(birth['pid'],birth['startTicks'])
         return {'schema':'cpu0-consumer-cleanup.v6','birthGone':gone,'exitObserved':ready,
                 'signalSent':sent,'signal':'SIGTERM' if sent else None,'killFallback':False,
-                'unknownRetained':not gone}
+                'unknownRetained':not gone,'registeredParentPid':birth['parentPid'],
+                'observedParentPid':observed['parentPid']}
     finally:
         if fd is not None:os.close(fd)
 
