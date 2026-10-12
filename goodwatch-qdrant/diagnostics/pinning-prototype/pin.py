@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import resource
+import uuid
 import stat
 
 CLASSES = ('vector', 'graph', 'sparse', 'payload', 'other')
@@ -135,10 +136,28 @@ def release_preserving_error(manager, original):
 
 
 def classify(path):
-    value = path.lower()
-    return ('sparse' if any(token in value for token in ('sparse', 'inverted_index', 'bm25')) else
-            'graph' if any(token in value for token in ('hnsw', 'graph', 'links')) else
-            'vector' if 'vector' in value else 'payload' if 'payload' in value else 'other')
+    """Exclude segment payload structurally, independent of user-chosen names.
+
+    Nonpayload diagnostic labels retain the existing keyword convention within
+    the segment-relative path. Those labels are not a vector-field type schema;
+    field names can affect a nonpayload label, but never payload exclusion.
+    """
+    parts = Path(path).parts
+    for index, component in enumerate(parts[:-2]):
+        if component != 'segments':
+            continue
+        try:
+            uuid.UUID(parts[index + 1])
+        except ValueError:
+            continue
+        storage_component = parts[index + 2].lower()
+        if storage_component in ('payload_index', 'payload_storage'):
+            return 'payload'
+        value = '/'.join(parts[index + 2:]).lower()
+        return ('sparse' if any(token in value for token in ('sparse', 'inverted_index', 'bm25')) else
+                'graph' if any(token in value for token in ('hnsw', 'graph', 'links')) else
+                'vector' if 'vector' in value else 'other')
+    return 'other'
 
 
 def extents(fd, size):

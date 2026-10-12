@@ -18,7 +18,7 @@ case=sys.argv[1]
 test=RuntimeTests();test.setUp();test.nofile_patch.stop()
 try:
     for i in range(60):
-        path=test.store/(('vector','graph','sparse','id_tracker','payload_index')[i%5]+f'-{i}.bin')
+        path=test.fixture_path(('vector','graph','sparse','id_tracker','payload_index')[i%5]+f'-{i}.bin')
         path.write_bytes(b'x'*pin.PAGE);test.paths.append(path)
     test.write_maps(test.paths)
     _,hard=resource.getrlimit(resource.RLIMIT_NOFILE)

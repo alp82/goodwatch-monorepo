@@ -44,6 +44,36 @@ class PinTests(unittest.TestCase):
 
     def target(self): return pin.Target.open(self.path, 'vector')
 
+    def test_payload_classification_ignores_collection_and_payload_field_names(self):
+        segment = '52fe6e69-16c6-4fd1-b4b4-0d36b9e76979'
+        for collection in ('vector_movies', 'sparse_bm25', 'hnsw_graph_links', 'payload_movies', 'segments'):
+            for component in ('payload_index', 'payload_storage'):
+                for field in ('vector_field', 'sparse_inverted_index', 'hnsw_graph_links', 'ordinary'):
+                    path = f'/qdrant/storage/collections/{collection}/0/0/segments/{segment}/{component}/{field}/data.bin'
+                    with self.subTest(collection=collection, component=component, field=field):
+                        self.assertEqual(pin.classify(path), 'payload')
+
+    def test_classification_is_anchored_at_segment_not_collection_or_filename(self):
+        segment = '52fe6e69-16c6-4fd1-b4b4-0d36b9e76979'
+        base = f'/qdrant/storage/collections/sparse_payload_graph_movies/0/0/segments/{segment}'
+        cases = {'vector_storage_dense/vectors/chunk_0.mmap': 'vector',
+                 'vector_storage_sparse/store/page_0.dat': 'sparse',
+                 'vector_index_dense/links_compressed.bin': 'graph',
+                 'id_tracker.mapping': 'other',
+                 'payload_index/vector/segments/not-a-segment/hnsw_links.bin': 'payload'}
+        for tail, expected in cases.items():
+            with self.subTest(tail=tail): self.assertEqual(pin.classify(base + '/' + tail), expected)
+        self.assertEqual(pin.classify('/qdrant/storage/collections/vector_payload_movies/config.json'), 'other')
+
+    def test_adversarial_payload_file_is_measured_without_real_lock(self):
+        path = self.root/'collections'/'sparse_vector_movies'/'0'/'0'/'segments'/'52fe6e69-16c6-4fd1-b4b4-0d36b9e76979'/'payload_index'/'hnsw_links_field'/'data.bin'
+        path.parent.mkdir(parents=True); path.write_bytes(b'x' * pin.PAGE)
+        manager = self.manager(); target = pin.Target.open(path, pin.classify(str(path)))
+        result = manager.reconcile([target], ('fixture', 1), self.memory)
+        self.assertEqual(result['lockedBytes'], 0)
+        self.assertEqual(result['classesMeasured']['payload']['dataLockBytes'], pin.PAGE)
+        self.assertEqual(locked_bytes(), self.baseline)
+
     def test_real_sparse_file_shared_readonly_pin_skips_holes_and_releases(self):
         manager = self.manager(); target = self.target(); ranges = pin.page_ranges(target.ranges, target.identity[2])
         self.assertEqual(ranges, ((0, pin.PAGE), (4*pin.PAGE, 5*pin.PAGE)))

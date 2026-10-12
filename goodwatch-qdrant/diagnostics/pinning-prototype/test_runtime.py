@@ -22,16 +22,24 @@ class RuntimeTests(unittest.TestCase):
         self.nofile_patch.start()
         self.paths=[]
         for name in ('vector.bin','graph.bin','sparse.bin','id_tracker.bin','payload_index.bin'):
-            path=self.store/name;path.write_bytes(b'data'.ljust(pin.PAGE,b'x'));self.paths.append(path)
+            path=self.fixture_path(name);path.write_bytes(b'data'.ljust(pin.PAGE,b'x'));self.paths.append(path)
         self.write_maps(self.paths)
         self.memory={'availableBytes':1024**3,'anonBytes':16384,'fileBytes':0,'kernelBytes':4096,'unevictableBytes':0,'currentBytes':20480,
                      'cgroupMaxBytes':1024**2,'memoryEvents':{'oom':0,'oom_kill':0,'max':0},'cpu':{'nr_throttled':0,'throttled_usec':0}}
+
+    def fixture_path(self, name):
+        component = {'vector': 'vector_storage_dense', 'graph': 'vector_index_dense',
+                     'sparse': 'vector_storage_sparse', 'payload_index': 'payload_index/field',
+                     'id_tracker': 'id_tracker'}[name.split('.')[0].split('-')[0]]
+        path = self.store/'collections'/'fixture'/'0'/'0'/'segments'/'52fe6e69-16c6-4fd1-b4b4-0d36b9e76979'/component/name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        return path
 
     def write_maps(self,paths,deleted=None):
         rows=[]
         for index,path in enumerate(paths):
             info=path.stat();device=f'{os.major(info.st_dev):02x}:{os.minor(info.st_dev):02x}'
-            rows.append(f'{index+1:04x}-{index+2:04x} r--s 00000000 {device} {info.st_ino} /qdrant/storage/{path.name}')
+            rows.append(f'{index+1:04x}-{index+2:04x} r--s 00000000 {device} {info.st_ino} /qdrant/storage/{path.relative_to(self.store)}')
         if deleted is not None:rows.append(deleted+' (deleted)')
         (self.proc/'900'/'maps').write_text('\n'.join(rows)+'\n')
         return rows
@@ -52,7 +60,7 @@ class RuntimeTests(unittest.TestCase):
         with patch.object(runtime,'prepare_self'),patch.object(runtime,'accounting',return_value=self.memory):
             first=runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
             old_rows=self.write_maps(self.paths);old_identity=self.paths[0].stat().st_ino;self.paths[0].unlink()
-            replacement=self.store/'replacement_vector.bin';replacement.write_bytes(b'replacement'.ljust(pin.PAGE,b'x'))
+            replacement=self.paths[0].parent/'replacement_vector.bin';replacement.write_bytes(b'replacement'.ljust(pin.PAGE,b'x'))
             self.paths[0]=replacement;self.write_maps(self.paths,old_rows[0])
             old_healthy={key:mapping.address for key,mapping in manager.mappings.items() if key[1]!=old_identity}
             second=runtime.reconcile_source(manager,self.spec,source_check=runtime.inspect_source)
