@@ -43,12 +43,7 @@ function BrowseButton() {
 
 function Wordmark({ fontSize }: { fontSize: number }) {
 	return (
-		<Link
-			to="/"
-			prefetch="intent"
-			aria-label="GoodWatch home"
-			className="flex shrink-0"
-		>
+		<Link to="/" prefetch="intent" aria-label="GoodWatch home" className="flex shrink-0">
 			<GoodWatchWordmark fontSize={fontSize} />
 		</Link>
 	)

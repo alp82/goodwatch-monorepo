@@ -1,12 +1,12 @@
+// Small pieces shared by the dock, the header, and the hub: the GoodWatch mark, Tonight's pick as a tiny poster, and
+// the account slot (Sign in for guests, the avatar and its menu for members).
+import { assetUrl } from "~/utils/asset-url"
 import { BookmarkIcon, UserCircleIcon } from "@heroicons/react/24/solid"
 import { Link, useLocation } from "@remix-run/react"
 import type { SignalWords } from "~/domain/new-episodes-signal"
 import { useFeatures } from "~/hooks/useFeature"
 import logoWhite from "~/img/goodwatch-logo-white.svg"
 import { LazyUserMenu } from "~/ui/main/LazyUserMenu"
-// Small pieces shared by the dock, the header, and the hub: the GoodWatch mark, Tonight's pick as a tiny poster, and
-// the account slot (Sign in for guests, the avatar and its menu for members).
-import { assetUrl } from "~/utils/asset-url"
 import { useUser } from "~/utils/auth"
 import { useAuthHref } from "~/utils/auth-href"
 import { currentDestination, getDestinations } from "./destinations"
